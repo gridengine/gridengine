@@ -26,7 +26,7 @@
  *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  *
- *   Copyright: 2003 by Sun Microsystems, Inc.
+ *   Copyright: 2001 by Sun Microsystems, Inc.
  *
  *   All Rights Reserved.
  *
@@ -37,14 +37,10 @@
 extern "C" {
 #endif
 
-extern void sge_mutex_lock(const char*, const char*, int, pthread_mutex_t*);
-extern void sge_mutex_unlock(const char*, const char*, int, pthread_mutex_t*);
+void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex);
+void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex);
 
-extern void sge_rwlock_rdlock(const char*, const char*, int, pthread_rwlock_t*);
-extern void sge_rwlock_wrlock(const char*, const char*, int, pthread_rwlock_t*);
-extern void sge_rwlock_unlock(const char*, const char*, int, pthread_rwlock_t*);
-
-extern void sge_relative_timespec(signed long, struct timespec*);
+void sge_relative_timespec(signed long timeout, struct timespec *ts);
 
 #ifdef  __cplusplus
 }

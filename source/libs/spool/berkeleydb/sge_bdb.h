@@ -46,15 +46,11 @@ spool_berkeleydb_check_version(lList **answer_list);
 
 bool 
 spool_berkeleydb_create_environment(lList **answer_list, 
-                                    struct bdb_info *info);
+                                    struct bdb_info *info, const char *url);
 
 bool 
 spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info, 
-                               bool create);
-
-bool 
-spool_berkeleydb_check_reopen_database(lList **answer_list, 
-                                       struct bdb_info *info);
+                               const char *url, bool create);
 
 bool 
 spool_berkeleydb_close_database(lList **answer_list, struct bdb_info *info,
@@ -112,12 +108,4 @@ spool_berkeleydb_delete_job(lList **answer_list, struct bdb_info *info,
 bool
 spool_berkeleydb_delete_cqueue(lList **answer_list, struct bdb_info *info,
                                const char *key);
-
-bool
-spool_berkeleydb_read_keys(lList **answer_list, struct bdb_info *info,
-                           lList **list, const char *key);
-
-lListElem *
-spool_berkeleydb_read_object(lList **answer_list, struct bdb_info *info,
-                             const char *key);
 #endif /* __SGE_BDB_H */    

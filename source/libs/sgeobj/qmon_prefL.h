@@ -50,11 +50,7 @@ enum {
    PREF_job_filter_owners,
    PREF_job_filter_fields,
    PREF_job_filter_compact,
-   PREF_queue_filter_resources,
-   PREF_queue_filter_pe,
-   PREF_queue_filter_user,
-   PREF_queue_filter_q,
-   PREF_queue_filter_state
+   PREF_queue_filter_resources
 };
 
 ILISTDEF(PREF_Type, QmonPreferences, QMON_PREF_LIST)
@@ -64,10 +60,6 @@ ILISTDEF(PREF_Type, QmonPreferences, QMON_PREF_LIST)
    SGE_LIST(PREF_job_filter_fields, ST_Type, CULL_DEFAULT)
    SGE_BOOL(PREF_job_filter_compact, CULL_DEFAULT)
    SGE_LIST(PREF_queue_filter_resources, CE_Type, CULL_DEFAULT)
-   SGE_LIST(PREF_queue_filter_pe, ST_Type, CULL_DEFAULT)
-   SGE_LIST(PREF_queue_filter_user, ST_Type, CULL_DEFAULT)
-   SGE_LIST(PREF_queue_filter_q, ST_Type, CULL_DEFAULT)
-   SGE_STRING(PREF_queue_filter_state, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(PREFS)
@@ -77,10 +69,6 @@ NAMEDEF(PREFS)
    NAME("PREF_job_filter_fields")
    NAME("PREF_job_filter_compact")
    NAME("PREF_queue_filter_resources")
-   NAME("PREF_queue_filter_pe")
-   NAME("PREF_queue_filter_user")
-   NAME("PREF_queue_filter_q")
-   NAME("PREF_queue_filter_state")
 NAMEEND
 
 /* *INDENT-ON* */

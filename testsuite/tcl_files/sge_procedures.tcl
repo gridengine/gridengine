@@ -1006,6 +1006,123 @@ proc move_qmaster_spool_dir { new_spool_dir } {
 }
 
 #                                                             max. column:     |
+#****** sge_procedures/reset_schedd_config() ******
+# 
+#  NAME
+#     reset_schedd_config -- set schedd configuration default values
+#
+#  SYNOPSIS
+#     reset_schedd_config { } 
+#
+#  FUNCTION
+#     This procedure will call set_schedd_config with default values 
+#
+#  RESULT
+#       -1 : timeout error
+#        0 : ok
+#
+#
+#  NOTES
+#     The default values are:
+#     
+#     SGE system:
+#    
+#     algorithm                   "default"
+#     schedule_interval           "0:0:15"
+#     maxujobs                    "0"
+#     queue_sort_method           "load"
+#     user_sort                   "false"
+#     job_load_adjustments        "np_load_avg=0.50"
+#     load_adjustment_decay_time  "0:7:30"
+#     load_formula                "np_load_avg"
+#     schedd_job_info             "true"
+#     
+#     
+#     SGEEE differences:
+#     queue_sort_method           "share"
+#     user_sort                   "false"
+#     reprioritize_interval       "00:01:00"
+#     halftime                    "168"
+#     usage_weight_list           "cpu=1,mem=0,io=0"
+#     compensation_factor         "5"
+#     weight_user                 "0.2"
+#     weight_project              "0.2"
+#     weight_jobclass             "0.2"
+#     weight_department           "0.2"
+#     weight_job                  "0.2"
+#     weight_tickets_functional   "0"
+#     weight_tickets_share        "0"
+#     weight_tickets_deadline     "10000"
+#
+#  SEE ALSO
+#     sge_procedures/set_schedd_config()
+#*******************************
+proc reset_schedd_config {} {
+  global ts_config
+ 
+  set default_array(algorithm)                  "default"
+  set default_array(schedule_interval)          "0:0:10"
+  set default_array(maxujobs)                   "0"
+  set default_array(queue_sort_method)          "load"
+  set default_array(user_sort)                  "false"
+  set default_array(job_load_adjustments)       "np_load_avg=0.15"
+  set default_array(load_adjustment_decay_time) "0:7:30"
+  set default_array(load_formula)               "np_load_avg"
+  set default_array(schedd_job_info)            "true"
+  if { $ts_config(gridengine_version) == 60 } {
+     set default_array(flush_submit_sec)        "0"
+     set default_array(flush_finish_sec)        "0"
+     set default_array(params)                  "none"
+  }
+
+# this is sgeee
+  if { [string compare $ts_config(product_type) "sgeee"] == 0 } {
+     set default_array(queue_sort_method)          "share"
+     if { $ts_config(gridengine_version) == 60 } {
+        set default_array(reprioritize_interval)    "00:00:40"
+     } else {
+        set default_array(sgeee_schedule_interval)    "00:00:40"
+     }
+     set default_array(halftime)                   "168"
+     set default_array(usage_weight_list)          "cpu=1,mem=0,io=0"
+     set default_array(compensation_factor)        "5"
+     set default_array(weight_user)                "0.2"
+     set default_array(weight_project)             "0.2"
+     set default_array(weight_jobclass)            "0.2"
+     set default_array(weight_department)          "0.2"
+     set default_array(weight_job)                 "0.2"
+     set default_array(weight_tickets_functional)  "0"
+     set default_array(weight_tickets_share)       "0"
+     if { $ts_config(gridengine_version) == 60 } {
+         set default_array(share_override_tickets)        "true"
+         set default_array(share_functional_shares)       "true"
+        
+         set default_array(max_functional_jobs_to_schedule) "200"
+         set default_array(report_pjob_tickets)             "true"
+         set default_array(max_pending_tasks_per_job)       "50"
+         set default_array(halflife_decay_list)             "none"
+         set default_array(policy_hierarchy)                "OFS"
+
+         set default_array(weight_ticket)                   "1"
+         set default_array(weight_waiting_time)             "1"
+         set default_array(weight_deadline)                 "1000000"
+         set default_array(weight_urgency)                  "0"
+     } else {
+         set default_array(weight_tickets_deadline)    "10000"
+     }
+  }
+
+  set ret_value [ set_schedd_config default_array ]
+
+  if { $ret_value != 0 } {
+     add_proc_error "reset_schedd_config" $ret_value "error set_schedd_config - call"
+  } 
+
+  return $ret_value
+}
+
+
+#                                                             max. column:     |
 #****** sge_procedures/get_hosts() ******
 # 
 #  NAME
@@ -1443,6 +1560,430 @@ proc set_complex { change_array complex_list { create 0 } } {
 
 
 
+#                                                             max. column:     |
+#****** sge_procedures/set_schedd_config() ******
+# 
+#  NAME
+#     set_schedd_config -- change scheduler configuration
+#
+#  SYNOPSIS
+#     set_schedd_config { change_array } 
+#
+#  FUNCTION
+#     Set the scheduler configuration corresponding to the content of the 
+#     change_array.
+#
+#  INPUTS
+#     change_array - name of an array variable that will be set by 
+#                    set_schedd_config
+#  RESULT
+#     -1 : timeout
+#      0 : ok
+#
+#  EXAMPLE
+#     get_schedd_config myconfig
+#     set myconfig(schedule_interval) "0:0:10"
+#     set_schedd_config myconfig
+#
+#  NOTES
+#     The array should be build like follows:
+#   
+#     set change_array(algorithm) default
+#     set change_array(schedule_interval) 0:0:15
+#     ....
+#     (every value that is set will be changed)
+#
+#     Here the possible change_array values with some typical settings:
+#     
+#     algorithm                   "default"
+#     schedule_interval           "0:0:15"
+#     maxujobs                    "0"
+#     queue_sort_method           "share"
+#     user_sort                   "false"
+#     job_load_adjustments        "np_load_avg=0.50"
+#     load_adjustment_decay_time  "0:7:30"
+#     load_formula                "np_load_avg"
+#     schedd_job_info             "true"
+#     
+#     
+#     In case of a SGEEE - System:
+#     
+#     reprioritize_interval       "00:01:00"
+#     halftime                    "168"
+#     usage_weight_list           "cpu=0.34,mem=0.33,io=0.33"
+#     compensation_factor         "5"
+#     weight_user                 "0"
+#     weight_project              "0"
+#     weight_jobclass             "0"
+#     weight_department           "0"
+#     weight_job                  "0"
+#     weight_tickets_functional   "0"
+#     weight_tickets_share        "0"
+#     weight_tickets_deadline     "10000"
+#     
+#
+#  SEE ALSO
+#     sge_procedures/get_schedd_config()
+#*******************************
+proc set_schedd_config { change_array } {
+  global ts_config
+  global env CHECK_ARCH open_spawn_buffer
+  global CHECK_OUTPUT CHECK_CORE_MASTER
+  upvar $change_array chgar
+
+  set vi_commands [build_vi_command chgar]
+  set CHANGED_SCHEDD_CONFIG [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION]]
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-msconf" $vi_commands $CHANGED_SCHEDD_CONFIG ]  
+
+  if { $result != 0 } {
+     add_proc_error "set_schedd_config" -1 "error changing scheduler configuration"
+  }
+  
+  return $result
+}
+
+#                                                             max. column:     |
+#****** sge_procedures/get_schedd_config() ******
+# 
+#  NAME
+#     get_schedd_config -- get scheduler configuration 
+#
+#  SYNOPSIS
+#     get_schedd_config { change_array } 
+#
+#  FUNCTION
+#     Get the current scheduler configuration     
+#
+#  INPUTS
+#     change_array - name of an array variable that will get set by 
+#                    get_schedd_config
+#
+#  EXAMPLE
+#     get_schedd_config test
+#     puts $test(schedule_interval)
+#
+#  NOTES
+# 
+#     The array is build like follows:
+#   
+#     set change_array(algorithm) default
+#     set change_array(schedule_interval) 0:0:15
+#     ....
+#
+#     Here the possible change_array values with some typical settings:
+#     
+#     algorithm                   "default"
+#     schedule_interval           "0:0:15"
+#     maxujobs                    "0"
+#     queue_sort_method           "share"
+#     user_sort                   "false"
+#     job_load_adjustments        "np_load_avg=0.50"
+#     load_adjustment_decay_time  "0:7:30"
+#     load_formula                "np_load_avg"
+#     schedd_job_info             "true"
+#     
+#     
+#     In case of a SGEEE - System:
+#     
+#     reprioritize_interval       "00:01:00"
+#     halftime                    "168"
+#     usage_weight_list           "cpu=0.34,mem=0.33,io=0.33"
+#     compensation_factor         "5"
+#     weight_user                 "0"
+#     weight_project              "0"
+#     weight_jobclass             "0"
+#     weight_department           "0"
+#     weight_job                  "0"
+#     weight_tickets_functional   "0"
+#     weight_tickets_share        "0"
+#     weight_tickets_deadline     "10000"
+#
+#  SEE ALSO
+#     sge_procedures/set_schedd_config()
+#*******************************
+proc get_schedd_config { change_array } {
+  global ts_config
+  global CHECK_ARCH
+  upvar $change_array chgar
+
+  set catch_return [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -ssconf" } result ]
+  if { $catch_return != 0 } {
+     add_proc_error "get_schedd_config" "-1" "qconf error or binary not found"
+     return
+  }
+
+  # split each line as listelement
+  set help [split $result "\n"]
+
+  foreach elem $help {
+     set id [lindex $elem 0]
+     set value [lrange $elem 1 end]
+     set chgar($id) $value
+  }
+}
+
+
+
+#                                                             max. column:     |
+#****** sge_procedures/set_queue() ******
+# 
+#  NAME
+#     set_queue -- set or change queue configuration
+#
+#  SYNOPSIS
+#     set_queue { q_name change_array } 
+#
+#  FUNCTION
+#     Set a queue configuration corresponding to the content of the change_array.
+#
+#  INPUTS
+#     q_name       - name of the queue to configure
+#     change_array - name of an array variable that will be set by set_queue
+#
+#  RESULT
+#     0  : ok
+#     -1 : timeout
+#
+#  EXAMPLE
+#     get_queue myqueue.q queue1
+#     set queue1(load_thresholds) "np_load_avg=3.75" 
+#     set_queue myqueue.q queue1
+#
+#  NOTES
+#     the array should look like this:
+#
+#     set change_array(qname) MYHOST
+#     set change_array(hostname) MYHOST.domain
+#     ....
+#     (every value that is set will be changed)
+#
+#     here is a list of all valid array names (template queue):
+#
+#     change_array(qname)                "template"
+#     change_array(hostname)             "unknown"
+#     change_array(seq_no)               "0"
+#     change_array(load_thresholds)      "np_load_avg=1.75"
+#     change_array(suspend_thresholds)   "NONE"
+#     change_array(nsuspend)             "0"
+#     change_array(suspend_interval)     "00:05:00"
+#     change_array(priority)             "0"
+#     change_array(min_cpu_interval)     "00:05:00"
+#     change_array(processors)           "UNDEFINED"
+#     change_array(qtype)                "BATCH INTERACTIVE" 
+#     change_array(rerun)                "FALSE"
+#     change_array(slots)                "1"
+#     change_array(tmpdir)               "/tmp"
+#     change_array(shell)                "/bin/csh"
+#     change_array(shell_start_mode)     "NONE"
+#     change_array(prolog)               "NONE"
+#     change_array(epilog)               "NONE"
+#     change_array(starter_method)       "NONE"
+#     change_array(suspend_method)       "NONE"
+#     change_array(resume_method)        "NONE"
+#     change_array(terminate_method)     "NONE"
+#     change_array(notify)               "00:00:60"
+#     change_array(owner_list)           "NONE"
+#     change_array(user_lists)           "NONE"
+#     change_array(xuser_lists)          "NONE"
+#     change_array(subordinate_list)     "NONE"
+#     change_array(complex_list)         "NONE"
+#     change_array(complex_values)       "NONE"
+#     change_array(projects)             "NONE"
+#     change_array(xprojects)            "NONE"
+#     change_array(calendar)             "NONE"
+#     change_array(initial_state)        "default"
+#     change_array(fshare)               "0"
+#     change_array(oticket)              "0"
+#     change_array(s_rt)                 "INFINITY"
+#     change_array(h_rt)                 "INFINITY"
+#     change_array(s_cpu)                "INFINITY"
+#     change_array(h_cpu)                "INFINITY"
+#     change_array(s_fsize)              "INFINITY"
+#     change_array(h_fsize)              "INFINITY"
+#     change_array(s_data)               "INFINITY"
+#     change_array(h_data)               "INFINITY"
+#     change_array(s_stack)              "INFINITY"
+#     change_array(h_stack)              "INFINITY"
+#     change_array(s_core)               "INFINITY"
+#     change_array(h_core)               "INFINITY"
+#     change_array(s_rss)                "INFINITY"
+#     change_array(h_rss)                "INFINITY"
+#     change_array(s_vmem)               "INFINITY"
+#     change_array(h_vmem)               "INFINITY"
+#
+#
+#  SEE ALSO
+#     sge_procedures/mqattr()
+#     sge_procedures/set_queue()
+#     sge_procedures/add_queue()
+#     sge_procedures/del_queue()
+#     sge_procedures/get_queue()
+#     sge_procedures/suspend_queue()
+#     sge_procedures/unsuspend_queue()
+#     sge_procedures/disable_queue()
+#     sge_procedures/enable_queue()
+#*******************************
+
+#                                                             max. column:     |
+#****** sge_procedures/add_queue() ******
+# 
+#  NAME
+#     add_queue -- Add a new queue configuration object
+#
+#  SYNOPSIS
+#     add_queue { change_array {fast_add 0} } 
+#
+#  FUNCTION
+#     Add a new queue configuration object corresponding to the content of 
+#     the change_array.
+#
+#  INPUTS
+#     change_array - name of an array variable that will be set by get_config
+#     {fast_add 0} - if not 0 the add_queue procedure will use a file for
+#                    queue configuration. (faster) (qconf -Aq, not qconf -aq)
+#
+#  RESULT
+#     -1   timeout error
+#     -2   queue allready exists
+#      0   ok 
+#
+#  EXAMPLE
+#     set new_queue(qname)    "new.q"
+#     set new_queue(hostname) "expo1"
+#     add_queue new_queue 
+#
+#  NOTES
+#     the array should look like this:
+#
+#     set change_array(qname) MYHOST
+#     set change_array(hostname) MYHOST.domain
+#     ....
+#     (every value that is set will be changed)
+#
+#     here is a list of all valid array names (template queue):
+#
+#     change_array(qname)                "template"
+#     change_array(hostname)             "unknown"
+#     change_array(seq_no)               "0"
+#     change_array(load_thresholds)      "np_load_avg=1.75"
+#     change_array(suspend_thresholds)   "NONE"
+#     change_array(nsuspend)             "0"
+#     change_array(suspend_interval)     "00:05:00"
+#     change_array(priority)             "0"
+#     change_array(min_cpu_interval)     "00:05:00"
+#     change_array(processors)           "UNDEFINED"
+#     change_array(qtype)                "BATCH INTERACTIVE" 
+#     change_array(rerun)                "FALSE"
+#     change_array(slots)                "1"
+#     change_array(tmpdir)               "/tmp"
+#     change_array(shell)                "/bin/csh"
+#     change_array(shell_start_mode)     "NONE"
+#     change_array(prolog)               "NONE"
+#     change_array(epilog)               "NONE"
+#     change_array(starter_method)       "NONE"
+#     change_array(suspend_method)       "NONE"
+#     change_array(resume_method)        "NONE"
+#     change_array(terminate_method)     "NONE"
+#     change_array(notify)               "00:00:60"
+#     change_array(owner_list)           "NONE"
+#     change_array(user_lists)           "NONE"
+#     change_array(xuser_lists)          "NONE"
+#     change_array(subordinate_list)     "NONE"
+#     change_array(complex_list)         "NONE"
+#     change_array(complex_values)       "NONE"
+#     change_array(projects)             "NONE"
+#     change_array(xprojects)            "NONE"
+#     change_array(calendar)             "NONE"
+#     change_array(initial_state)        "default"
+#     change_array(fshare)               "0"
+#     change_array(oticket)              "0"
+#     change_array(s_rt)                 "INFINITY"
+#     change_array(h_rt)                 "INFINITY"
+#     change_array(s_cpu)                "INFINITY"
+#     change_array(h_cpu)                "INFINITY"
+#     change_array(s_fsize)              "INFINITY"
+#     change_array(h_fsize)              "INFINITY"
+#     change_array(s_data)               "INFINITY"
+#     change_array(h_data)               "INFINITY"
+#     change_array(s_stack)              "INFINITY"
+#     change_array(h_stack)              "INFINITY"
+#     change_array(s_core)               "INFINITY"
+#     change_array(h_core)               "INFINITY"
+#     change_array(s_rss)                "INFINITY"
+#     change_array(h_rss)                "INFINITY"
+#     change_array(s_vmem)               "INFINITY"
+#     change_array(h_vmem)               "INFINITY"
+#
+#  SEE ALSO
+#     sge_procedures/mqattr()
+#     sge_procedures/set_queue()
+#     sge_procedures/add_queue()
+#     sge_procedures/del_queue()
+#     sge_procedures/get_queue()
+#     sge_procedures/suspend_queue()
+#     sge_procedures/unsuspend_queue()
+#     sge_procedures/disable_queue()
+#     sge_procedures/enable_queue()
+#*******************************
+proc set_queue_defaults { change_array } {
+   global ts_config
+
+   upvar $change_array chgar
+
+   set chgar(qname)                "queuename"
+   set chgar(seq_no)               "0"
+   set chgar(load_thresholds)      "np_load_avg=7.00"
+   set chgar(suspend_thresholds)   "NONE"
+   set chgar(nsuspend)             "1"
+   set chgar(suspend_interval)     "00:05:00"
+   set chgar(priority)             "0"
+   set chgar(min_cpu_interval)     "00:05:00"
+   set chgar(processors)           "UNDEFINED"
+   set chgar(rerun)                "FALSE"
+   set chgar(slots)                "10"
+   set chgar(tmpdir)               "/tmp"
+   set chgar(shell)                "/bin/csh"
+   set chgar(shell_start_mode)     "posix_compliant"
+   set chgar(prolog)               "NONE"
+   set chgar(epilog)               "NONE"
+   set chgar(starter_method)       "NONE"
+   set chgar(suspend_method)       "NONE"
+   set chgar(resume_method)        "NONE"
+   set chgar(terminate_method)     "NONE"
+   set chgar(notify)               "00:00:60"
+   set chgar(owner_list)           "NONE"
+   set chgar(user_lists)           "NONE"
+   set chgar(xuser_lists)          "NONE"
+   set chgar(subordinate_list)     "NONE"
+   set chgar(complex_values)       "NONE"
+   set chgar(calendar)             "NONE"
+   set chgar(initial_state)        "default"
+   set chgar(s_rt)                 "INFINITY"
+   set chgar(h_rt)                 "INFINITY"
+   set chgar(s_cpu)                "INFINITY"
+   set chgar(h_cpu)                "INFINITY"
+   set chgar(s_fsize)              "INFINITY"
+   set chgar(h_fsize)              "INFINITY"
+   set chgar(s_data)               "INFINITY"
+   set chgar(h_data)               "INFINITY"
+   set chgar(s_stack)              "INFINITY"
+   set chgar(h_stack)              "INFINITY"
+   set chgar(s_core)               "INFINITY"
+   set chgar(h_core)               "INFINITY"
+   set chgar(s_rss)                "INFINITY"
+   set chgar(h_rss)                "INFINITY"
+   set chgar(s_vmem)               "INFINITY"
+   set chgar(h_vmem)               "INFINITY"
+  
+   if { $ts_config(product_type) == "sgeee" } {
+      set chgar(projects)           "NONE"
+      set chgar(xprojects)          "NONE"
+      set chgar(fshare)             "0"
+      set chgar(oticket)            "0"
+   }
+
+   vdep_set_queue_defaults chgar
+}
 
 #                                                             max. column:     |
 #****** sge_procedures/add_exechost() ******
@@ -1718,6 +2259,542 @@ proc del_access_list { list_name } {
      return -1
   }
   return 0
+}
+
+
+#                                                             max. column:     |
+#****** sge_procedures/del_queue() ******
+# 
+#  NAME
+#     del_queue -- delete a queue
+#
+#  SYNOPSIS
+#     del_queue { q_name } 
+#
+#  FUNCTION
+#     remove a queue from the qmaster configuration
+#
+#  INPUTS
+#     q_name - name of the queue to delete
+#
+#  RESULT
+#     0  : ok
+#     -1 : timeout error
+#
+#  EXAMPLE
+#     del_queue "my_own_queue.q"
+#
+#  NOTES
+#
+#  SEE ALSO
+#     sge_procedures/mqattr()
+#     sge_procedures/set_queue() 
+#     sge_procedures/add_queue()
+#     sge_procedures/del_queue()
+#     sge_procedures/get_queue()
+#     sge_procedures/suspend_queue()
+#     sge_procedures/unsuspend_queue()
+#     sge_procedures/disable_queue()
+#     sge_procedures/enable_queue()
+#*******************************
+#                                                             max. column:     |
+#****** sge_procedures/get_queue() ******
+# 
+#  NAME
+#     get_queue -- get queue configuration information
+#
+#  SYNOPSIS
+#     get_queue { q_name change_array } 
+#
+#  FUNCTION
+#     Get the actual configuration settings for the named queue
+#
+#  INPUTS
+#     q_name       - name of the queue
+#     change_array - name of an array variable that will get set by get_config
+#
+#  EXAMPLE
+#     get_queue "myqueue.q" qinfo
+#     puts qinfo(seq_no) 
+#
+#  NOTES
+#     the array should look like this:
+#
+#     set change_array(qname) MYHOST
+#     set change_array(hostname) MYHOST.domain
+#     ....
+#     (every value that is set will be changed)
+#
+#     here is a list of all valid array names (template queue):
+#
+#     change_array(qname)                "template"
+#     change_array(hostname)             "unknown"
+#     change_array(seq_no)               "0"
+#     change_array(load_thresholds)      "np_load_avg=1.75"
+#     change_array(suspend_thresholds)   "NONE"
+#     change_array(nsuspend)             "0"
+#     change_array(suspend_interval)     "00:05:00"
+#     change_array(priority)             "0"
+#     change_array(min_cpu_interval)     "00:05:00"
+#     change_array(processors)           "UNDEFINED"
+#     change_array(qtype)                "BATCH INTERACTIVE" 
+#     change_array(rerun)                "FALSE"
+#     change_array(slots)                "1"
+#     change_array(tmpdir)               "/tmp"
+#     change_array(shell)                "/bin/csh"
+#     change_array(shell_start_mode)     "NONE"
+#     change_array(prolog)               "NONE"
+#     change_array(epilog)               "NONE"
+#     change_array(starter_method)       "NONE"
+#     change_array(suspend_method)       "NONE"
+#     change_array(resume_method)        "NONE"
+#     change_array(terminate_method)     "NONE"
+#     change_array(notify)               "00:00:60"
+#     change_array(owner_list)           "NONE"
+#     change_array(user_lists)           "NONE"
+#     change_array(xuser_lists)          "NONE"
+#     change_array(subordinate_list)     "NONE"
+#     change_array(complex_list)         "NONE"
+#     change_array(complex_values)       "NONE"
+#     change_array(projects)             "NONE"
+#     change_array(xprojects)            "NONE"
+#     change_array(calendar)             "NONE"
+#     change_array(initial_state)        "default"
+#     change_array(fshare)               "0"
+#     change_array(oticket)              "0"
+#     change_array(s_rt)                 "INFINITY"
+#     change_array(h_rt)                 "INFINITY"
+#     change_array(s_cpu)                "INFINITY"
+#     change_array(h_cpu)                "INFINITY"
+#     change_array(s_fsize)              "INFINITY"
+#     change_array(h_fsize)              "INFINITY"
+#     change_array(s_data)               "INFINITY"
+#     change_array(h_data)               "INFINITY"
+#     change_array(s_stack)              "INFINITY"
+#     change_array(h_stack)              "INFINITY"
+#     change_array(s_core)               "INFINITY"
+#     change_array(h_core)               "INFINITY"
+#     change_array(s_rss)                "INFINITY"
+#     change_array(h_rss)                "INFINITY"
+#     change_array(s_vmem)               "INFINITY"
+#     change_array(h_vmem)               "INFINITY"
+#
+#  SEE ALSO
+#     sge_procedures/mqattr()
+#     sge_procedures/set_queue() 
+#     sge_procedures/add_queue()
+#     sge_procedures/del_queue()
+#     sge_procedures/get_queue()
+#     sge_procedures/suspend_queue()
+#     sge_procedures/unsuspend_queue()
+#     sge_procedures/disable_queue()
+#     sge_procedures/enable_queue()
+#*******************************
+proc get_queue { q_name change_array } {
+  global ts_config
+
+
+  global CHECK_ARCH CHECK_OUTPUT
+  upvar $change_array chgar
+
+  set catch_return [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -sq ${q_name}" } result ]
+  if { $catch_return != 0 } {
+     add_proc_error "get_queue" "-1" "qconf error or binary not found"
+     return
+  }
+
+  # split each line as listelement
+  set help [split $result "\n"]
+
+  foreach elem $help {
+     set id [lindex $elem 0]
+     set value [string trim [lrange $elem 1 end] "{}"]
+     
+     if { $id != "" } {
+        set chgar($id) $value
+#        puts $CHECK_OUTPUT "queue($id) = $value"
+     }
+  }
+}
+
+#                                                             max. column:     |
+#****** sge_procedures/suspend_queue() ******
+# 
+#  NAME
+#     suspend_queue -- set a queue in suspend mode
+#
+#  SYNOPSIS
+#     suspend_queue { qname } 
+#
+#  FUNCTION
+#     This procedure will set the given queue into suspend state
+#
+#  INPUTS
+#     qname - name of the queue to suspend 
+#
+#  RESULT
+#     0  - ok
+#    -1  - error 
+#
+#  SEE ALSO
+#     sge_procedures/mqattr()
+#     sge_procedures/set_queue() 
+#     sge_procedures/add_queue()
+#     sge_procedures/del_queue()
+#     sge_procedures/get_queue()
+#     sge_procedures/suspend_queue()
+#     sge_procedures/unsuspend_queue()
+#     sge_procedures/disable_queue()
+#     sge_procedures/enable_queue()
+#*******************************
+proc suspend_queue { qname } {
+  global ts_config
+ global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
+ global CHECK_OUTPUT
+  log_user 0 
+  set WAS_SUSPENDED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_SUSPENDQ_SSS] "*" "*" "*" ]
+
+  
+  # spawn process
+  set program "$ts_config(product_root)/bin/$CHECK_ARCH/qmod"
+  set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-s $qname" ]
+  set sp_id [ lindex $sid 1 ]
+  set result -1	
+
+  log_user 0
+  set timeout 30
+  expect {
+     -i $sp_id full_buffer {
+         set result -1
+         add_proc_error "suspend_queue" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+     }
+     -i $sp_id "was suspended" {
+         set result 0
+     }
+      -i $sp_id $WAS_SUSPENDED {
+         set result 0
+     }
+
+	  -i $sp_id default {
+         puts $CHECK_OUTPUT $expect_out(buffer)
+	      set result -1
+	  }
+  }
+  # close spawned process 
+  close_spawn_process $sid
+  log_user 1
+  if { $result != 0 } {
+     add_proc_error "suspend_queue" -1 "could not suspend queue \"$qname\""
+  }
+
+  return $result
+}
+
+#                                                             max. column:     |
+#****** sge_procedures/unsuspend_queue() ******
+# 
+#  NAME
+#     unsuspend_queue -- set a queue in suspend mode
+#
+#  SYNOPSIS
+#     unsuspend_queue { queue } 
+#
+#  FUNCTION
+#     This procedure will set the given queue into unsuspend state
+#
+#  INPUTS
+#     queue - name of the queue to set into unsuspend state
+#
+#  RESULT
+#     0  - ok
+#    -1  - error 
+#
+#  SEE ALSO
+#     sge_procedures/mqattr()
+#     sge_procedures/set_queue() 
+#     sge_procedures/add_queue()
+#     sge_procedures/del_queue()
+#     sge_procedures/get_queue()
+#     sge_procedures/suspend_queue()
+#     sge_procedures/unsuspend_queue()
+#     sge_procedures/disable_queue()
+#     sge_procedures/enable_queue()
+#*******************************
+proc unsuspend_queue { queue } {
+  global ts_config
+   global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
+   global CHECK_OUTPUT
+
+  set timeout 30
+  log_user 0 
+   
+  set UNSUSP_QUEUE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_UNSUSPENDQ_SSS] "*" "*" "*" ]
+
+  # spawn process
+  set program "$ts_config(product_root)/bin/$CHECK_ARCH/qmod"
+  set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-us $queue" ]     
+  set sp_id [ lindex $sid 1 ]
+  set result -1	
+  log_user 0 
+
+  set timeout 30
+  expect {
+      -i $sp_id full_buffer {
+         set result -1
+         add_proc_error "unsuspend_queue" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+      }
+      -i $sp_id "unsuspended queue" {
+         set result 0 
+      }
+      -i $sp_id  $UNSUSP_QUEUE {
+         set result 0 
+      }
+      -i $sp_id default {
+         puts $CHECK_OUTPUT $expect_out(buffer) 
+         set result -1 
+      }
+  }
+  # close spawned process 
+  close_spawn_process $sid
+  log_user 1   
+  if { $result != 0 } {
+     add_proc_error "unsuspend_queue" -1 "could not unsuspend queue \"$queue\""
+  }
+  return $result
+}
+
+#                                                             max. column:     |
+#****** sge_procedures/disable_queue() ******
+# 
+#  NAME
+#     disable_queue -- disable queues
+#
+#  SYNOPSIS
+#     disable_queue { queue } 
+#
+#  FUNCTION
+#     Disable the given queue/queue list
+#
+#  INPUTS
+#     queue - name of queues to disable
+#
+#  RESULT
+#     0  - ok
+#    -1  - error
+#
+#  SEE ALSO
+#     sge_procedures/mqattr()
+#     sge_procedures/set_queue() 
+#     sge_procedures/add_queue()
+#     sge_procedures/del_queue()
+#     sge_procedures/get_queue()
+#     sge_procedures/suspend_queue()
+#     sge_procedures/unsuspend_queue()
+#     sge_procedures/disable_queue()
+#     sge_procedures/enable_queue()
+#*******************************
+proc disable_queue { queuelist } {
+  global ts_config
+ global CHECK_ARCH open_spawn_buffer 
+  global CHECK_OUTPUT CHECK_HOST CHECK_USER
+  global CHECK_CORE_MASTER CHECK_USER
+  
+  set return_value ""
+  # spawn process
+
+  set nr_of_queues 0
+  set nr_disabled 0
+
+  foreach elem $queuelist {
+     set queue_name($nr_of_queues) $elem
+     incr nr_of_queues 1
+  }
+
+  set queue_nr 0
+  while { $queue_nr != $nr_of_queues } {
+     log_user 0
+     set queues ""
+     set i 10  ;# maximum 10 queues at one time
+     while { $i > 0 } {
+        if { $queue_nr < $nr_of_queues } {
+           append queues " $queue_name($queue_nr)"
+           incr queue_nr 1
+        }
+        incr i -1
+     }   
+     
+     set result ""
+     set catch_return [ catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qmod -d $queues" } result ]
+     debug_puts $CHECK_OUTPUT "disable queue(s) $queues"
+     set res_split [ split $result "\n" ]   
+     foreach elem $res_split {
+        if { [ string first "has been disabled" $result ] >= 0 } {
+           incr nr_disabled 1 
+        } else {
+           # try to find localized output
+           foreach q_name $queues {
+              set HAS_DISABLED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_DISABLEQ_SSS] $q_name $CHECK_USER "*" ]
+               
+              if { [ string match "*$HAS_DISABLED" $result ] } {
+                 incr nr_disabled 1
+                 break
+              } 
+           }
+        }
+     }
+  }    
+
+  if { $nr_of_queues != $nr_disabled } {
+     add_proc_error "disable_queue" "-1" "could not disable all queues"
+     return -1
+  }
+ 
+  return 0
+}
+
+
+#                                                             max. column:     |
+#****** sge_procedures/enable_queue() ******
+# 
+#  NAME
+#     enable_queue -- enable queuelist
+#
+#  SYNOPSIS
+#     enable_queue { queue } 
+#
+#  FUNCTION
+#     This procedure enables a given queuelist by calling the qmod -e binary
+#
+#  INPUTS
+#     queue - name of queues to enable (list)
+#
+#  RESULT
+#     0  - ok
+#    -1  - on error
+#
+#  SEE ALSO
+#     sge_procedures/mqattr()
+#     sge_procedures/set_queue() 
+#     sge_procedures/add_queue()
+#     sge_procedures/del_queue()
+#     sge_procedures/get_queue()
+#     sge_procedures/suspend_queue()
+#     sge_procedures/unsuspend_queue()
+#     sge_procedures/disable_queue()
+#     sge_procedures/enable_queue()
+#*******************************
+proc enable_queue { queuelist } {
+  global ts_config
+  global CHECK_ARCH open_spawn_buffer 
+  global CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_CORE_MASTER 
+  
+  set return_value ""
+  # spawn process
+
+  set nr_of_queues 0
+  set nr_enabled 0
+
+  foreach elem $queuelist {
+     set queue_name($nr_of_queues) $elem
+     incr nr_of_queues 1
+  }
+
+  set queue_nr 0
+  while { $queue_nr != $nr_of_queues } {
+     log_user 0
+     set queues ""
+     set i 10  ;# maximum 10 queues at one time
+     while { $i > 0 } {
+        if { $queue_nr < $nr_of_queues } {
+           append queues " $queue_name($queue_nr)"
+           incr queue_nr 1
+        }
+        incr i -1
+     }   
+     set result ""
+     set catch_return [ catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qmod -e $queues" } result ]
+     debug_puts $CHECK_OUTPUT "enable queue(s) $queues"
+     set res_split [ split $result "\n" ]   
+     foreach elem $res_split {
+        if { [ string first "has been enabled" $result ] >= 0 } {
+           incr nr_enabled 1 
+        } else {
+           # try to find localized output
+           foreach q_name $queues {
+              set BEEN_ENABLED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_ENABLEQ_SSS] $q_name $CHECK_USER "*" ]
+              if { [ string match "*$BEEN_ENABLED" $result ] } {
+                 incr nr_enabled 1
+                 break
+              } 
+           }
+        }
+     }
+  }    
+
+  if { $nr_of_queues != $nr_enabled } {
+     add_proc_error "enable_queue" "-1" "could not enable all queues"
+     return -1
+  }
+  return 0
+}
+
+
+#                                                             max. column:     |
+#****** sge_procedures/get_queue_state() ******
+# 
+#  NAME
+#     get_queue_state -- get the state of a queue
+#
+#  SYNOPSIS
+#     get_queue_state { queue } 
+#
+#  FUNCTION
+#     This procedure returns the state of the queue by parsing output of qstat -f. 
+#
+#  INPUTS
+#     queue - name of the queue
+#
+#  RESULT
+#     The return value can contain more than one state. Here is a list of possible
+#     states:
+#
+#     u(nknown)
+#     a(larm)
+#     A(larm)
+#     C(alendar  suspended)
+#     s(uspended)
+#     S(ubordinate)
+#     d(isabled)
+#     D(isabled)
+#     E(rror)
+#
+#*******************************
+proc get_queue_state { queue } {
+  global ts_config
+
+  global CHECK_ARCH
+
+  set catch_return [ catch { 
+     eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat -f -q $queue" 
+  } result ]
+
+  if { $catch_return != 0 } {
+     add_proc_error "get_queue_state" "-1" "qstat error or binary not found"
+     return ""
+  }
+
+  # split each line as listelement
+  set back ""
+  set help [split $result "\n"]
+  foreach line $help { 
+      if { [ string compare [lindex $line 0] $queue ] == 0 } {
+         set back [lindex $line 5 ]
+         return $back
+      }
+  }
+
+  add_proc_error "get_queue_state" -1 "queue \"$queue\" not found" 
+  return ""
 }
 
 
@@ -2083,21 +3160,15 @@ proc set_pe { pe_obj change_array } {
 
   set MODIFIED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
+  set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
 
-   if { $ts_config(gridengine_version) == 53 } {
-      set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
-   } else {
-      # JG: TODO: is it the right message? It's the only one mentioning non 
-      #           existing userset, but only for CQUEUE?
-      set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CQUEUE_UNKNOWNUSERSET_S] "*" ]
-   }
 
   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mp $pe_obj" $vi_commands $MODIFIED $ALREADY_EXISTS $NOT_EXISTS ]
   
   if {$result == -1 } { add_proc_error "set_pe" -1 "timeout error" }
   if {$result == -2 } { add_proc_error "set_pe" -1 "parallel environment \"$pe_obj\" already exists" }
   if {$result == -3 } { add_proc_error "set_pe" -1 "something (perhaps a queue) does not exist" }
-  if {$result != 0  } { add_proc_error "set_pe" -1 "could not change parallel environment \"$pe_obj\"" }
+  if {$result != 0  } { add_proc_error "set_pe" -1 "could not add parallel environment \"$pe_obj\"" }
 
   return $result
 }
@@ -2854,7 +3925,7 @@ proc master_queue_of { job_id } {
 # return master queue of job
 # no master -> return "": ! THIS MAY NOT HAPPEN !
    puts $CHECK_OUTPUT "Looking for MASTER QUEUE of Job $job_id."
-   set master_queue ""         ;# return -1, if there is no master queue
+   set master_queue ""         ;# return -1, if there is no slave queue
    
    set result [get_standard_job_info $job_id]
    foreach elem $result {
@@ -3307,7 +4378,7 @@ proc mqattr { attribute entry queue_list } {
 
   set help "$attribute \"$entry\""   ;# create e.g. slots "5" as string
   set catch_return [ catch {  
-    eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -mattr queue $help $queue_list" 
+    eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -mqattr $help $queue_list" 
   } result ]
   if { $catch_return != 0 } {
      add_proc_error "mqattr" "-1" "qconf error or binary not found"
@@ -3547,8 +4618,8 @@ proc is_job_id { job_id } {
 #  SEE ALSO
 #     sge_procedures/submit_job()
 #*******************************
-proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
-   global ts_config
+proc delete_job { jobid { wait_for_end 0 }} {
+  global ts_config
    global CHECK_ARCH CHECK_OUTPUT open_spawn_buffer CHECK_HOST
    global CHECK_USER
 
@@ -3563,16 +4634,7 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
    if { [ is_job_id $jobid] } {
       # spawn process
       set program "$ts_config(product_root)/bin/$CHECK_ARCH/qdel"
-
-      # beginning with SGE 6.0 we need to specify if we want to delete jobs from
-      # other users (as admin user)
-      set args ""
-      if { $ts_config(gridengine_version) != 53 } {
-         if { $all_users } {
-            set args "-u '*'"
-         }
-      }
-      set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$program" "$args $jobid" ]
+      set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$program" "$jobid" ]
       set sp_id [ lindex $id 1 ]
       set timeout 60 	
       log_user 1
@@ -3701,7 +4763,7 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
 #     check/add_proc_error()
 #*******************************
 proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""} { cd_dir ""} { show_args 1 } } {
-  global ts_config
+   global ts_config
   global CHECK_HOST CHECK_ARCH CHECK_OUTPUT CHECK_USER
   global open_spawn_buffer CHECK_DEBUG_LEVEL
 
@@ -3717,39 +4779,20 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
 
   set arch [resolve_arch $host]
 
-  if { $ts_config(gridengine_version) == 60 } {
-     set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
-     set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
-     set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_S] "*"]
-     set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S] ]
-  } else {
-     set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-     set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
-     set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U] "*"]
-     set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
-  }
-
+  set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
   set ERROR_OPENING       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_FILE_ERROROPENINGXY_SS] "*" "*"]
   set NOT_ALLOWED_WARNING [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NOTINANYQ_S] "*" ]
-
-
-  
-
+  set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
   set JOB_ARRAY_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOBARRAY_UUUUSS] "*" "*" "*" "*" "*" "*" ]
   set JOB_ARRAY_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOBARRAY_UUUUSS] "__JOB_ID__" "" "" "" "__JOB_NAME__" "__JOB_ARG__"]
 
 
   set TRY_LATER           [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER]]
+  set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U] "*"]
   set USAGE               [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_USAGE_USAGESTRING] ]
 
-   if { $ts_config(gridengine_version) == 53 } {
-      set UNAMBIGUOUSNESS [translate $CHECK_HOST 1 0 0   [sge_macro MSG_JOB_MOD_JOBNAMEVIOLATESJOBNET_SSUU] "*" "*" "*" "*" ]
-      set NON_AMBIGUOUS   [translate $CHECK_HOST 1 0 0   [sge_macro MSG_JOB_MOD_JOBNETPREDECESSAMBIGUOUS_SUU] "*" "*" "*" ]
-   } else {
-      # JG: TODO: jobnet handling completely changed - what are the messages?
-      set UNAMBIGUOUSNESS "aösjfasökjfaöjf"
-      set NON_AMBIGUOUS   "aajapsoidfupoijpoaisdfup9"
-   }
+  set UNAMBIGUOUSNESS [translate $CHECK_HOST 1 0 0   [sge_macro MSG_JOB_MOD_JOBNAMEVIOLATESJOBNET_SSUU] "*" "*" "*" "*" ]
+  set NON_AMBIGUOUS   [translate $CHECK_HOST 1 0 0   [sge_macro MSG_JOB_MOD_JOBNETPREDECESSAMBIGUOUS_SUU] "*" "*" "*" ]
   set UNKNOWN_OPTION  [translate $CHECK_HOST 1 0 0   [sge_macro MSG_ANSWER_UNKOWNOPTIONX_S] "*" ]
   set NO_ACC_TO_PRJ1  [translate $CHECK_HOST 1 0 0   [sge_macro MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS] "*" "*"]
   set NO_ACC_TO_PRJ2  [translate $CHECK_HOST 1 0 0   [sge_macro MSG_STREE_USERTNOACCESS2PRJ_SS] "*" "*"]
@@ -3758,13 +4801,14 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set NOT_REQUESTABLE [translate $CHECK_HOST 1 0 0   [sge_macro MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S] "*" ]
   set CAN_T_RESOLVE   [translate $CHECK_HOST 1 0 0   [sge_macro MSG_SGETEXT_CANTRESOLVEHOST_S] "*" ]
   set UNKNOWN_RESOURCE1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWN_RESOURCE_S] "*" ]
+  set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
   set TO_MUCH_TASKS [translate $CHECK_HOST 1 0 0     [sge_macro MSG_JOB_MORETASKSTHAN_U] "*" ]
   set WARNING_OPTION_ALREADY_SET [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S] "*"]
   set ONLY_ONE_RANGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_ONLYONERANGE]]
   set PARSE_DUPLICATEHOSTINFILESPEC [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_DUPLICATEHOSTINFILESPEC]] 
 
   if { $ts_config(gridengine_version) == 60 } {
-     set COLON_NOT_ALLOWED "aöslfjaöskljf aöskljfaösdf"
+     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED] ]
   } else {
      set help_translation  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_COLON]]
      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_SC] "$help_translation" ":" ]
@@ -3825,7 +4869,8 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id -- $JOB_SUBMITTED {
              set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
              set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
-             if { $job_id_pos > $job_name_pos } {
+             set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
+             if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
                 add_proc_error "submit_job" "-1" "locale switches parameter for qsub string! This is not supported yet"
              }
              incr job_id_pos -1
@@ -4078,12 +5123,10 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id -- $ONLY_ONE_RANGE {
              set return_value -18
           }
-          -i $sp_id -- "$PARSE_DUPLICATEHOSTINFILESPEC" { 
+          -i $sp_id -- $PARSE_DUPLICATEHOSTINFILESPEC { 
              set return_value -19
           }
-          -i $sp_id -- "two files are specified for the same host" { 
-             set return_value -19
-          }
+
         }
      }
  
@@ -4439,11 +5482,7 @@ proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
   global ts_config
    global CHECK_ARCH CHECK_OUTPUT
 
-   if {$ts_config(gridengine_version) == 53} {
-      set catch_return [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" } result ]
-   } else {
-      set catch_return [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-g" "t" } result ]
-   }
+   set catch_return [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" } result ]
    if { $catch_return != 0 } {
       add_proc_error "get_standard_job_info" -1 "qstat error or binary not found"
       return ""
@@ -4844,11 +5883,8 @@ proc get_job_state { jobid { not_all_equal 0 } { taskid task_id } } {
    while { $my_timeout > [timestamp] && $states_all_equal == 0 } {   
       set states_all_equal 1
 
-      if {$ts_config(gridengine_version) == 53} {
-         set catch_state [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f" } result ]
-      } else {
-         set catch_state [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f" "-g" "t"} result ]
-      }
+      set catch_state [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f" } result ]
+   
       if { $catch_state != 0 } {
          puts $CHECK_OUTPUT "debug: $result"
          return -1
@@ -5415,7 +6451,7 @@ proc startup_qmaster {} {
   global ts_config
    global CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
-   global CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
+   global CHECK_START_SCRIPT_NAME CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
    global schedd_debug master_debug CHECK_DISPLAY_OUTPUT CHECK_SGE_DEBUG_LEVEL
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
@@ -5447,6 +6483,13 @@ proc startup_qmaster {} {
       puts $CHECK_OUTPUT $result
    }
    
+
+#   set output [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/default/common/$CHECK_START_SCRIPT_NAME" "-qmaster" ]
+
+#   if { [string first "found running qmaster with pid" $output] >= 0 } {
+#      add_proc_error "startup_qmaster" -1 "qmaster on host $CHECK_CORE_MASTER is allready running"
+#      return -1
+#   }
    return 0
 }
 
@@ -5481,7 +6524,7 @@ proc startup_scheduler {} {
   global ts_config
    global CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
-   global CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
+   global CHECK_START_SCRIPT_NAME CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
    global schedd_debug CHECK_DISPLAY_OUTPUT CHECK_SGE_DEBUG_LEVEL
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
@@ -5504,6 +6547,72 @@ proc startup_scheduler {} {
       start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_schedd" ""
    }
    
+   return 0
+}
+
+#                                                             max. column:     |
+#****** sge_procedures/startup_execd() ******
+# 
+#  NAME
+#     startup_execd -- ??? 
+#
+#  SYNOPSIS
+#     startup_execd { hostname } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     sge_procedures/shutdown_core_system()
+#     sge_procedures/shutdown_master_and_scheduler()
+#     sge_procedures/shutdown_all_shadowd()
+#     sge_procedures/shutdown_system_daemon()
+#     sge_procedures/startup_qmaster()
+#     sge_procedures/startup_execd()
+#     sge_procedures/startup_shadowd()
+#*******************************
+proc startup_execd { hostname } {
+  global ts_config
+   global CHECK_OUTPUT
+   global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global CHECK_START_SCRIPT_NAME CHECK_CORE_MASTER
+
+   if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+ 
+      if { [have_root_passwd] != 0  } {
+         add_proc_error "startup_execd" "-2" "no root password set or ssh not available"
+         return -1
+      }
+      set startup_user "root"
+   } else {
+      set startup_user $CHECK_USER
+   }
+
+   puts $CHECK_OUTPUT "starting up execd on host \"$hostname\" as user \"$startup_user\""
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/default/common/$CHECK_START_SCRIPT_NAME" "-execd"]
+
+   set ALREADY_RUNNING [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S] "*"]
+
+   if { [string match "*$ALREADY_RUNNING" $output ] } {
+      add_proc_error "startup_execd" -1 "execd on host $hostname is allready running"
+      return -1
+   }
+
    return 0
 }
 
@@ -5530,7 +6639,7 @@ proc startup_execd_raw { hostname } {
   global ts_config
    global CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
-   global CHECK_CORE_MASTER
+   global CHECK_START_SCRIPT_NAME CHECK_CORE_MASTER
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
       if { [have_root_passwd] != 0  } {
@@ -5555,6 +6664,71 @@ proc startup_execd_raw { hostname } {
       return -1
    }
    return 0
+}
+
+#                                                             max. column:     |
+#****** sge_procedures/startup_shadowd() ******
+# 
+#  NAME
+#     startup_shadowd -- ??? 
+#
+#  SYNOPSIS
+#     startup_shadowd { hostname } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     sge_procedures/shutdown_core_system()
+#     sge_procedures/shutdown_master_and_scheduler()
+#     sge_procedures/shutdown_all_shadowd()
+#     sge_procedures/shutdown_system_daemon()
+#     sge_procedures/startup_qmaster()
+#     sge_procedures/startup_execd()
+#     sge_procedures/startup_shadowd()
+#*******************************
+proc startup_shadowd { hostname } {
+  global ts_config
+   global CHECK_OUTPUT
+   global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global CHECK_START_SCRIPT_NAME
+
+
+   if { $CHECK_ADMIN_USER_SYSTEM == 0 } {  
+      if { [have_root_passwd] != 0  } {
+         add_proc_error "startup_shadowd" "-2" "no root password set or ssh not available"
+         return -1
+      }
+      set startup_user "root"
+   } else {
+      set startup_user $CHECK_USER
+   }
+ 
+
+   puts $CHECK_OUTPUT "starting up shadowd on host \"$hostname\" as user \"$startup_user\""
+
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/default/common/$CHECK_START_SCRIPT_NAME" "-shadowd"]
+   puts $CHECK_OUTPUT $output
+   if { [string first "starting sge_shadowd" $output] >= 0 } {
+       return 0
+   }
+   add_proc_error "startup_shadowd" -1 "could not start shadowd on host $hostname:\noutput:\"$output\""
+   return -1
 }
 
 # return values: 
@@ -6170,13 +7344,13 @@ global CHECK_OUTPUT
 global CHECK_USER
 global CHECK_ADMIN_USER_SYSTEM do_compile
 
-   puts $CHECK_OUTPUT "killing scheduler and all execds in the cluster ..."
+   puts $CHECK_OUTPUT "killing qmaster, scheduler and all execds in the cluster ..."
 
    set result ""
    set do_ps_kill 0
-   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ke all -ks" ]
+   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ke all -ks -km" ]
 
-   puts $CHECK_OUTPUT "qconf -ke all -ks returned $prg_exit_state"
+   puts $CHECK_OUTPUT "qconf -ke all -ks -km returned $prg_exit_state"
    if { $prg_exit_state == 0 } {
       puts $CHECK_OUTPUT $result
    } else {
@@ -6184,59 +7358,40 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
    }
 
-   sleep 5  ;# give the schedd and execd's some time to shutdown
-
-   puts $CHECK_OUTPUT "killing qmaster ..."
-
-   set result ""
-   set do_ps_kill 0
-   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-km" ]
-
-   puts $CHECK_OUTPUT "qconf -km returned $prg_exit_state"
-   if { $prg_exit_state == 0 } {
-      puts $CHECK_OUTPUT $result
-   } else {
-      set do_ps_kill 1
-      puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
-   }
-
-   sleep 5  ;# give the qmaster some time to shutdown
-
-   if { $ts_config(gridengine_version) == 53 } {
-      puts $CHECK_OUTPUT "killing all commds in the cluster ..." 
-     
-      set do_it_as_root 0
-      foreach elem $CHECK_CORE_EXECD { 
-          puts $CHECK_OUTPUT "killing commd on host $elem"
-          if { $do_it_as_root == 0 } { 
-             set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-U -k -host $elem"  ]
-          } else {
-             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
-          } 
-          if { $prg_exit_state == 0 } {
-             puts $CHECK_OUTPUT $result
-          } else {
-             puts $CHECK_OUTPUT $result
-             if { $prg_exit_state == 255 } {
-                puts $CHECK_OUTPUT "\"sgecommdcntl -k\" must be started by root user (to get reserved port)!"
-                puts $CHECK_OUTPUT "try again as root user ..." 
-                if { [ have_root_passwd ] == -1 } {
-                   set_root_passwd 
-                }
-                if { $CHECK_ADMIN_USER_SYSTEM != 1 } {
-                   set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
-                }
+   sleep 5  ;# give the qmaster time
+   puts $CHECK_OUTPUT "killing all commds in the cluster ..." 
+  
+   set do_it_as_root 0
+   foreach elem $CHECK_CORE_EXECD { 
+       puts $CHECK_OUTPUT "killing commd on host $elem"
+       if { $do_it_as_root == 0 } { 
+          set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-U -k -host $elem"  ]
+       } else {
+          set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
+       } 
+       if { $prg_exit_state == 0 } {
+          puts $CHECK_OUTPUT $result
+       } else {
+          puts $CHECK_OUTPUT $result
+          if { $prg_exit_state == 255 } {
+             puts $CHECK_OUTPUT "\"sgecommdcntl -k\" must be started by root user (to get reserved port)!"
+             puts $CHECK_OUTPUT "try again as root user ..." 
+             if { [ have_root_passwd ] == -1 } {
+                set_root_passwd 
              }
-             if { $prg_exit_state == 0 } {
-                set do_it_as_root 1 
-                puts $CHECK_OUTPUT $result
-                puts $CHECK_OUTPUT "sgecommdcntl -k -host $elem - success"
-             } else {
-                set do_ps_kill 1
-                puts $CHECK_OUTPUT "shutdown_core_system - commdcntl error or binary not found"
+             if { $CHECK_ADMIN_USER_SYSTEM != 1 } {
+                set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
              }
           }
-      }
+          if { $prg_exit_state == 0 } {
+             set do_it_as_root 1 
+             puts $CHECK_OUTPUT $result
+             puts $CHECK_OUTPUT "sgecommdcntl -k -host $elem - success"
+          } else {
+             set do_ps_kill 1
+             puts $CHECK_OUTPUT "shutdown_core_system - commdcntl error or binary not found"
+          }
+       }
    }
    
    if { $do_ps_kill == 1 && $do_compile == 0} {

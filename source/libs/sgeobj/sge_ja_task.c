@@ -30,11 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <string.h>
-#include <strings.h>
-#include <stdlib.h>
-#include <ctype.h>
-
 #include "sge_string.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -43,11 +38,8 @@
 #include "sge_range.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sgeobj/sge_mesobj.h"
 
 #include "sge_job.h"
-#include "sgeobj/sge_idL.h"
-#include "sgeobj/sge_strL.h"
 
 #include "sge_usageL.h"
 
@@ -269,117 +261,3 @@ bool ja_task_clear_finished_pe_tasks(lListElem *ja_task)
    DEXIT;
    return true;
 }
-
-/****** parse/sge_parse_jobtasks() *********************************************
-*  NAME
-*     sge_parse_jobtasks() -- parse array task ranges 
-*
-*  SYNOPSIS
-*     int sge_parse_jobtasks(lList **ipp, lListElem **idp, const char 
-*     *str_jobtask, lList **alpp, bool include_names, lList *arrayDefList) 
-*
-*  FUNCTION
-*    parses a job ids with or without task ranges following this pattern: 
-*     Digit = '0' | '1' | ... | '9' .
-*     JobId = Digit { Digit } .
-*     TaskIdRange = TaskId [ '-' TaskId [  ':' Digit ] ] .
-*     JobTasks = JobId [ '.' TaskIdRange ] .
-*
-*   in case of a job name, the task range has to be specified extra. This
-*   will be colleced in an extra list and handed in as the arrayDefList
-*
-*  INPUTS
-*     lList **ipp             - ID_Type List, target list
-*     lListElem **idp         - New ID_Type-Elem parsed from str_jobtask 
-*     const char *str_jobtask - job id with task range or job name 
-*     lList **alpp            - answer list 
-*     bool include_names      - true: job names are allowed
-*     lList *arrayDefList     - in case of job names, a list of array taskes
-*
-*  RESULT
-*     int - -1 no valid JobTask-Identifier
-*           0 everything went fine
-*
-*
-*  NOTES
-*     MT-NOTE: sge_parse_jobtasks() is MT safe 
-*
-*******************************************************************************/
-int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,   
-                        lList **alpp, bool include_names, lList *arrayDefList) {
-   char *token;
-   char *job_str;
-   lList *task_id_range_list = NULL;
-   int ret = 1;
-
-   DENTER(TOP_LAYER, "sge_parse_jobtasks");
-   job_str = strdup(str_jobtask);
-
-   /*
-   ** dup the input string for tokenizing
-   */
-   if (isdigit(job_str[0])) {
-      if ((token = strchr(job_str, '.')) != NULL){
-         token[0] = '\0';
-         token++;
-         range_list_parse_from_string(&task_id_range_list, alpp, token,
-                                      0, 1, INF_NOT_ALLOWED);
-         if (*alpp || !task_id_range_list) {
-            ret = -1;
-         }
-      }
-   }
-
-   if (arrayDefList != NULL) {
-      if (task_id_range_list == NULL) {
-         task_id_range_list = lCopyList(lGetListName(arrayDefList), arrayDefList);
-      }
-      else {
-         lAddList(task_id_range_list, lCopyList("",arrayDefList));
-      }
-   }
-
-   if (ret == 1) {
-      if (!include_names && !isdigit(job_str[0]) && strcmp(job_str, "\"*\"")) {
-         ret = -1;
-      }
-      else {   
-         *idp = lAddElemStr(ipp, ID_str, job_str, ID_Type);
-         if (*idp) {
-            range_list_sort_uniq_compress(task_id_range_list, alpp);
-            lSetList(*idp, ID_ja_structure, task_id_range_list);
-         }
-      }
-   }
-   /*
-   ** free the dupped string
-   */
-   FREE(job_str); 
-   DEXIT;
-   return ret;
-}
-
-/* EB: ADOC: add commets */
-
-bool
-ja_task_message_add(lListElem *this_elem, u_long32 type, const char *message)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "ja_task_message_add");
-   ret = object_message_add(this_elem, JAT_message_list, type, message);
-   DEXIT;
-   return ret;
-}
-
-bool
-ja_task_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "ja_task_message_trash_all_of_type_X");
-   ret = object_message_trash_all_of_type_X(this_elem, JAT_message_list, type);
-   DEXIT;
-   return ret;
-}
-

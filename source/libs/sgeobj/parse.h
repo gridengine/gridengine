@@ -58,11 +58,13 @@ bool parse_flag(lList **ppcmdline, const char *opt, lList **ppal, u_long32 *pfla
 
 int parse_string(lList **ppcmdline, const char *opt, lList **ppal, char **str);
 
-bool parse_multi_jobtaskslist(lList **ppcmdline, const char *opt, lList **ppal, lList **ppdestlist, bool include_names, u_long32 action);
+bool parse_multi_jobtaskslist(lList **ppcmdline, const char *opt, lList **ppal, lList **ppdestlist, bool include_names);
 
 int sge_unparse_ma_list(lList *head, char *mail_str, unsigned int mail_str_len); 
 
-u_long32 parse_group_options(lList *string_list, lList **anser_list);
+int sge_parse_jobtasks(lList **lp, lListElem **idp, const char *str, lList **alpp, bool include_names);
+
+u_long32 parse_group_options(lList *string_list);
 
 bool sge_parse_bitfield_str(const char *str, const char *set_specifier[],
                            u_long32 *value, const char *name, lList **alpp,  bool none_allowed);

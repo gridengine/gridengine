@@ -51,6 +51,10 @@
 int gettimeofday(struct timeval *tz, struct timezone *tzp);
 #endif
 
+#if defined(SUN4) || defined(AIX32)
+#  define TIMES_RETURNS_ZERO
+#endif
+ 
 #define NESTLEVEL 5
 
 /* MT-NOTE: stopwatch profiling used in qmaster, qstat and qmon only */
@@ -361,6 +365,9 @@ void sge_stopwatch_start(int i)
             time_log_interval[j] = -1;
          }
       }
+#if defined(SUN4) || defined(AIX32)
+      inittime = sge_get_gmt();
+#endif
       first = 0;
    }
  

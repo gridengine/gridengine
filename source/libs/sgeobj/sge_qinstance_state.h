@@ -39,7 +39,6 @@
 /*
  * QI states
  */
-#define QI_DEFAULT                     0x00000000 
 #define QI_ALARM                       0x00000001
 #define QI_SUSPEND_ALARM               0x00000002
 #define QI_DISABLED                    0x00000004
@@ -51,7 +50,6 @@
 #define QI_CAL_SUSPENDED               0x00040000
 #define QI_AMBIGUOUS                   0x00080000
 #define QI_ORPHANED                    0x00100000
-#define QI_FULL                        0x00200000
 
 /*
  * QI state transition
@@ -76,10 +74,6 @@
 #  define QI_DO_SETAMBIGUOUS           0x02000000
 #  define QI_DO_CLEARAMBIGUOUS         0x04000000
 #endif
-
-/* job/queue state transition via job identifier */
-#define JOB_DO_ACTION                  0x80000000
-#define QUEUE_DO_ACTION                0x40000000
 
 /*
  *
@@ -111,9 +105,9 @@ transition_option_is_valid_for_qinstance(u_long32 option, lList **answer_list);
 
 bool qinstance_has_state(const lListElem *this_elem, u_long32 bit); 
 
-const char * qinstance_state_as_string(u_long32 bit);
+const char *
+qinstance_state_as_string(u_long32 bit);
 
-u_long32 qinstance_state_from_string(const char* state, lList **answer_list, u_long32 filter);
 /* */
 
 void 
@@ -142,9 +136,6 @@ qinstance_state_set_cal_disabled(lListElem *this_elem, bool set_state);
 
 void 
 qinstance_state_set_cal_suspended(lListElem *this_elem, bool set_state);
-
-void 
-qinstance_state_set_full(lListElem *this_elem, bool set_state);
 
 void
 qinstance_state_set_orphaned(lListElem *this_elem, bool set_state);
@@ -187,9 +178,6 @@ qinstance_state_is_orphaned(const lListElem *this_elem);
 
 bool
 qinstance_state_is_ambiguous(const lListElem *this_elem);
-
-bool 
-qinstance_state_is_full(const lListElem *this_elem);
 
 bool 
 qinstance_state_append_to_dstring(const lListElem *this_elem, dstring *string);

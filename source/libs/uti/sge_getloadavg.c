@@ -69,7 +69,7 @@
 #elif defined(ALPHA4) || defined(ALPHA5)
 #  include <nlist.h>
 #  include <sys/table.h>
-#elif defined(IRIX)
+#elif defined(IRIX6)
 #  include <sys/sysmp.h> 
 #  include <sys/sysinfo.h> 
 #elif defined(HP10) 
@@ -79,7 +79,7 @@
 #  include <sys/file.h>
 #  include <errno.h>
 #  include <unistd.h> 
-#elif defined(HP11) || defined(HP1164)
+#elif defined(HP11)
 #  include <sys/param.h>
 #  include <sys/pstat.h>
 #elif defined(CRAY)
@@ -142,9 +142,6 @@
 #  include <sys/resource.h>
 #  include <fcntl.h>
 #  include <kvm.h>
-#elif defined(AIX51)
-#  include <sys/sysinfo.h>
-#  include <nlist.h>
 #endif
 
 #define KERNEL_TO_USER_AVG(x) ((double)x/SGE_FSCALE)
@@ -173,7 +170,7 @@
 #  define SGE_FSCALE 1000.0
 #  define KERNEL_AVG_TYPE long
 #  define CPUSTATES 4
-#elif defined(IRIX)
+#elif defined(IRIX6)
 #  define SGE_FSCALE 1024.0
 #  define KERNEL_AVG_TYPE long
 #  define KERNEL_AVG_NAME "avenrun"
@@ -187,12 +184,6 @@
 #  define KERNEL_AVG_TYPE double 
 #  define VMUNIX "/stand/vmunix"
 #  define X_CP_TIME 0 
-#elif defined(AIX51)
-#  define KERNEL_NAME_FILE "/unix"
-#  define KERNEL_AVG_NAME "avenrun"
-#  define KERNEL_AVG_TYPE long long
-#  define CPUSTATES 4 /* CPU_IDLE, CPU_USER, CPU_KERNEL, CPU_WAIT */
-#  define SGE_FSCALE 1024.0
 #endif
 
 #if defined(SOLARIS) || defined(SOLARIS64) || defined(FREEBSD)
@@ -205,7 +196,7 @@ typedef int kernel_fd_type;
 static long percentages(int cnt, double *out, long *new, long *old, long *diffs);   
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(HPUX) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX) || defined(LINUX) || defined(DARWIN) || defined(AIX51)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(HP10) || defined(HP11) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX6) || defined(LINUX) || defined(DARWIN)
 
 #ifndef DARWIN
 static int get_load_avg(double loadv[], int nelem);    
@@ -219,7 +210,7 @@ static double get_cpu_load(void);
 static char* skip_token(char *p); 
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(SOLARIS) || defined(SOLARIS64)|| defined(IRIX) || defined(HP10) || defined(FREEBSD) || defined(AIX51)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(SOLARIS) || defined(SOLARIS64)|| defined(IRIX6) || defined(HP10) || defined(FREEBSD)
 
 static int sge_get_kernel_fd(kernel_fd_type *kernel_fd);
 
@@ -236,7 +227,7 @@ static int kernel_initialized = 0;
 static kernel_fd_type kernel_fd;
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX) || defined(HP10) || defined(FREEBSD) || defined(AIX51)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX6) || defined(HP10) || defined(FREEBSD)
 
 static int sge_get_kernel_address(
 char *name,
@@ -246,7 +237,7 @@ long *address
 
    DENTER(TOP_LAYER, "sge_get_kernel_address");
 
-#if defined(IRIX)
+#if defined(IRIX6)
    if (!strcmp(KERNEL_AVG_NAME, name)) {
       *address = sysmp(MP_KERNADDR, MPKA_AVENRUN); 
       ret = 1;
@@ -256,18 +247,12 @@ long *address
    }
 #else
    {
-#if defined(AIX51)
-      struct nlist64 kernel_nlist[2];
-#else
       struct nlist kernel_nlist[2];
-#endif
 
       kernel_nlist[0].n_name = name;
       kernel_nlist[1].n_name = NULL;
-#  if defined(ALPHA4) || defined(ALPHA5) || defined(HPUX)
+#  if defined(ALPHA4) || defined(ALPHA5) || defined(HP10) || defined(HP11)
       if (nlist(KERNEL_NAME_FILE, kernel_nlist) >= 0)
-#  elif defined(AIX51)
-      if (nlist64(KERNEL_NAME_FILE, kernel_nlist) >= 0)
 #  else
       if (kernel_initialized && (kvm_nlist(kernel_fd, kernel_nlist) >= 0)) 
 #  endif
@@ -289,15 +274,13 @@ long *address
 static int sge_get_kernel_fd(
 kernel_fd_type *fd 
 ) {
-#if !(defined(IRIX) || defined(HP10) || defined(ALPHA4) || defined(ALPHA5) || defined(AIX51))
    char prefix[256] = "my_error:";
-#endif   
 
    DENTER(TOP_LAYER, "sge_get_kernel_fd");
 
    if (!kernel_initialized) {
 
-#if defined(IRIX) || defined(HP10) || defined(ALPHA4) || defined(ALPHA5) || defined(AIX51)
+#if defined(IRIX6) || defined(HP10) || defined(ALPHA4) || defined(ALPHA5) 
       kernel_fd = open("/dev/kmem", 0);
       if (kernel_fd != -1) 
 #else 
@@ -722,7 +705,7 @@ double get_cpu_load() {
    return cpu_load;
 }
 
-#elif defined(IRIX)
+#elif defined(IRIX6)
 
 double get_cpu_load() 
 {
@@ -778,7 +761,7 @@ static double get_cpu_load()
    return cpu_load;
 }    
 
-#elif defined(HP11) || defined(HP1164)
+#elif defined(HP11)
 
 static double get_cpu_load()
 {  
@@ -845,37 +828,9 @@ double get_cpu_load()
    return cpu_load;
 }
 
-#elif defined(AIX51)
-
-double get_cpu_load()
-{
-   static long cpu_time[CPUSTATES];
-   static long cpu_old[CPUSTATES];
-   static long cpu_diff[CPUSTATES];
-   double cpu_states[CPUSTATES];
-   double cpu_load;
-   struct sysinfo sys_info;
-   long address = 0;
-   int i;
-
-   if (sge_get_kernel_fd(&kernel_fd)
-       && sge_get_kernel_address("sysinfo", &address)) {
-      getkval(address, (long*)&cpu_time, sizeof(cpu_time), "sysinfo");
-      percentages(CPUSTATES, cpu_states, cpu_time, cpu_old, cpu_diff);
-
-      cpu_load = cpu_states[CPU_USER] + cpu_states[CPU_KERNEL];
-      if (cpu_load < 0.0) {
-         cpu_load = -1.0;
-      }
-   } else {
-      cpu_load = -1.0;
-   }
-   return cpu_load;
-}
-
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || (defined(SOLARIS) && !defined(SOLARIS64)) || defined(AIX51)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX6) || defined(HP10) || (defined(SOLARIS) && !defined(SOLARIS64))
 
 static int get_load_avg(
 double loadavg[],
@@ -901,7 +856,7 @@ int nelem
    return elements;
 }
 
-#elif defined(HP11) || defined(HP1164)
+#elif defined(HP11)
 
 static int get_load_avg(
 double loadavg[],
@@ -1149,13 +1104,38 @@ int nelem
    return 0;
 }
 
+#if 0
+/* #elif defined(DARWIN) */
+
+ static int get_load_avg(
+ double loadavg[],
+ int nelem
+ ) {
+     kern_return_t error;
+     struct host_load_info load_data;
+     int host_count = sizeof(load_data)/sizeof(integer_t);
+     mach_port_t host_priv_port = mach_host_self();
+     error = host_statistics(host_priv_port, HOST_LOAD_INFO,
+                       (host_info_t)&load_data, &host_count);
+     if (error != KERN_SUCCESS) {
+         return -1;
+     } else {
+         loadavg[0] = (double)load_data.avenrun[0] / LOAD_SCALE;
+         loadavg[1] = (double)load_data.avenrun[1] / LOAD_SCALE;
+         loadavg[2] = (double)load_data.avenrun[2] / LOAD_SCALE;
+         return 0;
+     }
+}
+
+#endif 
+
 #endif 
 
 
 int get_channel_fd()
 {
    if (kernel_initialized) {
-#if defined(SOLARIS) || defined(SOLARIS64) || defined(LINUX) || defined(HP11) || defined(HP1164) || defined(FREEBSD)
+#if defined(SOLARIS) || defined(SOLARIS64) || defined(LINUX) || defined(HP11) || defined(FREEBSD)
       return -1;
 #else
       return kernel_fd;
@@ -1173,7 +1153,7 @@ int nelem
 
 #if defined(SOLARIS64) || defined(FREEBSD) || defined(DARWIN)
    elem = getloadavg(loadavg, nelem); /* <== library function */
-#elif (defined(SOLARIS) && !defined(SOLARIS64)) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(AIX51)
+#elif (defined(SOLARIS) && !defined(SOLARIS64)) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX6) || defined(HP10) || defined(HP11) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX)
    elem = get_load_avg(loadavg, nelem); 
 #else
    elem = -1;    

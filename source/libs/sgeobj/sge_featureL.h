@@ -44,21 +44,42 @@ extern "C" {
 
 enum {
    FES_id = FES_LOWERBOUND,
-   FES_active
+   FES_active,
+   FES_features
 };
 
 LISTDEF(FES_Type)
    SGE_ULONG(FES_id, CULL_DEFAULT)
    SGE_ULONG(FES_active, CULL_DEFAULT)
+   SGE_LIST(FES_features, FE_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(FESN)
    NAME("FES_id")             /* unique feature set id (see enum *
                                * featureset_id_t) */
    NAME("FES_active")         /* boolean */
+   NAME("FES_features")       /* list of supported features */
 NAMEEND
 
 #define FESS sizeof(FESN)/sizeof(char*)
+enum {
+   FE_id = FE_LOWERBOUND,
+   FE_enabled
+};
+
+LISTDEF(FE_Type)
+   SGE_ULONG(FE_id, CULL_DEFAULT)           /* unique id (see enum below) */
+   SGE_ULONG(FE_enabled, CULL_DEFAULT)      /* is this feature currently enabled? */
+LISTEND 
+
+NAMEDEF(FEN)
+   NAME("FE_id")
+   NAME("FE_enabled")
+NAMEEND
+
+/* *INDENT-ON* */
+
+#define FES sizeof(FEN)/sizeof(char*)
 #ifdef  __cplusplus
 }
 #endif

@@ -45,6 +45,7 @@
 #define MSG_BERKELEY_PUTERROR_SS _MESSAGE(70006, _("error writing object with key "SFQ" into berkeley database: "SFN"\n"))
 #define MSG_BERKELEY_QUERYERROR_SS _MESSAGE(70007, _("error retrieving data ("SFQ") from berkeley database: "SFN"\n"))
 #define MSG_BERKELEY_DELETEERROR_SS _MESSAGE(70008, _("error deleting record with key "SFQ" from berkeley database: "SFN"\n"))
+/* #define MSG_BERKELEY_COULDNTSETCACHE_SS _MESSAGE(70009, _("couldn't set cache size in berkeley database "SFN": "SFN"\n")) */
 #define MSG_BERKELEY_NULLVALUEASKEY _MESSAGE(70010, _("null value given as object primary key\n"))
 #define MSG_BERKELEY_TXNALREADYOPEN _MESSAGE(70017, _("cannot open new transaction: There is already one open\n"))
 #define MSG_BERKELEY_ERRORSTARTINGTRANSACTION_S _MESSAGE(70018, _("error starting a transaction: "SFN"\n"))
@@ -65,21 +66,16 @@
 /*
  * sge_bdb.c
  */
-#define MSG_BERKELEY_DATABASEDIRDOESNTEXIST_S _MESSAGE(70101, _("database directory "SFN" doesn't exist\n"))
-#define MSG_BERKELEY_COULDNTCREATEENVIRONMENT_S _MESSAGE(70102, _("couldn't create database environment: "SFN"\n"))
-#define MSG_BERKELEY_COULDNTOPENENVIRONMENT_SSS _MESSAGE(70103, _("couldn't open database environment for server "SFQ", directory "SFQ": "SFN"\n"))
-#define MSG_BERKELEY_COULDNTCLOSEENVIRONMENT_SS _MESSAGE(70104, _("couldn't close database environment: "SFN": "SFN"\n"))
-#define MSG_BERKELEY_COULDNTESETUPLOCKDETECTION_S _MESSAGE(70105, _("couldn't setup deadlock detection: "SFN"\n"))
-#define MSG_BERKELEY_COULDNTESETRPCSERVER_S _MESSAGE(70106, _("couldn't set rpc server in database environment: "SFN"\n"))
-#define MSG_BERKELEY_CONNECTION_LOST_SS _MESSAGE(70107, _("connection to rpc server "SFQ", database "SFQ" lost. Freeing all resources to prepare for a reconnect.\n"))
-#define MSG_BERKELEY_RUNRECOVERY _MESSAGE(70108, _("Corrupted database detected. Freeing all resources to prepare for a reconnect with recovery.\n"))
-#define MSG_BERKELEY_COULDNTSETLOCKERS_S _MESSAGE(70109, _("couldn't set maximum number of lockers: "SFN"\n"))
-#define MSG_BERKELEY_COULDNTSETOBJECTS_S _MESSAGE(70110, _("couldn't set maximum number of locked objects: "SFN"\n"))
-#define MSG_BERKELEY_COULDNTSETLOCKS_S _MESSAGE(70111, _("couldn't set maximum number of locks: "SFN"\n"))
+#define MSG_BERKELEY_DATABASEDIRDOESNTEXIST_S _MESSAGE(70100, _("database directory "SFN" doesn't exist\n"))
+#define MSG_BERKELEY_COULDNTCREATEENVIRONMENT_S _MESSAGE(70100, _("couldn't create database environment: "SFN"\n"))
+#define MSG_BERKELEY_COULDNTOPENENVIRONMENT_SS _MESSAGE(70100, _("couldn't open database environment "SFQ": "SFN"\n"))
+#define MSG_BERKELEY_COULDNTCLOSEENVIRONMENT_SS _MESSAGE(70100, _("couldn't close database environment: "SFN": "SFN"\n"))
+#define MSG_BERKELEY_COULDNTESETUPLOCKDETECTION_S _MESSAGE(70100, _("couldn't setup deadlock detection: "SFN"\n"))
+#define MSG_BERKELEY_COULDNTESETRPCSERVER_S _MESSAGE(70100, _("couldn't set rpc server in database environment: "SFN"\n"))
 
 /*
  * sge_bdb_types.c
  */
-#define MSG_BERKELEY_DBNOTINITIALIZED _MESSAGE(70200, _("database not initialized"))
+
 
 #endif /* __MSG_SPOOLLIB_BERKELEYDB_H */

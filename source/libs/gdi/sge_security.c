@@ -32,7 +32,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <pwd.h>
+#ifdef SGE_MT
 #include <pthread.h>
+#endif
 
 #include "cull.h"
 #include "sgermon.h"
@@ -58,12 +60,12 @@
 #include "sge_job.h"
 #include "sge_answer.h"
 
-
 #include "msg_common.h"
 #include "msg_gdilib.h"
-#include "sge_hostname.h"
-#include "cl_commlib.h"
+
+#ifdef SGE_MT
 #include "sge_mtutil.h"
+#endif
 
 #ifdef CRYPTO
 #include <openssl/evp.h>
@@ -156,55 +158,6 @@ void sge_security_exit(int i)
 }
 
 
-int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, char* component_name, unsigned long component_id, int synchron, unsigned long response_mid, cl_com_message_t** message, cl_com_endpoint_t** sender) {
-
-   int ret;
-   DENTER(TOP_LAYER, "gdi_receive_sec_message");
-
-#ifdef SECURE   
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      ret = sec_receive_message( handle, un_resolved_hostname,  component_name,  component_id,  synchron,   response_mid,  message, sender);
-      DEXIT;
-      return ret;
-   }                      
-#endif
-
-   ret = cl_commlib_receive_message(handle, un_resolved_hostname,  component_name,  component_id,  
-                                     synchron, response_mid,  message,  sender);
-
-   DEXIT;
-   return ret;
-}
-
-int gdi_send_sec_message(cl_com_handle_t* handle,
-                            char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                            cl_xml_ack_type_t ack_type, 
-                            cl_byte_t* data, unsigned long size , 
-                            unsigned long* mid, unsigned long response_mid, unsigned long tag ,
-                            int copy_data,
-                            int wait_for_ack) {
-   int ret;
-   DENTER(TOP_LAYER, "gdi_send_sec_message");
-
-   
-#ifdef SECURE
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      ret = sec_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
-                                  ack_type, data,  size ,
-                                  mid,  response_mid,  tag , copy_data, wait_for_ack);
-      DEXIT;
-      return ret;
-   }                      
-#endif
-
-   ret = cl_commlib_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
-                                  ack_type, data,  size ,
-                                  mid,  response_mid,  tag , copy_data, wait_for_ack);
-   DEXIT;
-   return ret;
-
-}
-
 /************************************************************
    COMMLIB/SECURITY WRAPPERS
    FIXME: FUNCTIONPOINTERS SHOULD BE SET IN sge_security_initialize !!!
@@ -215,97 +168,6 @@ int gdi_send_sec_message(cl_com_handle_t* handle,
    NOTES
       MT-NOTE: gdi_send_message() is MT safe (assumptions)
 *************************************************************/
-#ifdef ENABLE_NGC
-int gdi_send_message(
-int synchron,
-const char *tocomproc,
-int toid,
-const char *tohost,
-int tag,
-char *buffer,
-int buflen,
-u_long32 *mid,
-int compressed 
-) {
-   int ret;
-   cl_com_handle_t* handle = NULL;
-   cl_xml_ack_type_t ack_type;
-   unsigned long dummy_mid;
-   int use_execd_handle = 0;
-   DENTER(TOP_LAYER, "gdi_send_message");
-
-
-
-
-   /* CR- TODO: This is for tight integration of qrsh -inherit
-    *       
-    *       All GDI functions normally connect to qmaster, but
-    *       qrsh -inhert want's to talk to execd. A second handle
-    *       is created. All gdi functions should accept a pointer
-    *       to a cl_com_handle_t* handle and use this handle to
-    *       send/receive messages to the correct endpoint.
-    */
-   if ( tocomproc[0] == '\0') {
-      DEBUG((SGE_EVENT,"tocomproc is empty string\n"));
-   }
-   switch (uti_state_get_mewho()) {
-      case QMASTER:
-      case EXECD:
-         use_execd_handle = 0;
-         break;
-      default:
-         if (strcmp(tocomproc,prognames[QMASTER]) == 0) {
-            use_execd_handle = 0;
-         } else {
-            if (tocomproc != NULL && tocomproc[0] != '\0') {
-               use_execd_handle = 1;
-            }
-         }
-   }
-   
- 
-   if (use_execd_handle == 0) {
-      /* normal gdi send to qmaster */
-      DEBUG((SGE_EVENT,"standard gdi request to qmaster\n"));
-      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-   } else {
-      /* we have to send a message to another component than qmaster */
-      DEBUG((SGE_EVENT,"search handle to \"%s\"\n", tocomproc));
-      handle = cl_com_get_handle("execd_handle", 0);
-      if (handle == NULL) {
-         DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", tocomproc));
-         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,-1, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
-         handle = cl_com_get_handle("execd_handle", 0);
-      }
-   }
-
-   ack_type = CL_MIH_MAT_NAK;
-   if (synchron) {
-      ack_type = CL_MIH_MAT_ACK;
-   }
-   if (mid) {
-      dummy_mid = *mid;
-   }
-
-   DEBUG((SGE_EVENT,"gdi_send_message(): sending message to %s,%s,%ld\n",(char*)tohost,(char*)tocomproc ,(unsigned long)toid));
-   ret = gdi_send_sec_message( handle, 
-                                  (char*)tohost ,(char*)tocomproc ,toid , 
-                                  ack_type , 
-                                  (cl_byte_t*)buffer ,(unsigned long)buflen,
-                                  &dummy_mid , 0 ,tag,1 , synchron);
-   if (ret != CL_RETVAL_OK) {
-      /* try again ( if connection timed out) */
-      ret = gdi_send_sec_message( handle, 
-                                     (char*)tohost ,(char*)tocomproc ,toid ,
-                                     ack_type , 
-                                     (cl_byte_t*)buffer ,(unsigned long)buflen,
-                                     &dummy_mid , 0 ,tag,1 , synchron);
-   }
-
-   DEXIT;
-   return ret;
-}
-#else
 int gdi_send_message(
 int synchron,
 const char *tocomproc,
@@ -352,7 +214,6 @@ int compressed
    DEXIT;
    return ret;
 }
-#endif
 
 
 /* 
@@ -361,115 +222,6 @@ int compressed
  *     MT-NOTE: gdi_receive_message() is MT safe (major assumptions!)
  *
  */
-#ifdef ENABLE_NGC
-int gdi_receive_message(
-char *fromcommproc,
-u_short *fromid,
-char *fromhost,
-int *tag,
-char **buffer,
-u_long32 *buflen,
-int synchron,
-u_short *compressed 
-) {
-   int ret;
-   cl_com_handle_t* handle = NULL;
-   cl_com_message_t* message = NULL;
-   cl_com_endpoint_t* sender = NULL;
-   int use_execd_handle = 0;
-
-   DENTER(TOP_LAYER, "gdi_receive_message");
-
-      /* CR- TODO: This is for tight integration of qrsh -inherit
-    *       
-    *       All GDI functions normally connect to qmaster, but
-    *       qrsh -inhert want's to talk to execd. A second handle
-    *       is created. All gdi functions should accept a pointer
-    *       to a cl_com_handle_t* handle and use this handle to
-    *       send/receive messages to the correct endpoint.
-    */
-
-
-   if ( fromcommproc[0] == '\0') {
-      DEBUG((SGE_EVENT,"fromcommproc is empty string\n"));
-   }
-   switch (uti_state_get_mewho()) {
-      case QMASTER:
-      case EXECD:
-         use_execd_handle = 0;
-         break;
-      default:
-         if (strcmp(fromcommproc,prognames[QMASTER]) == 0) {
-            use_execd_handle = 0;
-         } else {
-            if (fromcommproc != NULL && fromcommproc[0] != '\0') {
-               use_execd_handle = 1;
-            }
-         }
-   }
-
-   if (use_execd_handle == 0) {
-      /* normal gdi send to qmaster */
-      DEBUG((SGE_EVENT,"standard gdi request to qmaster\n"));
-      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-   } else {
-      /* we have to send a message to another component than qmaster */
-      DEBUG((SGE_EVENT,"search handle to \"%s\"\n", fromcommproc));
-      handle = cl_com_get_handle("execd_handle", 0);
-      if (handle == NULL) {
-         DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", fromcommproc));
-         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,-1, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
-         handle = cl_com_get_handle("execd_handle", 0);
-      }
-   } 
-
-   ret = gdi_receive_sec_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
-
-   if (ret == CL_RETVAL_CONNECTION_NOT_FOUND ) {
-      if ( fromcommproc[0] != '\0' && fromhost[0] != '\0' ) {
-          /* The connection was closed, reopen it */
-          ret = cl_commlib_open_connection(handle,fromhost,fromcommproc, *fromid);
-          INFO((SGE_EVENT,"reopen connection to %s,%s,"U32CFormat" (1)\n", fromhost , fromcommproc , u32c(*fromid)));
-          if (ret == CL_RETVAL_OK) {
-             INFO((SGE_EVENT,"reconnected successfully\n"));
-             ret = gdi_receive_sec_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
-          } 
-      } else {
-         DEBUG((SGE_EVENT,"can't reopen a connection to unspecified host or commproc (1)\n"));
-      }
-   }
-
-   if (message != NULL && ret == CL_RETVAL_OK) {
-      *buffer = (char *)message->message;
-      message->message = NULL;
-      *buflen = message->message_length;
-      if (tag) {
-         *tag = message->message_tag;
-      }
-      if (compressed) {
-         *compressed = 0;
-      }
-
-      if (sender != NULL) {
-         DEBUG((SGE_EVENT,"received from: %s,"U32CFormat"\n",sender->comp_host, u32c(sender->comp_id)));
-         if (fromcommproc != NULL && fromcommproc[0] == '\0') {
-            strcpy(fromcommproc, sender->comp_name);
-         }
-         if (fromhost != NULL) {
-            strcpy(fromhost, sender->comp_host);
-         }
-         if (fromid != NULL) {
-            *fromid = sender->comp_id;
-         }
-      }
-   }
-   cl_com_free_message(&message);
-   cl_com_free_endpoint(&sender);
-
-   DEXIT;
-   return ret;
-}
-#else
 int gdi_receive_message(
 char *fromcommproc,
 u_short *fromid,
@@ -514,7 +266,6 @@ u_short *compressed
    DEXIT;
    return ret;
 }
-#endif
 
 
 /****** gdi/security/set_sec_cred() *******************************************
@@ -566,7 +317,7 @@ int set_sec_cred(lListElem *job)
          SGE_EXIT(1);
       }   
       
-      command_pid = sge_peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err, false);
+      command_pid = sge_peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err);
 
       if (command_pid == -1) {
          fprintf(stderr, MSG_QSUB_CANTSTARTCOMMANDXTOGETTOKENQSUBFAILED_S, binary);
@@ -599,7 +350,7 @@ int set_sec_cred(lListElem *job)
 
       sprintf(cmd, "%s %s%s%s", binary, "sge", "@", sge_get_master(0));
       
-      command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err, false);
+      command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err);
 
       if (command_pid == -1) {
          fprintf(stderr, MSG_QSH_CANTSTARTCOMMANDXTOGETCREDENTIALSQSUBFAILED_S, binary);
@@ -642,7 +393,7 @@ int set_sec_cred(lListElem *job)
          if (sge_get_token_cmd(binary, buf))
             goto error;
 
-         command_pid = sge_peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err, false);
+         command_pid = sge_peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err);
 
          if (command_pid == -1) {
             DPRINTF(("can't start command \"%s\" to get token\n",  binary));
@@ -680,7 +431,7 @@ int set_sec_cred(lListElem *job)
 
          sprintf(cmd, "%s %s%s%s", binary, "sge", "@", sge_get_master(0));
       
-         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err, false);
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err);
 
          if (command_pid == -1) {
             DPRINTF((buf, "can't start command \"%s\" to get credentials "
@@ -750,7 +501,9 @@ void cache_sec_cred(lListElem *jep, const char *rhost)
 
          sprintf(cmd, "%s %s%s%s", binary, "sge", "@", rhost);
 
-         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err, false);
+         sge_switch2start_user();
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         sge_switch2admin_user();
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU, 
@@ -820,7 +573,9 @@ void delete_credentials(lListElem *jep)
 
          sprintf(cmd, "%s -s %s", binary, "sge");
 
-         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err, false);
+         sge_switch2start_user();
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         sge_switch2admin_user();
 
          if (command_pid == -1) {
             strcpy(tmpstr, SGE_EVENT);
@@ -899,7 +654,9 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
       if (sge_get_token_cmd(binary, NULL) == 0) {
          sprintf(cmd, "%s -s %s -u %s", binary, "sge", lGetString(jep, JB_owner));
 
-         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err, false);
+         sge_switch2start_user();
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         sge_switch2admin_user();
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU,
@@ -1021,7 +778,9 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
          sprintf(cmd, "%s -s %s -u %s -b %s", binary, "sge",
                  lGetString(jelem, JB_owner), lGetString(jelem, JB_owner));
 
-         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err, false);
+         sge_switch2start_user();
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         sge_switch2admin_user();
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU, binary, u32c(lGetUlong(jelem, JB_job_number))));
@@ -1479,7 +1238,7 @@ int sge_security_verify_user(const char *host, const char *commproc, u_short id,
 }   
 
 /* MT-NOTE: sge_security_ck_to_do() is MT safe (assumptions) */
-void sge_security_event_handler(te_event_t anEvent)
+void sge_security_ck_to_do(void)
 {
 #ifdef SECURE
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
@@ -1491,4 +1250,3 @@ void sge_security_event_handler(te_event_t anEvent)
    krb_check_for_idle_clients();
 #endif
 }
-

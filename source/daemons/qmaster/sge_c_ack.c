@@ -45,6 +45,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time_eventL.h"
+#include "time_event.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "sge_job.h"
@@ -55,6 +56,7 @@
 
 
 static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);
+static void sge_c_event_ack(char *, char *, u_long32, u_long32, u_long32);
 
 /****************************************************
  Master code.
@@ -102,7 +104,7 @@ sge_pack_buffer *pb
          break;
 
       case ACK_EVENT_DELIVERY:
-         sge_handle_event_ack(ack_ulong2, ack_ulong);
+         sge_c_event_ack(host, commproc, ack_tag, ack_ulong, ack_ulong2);
          break;
 
       default:
@@ -196,7 +198,8 @@ u_long32 ack_ulong2
    case TAG_SIGQUEUE:
       DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qinstance, QU_qname)));
                lSetUlong(qinstance, QU_pending_signal, 0);
-      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qinstance, QU_qname));
+      te_delete(TYPE_SIGNAL_RESEND_EVENT, 
+                lGetString(qinstance, QU_qname), 0, 0);
       spool_write_object(&answer_list, spool_get_default_context(), qinstance, 
                          lGetString(qinstance, QU_qname), SGE_TYPE_QINSTANCE);
       answer_list_output(&answer_list);
@@ -204,7 +207,7 @@ u_long32 ack_ulong2
    case TAG_SIGJOB:
       DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
       lSetUlong(jatep, JAT_pending_signal, 0);
-      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, ack_ulong, ack_ulong2, NULL);
+      te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, ack_ulong, ack_ulong2);
       {
          dstring buffer = DSTRING_INIT;
          spool_write_object(&answer_list, spool_get_default_context(), jep, 
@@ -218,5 +221,32 @@ u_long32 ack_ulong2
    }
 
    DEXIT;
+   return;
+}
+
+
+/*******************************************************************/
+static void sge_c_event_ack(
+char *host, 
+char *commproc, 
+u_long32 ack_tag, 
+u_long32 event_number,
+u_long32 ev_id
+) {
+   lListElem *event_client;
+
+   DENTER(TOP_LAYER, "sge_c_event_ack");
+
+   /* search commproc in event client list */
+   event_client = lGetElemUlong(EV_Clients, EV_id, ev_id);
+   if (event_client == NULL) {
+      ERROR((SGE_EVENT, MSG_COM_NO_EVCLIENTWITHID_U, u32c(ev_id)));
+      DEXIT;
+      return;
+   }
+
+   sge_ack_event(event_client, event_number);
+
+   DEXIT;   
    return;
 }

@@ -47,10 +47,9 @@
 #include "spool/sge_spooling.h"
 #include "spool/dynamic/sge_spooling_loader.h"
 
+#include "time_event.h"
 
 #include "sge_persistence_qmaster.h"
-
-#include "msg_qmaster.h"
 
 bool
 sge_initialize_persistence(lList **answer_list)
@@ -75,16 +74,12 @@ sge_initialize_persistence(lList **answer_list)
          ret = false;
       } else {
          time_t now = time(0);
-         te_event_t ev = NULL;
 
          /* set this context as default */
          spool_set_default_context(spooling_context);
 
          /* initialize timer for spooling trigger function */
-         te_register_event_handler(spooling_trigger_handler, TYPE_SPOOLING_TRIGGER);
-         ev = te_new_event(now, TYPE_SPOOLING_TRIGGER, ONE_TIME_EVENT, 0, 0, NULL);
-         te_add_event(ev);
-         te_free_event(ev);
+         te_add(TYPE_SPOOLING_TRIGGER, now, 0, 0, NULL);
       }
    }
 
@@ -96,16 +91,13 @@ bool
 sge_shutdown_persistence(lList **answer_list)
 {
    bool ret = true;
-   time_t time = 0;
-   lList* alp = NULL;
+
    lListElem *context;
 
    DENTER(TOP_LAYER, "sge_shutdown_persistence");
 
    /* trigger spooling actions (flush data) */
-   if (!spool_trigger_context(&alp, spool_get_default_context(), 0, &time)) {
-      answer_list_output(&alp);
-   }
+   deliver_spooling_trigger(TYPE_SPOOLING_TRIGGER, 0, 0, 0, NULL);
 
    /* shutdown spooling */
    context = spool_get_default_context();
@@ -127,18 +119,18 @@ sge_shutdown_persistence(lList **answer_list)
 }
 
 void
-spooling_trigger_handler(te_event_t anEvent)
+deliver_spooling_trigger(u_long32 type, u_long32 when, 
+                         u_long32 uval0, u_long32 uval1, const char *key)
 {
    time_t next_trigger = 0;
    time_t now;
    lList *answer_list = NULL;
-   te_event_t ev = NULL;
 
    DENTER(TOP_LAYER, "deliver_spooling_trigger");
 
    /* trigger spooling regular actions */
    if (!spool_trigger_context(&answer_list, spool_get_default_context(), 
-                              te_get_when(anEvent), &next_trigger)) {
+                              when, &next_trigger)) {
       answer_list_output(&answer_list);
    }
 
@@ -149,9 +141,7 @@ spooling_trigger_handler(te_event_t anEvent)
    }
 
    /* set timerevent for next trigger */
-   ev = te_new_event(next_trigger, te_get_type(anEvent), ONE_TIME_EVENT, 0, 0, NULL);
-   te_add_event(ev);
-   te_free_event(ev);
+   te_add(type, next_trigger, 0, 0, NULL);
 
    DEXIT;
    return;
@@ -476,29 +466,11 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
 
       /* if spooling was requested and we have an object type to spool */
       if (spool && object_type != SGE_TYPE_ALL) {
-         /* use an own answer list for the low level spooling operation. 
-          * in case of error, generate a high level error message.
-          */
-         lList *spool_answer_list = NULL;
          if (delete) {
-            ret = spool_delete_object(&spool_answer_list, spool_get_default_context(), 
-                                      object_type, key);
+            ret = spool_delete_object(answer_list, spool_get_default_context(), object_type, key);
          } else {
-            ret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
+            ret = spool_write_object(answer_list, spool_get_default_context(), 
                                      element, key, object_type);
-         }
-         /* output low level error messages */
-         answer_list_output(&spool_answer_list);
-
-         /* in case of error: generate error message for caller */
-         if (!ret) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    delete ? 
-                                    MSG_PERSISTENCE_DELETE_FAILED_S : 
-                                    MSG_PERSISTENCE_WRITE_FAILED_S,
-                                    key);
-            
          }
       }
    }
@@ -506,7 +478,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
    /* send event only, if spooling succeeded */
    if (ret) {
       if (send_event) {
-         sge_add_event( timestamp, event, 
+         sge_add_event(NULL, timestamp, event, 
                        intkey1, intkey2, strkey, strkey2,
                        session, element);
       }

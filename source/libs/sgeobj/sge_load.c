@@ -45,23 +45,24 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-bool 
-sge_is_static_load_value(const char *name) 
+int sge_is_static_load_value(const char *name) 
 {
-   bool ret = false;
-
    DENTER(BASIS_LAYER, "sge_is_static_load_value");
 
-   if (name != NULL) {
-      if (strcmp(name, LOAD_ATTR_ARCH) == 0 || 
-          strcmp(name, LOAD_ATTR_NUM_PROC) == 0 ||
-          strcmp(name, LOAD_ATTR_MEM_TOTAL) == 0 ||
-          strcmp(name, LOAD_ATTR_SWAP_TOTAL) == 0 ||
-          strcmp(name, LOAD_ATTR_VIRTUAL_TOTAL) == 0 ) {
-        ret = true;
-      }
+   if (!name) {
+      DEXIT;
+      return 0;
+   }
+
+   if (!strcmp(name, LOAD_ATTR_ARCH) || 
+       !strcmp(name, LOAD_ATTR_NUM_PROC) ||
+       !strcmp(name, LOAD_ATTR_MEM_TOTAL) ||
+       !strcmp(name, LOAD_ATTR_SWAP_TOTAL) ||
+       !strcmp(name, LOAD_ATTR_VIRTUAL_TOTAL)) {
+     DEXIT;
+     return 1;
    }
 
    DEXIT;
-   return ret;
+   return 0;
 }

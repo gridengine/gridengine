@@ -39,11 +39,13 @@
 
 #include "sge.h"
 #include "sge_log.h"
+#include "sge_parse_num_par.h"
 #include "sgermon.h"
 #include "commlib.h"
 #include "sge_conf.h"
 #include "configuration_qmaster.h"
 #include "cull.h"
+#include "sge_host.h"
 #include "config_file.h"
 #include "sge_userset_qmaster.h"
 #include "sge_utility.h"
@@ -55,13 +57,13 @@
 #include "reschedule.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
-#include "sge_host.h"
 #include "sge_prog.h"
 #include "sge_uidgid.h" 
 #include "sge_spool.h"
 #include "sge_answer.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
+#include "sge_host.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -301,7 +303,7 @@ char *rhost
                    ep, NULL, NULL, true, true);
 
    if (!strcmp(SGE_GLOBAL_NAME, config_name)) {
-      sge_add_event( 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL, NULL, NULL);
+      sge_add_event(NULL, 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL, NULL, NULL);
    }
 
    /*
@@ -327,7 +329,8 @@ char *rhost
       sge_show_conf();
 
       /* pass new max_unheard value to commlib */
-      cl_commlib_set_connection_param(cl_com_get_handle("qmaster",1), HEARD_FROM_TIMEOUT, conf.max_unheard);
+      set_commlib_param(CL_P_LT_HEARD_FROM_TIMEOUT, conf.max_unheard, 
+         NULL, NULL);
    }
  
    if (reschedule_unknown_changed) { 
@@ -557,8 +560,8 @@ lListElem **cepp
       lSetHost(hep, EH_name, config_name);
 
       ret = sge_resolve_host(hep, EH_name);
-      if (ret != CL_RETVAL_OK) {
-         DPRINTF(("get_configuration: error %s resolving host %s\n", cl_get_error_text(ret), config_name));
+      if (ret) {
+         DPRINTF(("get_configuration: error %s resolving host %s\n", cl_errstr(ret), config_name));
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, config_name));
          lFreeElem(hep);
          DEXIT;
@@ -651,6 +654,3 @@ lList *to_check_list
    DEXIT;
    return 1;
 }
-
-
-

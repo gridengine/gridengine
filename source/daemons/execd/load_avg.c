@@ -170,7 +170,9 @@ static int execd_add_job_report(lList *report_list)
    update_job_usage();
 
 #ifdef COMPILE_DC
-   force_job_rlimit();
+   if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
+      force_job_rlimit();
+   }
 #endif
 
    job_report = lCreateElem(REP_Type);
@@ -401,7 +403,7 @@ static int sge_get_loadavg(lList **lpp)
    sge_add_double2load_report(lpp, LOAD_ATTR_VIRTUAL_USED,    (mem_info.mem_total + mem_info.swap_total)- 
                                           (mem_info.mem_free  + mem_info.swap_free), uti_state_get_qualified_hostname(), "M");
 
-#ifdef IRIX
+#ifdef IRIX6
    sge_add_double2load_report(lpp, LOAD_ATTR_SWAP_RSVD,        mem_info.swap_rsvd, uti_state_get_qualified_hostname(), "M");
 #endif
 
@@ -539,18 +541,20 @@ static void update_job_usage(void)
 
 #ifdef COMPILE_DC
 
-   if (!sharetree_reserved_usage) {
-      int ptf_error;
+   if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
+      if (!sharetree_reserved_usage) {
+         int ptf_error;
 
-      if ((ptf_error=ptf_get_usage(&usage_list))) {
-         ERROR((SGE_EVENT, MSG_LOAD_NOPTFUSAGE_S, ptf_errstr(ptf_error)));
-         /*
-            use the old usage values in job report or none
-            in case this is the first call to ptf_get_usage()
-            since a new job was started
-         */
-         DEXIT;
-         return;
+         if ((ptf_error=ptf_get_usage(&usage_list))) {
+            ERROR((SGE_EVENT, MSG_LOAD_NOPTFUSAGE_S, ptf_errstr(ptf_error)));
+            /*
+               use the old usage values in job report or none
+               in case this is the first call to ptf_get_usage()
+               since a new job was started
+            */
+            DEXIT;
+            return;
+         }
       }
    }
 #endif
@@ -798,7 +802,7 @@ calculate_reserved_usage(const lListElem *ja_task, const lListElem *pe_task,
    io_val = iow_val = maxvmem = 0;
 
 #ifdef COMPILE_DC
-   {
+   if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
       /* use PDC actual I/O if available */
       lList *jul;
       lListElem *uep;

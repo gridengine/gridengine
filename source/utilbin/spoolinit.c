@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
       ret = EXIT_FAILURE;
    } else if (!sge_bootstrap(NULL)) {
       ret = EXIT_FAILURE;
-   } else if (feature_initialize_from_string(bootstrap_get_security_mode())) {
+   } else if (feature_initialize_from_string(bootstrap_get_product_mode())) {
       ret = EXIT_FAILURE;
    } else {
       spooling_maintenance_command cmd = SPM_info;
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
                }
             }
          }
-      
+       
          /* initialize spooling */
          if (ret == EXIT_SUCCESS) {
             ret = init_framework(shlib, libargs, check_framework);

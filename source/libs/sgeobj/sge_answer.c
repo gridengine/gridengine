@@ -205,7 +205,7 @@ void answer_exit_if_not_recoverable(const lListElem *answer)
 {
    DENTER(ANSWER_LAYER, "answer_exit_if_not_recoverable");
    if (!answer_is_recoverable(answer)) {
-      fprintf(stderr, "%s: %s", answer_get_quality_text(answer),
+      fprintf(stderr, "%s %s", answer_get_quality_text(answer),
               lGetString(answer, AN_text));
       DEXIT;
       SGE_EXIT(1);
@@ -354,9 +354,9 @@ void answer_to_dstring(const lListElem *answer, dstring *diag)
          const char *s, *t;
          s = lGetString(answer, AN_text);
          if ((t=strchr(s, '\n')))
-            sge_dstring_sprintf_append(diag, "%.*s", t-s, s);
+            sge_dstring_sprintf(diag, "%.*s", t-s, s);
          else
-            sge_dstring_append(diag, s);
+            sge_dstring_copy_string(diag, s);
       }
    }
 }
@@ -620,11 +620,8 @@ int answer_list_print_err_warn(lList **answer_list,
             status = answer_get_status(answer);
             do_exit = 1;
          }
-      } else if (answer_has_quality (answer, ANSWER_QUALITY_WARNING)) {
+      } else {
          answer_print_text(answer, stdout, warn_prefix, NULL);
-      }
-      else {
-         answer_print_text(answer, stdout, NULL, NULL);
       }
    }
    *answer_list = lFreeList(*answer_list);

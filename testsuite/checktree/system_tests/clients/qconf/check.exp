@@ -50,13 +50,12 @@ set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "qconf"
-set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level    0
-set check_description(0)  "test all qconf options (test not complete)"
+set check_description(0)  "add/remove queues"
 
 # define test's dependencies
-#set check_needs        "init_core_system qstat qsub"       ;# dependencies of this check (name of other check)
-set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
+set check_needs        "init_core_system qstat qsub"       ;# dependencies of this check (name of other check)
 
 set check_functions     ""
 lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
@@ -78,7 +77,9 @@ lappend check_functions "qconf_Muser"
 #lappend check_functions "qconf_Mattr_check"
 
 
+
 global queue_names
+
 
 global submitjob_jobid
 
@@ -117,7 +118,7 @@ proc init_level {} {
 
   set queue_names     ""
   for { set i 0 } { $i < 1000 }  {incr i 1} {
-     lappend queue_names "qconf.$i"
+     lappend queue_names "$CHECK_HOST.qconf$i"
   }
 
   switch -- $CHECK_ACT_LEVEL {
@@ -285,17 +286,19 @@ proc qconf_Muser {} {
 proc qconf_addqueues {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST queue_names CHECK_OUTPUT
 
+   set q_param(hostname)              "$CHECK_HOST"
    set q_param(load_thresholds)       "np_load_avg=7.00"
  
    set count 0
    foreach queue $queue_names {
+      set q_param(qname) "$queue"
       if { $count > 50 } {
          puts $CHECK_OUTPUT "adding queue \"$queue\" with vi"
-         add_queue $queue $CHECK_HOST q_param
+         add_queue q_param
          set count 0
       } else {
          puts $CHECK_OUTPUT "adding queue \"$queue\" with file"
-         add_queue $queue $CHECK_HOST q_param 1
+         add_queue q_param 1
       }
       incr count 1
    }
@@ -339,7 +342,7 @@ proc qconf_removequeues {} {
 
    foreach queue $queue_names {
      puts $CHECK_OUTPUT "deleting queue \"$queue\""
-     del_queue $queue $CHECK_HOST 0 1
+     del_queue $queue
    }
 
    set_error 0 "ok"

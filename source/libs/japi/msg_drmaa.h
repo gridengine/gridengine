@@ -43,9 +43,6 @@ extern "C" {
 #define MSG_DRMAA_UNKNOWN_JOB_CAT      _MESSAGE(45002, _("Unknown job category\n"))
 #define MSG_DRMAA_INVALID_TIME_STRING  _MESSAGE(45003, _("invalid format for job start time\n"))
 #define MSG_DRMAA_TIME_PARSE_ERROR     _MESSAGE(45004, _("Error parsing DRMAA date string\n"))
-#define MSG_DRMAA_INC_NOT_ALLOWED      _MESSAGE(45005, _("The $drmaa_inc_ph$ placeholder is not allowed when the DRMAA_NATIVE_SPECIFICATION attribute contains \"-b n\"\n"))
-#define MSG_DRMAA_PATH_NEEDS_COLON_S   _MESSAGE(45006, _("The "SFQ" attribute must begin with a colon, ':'\n"))
-#define MSG_DRMAA_NEEDS_INPUT_PATH     _MESSAGE(45007, _("When using input file staging, and input path must be set.\n"))
 
 #ifdef	__cplusplus
 }

@@ -134,14 +134,17 @@ char *rhost
       return ret;
    }
 
-   /*
-   ** check for users defined in more than one userset if they
-   ** are used as departments
-   */
-   ret = sge_verify_department_entries(*userset_list, ep, alpp);
-   if (ret!=STATUS_OK) {
-      DEXIT;
-      return ret;
+   /* only in sge/budget mode needed */
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      /*
+      ** check for users defined in more than one userset if they
+      ** are used as departments
+      */
+      ret = sge_verify_department_entries(*userset_list, ep, alpp);
+      if (ret!=STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
    }
 
    if (!sge_event_spool(alpp, 0, sgeE_USERSET_ADD,
@@ -300,21 +303,23 @@ char *rhost
       return ret;
    }
 
-   /* make sure acl is valid */
-   ret = acl_is_valid_acl(ep, alpp);
-   if (ret != STATUS_OK) {
-      DEXIT;
-      return ret;
-   }
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      /* make sure acl is valid */
+      ret = acl_is_valid_acl(ep, alpp);
+      if (ret != STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
 
-   /*
-   ** check for users defined in more than one userset if they
-   ** are used as departments
-   */
-   ret = sge_verify_department_entries(*userset_list, ep, alpp);
-   if (ret!=STATUS_OK) {
-      DEXIT;
-      return ret;
+      /*
+      ** check for users defined in more than one userset if they
+      ** are used as departments
+      */
+      ret = sge_verify_department_entries(*userset_list, ep, alpp);
+      if (ret!=STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
    }
 
    /* delete old userset */
@@ -717,18 +722,20 @@ const char *userset_name
       }
    }
 
-   for_each (ep, Master_Project_List) {
-      if (lGetElemStr(lGetList(ep, UP_acl), US_name, userset_name)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
-               MSG_OBJ_USERLIST, MSG_OBJ_PRJ, lGetString(ep, UP_name)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         ret = STATUS_EUNKNOWN;
-      }
-      if (lGetElemStr(lGetList(ep, UP_xacl), US_name, userset_name)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
-               MSG_OBJ_XUSERLIST, MSG_OBJ_PRJ, lGetString(ep, UP_name)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         ret = STATUS_EUNKNOWN;
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      for_each (ep, Master_Project_List) {
+         if (lGetElemStr(lGetList(ep, UP_acl), US_name, userset_name)) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
+                  MSG_OBJ_USERLIST, MSG_OBJ_PRJ, lGetString(ep, UP_name)));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = STATUS_EUNKNOWN;
+         }
+         if (lGetElemStr(lGetList(ep, UP_xacl), US_name, userset_name)) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
+                  MSG_OBJ_XUSERLIST, MSG_OBJ_PRJ, lGetString(ep, UP_name)));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = STATUS_EUNKNOWN;
+         }
       }
    }
 

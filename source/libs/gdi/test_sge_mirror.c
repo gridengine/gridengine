@@ -83,9 +83,9 @@ int main(int argc, char *argv[])
 
    sge_setup_sig_handlers(QEVENT);
 
-   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
+   if (reresolve_me_qualified_hostname() != CL_OK) {
       SGE_EXIT(1);
-   }
+   }   
 
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
    sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL);

@@ -130,7 +130,7 @@ XtPointer cld, cad;
    XSync(XtDisplay(qmon_ckpt), 0);
    XmUpdateDisplay(qmon_ckpt);
 
-   qmonMirrorMultiAnswer(CKPT_T, &alp);
+   qmonMirrorMultiAnswer(CKPT_T | QUEUE_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -142,7 +142,7 @@ XtPointer cld, cad;
 
    
    qmonTimerAddUpdateProc(CKPT_T, "updateCkptList", updateCkptList);
-   qmonStartTimer(CKPT_T);
+   qmonStartTimer(CKPT_T | QUEUE_T);
    updateCkptList();
    XmListSelectPos(ckpt_names, 1, True);
 
@@ -178,7 +178,7 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonPopdownCkptConfig");
 
    XtUnmanageChild(qmon_ckpt);
-   qmonStopTimer(CKPT_T);
+   qmonStopTimer(CKPT_T | QUEUE_T);
    qmonTimerRmUpdateProc(CKPT_T, "updateCkptList");
 
    DEXIT;

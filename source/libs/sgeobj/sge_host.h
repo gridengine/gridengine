@@ -55,8 +55,6 @@ bool
 host_is_centry_a_complex_value(const lListElem *this_elem, 
                                const lListElem *centry);
 
-bool
-host_trash_load_values(lListElem *host);
 
 lListElem *
 host_list_locate(const lList *this_list, const char *hostname);

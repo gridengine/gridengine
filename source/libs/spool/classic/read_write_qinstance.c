@@ -57,9 +57,7 @@
 #include "sge_centry.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-
-#include "sgeobj/sge_mesobj.h"
-#include "sgeobj/sge_qinstance_state.h"
+#include "sge_str.h"
 
 #include "msg_common.h"
 
@@ -114,16 +112,6 @@ int parsing_type
       DEXIT;
       return -1;
    }
-   else if ((lGetUlong(ep, QU_state) & QI_ERROR) != 0){
-      lList *message_list = lCreateList("mesage", QIM_Type);
-      lListElem *message = lCreateElem(QIM_Type);
-      
-      lAppendElem(message_list, message);
-      lSetList(ep, QU_message_list, message_list);
-
-      lSetUlong(message, QIM_type, QI_ERROR);
-      lSetString(message, QIM_message, MSG_ERROR_CLASSIC_SPOOLING);
-   }
 
    /* --------- QU_pending_signal */
    if (!set_conf_ulong(alpp, clpp, fields, "pending_signal",
@@ -144,19 +132,6 @@ int parsing_type
       DEXIT;
       return -1;
    }
-
-   /* --------- QU_error messages */
-   /* SG: not supported yet */
-#if 0   
-   {
-      const char *str = NULL;
-      if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, "error_messages"))) {
-         DEXIT;
-         return -1;
-      }
-      qinsteance_message_from_string(ep, str, alpp);
-   }
-#endif   
 
    /* --------- QU_queue_number */
    if (!set_conf_ulong(alpp, clpp, fields, "queue_number", ep, QU_queue_number)) {
@@ -339,43 +314,55 @@ write_qinstance(int spool, int how, const lListElem *ep)
          FPRINTF((fp, "owner_list         %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);
-      
-         list = lGetList(ep, QU_acl);
+      }
+      {
+         dstring tmp_string = DSTRING_INIT;
+         const lList *list = lGetList(ep, QU_acl);
 
          userset_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "user_lists         %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);
-      
-         list = lGetList(ep, QU_xacl);
+      }
+      {
+         dstring tmp_string = DSTRING_INIT;
+         const lList *list = lGetList(ep, QU_xacl);
 
          userset_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "xuser_lists        %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);
-      
-         list = lGetList(ep, QU_subordinate_list);
+      }
+      {
+         dstring tmp_string = DSTRING_INIT;
+         const lList *list = lGetList(ep, QU_subordinate_list);
 
          so_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "subordinate_list   %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);
-      
-         list = lGetList(ep, QU_consumable_config_list);
+      }
+      {
+         dstring tmp_string = DSTRING_INIT;
+         const lList *list = lGetList(ep, QU_consumable_config_list);
 
          centry_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "complex_values     %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);
-      
-         list = lGetList(ep, QU_projects);
+      }
+      if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+         dstring tmp_string = DSTRING_INIT;
+         const lList *list = lGetList(ep, QU_projects);
 
          userprj_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "projects           %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);
-      
-         list = lGetList(ep, QU_xprojects);
+      }
+      if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+         dstring tmp_string = DSTRING_INIT;
+         const lList *list = lGetList(ep, QU_xprojects);
 
          userprj_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "xprojects          %s\n", 
@@ -390,13 +377,12 @@ write_qinstance(int spool, int how, const lListElem *ep)
          FPRINTF((fp, "initial_state      %s\n",
                   lGetString(ep, QU_initial_state)));
       }
-#if 0
-      FPRINTF((fp, "fshare             "u32"\n",
-               lGetUlong(ep, QU_fshare)));
-      FPRINTF((fp, "oticket            "u32"\n",
-               lGetUlong(ep, QU_oticket)));
-      
-#endif
+      if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+         FPRINTF((fp, "fshare             "u32"\n",
+                  lGetUlong(ep, QU_fshare)));
+         FPRINTF((fp, "oticket            "u32"\n",
+                  lGetUlong(ep, QU_oticket)));
+      }
       {
          FPRINTF((fp, "s_rt               %s\n", lGetString(ep, QU_s_rt)));
          FPRINTF((fp, "h_rt               %s\n", lGetString(ep, QU_h_rt)));
@@ -429,18 +415,6 @@ write_qinstance(int spool, int how, const lListElem *ep)
                (int)lGetUlong(ep, QU_version)));
       FPRINTF((fp, "queue_number       %d\n",
                (int)lGetUlong(ep, QU_queue_number)));
-      /* SG: not supported */
-#if 0      
-      {
-         dstring tmp_string = DSTRING_INIT;
-
-         qinstance_message2string (ep, QI_ERROR, &tmp_string);
-
-         FPRINTF((fp, "error_messages    %s\n", 
-                  sge_dstring_get_string(&tmp_string)));
-         sge_dstring_free(&tmp_string);
-      }  
-#endif      
    }
    if (how != 0) {
       fclose(fp);

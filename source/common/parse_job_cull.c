@@ -174,7 +174,6 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
    lSetUlong(*pjob, JB_priority, BASE_PRIORITY);
 
-   lSetUlong(*pjob, JB_jobshare, 0);
 
    /*
     * -b
@@ -268,9 +267,11 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lRemoveElem(cmdline, ep);
    }
 
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-dl"))) {
-      lSetUlong(*pjob, JB_deadline, lGetUlong(ep, SPA_argval_lUlongT));
-      lRemoveElem(cmdline, ep);
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-dl"))) {
+         lSetUlong(*pjob, JB_deadline, lGetUlong(ep, SPA_argval_lUlongT));
+         lRemoveElem(cmdline, ep);
+      }
    }
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-c"))) {
@@ -378,6 +379,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
          lRemoveElem(cmdline, ep);
       }
       lSetList(*pjob, JB_jid_request_list, jref_list);
+/*      lSetList(*pjob, JB_jid_predecessor_list, jref_list); */
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {
@@ -459,14 +461,11 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lRemoveElem(cmdline, ep);
    }
 
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-js"))) {
-      lSetUlong(*pjob, JB_jobshare, lGetUlong(ep, SPA_argval_lUlongT));
-      lRemoveElem(cmdline, ep);
-   }
-
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-P"))) {
-      lSetString(*pjob, JB_project, lGetString(ep, SPA_argval_lStringT));
-      lRemoveElem(cmdline, ep);
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-P"))) {
+         lSetString(*pjob, JB_project, lGetString(ep, SPA_argval_lStringT));
+         lRemoveElem(cmdline, ep);
+      }
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-pe"))) {
@@ -481,11 +480,6 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    parse_list_hardsoft(cmdline, "-masterq", *pjob, 
                         JB_master_hard_queue_list, 0);
    
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-R"))) {
-      lSetBool(*pjob, JB_reserve, lGetInt(ep, SPA_argval_lIntT));
-      lRemoveElem(cmdline, ep);
-   }
-
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-r"))) {
       lSetUlong(*pjob, JB_restart, lGetInt(ep, SPA_argval_lIntT));
       lRemoveElem(cmdline, ep);
@@ -768,14 +762,8 @@ u_long32 flags
       } else {
          /* no script file but input from stdin */
          filestrptr = sge_stream2string(stdin, &script_len);
-         if (filestrptr == NULL) {
+         if (!filestrptr) {
             answer_list_add(&answer, MSG_ANSWER_ERRORREADINGFROMSTDIN, 
-                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
-         }
-         else if (filestrptr[0] == '\0') {
-            answer_list_add(&answer, MSG_ANSWER_NOINPUT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;

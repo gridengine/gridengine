@@ -140,9 +140,6 @@ int daemonize_execd()
 
    DENTER(TOP_LAYER, "daemonize_execd");
 
-   if (uti_state_get_daemonized()) {
-      return 1;
-   }
    FD_ZERO(&keep_open); 
 
    /* ask load sensor to fill in it's fd's */
@@ -154,7 +151,12 @@ int daemonize_execd()
       FD_SET(fd, &keep_open);
    } 
 
-   cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0), &keep_open);
+   if(!commlib_state_get_closefd()) {
+      int fd = commlib_state_get_sfd();
+      if (fd>=0) {
+         FD_SET(fd, &keep_open);
+      }
+   }
 
    ret = sge_daemonize(&keep_open);
 

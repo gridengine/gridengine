@@ -53,6 +53,7 @@
 #include "unparse_job_cull.h"
 #include "sge_dstring.h"
 #include "parse_qsubL.h"
+#include "sge_access_tree.h"
 #include "parse.h"
 #include "sge_category.h"
 #include "category.h"
@@ -62,21 +63,6 @@
 /* Categories of the job are managed here */
 lList *CATEGORY_LIST = NULL;
 
-void sge_print_categories(void) {
-   lListElem *cat;
-
-   DENTER(TOP_LAYER, "sge_print_categories");
-
-   for_each (cat, CATEGORY_LIST) {
-      DPRINTF(("PTR: %p CAT: %s REJECTED: "u32" REFCOUNT: "u32"\n", 
-         cat,
-         lGetString(cat, CT_str), 
-         lGetUlong(cat, CT_rejected), 
-         lGetUlong(cat, CT_refcount))); 
-   }
-
-   DEXIT;
-}
 /*-------------------------------------------------------------------------*/
 /*    add jobs' category to the´global category list, if it doesn´t        */
 /*    already exist, and reference the category in the job element         */
@@ -103,19 +89,12 @@ int sge_add_job_category( lListElem *job, lList *acl_list) {
       cat = lGetElemStr(CATEGORY_LIST, CT_str, cstr);
    }
 
-#if 0
    if (cat) {
-      DPRINTF(("############## Job "u32": Found %s in category list\n", jobid, cstr));
+      DPRINTF(("Job "u32": Found %s in category list\n", jobid, cstr));
    } else {
-      DPRINTF(("############## Job "u32": Added %s to category list\n", jobid, cstr));
+      DPRINTF(("Job "u32": Added %s to category list\n", jobid, cstr));
       cat = lAddElemStr(&CATEGORY_LIST, CT_str, cstr, CT_Type);
    }   
-#else   
-   if (!cat) {
-       cat = lAddElemStr(&CATEGORY_LIST, CT_str, cstr, CT_Type);
-   }
-#endif
-
    /* increment ref counter and set reference to this element */
    rc = lGetUlong(cat, CT_refcount);
    lSetUlong(cat, CT_refcount, ++rc);
@@ -148,7 +127,7 @@ lListElem *job
          lSetUlong(cat, CT_refcount, --rc);
       }
       else {
-         DPRINTF(("############## Removing %s from category list (refcount: " u32 ")\n", 
+         DPRINTF(("Removing %s from category list (refcount: " u32 ")\n", 
                   lGetString(cat, CT_str), lGetUlong(cat, CT_refcount)));
          lRemoveElem(CATEGORY_LIST, cat);
       }
@@ -176,7 +155,7 @@ lListElem *job
 /*-------------------------------------------------------------------------*/
 bool sge_is_job_category_rejected_(lRef cat) 
 {
-   return lGetUlong(cat, CT_rejected) ? true : false;
+   return lGetUlong(cat,  CT_rejected) ? true : false;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -216,7 +195,7 @@ int sge_reset_job_category()
       lSetList(cat, CT_ignore_hosts, NULL);
       lSetList(cat, CT_queue_violations, NULL);
       lSetBool(cat, CT_rc_valid, false);
-   }
+   } 
    DEXIT;
    return 0;
 }

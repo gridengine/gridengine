@@ -48,6 +48,7 @@
 #include "setup_path.h"
 #include "sge_uidgid.h"
 #include "sge_prog.h"
+#include "sge_answer.h"
 #include "sge_conf.h"
 
 #include "msg_common.h"
@@ -419,7 +420,7 @@ char** pargs /* The array to contain the parsed arguments */
 }
 
 /* This function was added to enable the DRMAA library to handle job
- * categories.  It is similar to sge_init() except that it doesn't do any
+ * categories.  It is similar to sge_init() except that it doesn't double any
  * initialization. */
 char** sge_get_qtask_args (
 char *taskname, /* The name of the task to look for in the qtask files */

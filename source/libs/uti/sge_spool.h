@@ -33,7 +33,6 @@
 /*___INFO__MARK_END__*/  
 
 #include "basis_types.h"
-#include "sge_dstring.h"
 
 #define COMMENT_CHAR '#'
 
@@ -217,9 +216,7 @@ char *sge_get_confval(const char *conf_val, const char *file);
 int sge_get_confval_array(const char *fname, 
                           int n, 
                           const char *name[], 
-                          char value[][1025],
-                          dstring *error_dstring
-                          );
+                          char value[][1025]);
  
 pid_t sge_readpid(const char *fname);
  

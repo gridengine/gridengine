@@ -31,6 +31,7 @@
 #___INFO__MARK_END__
 SHELL       = /bin/sh
 RM          = rm -f
+STRIP       = strip
 SDIR        = ../src
 TRANSSDIR   = ../culltrans
 DEPEND      = sge_depend -l -S -Y $(CFLAGS) 

@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "cull_list.h"
+
 #ifdef  __cplusplus
 extern "C" {
 #endif

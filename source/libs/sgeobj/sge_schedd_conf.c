@@ -32,7 +32,6 @@
 
 #include <string.h>
 
-#include "sge.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull.h"
@@ -114,7 +113,7 @@
 #define MAXUJOBS                            0
 #define MAXGJOBS                            0
 #define SCHEDD_JOB_INFO                     "true"
-#define DEFAULT_DURATION                    "0:10:"
+#define USER_SORT                           false
 
 
 /* 
@@ -152,6 +151,7 @@ typedef struct{
    int schedule_interval;
    int maxujobs;
    int queue_sort_method;
+   int user_sort;
    int job_load_adjustments;
    int load_adjustment_decay_time;
    int load_formula;
@@ -166,6 +166,7 @@ typedef struct{
    int compensation_factor;
    int weight_user;
    int weight_project;
+   int weight_jobclass;
    int weight_department;
    int weight_job;
    int weight_tickets_functional;
@@ -188,9 +189,6 @@ typedef struct{
    int weight_waiting_time;
    int weight_deadline;
    int weight_urgency;
-   int max_reservation;
-   int weight_priority;
-   int default_duration;
 }config_pos_type;
 
 
@@ -199,7 +197,6 @@ static bool sconf_calc_pos(void);
 static void sconf_clear_pos(void);
 
 static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, const char* param); 
-static bool sconf_eval_set_monitoring(lList *param_list, lList **answer_list, const char* param);
 
 static char policy_hierarchy_enum2char(policy_type_t value);
 
@@ -211,18 +208,17 @@ static int policy_hierarchy_verify_value(const char* value);
  * when the config_pos_type is edited
  */
 static config_pos_type pos = {true, 
-                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                       -1, -1, -1, -1, -1, -1, -1, -1, -1,  
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                       -1, -1, -1, -1, -1, -1, -1, -1,
                        SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL, 
-                       -1, -1, -1, -1, -1, -1};
+                       -1, -1, -1, -1};
 
 /*
  * a list of all valid "params" parameters
  */
 const parameters_t params[] = {
    {"PROFILE",  sconf_eval_set_profiling},
-   {"MONITOR",  sconf_eval_set_monitoring},
    {"NONE",     NULL},
    {NULL,       NULL}
 };
@@ -240,13 +236,6 @@ int load_adjustment_fields[] = { CE_name, CE_stringval, 0 };
 int usage_fields[] = { UA_name, UA_value, 0 };
 const char *delis[] = {"=", ",", ""};
 
-static int max_resources = QS_STATE_FULL;
-static bool global_load_correction = 0;
-static bool host_order_changed = true;
-static u_long32 default_duration = MAX_ULONG32;
-static u_long32 now_time;
-static bool host_order_changed;
-static int last_dispatch_type;
 
 
 /****** sge_schedd_conf/clear_pos() ********************************************
@@ -268,6 +257,7 @@ static void sconf_clear_pos(void){
          pos.schedule_interval = -1; 
          pos.maxujobs =  -1;
          pos.queue_sort_method = -1; 
+         pos.user_sort =  -1;
          pos.job_load_adjustments = -1; 
          pos.load_formula =  -1;
          pos.schedd_job_info = -1; 
@@ -281,6 +271,7 @@ static void sconf_clear_pos(void){
          pos.compensation_factor = -1; 
          pos.weight_user = -1; 
          pos.weight_project = -1; 
+         pos.weight_jobclass = -1; 
          pos.weight_department = -1; 
          pos.weight_job = -1; 
          pos.weight_tickets_functional = -1; 
@@ -308,9 +299,6 @@ static void sconf_clear_pos(void){
          pos.weight_waiting_time = -1;
          pos.weight_deadline = -1;
          pos.weight_urgency = -1;
-         pos.max_reservation = -1;
-         pos.weight_priority = -1;
-         pos.default_duration = -1;
 }
 
 static bool sconf_calc_pos(void){
@@ -328,6 +316,7 @@ static bool sconf_calc_pos(void){
          ret &= (pos.schedule_interval = lGetPosViaElem(config, SC_schedule_interval)) != -1; 
          ret &= (pos.maxujobs = lGetPosViaElem(config, SC_maxujobs)) != -1;
          ret &= (pos.queue_sort_method = lGetPosViaElem(config, SC_queue_sort_method)) != -1;
+         ret &= (pos.user_sort = lGetPosViaElem(config, SC_user_sort)) != -1;
 
          ret &= (pos.job_load_adjustments = lGetPosViaElem(config,SC_job_load_adjustments )) != -1;
          ret &= (pos.load_adjustment_decay_time = lGetPosViaElem(config, SC_load_adjustment_decay_time)) != -1;
@@ -345,6 +334,7 @@ static bool sconf_calc_pos(void){
          ret &= (pos.compensation_factor = lGetPosViaElem(config, SC_compensation_factor)) != -1;
          ret &= (pos.weight_user = lGetPosViaElem(config, SC_weight_user)) != -1;
          ret &= (pos.weight_project = lGetPosViaElem(config, SC_weight_project)) != -1;
+         ret &= (pos.weight_jobclass = lGetPosViaElem(config, SC_weight_jobclass)) != -1;
          ret &= (pos.weight_department = lGetPosViaElem(config, SC_weight_department)) != -1;
          ret &= (pos.weight_job = lGetPosViaElem(config, SC_weight_job)) != -1;
 
@@ -364,9 +354,6 @@ static bool sconf_calc_pos(void){
          ret &= (pos.weight_waiting_time = lGetPosViaElem(config, SC_weight_waiting_time)) != -1;
          ret &= (pos.weight_deadline = lGetPosViaElem(config, SC_weight_deadline)) != -1;
          ret &= (pos.weight_urgency = lGetPosViaElem(config, SC_weight_urgency)) != -1;
-         ret &= (pos.weight_priority = lGetPosViaElem(config, SC_weight_priority)) != -1;
-         ret &= (pos.max_reservation = lGetPosViaElem(config, SC_max_reservation)) != -1;
-         ret &= (pos.default_duration = lGetPosViaElem(config, SC_default_duration)) != -1;
       }
       else
          ret = false;
@@ -585,11 +572,19 @@ lListElem *sconf_create_default()
 
    ep = lCreateElem(SC_Type);
 
+   /* 
+    * 
+    * SGE & SGEEE
+    *
+    */
    lSetString(ep, SC_algorithm, "default");
    lSetString(ep, SC_schedule_interval, SCHEDULE_TIME);
    lSetUlong(ep, SC_maxujobs, MAXUJOBS);
 
-   lSetUlong(ep, SC_queue_sort_method, QSM_LOAD);
+   if (feature_is_enabled(FEATURE_SGEEE))
+      lSetUlong(ep, SC_queue_sort_method, QSM_SHARE);
+   else
+      lSetUlong(ep, SC_queue_sort_method, QSM_LOAD);
 
    added = lAddSubStr(ep, CE_name, "np_load_avg", SC_job_load_adjustments, CE_Type);
    lSetString(added, CE_stringval, "0.50");
@@ -598,43 +593,48 @@ lListElem *sconf_create_default()
                      DEFAULT_LOAD_ADJUSTMENTS_DECAY_TIME);
    lSetString(ep, SC_load_formula, DEFAULT_LOAD_FORMULA);
    lSetString(ep, SC_schedd_job_info, SCHEDD_JOB_INFO);
+   lSetBool(ep, SC_user_sort, USER_SORT);
    lSetUlong(ep, SC_flush_submit_sec, 0);
    lSetUlong(ep, SC_flush_finish_sec, 0);
    lSetString(ep, SC_params, "none");
-   
-   lSetString(ep, SC_reprioritize_interval, SGEEE_SCHEDULE_TIME);
-   lSetUlong(ep, SC_halftime, 168);
+   /* 
+    * 
+    * SGEEE
+    *
+    */
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      lSetString(ep, SC_reprioritize_interval, SGEEE_SCHEDULE_TIME);
+      lSetUlong(ep, SC_halftime, 168);
 
-   added = lAddSubStr(ep, UA_name, USAGE_ATTR_CPU, SC_usage_weight_list, UA_Type);
-   lSetDouble(added, UA_value, 1.00);
-   added = lAddSubStr(ep, UA_name, USAGE_ATTR_MEM, SC_usage_weight_list, UA_Type);
-   lSetDouble(added, UA_value, 0.0);
-   added = lAddSubStr(ep, UA_name, USAGE_ATTR_IO, SC_usage_weight_list, UA_Type);
-   lSetDouble(added, UA_value, 0.0);
+      added = lAddSubStr(ep, UA_name, USAGE_ATTR_CPU, SC_usage_weight_list, UA_Type);
+      lSetDouble(added, UA_value, 1.00);
+      added = lAddSubStr(ep, UA_name, USAGE_ATTR_MEM, SC_usage_weight_list, UA_Type);
+      lSetDouble(added, UA_value, 0.0);
+      added = lAddSubStr(ep, UA_name, USAGE_ATTR_IO, SC_usage_weight_list, UA_Type);
+      lSetDouble(added, UA_value, 0.0);
 
-   lSetDouble(ep, SC_compensation_factor, 5);
-   lSetDouble(ep, SC_weight_user, 0.25);
-   lSetDouble(ep, SC_weight_project, 0.25);
-   lSetDouble(ep, SC_weight_department, 0.25);
-   lSetDouble(ep, SC_weight_job, 0.25);
-   lSetUlong(ep, SC_weight_tickets_functional, 0);
-   lSetUlong(ep, SC_weight_tickets_share, 0);
+      lSetDouble(ep, SC_compensation_factor, 5);
+      lSetDouble(ep, SC_weight_user, 0.2);
+      lSetDouble(ep, SC_weight_project, 0.2);
+      lSetDouble(ep, SC_weight_jobclass, 0.2);
+      lSetDouble(ep, SC_weight_department, 0.2);
+      lSetDouble(ep, SC_weight_job, 0.2);
+      lSetUlong(ep, SC_weight_tickets_functional, 0);
+      lSetUlong(ep, SC_weight_tickets_share, 0);
 
-   lSetBool(ep, SC_share_override_tickets, true);  
-   lSetBool(ep, SC_share_functional_shares, true);
-   lSetUlong(ep, SC_max_functional_jobs_to_schedule, 200);
-   lSetBool(ep, SC_report_pjob_tickets, true);
-   lSetUlong(ep, SC_max_pending_tasks_per_job, 50);
-   lSetString(ep, SC_halflife_decay_list, "none"); 
-   lSetString(ep, SC_policy_hierarchy, policy_hierarchy_chars );
+      lSetBool(ep, SC_share_override_tickets, true);  
+      lSetBool(ep, SC_share_functional_shares, true);
+      lSetUlong(ep, SC_max_functional_jobs_to_schedule, 200);
+      lSetBool(ep, SC_report_pjob_tickets, true);
+      lSetUlong(ep, SC_max_pending_tasks_per_job, 50);
+      lSetString(ep, SC_halflife_decay_list, "none"); 
+      lSetString(ep, SC_policy_hierarchy, policy_hierarchy_chars );
 
-   lSetDouble(ep, SC_weight_ticket, 0.5);
-   lSetDouble(ep, SC_weight_waiting_time, 0.278); 
-   lSetDouble(ep, SC_weight_deadline, 3600000 );
-   lSetDouble(ep, SC_weight_urgency, 0.5 );
-   lSetUlong(ep, SC_max_reservation, 0);
-   lSetDouble(ep, SC_weight_priority, 0.0 );
-   lSetString(ep, SC_default_duration, DEFAULT_DURATION);
+      lSetDouble(ep, SC_weight_ticket, 0.5);
+      lSetDouble(ep, SC_weight_waiting_time, 0.278); 
+      lSetDouble(ep, SC_weight_deadline, 3600000 );
+      lSetDouble(ep, SC_weight_urgency, 0.5 );
+   }
 
    DEXIT;
    return ep;
@@ -674,6 +674,32 @@ bool sconf_is_centry_referenced(const lListElem *this_elem, const lListElem *cen
    }
    DEXIT;
    return ret;
+}
+
+/****** sge_schedd_conf/sconf_get_user_sort() **********************************
+*  NAME
+*     sconf_get_user_sort() -- ??? 
+*
+*  SYNOPSIS
+*     bool sconf_get_user_sort() 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*
+*  RESULT
+*     bool - 
+*
+*******************************************************************************/
+bool sconf_get_user_sort() {
+   const lListElem *sc_ep =  sconf_get_config();
+   if (pos.user_sort != -1) { 
+      return lGetPosBool(sc_ep, pos.user_sort);
+   }
+   else {
+      return USER_SORT;
+   }
 }
 
 /****** sge_schedd_conf/sconf_get_load_adjustment_decay_time_str() *************
@@ -1162,6 +1188,32 @@ double sconf_get_weight_project(void) {
       return 0;
 }
 
+/****** sge_schedd_conf/sconf_get_weight_jobclass() ****************************
+*  NAME
+*     sconf_get_weight_jobclass() -- ??? 
+*
+*  SYNOPSIS
+*     double sconf_get_weight_jobclass(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     double - 
+*
+*******************************************************************************/
+double sconf_get_weight_jobclass(void) {
+   const lListElem *sc_ep = sconf_get_config();
+
+   if (pos.weight_jobclass != -1)
+      return lGetPosDouble(sc_ep, pos.weight_jobclass );
+   else
+      return 0;
+}
+
 /****** sge_schedd_conf/sconf_get_weight_job() *********************************
 *  NAME
 *     sconf_get_weight_job() -- ??? 
@@ -1428,84 +1480,6 @@ double sconf_get_weight_urgency(void) {
    else
       return 0;
 }     
-
-/****** sge_schedd_conf/sconf_get_max_reservations() ***************************
-*  NAME
-*     sconf_get_max_reservations() -- Max reservation tuning parameter
-*
-*  SYNOPSIS
-*     int sconf_get_max_reservations(void) 
-*
-*  FUNCTION
-*     Tuning parameter. 
-*     Returns maximum number of reservations that should be done by 
-*     scheduler. If 0 is returned this no single job shall get a reservation
-*     and assignments are to be made for 'now' only.
-*     
-*  RESULT
-*     int - Max. number of reservations
-*******************************************************************************/
-u_long32 sconf_get_max_reservations(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
-   
-   if (pos.empty)
-      sconf_calc_pos();
-      
-   if (pos.max_reservation != -1)
-      return lGetPosUlong(sc_ep, pos.max_reservation);
-   else
-      return 0;
-}
-
-/****** sge_schedd_conf/sconf_get_default_duration_str() **********************
-*  NAME
-*     sconf_get_default_duration_str() -- Return default_duration string
-*
-*  SYNOPSIS
-*     const char* sconf_get_default_duration_str(void) 
-*
-*  FUNCTION
-*     Returns default duration string from scheduler configuration.
-*
-*  RESULT
-*     const char* - 
-*******************************************************************************/
-const char *sconf_get_default_duration_str(void){
-   const lListElem *sc_ep =  sconf_get_config();
-      
-   if (pos.schedule_interval != -1) 
-      return lGetPosString(sc_ep, pos.default_duration );
-   else
-      return DEFAULT_DURATION;
-}
-/****** sge_schedd_conf/sconf_get_weight_priority() ****************************
-*  NAME
-*     sconf_get_weight_priority() -- ??? 
-*
-*  SYNOPSIS
-*     double sconf_get_weight_priority(void) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     void - ??? 
-*
-*  RESULT
-*     double - 
-*******************************************************************************/
-double sconf_get_weight_priority(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
-   
-   if (pos.empty)
-      sconf_calc_pos();
-      
-   if (pos.weight_priority != -1)
-      return lGetPosDouble(sc_ep, pos.weight_priority);
-   else
-      return 0;
-}     
-
 
 /****** sge_schedd_conf/sconf_get_share_override_tickets() *********************
 *  NAME
@@ -1827,7 +1801,6 @@ void sconf_print_config(void){
       sconf_validate_config_(NULL);
    }
 
-
    /* --- SC_algorithm */
    s = sconf_get_algorithm();
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXASY_SS , s, "algorithm"));
@@ -1852,6 +1825,10 @@ void sconf_print_config(void){
    uval = sconf_get_flush_finish_sec();
    INFO((SGE_EVENT,MSG_ATTRIB_USINGXFORY_US,  u32c (uval) , "flush_finish_sec"));
 
+   /* --- SC_user_sort */
+   uval = sconf_get_user_sort();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS , uval?MSG_TRUE:MSG_FALSE, "user_sort"));
+
    /* --- SC_job_load_adjustments */
    lval = sconf_get_job_load_adjustments();
    uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), lval, load_adjustment_fields, delis, 0);
@@ -1871,97 +1848,99 @@ void sconf_print_config(void){
    s=lGetString(lFirst(Master_Sched_Config_List), SC_params);
    INFO((SGE_EVENT, MSG_READ_PARAM_S, s)); 
 
-   /* --- SC_reprioritize_interval */
-   s = sconf_reprioritize_interval_str();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "reprioritize_interval"));
+   /**
+    * check for SGEEE scheduler configurations
+    */
+   if (feature_is_enabled(FEATURE_SGEEE)) {
 
-   /* --- SC_halftime */
-   uval = sconf_get_halftime();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US ,  u32c (uval), "halftime"));
+      /* --- SC_reprioritize_interval */
+      s = sconf_reprioritize_interval_str();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "reprioritize_interval"));
 
-   /* --- SC_usage_weight_list */
-   uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), sconf_get_usage_weight_list(), usage_fields, delis, 0);
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, tmp_buffer, "usage_weight_list"));
+      /* --- SC_halftime */
+      uval = sconf_get_halftime();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US ,  u32c (uval), "halftime"));
 
-   /* --- SC_compensation_factor */
-   dval = sconf_get_compensation_factor();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "compensation_factor"));
+      /* --- SC_usage_weight_list */
+      uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), sconf_get_usage_weight_list(), usage_fields, delis, 0);
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, tmp_buffer, "usage_weight_list"));
 
-   /* --- SC_weight_user */
-   dval = sconf_get_weight_user();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_user"));
+      /* --- SC_compensation_factor */
+      dval = sconf_get_compensation_factor();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "compensation_factor"));
 
-   /* --- SC_weight_project */
-   dval = sconf_get_weight_project();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_project"));
+      /* --- SC_weight_user */
+      dval = sconf_get_weight_user();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_user"));
 
-   /* --- SC_weight_department */
-   dval = sconf_get_weight_department();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_department"));
+      /* --- SC_weight_project */
+      dval = sconf_get_weight_project();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_project"));
 
-   /* --- SC_weight_job */
-   dval = sconf_get_weight_job();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_job"));
+      /* --- SC_weight_jobclass */
+      dval = sconf_get_weight_jobclass();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_jobclass"));
 
-   /* --- SC_weight_tickets_functional */
-   uval = sconf_get_weight_tickets_functional();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_functional"));
+      /* --- SC_weight_department */
+      dval = sconf_get_weight_department();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_department"));
 
-   /* --- SC_weight_tickets_share */
-   uval = sconf_get_weight_tickets_share();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_share"));
+      /* --- SC_weight_job */
+      dval = sconf_get_weight_job();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_job"));
 
-   /* --- SC_share_override_tickets */
-   uval = sconf_get_share_override_tickets();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_override_tickets"));
-   
-   /* --- SC_share_functional_shares */
-   uval = sconf_get_share_functional_shares();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_functional_shares"));
+      /* --- SC_weight_tickets_functional */
+      uval = sconf_get_weight_tickets_functional();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_functional"));
 
-   /* --- SC_max_functional_jobs_to_schedule */
-   uval = sconf_get_max_functional_jobs_to_schedule();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "max_functional_jobs_to_schedule"));
-   
-   /* --- SC_report_job_tickets */
-   uval = sconf_get_report_pjob_tickets();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "report_pjob_tickets"));
-   
-   /* --- SC_max_pending_tasks_per_job */
-   uval = sconf_get_max_pending_tasks_per_job();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "max_pending_tasks_per_job"));
+      /* --- SC_weight_tickets_share */
+      uval = sconf_get_weight_tickets_share();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_share"));
 
-   /* --- SC_halflife_decay_list_str */
-   s = sconf_get_halflife_decay_list_str();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "halflife_decay_list"));
-  
-   /* --- SC_policy_hierarchy */
-   s = lGetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy);
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "policy_hierarchy"));
+      /* --- SC_share_override_tickets */
+      uval = sconf_get_share_override_tickets();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_override_tickets"));
+      
+      /* --- SC_share_functional_shares */
+      uval = sconf_get_share_functional_shares();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_functional_shares"));
 
-   /* --- SC_weight_ticket */
-   dval = sconf_get_weight_ticket();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_ticket"));
+      /* --- SC_max_functional_jobs_to_schedule */
+      uval = sconf_get_max_functional_jobs_to_schedule();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "max_functional_jobs_to_schedule"));
+      
+      /* --- SC_report_job_tickets */
+      uval = sconf_get_report_pjob_tickets();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "report_pjob_tickets"));
+      
+      /* --- SC_max_pending_tasks_per_job */
+      uval = sconf_get_max_pending_tasks_per_job();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "max_pending_tasks_per_job"));
 
-   /* --- SC_weight_waiting_time */
-   dval = sconf_get_weight_waiting_time();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_waiting_time"));
+      /* --- SC_halflife_decay_list_str */
+      s = sconf_get_halflife_decay_list_str();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "halflife_decay_list"));
+     
+      /* --- SC_policy_hierarchy */
+      s = lGetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy);
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "policy_hierarchy"));
 
-   /* --- SC_weight_deadline */
-   dval = sconf_get_weight_deadline();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_deadline"));
+      /* --- SC_weight_ticket */
+      dval = sconf_get_weight_ticket();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_ticket"));
 
-   /* --- SC_weight_urgency */
-   dval = sconf_get_weight_urgency();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_urgency"));
+      /* --- SC_weight_waiting_time */
+      dval = sconf_get_weight_waiting_time();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_waiting_time"));
 
-   /* --- SC_weight_priority */
-   dval = sconf_get_weight_priority();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_priority"));
+      /* --- SC_weight_deadline */
+      dval = sconf_get_weight_deadline();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_deadline"));
 
-   /* --- SC_max_reservation */
-   dval = sconf_get_max_reservations();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "max_reservation"));
+      /* --- SC_weight_urgency */
+      dval = sconf_get_weight_urgency();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_urgency"));
+   }
 
    DEXIT;
    return;
@@ -2009,8 +1988,6 @@ bool sconf_validate_config_(lList **answer_list){
    /* --- SC_algorithm */
    s = sconf_get_algorithm();
    if ( !s || (strcmp(s, "default") && strcmp(s, "simple_sched") && strncmp(s, "ext_", 4))) {
-      if (!s)
-         s = "not defined";
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_ALGORITHMNOVALIDNAME_S, s)); 
       answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       ret = false; 
@@ -2018,11 +1995,8 @@ bool sconf_validate_config_(lList **answer_list){
      
    /* --- SC_schedule_interval */
    s = sconf_get_schedule_interval_str();
-   if (!s || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0) ) {
-      if (!s)
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", "not defined"));   
-      else
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", tmp_error));    
+   if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0) ) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", tmp_error));    
       answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       ret =  false;
    }
@@ -2037,11 +2011,8 @@ bool sconf_validate_config_(lList **answer_list){
 
    /* --- SC_load_adjustment_decay_time */
    s = sconf_get_load_adjustment_decay_time_str();
-   if (!s || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0)) {
-      if (!s)
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", "not defined"));
-      else
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS, "load_adjustment_decay_time", tmp_error));    
+   if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0)) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS, "load_adjustment_decay_time", tmp_error));    
       answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       ret = false; 
    }
@@ -2057,46 +2028,38 @@ bool sconf_validate_config_(lList **answer_list){
       char* key;
       int ikey = 0;
       lList *rlp=NULL, *alp=NULL;
-      const char *schedd_info = lGetString(lFirst(Master_Sched_Config_List), SC_schedd_job_info);
 
-      if (schedd_info == NULL){
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM ));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);  
-         ret = false;
-      }
+      strcpy(buf, lGetString(lFirst(Master_Sched_Config_List), SC_schedd_job_info));
+      /* on/off or watch a set of jobs */
+      key = strtok(buf, " \t");
+      if (!strcmp("true", key)) 
+         ikey = SCHEDD_JOB_INFO_TRUE;
+      else if (!strcmp("false", key)) 
+         ikey = SCHEDD_JOB_INFO_FALSE;
+      else if (!strcmp("job_list", key)) 
+         ikey = SCHEDD_JOB_INFO_JOB_LIST;
       else {
-         strcpy(buf, schedd_info);
-         /* on/off or watch a set of jobs */
-         key = strtok(buf, " \t");
-         if (!strcmp("true", key)) 
-            ikey = SCHEDD_JOB_INFO_TRUE;
-         else if (!strcmp("false", key)) 
-            ikey = SCHEDD_JOB_INFO_FALSE;
-         else if (!strcmp("job_list", key)) 
-            ikey = SCHEDD_JOB_INFO_JOB_LIST;
-         else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM ));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM ));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         ret = false; 
+      }
+      /* check list of groups */
+      if (ikey == SCHEDD_JOB_INFO_JOB_LIST) {
+         key = strtok(NULL, "\n");
+         range_list_parse_from_string(&rlp, &alp, key, 0, 0, INF_NOT_ALLOWED);
+         if (rlp == NULL) {
+            lFreeList(alp);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST));
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             ret = false; 
-         }
-         /* check list of groups */
-         if (ikey == SCHEDD_JOB_INFO_JOB_LIST) {
-            key = strtok(NULL, "\n");
-            range_list_parse_from_string(&rlp, &alp, key, 0, 0, INF_NOT_ALLOWED);
-            if (rlp == NULL) {
-               lFreeList(alp);
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST));
-               answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               ret = false; 
-            }   
-            else{
-               pos.c_is_schedd_job_info = ikey;
-               pos.c_schedd_job_info_range = rlp;
-            }
-         }
+         }   
          else{
             pos.c_is_schedd_job_info = ikey;
+            pos.c_schedd_job_info_range = rlp;
          }
+      }
+      else{
+         pos.c_is_schedd_job_info = ikey;
       }
    }
 
@@ -2127,96 +2090,69 @@ bool sconf_validate_config_(lList **answer_list){
       }     
    }
 
-   /* --- SC_reprioritize_interval */
-   s = sconf_reprioritize_interval_str();
-   if (!s || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0)) {
-      if (!s)
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", "not defined"));
-      else   
+   /**
+    * check for SGEEE scheduler configurations
+    */
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+
+      /* --- SC_reprioritize_interval */
+      s = sconf_reprioritize_interval_str();
+      if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0)) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "reprioritize_interval", tmp_error));    
-      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      ret = false; 
-   }
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         ret = false; 
+      }
 
-   /* --- SC_usage_weight_list */
-   if (uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), sconf_get_usage_weight_list(), usage_fields, delis, 0) < 0) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SCHEDD_USAGE_WEIGHT_LIST_S, tmp_error));    
-      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);      
-      ret = false; 
-   }
+      /* --- SC_usage_weight_list */
+      if (uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), sconf_get_usage_weight_list(), usage_fields, delis, 0) < 0) {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SCHEDD_USAGE_WEIGHT_LIST_S, tmp_error));    
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);      
+         ret = false; 
+      }
 
-   /* --- SC_halflife_decay_list_str */
-   {
-      s = sconf_get_halflife_decay_list_str();
-      if (!s || !strcasecmp(s, "none")) {
-      } else {
-         lList *halflife_decay_list = NULL;
-         lListElem *ep;
-         const char *s0,*s1,*s2,*s3;
-         double value;
-         struct saved_vars_s *sv1=NULL, *sv2=NULL;
-         s0 = s; 
-         for(s1=sge_strtok_r(s0, ":", &sv1); s1;
-             s1=sge_strtok_r(NULL, ":", &sv1)) {
-            if ((s2=sge_strtok_r(s1, "=", &sv2)) &&
-                (s3=sge_strtok_r(NULL, "=", &sv2)) &&
-                (sscanf(s3, "%lf", &value)==1)) {
-               ep = lAddElemStr(&halflife_decay_list, UA_name, s2, UA_Type);
-               lSetDouble(ep, UA_value, value);
+      /* --- SC_halflife_decay_list_str */
+      {
+         s = sconf_get_halflife_decay_list_str();
+         if (!s || !strcasecmp(s, "none")) {
+         } else {
+            lList *halflife_decay_list = NULL;
+            lListElem *ep;
+            const char *s0,*s1,*s2,*s3;
+            double value;
+            struct saved_vars_s *sv1=NULL, *sv2=NULL;
+            s0 = s; 
+            for(s1=sge_strtok_r(s0, ":", &sv1); s1;
+                s1=sge_strtok_r(NULL, ":", &sv1)) {
+               if ((s2=sge_strtok_r(s1, "=", &sv2)) &&
+                   (s3=sge_strtok_r(NULL, "=", &sv2)) &&
+                   (sscanf(s3, "%lf", &value)==1)) {
+                  ep = lAddElemStr(&halflife_decay_list, UA_name, s2, UA_Type);
+                  lSetDouble(ep, UA_value, value);
+               }
+               if (sv2)
+                  free(sv2);
             }
-            if (sv2)
-               free(sv2);
-         }
-         if (sv1)
-            free(sv1);
-         pos.c_halflife_decay_list = halflife_decay_list;   
-      } 
-   }
-  
-   /* --- SC_policy_hierarchy */
-   {
-      const char *value_string = lGetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy);
-      if (value_string) {
-         policy_hierarchy_t hierarchy[POLICY_VALUES];
+            if (sv1)
+               free(sv1);
+            pos.c_halflife_decay_list = halflife_decay_list;   
+         } 
+      }
+     
+      /* --- SC_policy_hierarchy */
+      {
+         const char *value_string = lGetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy);
+         if (value_string) {
+            policy_hierarchy_t hierarchy[POLICY_VALUES];
 
-         if (policy_hierarchy_verify_value(value_string) != 0) {
-            answer_list_add(answer_list, MSG_GDI_INVALIDPOLICYSTRING, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);  
-            ret = false;
-            lSetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy, policy_hierarchy_chars);
-         }
-         sconf_ph_fill_array(hierarchy);
-      } 
-      else {
-         if (!s)
-         value_string = "not defined";
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "policy hierarchy", value_string));    
-         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         ret = false;          
+            if (policy_hierarchy_verify_value(value_string) != 0) {
+               answer_list_add(answer_list, MSG_GDI_INVALIDPOLICYSTRING, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);  
+               ret = false;
+               lSetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy, policy_hierarchy_chars);
+            }
+            sconf_ph_fill_array(hierarchy);
+         } 
       }
    }
-
-   /* --- SC_max_reservation and SC_default_duration */
-   {
-      const char *s = sconf_get_default_duration_str();
-      u_long32 max_reservation = sconf_get_max_reservations();
-
-      if (!s || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0) ) {
-         if (!s)
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "default_duration", "not defined"));   
-         else
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "default_duration", tmp_error));    
-         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         ret =  false;
-      } else {
-         /* ensure we get a non-zero/non-infinity duration default in reservation scheduling mode */
-         if (max_reservation != 0 && (uval == 0 || uval == MAX_ULONG32)) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_RR_REQUIRES_DEFAULT_DURATION));    
-            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);      
-            ret = false; 
-         }
-      }
-   }
-
 
    DEXIT;
    return ret;
@@ -2510,7 +2446,7 @@ static char policy_hierarchy_enum2char(policy_type_t value)
 static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, const char* param){
    bool ret = true;
    lListElem *elem = NULL;
-   DENTER(TOP_LAYER, "sconf_eval_set_profiling");
+   DENTER(TOP_LAYER, "sconf_validate_config");
 
    do_profiling = false;
 
@@ -2545,178 +2481,4 @@ static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, con
    
    DEXIT;
    return ret;
-}
-
-/****** sge_schedd_conf/sconf_eval_set_monitoring() ****************************
-*  NAME
-*     sconf_eval_set_monitoring() -- Control SERF on/off via MONITOR param 
-*
-*  SYNOPSIS
-*     static bool sconf_eval_set_monitoring(lList *param_list, lList 
-*     **answer_list, const char* param) 
-*
-*  FUNCTION
-*     The MONITOR param allows schedule entry recording facility module 
-*     be switched on/off. 
-*
-*  INPUTS
-*     lList *param_list   - ??? 
-*     lList **answer_list - ??? 
-*     const char* param   - ??? 
-*
-*  RESULT
-*     static bool - parsing error
-*
-*  NOTES
-*     MT-NOTE: sconf_eval_set_monitoring() is not MT safe 
-*******************************************************************************/
-static bool sconf_eval_set_monitoring(lList *param_list, lList **answer_list, const char* param){
-   bool ret = true;
-   lListElem *elem = NULL;
-   const char mon_true[] = "MONITOR=TRUE", mon_one[] = "MONITOR=1";
-   const char mon_false[] = "MONITOR=FALSE", mon_zero[] = "MONITOR=0";
-   bool do_monitoring = false;
-
-   DENTER(TOP_LAYER, "sconf_eval_set_monitoring");
-
-
-   if (!strncasecmp(param, mon_one, sizeof(mon_one)-1) || 
-       !strncasecmp(param, mon_true, sizeof(mon_true)-1) ) {
-      do_monitoring = true;
-      elem = lCreateElem(PARA_Type);
-      lSetString(elem, PARA_name, "monitor");
-      lSetString(elem, PARA_value, "true");
-   }      
-   else if (!strncasecmp(param, mon_zero, sizeof(mon_zero)-1) ||
-            !strncasecmp(param, mon_false, sizeof(mon_false)-1) ) {
-      elem = lCreateElem(PARA_Type);
-      lSetString(elem, PARA_name, "monitor");
-      lSetString(elem, PARA_value, "false");
-   }
-   else {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INVALID_PARAM_SETTING_S, param)); 
-      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      ret = false;
-   }
-   if (elem){
-      lAppendElem(pos.c_params, elem);
-   }
-
-   serf_set_active(do_monitoring);
-
-   DEXIT;
-   return ret;
-}
-
-
-/* 
-   QS_STATE_FULL
-      All debitations caused by running jobs are in effect.
-   QS_STATE_EMPTY
-      We ignore all debitations caused by running jobs.
-      Ignore all but static load values.
-*/
-void sconf_set_qs_state(qs_state_t qs_state) 
-{
-   max_resources = qs_state;
-}
-qs_state_t sconf_get_qs_state(void) 
-{
-   return max_resources;
-}
-void sconf_set_global_load_correction(bool flag) 
-{
-   global_load_correction = flag;
-}
-bool sconf_get_global_load_correction(void) 
-{
-   return global_load_correction;
-}
-
-void sconf_set_default_duration(u_long32 duration) 
-{
-   default_duration = duration;
-}
-u_long32 sconf_get_default_duration(void) 
-{
-   return default_duration;
-}
-
-void sconf_set_now(u_long32 now)
-{
-   now_time = now;
-}
-
-u_long32 sconf_get_now(void)
-{
-   return now_time;
-}
-
-bool sconf_get_host_order_changed(void)
-{
-   return host_order_changed;
-}
-
-void sconf_set_host_order_changed(bool changed)
-{
-   host_order_changed = changed;
-}
-
-int sconf_get_last_dispatch_type(void)
-{
-   return last_dispatch_type;
-}
-void sconf_set_last_dispatch_type(int last)
-{
-   last_dispatch_type = last;
-}
-
-/****** sge_resource_utilization/serf_control() ********************************
-*  NAME
-*     serf_control() -- Switch recording on/off.
-*
-*  SYNOPSIS
-*     void serf_control(bool on_off) 
-*
-*  FUNCTION
-*     Allows recording be switched on/off.
-*
-*  INPUTS
-*     bool on_off - true = on 
-*                   false = off
-*
-*  NOTES
-*     MT-NOTE: serf_control() is not MT safe 
-*
-*     Actually belongs to sge_serf.c but this would cause a link dependency 
-*     libsgeobj -> libschedd !! 
-*******************************************************************************/
-static bool current_serf_do_monitoring = false;
-void serf_set_active(bool on_off)
-{
-   current_serf_do_monitoring = on_off;
-}
-/****** sge_resource_utilization/serf_control() ********************************
-*  NAME
-*     serf_get_active() -- Retrieve whether SERF is active or not
-*
-*  SYNOPSIS
-*     bool serf_get_active(void);
-*
-*  FUNCTION
-*     Returns whether SERF is active or not
-*
-*  RETURN
-*     bool - true = on 
-*            false = off
-*
-*  NOTES
-*     MT-NOTE: serf_get_active() is not MT safe 
-*
-*     Actually belongs to sge_serf.c but this would cause a link dependency 
-*     libsgeobj -> libschedd !! 
-*******************************************************************************/
-bool serf_get_active(void)
-{
-   return current_serf_do_monitoring;
 }

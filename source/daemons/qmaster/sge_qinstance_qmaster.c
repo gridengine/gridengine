@@ -40,7 +40,6 @@
 
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_time.h"
 #include "sge_signal.h"
 #include "sge_event_master.h"
 #include "sge_event.h"
@@ -50,7 +49,7 @@
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_qinstance_qmaster.h"
-#include "sge_subordinate_qmaster.h"
+#include "subordinate_qmaster.h"
 #include "sge_qmod_qmaster.h"
 
 #include "sge_attr.h"
@@ -60,8 +59,6 @@
 #include "sge_cqueue.h"
 #include "sge_object.h"
 #include "sge_subordinate.h"
-
-#include "sge_reporting_qmaster.h"
 
 #include "msg_qmaster.h"
 
@@ -88,7 +85,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                            bool *has_changed_conf_attr, 
                            bool *has_changed_state_attr)
 {
-#if 0 /* EB: DEBUG: enable debugging for qinstance_modify_attribute() */
+#if 1 /* EB: debug */
 #define QINSTANCE_MODIFY_DEBUG
 #endif
    bool ret = true;
@@ -109,39 +106,6 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
       bool value_found = true;
 
       switch (cqueue_attibute_name) {
-         case CQ_calendar:
-            {
-               const char *old_value = lGetString(this_elem, attribute_name);
-               const char *new_value;
-
-               str_attr_list_find_value(attr_list, answer_list,
-                                        hostname, &new_value, 
-                                        matching_host_or_group,
-                                        matching_group, is_ambiguous);
-               if (old_value == NULL || new_value == NULL ||
-                   strcmp(old_value, new_value)) {
-                  lList *master_calendar_list = 
-                             *(object_type_get_master_list(SGE_TYPE_CALENDAR)); 
-                  lListElem *calendar = 
-                         calendar_list_locate(master_calendar_list, new_value);
-  
-#ifdef QINSTANCE_MODIFY_DEBUG
-                  DPRINTF(("Changed "SFQ" from "SFQ" to "SFQ"\n",
-                           lNm2Str(attribute_name),
-                           old_value ? old_value : "<null>",
-                           new_value ? new_value : "<null>"));
-#endif
-                  if (calendar != NULL) { 
-                     qinstance_change_state_on_calendar(this_elem, calendar);
-                  } else {
-                     qinstance_state_set_cal_disabled(this_elem, false);
-                     qinstance_state_set_cal_suspended(this_elem, false);
-                  }
-                  lSetString(this_elem, attribute_name, new_value);
-                  *has_changed_conf_attr = true;
-               }
-            }
-            break;
          case CQ_qtype:
             {
                u_long32 old_value = lGetUlong(this_elem, attribute_name);
@@ -314,6 +278,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                lList *new_list = NULL;
                lListElem *tmp_elem = lCopyElem(this_elem);
 
+               /* get new value for CQ_consumable_config_list */
                celist_attr_list_find_value(attr_list, answer_list,
                                            hostname, &new_value, 
                                            matching_host_or_group,
@@ -322,20 +287,26 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                new_value = NULL;
                centry_list_fill_request(new_list, Master_CEntry_List, 
                                         false, true, false);
+
+               /* reinitialize QU_consumable_actual_list */
                lSetList(tmp_elem, attribute_name, new_list);
                qinstance_reinit_consumable_actual_list(tmp_elem, answer_list);
                lXchgList(tmp_elem, attribute_name, &new_value);
+               tmp_elem = lFreeElem(tmp_elem);
+
                if (object_list_has_differences(old_value, answer_list,
                                                new_value, false)) {
 #ifdef QINSTANCE_MODIFY_DEBUG
                   DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
-                  lSetList(this_elem, attribute_name, lCopyList("", new_value));
+                  lSetList(this_elem, attribute_name, new_value);
                   *has_changed_conf_attr = true;
                   if (attribute_name == QU_consumable_config_list) {
                      qinstance_reinit_consumable_actual_list(this_elem, 
                                                              answer_list);
                   }
+               } else {
+                  new_value = lFreeList(new_value);
                }
             }
             break;
@@ -564,34 +535,21 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
          /*
           * Some transitions need extra work
           */
-          switch(transition){
-            case QI_DO_SUSPEND : 
-                  if ((!qinstance_state_is_susp_on_sub(this_elem) &&
-                       !qinstance_state_is_cal_suspended(this_elem)) ||
-                      force_transition) {
-                     sge_signal_queue(SGE_SIGSTOP, this_elem, NULL, NULL);
-                     did_something = true;
-                  }   
-               break;
-            case QI_DO_UNSUSPEND :    
-                  if (!qinstance_state_is_susp_on_sub(this_elem) &&
-                      !qinstance_state_is_cal_suspended(this_elem)) {
-                     sge_signal_queue(SGE_SIGCONT, this_elem, NULL, NULL);
-                     did_something = true;
-                  }   
-               break;
-            case QI_DO_CLEARERROR :
-                  qinstance_message_trash_all_of_type_X(this_elem, QI_ERROR);
-                  did_something = true;
-               break;   
-#ifdef __SGE_QINSTANCE_STATE_DEBUG__
-            case QI_DO_SETERROR :
-                 qinstance_message_add(this_elem, QI_ERROR, "this is a debug message\n");
-                 did_something = true;
-               break;  
-#endif                  
-            default:   
-                  did_something = true;
+         if (transition == QI_DO_SUSPEND) {
+            if ((!qinstance_state_is_susp_on_sub(this_elem) &&
+                 !qinstance_state_is_cal_suspended(this_elem)) ||
+                force_transition) {
+               sge_signal_queue(SGE_SIGSTOP, this_elem, NULL, NULL);
+               did_something = true;
+            }
+         } else if (transition == QI_DO_UNSUSPEND) {
+            if (!qinstance_state_is_susp_on_sub(this_elem) &&
+                !qinstance_state_is_cal_suspended(this_elem)) {
+               sge_signal_queue(SGE_SIGCONT, this_elem, NULL, NULL);
+               did_something = true;
+            }
+         } else {
+            did_something = true;
          }
       
          /*
@@ -606,7 +564,6 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
           */
          if (did_something) {
             qinstance_increase_qversion(this_elem);
-            reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
             ret &= sge_event_spool(answer_list, 0, sgeE_QINSTANCE_MOD,
                                    0, 0, lGetString(this_elem, QU_qname),
                                    lGetHost(this_elem, QU_qhostname), NULL,
@@ -698,7 +655,6 @@ qinstance_change_state_on_calendar(lListElem *this_elem,
       }
       if (state_changed) {
          qinstance_add_event(this_elem, sgeE_QINSTANCE_MOD);
-         reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
       }
    }
    DEXIT;

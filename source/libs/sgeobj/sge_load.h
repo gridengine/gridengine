@@ -34,7 +34,7 @@
 
 /* this function replaces sge_is_static_load_value() */
 
-bool 
+int 
 sge_is_static_load_value(const char *name);
 
 #endif /* __SGE_QREF_H__ */

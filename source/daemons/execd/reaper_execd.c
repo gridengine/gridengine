@@ -73,6 +73,7 @@
 #include "sge_string.h"
 #include "sge_afsutil.h"
 #include "sge_parse_num_par.h"
+#include "sge_conf.h"
 #include "setup_path.h"
 #include "get_path.h"
 #include "msg_common.h"
@@ -317,7 +318,7 @@ lListElem *jr
    if (ptf_error) {
       WARNING((SGE_EVENT, MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US,
          u32c(job_id), ptf_errstr(ptf_error)));
-   } else {
+   } else if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
       if (usage) {
          lXchgList(jr, JR_usage, &usage);
          lFreeList(usage);
@@ -691,20 +692,12 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
                   job_caused_failure = 1;
                }
             }
-         }
-/* bugfix 476: But is this enough? Do we have to handle some states some
-   where else? Now a queue is allways setin error state. When a job start
-   failed. 
- */
-#if 1            
-         else if (failed == SSTATE_BEFORE_JOB) {
-            
+         } else if (failed == SSTATE_BEFORE_JOB) {
             if (job && JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&
                 !sge_is_file(lGetString(job, JB_script_file))) {
                job_caused_failure = 1;
             }
          }
-#endif         
          general_failure = job_caused_failure ? GFSTATE_JOB : GFSTATE_QUEUE;
          lSetUlong(jr, JR_general_failure, general_failure);
          job_related_adminmail(jr, is_array);
@@ -717,7 +710,6 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_OPEN_OUTPUT:
    case SSTATE_NO_CWD:
    case SSTATE_AFS_PROBLEM:
-   case SSTATE_APPERROR:
       general_failure = GFSTATE_JOB;
       lSetUlong(jr, JR_general_failure, general_failure);
       job_related_adminmail(jr, is_array);
@@ -774,10 +766,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
     *           communication of qrsh with other components instead of qrsh socket.
     */
    if (pe_task_id != NULL) {
-#if 0
-      lListElem *petep = NULL, *uep = NULL;
-#endif
-      lListElem *jep = NULL, *jatep = NULL;
+      lListElem *jep = NULL, *jatep = NULL, *petep = NULL, *uep = NULL;
       const void *iterator;
 
       jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, job_id, &iterator);
@@ -789,12 +778,8 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          jep = lGetElemUlongNext(Master_Job_List, JB_job_number, job_id, &iterator);
       }
 
-      /* CR: TODO: This code is not active because there is no one who calls 
-       *           sge_qwaittid() to receive task exit message. Activate this
-       *           code when sge_qwaittid() is needed.
-       */
-#if 0
-      if (jatep && (petep = lGetSubStr(jatep, PET_id, pe_task_id, JAT_task_list))) {
+      if (jatep && (petep = lGetSubStr(jatep, PET_id, pe_task_id, 
+            JAT_task_list))) {
          const char *host, *commproc;
          u_short id;
          sge_pack_buffer pb;
@@ -819,12 +804,11 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             /* send a task exit message to the submitter of this task */
             ret=gdi_send_message_pb(0, commproc, id, host, TAG_TASK_EXIT, &pb, &dummymid);
             DPRINTF(("%s sending task exit message for pe-task \"%s\" to %s: %s\n",
-                  (ret!=CL_RETVAL_OK)?"failed":"success", pe_task_id, 
-                  lGetString(petep, PET_source), cl_get_error_text(ret)));
+                  ret?"failed":"success", pe_task_id, 
+                  lGetString(petep, PET_source), ret?cl_errstr(ret):""));
             clear_packbuffer(&pb);
          }
       }
-#endif
    }
 
    sge_dstring_free(&fname);
@@ -1945,8 +1929,6 @@ lListElem *jr
          action = MSG_MAIL_ACTION_MIGR;
       } else if (failed==SSTATE_AGAIN) {
          action = MSG_MAIL_ACTION_RESCH;
-      } else if (failed==SSTATE_APPERROR) {
-         action = MSG_MAIL_ACTION_APPERROR;
       } else if (lGetUlong(jr, JR_general_failure)==GFSTATE_JOB) {
          action = MSG_MAIL_ACTION_ERR;
          comment = MSG_MAIL_ACTION_ERR_COMMENT;

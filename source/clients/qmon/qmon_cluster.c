@@ -113,7 +113,6 @@ typedef struct _tCClEntry {
    int enforce_project;
    int enforce_user;
    String qmaster_params;
-   String reporting_params;
    String execd_params;
    String shepherd_cmd;
    String rsh_daemon;
@@ -125,10 +124,6 @@ typedef struct _tCClEntry {
    String token_extend_time;
    String gid_range;
    int zombie_jobs;
-   int auto_user_oticket;
-   int auto_user_fshare;
-   String auto_user_default_project;
-   String auto_user_delete_time;
 } tCClEntry;
 
 XtResource ccl_resources[] = {
@@ -270,10 +265,6 @@ XtResource ccl_resources[] = {
       sizeof(String), XtOffsetOf(tCClEntry, qmaster_params), 
       XtRImmediate, NULL },
 
-   { "reporting_params", "reporting_params", XtRString, 
-      sizeof(String), XtOffsetOf(tCClEntry, reporting_params), 
-      XtRImmediate, NULL },
-
    { "execd_params", "execd_params", XtRString, 
       sizeof(String), XtOffsetOf(tCClEntry, execd_params), 
       XtRImmediate, NULL },
@@ -318,22 +309,6 @@ XtResource ccl_resources[] = {
       sizeof(int), XtOffsetOf(tCClEntry, zombie_jobs),
       XtRImmediate, NULL },
 
-   { "auto_user_oticket", "auto_user_oticket", XtRInt,
-      sizeof(int), XtOffsetOf(tCClEntry, auto_user_oticket),
-      XtRImmediate, NULL },
-
-   { "auto_user_fshare", "auto_user_fshare", XtRInt,
-      sizeof(int), XtOffsetOf(tCClEntry, auto_user_fshare),
-      XtRImmediate, NULL },
-
-   { "auto_user_default_project", "auto_user_default_project", XtRString, 
-      sizeof(String), XtOffsetOf(tCClEntry, auto_user_default_project), 
-      XtRImmediate, NULL },
-      
-   { "auto_user_delete_time", "auto_user_delete_time", XtRString, 
-      sizeof(String), XtOffsetOf(tCClEntry, auto_user_delete_time), 
-      XtRImmediate, NULL },
-      
 };
 
 
@@ -382,7 +357,6 @@ static Widget cluster_projectsPB = 0;
 static Widget cluster_xprojectsPB = 0;
 
 static Widget cluster_qmaster_params = 0;
-static Widget cluster_reporting_params = 0;
 static Widget cluster_execd_params = 0;
 static Widget cluster_shepherd_cmd = 0;
 static Widget cluster_rsh_daemon = 0;
@@ -394,16 +368,9 @@ static Widget cluster_pag_cmd = 0;
 static Widget cluster_token_extend_time = 0;
 static Widget cluster_gid_range = 0;
 static Widget cluster_qmaster_params_label = 0;
-static Widget cluster_reporting_params_label = 0;
 static Widget cluster_set_token_cmd_label = 0;
 static Widget cluster_pag_cmd_label = 0;
 static Widget cluster_token_extend_time_label = 0;
-static Widget cluster_auto_user_defaults_label = 0;
-static Widget cluster_auto_user_oticket = 0;
-static Widget cluster_auto_user_fshare = 0;
-static Widget cluster_auto_user_default_project = 0;
-static Widget cluster_auto_user_delete_time = 0;
-static Widget cluster_auto_user_delete_timePB = 0;
 
 /*-------------------------------------------------------------------------*/
 static void qmonPopdownClusterConfig(Widget w, XtPointer cld, XtPointer cad);
@@ -704,8 +671,6 @@ Widget parent
                            "cluster_loglevel", &cluster_loglevel,
                            "cluster_qmaster_params", &cluster_qmaster_params,
                            "cluster_qmaster_params_label", &cluster_qmaster_params_label,
-                           "cluster_reporting_params", &cluster_reporting_params,
-                           "cluster_reporting_params_label", &cluster_reporting_params_label,
                            "cluster_execd_params", &cluster_execd_params,
                            "cluster_shepherd_cmd", &cluster_shepherd_cmd,
                            "cluster_rsh_daemon", &cluster_rsh_daemon,
@@ -722,20 +687,20 @@ Widget parent
                                     &cluster_token_extend_time,
                            "cluster_gid_range", 
                                     &cluster_gid_range,
-                           "cluster_auto_user_defaults_label", 
-                                    &cluster_auto_user_defaults_label,
-                           "cluster_auto_user_fshare", 
-                                    &cluster_auto_user_fshare,
-                           "cluster_auto_user_oticket", 
-                                    &cluster_auto_user_oticket,
-                           "cluster_auto_user_default_project", 
-                                    &cluster_auto_user_default_project,
-                           "cluster_auto_user_delete_time", 
-                                    &cluster_auto_user_delete_time,
-                           "cluster_auto_user_delete_timePB", 
-                                    &cluster_auto_user_delete_timePB,
                            NULL);
 
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
+      XtUnmanageChild(cluster_enforce_project);
+      XtUnmanageChild(cluster_enforce_user);
+      XtVaGetValues( cluster_projectsPB,
+                     XmtNlayoutIn, &cluster_projects_col,
+                     NULL);
+      XtUnmanageChild(cluster_projects_col);
+      XtVaGetValues( cluster_xprojectsPB,
+                     XmtNlayoutIn, &cluster_xprojects_col,
+                     NULL);
+      XtUnmanageChild(cluster_xprojects_col);
+   }
 
    if (!feature_is_enabled(FEATURE_AFS_SECURITY)) {
       XtVaGetValues( cluster_set_token_cmd,
@@ -757,12 +722,12 @@ Widget parent
    XtAddCallback(cluster_xusersPB, XmNactivateCallback, 
                      qmonClusterAskForUsers, (XtPointer)cluster_xusers);
 
-   XtAddCallback(cluster_projectsPB, XmNactivateCallback, 
-                 qmonClusterAskForProjects, (XtPointer)cluster_projects);
-   XtAddCallback(cluster_xprojectsPB, XmNactivateCallback, 
-                 qmonClusterAskForProjects, (XtPointer)cluster_xprojects);
-   XtAddCallback(cluster_auto_user_delete_timePB, XmNactivateCallback, 
-                 qmonClusterTime, (XtPointer)cluster_auto_user_delete_time);
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      XtAddCallback(cluster_projectsPB, XmNactivateCallback, 
+                    qmonClusterAskForProjects, (XtPointer)cluster_projects);
+      XtAddCallback(cluster_xprojectsPB, XmNactivateCallback, 
+                    qmonClusterAskForProjects, (XtPointer)cluster_xprojects);
+   }
 
    XtAddCallback(cluster_load_report_timePB, XmNactivateCallback, 
                      qmonClusterTime, (XtPointer)cluster_load_report_time);
@@ -992,21 +957,14 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_qmaster_params, mode);
    XtSetSensitive(cluster_qmaster_params_label, mode);
   
-   XtSetSensitive(cluster_reporting_params, mode);
-   XtSetSensitive(cluster_reporting_params_label, mode);
-  
-   XtSetSensitive(cluster_enforce_project, mode);
-   XtSetSensitive(cluster_enforce_user, mode);
-   XtSetSensitive(cluster_projects, mode);
-   XtSetSensitive(cluster_projectsPB, mode);
-   XtSetSensitive(cluster_xprojects, mode);
-   XtSetSensitive(cluster_xprojectsPB, mode);
-   XtSetSensitive(cluster_auto_user_defaults_label, mode);
-   XtSetSensitive(cluster_auto_user_fshare, mode);
-   XtSetSensitive(cluster_auto_user_oticket, mode);
-   XtSetSensitive(cluster_auto_user_default_project, mode);
-   XtSetSensitive(cluster_auto_user_delete_time, mode);
-   XtSetSensitive(cluster_auto_user_delete_timePB, mode);
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      XtSetSensitive(cluster_enforce_project, mode);
+      XtSetSensitive(cluster_enforce_user, mode);
+      XtSetSensitive(cluster_projects, mode);
+      XtSetSensitive(cluster_projectsPB, mode);
+      XtSetSensitive(cluster_xprojects, mode);
+      XtSetSensitive(cluster_xprojectsPB, mode);
+   }
 
    if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
       XtSetSensitive(cluster_set_token_cmd, mode);
@@ -1091,7 +1049,7 @@ int local
    static String loglevel[] = { "log_info", "log_warning", "log_err" };
 /*    static String logmail[] = { "true", "false" }; */
    static String enforce_project[] = { "true", "false" };
-   static String enforce_user[] = { "true", "false", "auto" };
+   static String enforce_user[] = { "true", "false" };
    String str = NULL;
    char min_uid[20];
    char min_gid[20];
@@ -1656,73 +1614,52 @@ int local
          lDelElemStr(&confl, CF_name, "gid_range");
       }
 
-      if (clen->enforce_project >= 0 && 
-            clen->enforce_project < sizeof(enforce_project))
-         str = enforce_project[clen->enforce_project];
-      ep = lGetElemStr(confl, CF_name, "enforce_project");
-      lSetString(ep, CF_value, str);
+      if (feature_is_enabled(FEATURE_SGEEE)) {
+         if (clen->enforce_project >= 0 && 
+               clen->enforce_project < sizeof(enforce_project))
+            str = enforce_project[clen->enforce_project];
+         ep = lGetElemStr(confl, CF_name, "enforce_project");
+         lSetString(ep, CF_value, str);
 
-      if (clen->enforce_user >= 0 && 
-            clen->enforce_user < sizeof(enforce_user))
-         str = enforce_user[clen->enforce_user];
-      ep = lGetElemStr(confl, CF_name, "enforce_user");
-      lSetString(ep, CF_value, str);
+         if (clen->enforce_user >= 0 && 
+               clen->enforce_user < sizeof(enforce_user))
+            str = enforce_user[clen->enforce_user];
+         ep = lGetElemStr(confl, CF_name, "enforce_user");
+         lSetString(ep, CF_value, str);
 
-      /*
-      ** (x)projects
-      */
-      strcpy(buf, "none");
-      first = True;
-      for_each(uep, clen->cluster_projects) {
-         if (first) {
-            first = False;
-            strcpy(buf, lGetString(uep, UP_name));
+         /*
+         ** (x)projects
+         */
+         strcpy(buf, "none");
+         first = True;
+         for_each(uep, clen->cluster_projects) {
+            if (first) {
+               first = False;
+               strcpy(buf, lGetString(uep, UP_name));
+            }
+            else {
+               strcat(buf, " "); 
+               strcat(buf, lGetString(uep, UP_name));
+            }
          }
-         else {
-            strcat(buf, " "); 
-            strcat(buf, lGetString(uep, UP_name));
+         ep = lGetElemStr(confl, CF_name, "projects");
+         lSetString(ep, CF_value, buf);
+
+         strcpy(buf, "none");
+         first = True;
+         for_each(uep, clen->cluster_xprojects) {
+            if (first) {
+               first = False;
+               strcpy(buf, lGetString(uep, UP_name));
+            }
+            else {
+               strcat(buf, " "); 
+               strcat(buf, lGetString(uep, UP_name));
+            }
          }
+         ep = lGetElemStr(confl, CF_name, "xprojects");
+         lSetString(ep, CF_value, buf);
       }
-      ep = lGetElemStr(confl, CF_name, "projects");
-      lSetString(ep, CF_value, buf);
-
-      strcpy(buf, "none");
-      first = True;
-      for_each(uep, clen->cluster_xprojects) {
-         if (first) {
-            first = False;
-            strcpy(buf, lGetString(uep, UP_name));
-         }
-         else {
-            strcat(buf, " "); 
-            strcat(buf, lGetString(uep, UP_name));
-         }
-      }
-      ep = lGetElemStr(confl, CF_name, "xprojects");
-      lSetString(ep, CF_value, buf);
-
-      ep = lGetElemStr(confl, CF_name, "auto_user_fshare");
-      sprintf(buf, "%d", clen->auto_user_fshare);
-      lSetString(ep, CF_value, buf);
-
-      ep = lGetElemStr(confl, CF_name, "auto_user_oticket");
-      sprintf(buf, "%d", clen->auto_user_oticket);
-      lSetString(ep, CF_value, buf);
-      
-      ep = lGetElemStr(confl, CF_name, "auto_user_delete_time");
-      if (check_white(clen->auto_user_delete_time)) {
-         strcpy(errstr, "No whitespace allowed in value for auto_user_delete_time");
-         goto error;
-      }
-      lSetString(ep, CF_value, clen->auto_user_delete_time);
-
-      ep = lGetElemStr(confl, CF_name, "auto_user_default_project");
-      if (clen->auto_user_default_project && clen->auto_user_default_project[0] != '\0') {
-         lSetString(ep, CF_value, clen->auto_user_default_project);
-      }
-      else
-         lSetString(ep, CF_value, "none");
-      
 
       /*
       **  additional config parameters
@@ -1735,16 +1672,6 @@ int local
       }
       else {
          lDelElemStr(&confl, CF_name, "qmaster_params");
-      }
-
-      if (clen->reporting_params && clen->reporting_params[0] != '\0') {
-         ep = lGetElemStr(confl, CF_name, "reporting_params");
-         if (!ep)
-            ep = lAddElemStr(&confl, CF_name, "reporting_params", CF_Type);
-         lSetString(ep, CF_value, clen->reporting_params);
-      }
-      else {
-         lDelElemStr(&confl, CF_name, "reporting_params");
       }
 
       if (clen->execd_params && clen->execd_params[0] != '\0') {
@@ -1908,8 +1835,6 @@ tCClEntry *clen
    StringConst max_u_jobs;
    StringConst max_jobs;
    StringConst zombie_jobs;
-   StringConst auto_user_fshare;
-   StringConst auto_user_oticket;
 
    DENTER(GUI_LAYER, "qmonCullToCClEntry");
 
@@ -2043,56 +1968,37 @@ tCClEntry *clen
       clen->gid_range = XtNewString(lGetString(ep, CF_value));
 
 
-   if ((ep = lGetElemStr(confl, CF_name, "enforce_project")))
-      str = (StringConst)lGetString(ep, CF_value);
-   if (str && !strcasecmp(str, "true"))
-      clen->enforce_project = 0;
-   else
-      clen->enforce_project = 1;
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      if ((ep = lGetElemStr(confl, CF_name, "enforce_project")))
+         str = (StringConst)lGetString(ep, CF_value);
+      if (str && !strcasecmp(str, "true"))
+         clen->enforce_project = 0;
+      else
+         clen->enforce_project = 1;
 
-   if ((ep = lGetElemStr(confl, CF_name, "enforce_user")))
-      str = (StringConst)lGetString(ep, CF_value);
-   if (str && !strcasecmp(str, "true"))
-      clen->enforce_user = 0;
-   else if (str && !strcasecmp(str, "auto"))
-      clen->enforce_user = 2;
-   else
-      clen->enforce_user = 1;
+      if ((ep = lGetElemStr(confl, CF_name, "enforce_user")))
+         str = (StringConst)lGetString(ep, CF_value);
+      if (str && !strcasecmp(str, "true"))
+         clen->enforce_user = 0;
+      else
+         clen->enforce_user = 1;
 
-   if ((ep = lGetElemStr(confl, CF_name, "projects"))) {
-      clen->cluster_projects = lFreeList(clen->cluster_projects);
-      lString2ListNone(lGetString(ep, CF_value), &clen->cluster_projects, 
-                           UP_Type, UP_name, NULL);
+      if ((ep = lGetElemStr(confl, CF_name, "projects"))) {
+         clen->cluster_projects = lFreeList(clen->cluster_projects);
+         lString2ListNone(lGetString(ep, CF_value), &clen->cluster_projects, 
+                              UP_Type, UP_name, NULL);
+      }
+
+      if ((ep = lGetElemStr(confl, CF_name, "xprojects"))) {
+         clen->cluster_xprojects = lFreeList(clen->cluster_xprojects);
+         lString2ListNone(lGetString(ep, CF_value), &clen->cluster_xprojects, 
+                              UP_Type, UP_name, NULL);
+      }
+
    }
-
-   if ((ep = lGetElemStr(confl, CF_name, "xprojects"))) {
-      clen->cluster_xprojects = lFreeList(clen->cluster_xprojects);
-      lString2ListNone(lGetString(ep, CF_value), &clen->cluster_xprojects, 
-                           UP_Type, UP_name, NULL);
-   }
-
-   if ((ep = lGetElemStr(confl, CF_name, "auto_user_oticket"))) {
-      auto_user_oticket = (StringConst)lGetString(ep, CF_value);
-      clen->auto_user_oticket = auto_user_oticket ? atoi(auto_user_oticket) : 0;
-   }
-
-   if ((ep = lGetElemStr(confl, CF_name, "auto_user_fshare"))) {
-      auto_user_fshare = (StringConst)lGetString(ep, CF_value);
-      clen->auto_user_fshare = auto_user_fshare ? atoi(auto_user_fshare) : 0;
-   }
-
-   if ((ep = lGetElemStr(confl, CF_name, "auto_user_default_project")))
-      clen->auto_user_default_project = XtNewString(lGetString(ep, CF_value));
-
-   if ((ep = lGetElemStr(confl, CF_name, "auto_user_delete_time")))
-      clen->auto_user_delete_time = XtNewString(lGetString(ep, CF_value));
-
 
    if ((ep = lGetElemStr(confl, CF_name, "qmaster_params")))
       clen->qmaster_params = XtNewString(lGetString(ep, CF_value));
-
-   if ((ep = lGetElemStr(confl, CF_name, "reporting_params")))
-      clen->reporting_params = XtNewString(lGetString(ep, CF_value));
 
    if ((ep = lGetElemStr(confl, CF_name, "execd_params")))
       clen->execd_params = XtNewString(lGetString(ep, CF_value));
@@ -2241,10 +2147,6 @@ tCClEntry *clen
       XtFree((char*)clen->qmaster_params);
       clen->qmaster_params = NULL;
    }
-   if (clen->reporting_params) {
-      XtFree((char*)clen->reporting_params);
-      clen->reporting_params = NULL;
-   }
    if (clen->execd_params) {
       XtFree((char*)clen->execd_params);
       clen->execd_params = NULL;
@@ -2284,16 +2186,6 @@ tCClEntry *clen
    if (clen->gid_range) {
       XtFree((char*)clen->gid_range);
       clen->gid_range = NULL;
-   }
-   clen->auto_user_oticket = 0;
-   clen->auto_user_fshare = 0;
-   if (clen->auto_user_default_project) {
-      XtFree((char*)clen->auto_user_default_project);
-      clen->auto_user_default_project = NULL;
-   }
-   if (clen->auto_user_delete_time) {
-      XtFree((char*)clen->auto_user_delete_time);
-      clen->auto_user_delete_time = NULL;
    }
    DEXIT;
 }
@@ -2404,15 +2296,16 @@ XtPointer cld, cad;
       ret=sge_resolve_hostname((const char*)cbs->input, unique, EH_name);
 
       switch ( ret ) {
-         case CL_RETVAL_GETHOSTNAME_ERROR:
+         case COMMD_NACK_UNKNOWN_HOST:
             qmonMessageShow(w, True, "can't resolve host '%s'\n", cbs->input);
             cbs->okay = False;
             break;
-         case CL_RETVAL_OK:
+         case CL_OK:
             cbs->input = unique;
             break;
          default:
-            DPRINTF(("sge_resolve_hostname() failed resolving: %s\n", cl_get_error_text(ret)));
+            DPRINTF(("sge_resolve_hostname() failed resolving: %s\n",
+            cl_errstr(ret)));
             cbs->okay = False;
       }
    }

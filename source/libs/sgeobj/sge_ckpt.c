@@ -149,27 +149,16 @@ lListElem *ckpt_list_locate(const lList *ckpt_list, const char *ckpt_name)
    return lGetElemStr(ckpt_list, CK_name, ckpt_name);
 }
 
-/****** sgeobj/ckpt/sge_parse_checkpoint_attr() *******************************
-*  NAME
-*     sge_parse_checkpoint_attr() -- make "when" bitmask from string 
-*
-*  SYNOPSIS
-*     int sge_parse_checkpoint_attr(const char *attr_str) 
-*
-*  FUNCTION
-*     Parse checkpoint "when" string and return a bitmask. 
-*
-*  INPUTS
-*     const char *attr_str - when string 
-*
-*  RESULT
-*     int - bitmask of checkpoint specifers
-*           0 if attr_str == NULL or nothing set or value 
-*           may be a time value 
-*
-*  NOTES
-*     MT-NOTE: sge_parse_checkpoint_attr() is MT safe
-*******************************************************************************/
+/*-----------------------------------------------------------
+ * sge_parse_checkpoint_attr
+ *    parse checkpoint "when" string
+ * return:
+ *    bitmask of checkpoint specifers
+ *    0 if attr_str == NULL or nothing set or value may be a time value
+ *
+ * NOTES
+ *    MT-NOTE: sge_parse_checkpoint_attr() is MT safe
+ *-----------------------------------------------------------*/
 int sge_parse_checkpoint_attr(const char *attr_str)
 {
    int opr;
@@ -205,7 +194,7 @@ int sge_parse_checkpoint_attr(const char *attr_str)
    return opr;
 }
 
-/****** sgeobj/ckpt/ckpt_validate() ******************************************
+/****** gdi/ckpt/ckpt_validate() ******************************************
 *  NAME
 *     ckpt_validate -- validate all ckpt interface parameters
 *
@@ -216,9 +205,11 @@ int sge_parse_checkpoint_attr(const char *attr_str)
 *     This function will test all ckpt interface parameters.
 *     If all are valid then it will return successfull.
 *
+*
 *  INPUTS
 *     ep     - element which sould be verified.
 *     answer - answer list where the function stored error messages
+*
 *
 *  RESULT
 *     [answer] - error messages will be added to this list
@@ -317,47 +308,12 @@ int ckpt_validate(lListElem *this_elem, lList **alpp)
    return STATUS_OK;
 }
 
-/****** sgeobj/ckpt/ckpt_list_get_master_list() *******************************
-*  NAME
-*     ckpt_list_get_master_list() -- Return pointer to master ckpt list 
-*
-*  SYNOPSIS
-*     lList ** ckpt_list_get_master_list(void) 
-*
-*  FUNCTION
-*     Return pointer to master ckpt list 
-*
-*  RESULT
-*     lList ** - master ckpt list
-*******************************************************************************/
 lList **
 ckpt_list_get_master_list(void)
 {
    return &Master_Ckpt_List;
 }
 
-/****** sgeobj/ckpt/ckpt_list_do_all_exist() **********************************
-*  NAME
-*     ckpt_list_do_all_exist() -- Do all ckpt's exist? 
-*
-*  SYNOPSIS
-*     bool 
-*     ckpt_list_do_all_exist(const lList *ckpt_list, 
-*                            lList **answer_list, 
-*                            const lList *ckpt_ref_list) 
-*
-*  FUNCTION
-*     Test if the checkpointing objects whose name is contained in
-*     "ckpt_ref_list" is contained in "ckpt_list". 
-*
-*  INPUTS
-*     const lList *ckpt_list     - CK_Type list 
-*     lList **answer_list        - AN_Type list 
-*     const lList *ckpt_ref_list - ST_Type list containing ckpt names 
-*
-*  RESULT
-*     bool - true if all ckpt objects exist 
-*******************************************************************************/
 bool
 ckpt_list_do_all_exist(const lList *ckpt_list, lList **answer_list,
                        const lList *ckpt_ref_list)
@@ -381,62 +337,4 @@ ckpt_list_do_all_exist(const lList *ckpt_list, lList **answer_list,
    return ret;
 }
 
-
-/****** src/sge_generic_ckpt() **********************************************
-*
-*  NAME
-*     sge_generic_ckpt -- build up a generic ckpt object
-*
-*  SYNOPSIS
-*     lListElem* sge_generic_ckpt(
-*        char *ckpt_name
-*     );
-*
-*  FUNCTION
-*     build up a generic ckpt object
-*
-*  INPUTS
-*     ckpt_name - name used for the CK_name attribute of the generic
-*               pe object. If NULL then "template" is the default name.
-*
-*  RESULT
-*     !NULL - Pointer to a new CULL object of type CK_Type
-*     NULL - Error
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*
-*****************************************************************************/   
-lListElem* sge_generic_ckpt(
-char *ckpt_name 
-) {
-   lListElem *ep;
-
-   DENTER(TOP_LAYER, "sge_generic_ckpt");
-
-   ep = lCreateElem(CK_Type);
-
-   if (ckpt_name)
-      lSetString(ep, CK_name, ckpt_name);
-   else
-      lSetString(ep, CK_name, "template");
-
-   lSetString(ep, CK_interface, "userdefined");
-   lSetString(ep, CK_ckpt_command, "none");
-   lSetString(ep, CK_migr_command, "none");
-   lSetString(ep, CK_rest_command, "none");
-   lSetString(ep, CK_clean_command, "none");
-   lSetString(ep, CK_ckpt_dir, "/tmp");
-   lSetString(ep, CK_when, "sx");
-   lSetString(ep, CK_signal, "none");
-   lSetUlong(ep, CK_job_pid, 0);
-
-   DEXIT;
-   return ep;
-}
 

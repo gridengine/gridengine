@@ -48,13 +48,13 @@
 
 #include "sge_ckpt.h"
 #include "sge_centry.h"
-#include "sge_cqueue.h"
 #include "sge_conf.h"
 #include "sge_schedd_conf.h"
 #include "sge_host.h"
 #include "sge_pe.h"
-#include "sgeobj/sge_qinstance.h"
-#include "sgeobj/sge_qinstance_state.h"
+#include "sge_cqueue.h"
+#include "sge_qinstance.h"
+#include "sge_qinstance_state.h"
 #include "sge_userset.h"
 
 #include "sort_hosts.h"
@@ -210,8 +210,6 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
       fields[i].name       = NULL;
       fields[i].sub_fields = NULL;
       fields[i].clientdata = NULL;
-      fields[i].read_func  = NULL;
-      fields[i].write_func = NULL;
    }
 
    /* do we have to strip field prefixes, e.g. "QU_" from field names? */
@@ -363,7 +361,8 @@ spool_free_spooling_fields(spooling_field *fields)
 *
 *  SEE ALSO
 *******************************************************************************/
-bool spool_default_validate_func(lList **answer_list, 
+bool
+spool_default_validate_func(lList **answer_list, 
                           const lListElem *type, 
                           const lListElem *rule,
                           lListElem *object,
@@ -387,21 +386,7 @@ bool spool_default_validate_func(lList **answer_list,
                cl_ret = sge_resolve_host(object, key_nm);
 
                /* if hostname resolving failed: create error */
-               if (cl_ret != CL_RETVAL_OK) {
-#ifdef ENABLE_NGC
-                  if (cl_ret != CL_RETVAL_GETHOSTNAME_ERROR) {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_ERROR, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_get_error_text(ret)); 
-                     ret = false;
-                  } else {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_WARNING, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_get_error_text(ret));
-                  }
-#else
+               if (cl_ret != CL_OK) {
                   if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
                       cl_ret != COMMD_NACK_TIMEOUT) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -415,7 +400,6 @@ bool spool_default_validate_func(lList **answer_list,
                                              MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
                                              old_name, cl_errstr(ret));
                   }
-#endif
                } else {
                   /* if hostname resolving changed hostname: spool */
                   const char *new_name;
@@ -434,13 +418,6 @@ bool spool_default_validate_func(lList **answer_list,
             }
 
             if (object_type == SGE_TYPE_EXECHOST) {
-               /* trash load values - they are not valid after unspooling
-                * a host object.
-                */
-               if (ret) {
-                  ret = host_trash_load_values(object);
-               }
-
                if (ret) {
                   /* necessary to setup actual list of exechost */
                   debit_host_consumable(NULL, object, Master_CEntry_List, 0);
@@ -461,12 +438,8 @@ bool spool_default_validate_func(lList **answer_list,
             /* handle slots from now on as a consumble attribute of queue */
             qinstance_set_conf_slots_used(object); 
 
-            /* remove all queue message, which are regenerated during the unspooling
-               the queue */
-            qinstance_message_trash_all_of_type_X(object, ~QI_ERROR);   
-
             /* setup actual list of queue */
-            qinstance_debit_consumable(object, NULL, Master_CEntry_List, 0);
+            qinstance_debit_consumable(NULL, object, Master_CEntry_List, 0);
 
             /* init double values of consumable configuration */
             centry_list_fill_request(lGetList(object, QU_consumable_config_list), 
@@ -516,7 +489,7 @@ bool spool_default_validate_func(lList **answer_list,
                qinstance_set_conf_slots_used(qinstance);
 
                /* setup actual list of queue */
-               qinstance_debit_consumable(qinstance, NULL, master_list, 0);
+               qinstance_debit_consumable(NULL, qinstance, master_list, 0);
 
                /* init double values of consumable configuration */
                ccl = lGetList(qinstance, QU_consumable_config_list);
@@ -559,22 +532,9 @@ bool spool_default_validate_func(lList **answer_list,
             /* try hostname resolving */
             if (strcmp(old_name, SGE_GLOBAL_NAME) != 0) {
                cl_ret = sge_resolve_host(object, CONF_hname);
+
                /* if hostname resolving failed: create error */
-               if (cl_ret != CL_RETVAL_OK) {
-#ifdef ENABLE_NGC
-                  if (cl_ret != CL_RETVAL_GETHOSTNAME_ERROR) {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_ERROR, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_get_error_text(ret)); 
-                     ret = false;
-                  } else {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_WARNING, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_get_error_text(ret));
-                  }
-#else
+               if (cl_ret != CL_OK) {
                   if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
                       cl_ret != COMMD_NACK_TIMEOUT) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -588,7 +548,6 @@ bool spool_default_validate_func(lList **answer_list,
                                              MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
                                              old_name, cl_errstr(ret));
                   }
-#endif
                } else {
                   /* if hostname resolving changed hostname: spool */
                   const char *new_name = lGetHost(object, CONF_hname);

@@ -48,5 +48,9 @@
 #define MSG_CUSER_DOESNOTEXIST_S      _MESSAGE(5012, _("User mapping entry "SFQ" does not exist\n"))
 #define MSG_CUSER_FILENOTCORRECT_S    _MESSAGE(5013, _("User mapping file "SFQ" is not correct\n"))
 
+#define MSG_CQUEUE_DOESNOTEXIST_S     _MESSAGE(5014, _("Cluster queue entry "SFQ" does not exist\n"))
+#define MSG_CQUEUE_FILENOTCORRECT_S   _MESSAGE(5015, _("Cluster queue file "SFQ" is not correct\n"))
+#define MSG_CQUEUE_NOQMATCHING_S      _MESSAGE(5016, _("No cluster queue or queue instance matches the phrase "SFQ"\n"))
+
 #endif /* __MSG_QCONF_H */
 

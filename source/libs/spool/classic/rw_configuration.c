@@ -204,8 +204,8 @@ u_long32 flags
                if (rlp == NULL) {
                   WARNING((SGE_EVENT, MSG_CONFIG_CONF_INCORRECTVALUEFORCONFIGATTRIB_SS, 
                            name, value));
-                  alp = lFreeList(alp);
-                  lp = lFreeList(lp);
+                  lFreeList(alp);
+                  lFreeList(lp);
                   fclose(fp);
                   DEXIT;
                   return NULL;
@@ -218,15 +218,15 @@ u_long32 flags
                      min = lGetUlong(rep, RN_min);
                      if (min < GID_RANGE_NOT_ALLOWED_ID) {
                         WARNING((SGE_EVENT, MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I, GID_RANGE_NOT_ALLOWED_ID));
-                        alp = lFreeList(alp);
-                        lp = lFreeList(lp);
+                        lFreeList(alp);
+                        lFreeList(lp);
                         fclose(fp);
                         DEXIT;
                         return (NULL);
                      }                  
                   }
-                  alp = lFreeList(alp);
-                  rlp = lFreeList(rlp);
+                  lFreeList(alp);
+                  lFreeList(rlp);
                   lSetString(ep, CF_value, value);
                }
             }
@@ -240,7 +240,7 @@ u_long32 flags
             lSetString(ep, CF_value, value);
          } else {
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
-            lp = lFreeList(lp);
+            lFreeList(lp);
             fclose(fp);
             DEXIT;
             return NULL;
@@ -268,7 +268,7 @@ u_long32 flags
          if (!(value = strtok(NULL, "\t\n"))) {
             /* return line if value is empty */
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
-            lp = lFreeList(lp);
+            lFreeList(lp);
             fclose(fp);
             DEXIT;
             return NULL;
@@ -281,7 +281,7 @@ u_long32 flags
       } else {
          if (!(value = strtok(NULL, " \t\n"))) {
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
-            lp = lFreeList(lp);
+            lFreeList(lp);
             fclose(fp);
             DEXIT;
             return NULL;

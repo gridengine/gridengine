@@ -30,19 +30,16 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_qmaster_timed_event.h"
+
 #include <string.h>
 #include <errno.h>
-#include <pthread.h>
 
-#include "sge_qmaster_timed_event.h"
 #include "cull.h"
-#include "sge_all_listsL.h"
+#include "sge_time_eventL.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_mtutil.h"
-#include "sge_prog.h"
-#include "setup.h"
-#include "setup_qmaster.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -178,8 +175,6 @@ void te_register_event_handler(te_handler_t aHandler, te_type_t aType)
 *     timed event due time in seconds since the Epoch. If event type is
 *     'RECURRING_EVENT', 'aTime' does determine the timed event INTERVAL in
 *     seconds.
-*
-*     If 'aStrKey' is not 'NULL', the new timed event will contain a copy.
 *
 *  INPUTS
 *     time_t aTime        - event due time or interval 
@@ -473,16 +468,12 @@ void te_shutdown(void)
    pthread_once(&Timed_Event_Once, timed_event_once_init);
 
    sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
-
    Event_Control.exit = true;
-
    sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 
    DPRINTF(("%s: wait for event thread termination\n", SGE_FUNC));
 
    pthread_join(Event_Thread, NULL);
-
-   sge_free((char *)Handler_Tbl.list);
 
    DEXIT;
    return;
@@ -826,8 +817,6 @@ static void* deliver_events(void* anArg)
    time_t now;
 
    DENTER(TOP_LAYER, "deliver_events");
-
-   sge_qmaster_thread_init();
 
    while (should_exit() == false) {
       sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);

@@ -195,7 +195,11 @@ void sge_sleep(int sec, int usec)
    timeout.tv_sec = sec;
    timeout.tv_usec = usec;
  
+#if !(defined(HPUX) || defined(HP10_01) || defined(HPCONVEX))
    select(0, (fd_set *) 0, (fd_set *) 0, (fd_set *) 0, &timeout);
+#else
+   select(0, (int *) 0, (int *) 0, (int *) 0, &timeout);
+#endif
 }       
 
 /****** uti/unistd/sge_chdir_exit() *******************************************
@@ -587,7 +591,11 @@ u_long32 sge_sysconf(sge_sysconf_t id)
    DENTER(BASIS_LAYER, "sge_sysconf");
    switch (id) {
       case SGE_SYSCONF_NGROUPS_MAX:
+#if defined(AIX42)
+         ret = NGROUPS;
+#else
          ret = sysconf(_SC_NGROUPS_MAX);
+#endif
       break;
       default:
          CRITICAL((SGE_EVENT, MSG_SYSCONF_UNABLETORETRIEVE_I, (int) id));

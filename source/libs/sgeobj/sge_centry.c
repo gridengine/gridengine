@@ -31,9 +31,7 @@
 /*___INFO__MARK_END__*/
 
 #include <string.h>
-#include <float.h>
 
-#include "sge.h"
 #include "sge_string.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -51,20 +49,17 @@
 #include "sge_centry.h"
 
 #include "msg_common.h"
-#include "msg_schedd.h"
 #include "msg_sgeobjlib.h"
 
 #define CENTRY_LAYER BASIS_LAYER
 
 lList *Master_CEntry_List = NULL;
 
-/* EB: ADOC: add commets */
-
 static int
 centry_fill_and_check(lListElem *cep, bool allow_empty_boolean,
                       bool allow_neg_consumable);
 
-   const int max_host_resources=23;/* specifies the number of elements in the host_resource array */
+   const int max_host_resources=24;/* specifies the number of elements in the host_resource array */
    const struct queue2cmplx host_resource[] = {
       {"arch",           0, TYPE_STR},
       {"cpu",            0, TYPE_DOUBLE},
@@ -86,6 +81,7 @@ centry_fill_and_check(lListElem *cep, bool allow_empty_boolean,
       {"swap_rsvd",      0, TYPE_MEM},
       {"swap_total",     0, TYPE_MEM},
       {"swap_used",      0, TYPE_MEM},
+      {"tmpdir",         0, TYPE_STR},
       {"virtual_free",   0, TYPE_MEM},
       {"virtual_total",  0, TYPE_MEM},
       {"virtual_used",   0, TYPE_MEM}
@@ -205,24 +201,12 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
             DEXIT;
             return -1;
          }
-
-         /* normalize time values, so that the string value is based on seconds */
-         if (TYPE_TIM == type && dval != DBL_MAX) {
-            char str_value[100];
-            dstring ds;
-            sge_dstring_init(&ds, str_value, sizeof(str_value));
-            sge_dstring_sprintf(&ds, "%.0f", dval);
-            DPRINTF(("normalized time value from \"%s\" to \"%s\"\n",
-                     lGetString(this_elem, CE_stringval), str_value));
-            lSetString(this_elem, CE_stringval, str_value);
-         }
-         
          break;
       case TYPE_HOST:
          /* resolve hostname and store it */
          ret = sge_resolve_host(this_elem, CE_stringval);
-         if (ret != CL_RETVAL_OK) {
-            if (ret == CL_RETVAL_GETHOSTNAME_ERROR) {
+         if (ret) {
+            if (ret == COMMD_NACK_UNKNOWN_HOST) {
                ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, s));
             } else {
                ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, s));
@@ -466,6 +450,7 @@ centry_is_referenced(const lListElem *centry, lList **answer_list,
 *
 *  NOTES
 *     MT-NOTE: centry_print_resource_to_dstring() is MT safe
+*
 *******************************************************************************/
 bool
 centry_print_resource_to_dstring(const lListElem *this_elem, dstring *string)
@@ -698,7 +683,7 @@ centry_list_fill_request(lList *this_list, lList *master_centry_list,
             return -1;
          }
       } else {
-         /* CLEANUP: message should be put into answer_list and
+         /* EB: TODO: message should be put into answer_list and
             returned via argument. */
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, name));
          DEXIT;
@@ -747,7 +732,7 @@ centry_list_append_to_dstring(const lList *this_list, dstring *string)
                                        lGetString(elem, CE_stringval));
          } else {
             sge_dstring_sprintf_append(string, "%f", 
-                                       lGetDouble(elem, CE_doubleval));
+                                       lGetString(elem, CE_doubleval));
          }
          printed = true;
       }
@@ -760,7 +745,7 @@ centry_list_append_to_dstring(const lList *this_list, dstring *string)
    return ret;
 }
 
-/* CLEANUP: should be replaced by centry_list_append_to_dstring() */
+/* EB: TODO: CLEANUP: should be replaced by centry_list_append_to_dstring() */
 int
 centry_list_append_to_string(lList *this_list, char *buff, 
                              u_long32 max_len)
@@ -787,7 +772,7 @@ centry_list_append_to_string(lList *this_list, char *buff,
    return 0;
 }
 
-/* CLEANUP: add answer_list remove SGE_EVENT */
+/* EB: TODO: CLEANUP: add answer_list remove SGE_EVENT */
 /*
  * NOTE
  *    MT-NOTE: function is not MT safe
@@ -1007,14 +992,11 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_
             case TYPE_MEM:
             case TYPE_BOO:
             case TYPE_DOUBLE:
-      
                if(!parse_ulong_val(&dval, NULL, type, temp, error_msg, 199)){
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
                   MSG_INVALID_CENTRY_PARSE_DEFAULT_SS, attrname, error_msg);
                   ret = false;
                }
-
-               /* accept non-zero default values for consumables only */
                if (dval != 0) {
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
                   MSG_INVALID_CENTRY_DEFAULT_S, attrname);
@@ -1074,7 +1056,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_
       for ( i=0; i< max_queue_resources; i++){
          if (strcmp(queue_resource[i].name, attrname) == 0 &&
             queue_resource[i].type != type){
-            if ((queue_resource[i].type != TYPE_STR && queue_resource[i].type != TYPE_CSTR && queue_resource[i].type != TYPE_RESTR ) ||
+            if ((host_resource[i].type != TYPE_STR && host_resource[i].type != TYPE_CSTR && host_resource[i].type != TYPE_RESTR ) ||
                 (type != TYPE_CSTR && type != TYPE_RESTR && type != TYPE_STR)){            
 
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
@@ -1194,54 +1176,5 @@ centry_urgency_contribution(int slots, const char *name, double value, const lLi
 
    DEXIT;
    return contribution;
-}
-
-bool
-centry_list_do_all_exists(const lList *this_list, lList **answer_list,
-                          const lList *centry_list) 
-{
-   bool ret = true;
-   lListElem *centry = NULL;
-   
-   DENTER(TOP_LAYER, "centry_list_do_all_exists");
-   for_each(centry, centry_list) {
-      const char *name = lGetString(centry, CE_name);
-
-      if (centry_list_locate(this_list, name) == NULL) {
-         answer_list_add_sprintf(answer_list, STATUS_EEXIST,
-                                 ANSWER_QUALITY_ERROR,
-                                 MSG_CQUEUE_UNKNOWNCENTRY_S, name);
-         DTRACE;
-         ret = false;
-         break;
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool
-centry_list_is_correct(lList *this_list, lList **answer_list)
-{
-
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "centry_list_has_error");
-   if (this_list != NULL) {
-      lListElem *centry = lGetElemStr(this_list, CE_name, "qname");
-
-      if (centry != NULL) {
-         const char *value = lGetString(centry, CE_stringval);
-
-         if (strchr(value, (int)'@')) {
-            answer_list_add_sprintf(answer_list, STATUS_EEXIST,
-                                    ANSWER_QUALITY_ERROR,
-                                    MSG_CENTRY_QINOTALLOWED);
-            ret = false;
-         } 
-      }
-   }
-   DEXIT;
-   return ret;
 }
 

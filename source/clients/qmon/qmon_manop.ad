@@ -164,29 +164,26 @@ Qmon*user_matrix.buttonLabels: True
 Qmon*user_matrix.cellMarginHeight: 2
 Qmon*user_matrix.rows: 7
 Qmon*user_matrix.visibleRows: 7
-Qmon*user_matrix.columns: 3
-Qmon*user_matrix.columnWidths: 20, 20, 20
-Qmon*user_matrix.columnMaxLengths: 200, 100, 100
-Qmon*user_matrix.columnLabels: @{User},@{Default Project},@{Delete Time}
+Qmon*user_matrix.columns: 2
+Qmon*user_matrix.columnWidths: 20, 20
+Qmon*user_matrix.columnMaxLengths: 200, 100
+Qmon*user_matrix.columnLabels: @{User},@{Default Project}
 !Qmon*user_matrix.gridType:     GRID_CELL_SHADOW
 Qmon*user_matrix.gridType:     GRID_COLUMN_SHADOW
 Qmon*user_matrix.cellShadowType: SHADOW_IN
 Qmon*user_matrix.cellShadowThickness: 1
 Qmon*user_matrix.evenRowBackground:      white
 Qmon*user_matrix.oddRowBackground:       white
-!!Qmon*user_matrix*editable:               True
 Qmon*user_matrix.translations: #override\n\
          Shift<Btn1Down>: SelectCell(end)\n\
          Ctrl<Btn1Down>:   SelectCell(toggle)\n\
          <Btn1Down>:       SelectCell(begin)\n\
-         Ctrl<Btn2Down>:   ResizeColumns()\n\
-         <Btn1Up>(2):      SelectCell(edit)
+         Ctrl<Btn2Down>:   ResizeColumns()
 Qmon*user_matrix.clip.translations: #override\n\
          Shift<Btn1Down>:  SelectCell(end)\n\
          Ctrl<Btn1Down>:   SelectCell(toggle)\n\
          <Btn1Down>:       SelectCell(begin)\n\
-         Ctrl<Btn2Down>:   ResizeColumns()\n\
-         <Btn1Up>(2):      SelectCell(edit)
+         Ctrl<Btn2Down>:   ResizeColumns()
 
 !Qmon*user_matrix.xmtChildren: unmanaged XmtPopupMenu del_menu;
 !Qmon*user_matrix.menuPost: <Btn3Down>

@@ -47,6 +47,7 @@
 #include "sge_feature.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
+#include "sge_prog.h"
 #include "sge_parse_num_par.h"
 #include "sge_hostname.h"
 #include "sge_spool.h"
@@ -84,29 +85,21 @@ u_long32 sge_formal_prog_name,
 lList **alpp 
 ) {
    dstring error_dstring = DSTRING_INIT;
-   bool is_exit_on_error = uti_state_get_exit_on_error();
 
    DENTER(TOP_LAYER, "sge_setup");
 
    /*
-    * for setuid clients we must seteuid to the users uid
-    *
-    * NOTE: For qmaster uid != euid is just the normal modus operandi.
-    * Do *not* call 'sge_run_as_user()'!
-    */
-   if (QMASTER != sge_formal_prog_name) {
-      if (sge_run_as_user()) {   
-         if (alpp == NULL || is_exit_on_error) {
-            CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
-         } else {
-            answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
-         }
-         
-         SGE_EXIT(1);
-      }   
-   }
+   ** for setuid clients we must seteuid to the users uid
+   */
+   if (sge_run_as_user()) {   
+      CRITICAL((SGE_EVENT, MSG_SYSTEM_CANTRUNASCALLINGUSER));
+      if (!uti_state_get_exit_on_error()) {
+         answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return -1;
+      }
+      SGE_EXIT(1);
+   }   
 
    sge_getme(sge_formal_prog_name);
 
@@ -123,32 +116,29 @@ lList **alpp
    }
 
    if (!sge_bootstrap(&error_dstring)) {
-      if (alpp == NULL || is_exit_on_error) {
+      if (alpp == NULL) {
          CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
       } else {
          answer_list_add(alpp, sge_dstring_get_string(&error_dstring), 
                          STATUS_NOCONFIG, ANSWER_QUALITY_ERROR);
       }
       sge_dstring_free(&error_dstring);
-      if (!is_exit_on_error) {
+      if (!uti_state_get_exit_on_error()) {
          DEXIT;
          return -1;
       }
       SGE_EXIT(1);
    }
 
-   if (feature_initialize_from_string(bootstrap_get_security_mode())) {
-      /*
-      if (alpp == NULL || is_exit_on_error) {
+   if (feature_initialize_from_string(bootstrap_get_product_mode())) {
+      if (alpp == NULL) {
          CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
-      } 
-      else {
+      } else {
          answer_list_add(alpp, sge_dstring_get_string(&error_dstring), 
                          STATUS_NOCONFIG, ANSWER_QUALITY_ERROR);
       }
       sge_dstring_free(&error_dstring);
-      */
-      if (!is_exit_on_error) {
+      if (!uti_state_get_exit_on_error()) {
          DEXIT;
          return -1;
       }
@@ -157,7 +147,7 @@ lList **alpp
 
    /* qmaster and shadowd should not fail on nonexistant act_qmaster file */
    if (!(uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == SHADOWD) && !sge_get_master(1)) {
-      if (!is_exit_on_error) {
+      if (!uti_state_get_exit_on_error()) {
          if (alpp) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
                         path_state_get_act_qmaster_file()));
@@ -165,9 +155,6 @@ lList **alpp
          }
          DEXIT;
          return -1;
-      }
-      else {
-         CRITICAL((SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S, path_state_get_act_qmaster_file()));   
       }
       SGE_EXIT(1);
    }
@@ -198,8 +185,6 @@ lList **alpp
       DPRINTF((MSG_GDI_SETCOMPRESSIONTHRESHOLD_D , u32c(compression_threshold)));
    }
 #endif
-
-   
 
    DEXIT;
    return 0;
@@ -233,9 +218,9 @@ int reresolve_me_qualified_hostname(void)
    /*
    ** get aliased hostname from commd
    */
-   if ((ret=getuniquehostname(uti_state_get_qualified_hostname(), unique_hostname, 0))!=CL_RETVAL_OK) {
+   if ((ret=getuniquehostname(uti_state_get_qualified_hostname(), unique_hostname, 0))!=CL_OK) {
       WARNING((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_SS, 
-               uti_state_get_qualified_hostname(), cl_get_error_text(ret)));
+               uti_state_get_qualified_hostname(), cl_errstr(ret)));
       DEXIT;
       return ret;
    }
@@ -243,6 +228,6 @@ int reresolve_me_qualified_hostname(void)
    uti_state_set_qualified_hostname(unique_hostname);
    DPRINTF(("me.qualified_hostname: %s\n", uti_state_get_qualified_hostname()));
    DEXIT;
-   return CL_RETVAL_OK;
+   return CL_OK;
 }
 

@@ -614,11 +614,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
    switch -- $host_arch {
 
       "solaris64" - 
-      "sol-sparc64" - 
       "solaris86" -
-      "sol-x86" -
-      "solaris" -
-      "sol-sparc" {
+      "solaris" {
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-e -o \"pid=_____pid\" -o \"pgid=_____pgid\" -o \"ppid=_____ppid\" -o \"uid=_____uid\" -o \"s=_____s\" -o \"stime=_____stime\" -o \"vsz=_____vsz\" -o \"time=_____time\" -o \"args=_____args\"" prg_exit_state 60 0 myenvironment]
          set index_names "_____pid _____pgid _____ppid _____uid _____s _____stime _____vsz _____time _____args"
@@ -668,8 +665,7 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       }
 
  
-      "aix43" -
-      "aix51" {
+      "aix43"   {
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid=BIG_AIX_PGID ppid=BIG_AIX_PPID uid=BIG_AIX_UID stat=AIXSTATE started vsz=BIG_AIX_VSZ time args\"" prg_exit_state 60 0 myenvironment]
          set index_names "  PID BIG_AIX_PGID BIG_AIX_PPID BIG_AIX_UID AIXSTATE  STARTED BIG_AIX_VSZ        TIME COMMAND"
@@ -735,12 +731,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set time_pos    7
          set command_pos 8
       }
-     
-      "glinux" -
-      "lx24-x86" -
-      "lx26-x86" - 
-      "lx24-amd64" - 
-      "lx26-amd64" { 
+      
+      "glinux"    { 
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-weo \"pid pgid ppid uid=BIGGERUID s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
          set index_names "  PID  PGID  PPID BIGGERUID S STIME   VSZ     TIME COMMAND"
@@ -754,8 +746,7 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set time_pos    7
          set command_pos 8
       }
-      "slinux" -
-      "lx24-sparc" { 
+      "slinux"    { 
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-weo \"pid pgid ppid uid s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
          set index_names "  PID  PGID  PPID   UID S STIME   VSZ     TIME COMMAND"
@@ -769,9 +760,7 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set time_pos    7
          set command_pos 8
       }
-      "alinux" -
-      "lx22-alpha" -
-      "lx24-alpha" {
+      "alinux" {
          if { $additional_run == 0 } {
             # this is the first ps without any size position
             set myenvironment(COLUMNS) "500"

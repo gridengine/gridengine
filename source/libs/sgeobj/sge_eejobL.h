@@ -54,6 +54,7 @@ enum {
    FCAT_project,
    FCAT_dept_share,
    FCAT_dept,
+   FCAT_jobclass_share,
    FCAT_jobrelated_ticket_first,
    FCAT_jobrelated_ticket_last
 };
@@ -66,6 +67,7 @@ LISTDEF(FCAT_Type)
    SGE_REF(FCAT_project,CULL_ANY_SUBTYPE,  CULL_DEFAULT)           /* pointer to the project structure */
    SGE_ULONG(FCAT_dept_share, CULL_DEFAULT)      /* all jobs in this functional category have this amount of department shares */
    SGE_REF(FCAT_dept,CULL_ANY_SUBTYPE,  CULL_DEFAULT)              /* pointer to the department structure */
+   SGE_ULONG(FCAT_jobclass_share, CULL_DEFAULT)  /* all jobs in this functional category have this amount of job class shares */
    SGE_REF(FCAT_jobrelated_ticket_first, CULL_ANY_SUBTYPE, CULL_DEFAULT) /* pointer to the first element of job ticket list*/
    SGE_REF(FCAT_jobrelated_ticket_last, CULL_ANY_SUBTYPE, CULL_DEFAULT)  /* pointer to the last element in the hob ticket list*/
 LISTEND 
@@ -78,6 +80,7 @@ NAMEDEF(FCATN)
    NAME("FCAT_project")
    NAME("FCAT_dept_share")
    NAME("FCAT_dept")
+   NAME("FCAT_jobclass_share")
    NAME("FCAT_jobrelated_ticket_first")
    NAME("FCAT_jobrelated_ticket_last")
 NAMEEND

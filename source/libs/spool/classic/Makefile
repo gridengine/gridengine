@@ -34,7 +34,7 @@
 #___INFO__MARK_END__
 SPOOLCLIB_DIR = $(SDIR)/libs/spool/classic
 
-SPOOLCLIB = libspoolc$(LIBEXT)
+SPOOLCLIB = libspoolc$(QIDLEXT)$(LIBEXT)
 
 SPOOLCLIB_SRC = \
          sge_spooling_classic.c \

@@ -423,7 +423,7 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
          break;
       case QU_qtype:
          qinstance_print_qtype_to_dstring(object, &string, false);
-         ret = sge_dstring_get_string(&string); 
+         ret = sge_dstring_get_string(buffer); 
          quote_special_case = true;
          break;
       case US_type:
@@ -698,7 +698,7 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
                ret = false;
             }
             if (ret) {
-               lSetUlong(object, nm, requestable);
+               lSetBool(object, nm, requestable);
             }
          }
          break;
@@ -931,7 +931,7 @@ object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end,
       lList *range_list;
  
       range_elem = lCreateElem(RN_Type);
-      range_list = lCreateList("task_id_range", RN_Type);
+      range_list = lCreateList("task id range", RN_Type);
       if (range_elem == NULL || range_list == NULL) {
          range_elem = lFreeElem(range_elem);
          range_list = lFreeList(range_list);
@@ -1063,6 +1063,7 @@ bool object_type_free_master_list(const sge_object_type type)
    return ret;
 }
 
+
 /****** sgeobj/object/object_type_get_name() *********************************
 *  NAME
 *     object_type_get_name() -- get a printable name for event type
@@ -1100,23 +1101,6 @@ const char *object_type_get_name(const sge_object_type type)
       ret = object_base[type].type_name;
    }
    DEXIT;
-   return ret;
-}
-
-/* EB: ADOC: add commets */
-sge_object_type object_name_get_type(const char *name)
-{
-   sge_object_type ret = SGE_TYPE_ALL;
-   int i;
-
-   for (i = 0; i < SGE_TYPE_ALL; i++) {
-      int length = strlen(object_base[i].type_name);
-
-      if (!strncasecmp(object_base[i].type_name, name, length)) {
-         ret = i;
-         break;
-      }
-   }
    return ret;
 }
 
@@ -1490,40 +1474,20 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
    DENTER(OBJECT_LAYER, "object_parse_ulong32_from_string");
    if (this_elem != NULL && string != NULL) {
       int pos = lGetPosViaElem(this_elem, name);
+      u_long32 value;
 
       if (strlen(string) == 0) {
          /*
           * Empty string will be parsed as '0'
           */
-         lSetPosUlong(this_elem, pos, (u_long32)0);
+         lSetPosUlong(this_elem, pos, 0);
+      } else if (sscanf(string, u32, &value) == 1) {
+         lSetPosUlong(this_elem, pos, value);
       } else {
-         const double epsilon = 1.0E-12;
-         char *end_ptr = NULL;
-         double dbl_value;
-         u_long32 ulng_value;
-
-         dbl_value = strtod(string, &end_ptr);
-         ulng_value = dbl_value;
-         if (dbl_value < 0 || dbl_value - ulng_value > epsilon) {
-            /*
-             * value to big for u_long32 variable
-             */
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                    ANSWER_QUALITY_ERROR,
-                                    MSG_OBJECT_VALUENOTULONG_S, string);
-            ret = false;
-         } else if (end_ptr != NULL && *end_ptr == '\0') {
-            lSetPosUlong(this_elem, pos, ulng_value);
-         } else {
-            /*
-             * Not a number or
-             * garbage after number
-             */
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                    ANSWER_QUALITY_ERROR,
-                                    MSG_ULONG_INCORRECTSTRING, string);
-            ret = false;
-         }
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ULONG_INCORRECTSTRING, string);
+         ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1703,15 +1667,13 @@ object_set_any_type(lListElem *this_elem, int name, void *value)
    } else if (type == lCharT) {
       ret = lSetPosChar(this_elem, pos, *((lChar*)value));
    } else if (type == lBoolT) {
-      ret = lSetPosBool(this_elem, pos, *((bool*)value));
+      ret = lSetPosBool(this_elem, pos, *((lBool*)value));
    } else if (type == lIntT) {
       ret = lSetPosInt(this_elem, pos, *((int*)value));
    } else if (type == lObjectT) {
       ret = lSetPosObject(this_elem, pos, *((lListElem **)value));
    } else if (type == lRefT) {
       ret = lSetPosRef(this_elem, pos, *((lRef*)value));
-   } else if (type == lListT) {
-      ret = lSetPosList(this_elem, pos, lCopyList("", *((lList **)value)));
    } else {
       /* not possible */
       ret = false;
@@ -1804,7 +1766,7 @@ object_get_any_type(lListElem *this_elem, int name, void *value)
       } else if (type == lCharT) {
          *((lChar*)value) = lGetPosChar(this_elem, pos);
       } else if (type == lBoolT) {
-         *((bool*)value) = lGetPosBool(this_elem, pos) ? true : false;
+         *((bool*)value) = (bool) lGetPosBool(this_elem, pos);
       } else if (type == lIntT) {
          *((int*)value) = lGetPosInt(this_elem, pos);
       } else if (type == lObjectT) {
@@ -1881,7 +1843,8 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                       sub_command == SGE_GDI_APPEND) {
 
                      if (!no_info && sub_command == SGE_GDI_APPEND) {
-                        INFO((SGE_EVENT, MSG_OBJECT_ALREADYEXIN_SSS,
+                        /* EB: TODO: move to msg file */
+                        INFO((SGE_EVENT, "No modification because "SFQ" already exists in "SFQ" of "SFQ"\n",
                               rstring, sub_list_name, object_name));
                         answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
                                         ANSWER_QUALITY_INFO);

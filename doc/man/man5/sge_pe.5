@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2004/02/25 15:15:51 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2003/11/13 16:57:14 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_PE 5 "$Date: 2004/02/25 15:15:51 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_PE 5 "$Date: 2003/11/13 16:57:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_pe \- xxQS_NAMExx parallel environment configuration file format
@@ -148,7 +148,8 @@ The \fBprocessors\fP string as contained in the queue configuration
 of the master queue (the queue in which the start-up and stop procedures
 are started).
 .IP "\fI$queue\fP"
-The cluster queue of the master queue instance.
+The master queue, i.e. the queue in which the start-up and stop procedures
+are started.
 .\"
 .\"
 .SS "\fBstop_proc_args\fP"
@@ -266,8 +267,7 @@ xxQS_NAME_EExx to assess the number of slots such jobs might finally
 get.
 .PP
 The assumed slot allocation has a meaning when determining the 
-resource resquest based priority contribution for numeric resoures
-as described in
+addend for numeric resoures as described in
 .M sge_priority 5 
 and is displayed when 
 .M qstat 1 
@@ -282,7 +282,7 @@ lower bound is specified with the range 1 is assumed.
 .IP "\fBmax\fP:" 1i
 The of the slot range maximum is used as prospective slot amount. 
 If no upper bound is specified with the range the absolute maximum 
-possible due to the PE's \fBslots\fP setting is assumed.
+possible due to the PE's \fBslots\f setting is assumed.
 .IP "\fBavg\fP:" 1i
 The average of all numbers occuring within the jobs PE range 
 request is assumed.

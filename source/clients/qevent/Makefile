@@ -45,9 +45,9 @@ QEVENT_OBJS = $(QEVENT_SRC:.c=.o)
 
 QEVENT_ADD_OBJS = $(QEVENT_ADD_SRC:.c=.o)
 
-QEVENT_ADD_LIBS = -lmir -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
+QEVENT_ADD_LIBS = -lmir -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon $(DLLIB)
 
-QEVENT_LIB_DEPENDS = $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
+QEVENT_LIB_DEPENDS = $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

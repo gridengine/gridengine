@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2004/02/24 17:07:40 $     Revision: $Revision: 1.3 $
+.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2003/11/14 15:14:35 $     Revision: $Revision: 1.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SGE_PRIORITY 5 "$Date: 2004/02/24 17:07:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SGE_PRIORITY 5 "$Date: 2003/11/14 15:14:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sge_priority \- xxQS_NAMExx job priorities
@@ -40,42 +40,41 @@ The SGE_PRIORITY man page describes means in xxQS_NAMExx for controlling
 job priorities. 
 .PP
 Both xxQS_NAME_Cxx and xxQS_NAME_EExx provide means for controlling 
-job dispatch and run-time priorities. The dispatch priority is about
-the importance of pending jobs compared with each other and 
+jobs dispatch and run-time priority. The dispatch priority is about
+the importance of pending jobs compared with other jobs and 
 determines the order in which xxQS_NAMExx dispatches jobs to 
-queues instances. The run-time priority is about the operating system
-priorities of running jobs that influences the CPU allocation which the
-operating system assigns to jobs.
+queues instances. The run-time priority is about the operating systems
+priority of running jobs that influences the operating systems scheduling
+decisions.
 .\"
 .\"
 .SS "\fBJOBS DISPATCH PRIORITY\fP"
 .\"
 .\"
-In xxQS_NAME_Cxx a job's dispatch priority is affected by the job's 
-.M qsub 1 
--p priority, the job's submit time and the \fBuser_sort\fP setting in
+In xxQS_NAME_Cxx jobs dispatch priority is affected by jobs 
+.M submit 1 
+-p priority, jobs submit time and the \fBuser_sort\fP setting in
 .M sched_conf 5 .
 .PP
-In xxQS_NAME_EExx a job's dispatch priority is affected by the job's 
+In xxQS_NAME_EExx jobs dispatch priority is affected by jobs 
 .M submit 1 
--p priority, the job's submit time and on the policy set-up. The overall 
-dispatch priority set-up specifies how priority values ("prio") 
-of jobs are dynamically computed and they are derived from the ticket
-policy and the urgency policy. 
+-p priority, jobs submit time and on the policy set-up. The overall 
+dispatch priority set-up specifies how jobs priority values ("prio") 
+are dynamically computed and is grouped into ticket policy and urgency 
+policy. 
 The 
 .M sched_conf 5 
 parameters \fBweight_ticket\fP and \fBweight_urgency\fP are used to 
-control to what degree the ticket policy resp. urgency policy shall be
-in effect. To facilitate easier control, the dynamically determined values
-("tckts"/"urg") for both policies are normalized ("ntckts"/"nurg") before
-they are used to calculate job priorities ("prio"):
+control to what degree ticket policy resp. urgency policy shall be in 
+effect. To facilitate easier control on each policies values range the 
+measured values ("tckts"/"urg") for both policies are normalized 
+("ntckts"/"nurg") before used for determining jobs priority 
 
    prio    = nurg * weight_urgency + weight_ticket * ntckts
    nurg    = normalized(urg)
    ntckts  = normalized(tckts)
 
-Normalizing maps the available urgency/ticket values into a range between 0
-and 1.  The higher a jobs dynamic priority value the earlier it gets an
+the higher a jobs dynamic priority ("prio") value the earlier it gets an 
 assignment.
 .\"
 .\"
@@ -86,99 +85,87 @@ urgency value
 
    urg     =  rrcontr + wtcontr + dlcontr
 
-consists of the resource requirement contribution ("rrcontr"), the waiting 
-time contribution ("wtcontr") and the deadline contribution ("dlcontr").
+consists of resource requirement contribution ("rrcontr"), waiting 
+time contribution ("wtcontr") and deadline contribution ("dlcontr").
 .PP
-The resource requirement contribution is adding up all resource
-requirements of a job into a single numeric value.
+The resource requirement contribution is a sum 
 
-   rrcontr = Sum over all(hrr)
+   rrcontr = Sum over all(rraddend)
 
-with an "hrr" for each hard resource request.
+with an addend for each hard resource request ("rraddend").
 Depending on the resource type two different methods are used to 
-determine the value to be used for "hrr" here. For numeric type resource
-requests the "hrr" representes how much of a resource a job requests (on a
-per-slot basis and on how many slots) and how "important" this resource is
-considered in comparison to other resources. This is expressed by the
-formula:
+determine this addend. For numeric type resource requests the addend 
+is the product 
 
-   hrr      = rurg * assumed_slot_allocation * request
+   rraddend = "rurg" * assumed_slot_allocation * request
 
-with the resources urgency value ("rurg") as specified 
+of the resources urgency value ("rurg") as specified 
 under \fBurgency\fP in 
 .M complex 5 , 
-the job's assumed_slot_allocation representing the number of slots a job
-supposedly gets and the per slot request as 
-specified using the -l 
-.M qsub 1
-option. For string type requests the formula is simply
+the jobs assumed slot allocation and the per slot request as 
+specified using -l 
+.M submit 1
+option. For string type requests the resources urgency value
 
-   hrr      = "rurg"
+   rraddend = "rurg"
 
-and directly assigns the resource urgency value
 as specified under \fBurgency\fP in 
-.M complex 5 . 
+.M complex 5 , 
+is directly used as addend.
 .PP
-The waiting time contribution represents a weighted weighting time of the
-jobs
+The waiting time contribution is the product 
 
    wtcontr = waiting_time * waiting_weight
 
-with the waiting time in seconds and the \fBwaiting_weight\fP value 
+of the jobs waiting time in seconds and the \fBwaiting_weight\fP value 
 as specified in 
 .M sched_conf 5 .
 .PP
-The deadline contribution has an increasing effect as jobs approach their
-deadline initiation time (see the -dl option in
-.M qsub 1 ).
-It is defined as the quotient of the \fBweight_deadline\fP 
-value from
-.M sched_conf 5
-and the (steadily decreasing) free time in seconds until deadline
+The deadline contribution is the quotient of the \fBweight_deadline\fP 
+value from sched_conf(5) and the free time in seconds until deadline 
 initiation time
 
-   dlcontr = wheight_deadline / free_time
+   dlcontr = waiting_deadline / free_time
 
-or is set to 0 for non-deadline jobs.
+or 0 for non-deadline jobs.
 .\"
 .\"
 .PP
 .\" ticket policy
-The xxQS_NAME_EExx ticket policy unites functional, override and share tree 
-policies in the ticket value ("tckts") being defined as the sum of the
-specific ticket values ("ftckt"/"otckt"/"stckt") for each sub-policy 
+The xxQS_NAME_EExx ticket policy unites functional, ovrride and share tree 
+policy in the ticket value ("tckts") being defined as the sum of the specific 
+ticket values ("ftckt"/"otckt"/"stckt") for each sub-policy 
 
     tckts = ftckt + otckt + stckt
 
 The ticket policies provide a broad range of means for influencing
-both job dispatch and runtime priorities on a per job, per user, per
-project, and per department basis. See the xxQS_NAME_EExx
-Installation and Administration Guide for details.
+both jobs dispatch priority on a per job, per user, per
+project, per department and per job class basis. 
 .\"
 .\"
-.SS "\fBJOB RUN-TIME PRIORITY\fP"
+.SS "\fBJOBS RUN-TIME PRIORITY\fP"
 .\"
 .\"
-In a xxQS_NAME_Cxx system the run-time priority of jobs is determined by the 
+In a xxQS_NAME_Cxx system jobs run-time priority is determined by the 
+the 
 .M queue_conf 5
-\fBpriority\fP specification in effect for the queue instance 
+\fBpriority\fP specification in effect with the queue instance 
 at the time when a job gets started.
 .PP
 .\"
-In a xxQS_NAME_EExx system the run-time priority can be dynamically adjusted 
-in order to meet the goals set with the ticket policy. Dynamic run-time
-priority adjustment can be turned off globally using
-\fBreprioritize_interval\fP in
+In a xxQS_NAME_EExx system jobs run-time priority can be dynamically adjusted 
+in order to meet the goals set with the ticket policy. Dynamic run-time job
+adjustment can be turned off globally using \fBreprioritize_interval\fP in
 .M sched_conf 5
-or on a per host basis by using the \fBexecd_params\fP setting
-\fBNO_REPRIORITIZATION\fP in the corresponding host configuration
-.M sge_conf 5 ).
-If no dynamic run-time priority adjustment is done 
-at a host level, the \fBpriority\fP specification in 
+or on a per host basis by using the \fBexecd_params\fP setting \fBNO_REPRIORITIZATION\fP  
+in
+.M sge_conf 5
+of a host. If no dynamic jobs run-time priority adjustment is done 
+at a host the \fBpriority\fP specification in 
 .M queue_conf 5
 is in effect.
 .PP
-.SH "SEE ALSO"
+.SH "SEEii ALSO"
 .M xxqs_name_sxx_intro 1 ,
 .M complex 5 ,
 .M qstat 1 ,

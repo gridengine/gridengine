@@ -158,31 +158,23 @@ int sub_command
       lSetString(new_pe, PE_allocation_rule, s);
    }
 
-   /* -------- PE_urgency_slots */
-   if (lGetPosViaElem(pe, PE_urgency_slots)>=0) {
-      s = lGetString(pe, PE_urgency_slots);
-      if (!s)  {
-         ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
-               lNm2Str(PE_allocation_rule), "validate_pe"));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EEXIST;
-      }
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      /* -------- PE_urgency_slots */
+      if (lGetPosViaElem(pe, PE_urgency_slots)>=0) {
+         s = lGetString(pe, PE_urgency_slots);
+         if (!s)  {
+            ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
+                  lNm2Str(PE_allocation_rule), "validate_pe"));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return STATUS_EEXIST;
+         }
 
-      if ((ret=pe_validate_urgency_slots(alpp, s))!=STATUS_OK) {
-         DEXIT;
-         return ret;
-      }
-      lSetString(new_pe, PE_urgency_slots, s);
-   }
-
-   /* -------- PE_resource_utilization */
-   if (add) {
-      if (pe_set_slots_used(new_pe, 0)) {
-         ERROR((SGE_EVENT, MSG_MEM_MALLOC));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EMALLOC;
+         if ((ret=pe_validate_urgency_slots(alpp, s))!=STATUS_OK) {
+            DEXIT;
+            return ret;
+         }
+         lSetString(new_pe, PE_urgency_slots, s);
       }
    }
 
@@ -195,26 +187,23 @@ ERROR:
 }
 
 
-int pe_spool(lList **alpp, lListElem *pep, gdi_object_t *object) 
-{
-   lList *answer_list = NULL;
-   bool dbret;
-
+int pe_spool(
+lList **alpp,
+lListElem *pep,
+gdi_object_t *object 
+) {
    DENTER(TOP_LAYER, "pe_spool");
 
-   dbret = spool_write_object(&answer_list, spool_get_default_context(), pep, 
-                              lGetString(pep, PE_name), SGE_TYPE_PE);
-   answer_list_output(&answer_list);
-
-   if (!dbret) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_PERSISTENCE_WRITE_FAILED_S,
-                              lGetString(pep, PE_name));
+   if (!spool_write_object(alpp, spool_get_default_context(), pep, 
+                           lGetString(pep, PE_name), SGE_TYPE_PE)) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
+            object->object_name, lGetString(pep, PE_name)));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
    }
-
    DEXIT;
-   return dbret ? 0 : 1;
+   return 0;
 }
 
 int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 
@@ -225,8 +214,7 @@ int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
 
    pe_name = lGetString(ep, PE_name);
 
-
-   sge_add_event( 0, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, 
+   sge_add_event(NULL, 0, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, 
                  pe_name, NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
 
@@ -320,8 +308,7 @@ lList *pe_list
    DENTER(TOP_LAYER, "debit_all_jobs_from_pes");
 
    for_each (pep, pe_list) {
-   
-      pe_set_slots_used(pep, 0);
+  
       pe_name = lGetString(pep, PE_name);
       DPRINTF(("debiting from pe %s:\n", pe_name));
 
@@ -337,7 +324,7 @@ lList *pe_list
                slots += sge_granted_slots(lGetList(jatep, JAT_granted_destin_identifier_list));
             }  
          }
-         pe_debit_slots(pep, slots, lGetUlong(jep, JB_job_number));
+         debit_job_from_pe(pep, slots, lGetUlong(jep, JB_job_number));
       }
    }
    DEXIT;
@@ -346,5 +333,47 @@ lList *pe_list
 
 
 
+void debit_job_from_pe(
+lListElem *pep, 
+int slots,
+u_long32 job_id  /* needed for job logging */
+) {
+   int n;
 
+   DENTER(TOP_LAYER, "debit_job_from_pe");
+
+   if (pep) {
+      n = (int)lGetUlong(pep, PE_used_slots);
+      n += slots;
+
+      lSetUlong(pep, PE_used_slots, (u_long32)n);
+   }
+   DEXIT;
+   return;
+}
+
+
+void reverse_job_from_pe(
+lListElem *pep,
+int slots,
+u_long32 job_id  /* needed for job logging */
+) {
+   int n;
+
+   DENTER(TOP_LAYER, "reverse_job_from_pe");
+
+   if (pep) {
+      n = (int)lGetUlong(pep, PE_used_slots);
+      n -= slots;
+
+      if (n < 0) {
+         ERROR((SGE_EVENT, MSG_PE_USEDSLOTSTOOBIG_S, lGetString(pep, PE_name)));
+      }
+
+      lSetUlong(pep, PE_used_slots, (u_long32)n);
+   }
+
+   DEXIT;
+   return;
+}
 

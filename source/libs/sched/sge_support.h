@@ -32,6 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+typedef struct {
+   int depth;
+   lListElem **nodes;
+} ancestors_t;
+
 typedef int (*sge_node_func_t) ( lListElem *node, void *ptr );
 
 void decay_userprj_usage ( lListElem *userprj, const lList *decay_list, u_long seqno, u_long curr_time );
@@ -58,10 +63,15 @@ void sge_calc_share_tree_proportions ( lList *share_tree, const lList *user_list
 
 lListElem *search_userprj_node (lListElem *ep, const char *username, const char *projname, lListElem **pep );
 
-void set_share_tree_project_flags( const lList *project_list, lListElem *node );
+lListElem *search_named_node ( lListElem *ep, const char *name );
 
-void sge_add_default_user_nodes( lListElem *root, const lList *user_list, const lList *project_list );
+lListElem *search_named_node_path ( lListElem *ep, const char *path, ancestors_t *ancestors );
 
+void free_ancestors( ancestors_t *ancestors);
+
+#ifdef notdef
+lListElem *search_ancestor_list ( lListElem *ep, char *name, ancestors_t *ancestors );
+#endif
 void sgeee_sort_jobs( lList **job_list );
 
 #endif /* __SGE_SUPPORT_H */

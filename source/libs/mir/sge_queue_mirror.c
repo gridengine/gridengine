@@ -64,6 +64,7 @@ cqueue_update_master_list(sge_object_type type, sge_event_action action,
    if ((action == SGE_EMA_MOD || action == SGE_EMA_ADD) 
        && cqueue != NULL) {
       /*
+       * EB:   
        * modify events for CQ_Type objects; we may not update
        * - CQ_qinstances - it is maintained by QINSTANCE events
        */         
@@ -141,6 +142,7 @@ qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
       if (!is_list) {
          lSetList(cqueue, CQ_qinstances, list);
       }
+printf("new elements: %d\n", lGetNumberOfElem(list));      
    } else {
       ERROR((SGE_EVENT, MSG_CQUEUE_CANTFINDFORUPDATEIN_SS, name, SGE_FUNC));
       ret = false;

@@ -35,7 +35,7 @@
 
 SPOOLBLIB_DIR = $(SDIR)/libs/spool/berkeleydb
 
-SPOOLBLIB = libspoolb$(LIBEXT)
+SPOOLBLIB = libspoolb$(QIDLEXT)$(LIBEXT)
 
 SPOOLBLIB_SRC = \
          sge_spooling_berkeleydb.c  \
@@ -90,3 +90,9 @@ sge_bdb_types.o: $(SPOOLBLIB_DIR)/sge_bdb_types.c
 
 #---------------------------------------------------------------------
 # test programs
+#test_sge_spooling_berkeleydb: test_sge_spooling_berkeleydb.o $(SPOOLBLIB) $(SPOOLLIB) $(GDILIB) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+#	$(CC) $(CFLAGS) -o test_sge_spooling_berkeleydb $(LFLAGS) test_sge_spooling_berkeleydb.o $(SPOOLBLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+#
+#test_sge_spooling_berkeleydb.o: $(SPOOLBLIB_DIR)/test_sge_spooling_berkeleydb.c
+#	$(CC) $(CFLAGS) -c $(SPOOLBLIB_DIR)/test_sge_spooling_berkeleydb.c
+#

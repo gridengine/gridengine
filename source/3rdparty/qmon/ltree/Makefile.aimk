@@ -18,7 +18,7 @@ XLTREE_HEADERS = \
 
 XLTREE_OBJS = ListTree.o DND.o
 
-XLTREELIB   = libXltree$(SHAREDEXT)
+XLTREELIB   = libXltree$(GLIBEXT)
 
 all: $(XLTREELIB)
    

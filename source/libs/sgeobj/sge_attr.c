@@ -78,14 +78,6 @@ PREFIX##_list_add(lList **this_list, lList **answer_list, lListElem **attr,   \
 }                                                                             \
                                                                               \
 bool                                                                          \
-PREFIX##_list_add_set_del(lList **this_list, lList **answer_list,             \
-                         const char *hostname, void *value, bool remove)      \
-{                                                                             \
-   return attr_list_add_set_del(this_list, answer_list, hostname,             \
-                        value, remove, DESCRIPTOR, HREF_NM, VALUE_NM);        \
-}                                                                             \
-                                                                              \
-bool                                                                          \
 PREFIX##_list_find_value(const lList *this_list, lList **answer_list,         \
                          const char *hostname, INTERNAL_TYPE *value,          \
                          const char **mastching_host_or_group,                \
@@ -96,16 +88,6 @@ PREFIX##_list_find_value(const lList *this_list, lList **answer_list,         \
                                value, mastching_host_or_group,                \
                                matching_group, is_ambiguous,                  \
                                DESCRIPTOR, HREF_NM, VALUE_NM);                \
-}                                                                             \
-                                                                              \
-bool                                                                          \
-PREFIX##_list_find_value_href(const lList *this_list, lList **answer_list,    \
-                         const char *hostname, INTERNAL_TYPE *value,          \
-                         bool *found)                                         \
-{                                                                             \
-   return attr_list_find_value_href(this_list, answer_list, hostname,         \
-                               value, found, DESCRIPTOR, HREF_NM,             \
-                               VALUE_NM);                                     \
 }                                                                             \
                                                                               \
 bool                                                                          \
@@ -138,23 +120,12 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
               int flags, lList **ambiguous_href_list,
               const lDescr *descriptor, int href_nm, int value_nm);
 
-static bool 
-attr_list_add_set_del(lList **this_list, lList **answer_list, 
-              const char *hostname, void *value_buffer, bool remove,
-              const lDescr *descriptor, int href_nm, int value_nm);
-
 static bool
 attr_list_find_value(const lList *this_list, lList **answer_list, 
                      const char *hostname, void *value_buffer, 
                      const char **matching_host_or_group,
                      const char **matching_group,
                      bool *is_ambiguous, const lDescr *descriptor, 
-                     int href_nm, int value_nm);
-
-static bool
-attr_list_find_value_href(const lList *this_list, lList **answer_list, 
-                     const char *hostname, void *value_buffer, 
-                     bool *found, const lDescr *descriptor, 
                      int href_nm, int value_nm);
 
 static bool
@@ -166,9 +137,6 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
 static lListElem *
 attr_list_locate(const lList *this_list, const char *host_or_group, 
                  int href_nm);
-
-
-/* EB: ADOC: add commets */
 
 /*
 descriptor        ASTR_Type
@@ -250,7 +218,6 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
             if (flags & HOSTATTR_OVERWRITE) {
                object_set_any_type(attr_elem, value_nm, &value);
                lFreeElem(*attr);
-/* FIXME ??? */               
                *attr = attr_elem;
                ret = true;
             } else {
@@ -261,7 +228,6 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
             }
          } else {
             lAppendElem(*this_list, *attr);
-/* FIXME ????            *attr = NULL; */
             ret = true;
          }
       } else {
@@ -276,7 +242,7 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
           *  - if the the caller of this functions expects this
           *    function to return it
           */ 
-         if (!(flags & HOSTATTR_ALLOW_AMBIGUITY) && 
+         if (!(flags & HOSTATTR_ALLOW_AMBIGUITY) ||
              ambiguous_href_list != NULL) {
 
             /*
@@ -343,32 +309,6 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
    DEXIT;
    return ret;
 }
-
-static bool 
-attr_list_add_set_del(lList **this_list, lList **answer_list, 
-              const char *hostname, void *value, bool remove,
-              const lDescr *descriptor, 
-              int href_nm, int value_nm)
-{
-   bool ret = True;
-   lListElem *attr = NULL;
-
-   if (remove && this_list && *this_list) {
-      attr = attr_list_locate(*this_list, hostname, href_nm);
-      lRemoveElem(*this_list, attr);
-      return ret;
-   }   
-      
-   attr = attr_create(answer_list, hostname, value, descriptor, 
-                         href_nm, value_nm);
-   ret = attr_list_add(this_list, answer_list,
-                        &attr, HOSTATTR_OVERWRITE, NULL,
-                        descriptor, href_nm, value_nm);
-/* FIXME ???   lFreeElem(attr); */
-
-   return ret;
-}
-
 
 /*
 descriptor        ASTR_Type
@@ -455,64 +395,6 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
             if (tmp_href != NULL) {
                DPRINTF(("Using default value\n"));
                object_get_any_type(tmp_href, value_nm, value_buffer);
-               ret = true;
-            } else {
-               /*
-                * Should never happen.
-                */
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_NOCONFVALUE));
-               answer_list_add(answer_list, SGE_EVENT,
-                               STATUS_ERROR1, ANSWER_QUALITY_ERROR);            
-            }
-         }
-      }
-      if (ret) {
-         DTRACE;
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-/*
-descriptor        ASTR_Type
-href_nm           ASTR_href
-value_nm          ASTR_value
-*/
-static bool
-attr_list_find_value_href(const lList *this_list, lList **answer_list, 
-                     const char *hostname, void *value_buffer,
-                     bool *found, const lDescr *descriptor, 
-                     int href_nm, int value_nm)
-{
-   bool ret = false;
-
-   DENTER(HOSTATTR_LAYER, "attr_list_find_value");
-
-   if (this_list != NULL && hostname != NULL) {
-      lListElem *href = NULL;
-   
-      /*
-       * Try to find a value for the concerned host
-       */ 
-      href = attr_list_locate(this_list, hostname, href_nm);
-      if (href != NULL) {  
-         object_get_any_type(href, value_nm, value_buffer);
-         *found = True;
-         DTRACE;
-         ret = true;
-      } else {
-         if (ret == false) {
-            lListElem *tmp_href = NULL;
-
-            /*
-             * Use the default value
-             */
-            tmp_href = attr_list_locate(this_list, HOSTREF_DEFAULT, href_nm);
-            if (tmp_href != NULL) {
-               object_get_any_type(tmp_href, value_nm, value_buffer);
-               *found = False;
-               DTRACE;
                ret = true;
             } else {
                /*
@@ -665,7 +547,6 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
             is_last_token = true;
          }
 
-
 #if 0 
          /* 
           * It is not allowed to remove all white space because.
@@ -676,19 +557,12 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
           */
          sge_strip_blanks(token);
 #endif
-
          length = strlen(token);
          if (length >= 1) {
             const char *href_name = NULL;
             char *value = NULL;
             bool first_is_default = true;
-  
-            /*
-             * There might be white space at the end of each token.
-             */
-            sge_strip_white_space_at_eol(token);
-            length = strlen(token);
-         
+   
             /* 
              * All except the last token has to conatin a ',' as last
              * character in the string. This ',' has to be removed.
@@ -705,12 +579,6 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
                   ret = false;
                }
             }
-
-            /*
-             * There might be space after a closing brace ']'
-             */
-            sge_strip_white_space_at_eol(token);
-            length = strlen(token);
 
             /* 
              * All except the first token has to end with a ']'. Also

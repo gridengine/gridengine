@@ -109,15 +109,8 @@ void
 centry_list_remove_duplicates(lList *this_list);
 
 double 
-centry_urgency_contribution(int slots, const char *name, double value, 
+centry_urgency_contribution(int slots, const char *name, double value,                       
                             const lListElem *centry);
-
-bool
-centry_list_do_all_exists(const lList *this_list, lList **answer_list,
-                          const lList *centry_list);
-
-bool
-centry_list_is_correct(lList *this_list, lList **answer_list);
 
 #endif /* __SGE_CENTRY_H */
 

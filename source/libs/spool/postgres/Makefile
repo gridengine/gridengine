@@ -35,7 +35,7 @@
 
 SPOOLPLIB_DIR = $(SDIR)/libs/spool/postgres
 
-SPOOLPLIB = libspoolp$(LIBEXT)
+SPOOLPLIB = libspoolp$(QIDLEXT)$(LIBEXT)
 
 SPOOLPLIB_SRC = \
          sge_spooling_postgres.c
@@ -66,7 +66,7 @@ libspoolp.a:	$(SPOOLPLIB_OBJS)
 	$(AR) $(ARFLAGS) libspoolp.a $(SPOOLPLIB_OBJS)
 	$(RANLIB) libspoolp.a
 
-libspoolp$(SHAREDEXT): $(SPOOLPLIB_OBJS) $(SPOOLLIB) $(SGEOBJLIB) $(ALLLISTSLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+libspoolp$(SHAREDEXT): $(SPOOLPLIB_OBJS) $(SPOOLLIB) $(SGEOBJLIB) $(ALLLISTSLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libspoolp$(SHAREDEXT) $(SPOOLPLIB_OBJS) -lspool -lsgeobj -lsgeobjd -lcom -lcull -luti -lrmon $(LIBS) -lc
 
 ###############################################################################
@@ -82,7 +82,7 @@ sge_spooling_postgres.o: $(SPOOLPLIB_DIR)/sge_spooling_postgres.c
 
 #---------------------------------------------------------------------
 # test programs
-test_sge_spooling_postgres: test_sge_spooling_postgres.o $(SPOOLPLIB) $(SPOOLLIB) $(GDILIB) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(RMONLIB)
+test_sge_spooling_postgres: test_sge_spooling_postgres.o $(SPOOLPLIB) $(SPOOLLIB) $(GDILIB) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
 	$(CC) $(CFLAGS) -o test_sge_spooling_postgres $(LFLAGS) test_sge_spooling_postgres.o $(SPOOLPLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_sge_spooling_postgres.o: $(SPOOLPLIB_DIR)/test_sge_spooling_postgres.c

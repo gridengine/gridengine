@@ -72,8 +72,6 @@ int sge_patternnullcmp(const char *str, const char *pattern);
 
 void sge_strip_blanks(char *str);
 
-void sge_strip_white_space_at_eol(char *str);
-
 void sge_strtoupper(char *buffer, int max_len);
 
 int sge_strisint(const char *str);

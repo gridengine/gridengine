@@ -48,6 +48,8 @@ qinstance_list_locate(const lList *this_list, const char *hostname,
 const char *
 qinstance_get_name(const lListElem *this_elem, dstring *string_buffer);
 
+u_long32 qinstance_state_from_string(const char* state, lList **answer_list);
+
 bool
 qinstance_reinit_consumable_actual_list(lListElem *this_elem,
                                         lList **answer_list);
@@ -113,26 +115,28 @@ qinstance_is_calendar_referenced(const lListElem *this_elem,
                                  const lListElem *calendar);
 
 int
-qinstance_debit_consumable(lListElem *this_elem, lListElem *job, 
-                           lList *centry_list, int slots);
+qinstance_debit_consumable(lListElem *jep, lListElem *qep, lList *centry_list,
+                           int slots);
 
 void
 qinstance_check_unknown_state(lListElem *this_elem);
 
-bool
-qinstance_message_add(lListElem *this_elem, u_long32 type, const char *message);
-
-bool
-qinstance_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type);
 
 /* EB: TODO: queue -> qinstance */
+
+extern const char *queue_types[];
+
+extern lList *Master_Queue_List;
 
 int queue_reference_list_validate(lList **alpp, lList *qr_list,
                                   const char *attr_name, const char *obj_descr,
                                   const char *obj_name);
 
+bool
+gqueue_is_suspended(const lList *this_list, const lList *qinstance_list);
+
 int
-rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots,
+debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots,
                  int config_nm, int actual_nm, const char *obj_name);
 
 lListElem *
@@ -141,7 +145,5 @@ explicit_job_request(lListElem *jep, const char *name);
 bool
 qinstance_list_find_matching(const lList *this_list, lList **answer_list,
                              const char *hostname_pattern, lList **qref_list);
-
-
 
 #endif /* __SGE_QINSTANCE_H */

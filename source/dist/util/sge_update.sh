@@ -813,9 +813,9 @@ Execute sed -e "s%=GENROOT%=$SGE_ROOT%g" \
             -e "s%=GENCELL%=$SGE_CELL%g" \
             -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" $SGE_ROOT/util/startup_template > ${TMP_V5_STARTUP_FILE}.0
 if [ "$COMMD_PORT" != "" ]; then
-   Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" ${TMP_V5_STARTUP_FILE}.0 > $C_DIR/rcsge
+   Execute sed -e "s/=GENCOMMD_PORT/=$COMMD_PORT/" ${TMP_V5_STARTUP_FILE}.0 > $C_DIR/rcsge
 else
-   Execute sed -e "/=GENSGE_QMASTER_PORT/d" ${TMP_V5_STARTUP_FILE}.0 > $C_DIR/rcsge
+   Execute sed -e "/=GENCOMMD_PORT/d" ${TMP_V5_STARTUP_FILE}.0 > $C_DIR/rcsge
 fi
 
 $RM ${TMP_V5_STARTUP_FILE}.0

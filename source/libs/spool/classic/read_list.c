@@ -62,6 +62,7 @@
 #include "sge_ckpt.h"
 #include "sge_centry.h"
 #include "sge_conf.h"
+#include "sge_host.h"
 #include "sge_pe.h"
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
@@ -663,7 +664,7 @@ int sge_read_cqueue_list_from_disk(void)
                   qinstance_set_conf_slots_used(qinstance);
 
                   /* setup actual list of queue */
-                  qinstance_debit_consumable(qinstance, NULL, master_list, 0);
+                  qinstance_debit_consumable(NULL, qinstance, master_list, 0);
 
                   ccl = lGetList(qinstance, QU_consumable_config_list);
                   centry_list_fill_request(ccl, master_list, 
@@ -876,21 +877,6 @@ char *object_dir
       old_name = strdup(lGetString(ep, nm));
    }
    ret = sge_resolve_host(ep, nm);
-#ifdef ENABLE_NGC
-   if (ret != CL_RETVAL_OK ) {
-      if (ret != CL_RETVAL_GETHOSTNAME_ERROR ) {
-         /* finish qmaster setup only if hostname resolving
-            does not work at all generally or a timeout
-            indicates that commd itself blocks in resolving
-            a host, e.g. when DNS times out */
-         ERROR((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS, object_name, old_name, cl_get_error_text(ret)));
-         free(old_name);
-         DEXIT;
-         return -1;
-      }
-      WARNING((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS, object_name, old_name));
-   }
-#else
    if (ret != CL_OK ) {
       if (ret != COMMD_NACK_UNKNOWN_HOST && ret != COMMD_NACK_TIMEOUT) {
          /* finish qmaster setup only if hostname resolving
@@ -906,7 +892,6 @@ char *object_dir
       WARNING((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS,
                object_name, old_name));
    }
-#endif
 
    /* rename config file if resolving changed name */
    if (dataType == lHostT) {
@@ -1087,19 +1072,7 @@ int read_all_configurations(lList **lpp,
          /* resolve config name */
          old_name = strdup(lGetHost(el, CONF_hname));
 
-         ret = sge_resolve_host(el, CONF_hname);
-#ifdef ENABLE_NGC
-         if (ret != CL_RETVAL_OK) {
-            if (ret != CL_RETVAL_GETHOSTNAME_ERROR  ) {
-               ERROR((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS, "local configuration", old_name, cl_get_error_text(ret)));
-               free(old_name);
-               DEXIT;
-               return -1;
-            }
-            WARNING((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS, "local configuration", old_name));
-         }
-#else
-         if (ret != CL_OK) {
+         if ((ret = sge_resolve_host(el, CONF_hname))!= CL_OK) {
             if (ret != COMMD_NACK_UNKNOWN_HOST && ret != COMMD_NACK_TIMEOUT) {
                ERROR((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS,
                         "local configuration", old_name, cl_errstr(ret)));
@@ -1110,7 +1083,6 @@ int read_all_configurations(lList **lpp,
             WARNING((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS,
                   "local configuration", old_name));
          }
-#endif
          new_name = lGetHost(el, CONF_hname);
 
          /* simply ignore it if it exists already */
@@ -1127,6 +1099,7 @@ int read_all_configurations(lList **lpp,
             sprintf(real_fname, "%s/%s", local_config_dir, new_name);
 
             DPRINTF(("global_config_file: %s\n", fname));
+            sge_switch2admin_user();
             if ((ret=write_configuration(1, &alp, fname, el, NULL, FLG_CONF_SPOOL))) {
                /* answer list gets filled in write_configuration() */
                free(old_name);
@@ -1138,15 +1111,18 @@ int read_all_configurations(lList **lpp,
 
                if (rename(fname, real_fname) == -1) {
                   free(old_name);
+                  sge_switch2start_user();
                   DEXIT;
                   return -1;
                }
                sprintf(old_fname, "%s/%s", local_config_dir, old_name);
                if (sge_unlink(NULL, old_fname)) {
+                  sge_switch2start_user();
                   DEXIT;
                   return -1;
                }
             }
+            sge_switch2start_user();
          }
          lFreeList(alp);
          free(old_name);

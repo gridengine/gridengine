@@ -226,7 +226,7 @@ int add_usage(lListElem *jr, char *name, const char *val_as_str, double val)
       val = parsed;
    }
       
-   lSetDouble(usage, UA_value, val /*val>old_val?val:old_val*/); 
+   lSetDouble(usage, UA_value, val>old_val?val:old_val); 
 
    DEXIT;
    return 0;

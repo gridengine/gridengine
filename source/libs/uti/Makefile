@@ -34,7 +34,7 @@
 #___INFO__MARK_END__
 UTILIB_DIR  = $(SDIR)/libs/uti
 
-UTILIB  = libuti$(LIBEXT)
+UTILIB  = libuti$(QIDLEXT)$(LIBEXT)
 
 UTILIB_DRMAA_SRC = \
          config_file.c \
@@ -45,8 +45,6 @@ UTILIB_DRMAA_SRC = \
          sge_bitop.c \
          sge_bootstrap.c \
          sge_crc.c \
-         sge_dstring.c \
-         sge_edit.c \
          sge_hostname.c \
          sge_htable.c \
          sge_io.c \
@@ -54,20 +52,21 @@ UTILIB_DRMAA_SRC = \
          sge_log.c \
          sge_nprocs.c \
          sge_os.c \
-         sge_parse_num_par.c \
          sge_profiling.c \
          sge_prog.c \
          sge_signal.c \
-         sge_spool.c \
-         sge_stdio.c \
-         sge_stdlib.c \
          sge_string.c \
+         sge_dstring.c \
          sge_time.c \
+         sge_stdio.c \
+         sge_spool.c \
+         sge_stdlib.c \
+         sge_unistd.c \
+         sge_parse_num_par.c \
          sge_tmpnam.c \
-         sge_uidgid.c \
-         sge_unistd.c
-
-UTILIB_SRC = sge_loadmem.c sge_getloadavg.c $(UTILIB_DRMAA_SRC)
+         sge_edit.c \
+         sge_uidgid$(QIDLEXT).c 
+UTILIB_SRC = sge_loadmem.c sge_getloadavg.c sge_hostname.c sge_uidgid.c $(UTILIB_DRMAA_SRC)
 
 UTILIB_DRMAA_OBJS = $(UTILIB_DRMAA_SRC:.c=.o)
 UTILIB_OBJS = $(UTILIB_SRC:.c=.o)
@@ -124,12 +123,12 @@ setup_path.o:  $(UTILIB_DIR)/setup_path.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/setup_path.c
 
 sge_hostname.o:	$(UTILIB_DIR)/sge_hostname.c
-		$(CC) $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_hostname.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_hostname.c
 
 sge_parse_num_par.o:	$(UTILIB_DIR)/sge_parse_num_par.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_parse_num_par.c
 
-sge_uidgid.o:	$(UTILIB_DIR)/sge_uidgid.c
+sge_uidgid$(QIDLEXT).o:	$(UTILIB_DIR)/sge_uidgid.c
 		$(LD_WRAPPER) $(CC) -o $@ $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_uidgid.c
 
 sge_afsutil.o: $(UTILIB_DIR)/sge_afsutil.c

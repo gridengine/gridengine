@@ -52,13 +52,12 @@
 typedef struct {
     u_long32         log_level;
     char             log_buffer[4*MAX_STRING_SIZE]; /* formerly known as SGE_EVENT */
+    char*            log_file;
     int              log_as_admin_user;
     int              verbose;
     int              gui_log;
     trace_func_type  trace_func;
 } log_state_t;
-
-static char* Log_File = TMP_ERR_FILE_SNBU;
 
 static pthread_once_t log_once = PTHREAD_ONCE_INIT;
 static pthread_key_t log_state_key;
@@ -68,7 +67,7 @@ static void         log_state_destroy(void* theState);
 static log_state_t* log_state_getspecific(pthread_key_t aKey);
 static void         log_state_init(log_state_t *theState);
 
-static void sge_do_log(int, const char*, const char*); 
+static void sge_do_log(int log_level, int levelchar, const char *err_str, const char *newline); 
 
 
 /****** uti/log/log_state_get_log_buffer() ******************************************
@@ -122,39 +121,29 @@ u_long32 log_state_get_log_level(void)
    return log_state->log_level;
 }
 
-/****** uti/sge_log/log_state_get_log_file() ***********************************
+/****** uti/log/log_state_get_log_file() ******************************************
 *  NAME
-*     log_state_get_log_file() -- get log file name
+*     log_state_get_log_file() -- Return path to log file in use.
 *
 *  SYNOPSIS
-*     const char* log_state_get_log_file(void) 
+*     const char *log_state_get_log_file(void) 
 *
 *  FUNCTION
-*     Return name of current log file. The string returned may or may not 
-*     contain a path.
-*
-*  INPUTS
-*     void - none 
+*     Return path to log file in use.
 *
 *  RESULT
-*     const char* - log file name (with relative or absolute path)
+*     const char * 
 *
-*  NOTES
-*     MT-NOTE: log_state_get_log_file() is not MT safe.
-*     MT-NOTE:
-*     MT-NOTE: It is safe, however, to call this function from within multiple
-*     MT-NOTE: threads as long as no other thread does change 'Log_File'.
-*
-*  BUGS
-*     BUGBUG-AD: This function should use something like a barrier for
-*     BUGBUG-AD: synchronization.
-*
-*******************************************************************************/
+******************************************************************************/
 const char *log_state_get_log_file(void)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
 
-   return Log_File;
+   log_state = log_state_getspecific(log_state_key);
+
+   return log_state->log_file;
 }
 
 /****** uti/log/log_state_get_log_verbose() ******************************************
@@ -299,38 +288,31 @@ void log_state_set_log_level(u_long32 i)
    return;
 }
 
-/****** uti/sge_log/log_state_set_log_file() ***********************************
+/****** uti/log/log_state_set_log_file() *****************************************
 *  NAME
-*     log_state_set_log_file() -- set log file name
+*     log_state_set_log_file() -- Set log file to be used.
 *
 *  SYNOPSIS
-*     void log_state_set_log_file(char *file) 
+*     void log_state_set_log_file(int i) 
 *
 *  FUNCTION
-*     Set log file name. 'file' may either contain a relative or absolute path. 
+*     Set path of log file to be used. 
 *
 *  INPUTS
-*     char *file - log file name 
+*     char * 
 *
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     MT-NOTE: log_state_set_log_file() is not MT safe 
-*     MT-NOTE:
-*     MT-NOTE: Do NOT invoke this function while more than one thread is
-*     MT-NOTE: active!
-*
-*  BUGS
-*     BUGBUG-AD: This function should use something like a barrier for
-*     BUGBUG-AD: synchronization.
-*
-*******************************************************************************/
+*  SEE ALSO
+*     uti/log/log_state_get_log_file() 
+******************************************************************************/
 void log_state_set_log_file(char *file)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
 
-   Log_File = file;
+   log_state = log_state_getspecific(log_state_key);
+
+   log_state->log_file = file;
 
    return;
 }
@@ -575,39 +557,43 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    } 
    if (uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD   || uti_state_get_mewho() == QSTD ||
        uti_state_get_mewho() == SCHEDD ||  uti_state_get_mewho() == SHADOWD || uti_state_get_mewho() == COMMD) {
-      sge_do_log(levelchar, mesg, newline);
+      sge_do_log(log_level, levelchar, mesg, newline);
    }
 
    DEXIT;
    return 0;
 } /* sge_log() */
 
-/****** uti/sge_log/sge_do_log() ***********************************************
+/****** sge_log/sge_do_log() ***************************************************
 *  NAME
-*     sge_do_log() -- Write message to log file 
+*     sge_do_log() -- SGE logging function
 *
 *  SYNOPSIS
-*     static void sge_do_log(int aLevel, const char *aMessage, const char 
-*     *aNewLine) 
-*
-*  FUNCTION
-*     ??? 
+*     static void sge_do_log(int log_level, int levelchar, const char *err_str, 
+*     const char *newline) 
 *
 *  INPUTS
-*     int aLevel           - log level
-*     const char *aMessage - log message
-*     const char *aNewLine - either newline or '\0' 
-*
-*  RESULT
-*     void - none
+*     int log_level       - ??? 
+*     int levelchar       - ??? 
+*     const char *err_str - ??? 
+*     const char *newline - ??? 
 *
 *  NOTES
-*     MT-NOTE: sge_do_log() is MT safe.
-*
+*     MT-NOTE: sge_do_log() is not MT safe due to sge_switch2admin_user()
+*     MT-NOTE: sge_do_log() can be used however in MT applications if no 
+*     MT-NOTE: admin user switching takes place
 *******************************************************************************/
-static void sge_do_log(int aLevel, const char *aMessage, const char *aNewLine) 
+static void sge_do_log(int log_level, int levelchar, const char *err_str, const char *newline) 
 {
    int fd;
+   int switch_back = 0;
+
+   /* LOG_CRIT LOG_ERR LOG_WARNING LOG_NOTICE LOG_INFO LOG_DEBUG */
+
+   if (log_state_get_log_as_admin_user() && geteuid() == 0) {
+      sge_switch2admin_user();
+      switch_back = 1;
+   }
 
    if ((fd = open(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
       char msg2log[4*MAX_STRING_SIZE];
@@ -622,11 +608,15 @@ static void sge_do_log(int aLevel, const char *aMessage, const char *aNewLine)
               date,
               uti_state_get_sge_formal_prog_name(),
               uti_state_get_unqualified_hostname(),
-              aLevel,
-              aMessage,
-              aNewLine);
+              levelchar,
+              err_str,
+              newline);
       write(fd, msg2log, strlen(msg2log));
       close(fd);
+   }
+
+   if (log_state_get_log_as_admin_user() && switch_back) {
+      sge_switch2start_user();
    }
 
    return;
@@ -754,6 +744,7 @@ static void log_state_init(log_state_t *theState)
 {
    strcpy(theState->log_buffer, "");
    theState->log_level         = LOG_WARNING;
+   theState->log_file          = TMP_ERR_FILE_SNBU;
    theState->log_as_admin_user = 0;
    theState->verbose           = 1;
    theState->gui_log           = 1;

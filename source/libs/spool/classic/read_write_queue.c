@@ -46,6 +46,7 @@
 #include "sge_stdio.h"
 #include "sge_spool.h"
 #include "sge_io.h"
+#include "sge_answer.h"
 #include "sched_conf.h"
 #include "sge_range.h"
 #include "sge_qinstance.h"
@@ -118,26 +119,7 @@ _Insight_set_option("suppress", "PARM_NULL");
       } 
       else {
          /* build unique hostname when it comes in */
-         ret = getuniquehostname(str, unique, 0);
-#ifdef ENABLE_NGC
-         if (ret != CL_RETVAL_OK) {
-            if ( ret != CL_RETVAL_GETHOSTNAME_ERROR) {
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ANSWER_GETUNIQUEHNFAILEDRESX_SS,
-                  str, cl_errstr(ret)));
-               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               DEXIT;
-               return -1;
-            }
-         } 
-         if (ret == CL_RETVAL_OK) {
-            lSetHost(ep, QU_qhostname, unique);
-         } else {
-            /* ignore NACK_UNKNOWN_HOST error */
-            lSetHost(ep, QU_qhostname, str);
-         }
- 
-#else
-         if (ret != CL_OK) {
+         if ((ret = getuniquehostname(str, unique, 0)) != CL_OK) {
             if (ret != COMMD_NACK_UNKNOWN_HOST) {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ANSWER_GETUNIQUEHNFAILEDRESX_SS,
                   str, cl_errstr(ret)));
@@ -146,13 +128,11 @@ _Insight_set_option("suppress", "PARM_NULL");
                return -1;
             }
          }
-         if (ret == CL_OK) {
+         if (ret == CL_OK)
             lSetHost(ep, QU_qhostname, unique);
-         } else {
+         else
             /* ignore NACK_UNKNOWN_HOST error */
             lSetHost(ep, QU_qhostname, str);
-         }
-#endif
       }
 
       lDelElemStr(clpp, CF_name, "hostname");
@@ -332,31 +312,31 @@ _Insight_set_option("suppress", "PARM_NULL");
       }    
    }
 
-   /* --------- QU_projects */
-   if (!set_conf_list(alpp, clpp, fields, "projects", ep, 
-            QU_projects, UP_Type, UP_name)) {
-      DEXIT;
-      return -1;
-   }
-   /* --------- QU_xprojects */
-   if (!set_conf_list(alpp, clpp, fields, "xprojects", ep, 
-            QU_xprojects, UP_Type, UP_name)) {
-      DEXIT;
-      return -1;
-   }
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      /* --------- QU_projects */
+      if (!set_conf_list(alpp, clpp, fields, "projects", ep, 
+               QU_projects, UP_Type, UP_name)) {
+         DEXIT;
+         return -1;
+      }
+      /* --------- QU_xprojects */
+      if (!set_conf_list(alpp, clpp, fields, "xprojects", ep, 
+               QU_xprojects, UP_Type, UP_name)) {
+         DEXIT;
+         return -1;
+      }
 
-#if 0
-   /* --------- QU_fshare */
-   if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, QU_fshare)) {
-      DEXIT;
-      return -1;
+      /* --------- QU_fshare */
+      if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, QU_fshare)) {
+         DEXIT;
+         return -1;
+      }
+      /* --------- QU_oticket */
+      if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, QU_oticket)) {
+         DEXIT;
+         return -1;
+      }
    }
-   /* --------- QU_oticket */
-   if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, QU_oticket)) {
-      DEXIT;
-      return -1;
-   }
-#endif
 
    /* --------- QU_calendar */
    if (!set_conf_string(alpp, clpp, fields, "calendar", ep, QU_calendar)) {
@@ -760,31 +740,29 @@ const lListElem *qep
    if (ret == -1) {
       goto FPRINTF_ERROR;
    } 
-  
-   ret = fprint_cull_list(fp, "projects             ", 
-      lGetList(qep, QU_projects), UP_name);
-   if (ret == -1) {
-      goto FPRINTF_ERROR;
-   } 
-   ret = fprint_cull_list(fp, "xprojects            ", 
-      lGetList(qep, QU_xprojects), UP_name);
-   if (ret == -1) {
-      goto FPRINTF_ERROR;
-   } 
-   
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      ret = fprint_cull_list(fp, "projects             ", 
+         lGetList(qep, QU_projects), UP_name);
+      if (ret == -1) {
+         goto FPRINTF_ERROR;
+      } 
+      ret = fprint_cull_list(fp, "xprojects            ", 
+         lGetList(qep, QU_xprojects), UP_name);
+      if (ret == -1) {
+         goto FPRINTF_ERROR;
+      } 
+   }
    FPRINTF((fp, "calendar             %s\n", 
       (s=lGetString(qep, QU_calendar))?s:"NONE"));
    FPRINTF((fp, "initial_state        %s\n", 
       lGetString(qep, QU_initial_state)));
 
-#if 0
-
-   FPRINTF((fp, "fshare               %d\n", 
-      (int)lGetUlong(qep, QU_fshare)));
-   FPRINTF((fp, "oticket              %d\n", 
-      (int)lGetUlong(qep, QU_oticket)));
-
-#endif
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      FPRINTF((fp, "fshare               %d\n", 
+         (int)lGetUlong(qep, QU_fshare)));
+      FPRINTF((fp, "oticket              %d\n", 
+         (int)lGetUlong(qep, QU_oticket)));
+   }
 
    FPRINTF((fp, "s_rt                 %s\n", lGetString(qep, QU_s_rt)));
    FPRINTF((fp, "h_rt                 %s\n", lGetString(qep, QU_h_rt)));
@@ -822,8 +800,8 @@ const lListElem *qep
    if (write_2_stdout && getenv("MORE_INFO")) {
       FPRINTF((fp, "suspended_on_subordinate "u32"\n", 
          lGetUlong(qep, QU_suspended_on_subordinate)));
-      ret = fprint_resource_utilizations(fp, "complex_values_actual  ", 
-         lGetList(qep, QU_resource_utilization), 1);
+      ret = fprint_thresholds(fp, "complex_values_actual  ", 
+         lGetList(qep, QU_consumable_actual_list), 1);
       if (ret == -1) {
          goto FPRINTF_ERROR;
       } 

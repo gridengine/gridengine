@@ -30,8 +30,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-# Base directory where the openssl binary and libraries reside
+# Base directory where the openssl binary and libraries resides
 OPENSSLBASE=/vol2/tools/SW/openssl-0.9.7c
-
-# Base directory where BDB resides
 BERKELEYDBBASE=/vol2/SW/db-4.2.52

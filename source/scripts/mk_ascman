@@ -1,4 +1,4 @@
-#!/bin/csh -fb
+#!/bin/csh -f
 #
 # Creates ASCII manual pages in ASCMAN/man/man{1,...} sudirectories from
 # nroff manual pages in SEDMAN/man/man{1,...} subdirectories.
@@ -58,22 +58,12 @@ mkdir -p $MANBUILDDIR
 # Take CVSROOT from current CVS direcotry
 #
 setenv CVSROOT `cat CVS/Root`
-
-setenv CVSBRANCH ""
-if ( $KVMAN == 1 ) then
-   if ( -f CVS/Tag ) then
-      setenv CVSBRANCH `sed 's/^[TN]//' CVS/Tag`
-      echo "==> Using CVS branch: ${CVSBRANCH}"
-      setenv CVSBRANCH "-r $CVSBRANCH"
-   endif
-endif
-
 cd $MANBUILDDIR
 
 if ( $KVMAN == 1 ) then
    set MANSRCDIR = $MANBUILDDIR/MANSRC
-   echo "Checking out manpage sources"
-   cvs -q co $CVSBRANCH -P -kv -d MANSRC gridengine/doc/man
+   echo "Checking out manpage source"
+   cvs -q co -P -kv -d MANSRC gridengine/doc/man
 else
    set MANSRCDIR = $1/../doc/man
 endif
@@ -85,20 +75,38 @@ endif
 # which are created if they do not exist.
 #
 # Requires sed to be installed and accessible.
-if ( $MANMODE == "ge" ) then
+if ( $MANMODE == "ge" ) then 
    set xxQS_NAMExx = "Grid Engine" 
    set xxQS_NAME_Cxx = "Grid Engine" 
-   set xxQS_NAME_EExx = "Grid Engine"
+   set xxQS_NAME_EExx = "Grid Engine Enterprise Edition" 
+   set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR" 
    set xxQS_NAME_Sxx = "SGE" 
    set xxqs_name_sxx = "sge" 
-   set xxRELxx = "GE 6.0beta"
+   set xxRELxx = "GE 5.3beta2"
+else if ( $MANMODE == "geee" ) then
+   set xxQS_NAMExx = "Grid Engine Enterprise Edition" 
+   set xxQS_NAME_Cxx = "Grid Engine" 
+   set xxQS_NAME_EExx = "Grid Engine Enterprise Edition" 
+   set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR" 
+   set xxQS_NAME_Sxx = "SGE" 
+   set xxqs_name_sxx = "sge" 
+   set xxRELxx = "GEEE 5.3beta2"
 else if ( $MANMODE == "sge" ) then
-   set xxQS_NAMExx = "N1 Grid Engine"
-   set xxQS_NAME_Cxx = "N1 Grid Engine"
-   set xxQS_NAME_EExx = "N1 Grid Engine"
+   set xxQS_NAMExx = "Sun Grid Engine"
+   set xxQS_NAME_Cxx = "Sun Grid Engine"
+   set xxQS_NAME_EExx = "Sun Grid Engine, Enterprise Edition"
+   set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR"
    set xxQS_NAME_Sxx = "SGE"
    set xxqs_name_sxx = "sge"
-   set xxRELxx = "N1GE 6.0beta"
+   set xxRELxx = "SGE 5.3beta2"
+else if ( $MANMODE == "sgeee" ) then
+   set xxQS_NAMExx = "Sun Grid Engine, Enterprise Edition"
+   set xxQS_NAME_Cxx = "Sun Grid Engine"
+   set xxQS_NAME_EExx = "Sun Grid Engine, Enterprise Edition"
+   set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR"
+   set xxQS_NAME_Sxx = "SGE"
+   set xxqs_name_sxx = "sge"
+   set xxRELxx = "SGEEE 5.3beta2"
 else
    echo error wrong MANMODE=$MANMODE. Exit
    exit 1
@@ -122,6 +130,7 @@ foreach n ( 1 3 5 8 )
    foreach f ( $MANSRCDIR/man${n}/*.${n} )
       echo Processing $f
       sed -e "s/xxQS_NAMExx/$xxQS_NAMExx/g" \
+          -e "s/xxqs_namexx/$xxqs_namexx/g" \
           -e "s/xxQS_NAME_Sxx/$xxQS_NAME_Sxx/g" \
           -e "s/xxqs_name_sxx/$xxqs_name_sxx/g" \
           -e "s/xxQS_NAME_EExx/$xxQS_NAME_EExx/g" \

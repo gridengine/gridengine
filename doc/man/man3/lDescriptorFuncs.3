@@ -1,0 +1,170 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\"
+.\" $RCSfile: lDescriptorFuncs.3,v $     Last Update: $Date: 2001/07/20 08:19:02 $     Revision: $Revision: 1.3 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB      \" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T    \" switch to typewriter font
+.ft CW      \" probably want CW if you don't have TA font
+..
+.\"
+.de TY      \" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M    \" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH DESCRIPTOR_FUNCS 3 "$Date: 2001/07/20 08:19:02 $" "xxRELxx" "xxQS_NAMExx List Library"
+.\"
+.SH NAME
+lInit, lNm2Str (_lNm2Str), lStr2Nm (_lStr2Nm), lCountDescr, lCopyDescr,
+lGetPosInDescr, lDumpDescr, lUndumpDescr, lWriteDescr
+.PP
+generic list manipulation and information functions
+.\"
+.\"
+.SH SYNOPSIS
+.B #include """cull.h"""
+.PP
+\fBvoid lInit( lNameSpace *namev );\fP
+.PP
+\fBchar* lNm2Str( int nm );\fP
+.PP
+\fBchar* _lNm2Str( lNameSpace *nsp, int nm );\fP
+.PP
+\fBint lStr2Nm( char *str );\fP
+.PP
+\fBint _lStr2Nm( lNameSpace *nsp, char *str );\fP
+.PP
+\fBint lCountDescr( lDescr *descriptor );\fP
+.PP
+\fBlDescr* lCopyDescr( lDescr *descriptor );\fP
+.PP
+\fBint lGetPosInDescr( lDescr *descriptor, int nm );\fP
+.PP
+\fBvoid lWriteDescr( lDescr *descriptor );\fP
+.PP
+.nf
+\fBint lDumpDescr(\fP
+.RS
+\fBFILE *file,\fP
+\fBlDescr *descriptor,\fP
+\fBint indent\fP
+.RE
+.fi
+\fB);\fP
+.PP
+\fBlDescr* lUndumpDescr( FILE *file );\fP
+.\"
+.\"
+.SH DESCRIPTION
+.IP "\fBlInit\fP"
+initializes the name to string conversion. Names are represented by unique
+numbers which are mapped to their corresponding strings.
+The function argument is a pointer to a \fIlNameSpace\fP array.
+.\"
+.IP "\fBlNm2Str, _lNm2Str\fP"
+converts the field names (represented by numbers) to the corresponding
+strings.
+If the NameSpace has been initialized with lInit() the corresponding
+string is returned, otherwise the string "Nameindex = n" is returned,
+where n is replaced by the field number representing \fBnm\fP.
+\fI_lNm2Str\fP  converts the field names (represented by numbers) to 
+the corresponding strings. A NameSpace is delivered explicitly. 
+The corresponding string is returned, otherwise the string 
+"Nameindex = n" is returned, where n is replaced by the field number 
+representing \fBnm\fP.
+.IP "\fBlStr2Nm, _lStr2Nm\fP"
+converts the string field names to the corresponding field id's.
+If the \fINameSpace\fP has been initialized with lInit() the corresponding
+field id is returned, otherwise \fINoName\fP is returned.
+\fI_lStr2Nm\fP converts the string field names to the corresponding 
+field id's.  A NameSpace is delivered explicitly. 
+The corresponding field id is returned, if it can be found in the NameSpace. 
+Otherwise the function returns \fINoName\fP. 
+.\"
+.IP "\fBlCountDescr\fP"
+count the number of fields specified in the descriptor. 
+The descriptor is delivered as function argument.
+The number of fields is returned.
+.\"
+.IP "\fBlCopyDescr\fP"
+duplicate the specified descriptor.
+The descriptor is delivered as function argument.
+A pointer to the copied descriptor is returned, NULL otherwise.
+.\"
+.IP "\fBlGetPosInDescr\fP"
+get the position of the field named \fBnm\fP from the descriptor.
+If the field named \fBnm\fP is not contained in the descriptor -1 is
+returned.
+.\"
+.IP "\fBlDumpDescr\fP"
+dump the list descriptor in ASCII format to a file. The first argument 
+is a FILE pointer of the dump file, the second argument is the descriptor 
+that shall be dumped and the third argument is the number of indentation 
+units for formatting purposes.
+This function is normally used only by
+.M lDumpList 3 .
+.\"
+.IP "\fBlUndumpDescr\fP"
+undump the list descriptor from a dump file. A FILE pointer to the dump
+file is delivered as function argument. If no error occurs a pointer to
+the list descriptor is returned, otherwise NULL is returned.
+This function is normally used only by
+.M lUndumpList 3 .
+.\"
+.IP "\fBlWriteDescr\fP"
+writes a list descriptor to stdout. This function is used for debugging
+only.
+.\"
+.\"
+.SH "RETURN VALUES"
+The functions return -1 or NULL in case of error, otherwise 0 or a valid
+pointer are returned.
+.\"
+.\"
+.SH ERRORS
+The following errors can occur in the above listed functions. The 
+functions which are affected by a special error are enumerated in parentheses.
+.IP "\fBLENAMEOUT\fP"
+This error occurs, if the name is out of namespace ranges. (\fIlNm2Str\fP)
+.IP "\fBLEDESCRNULL\fP"
+The descriptor argument is NULL. (\fIlCountDescr\fP, \fIlWriteDescr\fP, \fIlDumpDescr\fP,
+\fIlGetPosInDescr\fP)
+.IP "\fBLEFILENULL\fP"
+The file pointer delivered is NULL. (\fIlDumpDescr\fP, \fIlUndumpDescr\fP)
+.IP "\fBLENAMENOT\fP"
+The specified name is not a field of the specified descriptor. (\fIlGetPosInDescr\fP)
+.IP "\fBLEFIELDREAD\fP"
+Reading a field value from a dump file failed. (\fIlUndumpDescr\fP)
+.IP "\fBLEFGETDESCR\fP"
+Reading a descriptor pair from a dump file failed. (\fIlUndumpDescr\fP)
+.IP "\fBLESYNTAX\fP"
+A syntax error occurred (missing opening or closing brackets). (\fIlUndumpDescr\fP)
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M list_intro 3 .
+.\"
+.\"
+.SH COPYRIGHT
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

@@ -133,13 +133,10 @@ bool double_print_memory_to_dstring(double value, dstring *string)
             value /= kilo_byte;
             unit = 'K';
          }
-         else {
-            unit = 'B';
-         }
          if (unit != '\0') {
-            sge_dstring_sprintf_append(string, "%.3f%c", value, unit);
+            sge_dstring_sprintf_append(string, "%.2f%c", value, unit);
          } else {
-            sge_dstring_sprintf_append(string, "%.3f", absolute_value);
+            sge_dstring_sprintf_append(string, "%.2f", absolute_value);
          }
       } 
    }
@@ -259,13 +256,6 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
       timeptr.tm_year=atoi(tmp_str);
       if (i==12) {
          timeptr.tm_year -= 1900;
-      }
-      else {
-         /* the date is before 1970, thus we assume, that
-            20XX is ment. This works only till 2069, but
-            that should be sufficent for now */
-         if (timeptr.tm_year < 70)
-            timeptr.tm_year += 100;
       }
       non_seconds+=year_fieldlen;
    } else {

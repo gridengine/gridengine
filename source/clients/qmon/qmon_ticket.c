@@ -69,12 +69,12 @@ typedef struct _TOVEntry {
    double weight_deadline;
    double weight_waiting_time;
    double weight_urgency;
-   double weight_priority;
    double weight_ticket;
    char *policy_hierarchy;
+   char *halflife_decay_list;
 } tTOVEntry;
 
-static tTOVEntry cdata = {0, 0, 0, False, False, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, NULL};
+static tTOVEntry cdata = {0, 0, 0, False, False, 0, 0, 0.0, 0.0, 0.0, 0.0, NULL, NULL};
 static Boolean data_changed = False;
 
 static Widget qmon_tov = 0;
@@ -142,14 +142,14 @@ XtResource tov_resources[] = {
       XtOffsetOf(tTOVEntry, weight_urgency),
       XtRImmediate, (XtPointer) 0 },
 
-   { "weight_priority", "weight_priority", XmtRDouble,
-      sizeof(double),
-      XtOffsetOf(tTOVEntry, weight_priority),
-      XtRImmediate, (XtPointer) 0 },
-
    { "weight_ticket", "weight_ticket", XmtRDouble,
       sizeof(double),
       XtOffsetOf(tTOVEntry, weight_ticket),
+      XtRImmediate, (XtPointer) 0 },
+
+   { "halflife_decay_list", "halflife_decay_list", XtRString,
+      sizeof(String),
+      XtOffsetOf(tTOVEntry, halflife_decay_list),
       XtRImmediate, (XtPointer) 0 },
 
    { "policy_hierarchy", "policy_hierarchy", XtRString,
@@ -190,7 +190,7 @@ XtPointer cld, cad;
       ** set the icon and iconName
       */
       XmtCreatePixmapIcon(qmon_tov, qmonGetIcon("toolbar_ticket"), None);
-      XtVaSetValues(qmon_tov, XtNiconName, "qmon:Policy Configuration", NULL);
+      XtVaSetValues(qmon_tov, XtNiconName, "qmon:Ticket Overview", NULL);
       XmtAddDeleteCallback(qmon_tov, XmDO_NOTHING, 
                               qmonPopdownTicketOverview, NULL);
       XtAddEventHandler(qmon_tov, StructureNotifyMask, False, 
@@ -412,10 +412,6 @@ XtPointer cld, cad;
       cdata.weight_urgency = data.weight_urgency;
       data_changed = True;
    }
-   if (data.weight_priority != cdata.weight_priority) {
-      cdata.weight_priority = data.weight_priority;
-      data_changed = True;
-   }
    if (data.weight_ticket != cdata.weight_ticket) {
       cdata.weight_ticket = data.weight_ticket;
       data_changed = True;
@@ -426,6 +422,12 @@ XtPointer cld, cad;
       data.policy_hierarchy = NULL;
       data_changed = True;
    }
+   if (strcmp(data.halflife_decay_list, cdata.halflife_decay_list)) {
+      cdata.halflife_decay_list = data.halflife_decay_list;
+      data.halflife_decay_list = NULL;
+      data_changed = True;
+   }
+   
    XmtDialogSetDialogValues(tov_layout, &cdata);
 
    DEXIT;
@@ -537,11 +539,13 @@ static Boolean qmonTOVEntryReset(tTOVEntry *tov_data)
    tov_data->weight_deadline = 0.0;
    tov_data->weight_waiting_time = 0.0;
    tov_data->weight_urgency = 0.0;
-   tov_data->weight_priority = 0.0;
    tov_data->weight_ticket = 0.0;
    if (tov_data->policy_hierarchy)
       free(tov_data->policy_hierarchy);
    tov_data->policy_hierarchy = NULL;
+   if (tov_data->halflife_decay_list)
+      free(tov_data->halflife_decay_list);
+   tov_data->halflife_decay_list = NULL;
    
    DEXIT;
    return True;
@@ -584,10 +588,11 @@ lListElem *scep
    tov_data->weight_deadline = lGetDouble(scep, SC_weight_deadline);
    tov_data->weight_waiting_time = lGetDouble(scep, SC_weight_waiting_time);
    tov_data->weight_urgency = lGetDouble(scep, SC_weight_urgency);
-   tov_data->weight_priority = lGetDouble(scep, SC_weight_priority);
    tov_data->weight_ticket = lGetDouble(scep, SC_weight_ticket);
    tov_data->policy_hierarchy = sge_strdup(tov_data->policy_hierarchy,
                                     lGetString(scep, SC_policy_hierarchy));
+   tov_data->halflife_decay_list = sge_strdup(tov_data->halflife_decay_list,
+                                    lGetString(scep, SC_halflife_decay_list));
    
    DEXIT;
    return True;
@@ -620,13 +625,17 @@ tTOVEntry *tov_data
    lSetDouble(scep, SC_weight_deadline, tov_data->weight_deadline);
    lSetDouble(scep, SC_weight_waiting_time, tov_data->weight_waiting_time);
    lSetDouble(scep, SC_weight_urgency, tov_data->weight_urgency);
-   lSetDouble(scep, SC_weight_priority, tov_data->weight_priority);
    lSetDouble(scep, SC_weight_ticket, tov_data->weight_ticket);
    
    if (tov_data->policy_hierarchy && tov_data->policy_hierarchy[0] !='\0')
       lSetString(scep, SC_policy_hierarchy, tov_data->policy_hierarchy);
    else   
       lSetString(scep, SC_policy_hierarchy, "OFS");
+
+   if (tov_data->halflife_decay_list && tov_data->halflife_decay_list[0] !='\0')
+      lSetString(scep, SC_halflife_decay_list, tov_data->halflife_decay_list);
+   else   
+      lSetString(scep, SC_halflife_decay_list, "none");
 
    DEXIT;
    return True;

@@ -212,7 +212,6 @@ proc install_execd {} {
       set HIT_RETURN_TO_CONTINUE       [translate $exec_host 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
       set EXECD_INSTALL_COMPLETE       [translate $exec_host 0 1 0 [sge_macro DISTINST_EXECD_INSTALL_COMPLETE] ]
       set PREVIOUS_SCREEN              [translate $exec_host 0 1 0 [sge_macro DISTINST_PREVIOUS_SCREEN ] ]
-      set CELL_NAME_FOR_EXECD          [translate $exec_host 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_EXECD ] ]
       set ANSWER_YES                   [translate $exec_host 0 1 0 [sge_macro DISTINST_ANSWER_YES] ]
       set ANSWER_NO                    [translate $exec_host 0 1 0 [sge_macro DISTINST_ANSWER_NO] ]
       set ADD_DEFAULT_QUEUE_INSTANCE   [translate $exec_host 0 1 0 [sge_macro DISTINST_ADD_DEFAULT_QUEUE_INSTANCE] ]
@@ -222,15 +221,6 @@ proc install_execd {} {
       set MESSAGES_LOGGING             [translate $exec_host 0 1 0 [sge_macro DISTINST_MESSAGES_LOGGING] ]
       set CELL_NAME_FOR_QMASTER        [translate $exec_host 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_QMASTER] ]
       set USE_CONFIGURATION_PARAMS     [translate $exec_host 0 1 0 [sge_macro DISTINST_USE_CONFIGURATION_PARAMS] ]
-      set CURRENT_GRID_ROOT_DIRECTORY  [translate $exec_host 0 1 0 [sge_macro DISTINST_CURRENT_GRID_ROOT_DIRECTORY] "*" "*" ]
-      set CHECK_ADMINUSER_ACCOUNT      [translate $exec_host 0 1 0 [sge_macro DISTINST_CHECK_ADMINUSER_ACCOUNT] "*" "*" "*" "*" ]
-      set CHECK_ADMINUSER_ACCOUNT_ANSWER      [translate $exec_host 0 1 0 [sge_macro DISTINST_CHECK_ADMINUSER_ACCOUNT_ANSWER] ]
-      set INSTALL_STARTUP_SCRIPT       [translate $exec_host 0 1 0 [sge_macro DISTINST_INSTALL_STARTUP_SCRIPT] ]
-      set ENTER_LOCAL_EXECD_SPOOL_DIR  [translate $exec_host 0 1 0 [sge_macro DISTINST_ENTER_LOCAL_EXECD_SPOOL_DIR] ]
-      set ENTER_LOCAL_EXECD_SPOOL_DIR_ASK [translate $exec_host 0 1 0 [sge_macro DISTINST_ENTER_LOCAL_EXECD_SPOOL_DIR_ASK] ]
-      set ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER [translate $exec_host 0 1 0 [sge_macro DISTINST_ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER] ]
-      
-
 
       cd "$ts_config(product_root)"
 
@@ -308,7 +298,7 @@ proc install_execd {} {
 
             -i $sp_id $USE_CONFIGURATION_PARAMS { 
      
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.5)"
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11)"
                if {$do_log_output == 1} {
                     puts "press RETURN"
                     set anykey [wait_for_enter 1]
@@ -317,30 +307,7 @@ proc install_execd {} {
                continue;
             }
 
-            -i $sp_id $ENTER_LOCAL_EXECD_SPOOL_DIR_ASK { 
-               set spooldir [get_spool_dir $exec_host execd]
-               if { $spooldir == "" } {
-                  puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(11.7)"
-                  if {$do_log_output == 1} {
-                       puts "press RETURN"
-                       set anykey [wait_for_enter 1]
-                  }
-                  send -i $sp_id "$ANSWER_NO\n"
-                  continue;
-               } else {
-
-                  puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.6)"
-                  if {$do_log_output == 1} {
-                       puts "press RETURN"
-                       set anykey [wait_for_enter 1]
-                  }
-                  send -i $sp_id "$ANSWER_YES\n"
-                  continue;
-               }
-            }
-
-
-            -i $sp_id $CELL_NAME_FOR_EXECD {
+            -i $sp_id $CELL_NAME_FOR_QMASTER {
                puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
                if {$do_log_output == 1} {
                    puts "press RETURN"
@@ -360,39 +327,19 @@ proc install_execd {} {
                continue;
             }
 
-#            -i $sp_id $LOCAL_CONFIG_FOR_HOST {
-#               puts $CHECK_OUTPUT "\n -->testsuite: reconfigure configuration for spool dir\n"
-#               set spooldir [get_spool_dir $exec_host execd]
-#               puts $CHECK_OUTPUT "spooldir on host $exec_host is $spooldir"
-#
-#               if { $spooldir != "" } {
-#                  set params(execd_spool_dir) $spooldir
-#                  set_config params $exec_host
-#                  set local_execd_spool_set 1 
-#               }
-#               log_user 1
-#               continue; 
-#            }
-
-            -i $sp_id $ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER {
+            -i $sp_id $LOCAL_CONFIG_FOR_HOST {
                puts $CHECK_OUTPUT "\n -->testsuite: reconfigure configuration for spool dir\n"
-               set spooldir [get_spool_dir $exec_host execd 0]
+               set spooldir [get_spool_dir $exec_host execd]
                puts $CHECK_OUTPUT "spooldir on host $exec_host is $spooldir"
 
-                  if {$do_log_output == 1} {
-                       puts "press RETURN"
-                       set anykey [wait_for_enter 1]
-                  }
-
                if { $spooldir != "" } {
-                  send -i $sp_id "$spooldir\n"
-               } else {
-                  send -i $sp_id "\n"  
+                  set params(execd_spool_dir) $spooldir
+                  set_config params $exec_host
+                  set local_execd_spool_set 1 
                }
                log_user 1
                continue; 
             }
-
 
             -i $sp_id $IF_NOT_OK_STOP_INSTALLATION {
                if { $CHECK_ADMIN_USER_SYSTEM != 0 } {
@@ -421,17 +368,6 @@ proc install_execd {} {
                continue;
             }
 
-            -i $sp_id $INSTALL_STARTUP_SCRIPT { 
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(12)"
-               if {$do_log_output == 1} {
-                    puts "press RETURN"
-                    set anykey [wait_for_enter 1]
-               }
-     
-               send -i $sp_id "$ANSWER_NO\n"
-               continue;
-            }
-
             -i $sp_id $ADD_DEFAULT_QUEUE_INSTANCE { 
                puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(13)"
                if {$do_log_output == 1} {
@@ -442,18 +378,6 @@ proc install_execd {} {
                send -i $sp_id "$ANSWER_YES\n"
                continue;
             }
-
-            -i $sp_id $CHECK_ADMINUSER_ACCOUNT_ANSWER { 
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(13)"
-               if {$do_log_output == 1} {
-                    puts "(5)press RETURN"
-                    set anykey [wait_for_enter 1]
-               }
-     
-               send -i $sp_id "$ANSWER_YES\n"
-               continue;
-            }
-
 
             -i $sp_id "This host is unknown on the qmaster host" {
                puts $CHECK_OUTPUT "\nHostname resolving problem"
@@ -507,16 +431,6 @@ proc install_execd {} {
                set_error "-1" "install_execd - $expect_out(0,string)"
                close_spawn_process $id; 
                return;
-            }
-
-            -i $sp_id $CURRENT_GRID_ROOT_DIRECTORY {
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
-               if {$do_log_output == 1} {
-                    puts "-->testsuite: press RETURN"
-                    set anykey [wait_for_enter 1]
-               }
-               send -i $sp_id "\n"
-               continue;
             }
 
             -i $sp_id $EXECD_INSTALL_COMPLETE {

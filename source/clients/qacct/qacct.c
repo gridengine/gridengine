@@ -34,7 +34,6 @@
 #include <sys/types.h>
 #include <grp.h>
 #include <time.h>
-#include <fnmatch.h>
 
 #include "sge_unistd.h"
 #include "sge.h"
@@ -84,8 +83,7 @@ static void print_full(int length, const char* string);
 static void print_full_ulong(int length, u_long32 value); 
 static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data );
 static void showjob(sge_rusage_type *dusage);
-static void get_qacct_lists(lList **ppcomplex, lList **ppqeues, lList **ppexechosts,
-                            lList **hgrp_l);
+static void get_qacct_lists(lList **ppcomplex, lList **ppqeues, lList **ppexechosts);
 
 /*
 ** statics
@@ -122,6 +120,7 @@ char **argv
    ** but host[0] aso is referenced
    */
    stringT group;
+   stringT queue;
    stringT owner;
    stringT host;
    stringT project;
@@ -163,7 +162,6 @@ char **argv
    int ii, i_ret;
    lList *complex_options = NULL;
    lList *centry_list, *queue_list, *exechost_list;
-   lList *hgrp_list, *queueref_list = NULL, *queue_name_list = NULL;
    lList *sorted_list = NULL;
    lList *alp = NULL;
    int is_path_setup = 0;   
@@ -174,8 +172,6 @@ char **argv
    DENTER_MAIN(TOP_LAYER, "qacct");
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
-
-   log_state_set_log_gui(1);
 
    sge_gdi_param(SET_MEWHO, QACCT, NULL);
    if (sge_gdi_setup(prognames[QACCT], &alp)!=AE_OK) {
@@ -191,6 +187,7 @@ char **argv
    memset(granted_pe, 0, sizeof(granted_pe));
    slots = 0;
    memset(group, 0, sizeof(group));
+   memset(queue, 0, sizeof(queue));
    memset(host, 0, sizeof(host));
    memset(cell, 0, sizeof(cell));
    memset(complexes, 0, sizeof(complexes));
@@ -255,13 +252,16 @@ char **argv
       ** queue
       */
       else if (!strcmp("-q", argv[ii])) {
-         queueflag = 1;
          if (argv[ii+1]) {
-            if (*(argv[ii+1]) != '-') {
-               hostflag = 1;
-               lAddElemStr(&queueref_list, QR_name, argv[++ii], QR_Type);
+            if (*(argv[ii+1])=='-') {
+               queueflag = 1;
+            }
+            else {
+               strcpy(queue, argv[++ii]);
             }
          }
+         else
+            queueflag = 1;
       }
       /*
       ** host
@@ -270,14 +270,16 @@ char **argv
          if (argv[ii+1]) {
             if (*(argv[ii+1])=='-') {
                hostflag = 1;
-            } else {
+            }
+            else {
                u_short id = 0;
                int ret;
                prepare_enroll("qacct", id, NULL);
                ret = getuniquehostname(argv[++ii], host, 0);
-               if (ret != CL_RETVAL_OK) {
+               leave_commd();
+               if (ret) {
                   fprintf(stderr, MSG_HISTORY_FAILEDRESOLVINGHOSTNAME_SS ,
-                       argv[ii], cl_get_error_text(ret));
+                       argv[ii], cl_errstr(ret));
                   show_the_way(stderr);
                   return 1;
                }
@@ -507,7 +509,15 @@ char **argv
 
      DPRINTF(("acct_file: %s\n", (acct_file ? acct_file : "(NULL)")));
      strcpy(acctfile, acct_file);
-     
+     prepare_enroll(prognames[QACCT], 0, NULL);
+     if (!sge_get_master(1)) {
+        SGE_EXIT(1);
+     }
+     DPRINTF(("checking if qmaster is alive ...\n"));
+     if (check_isalive(sge_get_master(0))) {
+        ERROR((SGE_EVENT, MSG_HISTORY_QMASTERISNOTALIVE ));
+        SGE_EXIT(1);
+     }
      sge_setup_sig_handlers(QACCT);
      is_path_setup = 1;
    }
@@ -554,99 +564,38 @@ char **argv
    DPRINTF((" begin_time: %s", ctime(&begin_time)));
    DPRINTF((" end_time:   %s", ctime(&end_time)));
 
-   {
-      dstring cqueue_name = DSTRING_INIT;
-      dstring host_or_hgroup = DSTRING_INIT;      
-      lListElem *qref_pattern = NULL;
-      const char *name = NULL;
-      bool has_hostname = false;
-      bool has_domain = true;
-
-      for_each(qref_pattern, queueref_list) {
-         name = lGetString(qref_pattern, QR_name); 
-         cqueue_name_split(name,  &cqueue_name, &host_or_hgroup,
-                           &has_hostname, &has_domain);
-         if (has_domain)
-            break;
+   /*
+   ** parsing complex flags and initialising complex list
+   */
+   if (complexflag) {
+      complex_options = centry_list_parse_from_string(NULL, complexes, true);
+      if (!complex_options) {
+         /*
+         ** problem: still to tell some more to the user
+         */
+         show_the_way(stderr);
+      }
+      /* lDumpList(stdout, complex_options, 0); */
+      if (!is_path_setup) {
+         prepare_enroll(prognames[QACCT], 0, NULL);
+         if (!sge_get_master(1)) {
+            SGE_EXIT(1);
+         }
+         DPRINTF(("checking if qmaster is alive ...\n"));
+         if (check_isalive(sge_get_master(0))) {
+            ERROR((SGE_EVENT, "qmaster is not alive"));
+            SGE_EXIT(1);
+         }
+         sge_setup_sig_handlers(QACCT);
+         is_path_setup = 1;
       }
       
-      /* the user did not specify a queue domain, therefor we need no information
-         from the qmaster, but we have to work on the user input and generate the
-         same data structure, that we would have gotten with the qmaster functions*/
-      if (!has_domain) {
-         for_each(qref_pattern, queueref_list) {
-            dstring qi_name = DSTRING_INIT;
-            char *tmp_str = NULL;
-            name = lGetString(qref_pattern, QR_name); 
-           
-            sge_dstring_sprintf(&qi_name, "%s", name); 
-           
-            if ((tmp_str = strchr(name, '@')) == NULL){
-               sge_dstring_append(&qi_name, "@*");
-            }
-            else if(*(tmp_str+1) == '\0'){
-               sge_dstring_append(&qi_name, "*");
-            }
-            
-            lAddElemStr(&queue_name_list, QR_name, sge_dstring_get_string(&qi_name), QR_Type);
-
-            sge_dstring_free(&qi_name);
-         }   
-      }
-      if ( complexflag || (queueref_list && has_domain)) {
-         /*
-         ** parsing complex flags and initialising complex list
-         */
-         bool found_something;
-         complex_options = centry_list_parse_from_string(NULL, complexes, true);
-         if (!complex_options) {
-            /*
-            ** problem: still to tell some more to the user
-            */
-            show_the_way(stderr);
-         }
-         /* lDumpList(stdout, complex_options, 0); */
-         if (!is_path_setup) {
-            prepare_enroll(prognames[QACCT], 0, NULL);
-            if (!sge_get_master(1)) {
-               SGE_EXIT(1);
-            }
-            DPRINTF(("checking if qmaster is alive ...\n"));
-            if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) {
-               ERROR((SGE_EVENT, "qmaster is not alive"));
-               SGE_EXIT(1);
-            }
-            sge_setup_sig_handlers(QACCT);
-            is_path_setup = 1;
-         }
-         if (queueref_list && has_domain){ 
-            get_qacct_lists(NULL, &queue_list, NULL, &hgrp_list);
-            qref_list_resolve(queueref_list, NULL, &queue_name_list, 
-                           &found_something, queue_list, hgrp_list, true, true);
-            if (!found_something) {
-               fprintf(stderr, MSG_QINSTANCE_NOQUEUES);
-               SGE_EXIT(1);
-            }
-         }  
-         if (complexflag) {
-            get_qacct_lists(&centry_list, &queue_list, &exechost_list, NULL);
-         }   
-         
-      /* debug output) */
-      #if 0 
-            DPRINTF(("complex entrys:\n"));
-            lWriteList(centry_list);
-            DPRINTF(("queue instances:\n"));
-            lWriteList(queue_list);
-            DPRINTF(("exec hosts:\n"));
-            lWriteList(exechost_list);
-            DPRINTF(("host groups\n"));
-            lWriteList(hgrp_list);
-      #endif
-
-      } /* endif complexflag */
-
-   }
+      get_qacct_lists(&centry_list, &queue_list, &exechost_list);
+      DPRINTF(("got 3 current lists: \n"));
+      lWriteList(centry_list);
+      lWriteList(queue_list);
+      lWriteList(exechost_list);
+   } /* endif complexflag */
 
    fp = fopen(acctfile,"r");
    if (fp == NULL) {
@@ -694,9 +643,9 @@ char **argv
          continue;
       }
       if ((begin_time != -1) && ((time_t) dusage.start_time < begin_time)) { 
-/*         DPRINTF(("job no %ld started %s", dusage.job_number, \
-            sge_ctime32(&dusage.start_time, &ds)));*/
-/*         DPRINTF(("job count starts %s\n", ctime(&begin_time))); */
+         DPRINTF(("job no %ld started %s", dusage.job_number, \
+            sge_ctime32(&dusage.start_time, &ds)));
+         DPRINTF(("job count starts %s\n", ctime(&begin_time)));
          continue;
       }
       if ((end_time != -1) && ((time_t) dusage.start_time > end_time)) {
@@ -714,28 +663,10 @@ char **argv
          if (sge_strnullcmp(group, dusage.group))
             continue;
       }
-      if (queue_name_list){
-         dstring qi = DSTRING_INIT;
-         lListElem *elem;
-         bool found = false;
-
-         sge_dstring_sprintf(&qi,"%s@%s", dusage.qname, dusage.hostname );
- 
-         for_each(elem, queue_name_list) {
-            if (fnmatch(lGetString(elem, QR_name), sge_dstring_get_string(&qi), 0) == 0) {
-               found = true;
-               break;
-            }
-         }
-
-         sge_dstring_free(&qi);
-         
-         if (!found){
+      if (queue[0]) {
+         if (sge_strnullcmp(queue, dusage.qname))
             continue;
-         }  
-         
       }
-
       if (project[0]) {
          if (sge_strnullcmp(project, dusage.project))
             continue;
@@ -772,9 +703,9 @@ char **argv
             continue;
          } 
    
-         sconf_set_qs_state(QS_STATE_EMPTY);
+         set_qs_state(QS_STATE_EMPTY);
 
-         selected = sge_select_queue(complex_options,queue, NULL, exechost_list, centry_list, 1, 1);
+         selected = sge_select_queue(complex_options,queue, NULL, exechost_list,centry_list ,1, NULL, 0, 1 );
   
          if (!selected) {
             continue;
@@ -1024,6 +955,9 @@ char **argv
    if ( host[0] ) {
       column_sizes.host = strlen(host) + 1;
    } 
+   if ( queue[0] ) {
+      column_sizes.queue = strlen(queue) + 1;
+   } 
    if ( group[0] ) {
       column_sizes.group = strlen(group) + 1;
    } 
@@ -1046,11 +980,17 @@ char **argv
       int dashcnt = 0;
       char title_array[500];
 
+#ifndef NO_SGE_COMPILE_DEBUG
+      if (rmon_mlgetl(&DEBUG_ON, TOP_LAYER) & INFOPRINT) { 
+         lWriteListTo(sorted_list, stdout);
+      }
+#endif
+
       if (host[0] || hostflag) {
          print_full(column_sizes.host , MSG_HISTORY_HOST);
          dashcnt += column_sizes.host ;
       }
-      if (queueflag) {
+      if (queue[0] || queueflag) {
          print_full(column_sizes.queue ,MSG_HISTORY_QUEUE );
          dashcnt += column_sizes.queue ;
       }
@@ -1119,7 +1059,10 @@ char **argv
             */
             print_full(column_sizes.host, ((cp = lGetHost(ep, QAJ_host)) ? cp : ""));
          }
-         if (queueflag) {
+         if (queue[0]) {
+            print_full(column_sizes.queue,  queue);
+         }
+         else if (queueflag) {
             if (!ep)
                break;
             print_full(column_sizes.queue, ((cp = lGetString(ep, QAJ_queue)) ? cp : ""));
@@ -1405,14 +1348,14 @@ FILE *fp
    fprintf(fp, " [-o [owner]]                      %s", MSG_HISTORY_o_OPT_USAGE);
    fprintf(fp, " [-pe [pe_name]]                   %s", MSG_HISTORY_pe_OPT_USAGE );
    fprintf(fp, " [-P [project]]                    %s", MSG_HISTORY_P_OPT_USAGE );
-   fprintf(fp, " [-q [queue]                      %s", MSG_HISTORY_q_OPT_USAGE );
+   fprintf(fp, " [-q [queue]]                      %s", MSG_HISTORY_q_OPT_USAGE );
    fprintf(fp, " [-slots [slots]]                  %s", MSG_HISTORY_slots_OPT_USAGE);
    fprintf(fp, " [-t taskid[-taskid[:step]]]       %s", MSG_HISTORY_t_OPT_USAGE );
    fprintf(fp, " [[-f] acctfile]                   %s", MSG_HISTORY_f_OPT_USAGE );
    
    fprintf(fp, "\n");
    fprintf(fp, " begin_time, end_time              %s", MSG_HISTORY_beginend_OPT_USAGE );
-   fprintf(fp, " queue                             [cluster_queue|queue_instance|queue_domain|pattern]\n");
+  
    if (fp==stderr) {
       SGE_EXIT(1);
    } else {
@@ -1447,8 +1390,10 @@ sge_rusage_type *dusage
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_HOSTNAME, (dusage->hostname ? dusage->hostname : MSG_HISTORY_SHOWJOB_NULL));
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_GROUP, (dusage->group ? dusage->group : MSG_HISTORY_SHOWJOB_NULL));    
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_OWNER, (dusage->owner ? dusage->owner : MSG_HISTORY_SHOWJOB_NULL));
-   printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_PROJECT, (dusage->project ? dusage->project : MSG_HISTORY_SHOWJOB_NULL));
-   printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_DEPARTMENT, (dusage->department ? dusage->department : MSG_HISTORY_SHOWJOB_NULL));
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_PROJECT, (dusage->project ? dusage->project : MSG_HISTORY_SHOWJOB_NULL));
+      printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_DEPARTMENT, (dusage->department ? dusage->department : MSG_HISTORY_SHOWJOB_NULL));
+   }
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_JOBNAME, (dusage->job_name ? dusage->job_name : MSG_HISTORY_SHOWJOB_NULL));
    printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_JOBNUMBER, dusage->job_number);
    
@@ -1512,14 +1457,11 @@ sge_rusage_type *dusage
 ** NAME
 **   get_qacct_lists
 ** PARAMETER
-**   ppcentries  - list pointer-pointer to be set to the complex list, CX_Type, can be NULL
-**   ppqueues    - list pointer-pointer to be set to the queues list, QU_Type, has to be set
-**   ppexechosts - list pointer-pointer to be set to the exechosts list,EH_Type, can be NULL
-**   hgrp_l      - host group list, HGRP_Type, can be NULL
-**
+**   ppcentries - list pointer-pointer to be set to the complex list, CX_Type
+**   ppqueues    - list pointer-pointer to be set to the queues list, QU_Type
+**   ppexechosts - list pointer-pointer to be set to the exechosts list,EH_Type
 ** RETURN
 **   none
-**
 ** EXTERNAL
 **
 ** DESCRIPTION
@@ -1533,15 +1475,14 @@ sge_rusage_type *dusage
 static void get_qacct_lists(
 lList **ppcentries,
 lList **ppqueues,
-lList **ppexechosts,
-lList **hgrp_l
+lList **ppexechosts 
 ) {
    lCondition *where = NULL;
    lEnumeration *what = NULL;
    lList *alp = NULL;
    lListElem *aep = NULL;
    lList *mal = NULL;
-   int ce_id = 0, eh_id = 0, q_id = 0, hgrp_id = 0;
+   int ce_id = 0, eh_id = 0, q_id = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(TOP_LAYER, "get_qacct_lists");
@@ -1549,51 +1490,35 @@ lList **hgrp_l
    /*
    ** GET SGE_CENTRY_LIST 
    */
-   if (ppcentries) {
-      what = lWhat("%T(ALL)", CE_Type);
-      ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
-                              NULL, NULL, what, NULL, &state);
-      what = lFreeWhat(what);
+   what = lWhat("%T(ALL)", CE_Type);
+   ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
+                           NULL, NULL, what, NULL, &state);
+   what = lFreeWhat(what);
 
-      if (alp) {
-         ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-         SGE_EXIT(1);
-      }
+   if (alp) {
+      ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
+      SGE_EXIT(1);
    }
+
    /*
    ** GET SGE_EXECHOST_LIST 
    */
-   if (ppexechosts) {
-      where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
-      what = lWhat("%T(ALL)", EH_Type);
-      eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
-                              NULL, where, what, NULL, &state);
-      what = lFreeWhat(what);
-      where = lFreeWhere(where);
+   where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
+   what = lWhat("%T(ALL)", EH_Type);
+   eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
+                           NULL, where, what, NULL, &state);
+   what = lFreeWhat(what);
+   where = lFreeWhere(where);
 
-      if (alp) {
-         ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-         SGE_EXIT(1);
-      }
+   if (alp) {
+      ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
+      SGE_EXIT(1);
    }
 
-   /*
-   ** hgroup 
-   */
-   if (hgrp_l) {
-      what = lWhat("%T(ALL)", HGRP_Type);
-      hgrp_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
-                           NULL, NULL, what, NULL, &state);
-      what = lFreeWhat(what);
-
-      if (alp) {
-         printf("%s", lGetString(lFirst(alp), AN_text));
-         SGE_EXIT(1);
-      }
-   }
    /*
    ** GET SGE_QUEUE_LIST 
    */
+   /* EB: TODO: qacct */
    what = lWhat("%T(ALL)", QU_Type);
    q_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
                            NULL, NULL, what, &mal, &state);
@@ -1608,36 +1533,33 @@ lList **hgrp_l
    ** handle results
    */
    /* --- complex */
-   if (ppcentries) {
-      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
-                                   mal, ppcentries);
-      if (!alp) {
-         ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETCOMPLEXLISTFAILED ));
-         SGE_EXIT(1);
-      }
-      if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         ERROR((SGE_EVENT, lGetString(aep, AN_text)));
-         SGE_EXIT(1);
-      }
-      alp = lFreeList(alp);
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
+                                mal, ppcentries);
+   if (!alp) {
+      ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETCOMPLEXLISTFAILED ));
+      SGE_EXIT(1);
    }
+   if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
+      ERROR((SGE_EVENT, lGetString(aep, AN_text)));
+      SGE_EXIT(1);
+   }
+   alp = lFreeList(alp);
 
    /* --- exec host */
-   if (ppexechosts) {
-      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
-                                    mal, ppexechosts);
-      if (!alp) {
-         ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETEXECHOSTLISTFAILED ));
-         SGE_EXIT(1);
-      }
-      if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         ERROR((SGE_EVENT, lGetString(aep, AN_text)));
-         SGE_EXIT(1);
-      }
-      alp = lFreeList(alp);
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
+                                 mal, ppexechosts);
+   if (!alp) {
+      ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETEXECHOSTLISTFAILED ));
+      SGE_EXIT(1);
    }
+   if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
+      ERROR((SGE_EVENT, lGetString(aep, AN_text)));
+      SGE_EXIT(1);
+   }
+   alp = lFreeList(alp);
 
    /* --- queue */
+   /* EB: TODO: qacct */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
                                  mal, ppqueues);
    if (!alp) {
@@ -1650,22 +1572,8 @@ lList **hgrp_l
    }
    alp = lFreeList(alp);
 
-   /* --- hgrp */
-   if (hgrp_l) {
-      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_HGROUP_LIST, hgrp_id, mal, 
-                                   hgrp_l);
-      if (!alp) {
-         printf(MSG_GDI_HGRPCONFIGGDIFAILED);
-         SGE_EXIT(1);
-      }
-      if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         printf("%s", lGetString(aep, AN_text));
-         SGE_EXIT(1);
-      }
-      alp = lFreeList(alp);
-   }
-   /* --- end */
    mal = lFreeList(mal);
+
    DEXIT;
    return;
 }

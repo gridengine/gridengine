@@ -88,12 +88,8 @@
 #include "sge_helperL.h"
 #include "sge_cqueueL.h"
 #include "sge_qinstanceL.h"
-#include "sge_mesobjL.h"
 #include "sge_qref.h"
 #include "cull_packL.h"
-#include "sge_resource_utilizationL.h"
-#include "sge_qetiL.h"
-#include "cull_xmlL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -116,7 +112,6 @@ extern "C" {
           1.        2.           3.
 */
       {JB_LOWERBOUND, JBS, JBN},        /* job */
-      {QU_LOWERBOUND, QUS, QUN},        /* Queue Instance list */
       {EH_LOWERBOUND, EHS, EHN},        /* exec host */
       {AH_LOWERBOUND, AHS, AHN},        /* admin host */
       {SH_LOWERBOUND, SHS, SHN},        /* submit host */
@@ -202,6 +197,8 @@ extern "C" {
       {CU_LOWERBOUND, CUS, CUN},        /* usermap entry list for
                                          * administrator mapping */
       {LS_LOWERBOUND, LSS, LSN},        /* load sensor list */
+      {FES_LOWERBOUND, FESS, FESN},     /* feature list */
+      {FE_LOWERBOUND, FES, FEN},        /* feature list */
       {SU_LOWERBOUND, SUS, SUN},        /* submit user */
       {SEC_LOWERBOUND, SecurityS, SecurityN},   /* Certificate security */
 
@@ -213,7 +210,6 @@ extern "C" {
 
       {JJ_LOWERBOUND, JJS, JJN},        /* JAPI job */
       {JJAT_LOWERBOUND, JJATS, JJATN},  /* JAPI array task */
-
       {ASTR_LOWERBOUND, ASTRS, ASTRN},          /* CQ string sublist */
       {AULNG_LOWERBOUND, AULNGS, AULNGN},       /* CQ u_long32 sublist */
       {ABOOL_LOWERBOUND, ABOOLS, ABOOLN},       /* CQ bool sublist */
@@ -227,7 +223,7 @@ extern "C" {
       {ASOLIST_LOWERBOUND, ASOLISTS, ASOLISTN},    /* CQ SO_Type-list sublist */
       {AQTLIST_LOWERBOUND, AQTLISTS, AQTLISTN},    /* CQ qtype sublist */
       {CQ_LOWERBOUND, CQS, CQN},                /* Cluster Queue list */
-      {QIM_LOWERBOUND, QIMS, QIMN},                /* Queue Instance Messege list */
+      {QU_LOWERBOUND, QUS, QUN},                /* Queue Instance list */
       {FCAT_LOWERBOUND, FCATS, FCATN},          /* Functional category */
       {CTQV_LOWERBOUND, CTQVS,CTQVN},           /* cached queue soft request violations in a job category */
       {CTI_LOWERBOUND, CTIS, CTIN},             /* ignore host/queue list in a job category */
@@ -235,16 +231,6 @@ extern "C" {
       {ULNG_LOWERBOUND, ULNGS, ULNGN},          /* ???? info-messages ??? */
       {EVS_LOWERBOUND, EVSS, EVSN},              /* subscribed event list */
       {PACK_LOWERBOUND, PACKS, PACKN},          /* a cull version of the pack buffer */
-
-      {XMLA_LOWERBOUND, XMLAS, XMLAN},          /* ??? */
-      {XMLS_LOWERBOUND, XMLSS, XMLSN},          /* ??? */
-      {XMLH_LOWERBOUND, XMLHS, XMLHN},          /* ??? */
-      {XMLE_LOWERBOUND, XMLES, XMLEN},          /* ??? */
-
-      {RDE_LOWERBOUND, RDES, RDEN},             /* resource diagram */
-      {RUE_LOWERBOUND, RUES, RUEN},             /* resource utilization */
-      {QETI_LOWERBOUND, QETIS, QETIN},          /* queue end time iterator (scheduler) */
-
       {0, 0, NULL}
    };
 

@@ -55,9 +55,9 @@ int main(int argc, char *argv[])
 {
    double avg[3];
    int loads;
-   char *name = NULL;
 
 #ifdef SGE_LOADMEM
+	char *name;
    sge_mem_info_t mem_info;
 #endif
 
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
    print_mem_load(LOAD_ATTR_SWAP_USED, name, precision, mem_info.swap_total - mem_info.swap_free, m); 
    print_mem_load(LOAD_ATTR_VIRTUAL_USED, name, precision,(mem_info.mem_total + mem_info.swap_total) - 
                                           (mem_info.mem_free  + mem_info.swap_free), m); 
-#  ifdef IRIX
+#  ifdef IRIX6
    print_mem_load(LOAD_ATTR_SWAP_USED, name, precision, mem_info.swap_rsvd, m); 
 #  endif
 #endif /* SGE_LOADMEM */

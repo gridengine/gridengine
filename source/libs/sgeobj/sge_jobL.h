@@ -101,8 +101,7 @@ enum {
    MINUS_H_TGT_USER     = 1, /* remove needs at least job owner */
    MINUS_H_TGT_OPERATOR = 2, /* remove needs at least operator  */
    MINUS_H_TGT_SYSTEM   = 4, /* remove needs at least manager   */
-   MINUS_H_TGT_ALL      = 7,
-   MINUS_H_TGT_NONE     = 15
+   MINUS_H_TGT_ALL      = 7 
 };
 
 /* values for JB_verify_suitable_queues */
@@ -243,25 +242,8 @@ enum {
 *        Start job immediately or not at all. ("qsub -now")
 *        JG: TODO: it is no boolean, but misused for other information!
 *
-*     SGE_BOOL(JB_reserve)
-*        Specifies a reservation is desired by the user ("-R y|n").
-*        Available for non-immediate job submissions. Irrespective 
-*        of the users desire a job reservation is made
-*
-*        o only in reservation scheduling mode 
-*        o only until the maximum number of reservations during a 
-*          scheduling run is not exceeded when the order comes at 
-*          this job. The maximum number (SC_max_reservation) can be 
-*          specified in sched_conf(5).
-*        o only for non-immediate jobs 
-*
-*        Default is 'n'.
-*
 *     SGE_ULONG(JB_priority) 
 *        Priority ("qsub/qalter -p priority")     
-*
-*     SGE_ULONG(JB_jobshare) 
-*        Priority ("qsub/qalter -js jobshare")     
 *
 *     SGE_LIST(JB_shell_list, PN_Type)    
 *        Command interpreter to be used (PN_Type).
@@ -317,12 +299,12 @@ enum {
 *     Resource requests
 *     =================
 *
-*     SGE_LIST(JB_hard_resource_list, CE_Type) 
-*        Hard resource requirements/limits/restrictions (CE_Type).
+*     SGE_LIST(JB_hard_resource_list, RE_Type) 
+*        Hard resource requirements/limits/restrictions (RE_Type).
 *        ("qsub -l resource_list")
 *
-*     SGE_LIST(JB_soft_resource_list, CE_Type) 
-*        Soft resource requirements/limits/restrictions (CE_Type).
+*     SGE_LIST(JB_soft_resource_list) 
+*        Soft resource requirements/limits/restrictions (RE_Type).
 *        ("qsub -l resource_list")
 *
 *     SGE_LIST(JB_hard_queue_list) 
@@ -403,6 +385,10 @@ enum {
 *     Data used only in scheduler
 *     ===========================
 *
+*     SGE_XSTRING(JB_jobclass)
+*        Job class name. Local to schedd. Identical to master_queue.
+*        Not spooled. NOT USED
+*
 *     SGE_HOST(JB_host)                    
 *        SGEEE - host job is executing on. Local to schedd. 
 *        Not spooled.
@@ -447,12 +433,6 @@ enum {
 *        SGEEE. Relative importance due to static urgency in the range between 0.0 
 *        and 1.0. No need to make this a per task attribute as long as waiting time 
 *        and deadline remain job attributes.
-*        Not spooled.
-*
-*     SGE_DOUBLE(JB_nppri )         
-*        SGEEE. Relative importance due to Posix priority in the range between 0.0 
-*        and 1.0. No need to make this a per task attribute as long as the POSIX
-*        priority remains a job attribute.
 *        Not spooled.
 *
 *     SGE_DOUBLE(JB_rrcontr )         
@@ -543,9 +523,7 @@ enum {
    JB_cwd,                
    JB_notify,        
    JB_type,
-   JB_reserve,
    JB_priority,         
-   JB_jobshare,         
    JB_shell_list,
    JB_verify,      
    JB_env_list,
@@ -587,6 +565,7 @@ enum {
    JB_ja_template,
    JB_ja_tasks,
 
+/*   JB_jobclass,*/
    JB_host,
    JB_category,
 
@@ -602,7 +581,6 @@ enum {
    JB_path_aliases,
    JB_urg,
    JB_nurg,
-   JB_nppri,
    JB_rrcontr,
    JB_dlcontr,
    JB_wtcontr
@@ -643,9 +621,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_STRING(JB_cwd, CULL_DEFAULT | CULL_SPOOL)     
    SGE_BOOL(JB_notify, CULL_DEFAULT | CULL_SPOOL)  
    SGE_ULONG(JB_type, CULL_DEFAULT | CULL_SPOOL)     
-   SGE_BOOL(JB_reserve, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(JB_priority, CULL_DEFAULT | CULL_SPOOL)       
-   SGE_ULONG(JB_jobshare, CULL_DEFAULT | CULL_SPOOL)       
    SGE_LIST(JB_shell_list, PN_Type, CULL_DEFAULT | CULL_SPOOL) 
    SGE_ULONG(JB_verify, CULL_DEFAULT | CULL_SPOOL) 
    SGE_LIST(JB_env_list, VA_Type, CULL_DEFAULT | CULL_SPOOL)  
@@ -687,6 +663,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_LIST(JB_ja_template, JAT_Type, CULL_DEFAULT | CULL_SPOOL)  
    SGE_LIST(JB_ja_tasks, JAT_Type, CULL_DEFAULT | CULL_SPOOL)  
 
+/*   SGE_STRING(JB_jobclass, CULL_DEFAULT)*/
    SGE_HOST(JB_host, CULL_DEFAULT)       
    SGE_REF(JB_category, CT_Type, CULL_DEFAULT)    
 
@@ -701,15 +678,59 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_LIST(JB_qs_args, ST_Type, CULL_DEFAULT)   
    SGE_LIST(JB_path_aliases, PA_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_DOUBLE(JB_urg, CULL_DEFAULT)         
-   SGE_DOUBLE(JB_nurg, CULL_DEFAULT)         
-   SGE_DOUBLE(JB_nppri, CULL_DEFAULT)         
    SGE_DOUBLE(JB_rrcontr, CULL_DEFAULT)         
+   SGE_DOUBLE(JB_nurg, CULL_DEFAULT)         
    SGE_DOUBLE(JB_dlcontr, CULL_DEFAULT)         
    SGE_DOUBLE(JB_wtcontr, CULL_DEFAULT)         
 
    /* 
     * IF YOU ADD SOMETHING HERE THEN CHANGE ALSO THE ADOC COMMENT ABOVE 
     */
+
+
+
+   /*IDL
+   void submit()
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   void submit_array(in sge_ulong min,
+                     in sge_ulong max,
+                     in sge_ulong step)
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   void hold() 
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   void hold_task(in sge_ulong task_id) 
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   void hold_range(in sge_ulong start,
+                   in sge_ulong end,
+                   in sge_ulong step) 
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   void release() 
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   void release_task(in sge_ulong task_id) 
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   void release_range(in sge_ulong start,
+                      in sge_ulong end,
+                      in sge_ulong step) 
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   void suspend(in boolean force) 
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   void suspend_task(in sge_ulong task_id, in boolean force) 
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   void suspend_range(in sge_ulong start,
+                      in sge_ulong end,
+                      in sge_ulong step,
+                      in boolean force) 
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   void unsuspend(in boolean force)
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   void unsuspend_task(in sge_ulong task_id, in boolean force)
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   void unsuspend_range(in sge_ulong start,
+                        in sge_ulong end,
+                        in sge_ulong step,
+                        in boolean force) 
+            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   XIDL*/
 LISTEND
 
 NAMEDEF(JBN)
@@ -743,9 +764,7 @@ NAMEDEF(JBN)
    NAME("JB_cwd")
    NAME("JB_notify")
    NAME("JB_type")
-   NAME("JB_reserve")
    NAME("JB_priority")
-   NAME("JB_jobshare")
    NAME("JB_shell_list")
    NAME("JB_verify")
    NAME("JB_env_list")
@@ -787,6 +806,7 @@ NAMEDEF(JBN)
    NAME("JB_ja_template")
    NAME("JB_ja_tasks")
 
+/*   NAME("JB_jobclass")*/
    NAME("JB_host")
    NAME("JB_category")
    
@@ -802,7 +822,6 @@ NAMEDEF(JBN)
    NAME("JB_path_aliases")
    NAME("JB_urg")
    NAME("JB_nurg")
-   NAME("JB_nppri")
    NAME("JB_rrcontr")
    NAME("JB_dlcontr")
    NAME("JB_wtcontr")
@@ -816,23 +835,17 @@ NAMEEND
    
 enum {
    PN_path = PN_LOWERBOUND,
-   PN_host,
-   PN_file_host,
-   PN_file_staging
+   PN_host
 };
 
 SLISTDEF(PN_Type, PathName)
    SGE_STRING(PN_path, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)
-   SGE_HOST(PN_host, CULL_DEFAULT )                    /* CR - hostname change */
-   SGE_HOST(PN_file_host, CULL_DEFAULT )
-   SGE_BOOL(PN_file_staging, CULL_DEFAULT )
+   SGE_HOST(PN_host, CULL_DEFAULT | CULL_SUBLIST)                    /* CR - hostname change */
 LISTEND
 
 NAMEDEF(PNN)
    NAME("PN_path")
    NAME("PN_host")
-   NAME("PN_file_host")
-   NAME("PN_file_staging")
 NAMEEND
 
 #define PNS sizeof(PNN)/sizeof(char*)
@@ -884,7 +897,7 @@ enum {
 SLISTDEF( JG_Type, GrantedQueue )
    SGE_STRING(JG_qname, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)    /* the queue's name                           */
    SGE_ULONG(JG_qversion, CULL_DEFAULT)  /* it's version                               */
-   SGE_HOST(JG_qhostname, CULL_DEFAULT | CULL_SUBLIST)/* redundant qualified host name for caching  */  /* CR - hostname change */
+   SGE_HOST(JG_qhostname, CULL_DEFAULT)/* redundant qualified host name for caching  */  /* CR - hostname change */
    SGE_ULONG(JG_slots, CULL_DEFAULT | CULL_SUBLIST)     /* from orders list                           */
    SGE_OBJECT(JG_queue, QU_Type, CULL_DEFAULT) /* QU_Type - complete queue only in execd */
    SGE_ULONG(JG_tag_slave_job, CULL_DEFAULT) /* whether slave execds job has arrived in 

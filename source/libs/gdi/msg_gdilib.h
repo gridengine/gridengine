@@ -59,11 +59,9 @@
 #define MSG_GDI_COMMDUP                               _MESSAGE(43048, _("commd is up"))
 #define MSG_GDI_COMMDDOWN_S                           _MESSAGE(43049, _("commd is down: "SFN""))
 #define MSG_GDI_RHOSTISNULLFORSENDREQUEST             _MESSAGE(43050, _("parameter rhost = NULL for sge_send_any_request()"))
-#define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _MESSAGE(43051, _("can't send "SFN"synchronous message to commproc ("SFN":%d) on host "SFQ": "SFN"\n"))
+#define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _MESSAGE(43051, _("can't send "SFN"synchronous message to commproc ("SFN":%d) on host "SFQ": "SFN""))
 #define MSG_GDI_RHOSTISNULLFORGETANYREQUEST           _MESSAGE(43052, _("parameter rhost = NULL for sge_get_any_request()"))
 #define MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS _MESSAGE(43053, _("can't receive message from commproc ("SFN":%d) on host "SFQ": "SFN""))
-#define MSG_GDI_NOCOMMHANDLE                          _MESSAGE(43054, _("can't get communication handle\n"))
-#define MSG_GDI_SENDINGMESSAGE_SIU                    _MESSAGE(43055, _("sending to id: "SFN",%d, size of message: " U32CFormat"\n" ))
 
 /* 
 ** gdilib/sge_qexec.c
@@ -121,8 +119,6 @@
 */
 #define MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT   _MESSAGE(43117, _("NULL pointer passed to sge_gdi_multi()"))
 #define MSG_GDI_CANTCREATEGDIREQUEST                     _MESSAGE(43118, _("can't create gdi request"))
-#define MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS   _MESSAGE(43121, _("unable to send message to "SFN" using port "U32CFormat" on host "SFQ": "SFN"\n"))
-#define MSG_GDI_UNABLE_TO_CONNECT_SUS                    _MESSAGE(43122, _("unable to contact "SFN" using port "U32CFormat" on host "SFQ"\n"))
 #define MSG_GDI_GETPWUIDXFAILEDERRORX_IS                 _MESSAGE(43123, _("failed to getpwuid(%d): "SFN"\n"))
 #define MSG_GDI_GETGRGIDXFAILEDERRORX_IS                 _MESSAGE(43124, _("failed to getgrgid(%d): "SFN"\n"))
 #define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43125, _("failed sending gdi request\n"))
@@ -150,6 +146,5 @@
  */
 #define MSG_GDI_USAGE_SILENT          _MESSAGE(43293, _("startup silently"))
 
-#define MSG_GDI_GENERAL_COM_ERROR_S   _MESSAGE(43294, _("general communication error: "SFN"\n"))
 #endif /* __MSG_GDILIB_H */
 

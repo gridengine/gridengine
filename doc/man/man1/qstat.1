@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/03/04 16:20:17 $     Revision: $Revision: 1.16 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/01/07 15:12:33 $     Revision: $Revision: 1.12 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2004/03/04 16:20:17 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2004/01/07 15:12:33 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -43,7 +43,7 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 .B -f
 ] [ \fB\-F\fP [\fBresource_name,...\fP]
 ] [
-.B -g {c|d|t}[+]
+.B -g {d|t}[+]
 ] [
 .B -help
 ] [
@@ -55,7 +55,7 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 ] [
 .B -pe pe_name,...
 ] [
-.B -q wc_queue_list
+.B -q queue,...
 ] [
 .B -qs {a|c|d|o|s|u|A|C|D|E|S}
 ] [
@@ -70,8 +70,6 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 .B -u user,...
 ] [
 .B -urg
-] [
-.B -xml
 ]
 .\"
 .SH DESCRIPTION
@@ -85,13 +83,8 @@ will display only a list of jobs with no queue status
 information.
 .\"
 .SH OPTIONS
-.IP "\fB\-explain a|A|c|E\fP"
-\'c' displays the reason for the configuration ambigous state of a queue
-instance. 'a' shows the reason for the alarm state. Suspend alarm state
-reasons will be displayed by 'A'. 'E' displays the reason for a queue
-instance error state.
-.sp
-The output format for the alarm reasons is one line per reason containing
+.IP "\fB\-alarm\fP"
+Displays the reason(s) for queue alarm states. Outputs one line per reason containing
 the resource value and threshold. For details about the resource value please
 refer to the description of the \fBFull Format\fP in section \fBOUTPUT FORMATS\fP below.
 .IP "\fB\-ext\fP"
@@ -118,12 +111,9 @@ resource_name list. Please refer to the description of the
 \fBFull Format\fP in 
 section \fBOUTPUT FORMATS\fP below for further detail.
 .\"
-.IP "\fB\-g {c|d|t}[+]\fP"
+.IP "\fB\-g {d|t}[+]\fP"
 The \fB\-g\fP option allows for controlling grouping of displayed
 objects.
-.sp
-With \fB\-g c\fP a cluster queue summary is displayed. Find  more information
-in the section \fBOUTPUT FORMATS\fP. 
 .sp
 With \fB\-g d\fP array jobs are displayed verbosely in a one 
 line per job task fashion. By default, array jobs are grouped and all 
@@ -148,16 +138,11 @@ or patterns.
 
 .\"
 .IP "\fB\-l resource\fP[\fB=value\fP],..."
-Defines the resources required by the jobs or granted by the 
-queues on which information is requested. Matching is performed 
-on queues based on non-mutable resource availability information 
-only. That means load values are always ignored except the 
-so-called static load values (i.e. "arch", "num_proc", "mem_total", "swap_total" and 
-"virtual_total") ones. Also consumbale utilization is ignored.
-The pending jobs are restricted to jobs that might run in 
-one of the above queues. In a similar fashion also the queue-job
-matching bases only on non-mutable resource availability 
-information.
+Defines the resources required by the jobs or granted
+by the queues on which information is requested.
+Matching is performed on queues. The pending jobs are
+restricted to jobs that might run in one of the above
+queues.
 .\"
 .IP "\fB\-ne\fP"
 In combination with \fB\-f\fP the option suppresses the display of empty 
@@ -171,11 +156,9 @@ option argument. Status information for jobs is displayed either for those
 which execute in one of the selected queues or which are pending and 
 might get scheduled to those queues in principle.
 .\"
-.IP "\fB\-q wc_queue_list\fP"
-Specifies a wildcard queue list to which job
-information is to be displayed. Find the definition of \fBwc_queue_list\fP
-in
-.M sge_types 1 .
+.IP "\fB\-q queue,...\fP"
+Specifies the queue to which job
+information is to be displayed.
 .\"
 .IP "\fB\-qs {a|c|d|o|s|u|A|C|D|E|S}\fP"
 Similar to \fB\-f\fP. It generates the same output, but allows
@@ -231,10 +214,6 @@ jobs in those queues.
 .IP "\fB\-urg\fP"
 This option is only supported in case of a xxQS_NAME_EExx system. It is not available
 for xxQS_NAME_Cxx systems.
-.\"
-.IP "\fB\-xml\fP"
-This option can be used with all other options and changes the output to XML. The used
-schemas are referenced in the XML output. The output is printed to stdout.
 .br
 Displays additional information for each job related to the xxQS_NAME_EExx job urgency 
 policy scheme
@@ -242,41 +221,12 @@ policy scheme
 .\"
 .\"
 .SH "OUTPUT FORMATS"
-Depending on the presence or absence of the \fB-explain\fP, \fB\-f\fP, \fB\-F\fP, or \fB\-qs\fP and
+Depending on the presence or absence of the \fB-alarm\fP, \fB\-f\fP, \fB\-F\fP, or \fB\-qs\fP and
 \fB\-r\fP and \fB\-t\fP option three output formats need to be differentiated.
 .PP
 In case of a xxQS_NAME_EExx system, the \fB\-ext\fP and \fB\-urg\fP options may be used 
 to display additional information for each job.
 .\"
-.SS "\fBCluster Queue Format (without \-g c)\fP"
-Following the header line a section for each cluster queue
-is provided. When queue instances selection are applied (\-l \-pe, \-q, \-U)
-the cluster format contains only cluster queues of the corresponding queue
-instances.
-.IP "\(bu" 3n
-the cluster queue name.
-.IP "\(bu" 3n
-an average of the normalized load average of all queue hosts. Please note that
-only hosts with a load value are considered for this value. When queue
-selection is applied only data about selected queues is considered in this
-formula. If the load value is not available at any of the hosts '-NA-' is
-printed instead of the value from the complex attribute definition.
-.IP "\(bu" 3n
-the number of currently used slots. 
-.IP "\(bu" 3n
-the number of currently available slots.
-.IP "\(bu" 3n
-the total number of slots.
-.IP "\(bu" 3n
-the number of slots which is in at least in one of the states  'aoACDS' and in
-none of the states 'cdsuE'
-.IP "\(bu" 3n
-the number of slots which are in one of these states or in any  combination 
-of them: 'cdsuE'
-.IP "\(bu" 3n
-the \fB\-g c\fP option can be used in combination with \fB\-ext\fP. In this
-case additional collumns are added to the output. Each collumn contains
-the slot count for one of the available queue states.
 .SS "\fBReduced Format (without \-f, \-F, and \-qs)\fP"
 Following the header line a line is printed for each job
 consisting of
@@ -375,7 +325,7 @@ printed consists of
 the queue name,
 .IP "\(bu" 3n
 the queue type \- one of B(atch), I(nteractive), C(heckpointing),
-P(arallel), T(ransfer) or combinations thereof or N(one),
+P(arallel), T(ransfer) or combinations thereof,
 .IP "\(bu" 3n
 the number of used and available job slots,
 .IP "\(bu" 3n
@@ -434,33 +384,6 @@ queue afterwards via the \fB-c\fP option of the
 .M qmod 1
 command manually.
 .PP
-If the c(onfiguration ambiguous) state is displayed for a queue
-instance this indicates that the configuration specified for this
-queue instance in
-.M sge_conf 5
-is ambigous. The state vanishes when
-the configuration becomes un-ambigous again. This state prevents from
-scheduling further jobs to that queue instance. Detailed reasons why
-a queue instance entered the c(onfiguration ambiguous) state can
-be found in the
-.M sge_qmaster 8
-messages file and are shown by the
-qstat -explain switch. For queue instances in this state the cluster
-queue's default settings are used for the ambigous attribute.
-.PP
-If an o(rphaned) state is displayed for a queue instance this
-indicates that the current cluster queue's configuration and
-host group configuration does not any longer forsee this queue
-instance. The queue instance is kept because not yet finished
-jobs are still associated and it will vanish from qstat output
-when these jobs are finished. To quicken vanishing of an orphaned
-queue instance associated job(s) can be deleted using 
-.M qdel 1 .
-A queue instance in (o)rphaned state can be revived by changing
-the cluster queue configuration accordingly to cover that queue
-instance. This state prevents from scheduling further jobs to that
-queue instance.
-.PP
 If the \fB\-F\fP option was used, resource availability information is printed 
 following the queue status line. For each resource (as selected in an option 
 argument to \fB\-F\fP or for all resources if the option argument was
@@ -488,6 +411,9 @@ defined load scaling has been applied,
 the consumable resources facility (see
 .M complexes 5 ),
 .br
+`\fBv\fP' - a default complexes configuration value 
+never overwritten by a load report or a consumable update or
+.br
 `\fBf\fP' - a fixed 
 availability definition derived from a non-consumable complex attribute or 
 a fixed resource limit.
@@ -509,8 +435,7 @@ reported for the host. So while the queue might allow for jobs with higher
 virtual memory requirements, the host on which this particular queue resides 
 currently only has 4 Gigabyte available.
 .PP
-If the \fB\-explain\fP option was used with the character 'a' or 'A', 
-information about resources is displayed, that
+If the \fB\-alarm\fP option was used, information about resources is displayed, that
 violate load or suspend thresholds.
 .br
 The same format as with the \fB-F\fP option is used with following extensions:

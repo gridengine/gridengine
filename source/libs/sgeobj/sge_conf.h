@@ -81,10 +81,6 @@ struct confel {                       /* cluster configuration parameters */
     u_long32    max_u_jobs;           /* max. number of jobs per user */
     u_long32    max_jobs;             /* max. number of jobs in the system */
     u_long32    reprioritize;         /* reprioritize jobs based on the tickets or not */
-    u_long32    auto_user_fshare;     /* SGEEE automatic user fshare */
-    u_long32    auto_user_oticket;    /* SGEEE automatic user oticket */
-    char        *auto_user_default_project; /* SGEEE automatic user default project */
-    u_long32    auto_user_delete_time; /* SGEEE automatic user delete time */
 };
 
 typedef struct confel sge_conf_type;
@@ -97,7 +93,6 @@ extern sge_conf_type conf;
 
 extern bool use_qidle;
 extern bool forbid_reschedule;
-extern bool forbid_apperror;
 extern bool do_credentials;   
 extern bool do_authentication;  
 extern bool acct_reserved_usage;

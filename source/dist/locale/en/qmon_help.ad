@@ -453,7 +453,7 @@ Calendar contains the name of the calendar attached to this queue to manage the 
 the queue based on date and time.\n\
 Notify Time is the time that passes before a KILL signal is sent after sending user defined signals.\n\
 Job's Nice is the UNIX nice value that the job is started with.\n\
-Slots defines the maximum number of jobs that can run on this queue.\n\
+Slots defines the number of jobs that can maximally run on this queue.\n\
 Rerun Jobs defines that jobs that aborted on this queue are restarted automatically this may be useful\n\
 for checkpointed jobs for example.\n\
 Type defines the capability of the queue to handle special classes of jobs.\n\
@@ -809,10 +809,10 @@ By selecting one of the execution hosts the corresponding attributes are display
 To add a new execution host press @fBAdd@fR this pops up the execution host configuration editor.\n\
 Here the hostname of the new execution host can be specified the @fBLoad Scaling@fR factors, the\n\
 @fBAccess Attributes@fR, the @fBConsumables/Fixed Attributes@fR can be changed. In Grid Engine Enterprise Edition mode the\n\
-@fBUsage Scaling@fR can be adjusted.\n\
+@fBUsage Scaling@fR and the @fBResource Capability Factor@fR can be adjusted.\n\
 \n\
 The configuration helper dialogue consists of a folder with the categories @fBScaling@fR for\n\
-@fBLoad Scaling, Usage Scaling@fR (Grid Engine Enterprise Edition mode only)\n\
+@fBLoad Scaling, Usage Scaling@fR (Grid Engine Enterprise Edition mode only) and @fBResource Capability Factor@fR (Grid Engine Enterprise Edition mode only)\n\
 settings, @fBConsumables/Fixed Attributes@fR for host based attachment of consumables and fixed attributes,\n\
 @fBUser Access@fR for host based accessability settings and in Grid Engine Enterprise Edition mode additionally @fBProject Access@fR\n\
 for host based definition of project access.\n\
@@ -999,6 +999,7 @@ The @fBEqual Share Sort@fR enables the scheduler to equalize the jobs submitted 
 users to avoid that one user can allocate all the system resources uniquely. This policy is\n\
 only available in Grid Engine mode. No suspend of already existing jobs takes place to achieve an\n\
 equal share for the different users.\n\
+In Grid Engine Enterprise Edition mode there is another sorting mode: @fBSort by Share@fR.\n\
 The @fBJob Scheduling Information@fB part allows enabling/disabling of job scheduling information\n\
 for all or part of the jobs. The inputfield serves to enter a job range as min[-max][,...] to\n\
 define for which jobs scheduling information is requested.\n\

@@ -265,8 +265,12 @@ int slave
    lSetUlong(jatep, JAT_status, slave?JSLAVE:JIDLE);
 
    /* now we have a queue and a job filled */
-   DPRINTF(("===>JOB_EXECUTION: >"u32"."u32"< with "u32" tickets\n", jobid, jataskid,
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      DPRINTF(("===>JOB_EXECUTION: >"u32"."u32"< with "u32" tickets\n", jobid, jataskid,
                (u_long32)lGetDouble(jatep, JAT_tix)));
+   } else {
+      DPRINTF(("===>JOB_EXECUTION: >"u32"."u32"<\n", jobid, jataskid));
+   }   
 
    job_log(jobid, jataskid, MSG_COM_RECEIVED);
 
@@ -583,6 +587,10 @@ job_get_queue_for_task(lListElem *jatep, lListElem *petep,
    lListElem *this_q, *gdil_ep;
 
    DENTER(TOP_LAYER, "job_get_queue_for_task");
+
+#if 1 /* EB: TODO: debug */
+   lWriteListTo(lGetList(jatep, JAT_granted_destin_identifier_list), stderr);
+#endif
 
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       /* if a certain queuename is requested, check only this queue */

@@ -169,15 +169,11 @@ object_type_free_master_list(const sge_object_type type);
 const char *
 object_type_get_name(const sge_object_type type);
 
-sge_object_type 
-object_name_get_type(const char *name);
-
 const lDescr *
 object_type_get_descr(const sge_object_type type);
 
 int
 object_type_get_key_nm(const sge_object_type type);
-
 
 /* JG: TODO: rename to object_has_descr, make function object_has_type 
              and call this function where possible */

@@ -33,13 +33,13 @@
 /*___INFO__MARK_END__*/
 
 #include "cull.h"
-#include "sge_dstring.h"
-#include "sge_object.h"
-#include "sge_qmaster_timed_event.h"
 
+#include "sge_dstring.h"
+
+#include "sge_object.h"
 
 typedef enum {
-   JL_UNKNOWN = 0,   /* job is in unknown state - should never be seen */
+   JL_UNKNOWN,       /* job is in unknown state - should never be seen */
    JL_PENDING,       /* job is pending */
    JL_SENT,          /* job has been sent to execd */
    JL_RESENT,        /* job has been resent to execd - sent hasn't been ack */
@@ -54,8 +54,6 @@ typedef enum {
    JL_DELETED,       /* the job has been deleted */
    JL_FINISHED,      /* the job has finished */
    JL_ERROR,         /* job is in error state */
-
-   JL_ALL
 } job_log_t;
 
 bool
@@ -65,7 +63,8 @@ bool
 reporting_shutdown(lList **answer_list);
 
 void
-reporting_trigger_handler(te_event_t anEvent);
+reporting_deliver_trigger(u_long32 type, u_long32 when, 
+                          u_long32 uval0, u_long32 uval1, const char *key);
 
 bool
 reporting_create_new_job_record(lList **answer_list, const lListElem *job);
@@ -94,16 +93,6 @@ reporting_create_host_record(lList **answer_list,
 bool
 reporting_create_host_consumable_record(lList **answer_list,
                                         const lListElem *host,
-                                        u_long32 report_time);
-
-bool
-reporting_create_queue_record(lList **answer_list,
-                              const lListElem *queue,
-                              u_long32 report_time);
-
-bool
-reporting_create_queue_consumable_record(lList **answer_list,
-                                        const lListElem *queue,
                                         u_long32 report_time);
 
 bool

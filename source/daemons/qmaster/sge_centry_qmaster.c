@@ -53,16 +53,15 @@
 #include "sge_unistd.h"
 #include "sge_spool.h"
 #include "sge_answer.h"
+#include "sge_schedd_conf.h"
 #include "sge_qinstance.h"
 #include "sge_job.h"
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_utility.h"
-#include "sge_time.h"
 
 #include "spool/sge_spooling.h"
 #include "sge_persistence_qmaster.h"
-#include "sge_reporting_qmaster.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -228,26 +227,21 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
 /* ------------------------------------------------------------ */
 
 int 
-centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object) 
+centry_spool(lList **answer_list, lListElem *cep, gdi_object_t *object) 
 {
-   lList *answer_list = NULL;
-   bool dbret;
-
    DENTER(TOP_LAYER, "centry_spool");
 
-   dbret = spool_write_object(&answer_list, spool_get_default_context(), cep, 
-                              lGetString(cep, CE_name), SGE_TYPE_CENTRY);
-   answer_list_output(&answer_list);
-
-   if (!dbret) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_PERSISTENCE_WRITE_FAILED_S,
-                              lGetString(cep, CE_name));
+   if (!spool_write_object(answer_list, spool_get_default_context(), cep, 
+                           lGetString(cep, CE_name), SGE_TYPE_CENTRY)) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
+             MSG_OBJ_CPLX, lGetString(cep, CE_name)));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 0);
+      DEXIT;
+      return 1;
    } 
    
    DEXIT;
-   return dbret ? 0 : 1;
+   return 0;
 }
 
 /* ------------------------------------------------------------ */
@@ -263,7 +257,7 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
 
    centry_list_sort(Master_CEntry_List);
 
-   sge_add_event( 0, old_ep?sgeE_CENTRY_MOD:sgeE_CENTRY_ADD, 0, 0, 
+   sge_add_event(NULL, 0, old_ep?sgeE_CENTRY_MOD:sgeE_CENTRY_ADD, 0, 0, 
                  lGetString(ep, CE_name), NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
 
@@ -273,17 +267,17 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
       lListElem *qinstance = NULL;
 
       for_each(qinstance, qinstance_list) {
-         lSetList(qinstance, QU_resource_utilization, NULL);
-         qinstance_debit_consumable(qinstance, NULL, Master_CEntry_List, 0);
+         lSetList(qinstance, QU_consumable_actual_list, NULL);
+         qinstance_debit_consumable(NULL, qinstance, Master_CEntry_List, 0);
       }
    }
    for_each (hep, Master_Exechost_List) {
-      lSetList(hep, EH_resource_utilization, NULL);
+      lSetList(hep, EH_consumable_actual_list, NULL);
       debit_host_consumable(NULL, hep, Master_CEntry_List, 0);
    }
 
    /* 
-    * completely rebuild resource utilization of 
+    * completely rebuild consumable_actual_list of 
     * all queues and execution hosts
     * change versions of corresponding queues 
     */ 
@@ -303,7 +297,7 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
             qslots = lGetUlong(gdil, JG_slots);
             debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
                   lGetHost(qep, QU_qhostname)), Master_CEntry_List, qslots);
-            qinstance_debit_consumable(qep, jep, Master_CEntry_List, qslots);
+            qinstance_debit_consumable(jep, qep, Master_CEntry_List, qslots);
             slots += qslots;
          }
          debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
@@ -312,31 +306,7 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
    }
 
    sge_change_queue_version_centry(lGetString(ep, CE_name));
- 
-   /* changing complex attributes can change consumables.
-    * dump queue and host consumables to reporting file.
-    */
-   {
-      lList *answer_list = NULL;
-      u_long32 now = sge_get_gmt();
-      
-      /* dump all queue consumables */
-      for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         lListElem *qinstance = NULL;
-
-         for_each(qinstance, qinstance_list) {
-            reporting_create_queue_consumable_record(&answer_list, hep, now);
-         }
-      }
-      answer_list_output(&answer_list);
-      /* dump all host consumables */
-      for_each (hep, Master_Exechost_List) {
-         reporting_create_host_consumable_record(&answer_list, hep, now);
-      }
-      answer_list_output(&answer_list);
-   }
-
+   
    DEXIT;
    return 0;
 }

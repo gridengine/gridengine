@@ -89,8 +89,8 @@ typedef struct _tSCEntry {
    int  maxujobs;
    int  flush_submit_secs;
    int  flush_finish_secs;
-   int  max_reservation;
    int  queue_sort_method;
+   int  user_sort;
    char *load_adjustment_decay_time;
    char *load_formula;
    lList *job_load_adjustments;
@@ -122,12 +122,12 @@ static XtResource sc_resources[] = {
       sizeof(int), XtOffsetOf(tSCEntry, flush_finish_secs),
       XtRImmediate, NULL },
    
-   { "max_reservation", "max_reservation", XtRInt,
-      sizeof(int), XtOffsetOf(tSCEntry, max_reservation),
-      XtRImmediate, NULL },
-   
    { "queue_sort_method", "queue_sort_method", XtRInt, 
       sizeof(int), XtOffsetOf(tSCEntry, queue_sort_method), 
+      XtRImmediate, NULL },
+
+   { "user_sort", "user_sort", XtRInt, 
+      sizeof(int), XtOffsetOf(tSCEntry, user_sort), 
       XtRImmediate, NULL },
 
    { "job_load_adjustments", "job_load_adjustments", QmonRCE2_Type, 
@@ -158,12 +158,12 @@ static Widget sconf_sc_params = 0;
 static Widget sconf_maxujobs = 0;
 static Widget sconf_flush_submit_secs = 0;
 static Widget sconf_flush_finish_secs = 0;
-static Widget sconf_max_reservation = 0;
 static Widget sconf_lad_time = 0;
 static Widget sconf_load_formula = 0;
 static Widget sconf_load_adjustments = 0;
 static Widget sconf_reprioritize_interval = 0;
 static Widget sconf_queue_sort_method = 0;
+static Widget sconf_user_sort = 0;
 static Widget sconf_job_info = 0;
 static Widget sconf_job_range = 0;
 
@@ -240,7 +240,6 @@ Widget parent
                            "sconf_maxujobs", &sconf_maxujobs,
                            "sconf_flush_submit_secs", &sconf_flush_submit_secs,
                            "sconf_flush_finish_secs", &sconf_flush_finish_secs,
-                           "sconf_max_reservation", &sconf_max_reservation,
                            "sconf_lad_time", &sconf_lad_time,
                            "sconf_load_formula", &sconf_load_formula,
                            "sconf_load_adjustments", &sconf_load_adjustments,
@@ -252,6 +251,7 @@ Widget parent
                            "sconf_reprioritize_interval", 
                                  &sconf_reprioritize_interval,
                            "sconf_queue_sort_method", &sconf_queue_sort_method,
+                           "sconf_user_sort", &sconf_user_sort,
                            "sconf_lad_timePB", &sconf_lad_timePB,
                            "sconf_schedule_intervalPB", 
                                  &sconf_schedule_intervalPB,
@@ -260,6 +260,20 @@ Widget parent
                            "sconf_job_info", &sconf_job_info,
                            "sconf_job_range", &sconf_job_range,
                            NULL);
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
+      Widget *items = NULL;
+
+      XtUnmanageChild(sconf_reprioritize_interval);
+      XtUnmanageChild(sconf_reprioritize_intervalPB);
+      XtVaGetValues( sconf_queue_sort_method,
+                     XmtNitemWidgets, &items,
+                     NULL);
+      if (items && items[2])
+         XtUnmanageChild(items[2]);
+   }
+   else {
+      XtUnmanageChild(sconf_user_sort);
+   }
 
    XtAddCallback(sconf_main_link, XmNactivateCallback, 
                      qmonMainControlRaise, NULL);
@@ -425,10 +439,12 @@ lListElem *sep
    data.flush_submit_secs = lGetUlong(sep, SC_flush_submit_sec);
    data.flush_finish_secs = lGetUlong(sep, SC_flush_finish_sec);
 
-   data.max_reservation = lGetUlong(sep, SC_max_reservation);
-
    /* this depends on the kind queue_sort_method is represented */
    data.queue_sort_method = lGetUlong(sep, SC_queue_sort_method);
+
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
+      data.user_sort = lGetBool(sep, SC_user_sort);
+   }
 
    /*
    ** load adjustments need special treatment
@@ -442,8 +458,10 @@ lListElem *sep
    data.load_formula = sge_strdup(data.load_formula, 
                               (StringConst)lGetString(sep, SC_load_formula));
 
-   data.reprioritize_interval = sge_strdup(data.reprioritize_interval, 
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      data.reprioritize_interval = sge_strdup(data.reprioritize_interval, 
                               (StringConst)lGetString(sep, SC_reprioritize_interval));
+   }
 
 /**
 printf("->data.algorithm: '%s'\n", data.algorithm ? data.algorithm : "-NA-");
@@ -452,8 +470,8 @@ printf("->data.sc_params: '%s'\n", data.sc_params ? data.sc_params : "-NA-");
 printf("->data.maxujobs: '%d'\n", data.maxujobs );
 printf("->data.flush_submit_secs: '%d'\n", data.flush_submit_secs );
 printf("->data.flush_finish_secs: '%d'\n", data.flush_finish_secs );
-printf("->data.max_reservation: '%d'\n", data.max_reservation );
 printf("->data.queue_sort_method: '%d'\n", data.queue_sort_method );
+printf("->data.user_sort: '%d'\n", data.user_sort );
 printf("->data.load_adjustment_decay_time: '%s'\n", data.load_adjustment_decay_time ? data.load_adjustment_decay_time : "-NA-");
 printf("->data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-NA-");
 **/
@@ -527,8 +545,8 @@ printf("<-data.sc_params: '%s'\n", data.sc_params ? data.sc_params : "-NA-");
 printf("<-data.maxujobs: '%d'\n", data.maxujobs );
 printf("<-data.flush_submit_secs: '%d'\n", data.flush_submit_secs );
 printf("<-data.flush_finish_secs: '%d'\n", data.flush_finish_secs );
-printf("<-data.max_reservation: '%d'\n", data.max_reservation );
 printf("<-data.queue_sort_method: '%d'\n", data.queue_sort_method );
+printf("<-data.user_sort: '%d'\n", data.user_sort );
 printf("<-data.load_adjustment_decay_time: '%s'\n", data.load_adjustment_decay_time ? data.load_adjustment_decay_time : "-NA-");
 printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-NA-");
 **/
@@ -555,10 +573,12 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
 
    lSetUlong(sep, SC_flush_submit_sec, (u_long32) data.flush_submit_secs);
    lSetUlong(sep, SC_flush_finish_sec, (u_long32) data.flush_finish_secs);
-
-   lSetUlong(sep, SC_max_reservation, (u_long32) data.max_reservation);
   
    lSetUlong(sep, SC_queue_sort_method, (u_long32) data.queue_sort_method);
+
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
+      lSetBool(sep, SC_user_sort, (u_long32) data.user_sort);
+   }
 
    /*
    ** load adjustments need special treatment
@@ -582,13 +602,15 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
    }
    lSetString(sep, SC_load_formula, data.load_formula);
   
-   if (!data.reprioritize_interval|| 
-         data.reprioritize_interval[0] == '\0') {
-      qmonMessageShow(qmon_sconf, True, "@{SGEEE Schedule Interval required!}");
-      DEXIT;
-      return False;
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      if (!data.reprioritize_interval|| 
+            data.reprioritize_interval[0] == '\0') {
+         qmonMessageShow(qmon_sconf, True, "@{SGEEE Schedule Interval required!}");
+         DEXIT;
+         return False;
+      }
+      lSetString(sep, SC_reprioritize_interval, data.reprioritize_interval);
    }
-   lSetString(sep, SC_reprioritize_interval, data.reprioritize_interval);
    /*
    ** schedd_job_info needs some extras
    ** see comment for schedd_job_info in qmonScheddSet

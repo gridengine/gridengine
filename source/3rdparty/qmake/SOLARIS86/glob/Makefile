@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = ..
 
-ACLOCAL =  aclocal
-AUTOCONF =  autoconf
-AUTOMAKE =  automake
-AUTOHEADER =  autoheader
+ACLOCAL = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing aclocal
+AUTOCONF = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing autoconf
+AUTOMAKE = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing automake
+AUTOHEADER = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing autoheader
 
 INSTALL = ../../install-sh -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,7 +68,7 @@ CPP = cc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS = 
-MAKEINFO =  makeinfo
+MAKEINFO = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing makeinfo
 MAKE_HOST = i386-pc-solaris2.8
 PACKAGE = make
 PERL = perl

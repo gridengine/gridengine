@@ -37,6 +37,10 @@
 
 #include "sgermon.h"
 #include "sge_answer.h"
+#include "parse_job_cull.h"
+#include "parse_qsubL.h"
+#include "parse_qsub.h"
+#include "read_defaults.h"
 #include "setup_path.h"
 #include "sge_unistd.h"
 #include "msg_common.h"
@@ -45,11 +49,7 @@
 #include "sge_uidgid.h"
 #include "sge_io.h"
 #include "sge_prog.h"
-#include "parse_job_cull.h"
-#include "parse_qsubL.h"
-#include "parse_qsub.h"
-#include "read_defaults.h"
-
+#include "sge_answer.h"
 
 static char *get_root_defaults_file_path (void);
 static char *get_user_home_defaults_file_path (lList **answer_list);
@@ -142,14 +142,19 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
 *
 *******************************************************************************/
 static char *get_root_defaults_file_path () {
+   const char *cell = NULL;
    char *file = NULL;
    
    DENTER (TOP_LAYER, "get_root_defaults_file_path");
    
-   file = (char *)malloc(strlen(path_state_get_cell_root()) +
+   if ((cell = sge_getenv ("SGE_SHELL")) == 0) {
+      cell = "default";
+   }
+   
+   file = (char *)malloc(strlen(path_state_get_sge_root()) + strlen (cell) +
                        strlen(SGE_COMMON_DEF_REQ_FILE) + 3);
    
-   sprintf (file, "%s/%s", path_state_get_cell_root(),
+   sprintf (file, "%s/%s/%s", path_state_get_sge_root(), cell,
             SGE_COMMON_DEF_REQ_FILE);
    
    DEXIT;
@@ -227,8 +232,11 @@ static char *get_user_home_defaults_file_path(lList **answer_list)
       if (*file && (file[strlen(file) - 1] != '/')) {
          strcat(file, "/");
       }
-
-      strcat(file, GRD_HOME_DEF_REQ_FILE);
+      if (feature_is_enabled(FEATURE_SGEEE)) {
+         strcat(file, GRD_HOME_DEF_REQ_FILE);
+      } else {
+         strcat(file, COD_HOME_DEF_REQ_FILE);
+      }
    }
    
    DEXIT;
@@ -286,8 +294,11 @@ static char *get_cwd_defaults_file_path(lList **answer_list)
       if (*file && (file[strlen(file) - 1] != '/')) {
          strcat(file, "/");
       }
-
-      strcat(file, GRD_HOME_DEF_REQ_FILE); 
+      if (feature_is_enabled(FEATURE_SGEEE)) {
+         strcat(file, GRD_HOME_DEF_REQ_FILE); 
+      } else {
+         strcat(file, COD_HOME_DEF_REQ_FILE);
+      }
    }
    
    DEXIT;

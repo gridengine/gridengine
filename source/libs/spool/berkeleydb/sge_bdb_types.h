@@ -37,10 +37,6 @@
 
 #include <db.h>
 
-/* utilib */
-#include "sge_dstring.h"
-
-
 /* Berkeley DB data structures:
  * We have a bdb_info object per spooling rule.
  * It holds all data that is required to use the spooling rule.
@@ -89,14 +85,4 @@ bdb_set_db(struct bdb_info *info, DB *db);
 
 void
 bdb_set_txn(struct bdb_info *info, DB_TXN *txn);
-
-const char *
-bdb_get_dbname(struct bdb_info *info, dstring *buffer);
-
-void
-bdb_lock_info(struct bdb_info *info);
-
-void
-bdb_unlock_info(struct bdb_info *info);
-
 #endif /* __SGE_BDB_TYPES_H */    

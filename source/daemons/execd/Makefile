@@ -76,12 +76,12 @@ EXECD_OBJS    = $(EXECD_SRC:.c=.o)
 
 EXECD_ADD_OBJS = $(EXECD_ADD_SRC:.c=.o)  
 
-EXECD_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
+EXECD_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon $(DLLIB)
 
 EXECD_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                     $(SECLIBS) $(KRBLIBS) \
-                    $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) \
-                    $(TPLIB)
+                    $(CULLLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) \
+                    $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

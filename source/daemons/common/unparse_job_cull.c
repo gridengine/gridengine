@@ -141,13 +141,15 @@ int flags
       ep_opt = sge_add_noarg(pcmdline, cwd_OPT, "-cwd", NULL);
    }
 
-   /*
-    * -P
-    */
-   if (sge_unparse_string_option(job, JB_project, "-P",
-            pcmdline, &answer) != 0) {
-      DEXIT;
-      return answer;
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      /*
+       * -P
+       */
+      if (sge_unparse_string_option(job, JB_project, "-P",
+               pcmdline, &answer) != 0) {
+         DEXIT;
+         return answer;
+      }
    }
 
    /*
@@ -194,15 +196,6 @@ int flags
    }
 
    /*
-   ** -i
-   */
-   if (sge_unparse_path_list(job, JB_stdin_path_list, "-i", pcmdline, 
-                     &answer) != 0) {
-      DEXIT;
-      return answer;
-   }
-
-   /*
    ** -j
    */
    if ((ul = lGetBool(job, JB_merge_stderr))) {
@@ -227,15 +220,6 @@ int flags
       }
       ep_opt = sge_add_arg(pcmdline, jid_OPT, lListT, "-jid", str);
       lSetList(ep_opt, SPA_argval_lListT, lCopyList("jid list", lp));      
-   }
-
-   /*
-   ** -js
-   */
-   if ((ul = lGetUlong(job, JB_jobshare)) != 0)  {
-      sprintf(str, u32, ul);
-      ep_opt = sge_add_arg(pcmdline, js_OPT, lUlongT, "-js", str);
-      lSetUlong(ep_opt, SPA_argval_lUlongT, ul);
    }
 
    /*
@@ -420,13 +404,6 @@ int flags
    }
 #endif
    
-   /*
-   ** -R
-   */
-   if ((ul = lGetBool(job, JB_reserve))) {
-      ep_opt = sge_add_arg(pcmdline, R_OPT, lIntT, "-R", "y");
-      lSetInt(ep_opt, SPA_argval_lIntT, true);
-   }
 
    /*
    ** -r
@@ -443,15 +420,8 @@ int flags
    /*
    ** -S
    */
-#if 1   
-   if (sge_unparse_path_list(job, JB_shell_list, "-S", pcmdline, 
-                     &answer) != 0) {
-      DEXIT;
-      return answer;
-   }
-#else
    if ((lp = lGetList(job, JB_shell_list))) {
-      int fields[] = { PN_host, PN_file_host, PN_path, PN_file_staging, 0 };
+      int fields[] = { PN_host, PN_path, 0 };
       const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
@@ -464,7 +434,6 @@ int flags
       ep_opt = sge_add_arg(pcmdline, S_OPT, lListT, "-S", str);
       lSetList(ep_opt, SPA_argval_lListT, lCopyList("shell list", lp));
    }
-#endif
 
    /*
    ** -v, -V

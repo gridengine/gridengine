@@ -38,6 +38,7 @@ SCHEDD_TARGETS = sge_schedd sge_share_mon
 
 SCHEDD_SRC  = sge_schedd.c \
              scheduler.c \
+             sge_access_tree.c \
              sge_category.c \
              sge_process_events.c \
              interactive_sched.c 
@@ -64,20 +65,20 @@ SCHEDD_OBJS = $(SCHEDD_SRC:.c=.o)
 
 SCHEDD_ADD_OBJS = $(SCHEDD_ADD_SRC:.c=.o) 
 
-SCHEDD_ADD_LIBS = -lsched -lmir -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck $(DLLIB)
+SCHEDD_ADD_LIBS = -lsched -lmir -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti -llck $(DLLIB)
 
 SCHEDD_LIB_DEPENDS = $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) \
                      $(SGEOBJLIB) $(SGEOBJDLIB) \
                      $(SECLIBS) $(KRBLIBS) \
-                     $(CULLLIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(TPLIB)
+                     $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(ZLIB) $(TPLIB)
 
 SMON_OBJS = $(SMON_SRC:.c=.o)
 
 SMON_ADD_OBJS = $(SMON_ADD_SRC:.c=.o) 
 
-SMON_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck $(DLLIB)
+SMON_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti -llck $(DLLIB)
 
-SMON_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(LCKLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB)
+SMON_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -115,6 +116,9 @@ include $(SCHEDD_SDIR)/schedd_dependencies
 ###############################################################################
 sge_schedd.o:	$(SCHEDD_SDIR)/sge_schedd.c
 	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_schedd.c
+
+sge_access_tree.o : $(SCHEDD_SDIR)/sge_access_tree.c
+	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_access_tree.c
 
 sge_category.o : $(SCHEDD_SDIR)/sge_category.c
 	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_category.c

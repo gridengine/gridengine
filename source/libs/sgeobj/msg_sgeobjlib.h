@@ -34,9 +34,10 @@
 
 #define MSG_ANSWER_NOANSWERLIST     _MESSAGE(64000, _("no answer list - gdi request failed\n"))
 #define MSG_CKPTREFINJOB_SU         _MESSAGE(64001, _("Checkpointing object "SFQ" is still referenced in job " U32CFormat".\n"))
-#define MSG_GDI_INVALIDPRODUCTMODESTRING_S   _MESSAGE(64005, _("invalid security mode string "SFQ"\n"))
+#define MSG_GDI_INVALIDPRODUCTMODESTRING_S   _MESSAGE(64005, _("invalid product mode string "SFQ"\n"))
 #define MSG_GDI_SWITCHFROMTO_SS              _MESSAGE(64007, _("switching from "SFQ" to "SFQ" feature set\n"))
 #define MSG_HOSTREFINQUEUE_SS                _MESSAGE(64008, _("Host object "SFQ" is still referenced in queue "SFQ".\n"))
+#define MSG_QUEUE_NULLPTR             _MESSAGE(64011, _("NULL ptr passed to sge_add_queue()\n"))
 #define MSG_GDI_CONFIGNOARGUMENTGIVEN_S                  _MESSAGE(64012, _("no argument given in config option: "SFN"\n"))
 #define MSG_GDI_CONFIGMISSINGARGUMENT_S                  _MESSAGE(64013, _("missing configuration attribute "SFQ""))
 #define MSG_GDI_CONFIGADDLISTFAILED_S                    _MESSAGE(64014, _("can't add "SFQ" to list"))
@@ -49,7 +50,6 @@
 #define MSG_GDI_READCONFIGFILEUNKNOWNSPEC_SS             _MESSAGE(64022, _("reading conf file: unknown specifier "SFQ" for "SFN"\n"))
 #define MSG_GDI_READCONFIGFILEEMPTYENUMERATION_S         _MESSAGE(64023, _("reading conf file: empty enumeration for "SFQ"\n"))
 #define MSG_JOB_XISINVALIDJOBTASKID_S                    _MESSAGE(64024, _("ERROR! "SFN" is a invalid job-task identifier\n"))
-#define MSG_JOB_LONELY_TOPTION_S                          _MESSAGE(64025, _("found lonely '-t "SFQ"' option (The -t option needs a leading job name).\n"))
 
 #define MSG_JOB_JLPPNULL                  _MESSAGE(64028, _("jlpp == NULL in job_add_job()\n"))                                                        
 #define MSG_JOB_JEPNULL                   _MESSAGE(64029, _("jep == NULL in job_add_job()\n"))
@@ -227,6 +227,7 @@
 
 #define MSG_CQUEUE_NODEFVALUE_S        _MESSAGE(64228, _(SFQ" has no default value\n"))
 #define MSG_CQUEUE_MULVALNOTALLOWED_S  _MESSAGE(64229, _("Multiple values for one queue domain/host ("SFN") are not allowed\n"))
+#define MSG_CQUEUE_NOTINHOSTLIST_S     _MESSAGE(64230, _(SFQ" is not in hostlist but used in cluster queue definition\n"))
 #define MSG_CQUEUE_WRONGCHARINPRIO     _MESSAGE(64231, _("Invalid character\n"))
 #define MSG_QINSTANCE_ALARM            _MESSAGE(64233, _("load alarm"))
 #define MSG_QINSTANCE_SUSPALARM        _MESSAGE(64234, _("suspend alarm"))
@@ -271,10 +272,7 @@
 #define MSG_DOUBLE_INCORRECTSTRING     _MESSAGE(64272, _("error parsing double value from string "SFQ"\n"))
 #define MSG_FLOAT_INCORRECTSTRING      _MESSAGE(64273, _("error parsing float value from string "SFQ"\n"))
 #define MSG_QTYPE_INCORRECTSTRING      _MESSAGE(64274, _("error parsing queue type from string "SFQ"\n"))
-#define MSG_QSTATE_UNKNOWNCHAR_CS      _MESSAGE(64275, _("unknwon queue state: %c found in string: %s\n"))
-#define MSG_QSTAT_WRONGGCHAR_C         _MESSAGE(64276, _("wrong character \'%c\' for -g option\n"))
-#define MSG_CQUEUE_UNKNOWNCENTRY_S     _MESSAGE(64277, _("Complex attribute "SFQ" does not exist\n"))
-#define MSG_OBJECT_ALREADYEXIN_SSS     _MESSAGE(64278, _("No modification because "SFQ" already exists in "SFQ" of "SFQ"\n"))
+#define MSG_QSTATE_UNKNOWNCHAR       _MESSAGE(64275, _("unknwon queue state\n"))
 
 /*
 ** sge_conf.c
@@ -282,7 +280,6 @@
 #define MSG_CONF_USING_SS              _MESSAGE(64300, _("using "SFQ" for "SFN"\n"))
 #define MSG_CONF_NOCONFIGFROMMASTER    _MESSAGE(64301, _("could not get configuration from qmaster - using defaults\n"))
 #define MSG_CONF_NEITHERSGECODGRDSETTINGSGE _MESSAGE(64302, _("neither SGE nor COD nor GRD environment for jobs configured, setting SGE environment\n"))
-#define MSG_CENTRY_QINOTALLOWED        _MESSAGE(64303, _("Queue instance names are not allowed in -l resource requests\n"))
-#define MSG_OBJECT_VALUENOTULONG_S     _MESSAGE(64304, _(SFQ" is not an u_long32 value\n"))
+#define MSG_CONF_INVALIDREPORTING_FLUSH_TIME_S  _MESSAGE(64303, _("invalid reporting_flush_time settings: "SFQ"\n"))
 
 #endif /* __MSG_SGEOBJLIB_H */

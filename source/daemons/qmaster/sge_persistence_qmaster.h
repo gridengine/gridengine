@@ -33,8 +33,6 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_eventL.h"
-#include "sge_qmaster_timed_event.h"
-
 
 bool
 sge_initialize_persistence(lList **answer_list);
@@ -43,7 +41,8 @@ bool
 sge_shutdown_persistence(lList **answer_list);
 
 void
-spooling_trigger_handler(te_event_t anEvent);
+deliver_spooling_trigger(u_long32 type, u_long32 when, 
+                         u_long32 uval0, u_long32 uval1, const char *key);
 
 bool
 sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event type, 

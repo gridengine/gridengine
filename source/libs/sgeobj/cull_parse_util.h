@@ -72,6 +72,5 @@ int uni_print_list(FILE *fp, char *buff, u_long32 max_len, const lList *lp, int 
 
 int fprint_cull_list(FILE *fp, char *str, lList *lp, int fi); 
 int fprint_thresholds(FILE *fp, char *str, lList *thresholds, int print_slots); 
-int fprint_resource_utilizations(FILE *fp, char *str, lList *thresholds, int print_slots); 
 
 #endif /* __CULL_PARSE_UTIL_H */

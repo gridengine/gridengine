@@ -33,7 +33,10 @@
 #include <errno.h>
 #include <signal.h>
 #include <string.h>
+
+#if defined(SGE_MT)
 #include <pthread.h>
+#endif
 
 #ifdef WIN32NATIVE
 #	include "win32nativetypes.h"
@@ -60,8 +63,11 @@
 #include "sge_feature.h"
 #include "sge_bootstrap.h"
 
+
 static void default_exit_func(int i);
+#if defined(SGE_MT)
 static void gdi_init_mt(void);
+#endif
 
 struct gdi_state_t {
    /* gdi request base */
@@ -78,8 +84,15 @@ struct gdi_state_t {
    char     cached_master_name[MAXHOSTLEN];
 };
 
+#if defined(SGE_MT)
 static pthread_key_t   gdi_state_key;
+#else
+static struct gdi_state_t gdi_state_opaque = {
+  0, 1, 1, COMMD_UNKNOWN, 0, 0, 0, "" };
+struct gdi_state_t *gdi_state = &gdi_state_opaque;
+#endif
 
+#if defined(SGE_MT)
 static pthread_once_t gdi_once_control = PTHREAD_ONCE_INIT;
 
 static void gdi_state_destroy(void* state) {
@@ -96,6 +109,9 @@ void gdi_once_init(void) {
 
    bootstrap_mt_init();
    feature_mt_init();
+
+   /* commlib */
+   commlib_mt_init();
 
    /* sec */
 #ifdef SECURE
@@ -118,6 +134,9 @@ static void gdi_state_init(struct gdi_state_t* state) {
    state->reread_qmaster_file = 0;
    strcpy(state->cached_master_name, "");
 }
+#endif
+
+
 
 /****** gid/gdi_setup/gdi_mt_init() ************************************************
 *  NAME
@@ -296,7 +315,10 @@ int sge_gdi_setup(const char *programname, lList **alpp)
    DENTER(TOP_LAYER, "sge_gdi_setup");
 
    /* initialize libraries */
+#if defined(SGE_MT)
    pthread_once(&gdi_once_control, gdi_once_init);
+#endif
+
    if (gdi_state_get_made_setup()) {
       answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING, "GDI already setup\n");
       DEXIT;
@@ -315,7 +337,6 @@ int sge_gdi_setup(const char *programname, lList **alpp)
    lInit(nmv);
 
    if (sge_setup(uti_state_get_mewho(), alpp)) {
-      answer_list_output (alpp);
       DEXIT;
       return AE_QMASTER_DOWN;
    }
@@ -330,12 +351,8 @@ int sge_gdi_setup(const char *programname, lList **alpp)
 
    /* check if master is alive */
    if (gdi_state_get_isalive()) {
-      DEXIT;  /* TODO: shall we rework the gdi function return values ? CR */
-      if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) {
-         return AE_QMASTER_DOWN;
-      } else {
-         return AE_OK;
-      }
+      DEXIT;
+      return check_isalive(sge_get_master(0));
    }
 
    DEXIT;
@@ -383,7 +400,10 @@ int sge_gdi_param(int param, int intval, char *strval)
    DENTER(TOP_LAYER, "sge_gdi_param");
 
 /* initialize libraries */
+#if defined(SGE_MT)
    pthread_once(&gdi_once_control, gdi_once_init);
+#endif
+
    if (gdi_state_get_made_setup()) {
       DEXIT;
       return AE_ALREADY_SETUP;
@@ -414,7 +434,8 @@ int sge_gdi_param(int param, int intval, char *strval)
 static void default_exit_func(int i) 
 {
    sge_security_exit(i); 
-   cl_com_cleanup_commlib();
+
+   leave_commd();  /* tell commd we're going */
 }
 
 /****** gdi/setup/sge_gdi_shutdown() ******************************************
@@ -435,8 +456,11 @@ int sge_gdi_shutdown()
 {
    DENTER(TOP_LAYER, "sge_gdi_shutdown");
 
-   /* initialize libraries */
+/* initialize libraries */
+#if defined(SGE_MT)
    pthread_once(&gdi_once_control, gdi_once_init);
+#endif
+
    default_exit_func(0);
 
    DEXIT;

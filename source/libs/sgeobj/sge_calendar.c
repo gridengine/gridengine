@@ -41,6 +41,7 @@
 #include "sge_log.h"
 #include "sge_string.h"
 #include "sgermon.h"
+#include "time_event.h"
 #include "sge_c_gdi.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_qmod_qmaster.h"
@@ -52,10 +53,14 @@
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_calendar.h"
+
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 #include "msg_qmaster.h"
 
+#ifdef QIDL
+   #include "qidl_c_gdi.h"
+#endif
 
 enum {
    DOT = 1,
@@ -1933,24 +1938,3 @@ calendar_is_referenced(const lListElem *calendar, lList **answer_list,
    return ret;
 }
 
-/* -----------------------------
-   
-   build up a generic cal object
-
-   returns 
-      NULL on error
-
-*/
-lListElem* sge_generic_cal(char *cal_name)
-{
-   lListElem *calp;
-
-   DENTER(TOP_LAYER, "sge_generic_cal");
-
-   calp = lCreateElem(CAL_Type);
-
-   lSetString(calp, CAL_name, cal_name?cal_name:"template");
-
-   DEXIT;
-   return calp;
-}

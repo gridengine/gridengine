@@ -38,7 +38,7 @@ Qmon*qmon_tov.allowShellResize: True
 !! Ticket Overview Layout 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*tov_layout.autoUnmanage:   False
-Qmon*tov_layout.dialogTitle:    @{QMON +++ Policy Configuration}
+Qmon*tov_layout.dialogTitle:    @{QMON +++ Ticket Overview}
 !Qmon*tov_layout.fontList:       $dialog_font
 
 Qmon*tov_layout.xmtChildren: \
@@ -47,9 +47,9 @@ Qmon*tov_layout.xmtChildren: \
                      functional_tickets_field = total_functional_tickets, \
                      weight_deadline=weight_deadline, \
                      weight_urgency=weight_urgency, \
-                     weight_priority=weight_priority, \
                      weight_ticket=weight_ticket, \
                      weight_waiting_time=weight_waiting_time, \
+                     halflife_decay_list=halflife_decay_list, \
                      policy_hierarchy = policy_hierarchy; \
    Label             share_tree_tickets_label = label_share_tree_tickets, \
                      functional_tickets_label = label_functional_tickets, \
@@ -66,69 +66,59 @@ Qmon*tov_layout.xmtChildren: \
 Qmon*tov_layout.layout: \
    Fixed Shadowed Out 4 2 LREvenSpaced Row tovcontrol_title { \
       Fixed Centered tov_main_link \
-      Centered Color "$title_fg" "@{@fBPolicy Configuration}" \
+      Centered Color "$title_fg" "@{@fBTicket Overview}" \
    } \
    # \
    Row { \
-      Shadowed Out Col { \
-         FlushLeft Color "blue" "@{@fBPolicy Importance Factor}" \
+      Col { \
          Row { \
-            Col { \
-               Caption tl "@{Priority}" weight_priority \
+            Shadowed Out Col { \
+               Centered Color "blue" "@{@fBCurrent Active Tickets}" \
+               Caption tl "@{@fIShare Tree Tickets}" share_tree_tickets_label \
+               Caption tl "@{@fIFunctional Tickets}" functional_tickets_label \
+               Caption tl "@{@fIOverride Tickets}" override_tickets_label \
+               <>\
             } \
-            Col { \
-               Caption tl "@{Urgency}" weight_urgency \
-            } \
-            Col { \
-               Caption tl "@{Ticket}" weight_ticket \
+            Shadowed Out Col { \
+               Centered Color "blue" "@{@fBEdit Tickets}" \
+               Caption tl "@{@fITotal Share Tree Tickets}" share_tree_tickets_field \
+               Caption tl "@{@fITotal Functional Tickets}" functional_tickets_field \
+               <>\
             } \
          } \
-         = \
-         = \
-         Col { \
-            FlushLeft Color "blue" "@{@fBUrgency Policy}" \
-            Caption tl "@{Weight Deadline}" \
-               weight_deadline \
-            Caption tl "@{Weight Waiting Time}" \
-               weight_waiting_time \
-         } \
-         = \
-         Col { \
-            FlushLeft Color "blue" "@{@fBTicket Policy}" \
-            # \
-            Row { \
-               Col { \
-                  FlushLeft "@{Current Active Tickets}" \
-                  ## \
-                  Caption tl "@{@fIShare Tree Tickets}" share_tree_tickets_label \
-                  Caption tl "@{@fIFunctional Tickets}" functional_tickets_label \
-                  Caption tl "@{@fIOverride Tickets}" override_tickets_label \
-                  <>\
-               } \
-               | \
-               Col { \
-                  FlushLeft "@{Edit Tickets}" \
-                  <>\
-                  Caption tl "@{@fITotal Share Tree Tickets}" share_tree_tickets_field \
-                  Caption tl "@{@fITotal Functional Tickets}" functional_tickets_field \
-               } \
+         Shadowed Out Col { \
+            Shadowed Out Even Equal Row { \
+               Caption tl "@{Weight Urgency Policy}" \
+                  weight_urgency \
+               Caption tl "@{Weight Ticket Policy}" \
+                  weight_ticket \
             } \
-            = \
-            share_override_ticket \
-            share_functional_ticket \
-            Caption tl "@{Maximum Functional Jobs}" \
-               Row { max_functional_jobs <> } \
-            Caption tl "@{Maximum Pending Tasks Per Job}" \
-               Row { max_pending_tasks_per_job <> }\
-            Caption tl "@{Ticket Policy Hierarchy}" \
-               policy_hierarchy \
-         } \
-         = \
-         Equal Even Row { \
-            tov_users_for_deadline \
-            tov_share_tree_policy \
-            tov_functional_policy \
-            tov_override_policy \
+            Shadowed Out Col { \
+               Centered Color "blue" "@{@fBTicket Policy}" \
+               share_override_ticket \
+               share_functional_ticket \
+               Caption tl "@{Maximum Functional Jobs}" \
+                  max_functional_jobs \
+               Caption tl "@{Maximum Pending Tasks Per Job}" \
+                  max_pending_tasks_per_job \
+               Caption tl "@{Halflife Decay List}" \
+                  halflife_decay_list \
+               Caption tl "@{Policy Hierarchy}" \
+                  policy_hierarchy \
+            } \
+            Shadowed Out Col { \
+               Centered Color "blue" "@{@fBUrgency Policy}" \
+               Caption tl "@{Weight Deadline}" \
+                  weight_deadline \
+               Caption tl "@{Weight Waiting Time}" \
+                  weight_waiting_time \
+            } \
+            Equal Even Row { \
+               tov_users_for_deadline \
+               tov_share_tree_policy \
+               tov_functional_policy \
+               tov_override_policy \
+            } \
          } \
       } \
       Fixed Shadowed Out Col { \
@@ -178,14 +168,6 @@ Qmon*tov_layout*share_override_ticket.alignment:      ALIGNMENT_BEGINNING
 
 Qmon*tov_layout*share_functional_ticket.labelString:  @{Share Functional Tickets}
 Qmon*tov_layout*share_functional_ticket.alignment:    ALIGNMENT_BEGINNING
-
-Qmon*tov_layout*max_functional_jobs.minimum: 0
-Qmon*tov_layout*max_functional_jobs.spinboxStyle: SPINBOX_STACKED_RIGHT
-Qmon*tov_layout*max_functional_jobs.buttonSizeFixed: True
-Qmon*tov_layout*max_functional_jobs.columns: 5
-Qmon*tov_layout*max_functional_jobs.spinboxUseClosestValue: True
-Qmon*tov_layout*max_functional_jobs.value: 0
-Qmon*tov_layout*max_functional_jobs.incrementLarge: 10
 
 Qmon*tov_layout*max_pending_tasks_per_job.minimum: 0
 Qmon*tov_layout*max_pending_tasks_per_job.spinboxStyle: SPINBOX_STACKED_RIGHT

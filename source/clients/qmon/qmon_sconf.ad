@@ -90,9 +90,9 @@ Qmon*sconf_general.xmtChildren: \
                   sconf_load_formula = load_formula; \
    XmtChooser     sconf_queue_sort_method = queue_sort_method; \
    XmtChooser     sconf_job_info; \
+   XmToggleButton sconf_user_sort = user_sort; \
    Spinbox        sconf_flush_submit_secs = flush_submit_secs, \
-                  sconf_flush_finish_secs = flush_finish_secs, \
-                  sconf_max_reservation = max_reservation; \
+                  sconf_flush_finish_secs = flush_finish_secs; \
    XmPushButton   sconf_schedule_intervalPB, sconf_reprioritize_intervalPB;
 
 
@@ -120,6 +120,7 @@ Qmon*sconf_general.layout: \
             Fixed Centered sconf_queue_sort_method \
             <> \
          } \
+         Fixed Centered sconf_user_sort \
          Caption tl "@{@fBJob Scheduling Information}" Row { \
             Fixed Centered sconf_job_info \
             Centered sconf_job_range \
@@ -127,7 +128,6 @@ Qmon*sconf_general.layout: \
          Fixed Caption tl "@{@fBLoad Formula}" sconf_load_formula \
          Fixed Caption tl "@{@fBFlush Submit Seconds}" sconf_flush_submit_secs \
          Fixed Caption tl "@{@fBFlush Finish Seconds}" sconf_flush_finish_secs \
-         Fixed Caption tl "@{@fBMaximum Reservation}" sconf_max_reservation \
          Fixed Caption tl "@{@fBParams}" sconf_sc_params \
       } \
    }
@@ -158,18 +158,14 @@ Qmon*sconf_general*sconf_flush_finish_secs.spinboxUseClosestValue: True
 Qmon*sconf_general*sconf_flush_finish_secs.value: 0
 Qmon*sconf_general*sconf_flush_finish_secs.incrementLarge: 10
 
-Qmon*sconf_general*sconf_max_reservation.minimum: 0
-Qmon*sconf_general*sconf_max_reservation.spinboxStyle: SPINBOX_STACKED_RIGHT
-Qmon*sconf_general*sconf_max_reservation.buttonSizeFixed: True
-Qmon*sconf_general*sconf_max_reservation.columns: 5
-Qmon*sconf_general*sconf_max_reservation.spinboxUseClosestValue: True
-Qmon*sconf_general*sconf_max_reservation.value: 0
-Qmon*sconf_general*sconf_max_reservation.incrementLarge: 10
-
 Qmon*sconf_general*sconf_queue_sort_method.chooserType: ChooserOption
 Qmon*sconf_general*sconf_queue_sort_method.strings: \
    "@{Sort by load}", \
-   "@{Sort by sequence number}"
+   "@{Sort by sequence number}", \
+   "@{Sort by share}"
+
+Qmon*sconf_general*sconf_user_sort.labelString:    @{User Sort}
+Qmon*sconf_general*sconf_user_sort.alignment:      ALIGNMENT_BEGINNING
 
 Qmon*sconf_general*sconf_job_info.chooserType: ChooserOption
 Qmon*sconf_general*sconf_job_info.strings: \
@@ -203,8 +199,8 @@ Qmon*sconf_special*sconf_load_namePB.labelPixmap:       qask
 
 
 Qmon*sconf_special*sconf_load_adjustments.buttonLabels: True
-Qmon*sconf_special*sconf_load_adjustments.rows: 20
-Qmon*sconf_special*sconf_load_adjustments.visibleRows: 20
+Qmon*sconf_special*sconf_load_adjustments.rows: 8
+Qmon*sconf_special*sconf_load_adjustments.visibleRows: 8
 Qmon*sconf_special*sconf_load_adjustments.columns: 2
 Qmon*sconf_special*sconf_load_adjustments.columnWidths: 15, 15
 Qmon*sconf_special*sconf_load_adjustments.columnMaxLengths: 100, 100

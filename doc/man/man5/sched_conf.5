@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/02/26 13:56:27 $     Revision: $Revision: 1.15 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2003/11/13 16:57:14 $     Revision: $Revision: 1.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2004/02/26 13:56:27 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2003/11/13 16:57:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -177,6 +177,24 @@ waits for event reports otherwise.
 \fBSchedule_interval\fP is a time value (see
 .M queue_conf 5
 for a definition of the syntax of time values).
+.SS "\fBuser_sort\fP"
+xxQS_NAMExx usually schedules user jobs corresponding to a first-come-first-served
+policy. In case a user submits a large amount of jobs in very short time,
+this can lead to a rather unfair situation, because all users submitting
+afterwards are blocked until most of the first user's jobs are completed.
+Therefore, xxQS_NAMExx allows to change this policy to the so called
+equal share sort: As soon as a user has a job running his other jobs
+are sorted to the end of the pending jobs list. Thus, the first jobs of all
+other users have comparable chances to find a queue. \fBNote:\fP The
+equal share sort only applies within the same job priority category
+(refer to the \fImp\fP option of the
+.M qsub 1
+and
+.M qalter 1
+commands for more information).
+.PP
+The default for \fBuser_sort\fP is \fBFALSE\fP.
+.\"
 .SS "\fBqueue_sort_method\fP"
 This parameter determines in which order several criteria are taken into
 account to product a sorted queue list. Currently, two settings are valid:
@@ -271,6 +289,13 @@ this parameter.
 .PP
 The relative importance of the project shares in the functional policy.
 Values are of type real.
+.\"
+.SS "\fBweight_jobclass\fP"
+This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
+this parameter.
+.PP
+The relative importance of the job class (i.e. queue) shares in the
+functional policy. Values are of type real.
 .\"
 .SS "\fBweight_department\fP"
 This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
@@ -376,10 +401,6 @@ to the xxQS_NAMExx scheduler. The following values are recognized currently:
 If set, the scheduler logs profiling information summarizing each scheduling 
 run.
 .\"
-.IP "\fIMONITOR\fP"
-If set, the scheduler records information for each scheduling run allowing 
-to reproduce job resources utilization in the file \fI<xxqs_name_sxx_root>/<cell>/common/schedule\fP.\"
-.\"
 .PP
 Changing \fBparams\fP will take immediate effect.
 The default for \fBparams\fP is none.
@@ -398,17 +419,6 @@ and qmon is only based on the submit time, when the reporting is turned off.
 .br
 The reporting should be turned of in a system with very large amount of jobs by
 setting this param to "false". This parameter is only valid in a xxQS_NAME_EExx system. 
-.\"
-.SS "\fBhalflife_decay_list\fP"
-The halflive_decay_list allows to configure different decay rates for the 
-"finished_jobs usage types, which is used in the pending job ticket calculation
-to account for jobs which have just ended. This allows the user the pending jobs
-algorithm to count finished jobs against a user or project for a configurable decayed 
-time period. The default is set so, that finished jobs are not considered. It is also
-used to determine if the job usage has been added to the user or project usage_list.
-.br
-The halflife_decay_list also allows to configure different decay rates for each usage 
-type being tracked (cpu, io, and mem).
 .\"
 .SS "\fBpolicy_hierarchy\fP"
 This parameter sets up a dependency chain of ticket based
@@ -459,38 +469,6 @@ The maximum number of subtasks per pending array job to schedule. This
 parameter exists in order to reduce scheduling overhead. The default value 
 is 50.
 This parameter is only valid in a xxQS_NAME_EExx system.    
-.\"
-.SS "\fBmax_reservation\fP"
-The maximum number of reservations scheduled within a schedule interval. 
-When a runnable job can not be started due to a shortage of resources a 
-reservation can be scheduled instead. A reservation can cover consumable 
-resources with the global host, any execution host and any queue. For 
-parallel jobs reservations are done also for slots resource as specified in
-.M sge_pe 5 . 
-As job runtime the maximum of the time specified with -l h_rt=... or 
--l s_rt=... is assumed. For jobs that have neither of them the default_duration 
-is assumed.
-Reservations prevent jobs of lower priority as specified in 
-.M sge_priority 5
-from utilizing the reserved resource quota during the while of reservation. 
-Jobs of lower priority are allowed to utilize those reserved resources only 
-if their prospective job end is before the start of the reservation (backfilling).
-Reservation is done only for non-immediate jobs (-now no) that request reservation 
-(-R y). If max_reservation is set to "0" no job reservation is done. 
-.sp 1
-Note, that reservation scheduling can be performance consuming and hence reservation 
-scheduling is switched off by default. Since reservation scheduling performance 
-consumption is known to grow with the number of pending jobs use of -R y option 
-is recommended only for those jobs actually queuing for bottleneck resources. 
-Together with the max_reservation parameter this technique can be used to narrow 
-down performance impacts.
-.\"
-.SS "\fBdefault_duration\fP"
-When job reservation is enabled through max_reservation 
-.M sched_conf 5 
-parameter the default duration is assumed as runtime for jobs that have 
-neiter -l h_rt=... nor -l s_rt=... specified. In contrast to a h_rt/s_rt 
-time limit the default_duration is not enforced.
 .\"
 .\"
 .SH FILES

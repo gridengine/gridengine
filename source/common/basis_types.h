@@ -32,6 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <pthread.h>
 #include <sys/types.h>
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__
@@ -81,12 +82,16 @@ typedef enum {
 #define x32c(x)  (unsigned long)(x)
 
 
-#if defined(IRIX)
+#if defined(IRIX6) || defined(IRIX64)
 #define u64 "%lld"
 #define u64c(x)  (unsigned long long)(x)
 #endif
 
-#if defined(HP11) || defined(HP1164)
+#if defined(SUN4)
+#  include <sys/param.h>
+#endif
+
+#if defined(ALPHA) || defined(HP11)
 #  include <limits.h>
 #else
 #  ifndef WIN32NATIVE
@@ -98,7 +103,7 @@ typedef enum {
 extern "C" {
 #endif
 
-#if defined(TARGET_64BIT)
+#if defined(ALPHA) || defined(IRIX6) || defined(CRAY) || defined(SOLARIS64) || defined(NECSX4) || defined(NECSX5) || defined(ALINUX) || defined(DARWIN)
 #  define u_long32 u_int
 #elif defined(WIN32NATIVE)
 #  define u_long32 unsigned long
@@ -110,7 +115,7 @@ extern "C" {
 
 /* set u32 and x32 for 64 or 32 bit machines */
 /* uu32 for strictly unsigned, not nice, but did I use %d for an unsigned? */
-#ifdef TARGET_64BIT
+#if defined(ALPHA) || defined(IRIX6) || defined(CRAY) || defined(SOLARIS64) || defined(NECSX4) || defined(NECSX5) || defined(ALINUX) || defined(DARWIN)
 #  define u32    "%d"
 #  define uu32   "%u"
 #  define x32    "%x"
@@ -128,15 +133,17 @@ extern "C" {
 */
 #define uid_t_fmt pid_t_fmt
 
-#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX)
+#if (defined(SOLARIS) && !defined(SOLARIS64)) || defined(IRIX6)
 #  define pid_t_fmt    "%ld"
 #else
 #  define pid_t_fmt    "%d"
 #endif
 
-#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX) 
+#if (defined(SOLARIS) && !defined(SOLARIS64)) || defined(IRIX6) 
 #  define gid_t_fmt    "%ld"
-#elif defined(LINUX86)
+#elif defined(LINUX5)
+#  define gid_t_fmt    "%hu"
+#elif defined(LINUX6)
 #  define gid_t_fmt    "%u"
 #else
 #  define gid_t_fmt    "%d"
@@ -145,7 +152,7 @@ extern "C" {
 /* _POSIX_PATH_MAX is only 255 and this is less than in most real systmes */
 #define SGE_PATH_MAX    1024  
 
-#define MAX_STRING_SIZE 8192
+#define MAX_STRING_SIZE 2048
 typedef char stringT[MAX_STRING_SIZE];
 
 #define INTSIZE     4           /* (4) 8 bit bytes */
@@ -189,7 +196,13 @@ typedef char stringT[MAX_STRING_SIZE];
 /* non-quoted string not limited intentionally */
 #define SN_UNLIMITED  "%s"
 
-#if defined(HPUX)
+#if defined(SUN4)
+    int setgroups(int ngroups, gid_t gidset[]);
+    int seteuid(uid_t euid);
+    int setegid(gid_t egid);
+#endif
+
+#if defined(HP10) || defined(HP11)
 #  define seteuid(euid) setresuid(-1, euid, -1)
 #  define setegid(egid) setresgid(-1, egid, -1)
 #endif
@@ -232,14 +245,16 @@ typedef char stringT[MAX_STRING_SIZE];
    else \
       variable = pthread_getspecific(key)
 
-#if !defined(FREEBSD)
+#if !defined(AIX42) && !defined(FREEBSD)
 #define HAS_GETPWNAM_R
 #define HAS_GETGRNAM_R
 #define HAS_GETPWUID_R
 #define HAS_GETGRGID_R
 #endif
 
+#if !defined(AIX42)
 #define HAS_LOCALTIME_R
 #define HAS_CTIME_R
+#endif
 
 #endif /* __BASIS_TYPES_H */

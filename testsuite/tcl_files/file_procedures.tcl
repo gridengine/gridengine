@@ -1526,11 +1526,6 @@ proc create_shell_script { scriptfile
       if { [info exists CHECK_COMMD_PORT] } {
          puts $script "   COMMD_PORT=$CHECK_COMMD_PORT"
          puts $script "   export COMMD_PORT"
-         puts $script "   SGE_QMASTER_PORT=$CHECK_COMMD_PORT"
-         puts $script "   export SGE_QMASTER_PORT"
-         set my_execd_port [expr ($CHECK_COMMD_PORT + 1) ]
-         puts $script "   SGE_EXECD_PORT=$my_execd_port"
-         puts $script "   export SGE_EXECD_PORT"
       }
       if { [info exists CHECK_PRODUCT_ROOT] } {
          puts $script "   SGE_ROOT=$CHECK_PRODUCT_ROOT"
@@ -1539,9 +1534,6 @@ proc create_shell_script { scriptfile
       if { $source_settings_file == 1 } {
          puts $script "fi"
       }
-
-      puts $script "SGE_SINGLE_LINE=1"
-      puts $script "export SGE_SINGLE_LINE"
    
       foreach u_env [ array names users_env ] {
          set u_val [set users_env($u_env)] 
@@ -2075,7 +2067,7 @@ proc delete_file { filename } {
  
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
 
-   wait_for_file "$filename" 60 0 0 ;# wait for file, no error reporting!
+   wait_for_file "$filename" 200 0 0 ;# wait for file, no error reporting!
 
    if {[file isdirectory "$CHECK_TESTSUITE_ROOT/testsuite_trash"] != 1} {
       file mkdir "$CHECK_TESTSUITE_ROOT/testsuite_trash"

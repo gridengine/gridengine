@@ -47,6 +47,7 @@
 #include "sge_log.h"
 #include "setup_path.h"
 #include "msg_common.h"
+#include "sge_feature.h"
 #include "sge_stdio.h"
 #include "sge_schedd.h"
 #include "sge_spool.h"
@@ -162,6 +163,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
    FPRINTF((fp, "schedule_interval                %s\n", lGetString(ep, SC_schedule_interval)));
    FPRINTF((fp, "maxujobs                         " u32 "\n", lGetUlong(ep, SC_maxujobs)));
    FPRINTF((fp, "queue_sort_method                %s\n", qsm2str(lGetUlong(ep, SC_queue_sort_method))));
+   FPRINTF((fp, "user_sort                        %s\n", lGetBool(ep, SC_user_sort)?"true":"false"));
    FPRINTF((fp, "job_load_adjustments             "));
    fret = uni_print_list(fp, NULL, 0, lGetList(ep, SC_job_load_adjustments), intprt_as_load_adjustment, delis, 0);
    if (fret < 0) {
@@ -174,35 +176,36 @@ _Insight_set_option("suppress", "READ_DANGLING");
    FPRINTF((fp, "flush_finish_sec                 " u32 "\n", lGetUlong(ep, SC_flush_finish_sec)));
    FPRINTF((fp, "params                           %s\n", lGetString(ep, SC_params)));
    
-   FPRINTF((fp, "reprioritize_interval            %s\n", lGetString(ep, SC_reprioritize_interval)));
-   FPRINTF((fp, "halftime                         " u32 "\n", lGetUlong(ep, SC_halftime)));
-   FPRINTF((fp, "usage_weight_list                "));
-   fret = uni_print_list(fp, NULL, 0, lGetList(ep, SC_usage_weight_list), intprt_as_usage, delis, 0);
-   if (fret < 0) {
-      goto FPRINTF_ERROR;
-   }
-   FPRINTF((fp, "compensation_factor              %.10g\n", lGetDouble(ep, SC_compensation_factor)));
-   FPRINTF((fp, "weight_user                      %.10g\n", lGetDouble(ep, SC_weight_user)));
-   FPRINTF((fp, "weight_project                   %.10g\n", lGetDouble(ep, SC_weight_project)));
-   FPRINTF((fp, "weight_department                %.10g\n", lGetDouble(ep, SC_weight_department)));
-   FPRINTF((fp, "weight_job                       %.10g\n", lGetDouble(ep, SC_weight_job)));
-   FPRINTF((fp, "weight_tickets_functional        " u32 "\n", lGetUlong(ep, SC_weight_tickets_functional)));
-   FPRINTF((fp, "weight_tickets_share             " u32 "\n", lGetUlong(ep, SC_weight_tickets_share)));
+   /* conf values needed for SGEEE */
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      FPRINTF((fp, "reprioritize_interval            %s\n", lGetString(ep, SC_reprioritize_interval)));
+      FPRINTF((fp, "halftime                         " u32 "\n", lGetUlong(ep, SC_halftime)));
+      FPRINTF((fp, "usage_weight_list                "));
+      fret = uni_print_list(fp, NULL, 0, lGetList(ep, SC_usage_weight_list), intprt_as_usage, delis, 0);
+      if (fret < 0) {
+         goto FPRINTF_ERROR;
+      }
+      FPRINTF((fp, "compensation_factor              %.10g\n", lGetDouble(ep, SC_compensation_factor)));
+      FPRINTF((fp, "weight_user                      %.10g\n", lGetDouble(ep, SC_weight_user)));
+      FPRINTF((fp, "weight_project                   %.10g\n", lGetDouble(ep, SC_weight_project)));
+      FPRINTF((fp, "weight_jobclass                  %.10g\n", lGetDouble(ep, SC_weight_jobclass)));
+      FPRINTF((fp, "weight_department                %.10g\n", lGetDouble(ep, SC_weight_department)));
+      FPRINTF((fp, "weight_job                       %.10g\n", lGetDouble(ep, SC_weight_job)));
+      FPRINTF((fp, "weight_tickets_functional        " u32 "\n", lGetUlong(ep, SC_weight_tickets_functional)));
+      FPRINTF((fp, "weight_tickets_share             " u32 "\n", lGetUlong(ep, SC_weight_tickets_share)));
 
-   FPRINTF((fp, "share_override_tickets           %s\n", lGetBool(ep, SC_share_override_tickets)?"true":"false"));
-   FPRINTF((fp, "share_functional_shares          %s\n", lGetBool(ep, SC_share_functional_shares)?"true":"false"));
-   FPRINTF((fp, "max_functional_jobs_to_schedule  " u32 "\n", lGetUlong(ep, SC_max_functional_jobs_to_schedule)));
-   FPRINTF((fp, "report_pjob_tickets              %s\n", lGetBool(ep, SC_report_pjob_tickets)?"true":"false"));
-   FPRINTF((fp, "max_pending_tasks_per_job        " u32 "\n", lGetUlong(ep, SC_max_pending_tasks_per_job)));
-   FPRINTF((fp, "halflife_decay_list              %s\n", lGetString(ep, SC_halflife_decay_list)));
-   FPRINTF((fp, "policy_hierarchy                 %s\n", lGetString(ep, SC_policy_hierarchy)));
-   FPRINTF((fp, "weight_ticket                    %.10g\n", lGetDouble(ep, SC_weight_ticket)));
-   FPRINTF((fp, "weight_waiting_time              %.10g\n", lGetDouble(ep, SC_weight_waiting_time)));
-   FPRINTF((fp, "weight_deadline                  %.10g\n", lGetDouble(ep, SC_weight_deadline)));
-   FPRINTF((fp, "weight_urgency                   %.10g\n", lGetDouble(ep, SC_weight_urgency)));
-   FPRINTF((fp, "weight_priority                  %.10g\n", lGetDouble(ep, SC_weight_priority)));
-   FPRINTF((fp, "max_reservation                  " u32 "\n", lGetUlong(ep, SC_max_reservation)));
-   FPRINTF((fp, "default_duration                 %s\n", lGetString(ep, SC_default_duration)));
+      FPRINTF((fp, "share_override_tickets           %s\n", lGetBool(ep, SC_share_override_tickets)?"true":"false"));
+      FPRINTF((fp, "share_functional_shares          %s\n", lGetBool(ep, SC_share_functional_shares)?"true":"false"));
+      FPRINTF((fp, "max_functional_jobs_to_schedule  " u32 "\n", lGetUlong(ep, SC_max_functional_jobs_to_schedule)));
+      FPRINTF((fp, "report_pjob_tickets              %s\n", lGetBool(ep, SC_report_pjob_tickets)?"true":"false"));
+      FPRINTF((fp, "max_pending_tasks_per_job        " u32 "\n", lGetUlong(ep, SC_max_pending_tasks_per_job)));
+      FPRINTF((fp, "halflife_decay_list              %s\n", lGetString(ep, SC_halflife_decay_list)));
+      FPRINTF((fp, "policy_hierarchy                 %s\n", lGetString(ep, SC_policy_hierarchy)));
+      FPRINTF((fp, "weight_ticket                    %.10g\n", lGetDouble(ep, SC_weight_ticket)));
+      FPRINTF((fp, "weight_waiting_time              %.10g\n", lGetDouble(ep, SC_weight_waiting_time)));
+      FPRINTF((fp, "weight_deadline                  %.10g\n", lGetDouble(ep, SC_weight_deadline)));
+      FPRINTF((fp, "weight_urgency                   %.10g\n", lGetDouble(ep, SC_weight_urgency)));
+   }
 
    if (how != 0) {
       fclose(fp);
@@ -233,6 +236,8 @@ static char *qsm2str(u_long32 qsm_val) {
    switch (qsm_val) {
    case QSM_SEQNUM:
       return "seqno";
+   case QSM_SHARE:
+      return "share";
    default: 
       return "load";
    }
@@ -248,6 +253,8 @@ static int str2qsm(const char *qsm_str)
       return QSM_LOAD;
    if (!strcasecmp(qsm_str, "seqno"))
       return QSM_SEQNUM;
+   if (!strcasecmp(qsm_str, "share"))
+      return QSM_SHARE;
 
    return -1; /* error */
 }
@@ -266,158 +273,161 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
    
    DENTER(TOP_LAYER, "read_schedd_conf_work");
 
-   /* --------- SC_halftime */
-   if (!set_conf_ulong(alpp, clpp, fields, "halftime", ep, SC_halftime)) {
-      DEXIT;
-      return -1;
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      /* --------- SC_halftime */
+      if (!set_conf_ulong(alpp, clpp, fields, "halftime", ep, SC_halftime)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_usage_weight_list */
+      if (!set_conf_deflist(alpp, clpp, fields, "usage_weight_list", ep, 
+               SC_usage_weight_list, UA_Type, intprt_as_usage)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_compensation_factor */
+      if (!set_conf_double(alpp, clpp, fields, "compensation_factor", ep, 
+               SC_compensation_factor, 0)) {
+         DEXIT;
+         return -1;
+      }
+      
+      /* --------- SC_weight_user */
+      if (!set_conf_double(alpp, clpp, fields, "weight_user", ep, 
+               SC_weight_user, 0)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_weight_project */
+      if (!set_conf_double(alpp, clpp, fields, "weight_project", ep, 
+               SC_weight_project, 0)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_share_override_tickets */
+      if (!set_conf_bool(alpp, clpp, fields, "share_override_tickets", ep, 
+               SC_share_override_tickets)) {
+         DEXIT;
+         return -1;
+      }
+      
+      /* --------- SC_share_functional_shares */
+      if (!set_conf_bool(alpp, clpp, fields, "share_functional_shares", ep, 
+               SC_share_functional_shares)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_report_pjob_tickets*/
+      if (!set_conf_bool(alpp, clpp, fields, "report_pjob_tickets", ep, 
+               SC_report_pjob_tickets)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_max_functional_jobs_to_schedule*/
+      if (!set_conf_ulong(alpp, clpp, fields, "max_functional_jobs_to_schedule", ep, 
+               SC_max_functional_jobs_to_schedule)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_max_pending_tasks_per_job */
+      if (!set_conf_ulong(alpp, clpp, fields, "max_pending_tasks_per_job", ep, 
+               SC_max_pending_tasks_per_job)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_halflife_decay_list */
+      if (!set_conf_string(alpp, clpp, fields, "halflife_decay_list", ep, 
+               SC_halflife_decay_list)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_weight_jobclass */
+      if (!set_conf_double(alpp, clpp, fields, "weight_jobclass", ep, 
+               SC_weight_jobclass, 0)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_weight_department */
+      if (!set_conf_double(alpp, clpp, fields, "weight_department", ep, 
+               SC_weight_department,0)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_weight_job */
+      if (!set_conf_double(alpp, clpp, fields, "weight_job", ep, 
+               SC_weight_job, 045)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_weight_tickets_functional */
+      if (!set_conf_ulong(alpp, clpp, fields, "weight_tickets_functional", ep, 
+                           SC_weight_tickets_functional)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_weight_tickets_share */
+      if (!set_conf_ulong(alpp, clpp, fields, "weight_tickets_share", ep, 
+                           SC_weight_tickets_share)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_weight_ticket */
+      if (!set_conf_double(alpp, clpp, fields, "weight_ticket", ep, 
+               SC_weight_ticket, 0)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_weight_waiting_time */
+      if (!set_conf_double(alpp, clpp, fields, "weight_waiting_time", ep, 
+               SC_weight_waiting_time, 0)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_weight_deadline */
+      if (!set_conf_double(alpp, clpp, fields, "weight_deadline", ep, 
+               SC_weight_deadline, 0)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_weight_urgency */
+      if (!set_conf_double(alpp, clpp, fields, "weight_urgency", ep, 
+               SC_weight_urgency, 0)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_reprioritize_interval*/
+      if (!set_conf_timestr(alpp, clpp, fields, "reprioritize_interval", ep, 
+                              SC_reprioritize_interval)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_policy_hierarchy */
+      if (!set_conf_string(alpp, clpp, fields, "policy_hierarchy", ep,
+                           SC_policy_hierarchy)) {
+         DEXIT;
+         return -1;
+      }
    }
 
-   /* --------- SC_usage_weight_list */
-   if (!set_conf_deflist(alpp, clpp, fields, "usage_weight_list", ep, 
-            SC_usage_weight_list, UA_Type, intprt_as_usage)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_compensation_factor */
-   if (!set_conf_double(alpp, clpp, fields, "compensation_factor", ep, 
-            SC_compensation_factor, 0)) {
-      DEXIT;
-      return -1;
-   }
-   
-   /* --------- SC_weight_user */
-   if (!set_conf_double(alpp, clpp, fields, "weight_user", ep, 
-            SC_weight_user, 0)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_weight_project */
-   if (!set_conf_double(alpp, clpp, fields, "weight_project", ep, 
-            SC_weight_project, 0)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_share_override_tickets */
-   if (!set_conf_bool(alpp, clpp, fields, "share_override_tickets", ep, 
-            SC_share_override_tickets)) {
-      DEXIT;
-      return -1;
-   }
-   
-   /* --------- SC_share_functional_shares */
-   if (!set_conf_bool(alpp, clpp, fields, "share_functional_shares", ep, 
-            SC_share_functional_shares)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_report_pjob_tickets*/
-   if (!set_conf_bool(alpp, clpp, fields, "report_pjob_tickets", ep, 
-            SC_report_pjob_tickets)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_max_functional_jobs_to_schedule*/
-   if (!set_conf_ulong(alpp, clpp, fields, "max_functional_jobs_to_schedule", ep, 
-            SC_max_functional_jobs_to_schedule)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_max_pending_tasks_per_job */
-   if (!set_conf_ulong(alpp, clpp, fields, "max_pending_tasks_per_job", ep, 
-            SC_max_pending_tasks_per_job)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_halflife_decay_list */
-   if (!set_conf_string(alpp, clpp, fields, "halflife_decay_list", ep, 
-            SC_halflife_decay_list)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_weight_department */
-   if (!set_conf_double(alpp, clpp, fields, "weight_department", ep, 
-            SC_weight_department,0)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_weight_job */
-   if (!set_conf_double(alpp, clpp, fields, "weight_job", ep, 
-            SC_weight_job, 045)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_weight_tickets_functional */
-   if (!set_conf_ulong(alpp, clpp, fields, "weight_tickets_functional", ep, 
-                        SC_weight_tickets_functional)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_weight_tickets_share */
-   if (!set_conf_ulong(alpp, clpp, fields, "weight_tickets_share", ep, 
-                        SC_weight_tickets_share)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_weight_ticket */
-   if (!set_conf_double(alpp, clpp, fields, "weight_ticket", ep, 
-            SC_weight_ticket, 0)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_weight_waiting_time */
-   if (!set_conf_double(alpp, clpp, fields, "weight_waiting_time", ep, 
-            SC_weight_waiting_time, 0)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_weight_deadline */
-   if (!set_conf_double(alpp, clpp, fields, "weight_deadline", ep, 
-            SC_weight_deadline, 0)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_weight_urgency */
-   if (!set_conf_double(alpp, clpp, fields, "weight_urgency", ep, 
-            SC_weight_urgency, 0)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_weight_priority */
-   if (!set_conf_double(alpp, clpp, fields, "weight_priority", ep, 
-            SC_weight_priority, 0)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_reprioritize_interval*/
-   if (!set_conf_timestr(alpp, clpp, fields, "reprioritize_interval", ep, 
-                           SC_reprioritize_interval)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_policy_hierarchy */
-   if (!set_conf_string(alpp, clpp, fields, "policy_hierarchy", ep,
-                        SC_policy_hierarchy)) {
-      DEXIT;
-      return -1;
-   }
 
    /* --------- SC_schedule_interval */
    if (!set_conf_timestr(alpp, clpp, fields, "schedule_interval", ep, 
@@ -488,6 +498,13 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
       add_nm_to_set(fields, SC_queue_sort_method);
    }
       
+   /* --------- SC_user_sort */
+   if (!set_conf_bool(alpp, clpp, fields, "user_sort", ep, SC_user_sort)) {
+      DEXIT;
+      return -1;
+   }
+ 
+
    /* ---------  SC_job_load_adjustments */
    if (!set_conf_deflist(alpp, clpp, fields, "job_load_adjustments", ep, 
          SC_job_load_adjustments, CE_Type, intprt_as_load_adjustment)) {
@@ -510,23 +527,12 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
    }
 
    /* --------- SC_schedd_job_info */
+
    if (!set_conf_string(alpp, clpp, fields, "schedd_job_info", ep, SC_schedd_job_info)) {
       DEXIT;
       return -1;
    }
 
-   /* --------- SC_max_reservation */
-   if (!set_conf_ulong(alpp, clpp, fields, "max_reservation", ep, SC_max_reservation)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_max_reservation */
-   if (!set_conf_string(alpp, clpp, fields, "default_duration", ep, SC_default_duration)) {
-      DEXIT;
-      return -1;
-   }   
-   
    DEXIT;
    return 0;
 }

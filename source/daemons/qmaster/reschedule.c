@@ -48,6 +48,7 @@
 #include "sge_parse_num_par.h"
 #include "execution_states.h"
 #include "mail.h"
+#include "time_event.h"
 #include "symbols.h"
 #include "sge_time.h"
 #include "reschedule.h"
@@ -72,7 +73,9 @@ u_long32 add_time = 0;
 *     reschedule_unknown_event() -- event handler to reschedule jobs 
 *
 *  SYNOPSIS
-*     void reschedule_unknown_event(te_event_t anEvent)
+*     void reschedule_unknown_event(u_long32 type, u_long32 when, u_long32 
+*                                   timeout, u_long32 not_used2, 
+*                                   char *hostname) 
 *
 *  FUNCTION
 *     This function initiates the automatic rescheduling for certain
@@ -92,28 +95,32 @@ u_long32 add_time = 0;
 *        - qmaster startup (all execution hosts are in unknown state) 
 *
 *  INPUTS
-*     sge_timed_event_t* - timed event
+*     u_long32 type      - TYPE_RESCHEDULE_UNKNOWN_EVENT 
+*     u_long32 when      - time when this function should be triggerd.
+*     u_long32 timeout   - timeout value ("reschedule_unknown") 
+*     u_long32 not_used2 - not used 
+*     char *hostname     - name of the host which went into unknown state 
 *
 *  RESULT
 *     void - none
-*
-*  NOTES
-*     MT-NOTE: reschedule_unknown_event() is NOT MT safe
-*
 *******************************************************************************/
-void reschedule_unknown_event(te_event_t anEvent)
+void reschedule_unknown_event(u_long32 type, u_long32 when, u_long32 timeout,
+                              u_long32 not_used2, const char *hostname) 
 {
    lListElem *qep;            /* QU_Type */
    lList *answer_list = NULL; /* AN_Type */
    lListElem *hep;            /* EH_Type */
    lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
    u_long32 new_timeout = 0;
-   u_long32 timeout = te_get_first_numeric_key(anEvent);
-   const char* hostname = te_get_alphanumeric_key(anEvent);
 
 
    DENTER(TOP_LAYER, "reschedule_unknown_event");
  
+   /*
+    * delete the timer entry which triggers the execution of this function
+    */
+   te_delete(type, hostname, timeout, not_used2);
+
    /*
     * is the automatic rescheduling disabled
     */
@@ -139,14 +146,14 @@ void reschedule_unknown_event(te_event_t anEvent)
       DEXIT;
       goto Error;
    } else if (new_timeout+add_time > timeout) {
-      u_long32 when, delta = 0;
-      te_event_t ev = NULL;
+      u_long32 now;
  
-      delta = new_timeout + add_time;    
-      when = time(NULL) + (delta - timeout);
-      ev = te_new_event(when, TYPE_RESCHEDULE_UNKNOWN_EVENT, ONE_TIME_EVENT, delta, 0, hostname);
-      te_add_event(ev);
-      te_free_event(ev);
+      now = sge_get_gmt();
+      te_add(TYPE_RESCHEDULE_UNKNOWN_EVENT, now + 
+         (new_timeout + add_time - timeout), new_timeout + add_time, 
+         0, hostname);
+      INFO((SGE_EVENT, MSG_RU_TRIGGER_SU, hostname,
+         u32c(new_timeout + add_time - timeout)));
       DEXIT;
       goto Error;
    }
@@ -180,13 +187,11 @@ void reschedule_unknown_event(te_event_t anEvent)
     */
    reschedule_jobs(hep, 0, &answer_list);
    lFreeList(answer_list);
-   
-   free((char*)hostname);
    DEXIT;
    return;
 
 Error:
-   free((char*)hostname);
+   DEXIT;
    return;
 }
  
@@ -1093,23 +1098,19 @@ u_long32 reschedule_unknown_timeout(lListElem *hep)
 ******************************************************************************/
 void reschedule_unknown_trigger(lListElem *hep) 
 {
+   u_long32 now;
    u_long32 timeout;
 
    DENTER(TOP_LAYER, "reschedule_unknown_trigger"); 
-
+   now = sge_get_gmt();
    timeout = reschedule_unknown_timeout(hep);
  
-   if (timeout)
-   {
-      const char *host = lGetHost(hep, EH_name);
-      u_long32 when = time(NULL) + timeout + add_time;
-      te_event_t ev = NULL;
-
-      DPRINTF(("RU: Autorescheduling enabled for host "SFN". ("u32 " sec)\n", host, timeout + add_time));
-      
-      ev = te_new_event(when, TYPE_RESCHEDULE_UNKNOWN_EVENT, ONE_TIME_EVENT, timeout, 0, host);
-      te_add_event(ev);
-      te_free_event(ev);
+   if (timeout) {
+      DPRINTF(("RU: Autorescheduling "
+         "enabled for host "SFN". ("u32
+         " sec)\n", lGetHost(hep, EH_name), timeout + add_time));
+      te_add(TYPE_RESCHEDULE_UNKNOWN_EVENT, now+timeout+add_time, timeout, 0,
+         lGetHost(hep, EH_name));
    }
    DEXIT;
 }       

@@ -146,8 +146,9 @@ proc issue193_setup {} {
    set_config myconfig
 
    puts $CHECK_OUTPUT "disabling all cluster queues"
-   foreach host $CHECK_CORE_EXECD {
-      disable_queue [get_queue_instance "all.q" $host]
+   foreach elem $CHECK_CORE_EXECD {
+      puts "${elem}.q"
+      disable_queue "${elem}.q"
    }
 
    if {[add_operator $ts_user_config(first_foreign_user)] != 0} {
@@ -158,18 +159,24 @@ proc issue193_setup {} {
    puts $CHECK_OUTPUT "using host \"$rerun_host\" for queue with rerun=TRUE"
    puts $CHECK_OUTPUT "using host \"$no_rerun_host\" for queue with rerun=FALSE"
 
+   set new_queue(qname)    $rerun_queue
+   set new_queue(hostname) $rerun_host
    set new_queue(rerun)    "TRUE"
    set new_queue(qtype)    "BATCH INTERACTIVE PARALLEL CHECKPOINTING"
    set new_queue(load_thresholds) "np_load_avg=8.00"
    set new_queue(slots)    "100"
 
-   add_queue $rerun_queue $rerun_host new_queue
+   add_queue new_queue 
  
-   add_queue $rerun_queue2 $no_rerun_host new_queue
+   set new_queue(qname)    $rerun_queue2
+   set new_queue(hostname) $no_rerun_host 
+   add_queue new_queue
 
+   set new_queue(qname)    $no_rerun_queue
+   set new_queue(hostname) $no_rerun_host
    set new_queue(rerun)    "FALSE"
 
-   add_queue $no_rerun_queue  $no_rerun_host new_queue
+   add_queue new_queue
 
    # add checkpointobject for test
    puts $CHECK_OUTPUT "creating checkpointobjects ..."
@@ -177,12 +184,12 @@ proc issue193_setup {} {
    set new_checkpointobj(interface)  "userdefined"
    set new_checkpointobj(when) "r"
    add_checkpointobj "new_checkpointobj"
-   assign_queues_with_ckpt_object $rerun_queue $rerun_host qmod_with_r
+   assign_queues_with_ckpt_object $rerun_queue qmod_with_r
 
    set new_checkpointobj(ckpt_name)  "qmod_without_r"
    set new_checkpointobj(when) "s"
    add_checkpointobj "new_checkpointobj"
-   assign_queues_with_ckpt_object $rerun_queue $rerun_host qmod_without_r
+   assign_queues_with_ckpt_object $rerun_queue qmod_without_r
 
    # add pe_object for test
    puts $CHECK_OUTPUT "creating pe object ..."
@@ -193,8 +200,7 @@ proc issue193_setup {} {
       set new_peobj(allocation_rule) [lindex $pe_alloc_rule $index]
       incr index 1
       add_pe new_peobj
-      assign_queues_with_pe_object $rerun_queue2 $no_rerun_host $new_peobj(pe_name)
-      assign_queues_with_pe_object $rerun_queue $rerun_host $new_peobj(pe_name)
+      assign_queues_with_pe_object "$rerun_queue2 $rerun_queue" $new_peobj(pe_name)
    } 
 
    set_error 0 "ok"
@@ -238,11 +244,10 @@ proc issue193_submit_jobs {} {
 
    set jobs_string ""
    foreach elem $jobs {
-      wait_for_jobstart $elem "Sleeper" 30
-      wait_for_end_of_transfer $elem 30
+      wait_for_jobstart $elem "Sleeper" 300
+      wait_for_end_of_transfer $elem 300
       append jobs_string "$elem "
    }
-   # JG: TODO: here should be some error handling, in case not all jobs start running
 
    puts $CHECK_OUTPUT "running jobs: $jobs_string"
 
@@ -259,12 +264,12 @@ proc issue193_submit_jobs {} {
    set no_sched_jobs "[lindex $jobs 1] [lindex $jobs 3] [lindex $jobs 5 ]"
    puts $CHECK_OUTPUT "jobs $sched_jobs should be pending ..."
    foreach elem $sched_jobs {
-      wait_for_jobpending $elem "Sleeper" 60
+      wait_for_jobpending $elem "Sleeper" 300
    }
    
    puts $CHECK_OUTPUT "jobs $no_sched_jobs should still run ..."
    foreach elem $no_sched_jobs {
-      wait_for_jobstart $elem "Sleeper" 60
+      wait_for_jobstart $elem "Sleeper" 300
    }
 
    set qmod_arg [lindex $jobs 1]
@@ -278,10 +283,9 @@ proc issue193_submit_jobs {} {
    enable_queue $rerun_queue
 
    foreach elem $jobs {
-      wait_for_jobstart $elem "Sleeper" 60
-      wait_for_end_of_transfer $elem 60
+      wait_for_jobstart $elem "Sleeper" 300
+      wait_for_end_of_transfer $elem 300
    }
-
    
    puts $CHECK_OUTPUT "disabling queues $no_rerun_queue and $rerun_queue"
    disable_queue $no_rerun_queue
@@ -294,12 +298,12 @@ proc issue193_submit_jobs {} {
 
    puts $CHECK_OUTPUT "jobs $sched_jobs should be pending ..."
    foreach elem $sched_jobs {
-      wait_for_jobpending $elem "Sleeper" 60
+      wait_for_jobpending $elem "Sleeper" 300
    }
    
    puts $CHECK_OUTPUT "jobs $no_sched_jobs should still run ..."
    foreach elem $no_sched_jobs {
-      wait_for_jobstart $elem "Sleeper" 60
+      wait_for_jobstart $elem "Sleeper" 300
    }
 
    set qmod_arg [lindex $jobs 1]
@@ -307,20 +311,20 @@ proc issue193_submit_jobs {} {
    set result [run_command_as_user "$CHECK_HOST" "$ts_user_config(first_foreign_user)" "qmod" "-f -r $qmod_arg" 1]
    puts $CHECK_OUTPUT $result
    puts $CHECK_OUTPUT "waiting for job $qmod_arg to get in pending state ..."
-   wait_for_jobpending $qmod_arg "Sleeper" 60
+   wait_for_jobpending $qmod_arg "Sleeper" 300
    
    enable_queue $no_rerun_queue
    enable_queue $rerun_queue
 
    foreach elem $jobs {
-      wait_for_jobstart $elem "Sleeper" 60
-      wait_for_end_of_transfer $elem 60
+      wait_for_jobstart $elem "Sleeper" 300
+      wait_for_end_of_transfer $elem 300
    }
 
    # cleanup jobs
    foreach elem $jobs {
       delete_job $elem
-      wait_for_jobend $elem "Sleeper" 60 0
+      wait_for_jobend $elem "Sleeper" 300 0
    }
    set_error 0 "ok"
 }
@@ -557,8 +561,6 @@ proc issue193_pe_jobs {} {
        while { $run == 1 } {
           set job_info [get_standard_job_info $job 1]
           foreach elem $job_info {
-puts $CHECK_OUTPUT [llength $job_info]
-puts $CHECK_OUTPUT $elem
              puts $CHECK_OUTPUT $elem
              if { [string first "MASTER" $elem ] >= 0 } {
                 set master_queue [lindex $elem 7]
@@ -582,13 +584,13 @@ puts $CHECK_OUTPUT $elem
           sleep 1
        }
 
-       if { [string first $rerun_queue $master_queue] == -1 } {
+       if { [string compare $master_queue $rerun_queue] != 0 } {
           puts $CHECK_OUTPUT "\"$master_queue\"\n\"$rerun_queue\""
           add_proc_error "reschedule_pe_jobs" "-1" "job $job: master task is not on queue $rerun_queue, pe $pe"
        }
       
        if { [string compare $pe "reschpe_1"] == 0 } {
-          if { [string first $rerun_queue2 $slave_queue] == -1 } {
+          if { [string compare $slave_queue $rerun_queue2] != 0 } {
              puts $CHECK_OUTPUT "\"$slave_queue\"\n\"$rerun_queue2\""
              add_proc_error "reschedule_pe_jobs" "-1" "job $job: slave task is not on queue $rerun_queue2, pe $pe"
           }
@@ -758,13 +760,14 @@ proc issue193_cleanup {} {
    } 
 
    puts $CHECK_OUTPUT "removing queues ..."
-   del_queue $rerun_queue "" 0 1
-   del_queue $no_rerun_queue "" 0 1
-   del_queue $rerun_queue2 "" 0 1
+   del_queue $rerun_queue
+   del_queue $no_rerun_queue
+   del_queue $rerun_queue2
 
    puts $CHECK_OUTPUT "enabling queues ..."
-   foreach host $CHECK_CORE_EXECD {
-      enable_queue [get_queue_instance "all.q" $host]
+   foreach elem $CHECK_CORE_EXECD {
+      puts "${elem}.q"
+      enable_queue "${elem}.q"
    }
 
    if {[delete_operator $ts_user_config(first_foreign_user)] != 0} {

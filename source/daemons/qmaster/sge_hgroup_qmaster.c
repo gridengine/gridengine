@@ -65,8 +65,6 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-/* EB: ADOC: add comments */
-
 static bool
 hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
                     lListElem *reduced_elem, int sub_command,
@@ -353,6 +351,12 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
                                               before_mod_list, 
                                               &real_add_hosts,
                                               NULL, NULL, NULL);
+#if 1 /* debug */
+                     if (ret) { 
+                        href_list_debug_print(real_add_hosts, "CQ add_host: ");
+                        href_list_debug_print(real_rem_hosts, "CQ rem_host: ");
+                     }
+#endif
                   }
 
                   /*
@@ -369,6 +373,7 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
                      if (new_cqueue != NULL && cqueue_list != NULL) {
                         lAppendElem(cqueue_list, new_cqueue);
                      } else {
+                        /* EB: TODO: Add error message */
                         ret = false;
                      }
                   }
@@ -417,9 +422,10 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
          } 
 
          /*
-          * Client and scheduler code expects existing EH_Type elements
-          * for all hosts used in CQ_hostlist. Therefore it is neccessary
-          * to create all not existing EH_Type elements.
+          * EB:
+          *    Client and scheduler code expects existing EH_Type elements
+          *    for all hosts used in CQ_hostlist. Therefore it is neccessary
+          *    to create all not existing EH_Type elements.
           */
          if (ret) {
             lList *list = *(object_type_get_master_list(SGE_TYPE_EXECHOST));
@@ -459,7 +465,6 @@ hgroup_del(lListElem *this_elem, lList **answer_list,
        */
       if (name != NULL) {
          lList *master_hgroup_list = *(hgroup_list_get_master_list());
-         lList *master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
 #ifndef __SGE_NO_USERMAPPING__
          lList *master_cuser_list = *(cuser_list_get_master_list());
 #endif
@@ -471,36 +476,22 @@ hgroup_del(lListElem *this_elem, lList **answer_list,
          hgroup = hgroup_list_locate(master_hgroup_list, name);
          if (hgroup != NULL) {
             lList *href_list = NULL;
-            lList *qref_list = NULL;
 #ifndef __SGE_NO_USERMAPPING__
             lList *string_list = NULL;
 #endif
 
             /*
-             * Is it still referenced in another hostgroup or cqueue?
+             * Is it still referenced in another hostgroup?
              */
             ret &= hgroup_find_referencees(hgroup, answer_list, 
                                            master_hgroup_list, 
-                                           master_cqueue_list,
-                                           &href_list,
-                                           &qref_list);
+                                           &href_list);
             if (ret) {
                if (href_list != NULL) {
                   dstring string = DSTRING_INIT;
 
                   href_list_append_to_dstring(href_list, &string);
                   ERROR((SGE_EVENT, MSG_HGROUP_REFINHGOUP_SS, name,
-                         sge_dstring_get_string(&string)));
-                  answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
-                                  ANSWER_QUALITY_ERROR);
-                  sge_dstring_free(&string);
-                  ret = false;
-               }
-               if (qref_list != NULL) {
-                  dstring string = DSTRING_INIT;
-
-                  str_list_append_to_dstring(qref_list, &string, ' ');
-                  ERROR((SGE_EVENT, MSG_CQUEUE_REFINHGOUP_SS, name,
                          sge_dstring_get_string(&string)));
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
                                   ANSWER_QUALITY_ERROR);
@@ -597,7 +588,7 @@ hgroup_success(lListElem *hgroup, lListElem *old_hgroup, gdi_object_t *object)
    /*
     * HGRP modify or add event
     */
-   sge_add_event( 0, old_hgroup?sgeE_HGROUP_MOD:sgeE_HGROUP_ADD, 0, 0, 
+   sge_add_event(NULL, 0, old_hgroup?sgeE_HGROUP_MOD:sgeE_HGROUP_ADD, 0, 0, 
                  name, NULL, NULL, hgroup);
    lListElem_clear_changed_info(hgroup);
 
@@ -615,87 +606,50 @@ int
 hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object) 
 {
    bool tmp_ret = true;
-   bool dbret;
    const char *name = lGetHost(this_elem, HGRP_name);
    lList *cqueue_list = lGetList(this_elem, HGRP_cqueue_list);
    lListElem *cqueue = NULL;
-   dstring key_dstring = DSTRING_INIT;
-   lList *spool_answer_list = NULL;
 
    DENTER(TOP_LAYER, "hgroup_spool");
 
-   /* start a transaction for spooling of all affected objects */
-   dbret = spool_transaction(&spool_answer_list, spool_get_default_context(),
-                             STC_begin);
-   answer_list_output(&spool_answer_list);
-   if (!dbret) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_PERSISTENCE_OPENTRANSACTION_FAILED);
-      tmp_ret = false;
-   }
-  
-   if (tmp_ret) {
-      for_each (cqueue, cqueue_list) {
-         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         lListElem *qinstance = NULL;
-         const char *cqname = lGetString(cqueue, CQ_name);
+   /*
+    * EB: TODO: Spooling
+    * 
+    * Spooling for CQ and HGRP is no atomar operation until now!!!
+    * Transactions within the spooling framework may solve this problem.
+    */
+   for_each (cqueue, cqueue_list) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance = NULL;
 
-         for_each(qinstance, qinstance_list) {
-            u_long32 tag = lGetUlong(qinstance, QU_tag);
+      for_each(qinstance, qinstance_list) {
+         u_long32 tag = lGetUlong(qinstance, QU_tag);
 
-            if (tag == SGE_QI_TAG_ADD || tag == SGE_QI_TAG_MOD) {
-               const char *key = sge_dstring_sprintf(&key_dstring, "%s/%s",
-                                                cqname,
-                                                lGetHost(qinstance, QU_qhostname));
-               dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
-                                          qinstance, key, SGE_TYPE_QINSTANCE);
-               answer_list_output(&spool_answer_list);
-
-               if (!dbret) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_PERSISTENCE_WRITE_FAILED_S,
-                                          key);
-                  tmp_ret = false;
-                  break;
-               }
+         if (tag == SGE_QI_TAG_ADD || tag == SGE_QI_TAG_MOD) {
+            if (!spool_write_object(NULL, spool_get_default_context(), 
+                                    qinstance,
+                                    name, SGE_TYPE_QINSTANCE)) {
+               ERROR((SGE_EVENT, MSG_CQUEUE_ERRORWRITESPOOLFILE_S, name));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
+                               ANSWER_QUALITY_ERROR);
+               tmp_ret = false;
+               break;
             }
          }
       }
    }
 
-   sge_dstring_free(&key_dstring);
-
-   if (tmp_ret) {
-      dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
-                                 this_elem, name, SGE_TYPE_HGROUP);
-      answer_list_output(&spool_answer_list);
-      if (!dbret) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_PERSISTENCE_WRITE_FAILED_S,
-                                 name);
-         tmp_ret = false;
-      }
-   }
-
-   /* commit or rollback database transaction */
-   dbret = spool_transaction(&spool_answer_list, spool_get_default_context(),
-                             tmp_ret ? STC_commit : STC_rollback);
-   answer_list_output(&spool_answer_list);
-   if (!dbret) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_PERSISTENCE_CLOSINGTRANSACTION_FAILED);
+   if (tmp_ret && !spool_write_object(answer_list, spool_get_default_context(), 
+                                      this_elem, name, SGE_TYPE_HGROUP)) {
+      ERROR((SGE_EVENT, MSG_HGRP_ERRORWRITESPOOLFORGROUP_S, name));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
+                      ANSWER_QUALITY_ERROR);
       tmp_ret = false;
    }
- 
-   /* commit or rollback hostgroup action */
+
    if (!tmp_ret) {
       hgroup_rollback(this_elem);
    }
-
    DEXIT;
    return tmp_ret ? 0 : 1;
 }

@@ -52,7 +52,6 @@ extern Pixel         TooltipForeground;
 extern Pixel         TooltipBackground;
 extern int           nologo;
 extern int           helpset;
-extern int           qmon_debug;
 
 /* this function is used almost everywhere */
 void qmonMainControlRaise(Widget w, XtPointer cld, XtPointer cad);

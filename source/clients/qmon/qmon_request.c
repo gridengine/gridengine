@@ -623,15 +623,17 @@ int maxlen
             /* try to resolve hostname */
             ret=sge_resolve_hostname(stringval, unique, EH_name);
             switch ( ret ) {
-               case CL_RETVAL_GETHOSTNAME_ERROR:
-                  qmonMessageShow(w, True, "Can't resolve host '%s'", stringval);
+               case COMMD_NACK_UNKNOWN_HOST:
+                  qmonMessageShow(w, True, "Can't resolve host '%s'", 
+                                       stringval);
                   status = False;
                   break;
-               case CL_RETVAL_OK:
+               case CL_OK:
                   strcpy(stringval, unique);
                   break; 
                default:
-                  DPRINTF(("sge_resolve_hostname() failed resolving: %s\n", cl_get_error_text(ret)));
+                  DPRINTF(("sge_resolve_hostname() failed resolving: %s\n",
+                  cl_errstr(ret)));
             }
          }
          else

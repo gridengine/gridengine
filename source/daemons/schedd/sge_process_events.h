@@ -65,8 +65,6 @@ bool
 sge_process_ja_task_event_after(sge_object_type type, sge_event_action action, 
                                 lListElem *event, void *clientdata);
 
-bool sge_process_global_config_event(sge_object_type type, sge_event_action action, 
-                                lListElem *event, void *clientdata);
 bool 
 sge_process_userset_event_after(sge_object_type type, sge_event_action action, 
                                 lListElem *event, void *clientdata);

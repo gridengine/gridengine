@@ -204,7 +204,6 @@ foreach layer ( $layer_name )
 end
 
 setenv SGE_DEBUG_LEVEL "$VAR"
-setenv SGE_ND true
 
 unset VAR
 unset debug 

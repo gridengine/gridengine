@@ -127,6 +127,23 @@ int parsing_type
                                       AULNG_href)) ? -1 : 0;
    }
 
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+
+      /* --------- CQ_fshare */
+      if (ret == 0) {
+         ret = (!set_conf_ulng_attr_list(alpp, clpp, fields, "fshare", ep, 
+                                         CQ_fshare, AULNG_Type, 
+                                         AULNG_href)) ? -1 : 0;
+      }
+
+      /* --------- CQ_oticket */
+      if (ret == 0) {
+         ret = (!set_conf_ulng_attr_list(alpp, clpp, fields, "oticket", ep, 
+                                         CQ_oticket, AULNG_Type, 
+                                         AULNG_href)) ? -1 : 0;
+      }
+   }
+
    /* --------- CQ_rerun */
    if (ret == 0) {
       ret = (!set_conf_bool_attr_list(alpp, clpp, fields, "rerun", ep, 
@@ -393,18 +410,20 @@ int parsing_type
                                          AUSRLIST_href)) ? -1 : 0;
    }
 
-   /* --------- CQ_projects */
-   if (ret == 0) {
-      ret = (!set_conf_prjlist_attr_list(alpp, clpp, fields, "projects", ep,
-                                         CQ_projects, APRJLIST_Type, 
-                                         APRJLIST_href)) ? -1 : 0;
-   }
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      /* --------- CQ_projects */
+      if (ret == 0) {
+         ret = (!set_conf_prjlist_attr_list(alpp, clpp, fields, "projects", ep,
+                                            CQ_projects, APRJLIST_Type, 
+                                            APRJLIST_href)) ? -1 : 0;
+      }
 
-   /* --------- CQ_xprojects */
-   if (ret == 0) {
-      ret = (!set_conf_prjlist_attr_list(alpp, clpp, fields, "xprojects", ep,
-                                         CQ_xprojects, APRJLIST_Type, 
-                                         APRJLIST_href)) ? -1 : 0;
+      /* --------- CQ_xprojects */
+      if (ret == 0) {
+         ret = (!set_conf_prjlist_attr_list(alpp, clpp, fields, "xprojects", ep,
+                                            CQ_xprojects, APRJLIST_Type, 
+                                            APRJLIST_href)) ? -1 : 0;
+      }
    }
 
    /* --------- CQ_load_thresholds */
@@ -905,35 +924,36 @@ write_cqueue(int spool, int how, const lListElem *ep)
          FPRINTF((fp, "NONE\n"));
       }
    }
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      {
+         const lList *str_attr_list = lGetList(ep, CQ_projects);
 
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_projects);
+         FPRINTF((fp, "projects           "));
+         if (str_attr_list != NULL) {
+            dstring string = DSTRING_INIT;
 
-      FPRINTF((fp, "projects           "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         prjlist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
+            prjlist_attr_list_append_to_dstring(str_attr_list, &string);
+            FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+            sge_dstring_free(&string);
+         } else {
+            FPRINTF((fp, "NONE\n"));
+         }
       }
-   
-      str_attr_list = lGetList(ep, CQ_xprojects);
+      {
+         const lList *str_attr_list = lGetList(ep, CQ_xprojects);
 
-      FPRINTF((fp, "xprojects          "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
+         FPRINTF((fp, "xprojects          "));
+         if (str_attr_list != NULL) {
+            dstring string = DSTRING_INIT;
 
-         prjlist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
+            prjlist_attr_list_append_to_dstring(str_attr_list, &string);
+            FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+            sge_dstring_free(&string);
+         } else {
+            FPRINTF((fp, "NONE\n"));
+         }
       }
    }
-
    {
       const lList *str_attr_list = lGetList(ep, CQ_calendar);
 
@@ -963,6 +983,36 @@ write_cqueue(int spool, int how, const lListElem *ep)
          FPRINTF((fp, "default\n"));
       }
  
+   }
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      {
+         const lList *ulng_attr_list = lGetList(ep, CQ_fshare);
+
+         FPRINTF((fp, "fshare             "));
+         if (ulng_attr_list != NULL) {
+            dstring string = DSTRING_INIT;
+
+            ulng_attr_list_append_to_dstring(ulng_attr_list, &string);
+            FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+            sge_dstring_free(&string);
+         } else {
+            FPRINTF((fp, "1\n"));
+         }
+      }
+      {
+         const lList *ulng_attr_list = lGetList(ep, CQ_oticket);
+
+         FPRINTF((fp, "oticket            "));
+         if (ulng_attr_list != NULL) {
+            dstring string = DSTRING_INIT;
+
+            ulng_attr_list_append_to_dstring(ulng_attr_list, &string);
+            FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+            sge_dstring_free(&string);
+         } else {
+            FPRINTF((fp, "1\n"));
+         }
+      }
    }
    {
       const lList *time_attr_list = lGetList(ep, CQ_s_rt);

@@ -1,0 +1,125 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\"
+.\" $RCSfile: lGetType.3,v $     Last Update: $Date: 2001/07/20 08:19:04 $     Revision: $Revision: 1.3 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB      \" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T    \" switch to typewriter font
+.ft CW      \" probably want CW if you don't have TA font
+..
+.\"
+.de TY      \" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M    \" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH GET_FUNCS 3 "$Date: 2001/07/20 08:19:04 $" "xxRELxx" "xxQS_NAMExx List Library"
+.\"
+.SH NAME
+lGet{Type},lGetPos{Type} \- get the field content of type {Type}
+.\"
+.\"
+.SH SYNOPSIS
+.B #include """cull.h"""
+.PP
+\fBint lGetInt( lListElem *element, int fieldname );\fP
+.PP
+.nf
+\fBunsigned long lGetUlong(\fP
+.RS
+\fBlListElem *element,\fP
+\fBint fieldname\fP
+.RE
+.fi
+\fB);\fP
+.PP
+\fBchar* lGetString( lListElem *element, int fieldname );\fP
+.PP
+\fBlList* lGetList( lListElem *element, int fieldname );\fP
+.PP
+\fBfloat lGetFloat( lListElem *element, int fieldname );\fP
+.PP
+\fBdouble lGetDouble( lListElem *element, int fieldname );\fP
+.PP
+\fBchar lGetChar( lListElem *element, int fieldname );\fP
+.PP
+\fBlong lGetLong( lListElem *element, int fieldname );\fP
+.PP
+\fBint lGetPosInt( lListElem *element, int position );\fP
+.PP
+.nf
+\fBunsigned long lGetPosUlong(\fP
+.RS
+\fBlListElem *element,\fP
+\fBint position\fP
+.RE
+.fi
+\fB);\fP
+.PP
+\fBchar* lGetPosString( lListElem *element, int position );\fP
+.PP
+\fBlList* lGetPosList( lListElem *element, int position );\fP
+.PP
+\fBfloat lGetPosFloat( lListElem *element, int position );\fP
+.PP
+\fBdouble lGetPosDouble( lListElem *element, int position );\fP
+.PP
+\fBchar lGetPosChar( lListElem *element, int position );\fP
+.PP
+\fBlong lGetPosLong( lListElem *element, int position );\fP
+.\"
+.\"
+.SH DESCRIPTION
+.IP "\fB{Type} lGet{Type}( element, fieldname )\fP"
+return the content of the field specified by \fBfieldname\fP 
+of list element \fBelement\fP.
+The types of the requested field of list element \fBelement\fP and the type
+{Type} must be equal.
+.IP "\fB{Type} lGetPos{Type}( element, position )\fP"
+return the content of the field specified by \fBposition\fP 
+of list element \fBelement\fP.
+The types of the requested field of list element \fBelement\fP and the type
+{Type} must be equal.
+.\"
+.\"
+.SH "RETURN VALUES"
+.I lGet{Type}
+and
+.I lGetPos{Type}
+return the content of the specified field
+corresponding to its {Type}.
+.\"
+.\"
+.SH ERRORS
+The following possible values can occur for lerrno.
+.IP "\fBLEELEMNULL\fP"
+The element pointer specifying the element is NULL.
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M list_intro 3 ,
+.M lSetInt 3 .
+.\"
+.\"
+.SH COPYRIGHT
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

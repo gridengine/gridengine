@@ -562,7 +562,7 @@ int main(int argc, char *argv[])
    time_t next_prof_output = 0;
    lList *answer_list = NULL;
 
-   DENTER_MAIN(TOP_LAYER, "test_sge_spooling");
+   DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
    /* parse commandline parameters */
    if(argc != 3) {
@@ -578,9 +578,9 @@ int main(int argc, char *argv[])
 
    sge_setup_sig_handlers(QEVENT);
 
-   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
+   if (reresolve_me_qualified_hostname() != CL_OK) {
       SGE_EXIT(1);
-   }
+   }   
 
 #define defstring(str) #str
 

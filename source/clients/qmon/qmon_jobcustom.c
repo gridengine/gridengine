@@ -80,8 +80,6 @@
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
-#include "qstat_printing.h"
-#include "sge_cqueue_qstat.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */
@@ -141,6 +139,8 @@ static htable JobColumnPrintHashTable = NULL;
 static htable NameMappingHashTable = NULL;
 
 #define FIRST_FIELD     6
+/* #define SGEEE_FIELDS    10 */
+#define SGEEE_FIELDS    16
 
 static tJobField job_items[] = {
    { 1, JB_job_number, "@{Id}", 12, 20, PrintJobTaskId }, 
@@ -160,7 +160,6 @@ static tJobField job_items[] = {
    { 0, JB_cwd, "@{CWD}", 10, 30, PrintString },
    { 0, JB_stderr_path_list, "@{StderrPaths}", 15, 100, PrintPathList },
    { 0, JAT_hold, "@{Hold}", 10, 30, PrintHold },
-/*    { 0, JB_reserve, "@{Reserve}", 11, 30, PrintBool }, */
    { 0, JB_merge_stderr, "@{MergeOutput}", 11, 30, PrintBool },
    { 0, JB_mail_options, "@{MailOptions}", 11, 30, PrintMailOptions },
    { 0, JB_mail_list, "@{MailTo}", 15, 30, PrintMailList },
@@ -177,7 +176,7 @@ static tJobField job_items[] = {
    { 0, JAT_scaled_usage_list, "@{IO}", 10, 30, PrintIO },
    { 0, JAT_scaled_usage_list, "@{VMEM}", 10, 30, PrintVMEM },
    { 0, JAT_scaled_usage_list, "@{MAXVMEM}", 10, 30, PrintMAXVMEM },
-/**** EE specific fields *****/
+/**** SGEEE specific fields *****/
    { 0, JAT_tix, "@{Ticket}", 10, 30, PrintDoubleAsUlong},
    { 0, JAT_ntix, "@{N Ticket}", 10, 30, PrintDouble},
    { 0, JAT_oticket, "@{OTicket}", 10, 30, PrintDoubleAsUlong},
@@ -185,13 +184,10 @@ static tJobField job_items[] = {
    { 0, JAT_sticket, "@{STicket}", 10, 30, PrintDoubleAsUlong },
    { 0, JAT_share, "@{Share}", 10, 30, PrintDouble },
    { 0, JB_override_tickets, "@{OverrideTickets}", 15, 30, PrintUlong },
-   { 0, JB_jobshare, "@{JobShare}", 10, 30, PrintUlong },
    { 0, JB_project, "@{Project}", 10, 30, PrintString },
    { 0, JB_department, "@{Department}", 10, 30, PrintString },
    { 0, JB_deadline, "@{Deadline}", 10, 30, PrintTime },
-   { 0, JB_nppri, "@{N Priority}", 10, 30, PrintDouble },
-   { 0, JB_reserve, "@{Reservation}", 10, 30, PrintBool },
-/**** EE urgency specific fields *****/
+/**** SGEEE urgency specific fields *****/
    { 0, JB_nurg, "@{N Urgency}", 10, 30, PrintDouble },
    { 0, JB_urg, "@{Urgency}", 10, 30, PrintDoubleOpti },
    { 0, JB_rrcontr, "@{rrcontr}", 10, 30, PrintDoubleOpti },
@@ -1165,18 +1161,22 @@ int nm
 
    DENTER(GUI_LAYER, "PrintPriority");
 
-   if (!jat) {
-      lListElem *first_elem = lFirst(eleml);
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
+      sprintf(buf, "%d", (int)lGetUlong(ep, nm) - BASE_PRIORITY);
+   } else {
+      if (!jat) {
+         lListElem *first_elem = lFirst(eleml);
 
-      if (object_has_type(first_elem, JAT_Type)) {
-         jat = lFirst(eleml);
-      } else if (object_has_type(first_elem, RN_Type)) {
-         u_long32 task_id = range_list_get_first_id(eleml, NULL);
+         if (object_has_type(first_elem, JAT_Type)) {
+            jat = lFirst(eleml);
+         } else if (object_has_type(first_elem, RN_Type)) {
+            u_long32 task_id = range_list_get_first_id(eleml, NULL);
 
-         jat = job_get_ja_task_template(ep, task_id);       
+            jat = job_get_ja_task_template(ep, task_id);       
+         }
       }
-   }
-   sprintf(buf, "%7.5f", lGetDouble(jat, JAT_prio));
+      sprintf(buf, "%7.5f", lGetDouble(jat, JAT_prio));
+   }   
 
    str = XtNewString(buf);
 
@@ -1428,16 +1428,19 @@ XtPointer cld, cad;
    
    okCB(w, NULL, NULL);
 
-   lSetList(qmonGetPreferences(), PREF_job_filter_resources, 
+   if (!qmon_preferences)
+      qmon_preferences = lCreateElem(PREF_Type);
+
+   lSetList(qmon_preferences, PREF_job_filter_resources, 
                      lCopyList("", jobfilter_resources));
-   lSetList(qmonGetPreferences(), PREF_job_filter_owners, 
+   lSetList(qmon_preferences, PREF_job_filter_owners, 
                      lCopyList("", jobfilter_owners));
-   lSetBool(qmonGetPreferences(), PREF_job_filter_compact, jobfilter_compact);
+   lSetBool(qmon_preferences, PREF_job_filter_compact, jobfilter_compact);
    for (j=FIRST_FIELD; j<XtNumber(job_items); j++) {           
       if (job_items[j].show)
          lAddElemStr(&lp, ST_name, job_items[j].name, ST_Type); 
    }
-   lSetList(qmonGetPreferences(), PREF_job_filter_fields, lp);
+   lSetList(qmon_preferences, PREF_job_filter_fields, lp);
 
    alp = qmonWritePreferences();
 
@@ -1611,6 +1614,8 @@ int how
    DENTER(GUI_LAYER, "qmonWhatSetItems");
 
    num_jobs = XtNumber(job_items);
+   if (!feature_is_enabled(FEATURE_SGEEE))
+      num_jobs -= SGEEE_FIELDS;
 
 #if 0
    if (how == FILL_ALL)
@@ -1746,17 +1751,17 @@ XtPointer cld
    /*
    ** reference to preferences
    */
-   if (qmonGetPreferences()) {
+   if (qmon_preferences) {
       lListElem *field;
       lListElem *ep;
       tJobField *job_item = NULL;
 
-      jobfilter_resources = lCopyList("", lGetList(qmonGetPreferences(), 
+      jobfilter_resources = lCopyList("", lGetList(qmon_preferences, 
                                           PREF_job_filter_resources));
-      jobfilter_owners = lCopyList("", lGetList(qmonGetPreferences(), 
+      jobfilter_owners = lCopyList("", lGetList(qmon_preferences, 
                                           PREF_job_filter_owners));
-      jobfilter_compact = lGetBool(qmonGetPreferences(), PREF_job_filter_compact);
-      jobfilter_fields = lCopyList("", lGetList(qmonGetPreferences(),
+      jobfilter_compact = lGetBool(qmon_preferences, PREF_job_filter_compact);
+      jobfilter_fields = lCopyList("", lGetList(qmon_preferences,
                                           PREF_job_filter_fields));
 
 /* lWriteListTo(jobfilter_resources, stdout); */
@@ -2041,50 +2046,75 @@ int qmonJobFilterArraysCompressed(void)
 int match_queue(
 lList **queue_list,
 lList *request_list,
-lList *centry_list,
-lList *exechost_list 
+lList *complex_list,
+lList *exec_host_list 
 ) {
    lListElem *qep;
    lListElem *dep;
-   lList *filtered_queue_list = NULL;
-   static lCondition *tagged_queues = NULL;
-   static lEnumeration *all_fields = NULL;
-   u_long32 empty_qs = 0; 
 
    DENTER(GUI_LAYER, "match_queue");
 
-   if (!exechost_list) {
-      DPRINTF(("empty exechost_list\n"));
+   if (!exec_host_list) {
+      DPRINTF(("empty exec_host_list\n"));
       DEXIT;
       return False;
    } 
 
-   if (!tagged_queues) {
-      tagged_queues = lWhere("%T(%I == %u)", CQ_Type, CQ_tag, TAG_SHOW_IT);
-      all_fields = lWhat("%T(ALL)", CQ_Type);
-   }
-   centry_list_init_double(centry_list);
+/* lWriteListTo(request_list, stderr); */
 
    /*
    ** remove the queues not fulfilling the request_list
    */
+   qep = lFirst(*queue_list);
+   set_qs_state(QS_STATE_EMPTY);
+   while (qep) {
 
-   /* all queues are selected */
-   cqueue_list_set_tag(*queue_list, TAG_SHOW_IT, true);
+      DPRINTF(("QUEUE %s\n", lGetString(qep, QU_qname)));
+      if (!sge_select_queue(request_list, qep, NULL, exec_host_list, complex_list, 1, NULL, 0, 1)) {
+         dep = qep;
+         qep = lNext(qep);
+         lRemoveElem(*queue_list, dep);
+      }
+      else
+         qep = lNext(qep);
+   }
+   set_qs_state(QS_STATE_FULL);
 
-   if (select_by_resource_list(request_list, exechost_list, *queue_list, centry_list, empty_qs)<0) {
+   /*
+   ** remove the template queue if present
+   */
+   lDelElemStr(queue_list, QU_qname, SGE_TEMPLATE_NAME);
+
+   /*
+   ** fill in requests
+   */
+   if (centry_list_fill_request(request_list, complex_list, false, true, false)) {
+      DPRINTF(("failure in sge_fill_requests()\n"));
       DEXIT;
       return False;
    }
-   if (!is_cqueue_selected(*queue_list)) {
-      *queue_list = lFreeList(*queue_list);
-      DEXIT;
-      return True;
-   }
 
-   filtered_queue_list = lSelect("FQL", *queue_list, tagged_queues, all_fields);  
-   *queue_list = lFreeList(*queue_list);
-   *queue_list = filtered_queue_list;
+/* lWriteListTo(request_list, stderr); */
+
+   /*
+   ** remove the queues not fulfilling the request_list
+   */
+   qep = lFirst(*queue_list);
+   set_qs_state(QS_STATE_EMPTY);
+   while (qep) {
+      
+      if (!sge_select_queue(request_list,qep, NULL, exec_host_list, complex_list, 1, NULL, 0, 1)) {
+         dep = qep;
+         qep = lNext(qep);
+         lRemoveElem(*queue_list, dep);
+      }
+      else
+         qep = lNext(qep);
+   }
+   set_qs_state(QS_STATE_FULL);
+
+   if (lGetNumberOfElem(*queue_list) == 0)
+      *queue_list = lFreeList(*queue_list);
 
    DEXIT;
    return True;
@@ -2167,14 +2197,11 @@ lList *owner_list
 static int is_job_runnable_on_queues(
 lListElem *jep,
 lList *queue_list,
-lList *exechost_list,
-lList *centry_list 
+lList *exec_host_list,
+lList *complex_list 
 ) {
    lListElem *qep;   
    lList *hard_resource_list=NULL;   
-   u_long32 empty_qs = 0; 
-
-   DENTER(GUI_LAYER, "is_job_runnable_on_queues");
 
    hard_resource_list = lGetList(jep, JB_hard_resource_list);
    
@@ -2188,19 +2215,11 @@ lList *centry_list
    /*
    ** see if queues fulfill the request_list of the job
    */
-   /* all queues are selected */
-   cqueue_list_set_tag(queue_list, TAG_SHOW_IT, true);
-
-   if (select_by_resource_list(hard_resource_list, exechost_list, queue_list, centry_list, empty_qs)<0) {
-      DEXIT;
-      return False;
-   }
-
-   if (!is_cqueue_selected(queue_list)) {
-      DEXIT;
-      return False;
-   }
+   for_each(qep, queue_list) {
+      if (sge_select_queue(hard_resource_list,qep, NULL, exec_host_list, complex_list, 1, NULL, 0, 1)) {
+         return True;
+      } 
+   } 
    
-   DEXIT;
-   return True; 
+   return False; 
 }

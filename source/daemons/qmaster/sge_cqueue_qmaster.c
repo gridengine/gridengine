@@ -40,7 +40,6 @@
 
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_time.h"
 #include "sge_conf.h"
 #include "sge_log.h"
 #include "sge_c_gdi.h"
@@ -53,6 +52,7 @@
 #include "sge_job.h"
 #include "sge_ja_task.h"
 #include "sge_qinstance.h"
+#include "sge_qinstance_message.h"
 #include "sge_qinstance_state.h"
 #include "sge_userset.h"
 #include "sge_host.h"
@@ -74,12 +74,8 @@
 #include "spool/classic/read_write_ume.h"
 #include "spool/sge_spooling.h"
 
-#include "sge_reporting_qmaster.h"
-
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-/* EB: ADOC: add commets */
 
 static bool
 cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
@@ -129,27 +125,32 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
    *is_ambiguous = false;
    index = 0;
    while (cqueue_attribute_array[index].cqueue_attr != NoName) {
-      bool tmp_is_ambiguous = false;
-      bool tmp_has_changed_conf_attr = false;
-      bool tmp_has_changed_state_attr = false;
-      const char *matching_host_or_group = NULL;
-      const char *matching_group = NULL;
+      /*
+       * Skip geee attributes in ge mode
+       */
+      if (cqueue_attribute_array[index].is_sgeee_attribute == false ||
+          feature_is_enabled(FEATURE_SGEEE)) {
+         bool tmp_is_ambiguous = false;
+         bool tmp_has_changed_conf_attr = false;
+         bool tmp_has_changed_state_attr = false;
+         const char *matching_host_or_group = NULL;
+         const char *matching_group = NULL;
 
-      qinstance_modify_attribute(ret, answer_list, cqueue, 
-                       cqueue_attribute_array[index].qinstance_attr,
-                       cqueue_attribute_array[index].cqueue_attr, 
-                       cqueue_attribute_array[index].href_attr,
-                       cqueue_attribute_array[index].value_attr,
-                       cqueue_attribute_array[index].primary_key_attr,
-                       &matching_host_or_group,
-                       &matching_group,
-                       &tmp_is_ambiguous, 
-                       &tmp_has_changed_conf_attr,
-                       &tmp_has_changed_state_attr);
+         qinstance_modify_attribute(ret, answer_list, cqueue, 
+                          cqueue_attribute_array[index].qinstance_attr,
+                          cqueue_attribute_array[index].cqueue_attr, 
+                          cqueue_attribute_array[index].href_attr,
+                          cqueue_attribute_array[index].value_attr,
+                          cqueue_attribute_array[index].primary_key_attr,
+                          &matching_host_or_group,
+                          &matching_group,
+                          &tmp_is_ambiguous, 
+                          &tmp_has_changed_conf_attr,
+                          &tmp_has_changed_state_attr);
 
-      DPRINTF(("tmp_is_ambiguous == %d\n", tmp_is_ambiguous));
-      *is_ambiguous |= tmp_is_ambiguous;
-
+         DPRINTF(("tmp_is_ambiguous == %d\n", tmp_is_ambiguous));
+         *is_ambiguous |= tmp_is_ambiguous;
+      }
       index++;
    }
 
@@ -358,7 +359,7 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
             tmp_hosts = lFreeList(tmp_hosts);
          }
 
-#if 0 /* EB: DEBUG */
+#if 1 /* EB: debug */
          if (ret) {
             href_list_debug_print(*add_hosts, "add_hosts: ");
             href_list_debug_print(*rem_hosts, "rem_hosts: ");
@@ -417,7 +418,7 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
          /* 
           * Clear all messages which explain ambiguous state
           */
-         qinstance_message_trash_all_of_type_X(qinstance, QI_AMBIGUOUS);
+         qinstance_message_trash_all_of_type_X(qinstance, QIM_AMBIGUOUS);
 
          /*
           * Handle each cqueue attribute as long as there was no error
@@ -428,64 +429,70 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
             const char *matching_host_or_group = NULL;
             const char *matching_group = NULL;
 
-            int pos = lGetPosViaElem(reduced_elem,
-                                 cqueue_attribute_array[index].cqueue_attr);
-
-
             /*
-             * We try to find changes only for attributes which were 
-             * sent by the client. Only for those attributes 'pos' will
-             * be >= 0.
-             *
-             * There are two situations which make it absolutely necessary
-             * to have a look on ALL attributes:
-             *
-             * 1) refresh_all_values == true
-             *    The hostlist of "cqueue" changed. As a result it
-             *    might be possible that a value for an attribute is
-             *    now ambiguous. 
-             * 
-             * 2) is_ambiguous == true
-             *    The qinstance is currently in the ambiguous state.
-             *    It is not enough to test only modified attributes if
-             *    they are nonambigous. It is also necesssary to check
-             *    if all attributes which are not changed now are
-             *    nonambigous to clear the ambigous-state from qinstance. 
+             * Skip geee attributes in ge mode
              */
-            if (pos >= 0 || refresh_all_values || is_ambiguous) {
-               bool tmp_is_ambiguous = false;
-               bool tmp_has_changed_conf_attr = false;
-               bool tmp_has_changed_state_attr = false;
+            if (cqueue_attribute_array[index].is_sgeee_attribute == false ||
+                feature_is_enabled(FEATURE_SGEEE)) {
+               int pos = lGetPosViaElem(reduced_elem,
+                                    cqueue_attribute_array[index].cqueue_attr);
 
-               ret &= qinstance_modify_attribute(qinstance,
-                          answer_list, cqueue,
-                          cqueue_attribute_array[index].qinstance_attr,
-                          cqueue_attribute_array[index].cqueue_attr,
-                          cqueue_attribute_array[index].href_attr,
-                          cqueue_attribute_array[index].value_attr,
-                          cqueue_attribute_array[index].primary_key_attr,
-                          &matching_host_or_group,
-                          &matching_group,
-                          &tmp_is_ambiguous,
-                          &tmp_has_changed_conf_attr,
-                          &tmp_has_changed_state_attr);
 
-               if (tmp_is_ambiguous) {
-                  /*
-                   * Add a message which explains the reason for
-                   * ambiguous state
-                   */   
-                  sprintf(SGE_EVENT, MSG_ATTR_HASAMBVAL_SSS, 
-                          cqueue_attribute_array[index].name,
-                          matching_host_or_group, matching_group);
-                  qinstance_message_add(qinstance, QI_AMBIGUOUS, SGE_EVENT);
+               /*
+                * We try to find changes only for attributes which were 
+                * sent by the client. Only for those attributes 'pos' will
+                * be >= 0.
+                *
+                * There are two situations which make it absolutely necessary
+                * to have a look on ALL attributes:
+                *
+                * 1) refresh_all_values == true
+                *    The hostlist of "cqueue" changed. As a result it
+                *    might be possible that a value for an attribute is
+                *    now ambiguous. 
+                * 
+                * 2) is_ambiguous == true
+                *    The qinstance is currently in the ambiguous state.
+                *    It is not enough to test only modified attributes if
+                *    they are nonambigous. It is also necesssary to check
+                *    if all attributes which are not changed now are
+                *    nonambigous to clear the ambigous-state from qinstance. 
+                */
+               if (pos >= 0 || refresh_all_values || is_ambiguous) {
+                  bool tmp_is_ambiguous = false;
+                  bool tmp_has_changed_conf_attr = false;
+                  bool tmp_has_changed_state_attr = false;
+
+                  ret &= qinstance_modify_attribute(qinstance,
+                             answer_list, cqueue,
+                             cqueue_attribute_array[index].qinstance_attr,
+                             cqueue_attribute_array[index].cqueue_attr,
+                             cqueue_attribute_array[index].href_attr,
+                             cqueue_attribute_array[index].value_attr,
+                             cqueue_attribute_array[index].primary_key_attr,
+                             &matching_host_or_group,
+                             &matching_group,
+                             &tmp_is_ambiguous,
+                             &tmp_has_changed_conf_attr,
+                             &tmp_has_changed_state_attr);
+
+                  if (tmp_is_ambiguous) {
+                     /*
+                      * Add a message which explains the reason for
+                      * ambiguous state
+                      */   
+                     /* EB: TODO: move to msg file */
+                     sprintf(SGE_EVENT, "waning: "SFQ" has ambiguous value ("SFQ", "SFQ")\n", 
+                             cqueue_attribute_array[index].name,
+                             matching_host_or_group, matching_group);
+                     qinstance_message_add(qinstance, QIM_AMBIGUOUS, SGE_EVENT);
+                  }
+
+                  will_be_ambiguous |= tmp_is_ambiguous;
+                  state_changed |= tmp_has_changed_state_attr;
+                  conf_changed |= tmp_has_changed_conf_attr;
                }
-
-               will_be_ambiguous |= tmp_is_ambiguous;
-               state_changed |= tmp_has_changed_state_attr;
-               conf_changed |= tmp_has_changed_conf_attr;
             }
-            
             index++;
          }
 
@@ -637,9 +644,10 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    }
 
    /*
-    * Client and scheduler code expects existing EH_Type elements
-    * for all hosts used in CQ_hostlist. Therefore it is neccessary
-    * to create all not existing EH_Type elements.
+    * EB:
+    *    Client and scheduler code expects existing EH_Type elements
+    *    for all hosts used in CQ_hostlist. Therefore it is neccessary
+    *    to create all not existing EH_Type elements.
     */
    if (ret) {
       lList *list = *(object_type_get_master_list(SGE_TYPE_EXECHOST));
@@ -669,7 +677,7 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
    /*
     * CQ modify or add event
     */
-   sge_add_event( 0, old_cqueue?sgeE_CQUEUE_MOD:sgeE_CQUEUE_ADD, 0, 0, 
+   sge_add_event(NULL, 0, old_cqueue?sgeE_CQUEUE_MOD:sgeE_CQUEUE_ADD, 0, 0, 
                  lGetString(cqueue, CQ_name), NULL, NULL, cqueue);
 
    /*
@@ -706,11 +714,11 @@ void cqueue_commit(lListElem *cqueue)
       lSetUlong(qinstance, QU_tag, SGE_QI_TAG_DEFAULT);
 
       if (tag == SGE_QI_TAG_ADD) {
-         sge_add_event( 0, sgeE_QINSTANCE_ADD, 0, 0,
+         sge_add_event(NULL, 0, sgeE_QINSTANCE_ADD, 0, 0,
                        name, hostname, NULL, qinstance);
       } else if (tag == SGE_QI_TAG_MOD ||
                  tag == SGE_QI_TAG_MOD_ONLY_CONFIG) {
-         sge_add_event( 0, sgeE_QINSTANCE_MOD, 0, 0,
+         sge_add_event(NULL, 0, sgeE_QINSTANCE_MOD, 0, 0,
                        name, hostname, NULL, qinstance);
       } else if (tag == SGE_QI_TAG_DEL) {
          sge_event_spool(NULL, 0, sgeE_QINSTANCE_DEL,
@@ -734,22 +742,13 @@ int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object)
    int ret = 0;
    const char *name = lGetString(cqueue, CQ_name);
    lListElem *qinstance;
-   dstring key_dstring = DSTRING_INIT;
-   u_long32 now = sge_get_gmt();
-
-   bool dbret;
-   lList *spool_answer_list = NULL;
 
    DENTER(TOP_LAYER, "cqueue_spool");
-   dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
-                              cqueue, name, SGE_TYPE_CQUEUE);
-   answer_list_output(&spool_answer_list);
-
-   if (!dbret) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_PERSISTENCE_WRITE_FAILED_S,
-                              name);
+   if (!spool_write_object(NULL, spool_get_default_context(), cqueue, 
+                           name, SGE_TYPE_CQUEUE)) {
+      ERROR((SGE_EVENT, MSG_CQUEUE_ERRORWRITESPOOLFILE_S, name));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
+                      ANSWER_QUALITY_ERROR);
       ret = 1;
    }
 
@@ -757,28 +756,16 @@ int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object)
       u_long32 tag = lGetUlong(qinstance, QU_tag);
       
       if (tag == SGE_QI_TAG_ADD || tag == SGE_QI_TAG_MOD) {
-         const char *key = 
-               sge_dstring_sprintf(&key_dstring, "%s/%s", name,
-                                   lGetHost(qinstance, QU_qhostname));
-         dbret = spool_write_object(&spool_answer_list, 
-                                    spool_get_default_context(), qinstance,
-                                    key, SGE_TYPE_QINSTANCE);
-         answer_list_output(&spool_answer_list);
-
-         if (!dbret) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_PERSISTENCE_WRITE_FAILED_S,
-                                    key);
+         name = lGetString(qinstance, QU_full_name);
+         if (!spool_write_object(NULL, spool_get_default_context(), qinstance,
+                                 name, SGE_TYPE_QINSTANCE)) {
+            ERROR((SGE_EVENT, MSG_QINSTANCE_ERRORWRITESPOOLFILE_S, name));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
+                            ANSWER_QUALITY_ERROR);
             ret = 1;
          }
-
-         reporting_create_queue_record(NULL, qinstance, now);
       }
    }
-
-   sge_dstring_free(&key_dstring);
-   
    DEXIT;
    return ret;
 }
@@ -802,63 +789,35 @@ int cqueue_del(lListElem *this_elem, lList **answer_list,
             lListElem *qinstance = NULL;
             const char *cq_name = lGetString(cqueue, CQ_name);
             dstring dir = DSTRING_INIT;
-            bool do_del = true;
 
-
-            /*
-             * test if the CQ can be removed
-             */
+            sge_dstring_sprintf(&dir, "%s/%s", QINSTANCES_DIR, cq_name); 
             for_each(qinstance, qinstances) {
-               int slots = qinstance_slots_used(qinstance);
-   
-               if (slots > 0) {
-                  do_del = false;
-                  break; 
+               dstring key = DSTRING_INIT;
+               const char *qi_name = lGetHost(qinstance, QU_qhostname);
+
+               sge_dstring_sprintf(&key, "%s/%s", cq_name, qi_name); 
+               if (sge_event_spool(answer_list, 0, sgeE_QINSTANCE_DEL,
+                                   0, 0, cq_name, qi_name,
+                                   NULL, NULL, NULL, NULL, true, true)) {
+                  ; 
                }
+               sge_dstring_free(&key);
             }
+            sge_rmdir(sge_dstring_get_string(&dir), NULL);
+            sge_dstring_free(&dir);
+            if (sge_event_spool(answer_list, 0, sgeE_CQUEUE_DEL,
+                                0, 0, name, NULL, NULL,
+                                NULL, NULL, NULL, true, true)) {
+               lRemoveElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
+                           cqueue);
 
-            if (do_del) {
-               /*
-                * delete QIs
-                */
-               sge_dstring_sprintf(&dir, "%s/%s", QINSTANCES_DIR, cq_name); 
-               for_each(qinstance, qinstances) {
-                  dstring key = DSTRING_INIT;
-                  const char *qi_name = lGetHost(qinstance, QU_qhostname);
-
-                  sge_dstring_sprintf(&key, "%s/%s", cq_name, qi_name); 
-                  if (sge_event_spool(answer_list, 0, sgeE_QINSTANCE_DEL,
-                                      0, 0, cq_name, qi_name,
-                                      NULL, NULL, NULL, NULL, true, true)) {
-                     ; 
-                  }
-                  sge_dstring_free(&key);
-               }
-               sge_rmdir(sge_dstring_get_string(&dir), NULL);
-               sge_dstring_free(&dir);
-
-               /*
-                * delete CQ
-                */
-               if (sge_event_spool(answer_list, 0, sgeE_CQUEUE_DEL,
-                                   0, 0, name, NULL, NULL,
-                                   NULL, NULL, NULL, true, true)) {
-                  lRemoveElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
-                              cqueue);
-
-                  INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
-                        remote_user, remote_host, name , "cluster queue"));
-                  answer_list_add(answer_list, SGE_EVENT, STATUS_OK,
-                                  ANSWER_QUALITY_INFO);
-               } else {
-                  ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, "cluster queue",
-                         name )); 
-                  answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
-                                  ANSWER_QUALITY_ERROR);
-                  ret = false;
-               }
+               INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
+                     remote_user, remote_host, name , "cluster queue"));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_OK,
+                               ANSWER_QUALITY_INFO);
             } else {
-               ERROR((SGE_EVENT, MSG_QINSTANCE_STILLJOBS)); 
+               ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, "cluster queue",
+                      name )); 
                answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
                                ANSWER_QUALITY_ERROR);
                ret = false;

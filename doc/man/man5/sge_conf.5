@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/02/20 21:09:47 $     Revision: $Revision: 1.26 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2003/10/27 16:51:36 $     Revision: $Revision: 1.23 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/02/20 21:09:47 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2003/10/27 16:51:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -219,8 +219,8 @@ The \fBprocessors\fP string as contained in the queue configuration
 of the master queue (the queue in which the prolog and epilog procedures
 are started).
 .IP "\fI$queue\fP"
-The cluster queue name of the master queue instance, i.e. the cluster 
-queue in which the prolog and epilog procedures are started.
+The master queue, i.e. the queue in which the prolog and epilog procedures
+are started.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
@@ -669,92 +669,12 @@ xxQS_NAME_Cxx.
 .PP
 If set to \fItrue\fB, a xxQS_NAME_EExx
 .M user 5
-must exist to allow for job submission. Jobs are rejected if no corresponding user 
+must exists to allow for job submission. Jobs are rejected if no corresponding user 
 exists. 
-.PP
-If set to \fIauto\fB, a xxQS_NAME_EExx
-.M user 5
-object for the submitting user will automatically be created during
-job submission, if one does not already exist. The \fBauto_user_oticket\fP,
-\fBauto_user_fshare\fP, \fBauto_user_default_project\fP, and
-\fBauto_user_delete_time\fP configuration parameters will be used as
-default attributes of the new
-.M user 5
-object.
 .PP
 Changing \fBenforce_user\fP will take immediate effect.
 The default for \fBenforce_user\fP is \fIfalse\fP.
 .PP
-.PP
-This value is a global configuration parameter only. It cannot be
-overwritten by the execution host local configuration.
-.\"
-.\"
-.SH "\fBauto_user_oticket\fP"
-The number of override tickets to assign to automatically created
-.M user 5
-objects. User objects are created automatically if the
-.B enforce_user
-attribute is set to \fIauto\fP.
-.
-.PP
-Changing
-.B auto_user_oticket
-will affect any newly created user objects, but will not change user
-objects created in the past.
-.PP
-This value is a global configuration parameter only. It cannot be
-overwritten by the execution host local configuration.
-.\"
-.\"
-.SH "\fBauto_user_fshare\fP"
-The number of functional shares to assign to automatically created
-.M user 5
-objects. User objects are created automatically if the
-.B enforce_user
-attribute is set to \fIauto\fP.
-.
-.PP
-Changing
-.B auto_user_fshare
-will affect any newly created user objects, but will not change user
-objects created in the past.
-.PP
-This value is a global configuration parameter only. It cannot be
-overwritten by the execution host local configuration.
-.\"
-.\"
-.SH "\fBauto_user_default_project\fP"
-The default project to assign to automatically created
-.M user 5
-objects. User objects are created automatically if the
-.B enforce_user
-attribute is set to \fIauto\fP.
-.
-.PP
-Changing
-.B auto_user_default_project
-will affect any newly created user objects, but will not change user
-objects created in the past.
-.PP
-This value is a global configuration parameter only. It cannot be
-overwritten by the execution host local configuration.
-.\"
-.\"
-.SH "\fBauto_user_delete_time\fP"
-The number of seconds of inactivity after which automatically created
-.M user 5
-objects will be deleted. User objects are created automatically if the
-.B enforce_user
-attribute is set to \fIauto\fP. If no jobs have been submitted by the
-automatically created user for the specified amount of time, the
-object will automatically be deleted.  A value of 0 can be used to
-indicate that the user object should not
-be automatically deleted.
-.PP
-Changing
-.B auto_user_delete_time
-will affect the deletion time for all users of newly submitted jobs.
 .PP
 This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
@@ -1026,50 +946,6 @@ and
 if rsh and rshd components are used which are provided with xxQS_NAMExx
 (i.e., the \fBrsh_daemon\fP and \fBrsh_command\fP parameters may
 not be changed from the default).
-.\"
-.\"
-.SH "\fBreporting_params\fP"
-Used to define the behaviour of reporting modules in the xxQS_NAMExx 
-qmaster. Changes to the \fBreporting_params\f takes immediate effect.
-The following values are recognized:
-.\"
-.IP "\fIaccounting\fP"
-If this parameter is set to true, the accounting file is written.
-The accounting file is prerequisit for using the \fBqacct\fP command.
-.PP
-.IP "\fIreporting\fP"
-If this parameter is set to true, the reporting file is written.
-The reporting file contains data that can be used for monitoring and analysis,
-like job accounting, job log, host load and consumables, queue status and 
-consumables and sharetree configuration and usage.
-Attention: Depending on the size and load of the cluster, the reporting file can
-become quite large. Only activate the reporting file if you have a process running that will consume the reporting file!
-See 
-.M reporting 5
-for further information about format and contents of the reporting file.
-.PP
-.IP "\fIflush_time\fP"
-Contents of the accounting and the reporting file are buffered in the
-xxQS_NAMExx qmaster and flushed in a fixed interval.
-This interval can be configured with the \fIflush_time\fP parameter.
-It is specified as time value in the format HH:MM:SS.
-Sensible values range from some seconds to one minute. Setting it too low may slow down qmaster, setting it too high will make qmaster consume high amounts of memory for buffering data.
-.PP
-.IP "\fIjoblog\fP"
-If this parameter is set to true, the reporting file will contain job logging 
-information. See
-.M reporting 5 
-for more information about job logging.
-.PP
-.IP "\fIsharelog\fP"
-The xxQS_NAMExx qmaster can dump information about sharetree configuration and use to the reporting file.
-The parameter \fIsharelog\fP sets an interval in which sharetree information will be dumped.
-It is set in the format HH:MM:SS. A value of 00:00:00 configures qmaster not to
-dump sharetree information. Intervals of several minutes up to hours are sensible values for this parameter.
-See 
-.M reporting 5 
-for further information about sharelog.
-.PP
 .\"
 .\"
 .SH "\fBfinished_jobs\fP"

@@ -517,9 +517,8 @@ proc job_state_handling_cleanup  {} {
    global CHECK_PRODUCT_ROOT
 
    puts $CHECK_OUTPUT "do qdel -uall"
-   set catch_result [delete_all_jobs]
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
    puts $CHECK_OUTPUT $catch_result
-
 
    set_error 0 "ok"
 }

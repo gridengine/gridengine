@@ -47,6 +47,7 @@
 #include "sge_string.h"
 #include "sge_prog.h"
 #include "sge_job.h"
+#include "sge_host.h"
 #include "sge_centry.h"
 
 /* scheduling library */
@@ -129,7 +130,7 @@ const char *attr_name
    }
 
    /* resolve hostname */
-   if (sge_resolve_hostname(hostname, unique, EH_name) != CL_RETVAL_OK) {
+   if (sge_resolve_hostname(hostname, unique, EH_name)) {
       fprintf(stderr, MSG_NET_UNKNOWNHOSTNAME_S , hostname);
       DEXIT;
       return -1;
@@ -197,7 +198,7 @@ const char *attr_name
    }
 
    /* resolve hostname */
-   if (sge_resolve_hostname(hostname, unique, EH_name) != CL_RETVAL_OK) {
+   if (sge_resolve_hostname(hostname, unique, EH_name)) {
       fprintf(stderr, MSG_NET_UNKNOWNHOSTNAME_S , hostname);
       DEXIT;
       return NULL;
@@ -314,7 +315,7 @@ u_long32 jobid
    }
 
    /* resolve hostname */
-   if (sge_resolve_hostname(hostname, unique, EH_name) != CL_RETVAL_OK) {
+   if (sge_resolve_hostname(hostname, unique, EH_name)) {
       fprintf(stderr, MSG_NET_UNKNOWNHOSTNAME_S , hostname);
       DEXIT;
       return 0;

@@ -98,48 +98,6 @@ extern char **environ;
 
 /*-------------------------------------------------------------------------*/
 
-typedef struct _tSMEntry {
-   String   job_script;
-   String   job_tasks;
-   String   job_name;
-   String   project;
-   String   ckpt_obj;
-   String   directive_prefix;
-   String   cell;
-   String   account_string;
-   String   pe;
-   lList    *task_range;            /* RN_Type */
-   lList    *job_args;              /* ST_Type */
-   lList    *shell_list;            /* PN_Type */
-   lList    *mail_list;             /* MR_Type */
-   lList    *stdoutput_path_list;   /* PN_Type */
-   lList    *stdinput_path_list;    /* PN_Type */
-   lList    *stderror_path_list;    /* PN_Type */   
-   lList    *hard_resource_list;     
-   lList    *soft_resource_list;
-   lList    *hard_queue_list;       /* QR_Type */
-   lList    *soft_queue_list;       /* QR_Type */
-   lList    *master_queue_list;       /* QR_Type */
-   lList    *env_list;              /* Environment */
-   lList    *ctx_list;              /* Context */
-   lList    *hold_jid;              /* JB_jid_predecessor_list */
-   int      mail_options;
-   int      merge_output;
-   int      priority;
-   int      jobshare;
-   Cardinal execution_time;
-   Cardinal deadline;
-   int      hold;
-   int      now;
-   int      notify;
-   int      reservation;
-   int      restart;
-   int      cwd;
-   int      checkpoint_attr;
-   int      checkpoint_interval;
-   int      verify_mode;
-} tSMEntry;
-
    
 XtResource sm_resources[] = {
    { "job_script", "job_script", XtRString,
@@ -191,10 +149,6 @@ XtResource sm_resources[] = {
       sizeof(int), XtOffsetOf(tSMEntry, priority),
       XtRImmediate, NULL },
 
-   { "jobshare", "jobshare", XtRInt,
-      sizeof(int), XtOffsetOf(tSMEntry, jobshare),
-      XtRImmediate, NULL },
-
    { "restart", "restart", XtRInt,
       sizeof(int), XtOffsetOf(tSMEntry, restart),
       XtRImmediate, NULL },
@@ -205,10 +159,6 @@ XtResource sm_resources[] = {
 
    { "hold", "hold", XtRInt,
       sizeof(int), XtOffsetOf(tSMEntry, hold),
-      XtRImmediate, (XtPointer) 0 },
-
-   { "reservation", "reservation", XtRInt,
-      sizeof(int), XtOffsetOf(tSMEntry, reservation),
       XtRImmediate, (XtPointer) 0 },
 
    { "task_range", "task_range", QmonRTRN_Type,
@@ -438,7 +388,6 @@ static Widget submit_mail = 0;
 static Widget submit_mail_user = 0;
 static Widget submit_mail_userPB = 0;
 static Widget submit_notify = 0;
-static Widget submit_reservation = 0;
 static Widget submit_hold = 0;
 static Widget submit_task_hold = 0;
 static Widget submit_now = 0;
@@ -762,7 +711,6 @@ Widget parent
                           "submit_output_merge", &submit_output_merge,
                           "submit_cwd", &submit_cwd,
                           "submit_notify", &submit_notify,
-                          "submit_reservation", &submit_reservation,
                           "submit_hold", &submit_hold,
                           "submit_task_hold", &submit_task_hold,
                           "submit_now", &submit_now,
@@ -799,8 +747,19 @@ Widget parent
    ** in SGE mode the project field and the deadline time have to be
    ** displayed, otherwise they are unmanaged
    */
-   XtAddCallback(submit_deadlinePB, XmNactivateCallback, 
-                  qmonSubmitDeadline, NULL);
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
+      XtVaGetValues( submit_deadline,
+                     XmtNlayoutIn, &submit_deadline_row,
+                     NULL);
+      XtUnmanageChild(submit_deadline_row);
+      XtUnmanageChild(submit_project);
+      XtUnmanageChild(submit_projectPB);
+   }
+   else {
+      XtAddCallback(submit_deadlinePB, XmNactivateCallback, 
+                     qmonSubmitDeadline, NULL);
+   }
+   
    XtManageChild(submit_layout);
 
    /* callbacks */
@@ -1023,23 +982,25 @@ int submode
    */
    XtSetSensitive(submit_restart, sensitive2);
 
-   /*
-   ** set sensitivity of deadline field
-   */
-   if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
-            uti_state_get_user_name())) {
-      if (sensitive) {      
-         XtSetSensitive(submit_deadline, sensitive2);
-         XtSetSensitive(submit_deadlinePB, sensitive2);
-      }   
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      /*
+      ** set sensitivity of deadline field
+      */
+      if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
+               uti_state_get_user_name())) {
+         if (sensitive) {      
+            XtSetSensitive(submit_deadline, sensitive2);
+            XtSetSensitive(submit_deadlinePB, sensitive2);
+         }   
+         else {
+            XtSetSensitive(submit_deadline, sensitive);
+            XtSetSensitive(submit_deadlinePB, sensitive);
+         }   
+      }
       else {
-         XtSetSensitive(submit_deadline, sensitive);
-         XtSetSensitive(submit_deadlinePB, sensitive);
-      }   
-   }
-   else {
-      XtSetSensitive(submit_deadline, False);
-      XtSetSensitive(submit_deadlinePB, False);
+         XtSetSensitive(submit_deadline, False);
+         XtSetSensitive(submit_deadlinePB, False);
+      }
    }
 
    /*
@@ -1426,12 +1387,10 @@ XtPointer cld, cad;
          JB_job_name,
          JB_job_args,
          JB_priority,
-         JB_jobshare,
          JB_execution_time,
          JB_cwd,
          JB_hard_resource_list,
          JB_soft_resource_list,
-         JB_reserve,
          JB_merge_stderr,
          JB_stdout_path_list,
          JB_stdin_path_list,
@@ -1468,23 +1427,23 @@ XtPointer cld, cad;
       for (i=0; fixed_qalter_fields[i]!= NoName; i++)
          nm_set((int*)qalter_fields, (int)fixed_qalter_fields[i]);
 
-      /* 
-      ** the deadline initiation time 
-      ** can be modified if the user is a deadline user 
-      */
-      qmonMirrorMultiAnswer(USERSET_T, &alp);
-      if (alp) {
-         qmonMessageBox(w, alp, 0);
-         /* set default cursor */
-         XmtDisplayDefaultCursor(w);
-         alp = lFreeList(alp);
-         DEXIT;
-         return;
-      }
+      /* in case of SGEEE the deadline initiation time 
+         can be modified if the user is a deadline user */
+      if (feature_is_enabled(FEATURE_SGEEE)) {
+         qmonMirrorMultiAnswer(USERSET_T, &alp);
+         if (alp) {
+            qmonMessageBox(w, alp, 0);
+            /* set default cursor */
+            XmtDisplayDefaultCursor(w);
+            alp = lFreeList(alp);
+            DEXIT;
+            return;
+         }
 
-      if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
-            uti_state_get_user_name())) 
-         nm_set((int*)qalter_fields, JB_deadline);
+         if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
+               uti_state_get_user_name())) 
+            nm_set((int*)qalter_fields, JB_deadline);
+      }
 
       if (!(what = lIntVector2What(JB_Type, (int*) qalter_fields))) {
          DPRINTF(("lIntVector2What failure\n"));
@@ -1925,9 +1884,7 @@ char *prefix
    data->stderror_path_list = lCopyList("JB_stderr_path_list", 
                                        lGetList(jep, JB_stderr_path_list));
    data->merge_output = lGetBool(jep, JB_merge_stderr);
-/*    data->reserve = lGetBool(jep, JB_reserve); */
    data->priority = lGetUlong(jep, JB_priority) - BASE_PRIORITY;
-   data->jobshare = lGetUlong(jep, JB_jobshare);
    data->execution_time = lGetUlong(jep, JB_execution_time);
    data->deadline = lGetUlong(jep, JB_deadline);
 
@@ -1989,8 +1946,6 @@ char *prefix
    data->now = JOB_TYPE_IS_IMMEDIATE(lGetUlong(jep, JB_type));
 
    data->notify = lGetBool(jep, JB_notify);
-
-   data->reservation = lGetBool(jep, JB_reserve);
 
    data->verify_mode = lGetUlong(jep, JB_verify_suitable_queues);
 
@@ -2158,11 +2113,9 @@ int save
     * process the resources from dialog
     */ 
    lSetUlong(jep, JB_priority, data->priority + (u_long32)BASE_PRIORITY);
-   lSetUlong(jep, JB_jobshare, data->jobshare);
    lSetUlong(jep, JB_execution_time, data->execution_time);
    lSetBool(jep, JB_merge_stderr, data->merge_output);
    lSetBool(jep, JB_notify, data->notify);
-   lSetBool(jep, JB_reserve, data->reservation);
    lSetUlong(jep, JB_restart, data->restart);
    lSetUlong(jep, JB_deadline, data->deadline);
    {
@@ -3303,25 +3256,11 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonToggleHoldNow");
 
    /* hold selected => deselect now) */
-   if (XmToggleButtonGetState(submit_hold) && !SMData.hold) {
+   if(XmToggleButtonGetState(submit_hold) && !SMData.hold)
       XmToggleButtonSetState(submit_now, 0, False);
-      XtSetSensitive(submit_now, False);
-   } else {   
-      XtSetSensitive(submit_now, True);
-   }
-
-   if (XmToggleButtonGetState(submit_now) && !SMData.now) {
+   /* now selected => deselect hold */
+   if(XmToggleButtonGetState(submit_now) && !SMData.now)
       XmToggleButtonSetState(submit_hold, 0, False);
-   }   
 
-   if (XmToggleButtonGetState(submit_now)) {
-      XtSetSensitive(submit_hold, False);
-      XtSetSensitive(submit_reservation, False);
-      XmToggleButtonSetState(submit_reservation, 0, False);
-   } else {
-      XtSetSensitive(submit_hold, True);
-      XtSetSensitive(submit_reservation, True);
-   }
-   
    DEXIT;
 }

@@ -44,7 +44,7 @@ void
 qinstance_add_event(lListElem *this_elem, u_long32 type)
 {
    DENTER(TOP_LAYER, "qinstance_add_event");
-   sge_add_event(0, type, 0, 0, 
+   sge_add_event(NULL, 0, type, 0, 0, 
                  lGetString(this_elem, QU_qname), 
                  lGetHost(this_elem, QU_qhostname), NULL, this_elem);
    DEXIT;
@@ -54,7 +54,7 @@ void
 cqueue_add_event(lListElem *this_elem, u_long32 type)
 {
    DENTER(TOP_LAYER, "cqueue_add_event");
-   sge_add_event( 0, type, 0, 0, 
+   sge_add_event(NULL, 0, type, 0, 0, 
                  lGetString(this_elem, CQ_name), NULL,
                  NULL, this_elem);
    DEXIT;

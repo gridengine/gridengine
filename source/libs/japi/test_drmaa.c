@@ -48,8 +48,6 @@
 #include "sge_answer.h"
 #include "show_job.h"
 #include "japiP.h"
-#include "rmon_monitoring_level.h"
-#include "sgermon.h"
 
 #define JOB_CHUNK 8
 #define NTHREADS 3
@@ -371,20 +369,11 @@ enum {
          DRMAA_V_ARGV
          DRMAA_V_EMAIL
          DRMAA_V_ENV */
-   ST_USAGE_CHECK,
+   ST_USAGE_CHECK
       /* - one thread 
          - submit jobs 
          - wait for jobend
          - print job usage */
-   ST_TRANSFER_FILES_SINGLE_JOB,
-   ST_TRANSFER_FILES_BULK_JOB,
-      /* Set Job InputHost:/InputPath, OutputHost:/OutputPath, ErrorHost:/ErrorPath */
-
-   ST_RESERVATION_FINISH_ORDER,
-      /* ensure three jobs finish in the order foreseen for reservation */
-   ST_BACKFILL_FINISH_ORDER
-      /* ensure three jobs finish in the order foreseen for backfilling */
-            
 };
 
 const struct test_name2number_map {
@@ -395,7 +384,7 @@ const struct test_name2number_map {
 } test_map[] = {
 
    /* all automated tests - ST_* and MT_* tests */
-   { "ALL_AUTOMATED",                            ALL_TESTS,                              3, "<sleeper_job> <exit_arg_job> <email_addr>" },
+   { "ALL_AUTOMATED",                            ALL_TESTS,                              2, "<sleeper_job> <exit_arg_job>" },
 
    /* one application thread - automated tests only */
    { "ST_MULT_INIT",                              ST_MULT_INIT,                              0, "" },
@@ -448,17 +437,7 @@ const struct test_name2number_map {
    /* tests that test_drmaa can't test in an automated fashion (so far) */
    { "ST_DRMAA_JOB_PS",                          ST_DRMAA_JOB_PS,                            1, "<jobid> ..."   },
    { "ST_DRMAA_CONTROL",                         ST_DRMAA_CONTROL,                           3, "DRMAA_CONTROL_* DRMAA_ERRNO_* <jobid> ..." },
-   { "ST_USAGE_CHECK",                           ST_USAGE_CHECK,                             1, "<exit_job>" },
-
-   { "ST_TRANSFER_FILES_SINGLE_JOB",             ST_TRANSFER_FILES_SINGLE_JOB,               6, "<sleeper_job> <file_staging_flags "
-         "{\"i\"|\"o\"|\"e\" }> <merge_stderr {\"y\"|\"n\"}> <[inputhost]:/inputpath> <[outputhost]:/outputpath> <[errorhost]:/errorpath>" },
-
-
-   { "ST_TRANSFER_FILES_BULK_JOB",               ST_TRANSFER_FILES_BULK_JOB,                 6, "<sleeper_job> <file_staging_flags "
-         "{\"i\"|\"o\"|\"e\" }> <<merge_stderr {\"y\"|\"n\"}> [inputhost]:/inputpath> <[outputhost]:/outputpath> <[errorhost]:/errorpath>" },
-
-   { "ST_RESERVATION_FINISH_ORDER",              ST_RESERVATION_FINISH_ORDER,                4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
-   { "ST_BACKFILL_FINISH_ORDER",                 ST_BACKFILL_FINISH_ORDER,                   4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
+   { "ST_USAGE_CHECK",                            ST_USAGE_CHECK,                            1, "<exit_job>" },
 
    { NULL,                                       0 }
 };
@@ -485,7 +464,6 @@ static const char *drmaa_ctrl2str(int control);
 static const char *drmaa_errno2str(int ctrl);
 
 static void report_wrong_job_finish(const char *comment, const char *jobid, int stat);
-static int test_dispatch_order_3jobs(const char *native[3], int reserve);
 
 static int test_case;
 static int is_sun_grid_engine;
@@ -496,8 +474,7 @@ char *sleeper_job = NULL,
      *mirror_job = NULL,
      *input_path = NULL,
      *output_path = NULL,
-     *error_path = NULL,
-     *email_addr = NULL;
+     *error_path = NULL;
 int ctrl_op = -1;
 
 
@@ -522,9 +499,6 @@ static void usage(void)
    fprintf(stderr, "                 the user must have write access to this file at the target machine\n");
    fprintf(stderr, "  <email_addr>   is an email address to which to send \n");
    fprintf(stderr, "                 job completion notices\n");
-   fprintf(stderr, "  <native_spec0> a native specification\n");
-   fprintf(stderr, "  <native_spec1> a native specification\n");
-   fprintf(stderr, "  <native_spec2> a native specification\n");
 
    exit(1);
 }
@@ -535,16 +509,8 @@ int main(int argc, char *argv[])
    int i; 
    char diag[DRMAA_ERROR_STRING_BUFFER];
 
-   DENTER_MAIN(TOP_LAYER, "qsub");
-
    if (argc == 1) 
       usage();
-   
-   /* Print out an adivsory */
-   printf ("The DRMAA test suite is now starting.  Once it has begun execution,\n");
-   printf ("please do not interrupt (CTRL-C) it.  If the program is interrupted\n");
-   printf ("before drmaa_exit() is called, session state information will be\n");
-   printf ("left behind in the JAPI session directory, ~/.sge/session.\n");
 
    /* figure out which DRM system we are using */
    {
@@ -577,7 +543,6 @@ int main(int argc, char *argv[])
       if (test_case == ALL_TESTS) {
          sleeper_job = NEXT_ARGV(&argc, &argv);
          exit_job    = NEXT_ARGV(&argc, &argv);
-         email_addr  = NEXT_ARGV(&argc, &argv);
 
          for (i=1; test_map[i].test_name && test_map[i].test_number != FIRST_NON_AUTOMATED_TEST; i++) {
             test_case = test_map[i].test_number;
@@ -634,9 +599,8 @@ int main(int argc, char *argv[])
 
 static int test(int *argc, char **argv[], int parse_args)
 {
-   bool bBulkJob = false;
-   int  i;
-   int  job_chunk = JOB_CHUNK;
+   int i;
+   int job_chunk = JOB_CHUNK;
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
    drmaa_job_template_t *jt = NULL;
    int drmaa_errno=0;
@@ -2479,6 +2443,7 @@ static int test(int *argc, char **argv[], int parse_args)
          const char *job_argv[4];
          char jobid[1024], new_jobid[1024];
          char buffer[100];
+         char *email_addr = NULL;
          lList *alp, *job_lp;
          lListElem *job_ep;
          FILE *fp;
@@ -2567,8 +2532,7 @@ static int test(int *argc, char **argv[], int parse_args)
          
          if (failed_test) test_failed = 1;
          failed_test = 0;
-         printf("=====================\n");
-
+         
          /*
           * testing job submission state and job name
           */
@@ -2685,7 +2649,6 @@ static int test(int *argc, char **argv[], int parse_args)
          
          if (failed_test) test_failed = 1;
          failed_test = 0;
-         printf("=====================\n");
          
          /*
           * testing working directory, input stream and output stream
@@ -2767,6 +2730,7 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
                continue;
             }
+            free (abs_path);
 
             fscanf(fp, "%s", buffer);
             if (strcmp(buffer, mirror_text)) {
@@ -2782,7 +2746,6 @@ static int test(int *argc, char **argv[], int parse_args)
 
          if (failed_test) test_failed = 1;
          failed_test = 0;
-         printf("=====================\n");
          
          /*
           * testing error path
@@ -2851,6 +2814,7 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
                continue;
             }
+            free (abs_path);
 
             fscanf(fp, "%10c", buffer);
             buffer[10] = '\0';
@@ -2867,7 +2831,6 @@ static int test(int *argc, char **argv[], int parse_args)
          
          if (failed_test) test_failed = 1;
          failed_test = 0;
-         printf("=====================\n");
          
          /*
           * testing join files
@@ -3005,6 +2968,7 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
                continue;
             }
+            free (abs_path);
 
             fscanf(fp, "%14c%*[^\n]\n", buffer);
             buffer[14] = '\0';
@@ -3028,14 +2992,13 @@ static int test(int *argc, char **argv[], int parse_args)
 
          if (failed_test) test_failed = 1;
          failed_test = 0;
-         printf("=====================\n");
          
          /*
           * testing job category
           */
          do {
             printf ("Testing job category\n");
-            printf ("$SGE_ROOT/$SGE_CELL/common/qtask should contain the following entry:\n");
+            printf ("$SGE_ROOT/$SGE_CELL/common/sge_request should contain the following entry:\n");
             printf ("test.cat -N ExitTest -h\n");
             
             /* first test that it works */
@@ -3257,7 +3220,6 @@ static int test(int *argc, char **argv[], int parse_args)
          
          if (failed_test) test_failed = 1;
          failed_test = 0;
-         printf("=====================\n");
          
          /*
           * testing native specification
@@ -3483,7 +3445,6 @@ static int test(int *argc, char **argv[], int parse_args)
 
          if (failed_test) test_failed = 1;
          failed_test = 0;
-         printf("=====================\n");
          
          /*
           * testing start time
@@ -3586,7 +3547,6 @@ static int test(int *argc, char **argv[], int parse_args)
 
          if (failed_test) test_failed = 1;
          failed_test = 0;
-         printf("=====================\n");
          
          /*
           * testing job environment
@@ -3678,7 +3638,6 @@ static int test(int *argc, char **argv[], int parse_args)
 
          if (failed_test) test_failed = 1;
          failed_test = 0;
-         printf("=====================\n");
          
          /*
           * testing email address
@@ -3688,8 +3647,6 @@ static int test(int *argc, char **argv[], int parse_args)
             const char *email[3];
             
             printf ("Testing email address\n");
-            printf ("$SGE_ROOT/$SGE_CELL/common/sge_request should contain the following entry:\n");
-            printf ("-m e\n");
             printf ("Getting job template\n");
             drmaa_allocate_job_template(&jt, NULL, 0);
 
@@ -3750,14 +3707,11 @@ static int test(int *argc, char **argv[], int parse_args)
          /*
           * testing email supression
           */
-         printf("=====================\n");
 
          do {
             const char *email[2];
             
             printf ("Testing email supression\n");
-            printf ("$SGE_ROOT/$SGE_CELL/common/sge_request should contain the following entry:\n");
-            printf ("-m e\n");
             printf ("Getting job template\n");
             drmaa_allocate_job_template(&jt, NULL, 0);
 
@@ -3808,7 +3762,7 @@ static int test(int *argc, char **argv[], int parse_args)
                continue;
             }
 
-            printf ("Check for email to find out if the test failed.\n");
+            printf ("Check for email to find out if the test succeeded.\n");
          } while (0);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
@@ -3888,151 +3842,6 @@ static int test(int *argc, char **argv[], int parse_args)
          
          break;
       }
-   case ST_TRANSFER_FILES_BULK_JOB:
-      bBulkJob = true;
-   case ST_TRANSFER_FILES_SINGLE_JOB:
-      {
-         int aborted, stat, remote_ps;
-         char jobid[100];
-         const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
-         char* szPath;
-         char* szTemp;
-
-         if (parse_args)
-            sleeper_job = NEXT_ARGV(argc, argv);
-
-         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
-            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
-            return 1;
-         }
-         report_session_key();
-       
-         /* submit a working job from a local directory to the execution host */
-         drmaa_allocate_job_template(&jt, NULL, 0);
-         drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, sleeper_job, NULL, 0);
-
-         szTemp = NEXT_ARGV(argc,argv);
-         /*fprintf( stderr, "arg=%s\n", szTemp );*/
-         drmaa_set_attribute(jt, DRMAA_TRANSFER_FILES, szTemp, NULL, 0);
-        
-         szTemp = NEXT_ARGV(argc,argv);
-         /*fprintf( stderr, "arg=%s\n", szTemp );*/
-         drmaa_set_attribute(jt, DRMAA_JOIN_FILES, szTemp, NULL, 0);
-
-         if( !strcmp( (szPath=NEXT_ARGV(argc,argv)), "NULL" )) {
-            szPath="";
-         }
-         drmaa_set_attribute(jt, DRMAA_INPUT_PATH, szPath, NULL, 0);
-         /*fprintf( stderr, "arg=%s\n", szPath );*/
-
-         if( !strcmp( (szPath=NEXT_ARGV(argc,argv)), "NULL" )) {
-            szPath="";
-         }
-         drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH,szPath, NULL, 0);
-         /*fprintf( stderr, "arg=%s\n", szPath );*/
-
-         if( !strcmp( (szPath=NEXT_ARGV(argc,argv)), "NULL" )) {
-            szPath="";
-         }
-         drmaa_set_attribute(jt, DRMAA_ERROR_PATH, szPath, NULL, 0);
-         /*fprintf( stderr, "arg=%s\n", szPath );*/
-
-         if( bBulkJob ) {
-            drmaa_job_ids_t *jobids;
-            int j;
-         
-            if((drmaa_errno=drmaa_run_bulk_jobs(&jobids, jt, 1, 3, 1,
-               diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
-               printf("failed submitting bulk job (%s): %s\n", drmaa_strerror(drmaa_errno), diagnosis);
-               return 1;
-            } 
-
-            printf("submitted bulk job with jobids:\n");
-            for (j=0; j<3; j++) {
-               drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
-               printf("\t \"%s\"\n", jobid);
-            } 
-            drmaa_release_job_ids(jobids);
-
-         } else {
-            /* synchronize with job to finish but do not dispose job finish information */
-            if((drmaa_errno = drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
-                sizeof(diagnosis)-1)) != DRMAA_ERRNO_SUCCESS) {
-               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
-               return 1;
-            }
-         }
-
-         drmaa_delete_job_template(jt, NULL, 0);
-
-         /* synchronize with job to finish but do not dispose job finish information */
-         if ((drmaa_errno = drmaa_synchronize(session_all, DRMAA_TIMEOUT_WAIT_FOREVER, 0, 
-                     diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
-            fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
-            return 1;
-         }
-         printf("synchronized with job finish\n");
-
-         /* get job state */
-         drmaa_errno = drmaa_job_ps(jobid, &remote_ps, diagnosis, sizeof(diagnosis)-1);
-         if (remote_ps != DRMAA_PS_FAILED) {
-            fprintf(stderr, "job \"%s\" is not in failed state: %s\n", 
-                     jobid, drmaa_state2str(remote_ps));
-            return 1;
-         }
-
-         /* wait job */
-         if ((drmaa_errno = drmaa_wait(jobid, NULL, 0, &stat, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, 
-               diagnosis, sizeof(diagnosis)-1)) != DRMAA_ERRNO_SUCCESS) {
-            printf("drmaa_wait() failed %s: %s\n", drmaa_strerror(drmaa_errno), diagnosis);
-            return 1;
-         }
-
-         /* job finish information */
-         drmaa_wifaborted(&aborted, stat, diagnosis, sizeof(diagnosis)-1);
-         if (!aborted) {
-            fprintf(stderr, "job \"%s\" failed but drmaa_wifaborted() returns false\n", 
-                  jobid);
-            return 1;
-         }
-         printf("waited job \"%s\" that never ran\n", jobid);
-
-         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
-            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
-            return 1;
-         }
-      }
-      break;
-
-   case ST_RESERVATION_FINISH_ORDER:
-   case ST_BACKFILL_FINISH_ORDER:
-      {
-         const char *native_spec[3];
-
-         if (parse_args) {
-            sleeper_job    = NEXT_ARGV(argc, argv);
-            native_spec[0] = NEXT_ARGV(argc, argv);
-            native_spec[1] = NEXT_ARGV(argc, argv);
-            native_spec[2] = NEXT_ARGV(argc, argv);
-         }
-
-         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
-            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
-            return 1;
-         }
-         report_session_key();
-
-         if (test_dispatch_order_3jobs(native_spec, test_case==ST_RESERVATION_FINISH_ORDER?1:0)) {
-            return 1;
-         }
-
-         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
-            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
-            return 1;
-         }
-      }
-      break;
-      
    default:
       break;
    }
@@ -4102,12 +3911,12 @@ static drmaa_job_template_t *create_sleeper_job_template(int seconds, int as_bul
 
 #if 0
    if (!as_bulk_job)
-      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID", NULL, 0);
+      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID", NULL, 0);
    else
-      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID."DRMAA_PLACEHOLDER_INCR, NULL, 0);
+      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID."DRMAA_PLACEHOLDER_INCR, NULL, 0);
 #else
    /* no output please */
-   drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":/dev/null", NULL, 0);
+   drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, "/dev/null", NULL, 0);
 #endif
 
    if (in_hold) 
@@ -4521,101 +4330,4 @@ static void report_wrong_job_finish(const char *comment, const char *jobid, int 
                comment, jobid);
       }
    }
-}
-
-
-   /* during wait for job finish ends we examine job order 
-    * and report an error if it's wrong:
-    *
-    * 0   --> 1 --> 2 (reservation) 
-    * 
-    *         An error is returned if reservation job 1 does not finish before job 2 
-    *                           and if high prior job 0 does not finish before job 1
-    *         
-    * 0,2 --> 1       (backfilling)
-    * 
-    *         An error is returned if backfilling job 2 does not finish before job 1
-    *                           and if high prior job 0 does not finish before job 1
-    * 
-    */
-static int test_dispatch_order_3jobs(const char *native[3], int reserve)
-{
-   char diagnosis[DRMAA_ERROR_STRING_BUFFER];
-   char *all_jobids[3];
-   char jobid[100];
-   drmaa_job_template_t *jt;
-   int drmaa_errno, i, n = 3, pos = 0;
-   int stat;
-
-   /* submit jobs in hold */
-   for (i=0; i<3; i++) {
-      jt = create_sleeper_job_template(20, 0, 1);
-      drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, native[i], NULL, 0);
-      if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
-         fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
-         return -1;
-      }
-      all_jobids[pos++] = strdup(jobid);
-      drmaa_delete_job_template(jt, NULL, 0);
-   }
-   all_jobids[pos] = NULL;
-
-   /* release all three jobs in one operation to ensure they get runnable at once for scheduler */
-   if (drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_RELEASE, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
-      fprintf(stderr, "drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_RELEASE) failed: %s\n", diagnosis);
-      return -1;
-   }
-
-   do {
-      drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid, sizeof(jobid)-1, &stat, 
-                     DRMAA_TIMEOUT_WAIT_FOREVER, NULL, NULL, 0);
-      if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
-
-         printf("waited job \"%s\"\n", jobid);
-
-         /* map jobid to job index */
-         pos = -1;
-         for (i=0; i<3; i++) {
-            if (all_jobids[i] && !strcmp(jobid, all_jobids[i]))
-               pos = i;
-         }
-         if (pos == -1) {
-            fprintf(stderr, "drmaa_wait() returned unexpected job: %s\n", jobid);
-            return -1;
-         }
-
-         /* NULL-ify finished ones */
-         free(all_jobids[pos]);
-         all_jobids[pos] = NULL;
-
-         /* examine order */
-         if (reserve) {
-            if ( pos == 2 && all_jobids[1] != NULL) {
-               fprintf(stderr, "reservation broken: large job (1) did not finish before small job (2)\n");
-               return -1;
-            }
-            if ( pos == 1 && all_jobids[0] != NULL) {
-               fprintf(stderr, "reservation broken: high prior job (0) did not finish before large job (1)\n");
-               return -1;
-            }
-         } else {
-            if ( pos == 1 && all_jobids[2] != NULL) {
-               fprintf(stderr, "backfilling broken: backfilling job (2) did not finish before large job (1)\n");
-               return -1;
-            }
-            if ( pos == 1 && all_jobids[0] != NULL) {
-               fprintf(stderr, "backfilling broken: high prior job (0) did not finish before large job (1)\n");
-               return -1;
-            }
-         }
-         if (--n == 0) {
-            printf("waited for last job\n");
-            break;
-         }
-      } else if (drmaa_errno != DRMAA_ERRNO_INVALID_JOB) {
-         printf("drmaa_wait() returned %s\n", drmaa_strerror(drmaa_errno));
-      }
-   } while (drmaa_errno == DRMAA_ERRNO_SUCCESS);
-
-   return 0;
 }

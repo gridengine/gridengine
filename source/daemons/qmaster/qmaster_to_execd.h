@@ -38,10 +38,10 @@ int host_notify_about_new_conf(lListElem *host);
 
 int host_notify_about_kill(lListElem *host, int kill_command);
 
-int host_notify_about_featureset(lListElem *host, feature_id_t featureset);
+int host_notify_about_featureset(lListElem *host, featureset_id_t featureset);
 
 void host_list_notify_about_featureset(lList *host_list,
-                                       feature_id_t featureset);
+                                       featureset_id_t featureset);
 
 #endif /* __QMASTER_TO_EXECD_H */
 

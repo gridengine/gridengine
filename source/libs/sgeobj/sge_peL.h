@@ -78,14 +78,9 @@ extern "C" {
 *        --> has only a meaning when
 *        PE_control_slaves is true
 *
-*     SGE_LIST(PE_resource_utilization, RUE_Type)
-*        internal field; used only to store number used slots
+*     SGE_XULONG(PE_used_slots)
+*        internal field; number of used slots
 *        this field gets not spooled, updated dynamically
-*  
-*     SGE_ULONG(PE_free_slots)
-*        internal field; number of free slots
-*        Used only by flatfile spooling as a marker.  Never actually
-*        gets set.
 *  
 *     SGE_STRING(PE_urgency_slots)
 *        Specifies what slot amount shall be used when computing jobs 
@@ -104,8 +99,7 @@ enum {
    PE_allocation_rule,    
    PE_control_slaves,    
    PE_job_is_first_task,
-   PE_free_slots,
-   PE_resource_utilization,
+   PE_used_slots,
    PE_urgency_slots            
 };
 
@@ -120,8 +114,7 @@ ILISTDEF(PE_Type, ParallelEnvironment, SGE_PE_LIST)
    SGE_STRING(PE_allocation_rule, CULL_DEFAULT | CULL_SPOOL)
    SGE_BOOL(PE_control_slaves, CULL_DEFAULT | CULL_SPOOL)
    SGE_BOOL(PE_job_is_first_task, CULL_DEFAULT | CULL_SPOOL)
-   SGE_ULONG(PE_free_slots, CULL_DEFAULT)
-   SGE_LIST(PE_resource_utilization, RUE_Type, CULL_DEFAULT)
+   SGE_ULONG(PE_used_slots, CULL_DEFAULT)
    SGE_STRING(PE_urgency_slots, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
 
@@ -135,8 +128,7 @@ NAMEDEF(PEN)
    NAME("PE_allocation_rule")
    NAME("PE_control_slaves")
    NAME("PE_job_is_first_task")
-   NAME("PE_free_slots")
-   NAME("PE_resource_utilization")
+   NAME("PE_used_slots")
    NAME("PE_urgency_slots")
 NAMEEND
 

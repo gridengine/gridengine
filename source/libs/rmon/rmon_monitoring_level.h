@@ -34,27 +34,28 @@
 
 #include <sys/types.h>
 
-/* different layers for monitoring */
-#define N_LAYER          8
 
-#define TOP_LAYER        0 /* t */
-#define CULL_LAYER       1 /* c */
-#define BASIS_LAYER      2 /* b */
-#define GUI_LAYER        3 /* g */
-#define UNUSED0_LAYER    4 /* u */
-#define COMMD_LAYER      5 /* h */
-#define GDI_LAYER        6 /* a */
-#define PACK_LAYER       7 /* p */
+/* different layers for monitoring */
+#define N_LAYER   8
+
+#define TOP_LAYER      0 /* t */
+#define CULL_LAYER     1 /* c */
+#define BASIS_LAYER    2 /* b */
+#define GUI_LAYER      3 /* g */
+#define QIDL_LAYER     4 /* q */
+#define COMMD_LAYER    5 /* h */
+#define GDI_LAYER      6 /* a */
+#define PACK_LAYER     7 /* p */
 
 /* different classes of monitoring messages */
 #define TRACE            1 /* t */
 #define INFOPRINT        2 /* i */
 #define JOBTRACE         4 /* j */
-#define SPECIAL	         8 /* s */
+#define SPECIAL	       8 /* s */
 #define TIMING          16 /* m */
 
-#define LOCK	        32 /* X */
-#define FREE_CLASS_Y	64 /* Y */
+#define LOCK	         32 /* X */
+#define FREE_CLASS_Y	   64 /* Y */
 #define FREE_CLASS_Z   128 /* Z */
 
 #define NO_LEVEL  256  
@@ -72,3 +73,6 @@ u_long rmon_mlgetl(monitoring_level *, int);
 void   rmon_mlputl(monitoring_level *, int, u_long);
 
 #endif /* _RMON_MONITORING_LEVEL_H_ */
+
+
+

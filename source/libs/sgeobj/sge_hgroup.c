@@ -49,7 +49,6 @@
 #include "commlib.h"
 #include "sge_log.h"
 #include "sge_answer.h"
-#include "sge_cqueue.h"
 #include "sge_hostname.h"
 #include "sge_hgroup.h"
 #include "sge_href.h"
@@ -490,12 +489,10 @@ hgroup_find_all_referencees(const lListElem *this_elem,
 *     not successfull 
 *
 *  INPUTS
-*     const lListElem *this_elem        - HGRP_Type 
-*     lList **answer_list               - AN_Type 
-*     const lList *master_hgroup_list   - HGRP_Type master list 
-*     const lList *master_cqueue_list   - CQ_Type
-*     lList **occupants_groups          - HR_Type 
-*     lList **occupants_queues          - ST_Type
+*     const lListElem *this_elem - HGRP_Type 
+*     lList **answer_list        - AN_Type 
+*     const lList *master_list   - HGRP_Type master list 
+*     lList **occupants_groups   - HR_Type 
 *
 *  RESULT
 *     bool - Error state
@@ -503,35 +500,24 @@ hgroup_find_all_referencees(const lListElem *this_elem,
 *        false - Error
 *******************************************************************************/
 bool 
-hgroup_find_referencees(const lListElem *this_elem, 
-                        lList **answer_list,
-                        const lList *master_hgroup_list, 
-                        const lList *master_cqueue_list,
-                        lList **occupants_groups,
-                        lList **occupants_queues)
+hgroup_find_referencees(const lListElem *this_elem, lList **answer_list,
+                        const lList *master_list, lList **occupants_groups)
 {
    bool ret = true;
 
    DENTER(HGROUP_LAYER, "hgroup_find_all_referencees");
-   if (this_elem != NULL) {
-      if (occupants_groups != NULL) {
-         const char *name = lGetHost(this_elem, HGRP_name);
-         lList *href_list = NULL;
+   if (this_elem != NULL && occupants_groups != NULL) {
+      lList *href_list = NULL;
+      const char *name;
 
-         ret &= href_list_add(&href_list, answer_list, name);
-         if (ret) {
-            ret &= href_list_find_referencees(href_list, answer_list,
-                                              master_hgroup_list, 
-                                              occupants_groups);
-         }
-         href_list = lFreeList(href_list);
+      name = lGetHost(this_elem, HGRP_name);
+      ret &= href_list_add(&href_list, answer_list, name);
+
+      if (ret) {
+         ret &= href_list_find_referencees(href_list, answer_list,
+                                         master_list, occupants_groups);
       }
-      if (ret && occupants_queues != NULL) {
-         ret &= cqueue_list_find_hgroup_references(master_cqueue_list, 
-                                                   answer_list,
-                                                   this_elem, 
-                                                   occupants_queues);
-      }
+      href_list = lFreeList(href_list);
    }
    DEXIT;
    return ret;
@@ -606,6 +592,7 @@ hgroup_list_exists(const lList *this_list, lList **answer_list,
 *    Selects all hostgroups of "this_list" which match the pattern 
 *    "hgroup_pattern". All hostnames which are directly or indirectly
 *     referenced will be added to "used_hosts"
+*      
 *
 *  INPUTS
 *     const lList *this_list     - HGRP_Type 
@@ -654,36 +641,9 @@ hgroup_list_find_matching_and_resolve(const lList *this_list,
    return ret;
 }
 
-/****** sgeobj/hgroup/hgroup_list_find_matching() *****************************
-*  NAME
-*     hgroup_list_find_matching() -- Find hgroups which match pattern 
-*
-*  SYNOPSIS
-*     bool 
-*     hgroup_list_find_matching(const lList *this_list, 
-*                               lList **answer_list, 
-*                               const char *hgroup_pattern, 
-*                               lList **href_list) 
-*
-*  FUNCTION
-*    Selects all hostgroups of "this_list" which match the pattern 
-*    "hgroup_pattern". All matching hostgroup names will be added to
-*    "href_list"
-*
-*  INPUTS
-*     const lList *this_list     - HGRP_Type list 
-*     lList **answer_list        - AN_Type list 
-*     const char *hgroup_pattern - hostgroup pattern 
-*     lList **used_hosts         - HR_Type list  
-*
-*  RESULT
-*     bool - error state
-*        true  - success
-*        false - error
-*******************************************************************************/
 bool
 hgroup_list_find_matching(const lList *this_list, lList **answer_list,
-                          const char *hgroup_pattern, lList **href_list) 
+                          const char *hgroup_pattern, lList **used_hosts) 
 {
    bool ret = true;
 
@@ -695,8 +655,8 @@ hgroup_list_find_matching(const lList *this_list, lList **answer_list,
          const char *hgroup_name = lGetHost(hgroup, HGRP_name);
 
          if (!fnmatch(hgroup_pattern, hgroup_name, 0)) {
-            if (href_list != NULL) {
-               lAddElemHost(href_list, HR_name, hgroup_name, HR_Type);
+            if (used_hosts != NULL) {
+               lAddElemHost(used_hosts, HR_name, hgroup_name, HR_Type);
             }
          }
       }

@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = ..
 
-ACLOCAL =  aclocal
-AUTOCONF =  autoconf
-AUTOMAKE =  automake
-AUTOHEADER =  autoheader
+ACLOCAL = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing aclocal
+AUTOCONF = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing autoconf
+AUTOMAKE = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing automake
+AUTOHEADER = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing autoheader
 
 INSTALL = ../../install-sh -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,7 +68,7 @@ CPP = cc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS =  getloadavg.o
-MAKEINFO =  makeinfo
+MAKEINFO = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing makeinfo
 MAKE_HOST = hppa1.1-hp-hpux11.00
 PACKAGE = make
 PERL = perl
@@ -96,7 +96,7 @@ LDFLAGS =
 LIBS = -lelf -lelf 
 libglob_a_LIBADD = 
 libglob_a_OBJECTS =  glob.o fnmatch.o
-CFLAGS = -g +DD32
+CFLAGS = -g
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@

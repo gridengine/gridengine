@@ -926,9 +926,11 @@ sge_mirror_error sge_mirror_process_events(void)
          lFreeList(event_list);
       }
    } else {
-      WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
-      ec_mark4registration();
-      ret = SGE_EM_TIMEOUT;
+      if(last_heared != 0 && (now > last_heared + ec_get_edtime() * 10)) {
+         WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
+         ec_mark4registration();
+         ret = SGE_EM_TIMEOUT;
+      }
    }
 
    if(prof_is_active()) {
@@ -941,7 +943,7 @@ sge_mirror_error sge_mirror_process_events(void)
 
    
    DEXIT;
-   return ret;
+   return SGE_EM_OK;
 }
 
 /****** Eventmirror/sge_mirror_strerror() ***************************************
@@ -1584,7 +1586,7 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
       case SGE_EMA_ADD:
          /* check for duplicate */
          if(ep != NULL) {
-            ERROR((SGE_EVENT, "duplicate list element "SFQ"\n", (key != NULL) ?key:"NULL"));
+            ERROR((SGE_EVENT, "duplicate list element "SFQ"\n", key));
             DEXIT;
             return SGE_EM_DUPLICATE_KEY;
          }
@@ -1602,7 +1604,7 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
       case SGE_EMA_DEL:
          /* check for existence */
          if(ep == NULL) {
-            ERROR((SGE_EVENT, "element "SFQ" does not exist\n", (key != NULL) ?key:"NULL"));
+            ERROR((SGE_EVENT, "element "SFQ" does not exist\n", key));
             DEXIT;
             return SGE_EM_KEY_NOT_FOUND;
          }
@@ -1614,7 +1616,7 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
       case SGE_EMA_MOD:
          /* check for existence */
          if(ep == NULL) {
-            ERROR((SGE_EVENT, "element "SFQ" does not exist\n", (key != NULL) ?key:"NULL"));
+            ERROR((SGE_EVENT, "element "SFQ" does not exist\n", key));
             DEXIT;
             return SGE_EM_KEY_NOT_FOUND;
          }

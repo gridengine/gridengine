@@ -1,5 +1,5 @@
 # Generated automatically from Makefile.in by configure.
-# $Id: Makefile,v 1.3 2004/02/19 13:17:35 andy Exp $
+# $Id: Makefile,v 1.2 2002/10/01 14:49:54 joga Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -30,7 +30,7 @@ LFLAGS=$(SGE_LOPTS)
 #LFLAGS= -Zn10000		# hpux lint
 
 
-CFLAGS = $(SGE_COPTS) -g  +DD64 -DHP1164 -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
+CFLAGS = $(SGE_COPTS) -g  -DHP11 -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
 #CFLAGS= -g			# debug
 #CFLAGS= -O			# production
 #CFLAGS= 			# Broken optimizers....
@@ -158,8 +158,7 @@ LDFLAGS=$(SGE_LOPTS) 		## This is set by autoconf.
 ################################################################
 ## LIBES.  Pick one, or roll your own.
 ################################################################
-#LIBES= -ltermlib -lrpcsvc  ## This is set by autoconf.
-LIBES= -lcurses -lrpcsvc
+LIBES= -ltermlib -lrpcsvc  ## This is set by autoconf.
 #LIBES= -ltermcap 			 ## BSD style things
 #LIBES= -ltermcap			 ## SunOS, HP-UX, pyramid
 #LIBES= -ltermcap			 ## Linux

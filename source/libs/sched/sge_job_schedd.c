@@ -55,8 +55,6 @@
 #include "sge_centry.h"
 #include "sge_schedd_conf.h"
 #include "sge_qinstance.h"
-#include "sge_gqueue.h"
-#include "sge_answer.h"
 
 #include "cull_hash.h"
 
@@ -242,42 +240,12 @@ void job_move_first_pending_to_running(lListElem **pending_job,
       *pending_job = lFreeElem(*pending_job); 
    }
 
-#if 0 /* EB: DEBUG */
+#if 0 /* EB: debug */
    job_lists_print(splitted_jobs);
 #endif
 
    DEXIT;
 }
-
-int job_get_next_task(lListElem *job, lListElem **task_ret, u_long32 *id_ret)
-{
-   lListElem *ja_task;
-   u_long32 ja_task_id;
-
-   DENTER(TOP_LAYER, "job_get_next_task");
-
-   ja_task = lFirst(lGetList(job, JB_ja_tasks));
-   if (!ja_task) {
-      lList *answer_list = NULL;
-
-      ja_task_id = range_list_get_first_id(lGetList(job, JB_ja_n_h_ids),
-                                           &answer_list);
-      if (answer_list_has_error(&answer_list)) {
-         answer_list = lFreeList(answer_list);
-         return -1;
-      }
-      ja_task = job_get_ja_task_template_pending(job, ja_task_id);
-   } else {
-      ja_task_id = lGetUlong(ja_task, JAT_task_number);
-   }
-
-   *task_ret = ja_task;
-   *id_ret   = ja_task_id;
-
-   DEXIT;
-   return 0;
-}
-
 
 /****** sched/sge_job_schedd/user_list_init_jc() ******************************
 *  NAME
@@ -484,7 +452,7 @@ void split_jobs(lList **job_list, lList **answer_list,
                 lList *queue_list, u_long32 max_aj_instances, 
                 lList **result_list[])
 {
-#if 0 /* EB: DEBUG: enable debug messages for split_jobs() */
+#if 0 /* EB: enable debug messages for split_jobs() */
 #define JOB_SPLIT_DEBUG
 #endif
    lListElem *job = NULL;
@@ -566,6 +534,15 @@ void split_jobs(lList **job_list, lList **answer_list,
 #endif
             target = &(target_tasks[SPLIT_FINISHED]);
          } 
+#if 0
+      /*
+       * EB: "hold" section has been moved downwards!!!!
+       *
+       *      Running or suspended jobs which have a hold applied
+       *      have to be handled as running or suspended jobs within schedd
+       *      We cannot trash them because of the hold state!
+       */
+#endif
 
          if (target == NULL && result_list[SPLIT_ERROR] && 
              (ja_task_state & JERROR)) {
@@ -1026,6 +1003,39 @@ void sge_inc_jc(lList **jcpp, const char *name, int slots)
 int resort_jobs(lList *jc, lList *job_list, const char *owner, lSortOrder *so) 
 {
    DENTER(TOP_LAYER, "resort_jobs");
+
+
+   if (sconf_get_user_sort()) {
+      int njobs;
+      lListElem *job, *jc_owner;
+
+      /* get number of running jobs of this user */
+      if (owner) {
+         lListElem *next_job;
+         const void *iterator = NULL;
+
+         jc_owner = lGetElemStr(jc, JC_name, owner);
+         njobs = jc_owner ? lGetUlong(jc_owner, JC_jobs) : 0;
+
+#ifndef CULL_NO_HASH
+      /* create a hash table on JB_owner to speedup 
+       * searching for jobs of a specific owner
+       */
+      cull_hash_new_check(job_list, JB_owner, 0);
+#endif      
+         next_job = lGetElemStrFirst(job_list, JB_owner, owner, &iterator);
+         while((job = next_job) != NULL) {
+            next_job = lGetElemStrNext(job_list, JB_owner, owner, &iterator);
+            lSetUlong(job, JB_nrunning, njobs);
+         }
+      } else { /* update JB_nrunning for all jobs */
+         for_each(job, job_list) {
+            jc_owner = lGetElemStr(jc, JC_name, lGetString(job, JB_owner));
+            njobs = jc_owner ? lGetUlong(jc_owner, JC_jobs) : 0;
+            lSetUlong(job, JB_nrunning, njobs);
+         }
+      }
+   }
 
    lSortList(job_list, so);
 #if 0

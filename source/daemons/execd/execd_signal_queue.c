@@ -57,6 +57,7 @@
 #include "sge_conf.h"
 #include "sge_usageL.h"
 #include "mail.h"
+#include "admin_mail.h"
 #include "get_path.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"

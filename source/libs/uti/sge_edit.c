@@ -36,7 +36,6 @@
 #include <sys/wait.h>
 
 #include "sge_prog.h"
-#include "sge.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_signal.h"

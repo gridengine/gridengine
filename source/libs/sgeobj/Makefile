@@ -34,9 +34,9 @@
 #___INFO__MARK_END__
 SGEOBJLIB_DIR = $(SDIR)/libs/sgeobj
 
-SGEOBJLIB = libsgeobj$(LIBEXT)
+SGEOBJLIB = libsgeobj$(QIDLEXT)$(LIBEXT)
 
-SGEOBJDLIB = libsgeobjd$(LIBEXT)
+SGEOBJDLIB = libsgeobjd$(QIDLEXT)$(LIBEXT)
 
 SGEOBJDLIB_SRC = \
          sge_answer.c \
@@ -55,7 +55,6 @@ SGEOBJLIB_SRC = \
          sge_ckpt.c \
          sge_cuser.c \
          sge_event.c \
-         sge_gqueue.c \
          sge_host.c \
          sge_hgroup.c \
          sge_href.c \
@@ -65,12 +64,12 @@ SGEOBJLIB_SRC = \
          sge_load.c \
          sge_mailrec.c \
          sge_manop.c \
-         sge_mesobj.c \
          sge_object.c \
          sge_path_alias.c \
          sge_pe.c \
          sge_pe_task.c \
          sge_qinstance.c \
+         sge_qinstance_message.c \
          sge_qinstance_state.c \
          sge_qref.c \
          sge_range.c \
@@ -117,7 +116,7 @@ libsgeobj.a:	$(SGEOBJLIB_OBJS)
 	$(RANLIB) libsgeobj.a
 
 libsgeobj$(SHAREDEXT): $(SGEOBJLIB_OBJS) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libsgeobj$(SHAREDEXT) $(SGEOBJLIB_OBJS) -lsgeobjd -lcomm -lcommlists -lcull -luti -lrmon $(LIBS) -lc
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libsgeobj$(SHAREDEXT) $(SGEOBJLIB_OBJS) -lsgeobjd -lcom -lcull -luti -lrmon $(LIBS) -lc
 
 libsgeobjd.a:	$(SGEOBJDLIB_OBJS)
 	$(AR) $(ARFLAGS) libsgeobjd.a $(SGEOBJDLIB_OBJS) 
@@ -167,9 +166,6 @@ sge_ckpt.o: $(SGEOBJLIB_DIR)/sge_ckpt.c
 sge_event.o:	$(SGEOBJLIB_DIR)/sge_event.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_event.c
 
-sge_gqueue.o:	$(SGEOBJLIB_DIR)/sge_gqueue.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_gqueue.c
-
 sge_host.o: $(SGEOBJLIB_DIR)/sge_host.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_host.c
 
@@ -197,9 +193,6 @@ sge_mailrec.o: $(SGEOBJLIB_DIR)/sge_mailrec.c
 sge_manop.o: $(SGEOBJLIB_DIR)/sge_manop.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_manop.c
 
-sge_mesobj.o: $(SGEOBJLIB_DIR)/sge_mesobj.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_mesobj.c
-
 sge_object.o: $(SGEOBJLIB_DIR)/sge_object.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_object.c
 
@@ -214,6 +207,9 @@ sge_pe_task.o: $(SGEOBJLIB_DIR)/sge_pe_task.c
 
 sge_qinstance.o: $(SGEOBJLIB_DIR)/sge_qinstance.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qinstance.c
+
+sge_qinstance_message.o: $(SGEOBJLIB_DIR)/sge_qinstance_message.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qinstance_message.c
 
 sge_qinstance_state.o: $(SGEOBJLIB_DIR)/sge_qinstance_state.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qinstance_state.c
@@ -239,11 +235,7 @@ sge_str.o: $(SGEOBJLIB_DIR)/sge_str.c
 sge_subordinate.o: $(SGEOBJLIB_DIR)/sge_subordinate.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_subordinate.c
 
-# dummy rule to propagate dependencies for sge_sub_object.c
-sge_sub_object_cpp.o: $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c
-		touch sge_sub_object_cpp.o
-
-sge_sub_object.c: sge_sub_object_cpp.o $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c ../scripts/gen_subtype_info.sh
+sge_sub_object.c: $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c ../scripts/gen_subtype_info.sh
 		$(CC) $(CFLAGS) -E -c $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c | grep __SUBTYPE_MAPPING__ | ../scripts/gen_subtype_info.sh sge_sub_object.c
 
 sge_sub_object.o: sge_sub_object.c 

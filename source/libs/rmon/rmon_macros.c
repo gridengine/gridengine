@@ -43,12 +43,6 @@
 
 #define DEBUG RMON_LOCAL
 
-/* ALPHA (osf4 and tru64) have f(un)lockfile, but prototype is missing */
-#if defined (ALPHA)
-extern void flockfile(FILE *);
-extern void funlockfile(FILE *);
-#endif
-
 enum {
    RMON_NONE     = 0,   /* monitoring off */
    RMON_LOCAL    = 1,   /* monitoring on */
@@ -452,6 +446,7 @@ static int set_debug_level_from_env(void)
 *  RESULT
 *     0 - successful
 *     EACCES - file name is invalid or unable to open file
+*     EINVAL - invalid environment variable format
 *
 *  NOTES
 *     MT-NOTE: 'set_debug_target_from_env()' is MT safe with exceptions.
@@ -477,7 +472,12 @@ static int set_debug_target_from_env(void)
       fprintf(rmon_fp, MSG_RMON_ERRNOXY_DS, errno, strerror(errno));
       free((char *)s);
       return EINVAL;
-   } 
+   } else {
+      rmon_fp = stderr;
+      fprintf(rmon_fp, MSG_RMON_ILLEGALDBUGTARGETFORMAT);
+      free((char *)s);
+      return ENOENT;
+   }
 
    free((char *)s);
    return 0;

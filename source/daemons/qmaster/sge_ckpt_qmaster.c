@@ -225,25 +225,19 @@ ERROR:
 *     STATUS_EEXIST - an error occured
 ******************************************************************************/
 int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object) 
-{  
-   lList *answer_list = NULL;
-   bool dbret;
-
+{
    DENTER(TOP_LAYER, "ckpt_spool");
 
-   dbret = spool_write_object(&answer_list, spool_get_default_context(), ep, 
-                              lGetString(ep, CK_name), SGE_TYPE_CKPT);
-   answer_list_output(&answer_list);
-
-   if (!dbret) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_PERSISTENCE_WRITE_FAILED_S,
-                              lGetString(ep, CK_name));
+   if (!spool_write_object(alpp, spool_get_default_context(), ep, 
+                           lGetString(ep, CK_name), SGE_TYPE_CKPT)) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
+            object->object_name, lGetString(ep, CK_name)));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
    }
-
    DEXIT;
-   return dbret ? 0 : 1;
+   return 0;
 }
 
 /****** qmaster/ckpt/ckpt_success() *******************************************
@@ -282,7 +276,7 @@ int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
 
    ckpt_name = lGetString(ep, CK_name);
 
-   sge_add_event( 0, old_ep ? sgeE_CKPT_MOD : sgeE_CKPT_ADD, 0, 0, 
+   sge_add_event(NULL, 0, old_ep ? sgeE_CKPT_MOD : sgeE_CKPT_ADD, 0, 0, 
                  ckpt_name, NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
 

@@ -54,6 +54,7 @@
 #include "sge_give_jobs.h"
 #include "sge_pe_qmaster.h"
 #include "sge_time.h"
+#include "time_event.h"
 #include "reschedule.h"
 #include "msg_daemons_common.h"
 #include "msg_qmaster.h"
@@ -240,15 +241,14 @@ sge_pack_buffer *pb
                  
                   if (status==JTRANSFERING) { /* got async ack for this job */ 
                      DPRINTF(("--- transfering job "u32" is running\n", jobid));
-                     sge_commit_job(jep, jatep, jr, COMMIT_ST_ARRIVED, COMMIT_DEFAULT); /* implicitly sending usage to schedd */
+                     sge_commit_job(jep, jatep, jr, COMMIT_ST_ARRIVED, COMMIT_DEFAULT); /* implicitly sending usage to schedd in sgeee_mode */
                      cancel_job_resend(jobid, jataskid);
-                  } 
-                  else {
+                  } else if (feature_is_enabled(FEATURE_SGEEE)) {
                      /* need to generate a job event for new usage 
                       * the timestamp should better come from report object
                       */
                      /* jatask usage is not spooled (?) */
-                     sge_add_list_event( 0, sgeE_JOB_USAGE, 
+                     sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
                                         jobid, jataskid, NULL, NULL,
                                         lGetString(jep, JB_session),
                                         lGetList(jatep, JAT_scaled_usage_list));
@@ -320,7 +320,7 @@ sge_pack_buffer *pb
                                           jep, jatep, petask, true, true);
                        } else {
                           /* do not spool usage of pe task (?) */
-                          sge_add_list_event( 0, sgeE_JOB_USAGE, 
+                          sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
                                              jobid, jataskid, pe_task_id_str, 
                                              NULL, lGetString(jep, JB_session),
                                              lGetList(petask, PET_scaled_usage));
@@ -557,7 +557,7 @@ sge_pack_buffer *pb
                            } else {
                               pe_task_sum_past_usage(container, petask);
                               /* usage container will not be spooled (?) */
-                              sge_add_list_event( 0, sgeE_JOB_USAGE, 
+                              sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
                                                  jobid, jataskid, 
                                                  PE_TASK_PAST_USAGE_CONTAINER, 
                                                  NULL,

@@ -135,7 +135,6 @@ u_long32 flags
    lListElem *ep_opt;
    int i_ret;
    u_long32 is_qalter = flags & FLG_QALTER;
-   bool is_hold_option = false;
 
    DENTER(TOP_LAYER, "cull_parse_cmdline");
 
@@ -664,7 +663,7 @@ u_long32 flags
             int hold;
             char *cmd_switch;
             char *cmd_arg = "";
-         is_hold_option = true;
+
          cmd_switch = *sp;
 
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
@@ -801,41 +800,12 @@ u_long32 flags
             lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
          }
          else {
-             sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENT_SS, "-j", *sp);
+             sprintf(str,MSG_PARSE_INVALIDOPTIONARGUMENTJX_S ,
+             *sp);
              answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
-
-         sp++;
-         continue;
-      }
-
-/*----------------------------------------------------------------------------*/
-      /* "-js jobshare */
-
-      if (!strcmp("-js", *sp)) {
-         u_long32 jobshare;
-
-         sp++;
-         if (!*sp) {
-            sprintf(str,
-            MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-js");
-            answer_list_add(&answer, str, 
-                            STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
-         }
-
-         if (!parse_ulong_val(NULL, &jobshare, TYPE_INT, *sp, NULL, 0)) {
-            answer_list_add(&answer, MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT,
-                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
-         }
-
-         ep_opt = sge_add_arg(pcmdline, js_OPT, lUlongT, *(sp - 1), *sp);
-         lSetUlong(ep_opt, SPA_argval_lUlongT, jobshare);
 
          sp++;
          continue;
@@ -887,7 +857,7 @@ u_long32 flags
 
          DPRINTF(("\"-l %s\"\n", *sp));
 
-         resource_list = centry_list_parse_from_string(NULL, *sp, false);
+         resource_list = centry_list_parse_from_string(NULL, *sp, true);
          if (!resource_list) {
              sprintf(str,MSG_PARSE_WRONGRESOURCELISTFORMATXSPECTOLOPTION_S ,
              *sp);
@@ -1086,11 +1056,11 @@ u_long32 flags
          DPRINTF(("\"-now %s\"\n", *sp));
          
          if(!strcmp(*sp, "y") || !strcmp(*sp, "yes")){
-            ep_opt = sge_add_arg(pcmdline, now_OPT, lIntT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
          }
          else if (!strcmp(*sp, "n") || !strcmp(*sp, "no")) {
-            ep_opt = sge_add_arg(pcmdline, now_OPT, lIntT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
          }
          else {
@@ -1139,7 +1109,7 @@ u_long32 flags
 /*----------------------------------------------------------------------------*/
       /* "-ot override tickets */
 
-      if (!strcmp("-ot", *sp)) {
+      if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-ot", *sp)) {
          int otickets;
 
          sp++;
@@ -1349,50 +1319,6 @@ DTRACE;
       }
 
 /*-----------------------------------------------------------------------------*/
-      /* "-R y|n" */
-
-      if (!strcmp("-R", *sp)) {
-
-         if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
-            sprintf(str,
-               MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
-               *sp);
-            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
-         }
-
-         /* next field is "y|n" */
-         sp++;
-         if (!*sp) {
-             sprintf(str,
-             MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-R");
-             answer_list_add(&answer, str, STATUS_ESEMANTIC, 
-                             ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
-         }
-
-         DPRINTF(("\"-R %s\"\n", *sp));
-
-         if (!strcmp("y", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, R_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
-         }
-         else if (!strcmp("n", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, R_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
-         }
-         else {
-             sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENT_SS, "-R", *sp);
-             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
-         }
-
-         sp++;
-         continue;
-      }
-
-/*-----------------------------------------------------------------------------*/
       /* "-sc variable_list" */
       /* set context */
 
@@ -1440,46 +1366,6 @@ DTRACE;
          continue;
       }
 
-/*----------------------------------------------------------------------------*/
-     /*  -sync y[es]|n[o] */
-
-      if(!strcmp("-sync", *sp)) {
-         if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
-            sprintf(str,
-               MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
-               *sp);
-            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
-         }
-         /* next field is yes/no switch */
-         sp++;
-         if(!*sp) {
-            sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-sync");
-            answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
-         }
-         
-         DPRINTF(("\"-sync %s\"\n", *sp));
-         
-         if(!strcmp(*sp, "y") || !strcmp(*sp, "yes")){
-            ep_opt = sge_add_arg(pcmdline, sync_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
-         }
-         else if (!strcmp(*sp, "n") || !strcmp(*sp, "no")) {
-            ep_opt = sge_add_arg(pcmdline, sync_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
-         }
-         else {
-             sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTNOW_S , *sp);
-             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
-         }
-
-         sp++;
-         continue;
-      }
-            
 /*----------------------------------------------------------------------------*/
       /* "-S path_name" */
 
@@ -1875,24 +1761,31 @@ DTRACE;
             }
          }
          else {
-            lList *jid_list = NULL;
+            for (; *sp; sp++) {
+               lList *jid_list = NULL;
 
-            if (!strcmp(*sp, "--")) {
-               ep_opt = sge_add_noarg(pcmdline, 0, *sp, NULL);
-               break;
-            }
-            i_ret = cull_parse_jid_hold_list(&jid_list, *sp);
+               if (!strcmp(*sp, "--")) {
+                  ep_opt = sge_add_noarg(pcmdline, 0, *sp, NULL);
+                  break;
+               }
+               i_ret = cull_parse_jid_hold_list(&jid_list, *sp);
 
-            if (i_ret) {
-               sprintf(str,MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S,
-                       *sp);
-               answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               DEXIT;
-               return answer;
+               if (i_ret) {
+                  sprintf(str,MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S,
+                          *sp);
+                  answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  DEXIT;
+                  return answer;
+               }
+               ep_opt = sge_add_arg(pcmdline, 0, lListT, STR_PSEUDO_JOBID, *sp);
+               lSetList(ep_opt, SPA_argval_lListT, jid_list);
             }
-            ep_opt = sge_add_arg(pcmdline, 0, lListT, STR_PSEUDO_JOBID, *sp);
-            lSetList(ep_opt, SPA_argval_lListT, jid_list);
-            sp++;
+            if (!*sp)
+               continue;
+            for (sp++; *sp; sp++) {
+               ep_opt = sge_add_arg(pcmdline, 0, lStringT, STR_PSEUDO_JOBARG, NULL);
+               lSetString(ep_opt, SPA_argval_lStringT, *sp);
+            }
          }
          continue;
       }
@@ -1904,17 +1797,6 @@ DTRACE;
       sp++;
    }
 
-   if (!is_hold_option) {
-      if (uti_state_get_mewho() == QHOLD) { 
-         ep_opt = sge_add_arg(pcmdline, h_OPT, lIntT, "-h", "u");
-         lSetInt(ep_opt, SPA_argval_lIntT, MINUS_H_TGT_USER);
-
-      }
-      else if (uti_state_get_mewho() == QRLS) {
-         ep_opt = sge_add_arg(pcmdline, h_OPT, lIntT, "-h", "n");
-         lSetInt(ep_opt, SPA_argval_lIntT, MINUS_H_TGT_NONE);
-      }
-   }
    DEXIT;
    return answer;
 
@@ -1937,9 +1819,7 @@ char *hold_str
    for (j = 0; j < i; j++) {
       switch (hold_str[j]) {
       case 'n':
-         if ((uti_state_get_mewho() == QHOLD)  || 
-             (uti_state_get_mewho() == QRLS) || 
-             (op_code && op_code != MINUS_H_CMD_SUB)) {
+         if (op_code && op_code != MINUS_H_CMD_SUB) {
             target = -1;
             break;
          }
@@ -1947,64 +1827,32 @@ char *hold_str
          target = MINUS_H_TGT_USER|MINUS_H_TGT_OPERATOR|MINUS_H_TGT_SYSTEM;
          break;
       case 's':
-         if (uti_state_get_mewho() == QRLS) {
-            if (op_code && op_code != MINUS_H_CMD_SUB) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_SUB;
-            target = target|MINUS_H_TGT_SYSTEM;         
+         if (op_code && op_code != MINUS_H_CMD_ADD) {
+            target = -1;
+            break;
          }
-         else {
-            if (op_code && op_code != MINUS_H_CMD_ADD) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_ADD;
-            target = target|MINUS_H_TGT_SYSTEM;
-         }   
+         op_code = MINUS_H_CMD_ADD;
+         target = target|MINUS_H_TGT_SYSTEM;
          break;
       case 'o':
-         if (uti_state_get_mewho() == QRLS) {
-            if (op_code && op_code != MINUS_H_CMD_SUB) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_SUB;
-            target = target|MINUS_H_TGT_OPERATOR;         
+         if (op_code && op_code != MINUS_H_CMD_ADD) {
+            target = -1;
+            break;
          }
-         else {
-            if (op_code && op_code != MINUS_H_CMD_ADD) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_ADD;
-            target = target|MINUS_H_TGT_OPERATOR;
-         }
+         op_code = MINUS_H_CMD_ADD;
+         target = target|MINUS_H_TGT_OPERATOR;
          break;
-         
       case 'u':
-         if (uti_state_get_mewho() == QRLS) {
-            if (op_code && op_code != MINUS_H_CMD_SUB) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_SUB;
-            target = target|MINUS_H_TGT_USER;
+         if (op_code && op_code != MINUS_H_CMD_ADD) {
+            target = -1;
+            break;
          }
-         else {
-            if (op_code && op_code != MINUS_H_CMD_ADD) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_ADD;
-            target = target|MINUS_H_TGT_USER;
-         }
+         op_code = MINUS_H_CMD_ADD;
+         target = target|MINUS_H_TGT_USER;
          break;
+
       case 'S':
-         if ((uti_state_get_mewho() == QHOLD)  || 
-             (uti_state_get_mewho() == QRLS) || 
-             (op_code && op_code != MINUS_H_CMD_SUB)) {
+         if (op_code && op_code != MINUS_H_CMD_SUB) {
             target = -1;
             break;
          }
@@ -2012,9 +1860,7 @@ char *hold_str
          target = target|MINUS_H_TGT_SYSTEM;
          break;
       case 'U':
-         if ((uti_state_get_mewho() == QHOLD)  || 
-             (uti_state_get_mewho() == QRLS) || 
-             (op_code && op_code != MINUS_H_CMD_SUB)) {
+         if (op_code && op_code != MINUS_H_CMD_SUB) {
             target = -1;
             break;
          }
@@ -2022,9 +1868,7 @@ char *hold_str
          target = target|MINUS_H_TGT_USER;
          break;
       case 'O':
-         if ((uti_state_get_mewho() == QHOLD)  || 
-             (uti_state_get_mewho() == QRLS) || 
-             (op_code && op_code != MINUS_H_CMD_SUB)) {
+         if (op_code && op_code != MINUS_H_CMD_SUB) {
             target = -1;
             break;
          }
@@ -2151,7 +1995,6 @@ char *path_str
       return 1;
    }
 */
-
    if(!ret_error){
       path_string = sge_strdup(NULL, path_str);
       ret_error = !path_string;
@@ -2176,7 +2019,7 @@ char *path_str
    }
 */
    if ( (!ret_error) && (!*lpp)) {
-      *lpp = lCreateList("path_list", PN_Type);
+      *lpp = lCreateList("path list", PN_Type);
       ret_error = !*lpp;
 /*
       if (!*lpp) {
@@ -2205,7 +2048,8 @@ char *path_str
          }
 
          SGE_ASSERT((path));
-         ep = lCreateElem(PN_Type);
+
+         ep = lCreateElem(AT_Type);
          /* SGE_ASSERT(ep); */
          lAppendElem(*lpp, ep);
 

@@ -600,7 +600,7 @@ proc scheduler_setup_test_conditions { nr_of_jobs } {
       }
       puts $CHECK_OUTPUT "pending jobs: $pending_jobs"
       if { $pending_jobs > $nr_of_jobs } {
-         set catch_result [delete_all_jobs]
+         catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
       }
       set submit_count [expr ( $nr_of_jobs - $pending_jobs ) ]
       puts $CHECK_OUTPUT "submitting $submit_count jobs ..."
@@ -639,7 +639,7 @@ proc scheduler_cleanup {} {
    if { [string match "analysis" $scheduler_test_level] == 0 } {
  
       puts $CHECK_OUTPUT "delete all jobs ..."
-      set catch_result [delete_all_jobs]
+      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
    
       puts $CHECK_OUTPUT "wait for end of all jobs ..."
       wait_for_end_of_all_jobs 120

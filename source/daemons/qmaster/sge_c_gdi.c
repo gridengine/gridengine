@@ -29,11 +29,8 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
 #include <string.h>
 #include <stdlib.h>
-#include <errno.h>
-
 #include "sge_all_listsL.h"
 #include "cull.h"
 #include "sge.h"
@@ -58,12 +55,14 @@
 #include "sge_hgroup_qmaster.h"
 #include "sge_sharetree_qmaster.h"
 #include "sge_cuser_qmaster.h"
+#include "sge_cqueue_qmaster.h"
 #include "sge_feature.h"
 #include "sge_qmod_qmaster.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_qmaster_main.h"
+#include "qmaster.h"
+#include "sge_host.h"
 #include "sge_time.h"  
 #include "version.h"  
 #include "sge_security.h"  
@@ -81,8 +80,13 @@
 #include "sge_cuser.h"
 #include "sge_centry.h"
 #include "sge_cqueue.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
+
+#ifdef QIDL
+#include "qidl_c_gdi.h"
+#endif
 
 static void sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request, sge_gdi_request *answer, int *before, int *after);
 static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request, sge_gdi_request *answer, int return_list_flag);
@@ -93,10 +97,6 @@ static void sge_c_gdi_copy(gdi_object_t *ao, char *host, sge_gdi_request *reques
 static void sge_c_gdi_permcheck(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_request *answer);
-
-static void sge_gdi_shutdown_event_client(const char*, sge_gdi_request*, sge_gdi_request*, lList **alpp);
-static int  get_client_id(lListElem*, int*);
-static void trigger_scheduler_monitoring(char*, sge_gdi_request*, sge_gdi_request*); 
 
 static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user);
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, char *commproc, int mod, lListElem *ep);
@@ -109,7 +109,7 @@ static int schedd_mod( lList **alpp, lListElem *modp, lListElem *ep, int add, co
 /* *INDENT-OFF* */
 static gdi_object_t gdi_object[] = {
    { SGE_CALENDAR_LIST,     CAL_name,  CAL_Type,  "calendar",                &Master_Calendar_List,        NULL,                  calendar_mod, calendar_spool, calendar_update_queue_states },
-   { SGE_EVENT_LIST,        0,         NULL,      "event",                   NULL,                         NULL,                  NULL,         NULL,           NULL },
+   { SGE_EVENT_LIST,        0,         NULL,      "event",                   &EV_Clients,                  NULL,                  NULL,         NULL,           NULL },
    { SGE_ADMINHOST_LIST,    AH_name,   AH_Type,   "adminhost",               &Master_Adminhost_List,       NULL,                  host_mod,     host_spool,     host_success },
    { SGE_SUBMITHOST_LIST,   SH_name,   SH_Type,   "submithost",              &Master_Submithost_List,      NULL,                  host_mod,     host_spool,     host_success },
    { SGE_EXECHOST_LIST,     EH_name,   EH_Type,   "exechost",                &Master_Exechost_List,        NULL,                  host_mod,     host_spool,     host_success },
@@ -423,6 +423,21 @@ int *after
       return;
    }
 
+   /* ensure sge objects are licensed */
+
+   switch (request->target) {
+   case SGE_USER_LIST:
+   case SGE_PROJECT_LIST:
+   case SGE_SHARETREE_LIST:
+      if (!feature_is_enabled(FEATURE_SGEEE)) {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S ,
+         feature_get_product_name(FS_SHORT, &ds)));
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return;
+      }
+   }
+
    switch (request->target) {
 #ifdef QHOST_TEST
    case SGE_QHOST:
@@ -432,12 +447,7 @@ int *after
       DEXIT;
       return;
 #endif
-   case SGE_EVENT_LIST:
-      answer->lp = sge_select_event_clients("qmaster_response", request->cp, request->enp);
-      sprintf(SGE_EVENT, MSG_GDI_OKNL);
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-      DEXIT;
-      return;
+
    default:
       if (ao == NULL || (ao->master_list == NULL && ao->getMasterList == NULL)) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
@@ -453,7 +463,7 @@ int *after
 
    *before = lGetNumberOfElem(lp);
 
-   answer->lp = lSelect("qmaster_response", 
+   answer->lp = lSelect("sge_c_gdi_get(answer)", 
             lp, request->cp, request->enp);
 
    *after = lGetNumberOfElem(answer->lp);
@@ -510,6 +520,20 @@ int sub_command
       if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, request->commproc, 0, NULL))
          continue;
 
+      /* ensure sge objects are licensed */
+      switch (request->target) {
+      case SGE_USER_LIST:
+      case SGE_PROJECT_LIST:
+      case SGE_SHARETREE_LIST:
+         if (!feature_is_enabled(FEATURE_SGEEE)) {
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S ,
+            feature_get_product_name(FS_SHORT, &ds) ));
+            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return;
+         }
+      }
+
       /* add each element */
       switch (request->target) {
       case SGE_EVENT_LIST:
@@ -550,9 +574,8 @@ int sub_command
                      lGetUlong(ep, OR_seq_no), lGetNumberOfRemainingElem(ep)));
                ep = lLast(request->lp); /* this will exit the loop */
 
-               if (ret==-2) {
-                  sge_resync_schedd();
-               }
+               if (ret==-2)
+                  reinit_event_client(EV_ID_SCHEDD);
             }
          }
          break;
@@ -697,6 +720,20 @@ int sub_command
          if (sge_chck_mod_perm_host(&(answer->alp), request->target, 
                                     request->host, request->commproc, 0, NULL))
             continue;
+
+         /* ensure sge objects are licensed */
+         switch (request->target) {
+         case SGE_USER_LIST:
+         case SGE_PROJECT_LIST:
+         case SGE_SHARETREE_LIST:
+            if (!feature_is_enabled(FEATURE_SGEEE)) {
+               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S ,
+               feature_get_product_name(FS_SHORT, &ds)));
+               answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
+               DEXIT;
+               return;
+            }
+         }
 
          /* try to remove the element */
          switch (request->target) {
@@ -956,8 +993,6 @@ char *host,
 sge_gdi_request *request,
 sge_gdi_request *answer 
 ) {
-   lList *alp = NULL;
-   
    DENTER(GDI_LAYER, "sge_c_gdi_trigger");
 
    switch (request->target) {
@@ -989,11 +1024,11 @@ sge_gdi_request *answer
    case SGE_MASTER_EVENT: /* kill master */
       sge_gdi_kill_master(host, request, answer);
       break;
-   case SGE_EVENT_LIST:
-      sge_gdi_shutdown_event_client(host, request, answer, &alp);
+   case SGE_EVENT_LIST: /* kill schedler */
+      sge_gdi_kill_eventclient(host, request, answer);
       break;
    case SGE_SC_LIST: /* trigger scheduler monitoring */
-      trigger_scheduler_monitoring(host, request, answer);
+      sge_gdi_tsm(host, request, answer);
       break;
    default:
       WARNING((SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
@@ -1003,205 +1038,6 @@ sge_gdi_request *answer
    DEXIT;
    return;
 }
-
-/****** qmaster/sge_c_gdi/sge_gdi_shutdown_event_client() **********************
-*  NAME
-*     sge_gdi_shutdown_event_client() -- shutdown event client 
-*
-*  SYNOPSIS
-*     static void sge_gdi_shutdown_event_client(const char *aHost, 
-*     sge_gdi_request *aRequest, sge_gdi_request *anAnswer) 
-*
-*  FUNCTION
-*     Shutdown event clients by client id. 'aRequest' does contain a list of 
-*     client id's. This is a list of 'ID_Type' elements.
-*
-*  INPUTS
-*     const char *aHost         - sender 
-*     sge_gdi_request *aRequest - request 
-*     sge_gdi_request *anAnswer - answer
-*     lList **alpp              - answer list for info & errors
-*
-*  RESULT
-*     void - none 
-*
-*  NOTES
-*     MT-NOTE: sge_gdi_shutdown_event_client() is NOT MT safe. 
-*
-*******************************************************************************/
-static void sge_gdi_shutdown_event_client(const char *aHost,
-                                          sge_gdi_request *aRequest,
-                                          sge_gdi_request *anAnswer,
-                                          lList **alpp)
-{
-   uid_t uid = 0;
-   gid_t gid = 0;
-   char user[128]  = { '\0' };
-   char group[128] = { '\0' };
-   lListElem *elem = NULL; /* ID_Type */
-   lListElem *answer = NULL;
-
-   DENTER(TOP_LAYER, "sge_gdi_shutdown_event_client");
-
-   if (sge_get_auth_info(aRequest, &uid, user, &gid, group) == -1)
-   {
-      ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return;
-   }
-
-   for_each (elem, aRequest->lp)
-   {
-      int client_id = EV_ID_ANY;
-      int res = -1;
-
-      if (get_client_id(elem, &client_id) != 0) {
-         answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-         continue;
-      }
-
-      if (client_id == EV_ID_ANY) {
-         res = sge_shutdown_dynamic_event_clients(user, alpp);
-      } else {
-         res = sge_shutdown_event_client(client_id, user, uid, alpp);
-      }
-
-      
-      /* Process answer */
-      if (anAnswer->alp == NULL) {
-         anAnswer->alp = lCopyList ("Answer", *alpp);
-      }
-      else {
-         for_each (answer, *alpp) {
-            answer = lDechainElem (*alpp, answer);
-            lAppendElem (anAnswer->alp, answer);
-         }
-      }
-   }
-
-   DEXIT;
-   return;
-} /* sge_gdi_shutdown_event_client() */
-
-/****** qmaster/sge_c_gdi/get_client_id() **************************************
-*  NAME
-*     get_client_id() -- get client id from ID_Type element. 
-*
-*  SYNOPSIS
-*     static int get_client_id(lListElem *anElem, int *anID) 
-*
-*  FUNCTION
-*     Get client id from ID_Type element. The client id is converted to an
-*     integer and stored in 'anID'.
-*
-*  INPUTS
-*     lListElem *anElem - ID_Type element 
-*     int *anID         - will contain client id on return
-*
-*  RESULT
-*     EINVAL - failed to extract client id. 
-*     0      - otherwise
-*
-*  NOTES
-*     MT-NOTE: get_client_id() is MT safe. 
-*
-*     Using 'errno' to check for 'strtol' error situations is recommended
-*     by POSIX.
-*
-*******************************************************************************/
-static int get_client_id(lListElem *anElem, int *anID)
-{
-   const char *id = NULL;
-
-   DENTER(TOP_LAYER, "get_client_id");
-
-   if ((id = lGetString(anElem, ID_str)) == NULL)
-   {
-      DEXIT;
-      return EINVAL;
-   }
-
-   errno = 0; /* errno is thread local */
-
-   *anID = strtol(id, NULL, 0);
-
-   if (errno != 0)
-   {
-      ERROR((SGE_EVENT, MSG_GDI_EVENTCLIENTIDFORMAT_S, id));
-      DEXIT;
-      return EINVAL;
-   }
-
-   DEXIT;
-   return 0;
-} /* get_client_id() */
-
-/****** qmaster/sge_c_gdi/trigger_scheduler_monitoring() ***********************
-*  NAME
-*     trigger_scheduler_monitoring() -- trigger scheduler monitoring 
-*
-*  SYNOPSIS
-*     void trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, 
-*     sge_gdi_request *anAnswer) 
-*
-*  FUNCTION
-*     Trigger scheduler monitoring.
-*
-*  INPUTS
-*     char *aHost               - sender 
-*     sge_gdi_request *aRequest - request 
-*     sge_gdi_request *anAnswer - response 
-*
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     MT-NOTE: trigger_scheduler_monitoring() is not MT safe 
-*
-*  SEE ALSO
-*     qconf -tsm
-*
-*******************************************************************************/
-void trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, sge_gdi_request *anAnswer) 
-{
-   uid_t uid;
-   gid_t gid;
-   char user[128];
-   char group[128];
-
-   DENTER(GDI_LAYER, "trigger_scheduler_monitoring");
-
-   if (sge_get_auth_info(aRequest, &uid, user, &gid, group) == -1)
-   {
-      ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
-      DEXIT;
-      return;
-   }
-
-   if (!manop_is_manager(user))
-   {
-      WARNING((SGE_EVENT, MSG_COM_NOSCHEDMONPERMS));
-      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_WARNING);
-      DEXIT;
-      return;
-   }
-     
-   if (sge_add_event_for_client(EV_ID_SCHEDD, 0, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL, NULL, NULL) != 0)
-   {
-      WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
-      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_WARNING);
-      DEXIT;
-      return;
-   }
-
-   INFO((SGE_EVENT, MSG_COM_SCHEDMON_SS, user, aHost));
-   answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-
-   DEXIT;
-   return;
-} /* trigger_scheduler_monitoring() */
 
 static void sge_c_gdi_mod(
 gdi_object_t *ao,
@@ -1238,6 +1074,20 @@ int sub_command
       if (sge_chck_mod_perm_host(&(answer->alp), request->target, 
             request->host, request->commproc, 1, ep)) {
          continue;
+      }
+
+      /* ensure sge objects are licensed */
+      switch (request->target) {
+      case SGE_USER_LIST:
+      case SGE_PROJECT_LIST:
+      case SGE_SHARETREE_LIST:
+         if (!feature_is_enabled(FEATURE_SGEEE)) {
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S ,
+            feature_get_product_name(FS_SHORT, &ds) ));
+            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return;
+         }
       }
 
       /* try to mod the element */
@@ -1636,18 +1486,16 @@ int sub_command
 
    /* resolve host name in case of objects with hostnames as key 
       before searching for the objects */
-   
-   if ( object->key_nm == EH_name || 
-        object->key_nm == AH_name || 
-        object->key_nm == SH_name ) {
-      if ( sge_resolve_host(instructions, object->key_nm) != CL_RETVAL_OK )
-      {
-         const char *host = lGetHost(instructions, object->key_nm);    
-         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, host ? host : "NULL"));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
+   if ((object->key_nm == EH_name||
+          object->key_nm == AH_name||
+          object->key_nm == SH_name) && 
+          sge_resolve_host(instructions, object->key_nm)) {
+      const char *host = lGetHost(instructions, object->key_nm);    
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, 
+            host ? host : "NULL"));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EUNKNOWN;
    }
 
    pos = lGetPosViaElem(instructions,  object->key_nm );
@@ -1755,6 +1603,11 @@ int sub_command
       /* chain in new object */
       lAppendElem(*(master_list), new_obj);
    }
+#ifdef QIDL
+   if (add) /* this assumes that all generic object are identified by name */
+      addObjectByName(object->target,lGe*(object->master_list)tString(new_obj,object->key_nm));
+#endif
+   
    if (object->on_success)
       object->on_success(new_obj, old_obj, object);
 

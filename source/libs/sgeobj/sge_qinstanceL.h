@@ -48,13 +48,11 @@ enum {
    IQ = 0x02                 /* interactive Q */
 };
 
-#if 0
 /* *INDENT-OFF* */
 
 /*
  * Qinstance explanation element
  */
-
 enum {
    QIM_type = QIM_LOWERBOUND,
    QIM_message
@@ -73,7 +71,6 @@ NAMEEND
 #define QIMS sizeof(QIMN)/sizeof(char*)
 
 /* *INDENT-ON* */
-#endif 
 
 /* *INDENT-OFF* */
 
@@ -82,12 +79,13 @@ enum {
    QU_qname,
    QU_full_name,
    QU_tag,
-   QU_available_at, /* scheduling code only */
 
    QU_seq_no,
    QU_nsuspend,
    QU_qtype,
    QU_job_slots,
+   QU_fshare,
+   QU_oticket,
 
    QU_tmpdir,
    QU_shell,
@@ -157,74 +155,75 @@ enum {
    QU_pending_job_cnt,
    QU_soft_violation,
    QU_host_seq_no,
-   QU_resource_utilization,
+   QU_consumable_actual_list,
    QU_message_list
 };
 
 SLISTDEF(QU_Type, QInstance)
    SGE_HOST(QU_qhostname, CULL_SPOOL) 
    SGE_STRING(QU_qname, CULL_SPOOL)
-   SGE_STRING(QU_full_name, CULL_PRIMARY_KEY)
+   SGE_STRING(QU_full_name, CULL_SPOOL | CULL_PRIMARY_KEY)
    SGE_ULONG(QU_tag, CULL_DEFAULT)
-   SGE_ULONG(QU_available_at, CULL_DEFAULT)
 
-   SGE_ULONG(QU_seq_no, CULL_CONFIGURE)
-   SGE_ULONG(QU_nsuspend, CULL_CONFIGURE)
-   SGE_ULONG(QU_qtype, CULL_CONFIGURE)
-   SGE_ULONG(QU_job_slots, CULL_CONFIGURE)
+   SGE_ULONG(QU_seq_no, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_ULONG(QU_nsuspend, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_ULONG(QU_qtype, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_ULONG(QU_job_slots, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_ULONG(QU_fshare, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_ULONG(QU_oticket, CULL_SPOOL | CULL_CONFIGURE)
 
-   SGE_STRING(QU_tmpdir, CULL_CONFIGURE)
-   SGE_STRING(QU_shell, CULL_CONFIGURE)
-   SGE_STRING(QU_calendar, CULL_CONFIGURE)
-   SGE_STRING(QU_priority, CULL_CONFIGURE)
-   SGE_STRING(QU_processors, CULL_CONFIGURE)
-   SGE_STRING(QU_prolog, CULL_CONFIGURE)
-   SGE_STRING(QU_epilog, CULL_CONFIGURE)
-   SGE_STRING(QU_shell_start_mode, CULL_CONFIGURE)
-   SGE_STRING(QU_starter_method, CULL_CONFIGURE)
-   SGE_STRING(QU_suspend_method, CULL_CONFIGURE)
-   SGE_STRING(QU_resume_method, CULL_CONFIGURE)
-   SGE_STRING(QU_terminate_method, CULL_CONFIGURE)
-   SGE_STRING(QU_initial_state, CULL_CONFIGURE)
+   SGE_STRING(QU_tmpdir, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_shell, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_calendar, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_priority, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_processors, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_prolog, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_epilog, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_shell_start_mode, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_starter_method, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_suspend_method, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_resume_method, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_terminate_method, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_initial_state, CULL_SPOOL | CULL_CONFIGURE)
 
-   SGE_BOOL(QU_rerun, CULL_CONFIGURE)
+   SGE_BOOL(QU_rerun, CULL_SPOOL | CULL_CONFIGURE)
 
-   SGE_STRING(QU_s_rt, CULL_CONFIGURE)
-   SGE_STRING(QU_h_rt, CULL_CONFIGURE)
-   SGE_STRING(QU_s_cpu, CULL_CONFIGURE)
-   SGE_STRING(QU_h_cpu, CULL_CONFIGURE)
-   SGE_STRING(QU_s_fsize, CULL_CONFIGURE)
-   SGE_STRING(QU_h_fsize, CULL_CONFIGURE)
-   SGE_STRING(QU_s_data, CULL_CONFIGURE)
-   SGE_STRING(QU_h_data, CULL_CONFIGURE)
-   SGE_STRING(QU_s_stack, CULL_CONFIGURE)
-   SGE_STRING(QU_h_stack, CULL_CONFIGURE)
-   SGE_STRING(QU_s_core, CULL_CONFIGURE)
-   SGE_STRING(QU_h_core, CULL_CONFIGURE)
-   SGE_STRING(QU_s_rss, CULL_CONFIGURE)
-   SGE_STRING(QU_h_rss, CULL_CONFIGURE)
-   SGE_STRING(QU_s_vmem, CULL_CONFIGURE)
-   SGE_STRING(QU_h_vmem, CULL_CONFIGURE)
+   SGE_STRING(QU_s_rt, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_h_rt, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_s_cpu, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_h_cpu, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_s_fsize, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_h_fsize, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_s_data, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_h_data, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_s_stack, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_h_stack, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_s_core, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_h_core, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_s_rss, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_h_rss, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_s_vmem, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_h_vmem, CULL_SPOOL | CULL_CONFIGURE)
 
-   SGE_STRING(QU_suspend_interval, CULL_CONFIGURE)
-   SGE_STRING(QU_min_cpu_interval, CULL_CONFIGURE)
-   SGE_STRING(QU_notify, CULL_CONFIGURE)
+   SGE_STRING(QU_suspend_interval, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_min_cpu_interval, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_notify, CULL_SPOOL | CULL_CONFIGURE)
 
-   SGE_LIST(QU_ckpt_list, ST_Type, CULL_CONFIGURE)
-   SGE_LIST(QU_pe_list, ST_Type, CULL_CONFIGURE)
+   SGE_LIST(QU_ckpt_list, ST_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QU_pe_list, ST_Type, CULL_SPOOL | CULL_CONFIGURE)
 
-   SGE_LIST(QU_owner_list, US_Type, CULL_CONFIGURE)
-   SGE_LIST(QU_acl, US_Type, CULL_CONFIGURE)
-   SGE_LIST(QU_xacl, US_Type, CULL_CONFIGURE)
+   SGE_LIST(QU_owner_list, US_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QU_acl, US_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QU_xacl, US_Type, CULL_SPOOL | CULL_CONFIGURE)
 
-   SGE_LIST(QU_projects, UP_Type, CULL_CONFIGURE)
-   SGE_LIST(QU_xprojects, UP_Type, CULL_CONFIGURE)
+   SGE_LIST(QU_projects, UP_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QU_xprojects, UP_Type, CULL_SPOOL | CULL_CONFIGURE)
 
-   SGE_LIST(QU_consumable_config_list, CE_Type, CULL_CONFIGURE)
-   SGE_LIST(QU_load_thresholds, CE_Type, CULL_CONFIGURE)
-   SGE_LIST(QU_suspend_thresholds, CE_Type, CULL_CONFIGURE)
+   SGE_LIST(QU_consumable_config_list, CE_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QU_load_thresholds, CE_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QU_suspend_thresholds, CE_Type, CULL_SPOOL | CULL_CONFIGURE)
 
-   SGE_LIST(QU_subordinate_list, SO_Type, CULL_CONFIGURE)
+   SGE_LIST(QU_subordinate_list, SO_Type, CULL_SPOOL | CULL_CONFIGURE)
 
 /* EB: TODO: Add internal attributes */
 
@@ -241,8 +240,8 @@ SLISTDEF(QU_Type, QInstance)
    SGE_ULONG(QU_pending_job_cnt, CULL_DEFAULT)
    SGE_ULONG(QU_soft_violation, CULL_DEFAULT)
    SGE_ULONG(QU_host_seq_no, CULL_DEFAULT)
-   SGE_LIST(QU_resource_utilization, RUE_Type, CULL_DEFAULT)
-   SGE_LIST(QU_message_list, QIM_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(QU_consumable_actual_list, CE_Type, CULL_DEFAULT)
+   SGE_LIST(QU_message_list, QIM_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(QUN)
@@ -250,12 +249,13 @@ NAMEDEF(QUN)
    NAME("QU_qname")
    NAME("QU_full_name")
    NAME("QU_tag")
-   NAME("QU_available_at")
 
    NAME("QU_seq_no")
    NAME("QU_nsuspend")
    NAME("QU_qtype")
    NAME("QU_job_slots")
+   NAME("QU_fshare")
+   NAME("QU_oticket")
 
    NAME("QU_tmpdir")
    NAME("QU_shell")
@@ -325,7 +325,7 @@ NAMEDEF(QUN)
    NAME("QU_pending_job_cnt")
    NAME("QU_soft_violation")
    NAME("QU_host_seq_no")
-   NAME("QU_resource_utilization")
+   NAME("QU_consumable_actual_list")
    NAME("QU_message_list")
 NAMEEND
 

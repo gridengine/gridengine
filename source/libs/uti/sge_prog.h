@@ -32,15 +32,23 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge.h" 
 #include "basis_types.h"
+
 #include "sge_arch.h"
 
 #define SGE_PREFIX      "sge_"
+
 #define SGE_COMMD       "sge_commd"
+
 #define SGE_SHEPHERD    "sge_shepherd"
+
 #define SGE_COSHEPHERD  "sge_coshepherd"
-#define SGE_QMASTER     "sge_qmaster"
+
+#define SGE_QMASTER  "sge_qmaster"
+
 #define SGE_SHADOWD     "sge_shadowd"
+
 #define PE_HOSTFILE     "pe_hostfile"
 
 /* who - must match prognames[] in prognames.c */
@@ -67,7 +75,7 @@ enum {
  EXECD           ,       /* 19 */
  MAX_ANCILLARY   = EXECD , /* 19 */
  QEVENT,                 /* 20 */
- QUSERDEFINED    ,       /* 21 */
+ QUSERDEFINED   ,        /* 21 */
  ALL_OPT         ,       /* 22 */
 
 /* programs with numbers > ALL_OPT do not use the old parsing */
@@ -88,10 +96,7 @@ enum {
  PVM_RMANAGER    ,       /* 36 */
  QHOST           ,       /* 37 */
  COMMDCNTL       ,       /* 38 */ 
- SPOOLDEFAULTS   ,       /* 39 */
- JAPI            ,       /* 40 */
- JAPI_EC         ,       /* 41 */
- DRMAA                   /* 42 */
+ SPOOLDEFAULTS           /* 39 */
 };
 
 

@@ -47,14 +47,22 @@
 #include "msg_utilib.h"
 
 
-#if defined(IRIX)
+#if defined(IRIX6)
    /* to be independent from irix' compiler options */
 #  undef RLIM_INFINITY
 #  define  RLIM_INFINITY  0x7fffffffffffffffLL
 #elif defined(CRAY)
 #  define  RLIM_INFINITY  0
+#elif defined(ALPHA)
+#  define  RLIM_INFINITY  0x7fffffffffffffffL
+#elif defined(HPUX)
+#  define  RLIM_INFINITY  0x7fffffff
 #elif defined(WIN32NATIVE)
 #	define RLIM_INFINITY 0
+#elif defined(SOLARIS) && !defined(SOLARIS64)
+   /* Solaris 2.5 and 2.6 have different definition for RLIM_INFINITY */
+#  undef RLIM_INFINITY
+#  define  RLIM_INFINITY  0x7fffffff
 #endif
 
 #if !defined(CRAY) && !defined(SOLARIS64)
@@ -66,6 +74,10 @@
 #ifdef WIN32NATIVE
 #	define strcasecmp( a, b) stricmp( a, b)
 #	define strncasecmp( a, b, n) strnicmp( a, b, n)
+#endif
+
+#ifdef SUN4
+double strtod(const char *str, char **ptr);
 #endif
 
 u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp, 
@@ -140,6 +152,7 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
          return 0;
       } 
    }
+
 
    if (!uvalp)
       uvalp = &dummy_uval;
@@ -327,7 +340,6 @@ static double get_multiplier(sge_rlim_t *rlimp, char **dptr,
    case ',':                    /* no multiplier */
    case '\0':                   /* no multiplier */
    case '/':                    /* no multiplier */
-   case ' ':                    /* no multiplier */
       break;
    default:
       sprintf(tmp, MSG_GDI_UNRECOGNIZEDVALUETRAILER_SS , *dptr, where);
@@ -529,3 +541,4 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
       return (u_long32)ldummy;
    }
 }
+

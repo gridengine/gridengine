@@ -576,7 +576,7 @@ bool ck_event_number(lList *lp, u_long32 *waiting_for,
                      u_long32 *wrong_number);
 
 static bool 
-get_event_list(int sync, lList **lp, int* commlib_error);
+get_event_list(int sync, lList **lp);
 
 static void ec_add_subscriptionElement(lListElem *event_el, ev_event event, bool flush, int interval); 
 
@@ -805,7 +805,8 @@ ec_need_new_registration(void)
 *  SEE ALSO
 *     Eventclient/Client/ec_get_edtime()
 *******************************************************************************/
-int ec_set_edtime(int interval) 
+int 
+ec_set_edtime(int interval) 
 {
    int ret = 0;
 
@@ -815,8 +816,9 @@ int ec_set_edtime(int interval)
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       ret = (lGetUlong(ec, EV_d_time) != interval);
+
       if (ret > 0) {
-         lSetUlong(ec, EV_d_time, MIN(interval, CL_DEFINE_CLIENT_CONNECTION_LIFETIME-5));
+         lSetUlong(ec, EV_d_time, MIN(interval, COMMPROC_TIMEOUT-5));
          ec_config_changed();
       }
    }
@@ -1148,7 +1150,6 @@ bool
 ec_register(bool exit_on_qmaster_down, lList** alpp)
 {
    bool ret = false;
-   cl_com_handle_t* com_handle = NULL;
 
    DENTER(TOP_LAYER, "ec_register");
 
@@ -1180,26 +1181,11 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
       lp = lCreateList("registration", EV_Type);
       lAppendElem(lp, lCopyElem(ec));
 
-
-      /* closing actual connection to qmaster and reopen new connection. This will delete all
-         buffered messages  - CR */
-      com_handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
-      if (com_handle != NULL) {
-         int ngc_error;
-         ngc_error = cl_commlib_close_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1);
-         if (ngc_error == CL_RETVAL_OK) {
-            DPRINTF(("closed old connection to qmaster\n"));
-         } else {
-            INFO((SGE_EVENT, "error closing old connection to qmaster: "SFQ"\n", cl_get_error_text(ngc_error)));
-         }
-         ngc_error = cl_commlib_open_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1 );
-         if (ngc_error == CL_RETVAL_OK) {
-            DPRINTF(("opened new connection to qmaster\n"));
-         } else {
-            ERROR((SGE_EVENT, "error opening new connection to qmaster: "SFQ"\n", cl_get_error_text(ngc_error)));
-         }
-      }
-
+      /* remove possibly pending messages */
+      remove_pending_messages(NULL, 0, 0, TAG_REPORT_REQUEST);
+      /* commlib call to mark all commprocs as unknown */
+      reset_last_heard();
+      
       /*
        *  to add may also means to modify
        *  - if this event client is already enrolled at qmaster
@@ -1296,19 +1282,18 @@ ec_deregister(void)
       if (init_packbuffer(&pb, sizeof(u_long32), 0) == PACK_SUCCESS) {
          /* error message is output from init_packbuffer */
          int send_ret; 
-         lList *alp = NULL;
 
          packint(&pb, lGetUlong(ec, EV_id));
 
-         send_ret = sge_send_any_request(0, NULL, sge_get_master(0),
-                                         prognames[QMASTER], 1, &pb,
-                                         TAG_EVENT_CLIENT_EXIT, 0, &alp);
+         send_ret = sge_send_any_request(0, NULL, sge_get_master(0), 
+                                         prognames[QMASTER], 1, &pb, 
+                                         TAG_EVENT_CLIENT_EXIT);
          
          clear_packbuffer(&pb);
-         answer_list_output (&alp);
 
-         if (send_ret == CL_RETVAL_OK) {
+         if (send_ret == CL_OK) {
             /* error message is output from sge_send_any_request */
+
             /* clear state of this event client instance */
             ec = lFreeElem(ec);
             need_register = true;
@@ -1788,8 +1773,8 @@ ec_set_flush(ev_event event, bool flush, int interval)
          ret = ec_unset_flush(event);
          ec_mod_subscription_flush(ec, event, EV_NOT_FLUSHED, EV_NO_FLUSH);
          PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
-/*      } else if (interval < 0 || interval > EV_MAX_FLUSH) {
-         WARNING((SGE_EVENT, MSG_EVENT_ILLEGALFLUSHTIME_I, interval)); */
+      } else if (interval < 0 || interval > EV_MAX_FLUSH) {
+         WARNING((SGE_EVENT, MSG_EVENT_ILLEGALFLUSHTIME_I, interval));
       } else {
          lListElem *sub_event = lGetElemUlong(lGetList(ec, EV_subscribed), EVS_id, event);
 
@@ -2342,7 +2327,6 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
    bool ret = true;
    lList *report_list = NULL;
    u_long32 wrong_number;
-   lList *alp = NULL;
 
    DENTER(TOP_LAYER, "ec_get");
 
@@ -2379,8 +2363,6 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
     */
    if (ret) {
       static time_t last_fetch_time = 0;
-      static time_t last_fetch_ok_time = 0;
-      int commlib_error = CL_RETVAL_UNKNOWN;
       time_t now;
 
       bool done = false;
@@ -2389,11 +2371,6 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
       int sync = 1;
 
       now = sge_get_gmt();
-
-      /* initialize last_fetch_ok_time */
-      if (last_fetch_ok_time == 0) {
-         last_fetch_ok_time = ec_get_edtime();
-      }
 
       /* initialize the maximum number of fetches */
       if (last_fetch_time == 0) {
@@ -2412,7 +2389,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
          DPRINTF(("doing %s fetch for messages, %d still to do\n", 
                   sync ? "sync" : "async", max_fetch));
 
-         if ((fetch_ok = get_event_list(sync, &report_list,&commlib_error))) {
+         if ((fetch_ok = get_event_list(sync, &report_list))) {
             lList *new_events = NULL;
             lXchgList(lFirst(report_list), REP_list, &new_events);
             report_list = lFreeList(report_list);
@@ -2455,44 +2432,12 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
 
       /* if first synchronous get_event_list failed, return error */
       if (sync && !fetch_ok) {
-         u_long32 timeout = ec_get_edtime() * 10;
-
          DPRINTF(("first syncronous get_event_list failed\n"));
-
-         /* we return false when we have reached a timeout or 
-            on communication error, otherwise we return true */
-         ret = true;
-
-         /* check timeout */
-         if ( last_fetch_ok_time + timeout < now ) {
-            /* we have a  SGE_EM_TIMEOUT */
-            DPRINTF(("SGE_EM_TIMEOUT reached\n"));
-            ret = false;
-         } else {
-            DPRINTF(("SGE_EM_TIMEOUT in "U32CFormat" seconds\n", u32c(last_fetch_ok_time + timeout - now) ));
-         }
-
-         /* check for communicaton error */
-         if (commlib_error != CL_RETVAL_OK) { 
-            switch (commlib_error) {
-               case CL_RETVAL_NO_MESSAGE:
-               case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
-                  break;
-               default:
-                  DPRINTF(("COMMUNICATION ERROR: %s\n", cl_get_error_text(commlib_error)));
-                  ret = false;
-                  break;
-            }
-         }
+         ret = false;
       } else {
-         /* set last_fetch_ok_time, because we had success */
-         last_fetch_ok_time = sge_get_gmt();
-
          /* send an ack to the qmaster for all received events */
-         if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event - 1,
-                                     lGetUlong(ec, EV_id), &alp)
-                                    != CL_RETVAL_OK) {
-            answer_list_output (&alp);
+         if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event - 1, 
+                                     lGetUlong(ec, EV_id))) {
             WARNING((SGE_EVENT, MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY ));
          } else {
             DPRINTF(("Sent ack for all events lower or equal %d\n", 
@@ -2503,20 +2448,6 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
 
    if (*event_list != NULL) {
       DPRINTF(("ec_get - received %d events\n", lGetNumberOfElem(*event_list)));
-   }
-
-   /* check if we got a QMASTER_GOES_DOWN event. 
-    * if yes, reregister with next event fetch
-    */
-   if (lGetNumberOfElem(*event_list) > 0) {
-      const lListElem *event;
-
-      for_each(event, *event_list) {
-         if (lGetUlong(event, ET_type) == sgeE_QMASTER_GOES_DOWN) {
-            ec_mark4registration();
-            break;
-         }
-      }
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
@@ -2660,7 +2591,7 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
 *
 *  SYNOPSIS
 *     static bool 
-*     get_event_list(int sync, lList **report_list, int *commlib_error) 
+*     get_event_list(int sync, lList **report_list) 
 *
 *  FUNCTION
 *     Tries to retrieve the event list.
@@ -2670,7 +2601,6 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
 *  INPUTS
 *     int sync            - synchronous transfer
 *     lList **report_list - pointer to returned list
-*     int *commlib_error  - pointer to integer to return communication error
 *
 *  RESULT
 *     static bool - true on success, else false
@@ -2679,28 +2609,24 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
 *     Eventclient/Client/ec_get()
 ******************************************************************************/
 static bool 
-get_event_list(int sync, lList **report_list, int *commlib_error )
+get_event_list(int sync, lList **report_list)
 {
    int tag;
    bool ret = true;
    u_short id;
    sge_pack_buffer pb;
-   int help;
 
    DENTER(TOP_LAYER, "get_event_list");
 
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
+   id = 0;
    tag = TAG_REPORT_REQUEST;
-   id = 1;
-
-   DPRINTF(("try to get request from %s, id %d\n",(char*)prognames[QMASTER], id ));
-   if ( (help=sge_get_any_request((char*)sge_get_master(0), (char*)prognames[QMASTER], &id, &pb, &tag, sync,0,NULL)) != CL_RETVAL_OK) {
-      if (help == CL_RETVAL_NO_MESSAGE || help == CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
-         DEBUG((SGE_EVENT, "commlib returns %s\n", cl_get_error_text(help)));
-      } else {
-         WARNING((SGE_EVENT, "commlib returns %s\n", cl_get_error_text(help))); 
-      }
+   /* FIX_CONST */
+   if (sge_get_any_request((char*)sge_get_master(0), 
+                           (char*)prognames[QMASTER], &id, &pb, &tag, sync) 
+                           != CL_OK) {
+      DPRINTF(("commlib returns %s (%d)\n", cl_errstr(ret), ret));
       ret = false;
    } else {
       if (cull_unpack_list(&pb, report_list)) {
@@ -2708,9 +2634,6 @@ get_event_list(int sync, lList **report_list, int *commlib_error )
          ret = false;
       }
       clear_packbuffer(&pb);
-   }
-   if ( commlib_error != NULL) {
-      *commlib_error = help;
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);

@@ -1,0 +1,184 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\" $RCSfile: sge_gdi_trm.3,v $     Last Update: $Date: 2001/07/20 08:19:08 $     Revision: $Revision: 1.3 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB      \" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T    \" switch to typewriter font
+.ft CW      \" probably want CW if you don't have TA font
+..
+.\"
+.de TY      \" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M    \" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH SGE_GDI_TRM 3 "$Date: 2001/07/20 08:19:08 $" "xxRELxx" "xxQS_NAMExx/TRM GDI"
+.\"
+.SH NAME
+.PP
+.nf
+sge_gdi_host_attribute, sge_gdi_host_scaling,
+sge_gdi_host_nslots, sge_gdi_myhost_attribute,
+sge_gdi_myhost_scaling, sge_gdi_myhost_nslots 
+- xxQS_NAMExx/TRM GDI calls
+.PP
+.\"
+.\"
+.SH SYNOPSIS
+.B #include """sge_gdi_attributes.h"""
+.PP
+.nf
+\fBchar *sge_gdi_host_attribute(\fB
+.RS
+\fBchar *hostname,\fB
+\fBchar *attr_name\fB
+.RE
+.fi
+\fB);\fB
+.PP
+.nf
+\fBdouble sge_gdi_host_scaling(\fB
+.RS
+\fBchar *hostname,\fB
+\fBchar *attr_name\fB
+.RE
+.fi
+\fB);\fB
+.PP
+.nf
+\fBint sge_gdi_host_nslots(\fB
+.RS
+\fBchar *hostname,\fB
+\fBu_long32 jobid\fB
+.RE
+.fi
+\fB);\fB
+.PP
+.nf
+\fBchar *sge_gdi_myhost_attribute(\fB
+.RS
+\fBchar *attr_name\fB
+.RE
+.fi
+\fB);\fB
+.PP
+.nf
+\fBdouble sge_gdi_myhost_scaling(\fB
+.RS
+\fBchar *attr_name\fB
+.RE
+.fi
+\fB);\fB
+.PP
+.nf
+\fBint sge_gdi_myhost_nslots(\fB
+.RS
+\fBu_long32 jobid\fB
+.RE
+.fi
+\fB);\fB
+.\"
+.\"
+.SH DESCRIPTION
+The Transparent Resource Manager (TRM) extension to the xxQS_NAMExx 
+Database Interface (GDI) of xxQS_NAMExx simplifies integration of 
+(parallel) applications with xxQS_NAMExx. Access is provided to 
+information which describes the runtime environment of a xxQS_NAMExx job.
+In many cases this information can be used to optimize runtime 
+of jobs/applications by adapting its behavior to runtime environment
+or load situation.
+.sp 1
+The following is a description of the basic functionality of all
+xxQS_NAMExx TRM GDI functions:
+.\"
+.SS "sge_gdi_host_attribute"
+Returns value of the requested attribute at the host. 
+Depending on the attribute this can be a load 
+value, a statically configured value or a consumable resource. 
+On error NULL is returned. Otherwise a pointer is returned which 
+points to a static address. Please note that 
+.I sge_gdi_host_attribute
+will fail if the xxQS_NAMExx GDI was not successfully initialized by use of 
+.M sge_gdi_setup 3 .
+.\"
+.SS "sge_gdi_host_scaling"
+Returns the scaling factor which is used to scale the given 
+load value from the host. The scaling values for a host can be modified
+using the  
+.M qconf 1
+command. If no scaling is active for the attribute a value of 1 is returned.
+On error -1 is returned. Please note that 
+.I sge_gdi_host_scaling
+will fail if the xxQS_NAMExx GDI was not successfully initialized by use of 
+.M sge_gdi_setup 3 .
+.\"
+.SS "sge_gdi_host_nslots"
+Returns the number of slots the job got from the xxQS_NAMExx scheduler 
+for the given host. This number can be important in case of 
+multithreaded parallel applications.
+If the jobid is 0 the value of the JOB_ID environment is 
+used instead.
+On error 0 is returned. Please note that 
+.I sge_gdi_host_nslots
+will fail if the xxQS_NAMExx GDI was not successfully initialized by use of 
+.M sge_gdi_setup 3 .
+.\"
+.SS "sge_gdi_myhost_attribute"
+Returns the value of the requested attribute at the local host.
+Depending on the attribute this can be a load 
+value, a statically configured value or a consumable resource. 
+On error NULL is returned. Otherwise a pointer is returned which 
+points to a static address. 
+.I sge_gdi_host_attribute 
+should be called without setting up the xxQS_NAMExx GDI since this is 
+done inside of this function. 
+.\"
+.SS "sge_gdi_myhost_scaling"
+Returns the scaling factor which is used to scale the given 
+load value from the local host. The scaling values for a host can be modified
+using the  
+.M qconf 1
+command. If no scaling is active for the attribute a value of 1 is returned.
+On error -1 is returned. 
+.I sge_gdi_myhost_scaling 
+should be called without setting up the xxQS_NAMExx GDI since this is 
+done inside of this function. 
+.\"
+.SS "sge_gdi_myhost_nslots"
+Returns the number of slots the job got from the xxQS_NAMExx scheduler 
+for the local host. This number can be important in case of 
+multithreaded parallel applications.
+If the jobid is 0 the value of the JOB_ID environment is 
+used instead.
+On error 0 is returned. 
+.I sge_gdi_myhost_nslots 
+should be called without setting up the xxQS_NAMExx GDI since this is 
+done inside of this function. 
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M sge_gdi_setup 3 .
+.M qconf 1
+.\"
+.\"
+.SH COPYRIGHT
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

@@ -52,7 +52,6 @@ enum {
    UP_name = UP_LOWERBOUND,
    UP_oticket,
    UP_fshare,
-   UP_delete_time,
    UP_job_cnt,
    UP_pending_job_cnt,
    UP_usage,
@@ -73,8 +72,6 @@ ILISTDEF(UP_Type, UserProject, SGE_PROJECT_LIST)
                                * used by SGEEE schedd) spooled */
    SGE_ULONG(UP_fshare, CULL_DEFAULT | CULL_SPOOL)       /* configured functional shares (set by Qmon, 
                                * used by SGEEE schedd) spooled */
-   SGE_ULONG(UP_delete_time, CULL_DEFAULT | CULL_SPOOL) /* delete time for automatic users, (set by qmaster, 
-                               * used by SGEEE qmaster) spooled */
    SGE_ULONG(UP_job_cnt, CULL_DEFAULT)     /* job count (set and used by SGEEE schedd, not 
                                * spooled) schedd local, not stored to 
                                * qmaster */
@@ -114,7 +111,6 @@ NAMEDEF(UPN)
    NAME("UP_name")
    NAME("UP_oticket")
    NAME("UP_fshare")
-   NAME("UP_delete_time")
    NAME("UP_job_cnt")
    NAME("UP_pending_job_cnt")
    NAME("UP_usage")

@@ -92,10 +92,7 @@ const char *prognames[] =
    "unknown"	,       /* 36  */
    "qhost"		,       /* 37  */
    "commdcntl" ,       /* 38  */
-   "spoolinit" ,       /* 39  */
-   "japi"      ,       /* 40  */
-   "japi_ec"   ,       /* 41  */
-   "drmaa"             /* 42  */
+   "spoolinit"         /* 39  */
 };
  
 typedef struct {
@@ -449,10 +446,10 @@ void uti_state_set_exit_func(sge_exit_func_t f)
 ******************************************************************************/
 void sge_getme(u_long32 program_number)
 {
-   char *s = NULL;
+   char *s;
    stringT tmp_str;
-   struct passwd *paswd = NULL;
-   struct hostent *hent = NULL;
+   struct passwd *paswd;
+   struct hostent *hent, *hent2;
  
    DENTER(TOP_LAYER, "sge_getme");
  
@@ -464,7 +461,7 @@ void sge_getme(u_long32 program_number)
 
    /* Fetch hostnames */
    SGE_ASSERT((gethostname(tmp_str, sizeof(tmp_str)) == 0));
-   SGE_ASSERT(((hent = sge_gethostbyname(tmp_str,NULL)) != NULL));
+   SGE_ASSERT(((hent = sge_gethostbyname(tmp_str)) != NULL));
 
    DTRACE;
 
@@ -478,20 +475,20 @@ void sge_getme(u_long32 program_number)
    /* Bad resolving in some networks leads to short qualified host names */
    if (!strcmp(uti_state_get_qualified_hostname(), uti_state_get_unqualified_hostname())) {
       char tmp_addr[8];
-      struct hostent *hent2 = NULL;
+ 
       memcpy(tmp_addr, hent->h_addr, hent->h_length);
       DTRACE;
-      SGE_ASSERT(((hent2 = sge_gethostbyaddr((const struct in_addr *)&tmp_addr, NULL)) != NULL));
+      SGE_ASSERT(((hent2 = sge_gethostbyaddr((const struct in_addr *)&tmp_addr)) != NULL));
       DTRACE;
 
       uti_state_set_qualified_hostname(hent2->h_name);
       s = sge_dirname(hent2->h_name, '.');
       uti_state_set_unqualified_hostname(s);
       free(s);
-      sge_free_hostent(&hent2);
    }
 
-   sge_free_hostent(&hent);
+   FREE (hent);
+   
    DTRACE;
 
    /* SETPGRP; */

@@ -120,6 +120,7 @@ lList **topp  /* ticket orders ptr ptr */
    u_long32 force, state;
    u_long32 pe_slots = 0, q_slots, q_version, task_id_range = 0;
    lListElem *pe = NULL;
+   lListElem *scheduler;
 
    DENTER(TOP_LAYER, "sge_follow_order");
 
@@ -130,20 +131,20 @@ lList **topp  /* ticket orders ptr ptr */
    force=lGetUlong(ep, OR_force);
    or_pe=lGetString(ep, OR_pe);
 
-   if(!sge_event_client_registered(EV_ID_SCHEDD)) {
+   scheduler = eventclient_list_locate(EV_ID_SCHEDD);
+   if(scheduler == NULL) {
       ERROR((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
       DEXIT;
       return -2;
    }
 
    /* last order has been sent again - ignore it */
-   if (sge_get_event_client_data(EV_ID_SCHEDD) == seq_no) {
+   if (seq_no == lGetUlong(scheduler, EV_clientdata)) {
       WARNING((SGE_EVENT, MSG_IGNORE_ORDER_RETRY_I, seq_no));
       DEXIT;
       return STATUS_OK;
    }
-
-   sge_set_event_client_data(EV_ID_SCHEDD, seq_no);
+   lSetUlong(scheduler, EV_clientdata, seq_no);
 
    DPRINTF(("-----------------------------------------------------------------------\n"));
 
@@ -177,7 +178,7 @@ lList **topp  /* ticket orders ptr ptr */
          WARNING((SGE_EVENT, MSG_JOB_FINDJOB_U, u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          /* try to repair schedd data - session is unknown here */
-         sge_add_event(0, sgeE_JOB_DEL, job_number, 0, 
+         sge_add_event(NULL, 0, sgeE_JOB_DEL, job_number, 0, 
                        NULL, NULL, NULL, NULL);
          DEXIT;
          return -1;
@@ -199,21 +200,16 @@ lList **topp  /* ticket orders ptr ptr */
       /* search and enroll task */
       jatp = job_search_task(jep, NULL, task_number);
       if(jatp == NULL) {
-         lList *answer_list = NULL;
-
          jatp = job_create_task(jep, NULL, task_number);
          /* JG: TODO: where is spooling done? */
-         sge_add_event(0, sgeE_JATASK_ADD, job_number, task_number, 
+         sge_add_event(NULL, 0, sgeE_JATASK_ADD, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), jatp);
-         sge_event_spool(&answer_list, 0, sgeE_JOB_MOD,
-                         job_number, 0, NULL, NULL, lGetString(jep, JB_session),
-                         jep, NULL, NULL, true, true);
       }
       if (!jatp) {
          WARNING((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), 
                   u32c(job_number)));
          /* try to repair schedd data */
-         sge_add_event( 0, sgeE_JATASK_DEL, job_number, task_number, 
+         sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), NULL);
          DEXIT;
          return -1;
@@ -227,6 +223,8 @@ lList **topp  /* ticket orders ptr ptr */
          return -1;
       }
 
+
+      /* EB: TODO: untag all queues */
       cqueue_list_set_tag(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
                           0, true);
 
@@ -244,17 +242,19 @@ lList **topp  /* ticket orders ptr ptr */
 
       master_qep = NULL;
        
-      /* fill number of tickets into job */
-      lSetDouble(jatp, JAT_tix,                   lGetDouble(ep, OR_ticket));
-      lSetDouble(jatp, JAT_ntix,                  lGetDouble(ep, OR_ntix));
-      lSetDouble(jatp, JAT_prio,                  lGetDouble(ep, OR_prio));
+      if (feature_is_enabled(FEATURE_SGEEE)) {
+         /* fill number of tickets into job */
+         lSetDouble(jatp, JAT_tix,                   lGetDouble(ep, OR_ticket));
+         lSetDouble(jatp, JAT_ntix,                  lGetDouble(ep, OR_ntix));
+         lSetDouble(jatp, JAT_prio,                  lGetDouble(ep, OR_prio));
 
-      sprintf(opt_sge, MSG_ORD_INITIALTICKETS_U, u32c((u_long32)lGetDouble(ep, OR_ticket)));
+         sprintf(opt_sge, MSG_ORD_INITIALTICKETS_U, u32c((u_long32)lGetDouble(ep, OR_ticket)));
 
-      if ((oep = lFirst(lGetList(ep, OR_queuelist)))) {
-         lSetDouble(jatp, JAT_oticket, lGetDouble(oep, OQ_oticket));
-         lSetDouble(jatp, JAT_fticket, lGetDouble(oep, OQ_fticket));
-         lSetDouble(jatp, JAT_sticket, lGetDouble(oep, OQ_sticket));
+         if ((oep = lFirst(lGetList(ep, OR_queuelist)))) {
+            lSetDouble(jatp, JAT_oticket, lGetDouble(oep, OQ_oticket));
+            lSetDouble(jatp, JAT_fticket, lGetDouble(oep, OQ_fticket));
+            lSetDouble(jatp, JAT_sticket, lGetDouble(oep, OQ_sticket));
+         }
       }
 
       for_each(oep, lGetList(ep, OR_queuelist)) {
@@ -278,8 +278,9 @@ lList **topp  /* ticket orders ptr ptr */
 
          DPRINTF(("%sORDER #%d: start %d slots of job \"%d\" on"
                   " queue \"%s\" v%d%s\n", 
-               force ? "FORCE ": "", seq_no, q_slots, job_number, q_name, 
-               (int)q_version, (opt_sge ) ));
+            force ? "FORCE ": "", seq_no, q_slots, job_number, q_name, 
+               (int)q_version, 
+               (feature_is_enabled(FEATURE_SGEEE) ? opt_sge : "") ));
 
          qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), q_name);
          if (!qep) {
@@ -383,7 +384,7 @@ lList **topp  /* ticket orders ptr ptr */
          if (hep) {
             lListElem *ruep;
             lList *rulp;
-
+ 
             rulp = lGetList(hep, EH_reschedule_unknown_list);
             if (rulp) {
                for_each(ruep, rulp) {
@@ -419,11 +420,14 @@ lList **topp  /* ticket orders ptr ptr */
           *  and gets untagged when ack has arrived 
           */
          if (pe && lGetBool(pe, PE_control_slaves)) {
-      
-            lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));
-            lSetDouble(gdil_ep, JG_oticket, lGetDouble(oep, OQ_oticket));
-            lSetDouble(gdil_ep, JG_fticket, lGetDouble(oep, OQ_fticket));
-            lSetDouble(gdil_ep, JG_sticket, lGetDouble(oep, OQ_sticket));
+
+            if (feature_is_enabled(FEATURE_SGEEE)) {
+               lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));
+               lSetDouble(gdil_ep, JG_oticket, lGetDouble(oep, OQ_oticket));
+               lSetDouble(gdil_ep, JG_fticket, lGetDouble(oep, OQ_fticket));
+               lSetDouble(gdil_ep, JG_sticket, lGetDouble(oep, OQ_sticket));
+            }
+     
 
             if (sge_hostcmp(lGetHost(master_host, EH_name), lGetHost(hep, EH_name))) {
                lListElem *first_at_host;
@@ -445,7 +449,7 @@ lList **topp  /* ticket orders ptr ptr */
          if (pe) 
             pe_slots += q_slots;
       }
-         
+
       /* fill in master_queue */
       lSetString(jatp, JAT_master_queue, lGetString(master_qep, QU_full_name));
       lSetList(jatp, JAT_granted_destin_identifier_list, gdil);
@@ -468,9 +472,9 @@ lList **topp  /* ticket orders ptr ptr */
       trigger_job_resend(sge_get_gmt(), master_host, job_number, task_number);
 
       if (pe) {
-         pe_debit_slots(pe, pe_slots, job_number);
+         debit_job_from_pe(pe, pe_slots, job_number);
          /* this info is not spooled */
-         sge_add_event( 0, sgeE_PE_MOD, 0, 0, 
+         sge_add_event(NULL, 0, sgeE_PE_MOD, 0, 0, 
                        lGetString(jatp, JAT_granted_pe), NULL, NULL, pe);
          lListElem_clear_changed_info(pe);
       }
@@ -501,7 +505,7 @@ lList **topp  /* ticket orders ptr ptr */
    case ORT_ptickets:
 
       DPRINTF(("ORDER ORT_ptickets\n"));
-      {
+      if (feature_is_enabled(FEATURE_SGEEE)) {
 
          lListElem *joker;
          int pos;
@@ -539,7 +543,7 @@ lList **topp  /* ticket orders ptr ptr */
          if (!jatp) {
             ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
                   u32c(task_number), u32c(job_number)));
-            sge_add_event( 0, sgeE_JATASK_DEL, job_number, task_number, 
+            sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_number, task_number, 
                           NULL, NULL, lGetString(jep, JB_session), NULL);
             DEXIT;
             return -2;
@@ -590,19 +594,17 @@ lList **topp  /* ticket orders ptr ptr */
             if ((pos=lGetPosViaElem(joker_task, JAT_ntix))>=0) 
                lSetDouble(jatp, JAT_ntix, lGetPosDouble(joker_task, pos));
 
-            lSetDouble(jep, JB_nppri,                     lGetDouble(joker, JB_nppri));
             lSetDouble(jep, JB_nurg,                      lGetDouble(joker, JB_nurg));
             lSetDouble(jep, JB_urg,                       lGetDouble(joker, JB_urg));
             lSetDouble(jep, JB_rrcontr,                   lGetDouble(joker, JB_rrcontr));
             lSetDouble(jep, JB_dlcontr,                   lGetDouble(joker, JB_dlcontr));
             lSetDouble(jep, JB_wtcontr,                   lGetDouble(joker, JB_wtcontr));
          }
-         DPRINTF(("PRIORITY: "u32"."u32" %f/%f tix/ntix %f npri %f/%f urg/nurg %f prio\n",
+         DPRINTF(("PRIORITY: "u32"."u32" %f/%f tix/ntix %f/%f urg/nurg %f prio\n",
             lGetUlong(jep, JB_job_number),
             lGetUlong(jatp, JAT_task_number),
             lGetDouble(jatp, JAT_tix),
             lGetDouble(jatp, JAT_ntix),
-            lGetDouble(jep, JB_nppri),
             lGetDouble(jep, JB_urg),
             lGetDouble(jep, JB_nurg),
             lGetDouble(jatp, JAT_prio)));
@@ -625,7 +627,7 @@ lList **topp  /* ticket orders ptr ptr */
    case ORT_tickets:
 
       DPRINTF(("ORDER ORT_tickets\n"));
-      {
+      if (feature_is_enabled(FEATURE_SGEEE)) {
 
          lList *oeql;
          lListElem *joker;
@@ -660,7 +662,7 @@ lList **topp  /* ticket orders ptr ptr */
          if (!jatp) {
             ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
                   u32c(task_number), u32c(job_number)));
-            sge_add_event( 0, sgeE_JATASK_DEL, job_number, task_number, 
+            sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_number, task_number, 
                           NULL, NULL, lGetString(jep, JB_session), NULL);
             DEXIT;
             return -2;
@@ -716,7 +718,6 @@ lList **topp  /* ticket orders ptr ptr */
 
                destribute_tickets = (lGetPosViaElem(joker_task, JAT_granted_destin_identifier_list) >-1); 
 
-               lSetDouble(jep, JB_nppri,                     lGetDouble(joker, JB_nppri));
                lSetDouble(jep, JB_nurg,                      lGetDouble(joker, JB_nurg));
                lSetDouble(jep, JB_urg,                       lGetDouble(joker, JB_urg));
                lSetDouble(jep, JB_rrcontr,                   lGetDouble(joker, JB_rrcontr));
@@ -832,7 +833,7 @@ lList **topp  /* ticket orders ptr ptr */
          ERROR((SGE_EVENT, MSG_JOB_FINDJOB_U, u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          /* try to repair schedd data - session is unknown here */
-         sge_add_event( 0, sgeE_JOB_DEL, job_number, task_number, 
+         sge_add_event(NULL, 0, sgeE_JOB_DEL, job_number, task_number, 
                        NULL, NULL, NULL, NULL);
          DEXIT;
          return -1;
@@ -841,12 +842,12 @@ lList **topp  /* ticket orders ptr ptr */
       if(jatp == NULL) {
          jatp = job_create_task(jep, NULL, task_number);
          /* JG: TODO: where is jatask spooled? */
-         sge_add_event( 0, sgeE_JATASK_ADD, job_number, task_number, 
+         sge_add_event(NULL, 0, sgeE_JATASK_ADD, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), jatp);
       }
       if (!jatp) {
          ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), u32c(job_number)));
-         sge_add_event( 0, sgeE_JATASK_DEL, job_number, task_number, 
+         sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), NULL);
          /* try to repair schedd data */
          DEXIT;
@@ -902,14 +903,11 @@ lList **topp  /* ticket orders ptr ptr */
    case ORT_update_project_usage:
    case ORT_update_user_usage:
       DPRINTF(("ORDER: ORT_update_project_usage/ORT_update_user_usage\n"));
-      {
+      if (feature_is_enabled(FEATURE_SGEEE)) {
          lListElem *up_order, *up, *ju, *up_ju, *next;
          int pos;
          const char *up_name;
          lList *tlp;
-#if 0  /* SVD040128 - commented out because we only extend auto_user life based on qsub */
-         u_long32 now = sge_get_gmt();
-#endif
 
          DPRINTF(("%sORDER #%d: update %d users/prjs\n", 
             force?"FORCE ":"", 
@@ -958,13 +956,6 @@ lList **topp  /* ticket orders ptr ptr */
                /* Note: Should we apply the debited job usage in this case? */
                continue;
             }
-
-#if 0  /* SVD040128 - commented out because we only extend auto_user life based on qsub */
-            /* Extend life of automatic users */
-            if (lGetUlong(up, UP_delete_time) > 0) {
-               lSetUlong(up, UP_delete_time, now + conf.auto_user_delete_time);
-            }
-#endif
 
             lSetUlong(up, UP_version, lGetUlong(up, UP_version)+1);
 
@@ -1047,7 +1038,8 @@ lList **topp  /* ticket orders ptr ptr */
     * ----------------------------------------------------------------------- */
    case ORT_share_tree:
       DPRINTF(("ORDER: ORT_share_tree\n"));
-      if ( !sge_init_node_fields(lFirst(Master_Sharetree_List)) &&
+      if (feature_is_enabled(FEATURE_SGEEE) && 
+           !sge_init_node_fields(lFirst(Master_Sharetree_List)) &&
 	        update_sharetree(alpp, Master_Sharetree_List, lGetList(ep, OR_joker))) {
          /* alpp gets filled by update_sharetree */
          DPRINTF(("%sORDER #%d: ORT_share_tree\n", force?"FORCE ":"", seq_no));
@@ -1062,7 +1054,7 @@ lList **topp  /* ticket orders ptr ptr */
     * ----------------------------------------------------------------------- */
    case ORT_sched_conf:
       DPRINTF(("ORDER: ORT_sched_conf\n"));
-      {
+      if (feature_is_enabled(FEATURE_SGEEE)) {
          lListElem *joker;
          int pos;
 
@@ -1119,9 +1111,8 @@ lList **topp  /* ticket orders ptr ptr */
 
             {
                lList *answer_list = NULL;
-               const char *session = lGetString (jep, JB_session);
                sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
-                               jobid, task_number, NULL, NULL, session,
+                               jobid, task_number, NULL, NULL, NULL,
                                jep, jatp, NULL, true, true);
                answer_list_output(&answer_list);
             }
@@ -1172,9 +1163,8 @@ lList **topp  /* ticket orders ptr ptr */
             lSetUlong(jatp, JAT_state, state);
             {
                lList *answer_list = NULL;
-               const char *session = lGetString (jep, JB_session);
                sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
-                               jobid, task_number, NULL, NULL, session,
+                               jobid, task_number, NULL, NULL, NULL,
                                jep, jatp, NULL, true, true);
                answer_list_output(&answer_list);
             }
@@ -1199,7 +1189,7 @@ lList **topp  /* ticket orders ptr ptr */
             lAppendElem(Master_Job_Schedd_Info_List, lCopyElem(sme));
          }
          /* this information is not spooled (but might be usefull in a db) */
-         sge_add_event( 0, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, 
+         sge_add_event(NULL, 0, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, 
                        NULL, NULL, NULL, sme);
       }
       break;
@@ -1224,16 +1214,11 @@ lList *ticket_orders
    const char *master_host_name;
    lListElem *jep, *other_jep, *ep, *ep2, *next, *other, *jatask = NULL, *other_jatask;
    sge_pack_buffer pb;
+   int cl_err = 0;
    u_long32 dummymid;
    int n;
    u_long32 now;
-#ifdef ENABLE_NGC
-   int cl_err = CL_RETVAL_OK;
-   unsigned long last_heard_from;
-#else
-   int cl_err = 0;
    static u_short number_one = 1;
-#endif
 
    DENTER(TOP_LAYER, "distribute_ticket_orders");
 
@@ -1290,17 +1275,10 @@ lList *ticket_orders
       hep = host_list_locate(Master_Exechost_List, master_host_name);
       n = lGetNumberOfElem(to_send);
 
-#ifdef ENABLE_NGC
-      if (hep) {
-         cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
-                                        (char*)master_host_name, (char*)prognames[EXECD],1, &last_heard_from);
-      }
-      if (  hep &&  last_heard_from + 10 * conf.load_report_time > now)
-#else
-      if (  hep && last_heard_from(prognames[EXECD], &number_one, master_host_name) 
-            + 10 * conf.load_report_time > now) 
-#endif
-         {
+      if (  hep && 
+            last_heard_from(prognames[EXECD], &number_one, 
+            master_host_name) 
+            +10*conf.load_report_time > now) {
 
          /* should have now all ticket orders for 'host' in 'to_send' */ 
          if (init_packbuffer(&pb, sizeof(u_long32)*3*n, 0)==PACK_SUCCESS) {
@@ -1309,16 +1287,11 @@ lList *ticket_orders
                packint(&pb, lGetUlong(ep2, OR_ja_task_number));
                packdouble(&pb, lGetDouble(ep2, OR_ticket));
             }
-
-#ifdef ENABLE_NGC
-            cl_err = gdi_send_message_pb(0, prognames[EXECD], 1, master_host_name, TAG_CHANGE_TICKET, &pb, &dummymid);
+            cl_err = gdi_send_message_pb(0, prognames[EXECD], 0,
+                  master_host_name, TAG_CHANGE_TICKET, &pb, &dummymid);
             clear_packbuffer(&pb);
-            DPRINTF(("%s %d ticket changings to execd@%s\n", (cl_err==CL_RETVAL_OK)?"failed sending":"sent", n, master_host_name));
-#else
-            cl_err = gdi_send_message_pb(0, prognames[EXECD], 0, master_host_name, TAG_CHANGE_TICKET, &pb, &dummymid);
-            clear_packbuffer(&pb);
-            DPRINTF(("%s %d ticket changings to execd@%s\n", cl_err?"failed sending":"sent", n, master_host_name));
-#endif
+            DPRINTF(("%s %d ticket changings to execd@%s\n", 
+               cl_err?"failed sending":"sent", n, master_host_name));
          }
       } else {
          DPRINTF(("     skipped sending of %d ticket changings to "

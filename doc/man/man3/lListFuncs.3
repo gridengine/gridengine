@@ -1,0 +1,284 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\"
+.\" $RCSfile: lListFuncs.3,v $     Last Update: $Date: 2001/07/20 08:19:04 $     Revision: $Revision: 1.3 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH LIST_FUNCS 3 "$Date: 2001/07/20 08:19:04 $" "xxRELxx" "xxQS_NAMExx List Library"
+.\"
+.SH NAME
+lCreateList, lFreeList, lCopyList, lAddList, lPSortList, lDumpList,
+lUndumpList, lWriteList, lWriteListTo, lGetListName, lGetListDescr, 
+lGetNumberOfElem
+.PP
+generic list manipulation and information functions
+.\"
+.\"
+.SH SYNOPSIS
+.B #include """cull.h"""
+.PP
+\fBlList* lCreateList( char *listname, lDescr *descriptor );\fP
+.PP
+\fBlList* lCreateElemList( char *listname, lDescr *descriptor, int n );\fP
+.PP
+.\"
+\fBlList* lFreeList( lList *list );\fP
+.PP
+.\"
+\fBlList* lCopyList( char *listname, lList *list );\fP
+.PP
+.\"
+\fBvoid lAddList( lList *list1, lList *list2 );\fP
+.PP
+.\"
+\fBint lPSortList( lList *list, char *orderstring, ... );\fP
+.PP
+.\"
+\fBint lDumpList( FILE *file, lList *list, int indent );\fP
+.PP
+.\"
+.nf
+\fBlList* lUndumpList(\fP
+.RS
+\fBFILE *file,\fP
+\fBchar *newname,\fP
+\fBlDescr *descriptor\fP
+.RE
+.fi
+\fB);\fP
+.PP
+.\"
+\fBvoid lWriteList( lList *list );\fP
+.PP
+.\"
+\fBvoid lWriteListTo( lList *list, FILE *fp );\fP
+.PP
+.\"
+\fBchar* lGetListName( lList *list );\fP
+.PP
+.\"
+\fBlDescr* lGetListDescr( lList *list );\fP
+.PP
+.\"
+\fBint lGetNumberOfElem( lList *list );\fP
+.PP
+.\"
+\fBint lGetNumberOfRemainingElem( lListElem *elem );\fP
+.PP
+.\"
+.\"
+.SH DESCRIPTION
+.IP "\fBlCreateList\fP"
+gets the new name of the list to be created and its descriptor which 
+enumerates the fields (name,type), that a list element will contain.
+The memory for the list is dynamically created and a pointer to the newly 
+created list is returned.
+If one of the arguments is NULL or if the descriptor contains no fields the
+return value of
+.I lCreateList
+is NULL. This is also true for any error that might occur.
+The list must be freed with
+.I lFreeList
+when the list is no longer used 
+(all associated sub-lists and strings are also freed). 
+.\"
+.IP "\fBlCreateElemList\fP"
+gets the new name of the list to be created and its descriptor which 
+enumerates the fields (name,type), that a list element will contain.
+The third argument specifies the number of elements that shall be created.
+The memory for the list is dynamically created and a pointer to the newly 
+created list is returned.
+If one of the arguments is NULL, if the descriptor contains no fields or
+if creation of all requested elements fails the return value of
+.I lCreateElemList
+is NULL. This is also true for any error that might occur.
+The list must be freed with
+.I lFreeList
+when the list is no longer used 
+(all associated sub-lists and strings are also freed). 
+.\"
+.IP "\fBlFreeList\fP"
+gets as argument a pointer to a generic list. If the list pointer is NULL
+the function simply returns, otherwise the list, all its sub-lists and its
+strings are freed.
+.\"
+.IP "\fBlCopyList\fP"
+copies an existing generic list with all its sub-lists. The 
+required memory is allocated by
+.I lCopyList
+and must be released via
+.I lFreeList
+if the copied list is no longer used.
+The first argument to lCopyList is the name of the copied list, the 
+second argument is an existing list.
+In case of success a pointer to the copied list is returned. Otherwise
+the return value is NULL.
+.\"
+.IP "\fBlAddList\fP"
+concatenates two generic lists. The first argument is the list which is
+expanded. The second argument is the list that is added to the first list.
+The descriptors of both lists have to be equal. After appending the elements
+of the second list to the first list, the second list gets destroyed.
+.IP "\fBlPSortList\fP"
+sorts a given list corresponding to a given sort order.
+The first argument is the generic list to be sorted, the second 
+argument is the sort order string and the following variable argument list 
+specifies the fields which act as sorting keys.
+lPSortList returns -1 in case of error, 0 otherwise.
+.br
+The sort order string has the following syntax:
+.sp 1
+	sort order string = %I{+|-} [%I{+|-}...]
+.sp 1
+%I stands for the field and +/- stands for ascending/descending sorting order
+.br
+for every percent sign there is one 'fieldname' in the variable argument list,
+%I stands for the field and +/- stands for ascending/descending sorting order.
+.sp 1
+The following example may show the usage:
+.sp 1
+	lPSortList( list, "%I+ %I-", field1, field2 );
+.\"
+.IP "\fBlDumpList\fP"
+writes a generic list and all its sub-lists to a file. The first argument is
+a FILE pointer, the second argument is a generic list pointer and the 
+third argument is the number of indentation units for the lines in the list
+file (for better readability).
+.\"
+.IP "\fBlUndumpList\fP"
+read a dumped list and all its sub-lists from a dump file.
+The first argument is the FILE pointer of the dump file. The second
+argument is the program internal name of the read in list or the name of
+the list in the dump file if NULL is specified. The third argument is the
+descriptor of the new list or the list descriptor stored in the dump file
+if NULL is specified. If the new list descriptor is a subset of the 
+descriptor in the dump file the obsolete fields are skipped and a warning
+message is displayed. If additional fields occur in the new descriptor they
+remain unchanged (i.e. they keep their creation time value).
+If
+.I lUndumpList
+is successful, a generic list is created and the list pointer
+is returned. Otherwise the return value is NULL.
+.\"
+.IP "\fBlWriteList\fP"
+writes a generic list and all its sub-lists if Monitoring Level CULL_LAYER is 
+set to info. The generic list pointer is the only function argument. 
+If the list pointer is NULL the function displays a warning and returns.
+.\"
+.IP "\fBlWriteListTo\fP"
+writes a generic list and all its sub-lists to the stream connected with fp. 
+The generic list pointer is the first function argument. The second argument
+is the file pointer. If the file pointer is NULL, the function behaves 
+as "\fBlWriteList\fP".
+.\"
+.IP "\fBlGetListName\fP"
+returns the name of the specified generic list. If the function argument
+is NULL, the string 'No List specified' is returned.
+.\"
+.IP "\fBlGetListDescr\fP"
+returns the list descriptor of the specified list or NULL if a NULL if the
+argument is NULL.
+.\"
+.IP "\fBlGetNumberOfElem\fP"
+gets the number of list elements actually contained in the generic list
+specified as function argument. If the generic list pointer is NULL, -1
+is returned, the number of list elements is returned otherwise.
+.\"
+.IP "\fBlGetNumberOfRemainingElem\fP"
+returns the number of list elements contained in the remainder of a generic
+list after a specified list element.
+.\"
+.SH "RETURN VALUES"
+In case of error the return value is -1 or NULL, otherwise 0 or a valid
+pointer to the corresponding struct is returned.
+.\"
+.\"
+.SH ERRORS
+The following errors may occur. The affected functions are listed 
+in parentheses.
+.IP "\fBLENOLISTNAME\fP"
+No list name specified. (\fIlCreateList\fP)
+.IP "\fBLEDESCRNULL\fP"
+List descriptor is NULL. (\fIlCreateList\fP)
+.IP "\fBLEMALLOC\fP"
+.M Malloc 3
+failed. (\fIlCreateList\fP, \fIlUndumpList\fP)
+.IP "\fBLESTRDUP\fP"
+.M Strdup 3
+failed. (\fIlCreateList\fP)
+.IP "\fBLECOUNTDESCR\fP"
+Counting the descriptor length failed. (\fIlCreateList\fP, \fIlAddList\fP, \fIlUndumpList\fP)
+.IP "\fBLELISTNULL\fP"
+List pointer is NULL. (\fIlFreeList\fP, \fIlCopyList\fP, \fIlAddList\fP, \fIlPSortList\fP,
+\fIlWriteList\fP,
+\fIlGetListName\fP, \fIlGetListDescr\fP, \fIlGetNumberOfElem\fP, \fIlDumpList\fP)
+.IP "\fBLECREATELIST\fP"
+Creation of a new list failed. (\fIlCopyList\fP, \fIlPSortList\fP, \fIlUndumpList\fP)
+.IP "\fBLEAPPENDELEM\fP"
+.I lAppendElem
+function failed. (\fIlCopyList\fP, \fIlAddList\fP, \fIlUndumpList\fP)
+.IP "\fBLEDIFFDESCR\fP"
+Unequal descriptors specified. (\fIlAddList\fP)
+.IP "\fBLEDECHAINELEM\fP"
+.I lDechainElem
+failed. (\fIlAddList\fP, \fIlPSortList\fP)
+.IP "\fBLENOFORMATSTR\fP"
+No format string specified. (\fIlPSortList\fP)
+.IP "\fBLEPARSESORTORD\fP"
+Parsing the sort order format string failed. (\fIlPSortList\fP)
+.IP "\fBLEGETNROFELEM\fP"
+Getting number of list elements failed. (\fIlPSortList\fP)
+.IP "\fBLEFILENULL\fP"
+File pointer to dump file is NULL. (\fIlDumpList\fP, \fIlUndumpList\fP)
+.IP "\fBLESYNTAX\fP"
+A syntax error occurred. (\fIlUndumpList\fP)
+.IP "\fBLEFIELDREAD\fP"
+Reading a field value failed. (\fIlUndumpList\fP)
+.IP "\fBLEFGETDESCR\fP"
+.I lUndumpDescr
+failed. (\fIlUndumpList\fP)
+.IP "\fBLEUNDUMPELEM\fP"
+.I lUndumpElem
+failed. (\fIlUndumpList\fP)
+.IP "\fBLECREATEELEM\fP"
+.I lCreateElem
+failed. (\fIlUndumpList\fP)
+.IP "\fBLECOPYSWITCH\fP"
+Copying list element fields failed. (\fIlUndumpList\fP)
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M list_intro 3 .
+.\"
+.\"
+.SH COPYRIGHT
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

@@ -51,7 +51,6 @@
 #include "sge_string.h"
 #include "sge_log.h"
 #include "sge_host.h"
-#include "sge_qinstance.h"
 #include "msg_schedd.h"
 
 static char load_ops[]={
@@ -78,8 +77,8 @@ enum {
 };
 
 /* prototypes */
-static double scaled_mixed_load( lListElem *global, lListElem *host, const lList *centry_list);
-static int get_load_value(double *dvalp, lListElem *global, lListElem *host, const lList *centry_list, const char *attrname);
+static double scaled_mixed_load( lListElem *global, lListElem *host, lList *centry_list);
+static int get_load_value(double *dvalp, lListElem *global, lListElem *host, lList *centry_list, const char *attrname);
 
 /*************************************************************************
 
@@ -158,7 +157,7 @@ lList *centry_list   /* CE_Type */
                        0 means no load correction, 
                        n load correction for n new jobs
 *************************************************************************/
-static double scaled_mixed_load( lListElem *global, lListElem *host, const lList *centry_list)
+static double scaled_mixed_load( lListElem *global, lListElem *host, lList *centry_list)
 {
    char *cp, *tf, *ptr, *ptr2, *par_name, *op_ptr=NULL;
    double val=0, val2=0;
@@ -296,7 +295,7 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
    get_load_value
 
  ***********************************************************************/
-static int get_load_value(double *dvalp, lListElem *global, lListElem *host, const lList *centry_list, const char *attrname) 
+static int get_load_value(double *dvalp, lListElem *global, lListElem *host, lList *centry_list, const char *attrname) 
 {
    lListElem *cep;
    u_long32 dominant;
@@ -305,7 +304,7 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
 
    /* search complex */
 
-   if(!(cep = get_attribute_by_name(global, host, NULL, attrname, centry_list))){
+   if(!(cep = get_attribute_by_name(global, host, NULL, attrname, centry_list, NULL, 0))){
 /*   if (!(cep = lGetElemStr(tcl, CE_name, name))) {*/
       /* 
        * admin has forgotten to configure complex for 
@@ -352,12 +351,15 @@ int *sort_hostlist
    lListElem *gel, *hep;
    lListElem *global;
    const char *hnm;
-
+   u_long32 queue_sort_method = sconf_get_queue_sort_method();
    double old_sort_value, new_sort_value;
 
    DENTER(TOP_LAYER, "debit_job_from_hosts");
 
-   so = lParseSortOrderVarArg(lGetListDescr(host_list), "%I+", EH_sort_value);
+   if (feature_is_enabled(FEATURE_SGEEE) 
+       || queue_sort_method!=QSM_SHARE) {
+      so = lParseSortOrderVarArg(lGetListDescr(host_list), "%I+", EH_sort_value);
+   }
 
    global = host_list_locate(host_list, "global");
 
@@ -386,13 +388,17 @@ int *sort_hostlist
 
       if(new_sort_value != old_sort_value) {
          lSetDouble(hep, EH_sort_value, new_sort_value);
-         if (sort_hostlist)
-            *sort_hostlist = 1;
+         *sort_hostlist = 1;
          DPRINTF(("Increasing sort value of Host %s from %f to %f\n", 
             hnm, old_sort_value, new_sort_value));
       }
 
-      lResortElem(so, hep, host_list);
+      if (feature_is_enabled(FEATURE_SGEEE) 
+          || queue_sort_method!=QSM_SHARE) {
+         /* change position of this host in the host_list */
+         /* !!! JG: sorting always necessary, or only if sort_hostlist? */
+         lResortElem(so, hep, host_list);
+      }
    }
 
    if(so) {
@@ -409,10 +415,11 @@ int *sort_hostlist
  * centry_list: CE_Type
  */
 int 
-debit_host_consumable(lListElem *jep, lListElem *hep, lList *centry_list, int slots) 
+debit_host_consumable(lListElem *jep, lListElem *hep, lList *centry_list, 
+                      int slots) 
 {
-   return rc_debit_consumable(jep, hep, centry_list, slots, 
+   return debit_consumable(jep, hep, centry_list, slots, 
                            EH_consumable_config_list, 
-                           EH_resource_utilization, 
+                           EH_consumable_actual_list, 
                            lGetHost(hep, EH_name));
 }

@@ -35,6 +35,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef AIX32
+#   include <sys/select.h>
+#endif
+
 #include "sge_bootstrap.h"
 #include "sge_unistd.h"
 #include "sge_loadsensorL.h"
@@ -189,7 +193,11 @@ static int sge_ls_status(lListElem *this_ls)
    FD_SET(fileno((FILE *) lGetRef(this_ls, LS_in)), &writefds);
 
    /* is load sensor ready to read ? */
+#if defined(HPUX) || defined(HP10_01) || defined(HP10CONVEX)
+   ret = select(FD_SETSIZE, NULL, (int *) &writefds, NULL, NULL);
+#else
    ret = select(FD_SETSIZE, NULL, &writefds, NULL, NULL);
+#endif
 
    if (ret <= 0) {
       DEXIT;
@@ -254,7 +262,7 @@ static void sge_ls_start_ls(lListElem *this_ls)
 
    /* we need fds for select() .. */
    pid = sge_peopen("/bin/sh", 0, lGetString(this_ls, LS_command), NULL, envp,
-                &fp_in, &fp_out, &fp_err, true);
+                &fp_in, &fp_out, &fp_err);
 
    if (envp) {
       free(envp);
@@ -593,7 +601,11 @@ static int ls_send_command(lListElem *this_ls, const char *command)
    timeleft.tv_usec = 0;
 
    /* wait for writing on fd_in */
+#ifdef HPUX
+   ret = select(FD_SETSIZE, NULL, (int *) &writefds, NULL, &timeleft);
+#else
    ret = select(FD_SETSIZE, NULL, &writefds, NULL, &timeleft);
+#endif
    if (ret == -1) {
       if (errno == EINTR) {
          DEXIT;

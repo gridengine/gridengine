@@ -361,7 +361,6 @@ lList **found  /* tmp list that contains one entry for each found u/p */
 
          /* non project sub-tree leaf nodes must be a user or a project */
          if (!userprj_list_locate(user_list, name) &&
-             strcmp(name, "default") &&
              ((objname=MSG_JOB_PROJECT) &&
               !userprj_list_locate(project_list, name))) {
 

@@ -53,10 +53,12 @@
 #include "sge_gdi.h"
 #include "sge_time.h"
 #include "sge_host.h"
+#include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
+#include "sge_host.h"
 
 #include "config_file.h"
 
@@ -70,7 +72,6 @@ lList *Master_Config_List = NULL;
 sge_conf_type conf = { NULL };
 
 bool forbid_reschedule = false;
-bool forbid_apperror = false;
 bool enable_forced_qdel = false;
 bool do_credentials = true;
 bool do_authentication = true;
@@ -225,10 +226,6 @@ static tConfEntry conf_entries[] = {
  { "max_u_jobs",        0, MAX_U_JOBS,          1, NULL },
  { "max_jobs",          0, MAX_JOBS,            1, NULL },
  { REPRIORITIZE,        0, "1",                 1, NULL },
- { "auto_user_oticket", 0, "0",                 1, NULL },
- { "auto_user_fshare",  0, "0",                 1, NULL },
- { "auto_user_default_project", 0, "none",      1, NULL },
- { "auto_user_delete_time", 0, "0",             1, NULL },
  { NULL,                0, NULL,                0, 0,   }
 };
 
@@ -260,11 +257,13 @@ lList *sge_set_defined_defaults(lList *lpCfg)
    lpCfg = NULL;
    i = 0;       
    while (conf_entries[i].name) {
-      
-      ep = lAddElemStr(&lpCfg, CF_name, conf_entries[i].name, CF_Type);
-      lSetString(ep, CF_value, conf_entries[i].value);
-      lSetUlong(ep, CF_local, conf_entries[i].local);
-      
+      if (feature_is_enabled(FEATURE_SGEEE) ||             
+          strcmp("enforce_project", conf_entries[i].name) || 
+          strcmp("enforce_user", conf_entries[i].name)) {
+         ep = lAddElemStr(&lpCfg, CF_name, conf_entries[i].name, CF_Type);
+         lSetString(ep, CF_value, conf_entries[i].value);
+         lSetUlong(ep, CF_local, conf_entries[i].local);
+      }   
       i++;
    }      
 
@@ -397,10 +396,7 @@ lList *lpCfg
    chg_conf_val(lpCfg, "max_u_jobs", NULL, &mconf->max_u_jobs, TYPE_INT);
    chg_conf_val(lpCfg, "max_jobs", NULL, &mconf->max_jobs, TYPE_INT);
    chg_conf_val(lpCfg, REPRIORITIZE, NULL, &mconf->reprioritize, TYPE_BOO );
-   chg_conf_val(lpCfg, "auto_user_oticket", NULL, &mconf->auto_user_oticket, TYPE_INT);
-   chg_conf_val(lpCfg, "auto_user_fshare", NULL, &mconf->auto_user_fshare, TYPE_INT);
-   chg_conf_val(lpCfg, "auto_user_default_project", &mconf->auto_user_default_project, NULL, 0);
-   chg_conf_val(lpCfg, "auto_user_delete_time", NULL, &mconf->auto_user_delete_time, TYPE_TIM);
+
    DEXIT;
 }
 
@@ -496,7 +492,6 @@ int merge_configuration(lListElem *global, lListElem *local,
    {
       const char *s;
       forbid_reschedule = false;
-      forbid_apperror = false;
       enable_forced_qdel = false;
       do_credentials = true;
       do_authentication = true;
@@ -511,9 +506,6 @@ int merge_configuration(lListElem *global, lListElem *local,
          if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
             continue;
          } 
-         if (parse_bool_param(s, "FORBID_APPERROR", &forbid_apperror)) {
-            continue;
-         }   
          if (parse_bool_param(s, "ENABLE_FORCED_QDEL", &enable_forced_qdel)) {
             continue;
          } 
@@ -570,7 +562,7 @@ int merge_configuration(lListElem *global, lListElem *local,
       sharetree_reserved_usage = false;
 #else
       acct_reserved_usage = false;
-      sharetree_reserved_usage = true;
+      sharetree_reserved_usage = (feature_is_enabled(FEATURE_SGEEE)!=0);
 #endif
       notify_kill_type = 1;
       notify_susp_type = 1;
@@ -752,11 +744,7 @@ void sge_show_conf()
    DPRINTF(("conf.max_aj_tasks           >%u<\n", (unsigned) conf.max_aj_tasks));
    DPRINTF(("conf.max_u_jobs             >%u<\n", (unsigned) conf.max_u_jobs));
    DPRINTF(("conf.max_jobs               >%u<\n", (unsigned) conf.max_jobs));
-   DPRINTF(("conf.reprioritize           >%u<\n", conf.reprioritize));
-   DPRINTF(("conf.auto_user_oticket      >%u<\n", conf.auto_user_oticket));
-   DPRINTF(("conf.auto_user_fshare       >%u<\n", conf.auto_user_fshare));
-   DPRINTF(("conf.auto_user_default_project >%s<\n", conf.auto_user_default_project));
-   DPRINTF(("conf.auto_user_delete_time  >%u<\n", conf.auto_user_delete_time));
+   DPRINTF(("conf. reprioritize          >%u<\n", conf.reprioritize));
 
    for_each (ep, conf.user_lists) {
       DPRINTF(("%s             >%s<\n", 

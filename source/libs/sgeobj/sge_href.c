@@ -739,10 +739,11 @@ href_list_resolve_hostnames(lList *this_list, lList **answer_list)
          const char *name = lGetHost(href, HR_name);
 
          if (!sge_is_hgroup_ref(name)) {
-            char resolved_name[MAXHOSTLEN+1];
+            char resolved_name[500];
+
             int back = getuniquehostname(name, resolved_name, 0);
 
-            if (back == CL_RETVAL_OK) {
+            if (back == 0) {
                lSetHost(href, HR_name, resolved_name);
             } else {
                INFO((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, name));
@@ -900,23 +901,6 @@ href_list_debug_print(const lList *this_list, const char *prefix)
    DEXIT;
 }
 
-/****** sgeobj/href/href_list_make_uniq() *************************************
-*  NAME
-*     href_list_make_uniq() -- remove duplicates 
-*
-*  SYNOPSIS
-*     void href_list_make_uniq(lList *this_list, lList **answer_list) 
-*
-*  FUNCTION
-*     Remove duplicates from "this_list" 
-*
-*  INPUTS
-*     lList *this_list    - HR_Type list 
-*     lList **answer_list - AN_Type list 
-*
-*  RESULT
-*     void - none 
-*******************************************************************************/
 void
 href_list_make_uniq(lList *this_list, lList **answer_list)
 {

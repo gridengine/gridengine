@@ -218,7 +218,6 @@ enum {
    JAT_usage_list,
 
    JAT_scaled_usage_list,
-   JAT_reported_usage_list,
    JAT_fshare,
    JAT_tix,
    JAT_oticket,
@@ -237,9 +236,7 @@ enum {
    /*JAT_progress_in_former_runs,*/
    JAT_stop_initiate_time,
    JAT_prio,
-   JAT_ntix,
-
-   JAT_message_list
+   JAT_ntix
 };
 
 SLISTDEF(JAT_Type, Task)
@@ -263,7 +260,6 @@ SLISTDEF(JAT_Type, Task)
    SGE_LIST(JAT_usage_list, UA_Type, CULL_DEFAULT | CULL_SUBLIST)
 
    SGE_LIST(JAT_scaled_usage_list, UA_Type, CULL_DEFAULT | CULL_SUBLIST)
-   SGE_LIST(JAT_reported_usage_list, UA_Type, CULL_DEFAULT | CULL_SUBLIST)
    SGE_ULONG(JAT_fshare, CULL_DEFAULT | CULL_SUBLIST)
    SGE_DOUBLE(JAT_tix, CULL_DEFAULT | CULL_SUBLIST)
    SGE_DOUBLE(JAT_oticket, CULL_DEFAULT | CULL_SUBLIST)
@@ -283,8 +279,6 @@ SLISTDEF(JAT_Type, Task)
    SGE_ULONG(JAT_stop_initiate_time, CULL_DEFAULT | CULL_SUBLIST)         
    SGE_DOUBLE(JAT_prio, CULL_DEFAULT)         
    SGE_DOUBLE(JAT_ntix, CULL_DEFAULT)         
-
-   SGE_LIST(JAT_message_list, QIM_Type, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
 
 NAMEDEF(JATN)
@@ -305,7 +299,6 @@ NAMEDEF(JATN)
    NAME("JAT_osjobid")
    NAME("JAT_usage_list")
    NAME("JAT_scaled_usage_list")
-   NAME("JAT_reported_usage_list")
    NAME("JAT_fshare")
 
    NAME("JAT_tix")
@@ -325,8 +318,6 @@ NAMEDEF(JATN)
    NAME("JAT_stop_initiate_time")
    NAME("JAT_prio")
    NAME("JAT_ntix")
-
-   NAME("JAT_message_list")
 NAMEEND
 
 /* *INDENT-ON* */

@@ -3,6 +3,7 @@
 #
 # global CHECK_ACT_PATH          ;# actual checkpath
 # gloabl CHECK_ACTUAL_TEST_PATH  ;# this directory
+# global CHECK_COMMD_PORT        ;# commd port
 # global CHECK_USER              ;# user who start test
 # global CHECK_ARCH              ;# architecture of this system (e.g. irix6)
 # global CHECK_HOST              ;# hostname of this system (e.g. DWAIN)
@@ -51,7 +52,7 @@ global check_use_installed_system
 # This file shows some check spezific things
 set check_root_access_needs  "yes"
 set check_name          "init_core_system"
-set check_category      "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_category      "COMPATIBILITY SYSTEM L10N"
 set check_description(0)   "install a default system (master/execution daemon on local host and start them up)"
 set check_needs         ""                        ;# dependencies of this check (name of other check)
 set check_functions     ""                        ;# functions to call (in order)
@@ -339,8 +340,6 @@ proc cleanup_system { } {
    global CHECK_CORE_PROCESSORS
    global check_use_installed_system CHECK_OUTPUT CHECK_USER
 
-#puts "press RETURN"
-#set anykey [wait_for_enter 1]
    # check if the system is running and qmaster accessable
    set catch_return [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" } result ]
    if { $catch_return != 0 } {
@@ -352,7 +351,7 @@ proc cleanup_system { } {
    puts $CHECK_OUTPUT "\ncleaning up system"
 
    # delete all jobs
-   delete_all_jobs
+   catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qdel" "-uall" } result
 
    # wait until cluster is empty
    set my_time [ expr ( [timestamp] + 100 ) ]
@@ -468,7 +467,7 @@ proc cleanup_system { } {
    set queue_list [get_queue_list]
    foreach elem $queue_list {
       puts $CHECK_OUTPUT "removing queue $elem."
-      del_queue $elem "" 1 1
+      del_queue $elem 
    }
 
    # add new testsuite queues
@@ -539,7 +538,7 @@ proc setup_queues {} {
       } 
    }
 
-   if { $check_errno == 0} {
+   if { $check_errno == 0 } {
       # for each individual queue set the slots attribute
       foreach hostname $ts_config(execd_hosts) {
          unset new_values
@@ -649,9 +648,6 @@ proc setup_conf {} {
    global ts_config
   global CHECK_ARCH
   global CHECK_DEFAULT_DOMAIN 
-  global CHECK_REPORT_EMAIL_TO 
-  global CHECK_USER 
-  global CHECK_DNS_DOMAINNAME
 
   get_config old_config
   set params(reschedule_unknown) "00:00:00"
@@ -673,13 +669,7 @@ proc setup_conf {} {
   set params(user_lists) "none"
   set params(xuser_lists) "none"
   set params(max_unheard) "00:01:00"
-
-  if { $CHECK_REPORT_EMAIL_TO == "none" } {
-     set params(administrator_mail) "${CHECK_USER}@${CHECK_DNS_DOMAINNAME}"
-  } else {
-     set params(administrator_mail) $CHECK_REPORT_EMAIL_TO
-  }
-
+  set params(administrator_mail) "none"
   set params(set_token_cmd) "none"
   set params(pag_cmd) "none"
   set params(token_extend_time) "none"
@@ -687,8 +677,6 @@ proc setup_conf {} {
   set params(qmaster_params) "none"
   if { $ts_config(gridengine_version) == 53 } {
      set params(schedd_params) "none"
-  } else {
-     set params(reporting_params) "accounting=true reporting=false flush_time=00:00:05 joblog=true sharelog=00:10:00"
   }
   set params(execd_params) "none"
   set params(qlogin_command) "telnet"
@@ -738,13 +726,12 @@ proc setup_conf {} {
        set old  $old_config($param)
        set new  $new_config($param)
 
-       if { [ string compare -nocase $old $new ] != 0 } {
+       if { [ string compare $old $new ] != 0 } {
           if { [ string compare $param "load_report_time" ] == 0 } { continue }
           if { [ string compare $param "loglevel" ] == 0 } { continue }
           if { [ string compare $param "execd_params" ] == 0 } { continue }
           if { [ string compare $param "finished_jobs" ] == 0 } { continue }
           if { [ string compare $param "max_unheard" ] == 0 } { continue }
-          if { [ string compare $param "reporting_params" ] == 0 } { continue }
 #          if { [ string compare $param "" ] == 0 } { continue }
 #          if { [ string compare $param "" ] == 0 } { continue }
 #          if { [ string compare $param "" ] == 0 } { continue }

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qdel.1,v $     Last Update: $Date: 2004/02/05 13:26:54 $     Revision: $Revision: 1.10 $
+.\" $RCSfile: qdel.1,v $     Last Update: $Date: 2003/12/15 15:42:14 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QDEL 1 "$Date: 2004/02/05 13:26:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QDEL 1 "$Date: 2003/12/15 15:42:14 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qdel \- delete xxQS_NAMExx jobs from queues
 .SH SYNTAX
@@ -40,10 +40,21 @@ qdel \- delete xxQS_NAMExx jobs from queues
 ] [
 .B \-help
 ] [
-.B -u wc_user_list
+.B \-verify
 ] [
-.B wc_job_range_list
+.B job/task_id_list
 ]
+.\"
+.PP
+.B qdel
+[
+.B \-f
+] [
+.B \-help
+] [
+.B \-verify
+] 
+.B -u user_list | -uall
 .\" 
 .SH DESCRIPTION
 .I Qdel
@@ -51,9 +62,7 @@ provides a means for a user/operator/manager to delete
 one or more jobs. 
 .I Qdel
 deletes jobs in the order in which their job 
-identifiers are presented. Find additional information concerning
-\fIwc_user_list\fP and \fIwc_job_list\fP in
-.M sge_types 1 .
+identifiers are presented. 
 .\"
 .\"
 .SH OPTIONS
@@ -82,16 +91,56 @@ the regular deletion was unsuccessful.
 .IP "\fB\-help\fP"
 Prints a listing of all options.
 .\"
-.IP "\fB\-u wc_user_list\fP"
+.IP "\fB\-u username,... | -uall\fP"
 Deletes only those jobs which were submitted by
 users specified in the list of usernames.
-For managers it is possible to use \fB\qdel -u "*"\fP to delete
-all jobs of all users. If a manager wants to delete a specific
-job of a user, he has to specify the user and the job. If no 
-job is specified all jobs from that user are deleted.
+For managers it is possible to use the \fB\qdel -uall\fP command
+to delete all jobs of all users.
+.sp 1
+If you use the \fB\-u\fP or \fB\-uall\fP switch it is be permitted to
+specify a additional \fI\job/task_id_list\fP.  
 .\"
-.IP "\fBwc_job_range_list\fP"
-A list of jobs, which should be deleted
+.IP "\fB\-verify\fP"
+performs no modifications but just prints what would be done if
+\fB\-verify\fB was not present.
+.\"
+.IP "\fBjob/task_id_list\fP"
+Specified by the following form:
+.sp 1
+.ta 0.5i
+    \fI[job_id|job_name|pattern][.task_range][ [job_id|job_name|pattern][.task_range] ...]\fP
+.ta 0.0i
+.sp 1
+The job name and pattern are usualy not unique. One has to be carefull. 
+The pattern specification follows the following rules and should be
+specified in '"':
+.RS
+ - "*"   : matches any character and any number of 
+           chars (between 0 and inv).
+ - "?"   : matches any character. It cannot be no 
+           character
+ - "."   : is the character ".". It has no other 
+           meaning
+ - "\\"   : escape character. "\\\\" = "\\", "\\*" = "*", 
+           "\\?" = "?"
+ - "[xx]": specifies an array or a range of allowed 
+           characters for one character at a specific 
+           position
+.RE           
+.sp 1
+If present, the \fItask_range\fP restricts the effect of the \fIqdel\fP
+operation to the array job task range specified as suffix to the job id
+(see the \fB\-t\fP option to
+.M qsub 1
+for further details on array jobs).
+.sp 1
+The task range specifier has the
+form n[-m[:s]]. The range may be a single number, a  simple
+range  of the form n-m or a range with a step size.
+.sp 1
+Instead of job/task_id_list it is possible to
+use the keyword 'all' to modify all jobs of the
+current user. 
 .\"
 .\"
 .SH "ENVIRONMENTAL VARIABLES"

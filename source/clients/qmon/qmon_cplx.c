@@ -292,7 +292,6 @@ XtPointer cld, cad;
       return;
    }
    
-   XbaeMatrixDeselectAll(attr_mx);
    XtUnmanageChild(qmon_cplx);
    XtPopdown(XtParent(qmon_cplx));
 
@@ -309,7 +308,6 @@ static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
    int row_to_change = 0;
    String str;
    int req_state;
-   int requestable = 0;
    int valtype = 0;
    int consumable = 0;
    int relop = 0;
@@ -359,19 +357,15 @@ static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
    relop = XmtChooserGetState(attr_arel) + 1;
    new_str[0][3] = XtNewString(map_op2str(relop));
    req_state = XmtChooserGetState(attr_areq); 
-
    switch (req_state) {
       case 1:  
          new_str[0][4] = XtNewString("YES");
-         requestable = REQU_YES;
          break;
       case 2:  
          new_str[0][4] = XtNewString("FORCED");
-         requestable = REQU_FORCED;
          break;
       default:
          new_str[0][4] = XtNewString("NO");
-         requestable = REQU_NO;
    }
       
    consumable = XmtChooserGetState(attr_aconsumable);   
@@ -389,7 +383,7 @@ static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
    lSetUlong(new_entry, CE_valtype, valtype);
    lSetUlong(new_entry, CE_relop, relop);
    lSetBool(new_entry, CE_consumable, consumable);
-   lSetUlong(new_entry, CE_requestable, requestable);
+   lSetUlong(new_entry, CE_requestable, req_state);
    if (consumable) {
       lSetString(new_entry, CE_default, new_str[0][6]);
    }   

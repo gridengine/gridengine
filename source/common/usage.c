@@ -78,15 +78,10 @@ static char* get_argument_syntax(int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_DATE_TIME; 
      case OA_DESTIN_ID_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST; 
+     case OA_DESTIN_ID_LIST2:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST2;
      case OA_HOLD_LIST:
-         if ((uti_state_get_mewho() == QHOLD) ||
-             (uti_state_get_mewho() == QRLS)
-         ){
-            return MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST_QHOLD;
-         }
-         else {
-            return MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST; 
-         }
+         return MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST; 
      case OA_HOST_ID_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST;
      case OA_JOB_ID_LIST:
@@ -132,12 +127,7 @@ static char* get_argument_syntax(int nr)
      case OA_JOB_TASK_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASK_LIST; 
      case OA_JOB_TASKS:
-         if (uti_state_get_mewho() == QRESUB) {
-            return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS_RESUB;
-         }
-         else {
-            return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS; 
-         }
+         return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS; 
      case OA_TASK_ID_RANGE:
          return MSG_GDI_ARGUMENTSYNTAX_OA_TASK_ID_RANGE; 
      case OA_USER_LIST:
@@ -156,22 +146,6 @@ static char* get_argument_syntax(int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST;
      case OA_HOST_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_HOST_LIST;
-     case OA_WC_CQUEUE:
-         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_CQUEUE;
-     case OA_WC_HOST:
-         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_HOST;
-     case OA_WC_HOSTGROUP:
-         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_HOSTGROUP;
-     case OA_WC_QINSTANCE:
-         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_QINSTANCE;
-     case OA_WC_QDOMAIN:
-         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_QDOMAIN;
-     case OA_WC_QUEUE:
-         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE;
-     case OA_WC_QUEUE_LIST:
-         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE_LIST;
-     case OA_OBJECT_NAME2:
-         return MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME2;
 
      default:
          break; 
@@ -312,11 +286,11 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_Ap_OPT_FNAME , MSG_GDI_UTEXT_Ap_OPT_FNAME );
    }
 
-   if (VALID_OPT(aprj_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(aprj_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_APRJ , MSG_GDI_UTEXT_APRJ );
    }
 
-   if (VALID_OPT(Aprj_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Aprj_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Aprj , MSG_GDI_UTEXT_Aprj );
    }
 
@@ -332,17 +306,17 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_as_OPT_HOSTNAME , MSG_GDI_UTEXT_as_OPT_HOSTNAME);
    }
 
-   if (VALID_OPT(astnode_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(astnode_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_ASTNODE_NODE_SHARES_LIST , MSG_GDI_UTEXT_ASTNODE_NODE_SHARES_LIST );
       MARK(OA_NODE_SHARES_LIST);
       MARK(OA_NODE_PATH);
    }
 
-   if (VALID_OPT(astree_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(astree_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_ASTREE , MSG_GDI_UTEXT_ASTREE);
    }
 
-   if (VALID_OPT(Astree_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Astree_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_ASTREE_FNAME, MSG_GDI_UTEXT_ASTREE_FNAME);
    }
 
@@ -366,11 +340,11 @@ FILE *fp
    }
 #endif 
  
-   if (VALID_OPT(aus_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(aus_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_AUSER , MSG_GDI_UTEXT_AUSER );
    }
 
-   if (VALID_OPT(Aus_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Aus_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Auser , MSG_GDI_UTEXT_Auser );
    }
 
@@ -400,7 +374,7 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_clear_OPT, MSG_GDI_UTEXT_clear_OPT);
    }
 
-   if (VALID_OPT(cu_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(cu_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_clearusage_OPT, MSG_GDI_UTEXT_clearusage_OPT);
    }
 
@@ -470,7 +444,7 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_dhgrp_OPT, MSG_GDI_UTEXT_dhgrp_OPT);
    }
 
-   if (VALID_OPT(dl_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(dl_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_dl_OPT_DATE_TIME , MSG_GDI_UTEXT_dl_OPT_DATE_TIME );
       MARK(OA_DATE_TIME);
    }
@@ -489,7 +463,7 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_dp_OPT_PE_NAME, MSG_GDI_UTEXT_dp_OPT_PE_NAME );
    }
 
-   if (VALID_OPT(dprj_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(dprj_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_dprj_OPT_PROJECT, MSG_GDI_UTEXT_dprj_OPT_PROJECT );
       MARK(OA_PROJECT_LIST);
    }
@@ -504,13 +478,13 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_ds_OPT_HOST_LIST, MSG_GDI_UTEXT_ds_OPT_HOST_LIST);
    }
 
-   if (VALID_OPT(dstnode_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(dstnode_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_DSTNODE_NODELIST, MSG_GDI_UTEXT_DSTNODE_NODELIST);
       MARK(OA_NODE_LIST);
       MARK(OA_NODE_PATH);
    }
 
-   if (VALID_OPT(dstree_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(dstree_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_DSTREE  , MSG_GDI_UTEXT_DSTREE );
    }
 
@@ -530,7 +504,7 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_dumap_OPT, MSG_GDI_UTEXT_dumap_OPT );
    }
 #endif
-   if (VALID_OPT(dus_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(dus_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_DUSER_USER, MSG_GDI_UTEXT_DUSER_USER );
       MARK(OA_USER_LIST);
    }
@@ -545,7 +519,7 @@ FILE *fp
       }
    }
 
-   if (VALID_OPT(ext_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(ext_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_ext_OPT, MSG_GDI_UTEXT_ext_OPT );
    }
 
@@ -609,10 +583,6 @@ FILE *fp
       }
    }
 
-   if (VALID_OPT(js_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_js_OPT_YN , MSG_GDI_UTEXT_js_OPT_YN );
-   }
-
    if (VALID_OPT(ke_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_ke_OPT_HOSTS, MSG_GDI_UTEXT_ke_OPT_HOSTS );
       PRINTITD(MSG_GDI_USAGE_k_OPT_MASTERORSCHEDULINGDAEMON, MSG_GDI_UTEXT_k_OPT_MASTERORSCHEDULINGDAEMON );
@@ -642,13 +612,7 @@ FILE *fp
    if (VALID_OPT(masterq_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_masterq_OPT_DESTIN_ID_LIST, 
          MSG_GDI_UTEXT_masterq_OPT_DESTIN_ID_LIST_BIND );
-      MARK(OA_WC_CQUEUE);
-      MARK(OA_WC_HOST);
-      MARK(OA_WC_HOSTGROUP);
-      MARK(OA_WC_QINSTANCE);
-      MARK(OA_WC_QDOMAIN);
-      MARK(OA_WC_QUEUE);
-      MARK(OA_WC_QUEUE_LIST);
+      MARK(OA_DESTIN_ID_LIST2);
    }
 
    if (VALID_OPT(mattr_OPT, uti_state_get_mewho())) {
@@ -729,11 +693,11 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_Mp_OPT_FNAME , MSG_GDI_UTEXT_Mp_OPT_FNAME );
    }
 
-   if (VALID_OPT(mprj_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(mprj_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_mprj_OPT_PROJECT, MSG_GDI_UTEXT_mprj_OPT_PROJECT);
    }
 
-   if (VALID_OPT(Mprj_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Mprj_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Mprj_OPT_PROJECT, MSG_GDI_UTEXT_Mprj_OPT_PROJECT);
    }
 
@@ -741,22 +705,34 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_mq_OPT_QUEUE , MSG_GDI_UTEXT_mq_OPT_QUEUE );
    }
 
+   if (VALID_OPT(mqattr_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST,
+         MSG_GDI_UTEXT_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST);
+      MARK(OA_DESTIN_ID_LIST);
+   }
+
    if (VALID_OPT(Mq_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Mq_OPT_FNAME, MSG_GDI_UTEXT_Mq_OPT_FNAME);
    }
 
-   if (VALID_OPT(mstnode_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(Mqattr_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_Mqattr_OPT_FNAME_DESTIN_ID_LIST, 
+         MSG_GDI_UTEXT_Mqattr_OPT_FNAME_DESTIN_ID_LIST );
+      MARK(OA_DESTIN_ID_LIST);
+   }
+
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(mstnode_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_MSTNODE_NODE_SHARES_LIST, 
          MSG_GDI_UTEXT_MSTNODE_NODE_SHARES_LIST );
       MARK(OA_NODE_SHARES_LIST);
       MARK(OA_NODE_PATH);
    }
 
-   if (VALID_OPT(Mstree_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Mstree_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_MSTREE_FNAME, MSG_GDI_UTEXT_MSTREE_FNAME);
    }
 
-   if (VALID_OPT(mstree_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(mstree_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_MSTREE , MSG_GDI_UTEXT_MSTREE );
    }
 
@@ -780,11 +756,11 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_mumap_OPT, MSG_GDI_UTEXT_mumap_OPT);
    }
 #endif
-   if (VALID_OPT(mus_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(mus_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_muser_OPT_USER, MSG_GDI_UTEXT_muser_OPT_USER);
    }
 
-   if (VALID_OPT(Mus_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Mus_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Muser_OPT_USER, MSG_GDI_UTEXT_Muser_OPT_USER);
    }
 
@@ -819,11 +795,11 @@ FILE *fp
       MARK(OA_PATH_LIST);
    }
 
-   if (VALID_OPT(ot_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(ot_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_ot_OPT_TICKETS, MSG_GDI_UTEXT_ot_OPT_TICKETS);
    }
 
-   if (VALID_OPT(P_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(P_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_P_OPT_PROJECT_NAME, 
          MSG_GDI_UTEXT_P_OPT_PROJECT_NAME);
    }
@@ -852,17 +828,7 @@ FILE *fp
          PRINTITD(MSG_GDI_USAGE_q_OPT_DESTIN_ID_LIST, 
             MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_INFO);
       }
-      MARK(OA_WC_CQUEUE);
-      MARK(OA_WC_HOST);
-      MARK(OA_WC_HOSTGROUP);
-      MARK(OA_WC_QINSTANCE);
-      MARK(OA_WC_QDOMAIN);
-      MARK(OA_WC_QUEUE);
-      MARK(OA_WC_QUEUE_LIST);
-   }
-
-   if (VALID_OPT(R_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_R_OPT_YN , MSG_GDI_UTEXT_R_OPT_YN );
+      MARK(OA_DESTIN_ID_LIST2);
    }
 
    if (VALID_OPT(r_OPT, uti_state_get_mewho())) {
@@ -874,7 +840,7 @@ FILE *fp
    }
 
    if (VALID_OPT(s_OPT, uti_state_get_mewho())) {
-      if (uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD) { 
+      if (uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD) { 
          usage_silent(fp);
       } else 
       if (uti_state_get_mewho() == QSELECT) {
@@ -884,7 +850,7 @@ FILE *fp
       else if (uti_state_get_mewho() == QMOD) {
          PRINTITD(MSG_GDI_USAGE_s_OPT ,MSG_GDI_UTEXT_s_OPT );
       }
-      else if (uti_state_get_mewho() != QMASTER) {
+      else {
          PRINTIT(MSG_GDI_USAGE_s_OPT_SIGNAL);
          MARK(OA_SIGNAL);
       }
@@ -967,21 +933,11 @@ FILE *fp
    if (VALID_OPT(shgrp_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_shgrp_OPT, MSG_GDI_UTEXT_shgrp_OPT);
    }
-   if (VALID_OPT(shgrp_tree_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_shgrp_tree_OPT, MSG_GDI_UTEXT_shgrp_tree_OPT);
-   }
-   if (VALID_OPT(shgrp_resolved_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_shgrp_resolved_OPT, MSG_GDI_UTEXT_shgrp_resolved_OPT);
-   }
 
    if (VALID_OPT(shgrpl_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_shgrpl_OPT, MSG_GDI_UTEXT_shgrpl_OPT);
    }
  
-   if (VALID_OPT(sick_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_sick_OPT , MSG_GDI_UTEXT_sick_OPT );
-   }
-
    if (VALID_OPT(sm_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_sm_OPT , MSG_GDI_UTEXT_sm_OPT );
    }
@@ -989,12 +945,6 @@ FILE *fp
    if (VALID_OPT(so_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_so_OPT , MSG_GDI_UTEXT_so_OPT );
    }
-
-   if (VALID_OPT(sobjl_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_sobjl_OPT, MSG_GDI_UTEXT_sobjl_OPT);
-      MARK(OA_OBJECT_NAME2); 
-      MARK(OA_ATTRIBUTE_NAME); 
-   } 
 
    if (VALID_OPT(soft_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_soft_OPT ,  MSG_GDI_UTEXT_soft_OPT );
@@ -1008,11 +958,11 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_spl_OPT , MSG_GDI_UTEXT_spl_OPT );
    }
 
-   if (VALID_OPT(sprj_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(sprj_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_sprj_OPT_PROJECT, MSG_GDI_UTEXT_sprj_OPT_PROJECT);
    }
 
-   if (VALID_OPT(sprjl_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(sprjl_OPT, uti_state_get_mewho())) {
       PRINTITD( MSG_GDI_USAGE_sprjl_OPT, MSG_GDI_UTEXT_sprjl_OPT);
    }
 
@@ -1038,21 +988,21 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_ssconf_OPT , MSG_GDI_UTEXT_ssconf_OPT );
    } 
 
-   if (VALID_OPT(sstnode_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(sstnode_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_sstnode_OPT_NODE_LIST, 
          MSG_GDI_UTEXT_sstnode_OPT_NODE_LIST);
       MARK(OA_NODE_LIST);
       MARK(OA_NODE_PATH);
    }
 
-   if (VALID_OPT(rsstnode_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(rsstnode_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_rsstnode_OPT_NODE_LIST, 
          MSG_GDI_UTEXT_rsstnode_OPT_NODE_LIST);
       MARK(OA_NODE_LIST);
       MARK(OA_NODE_PATH);
    }
 
-   if (VALID_OPT(sstree_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(sstree_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_sstree_OPT, MSG_GDI_UTEXT_sstree_OPT);
    }
 
@@ -1071,7 +1021,7 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_sumapl_OPT, MSG_GDI_UTEXT_sumapl_OPT);
    }
 #endif
-   if (VALID_OPT(sus_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(sus_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_suser_OPT_USER, MSG_GDI_UTEXT_suser_OPT_USER);
       MARK(OA_USER_LIST);
    }
@@ -1080,13 +1030,8 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_sul_OPT, MSG_GDI_UTEXT_sul_OPT);
    }
 
-   if (VALID_OPT(susl_OPT, uti_state_get_mewho())) {
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(susl_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_suserl_OPT, MSG_GDI_UTEXT_suserl_OPT);
-   }
-
-   if (VALID_OPT(sync_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_sync_OPT_YN, MSG_GDI_UTEXT_sync_OPT_YN);
-      MARK(OA_PATH_LIST);
    }
 
    if (VALID_OPT(S_OPT, uti_state_get_mewho())) {
@@ -1153,11 +1098,7 @@ FILE *fp
 
    if (VALID_OPT(JOB_ID_OPR, uti_state_get_mewho())) {
       PRINTIT(MSG_GDI_USAGE_JOB_ID_OPR );
-      if ((uti_state_get_mewho() != QHOLD) &&
-          (uti_state_get_mewho() != QRESUB) &&
-          (uti_state_get_mewho() != QRLS)) {
-         MARK(OA_JOB_ID_LIST);
-      }
+      MARK(OA_JOB_ID_LIST);
    }
 
    if (VALID_OPT(SCRIPT_OPR, uti_state_get_mewho())) {
@@ -1168,6 +1109,10 @@ FILE *fp
          PRINTITD(MSG_GDI_USAGE_JOB_ID_OPR , MSG_GDI_UTEXT_JOB_ID_OPR );
          PRINTITD(MSG_GDI_USAGE_SCRIPT_OPR_ARGS , MSG_GDI_UTEXT_SCRIPT_OPR_ARGS );
       }
+   }
+
+   if (VALID_OPT(nostart_commd_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_nostart_commd_OPT, MSG_GDI_UTEXT_nostart_commd_OPT );
    }
 
    if (VALID_OPT(verbose_OPT, uti_state_get_mewho())) {

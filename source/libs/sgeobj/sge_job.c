@@ -48,6 +48,7 @@
 #include "sge_stdlib.h"
 #include "sge_var.h"
 #include "sge_path_alias.h"
+#include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_object.h"
 #include "sge_prog.h"
@@ -57,7 +58,7 @@
 #include "sge_qinstance.h"
 #include "sge_host.h"
 #include "symbols.h"
-#include "sge_mesobj.h"
+#include "sge_messageL.h"
 #include "sge_parse_num_par.h"
 
 #include "msg_sgeobjlib.h"
@@ -97,9 +98,6 @@ lList *Master_Job_Schedd_Info_List = NULL;
 *     sgeobj/job/job_get_ja_task_template_pending()
 *     sgeobj/job/job_get_ja_task_template_hold()
 *     sgeobj/job/job_get_ja_task_template()
-*
-*  NOTES
-*     MT-NOTE: job_get_ja_task_template_pending() is MT safe
 *******************************************************************************/
 lListElem *job_get_ja_task_template_pending(const lListElem *job,
                                             u_long32 ja_task_id)
@@ -121,7 +119,6 @@ lListElem *job_get_ja_task_template_pending(const lListElem *job,
    return template_task;
 }
 
-   
 /****** sgeobj/job/job_get_ja_task_template_hold() ****************************
 *  NAME
 *     job_get_ja_task_template_hold() -- create a ja task template 
@@ -618,6 +615,7 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
 
    object_delete_range_id(job, answer_list, JB_ja_n_h_ids, ja_task_number);
 
+   /* EB: CLEANUP: should we add a new CULL function? */
    ja_task = lGetSubUlong(job, JAT_task_number, ja_task_number, JB_ja_tasks);
    if (ja_task == NULL) {
       lListElem *template_task = NULL;
@@ -1638,7 +1636,7 @@ void job_initialize_env(lListElem *job, lList **answer_list,
       }
    }
    {
-      const char* host = sge_getenv("HOST"); /* ??? */
+      const char* host = sge_getenv("HOST");
 
       if (host == NULL) {
          host = uti_state_get_unqualified_hostname();
@@ -1970,7 +1968,6 @@ bool job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt)
 *     char *str   - containes the state flags for 'qstat'/'qhost' 
 *     u_long32 op - job state bitmask 
 ******************************************************************************/
-/* JG: TODO: use dstring! */
 void job_get_state_string(char *str, u_long32 op)
 {
    queue_or_job_get_states(JB_job_number, str, op);
@@ -2377,38 +2374,22 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
    DENTER(TOP_LAYER, "job_resolve_host_for_path_list");
 
    for_each( ep, lGetList(job, name) ){
-      int res = sge_resolve_host(ep, PN_host);
-#ifdef ENABLE_NGC
-      DPRINTF(("after sge_resolve_host() which returned %s\n", cl_get_error_text(res)));
-      if (res != CL_RETVAL_OK) { 
-         const char *hostname = lGetHost(ep, PN_host);
-         if (hostname != NULL) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hostname));
-            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            ret_error=true;
-         } else if (res != CL_RETVAL_PARAMS) {
-            ERROR((SGE_EVENT,MSG_PARSE_NULLPOINTERRECEIVED ));
-            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            ret_error=true;
-         }
-      } 
-#else
+      int res=sge_resolve_host(ep, PN_host);
+
       if( (res != 0) && (res != -1) && (res !=1 ) ){ /* 0 = everything is fine, 1 = no host specified*/
          const char *hostname = lGetHost(ep, PN_host);
 
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hostname));
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret_error=true;
-      }  else if (res==-1) {/*something in the data-structure is wrong */
+      }  
+      else if(res==-1){/*something in the data-structure is wrong */
          ERROR((SGE_EVENT, MSG_PARSE_NULLPOINTERRECEIVED));
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret_error=true;
       }
-#endif
-      DPRINTF(("after sge_resolve_host() - II\n"));
-
       /* ensure, that each hostname is only specified once */
-      if( !ret_error ){
+      if(!ret_error){
          const char *hostname = lGetHost(ep, PN_host);       
          lListElem *temp;         
 
@@ -2422,7 +2403,7 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
                   ret_error=true;
                }
             } 
-            else if( temp_hostname && strcmp(hostname, temp_hostname)==0){
+            else if(strcmp(hostname, temp_hostname)==0){
                ERROR((SGE_EVENT, MSG_PARSE_DUPLICATEHOSTINFILESPEC));
                answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                ret_error=true;
@@ -2431,10 +2412,8 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
                break;
          }/* end for */ 
       }
-
-      if(ret_error) {
+      if(ret_error)
          break;
-      }
    }/*end for*/
 
    DEXIT;
@@ -2443,8 +2422,6 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
    else
       return STATUS_OK;
 }
-
-/* EB: ADOC: add commets */
 
 lListElem *
 job_get_request(const lListElem *this_elem, const char *centry_name) 
@@ -2494,7 +2471,9 @@ job_get_contribution(const lListElem *this_elem, lList **answer_list,
    return ret;
 }
 
-/* JG: TODO: use dstring! */
+
+/* EB: TODO: rename */
+
 void queue_or_job_get_states(int nm, char *str, u_long32 op)
 {
    int count = 0;

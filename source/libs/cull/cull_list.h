@@ -34,6 +34,7 @@
 
 #include <stdio.h> 
 
+#include "basis_types.h"
 #include "sge_htable.h"
 
 #ifdef  __cplusplus
@@ -215,7 +216,6 @@ lListElem *lFreeElem(lListElem *ep);
 lList *lFreeList(lList *lp);
 
 int lAddList(lList *lp0, lList *lp1);
-lList *lAddSubList(lListElem *ep, int nm, lList *to_add);
 int lCompListDescr(const lDescr *dp0, const lDescr *dp1);
 lList *lCopyList(const char *name, const lList *src);
 lListElem *lCopyElem(const lListElem *src);

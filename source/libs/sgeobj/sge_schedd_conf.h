@@ -90,6 +90,8 @@ lList **sconf_get_config_list(void);
 
 bool sconf_is(void);
 
+bool sconf_get_user_sort(void);
+
 u_long32 sconf_get_load_adjustment_decay_time(void);
 
 const lList *sconf_get_job_load_adjustments(void);
@@ -132,6 +134,8 @@ double sconf_get_weight_department(void);
 
 double sconf_get_weight_project(void);
 
+double sconf_get_weight_jobclass(void);
+
 double sconf_get_weight_job(void);
 
 u_long32 sconf_get_weight_tickets_share(void);
@@ -166,37 +170,5 @@ double sconf_get_weight_ticket(void);
 double sconf_get_weight_waiting_time(void);
 double sconf_get_weight_deadline(void);
 double sconf_get_weight_urgency(void);
-
-u_long32 sconf_get_max_reservations(void);
-
-typedef enum {
-   QS_STATE_EMPTY,
-   QS_STATE_FULL
-} qs_state_t;
-
-void sconf_set_qs_state(qs_state_t state);
-qs_state_t sconf_get_qs_state(void);
-
-void sconf_set_global_load_correction(bool flag);
-bool sconf_get_global_load_correction(void);
-
-void     sconf_set_default_duration(u_long32 duration);
-u_long32 sconf_get_default_duration(void);
-const char *sconf_get_default_duration_str(void);
-
-void     sconf_set_now(u_long32);
-u_long32 sconf_get_now(void);
-
-bool sconf_get_host_order_changed(void);
-void sconf_set_host_order_changed(bool changed);
-
-int  sconf_get_last_dispatch_type(void);
-void sconf_set_last_dispatch_type(int changed);
-
-bool serf_get_active(void);
-void serf_set_active(bool);
-
-double sconf_get_weight_priority(void);
-
 
 #endif /* __SGE_SCHEDD_CONF_H */

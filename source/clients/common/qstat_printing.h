@@ -57,12 +57,10 @@
 #define QSTAT_DISPLAY_JOBHOLD       (1<<15)
 #define QSTAT_DISPLAY_STARTTIMEHOLD (1<<16)
 #define QSTAT_DISPLAY_URGENCY       (1<<17)
-#define QSTAT_DISPLAY_PRIORITY      (1<<18)
 
 #define QSTAT_DISPLAY_HOLD          (QSTAT_DISPLAY_USERHOLD|QSTAT_DISPLAY_SYSTEMHOLD|QSTAT_DISPLAY_OPERATORHOLD|QSTAT_DISPLAY_JOBHOLD|QSTAT_DISPLAY_STARTTIMEHOLD)
 #define QSTAT_DISPLAY_ALL           (QSTAT_DISPLAY_PENDING|QSTAT_DISPLAY_SUSPENDED|QSTAT_DISPLAY_RUNNING|QSTAT_DISPLAY_FINISHED)
 
-#define TAG_DEFAULT       0x00
 #define TAG_SHOW_IT       0x01
 #define TAG_FOUND_IT      0x02
 #define TAG_SELECT_IT     0x04
@@ -98,6 +96,5 @@ void
 sge_print_jobs_zombie(lList *zombie_list, const lList *pe_list, 
                       lList *user_list, lList *ehl, lList *cl, 
                       u_long32 full_listing, u_long32 group_opt);
-
 
 #endif /* __QSTAT_PRINTING_H */

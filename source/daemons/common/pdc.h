@@ -168,7 +168,7 @@ typedef struct {
 
 typedef struct {
    lnk_link_t link;
-   JobID_t jid;            
+   JobID_t jid;            /* only used in IRIX 6.4 workaround */
    psProc_t proc;
    double bwtime;
    double rwtime;
@@ -177,8 +177,10 @@ typedef struct {
    uint64 mem;             /* delta integral vmem */
    uint64 vmem;            /* virtual process size */
    uint64 rss;             /* resident set size */
+#ifndef IRIX6
    uint64 ru_ioblock;      /* # of block input operations */
    uint64 delta_chars;     /* number of chars to be added to jd_chars this time step */
+#endif
 } proc_elem_t;
 
 extern long pagesize;

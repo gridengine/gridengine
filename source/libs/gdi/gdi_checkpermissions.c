@@ -165,13 +165,7 @@ bool sge_gdi_check_permission(lList **alpp, int option)
 
   if (permList == NULL) {
      DPRINTF(("Permlist is NULL\n"));
-     if (alpp != NULL) {
-        if (*alpp == NULL) {
-           *alpp = alp;
-        } else {
-           lAddList(*alpp, alp); 
-        }       
-     }
+     alpp = &alp;
      failed_checks++;
      return -10;
   } else {

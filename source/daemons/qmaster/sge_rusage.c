@@ -90,7 +90,6 @@ sge_write_rusage(dstring *buffer,
    char *arch_dep_usage_string;
 #endif
    const char *ret = NULL;
-   char *qname = NULL;
 
    DENTER(TOP_LAYER, "sge_write_rusage");
 
@@ -182,20 +181,10 @@ sge_write_rusage(dstring *buffer,
 #endif
       DPRINTF(("arch_string: %s\n", arch_dep_usage_string));
    }
-#endif 
-   {
-      char *pos = NULL;
-      const char *qi_name = NULL;
-      qi_name = lGetString(jr, JR_queue_name);
-      qname = malloc(strlen(qi_name)+1);
-      strcpy(qname, qi_name);
-      if ( (pos = strchr(qname, '@'))){
-         pos[0] = '\0';
-      }
-   }
-   
+#endif         
+
    ret = sge_dstring_sprintf(buffer, ACTFILE_FPRINTF_FORMAT, 
-         qname, delimiter,
+          lGetString(jr, JR_queue_name), delimiter,
           lGetHost(jr, JR_host_name), delimiter,
           lGetString(jr, JR_group), delimiter,
           lGetString(jr, JR_owner), delimiter,
@@ -243,7 +232,7 @@ sge_write_rusage(dstring *buffer,
 #endif 
              );
      
-   FREE(qname);
+
    DEXIT;   
    return ret;
 }
@@ -623,8 +612,6 @@ int sge_read_rusage(FILE *f, sge_rusage_type *d)
    d->io = ((pc=strtok(NULL, ":")))?atof(pc):0;
 
    /* skip job category */
-   pc=strtok(NULL, ":");
-#if 0   
    while ((pc=strtok(NULL, ":")) &&
           strlen(pc) &&
           pc[strlen(pc)-1] != ' ' &&
@@ -636,7 +623,7 @@ int sge_read_rusage(FILE *f, sge_rusage_type *d)
        */
       ;
    }
-#endif
+
    d->iow = ((pc=strtok(NULL, ":")))?atof(pc):0;
 
    /* skip pe_taskid */

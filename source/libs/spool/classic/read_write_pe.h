@@ -38,6 +38,8 @@ lListElem *cull_read_in_pe(const char *dirname, const char *filename, int spool,
 
 char *write_pe(int spool, int how, const lListElem *pep);
 
+lListElem *sge_generic_pe(char *pe_name);
+
 int read_pe_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);  
 
 #endif /* _READ_WRITE_PE_H */

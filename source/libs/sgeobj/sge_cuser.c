@@ -54,7 +54,7 @@
 
 lList *Master_Cuser_List = NULL;
 
-/* EB: ADOC: add comments */
+/* EB: TODO: ADOC: add comments */
 
 lListElem *
 cuser_create(lList **answer_list, const char *cluster_user, lList *remote_user)
@@ -211,4 +211,5 @@ cuser_list_map_user(const lList *this_list, lList **answer_list,
    DEXIT;
    return ret;
 }
+
 #endif

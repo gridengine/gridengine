@@ -70,7 +70,7 @@ QIDLESRC =  qidle.c
 QIDLEOBJS = $(QIDLESRC:.c=.o) 
             
 ALLQIDLEOBJS = $(QIDLEOBJS) sge_conf.o sge_load_sensor.o report.o $(SCHEDLIB) $(GDILIB) \
-               $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB)
+               $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) $(ZLIB)
   
 $(QIDLE):  $(ALLQIDLEOBJS) 
 	$(CC) $(LFLAGS) $(XLFLAGS) -o $@ $(ALLQIDLEOBJS) $(XLIBS) $(LIBS) 

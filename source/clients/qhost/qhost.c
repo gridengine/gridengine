@@ -115,13 +115,15 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "qhost");
   
-   log_state_set_log_gui(1);
-
    sge_gdi_param(SET_MEWHO, QHOST, NULL);
    if (sge_gdi_setup(prognames[QHOST], &alp) != AE_OK) {
       answer_exit_if_not_recoverable(lFirst(alp));
       SGE_EXIT(1);
    }
+
+
+   set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
+   set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
 
    sge_setup_sig_handlers(QHOST);
 
@@ -198,7 +200,7 @@ char **argv
 
          DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
 
-         selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 1, -1);
+         selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 1, NULL, 0, -1);
 
          if (selected) 
             lSetUlong(ep, EH_tagged, 1);
@@ -213,9 +215,7 @@ char **argv
    }
 
    /* scale load values and adjust consumable capacities */
-/*    TODO                                            */
-/*    is correct_capacities needed here ???           */
-/*    correct_capacities(ehl, cl);                    */
+   correct_capacities(ehl, cl);
 
    /* SGE_GLOBAL_NAME should be printed at first */
    lPSortList(ehl, "%I+", EH_name);
@@ -231,7 +231,7 @@ char **argv
    ** format and print the info
    */
 
-#define HEAD_FORMAT "%-23s %-13.13s%4.4s %5.5s %7.7s %7.7s %7.7s %7.7s\n"
+#define HEAD_FORMAT "%-20s %-10.10s %5.5s %5.5s %8.8s %8.8s %8.8s %8.8s\n"
 
    for_each(ep, ehl) {
       if (print_header) {
@@ -705,12 +705,7 @@ lListElem *ep;
          ** resolve hostnames and replace them in list
          */
          for_each(ep, *pphost) {
-#ifdef ENABLE_NGC
-            if (sge_resolve_host(ep, ST_name) != CL_RETVAL_OK) 
-#else
-            if (sge_resolve_host(ep, ST_name)) 
-#endif
-            {
+            if (sge_resolve_host(ep, ST_name)) {
                char buf[BUFSIZ];
                sprintf(buf, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep,ST_name) );
                answer_list_add(&alp, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
@@ -864,12 +859,6 @@ lWriteListTo(ehl, stdout);
       else
          where = lOrWhere(where, nw);
    }
-   /* the global host has to be retrieved as well */
-   if (where != NULL) {
-      nw = lWhere("%T(%I == %s)", EH_Type, EH_name, SGE_GLOBAL_NAME);
-      where = lOrWhere(where, nw);
-   }
-   
    nw = lWhere("%T(%I != %s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
    if (where)
       where = lAndWhere(where, nw);
@@ -921,7 +910,7 @@ lWriteListTo(ehl, stdout);
             jw = lAndWhere(jw, nw);
       }
 
-      j_all = lWhat("%T(%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I)", JB_Type, 
+      j_all = lWhat("%T(%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I)", JB_Type, 
                      JB_job_number, 
                      JB_script_file,
                      JB_owner,
@@ -932,7 +921,6 @@ lWriteListTo(ehl, stdout);
                      JB_jid_predecessor_list,
                      JB_env_list,
                      JB_priority,
-                     JB_jobshare,
                      JB_job_name,
                      JB_project,
                      JB_department,
@@ -1026,6 +1014,7 @@ lWriteListTo(ehl, stdout);
    alp = lFreeList(alp);
 
    /* --- queue */
+   /* EB: TODO: */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
                                  mal, queue_l);
    if (!alp) {

@@ -126,9 +126,7 @@ proc run_dummy_jobs {} {
    global check_errno 
    global check_errstr old_job_id hold_job_A hold_job_B hold_job_C
 
-   set queue [get_queue_instance all.q $CHECK_HOST]
-
-   set submitresult [ submit_job "-o /dev/null -e /dev/null -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 10" ]
+   set submitresult [ submit_job "-o /dev/null -e /dev/null -l q=${CHECK_HOST}.q $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 10" ]
    if {$submitresult < 0 } {
      set_error -1 "failure"
      return
@@ -137,20 +135,18 @@ proc run_dummy_jobs {} {
    # wait for job to run
    if { [wait_for_jobstart $submitresult "leeper" 200] != 0 } {
       set_error -1 "job $submitresult does not start"
-      delete_all_jobs
       return 
    }
 
    # wait for job to stop
    if { [wait_for_jobend $submitresult "leeper" 200] != 0 } {
       set_error -1 "job $submitresult does not end"
-      delete_all_jobs
       return 
    }
 
    set old_job_id $submitresult 
 
-   set submitresult [ submit_job "-h -o /dev/null -e /dev/null -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" ]
+   set submitresult [ submit_job "-h -o /dev/null -e /dev/null -l q=${CHECK_HOST}.q $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" ]
    if {$submitresult < 0 } {
      set_error -1 "failure"
      return
@@ -159,12 +155,11 @@ proc run_dummy_jobs {} {
    # wait for job to get in pending state
    if { [wait_for_jobpending $submitresult "leeper" 200 ] != 0 } {
       set_error -1 "job $submitresult is not in pending state"
-      delete_all_jobs
       return 
    }
    set hold_job_A $submitresult
 
-   set submitresult [ submit_job "-h -o /dev/null -e /dev/null -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" ]
+   set submitresult [ submit_job "-h -o /dev/null -e /dev/null -l q=${CHECK_HOST}.q $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" ]
    if {$submitresult < 0 } {
      set_error -1 "failure"
      return
@@ -173,12 +168,11 @@ proc run_dummy_jobs {} {
    # wait for job to get in pending state
    if { [wait_for_jobpending $submitresult "leeper" 200 ] != 0 } {
       set_error -1 "job $submitresult is not in pending state"
-      delete_all_jobs
       return 
    }
    set hold_job_B $submitresult
     
-   set submitresult [ submit_job "-h -o /dev/null -e /dev/null -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15 " ]
+   set submitresult [ submit_job "-h -o /dev/null -e /dev/null -l q=${CHECK_HOST}.q $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15 " ]
    if {$submitresult < 0 } {
      set_error -1 "failure"
      return
@@ -187,7 +181,6 @@ proc run_dummy_jobs {} {
    # wait for job to get in pending state
    if { [wait_for_jobpending $submitresult "leeper" 200 ] != 0 } {
       set_error -1 "job $submitresult is not in pending state"
-      delete_all_jobs
       return 
    }
    set hold_job_C $submitresult
@@ -231,10 +224,9 @@ proc start_testjob {} {
    global check_errno job_output_dir CHECK_JOB_OUTPUT_DIR
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
 
-   set queue [get_queue_instance "all.q" $CHECK_HOST]
 
    set job_output_dir "$CHECK_JOB_OUTPUT_DIR" 
-   set submitresult [ submit_job "-h -q $queue -e $job_output_dir -o $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" ]
+   set submitresult [ submit_job "-h -l q=${CHECK_HOST}.q -e $job_output_dir -o $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" ]
    if {$submitresult < 0 } {
      set_error -1 "start_testjob - failure"
      return
@@ -242,7 +234,6 @@ proc start_testjob {} {
    # wait for job to get in pending state 
    if { [wait_for_jobpending $submitresult "leeper" 200] != 0 } {
       set_error -1 "start_testjob - job $submitresult is not in pending state"
-      delete_all_jobs
       return 
    }
    set_error 0 "start_testjob - no errors"
@@ -625,9 +616,7 @@ proc qalter_hard {} {
   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
    global check_errno CHECK_OUTPUT
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
-
-   set queue [get_queue_instance "all.q" $CHECK_HOST]
-  set option "-hard -q $queue"
+  set option "-hard -l q=${CHECK_HOST}.q"
   puts $CHECK_OUTPUT "calling: qalter $option $submitresult"
   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
   if {$qalterresult == 1} {
@@ -688,7 +677,6 @@ proc qalter_hold {} {
   # wait for job to run
   if { [wait_for_jobstart $hold_job_A "leeper" 200 0] != -1 } {
      set_error -1 "job $hold_job_A should not start yet"
-      delete_all_jobs
      return 
   }
 
@@ -707,7 +695,6 @@ proc qalter_hold {} {
   # wait for job A to run 
   if { [wait_for_jobstart $hold_job_A "leeper" 200] != 0 } {
      set_error -1 "job $hold_job_A does not run"
-      delete_all_jobs
      return 
   }
 
@@ -792,7 +779,7 @@ proc qalter_l {} {
   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
-  set option "-l h=$CHECK_HOST"
+  set option "-l q=${CHECK_HOST}.q"
   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
   if {$qalterresult == 1} {
     set_error -1 "qalter $option - $qalteroutput"
@@ -1192,7 +1179,7 @@ proc qalter_q {} {
   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
-  set option "-q [get_queue_instance all.q $CHECK_HOST]"
+  set option "-q ${CHECK_HOST}.q"
   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
   if {$qalterresult == 1} {
     set_error -1 "qalter $option - $qalteroutput"
@@ -1407,8 +1394,7 @@ proc qalter_soft {} {
   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
-   set queue [get_queue_instance "all.q" $CHECK_HOST]
-  set option "-soft -q $queue"
+  set option "-soft -l q=${CHECK_HOST}.q"
   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
   if {$qalterresult == 1} {
     set_error -1 "qalter $option - $qalteroutput"
@@ -1623,9 +1609,7 @@ proc qalter_w {} {
   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
-
-   set queue [get_queue_instance "all.q" $CHECK_HOST]
-  set option "-w e -q $queue"
+  set option "-w e -l q=${CHECK_HOST}.q"
   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
   if {$qalterresult == 1} {
     set_error -1 "qalter $option - $qalteroutput"
@@ -1738,7 +1722,6 @@ proc qalter_a {} {
    if { [wait_for_jobstart $submitresult "leeper" $wait_time 0] != -1 } {
       puts $CHECK_OUTPUT "qalter $option - time left: [expr ($wait_time - [expr ( [timestamp] - $time)] ) ]"
       set_error -1 "qalter $option - job should not run until yet"
-      delete_all_jobs
       return 
    } 
 
@@ -1747,14 +1730,12 @@ proc qalter_a {} {
    puts $CHECK_OUTPUT "qalter $option - ok now the job should start"
    if { [wait_for_jobstart $submitresult "leeper" 300] == -1 } {
       set_error -1 "qalter $option - job doesn't start"
-      delete_all_jobs
       return 
    } 
  
    # wait for end of job
    if { [wait_for_jobend $submitresult "leeper" 300] == -1 } {
       set_error -1 "qalter $option - job doesn't stop"
-      delete_all_jobs
       return 
    } 
   

@@ -36,7 +36,6 @@
 #include <pthread.h>
 
 #include <pthread.h>
-#include <pwd.h>
 
 #include "sge_mtutil.h"
 
@@ -51,7 +50,6 @@
 #include "read_defaults.h"
 
 /* COMMON */
-#include "msg_common.h"
 #include "parse_job_cull.h"
 #include "parse_qsub.h"
 #include "sge_options.h"
@@ -61,11 +59,9 @@
 #include "sge_qtcsh.h"
 
 /* UTI */
-#include "setup_path.h"
 #include "sge_dstring.h"
 #include "sge_prog.h"
 #include "sge_string.h"
-#include "sge_uidgid.h"
 
 /* RMON */
 #include "sgermon.h"
@@ -76,7 +72,6 @@
 #include "parse_qsubL.h"
 #include "parse.h"
 #include "sge_mailrecL.h"
-#include "sge_range.h"
 #include "sge_ulong.h"
 
 /* OBJ */
@@ -129,8 +124,7 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[]);
 static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_jt, 
    int is_bulk, int start, int end, int step, dstring *diag);
 static int japi_drmaa_path2path_opt(const lList *attrs, lList **args,
-   int is_bulk, const char *attribute_key, const char *sw, int opt, dstring *diag,
-   bool bFileStaging);
+   int is_bulk, const char *attribute_key, const char *sw, int opt, dstring *diag);
 static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk, 
    dstring *diag);
 static int japi_drmaa_path2sge_path(const lList *attrs, int is_bulk,
@@ -144,10 +138,6 @@ static void merge_drmaa_options (lList **opts_all, lList **opts_default,
 static int opt_list_append_opts_from_drmaa_attr (lList **args, const lList *attrs,
    const lList *vattrs, int is_bulk, dstring *diag);
 char *drmaa_time2sge_time (const char *drmaa_time, dstring *diag);
-static char *drmaa_get_home_directory (lList *alp);
-static char *drmaa_expand_wd_path(const char *path, lList *alp);
-static int drmaa_set_bulk_range (lList **opts, int start, int end, int step,
-                                 lList **alp);
 
 /****** DRMAA/-DRMAA_Session_state *******************************************
 *  NAME
@@ -198,14 +188,12 @@ static const char *drmaa_supported_nonvector[] = {
    DRMAA_NATIVE_SPECIFICATION,  /* mandatory */
    DRMAA_BLOCK_EMAIL,           /* mandatory */
    DRMAA_START_TIME,            /* mandatory */
-#if 0
    DRMAA_TRANSFER_FILES,        /* optional */
    DRMAA_DEADLINE_TIME,         /* optional */
    DRMAA_WCT_HLIMIT,            /* optional */
    DRMAA_WCT_SLIMIT,            /* optional */
    DRMAA_DURATION_HLIMIT,       /* optional */
    DRMAA_DURATION_SLIMIT,       /* optional */
-#endif
    NULL
 };
 
@@ -279,7 +267,7 @@ int drmaa_init(const char *contact, char *error_diagnosis, size_t error_diag_len
     * to interface JAPI session key forth ... 
     */
    ret = japi_init(contact, set_session?sge_dstring_get_string(&session_key_in):NULL, 
-        &session_key_out, DRMAA, 1, diagp);
+        &session_key_out, diagp);
 
    if (set_session)
       sge_dstring_free(&session_key_in);
@@ -358,7 +346,7 @@ int drmaa_exit(char *error_diagnosis, size_t error_diag_len)
    }
    DRMAA_UNLOCK_ENVIRON();
 
-   drmaa_errno = japi_exit(close_session, JAPI_EXIT_NO_FLAG, diagp);
+   drmaa_errno = japi_exit(close_session, diagp);
 
    /* need to get rid of session key env var */
    DRMAA_LOCK_ENVIRON();
@@ -1252,16 +1240,11 @@ int drmaa_wait(const char *job_id, char *job_id_out, size_t job_id_out_len,
 {
    dstring diag;
    dstring waited_job;
-   int ev;
-   
    if (error_diagnosis) 
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
-   
    if (job_id_out) 
       sge_dstring_init(&waited_job, job_id_out, job_id_out_len+1);
-   
-   return japi_wait(job_id, job_id_out?&waited_job:NULL, stat, timeout,
-                    JAPI_JOB_FINISH, &ev, rusage, error_diagnosis?&diag:NULL);
+   return japi_wait(job_id, job_id_out?&waited_job:NULL, stat, timeout, rusage, error_diagnosis?&diag:NULL);
 }
 
 
@@ -1913,11 +1896,11 @@ static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
                                   dstring *diag)
 {
    const char *new_path = NULL;
-   int drmaa_errno;
+   int ret_val;
    
    DENTER (TOP_LAYER, "japi_drmaa_path2wd_opt");
    
-   if ((drmaa_errno = japi_drmaa_path2sge_path (attrs, is_bulk,
+   if ((ret_val = japi_drmaa_path2sge_path (attrs, is_bulk,
                                             DRMAA_WD, 0, &new_path,
                                             diag)) == DRMAA_ERRNO_SUCCESS) {
       if (new_path) {
@@ -1930,12 +1913,12 @@ static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
          lSetString (ep, SPA_argval_lStringT, new_path);
       }
       else {
-         drmaa_errno = DRMAA_ERRNO_SUCCESS;
+         ret_val = 0;
       }
    }   
    
    DEXIT;
-   return drmaa_errno;
+   return ret_val;
 }
 
 /****** DRMAA/drmaa_path2path_opt() ********************************************
@@ -1977,21 +1960,18 @@ static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
 *******************************************************************************/
 static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bulk,
                                     const char *attribute_key, const char *sw,
-                                    int opt, dstring *diag, bool bFileStaging )
+                                    int opt, dstring *diag)
 {
    const char *new_path = NULL;
-   int drmaa_errno;
-   lList *path_list = lCreateList ("path_list", PN_Type);
+   int ret_val;
+   lList *path_list = lCreateList ("path list", PN_Type);
    
    DENTER (TOP_LAYER, "japi_drmaa_path2path_opt");
 
    if (path_list == NULL) {
-      japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diag);
-      DEXIT;
-      return DRMAA_ERRNO_INTERNAL_ERROR;
+      return 1;
    }
-   
-   if ((drmaa_errno = japi_drmaa_path2sge_path (attrs, is_bulk,
+   else if ((ret_val = japi_drmaa_path2sge_path (attrs, is_bulk,
                                                  attribute_key, 1, &new_path,
                                                  diag)) == DRMAA_ERRNO_SUCCESS) {
       if (new_path) {
@@ -1999,15 +1979,10 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
          const char *value = lGetString(ep, VA_value);
          char *cell = NULL;
          char *path = NULL;
-   
-         /* We must accept an empty path. This must be set to the default
-          * path later.
-          * A empty path means that the drmaa attribute is not set, so it
-          * obviously doesn't  have to start with a colon.
-          */
-         if( strlen( new_path )==0 ) {
-            path = "";
-         } else if (new_path[0] == ':') {  /* :path */
+
+         DPRINTF (("%s = \"%s\"\n", sw, new_path));
+
+         if (new_path[0] == ':') {  /* :path */
             path = (char *)new_path + 1;
          } else if ((path = strstr (new_path, ":"))){ /* host:path */
             path[0] = '\0';
@@ -2015,50 +1990,32 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
             path[0] = ':';
             path += 1;
          } else { /* path */
-            /* DRMAA-Spec says: The path MUST begin with a colon! */
-            sge_dstring_sprintf(diag, MSG_DRMAA_PATH_NEEDS_COLON_S, attribute_key);
-            DEXIT;
-            return DRMAA_ERRNO_INVALID_ARGUMENT;
+            path = (char *)new_path;
          }
-   
-         ep = lCreateElem( PN_Type );
+
+         ep = lCreateElem (AT_Type);
          lAppendElem (path_list, ep);
          DPRINTF (("PN_path = \"%s\"\n", path));
-         if( strlen( path )>0 ) {
-            lSetString( ep, PN_path, path );
-         } else if( !strcmp( sw, "-i" ) && bFileStaging==true ) {
-            /* No default stdin_path for file staging! */
-            sge_dstring_sprintf(diag, MSG_DRMAA_NEEDS_INPUT_PATH);
-            drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
+         lSetString (ep, PN_path, path);
+
+         if (cell) {
+            DPRINTF (("PN_host = \"%s\"\n", cell));
+            lSetHost (ep, PN_host, cell);
+            FREE (cell);
          }
 
-         if( cell ) {
-            DPRINTF(( "PN_file_host = \"%s\"\n", cell ));
-            lSetHost( ep, PN_file_host, cell );
-            FREE( cell );
-         } else {
-            /* No host was given, so we use this host we are running on.*/
-            lSetHost( ep, PN_file_host, uti_state_get_unqualified_hostname());
-         }
-         
-
-         DPRINTF(( "FileStaging = %d\n", bFileStaging ));
-         lSetBool( ep, PN_file_staging, bFileStaging );
-         
-         DPRINTF(( "Adding args\n" ));
          ep = sge_add_arg (args, opt, lListT, sw, value);
-         DPRINTF(( "Setting List\n" ));
          lSetList (ep, SPA_argval_lListT, path_list);
-         DPRINTF(( "Freeing Path\n" ));
+         
          FREE (new_path);
       }   
       else {
-         drmaa_errno = DRMAA_ERRNO_SUCCESS;
+         ret_val = 0;
       }
    }
 
    DEXIT;
-   return drmaa_errno;
+   return ret_val;
 }
 
 /****** DRMAA/drmaa_path2sge_path() ********************************************
@@ -2107,27 +2064,15 @@ static int japi_drmaa_path2sge_path(const lList *attrs, int is_bulk,
 
    if ((ep=lGetElemStr(attrs, VA_variable, attribute_key ))) {
       dstring ds = DSTRING_INIT;
-      const char *p = NULL;
-      const char *value = lGetString(ep, VA_value);
-      
+      const char *p, *value = lGetString(ep, VA_value);
       /* substitute DRMAA placeholder with grid engine counterparts */
-      p = strchr (value, ':');
-      
-      /* If there is a colon, skip past it */
-      if (p != NULL) {
-         sge_dstring_append_char (&ds, ':');
-         value = p + 1;
-      }
-      /* If there is no colon, we assume that the calling function will deal
-       * with the problem since we can't know who's doing the calling and
-       * whether there has to be a colon or not. */
-      
+
       /* home directory and working directory placeholder only recognized at the begin */
       if (!strncmp(value, DRMAA_PLACEHOLDER_HD, strlen(DRMAA_PLACEHOLDER_HD))) {
-         sge_dstring_append(&ds, "$HOME");
+         sge_dstring_copy_string(&ds, "$HOME");
          value += strlen(DRMAA_PLACEHOLDER_HD);
       } else if (do_wd && (!strncmp(value, DRMAA_PLACEHOLDER_WD, strlen(DRMAA_PLACEHOLDER_WD)))) {
-         sge_dstring_append(&ds, "$CWD"); /* not yet supported by Grid Engine */
+         sge_dstring_copy_string(&ds, "$CWD"); /* not yet supported by Grid Engine */
          value += strlen(DRMAA_PLACEHOLDER_WD);
       }
 
@@ -2187,7 +2132,7 @@ static int japi_drmaa_path2sge_path(const lList *attrs, int is_bulk,
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTE: drmaa_job2sge_job() is MT safe except on AIX4.2 and FreeBSD
+*     MT-NOTE: drmaa_job2sge_job() is MT safe
 *
 *******************************************************************************/
 static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_jt, 
@@ -2208,7 +2153,6 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
 
    DENTER (TOP_LAYER, "drmaa_job2sge_job");
 
-DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
    /* make JB_Type job description out of DRMAA job template */
    if (!(jt = lCreateElem (JB_Type))) {
       japi_standard_error (DRMAA_ERRNO_NO_MEMORY, diag);
@@ -2290,7 +2234,7 @@ DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
       DEXIT;
       return drmaa_errno;
    }
-
+ 
    /*
     * Set up default options
     */
@@ -2298,15 +2242,9 @@ DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
 
    /*
     * We will only read commandline options from scripfile if the script
-    * itself should not be handled as binary.
-    * There's a big danger in trying to parse the scriptfile that needs to be
-    * documented.  The problem is that the path to the working directory and
-    * hence to the script is relative to the execution host.  This code runs on
-    * the submit host, so the working directory path may not point to the right
-    * thing.  If it doesn't the only way we'll find out is the path to the
-    * script doesn't exist.  If it just points to the wrong script, we have no
-    * way of knowing it.
+    * itself should not be handled as binary
     */   
+   
    if (opt_list_is_X_true (opts_native, "-b") ||
        (!opt_list_has_X (opts_native, "-b") &&
         (opt_list_is_X_true (opts_defaults, "-b") ||
@@ -2314,58 +2252,7 @@ DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
          opt_list_is_X_true (opts_default, "-b"))))) {
       DPRINTF(("Skipping options from script due to -b option\n"));
    } else {
-      const char *path = NULL;
-
-/* This doesn't function until cull_parse_job_parameter() understands the
- * -noshell option. */
-#if 0
-      /* BUGFIX: #658
-       * In order to work around Bug #476, I set DRMAA to not spawn an exec shell.
-       * If another option level disables binary mode, I have to remove this
-       * option.  This means that "-b n" trumps both the default "-b y" and the
-       * default "-noshell". */
-      ep = lGetElemStr(opts_default, SPA_switch, "-noshell");
-      lRemoveElem(opts_default, ep);
-#endif
-
-      /* If the scriptfile is to be parsed for options, we have to set the
-       * cwd.  In DRMAA, the script path is assumed to be relative to the
-       * working directory.  Therefore, if a DRMAA_WD is given, we must
-       * chdir() to that directory before trying to parse (and hence find) the
-       * script.  If the working directory is not given, the job will be run in
-       * the user's home directory, presumably.  The exception is if -cwd is
-       * set from the DRMAA_NATIVE_SPECIFICATION or in a default file, in which
-       * case we don't need to chdir() at all. */
-      if (opt_list_has_X (opts_drmaa, "-wd")) {
-         ep = lGetElemStr(opts_drmaa, SPA_switch, "-wd");
-         path = lGetString(ep, SPA_argval_lStringT);
-         path = drmaa_expand_wd_path (path, alp);
-         
-         if (path == NULL) {
-            answer_list_to_dstring (alp, diag);
-            lFreeList (alp);
-            jt = lFreeElem (jt);   
-            DEXIT;
-            return DRMAA_ERRNO_DENIED_BY_DRM;
-         }
-      }
-      /* -cwd could also theoretically appear in opts_default, but since I
-       * control what goes into opts_default, I know it isn't. */
-      else if ((!(opt_list_has_X(opts_native, "-cwd"))) &&
-               (!(opt_list_has_X(opts_defaults, "-cwd")))){
-         path = drmaa_get_home_directory (alp);
-      }
-
-      if (path != NULL) {
-         DPRINTF (("Using \"%s\" for the working directory.\n", path));
-         chdir (path);
-         FREE (path);
-      }
-      else {
-         DPRINTF (("Using current directory for the working directory.\n"));
-      }
-      
-      opt_list_append_opts_from_script (&opts_scriptfile, &alp, opts_drmaa, environ);
+      opt_list_append_opts_from_script (&opts_scriptfile, &alp, opts_all, environ);
       
       if (answer_list_has_error (&alp)) {
          answer_list_to_dstring (alp, diag);
@@ -2510,16 +2397,6 @@ DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
    merge_drmaa_options (&opts_all, &opts_default, &opts_defaults, &opts_scriptfile,
                        &opts_job_cat, &opts_native, &opts_drmaa);
 
-   /* If the job is a bulk job, add the -t switch last so it takes top priority. */
-   if (is_bulk) {
-      if (drmaa_set_bulk_range (&opts_all, start, end, step, &alp) != 0) {
-         answer_list_to_dstring (alp, diag);
-         jt = lFreeElem (jt);   
-         DEXIT;
-         return DRMAA_ERRNO_DENIED_BY_DRM;
-      }
-   }
-
    alp = cull_parse_job_parameter (opts_all, &jt);
    
    if (answer_list_has_error (&alp)) {
@@ -2571,7 +2448,6 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
    int drmaa_errno;
    lListElem *ep = NULL;
    lListElem *ep_opt = NULL;
-   const char *scriptname = NULL;
    /* Turn each DRMAA attribute into a list entry. */
 
    DENTER (TOP_LAYER, "opt_list_append_opts_from_drmaa_attr");
@@ -2622,31 +2498,23 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
    }
 
    /* jobs input/output/error stream -- -i/o/e */
-   {
-      const char* strvalue="";
-      if( (ep=lGetElemStr( attrs, VA_variable, DRMAA_TRANSFER_FILES ))) {
-         strvalue = lGetString( ep, VA_value );   
-      }
-      
-      if((drmaa_errno = japi_drmaa_path2path_opt(attrs, args, is_bulk,
-               DRMAA_OUTPUT_PATH, "-o", o_OPT, diag, strchr( strvalue, 'o')?true:false))
-         != DRMAA_ERRNO_SUCCESS) {
-         DEXIT;
-         return drmaa_errno;
-      }
-
-      if((drmaa_errno = japi_drmaa_path2path_opt(attrs, args, is_bulk,
-               DRMAA_ERROR_PATH, "-e", e_OPT, diag, strchr( strvalue, 'e')?true:false))
-         != DRMAA_ERRNO_SUCCESS) {
-         DEXIT;
-         return drmaa_errno;
-      }
-      if((drmaa_errno = japi_drmaa_path2path_opt(attrs, args, is_bulk,
-               DRMAA_INPUT_PATH, "-i", i_OPT, diag, strchr( strvalue, 'i')?true:false))
-         != DRMAA_ERRNO_SUCCESS) {
-         DEXIT;
-         return drmaa_errno;
-      }
+   if ((drmaa_errno = japi_drmaa_path2path_opt (attrs, args, is_bulk, DRMAA_OUTPUT_PATH,
+                                                "-o", o_OPT, diag))
+        != DRMAA_ERRNO_SUCCESS) {
+      DEXIT;
+      return drmaa_errno;
+   }
+   if ((drmaa_errno = japi_drmaa_path2path_opt (attrs, args, is_bulk, DRMAA_ERROR_PATH,
+                                                "-e", e_OPT, diag))
+        != DRMAA_ERRNO_SUCCESS) {
+      DEXIT;
+      return drmaa_errno;
+   }
+   if ((drmaa_errno = japi_drmaa_path2path_opt (attrs, args, is_bulk, DRMAA_INPUT_PATH,
+                                                "-i", i_OPT, diag))
+        != DRMAA_ERRNO_SUCCESS) {
+      DEXIT;
+      return drmaa_errno;
    }
 
    /* user hold state -- -h */
@@ -2813,10 +2681,10 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
       return DRMAA_ERRNO_DENIED_BY_DRM;
    }
    
-   if ((scriptname = lGetString (ep, VA_value)) != NULL) {
-      DPRINTF (("remote command is \"%s\"\n", scriptname));
+   if (lGetString (ep, VA_value) != NULL) {
+      DPRINTF (("remote command is \"%s\"\n", lGetString (ep, VA_value)));
       ep_opt = sge_add_arg (args, 0, lStringT, STR_PSEUDO_SCRIPT, NULL);
-      lSetString (ep_opt, SPA_argval_lStringT, scriptname);
+      lSetString (ep_opt, SPA_argval_lStringT, lGetString (ep, VA_value));
 
       /* job arguments -- last thing on the command line */
       if ((ep=lGetElemStr (vattrs, NSV_name, DRMAA_V_ARGV))) {
@@ -2872,7 +2740,8 @@ static void opt_list_append_default_drmaa_opts(lList **opts)
    ep_opt = sge_add_arg (opts, p_OPT, lIntT, "-p", "0");
    lSetInt (ep_opt, SPA_argval_lIntT, 0);
    
-   /* We always use binary submission mode by default. A native spec, job
+   /* 
+    * We always use binary submission mode by default. A native spec, job
     * category, or default file attribute can use -b n to reenable script
     * attributes.
     */
@@ -2880,17 +2749,13 @@ static void opt_list_append_default_drmaa_opts(lList **opts)
    ep_opt = sge_add_arg (opts, b_OPT, lIntT, "-b", "y");
    lSetInt (ep_opt, SPA_argval_lIntT, 1);
    
-/* This doesn't function until cull_parse_job_parameter() understands the
- * -noshell option. */
-#if 0
-   /* BUGFIX: #658
-    * In order to work around Bug #476, I set DRMAA to not spawn an exec shell.
-    * Later in drmaa_job2sge_job if binary mode is disabled, I also have to
-    * remove this option. */
-   DPRINTF (("disabling execution shell\n"));
-   ep_opt = sge_add_noarg(opts, noshell_OPT, "-noshell", NULL);
-#endif
-
+   /* DRMAA sends email by default.  Since DRMAA doesn't really specify when
+    * email gets sent, we assume an innocuous default: send email when the job
+    * is done. */
+   DPRINTF (("Enabling email at end of job\n"));
+   ep_opt = sge_add_arg (opts, m_OPT, lIntT, "-m", "e");
+   lSetInt (ep_opt, SPA_argval_lIntT, MAIL_AT_EXIT);
+   
    DEXIT;
 }
 
@@ -2960,10 +2825,13 @@ static void merge_drmaa_options(lList **opts_all, lList **opts_default,
       prune_arg_list (*opts_scriptfile);
       
       if (*opts_all == NULL) {
+         DPRINTF (("Setting all options to scriptfile options\n"));
          *opts_all = *opts_scriptfile;
       } else {
+         DPRINTF (("Copying scriptfile options\n"));
          lAddList (*opts_all, *opts_scriptfile);
       }
+      DPRINTF (("Deleting scriptfile options\n"));
       *opts_scriptfile = NULL;
    }
    
@@ -3109,10 +2977,7 @@ o   -V                                     export all environment variables
 *     lList *drmaa_time              - the DRMAA time string
 *
 *  OUTPUTS
-*     dstring *diag                  - errors
-*
-*  RESULT
-*     char *   - The time as a string
+*     lList *diag                    - errors
 *
 *  NOTES
 *     MT-NOTE: drmaa_time2sge_time() is MT safe
@@ -3409,189 +3274,4 @@ char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
 
    DEXIT;
    return strdup (sge_time);
-}
-
-/****** DRMAA/drmaa_expand_wd_path()********************************************
-*  NAME
-*     drmaa_expand_wd_path() -- convert DRMAA_WD to a usable path
-*
-*  SYNOPSIS
-*     void drmaa_expand_wd_path(const char *path, lList *alp)
-*
-*  FUNCTION
-*     The DRMAA_WD is translated into a usable path by converting $drmaa_hd_ph$
-*     into the user's home directory path.  Note that $drmaa_inc_ph$ is not
-*     translated.  This function is used only when parsing the script file.
-*     because $drmaa_inc_ph$ only has a value after the job has been submitted,
-*     it is not useful for finding the script, and hence is not allowed in
-*     conjunction with "-b n".
-*
-*  INPUTS
-*     lList *path              - the DRMAA_WD string
-*
-*  OUTPUTS
-*     lList *alp               - errors
-*
-*  RESULT
-*     char *   - The expanded path as a string
-*
-*  NOTES
-*     MT-NOTE: drmaa_expand_wd_path() is MT safe except on AIX4.2 and FreeBSD
-*
-*******************************************************************************/
-static char *drmaa_expand_wd_path(const char *path, lList *alp)
-{
-   char *file = NULL;
-   char str[256 + 1];
-   
-   DENTER (TOP_LAYER, "drmaa_expand_wd_path");
-   DPRINTF (("Expanding \"%s\"\n", path));
-
-   /* First look for the job index placeholder.  It is illegal. */
-   if (strstr(path, "$TASK_ID") != NULL) {
-         sprintf (str, MSG_DRMAA_INC_NOT_ALLOWED);
-         answer_list_add(&alp, str, STATUS_ENOSUCHUSER, 
-                         ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return NULL;
-   }
-   
-   /* If the home directory placeholder is found at the beginning of the
-    * path, replace it with the user's home directory on the current
-    * machine in hopes that it's the same home directory as on the exec
-    * host. */
-   if (!strncmp(path, "$HOME", 5)) {
-      int length = 0;
-      char *homedir = drmaa_get_home_directory (alp);
-
-      if (homedir == NULL) {
-         DEXIT;
-         return NULL;
-      }
-      
-      length = strlen (path) - 5 + strlen (homedir) + 1;
-      
-      file = (char *)malloc (sizeof (char) * length);
-      strcpy (file, homedir);
-      file = strcat (file, path + 5);
-      
-      FREE (homedir);
-   }
-   else {
-      file = (char *)malloc (sizeof (char) * (strlen (path) + 1));
-      file = strcpy (file, path);
-   }
-
-   DPRINTF (("Expanded to \"%s\"\n", file));
-   DEXIT;
-   return file;
-}
-
-/****** DRMAA/drmaa_get_home_directory()****************************************
-*  NAME
-*     drmaa_get_home_directory() -- get the user's home directory
-*
-*  SYNOPSIS
-*     void drmaa_get_home_directory(lList *alp)
-*
-*  FUNCTION
-*     Returns the user's home directory as determined from nsswitch.conf.
-*
-*  OUTPUTS
-*     lList *alp               - errors
-*
-*  RESULT
-*     char *   - the home directory path as a string
-*
-*  NOTES
-*     MT-NOTE: drmaa_get_home_directory() is MT safe except on AIX4.2 and
-*     MT-NOTE: FreeBSD
-*
-*******************************************************************************/
-static char *drmaa_get_home_directory (lList *alp)
-{
-   struct passwd *pwd = NULL;
-   char str[256 + 1];
-#ifdef HAS_GETPWNAM_R
-   struct passwd pw_struct;
-   char buffer[2048];
-#endif
-
-   DENTER (TOP_LAYER, "drmaa_get_home_directory");
-   
-#ifdef HAS_GETPWNAM_R
-   pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
-#else
-   pwd = sge_getpwnam(uti_state_get_user_name());
-#endif
-
-   if (!pwd) {
-      sprintf(str, MSG_USER_INVALIDNAMEX_S, uti_state_get_user_name());
-      answer_list_add(&alp, str, STATUS_ENOSUCHUSER, 
-                      ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return NULL;
-   }
-
-   if (!pwd->pw_dir) {
-      sprintf(str, MSG_USER_NOHOMEDIRFORUSERX_S, uti_state_get_user_name());
-      answer_list_add(&alp, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return NULL;
-   }
-   
-   return strdup (pwd->pw_dir);
-}
-
-/****** DRMAA/drmaa_set_bulk_range()********************************************
-*  NAME
-*     drmaa_set_bulk_range() -- set the bulk job switch for the given range
-*
-*  SYNOPSIS
-*     int drmaa_set_bulk_range(lList **opts, int start, int end, int step,
-*                              lList **alp)
-*
-*  FUNCTION
-*     Adds a "-t range" option to the opts list for the given task id range.
-*
-*  INPUTS
-*     lList **opts             - the list to which the -t option will be added
-*     int     start            - the beginning of the task id range
-*     int     end              - the end of the task id range
-*     int     step             - the increment between consequetive task ids
-*  OUTPUTS
-*     lList **alp               - errors
-*
-*  RESULT
-*     int   - error code: 1 = OK, 0 = Error
-*
-*  NOTES
-*     MT-NOTE: drmaa_set_bulk_range() is MT safe
-*
-*******************************************************************************/
-static int drmaa_set_bulk_range (lList **opts, int start, int end, int step,
-                                 lList **alp)
-{
-   char str[128];
-   lListElem *ep_opt = NULL;
-   lList *task_id_range_list = NULL;
-
-   DENTER (TOP_LAYER, "drmaa_set_bulk_range");
-   
-   sprintf (str, "%d-%d:%d", start, end, step);
-
-   range_list_parse_from_string(&task_id_range_list, alp, str,
-                                   0, 1, INF_NOT_ALLOWED);
-
-   if (task_id_range_list) {
-      ep_opt = sge_add_arg (opts, t_OPT, lStringT, "-t", str);
-      lSetList (ep_opt, SPA_argval_lListT, task_id_range_list);
-      
-      DEXIT;
-      return 0;
-   }
-   else {
-      DEXIT;
-      return 1;
-   }
 }

@@ -39,27 +39,28 @@
 #define ADMINHOST_T           (1<<0)
 #define SUBMITHOST_T          (1<<1)
 #define EXECHOST_T            (1<<2)
-#define CQUEUE_T              (1<<3)
-#define JOB_T                 (1<<4)
-#define EVENT_T               (1<<5)
-#define CENTRY_T              (1<<6)
-#define ORDER_T               (1<<7)
-#define MASTER_EVENT_T        (1<<8)
-#define CONFIG_T              (1<<9)
-#define MANAGER_T             (1<<10)
-#define OPERATOR_T            (1<<11)
-#define PE_T                  (1<<12)
-#define SC_T                  (1<<13)
-#define USER_T                (1<<14)
-#define USERSET_T             (1<<15)
-#define PROJECT_T             (1<<16)
-#define SHARETREE_T           (1<<17)
-#define CKPT_T                (1<<18)
-#define CALENDAR_T            (1<<19)
-#define JOB_SCHEDD_INFO_T     (1<<20)
-#define ZOMBIE_T              (1<<21)
-#define USER_MAPPING_T        (1<<22)
-#define HGROUP_T              (1<<23)
+#define QUEUE_T               (1<<3)
+#define CQUEUE_T              (1<<4)
+#define JOB_T                 (1<<5)
+#define EVENT_T               (1<<6)
+#define CENTRY_T              (1<<7)
+#define ORDER_T               (1<<8)
+#define MASTER_EVENT_T        (1<<9)
+#define CONFIG_T              (1<<10)
+#define MANAGER_T             (1<<11)
+#define OPERATOR_T            (1<<12)
+#define PE_T                  (1<<13)
+#define SC_T                  (1<<14)
+#define USER_T                (1<<15)
+#define USERSET_T             (1<<16)
+#define PROJECT_T             (1<<17)
+#define SHARETREE_T           (1<<18)
+#define CKPT_T                (1<<19)
+#define CALENDAR_T            (1<<20)
+#define JOB_SCHEDD_INFO_T     (1<<21)
+#define ZOMBIE_T              (1<<22)
+#define USER_MAPPING_T        (1<<23)
+#define HGROUP_T              (1<<24)
 
 /*
  * The different list types defined in sge_gdi_request.h
@@ -89,11 +90,6 @@ int qmonMirrorMultiAnswer(u_long32 selector, lList**answerp);
 void qmonShowMirrorList(Widget w, XtPointer cld, XtPointer cad);
 
 lList* qmonDelList(int type, lList **local, int nm, lList **lpp, lCondition *where, lEnumeration *what); 
-
-#if 0
-lList* qmonDelJobList(int type, lList **local, int nm, lList **lpp, lCondition *where, lEnumeration *what); 
-#endif
-
 lList* qmonModList(int type, lList **local, int nm, lList **lpp, lCondition *where, lEnumeration *what); 
 lList* qmonAddList(int type, lList **local, int nm, lList **lpp, lCondition *where, lEnumeration *what); 
 lList* qmonChangeStateList(int type, lList *lp, int force, int action);

@@ -42,34 +42,6 @@
 
 #define STR_LAYER BASIS_LAYER
 
-/****** sgeobj/str/str_list_append_to_dstring() *******************************
-*  NAME
-*     str_list_append_to_dstring() -- append strings to dstring 
-*
-*  SYNOPSIS
-*     const char * 
-*     str_list_append_to_dstring(const lList *this_list, 
-*                                dstring *string, 
-*                                const char delimiter) 
-*
-*  FUNCTION
-*     Append the strings contained in "this_list" to the dstring 
-*     "string". Separate them by the character contained in 
-*     "delimiter". 
-*     If "this_list" is NULL or conaines no elements, "NONE" will
-*     be added to the dstring.
-*
-*  INPUTS
-*     const lList *this_list - ST_Type list 
-*     dstring *string        - dynamic string 
-*     const char delimiter   - delimiter  
-*
-*  RESULT
-*     const char * - pointer to the given "string"-buffer 
-*
-*  SEE ALSO
-*     sgeobj/str/str_list_parse_from_string()
-*******************************************************************************/
 const char *
 str_list_append_to_dstring(const lList *this_list, dstring *string,
                            const char delimiter)
@@ -97,34 +69,6 @@ str_list_append_to_dstring(const lList *this_list, dstring *string,
    return ret;
 }
 
-/****** sgeobj/str/str_list_parse_from_string() *******************************
-*  NAME
-*     str_list_parse_from_string() -- Parse a list of strings 
-*
-*  SYNOPSIS
-*     bool 
-*     str_list_parse_from_string(lList **this_list, 
-*                                const char *string, 
-*                                const char *delimitor) 
-*
-*  FUNCTION
-*     Parse a list of strings from "string". The strings have to be 
-*     separated by a token contained in "delimitor". for each string
-*     an element of type ST_Type will be added to "this_list". 
-*     
-*  INPUTS
-*     lList **this_list     - ST_Type list
-*     const char *string    - string to be parsed 
-*     const char *delimitor - delimitor string 
-*
-*  RESULT
-*     bool - error state
-*        true  - success
-*        false - error 
-*
-*  SEE ALSO
-*     sgeobj/str/str_list_append_to_dstring()
-*******************************************************************************/
 bool 
 str_list_parse_from_string(lList **this_list,
                            const char *string, const char *delimitor)
@@ -147,26 +91,6 @@ str_list_parse_from_string(lList **this_list,
    return ret;
 }
 
-/****** sgeobj/str/str_list_is_valid() ****************************************
-*  NAME
-*     str_list_is_valid() -- Are all strings valid 
-*
-*  SYNOPSIS
-*     bool 
-*     str_list_is_valid(const lList *this_list, lList **answer_list) 
-*
-*  FUNCTION
-*     Does each element in "this_list" contain a valid string (!= NULL). 
-*
-*  INPUTS
-*     const lList *this_list - ST_Type list 
-*     lList **answer_list    - AN_Type list 
-*
-*  RESULT
-*     bool - result
-*        true  - all strings are != NULL
-*        false - at least one entry is NULL 
-*******************************************************************************/
 bool
 str_list_is_valid(const lList *this_list, lList **answer_list)
 {
@@ -182,7 +106,6 @@ str_list_is_valid(const lList *this_list, lList **answer_list)
          if (string == NULL) {
             answer_list_add(answer_list, MSG_STR_INVALIDSTR, 
                             STATUS_ENOKEY, ANSWER_QUALITY_ERROR);
-            break;
          }
       }
    }

@@ -414,7 +414,6 @@ sge_change_queue_state(char *user, char *host, lListElem *qep, u_long32 action, 
          result = qinstance_change_state_on_command(qep, answer, action, force ? true : false, user, host, isoperator, isowner) ? 0 : -1;
          break;
       case QI_DO_CLEAN:
-         /* EB: TODO: QI operation */
          result = qmod_queue_clean(qep, force, answer, user, host, isoperator, isowner);
          break;
 
@@ -571,10 +570,12 @@ int isoperator,
 int isowner 
 ) {
    lListElem *gdil_ep, *nextjep, *nexttep, *jep;
-
+   const char *qname = NULL;
    DENTER(TOP_LAYER, "qmod_queue_clean");
 
-   DPRINTF(("cleaning queue >%s<\n", lGetString(qep, QU_qname)));
+   qname = lGetString(qep, QU_full_name);
+
+   DPRINTF(("cleaning queue >%s<\n", qname ));
    
    if (!manop_is_manager(user)) {
       WARNING((SGE_EVENT, MSG_QUEUE_NOCLEANQPERMS)); 
@@ -595,7 +596,7 @@ int isowner
          nexttep = lNext(jatep);
 
          for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
-            if (!strcmp(lGetString(qep, QU_qname), lGetString(gdil_ep, JG_qname))) {
+            if (!strcmp(qname, lGetString(gdil_ep, JG_qname))) {
                /* 3: JOB_FINISH reports aborted */
                sge_commit_job(jep, jatep, NULL, COMMIT_ST_FINISHED_FAILED, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
                break;
@@ -603,7 +604,7 @@ int isowner
          }
       }
    }
-   INFO((SGE_EVENT, MSG_QUEUE_CLEANQ_SSS, user, host, lGetString(qep, QU_qname)));
+   INFO((SGE_EVENT, MSG_QUEUE_CLEANQ_SSS, user, host, qname ));
    answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    DEXIT;

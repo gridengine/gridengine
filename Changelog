@@ -1,3 +1,11 @@
+SG-2004-01-09-1: Bugfix:    The scheduler did not renew its event subscriptions
+                            after the qmaster went down and up again.
+                 Changed:   scheduler                            
+
+SG-2004-01-09-0: Enhancem.: qconf -cq is working again with the cqueues
+                 Changed:   qmaster
+                 Review:    pending
+
 DT-2004-01-09-0: Enhancem.: OpenSSL is now loaded dynamically on Solaris and
                             Linux via dlopen.  For more information please see
                             the comments in sec_lib.c starting around line 170.

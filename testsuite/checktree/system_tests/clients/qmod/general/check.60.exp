@@ -31,5 +31,4 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-global qdel_help_lines
-set qdel_help_lines 11
+set qmod_num_help_lines 30

@@ -58,6 +58,10 @@ set check_description(0)  "test all qconf options (test not complete)"
 #set check_needs        "init_core_system qstat qsub"       ;# dependencies of this check (name of other check)
 set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
 
+# setup and cleanup functions
+set check_cleanup_function "qconf_cleanup"
+
+# define test's procedure order
 set check_functions     ""
 lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
 lappend check_functions "qconf_removequeues"
@@ -130,8 +134,14 @@ proc init_level {} {
            return 0
         }
      } 
-  } 
+  }
+
   return -1  ;# no other level else
+}
+
+proc qconf_cleanup {} {
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 }
 
 proc qconf_auser {} {

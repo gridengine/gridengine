@@ -62,11 +62,13 @@ set check_description(1)  "checking user path alias file"
 set check_needs           "init_core_system" 
 
 
+# setup and cleanup functions
+set check_setup_level_function "path_alias_setup"
+set check_cleanup_level_function "path_alias_cleanup"
+
 # define test's procedure order
 set check_functions ""
-lappend check_functions "path_alias_setup"
 lappend check_functions "path_alias_main"
-lappend check_functions "path_alias_cleanup"
 
 global PATH_ALIAS_OUTPUT1
 global PATH_ALIAS_OUTPUT2
@@ -304,6 +306,9 @@ proc path_alias_cleanup {} {
    global CHECK_PRODUCT_ROOT
    global env
 
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    puts $CHECK_OUTPUT "deleting directory: $PATH_ALIAS_OUTPUT1"
    catch { file delete $PATH_ALIAS_OUTPUT1 }

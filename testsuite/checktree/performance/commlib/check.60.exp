@@ -43,23 +43,22 @@ set check_description(0)      "run virtual qmaster/ gdi /event client tests"
 set check_description(100)    "run virtual qmaster/ gdi /event client tests"
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 set check_root_access_needs   "yes"
+
+# setup and cleanup functions
+set check_cleanup_function "cl_throughput_cleanup"
+
+# define test's procedure order
 set check_functions           ""
-lappend check_functions       "cl_throughput_setup"          ;# functions to call (in order)
+lappend check_functions       "cl_throughput_shutdown_sge"
 lappend check_functions       "cl_throughput_run"
-lappend check_functions       "cl_throughput_analize" 
-lappend check_functions       "cl_throughput_cleanup"
+lappend check_functions       "cl_throughput_analyze" 
 set check_highest_level       100
 
 proc init_level {} {
    global CHECK_ACT_LEVEL ts_config CHECK_PROTOCOL_DIR
    global cl_throughput_prot_output_dir check_name
 
-   if { $ts_config(gridengine_version) == 53 } {
-       
-       return -1
-   }
-
-    # TODO setup levels 
+    # setup levels 
    switch -- $CHECK_ACT_LEVEL {
       "0"  { 
          set cl_throughput_prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name/level_$CHECK_ACT_LEVEL"
@@ -70,12 +69,13 @@ proc init_level {} {
          return 0
       }
    }
+
    return -1
 }
 
 
 
-proc cl_throughput_setup {} {
+proc cl_throughput_shutdown_sge {} {
    global ts_config CHECK_HOST cl_throughput_ge_version
 
    set cl_throughput_ge_version [get_version_info] 
@@ -448,10 +448,10 @@ proc cl_throughput_plot_test_run { udata nec ngc local dir } {
    create_gnuplot_xy_gif plot_data xy_rows
 }
 
-proc cl_throughput_analize {} {
+proc cl_throughput_analyze {} {
    global ts_config  CHECK_OUTPUT cl_throughput_prot_output_dir
 
-   puts $CHECK_OUTPUT "analize output directory:"
+   puts $CHECK_OUTPUT "analyze output directory:"
    puts $CHECK_OUTPUT "$cl_throughput_prot_output_dir"
 
    set files [get_file_names $cl_throughput_prot_output_dir "*.data"]
@@ -466,7 +466,7 @@ proc cl_throughput_analize {} {
          puts $CHECK_OUTPUT "skipping directory creation for file: $file"
          set do_report 0
       } else {
-         puts $CHECK_OUTPUT "creating analize directory for file:\n$full_name"
+         puts $CHECK_OUTPUT "creating analyze directory for file:\n$full_name"
          set do_report 1
          file mkdir $cl_throughput_prot_output_dir/$file_root_name
       }
@@ -492,7 +492,7 @@ proc cl_throughput_analize {} {
               $last_loop6   != $data(ng_end)        ||
               $last_lines   != $data(lines)
             } {
-               add_proc_error "cl_throughput_analize" -3 "analize data for history has changed since first test.\nPlease check test file $file. Skipping this test data file."
+               add_proc_error "cl_throughput_analyze" -3 "analyze data for history has changed since first test.\nPlease check test file $file. Skipping this test data file."
                continue
             } 
       } else {
@@ -509,7 +509,7 @@ proc cl_throughput_analize {} {
 
 
       if { $do_report == 0 } {
-         puts $CHECK_OUTPUT "skipping chart creation for file $file (analize directory already exists)"
+         puts $CHECK_OUTPUT "skipping chart creation for file $file (analyze directory already exists)"
       } else {
          cl_throughput_plot_gdi data "local" "$cl_throughput_prot_output_dir/$file_root_name"
          cl_throughput_plot_gdi data "remote" "$cl_throughput_prot_output_dir/$file_root_name"
@@ -547,7 +547,7 @@ proc cl_throughput_analize {} {
          }
 
          if { $do_report == 0 } {
-            puts $CHECK_OUTPUT "skipping chart creation for file $file (analize directory already exists)"
+            puts $CHECK_OUTPUT "skipping chart creation for file $file (analyze directory already exists)"
          } else {
             cl_throughput_plot_test_run data $max_nec $max_ngc $elem "$cl_throughput_prot_output_dir/$file_root_name"
          }

@@ -31,9 +31,7 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-global check_functions
 lappend check_functions "check_option_qs_args"
-lappend check_functions "check_cleanup_config"
 
 #                                                             max. column:     |
 #****** qsub/check_option_qs_args() ******

@@ -61,15 +61,17 @@ set check_description(2)  "Check qmake in dynamic allocation mode"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_function "qmake_setup"
+set check_cleanup_function "qmake_cleanup"
+
 # define test's procedure order
 set check_functions ""
-lappend check_functions "qmake_setup"
 lappend check_functions "qmake_sequential"
 lappend check_functions "qmake_parallel"
 lappend check_functions "qmake_flags"
 lappend check_functions "qmake_recursive"
 lappend check_functions "qmake_rreq" ;# only for dynamic allocation mode
-lappend check_functions "qmake_cleanup"
 
 proc qmake_init_level {} {
    global ts_config
@@ -142,6 +144,7 @@ proc qmake_cleanup  {} {
 
    after 5000
    delete_all_jobs
+   wait_for_end_of_all_jobs 60
    after 5000
 
    # unassign pe with queue

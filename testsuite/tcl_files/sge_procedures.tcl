@@ -3478,7 +3478,9 @@ proc is_job_id { job_id } {
 #
 #  RESULT
 #     0   - ok
-#    -1   - timeout error
+#    -1   - qdel error
+#    -4   - unknown message from qdel
+#    -5   - timeout or buffer overflow error
 #
 #  SEE ALSO
 #     sge_procedures/submit_job()
@@ -3493,6 +3495,12 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
    set REGISTERED2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_REGDELJOB_SU] "*" "*" ]
    set DELETED1  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_DELETETASK_SUU] "*" "*" "*"]
    set DELETED2  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_DELETEJOB_SU] "*" "*" ]
+
+   if {$ts_config(gridengine_version) == 53} {
+      set UNABLETOSYNC "asldfjaösldkfjöajföajf"
+   } else {
+      set UNABLETOSYNC [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COM_NOSYNCEXECD_SU] $CHECK_USER $jobid]
+   }
 
    set result -100
    if { [ is_job_id $jobid] } {
@@ -3514,6 +3522,11 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
    
       while { $result == -100 } {
       expect {
+          -i $sp_id timeout {
+             add_proc_error "delete_job" "-1" "timeout waiting for qdel"
+             set result -5
+          }
+
           -i $sp_id full_buffer {
              set result -5
              add_proc_error "delete_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
@@ -3542,12 +3555,16 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
              puts $CHECK_OUTPUT $expect_out(0,string)
              set result 0
           }
+          -i $sp_id $UNABLETOSYNC {
+            add_proc_error "delete_job" -1 "$UNABLETOSYNC"
+            set result -1
+          }
           -i default {
              if { [info exists expect_out(buffer)] } {
                 puts $CHECK_OUTPUT $expect_out(buffer)
                 add_proc_error "delete_job" -1 "expect default switch\noutput was:\n>$expect_out(buffer)<"
              }
-             set result -1 
+             set result -4 
           }
       }
       }

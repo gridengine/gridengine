@@ -48,6 +48,14 @@ set check_name         "qalter"
 set check_category     "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_description(0)  "check every option"
 set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
+
+# define a level initialization procedure:
+set check_init_level_procedure "qalter_init_level"
+
+# setup and cleanup functions
+set check_cleanup_function "qalter_cleanup"
+
+# define test's procedure order
 set check_functions ""
 lappend check_functions "run_dummy_jobs"   ;# functions to call (in order)
 lappend check_functions "start_testjob"      
@@ -95,6 +103,23 @@ global hold_job_D
 global hold_job_T
 global hold_job_U
 global job_output_dir
+
+proc qalter_init_level {} {
+   global CHECK_ACT_LEVEL
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" {
+         return 0
+      }
+   }
+
+   return -1  ;# no other level else
+}
+
+proc qalter_cleanup {} {
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+}
 
 #                                                             max. column:     |
 #****** qalter/run_dummy_jobs() ******

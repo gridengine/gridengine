@@ -43,8 +43,13 @@ set check_root_access_needs "yes"
 
 set check_description(0)  "checking all options, except rescheduling (-r)"
 set check_needs        "init_core_system"  ;# dependencies of this check (name of other check)
+
+# setup and cleanup functions
+set check_setup_function "qmod_setup"
+set check_cleanup_function "qmod_cleanup"
+
+# define test's procedure order
 set check_functions    "" 
-lappend check_functions    "addqueue"           ;# functions to call (in order)
 lappend check_functions    "qmod_check_default_status"
 lappend check_functions    "qmod_help"
 lappend check_functions    "qmod_disable"
@@ -52,16 +57,13 @@ lappend check_functions    "qmod_enable"
 lappend check_functions    "qmod_suspend"
 lappend check_functions    "qmod_unsuspend"
 lappend check_functions    "qmod_clearerrorstate"
-lappend check_functions    "qmod_verify"
 lappend check_functions    "qmod_forceaction"
-lappend check_functions    "removequeue"
 # ---- Wildchart test ------------------------------
-lappend check_functions    "qmod_addqueues"
 lappend check_functions    "qmod_wildcard_disable"
 lappend check_functions    "qmod_wildcard_enable"
 lappend check_functions    "qmod_issue_1131"
-lappend check_functions    "qmod_removequeues"
 
+global qmod_num_help_lines
 global test_queue
 global qmod_test_queues
 
@@ -71,15 +73,17 @@ lappend qmod_test_queues "qmod1"
 lappend qmod_test_queues "qmod2"
 
 
+
 proc qmod_general_init_level {} {
    global CHECK_ACT_LEVEL
 
-  switch -- $CHECK_ACT_LEVEL {
-     "0" { 
-           return 0    
-     }
-  } 
-  return -1  ;# no other level else
+   switch -- $CHECK_ACT_LEVEL {
+      "0" {
+         return 0
+      }
+   }
+
+   return -1  ;# no other level else
 }
 
 #                                                             max. column:     |
@@ -112,14 +116,18 @@ proc qmod_general_init_level {} {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc qmod_addqueues {} {
-   global CHECK_HOST qmod_test_queues CHECK_OUTPUT
-   
+proc qmod_setup {} {
+   global CHECK_HOST CHECK_OUTPUT
+   global test_queue qmod_test_queues 
+
    foreach queue_name $qmod_test_queues {
       set q_param(slots)                 "2"
       set q_param(load_thresholds)       "np_load_avg=6.75"      
       add_queue $queue_name ${CHECK_HOST} q_param
-   }   
+   }
+
+   set test_queue [get_queue_instance "qmod0" $CHECK_HOST]
+
    set_error 0 "ok"        
 }
 
@@ -153,18 +161,22 @@ proc qmod_addqueues {} {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc qmod_removequeues {} {
+proc qmod_cleanup {} {
    global CHECK_HOST qmod_test_queues
-   
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
    foreach queue_name $qmod_test_queues {
      del_queue $queue_name $CHECK_HOST 0 1
-   }   
+   }
+
    set_error 0 "ok"
 }
 
 #                                                             max. column:     |
 #****** qmod/qmod_wildcard_enable() ******
-# 
+#
 #  NAME
 #     qmod_wildcard_enable -- ??? 
 #
@@ -306,89 +318,6 @@ proc qmod_issue_1131 {} {
    set_error 0 "ok"
 }
 
-
-
-#                                                             max. column:     |
-#****** qmod/addqueue() ******
-# 
-#  NAME
-#     addqueue -- ??? 
-#
-#  SYNOPSIS
-#     addqueue { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc addqueue {} {
-  global CHECK_HOST test_queue
-
-  set test_queue [get_queue_instance "qmod" ${CHECK_HOST}]
-
-  set q_param(slots)                 "2"
-  set q_param(load_thresholds)       "np_load_avg=6.75"
- 
-  add_queue "qmod" ${CHECK_HOST} q_param
-
-  set_error 0 "ok"  
-}         
-                                                                 
-
-#                                                             max. column:     |
-#****** qmod/removequeue() ******
-# 
-#  NAME
-#     removequeue -- ??? 
-#
-#  SYNOPSIS
-#     removequeue { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc removequeue {} {
-   global CHECK_HOST
-
-   del_queue "qmod" $CHECK_HOST 0 1
-
-   set_error 0 "ok"
-}
-
-
 #                                                             max. column:     |
 #****** qmod/qmod_check_default_status() ******
 # 
@@ -419,7 +348,6 @@ proc removequeue {} {
 #     ???/???
 #*******************************
 proc qmod_check_default_status {} {
-
   global CHECK_OUTPUT test_queue
 
   set status [ get_queue_state "$test_queue" ]
@@ -463,6 +391,7 @@ proc qmod_check_default_status {} {
 proc qmod_help {} {
    global ts_config
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_PRODUCT_VERSION_NUMBER
+   global qmod_num_help_lines
 
    set state [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod" "-help" } output ]
 
@@ -482,14 +411,8 @@ proc qmod_help {} {
 
    puts $CHECK_OUTPUT "Output has $nr_of_lines lines"
 
-   if { $ts_config(gridengine_version) == 53 } {
-      set expected_lines 15
-   } else {
-      set expected_lines 30
-   }
-
-   if { $nr_of_lines != $expected_lines } {
-      set_error -1 "help output has not $expected_lines lines"
+   if { $nr_of_lines != $qmod_num_help_lines } {
+      set_error -1 "help output has not $qmod_num_help_lines lines"
    }
    set_error 0 "ok"
 }
@@ -721,10 +644,6 @@ proc qmod_clearerrorstate {} {
    set file_name "sge_shepherd"
 
    # rename the shepherd binary to produce error state
-   #set result [ catch { file rename "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/${file_name}.tmp" } ]
-   #if { $result != 0 } {
-   #   set_error -1 "could not rename the $file_name binary to produce error state"
-   #}
    set output [ run_command_as_user "$CHECK_HOST" "root" "/bin/mv" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/${file_name}.tmp" 1 ] 
    wait_for_file "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name" 200 1    ;# wait for shepherd binary to disappear
    
@@ -786,59 +705,6 @@ proc qmod_clearerrorstate {} {
 
    set_error 0 "ok" 
 }  
-
-#                                                             max. column:     |
-#****** qmod/qmod_verify() ******
-# 
-#  NAME
-#     qmod_verify -- ??? 
-#
-#  SYNOPSIS
-#     qmod_verify { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc qmod_verify {} {
-   global ts_config
-   global CHECK_OUTPUT
-   global CHECK_PRODUCT_ROOT CHECK_ARCH test_queue 
-  
-   if { $ts_config(gridengine_version) == 53 } { 
-      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -verify -s $test_queue" } output ]
-      if {$result != 0} {
-        set_error -1 "exit state of \"qmod -verify -s $test_queue\" is not 0"
-      }            
-      
-      set state [ get_queue_state $test_queue ] 
-      if { [ string compare $state "" ] != 0  } {
-         set_error -1 "queue $test_queue is not in original state"
-      }
-   } else {
-      puts $CHECK_OUTPUT "the -verify switch has been removed in SGE 6.0"
-   }
-   set_error 0 "ok"
-}
-
-
-
 
 # do to:
 # 1) set running job to suspend
@@ -1026,7 +892,3 @@ proc qmod_forceaction {} {
    }
    set_error 0 "ok"
 }
-
-
-
-

@@ -58,6 +58,9 @@ set check_description(200)  "checking qrsh to all exec hosts"
 set check_needs           "init_core_system" 
 set check_root_access_needs  "yes"
 
+# setup and cleanup functions
+set check_cleanup_function "qrsh_cleanup"
+
 # define test's procedure order
 set check_functions ""
 lappend check_functions "qrsh_function"              ;# is a job executed?
@@ -118,7 +121,7 @@ proc init_level {} {
    global qrsh_hostlist
 
    switch -exact $CHECK_ACT_LEVEL {
-      0 { 
+      0 {
          set qrsh_hostlist $CHECK_HOST
          return 0
       }
@@ -1670,4 +1673,9 @@ proc qrsh_env {} {
    }
 
    set_error 0 "ok"
+}
+
+proc qrsh_cleanup {} {
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 }

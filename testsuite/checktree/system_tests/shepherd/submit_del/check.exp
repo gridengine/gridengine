@@ -59,24 +59,24 @@ set check_description(0)  "delete immediate submitted job (signaling test)"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_function "submit_del_setup"
+set check_cleanup_function "submit_del_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "submit_del_setup"
 lappend check_functions "submit_del_test"
-lappend check_functions "submit_del_cleanup"
 
 proc submit_del_init_level {} {
    global CHECK_ACT_LEVEL
-   global CHECK_PRODUCT_TYPE
-   global test_array_jobs 
 
-  switch -- $CHECK_ACT_LEVEL {
-     "0" { 
-           return 0    
-     } 
-  } 
-  return -1  ;# no other level else
+   switch -- $CHECK_ACT_LEVEL {
+      "0" {
+         return 0
+      }
+   }
+
+   return -1  ;# no other level else
 }
 
 # -------- local test procedures -----------------------------------------------
@@ -91,7 +91,6 @@ proc submit_del_setup  {} {
    global submit_del_qconfig CHECK_PRODUCT_ROOT CHECK_HOST
    global submit_del_check_queue
 
-
    if { $ts_config(gridengine_version) == 53 } {
       get_config submit_del_qconfig
       set my_config(schedd_params) "FLUSH_SUBMIT_SEC=0"
@@ -100,9 +99,6 @@ proc submit_del_setup  {} {
       set my_schedd_conf(flush_submit_sec) "1"
       set_schedd_config my_schedd_conf
    }   
-
-   
-   wait_for_end_of_all_jobs 100
 
    set_error 0 "ok"
 }
@@ -208,16 +204,13 @@ proc submit_del_cleanup  {} {
    global submit_del_qconfig submit_del_check_queue CHECK_HOST
 
 
-   if {$ts_config(gridengine_version) == 60} {
-      reset_schedd_config
-   } else {
+   if {$ts_config(gridengine_version) == 53} {
       set_config submit_del_qconfig
+   } else {
+      reset_schedd_config
    }
 
-   puts $CHECK_OUTPUT "do qdel -uall"
-   set catch_result [delete_all_jobs]
-
-   puts $CHECK_OUTPUT $catch_result
+   delete_all_jobs
    wait_for_end_of_all_jobs 100
 
    puts $CHECK_OUTPUT "do qmod -c for all queues"
@@ -225,7 +218,6 @@ proc submit_del_cleanup  {} {
       set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c [get_queue_instance all.q $hostname]" } output ]
       puts $CHECK_OUTPUT $output
    }
- 
 
    set_error 0 "ok"
 }

@@ -31,9 +31,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-global check_functions
-lappend check_functions "check_cleanup_config"
-
 proc check_qhold_jobname {} {
  global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_HOST job_output_dir actual_host
  global CHECK_FIRST_FOREIGN_SYSTEM_USER

@@ -63,12 +63,13 @@ set check_description(100)  "Testing geee share_tree"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_function "share_tree_setup"
+set check_cleanup_function "share_tree_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "share_tree_setup"
 lappend check_functions "share_tree_test"
-lappend check_functions "share_tree_cleanup"
 
 
 global share_tree_job_counter 
@@ -596,15 +597,10 @@ proc share_tree_cleanup  {} {
    global prj1_id_list prj2_id_list prj3_id_list
    global shartree_stored_configuration test_host
 
-   if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
-      set_error -3 "not available for sge system"
-      return 
-   }
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    reset_schedd_config
-
-   set result [delete_all_jobs]
-
 
    puts $CHECK_OUTPUT "ensure that no jobs are referenced in qmaster any longer ..."
    foreach job [concat $prj1_id_list $prj2_id_list $prj3_id_list] {

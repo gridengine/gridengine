@@ -50,8 +50,12 @@ set check_needs        "init_core_system"       ;# dependencies of this check (n
 # define a level initialization procedure:
 set check_init_level_procedure "init_level"
 
+# setup and cleanup functions
+set check_setup_level_function "qmaster_size_setup"
+set check_cleanup_level_function "qmaster_size_cleanup"
+
+# define test's procedure order
 set check_functions     ""
-lappend check_functions {restart_system}               ;# restart to have initial size
 lappend check_functions {init_ps}                      ;# init ps commands, find pids
 lappend check_functions {check_size_config}            ;# set initial config
 lappend check_functions {check_idle}                   ;# wait for execd's to connect etc.
@@ -71,7 +75,6 @@ lappend check_functions {check_idle}                   ;# wait for system to sta
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
 lappend check_functions {check_miniworm}               ;# run miniworms
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
-lappend check_functions {check_size_cleanup}           ;# cleanup, restore initial config
 
 # constants / global variables for monitor_size
 global MONITOR_SIZE_FILENAME MONITOR_SIZE_INTERVAL MONITOR_SIZE_ERROR
@@ -217,13 +220,13 @@ proc init_level {} {
 }
 
 #                                                             max. column:     |
-#****** size/restart_system() ******
+#****** size/qmaster_size_setup() ******
 # 
 #  NAME
-#     restart_system -- ??? 
+#     qmaster_size_setup -- ??? 
 #
 #  SYNOPSIS
-#     restart_system { } 
+#     qmaster_size_setup { } 
 #
 #  FUNCTION
 #     ??? 
@@ -245,7 +248,7 @@ proc init_level {} {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc restart_system {} {
+proc qmaster_size_setup {} {
    global CHECK_HOST CHECK_OUTPUT
    global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_ACTUAL_TEST_PATH CHECK_USER
    global time_start MONITOR_SIZE_FILENAME CHECK_CORE_MASTER
@@ -272,7 +275,7 @@ proc restart_system {} {
          delete_file $MONITOR_SIZE_FILENAME
       }
    } else {
-      add_proc_error "restart_system" "-1" "file name length of monitor size file should be longer than 5 characters"
+      add_proc_error "qmaster_size_setup" "-1" "file name length of monitor size file should be longer than 5 characters"
    }
 
    monitor_header
@@ -291,7 +294,7 @@ proc restart_system {} {
       }
       set runtime [expr ( [timestamp] - $time) ]
       if { $runtime >= 300 } {
-          add_proc_error "restart_system" -1 "timeout while waiting for startup of qmaster and scheduler"
+          add_proc_error "qmaster_size_setup" -1 "timeout while waiting for startup of qmaster and scheduler"
           break;
       }
    } 
@@ -1289,13 +1292,13 @@ proc check_size_config_zombies {} {
 }
 
 #                                                             max. column:     |
-#****** size/check_size_cleanup() ******
+#****** size/qmaster_size_cleanup() ******
 # 
 #  NAME
-#     check_size_cleanup -- ??? 
+#     qmaster_size_cleanup -- ??? 
 #
 #  SYNOPSIS
-#     check_size_cleanup { } 
+#     qmaster_size_cleanup { } 
 #
 #  FUNCTION
 #     ??? 
@@ -1317,7 +1320,10 @@ proc check_size_config_zombies {} {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc check_size_cleanup {} {
+proc qmaster_size_cleanup {} {
+   delete_all_jobs
+   wait_for_end_of_all_jobs 180
+
    reset_schedd_config
 
    set default_array(finished_jobs)   0

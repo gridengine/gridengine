@@ -46,7 +46,6 @@ global env
 
 # set check_root_access_needs "yes"
 
-
 # define a level initialization procedure:
 set check_init_level_procedure "init_level"
 
@@ -61,11 +60,13 @@ set check_description(1)  "checking submit host functionality with local qsh_com
 set check_needs           "init_core_system" 
 
 
+# setup and cleanup functions
+set check_setup_level_function "submit_hosts_setup"
+set check_cleanup_level_function "submit_hosts_cleanup"
+
 # define test's procedure order
 set check_functions ""
-lappend check_functions "submit_hosts_setup"
 lappend check_functions "submit_hosts_test"
-lappend check_functions "submit_hosts_cleanup"
 global submit_hosts_use_local_conf
 
 proc init_level {} {
@@ -107,6 +108,7 @@ proc submit_hosts_setup {} {
          puts $CHECK_OUTPUT "$result"
       }
    }
+
    puts $CHECK_OUTPUT "done"
    set_error 0 "ok"
 }
@@ -118,6 +120,9 @@ proc submit_hosts_cleanup {} {
    global CHECK_SUBMIT_ONLY_HOSTS 
    global CHECK_JOB_OUTPUT_DIR
    global submit_hosts_use_local_conf
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    foreach submit_host $CHECK_SUBMIT_ONLY_HOSTS { 
       catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ds $submit_host" } result

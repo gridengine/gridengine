@@ -59,13 +59,13 @@ set check_description(0)  "Testing global, home and pwd request def. file, scrip
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_cleanup_function "file_parsing_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "file_parsing_setup"
 lappend check_functions "file_parsing_N_option"
 lappend check_functions "file_parsing_long_option"
-lappend check_functions "file_parsing_cleanup"
 
 global file_parsing_request_test
 global file_parsing_cluster_request_file
@@ -100,13 +100,6 @@ proc init_level {} {
 # -------- local test procedures -----------------------------------------------
 
 
-
-proc file_parsing_setup {} {
-   global CHECK_OUTPUT
-   global file_parsing_job_script
-
-   set_error 0 "ok"
-}
 
 proc create_job_script { option } {
    global CHECK_OUTPUT
@@ -420,7 +413,9 @@ proc file_parsing_long_option {} {
 
 
 proc file_parsing_cleanup {} {
-   global CHECK_OUTPUT
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
    set_error 0 "ok"
 }
 

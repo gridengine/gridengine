@@ -60,12 +60,17 @@ for {set i 0} { $i <= $check_highest_level } { incr i} {
    set check_description($i)  "check every option for execution on host [lindex $CHECK_CORE_EXECD $i]" 
 }
 
-set check_init_level_procedure "select_queue"
+set check_init_level_procedure "qsub_init_level"
 set check_name         "qsub"
 set check_category     "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
 set check_functions    ""
-lappend check_functions "check_setup_config"
+
+# setup and cleanup functions
+set check_setup_function "qsub_setup"
+set check_cleanup_function "qsub_cleanup"
+
+# define test's procedure order
 lappend check_functions "check_submit"
 lappend check_functions "qsub_starter_method"
 lappend check_functions "check_start_time"  
@@ -119,13 +124,13 @@ set job_output_dir "."
 
 
 #                                                             max. column:     |
-#****** qsub/select_queue() ******
+#****** qsub/qsub_init_level() ******
 # 
 #  NAME
-#     select_queue -- ??? 
+#     qsub_init_level -- ??? 
 #
 #  SYNOPSIS
-#     select_queue { } 
+#     qsub_init_level { } 
 #
 #  FUNCTION
 #     ??? 
@@ -147,7 +152,7 @@ set job_output_dir "."
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc select_queue {} {
+proc qsub_init_level {} {
    global actual_host CHECK_ACT_LEVEL CHECK_CORE_EXECD
    global HUGE_SCRIPT_SIZE HUGE_SCRIPT_TIMEOUT HUGE_SCRIPT_STEPS steps_per_queue size_interval
    global HUGE_SCRIPT_MAX_SIZE 
@@ -3278,10 +3283,9 @@ proc check_huge_script {} {
    set_error 0 "ok"
 }
 
-proc check_setup_config {} {
+proc qsub_setup {} {
    global ts_config
    global stored_configuration
-
 
    if { $ts_config(gridengine_version) == 53 } {
       get_config stored_configuration
@@ -3291,20 +3295,22 @@ proc check_setup_config {} {
       set my_schedd_conf(flush_submit_sec) "1"
       set_schedd_config my_schedd_conf 
    }
+
    set_error 0 "ok"
 }
 
-proc check_cleanup_config {} {
+proc qsub_cleanup {} {
    global ts_config
    global stored_configuration
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    if {$ts_config(gridengine_version) == 60} {
       reset_schedd_config
    } else {
       set_config stored_configuration
    }
-
-   delete_all_jobs
    
    set_error 0 "ok"
 }

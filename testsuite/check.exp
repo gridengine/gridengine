@@ -3780,6 +3780,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
       # if we have a level specific setup function: execute it
       set setup_error 0
       if { $check_setup_level_function != "" } {
+         set errorInfo ""
          set CHECK_CUR_PROC_NAME $check_setup_level_function
          puts $CHECK_OUTPUT "starting level setup function $check_setup_level_function"
          set setup_catch_return [ catch { $check_setup_level_function } setup_catch_message ]
@@ -3899,6 +3900,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
 
       # if we have a level specific cleanup function: execute it
       if { $check_cleanup_level_function != "" } {
+         set errorInfo ""
          set CHECK_CUR_PROC_NAME $check_cleanup_level_function
          puts $CHECK_OUTPUT "starting level cleanup function $check_cleanup_level_function"
          set setup_catch_return [ catch { $check_cleanup_level_function } setup_catch_message ]
@@ -4151,6 +4153,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
 
    # if we have a specific setup function: execute it
    if { $check_setup_function != "" } {
+      set errorInfo ""
       puts $CHECK_OUTPUT "starting setup function $check_setup_function"
       set setup_catch_return [ catch { $check_setup_function } setup_catch_message ]
       if { $setup_catch_return != 0 } {
@@ -4225,6 +4228,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
 
    # if we have a specific cleanup function: execute it
    if { $check_cleanup_function != "" } {
+      set errorInfo ""
       puts $CHECK_OUTPUT "starting cleanup function $check_cleanup_function"
       set setup_catch_return [ catch { $check_cleanup_function } setup_catch_message ]
       if { $setup_catch_return != 0 } {

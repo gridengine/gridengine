@@ -61,12 +61,14 @@ set check_description(1)  "checking auto_reschedule with global reschedule_unkno
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_level_function "auto_reschedule_setup"
+set check_cleanup_level_function "auto_reschedule_cleanup"
+
 # define test's procedure order
 set check_functions ""
-lappend check_functions "auto_reschedule_setup"
 lappend check_functions "auto_reschedule_unknown_check"
 lappend check_functions "auto_reschedule_unknown_check_master"
-lappend check_functions "auto_reschedule_cleanup"
 
 
 # CHECK description
@@ -160,16 +162,15 @@ global stored_auto_reschedule_host1_config
 #*******************************
 #
 proc init_level {} {
-  global CHECK_ACT_LEVEL CHECK_HOST global_resch
-  global auto_reschedule_host1 auto_reschedule_host2 CHECK_CORE_EXECD CHECK_OUTPUT
+   global ts_config CHECK_OUTPUT CHECK_ACT_LEVEL
+   global global_resch auto_reschedule_host1 auto_reschedule_host2
   
-   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+   if { [ llength $ts_config(execd_hosts) ] < 2 } {
       return -1
    }
 
-
-   set auto_reschedule_host1  [ lindex $CHECK_CORE_EXECD 0  ]
-   set auto_reschedule_host2  [ lindex $CHECK_CORE_EXECD 1  ]
+   set auto_reschedule_host1  [ lindex $ts_config(execd_hosts) 0  ]
+   set auto_reschedule_host2  [ lindex $ts_config(execd_hosts) 1  ]
 
    set global_resch 1
 
@@ -180,7 +181,7 @@ proc init_level {} {
      "1" { set global_resch 0
            return 0 
          }
-   } 
+   }
 
    return -1  ;# no other level else
 }
@@ -286,7 +287,6 @@ proc auto_reschedule_setup {} {
 
    wait_for_jobend $job_id1 "Sleeper" 60
    wait_for_jobend $job_id2 "Sleeper" 60
-
 
    set_error 0 "ok"
 }
@@ -443,13 +443,15 @@ proc auto_reschedule_unknown_check {} {
 }
 
 proc auto_reschedule_cleanup {} {
-   
    global queue1 queue2 CHECK_OUTPUT auto_reschedule_host1 auto_reschedule_host2
    global CHECK_CORE_EXECD stored_configuration
    global stored_auto_reschedule_host1_config CHECK_USER
-   
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
    reset_schedd_config
-   
+
    get_config tmp_config $auto_reschedule_host2
    if {![info exists tmp_config(execd_spool_dir)]} {
          get_config tmp_config

@@ -1,3 +1,6 @@
+JG-2005-03-08-0: Testsuite: Make all tests use the setup/cleanup framework.
+                 Issue:     888
+
 JG-2005-03-08-0: Bugfix:    Fixed broken build.
 
 DT-2005-03-04-0: Bugfix:    o Cleaned up JAPI locking

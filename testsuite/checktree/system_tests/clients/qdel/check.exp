@@ -62,10 +62,12 @@ set check_description(3)  "checking all options in job running and hold state"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_function "qdel_setup"
+set check_cleanup_function "qdel_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "qdel_setup"
 lappend check_functions "qdel_help"                   ;# print this help
 lappend check_functions "qdel_submit_delete_when_transfered"
 lappend check_functions "qdel_job_task_list"          ;# delete all jobs given in list
@@ -113,18 +115,17 @@ global queue
 #     ???/???
 #*******************************
 proc init_level {} {
-  global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state queue
+  global CHECK_ACT_LEVEL hold_state pending_state queue
 
   set queue "qdel.q"
 
-  
-
   switch -- $CHECK_ACT_LEVEL {
-     "0" { set hold_state 0 ; set pending_state 1 ; return 0   } 
-     "1" { set hold_state 1 ; set pending_state 1 ; return 0   }
-     "2" { set hold_state 0 ; set pending_state 0 ; return 0   }
-     "3" { set hold_state 1 ; set pending_state 0 ; return 0   }
-  } 
+     "0" { set hold_state 0 ; set pending_state 1 ; return 0 }
+     "1" { set hold_state 1 ; set pending_state 1 ; return 0 }
+     "2" { set hold_state 0 ; set pending_state 0 ; return 0 }
+     "3" { set hold_state 1 ; set pending_state 0 ; return 0 }
+  }
+
   return -1  ;# no other level else
 }
 
@@ -213,7 +214,6 @@ proc qdel_cleanup {} {
       set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c [get_queue_instance all.q $hostname]" } output ]
       puts $CHECK_OUTPUT $output
    }
-
 
    set_error 0 "ok"
 }

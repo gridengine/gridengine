@@ -38,12 +38,32 @@ set check_name         "loadcheck"
 set check_category     "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_description(0)  "checking \"loadcheck\" binary in utilbin - num_proc for each execution host"
 set check_needs        ""  ;# dependencies of this check (name of other check)
+
+# define a level initialization procedure:
+set check_init_level_procedure "loadcheck_init_level"
+
+# setup and cleanup functions
+set check_setup_function ""
+set check_cleanup_function ""
+
+# define test's procedure order
 set check_functions    ""             ;# functions to call (in order)
 lappend check_functions    "check_numb_proc"  
 set check_errno       "-1"                          ;# 0 -> OK , != 0 means error
 set check_errstr        "was never running"           ;# string for error description
 
 
+proc loadcheck_init_level {} {
+   global CHECK_ACT_LEVEL
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" {
+         return 0
+      }
+   }
+
+   return -1  ;# no other level else
+}
 
 #                                                             max. column:     |
 #****** loadcheck/get_numb_proc() ******

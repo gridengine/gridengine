@@ -43,33 +43,28 @@ set check_name                "commlib_issues"
 set check_description(0)      "check commlib issue test module"
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 set check_root_access_needs   "yes"
+
+# setup and cleanup functions
+set check_setup_level_function "commlib_issues_setup"
+set check_cleanup_level_function "commlib_issues_cleanup"
+
+# define test's procedure order
 set check_functions           ""
-lappend check_functions       "commlib_issues_setup"          ;# functions to call (in order)
 lappend check_functions       "commlib_issues_run"
-lappend check_functions       "commlib_issues_cleanup"
 set check_highest_level       0
 
 proc init_level {} {
    global CHECK_ACT_LEVEL ts_config
 
-   if { $ts_config(gridengine_version) == 53 } {
-       
-       return -1
-   }
-
-    # TODO setup levels 
+   # setup levels 
    switch -- $CHECK_ACT_LEVEL {
       "0"  { 
          return 0
       }
    }
+
    return -1
 }
-
-
-
-
-
 
 proc commlib_issues_setup {} {
    global ts_config CHECK_HOST
@@ -78,6 +73,7 @@ proc commlib_issues_setup {} {
    after 5000
    set_error 0 "ok"
 }
+
 proc commlib_issues_run  {} {
    global ts_config  CHECK_OUTPUT CHECK_USER
    
@@ -167,12 +163,9 @@ proc commlib_issues_run  {} {
    }
    close_spawn_process $server_sid
    close_spawn_process $client_sid
-   
-   
 
    set_error 0 "ok"
 }
-
 
 proc commlib_issues_cleanup {} {
    global ts_config 

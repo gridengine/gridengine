@@ -60,12 +60,13 @@ set check_description(0) "check qmaster spooling"
 # define test's dependencies
 set check_needs "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_function "qmaster_spooling_setup"
+set check_cleanup_function "qmaster_spooling_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "qmaster_spooling_setup"
 lappend check_functions "qmaster_spooling_prj_restart"
-lappend check_functions "qmaster_spooling_cleanup"
 
 proc qmaster_spooling_init_level {} {
    global CHECK_ACT_LEVEL

@@ -74,12 +74,13 @@ lappend check_functions "access_lists_pe"
 proc access_lists_init_level {} {
    global CHECK_ACT_LEVEL
 
-  switch -- $CHECK_ACT_LEVEL {
-     "0" { 
-           return 0    
-     } 
-  } 
-  return -1  ;# no other level else
+   switch -- $CHECK_ACT_LEVEL {
+      "0" {
+         return 0
+      }
+   }
+
+   return -1  ;# no other level else
 }
 
 # -------- local test procedures -----------------------------------------------

@@ -59,18 +59,18 @@ set check_description(0)  "checking reschedule option of qmod"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_level_function "reschedule_setup"
+set check_cleanup_level_function "reschedule_cleanup"
+
 # define test's procedure order
 set check_functions ""
-lappend check_functions "reschedule_setup"
 lappend check_functions "reschedule_submit_jobs"
 lappend check_functions "reschedule_checkpointing"
 lappend check_functions "reschedule_checkpointing_forced"
 lappend check_functions "reschedule_qsh_qlogin_qrsh_qrlogin"
 lappend check_functions "reschedule_pe_jobs"
 lappend check_functions "reschedule_deleted_job"
-lappend check_functions "reschedule_cleanup"
-
-
 
 # -------- local test procedures -----------------------------------------------
 global rerun_queue rerun_queue2
@@ -130,7 +130,6 @@ proc init_level {} {
    global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state queue
    global rerun_host no_rerun_host CHECK_CORE_EXECD CHECK_OUTPUT
 
-   
    if { [ llength $CHECK_CORE_EXECD ] < 2 } {
       return -1
    }
@@ -225,7 +224,6 @@ proc reschedule_setup {} {
    set new_checkpointobj(when) "s"
    add_checkpointobj "new_checkpointobj"
    assign_queues_with_ckpt_object $rerun_queue $rerun_host qmod_without_r
-
 
    # add pe_object for test
    puts $CHECK_OUTPUT "creating pe object ..."
@@ -1056,13 +1054,13 @@ proc reschedule_deleted_job {} {
 #*******************************
 #
 proc reschedule_cleanup {} {
-
    global rerun_queue no_rerun_queue CHECK_OUTPUT rerun_host no_rerun_host
    global CHECK_CORE_EXECD stored_configuration rerun_queue2
    global pe_names pe_alloc_rule CHECK_CORE_EXECD
 
    delete_all_jobs
-   
+   wait_for_end_of_all_jobs 60
+
    reset_schedd_config
    set_config stored_configuration
 

@@ -49,7 +49,7 @@ extern char SFLN_ELN[];
 #ifdef ADD_SUN_COPYRIGHT
 static char mailto[] = "\nFor further information and feedback use: @fBn1ge6beta-support@@.sun.com@fR\n\n";
 #else
-static char mailto[] = "\n";
+static char mailto[] = "For further information and feedback please subscribe to the \"dev\" mailing list:\n\n   http://gridengine.sunsource.net/project/gridengine/maillist.html\n\n";
 #endif
 
 void qmonAboutMsg(w, cld, cad)

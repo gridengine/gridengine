@@ -59,7 +59,7 @@ centry_fill_and_check(lListElem *cep, bool allow_empty_boolean,
    const int max_host_resources=24;/* specifies the number of elements in the host_resource array */
    const struct queue2cmplx host_resource[] = {
       {"arch",           0, TYPE_STR},
-      {"cpu",            0, TYPE_STR},
+      {"cpu",            0, TYPE_DOUBLE},
       {"load_avg",       0, TYPE_DOUBLE},
       {"load_long",      0, TYPE_DOUBLE},
       {"load_medium",    0, TYPE_DOUBLE},

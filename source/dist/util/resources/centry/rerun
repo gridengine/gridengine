@@ -4,7 +4,7 @@
 # 
 name        rerun
 shortcut    re
-type        INT
+type        BOOL
 relop       ==
 requestable NO
 consumable  NO

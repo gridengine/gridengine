@@ -70,10 +70,12 @@ GetCell()
     SGE_CELL_VAL=$CELL_NAME
     $INFOTEXT -log "Using >%s< as CELL_NAME." "$CELL_NAME"
 
-    if [ -d $SGE_ROOT/$SGE_CELL ]; then
-       $INFOTEXT -log "The cell name you have used already exists!"
-       $INFOTEXT -log "This may cause, that data can be lost!"
+    if [ -f $SGE_ROOT/$SGE_CELL/bootstrap ]; then
+       $INFOTEXT -log "The cell name you have used and the bootstrap already exists!"
+       $INFOTEXT -log "It seems that you have already a installed system."
+       $INFOTEXT -log "A installation may cause, that data can be lost!"
        $INFOTEXT -log "Please, check this directory and remove it, or use any other cell name"
+       $INFOTEXT -log "Exiting installation now!"
        exit 1
     fi 
 

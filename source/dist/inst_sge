@@ -297,7 +297,7 @@ if [ $QMASTER = "install" -a $UPDATE != "true" ]; then
  SetScheddConfig
  GiveHints
 
- if [ $AUTO = true ]; then 
+ if [ $AUTO = true ]; then
     MoveLog
  fi
 

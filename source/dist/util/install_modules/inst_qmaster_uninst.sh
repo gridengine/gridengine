@@ -87,7 +87,8 @@ ShutdownMaster()
    $INFOTEXT "Shutting down scheduler and qmaster!"
    $INFOTEXT -log "Shutting down scheduler and qmaster!"
 
-   master_pid=`cat $SGE_ROOT/$SGE_CELL/spool/qmaster/qmaster.pid`
+   spool_dir_master=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
+   master_pid=`cat $spool_dir_master/qmaster.pid`
 
    `qconf -ks`
    `qconf -km`

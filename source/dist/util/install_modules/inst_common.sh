@@ -693,6 +693,7 @@ GiveHints()
 {
 
    if [ $AUTO = true ]; then
+      $INFOTEXT -log "sge_qmaster successfully installed!"
       return
    fi
 
@@ -906,7 +907,7 @@ AddSGEStartUpScript()
    else
       TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
       STARTUP_FILE_NAME=sgeexecd
-      S95NAME=S95sgeexecd
+      S95NAME=S96sgeexecd
       DAEMON_NAME="execd"
    fi
 
@@ -1092,8 +1093,7 @@ CheckRunningDaemon()
 
       sge_execd )
        h=`hostname`
-       daemon_pid=`cat $SGE_ROOT/$SGE_CELL/spool/$h/execd.pid`
-       $SGE_UTILBIN/checkprog $daemon_pid $daemon_name
+       $SGE_UTILBIN/qping -info $h $SGE_EXECD_PORT execd 1
        return $?      
       ;;
 

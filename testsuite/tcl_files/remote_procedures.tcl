@@ -84,6 +84,165 @@ proc test {m p} {
    puts "test $m $p"
 }
 
+#****** remote_procedures/setup_qping_dump() ***********************************
+#  NAME
+#     setup_qping_dump() -- start qping dump as remote process (as root)
+#
+#  SYNOPSIS
+#     setup_qping_dump { log_array } 
+#
+#  FUNCTION
+#     starts qping -dump as root user on the qmaster host and fills the
+#     log_array with connection specific data
+#
+#  INPUTS
+#     log_array - array for results and settings
+#
+#  SEE ALSO
+#     remote_procedures/setup_qping_dump()
+#     remote_procedures/get_qping_dump_output()
+#     remote_procedures/cleanup_qping_dump_output()
+#*******************************************************************************
+proc setup_qping_dump { log_array  } {
+   global CHECK_OUTPUT ts_config
+   upvar $log_array used_log_array
+
+   set master_host $ts_config(master_host)
+   set master_host_arch [resolve_arch $master_host]
+   set qping_binary    "$ts_config(product_root)/bin/$master_host_arch/qping"
+   set qping_arguments "-dump $master_host $ts_config(commd_port) qmaster 1"
+
+   set sid [open_remote_spawn_process $master_host "root" $qping_binary $qping_arguments]
+   set sp_id [lindex $sid 1]
+   set timeout 5
+
+   set used_log_array(spawn_sid)    $sid
+   set used_log_array(spawn_id)     $sp_id
+   set used_log_array(actual_line)  0
+   set timeout 15
+   while { 1 } {
+      expect {
+         -i $used_log_array(spawn_id) -- full_buffer {
+            add_proc_error "get_qping_dump_output" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            break
+         }
+         -i $used_log_array(spawn_id) eof {
+            add_proc_error "setup_qping_dump" -1 "unexpected eof getting qping -dump connection to qmaster"
+            break
+         }
+         -i $used_log_array(spawn_id) timeout {
+            add_proc_error "setup_qping_dump" -1 "timeout for getting qping -dump connection to qmaster"
+            break
+         }
+         -i $used_log_array(spawn_id) -- "*debug_client*crm*\n" {
+            puts $CHECK_OUTPUT "qping is now connected to qmaster!"
+            break
+         }
+      }     
+   }
+}
+
+#****** remote_procedures/get_qping_dump_output() ******************************
+#  NAME
+#     get_qping_dump_output() -- get qping dump output
+#
+#  SYNOPSIS
+#     get_qping_dump_output { log_array } 
+#
+#  FUNCTION
+#     This function fills up the log_array with qping -dump information. 
+#     The function will return after 2 seconds when no dump output is available
+#
+#  INPUTS
+#     log_array - array for results and settings
+#
+#  SEE ALSO
+#     remote_procedures/setup_qping_dump()
+#     remote_procedures/get_qping_dump_output()
+#     remote_procedures/cleanup_qping_dump_output()
+#*******************************************************************************
+proc get_qping_dump_output { log_array } {
+   global CHECK_OUTPUT ts_config
+   upvar $log_array used_log_array
+   set return_value 0
+
+   set timeout 2
+   log_user 0
+   expect {
+      -i $used_log_array(spawn_id) -- full_buffer {
+         add_proc_error "get_qping_dump_output" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+      }
+      -i $used_log_array(spawn_id) eof {
+      }
+      -i $used_log_array(spawn_id) timeout {
+         set return_value 1
+      }
+      -i $used_log_array(spawn_id) -- "_exit_status_" {
+      }
+      -i $used_log_array(spawn_id) -- "*\n" {
+         set output $expect_out(buffer)
+         set output [ split $output "\n" ]
+         foreach line $output {
+            set line [string trim $line]
+            if {[string length $line] == 0} {
+               continue
+            }
+            set qping_line [split $line "|"]
+            set used_log_array(line,$used_log_array(actual_line)) $line
+            set row 1
+            foreach column $qping_line {
+               set used_log_array(line,$row,$used_log_array(actual_line)) $column
+               incr row 1
+            }
+            incr used_log_array(actual_line) 1
+         }
+      }
+   }
+   log_user 1
+#
+#   01 time     time of debug output creation
+#   02 local    endpoint service name where debug client is connected
+#   03 d.       message direction
+#   04 remote   name of participating communication endpoint
+#   05 format   message data format
+#   06 ack type message acknowledge type
+#   07 msg tag  message tag information
+#   08 msg id   message id
+#   09 msg rid  message response id
+#   10 msg len  message length
+#   11 msg time time when message was sent/received
+#   12 xml dump commlib xml protocol output
+#   13 info     additional information
+
+
+   return $return_value
+}
+
+#****** remote_procedures/cleanup_qping_dump_output() **************************
+#  NAME
+#     cleanup_qping_dump_output() -- shutdwon qping dump connection
+#
+#  SYNOPSIS
+#     cleanup_qping_dump_output { log_array } 
+#
+#  FUNCTION
+#     close qping -dump spawn connection
+#
+#  INPUTS
+#     log_array - array for results and settings
+#
+#  SEE ALSO
+#     remote_procedures/setup_qping_dump()
+#     remote_procedures/get_qping_dump_output()
+#     remote_procedures/cleanup_qping_dump_output()
+#*******************************************************************************
+proc cleanup_qping_dump_output { log_array } {
+   global CHECK_OUTPUT ts_config
+   upvar $log_array used_log_array
+
+   close_spawn_process $used_log_array(spawn_sid)
+}
+
 
 #                                                             max. column:     |
 #****** remote_procedures/start_remote_tcl_prog() ******
@@ -445,7 +604,6 @@ proc start_remote_prog { hostname
 
    return $output
 }
-
 
 
 #****** remote_procedures/sendmail() *******************************************

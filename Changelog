@@ -1,3 +1,6 @@
+CR-2005-01-11-2: Testsuite: added testsuite code for parsing qping -dump
+                            output into tcl_files/remote_procedures.tcl
+
 CR-2005-01-11-1: Testsuite: modified issue test #141 for detection
                             of issue #1414
 

@@ -1981,7 +1981,7 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
 {
    const char *new_path = NULL;
    int drmaa_errno;
-   lList *path_list = lCreateList ("path list", PN_Type);
+   lList *path_list = lCreateList ("path_list", PN_Type);
    
    DENTER (TOP_LAYER, "japi_drmaa_path2path_opt");
 

@@ -2176,7 +2176,7 @@ char *path_str
    }
 */
    if ( (!ret_error) && (!*lpp)) {
-      *lpp = lCreateList("path list", PN_Type);
+      *lpp = lCreateList("path_list", PN_Type);
       ret_error = !*lpp;
 /*
       if (!*lpp) {

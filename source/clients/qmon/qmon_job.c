@@ -1951,8 +1951,11 @@ dstring *sb
  
             if (header) {
                if (!first_run)
-                  printf("\n\n");
-               else
+                  if (fp)
+                     printf("\n\n");
+                  else   
+                     sge_string_printf(sb, "\n\n");
+               } else
                   first_run = 0;
                sge_dstring_sprintf_append(sb, "%s\n", sge_schedd_text(mid+SCHEDD_INFO_OFFSET));
                first_row = 1;

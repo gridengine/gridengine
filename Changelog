@@ -1,3 +1,9 @@
+AA-2003-02-11-0  Bugfix:    qmon crash fixed for pressing Why ? when several
+                            jobs are selected.
+                 Changed:   qmon
+                 Bugtraq:   4816529
+                 IZ:        #490
+
 CR-2003-02-10-1  Testsuite: - new SGE/EE version string for 5.3p3
                             - fixed bug for tar/zip package testing
                               (could not enter package directory without

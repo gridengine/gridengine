@@ -325,8 +325,12 @@ lListElem *jr
    lSetList(cull_job, JB_ja_tasks, lCreateList("one task", JAT_Type));
    cull_jatask = lAddSubUlong(cull_job, JAT_task_number, jataskid, 
                                                         JB_ja_tasks, JAT_Type);
-  
-   if ((ptf_error=ptf_job_complete(cull_job))) {
+
+   switch2start_user();
+   ptf_error=ptf_job_complete(cull_job);
+   switch2admin_user();
+
+   if (ptf_error) {
       ERROR((SGE_EVENT, MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US,
          u32c(jobid), ptf_errstr(ptf_error)));
    } else if (feature_is_enabled(FEATURE_REPORT_USAGE)) {

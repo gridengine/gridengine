@@ -352,6 +352,8 @@ int answer_error
             lListElem *job, *jatask;
             lListElem *slave_job, *slave_jatask;
 
+            switch2start_user();
+
             for_each(job, Master_Job_List) {
                lListElem *master_queue;
 
@@ -391,6 +393,7 @@ int answer_error
                   }
                }
             }
+            switch2admin_user();
          } else {
             DPRINTF(("LEAVE PRIORITIES UNTOUCHED\n"));
          }

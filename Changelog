@@ -1,3 +1,9 @@
+AH-2003-01-31-0: Bugfix:    wrong usage reported by qstat -j <jobid>
+                 Bugtraq:   #4794242
+                 IZ:        #446
+                 Review:    AS
+                 Changed:   sge_execd
+
 JG-2003-01-31-0  Bugfix:    For tightly integrated parallel jobs, the handling
                             of a task exit could be done multiple times 
                             resulting in too much accounting entries, probably

@@ -166,7 +166,69 @@ int groups_in_proc (void) {
 
 #endif
 
-#if defined(LINUX) || defined(SOLARIS) || defined(ALPHA)
+/* search in job list for the pid 
+   return the proc element */
+static lnk_link_t *find_pid_in_jobs(pid_t pid, lnk_link_t *job_list)
+{
+   lnk_link_t *job, *proc = NULL;
+   proc_elem_t *proc_elem = NULL;
+   job_elem_t *job_elem = NULL;
+
+   /* 
+    * try to find a matching job 
+    */
+   for (job=job_list->next; job != job_list; job=job->next) {
+
+      job_elem = LNK_DATA(job, job_elem_t, link);
+
+      /* 
+       * try to find process in this jobs' proc list 
+       */
+
+      for (proc=job_elem->procs.next; proc != &job_elem->procs; 
+               proc=proc->next) {
+      
+         proc_elem = LNK_DATA(proc, proc_elem_t, link);
+         if (proc_elem->proc.pd_pid == pid)
+            break; /* found it */
+      }
+
+      if (proc == &job_elem->procs) {
+         /* end of procs list - no process found - try next job */
+         proc = NULL;
+      } else 
+         /* found a process */
+         break;
+   }
+
+   return proc;
+}
+
+static void touch_time_stamp(const char *d_name, int time_stamp, lnk_link_t *job_list)
+{
+   pid_t pid;
+   proc_elem_t *proc_elem;
+   lnk_link_t *proc;
+
+   DENTER(TOP_LAYER, "touch_time_stamp");
+
+   sscanf(d_name, pid_t_fmt, &pid);
+   if ((proc = find_pid_in_jobs(pid, job_list))) {
+      proc_elem = LNK_DATA(proc, proc_elem_t, link);
+      proc_elem->proc.pd_tstamp = time_stamp;
+#ifdef MONITOR_PDC
+      INFO((SGE_EVENT, "found job to process %s: set time stamp\n", d_name));
+#endif
+   } 
+#ifdef MONITOR_PDC
+   else
+      INFO((SGE_EVENT, "found no job to process %s\n", d_name));
+#endif
+
+   DEXIT;
+   return;
+}
+
 void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
    tShepherd_trace shepherd_trace)
 {
@@ -326,11 +388,8 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
                   shepherd_trace(err_str);
                }
 
-#if 1
                kill(pid, sig);
-#endif
 
-#if defined(LINUX) || defined(SOLARIS) || defined(ALPHA)
             } else {
                if (shepherd_trace) {
                   char err_str[256];
@@ -340,7 +399,6 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
                   shepherd_trace(err_str);
                }
             }
-#endif
 
             break;
          }
@@ -349,7 +407,6 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
    pt_close();
    free(list);
 }
-#endif
 
 int pt_open(void)
 {
@@ -380,12 +437,10 @@ int time_stamp
    prcred_t proc_cred;
 #endif
 
-#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) 
    int ret;
    u_long32 max_groups;
    gid_t *list;
    int groups=0;
-#endif                        
 
    proc_elem_t *proc_elem = NULL;
    job_elem_t *job_elem = NULL;
@@ -395,7 +450,6 @@ int time_stamp
 
    DENTER(TOP_LAYER, "pt_dispatch_proc_to_job");
 
-#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
    max_groups = sge_sysconf(sge_sysconf_NGROUPS_MAX);
    if (max_groups <= 0) {
       ERROR((SGE_EVENT, MSG_SGE_NGROUPS_MAXOSRECONFIGURATIONNECESSARY));
@@ -409,7 +463,6 @@ int time_stamp
       DEXIT;
       return 1;
    }
-#endif
 
    /* find next valid entry in procfs */ 
    while ((dent = readdir(cwd))) {
@@ -430,8 +483,19 @@ int time_stamp
 #else
       sprintf(procnam, "%s/%s", PROC_DIR, dent->d_name);
 #endif
-      if ((fd = open(procnam, O_RDONLY, 0)) == -1)
+      if ((fd = open(procnam, O_RDONLY, 0)) == -1) {
+         if (errno != ENOENT) {
+#ifdef MONITOR_PDC
+            if (errno == EACCES)
+               INFO((SGE_EVENT, "(uid:"gid_t_fmt" euid:"gid_t_fmt") could not open %s: %s\n", 
+                        getuid(), geteuid(), procnam, strerror(errno)));
+            else
+               INFO((SGE_EVENT, "could not open %s: %s\n", procnam, strerror(errno)));
+#endif
+            touch_time_stamp(dent->d_name, time_stamp, job_list);
+         }
          continue;
+      }
 
       /** 
        ** get a list of supplementary group ids to decide
@@ -446,12 +510,24 @@ int time_stamp
        */
       if ((ret = read(fd, buffer, BIGLINE-1))>= BIGLINE-1) {
          close(fd);
+         if (errno != ENOENT) {
+#ifdef MONITOR_PDC
+            INFO((SGE_EVENT, "could not read %s: %s\n", procnam, strerror(errno)));
+#endif
+            touch_time_stamp(dent->d_name, time_stamp, job_list);
+         }
          continue;
       }
       buffer[BIGLINE-1] = '\0';
       
       if (SGE_FSTAT(fd, &fst)) {
          close(fd);
+         if (errno != ENOENT) {
+#ifdef MONITOR_PDC
+            INFO((SGE_EVENT, "could not fstat %s: %s\n", procnam, strerror(errno)));
+#endif
+            touch_time_stamp(dent->d_name, time_stamp, job_list);
+         }
          continue;
       }
 
@@ -538,6 +614,12 @@ int time_stamp
        */
       if (ioctl(fd, PIOCSTATUS, &pr)==-1) {
          close(fd);
+         if (errno != ENOENT) {
+#ifdef MONITOR_PDC
+            INFO((SGE_EVENT, "could not ioctl(PIOCSTATUS) %s: %s\n", procnam, strerror(errno)));
+#endif
+            touch_time_stamp(dent->d_name, time_stamp, job_list);
+         }
          continue;
       }
                                     
@@ -547,6 +629,12 @@ int time_stamp
       ret=ioctl(fd, PIOCCRED, &proc_cred);
       if (ret < 0) {
          close(fd);
+         if (errno != ENOENT) {
+#ifdef MONITOR_PDC
+            INFO((SGE_EVENT, "could not ioctl(PIOCCRED) %s: %s\n", procnam, strerror(errno)));
+#endif
+            touch_time_stamp(dent->d_name, time_stamp, job_list);
+         }
          continue;
       }
       
@@ -557,6 +645,12 @@ int time_stamp
       ret=ioctl(fd, PIOCGROUPS, list);
       if (ret<0) {
          close(fd);
+         if (errno != ENOENT) {
+#ifdef MONITOR_PDC
+            INFO((SGE_EVENT, "could not ioctl(PIOCCRED) %s: %s\n", procnam, strerror(errno)));
+#endif
+            touch_time_stamp(dent->d_name, time_stamp, job_list);
+         }
          continue;
       }
 
@@ -572,7 +666,6 @@ int time_stamp
 
 #  endif
 
-#  if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
       /* 
        * try to find a matching job 
        */
@@ -581,7 +674,6 @@ int time_stamp
          int group;
          
          job_elem = LNK_DATA(curr, job_elem_t, link);
-
          for (group=0; !found_it && group<groups; group++) {
             if (job_elem->job.jd_jid == list[group]) {
                found_it = 1;
@@ -590,11 +682,14 @@ int time_stamp
          if (found_it)
             break;
       }
-   
+
       if (curr == job_list) { /* this is not a traced process */ 
          close(fd);
          continue;
       }
+
+      /* we always read only one entry per function call
+         the while loop is needed to read next one */
       break;
    } /* while */
 
@@ -607,63 +702,18 @@ int time_stamp
    /* 
     * try to find process in this jobs' proc list 
     */
+
    for (curr=job_elem->procs.next; curr != &job_elem->procs; 
             curr=curr->next) {
-      int found_it = 0;
-      int group = 0;
-      
       proc_elem = LNK_DATA(curr, proc_elem_t, link);
       
-      for (group=0; !found_it && group<groups; group++) {
-         if (proc_elem->proc.pd_pid == pr.pr_pid) {
-            found_it = 1;
-         }
-      }
-      if (found_it) {
-/*          DPRINTF(("Found process with pid %ld\n", (long) pr.pr_pid)); */
+      if (proc_elem->proc.pd_pid == pr.pr_pid)
          break;
-      }
    }
-
-#  else
-
-      /* 
-       * try to find matching job 
-       */
-      for (curr=job_list->next; curr != job_list; curr=curr->next) {  
-         job_elem = LNK_DATA(curr, job_elem_t, link);
-         if (job_elem->job.jd_jid == pr.pr_sid) {
-
-            printf("sid "pid_t_fmt" pid "pid_t_fmt"\n", pr.pr_sid, pr.pr_pid);
-            break; /* found it */
-         }
-      }
-   
-      if (curr == job_list) { /* this is not a traced process */ 
-         close(fd);
-         continue;
-      }
-      break;
-   } /* while */
-
-   if (!dent) { /* visited all files in procfs */
-      DEXIT; 
-      return 1;
-   }
-   /* try to find process in this jobs' proc list */
-   for (curr=job_elem->procs.next; curr != &job_elem->procs; 
-            curr=curr->next) {  
-      proc_elem = LNK_DATA(curr, proc_elem_t, link);
-      if (  proc_elem->proc.pd_pid == pr.pr_pid )
-         break; /* found it */
-      else
-         printf("proclist "pid_t_fmt" pid "pid_t_fmt"\n", proc_elem->proc.pd_pid, 
-            pr.pr_pid);
-   }
-
-#  endif
 
    if (curr == &job_elem->procs) { 
+      double utime, stime;
+
       /* new process, add a proc element into jobs proc list */
       if (!(proc_elem=(proc_elem_t *)malloc(sizeof(proc_elem_t)))) {
          if (fd >= 0)
@@ -676,6 +726,19 @@ int time_stamp
       proc_elem->proc.pd_state  = 1; /* active */
       LNK_ADD(job_elem->procs.prev, &proc_elem->link);
       job_elem->job.jd_proccount++;
+
+#if defined(LINUX)
+      utime = ((double)pr.pr_utime)/HZ; 
+      stime = ((double)pr.pr_stime)/HZ;
+#else
+      utime = pr.pr_utime.tv_sec + pr.pr_utime.tv_nsec*1E-9;
+      stime = pr.pr_stime.tv_sec + pr.pr_stime.tv_nsec*1E-9;
+#endif
+#ifdef MONITOR_PDC
+      INFO((SGE_EVENT, "new process "pid_t_fmt" for job "pid_t_fmt" (utime = %f stime = %f)\n", 
+            pr.pr_pid, job_elem->job.jd_jid, utime, stime)); 
+#endif
+
    } else {
       /* save previous usage data - needed to build delta usage */
       old_time = proc_elem->proc.pd_utime + proc_elem->proc.pd_stime;

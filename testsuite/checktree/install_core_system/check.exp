@@ -255,32 +255,36 @@ proc reread_bootstrap {} {
 # generating all testsuite cluster user keys and certificates
 proc make_user_cert {} {
    global ts_config 
+   global check_use_installed_system
   global CHECK_OUTPUT CHECK_MAIN_RESULTS_DIR
   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_REPORT_EMAIL_TO
   global CHECK_USER CHECK_DEBUG_LEVEL
 
-  if { $ts_config(product_feature) == "csp" } {
-     puts $CHECK_OUTPUT "removing evtl. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
-     set result [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
-     puts $CHECK_OUTPUT $result
- 
-     puts $CHECK_OUTPUT "creating file \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
-     set script [ open "$CHECK_MAIN_RESULTS_DIR/user_file.txt" "w" ]
-     puts $script "$CHECK_FIRST_FOREIGN_SYSTEM_USER:first_testsuite_user:$CHECK_REPORT_EMAIL_TO"
-     puts $script "$CHECK_SECOND_FOREIGN_SYSTEM_USER:second_testsuite_user:$CHECK_REPORT_EMAIL_TO"
-     flush $script
-     close $script
-     
-     set result [ start_remote_prog "$ts_config(master_host)" "root" "cd" "$ts_config(product_root) ; util/sgeCA/sge_ca -usercert $CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
-     puts $CHECK_OUTPUT $result
- 
-     puts $CHECK_OUTPUT "removing evtl. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
-     set result [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
-     puts $CHECK_OUTPUT $result
-  } else {
-     puts $CHECK_OUTPUT "no csp feature enabled"
-  }
-  set_error 0 "ok"
+   if { !$check_use_installed_system } {
+      if { $ts_config(product_feature) == "csp" } {
+         puts $CHECK_OUTPUT "removing evtl. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
+         set result [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
+         puts $CHECK_OUTPUT $result
+    
+         puts $CHECK_OUTPUT "creating file \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
+         set script [ open "$CHECK_MAIN_RESULTS_DIR/user_file.txt" "w" ]
+         puts $script "$CHECK_FIRST_FOREIGN_SYSTEM_USER:first_testsuite_user:$CHECK_REPORT_EMAIL_TO"
+         puts $script "$CHECK_SECOND_FOREIGN_SYSTEM_USER:second_testsuite_user:$CHECK_REPORT_EMAIL_TO"
+         flush $script
+         close $script
+        
+         set result [ start_remote_prog "$ts_config(master_host)" "root" "cd" "$ts_config(product_root) ; util/sgeCA/sge_ca -usercert $CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
+         puts $CHECK_OUTPUT $result
+      
+         puts $CHECK_OUTPUT "removing evtl. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
+         set result [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
+         puts $CHECK_OUTPUT $result
+     } else {
+        puts $CHECK_OUTPUT "no csp feature enabled"
+     }
+   }
+
+   set_error 0 "ok"
 }
 
 

@@ -172,7 +172,14 @@ Linux)
       lxrelease=22
       ;;
    2.[46].*)
-      strings /lib/libc.so.6 | grep "GNU C Library" | grep "2\.0" 2>&1 > /dev/null
+      case $lxmachine in
+      amd64)
+        strings /lib64/libc.so.6 | grep "GNU C Library" | grep "2\.0" 2>&1 > /dev/null
+        ;;
+      *)
+        strings /lib/libc.so.6 | grep "GNU C Library" | grep "2\.0" 2>&1 > /dev/null
+      esac
+
       if [ $? = 0 ]; then
          lxrelease=UNSUPPORTED-linux2.2-glibc2.0
       else

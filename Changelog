@@ -1,3 +1,9 @@
+MD-2004-11-24-0: Bugfix:    arch script does not know about /lib64
+                 Review:    JG
+                 Changed:   arch, arch.dist
+                 Issue:     1357
+                 Bugtraq:   6200013
+
 JG-2004-11-24-0: Bugfix:    sge_qmaster hit stack limit on aix43, aix51 and hp11
                             with classic spooling.
                  Review:    CR

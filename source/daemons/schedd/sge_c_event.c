@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <string.h>
 #include <strings.h>
 
@@ -64,26 +65,45 @@ static int get_event_list(int sync, lList **lp);
  *----------------------------------------*/
 static int need_register = 1;
 
-static int ec_ed_time = DEFAULT_EVENT_DELIVERY_INTERVAL; 
-
-static u_long32 ec_id = 0;
+static lListElem *ec;
 static u_long32 ec_reg_id = 0;
-static const char *ec_name = NULL;
 
-
-void ec_prepare_registration(u_long32 id, const char *name)
+int ec_prepare_registration(u_long32 id, const char *name)
 {
+   char subscription[sgeE_EVENTSIZE + 1];
+   int i;
+
    DENTER(TOP_LAYER, "ec_prepare_registration");
 
    if(id >= EV_ID_FIRST_DYNAMIC || name == NULL || *name == 0) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGAL_ID_OR_NAME_US, u32c(id), name != NULL ? name : "NULL" ));
       DEXIT;
-      return;
+      return 0;
    }
 
+   ec = lCreateElem(EV_Type);
+
+   if(ec == NULL) {
+      DEXIT; /* error message already comes from lCreateElem */
+      return 0;
+   }
+
+   /* remember registration id for subsequent registrations */
    ec_reg_id = id;
-   ec_name = name;
+
+   /* initialize event client object */
+   lSetString(ec, EV_name, name);
+   lSetUlong(ec, EV_d_time, DEFAULT_EVENT_DELIVERY_INTERVAL);
+
+   /* initialize subscription "bitfield" */
+   for(i = 0; i < sgeE_EVENTSIZE; i++) {
+      subscription[i] = '0';
+   }
+   subscription[sgeE_EVENTSIZE] = 0;
+   lSetString(ec, EV_subscription, subscription);
+
    DEXIT;
+   return 1;
 }
 
 /*-------------------------------------------------------------*/
@@ -103,14 +123,41 @@ int ec_need_new_registration(void)
 
 /* return 1 if parameter has changed 
           0 otherwise                */
-int ec_set_edtime(int intval) {
-   int ret = (ec_ed_time != intval);
-   ec_ed_time = intval;
+int ec_set_edtime(int interval) {
+   int ret;
+
+   DENTER(TOP_LAYER, "ec_set_edtime");
+   
+   if(ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      DEXIT;
+      return 0;
+   }
+
+   ret = (lGetUlong(ec, EV_d_time) != interval);
+
+   if(ret) {
+      lSetUlong(ec, EV_d_time, interval);
+   }
+
+   DEXIT;
    return ret;
 }
 
 int ec_get_edtime(void) {
-   return ec_ed_time;
+   int interval;
+
+   DENTER(TOP_LAYER, "ec_get_edtime");
+
+   if(ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      DEXIT;
+      return 0;
+   }
+
+   interval = lGetUlong(ec, EV_d_time);
+   DEXIT;
+   return interval;
 }
 
 /*---------------------------------------------------------
@@ -119,23 +166,20 @@ int ec_get_edtime(void) {
  *  this has also be done in case the
  *  qmaster was down and the scheduler
  *  reenrolls at qmaster 
- *  return 0 if success  
- *         -1 in case of failure
+ *  return 1 if success  
+ *         0 in case of failure
  *---------------------------------------------------------*/
 int ec_register(void)
 {
    int success;
-   lListElem *event_client;
    lList *lp, *alp;
 
    DENTER(TOP_LAYER, "ec_register");
 
-   if(ec_reg_id >= EV_ID_FIRST_DYNAMIC || ec_name == NULL || *ec_name == 0) {
-      WARNING((SGE_EVENT, MSG_EVENT_ILLEGAL_ID_OR_NAME_US, u32c(ec_reg_id), ec_name != NULL ? ec_name : "NULL" ));
-      return -1;
+   if(ec_reg_id >= EV_ID_FIRST_DYNAMIC || ec == NULL) {
+      WARNING((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      return 0;
    }
-
-   event_client = lCreateElem(EV_Type);
 
    /*
     *   EV_host, EV_commproc and EV_commid get filled
@@ -146,13 +190,17 @@ int ec_register(void)
     *  informations
     */
 
-   lSetUlong(event_client, EV_id, ec_reg_id);
-   lSetString(event_client, EV_name, ec_name);
+   lSetUlong(ec, EV_id, ec_reg_id);
 
-   lSetUlong(event_client, EV_d_time, ec_ed_time);
+   /* initialize, we could do a re-registration */
+   lSetUlong(ec, EV_last_heard_from, 0);
+   lSetUlong(ec, EV_last_send_time, 0);
+   lSetUlong(ec, EV_next_send_time, 0);
+   lSetUlong(ec, EV_next_number, 0);
+
 
    lp = lCreateList("registration", EV_Type);
-   lAppendElem(lp, event_client);
+   lAppendElem(lp, lCopyElem(ec));
 
    /* remove possibly pending messages */
    remove_pending_messages(NULL, 0, 0, TAG_REPORT_REQUEST);
@@ -178,18 +226,18 @@ int ec_register(void)
          new_id = atoi(s);
       }
       if(new_id != 0) {
-         ec_id = new_id;
-         DPRINTF(("REGISTERED with id "U32CFormat" in "u32" seconds\n", new_id, ec_ed_time));
+         lSetUlong(ec, EV_id, new_id);
+         DPRINTF(("REGISTERED with id "U32CFormat"\n", new_id));
          lFreeList(alp);
          DEXIT;
-         return 0;
+         return 1;
       }
    }
 
    lFreeList(alp);
    DPRINTF(("REGISTRATION FAILED\n"));
    DEXIT;
-   return -1;
+   return 0;
 }      
 
 int ec_deregister(void)
@@ -197,19 +245,131 @@ int ec_deregister(void)
    int ret;
    sge_pack_buffer pb;
 
-   if(init_packbuffer(&pb, sizeof(u_long32), 0) != PACK_SUCCESS) {
-      return CL_MALLOC;
+   DENTER(TOP_LAYER, "ec_deregister");
+
+   if(ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      DEXIT;
+      return 0;
    }
 
-   packint(&pb, ec_id);
+   if(init_packbuffer(&pb, sizeof(u_long32), 0) != PACK_SUCCESS) {
+      /* error message is output from init_packbuffer */
+      DEXIT;
+      return 0;
+   }
+
+   packint(&pb, lGetUlong(ec, EV_id));
 
    ret = sge_send_any_request(0, NULL, sge_get_master(0), 
          prognames[QMASTER], 1, &pb, TAG_EVENT_CLIENT_EXIT);
    
    clear_packbuffer(&pb);
 
-   return ret;
+   if(ret != CL_OK) {
+      /* error message is output from sge_send_any_request */
+      DEXIT;
+      return 0;
+   }
+
+   DEXIT;
+   return 1;
 }
+
+int ec_subscribe(int event)
+{
+   char *subscription;
+   
+   DENTER(TOP_LAYER, "ec_subscribe");
+
+   if(ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      DEXIT;
+      return 0;
+   }
+
+   if(event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
+      WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event));
+      DEXIT;
+      return 0;
+   }
+
+   subscription = strdup(lGetString(ec, EV_subscription));
+
+   if(subscription == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      DEXIT;
+      return 0;
+   }
+
+   if(event == sgeE_ALL_EVENTS) {
+      int i;
+      for(i = 0; i < sgeE_EVENTSIZE; i++) {
+         subscription[i] = '1';
+      }
+   } else {
+      subscription[event] = '1';
+   }
+
+   lSetString(ec, EV_subscription, subscription);
+   free(subscription);
+
+   DEXIT;
+   return 1;
+}
+
+int ec_subscribe_all(void)
+{
+   return ec_subscribe(sgeE_ALL_EVENTS);
+}
+
+int ec_unsubscribe(int event)
+{
+   char *subscription;
+   
+   DENTER(TOP_LAYER, "ec_unsubscribe");
+
+   if(ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      DEXIT;
+      return 0;
+   }
+
+   if(event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
+      WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
+      DEXIT;
+      return 0;
+   }
+
+   subscription = strdup(lGetString(ec, EV_subscription));
+
+   if(subscription == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      DEXIT;
+      return 0;
+   }
+
+   if(event == sgeE_ALL_EVENTS) {
+      int i;
+      for(i = 0; i < sgeE_EVENTSIZE; i++) {
+         subscription[i] = '0';
+      }
+   } else {
+      subscription[event] = '0';
+   }
+
+   lSetString(ec, EV_subscription, subscription);
+   free(subscription);
+
+   DEXIT;
+   return 1;
+}
+
+int ec_unsubscribe_all(void)
+{
+   return ec_unsubscribe(sgeE_ALL_EVENTS);
+}
+
 
 /*-------------------------------------------------------------------*
  * ec_get
@@ -228,10 +388,16 @@ lList **event_list
    int sync;
    
    DENTER(TOP_LAYER, "ec_get");
-  
+ 
+   if(ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      DEXIT;
+      return -1;
+   }
+ 
    if (ec_need_new_registration()) {
       next_event = 1;
-      if (ec_register()) {
+      if (!ec_register()) {
          DEXIT;
          return -1;
       }
@@ -275,7 +441,7 @@ lList **event_list
       
    /* send an ack to the qmaster for all received events */
    if (!sync) {
-      if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event-1, ec_id)) {
+      if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event-1, lGetUlong(ec, EV_id))) {
          WARNING((SGE_EVENT, MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY ));
       }
       else

@@ -48,6 +48,8 @@ int sge_add_event_client(lListElem *clio, lList **alpp, char *ruser, char *rhost
 void sge_event_client_exit(const char *host, const char *commproc, sge_pack_buffer *pb);
 void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
+int sge_eventclient_subscribed(const lListElem *event_client, int event);
+
 int sge_ack_event(lListElem *er, u_long32 event_number);
 void ck_4_deliver_events(u_long32 now);
 

@@ -188,6 +188,7 @@ char *argv[]
    set_commlib_param(CL_P_TIMEOUT_SSND, 4*60, NULL, NULL);
 
    ec_prepare_registration(EV_ID_SCHEDD, "scheduler");
+   ec_subscribe_all();
 
    while (1) {
       lList* event_list = NULL;

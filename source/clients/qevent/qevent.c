@@ -83,27 +83,31 @@ int main(int argc, char **argv)
    int ret;
    time_t last_heared = 0;
 
-   DENTER_MAIN(TOP_LAYER, "qconf");
+   DENTER_MAIN(TOP_LAYER, "qevent");
 
-   sge_gdi_param(SET_MEWHO, QCONF, NULL);
+   sge_gdi_param(SET_MEWHO, QEVENT, NULL);
 /*    sge_gdi_param(SET_ISALIVE, 1, NULL); */
-   if ((cl_err = sge_gdi_setup(prognames[QCONF]))) {
+   if ((cl_err = sge_gdi_setup(prognames[QEVENT]))) {
       ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);
    }
 
-   sge_setup_sig_handlers(QCONF);
+   sge_setup_sig_handlers(QEVENT);
 
    if (reresolve_me_qualified_hostname() != CL_OK) {
       SGE_EXIT(1);
    }   
 
-   if (argc == 1) {
-      sge_usage(stderr);
-      SGE_EXIT(1);
-   }
-
    ec_prepare_registration(EV_ID_ANY, "qevent");
+/*    ec_subscribe(sgeE_JOB_DEL); */
+/*    ec_subscribe(sgeE_JOB_ADD); */
+/*    ec_subscribe(sgeE_JOB_MOD); */
+/*    ec_subscribe(sgeE_JOB_LIST); */
+/*    ec_subscribe(sgeE_JOB_MOD_SCHED_PRIORITY); */
+/*    ec_subscribe(sgeE_JOB_USAGE); */
+/*    ec_subscribe(sgeE_JOB_USAGE); */
+
+   ec_subscribe_all();
 
    while(!shut_me_down) {
       time_t now = time(0);

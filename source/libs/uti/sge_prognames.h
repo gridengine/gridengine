@@ -69,27 +69,28 @@ enum {
  QSUB            ,       /* 18 */
  EXECD           ,       /* 19 */
  MAX_ANCILLARY   = EXECD , /* 19 */
- QUSERDEFINED   ,        /* 20 */
- ALL_OPT         ,       /* 21 */
+ QEVENT,                 /* 20 */
+ QUSERDEFINED   ,        /* 21 */
+ ALL_OPT         ,       /* 22 */
 
 /* programs with numbers > ALL_OPT do not use the old parsing */
 
- QUSAGE          ,       /* 22 */
- DCMD            ,       /* 23 */
- DSH             ,       /* 24 */
- QMON            ,       /* 25 */
- SCHEDD          ,       /* 26 */
- QSCHED          ,       /* 27 */
- QACCT           ,       /* 28 */
- QSTD            ,       /* 29 */
- COMMD           ,       /* 30 */
- SHADOWD         ,       /* 31 */
- CW3             ,       /* 32 */
- PVM_TASKER      ,       /* 33 */
- QIDLD           ,       /* 34 */
- PVM_RMANAGER    ,       /* 35 */
- QHOST           ,       /* 36 */
- COMMDCNTL               /* 37 */ 
+ QUSAGE          ,       /* 23 */
+ DCMD            ,       /* 24 */
+ DSH             ,       /* 25 */
+ QMON            ,       /* 26 */
+ SCHEDD          ,       /* 27 */
+ QSCHED          ,       /* 28 */
+ QACCT           ,       /* 29 */
+ QSTD            ,       /* 30 */
+ COMMD           ,       /* 31 */
+ SHADOWD         ,       /* 32 */
+ CW3             ,       /* 33 */
+ PVM_TASKER      ,       /* 34 */
+ QIDLD           ,       /* 35 */
+ PVM_RMANAGER    ,       /* 36 */
+ QHOST           ,       /* 37 */
+ COMMDCNTL               /* 38 */ 
 };
 
 extern const char *prognames[];

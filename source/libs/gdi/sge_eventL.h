@@ -68,6 +68,7 @@ enum {
    EV_last_send_time,        /* time when last event list has been sent */
    EV_next_send_time,        /* time when next list has to be sent */
    EV_next_number,           /* the number the next event will get */
+   EV_subscription,          /* subscription information */
    EV_events                 /* used to hold the events that */
                              /* are not acknowledged */
 };
@@ -84,6 +85,7 @@ LISTDEF(EV_Type)
    SGE_ULONG(EV_last_send_time)
    SGE_ULONG(EV_next_send_time)
    SGE_ULONG(EV_next_number)
+   SGE_STRING(EV_subscription)
    SGE_LIST(EV_events)
 LISTEND 
 
@@ -99,6 +101,7 @@ NAMEDEF(EVN)
    NAME("EV_last_send_time")
    NAME("EV_next_send_time")
    NAME("EV_next_number")
+   NAME("EV_subscription")
    NAME("EV_events")
 NAMEEND
 
@@ -106,7 +109,9 @@ NAMEEND
 
 /* valid values for ET_type */
 enum {
-   sgeE_JOB_DEL = 1,
+   sgeE_ALL_EVENTS,
+
+   sgeE_JOB_DEL,
    sgeE_JOB_ADD,
    sgeE_JOB_MOD,
    sgeE_JOB_LIST,
@@ -166,7 +171,9 @@ enum {
    sgeE_CKPT_LIST,
 
    sgeE_JATASK_DEL,
-   sgeE_JATASK_MOD
+   sgeE_JATASK_MOD,
+
+   sgeE_EVENTSIZE 
 };
 
 enum {

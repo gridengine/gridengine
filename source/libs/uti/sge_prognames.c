@@ -54,22 +54,23 @@ const char *prognames[] =
    "qstat"		,       /* 17  */
    "qsub"		,       /* 18  */
    "execd"		,       /* 19  */
-   "unknown"	,       /* 20  */
+   "qevent"    ,       /* 20  */
    "unknown"	,       /* 21  */
-   "qusage"		,       /* 22  */
-   "dcmd"		,       /* 23  */
-   "dsh"		   ,       /* 24  */
-   "qmon"		,       /* 25  */
-   "schedd"		,       /* 26  */
-   "qsched"		,       /* 27  */
-   "qacct"		,       /* 28  */
-   "qstd"		,       /* 29  */
-   "commd"		,       /* 30  */
-   "shadowd"	,       /* 31  */
-   "yyy"	   	,       /* 32, obsolete */
-   "tasker"	  	,       /* 33  */
-   "qidl"		,       /* 34  */
-   "unknown"	,       /* 35  */
-   "qhost"		,       /* 36  */
-   "commdcntl"         /* 37  */
+   "unknown"	,       /* 22  */
+   "qusage"		,       /* 23  */
+   "dcmd"		,       /* 24  */
+   "dsh"		   ,       /* 25  */
+   "qmon"		,       /* 26  */
+   "schedd"		,       /* 27  */
+   "qsched"		,       /* 28  */
+   "qacct"		,       /* 29  */
+   "qstd"		,       /* 30  */
+   "commd"		,       /* 31  */
+   "shadowd"	,       /* 32  */
+   "yyy"	   	,       /* 33, obsolete */
+   "tasker"	  	,       /* 34  */
+   "qidl"		,       /* 35  */
+   "unknown"	,       /* 36  */
+   "qhost"		,       /* 37  */
+   "commdcntl"         /* 38  */
 };

@@ -377,6 +377,27 @@ void sge_event_client_exit(const char *host, const char *commproc, sge_pack_buff
    DEXIT;
 }
 
+int sge_eventclient_subscribed(const lListElem *event_client, int event)
+{
+   const char *subscription = NULL;
+
+   if(event_client == NULL) {
+      return 0;
+   }
+
+   subscription = lGetString(event_client, EV_subscription);
+
+   if(subscription == NULL || *subscription == 0) {
+      return 0;
+   }
+
+   if(subscription[event] == '1') {
+      return 1;
+   }
+
+   return 0;
+}
+
 /* 
 
    RETURN
@@ -485,7 +506,7 @@ u_long32 now
       if(timeout > EVENT_ACK_MAX_TIMEOUT) {
          timeout = EVENT_ACK_MAX_TIMEOUT;
       }
-
+      
       if (now > (lGetUlong(event_client, EV_last_heard_from) + timeout)) {
          ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, 
                (int) timeout, commproc, (int) id, host));
@@ -565,11 +586,14 @@ const char *strkey,
 lList *list 
 ) {
    if(event_client != NULL) {
-      sge_add_list_event_(event_client, type, intkey, intkey2, strkey, list, 1);
+      if(sge_eventclient_subscribed(event_client, type)) {
+         sge_add_list_event_(event_client, type, intkey, intkey2, strkey, list, 1);
+      }
    } else {
-      lListElem *ec;
-      for_each (ec, EV_Clients) {
-         sge_add_list_event_(ec, type, intkey, intkey2, strkey, list, 1);
+      for_each (event_client, EV_Clients) {
+         if(sge_eventclient_subscribed(event_client, type)) {
+            sge_add_list_event_(event_client, type, intkey, intkey2, strkey, list, 1);
+         }
       }
    }
 }
@@ -593,10 +617,14 @@ lListElem *element
 #endif
 
    if(event_client != NULL) {
-      sge_add_event_(event_client, type, intkey, intkey2, strkey, element);
+      if(sge_eventclient_subscribed(event_client, type)) {
+         sge_add_event_(event_client, type, intkey, intkey2, strkey, element);
+      }   
    } else {
       for_each(event_client, EV_Clients) {
-         sge_add_event_(event_client, type, intkey, intkey2, strkey, element);
+         if(sge_eventclient_subscribed(event_client, type)) {
+            sge_add_event_(event_client, type, intkey, intkey2, strkey, element);
+         }
       }
    }
 
@@ -893,27 +921,29 @@ lList *lp
 
    DENTER(TOP_LAYER, "sge_total_update_event");
 
-   event = lCreateElem(ET_Type); 
+   if(sge_eventclient_subscribed(event_client, type)) {
+      event = lCreateElem(ET_Type); 
 
-   /* fill in event number and increment EV_next_number of event recipient */
-   i = lGetUlong(event_client, EV_next_number);
-   lSetUlong(event, ET_number, i++);
-   lSetUlong(event_client, EV_next_number, i);
-   
-   lSetUlong(event, ET_type, type); 
+      /* fill in event number and increment EV_next_number of event recipient */
+      i = lGetUlong(event_client, EV_next_number);
+      lSetUlong(event, ET_number, i++);
+      lSetUlong(event_client, EV_next_number, i);
+      
+      lSetUlong(event, ET_type, type); 
 
-   lSetList(event, ET_new_version, lCopyList("updating list", lp));
+      lSetList(event, ET_new_version, lCopyList("updating list", lp));
 
-   /* build a new event list if not exists */
-   lp = lGetList(event_client, EV_events); 
-   if (!lp) {
-      lp=lCreateList("", ET_Type);
-      lSetList(event_client, EV_events, lp);
+      /* build a new event list if not exists */
+      lp = lGetList(event_client, EV_events); 
+      if (!lp) {
+         lp=lCreateList("", ET_Type);
+         lSetList(event_client, EV_events, lp);
+      }
+
+      DPRINTF((event_text(event)));
+      /* chain in new event */
+      lAppendElem(lp, event);
    }
-
-   DPRINTF((event_text(event)));
-   /* chain in new event */
-   lAppendElem(lp, event);
 
    DEXIT;
    return;

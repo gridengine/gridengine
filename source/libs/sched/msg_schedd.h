@@ -64,6 +64,8 @@
 #define MSG_EVENT_EVENTSWITHNOINCREASINGNUMBERS       _("got events with not increasing numbers\n")
 #define MSG_LIST_FAILEDINCULLUNPACKREPORT             _("Failed in cull_unpack report\n")
 #define MSG_EVENT_ILLEGAL_ID_OR_NAME_US               _("Illegal id "U32CFormat" or name "SFQ" in event client registration\n")
+#define MSG_EVENT_UNINITIALIZED_EC                    _("event client not properly initialized (ec_prepare_registration)\n")
+#define MSG_EVENT_ILLEGALEVENTID_I                    _("illegal event id %d\n")
 
 /* 
 ** schedd/sge_category.c

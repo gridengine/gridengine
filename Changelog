@@ -1,3 +1,9 @@
+JG-2001-11-26-3: Added a subscribe/unsubscribe mechanism to the event client
+                 interface. The current implementation does not yet allow 
+                 dynamic (un)subscription, but only before a (re)registration.
+                 Sort output of qconf -secl by event client id.
+                 Insert qevent to the Grid Engine program and options handling.
+
 CR-2001-11-26-0: Testsuite:
                     Conformation of the testsuite because of changes from
                     AH-2001-11-23-1, Removed unused configuration parameters

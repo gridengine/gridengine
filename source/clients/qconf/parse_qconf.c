@@ -4559,6 +4559,8 @@ static int show_eventclients()
    }
 
    if (lp) {
+      lPSortList(lp, "%I+", EV_id);
+   
       printf("%8s %-15s %-25s\n",MSG_TABLE_EV_ID, MSG_TABLE_EV_NAME, MSG_TABLE_HOST);
       printf("--------------------------------------------------\n");
       for_each (ep, lp) {

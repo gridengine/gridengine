@@ -33,9 +33,15 @@
 /*___INFO__MARK_END__*/
 
 
-void ec_prepare_registration(u_long32 id, const char *name);
+int ec_prepare_registration(u_long32 id, const char *name);
 int ec_register(void);
 int ec_deregister(void);
+
+int ec_subscribe(int event);
+int ec_subscribe_all(void);
+
+int ec_unsubscribe(int event);
+int ec_unsubscribe_all(void);
 
 int ec_get(lList **);
 

@@ -80,10 +80,6 @@ static host *sge_host_create(void);
 static void sge_host_delete(host *h);
 static int sge_host_alias(host *h1, host *h2);
 
-#if 0 /* EB: not used */
-static int sge_host_alias_str(char *host1, char *host2); 
-#endif
-
 #if defined(SOLARIS)
 int gethostname(char *name, int namelen);
 #endif
@@ -362,22 +358,6 @@ static int sge_host_alias(host *h1, host *h2)
 
    return 0;
 }
-
-#if 0 /* EB: not used */
-
-static int sge_host_alias_str(char *host1, char *host2) 
-{
-   host *h1, *h2;
-
-   h1 = sge_host_search(host1, NULL);
-   h2 = sge_host_search(host2, NULL);
-   if (!h1 || !h2)
-      return -1;
-
-   return sge_host_alias(h1, h2);
-}
-
-#endif
 
 /**********************************************************************/
 static int matches_name(struct hostent *he, const char *name) 

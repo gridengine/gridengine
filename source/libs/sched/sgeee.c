@@ -95,8 +95,6 @@ static int sge_calc_sharetree_targets(lListElem *root, sge_Sdescr_t *lists,
 
 static lListElem *locate_user_or_project(lList *user_list, const char *name);
 
-
-#if 1 /* EB: */
 static void task_ref_initialize_table(u_long32 number_of_tasks);
 static void task_ref_destroy_table(void);
 static sge_task_ref_t *task_ref_get_entry(u_long32 index);
@@ -254,8 +252,6 @@ u_long32 sgeee_get_scheduling_run_id(void)
 {
    return sge_scheduling_run;
 }
-
-#endif
 
 #define SGE_MIN_USAGE 1.0
 
@@ -2993,28 +2989,15 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
          if ((sorted_job_node_list = sge_sort_pending_job_nodes(root, root, total_share_tree_tickets))) {
             lListElem *job_node;
-#if 0 /* EB: normalize the number of pending tickets */
-            double sum = 0.0;
-#endif
 
             /* 
              * set share tree tickets of each pending job 
              * based on the returned sorted node list 
              */
-#if 0 /* EB: normalize the number of pending tickets */
-            for_each(job_node, sorted_job_node_list) {
-               sum += lGetDouble(job_node, STN_shr); 
-            }
-#endif
             for_each(job_node, sorted_job_node_list) {
                sge_ref_t *jref = &job_ref[lGetUlong(job_node, STN_ref)-1];
-#if 0 /* EB: normalize the number of pending tickets */
-               REF_SET_STICKET(jref, 
-                lGetDouble(job_node, STN_shr) * total_share_tree_tickets / sum);
-#else
                REF_SET_STICKET(jref, 
                      lGetDouble(job_node, STN_shr) * total_share_tree_tickets);
-#endif
                if (hierarchy[policy_ndx].dependent)
                   jref->tickets += REF_GET_STICKET(jref);
             }
@@ -3353,23 +3336,11 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    }
 
    /* 
-    * EB: copy tickets 
-    * 
     * Tickets for unenrolled pending tasks where stored an internal table.
     * Now it is necessary to find the ja_task of a job which got the 
     * most tickets. These ticket numbers will be stored in the template
     * element within the job. 
     */
-
-#if 0 /* EB: debug */
-   {
-      lListElem *job;
-
-      for_each(job, queued_jobs) {
-         DPRINTF(("job_id: "u32"\n", lGetUlong(job, JB_job_number)));
-      }
-   }
-#endif
    if (queued_jobs != NULL) {
       sge_task_ref_t *tref = task_ref_get_first_job_entry();
 
@@ -3379,9 +3350,6 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
          if (job) {
             lListElem *ja_task_template;
-#if 0 /* EB: debug */
-   DPRINTF(("tref->job_number: "u32"\n", tref->job_number));         
-#endif
 
             ja_task_template = lFirst(lGetList(job, JB_ja_template));
 

@@ -193,36 +193,6 @@ lListElem **pjob
    /*
     * -t
     */
-#if 0 /* EB: TODO reviw with JG */
-   {
-      lList *range_list = NULL;
-      lList *n_h_list;
-
-      ep = lGetElemStr(cmdline, SPA_switch, "-t");
-      if (ep) {
-         range_list = lGetList(ep, SPA_argval_lListT);
-         lSetList(*pjob, JB_ja_structure, lCopyList("range list", range_list)); 
-      } else {
-         job_set_submit_task_ids(*pjob, 1, 1, 1);
-         range_list = lGetList(*pjob, JB_ja_structure);
-      }
-
-      n_h_list = lCopyList("range list", range_list);
-      if (!n_h_list) {
-         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
-         DEXIT;
-         return answer;
-      }     
-      lSetList(*pjob, JB_ja_n_h_ids, n_h_list);
-      lSetList(*pjob, JB_ja_u_h_ids, NULL);
-      lSetList(*pjob, JB_ja_o_h_ids, NULL);
-      lSetList(*pjob, JB_ja_s_h_ids, NULL);
-
-      if (ep) {
-         lRemoveElem(cmdline, ep);
-      }
-   }
-#else
    ep = lGetElemStr(cmdline, SPA_switch, "-t");
    if (ep != NULL) {
       lList *range_list = lGetList(ep, SPA_argval_lListT);
@@ -238,7 +208,6 @@ lListElem **pjob
       DEXIT;
       return answer;
    }
-#endif
 
    /*
    ** -clear option is special, is sensitive to order

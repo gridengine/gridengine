@@ -240,17 +240,10 @@ lList **topp  /* ticket orders ptr ptr */
       master_qep = NULL;
        
       if (feature_is_enabled(FEATURE_SGEEE)) {
-
-#if 0 /* EB: initial tickets for currently started jobs will be 0 */
-         /* fill number of tickets into job */
-         lSetDouble(jatp, JAT_ticket, 0.0);
-         sprintf(opt_sge, MSG_ORD_INITIALTICKETS_U, u32c(0l));
-#else
          /* fill number of tickets into job */
          lSetDouble(jatp, JAT_ticket, lGetDouble(ep, OR_ticket));
          sprintf(opt_sge, MSG_ORD_INITIALTICKETS_U, 
                  u32c((u_long32)lGetDouble(ep, OR_ticket)));
-#endif
 
          if ((oep = lFirst(lGetList(ep, OR_queuelist)))) {
             lSetDouble(jatp, JAT_oticket, lGetDouble(oep, OQ_oticket));

@@ -502,10 +502,6 @@ char **argv
          }
          jatep = tmp_jatep;
       }
-#if 0 /* EB: we need the container for the pending jobs */
-      if (lGetNumberOfElem(task_list) == 0)
-         lRemoveElem(job_list, jep);
-#endif
       jep = tmp;
    }
 

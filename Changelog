@@ -1,3 +1,5 @@
+EB-2002-04-29-0: Cleanup:   removed old code/comments/debug code
+
 CR-2002-04-29-0: Testsuite: added sleep in compile_source() procedure to
                             give NFS time to update remote directories
                             when creating dependencies

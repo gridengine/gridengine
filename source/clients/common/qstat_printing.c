@@ -589,14 +589,6 @@ u_long32 group_opt
                   lAppendElem(ja_task_list, lCopyElem(jatep));
                   FoundTasks = 1;
                }
-#if 0
-   /*    
-    * EB: 
-    *    I can not explain the line below. Why should the first loop start
-    *    at the first element of 'job_list'?
-    */
-               nxt = lFirst(job_list);
-#endif
             }
          }
       }

@@ -725,12 +725,7 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
              id <= lGetUlong(range, RN_max);
              id += lGetUlong(range, RN_step)) {  
             range_list_insert_id(range_list2, answer_list, id);
-#if 1 /* 
-       * EB: should fix the performance problem within the scheduler 
-       *     reported by JG 
-       */
             range_list_compress(*range_list2);
-#endif
             if (--n == 0) {
                break;
             }

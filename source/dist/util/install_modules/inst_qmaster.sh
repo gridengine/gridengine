@@ -410,7 +410,7 @@ SetSpoolingOptionsClassic()
 SetSpoolingOptionsDynamic()
 {
    if [ $AUTO = "true" ]; then
-      if [ "$SPOOLING_METHOD" != "berkeleydb" -o "$SPOOLING_METHOD" != "classic" ]; then
+      if [ "$SPOOLING_METHOD" != "berkeleydb" -a "$SPOOLING_METHOD" != "classic" ]; then
          SPOOLING_METHOD="berkeleydb"
       fi
    else

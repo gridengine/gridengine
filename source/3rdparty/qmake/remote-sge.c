@@ -1223,7 +1223,7 @@ static int inherit_job()
 *  FUNCTION
 *     Adds default options to the sge argument vector:
 *        - if no resource request is contained, insert resource request for 
-*          the architecture (-l arch=$ARCH)
+*          the architecture (-l arch=$SGE_ARCH)
 *     If a system call failes (reading environment, malloc), qmake exits with
 *     an appropriate error message and error code.
 *
@@ -1233,18 +1233,9 @@ static int inherit_job()
 void set_default_options()
 {
    int i;
-   char *architecture;
    char **argv;
    static char buffer[1024];
    int insert_resource_request = 1;
-
-   /* determine architecture */
-   architecture = getenv("ARCH");
-   if(architecture == NULL || strlen(architecture) == 0) {
-      fprintf(stderr, "qmake: *** cannot determine architecture from environment variable ARCH\n");
-      fprintf(stderr, "           no default architecture set\n");
-      return;
-   }
 
    /* check if sge options contain resource requests */
    for(i = 0; i < sge_argc; i++) {
@@ -1255,6 +1246,15 @@ void set_default_options()
    }
    
    if(insert_resource_request) {
+      char *architecture;
+      /* determine architecture */
+      architecture = getenv("SGE_ARCH");
+      if(architecture == NULL || strlen(architecture) == 0) {
+         fprintf(stderr, "qmake: *** cannot determine architecture from environment variable SGE_ARCH\n");
+         fprintf(stderr, "           no default architecture set\n");
+         return;
+      }
+
       /* if no resource requests, insert to use same architecture */
       /* copy old sge options */
       argv = sge_argv;

@@ -1,3 +1,15 @@
+JG-2004-04-22-1: Bugfix:    qmake output warning "cannot determine architecture"
+                            even if the commandline contained an explicit 
+                            resource request.
+                            Now read from environment variable SGE_ARCH instead
+                            of ARCH.
+                 Review:    patch submitted by uddeborg
+                 Issue:     983
+                 Bugfix:    fixed aimk.site for HP11
+                 Review:    AS
+                 Bugfix:    Fixed automatic installation.
+                 Review:    MD
+
 AA-2004-04-22-0: Bugfix:    - loadadjustments display of load values was broken
                  Changed:   qmon
                  Review:    SG

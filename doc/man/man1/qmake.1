@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmake.1,v $     Last Update: $Date: 2004/04/20 14:56:43 $     Revision: $Revision: 1.10 $
+.\" $RCSfile: qmake.1,v $     Last Update: $Date: 2004/04/22 13:56:17 $     Revision: $Revision: 1.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMAKE 1 "$Date: 2004/04/20 14:56:43 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMAKE 1 "$Date: 2004/04/22 13:56:17 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmake \- distributed parallel make, scheduling by xxQS_NAMExx.
 .PP
@@ -84,11 +84,11 @@ parallel environment (see
 ).
 .PP
 If no resource request (xxQS_NAMExx commandline option -l) is specified, 
-qmake will use the environment variable ARCH to request the same architecture 
+qmake will use the environment variable SGE_ARCH to request the same architecture 
 for task execution as has the submit host.
-If ARCH is set, the architecture specified in ARCH will be requested by 
-inserting the option -l arch=$ARCH into the commandline options.
-If ARCH is not set, the make tasks can be executed on any available architecture.
+If SGE_ARCH is set, the architecture specified in SGE_ARCH will be requested by 
+inserting the option -l arch=$SGE_ARCH into the commandline options.
+If SGE_ARCH is not set, the make tasks can be executed on any available architecture.
 As this is critical for typical make (compile) jobs, a warning will be output.
 .PP
 .I qmake 
@@ -120,7 +120,7 @@ qmake -cwd -v PATH -pe compiling 1-10 --
 .fi
 .sp 1
 will request between 1 and 10 slots in parallel environment "compiling".
-If the ARCH environment variable is set to the machines architecture, a 
+If the SGE_ARCH environment variable is set to the machines architecture, a 
 resource request will be inserted into the qmake commandline to start the 
 qmake job on the same architecture as the submit host. The
 .I make
@@ -223,7 +223,7 @@ If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
 .\"
-.IP "\fBARCH\fP" 1.5i
+.IP "\fBSGE_ARCH\fP" 1.5i
 The architecture of the submit host. If this variable is set in 
 the submission environment, qmake 
 will request the given architecture for job execution (see DESCRIPTION above).

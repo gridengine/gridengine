@@ -310,7 +310,7 @@ const char *name
    if "none" is it's value
 */
 char *search_nonone_conf_val(
-char *name 
+const char *name 
 ) {
    char *s;
 

@@ -35,11 +35,11 @@
 
 #include "sge_dstring.h"
 
-int shepconf_has_userdef_method(char *method_name, dstring *method);
+int shepconf_has_userdef_method(const char *method_name, dstring *method);
 
-int shepconf_has_userdef_signal(char *method_name, int *signal);
+int shepconf_has_userdef_signal(const char *method_name, int *signal);
 
-int shepconf_has_notify_signal(char *notify_name, int *signal);
+int shepconf_has_notify_signal(const char *notify_name, int *signal);
 
 int shepconf_has_to_notify_before_signal(int *seconds);
 

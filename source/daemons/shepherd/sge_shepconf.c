@@ -60,7 +60,7 @@
 *  RESULT
 *     int - true or false 
 *******************************************************************************/
-int shepconf_has_userdef_method(char *method_name, dstring *method)
+int shepconf_has_userdef_method(const char *method_name, dstring *method)
 {
    char *conf_val = search_nonone_conf_val(method_name);
    int ret = 0;
@@ -92,7 +92,7 @@ int shepconf_has_userdef_method(char *method_name, dstring *method)
 *  RESULT
 *     int - true or false 
 *******************************************************************************/
-int shepconf_has_userdef_signal(char *method_name, int *signal) 
+int shepconf_has_userdef_signal(const char *method_name, int *signal) 
 {
    char *conf_val = search_nonone_conf_val(method_name);
    int ret = 0;
@@ -124,7 +124,7 @@ int shepconf_has_userdef_signal(char *method_name, int *signal)
 *  RESULT
 *     int - true or false
 *******************************************************************************/
-int shepconf_has_notify_signal(char *notify_name, int *signal)
+int shepconf_has_notify_signal(const char *notify_name, int *signal)
 {
    const char *notify_array[] = {
       "notify_susp", "notify_kill", NULL

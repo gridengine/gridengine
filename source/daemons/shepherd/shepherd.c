@@ -133,7 +133,7 @@ static int wait_my_child(int pid, int ckpt_pid, int ckpt_type, struct rusage *ru
 static void set_ckpt_params(int, char *, int, char *, int, char *, int, int *);
 static void set_ckpt_restart_command(char *, int, char *, int);
 static void handle_job_pid(int, int, int *);
-static int start_async_command(char *descr, char *cmd);
+static int start_async_command(const char *descr, char *cmd);
 static void start_clean_command(char *);
 static int checkpointed_file_exists(void);
 static void create_checkpointed_file(int ckpt_is_in_arena);
@@ -142,6 +142,7 @@ static int do_wait(pid_t);
 static void set_sig_handler(int);
 static void shepherd_signal_handler(int);
 
+static void shepconf_deliver_signal_or_method(int sig, int pid, pid_t *ctrl_pid);
 
 /* overridable control methods */
 static void verify_method(char *method_name);
@@ -1367,6 +1368,86 @@ static void forward_signal_to_job(int pid, int timeout,
    }
 }
 
+static const char *method_name[] = { 
+   "resume_method", 
+   "suspend_method", 
+   "terminate_method", 
+   NULL 
+};
+
+
+static int signal_array[] = { 
+   SIGCONT, 
+   SIGSTOP, 
+   SIGKILL, 
+   0 
+};
+
+static const char *notify_name[] = { 
+      "",                    
+      "notify_susp",
+      "notify_kill", 
+      NULL 
+};
+
+/****** shepherd/core/shepherd_find_method() *********************************
+*  NAME
+*     shepherd_find_method() -- find the method_name for a signal 
+*
+*  SYNOPSIS
+*     static const char* shepherd_find_method(int sig) 
+*
+*  FUNCTION
+*
+*    find the method_name for a signal
+*
+*  INPUTS
+*     int pid               - the signal 
+*******************************************************************************/
+static const char* shepherd_find_method(int sig) {
+   
+   int index;
+
+   /*
+    * Find names of variables stored in the config file
+    */
+   for (index = 0; method_name[index] != NULL; index++) {
+      if (signal_array[index] == sig) {
+         break;
+      }
+   }
+   return method_name[index];   
+}
+
+/****** shepherd/core/shepherd_find_notify() *********************************
+*  NAME
+*     shepherd_find_method() -- find the notify_name for a signal 
+*
+*  SYNOPSIS
+*     static const char* shepherd_find_notify(int sig) 
+*
+*  FUNCTION
+*
+*    find the notify_name for a signal
+*
+*  INPUTS
+*     int pid               - the signal 
+*******************************************************************************/
+static const char* shepherd_find_notify(int sig) {
+   
+   int index;
+
+   /*
+    * Find names of variables stored in the config file
+    */
+   for (index = 0; notify_name[index] != NULL; index++) {
+      if (signal_array[index] == sig) {
+         break;
+      }
+   }
+   return notify_name[index];
+}
+
 /****** shepherd/core/shepherd_deliver_signal() ********************************
 *  NAME
 *     shepherd_deliver_signal() -- Resume/Suspend/Terminate processgroup
@@ -1406,36 +1487,7 @@ static void forward_signal_to_job(int pid, int timeout,
 void shepherd_deliver_signal(int sig, int pid, int *postponed_signal,
                              int remaining_alarm, pid_t *ctrl_pid)
 {
-   char *method_name[] = { 
-      "resume_method", 
-      "suspend_method", 
-      "terminate_method", 
-      NULL 
-   };
-   char *notify_name[] = { 
-      "",                    
-      "notify_susp",
-      "notify_kill", 
-      NULL 
-   };
-   int signal_array[] = { 
-      SIGCONT, 
-      SIGSTOP, 
-      SIGKILL, 
-      0 
-   };
-   dstring method = DSTRING_INIT;
-   int new_sig;
-   int index;
-
-   /*
-    * Find names of variables stored in the config file
-    */
-   for (index = 0; method_name[index] != NULL; index++) {
-      if (signal_array[index] == sig) {
-         break;
-      }
-   }
+   const char* notify_name = shepherd_find_notify(sig);
 
    /*
     * When notify is used for SIGSTOP the SIGCONT might be sent by execd before
@@ -1485,7 +1537,7 @@ void shepherd_deliver_signal(int sig, int pid, int *postponed_signal,
          } else {
             int notify_signal = 0;
 
-            if (shepconf_has_notify_signal(notify_name[index],&notify_signal)) {
+            if (shepconf_has_notify_signal(notify_name,&notify_signal)) {
                shepherd_trace_sprintf("kill(%d, %s) -> notification "
                                       "for delayed (%d s) signal %s", -pid,
                                       sge_sys_sig2str(notify_signal),
@@ -1505,7 +1557,35 @@ void shepherd_deliver_signal(int sig, int pid, int *postponed_signal,
          }
       } 
    }
+   
+   shepconf_deliver_signal_or_method(sig, pid, ctrl_pid);
+}
 
+/****** shepherd/core/shepconf_deliver_signal_or_method() *********************************
+*  NAME
+*     shepherd_find_method() -- find the notify_name for a signal 
+*
+*  SYNOPSIS
+*     static void shepconf_deliver_signal_or_method(int sig, int pid, 
+                                                    pid_t *ctrl_pid)
+*
+*  FUNCTION
+*
+*    deliver a signal to a process or start a user defined method
+*    (terminate_method, resume_method or suspend_method) 
+*
+*  INPUTS
+*     int pid               - the signal which sould be delivered
+*     int pid               - pid of the job
+*     pid_t *ctrl_pid       - pid of applications which might be started 
+*
+*******************************************************************************/
+static void shepconf_deliver_signal_or_method(int sig, int pid, pid_t *ctrl_pid) {
+   
+   const char* method_name = shepherd_find_method(sig);
+   int new_sig;
+   dstring method = DSTRING_INIT;
+   
    /*
     * There are three different ways to signal the processes:
     *
@@ -1513,12 +1593,12 @@ void shepherd_deliver_signal(int sig, int pid, int *postponed_signal,
     *    b) Userdefined method
     *    c) Default signal 
     */
-   if (shepconf_has_userdef_signal(method_name[index], &new_sig)) {
+   if (shepconf_has_userdef_signal(method_name, &new_sig)) {
       shepherd_trace_sprintf("kill(%d, %s) -> overriddes kill(%d, %s)",
                              -pid, sge_sys_sig2str(new_sig),
                              -pid, sge_sys_sig2str(sig));
       shepherd_signal_job(-pid, new_sig);
-   } else if (shepconf_has_userdef_method(method_name[index], &method)) {
+   } else if (shepconf_has_userdef_method(method_name, &method)) {
       shepherd_trace_sprintf("%s -> overriddes kill(%d, %s)",
                              sge_dstring_get_string(&method), -pid,
                              sge_sys_sig2str(sig));
@@ -1527,7 +1607,7 @@ void shepherd_deliver_signal(int sig, int pid, int *postponed_signal,
 
          replace_params(sge_dstring_get_string(&method), command,
                         sizeof(command)-1, ctrl_method_variables);
-         *ctrl_pid = start_async_command(method_name[index], command);
+         *ctrl_pid = start_async_command(method_name, command);
       } else {
          shepherd_trace_sprintf("Skipped start of suspend: previous command "
                                 "(pid= "pid_t_fmt") is still active", 
@@ -1537,7 +1617,6 @@ void shepherd_deliver_signal(int sig, int pid, int *postponed_signal,
       shepherd_trace_sprintf("kill(%d, %s)", -pid, sge_sys_sig2str(sig));
       shepherd_signal_job(-pid, sig);
    }
-
 }
 
 /*--------------------------------------------------------------------
@@ -1781,7 +1860,10 @@ char *childname            /* "job", "pe_start", ...     */
                shepherd_trace_sprintf("kill(%d, %s) -> delivering postponed "
                                       "signal", -pid, 
                                       sge_sys_sig2str(postponed_signal));
-               shepherd_signal_job(-pid, postponed_signal);
+               
+               shepconf_deliver_signal_or_method(postponed_signal, -pid, 
+                                                 ctrl_pid);
+               /*shepherd_signal_job(-pid, postponed_signal);*/
                postponed_signal = 0;
             } else {
                shepherd_trace("no postponed signal");
@@ -2054,7 +2136,7 @@ static void handle_job_pid(int ckpt_type, int pid, int *ckpt_pid)
 }   
 
 /*-------------------------------------------------------------------------*/
-static int start_async_command(char *descr, char *cmd)
+static int start_async_command(const char *descr, char *cmd)
 {
    int pid;
    char err_str[512];

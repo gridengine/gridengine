@@ -1151,7 +1151,7 @@ static char **read_job_args(char **preargs, int extra_args)
  * set signal mask that shpher can handle signals from execd
  *--------------------------------------------------------------------*/
 void start_command(
-char *childname,
+const char *childname,
 char *shell_path,
 char *script_file,
 char *argv0,

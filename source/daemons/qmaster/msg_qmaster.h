@@ -721,7 +721,7 @@
 #define MSG_OBJ_UNKNOWNHOST           _("<unknown host>")
 #define MSG_JOB_WRITEJFINISH_S        _("writing job finish information: can't locate queue \"%s\"\n")
 #define MSG_JOB_JFINISH_UUS           _("job "U32CFormat"."U32CFormat" finished on host %s")
-#define MSG_JOB_FAILEDONHOST_UUSSSS   _("job "U32CFormat"."U32CFormat" failed on host %s %s%s because: %s")
+#define MSG_JOB_FAILEDONHOST_UUSSSS   _("job "U32CFormat"."U32CFormat" failed on host "SFN" "SFN SFN" because: %-.512s")
 #define MSG_GENERAL                   _("general ")
 #define MSG_JOB_JEXITNOTRUN_UU        _("received JOB_EXIT for job "U32CFormat"."U32CFormat" which ist NOT running\n")
 #define MSG_LOG_JREMOVED              _("job removed ")

@@ -44,7 +44,7 @@
 #   include "basis_types.h"
 #endif
 
-extern stringT SGE_EVENT;
+extern stringTlong SGE_EVENT;
 extern char *error_file;
 
 /* hook for commd trace() */

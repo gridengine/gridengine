@@ -52,7 +52,7 @@ static void sge_do_log(int log_level, int levelchar, char *err_str, char *newlin
 
 u_long32 logginglevel = LOG_WARNING;
 
-stringT SGE_EVENT;
+stringTlong SGE_EVENT;
 char *error_file = TMP_ERR_FILE_SNBU;
 static int log_as_admin_user = 0;
 static int verbose = 1;

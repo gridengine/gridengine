@@ -118,6 +118,7 @@ extern "C" {
 
 #define MAX_STRING_SIZE 2048
 typedef char stringT[MAX_STRING_SIZE];
+typedef char stringTlong[4*MAX_STRING_SIZE];
 
 #define INTSIZE     4           /* (4) 8 bit bytes */
 #if defined(_UNICOS)

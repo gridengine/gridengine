@@ -1,3 +1,6 @@
+EB-2002-01-23-0: Bugfix:    qsub -e/o <path longer than MAX_STRING_SIZE>
+                            caused crash of qmaster
+
 AS-2002-01-23-1: Enhancem. set execd priority not higher than PTF_MAX_PRIORITY
 
 SD-2002-01-23-2: Bugfix:   Initialize rusage structure to zeroes
@@ -10,7 +13,6 @@ CR-2002-01-23-1: Testsuite: - new procedure: close_open_rlogin_sessions()
                  Enhancem.: - closing all rlogin sessions on TCL error
                             - send CTRL + C on each close_spawn_process() call
                               to stop evtl. running applications at remote host          
-                            
 CR-2002-01-23-0: Testsuite: - updated resolve_version for SGE(EE) 5.3beta2
                             - bugfix for SGE installation (install_core_system)
 

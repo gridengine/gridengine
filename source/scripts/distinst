@@ -59,7 +59,7 @@ DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_commd sge_schedd \
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
-                 adminrun qrsh_starter testsuidroot openssl infotext spooldefaults spoolinit"
+                 adminrun qrsh_starter testsuidroot openssl infotext spooldefaults spoolinit berkeley_db_svc"
 
 REMOTEBINARIES="rsh rshd rlogin"
 
@@ -950,6 +950,8 @@ for i in $ARCH; do
             fi
          elif [ $prog = testsuidroot ]; then
             InstallProgSUID $prog
+         elif [ $prog = berkeley_db_svc ]; then
+            InstallProg $BERKELEYDBBASE/$DSTARCH/bin/berkeley_db_svc
          else   
             InstallProg $prog
          fi

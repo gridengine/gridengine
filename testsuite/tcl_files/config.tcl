@@ -3067,6 +3067,149 @@ proc config_testsuite_gridengine_version { only_check name config_array } {
    return $value
 }
 
+#****** config/config_testsuite_bdb_server() ***************************
+#  NAME
+#     config_testsuite_bdb_server() -- bdb server setup
+#
+#  SYNOPSIS
+#     config_testsuite_bdb_server { only_check name config_array } 
+#
+#  FUNCTION
+#     Testsuite configuration setup - called from verify_config()
+#
+#  INPUTS
+#     only_check   - 0: expect user input
+#                    1: just verify user input
+#     name         - option name (in ts_config array)
+#     config_array - config array name (ts_config)
+#
+#  SEE ALSO
+#     check/setup2()
+#     check/verify_config()
+#*******************************************************************************
+proc config_testsuite_bdb_server { only_check name config_array } {
+   global CHECK_OUTPUT CHECK_USER
+   global ts_config
+
+   upvar $config_array config
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+   set value $actual_value
+
+   if { $actual_value == "" } {
+      set value $default_value
+   }
+
+   # called from setup
+   if { $only_check == 0 } {
+      puts $CHECK_OUTPUT "" 
+      puts $CHECK_OUTPUT "Please specify the host of a Berkeley DB RPC server"
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT "A Berkeley DB RPC server is used, if you want to run"
+      puts $CHECK_OUTPUT "the shadowd tests or if you don't want to configure"
+      puts $CHECK_OUTPUT "a database directory on a local filesystem"
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT "Enter \"none\" if you use local spooling"
+      puts $CHECK_OUTPUT "or press >RETURN< to use the default value."
+      puts $CHECK_OUTPUT "(default: $value)"
+      puts -nonewline $CHECK_OUTPUT "> "
+      set input [ wait_for_enter 1]
+      if { [ string length $input] > 0 } {
+         set value $input 
+      } else {
+         puts $CHECK_OUTPUT "using default value"
+      }
+   } 
+
+   # check parameter
+   set host $value
+   if { [string compare $host "none"] != 0 } {
+      set result [ start_remote_prog $host $CHECK_USER "echo" "\"hello $host\"" prg_exit_state 60 0 "" 1 0 ]
+      if { $prg_exit_state != 0 } {
+         puts $CHECK_OUTPUT "rlogin to host $host doesn't work correctly"
+         return -1
+      }
+      if { [ string first "hello $host" $result ] < 0 } {
+         puts $CHECK_OUTPUT "$result"
+         puts $CHECK_OUTPUT "echo \"hello $host\" doesn't work"
+         return -1
+      }
+   }
+
+   # set parameter
+   set ts_config($name) $value
+
+   return $value
+}
+
+#****** config/config_testsuite_bdb_dir() ***************************
+#  NAME
+#     config_testsuite_bdb_dir() -- bdb database directory setup
+#
+#  SYNOPSIS
+#     config_testsuite_bdb_dir { only_check name config_array } 
+#
+#  FUNCTION
+#     Testsuite configuration setup - called from verify_config()
+#
+#  INPUTS
+#     only_check   - 0: expect user input
+#                    1: just verify user input
+#     name         - option name (in ts_config array)
+#     config_array - config array name (ts_config)
+#
+#  SEE ALSO
+#     check/setup2()
+#     check/verify_config()
+#*******************************************************************************
+proc config_testsuite_bdb_dir { only_check name config_array } {
+   global CHECK_OUTPUT 
+   global ts_config
+
+   upvar $config_array config
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+   set value $actual_value
+
+   if { $actual_value == "" } {
+      set value $default_value
+   }
+
+   # called from setup
+   if { $only_check == 0 } {
+      puts $CHECK_OUTPUT "" 
+      puts $CHECK_OUTPUT "Please specify the database directory for spooling"
+      puts $CHECK_OUTPUT "with the Berkeley DB spooling framework"
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT "If your testsuite host configuration defines a local"
+      puts $CHECK_OUTPUT "spool directory for your master host, specify \"none\""
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT "If no local spool directory is defined in the host"
+      puts $CHECK_OUTPUT "configuration, give the path to a local database"
+      puts $CHECK_OUTPUT "directory."
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT "If you configured a Berkeley DB RPC server, enter"
+      puts $CHECK_OUTPUT "the database directory on the RPC server host."
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT "Press >RETURN< to use the default value."
+      puts $CHECK_OUTPUT "(default: $value)"
+      puts -nonewline $CHECK_OUTPUT "> "
+      set input [ wait_for_enter 1]
+      if { [ string length $input] > 0 } {
+         set value $input 
+      } else {
+         puts $CHECK_OUTPUT "using default value"
+      }
+   } 
+
+   # set parameter
+   set ts_config($name) $value
+
+   return $value
+}
+
 #****** config/config_add_compile_archs() ***************************************
 #  NAME
 #     config_add_compile_archs() -- forced compilation setup
@@ -3548,9 +3691,48 @@ proc config_build_ts_config_1_3 {} {
    set ts_config(version) "1.3"
 }
 
+proc config_build_ts_config_1_4 {} {
+   global ts_config
+
+   # insert new parameter after version parameter
+   set insert_pos $ts_config(product_feature,pos)
+   incr insert_pos 1
+
+   # move positions of following parameters by 2
+   set names [array names ts_config "*,pos"]
+   foreach name $names {
+      if { $ts_config($name) >= $insert_pos } {
+         set ts_config($name) [ expr ( $ts_config($name) + 2 ) ]
+      }
+   }
+
+   # new parameter bdb_server
+   set parameter "bdb_server"
+   set ts_config($parameter)            "none"
+   set ts_config($parameter,desc)       "Berkeley Database RPC server (none for local spooling)"
+   set ts_config($parameter,default)    "none"
+   set ts_config($parameter,setup_func) "config_testsuite_bdb_server"
+   set ts_config($parameter,onchange)   "stop"
+   set ts_config($parameter,pos)        $insert_pos
+
+   incr insert_pos 1
+
+   # new parameter bdb_dir
+   set parameter "bdb_dir"
+   set ts_config($parameter)            "none"
+   set ts_config($parameter,desc)       "Berkeley Database database directory"
+   set ts_config($parameter,default)    "none"
+   set ts_config($parameter,setup_func) "config_testsuite_bdb_dir"
+   set ts_config($parameter,onchange)   "stop"
+   set ts_config($parameter,pos)        $insert_pos
+
+   # now we have a configuration version 1.4
+   set ts_config(version) "1.4"
+}
+
 # MAIN
 global actual_ts_config_version      ;# actual config version number
-set actual_ts_config_version "1.3"
+set actual_ts_config_version "1.4"
 
 # first source of config.tcl: create ts_config
 if {![info exists ts_config]} {
@@ -3558,5 +3740,6 @@ if {![info exists ts_config]} {
    config_build_ts_config_1_1
    config_build_ts_config_1_2
    config_build_ts_config_1_3
+   config_build_ts_config_1_4
 }
 

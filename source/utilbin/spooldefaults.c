@@ -69,6 +69,7 @@ static void usage(const char *argv0)
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_OPERATORS);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CONFIGURATION);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_LOCAL_CONF);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_COMPLEXES);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_PES);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_USERSETS);
 }

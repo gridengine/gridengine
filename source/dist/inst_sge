@@ -2085,14 +2085,108 @@ SetSpoolingOptions()
          ;;
       berkeleydb)
          SPOOLING_LIB=none
-         SPOOLING_ARGS="$QMDIR/spooldb"
-         Makedir $QMDIR/spooldb
+         SPOOLING_SERVER=none
+         SPOOLING_DIR="$QMDIR/spooldb"
+         params_ok=0
+         while [ $params_ok -eq 0 ]; do
+            SpoolingQueryChange
+            SpoolingCheckParams
+            params_ok=$?
+         done
+
+         if [ $SPOOLING_SERVER = "none" ]; then
+            Makedir $SPOOLING_DIR
+            SPOOLING_ARGS="$SPOOLING_DIR"
+         else
+            SPOOLING_ARGS="$SPOOLING_SERVER:`basename $SPOOLING_DIR`"
+         fi
+         
          ;;
       *)
          $INFOTEXT -e "\nUnknown spooling method. Exit."
          exit 1
          ;;
    esac
+}
+
+SpoolingQueryChange()
+{
+   $INFOTEXT -u "\nBerkeley Database spooling parameters"
+   $INFOTEXT "\nWe can use local spooling, which will go to a local filesystem" \
+             "\nor use a RPC Client/Server mechanism. In this case, qmaster will" \
+             "\ncontact a RPC server running on a separate server machine." \
+             "\nIf you want to use the SGE shadowd, you have to use the " \
+             "\nRPC Client/Server mechanism.\n"
+   $INFOTEXT "\nEnter database server (none for local spooling)\n" \
+             "or hit <RETURN> to use default [%s] >> " $SPOOLING_SERVER
+             SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
+
+   $INFOTEXT "\nEnter the database directory\n" \
+             "or hit <RETURN> to use default [%s] >> " $SPOOLING_DIR
+             SPOOLING_DIR=`Enter $SPOOLING_DIR`
+}
+
+SpoolingCheckParams()
+{
+   # if we use local spooling, check if the database directory is on local fs
+   if [ $SPOOLING_SERVER = "none" ]; then
+      CheckLocalFilesystem $SPOOLING_DIR
+      ret=$?
+      if [ $ret -eq 0 ]; then
+      $INFOTEXT -e "\nThe database directory >%s<\n" \
+                   "is not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" $SPOOLING_DIR
+         return 0
+      fi
+   else 
+      # TODO: we should check if the hostname can be resolved
+      # create a script to start the rpc server
+      CreateRPCServerScript
+      $INFOTEXT "Please startup the rc script >%s< on the RPC server machine\n" $COMMONDIR/rcrpc
+      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+   fi
+
+   return 1
+}
+
+CreateRPCServerScript()
+{
+   RPCSCRIPT=$COMMONDIR/rcrpc
+   Execute sed -e "s%GENROOT%${QSYST_ROOT_VAL}%g" \
+               -e "s%GENCELL%${QSYST_CELL_VAL}%g" \
+               -e "s%SPOOLING_DIR%${SPOOLING_DIR}%g" \
+               -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
+               util/rpc_startup_template > ${RPCSCRIPT}
+   Execute $CHMOD a+x $RPCSCRIPT
+
+}
+
+CheckLocalFilesystem()
+{  
+   FS=`dirname $1`
+   case $ARCH in
+      solaris*)
+         df -l $FS >/dev/null 2>&1
+         if [ $? -eq 0 ]; then
+            return 1
+         else
+            return 0
+         fi
+         ;;
+      *linux)
+         df -l $FS | grep $FS >/dev/null 2>&1
+         if [ $? -eq 0 ]; then
+            return 1
+         else
+            return 0
+         fi
+         ;;
+      *)
+         $INFOTEXT -e "\nDon't know how to test for local filesystem. Exit."
+         exit 1
+         ;;
+   esac
+
+   return 0
 }
 
 #--------------------------------------------------------------------------
@@ -2340,10 +2434,10 @@ qmaster)
    fi
 
    SetPermissions
-   SetSpoolingOptions
    MakeDirsMaster
    SelectHostNameResolving
    SetProductMode
+   SetSpoolingOptions
    AddBootstrap
    InitSpoolingDatabase
    AddConfiguration

@@ -594,6 +594,11 @@ proc sge_macro { macro_name } {
       "DISTINST_ALL_QUEUE_HOSTGROUP" { set value "Creating the default <all.q> queue and <allhosts> hostgroup" }
       "DISTINST_ADD_DEFAULT_QUEUE_INSTANCE" { set value "Do you want to add a default queue instance for this host (y/n) \[y\] >> " }
 
+      "DISTINST_ENTER_DATABASE_SERVER" { set value "Enter database server (none for local spooling)\nor hit <RETURN> to use default \[%s\] >> " }
+      "DISTINST_ENTER_DATABASE_DIRECTORY" { set value "Enter the database directory\nor hit <RETURN> to use default \[%s\] >> " }
+      "DISTINST_DATABASE_DIR_NOT_ON_LOCAL_FS" { set value "The database directory >%s<\nis not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" }
+      "DISTINST_STARTUP_RPC_SERVER" { set value "Please startup the rc script >%s< on the RPC server machine" }
+      "DISTINST_DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS" { set value "Don't know how to test for local filesystem. Exit." }
 
    }
    if { $value == "" } {

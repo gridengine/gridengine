@@ -314,7 +314,8 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          object_type = SGE_TYPE_OPERATOR;
          break;
       case sgeE_NEW_SHARETREE:
-         key = strkey;
+         /* we have only one sharetree - there is no key */
+         key = "sharetree";
          element = object;
          object_type = SGE_TYPE_SHARETREE;
          break;

@@ -144,9 +144,10 @@
 #define MSG_SPOOLDEFAULTS_USERSETS            _MESSAGE(57049,     _("usersets <template_dir>       create usersets\n"))
 #define MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT   _MESSAGE(57051, _("cannot create spooling context\n"))
 #define MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT  _MESSAGE(57052, _("cannot startup spooling context\n"))
+#define MSG_SPOOLDEFAULTS_COMPLEXES             _MESSAGE(57053,         _("complexes <template_dir>      create complexes\n"))
 
 /*
- * utilbin/spooldefaults.c
+ * utilbin/spoolinit.c
  */
 
 #define MSG_SPOOLINIT_COMMANDINTRO0   _MESSAGE(57060, _("shlib libargs command [args]"))

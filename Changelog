@@ -1,3 +1,10 @@
+JG-2004-01-08-0: Enhancem.: Use Berkeley DB RPC server in case spooling to a 
+                            local filesystem is not possible (e.g. if the 
+                            sge_shadowd shall be used), adapted installation
+                            procedure and testsuite.
+                 Bugfix:    Fix spooling of sharetree.
+                 Review:    MD, AD
+
 AD-2004-01-08-0: Bugfix:    'log_state_t' has only been allocated for the
                             first thread calling one of the log state
                             get/set functions.

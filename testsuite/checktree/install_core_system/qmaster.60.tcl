@@ -131,7 +131,12 @@ proc install_qmaster {} {
  set USING_GID_RANGE_HIT_RETURN   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_USING_GID_RANGE_HIT_RETURN] "*"]
  set CREATING_ALL_QUEUE_HOSTGROUP [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ALL_QUEUE_HOSTGROUP] ]
 
-
+ # berkeley db
+ set ENTER_DATABASE_SERVER       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_SERVER] "*"]
+ set ENTER_DATABASE_DIRECTORY    [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_DIRECTORY] "*"]
+ set DATABASE_DIR_NOT_ON_LOCAL_FS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DATABASE_DIR_NOT_ON_LOCAL_FS] "*"]
+ set STARTUP_RPC_SERVER [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_STARTUP_RPC_SERVER] "*"]
+ set DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS]]
 
  cd "$ts_config(product_root)"
 
@@ -573,6 +578,77 @@ proc install_qmaster {} {
           }
           continue;
        }
+      # 
+      # SGE 6.0 Berkeley DB Spooling
+      #
+      -i $sp_id $ENTER_DATABASE_SERVER {
+         puts $CHECK_OUTPUT "\n -->testsuite: sending $ts_config(bdb_server)"
+         if {$do_log_output == 1} {
+            puts "press RETURN"
+            set anykey [wait_for_enter 1]
+         }
+
+         send -i $sp_id "$ts_config(bdb_server)\n"
+         continue;
+      }
+
+      -i $sp_id $ENTER_DATABASE_DIRECTORY {
+         # if we set a specific bdb_dir, send this one, else accept
+         # the default suggested by inst_sge(ee)
+         if {[string compare $ts_config(bdb_dir) "none"] != 0 } {
+            set input "$ts_config(bdb_dir)\n"
+            puts $CHECK_OUTPUT "\n -->testsuite: sending $ts_config(bdb_dir)"
+         } else {
+            set input "\n"
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+         }
+         if {$do_log_output == 1} {
+            puts "press RETURN"
+            set anykey [wait_for_enter 1]
+         }
+         send -i $sp_id $input
+         continue;
+      }
+
+      -i $sp_id $DATABASE_DIR_NOT_ON_LOCAL_FS {
+          set_error "-1" "install_qmaster - configured database directory not on y local disk\nPlease run testsuite setup and configure Berkeley DB server and/or directory"; 
+          close_spawn_process $id;
+          return;  
+      }
+
+      -i $sp_id $STARTUP_RPC_SERVER {
+         # startup RPC server
+         set result [start_remote_prog $ts_config(bdb_server) "ts_def_con2" "$ts_config(product_root)/default/common/rcrpc" "start"]
+         if {[string length $result] > 0} {
+            puts $CHECK_OUTPUT $result
+            set_error "-1" "install_qmaster - starting Berkeley DB RPC server failed: $result"
+            close_spawn_process $id;
+            return;  
+         }
+
+         # sleep some time to let RPC server startup and register
+         sleep 2
+
+         # send RETURN to tell installation, server is running
+         puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+         if {$do_log_output == 1} {
+            puts "press RETURN"
+            set anykey [wait_for_enter 1]
+         }
+         send -i $sp_id "\n"
+         continue;
+      }
+
+      -i $sp_id $DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS {
+          set_error "-1" "install_qmaster - not yet ported for this platform"; 
+          close_spawn_process $id;
+          return;  
+      }
+
+      #
+      # end SGE 6.0 Berkeley DB Spooling
+      #
+
       # 
       # SGE 6.0 Cluster Queues
       #

@@ -48,8 +48,9 @@
 struct bdb_info {
    pthread_mutex_t   mtx;                 /* lock access to this object */
    pthread_key_t     key;                 /* for thread specific data */
-   
-   const char *      params;              /* the spooling params */
+  
+   const char *      server;              /* server, in case of RPC mechanism */
+   const char *      path;                /* the database path */
 
    DB_ENV *          env;                 /* global database environment */
    DB *              db;                  /* global database object */
@@ -59,7 +60,13 @@ struct bdb_info {
 };
 
 struct bdb_info *
-bdb_create(const char *params);
+bdb_create(const char *server, const char *path);
+
+const char *
+bdb_get_server(struct bdb_info *info);
+
+const char *
+bdb_get_path(struct bdb_info *info);
 
 DB_ENV *
 bdb_get_env(struct bdb_info *info);
@@ -71,10 +78,10 @@ DB_TXN *
 bdb_get_txn(struct bdb_info *info);
 
 void
-bdb_set_env(struct bdb_info *info, DB_ENV *env, bool global);
+bdb_set_env(struct bdb_info *info, DB_ENV *env);
 
 void
-bdb_set_db(struct bdb_info *info, DB *db, bool global);
+bdb_set_db(struct bdb_info *info, DB *db);
 
 void
 bdb_set_txn(struct bdb_info *info, DB_TXN *txn);

@@ -88,11 +88,19 @@ const char *get_spooling_method(void)
 *
 *  FUNCTION
 *     Create a spooling context for the berkeleydb spooling.
+*     
+*     Argv has as first (and currently only) parameter the Database URL.
+*
+*     If we spool to a local filesystem this is the path to the database 
+*     directory.
+*
+*     If the RPC Client/Server mechanism shall be used, the URL has the form
+*     <server>:basename(<path>), e.g. "nori:sge" if we have the RPC server
+*     running on nori and it uses the path /export/home/spooldb/sge.
 * 
 *  INPUTS
 *     lList **answer_list - to return error messages
-*     int argc     - number of arguments in argv
-*     char *argv[] - argument vector
+*     const char *args    - arguments to the spooling method, see above.
 *
 *  RESULT
 *     lListElem* - on success, the new spooling context, else NULL
@@ -116,6 +124,8 @@ spool_berkeleydb_create_context(lList **answer_list, const char *args)
    } else {
       lListElem *rule, *type;
       struct bdb_info *info;
+      char *server = NULL;
+      char *path   = NULL;
       
       /* create spooling context */
       context = spool_create_context(answer_list, "berkeleydb spooling");
@@ -136,7 +146,27 @@ spool_berkeleydb_create_context(lList **answer_list, const char *args)
                                        spool_default_validate_func,
                                        spool_default_validate_list_func);
 
-      info = bdb_create(args);
+      /* parse arguments */
+      {
+         char *dup = strdup(args);
+         path = strchr(dup, ':');
+         if (path != NULL) {
+            *path = '\0';
+            server = strdup(dup);
+            path = strdup(path + 1);
+         } else {
+            server = NULL;
+            path = strdup(dup);
+         }
+         free(dup);
+      }
+
+      DPRINTF(("using %sRPC server %s, database %s\n", 
+               server == NULL ? "no " : "",
+               server == NULL ? "" : server,
+               path));
+
+      info = bdb_create(server, path);
       lSetRef(rule, SPR_clientdata, info);
       type = spool_context_create_type(answer_list, context, SGE_TYPE_ALL);
       spool_type_add_rule(answer_list, type, rule, true);
@@ -169,6 +199,8 @@ spool_berkeleydb_create_context(lList **answer_list, const char *args)
 *  NOTES
 *     This function should not be called directly, it is called by the
 *     spooling framework.
+*
+*     MT-NOTE: spool_berkeleydb_default_startup_func() is MT safe 
 *
 *  SEE ALSO
 *     spool/berkeleydb/--BerkeleyDB-Spooling
@@ -226,6 +258,8 @@ spool_berkeleydb_default_startup_func(lList **answer_list,
 *  NOTES
 *     This function should not be called directly, it is called by the
 *     spooling framework.
+*
+*     MT-NOTE: spool_berkeleydb_default_shutdown_func() is MT safe 
 *
 *  SEE ALSO
 *     spool/berkeleydb/--Spooling-BerkeleyDB
@@ -290,6 +324,8 @@ spool_berkeleydb_default_shutdown_func(lList **answer_list,
 *     This function should not be called directly, it is called by the
 *     spooling framework.
 *
+*     MT-NOTE: spool_berkeleydb_default_maintenance_func() is MT safe 
+*
 *  SEE ALSO
 *     spool/berkeleydb/--Spooling-BerkeleyDB
 *     spool/spool_maintain_context()
@@ -327,6 +363,40 @@ spool_berkeleydb_default_maintenance_func(lList **answer_list,
    return ret;
 }
 
+/****** spool/berkeleydb/spool_berkeleydb_trigger_func() ****************
+*  NAME
+*     spool_berkeleydb_trigger_func() -- do recurring tasks
+*
+*  SYNOPSIS
+*     bool 
+*     spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule,
+*                                   time_t trigger, time_t *next_trigger) 
+*
+*  FUNCTION
+*     Does recurring tasks for the Berkeley DB.
+*     
+*     In case of spooling to a local filesystem (no use of RPC server), 
+*     - regular checkpointing is done
+*     - a cleanup of the transaction log is done
+*
+*     If we use the RPC server, nothing has to be done - the RPC server takes
+*     care of these tasks.
+*
+*  INPUTS
+*     lList **answer_list   - used to return error messages
+*     const lListElem *rule - the spooling rule
+*     time_t trigger        - time when this trigger was due
+*     time_t *next_trigger  - time when trigger shall be called again
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     MT-NOTE: spool_berkeleydb_trigger_func() is MT safe 
+*
+*  SEE ALSO
+*     spool/berkeleydb/--Spooling-BerkeleyDB
+*******************************************************************************/
 bool
 spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule,
                               time_t trigger, time_t *next_trigger)
@@ -368,6 +438,34 @@ spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule,
    return ret;
 }
 
+/****** spool/berkeleydb/spool_berkeleydb_transaction_func() ************
+*  NAME
+*     spool_berkeleydb_transaction_func() -- start or end a transaction
+*
+*  SYNOPSIS
+*     bool 
+*     spool_berkeleydb_transaction_func(lList **answer_list, const lListElem *rule, 
+*                                       spooling_transaction_command cmd) 
+*
+*  FUNCTION
+*     Starts or ends a transaction (depending on cmd).
+*
+*     Each thread of a process can have one open transaction.
+*
+*  INPUTS
+*     lList **answer_list              - to return error messages
+*     const lListElem *rule            - spooling rule
+*     spooling_transaction_command cmd - the transaction command
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     MT-NOTE: spool_berkeleydb_transaction_func() is MT safe 
+*
+*  SEE ALSO
+*     spool/berkeleydb/--Spooling-BerkeleyDB
+*******************************************************************************/
 bool
 spool_berkeleydb_transaction_func(lList **answer_list, const lListElem *rule, 
                                   spooling_transaction_command cmd)
@@ -436,6 +534,11 @@ spool_berkeleydb_transaction_func(lList **answer_list, const lListElem *rule,
 *  NOTES
 *     This function should not be called directly, it is called by the
 *     spooling framework.
+*
+*     MT-NOTE: spool_berkeleydb_default_list_func() is MT safe 
+*  
+*              The caller has to make sure, that locking for the list
+*              parameter is done correctly!
 *
 *  SEE ALSO
 *     spool/berkeleydb/--BerkeleyDB-Spooling
@@ -658,6 +761,8 @@ spool_berkeleydb_default_list_func(lList **answer_list,
 *     This function should not be called directly, it is called by the
 *     spooling framework.
 *
+*     MT-NOTE: spool_berkeleydb_default_read_func() is MT safe 
+*  
 *  SEE ALSO
 *     spool/berkeleydb/--BerkeleyDB-Spooling
 *     spool/spool_read_object()
@@ -719,6 +824,8 @@ spool_berkeleydb_default_read_func(lList **answer_list,
 *  NOTES
 *     This function should not be called directly, it is called by the
 *     spooling framework.
+*
+*     MT-NOTE: spool_berkeleydb_default_write_func() is MT safe 
 *
 *  SEE ALSO
 *     spool/berkeleydb/--BerkeleyDB-Spooling
@@ -855,6 +962,8 @@ spool_berkeleydb_default_write_func(lList **answer_list,
 *  NOTES
 *     This function should not be called directly, it is called by the
 *     spooling framework.
+*
+*     MT-NOTE: spool_berkeleydb_default_delete_func() is MT safe 
 *
 *  SEE ALSO
 *     spool/berkeleydb/--BerkeleyDB-Spooling

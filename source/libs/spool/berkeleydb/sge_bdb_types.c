@@ -90,7 +90,7 @@ bdb_destroy_connection(void *connection);
 *     ???/???
 *******************************************************************************/
 struct bdb_info *
-bdb_create(const char *params) 
+bdb_create(const char *server, const char *path) 
 {
    int ret;
    struct bdb_info *info = (struct bdb_info *) malloc(sizeof(struct bdb_info));
@@ -100,9 +100,10 @@ bdb_create(const char *params)
    if (ret != 0) {
       fprintf(stderr, "can't initialize key for thread local storage: %s\n", strerror(ret));
    }
-   info->params = params;
-   info->env = NULL;
-   info->db  = NULL;
+   info->server = server;
+   info->path   = path;
+   info->env    = NULL;
+   info->db     = NULL;
 
    info->next_clear = 0;
    info->next_checkpoint = 0;
@@ -145,6 +146,18 @@ bdb_destroy_connection(void *connection)
    DEXIT;
 }
 
+const char *
+bdb_get_server(struct bdb_info *info)
+{
+   return info->server;
+}
+
+const char *
+bdb_get_path(struct bdb_info *info)
+{
+   return info->path;
+}
+
 DB_ENV *
 bdb_get_env(struct bdb_info *info)
 {
@@ -183,9 +196,9 @@ bdb_get_txn(struct bdb_info *info)
 }
 
 void
-bdb_set_env(struct bdb_info *info, DB_ENV *env, bool global)
+bdb_set_env(struct bdb_info *info, DB_ENV *env)
 {
-   if (global) {
+   if (info->server == NULL) {
       info->env  = env;
    } else {
       GET_SPECIFIC(struct bdb_connection, con, bdb_init_connection, info->key, "bdb_set_env");
@@ -194,9 +207,9 @@ bdb_set_env(struct bdb_info *info, DB_ENV *env, bool global)
 }
 
 void
-bdb_set_db(struct bdb_info *info, DB *db, bool global)
+bdb_set_db(struct bdb_info *info, DB *db)
 {
-   if (global) {
+   if (info->server == NULL) {
       info->db  = db;
    } else {
       GET_SPECIFIC(struct bdb_connection, con, bdb_init_connection, info->key, "bdb_set_db");

@@ -47,10 +47,6 @@
 #define MSG_BERKELEY_DELETEERROR_SS _MESSAGE(70008, _("error deleting record with key "SFQ" from berkeley database: "SFN"\n"))
 /* #define MSG_BERKELEY_COULDNTSETCACHE_SS _MESSAGE(70009, _("couldn't set cache size in berkeley database "SFN": "SFN"\n")) */
 #define MSG_BERKELEY_NULLVALUEASKEY _MESSAGE(70010, _("null value given as object primary key\n"))
-#define MSG_BERKELEY_DATABASEDIRDOESNTEXIST_S _MESSAGE(70012, _("database directory "SFN" doesn't exist\n"))
-#define MSG_BERKELEY_COULDNTCREATEENVIRONMENT_S _MESSAGE(70013, _("couldn't create database environment: "SFN"\n"))
-#define MSG_BERKELEY_COULDNTCLOSEENVIRONMENT_SS _MESSAGE(70015, _("couldn't close database environment: "SFN": "SFN"\n"))
-#define MSG_BERKELEY_COULDNTESETUPLOCKDETECTION_S _MESSAGE(70016, _("couldn't setup deadlock detection: "SFN"\n"))
 #define MSG_BERKELEY_TXNALREADYOPEN _MESSAGE(70017, _("cannot open new transaction: There is already one open\n"))
 #define MSG_BERKELEY_ERRORSTARTINGTRANSACTION_S _MESSAGE(70018, _("error starting a transaction: "SFN"\n"))
 #define MSG_BERKELEY_TXNNOTOPEN _MESSAGE(70019, _("cannot close transaction: There is no open transaction\n"))
@@ -66,4 +62,20 @@
 #define MSG_BERKELEY_UNPACKERROR_SS _MESSAGE(70029, _("error unpacking object with key "SFQ": "SFN"\n"))
 #define MSG_BERKELEY_UNPACKINITERROR_SS _MESSAGE(70030, _("error initializing packing buffer while unpacking object with key "SFQ": "SFN"\n"))
 #define MSG_BERKELEY_CANTSPOOLFREEELEM_S _MESSAGE(70031, _("can't spool free element with key "SFQ"\n"))
+
+/*
+ * sge_bdb.c
+ */
+#define MSG_BERKELEY_DATABASEDIRDOESNTEXIST_S _MESSAGE(70100, _("database directory "SFN" doesn't exist\n"))
+#define MSG_BERKELEY_COULDNTCREATEENVIRONMENT_S _MESSAGE(70100, _("couldn't create database environment: "SFN"\n"))
+#define MSG_BERKELEY_COULDNTOPENENVIRONMENT_SS _MESSAGE(70100, _("couldn't open database environment "SFQ": "SFN"\n"))
+#define MSG_BERKELEY_COULDNTCLOSEENVIRONMENT_SS _MESSAGE(70100, _("couldn't close database environment: "SFN": "SFN"\n"))
+#define MSG_BERKELEY_COULDNTESETUPLOCKDETECTION_S _MESSAGE(70100, _("couldn't setup deadlock detection: "SFN"\n"))
+#define MSG_BERKELEY_COULDNTESETRPCSERVER_S _MESSAGE(70100, _("couldn't set rpc server in database environment: "SFN"\n"))
+
+/*
+ * sge_bdb_types.c
+ */
+
+
 #endif /* __MSG_SPOOLLIB_BERKELEYDB_H */

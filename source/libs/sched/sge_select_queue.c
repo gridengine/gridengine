@@ -2387,15 +2387,15 @@ static int sge_tag_queues_suitable4job_fast_track(sge_assignment_t *a)
    u_long32 job_id = lGetUlong(a->job, JB_job_number);
    u_long32 tt_global = a->start;
    int best_queue_result = -1;
-   bool fast_track_exit = false;
-   int global_violations = 0, host_violations, queue_violations;
-   lListElem *hep;
+   int global_violations = 0, queue_violations;
+   lListElem *qep;
 
    DENTER(TOP_LAYER, "sge_tag_queues_suitable4job_fast_track");
 
    /* restore job messages from previous dispatch runs of jobs of the same category */
    if (use_category) {
       schedd_mes_set_tmp_list(category, CT_job_messages, job_id);
+
       skip_host_list = lGetList(category, CT_ignore_hosts);
       if (skip_host_list == NULL) {
          skip_host_list = lCreateList("ignore_hosts",CTI_Type);
@@ -2416,55 +2416,48 @@ static int sge_tag_queues_suitable4job_fast_track(sge_assignment_t *a)
       return result;
    }
 
-   for_each(hep, a->host_list) {
+   for_each(qep, a->queue_list) {   
       u_long32 tt_host = a->start;
-      const char *eh_name = lGetHost(hep, EH_name);
+      u_long32 tt_queue = a->start;   
+      const char *eh_name;
       const char *qname;
-      lListElem *qep;
-      const void *queue_iterator = NULL;
-      lListElem *next_queue;
-      bool is_skip_host = true;
+      lListElem *hep;
 
-      host_violations = global_violations;
-      if (a->start == DISPATCH_TIME_QUEUE_END)
-         tt_host = a->start;
+      qname = lGetString(qep, QU_full_name);
 
-      if (!strcasecmp(eh_name, "global") || !strcasecmp(eh_name, "template"))
-         continue;
-
-      if (skip_host_list && lGetElemStr(skip_host_list, CTI_name, eh_name)){
-         DPRINTF(("job category skip host %s", eh_name));          
+      if (skip_queue_list && lGetElemStr(skip_queue_list, CTI_name, qname)){
+         DPRINTF(("job category skip queue %s", qname));             
          continue;
       }
 
-      result = host_time_by_slots(1, &tt_host, a->duration, compute_violation?&host_violations:NULL, 
-            a->job, a->ja_task, hep, a->centry_list, a->acl_list);
-      if (result != 0) {
-         
-         if (skip_host_list) {
-            lAddElemStr(&skip_host_list, CTI_name, eh_name, CTI_Type);
+      eh_name = lGetHost(qep, QU_qhostname);
+      hep = lGetElemHost(a->host_list, EH_name, eh_name);
+
+      if (hep != NULL) {
+
+         if (skip_host_list && lGetElemStr(skip_host_list, CTI_name, eh_name)){
+            DPRINTF(("job category skip host %s", eh_name));          
+            continue;
          }
+         
+         queue_violations = global_violations;
+         
+         result = host_time_by_slots(1, &tt_host, a->duration, compute_violation?&queue_violations:NULL, 
+               a->job, a->ja_task, hep, a->centry_list, a->acl_list);
 
-         DPRINTF(("host %s returned %d\n", eh_name, result));         
-         /* right now there is no use in continuing with that host but we 
-            don't wanna loose an opportunity for a reservation */
-         best_queue_result = sge_best_result(result, best_queue_result); 
-         continue;
-      }
+         if (result != 0) {
+            
+            if (skip_host_list) {
+               lAddElemStr(&skip_host_list, CTI_name, eh_name, CTI_Type);
+            }
 
-      next_queue = lGetElemHostFirst(a->queue_list, QU_qhostname, eh_name, &queue_iterator);
-      while ((qep = next_queue)) {
-
-         u_long32 tt_queue = a->start;
-         next_queue = lGetElemHostNext(a->queue_list, QU_qhostname, eh_name, &queue_iterator);
-         qname = lGetString(qep, QU_full_name);
-
-         if (skip_queue_list && lGetElemStr(skip_queue_list, CTI_name, qname)){
-            DPRINTF(("job category skip queue %s", qname));             
+            DPRINTF(("host %s returned %d\n", eh_name, result));         
+            /* right now there is no use in continuing with that host but we 
+               don't wanna loose an opportunity for a reservation */
+            best_queue_result = sge_best_result(result, best_queue_result); 
             continue;
          }
 
-         queue_violations = host_violations;
          result = queue_time_by_slots(1, &tt_queue, a->duration, 
                   compute_violation?&queue_violations:NULL, a->job, qep, NULL, a->ckpt, 
                   a->centry_list, a->acl_list);
@@ -2483,9 +2476,8 @@ static int sge_tag_queues_suitable4job_fast_track(sge_assignment_t *a)
          }
 
          if (result == 0) {
-            is_skip_host = false; /* we have at least one queue, though we do not remove the host */
-            /* tag number of slots per queue and time when it will be available */
-            lSetUlong(qep, QU_tag, 1);
+            lSetUlong(qep, QU_tag, 1); /* tag number of slots per queue and time when it will be available */
+            
             if (a->start == DISPATCH_TIME_QUEUE_END) {
                DPRINTF(("    global "u32" host "u32" queue "u32"\n", tt_global, tt_host, tt_queue));
                tt_queue = MAX(tt_queue, MAX(tt_host, tt_global));
@@ -2496,9 +2488,9 @@ static int sge_tag_queues_suitable4job_fast_track(sge_assignment_t *a)
             best_queue_result = 0;
 
             if (now_assignment && !soft_requests ) {
-               fast_track_exit = true;
                break;
-            }
+            }               
+
          } else {
             DPRINTF(("queue %s reported %d", qname, result));
             if (skip_queue_list) {
@@ -2506,18 +2498,15 @@ static int sge_tag_queues_suitable4job_fast_track(sge_assignment_t *a)
             }
             best_queue_result = sge_best_result(result, best_queue_result); 
          }   
+      } 
+      else {
+         ERROR((SGE_EVENT, MSG_SCHEDD_UNKNOWN_HOST_SS, qname, eh_name));
+         if (skip_queue_list != NULL) {
+            lAddElemStr(&skip_queue_list, CTI_name, qname, CTI_Type);
+         }
       }
+   }  
 
-      if (fast_track_exit == true) {
-         break;
-      }   
-
-      if ((skip_host_list != NULL) && is_skip_host) {
-         lAddElemStr(&skip_host_list, CTI_name, eh_name, CTI_Type);
-      }
-
-   }
- 
    /* cache so far generated messages with the job category */
    if (use_category) {  
       lList *temp = schedd_mes_get_tmp_list();

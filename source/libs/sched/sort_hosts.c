@@ -100,7 +100,6 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
       hl             :  the sorted host list
 
 *************************************************************************/
-/* TODO SG: change from complex list to accessing the necisary parts directly */
 int sort_host_list(
 lList *hl,           /* EH_Type */ 
 lList *centry_list   /* CE_Type */

@@ -131,7 +131,7 @@ int sge_read_configuration(lListElem *aSpoolContext, lList *anAnswer)
          
    if ((global = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) == NULL)
    {
-      ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL, SGE_GLOBAL_NAME));
+      ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL));
       DEXIT;
       return -1;
    }
@@ -311,7 +311,7 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
       
       if ((global = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) == NULL)
       {
-         ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL, SGE_GLOBAL_NAME));
+         ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL));
       }
             
       if (merge_configuration(global, local, &conf, NULL) != 0) 

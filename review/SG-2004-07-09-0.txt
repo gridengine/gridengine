@@ -10,7 +10,7 @@ Date: 2004-07-07
 1.3 Summary: scheduler ignores queue seqno for queue sorting
 1.4 Changelog ID: SG-2004-07-07-0
 1.5 Developer(s): SG
-1.6 Reviewer(s): 
+1.6 Reviewer(s):  RH
 
 
 2 Conformance to specification

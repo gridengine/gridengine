@@ -42,5 +42,6 @@
 #define MSG_DONTKNOWHOWTOHANDLELIST_S  _MESSAGE(62006, _("don't know how to handle sublist "SFQ"\n"))
 #define MSG_FLATFILE_HOSTNOTEXISTS_SS  _MESSAGE(62007, _("Host object "SFQ" for queue instance "SFQ" does not exist\n"))
 #define MSG_FLATFILE_ATTRIBISMISSING_S  _MESSAGE(62008, _("Required attribute "SFQ" is missing\n"))
+#define MSG_FLATFILE_DUPLICATEATTRIB_S  _MESSAGE(62009, _("Attribute "SFQ" appears more than once\n"))
 
 #endif /* __MSG_SPOOLLIB_FLATFILE_H */

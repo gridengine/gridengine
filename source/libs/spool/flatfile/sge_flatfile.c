@@ -1251,10 +1251,25 @@ _spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
                             bool parse_values)
 {
    lListElem *object = NULL;
+   int *my_fields_out = NULL;
+   
+   /* BUGFIX: Issuezilla #732
+    * If we're not given a fields_out array, create one for internal use. */
+   if (fields_out != NULL) {
+      my_fields_out = fields_out;
+   }
+   else {
+      my_fields_out = (int *)malloc (spool_get_number_of_fields (fields) *
+                                                                  sizeof (int));
+   }
 
    _spool_flatfile_read_live_object(answer_list, &object, descr, root, instr,
-                                    fields, fields_out, token, end_token,
+                                    fields, my_fields_out, token, end_token,
                                     parse_values);
+
+   if (fields_out == NULL) {
+      FREE (my_fields_out);
+   }
    
    return object;
 }
@@ -1415,14 +1430,27 @@ FF_DEBUG(lNm2Str(nm));
       if (pos < 0) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ATTRIBUTENOTINOBJECT_S, lNm2Str(nm));
+                                 MSG_ATTRIBUTENOTINOBJECT_S,
+                                 (fields[field_index].name != NULL) ?
+                                 fields[field_index].name : lNm2Str(nm));
          stop = true;
          continue;
       }
 
       /* if list of read fields is requested in fields_out, store this info */
       if (fields_out != NULL) {
-         add_nm_to_set(fields_out, nm);
+         /* BUGFIX: Issuezilla #732
+          * If add_nm_to_set returns -1, it means that the field already exists
+          * in the field list.  In this case, return an error. */
+         if (add_nm_to_set(fields_out, nm) == -1) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                    ANSWER_QUALITY_ERROR,
+                                    MSG_FLATFILE_DUPLICATEATTRIB_S,
+                                    (fields[field_index].name != NULL) ?
+                                    fields[field_index].name : lNm2Str(nm));
+            stop = true;
+            continue;
+         }
       }
 
       type = mt_get_type(descr[pos].mt);

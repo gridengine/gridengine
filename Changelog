@@ -1,3 +1,8 @@
+DT-2004-03-03-0: Bugfix:    o Flatfile spooling now checks for duplicate
+                              attributes.
+                 Changed:   Flatfile spooling
+                 Issue:     732
+
 SG-2004-03-03-1: Bugfix:    third part of removing SGE - simplefying
                             the feature set code
                  Changed:   qmaster
@@ -51,7 +56,7 @@ SG-2004-03-02-0: Bugfix:    - fixed build for glinux
 DT-2004-03-02-2: Bugfix:    o Fixed broken build
                             o Added tmpdir to queue instance flatfile spooling
                  Changed:   Flatfile spooling, libsched
-                 Issues:    760
+                 Issue:    760
 
 AH-2004-03-02-0: Enhancem.: Completed qstat -j schedd messages
                             Fixed broken qsub -w e|w option

@@ -1,3 +1,7 @@
+RC-2004-03-06-1: Bugfix:    nice values should not be less than zero on Linux,
+                            merging the fix from maintrunk to 5.3
+                 Changed:   execd
+
 RC-2004-03-06-0: Bugfix:    deny jobnames with a colon
                  Issue:     314
                  Review:    RC, BC (patch from BC)

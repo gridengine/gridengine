@@ -1997,31 +1997,10 @@ int start_remote_job (char **argv, char **envp,
       int argc, no_args, i;
       char **args;
 
-      if(exec_remote || recursive_make) {
-         char pwd_buffer[PATH_MAX + 1];
-         static char pwd_env[PATH_MAX + 5];
-         for(i = 0; envp[i] != NULL; i++) { 
-            if(strncmp(envp[i], "PWD=", 4) != 0) {
-               char *new_env;
-               new_env = (char *)malloc(strlen(envp[i]) + 1);
-               strcpy(new_env, envp[i]);
-               putenv(new_env);
-            }   
-         }
-         if(getcwd(pwd_buffer, PATH_MAX) == NULL) {
-            remote_exit(EXIT_FAILURE, "cannot determine current working directory", strerror(errno));
-         }
-         if(chdir(pwd_buffer) == -1) {
-            fprintf(stderr, "qmake: error changing dir to %s: %s\n", pwd_buffer, strerror(errno));
-         }
-         sprintf(pwd_env, "PWD=%s", pwd_buffer); 
-         putenv(pwd_env); 
-
-         if(getenv("JOB_ID")) {
-            static char buffer[1024];
-            sprintf(buffer, "PARENT=%s", getenv("JOB_ID"));
-            putenv(buffer);
-         }
+      if(getenv("JOB_ID")) {
+         static char buffer[1024];
+         sprintf(buffer, "PARENT=%s", getenv("JOB_ID"));
+         putenv(buffer);
       }
    
       argc = 0;
@@ -2030,7 +2009,7 @@ int start_remote_job (char **argv, char **envp,
       
       while(argv[no_args++]);
 
-      args = (char **)malloc((no_args + sge_v_argc + 6 + pass_cwd * 3 + be_verbose) * sizeof(char *));
+      args = (char **)malloc((no_args + sge_v_argc + 6 + pass_cwd + be_verbose) * sizeof(char *));
 
       if(exec_remote) {
          args[argc++] = "qrsh";
@@ -2049,8 +2028,6 @@ int start_remote_job (char **argv, char **envp,
 
          if(pass_cwd) {
             args[argc++] = "-cwd";
-            args[argc++] = "-v";
-            args[argc++] = "PWD";
          }
 
          for(i = 0; i < sge_v_argc; i++) {

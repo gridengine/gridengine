@@ -1,3 +1,6 @@
+JG-2001-11-02-0: qmake: Does not need to export variable PWD when executing 
+                        remote tasks; PWD is setup correctly by execd/shepherd.
+
 CR-2001-10-31-0: Testsuite:
                    Added new test for share tree in
                    checktree/system_tests/grd/sharetree/check.exp

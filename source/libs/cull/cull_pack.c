@@ -626,7 +626,8 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
       call lFreeElem() in case of errors 
     */
 
-   if((ret = unpackbitfield(pb, &(ep->changed))) != PACK_SUCCESS) {
+   if((ret = unpackbitfield(pb, &(ep->changed), lCountDescr(ep->descr))) 
+                            != PACK_SUCCESS) {
       if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
          free(ep->descr);
       }

@@ -1675,7 +1675,7 @@ lList **hgrp_l
 static int 
 sge_read_rusage(FILE *f, sge_rusage_type *d) 
 {
-   static char szLine[4092] = "";
+   static char szLine[MAX_STRING_SIZE * 10] = "";
    char  *pc;
    int len;
 

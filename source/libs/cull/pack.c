@@ -47,6 +47,8 @@
 #include "msg_cull.h"
 #include "cull_state.h"
 
+#include "uti/sge_stdlib.h"
+
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
 #   define NO_SGE_COMPILE_DEBUG
@@ -1170,9 +1172,13 @@ int buf_size
 *  FUNCTION
 *     Unpacks a bitfield from a packbuffer.
 *
+*     If the size of the descriptor doesn't match the size of the unpacked
+*     bitfield, create a new bitfield.
+*
 *  INPUTS
 *     sge_pack_buffer *pb - the source packbuffer
 *     bitfield *bitfield  - used to return the unpacked bitfield
+*     int descr_size      - size of the corresponding descriptor
 *
 *  RESULT
 *     int - PACK_SUCCESS on success,
@@ -1182,7 +1188,7 @@ int buf_size
 *     uti/bitfield/--Bitfield
 *     cull/pack/packbitfield()
 *******************************************************************************/
-int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield)
+int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield, int descr_size)
 {
    int ret;
    u_long32 size, char_size;
@@ -1190,17 +1196,17 @@ int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield)
 
    DENTER(PACK_LAYER, "unpackbitfield");
 
+   /* create new bitfield */
+   *bitfield = sge_bitfield_new(descr_size);
+   if(*bitfield == NULL) {
+      DEXIT;
+      return PACK_ENOMEM;
+   }
+
    /* unpack the size in bits */
    if((ret = unpackint(pb, &size)) != PACK_SUCCESS) {
       DEXIT;
       return ret;
-   }
-
-   /* create new bitfield */
-   *bitfield = sge_bitfield_new(size);
-   if(*bitfield == NULL) {
-      DEXIT;
-      return PACK_ENOMEM;
    }
 
    /* unpack contents of the bitfield */
@@ -1210,10 +1216,14 @@ int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield)
       DEXIT;
       return ret;
    }
- 
-   /* copy and free buffer */
-   memcpy((*bitfield)->bf, buffer, char_size);
-   free(buffer);
+   
+   /* if bitfield matches descr, copy bitfield */
+   if (size == descr_size) {
+      memcpy((*bitfield)->bf, buffer, char_size);
+   }
+
+   /* free unpacked bitfield buffer */
+   FREE(buffer);
 
    DEXIT;
    return PACK_SUCCESS;

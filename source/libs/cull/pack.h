@@ -135,7 +135,7 @@ int unpackint(register sge_pack_buffer *, register u_long32 *);
 int unpackdouble(register sge_pack_buffer *, register double *);
 int unpackstr(register sge_pack_buffer *, register char **);
 int unpackbuf(sge_pack_buffer *, char **, int);
-int unpackbitfield(sge_pack_buffer *, bitfield *);
+int unpackbitfield(sge_pack_buffer *, bitfield *, int descr_size);
 
 void debugpack(int on_off); 
 

@@ -1,3 +1,11 @@
+JG-2004-05-11-0: Bugfix:    If the CULL definition of an object was extended by
+                            additional attributes without changing the spooled 
+                            fields, the object was unspooled incorrectly by a 
+                            newly built qmaster.
+                 Bugfix:    qacct failed if jobs were started with a very long 
+                            job name.
+                 Review:    SG
+
 CR-2004-05-11-1: Bugfix:    o removed ignored parameters from prepare_enroll()
                             o execd now appends it's pid to temporary startup
                               file name ( /tmp/execd_messages.PID) 

@@ -3221,6 +3221,11 @@ lListElem *lAddSubStr(lListElem *ep, int nm, const char *str, int snm,
 
    ret = lAddElemStr(&(ep->cont[sublist_pos].glp), nm, str, dp);
 
+   /* remember that field changed */
+   if (ret != NULL) {
+      sge_bitfield_set(ep->changed, sublist_pos);
+   }
+
    DEXIT;
    return ret;
 }
@@ -3278,6 +3283,11 @@ lListElem *lAddSubHost(lListElem *ep, int nm, const char *str, int snm,
    }
 
    ret = lAddElemHost(&(ep->cont[sublist_pos].glp), nm, str, dp);
+
+   /* remember that field changed */
+   if (ret != NULL) {
+      sge_bitfield_set(ep->changed, sublist_pos);
+   }
 
    DEXIT;
    return ret;
@@ -3453,6 +3463,11 @@ int lDelSubStr(lListElem *ep, int nm, const char *str, int snm)
    }
 
    ret = lDelElemStr(&(ep->cont[sublist_pos].glp), nm, str);
+
+   /* remember that field changed */
+   if (ret == 1) {
+      sge_bitfield_set(ep->changed, sublist_pos);
+   }
 
    DEXIT;
    return ret;
@@ -3926,6 +3941,11 @@ lListElem *lAddSubUlong(lListElem *ep, int nm, lUlong val, int snm,
 
    ret = lAddElemUlong(&(ep->cont[sublist_pos].glp), nm, val, dp);
 
+   /* remember that field changed */
+   if (ret != NULL) {
+      sge_bitfield_set(ep->changed, sublist_pos);
+   }
+
    DEXIT;
    return ret;
 }
@@ -4030,6 +4050,11 @@ int lDelSubUlong(lListElem *ep, int nm, lUlong val, int snm)
    }
 
    ret = lDelElemUlong(&(ep->cont[sublist_pos].glp), nm, val);
+
+   /* remember that field changed */
+   if (ret == 1) {
+      sge_bitfield_set(ep->changed, sublist_pos);
+   }
 
    DEXIT;
    return ret;
@@ -4353,6 +4378,11 @@ int lDelSubCaseStr(lListElem *ep, int nm, const char *str, int snm)
    }
 
    ret = lDelElemCaseStr(&(ep->cont[sublist_pos].glp), nm, str);
+
+   /* remember that field changed */
+   if (ret == 1) {
+      sge_bitfield_set(ep->changed, sublist_pos);
+   }
 
    DEXIT;
    return ret;

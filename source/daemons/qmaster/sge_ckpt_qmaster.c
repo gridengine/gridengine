@@ -59,6 +59,7 @@
 #include "sge_utility_qmaster.h"
 #include "symbols.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -286,6 +287,7 @@ int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
          MSG_OBJ_CKPTI, ckpt_name);
 
    sge_add_event(NULL, 0, old_ep?sgeE_CKPT_MOD:sgeE_CKPT_ADD, 0, 0, ckpt_name, ep);
+   lListElem_clear_changed_info(ep);
 
    DEXIT;
    return 0;
@@ -376,15 +378,15 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* remove ckpt file 1st */
-   if (!spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_CKPT, 
-                            ckpt_name)) {
+   if (!sge_event_spool(alpp, 0, sgeE_CKPT_DEL,
+                            0, 0, ckpt_name,
+                            NULL, NULL, NULL, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CKPT, ckpt_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EDISK;
    }
 
-   sge_add_event(NULL, 0, sgeE_CKPT_DEL, 0, 0, ckpt_name, NULL);
    sge_change_queue_version_qr_list(lGetList(found, CK_queue_list),
       NULL, "checkpoint interface", ckpt_name);
 

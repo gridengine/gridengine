@@ -1,3 +1,9 @@
+JG-2003-04-29-0  Enhancem.: Reset information which fields have changed in 
+                            qmaster's objects after spooling and sending events.
+                 Bugfix:    Removed some classic spooling code from qmaster 
+                            (replaced by calls to spooling framework).
+                 Review:    EB
+
 EB-2003-04-29-0  Bugfix:    SGEEE: scheduler dispatches wrong jobs if there
                             are jobs in the list of pending jobs which had
                             an error state or which have been rescheduled

@@ -45,6 +45,7 @@
 #include "sge_answer.h"
 #include "sge_complex.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_qmaster.h"
@@ -99,13 +100,12 @@ char *rhost
       old_SC_weight_tickets_override);
    lAppendElem(*confl, lCopyElem(confp));
 
-   if (!spool_write_object(alpp, spool_get_default_context(), lFirst(*confl), NULL, SGE_TYPE_SCHEDD_CONF)) {
+   if (!sge_event_spool(alpp, 0, sgeE_SCHED_CONF, 0, 0, NULL, confp, NULL, NULL,
+                        true)) {
       answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
    }
-
-   sge_add_event(NULL, 0, sgeE_SCHED_CONF, 0, 0, NULL, confp);
 
    INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, "scheduler", 
         "scheduler configuration"));

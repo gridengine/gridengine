@@ -63,6 +63,7 @@
 #include "sge_utility.h"
 #include "sge_utility_qmaster.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -213,6 +214,7 @@ gdi_object_t *object
          (user_flag?sgeE_USER_MOD:sgeE_PROJECT_MOD) :
          (user_flag?sgeE_USER_ADD:sgeE_PROJECT_ADD), 
          0, 0, lGetString(ep, UP_name), ep);
+   lListElem_clear_changed_info(ep);
 
    DEXIT;
    return 0;
@@ -350,13 +352,12 @@ int user        /* =1 user, =0 project */
    lRemoveElem(*upl, ep);
 
    /* delete user or project file */
-   if (!spool_delete_object(alpp, spool_get_default_context(), 
-                            user ? SGE_TYPE_USER : SGE_TYPE_PROJECT, name)) {
+   if (!sge_event_spool(alpp, 0, user ? sgeE_USER_DEL : sgeE_PROJECT_DEL,
+                        0, 0, name, 
+                        NULL, NULL, NULL, true)) {
       DEXIT;
       return STATUS_EDISK;
    }
-
-   sge_add_event( NULL, 0, user?sgeE_USER_DEL:sgeE_PROJECT_DEL, 0, 0, name, NULL);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
          ruser, rhost, name, user?MSG_OBJ_USER:MSG_OBJ_PRJ));

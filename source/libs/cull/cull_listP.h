@@ -83,7 +83,7 @@ struct _lListElem {
 struct _lList {
    int nelem;                   /* number of elements in the list            */
    char *listname;              /* name of the list                          */
-   int changed;                 /* the list has been changed                 */
+   bool changed;                /* the list has been changed                 */
    lDescr *descr;               /* pointer to the descriptor array           */
    lListElem *first;            /* pointer to the first element of the list  */
    lListElem *last;             /* pointer to the last element of the list   */

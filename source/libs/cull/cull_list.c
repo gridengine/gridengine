@@ -1124,7 +1124,7 @@ lList *lCreateList(const char *listname, const lDescr *descr)
       }
    }
 
-   lp->changed = 0;
+   lp->changed = false;
 
    DEXIT;
    return lp;
@@ -1582,7 +1582,7 @@ int lInsertElem(lList *lp, lListElem *ep, lListElem *new)
    cull_hash_elem(new);
    
    lp->nelem++;
-   lp->changed = 1;
+   lp->changed = true;
 
    DEXIT;
    return 0;
@@ -1654,7 +1654,7 @@ _Insight_set_option("suppress", "LEAK_ASSIGN");
 
    cull_hash_elem(ep);
    lp->nelem++;
-   lp->changed = 1;
+   lp->changed = true;
 
    DEXIT;
    return 0;
@@ -1714,7 +1714,7 @@ int lRemoveElem(lList *lp, lListElem *ep)
    ep->prev = ep->next = NULL;
 
    lp->nelem--;
-   lp->changed = 1;
+   lp->changed = true;
 
    lFreeElem(ep);
 
@@ -1782,7 +1782,7 @@ lListElem *lDechainElem(lList *lp, lListElem *ep)
    ep->descr = lCopyDescr(ep->descr);
    ep->status = FREE_ELEM;
    lp->nelem--;
-   lp->changed = 1;
+   lp->changed = true;
 
    DEXIT;
    return ep;
@@ -2436,4 +2436,102 @@ int mt_do_hashing(int mt)
 int mt_is_unique(int mt)
 {
    return mt & CULL_UNIQUE;
+}
+
+/****** cull_list/lList_clear_changed_info() ***********************************
+*  NAME
+*     lList_clear_changed_info() -- clear changed info of a list
+*
+*  SYNOPSIS
+*     bool 
+*     lList_clear_changed_info(lList *lp) 
+*
+*  FUNCTION
+*     Clears in a list the information, if the list itself has been changed
+*     (objects added/removed) and which fields have changed in the lists
+*     objects.
+*
+*  INPUTS
+*     lList *lp - the list to update
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*
+*  BUGS
+*
+*  SEE ALSO
+*     cull_list/lListElem_clear_changed_info()
+*******************************************************************************/
+bool
+lList_clear_changed_info(lList *lp)
+{
+   bool ret = true;
+
+   if (lp == NULL) {
+      ret = false;
+   } else {
+      lListElem *ep;
+
+      lp->changed = false;
+
+      for_each(ep, lp) {
+         lListElem_clear_changed_info(ep);
+      }
+   }
+
+   return ret;
+}
+
+/****** cull_list/lListElem_clear_changed_info() *******************************
+*  NAME
+*     lListElem_clear_changed_info() -- clear changed info of an object
+*
+*  SYNOPSIS
+*     bool 
+*     lListElem_clear_changed_info(lListElem *ep) 
+*
+*  FUNCTION
+*     clears in an object the information, which fields have been changed.
+*     Recursively walks down sublists.
+*
+*  INPUTS
+*     lListElem *ep - the list element to update
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*
+*  BUGS
+*
+*  SEE ALSO
+*     cull_list/lList_clear_changed_info()
+*******************************************************************************/
+bool 
+lListElem_clear_changed_info(lListElem *ep)
+{
+   bool ret = true;
+
+   if (ep == NULL) {
+      ret = false;
+   } else {
+      int i;
+      lDescr *descr = ep->descr;
+
+      for (i = 0; ep->descr[i].nm != NoName; i++) {
+         int type = mt_get_type(descr[i].mt);
+
+         sge_bitfield_clear(ep->changed, i);
+
+         if (type == lListT) {
+            lList_clear_changed_info(ep->cont[i].glp);
+         } else if (type == lObjectT) {
+            lListElem_clear_changed_info(ep->cont[i].obj);
+         }
+      }
+   }
+
+   return ret;
 }

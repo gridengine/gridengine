@@ -65,6 +65,7 @@
 #include "sge_userset.h"
 #include "sge_host.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -140,9 +141,9 @@ char *rhost
    }
 #endif   
 
-    
-   spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_CONFIG, 
-                       config_name);
+   sge_event_spool(alpp, 0, sgeE_CONFIG_DEL,
+                   0, 0, config_name,
+                   NULL, NULL, NULL, true);
     
    /* now remove it from our internal list*/
    lRemoveElem(Master_Config_List, ep);
@@ -156,7 +157,6 @@ char *rhost
    new_config = 1;
 
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-   sge_add_event(NULL, 0, sgeE_CONFIG_DEL, 0, 0, config_name, NULL);
    
    DEXIT;
    return STATUS_OK;
@@ -292,12 +292,13 @@ char *rhost
       lSetUlong(confp, CONF_version, old_conf_version + 1);
    }
 
+   sge_event_spool(alpp, 0, added ? sgeE_CONFIG_ADD : sgeE_CONFIG_MOD, 
+                   0, 0, config_name, ep, NULL, NULL, true);
+
    if (!strcmp(SGE_GLOBAL_NAME, config_name)) {
       sge_add_event(NULL, 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL);
    }
-   
-   spool_write_object(alpp, spool_get_default_context(), confp, 
-                      lGetHost(confp, CONF_hname), SGE_TYPE_CONFIG);
+
    /*
    ** is the configuration change relevant for the qmaster itsself?
    ** if so, initialise conf struct anew
@@ -339,7 +340,6 @@ char *rhost
 
    INFO((SGE_EVENT, cp, ruser, rhost, config_name, MSG_OBJ_CONF ));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-   sge_add_event(NULL, 0, added ? sgeE_CONFIG_ADD : sgeE_CONFIG_MOD, 0, 0, config_name, ep);
    
    DEXIT;
    return STATUS_OK;

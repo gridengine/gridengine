@@ -52,6 +52,7 @@
 #include "sge_utility.h"
 #include "sge_utility_qmaster.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -97,9 +98,6 @@ int sub_command
       if (parse_week(alpp, new_cal))
          goto ERROR;
    }
-
-   sge_add_event( NULL, 0, add ? sgeE_CALENDAR_ADD : sgeE_CALENDAR_MOD, 
-         0, 0, cal_name, new_cal);
 
    DEXIT;
    return 0;
@@ -178,7 +176,9 @@ char *rhost
    /* remove timer for this calendar */
    te_delete(TYPE_CALENDAR_EVENT, cal_name, 0, 0);
 
-   spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_CALENDAR, cal_name);
+   sge_event_spool(alpp, 0, sgeE_CALENDAR_DEL, 
+                   0, 0, cal_name, 
+                   NULL, NULL, NULL, true);
    lDelElemStr(&Master_Calendar_List, CAL_name, cal_name);
 
 #ifdef QIDL
@@ -188,7 +188,6 @@ char *rhost
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
          ruser, rhost, cal_name, MSG_OBJ_CALENDAR));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-   sge_add_event(NULL, 0, sgeE_CALENDAR_DEL, 0, 0, cal_name, NULL);
    DEXIT;
    return STATUS_OK;
 }
@@ -232,6 +231,11 @@ gdi_object_t *object
 
    cal_name = lGetString(cep, CAL_name);
    DPRINTF(("CALENDAR: %s\n", cal_name));
+
+   sge_add_event(NULL, 0, old_cep ? sgeE_CALENDAR_MOD : sgeE_CALENDAR_ADD, 
+         0, 0, cal_name, cep);
+   lListElem_clear_changed_info(cep);
+
    new_state = act_cal_state(cep, &next_event);
 
    for_each (qep, Master_Queue_List) {

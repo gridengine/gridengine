@@ -51,6 +51,7 @@
 #include "sge_host.h"
 #include "sge_utility.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -146,8 +147,9 @@ char *rhost
       }
    }
 
-   /* update on file */
-   if (!spool_write_object(alpp, spool_get_default_context(), ep, userset_name, SGE_TYPE_USERSET)) {
+   if (!sge_event_spool(alpp, 0, sgeE_USERSET_ADD,
+                        0, 0, userset_name, 
+                        ep, NULL, NULL, true)) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }   
@@ -161,11 +163,6 @@ char *rhost
    if (!*userset_list)
       *userset_list = lCreateList("global userset list", US_Type);
    lAppendElem(*userset_list, lCopyElem(ep));
-
-   /* it's better to send the event only when the internal lists have
-    * been updated. The CORBA part relies on this fact...
-    */
-   sge_add_event(NULL, 0, sgeE_USERSET_ADD, 0, 0, userset_name, ep);
 
    INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
             ruser, rhost, userset_name, MSG_OBJ_USERSET));
@@ -233,10 +230,10 @@ char *rhost
    }
 
    lFreeElem(lDechainElem(*userset_list, found));
-   /* remove userset file */
-   spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_USERSET, 
-                       userset_name);
-   sge_add_event(NULL, 0, sgeE_USERSET_DEL, 0, 0, userset_name, NULL);
+
+   sge_event_spool(alpp, 0, sgeE_USERSET_DEL, 
+                   0, 0, userset_name, 
+                   NULL, NULL, NULL, true);
 
    /* change queue versions */
    sge_change_queue_version_acl(userset_name);
@@ -332,13 +329,12 @@ char *rhost
    lAppendElem(*userset_list, lCopyElem(ep));
 
    /* update on file */
-   if (!spool_write_object(alpp, spool_get_default_context(), ep, userset_name, 
-                           SGE_TYPE_USERSET)) {
+   if (!sge_event_spool(alpp, 0, sgeE_USERSET_MOD,
+                        0, 0, userset_name, 
+                        ep, NULL, NULL, true)) {
       DEXIT;
       return STATUS_EDISK;
    }
-
-   sge_add_event(NULL, 0, sgeE_USERSET_MOD, 0, 0, userset_name, ep);
 
    /* change queue versions */
    sge_change_queue_version_acl(userset_name);

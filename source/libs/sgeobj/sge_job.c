@@ -949,7 +949,7 @@ lListElem *job_create_task(lListElem *job, lList **answer_list, u_long32 ja_task
 {
    lListElem *ja_task = NULL; 
 
-   DENTER(TOP_LAYER, "job_search_task");
+   DENTER(TOP_LAYER, "job_create_task");
 
    if(job != NULL) {
       if(job_is_ja_task_defined(job, ja_task_id)) {

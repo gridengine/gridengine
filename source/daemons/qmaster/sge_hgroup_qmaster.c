@@ -55,6 +55,8 @@
 #include "sge_href.h"
 #include "sge_cstring.h"
 #include "sge_event_master.h"
+
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -378,13 +380,14 @@ sge_del_hgroup(lListElem *this_elem, lList **answer_list,
              * Try to unlink the concerned spoolfile
              */
             if (ret) {
-               if (!sge_unlink(HGROUP_DIR, name)) {
+               if (sge_event_spool(answer_list, 0, sgeE_HGROUP_DEL, 
+                                   0, 0, name, 
+                                   NULL, NULL, NULL, true)) {
       
                   /*
                    * Let's remove the object => Success!
                    */
 
-                  sge_add_event(NULL, 0, sgeE_HGROUP_DEL, 0, 0, name, NULL);
                   lRemoveElem(Master_HGroup_List, hgroup);
 
                   INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
@@ -436,6 +439,7 @@ hgroup_success(lListElem *hgroup, lListElem *old_hgroup, gdi_object_t *object)
    DENTER(TOP_LAYER, "hgroup_success");
    sge_add_event(NULL, 0, old_hgroup?sgeE_HGROUP_MOD:sgeE_HGROUP_ADD, 0, 
                  0, name, hgroup);
+   lListElem_clear_changed_info(hgroup);
    DEXIT;
    return 0;
 }

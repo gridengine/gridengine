@@ -227,6 +227,9 @@ int mt_get_type(int mt);
 int mt_do_hashing(int mt);
 int mt_is_unique(int mt);
 
+bool lList_clear_changed_info(lList *lp);
+bool lListElem_clear_changed_info(lListElem *lp);
+
 /* #define for_each(ep,lp) for (ep=lFirst(lp);ep;ep=lNext(ep)) */
 /* #define for_each_rev(ep,lp) for (ep=lLast(lp);ep;ep=lPrev(ep)) */
 

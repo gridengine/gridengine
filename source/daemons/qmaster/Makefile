@@ -66,7 +66,8 @@ QMASTER_SRC =  qmaster$(QIDLEXT).c  \
               setup_qmaster.c \
               subordinate_qmaster.c \
               time_event.c \
-              sge_utility_qmaster.c 
+              sge_utility_qmaster.c \
+              sge_persistence_qmaster.c
              
 QMASTER_ADD_SRC = usage.c sge_options.c job_log.c \
               startprog.c shutdown.c \
@@ -221,4 +222,7 @@ qmaster_to_execd.o   : $(QMASTER_DIR)/qmaster_to_execd.c
 
 qmaster_license.o : $(QMASTER_DIR)/qmaster_license.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/qmaster_license.c
+
+sge_persistence_qmaster.o : $(QMASTER_DIR)/sge_persistence_qmaster.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_persistence_qmaster.c
 

@@ -92,6 +92,7 @@
 #include "sge_userprj.h"
 #include "sge_complex.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -639,8 +640,9 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    job_suc_pre(jep);
 
-   if (!spool_write_object(alpp, spool_get_default_context(), jep, 
-                           job_get_key(job_number, 0, NULL), SGE_TYPE_JOB)) {
+   if (!sge_event_spool(alpp, 0, sgeE_JOB_ADD, 
+                        job_number, 0, NULL,
+                        jep, NULL, NULL, true)) {
       ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, u32c(job_number)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -663,9 +665,11 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       return STATUS_EUNKNOWN;
    }
 
-
-   /* generate an sgeE_JOB_ADD event and queue it into the event list */
-   sge_add_job_event(sgeE_JOB_ADD, jep, NULL);
+   /* JG: TODO: error handling: 
+    * if job can't be spooled, no event is sent (in sge_event_spool)
+    * if job can't be added to master list, it remains spooled
+    * make checks earlier
+    */
 
    /*
    ** immediate jobs trigger scheduling immediately
@@ -964,6 +968,7 @@ int sub_command
                                   job, job_get_job_key(job_number), 
                                   SGE_TYPE_JOB);
                answer_list_output(&answer_list);
+               lListElem_clear_changed_info(job);
             } else {
                sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, NULL, NULL);
             }
@@ -1471,6 +1476,7 @@ void job_mark_job_as_deleted(lListElem *j,
                          job_get_key(lGetUlong(j, JB_job_number),
                                      lGetUlong(t, JAT_task_number), NULL),
                          SGE_TYPE_JOB);
+      lListElem_clear_changed_info(t);
       answer_list_output(&answer_list);
    }
    DEXIT;
@@ -1636,6 +1642,8 @@ int sub_command
          if (trigger & PRIO_EVENT) {
             sge_add_job_event(sgeE_JOB_MOD_SCHED_PRIORITY, new_job, NULL);
          }
+
+         lListElem_clear_changed_info(new_job);
 
          /* remove all existing trigger links - 
             this has to be done using the old 

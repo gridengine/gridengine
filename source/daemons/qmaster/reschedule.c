@@ -62,6 +62,7 @@
 #include "sge_queue.h"
 #include "sge_ckpt.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 u_long32 add_time = 0;
@@ -618,11 +619,10 @@ lListElem* add_to_reschedule_unknown_list(lListElem *host, u_long32 job_number,
       lSetUlong(ruep, RU_state, state);
       {
          lList *answer_list = NULL;
-         spool_write_object(&answer_list, spool_get_default_context(), host, 
-                            lGetHost(host, EH_name), SGE_TYPE_EXECHOST);
+         sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 0, 0, 
+                         lGetHost(host, EH_name), host, NULL, NULL, true);
          answer_list_output(&answer_list);
       }
-      sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host, EH_name), host);
    }
    DEXIT;
    return ruep;
@@ -707,12 +707,10 @@ void delete_from_reschedule_unknown_list(lListElem *host)
             lRemoveElem(rulp, this);
             {
                lList *answer_list = NULL;
-               spool_write_object(&answer_list, spool_get_default_context(), 
-                                  host, lGetHost(host, EH_name), 
-                                  SGE_TYPE_EXECHOST);
+               sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 0, 0, 
+                               lGetHost(host, EH_name), host, NULL, NULL, true);
                answer_list_output(&answer_list);
             }
-            sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host, EH_name), host); 
          }
       }
    }
@@ -759,12 +757,10 @@ void update_reschedule_unknown_list(lListElem *host)
             }
             {
                lList *answer_list = NULL;
-               spool_write_object(&answer_list, spool_get_default_context(), 
-                                  host, lGetHost(host, EH_name), 
-                                  SGE_TYPE_EXECHOST);
+               sge_event_spool(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
+                               lGetHost(host, EH_name), host, NULL, NULL, true);
                answer_list_output(&answer_list);
             }
-            sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host, EH_name), host);
          }
       }
    }

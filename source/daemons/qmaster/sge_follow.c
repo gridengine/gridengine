@@ -79,6 +79,7 @@
 #include "sge_sharetree.h"
 #include "sge_todo.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -199,6 +200,7 @@ lList **topp  /* ticket orders ptr ptr */
       jatp = job_search_task(jep, NULL, task_number);
       if(jatp == NULL) {
          jatp = job_create_task(jep, NULL, task_number);
+         /* JG: TODO: where is spooling done? */
          sge_add_event(NULL, 0, sgeE_JATASK_ADD, job_number, task_number, NULL, jatp);
       }
       if (!jatp) {
@@ -469,7 +471,9 @@ lList **topp  /* ticket orders ptr ptr */
 
       if (pe) {
          debit_job_from_pe(pe, pe_slots, job_number);
+         /* this info is not spooled */
          sge_add_event(NULL, 0, sgeE_PE_MOD, 0, 0, lGetString(jatp, JAT_granted_pe), pe);
+         lListElem_clear_changed_info(pe);
       }
 
       DPRINTF(("successfully handed off job \"" u32 "\" to queue \"%s\"\n",
@@ -804,6 +808,7 @@ lList **topp  /* ticket orders ptr ptr */
       jatp = job_search_task(jep, NULL, task_number);
       if(jatp == NULL) {
          jatp = job_create_task(jep, NULL, task_number);
+         /* JG: TODO: where is jatask spooled? */
          sge_add_event(NULL, 0, sgeE_JATASK_ADD, job_number, task_number, NULL, jatp);
       }
       if (!jatp) {
@@ -978,18 +983,15 @@ lList **topp  /* ticket orders ptr ptr */
                }
             }
 
-            /* spool */
+            /* spool and send event */
             {
                lList *answer_list = NULL;
-               spool_write_object(&answer_list, 
-                                  spool_get_default_context(), up, up_name, 
-                                  or_type == ORT_update_user_usage ? 
-                                  SGE_TYPE_USER : SGE_TYPE_PROJECT);
+               sge_event_spool(&answer_list, 0,
+                               or_type == ORT_update_user_usage ? 
+                                          sgeE_USER_MOD:sgeE_PROJECT_MOD,
+                               0, 0, up_name, up, NULL, NULL, true);
                answer_list_output(&answer_list);
             }
-            sge_add_event(NULL, 0,
-               or_type==ORT_update_user_usage?sgeE_USER_MOD:sgeE_PROJECT_MOD,
-               0, 0, up_name, up);
          }
       } /* just ignore them being not in sge mode */
       break;
@@ -1075,13 +1077,11 @@ lList **topp  /* ticket orders ptr ptr */
             SETBIT(JSUSPENDED_ON_THRESHOLD, state);
             lSetUlong(jatp, JAT_state, state);
 
-            sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatp);
             {
                lList *answer_list = NULL;
-               spool_write_object(&answer_list, 
-                                  spool_get_default_context(), jep, 
-                                  job_get_key(jobid, task_number, NULL),
-                                  SGE_TYPE_JOB);
+               sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
+                               jobid, task_number, NULL, 
+                               jep, jatp, NULL, true);
                answer_list_output(&answer_list);
             }
 
@@ -1129,13 +1129,11 @@ lList **topp  /* ticket orders ptr ptr */
             state = lGetUlong(jatp, JAT_state);
             CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
             lSetUlong(jatp, JAT_state, state);
-            sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatp);
             {
                lList *answer_list = NULL;
-               spool_write_object(&answer_list, 
-                                  spool_get_default_context(), jep, 
-                                  job_get_key(jobid, task_number, NULL),
-                                  SGE_TYPE_JOB);
+               sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
+                               jobid, task_number, NULL,
+                               jep, jatp, NULL, true);
                answer_list_output(&answer_list);
             }
             /* update queues time stamp in schedd */
@@ -1158,7 +1156,7 @@ lList **topp  /* ticket orders ptr ptr */
             Master_Job_Schedd_Info_List = lCreateList("schedd info", SME_Type);
             lAppendElem(Master_Job_Schedd_Info_List, lCopyElem(sme));
          }
-
+         /* this information is not spooled (but might be usefull in a db) */
          sge_add_event(NULL, 0, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, NULL, sme);
       }
       break;

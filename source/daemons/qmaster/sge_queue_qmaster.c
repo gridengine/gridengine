@@ -78,6 +78,7 @@
 #include "sge_utility_qmaster.h"
 #include "sge_static_load.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -855,11 +856,11 @@ int sub_command
       }
    }
                
-
    /* write on file */
    if (sge_change_queue_version(new_queue, add, 1) ||
-      !spool_write_object(alpp, spool_get_default_context(), new_queue, 
-                         lGetString(new_queue, QU_qname), SGE_TYPE_QUEUE)) {
+      !sge_event_spool(alpp, 0, sgeE_QUEUE_MOD,
+                       0, 0, lGetString(new_queue, QU_qname),
+                       new_queue, NULL, NULL, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_QUEUE, qname));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -985,15 +986,13 @@ int sub_command
 
             CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
             lSetUlong(ja_task, JAT_state, state);
-            sge_add_jatask_event(sgeE_JATASK_MOD, job, ja_task);
-            spool_write_object(alpp, spool_get_default_context(), job,
-                               job_get_key(lGetUlong(job, JB_job_number),
-                                           lGetUlong(ja_task, JAT_task_number),
-                                           NULL), 
-                               SGE_TYPE_JOB);
+            sge_event_spool(alpp, 0, sgeE_JATASK_MOD,
+                            lGetUlong(job, JB_job_number), 
+                            lGetUlong(ja_task, JAT_task_number), NULL,
+                            job, ja_task, NULL, true);
          }
       }
-   }            
+   }         
 
    /* send an additional event concerning this queue to schedd */
    /* the first one is sent whithin sge_change_queue_version() */
@@ -1165,10 +1164,9 @@ char *rhost
       return STATUS_EEXIST;
    }
 
-   /* generate a sgeE_QUEUE_DEL event and queue it into the event list */
-   sge_add_event(NULL, 0, sgeE_QUEUE_DEL, 0, 0, qname, NULL);
-  
-   spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_QUEUE, qname);
+   sge_event_spool(alpp, 0, sgeE_QUEUE_DEL, 
+                   0, 0, qname, 
+                   NULL, NULL, NULL, true);
 
    unsuspend_all(sos_list_before, 0);
    lFreeList(sos_list_before); 

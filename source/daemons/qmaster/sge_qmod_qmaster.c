@@ -71,6 +71,7 @@
 #include "sge_complex.h"
 #include "sge_todo.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -296,6 +297,7 @@ lList **answer
          break;
    }
 
+   /* JG: TODO: queue is spooled twice, e.g. in qmod_queue_clear and here */
    spool_write_object(answer, spool_get_default_context(), qep, 
                       lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
    DEXIT;
@@ -350,10 +352,9 @@ lList **answer
       case QERROR:
          if (VALID(JERROR, lGetUlong(jatep, JAT_state))) {
             lSetUlong(jatep, JAT_state, lGetUlong(jatep, JAT_state) & ~JERROR);
-            sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-            spool_write_object(answer, spool_get_default_context(), jep,
-                               job_get_key(job_id, task_id, NULL), 
-                               SGE_TYPE_JOB);
+            sge_event_spool(answer, 0, sgeE_JATASK_MOD,
+                            job_id, task_id, NULL,
+                            jep, jatep, NULL, true);
             if (job_is_array(jep)) {
                INFO((SGE_EVENT, MSG_JOB_CLEARERRORTASK_SSUU, user, host, u32c(job_id), u32c(task_id)));
             } else {
@@ -914,10 +915,9 @@ char *host
       SETBIT(JSUSPENDED, state);
       lSetUlong(jatep, JAT_state, state);
 
-      sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-      spool_write_object(answer, spool_get_default_context(), jep,
-                         job_get_key(jobid, jataskid, NULL), 
-                         SGE_TYPE_JOB);
+      sge_event_spool(answer, 0, sgeE_JATASK_MOD, 
+                      jobid, jataskid, NULL,
+                      jep, jatep, NULL, true);
    }
    else {   /* job wasn't suspended yet */
       if (queueep) {
@@ -948,10 +948,9 @@ char *host
          CLEARBIT(JRUNNING, state);
          SETBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
-         sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-         spool_write_object(answer, spool_get_default_context(), jep,
-                            job_get_key(jobid, jataskid, NULL), 
-                            SGE_TYPE_JOB);
+         sge_event_spool(answer, 0, sgeE_JATASK_MOD,
+                         jobid, jataskid, NULL, 
+                         jep, jatep, NULL, true);
       }
       else {
          if (!i) {
@@ -966,10 +965,9 @@ char *host
             CLEARBIT(JRUNNING, state);
             SETBIT(JSUSPENDED, state);
             lSetUlong(jatep, JAT_state, state);
-            sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-            spool_write_object(answer, spool_get_default_context(), jep,
-                               job_get_key(jobid, jataskid, NULL), 
-                               SGE_TYPE_JOB);
+            sge_event_spool(answer, 0, sgeE_JATASK_MOD, 
+                            jobid, jataskid, NULL,
+                            jep, jatep, NULL, true);
          }
       }
    }
@@ -1010,10 +1008,9 @@ char *host
          state = lGetUlong(jatep, JAT_state);
          CLEARBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
-         sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-         spool_write_object(answer, spool_get_default_context(), jep,
-                            job_get_key(jobid, jataskid, NULL), 
-                            SGE_TYPE_JOB);
+         sge_event_spool(answer, 0, sgeE_JATASK_MOD,
+                         jobid, jataskid, NULL,
+                         jep, jatep, NULL, true);
          DEXIT;
          return;
       } 
@@ -1096,10 +1093,9 @@ char *host
          SETBIT(JRUNNING, state);
          CLEARBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
-         sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-         spool_write_object(answer, spool_get_default_context(), jep,
-                            job_get_key(jobid, jataskid, NULL), 
-                            SGE_TYPE_JOB);
+         sge_event_spool(answer, 0, sgeE_JATASK_MOD,
+                         jobid, jataskid, NULL,
+                         jep, jatep, NULL, true);
       }
       else {
          /* set job state only if communication works */
@@ -1115,10 +1111,9 @@ char *host
             SETBIT(JRUNNING, state);
             CLEARBIT(JSUSPENDED, state);
             lSetUlong(jatep, JAT_state, state);
-            sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-            spool_write_object(answer, spool_get_default_context(), jep,
-                               job_get_key(jobid, jataskid, NULL), 
-                               SGE_TYPE_JOB);
+            sge_event_spool(answer, 0, sgeE_JATASK_MOD,
+                            jobid, jataskid, NULL,
+                            jep, jatep, NULL, true);
          }
       }
    }

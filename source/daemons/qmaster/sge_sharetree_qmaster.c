@@ -53,6 +53,7 @@
 #include "sge_answer.h"
 #include "sge_userprj.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -131,15 +132,15 @@ char *rhost
    }
 
    lSetUlong(ep, STN_version, prev_version+1);
-   sge_add_event(NULL, 0, sgeE_NEW_SHARETREE, 0, 0, NULL, ep);
 
    /* now insert new element */
    lAppendElem(*lpp, lCopyElem(ep));
   
    /* write sharetree to file */
-   if (!spool_write_object(alpp, spool_get_default_context(), ep, NULL, 
-                           SGE_TYPE_SHARETREE)) {
-      /* answer list gets filled in write_sharetree() */
+   if (!sge_event_spool(alpp, 0, sgeE_NEW_SHARETREE,
+                        0, 0, NULL, 
+                        ep, NULL, NULL, true)) {
+      /* answer list gets filled in sge_event_spool() */
       DEXIT;
       return ret;
    }
@@ -177,12 +178,13 @@ char *rhost
       return STATUS_EEXIST;
    }
 
-   spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_SHARETREE, NULL);
+   sge_event_spool(alpp, 0, sgeE_NEW_SHARETREE, 
+                   0, 0, NULL, 
+                   NULL, NULL, NULL, true);
 
    lFreeList(*lpp);
    *lpp = NULL;
    
-   sge_add_event(NULL, 0, sgeE_NEW_SHARETREE, 0, 0, NULL, NULL);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDLIST_SSS, ruser, rhost, MSG_OBJ_SHARETREE));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);

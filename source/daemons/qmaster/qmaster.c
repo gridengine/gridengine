@@ -100,6 +100,7 @@
 #include "sge_manop.h"
 #include "sge_cuser.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -810,10 +811,11 @@ static int update_license_data(lListElem *hep, lList *lp_lic)
 
       DPRINTF(("%s has " u32 " processors\n",
          lGetHost(hep, EH_name), processors));
-      spool_write_object(&answer_list, spool_get_default_context(), hep, 
-                         lGetHost(hep, EH_name), SGE_TYPE_EXECHOST);
+      sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 0, 0, 
+                      lGetHost(hep, EH_name), hep, NULL, NULL, true);
       answer_list_output(&answer_list);
    }
+
    DEXIT;
    return 0;
 }

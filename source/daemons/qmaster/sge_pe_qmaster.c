@@ -56,6 +56,7 @@
 #include "sge_utility.h"
 #include "sge_utility_qmaster.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -213,6 +214,7 @@ gdi_object_t *object
          "parallel environment", pe_name);
 
    sge_add_event(NULL, 0, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, pe_name, ep);
+   lListElem_clear_changed_info(ep);
 
    DEXIT;
    return 0;
@@ -275,13 +277,14 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* remove host file */
-   if (!spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_PE, pe)) {
+   if (!sge_event_spool(alpp, 0, sgeE_PE_DEL,
+                        0, 0, pe, 
+                        NULL, NULL, NULL, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, pe));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
-   sge_add_event(NULL, 0, sgeE_PE_DEL, 0, 0, pe, NULL);
    sge_change_queue_version_qr_list(lGetList(ep, PE_queue_list), 
       NULL, MSG_OBJ_PE, pe);
 

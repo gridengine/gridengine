@@ -70,6 +70,7 @@
 #include "sge_userset.h"
 #include "sge_todo.h"
 
+#include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
 /************************************************************************
@@ -96,7 +97,6 @@ lListElem *jatep
    lListElem *qep, *queueep;
    const char *err_str;
    const char *qname; 
-   const char *host;
    u_long32 jobid, state, jataskid;
    lListElem *hep;
    int enhanced_product_mode;
@@ -239,6 +239,8 @@ lListElem *jatep
    }
 
    if (queueep) {
+      bool spool_queueep = false;
+      lList *answer_list = NULL;
       /*
       ** to be sure this queue is halted even if the host 
       ** is not found in the next statement
@@ -248,45 +250,50 @@ lListElem *jatep
          state = lGetUlong(queueep, QU_state);
          SETBIT(QERROR, state);
          lSetUlong(queueep, QU_state, state);
-         {
-            lList *answer_list = NULL;
-            spool_write_object(&answer_list, spool_get_default_context(), 
-                               queueep, lGetString(queueep, QU_qname), 
-                               SGE_TYPE_QUEUE);
-            answer_list_output(&answer_list);
-         }
-         ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOB_SU, lGetString(queueep, QU_qname), u32c(jobid)));    
+         spool_queueep = true;
+         ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOB_SU, 
+                lGetString(queueep, QU_qname), u32c(jobid)));    
       }
       /*
       ** in this case we have to halt all queues on this host
       */
       if (general_failure == GFSTATE_HOST) {
+         spool_queueep = true;
          hep = host_list_locate(Master_Exechost_List, 
                   lGetHost(queueep, QU_qhostname));
          if (hep) {
+            const char *host;
+            lListElem *next_qep;
+            const void *iterator;
+
             host = lGetHost(hep, EH_name);
-            for_each(qep, Master_Queue_List) {
-               if (!sge_hostcmp(lGetHost(qep, QU_qhostname), host)) {
-                  state = lGetUlong(qep, QU_state);
-                  CLEARBIT(QRUNNING,state);
-                  SETBIT(QERROR, state);
-                  lSetUlong(qep, QU_state, state);
-/*                   DPRINTF(("queue %s marked QERROR\n", lGetString(qep, QU_qname))); */
-                  ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qep, QU_qname), u32c(jobid), host));    
-                  
-                  {
-                     lList *answer_list = NULL;
-                     spool_write_object(&answer_list, 
-                               spool_get_default_context(), qep, 
-                               lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
-                     answer_list_output(&answer_list);
-                  }
-                  sge_add_queue_event(sgeE_QUEUE_MOD, qep);
+            next_qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, 
+                                         host, &iterator);
+
+            while((qep = next_qep) != NULL) {
+               next_qep = lGetElemHostNext(Master_Queue_List, QU_qhostname,
+                                           host, &iterator);
+               state = lGetUlong(qep, QU_state);
+               CLEARBIT(QRUNNING,state);
+               SETBIT(QERROR, state);
+               lSetUlong(qep, QU_state, state);
+
+               ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOBHOST_SUS, 
+                      lGetString(qep, QU_qname), u32c(jobid), host));    
+              
+               /* queueep will be spooled anyway below */
+               if (qep != queueep) {
+                  sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 0, 0, 
+                         lGetString(qep, QU_qname), qep, NULL, NULL, true);
                }
             }
          }
       }
-      sge_add_queue_event(sgeE_QUEUE_MOD, queueep);
+
+      sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 0, 0, 
+                      lGetString(queueep, QU_qname), queueep, NULL, NULL, 
+                      spool_queueep);
+      answer_list_output(&answer_list);
    }
 
    DEXIT;

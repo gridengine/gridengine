@@ -61,14 +61,13 @@
 #include "sge_utility.h"
 
 #include "spool/sge_spooling.h"
+#include "sge_persistence_qmaster.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
 static void sge_change_queue_version_complex(const char *cmplx_name);
 static int verify_complex_deletion(lList **alpp, const char *userset_name);
-
-
 
 /* ------------------------------------------------------------ */
 
@@ -348,7 +347,8 @@ gdi_object_t *object
    DENTER(TOP_LAYER, "complex_success");
 
    sge_add_event(NULL, 0, old_ep?sgeE_COMPLEX_MOD:sgeE_COMPLEX_ADD, 0, 0, lGetString(ep, CX_name), ep);
-  
+   lListElem_clear_changed_info(ep);
+
    /* throw away all old actual values lists and rebuild them from scratch */
    for_each (qep, Master_Queue_List) {
       lSetList(qep, QU_consumable_actual_list, NULL);
@@ -449,8 +449,9 @@ char *rhost
    }
 
    /* If this is the qmaster we delete the complex from disk */
-   spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_COMPLEX, cmplxname);
-   sge_add_event(NULL, 0, sgeE_COMPLEX_DEL, 0, 0, cmplxname, NULL);
+   sge_event_spool(alpp, 0, sgeE_COMPLEX_DEL, 
+                   0, 0, cmplxname, 
+                   NULL, NULL, NULL, true);
 
    /* change versions of corresponding queues */ 
    sge_change_queue_version_complex(cmplxname);
@@ -478,19 +479,24 @@ static void sge_change_queue_version_complex(
 const char *cmplx_name 
 ) {
    lListElem *ep;
+   lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "sge_change_queue_version_complex");
 
    for_each(ep, Master_Queue_List) {
-      lList *answer_list = NULL;
+
       sge_change_queue_version(ep, 0, 0);
-      spool_write_object(&answer_list, spool_get_default_context(), ep, 
-                         lGetString(ep, QU_qname), SGE_TYPE_QUEUE);
-      answer_list_output(&answer_list);
-      sge_add_event(NULL, 0, sgeE_QUEUE_MOD, 0, 0, lGetString(ep, QU_qname), ep);
+
+      sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 0, 0, 
+                      lGetString(ep, QU_qname), ep, NULL, NULL, true);
    }
-   for_each(ep, Master_Exechost_List)
-      sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(ep, EH_name), ep);
+
+   for_each(ep, Master_Exechost_List) {
+      sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 0, 0, 
+                      lGetHost(ep, EH_name), ep, NULL, NULL, false);
+   }
+
+   answer_list_output(&answer_list);
 
    DEXIT;
    return;

@@ -101,7 +101,7 @@ proc issue_314_check {} {
    # try to submit one job using a colon in account string
    set qsub_arguments "$A_option $the_command"
    set job_id [submit_job $qsub_arguments 0]
-   if { ($job_id != -1) } {
+   if { ($job_id > 0 ) } {
       add_proc_error "issue_314_check" "-1" \
                      "qsub does not reject colon \":\" in account string"
       return      
@@ -118,7 +118,7 @@ proc issue_314_check {} {
    }
 
    # delete the submitted job
-   set qdelresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $job_id" } qdel_output ]
+   delete_job $job_id "1"
 
    set_error 0 "ok"
 }

@@ -1376,3 +1376,113 @@ RestoreConfig()
       $INFOTEXT -n "\nYour configuration has been restored\n"
    fi
 }
+
+
+RemoveRcScript()
+{
+   host=$1
+   hosttype=$2
+   euid=$3
+   
+
+   $INFOTEXT "Checking for installed rc startup scripts!\n"
+
+
+   if [ $hosttype = "master" ]; then
+      TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
+      STARTUP_FILE_NAME=sgemaster
+      S95NAME=S95sgemaster
+      DAEMON_NAME="qmaster/scheduler"
+   else
+      TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
+      STARTUP_FILE_NAME=sgeexecd
+      S95NAME=S96sgeexecd
+      DAEMON_NAME="execd"
+   fi
+
+   SGE_STARTUP_FILE=$SGE_ROOT/$SGE_CELL/common/$STARTUP_FILE_NAME
+
+
+   if [ $euid != 0 ]; then
+      return 0
+   fi
+
+   $INFOTEXT -u "\nRemoving %s startup script" $DAEMON_NAME
+
+   # --- from here only if root installs ---
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+             "\nDo you want to remove the startup script \n" \
+             "for %s at this machine? (y/n) [y] >> " $DAEMON_NAME
+
+   ret=$?
+   if [ $AUTO = "true" -a $REMOVE_RC = "false" ]; then
+      $CLEAR
+      return
+   else
+      if [ $ret = 1 ]; then
+         $CLEAR
+         return
+      fi
+   fi
+
+   # If we have System V we need to put the startup script to $RC_PREFIX/init.d
+   # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
+   if [ "$RC_FILE" = "sysv_rc" ]; then
+      $INFOTEXT "Removing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
+      Execute rm -f $RC_PREFIX/$RC_DIR/$S95NAME
+      Execute rm -f $RC_PREFIX/init.d/$STARTUP_FILE_NAME
+
+      # runlevel management in Linux is different -
+      # each runlevel contains full set of links
+      # RedHat uses runlevel 5 and SUSE runlevel 3 for xdm
+      # RedHat uses runlevel 3 for full networked mode
+      # Suse uses runlevel 2 for full networked mode
+      # we already installed the script in level 3
+      SGE_ARCH=`$SGE_UTIL/arch`
+      case $SGE_ARCH in
+      lx2?-*)
+         runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
+         if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
+            $INFOTEXT "Removing startup script %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
+            Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
+         fi
+         ;;
+       esac
+
+   elif [ "$RC_FILE" = "insserv-linux" ]; then
+      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      echo /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
+      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
+   elif [ "$RC_FILE" = "freebsd" ]; then
+      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
+      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
+   else
+      # if this is not System V we simple add the call to the
+      # startup script to RC_FILE
+
+      # Start-up script already installed?
+      #------------------------------------
+      grep $STARTUP_FILE_NAME $RC_FILE > /dev/null 2>&1
+      status=$?
+      if [ $status = 0 ]; then
+         mv $RC_FILE.sge_uninst.3 $RC_FILE.sge_uninst.4
+         mv $RC_FILE.sge_uninst.2 $RC_FILE.sge_uninst.3
+         mv $RC_FILE.sge_uninst.1 $RC_FILE.sge_uninst.2
+         mv $RC_FILE.sge_uninst $RC_FILE.sge_uninst.1
+
+         cat $RC_FILE | sed -e "s/# Grid Engine start up//g" | sed -e "s/$SGE_STARTUP_FILE//g"  > $RC_FILE.new.1 2>/dev/null
+         cp $RC_FILE $RC_FILE.sge_uninst
+         cp $RC_FILE.new.1 $RC_FILE
+         $INFOTEXT "Application removed from %s" $RC_FILE
+         
+         rm $RC_FILE.new.1
+      fi
+   fi
+
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+   $CLEAR
+
+
+
+}

@@ -11,7 +11,7 @@ Date: 07.22.2004
 1.3 Summary       : uninstall procedure doesn't remove rc-script of execd! 
 1.4 Changelog ID  : MD-2004-07-22-0.txt 
 1.5 Developer(s)  : MD 
-1.6 Reviewer(s)   : JG 
+1.6 Reviewer(s)   :  
 
 
 2 Conformance to specification
@@ -92,7 +92,7 @@ Successfull execution
 
 
 7 Accepted
-7 [x ] yes
+7 [ ] yes
 7 [ ] no - comment:
 
 

@@ -72,6 +72,7 @@ AFS=false
 NOREMOTE=false
 START_RPC_SERVICE=false
 ADD_TO_RC=false
+REMOVE_RC=false
 SET_FILE_PERMS=false
 
 QMASTER="undef"
@@ -473,7 +474,11 @@ if [ $EXECD = "uninstall" ]; then
                 "screens!\n\nHit, <ENTER> to continue!"
       $CLEAR
       ProcessSGERoot
-      GetCell
+
+      $INFOTEXT -n "Please enter your SGE_CELL directory or use the default [default] >> "
+
+      SGE_CELL=`Enter default`
+      export SGE_CELL
    fi
 
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
@@ -484,8 +489,8 @@ if [ $EXECD = "uninstall" ]; then
       MoveLog
    fi
    
-   $INFOTEXT "If you have local execution host spool directories\n" \
-             "or installed rc startup scripts, please remove them by hand!\n\n"
+   $INFOTEXT "If you have local execution host spool directories,\n" \
+             "please remove them by hand!\n\n"
 
    if [ $QMASTER != "uninstall" ]; then 
       exit 0

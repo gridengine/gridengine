@@ -59,6 +59,8 @@ WelcomeUninstall()
 
 FetchHostname()
 {
+   euid=`$SGE_UTILBIN/uidgid -euid`
+
    if [ $AUTO = "true" ]; then
       HOST=$EXEC_HOST_LIST_RM
    fi
@@ -82,6 +84,7 @@ FetchHostname()
         RemoveExecd $h
         RemoveQueues $h
         RemoveSpoolDir $h
+        RemoveRcScript $h execd $euid
 
      else
         $INFOTEXT "%s is not an execution host" $h

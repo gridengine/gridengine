@@ -1,3 +1,6 @@
+EB-2002-01-28-0: Bugfix:    - "qselect -l h=<host with no queues>" prints
+                              error message.
+
 AA-2002-01-28-1: Bugfix:    - qmon unable to contact master message fix
                             - func proto show_info_job,..
 

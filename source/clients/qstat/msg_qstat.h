@@ -39,6 +39,7 @@
 ** qstat.c
 */
 #define MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S    _("no queues remaining after %s queue selection\n")
+#define MSG_QSTAT_NOQUEUESREMAININGAFTERSELECTION _("no queues remaining after selection\n")
 #define MSG_GDI_JOBZOMBIESSGEGDIFAILED              _("job zombies: sge_gdi failed\n")
 #define MSG_GDI_PESGEGDIFAILED              _("pe: sge_gdi failed\n")
 #define MSG_GDI_CKPTSGEGDIFAILED    _("ckpt: sge_gdi failed\n")

@@ -350,10 +350,17 @@ char **argv
       }
    }
 
+   if (!a_queue_was_selected && qselect_mode) {
+      fprintf(stderr, MSG_QSTAT_NOQUEUESREMAININGAFTERSELECTION);
+      SGE_EXIT(1);
+   }
+
    if (qselect_mode) {
-      for_each(qep, queue_list) 
-         if ((lGetUlong(qep, QU_tagged) & TAG_SHOW_IT)!=0)
+      for_each(qep, queue_list) {
+         if ((lGetUlong(qep, QU_tagged) & TAG_SHOW_IT)!=0) {
             printf("%s\n", lGetString(qep, QU_qname));
+         }
+      }
       SGE_EXIT(0);
    }
 

@@ -58,6 +58,7 @@
 #include "sge_string.h"
 #include "sge_prog.h"
 #include "sge_io.h"
+#include "sge_answer.h"
 
 static intprt_type intprt_as_load_adjustment[] = { CE_name, CE_stringval, 0 };
 
@@ -379,7 +380,7 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
       ul = str2qsm(str);
       if (ul == (u_long32) -1) {
          sprintf(SGE_EVENT, MSG_SCHEDCONF_INVALIDVALUEXFORQUEUESORTMETHOD_S, str);
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1; 
       }
@@ -392,7 +393,7 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
       alp = lFreeList(alp);
       if (!str) {
          sprintf(SGE_EVENT, MSG_SCHEDCONF_INVALIDVALUEXFORQUEUESORTMETHOD_S, str);
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1; 
       }
@@ -487,14 +488,14 @@ lList *read_sched_configuration(char *fname, int spool, lList **alpp)
    }
    else {
       CRITICAL((SGE_EVENT, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return NULL;
    }
 
    if (write_default_config) {
       if (write_sched_configuration(1, 2, lFirst(confl)) == NULL) {
-         sge_add_answer(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, 0);
+         answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return NULL;
       }

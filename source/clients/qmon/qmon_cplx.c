@@ -56,6 +56,7 @@
 #include "def.h"
 #include "sge_complex.h"
 #include "sge_complex_schedd.h"
+#include "sge_answer.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"

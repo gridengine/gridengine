@@ -51,9 +51,10 @@
 #include "sge_m_event.h"
 #include "sge_log.h"
 #include "sge_dstring.h"
-#include "scheduler.h"                                                                
-#include "sgeee.h"                                                                
-#include "sge_support.h"                                                                
+#include "scheduler.h"
+#include "sge_answer.h"
+#include "sgeee.h"                                                            
+#include "sge_support.h"                                                
 #include "msg_common.h"
 #include "sge_feature.h"
 #include "sge_stdio.h"
@@ -98,7 +99,7 @@ int root_node
    lListElem *cep;
    int i;
 
-   DENTER(TOP_LAYER, "_write_sharetree");
+   DENTER(TOP_LAYER, "write_sharetree");
 
    if (!ep) {
       if (!alpp) {
@@ -106,7 +107,7 @@ int root_node
          SGE_EXIT(1);
       } 
       else {
-         sge_add_answer(alpp, MSG_OBJ_NOSTREEELEM, STATUS_EEXIST, 0);
+         answer_list_add(alpp, MSG_OBJ_NOSTREEELEM, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -119,7 +120,7 @@ int root_node
             SGE_EXIT(1);
          } 
          else {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -152,7 +153,7 @@ int root_node
       fret = uni_print_list(fp, NULL, 0, lGetList(ep, STN_children), print_elements, 
                      delis, 0);
       if (fret < 0) {
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -177,7 +178,7 @@ int root_node
 FPRINTF_ERROR:
    if (fname)
       fclose(fp); 
-   sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+   answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
    DEXIT;
    return -1;
 }
@@ -540,14 +541,15 @@ const char *path
          fprintf(fp, "="u32"\n", lGetUlong(node, STN_shares));
       free_ancestors(&ancestors);
       for_each(cep, lGetList(node, STN_children)) {
-         dstring sb = {NULL, 0};
+         dstring sb = DSTRING_INIT;
+
          if (!strcmp(path, "/"))
             sge_dstring_sprintf(&sb, "/%s", lGetString(cep, STN_name));
          else
             sge_dstring_sprintf(&sb, "%s/%s", path,
                                  lGetString(cep, STN_name));
-         show_sharetree_path(root, sb.s);
-         free(sb.s);
+         show_sharetree_path(root, sge_dstring_get_string(&sb));
+         sge_dstring_free(&sb);
       }
    }
    else {

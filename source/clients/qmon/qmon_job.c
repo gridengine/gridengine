@@ -71,7 +71,6 @@
 #include "gdi_qmod.h"
 #include "sge_gdi_intern.h"
 #include "sge_feature.h"
-#include "parse_range.h"
 #include "qmon_matrix.h"
 #include "sge_range.h"
 #include "parse.h"
@@ -81,6 +80,7 @@
 #include "sge_support.h"
 #include "sge_job_jatask.h"
 #include "sge_range.h"
+#include "sge_answer.h"
 
 enum {
    JOB_DISPLAY_MODE_RUNNING,
@@ -1214,8 +1214,8 @@ XtPointer cld, cad;
       lAddList(jl, rl);
    
    if (jl) {
-      dstring dyn_tasks = {NULL, 0};
-      dstring dyn_oldtasks = {NULL, 0};
+      dstring dyn_tasks = DSTRING_INIT;
+      dstring dyn_oldtasks = DSTRING_INIT;
       lListElem *selected_job;
       lListElem *selected_ja_task;
       u_long32 selected_job_id;
@@ -1411,7 +1411,6 @@ lListElem *jep
 
    static char info[60000];
    char buf[1024];
-   const char *str;
 
 /*    int status; */
 
@@ -1469,9 +1468,12 @@ lListElem *jep
             lGetString(jep, JB_checkpoint_object) : "");
 
    if (lGetString(jep, JB_pe)) {
-      show_ranges(buf, 0, NULL, lGetList(jep, JB_pe_range));
+      dstring range_string = DSTRING_INIT;
+
+      range_list_print_to_string(lGetList(jep, JB_pe_range), &range_string, 1);
       sprintf(info, WIDTH"%s %s\n", info, "Requested PE:", 
-               lGetString(jep, JB_pe), buf);
+              lGetString(jep, JB_pe), sge_dstring_get_string(&range_string));
+      sge_dstring_free(&range_string);
    }
 
 #ifdef FIXME
@@ -1643,7 +1645,7 @@ static void qmonJobScheddInfo(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
-   dstring sb = {NULL, 0};
+   dstring sb = DSTRING_INIT;
    lList *jl = NULL;
 
    lDescr info_descr[] = {
@@ -1657,9 +1659,10 @@ XtPointer cld, cad;
    
    qmonBrowserOpen(w, NULL, NULL);
    if (jl ? (show_info_for_jobs(jl, NULL, NULL, &sb) == 0) :  
-            (show_info_for_job(NULL, NULL, &sb) == 0) && sb.s) {
-      qmonBrowserShow(sb.s);
-      free(sb.s);
+            (show_info_for_job(NULL, NULL, &sb) == 0) && 
+               sge_dstring_get_string(&sb)) {
+      qmonBrowserShow(sge_dstring_get_string(&sb));
+      sge_dstring_free(&sb);
    }
    else 
       qmonBrowserShow("---------Could not get scheduling info--------\n");
@@ -1751,7 +1754,7 @@ dstring *sb
          if (fp)
             fprintf(fp, "%s", lGetString(aep, AN_text));
          if (alpp) {
-            sge_add_answer(alpp, lGetString(aep, AN_text),
+            answer_list_add(alpp, lGetString(aep, AN_text),
                   lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
          }
          schedd_info = FALSE;
@@ -1780,7 +1783,7 @@ dstring *sb
          if (fp)
             fprintf(fp, "%s", lGetString(aep, AN_text));
          if (alpp) {
-            sge_add_answer(alpp, lGetString(aep, AN_text),
+            answer_list_add(alpp, lGetString(aep, AN_text),
                   lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
          }
          jobs_exist = FALSE;
@@ -1875,7 +1878,7 @@ dstring *sb
          if (fp)
             fprintf(fp, "%s", lGetString(aep, AN_text));
          if (alpp) {
-            sge_add_answer(alpp, lGetString(aep, AN_text),
+            answer_list_add(alpp, lGetString(aep, AN_text),
                   lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
          }
          schedd_info = FALSE;

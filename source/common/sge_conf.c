@@ -62,6 +62,7 @@
 #include "msg_common.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
+#include "sge_answer.h"
 
 #define SGE_BIN "bin"
 

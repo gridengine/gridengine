@@ -59,7 +59,6 @@ GDILIB_SRC = sge_all_listsL.c \
          sge_parse_date_time.c \
          parse.c \
          parse_mail.c \
-         parse_range.c \
          sge_c_event.c \
          sge_event.c \
          sge_resource.c \
@@ -70,6 +69,7 @@ GDILIB_SRC = sge_all_listsL.c \
          sge_path_alias.c \
          sge_job_jatask.c \
          sge_suser.c \
+         sge_answer.c \
          version.c
 
 GDILIB_OBJS = $(GDILIB_SRC:.c=.o)
@@ -181,9 +181,6 @@ parse.o: 	$(GDILIB_DIR)/parse.c
 parse_mail.o : $(GDILIB_DIR)/parse_mail.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/parse_mail.c
 
-parse_range.o: $(GDILIB_DIR)/parse_range.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/parse_range.c
-
 sge_resource.o: $(GDILIB_DIR)/sge_resource.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_resource.c
 
@@ -207,6 +204,9 @@ sge_job_jatask.o: $(GDILIB_DIR)/sge_job_jatask.c
 
 sge_suser.o: $(GDILIB_DIR)/sge_suser.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_suser.c
+
+sge_answer.o: $(GDILIB_DIR)/sge_answer.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_answer.c
 
 sge_event.o: $(GDILIB_DIR)/sge_event.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_event.c

@@ -153,8 +153,6 @@ int reresolve_me_qualified_hostname(void);
 /* sge_ack.c */
 int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val, u_long32 ulong_val_2);
 
-u_long32 sge_get_recoverable(lListElem *aep);  
-
 const char *quality_text(lListElem *aep);
 
 int check_isalive(const char *masterhost);

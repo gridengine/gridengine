@@ -46,6 +46,8 @@
 
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
+#include "sge_dstring.h"
+#include "sge_answer.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -57,7 +59,6 @@
 #include "qmon_message.h"
 #include "qmon_calendar.h"
 #include "qmon_globals.h"
-#include "sge_dstring.h"
 
 static Widget qmon_cal = 0;
 static Widget cal_names = 0;
@@ -171,7 +172,7 @@ lListElem *ep
    Cardinal itemCount; 
    const char *s;
    int i;
-   dstring sb = {NULL, 0};
+   dstring sb = DSTRING_INIT;
 
    DENTER(GUI_LAYER, "qmonCalendarFillConf");
    
@@ -201,7 +202,7 @@ lListElem *ep
    /* week calendar */
    sge_dstring_sprintf(&sb, "%-20.20s ", "Week");
    sge_dstring_append(&sb, (s=lGetString(ep, CAL_week_calendar))?s:"NONE");
-   items[i++] = XmStringCreateLtoR(sb.s, "LIST");
+   items[i++] = XmStringCreateLtoR((char*)sge_dstring_get_string(&sb), "LIST");
    sge_dstring_free(&sb);
 
    XtVaSetValues( cal_conf_list, 

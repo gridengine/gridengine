@@ -149,7 +149,7 @@ enum {
 #define CONTEXT_IOR "IOR"
 #define CONTEXT_PARENT "PARENT"
 
-/****** gdi/job_jatask/JB_Type ************************************************
+/****** gdi/job_jatask/--JB_Type **********************************************
 *  NAME
 *     JB_Type - CULL job element 
 *

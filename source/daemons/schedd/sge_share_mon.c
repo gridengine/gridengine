@@ -52,6 +52,7 @@
 #include "scheduler.h"
 #include "sgeee.h"
 #include "sge_support.h"
+#include "sge_answer.h"
 
 typedef struct {
    int name_format;
@@ -79,7 +80,8 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(aep);
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
@@ -99,7 +101,8 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(aep);
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
@@ -118,7 +121,7 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(3);
    }

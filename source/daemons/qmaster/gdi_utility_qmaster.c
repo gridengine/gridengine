@@ -44,7 +44,7 @@
 #include "sge_complex_schedd.h"
 #include "sort_hosts.h"
 #include "config_file.h"
-
+#include "sge_answer.h"
 #include "sge_jobL.h"
 #include "sge_hostL.h"
 #include "sge_queueL.h"
@@ -97,14 +97,14 @@ char *attr_name
          if (s[0] != '/' ) {
             if (!isdigit((int) s[0]) && strncmp(s, "SIG", 3)) {
                ERROR((SGE_EVENT, MSG_GDI_SIG_DIGIT_SS, attr_name, s));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                DEXIT;
                return STATUS_EUNKNOWN;
             }
          } else {
             if (replace_params(s, NULL, 0, ctrl_method_variables )) {
                ERROR((SGE_EVENT, MSG_GDI_METHOD_VARS_SS, attr_name, err_msg));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+               answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
                DEXIT;
                return STATUS_EEXIST;
             }
@@ -145,7 +145,7 @@ char *variables[]
          /* force use of absolut pathes */ 
          if (script[0] != '/' ) { 
             ERROR((SGE_EVENT, MSG_GDI_APATH_S, attr_name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return STATUS_EEXIST;
          } 
@@ -153,7 +153,7 @@ char *variables[]
          /* ensure that variables are valid */
          if (replace_params(script, NULL, 0, variables )) {
             ERROR((SGE_EVENT, MSG_GDI_VARS_SS, attr_name, err_msg));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return STATUS_EEXIST;
          }
@@ -211,7 +211,7 @@ char *attr_name
          case lStringT:
             if (!(s = lGetString(qep, nm))) {
                ERROR((SGE_EVENT, MSG_GDI_VALUE_S, attr_name));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                DEXIT;
                return STATUS_EUNKNOWN;
             }
@@ -220,7 +220,7 @@ char *attr_name
          case lHostT:
             if (!(s = lGetHost(qep, nm))) {
                ERROR((SGE_EVENT, MSG_GDI_VALUE_S, attr_name));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                DEXIT;
                return STATUS_EUNKNOWN;
             }
@@ -303,7 +303,7 @@ char *object_name
       ret=sge_fill_requests(lGetList(tmp_elem, nm), Master_Complex_List, 1, 0, 0);
       if (ret) {
          /* error message gets written by sge_fill_requests into SGE_EVENT */
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -340,7 +340,7 @@ char *attr_name
 
       if(!parse_ulong_val(NULL, NULL, TYPE_MEM, str, NULL, 0)) {
          sprintf(SGE_EVENT, MSG_GDI_TYPE_MEM_SS, attr_name, str?str:"(null)");
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_ESYNTAX;
       }
@@ -373,7 +373,7 @@ int enable_infinity
          if ((strcasecmp(str, "infinity") == 0) && (enable_infinity == 0)) { 
               DPRINTF(("ERROR! Infinity value for \"%s\"\n",attr_name));
               sprintf(SGE_EVENT, MSG_GDI_SIG_DIGIT_SS, attr_name, str);
-              sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+              answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
               DEXIT;
               return STATUS_ESYNTAX;
          }
@@ -381,7 +381,7 @@ int enable_infinity
 
       if(!parse_ulong_val(NULL, NULL, TYPE_TIM, str, NULL, 0)) {
          sprintf(SGE_EVENT, MSG_GDI_TYPE_TIME_SS, attr_name, str?str:"(null)");
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_ESYNTAX;
       }
@@ -447,7 +447,7 @@ int verify_str_key(lList **alpp, const char *str, const char *name) {
          } else {
             sprintf(SGE_EVENT, MSG_GDI_KEYSTR_FIRSTCHAR_S, begin_strings[i]);
          }
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);   
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);   
          return STATUS_EUNKNOWN;  
       }
    }
@@ -462,7 +462,7 @@ int verify_str_key(lList **alpp, const char *str, const char *name) {
          } else {
             sprintf(SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_S, mid_strings[i]);
          }
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);   
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);   
          return STATUS_EUNKNOWN;
       }
    }      
@@ -473,7 +473,7 @@ int verify_str_key(lList **alpp, const char *str, const char *name) {
       if (!strcasecmp(str, forbidden_string)) {
          sprintf(SGE_EVENT, MSG_GDI_KEYSTR_KEYWORD_SS, keyword_strings[i], 
             forbidden_string);
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
          return STATUS_EUNKNOWN;                         
       }
    }
@@ -505,7 +505,7 @@ const char *obj_name
       if (lGetElemStr(lp2, nm, s)) {
          sprintf(SGE_EVENT, MSG_GDI_MULTIPLE_OCCUR_SSSS, 
                   (nm==US_name)?MSG_OBJ_USERSET:MSG_JOB_PROJECT, s, obj_name, name);
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -549,7 +549,7 @@ int nm
       if (!lGetElemStr(resources, CE_name, name)) {
          resources = lFreeList(resources);
          ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_SSS, name, obj_descr, obj_name));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -628,7 +628,7 @@ int no_info
                      INFO((SGE_EVENT, SFQ" already exists in "SFQ" of "SFQ"\n",
                         lGetString(reduced_element, this_elem_primary_key), 
                         sub_list_name, object_name));
-                     sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
                   }
                   lFreeElem(old_sub_elem);
                   lAppendElem(full_sublist, new_sub_elem);
@@ -662,14 +662,14 @@ int no_info
                INFO((SGE_EVENT, SFQ" does not exist in "SFQ" of "SFQ"\n",
                    lGetString(reduced_element, this_elem_primary_key),
                    sub_list_name, object_name));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+               answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
             } else {
                if (!full_sublist) {
                   if (!no_info && sub_command == SGE_GDI_CHANGE) {
                      INFO((SGE_EVENT, SFQ" of "SFQ" is empty - "
                         "Adding new element(s).\n",
                         sub_list_name, object_name));
-                     sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
                   } 
                   lSetList(this_elem, this_elem_name, lCopyList("",
                      lGetList(delta_elem, this_elem_name)));
@@ -681,7 +681,7 @@ int no_info
                         " - Adding new element.\n",
                         lGetString(reduced_element, this_elem_primary_key),
                         sub_list_name, object_name));
-                     sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
                   }   
                   new_sub_elem =
                      lDechainElem(reduced_sublist, reduced_element);

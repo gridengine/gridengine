@@ -101,6 +101,7 @@
 #include "sge_uidgid.h"
 #include "sge_io.h"
 #include "sge_sharetree_qmaster.h"
+#include "sge_answer.h"
 
 extern lList *Master_Project_List;
 extern lList *Master_Sharetree_List;

@@ -47,6 +47,7 @@
 #include "sge_sched.h"
 #include "sge_log.h"
 #include "setup_path.h"
+#include "sge_answer.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
 #include "msg_common.h"
@@ -72,7 +73,7 @@ char *rhost
 
    if ( !confp || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -102,7 +103,7 @@ char *rhost
    lAppendElem(*confl, lCopyElem(confp));
 
    if (write_sched_configuration(1, 2, lFirst(*confl)) == NULL) {
-      sge_add_answer(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, 0);
+      answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
    }
@@ -112,7 +113,7 @@ char *rhost
 
    INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, "scheduler", 
         "scheduler configuration"));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    DEXIT;
    return STATUS_OK;

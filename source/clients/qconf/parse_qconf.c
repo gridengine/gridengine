@@ -100,6 +100,8 @@
 #include "sge_spool.h"
 #include "sge_signal.h"
 #include "sge_io.h"
+#include "sge_answer.h"
+
 #include "msg_qconf.h"
 
 static int sge_edit(char *fname);
@@ -272,7 +274,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -349,7 +351,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          lFreeList(alp);
@@ -407,7 +409,8 @@ DPRINTF(("ep: %s %s\n",
          where = lFreeWhere(where);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -455,14 +458,16 @@ DPRINTF(("ep: %s %s\n",
          lFreeList(lp);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
          }
 
          ep = lFirst(alp);
-         if (sge_get_recoverable(ep) == STATUS_OK)
+         answer_exit_if_not_recoverable(ep);
+         if (answer_get_status(ep) == STATUS_OK)
             fprintf(stderr, MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S, host);
          else
             fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -510,8 +515,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         
-         sge_get_recoverable(aep);
+        
+         answer_exit_if_not_recoverable(aep); 
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          lFreeList(alp);
          lFreeList(lp);
@@ -543,10 +548,7 @@ DPRINTF(("ep: %s %s\n",
          spp = sge_parser_get_next(spp);
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
          alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -563,10 +565,7 @@ DPRINTF(("ep: %s %s\n",
          spp = sge_parser_get_next(spp);
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
          alp = sge_gdi(SGE_OPERATOR_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -628,7 +627,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_PE_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -660,7 +659,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -689,7 +688,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -729,7 +728,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text)); 
             alp = lFreeList(alp);
             lp = lFreeList(lp);
@@ -773,7 +773,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text)); 
             alp = lFreeList(alp);
             lp = lFreeList(lp);
@@ -856,7 +857,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
 
          alp = lFreeList(alp);
@@ -895,7 +896,8 @@ DPRINTF(("ep: %s %s\n",
             what = lFreeWhat(what);
 
             aep = lFirst(alp);
-            if (sge_get_recoverable(aep) != STATUS_OK) {
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
                fprintf(stderr, "%s", lGetString(aep, AN_text));
                spp++;
                continue;
@@ -927,7 +929,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          ep = lFirst(alp);
-         if (sge_get_recoverable(ep) == STATUS_OK)
+         answer_exit_if_not_recoverable(ep);
+         if (answer_get_status(ep) == STATUS_OK)
             fprintf(stderr, MSG_TREE_CHANGEDSHARETREE);
          else
             fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -956,7 +959,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -1053,7 +1057,8 @@ DPRINTF(("ep: %s %s\n",
             alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_MOD, &lp, NULL, what);
             what = lFreeWhat(what);
             ep = lFirst(alp);
-            if (sge_get_recoverable(ep) == STATUS_OK)
+            answer_exit_if_not_recoverable(ep);
+            if (answer_get_status(ep) == STATUS_OK)
                fprintf(stderr, MSG_TREE_MODIFIEDSHARETREE);
             else
                fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -1093,9 +1098,7 @@ DPRINTF(("ep: %s %s\n",
          /* add all users/groups from lp to the acls in alp */
          sge_client_add_user(&alp, lp, arglp);
 
-         for_each(aep,alp) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          arglp = lFreeList(arglp);
          lp = lFreeList(lp);
@@ -1123,7 +1126,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
 
          alp = lFreeList(alp);
@@ -1148,7 +1151,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -1161,7 +1165,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -1183,19 +1188,13 @@ DPRINTF(("ep: %s %s\n",
          /* update user usage */
          if (lp) {
             alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-            for_each(aep, alp) {
-               sge_get_recoverable(aep);
-               fprintf(stderr, "%s", lGetString(aep, AN_text));
-            }
+            answer_list_on_error_print_or_exit(&alp, stderr);
          }
 
          /* update project usage */
          if (lp2) {
             alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &lp2, NULL, NULL);
-            for_each(aep, alp) {
-               sge_get_recoverable(aep);
-               fprintf(stderr, "%s", lGetString(aep, AN_text));
-            }
+            answer_list_on_error_print_or_exit(&alp, stderr);
          }
 
          alp = lFreeList(alp);
@@ -1216,10 +1215,7 @@ DPRINTF(("ep: %s %s\n",
             lSetUlong(ep, ID_action, QCLEAN);
          }
          alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_TRIGGER, &lp, NULL, NULL);
-         for_each(aep, alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
          spp++;
@@ -1252,10 +1248,7 @@ DPRINTF(("ep: %s %s\n",
          lp = lCreateList("cal's to del", CAL_Type);
          lAppendElem(lp, ep);
          alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1274,10 +1267,7 @@ DPRINTF(("ep: %s %s\n",
          lp = lCreateList("ckpt interfaces to del", CK_Type);
          lAppendElem(lp, ep);
          alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1321,10 +1311,7 @@ DPRINTF(("ep: %s %s\n",
 
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
          alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1341,10 +1328,7 @@ DPRINTF(("ep: %s %s\n",
 
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
          alp = sge_gdi(SGE_OPERATOR_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1364,10 +1348,7 @@ DPRINTF(("ep: %s %s\n",
          lp = lCreateList("pe's to del", PE_Type);
          lAppendElem(lp, ep);
          alp = sge_gdi(SGE_PE_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1387,10 +1368,7 @@ DPRINTF(("ep: %s %s\n",
                lString2List(*spp, &lp, QU_Type, QU_qname, ", ");
 
                alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-               for_each(aep, alp) {
-                  sge_get_recoverable(aep);
-                  fprintf(stderr, "%s", lGetString(aep, AN_text));
-               }
+               answer_list_on_error_print_or_exit(&alp, stderr);
                alp = lFreeList(alp);
                lp = lFreeList(lp);
             }
@@ -1435,9 +1413,7 @@ DPRINTF(("ep: %s %s\n",
 
          /* remove users/groups from lp from the acls in alp */
          sge_client_del_user(&alp, lp, arglp);
-         for_each(aep,alp) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          lp = lFreeList(lp);
          alp = lFreeList(alp);
          arglp = lFreeList(arglp);
@@ -1456,10 +1432,7 @@ DPRINTF(("ep: %s %s\n",
 
          lString2List(*spp, &lp, US_Type, US_name, ", ");
          alp = sge_gdi(SGE_USERSET_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1476,10 +1449,7 @@ DPRINTF(("ep: %s %s\n",
 
          lString2List(*spp, &lp, UP_Type, UP_name, ", ");
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1498,10 +1468,7 @@ DPRINTF(("ep: %s %s\n",
 
          lString2List(*spp, &lp, UP_Type, UP_name, ", ");
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1524,7 +1491,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -1591,7 +1559,8 @@ DPRINTF(("ep: %s %s\n",
             alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_MOD, &lp, NULL, what);
             what = lFreeWhat(what);
             ep = lFirst(alp);
-            if (sge_get_recoverable(ep) == STATUS_OK)
+            answer_exit_if_not_recoverable(ep);
+            if (answer_get_status(ep) == STATUS_OK)
                fprintf(stderr, MSG_TREE_MODIFIEDSHARETREE);
             else
                fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -1614,10 +1583,7 @@ DPRINTF(("ep: %s %s\n",
          /* no adminhost/manager check needed here */
          
          alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_DEL, NULL, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1641,9 +1607,10 @@ DPRINTF(("ep: %s %s\n",
 
          alp = gdi_kill(NULL, me.default_cell, 0, SCHEDD_KILL);
          for_each(aep, alp) {
-            if (sge_get_recoverable(aep) != STATUS_OK)
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK)
                sge_parse_return = 1;
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            answer_print_text(aep, stderr);
          }
 
          alp = lFreeList(alp);
@@ -1658,9 +1625,7 @@ DPRINTF(("ep: %s %s\n",
       if (!strcmp("-km", *spp)) {
          /* no adminhost/manager check needed here */
          alp = gdi_kill(NULL, me.default_cell, 0, MASTER_KILL);
-         for_each(aep, alp) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
 
          spp++;
@@ -1685,11 +1650,7 @@ DPRINTF(("ep: %s %s\n",
             lString2List(*spp, &lp, ID_Type, ID_str, ", ");
             alp = gdi_kill(lp, me.default_cell, 0, opt);
          }      
-
-         for_each(aep, alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
          spp++;
@@ -1734,10 +1695,7 @@ DPRINTF(("ep: %s %s\n",
             alp = gdi_kill(lp, me.default_cell, 0, opt);
          }
 
-         for_each(aep, alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
          spp++;
@@ -1787,7 +1745,8 @@ DPRINTF(("ep: %s %s\n",
             what = lFreeWhat(what);
 
             aep = lFirst(alp);
-            if (sge_get_recoverable(aep) != STATUS_OK) {
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
               fprintf(stderr, "%s", lGetString(aep, AN_text));
                spp++;
                continue;
@@ -1840,7 +1799,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -1882,7 +1841,8 @@ DPRINTF(("ep: %s %s\n",
             lFreeWhat(what);
 
             aep = lFirst(alp);
-            if (sge_get_recoverable(aep) != STATUS_OK) {
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
               fprintf(stderr, "%s", lGetString(aep, AN_text));
                spp++;
                continue;
@@ -1935,7 +1895,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -1985,7 +1945,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -2033,7 +1993,8 @@ DPRINTF(("ep: %s %s\n",
             what = lFreeWhat(what);
 
             aep = lFirst(alp);
-            if (sge_get_recoverable(aep) != STATUS_OK) {
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
                fprintf(stderr, "%s", lGetString(aep, AN_text));
                spp++;
                continue;
@@ -2055,7 +2016,8 @@ DPRINTF(("ep: %s %s\n",
             
             alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
             ep = lFirst(alp);
-            if (sge_get_recoverable(ep) == STATUS_OK)
+            answer_exit_if_not_recoverable(ep);
+            if (answer_get_status(ep) == STATUS_OK)
                fprintf(stderr, MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S,
                       host);
             else
@@ -2084,7 +2046,8 @@ DPRINTF(("ep: %s %s\n",
             what = lFreeWhat(what);
 
             aep = lFirst(alp);
-            if (sge_get_recoverable(aep) != STATUS_OK) {
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
               fprintf(stderr, "%s", lGetString(aep, AN_text));
                spp++;
                continue;
@@ -2137,7 +2100,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_PE_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -2163,7 +2126,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -2223,7 +2187,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
 
          alp = lFreeList(alp);
@@ -2434,7 +2398,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
 
          alp = lFreeList(alp);
@@ -2457,7 +2421,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -2472,7 +2437,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_SC_LIST, SGE_GDI_MOD, &newlp, NULL, what);
          what = lFreeWhat(what);
          ep = lFirst(alp);
-         if (sge_get_recoverable(ep) == STATUS_OK)
+         answer_exit_if_not_recoverable(ep);
+         if (answer_get_status(ep) == STATUS_OK)
             fprintf(stderr, MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION);
          else
             fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -2497,7 +2463,8 @@ DPRINTF(("ep: %s %s\n",
             what = lFreeWhat(what);
 
             aep = lFirst(alp);
-            if (sge_get_recoverable(aep) != STATUS_OK) {
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
                fprintf(stderr, "%s", lGetString(aep, AN_text));
                spp++;
                continue;
@@ -2528,7 +2495,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_MOD, &newlp, NULL, what);
          what = lFreeWhat(what);
          ep = lFirst(alp);
-         if (sge_get_recoverable(ep) == STATUS_OK)
+         answer_exit_if_not_recoverable(ep);
+         if (answer_get_status(ep) == STATUS_OK)
             fprintf(stderr, MSG_TREE_CHANGEDSHARETREE);
          else
             fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -2593,7 +2561,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             ep = lFreeElem(ep);
@@ -2616,7 +2585,8 @@ DPRINTF(("ep: %s %s\n",
 
          alp = sge_gdi(SGE_USERSET_LIST, SGE_GDI_MOD, &acl, NULL, NULL);
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             acl = lFreeList(acl);
@@ -2659,7 +2629,8 @@ DPRINTF(("ep: %s %s\n",
 
          alp = sge_gdi(SGE_USERSET_LIST, SGE_GDI_ADD, &acl, NULL, NULL);
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             acl = lFreeList(acl);
@@ -2691,7 +2662,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -2713,7 +2685,8 @@ DPRINTF(("ep: %s %s\n",
          if (strcmp(lGetString(ep, UP_name), lGetString(newep, UP_name))) {
             alp = sge_gdi(SGE_USER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
             aep = lFirst(alp);
-            sge_get_recoverable(aep);
+            answer_exit_if_not_recoverable(aep);
+            answer_get_status(aep);
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
          }
@@ -2726,7 +2699,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -2754,7 +2727,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
                   
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -2775,7 +2749,7 @@ DPRINTF(("ep: %s %s\n",
          /*if (strcmp(lGetString(ep, UP_name), lGetString(newep, UP_name))) {
             alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
             aep = lFirst(alp);
-            sge_get_recoverable(aep);
+            answer_exit_if_not_recoverable(aep);
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
          }*/
@@ -2787,7 +2761,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -2833,7 +2807,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
                   
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             newep = lFreeElem(newep);
@@ -2862,7 +2837,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s", lGetString(aep, AN_text));
            alp = lFreeList(alp);
            lp = lFreeList(lp);
@@ -2909,7 +2885,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
                   
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             newep = lFreeElem(newep);
@@ -2938,7 +2915,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s", lGetString(aep, AN_text));
            alp = lFreeList(alp);
            lp = lFreeList(lp);
@@ -2993,7 +2971,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3126,7 +3105,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3254,7 +3234,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3323,7 +3304,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3383,7 +3365,8 @@ DPRINTF(("ep: %s %s\n",
                         sge_parse_return = 1;
                      }
                      aep = lFirst(alp);
-                     if(sge_get_recoverable(aep) != STATUS_OK) {
+                     answer_exit_if_not_recoverable(aep);
+                     if(answer_get_status(aep) != STATUS_OK) {
                         fprintf(stderr, "%s", lGetString(aep, AN_text));
                      }
                      lFreeList(alp);
@@ -3405,7 +3388,7 @@ DPRINTF(("ep: %s %s\n",
                cull_write_qconf(0, 1, NULL, NULL, NULL, lFirst(lp));
             else {
                aep = lFirst(alp);
-               sge_get_recoverable(aep);
+               answer_exit_if_not_recoverable(aep);
                fprintf(stderr, "%s", lGetString(aep, AN_text));
             }
             printf("\n");
@@ -3426,7 +3409,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3459,7 +3443,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3526,7 +3511,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3570,7 +3556,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3596,7 +3583,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3916,7 +3904,8 @@ DPRINTF(("ep: %s %s\n",
                         
             printf("\n");            
             aep = lFirst(alp);
-            if (sge_get_recoverable(aep) != STATUS_OK) {
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
                fprintf(stderr, "%s", lGetString(aep, AN_text));
                continue;
             }
@@ -3951,7 +3940,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
                   
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -4021,9 +4011,7 @@ DPRINTF(("ep: %s %s\n",
          /* no adminhost/manager check needed here */
 
          alp = gdi_tsm(NULL, NULL);
-         for_each(aep, alp) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          
          spp++;
@@ -4293,7 +4281,8 @@ u_long32 target
 
       /* report results */
       ep = lFirst(alp);
-      if (sge_get_recoverable(ep) == STATUS_OK)
+      answer_exit_if_not_recoverable(ep);
+      if (answer_get_status(ep) == STATUS_OK)
          fprintf(stderr, MSG_QCONF_XADDEDTOYLIST_SS, host, name);
       else 
          fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -4352,7 +4341,7 @@ u_long32 target
 
       /* print results */
       ep = lFirst(alp);
-      sge_get_recoverable(ep);
+      answer_exit_if_not_recoverable(ep);
 		fprintf(stderr, "%s\n", lGetString(ep, AN_text));
 
       lFreeList(alp);
@@ -4606,7 +4595,8 @@ char *name
    where = lFreeWhere(where);
 
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       return 0;
    }
@@ -4660,7 +4650,8 @@ static int show_eventclients()
    what = lFreeWhat(what);
 
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       DEXIT;
       return -1;
@@ -4709,7 +4700,8 @@ static int show_processors()
    where = lFreeWhere(where);
 
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       DEXIT;
       return -1;
@@ -4893,10 +4885,8 @@ lList *alp
    DENTER(TOP_LAYER, "show_gdi_request_answer");
    if (alp != NULL) {
     
-    
       for_each(aep,alp) {
-        sge_get_recoverable(aep); 
-        /* fprintf(stderr, "%s", lGetString(aep, AN_text)); */
+         answer_exit_if_not_recoverable(aep);
       }
       aep = lLast(alp);
       fprintf(stderr, "%s", lGetString(aep, AN_text));
@@ -5679,7 +5669,8 @@ char *fname                     /* != NULL if we read the complex from file */
    where = lFreeWhere(where);
 
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
    }
    else {
@@ -5769,7 +5760,8 @@ char *fname                     /* != NULL if we read the complex from file */
 
    /* report results */
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) == STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) == STATUS_OK) {
 
       switch (add) {
          case 0:
@@ -5927,7 +5919,7 @@ lList *arglp
       lFreeList(lp);
 
       for_each(aep, alp) 
-         fprintf(stderr, "%s: %s", quality_text(aep), lGetString(aep, AN_text));
+         fprintf(stderr, "%s: %s", answer_get_quality_text(aep), lGetString(aep, AN_text));
    }
 
    DEXIT;
@@ -5956,7 +5948,8 @@ const char *cmplx_name
    where = lFreeWhere(where);
 
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       fail = 1;
    }
@@ -6004,7 +5997,8 @@ const char *config_name
    where = lFreeWhere(where);
 
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       fail = 1;
    }
@@ -6043,7 +6037,8 @@ const char *config_name
    ep = lFirst(alp);
    fprintf(stderr, "%s\n", lGetString(ep, AN_text));
 
-   fail = !(sge_get_recoverable(ep) == STATUS_OK);
+   answer_exit_if_not_recoverable(ep);
+   fail = !(answer_get_status(ep) == STATUS_OK);
 
    lFreeList(alp);
    lFreeList(lp);
@@ -6080,7 +6075,8 @@ u_long32 flags
 
    failed = FALSE;
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       lFreeList(alp);
       lFreeList(lp);
@@ -6167,8 +6163,9 @@ u_long32 flags
             
    /* report results */
    ep = lFirst(alp);                   
-         
-   failed = !(sge_get_recoverable(ep) == STATUS_OK);
+        
+   answer_exit_if_not_recoverable(ep); 
+   failed = !(answer_get_status(ep) == STATUS_OK);
          
    fprintf(stderr, "%s\n", lGetString(ep, AN_text));
      
@@ -6383,7 +6380,8 @@ struct object_info_entry *info_entry
          if (sge_next_is_an_opt(*spp))  {
             sprintf(SGE_EVENT, MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S, 
                "qconf");
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, 
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             return 1;
          }                
          *epp = info_entry->cull_read_in_object(NULL, **spp, 0, 
@@ -6408,7 +6406,7 @@ struct object_info_entry *info_entry
          if (lGetNumberOfElem(cflp) > 0) {
             sprintf(SGE_EVENT, MSG_QCONF_XISNOTAOBJECTATTRIB_SSS, "qconf", 
                     lGetString(lFirst(cflp), CF_name), info_entry->object_name);
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             return 1;
          }
       }
@@ -6417,7 +6415,7 @@ struct object_info_entry *info_entry
       if (add_nm_to_set(fields, info_entry->nm_name) < 0) {
          sprintf(SGE_EVENT, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, "qconf", 
             info_entry->attribute_name);
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return 1;
       }
 
@@ -6457,7 +6455,7 @@ struct object_info_entry *info_entry
                break;
             default:
                sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf");
-               sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                return 1;
          }
          lAppendElem(qlp, add_qp);
@@ -6465,7 +6463,7 @@ struct object_info_entry *info_entry
       if (!qlp) {
          sprintf(SGE_EVENT, MSG_QCONF_MQATTR_MISSINGOBJECTLIST_S, 
             "qconf");
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return 1;
       }
 
@@ -6520,9 +6518,10 @@ const char *user
 
  
      ep = lFirst(alp);
-     if (sge_get_recoverable(ep) != STATUS_OK) {
+      answer_exit_if_not_recoverable(ep);
+     if (answer_get_status(ep) != STATUS_OK) {
        fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-       if (sge_get_recoverable(ep) == STATUS_ENOIMP) {
+       if (answer_get_status(ep) == STATUS_ENOIMP) {
          alp = lFreeList(alp);
          umlp = lFreeList(umlp);
          SGE_EXIT(1); 
@@ -6578,9 +6577,10 @@ const char *group
 
  
      ep = lFirst(alp);
-     if (sge_get_recoverable(ep) != STATUS_OK) {
+     answer_exit_if_not_recoverable(ep);
+     if (answer_get_status(ep) != STATUS_OK) {
        fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-       if (sge_get_recoverable(ep) == STATUS_ENOIMP) {
+       if (answer_get_status(ep) == STATUS_ENOIMP) {
          alp = lFreeList(alp);
          umlp = lFreeList(umlp);
          SGE_EXIT(1); 

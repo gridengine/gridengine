@@ -44,6 +44,7 @@
 #include "sge_log.h"
 #include "config.h"
 #include "sge_string.h"
+#include "sge_answer.h"
 #include "msg_gdilib.h"
 
 static int sge_parse_enum(const char *str, char *enumv[], u_long32 *uptr, 
@@ -123,7 +124,7 @@ int read_config_list(FILE *fp, lList **lpp, lList **alpp, lDescr *dp, int nm1,
       if(!value || !(*value)) {
          if (force_value) {
             sprintf(SGE_EVENT, MSG_GDI_CONFIGNOARGUMENTGIVEN_S , name);
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
             goto Error;
          }
@@ -150,7 +151,7 @@ int read_config_list(FILE *fp, lList **lpp, lList **alpp, lDescr *dp, int nm1,
          ep = lAddElemStr(lpp, nm1, name, dp);
          if (!ep) { 
             ERROR((SGE_EVENT, MSG_GDI_CONFIGADDLISTFAILED_S , name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             goto Error;
          } 
@@ -159,7 +160,7 @@ int read_config_list(FILE *fp, lList **lpp, lList **alpp, lDescr *dp, int nm1,
          ep = lAddElemStr(lpp, nm1, name, dp);
          if (!ep) { 
             ERROR((SGE_EVENT, MSG_GDI_CONFIGADDLISTFAILED_S , name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             goto Error;
          } 
@@ -206,7 +207,7 @@ lList *get_conf_sublist(lList **alpp, lList *lp, int name_nm, int value_nm,
       if (alpp) {
          char error[1000];
          sprintf(error, MSG_GDI_CONFIGMISSINGARGUMENT_S , key);
-         sge_add_answer(alpp, error, STATUS_ESEMANTIC, NUM_AN_ERROR);
+         answer_list_add(alpp, error, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       }
       DEXIT;
       return NULL;
@@ -245,7 +246,7 @@ char *get_conf_value(lList **alpp, lList *lp, int name_nm, int value_nm,
       if (alpp) {
          char error[1000];
          sprintf(error, MSG_GDI_CONFIGMISSINGARGUMENT_S , key);
-         sge_add_answer(alpp, error, STATUS_ESEMANTIC, NUM_AN_ERROR);
+         answer_list_add(alpp, error, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       }
       DEXIT;
       return NULL;
@@ -408,7 +409,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    if (sscanf(str, u32, &uval)!=1) {
       sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOTINTEGER_SS ,
                key, str); 
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR); 
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR); 
       DEXIT;
       return FALSE;
    }
@@ -487,7 +488,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    if ( (sscanf(str, "%lf", &dval)!=1) || ( strncasecmp(str,"inf",3) == 0 ) ) {
       sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOTDOUBLE_SS , 
                key, str);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return FALSE;
    }
@@ -605,7 +606,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    }
    if(!parse_ulong_val(NULL, NULL, TYPE_TIM, str, NULL, 0)) {
       sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOTTIME_SS , key, str);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return FALSE;
    }
@@ -656,7 +657,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    }
    if(!parse_ulong_val(NULL, NULL, TYPE_MEM, str, NULL, 0)) {
       sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOMEMORY_SS , key, str);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return FALSE;
    }
@@ -708,7 +709,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    
    if(!uval) {
       sprintf(SGE_EVENT, MSG_GDI_CONFIGINVALIDQUEUESPECIFIED );
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
    }
@@ -832,7 +833,7 @@ _Insight_set_option("suppress", "PARM_NULL");
       lSetUlong(tmpep, subval_nm, strtol(s, &endptr, 10));
       if (*endptr) {
          sprintf(SGE_EVENT, MSG_GDI_CONFIGREADFILEERRORNEAR_SS , key, endptr);
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return FALSE;
       }
@@ -929,7 +930,7 @@ static int sge_parse_enum(const char *str, char *set_specifier[],
             if ( *value & bitmask ) {
                /* whops! unknown specifier */
                sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS, *cpp, name); 
-               sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                DEXIT;
                return -1;
             }
@@ -944,7 +945,7 @@ static int sge_parse_enum(const char *str, char *set_specifier[],
       if ( **cpp == '\0' ) {
          /* whops! unknown specifier */
          sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILEUNKNOWNSPEC_SS, s, name); 
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -953,7 +954,7 @@ static int sge_parse_enum(const char *str, char *set_specifier[],
 
    if (!value) {
       sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILEEMPTYENUMERATION_S , name);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
 

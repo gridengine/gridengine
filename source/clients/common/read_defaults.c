@@ -48,6 +48,7 @@
 #include "sge_uidgid.h"
 #include "sge_io.h"
 #include "sge_prog.h"
+#include "sge_answer.h"
 
 static char *def_files[3 + 1];
 
@@ -112,12 +113,12 @@ lList *get_all_defaults_files(lList **pcmdline, char **envp)
    pwd = sge_getpwnam(me.user_name);
    if (!pwd) {
       sprintf(str, MSG_USER_INVALIDNAMEX_S, me.user_name);
-      sge_add_answer(&answer, str, STATUS_ENOSUCHUSER, 0);
+      answer_list_add(&answer, str, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
       return answer;
    }
    if (!pwd->pw_dir) {
       sprintf(str, MSG_USER_NOHOMEDIRFORUSERX_S, me.user_name);
-      sge_add_answer(&answer, str, STATUS_EDISK, 0);
+      answer_list_add(&answer, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       return answer;
    }
 
@@ -146,7 +147,7 @@ lList *get_all_defaults_files(lList **pcmdline, char **envp)
     */
    if (!getcwd(cwd, sizeof(cwd))) {
       sprintf(str, MSG_FILE_CANTREADCURRENTWORKINGDIR);
-      sge_add_answer(&answer, str, STATUS_EDISK, 0);
+      answer_list_add(&answer, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       return answer;
    }
    
@@ -205,13 +206,13 @@ lList *get_all_defaults_files(lList **pcmdline, char **envp)
          status = lGetUlong(aep, AN_status);
          quality = lGetUlong(aep, AN_quality);
 
-         if (quality == NUM_AN_ERROR) {
+         if (quality == ANSWER_QUALITY_ERROR) {
             DPRINTF(("%s", lGetString(aep, AN_text)));
             if (status == STATUS_EDISK) {
                /*
                ** we turn this error into a warning here
                */
-               quality = NUM_AN_WARNING;
+               quality = ANSWER_QUALITY_WARNING;
             }
             else {
                do_exit = 1;
@@ -220,7 +221,7 @@ lList *get_all_defaults_files(lList **pcmdline, char **envp)
          else {
             DPRINTF(("Warning: Error: %s\n", lGetString(aep, AN_text)));
          }
-         sge_add_answer(&answer, lGetString(aep, AN_text), status, quality);
+         answer_list_add(&answer, lGetString(aep, AN_text), status, quality);
       }
 
       if (do_exit) {

@@ -40,7 +40,7 @@
 
 #include "sge_confL.h"
 #include "sge_answerL.h"
-
+#include "sge_answer.h"
 #include "read_object.h"
 #include "sge_gdi_intern.h"
 #include "sgermon.h"
@@ -84,7 +84,7 @@ print_func_t ostream
 
    if (!(fp = fopen(fname, "r")) && errno != ENOENT) {
       sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
    }
@@ -110,13 +110,13 @@ print_func_t ostream
    /* user settings */
    if (!(pwd = sge_getpwnam(me.user_name))) {
       sprintf(SGE_EVENT, "invalid user name \"%s\"\n", me.user_name);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ENOSUCHUSER, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
    }
    if (!pwd->pw_dir) {
       sprintf(SGE_EVENT, "missing home directory for user \"%s\"\n", me.user_name);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
    }
@@ -124,7 +124,7 @@ print_func_t ostream
    
    if (!(fp = fopen(fname, "r")) && errno != ENOENT) {
       sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
    }

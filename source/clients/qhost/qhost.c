@@ -67,6 +67,7 @@
 #include "sge_hostname.h"
 #include "sge_log.h"
 #include "sge_job_queue.h"
+#include "sge_answer.h"
 
 #define QHOST_DISPLAY_QUEUES     (1<<0)
 #define QHOST_DISPLAY_JOBS       (1<<1)
@@ -647,7 +648,7 @@ lList *alp = NULL;
       /* oops */
       sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
       qhost_usage(stderr);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -697,7 +698,7 @@ lListElem *ep;
             if (sge_resolve_host(ep, STR)) {
                char buf[BUFSIZ];
                sprintf(buf, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep,STR) );
-               sge_add_answer(&alp, buf, STATUS_ESYNTAX, 0);
+               answer_list_add(&alp, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                DEXIT;
                return alp; 
             }
@@ -743,7 +744,7 @@ lListElem *ep;
      sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
      if (!usageshowed)
         qhost_usage(stderr);
-     sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+     answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
      DEXIT;
      return alp;
    }

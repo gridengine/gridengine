@@ -192,7 +192,11 @@ int sge_spoolmsg_write(FILE *file, const char comment_char,
                        const char *version);   
 
 char *sge_get_confval(const char *conf_val, const char *file);
-int get_confval_array(const char *fname, int n, const char *name[], char value[][1025]);
+
+int sge_get_confval_array(const char *fname, 
+                          int n, 
+                          const char *name[], 
+                          char value[][1025]);
  
 pid_t sge_readpid(const char *fname);
  

@@ -80,7 +80,7 @@ lListElem *job,
 lList *acl_list 
 ) {
    char *cats = NULL;
-   dstring sb = {NULL, 0};
+   dstring sb = DSTRING_INIT;
    lList *cmdl = NULL;
    lListElem *ep;
    const char *owner, *group;

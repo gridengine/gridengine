@@ -39,6 +39,8 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
+#include "sge_answer.h"
+
 #include "msg_qconf.h"
 
 
@@ -57,7 +59,8 @@ lList *new_answers
    }
    else { /* write errors to stderr */
       for_each (answer, new_answers) 
-         if (sge_get_recoverable(answer) != STATUS_OK) 
+         answer_exit_if_not_recoverable(answer);
+         if (answer_get_status(answer) != STATUS_OK) 
             fprintf(stderr, "%s\n", lGetString(answer, AN_text));
       lFreeList(new_answers);
    }
@@ -149,8 +152,8 @@ lList *acl_args
                sprintf(SGE_EVENT, MSG_GDI_ADDTOACL_SS, user_name, acl_name);
             answers = lFreeList(answers);
          }
-         sge_add_answer(alpp, SGE_EVENT, status, 
-            ((status == STATUS_OK) ? NUM_AN_INFO : NUM_AN_ERROR));
+         answer_list_add(alpp, SGE_EVENT, status, 
+            ((status == STATUS_OK) ? ANSWER_QUALITY_INFO : ANSWER_QUALITY_ERROR));
          acl = lFreeList(acl);
 
       }
@@ -235,8 +238,8 @@ lList *acl_args
          }
          else 
             sprintf(SGE_EVENT, MSG_GDI_DELFROMACL_SS, user_name, acl_name);
-         sge_add_answer(alpp, SGE_EVENT, status, 
-                        ((status == STATUS_OK) ? NUM_AN_INFO : NUM_AN_ERROR));
+         answer_list_add(alpp, SGE_EVENT, status, 
+                        ((status == STATUS_OK) ? ANSWER_QUALITY_INFO : ANSWER_QUALITY_ERROR));
          acl = lFreeList(acl);
          
          if (cp) {

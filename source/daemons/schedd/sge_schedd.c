@@ -73,6 +73,7 @@
 #include "sge_spool.h"
 #include "sge_hostname.h"
 #include "sge_os.h"
+#include "sge_answer.h"
 
 /* number of current scheduling alorithm in above array */
 int current_scheduler = 0; /* default scheduler */

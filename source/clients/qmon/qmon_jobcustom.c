@@ -68,7 +68,6 @@
 #include "sge_all_listsL.h"
 #include "IconList.h"
 #include "sge_feature.h"
-#include "parse_range.h"
 #include "sge_htable.h"
 #include "sge_range.h"
 #include "qmon_preferences.h"
@@ -466,14 +465,14 @@ lListElem *jat,
 lList *eleml,
 int nm 
 ) {
-   char buf[BUFSIZ];
+   dstring range_string = DSTRING_INIT;
    String str;
 
    DENTER(GUI_LAYER, "PrintPERange");
 
-   show_ranges(buf, 0, NULL, lGetList(ep, nm));
-
-   str = XtNewString(buf);
+   range_list_print_to_string(lGetList(ep, nm), &range_string, 1);
+   str = XtNewString(sge_dstring_get_string(&range_string));
+   sge_dstring_free(&range_string);
 
    DEXIT;
    return str;
@@ -910,7 +909,7 @@ lListElem *jat,
 lList *eleml,
 int nm 
 ) {
-   dstring dyn_buf = {NULL, 0};
+   dstring dyn_buf = DSTRING_INIT;
    String str;
 
    DENTER(GUI_LAYER, "PrintJobTaskId");
@@ -919,7 +918,8 @@ int nm
    */
    sge_dstring_sprintf(&dyn_buf, u32, lGetUlong(ep, JB_job_number));
    if (job_is_array(ep)) {
-      dstring dyn_buf2 = {NULL, 0};
+      dstring dyn_buf2 = DSTRING_INIT;
+      const char* tmp_string = NULL;
 
       if (jat) {
          sge_dstring_sprintf(&dyn_buf2, u32, lGetUlong(jat, JAT_task_number)); 
@@ -929,19 +929,20 @@ int nm
          if (is_obj_of_type(first_elem, JAT_Type)) {
             jatask_list_print_to_string(eleml, &dyn_buf2);
          } else if (is_obj_of_type(first_elem, RN_Type)) {
-            range_list_print_to_string(eleml, &dyn_buf2);
+            range_list_print_to_string(eleml, &dyn_buf2, 0);
          }
       }
-      if (dyn_buf2.s) {
+      tmp_string = sge_dstring_get_string(&dyn_buf2);
+      if (tmp_string) {
          sge_dstring_append(&dyn_buf, ".");
-         sge_dstring_append(&dyn_buf, dyn_buf2.s);
+         sge_dstring_append(&dyn_buf, tmp_string);
          sge_dstring_free(&dyn_buf2);
       }
    }
 
-   DPRINTF(("PrintJobTaskId: %s\n", dyn_buf.s));
+   DPRINTF(("PrintJobTaskId: %s\n", sge_dstring_get_string(&dyn_buf)));
 
-   str = XtNewString(dyn_buf.s);
+   str = XtNewString(sge_dstring_get_string(&dyn_buf));
 
    sge_dstring_free(&dyn_buf);
 

@@ -43,6 +43,7 @@
 #include "sge_m_event.h"
 #include "sge_log.h"
 #include "sge_uidgid.h"
+#include "sge_answer.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
@@ -76,7 +77,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
 
    if ( !ep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -100,7 +101,7 @@ DTRACE;
    if ((pos = lGetPosViaElem(ep, MO_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(MO_name), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -108,14 +109,14 @@ DTRACE;
    manop_name = lGetPosString(ep, pos);
    if (!manop_name) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
 
    if (lGetElemStr(*lpp, MO_name, manop_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_ALREADYEXISTS_SS, object_name, manop_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -126,7 +127,7 @@ DTRACE;
    /* update on file */
    if (write_manop(1, target)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    
       /* remove element from list */
       lFreeElem(lDechainElem(*lpp, added));
@@ -137,7 +138,7 @@ DTRACE;
 
    INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
             ruser, rhost, manop_name, object_name));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    sge_add_event(NULL, target == SGE_MANAGER_LIST ? sgeE_MANAGER_ADD : sgeE_OPERATOR_ADD,
                  0, 0, manop_name, added);
    DEXIT;
@@ -166,7 +167,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
 
    if ( !ep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -190,7 +191,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    if ((pos = lGetPosViaElem(ep, MO_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(MO_name), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -198,7 +199,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    manop_name = lGetPosString(ep, pos);
    if (!manop_name) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -206,7 +207,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    /* prevent removing of root from man/op-list */
    if (!strcmp(manop_name, "root")) {
       ERROR((SGE_EVENT, MSG_SGETEXT_MAY_NOT_REMOVE_USER_FROM_LIST_SS, "root", object_name));  
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -214,7 +215,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    found = lGetElemStr(*lpp, MO_name, manop_name);
    if (!found) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, object_name, manop_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -224,7 +225,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    /* update on file */
    if (write_manop(1, target)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    
       /* chain in again */
       lAppendElem(*lpp, found);
@@ -236,7 +237,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
             ruser, rhost, manop_name, object_name));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    sge_add_event(NULL, target == SGE_MANAGER_LIST ? sgeE_MANAGER_DEL : sgeE_OPERATOR_DEL,
                  0, 0, manop_name, NULL);
    DEXIT;

@@ -50,6 +50,7 @@
 #include "gdi_utility_qmaster.h"
 #include "sge_time.h"
 #include "sge_unistd.h"
+#include "sge_answer.h"
 
 #include "msg_common.h"
 #include "msg_utilib.h"
@@ -668,7 +669,7 @@ ERROR:
       lFreeList(*cal);
    sprintf(SGE_EVENT, MSG_ANSWER_ERRORINDISABLYEAROFCALENDARXY_SS, 
          save_error(), cal_name);
-   sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+   answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
    DEXIT;
    return -1;
 }
@@ -1292,7 +1293,7 @@ ERROR:
       lFreeList(*cal);
    sprintf(SGE_EVENT, MSG_PARSE_ERRORINDISABLEDWEEKOFCALENDAR_SS, 
         cal_name, save_error());
-   sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+   answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
    DEXIT;
    return -1;
 }
@@ -1834,7 +1835,7 @@ gdi_object_t *object
    DENTER(TOP_LAYER, "calendar_spool");
 
    if (write_cal(1, 2, cep)==NULL) {
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return 1;
    }
@@ -1856,7 +1857,7 @@ char *rhost
 
    if ( !cep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -1865,7 +1866,7 @@ char *rhost
    if (lGetPosViaElem(cep, CAL_name)<0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(QU_qname), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -1873,7 +1874,7 @@ char *rhost
 
    if (!sge_locate_calendar(cal_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_CALENDAR, cal_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -1885,7 +1886,7 @@ char *rhost
       if ((s=lGetString(qep, QU_calendar)) && !strcmp(cal_name, s)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_CALENDARSTILLREFERENCEDINQUEUE_SS, 
                cal_name, lGetString(qep, QU_qname)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_ESEMANTIC;
       }
@@ -1903,7 +1904,7 @@ char *rhost
    
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
          ruser, rhost, cal_name, _("calendar")));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    sge_add_event(NULL, sgeE_CALENDAR_DEL, 0, 0, cal_name, NULL);
    DEXIT;
    return STATUS_OK;

@@ -62,7 +62,6 @@
 #include "Matrix.h"
 #include "symbols.h"
 #include "parse_qsub.h"
-#include "parse_range.h"
 #include "sge_time.h"
 #include "parse_job_cull.h"
 #include "unparse_job_cull.h"
@@ -95,6 +94,7 @@
 #include "sge_stdlib.h"
 #include "sge_io.h"
 #include "sge_var.h"
+#include "sge_answer.h"
 
 extern char **environ;
 
@@ -1192,9 +1192,12 @@ XtPointer cld, cad;
          if (!(pe_range && pe_range[0] != '\0')) {
             sprintf(buf, "Parallel Environment requires valid name and valid range !");
             goto error;
-         }
-         else {
-            parse_ranges(pe_range, 1, 0, &alp, NULL, INF_ALLOWED);
+         } else {
+            lList *range_list = NULL;
+
+            range_list_parse_from_string(&range_list, &alp, pe_range,
+                                         1, 0, INF_ALLOWED);
+            range_list = lFreeList(range_list);
             if (alp) {
                sprintf(buf, "Parallel Environment requires valid name and valid range !");
                alp = lFreeList(alp);
@@ -1237,7 +1240,7 @@ XtPointer cld, cad;
                         JB_job_number, &lp, NULL, what);
 
       if (lFirst(alp) && (lGetUlong(lFirst(alp), AN_status) == STATUS_OK
-            || lGetUlong(lFirst(alp), AN_quality) != NUM_AN_ERROR))
+            || lGetUlong(lFirst(alp), AN_quality) != ANSWER_QUALITY_ERROR))
          status = True;
 
       qmonMessageBox(w, alp, just_verify);
@@ -1668,15 +1671,15 @@ tSMEntry *data,
 char *prefix 
 ) {
    StringConst job_script;
-   dstring dyn_job_tasks = {NULL, 0};
+   dstring dyn_job_tasks = DSTRING_INIT;
    char pe_tasks[BUFSIZ];
-   char pe_range[BUFSIZ];
    StringConst job_name;
    StringConst directive_prefix;
    StringConst account_string;
    StringConst pe;
    StringConst project;
    StringConst ckpt_obj;
+   const char* tmp_string;
    
    DENTER(GUI_LAYER, "qmonCullToSM");
 
@@ -1696,8 +1699,9 @@ char *prefix
 
    if (job_is_array(jep))
       jatask_list_print_to_string(lGetList(jep, JB_ja_tasks), &dyn_job_tasks);
-   if (dyn_job_tasks.s && (dyn_job_tasks.s)[0] != '\0')
-      data->job_tasks = XtNewString(dyn_job_tasks.s);
+   tmp_string = sge_dstring_get_string(&dyn_job_tasks);
+   if (tmp_string && tmp_string[0] != '\0')
+      data->job_tasks = XtNewString(tmp_string);
 
    if ((job_name = lGetString(jep, JB_job_name)))
       data->job_name = XtNewString(job_name);
@@ -1753,7 +1757,14 @@ char *prefix
          lSetHost(entry, MR_host, me.qualified_hostname);
    }
 
-   data->env_list = lCopyList("JB_env_list", lGetList(jep, JB_env_list));
+   {
+      lList *prefix_vars = NULL;
+
+      var_list_split_prefix_vars(lGetList(jep, JB_env_list),
+                                 &prefix_vars, VAR_PREFIX);
+      data->env_list = lCopyList("JB_env_list", lGetList(jep, JB_env_list));
+      lAddList(lGetList(jep, JB_env_list), prefix_vars);
+   }
 
    data->ctx_list = lCopyList("JB_ctx_list", lGetList(jep, JB_context));
 
@@ -1790,9 +1801,11 @@ char *prefix
    data->restart = lGetUlong(jep, JB_restart);
 
    if ((pe = lGetString(jep, JB_pe))) {
-      sprintf(pe_tasks, "%s ", pe);  
-      show_ranges(pe_range, 0, NULL, lGetList(jep, JB_pe_range));
-      strcat(pe_tasks, pe_range);
+      dstring range_string = DSTRING_INIT;
+
+      range_list_print_to_string(lGetList(jep, JB_pe_range), &range_string, 1);
+      sprintf(pe_tasks, "%s %s", pe, sge_dstring_get_string(&range_string));  
+      sge_dstring_free(&range_string);
       data->pe = XtNewString(pe_tasks);
    }
    else
@@ -1878,7 +1891,9 @@ int save
       /* job with tasks */
       lList *range_list = NULL;
 
-      range_list = parse_ranges(data->job_tasks, 0, 1, &alp, NULL, INF_NOT_ALLOWED);
+      range_list_parse_from_string(&range_list, &alp, data->job_tasks,
+                                   0, 1, INF_NOT_ALLOWED);
+      range_list = lFreeList(range_list);
 
       if (alp) {
          qmonMessageBox(qmon_submit, alp, 0);
@@ -2084,9 +2099,16 @@ int save
    
    DPRINTF(("JB_shell_list %p\n", data->shell_list));
    lSetList(jep, JB_shell_list, lCopyList("shell",data->shell_list));
-   
+  
    DPRINTF(("JB_env_list %p\n", data->env_list));
-   lSetList(jep, JB_env_list, lCopyList("env_list", data->env_list));
+   { 
+      lList *prefix_vars = NULL;
+   
+      var_list_split_prefix_vars(lGetList(jep, JB_env_list),
+                                 &prefix_vars, VAR_PREFIX);
+      lSetList(jep, JB_env_list, lCopyList("env_list", data->env_list));
+      lAddList(lGetList(jep, JB_env_list), prefix_vars);
+   }
 
    DPRINTF(("JB_ctx_list %p\n", data->ctx_list));
    lSetList(jep, JB_context, lCopyList("ctx_list", data->ctx_list));
@@ -2130,7 +2152,8 @@ int save
       strcpy(pe_tasks, data->pe);
       pe = strtok(pe_tasks, " ");
       pe_range =  strtok(NULL, "\n");
-      perl = parse_ranges(pe_range, 0, 0, &alp, NULL, INF_ALLOWED);
+      range_list_parse_from_string(&perl, &alp, pe_range,
+                                   0, 0, INF_ALLOWED);
       if (pe && perl && !alp) { 
          lSetString(jep, JB_pe, pe);
          lSetList(jep, JB_pe_range, perl);

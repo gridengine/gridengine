@@ -150,10 +150,6 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd, lList *
 
 int sge_gdi_shutdown(void);
 
-int sge_add_answer(lList **, const char *, u_long32, u_long32);
-
-int answer_list_is_error_in_list(lList **answer_list); 
-
 lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id, lList *mal, lList **olpp);
 
 #ifdef  __cplusplus

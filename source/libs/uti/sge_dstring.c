@@ -137,20 +137,54 @@ void sge_dstring_free(dstring *sb)
    }
 }   
 
-#if 0
+/****** uti/dstring/sge_dstring_get_string() **********************************
+*  NAME
+*     sge_dstring_get_string() -- Returns string buffer 
+*
+*  SYNOPSIS
+*     const char* sge_dstring_get_string(const dstring *string) 
+*
+*  FUNCTION
+*     Returns a pointer to the buffer where the string is stored.
+*     The pointer is not valid until doomsday. The next
+*     sge_dstring_* call may make it invalid.
+*
+*  INPUTS
+*     const dstring *string - pointer to dynamic string 
+*
+*  RESULT
+*     const char* - pointer to string buffer
+*******************************************************************************/
+const char *sge_dstring_get_string(const dstring *string)
+{
+   return (string != NULL) ? string->s : NULL;
+}
+
+
+
+#if 0 /* EB: debug */
 int main(void)
 {
    char *s;
-   dstring sb = {NULL, 0};
+   dstring sb = DSTRING_INIT;    /* initialize */
 
+   /*
+    * change content
+    */
    s = sge_dstring_append(&sb, "Trala");
    s = sge_dstring_append(&sb, " trolo");
    s = sge_dstring_append(&sb, " troet");
    s = sge_dstring_sprintf(&sb, "%d, %s, %f\n", 5, "rabarber ", 5.6);
-   printf("%s\n", s);
+
    /*
-   ** free the string when no longer needed
-   */
+    * use string
+    */
+   printf("%s\n", s);
+   printf("%s\n", sge_dstring_get_string(&sb));
+
+   /*
+    * free the string when no longer needed
+    */
    sge_dstring_free(&sb);
    return 0;
 }

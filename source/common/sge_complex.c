@@ -50,6 +50,7 @@
 #include "msg_common.h"
 #include "sge_feature.h"
 #include "sge_spool.h"
+#include "sge_answer.h"
 
 static int parse_flag(lList **alpp, const char *cp, lListElem *ep, int nm, const char *name, const char *fname, int line);
 
@@ -146,7 +147,7 @@ lList **alpp
    if (!(fp = fopen(fname, "r"))) {
       ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
       if (alpp) {
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          lp = lFreeList(lp);
          DEXIT;
          return NULL;
@@ -182,7 +183,7 @@ lList **alpp
       else {
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
          if (alpp) {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lp = lFreeList(lp);
             DEXIT;
             return NULL;
@@ -203,7 +204,7 @@ lList **alpp
          if (!type) {
             ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXTYPE_SS, fname, s));
          if (alpp) {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lp = lFreeList(lp);
             DEXIT;
             return NULL;
@@ -216,7 +217,7 @@ lList **alpp
       else {
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
          if (alpp) {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lp = lFreeList(lp);
             DEXIT;
             return NULL;
@@ -240,7 +241,7 @@ lList **alpp
                SGE_LOG(LOG_ERR, SGE_EVENT);
                ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_S, fname));
                if (alpp) {
-                  sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                   lp = lFreeList(lp);
                   DEXIT;
                   return NULL;
@@ -263,7 +264,7 @@ lList **alpp
                   ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, s));
                }
                if (alpp) {
-                  sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+                  answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
                   lp = lFreeList(lp);
                   DEXIT;
                   return NULL;
@@ -277,7 +278,7 @@ lList **alpp
       else {
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
          if (alpp) {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lp = lFreeList(lp);
             DEXIT;
             return NULL;
@@ -298,7 +299,7 @@ lList **alpp
          if (!relop) {
             ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXRELOP_SS, fname, s));
             if (alpp) {
-               sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                lp = lFreeList(lp);
                DEXIT;
                return NULL;
@@ -311,7 +312,7 @@ lList **alpp
       else {
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
          if (alpp) {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lp = lFreeList(lp);
             DEXIT;
             return NULL;
@@ -346,7 +347,7 @@ lList **alpp
           type==TYPE_CSTR)) {
          ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXCONSUM_SSS, fname, lGetString(ep, CE_name), map_type2str(type)));
          if (alpp) {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lp = lFreeList(lp);
             DEXIT;
             return NULL;
@@ -370,7 +371,7 @@ lList **alpp
                SGE_LOG(LOG_ERR, SGE_EVENT);
                ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_S, fname));
                if (alpp) {
-                  sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                   lp = lFreeList(lp);
                   DEXIT;
                   return NULL;
@@ -393,7 +394,7 @@ lList **alpp
                   ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, s));
                }
                if (alpp) {
-                  sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+                  answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
                   lp = lFreeList(lp);
                   DEXIT;
                   return NULL;
@@ -407,7 +408,7 @@ lList **alpp
       else {
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
          if (alpp) {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lp = lFreeList(lp);
             DEXIT;
             return NULL;
@@ -420,7 +421,7 @@ lList **alpp
       if (((s = sge_strtok(cp, " \t\n"))) && (*s != '#')) {
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
          if (alpp) {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lp = lFreeList(lp);
             DEXIT;
             return NULL;
@@ -463,7 +464,7 @@ int line
       else {
          ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXENTRY_SSS, fname, name, s));
          if (alpp)
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return 1;
       }
@@ -472,7 +473,7 @@ int line
    else {
       ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
       if (alpp) 
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return 1;
    }
@@ -503,7 +504,7 @@ int line
       else {
          ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXREQ_SS, fname, s));
          if (alpp)
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return 1;
       }
@@ -519,7 +520,7 @@ int line
    else {
       ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
       if (alpp) 
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return 1;
    }
@@ -548,7 +549,7 @@ lList **alpp
       if (!(fp = fopen(fname, "w"))) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
          if (alpp) {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0); 
+            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR); 
             DEXIT;
             return -1; 
          }
@@ -595,7 +596,7 @@ lList **alpp
 FPRINTF_ERROR:
    ERROR((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, fname, strerror(errno)));
    if (alpp) 
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0); 
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR); 
    DEXIT;
    return -1;
 }

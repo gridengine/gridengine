@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <unistd.h>  
+#include <ctype.h>
 
 #include "sgermon.h"
 #include "def.h"
@@ -41,6 +41,10 @@
 #include "sge.h"
 #include "sge_time.h"
 #include "sge_log.h"
+#include "sge_unistd.h"
+#include "sge_dstring.h"
+#include "sge_prog.h"
+#include "sge_string.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
@@ -53,20 +57,145 @@
 #include "cull_sort.h"
 #include "usage.h"
 #include "parse.h"
-#include "parse_range.h"
-#include "sge_prog.h"
 #include "sge_parse_num_par.h"
-#include "sge_string.h"
 #include "show_job.h"
-#include "sge_dstring.h"
 #include "sge_range.h"
 #include "sge_schedd_text.h"
+#include "sge_answer.h"
+
+#include "msg_gdilib.h"
+
+#define RANGE_SEPARATOR_CHARS ","
 
 static void add_taskrange_str(u_long32 start, u_long32 end, int step, 
-                              dstring *dyn_taskrange_str);
+                              dstring *dyn_taskrange_str, int ignore_step);
 
 static int range_is_overlapping(const lListElem *range1, 
                                 const lListElem *range2);
+
+static void expand_range_list(lListElem *r, lList **rl);
+
+/* we keep a descending sorted list of non overlapping ranges */
+/* why descending? don't ask me! ask the initiator of this function */
+static void expand_range_list(
+lListElem *r,
+lList **rl
+) {
+   u_long32 rmin, rmax, rstep;
+   lListElem *ep, *rr;
+
+   DENTER(TOP_LAYER, "expand_range_list");
+
+   rmin = lGetUlong(r, RN_min);
+   rmax = lGetUlong(r, RN_max);
+   rstep = lGetUlong(r, RN_step);
+
+   /* create list */
+   if ( !*rl ) {
+      *rl = lCreateList("ranges", RN_Type);
+   }
+
+   if ( lGetNumberOfElem(*rl)!=0 ) {
+      ep = lFirst(*rl);
+      while (ep) {
+
+         if (rstep != lGetUlong(ep, RN_step) || rstep > 1 ||
+             lGetUlong(ep, RN_step) > 1) {
+            lInsertElem(*rl, NULL, r);
+            break;
+         } else if (rmin > lGetUlong(ep, RN_max)) {
+
+            /* 
+            ** r and ep are non-overlapping and r is to be
+            ** sorted ahead of ep.
+            */
+            lInsertElem(*rl, NULL, r);
+            break;
+
+         } else if ( rmax < lGetUlong(ep, RN_min)) {
+            /* 
+            ** r and ep are non-overlapping and r is to be
+            ** sorted after ep ==> go for the next iteration
+            */
+            ep = lNext(ep);
+            if (!ep)
+               /* We are at the end of the list ==> append r */
+               lAppendElem(*rl, r);
+
+            continue;
+
+         } else if ((rmax <= lGetUlong(ep, RN_max)) &&
+                    (rmin >= lGetUlong(ep, RN_min))) {
+
+            /* 
+            ** r is fully contained within ep ==> delete it 
+            */
+            lFreeElem(r);
+            break;
+
+         } else if (rmin < lGetUlong(ep, RN_min)) {
+
+            /* 
+            ** ep is either fully contained within r
+            ** or r overlaps ep at ep's bottom ==>
+            ** overwrite ep and see if further list elements
+            ** are covered also;
+            */
+            if (rmax > lGetUlong(ep, RN_max)) {
+               /* r contains ep */
+               lSetUlong(ep, RN_max, rmax);
+            }
+            lSetUlong(ep, RN_min, rmin);
+
+            /* we're already sure we can free r */
+            lFreeElem(r);
+            rr = ep;
+            ep = lNext(ep);
+            while(ep) {
+               if (rmin < lGetUlong(ep, RN_min)) {
+
+                  /* it also contains this one */
+                  r = ep;
+                  ep = lNext(ep);
+                  lRemoveElem(*rl, r);
+
+               } else if (rmin <= lGetUlong(ep, RN_max)) {
+
+                  /* these overlap ==> glue them */
+                  lSetUlong(rr, RN_min, lGetUlong(ep, RN_min));
+
+                  r = ep;
+                  ep = lNext(ep);
+                  lRemoveElem(*rl, r);
+                  break;
+
+               } else
+                  /* they are non overlapping */
+                  break;
+
+               ep = lNext(ep);
+            }
+
+            /* we're now sure we inserted it */
+            break;
+         } else if (rmax > lGetUlong(ep, RN_max)) {
+            /*
+            ** r and ep overlap and r starts above ep
+            ** ==> glue them
+            */
+            lSetUlong(ep, RN_max, rmax);
+            lFreeElem(r);
+            break;
+         }
+      }
+   }
+   else {
+      lAppendElem(*rl, r);
+   }
+
+   DEXIT;
+   return;
+}
 
 /****** gdi/range/range_correct_end() *****************************************
 *  NAME
@@ -190,10 +319,10 @@ void range_list_initialize(lList **range_list, lList **answer_list)
             lRemoveElem(*range_list, range);
          } 
       } else {
-         *range_list = lCreateList("range list", RN_Type);
+         *range_list = lCreateList("", RN_Type);
          if (*range_list == NULL) {
-            sge_add_answer(answer_list, "unable to create range list",
-                           STATUS_ERROR1, NUM_AN_ERROR);
+            answer_list_add(answer_list, "unable to create range list",
+                           STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          }
       }
    }
@@ -277,6 +406,7 @@ u_long32 range_get_number_of_ids(const lListElem *range)
 *  INPUTS
 *     const lList *range_list - RN_Type 
 *     dstring *string         - dynamic string 
+*     int ignore_step         - ignore step for printing
 *
 *  RESULT
 *     string will be modified
@@ -284,17 +414,23 @@ u_long32 range_get_number_of_ids(const lListElem *range)
 *  SEE ALSO
 *     gdi/range/RN_Type 
 *******************************************************************************/
-void range_list_print_to_string(const lList *range_list, dstring *string) 
+void range_list_print_to_string(const lList *range_list, 
+                                dstring *string,
+                                int ignore_step) 
 {
-   if (range_list != NULL && string != NULL) {
-      lListElem *range;
-      u_long32 start, end, step;
+   if (string != NULL) {
+      if (range_list != NULL) {
+         lListElem *range;
+         u_long32 start, end, step;
 
-      for_each(range, range_list) {
-         range_get_all_ids(range, &start, &end, &step);
-         add_taskrange_str(start, end, step, string);
+         for_each(range, range_list) {
+            range_get_all_ids(range, &start, &end, &step);
+            add_taskrange_str(start, end, step, string, ignore_step);
+         }
+      } else {
+         sge_dstring_append(string, "UNDEFINED"); 
       }
-   }
+   } 
 }
 
 /****** gdi/range/range_list_get_first_id() ***********************************
@@ -334,8 +470,8 @@ u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list)
 
       range_get_all_ids(range, &start, &end, &step);
    } else {
-      sge_add_answer(answer_list, "range_list containes no elements",
-                     STATUS_ERROR1, NUM_AN_ERROR);
+      answer_list_add(answer_list, "range_list containes no elements",
+                     STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    }
    DEXIT;
    return start;
@@ -378,8 +514,8 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
 
       range_get_all_ids(range, &start, &end, &step);
    } else {
-      sge_add_answer(answer_list, "range_list containes no elements",
-                     STATUS_ERROR1, NUM_AN_ERROR);
+      answer_list_add(answer_list, "range_list containes no elements",
+                     STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    }
    DEXIT;
    return end;
@@ -415,6 +551,7 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
 ******************************************************************************/
 void range_sort_uniq_compress(lList *range_list, lList **answer_list)
 {
+   DENTER(TOP_LAYER, "range_sort_uniq_compress");
    if (range_list) {
       lListElem *range1, *next_range1;
       lListElem *range2, *next_range2;
@@ -428,7 +565,7 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
       /* 
        * Remove overlapping ranges
        */ 
-      tmp_list = lCreateList("tmp list", RN_Type); 
+      tmp_list = lCreateList("", RN_Type); 
       if (tmp_list) {
          next_range1 = lFirst(range_list);
          while ((range1 = next_range1)) {
@@ -466,10 +603,11 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
           */
          range_list_compress(range_list);
       } else {
-         sge_add_answer(answer_list, "unable to create range list",
-                        STATUS_ERROR1, NUM_AN_ERROR);            
+         answer_list_add(answer_list, "unable to create range list",
+                        STATUS_ERROR1, ANSWER_QUALITY_ERROR);            
       }
    }
+   DEXIT;
 }
 
 /****** gdi/range/range_list_compress() ***************************************
@@ -501,6 +639,7 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
 ******************************************************************************/
 void range_list_compress(lList *range_list) 
 {
+   DENTER(TOP_LAYER, "range_list_compress");
    if (range_list != NULL) {
       lListElem *range1 = NULL;
       lListElem *range2 = NULL;
@@ -548,6 +687,7 @@ void range_list_compress(lList *range_list)
          next_range2 = lNext(next_range1);
       }             
    }
+   DEXIT;
 }
 
 /****** gdi/range/range_list_is_id_within() ***********************************
@@ -673,8 +813,8 @@ void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id)
                   range_set_all_ids(new_range, id + step, end, step);
                   lInsertElem(*range_list, range, new_range);
                } else {
-                  sge_add_answer(answer_list, "unable to split range element",
-                                 STATUS_ERROR1, NUM_AN_ERROR);     
+                  answer_list_add(answer_list, "unable to split range element",
+                                 STATUS_ERROR1, ANSWER_QUALITY_ERROR);     
                }
                break;
             }
@@ -781,10 +921,10 @@ void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
 
    range = NULL;
    if (*range_list == NULL) {
-      *range_list = lCreateList("range list", RN_Type);
+      *range_list = lCreateList("", RN_Type);
       if (*range_list == NULL) {
-         sge_add_answer(answer_list, "unable to insert id into range",
-                        STATUS_ERROR1, NUM_AN_ERROR);  
+         answer_list_add(answer_list, "unable to insert id into range",
+                        STATUS_ERROR1, ANSWER_QUALITY_ERROR);  
       }
    }
    prev_range = lLast(*range_list);
@@ -983,14 +1123,13 @@ void range_list_calculate_union_set(lList **range_list,
 {
    if (range_list != NULL && (range_list1 != NULL || range_list2 != NULL)) {
       *range_list = lFreeList(*range_list);
-      *range_list = lCopyList("union_set range list",
-                              range_list1 ? range_list1 : range_list2);
+      *range_list = lCopyList("", range_list1 ? range_list1 : range_list2);
       if (*range_list) {
          goto error;
       }
 
       range_sort_uniq_compress(*range_list, answer_list);
-      if (answer_list_is_error_in_list(answer_list)) {
+      if (answer_list_has_error(answer_list)) {
          goto error;
       }
 
@@ -1012,8 +1151,8 @@ void range_list_calculate_union_set(lList **range_list,
 
 error:
    *range_list = lFreeList(*range_list);
-   sge_add_answer(answer_list, "unable to calculate union set", 
-                  STATUS_ERROR1, NUM_AN_ERROR);
+   answer_list_add(answer_list, "unable to calculate union set", 
+                  STATUS_ERROR1, ANSWER_QUALITY_ERROR);
 }
 
 /****** gdi/range/range_list_calculate_difference_set() ***********************
@@ -1053,7 +1192,7 @@ void range_list_calculate_difference_set(lList **range_list,
       }
 
       range_sort_uniq_compress(*range_list, answer_list);
-      if (answer_list_is_error_in_list(answer_list)) {
+      if (answer_list_has_error(answer_list)) {
          goto error;
       }            
 
@@ -1066,7 +1205,7 @@ void range_list_calculate_difference_set(lList **range_list,
             range_get_all_ids(range2, &start2, &end2, &step2);
             for (; start2 <= end2; start2 += step2) {
                range_list_remove_id(range_list, answer_list, start2);
-               if (answer_list_is_error_in_list(answer_list)) {
+               if (answer_list_has_error(answer_list)) {
                   goto error;
                }
             }
@@ -1079,8 +1218,8 @@ void range_list_calculate_difference_set(lList **range_list,
  
 error:
    *range_list = lFreeList(*range_list);
-   sge_add_answer(answer_list, "unable to calculate union set",
-                  STATUS_ERROR1, NUM_AN_ERROR); 
+   answer_list_add(answer_list, "unable to calculate union set",
+                  STATUS_ERROR1, ANSWER_QUALITY_ERROR); 
    DEXIT;
 }
 
@@ -1125,7 +1264,7 @@ void range_list_calculate_intersection_set(lList **range_list,
                lListElem *new_range;
 
                if (*range_list == NULL) {
-                  *range_list = lCreateList("intersection_set", RN_Type);
+                  *range_list = lCreateList("", RN_Type);
                   if (*range_list == NULL) {
                      goto error;
                   }
@@ -1145,8 +1284,8 @@ void range_list_calculate_intersection_set(lList **range_list,
 
 error:
    *range_list = lFreeList(*range_list);
-   sge_add_answer(answer_list, "unable to calculate intersection set",
-                  STATUS_ERROR1, NUM_AN_ERROR);
+   answer_list_add(answer_list, "unable to calculate intersection set",
+                  STATUS_ERROR1, ANSWER_QUALITY_ERROR);
 }
 
 /****** gdi/range/add_taskrange_str() *****************************************
@@ -1160,19 +1299,20 @@ error:
 *                                   dstring *dyn_taskrange_str) 
 *
 *  FUNCTION
-*     Appends a range to a dynamic string 
+*     Appends a range to a dynamic string.
 *
 *  INPUTS
 *     u_long32 start             - min id 
 *     u_long32 end               - max id 
 *     int step                   - step size 
 *     dstring *dyn_taskrange_str - dynamic string 
+*     int ignore_step            - ignore step for output
 *
 *  SEE ALSO
 *     gdi/range/RN_Type 
 ******************************************************************************/
 static void add_taskrange_str(u_long32 start, u_long32 end, int step, 
-                              dstring *dyn_taskrange_str) 
+                              dstring *dyn_taskrange_str, int ignore_step) 
 {
    char tail[256]="";
 
@@ -1180,12 +1320,272 @@ static void add_taskrange_str(u_long32 start, u_long32 end, int step,
       sge_dstring_append(dyn_taskrange_str, ",");
    }
 
-   if (start == end)
+   if (start == end) {
       sprintf(tail, u32, start);
-   else if (start+step == end)
+   } else if (start+step == end) {
       sprintf(tail, u32","u32, start, end);
-   else {
-      sprintf(tail, u32"-"u32":%d", start, end, step); 
+   } else {
+      if (ignore_step) {
+         sprintf(tail, u32"-"u32, start, end); 
+      } else {
+         sprintf(tail, u32"-"u32":%d", start, end, step); 
+      }
    }
    sge_dstring_append(dyn_taskrange_str, tail);
 }
+
+void range_parse_from_string(lListElem **range,
+                             lList **alpp,
+                             const char *rstr,
+                             int step_allowed,
+                             int inf_allowed) {
+   const char *old_str;
+   char *dptr;
+   u_long32 rmin, rmax, ldummy, step = 1;
+   lListElem *r;
+   char msg[BUFSIZ];
+
+   DENTER(TOP_LAYER, "range_parse_from_string");
+
+   old_str = rstr;
+
+   if (!strcasecmp(rstr, "UNDEFINED")) {
+      DEXIT;
+      *range = NULL;
+      return;
+   }
+   r = lCreateElem(RN_Type);
+
+   rmin = rmax = 0;
+   if (rstr[0] == '-') {
+      /* rstr e.g. is "-<n>" ==> min=1 */
+      rmin = 1;
+      rstr++;
+      if (*rstr == '\0') {
+         if (inf_allowed) {
+            /* rstr is just "-" <==> "1-inf" */
+            lSetUlong(r, RN_min, rmin);
+            lSetUlong(r, RN_max, RANGE_INFINITY);
+            DEXIT;
+            *range = r;
+            return;
+         }
+         else {
+            DEXIT;
+            *range = NULL;
+            return;
+         }
+      }
+   }
+
+   /* rstr should point to a decimal now */
+   ldummy = strtol(rstr,&dptr,10);
+   if ((ldummy == 0) && (rstr == dptr)) {
+      sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S, rstr);
+      answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      lFreeElem(r);
+      DEXIT;
+      *range = NULL;
+      return;
+   }
+
+   if (rmin != 0) {
+      /* rstr is "-<n>" and ldummy contains <n>
+       * dptr poits right after <n>.
+       */
+      if (*dptr != '\0' || (step_allowed && *dptr != ':')) {
+         sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS ,
+                        old_str, rstr);
+         answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         lFreeElem(r);
+         DEXIT;
+         *range = NULL;
+         return;
+      }
+      /* <n> is the max-value */
+      rmax = ldummy;
+
+   } else { /* rmin==0) */
+      /*
+      ** rstr is "<n>" or "<n>-..." and ldummy contains <n>
+      ** dptr poits right after <n>.
+      */
+      if (*dptr == '\0') {
+         /* rstr is just "<n>" */
+         rmin = ldummy;
+         rmax = ldummy;
+      } else {
+         /* rstr should be "<n>-..." */
+         if (!(*dptr == '-' || isdigit((int) *(dptr+1)) || *(dptr+1) == '\0'
+               || (step_allowed && *dptr == ':'))) {
+            /* ... but isn't */
+            sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS ,
+                           old_str, dptr);
+            answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            lFreeElem(r);
+            DEXIT;
+            *range = NULL;
+            return;
+         } else {
+            /* it is. set min to ldummy. now, what's after the - */
+            rmin = ldummy;
+            rstr  = dptr+1;
+            if (*rstr == '\0') {
+               /* the range string was "<n>-" <==> "ldummy-inf" */
+               if (inf_allowed)
+                  rmax = RANGE_INFINITY;
+               else {
+                  DEXIT;
+                  *range = NULL;
+                  return;
+               }
+            } else {
+               /* the trailer should contain a decimal - go for it */
+               ldummy = strtol(rstr,&dptr,10);
+               if ((ldummy == 0) && (rstr == dptr)) {
+                  sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S , rstr);
+                  answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  lFreeElem(r);
+                  DEXIT;
+                  *range = NULL;
+                  return;
+               }
+
+               if (!(*dptr == '\0' || (step_allowed && *dptr == ':'))) {
+                  sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS ,
+                           rstr, dptr);
+                  answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  lFreeElem(r);
+                  DEXIT;
+                  *range = NULL;
+                  return;
+               }
+               /* finally, we got the max-value in ldummy */
+               rmax = ldummy;
+               if (step_allowed && *dptr && *dptr == ':') {
+                  rstr  = dptr+1;
+                  ldummy = strtol(rstr,&dptr,10);
+                  if ((ldummy == 0) && (rstr == dptr)) {
+                     sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S , rstr);
+                     answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                     lFreeElem(r);
+                     DEXIT;
+                     *range = NULL;
+                     return;
+                  }
+                  if (*dptr != '\0') {
+                     sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS ,
+                              rstr, dptr);
+                     answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                     lFreeElem(r);
+                     DEXIT;
+                     *range = NULL;
+                     return;
+                  }
+                  /* finally, we got the max-value in ldummy */
+                  step = ldummy;
+               }
+            } /* if (*rstr == '\0') -- else clause */
+         } /* if (*dptr != '-') -- else clause */
+      } /* if (*dptr == '\0') -- else clause */
+   } /* if (r->min != 0) -- else clause */
+
+   /* We're ready? Not quite! We still have to check whether min<=max */
+   if (rmin > rmax) {
+      ldummy = rmax;
+      rmax = rmin;
+      rmin = ldummy;
+   }
+
+   lSetUlong(r, RN_min, rmin);
+   lSetUlong(r, RN_max, rmax);
+   lSetUlong(r, RN_step, step);
+
+   /* Ughhhh! Done ... */
+
+   DEXIT;
+   *range = r;
+   return;
+}
+
+/* 
+
+   converts a range string into a range cull list
+
+   an undefined range return NULL
+
+   if alpp is delivered no exit occurs instead the function fills the 
+   answer list and returns NULL, *alpp must be NULL !
+
+*/
+
+void range_list_parse_from_string(lList **rl,
+                                  lList **alpp,
+                                  const char *str,
+                                  int just_parse,
+                                  int step_allowed,
+                                  int inf_allowed)
+{
+   const char *s;
+   lListElem *r = NULL;
+   lList *range_list = NULL;
+   int undefined = 0, first = 1;
+
+   DENTER(TOP_LAYER, "parse_ranges");
+
+   if (!rl)
+      rl = &range_list;
+
+   for (s = sge_strtok(str, RANGE_SEPARATOR_CHARS);
+        s;
+        s = sge_strtok(NULL, RANGE_SEPARATOR_CHARS)) {
+      if ( !first && undefined ) {
+         /* first was undefined - no more ranges allowed */
+         ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED ));
+         if (alpp) {
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            *rl = NULL;
+            return;
+         }
+         else
+            SGE_EXIT(1);
+      }
+
+      range_parse_from_string(&r, alpp, s, step_allowed, inf_allowed);
+
+      if (!r) {
+         if (first)  {
+            undefined = 1;
+         }
+         else {
+            /* second range may not be undefined ! */
+            ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDUNDEFINEDFOLLOWINGRANGE ));
+            if (alpp) {
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               DEXIT;
+               *rl = NULL;
+               return;
+            }
+            else
+               SGE_EXIT(1);
+         }
+      }
+      first = 0;
+
+      if (!just_parse) {
+         /* insert into range list; malloc new elements;
+         ** free unecessary elements
+         */
+         if (r)
+            expand_range_list(r, rl);
+      }
+      else {
+         lFreeElem(r);
+      }
+   }
+   DEXIT;
+   return;
+}
+
+

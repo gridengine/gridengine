@@ -92,7 +92,8 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **complex)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(aep);
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
@@ -112,7 +113,8 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **complex)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(aep);
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
@@ -127,7 +129,8 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **complex)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(aep);
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
@@ -143,7 +146,8 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **complex)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(aep);
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }

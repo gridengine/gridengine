@@ -51,6 +51,7 @@
 #include "sge_unistd.h"
 #include "jb_now.h"
 #include "sge_security.h"
+#include "sge_answer.h"
 #include "msg_clients_common.h"
 #include "msg_qsub.h"
 
@@ -111,7 +112,7 @@ char **argv
 
       status = lGetUlong(aep, AN_status);
       quality = lGetUlong(aep, AN_quality);
-      if (quality == NUM_AN_ERROR) {
+      if (quality == ANSWER_QUALITY_ERROR) {
          s = lGetString(aep, AN_text);
          if (s[strlen(s)-1] != '\n')
             fprintf(stderr, "%s\n", s);
@@ -136,7 +137,7 @@ char **argv
    for_each(aep, alp) {
       status = lGetUlong(aep, AN_status);
       quality = lGetUlong(aep, AN_quality);
-      if (quality == NUM_AN_ERROR) {
+      if (quality == ANSWER_QUALITY_ERROR) {
          fprintf(stderr, "qsub: %s", lGetString(aep, AN_text));
          do_exit = 1;
       }
@@ -170,7 +171,7 @@ char **argv
    for_each(aep, alp) {
       status = lGetUlong(aep, AN_status);
       quality = lGetUlong(aep, AN_quality);
-      if (quality == NUM_AN_ERROR) {
+      if (quality == ANSWER_QUALITY_ERROR) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          do_exit = 1;
       }
@@ -219,7 +220,7 @@ char **argv
    for_each(aep, alp) {
       status = lGetUlong(aep, AN_status);
       quality = lGetUlong(aep, AN_quality);
-      if (quality == NUM_AN_ERROR) {
+      if (quality == ANSWER_QUALITY_ERROR) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          do_exit = 1;
       }
@@ -269,7 +270,7 @@ char **argv
       status = lGetUlong(aep, AN_status);
       quality = lGetUlong(aep, AN_quality);
       s = lGetString(aep, AN_text);
-      if (quality == NUM_AN_ERROR) {
+      if (quality == ANSWER_QUALITY_ERROR) {
          if (s[strlen(s)-1] != '\n') {
             fprintf(stderr, "%s\n", s);
          } else {
@@ -327,12 +328,12 @@ DTRACE;
       for_each(aep, alp) {
          status = lGetUlong(aep, AN_status);
          quality = lGetUlong(aep, AN_quality);
-         if (quality == NUM_AN_ERROR) {
+         if (quality == ANSWER_QUALITY_ERROR) {
             fprintf(stderr, "\n%s", lGetString(aep, AN_text));
             do_exit = 1;
             break;
          }
-         else if (quality == NUM_AN_WARNING) {
+         else if (quality == ANSWER_QUALITY_WARNING) {
             printf("\n%s", lGetString(aep, AN_text));
          }
          else {

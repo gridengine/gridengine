@@ -42,53 +42,23 @@ extern "C" {
 
 /* *INDENT-OFF* */
 
-/* 
- * valid values for AN_status 
- */
-enum {
-   STATUS_OK = 1,            /* everything was fine */
-   STATUS_ESEMANTIC,         /* semantic error */
-   STATUS_EEXIST,            /* elem does not exist OR it exists for a
-                              * "add" request */
-   STATUS_EUNKNOWN,          /* unknown error occured */
-   STATUS_ENOIMP,            /* command not implemented for target */
-   STATUS_ENOKEY,            /* missing key field in case of add,del,mod */
-   STATUS_ESYNTAX,           /* syntax error parsing a_source field */
-   STATUS_EDENIED2HOST,      /* operation denied to this host */
-   STATUS_ENOMGR,            /* operation needs manager privileges */
-   STATUS_ENOOPR,            /* operation needs operator privileges */
-   STATUS_NOQMASTER,         /* failed to reach sge_qmaster */
-   STATUS_NOCOMMD,           /* failed to reach commd */
-   STATUS_EDISK,             /* disk operation failed */
-   STATUS_ENOSUCHUSER,       /* can't resolve user */
-   STATUS_NOSUCHGROUP,       /* can't resolve group */
-   STATUS_EMALLOC,           /* can't allocate memory */
-   STATUS_ENOTOWNER,         /* need to be owner for this operation */
-   STATUS_ESUBHLIC,          /* too few submit host licenses */
-   STATUS_DENIED,            /* not allowed to do whatever you try */
-   STATUS_EVERSION,          /* qmaster GDI version differs from clients
-                              * GDI version */
-   STATUS_ERROR1,            /* general error 1 */
-   STATUS_ERROR2,            /* general error 2 */
-   STATUS_ERROR3,            /* general error 3 */
-   STATUS_OK_DOAGAIN=24,     /* 
-                              * everything was fine but transaction
-                              * was not completly finished. 
-                              */
-   STATUS_NOTOK_DOAGAIN=25   /*
-                              * transaction was rejected. Try again later 
-                              * (value will be used as return value for
-                              * qsub)
-                              */
-};
-
-/*
- * definess for AN_quality
- */
-#define NUM_AN_ERROR    0
-#define NUM_AN_WARNING  1
-#define NUM_AN_INFO     2
-
+/****** gdi/answer/--AN_Type **************************************************
+*  NAME
+*     AN_Type - CULL answer element
+*
+*  ELEMENTS
+*     SGE_ULONG(AN_status)
+*        status of an answer (e.g STATUS_NOCOMMD) 
+*
+*     SGE_STRING(AN_text)
+*        printable error text
+*
+*     SGE_ULONG(AN_quality)
+*        answer quality (e.g ANSWER_QUALITY_ERROR)
+*
+*  FUNCTION
+*     CULL element holding information for an answer of a request. 
+******************************************************************************/
 enum {
    AN_status = AN_LOWERBOUND,
    AN_text,
@@ -113,4 +83,6 @@ NAMEEND
 #ifdef  __cplusplus
 }
 #endif
-#endif                          /* __SGE_ANSWERL_H */
+
+#endif  /* __SGE_ANSWERL_H */
+

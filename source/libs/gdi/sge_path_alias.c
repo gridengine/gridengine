@@ -50,8 +50,9 @@
 #include "sge_uidgid.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
+#include "sge_answer.h"
 
-/****** gdi/path_alias/--PathAlias ********************************************
+/****** gdi/path_alias/-PathAlias *********************************************
 *  NAME
 *     PathAlias - Path aliasing mechanism for SGE/EE
 *
@@ -147,7 +148,7 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
 
    if (!path_alias_list || !file_name) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
    }
@@ -190,7 +191,7 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
       if (*origin == '\0' || *submit_host == '\0' || *exec_host == '\0' ||
             *translation == '\0') {
          sprintf(err, MSG_ALIAS_INVALIDSYNTAXOFPATHALIASFILEX_S, file_name);
-         sge_add_answer(alpp, err, STATUS_ESYNTAX, 0);
+         answer_list_add(alpp, err, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          ret = -1;
          break;
       }
@@ -205,7 +206,7 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
       pal = lAddElemStr(path_alias_list, PA_origin, origin, PA_Type);
       
       if (!pal) {
-         sge_add_answer(alpp, MSG_SGETEXT_NOMEM, STATUS_EMALLOC, 0);
+         answer_list_add(alpp, MSG_SGETEXT_NOMEM, STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          ret = -1;
          break;
       }
@@ -216,7 +217,7 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
       lSetHost(pal, PA_submit_host, submit_host);
       if (strcmp(submit_host, "*") && sge_resolve_host(pal, PA_submit_host)) {
          sprintf(SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, submit_host);
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = -1;
          break;
       }
@@ -283,13 +284,13 @@ int path_alias_list_initialize(lList **path_alias_list,
       pwd = sge_getpwnam(user);
       if (!pwd) {
          sprintf(err, MSG_USER_INVALIDNAMEX_S, user);
-         sge_add_answer(alpp, err, STATUS_ENOSUCHUSER, 0);
+         answer_list_add(alpp, err, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
       if (!pwd->pw_dir) {
          sprintf(err, MSG_USER_NOHOMEDIRFORUSERX_S, user);
-         sge_add_answer(alpp, err, STATUS_EDISK, 0);
+         answer_list_add(alpp, err, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -309,7 +310,7 @@ int path_alias_list_initialize(lList **path_alias_list,
          if (path_alias_read_from_file(path_alias_list, 
                                        alpp, filename[i]) != 0) {
             sprintf(err, MSG_ALIAS_CANTREAD_SS, filename[i], strerror(errno));
-            sge_add_answer(alpp, err, STATUS_EDISK, 0);
+            answer_list_add(alpp, err, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }

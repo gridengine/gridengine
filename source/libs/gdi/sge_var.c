@@ -47,7 +47,7 @@
 #include "sge_stdlib.h"
 #include "sge_string.h"
 
-/****** gdi/var/--VariableList ************************************************
+/****** gdi/var/-VariableList *************************************************
 *  NAME
 *     VariableList - Object to store variable name/value pairs
 *
@@ -118,14 +118,14 @@ static const char *var_get_sharedlib_path_name(void)
 #endif
 }
 
-/****** gdi/var/var_list_set_string() ******************************
+/****** gdi/var/var_list_set_string() *****************************************
 *  NAME
 *     var_list_set_string -- add/change an variable
 *
 *  SYNOPSIS
 *     void var_list_set_string(lList *varl, 
-*                                         const char *name, 
-*                                         const char *value);
+*                              const char *name, 
+*                              const char *value);
 *
 *  FUNCTION
 *     If the variable <name> does not already exist in <varl>, 
@@ -160,14 +160,14 @@ void var_list_set_string(lList **varl, const char *name,
    DEXIT;
 }
 
-/****** gdi/var/var_list_set_int() *********************************
+/****** gdi/var/var_list_set_int() ********************************************
 *  NAME
 *     var_list_set_int -- add/change an variable
 *
 *  SYNOPSIS
 *     void var_list_set_int(lList *varl, 
-*                                      const char *name, 
-*                                      int value);
+*                           const char *name, 
+*                           int value);
 *
 *  FUNCTION
 *     If the variable <name> does not already exist in <varl>, 
@@ -194,14 +194,14 @@ void var_list_set_int(lList **varl, const char *name, int value)
    DEXIT;
 }
 
-/****** gdi/var/var_list_set_u32() *********************************
+/****** gdi/var/var_list_set_u32() ********************************************
 *  NAME
 *     var_list_set_u32 -- add/change a variable
 *
 *  SYNOPSIS
 *     void var_list_set_u32(lList *varl, 
-*                                      const char *name, 
-*                                      u_long32 value);
+*                           const char *name, 
+*                           u_long32 value);
 *
 *  FUNCTION
 *     If the variable <name> does not already exist in <varl>, 
@@ -228,7 +228,7 @@ void var_list_set_u32(lList **varl, const char *name, u_long32 value)
    DEXIT;
 }
 
-/****** gdi/var/var_list_set_sharedlib_path() **********************
+/****** gdi/var/var_list_set_sharedlib_path() *********************************
 *  NAME
 *     var_list_set_sharedlib_path -- set shared lib path
 *
@@ -504,6 +504,34 @@ void var_list_remove_prefix_vars(lList *varl, const char *prefix)
       if (!strncmp(prefix_name, prefix, prefix_len)) {
          lRemoveElem(varl, var_elem);
       } 
+   }
+   DEXIT;
+   return;
+}
+
+void var_list_split_prefix_vars(lList *varl, 
+                                lList **pefix_vars, 
+                                const char *prefix)
+{
+      int prefix_len = strlen(prefix);
+   lListElem *var_elem = NULL;
+   lListElem *next_var_elem = NULL;
+
+   DENTER(TOP_LAYER, "var_list_remove_prefix_vars");
+   next_var_elem = lFirst(varl);
+   while((var_elem = next_var_elem)) {
+      const char *prefix_name = lGetString(var_elem, VA_variable);
+      next_var_elem = lNext(var_elem);
+
+      if (!strncmp(prefix_name, prefix, prefix_len)) {
+         lListElem *dechained_elem = lDechainElem(varl, var_elem);
+
+         if (*pefix_vars == NULL) {
+            *pefix_vars = lCreateList("", VA_Type);
+         }
+
+         lAppendElem(*pefix_vars, dechained_elem);
+      }
    }
    DEXIT;
    return;

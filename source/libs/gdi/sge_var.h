@@ -60,4 +60,8 @@ void var_list_set_sharedlib_path(lList **varl);
 
 void var_list_remove_prefix_vars(lList *varl, const char *prefix);
 
+void var_list_split_prefix_vars(lList *varl,
+                                lList **pefix_vars,
+                                const char *prefix);
+
 #endif /* __SGE_VAR_H */

@@ -42,6 +42,7 @@
 
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
+#include "sge_answer.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_globals.h"

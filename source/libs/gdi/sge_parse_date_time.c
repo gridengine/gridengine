@@ -39,6 +39,8 @@
 #include "sge_string.h"
 #include "sge_log.h"
 #include "sge_time.h"
+#include "sge_answer.h"
+
 #include "msg_gdilib.h"
 
 /*  -------------------------
@@ -73,7 +75,7 @@ lList **alpp
    if (strlen(date_str) > sizeof(stringT)) {
       sprintf(SGE_EVENT, MSG_PARSE_STARTTIMETOOLONG); 
       if (alpp) 
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       else 
          fprintf(stderr,"\n%s\n", SGE_EVENT);
       DEXIT;
@@ -92,7 +94,7 @@ lList **alpp
    if ((i!=0)&&(i!=2)) {
       sprintf(SGE_EVENT, MSG_PARSE_INVALIDSECONDS);
       if (alpp) 
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       else 
          fprintf(stderr,"\n%s\n", SGE_EVENT);
       DEXIT;
@@ -104,7 +106,7 @@ lList **alpp
    if ((i!=8)&&(i!=10)&&(i!=12)) {
       sprintf(SGE_EVENT, MSG_PARSE_INVALIDHOURMIN); 
       if (alpp) 
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       else 
          fprintf(stderr,"\n%s\n", SGE_EVENT);
       DEXIT;
@@ -136,7 +138,7 @@ lList **alpp
    if ((timeptr.tm_mon>11)||(timeptr.tm_mon<0)) {
       sprintf(SGE_EVENT, MSG_PARSE_INVALIDMONTH);
       if (alpp) 
-	 sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+	 answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       else 
          fprintf(stderr,"\n%s\n", SGE_EVENT);
       DEXIT;
@@ -154,7 +156,7 @@ lList **alpp
       /* actually mktime() should frigging do it */
       sprintf(SGE_EVENT, MSG_PARSE_INVALIDDAY);
       if (alpp) 
-	 sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+	 answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       else 
          fprintf(stderr,"\n%s\n", SGE_EVENT);
       DEXIT;
@@ -169,7 +171,7 @@ lList **alpp
    if ((timeptr.tm_hour>23)||(timeptr.tm_hour<0)) {
       sprintf(SGE_EVENT, MSG_PARSE_INVALIDHOUR);
       if (alpp) 
-	 sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+	 answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       else 
          fprintf(stderr,"\n%s\n", SGE_EVENT);
       DEXIT;
@@ -183,7 +185,7 @@ lList **alpp
    if ((timeptr.tm_min>59)||(timeptr.tm_min<0)) {
       sprintf(SGE_EVENT, MSG_PARSE_INVALIDMINUTE);
       if (alpp) 
-	 sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+	 answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       else 
          fprintf(stderr,"\n%s\n", SGE_EVENT);
       DEXIT;
@@ -195,7 +197,7 @@ lList **alpp
    if ((timeptr.tm_sec>59)||(timeptr.tm_mday<0)) {
       sprintf(SGE_EVENT, MSG_PARSE_INVALIDSECOND);
       if (alpp) 
-	 sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+	 answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       else 
          fprintf(stderr,"\n%s\n", SGE_EVENT);
       DEXIT;
@@ -228,7 +230,7 @@ lList **alpp
       DPRINTF(("input to mktime: %s\n",asctime(&timeptr)));
       sprintf(SGE_EVENT, MSG_PARSE_NODATEFROMINPUT); 
       if (alpp) 
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       else 
          fprintf(stderr,"\n%s\n", SGE_EVENT);
       DEXIT;

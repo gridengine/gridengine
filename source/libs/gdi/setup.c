@@ -54,6 +54,7 @@
 #include "sge_parse_num_par.h"
 #include "sge_hostname.h"
 #include "sge_spool.h"
+#include "sge_answer.h"
 
 extern long compression_level;
 extern long compression_threshold;
@@ -104,7 +105,7 @@ lList **alpp
          sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
                      path.act_qmaster_file);
    /* gdi lib call */
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return;
       }
@@ -176,7 +177,7 @@ static int init_hostcpy_policy(void)
 
    DENTER(TOP_LAYER, "init_hostcpy_policy");
 
-   if (get_confval_array(path.conf_file, 2, name, value)) {
+   if (sge_get_confval_array(path.conf_file, 2, name, value)) {
       ERROR((SGE_EVENT, MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S,
       path.conf_file));
       DEXIT;

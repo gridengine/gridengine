@@ -82,6 +82,7 @@
 #include "sge_range.h"
 #include "sge_job_jatask.h"
 #include "sge_hostname.h"
+#include "sge_answer.h"
 
 extern lList *Master_Userset_List;
 extern lList *Master_Project_List;
@@ -167,21 +168,21 @@ lList **topp  /* ticket orders ptr ptr */
       job_number=lGetUlong(ep, OR_job_number);
       if(!job_number) {
          ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -2;
       }
       task_number=lGetUlong(ep, OR_ja_task_number);
       if (!task_number) {
          ERROR((SGE_EVENT, MSG_JOB_NOTASKID));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -2;
       }
       jep = sge_locate_job(job_number);
       if(!jep) {
          WARNING((SGE_EVENT, MSG_JOB_FINDJOB_U, u32c(job_number)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          /* try to repair schedd data */
          sge_add_event(NULL, sgeE_JOB_DEL, job_number, 0, NULL, NULL);
          DEXIT;
@@ -196,7 +197,7 @@ lList **topp  /* ticket orders ptr ptr */
          ERROR((SGE_EVENT, MSG_ORD_OLDVERSION_UUU, 
                u32c(lGetUlong(ep, OR_job_version)), u32c(job_number), 
                u32c(task_number)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -216,7 +217,7 @@ lList **topp  /* ticket orders ptr ptr */
       if (lGetUlong(jatp, JAT_status) != JIDLE) {
          ERROR((SGE_EVENT, MSG_ORD_TWICE_UU, u32c(job_number), 
                 u32c(task_number)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -229,7 +230,7 @@ lList **topp  /* ticket orders ptr ptr */
          pe = sge_locate_pe(or_pe);
          if (!pe) {
             ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDPE_S, or_pe));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -2;
          }
@@ -265,7 +266,7 @@ lList **topp  /* ticket orders ptr ptr */
           */
          if(!q_name) {
             ERROR((SGE_EVENT, MSG_OBJ_NOQNAME));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
@@ -281,7 +282,7 @@ lList **topp  /* ticket orders ptr ptr */
          qep = sge_locate_queue(q_name);
          if (!qep) {
             ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDQ_S, q_name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
@@ -296,7 +297,7 @@ lList **topp  /* ticket orders ptr ptr */
          if ( !force && (q_version!=lGetUlong(qep, QU_version))) {
             ERROR((SGE_EVENT, MSG_ORD_QVERSION_UUS,
                   u32c(q_version), u32c(lGetUlong(qep, QU_version)), q_name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
 
             /* try to repair schedd data */
             sge_add_queue_event(sgeE_QUEUE_MOD, qep);
@@ -319,7 +320,7 @@ lList **topp  /* ticket orders ptr ptr */
          lFreeList(xacl); 
          if (!allowed) {
             ERROR((SGE_EVENT, MSG_JOB_JOBACCESSQ_US, u32c(job_number), q_name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
@@ -329,7 +330,7 @@ lList **topp  /* ticket orders ptr ptr */
          /* ensure that this queue has enough free slots */
          if (lGetUlong(qep, QU_job_slots) - qslots_used(qep) < q_slots) {
             ERROR((SGE_EVENT, MSG_JOB_FREESLOTS_US, u32c(q_slots), q_name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
@@ -339,7 +340,7 @@ lList **topp  /* ticket orders ptr ptr */
          /* handle QERROR */
          if (VALID(QERROR, lGetUlong(qep, QU_state))) {
             ERROR((SGE_EVENT, MSG_JOB_QMARKEDERROR_S, q_name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
@@ -347,7 +348,7 @@ lList **topp  /* ticket orders ptr ptr */
          }  
          if (VALID(QCAL_SUSPENDED, lGetUlong(qep, QU_state))) {
             ERROR((SGE_EVENT, MSG_JOB_QSUSPCAL_S, q_name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
@@ -355,7 +356,7 @@ lList **topp  /* ticket orders ptr ptr */
          }  
          if (VALID(QCAL_DISABLED, lGetUlong(qep, QU_state))) {
             ERROR((SGE_EVENT, MSG_JOB_QDISABLECAL_S, q_name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
@@ -371,7 +372,7 @@ lList **topp  /* ticket orders ptr ptr */
           */
          if (!(hep=sge_locate_host(lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST))) {
             ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetHost(qep, QU_qhostname)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
@@ -388,7 +389,7 @@ lList **topp  /* ticket orders ptr ptr */
                       && lGetUlong(jatp, JAT_task_number) == lGetUlong(ruep, RU_task_number)) {
                      ERROR((SGE_EVENT, MSG_JOB_UNABLE2STARTJOB_US, u32c(lGetUlong(ruep, RU_job_number)),
                         lGetHost(qep, QU_qhostname)));
-                     sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+                     answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                      lFreeList(gdil);
                      lSetString(jatp, JAT_granted_pe, NULL);
                      DEXIT;
@@ -461,7 +462,7 @@ lList **topp  /* ticket orders ptr ptr */
 
          ERROR((SGE_EVENT, MSG_JOB_JOBDELIVER_UU, 
                 u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatp, JAT_task_number))));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -3;
       }
@@ -502,7 +503,7 @@ lList **topp  /* ticket orders ptr ptr */
          job_number=lGetUlong(ep, OR_job_number);
          if(!job_number) {
             ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -2;
          }
@@ -514,14 +515,14 @@ lList **topp  /* ticket orders ptr ptr */
          jep = sge_locate_job(job_number);
          if(!jep) {
             WARNING((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, u32c(job_number)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return 0; /* it's ok - job has exited - forget about him */
          }
          task_number=lGetUlong(ep, OR_ja_task_number);
          if (!task_number) {
             ERROR((SGE_EVENT, MSG_JOB_NOTASKID));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -2;
          }
@@ -543,7 +544,7 @@ lList **topp  /* ticket orders ptr ptr */
                      u32c(lGetUlong(ep, OR_job_version)), 
                      u32c(lGetUlong(jep, JB_job_number)),
                      u32c(task_number)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -555,7 +556,7 @@ lList **topp  /* ticket orders ptr ptr */
             WARNING((SGE_EVENT, MSG_JOB_CHANGEPTICKETS_UU, 
                      u32c(lGetUlong(jep, JB_job_number)), 
                      u32c(lGetUlong(jatp, JAT_task_number))));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -612,7 +613,7 @@ lList **topp  /* ticket orders ptr ptr */
          job_number=lGetUlong(ep, OR_job_number);
          if(!job_number) {
             ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -2;
          }
@@ -623,14 +624,14 @@ lList **topp  /* ticket orders ptr ptr */
          jep = sge_locate_job(job_number);
          if(!jep) {
             WARNING((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, u32c(job_number)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return 0; /* it's ok - job has exited - forget about him */
          }
          task_number=lGetUlong(ep, OR_ja_task_number);
          if (!task_number) {
             ERROR((SGE_EVENT, MSG_JOB_NOTASKID));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -2;
          }
@@ -647,7 +648,7 @@ lList **topp  /* ticket orders ptr ptr */
                      u32c(lGetUlong(ep, OR_job_version)), 
                      u32c(lGetUlong(jep, JB_job_number)),
                      u32c(task_number)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -659,7 +660,7 @@ lList **topp  /* ticket orders ptr ptr */
                WARNING((SGE_EVENT, MSG_JOB_CHANGETICKETS_UU, 
                         u32c(lGetUlong(jep, JB_job_number)), 
                         u32c(lGetUlong(jatp, JAT_task_number))));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+               answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
                DEXIT;
                return -1;
             }
@@ -777,14 +778,14 @@ lList **topp  /* ticket orders ptr ptr */
       job_number=lGetUlong(ep, OR_job_number);
       if(!job_number) {
          ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -2;
       }
       task_number=lGetUlong(ep, OR_ja_task_number);
       if (!task_number) {
          ERROR((SGE_EVENT, MSG_JOB_NOTASKID));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -2;
       }
@@ -795,7 +796,7 @@ lList **topp  /* ticket orders ptr ptr */
       jep = sge_locate_job(job_number);
       if(!jep) {
          ERROR((SGE_EVENT, MSG_JOB_FINDJOB_U, u32c(job_number)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          /* try to repair schedd data */
          sge_add_event(NULL, sgeE_JOB_DEL, job_number, task_number, NULL, NULL);
          DEXIT;
@@ -815,7 +816,7 @@ lList **topp  /* ticket orders ptr ptr */
 
          if (lGetUlong(jatp, JAT_status) != JFINISHED) {
             ERROR((SGE_EVENT, MSG_JOB_REMOVENOTFINISHED_U, u32c(lGetUlong(jep, JB_job_number))));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -828,13 +829,13 @@ lList **topp  /* ticket orders ptr ptr */
                ERROR((SGE_EVENT, MSG_JOB_REMOVENONINTERACT_U, u32c(lGetUlong(jep, JB_job_number))));
             else
                ERROR((SGE_EVENT, MSG_JOB_REMOVENONIMMEDIATE_U,  u32c(lGetUlong(jep, JB_job_number))));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
          if (lGetUlong(jatp, JAT_status) != JIDLE) {
             ERROR((SGE_EVENT, MSG_JOB_REMOVENOTIDLEIA_U, u32c(lGetUlong(jep, JB_job_number))));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -1051,7 +1052,7 @@ lList **topp  /* ticket orders ptr ptr */
             if (!queueep) {
                ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDMQ_SU,
                      qnm, u32c(jobid)));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+               answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
                DEXIT;
                return -1;
             }
@@ -1099,7 +1100,7 @@ lList **topp  /* ticket orders ptr ptr */
             queueep = sge_locate_queue(qnm);
             if (!queueep) {
                ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDMQ_SU, qnm, u32c(jobid)));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+               answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
                DEXIT;
                return -1;
             }
@@ -1148,7 +1149,7 @@ lList **topp  /* ticket orders ptr ptr */
    }
 
   /* order sucessfully executed */
-  sge_add_answer(alpp, "OK\n", STATUS_OK, NUM_AN_INFO);
+  answer_list_add(alpp, "OK\n", STATUS_OK, ANSWER_QUALITY_INFO);
 
   DEXIT;
   return STATUS_OK;

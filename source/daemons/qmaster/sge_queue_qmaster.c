@@ -81,6 +81,7 @@
 #include "sge_job.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
+#include "sge_answer.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
@@ -222,7 +223,7 @@ int sub_command
       if (lGetPosViaElem(qep, QU_qname)<0) {
          CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
                lNm2Str(QU_qname), SGE_FUNC));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          goto ERROR;            
       }
       qname = lGetString(qep, QU_qname);
@@ -238,12 +239,12 @@ int sub_command
       if (lGetPosViaElem(qep, QU_qhostname) < 0) {
          CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
                lNm2Str(QU_qhostname), SGE_FUNC));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          goto ERROR;            
       }
       if (sge_resolve_host(qep, QU_qhostname)!=0) {
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(qep, QU_qhostname)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          goto ERROR;            
       }
       lSetHost(new_queue, QU_qhostname, lGetHost(qep, QU_qhostname));
@@ -252,7 +253,7 @@ int sub_command
       if (lGetPosViaElem(qep, QU_qhostname) >= 0) {
          if (sge_hostcmp(lGetHost(new_queue, QU_qhostname), lGetHost(qep, QU_qhostname))) {
             ERROR((SGE_EVENT, MSG_SGETEXT_NOTPOSSIBLETOMODHOSTNAME));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0); 
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR); 
             goto ERROR;
          } 
       }
@@ -304,14 +305,14 @@ int sub_command
       
       if (!(s = lGetString(qep, QU_priority))) {
          ERROR((SGE_EVENT, MSG_QUEUE_PRIORITYRANGE));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          goto ERROR;
       }
       priority = atoi(s);
       if (priority < -20 || priority > 20 ) {
          /* out of range */
          ERROR((SGE_EVENT, MSG_QUEUE_PRIORITYRANGE));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          goto ERROR;
       }
       lSetString(new_queue, QU_priority, s);
@@ -358,7 +359,7 @@ int sub_command
       }
       if (!qtype) {
          ERROR((SGE_EVENT, MSG_AT_LEASTONEQTYPE));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;  
       }
@@ -529,7 +530,7 @@ int sub_command
                  MSG_CALENDAR_CALENDARXREFERENCEDINQUEUEYNOTEXISTS_SS,
                  nc, 
                  qname);
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          goto ERROR;            
       }
 
@@ -577,7 +578,7 @@ int sub_command
                strcasecmp("posix_compliant", s) && 
                strcasecmp("script_from_stdin", s)) {
          sprintf(SGE_EVENT, SFQ" is not a valid shell_start_mode\n", s);
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          goto ERROR;
       }
    }
@@ -594,7 +595,7 @@ int sub_command
                strcasecmp("enabled", s) && 
                strcasecmp("disabled", s)) {
          sprintf(SGE_EVENT, SFQ" is not a valid initial_state\n", s);
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          goto ERROR;
       }
 
@@ -709,7 +710,7 @@ int sub_command
    /* DO COMMON CHECKS AND SEARCH OLD QUEUE */
    if ( !qep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -718,7 +719,7 @@ int sub_command
    if (lGetPosViaElem(qep, QU_qname)<0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(QU_qname), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -732,7 +733,7 @@ int sub_command
          ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_QUEUE, qname));
       else 
          ERROR((SGE_EVENT, MSG_SGETEXT_ALREADYEXISTS_SS, MSG_OBJ_QUEUE, qname));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -742,7 +743,7 @@ int sub_command
          ? lCreateElem(QU_Type) 
          : lCopyElem(old_queue)))) {
       ERROR((SGE_EVENT, MSG_MEM_MALLOC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -827,7 +828,7 @@ int sub_command
    if (sge_change_queue_version(new_queue, add, 1) ||
       cull_write_qconf(1, 0, QUEUE_DIR, lGetString(new_queue, QU_qname), NULL, new_queue)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_QUEUE, qname));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, NUM_AN_ERROR);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -962,7 +963,7 @@ int sub_command
 
    INFO((SGE_EVENT, add?MSG_SGETEXT_ADDEDTOLIST_SSSS:
       MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, qname, MSG_OBJ_QUEUE));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
 }
@@ -990,7 +991,7 @@ char *rhost
 
    if ( !qep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -999,7 +1000,7 @@ char *rhost
    if (lGetPosViaElem(qep, QU_qname)<0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(QU_qname), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -1009,7 +1010,7 @@ char *rhost
    /* deleting a template queue is not allowed */
    if (!strcmp(qname, SGE_TEMPLATE_NAME )) {
       ERROR((SGE_EVENT, MSG_SGETEXT_OPNOTALLOWED_S, MSG_QUEUE_DELQUEUETEMPLATE));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
       DEXIT;
       return STATUS_ESEMANTIC;
    }
@@ -1026,7 +1027,7 @@ char *rhost
 
          if (sqep) {
             ERROR((SGE_EVENT, MSG_NOTALLOWEDTODELSUBORDINATE_SS, qname, lGetString(qep, QU_qname)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);  
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);  
             DEXIT;
             return STATUS_ESEMANTIC;
          }
@@ -1053,7 +1054,7 @@ char *rhost
                      chkpt_name = MSG_OBJ_UNKNOWN;
                   } 
                   ERROR((SGE_EVENT, MSG_UNABLETODELQUEUEXREFERENCEDINCHKPTY_SS, qname,chkpt_name ));
-                  sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);  
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);  
                   DEXIT;
                   return STATUS_ESEMANTIC;
                }
@@ -1081,7 +1082,7 @@ char *rhost
                      pe_name = MSG_OBJ_UNKNOWN;
                   } 
                   ERROR((SGE_EVENT, MSG_UNABLETODELQUEUEXREFERENCEDINPEY_SS, qname,pe_name ));
-                  sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);  
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);  
                   DEXIT;
                   return STATUS_ESEMANTIC;
                }
@@ -1096,7 +1097,7 @@ char *rhost
 
    if (!(oqep = sge_locate_queue(qname))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_QUEUE, qname));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -1104,7 +1105,7 @@ char *rhost
    if (running_jobs) {
       ERROR((SGE_EVENT, MSG_SGETEXT_ACTIVEUNITS_SSIS,
          MSG_OBJ_QUEUE, qname, running_jobs, MSG_OBJ_JOBS));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -1121,7 +1122,7 @@ char *rhost
 
    if (sge_del_queue(qname)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_QUEUE, qname));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -1136,7 +1137,7 @@ char *rhost
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
          ruser, rhost, qname, MSG_OBJ_QUEUE));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
 
@@ -1160,7 +1161,7 @@ lList *project_list  /* UP_Type */
       if (!lGetElemStr(Master_Project_List, UP_name, lGetString(pep, UP_name))) {
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNPROJECT_SSS, 
                lGetString(pep, UP_name), obj_name, qname));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -1193,7 +1194,7 @@ lList *complex_list  /* CX_Type */
           !strcmp(s, "queue")) {
          ERROR((SGE_EVENT, MSG_SGETEXT_COMPLEXNOTUSERDEFINED_SSS,
                s, obj_name, qname));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          ret = STATUS_EUNKNOWN;
       } 
 
@@ -1201,7 +1202,7 @@ lList *complex_list  /* CX_Type */
       if (!lGetElemStr(Master_Complex_List, CX_name, s)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNCOMPLEX_SSS, 
                s, obj_name, qname));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          ret = STATUS_EUNKNOWN;
       }
    }
@@ -1351,7 +1352,7 @@ const char *obj_name   /* e.g. "pvm", "hibernator"  */
       } else if (!sge_locate_queue(lGetString(qrep, QR_name))) {
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNQUEUE_SSSS, 
             lGetString(qrep, QR_name), attr_name, obj_descr, obj_name));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          DEXIT;
          return STATUS_EUNKNOWN;
       } else {
@@ -1360,7 +1361,7 @@ const char *obj_name   /* e.g. "pvm", "hibernator"  */
       if (all_name_exists && queue_exist) {
          ERROR((SGE_EVENT, MSG_SGETEXT_QUEUEALLANDQUEUEARENOT_SSSS,
             SGE_ATTRVAL_ALL, attr_name, obj_descr, obj_name));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          DEXIT;
          return STATUS_EUNKNOWN;
       }

@@ -49,6 +49,8 @@
 
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
+#include "sge_answer.h"
+#include "sge_range.h"
 #include "commlib.h"
 #include "def.h"
 #include "qmon_proto.h"
@@ -68,7 +70,6 @@
 #include "AskForTime.h"
 #include "sge_feature.h"
 #include "sge_sched.h"
-#include "parse_range.h"
 #include "sge_string.h"
 
 /*-------------------------------------------------------------------------*/
@@ -586,7 +587,13 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
          break;
       case 2:
          str = XmtInputFieldGetString(sconf_job_range);
-         parse_ranges(str, 1, 0, &alp, NULL, INF_NOT_ALLOWED);
+         {
+            lList *range_list = NULL;
+
+            range_list_parse_from_string(&range_list, &alp, str,
+                                         1, 0, INF_NOT_ALLOWED);
+            range_list = lFreeList(range_list);
+         }
          if (alp) {
             qmonMessageShow(sconf_job_range, True, lGetString(lFirst(alp), AN_text));
             alp =lFreeList(alp);

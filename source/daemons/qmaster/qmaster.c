@@ -101,6 +101,7 @@
 #include "sge_hostname.h"
 #include "sge_spool.h"
 #include "sge_os.h"
+#include "sge_answer.h"
 
 #ifdef PW
 /* The license key - to be replaced when serialized */
@@ -693,14 +694,14 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
    DENTER(GDI_LAYER, "sge_gdi_kill_master");
    if (sge_get_auth_info(request, &uid, username, &gid, groupname) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
 
    if (sge_manager(username)) {
       ERROR((SGE_EVENT, MSG_SHUTDOWN_SHUTTINGDOWNQMASTERREQUIRESMANAGERPRIVILEGES));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -710,7 +711,7 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
    /* sge_flush_events(NULL, 0); !!!! not really necessary */
       
    INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, username, host, prognames[QMASTER]));
-   sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
 }
 
@@ -996,7 +997,7 @@ lList *alp = NULL;
       sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
       printf("%s\n", *sp);
       sge_usage(stderr);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -1073,7 +1074,7 @@ char *filename;
       sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
       if(!usageshowed)
          sge_usage(stderr);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }

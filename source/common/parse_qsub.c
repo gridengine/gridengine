@@ -47,13 +47,15 @@
 #include "sge_userset.h"
 #include "sge_parse_num_par.h"
 #include "parse.h"
-#include "parse_range.h"
 #include "sge_options.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_parse_util.h"
 #include "sge_string.h"
 #include "sge_stdlib.h"
+#include "sge_answer.h"
+#include "sge_range.h"
+
 #include "msg_common.h"
 
 static int sge_parse_priority(lList **alpp, int *valp, char *priority_str);
@@ -140,7 +142,8 @@ u_long32 flags
    DENTER(TOP_LAYER, "cull_parse_cmdline");
 
    if (!arg_list || !pcmdline) {
-      sge_add_answer(&answer, MSG_PARSE_NULLPOINTERRECEIVED, STATUS_EUNKNOWN, 0);
+      answer_list_add(&answer, MSG_PARSE_NULLPOINTERRECEIVED, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -161,7 +164,8 @@ u_long32 flags
             sprintf(str,
                MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
                *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, 
+                            STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
          /* next field(s) is "date_time" */
@@ -169,7 +173,8 @@ u_long32 flags
          if (!*sp) {
             sprintf(str,
                MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-a");
-            sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+            answer_list_add(&answer, str, 
+                            STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -180,7 +185,8 @@ u_long32 flags
             sprintf(str,
                MSG_ANSWER_WRONGTIMEFORMATEXSPECIFIEDTOAOPTION_S,
             *sp);
-            sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+            answer_list_add(&answer, str, 
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -201,7 +207,7 @@ u_long32 flags
             sprintf(str,
                MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
                *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
          /* next field is account_string */
@@ -209,7 +215,8 @@ u_long32 flags
          if (!*sp) {
              sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S
              ,"-A");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -233,7 +240,8 @@ u_long32 flags
          sp++;
          if (!*sp) {
              sprintf(str,MSG_PARSE_ACOPTIONMUSTHAVECONTEXTLISTLISTARGUMENT);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -242,7 +250,8 @@ u_long32 flags
          i_ret = var_list_parse_from_string(&variable_list, *sp, 0);
          if (i_ret) {
              sprintf(str, MSG_ANSWER_WRONGCONTEXTLISTFORMATAC_S , *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -267,7 +276,8 @@ u_long32 flags
          sp++;
          if (!*sp) {
             sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-c");
-            sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+            answer_list_add(&answer, str, 
+                            STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -279,7 +289,8 @@ u_long32 flags
             interval = sge_parse_checkpoint_interval(*sp);
             if (!interval) {
                sprintf(str, MSG_PARSE_CARGUMENTINVALID);
-               sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+               answer_list_add(&answer, str, 
+                               STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                DEXIT;
                return answer;
             }
@@ -288,7 +299,8 @@ u_long32 flags
          }
          else if (attr == -1) {
             sprintf(str, MSG_PARSE_CSPECIFIERINVALID);
-            sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+            answer_list_add(&answer, str, 
+                            STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -311,7 +323,8 @@ u_long32 flags
          if (!*sp) {
             sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S
                , *(sp - 1));
-            sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+            answer_list_add(&answer, str, 
+                            STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -357,14 +370,15 @@ u_long32 flags
             sprintf(str, MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S
                ,
                *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
          /* next field is directive_prefix */
          sp++;
          if (!*sp) {
              sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-C");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -389,7 +403,8 @@ u_long32 flags
          sp++;
          if (!*sp) {
              sprintf(str, MSG_PARSE_DCOPTIONMUSTHAVESIMPLECONTEXTLISTARGUMENT);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -399,7 +414,8 @@ u_long32 flags
          if (i_ret) {
              sprintf(str,MSG_PARSE_WRONGCONTEXTLISTFORMATDC_S
              , *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -423,14 +439,16 @@ u_long32 flags
             sprintf(str, MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S
                ,
                *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, 
+                            STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
          /* next field is display to redirect interactive jobs to */
          sp++;
          if (!*sp) {
              sprintf(str, MSG_PARSE_DISPLAYOPTIONMUSTHAVEARGUMENT );
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -473,7 +491,7 @@ u_long32 flags
 
          if (!is_deadline_user(me.user_name, userset_list)) {
             sprintf(str, "%s you are not a deadline user\n", me.user_name);
-            sge_add_answer(&answer, str, STATUS_DENIED, NUM_AN_ERROR);
+            answer_list_add(&answer, str, STATUS_DENIED, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -483,7 +501,7 @@ u_long32 flags
             sprintf(str,
                MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
                *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
          /* next field(s) is "date_time" */
@@ -491,7 +509,7 @@ u_long32 flags
          if (!*sp) {
             sprintf(str,
                MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-dl");
-            sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+            answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -501,7 +519,7 @@ u_long32 flags
          {
             sprintf(str, MSG_PARSE_WRONGTIMEFORMATXSPECTODLOPTION_S ,
             *sp);
-            sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+            answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -525,7 +543,7 @@ u_long32 flags
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-e");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -537,7 +555,7 @@ u_long32 flags
              sprintf(str,
              MSG_PARSE_WRONGPATHLISTFORMATXSPECTOEOPTION_S,
              *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -562,7 +580,7 @@ u_long32 flags
             sprintf(str,
                MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
                *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
          if ((flags & FLG_QALTER)) {
@@ -571,7 +589,7 @@ u_long32 flags
             if (!*sp) {
                 sprintf(str,
                 MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-h");
-                sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+                answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                 DEXIT;
                 return answer;
             }
@@ -579,7 +597,7 @@ u_long32 flags
             if (hold == -1) {
                 sprintf(str,MSG_PARSE_UNKNOWNHOLDLISTXSPECTOHOPTION_S ,
                 *sp);
-                sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+                answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                 DEXIT;
                 return answer;
             }
@@ -635,7 +653,8 @@ u_long32 flags
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-hold_jid");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -645,7 +664,8 @@ u_long32 flags
          if (i_ret) {
              sprintf(str,MSG_PARSE_WRONGJIDHOLDLISTFORMATXSPECTOHOLDJIDOPTION_S ,
              *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -665,7 +685,7 @@ u_long32 flags
             sprintf(str,
                MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
                *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
          /* next field is "y|n" */
@@ -673,7 +693,8 @@ u_long32 flags
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-j");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, 
+                             ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -691,7 +712,7 @@ u_long32 flags
          else {
              sprintf(str,MSG_PARSE_INVALIDOPTIONARGUMENTJX_S ,
              *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -710,7 +731,8 @@ u_long32 flags
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-lj");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -741,7 +763,8 @@ u_long32 flags
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-l");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -757,7 +780,8 @@ u_long32 flags
          if (!resource_list) {
              sprintf(str,MSG_PARSE_WRONGRESOURCELISTFORMATXSPECTOLOPTION_S ,
              *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -785,7 +809,8 @@ u_long32 flags
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-m");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -796,7 +821,8 @@ u_long32 flags
              sprintf(str,
              MSG_PARSE_WRONGMAILOPTIONSLISTFORMATXSPECTOMOPTION_S ,
              *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -818,7 +844,8 @@ u_long32 flags
          sp++;
          if (!*sp) {
              sprintf(str, MSG_PARSE_QOPTIONMUSTHAVEDESTIDLISTARGUMENT);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -828,7 +855,7 @@ u_long32 flags
          if (i_ret) {
              sprintf(str,MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOQOPTION_S,
              *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -851,7 +878,7 @@ u_long32 flags
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-M");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -862,7 +889,7 @@ u_long32 flags
           if (i_ret) {
              sprintf(str,MSG_PARSE_WRONGMAILLISTFORMATXSPECTOMOPTION_S ,
              *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -882,7 +909,7 @@ u_long32 flags
             sprintf(str,
                MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
                *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
          /* next field is name */
@@ -890,20 +917,20 @@ u_long32 flags
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-N");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
          if (strchr(*sp, '/')) {
              sprintf(str,MSG_PARSE_ARGUMENTTONOPTIONMUSTNOTCONTAINBSL);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
 
          if (*sp == '\0') {
              sprintf(str,MSG_PARSE_EMPTYSTRINGARGUMENTTONOPTIONINVALID);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -937,13 +964,13 @@ u_long32 flags
             sprintf(str,
                MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
                *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
          /* next field is yes/no switch */
          sp++;
          if(!*sp) {
             sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-now");
-            sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+            answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -960,7 +987,7 @@ u_long32 flags
          }
          else {
              sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTNOW_S , *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -980,7 +1007,7 @@ u_long32 flags
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-o");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -990,7 +1017,7 @@ u_long32 flags
          if (i_ret) {
              sprintf(str,MSG_PARSE_WRONGSTDOUTPATHLISTFORMATXSPECTOOOPTION_S ,
              *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1011,7 +1038,7 @@ u_long32 flags
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-ot");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1035,7 +1062,8 @@ u_long32 flags
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-p");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1061,7 +1089,7 @@ u_long32 flags
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
             sprintf(str, MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
                *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
          /* next field is the projects name */
@@ -1069,7 +1097,8 @@ u_long32 flags
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-P");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1090,14 +1119,15 @@ u_long32 flags
             sprintf(str,
                MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
                *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 DTRACE;
          /* next field must be the pe_name ... */
          sp++;
          if (!*sp) {
              sprintf(str,MSG_PARSE_PEOPTIONMUSTHAVEPENAMEARGUMENT);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1106,12 +1136,14 @@ DTRACE;
          sp++;
          if (!*sp) {
              sprintf(str,MSG_PARSE_PEOPTIONMUSTHAVERANGEAS2NDARGUMENT);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
 
-         pe_range = parse_ranges(*sp, 0, 0, &answer, NULL, INF_ALLOWED);
+         range_list_parse_from_string(&pe_range, &answer, *sp, 
+                                      0, 0, INF_ALLOWED);
 
          if (!pe_range) {
             DEXIT;
@@ -1140,7 +1172,7 @@ DTRACE;
          sp++;
          if (!*sp) {
              sprintf(str, MSG_PARSE_QOPTIONMUSTHAVEDESTIDLISTARGUMENT);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, 0);
              DEXIT;
              return answer;
          }
@@ -1150,7 +1182,7 @@ DTRACE;
          if (i_ret) {
              sprintf(str,MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOQOPTION_S,
              *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1171,13 +1203,13 @@ DTRACE;
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
             sprintf(str,
                MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
          /* loop till we get -qs_end */
          sp++;
          if (!*sp) {
              sprintf(str,MSG_PARSE_QSARGSOPTIONMUSTBETERMINATEDWITHQSEND);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1189,7 +1221,7 @@ DTRACE;
          if ( !sp || !*sp || strcmp("-qs_end", *sp)) {
              qs_args_list = lFreeList(qs_args_list);
              sprintf(str,MSG_PARSE_QSARGSOPTIONMUSTBETERMINATEDWITHQSEND);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1211,7 +1243,7 @@ DTRACE;
             sprintf(str,
                MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
                *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
          /* next filed is "y|n" */
@@ -1219,7 +1251,7 @@ DTRACE;
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-r");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1237,7 +1269,7 @@ DTRACE;
          else {
              sprintf(str,MSG_PARSE_INVALIDOPTIONARGUMENTRX_S,
              *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1259,7 +1291,7 @@ DTRACE;
          sp++;
          if (!*sp) {
              sprintf(str,MSG_PARSE_SCOPTIONMUSTHAVECONTEXTLISTARGUMENT);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1268,7 +1300,7 @@ DTRACE;
          i_ret = var_list_parse_from_string(&variable_list, *sp, 0);
          if (i_ret) {
              sprintf(str,MSG_PARSE_WRONGCONTEXTLISTFORMATSCX_S, *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1305,7 +1337,7 @@ DTRACE;
          sp++;
          if (!*sp) {
              sprintf(str,MSG_PARSE_SOPTIONMUSTHAVEPATHNAMEARGUMENT);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1316,7 +1348,7 @@ DTRACE;
          if (i_ret) {
              sprintf(str,MSG_PARSE_WRONGSHELLLISTFORMATXSPECTOSOPTION_S,
              *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1338,15 +1370,15 @@ DTRACE;
          sp++;
          if (!*sp) {
              sprintf(str,MSG_PARSE_TOPTIONMUSTHAVEALISTOFTASKIDRANGES);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
 
          DPRINTF(("\"-t %s\"\n", *sp));
 
-         task_id_range_list = parse_ranges(*sp, 0, 1, &answer, 
-                                             NULL, INF_NOT_ALLOWED);
+         range_list_parse_from_string(&task_id_range_list, &answer, *sp,
+                                      0, 1, INF_NOT_ALLOWED);
          if (!task_id_range_list) {
             DEXIT;
             return answer;
@@ -1368,7 +1400,7 @@ DTRACE;
          sp++;
          if (!*sp) {
             sprintf(str, MSG_PARSE_UOPTMUSTHAVEALISTUSERNAMES);
-            sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+            answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -1405,7 +1437,7 @@ DTRACE;
          sp++;
          if (!*sp) {
              sprintf(str,MSG_PARSE_VOPTMUSTHAVEVARIABLELISTARGUMENT);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1416,7 +1448,7 @@ DTRACE;
          if (i_ret) {
              sprintf(str,MSG_PARSE_WRONGVARIABLELISTFORMATVORENVIRONMENTVARIABLENOTSET_S,
              *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1449,7 +1481,7 @@ DTRACE;
          i_ret = var_list_parse_from_environment(&env_list, envp);
          if (i_ret) {
              sprintf(str,MSG_PARSE_COULDNOTPARSEENVIRIONMENT);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1470,7 +1502,7 @@ DTRACE;
             sprintf(str,
                MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
                *sp);
-            sge_add_answer(&answer, str, STATUS_EEXIST, NUM_AN_WARNING);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
          /* next filed is "y|n" */
@@ -1478,7 +1510,7 @@ DTRACE;
          if (!*sp) {
              sprintf(str,
              MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-w");
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1504,7 +1536,7 @@ DTRACE;
          else {
              sprintf(str,MSG_PARSE_INVALIDOPTIONARGUMENTWX_S,
              *sp);
-             sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1525,7 +1557,7 @@ DTRACE;
          sp++;
          if (!*sp) {
              sprintf(str, MSG_PARSE_ATSIGNOPTIONMUSTHAVEFILEARGUMENT);
-             sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1537,7 +1569,7 @@ DTRACE;
             u_long32 quality;
 
             quality = lGetUlong(aep, AN_quality);
-            if (quality == NUM_AN_ERROR) {
+            if (quality == ANSWER_QUALITY_ERROR) {
                do_exit = 1;
             }
             lAppendElem(answer, lCopyElem(aep));
@@ -1590,7 +1622,7 @@ DTRACE;
 
       if (!strncmp("-", *sp, 1) && strcmp("--", *sp)) {
          sprintf(str,MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
-         sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+         answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
@@ -1612,7 +1644,7 @@ DTRACE;
             }
             else {
                sprintf(str,MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
-               sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+               answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                DEXIT;
                return answer;
             }
@@ -1634,7 +1666,7 @@ DTRACE;
 
          if ((flags & FLG_QALTER)) {
             sprintf(str,MSG_PARSE_NOJOBIDGIVENBEFORESEPARATOR);
-            sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+            answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -1642,7 +1674,7 @@ DTRACE;
             sp++;
             if (!*sp) {
                sprintf(str,MSG_PARSE_OPTIONMUSTBEFOLLOWEDBYJOBARGUMENTS);
-               sge_add_answer(&answer, str, STATUS_ESEMANTIC, 0);
+               answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                DEXIT;
                return answer;
             }
@@ -1694,7 +1726,7 @@ DTRACE;
                if (i_ret) {
                   sprintf(str,MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S,
                           *sp);
-                  sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+                  answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                   DEXIT;
                   return answer;
                }
@@ -1964,7 +1996,7 @@ char *priority_str
    *valp = strtol(priority_str, &s, 10);
    if (priority_str==s || *valp > 1024 || *valp < -1023) {
        sprintf(SGE_EVENT, MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024);
-       sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
        DEXIT;
        return -1;
    }

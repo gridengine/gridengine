@@ -49,6 +49,8 @@
 #include "sge_log.h"
 #include "sge_stdio.h"
 #include "sge_spool.h"
+#include "sge_answer.h"
+
 #include "msg_common.h"
 
 /*
@@ -167,7 +169,8 @@ int spool
          ERROR((SGE_EVENT, MSG_USERSET_NOUSERETELEMENT));
          SGE_EXIT(1);
       } else {
-         sge_add_answer(alpp, MSG_USERSET_NOUSERETELEMENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, MSG_USERSET_NOUSERETELEMENT, 
+                         STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -179,7 +182,8 @@ int spool
          if (!alpp) {
             SGE_EXIT(1);
          } else {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(alpp, SGE_EVENT, 
+                            STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }

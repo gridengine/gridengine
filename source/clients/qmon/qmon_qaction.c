@@ -79,6 +79,7 @@
 #include "AskForTime.h"
 #include "resolve_host.h"
 #include "sge_feature.h"
+#include "sge_answer.h"
 /*-------------------------------------------------------------------------*/
 
 

@@ -59,11 +59,12 @@
 #include "qm_name.h"
 #include "basis_types.h"
 #include "sge_time.h"
-#include "parse_range.h"
 #include "msg_history.h"
 #include "msg_clients_common.h"
 #include "sge_parse_num_par.h"
 #include "sge_hostname.h"
+#include "sge_answer.h"
+#include "sge_range.h"
 
 typedef struct {
    int host;
@@ -327,8 +328,8 @@ char **argv
             lList* answer=NULL;
 
             ii++;
-            task_id_range_list = parse_ranges(argv[ii], 0, 1, &answer,
-                                             NULL, INF_NOT_ALLOWED);
+            range_list_parse_from_string(&task_id_range_list, &answer,
+                                         argv[ii], 0, 1, INF_NOT_ALLOWED);
             if (!task_id_range_list) {
                lFreeList(answer);
                fprintf(stderr, MSG_HISTORY_INVALIDLISTOFTASKIDRANGES_S , argv[ii]);

@@ -54,7 +54,7 @@
 #include "sge_complex.h"
 #include "sge_parse_num_par.h"
 #include "sge_complex_schedd.h"
-#include "parse_range.h"
+#include "sge_range.h"
 #include "qmon_rmon.h"
 #include "qmon_quarks.h"
 #include "qmon_matrix.h"
@@ -1168,7 +1168,13 @@ Widget w
             }
          }
          nr_ranges++;
-         lSetList(rep, RE_ranges, parse_ranges(column[0], 0, 0, &alp, NULL, INF_ALLOWED));
+         {
+            lList *range_list = NULL;
+
+            range_list_parse_from_string(&range_list, &alp, column[0], 
+                                         0, 0, INF_ALLOWED);
+            lSetList(rep, RE_ranges, range_list);
+         }
          if (alp) {
             qmonMessageShow(w, True, lGetString(lFirst(alp), AN_text));
             alp =lFreeList(alp);

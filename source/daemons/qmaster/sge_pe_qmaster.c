@@ -55,6 +55,7 @@
 #include "sge_job_schedd.h"
 #include "gdi_utility_qmaster.h"
 #include "sge_unistd.h"
+#include "sge_answer.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
@@ -157,14 +158,14 @@ int sub_command
       if (!s)  {
          ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
                lNm2Str(PE_allocation_rule), "validate_pe"));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
 
       if (replace_params(s, NULL, 0, pe_alloc_rule_variables )) {
          ERROR((SGE_EVENT, MSG_PE_ALLOCRULE_SS, pe_name, err_msg));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
@@ -189,7 +190,7 @@ gdi_object_t *object
    if (!write_pe(1, 2, pep)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
             object->object_name, lGetString(pep, PE_name)));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -237,7 +238,7 @@ char *rhost
 
    if ( !pep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -245,7 +246,7 @@ char *rhost
    if ((pos = lGetPosViaElem(pep, PE_name)) < 0) {
       ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(PE_name), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -253,14 +254,14 @@ char *rhost
    pe = lGetPosString(pep, pos);
    if (!pe) {
       ERROR((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
 
    if ((ep=sge_locate_pe(pe))==NULL) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, object_name, pe));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -268,7 +269,7 @@ char *rhost
    /* remove host file */
    if (sge_unlink(PE_DIR, pe)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, pe));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -281,7 +282,7 @@ char *rhost
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
          ruser, rhost, pe, object_name ));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
 }
@@ -397,7 +398,7 @@ lList **alpp
    pe_name = lGetString(pep, PE_name);
    if (pe_name && verify_str_key(alpp, pe_name, MSG_OBJ_PE)) {
       ERROR((SGE_EVENT, "Invalid character in pe name of pe "SFQ, pe_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
       DEXIT;
       return STATUS_EEXIST; 
    }
@@ -409,7 +410,7 @@ lList **alpp
    s = lGetString(pep, PE_start_proc_args);
    if (s && replace_params(s, NULL, 0, pe_variables )) {
       ERROR((SGE_EVENT, MSG_PE_STARTPROCARGS_SS, pe_name, err_msg));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR); 
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -418,7 +419,7 @@ lList **alpp
    s = lGetString(pep, PE_stop_proc_args);
    if (s && replace_params(s, NULL, 0, pe_variables )) {
       ERROR((SGE_EVENT, MSG_PE_STOPPROCARGS_SS, pe_name, err_msg));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -428,14 +429,14 @@ lList **alpp
    if (!s)  {
       ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(PE_allocation_rule), "validate_pe"));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
 
    if (replace_params(s, NULL, 0, pe_alloc_rule_variables )) {
       ERROR((SGE_EVENT, MSG_PE_ALLOCRULE_SS, pe_name, err_msg));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }

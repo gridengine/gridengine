@@ -54,6 +54,7 @@
 #include "cull_parse_util.h"
 #include "sge_m_event.h"
 #include "sge_log.h"
+#include "sge_answer.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
@@ -105,7 +106,7 @@ char *rhost
    /* do some checks */
    if (!ep || !ruser || !rhost) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -155,7 +156,7 @@ char *rhost
       INFO((SGE_EVENT, MSG_STREE_MODSTREE_SSII, 
          ruser, rhost, lGetNumberOfNodes(ep, NULL, STN_children), lGetNumberOfLeafs(ep, NULL, STN_children)));
 
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    DEXIT;
    return STATUS_OK;
@@ -176,7 +177,7 @@ char *rhost
 
    if (!*lpp || !lFirst(*lpp)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_S, MSG_OBJ_SHARETREE));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -186,7 +187,7 @@ char *rhost
    sge_add_event(NULL, sgeE_NEW_SHARETREE, 0, 0, NULL, NULL);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDLIST_SSS, ruser, rhost, MSG_OBJ_SHARETREE));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    DEXIT;
    return STATUS_OK;
@@ -234,7 +235,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
          /* check for sub-projects (not allowed) */
          if (project) {
             ERROR((SGE_EVENT, MSG_STREE_PRJINPTJSUBTREE_SS, name, lGetString(project, UP_name)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -242,7 +243,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
          /* check for projects appearing more than once */
          if (lGetElemStr(*found, STN_name, name)) {
             ERROR((SGE_EVENT, MSG_STREE_PRJTWICE_S, name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -258,7 +259,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
          /* check for user appearing as non-leaf node */
       } else if (sge_locate_user_prj(name, user_list)) {
             ERROR((SGE_EVENT, MSG_STREE_USERNONLEAF_S, name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
       }
@@ -272,7 +273,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
                lGetString(remaining, STN_name))) {
                ERROR((SGE_EVENT, MSG_SGETEXT_FOUND_UP_TWICE_SS, 
                   lGetString(child, STN_name), lGetString(node, STN_name)));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                /* restore old found list */
                if (save_found) {
                   lFreeList(*found);
@@ -318,7 +319,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
          /* check for sub-projects */
          if (sge_locate_user_prj(name, project_list)) {
             ERROR((SGE_EVENT, MSG_STREE_PRJINPTJSUBTREE_SS, name, lGetString(project, UP_name)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -327,7 +328,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
          if (!sge_locate_user_prj(name, user_list) &&
              strcmp(name, "default")) {
             ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_SHARE_TREE_REF_TO_SS, MSG_OBJ_USER, name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -335,7 +336,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
          /* make sure this user is in the project sub-tree once */
          if (lGetElemStr(*found, STN_name, name)) {
             ERROR((SGE_EVENT, MSG_STREE_USERTWICEINPRJSUBTREE_SS, name, lGetString(project, UP_name)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -348,7 +349,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
              !sge_has_access_(name, NULL, lGetList(project, UP_acl),
                   lGetList(project, UP_xacl), Master_Userset_List)) {
             ERROR((SGE_EVENT, MSG_STREE_USERTNOACCESS2PRJ_SS, name, lGetString(project, UP_name)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -364,7 +365,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
 
             ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_SHARE_TREE_REF_TO_SS, 
                      MSG_OBJ_USERPRJ, name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -373,7 +374,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
             portion of the share tree only once */
          if (lGetElemStr(*found, STN_name, name)) {
             ERROR((SGE_EVENT, MSG_STREE_USERPRJTWICE_SS, objname, name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -419,7 +420,7 @@ lList *src
    if ((dnode!=NULL) != (snode!=NULL)) {
       ERROR((SGE_EVENT, MSG_STREE_QMASTERSORCETREE_SS, 
             snode?"":MSG_STREE_NOPLUSSPACE, dnode?"":MSG_STREE_NOPLUSSPACE));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       depth = 0;
       DEXIT;
       return -1;
@@ -434,7 +435,7 @@ lList *src
       if (dnode && (dv=lGetUlong(dnode, STN_version)) != 
              (sv=lGetUlong(snode, STN_version))) {
          ERROR((SGE_EVENT, MSG_STREE_VERSIONMISMATCH_II, dv, sv));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          depth = 0;
          DEXIT;
          return -1;
@@ -451,7 +452,7 @@ lList *src
       s_name = lGetString(snode, STN_name);
       if (!(dnode = lGetElemStr(dst, STN_name, s_name))) {
          ERROR((SGE_EVENT, MSG_STREE_MISSINGNODE_S, s_name));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          depth = 0;
          DEXIT;
          return -1;

@@ -44,6 +44,8 @@
 #include "sge_feature.h"
 #include "sge_language.h"
 #include "sge_unistd.h"
+#include "sge_answer.h"
+
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qmod.h"
@@ -220,7 +222,7 @@ lList *alp = NULL;
       /* oops */
       sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
       qmod_usage(stderr, NULL);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -297,7 +299,7 @@ int usageshowed = 0;
      sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
      if(!usageshowed)
         qmod_usage(stderr, NULL);
-     sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+     answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
      DEXIT;
      return alp;
    }

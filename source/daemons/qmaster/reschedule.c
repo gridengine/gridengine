@@ -57,6 +57,7 @@
 #include "sge_string.h"
 #include "sge_job_jatask.h"
 #include "sge_hostname.h"
+#include "sge_answer.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
@@ -389,7 +390,7 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
       if (!force && lGetUlong(jep, JB_restart) == 2) {
          INFO((SGE_EVENT, MSG_RU_NOT_RESTARTABLE_SS, 
             mail_type, mail_ids));
-         sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          continue;
       }
 
@@ -402,8 +403,8 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
           || JB_NOW_IS_QRSH(job_now) || JB_NOW_IS_QRLOGIN(job_now)) {
          INFO((SGE_EVENT, MSG_RU_INTERACTIVEJOB_SSS, mail_ids, mail_type, 
             mail_type));
-         sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, 
-            NUM_AN_WARNING);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, 
+            ANSWER_QUALITY_WARNING);
          continue;
       }
 
@@ -426,15 +427,15 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
             if (!(flags & CHECKPOINT_AT_AUTO_RES)) {
                INFO((SGE_EVENT, MSG_RU_CKPTNOTVALID_SSS,
                    mail_ids, lGetString(ckpt_ep, CK_name), mail_type));
-               sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, 
-                  NUM_AN_WARNING);
+               answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, 
+                  ANSWER_QUALITY_WARNING);
                continue;
             }
          } else {
             INFO((SGE_EVENT, MSG_RU_CKPTEXIST_SS, mail_ids, 
                lGetString(ckpt_ep, CK_name)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, 
-               NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, 
+               ANSWER_QUALITY_WARNING);
             continue;
          }
       }               
@@ -445,7 +446,7 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
        */
       if (!force && (lGetUlong(this_jatep, JAT_state) & JDELETED)) {
          INFO((SGE_EVENT, MSG_RU_INDELETEDSTATE_SS, mail_type, mail_ids));
-         sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          continue;
       }
 
@@ -466,8 +467,8 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
          if (!lGetUlong(queue, QU_rerun)) {
             INFO((SGE_EVENT, MSG_RU_NORERUNQUEUE_SSS, mail_type, mail_ids, 
                lGetString(queue, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, 
-               NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, 
+               ANSWER_QUALITY_WARNING);
             continue;
          }
       }
@@ -561,7 +562,7 @@ DTRACE;
 
 DTRACE;
 
-         sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       }
    }
    DEXIT;

@@ -59,6 +59,7 @@
 #include "sge_stdio.h"
 #include "sge_language.h"
 #include "sge_spool.h"
+#include "sge_answer.h"
 
 #include "msg_common.h"
 
@@ -107,7 +108,7 @@ int user        /* =1 user, =0 project */
       if (!alpp) {
          SGE_EXIT(1);
       } else {
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -120,7 +121,7 @@ int user        /* =1 user, =0 project */
          if (!alpp) {
             SGE_EXIT(1);
          } else {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -235,7 +236,7 @@ int user        /* =1 user, =0 project */
    return 0;
 
 FPRINTF_ERROR:
-   sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
+   answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR); 
    DEXIT;
    return -1;   
 }
@@ -340,8 +341,8 @@ _Insight_set_option("suppress", "PARM_NULL");
                   /* --------- UPP_name */
                   if (!(upp = lAddSubStr(ep, UPP_name, name, UP_project, UPP_Type))) {
                      sprintf(SGE_EVENT, MSG_PROJECT_FOUNDPROJECTXTWICE_S, name);
-                     sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX,
-                            NUM_AN_ERROR);
+                     answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX,
+                            ANSWER_QUALITY_ERROR);
                      DEXIT;
                      return -1;
                   }
@@ -371,8 +372,8 @@ _Insight_set_option("suppress", "PARM_NULL");
 
                   if (!strcasecmp("NONE", val)) {
                      sprintf(SGE_EVENT, MSG_PROJECT_INVALIDPROJECTX_S, name);
-                     sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX,
-                            NUM_AN_ERROR);
+                     answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX,
+                            ANSWER_QUALITY_ERROR);
                      DEXIT;
                      return -1;
                   }
@@ -412,7 +413,7 @@ _Insight_set_option("suppress", "PARM_NULL");
          job_number = (u_long32)strtol(name, &rest, 10);
          if (*rest != '\0') {
             sprintf(SGE_EVENT, MSG_JOB_FOUNDJOBWITHWRONGKEY_S, name);
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -421,7 +422,7 @@ _Insight_set_option("suppress", "PARM_NULL");
          if (!(upu = lAddSubUlong(ep, UPU_job_number, job_number, 
                                     UP_debited_job_usage, UPU_Type))) {
             sprintf(SGE_EVENT, MSG_JOB_FOUNDJOBXTWICE_U, u32c(job_number));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }

@@ -76,6 +76,7 @@
 #include "job_log.h"
 #include "sge_range.h"
 #include "sge_job_jatask.h"
+#include "sge_answer.h"
 
 
 /* profiling info */
@@ -669,7 +670,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
          ja_task_id = range_list_get_first_id(lGetList(job, JB_ja_n_h_ids),
                                               &answer_list);
-         if (answer_list_is_error_in_list(&answer_list)) {
+         if (answer_list_has_error(&answer_list)) {
             answer_list = lFreeList(answer_list);
             DPRINTF(("Found job "u32" with no job array tasks\n", job_id));
             goto SKIP_THIS_JOB; 

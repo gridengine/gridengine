@@ -69,7 +69,6 @@
 #include "show_job.h"
 #include "mail.h"
 #include "sgermon.h"
-#include "parse_range.h"
 #include "commlib.h"
 #include "basis_types.h"
 #include "sgedefs.h"
@@ -90,6 +89,7 @@
 #include "sge_os.h"
 #include "sge_varL.h"
 #include "sge_var.h"
+#include "sge_range.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -432,7 +432,9 @@ char *err_str
          if (!sge_hostcmp(lGetHost(master_q, QU_qhostname), lGetHost(gdil_ep, JG_qhostname))) {
             host_slots += slots;
             if (q_set && strcasecmp(q_set, "UNDEFINED")) {
-               parse_ranges(lGetString(qep, QU_processors), 0, 0, &alp, &processor_set, INF_ALLOWED);
+               range_list_parse_from_string(&processor_set, &alp,
+                                            lGetString(qep, QU_processors),
+                                            0, 0, INF_ALLOWED);
                if (lGetNumberOfElem(alp))
                   alp = lFreeList(alp);
             }
@@ -714,8 +716,9 @@ char *err_str
       
       /* parse range add create list */
       DPRINTF(("gid_range = %s\n", conf.gid_range));
-      if (!(rlp=parse_ranges(conf.gid_range, 0, 0, &alp, NULL, 
-            INF_NOT_ALLOWED))) {
+      range_list_parse_from_string(&rlp, &alp, conf.gid_range,
+                                   0, 0, INF_NOT_ALLOWED);
+      if (rlp == NULL) {
           lFreeList(alp);
           sprintf(err_str, MSG_EXECD_NOPARSEGIDRANGE);
           lFreeList(environmentList);
@@ -900,8 +903,13 @@ char *err_str
    fprintf(fp, "forbid_reschedule=%d\n", forbid_reschedule);
    fprintf(fp, "queue=%s\n", lGetString(master_q, QU_qname));
    fprintf(fp, "host=%s\n", lGetHost(master_q, QU_qhostname));
-   fprintf(fp, "processors=");
-   unparse_ranges(fp, NULL, 0, processor_set);
+   {
+      dstring range_string = DSTRING_INIT;
+
+      range_list_print_to_string(processor_set, &range_string, 1);
+      fprintf(fp, "processors=%s", sge_dstring_get_string(&range_string)); 
+      sge_dstring_free(&range_string);
+   }
    fprintf(fp, "\n");
    fprintf(fp, "job_name=%s\n", lGetString(jep, JB_job_name));
    fprintf(fp, "job_id="u32"\n", lGetUlong(jep, JB_job_number));

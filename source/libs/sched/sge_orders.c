@@ -41,6 +41,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "schedd_message.h"
+#include "sge_answer.h"
 #include "msg_schedd.h"
 #include "msg_common.h"
 

@@ -42,6 +42,7 @@
 #include "sge_time.h"
 #include "setup_path.h"
 #include "sge_gdi_intern.h"
+#include "sge_answer.h"
 
 int monitor_next_run = 0;
 char log_string[2048 + 1] = "invalid log_string";
@@ -80,7 +81,7 @@ int schedd_log(const char *logstr) {
       char logloglog[2048];
 /*       DPRINTF(("schedd_log: %s\n", logstr)); */
       sprintf(logloglog, "%s\n", logstr);
-      sge_add_answer(monitor_alpp, logloglog, STATUS_ESEMANTIC, 0);
+      answer_list_add(monitor_alpp, logloglog, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
    } else {
       if (!*schedd_log_file) {
          sprintf(schedd_log_file, "%s/%s/%s", path.cell_root, "common", SCHED_LOG_NAME);

@@ -42,6 +42,7 @@
 #include "gdi_qmod.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
+#include "sge_answer.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_comm.h"
@@ -313,7 +314,8 @@ lEnumeration *what
    DENTER(GUI_LAYER, "qmonDelList");
 
    if (!lpp) {
-      sge_add_answer(&alp, "lpp is NULL", STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, "lpp is NULL", 
+                      STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -374,7 +376,8 @@ printf("__________________________________\n");
                   lDelElemHost(local, nm, lGetHost(ep, nm));
                   break;
                default:
-                  sge_add_answer(&alp, "data type not lStringT or lHostT", STATUS_ESEMANTIC, 0);
+                  answer_list_add(&alp, "data type not lStringT or lHostT", 
+                                  STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                   DPRINTF(("qmonDelList: data type not lStringT or lHostT\n"));
                   break;
             }

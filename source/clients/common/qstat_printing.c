@@ -55,7 +55,6 @@
 #include "usage.h"
 #include "sge_feature.h"
 #include "parse.h"
-#include "parse_range.h"
 #include "sge_prog.h"
 #include "sge_parse_num_par.h"
 #include "sge_string.h"
@@ -70,6 +69,7 @@
 #include "sge_job_queue.h"
 #include "sge_job_jatask.h"
 #include "sge_var.h"
+#include "sge_answer.h"
 
 static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, char *master, dstring *task_str, u_long32 full_listing, int slots, int slot, lList *ehl, lList *cl, lList *pe_list, char *intend);
 
@@ -399,7 +399,7 @@ char *indent
    u_long32 jid = 0, old_jid;
    u_long32 jataskid = 0, old_jataskid;
    const char *qnm;
-   dstring dyn_task_str = {NULL, 0};
+   dstring dyn_task_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_print_jobs_queue");
 
@@ -524,7 +524,7 @@ u_long32 group_opt
 ) {
    lListElem *nxt, *jep, *jatep, *nxt_jatep;
    int sge_ext;
-   dstring dyn_task_str = {NULL, 0};
+   dstring dyn_task_str = DSTRING_INIT;
    lList* ja_task_list = NULL;
    int FoundTasks;
 
@@ -658,7 +658,7 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
  
    job_create_hold_id_lists(job, range_list, hold_state); 
    for (i = 0; i <= 7; i++) {
-      dstring ja_task_id_string = {NULL, 0};
+      dstring ja_task_id_string = DSTRING_INIT;
       lList *answer_list = NULL;
       u_long32 first_id;
       int show = 0;
@@ -675,9 +675,9 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
 
       if (range_list[i] != NULL && show) { 
          if (group_opt == GROUP_TASK_GROUPS) {
-            range_list_print_to_string(range_list[i], &ja_task_id_string);
+            range_list_print_to_string(range_list[i], &ja_task_id_string, 0);
             first_id = range_list_get_first_id(range_list[i], &answer_list);
-            if (answer_list_is_error_in_list(&answer_list) != 1) {
+            if (answer_list_has_error(&answer_list) != 1) {
                lListElem *ja_task = job_get_ja_task_template_hold(job, 
                                                       first_id, hold_state[i]);
                lList *n_h_ids = NULL;
@@ -738,7 +738,7 @@ u_long32 full_listing
    int sge_ext;
    int first = 1;
    lListElem *jep, *jatep;
-   dstring dyn_task_str = {NULL, 0};
+   dstring dyn_task_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_print_jobs_finished");
 
@@ -793,7 +793,7 @@ u_long32 full_listing
    int first = 1;
    lListElem *jep, *jatep;
    int sge_ext;
-   dstring dyn_task_str = {NULL, 0};
+   dstring dyn_task_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_print_jobs_error");
 
@@ -836,7 +836,7 @@ u_long32 full_listing
 ) {
    int sge_ext;
    lListElem *jep;
-   dstring dyn_task_str = {NULL, 0}; 
+   dstring dyn_task_str = DSTRING_INIT; 
 
    DENTER(TOP_LAYER, "sge_print_jobs_zombie");
    
@@ -860,7 +860,7 @@ u_long32 full_listing
                            (QSTAT_DISPLAY_ZOMBIES | QSTAT_DISPLAY_FULL), 
                            sge_ext);
          ja_task = job_get_ja_task_template_pending(jep, first_task_id);
-         range_list_print_to_string(z_ids, &dyn_task_str);
+         range_list_print_to_string(z_ids, &dyn_task_str, 0);
          sge_print_job(jep, ja_task, NULL, 1, NULL, &dyn_task_str, 
                        full_listing, 0, 0, ehl, cl, NULL, "");
          sge_dstring_free(&dyn_task_str);
@@ -1151,8 +1151,8 @@ char *indent
    else
       printf("        ");
 
-   if (dyn_task_str->s && job_is_array(job))
-      printf("%s", dyn_task_str->s); 
+   if (sge_dstring_get_string(dyn_task_str) && job_is_array(job))
+      printf("%s", sge_dstring_get_string(dyn_task_str)); 
    else
       printf("       ");
 
@@ -1203,12 +1203,15 @@ char *indent
 
    /* print additional job info if requested */
    if (print_jobid && (full_listing & QSTAT_DISPLAY_RESOURCES)) {
-         char buffer[1024];
          printf(QSTAT_INDENT "Full jobname:     %s\n", lGetString(job, JB_job_name)); 
          if (lGetString(job, JB_pe)) {
-            show_ranges(buffer, 0, NULL, lGetList(job, JB_pe_range));
+            dstring range_string = DSTRING_INIT;
+
+            range_list_print_to_string(lGetList(job, JB_pe_range), 
+                                       &range_string, 1);
             printf(QSTAT_INDENT "Requested PE:     %s %s\n", 
-               lGetString(job, JB_pe), buffer); 
+                   lGetString(job, JB_pe), sge_dstring_get_string(&range_string)); 
+            sge_dstring_free(&range_string);
          }
          if (lGetString(jatep, JAT_granted_pe)) {
             lListElem *gdil_ep;

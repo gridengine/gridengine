@@ -68,6 +68,7 @@
 #include "sge_prog.h"
 #include "sge_varL.h"
 #include "sge_var.h"
+#include "sge_answer.h"
 
 #define USE_CLIENT_QSUB 1
 
@@ -78,7 +79,6 @@
 ** USE_CLIENT_QSH
 */
 
-static void strip_quotes(char **pstr);
 /* static int skip_line(char *s); */
 
 /* returns true if line has only white spaces */
@@ -119,7 +119,8 @@ lListElem **pjob
    DENTER(TOP_LAYER, "cull_parse_job_parameter"); 
 
    if (!pjob) {
-      sge_add_answer(&answer,  MSG_PARSE_NULLPOINTERRECEIVED , STATUS_EUNKNOWN, 0);
+      answer_list_add(&answer,  MSG_PARSE_NULLPOINTERRECEIVED, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -127,7 +128,8 @@ lListElem **pjob
    if (!*pjob) {
       *pjob = lCreateElem(JB_Type);
       if (!*pjob) {
-         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+         answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
+                         STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
@@ -140,7 +142,8 @@ lListElem **pjob
       tmpl_task_list = lCreateList("template task list", JAT_Type);
       tmpl_task = lCreateElem(JAT_Type);
       if (!tmpl_task_list || !tmpl_task) {
-         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+         answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
+                         STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
@@ -296,13 +299,15 @@ lListElem **pjob
       const char *env_value = job_get_env_string(*pjob, VAR_PREFIX "O_HOME");
 
       if (!getcwd(tmp_str, sizeof(tmp_str))) {
-         sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
+         answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
       if (!chdir(env_value)) {
          if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
-            sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
+            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -366,7 +371,8 @@ lListElem **pjob
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-help"))) {
       lRemoveElem(cmdline, ep);
       sprintf(error_string, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
-      sge_add_answer(&answer, error_string, STATUS_ENOIMP, 0);
+      answer_list_add(&answer, error_string, 
+                      STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -575,7 +581,8 @@ lListElem **pjob
          strcat(error_string, cp);
       }
       strcat(error_string, "\n");
-      sge_add_answer(&answer, error_string, STATUS_ENOIMP, 0);
+      answer_list_add(&answer, error_string, 
+                      STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
    } 
 
    cp = lGetString(*pjob, JB_script_file);
@@ -687,7 +694,8 @@ u_long32 flags
 
    if (!lpp_options) {
       /* no place where to put result */
-      sge_add_answer(&answer, MSG_ANSWER_CANTPROCESSNULLLIST, STATUS_EUNKNOWN, 0);
+      answer_list_add(&answer, MSG_ANSWER_CANTPROCESSNULLLIST, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -696,7 +704,8 @@ u_long32 flags
       /* are we able to access this file? */
       if ((fp = fopen(script_file, "r")) == NULL) {
          sprintf(error_string, MSG_FILE_ERROROPENINGXY_SS, script_file, strerror(errno));
-         sge_add_answer(&answer, error_string, STATUS_EDISK, 0);
+         answer_list_add(&answer, error_string, 
+                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
@@ -708,7 +717,8 @@ u_long32 flags
 
       if (!filestrptr) {
          sprintf(error_string, MSG_ANSWER_ERRORREADINGFROMFILEX_S, script_file);
-         sge_add_answer(&answer, error_string, STATUS_EUNKNOWN, 0);
+         answer_list_add(&answer, error_string, 
+                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
@@ -716,7 +726,8 @@ u_long32 flags
       /* no script file but input from stdin */
       filestrptr = sge_stream2string(stdin, &script_len);
       if (!filestrptr) {
-         sge_add_answer(&answer, MSG_ANSWER_ERRORREADINGFROMSTDIN, STATUS_EUNKNOWN, 0);
+         answer_list_add(&answer, MSG_ANSWER_ERRORREADINGFROMSTDIN, 
+                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
@@ -809,7 +820,7 @@ u_long32 flags
          for (i=0; str_table[i]; i++) {
             DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
          }
-         strip_quotes(str_table);
+         sge_strip_quotes(str_table);
          for (i=0; str_table[i]; i++) {
             DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
          }
@@ -825,14 +836,14 @@ u_long32 flags
 
             status = lGetUlong(aep, AN_status);
             quality = lGetUlong(aep, AN_quality);
-            if (quality == NUM_AN_ERROR) {
+            if (quality == ANSWER_QUALITY_ERROR) {
                DPRINTF(("%s", lGetString(aep, AN_text)));
                do_exit = 1;
             }
             else {
                DPRINTF(("Warning: %s\n", lGetString(aep, AN_text)));
             }
-            sge_add_answer(&answer, lGetString(aep, AN_text), status, quality);
+            answer_list_add(&answer, lGetString(aep, AN_text), status, quality);
          }
 
          lFreeList(alp);
@@ -895,32 +906,6 @@ u_long32 flags
    DEXIT;
    return answer;
 }
-
-
-static void strip_quotes(
-char **pstr 
-) {
-   char *cp, *cp2;
-
-   DENTER(TOP_LAYER, "strip_quotes");
-
-   if (!pstr) {
-      DEXIT;
-      return;
-   }
-
-   for (; *pstr; pstr++) {
-      for (cp2 = cp = *pstr; *cp; cp++) {
-         if (*cp == '"') {
-            *cp2++ = *cp;
-         }
-      }
-   }
-
-   DEXIT;
-   return;
-}
-
 
 /****** src/add_parent_uplink() **********************************
 *

@@ -57,6 +57,7 @@
 #include "msg_qmaster.h"
 #include "sge_security.h"
 #include "sge_hostname.h"
+#include "sge_answer.h"
 
 static int   sge_isHostInHostList(lList *hostGroupList, lList *hostList, const char *hostName);
 static int   sge_isNameInMappingList(lList *mapList, const char *mappedName);
@@ -1082,15 +1083,15 @@ int doResolving
       /* new element will generate new entry */
       lSetString(mapElem, UM_mapped_user, actMapName );
       INFO((SGE_EVENT,MSG_UMAP_ADDEDENTRY_S, actMapName));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_OK, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
     } else {
       /* user allready exists - ok */
       INFO((SGE_EVENT,MSG_UMAP_EXAMINEMAPENTRY_S, actMapName ));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_OK, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
     }
     
     INFO((SGE_EVENT,MSG_UMAP_EXAMINEHOSTLISTFORMAPNAME_S, actMapName ));
-    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, 0);
+    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
     /* set actHostList --------------------------*/
     tmpHostList = lGetList(mapElem, UM_host_list);
     if (tmpHostList == NULL) {
@@ -1108,11 +1109,11 @@ int doResolving
           if (sge_isHostInHostList(NULL,newHostList, actHostName) == FALSE) {
             if (sge_addHostToHostList(hostGroupList,newHostList, actHostName, doResolving) == FALSE) {
               WARNING((SGE_EVENT,MSG_UMAP_CANTADDHOSTX_S, actHostName ));
-              sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+              answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
               back = FALSE;
             } else {
               INFO((SGE_EVENT,MSG_UMAP_XADDED_S , actHostName ));
-              sge_add_answer(alpp, SGE_EVENT, STATUS_OK, 0);
+              answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
             }
           } else {
             DPRINTF(("host '%s' allready in list\n",actHostName));
@@ -1130,11 +1131,11 @@ int doResolving
          if (sge_isHostInHostList(NULL,tmpHostList, actHostName) == FALSE) {
             if ( sge_addHostToHostList(hostGroupList,tmpHostList, actHostName, doResolving) == FALSE) {
                WARNING((SGE_EVENT,MSG_UMAP_CANTADDHOSTX_S, actHostName ));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                back = FALSE;
             } else {
               INFO((SGE_EVENT,MSG_UMAP_XADDED_S, actHostName ));
-              sge_add_answer(alpp, SGE_EVENT, STATUS_OK, 0);
+              answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
             }
          } else {
             DPRINTF(("host '%s' allready in list\n",actHostName));
@@ -1467,7 +1468,7 @@ lListElem *origListElem     /* ListElement to compare with */
         
         dirty = TRUE;
         INFO((SGE_EVENT,MSG_UMAP_REMOVEDMAPENTRYXFORCLUSERUSERY_SS, mapName, clusterUser ));
-        sge_add_answer(alpp, SGE_EVENT, STATUS_OK, 0);
+        answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
         next = lNext(ep);
         ep = lDechainElem(newMap,ep);
         lFreeElem(ep);
@@ -1492,7 +1493,7 @@ lListElem *origListElem     /* ListElement to compare with */
               dirty = TRUE;
               INFO((SGE_EVENT,MSG_UMAP_REMOVEDXFROMMAPENTRYYFORCLUSERUSERZ_SSS, 
                     hostName, mapName, clusterUser ));
-              sge_add_answer(alpp, SGE_EVENT, STATUS_OK, 0);
+              answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
               nexthost = lNext(ephost);
               ephost = lDechainElem(newHostList, ephost);
               lFreeElem(ephost);
@@ -1653,7 +1654,7 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
         if (strcmp(clusterName, filename)  != 0) {
             /* clusterName and filename different */
             INFO((SGE_EVENT, MSG_ANSWER_CLUSTERUNAMEXDIFFFROMY_SS, clusterName, filename));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
             return FALSE;
         }
@@ -1702,7 +1703,7 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
                          /* intern entries in mapping for cluster user not ambiguous (outgoing mapping) */
                          INFO((SGE_EVENT, MSG_ANSWER_CLUSTERUNAMEXNOTAMBIGUOUSMAPFORYATZ_SSS, filename,lastMapName ,hostName ));
                          DPRINTF(("matches is %d\n",matches));
-                         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+                         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                          free(lastMapName);
                          lastMapName = NULL;
                          DEXIT;
@@ -1755,7 +1756,7 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
                                                             hostName) == TRUE) { 
                                       /* mapping for cluster user not ambiguous (incoming mapping) */
                                       INFO((SGE_EVENT, MSG_ANSWER_DUPLICATEDMAPPINGENTRY_SSS, newMappingName, hostName, clusterUser ));
-                                      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+                                      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                                       DEXIT;
                                       return FALSE;
                                    }
@@ -1775,7 +1776,7 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
   }
 
   INFO((SGE_EVENT, MSG_NULLPOINTER ));
-  sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0); 
+  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR); 
   DEXIT;
   return FALSE;
 }
@@ -1856,7 +1857,7 @@ lList *hostList
              /* no guilty group or hostname */
              answer =  FALSE;
              INFO((SGE_EVENT, MSG_ANSWER_UNKNOWNHOSTORGROUPNAME_S, tmpHost));
-             sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
           }
        } 
     }

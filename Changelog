@@ -1,3 +1,11 @@
+EB-2002-05-09-0: Cleanup:   libgdi:
+                            - Moved some functions into libuti
+                            - Put all 'answer' specific functions into a module 
+                            - Pooled code which was copied in the past
+                            - Eliminated 'old' pe-range code. Range module
+                              is used instead.
+                            - Modified and added several ADOC comments 
+
 EB-2002-05-08-0: Bugfix:    Fix of EB-2002-05-04-0
 
 CR-2002-05-06-0: Testsuite: Fixed testsuite dependencies

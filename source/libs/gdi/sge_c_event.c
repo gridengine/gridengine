@@ -47,6 +47,7 @@
 #include "qm_name.h"
 #include "sge_log.h"
 #include "sge_time.h"
+#include "sge_answer.h"
 #include "msg_gdilib.h"
 
 /****** Eventclient/--Event_Client_Interface **********************************
@@ -627,7 +628,7 @@ int ec_register(void)
          return 1;
       }
    } else {
-      if (lGetUlong(aep, AN_quality) == NUM_AN_ERROR) {
+      if (lGetUlong(aep, AN_quality) == ANSWER_QUALITY_ERROR) {
          ERROR((SGE_EVENT, "%s", lGetString(aep, AN_text)));
          lFreeList(lp);
          lFreeList(alp);

@@ -76,6 +76,7 @@
 #include "sge_unistd.h"
 #include "jb_now.h"
 #include "sge_security.h"
+#include "sge_answer.h"
 
 #include "msg_clients_common.h"
 #include "msg_qsh.h"
@@ -614,7 +615,7 @@ static int parse_result_list(lList *alp, int *alp_error)
    for_each(aep, alp) {
       u_long32 status  = lGetUlong(aep, AN_status);
       u_long32 quality = lGetUlong(aep, AN_quality);
-      if (quality == NUM_AN_ERROR) {
+      if (quality == ANSWER_QUALITY_ERROR) {
          ERROR((SGE_EVENT, "%s", lGetString(aep, AN_text)));
          *alp_error = 1;
 
@@ -629,7 +630,7 @@ static int parse_result_list(lList *alp, int *alp_error)
                break;
          }
       }
-      else if (quality == NUM_AN_WARNING) {
+      else if (quality == ANSWER_QUALITY_WARNING) {
          WARNING((SGE_EVENT, MSG_WARNING_S, lGetString(aep, AN_text)));
       }
    }
@@ -1505,7 +1506,8 @@ char **argv
 
       job = lCreateElem(JB_Type);
       if (!job) {
-         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+         answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
+                         STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          do_exit = parse_result_list(alp, &alp_error);
          lFreeList(answer);
          if (alp_error) {
@@ -1655,11 +1657,11 @@ char **argv
       for_each(aep, alp) {
          status = lGetUlong(aep, AN_status);
          quality = lGetUlong(aep, AN_quality);
-         if (quality == NUM_AN_ERROR) {
+         if (quality == ANSWER_QUALITY_ERROR) {
             ERROR((SGE_EVENT, "%s", lGetString(aep, AN_text)));
             do_exit = 1;
          }
-         else if (quality == NUM_AN_WARNING) {
+         else if (quality == ANSWER_QUALITY_WARNING) {
             WARNING((SGE_EVENT, "%s", lGetString(aep, AN_text)));
          } else {
             INFO((SGE_EVENT, "%s", lGetString(aep, AN_text)));

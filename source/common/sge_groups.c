@@ -51,7 +51,9 @@
 #include "commlib.h"
 #include "sge_log.h"
 #include "sge_answerL.h"
+#include "sge_answer.h"
 #include "msg_common.h"
+
 static int sge_verify_group_entry(lList** alpp, lList* hostGroupList, lListElem* hostGroupElem, const char* extraSubgroupCheck , int ignoreSupergroupLinks);
 
 /****** src/sge_verify_host_group_entry() **********************************
@@ -127,7 +129,7 @@ const char *filename
          if (strcmp(groupName, filename)  != 0) {
             /* groupName is different to filename */
             INFO((SGE_EVENT, MSG_ANSWER_HOSTGROUPNAMEXDIFFFROMY_SS, groupName, filename));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
             return FALSE;
          }
@@ -146,7 +148,7 @@ const char *filename
                 } else {
                     /* hostname not resolved */
                     INFO((SGE_EVENT, MSG_ANSWER_UNKNOWNHOSTNAME_S, hostName));
-                    sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+                    answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                     DEXIT;
                     return FALSE;
                 }
@@ -161,7 +163,7 @@ const char *filename
       return TRUE; 
    } 
    INFO((SGE_EVENT, MSG_NULLPOINTER ));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0); 
+   answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR); 
    DEXIT;
    return FALSE;
 }
@@ -307,7 +309,7 @@ int ignoreSupergroupLinks
                       if (sge_add_supergroup2group(hostGroupList,tmp_ep, groupName) == FALSE) { 
                          /* sub group has no supergroup entry for this group */
                          INFO((SGE_EVENT, MSG_ANSWER_SUBGROUPHASNOSUPERGROUP_SS, subGroupName, groupName));
-                         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+                         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                          lFreeList(subGroupList);
                          subGroupList = NULL;
                          DEXIT;
@@ -321,7 +323,7 @@ int ignoreSupergroupLinks
                   /* subtree deadlock */
                   
                   INFO((SGE_EVENT, MSG_ANSWER_SUBGROUPXHASLINKTOGROUPY_SS,  subGroupName, groupName));
-                  sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                   lFreeList(subGroupList);
                   subGroupList = NULL;
                   DEXIT;
@@ -330,7 +332,7 @@ int ignoreSupergroupLinks
             } else {
                /* sub group is not guilty */
                INFO((SGE_EVENT, MSG_ANSWER_UNKNOWNGROUPNAME_S, subGroupName));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                lFreeList(subGroupList);
                subGroupList = NULL;
                DEXIT;
@@ -352,7 +354,7 @@ int ignoreSupergroupLinks
                    if (sge_add_subgroup2group(alpp,hostGroupList,tmp_ep, groupName, TRUE) == FALSE) { 
                       /* super group has no subgroup entry for this group */
                       INFO((SGE_EVENT, MSG_ANSWER_SUPERGROUPHASNOSUBGROUP_SS, superGroupName, groupName));
-                      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+                      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                       lFreeList(subGroupList);
                       subGroupList = NULL;
                       DEXIT;
@@ -363,7 +365,7 @@ int ignoreSupergroupLinks
          } else {
             /* super group is not guilty */
             INFO((SGE_EVENT, MSG_ANSWER_UNKNOWNGROUPNAME_S, superGroupName));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lFreeList(subGroupList);
             subGroupList = NULL;            
             DEXIT;
@@ -446,7 +448,7 @@ int makeChanges
      if (groupList != NULL) { 
         if (sge_is_group(groupList, subGroupName) == FALSE) {
            INFO((SGE_EVENT, MSG_ANSWER_NOGUILTYSUBGROUPNAME_S, subGroupName));
-           sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+           answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
            DEXIT;
            return FALSE;
         }
@@ -455,14 +457,14 @@ int makeChanges
      groupName = lGetString(groupElem, GRP_group_name);
      if (groupName == NULL) {
         INFO((SGE_EVENT, MSG_ANSWER_NOGROUPNAMESPECIFIED));
-        sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+        answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
         DEXIT;
         return FALSE;
      }
           
      if (strcasecmp(groupName, subGroupName) == 0) {
         INFO((SGE_EVENT, MSG_ANSWER_XCANTBESUBGROUPOFITSELF_S, groupName));
-        sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+        answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
         DEXIT;
         return FALSE;
      }
@@ -480,7 +482,7 @@ int makeChanges
         if (subGroupElem == NULL) {
            DPRINTF(("cant get subgroup elem\n"));
            INFO((SGE_EVENT, MSG_ANSWER_CANTGETSUBGROUPELEMX_S, subGroupName));
-           sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+           answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
            DEXIT;
            return FALSE;
         }

@@ -48,15 +48,16 @@
 #include "read_write_queue.h"
 #include "read_object.h"
 #include "config.h"
-#include "parse_range.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
 #include "sge_stdio.h"
 #include "sge_spool.h"
 #include "sge_io.h"
+#include "sge_answer.h"
 #include "msg_common.h"
 #include "sched_conf.h"
+#include "sge_range.h"
 
 static char *queue_types[] = {
    "BATCH",        
@@ -133,7 +134,7 @@ _Insight_set_option("suppress", "PARM_NULL");
             if (ret != COMMD_NACK_UNKNOWN_HOST) {
                sprintf(SGE_EVENT, MSG_ANSWER_GETUNIQUEHNFAILEDRESX_SS,
                   str, cl_errstr(ret));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                DEXIT;
                return -1;
             }
@@ -218,7 +219,10 @@ _Insight_set_option("suppress", "PARM_NULL");
    }
 
    if ((str = lGetString(ep, QU_processors))) {
-      parse_ranges(str, JUST_PARSE, 0, alpp, NULL, INF_ALLOWED);
+      lList *range_list = NULL;
+      range_list_parse_from_string(&range_list, alpp, str, 
+                                   JUST_PARSE, 0, INF_ALLOWED);
+      range_list = lFreeList(range_list);
       if (*alpp) {
          DEXIT;
          return -1;

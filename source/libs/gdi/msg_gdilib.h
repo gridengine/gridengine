@@ -189,11 +189,8 @@
 #define MSG_GDI_CONFIGINVALIDQUEUESPECIFIED              _("reading conf file: invalid queue type specified\n")
 #define MSG_GDI_CONFIGREADFILEERRORNEAR_SS               _("reading conf file: %s error near \"%s\"\n")
 
-
-
-
 /* 
-** gdilib/parse_range.c
+** gdilib/sge_range.c
 */
 #define MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S          _("Numerical value invalid!\nThe initial portion of string \"%s\" contains no decimal number\n")
 #define MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS      _("Range specifier \"%s\" has unknown trailer \"%s\"\n")

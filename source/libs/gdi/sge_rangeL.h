@@ -44,7 +44,7 @@ extern "C" {
 
 /****** gdi/range/--RN_Type ***************************************************
 *  NAME
-*     RN_Type - CULL range element
+*     RN_Type -- CULL range element
 *
 *  ELEMENTS
 *     SGE_ULONG(RN_min)

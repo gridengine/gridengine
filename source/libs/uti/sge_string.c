@@ -837,7 +837,7 @@ void sge_compress_slashes(char *str)
 {
    char *p;
    int compressed = 0;
-   DENTER(BASIS_LAYER, "compress_slashes");
+   DENTER(BASIS_LAYER, "sge_compress_slashes");
 
    for (p = str; *p; p++) {
       while (*p == '/' && *(p+1) == '/') {
@@ -852,3 +852,37 @@ void sge_compress_slashes(char *str)
    }
    DEXIT;
 }
+
+/****** uti/string/sge_strip_quotes() *****************************************
+*  NAME
+*     sge_strip_quotes() -- Strip quotes from string
+*
+*  SYNOPSIS
+*     void sge_strip_quotes(char **pstr) 
+*
+*  FUNCTION
+*     Strip quotes from "pstr". 
+*
+*  INPUTS
+*     char **pstr - string to be modified 
+******************************************************************************/
+void sge_strip_quotes(char **pstr) 
+{
+   char *cp, *cp2;
+
+   DENTER(TOP_LAYER, "sge_strip_quotes");
+   if (!pstr) {
+      DEXIT;
+      return;
+   }
+   for (; *pstr; pstr++) {
+      for (cp2 = cp = *pstr; *cp; cp++) {
+         if (*cp == '"') {
+            *cp2++ = *cp;
+         }
+      }
+   }
+   DEXIT;
+   return;
+}
+

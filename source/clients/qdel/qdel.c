@@ -41,6 +41,7 @@
 #include "sge_prog.h"
 #include "sig_handlers.h"
 #include "parse.h"
+#include "sge_answer.h"
 
 #include "msg_gdilib.h"
 #include "gdi_checkpermissions.h"
@@ -340,7 +341,7 @@ lList *alp = NULL;
       /* oops */
       sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
       qdel_usage(stderr, NULL);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -407,10 +408,12 @@ lListElem *ep;
       }
    }
    if ((*pallusers || *ppuserlist) && *ppreflist) {
-      sge_add_answer(&alp, MSG_OPTION_SELECTUSERSANDJOBIDSTOGETHERNOTALLOWED, STATUS_EUNKNOWN, 0);
+      answer_list_add(&alp, MSG_OPTION_SELECTUSERSANDJOBIDSTOGETHERNOTALLOWED, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
    }
    if (*ppuserlist && *pallusers) {
-      sge_add_answer(&alp, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, STATUS_EUNKNOWN, 0);
+      answer_list_add(&alp, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
    }
 
    DEXIT;

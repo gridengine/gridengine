@@ -67,7 +67,7 @@
 #include "read_write_job.h"
 #include "sge_os.h"
 #include "sge_spool.h"
-
+#include "sge_answer.h"
 #include "basis_types.h"
 #include "msg_utilib.h"
 #include "msg_execd.h"
@@ -498,7 +498,7 @@ lList *alp = NULL;
       /* oops */
       sprintf(str, MSG_PARSE_INVALIDARG_S, *sp);
       sge_usage(stderr);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -554,7 +554,7 @@ char *filename;
       sprintf(str, MSG_PARSE_TOOMANYARGS);
       if(!usageshowed)
          sge_usage(stderr);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }

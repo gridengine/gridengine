@@ -47,6 +47,7 @@
 #include "msg_qmaster.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
+#include "sge_answer.h"
 
 extern lList *Master_Queue_List;
 
@@ -280,7 +281,7 @@ int how
       /* check for recursions to our self */
       if (!strcmp(qname, so_qname)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_SUBITSELF_S, qname));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -288,7 +289,7 @@ int how
       /* try to find a referenced queue which does not exist */
       if (!(refqep=lGetElemStr(Master_Queue_List, QU_qname, so_qname))) {
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNSUB_SS, so_qname, qname));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          if (how!=CHECK4SETUP) {
             DEXIT;
             return STATUS_EUNKNOWN; /* exit if not in SETUP case */
@@ -300,7 +301,7 @@ int how
          if (sge_hostcmp(host, lGetHost(refqep, QU_qhostname))) {
             ERROR((SGE_EVENT, MSG_SGETEXT_SUBHOSTDIFF_SSS, 
                   qname, so_qname, lGetHost(refqep, QU_qhostname)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return STATUS_EUNKNOWN;
          }
@@ -311,7 +312,7 @@ int how
       if (so_threshold && so_threshold>slots) {
          ERROR((SGE_EVENT, MSG_SGETEXT_SUBTHRESHOLD_EXCEEDS_SLOTS_SUSU, 
                qname, u32c(so_threshold), so_qname, u32c(slots)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
       }

@@ -56,7 +56,8 @@
 #include "sge_gdi.h"
 #include "commlib.h"
 #include "def.h"
-#include "parse_range.h"
+#include "sge_answer.h"
+#include "sge_range.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -1429,7 +1430,12 @@ int local
 
       if (feature_is_enabled(FEATURE_SGEEE)) {
          if (clen->gid_range && clen->gid_range[0] != '\0') {
-            if (!parse_ranges(clen->gid_range, 0, 0, &alp, NULL, INF_NOT_ALLOWED)){ 
+            lList *range_list = NULL;
+
+            range_list_parse_from_string(&range_list, &alp, clen->gid_range,
+                                         0, 0, INF_NOT_ALLOWED);
+                                       
+            if (range_list == NULL){ 
                strcpy(errstr, "Cannot parse GID Range !");
                alp = lFreeList(alp);
                goto error;
@@ -1692,7 +1698,11 @@ int local
          lSetString(ep, CF_value, str);
 
          if (clen->gid_range && clen->gid_range[0] != '\0') {
-            if (!parse_ranges(clen->gid_range, 0, 0, &alp, NULL, INF_NOT_ALLOWED)){ 
+            lList *range_list = NULL;
+
+            range_list_parse_from_string(&range_list, &alp, clen->gid_range,
+                                         0, 0, INF_NOT_ALLOWED);
+            if (range_list == NULL){ 
                strcpy(errstr, "Cannot parse GID Range !");
                alp = lFreeList(alp);
                goto error;

@@ -68,6 +68,7 @@
 #include "read_write_queue.h"
 #include "sge_unistd.h"
 #include "sge_spool.h"
+#include "sge_answer.h"
 
 extern lList *Master_Job_List;
 extern lList *Master_Queue_List;
@@ -134,7 +135,7 @@ int sub_command
                   ceep = lGetElemStr(lGetList(qep, QU_consumable_config_list), CE_name, old_cep_CE_name );   
                   if (ceep) {
                      ERROR((SGE_EVENT, MSG_ATTRSTILLREFINQUEUE_SS, old_cep_CE_name, lGetString(qep, QU_qname)));
-                     sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+                     answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                      goto ERROR;
                   }
                }
@@ -145,7 +146,7 @@ int sub_command
                   ceep = lGetElemStr(lGetList(hep, EH_consumable_config_list), CE_name, old_cep_CE_name );
                   if (ceep) {
                      ERROR((SGE_EVENT, MSG_ATTRSTILLREFINHOST_SS, old_cep_CE_name, lGetHost(hep, EH_name)));
-                     sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+                     answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                      goto ERROR;
                   }        
                }
@@ -157,7 +158,7 @@ int sub_command
                   ceep = lGetElemStr(lGetList(scep, SC_job_load_adjustments), CE_name, old_cep_CE_name );
                   if (ceep) {
                      ERROR((SGE_EVENT, MSG_ATTRSTILLREFINSCHED_S, old_cep_CE_name ));
-                     sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+                     answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                      goto ERROR;
                   }                      
                }
@@ -193,7 +194,7 @@ int sub_command
                   }
                   if (reference_found) {
                      ERROR((SGE_EVENT, MSG_ATTRSTILLREFINSCHED_S, old_cep_CE_name ));
-                     sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+                     answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                      goto ERROR;
                   }
                }
@@ -214,7 +215,7 @@ int sub_command
              !lGetString(cep, CE_default)) {
             ERROR((SGE_EVENT, MSG_CPLX_ATTRIBISNULL_SS,
                   name?name:MSG_NONAME, complex_name)); 
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             goto ERROR;
          }
 
@@ -240,14 +241,14 @@ int sub_command
             /* search for long name */
             if (find_attribute_in_complex_list(name, lFirst(lGetList(cxep, CX_entries)))) {
                ERROR((SGE_EVENT, MSG_CPLX_ATTRIBALREADY_SS, name, lGetString(cxep, CX_name))); 
-               sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                goto ERROR;
             } 
 
             /* search for shortcut */
             if (find_attribute_in_complex_list(name, lFirst(lGetList(cxep, CX_entries)))) {
                ERROR((SGE_EVENT, MSG_CPLX_SHORTCUTALREADY_SS, name, lGetString(cxep, CX_name))); 
-               sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                goto ERROR;
             } 
          }
@@ -256,20 +257,20 @@ int sub_command
          /* search for long name in remaining attribs */
          if (find_attribute_in_complex_list(name, lNext(cep))) {
             ERROR((SGE_EVENT, MSG_CPLX_ATTRIBALREADY_SS, name, complex_name)); 
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             goto ERROR;
          } 
 
          /* search for shortcut in remaining attribs */
          if (find_attribute_in_complex_list(name, lNext(cep))) {
             ERROR((SGE_EVENT, MSG_CPLX_SHORTCUTALREADY_SS, name, complex_name)); 
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             goto ERROR;
          } 
       
          /* ensure CE_stringval and CE_default is parsable or resolve if it is a hostname */
          if (fill_and_check_attribute(cep, 0, 1)) {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             goto ERROR;
          }
 
@@ -278,7 +279,7 @@ int sub_command
             u_long32 type = lGetUlong(cep, CE_valtype);
             if (type==TYPE_STR||type==TYPE_CSTR||type==TYPE_HOST) {
                ERROR((SGE_EVENT, MSG_CPLX_ATTRIBNOCONSUM_S, name));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                goto ERROR;
             }
 
@@ -289,7 +290,7 @@ int sub_command
                if ((cr = lGetSubStr(hep, CE_name, name, EH_consumable_config_list)) && 
                      !parse_ulong_val(NULL, NULL, type, lGetString(cr, CE_stringval), NULL, 0)) {
                   ERROR((SGE_EVENT, MSG_CPLX_ATTRIBNOCONSUMEH_SS, name, lGetHost(hep, EH_name))) ;
-                  sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+                  answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                   goto ERROR;
                } 
             }
@@ -298,7 +299,7 @@ int sub_command
                if ((cr = lGetSubStr(qep, CE_name, name, QU_consumable_config_list)) && 
                      !parse_ulong_val(NULL, NULL, type, lGetString(cr, CE_stringval), NULL, 0)) {
                   ERROR((SGE_EVENT, MSG_CPLX_ATTRIBNOCONSUMQ_SS, name, lGetString(qep, QU_qname)));
-                  sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+                  answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                   goto ERROR;
                }
             }
@@ -333,7 +334,7 @@ gdi_object_t *object
    if (write_cmplx(1, fname, lGetList(cep, CX_entries), NULL, alpp)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CPLX, 
                lGetString(cep, CX_name)));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0);
       DEXIT;
       return 1;
    } else {
@@ -509,7 +510,7 @@ char *rhost
 
    if ( !cxp || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -518,7 +519,7 @@ char *rhost
       /* cxp is no complex element, if cxp has no CX_name */
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
                 lNm2Str(CX_name), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -526,7 +527,7 @@ char *rhost
    /* check if complex is in Master_Complex_List */
    if (!(ep = lGetElemStr(Master_Complex_List, CX_name, cmplxname))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_CPLX, cmplxname));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -544,7 +545,7 @@ char *rhost
        !strcasecmp("queue", cmplxname) ||
        !strcasecmp("global", cmplxname))  {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTDELCMPLX_S, cmplxname));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -552,7 +553,7 @@ char *rhost
    /* If this is the qmaster we delete the complex from disk */
    if (sge_unlink(COMPLEX_DIR, cmplxname)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTDELCMPLXDISK_S, cmplxname));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, 0);
       DEXIT;
       return STATUS_EDISK;
    }
@@ -566,7 +567,7 @@ char *rhost
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, ruser, rhost, cmplxname, MSG_OBJ_CPLX));
 
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
 }
@@ -612,7 +613,7 @@ const char *complex_name
       if (lGetElemStr(lGetList(ep, QU_complex_list), CX_name, complex_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_COMPLEXSTILLREFERENCED_SSS, 
                complex_name, MSG_OBJ_QUEUE, lGetString(ep, QU_qname)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          ret = STATUS_EUNKNOWN;
       }
    }
@@ -621,7 +622,7 @@ const char *complex_name
       if (lGetElemStr(lGetList(ep, EH_complex_list), CX_name, complex_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_COMPLEXSTILLREFERENCED_SSS, 
                complex_name, MSG_OBJ_EH, lGetHost(ep, EH_name)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          ret = STATUS_EUNKNOWN;
       }
    }

@@ -41,7 +41,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_parse_util.h"
-#include "parse_range.h"
 #include "get_path.h"
 #include "sge_parse_num_par.h"
 #include "sge_feature.h"
@@ -49,6 +48,7 @@
 #include "sge_job_jatask.h"
 #include "symbols.h"
 #include "sge_var.h"
+#include "sge_range.h"
 
 static void sge_show_checkpoint(int how, int op);
 static void sge_show_y_n(int op, int how);
@@ -302,12 +302,18 @@ DTRACE;
 
    if (lGetPosViaElem(job, JB_env_list)>=0)
       if (lGetList(job, JB_env_list)) {
+         lList *print = NULL;
+         lList *do_not_print = NULL;
          intprt_type fields[] = {VA_variable, VA_value, 0 };
 
          delis[0] = "=";
          printf("env_list:                   ");
-         uni_print_list(stdout, NULL, 0, lGetList(job, JB_env_list), 
+
+         print = lGetList(job, JB_env_list);
+         var_list_split_prefix_vars(print, &do_not_print, VAR_PREFIX);
+         uni_print_list(stdout, NULL, 0, print, 
             fields, delis, FLG_NO_DELIS_STRINGS);
+         lAddList(print, do_not_print);
       }
 
    if (lGetPosViaElem(job, JB_job_args)>=0)
@@ -366,11 +372,13 @@ DTRACE;
 
    if (lGetPosViaElem(job, JB_pe)>=0)
       if (lGetString(job, JB_pe)) {
-         char str[256 + 1];
+         dstring range_string = DSTRING_INIT;
 
-         show_ranges(str, 0, NULL, lGetList(job, JB_pe_range));
+         range_list_print_to_string(lGetList(job, JB_pe_range), 
+                                    &range_string, 1);
          printf("parallel environment:  %s range: %s\n",
-            lGetString(job, JB_pe), str);
+                lGetString(job, JB_pe), sge_dstring_get_string(&range_string));
+         sge_dstring_free(&range_string);
       }
 
    if (lGetPosViaElem(job, JB_jid_predecessor_list)>=0)

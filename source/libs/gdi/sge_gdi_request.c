@@ -53,6 +53,7 @@
 #include "qm_name.h"
 #include "sge_unistd.h"
 #include "sge_security.h"
+#include "sge_answer.h"
 #ifdef KERBEROS
 #  include "krb_lib.h"
 #endif
@@ -483,7 +484,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
 
    error:
       if (alpp)
-         sge_add_answer(alpp, SGE_EVENT, STATUS_NOQMASTER, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
       answer = free_gdi_request(answer);
       first = free_gdi_request(first);
       last = NULL;
@@ -545,7 +546,7 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
 
    if (!mal || id < 0) {
       sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC);
-      sge_add_answer(&alp, SGE_EVENT, STATUS_ESYNTAX, 0);
+      answer_list_add(&alp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -560,7 +561,7 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
        (operation == SGE_GDI_ADD && sub_command == SGE_GDI_RETURN_NEW_VERSION )) {
       if (!olpp) {
          sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC);
-         sge_add_answer(&alp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         answer_list_add(&alp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return alp;
       }
@@ -1068,122 +1069,6 @@ sge_gdi_request *free_gdi_request(sge_gdi_request *ar) {
 
    DEXIT;
    return NULL;
-}
-
-
-/*--------------------------------------------------------------- 
- * sge_add_answer
- *
- *  Add an answer element to an answer list.
- *  This is used for answering requests.
- *---------------------------------------------------------------*/
-int sge_add_answer(lList **alpp, const char *report, u_long32 status,
-                   u_long32 quality) {
-   lListElem *aep;
-
-   DENTER(GDI_LAYER, "sge_add_answer");
-   if ( !alpp ) {
-      DEXIT;
-      return -1;
-   }
-
-   /* build new answer element */
-   aep = lCreateElem(AN_Type);
-   lSetString(aep, AN_text, report);
-   lSetUlong(aep, AN_status, status);
-   lSetUlong(aep, AN_quality, quality);
-   
-   /* create a list for the answers */
-   if (!*alpp)
-      *alpp = lCreateList("answer", AN_Type);
-
-   lAppendElem(*alpp, aep);
-
-   DEXIT;
-   return 0;
-}
-
-int answer_list_is_error_in_list(lList **answer_list)
-{
-   lListElem *answer = NULL;
-   int ret = 0;
-
-   if (answer_list != NULL) {
-      for_each(answer, *answer_list) {
-         if (lGetUlong(answer, AN_quality) ==  NUM_AN_ERROR) {
-            ret = 1;
-            break;
-         }
-      }
-   }
-   return ret;
-}                   
-
-/*-----------------------------------------------------------------------*/
-const char *quality_text(lListElem *aep) {
-   u_long32 q;
-   static char *qt[] = {
-      "ERROR",
-      "WARNING",
-      "INFO"
-   };
-   if ((q = lGetUlong(aep, AN_quality))>2)
-      q = 0;
-   return qt[q];  
-}
-
-/****** gdi/request/sge_get_recoverable() *************************************
-*  NAME
-*     sge_get_recoverable() -- analyze answer of gdi request 
-*
-*  SYNOPSIS
-*     u_long32 sge_get_recoverable(lListElem *aep) 
-*
-*  FUNCTION
-*     Used for analyzing the answer of an gdi request. This is client 
-*     code and exits if there is no sense proceeding (May be the master 
-*     cant be contacted ...). Errors are printed to stderr and returned. 
-*
-*  INPUTS
-*     lListElem *aep - AN_Type 
-*
-*  RESULT
-*     u_long32 - status value
-*
-*  NOTES
-*     This function may terminate the application 
-*******************************************************************************/
-u_long32 sge_get_recoverable(lListElem *aep) 
-{
-   int pos;
-   u_long32 status;
-
-   DENTER(GDI_LAYER, "sge_get_recoverable");
-
-   if (!aep) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      SGE_EXIT(1);
-   }
-
-   /* is the list element an answer element ? */
-   if ( (pos = lGetPosViaElem(aep, AN_status))<0) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS, 
-            lNm2Str(AN_status), SGE_FUNC));
-      SGE_EXIT(1);
-   }
-
-   switch (status = lGetPosUlong(aep, pos)) {
-      case STATUS_NOQMASTER:
-      case STATUS_NOCOMMD:
-      case STATUS_ENOKEY:
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
-         SGE_EXIT(1);
-      default:
-         break;
-   }
-
-   DEXIT;
-   return status;
 }
 
 #ifdef QIDL

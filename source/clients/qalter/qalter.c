@@ -51,6 +51,7 @@
 #include "cull_parse_util.h"
 #include "sge_var.h"
 #include "sge_job_jatask.h"
+#include "sge_answer.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
@@ -111,7 +112,7 @@ char **argv
    for_each(aep, alp) {
       status = lGetUlong(aep, AN_status);
       quality = lGetUlong(aep, AN_quality);
-      if (quality == NUM_AN_ERROR) {
+      if (quality == ANSWER_QUALITY_ERROR) {
          fprintf(stderr, MSG_QALTER_S, lGetString(aep, AN_text));
          do_exit = 1;
       }
@@ -151,7 +152,7 @@ char **argv
    for_each(aep, alp) {
       status = lGetUlong(aep, AN_status);
       quality = lGetUlong(aep, AN_quality);
-      if (quality == NUM_AN_ERROR) {
+      if (quality == ANSWER_QUALITY_ERROR) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          do_exit = 1;
       }
@@ -250,7 +251,8 @@ int *all_users
    DENTER(TOP_LAYER, "qalter_parse_job_parameter"); 
 
    if (!prequestlist) {
-      sge_add_answer(&answer, MSG_PARSE_NULLPOINTERRECEIVED, STATUS_EUNKNOWN, 0);
+      answer_list_add(&answer, MSG_PARSE_NULLPOINTERRECEIVED, STATUS_EUNKNOWN, 
+                      ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -264,8 +266,8 @@ int *all_users
    /* we need this job to parse our options in */
    job = lCreateElem(JB_Type);
    if (!job) {
-      sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, 
-                        STATUS_EMALLOC, 0);
+      answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
+                      STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -317,7 +319,7 @@ int *all_users
 
       lRemoveElem(cmdline, ep);
       sprintf(str, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
-      sge_add_answer(&answer, str, STATUS_ENOIMP, 0);
+      answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -346,14 +348,16 @@ int *all_users
          const char *sge_o_home = job_get_env_string(job, VAR_PREFIX "O_HOME");
  
          if (!getcwd(tmp_str, sizeof(tmp_str))) {
-            sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
+            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
          
          if (sge_o_home && !chdir(sge_o_home)) {
             if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
-               sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
+               answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                               STATUS_EDISK, ANSWER_QUALITY_ERROR);
                DEXIT;
                return answer;
             }
@@ -410,7 +414,7 @@ int *all_users
          lList *jid_list = NULL;
 
          if (lGetElemStr(cmdline, SPA_switch, "-uall")) {
-            sge_add_answer(&answer, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, STATUS_EUNKNOWN, 0);
+            answer_list_add(&answer, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -429,7 +433,7 @@ int *all_users
          lList *jid_list = NULL;
 
          if (lGetElemStr(cmdline, SPA_switch, "-u")) {
-            sge_add_answer(&answer, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, STATUS_EUNKNOWN, 0);
+            answer_list_add(&answer, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -659,7 +663,7 @@ int *all_users
          strcat(str, cp);
       }
       strcat(str, "\n");
-      sge_add_answer(&answer, str, STATUS_ENOIMP, 0);
+      answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
    }
 
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-verify"))) {
@@ -668,8 +672,8 @@ int *all_users
    } 
   
    if (job_field[1] == NoName) {
-      sge_add_answer(&answer, MSG_JOB_NOJOBATTRIBUTESELECTED, 
-                        STATUS_EUNKNOWN, 0);
+      answer_list_add(&answer, MSG_JOB_NOJOBATTRIBUTESELECTED, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -685,8 +689,8 @@ int *all_users
    */
 
    if (!(what = lIntVector2What(JB_Type, job_field))) {
-      sge_add_answer(&answer, MSG_ANSWER_FAILDTOBUILDREDUCEDDESCRIPTOR, 
-                        STATUS_EUNKNOWN, 0);
+      answer_list_add(&answer, MSG_ANSWER_FAILDTOBUILDREDUCEDDESCRIPTOR, 
+                        STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -694,8 +698,8 @@ int *all_users
    rdp = NULL;
    lReduceDescr(&rdp, JB_Type, what);
    if (!rdp) {
-      sge_add_answer(&answer, MSG_ANSWER_FAILDTOBUILDREDUCEDDESCRIPTOR, 
-                        STATUS_EUNKNOWN, 0);
+      answer_list_add(&answer, MSG_ANSWER_FAILDTOBUILDREDUCEDDESCRIPTOR, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -734,15 +738,15 @@ int *all_users
          DPRINTF(("got job " u32 " from parsing\n", jobid));
       } else {
          if (!strcmp(lGetString(ep, ID_str), "all") || (all_or_jidlist == ALL)) {
-            sge_add_answer(&answer, MSG_ANSWER_ALLANDJOBIDSARENOTVALID, 
-               STATUS_ESYNTAX, 0);
+            answer_list_add(&answer, MSG_ANSWER_ALLANDJOBIDSARENOTVALID, 
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          } else if (!strcmp(lGetString(ep, ID_str), "dummy")) {
             /* we will add a dummy-object to send parameters to qmaster */ 
          } else {
-            sge_add_answer(&answer, MSG_ANSWER_0ISNOTAVALIDJOBID,
-               STATUS_ESYNTAX, 0);
+            answer_list_add(&answer, MSG_ANSWER_0ISNOTAVALIDJOBID,
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -753,15 +757,15 @@ int *all_users
          char str[1024];
 
          sprintf(str, MSG_JOB_XMULTIPLEJOBID_U, u32c(jobid));
-         sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+         answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
 
       rep = lAddElemUlong(prequestlist, JB_job_number, jobid, rdp);
       if (!rep) { 
-         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, 
-               STATUS_EMALLOC, 0);
+         answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
+                         STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
@@ -851,7 +855,8 @@ int *all_users
 
    if (!*prequestlist) {
       /* got no target */
-      sge_add_answer(&answer, MSG_JOB_MISSINGJOBID, STATUS_ESYNTAX, 0);
+      answer_list_add(&answer, MSG_JOB_MISSINGJOBID, 
+                      STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;      
    }

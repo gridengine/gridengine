@@ -55,7 +55,6 @@
 #include "usage.h"
 #include "sge_feature.h"
 #include "parse.h"
-#include "parse_range.h"
 #include "sge_prog.h"
 #include "sge_parse_num_par.h"
 #include "sge_string.h"
@@ -72,6 +71,7 @@
 #include "sgeee.h" 
 #include "sge_support.h"
 #include "sge_unistd.h"
+#include "sge_answer.h"
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_10 "%I %I %I %I %I %I %I %I %I %I "
@@ -1341,7 +1341,7 @@ lList *alp = NULL;
       /* oops */
       sprintf(str, MSG_ANSWER_INVALIDOPTIONARGX_S, *sp);
       qstat_usage(stderr, NULL);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -1488,7 +1488,8 @@ lList **ppljid
                   sprintf(str, MSG_OPTIONS_WRONGARGUMENTTOSOPT);
                   if (!usageshowed)
                      qstat_usage(stderr, NULL);
-                  sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+                  answer_list_add(&alp, str, 
+                                  STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                   DEXIT;
                   return alp;
                }  
@@ -1561,7 +1562,7 @@ lList **ppljid
      sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
      if (!usageshowed)
         qstat_usage(stderr, NULL);
-     sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+     answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
      DEXIT;
      return alp;
    }

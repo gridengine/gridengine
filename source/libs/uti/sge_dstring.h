@@ -32,6 +32,23 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+/****** uti/dstring/DSTRING_INIT **********************************************
+*  NAME
+*     DSTRING_INIT -- Define to initialize dstring variables 
+*
+*  SYNOPSIS
+*     #define DSTRING_INIT {NULL, 0}
+*
+*  FUNCTION
+*     Define to preinitialize dstring variables 
+*
+*  EXAMPLE
+*     {
+*        dstring error_msg = DSTRING_INIT;
+*     }
+******************************************************************************/
+#define DSTRING_INIT {NULL, 0}
+
 typedef struct {
    char *s;
    size_t size;
@@ -42,6 +59,8 @@ char* sge_dstring_append(dstring *sb, const char *a);
 char* sge_dstring_sprintf(dstring *sb, const char *fmt, ...);
 
 void sge_dstring_free(dstring *sb);
+
+const char *sge_dstring_get_string(const dstring *string);
 
 #endif /* __SGE_STRING_APPEND_H */
 

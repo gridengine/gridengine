@@ -80,6 +80,7 @@
 #include "sge_security.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
+#include "sge_answer.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
@@ -183,7 +184,7 @@ u_long32 target
 
    if ( !hep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -212,7 +213,7 @@ u_long32 target
    if ((pos = lGetPosViaElem(hep, nm)) < 0) {
       ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(nm), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -220,7 +221,7 @@ u_long32 target
    host = lGetPosHost(hep, pos);
    if (!host) {
       ERROR((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -229,7 +230,7 @@ u_long32 target
    found_host = 1;
    if ((ep=sge_locate_host(host, target))==NULL) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, name, host));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       found_host = 0;
    }
 
@@ -241,7 +242,7 @@ u_long32 target
          Get the unique hostname and try to find it again. */
       if (getuniquehostname(host, unique, 0)!=CL_OK) {
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, host));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -249,7 +250,7 @@ u_long32 target
          hostname */
       if ((ep=sge_locate_host(unique, target))==NULL) {
          ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, name, host));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
@@ -263,21 +264,21 @@ u_long32 target
          !sge_hostcmp(unique, me.qualified_hostname)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTDELADMINQMASTER_S, 
           me.qualified_hostname));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
 
    if (target==SGE_EXECHOST_LIST && sge_has_active_queue(unique)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTDELEXECACTIVQ_S, unique));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_ESEMANTIC;
    }
 
    if (target==SGE_EXECHOST_LIST && !strcasecmp(unique, "global")) {
       ERROR((SGE_EVENT, MSG_OBJ_DELGLOBALHOST));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_ESEMANTIC;
    }
@@ -303,7 +304,7 @@ u_long32 target
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
          ruser, rhost, unique, name));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
 }
@@ -345,7 +346,7 @@ int sub_command
          if (pw_num_submit < ret+1) {
             /* we've a license violation */
             ERROR((SGE_EVENT, MSG_SGETEXT_TOOFEWSUBMHLIC_II, (int) pw_num_submit, ret+1));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESUBHLIC, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESUBHLIC, ANSWER_QUALITY_ERROR);
             DEXIT;
             return STATUS_ESUBHLIC;
          }
@@ -477,10 +478,10 @@ gdi_object_t *object
       dataType = lGetPosType(lGetElemDescr(ep),pos);
       if (dataType != lHostT ) { 
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object->object_name, lGetString(ep, object->key_nm)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       } else {
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object->object_name, lGetHost(ep, object->key_nm)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       }
       DEXIT;
       return 1;
@@ -1142,14 +1143,14 @@ void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
 
    if (sge_manager(user)) {
       ERROR((SGE_EVENT, MSG_OBJ_SHUTDOWNPERMS)); 
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -1198,7 +1199,7 @@ sge_gdi_request *answer
          /* no exechosts have been killed */
          DPRINTF((MSG_SGETEXT_NOEXECHOSTS));
          INFO((SGE_EVENT, MSG_SGETEXT_NOEXECHOSTS));
-         sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       }
    } else {
       /* only specified exechosts should be killed. */
@@ -1207,7 +1208,7 @@ sge_gdi_request *answer
       for_each(rep, request->lp) {
          if ((getuniquehostname(lGetString(rep, ID_str), host, 0)) != CL_OK) {
             WARNING((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(rep, ID_str)));
-            sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          } else {
             if ((lel = lGetElemHost(Master_Exechost_List, EH_name, host))) {
                kill_jobs = lGetUlong(rep, ID_force)?1:0;
@@ -1222,7 +1223,7 @@ sge_gdi_request *answer
                reschedule_unknown_trigger(lel);
             } else {
                WARNING((SGE_EVENT, MSG_SGETEXT_ISNOEXECHOST_S, host));
-               sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+               answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
             }
          }
       }
@@ -1273,8 +1274,8 @@ int force
 
    if (!force && !execd_alive) {
       WARNING((SGE_EVENT, MSG_OBJ_NOEXECDONHOST_S, hostname));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, 
-                     NUM_AN_WARNING);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, 
+                     ANSWER_QUALITY_WARNING);
    }
    if (execd_alive || force) {
       if (notify_kill_job(lel, kill_jobs, prognames[EXECD])) {
@@ -1285,7 +1286,7 @@ int force
                (execd_alive ? "" : MSG_OBJ_UNKNOWN), hostname));
       }
       DPRINTF((SGE_EVENT));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 
    if(kill_jobs) {
@@ -1419,7 +1420,7 @@ u_long32 target) {
 
    if( !host || !ruser || !rhost) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -1428,7 +1429,7 @@ u_long32 target) {
    if(!hep) {
       if (sge_add_host_of_type(rhost, SGE_EXECHOST_LIST) < 0) {
          ERROR((SGE_EVENT, MSG_OBJ_INVALIDHOST_S, rhost));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_DENIED, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_DENIED;
       } 
@@ -1437,7 +1438,7 @@ u_long32 target) {
    hep = sge_locate_host(rhost, SGE_EXECHOST_LIST);
    if(!hep) {
       ERROR((SGE_EVENT, MSG_OBJ_NOADDHOST_S, rhost));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_DENIED, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_DENIED;
    }
@@ -1466,7 +1467,7 @@ u_long32 target) {
    sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, rhost, hep);
 
    INFO((SGE_EVENT, MSG_LOG_REGISTER_SS, "execd", rhost));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, 0);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
 
    DEXIT;
    return STATUS_OK;
@@ -1498,7 +1499,7 @@ lListElem *hep
          resources = lFreeList(resources);
          ERROR((SGE_EVENT, MSG_OBJ_NOSCALING4HOST_SS,
                name, lGetHost(hep, EH_name)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
       }

@@ -52,10 +52,10 @@
 #include "sge_options.h"
 #include "sge_rangeL.h"
 #include "sge_identL.h"
-#include "parse_range.h"
 #include "msg_common.h"
 #include "msg_gdilib.h"
-
+#include "sge_answer.h"
+#include "sge_range.h"
 
 int hard = TRUE;
 
@@ -154,8 +154,8 @@ lList **alpp
    job_str = str;
 
    if ((token = strtok(NULL, ""))) {
-      task_id_range_list = parse_ranges(token, 0, 1, alpp, NULL, 
-                                          INF_NOT_ALLOWED);
+      range_list_parse_from_string(&task_id_range_list, alpp, token,
+                                   0, 1, INF_NOT_ALLOWED);
       if (*alpp) {
          /*
          ** free the dupped string
@@ -324,7 +324,7 @@ lListElem *ep; /* SPA_Type */
            && !strncmp(longopt, *sp, strlen(longopt)-1)) ) {
       if(!*(++rp) || (**rp == '-')) {
          sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, *sp);
-         sge_add_answer(alpp, str, STATUS_ESEMANTIC, 0);
+         answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return rp;
       }
@@ -371,7 +371,7 @@ lList **alpp
       string str;
       if(!*() || (**rp == '-')) {
          sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, *sp);
-         sge_add_answer(alpp, str, STATUS_ESEMANTIC, 0);
+         answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return rp;
       }
@@ -521,7 +521,7 @@ lList **ppdestlist
                lGetString(sep, STR), &tmp_alp) == -1) {
             sprintf(str,  MSG_JOB_XISINVALIDJOBTASKID_S, 
                lGetString(sep, STR));
-            sge_add_answer(alpp, str, STATUS_ESEMANTIC, 0);
+            answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
             lRemoveElem(*ppcmdline, ep);
             DEXIT;

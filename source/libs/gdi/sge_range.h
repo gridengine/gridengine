@@ -35,6 +35,10 @@
 #include "sge_dstring.h"
 #include "sge_rangeL.h"
 
+#define JUST_PARSE         1
+#define INF_ALLOWED        1
+#define INF_NOT_ALLOWED    0
+
 #define MAX_IDS_PER_LINE  8
 #define MAX_LINE_LEN      70
 
@@ -59,7 +63,9 @@ void range_get_all_ids(const lListElem *range_elem, u_long32 *min,
 void range_set_all_ids(lListElem *range_elem, u_long32 min, u_long32 max,
                        u_long32 step);
 
-void range_list_print_to_string(const lList *range_list, dstring *string);
+void range_list_print_to_string(const lList *range_list, 
+                                dstring *string,
+                                int ignore_step);
 
 void range_sort_uniq_compress(lList *range_list, lList **answer_list);  
 
@@ -89,5 +95,18 @@ u_long32 range_list_get_number_of_ids(const lList *range_list);
 u_long32 range_get_number_of_ids(const lListElem *range);
 
 void range_correct_end(lListElem *range);   
+
+void range_parse_from_string(lListElem **range,
+                             lList **alpp,
+                             const char *rstr,
+                             int step_allowed,
+                             int inf_allowed);
+
+void range_list_parse_from_string(lList **rl,
+                                  lList **alpp,
+                                  const char *str,
+                                  int just_parse,
+                                  int step_allowed,
+                                  int inf_allowed);
 
 #endif /* __SGE_RANGE_H */

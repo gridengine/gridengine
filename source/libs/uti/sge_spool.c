@@ -465,21 +465,21 @@ char *sge_get_confval(const char *conf_val, const char *fname)
    const char *namev[1];
 
    namev[0] = conf_val;
-   if (get_confval_array(fname, 1, namev, valuev)) {
+   if (sge_get_confval_array(fname, 1, namev, valuev)) {
       return NULL;
    } else {
       return valuev[0];
    }
 }
 
-
-/****** sge_get_confval/get_confval_array() ************************************
+/****** uti/spool/sge_get_confval_array() *************************************
 *  NAME
-*     get_confval_array()
+*     sge_get_confval_array() - Read configuration file entries
 *
 *  SYNOPSIS
-*     int get_confval_array(const char *fname, int n, const char *name[], char 
-*     value[][1025]) 
+*     int sge_get_confval_array(const char *fname, int n, 
+*                               const char *name[], 
+*                               char value[][1025]) 
 *
 *  FUNCTION
 *     Reads in an array of configuration file entries
@@ -489,18 +489,15 @@ char *sge_get_confval(const char *conf_val, const char *fname)
 *
 *  BUGS
 *     Function can not differ multiple similar named entries.
-*******************************************************************************/
-int get_confval_array(
-const char *fname,
-int n,
-const char *name[],
-char value[][1025]
-) {
+******************************************************************************/
+int sge_get_confval_array(const char *fname, int n, const char *name[], 
+                          char value[][1025]) 
+{
    FILE *fp;
    char buf[1024], *cp;
    int i, nmissing = n;
    
-   DENTER(TOP_LAYER, "get_confval");
+   DENTER(TOP_LAYER, "sge_get_confval_array");
 
 #if 0
    /*  this may cause problems if a previous call has set a char* pointer

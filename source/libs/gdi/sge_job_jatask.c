@@ -47,6 +47,7 @@
 #include "sge_var.h"
 #include "sge_path_alias.h"
 #include "sge_var.h"
+#include "sge_answer.h"
 
 #include "msg_gdilib.h"
 #include "msg_common.h"
@@ -449,7 +450,7 @@ int job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number)
 *
 *  SEE ALSO
 *     gdi/job_jatask/job_get_ja_tasks() 
-*     gdi/job_jatask/job_get_enrolled_ja_tasks_ja_tasks() 
+*     gdi/job_jatask/job_get_enrolled_ja_tasks() 
 *     gdi/job_jatask/job_get_not_enrolled_ja_tasks() 
 *     gdi/job_jatask/job_get_submit_ja_tasks() 
 *******************************************************************************/
@@ -483,7 +484,7 @@ u_long32 job_get_ja_tasks(const lListElem *job)
 *
 *  SEE ALSO
 *     gdi/job_jatask/job_get_ja_tasks() 
-*     gdi/job_jatask/job_get_enrolled_ja_tasks_ja_tasks() 
+*     gdi/job_jatask/job_get_enrolled_ja_tasks() 
 *     gdi/job_jatask/job_get_not_enrolled_ja_tasks() 
 *     gdi/job_jatask/job_get_submit_ja_tasks() 
 *******************************************************************************/
@@ -522,7 +523,7 @@ u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job)
 *
 *  SEE ALSO
 *     gdi/job_jatask/job_get_ja_tasks() 
-*     gdi/job_jatask/job_get_enrolled_ja_tasks_ja_tasks() 
+*     gdi/job_jatask/job_get_enrolled_ja_tasks() 
 *     gdi/job_jatask/job_get_not_enrolled_ja_tasks() 
 *     gdi/job_jatask/job_get_submit_ja_tasks() 
 *******************************************************************************/
@@ -547,9 +548,10 @@ u_long32 job_get_enrolled_ja_tasks(const lListElem *job)
 *
 *  RESULT
 *     u_long32 - number of tasks
+*
 *  SEE ALSO
 *     gdi/job_jatask/job_get_ja_tasks() 
-*     gdi/job_jatask/job_get_enrolled_ja_tasks_ja_tasks() 
+*     gdi/job_jatask/job_get_enrolled_ja_tasks() 
 *     gdi/job_jatask/job_get_not_enrolled_ja_tasks() 
 *     gdi/job_jatask/job_get_submit_ja_tasks() 
 ******************************************************************************/
@@ -1397,7 +1399,7 @@ void jatask_list_print_to_string(const lList *task_list, dstring *range_string)
       range_list_insert_id(&range_list, NULL, tid);      
    } 
    range_sort_uniq_compress(range_list, NULL); 
-   range_list_print_to_string(range_list, range_string); 
+   range_list_print_to_string(range_list, range_string, 0); 
    range_list = lFreeList(range_list);
    DEXIT;
 }
@@ -1476,7 +1478,8 @@ void job_initialize_id_lists(lListElem *job, lList **answer_list)
    DENTER(TOP_LAYER, "job_initialize_id_lists");
    n_h_list = lCopyList("", lGetList(job, JB_ja_structure));
    if (n_h_list == NULL && answer_list != NULL) {
-      sge_add_answer(answer_list, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+      answer_list_add(answer_list, MSG_MEM_MEMORYALLOCFAILED, 
+                      STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
    } else {
       lSetList(job, JB_ja_n_h_ids, n_h_list);
       lSetList(job, JB_ja_u_h_ids, NULL);
@@ -1553,7 +1556,8 @@ void job_initialize_env(lListElem *job, lList **answer_list,
       char tmp_str[SGE_PATH_MAX + 1];
 
       if (!getcwd(tmp_str, sizeof(tmp_str))) {
-         sge_add_answer(answer_list, MSG_ANSWER_GETCWDFAILED , STATUS_EDISK, 0);
+         answer_list_add(answer_list, MSG_ANSWER_GETCWDFAILED, 
+                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
          goto error;
       }
       path_alias_list_get_path(path_alias_list, NULL, 

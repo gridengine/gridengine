@@ -53,8 +53,10 @@
 #include "sge_io.h"
 #include "sge_stdio.h"
 #include "sge_prog.h"
-#include "msg_gdilib.h"
 #include "sge_varL.h"
+#include "sge_answer.h"
+
+#include "msg_gdilib.h"
 
 #ifdef CRYPTO
 #include <openssl/evp.h>
@@ -615,7 +617,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
 
       if (do_authentication && lGetString(jep, JB_cred) == NULL) {
          ERROR((SGE_EVENT, MSG_SEC_NOAUTH_U, u32c(lGetUlong(jep, JB_job_number))));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -660,7 +662,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
 
          if (do_authentication && (ret != 0)) {
             ERROR((SGE_EVENT, MSG_SEC_NOAUTH_U, u32c(lGetUlong(jep, JB_job_number))));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }

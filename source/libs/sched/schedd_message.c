@@ -39,12 +39,11 @@
 #include "schedd_conf.h"
 #include "schedd_monitor.h"
 #include "sge_log.h"
-#include "parse_range.h"
 #include "sge_jobL.h"
 #include "sge_ulongL.h"
 #include "sge_schedd_text.h"
 #include "msg_schedd.h"
-
+#include "sge_range.h"
 
 /* 
 ** Message structure where job scheduling informations are stored i
@@ -211,7 +210,8 @@ void schedd_add_message(u_long32 job_number, u_long32 message_number, ...)
    */
    if (job_number && (scheddconf.schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
       if (scheddconf.schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
-         if (!id_in_range (job_number, scheddconf.schedd_job_info_list)) {
+         if (!range_list_is_id_within(scheddconf.schedd_job_info_list,
+                                      job_number)) {
             DPRINTF(("Job "u32" not in scheddconf.schedd_job_info_list\n", job_number));
             return; 
          }

@@ -63,6 +63,7 @@
 #include "sge_prog.h"
 #include "sge_varL.h"
 #include "sge_var.h"
+#include "sge_answer.h"
 
 /*
 ** NAME
@@ -90,7 +91,8 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
    DENTER(TOP_LAYER, "cull_parse_qsh_parameter"); 
 
    if (!pjob) {
-      sge_add_answer(&answer, MSG_PARSE_NULLPOINTERRECEIVED, STATUS_EUNKNOWN, 0);
+      answer_list_add(&answer, MSG_PARSE_NULLPOINTERRECEIVED, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -217,13 +219,15 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
       const char *env_value = job_get_env_string(*pjob, VAR_PREFIX "O_HOME");
 
       if (!getcwd(tmp_str, sizeof(tmp_str))) {
-         sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
+         answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
       if (!chdir(env_value)) {
          if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
-            sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
+            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -318,7 +322,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
 
       lRemoveElem(cmdline, ep);
       sprintf(str, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
-      sge_add_answer(&answer, str, STATUS_ENOIMP, 0);
+      answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -497,7 +501,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
          strcat(str, cp);
       }
       strcat(str, "\n");
-      sge_add_answer(&answer, str, STATUS_ENOIMP, 0);
+      answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
    } 
 
    if (!(ep = lGetElemStr(lGetList(*pjob, JB_env_list), VA_variable, 
@@ -536,14 +540,15 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
             case -1:
                sprintf(str, MSG_ANSWER_GETUNIQUEHNFAILEDRESX_S,
                   cl_errstr(-1));
-               sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
+               answer_list_add(&answer, str, 
+                               STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                lFreeElem(hep);
                DEXIT;
             return answer;
             default:
                sprintf(str, MSG_SGETEXT_CANTRESOLVEHOST_S, 
                        lGetHost(hep, EH_name));
-               sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
+               answer_list_add(&answer, str, STATUS_EUNKNOWN, 0);
                lFreeElem(hep);
             DEXIT;
             return answer;

@@ -53,6 +53,7 @@
 #include "sge_feature.h"
 #include "sge_spool.h"
 #include "sge_io.h"
+#include "sge_answer.h"
 
 static int read_host_group_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);
 
@@ -216,7 +217,7 @@ int parsing_type
                if (sge_add_subgroup2group(alpp,NULL, ep, &fileEntry[1],FALSE) == FALSE) {
                  DPRINTF(("Error adding subgroup '%s'\n", &fileEntry[1]));
                  sprintf(SGE_EVENT, MSG_ANSWER_SUBGROUPXINGROUPYNOTACCEPTED_SS, &fileEntry[1], lGetString(ep, GRP_group_name));
-                 sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0); 
+                 answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR); 
                  back = -1;
                }
             } else {
@@ -224,7 +225,7 @@ int parsing_type
                if (sge_add_member2group( ep, fileEntry) == FALSE) {
                  DPRINTF(("Error adding host '%s'\n", fileEntry));
                  sprintf(SGE_EVENT, MSG_ANSWER_HOSTXINGROUPYNOTACCEPTED_SS,fileEntry , lGetString(ep, GRP_group_name));
-                 sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0); 
+                 answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR); 
                  back = -1;
                }
             } 

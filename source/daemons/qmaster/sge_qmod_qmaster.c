@@ -69,7 +69,7 @@
 #include "reschedule.h"
 #include "sge_security.h"
 #include "sge_job_jatask.h"
-
+#include "sge_answer.h"
 #include "sge_conf.h"
 #include "sge_complexL.h"
 #include "sge_string.h"
@@ -132,7 +132,7 @@ sge_gdi_request *answer
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -140,7 +140,7 @@ sge_gdi_request *answer
    if (!request->host || !user || !request->commproc ||
        !request->id) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -231,7 +231,7 @@ sge_gdi_request *answer
             WARNING((SGE_EVENT, MSG_QUEUE_INVALIDQORJOB_S, lGetString(dep, ID_str)));
          else
             WARNING((SGE_EVENT, MSG_QUEUE_INVALIDQ_S, lGetString(dep, ID_str)));  
-         sge_add_answer(&alp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+         answer_list_add(&alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       }
    }
 
@@ -260,7 +260,7 @@ lList **answer
 
    if (!isowner) {
       WARNING((SGE_EVENT, MSG_QUEUE_NOCHANGEQPERMS_SS, user, lGetString(qep, QU_qname)));
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
@@ -295,7 +295,7 @@ lList **answer
 	 break;
       default:
          INFO((SGE_EVENT, MSG_LOG_UNKNOWNQMODCMD_U, u32c(action)));
-         sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+         answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          break;
    }
    cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, qep);
@@ -321,7 +321,7 @@ lList **answer
    
    if (strcmp(user, lGetString(jep, JB_owner)) && sge_operator(user)) {
       WARNING((SGE_EVENT, MSG_JOB_NOMODJOBPERMS_SU, user, u32c(lGetUlong(jep, JB_job_number))));
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
@@ -365,12 +365,12 @@ lList **answer
                INFO((SGE_EVENT, MSG_JOB_NOERRORSTATEJOB_UU, u32c(job_id)));
             }
          }
-         sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+         answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          break;
          
       default:
          INFO((SGE_EVENT, MSG_LOG_UNKNOWNQMODCMD_U, u32c(action)));
-         sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+         answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          break;
    }
 
@@ -396,14 +396,14 @@ int isowner
 
    if (!isoperator && !isowner) {
       WARNING((SGE_EVENT, MSG_QUEUE_NOCLEARERRORPERMS_SS, user, lGetString(qep, QU_qname)));
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
 
    if ( !VALID(QERROR, lGetUlong(qep, QU_state))) {
       INFO((SGE_EVENT, MSG_QUEUE_NOERRORSTATEQ_SS, user, lGetString(qep, QU_qname)));
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
@@ -415,7 +415,7 @@ int isowner
    sge_change_queue_version(qep, 0, 0);
    if (cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, qep) == -1) {
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname))); 
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
       /* rollback */
       lSetUlong(qep, QU_state, old_state);
@@ -424,7 +424,7 @@ int isowner
       return -1;
    } else {
       INFO((SGE_EVENT, MSG_QUEUE_CLEARERRORSTATE_SSS, lGetString(qep, QU_qname), user, host ));
-      sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+      answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
    } 
    DEXIT;
    return 0;
@@ -448,14 +448,14 @@ int isowner
 
    if (!isoperator && !isowner) {
       WARNING((SGE_EVENT, MSG_QUEUE_NOENABLEQPERMS_SS, user, lGetString(qep, QU_qname)));
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
 
    if (!VALID(QDISABLED, lGetUlong(qep, QU_state))) {
       INFO((SGE_EVENT, MSG_QUEUE_ALREADYENABLED_SS, user, lGetString(qep, QU_qname)));
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
@@ -467,7 +467,7 @@ int isowner
    sge_change_queue_version(qep, 0, 0);
    if (cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, qep) == -1) {
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname)));
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
       /* rollback */
       lSetUlong(qep, QU_state, old_state);
@@ -476,7 +476,7 @@ int isowner
       return -1;
    } else {        
       INFO((SGE_EVENT, MSG_QUEUE_ENABLEQ_SSS, lGetString(qep, QU_qname), user, host));
-      sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+      answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
    }
 
    DEXIT;
@@ -501,14 +501,14 @@ int isowner
 
    if (!isoperator && !isowner) {
       WARNING((SGE_EVENT, MSG_QUEUE_NODISABLEQPERMS_SS, user, lGetString(qep, QU_qname)));
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
 
    if (VALID(QDISABLED, lGetUlong(qep, QU_state))) {
       INFO((SGE_EVENT, MSG_QUEUE_ALREADYDISABLED_SS, user, lGetString(qep, QU_qname)));
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
@@ -520,7 +520,7 @@ int isowner
    sge_change_queue_version(qep, 0, 0);
    if (cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, qep) == -1) {
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname)));
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
       /* rollback */
       lSetUlong(qep, QU_state, old_state);
@@ -530,7 +530,7 @@ int isowner
    } else {        
       INFO((SGE_EVENT, MSG_QUEUE_DISABLEQ_SSS,
          lGetString(qep, QU_qname), user, host));
-      sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+      answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
    }
 
    DEXIT;
@@ -554,7 +554,7 @@ int isowner
    if (!isoperator && !isowner) {
       WARNING((SGE_EVENT, MSG_QUEUE_NORESCHEDULEQPERMS_SS, user, 
          lGetString(qep, QU_qname)));
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
@@ -592,7 +592,7 @@ int isowner
       else {
          WARNING((SGE_EVENT, MSG_QUEUE_ALREADYSUSPENDED_SS, user, lGetString(qep, QU_qname)));
       }
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
 
       old_state = state = lGetUlong(qep, QU_state);
       SETBIT(QSUSPENDED, state);
@@ -604,11 +604,11 @@ int isowner
       if (force) {
          if (sge_signal_queue(SGE_SIGSTOP, qep, NULL, NULL)) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOFORCESUSPENDQ_SS, user, lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
          else {
             INFO((SGE_EVENT, MSG_QUEUE_FORCESUSPENDQ_SS, user, lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+            answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          }
 
          old_state = state = lGetUlong(qep, QU_state);
@@ -622,11 +622,11 @@ int isowner
               !VALID(QCAL_SUSPENDED, lGetUlong(qep, QU_state)) &&
               sge_signal_queue(SGE_SIGSTOP, qep, NULL, NULL)) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOSUSPENDQ_SS, user, lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
          else {
             INFO((SGE_EVENT, MSG_QUEUE_SUSPENDQ_SSS, lGetString(qep, QU_qname), user, host));
-            sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+            answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
             
             old_state = state = lGetUlong(qep, QU_state);
             SETBIT(QSUSPENDED, state);
@@ -648,7 +648,7 @@ int isowner
 
       /* add error message */
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname)));
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
       DEXIT;
       return -1;
@@ -679,34 +679,34 @@ int isowner
          if (VALID(QSUSPENDED_ON_SUBORDINATE, lGetUlong(qep, QU_state))) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOUNSUSP4SOS_SS, user, 
                lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          } else if (VALID(QCAL_SUSPENDED, lGetUlong(qep, QU_state))) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOUNSUSP4SOC_SS, user, 
                lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);      
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);      
          } else if (sge_signal_queue(SGE_SIGCONT, qep, NULL, NULL)) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOFORCEENABLEQ_SS, user, 
                lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          } else {
             WARNING((SGE_EVENT, MSG_QUEUE_FORCEENABLEQ_SSS, user, host, 
                lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
       } 
       else {
          if (VALID(QSUSPENDED_ON_SUBORDINATE, lGetUlong(qep, QU_state))) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOUNSUSP4SOS_SS, user, 
                lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          } else if (VALID(QCAL_SUSPENDED, lGetUlong(qep, QU_state))) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOUNSUSP4SOC_SS, user, 
                lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          } else {
             WARNING((SGE_EVENT, MSG_QUEUE_ALREADYUNSUSP_SS, user, 
                lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
       }
       
@@ -720,11 +720,11 @@ int isowner
       if (force) {
          if (sge_signal_queue(SGE_SIGCONT, qep, NULL, NULL)) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOFORCEENABLEQ_SS, user, lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
          else {
             INFO((SGE_EVENT, MSG_QUEUE_FORCEENABLEQ_SSS, user, host, lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+            answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
          }
 
          old_state = state = lGetUlong(qep, QU_state);
@@ -738,11 +738,11 @@ int isowner
               !VALID(QCAL_SUSPENDED, lGetUlong(qep, QU_state)) &&
             sge_signal_queue(SGE_SIGCONT, qep, NULL, NULL)) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOUNSUSPQ_SS, user, lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
          else {
             INFO((SGE_EVENT, MSG_QUEUE_UNSUSPENDQ_SSS, user, host, lGetString(qep, QU_qname)));
-            sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+            answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
 
             old_state = state = lGetUlong(qep, QU_state);
             CLEARBIT(QSUSPENDED, state);
@@ -764,7 +764,7 @@ int isowner
 
       /* add error message */
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname)));
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
       DEXIT;
       return -1;
@@ -796,7 +796,7 @@ int isowner
    
    if (sge_manager(user)) {
       WARNING((SGE_EVENT, MSG_QUEUE_NOCLEANQPERMS)); 
-      sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
@@ -822,7 +822,7 @@ int isowner
       }
    }
    INFO((SGE_EVENT, MSG_QUEUE_CLEANQ_SSS, user, host, lGetString(qep, QU_qname)));
-   sge_add_answer(answer, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    DEXIT;
    return 0;
@@ -880,7 +880,7 @@ char *host
             } else {
                WARNING((SGE_EVENT, MSG_JOB_NOFORCESUSPENDJOB_SU, user, u32c(jobid)));
             }
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
          else {
             if (job_is_array(jep)) {
@@ -888,7 +888,7 @@ char *host
             } else {
                WARNING((SGE_EVENT, MSG_JOB_FORCESUSPENDJOB_SU, user, u32c(jobid)));
             }
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
       }
       else {
@@ -897,7 +897,7 @@ char *host
          } else {
             WARNING((SGE_EVENT, MSG_JOB_ALREADYSUSPENDED_SU, user, u32c(jobid)));
          }
-         sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       }
 
       /* 
@@ -919,7 +919,7 @@ char *host
             } else {
                WARNING((SGE_EVENT, MSG_JOB_NOSUSPENDJOB_SU, user, u32c(jobid)));
             }
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
       }
       else
@@ -933,7 +933,7 @@ char *host
             } else {
                INFO((SGE_EVENT, MSG_JOB_FORCESUSPENDJOB_SU, user, u32c(jobid)));
             }
-            sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+            answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
          }
 
          state = lGetUlong(jatep, JAT_state);
@@ -950,7 +950,7 @@ char *host
             } else {
                INFO((SGE_EVENT, MSG_JOB_SUSPENDJOB_SU, user, u32c(jobid)));
             }
-            sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+            answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
 
             state = lGetUlong(jatep, JAT_state);
             CLEARBIT(JRUNNING, state);
@@ -993,7 +993,7 @@ char *host
          } else {
             INFO((SGE_EVENT, MSG_JOB_RMADMSUSPENDJOB_SSU, user, host, u32c(jobid)));
          }
-         sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+         answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
 
          state = lGetUlong(jatep, JAT_state);
          CLEARBIT(JSUSPENDED, state);
@@ -1010,7 +1010,7 @@ char *host
          } else {
             WARNING((SGE_EVENT, MSG_JOB_NOADMSUSPENDJOB_SU, user, u32c(jobid)));
          }
-         sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          DEXIT;
          return;
       }
@@ -1030,7 +1030,7 @@ char *host
             } else {
                WARNING((SGE_EVENT, MSG_JOB_NOFORCEENABLEJOB_SU, user, u32c(jobid)));
             }
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
          else {
             if (job_is_array(jep)) {
@@ -1038,7 +1038,7 @@ char *host
             } else {
                WARNING((SGE_EVENT, MSG_JOB_FORCEENABLEJOB_SU, user, u32c(jobid)));
             }
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
       }
       else {
@@ -1047,7 +1047,7 @@ char *host
          } else {
             WARNING((SGE_EVENT, MSG_JOB_ALREADYUNSUSPENDED_SU, user, u32c(jobid))); 
          }
-         sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       }
       /* 
       ** job is already running, so no job information has to be changed 
@@ -1061,7 +1061,7 @@ char *host
             } else {
                WARNING((SGE_EVENT, MSG_JOB_NOUNSUSPENDJOB_SU, user, u32c(jobid)));
             }
-            sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
       }
       else
@@ -1075,7 +1075,7 @@ char *host
             } else {
                INFO((SGE_EVENT, MSG_JOB_FORCEUNSUSPJOB_SSU, user, host, u32c(jobid)));
             }
-            sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+            answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
          }
 
          state = lGetUlong(jatep, JAT_state);
@@ -1093,7 +1093,7 @@ char *host
             } else {
                INFO((SGE_EVENT, MSG_JOB_UNSUSPENDJOB_SU, user, u32c(jobid)));
             }
-            sge_add_answer(answer, SGE_EVENT, STATUS_OK, 0);
+            answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
             
             state = lGetUlong(jatep, JAT_state);
             SETBIT(JRUNNING, state);

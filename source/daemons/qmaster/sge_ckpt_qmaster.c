@@ -58,6 +58,8 @@
 #include "gdi_utility_qmaster.h"
 #include "sge_stdlib.h"
 #include "sge_unistd.h"
+#include "sge_answer.h"
+
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
@@ -135,7 +137,7 @@ int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add,
    } else {
       ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(CK_name), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0); 
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR); 
       goto ERROR;
    }
    
@@ -173,7 +175,7 @@ int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add,
          lSetString(new_ckpt, CK_when, get_checkpoint_when(new_flags));
       } else {
          ERROR((SGE_EVENT, MSG_CKPT_INVALIDWHENATTRIBUTE_S, ckpt_name));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          goto ERROR;
       }
    } 
@@ -238,7 +240,7 @@ int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object)
    if (!write_ckpt(1, 2, ep)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
             object->object_name, lGetString(ep, CK_name)));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -328,7 +330,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
 
    if ( !ep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -337,7 +339,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    if ((pos = lGetPosViaElem(ep, CK_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(CK_name), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -345,7 +347,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    ckpt_name = lGetPosString(ep, pos);
    if (!ckpt_name) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }                    
@@ -353,7 +355,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
 
    if (!found) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_CKPT, ckpt_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -361,7 +363,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    /* remove ckpt file 1st */
    if (sge_unlink(CKPTOBJ_DIR, ckpt_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CKPT, ckpt_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EDISK;
    }
@@ -375,7 +377,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
             ruser, rhost, ckpt_name, MSG_OBJ_CKPT));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
 }                     
@@ -530,7 +532,7 @@ int validate_ckpt(lListElem *ep, lList **alpp)
 
    if (!ep) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -556,7 +558,7 @@ int validate_ckpt(lListElem *ep, lList **alpp)
 
       if (!found) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NO_INTERFACE_S, interface));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
@@ -569,7 +571,7 @@ int validate_ckpt(lListElem *ep, lList **alpp)
              !strcasecmp(interface, "APPLICATION-LEVEL") ||
              !strcasecmp(interface, "CRAY-CKPT")) {
             ERROR((SGE_EVENT, MSG_SGETEXT_NO_CKPT_LIC));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return STATUS_EEXIST;
          }
@@ -582,7 +584,7 @@ int validate_ckpt(lListElem *ep, lList **alpp)
                NULL, 0, ckpt_variables)) {
          ERROR((SGE_EVENT, MSG_OBJ_CKPTENV,
                ckpt_commands[i].text, lGetString(ep, CK_name), err_msg));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
@@ -600,7 +602,7 @@ int validate_ckpt(lListElem *ep, lList **alpp)
          strcasecmp(s, "none") &&
          sge_sys_str2signal(s)==-1) {
       ERROR((SGE_EVENT, MSG_CKPT_XISNOTASIGNALSTRING_S , s));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }

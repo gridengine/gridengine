@@ -40,12 +40,13 @@
 #include "sge_confL.h"
 #include "rw_configuration.h"
 #include "sge_log.h"
-#include "parse_range.h"
 #include "sge_rangeL.h"
 #include "sge_stdio.h"
 #include "sge_feature.h" 
 #include "sge_unistd.h"
 #include "sge_spool.h"
+#include "sge_answer.h"
+#include "sge_range.h"
 
 #include "msg_common.h"
 
@@ -76,7 +77,8 @@ u_long32 flags
          if (!alpp) {
             SGE_EXIT(1);
          } else {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(alpp, SGE_EVENT, 
+                            STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;  
          }
@@ -218,33 +220,35 @@ u_long32 flags
             if (!strcmp(value, "none") ||
                 !strcmp(value, "NONE")) {
                lSetString(ep, CF_value, value);
-            } else if (!(rlp = parse_ranges(value, 0, 0, &alp, NULL,
-                INF_NOT_ALLOWED))) {
-
-               lFreeList(alp);
-               lFreeList(lp);
-               fclose(fp);
-               DEXIT;
-               return (NULL);
             } else {
-               /* gids < 1000 are not allowed */
-               lListElem *rep;
+               range_list_parse_from_string(&rlp, &alp, value, 
+                                            0, 0, INF_NOT_ALLOWED);
+               if (rlp == NULL) {
+                  lFreeList(alp);
+                  lFreeList(lp);
+                  fclose(fp);
+                  DEXIT;
+                  return (NULL);
+               } else {
+                  /* gids < 1000 are not allowed */
+                  lListElem *rep;
 
-               for_each (rep, rlp) {
-                  long min;
+                  for_each (rep, rlp) {
+                     long min;
 
-                  min = lGetUlong(rep, RN_min);
-                  if (min < 1000) {
-                     lFreeList(alp);
-                     lFreeList(lp);
-                     fclose(fp);
-                     DEXIT;
-                     return (NULL);
-                  }                  
+                     min = lGetUlong(rep, RN_min);
+                     if (min < 1000) {
+                        lFreeList(alp);
+                        lFreeList(lp);
+                        fclose(fp);
+                        DEXIT;
+                        return (NULL);
+                     }                  
+                  }
+                  lFreeList(alp);
+                  lFreeList(rlp);
+                  lSetString(ep, CF_value, value);
                }
-               lFreeList(alp);
-               lFreeList(rlp);
-               lSetString(ep, CF_value, value);
             }
          }
       } 

@@ -48,6 +48,7 @@
 #include "sge_log.h"
 #include "sge_conf.h"
 #include "sge_security.h"
+#include "sge_answer.h"
 #include "msg_qmaster.h"
 #ifdef QIDL
 #include "qidl_c_gdi.h"
@@ -453,14 +454,14 @@ char *rhost
    
    if(id < EV_ID_ANY || id >= EV_ID_FIRST_DYNAMIC) { /* invalid request */
       ERROR((SGE_EVENT, MSG_EVE_ILLEGALIDREGISTERED_U, u32c(id)));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_ESEMANTIC;
    }
 
    if(subscription == NULL || strlen(subscription) != sgeE_EVENTSIZE) {
       ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_ESEMANTIC;
    }
@@ -515,7 +516,7 @@ char *rhost
    
    INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
          ruser, rhost, name, MSG_EVE_EVENTCLIENT));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    DEXIT; 
    return STATUS_OK;
@@ -574,7 +575,7 @@ char *rhost
 
    if(event_client == NULL) {
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_U, u32c(id)));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -586,14 +587,14 @@ char *rhost
 
    if(ev_d_time < 1) {
       ERROR((SGE_EVENT, MSG_EVE_INVALIDINTERVAL_U, u32c(ev_d_time)));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_ESEMANTIC;
    }
 
    if(subscription == NULL || strlen(subscription) != sgeE_EVENTSIZE) {
       ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_ESEMANTIC;
    }
@@ -635,7 +636,7 @@ char *rhost
 
    DEBUG((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS,
          ruser, rhost, lGetString(event_client, EV_name), MSG_EVE_EVENTCLIENT));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    /* return modified event client object to event client */
    if(eclpp != NULL) {
@@ -1612,7 +1613,8 @@ void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, sge_gd
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, 
+                      STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -1628,7 +1630,8 @@ void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, sge_gd
          id = strtol(idstr, &dptr, 0); 
          if(dptr == idstr) {
             ERROR((SGE_EVENT, MSG_EVE_ILLEGALEVENTCLIENTID_S, idstr));
-            sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(&(answer->alp), SGE_EVENT, 
+                            STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             continue;
          }
       }
@@ -1648,7 +1651,8 @@ void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, sge_gd
             } else {
                ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_U, u32c(id)));
             }
-            sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_EEXIST, 0);
+            answer_list_add(&(answer->alp), SGE_EVENT, 
+                            STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             continue;
          }
          sge_gdi_kill_eventclient_(event_client, host, user, uid, answer);
@@ -1663,7 +1667,8 @@ void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const 
    /* must be either manager or owner of the event client */
    if (sge_manager(user) && uid != lGetUlong(event_client, EV_uid)) {
       ERROR((SGE_EVENT, MSG_COM_NOSHUTDOWNPERMS));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, 
+                      STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -1673,7 +1678,7 @@ void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const 
    /* sge_flush_events(event_client, 0); !!!! not really necessary */
 
    INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, user, host, lGetString(event_client, EV_name)));
-   sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
 }
 
@@ -1715,14 +1720,14 @@ void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer)
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
       DEXIT;
       return;
    }
 
    if (sge_manager(user)) {
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDMONPERMS));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, NUM_AN_WARNING);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_WARNING);
       DEXIT;
       return;
    }
@@ -1731,7 +1736,7 @@ void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer)
      
    if (scheduler == NULL) {
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_WARNING);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_WARNING);
       DEXIT;
       return;
    }
@@ -1740,7 +1745,7 @@ void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer)
    sge_add_event(scheduler, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL);
 
    INFO((SGE_EVENT, MSG_COM_SCHEDMON_SS, user, host));
-   sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 }
 
 

@@ -51,6 +51,7 @@
 #include "sge_log.h"
 #include "version.h"
 #include "sge_feature.h"
+#include "sge_answer.h"
 
 static int read_pref_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);
 
@@ -195,7 +196,7 @@ lListElem *ep
 
    if (!fp) {
       sprintf(SGE_EVENT, "error writing %s\n", filename);
-      sge_add_answer(&answer, SGE_EVENT, STATUS_EDISK, NUM_AN_ERROR);
+      answer_list_add(&answer, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }

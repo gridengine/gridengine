@@ -49,6 +49,7 @@
 #include "Spinbox.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
+#include "sge_answer.h"
 #include "commlib.h"
 #include "def.h"
 #include "qmon_proto.h"
@@ -195,7 +196,7 @@ lListElem *ep
    char buf[BUFSIZ];
    StringConst str;
    int i;
-   dstring sb = {NULL, 0};
+   dstring sb = DSTRING_INIT;
 
    DENTER(GUI_LAYER, "qmonPEFillConf");
    
@@ -234,7 +235,7 @@ lListElem *ep
    if (!lGetNumberOfElem(ql))
       (void) sge_dstring_append(&sb, " NONE"); 
 /*    items[i++] = XmStringCreateLtoR(sb.s, "LIST"); */
-   items[i++] = XmStringCreateLocalized(sb.s);
+   items[i++] = XmStringCreateLocalized((char*)sge_dstring_get_string(&sb));
    sge_dstring_free(&sb);
    
    /* users list */

@@ -47,6 +47,7 @@
 
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
+#include "sge_answer.h"
 #include "commlib.h"
 #include "def.h"
 #include "qmon_proto.h"

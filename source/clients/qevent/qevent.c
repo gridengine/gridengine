@@ -97,7 +97,7 @@ int print_jatask_event(sge_event_type type, sge_event_action action,
          int task_running = (job_status==JRUNNING || job_status==JTRANSFERING);
 
          if (task_running) {
-            fprintf(stdout,"JOB_START (%ld.%ld:ECL_TIME=%ld)\n", job_id ,task_id,timestamp);
+            fprintf(stdout,"JOB_START (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id ,task_id,u32c(timestamp));
             fflush(stdout);  
             Global_jobs_running++;
          }
@@ -109,7 +109,7 @@ int print_jatask_event(sge_event_type type, sge_event_action action,
          u_long job_id = lGetUlong(event, ET_intkey);
          u_long task_id = lGetUlong(event, ET_intkey2);
          /* lWriteElemTo(event, stdout); */
-         fprintf(stdout,"JOB_FINISH (%ld.%ld:ECL_TIME=%ld)\n", job_id, task_id,timestamp);
+         fprintf(stdout,"JOB_FINISH (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id,u32c(timestamp));
          Global_jobs_running--;
          fflush(stdout);  
       }
@@ -122,14 +122,14 @@ int print_jatask_event(sge_event_type type, sge_event_action action,
          if (job_project == NULL) {
             job_project = "NONE";
          }
-         fprintf(stdout,"JOB_ADD (%ld.%ld:ECL_TIME=%ld:project=%s)\n", job_id, task_id, timestamp,job_project);
+         fprintf(stdout,"JOB_ADD (%ld.%ld:ECL_TIME="U32CFormat":project=%s)\n", job_id, task_id, u32c(timestamp),job_project);
          Global_jobs_registered++;
          fflush(stdout);  
       }
       if (type == sgeE_JOB_DEL) { 
          u_long job_id  = lGetUlong(event, ET_intkey);
          u_long task_id = lGetUlong(event, ET_intkey2);
-         fprintf(stdout,"JOB_DEL (%ld.%ld:ECL_TIME=%ld)\n", job_id, task_id,timestamp);
+         fprintf(stdout,"JOB_DEL (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id,u32c(timestamp));
          Global_jobs_registered--;
          fflush(stdout);  
       }
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
    while(!shut_me_down) {
       sge_mirror_process_events();
       timestamp = sge_get_gmt();
-      fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_registered=%ld:ECL_TIME=%ld)\n",Global_jobs_running,Global_jobs_registered,timestamp);
+      fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_registered=%ld:ECL_TIME="U32CFormat")\n",Global_jobs_running,Global_jobs_registered,u32c(timestamp));
       fflush(stdout);  
    }
 

@@ -1,3 +1,5 @@
+CR-2003-02-07-1  Bugfix:    Compile warnings for ALINUX fixed
+
 CR-2003-02-07-0  Testsuite: Throughput performance test:
                  Bugfix:    - Error in Job to Project assignment. This causes
                               wrong project job analysis.

@@ -139,7 +139,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
       !(last_seqno > 9990 && this_seqno < 10)) {
       /* this must be an old report, log and then ignore it */
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-      WARNING((SGE_EVENT, MSG_QMASTER_RECEIVED_OLD_LOAD_REPORT_UUS, 
+      INFO((SGE_EVENT, MSG_QMASTER_RECEIVED_OLD_LOAD_REPORT_UUS, 
                u32c(this_seqno), u32c(last_seqno), rhost));
       DEXIT;
       return;

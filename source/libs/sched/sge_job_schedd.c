@@ -917,58 +917,6 @@ void sge_inc_jc(lList **jcpp, const char *name, int slots)
    return;
 }
 
-int rebuild_jc(
-lList **jcpp,
-lList *job_list 
-) {
-   lListElem *job, *jc_elem, *ja_task;
-   DENTER(TOP_LAYER, "rebuild_jc");
-
-   /* free existing job counter list */
-   *jcpp = lFreeList(*jcpp);
-
-   if (!user_sort) {
-      DEXIT;
-      return 0;
-   }
-
-   /* prepare job counter list */
-   for_each (job, job_list) {
-      u_long32 number_of_tasks;
-
-
-      number_of_tasks = job_get_ja_tasks(job);
-      DPRINTF(("rebuild_jc(1): visiting %d array-jobs\n", number_of_tasks));
-      for_each (ja_task, lGetList(job, JB_ja_tasks)) {
-         if (running_status(lGetUlong(ja_task, JAT_status))) {
-            sge_inc_jc(jcpp, lGetString(job, JB_owner), 1);      
-#if 0
-            DPRINTF(("JOB "u32" is RUNNING\n", lGetUlong(job, JB_job_number)));
-#endif
-         }
-      }
-   }
-
-   /* use job counter list to fill in # of running jobs */
-   for_each (job, job_list) {
-      jc_elem = lGetElemStr(*jcpp, JC_name, lGetString(job, JB_owner));
-      lSetUlong(job, JB_nrunning, jc_elem ? lGetUlong(jc_elem, JC_jobs): 0);
-   }
-
-#if 0
-   {
-      lListElem *jc;
-      for_each (jc, *jcpp) {
-         DPRINTF(("USER: %s JOBS RUNNING: "u32"\n", 
-           lGetString(jc, JC_name), lGetUlong(jc, JC_jobs))); 
-      }
-   }
-#endif
-
-   DEXIT;
-   return 0;
-}
-
 /* 
    This func has to be called each time the number of 
    running jobs has changed 

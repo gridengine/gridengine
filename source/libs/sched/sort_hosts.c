@@ -105,18 +105,9 @@ lList *cplx_list     /* CX_Type */
    lListElem *hlp;
    const char *host;
    double load;
-   lListElem *host_complex;
-   lList *host_complex_attributes = NULL, *tcl = NULL;
+   lList *tcl = NULL;
    
    DENTER(TOP_LAYER, "sort_host_list");
-
-   /* 
-      don't panic if there is no host_complex 
-      or a given attributename does not exist -
-      error handling is done in get_load_value()
-   */
-   if ((host_complex = lGetElemStr(cplx_list, CX_name, SGE_HOST_NAME)))
-      host_complex_attributes = lGetList(host_complex, CX_entries);
 
    for_each (hlp, hl) {
       host = lGetHost(hlp,EH_name);

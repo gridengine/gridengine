@@ -290,6 +290,7 @@ int slots
    if (!(pgrp = lGetElemUlong(priority_group_list, PGR_priority, priority))) {
       if (slots<=0) {
          ERROR((SGE_EVENT, MSG_SCHEDD_INCONSISTENTACCESSTREEDATA));
+         at_trace();
          return;
       }
       pgrp = lAddElemUlong(&priority_group_list, PGR_priority, priority, PGR_Type);
@@ -300,6 +301,7 @@ int slots
    if (!(user = lGetSubStr(pgrp, USR_name, owner, PGR_subordinated_list))) {
       if (slots<=0) {
          ERROR((SGE_EVENT, MSG_SCHEDD_INCONSISTENTACCESSTREEDATA));
+         at_trace();
          return;
       }
       user = lAddSubStr(pgrp, USR_name, owner, PGR_subordinated_list, USR_Type);
@@ -311,6 +313,7 @@ int slots
    resulting = nrunning+slots;
    if ( resulting < 0) {
       ERROR((SGE_EVENT, MSG_SCHEDD_INCONSISTENTACCESSTREEDATA ));
+      at_trace();
       return;
    }
 

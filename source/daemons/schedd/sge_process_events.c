@@ -457,7 +457,6 @@ void cleanup_default_scheduler(void)
    FREE_AND_NULL_IT(lists.project_list);
    FREE_AND_NULL_IT(lists.share_tree);
    FREE_AND_NULL_IT(lists.ckpt_list);
-   FREE_AND_NULL_IT(lists.running_per_user);
    
    /* free job sorting access tree */ 
    at_finish();
@@ -495,7 +494,6 @@ int sge_process_all_events(lList *event_list)
    int ret;
    int sge_mode = feature_is_enabled(FEATURE_SGEEE);
    int rebuild_categories = 0, 
-       rebuild_jobcounter = 0,
        rebuild_accesstree = 0;
 
    DENTER(TOP_LAYER, "sge_process_all_events");
@@ -599,11 +597,8 @@ int sge_process_all_events(lList *event_list)
                for_each(ja_task, (lGetList(ep, JB_ja_tasks))) {
                   was_running = running_status(lGetUlong(ja_task, JAT_status));
                   /* decrease # of running jobs for this user */
-                  if (was_running) {
-                     sge_dec_jc(&lists.running_per_user, lGetString(ep, JB_owner), 1);
-                     if (!sge_mode && user_sort)
-                        at_dec_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
-                  }
+                  if (was_running && !sge_mode && user_sort)
+                     at_dec_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
                }
                /* delete job category if necessary */
                sge_delete_job_category(ep);
@@ -646,11 +641,8 @@ int sge_process_all_events(lList *event_list)
                /* initialize JB_nrunning */
                for_each (ja_task, lGetList(ep, JB_ja_tasks)) {
                   is_running = running_status(lGetUlong(ja_task, JAT_status));
-                  if (is_running) {
-                     sge_inc_jc(&lists.running_per_user, lGetString(ep, JB_owner), 1);
-                     if (!sge_mode && user_sort)
-                        at_inc_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
-                  }
+                  if (is_running && !sge_mode && user_sort)
+                     at_inc_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
 
                   job_log(lGetUlong(ep, JB_job_number), lGetUlong(ja_task, JAT_task_number), "arrived at schedd");
                }
@@ -912,25 +904,24 @@ int sge_process_all_events(lList *event_list)
                if (lGetPosViaElem(new_ja_task, list_nm[i]))
                   lSetList(ja_task, list_nm[i], lCopyList("", lGetList(new_ja_task, list_nm[i])));
 
-            if (old_status != lGetUlong(ja_task, JAT_status)) {
+            if (running_status(lGetUlong(ja_task, JAT_status))) {
                if (!running_status(old_status)) {
                   DPRINTF(("JATASK "u32"."u32": IDLE -> RUNNING\n", intkey, intkey2));
-                  sge_inc_jc(&lists.running_per_user, lGetString(ep, JB_owner), 1);
                   if (!sge_mode && user_sort)
                      at_inc_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
-               } else {
+               }
+            } else {
+               if (running_status(old_status)) {
                   DPRINTF(("JATASK "u32"."u32": RUNNING -> IDLE\n", intkey, intkey2));
-                  sge_dec_jc(&lists.running_per_user, lGetString(ep, JB_owner), 1);
                   if (!sge_mode && user_sort)
                      at_dec_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
                }
-            }
+            }     
          }
          break;
       case sgeE_JOB_LIST:
          lXchgList(event, ET_new_version, &(lists.job_list));
          rebuild_categories = 1;
-         rebuild_jobcounter = 1;
          break;
 
       case sgeE_JOB_MOD_SCHED_PRIORITY:
@@ -1004,7 +995,6 @@ int sge_process_all_events(lList *event_list)
             was_running = running_status(lGetUlong(ja_task, JAT_status));
             /* decrease # of running jobs for this user */
             if (type == sgeE_JOB_FINAL_USAGE && was_running && !strkey) {
-               sge_dec_jc(&lists.running_per_user, lGetString(jep, JB_owner), 1);
                if (!sge_mode && user_sort)
                   at_dec_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
             }
@@ -1541,13 +1531,9 @@ int sge_process_all_events(lList *event_list)
                      goto Error;
                   } else {
                      was_running = running_status(lGetUlong(ja_task, JAT_status));
-                     if (was_running) {
-                        sge_dec_jc(&lists.running_per_user, 
-                                   lGetString(ep, JB_owner), 1);
-                        if (!sge_mode && user_sort)
-                           at_dec_job_counter(lGetUlong(ep, JB_priority), 
-                                              lGetString(ep, JB_owner), 1);
-                     }
+                     if (was_running && !sge_mode && user_sort)
+                        at_dec_job_counter(lGetUlong(ep, JB_priority), 
+                                           lGetString(ep, JB_owner), 1);
                      lRemoveElem(lGetList(ep, JB_ja_tasks), ja_task);
                      /* delete job category if necessary and delete job */
                      if (job_get_ja_tasks(ep) == 0) {
@@ -1589,10 +1575,6 @@ int sge_process_all_events(lList *event_list)
    if (rebuild_accesstree && !sge_mode) {
       DPRINTF(("### ### ### ### ###     REBUILDING ACCESS TREE    ### ### ### ### ###\n"));
       sge_rebuild_access_tree(lists.job_list, user_sort);
-   }
-   if (rebuild_jobcounter) {
-      DPRINTF(("### ### ### ### ###     REBUILDING JOB COUNTER    ### ### ### ### ###\n"));
-      rebuild_jc(&(lists.running_per_user), lists.job_list);
    }
 
    DEXIT;

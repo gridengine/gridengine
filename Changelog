@@ -1,3 +1,14 @@
+AH-2002-04-26-1: Bugfix:    - queue nsuspend > 1 was not used to suspend
+                              multiple jobs in a queue at a time in case
+                              of a suspend threshold alarm.
+                 Issue:     #239
+                 Bugtraq:   #4675410
+                            - use of suspend thresholds and user sort
+                              policy could cause "inconsistent access tree data"
+                              schedd logging and break user sort policy
+                 Issue:     #240
+                 Bugtraq:   #4675416
+
 EB-2002-04-25-0: Enhancem.: Summarize answer messages for array jobs
                  Issue:     #209 (partially)
 

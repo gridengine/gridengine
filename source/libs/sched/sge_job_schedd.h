@@ -45,8 +45,6 @@ void sge_inc_jc(lList** jcpp, const char *name, int slots);
 
 void sge_dec_jc(lList** jcpp, const char *name, int slots);
 
-int rebuild_jc(lList **jcpp, lList *job_list);
-
 int resort_jobs(lList *jc, lList *job_list, const char *owner, lSortOrder *so);
 
 int set_user_sort(int foo);

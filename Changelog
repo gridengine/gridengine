@@ -1,3 +1,5 @@
+SG-2003-07-17-1: Bugfix     fixed the build (removed printf statements)
+
 SG-2003-07-17-0: optim.     - Optimized function ticket computation. Decreased
                             the amount of cull accesses when the pending jobs
                             are set active and inactive for calculation its

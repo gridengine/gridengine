@@ -2965,8 +2965,6 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                   calc_job_deadline_tickets_pass1(&job_ref[job_ndx],
                                                   total_deadline_tickets,
                                                   curr_time);
-printf("2_tickets: %d\n", REF_GET_FTICKET(&job_ref[job_ndx]));
-
    }
 /*
    if(total_functional_tickets > 0)
@@ -3038,7 +3036,6 @@ printf("2_tickets: %d\n", REF_GET_FTICKET(&job_ref[job_ndx]));
                   classic_sgeee_scheduling ? 1 : 0);
 
          sum_of_active_tickets += calc_job_tickets(&job_ref[job_ndx]);
-printf("2_tickets: %d\n", REF_GET_FTICKET(&job_ref[job_ndx]));
       }
    }
    /* set scheduler configuration information to go back to GUI */
@@ -3178,6 +3175,7 @@ printf("2_tickets: %d\n", REF_GET_FTICKET(&job_ref[job_ndx]));
          double pending_jobclass_fshares = sum_of_jobclass_functional_shares;
          double pending_job_fshares = sum_of_job_functional_shares;
          int max;
+
          sort_list = (int *)malloc(num_queued_jobs * sizeof(int));
 
          for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
@@ -3194,6 +3192,7 @@ printf("2_tickets: %d\n", REF_GET_FTICKET(&job_ref[job_ndx]));
          get_functional_weighting_parameters(1, 1, 1, 1, 1, weight);
 
          max =  MIN(num_queued_jobs,max_functional_jobs_to_schedule);
+
          for(i=0; i<max; i++) {
             double ftickets, max_ftickets=0;
             u_long jid, save_jid=0, save_tid=0;
@@ -3242,6 +3241,12 @@ printf("2_tickets: %d\n", REF_GET_FTICKET(&job_ref[job_ndx]));
                   tmp_ndx = sort_list[i];
                   sort_list[i] = sort_list[j];
                   sort_list[j] = tmp_ndx;
+
+                  temp_user = user_fshares;
+                  temp_proj = proj_fshares;
+                  temp_dept = dept_fshares;
+                  temp_jobclass = jobclass_fshares;
+                  temp_job = job_fshares;
                }
             }
 

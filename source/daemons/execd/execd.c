@@ -409,7 +409,7 @@ static void execd_register()
    lSetUlong(hep, EH_featureset_id, feature_get_active_featureset_id());
    lAppendElem(hlp, hep);
 
-   while (true) {
+   while (!shut_me_down) {
       lListElem *aep;
       DPRINTF(("*****Checking In With qmaster*****\n"));
 

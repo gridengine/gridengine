@@ -2271,7 +2271,7 @@ if ( "$QMAKE" == 1) then
 	! -r $SOURCE/3rdparty/qmake/$COMPILE_ARCH/Makefile ) then
       mkdir -p $SOURCE/3rdparty/qmake/$COMPILE_ARCH
       cd $SOURCE/3rdparty/qmake/$COMPILE_ARCH
-      env REMOTE=sge CFLAGS="${CFLAGS}" SGE_ARCH=$buildarch \
+      env REMOTE=sge CFLAGS="${CFLAGS} ${NOERR_CFLAG}" SGE_ARCH=$buildarch \
        ../configure --with-grd=${COMPILE_ARCH} --srcdir=..
    endif
 
@@ -2321,7 +2321,7 @@ if ( "$QTCSH" == 1) then
 	! -r $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH/Makefile ) then
       mkdir -p $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH
       cd $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH
-      env REMOTE=sge CFLAGS="${CFLAGS}" SGE_ARCH=$buildarch \
+      env REMOTE=sge CFLAGS="${CFLAGS} ${NOERR_CFLAG}" SGE_ARCH=$buildarch \
        ../configure --with-grd=${COMPILE_ARCH} --srcdir=..
    endif
 

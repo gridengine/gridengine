@@ -274,9 +274,8 @@ char **argv
             if (*(argv[ii+1])=='-') {
                hostflag = 1;
             } else {
-               u_short id = 0;
                int ret;
-               prepare_enroll("qacct", id, NULL);
+               prepare_enroll("qacct");
                ret = getuniquehostname(argv[++ii], host, 0);
                if (ret != CL_RETVAL_OK) {
                   fprintf(stderr, MSG_HISTORY_FAILEDRESOLVINGHOSTNAME_SS ,
@@ -610,7 +609,7 @@ char **argv
          }
          /* lDumpList(stdout, complex_options, 0); */
          if (!is_path_setup) {
-            prepare_enroll(prognames[QACCT], 0, NULL);
+            prepare_enroll(prognames[QACCT]);
             if (!sge_get_master(1)) {
                SGE_EXIT(1);
             }

@@ -1,3 +1,13 @@
+CR-2004-05-11-1: Bugfix:    o removed ignored parameters from prepare_enroll()
+                            o execd now appends it's pid to temporary startup
+                              file name ( /tmp/execd_messages.PID) 
+                            o execd will now exit after a timeout when binding 
+                              SGE_EXECD_PORT fails 
+                            o communication lib errors are now L10N enabled 
+                 Changed:   commlib gdilib
+                 Issue:     1023, 767
+                 Review:    JG
+
 CR-2004-05-11-0: Bugfix:    sge_gdi_setup() with NULL as alpp can cause
                             sgementation fault.
                  Review:    AA

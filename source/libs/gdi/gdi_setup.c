@@ -337,7 +337,7 @@ int sge_gdi_setup(const char *programname, lList **alpp)
       return AE_QMASTER_DOWN;
    }
 
-   prepare_enroll(programname, 0, NULL);
+   prepare_enroll(programname);
 
    /* ensure gdi default exit func is used if no-one has been specified */
    if (!uti_state_get_exit_func())

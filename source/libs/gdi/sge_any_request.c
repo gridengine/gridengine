@@ -196,7 +196,7 @@ int sge_get_communication_error(void) {
  * NOTES
  *    MT-NOTE: prepare_enroll() is MT safe
  *-----------------------------------------------------------------------*/
-void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
+void prepare_enroll(const char *name)
 {
    int ret_val;
    u_long32 me_who;
@@ -215,21 +215,23 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    /* TODO: activate mutlithreaded communication for SCHEDD and EXECD !!!
             This can only by done when the daemonize functions of SCHEDD and EXECD
             are thread save and reresolve qualified hostname for each thread */
-   if ( uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == QMON /* || uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD */ ) {
-      INFO((SGE_EVENT,"starting up multi thread communication\n"));
+
+   if ( uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == QMON 
+        /* || uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD */ ) {
+      INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
       ret_val = cl_com_setup_commlib(CL_ONE_THREAD,CL_LOG_OFF,gdi_log_flush_func);
    } else {
-      INFO((SGE_EVENT,"starting up communication without threads\n"));
+      INFO((SGE_EVENT,MSG_GDI_SINGLE_THREADED_STARTUP));
       ret_val = cl_com_setup_commlib(CL_NO_THREAD,CL_LOG_OFF,gdi_log_flush_func);
    }
    if (ret_val != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, "cl_com_setup_commlib(): %s\n",cl_get_error_text(ret_val)));
+      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
  
    /* set alias file */
    ret_val = cl_com_set_alias_file(sge_get_alias_path());
    if (ret_val != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, "cl_com_set_alias_file(): %s\n",cl_get_error_text(ret_val)));
+      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
    /* set hostname resolve (compare) method */
@@ -242,13 +244,13 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    ret_val = cl_com_set_resolve_method(resolve_method, (char*)default_domain);
 
    if (ret_val != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, "cl_com_set_resolve_method(): %s\n",cl_get_error_text(ret_val)));
+      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
 
    ret_val = cl_com_set_error_func(general_communication_error);
    if (ret_val != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, "cl_com_set_error_func(): %s\n",cl_get_error_text(ret_val)));
+      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
    me_who = uti_state_get_mewho();
@@ -256,9 +258,11 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    if (handle == NULL) {
       int my_component_id = 0; /* 1 for daemons, 0=automatical for clients */
+      int execd_port = 0;
       if ( me_who == QMASTER ||
            me_who == EXECD   ||
-           me_who == SCHEDD  ) {
+           me_who == SCHEDD  || 
+           me_who == SHADOWD ) {
          my_component_id = 1;   
       }
 
@@ -266,9 +270,16 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
          case EXECD:
             /* add qmaster as known endpoint */
             cl_com_append_known_endpoint_from_name((char*)sge_get_master(gdi_state_get_reread_qmaster_file()), (char*)prognames[QMASTER], 1 ,sge_get_qmaster_port(),CL_CM_AC_DISABLED ,1);
-            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,sge_get_execd_port(),
+            execd_port = sge_get_execd_port(); 
+            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,execd_port ,
                                           (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
+            if (handle == NULL) {
+               CRITICAL((SGE_EVENT, MSG_GDI_CANT_GET_EXECD_HANDLE_SUU, 
+                         (char*) prognames[uti_state_get_mewho()],
+                          u32c(my_component_id), 
+                          u32c(execd_port)));
+            }
             break;
          case QMASTER:
             DPRINTF(("creating QMASTER handle\n"));
@@ -293,9 +304,9 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
             break;
       }
       if (handle == NULL) {
-         CRITICAL((SGE_EVENT,"can't create handle\n"));
+         CRITICAL((SGE_EVENT,MSG_GDI_CANT_CREATE_COM_HANDLE));
       } else {
-         INFO((SGE_EVENT,"local component handle created for prog_name: \"%s\"\n",uti_state_get_sge_formal_prog_name() ));
+         INFO((SGE_EVENT, MSG_GDI_HANDLE_CREATED_FOR_S, uti_state_get_sge_formal_prog_name() ));
       }
    } 
    DEXIT;
@@ -575,7 +586,7 @@ int check_isalive(const char *masterhost)
    }
    handle=cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    if (handle == NULL) {
-      CRITICAL((SGE_EVENT,"could not get communication handle\n"));
+      CRITICAL((SGE_EVENT,MSG_GDI_COULD_NOT_GET_COM_HANDLE_S, (char*) uti_state_get_sge_formal_prog_name() ));
       return CL_RETVAL_UNKNOWN;
    }
    ret = cl_commlib_get_endpoint_status(handle,(char*)masterhost,(char*)prognames[QMASTER] , 1, &status);
@@ -583,12 +594,12 @@ int check_isalive(const char *masterhost)
       DPRINTF(("cl_commlib_get_endpoint_status() returned "SFQ"\n", cl_get_error_text(ret)));
       alive = ret;
    } else {
-      DEBUG((SGE_EVENT,"qmaster is still running\n"));   
+      DEBUG((SGE_EVENT,MSG_GDI_QMASTER_STILL_RUNNING));   
       alive = CL_RETVAL_OK;
    }
 
    if (status != NULL) {
-      DEBUG((SGE_EVENT,"endpoint is up since %ld seconds and has status %ld\n", status->runtime, status->application_status));
+      DEBUG((SGE_EVENT,MSG_GDI_ENDPOINT_UPTIME_UU, u32c( status->runtime) , u32c( status->application_status) ));
       cl_com_free_sirm_message(&status);
    }
  

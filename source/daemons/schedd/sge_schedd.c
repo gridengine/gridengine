@@ -171,7 +171,7 @@ char *argv[]
       SGE_EXIT(1);
    }
    
-   prepare_enroll(prognames[SCHEDD], 1, NULL);
+   prepare_enroll(prognames[SCHEDD]);
 
    if ((ret = sge_occupy_first_three()) >= 0) {
       CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFILEDESCRIPTORFAILED_I , ret));

@@ -69,12 +69,14 @@
 extern char execd_spool_dir[SGE_PATH_MAX];
 extern lList *jr_list;
 
-char execd_messages_file[SGE_PATH_MAX];
+static char execd_messages_file[SGE_PATH_MAX];
 
 /*-------------------------------------------------------------------*/
 void sge_setup_sge_execd()
 {
    char err_str[1024];
+   static char tmp_err_file_name[SGE_PATH_MAX];
+   int my_pid;
 
    DENTER(TOP_LAYER, "sge_setup_sge_execd");
 
@@ -111,9 +113,11 @@ void sge_setup_sge_execd()
    sge_chdir_exit(uti_state_get_unqualified_hostname(), 1); 
    /* having passed the  previous statement we may 
       log messages into the ERR_FILE  */
-   sge_copy_append(TMP_ERR_FILE_EXECD, ERR_FILE, SGE_MODE_APPEND);
+   my_pid = getpid();
+   sprintf(tmp_err_file_name,"%s."U32CFormat"",TMP_ERR_FILE_EXECD,u32c(my_pid));
+   sge_copy_append(tmp_err_file_name, ERR_FILE, SGE_MODE_APPEND);
    sge_switch2start_user();
-   unlink(TMP_ERR_FILE_EXECD);
+   unlink(tmp_err_file_name);
    sge_switch2admin_user();
    log_state_set_log_as_admin_user(1);
    sprintf(execd_messages_file, "%s/%s/%s", conf.execd_spool_dir, 

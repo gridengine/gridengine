@@ -87,7 +87,7 @@ comm_all: commlib commlists_all test_cl_tcp_framework test_cl_commlib test_cl_co
 
 depend: commlib_depend commlistslib_depend
 
-messages: commlib_messages
+messages: commlib_messages commlistslib_messages
 
 clean: commlib_clean
 

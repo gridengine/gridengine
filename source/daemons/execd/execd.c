@@ -129,7 +129,9 @@ char **argv
 ) {
    int i, dispatch_timeout;
    char err_str[1024];
-   int priority_tags[10];
+   int max_enroll_tries;
+   int my_pid;
+   static char tmp_err_file_name[SGE_PATH_MAX];
 
    DENTER_MAIN(TOP_LAYER, "execd");
 
@@ -149,23 +151,37 @@ char **argv
    umask(022);
       
    /* Initialize path for temporary logging until we chdir to spool */
-   log_state_set_log_file(TMP_ERR_FILE_EXECD);
+   my_pid = getpid();
+   sprintf(tmp_err_file_name,"%s."U32CFormat"",TMP_ERR_FILE_EXECD,u32c(my_pid));
+   log_state_set_log_file(tmp_err_file_name);
 
    /* exit func for SGE_EXIT() */
    in_main_loop = 0;
    uti_state_set_exit_func(execd_exit_func);
    sge_setup_sig_handlers(EXECD);
 
-   memset(priority_tags, 0, sizeof(priority_tags));
-   priority_tags[0] = TAG_ACK_REQUEST;
-   priority_tags[1] = TAG_JOB_EXECUTION;
 
    if (sge_setup(EXECD, NULL) != 0) {
       /* sge_setup has already printed the error message */
       SGE_EXIT(1);
    }
    
-   prepare_enroll(prognames[EXECD], 1, priority_tags);
+
+   /* exit if we can't get communication handle (bind port) */
+   max_enroll_tries = 30;
+   while ( cl_com_get_handle((char*)prognames[EXECD],1) == NULL) {
+      prepare_enroll(prognames[EXECD]);
+      max_enroll_tries--;
+      if ( max_enroll_tries <= 0 || shut_me_down ) {
+         /* exit after 30 seconds */
+         CRITICAL((SGE_EVENT, MSG_COM_ERROR));
+         SGE_EXIT(1);
+      }
+      if (  cl_com_get_handle((char*)prognames[EXECD],1) == NULL) {
+        /* sleep when prepare_enroll() failed */
+        sleep(1);
+      }
+   }
 
    if ((i=sge_occupy_first_three())>=0) {
       CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFD_I, i));
@@ -176,79 +192,12 @@ char **argv
 
    parse_cmdline_execd(argv);   
 
-#ifdef ENABLE_NGC
-#else
-   /* check for running execd - ignore $COMMD_HOST */
-   if (start_commd) {
-      set_commlib_param(CL_P_COMMDHOST, 0, uti_state_get_unqualified_hostname(), NULL);
-   }
-   
-   /* start commd if necessary */ 
-   set_commlib_param(CL_P_NAME, 0, prognames[EXECD], NULL);
-   set_commlib_param(CL_P_ID, 1, NULL, NULL);
-   set_commlib_param(CL_P_PRIO_LIST, 0, NULL, priority_tags); 
-   if((ret = enroll())) {
-      DTRACE;
-      if (ret == CL_CONNECT && start_commd) {
-         suc = startprog(1, 2, argv[0], NULL, SGE_COMMD, NULL);
-
-         if (suc) {
-            CRITICAL((SGE_EVENT, MSG_COM_CANTSTARTCOMMD));
-            SGE_EXIT(1);
-         }
-         sleep(10);
-         ret = enroll();
-         switch (ret) {
-         case 0:
-            /* ok */
-            break;
-         case CL_CONNECT:
-            /* usually clients end here if there is no commd */
-            CRITICAL((SGE_EVENT, MSG_SGETEXT_NOCOMMD));
-            SGE_EXIT(1);
-            break;
-         case COMMD_NACK_CONFLICT:
-            /* usually daemons end here if they get enrolled twice */
-            /* or if they get started after a daemon that made no leave() before exit() */
-            CRITICAL((SGE_EVENT, MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S, 
-               uti_state_get_sge_formal_prog_name()
-               ));
-            SGE_EXIT(1);
-            break;
-         case CL_ALREADYDONE:
-            break;
-         default:
-            CRITICAL((SGE_EVENT, MSG_GDI_ENROLLTOCOMMDFAILED_S , cl_errstr(ret)));
-            SGE_EXIT(1);
-         }     
-      }
-      else if (ret == COMMD_NACK_CONFLICT) {
-         CRITICAL((SGE_EVENT, MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S, 
-            uti_state_get_sge_formal_prog_name()));
-         SGE_EXIT(1);
-      }
-      else {
-         CRITICAL((SGE_EVENT, MSG_COM_CANTENROLL2COMMD_S, cl_errstr(ret)));
-         SGE_EXIT(1);
-      }            
-   }
-   
-#endif
    /* daemonizes if qmaster is unreachable */   
    sge_setup_sge_execd();
 
    if (!getenv("SGE_ND"))
       daemonize_execd();
 
-#ifdef ENABLE_NGC
-   /* CR - remove pending messages and reset_last_heard() not necessary */
-#else
-   /* don't wanna get old messages */
-   remove_pending_messages(NULL, 0, 0, 0);
-
-   /* commlib call to mark all commprocs as unknown */
-   reset_last_heard();
-#endif
 
    /* are we using qidle or not */
    sge_ls_qidle(use_qidle);
@@ -388,6 +337,10 @@ static void execd_register()
           *  cl_commlib_trigger() will block 1 second , when there are no messages to read/write 
           */
          for (i = 0; i< 10 ; i++) {
+            if ( cl_com_get_handle((char*)prognames[EXECD],1) == NULL) {
+               DPRINTF(("preparing reenroll"));
+               prepare_enroll(prognames[EXECD]);
+            }
             if ( cl_commlib_trigger(cl_com_get_handle( "execd" ,1)) != CL_RETVAL_OK) {
                sleep(1);
             }

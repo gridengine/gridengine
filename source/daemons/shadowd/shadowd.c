@@ -148,7 +148,6 @@ int argc,
 char **argv 
 ) {
    int heartbeat, last_heartbeat, latest_heartbeat, ret, delay;
-   int priority_tags[10];
    time_t now, last;
    const char *cp;
    fd_set fds;
@@ -217,10 +216,7 @@ char **argv
       }
    }
 
-   memset(priority_tags, 0, sizeof(priority_tags));
-   priority_tags[0] = TAG_ACK_REQUEST;
-   priority_tags[1] = TAG_FINISH_REQUEST;
-   prepare_enroll(prognames[SHADOWD], 1, priority_tags);
+   prepare_enroll(prognames[SHADOWD]);
 
    uti_state_set_exit_func(shadowd_exit_func);
    sge_setup_sig_handlers(SHADOWD);

@@ -152,5 +152,14 @@
 #define MSG_GDI_USAGE_SILENT          _MESSAGE(43293, _("startup silently"))
 
 #define MSG_GDI_GENERAL_COM_ERROR_S   _MESSAGE(43294, _("general communication error: "SFN"\n"))
+
+#define MSG_GDI_MULTI_THREADED_STARTUP     _MESSAGE(43295, _("starting up multi thread communication\n"))
+#define MSG_GDI_SINGLE_THREADED_STARTUP    _MESSAGE(43296, _("starting up communication without threads\n"))
+#define MSG_GDI_CANT_GET_EXECD_HANDLE_SUU  _MESSAGE(43297, _("can't create execd handle for "SFQ" with id "U32CFormat", using port "U32CFormat"\n"))
+#define MSG_GDI_CANT_CREATE_COM_HANDLE     _MESSAGE(43298, _("can't create handle for communication\n"))
+#define MSG_GDI_HANDLE_CREATED_FOR_S       _MESSAGE(43299, _("created communication handel for component name "SFQ"\n"))
+#define MSG_GDI_COULD_NOT_GET_COM_HANDLE_S _MESSAGE(43300, _("could not get communication handle for "SFQ"\n"))
+#define MSG_GDI_QMASTER_STILL_RUNNING      _MESSAGE(43301, _("qmaster is still running\n"))
+#define MSG_GDI_ENDPOINT_UPTIME_UU         _MESSAGE(43302, _("endpoint is up since "U32CFormat" seconds and has status "U32CFormat"\n"))
 #endif /* __MSG_GDILIB_H */
 

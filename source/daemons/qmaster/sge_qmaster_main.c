@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
 
    sge_qmaster_thread_init();
 
-   prepare_enroll(prognames[QMASTER], 1, NULL);
+   prepare_enroll(prognames[QMASTER]);
 
    become_admin_user();
 

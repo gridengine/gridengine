@@ -36,6 +36,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "basis_types.h"
+#include "sge_language.h"
+#include "msg_commlistslib.h"
+
+
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
@@ -44,262 +49,262 @@ const char* cl_get_error_text(int error_id) {       /* CR check */
 
    switch(error_id) {
       case CL_RETVAL_OK                        : {
-         return "no error happened";
+         return MSG_CL_RETVAL_OK;
       }
       case CL_RETVAL_MALLOC                    : {
-         return "can't allocate memory";
+         return MSG_CL_RETVAL_MALLOC;
       }
       case CL_RETVAL_PARAMS                    : {
-         return "got unexpected parameters";
+         return MSG_CL_RETVAL_PARAMS;
       }
       case CL_RETVAL_UNKNOWN                   : {
-         return "can't report a reason";
+         return MSG_CL_RETVAL_UNKNOWN;
       }
       case CL_RETVAL_MUTEX_ERROR               : {
-         return "got general mutex error";
+         return MSG_CL_RETVAL_MUTEX_ERROR;
       }
       case CL_RETVAL_MUTEX_CLEANUP_ERROR       : {
-         return "can't cleanup mutex";
+         return MSG_CL_RETVAL_MUTEX_CLEANUP_ERROR;
       }
       case CL_RETVAL_MUTEX_LOCK_ERROR          : {
-         return "can't lock mutex";
+         return MSG_CL_RETVAL_MUTEX_LOCK_ERROR;
       }
       case CL_RETVAL_MUTEX_UNLOCK_ERROR        : {
-         return "can't unlock mutex";
+         return MSG_CL_RETVAL_MUTEX_UNLOCK_ERROR;
       }
       case CL_RETVAL_CONDITION_ERROR           : {
-         return "got general thread condition error";
+         return MSG_CL_RETVAL_CONDITION_ERROR;
       }
       case CL_RETVAL_CONDITION_CLEANUP_ERROR   : {
-         return "can't cleanup thread condition";
+         return MSG_CL_RETVAL_CONDITION_CLEANUP_ERROR;
       }
       case CL_RETVAL_CONDITION_WAIT_TIMEOUT    : {
-         return "timeout while waiting for thread condition";
+         return MSG_CL_RETVAL_CONDITION_WAIT_TIMEOUT;
       }
       case CL_RETVAL_CONDITION_SIGNAL_ERROR    : {
-         return "received a signal while waiting for thread condition";
+         return MSG_CL_RETVAL_CONDITION_SIGNAL_ERROR;
       }
       case CL_RETVAL_THREAD_CREATE_ERROR       : {
-         return "can't create thread";
+         return MSG_CL_RETVAL_THREAD_CREATE_ERROR;
       }
       case CL_RETVAL_THREAD_START_TIMEOUT      : {
-         return "timeout while waiting for thread start";
+         return MSG_CL_RETVAL_THREAD_START_TIMEOUT;
       }
       case CL_RETVAL_THREAD_NOT_FOUND          : {
-         return "can't find thread";
+         return MSG_CL_RETVAL_THREAD_NOT_FOUND;
       }
       case CL_RETVAL_THREAD_JOIN_ERROR         : {
-         return "got thread join error";
+         return MSG_CL_RETVAL_THREAD_JOIN_ERROR;
       }
       case CL_RETVAL_THREAD_CANCELSTATE_ERROR  : {
-         return "got unexpected thread cancel state";
+         return MSG_CL_RETVAL_THREAD_CANCELSTATE_ERROR;
       }
       case CL_RETVAL_LOG_NO_LOGLIST            : {
-         return "no log list found";
+         return MSG_CL_RETVAL_LOG_NO_LOGLIST;
       }
       case CL_RETVAL_CONNECTION_NOT_FOUND      : {
-         return "can't find connection";
+         return MSG_CL_RETVAL_CONNECTION_NOT_FOUND;
       }
       case CL_RETVAL_HANDLE_NOT_FOUND          : {
-         return "can't find handle";
+         return MSG_CL_RETVAL_HANDLE_NOT_FOUND;
       }
       case CL_RETVAL_THREADS_ENABLED       : {
-         return "threads are enabled";
+         return MSG_CL_RETVAL_THREADS_ENABLED;
       }
       case CL_RETVAL_NO_MESSAGE                : {
-         return "got no message";
+         return MSG_CL_RETVAL_NO_MESSAGE;
       }
       case CL_RETVAL_CREATE_SOCKET             : {
-         return "can't create socket";
+         return MSG_CL_RETVAL_CREATE_SOCKET;
       }
       case CL_RETVAL_CONNECT_ERROR             : {
-         return "can't connect to service";
+         return MSG_CL_RETVAL_CONNECT_ERROR;
       }
       case CL_RETVAL_CONNECT_TIMEOUT           : {
-         return "got connect timeout";
+         return MSG_CL_RETVAL_CONNECT_TIMEOUT;
       }
       case CL_RETVAL_NOT_OPEN                  : {
-         return "not open error";
+         return MSG_CL_RETVAL_NOT_OPEN;
       }
       case CL_RETVAL_SEND_ERROR                : {
-         return "got send error";
+         return MSG_CL_RETVAL_SEND_ERROR;
       }
       case CL_RETVAL_BIND_SOCKET               : {
-         return "can't bind socket";
+         return MSG_CL_RETVAL_BIND_SOCKET;
       }
       case CL_RETVAL_SELECT_ERROR              : {
-         return "got select error";
+         return MSG_CL_RETVAL_SELECT_ERROR;
       }
       case CL_RETVAL_RECEIVE_ERROR             : {
-         return "got receive error";
+         return MSG_CL_RETVAL_RECEIVE_ERROR;
       }
       case CL_RETVAL_PIPE_ERROR                : {
-         return "got pipe error";
+         return MSG_CL_RETVAL_PIPE_ERROR;
       }
       case CL_RETVAL_GETHOSTNAME_ERROR         : {
-         return "can't resolve host name";
+         return MSG_CL_RETVAL_GETHOSTNAME_ERROR;
       }
       case CL_RETVAL_GETHOSTADDR_ERROR         : {
-         return "can't resolve ip address";
+         return MSG_CL_RETVAL_GETHOSTADDR_ERROR;
       }
       case CL_RETVAL_SEND_TIMEOUT              : {
-         return "got send timeout";
+         return MSG_CL_RETVAL_SEND_TIMEOUT;
       }
       case CL_RETVAL_READ_TIMEOUT              : {
-         return "got read timeout";
+         return MSG_CL_RETVAL_READ_TIMEOUT;
       }
       case CL_RETVAL_UNDEFINED_FRAMEWORK       : {
-         return "framework is not defined";
+         return MSG_CL_RETVAL_UNDEFINED_FRAMEWORK;
       }
       case CL_RETVAL_NOT_SERVICE_HANDLER       : {
-         return "handle is not defined as service handler";
+         return MSG_CL_RETVAL_NOT_SERVICE_HANDLER;
       }
       case CL_RETVAL_NO_FRAMEWORK_INIT         : {
-         return "framework is not initalized";
+         return MSG_CL_RETVAL_NO_FRAMEWORK_INIT;
       }
       case CL_RETVAL_SETSOCKOPT_ERROR          : {
-         return "can't set socket options";
+         return MSG_CL_RETVAL_SETSOCKOPT_ERROR;
       }
       case CL_RETVAL_FCNTL_ERROR               : {
-         return "got fcntl error";
+         return MSG_CL_RETVAL_FCNTL_ERROR;
       }
       case CL_RETVAL_LISTEN_ERROR              : {
-         return "got listen error";
+         return MSG_CL_RETVAL_LISTEN_ERROR;
       }
       case CL_RETVAL_NEED_EMPTY_FRAMEWORK      : {
-         return "framework is not uninitalized";
+         return MSG_CL_RETVAL_NEED_EMPTY_FRAMEWORK;
       }
       case CL_RETVAL_LOCK_ERROR                : {
-         return "can't lock error";
+         return MSG_CL_RETVAL_LOCK_ERROR;
       }
       case CL_RETVAL_UNLOCK_ERROR              : {
-         return "can't unlock error";
+         return MSG_CL_RETVAL_UNLOCK_ERROR;
       }
       case CL_RETVAL_WRONG_FRAMEWORK           : {
-         return "used wrong framework";
+         return MSG_CL_RETVAL_WRONG_FRAMEWORK;
       }
       case CL_RETVAL_READ_ERROR                : {
-         return "got read error";
+         return MSG_CL_RETVAL_READ_ERROR;
       }
       case CL_RETVAL_MAX_READ_SIZE             : {
-         return "max read size reached";
+         return MSG_CL_RETVAL_MAX_READ_SIZE;
       }
       case CL_RETVAL_CLIENT_WELCOME_ERROR      : {
-         return "got client welcome error";
+         return MSG_CL_RETVAL_CLIENT_WELCOME_ERROR;
       }
       case CL_RETVAL_UNKOWN_HOST_ERROR         : {
-         return "unkown host error";
+         return MSG_CL_RETVAL_UNKOWN_HOST_ERROR;
       }
       case CL_RETVAL_LOCAL_HOSTNAME_ERROR      : {
-         return "local host name error";
+         return MSG_CL_RETVAL_LOCAL_HOSTNAME_ERROR;
       }
       case CL_RETVAL_UNKNOWN_ENDPOINT          : {
-         return "unknown endpoint error";
+         return MSG_CL_RETVAL_UNKNOWN_ENDPOINT;
       }
       case CL_RETVAL_UNCOMPLETE_WRITE          : {
-         return "couldn't write all data";
+         return MSG_CL_RETVAL_UNCOMPLETE_WRITE;
       }
       case CL_RETVAL_UNCOMPLETE_READ           : {
-         return "couldn't read all data";
+         return MSG_CL_RETVAL_UNCOMPLETE_READ;
       }
       case CL_RETVAL_LIST_DATA_NOT_EMPTY           : {
-         return "list data is not empty";
+         return MSG_CL_RETVAL_LIST_DATA_NOT_EMPTY;
       }
       case CL_RETVAL_LIST_NOT_EMPTY           : {
-         return "list is not empty";
+         return MSG_CL_RETVAL_LIST_NOT_EMPTY;
       }
       case CL_RETVAL_LIST_DATA_IS_NULL: {
-         return "list data is not initalized";
+         return MSG_CL_RETVAL_LIST_DATA_IS_NULL;
       }
       case CL_RETVAL_THREAD_SETSPECIFIC_ERROR: {
-         return "got error setting thread specific data";
+         return MSG_CL_RETVAL_THREAD_SETSPECIFIC_ERROR;
       } 
       case CL_RETVAL_NOT_THREAD_SPECIFIC_INIT: {
-         return "could not initialize thread specific data";
+         return MSG_CL_RETVAL_NOT_THREAD_SPECIFIC_INIT;
       }
       case CL_RETVAL_ALLREADY_CONNECTED: {
-         return "already connected error";
+         return MSG_CL_RETVAL_ALLREADY_CONNECTED;
       }
       case CL_RETVAL_STREAM_BUFFER_OVERFLOW: {
-         return "got stream buffer overflow";
+         return MSG_CL_RETVAL_STREAM_BUFFER_OVERFLOW;
       }
       case CL_RETVAL_GMSH_ERROR: {
-         return "can't read general message size header (GMSH)";
+         return MSG_CL_RETVAL_GMSH_ERROR;
       }
       case CL_RETVAL_MESSAGE_ACK_ERROR: {
-         return "got message acknowledge error";
+         return MSG_CL_RETVAL_MESSAGE_ACK_ERROR;
       }
       case CL_RETVAL_MESSAGE_WAIT_FOR_ACK: {
-         return "message is not acknowledged";
+         return MSG_CL_RETVAL_MESSAGE_WAIT_FOR_ACK;
       }
       case CL_RETVAL_ENDPOINT_NOT_UNIQUE: {
-         return "endpoint is not unique error";
+         return MSG_CL_RETVAL_ENDPOINT_NOT_UNIQUE;
       }
       case CL_RETVAL_SYNC_RECEIVE_TIMEOUT: {
-         return "got syncron message receive timeout error";
+         return MSG_CL_RETVAL_SYNC_RECEIVE_TIMEOUT;
       }
       case CL_RETVAL_MAX_MESSAGE_LENGTH_ERROR: {
-         return "reached max message length";
+         return MSG_CL_RETVAL_MAX_MESSAGE_LENGTH_ERROR;
       }
       case CL_RETVAL_RESOLVING_SETUP_ERROR: {
-         return "resolve setup error";
+         return MSG_CL_RETVAL_RESOLVING_SETUP_ERROR;
       }
       case CL_RETVAL_IP_NOT_RESOLVED_ERROR: {
-         return "can't resolve ip address";
+         return MSG_CL_RETVAL_IP_NOT_RESOLVED_ERROR;
       }
       case CL_RETVAL_MESSAGE_IN_BUFFER: {
-         return "still messages in buffer";
+         return MSG_CL_RETVAL_MESSAGE_IN_BUFFER;
       }
       case CL_RETVAL_CONNECTION_GOING_DOWN: {
-         return "connection is going down";
+         return MSG_CL_RETVAL_CONNECTION_GOING_DOWN;
       }
       case CL_RETVAL_CONNECTION_STATE_ERROR: {
-         return "general connection state error";
+         return MSG_CL_RETVAL_CONNECTION_STATE_ERROR;
       } 
       case CL_RETVAL_SELECT_TIMEOUT: {
-         return "got select timeout";
+         return MSG_CL_RETVAL_SELECT_TIMEOUT;
       }
       case CL_RETVAL_SELECT_INTERRUPT: {
-         return "select was interrupted";
+         return MSG_CL_RETVAL_SELECT_INTERRUPT;
       }
       case CL_RETVAL_NO_SELECT_DESCRIPTORS: {
-         return "no file descriptors for select available";
+         return MSG_CL_RETVAL_NO_SELECT_DESCRIPTORS;
       }
       case CL_RETVAL_ALIAS_EXISTS: {
-         return "alias is already existing";
+         return MSG_CL_RETVAL_ALIAS_EXISTS;
       }
       case CL_RETVAL_NO_ALIAS_FILE: {
-         return "no alias file specified";
+         return MSG_CL_RETVAL_NO_ALIAS_FILE;
       }
       case CL_RETVAL_ALIAS_FILE_NOT_FOUND: {
-         return "could not get alias file";
+         return MSG_CL_RETVAL_ALIAS_FILE_NOT_FOUND;
       }
       case CL_RETVAL_OPEN_ALIAS_FILE_FAILED: {
-         return "could not open alias file";
+         return MSG_CL_RETVAL_OPEN_ALIAS_FILE_FAILED;
       }
       case CL_RETVAL_ALIAS_VERSION_ERROR: {
-         return "wrong alias file version";
+         return MSG_CL_RETVAL_ALIAS_VERSION_ERROR;
       }
       case CL_RETVAL_SECURITY_ANNOUNCE_FAILED: {
-         return "security announce failed";
+         return MSG_CL_RETVAL_SECURITY_ANNOUNCE_FAILED;
       }
       case CL_RETVAL_SECURITY_SEND_FAILED: {
-         return "security send failed";
+         return MSG_CL_RETVAL_SECURITY_SEND_FAILED;
       } 
       case CL_RETVAL_SECURITY_RECEIVE_FAILED: {
-         return "security receive failed";
+         return MSG_CL_RETVAL_SECURITY_RECEIVE_FAILED;
       }
       case CL_RETVAL_ACCESS_DENIED: {
-         return "got access denied";
+         return MSG_CL_RETVAL_ACCESS_DENIED;
       }
       case CL_RETVAL_MAX_CON_COUNT_REACHED: {
-         return "max. connection count reached";
+         return MSG_CL_RETVAL_MAX_CON_COUNT_REACHED;
       }
       case CL_RETVAL_NO_PORT_ERROR: {
-         return "got no valid port number";
+         return MSG_CL_RETVAL_NO_PORT_ERROR;
       }
       case CL_RETVAL_PROTOCOL_ERROR: {
-         return "can't send response for this message id - protocol error";
+         return MSG_CL_RETVAL_PROTOCOL_ERROR;
       }
       
    }

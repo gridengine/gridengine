@@ -1,281 +1,696 @@
-<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="title" content="Grid Engine aggregates compute power and delivers it as a network service.">
+   <meta name="description" content="Grid Engine aggregates compute power and delivers it as a network service. The Grid Engine project facilitates collaborative development, open standards for DRM software, and innovative services and applications.">
+   <meta name="Keys" content="Sun Microsystems, Grid Engine, Sun, Solaris, Sparc, Unix, Linux, computer systems, server, mission critical, high availability, cluster, workgroup server, desktop, workstation, network computer, network computing, distributed computing, DRM, distributed resource management, load balancing, batch, queue, queueing, queuing, software, open source, collaborative, technical computing, scientific computing, high performance, enterprise computing, compute farms, grid computing, grid">
+   <meta name="GENERATOR" content="Mozilla/4.76C-CCK-MCD Netscape [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+   <title>sunsource.net</title>
+<!-- Contents of this file are Copyright 2000, CollabNet. -->
+<!-- Head -->
+<!-- gridengine.sunsource.net -->
+<link rel="STYLESHEET" href="http://www.sunsource.net/branding/style.css" TYPE="text/css">
+<!-- /Head -->
+<!-- Body -->
+</head>
+<body text="#000000" bgcolor="#FFFFFF" topmargin="1" leftmargin="1" marginheight="1" marginwidth="1">
+<!-- /Body --><!-- Banner --><!-- Banner.wm -->
+<table BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH="100%" >
 <tr>
-<td><H2><font color="#336699" class="PageHeader">Source Module Documentation</font></H2></td>
+<td BGCOLOR="#214189"><a href="http://gridengine.sunsource.net/"><img SRC="ge_logo.gif" ALT="" BORDER=0 height=84 width=366></a></td>
+
+<td>
+<table BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH="100%" >
+<tr>
+<td ALIGN=RIGHT WIDTH="144" HEIGHT="38" BGCOLOR="#214189"><spacer type="block" width="144" height="38"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT BGCOLOR="#214189"><a href="http://www.sun.com/"><img SRC="sun_logo.gif" ALT="" BORDER=0 height=46 width=144></a></td>
 </tr>
 </table>
-<table border="0" cellpadding="2" cellspacing="0" width="100%">
+</td>
+</tr>
+
+<tr>
+<td COLSPAN="2" HEIGHT="1" BGCOLOR="#CCCCFF"><spacer type="block" height="1"></td>
+</tr>
+
+<tr>
+<td COLSPAN="2" HEIGHT="1" BGCOLOR="#999999"><spacer type="block" height="1"></td>
+</tr>
+
+<tr>
+<td COLSPAN="2" HEIGHT="1" BGCOLOR="#CCCCCC"><spacer type="block" height="1"></td>
+</tr>
+</table>
+<!-- /Banner.wm --><!-- /Banner -->
+<table BORDER=0 CELLSPACING=0 CELLPADDING=6 WIDTH="100%" >
+<tr>
+<td VALIGN=TOP><!-- Nav Column --><!--Nav_Column-- start left side column for logo and Nav Bar--><!-- Sun's search form --><!-- <FORM action="http://search1.sun.com/Search/sunsource" id="fmSearch" METHOD="post"> --><!-- //Sun's search form --><!-- SourceCast search form --><form ACTION="/servlets/Search" METHOD="get"><!-- //SourceCast search form -->
+<table BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH="160" >
+<tr>
+<td><b><font color="#CC0000">Search</font></b></td>
+</tr>
+
+<tr>
+<td COLSPAN="2"><input TYPE="hidden" NAME="resultsPerPage" VALUE="40"><input TYPE="hidden" NAME="Button" VALUE="Search"><input name="query" size="10"><input TYPE="IMAGE" width="21" height="15" BORDER="0" VALIGN="MIDDLE" SRC="http://www.sunsource.net/branding/gridengine/images/go_button.gif" ALT="search"></td>
+</tr>
+</table>
+</form><!-- Close the search engine form. -->
+<table BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH="160" >
+<caption><!-- <tr> --><!-- <td height="2"><spacer type="block" height="2"></td> --><!-- </tr> --><!-- <tr> --><!-- <td align="right"><small><a href="/servlets/StartPage">My Projects</a> <font --><!-- color="#cc3300" class="plus">+</font></small></td> --><!-- </tr> --><!-- <tr> --><!-- <td height="2"><spacer type="block" height="2"></td>  --><!-- </tr> -->
+<br><!-- begin stats -->
+<br><!-- end stats--></caption>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/servlets/TLogin">Login
+(SunSource)</a><font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/servlets/Join">Register
+(SunSource)</a><font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="6"><spacer type="block" height="6"></td>
+</tr>
+
+<tr>
+<td HEIGHT="3" BGCOLOR="#CC6600"><spacer type="block" height="3"></td>
+</tr>
+
+<tr>
+<td HEIGHT="3"><spacer type="block" height="3"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><b><font color="#000099">PROJECT INFO</font></b></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/project/gridengine/background.html">Background</a>
+<font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/project/gridengine/news.html">News</a>
+<font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/servlets/ProjectSource">Download
+Source</a> <font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/project/gridengine/download.html">Download
+Binaries</a> <font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/project/gridengine/DomainFAQ.html">FAQ</a>
+<font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/servlets/HelpTOC">Help</a>
+<font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="8"><spacer type="block" height="8"></td>
+</tr>
+
+<tr>
+<td HEIGHT="3" BGCOLOR="#669900"><spacer type="block" height="3"></td>
+</tr>
+
+<tr>
+<td HEIGHT="3"><spacer type="block" height="3"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT NOWRAP><b><font color="#000099">RESOURCES</font></b></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/project/gridengine/getstart.html">Getting
+Started</a> <font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/servlets/DomainProjects">View
+Projects</a> <font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/project/gridengine/maillist.html">Mailing
+Lists</a> <font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/servlets/ProjectIssues">Report
+Bugs</a> <font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="8"><spacer type="block" height="8"></td>
+</tr>
+
+<tr>
+<td HEIGHT="3" BGCOLOR="#336699"><spacer type="block" height="3"></td>
+</tr>
+
+<tr>
+<td HEIGHT="3"><spacer type="block" height="3"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><b><font color="#000099">DOCUMENTATION</font></b></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/project/gridengine/documentation.html">Grid
+Engine Docs</a> <font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/project/gridengine/tooldocs.html">Tool
+Docs</a> <font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/project/gridengine/license.html">License</a>
+<font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT NOWRAP><a href="http://gridengine.sunsource.net/project/gridengine/standards.html">Project
+Standards</a> <font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><a href="http://gridengine.sunsource.net/project/gridengine/governance.html">Governance</a>
+<font color="#CC3300">+</font></td>
+</tr>
+
+<tr>
+<td COLSPAN="2" HEIGHT="10"><spacer type="block" height="10"></td>
+</tr>
+
+<tr>
+<td COLSPAN="2" HEIGHT="1" BGCOLOR="#999999"><spacer type="block" height="1"></td>
+</tr>
+
+<tr>
+<td COLSPAN="2" HEIGHT="1"><spacer type="block" height="1"></td>
+</tr>
+
+<tr>
+<td COLSPAN="2" HEIGHT="1" BGCOLOR="#999999"><spacer type="block" height="1"></td>
+</tr>
+
+<tr>
+<td COLSPAN="2" HEIGHT="3"><spacer type="block" height="3"></td>
+</tr>
+
 <tr>
 <td>
+<table BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH="100%" >
+<tr>
+<td ALIGN=RIGHT COLSPAN="2"><b><font color="#336699"><font size=-1>Stats
+Up To:</font></font></b>
+<br><b><font color="#336699"><font size=-1>Oct 13, 2001</font></font></b></td>
+</tr>
 
-<br><br>
-This document describes the Grid Engine source code modules, and
-is written for use by software developers. Our goal is to provide you
-with useful information if you are considering participating in the
-Grid Engine project or will be using Grid Engine source code. In
-addition to this source documentation, the user product documentation
-is necessary for a full understanding of the functional operation of
-the software. Consequently the 
+<tr>
+<td COLSPAN="2" HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
 
-<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/index.html?content-type=text/html" NAME="man pages">man pages</A>
-are refered to herein where appropriate.</P>
+<tr>
+<td COLSPAN="2" HEIGHT="1" BGCOLOR="#CCCCCC"><spacer type="block" height="1"></td>
+</tr>
 
-<P>If you have problems with finding functions or browsing through
-the souce code we suggest the use of grep or preferably <A HREF="http://ctags.sourceforge.net/">ctags</A>.</P>
-<H3><font color="#CC3300" class="SectionHeader">1. Job life cycle</font></h3>
-<P>The job life cycle is a good way to understand to overall system. 
-</P>
-<OL>
-	<LI>Execd's report load information to qmaster</LI>
-	<LI>User submits job using qsub command</LI>
-	<LI>Qmaster notifies Schedd about new job</LI>
-	<LI>Schedd dispatches job to an Execd</LI>
-	<LI>Qmaster delivers job to Execd; Execd starts job using Shepherd</LI>
-	<LI>At job end Execd notfies Qmaster about job finish</LI>
-	<LI>Qmaster feeds jobs resource consumption in accounting database</LI>
-</OL>
-<P><IMG SRC="structure.gif" NAME="Graphic1" ALIGN=MIDDLE WIDTH=657 HEIGHT=415 BORDER=0></P>
-<H3><font color="#CC3300" class="SectionHeader">2. Components</font></h3>
-<H3><font color="#CC3300" class="SectionHeader">2.1 Daemon components</font></H3>
-<P>In the &quot;source/daemons&quot; subdirectory there is one
-directory for each daemon.</P>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/source/browse/gridengine/source/daemons/qmaster/qmaster.html?rev=1&content-type=text/html" NAME="Qmaster">Qmaster</A></H4>
-	<P>The Qmaster (Queue Master) controls the overall behaviour in a
-	cluster. For the purpose of scheduling jobs Qmaster cooperates with
-	Schedd. The Qmaster is the responsible for answering GDI requests
-	from clients and for delivering dispatched jobs to the assigned
-	Execd's. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/schedd/schedd.html?content-type=text/html" NAME="Schedd">Schedd</A></H4>
-	<P>The Schedd (Scheduling Daemon) gets notified via events about all
-	scheduling relevant information. The resulting scheduling decisions
-	are sent as orders to Qmaster. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/execd/execd.html?content-type=text/html" NAME="Execd">Execd</A></H4>
-	<P>The Execd (Execution Daemon) provides Qmaster with information
-	about utilization and availability of resources. Each job sent to
-	Execd by Qmaster is started by writing all relevant information into
-	a couple files describing the job and forking a Sheperd. After
-	Shepherds termination Execd reports details about the job run back
-	to Qmaster. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/shepherd/shepherd.html?content-type=text/html" NAME="Shepherd">Shepherd</A></H4>
-	<P>The Shepherd starts all kinds of jobs according to what he finds
-	in the per-job configuration files written by Execd. If necessary
-	administrator supplied procedures are started before the job is
-	started (prolog, PE start-up), during job run (checkpoint/migrate,
-	terminate/suspend/resume) and after job termination (PE shut-down,
-	epilog). 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/commd/commd.html?content-type=text/html" NAME="Commd">Commd</A></H4>
-	<P>Nearly all network communication in a cluster is handled via the
-	Commd (Communication Daemon). Daemons and clients use the commlib
-	(communication library) calls to send and receive messages
-	(sync/async), but also a hostname resolving service is provided by
-	Commd. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/shadowd/shadowd.html?content-type=text/html" NAME="Shadowd">Shadowd</A></H4>
-	<P>The Shadowd (Shadow Daemon) detects failures of the Qmaster and
-	starts a new Qmaster if necessary. 
-	</P>
-</UL>
-<H3><font color="#CC3300" class="SectionHeader">2.2 Client components</font></H3>
-<P>In the &quot;source/clients&quot;
-subdirectory there is one directory for each client.</P>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qsub?content-type=text/html" NAME="Qsub">Qsub</A></H4>
-	<P>Qsub combines all information provided with the command line and
-	in per-cluster or per-user default settings files in a job object
-	and sends the job via GDI to Qmaster. As response Qsub receives a
-	job ID and prints it. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qrsh?content-type=text/html" NAME="Qrsh">Qrsh</A></H4>
-	<P>Qrsh combines all job relevant information in a job object like
-	Qsub does and sends it as an interactive job via GDI to Qmaster. For
-	stdin/stdout/stderr redirection rsh command is forked by qrsh. The
-	rsh command cooperates with the rshd forked by shepherd for jobs of
-	that type. Instead of rsh/rshd also other commands can be used. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/qmon/qmon.html?content-type=text/html" NAME="Qmon">Qmon</A></H4>
-	<P>Qmon is a Motif GUI allowing to administer and monitor the system
-	but also to submit and monitor jobs. Qmon uses GDI to retrieve from
-	Qmaster the whole configuration and to change it. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qdel?content-type=text/html" NAME="Qdel">Qdel</A></H4>
-	<P>Qdel uses GDI to initiate job termination. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qacct?content-type=text/html" NAME="Qacct">Qacct</A></H4>
-	<P>Qacct produces accounting reports by scanning the accounting data
-	file. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qlogin?content-type=text/html" NAME="Qlogin">Qlogin</A></H4>
-	<P>Qlogin invokes an interactive login session in the current
-	terminal using GDI. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qresub?content-type=text/html" NAME="Qresub">Qresub</A></H4>
-	<P>Qresub creates a copy from an existing job using GDI. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qselect?content-type=text/html" NAME="Qselect">Qselect</A></H4>
-	<P>Qselect prints a list of queues matching the specified criteria
-	from the command line. The necessary information about the clusters
-	configuration is fetched from Qmaster using GDI. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qalter?content-type=text/html" NAME="Qalter">Qalter</A></H4>
-	<P>Qalter modifies an already submitted job using GDI. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qhold?content-type=text/html" NAME="Qhold">Qhold</A></H4>
-	<P>Qhold puts a hold on a job using Qalter. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qrls?content-type=text/html" NAME="Qrls">Qrls</A></H4>
-	<P>Qhold releases a hold from a job using Qalter. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qsh?content-type=text/html" NAME="Qsh">Qsh</A></H4>
-	<P>Qsh submits an interactive X-windows session job using GDI. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qconf?content-type=text/html" NAME="Qconf">Qconf</A></H4>
-	<P>Qconf allows to add, delete, modify and view the configuration of
-	all kind of configuration objects. Qconf uses GDI to do this. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qhost?content-type=text/html" NAME="Qhost">Qhost</A></H4>
-	<P>Qhost shows the current status of all hosts in the cluster based
-	on information retrieved using GDI. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qstat?content-type=text/html" NAME="Qstat">Qstat</A></H4>
-	<P>Qstat shows the current status of all queues in the cluster based
-	on information retrieved using GDI. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qmod?content-type=text/html" NAME="Qmod">Qmod</A></H4>
-	<P>Qmod allows to modify the state of queues and jobs by using GDI. 
-	</P>
-</UL>
-<H3><font color="#CC3300" class="SectionHeader">2.3 Libraries</font></H3>
-<P>In the &quot;source/libs&quot;
-subdirectory there is one directory for each library.</P>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/rmon/rmon.html?content-type=text/html" NAME="librmon">librmon</A></H4>
-	<P>This low level library provides functionality to run daemons in a
-	monitoring mode. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/rmon/uti.html?content-type=text/html" NAME="libuti">libuti</A></H4>
-	<P>A low level library with several utility functions. This library
-	bases on functionality of librmon. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/cull/cull.html?content-type=text/html" NAME="libcull">libcull</A></H4>
-	<P>The generic list library which is used in nearly all components
-	of the system. The cull library bases on functionality of libuti and
-	librmon. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/comm/comm.html?content-type=text/html" NAME="libcomm">libcomm</A></H4>
-	<P>The communication libraryis the interface providing communication
-	via Commd. This library bases on librmon. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/gdi/gdi.html?content-type=text/html" NAME="libgdi">libgdi</A></H4>
-	<P>The Gridengine Database Interface library provides methods to
-	retrieve, add, delete and modify all internal objects hosted by the
-	Qmaster. The GDI library bases on libcomm and libcull. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/sched/sched.html?content-type=text/html" NAME="libsched">libsched</A></H4>
-	<P>This library contains many important high-level functions mainly
-	used by Schedd. Some of them however have turned out to be very
-	helpful also in other clients like Qstat, Qhost or qmon and also in
-	Qmaster. 
-	</P>
-</UL>
-<H3><font color="#CC3300" class="SectionHeader">2.4 Third-party components</font></H3>
-<P>The &quot;source/3rdparty&quot; directory contains modules with
-different licenses than SISSL. 
-</P>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty/qmake/qmake.html?content-type=text/html" NAME="Qmake">Qmake</A></H4>
-	<P>This client is a GNU make enhanced with transparent remote
-	execution. The implementation of transparent remote execution bases
-	on a forked 'qrsh -inherit' command. 
-	</P>
-</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty/qtcsh/qtcsh.html?content-type=text/html" NAME="Qtcsh">Qtcsh</A></H4>
-	<P>This client program is an extension to the popular csh(1)
-	derivative tcsh. The implementation of transparent remote execution
-	bases on libgdi. 
-	</P>
-	</UL>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty/remote/remote.html?content-type=text/html" NAME="Qtcsh">Remote
-	tools</A></H4>
-	<P>This directory is the home of rsh, rshd, rlogin.</P>
-</UL>
-<H3><font color="#CC3300" class="SectionHeader">2.5 Utilities</font></H3>
-<P>The &quot;source/utilbin&quot; directory contains <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/utilbin/utilbin.html?content-type=text/html" NAME="binaries">binaries</A>
-that are needed during installation of Grid Engine, for diagnosis purposes or for the job samples.</P>
-<H3><font color="#CC3300" class="SectionHeader">2.6 Dist</font></H3>
-<P>The &quot;source/dist&quot; directory contains <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/dist/dist.html?content-type=text/html" NAME="files and directories">files and directories</A>
-which are part of a Grid Engine distribution.</P>
-<H3><font color="#CC3300" class="SectionHeader">3. Security</font></H3>
-<P>The &quot;source/security&quot; directory contains modules handling security.
-</P>
-<UL>
-	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/security/security.html?content-type=text/html" NAME="Security">Security</A></H4>
-	<P>Contains security related modules.</P>
-</UL>
-<H3><font color="#CC3300" class="SectionHeader">4. Experimental</font></H3>
-<P>Each subdirectory of the &quot;source/experimental&quot; directory contains an
-experimental module. Those modules cannot be expected to work - although some may, 
-at least with a bit of work. The 
-<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/experimental/experimental.html?content-type=text/html" NAME="experimental modules">experimental modules</A>
-are provided here for information purposes mainly and may be helpful if you plan to 
-enhance Grid Engine in a direction similar to one of the modules. Some also can be a 
-valid starting point for such an effort.
+<tr>
+<td COLSPAN="2" HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><font size=-1>Members</font></td>
+
+<td ALIGN=RIGHT><font size=-1>121</font></td>
+</tr>
+
+<tr>
+<td COLSPAN="2" HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><font size=-1>Posts</font></td>
+
+<td ALIGN=RIGHT><font size=-1>196</font></td>
+</tr>
+
+<tr>
+<td COLSPAN="2" HEIGHT="2"><spacer type="block" height="2"></td>
+</tr>
+
+<tr>
+<td ALIGN=RIGHT><font size=-1>CVS Commits</font></td>
+
+<td ALIGN=RIGHT><font size=-1>794</font></td>
+</tr>
+</table>
+</td>
+</tr>
+
+<tr>
+<td COLSPAN="2" HEIGHT="1"><spacer type="block" height="1"></td>
+</tr>
+
+<tr>
+<td COLSPAN="2" HEIGHT="1" BGCOLOR="#999999"><spacer type="block" height="1"></td>
+</tr>
+</table>
+<!--Nav_Column End--><!-- HelpBox Start --><!-- HelpBox End --><!-- /Nav Column --></td>
+
+<td VALIGN=TOP WIDTH="100%"><!-- project nav --><!-- Project Navigation -->
+<table BORDER=0 CELLSPACING=2 CELLPADDING=0 >
+<tr>
+<td VALIGN=TOP CLASS="ProjectDownloadHeader">Project</td>
+
+<td VALIGN=TOP CLASS="PlainText"><a href="http://gridengine.sunsource.net/servlets/ProjectHome" CLASS="ProjectName">Project
+Home</a> | <a href="http://gridengine.sunsource.net/project/gridengine/news.html" CLASS="ProjectName">News</a>
+| <a href="http://gridengine.sunsource.net/servlets/ProjectDownloadList" CLASS="ProjectName">File
+Exchange</a> | <a href="http://gridengine.sunsource.net/servlets/ProjectMemberList" CLASS="ProjectName">Members</a></td>
+</tr>
+
+<tr>
+<td VALIGN=TOP CLASS="ProjectDownloadHeader">Resources:&nbsp;</td>
+
+<td VALIGN=TOP CLASS="PlainText"><a href="http://gridengine.sunsource.net/project/gridengine/maillist.html" CLASS="ProjectName">Mailing
+Lists</a> | <a href="http://gridengine.sunsource.net/servlets/ProjectIssues" CLASS="ProjectName">Issue
+Tracking</a></td>
+</tr>
+</table>
+
+<hr SIZE="1" NOSHADE><!-- /Project Navigation --><!-- Broadcast Message --><!-- /Broadcast Message --><!-- Message --><!-- /Message --><!-- Servlet-Specific template --><!-- Wrap Servlet-Specific Help -->
+<table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+<tr>
+<td>
+<h2>
+<font color="#336699">Source Module Documentation</font></h2>
 </td>
 </tr>
 </table>
 
+<table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+<tr>
+<td>
+<p>This document describes the Grid Engine source code modules, and is
+written for use by software developers. Our goal is to provide you with
+useful information if you are considering participating in the Grid Engine
+project or will be using Grid Engine source code. In addition to this source
+documentation, the user product documentation is necessary for a full understanding
+of the functional operation of the software. Consequently the&nbsp;<a NAME="man pages" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/index.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/index.html?content-type=text/html" NAME="man pages">man
+pages</a> are refered to herein where appropriate.
+<p>If you have problems with finding functions or browsing through the
+souce code we suggest the use of grep or preferably <a href="http://ctags.sourceforge.net/">ctags</a>.
+<h3>
+<font color="#CC3300">1. Job life cycle</font></h3>
+The job life cycle is a good way to understand to overall system.&nbsp;
+<ol>
+<li>
+Execds report load information to qmaster</li>
+
+<li>
+User submits job using qsub command</li>
+
+<li>
+Qmaster notifies Schedd about new job</li>
+
+<li>
+Schedd dispatches job to an Execd</li>
+
+<li>
+Qmaster delivers job to Execd; Execd starts job using Shepherd</li>
+
+<li>
+At job end Execd notfies Qmaster about job finish</li>
+
+<li>
+Qmaster feeds jobs resource consumption in accounting database</li>
+</ol>
+<img SRC="structure.gif" NAME="Graphic1" BORDER=0 height=415 width=657 align=CENTER>
+<h3>
+<font color="#CC3300">2. Components</font></h3>
+
+<h3>
+<font color="#CC3300">2.1 Daemon components</font></h3>
+In the "source/daemons" subdirectory there is one directory for each daemon.
+<ul>
+<h4>
+<a NAME="Qmaster" HREF="http://gridengine.sunsource.net/source/browse/gridengine/source/daemons/qmaster/qmaster.html?rev=1&content-type=text/html"></a><a href="http://gridengine.sunsource.net/source/browse/gridengine/source/daemons/qmaster/qmaster.html?rev=1&content-type=text/html" NAME="Qmaster">Qmaster</a></h4>
+The Qmaster (Queue Master) controls the overall behaviour in a cluster.
+For the purpose of scheduling jobs Qmaster cooperates with Schedd. The
+Qmaster is the responsible for answering GDI requests from clients and
+for delivering dispatched jobs to the assigned Execd's.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Schedd" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/schedd/schedd.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/schedd/schedd.html?content-type=text/html" NAME="Schedd">Schedd</a></h4>
+The Schedd (Scheduling Daemon) gets notified via events about all scheduling
+relevant information. The resulting scheduling decisions are sent as orders
+to Qmaster.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Execd" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/execd/execd.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/execd/execd.html?content-type=text/html" NAME="Execd">Execd</a></h4>
+The Execd (Execution Daemon) provides Qmaster with information about utilization
+and availability of resources. Each job sent to Execd by Qmaster is started
+by writing all relevant information into a couple files describing the
+job and forking a Sheperd. After Shepherds termination Execd reports details
+about the job run back to Qmaster.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Shepherd" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/shepherd/shepherd.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/shepherd/shepherd.html?content-type=text/html" NAME="Shepherd">Shepherd</a></h4>
+The Shepherd starts all kinds of jobs according to what he finds in the
+per-job configuration files written by Execd. If necessary administrator
+supplied procedures are started before the job is started (prolog, PE start-up),
+during job run (checkpoint/migrate, terminate/suspend/resume) and after
+job termination (PE shut-down, epilog).&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Commd" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/commd/commd.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/commd/commd.html?content-type=text/html" NAME="Commd">Commd</a></h4>
+Nearly all network communication in a cluster is handled via the Commd
+(Communication Daemon). Daemons and clients use the commlib (communication
+library) calls to send and receive messages (sync/async), but also a hostname
+resolving service is provided by Commd.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Shadowd" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/shadowd/shadowd.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/shadowd/shadowd.html?content-type=text/html" NAME="Shadowd">Shadowd</a></h4>
+The Shadowd (Shadow Daemon) detects failures of the Qmaster and starts
+a new Qmaster if necessary.&nbsp;</ul>
+
+<h3>
+<font color="#CC3300">2.2 Client components</font></h3>
+In the "source/clients" subdirectory there is one directory for each client.
+<ul>
+<h4>
+<a NAME="Qsub" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qsub?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qsub?content-type=text/html" NAME="Qsub">Qsub</a></h4>
+Qsub combines all information provided with the command line and in per-cluster
+or per-user default settings files in a job object and sends the job via
+GDI to Qmaster. As response Qsub receives a job ID and prints it.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qrsh" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qrsh?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qrsh?content-type=text/html" NAME="Qrsh">Qrsh</a></h4>
+Qrsh combines all job relevant information in a job object like Qsub does
+and sends it as an interactive job via GDI to Qmaster. For stdin/stdout/stderr
+redirection rsh command is forked by qrsh. The rsh command cooperates with
+the rshd forked by shepherd for jobs of that type. Instead of rsh/rshd
+also other commands can be used.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qmon" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/qmon/qmon.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/qmon/qmon.html?content-type=text/html" NAME="Qmon">Qmon</a></h4>
+Qmon is a Motif GUI allowing to administer and monitor the system but also
+to submit and monitor jobs. Qmon uses GDI to retrieve from Qmaster the
+whole configuration and to change it.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qdel" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qdel?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qdel?content-type=text/html" NAME="Qdel">Qdel</a></h4>
+Qdel uses GDI to initiate job termination.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qacct" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qacct?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qacct?content-type=text/html" NAME="Qacct">Qacct</a></h4>
+Qacct produces accounting reports by scanning the accounting data file.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qlogin" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qlogin?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qlogin?content-type=text/html" NAME="Qlogin">Qlogin</a></h4>
+Qlogin invokes an interactive login session in the current terminal using
+GDI.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qresub" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qresub?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qresub?content-type=text/html" NAME="Qresub">Qresub</a></h4>
+Qresub creates a copy from an existing job using GDI.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qselect" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qselect?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qselect?content-type=text/html" NAME="Qselect">Qselect</a></h4>
+Qselect prints a list of queues matching the specified criteria from the
+command line. The necessary information about the clusters configuration
+is fetched from Qmaster using GDI.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qalter" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qalter?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qalter?content-type=text/html" NAME="Qalter">Qalter</a></h4>
+Qalter modifies an already submitted job using GDI.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qhold" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qhold?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qhold?content-type=text/html" NAME="Qhold">Qhold</a></h4>
+Qhold puts a hold on a job using Qalter.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qrls" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qrls?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qrls?content-type=text/html" NAME="Qrls">Qrls</a></h4>
+Qhold releases a hold from a job using Qalter.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qsh" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qsh?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qsh?content-type=text/html" NAME="Qsh">Qsh</a></h4>
+Qsh submits an interactive X-windows session job using GDI.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qconf" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qconf?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qconf?content-type=text/html" NAME="Qconf">Qconf</a></h4>
+Qconf allows to add, delete, modify and view the configuration of all kind
+of configuration objects. Qconf uses GDI to do this.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qhost" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qhost?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qhost?content-type=text/html" NAME="Qhost">Qhost</a></h4>
+Qhost shows the current status of all hosts in the cluster based on information
+retrieved using GDI.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qstat" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qstat?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qstat?content-type=text/html" NAME="Qstat">Qstat</a></h4>
+Qstat shows the current status of all queues in the cluster based on information
+retrieved using GDI.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qmod" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qmod?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/clients/clients.html#qmod?content-type=text/html" NAME="Qmod">Qmod</a></h4>
+Qmod allows to modify the state of queues and jobs by using GDI.&nbsp;</ul>
+
+<h3>
+<font color="#CC3300">2.3 Libraries</font></h3>
+In the "source/libs" subdirectory there is one directory for each library.
+<ul>
+<h4>
+<a NAME="librmon" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/rmon/rmon.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/rmon/rmon.html?content-type=text/html" NAME="librmon">librmon</a></h4>
+This low level library provides functionality to run daemons in a monitoring
+mode.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="libuti" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/rmon/uti.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/rmon/uti.html?content-type=text/html" NAME="libuti">libuti</a></h4>
+A low level library with several utility functions. This library bases
+on functionality of librmon.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="libcull" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/cull/cull.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/cull/cull.html?content-type=text/html" NAME="libcull">libcull</a></h4>
+The generic list library which is used in nearly all components of the
+system. The cull library bases on functionality of libuti and librmon.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="libcomm" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/comm/comm.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/comm/comm.html?content-type=text/html" NAME="libcomm">libcomm</a></h4>
+The communication libraryis the interface providing communication via Commd.
+This library bases on librmon.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="libgdi" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/gdi/gdi.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/gdi/gdi.html?content-type=text/html" NAME="libgdi">libgdi</a></h4>
+The Gridengine Database Interface library provides methods to retrieve,
+add, delete and modify all internal objects hosted by the Qmaster. The
+GDI library bases on libcomm and libcull.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="libsched" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/sched/sched.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/sched/sched.html?content-type=text/html" NAME="libsched">libsched</a></h4>
+This library contains many important high-level functions mainly used by
+Schedd. Some of them however have turned out to be very helpful also in
+other clients like Qstat, Qhost or qmon and also in Qmaster.&nbsp;</ul>
+
+<h3>
+<font color="#CC3300">2.4 Third-party components</font></h3>
+The "source/3rdparty" directory contains modules with different licenses
+than SISSL.&nbsp;
+<ul>
+<h4>
+<a NAME="Qmake" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty/qmake/qmake.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty/qmake/qmake.html?content-type=text/html" NAME="Qmake">Qmake</a></h4>
+This client is a GNU make enhanced with transparent remote execution. The
+implementation of transparent remote execution bases on a forked 'qrsh
+-inherit' command.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qtcsh" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty/qtcsh/qtcsh.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty/qtcsh/qtcsh.html?content-type=text/html" NAME="Qtcsh">Qtcsh</a></h4>
+This client program is an extension to the popular csh(1) derivative tcsh.
+The implementation of transparent remote execution bases on libgdi.&nbsp;</ul>
+
+<ul>
+<h4>
+<a NAME="Qtcsh" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty/remote/remote.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty/remote/remote.html?content-type=text/html" NAME="Qtcsh">Remote
+tools</a></h4>
+This directory is the home of rsh, rshd, rlogin.</ul>
+
+<h3>
+<font color="#CC3300">2.5 Utilities</font></h3>
+The "source/utilbin" directory contains&nbsp;<a NAME="binaries" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/utilbin/utilbin.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/utilbin/utilbin.html?content-type=text/html" NAME="binaries">binaries</a>
+that are needed during installation of Grid Engine, for diagnosis purposes
+or for the job samples.
+<h3>
+<font color="#CC3300">2.6 Dist</font></h3>
+The "source/dist" directory contains&nbsp;<a NAME="files and directories" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/dist/dist.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/dist/dist.html?content-type=text/html" NAME="files and directories">files
+and directories</a> which are part of a Grid Engine distribution.
+<h3>
+<font color="#CC3300">3. Security</font></h3>
+The "source/security" directory contains modules handling security.
+<ul>
+<h4>
+<a NAME="Security" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/security/security.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/security/security.html?content-type=text/html" NAME="Security">Security</a></h4>
+Contains security related modules.</ul>
+
+<h3>
+<font color="#CC3300">4. Experimental</font></h3>
+Each subdirectory of the "source/experimental" directory contains an experimental
+module. Those modules cannot be expected to work - although some may, at
+least with a bit of work. The&nbsp;<a NAME="experimental modules" HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/experimental/experimental.html?content-type=text/html"></a><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/experimental/experimental.html?content-type=text/html" NAME="experimental modules">experimental
+modules</a> are provided here for information purposes mainly and may be
+helpful if you plan to enhance Grid Engine in a direction similar to one
+of the modules. Some also can be a valid starting point for such an effort.</td>
+</tr>
+</table>
+<!-- /Servlet-Specific template --></td>
+</tr>
+</table>
+<!-- Footer --><!-- Footer -->
+<table BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH="100%" >
+<tr>
+<td COLSPAN="3" HEIGHT="20"><spacer type="block" height="20" width="1"></td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="10"><img SRC="pixel.gif" ></td>
+
+<td WIDTH="100%">
+<hr size="1" noshade></td>
+
+<td VALIGN=TOP WIDTH="10"><img SRC="pixel.gif" ></td>
+</tr>
+</table>
+
+<table BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH="100%" >
+<tr>
+<td WIDTH="50"><spacer type="block" width="50" height="1"></td>
+
+<td ALIGN=CENTER VALIGN=TOP NOWRAP class="Footer"><a href="http://www.collab.net"><img SRC="collabnetlabel.gif" BORDER=0 height=31 width=88></a></td>
+
+<td WIDTH="30"><spacer type="block" width="30" height="1"></td>
+
+<td ALIGN=CENTER><span class="Footer"><a href="http://sun.com">This site
+sponsored by Sun Microsystems, Inc.</a>
+<br>Copyright &copy; 2001 Collab.Net, Inc. All rights reserved. Copyright
+&copy; 2001 Sun Microsystems, Inc. All rights reserved.</span>
+<center><a href="http://gridengine.sunsource.net/servlets/ProjectHome">Home</a>
+| <a href="http://gridengine.sunsource.net/servlets/HelpTOC">Help</a> |
+<a href="http://gridengine.sunsource.net/project/gridengine/DomainFeedback.html">Feedback</a>
+| <a href="http://gridengine.sunsource.net/project/gridengine/DomainFAQ.html">FAQ</a>
+| <a href="http://gridengine.sunsource.net/project/gridengine/legalese.html">Legalese</a></center>
+</td>
+
+<td WIDTH="30"><spacer type="block" width="30" height="1"></td>
+
+<td ALIGN=CENTER VALIGN=TOP><a href="http://www.sunsource.net"><img SRC="color_sslogo.gif" BORDER=0 height=24 width=159></a></td>
+
+<td WIDTH="50"><spacer type="block" width="50" height="1"></td>
+</tr>
+
+<tr>
+<td COLSPAN="7" HEIGHT="10"><spacer type="block" height="10"></td>
+</tr>
+</table>
+<!-- /Footer --><!-- /Footer -->
+</body>
+</html>

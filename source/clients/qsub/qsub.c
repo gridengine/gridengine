@@ -89,7 +89,7 @@ char **argv
    u_long32 start, end, step;
    u_long32 num_tasks;
    int count, stat;
-   char *jobid_string;
+   char *jobid_string = NULL;
 
    DENTER_MAIN(TOP_LAYER, "qsub");
 
@@ -321,7 +321,7 @@ char **argv
                   if (signaled) {
                      dstring termsig = DSTRING_INIT;
                      japi_wtermsig(&termsig, stat, NULL);
-                     printf(MSG_QSUB_JOBRECEIVEDSIGNAL_U, jobid_strings[count], termsig);
+                     printf(MSG_QSUB_JOBRECEIVEDSIGNAL_U, jobid_strings[count], sge_dstring_get_string (&termsig));
                      sge_dstring_free (&termsig);
                   }
                   else {

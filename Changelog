@@ -1,3 +1,8 @@
+SG-2004-09-06-0: Cleanup:   Cleanup in the order processing, event master, and
+                            event client
+                 Changed:   qmaster, scheduler
+                 Review:    EB
+
 AH-2004-09-06-0: Bugfix:    Effect of -p priority and weight_priority not 
                             described in sge_priority(5)
                  Changed:   man page

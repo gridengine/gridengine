@@ -257,7 +257,7 @@ lListElem *lFindLast(const lList *lp, const lCondition *cp);
 #define mt_is_unique(mt) ((mt) & CULL_UNIQUE)
 
 bool lListElem_is_pos_changed(const lListElem *ep, int pos);
-
+bool lListElem_is_changed(const lListElem *ep);
 bool lList_clear_changed_info(lList *lp);
 bool lListElem_clear_changed_info(lListElem *lp);
 

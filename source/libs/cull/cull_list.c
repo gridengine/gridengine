@@ -2411,6 +2411,13 @@ lListElem_is_pos_changed(const lListElem *ep, int pos)
    return sge_bitfield_get(ep->changed, pos);
 }
 
+
+bool
+lListElem_is_changed(const lListElem *ep)
+{
+   return sge_bitfield_changed(ep->changed);
+}
+
 /****** cull_list/lList_clear_changed_info() ***********************************
 *  NAME
 *     lList_clear_changed_info() -- clear changed info of a list

@@ -120,36 +120,16 @@ lList **topp  /* ticket orders ptr ptr */
    u_long32 job_number, task_number;
    const char *or_pe, *q_name=NULL;
    u_long32 or_type;
-   int seq_no;
    lList *acl, *xacl;
    lListElem *jep, *qep, *master_qep, *oep, *hep, *master_host = NULL, *jatp = NULL;
-   u_long32 force, state;
+   u_long32 state;
    u_long32 pe_slots = 0, q_slots, q_version, task_id_range = 0;
    lListElem *pe = NULL;
 
    DENTER(TOP_LAYER, "sge_follow_order");
 
-   strcpy(SGE_EVENT, MSG_UNKNOWN_ERROR_NL);
-
    or_type=lGetUlong(ep, OR_type);
-   seq_no = (int)lGetUlong(ep, OR_seq_no);
-   force=lGetUlong(ep, OR_force);
    or_pe=lGetString(ep, OR_pe);
-
-   if(!sge_event_client_registered(EV_ID_SCHEDD)) {
-      ERROR((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
-      DEXIT;
-      return -2;
-   }
-
-   /* last order has been sent again - ignore it */
-   if (sge_get_event_client_data(EV_ID_SCHEDD) == seq_no) {
-      WARNING((SGE_EVENT, MSG_IGNORE_ORDER_RETRY_I, seq_no));
-      DEXIT;
-      return STATUS_OK;
-   }
-
-   sge_set_event_client_data(EV_ID_SCHEDD, seq_no);
 
    DPRINTF(("-----------------------------------------------------------------------\n"));
 
@@ -192,8 +172,7 @@ lList **topp  /* ticket orders ptr ptr */
       DPRINTF(("ORDER to start Job %ld Task %ld\n", (long) job_number, 
                (long) task_number));      
 
-      if (!force && 
-          lGetUlong(jep, JB_version) != lGetUlong(ep, OR_job_version)) {
+      if (lGetUlong(jep, JB_version) != lGetUlong(ep, OR_job_version)) {
          ERROR((SGE_EVENT, MSG_ORD_OLDVERSION_UUU, 
                u32c(lGetUlong(ep, OR_job_version)), u32c(job_number), 
                u32c(task_number)));
@@ -283,10 +262,9 @@ lList **topp  /* ticket orders ptr ptr */
             return -2;
          }
 
-         DPRINTF(("%sORDER #%d: start %d slots of job \"%d\" on"
+         DPRINTF(("ORDER: start %d slots of job \"%d\" on"
                   " queue \"%s\" v%d%s\n", 
-               force ? "FORCE ": "", seq_no, q_slots, job_number, q_name, 
-               (int)q_version, (opt_sge ) ));
+               q_slots, job_number, q_name, (int)q_version, (opt_sge ) ));
 
          qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), q_name);
          if (!qep) {
@@ -303,7 +281,7 @@ lList **topp  /* ticket orders ptr ptr */
             master_qep = qep;
 
          /* check queue version */
-         if ( !force && (q_version!=lGetUlong(qep, QU_version))) {
+         if (q_version != lGetUlong(qep, QU_version)) {
             ERROR((SGE_EVENT, MSG_ORD_QVERSION_UUS,
                   u32c(q_version), u32c(lGetUlong(qep, QU_version)), q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -526,9 +504,8 @@ lList **topp  /* ticket orders ptr ptr */
             return -2;
          }
 
-         DPRINTF(("%sORDER #%d: job("u32")->ticket = "u32"\n", 
-            force?"FORCE ":"", seq_no, job_number, 
-            (u_long32)lGetDouble(ep, OR_ticket)));
+         DPRINTF(("ORDER : job("u32")->ticket = "u32"\n", 
+            job_number, (u_long32)lGetDouble(ep, OR_ticket)));
 
          jep = job_list_locate(Master_Job_List, job_number);
          if(!jep) {
@@ -556,8 +533,7 @@ lList **topp  /* ticket orders ptr ptr */
             DEXIT;
             return -2;
          }
-         if (!force && lGetUlong(jep, JB_version) != 
-                                                lGetUlong(ep, OR_job_version)) {
+         if (lGetUlong(jep, JB_version) != lGetUlong(ep, OR_job_version)) {
             WARNING((SGE_EVENT, MSG_ORD_OLDVERSION_UUU, 
                      u32c(lGetUlong(ep, OR_job_version)), 
                      u32c(lGetUlong(jep, JB_job_number)),
@@ -653,8 +629,8 @@ lList **topp  /* ticket orders ptr ptr */
          }
 
 #if 0
-         DPRINTF(("%sORDER #%d: job("u32")->ticket = "u32"\n", 
-            force?"FORCE ":"", seq_no, job_number, (u_long32)lGetDouble(ep, OR_ticket)));
+         DPRINTF(("ORDER: job("u32")->ticket = "u32"\n", 
+            job_number, (u_long32)lGetDouble(ep, OR_ticket)));
 #endif
 
          jep = job_list_locate(Master_Job_List, job_number);
@@ -680,7 +656,7 @@ lList **topp  /* ticket orders ptr ptr */
             DEXIT;
             return -2;
          }
-         if (!force && lGetUlong(jep, JB_version) != lGetUlong(ep, OR_job_version)) {
+         if (lGetUlong(jep, JB_version) != lGetUlong(ep, OR_job_version)) {
             WARNING((SGE_EVENT, MSG_ORD_OLDVERSION_UUU, 
                      u32c(lGetUlong(ep, OR_job_version)), 
                      u32c(lGetUlong(jep, JB_job_number)),
@@ -839,8 +815,7 @@ lList **topp  /* ticket orders ptr ptr */
          DEXIT;
          return -2;
       }
-      DPRINTF(("%sORDER #%d: remove %sjob "u32"."u32"\n", 
-         force?"FORCE ":"", seq_no,
+      DPRINTF(("ORDER: remove %sjob "u32"."u32"\n", 
          or_type==ORT_remove_immediate_job?"immediate ":"" ,
          job_number, task_number));
       jep = job_list_locate(Master_Job_List, job_number);
@@ -944,9 +919,8 @@ lList **topp  /* ticket orders ptr ptr */
          }
          sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
 
-         DPRINTF(("%sORDER #%d: update %d users/prjs\n", 
-            force?"FORCE ":"", 
-            seq_no, lGetNumberOfElem(lGetList(ep, OR_joker))));
+         DPRINTF(("ORDER: update %d users/prjs\n", 
+            lGetNumberOfElem(lGetList(ep, OR_joker))));
 
          for_each (up_order, lGetList(ep, OR_joker)) {
             if ((pos=lGetPosViaElem(up_order, UP_name))<0 || 
@@ -1059,7 +1033,7 @@ lList **topp  /* ticket orders ptr ptr */
       if ( !sge_init_node_fields(lFirst(Master_Sharetree_List)) &&
 	        update_sharetree(alpp, Master_Sharetree_List, lGetList(ep, OR_joker))) {
          /* alpp gets filled by update_sharetree */
-         DPRINTF(("%sORDER #%d: ORT_share_tree\n", force?"FORCE ":"", seq_no));
+         DPRINTF(("ORDER: ORT_share_tree failed\n" ));
          DEXIT;
          return -1;
       } /* just ignore it being not in sge mode */
@@ -1070,18 +1044,17 @@ lList **topp  /* ticket orders ptr ptr */
     * UPDATE FIELDS IN SCHEDULING CONFIGURATION 
     * ----------------------------------------------------------------------- */
    case ORT_sched_conf:
-      DPRINTF(("ORDER: ORT_sched_conf\n"));
       {
          lListElem *joker;
          int pos;
 
-         DPRINTF(("%sORDER #%d: ORT_sched_conf\n", force?"FORCE ":"", seq_no));
+         DPRINTF(("ORDER: ORT_sched_conf\n" ));
          joker = lFirst(lGetList(ep, OR_joker));
 
-         if (sconf_is() && joker) {
-            if ((pos=lGetPosViaElem(joker, SC_weight_tickets_override))>=0) 
-               sconf_set_weight_tickets_override(
-                  lGetPosUlong(joker, pos));
+         if (sconf_is() && joker != NULL) {
+            if ((pos=lGetPosViaElem(joker, SC_weight_tickets_override)) > -1) {
+               sconf_set_weight_tickets_override( lGetPosUlong(joker, pos));
+            }   
          }
          /* no need to spool sched conf */
       }
@@ -1196,20 +1169,29 @@ lList **topp  /* ticket orders ptr ptr */
 
    case ORT_job_schedd_info:
       {
-         lListElem *sme ; /* SME_Type */
+         lList *sub_order_list = NULL;
+         lListElem *sme  = NULL; /* SME_Type */
 
          DPRINTF(("ORDER: ORT_job_schedd_info\n"));
-         sme = lFirst(lGetList(ep, OR_joker));
-         if (sme && Master_Job_Schedd_Info_List) {
-            Master_Job_Schedd_Info_List = lFreeList(Master_Job_Schedd_Info_List);
+         sub_order_list = lGetList(ep, OR_joker);
+         
+         if (sub_order_list != NULL) {
+            sme = lFirst(sub_order_list);
+            lDechainElem(sub_order_list, sme);
          }
-         if (sme && !Master_Job_Schedd_Info_List) {
+
+         if (sme != NULL) {
+            if (Master_Job_Schedd_Info_List != NULL) {
+               Master_Job_Schedd_Info_List = lFreeList(Master_Job_Schedd_Info_List);
+            }
+
             Master_Job_Schedd_Info_List = lCreateList("schedd info", SME_Type);
-            lAppendElem(Master_Job_Schedd_Info_List, lCopyElem(sme));
-         }
-         /* this information is not spooled (but might be usefull in a db) */
-         sge_add_event( 0, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, 
+            lAppendElem(Master_Job_Schedd_Info_List, sme);
+
+            /* this information is not spooled (but might be usefull in a db) */
+            sge_add_event( 0, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, 
                        NULL, NULL, NULL, sme);
+         }              
       }
       break;
 
@@ -1310,9 +1292,11 @@ lList *ticket_orders
                packint(&pb, lGetUlong(ep2, OR_ja_task_number));
                packdouble(&pb, lGetDouble(ep2, OR_ticket));
             }
-            cl_err = gdi_send_message_pb(0, prognames[EXECD], 1, master_host_name, TAG_CHANGE_TICKET, &pb, &dummymid);
+            cl_err = gdi_send_message_pb(0, prognames[EXECD], 1, master_host_name, 
+                                         TAG_CHANGE_TICKET, &pb, &dummymid);
             clear_packbuffer(&pb);
-            DPRINTF(("%s %d ticket changings to execd@%s\n", (cl_err==CL_RETVAL_OK)?"failed sending":"sent", n, master_host_name));
+            DPRINTF(("%s %d ticket changings to execd@%s\n", 
+                     (cl_err==CL_RETVAL_OK)?"failed sending":"sent", n, master_host_name));
          }
       } else {
          DPRINTF(("     skipped sending of %d ticket changings to "
@@ -1326,14 +1310,3 @@ lList *ticket_orders
    DEXIT;
    return cl_err;
 }
-
-#if 0
-static double get_usage_value(lList *usage, char *name)
-{
-   lListElem *ue;
-   double value = 0;
-   if ((ue = lGetElemStr(usage, UA_name, name)))
-      value = lGetDouble(ue, UA_value);
-   return value;
-}
-#endif

@@ -357,10 +357,6 @@
 *        list of events - they will be spooled until the event client 
 *        acknowledges receipt
 *  
-*     SGE_ULONG(EV_clientdata)
-*        a 32bit ulong for use by the event client or special handling 
-*        for certain event clients
-*
 *  FUNCTION
 *     An event client creates and initializes such an object and passes
 *     it to qmaster for registration.
@@ -1032,87 +1028,6 @@ ec_get_busy_handling(void)
 
    DEXIT;
    return handling;
-}
-
-/****** Eventclient/Client/ec_set_clientdata() ********************************
-*  NAME
-*     ec_set_clientdata() -- set the clientdata value
-*
-*  SYNOPSIS
-*     #include "sge_event_client.h"
-*
-*     void 
-*     ec_set_clientdata(u_long32 data) 
-*
-*  FUNCTION
-*     An event client (the event client object) has a field EV_clientdata.
-*     It is of datatype u_long32 and can be used by the event client for
-*     any purpose.
-*
-*     The sge scheduler uses it to store the last order from scheduler processed
-*     by qmaster.
-*
-*  INPUTS
-*     u_long32 data - the clientdata to set 
-*
-*  NOTES
-*
-*  SEE ALSO
-*     Eventclient/Client/ec_get_clientdata()
-*     Eventclient/--EV_Type
-*     documentation of scheduler <-> qmaster mechanisms
-*******************************************************************************/
-void 
-ec_set_clientdata(u_long32 data)
-{
-   DENTER(TOP_LAYER, "ec_set_clientdata");
-
-   if (ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-   } else {
-      lSetUlong(ec, EV_clientdata, data);
-   }
-
-   DEXIT;
-}
-
-/****** Eventclient/Client/ec_get_clientdata() ********************************
-*  NAME
-*     ec_get_clientdata() -- get the clientdata value
-*
-*  SYNOPSIS
-*     #include "sge_event_client.h"
-*
-*     u_long32 
-*     ec_get_clientdata() 
-*
-*  FUNCTION
-*     Get the current value of the clientdata for the event client.
-*
-*  RESULT
-*     u_long32 - current value
-*
-*  NOTES
-*
-*  SEE ALSO
-*     Eventclient/Client/ec_get_clientdata()
-*     Eventclient/EV_Type
-*******************************************************************************/
-u_long32 
-ec_get_clientdata(void)
-{
-   u_long32 clientdata = 0;
-
-   DENTER(TOP_LAYER, "ec_get_clientdata");
-
-   if (ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-   } else {
-      clientdata = lGetUlong(ec, EV_clientdata);
-   }
-
-   DEXIT;
-   return clientdata;
 }
 
 /****** Eventclient/Client/ec_register() ***************************************

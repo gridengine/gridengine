@@ -817,47 +817,6 @@ int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    return STATUS_OK;
 } /* sge_mod_event_client() */
 
-/****** evm/sge_event_master/sge_event_client_registered() *********************
-*  NAME
-*     sge_event_client_registered() -- check if event client is registered
-*
-*  SYNOPSIS
-*     bool sge_event_client_registered(u_long32 aClientID) 
-*
-*  FUNCTION
-*     Check if event client is registered. 
-*
-*  INPUTS
-*     u_long32 aClientID - event client id to check
-*
-*  RESULT
-*     true  - client is registered 
-*     false - otherwise
-*
-*  NOTES
-*     MT-NOTE: sge_event_client_registered() is NOT MT safe. 
-*
-*******************************************************************************/
-bool sge_event_client_registered(u_long32 aClientID)
-{
-   bool res = false;
-
-   DENTER(TOP_LAYER, "sge_event_client_registered");
-
-   pthread_once(&Event_Master_Once, event_master_once_init);
-
-   lock_client (aClientID, true);
-
-   if (get_event_client (aClientID) != NULL) {
-      res = true;
-   }
-
-   unlock_client (aClientID);
-
-   DEXIT;
-   return res;
-} /* sge_event_client_registered() */
-
 /****** evm/sge_event_master/sge_remove_event_client() *************************
 *  NAME
 *     sge_remove_event_client() -- remove event client 
@@ -1295,105 +1254,6 @@ int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp)
    return 0;
 } /* sge_shutdown_dynamic_event_clients() */
 
-/****** evm/sge_event_master/sge_get_event_client_data() ***************************
-*  NAME
-*     sge_get_event_client_data() -- get event client data 
-*
-*  SYNOPSIS
-*     u_long32 sge_get_event_client_data(u_long32 aClientID) 
-*
-*  FUNCTION
-*     Get event client data. 
-*
-*  INPUTS
-*     u_long32 aClientID - event client id 
-*
-*  RESULT
-*     u_long32 - event client data
-*
-*  NOTES
-*     MT-NOTE: sge_get_event_client_data() is NOT MT safe. 
-*
-*******************************************************************************/
-u_long32 sge_get_event_client_data(u_long32 aClientID)
-{
-   u_long32 res = 0;
-   lListElem *client = NULL;
-
-   DENTER(TOP_LAYER, "sge_get_event_client_data");
-
-   pthread_once(&Event_Master_Once, event_master_once_init);
-
-   lock_client (aClientID, true);
-
-   if ((client = get_event_client (aClientID)) == NULL) {
-      unlock_client (aClientID);
-
-      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
-
-      DEXIT;
-      return 0;
-   }
-
-   res = lGetUlong(client, EV_clientdata); /* will fail if client == NULL */
-
-   unlock_client (aClientID);
-
-   DEXIT;
-   return res;
-} /* sge_get_event_client_data() */
-
-/****** evm/sge_event_master/sge_set_event_client_data() ***********************
-*  NAME
-*     sge_set_event_client_data() -- set event client data 
-*
-*  SYNOPSIS
-*     int sge_set_event_client_data(u_long32 aClientID, u_long32 theData) 
-*
-*  FUNCTION
-*     Set event client data. 
-*
-*  INPUTS
-*     u_long32 aClientID - event client id 
-*     u_long32 theData   - data 
-*
-*  RESULT
-*     EACCES - failed to set data
-*     0      - success
-*
-*  NOTES
-*     MT-NOTE: sge_set_event_client_data() is NOT MT safe. 
-*
-*******************************************************************************/
-int sge_set_event_client_data(u_long32 aClientID, u_long32 theData)
-{
-   int res = EACCES;
-   lListElem *ep = NULL;
-
-   DENTER(TOP_LAYER, "sge_set_event_client_data");
-
-   pthread_once(&Event_Master_Once, event_master_once_init);
-
-   lock_client (aClientID, true);
-
-   if ((ep = get_event_client (aClientID)) == NULL)
-   {
-      unlock_client (aClientID);
-
-      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
-
-      DEXIT;
-      return EINVAL;
-   }
-
-   res = (lSetUlong(ep, EV_clientdata, theData) == 0) ? 0 : EACCES;
-
-   unlock_client (aClientID);
-
-   DEXIT;
-   return res;
-} /* sge_set_event_client_data() */
-
 /****** Eventclient/Server/sge_add_event() *************************************
 *  NAME
 *     sge_add_event() -- add an object as event
@@ -1686,6 +1546,7 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
    lSetString (etp, ET_strkey, strkey);
    lSetString (etp, ET_strkey2, strkey2);
    lSetList (etp, ET_new_version, list);   
+
    sge_mutex_lock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Master_Control.t_add_event_mutex);
    if (Master_Control.is_transaction) {
       is_add_direct = false; 

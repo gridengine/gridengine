@@ -622,7 +622,6 @@ void sge_schedd_mirror_register()
    /* register as event mirror */
    sge_mirror_initialize(EV_ID_SCHEDD, "scheduler");
    ec_set_busy_handling(EV_BUSY_UNTIL_RELEASED);
-   ec_set_clientdata(-1);
 
    /* subscribe events */
    sched_funcs[current_scheduler].subscribe_func();

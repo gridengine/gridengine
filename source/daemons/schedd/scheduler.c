@@ -1186,6 +1186,7 @@ static bool job_get_duration(u_long32 *duration, const lListElem *jep)
       d_ret = d_tmp;
       got_duration = true;
    }
+   
    if ((ep=lGetElemStr(lGetList(jep, JB_hard_resource_list), CE_name, SGE_ATTR_S_RT))) {
       if (parse_ulong_val(&d_tmp, NULL, TYPE_TIM, (s=lGetString(ep, CE_stringval)),
                error_str, sizeof(error_str)-1)==0) {
@@ -1203,15 +1204,16 @@ static bool job_get_duration(u_long32 *duration, const lListElem *jep)
    }
 
    if (got_duration) {
-      if (d_ret > (double)U_LONG32_MAX)
+      if (d_ret > (double)U_LONG32_MAX) {
          *duration = U_LONG32_MAX;
-      else
+      }   
+      else {
          *duration = d_ret;
-      DEXIT;
-      return true;
+      }   
    } 
-
-   *duration = sconf_get_default_duration();
+   else {
+      *duration = sconf_get_default_duration();
+   }    
 
    DEXIT;
    return true;

@@ -111,8 +111,6 @@ enum {
                              /* are not acknowledged */
    EV_sub_array,             /* contains an array of subscribed events, only used in qmaster */      
    
-   /* for free use */
-   EV_clientdata,             /* can be used by client or master for any purposes */
    EV_state                   /* identifies the state the event client is in. Sofar we have: connected, closing, terminated */
 };
 
@@ -141,7 +139,6 @@ LISTDEF(EV_Type)
    SGE_LIST(EV_events, ET_Type, CULL_DEFAULT)
    SGE_REF(EV_sub_array, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 
-   SGE_ULONG(EV_clientdata, CULL_DEFAULT)
    SGE_ULONG(EV_state, CULL_DEFAULT)
 LISTEND 
 
@@ -170,7 +167,6 @@ NAMEDEF(EVN)
    NAME("EV_events")
    NAME("EV_sub_array")
 
-   NAME("EV_clientdata")
    NAME("EV_state")
 NAMEEND
 

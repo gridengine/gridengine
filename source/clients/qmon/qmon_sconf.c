@@ -138,8 +138,7 @@ static XtResource sc_resources[] = {
 };
 
 
-
-static tSCEntry data;
+static tSCEntry data = {NULL, NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL};
 
 
 static Widget qmon_sconf = 0;
@@ -361,7 +360,7 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonSchedTime");
 
    current = XmtInputFieldGetString(input_field);
-   strncpy(stringval, current, sizeof(stringval));
+   strncpy(stringval, current ? current : "", sizeof(stringval));
    status = XmtAskForTime(w, NULL, "@{Enter time}",
                stringval, sizeof(stringval), NULL, False);
    if (stringval[0] == '\0')
@@ -390,6 +389,9 @@ lListElem *sep
       return False;
    }
 
+/* printf("------> qmonSchedSet\n"); */
+/* lWriteElemTo(sep, stdout);    */
+
    data.algorithm = sge_strdup(data.algorithm, 
                                  lGetString(sep, SC_algorithm));
 
@@ -410,7 +412,8 @@ lListElem *sep
    /*
    ** load adjustments need special treatment
    */
-   data.job_load_adjustments =  lGetList(sep, SC_job_load_adjustments);
+   data.job_load_adjustments = lFreeList(data.job_load_adjustments);
+   data.job_load_adjustments =  lCopyList("copy", lGetList(sep, SC_job_load_adjustments));
    
    data.load_adjustment_decay_time = sge_strdup(data.load_adjustment_decay_time, 
                lGetString(sep, SC_load_adjustment_decay_time));
@@ -423,11 +426,17 @@ lListElem *sep
                               lGetString(sep, SC_sgeee_schedule_interval));
    }
 
-   if (lGetString(sep, SC_schedd_job_info))
-      strncpy(schedd_job_info, lGetString(sep, SC_schedd_job_info), BUFSIZ - 1);
-   else
-      strcpy(schedd_job_info, "");
-
+/**
+printf("->data.algorithm: '%s'\n", data.algorithm ? data.algorithm : "-NA-");
+printf("->data.schedule_interval: '%s'\n", data.schedule_interval ? data.schedule_interval : "-NA-");
+printf("->data.maxujobs: '%d'\n", data.maxujobs );
+printf("->data.maxgjobs: '%d'\n", data.maxgjobs );
+printf("->data.queue_sort_method: '%d'\n", data.queue_sort_method );
+printf("->data.user_sort: '%d'\n", data.user_sort );
+printf("->data.load_adjustment_decay_time: '%s'\n", data.load_adjustment_decay_time ? data.load_adjustment_decay_time : "-NA-");
+printf("->data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-NA-");
+**/
+   
    /*
    ** set the dialog values
    */
@@ -443,6 +452,11 @@ lListElem *sep
    ** "True", \
    ** "Job Range"
    */
+   if (lGetString(sep, SC_schedd_job_info))
+      strncpy(schedd_job_info, lGetString(sep, SC_schedd_job_info), BUFSIZ - 1);
+   else
+      strcpy(schedd_job_info, "false");
+
    if (!strcasecmp(schedd_job_info, "false")) {
       XmtChooserSetState(sconf_job_info, 0, True);
       XmtInputFieldSetString(sconf_job_range, "");
@@ -484,6 +498,18 @@ lListElem *sep
    ** get entries from dialog
    */
    XmtDialogGetDialogValues(qmon_sconf, &data);
+
+/**
+printf("<-data.algorithm: '%s'\n", data.algorithm ? data.algorithm : "-NA-");
+printf("<-data.schedule_interval: '%s'\n", data.schedule_interval ? data.schedule_interval : "-NA-");
+printf("<-data.maxujobs: '%d'\n", data.maxujobs );
+printf("<-data.maxgjobs: '%d'\n", data.maxgjobs );
+printf("<-data.queue_sort_method: '%d'\n", data.queue_sort_method );
+printf("<-data.user_sort: '%d'\n", data.user_sort );
+printf("<-data.load_adjustment_decay_time: '%s'\n", data.load_adjustment_decay_time ? data.load_adjustment_decay_time : "-NA-");
+printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-NA-");
+**/
+   
 
 
    if (!data.algorithm || data.algorithm[0] == '\0') {
@@ -572,6 +598,9 @@ lListElem *sep
             return False;
          }
    }
+
+/* printf("------> qmonSchedGet\n"); */
+/* lWriteElemTo(sep, stdout);    */
 
    DEXIT;
    return True;

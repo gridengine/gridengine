@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: InputField.c,v 1.1 2001/07/18 11:06:02 root Exp $
+ * $Id: InputField.c,v 1.1.1.1.2.1 2001/08/09 12:55:19 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,8 +9,11 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: InputField.c,v $
- * Revision 1.1  2001/07/18 11:06:02  root
- * Initial revision
+ * Revision 1.1.1.1.2.1  2001/08/09 12:55:19  andre
+ * AA-2001-08-09-0: - IZ 33, fixed duplicate free for scheduler conf dialogue code
+ *
+ * Revision 1.1.1.1  2001/07/18 11:06:02  root
+ * Initial checkin.
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -1192,8 +1195,11 @@ StringConst s;
     XmtInputFieldWidget iw = (XmtInputFieldWidget) w;
 
     XmtAssertWidgetClass(w, xmtInputFieldWidgetClass,"XmtInputFieldSetString");
-    if (iw->input_field.input)
-	XtFree(iw->input_field.input);
+    if (iw->input_field.input) {
+/* _AA fix this                        */    
+/* 	XtFree(iw->input_field.input); */
+        iw->input_field.input = NULL;
+    }    
     if (s)
 	iw->input_field.input = XtNewString(s);
     else

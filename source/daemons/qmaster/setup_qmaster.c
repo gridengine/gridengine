@@ -318,10 +318,6 @@ static lList *parse_cmdline_qmaster(char **argv, lList **ppcmdline )
       if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, &alp)) != sp)
          continue;
 
-      /* -s */
-      if ((rp = parse_noopt(sp, "-s", NULL, ppcmdline, &alp)) != sp)
-         continue;
-
       /* -lj */
       if ((rp = parse_until_next_opt(sp, "-lj", NULL, ppcmdline, &alp)) != sp)
          continue;
@@ -383,12 +379,6 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
          break;
       }
 
-      /* -s */
-      if(parse_flag(ppcmdline, "-s", &alp, &flag)) {
-         sge_silent_set(1);
-         continue;
-      }
-      
       /* -lj */
       if(parse_string(ppcmdline, "-lj", &alp, &filename)) {
          enable_job_logging(filename);

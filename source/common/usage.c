@@ -874,7 +874,7 @@ FILE *fp
    }
 
    if (VALID_OPT(s_OPT, uti_state_get_mewho())) {
-      if (uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD) { 
+      if (uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD) { 
          usage_silent(fp);
       } else 
       if (uti_state_get_mewho() == QSELECT) {
@@ -884,7 +884,7 @@ FILE *fp
       else if (uti_state_get_mewho() == QMOD) {
          PRINTITD(MSG_GDI_USAGE_s_OPT ,MSG_GDI_UTEXT_s_OPT );
       }
-      else {
+      else if (uti_state_get_mewho() != QMASTER) {
          PRINTIT(MSG_GDI_USAGE_s_OPT_SIGNAL);
          MARK(OA_SIGNAL);
       }

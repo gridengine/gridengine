@@ -116,6 +116,7 @@ void sge_setup_sge_execd()
    sge_switch2start_user();
    unlink(TMP_ERR_FILE_EXECD);
    sge_switch2admin_user();
+   sge_log_set_auser(1);
    sprintf(execd_messages_file, "%s/%s/%s", conf.execd_spool_dir, 
            me.unqualified_hostname, ERR_FILE);
    error_file = execd_messages_file;

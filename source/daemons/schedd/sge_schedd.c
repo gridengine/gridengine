@@ -525,8 +525,8 @@ static int sge_setup_sge_schedd()
    sge_switch2start_user();
    unlink(TMP_ERR_FILE_SCHEDD);
    sge_switch2admin_user();
-   error_file = ERR_FILE;
    sge_log_set_auser(1);
+   error_file = ERR_FILE;
    /* suppress the INFO messages during setup phase */
    saved_logginglevel = logginglevel;
    logginglevel = LOG_WARNING;

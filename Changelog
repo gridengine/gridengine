@@ -1,3 +1,9 @@
+AH-2002-03-15-0: Bugfix:    Changed scheme used for creation of id used for 
+                            qrsh -inherit sub-tasks to fix accounting data leak with 
+                            multiple runs of a par. application within a job. Also
+                            write id into accounting file.
+                 Bugtraq:   #4447392
+
 AA-2002-03-14-0: Bugfix:    msg_sec.h new messages
 
 EB-2002-03-13-0: Bugfix:    handling of faulty migrate script
@@ -20,6 +26,8 @@ AS-2002-03-11-1: Doc:       added "doc/logfile-trimming.asc" to document
 
 AS-2002-03-11-0: Enhancem.: added "util/logchecker.sh" script to truncate/rotate 
                             'messages' files
+
+AH-2002-03-11-0: Bugfix:    A set of fixes on initiative from Patrik Koch
 
 AS-2002-03-08-2: Doc:       document location of PE stderr/out files in
                             qsub(1) and sge_pe(5)
@@ -83,7 +91,6 @@ CR-2002-03-04-0: Bugfix:    qacct truncates project/department/... names
 AH-2002-03-04-2: Enhancem.: Added PVM 3.4.4 Virtual Machine ID setting
                             to startpvm.sh from Andrew Shewmaker
 
-AH-2002-03-04-1: Bugfix:    A set of fixes on initiative from Patrik Koch
 
 EB-2002-03-04-1: Bugfix:    'qalter -h xxx' caused core if task of array
                             did not exist.
@@ -1175,6 +1182,7 @@ EB-2001-11-05-0: Bugfix: Ckpt jobs and jobs exiting with exit state 99
 AH-2001-11-05-0: Fixes with qstat -pe <pe_name> and qselect -pe <pe_name>
                  - 'all' keyword in PE's queue_list was not honoured
                  - non-parallel queues were selected
+                 Bugtraq: #4584673
 
 JG-2001-11-02-1: qstat -j aborted when writing usage of pe tasks
 

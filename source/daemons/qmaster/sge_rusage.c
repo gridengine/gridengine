@@ -96,24 +96,23 @@ char *category_str
    int fprintf_count;
    lListElem *ep;
    lList *usage_list;
-   const char *s;
+   const char *s, *pe_task_id_str;
 #ifdef NEC_ACCOUNTING_ENTRIES
    char arch_dep_usage_string[256] = "";
 #endif
 
    DENTER(TOP_LAYER, "sge_write_rusage");
 
-
-
    if (fp == NULL) {
       DEXIT;   
       return (-2);
    } 
    /* for tasks we take usage from job report */
-   if (lGetString(jr, JR_pe_task_id_str))
+   if ((pe_task_id_str=lGetString(jr, JR_pe_task_id_str)))
       usage_list = lGetList(jr, JR_usage);
    else
       usage_list = lGetList(jatp, JAT_usage_list);
+
 
 #if 1
    {
@@ -231,7 +230,7 @@ char *category_str
           GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_IO_ACCT, ep, 0),
           category_str?category_str:"none",
           GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_IOW_ACCT, ep, 0),
-          "none", 
+          pe_task_id_str?pe_task_id_str:"none", 
           GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_MAXVMEM_ACCT, ep, 0)
 #ifdef NEC_ACCOUNTING_ENTRIES
           ,arch_dep_usage_string

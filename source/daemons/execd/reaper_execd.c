@@ -867,7 +867,7 @@ lListElem *jr
             return;
          }
 
-         if(lGetUlong(lFirst(lGetList(tep, JB_ja_tasks)), JAT_status) != JEXITING) {
+         if (lGetUlong(jr, JR_state)!=JEXITING) {
             WARNING((SGE_EVENT, MSG_EXECD_GOTACKFORPETASKBUTISNOTINSTATEEXITING_S, pe_task_id_str));
             DEXIT;
             return;
@@ -884,7 +884,6 @@ lListElem *jr
       if (jr && lGetUlong(jr, JR_state)!=JSLAVE)
          reaper_sendmail(jep, jr); 
 
-
       /*
       ** security hook
       */
@@ -899,8 +898,6 @@ lListElem *jr
       if (do_credentials)
          delete_credentials(jep);
 
-
-
       /* remove job/task active dir */
       if (!keep_active && !getenv("SGE_KEEP_ACTIVE") && !pe_task_id_str) {
          sprintf(jobdir, "%s/"u32"."u32"", ACTIVE_DIR, lGetUlong(job, JB_job_number),
@@ -911,8 +908,6 @@ lListElem *jr
                    jobdir, err_str));
          }
       }
-
-      
 
       /* increment # of free slots. In case no slot is used any longer 
          we have to remove queues tmpdir for this job */
@@ -1370,7 +1365,9 @@ int npids
    }
    
    if (fscanf(fp, pid_t_fmt, &pid) != 1) {
-      ERROR((SGE_EVENT, MSG_SHEPHERD_CANTREADPIDFROMPIDFILEXFORJOBY_SS,
+      /* most probably a newly started job 
+         shepherd usually just had not enough time for writing the pid file */
+      WARNING((SGE_EVENT, MSG_SHEPHERD_CANTREADPIDFROMPIDFILEXFORJOBY_SS,
              fname, dir));
       fclose(fp);
       DEXIT;

@@ -435,12 +435,6 @@ lList **topp  /* ticket orders ptr ptr */
                            u32c(lGetUlong(jep, JB_job_number)), 
                            lGetHost(hep, EH_name)  ));
                } else {
-                  if (lGetUlong(first_at_host, JG_tag_slave_job)==0) {
-                     DPRINTF(("slave host %s\n", lGetHost(hep, EH_name)));
-                     task_id_range += TASK_ID_RANGE_SIZE;
-                     DPRINTF(("task_id_range = %d\n", task_id_range));
-                     lSetUlong(first_at_host, JG_task_id_range, task_id_range);   
-                  }
                   lSetUlong(first_at_host, JG_tag_slave_job, 1);   
                }
             } else 

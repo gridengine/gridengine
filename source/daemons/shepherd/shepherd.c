@@ -696,7 +696,7 @@ char **argv
       exit_status = 0; /* no error */
    }
    else {
-      /* start pe_stop */
+      /* start pe_start */
       run_pe_stop = 1;
       if (pe && (exit_status = do_pe_start(script_timeout, ckpt_type, &pe_pid))) {
          if (exit_status == SSTATE_BEFORE_PESTART)

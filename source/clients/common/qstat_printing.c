@@ -286,7 +286,7 @@ int indent
    task_running = (tstatus==JRUNNING || tstatus==JTRANSITING);
 
    if (print_hdr) {
-      printf(QSTAT_INDENT "Sub-tasks:           %-7.7s %5.5s %s %-4.4s %-6.6s\n", 
+      printf(QSTAT_INDENT "Sub-tasks:           %-12.12s %5.5s %s %-4.4s %-6.6s\n", 
              "task-ID",
              "state",
              sge_mode ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "     "
@@ -296,7 +296,7 @@ int indent
    }
 
    str = (task==job)?NULL:lGetString(task, JB_pe_task_id_str);
-   printf("   %s%7.7s ", indent?QSTAT_INDENT2:"", str?str:"");
+   printf("   %s%-12s ", indent?QSTAT_INDENT2:"", str?str:"");
 
    /* move status info into state info */
    tstate = lGetUlong(ja_task, JAT_state);
@@ -945,7 +945,7 @@ char *indent
                   "queue",
                   "master",
                   "ja-task-ID ", 
-               tsk_ext?"task-ID ":"",
+               tsk_ext?"task-ID      ":"",
                tsk_ext?"state ":"",
                tsk_ext?(sge_mode ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      " : "") : "",
                tsk_ext?"stat ":"",

@@ -294,9 +294,6 @@ int slave
             lSetUlong(mq, QU_job_slots, slots);
 
          }
-         DPRINTF(("Task ID range is "u32"-"u32"\n", 
-            lGetUlong(jelem, JB_task_id_range),
-            lGetUlong(jelem, JB_task_id_range)+TASK_ID_RANGE_SIZE-1));
       }
    }
 
@@ -575,7 +572,7 @@ sge_pack_buffer *pb, *apb;
 int *synchron; 
 {
    u_long32 jobid, jataskid;
-   lListElem *jep, *tep, *ep, *pe, *jatep;
+   lListElem *jep, *pe, *jatep;
    char job_source[1024], new_task_id[12];
    const char *task_str;
    lList *gdil = NULL;
@@ -622,41 +619,14 @@ int *synchron;
       goto Error;
    }
 
-   /* test whether we get a taskid from outside */
-   if (!(ep=lGetSubStr(jelem, VA_variable, "TASK_ID", JB_env_list)) ||
-       !(task_str=lGetString(ep, VA_value))) {
-      int found;
-   
-      /* need to start with different values for different hosts */
-      tid = MAX(1, lGetUlong(jep, JB_task_id_range));
-      do {
-         found = 0;
-         for_each (tep, lGetList(jatep, JAT_task_list)) {
-            if (atoi(lGetString(tep, JB_pe_task_id_str))==tid) {
-               found = 1;
-               tid++;
-               break;
-            }
-         }
-      } while (found);
+   /* generate unique task id by combining consecutive number 1-max(u_long32) */
+   tid = MAX(1, lGetUlong(jep, JB_task_id_range));
 
-      sprintf(new_task_id, "%d", tid);
-      task_str = new_task_id;
-      DPRINTF(("found free task id %s for job "u32"\n", 
-         task_str, jobid));
-
-      if (!ep)
-         ep = lAddSubStr(jelem, VA_variable, "TASK_ID", JB_env_list, VA_Type);
-      lSetString(ep, VA_value, task_str);
-   } else { /* user proposes a task id - ensure we do 
-               not already have a task with this id */
-      for_each (tep, lGetList(jatep, JAT_task_list)) {
-         if (!strcmp(lGetString(tep, JB_pe_task_id_str), task_str)) {
-            ERROR((SGE_EVENT, MSG_JOB_TASKALREADYEXISTS_US, u32c(jobid), task_str));
-            goto Error;
-         }
-      }
-   }
+   /* set taskid for next task to be started */
+   lSetUlong(jep, JB_task_id_range, tid+1); 
+   sprintf(new_task_id, "%d.%s", tid, me.unqualified_hostname);
+   task_str = new_task_id;
+   DPRINTF(("using pe_task_id_str %s for job "u32"\n", task_str, jobid));
 
    lSetString(jelem, JB_pe_task_id_str, task_str);
    if (!lGetString(jelem, JB_job_name))

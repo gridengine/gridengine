@@ -65,6 +65,7 @@ EXECD_ADD_SRC =  usage.c \
               read_object.c \
               read_write_job.c \
               read_write_queue.c \
+              sge_dirent.c \
               execution_states.c \
               sig_handlers.c \
               job_log.c \

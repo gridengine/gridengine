@@ -36,6 +36,7 @@ SHELL = /bin/sh
 RM    = rm -f 
 STRIP = strip
 DEPEND = ../3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(DEPEND_FLAGS)
+LEX    = flex
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################

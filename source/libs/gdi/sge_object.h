@@ -51,18 +51,37 @@
 *     Functions like attr_mod_double from gdi_utility should also be moved here.
 *
 *  SEE ALSO
+*     gdi/object/object_has_type()
+*     gdi/object/object_get_type()
+*     gdi/object/object_get_subtype()
+*     gdi/object/object_get_primary_key()
+*     gdi/object/object_get_name_prefix()
 *     gdi/object/object_get_field_contents()
 *     gdi/object/object_set_field_contents()
-*     gdi/object/object_has_type()
-*     gdi/object/object_get_primary_key()
 ****************************************************************************
 */
+
+#define NULL_OUT_NONE(ep, nm) \
+   if (lGetString(ep, nm) != NULL && \
+       strcasecmp(lGetString(ep, nm), "none") == 0) { \
+      lSetString(ep, nm, NULL); \
+   }
+
 
 bool 
 object_has_type(const lListElem *object, const lDescr *descr);
 
+const lDescr *
+object_get_type(const lListElem *object);
+
+const lDescr *
+object_get_subtype(int nm);
+
 int 
 object_get_primary_key(const lDescr *descr);
+
+const char *
+object_get_name_prefix(const lDescr *descr, dstring *buffer);
 
 const char *
 object_get_field_contents(const lListElem *object, lList **answer_list, 

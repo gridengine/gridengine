@@ -56,34 +56,37 @@
 *     Typedefs -- type definitions for spooling utility functions
 *
 *  SYNOPSIS
-*     typedef struct spooling_instruction {
+*     typedef struct spool_instr {
 *        int selection;
-*        const struct spooling_instruction *sub_instruction;
-*     } spooling_instruction;
+*        bool copy_field_names;
+*        bool strip_field_prefix;
+*        const struct spool_instr *sub_instr;
+*     } spool_instr;
 *     
-*     extern const spooling_instruction spool_config_instruction;
+*     extern const spool_instr spool_config_instr;
 *     
 *     typedef struct spooling_field {
 *        int nm;
-*        int mt;
 *        int width;
+*        const char *name;
 *        const struct spooling_field *sub_fields;
 *     } spooling_field;
 *     
 *  FUNCTION
-*     spooling_instruction
+*     spooling_instr
 *     Describes how the fields to be spooled are selected.
 *     The int field "selection" contains a bitmask that will be applied
 *     to the mt field of a field descriptor to check, if a field has to be
 *     spooled.
-*     sub_instruction points to a spooling_instruction that will be used
+*     sub_instr points to a spool_instr that will be used
 *     to spool elements in sublists.
 *
 *     spooling_field
 *     An array of spooling_fields is provides the necessary information
 *     for the formatted output of data.
 *     It contains the names and types of attributes to spool, information
-*     about field width (for formatted output).
+*     about field width (for formatted output), the attribute name that shall
+*     be used in output.
 *     For list fields, that shall be spooled, it contains an array of 
 *     fields that shall be spooled in sublist objects.
 *
@@ -94,26 +97,29 @@
 *
 *  SEE ALSO
 *     spool/utilities/spool_get_fields_to_spool()
+*     spool/utilities/spool_free_spooling_fields()
 ****************************************************************************
 */
 
-typedef struct spooling_instruction {
+typedef struct spool_instr {
    int selection;
-   const struct spooling_instruction *sub_instruction;
-} spooling_instruction;
+   bool copy_field_names;
+   bool strip_field_prefix;
+   const struct spool_instr *sub_instr;
+} spool_instr;
 
-extern const spooling_instruction spool_config_instruction;
+extern const spool_instr spool_config_instr;
 
 typedef struct spooling_field {
    int nm;
-   int mt;
    int width;
+   const char *name;
    struct spooling_field *sub_fields;
 } spooling_field;
 
 spooling_field *
-spool_get_fields_to_spool(lList **answer_list, const lListElem *ep, 
-                          const spooling_instruction *instruction);
+spool_get_fields_to_spool(lList **answer_list, const lDescr *descr, 
+                          const spool_instr *instr);
 
 spooling_field *
 spool_free_spooling_fields(spooling_field *fields);

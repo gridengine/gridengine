@@ -82,4 +82,10 @@ queue_get_type_string(const lListElem *queue, lList **answer_list,
 bool 
 queue_set_type_string(lListElem *queue, lList **answer_list, const char *value);
 
+bool 
+queue_validate(lListElem *queue, lList **answer_list);
+
+lListElem *
+queue_create_template(void);
+
 #endif /* __SGE_QUEUE_H */

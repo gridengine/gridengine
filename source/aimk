@@ -229,7 +229,7 @@ endif
 
 set   CFLAGS       = "$INP_CFLAGS"
 set   CXXFLAGS     = "$CFLAGS"
-set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs/uti -I../libs/gdi -I../libs/spool -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
+set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs/uti -I../libs/gdi -I../libs/spool -I../libs/spool/classic -I../libs/spool/flatfile -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 
 set   ADD_COPYRIGHT     = 0
 set   ADD_SUN_COPYRIGHT = 0
@@ -248,6 +248,7 @@ set   SHAREDEXT    = ".so"
 set   SHAREDLD     = ""
 set   SHARED_CFLAGS = ""
 set   SHARED_LFLAGS = ""
+set   DLLIB         = "-ldl"
 set   STATIC        = 0
 set   IRIX_ABI      = ""
 set   IRIX_ARCHDEF  = IRIX6
@@ -866,6 +867,8 @@ case ALPHA5:
    set WFLAG   = "-w2"
    # set WFLAG = ""
 
+   set DLLIB = ""
+
    set OFLAG = "-O"
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3"
@@ -1010,6 +1013,7 @@ case IRIX6*:
 
 case HP10:
    set MAKE = gmake
+   set DLLIB = ""
    set OFLAG = "-O"
    if ( $CC == gcc ) then
       if ( $OPTIMIZATION == 1 ) then
@@ -1060,6 +1064,7 @@ case HP10:
 case HP11:
    set MAKE = gmake
    set OFLAG = "-O"
+   set DLLIB = ""
    if ( $CC == gcc ) then
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "-O3"
@@ -1109,6 +1114,7 @@ case HP11:
 case HP1164:
    set MAKE = gmake
    set OFLAG = "-O"
+   set DLLIB = ""
    if ( $CC == gcc ) then
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "-O3"
@@ -1351,6 +1357,11 @@ case SOLARIS86:
       endif   
    endif
 
+   if ( $DEBUGGED == 1 ) then
+      set DEBUG_FLAG = "-g"
+      set OFLAG = ""
+   endif
+
    if ( $GPROFFED == 1 ) then
       set OFLAG = "-O"
       if ( $CC == gcc ) then
@@ -1359,11 +1370,6 @@ case SOLARIS86:
       else
          set DEBUG_FLAG = "-g -xpg"
       endif
-   endif
-
-   if ( $DEBUGGED == 1 ) then
-      set DEBUG_FLAG = "-g"
-      set OFLAG = ""
    endif
 
    set DEPEND_FLAGS = "$CFLAGS -D$BUILDARCH $XMTINCD"
@@ -1764,6 +1770,7 @@ if ( "$CORE" == 1 ) then
        "INTERACTTARGETS=$INTERACTTARGETS" \
        "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
        "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+       "DLLIB=$DLLIB" \
        "MEMCFLAG=$MEMCFLAG" \
        "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" "CORE_INCLUDE=$CORE_INCLUDE" $argv $TARGET 
    if ( $status != 0 ) then

@@ -35,6 +35,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
+#include "sge_stdlib.h"
 #include "sge_string.h"
 
 #include "sge_all_listsL.h"
@@ -95,6 +96,112 @@ object_has_type(const lListElem *object, const lDescr *descr)
    return ret;
 } 
 
+/****** gdi/object/object_get_type() *******************************************
+*  NAME
+*     object_get_type() -- return type (descriptor) for object
+*
+*  SYNOPSIS
+*     const lDescr * object_get_type(const lListElem *object) 
+*
+*  FUNCTION
+*     Returns the cull type (descriptor) for a certain object.
+*     This descriptor can be different from the objects descriptor,
+*     as the objects descriptor can come from an object created from
+*     communication, can be a partial descriptor etc.
+*
+*  INPUTS
+*     const lListElem *object - the object to analyze
+*
+*  RESULT
+*     const lDescr * - the object type / descriptor
+*
+*******************************************************************************/
+const lDescr * 
+object_get_type(const lListElem *object)
+{
+   const lDescr *ret = NULL;
+
+   if (object_has_type(object, EH_Type)) {
+      ret = EH_Type;
+   } else if (object_has_type(object, AH_Type)) {
+      ret = AH_Type;
+   } else if (object_has_type(object, SH_Type)) {
+      ret = SH_Type;
+   } else if (object_has_type(object, QU_Type)) {
+      ret = QU_Type;
+   } else if (object_has_type(object, JB_Type)) {
+      ret = JB_Type;
+   } else if (object_has_type(object, JAT_Type)) {
+      ret = JAT_Type;
+   } else if (object_has_type(object, PET_Type)) {
+      ret = PET_Type;
+   } else if (object_has_type(object, RN_Type)) {
+      ret = RN_Type;
+   } else if (object_has_type(object, PE_Type)) {
+      ret = PE_Type;
+   } else if (object_has_type(object, VA_Type)) {
+      ret = VA_Type;
+   }
+
+   return ret;
+}
+
+/****** gdi/object/object_get_subtype() ****************************************
+*  NAME
+*     object_get_subtype() -- get type of a sublist
+*
+*  SYNOPSIS
+*     const lDescr * object_get_subtype(int nm) 
+*
+*  FUNCTION
+*     returns the data type (descriptor) of a certain sublist.
+*
+*  INPUTS
+*     int nm - name of the sublist
+*
+*  RESULT
+*     const lDescr * - type of the sublist
+*
+*  NOTES
+*     Only partially implemented.
+*     The function has to be extended as needed.
+*     Better would be to have some global data structure containing this
+*     information.
+*
+*******************************************************************************/
+const lDescr * 
+object_get_subtype(int nm)
+{
+   const lDescr *ret = NULL;
+
+   switch(nm) {
+      case QU_load_thresholds:
+      case QU_suspend_thresholds:
+         ret = CE_Type;
+         break;
+      case QU_acl:
+      case QU_xacl:
+      case QU_owner_list:
+         ret = US_Type;
+         break;
+      case QU_subordinate_list:
+         ret = SO_Type;
+         break;
+      case QU_complex_list:
+         ret = CX_Type;
+         break;
+      case QU_consumable_config_list:
+         ret = CE_Type;
+         break;
+      case QU_projects:
+      case QU_xprojects:
+         ret = UP_Type;
+         break;
+   }
+
+   return ret;
+}
+
 /****** gdi/object/object_get_primary_key() ************************************
 *  NAME
 *     object_get_primary_key() -- get primary key for object type
@@ -150,6 +257,64 @@ object_get_primary_key(const lDescr *descr)
    return ret;
 }
  
+/****** gdi/object/object_get_name_prefix() ************************************
+*  NAME
+*     object_get_name_prefix() -- get prefix of cull attribute name
+*
+*  SYNOPSIS
+*     const char * object_get_name_prefix(const lDescr *descr, dstring *buffer) 
+*
+*  FUNCTION
+*     Returns the prefix that is used in attribute names characterizing the 
+*     object type (e.g. "QU_" for the QU_Type).
+*
+*  INPUTS
+*     const lDescr *descr - object type to use
+*     dstring *buffer     - buffer that is used to return the result
+*
+*  RESULT
+*     const char * - the prefix or
+*                    NULL, if an error occured
+*
+*  EXAMPLE
+*     object_get_name_prefix(QU_Type, buffer) = "QU_"
+*     object_get_name_prefix(JB_Type, buffer) = "JB_"
+*
+*  NOTES
+*     The function relies on object_get_primary_key. This function only
+*     is implemented for some object types.
+*     For types not handled in object_get_primary_key, NULL will be returned.
+*
+*  SEE ALSO
+*     gdi/object/object_get_primary_key()
+*******************************************************************************/
+const char * 
+object_get_name_prefix(const lDescr *descr, dstring *buffer)
+{
+   int nm;
+
+   if (descr == NULL || buffer == NULL) {
+      return NULL;
+   }
+
+   nm = object_get_primary_key(descr);
+
+   if (nm != NoName) {
+      const char *name = lNm2Str(nm);
+
+      if (name != NULL) {
+         char *underscore = strchr(name, '_');
+
+         if (underscore != NULL) {
+            sge_dstring_sprintf(buffer, "%.*s", underscore - name + 1, name);
+            return sge_dstring_get_string(buffer);
+         }
+      }
+   }
+
+   return NULL;
+}
+
 /****** gdi/object/object_get_field_contents() *********************************
 *  NAME
 *     object_get_field_contents() -- get object field contents as string
@@ -241,18 +406,18 @@ object_get_field_contents(const lListElem *object, lList **answer_list,
          sge_dstring_sprintf(buffer, "%c", lGetPosChar(object, pos));
          break;
       case lBoolT:
-         result = lGetPosBool(object, pos) ? "true" : "false";
+         result = lGetPosBool(object, pos) ? TRUE_STR : FALSE_STR;
          break;
       case lIntT:
          sge_dstring_sprintf(buffer, "%d", lGetPosInt(object, pos));
          break;
       case lStringT:
          str = lGetPosString(object, pos);
-         sge_dstring_sprintf(buffer, "%s", str != NULL ? str : "none");
+         sge_dstring_sprintf(buffer, "%s", str != NULL ? str : NONE_STR);
          break;
       case lHostT:
          str = lGetPosHost(object, pos);
-         sge_dstring_sprintf(buffer, "%s", str != NULL ? str : "none");
+         sge_dstring_sprintf(buffer, "%s", str != NULL ? str : NONE_STR);
          break;
       case lListT:
       case lObjectT:
@@ -417,9 +582,16 @@ object_set_field_contents(lListElem *object, lList **answer_list, const int nm,
          }
          break;
       case lBoolT:
-         if (sge_strnullcasecmp(value, "true") == 0) {
+         if(value == NULL) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_ERRORPARSINGVALUEFORNM_SS,
+                                    "<null>", lNm2Str(nm));
+            ret = false;
+         }
+         if (strncmp(value, TRUE_STR, TRUE_LEN) == 0) {
             lSetPosBool(object, pos, true);
-         } else if (sge_strnullcasecmp(value, "false") == 0) {
+         } else if (strncmp(value, FALSE_STR, FALSE_LEN) == 0) {
             lSetPosBool(object, pos, false);
          } else {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 

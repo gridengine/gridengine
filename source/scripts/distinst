@@ -72,7 +72,7 @@ SGEEE_UTILITYBINARIES="sge_share_mon"
 
 JOBBINARIES="work"
 
-SHARED_LIBRARIES="libcom libcull libgdi librmon libsched libsge libuti"
+SHARED_LIBRARIES="libcom libcull libgdi librmon libsched libsge libuti libspool libspoolc libspoolf"
 QMON_SHARED_LIBRARIES="libXbae libXicon libXltree libXmt libXspin libXtab"
 ZLIB_SHARED_LIBRARIES="libz"
 

@@ -38,13 +38,19 @@
 #include "sge.h"
 
 #include "gdi_utility.h"
+#include "sge_object.h"
+#include "sge_complex.h"
 #include "sge_job.h"
 #include "sge_manop.h"
 #include "sge_userset.h"
 #include "sge_event.h"
 #include "sge_m_event.h"
 #include "sge_answer.h"
+#include "sge_range.h"
 #include "parse.h"
+
+#include "commlib.h"
+#include "commd.h"
 
 #include "msg_common.h"
 #include "msg_gdilib.h"
@@ -580,7 +586,7 @@ static const char *queue_types[] = {
    "INTERACTIVE",  
    "CHECKPOINTING",
    "PARALLEL",
-   NULL
+   ""
 };
 
 /****** gdi/queue/queue_get_type_string() **************************************
@@ -686,3 +692,119 @@ queue_set_type_string(lListElem *queue, lList **answer_list, const char *value)
    DEXIT;
    return ret;
 }
+
+bool 
+queue_validate(lListElem *queue, lList **answer_list)
+{
+   bool ret = true;
+
+   const char *queue_name;
+   const char *host_name;
+   const char *str;
+
+   DENTER(TOP_LAYER, "queue_validate");
+
+   /* check queue name */
+   queue_name = lGetString(queue, QU_qname);
+   if(queue_name == NULL || *queue_name == '\0') {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_NULLOREMPTYSTRINGFOR_S, "QU_qname");
+      DEXIT;
+      return false;
+   }
+
+   /* check host name */
+   host_name = lGetHost(queue, QU_qhostname);
+   if(host_name == NULL || *host_name == '\0') {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_NULLOREMPTYSTRINGFOR_S, "QU_qhostname");
+      DEXIT;
+      return false;
+   }
+
+   /* check hostname resolving, accept unknown host */
+   if(strcmp(queue_name, SGE_TEMPLATE_NAME) != 0) {
+      char unique[MAXHOSTLEN];
+      int ret1;
+
+      if ((ret1 = getuniquehostname(host_name, unique, 0)) != CL_OK) {
+         if (ret1 != COMMD_NACK_UNKNOWN_HOST) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_ANSWER_GETUNIQUEHNFAILEDRESX_SS, 
+                                    host_name, cl_errstr(ret1));
+            ret = false; 
+         }
+      }
+   }
+
+   /* check processors */
+   if ((str = lGetString(queue, QU_processors)) != NULL) {
+      lList *range_list = NULL;
+      range_list_parse_from_string(&range_list, answer_list, str, 
+                                   JUST_PARSE, 0, INF_ALLOWED);
+      range_list = lFreeList(range_list);
+      /* JG: TODO: range_list_parse_from_string should return error */
+      if (*answer_list) {   
+         DEXIT;
+         ret = false;
+      }
+   }
+
+   NULL_OUT_NONE(queue, QU_calendar);
+   NULL_OUT_NONE(queue, QU_prolog);
+   NULL_OUT_NONE(queue, QU_epilog);
+   NULL_OUT_NONE(queue, QU_shell_start_mode);
+   NULL_OUT_NONE(queue, QU_starter_method);
+   NULL_OUT_NONE(queue, QU_suspend_method);
+   NULL_OUT_NONE(queue, QU_resume_method);
+   NULL_OUT_NONE(queue, QU_terminate_method);
+   NULL_OUT_NONE(queue, QU_initial_state);
+
+   DEXIT;
+   return true;
+}
+
+lListElem *queue_create_template(void)
+{
+   lListElem *queue, *ep;
+
+   queue = lCreateElem(QU_Type);
+   lSetString(queue, QU_qname, "template");
+   lSetHost(queue, QU_qhostname, "unknown");
+
+   ep = lAddSubStr(queue, CE_name, "np_load_avg", QU_load_thresholds, CE_Type);
+   lSetString(ep, CE_stringval, "1.75"); 
+
+   lSetString(queue, QU_suspend_interval, "00:05:00");
+   lSetUlong(queue, QU_nsuspend, 1);
+   lSetString(queue, QU_min_cpu_interval, "00:05:00");
+   lSetString(queue, QU_processors, "UNDEFINED");
+   lSetString(queue, QU_priority, "0");
+   lSetUlong(queue, QU_qtype, BQ|IQ|PQ);
+   lSetUlong(queue, QU_job_slots, 1);
+   lSetString(queue, QU_tmpdir, "/tmp");
+   lSetString(queue, QU_shell, "/bin/csh");
+   lSetString(queue, QU_notify, "00:00:60");
+   lSetString(queue, QU_initial_state, "default");
+
+   lSetString(queue, QU_s_rt, "INFINITY");
+   lSetString(queue, QU_h_rt, "INFINITY");
+   lSetString(queue, QU_s_cpu, "INFINITY");
+   lSetString(queue, QU_h_cpu, "INFINITY");
+   lSetString(queue, QU_s_fsize, "INFINITY");
+   lSetString(queue, QU_h_fsize, "INFINITY");
+   lSetString(queue, QU_s_data, "INFINITY");
+   lSetString(queue, QU_h_data, "INFINITY");
+   lSetString(queue, QU_s_stack, "INFINITY");
+   lSetString(queue, QU_h_stack, "INFINITY");
+   lSetString(queue, QU_s_core, "INFINITY");
+   lSetString(queue, QU_h_core, "INFINITY");
+   lSetString(queue, QU_s_rss, "INFINITY");
+   lSetString(queue, QU_h_rss, "INFINITY");
+   lSetString(queue, QU_s_vmem, "INFINITY");
+   lSetString(queue, QU_h_vmem, "INFINITY");
+
+   return queue;
+}
+

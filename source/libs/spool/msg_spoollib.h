@@ -36,7 +36,7 @@
 
 
 /* 
- * libs/gdi/sge_spooling.c
+ * libs/spool/sge_spooling.c
  */
 #define MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS     _MESSAGE(59000, _("object type "SFQ" is not handled in spooling context "SFQ"\n")) 
 #define MSG_SPOOL_NODEFAULTRULEFORTYPEINCONTEXT_SS  _MESSAGE(59001, _("no default rule for object type "SFQ" in spooling context "SFQ"\n"))
@@ -59,4 +59,11 @@
 #define MSG_SPOOL_RULEALREADYEXISTS_SS              _MESSAGE(59018, _("a rule named "SFQ" already exists in spooling context "SFQ"\n"))
 #define MSG_SPOOL_TYPEALREADYHASDEFAULTRULE_S       _MESSAGE(59019, _("spooling type "SFQ" already has a default rule, cannot add a second one\n"))
 
+/* 
+ * libs/spool/sge_spooling_utilities.c
+ */
+#define MSG_DONTKNOWHOWTOSPOOLSUBLIST_SS _MESSAGE(59100, _("don't know how to spool list attribute "SFQ" in function "SFQ"\n"))
+#define MSG_UNKNOWNOBJECTTYPEFOR_SS _MESSAGE(59101, _("unknown object type for list attribute "SFQ" in function "SFQ"\n"))
+#define MSG_FIELDDESCRIPTIONDOESNOTCONTAINNAME_S   _MESSAGE(59102, _("spooling field description for field "SFQ" does not contain name\n"))
+#define MSG_NONAMEFORATTRIBUTE_D _MESSAGE(59103, _("no or invalid name for attribute %d\n"))
 #endif /* __MSG_SPOOLLIB_H */

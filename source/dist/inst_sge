@@ -2051,6 +2051,14 @@ if [ ! -f util/arch ]; then
    exit 1
 fi
 
+shlib_path_name=`util/arch -lib`
+old_value=`eval echo '$'$shlib_path_name`
+if [ x$old_value = x ]; then
+   eval $shlib_path_name=lib/$ARCH
+else
+   eval $shlib_path_name=$old_value:lib/$ARCH
+fi
+export $shlib_path_name
 
 umask 022
 

@@ -1113,7 +1113,7 @@
 
 /* general error messages */
 #define MSG_UNKNOWNREASON                 _MESSAGE(60000, _("<unknown reason>"))
-
+#define MSG_NOTYETIMPLEMENTED_S           _MESSAGE(60001, _("feature "SFQ" not yet implemented\n"))
 /* memory */
 #define MSG_UNABLETOALLOCATEBYTES_DS      _MESSAGE(60100, _("unable to allocate %d bytes of memory in function "SFQ"\n"))
 
@@ -1121,10 +1121,10 @@
 #define MSG_INVALIDFILENAMENULLOREMPTY    _MESSAGE(60200, _("invalid file name: NULL pointer or empty string\n"))
 #define MSG_STDFILEHANDLECLOSEDORCORRUPTED_S _MESSAGE(60201, _("standard file handle "SFN" has been closed or corrupted\n"))
 #define MSG_ERRORGETTINGTMPNAM_S          _MESSAGE(60202, _("error getting temporary file name: "SFN"\n"))
-/* #define MSG_ERROROPENINGFILEFORREADING_SS _message(60203, _("error opening file "SFQ" for reading: "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_ERROROPENINGFILEFORREADING_SS _MESSAGE(60203, _("error opening file "SFQ" for reading: "SFN"\n")) 
 #define MSG_ERROROPENINGFILEFORWRITING_SS _MESSAGE(60204, _("error opening file "SFQ" for writing: "SFN"\n"))
 #define MSG_ERRORCLOSINGFILE_SS           _MESSAGE(60205, _("error closing file "SFQ": "SFN"\n"))
-/* #define MSG_ERROR_READINGFILE_SS          _message(60206, _("error reading from file "SFQ": "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_ERROR_READINGFILE_SS          _MESSAGE(60206, _("error reading from file "SFQ": "SFN"\n"))
 #define MSG_ERROR_WRITINGFILE_SS          _MESSAGE(60207, _("error writing to file "SFQ": "SFN"\n"))
 
 /* parsing of parameters */
@@ -1133,6 +1133,9 @@
 /* cull specific */
 #define MSG_NMNOTINELEMENT_S              _MESSAGE(60401, _("attribute "SFQ" not contained in given object\n"))
 #define MSG_INVALIDCULLDATATYPE_D         _MESSAGE(60402, _("invalid cull datatype %d\n"))
+#define MSG_ERRORCREATINGOBJECT           _MESSAGE(60403, _("error creating object\n"))
+#define MSG_ERRORCREATINGLIST           _MESSAGE(60404, _("error creating list\n"))
+#define MSG_NULLOREMPTYSTRINGFOR_S  _MESSAGE(60405, _("null or empty string for attribute "SFQ"\n"))
 
 /* =================================================
  * please do not enter new messages after this point,

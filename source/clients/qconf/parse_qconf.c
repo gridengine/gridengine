@@ -95,8 +95,142 @@
 #include "sge_conf.h"
 #include "sge_ckpt.h"
 
+#ifdef USE_FLATFILE_SPOOLING
+#include "sge_spooling_utilities.h"
+#include "sge_spooling_flatfile.h"
+#endif
+
 #include "msg_common.h"
 #include "msg_qconf.h"
+
+#ifdef USE_FLATFILE_SPOOLING
+spooling_field CE_sub_fields[] = {
+   {  CE_name, 0, NULL },
+   {  CE_stringval, 0, NULL},
+   {  NoName, 0, NULL},
+};
+
+spooling_field CX_sub_fields[] = {
+   {  CX_name, 0, NULL },
+   {  NoName, 0, NULL},
+};
+
+spooling_field UP_sub_fields[] = {
+   {  UP_name, 0, NULL },
+   {  NoName, 0, NULL},
+};
+
+spooling_field SO_sub_fields[] = {
+   {  SO_qname, 0, NULL },
+   {  NoName, 0, NULL},
+};
+
+spooling_field US_sub_fields[] = {
+   {  US_name, 0, NULL },
+   {  NoName, 0, NULL},
+};
+
+spooling_field QU_fields[] = {
+   {  QU_qname,                 20, "qname",              NULL },
+   {  QU_qhostname,              0, "hostname",           NULL },
+   {  QU_seq_no,                 0, "seq_no",          NULL },
+   {  QU_load_thresholds,        0, "load_thresholds", CE_sub_fields},
+   {  QU_suspend_thresholds,     0, "suspend_thresholds", CE_sub_fields},
+   {  QU_nsuspend,               0, "nsuspend", NULL},
+   {  QU_suspend_interval,       0, "suspend_interval", NULL},
+   {  QU_priority,               0, "priority", NULL},
+   {  QU_min_cpu_interval,       0, "min_cpu_interval", NULL},
+   {  QU_processors,             0, "processors", NULL},
+   {  QU_qtype,                  0, "qtype", NULL},
+   {  QU_rerun,                  0, "rerun", NULL},
+   {  QU_job_slots,              0, "slots", NULL},
+   {  QU_tmpdir,                 0, "tmpdir", NULL},
+   {  QU_shell,                  0, "shell", NULL},
+   {  QU_shell_start_mode,       0, "shell_start_mode", NULL},
+   {  QU_prolog,                 0, "prolog", NULL},
+   {  QU_epilog,                 0, "epilog", NULL},
+   {  QU_starter_method,         0, "starter_method", NULL},
+   {  QU_suspend_method,         0, "suspend_method", NULL},
+   {  QU_resume_method,          0, "resume_method", NULL},
+   {  QU_terminate_method,       0, "terminate_method", NULL},
+   {  QU_notify,                 0, "notify", NULL},
+   {  QU_owner_list,             0, "owner_list", US_sub_fields},
+   {  QU_acl,                    0, "user_lists", US_sub_fields},
+   {  QU_xacl,                   0, "xuser_lists", US_sub_fields},
+   {  QU_subordinate_list,       0, "subordinate_list", SO_sub_fields},
+   {  QU_complex_list,           0, "complex_list", CX_sub_fields},
+   {  QU_consumable_config_list, 0, "complex_values", CE_sub_fields},
+   {  QU_projects,               0, "projects", UP_sub_fields},
+   {  QU_xprojects,              0, "xprojects", UP_sub_fields},
+   {  QU_calendar,               0, "calendar", NULL},
+   {  QU_initial_state,          0, "initial_state", NULL},
+   {  QU_fshare,                 0, "fshare", NULL},
+   {  QU_oticket,                0, "oticket", NULL},
+   {  QU_s_rt,                   0, "s_rt", NULL},
+   {  QU_h_rt,                   0, "h_rt", NULL},
+   {  QU_s_cpu,                  0, "s_cpu", NULL},
+   {  QU_h_cpu,                  0, "h_cpu", NULL},
+   {  QU_s_fsize,                0, "s_fsize", NULL},
+   {  QU_h_fsize,                0, "h_fsize", NULL},
+   {  QU_s_data,                 0, "s_data", NULL},
+   {  QU_h_data,                 0, "h_data", NULL},
+   {  QU_s_stack,                0, "s_stack", NULL},
+   {  QU_h_stack,                0, "h_stack", NULL},
+   {  QU_s_core,                 0, "s_core", NULL},
+   {  QU_h_core,                 0, "h_core", NULL},
+   {  QU_s_rss,                  0, "s_rss", NULL},
+   {  QU_h_rss,                  0, "h_rss", NULL},
+   {  QU_s_vmem,                 0, "s_vmem", NULL},
+   {  QU_h_vmem,                 0, "h_vmem", NULL},
+   {  NoName,                    0, NULL, NULL}
+};
+
+const spool_instr qconf_sub_si = 
+{
+   CULL_NAMELIST | CULL_TUPLELIST,
+   true,
+   true,
+   NULL
+};
+
+const spool_instr qconf_si = 
+{
+   CULL_CONFIGURE,
+   true,
+   true,
+   &qconf_sub_si
+};
+
+const spool_flatfile_instr qconf_sub_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   NULL,
+   "=",
+   ",",
+   NULL,
+   NULL
+};
+
+const spool_flatfile_instr qconf_sfi = 
+{
+   &qconf_si,
+   true,
+   false,
+   true,
+   false,
+   NULL,
+   "\n",
+   "\n",
+   NULL,
+   NULL,
+   &qconf_sub_sfi
+};
+
+#endif
 
 static int sge_edit(char *fname);
 static int sge_next_is_an_opt(char **ptr);
@@ -815,10 +949,29 @@ DPRINTF(("ep: %s %s\n",
          ep = lFirst(lp);
 
          /* write queue to temp file */
+#ifdef USE_FLATFILE_SPOOLING
+      {
+         lList *answer_list = NULL;
+         const char *result;
+
+         if ((result = spool_flatfile_write_object(&answer_list, ep, 
+                                                   QU_fields, &qconf_sfi, 
+                                                   SP_DEST_TMP, SP_FORM_ASCII,
+                                                   NULL)) == NULL) { 
+            answer_list_print_err_warn(&answer_list, NULL, NULL);
+#else
          if (cull_write_qconf(0, FALSE, NULL, NULL, fname, ep)) {
+#endif
             if (sge_error_and_exit(MSG_QUEUE_UNABLETOWRITETEMPLATEQUEUE))
                continue;
          }
+#ifdef USE_FLATFILE_SPOOLING
+         else {
+            strcpy(fname, result);
+            FREE(result);
+         }
+      }   
+#endif
 
          /* edit template file */
          status = sge_edit(fname);
@@ -836,7 +989,25 @@ DPRINTF(("ep: %s %s\n",
          }
 
          /* read it in again */
+#ifdef USE_FLATFILE_SPOOLING
+         {
+            lList *answer_list = NULL;
+
+            ep = spool_flatfile_read_object(&answer_list, QU_Type,
+                                            QU_fields, NULL, &qconf_sfi, 
+                                            SP_FORM_ASCII,
+                                            NULL, fname);
+            if(ep != NULL) {
+               if(!queue_validate(ep, &answer_list)) {
+                  ep = lFreeElem(ep);
+               }
+            }
+
+            answer_list_print_err_warn(&answer_list, NULL, NULL);
+         }
+#else
          ep = cull_read_in_qconf(NULL, fname, 0, 0, NULL, NULL);
+#endif
          unlink(fname);
          if (!ep) {
             if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE)) {
@@ -1108,7 +1279,25 @@ DPRINTF(("ep: %s %s\n",
 
          spp = sge_parser_get_next(spp);
 
+#ifdef USE_FLATFILE_SPOOLING
+         {
+            lList *answer_list = NULL;
+
+            ep = spool_flatfile_read_object(&answer_list, QU_Type,
+                                            QU_fields, NULL, &qconf_sfi, 
+                                            SP_FORM_ASCII,
+                                            NULL, *spp);
+            if(ep != NULL) {
+               if(!queue_validate(ep, &answer_list)) {
+                  ep = lFreeElem(ep);
+               }
+            }
+
+            answer_list_print_err_warn(&answer_list, NULL, NULL);
+         }
+#else
          ep = cull_read_in_qconf(NULL, *spp, 0, 0, NULL, NULL);
+#endif
          if (!ep)
             if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE))
                continue;
@@ -2140,11 +2329,29 @@ DPRINTF(("ep: %s %s\n",
 
          ep = lFirst(lp);
          
-         /* write queue to temp file */
+#ifdef USE_FLATFILE_SPOOLING
+      {
+         lList *answer_list = NULL;
+         const char *result;
+
+         if ((result = spool_flatfile_write_object(&answer_list, ep, 
+                                                   QU_fields, &qconf_sfi, 
+                                                   SP_DEST_TMP, SP_FORM_ASCII,
+                                                   NULL)) == NULL) { 
+            answer_list_print_err_warn(&answer_list, NULL, NULL);
+#else
          if (cull_write_qconf(0, FALSE, NULL, NULL, fname, ep)) {
+#endif
             if (sge_error_and_exit(MSG_QUEUE_UNABLETOWRITEOLDQUEUE))
                continue;
          }
+#ifdef USE_FLATFILE_SPOOLING
+         else {
+            strcpy(fname, result);
+            FREE(result);
+         }
+      }   
+#endif
          old_version = lGetUlong(ep, QU_version);
 
          lp = lFreeList(lp);
@@ -2165,7 +2372,25 @@ DPRINTF(("ep: %s %s\n",
          }
 
          /* read it in again */
+#ifdef USE_FLATFILE_SPOOLING
+         {
+            lList *answer_list = NULL;
+
+            ep = spool_flatfile_read_object(&answer_list, QU_Type,
+                                            QU_fields, NULL, &qconf_sfi, 
+                                            SP_FORM_ASCII,
+                                            NULL, fname);
+            if(ep != NULL) {
+               if(!queue_validate(ep, &answer_list)) {
+                  ep = lFreeElem(ep);
+               }
+            }
+
+            answer_list_print_err_warn(&answer_list, NULL, NULL);
+         }
+#else
          ep = cull_read_in_qconf(NULL, fname, 0, 0, NULL, NULL);
+#endif
          unlink(fname);
          if (!ep) {
             if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE)) {
@@ -3353,7 +3578,16 @@ DPRINTF(("ep: %s %s\n",
                      what = lFreeWhat(what);
 
                      if(lp)
+#ifdef USE_FLATFILE_SPOOLING
+                        {
+                           lList *answer_list = NULL;
+                           spool_flatfile_write_object(&answer_list, lFirst(lp),
+                           QU_fields, &qconf_sfi, SP_DEST_STDOUT, SP_FORM_ASCII, NULL);
+                           answer_list_print_err_warn(&answer_list, NULL, NULL);
+                        }   
+#else
                         cull_write_qconf(0, 1, NULL, NULL, NULL, lFirst(lp));
+#endif
                      else {
                         fprintf(stderr, MSG_QUEUE_UNABLE2FINDQ_S, lGetString(argep, QR_name));
                         sge_parse_return = 1;

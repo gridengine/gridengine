@@ -332,7 +332,7 @@ sge_check_stdout_stream(FILE *file, int fd)
       return false;
    }
 
-   if(fprintf(file, "%c", '\0') < 0) {
+   if(fprintf(file, "%s", "") < 0) {
       return false;
    }
 

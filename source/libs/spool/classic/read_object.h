@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_object.h"
+
 typedef int (*ReadWorkFuncT)(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);
 
 struct read_object_args {
@@ -41,9 +43,5 @@ struct read_object_args {
 };
 
 lListElem *read_object(const char *dirname, const char *filename, int spool, int flag, int read_config_list_flag, struct read_object_args *args, int *tag, int fields[]);
-
-#define NULL_OUT_NONE(ep, nm) \
-   if (lGetString(ep, nm) && !strcasecmp(lGetString(ep, nm), "none")) \
-         lSetString(ep, nm, NULL);
 
 #endif /* _READ_OBJECT_H */

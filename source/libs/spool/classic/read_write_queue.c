@@ -577,7 +577,7 @@ _Insight_set_option("suppress", "PARM_NULL");
          DEXIT;
          return lCopyElem(template);
       }
-      ep = create_template_queue();
+      ep = queue_create_template();
       template = lCopyElem(ep);
    } else 
       ep = read_object(dirname, filename, spool, 0,0 , &args, tag?tag:&intern_tag, fields);
@@ -587,58 +587,6 @@ _Insight_set_option("suppress", "PARM_NULL");
 #ifdef __INSIGHT__
 _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
-}
-
-/****
- **** create_template_queue (static)
- **** JG: TODO: should be moved to sge_queue.*
- ****/
-lListElem *create_template_queue(void)
-{
-lListElem *qep, *ep;
-lList *lp;
-
-   qep = lCreateElem(QU_Type);
-   lSetString(qep, QU_qname, "template");
-   lSetHost(qep, QU_qhostname, "unknown");
-
-   lp = lCreateList("load_thresholds", CE_Type); 
-   ep = lCreateElem(CE_Type);
-   lSetString(ep, CE_name, "np_load_avg");
-   lSetString(ep, CE_stringval, "1.75"); 
-   lAppendElem(lp, ep);
-   lSetList(qep, QU_load_thresholds, lp);
-
-   lSetString(qep, QU_suspend_interval, "00:05:00");
-   lSetUlong(qep, QU_nsuspend, 1);
-   lSetString(qep, QU_min_cpu_interval, "00:05:00");
-   lSetString(qep, QU_processors, "UNDEFINED");
-   lSetString(qep, QU_priority, "0");
-   lSetUlong(qep, QU_qtype, BQ|IQ|PQ);
-   lSetUlong(qep, QU_job_slots, 1);
-   lSetString(qep, QU_tmpdir, "/tmp");
-   lSetString(qep, QU_shell, "/bin/csh");
-   lSetString(qep, QU_notify, "00:00:60");
-   lSetString(qep, QU_initial_state, "default");
-
-   lSetString(qep, QU_s_rt, "INFINITY");
-   lSetString(qep, QU_h_rt, "INFINITY");
-   lSetString(qep, QU_s_cpu, "INFINITY");
-   lSetString(qep, QU_h_cpu, "INFINITY");
-   lSetString(qep, QU_s_fsize, "INFINITY");
-   lSetString(qep, QU_h_fsize, "INFINITY");
-   lSetString(qep, QU_s_data, "INFINITY");
-   lSetString(qep, QU_h_data, "INFINITY");
-   lSetString(qep, QU_s_stack, "INFINITY");
-   lSetString(qep, QU_h_stack, "INFINITY");
-   lSetString(qep, QU_s_core, "INFINITY");
-   lSetString(qep, QU_h_core, "INFINITY");
-   lSetString(qep, QU_s_rss, "INFINITY");
-   lSetString(qep, QU_h_rss, "INFINITY");
-   lSetString(qep, QU_s_vmem, "INFINITY");
-   lSetString(qep, QU_h_vmem, "INFINITY");
-
-   return qep;
 }
 
 int cull_write_qconf(

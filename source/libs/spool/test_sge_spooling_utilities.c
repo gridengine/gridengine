@@ -33,16 +33,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "cull.h"
-
 #include "sge_string.h"
 #include "sge_dstring.h"
 
+#include "cull.h"
+
 #include "sge_all_listsL.h"
 #include "sge_object.h"
+#include "sge_queue.h"
 
 #include "sge_spooling_utilities.h"
-#include "read_write_queue.h"
 
 int main(int argc, char *argv[])
 {
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
    lInit(nmv);
 
-   queue = create_template_queue();
+   queue = queue_create_template();
    copy  = lCreateElem(QU_Type);
 
    descr = lGetElemDescr(queue);
@@ -99,9 +99,9 @@ int main(int argc, char *argv[])
       }
    }
 
-   fields = spool_get_fields_to_spool(&answer_list, queue, &spool_config_instruction);
+   fields = spool_get_fields_to_spool(&answer_list, QU_Type, &spool_config_instr);
    printf("\nthe following fields will be spooled:");
-   for(i = 0; fields[i].nm >= 0; i++) {
+   for(i = 0; fields[i].nm != NoName; i++) {
       printf(" %s", lNm2Str(fields[i].nm));
    }
    printf("\n");

@@ -139,7 +139,7 @@ gdi_setup.o:	$(GDILIB_DIR)/gdi_setup.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_setup.c
 
 gdi_utility.o:	$(GDILIB_DIR)/gdi_utility.c
-		$(CC) $(CFLAGS) -c $(GDILIB_DIR)/gdi_utility.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_utility.c
 
 sge_ack.o:	$(GDILIB_DIR)/sge_ack.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_ack.c
@@ -289,7 +289,7 @@ sge_c_event.o: $(GDILIB_DIR)/sge_c_event.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_c_event.c
 
 sge_m_event$(QIDLEXT).o:	$(GDILIB_DIR)/sge_m_event.c
-		$(CC) -o $@ $(CFLAGS) -c $(GDILIB_DIR)/sge_m_event.c
+		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_m_event.c
 
 sge_usage.o: $(GDILIB_DIR)/sge_usage.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_usage.c
@@ -301,4 +301,10 @@ test_sge_mirror: test_sge_mirror.o sig_handlers.o $(GDILIB) $(CULLLIB) $(COMMLIB
 
 test_sge_mirror.o: $(GDILIB_DIR)/test_sge_mirror.c
 	$(CC) $(CFLAGS) -c $(GDILIB_DIR)/test_sge_mirror.c
+
+test_sge_object: test_sge_object.o $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_sge_object $(LFLAGS) test_sge_object.o sig_handlers.o $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+
+test_sge_object.o: $(GDILIB_DIR)/test_sge_object.c
+	$(CC) $(CFLAGS) -c $(GDILIB_DIR)/test_sge_object.c
 

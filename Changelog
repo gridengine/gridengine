@@ -1,6 +1,6 @@
 EB-2004-02-19-1: Bugfix:    It was possible to delete used cluster queues
                  Changed:   sge_qmaster
-                 Review:    pending
+                 Review:    SG 
                  Issue:     679
                   
 DT-2004-02-19-1: Bugfix:    Did various minor qconf & FF bug fixes.

@@ -1,3 +1,6 @@
+MD-2004-02-20-1: Bugfix:    - fixed wrong schedd default configuration
+                 Changed:   schedd templatefiles (installation)
+
 CR-2004-02-20-0: Bugfix:    reaching max possible connection count will disable
                             accepting/creating new connections. This is the 
                             part of fixing Issue #687

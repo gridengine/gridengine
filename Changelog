@@ -1,3 +1,5 @@
+CR-2002-07-26-3: Bugfix:    removed debug output from qsh client
+
 EB-2002-07-26-0: Cleanup:   removed duplicated code.
 
 EB-2002-07-24-0: Cleanup:   removed code which someone copied in the past. 

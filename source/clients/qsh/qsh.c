@@ -1843,7 +1843,7 @@ static void remove_unknown_opts(lList *lp)
       return;
    }
 
-   lWriteListTo(lp, stdout);
+   /* lWriteListTo(lp, stdout); */
    
    ep = lFirst(lp);
    while (ep) {
@@ -1885,5 +1885,5 @@ static void remove_unknown_opts(lList *lp)
       }
    }
 
-   lWriteListTo(lp, stdout);
+   /* lWriteListTo(lp, stdout); */
 } 

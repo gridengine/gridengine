@@ -246,12 +246,12 @@ proc path_alias_main {} {
 
       puts $CHECK_OUTPUT "qsh ..."
       set script_name "$PATH_ALIAS_OUTPUT1/global_pwdscript_$elem.sh"
-      set command     "> qsh_pwd_output_$elem.txt ; sleep 20"
+      set command     "> qsh_pwd_output_$elem.txt ; sleep 10"
       create_shell_script $script_name $elem "pwd" "$command "
       set pwd_script $script_name
       
       set script_name "$PATH_ALIAS_OUTPUT1/global_qsh_alias_$elem.sh"
-      set command     "qsh -cwd -l h=${elem} -S $pwd_script"
+      set command     "qsh -cwd -l h=${elem} -- -e $pwd_script"
       create_shell_script $script_name $elem "cd" "$PATH_ALIAS_OUTPUT1 ; $command "
       set output [start_remote_prog $elem $CHECK_USER $script_name "" ]
       puts $CHECK_OUTPUT $output

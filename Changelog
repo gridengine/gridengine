@@ -1,3 +1,8 @@
+CR-2004-11-26-0: Testsuite: - fixed bug in path_alias test which caused errors
+                              on irix65
+                            - additional test output for migration test
+                 Review:    JG
+
 DT-2004-11-25-0: Bugfix:    o Backed out DRMAA-J changes to create_settings.sh
                  Changed:   create_settings.sh
 

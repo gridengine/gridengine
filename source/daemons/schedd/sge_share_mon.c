@@ -35,6 +35,10 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "sge_dstring.h"
 
 #include "sge_gdi.h"

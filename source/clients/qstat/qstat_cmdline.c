@@ -36,6 +36,10 @@
 #include <ctype.h>
 #include <pwd.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "sgermon.h"
 #include "symbols.h"
 #include "sge.h"

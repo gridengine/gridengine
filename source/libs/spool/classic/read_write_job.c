@@ -35,6 +35,10 @@
 #include <unistd.h>
 #include <errno.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "basis_types.h"
 #include "sge.h"
 #include "sge_log.h"

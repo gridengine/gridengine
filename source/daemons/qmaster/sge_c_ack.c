@@ -30,9 +30,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_c_ack.h"
 
 #include <string.h>
+
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
+#include "sge_c_ack.h"
 #include "sge.h"
 #include "sge_job_qmaster.h"
 #include "sge_any_request.h"

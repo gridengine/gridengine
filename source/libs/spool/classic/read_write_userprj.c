@@ -43,6 +43,10 @@
 #include <errno.h>
 #include <limits.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "sge_unistd.h"
 #include "sgermon.h"
 #include "sge_gdi_request.h"

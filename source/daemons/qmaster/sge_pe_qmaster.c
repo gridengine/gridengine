@@ -33,6 +33,10 @@
 #include <string.h>
 #include <fnmatch.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "sge.h"
 #include "sge_pe.h"
 #include "sge_ja_task.h"

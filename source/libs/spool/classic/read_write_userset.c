@@ -34,6 +34,10 @@
 #include <string.h>
 #include <errno.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "sge_unistd.h"
 #include "sge.h"
 #include "cull.h"

@@ -29,6 +29,10 @@
  *
  ************************************************************************/
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_conf.h"

@@ -1,3 +1,8 @@
+JG-2002-11-19-0  Enhancem.: First part of a flat file spooling module
+                            containing generic functions for input/output
+                            of any objects in different formats.
+                 Cleanup:   Several cleanup issues done in libuti and libgdi.
+
 AH-2002-11-18-1  Bugfix:    Complex values for user defined complexes
                               are rejected with global host.
                  IZ         418

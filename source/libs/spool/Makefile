@@ -37,10 +37,12 @@ SPOOLLIB_DIR = $(SDIR)/libs/spool
 SPOOLLIB = libspool$(QIDLEXT)$(LIBEXT)
 
 SPOOLLIB_SRC = \
-         complex_history.c \
          sge_spooling.c \
+         sge_spooling_utilities.c \
+         \
          sge_spooling_classic.c \
          opt_history.c \
+         complex_history.c \
          read_write_sharetree.c \
          read_write_complex.c \
          read_list.c \
@@ -57,7 +59,9 @@ SPOOLLIB_SRC = \
          read_write_userprj.c \
          read_write_userset.c \
          rw_configuration.c \
-         sched_conf.c
+         sched_conf.c \
+         \
+         sge_spooling_flatfile.c
          
 
 SPOOLLIB_OBJS = $(SPOOLLIB_SRC:.c=.o)
@@ -97,15 +101,18 @@ include $(SPOOLLIB_DIR)/spool_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-complex_history.o:	$(SPOOLLIB_DIR)/complex_history.c
-		$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/complex_history.c
-   
 sge_spooling.o: $(SPOOLLIB_DIR)/sge_spooling.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLLIB_DIR)/sge_spooling.c
+
+sge_spooling_utilities.o: $(SPOOLLIB_DIR)/sge_spooling_utilities.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLLIB_DIR)/sge_spooling_utilities.c
 
 sge_spooling_classic.o: $(SPOOLLIB_DIR)/sge_spooling_classic.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLLIB_DIR)/sge_spooling_classic.c
 
+complex_history.o:	$(SPOOLLIB_DIR)/complex_history.c
+		$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/complex_history.c
+   
 opt_history.o: 	$(SPOOLLIB_DIR)/opt_history.c
 		$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/opt_history.c
 
@@ -160,6 +167,9 @@ sched_conf.o   : $(SPOOLLIB_DIR)/sched_conf.c
 read_list.o   : $(SPOOLLIB_DIR)/read_list.c
 		$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/read_list.c
 
+sge_spooling_flatfile.o: $(SPOOLLIB_DIR)/sge_spooling_flatfile.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLLIB_DIR)/sge_spooling_flatfile.c
+
 #---------------------------------------------------------------------
 # test programs
 test_sge_spooling: test_sge_spooling.o sig_handlers.o $(SPOOLLIB) $(GDILIB) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
@@ -167,4 +177,16 @@ test_sge_spooling: test_sge_spooling.o sig_handlers.o $(SPOOLLIB) $(GDILIB) $(SC
 
 test_sge_spooling.o: $(SPOOLLIB_DIR)/test_sge_spooling.c
 	$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/test_sge_spooling.c
+
+test_sge_spooling_utilities: test_sge_spooling_utilities.o $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_sge_spooling_utilities $(LFLAGS) test_sge_spooling_utilities.o $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+
+test_sge_spooling_utilities.o: $(SPOOLLIB_DIR)/test_sge_spooling_utilities.c
+	$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/test_sge_spooling_utilities.c
+
+test_sge_spooling_flatfile: test_sge_spooling_flatfile.o $(SPOOLLIB) $(GDILIB) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_sge_spooling_flatfile $(LFLAGS) test_sge_spooling_flatfile.o $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+
+test_sge_spooling_flatfile.o: $(SPOOLLIB_DIR)/test_sge_spooling_flatfile.c
+	$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/test_sge_spooling_flatfile.c
 

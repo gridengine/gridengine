@@ -169,6 +169,11 @@ int lGetPosViaElem(const lListElem *element, int name)
 *
 *  RESULT
 *     char* - string representation of id
+*  
+*  NOTE
+*     JG: TODO: Implementation is not really efficient.
+*               Could be improved by using a hash table that will be 
+*               dynamically built as names are looked up.
 ******************************************************************************/
 char *lNm2Str(int nm) 
 {
@@ -178,6 +183,7 @@ char *lNm2Str(int nm)
 
    DENTER(CULL_BASIS_LAYER, "lNm2Str");
 
+   /* JG: TODO: the sprintf(noinit) only has to be done on error */
    sprintf(noinit, "Nameindex = %d", nm);
    if (!lNameStr) {
       DPRINTF(("name vector uninitialized !!\n"));
@@ -231,6 +237,11 @@ static char *_lNm2Str(const lNameSpace *nsp, int nm)
 *
 *  RESULT
 *     int - value
+*
+*  NOTE
+*     JG: TODO: Highly inefficient implementation, does tons of strcmp.
+*               Should have a hash table that will be extended whenever
+*               a new name has to be resolved.
 ******************************************************************************/
 int lStr2Nm(const char *str) 
 {

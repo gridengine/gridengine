@@ -57,7 +57,7 @@
 ** the order is important, cause the corresponding enum is created
 ** in sge_parse_enum by value = (1<<array_index) 
 */
-static char* userset_types[] = {
+static const char* userset_types[] = {
    "ACL",   /* US_ACL   */
    "DEPT",  /* US_DEPT  */
    ""
@@ -156,7 +156,7 @@ int spool
    FILE *fp;
    intprt_type print_elements[] = { UE_name, 0 };
    const char *delis[] = {":", ",", NULL};
-   char **ptr;
+   const char **ptr;
    u_long32 bitmask, type;
    char filename[SGE_PATH_MAX];
    int ret;

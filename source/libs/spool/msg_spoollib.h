@@ -59,5 +59,4 @@
 #define MSG_SPOOL_RULEALREADYEXISTS_SS       _MESSAGE(59016, _("a rule named "SFQ" already exists in spooling context "SFQ"\n"))
 #define MSG_SPOOL_TYPEALREADYHASDEFAULTRULE_S _MESSAGE(59017, _("spooling type "SFQ" already has a default rule, cannot add a second one\n"))
 
-
 #endif /* __MSG_SPOOLLIB_H */

@@ -43,11 +43,10 @@
 #include "sge_string.h"
 #include "sge_answer.h"
 #include "sge_conf.h"
+#include "parse.h"
 
 #include "msg_gdilib.h"
 
-static int sge_parse_enum(const char *str, char *enumv[], u_long32 *uptr, 
-                          const char *name, lList **alpp); 
 /* 
 **
 ** DESCRIPTION
@@ -686,7 +685,7 @@ _Insight_set_option("unsuppress", "PARM_NULL");
  **** The function returns FALSE on error, otherwise TRUE.
  ****/
 int set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key,
-                  lListElem *ep, int name_nm, char **enum_strings) 
+                  lListElem *ep, int name_nm, const char **enum_strings) 
 {
 #ifdef __INSIGHT__
 /* JG: NULL is OK for fields */
@@ -701,7 +700,7 @@ _Insight_set_option("suppress", "PARM_NULL");
       DEXIT;
       return fields?TRUE:FALSE;
    }
-   if(sge_parse_enum(str, enum_strings, &uval, key, alpp)) {
+   if(!sge_parse_bitfield_str(str, enum_strings, &uval, key, alpp)) {
       DEXIT;
       return FALSE;
    }
@@ -896,68 +895,3 @@ _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
 }
 
-/* ------------------------------------------ 
-
-   parses an enumeration of specifiers into value
-   the first specifier is interpreted
-   as 1, second as 2, third as 4 ..
-   
-   return value
-
-   0 ok
-   -1 error
-
-*/
-static int sge_parse_enum(const char *str, char *set_specifier[], 
-                          u_long32 *value, const char *name, lList **alpp) 
-{
-   const char *s;
-   char **cpp;
-   u_long32 bitmask;
-   /* isspace() character plus "," */
-   static char delim[] = ", \t\v\n\f\r";
-   DENTER(TOP_LAYER, "sge_parse_enum");
-   
-   *value = 0;
-
-   for (s = sge_strtok(str, delim); s; s=sge_strtok(NULL, delim)) {
-
-      bitmask = 1;
-      for (cpp=set_specifier; **cpp != '\0'; cpp++) {
-         if (!strcasecmp(*cpp, s)) {
-
-            if ( *value & bitmask ) {
-               /* whops! unknown specifier */
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS, *cpp, name)); 
-               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               DEXIT;
-               return -1;
-            }
-
-            *value |= bitmask;
-            break;
-         }
-         else   
-            bitmask <<= 1;
-      }
-
-      if ( **cpp == '\0' ) {
-         /* whops! unknown specifier */
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILEUNKNOWNSPEC_SS, s, name)); 
-         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
-      }
-
-   }
-
-   if (!value) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILEEMPTYENUMERATION_S , name));
-      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return -1;
-
-   }
-   DEXIT;
-   return 0;
-}

@@ -470,5 +470,9 @@
 #define MSG_SGETEXT_UNKNOWNUSERSET_SSSS               _MESSAGE(43290, _("denied: userset "SFQ" referenced in "SFN" of "SFN" "SFQ" does not exist\n") ) 
 #define MSG_US_INVALIDUSERNAME        _MESSAGE(43291, _("userset contains invalid (null) user name"))
 
+/*
+ * libs/gdi/sge_object.c
+ */
+#define  MSG_ERRORPARSINGVALUEFORNM_SS _MESSAGE(43292, _("error parsing value "SFQ" for attribute "SFQ"\n"))
 #endif /* __MSG_GDILIB_H */
 

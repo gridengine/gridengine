@@ -80,6 +80,7 @@ enum {
                               */
 };
 
+
 int answer_has_quality(const lListElem *answer, answer_quality_t quality);
 
 int answer_is_recoverable(const lListElem *answer);
@@ -95,8 +96,13 @@ void answer_print_text(const lListElem *answer,
                        const char *prefix,
                        const char *suffix);
 
-int answer_list_add(lList **answer_list, const char *text, 
-                    u_long32 status, answer_quality_t quality);
+bool
+answer_list_add(lList **answer_list, const char *text, 
+                u_long32 status, answer_quality_t quality);
+
+bool 
+answer_list_add_sprintf(lList **answer_list, u_long32 status, 
+                        answer_quality_t quality, const char *fmt, ...);
 
 int answer_list_has_quality(lList **answer_list, 
                             answer_quality_t quality);
@@ -110,5 +116,7 @@ int answer_list_print_err_warn(lList **answer_list,
                                const char *warn_prefix);
 
 int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream);
+
+/* */
 
 #endif /* __SGE_ANSWER_H */

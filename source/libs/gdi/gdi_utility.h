@@ -33,8 +33,28 @@
 /*___INFO__MARK_END__*/
 
 
+#include "cull.h"
+#include "sge_answer.h"
 
-extern char err_msg[1000];
+#define SGE_CHECK_POINTER_NULL(pointer)                              \
+   if ((pointer) == NULL) {                                          \
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,          \
+                              ANSWER_QUALITY_ERROR,                  \
+                              MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);  \
+      DEXIT;                                                         \
+      return NULL;                                                   \
+   }
+
+#define SGE_CHECK_POINTER_FALSE(pointer)                             \
+   if ((pointer) == NULL) {                                          \
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,          \
+                              ANSWER_QUALITY_ERROR,                  \
+                              MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);  \
+      DEXIT;                                                         \
+      return false;                                                  \
+   }
+
+extern char err_msg[1000]; /* JG: TODO: thats potentially very dangerous! */
 void error(char *err_str);
 
 int attr_mod_procedure(lList **alpp, lListElem *qep, lListElem *new_queue, int nm, char *attr_name, char *variables[]);

@@ -60,6 +60,11 @@
 *  NOTES
 *     Don't forget to define the 'FPRINTF_ERROR'-label
 ******************************************************************************/
+
+#include <stdio.h>
+
+#include "basis_types.h"
+
 #define FPRINTF(x) \
    __fprintf_ret = fprintf x; \
    if (__fprintf_ret == -1) { \
@@ -76,5 +81,8 @@ int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err,
                 struct timeval *timeout); 
 
 void print_option_syntax(FILE *fp, const char *option, const char *meaning);
+
+bool 
+sge_check_stdout_stream(FILE *file, int fd);
 
 #endif /* __SGE_STDIO_H */

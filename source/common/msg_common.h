@@ -1111,7 +1111,28 @@
  * =================================================
  */
 
-#define MSG_UNKNOWNREASON                  _MESSAGE(60000, _("<unknown reason>"))
+/* general error messages */
+#define MSG_UNKNOWNREASON                 _MESSAGE(60000, _("<unknown reason>"))
+
+/* memory */
+#define MSG_UNABLETOALLOCATEBYTES_DS      _MESSAGE(60100, _("unable to allocate %d bytes of memory in function "SFQ"\n"))
+
+/* file io */
+#define MSG_INVALIDFILENAMENULLOREMPTY    _MESSAGE(60200, _("invalid file name: NULL pointer or empty string\n"))
+#define MSG_STDFILEHANDLECLOSEDORCORRUPTED_S _MESSAGE(60201, _("standard file handle "SFN" has been closed or corrupted\n"))
+#define MSG_ERRORGETTINGTMPNAM_S          _MESSAGE(60202, _("error getting temporary file name: "SFN"\n"))
+#define MSG_ERROROPENINGFILEFORREADING_SS _MESSAGE(60203, _("error opening file "SFQ" for reading: "SFN"\n"))
+#define MSG_ERROROPENINGFILEFORWRITING_SS _MESSAGE(60204, _("error opening file "SFQ" for writing: "SFN"\n"))
+#define MSG_ERRORCLOSINGFILE_SS           _MESSAGE(60205, _("error closing file "SFQ": "SFN"\n"))
+#define MSG_ERROR_READINGFILE_SS          _MESSAGE(60206, _("error reading from file "SFQ": "SFN"\n"))
+#define MSG_ERROR_WRITINGFILE_SS          _MESSAGE(60207, _("error writing to file "SFQ": "SFN"\n"))
+
+/* parsing of parameters */
+#define MSG_NULLELEMENTPASSEDTO_S         _MESSAGE(60301, _("NULL object pointer passed to function "SFQ"\n"))
+
+/* cull specific */
+#define MSG_NMNOTINELEMENT_S              _MESSAGE(60401, _("attribute "SFQ" not contained in given object\n"))
+#define MSG_INVALIDCULLDATATYPE_D         _MESSAGE(60401, _("invalid cull datatype %d\n"))
 
 /* =================================================
  * please do not enter new messages after this point,

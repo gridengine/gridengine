@@ -47,6 +47,9 @@
 *        dstring error_msg = DSTRING_INIT;
 *     }
 ******************************************************************************/
+
+#include <stdarg.h>
+
 #define DSTRING_INIT {NULL, 0}
 
 typedef struct {
@@ -58,6 +61,7 @@ const char* sge_dstring_append(dstring *sb, const char *a);
 const char* sge_dstring_append_dstring(dstring *sb, const dstring *a);
 
 const char* sge_dstring_sprintf(dstring *sb, const char *fmt, ...);
+const char* sge_dstring_vsprintf(dstring *sb, const char *fmt, va_list ap);
 const char* sge_dstring_sprintf_append(dstring *sb, const char *fmt, ...);
 
 void sge_dstring_clear(dstring *sb);

@@ -36,12 +36,17 @@
 #include "cull_list.h"
 #include "symbols.h"
 #include "sge.h"
+
+#include "gdi_utility.h"
 #include "sge_job.h"
 #include "sge_manop.h"
 #include "sge_userset.h"
 #include "sge_event.h"
 #include "sge_m_event.h"
 #include "sge_answer.h"
+#include "parse.h"
+
+#include "msg_common.h"
 #include "msg_gdilib.h"
 
 #include "sge_queue.h"
@@ -570,3 +575,114 @@ int queue_check_owner(const lListElem *queue, const char *user_name)
    return FALSE;
 }
 
+static const char *queue_types[] = {
+   "BATCH",        
+   "INTERACTIVE",  
+   "CHECKPOINTING",
+   "PARALLEL",
+   NULL
+};
+
+/****** gdi/queue/queue_get_type_string() **************************************
+*  NAME
+*     queue_get_type_string() -- get readable type definition
+*
+*  SYNOPSIS
+*     const char* 
+*     queue_get_type_string(const lListElem *queue, lList **answer_list,
+*                           dstring *buffer) 
+*
+*  FUNCTION
+*     Returns a readable string representation of the queue type bitfield.
+*
+*  INPUTS
+*     const lListElem *queue - the queue containing the requested information
+*     dstring *buffer        - string buffer to hold the result string
+*
+*  RESULT
+*     const char* - resulting string
+*
+*  SEE ALSO
+*     gdi/queue/queue_set_type_string()
+*******************************************************************************/
+const char *
+queue_get_type_string(const lListElem *queue, lList **answer_list, 
+                      dstring *buffer)
+{
+   u_long32 type;
+   int i;
+   bool append = false;
+   const char *ret;
+
+   DENTER(TOP_LAYER, "queue_get_type_string");
+
+   
+   SGE_CHECK_POINTER_NULL(queue);
+   SGE_CHECK_POINTER_NULL(buffer);
+
+   type = lGetUlong(queue, QU_qtype);
+   sge_dstring_clear(buffer);
+
+   for (i = 0; queue_types[i] != NULL; i++) {
+      if ((type & (1 << i)) != 0) {
+         if (append) {
+            sge_dstring_append(buffer, " ");
+         }
+         sge_dstring_append(buffer, queue_types[i]);
+         append = true;
+      }
+   }
+
+   ret = sge_dstring_get_string(buffer);
+   DEXIT;
+   return ret;
+}
+
+/****** gdi/queue/queue_set_type_string() **************************************
+*  NAME
+*     queue_set_type_string() -- set queue type from string representation
+*
+*  SYNOPSIS
+*     bool 
+*     queue_set_type_string(lListElem *queue, lList **answer_list, 
+*                           const char *value) 
+*
+*  FUNCTION
+*     Takes a string representation for the queue type, e.g. "BATCH PARALLEL"
+*     and sets the queue type bitfield (attribute QU_qtype) of the given
+*     queue.
+*
+*  INPUTS
+*     lListElem *queue    - the queue to change
+*     lList **answer_list - errors will be reported here
+*     const char *value   - new value for queue type
+*
+*  RESULT
+*     bool - true on success, 
+*            false on error, error message will be in answer_list
+*
+*  SEE ALSO
+*     gdi/queue/queue_get_type_string()
+*******************************************************************************/
+bool 
+queue_set_type_string(lListElem *queue, lList **answer_list, const char *value)
+{
+   bool ret = true;
+   u_long32 type = 0;
+ 
+   DENTER(TOP_LAYER, "queue_set_type_string");
+
+   SGE_CHECK_POINTER_FALSE(queue);
+
+   if (value != NULL && *value != 0) {
+      if (!sge_parse_bitfield_str(value, queue_types, &type, 
+                                 "queue type", NULL)) {
+         ret = false;
+      }
+   }
+
+   lSetUlong(queue, QU_qtype, type);
+
+   DEXIT;
+   return ret;
+}

@@ -57,6 +57,11 @@
 #   define TRUE                 (1)
 #endif
 
+typedef enum {
+  false = 0,
+  true
+} bool;
+
 #define U32CFormat "%ld"
 #define u32c(x)  (unsigned long)(x)
 

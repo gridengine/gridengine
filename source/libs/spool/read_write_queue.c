@@ -58,7 +58,7 @@
 
 #include "msg_common.h"
 
-static char *queue_types[] = {
+static const char *queue_types[] = {
    "BATCH",        
    "INTERACTIVE",  
    "CHECKPOINTING",
@@ -75,7 +75,6 @@ static char *true_false[] =
 
 static intprt_type intprt_as_load_thresholds[] = { CE_name, CE_stringval, 0 };
 
-static lListElem *create_template_queue(void);
 
 /****
  **** read_queue_work
@@ -592,8 +591,9 @@ _Insight_set_option("unsuppress", "PARM_NULL");
 
 /****
  **** create_template_queue (static)
+ **** JG: TODO: should be moved to sge_queue.*
  ****/
-static lListElem *create_template_queue(void)
+lListElem *create_template_queue(void)
 {
 lListElem *qep, *ep;
 lList *lp;
@@ -649,7 +649,7 @@ const char *file_name,
 char *rfile,            /* has to be allocated by caller; can be NULL */
 const lListElem *qep 
 ) {
-   char **ptr;
+   const char **ptr;
    FILE *fp;
    const char *s, *cp = NULL;
    char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX]; 

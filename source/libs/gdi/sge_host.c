@@ -31,8 +31,10 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#include "sge_all_listsL.h"
+/* #include "sge_all_listsL.h" */
+#include "sge_object.h"
 #include "sge_host.h"
+#include "sge_queue.h"
 #include "sge_m_event.h"
 #include "commlib.h"
 #include "sgermon.h"

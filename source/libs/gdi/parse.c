@@ -572,3 +572,68 @@ lList *string_list
    return (group_opt);
 }
 
+/* ------------------------------------------ 
+   JG: TODO: make ADOC header
+   parses an enumeration of specifiers into value
+   the first specifier is interpreted
+   as 1, second as 2, third as 4 ..
+   
+   return value
+
+   0 ok
+   -1 error
+
+*/
+int sge_parse_bitfield_str(const char *str, const char *set_specifier[], 
+                           u_long32 *value, const char *name, lList **alpp) 
+{
+   const char *s;
+   const char **cpp;
+   u_long32 bitmask;
+   /* isspace() character plus "," */
+   static char delim[] = ", \t\v\n\f\r";
+   DENTER(TOP_LAYER, "sge_parse_bitfield_str");
+   
+   *value = 0;
+
+   for (s = sge_strtok(str, delim); s; s=sge_strtok(NULL, delim)) {
+
+      bitmask = 1;
+      for (cpp=set_specifier; **cpp != '\0'; cpp++) {
+         if (!strcasecmp(*cpp, s)) {
+
+            if ( *value & bitmask ) {
+               /* whops! unknown specifier */
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS, *cpp, name)); 
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               DEXIT;
+               return FALSE;
+            }
+
+            *value |= bitmask;
+            break;
+         }
+         else   
+            bitmask <<= 1;
+      }
+
+      if ( **cpp == '\0' ) {
+         /* whops! unknown specifier */
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILEUNKNOWNSPEC_SS, s, name)); 
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return FALSE;
+      }
+
+   }
+
+   if (!value) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILEEMPTYENUMERATION_S , name));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return FALSE;
+
+   }
+   DEXIT;
+   return TRUE;
+}

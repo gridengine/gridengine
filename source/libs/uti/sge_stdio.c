@@ -325,3 +325,16 @@ const char *meaning
       fprintf(fp,"   %-40.40s %s\n",  option, meaning);
 }
 
+bool 
+sge_check_stdout_stream(FILE *file, int fd)
+{
+   if (fileno(file) != fd) {
+      return false;
+   }
+
+   if(fprintf(file, "%c", '\0') < 0) {
+      return false;
+   }
+
+   return true;
+}

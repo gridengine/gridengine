@@ -33,6 +33,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_dstring.h"
+
 #include "sge_queueL.h"
 #include "sge_mirror.h"
 
@@ -72,5 +74,12 @@ void sge_add_queue_event(u_long32 type, lListElem *qep);
 int queue_list_add_queue(lListElem *queue);
 
 int queue_check_owner(const lListElem *queue, const char *user_name);
+
+const char *
+queue_get_type_string(const lListElem *queue, lList **answer_list,
+                      dstring *buffer);
+
+bool 
+queue_set_type_string(lListElem *queue, lList **answer_list, const char *value);
 
 #endif /* __SGE_QUEUE_H */

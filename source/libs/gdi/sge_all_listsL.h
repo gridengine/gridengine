@@ -88,10 +88,6 @@
 extern "C" {
 #endif
 
-int object_has_type(const lListElem *ep, const lDescr *descr);
-
-int object_get_primary_key(const lDescr *descr);
-
 #ifdef  __cplusplus
 }
 #endif

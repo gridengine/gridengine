@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <stdarg.h>
 #include "sgermon.h"
 #include "sge_dstring.h"
 
@@ -72,6 +71,7 @@ const char* sge_dstring_append(dstring *sb, const char *a)
    
    /* only allow to append a string with length 0
       for memory allocation */
+   /* JG: TODO: strlen(a) is called more than once -> performance leak */
    if (strlen(a) == 0 && sb->s != NULL ) {
       return sb->s;
    }
@@ -153,6 +153,43 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
    va_list ap;
 
    va_start(ap, format);
+   if (!format) {
+      return sb ? sb->s : NULL;
+   }
+   vsprintf(buf, format, ap);
+   return sge_dstring_copy_string(sb, buf);
+}
+
+/****** uti/dstring/sge_dstring_vsprintf() *************************************
+*  NAME
+*     sge_dstring_vsprintf() -- vsprintf() for dstring's 
+*
+*  SYNOPSIS
+*     const char* sge_dstring_vsprintf(dstring *sb, const char *format,va_list ap)
+*
+*  FUNCTION
+*     see vsprintf() 
+*
+*  INPUTS
+*     dstring *sb        - dynamic string 
+*     const char *format - format string 
+*     va_list ap         - argument list
+*
+*  RESULT
+*     const char* - result string 
+*
+*  NOTES
+*     JG: TODO (265): Do not use a fixed size buffer and vprintf!
+*                     This undoes the benefits of a dynamic string
+*                     implementation.
+*                     Either use a vsnprintf implementation (if 
+*                     available for all platforms) or find other means 
+*                     to prevent buffer overflows.
+******************************************************************************/
+const char* sge_dstring_vsprintf(dstring *sb, const char *format, va_list ap)
+{
+   char buf[BUFFER_SIZE];
+
    if (!format) {
       return sb ? sb->s : NULL;
    }

@@ -30,54 +30,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <stdio.h>
-
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
 #include "cull_list.h"
 #include "sge_all_listsL.h"
 
-int object_has_type(const lListElem *ep, const lDescr *descr) 
-{
-   int ret = 0;
- 
-   /*
-    * we assume that "ep" is of the given type when the 
-    * primary key is contained in the element
-    *
-    * --> make sure that your object is handled in object_get_primary_key() 
-    */
-   if (ep != NULL &&
-       lGetPosInDescr(ep->descr, object_get_primary_key(descr)) != -1) {
-      ret = 1;
-   }
-   return ret;
-} 
-
-int object_get_primary_key(const lDescr *descr)
-{
-   int ret = NoName;
-
-   if (descr == EH_Type) {
-      ret = EH_name;
-   } else if (descr == AH_Type) {
-      ret = AH_name;
-   } else if (descr == SH_Type) {
-      ret = SH_name;
-   } else if (descr == QU_Type) {
-      ret = QU_qname;
-   } else if (descr == JB_Type) {
-      ret = JB_job_number;
-   } else if (descr == JAT_Type) {
-      ret = JAT_task_number;
-   } else if (descr == PET_Type) {
-      ret = PET_id;
-   } else if (descr == RN_Type) {
-      ret = RN_min;
-   } else if (descr == PE_Type) {
-      ret = PE_name;
-   } else if (descr == VA_Type) {
-      ret = VA_variable;
-   }
-   return ret;
-}
- 
+/* this is not an empty module - even if it appeares to be empty.
+ * The define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__ makes all list descriptors 
+ * being defined here.
+ */

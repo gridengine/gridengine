@@ -112,10 +112,10 @@ enum {
 };
 
 SLISTDEF(CE_Type, ComplexEntry)
-   SGE_STRING(CE_name, CULL_HASH | CULL_UNIQUE)          /* full name of attribute */
+   SGE_STRING(CE_name, CULL_HASH | CULL_UNIQUE | CULL_NAMELIST)          /* full name of attribute */
    SGE_STRING(CE_shortcut, CULL_HASH | CULL_UNIQUE)      /* shortcut name of attribute */
    SGE_ULONG(CE_valtype, CULL_DEFAULT)        /* type */
-   SGE_STRING(CE_stringval, CULL_DEFAULT)     /* non overwritten value */
+   SGE_STRING(CE_stringval, CULL_DEFAULT | CULL_TUPLELIST)     /* non overwritten value */
    SGE_DOUBLE(CE_doubleval, CULL_DEFAULT)    /* parsed CE_stringval */
    SGE_ULONG(CE_relop, CULL_DEFAULT)          /* relational operator */
    SGE_BOOL(CE_request, CULL_DEFAULT)         /* flag requestable */

@@ -64,6 +64,7 @@ GDILIB_SRC = sge_all_listsL.c \
          sge_conf.c \
          sge_event.c \
          sge_mirror.c \
+         sge_object.c \
          sge_resource.c \
          sge_feature.c \
          sge_security.c \
@@ -202,6 +203,9 @@ parse.o: 	$(GDILIB_DIR)/parse.c
 
 parse_mail.o : $(GDILIB_DIR)/parse_mail.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/parse_mail.c
+
+sge_object.o: $(GDILIB_DIR)/sge_object.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_object.c
 
 sge_resource.o: $(GDILIB_DIR)/sge_resource.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_resource.c

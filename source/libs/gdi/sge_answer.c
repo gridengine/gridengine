@@ -30,11 +30,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <stdarg.h>
 #include "sge.h"
 #include "sgermon.h"
 #include "cull.h"
 
 #include "sge_unistd.h"
+#include "sge_dstring.h"
 #include "sge_log.h"
 
 #include "msg_gdilib.h"
@@ -82,6 +84,7 @@
 *     gdi/answer/answer_get_status() 
 *     gdi/answer/answer_print_text() 
 *     gdi/answer/answer_list_add() 
+*     gdi/answer/answer_list_add_sprintf() 
 *     gdi/answer/answer_list_has_quality() 
 *     gdi/answer/answer_list_has_error() 
 *     gdi/answer/answer_list_on_error_print_or_exit() 
@@ -279,7 +282,7 @@ void answer_print_text(const lListElem *answer,
 
 /****** gdi/answer/answer_list_add() ******************************************
 *  NAME
-*     answer_list_add() -- Add an answer to a answer list 
+*     answer_list_add() -- Add an answer to an answer list 
 *
 *  SYNOPSIS
 *     int answer_list_add(lList **answer_list, 
@@ -292,6 +295,11 @@ void answer_print_text(const lListElem *answer,
 *     "status" and "text"). The new element will be appended to
 *     "answer_list" 
 *
+*     If "answer_list" is NULL, no action is performed.
+*
+*     If the list pointed to by "answer_list" is NULL, a new list will be
+*     created.
+*
 *  INPUTS
 *     lList **answer_list      - AN_Type list 
 *     const char *text         - answer text 
@@ -300,12 +308,18 @@ void answer_print_text(const lListElem *answer,
 *
 *  RESULT
 *     int - error state
-*        0 - OK
-*       -1 - error occured
+*        true  - OK
+*        false - error occured
+*
+*  SEE ALSO
+*     gdi/answer/answer_list_add_sprintf()
 *******************************************************************************/
-int answer_list_add(lList **answer_list, const char *text, 
-                   u_long32 status, answer_quality_t quality) {
-   int ret = -1;
+bool
+answer_list_add(lList **answer_list, const char *text, 
+                u_long32 status, answer_quality_t quality) 
+{
+   int ret = false;
+
    DENTER(GDI_LAYER, "answer_list_add");
 
    if (answer_list != NULL) {
@@ -319,15 +333,79 @@ int answer_list_add(lList **answer_list, const char *text,
          if (*answer_list == NULL) {
             *answer_list = lCreateList("", AN_Type);
          }
+
          if (*answer_list != NULL) {
             lAppendElem(*answer_list, answer);
-            ret = 0;
+            ret = true;
          }
       }
-      if (ret != 0) {
+
+      if (!ret) {
          answer = lFreeElem(answer);
       }
    }
+
+   DEXIT;
+   return ret;
+}
+
+/****** gdi/answer/answer_list_add_sprintf() ***********************************
+*  NAME
+*     answer_list_add_sprintf() -- Format add an answer to an answer list
+*
+*  SYNOPSIS
+*     bool answer_list_add_sprintf(lList **answer_list, u_long32 status, 
+*                                  answer_quality_t quality, const char *fmt, 
+*                                  ...) 
+*
+*  FUNCTION
+*     This function creates a new answer element having the properties
+*     "status", "quality", and a message text created from fmt and the 
+*     following variable argument list.
+*
+*     The new element will be appended to "answer_list".
+*     
+*     If "answer_list" is NULL, no action is performed.
+*
+*     If the list pointed to by "answer_list" is NULL, a new list will be
+*     created.
+*
+*  INPUTS
+*     lList **answer_list      - AN_Type list
+*     u_long32 status          - answer status
+*     answer_quality_t quality - answer quality
+*     const char *fmt          - format string to create message (printf)
+*     ...                      - arguments used for formatting message
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  SEE ALSO
+*     gdi/answer/answer_list_add()
+*******************************************************************************/
+bool 
+answer_list_add_sprintf(lList **answer_list, u_long32 status, 
+                        answer_quality_t quality, const char *fmt, ...)
+{
+   bool ret = false;
+
+   DENTER(GDI_LAYER, "answer_list_add");
+   
+   if (answer_list != NULL) {
+      dstring buffer = DSTRING_INIT;
+      const char *message;
+      va_list ap;
+
+      va_start(ap, fmt);
+      message = sge_dstring_vsprintf(&buffer, fmt, ap);
+
+      if (message != NULL) {
+         ret = answer_list_add(answer_list, message, status, quality);
+      }
+
+      sge_dstring_clear(&buffer);
+   }
+
    DEXIT;
    return ret;
 }
@@ -437,7 +515,7 @@ void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream)
 *     All warning and info messages will be printed to stdout with
 *     the prefix "warn_prefix". 
 *
-*     If the "answer_list" contains at least one error than this
+*     If the "answer_list" contains at least one error then this
 *     function will return with a positive return value. This value
 *     is the errror status of the first error message.
 *
@@ -459,7 +537,7 @@ int answer_list_print_err_warn(lList **answer_list,
    lListElem *answer;   /* AN_Type */
    u_long32 status = 0;
 
-   DENTER(TOP_LAYER, "answer_list_print_err_warn_exit");
+   DENTER(TOP_LAYER, "answer_list_print_err_warn");
    for_each(answer, *answer_list) {
       if (answer_has_quality(answer, ANSWER_QUALITY_ERROR)) {
          answer_print_text(answer, stderr, err_prefix, NULL);

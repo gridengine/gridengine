@@ -51,6 +51,8 @@ char *sge_dirname(const char *name, int delim);
 
 char *sge_strdup(char *old, const char *src);
 
+int sge_strlen(const char *str);
+
 char *sge_strtok(const char *str, const char *delimitor);
 
 int sge_is_pattern(const char *p);

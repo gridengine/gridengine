@@ -37,8 +37,8 @@ include $(SDIR)/libs/uti/Makefile
 include $(SDIR)/libs/cull/Makefile
 include $(SDIR)/libs/comm/Makefile
 include $(SDIR)/libs/gdi/Makefile
-include $(SDIR)/libs/spool/Makefile
 include $(SDIR)/libs/sched/Makefile
+include $(SDIR)/libs/spool/Makefile
 
 ###############################################################################
 # Variable definitions for targets to build

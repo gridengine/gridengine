@@ -34,7 +34,11 @@
 #include "basis_types.h"
 #include "sgermon.h"
 #include "sge.h"
-#include "sge_all_listsL.h"
+
+#include "sge_object.h"
+#include "sge_ja_task.h"
+#include "sge_report.h"
+
 #include "job_exit.h"
 #include "sge_m_event.h"
 #include "sge_host.h"

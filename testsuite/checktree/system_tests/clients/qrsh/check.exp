@@ -72,7 +72,7 @@ lappend check_functions "qrsh_terminate"             ;# test terminate method
 lappend check_functions "qrsh_qsub_gid"              ;# qsub gid set correctly?
 lappend check_functions "qrsh_batch"                 ;# run qrsh in batch mode
 lappend check_functions "qrsh_limits"                ;# limits (e.g. cpu) passed correctly
-lappend check_functions "qrsh_trap"                  ;# started command traps SIGINT
+# lappend check_functions "qrsh_trap"                  ;# started command traps SIGINT
 
 
 # test specific global variables

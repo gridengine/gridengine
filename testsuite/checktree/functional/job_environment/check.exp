@@ -87,7 +87,7 @@ proc job_environment_init_level {} {
 
 proc job_environment_setup  {} {
    global CHECK_CORE_EXECD CHECK_OUTPUT
-   
+
    puts $CHECK_OUTPUT "setup ..."
 
    set_error 0 "ok"
@@ -264,7 +264,16 @@ proc job_environment_check_env_value { env_name should_be_name is_name } {
    }
    puts $CHECK_OUTPUT " ($env_name=$is_name)"
    if { $had_error == 1 } {
-      add_proc_error "job_environment_check_job_name" -1 "environment variable \"$env_name\" is set to \"$is_name\", should be \"$should_be_name\""
+
+      if { [resolve_version] <= 2 && [ string compare $env_name "JOB_NAME" ] == 0 } {
+         set message "environment variable \"$env_name\" is set to \"$is_name\", should be \"$should_be_name\"\n\n"
+         append message "This bug is not fixed for version [get_version_info]\n"
+         append message "Workaround: Use \"REQNAME\" or \"REQUEST\" instead of \"$env_name\"\n"
+         append message "in your job scripts!!!\n"
+         add_proc_error "job_environment_check_job_name" -3 $message
+      } else {
+         add_proc_error "job_environment_check_job_name" -1 "environment variable \"$env_name\" is set to \"$is_name\", should be \"$should_be_name\""
+      } 
    }
    
 }

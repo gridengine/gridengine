@@ -1,3 +1,8 @@
+CR-2002-12-02-2  Testsuite: a) test job_environment:
+                               report only warning for JOB_NAME bug if version
+                               is <= 5.3p2
+                            b) removed qrsh_trap test from qrsh test
+
 CR-2002-12-02-1  Testsuite: a) setting default configuration max_unheard to
                                00:01:00
                             b) new procedure: soft_execd_shutdown() 

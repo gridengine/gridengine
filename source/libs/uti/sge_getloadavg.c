@@ -143,6 +143,10 @@
 #  include <sys/resource.h>
 #  include <fcntl.h>
 #  include <kvm.h>
+#elif defined(NETBSD)
+#  include <sys/sched.h>
+#  include <sys/param.h>
+#  include <sys/sysctl.h>
 #endif
 
 #define KERNEL_TO_USER_AVG(x) ((double)x/SGE_FSCALE)
@@ -827,6 +831,35 @@ double get_cpu_load()
    return cpu_load;
 }
 
+#elif defined(NETBSD)
+
+double get_cpu_load()
+{
+  int mib[2];
+  static long cpu_time[CPUSTATES];
+  static long cpu_old[CPUSTATES];
+  static long cpu_diff[CPUSTATES];
+  double cpu_states[CPUSTATES];
+  double cpu_load;
+  size_t size;
+
+  mib[0] = CTL_KERN;
+  mib[1] = KERN_CP_TIME;
+
+  size = sizeof(cpu_time);
+
+  sysctl(mib, sizeof(mib)/sizeof(int), &cpu_time, &size, NULL, 0);
+  percentages(CPUSTATES, cpu_states, cpu_time, cpu_old, cpu_diff);
+  cpu_load = cpu_states[0] + cpu_states[1] + cpu_states[2];
+
+  if (cpu_load < 0.0) {
+    cpu_load = -1.0;
+  }
+
+  return cpu_load;
+
+}
+
 #endif
 
 #if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX6) || defined(HP10) || (defined(SOLARIS) && !defined(SOLARIS64))
@@ -1150,7 +1183,7 @@ int nelem
 ) {
    int elem = 0;   
 
-#if defined(SOLARIS64) || defined(FREEBSD) || defined(DARWIN)
+#if defined(SOLARIS64) || defined(FREEBSD) || defined(DARWIN) || defined(NETBSD)
    elem = getloadavg(loadavg, nelem); /* <== library function */
 #elif (defined(SOLARIS) && !defined(SOLARIS64)) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX6) || defined(HP10) || defined(HP11) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX)
    elem = get_load_avg(loadavg, nelem); 

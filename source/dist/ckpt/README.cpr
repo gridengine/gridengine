@@ -61,7 +61,7 @@ That is, the latest checkpoint file will not be used for a restart until the
 checkpoint command completes.  If the system fails before the checkpoint has
 completed, the last checkpoint file will be used for restart.
 
-6. The checkpoint files will not be deleted in the cray_clean_command script
+6. The checkpoint files will not be deleted in the cprcray_clean_command script
 if either the SGE_LEAVE_CKPT_DIR environment variable is set to a non-null
 string or if the fourth parameter in the clean command for the checkpoint
 configuration is set to the string "save".

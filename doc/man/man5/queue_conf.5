@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2004/07/22 15:42:36 $     Revision: $Revision: 1.19 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2004/10/22 09:23:33 $     Revision: $Revision: 1.20 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2004/07/22 15:42:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2004/10/22 09:23:33 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -478,8 +478,10 @@ the
 .SS "\fBowner_list\fP"
 The \fBowner_list\fP names the login names (in a comma separated list)
 of those users who are
-authorized to suspend this queue (xxQS_NAMExx operators and managers can suspend
-queues by default). It is customary to set this field for queues on
+authorized to disable and suspend this queue through 
+.M qmod 1
+(xxQS_NAMExx operators and managers can do this by default). It is customary 
+to set this field for queues on
 interactive workstations where the computing resources are shared between
 interactive sessions and xxQS_NAMExx jobs, allowing the workstation owner to have
 priority access

@@ -5004,14 +5004,14 @@ main(int argc, char **argv)
 
    sge_calc_tickets(lists, lists->job_list, NULL, NULL);
 
-   lWriteListTo(lists->job_list, stdout);
+/*   lWriteListTo(lists->job_list, stdout);*/
 
    sge_calc_share_tree_proportions( lists->share_tree,
                                     lists->user_list,
                                     lists->project_list,
                                     lists->config_list);
 
-   lWriteListTo(lists->share_tree, stdout);
+/*   lWriteListTo(lists->share_tree, stdout);*/
 
    return 0;
 }

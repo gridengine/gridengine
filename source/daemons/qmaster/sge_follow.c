@@ -450,9 +450,6 @@ lList **topp  /* ticket orders ptr ptr */
       lSetString(jatp, JAT_master_queue, lGetString(master_qep, QU_full_name));
       lSetList(jatp, JAT_granted_destin_identifier_list, gdil);
 
-lWriteElemTo(jatp, stderr);
-lWriteElemTo(master_qep, stderr);
-
       if (sge_give_job(jep, jatp, master_qep, pe, master_host)) {
 
          /* setting of queues in state unheard is done by sge_give_job() */

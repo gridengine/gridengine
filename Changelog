@@ -1,3 +1,8 @@
+SG-2004-02-11-0: Bugfix:    scheduler died, when the qmaster removed automicaly
+                            created users.
+                 Changed:   qmaster
+                 Review:    AA
+
 AA-2004-02-11-1: Enhancem:  qmon
                             - explain functionality
                             - cq filtering

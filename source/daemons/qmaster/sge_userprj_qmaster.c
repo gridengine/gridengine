@@ -295,6 +295,7 @@ int user        /* =1 user, =0 project */
    }
 
    name = lGetString(up_ep, UP_name);
+   
 
    if (!(ep=userprj_list_locate(*upl, name))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, user? MSG_OBJ_USER : MSG_OBJ_PRJ, name));
@@ -386,12 +387,12 @@ int user        /* =1 user, =0 project */
 
    }
 
-   lRemoveElem(*upl, ep);
-
    /* delete user or project file */
    if (!sge_event_spool(alpp, 0, user ? sgeE_USER_DEL : sgeE_PROJECT_DEL,
                         0, 0, name, NULL, NULL,
                         NULL, NULL, NULL, true, true)) {
+
+      lRemoveElem(*upl, ep);
       DEXIT;
       return STATUS_EDISK;
    }
@@ -399,6 +400,8 @@ int user        /* =1 user, =0 project */
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
          ruser, rhost, name, user?MSG_OBJ_USER:MSG_OBJ_PRJ));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+
+   lRemoveElem(*upl, ep);
 
    DEXIT;
    return STATUS_OK;

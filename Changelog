@@ -1,5 +1,7 @@
 JG-2004-02-19-1: Bugfix:    Fixed lGetElemHost[First|Next] in case no hashtable
                             was defined for the queried attribute.
+                 Changed:   all (libcull)
+                 Review:    AH
 
 JG-2004-02-19-0: Testsuite: Make testsuite work on Linux AMD64.
 

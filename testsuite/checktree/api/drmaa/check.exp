@@ -95,6 +95,11 @@ proc drmaa_init_level {} {
 # change setup in a way allowing the next runlevel to start
 proc drmaa_setup {} {
 
+  if { [resolve_version] <= 2 } {
+      set_error -3 "drmaa_setup - sge/ee version \"[get_version_info]\" doesn't support multi threading"
+      return 1
+   }
+
 
   set_error 0 "ok"
 }
@@ -104,6 +109,13 @@ proc drmaa_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
    global CHECK_HOST CHECK_CORE_EXECD CHECK_SOURCE_DIR CHECK_USER CHECK_CORE_MASTER
    global CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT
+
+
+   if { [resolve_version] <= 2 } {
+      set_error -3 "drmaa_check - sge/ee version \"[get_version_info]\" doesn't support multi threading"
+      return 1
+   }
+
 
    puts $CHECK_OUTPUT "product root is $CHECK_PRODUCT_ROOT"
    puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
@@ -193,6 +205,10 @@ proc drmaa_check {} {
 
 # undo what we've done in drmaa_setup
 proc drmaa_cleanup  {} {
+   if { [resolve_version] <= 2 } {
+      set_error -3 "drmaa_cleanup - sge/ee version \"[get_version_info]\" doesn't support multi threading"
+      return 1
+   }
 
    set_error 0 "ok"
 }

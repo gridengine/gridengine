@@ -844,13 +844,15 @@ static lListElem* is_reprioritize_missing(lList *theOldConfEntries, lList *theNe
 static int exchange_conf_by_name(char *aConfName, lListElem *anOldConf, lListElem *aNewConf, lList**anAnswer)
 {
    lListElem *elem = NULL;
-   u_long32 old_version = 0;
+   u_long32 old_version, new_version = 0;
    
    DENTER(TOP_LAYER, "remove_conf_by_name");
 
    old_version = lGetUlong(anOldConf, CONF_version);
    
-   lSetUlong(aNewConf, CONF_version, old_version++); 
+   new_version = (old_version + 1);
+   
+   lSetUlong(aNewConf, CONF_version, new_version); 
      
    /* Make sure, 'aNewConf' does have a unique name */
    lSetHost(aNewConf, CONF_hname, aConfName);   

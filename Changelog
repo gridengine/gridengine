@@ -1,3 +1,7 @@
+AD-2004-05-25-0: Bugfix:    Configuration version increment has been lost.
+                 Changed:   qmaster
+                 Review:    pending
+
 MD-2004-05-24-0: Bugfix:    - Berkeley DB RPC server is running as user root
                             - inst_sge -db doesn't install rc script (typo)
                             - typos

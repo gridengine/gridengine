@@ -3526,7 +3526,7 @@ proc config_build_ts_config {} {
    set parameter "aimk_compile_options"
    set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Aimk compile options"
-   set ts_config($parameter,default)    "-secure"
+   set ts_config($parameter,default)    "none"
    set ts_config($parameter,setup_func) "config_$parameter"
    set ts_config($parameter,onchange)   "compile"
    set ts_config($parameter,pos)        $ts_pos

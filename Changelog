@@ -1,3 +1,6 @@
+CR-2004-02-11-0: Testsuite: Testsuite will not use -secure switch for aimk. This
+                            switch is not supported by aimk anymore.
+
 JG-2004-02-11-0: Testsuite: performance/throughput was broken for SGE 5.3.
                             Fixed bugs/issuezilla/126, bugs/issuezilla/140, 
                             bugs/issuezilla/141, bugs/issuezilla/171, 

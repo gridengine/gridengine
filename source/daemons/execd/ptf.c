@@ -827,12 +827,12 @@ static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri)
 
 #elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
 
-/****** ptf/ptf_setpriority_jobid() ******************************************
+/****** ptf/ptf_setpriority_addgrpid() ******************************************
 *  NAME
 *     ptf_setpriority_addgrpid() -- Change priority of processes
 *
 *  SYNOPSIS
-*     static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob,
+*     static void ptf_setpriority_addgrpid(lListElem *job, lListElem *osjob,
 *                                       long *pri)
 *
 *  FUNCTION
@@ -1489,47 +1489,63 @@ static void ptf_calc_job_proportion_pass3(lListElem *job,
 
 /*--------------------------------------------------------------------
  * ptf_set_OS_scheduling_parameters
+ *
+ * This function assumes the the "max" priority is smaller than the "min"
+ * priority.
  *--------------------------------------------------------------------*/
-
 static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
                                              double max_share,
                                              double max_ticket_share)
 {
    lListElem *job;
-   static long pri_range, pri_min = 1000, pri_max = -1000;
+   static long pri_range, pri_min = -999, pri_max = -999;
    long pri_min_tmp, pri_max_tmp;
    long pri;
-   char *env;
-   int val;
-
+   
    DENTER(TOP_LAYER, "ptf_set_OS_scheduling_parameters");
 
-
-   pri_min_tmp = PTF_MIN_PRIORITY;
-   if ((env = getenv("PTF_MIN_PRIORITY")))
-      if (sscanf(env, "%d", &val) == 1)
-         pri_min_tmp = val;
    if (ptf_min_priority != -999)
       pri_min_tmp = ptf_min_priority;
+   else
+      pri_min_tmp = PTF_MIN_PRIORITY;   
 
-   pri_max_tmp = PTF_MAX_PRIORITY;
-   if ((env = getenv("PTF_MAX_PRIORITY")))
-      if (sscanf(env, "%d", &val) == 1)
-         pri_max_tmp = val;
    if (ptf_max_priority != -999)
       pri_max_tmp = ptf_max_priority;
+   else
+      pri_max_tmp = PTF_MAX_PRIORITY;   
 
+   /* 
+    * For OS'es where we enforce the values of max and min priority verify
+    * the the values are in the boundaries of PTF_OS_MAX_PRIORITY and
+    * PTF_OS_MIN_PRIORITY.
+    */
+   if (ENFORCE_PRI_RANGE) {
+      pri_max_tmp = MAX(pri_max_tmp, PTF_OS_MAX_PRIORITY);
+      pri_min_tmp = MIN(pri_min_tmp, PTF_OS_MIN_PRIORITY);
+   }
+   
+   /*
+    * Ensure that the max priority can't get a bigger value than
+    * the min priority (otherwise the "range" gets wrongly calculated
+    */         
+   if (pri_max_tmp > pri_min_tmp)
+      pri_max_tmp = pri_min_tmp;
+      
+   /* If the value has changed set pri_max/pri_min/pri_range and log */
    if (pri_max != pri_max_tmp || pri_min != pri_min_tmp) {
+      extern u_long32 logginglevel;
+      u_long32 old_ll = logginglevel;
+      
       pri_max = pri_max_tmp;
       pri_min = pri_min_tmp;
       pri_range = pri_min - pri_max;
-
+   
+      logginglevel = LOG_INFO;   
       INFO((SGE_EVENT, MSG_PRIO_PTFMINMAX_II, (int) pri_max, (int) pri_min));
+      logginglevel = old_ll;
    }
 
-   /*
-    * Set the priority for each job
-    */
+   /* Set the priority for each job */
    for_each(job, job_list) {
 
 #if 0
@@ -1816,7 +1832,7 @@ int ptf_adjust_job_priorities(void)
     * just get jobs usage in SGE mode 
     * this is necessary to force job resource limits 
     */
-   if (feature_is_enabled(FEATURE_REPRIORISATION)) {
+   if (feature_is_enabled(FEATURE_REPRIORITIZATION)) {
 
       /*
        * Do pass 0 of calculating job proportional share of resources

@@ -318,16 +318,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
       /* create a hash table on JB_owner to speedup 
        * searching for jobs of a specific owner
        */
-      {
-         const lDescr *descr = lGetListDescr(*(job_lists[SPLIT_PENDING]));
-         int pos = lGetPosInDescr(descr, JB_owner);
-        
-         if(descr != NULL && pos >= 0) {
-            if(descr[pos].ht == NULL)  {
-               cull_hash_new(*(job_lists[SPLIT_PENDING]), JB_owner, 0);
-            }
-         }
-      }
+      cull_hash_new_check(*(job_lists[SPLIT_PENDING]), JB_owner, 0);
 #endif      
 
       for_each(user, *user_list) {
@@ -970,22 +961,32 @@ void sge_inc_jc(lList **jcpp, const char *name, int slots)
 */
 int resort_jobs(lList *jc, lList *job_list, const char *owner, lSortOrder *so) 
 {
-   lListElem *job, *jc_owner;
-   int njobs;
-
    DENTER(TOP_LAYER, "resort_jobs");
 
 
    if (get_user_sort()) {
+      int njobs;
+      lListElem *job, *jc_owner;
+
       /* get number of running jobs of this user */
       if (owner) {
+         lListElem *next_job;
+         const void *iterator = NULL;
+
          jc_owner = lGetElemStr(jc, JC_name, owner);
          njobs = jc_owner ? lGetUlong(jc_owner, JC_jobs) : 0;
 
-         for_each(job, job_list) {
-            if (!strcmp(owner, lGetString(job, JB_owner)))
-               lSetUlong(job, JB_nrunning, njobs);
-         }      
+#ifndef CULL_NO_HASH
+      /* create a hash table on JB_owner to speedup 
+       * searching for jobs of a specific owner
+       */
+      cull_hash_new_check(job_list, JB_owner, 0);
+#endif      
+         next_job = lGetElemStrFirst(job_list, JB_owner, owner, &iterator);
+         while((job = next_job) != NULL) {
+            next_job = lGetElemStrNext(job_list, JB_owner, owner, &iterator);
+            lSetUlong(job, JB_nrunning, njobs);
+         }
       } else { /* update JB_nrunning for all jobs */
          for_each(job, job_list) {
             jc_owner = lGetElemStr(jc, JC_name, lGetString(job, JB_owner));

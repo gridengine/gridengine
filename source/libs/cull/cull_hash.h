@@ -41,6 +41,7 @@ extern "C" {
 
 htable cull_hash_create(const lDescr *descr);
 int cull_hash_new(lList *lp, int name, int unique);
+int cull_hash_new_check(lList *lp, int nm, int unique);
 void cull_hash_insert(const lListElem *ep, const int pos);
 void cull_hash_remove(const lListElem *ep, const int pos);
 void cull_hash_elem(const lListElem *ep);

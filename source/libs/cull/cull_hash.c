@@ -584,6 +584,57 @@ void cull_hash_free_descr(lDescr *descr)
 }
 
 
+/****** cull/hash/cull_hash_new_check() ****************************************
+*  NAME
+*     cull_hash_new() -- create new hash table, if it does not yet exist
+*
+*  SYNOPSIS
+*     int cull_hash_new_check(lList *lp, int nm, int unique) 
+*
+*  FUNCTION
+*     Usually hash tables are defined in the object type definition
+*     for each object type in libs/gdi.
+*
+*     There are cases where for a certain application additional hash 
+*     tables shall be defined to speed up certain access methods.
+*
+*     cull_hash_new_check can be used to create a hash table for a list
+*     on the contents of a certain field.
+*     If it already exist, nothing is done.
+*
+*     The caller can choose whether the field contents have to be
+*     unique within the list or not.
+*
+*  INPUTS
+*     lList *lp  - the list to hold the new hash table
+*     int nm     - the field on which to create the hash table 
+*     int unique - unique contents or not 
+*
+*  RESULT
+*     int - 1 on success, else 0
+*
+*  EXAMPLE
+*     create a non unique hash index on the job owner for a job list
+*     cull_hash_new_check(job_list, JB_owner, 0);
+*
+*  SEE ALSO
+*     cull/hash/cull_hash_new()
+*
+*******************************************************************************/
+int cull_hash_new_check(lList *lp, int nm, int unique)
+{
+   const lDescr *descr = lGetListDescr(lp);
+   int pos = lGetPosInDescr(descr, nm);
+  
+   if (descr != NULL && pos >= 0) {
+      if (descr[pos].ht == NULL)  {
+         return cull_hash_new(lp, nm, unique);
+      }
+   }
+
+   return 1;
+}
+
 /****** cull/hash/cull_hash_new() **********************************************
 *  NAME
 *     cull_hash_new() -- create new hash table

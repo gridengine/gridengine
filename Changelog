@@ -1,3 +1,5 @@
+JG-2002-12-17-0  Enhancem.  Improved performance / scalability for job submit.
+
 JG-2002-12-16-0  Bugfix:    qrsh without command reported "protocol error".
                  IZ:        #431
 

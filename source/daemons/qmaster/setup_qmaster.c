@@ -145,6 +145,15 @@ int sge_setup_qmaster()
    /* register our error function for use in replace_params() */
    config_errfunc = error;
 
+
+   /*
+    * Initialize Master lists and hash tables, if necessary 
+    */
+   if(Master_Job_List == NULL) {
+      Master_Job_List = lCreateList("Master_Job_List", JB_Type);
+   }
+   cull_hash_new(Master_Job_List, JB_owner, 0);
+
    /*
    ** get cluster configuration
    */

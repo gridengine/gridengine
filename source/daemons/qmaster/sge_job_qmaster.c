@@ -2804,7 +2804,6 @@ static int job_verify_name(const lListElem *job, lList **alpp,
                            const char *job_descr)
 {
    const char *job_name = lGetString(job, JB_job_name);
-   lListElem *jep;
    int ret = 0;
 
    DENTER(TOP_LAYER, "job_verify_name");
@@ -2814,16 +2813,20 @@ static int job_verify_name(const lListElem *job, lList **alpp,
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       ret = STATUS_EUNKNOWN;
    } else {
-      /* 
-       * EB (256): maybe we should define a hash table on JB_job_name 
-       * or JB_owner and use lGetElemStrFirst/Next here 
-       */
-      for_each (jep, Master_Job_List) {
-         const char *jep_name = lGetString(jep, JB_job_name);
-         const char *jep_owner = lGetString(jep, JB_owner);
-         const char *job_owner = lGetString(job, JB_owner);
+      const void *iterator = NULL;
+      lListElem *jep, *next_jep;
+      const char *job_owner = lGetString(job, JB_owner);
 
-         if (!strcmp(job_name, jep_name) && !strcmp(job_owner, jep_owner)) {
+      next_jep = lGetElemStrFirst(Master_Job_List, JB_owner, job_owner, 
+                                  &iterator);
+
+      while ((jep = next_jep) != NULL) {
+         const char *jep_name = lGetString(jep, JB_job_name);
+
+         next_jep = lGetElemStrNext(Master_Job_List, JB_owner, job_owner, 
+                                    &iterator);
+
+         if (strcmp(job_name, jep_name) == 0) {
             u_long32 succ_jid = job_is_referenced_by_jobname(jep);
 
             if (succ_jid) {

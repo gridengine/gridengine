@@ -392,6 +392,8 @@ static void qmaster_init(char **anArgv)
 
    umask(022); /* this needs a better solution */
 
+   INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
+
    communication_setup(anArgv);
 
    if (setup_qmaster()) {
@@ -400,6 +402,8 @@ static void qmaster_init(char **anArgv)
    }
 
    uti_state_set_exit_func(qmaster_lock_and_shutdown); /* CWD is spool directory */
+
+   sge_write_pid(QMASTER_PID_FILE);
 
    host_list_notify_about_featureset(Master_Exechost_List, feature_get_active_featureset_id());
 

@@ -145,11 +145,7 @@ int main(int argc, char* argv[])
 
    lInit(nmv);
    sge_setup(QMASTER, NULL);
-   sge_write_pid(QMASTER_PID_FILE);
-
    uti_state_set_exit_func(exit_func);
-
-   INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
 
    sigfillset(&sig_set);
    pthread_sigmask(SIG_SETMASK, &sig_set, NULL);

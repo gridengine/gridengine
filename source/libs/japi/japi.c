@@ -3131,16 +3131,19 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
                               u_long32 taskid, int *remote_ps, dstring *diag)
 {
    bool task_finished = false;
-   lListElem *ja_task;
+   lListElem *ja_task = NULL;
    
    DENTER(TOP_LAYER, "japi_sge_state_to_drmaa_state");
 
-   if (!job) 
+   if (job == NULL) {
       task_finished = true; 
-   if (job) {
+   }
+   else {
       ja_task = job_search_task(job, NULL, taskid);
-      if (ja_task && lGetUlong(ja_task, JAT_status) == JFINISHED)
+      
+      if ((ja_task != NULL) && (lGetUlong(ja_task, JAT_status) == JFINISHED)) {
          task_finished = true;
+      }
    }
 
    /*
@@ -3150,13 +3153,14 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
     * we return DRMAA_ERRNO_INVALID_JOB.
     */
    if (task_finished) {
-      lListElem *japi_job, *japi_task = NULL;
+      lListElem *japi_job = NULL;
 
       JAPI_LOCK_JOB_LIST();
       
       japi_job = lGetElemUlong(Master_japi_job_list, JJ_jobid, jobid);
 
-      if (japi_job) {
+      if (japi_job != NULL) {
+         lListElem *japi_task = NULL;
          u_long32 wait_status;
 
          /* 
@@ -3178,33 +3182,22 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
          japi_task = lGetSubUlong(japi_job, JJAT_task_id, taskid, JJ_finished_tasks);
          wait_status = lGetUlong(japi_task, JJAT_stat);
          DPRINTF(("wait_status("u32"/"u32") = "u32"\n", jobid, taskid, wait_status));
+         
          if (SGE_GET_NEVERRAN(wait_status)) {
             *remote_ps = DRMAA_PS_FAILED;
          } else {
             *remote_ps = DRMAA_PS_DONE;
          }
+         
          JAPI_UNLOCK_JOB_LIST();
          DEXIT;
          return DRMAA_ERRNO_SUCCESS;
-      }
-
-      if (!japi_job || !japi_task) {
+      } else {
          JAPI_UNLOCK_JOB_LIST();
          japi_standard_error(DRMAA_ERRNO_INVALID_JOB, diag);
          DEXIT;
          return DRMAA_ERRNO_INVALID_JOB;
       }
-
-      /* 
-       * JJAT_stat must indicate whether the job finished or failed 
-       * at this point we simply assume it finished successfully 
-       * when it is found in the finished tasks list
-       */
-
-      JAPI_UNLOCK_JOB_LIST();
-      *remote_ps = DRMAA_PS_DONE;
-      DEXIT;
-      return DRMAA_ERRNO_SUCCESS;
    }
 
    if (!is_array_task) {
@@ -3223,7 +3216,9 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
       }
    }
    
-   if ((ja_task=job_search_task(job, NULL, taskid))) { 
+   ja_task = job_search_task(job, NULL, taskid);
+   
+   if (ja_task != NULL) { 
       /* the state of enrolled tasks can be direclty determined */
       u_long32 ja_task_status = lGetUlong(ja_task, JAT_status);
       u_long32 ja_task_state = lGetUlong(ja_task, JAT_state);

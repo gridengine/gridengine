@@ -81,10 +81,11 @@ int verify_str_key(lList **alpp, const char *str, const char *name)
       mid_strings[10] = MSG_GDI_KEYSTR_BRACKETS;
       mid_strings[11] = MSG_GDI_KEYSTR_BRACES;
       mid_strings[12] = MSG_GDI_KEYSTR_BRACES;
-      mid_strings[13] = MSG_GDI_KEYSTR_PARENTHESIS;
+      mid_strings[13] = MSG_GDI_KEYSTR_PIPE;
       mid_strings[14] = MSG_GDI_KEYSTR_PARENTHESIS;
-      mid_strings[15] = MSG_GDI_KEYSTR_AT;
-      mid_strings[16] = NULL;
+      mid_strings[15] = MSG_GDI_KEYSTR_PARENTHESIS;
+      mid_strings[16] = MSG_GDI_KEYSTR_AT;
+      mid_strings[17] = NULL;
       keyword_strings[0] = MSG_GDI_KEYSTR_KEYWORD;
       keyword_strings[1] = MSG_GDI_KEYSTR_KEYWORD;
       keyword_strings[2] = MSG_GDI_KEYSTR_KEYWORD;

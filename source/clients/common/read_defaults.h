@@ -55,6 +55,11 @@ void opt_list_append_opts_from_script(lList **opts_scriptfile,
                                       const lList *opts_cmdline,
                                       char **envp);
 
+void opt_list_append_opts_from_script_path(lList **opts_scriptfile, const char *path,
+                                           lList **answer_list,
+                                           const lList *opts_cmdline,
+                                           char **envp);
+                                           
 void opt_list_merge_command_lines(lList **opts_all,
                                   lList **opts_defaults,
                                   lList **opts_scriptfile,

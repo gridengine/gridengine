@@ -170,7 +170,10 @@ proc binary_submission_check {} {
    #     -> embedded script options won't be parsed
    #  path_aliasing is disabled
    #     -> jobscript won't be found on execd
-   #     -> job will be put into E state
+   #     -> shell will be started with not existing job script 
+   #     -> job will be executed successfully 
+   #        (shell will return with error code and error message will
+   #         be found in output file)
    # 
    # Scenario 5:
    #  qsub -b n sleeper.sh
@@ -256,7 +259,7 @@ proc binary_submission_check {} {
    # 0 - job execution should be successfull
    # 1 - job should switch into error state
    # 2 - do not perform this test (job was not submitted)
-   set e_error_list { "2" "2" "0" "1" "0" "0" "0" \
+   set e_error_list { "2" "2" "0" "0" "0" "0" "0" \
                       "0" "0" "2" "2" }
 
    # 0 - check wether the job was executed successfully (qacct)

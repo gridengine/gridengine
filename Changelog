@@ -1,3 +1,5 @@
+EB-2002-12-04-1  Testsuite: Fixed bug in checktree/functional/binary_submission
+
 CR-2002-12-03-1  L10N:      Modified messages for spool files. 
                             The "#" (comment start) sign should not belong to 
                             l10n message.

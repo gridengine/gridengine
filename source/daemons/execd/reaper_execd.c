@@ -681,11 +681,24 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          lListElem *ja_task = NULL;
          lListElem *master_queue = NULL;
 
-         if ((job = job_list_locate(Master_Job_List, job_id)) != NULL) { 
-            ja_task = job_search_task(job, NULL, ja_task_id);
+         /* Bugfix: Issuezilla 1031/1034
+          * The problem in 1031 is that each task got added as its own job
+          * structure, but the reaper was only looking at the first job
+          * structure in the list.  Instead, we have to iterate through the
+          * list by hand to make sure we find every instance. */
+         job = lFirst (Master_Job_List);
+         
+         while ((job != NULL) && (ja_task == NULL)) {
+            if (job != NULL) { 
+               ja_task = job_search_task(job, NULL, ja_task_id);
+            }
+            
+            if (ja_task == NULL) {
+               job = lNext (job);
+            }
          }
          
-         if (job && ja_task) {
+         if ((job != NULL) && (ja_task != NULL)) {
             master_queue = responsible_queue(job, ja_task, NULL);
          }
 

@@ -58,14 +58,12 @@
 #include "sge_afsutil.h"
 #include "setup_path.h"
 #include "sge_security.h"
-#include "sgeobj/sge_job.h"
+#include "sge_job.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sge_var.h"
 #include "sge_qinstance.h"
 #include "get_path.h"
-#include "sgeobj/sge_object.h"
-#include "sgeobj/sge_answer.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -225,7 +223,6 @@ int slave
    int slots;
    int fd;
    const void *iterator = NULL;
-   bool job_exists = false;
 
    DENTER(TOP_LAYER, "handle_job");
 
@@ -246,59 +243,23 @@ int slave
     * We can ignore this job because job is resend by qmaster.
     */
    jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
-   
-   /* Bugfix: Issuezilla 1031/1034
-    * The problem in 1031 is that each task got added as its own job
-    * structure.  Since this is the only place where jobs get added to the
-    * Master_Job_List, it makes sense to save some effort here by reusing
-    * any existing job structures we might find.  This saves us a couple of
-    * steps further down, such as initializing security for each task when it's
-    * only needed once per job.  To reuse an existing structure, we have to
-    * take the task out of the job structure we've been given and put it in the
-    * existing job structure.  We also have to update the job's ja_n_h_ids.
-    * Any other bits of code that look for tasks in the Master_Job_List
-    * should continue to function normally because they expect that a job may
-    * be split up over any number of job structures.
-    * A further enhancement could be made to the qmaster by sending just the
-    * job id instead of the whole job.  That way, if the job structure exists,
-    * the qmaster is spared a create, and the execd is spared a free.  If it
-    * doesn't exist, the execd has to do the create, which is also good since it
-    * reduces the work the qmaster has to do. */
-   
-   if (jep != NULL) {
-      lList *alp = NULL;
-      
+   while(jep != NULL) {
       jep_jatep = job_search_task(jep, NULL, jataskid);
-
-      if (jep_jatep != NULL) {
+      if(jep_jatep != NULL) {
          DPRINTF(("Job "u32"."u32" is already running - skip the new one\n", 
                   jobid, jataskid));
          DEXIT;
          goto Ignore;   /* don't set queue in error state */
       }
 
-      job_exists = true;
-      jatep = lDechainElem (lGetList (jelem, JB_ja_tasks), jatep);
-      lAppendElem (lGetList (jep, JB_ja_tasks), jatep);
-      jelem = lFreeElem (jelem);
-      
-      object_delete_range_id (jep, &alp, JB_ja_n_h_ids, jataskid);
-      
-      if (lFirst(alp) != NULL) {
-         answer_list_to_dstring(alp, &err_str);
-         DEXIT;
-         goto Error;
-      }
+      jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
    }
-   else {
-      jep = jelem;
-   }
-      
-   if(sge_make_ja_task_active_dir(jep, jatep, &err_str) == NULL) {
+
+   if(sge_make_ja_task_active_dir(jelem, jatep, &err_str) == NULL) {
       DEXIT;
       goto Error;
    }
-   
+
    /* initialize state - prevent slaves from getting started */
    lSetUlong(jatep, JAT_status, slave?JSLAVE:JIDLE);
 
@@ -318,7 +279,7 @@ int slave
       qnm=lGetString(gdil_ep, JG_qname);
       if (!(qep=qinstance_list_locate2(qlp, qnm))) {
          sge_dstring_sprintf(&err_str, MSG_JOB_MISSINGQINGDIL_SU, qnm, 
-                             u32c(lGetUlong(jep, JB_job_number)));
+                             u32c(lGetUlong(jelem, JB_job_number)));
          DEXIT;
          goto Error;
       }
@@ -339,7 +300,7 @@ int slave
 
    /* ------- optionally pe */
    if (lGetString(jatep, JAT_granted_pe)) {
-      cull_unpack_elem(pb, &pelem, NULL); /* pelem will be freed with jep */
+      cull_unpack_elem(pb, &pelem, NULL); /* pelem will be freed with jelem */
       lSetObject(jatep, JAT_pe_object, pelem);
 
       if (lGetBool(pelem, PE_control_slaves)) {
@@ -357,94 +318,93 @@ int slave
       }
    }
 
-   if (!job_exists) {
-      if (!JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
-         /* interactive jobs and slave jobs do not have a script file */
-         if (!slave && lGetString(jep, JB_script_file)) {
-            int nwritten;
-            int found_script = 0;
-            u_long32 job_id = lGetUlong(jep, JB_job_number);
-            const void *iterator = NULL;
-            lListElem *tmp_job, *next_tmp_job;
+   if (!JOB_TYPE_IS_BINARY(lGetUlong(jelem, JB_type))) {
+      /* interactive jobs and slave jobs do not have a script file */
+      if (!slave && lGetString(jelem, JB_script_file)) {
+         int nwritten;
+         int found_script = 0;
+         const void *iterator = NULL;
+         lListElem *tmp_job = NULL;
+         lListElem *next_tmp_job = NULL;
+         u_long32 job_id = lGetUlong(jelem, JB_job_number);
 
-            /*
-             * Is another array task of the same job already here?
-             * In this case it is not necessary to spool the jobscript.
-             */
-            next_tmp_job = lGetElemUlongFirst(Master_Job_List,
-                                              JB_job_number, job_id, &iterator);
-            while((tmp_job = next_tmp_job) != NULL) {
-               next_tmp_job = lGetElemUlongNext(Master_Job_List,
-                                              JB_job_number, job_id, &iterator);
-               if (lGetUlong(tmp_job, JB_job_number) == job_id) {
-                  found_script = 1;
-                  break;
-               }
+         /*
+          * Is another array task of the same job already here?
+          * In this case it is not necessary to spool the jobscript.
+          */
+         next_tmp_job = lGetElemUlongFirst(Master_Job_List,
+                                           JB_job_number, job_id, &iterator);
+         while((tmp_job = next_tmp_job) != NULL) {
+            next_tmp_job = lGetElemUlongNext(Master_Job_List,
+                                           JB_job_number, job_id, &iterator);
+            if (lGetUlong(tmp_job, JB_job_number) == job_id) {
+               found_script = 1;
+               break;
+            }
+         }
+
+         if (!found_script) {
+            /* We are root. Make the scriptfile readable for the jobs submitter,
+               so shepherd can open (execute) it after changing to the user. */
+            fd = open(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
+            if (fd < 0) {
+               sge_dstring_sprintf(&err_str, MSG_ERRORWRITINGFILE_SS, 
+                                   lGetString(jelem, JB_exec_file), 
+                                   strerror(errno));
+               DEXIT;
+               goto Error;
             }
 
-            if (!found_script) {
-               /* We are root. Make the scriptfile readable for the jobs submitter,
-                  so shepherd can open (execute) it after changing to the user. */
-               fd = open(lGetString(jep, JB_exec_file), O_CREAT | O_WRONLY, 0755);
-               if (fd < 0) {
-                  sge_dstring_sprintf(&err_str, MSG_ERRORWRITINGFILE_SS, 
-                                      lGetString(jep, JB_exec_file), 
-                                      strerror(errno));
-                  DEXIT;
-                  goto Error;
-               }
-
-               if ((nwritten = sge_writenbytes(fd, lGetString(jep, JB_script_ptr), 
-                  lGetUlong(jep, JB_script_size))) !=
-                  lGetUlong(jep, JB_script_size)) {
-                  DPRINTF(("errno: %d\n", errno));
-                  sge_dstring_sprintf(&err_str, MSG_EXECD_NOWRITESCRIPT_SIUS, 
-                                      lGetString(jep, JB_exec_file), nwritten, 
-                                      u32c(lGetUlong(jep, JB_script_size)), 
-                                      strerror(errno));
-                  close(fd);
-                  DEXIT;
-                  goto Error;
-               }      
+            if ((nwritten = sge_writenbytes(fd, lGetString(jelem, JB_script_ptr), 
+               lGetUlong(jelem, JB_script_size))) !=
+               lGetUlong(jelem, JB_script_size)) {
+               DPRINTF(("errno: %d\n", errno));
+               sge_dstring_sprintf(&err_str, MSG_EXECD_NOWRITESCRIPT_SIUS, 
+                                   lGetString(jelem, JB_exec_file), nwritten, 
+                                   u32c(lGetUlong(jelem, JB_script_size)), 
+                                   strerror(errno));
                close(fd);
-               lSetString(jep, JB_script_ptr, NULL);
-            } 
-         }
+               DEXIT;
+               goto Error;
+            }      
+            close(fd);
+            lSetString(jelem, JB_script_ptr, NULL);
+         } 
       }
+   }
 
-      /* 
-      ** security hook
-      **
-      ** Execute command to store the client's DCE or Kerberos credentials.
-      ** This also creates a forwardable credential for the user.
-      */
-      if (do_credentials) {
-         if (store_sec_cred2(jep, do_authentication, &general, SGE_EVENT) != 0) {
-            sge_dstring_copy_string(&err_str, SGE_EVENT);
-            goto Error;
-         }   
-      }
+   /* 
+   ** security hook
+   **
+   ** Execute command to store the client's DCE or Kerberos credentials.
+   ** This also creates a forwardable credential for the user.
+   */
+   if (do_credentials) {
+      if (store_sec_cred2(jelem, do_authentication, &general, SGE_EVENT) != 0) {
+         sge_dstring_copy_string(&err_str, SGE_EVENT);
+         goto Error;
+      }   
+   }
 
 #ifdef KERBEROS
-      kerb_job(jep, de);
+   kerb_job(jelem, de);
 #endif
 
-      lSetUlong(jep, JB_script_size, 0);
-   }
-   
-   if (job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD)) {
+
+
+   lSetUlong(jelem, JB_script_size, 0);
+   if (job_write_spool_file(jelem, jataskid, NULL, SPOOL_WITHIN_EXECD)) {
       /* SGE_EVENT is written by job_write_spool_file() */
       sge_dstring_copy_string(&err_str, SGE_EVENT);
       DEXIT;
       goto Error;
    }
 
-   add_job_report(jobid, jataskid, NULL, jep);
+   add_job_report(jobid, jataskid, NULL, jelem);
 
-   if (!job_exists) {
-      DPRINTF (("Adding job to master list.\n"));
+   if (!jep_jatep) {
       /* put into job list */
-      lAppendElem(Master_Job_List, jep);
+      lAppendElem(Master_Job_List, jelem);
    }
 
    DEXIT;

@@ -1,3 +1,9 @@
+DT-2004-05-21-0: Bugfix:    o Backed out DT-2004-05-14-0 and DT-2004-05-14-1
+                            o Made reaper search the entire job list for tasks
+                 Changed:   execd
+                 Review:    pending
+                 Issue:     1031, 1034
+
 BD-2004-05-19-5: Enhamcem:  - If 3rdparty/{qmake,qtcsh}/COMPILE_ARCH
                               does not exist, create it using
                               configure.  This should be vastly
@@ -7,12 +13,12 @@ BD-2004-05-19-5: Enhamcem:  - If 3rdparty/{qmake,qtcsh}/COMPILE_ARCH
 
 BD-2004-05-19-4: Enhamcem:  - Add three new variables to aimk.site and
                               use them in aimk and Makefiles to allow
-			      Berkeley DB's headers and libraries to
-			      live in subdirectories of include/ and
-			      lib/ as well as allowing the library to
-			      have a suffix.  This is needed to allow
-			      FreeBSD and NetBSD to build against the
-			      DB version from ports/pkgsrc.
+			                     Berkeley DB's headers and libraries to
+			                     live in subdirectories of include/ and
+			                     lib/ as well as allowing the library to
+			                     have a suffix.  This is needed to allow
+			                     FreeBSD and NetBSD to build against the
+			                     DB version from ports/pkgsrc.
 
 BD-2004-05-19-3: Bugfix:    - Revert incomplete rename of RC_FILE value
                               "freebsd" to "fbsd"
@@ -204,7 +210,7 @@ DT-2004-05-14-0: Bugfix:    o Fixed the way the last element is removed from a
                             o Miscelaneous cleanup
                  Changed:   range, execd, CULL, JAPI, DRMAA
                  Issue:     1031, 1034, 1035
-                 Review:    pending
+                 Review:    SG, JG
 
 JG-2004-05-13-2: Bugfix:    - for jobs that did no resource requests, the 
                               accounting record contained an empty field (::) 

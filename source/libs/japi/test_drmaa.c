@@ -595,8 +595,9 @@ static int wait_all_jobs(void *vp)
 static int wait_n_jobs(int n)
 {
    char jobid[100];
-   int drmaa_errno;
-   int i, stat;
+   int drmaa_errno=0;
+   int i=0;
+   int stat=0;
 
    for (i=0; i<n; i++) {
       do {

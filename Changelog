@@ -1,3 +1,7 @@
+CR-2002-07-26-1: Bugfix:    Wrong path for qmaster messages file in exe host 
+                            installation
+                 Bugtraq:   #4721181    
+ 
 CR-2002-07-26-0: Bugfix:    Junk messages in installation
                  Bugtraq:   #4705066 (refix)
 

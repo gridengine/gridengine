@@ -2238,6 +2238,10 @@ execd)
    fi
    CheckCellDirectory
    CheckCSP
+   if [ "$QMDIR" = "" ];then
+      # set qmaster dir
+      QMDIR=$QSYST_ROOT_VAL/$QSYST_CELL_VAL/spool/qmaster
+   fi
    CheckHostNameResolving
    AddLocalConfiguration_With_Qconf
    AddQsystStartUpScript $euid false

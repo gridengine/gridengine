@@ -488,10 +488,10 @@ enum featureset_product_name_id_t style
    if (feature_get_active_featureset_id() != FEATURESET_UNINITIALIZED ) {
       if (feature_is_enabled(FEATURE_SGEEE)) {
          short_name = "SGEEE";
-         long_name  = "Enhanced Gridengine Edition";
+         long_name  = "Grid Engine Enterprise Edition";
       } else {
          short_name = "SGE";
-         long_name  = "Gridengine";
+         long_name  = "Grid Engine";
       }
    }
    version = GDI_VERSION;  /* set in version.c ( in gdi libary ) */

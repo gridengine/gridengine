@@ -1,3 +1,5 @@
+JG-2004-10-19-1: Bugfix:    fixed broken build on alinux
+
 EB-2004-10-19-0: Bugfix:    fix of EB-2004-09-15-0: qstat will show
                             extended information for -pri -ext -urg
                  Issue:     not necessary

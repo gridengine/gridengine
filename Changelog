@@ -1,11 +1,14 @@
-EB-2002-03-20-1  Bugfix:   can't receive request: READ ERROR
-                           - replaced closeconnection(0) calls within 
-                             recvfromcommd() through closeconnection(1) calls 
-                             in case of read error
-                           - improved logging; additional messages may be 
-                             found in the messages files of the daemons which 
-                             might help if these errors occure again
-                 Issue:    #176 (partially)
+CR-2002-03-20-1  Testsuite: sending "vt100" when client host is using tset
+                            for terminal settings.
+
+EB-2002-03-20-1  Bugfix:    can't receive request: READ ERROR
+                            - replaced closeconnection(0) calls within 
+                              recvfromcommd() through closeconnection(1) calls 
+                              in case of read error
+                            - improved logging; additional messages may be 
+                              found in the messages files of the daemons which 
+                              might help if these errors occure again
+                 Issue:     #176 (partially)
 
 CR-2002-03-20-0             merge from V53_beta2_BRANCH
                  Bugfix:    qselect/qstat -U is (partially) broken

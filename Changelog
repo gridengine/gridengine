@@ -1,3 +1,6 @@
+RC-2005-03-21-0: Bugfix:    failed to build on IA64 and Alpha Linux
+                 Changed:   3rdparty/qtcsh/sh.h
+
 CR-2005-03-18-2: Bugfix:    fixed CSP problems on hp11/aix43/aix51
                  Review:    AA
 
@@ -326,7 +329,7 @@ JG-2005-02-25-0: Bugfix:    Adding/modifying a high number of complex entries
                  Review:    SG
 
 JM-2005-02-23-1: Enhancem.: Added support to handle setup of startup
-							       scripts in a Debian-specific way (update-rc.d).
+                            scripts in a Debian-specific way (update-rc.d).
                  Changed:   arch_variables, inst_common.sh
                  Reviewed:  RH,AH
 

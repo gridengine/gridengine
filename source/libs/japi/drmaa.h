@@ -523,7 +523,7 @@ int drmaa_synchronize(const char *job_ids[], signed long timeout, int dispose, c
  */
 int drmaa_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int *stat, 
    signed long timeout, drmaa_attr_values_t **rusage, 
-   char *error_diagnosis, size_t error_diagnois_len);
+   char *error_diagnosis, size_t error_diag_len);
 
 /* 
  * Evaluates into 'exited' a non-zero value if stat was returned for a

@@ -971,13 +971,14 @@ lList **load_list
       }
 
    } else {
-      lList *ignore_queues = NULL, *ignore_hosts = NULL;
       lListElem *category = lGetRef(job, JB_category);
       bool use_category = (category != NULL) && lGetUlong(category, CT_refcount) > MIN_JOBS_IN_CATEGORY;
 
       a.slots = 1;
 
       if (!dont_start) {
+         lList *ignore_queues = NULL, *ignore_hosts = NULL;
+
          if (reservation_mode) {
             DPRINTF(("### looking for immediate sequential assignment for job "
                U32CFormat"."U32CFormat" duration "U32CFormat"\n", 
@@ -997,8 +998,13 @@ lList **load_list
             if (use_category) {
                lAddSubList(category, CT_ignore_queues, ignore_queues);
                lAddSubList(category, CT_ignore_hosts, ignore_hosts);
+               ignore_queues = NULL;
+               ignore_hosts = NULL;
             }
          }
+
+         ignore_queues = lFreeList(ignore_queues);
+         ignore_hosts = lFreeList(ignore_hosts);
       }
 
       /* don't try to reserve for jobs that can not be dispatched with the current configuration */

@@ -880,6 +880,8 @@ int string_base_cmp(u_long32 type, const char *s1, const char *s2)
                                  break;
                               }   
                            }
+                           sge_free_saved_vars(context);
+                           context = NULL;
                         }
          break;
       default: match = -1;

@@ -55,7 +55,7 @@ EXECD_SRC   =  execd.c \
               reaper_execd.c \
               sge_report_execd.c \
               setup_execd.c \
-              tmpdir.c \
+              tmpdir.c
 
 EXECD_ADD_SRC =  usage.c \
                  sge_options.c \
@@ -103,7 +103,7 @@ execd_messages:
 ###############################################################################
 # rules to build binaries
 ###############################################################################
-sge_execd:	$(EXECD_OBJS) $(EXECD_ADD_OBJS) $(EXECD_LIB_DEPENDS)
+sge_execd:  $(EXECD_OBJS) $(EXECD_ADD_OBJS) $(EXECD_LIB_DEPENDS)
 		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) $(EXECD_OBJS) $(EXECD_ADD_OBJS) $(EXECD_ADD_LIBS) $(SLIBS) $(LIBS) $(LOADAVGLIBS)
 
 ###############################################################################

@@ -1,3 +1,7 @@
+DT-2004-05-25-0: Bugfix:    o Fixed build for Solaris make
+                            o Changed DRMAA job usage to unscaled
+                 Changed:   DRMAA, execd Makefile
+
 SG-2004-05-25-2: Bugfix:    removed a compiler warrning in event master
                  Changed:   qmaster
                  Review:    JG

@@ -1010,11 +1010,11 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
    } else {
       /* JR_usage gets cleared in the process of cleaning up a finished job.
        * It's contents get put into JAT_usage_list and eventually added to
-       * JAT_scaled_usage_list.  In the JAPI, however, it would be ugly to have
+       * JAT_usage_list.  In the JAPI, however, it would be ugly to have
        * to go picking through the Master_Job_List to find the accounting data.
        * So instead we pick through it here and stick it back in JR_usage. */
 
-      lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_scaled_usage_list));
+      lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_usage_list));
 
       if (commit_flags & COMMIT_NEVER_RAN) {
          lSetUlong(jr, JR_wait_status, SGE_NEVERRAN_BIT);
@@ -1041,7 +1041,7 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
       lFreeElem(jr);
    }   
    else {
-      lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_scaled_usage_list));
+      lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_usage_list));
    }
 
    DEXIT;

@@ -38,7 +38,7 @@ package org.ggf.drmaa;
 /** The format for the job attribute value is invalid.
  * @author dan.templeton@sun.com
  */
-public class InvalidAttributeFormatException extends InvalidArgumentException {
+public class InvalidAttributeFormatException extends InvalidAttributeException {
 	
 	/**
 	 * Creates a new instance of <code>InvalidAttributeFormatException</code> without detail message.

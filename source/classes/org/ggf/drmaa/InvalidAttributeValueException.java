@@ -38,7 +38,7 @@ package org.ggf.drmaa;
 /** The value for the job attribute is invalid.
  * @author dan.templeton@sun.com
  */
-public class InvalidAttributeValueException extends InvalidArgumentException {
+public class InvalidAttributeValueException extends InvalidAttributeException {
 	
 	/**
 	 * Creates a new instance of <code>InvalidAttributeValueException</code> without detail message.

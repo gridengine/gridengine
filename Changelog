@@ -1,3 +1,8 @@
+DT-2004-06-15-0: Bugfix:    o Fixed minor bugs in DRMAA Java binding
+                            o Fixed bad link in DRMAA howto
+                 Enhancem.: o Added Java binding README and started howto
+                 Changed:   DRMAA, howtos
+
 JG-2004-06-14-0: QA:        Updated review template and doc.
                  Cleanup:   Removed unused I18N messages.
                  Testsuite: Make checks performance/throughput and 

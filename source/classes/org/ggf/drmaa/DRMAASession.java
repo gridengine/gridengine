@@ -81,6 +81,8 @@ public abstract class DRMAASession {
 	public static final int SYSTEM_SUSPENDED = 0x21;
 	/** job is user suspended */
 	public static final int USER_SUSPENDED = 0x22;
+	/** job is user suspended */
+	public static final int USER_SYSTEM_SUSPENDED = 0x23;
 	/** job finished normally */
 	public static final int DONE = 0x30;
 	/** job finished, but failed */

@@ -136,8 +136,6 @@ void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options
    dstring tmp_buf = DSTRING_INIT;
    dstring line = DSTRING_INIT;
    dstring line2 = DSTRING_INIT;
-   char* line_buf = NULL;
-   char* line2_buf = NULL;
    
    int new_line_opt = options->n;
 

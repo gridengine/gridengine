@@ -1,3 +1,9 @@
+JG-2002-10-31-2  Bugfix:    Event mirror interface: the event 
+                            sgeE_JOB_MOD_SCHED_PRIORITY was not handled 
+                            correctly.
+                            Spooling framework (classic): Removing local 
+                            configurations used incorrect path.
+
 JG-2002-10-31-1  Bugfix:    shepherd dumped core when starting command with
                             unix behaviour (e.g. pe_start procedure).
 

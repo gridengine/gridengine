@@ -656,7 +656,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
 
    /* generate an sgeE_JOB_ADD event and queue it into the event list */
-   sge_add_job_event(sgeE_JOB_ADD, jep, 0);
+   sge_add_job_event(sgeE_JOB_ADD, jep, NULL);
 
    /*
    ** immediate jobs trigger scheduling immediately
@@ -1602,13 +1602,14 @@ int sub_command
          lAddList(*alpp, tmp_alp);
 
          if (trigger & MOD_EVENT) {
-            sge_add_job_event(sgeE_JOB_MOD, new_job, 0);
+            sge_add_job_event(sgeE_JOB_MOD, new_job, NULL);
             for_each(jatep, lGetList(new_job, JB_ja_tasks)) {
                sge_add_jatask_event(sgeE_JATASK_MOD, new_job, jatep);
             }
          }
-         if (trigger & PRIO_EVENT)
-            sge_add_event(NULL, sgeE_JOB_MOD_SCHED_PRIORITY, jobid, 0, NULL, jep);
+         if (trigger & PRIO_EVENT) {
+            sge_add_job_event(sgeE_JOB_MOD_SCHED_PRIORITY, new_job, NULL);
+         }
 
          /* remove all existing trigger links - 
             this has to be done using the old 

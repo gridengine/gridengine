@@ -728,6 +728,8 @@ int spool_classic_default_write_func(const lListElem *type, const lListElem *rul
 int spool_classic_default_delete_func(const lListElem *type, const lListElem *rule, 
                                       const char *key, const sge_event_type event_type)
 {
+   static dstring dir_name = DSTRING_INIT;
+
    DENTER(TOP_LAYER, "spool_classic_default_delete_func");
 
    switch(event_type) {
@@ -747,7 +749,9 @@ int spool_classic_default_delete_func(const lListElem *type, const lListElem *ru
          if(sge_hostcmp(key, "global") == 0) {
             ERROR((SGE_EVENT, MSG_SPOOL_GLOBALCONFIGNOTDELETED));
          } else {
-            sge_unlink("../../common/local_conf", key);
+            sge_dstring_sprintf(&dir_name, "%s/%s",
+                                lGetString(rule, SPR_url), LOCAL_CONF_DIR);
+            sge_unlink(sge_dstring_get_string(&dir_name), key);
          }
          break;
       case SGE_EMT_EXECHOST:

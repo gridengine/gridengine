@@ -933,7 +933,7 @@ lListElem *jep
             } else 
                DPRINTF(("job "u32"'s job exit triggers start of job "u32"\n",
                   lGetUlong(jep, JB_job_number), lGetUlong(suc_jep, JB_job_number)));
-            sge_add_job_event(sgeE_JOB_MOD, suc_jep, 0);
+            sge_add_job_event(sgeE_JOB_MOD, suc_jep, NULL);
          }
       }
    }

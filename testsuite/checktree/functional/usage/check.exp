@@ -149,7 +149,7 @@ proc usage_setup  {} {
    if {[info exists saved_config]} {
       unset saved_config
    }
-   if { [resolve_version] <= 2 } {
+   if { $ts_config(gridengine_version) == 53 } {
       foreach attrib "load_report_time execd_params schedd_params" {
          set saved_config($attrib) $config($attrib)
       }
@@ -219,7 +219,7 @@ proc usage_cleanup  {} {
 
    # reset config
    set_config saved_config
-   if {[resolve_version] >= 3} {
+   if {$ts_config(gridengine_version) == 53} {
       reset_schedd_config;
    }
 

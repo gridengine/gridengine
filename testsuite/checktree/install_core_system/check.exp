@@ -281,11 +281,12 @@ proc kill_running_system {} {
 #     ???/???
 #*******************************
 proc install_qmaster {} {
+   global ts_config
  global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_USER check_errstr 
  global CHECK_CORE_EXECD CHECK_CORE_MASTER CORE_INSTALLED CORE_INSTALLED CHECK_OUTPUT 
  global open_spawn_buffer CHECK_TESTSUITE_ROOT env CHECK_COMMD_PORT local_master_spool_set
  global check_use_installed_system CHECK_ADMIN_USER_SYSTEM CHECK_DEFAULT_DOMAIN
- global CHECK_DEBUG_LEVEL CHECK_QMASTER_INSTALL_OPTIONS CHECK_PRODUCT_FEATURE CHECK_COMMD_PORT
+ global CHECK_DEBUG_LEVEL CHECK_QMASTER_INSTALL_OPTIONS CHECK_COMMD_PORT
  global CHECK_REPORT_EMAIL_TO CHECK_MAIN_RESULTS_DIR CHECK_FIRST_FOREIGN_SYSTEM_USER
  global CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_REPORT_EMAIL_TO
  global CHECK_PROTOCOL_DIR
@@ -356,7 +357,7 @@ proc install_qmaster {} {
  set prod_type_var "SGE_ROOT"
 
  set feature_install_options ""
- if { $CHECK_PRODUCT_FEATURE == "csp" } {
+ if { $ts_config(product_feature) == "csp" } {
     append feature_install_options "-csp"
  }
 
@@ -1313,12 +1314,12 @@ proc reread_bootstrap {} {
 
 # generating all testsuite cluster user keys and certificates
 proc make_user_cert {} {
-  
-  global CHECK_PRODUCT_FEATURE CHECK_OUTPUT CHECK_CORE_MASTER CHECK_MAIN_RESULTS_DIR
+   global ts_config 
+  global CHECK_OUTPUT CHECK_CORE_MASTER CHECK_MAIN_RESULTS_DIR
   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_REPORT_EMAIL_TO
   global CHECK_PRODUCT_ROOT CHECK_USER CHECK_DEBUG_LEVEL
 
-  if { $CHECK_PRODUCT_FEATURE == "csp" } {
+  if { $ts_config(product_feature) == "csp" } {
      puts $CHECK_OUTPUT "removing evtl. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
      set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
      puts $CHECK_OUTPUT $result
@@ -1373,11 +1374,12 @@ proc make_user_cert {} {
 #     ???/???
 #*******************************
 proc install_execd {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_PRODUCT_TYPE CORE_INSTALLED
    global check_use_installed_system CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_DEBUG_LEVEL CHECK_EXECD_INSTALL_OPTIONS
-   global CHECK_PRODUCT_FEATURE CHECK_COMMD_PORT CHECK_CORE_MASTER
+   global CHECK_COMMD_PORT CHECK_CORE_MASTER
    global CHECK_MAIN_RESULTS_DIR CHECK_SUBMIT_ONLY_HOSTS
 
    set CORE_INSTALLED "" 
@@ -1386,7 +1388,7 @@ proc install_execd {} {
    set_error "0" "install_execd - no errors"
 
    set feature_install_options ""
-   if { $CHECK_PRODUCT_FEATURE == "csp" } {
+   if { $ts_config(product_feature) == "csp" } {
          set feature_install_options "-csp"
          set my_csp_host_list $CHECK_CORE_EXECD
          foreach elem $CHECK_SUBMIT_ONLY_HOSTS {
@@ -2248,6 +2250,7 @@ proc setup_testcheckpointobject {} {
 #     ???/???
 #*******************************
 proc setup_conf {} {
+   global ts_config
   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD CHECK_CORE_MASTER
   global CHECK_DEFAULT_DOMAIN CHECK_PRODUCT_TYPE
 
@@ -2277,7 +2280,7 @@ proc setup_conf {} {
   set params(token_extend_time) "none"
   set params(shepherd_cmd) "none"
   set params(qmaster_params) "none"
-  if { [resolve_version] <= 2 } {
+  if { $ts_config(gridengine_version) == 53 } {
      set params(schedd_params) "none"
   }
   set params(execd_params) "none"
@@ -2635,6 +2638,7 @@ proc setup_deadlineuser {} {
 #     ???/???
 #*******************************
 proc setup_schedconf {} {
+   global ts_config
   global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno  CHECK_CORE_EXECD CHECK_USER CHECK_CORE_MASTER
   global CHECK_PRODUCT_TYPE CHECK_OUTPUT
 
@@ -2675,7 +2679,7 @@ proc setup_schedconf {} {
        set new  $new_config($param)
 
        if { [ string compare $old $new ] != 0 } {
-          if { [resolve_version] >= 3 } {
+          if { $ts_config(gridengine_version) == 60 } {
              if { [ string compare $param "reprioritize_interval" ] == 0 } { continue }
           } else {
              if { [ string compare $param "sgeee_schedule_interval" ] == 0 } { continue }

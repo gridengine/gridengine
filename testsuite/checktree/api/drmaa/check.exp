@@ -94,9 +94,9 @@ proc drmaa_init_level {} {
 
 # change setup in a way allowing the next runlevel to start
 proc drmaa_setup {} {
-
-  if { [resolve_version] <= 2 } {
-      set_error -3 "drmaa_setup - sge/ee version \"[get_version_info]\" doesn't support multi threading"
+   global ts_config
+  if { $ts_config(gridengine_version) == 53 } {
+      set_error -3 "drmaa_setup - sge/ee version \"5.3\" doesn't support multi threading"
       return 1
    }
 
@@ -106,13 +106,14 @@ proc drmaa_setup {} {
 
 # here the actual test is done
 proc drmaa_check {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
    global CHECK_HOST CHECK_CORE_EXECD CHECK_SOURCE_DIR CHECK_USER CHECK_CORE_MASTER
    global CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
 
 
-   if { [resolve_version] <= 2 } {
-      set_error -3 "drmaa_check - sge/ee version \"[get_version_info]\" doesn't support multi threading"
+   if { $ts_config(gridengine_version) == 53 } {
+      set_error -3 "drmaa_check - sge/ee version \"5.3\" doesn't support multi threading"
       return 1
    }
 
@@ -228,8 +229,9 @@ proc drmaa_check {} {
 
 # undo what we've done in drmaa_setup
 proc drmaa_cleanup  {} {
-   if { [resolve_version] <= 2 } {
-      set_error -3 "drmaa_cleanup - sge/ee version \"[get_version_info]\" doesn't support multi threading"
+   global ts_config
+   if { $ts_config(gridengine_version) == 53 } {
+      set_error -3 "drmaa_cleanup - sge/ee version \"5.3\" doesn't support multi threading"
       return 1
    }
 

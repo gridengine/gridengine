@@ -112,13 +112,11 @@ proc init_level {} {
 
 
 proc is_version_ok {} {
-  
-  set version [ resolve_version ]
-  if { $version >= 3 } {
-     return 0 ;# ok 
-
-  } 
-  return -1  ;# version not ok
+   global ts_config
+   if { $ts_config(gridengine_version) == 60 } {
+      return 0 ;# ok 
+   } 
+   return -1  ;# version not ok
 }
 
 

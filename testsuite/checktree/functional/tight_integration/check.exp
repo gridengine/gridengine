@@ -324,13 +324,14 @@ proc tight_integration_function {} {
 
 # check if tasks are killed when they hit a wallclock limit
 proc tight_integration_iz_575 {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_HOST CHECK_USER 
    global CHECK_CORE_EXECD CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global TIGHT_INTEGRATION_FUNCTIONAL_SLOTS TIGHT_INTEGRATION_FUNCTIONAL_DURATION
    global submit_command
    puts $CHECK_OUTPUT "tight_integration: iz 575 task wallclock limit"
 
-   if {[resolve_version] < 3} {
+   if {$ts_config(gridengine_version) == 53} {
       add_proc_error "tight_integration_iz_575" -3 "iz 575 does not run in 5.3 systems"
       set_error 0 "ok"
       return

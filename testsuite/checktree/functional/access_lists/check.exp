@@ -129,7 +129,7 @@ proc access_lists_setup  {} {
 
    set my_schedd_config(schedule_interval)       "0:0:01"
    if { [ string compare $ts_config(product_type) sgeee] == 0 } {
-      if { [resolve_version] < 3 } {
+      if { $ts_config(gridengine_version) == 53 } {
          set my_schedd_config(sgeee_schedule_interval) "0:0:02"
       }
    }

@@ -3572,10 +3572,11 @@ proc check_huge_script {} {
 }
 
 proc check_setup_config {} {
+   global ts_config
    global stored_configuration
 
 
-   if { [resolve_version] <= 2 } {
+   if { $ts_config(gridengine_version) == 53 } {
       get_config stored_configuration
       set my_config(schedd_params) "$stored_configuration(schedd_params),FLUSH_SUBMIT_SEC=0"
       set_config my_config
@@ -3587,9 +3588,10 @@ proc check_setup_config {} {
 }
 
 proc check_cleanup_config {} {
+   global ts_config
    global stored_configuration
 
-   if {[resolve_version] >= 3} {
+   if {$ts_config(gridengine_version) == 60} {
       reset_schedd_config
    } else {
       set_config stored_configuration

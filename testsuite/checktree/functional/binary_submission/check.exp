@@ -83,14 +83,15 @@ proc binary_submission_init_level {} {
 # -------- local test procedures -------------------------------------------
 
 proc binary_submission_setup  {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_OUTPUT 
    global CHECK_CORE_MASTER
 
 
 
-   if { [resolve_version] <= 2 } {
-      set_error -3 "setup_queues - sge/ee version \"[get_version_info]\" doesn't support binary submission"
+   if { $ts_config(gridengine_version) == 53 } {
+      set_error -3 "setup_queues - sge/ee version \"5.3\" doesn't support binary submission"
       return 1
    }
 
@@ -107,11 +108,12 @@ proc binary_submission_setup  {} {
 }
 
 proc binary_submission_cleanup  {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
 
 
-   if { [resolve_version] <= 2 } {
-      set_error -3 "setup_queues - sge/ee version \"[get_version_info]\" doesn't support binary submission"
+   if { $ts_config(gridengine_version) == 53 } {
+      set_error -3 "setup_queues - sge/ee version \"5.3\" doesn't support binary submission"
       return 1
    }
 
@@ -132,13 +134,14 @@ proc binary_submission_cleanup  {} {
 }
 
 proc binary_submission_check {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_HOST CHECK_USER
    global qrsh_hostlist open_spawn_buffer 
  
     
-   if { [resolve_version] <= 2 } {
-      set_error -3 "setup_queues - sge/ee version \"[get_version_info]\" doesn't support binary submission"
+   if { $ts_config(gridengine_version) == 53 } {
+      set_error -3 "setup_queues - sge/ee version \"5.3\" doesn't support binary submission"
       return 1
    }
 

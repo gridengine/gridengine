@@ -2018,8 +2018,8 @@ proc config_product_type { only_check name config_array } {
 #     check/verify_config()
 #*******************************************************************************
 proc config_product_feature { only_check name config_array } {
+   global ts_config
    global CHECK_OUTPUT 
-   global CHECK_PRODUCT_FEATURE
 
    upvar $config_array config
    set actual_value  $config($name)
@@ -2053,8 +2053,6 @@ proc config_product_feature { only_check name config_array } {
         puts $CHECK_OUTPUT "product_feature can only be \"none\" or \"csp\""
         return -1
    }
-
-   set CHECK_PRODUCT_FEATURE $value
 
    return $value
 }

@@ -30,6 +30,34 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+#                                                             max. column:     |
+#
+#****** version/ts_source() ******
+#  NAME
+#     ts_source() -- get testsuite internal version number for product 
+#
+#  SYNOPSIS
+#     ts_source {filebase {extension tcl}} 
+#
+#  FUNCTION
+#     This function sources a tclfile named by filebase and extension.
+#     It will first source a version independent file (if it exists) and
+#     then a version dependent file.
+#
+#     It will check if the following files exist, and source them:
+#        $filebase.$extension
+#        $filebase.$ts_config(gridengine_version).$extension
+#
+#  INPUTS
+#     filebase  - filename without extension, e.g. tcl_files/version
+#     extension - extension, e.g. "tcl" or "ext", default "tcl"
+#
+#  RESULT
+#     1 on success, else 0
+#
+#  SEE ALSO
+#*******************************
+#
 proc ts_source {filebase} {
    global ts_config
    global CHECK_OUTPUT
@@ -64,151 +92,6 @@ proc ts_source {filebase} {
 }
 
 #                                                             max. column:     |
-#
-#****** control_procedures/resolve_version() ******
-#  NAME
-#     resolve_version() -- get testsuite internal version number for product 
-#
-#  SYNOPSIS
-#     resolve_version { { internal_number -100 } } 
-#
-#  FUNCTION
-#     This procedure will compare the product version string with known version
-#     numbers of the cluster software. A known version number will return a
-#     value > 0. The return value is an integer and the test procedures can
-#     enable or disable a check procedure by using this number.
-#     If an internal version number is given as parameter, a list of 
-#     SGE versions mapping to this internal number is returned.
-#
-#  INPUTS
-#     { internal_number -100 } - optional parameter
-#                                if set to a integer value > -3 the function
-#                                will return a list of corresponding product 
-#                                version strings.
-#
-#  RESULT
-#     when internal_number == -100 :
-#     ==============================
-#
-#     -4  - unsupported version
-#     -3  - system not running
-#     -2  - system not installed
-#     -1  - unknown error (testsuite error)
-#      0  - version number not set (testsuite error)
-#      1  - SGE 5.0.x
-#      2  - SGEEE 5.0.x
-#      3  - SGE(EE) 6.x
-#      ...
-#
-#     when internal_number != -100 :
-#     ==============================
-#      
-#      List of version strings of the cluster software that match the
-#      internal version number of the testsuite.
-#
-#  KNOWN BUGS
-#      A version string should not contain underscores (_); if an internal
-#      version number is given to resolve_version, all underscores are mapped
-#      to a space.
-#
-#  SEE ALSO
-#     sge_procedures/get_version_info()
-#*******************************
-#
-proc resolve_version { { internal_number -100 } } {
-
-   global CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_FEATURE CHECK_PRODUCT_ROOT
-   global CHECK_PRODUCT_TYPE
-   
-   if { [ string compare "system not running - run install test first" $CHECK_PRODUCT_VERSION_NUMBER] == 0 } {
-      get_version_info
-   }
-   if { [ string compare "system not installed - run compile option first" $CHECK_PRODUCT_VERSION_NUMBER] == 0 } {
-      get_version_info
-   }
-   if { [ string compare "unknown" $CHECK_PRODUCT_VERSION_NUMBER] == 0 } {
-      get_version_info
-   }
-
-   set versions(system_not_running_-_run_install_test_first)      -3
-   set versions(system_not_installed_-_run_compile_option_first)  -2
-   set versions(unknown)                                          -1
-
-   set versions(SGE_5.3)             1
-   set versions(SGE_5.3_alpha1)      1
-   set versions(SGEEE_5.3)           1
-   set versions(SGEEE_5.3_alpha1)    1
-   set versions(SGE_6.0_pre)         1
-   set versions(SGE_5.3_maintrunc)   2
-   set versions(SGEEE_5.3_maintrunc) 2
-   set versions(SGE_5.3beta1)        2
-   set versions(SGEEE_5.3beta1)      2
-   set versions(SGEEE_5.3beta2)      2
-   set versions(SGE_5.3beta2)        2
-   set versions(SGEEE_5.3beta2_1)    2
-   set versions(SGE_5.3beta2_1)      2
-   set versions(SGEEE_5.3beta2_2)    2
-   set versions(SGE_5.3beta2_2)      2
-   set versions(SGEEE_5.3.1beta1)    2
-   set versions(SGE_5.3.1beta1)      2
-   set versions(SGEEE_5.3.1beta2)    2
-   set versions(SGE_5.3.1beta2)      2
-   set versions(SGEEE_5.3.1beta3)    2
-   set versions(SGE_5.3.1beta3)      2
-   set versions(SGEEE_5.3.1beta4)    2
-   set versions(SGE_5.3.1beta4)      2
-   set versions(SGEEE_5.3.1beta5)    2
-   set versions(SGE_5.3.1beta5)      2
-   set versions(SGEEE_5.3.1beta6)    2
-   set versions(SGE_5.3.1beta6)      2
-   set versions(SGEEE_5.3.1beta7)    2
-   set versions(SGE_5.3.1beta7)      2
-   set versions(SGEEE_5.3.1beta8)    2
-   set versions(SGE_5.3.1beta8)      2
-   set versions(SGEEE_5.3.1beta9)    2
-   set versions(SGE_5.3.1beta9)      2
-   set versions(SGEEE_5.3p1)         2
-   set versions(SGE_5.3p1)           2
-   set versions(SGEEE_5.3p2)         2
-   set versions(SGE_5.3p2)           2
-   set versions(SGEEE_5.3p3)         2
-   set versions(SGE_5.3p3)           2
-   set versions(SGEEE_5.3prep4)      2
-   set versions(SGE_5.3prep4)        2
-   set versions(SGEEE_5.3p4)         2
-   set versions(SGE_5.3p4)           2
-   set versions(SGEEE_pre6.0_(Maintrunk))    3
-   set versions(SGE_pre6.0_(Maintrunk))      3
-
-   if { $internal_number == -100 } {
-      if { $CHECK_PRODUCT_VERSION_NUMBER == "" } {
-         return 0
-      }
-      set requested_version [string map {{ } {_}} $CHECK_PRODUCT_VERSION_NUMBER]
-      if {[info exists versions($requested_version)] } {
-         return $versions($requested_version)
-      }   
-      add_proc_error "resolve_version" "-1" "Product version \"$CHECK_PRODUCT_VERSION_NUMBER\" not supported"
-      return -4
-   } else {
-      set ret ""
-      foreach elem [array names versions] {
-         if { $internal_number == $versions($elem) } {
-            lappend ret [string map {{_} { }} $elem]
-         }
-      }
-      if { [llength $ret] > 0 } {
-         return $ret
-      }   
-      add_proc_error "resolve_version" "-1" "Internal version number \"$internal_number\" not supported"
-      return ""
-   }
-}
-
-
-
-
-#                                                             max. column:     |
 #****** sge_procedures/get_version_info() ******
 # 
 #  NAME
@@ -228,9 +111,10 @@ proc resolve_version { { internal_number -100 } } {
 #     ???/???
 #*******************************
 proc get_version_info {} {
-   global bootstrap
+   global ts_config
+   global sge_config
    global CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_ROOT CHECK_ARCH
-   global CHECK_PRODUCT_FEATURE CHECK_PRODUCT_TYPE CHECK_OUTPUT
+   global CHECK_PRODUCT_TYPE CHECK_OUTPUT
    global CHECK_CHECKTREE_ROOT
  
 
@@ -239,7 +123,7 @@ proc get_version_info {} {
       return $CHECK_PRODUCT_VERSION_NUMBER
    }
    
-   if { [file isfile "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"] == 1 } {
+   if { [file isfile "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"] } {
       set qmaster_running [ catch { 
          eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sh" 
       } result ]
@@ -257,8 +141,7 @@ proc get_version_info {} {
       if { [ string first "exit" $CHECK_PRODUCT_VERSION_NUMBER ] >= 0 } {
          set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
       } else {
-         set version [resolve_version]
-         if {$version < 3} {
+         if {$ts_config(gridengine_version) == 53} {
             # SGE(EE) 5.x: we have a product mode file
             set product_mode "unknown"
             if { [file isfile $CHECK_PRODUCT_ROOT/default/common/product_mode ] == 1 } {
@@ -267,9 +150,9 @@ proc get_version_info {} {
                close $product_mode_file
             } else {
                # SGE(EE) 6.x: product mode is in bootstrap file
-               set product_mode $bootstrap(product_mode)
+               set product_mode $sge_config(product_mode)
             }
-            if { $CHECK_PRODUCT_FEATURE == "csp" } {
+            if { $ts_config(product_feature) == "csp" } {
                 if { [ string first "csp" $product_mode ] < 0 } {
                     puts $CHECK_OUTPUT "get_version_info - product feature is not csp ( secure )"
                     puts $CHECK_OUTPUT "testsuite setup error - stop"
@@ -277,14 +160,14 @@ proc get_version_info {} {
                 } 
             } else {
                 if { [ string first "csp" $product_mode ] >= 0 } {
-                    puts $CHECK_OUTPUT "resolve_version - product feature is csp ( secure )"
+                    puts $CHECK_OUTPUT "get_version_info - product feature is csp ( secure )"
                     puts $CHECK_OUTPUT "testsuite setup error - stop"
                     exit -1
                 } 
             }
             if { $CHECK_PRODUCT_TYPE == "sgeee" } {
                 if { [ string first "sgeee" $product_mode ] < 0 } {
-                    puts $CHECK_OUTPUT "resolve_version - no sgeee system"
+                    puts $CHECK_OUTPUT "get_version_info - no sgeee system"
                     puts $CHECK_OUTPUT "please remove the file"
                     puts $CHECK_OUTPUT "\n$CHECK_PRODUCT_ROOT/default/common/product_mode"
                     puts $CHECK_OUTPUT "\nif you want to install a new sge system"
@@ -293,7 +176,7 @@ proc get_version_info {} {
                 } 
             } else {
                 if { [ string first "sgeee" $product_mode ] >= 0 } {
-                    puts $CHECK_OUTPUT "resolve_version - this is a sgeee system"
+                    puts $CHECK_OUTPUT "get_version_info - this is a sgeee system"
                     puts $CHECK_OUTPUT "testsuite setup error - stop"
                     exit -1
                 } 

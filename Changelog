@@ -1,3 +1,5 @@
+JG-2003-11-25-0: Testsuite: Cleanup of testsuite configuration.
+
 JG-2003-11-24-1: Bugfix:    Fixed memory leak from JG-2003-11-24-0.
 
 JG-2003-11-24-0: Bugfix:    Fixed writing of the reporting file.

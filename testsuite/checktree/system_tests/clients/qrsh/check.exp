@@ -676,6 +676,7 @@ proc qrsh_trap {} {
 #     ???/???
 #*******************************
 proc qrsh_accounting {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
    global CHECK_HOST CHECK_USER
    global qrsh_hostlist open_spawn_buffer
@@ -687,7 +688,7 @@ proc qrsh_accounting {} {
    } 
 
    puts $CHECK_OUTPUT "qrsh accounting test"
-   if { [resolve_version] > 2 } {
+   if { $ts_config(gridengine_version) != 53 } {
       set INTERACTIVE_JOB [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S] "*"]
       set INTERACTIVE_JOB_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S] "__JOBID__"]
    } else {

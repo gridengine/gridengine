@@ -270,33 +270,19 @@ proc get_complex_version {} {
 #     sge_procedures/get_execd_spool_dir()
 #*******************************
 proc get_qmaster_spool_dir {} {
-   global sge_config
+   global ts_config sge_config
 
-   set version [resolve_version]
-   if {$version < 1} {
+   set ret "unknown"
+
+   if {![info exists sge_config(qmaster_spool_dir)]} {
       # error
-      return "unknown version"
+      set ret "qmaster spool dir not yet initialized"
    } else {
-      if {$version < 3} {
-         # SGE 5.3 system
-         get_config global_config
-         if {[info exists global_config(qmaster_spool_dir)]} {
-            return $global_config(qmaster_spool_dir)
-         } else {
-            return "unknown qmaster_spool_dir for SGE 5.x"
-         }
-      } else {
-         # SGE 6.x system
-         # dump_sge_config
-         if {[info exists sge_config(qmaster_spool_dir)]} {
-            return $sge_config(qmaster_spool_dir)
-         } else {
-            return "unknown qmaster_spool_dir for SGE 6.x"
-         }
-      }
+      set ret $sge_config(qmaster_spool_dir)
    }
-}
 
+   return $ret
+}
 #                                                             max. column:     |
 #****** sge_procedures/set_qmaster_spool_dir() ******
 # 
@@ -394,7 +380,7 @@ proc check_messages_files { } {
    set status [ check_schedd_messages 1] 
    append full_info "\n=========================================\n"
    append full_info "schedd: $CHECK_CORE_MASTER\n"
-   append full_info "file   : [check_schedd_messages 2]\n"
+   append full_info "file  : [check_schedd_messages 2]\n"
    append full_info "=========================================\n"
    append full_info $status
 
@@ -1170,6 +1156,7 @@ proc move_qmaster_spool_dir { new_spool_dir } {
 #*******************************
 proc reset_schedd_config {} {
   global CHECK_PRODUCT_TYPE
+  global ts_config
  
   set default_array(algorithm)                  "default"
   set default_array(schedule_interval)          "0:0:10"
@@ -1180,7 +1167,7 @@ proc reset_schedd_config {} {
   set default_array(load_adjustment_decay_time) "0:7:30"
   set default_array(load_formula)               "np_load_avg"
   set default_array(schedd_job_info)            "true"
-  if { [resolve_version] >= 3 } {
+  if { $ts_config(gridengine_version) == 60 } {
      set default_array(flush_submit_sec)        "0"
      set default_array(flush_finish_sec)        "0"
      set default_array(params)                  "none"
@@ -1189,7 +1176,7 @@ proc reset_schedd_config {} {
 # this is sgeee
   if { [string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
      set default_array(queue_sort_method)          "share"
-     if { [resolve_version] >= 3 } {
+     if { $ts_config(gridengine_version) == 60 } {
         set default_array(reprioritize_interval)    "00:00:40"
      } else {
         set default_array(sgeee_schedule_interval)    "00:00:40"
@@ -1204,7 +1191,7 @@ proc reset_schedd_config {} {
      set default_array(weight_job)                 "0.2"
      set default_array(weight_tickets_functional)  "0"
      set default_array(weight_tickets_share)       "0"
-     if { [resolve_version] >= 3 } {
+     if { $ts_config(gridengine_version) == 60 } {
          set default_array(share_override_tickets)        "true"
          set default_array(share_functional_shares)       "true"
         
@@ -1541,6 +1528,8 @@ proc get_complex { change_array complex_list } {
 proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
   global CHECK_CORE_MASTER CHECK_USER
+  global ts_config
+
   upvar $change_array chgar
   set values [array names chgar]
 
@@ -1568,7 +1557,7 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
   } 
   set GIDRANGE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I] "*"]
 
-  if { [resolve_version] > 2 } {
+  if { $ts_config(gridengine_version) == 60 } {
      set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
      set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
   } else {
@@ -2091,13 +2080,14 @@ proc set_queue { q_name change_array } {
 #     sge_procedures/enable_queue()
 #*******************************
 proc add_queue { change_array {fast_add 0} } {
+  global ts_config
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_PRODUCT_TYPE
   global CHECK_USER CHECK_CORE_MASTER CHECK_HOST
 
   upvar $change_array chgar
 
-  if { [resolve_version] >= 3 && $fast_add != 0 } {
+  if { $ts_config(gridengine_version) == 60 && $fast_add != 0 } {
      puts $CHECK_OUTPUT "WARNING: add_queue : ignoring fast_add option !!!!!!!!!!"
      set fast_add 0
   }
@@ -3118,7 +3108,7 @@ proc get_queue_state { queue } {
 #     sge_procedures/del_checkpointobj()
 #*******************************
 proc add_checkpointobj { change_array } {
-
+   global ts_config
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
   global CHECK_USER CHECK_CORE_MASTER CHECK_HOST CHECK_OUTPUT
 
@@ -3149,7 +3139,7 @@ proc add_checkpointobj { change_array } {
   set ALREADY_EXISTS [ translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $chgar(ckpt_name)]
   set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $chgar(ckpt_name) "checkpoint interface" ]
 
-  if { [resolve_version] < 3 } {
+  if { $ts_config(gridengine_version) == 60 } {
      set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
 
      set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $ADDED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
@@ -5153,6 +5143,7 @@ proc delete_job { jobid { wait_for_end 0 }} {
 #     check/add_proc_error()
 #*******************************
 proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""} { cd_dir ""} { show_args 1 } } {
+   global ts_config
   global CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH CHECK_OUTPUT CHECK_USER
   global open_spawn_buffer CHECK_DEBUG_LEVEL
 
@@ -5196,7 +5187,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set ONLY_ONE_RANGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_ONLYONERANGE]]
   set PARSE_DUPLICATEHOSTINFILESPEC [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_DUPLICATEHOSTINFILESPEC]] 
 
-  if { [resolve_version] >= 3 } {
+  if { $ts_config(gridengine_version) == 60 } {
      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED] ]
   } else {
      set help_translation  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_COLON]]

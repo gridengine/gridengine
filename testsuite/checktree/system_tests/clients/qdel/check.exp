@@ -778,39 +778,37 @@ proc qdel_delete_unkown_jobid {} {
 
    qdel_delete_unknown_jobid_proc $job_list "$default_output"
 
-   if {[resolve_version] > 1} {
-      # submit jobs to delete
-      set job_list [submit_testjobs]
+   # submit jobs to delete
+   set job_list [submit_testjobs]
 
-      # add a unkown taskid
-      set last_jobid "[lindex $job_list end]"
-      set unknown_taskid 5
-      set job_list [lreplace $job_list end end "$last_jobid.$unknown_taskid"]
-      if { $CHECK_L10N == 0 } {
-         set default_output "job \"$last_jobid\" task \"$unknown_taskid\" does not exist"
-      } else {
-         set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASK_UU] $last_jobid $unknown_taskid ] 
-      } 
-      qdel_delete_unknown_jobid_proc $job_list "$default_output"
-      delete_job $last_jobid
+   # add a unkown taskid
+   set last_jobid "[lindex $job_list end]"
+   set unknown_taskid 5
+   set job_list [lreplace $job_list end end "$last_jobid.$unknown_taskid"]
+   if { $CHECK_L10N == 0 } {
+      set default_output "job \"$last_jobid\" task \"$unknown_taskid\" does not exist"
+   } else {
+      set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASK_UU] $last_jobid $unknown_taskid ] 
+   } 
+   qdel_delete_unknown_jobid_proc $job_list "$default_output"
+   delete_job $last_jobid
 
-      # submit jobs to delete
-      set job_list [submit_testjobs]
+   # submit jobs to delete
+   set job_list [submit_testjobs]
 
-      # add a unkown taskid range
-      set last_jobid "[lindex $job_list end]"
-      set empty_taskrange "5-10:2"
-      set job_list [lreplace $job_list end end "$last_jobid.$empty_taskrange"]
-      if { $CHECK_L10N == 0 } {
-         set default_output "job \"$last_jobid\" task id range \"$empty_taskrange\" comprises no tasks"
-      } else {
-         set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU] $last_jobid "5" "10" "2"]
-      }
-      qdel_delete_unknown_jobid_proc $job_list "$default_output"
-      delete_job $last_jobid 1
-      # wait for job to leave queue
-#      sleep 5
+   # add a unkown taskid range
+   set last_jobid "[lindex $job_list end]"
+   set empty_taskrange "5-10:2"
+   set job_list [lreplace $job_list end end "$last_jobid.$empty_taskrange"]
+   if { $CHECK_L10N == 0 } {
+      set default_output "job \"$last_jobid\" task id range \"$empty_taskrange\" comprises no tasks"
+   } else {
+      set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU] $last_jobid "5" "10" "2"]
    }
+   qdel_delete_unknown_jobid_proc $job_list "$default_output"
+   delete_job $last_jobid 1
+   # wait for job to leave queue
+#      sleep 5
 }
 
 proc qdel_delete_unknown_jobid_proc {job_list default_output} {
@@ -1218,7 +1216,6 @@ proc qdel_user_list {} {
 
    global CHECK_OUTPUT CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_HOST
    global CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_PRODUCT_ROOT CHECK_ARCH
-   global CHECK_PRODUCT_VERSION_NUMBER
    if { [have_root_passwd] == -1 } {
       set_error -3 "root access required"
       return
@@ -1283,12 +1280,7 @@ proc qdel_user_list {} {
 
    # now test if his jobs are deleted
    if { [ are_jobs_deleted $job_list_user2] != 0 } {
-      if { [ string first "5.1" $CHECK_PRODUCT_VERSION_NUMBER] >= 0 } {
-         set_error -1 "not all jobs of $CHECK_FIRST_FOREIGN_SYSTEM_USER deleted, this is ok for a X5.1.X system"
-        
-      } else {
-         set_error -1 "(2) not all jobs of $CHECK_FIRST_FOREIGN_SYSTEM_USER deleted"
-      }
+      set_error -1 "(2) not all jobs of $CHECK_FIRST_FOREIGN_SYSTEM_USER deleted"
    } 
    # now test if the jobs of user1 and user3 are still here
    set all_jobs "$job_list_user1 $job_list_user3"

@@ -105,16 +105,10 @@ proc init_level {} {
 
 
 proc scheduler_setup {} {
+   global ts_config
    global stored_configuration CHECK_OUTPUT scheduler_test_level
    global scheduler_queue_list CHECK_CORE_EXECD 
    global scheduler_complex_count
-
-   if { [resolve_version] < 2 } {
-       set_error -3 "test not supported for version [get_version_info]"
-       return -3
-   }
-
-   
 
    if { [string match "analysis" $scheduler_test_level] == 0 } {
       puts $CHECK_OUTPUT "saving configuration ..."
@@ -145,7 +139,7 @@ proc scheduler_setup {} {
       puts $CHECK_OUTPUT "setup configuration ..."
 
       set myconfig(loglevel)         "log_warning"
-      if { [resolve_version] <= 2 } {
+      if { $ts_config(gridengine_version) == 53 } {
          set my_schedd_params "PROFILE=1"
          if { [string compare "none" $stored_configuration(schedd_params)] != 0 } {
             append my_schedd_params ",$stored_configuration(schedd_params)"
@@ -358,11 +352,6 @@ proc scheduler_test_run {} {
 
    global CHECK_OUTPUT CHECK_CORE_MASTER CHECK_PRODUCT_ROOT CHECK_ARCH
    global scheduler_test_level CHECK_PROTOCOL_DIR check_name
-
-   if { [resolve_version] < 2 } {
-       set_error -3 "test not supported for version [get_version_info]"
-       return -3
-   }
 
    set sched_output_dir $CHECK_PROTOCOL_DIR/$check_name
    set sched_output_gif_dir $sched_output_dir/gif
@@ -646,11 +635,6 @@ proc scheduler_cleanup {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH stored_configuration CHECK_OUTPUT
    global scheduler_test_level scheduler_queue_list
    global scheduler_complex_count CHECK_CORE_EXECD
-
-   if { [resolve_version] < 2 } {
-       set_error -3 "test not supported for version [get_version_info]"
-       return -3
-   }
 
    if { [string match "analysis" $scheduler_test_level] == 0 } {
  

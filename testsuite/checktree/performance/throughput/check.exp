@@ -247,7 +247,7 @@ proc throughput_cleanup_sharetree {} {
 }
 
 proc setup_queues {} {
-
+   global ts_config
    global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_OUTPUT
    global CHECK_HOST event_client_bin CHECK_SOURCE_DIR
    global nr_queues queue_list host_list  nr_slots
@@ -258,11 +258,6 @@ proc setup_queues {} {
    if { [llength $CHECK_CORE_EXECD] <= 1 } {
       set_error -3 "need more than one host for this test"
       return -3
-   }
-
-   if { [resolve_version] < 2 } {
-       set_error -3 "test not supported for version [get_version_info]"
-       return -3
    }
 
    # start event client (if compiled)
@@ -285,7 +280,7 @@ proc setup_queues {} {
 
    set my_schedd_params "PROFILE=1"
 
-   if { [resolve_version] <= 2 } {
+   if { $ts_config(gridengine_version) == 53 } {
       if { [string compare "none" $stored_configuration(schedd_params)] != 0 } {
          append my_schedd_params ",$stored_configuration(schedd_params)"
       }
@@ -371,11 +366,6 @@ proc cleanup_queues {} {
       return -3
    }
 
-   if { [resolve_version] < 2 } {
-       set_error -3 "test not supported for version [get_version_info]"
-       return -3
-   }
-  
    if { [file isfile $event_client_bin] != 1 } {
       set_error -3 "could not open event client binary: $event_client_bin"
       return -3
@@ -440,12 +430,6 @@ proc run_throughput_test {} {
       set_error -3 "need more than one host for this test"
       return -3
    }
-
-   if { [resolve_version] < 2 } {
-       set_error -3 "test not supported for version [get_version_info]"
-       return -3
-   }
-
 
    if { [file isfile $event_client_bin] != 1 } {
       set_error -3 "could not open event client binary: $event_client_bin"

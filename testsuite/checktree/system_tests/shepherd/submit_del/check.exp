@@ -88,13 +88,14 @@ global submit_del_qconfig
 global submit_del_check_queue
 
 proc submit_del_setup  {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_SECOND_FOREIGN_SYSTEM_USER
    global CHECK_CORE_EXECD CHECK_MAIN_RESULTS_DIR CHECK_USER
    global submit_del_qconfig CHECK_PRODUCT_ROOT CHECK_HOST
    global submit_del_check_queue
 
 
-   if { [resolve_version] <= 2 } {
+   if { $ts_config(gridengine_version) == 53 } {
       get_config submit_del_qconfig
       set my_config(schedd_params) "FLUSH_SUBMIT_SEC=0,FLUSH_FINISH_SEC=0"
       set_config my_config
@@ -205,11 +206,12 @@ proc submit_del_test { } {
 
 
 proc submit_del_cleanup  {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD
    global submit_del_qconfig submit_del_check_queue CHECK_HOST
 
 
-   if {[resolve_version] >= 3} {
+   if {$ts_config(gridengine_version) == 60} {
       reset_schedd_config
    } else {
       set_config submit_del_qconfig

@@ -118,9 +118,9 @@ be read/write exported for the root user.&nbsp;
 <pre>% mkdir &lt;your_gridengine_root_direcotry>
 % cd &lt;your_gridengine_root_direcotry></pre>
 unpack the "common" files&nbsp;
-<pre STYLE="margin-bottom: 0.2in">% gzip -dc sge_&lt;version>_common.tar.gz | tar xvf -</pre>
+<pre STYLE="margin-bottom: 0.2in">% gzip -dc sge-&lt;version>-common.tar.gz | tar xvf -</pre>
 unpack the binaries for all architectures&nbsp;
-<pre STYLE="margin-bottom: 0.2in">% gzip -dc sge_&lt;version>_&lt;arch>.tar.gz | tar xvf -</pre>
+<pre STYLE="margin-bottom: 0.2in">% gzip -dc sge-&lt;version>-bin-&lt;arch>.tar.gz | tar xvf -</pre>
 </ul>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; It's recommended
 to add the service&nbsp;
@@ -133,7 +133,15 @@ want to add this service, you will be prompted for a port number during
 installation.&nbsp;
 <p><i>Install Grid Engine</i>
 <p>Run the script "inst_sge" in the $SGE_ROOT directory to install Grid
-Engine.&nbsp;
+Engine. The scripts install_qmaster and install_execd can be used as a
+shortcut. In Grid Engine mode you just install as described in the next
+intended paragraph.&nbsp;
+<br>Only for Grid Engine Enterprise Edition you have to make slight modifications:
+<br>% cd $SGE_ROOT
+<br>% ln -s inst_sge inst_sgeee
+<br>% replace inst_sge with inst_sgeee in the last line of the files install_qmaster
+and install_execd
+<br>Then you can proceed as with the standard Grid Engine installation.
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; First
 run&nbsp;
 <pre STYLE="margin-bottom: 0.2in">&nbsp;&nbsp;&nbsp;&nbsp; % ./install_qmaster</pre>
@@ -168,7 +176,8 @@ Source Tarball (~8MB)</a></td>
 </table>
 
 <p>To browse the Grid Engine source code or retrieve it using CVS follow
-<a href="/servlets/ProjectSource">Grid Engine Source</a> .&nbsp;
+<a href="/servlets/ProjectSource">Grid
+Engine Source</a> .&nbsp;
 <br>&nbsp;
 <p><!-- end content --></td>
 </tr>

@@ -51,6 +51,7 @@ proc get_queue_instance {queue host} {
 #     sge_procedures/queue/set_queue_defaults()
 #*******************************************************************************
 proc vdep_set_queue_defaults { change_array } {
+   global ts_config
    upvar $change_array chgar
 
    set chgar(hostname)             "hostname"

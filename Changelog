@@ -1,3 +1,5 @@
+JG-2004-02-04-1: Testsuite: fixed testsuite for SGE 5.3
+
 JG-2004-02-04-0: Enhancem.: Added a utility to dump the list of objects in the
                             Berkeley DB database, dump objects and delete 
                             objects.

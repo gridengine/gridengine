@@ -186,17 +186,13 @@ proc set_queue { qname hostlist change_array } {
    validate_queue_type chgar
 
    # non cluster queue: set queue and hostnames
-   if { $hostlist == "@allhosts" } {
+   if { $hostlist == "@allhosts" || $hostlist == "" } {
       set hostlist $ts_config(execd_hosts)
    }
 
-   if { [llength $hostlist] == 0 } {
-      set result [set_queue_work $qname chgar]
-   } else {
-      foreach host $hostlist {
-         set cqname "${qname}_${host}"
-         set result [set_queue_work $cqname chgar]
-      }
+   foreach host $hostlist {
+      set cqname "${qname}_${host}"
+      set result [set_queue_work $cqname chgar]
    }
 
    return $result

@@ -668,16 +668,19 @@ void refresh_hostlist()
    host *hl = hostlist;
    struct hostent *he;
 
+   DENTER(TOP_LAYER, "refresh_hostlist");
+
    while (hl) {
       he = sge_gethostbyname(hl->he.h_name);
       if (!he) {
          hl->deleted = 1;
-         continue;
-      }
-
-      copy_hostent(&hl->he, he);
+      } else
+         copy_hostent(&hl->he, he);
       hl = hl->next;
    }
+
+   DEXIT;
+   return;
 }
 
 /*****************************************************/

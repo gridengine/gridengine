@@ -1,3 +1,10 @@
+AH-2002-03-26-0  Bugfix:    Found and fixed infinite loop in commd in case host 
+                            formerly resolved by gethostbyname(3) is no longer 
+                            resolvable. Also fix commd option -dhr which was -drh 
+                            before.
+                 Bugtraq:   #4658193
+                 Issue:     #212
+
 JG-2002-03-26-1  Bugfix:    At startup qmaster removed pending messages too
                             late (after daemonizing instead of after enrolling). 
                             In rare cases (starting schedd immediately after

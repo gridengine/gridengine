@@ -593,8 +593,8 @@ XtPointer cld, cad;
    ** if the node or the parent node is default don't allow editing
    ** the nodes are read-only
    */
-   if (!strcasecmp(item->text, "default") ||
-       (item->parent && !strcasecmp(item->parent->text, "default"))) {
+   if ((item->text && !strcasecmp(item->text, "default")) ||
+       (item->parent && item->parent->text && !strcasecmp(item->parent->text, "default"))) {
       DEXIT;
       return;
    }   
@@ -657,8 +657,8 @@ XtPointer cld, cad;
    ** if the node or the parent node is default don't allow editing
    ** the nodes are read-only
    */
-   if (!strcasecmp(item->text, "default") ||
-       (item->parent && !strcasecmp(item->parent->text, "default"))) {
+   if ((item->text && !strcasecmp(item->text, "default")) ||
+       (item->parent && item->parent->text && !strcasecmp(item->parent->text, "default"))) {
       DEXIT;
       return;
    }   
@@ -674,7 +674,10 @@ XtPointer cld, cad;
    strcpy(name, "");
    status = AskForNode(w, name, 256, &share);
 
-   if (!status) {
+   if (!status || (name && !strcmp(name, "default"))) {
+      if (name && !strcmp(name, "default")) {
+         qmonMessageShow(w, True, "@{Nodes named 'default' are not allowed !}");
+      }   
       ListTreeDelete(tree, new);
    }
    else {
@@ -683,6 +686,7 @@ XtPointer cld, cad;
       item = new;
       dirty = True;
    }
+
    /*
    ** Highlight the new_node
    */
@@ -710,6 +714,15 @@ XtPointer cld, cad;
       return;
    }
    item = ret.items[0];
+
+   /*
+   ** if the node or the parent node is default don't allow editing
+   ** the nodes are read-only
+   */
+   if (item && item->parent && item->parent->text && !strcasecmp(item->parent->text, "default")) {
+      DEXIT;
+      return;
+   }   
 
    if (item != ListTreeFirstItem(tree)) {
       paste_tree = lCreateElemList("Tree", STN_Type, 1);
@@ -792,8 +805,8 @@ XtPointer cld, cad;
    ** if the node or the parent node is default don't allow editing
    ** the nodes are read-only
    */
-   if (!strcasecmp(item->text, "default") || 
-        (item->parent && !strcasecmp(item->parent->text, "default"))) {
+   if ((item->text && !strcasecmp(item->text, "default")) || 
+        (item->parent && item->parent->text && !strcasecmp(item->parent->text, "default"))) {
       DEXIT;
       return;
    }   
@@ -1062,12 +1075,18 @@ XtPointer cld, cad;
    ListTreeGetHighlighted(tree, &ret);
    if (ret.count == 1)
       item = ret.items[0];
+
+   if (!item) {
+      DEXIT;
+      return;
+   }   
+      
    
    /*
    ** if the parent node is default don't allow editing
    ** the nodes are read-only
    */
-   if (item->parent && !strcasecmp(item->parent->text, "default")) {
+   if (item->parent && item->parent->text && !strcasecmp(item->parent->text, "default")) {
       DEXIT;
       return;
    }   
@@ -1212,10 +1231,10 @@ XtPointer cld, cad;
       printf("HIGHLIGHT: count=%d\n",ret->count);
       for (i=0; i<ret->count; i++) {
         item=ret->items[i];
-        printf("%s",item->text);
+        printf("%s",item->text ? item->text : "-NA-");
         while (item->parent) {
           item=item->parent;
-          printf("<--%s",item->text);
+          printf("<--%s",item->text ? item->text : "-NA-");
         }
         printf("\n");
       }
@@ -1274,10 +1293,19 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonShareTreeMenu");
 
    /*
+   ** if the node is Root don't allow editing
+   ** the node is read-only
+   */
+   if (ret->item && ret->item->text && !strcasecmp(ret->item->text, "Root")) {
+      DEXIT;
+      return;
+   }   
+
+   /*
    ** if the parent node is default don't allow editing
    ** the nodes are read-only
    */
-   if (ret->item->parent && !strcasecmp(ret->item->parent->text, "default")) {
+   if (ret->item->parent && ret->item->parent->text && !strcasecmp(ret->item->parent->text, "default")) {
       DEXIT;
       return;
    }   
@@ -1335,10 +1363,19 @@ XtPointer cld, cad;
    }
 
    /*
+   ** if the node is Root don't allow editing
+   ** the node is read-only
+   */
+   if (item && item->text && !strcasecmp(item->text, "Root")) {
+      DEXIT;
+      return;
+   }   
+
+   /*
    ** if the parent node is default don't allow editing
    ** the nodes are read-only
    */
-   if (item->parent && !strcasecmp(item->parent->text, "default")) {
+   if (item->parent && item->parent->text && !strcasecmp(item->parent->text, "default")) {
       DEXIT;
       return;
    }   
@@ -2074,7 +2111,13 @@ Cardinal *share
    node_name = AskNodeInfo.AskNodeName;
    node_share = AskNodeInfo.AskNodeShare;
 
-   XmtSetInitialFocus(node_layout, node_name);
+   if (name && !strcmp(name, "default")) {
+      XtSetSensitive(node_name, False);
+      XmtSetInitialFocus(node_layout, node_share);
+   } else {   
+      XtSetSensitive(node_name, True); 
+      XmtSetInitialFocus(node_layout, node_name);
+   }   
    
    /* 
    ** Tell the dialog who it is transient for 

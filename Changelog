@@ -1,3 +1,11 @@
+AA-2004-11-23-0: Bugfix:    qmon segv when deleting sharetree Root node more than once
+                            - disallow editing of Root node
+                            - disallow changing default node label
+                 Issue:     1360
+                 Bugtraq:   6199261
+                 Changed:   qmon
+                 Review:    RH
+                 
 CR-2004-11-23-2: Bugfix:    fixed bug in sge_ca script (GE CSP feature):
                             Generating certificate for users failed
                  Changed:   sge_ca script

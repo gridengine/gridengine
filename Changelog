@@ -1,3 +1,5 @@
+CR-2002-04-26-0: Testsuite: merges from V53_beta2_BRANCH
+
 AH-2002-04-26-1: Bugfix:    - queue nsuspend > 1 was not used to suspend
                               multiple jobs in a queue at a time in case
                               of a suspend threshold alarm.

@@ -2229,7 +2229,7 @@ proc add_exechost { change_array {fast_add 0} } {
 # 
 #*******************************************************************************
 proc get_scheduling_info { job_id { check_pending 1 }} {
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT CHECK_ARCH CHECK_PRODUCT_ROOT 
 
    if { $check_pending == 1 } {
       set result [ wait_for_jobpending $job_id "leeper" 120 ]
@@ -2237,6 +2237,10 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
          return "job not pending"
       }
    }
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+   puts $CHECK_OUTPUT $catch_result
+
    set my_timeout [ expr ( [timestamp] + 120 ) ]
    while { 1 } {
       if { [get_qstat_j_info $job_id ] } {
@@ -4454,28 +4458,47 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
    
      if {$do_error_check == 1} { 
        switch -- $return_value {
-          "-1" { add_proc_error "submit_job" $return_value "timeout error" }
-          "-2" { add_proc_error "submit_job" 0 "usage was printed on -help or commandfile argument - ok" }
-          "-3" { add_proc_error "submit_job" $return_value "usage was printed NOT on -help or commandfile argument - error" }
-          "-4" { add_proc_error "submit_job" 0 "verify output was printed on -verify argument - ok" }
-          "-5" { add_proc_error "submit_job" $return_value "verify output was NOT printed on -verfiy argument - error" }
-          "-6" { add_proc_error "submit_job" $return_value "job could not be scheduled, try later - error" }
-          "-7" { add_proc_error "submit_job" $return_value "has to much tasks - error" }
-          "-8" { add_proc_error "submit_job" $return_value "unknown resource - error" }
-          "-9" { add_proc_error "submit_job" $return_value "can't resolve hostname - error" }
-          "-10" { add_proc_error "submit_job" $return_value "resource not requestable - error" }
-          "-11" { add_proc_error "submit_job" $return_value "not allowed to submit jobs - error" }
-          "-12" { add_proc_error "submit_job" $return_value "no acces to project - error" }
-          "-13" { add_proc_error "submit_job" $return_value "Unkown option - error" }
-          "-14" { add_proc_error "submit_job" $return_value "non-ambiguous jobnet predecessor - error" }
-          "-15" { add_proc_error "submit_job" $return_value "job violates reference unambiguousness - error" }
-
-
+          "-1"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-2"  { add_proc_error "submit_job" 0  [get_submit_error $return_value]  }
+          "-3"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-4"  { add_proc_error "submit_job" 0  [get_submit_error $return_value]  }
+          "-5"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-6"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-7"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-8"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-9"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-10" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-11" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-12" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-13" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-14" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-15" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
      }
      return $return_value
+}
+
+proc get_submit_error { error_id } {
+   switch -- $error_id {
+      "-1"  { return "timeout error" }
+      "-2"  { return "usage was printed on -help or commandfile argument - ok" }
+      "-3"  { return "usage was printed NOT on -help or commandfile argument - error" }
+      "-4"  { return "verify output was printed on -verify argument - ok" }
+      "-5"  { return "verify output was NOT printed on -verfiy argument - error" }
+      "-6"  { return "job could not be scheduled, try later - error" }
+      "-7"  { return "has to much tasks - error" }
+      "-8"  { return "unknown resource - error" }
+      "-9"  { return "can't resolve hostname - error" }
+      "-10" { return "resource not requestable - error" }
+      "-11" { return "not allowed to submit jobs - error" }
+      "-12" { return "no acces to project - error" }
+      "-13" { return "Unkown option - error" }
+      "-14" { return "non-ambiguous jobnet predecessor - error" }
+      "-15" { return "job violates reference unambiguousness - error" }
+      default { return "unknown error" }
+   }
 }
 
 #                                                             max. column:     |
@@ -6450,7 +6473,7 @@ global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM do_compile
 #     ???/???
 #*******************************
 proc gethostname {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH  CHECK_OUTPUT
+  global CHECK_PRODUCT_ROOT CHECK_ARCH  CHECK_OUTPUT env
 
   set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/utilbin/$CHECK_ARCH/gethostname" "-name"} result ]
   if { $catch_return == 0 } {
@@ -6461,6 +6484,27 @@ proc gethostname {} {
      puts $CHECK_OUTPUT "proc gethostname - gethostname error or binary not found"
      puts $CHECK_OUTPUT "error: $result"
      puts $CHECK_OUTPUT "error: $catch_return"
+     puts $CHECK_OUTPUT "trying local hostname call ..."
+     set catch_return [ catch { exec "hostname" } result ]
+     if { $catch_return == 0 } {
+        set result [split $result "."]
+        set newname [lindex $result 0]
+        puts $CHECK_OUTPUT "got hostname: \"$newname\""
+        return $newname
+     } else {
+        puts $CHECK_OUTPUT "local hostname error or binary not found"
+        puts $CHECK_OUTPUT "error: $result"
+        puts $CHECK_OUTPUT "error: $catch_return"
+        puts $CHECK_OUTPUT "trying local HOST environment variable ..."
+        if { [ info exists env(HOST) ] } {
+           set result [split $env(HOST) "."]
+           set newname [lindex $result 0]
+           if { [ string length $newname ] > 0 } {
+               puts $CHECK_OUTPUT "got hostname_ \"$newname\""
+               return $newname
+           } 
+        }
+     }
      return "unknown"
   }
 } 
@@ -6646,11 +6690,11 @@ proc resolve_host { name { long 0 } } {
 
   set remote_arch [ resolve_arch $name ]
 
-  set result [ start_remote_prog $name $CHECK_USER "$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname" "-name" ]
+  set result [ start_remote_prog $name $CHECK_USER "$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname" "-name" prg_exit_state 60 0 "" 0 ]
   set result [ lindex $result 0 ]  ;# removing /r /n
 
   if { $prg_exit_state != 0 } {
-     puts $CHECK_OUTPUT "proc reslove_host - gethostname error or file \"$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname\" not found"
+     puts $CHECK_OUTPUT "proc resolve_host - gethostname error or file \"$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname\" not found"
      return "unknown"
   }
 

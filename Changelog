@@ -1,3 +1,6 @@
+DT-2004-08-11-1: Bugfix.:   o Rolled back dangerous fix from DT-2004-07-16
+                 Review:    SG
+
 CR-2004-08-11-2: Testsuite: - usage test did not work with only 2 execd hosts
                             - wait_for_unknown_load call from shutdown_core_sytem
                               did not return immediately when no binaries are

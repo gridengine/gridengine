@@ -1,4 +1,4 @@
-EB-2004-03-31-0: Bugfix:    qconf -Mprj bad error message
+EB-2004-04-06-0: Bugfix:    qconf -Mprj bad error message
                             qconf -sprj gives bogus error message
                  Issue:     923, 926
                  Changed:   qconf

@@ -1,3 +1,6 @@
+JG-2001-07-26-0: (Issue# 15): startup_template: replaced fixed path by reference
+                 to SGE_ROOT
+
 CR-2001-07-25-2: Testsuite:
                     - modified compile mail output
 

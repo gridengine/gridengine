@@ -1,3 +1,6 @@
+CR-2004-04-22-0: Bugfix:    qping now also supports auto close when qmaster
+                            runs out of filedescriptors
+
 DT-2004-04-22-1: Bugfix:    o Minor bugs fixes to event master
                             o Added DRMAA test case to test suite
                             o Fixed qconf bug about whitespace after the queue

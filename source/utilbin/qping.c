@@ -174,6 +174,9 @@ int main(int argc, char *argv[]) {
       exit(1);
    }
 
+   /* enable auto close of ping application */
+   cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
+
    while (do_shutdown == 0 ) {
       cl_com_SIRM_t* status = NULL;
       retval = cl_commlib_get_endpoint_status(handle,comp_host , comp_name, comp_id, &status);

@@ -137,8 +137,6 @@ if [ "X$jid" == "X" ]; then
 fi
 
 # need to store this JID somewhere for starter, suspend, resume to use
-# use context variables on "this" job
-# qalter needs to work on LOCAL job, not remote job!
 # also, need to store the remote JID in accounting field,
 # so that resource utilization can be retrieved later from the
 # remote cluster

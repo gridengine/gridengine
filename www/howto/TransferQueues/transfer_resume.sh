@@ -1,4 +1,4 @@
-#!/bin/ksh -x
+#!/bin/ksh
 
 # resume method for transfer queue setup
 # NOTE: make sure the host which this script runs on is a submit host
@@ -7,9 +7,6 @@
 # first get the remote job id
 ARCH=`$SGE_ROOT/util/arch`
 export PATH=$SGE_ROOT/bin/$ARCH:$PATH
-#list=`qstat -j $JOB_ID | nawk '/^context/ { print $2}'`
-#tmp1=${list##*REMOTE_JID=}
-#remote_jid=${tmp1%%,*}
 remote_jid=`cat $TMPDIR/REMOTE_JID`
 
 # execute in subshell to avoid changing vars

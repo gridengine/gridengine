@@ -7,7 +7,7 @@
 	<META NAME="AUTHOR" CONTENT="Charu Chaubal">
 	<META NAME="CREATED" CONTENT="20021127;10251700">
 	<META NAME="CHANGEDBY" CONTENT="Charu Chaubal">
-	<META NAME="CHANGED" CONTENT="20021127;12524200">
+	<META NAME="CHANGED" CONTENT="20021127;12571100">
 </HEAD>
 <BODY LANG="en-US">
 <H1 ALIGN=CENTER>A Prototype of a Multi-Clustering Implementation
@@ -92,10 +92,10 @@ queue. Rather, one of the following approaches would be taken:</P>
 	<LI><P STYLE="margin-bottom: 0cm">if certain jobs cannot be run on
 	the remote cluster for whatever reason (licensing restrictions,
 	data/binaries inaccessible remotely), then a user-defined complex
-	with a boolean resource (eg, &ldquo;remote&rdquo;) should be
-	attached to the transfer queue(s). Jobs which cannot be run remotely
-	could be submitted with a resource request &quot;-l remote=false&quot;.
-	This will prevent those jobs from being dispatched to the transfer
+	with a boolean resource (eg, &quot;remote&quot;) should be attached
+	to the transfer queue(s). Jobs which cannot be run remotely could be
+	submitted with a resource request &quot;-l remote=false&quot;. This
+	will prevent those jobs from being dispatched to the transfer
 	queue(s), and hence will not be dispatched remotely.</P>
 </OL>
 <H3>Setup of transfer queue (only relevant lines shown)</H3>
@@ -104,7 +104,7 @@ qname transfer1
 hostname tcf-b060
 load_thresholds mpk27jobs=5
 qtype BATCH 
-slots 999
+slots 40
 prolog NONE
 epilog NONE
 starter_method /sge/TransferQueues/transfer_starter.sh
@@ -121,8 +121,8 @@ Configuration</H2>
 	<LI><P>the total number of &quot;foreign&quot; jobs in a system
 	(both running and pending) can be specified by setting the number of
 	slots in the transfer queue. It is recommended that this number be
-	set low, eg some fraction of the number of remote slots (1/3 or
-	1/4), for a couple of reasons:</P>
+	set to some fraction of the number of remote slots (eg, 1/3 or 1/4),
+	for a couple of reasons:</P>
 	<UL>
 		<LI><P>if many jobs are dispatched to the remote cluster and are
 		pending there, and the remote cluster gets flooded with higher

@@ -10,6 +10,11 @@
 	<META NAME="CHANGED" CONTENT="20011029;17332000">
 </HEAD>
 <BODY>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td><H2><font color="#336699" class="PageHeader">Grid Engine Enterprise Edition - policies and use cases</font></H2></td>
+</tr>
+</table>
 <H1>1. Strict priority scheduling</H1>
 <H2>a) Job based strict priority dispatching</H2>
 <P>The objective of this setup is to implement a strict hierarchy of
@@ -51,6 +56,14 @@ into a job class by submitting into a corresponding project</P>
 	<LI><P>access to higher privileged projects can be controlled via project acl/xacl</P>
 </UL>
 <H1>2. Control resource shares at any time</H1>
+All the setups in this category have in common that the functional policy is 
+used as main policy. Setups using the functional policy as main policy ensure that 
+a certain share is guaranteed to each user, project or department at any time, i.e. 
+jobs of users, projects or departments that have occupied less resources than 
+supposed (functional share) are prefered when dispatching jobs to idle resources. 
+All the same full resource utilization is guaranteed, because unused share proportions 
+are distributed among those users, projects and departments who need the resources. 
+Past resource consumption is not taken into account.
 <H2>a) User based functional scheduling</H2>
 <P>The objective of this setup is a certain share assignment of all
 the resources combined in the SGEEE cluster to different users. FCFS
@@ -101,6 +114,14 @@ FCFS scheduling is used among jobs of the same department.</P>
    </UL>
 </UL>
 <H1>3. Control resource shares over time</H1>
+All the setups in this category have in common that the share-tree policy is 
+used as main policy. Setups using the share-tree policy as main policy ensure
+that a certain share is guaranteed to the instances configured in the share-tree
+over time, i.e. jobs associated to share-tree branches where less resources
+were consumed in the past than supposed (share-tree share) are prefered when
+dispatching jobs to idle resources. All the same full resource utilization is 
+guaranteed, because unused share proportions are still available for pending 
+jobs associated to other share-tree branches.
 <H2>a) Project based share-tree scheduling with FCFS within each
 project</H2>
 <P>The objective of this setup is to guarantee over time a certain

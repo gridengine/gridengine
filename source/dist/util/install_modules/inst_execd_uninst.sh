@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: inst_sgeee_execd_uninst.sh
+# Scriptname: inst_execd_uninst.sh
 #
 #___INFO__MARK_BEGIN__
 ##########################################################################

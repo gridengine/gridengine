@@ -1,7 +1,7 @@
-#! /bin/sh
+#!/bin/sh
 #
 # SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: inst_sgeee_common.sh
+# Scriptname: inst_common.sh
 # Module: common functions
 #
 #___INFO__MARK_BEGIN__
@@ -36,15 +36,11 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-#set -x
-
-
 #-------------------------------------------------------------------------
 #Setting up common variables and paths (eg. ARCH, utilbin, util)
 #
 BasicSettings()
 {
-
   unset SGE_ND
   unset SGE_DEBUG_LEVEL
 
@@ -69,8 +65,6 @@ BasicSettings()
   DIRPERM=755
   FILEPERM=644
 
-  #SGE_ROOT=SGE_ROOT
-  #SGE_CELL=SGE_CELL
   SGE_MASTER_NAME=sge_qmaster
   SGE_EXECD_NAME=sge_execd
   SGE_SCHEDD_NAME=sge_schedd
@@ -102,7 +96,6 @@ BasicSettings()
      $INFOTEXT -e "can't get hostname of this machine. Installation failed."
      exit 1
   fi
-
 }
 
 
@@ -344,17 +337,17 @@ ErrUsage()
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
-             "   inst_sgeee -m -x\n" \
-             "                       Installs qmaster and exechost on localhost\n" \
-             "   inst_sgeee -m -x -auto /path/to/config-file\n" \
-             "                       Installs qmaster and exechost using the given\n" \
-             "                       configuration file\n" \
-             "                       (A templete can be found in:\n" \
-             "                       util/install_modules/inst_sgeee_template.conf)\n" \
-             "   inst_sgeee -ux -host hostname\n" \
-             "                       Uninstalls execd on given executionhost\n" \
-             "   inst_sgeee -db      Install a Berkeley DB Server on local host\n" \
-             "   inst_sgeee -sm      Install a Shadow Master Host on local host" $myname 
+             "   inst_sge -m -x\n" \
+             "                     Installs qmaster and exechost on localhost\n" \
+             "   inst_sge -m -x -auto /path/to/config-file\n" \
+             "                     Installs qmaster and exechost using the given\n" \
+             "                     configuration file\n" \
+             "                     (A templete can be found in:\n" \
+             "                     util/install_modules/inst_sgeee_template.conf)\n" \
+             "   inst_sge -ux -host hostname\n" \
+             "                     Uninstalls execd on given executionhost\n" \
+             "   inst_sge -db      Install a Berkeley DB Server on local host\n" \
+             "   inst_sge -sm      Install a Shadow Master Host on local host" $myname 
 
    exit 1
 }
@@ -479,23 +472,25 @@ CheckWhoInstallsSGE()
       while [ $done = false ]; do
          $CLEAR
          $INFOTEXT -u "\nChoosing a Grid Engine admin user name"
-         $INFOTEXT -n "\nPlease enter the user name (or >root<) >> "
+         $INFOTEXT -n "\nPlease enter a valid user name >> "
          INP=`Enter ""`
-         $SGE_UTILBIN/checkuser -check "$INP"
-         if [ $? != 0 ]; then
-            $INFOTEXT "User >%s< does not exist - please correct the username" $INP
-            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-            $CLEAR
-         else
-            $INFOTEXT "\nInstalling Grid Engine as user >%s<\n" $INP
-            $INFOTEXT -log "Installing Grid Engine as user >%s<" $INP
-            ADMINUSER=$INP
-            if [ $ADMINUSER = root ]; then
-               ADMINUSER=default
+         if [ "$INP" != "" ]; then
+            $SGE_UTILBIN/checkuser -check "$INP"
+            if [ $? != 0 ]; then
+               $INFOTEXT "User >%s< does not exist - please correct the username" $INP
+               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               $CLEAR
+            else
+               $INFOTEXT "\nInstalling Grid Engine as admin user >%s<\n" $INP
+               $INFOTEXT -log "Installing Grid Engine as user >%s<" $INP
+               ADMINUSER=$INP
+               if [ $ADMINUSER = root ]; then
+                  ADMINUSER=default
+               fi
+               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               $CLEAR
+               done=true
             fi
-            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-            $CLEAR
-            done=true
          fi
       done
    else
@@ -655,8 +650,7 @@ GiveHints()
                   "   # qconf -sh\n\n" \
                   "and you may add new administrative hosts with the command\n\n" \
                   "   # qconf -ah <hostname>\n\n"
-       $INFOTEXT -wait "Please, hit <RETURN>"
-       $CLEAR
+       $INFOTEXT -wait -n "Please hit <RETURN> >> "
        QMASTER="undef"
       return 0
    else

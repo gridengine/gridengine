@@ -1,6 +1,7 @@
 #!/bin/sh
 #
-# SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)# Scriptname: inst_sgeee_qmaster_uninst.sh
+# SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
+# Scriptname: inst_qmaster_uninst.sh
 #
 #___INFO__MARK_BEGIN__
 ##########################################################################

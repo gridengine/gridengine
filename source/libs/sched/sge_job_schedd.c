@@ -222,11 +222,17 @@ void user_list_init_jc(lList **user_list, lList **splitted_job_lists[])
 {
    lListElem *job;   /* JB_Type */
 
-   for_each(job, *(splitted_job_lists[SPLIT_RUNNING])) {
-      sge_inc_jc(user_list, lGetString(job, JB_owner), job_get_ja_tasks(job));
+   if (splitted_job_lists[SPLIT_RUNNING] != NULL) {
+      for_each(job, *(splitted_job_lists[SPLIT_RUNNING])) {
+         sge_inc_jc(user_list, lGetString(job, JB_owner), 
+                    job_get_ja_tasks(job));
+      }
    }
-   for_each(job, *(splitted_job_lists[SPLIT_SUSPENDED])) {
-      sge_inc_jc(user_list, lGetString(job, JB_owner), job_get_ja_tasks(job));
+   if (splitted_job_lists[SPLIT_SUSPENDED] != NULL) {
+      for_each(job, *(splitted_job_lists[SPLIT_SUSPENDED])) {
+         sge_inc_jc(user_list, lGetString(job, JB_owner), 
+                    job_get_ja_tasks(job));
+      }
    }
 }
 

@@ -351,7 +351,7 @@ int qlogin_starter(const char *cwd, char *daemon)
    int len = sizeof(serv_addr);
    struct timeval timeout;
    char buffer[2048];
-   char *args[20]; /* !!!! should be dynamically allocated */
+   char *args[20]; /* JG: TODO: should be dynamically allocated */
    int argc = 0;
    const char *sge_root = NULL;
    char *arch = NULL;
@@ -465,6 +465,9 @@ int qlogin_starter(const char *cwd, char *daemon)
    SHEPHERD_TRACE((err_str, "daemon to start: |%s|", daemon));
 
    /* split daemon commandline into single arguments */
+   /* JG: TODO: might contain quoted arguments containing spaces 
+    *           make function to split or use an already existing one
+    */
    args[argc++] = strtok(daemon, " ");
    while((args[argc++] = strtok(NULL, " ")) != NULL);
 

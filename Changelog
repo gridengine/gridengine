@@ -1,3 +1,7 @@
+JG-2002-05-29-2: Enhancem.  Allow specification of arguments to 
+                            [rsh|rlogin|qlogin]_[daemon|command]
+                 Issue:     #232           
+
 CR-2002-05-29-1: Testsuite: - docu of HTML procedures
 
 CR-2002-05-29-0: Testsuite: - added prototype functions for HTML generation

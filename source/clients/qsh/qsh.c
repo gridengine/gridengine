@@ -702,11 +702,25 @@ static int start_client_program(const char *client_name,
          }
       }
    } else {
-      char* args[11]; 
+      /* JG: TODO: args should be dynamically allocated 
+       *           we should have some utility similar to dstring
+       *           allowing to add any number of arguments, storing
+       *           them somewhere, e.g. in a list, and converting
+       *           this list into an argument vector.
+       */
+      char* args[20]; 
       int i = 0;
       char shellpath[SGE_PATH_MAX];
+      char *command = strdup(client_name); /* needn't be freed, as we exec */
 
-      args[i++] = (char *)client_name;
+      /* split command commandline into single arguments */
+      /* JG: TODO: might contain quoted arguments containing spaces 
+       *           make function to split or use an already existing one
+       */
+      args[i++] = strtok(command, " ");
+      while((args[i] = strtok(NULL, " ")) != NULL) {
+         i++;
+      }
 
       if(is_rsh || is_rlogin) {
          sge_set_def_sig_mask(0, NULL);

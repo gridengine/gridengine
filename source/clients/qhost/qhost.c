@@ -430,7 +430,7 @@ u_long32 show
                                     QSTAT_DISPLAY_ALL | 
                                     ( (show & QHOST_DISPLAY_QUEUES) ?
                                      QSTAT_DISPLAY_FULL : 0), "   ", 
-                                     GROUP_NO_PETASK_GROUPS);
+                                     GROUP_NO_PETASK_GROUPS, 10);
             }
          }
       }

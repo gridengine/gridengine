@@ -34,14 +34,14 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-if [ ! -f '../dist/qmon/qmon_help.ad' ]; then
-   echo "Error: '../dist/qmon/qmon_help.ad' does not exist"
+if [ ! -f 'dist/qmon/qmon_help.ad' ]; then
+   echo "Error: 'dist/qmon/qmon_help.ad' does not exist"
    exit 1
 fi
 
-horig='../dist/qmon/qmon_help.ad'
-hgrd='../dist/qmon/qmon_help.ad.ge'
-hcod='../dist/qmon/qmon_help.ad.geee'
+horig='dist/qmon/qmon_help.ad'
+hgrd='dist/qmon/qmon_help.ad.ge'
+hcod='dist/qmon/qmon_help.ad.geee'
 
 # ------------------------------
         

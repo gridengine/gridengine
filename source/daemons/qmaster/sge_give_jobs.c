@@ -557,7 +557,7 @@ void cancel_job_resend(u_long32 jid, u_long32 ja_task_id)
    DENTER(TOP_LAYER, "cancel_job_resend");
 
    DPRINTF(("CANCEL JOB RESEND "u32"/"u32"\n", jid, ja_task_id)); 
-   te_delete_one_time_event(TYPE_JOB_RESEND_EVENT, jid, ja_task_id, NULL);
+   te_delete_one_time_event(TYPE_JOB_RESEND_EVENT, jid, ja_task_id, "job-resend_event");
 
    DEXIT;
    return;

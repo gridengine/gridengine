@@ -1,3 +1,8 @@
+AH-2004-03-11-2: Enhancem.: Fix problem of frequent "cannot resend unknown 
+                            job" messages.
+                 Review:    AD
+                 Issue:     822
+
 AS-2004-03-11-1: Bugfix:    installation fixes and formatting
 
 AS-2004-03-11-0: Enhancem.: Merged HPCT changes from 5.3

@@ -1,3 +1,6 @@
+CR-2003-02-07-0  Enhancem.: Modified qevent client for testsuite throughput
+                            test
+
 EB-2003-02-07-0  Bugfix:    Optimization in scheduler which will have an effect
                             if maxujobs != 0 and many different users submit
                             jobs.

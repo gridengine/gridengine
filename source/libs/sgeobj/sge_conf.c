@@ -123,18 +123,6 @@ bool sharetree_reserved_usage = false;
 bool use_qsub_gid = false;
 
 /*
- * Set job environment variables with following prefixes if the
- * corresponding variables are true:
- *
- *   set_sge_environment => SGE_
- *   set_cod_environment => COD_
- *   set_grd_environment => GRD_
- */
-bool set_sge_environment = true;
-bool set_cod_environment = false;
-bool set_grd_environment = false;
-
-/*
  * notify_kill_default and notify_susp_default
  *       0  -> use the signal type stored in notify_kill and notify_susp
  *       1  -> user default signale (USR1 for susp and usr2 for kill)
@@ -585,9 +573,6 @@ int merge_configuration(lListElem *global, lListElem *local,
       execd_priority = -999;
       keep_active = false;
       use_qsub_gid = false;
-      set_sge_environment = true;
-      set_cod_environment = false;
-      set_grd_environment = false; 
 
       for (s=sge_strtok(pconf->execd_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
          if (parse_bool_param(s, "USE_QIDLE", &use_qidle)) {
@@ -648,15 +633,6 @@ int merge_configuration(lListElem *global, lListElem *local,
          if (parse_bool_param(s, "USE_QSUB_GID", &use_qsub_gid)) {
             continue;
          }
-         if (parse_bool_param(s, "SET_SGE_ENV", &set_sge_environment)) {
-            continue;
-         }
-         if (parse_bool_param(s, "SET_COD_ENV", &set_cod_environment)) {
-            continue;
-         }
-         if (parse_bool_param(s, "SET_GRD_ENV", &set_grd_environment)) {
-            continue;
-         }
          if (!strncasecmp(s, "PTF_MAX_PRIORITY", sizeof("PTF_MAX_PRIORITY")-1)) {
             ptf_max_priority=atoi(&s[sizeof("PTF_MAX_PRIORITY=")-1]);
             continue;
@@ -705,13 +681,6 @@ int merge_configuration(lListElem *global, lListElem *local,
       return -2;
    }
 
-   if (set_sge_environment == 0 && 
-       set_cod_environment == 0 && 
-       set_grd_environment == 0) {
-      WARNING((SGE_EVENT, MSG_CONF_NEITHERSGECODGRDSETTINGSGE));
-      set_sge_environment = 1;
-   }
-   
    DEXIT;
    return 0;
 }

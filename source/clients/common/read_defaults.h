@@ -35,8 +35,6 @@
 #define SGE_COMMON_DEF_REQ_FILE "common/sge_request"
 
 #define SGE_HOME_DEF_REQ_FILE   ".sge_request"
-#define COD_HOME_DEF_REQ_FILE   ".cod_request"
-#define GRD_HOME_DEF_REQ_FILE   ".grd_request"
 
 void opt_list_append_opts_from_default_files(lList **pcmdline,  
                                              lList **answer_list,

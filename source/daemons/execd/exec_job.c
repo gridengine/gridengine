@@ -694,27 +694,13 @@ char *err_str
 
       var_list_set_sharedlib_path(&environmentList);
 
-      if (set_sge_environment) {
-         /* set final of variables whose value shall be replaced */ 
-         var_list_copy_prefix_vars(&environmentList, environmentList,
-                                   VAR_PREFIX, "SGE_");
+      /* set final of variables whose value shall be replaced */ 
+      var_list_copy_prefix_vars(&environmentList, environmentList,
+                                VAR_PREFIX, "SGE_");
 
-         /* set final of variables whose value shall not be replaced */ 
-         var_list_copy_prefix_vars_undef(&environmentList, environmentList,
-                                         VAR_PREFIX_NR, "SGE_");
-      }
-      if (set_cod_environment) {
-         var_list_copy_prefix_vars(&environmentList, environmentList,
-                                   VAR_PREFIX, "COD_");
-         var_list_copy_prefix_vars_undef(&environmentList, environmentList,
-                                         VAR_PREFIX_NR, "COD_");
-      }
-      if (set_grd_environment) {
-         var_list_copy_prefix_vars(&environmentList, environmentList,
-                                   VAR_PREFIX, "GRD_");
-         var_list_copy_prefix_vars_undef(&environmentList, environmentList,
-                                         VAR_PREFIX_NR, "GRD_");
-      }
+      /* set final of variables whose value shall not be replaced */ 
+      var_list_copy_prefix_vars_undef(&environmentList, environmentList,
+                                      VAR_PREFIX_NR, "SGE_");
       var_list_remove_prefix_vars(&environmentList, VAR_PREFIX);
       var_list_remove_prefix_vars(&environmentList, VAR_PREFIX_NR);
 
@@ -1210,10 +1196,6 @@ char *err_str
       fprintf(fp, "qsub_gid="u32"\n", lGetUlong(jep, JB_gid));
    else
       fprintf(fp, "qsub_gid=%s\n", "no");
-
-   fprintf(fp, "set_sge_env=%d\n", set_sge_environment);
-   fprintf(fp, "set_cod_env=%d\n", set_cod_environment);
-   fprintf(fp, "set_grd_env=%d\n", set_grd_environment);
 
    /* config for interactive jobs */
    {

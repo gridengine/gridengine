@@ -118,6 +118,7 @@ const char *s;
    sge_pack_buffer pb;
    u_long32 jobid, jataskid;
    u_long32 dummymid;
+   const char *env_var_name = "SGE_TASK_ID";
 
    DENTER(TOP_LAYER, "sge_qexecve");
 
@@ -147,36 +148,20 @@ const char *s;
       return NULL;
    }
 
-   /* for compatibility we need to check SGE_, GRD_ and COD_TASK_ID */
-   {
-      int i;
-      int found = 0;
-      const char *variables[] = {
-         "SGE_TASK_ID",
-         "GRD_TASK_ID",
-         "COD_TASK_ID"
-      };
-
-      for(i = 0; i < 3; i++) {
-         if((s=getenv(variables[i])) != NULL) {
-            found = 1;
-            if(strcmp(s, "undefined") == 0) {
-               jataskid = 1;
-            } else {
-               if(sscanf(s, u32, &jataskid) != 1) {
-                  sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, variables[i]);
-                  DEXIT;
-                  return NULL;
-               }
-            }
+   if((s=getenv(env_var_name)) != NULL) {
+      if(strcmp(s, "undefined") == 0) {
+         jataskid = 1;
+      } else {
+         if(sscanf(s, u32, &jataskid) != 1) {
+            sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, env_var_name);
+            DEXIT;
+            return NULL;
          }
       }
-
-      if(!found) {
-         sprintf(lasterror, MSG_GDI_MISSINGINENVIRONMENT_S, "[SGE|GRD|COD]_TASK_ID");
-         DEXIT;
-         return NULL;
-      }
+   } else {
+      sprintf(lasterror, MSG_GDI_MISSINGINENVIRONMENT_S, env_var_name);
+      DEXIT;
+      return NULL;
    }
 
    /* ---- build up pe task request structure (see gdilib/sge_petaskL.h) */
@@ -245,8 +230,8 @@ sge_tid_t sge_qexecve(const char *hostname, const char *queuename,
                       const char *cwd, const lList *environment,
                       const lList *path_aliases)
 {
-char myname[256];
-const char *s;
+   char myname[256];
+   const char *s;
    int ret, uid;
    sge_tid_t tid = NULL;
    lListElem *petrep;
@@ -254,6 +239,7 @@ const char *s;
    sge_pack_buffer pb;
    u_long32 jobid, jataskid;
    u_long32 dummymid;
+   const char *env_var_name = "SGE_TASK_ID";
 
    DENTER(TOP_LAYER, "sge_qexecve");
 
@@ -283,36 +269,20 @@ const char *s;
       return NULL;
    }
 
-   /* for compatibility we need to check SGE_, GRD_ and COD_TASK_ID */
-   {
-      int i;
-      int found = 0;
-      const char *variables[] = {
-         "SGE_TASK_ID",
-         "GRD_TASK_ID",
-         "COD_TASK_ID"
-      };
-
-      for(i = 0; i < 3; i++) {
-         if((s=getenv(variables[i])) != NULL) {
-            found = 1;
-            if(strcmp(s, "undefined") == 0) {
-               jataskid = 1;
-            } else {
-               if(sscanf(s, u32, &jataskid) != 1) {
-                  sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, variables[i]);
-                  DEXIT;
-                  return NULL;
-               }
-            }
+   if((s=getenv(env_var_name)) != NULL) {
+      if(strcmp(s, "undefined") == 0) {
+         jataskid = 1;
+      } else {
+         if(sscanf(s, u32, &jataskid) != 1) {
+            sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, env_var_name);
+            DEXIT;
+            return NULL;
          }
       }
-
-      if(!found) {
-         sprintf(lasterror, MSG_GDI_MISSINGINENVIRONMENT_S, "[SGE|GRD|COD]_TASK_ID");
-         DEXIT;
-         return NULL;
-      }
+   } else {
+      sprintf(lasterror, MSG_GDI_MISSINGINENVIRONMENT_S, env_var_name);
+      DEXIT;
+      return NULL;
    }
 
    /* ---- build up pe task request structure (see gdilib/sge_petaskL.h) */

@@ -49,9 +49,6 @@
 ** utilib/sge_arch.c
 */       
 #define MSG_SGEROOTNOTSET           _MESSAGE(49006, _("Please set the environment variable SGE_ROOT.\n"))
-#define MSG_SGEGRDROOTNOTEQUIV      _MESSAGE(49007, _("SGE_ROOT and GRD_ROOT are not equivalent\n"))
-#define MSG_SGECODINEROOTNOTEQUIV   _MESSAGE(49008, _("SGE_ROOT and CODINE_ROOT are not equivalent\n"))
-#define MSG_GRDCODINEROOTNOTEQUIV   _MESSAGE(49009, _("GRD_ROOT and CODINE_ROOT are not equivalent\n"))
 #define MSG_UNKNOWNERRORINSGEROOT   _MESSAGE(49010, _("Unknown error in function sge_sge_root()\n"))
 #define MSG_MEMORY_MALLOCFAILEDFORPATHTOHOSTALIASFILE _MESSAGE(49011, _("can't malloc() for path to host alias file"))
 

@@ -76,10 +76,6 @@
 *     The event client interface should have much less impact on qmaster 
 *     performance than polling the same data in regular intervals.
 *
-*  NOTES
-*     The current implementation is a generalized form of the event client
-*     interface that already existed in Codine/GRD.
-*
 *  SEE ALSO
 *     Eventclient/--EV_Type
 *     Eventclient/-Subscription

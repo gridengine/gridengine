@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/03/17 13:05:43 $     Revision: $Revision: 1.27 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/03/19 15:02:26 $     Revision: $Revision: 1.28 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/03/17 13:05:43 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/03/19 15:02:26 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -972,26 +972,6 @@ or the special value \fInone\fP. If set to \fInone\fP,
 no notification signal will be sent. If it is set to \fITSTP\fP, for
 instance, or another
 signal name then this signal will be sent as notification signal.
-.PP
-.IP "\fISET_SGE_ENV, SET_COD_ENV, SET_GRD_ENV\fP"
-In qsub(1) you can find a list of environment variables which are
-exported into the execution environment of each xxQS_NAME_EExx job. Some of 
-these variables names begin with the prefix "SGE_". In the predecessor products 
-of xxQS_NAME_EExx (Codine, GRD) the prefixes "COD_" and "GRD_" were used for 
-those variables. This makes it necessary to update all job scripts relying one 
-of those environment variables. The parameters SET_SGE_ENV, SET_COD_ENV and 
-SET_GRD_ENV can be used to accomplish a smoother transition from Codine/GRD 
-to xxQS_NAME_EExx.
-
-Each of those parameters makes sure that a set of environment variables
-mentioned in qsub(1) and beginning with the corresponding prefix will be
-exported into the job environmnet. Every parameter can be set to
-"true", "1" or "false", "0". Defaults are "SET_SGE_ENV=1, SET_COD_ENV=0 and
-SET_GRD_ENV=0".
-
-If all three parameters are set to "false" or "0" jobs might fail as none of 
-the corresponding environment variables would be set. Therefore in this case
-the environment variables beginning with the prefix "SGE_" are set.
 .PP
 .IP "\fISHARETREE_RESERVED_USAGE\fP"
 If this parameter is set to true, reserved usage is taken for the xxQS_NAME_EExx share

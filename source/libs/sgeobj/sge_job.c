@@ -1608,7 +1608,7 @@ int job_initialize_id_lists(lListElem *job, lList **answer_list)
 *
 *     This function will be used in SGE/EE client applications.
 *     Clients do not know which prefix should be used for job
-*     environment variables ("SGE_", "GRD_" or "COD_"). Therefore 
+*     environment variables ("SGE_" or other). Therefore 
 *     we use the define <VAR_PREFIX> which will be replaced shortly 
 *     before the job is started.
 *

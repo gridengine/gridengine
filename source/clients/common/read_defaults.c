@@ -222,15 +222,6 @@ static char *get_user_home_defaults_file_path(lList **answer_list)
    }
    strcat(file, SGE_HOME_DEF_REQ_FILE);
 
-   if (!sge_is_file(file)) {
-      strcpy(file, pwd->pw_dir);
-      if (*file && (file[strlen(file) - 1] != '/')) {
-         strcat(file, "/");
-      }
-
-      strcat(file, GRD_HOME_DEF_REQ_FILE);
-   }
-   
    DEXIT;
    return file;
 }
@@ -281,14 +272,6 @@ static char *get_cwd_defaults_file_path(lList **answer_list)
       strcat(file, "/");
    }
    strcat(file, SGE_HOME_DEF_REQ_FILE);
-   if (!sge_is_file(file)) {
-      strcpy(file, cwd);
-      if (*file && (file[strlen(file) - 1] != '/')) {
-         strcat(file, "/");
-      }
-
-      strcat(file, GRD_HOME_DEF_REQ_FILE); 
-   }
    
    DEXIT;
    return file;

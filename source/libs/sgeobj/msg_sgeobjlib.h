@@ -278,7 +278,6 @@
 #define MSG_OBJECT_ALREADYEXIN_SSS     _MESSAGE(64278, _("No modification because "SFQ" already exists in "SFQ" of "SFQ"\n"))
 #define MSG_CONF_USING_SS              _MESSAGE(64300, _("using "SFQ" for "SFN"\n"))
 #define MSG_CONF_NOCONFIGFROMMASTER    _MESSAGE(64301, _("could not get configuration from qmaster - using defaults\n"))
-#define MSG_CONF_NEITHERSGECODGRDSETTINGSGE _MESSAGE(64302, _("neither SGE nor COD nor GRD environment for jobs configured, setting SGE environment\n"))
 #define MSG_CENTRY_QINOTALLOWED        _MESSAGE(64303, _("Queue instance names are not allowed in -l resource requests\n"))
 #define MSG_OBJECT_VALUENOTULONG_S     _MESSAGE(64304, _(SFQ" is not an u_long32 value\n"))
 #define MSG_CQUEUE_INVALIDDOMSETTING_S _MESSAGE(64305, _("No modification for host group "SFQ" which does not exist.\n"))

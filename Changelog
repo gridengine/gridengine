@@ -1,10 +1,17 @@
+EB-2004-03-19-0  Bugfix:    Cleanup for the next main release
+                            Still checks for $GRD_ROOT, "spoolinit" may fail 
+                            silently
+                 Issues:    122, 892
+                 Changed:   all, qconf.5 
+
+
 SG-2004-03-18-0: Bugfix:    - "qdel 0" is not allowed.
                             - "qdel 45-54" results in an error and does
                               not delete job 45.
                  Issue:     893
                  Changed:   qdel, qmod, qalter
 
-AA-2004-03-18-0: Bugfix:    - qmon spinbox on lx24-amd, lx22-alpha
+AA-2004-03-18-0  Bugfix:    - qmon spinbox on lx24-amd, lx22-alpha
                             - cluster dialogue crash,
                             - Modify button in User dialogue
                  Issues:    816, 840, 747

@@ -514,35 +514,10 @@ int truncate_stderr_out
 
    cwd = get_conf_val("cwd");
 
-   {
-      char *tmp_str;
-      int tmp_value;
-
-      if ((tmp_str = get_conf_val("set_sge_env")) 
-          && (tmp_value = atoi(tmp_str)) 
-          && tmp_value) {
-         sge_setenv("SGE_STDIN_PATH", stdin_path);
-         sge_setenv("SGE_STDOUT_PATH", stdout_path);
-         sge_setenv("SGE_STDERR_PATH", merge_stderr?stdout_path:stderr_path);
-         sge_setenv("SGE_CWD_PATH", cwd);
-      }
-      if ((tmp_str = get_conf_val("set_cod_env")) 
-          && (tmp_value = atoi(tmp_str)) 
-          && tmp_value) {
-         sge_setenv("COD_STDIN_PATH", stdin_path);
-         sge_setenv("COD_STDOUT_PATH", stdout_path);
-         sge_setenv("COD_STDERR_PATH", merge_stderr?stdout_path:stderr_path);
-         sge_setenv("COD_CWD_PATH", cwd);
-      }
-      if ((tmp_str = get_conf_val("set_grd_env")) 
-          && (tmp_value = atoi(tmp_str)) 
-          && tmp_value) {
-         sge_setenv("GRD_STDIN_PATH", stdin_path);
-         sge_setenv("GRD_STDOUT_PATH", stdout_path);
-         sge_setenv("GRD_STDERR_PATH", merge_stderr?stdout_path:stderr_path);
-         sge_setenv("GRD_CWD_PATH", cwd);
-      }
-   }
+   sge_setenv("SGE_STDIN_PATH", stdin_path);
+   sge_setenv("SGE_STDOUT_PATH", stdout_path);
+   sge_setenv("SGE_STDERR_PATH", merge_stderr?stdout_path:stderr_path);
+   sge_setenv("SGE_CWD_PATH", cwd);
 
    /*
    ** for interactive jobs, we disregard the current shell_start_mode

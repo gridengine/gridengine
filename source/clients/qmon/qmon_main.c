@@ -270,7 +270,7 @@ char **argv
    /*
    ** Internationalization:
    ** The qmon_messages.ad file is installed under 
-   ** $GRD_ROOT/qmon/locale/<LANG>/qmon_messages.ad
+   ** $SGE_ROOT/qmon/locale/<LANG>/qmon_messages.ad
    ** Read in the _Messages_ catalogue
    */
    if (((lang = getenv("LC_MESSAGES")) || (lang = getenv("LC_ALL")) ||

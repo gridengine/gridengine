@@ -1448,7 +1448,7 @@ decay_and_sum_usage( sge_ref_t *ref,
       decay_userprj_usage(project, decay_list, seqno, curr_time);
 
    /*-------------------------------------------------------------
-    * Note: Since CODINE will update job.usage directly, we 
+    * Note: Since SGE will update job.usage directly, we 
     * maintain the job usage the last time we collected it from
     * the job.  The difference between the new usage and the old
     * usage is what needs to be added to the user or project node.

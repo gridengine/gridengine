@@ -40,6 +40,7 @@
 #include "sge_profiling.h"
 
 int   do_test (void);
+int   test_params (void);
 void* do_sleep(void*);
 void* do_calc(void*);
 void* do_calc2(void*);
@@ -48,26 +49,58 @@ void* do_malloc(void*);
 
 int main(int argc, char *argv[])
 {
-   int ret = 0;
-   
+   int ret = EXIT_SUCCESS;
+
    /* First with profiling enabled */
    printf ("Testing with profiling enabled.\n");
    ret = do_test ();
    
-   if (ret == 0) {
+   if (ret == EXIT_SUCCESS) {
       /* Then with profiling disabled */
       printf ("Testing with profiling disabled.\n");
       sge_prof_set_enabled (false);
       ret = do_test ();
    }
    
-   if (ret == 0) {
+   if (ret == EXIT_SUCCESS) {
       /* Then again with profiling re-enabled */
       printf ("Testing with profiling re-enabled.\n");
       sge_prof_set_enabled (true);
       ret = do_test ();
    }
+
+   if (ret == EXIT_SUCCESS) {
+      ret = test_params();
+   }
    
+   return ret;
+}
+
+int test_params ()
+{
+   int ret = EXIT_SUCCESS;
+
+   /* Test formerly broken actions for SGE_PROF_ALL level */
+   sge_prof_setup();
+
+   prof_start(SGE_PROF_ALL, NULL);
+   
+   if (prof_is_active(SGE_PROF_ALL) != 1) {
+      printf("prof_is_active(SGE_PROF_ALL) did not return 1!");
+      ret = EXIT_FAILURE;
+   }
+
+   printf("the following prof_output_info call should output multiple profiling lines\n");
+   prof_output_info(SGE_PROF_ALL, false, "test:\n");
+
+   prof_stop(SGE_PROF_ALL, NULL);
+
+   sge_prof_cleanup();
+
+   if (ret == EXIT_SUCCESS) {
+      printf("test_params successfull\n\n");
+   }
+
    return ret;
 }
 

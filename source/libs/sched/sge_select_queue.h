@@ -123,7 +123,7 @@ typedef enum {
    DISPATCH_NOT_AT_TIME = 1,  /* no assignment at the specified time */
    DISPATCH_OK = 0,           /* ok got an assignment + set time for DISPATCH_TIME_QUEUE_END */
    DISPATCH_NEVER_CAT = -1,   /* assignment will never be possible for all jobs of that category */
-   DISPATCH_NEVER_JOB = -2,   /* assignment will never be possible for that particular job */
+   DISPATCH_NEVER_JOB = -2    /* assignment will never be possible for that particular job */
 }dispatch_t;
 
 dispatch_t

@@ -59,7 +59,7 @@
 *  SEE ALSO
 *     sgeobj/suser/SU_Type
 ******************************************************************************/
-lList *Master_SUser_List;
+lList *Master_SUser_List = NULL;
 
 /****** sgeobj/suser/suser_list_add() *****************************************
 *  NAME

@@ -99,7 +99,7 @@ const char *prognames[] =
  
 #if defined(SGE_MT)
 /* MT-NOTE: uti_state_key is used to create per thread instances of struct uti_state_t */
-pthread_key_t   uti_state_key;
+static pthread_key_t   uti_state_key;
 #else
 static struct uti_state_t uti_state_opaque = {
   NULL, NULL, NULL, QUSERDEFINED, 0, 0, 0, NULL, NULL, NULL, 1 };

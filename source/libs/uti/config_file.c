@@ -41,7 +41,7 @@
 #include "msg_daemons_common.h"
 
 
-char err_msg[1000];
+char err_msg[1000] = { '0' };
 
 /* ------------------------------
 

@@ -16,7 +16,6 @@ struct uti_state_t {
 
 
 #if defined(SGE_MT)
-extern pthread_key_t   uti_state_key;
 void uti_state_init(struct uti_state_t* state);
 #else
 extern struct uti_state_t *uti_state;

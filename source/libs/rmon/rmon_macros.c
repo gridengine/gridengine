@@ -93,8 +93,8 @@ pthread_mutex_t rmon_mutex = PTHREAD_MUTEX_INITIALIZER;
 /* ----------- global variables ------------ */
 
 int LAYER = 0;
-monitoring_level DEBUG_ON;
-u_long MLEVEL;
+monitoring_level DEBUG_ON = { {0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L} };
+u_long MLEVEL = 0L;
 u_long MTYPE = RMON_NONE;  /*RMON_LOCAL;*/
 u_long DEBUG_TRACEID = 0;
 

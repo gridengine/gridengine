@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-extern char err_msg[1000]; /* JG: TODO: thats potentially very dangerous! */
+extern char err_msg[]; /* JG: TODO: thats potentially very dangerous! */
 void set_error(char *err_str);
 
 int read_config(const char *fname);

@@ -1,3 +1,6 @@
+AD-2003-10-08-1: Bugfix:    Provided an initializer for several global variables.
+                            Removed duplicate definitions of global variables.
+
 AD-2003-10-08-0: Bugfix.:   Fixed the build
                  Changed:   msg_utilbin.h
 

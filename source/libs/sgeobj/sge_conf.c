@@ -69,7 +69,7 @@ const char *const policy_hierarchy_chars = "OFSD";
 extern u_long32 loggingfacility;
 lList *Master_Config_List = NULL; 
 
-sge_conf_type conf;
+sge_conf_type conf = { NULL };
 
 int forbid_reschedule = 0;
 int enable_forced_qdel = 0;

@@ -45,7 +45,7 @@
 
 
 /* global lerrno */
-int lerrno;
+int lerrno = 0;
 const char* get_lerror_string(int nr);
 
 /****** cull/lerrno/get_lerror_string() ****************************************

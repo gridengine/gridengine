@@ -1,3 +1,9 @@
+CR-2003-02-13-1  Testsuite: Bugfix in read_array_from_file_data() 
+                            - error reading in file without comment lines
+                 Enhancem.: New command line parameter: execute_func
+                            - execute a single tcl procedure
+                      
+
 CR-2003-02-13-0  Testsuite: shartree test now uses SHARETREE_RESERVED_USAGE=true
 
 JG-2003-02-13-0  Enhancem.: Improved ineffective implementation of removing

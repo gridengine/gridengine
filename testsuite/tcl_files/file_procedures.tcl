@@ -975,10 +975,14 @@ proc read_array_from_file_data { file_data obj_name array_name { enable_washing_
   if { $obj_end < 0 } {
      return -1
   }
+#  puts $CHECK_OUTPUT "start: $obj_start"
+#  puts $CHECK_OUTPUT "end: $obj_end"
   set wcount 0
   set time 0
   for { set i $obj_start } { $i <= $obj_end  } { incr i 1 } {
-     incr i 1
+     if { [string first "#" $file_dat($i)] == 0 } {
+        incr i 1
+     }
      set spec [unpack_data_line $file_dat($i)]
      incr i 1
      set spec_data [unpack_data_line $file_dat($i)]
@@ -990,6 +994,7 @@ proc read_array_from_file_data { file_data obj_name array_name { enable_washing_
         incr time 1
      }
      incr wcount 1
+     
   }
   return 0
 }

@@ -1091,7 +1091,17 @@ proc compare_dump_directory { dir } {
 
 proc compare_dump_data_file { file1 file2 } {
 
-   global CHECK_OUTPUT throughput_sharetree
+   global CHECK_OUTPUT 
+
+   if { [file isfile $file1] != 1 } {
+      puts $CHECK_OUTPUT "no file $file1"
+      return -1
+   }
+   if { [file isfile $file2] != 1 } {
+      puts $CHECK_OUTPUT "no file $file2"
+      return -1
+   }
+
 
    # first analyse the files (if not existent)
    analyse_dump_data_file $file1 

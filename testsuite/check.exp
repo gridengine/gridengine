@@ -14348,6 +14348,7 @@ set do_all            0
 set do_one_test       0
 set do_category       0
 set do_nomain         0
+set do_prog_start     0
 set do_only_reset_config 0
 set be_quiet          0
 set CHECK_CUR_PROC_NAME "main"
@@ -14408,6 +14409,10 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "check PATH RUNLEVEL   run test in checktree sub-path automatically up to runlevel"
       puts "                      RUNLEVEL. PATH is as check sub-path, relative to checktree."
       puts "                      (RUNLEVEL is a value from 0=short tests, up to 4=week tests)"
+      puts ""
+      puts "execute_func [args]   just run this procedure with given arguments"
+      puts "                      (all arguments after this keyword are used as function call)"
+      puts "                      e.g.: .. no_update execute_func compare_dump_data_file arg1 arg2"
       puts ""
       puts "category CAT_LIST     set users category list (COMPATIBILITY SYSTEM \[...\])"
       puts "                      (CAT_LIST must be 1 single parameter, must be quoted"
@@ -14626,8 +14631,16 @@ for { set i 0 } { $i < $argc } { incr i } {
       incr i
       continue
    }
+   if { ( [string compare [lindex $argv $i] "--execute_func"] == 0 ) || ([string compare [lindex $argv $i] "execute_func"] == 0 ) } {
+      set exec_args ""
+      for { incr i 1 } { $i < $argc } { incr i } {
+         lappend exec_args [lindex $argv $i]
+      }
+      set do_prog_start 1
+      break
+   }
 
-
+   
 
    if { ( [string compare [lindex $argv $i] "--no_main"] == 0 ) || ([string compare [lindex $argv $i] "no_main"] == 0 ) } {
       set do_nomain 1
@@ -14662,6 +14675,13 @@ if { $no_action == 1 } {
   puts $CHECK_OUTPUT "CHECK_GROUP=$CHECK_GROUP"
   puts "No action flag is set -> exit 1"
   exit 1
+}
+
+if { $do_prog_start == 1 } {
+   puts $CHECK_OUTPUT "starting $exec_args ..."
+      
+
+   exit [ eval $exec_args  ]
 }
 
 if { $check_reinit_on_tcl_error == 1 } {

@@ -239,7 +239,7 @@ int main(int argc, char **argv) {
                }
             }
             first_try = 0;
-         } while ((all_users || all_jobs) && do_again && !error_occured);
+         } while ((user_list != NULL || all_users || all_jobs) && do_again && !error_occured);
 
          if (delete_mode == 7) {
             /* 

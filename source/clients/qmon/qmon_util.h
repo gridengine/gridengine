@@ -97,7 +97,6 @@ void XmListMoveItemToPos(Widget list, String item, int pos);
 
 Boolean is_empty_word(char *str);
 
-
 void xmui_manage(Widget w);
 void xmui_unmanage(Widget w);
 

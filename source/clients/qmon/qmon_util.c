@@ -1022,7 +1022,5 @@ Widget w
    XmUpdateDisplay(topshell);
 }
 
-
-         
    
    

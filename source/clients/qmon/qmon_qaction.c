@@ -397,7 +397,6 @@ static void qmonQCAdd(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCModify(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCDelete(Widget w, XtPointer cld, XtPointer cad);
 
-static void qmonLoadNamesQueue(Widget w, XtPointer cld, XtPointer cad); 
 static void updateQCA(void);
 static void updateQCP(void);
 
@@ -732,7 +731,7 @@ Widget parent
                   qmonLoadSelectEntry, NULL);
 #endif
    XtAddCallback(load_thresholds, XmNlabelActivateCallback,
-                  qmonLoadNamesQueue, NULL);
+                  qmonLoadNames, NULL);
 
    /*
    ** Suspend Thresholds
@@ -746,7 +745,7 @@ Widget parent
                   qmonLoadSelectEntry, NULL);
 #endif
    XtAddCallback(suspend_thresholds, XmNlabelActivateCallback,
-                  qmonLoadNamesQueue, NULL);
+                  qmonLoadNames, NULL);
    XtAddCallback(suspend_intervalPB, XmNactivateCallback,
                   qmonQCTime, (XtPointer) suspend_interval); 
 
@@ -777,7 +776,7 @@ Widget parent
                   qmonLoadSelectEntry, NULL);
 #endif
    XtAddCallback(complexes_ccl, XmNlabelActivateCallback,
-                  qmonLoadNamesQueue, NULL);
+                  qmonLoadNames, NULL);
 
    /*
    ** Limits
@@ -2334,52 +2333,3 @@ static void updateQCP(void)
 }
 
 
-/*-------------------------------------------------------------------------*/
-static void qmonLoadNamesQueue(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
-{
-   char *qname = NULL;
-   char *qhostname = NULL;
-   lList *cl = NULL;
-   lList *alp = NULL;
-   lList *ehl = NULL;
-   lList *entries = NULL;
-   lListElem *qep = NULL;
-   static lCondition *where = NULL;
-
-   DENTER(GUI_LAYER, "qmonLoadNamesQueue");
-
-   qmonMirrorMultiAnswer(CENTRY_T|EXECHOST_T, &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
-      DEXIT;
-      return;
-   }
-   cl = qmonMirrorList(SGE_CENTRY_LIST);
-   ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-
-   /*
-   ** create a queue element and get the complex attribute entries
-   */
-   qname = XmtInputFieldGetString(qc_qname);
-   qhostname = XmtInputFieldGetString(qc_qhostname);
-
-   qep = lCreateElem(QU_Type);
-   lSetString(qep, QU_qname, qname);
-   lSetHost(qep, QU_qhostname, qhostname);
-   queue_complexes2scheduler(&entries, qep, ehl, cl, 0);   
-   qep = lFreeElem(qep);
-   
-   if (!where)
-      where = lWhere("%T(%I != %s)", CE_Type, CE_name, "slots");
-   entries = lSelectDestroy(entries, where);
-
-   ShowLoadNames(w, entries);
-
-   /*
-   ** free the copied list
-   */
-   entries = lFreeList(entries);
-}

@@ -1,5 +1,9 @@
-AH-2003-08-18-1: Enhancem.  Update on tight integration with Sun HPC 
-                            ClusterTools 5
+SG-2003-08-19-0: Bugfix:   The complex selection dialog did not show all available complexes.
+                 Changed:  qmon
+                 Review:   AA
+ 
+AH-2003-08-18-1: Enhancem. Update on tight integration with Sun HPC 
+                           ClusterTools 5
 
 AA-2003-08-14-0: Bugfix:   Host Configuration -> Execution Host -> Add/Modify Exec Host -> 
                            Consumables/Fixed Attributs core dump, when QControl hasn't been

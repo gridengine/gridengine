@@ -168,8 +168,6 @@ static lList* qmonExecHostGetAsk(void);
 static void qmonHostAvailableAcls(void);
 static void qmonHostAvailableProjects(void);
 
-static void qmonLoadNamesHost(Widget w, XtPointer cld, XtPointer cad); 
-
 static void qmonExecHostAccessToggle(Widget w, XtPointer cld, XtPointer cad); 
 static void qmonExecHostAccessAdd(Widget w, XtPointer cld, XtPointer cad); 
 static void qmonExecHostAccessRemove(Widget w, XtPointer cld, XtPointer cad); 
@@ -690,7 +688,7 @@ Widget parent
                   qmonLoadNoEdit, NULL);
 #endif
    XtAddCallback(complexes_ccl, XmNlabelActivateCallback,
-                  qmonLoadNamesHost, NULL);
+                  qmonLoadNames, NULL);
 
    XtAddCallback(access_toggle, XmtNvalueChangedCallback, 
                      qmonExecHostAccessToggle, NULL);
@@ -1435,66 +1433,6 @@ XtPointer cld, cad;
    DEXIT;
 }
 
-
-/*-------------------------------------------------------------------------*/
-static void qmonLoadNamesHost(
-Widget w,
-XtPointer cld,
-XtPointer cad  
-) {
-
-   lList *entries = NULL;
-   lList *alp = NULL;
-
-   DENTER(GUI_LAYER, "qmonLoadNamesHost");
-
-   qmonMirrorMultiAnswer(CENTRY_T, &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
-      DEXIT;
-      return;
-   }
-
-   entries = qmonMirrorList(SGE_CENTRY_LIST);
-   ShowLoadNames(w, entries);
-}
-
-#ifdef ANDRE
-  FIXME  folgende Funktion pruefen
-
-/*-------------------------------------------------------------------------*/
-static lList* GetAttributes(
-char *qhostname,
-lList *attached_cplx_list 
-) {
-   lList *cl = NULL;
-   lList *ehl = NULL;
-   lList *entries = NULL;
-   lListElem *hep = NULL;
-
-   DENTER(GUI_LAYER, "GetAttributes");
-#ifdef ANDRE   
-   FIXME
-#endif
-
-   ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-
-   /*
-   ** create a queue element and get the complex attribute entries
-   */
-   hep = lCreateElem(EH_Type);
-   lSetHost(hep, EH_name, qhostname);
-   if (qhostname && !strcasecmp(qhostname, "global"))
-      global_complexes2scheduler(&entries, hep, cl, 0);
-   else 
-      host_complexes2scheduler(&entries, hep, ehl, cl, 0);   
-   hep = lFreeElem(hep);
-   
-   DEXIT;
-   return entries;
-}
-#endif
 
 /*-------------------------------------------------------------------------*/
 /* A C C E S S L I S T     P A G E                                         */

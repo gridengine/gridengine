@@ -1,18 +1,26 @@
-HP-2005-03-18-0  Bugfix:   Replaced direct compare of UID to 0 with function call to
+EB-2005-03-31-0: Bugfix:    qhost -h <hostname> does not show selected host
+                            (Merged from Maintrunc EB-2005-03-24-0)
+                 Changed:   qhost
+                 Issue:     1524
+                 Bugtraq:   6245487
+                 Review:    SG
+
+HP-2005-03-18-0  Bugfix:   Replaced direct compare of UID to 0 with function 
+                           call to
                            sge_is_start_user_superuser(), removed
-                           sge_is_start_user_root() from library because it did the
-                           same /
+                           sge_is_start_user_root() from library because it 
+                           did the same /
                            Put error message in Debug output in error handling
                            branch.
                  Changed:  libs/uti/sge_uidgid.c, libs/uti/sge_io.c
                  Review:   RD
 
-
 HP-2005-03-17-1  Bugfix:    UID was still compared to 0, not to SuperUser
                  Changed:   libs/uti/sge_uidgid.c
 
 HP-2005-02-14-0: Bugfix:    Changed arch_variables in Windows section,
-                            changed uidgid so that it returns 0 for Administrator.
+                            changed uidgid so that it returns 0 for 
+                            Administrator.
                  Changed:   arch_variables, uidgid.c
 
 EB-2005-01-18-0: Enhancem.: qtcsh port for WIN32_X86

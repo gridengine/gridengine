@@ -1260,6 +1260,7 @@ case SOLARIS86:
       set SOL64BITFLAG = ""
       if ( $CC == cc || $CC == insure ) then
          set MEMCFLAG=-Xa
+         set LFLAGS = "-xildoff $LFLAGS"
       endif
    endif
 

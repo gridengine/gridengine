@@ -1,3 +1,7 @@
+CR-2002-02-27-0: Bugfix:    Merged from maintrunc: a) removed unnecessary
+                            feature_is_enabled() call in qmon_main.c
+                                                   b) aimk LFLAGS
+
 CR-2002-02-26-1: Testsuite: changes from maintrunc merged
 
 CR-2002-02-26-0: Feature:   qmaster installation script will now check if

@@ -45,11 +45,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-if ( ! $?CVSROOT ) then
-   echo "CVSROOT must be set"
-   exit 1
-endif
-
 set MANBUILDDIR = $1/MANSBUILD_$2
 set MANMODE = $2
 set MANASC  = $3

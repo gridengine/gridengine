@@ -63,8 +63,8 @@ PWD=`pwd`
 UPGRADE=false
 DOWNGRADE=false
 BACKUP=false
+RESTORE=false
 AUTO=false
-SGEEE=true
 RESCHEDULE=true
 RESPORT=false
 CSP=false
@@ -139,6 +139,10 @@ while [ $ARGC != 0 ]; do
      SHADOW="install"
      #echo Install Shadowhost
      ;;
+   -usm)
+     SHADOW="uninstall"
+     #echo uninstall Shadowhost
+     ;;
    -db)
      BERKELEY="install"
      SPOOLING_SERVER=`hostname`
@@ -154,9 +158,20 @@ while [ $ARGC != 0 ]; do
      shift
      ARGC=`expr $ARGC - 1`
      ;;
+   -bup)
+     BACKUP=true
+     #do configuration database backup
+     ;;
+   -rst)
+     RESTORE=true
+     #restore a backuped database
+     ;; 
    -noremote)
      NOREMOTE=true
      #Disable remote installation
+     ;;
+   -rsh)
+     SHELL_NAME=rsh
      ;;
    -nr)
      RESCHEDULE=false
@@ -412,14 +427,57 @@ if [ $SHADOW = "install" ]; then
          SGE_ARCH=`$SGE_ROOT/util/arch`
          $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
       else
-        echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | rsh $SHADOW_HOST /bin/sh &
+        echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $SHADOW_HOST /bin/sh &
       fi
    else
       $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW_HOST    
       mod_file="echo $SHADOW_HOST"
       ExecuteAsAdmin $mod_file > $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | rsh $SHADOW_HOST /bin/sh &
+      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $SHADOW_HOST /bin/sh &
    fi
 fi
 
+if [ $SHADOW = "uninstall" ]; then
+
+   s_host=`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`
+   s_pid=`cat $SGE_ROOT/$SGE_CELL/spool/qmaster/shadowd_$s_host.pid`
+
+   if [ $AUTO = "true" ]; then
+      ret=$SGE_UTILBIN/checkprog $s_pid shadowd
+      if [ $ret = 0 ]; then
+         $INFOTEXT -log "Stopping shadowd!" 
+         $SGE_ROOT/$SGE_CELL/common/sgemaster -shadowd stop
+         ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         exit 0
+      else
+         $INFOTEXT -log "Shadow daemon is not running on this host!" 
+         exit 1
+      fi
+   else
+      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; $SGE_ROOT/$SGE_CELL/common/sgemaster -shadowd stop &; ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters" | $SHELL_NAME $s_host /bin/sh &   
+
+   fi
+
+   if [ $s_host = `hostname` ]; then
+      ret=$SGE_UTILBIN/checkprog $s_pid shadowd
+      if [ $ret = 0 ]; then
+         $SGE_ROOT/$SGE_CELL/common/sgemaster -shadowd stop
+         ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      else
+         $INFOTEXT "Shadow daemon is not running on this host!" 
+      fi
+   else
+      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; $SGE_ROOT/$SGE_CELL/common/sgemaster -shadowd stop &; ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters" | $SHELL_NAME $s_host /bin/sh &
+   fi
+      
+
+fi
+
+if [ $BACKUP = "true" ]; then
+   BackupConfig
+fi
+
+if [ $RESTORE = "true" ]; then
+   RestoreConfig
+fi
 exit 0

@@ -1,6 +1,6 @@
 #! /bin/sh 
 #
-# SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
+# SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
 # Scriptname: inst_qmaster.sh
 # Module: qmaster installation functions
 #
@@ -407,8 +407,12 @@ SetSpoolingOptionsClassic()
 
 SetSpoolingOptionsDynamic()
 {
-   $INFOTEXT "\nPlease choose spooling method (berkeleydb|classic) [berkeleydb] >> "
-   INP=`Enter berkeleydb`
+   if [ $AUTO = "true" ]; then
+      INP=$SPOOLING_METHOD
+   else
+      $INFOTEXT "\nPlease choose spooling method (berkeleydb|classic) [berkeleydb] >> "
+      INP=`Enter berkeleydb`
+   fi
 
    case $INP in 
       classic)
@@ -562,7 +566,7 @@ AddBootstrap()
 }
 
 #-------------------------------------------------------------------------
-# PrintBootstrap: print SGE/SGEEE default configuration
+# PrintBootstrap: print SGE default configuration
 #
 PrintBootstrap()
 {
@@ -620,7 +624,7 @@ AddConfiguration()
 
 
 #-------------------------------------------------------------------------
-# PrintConf: print SGE/SGEEE default configuration
+# PrintConf: print SGE default configuration
 #
 PrintConf()
 {
@@ -677,6 +681,7 @@ PrintConf()
    $ECHO "auto_user_fshare       0"
    $ECHO "auto_user_default_project none"
    $ECHO "auto_user_delete_time  100"
+   $ECHO "delegated_file_staging false"
 
 }
 
@@ -874,18 +879,16 @@ AddPEFiles()
 #
 AddDefaultDepartement()
 {
-   if [ $SGEEE = true ]; then
-      #$INFOTEXT "Adding SGEEE >defaultdepartment< userset"
+      #$INFOTEXT "Adding SGE >defaultdepartment< userset"
       #ExecuteAsAdmin $CP util/resources/usersets/defaultdepartment $QMDIR/usersets
       #ExecuteAsAdmin $CHMOD $FILEPERM $QMDIR/usersets/defaultdepartment
 
-      #$INFOTEXT "Adding SGEEE >deadlineusers< userset"
+      #$INFOTEXT "Adding SGE >deadlineusers< userset"
       #ExecuteAsAdmin $CP util/resources/usersets/deadlineusers $QMDIR/usersets
       #ExecuteAsAdmin $CHMOD 644 $QMDIR/usersets/deadlineusers
 
-      $INFOTEXT "Adding SGEEE default usersets"
+      $INFOTEXT "Adding SGE default usersets"
       ExecuteAsAdmin $SPOOLDEFAULTS usersets $SGE_ROOT_VAL/util/resources/usersets
-   fi
 }
 
 
@@ -942,6 +945,7 @@ StartQmaster()
 {
    $INFOTEXT -u "\nGrid Engine qmaster and scheduler startup"
    $INFOTEXT "\nStarting qmaster and scheduler daemon. Please wait ..."
+   . $SGE_ROOT/$SGE_CELL/common/settings.sh
    $SGE_STARTUP_FILE -qmaster
    CheckRunningDaemon
    run=$?

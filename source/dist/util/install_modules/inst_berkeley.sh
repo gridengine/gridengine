@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
+# SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
 # Scriptname: inst_berkeley.sh
 # Module: berkeley db install functions
 #
@@ -91,8 +91,10 @@ SpoolingCheckParams()
       # TODO: we should check if the hostname can be resolved
       # create a script to start the rpc server
       Makedir $SPOOLING_DIR
-      DB_CONFIG_COPY="cp ./util/install_modules/DB_CONFIG $SPOOLING_DIR/DB_CONFIG"
-      ExecuteAsAdmin $DB_CONFIG_COPY
+
+      # Deactivated the copy of DB_CONFIG file. The DB_CONFIG file is still distributed 
+      #DB_CONFIG_COPY="cp ./util/install_modules/DB_CONFIG $SPOOLING_DIR/DB_CONFIG"
+      #ExecuteAsAdmin $DB_CONFIG_COPY
       CreateRPCServerScript
       $INFOTEXT "\nNow we have to startup the rc script\n >%s< \non the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
       $INFOTEXT -n "If you already have a configured Berkeley DB Spooling Server,\n you have to restart "

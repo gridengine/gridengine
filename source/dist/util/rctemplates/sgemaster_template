@@ -298,21 +298,29 @@ GetPathToUtilbin()
 #
 CheckRunningQmaster()
 {
-   if [ -f $qmaster_spool_dir/qmaster.pid ]; then
-      :
-   else
-      sleep 10
+   masterhost=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
+   running=false
+   loop=0
 
-   fi
+   while [ $running = "false" -a $loop -ne 10 ]; do 
+      $bin_dir/qping -info $masterhost $SGE_QMASTER_PORT qmaster 1 > /dev/null
 
-   act_pid=`cat $qmaster_spool_dir/qmaster.pid`
+      if [ "$?" = 0 ]; then
+         running=true
+      else
+         sleep 3 
+         loop=`expr $loop + 1`
+      fi
+   done
 
-   $utilbin_dir/checkprog $act_pid sge_qmaster > /dev/null
-   
-   if [ "$?" = 1 ]; then
+   if [ $running = "false" ]; then
       echo
       echo "sge_qmaster didn't start!"
       echo "Please check the messages file"
+      echo
+   else
+      echo
+      echo "   ...sge_qmaster started!"
       echo
    fi
 }
@@ -426,9 +434,9 @@ if [ "$startup" = true ]; then
    if [ $qmaster = true -a $qmaster_host = true ]; then
       echo "   starting sge_qmaster"
       $bin_dir/sge_qmaster
+      CheckRunningQmaster
       echo "   starting sge_schedd"
       $bin_dir/sge_schedd
-      CheckRunningQmaster
    elif [ $qmaster = true -a $qmaster_host = false ]; then
       echo
       echo "sge_qmaster didn't start!"

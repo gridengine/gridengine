@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
+# SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
 # Scriptname: inst_common.sh
 # Module: common functions
 #
@@ -325,15 +325,17 @@ ErrUsage()
    myname=`basename $0`
    $ECHO >&2
    $INFOTEXT -e \
-             "Usage: %s -m|-um|-x|-ux|-sm|-db [-auto filename ] [-csp]\n" \
-             "              [-resport] [-afs] [-host] [-noremote]\n" \
+             "Usage: %s -m|-um|-x|-ux|-sm|-usm|-db [-auto filename ] [-csp]\n" \
+             "              [-resport] [-afs] [-host] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
              "   -ux        uninstall execution host\n" \
              "   -sm        install shadow host\n" \
+             "   -usm       uninstall shadow host\n" \
              "   -db        install Berkeley DB on seperated Spooling Server\n" \
              "   -host      hostname for unistallation (eg. exec host)\n" \
+             "   -rsh       use rsh instead of ssh (default is ssh)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
@@ -554,7 +556,7 @@ CheckForLocalHostResolving()
 }
                
 #-------------------------------------------------------------------------
-# ProcessSGERoot: read SGE/SGEEE root directory and set $SGE_ROOT
+# ProcessSGERoot: read SGE root directory and set $SGE_ROOT
 #                    check if $SGE_ROOT matches current directory
 #
 ProcessSGERoot()
@@ -719,7 +721,7 @@ GiveHints()
 
 
 #-------------------------------------------------------------------------
-# PrintLocalConf:  print execution host local SGE/SGEEE configuration
+# PrintLocalConf:  print execution host local SGE configuration
 #
 PrintLocalConf()
 {
@@ -1055,3 +1057,110 @@ CheckRunningDaemon()
 
 
 }
+
+#----------------------------------------------------------------------------
+# Backup configuration
+# BackupConfig
+#
+BackupConfig()
+{
+   DATE=`date '+%Y-%m-%d_%H:%M:%S'`
+
+   $INFOTEXT -u "SGE Configuration Backup"
+   $INFOTEXT -n "\nThis feature does a backup of all configuration you made\n" \
+                "within your cluster."
+                SGE_ROOT=`pwd`
+   $INFOTEXT -n "\nPlease enter your SGE_ROOT directory. Default: [%s]" $SGE_ROOT 
+                SGE_ROOT=`Enter $SGE_ROOT`
+   $INFOTEXT -n "\nPlease enter your SGE_CELL name. Default: [default]"
+                SGE_CELL=`Enter default`
+
+   db_home=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
+
+   $INFOTEXT -n "\nWhere do you want to save the backupfiles? \nDefault: [%s]" $SGE_ROOT/$SGE_CELL/spool/backup
+                backup_dir=`Enter $SGE_ROOT/$SGE_CELL/spool/backup`
+                Makedir $backup_dir
+   $INFOTEXT  -auto $AUTO -ask "y" "n" -def "y" -n "\nShall the backup function create a tar/gz package with your files? (y/n) [y]"
+
+   if [ $? = 0 ]; then
+      TAR=true
+   fi
+ 
+   $INFOTEXT -n "\n... starting with backup\n"    
+   $SGE_UTILBIN/db_dump -f $backup_dir/$DATE.dump -h $db_home sge
+
+   cp -f $SGE_ROOT/$SGE_CELL/common/bootstrap $SGE_ROOT/$SGE_CELL/common/sge_aliases $backup_dir
+
+   if [ $TAR = "true" ]; then
+      $INFOTEXT "\nPlease enter a filename for your backupfile. Default: [backup.tar]"
+      bup_file=`Enter backup.tar`
+      cd $backup_dir
+      tar -cvf $bup_file $DATE.dump bootstrap sge_aliases
+      gzip -9 $bup_file 
+
+      cd $SGE_ROOT
+      $INFOTEXT -n "\n... backup completed"
+      $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir/$bup_file".gz"
+
+      cd $backup_dir      
+      rm -f $DATE.dump.tar $DATE.dump bootstrap sge_aliases
+
+      exit 0
+   fi
+
+   $INFOTEXT -n "\n... backup completed"
+   $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir
+
+}
+
+
+
+#----------------------------------------------------------------------------
+# Restore configuration
+# RestoreConfig
+#
+RestoreConfig()
+{
+   $INFOTEXT -u "SGE Configuration Restore"
+   $INFOTEXT -n "\nThis feature restores the configuration from a backup you made\n" \
+                "previously."
+                SGE_ROOT=`pwd`
+   $INFOTEXT -n "\nPlease enter your SGE_ROOT directory. Default: [%s]" $SGE_ROOT
+                SGE_ROOT=`Enter $SGE_ROOT`
+   $INFOTEXT -n "\nPlease enter your SGE_CELL name. Default: [default]"
+                SGE_CELL=`Enter default`
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nIs your backupfile in tar/gz format? (y/n) [y] "
+
+   if [ $? = 0 ]; then
+      $INFOTEXT -n "\nPlease enter the full path and name of your backup file."
+      $INFOTEXT -n "\nDefault: [%s]" $SGE_ROOT/$SGE_CELL/spool/backup/backup.tar.gz
+      bup_file=`Enter $SGE_ROOT/$SGE_CELL/spool/backup/backup.tar.gz`
+      Makedir /tmp/bup_tmp
+      $INFOTEXT -n "\nCopiing backupfile to /tmp/bup_tmp\n"
+      cp $bup_file /tmp/bup_tmp
+      cd /tmp/bup_tmp/
+      gzip -d /tmp/bup_tmp/*.gz 
+      tar -xvf /tmp/bup_tmp/*.tar
+      cd $SGE_ROOT 
+      db_home=`cat /tmp/bup_tmp/bootstrap | grep "spooling_params" | awk '{ print $2 }'`   
+      $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
+      $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path "
+      db_home=`Enter $db_home`
+      
+      $SGE_UTILBIN/db_load -f /tmp/bup_tmp/*.dump -h $db_home sge
+      $INFOTEXT -n "\nYour configuration has been restored"
+      rm -fR /tmp/bup_tmp
+   else
+      $INFOTEXT -n "\nPlease enter the full path  your backup file."
+      bup_file=`Enter $SGE_ROOT/$SGE_CELL/default/spool/backup`
+      db_home=`cat bup_file/bootstrap | grep "spooling_params" | awk '{ print $2 }'`   
+      $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
+      $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path. >> "
+      db_home=`Enter $db_home`
+      
+      $SGE_UTILBIN/db_load -f $bup_file/*.dump -h $db_home sge
+      $INFOTEXT -n "\nYour configuration has been restored\n"
+   fi
+}
+
+

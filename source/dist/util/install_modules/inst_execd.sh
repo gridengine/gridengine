@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
+# SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
 # Scriptname: inst_execd.sh
 # Module: execd installation functions
 #
@@ -384,6 +384,7 @@ StartExecd()
 {
    $INFOTEXT -u "\nGrid Engine execution daemon startup"
    $INFOTEXT "\nStarting execution daemon. Please wait ..."
+   . $SGE_ROOT/$SGE_CELL/common/settings.sh
    $SGE_STARTUP_FILE 
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR

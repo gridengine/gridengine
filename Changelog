@@ -1,3 +1,8 @@
+EB-2004-03-16-0: Bugfix:    Hostgroup identifiers not verified in queue_conf(5)
+                 Issue:     856
+                 Changed:   sge_qmaster
+                 Review:    SG 
+
 JG-2004-03-16-0: Testsuite: Cleanup and fix of tests 
                             bugs/issuezilla/193, 
                             system_tests/clients/qalter, 

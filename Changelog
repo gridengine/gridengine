@@ -1,3 +1,6 @@
+AA-2002-03-22-2  Bugfix:    Tru64 spinbox incrementLarge fix for cluster
+                            config dialogue
+
 CR-2002-03-22-0  Bugfix:    Reopend issue: Wrong error message when service sge_commd 
                             is not available 
                  Issue:     #158

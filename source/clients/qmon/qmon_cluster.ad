@@ -362,6 +362,7 @@ Qmon*cluster_global_layout.cluster_max_aj_instances.buttonSizeFixed: True
 Qmon*cluster_global_layout.cluster_max_aj_instances.columns: 5
 Qmon*cluster_global_layout.cluster_max_aj_instances.spinboxUseClosestValue: True
 Qmon*cluster_global_layout.cluster_max_aj_instances.value: 0
+Qmon*cluster_global_layout.cluster_max_aj_instances.incrementLarge: 10
 
 Qmon*cluster_global_layout.cluster_max_aj_tasks.minimum: 0
 Qmon*cluster_global_layout.cluster_max_aj_tasks.spinboxStyle: SPINBOX_STACKED_RIGHT
@@ -369,6 +370,7 @@ Qmon*cluster_global_layout.cluster_max_aj_tasks.buttonSizeFixed: True
 Qmon*cluster_global_layout.cluster_max_aj_tasks.columns: 5
 Qmon*cluster_global_layout.cluster_max_aj_tasks.spinboxUseClosestValue: True
 Qmon*cluster_global_layout.cluster_max_aj_tasks.value: 0
+Qmon*cluster_global_layout.cluster_max_aj_tasks.incrementLarge: 10
 
 Qmon*cluster_global_layout.cluster_max_u_jobs.minimum: 0
 Qmon*cluster_global_layout.cluster_max_u_jobs.spinboxStyle: SPINBOX_STACKED_RIGHT
@@ -376,6 +378,7 @@ Qmon*cluster_global_layout.cluster_max_u_jobs.buttonSizeFixed: True
 Qmon*cluster_global_layout.cluster_max_u_jobs.columns: 5
 Qmon*cluster_global_layout.cluster_max_u_jobs.spinboxUseClosestValue: True
 Qmon*cluster_global_layout.cluster_max_u_jobs.value: 0
+Qmon*cluster_global_layout.cluster_max_u_jobs.incrementLarge: 10
 !! 
 !! TrimAndTrail callback, remove leading and trailing whitespace after input
 !!

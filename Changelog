@@ -1,3 +1,5 @@
+JG-2002-05-14-2: Doc:       Coding styleguide, format for special comments.
+
 JG-2002-05-14-1: Bugfix:    MPI tight integration rsh wrapper contained
                             shortcut syntax not executed correctly by all
                             shells.

@@ -1,0 +1,125 @@
+#!/vol2/TCL_TK/glinux/bin/expect --
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
+global check_init_level_procedure check_category
+
+set check_init_level_procedure "init_level"
+
+set check_category            "COMPATIBILITY SYSTEM VERIFIED"
+set check_name                "issue_1104"
+set check_description(0)      "Qmaster requires a local conf in order to start"
+set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
+set check_root_access_needs   "yes"
+set check_functions           ""
+lappend check_functions       "issue_1104_run"          ;# functions to call (in order)
+set check_highest_level       0
+
+
+
+# This test saves the local configuration on the master host and removes it.
+# Then it tries to restart the sge_qmaster daemon. THe qmaster should start without local_conf,
+# but writing a Warning to the messages file.
+# After restart the local configuration will be added again.
+
+proc init_level {} {
+   global CHECK_ACT_LEVEL ts_config
+
+   if { $ts_config(gridengine_version) == 53 } {
+       return -1
+   }
+
+    # TODO setup levels 
+   switch -- $CHECK_ACT_LEVEL {
+      "0"  { 
+         return 0
+      }
+   }
+   return -1
+}
+
+
+
+
+
+
+proc issue_1104_run {} {
+   global ts_config CHECK_HOST orig_config CHECK_OUTPUT
+
+   get_config orig1104_config $ts_config(master_host)
+
+   foreach name [array names orig1104_config] {
+      puts $CHECK_OUTPUT "$name $orig1104_config($name)"
+   }
+   
+   set arch [resolve_arch $ts_config(master_host)]
+
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf" "-sconf" "$ts_config(master_host)"} result ]
+
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf" "-dconf" "$ts_config(master_host)"} result ]
+   puts $CHECK_OUTPUT $result
+
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf" "-sconf" "$ts_config(master_host)"} result ]
+
+   if { $catch_result == 0 } {
+      add_proc_error "issue_1104_setup" "-1" "could not delete local configuration for host $ts_config(master_host)"
+   } 
+
+   
+   shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
+
+   startup_qmaster
+   
+   file mkdir "$ts_config(product_root)/tmp"
+   set conf_file [ open "$ts_config(product_root)/tmp/$ts_config(master_host)" "w" ]
+   foreach name [array names orig1104_config] {
+      puts $conf_file "$name $orig1104_config($name)" 
+   }
+   close $conf_file
+
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf" "-Aconf" "$ts_config(product_root)/tmp/$ts_config(master_host)"} result ]
+
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qstat" } result ]
+   if { $catch_result != 0 } {
+      add_proc_error "issue_1104_setup" "-1" "could not contact qmaster and add configuration on host $ts_config(master_host), original config stored at $ts_config(product_root)/tmp/$ts_config(master_host)"
+   } else {
+      file delete "$ts_config(product_root)/tmp/$ts_config(master_host)" 
+
+      file delete "$ts_config(product_root)/tmp"
+   }
+
+   set_error 0 "ok"
+}
+
+

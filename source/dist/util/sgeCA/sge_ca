@@ -579,8 +579,9 @@ umask 022
 
 if [ -z "$SGE_ROOT" -o ! -d "$SGE_ROOT" ]; then
    echo
-   echo ERROR: Please set your \$SGE_ROOT environment variable
-   echo and start this script again. Exit.
+   echo ERROR: Please set your \$SGE_ROOT and optionally \$SGE_CELL and 
+   echo \$COMMD_PORT environment variable and start this script again.
+   echo Exit
    echo
    exit 1
 fi
@@ -605,12 +606,15 @@ fi
 
 if [ "$SGE_CELL" = "" ]; then
    SGE_CELL=default
+   export SGE_CELL
 fi
 
 if [ "$COMMD_PORT" != "" ]; then
    CA_PORT=port$COMMD_PORT
+   export CA_PORT
 else
    CA_PORT=sge_commd
+   export CA_PORT
 fi
 
 

@@ -170,7 +170,6 @@ drmaaj_meta: drmaaj_meta_clean
 drmaaj_doc: drmaaj_classes drmaaj_doc_clean
 	$(JAVA_HOME)/$(JAVA_BINDIR)/javadoc -sourcepath $(CLASSES_DIR) -classpath . -d ../../doc/javadocs -version -overview $(CLASSES_DIR)/overview.html $(DRMAAJ_JAVA)
 
-
 ###############################################################################
 # rules to build library
 ###############################################################################

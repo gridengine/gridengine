@@ -3809,7 +3809,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   }
   set sp_id [ lindex $id 1 ]
 
-  set timeout 10 ;# $submit_timeout
+  set timeout $submit_timeout
   set do_again 1
 
 

@@ -137,6 +137,9 @@ static cl_thread_mode_t       cl_com_create_threads = CL_NO_THREAD;
 static pthread_mutex_t cl_com_application_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cl_app_status_func_t   cl_com_application_status_func = NULL;
 
+/* global application function pointer for errors */
+static pthread_mutex_t cl_com_error_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cl_error_func_t   cl_com_error_status_func = NULL;
 
 
 
@@ -165,6 +168,10 @@ cl_raw_list_t* cl_com_get_log_list(void) {
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_set_status_func()"
 int cl_com_set_status_func(cl_app_status_func_t status_func) {
    pthread_mutex_lock(&cl_com_application_mutex);
    cl_com_application_status_func = *status_func;
@@ -172,6 +179,22 @@ int cl_com_set_status_func(cl_app_status_func_t status_func) {
    return CL_RETVAL_OK;
 }
 
+
+
+/* The only errors supported by error func calls are:
+    CL_RETVAL_UNKNOWN:             when CRM contains unexpected error
+    CL_RETVAL_ACCESS_DENIED:       when CRM says that access to service is denied 
+    CL_CRM_CS_ENDPOINT_NOT_UNIQUE: when CRM says that there is already an endpoint with this id connected */
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_set_error_func()"
+int cl_com_set_error_func(cl_error_func_t error_func) {
+   pthread_mutex_lock(&cl_com_error_mutex);
+   cl_com_error_status_func = *error_func;
+   pthread_mutex_unlock(&cl_com_error_mutex);
+   return CL_RETVAL_OK;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -981,15 +1004,21 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
 #endif
 #define __CL_FUNCTION__ "cl_com_setup_connection()"
 int cl_com_setup_connection(cl_com_handle_t* handle, cl_com_connection_t** connection) {
+   int ret_val = CL_RETVAL_HANDLE_NOT_FOUND;
    if (handle != NULL) {
       switch(handle->framework) {
          case CL_CT_TCP:   
-            return cl_com_setup_tcp_connection( connection, handle->service_port, handle->connect_port, handle->data_flow_type );
+            ret_val = cl_com_setup_tcp_connection( connection, handle->service_port, handle->connect_port, handle->data_flow_type );
+            if (ret_val == CL_RETVAL_OK) {
+               pthread_mutex_lock(&cl_com_error_mutex);
+               (*connection)->error_func = cl_com_error_status_func;
+               pthread_mutex_unlock(&cl_com_error_mutex);
+            }
          default:
             break;
       }
    }
-   return CL_RETVAL_HANDLE_NOT_FOUND;
+   return ret_val;
 }
 
 
@@ -3963,8 +3992,6 @@ static void *cl_com_handle_service_thread(void *t_conf) {
                handle = handle_elem->handle;
                select_sec_timeout = handle->select_sec_timeout; 
                select_usec_timeout = handle->select_usec_timeout;
-/*               select_sec_timeout = 1;
-               select_usec_timeout = 0; */
             }
             handle_elem = cl_handle_list_get_next_elem(cl_com_handle_list,handle_elem );
          }

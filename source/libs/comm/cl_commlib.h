@@ -91,6 +91,7 @@ int cl_com_disable_max_connection_close(cl_com_handle_t* handle);
 int cl_com_set_status_func(cl_app_status_func_t status_func);
 
 
+int cl_com_set_error_func(cl_error_func_t error_func);
 
 
 

@@ -1,3 +1,9 @@
+CR-2004-02-18-0: Enhancem.: - added error function callback for communication 
+                            errors
+                            - connect response message reports now if connection
+                            endpoint is already connected with service endpoint
+                 Changed:   communication lib
+
 DT-2004-02-18-1: Bugfix:    Added missing -sconf param in qconf
                  Changed:   flatfile spooling
 

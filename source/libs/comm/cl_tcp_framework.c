@@ -1583,9 +1583,10 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
                CL_LOG(CL_LOG_INFO,"new client is unique");
             } else {
                CL_LOG(CL_LOG_WARNING,"new client is allready connected - endpoint not unique error");
-               connection->crm_state = CL_CRM_CS_DENIED;
+               connection->crm_state = CL_CRM_CS_ENDPOINT_NOT_UNIQUE; /* CL_CRM_CS_DENIED; */
                connection_status_text = "allready connected - endpoint not unique error";
-               connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
+/*               connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED; */
+               connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_NOT_UNIQUE;
                CL_LOG(CL_LOG_ERROR, connection_status_text );
             }
          } else {
@@ -1918,6 +1919,26 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
          /* printf("local hostname is  : \"%s\"\n", connection->local->comp_host); */
          /* printf("remote hostname is : \"%s\"\n", connection->remote->comp_host); */
       } else {
+         CL_LOG_INT(CL_LOG_ERROR,"Connect Error:",crm_message->cs_condition);
+         if (connection->error_func != NULL) {
+            CL_LOG(CL_LOG_WARNING,"calling application error function");
+            switch(crm_message->cs_condition) {
+               case CL_CRM_CS_UNDEFINED: 
+               case CL_CRM_CS_UNSUPPORTED:
+                  connection->error_func(CL_RETVAL_UNKNOWN);
+                  break;
+               case CL_CRM_CS_DENIED:
+                  connection->error_func(CL_RETVAL_ACCESS_DENIED);
+                  break;
+               case CL_CRM_CS_ENDPOINT_NOT_UNIQUE:
+                  connection->error_func(CL_RETVAL_ENDPOINT_NOT_UNIQUE);
+                  break;
+            }
+            CL_LOG(CL_LOG_WARNING,"application error function returns");
+
+         } else {
+            CL_LOG(CL_LOG_WARNING,"No application error function set");
+         }
          CL_LOG_STR(CL_LOG_ERROR,"error:",crm_message->cs_text);
          connection->connection_state = CL_COM_CLOSING;  /* That was it */
       }
@@ -2144,14 +2165,17 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
          /* return immediate for only write select ( only called by write thread) */
          return CL_RETVAL_NO_SELECT_DESCRIPTORS;
       }
-      /* we have no file descriptors, but we do a select with minimal timeout
+      /* we have no file descriptors, but we do a select with standard timeout
          because we don't want to overload the cpu by endless trigger() calls 
          from application when there is no connection client 
          (no descriptors part 1)
       */
       CL_LOG(CL_LOG_WARNING, "no entries in open connection list ... wait");
+#if 0
+      /* enable this for shorter timeout */
       timeout.tv_sec = 0; 
       timeout.tv_usec = 100*1000;  /* wait for 1/10 second */
+#endif
       max_fd = 0;
    }
 

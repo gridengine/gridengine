@@ -96,8 +96,11 @@ typedef enum cl_log_list_flush_method_type {
    CL_LOG_IMMEDIATE       /* cl_log_list_flush() is called on each log  */
 } cl_log_list_flush_method_t;
 
-typedef int (*cl_log_func_t)(cl_raw_list_t* log_list);
-typedef unsigned long (*cl_app_status_func_t)(void);
+
+/* function return value  function typedef              func parameter */
+typedef int               (*cl_log_func_t)              (cl_raw_list_t* log_list);
+typedef unsigned long     (*cl_app_status_func_t)       (void);
+typedef void              (*cl_error_func_t)            (int cl_error);
 
 typedef struct cl_log_list_data_type {                      /* list specific data */
    int                         current_log_level;           /* current log level */

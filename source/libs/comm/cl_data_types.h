@@ -94,10 +94,11 @@ typedef enum cl_xml_connection_type_def {
 }cl_xml_connection_type_t ;
 
 typedef enum cl_xml_connection_status_def {
-   CL_CRM_CS_UNDEFINED = 1,
-   CL_CRM_CS_CONNECTED,
-   CL_CRM_CS_DENIED,
-   CL_CRM_CS_UNSUPPORTED
+   CL_CRM_CS_UNDEFINED = 1,         /* 1 */
+   CL_CRM_CS_CONNECTED,             /* 2 */
+   CL_CRM_CS_DENIED,                /* 3 */
+   CL_CRM_CS_ENDPOINT_NOT_UNIQUE,   /* 4 */
+   CL_CRM_CS_UNSUPPORTED            /* 5 */
 }cl_xml_connection_status_t ;
 
 
@@ -386,7 +387,7 @@ typedef struct cl_com_con_statistic_type {
 
 struct cl_com_connection_type {
 
-  
+   cl_error_func_t    error_func;   /* if not NULL this function is called on errors */
    cl_com_endpoint_t* remote;   /* dst on local host in CM */
    cl_com_endpoint_t* local;    /* src on local host in CM */
    cl_com_endpoint_t* sender;   /* for routing */

@@ -133,6 +133,7 @@ int cl_com_setup_tcp_connection(cl_com_connection_t** connection, int server_por
    }
    memset(com_private, 0, sizeof(cl_com_tcp_private_t));
 
+   (*connection)->error_func = NULL;
    (*connection)->com_private = com_private;
    (*connection)->ccm_received = 0;
    (*connection)->ccm_sent = 0;
@@ -1115,6 +1116,9 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
       } 
       if (strcmp(CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_UNSUP_DATA_FORMAT,help_buf) == 0) {
          (*message)->cs_condition = CL_CRM_CS_UNSUPPORTED;
+      }
+      if (strcmp(CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_NOT_UNIQUE ,help_buf) == 0) {
+         (*message)->cs_condition = CL_CRM_CS_ENDPOINT_NOT_UNIQUE;
       }
       i++;
       help_buf_pointer = 0;

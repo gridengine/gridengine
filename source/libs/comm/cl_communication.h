@@ -92,6 +92,7 @@
 #define CL_CONNECT_RESPONSE_MESSAGE_VERSION                      "0.1"
 #define CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_OK         "connected"
 #define CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED     "access denied"
+#define CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_NOT_UNIQUE "endpoint not unique"
 #define CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_UNSUP_DATA_FORMAT "unsupported data format"
 
 /* (6) status information message (SIM) */

@@ -743,8 +743,6 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
       {"s_vmem",           "sv",  QU_s_vmem,           TYPE_MEM, CMPLXLT_OP},
       {"h_vmem",           "hv",  QU_h_vmem,           TYPE_MEM, CMPLXLT_OP},
       {"min_cpu_interval", "mci", QU_min_cpu_interval, TYPE_TIM, CMPLXGT_OP},
-      {"max_migr_time",    "mmt", QU_max_migr_time,    TYPE_TIM, CMPLXLT_OP},
-      {"max_no_migr",      "mnm", QU_max_no_migr,      TYPE_TIM, CMPLXLT_OP},
       {"", "", 0, 0, 0}                               /* delimiter */
    };
    /* *INDENT-ON* */

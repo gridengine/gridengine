@@ -38,7 +38,6 @@ struct schedd_confel {
     u_long32    sgeee_schedule_interval;      /* how often to attemt to schedule */
     u_long32    schedule_interval;      /* how often to attemt to schedule */
     u_long32    maxujobs;               /* limit on max running jobs per user */
-    u_long32    maxgjobs;               /* limit on max running jobs per group */
     u_long32    queue_sort_method;      /* use seq_no to sort else use load */
     lList*      job_load_adjustments;   /* load we use per job slot to correct host load */
     u_long32    load_adjustment_decay_time; /* after this time we assume our load sensors */

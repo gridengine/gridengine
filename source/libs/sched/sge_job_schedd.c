@@ -739,9 +739,9 @@ lList *ckpt_list        /* CK_Type */
 /*------------------------------------------------------------------*/
 lList *filter_max_running(
 lList *pending_jobs,
-lList *jc_list,      /* either user_list or group_list */
-int max_jobs,        /* either conf.maxujobs or conf.maxgjobs */
-int elem             /* either JB_owner or JB_group */
+lList *jc_list,      /* user_list */
+int max_jobs,        /* maxujobs */
+int elem             /* JB_owner */
 ) {
    lCondition *where, *exceed;
    lListElem *jce;
@@ -796,9 +796,9 @@ int elem             /* either JB_owner or JB_group */
 lList *filter_max_running_1step(
 lList *pending_jobs,
 lList *running_jobs,
-lList **jc_list,     /* either user_list or group_list */
-int max_jobs,        /* either conf.maxujobs or conf.maxgjobs */
-int elem             /* either JB_owner or JB_group */
+lList **jc_list,     /* user_list */
+int max_jobs,        /* maxujobs */
+int elem             /* JB_owner */
 ) {
    lListElem *job;
 

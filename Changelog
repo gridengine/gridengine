@@ -1,3 +1,25 @@
+AH-2001-11-23-1: Removed unused configuration parameters in queue 
+                 configuration (IssueZilla #71) and scheduler configuration 
+                 (Bugtraq #4431000). 
+                 
+                 This requires manual removal of certain parameters before 
+                 restarting daemons
+                     - max_migr_time
+                     - migr_load_thresholds
+                     - max_no_migr
+                     - klog
+                     - reauth_time
+                 from all queue configurations stored in 
+                     $SGE_ROOT/default/spool/qmaster/queues/*
+                 and 
+                     - maxgjobs
+                 from the scheduler configuration in
+                     $SGE_ROOT/default/common/sched_configuration
+
+                 This change is not yet done in qmon but only in the core 
+                 system. Please don't try to compile qmon until qmon has been 
+                 updated accordingly (aimk -no-qmon).
+
 AH-2001-11-23-0: Enhanced queue priority range to -20 to +20
                  changed data type of queue priority from ulong to string
                  removed priority attribute from queue complex

@@ -164,7 +164,6 @@ char *write_sched_configuration(int spool, int how, lListElem *ep)
    FPRINTF((fp, "algorithm                  %s\n", lGetString(ep, SC_algorithm)));
    FPRINTF((fp, "schedule_interval          %s\n", lGetString(ep, SC_schedule_interval)));
    FPRINTF((fp, "maxujobs                   " u32 "\n", lGetUlong(ep, SC_maxujobs)));
-   FPRINTF((fp, "maxgjobs                   " u32 "\n", lGetUlong(ep, SC_maxgjobs)));
    FPRINTF((fp, "queue_sort_method          %s\n", qsm2str(lGetUlong(ep, SC_queue_sort_method))));
    FPRINTF((fp, "user_sort                  %s\n", lGetUlong(ep, SC_user_sort)?"true":"false"));
    FPRINTF((fp, "job_load_adjustments       "));
@@ -362,13 +361,6 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
       return -1;
    }
 
-   /* --------- SC_maxgjobs */
-   if (!set_conf_ulong(alpp, clpp, fields, "maxgjobs", ep, SC_maxgjobs)) {
-      DEXIT;
-      return -1;
-   }
-
-
    /* --------- SC_queue_sort_method */
    str = get_conf_value(&alp, *clpp, CF_name, CF_value, "queue_sort_method");
    alp = lFreeList(alp);
@@ -519,7 +511,6 @@ static lListElem *create_default_sched_conf()
    lSetString(ep, SC_algorithm, "default");
    lSetString(ep, SC_schedule_interval, SCHEDULE_TIME);
    lSetUlong(ep, SC_maxujobs, MAXUJOBS);
-   lSetUlong(ep, SC_maxgjobs, MAXGJOBS);
 
    if (feature_is_enabled(FEATURE_SGEEE))
       lSetUlong(ep, SC_queue_sort_method, QSM_SHARE);

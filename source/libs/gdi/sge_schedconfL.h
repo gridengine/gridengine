@@ -58,7 +58,6 @@ enum {
    SC_algorithm = SC_LOWERBOUND,
    SC_schedule_interval,
    SC_maxujobs,
-   SC_maxgjobs,
    SC_queue_sort_method,
    SC_user_sort,
    SC_job_load_adjustments,
@@ -89,7 +88,6 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    SGE_KSTRING(SC_algorithm)
    SGE_STRING(SC_schedule_interval)
    SGE_ULONG(SC_maxujobs)
-   SGE_ULONG(SC_maxgjobs)
    SGE_ULONG(SC_queue_sort_method)    /* see at top of file for valid values */
    SGE_XULONG(SC_user_sort)
    SGE_TLIST(SC_job_load_adjustments, CE_Type)        /* CE_Type */
@@ -128,7 +126,6 @@ NAMEDEF(SCN)
    NAME("SC_algorithm")
    NAME("SC_schedule_interval")
    NAME("SC_maxujobs")
-   NAME("SC_maxgjobs")
    NAME("SC_queue_sort_method")
    NAME("SC_user_sort")
    NAME("SC_job_load_adjustments")

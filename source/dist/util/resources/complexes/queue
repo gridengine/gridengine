@@ -19,6 +19,4 @@ h_core           h_core     MEMORY 0               <=    YES         NO         
 s_rss            s_rss      MEMORY 0               <=    YES         NO         0
 h_rss            h_rss      MEMORY 0               <=    YES         NO         0
 min_cpu_interval mci        TIME   0:0:0           <=    NO          NO         0:0:0
-max_migr_time    mmt        TIME   0:0:0           <=    NO          NO         0:0:0
-max_no_migr      mnm        TIME   0:0:0           <=    NO          NO         0:0:0
 #--- # starts a comment but comments are not saved across edits ------------------------

@@ -125,12 +125,6 @@ u_long32 *si              /* here scheduling interval gets written */
       sc->maxujobs = uval;
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US, u32c( uval), "maxujobs"));
 
-   /* --- SC_maxgjobs */
-   uval = lGetUlong(sc_ep, SC_maxgjobs);
-   if (sc)
-      sc->maxgjobs = uval;
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c( uval), "maxgjobs"));
-
    /* --- SC_queue_sort_method (was: SC_sort_seq_no) */
    uval = lGetUlong(sc_ep, SC_queue_sort_method);
    if (sc)

@@ -325,21 +325,6 @@ int sub_command
       lSetString(new_queue, QU_priority, s);
    }
 
-   /* ---- QU_max_migr_time */
-   if (attr_mod_time_str(alpp, qep, new_queue, QU_max_migr_time, 
-         "max_migr_time",0))
-      goto ERROR;            
-
-   /* ---- QU_migr_load_thresholds */
-   if (attr_mod_threshold(alpp, qep, new_queue, QU_migr_load_thresholds, CE_name,
-            sub_command, SGE_ATTR_MIGR_LOAD_THRESHOLD, SGE_OBJ_QUEUE))
-      goto ERROR;            
- 
-   /* ---- QU_max_no_migr */
-   if (attr_mod_time_str(alpp, qep, new_queue, QU_max_no_migr, 
-         "max_no_migr",0))
-      goto ERROR;            
-
    /* ---- QU_min_cpu_interval */
    if (attr_mod_time_str(alpp, qep, new_queue, QU_min_cpu_interval, 
          "min_cpu_interval",0))
@@ -417,16 +402,6 @@ int sub_command
    /* ---- QU_shell */  
    if (attr_mod_str(alpp, qep, new_queue, QU_shell, "shell")) {
       goto ERROR;
-   }
-
-   /* ---- QU_klog */   
-   if (attr_mod_str(alpp, qep, new_queue, QU_klog, "klog")) {
-      goto ERROR;
-   }
-
-   /* ---- QU_reauth_time */
-   if (attr_mod_time_str(alpp, qep, new_queue, QU_reauth_time, "reauth time",0)) {
-      goto ERROR;            
    }
 
    /* ---- QU_notify */

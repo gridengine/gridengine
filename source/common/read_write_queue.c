@@ -201,33 +201,6 @@ int parsing_type
       return -1;
    }
 
-   /* --------- QU_max_migr_time */
-   if (!set_conf_string(alpp, clpp, fields, "max_migr_time", ep, QU_max_migr_time)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- QU_migr_load_thresholds */
-   if (parsing_type == 0) {
-      if (!set_conf_deflist(alpp, clpp, fields, "migr_load_thresholds", ep, 
-               QU_migr_load_thresholds, CE_Type, intprt_as_load_thresholds)) {
-         DEXIT;
-         return -1;
-      }
-   } else {
-      if (!set_conf_list(alpp, clpp, fields, "migr_load_thresholds", ep,
-         QU_migr_load_thresholds, CE_Type, CE_name)) {
-         DEXIT;
-         return -1;
-      }     
-   }
-
-   /* --------- QU_max_no_migr */
-   if (!set_conf_timestr(alpp, clpp, fields, "max_no_migr", ep, QU_max_no_migr)) {
-      DEXIT;
-      return -1;
-   }
-
    /* --------- QU_min_cpu_interval */
    if (!set_conf_timestr(alpp, clpp, fields, "min_cpu_interval", ep, 
             QU_min_cpu_interval)) {
@@ -275,18 +248,6 @@ int parsing_type
 
    /* --------- QU_shell */
    if (!set_conf_string(alpp, clpp, fields, "shell", ep, QU_shell)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- QU_klog */
-   if (!set_conf_string(alpp, clpp, fields, "klog", ep, QU_klog)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- QU_reauth_time */
-   if (!set_conf_timestr(alpp, clpp, fields, "reauth_time", ep, QU_reauth_time)) {
       DEXIT;
       return -1;
    }
@@ -633,17 +594,8 @@ lList *lp;
    lAppendElem(lp, ep);
    lSetList(qep, QU_load_thresholds, lp);
 
-   lSetString(qep, QU_max_migr_time, "0");
-   lp = lCreateList("migr_load_thresholds", CE_Type);
-   ep = lCreateElem(CE_Type);
-   lSetString(ep, CE_name, "np_load_avg");
-   lSetString(ep, CE_stringval, "5.00");
-   lAppendElem(lp, ep);
-   lSetList(qep, QU_migr_load_thresholds, lp);
-    
    lSetString(qep, QU_suspend_interval, "00:05:00");
    lSetUlong(qep, QU_nsuspend, 1);
-   lSetString(qep, QU_max_no_migr, "00:02:00");
    lSetString(qep, QU_min_cpu_interval, "00:05:00");
    lSetString(qep, QU_processors, "UNDEFINED");
    lSetString(qep, QU_priority, "0");
@@ -651,8 +603,6 @@ lList *lp;
    lSetUlong(qep, QU_job_slots, 1);
    lSetString(qep, QU_tmpdir, "/tmp");
    lSetString(qep, QU_shell, "/bin/csh");
-   lSetString(qep, QU_klog, "/usr/local/bin/klog");
-   lSetString(qep, QU_reauth_time, "01:40:00");
    lSetString(qep, QU_notify, "00:00:60");
    lSetString(qep, QU_initial_state, "default");
 
@@ -753,11 +703,6 @@ lListElem *qep
       lGetString(qep, QU_suspend_interval) ? 
       lGetString(qep, QU_suspend_interval) : "00:05:00"));
    FPRINTF((fp, "priority             %s\n", lGetString(qep, QU_priority)));
-   FPRINTF((fp, "max_migr_time        %s\n", 
-      lGetString(qep, QU_max_migr_time)));
-   fprint_thresholds(fp, "migr_load_thresholds ", 
-      lGetList(qep, QU_migr_load_thresholds), 1);
-   FPRINTF((fp, "max_no_migr          %s\n", lGetString(qep, QU_max_no_migr)));
    FPRINTF((fp, "min_cpu_interval     %s\n", 
       lGetString(qep, QU_min_cpu_interval)));
    FPRINTF((fp, "processors           %s\n", lGetString(qep, QU_processors)));
@@ -777,7 +722,6 @@ lListElem *qep
    FPRINTF((fp, "shell                %s\n", lGetString(qep, QU_shell)));
    FPRINTF((fp, "shell_start_mode     %s\n", 
       (s=lGetString(qep, QU_shell_start_mode))?s:"NONE"));
-   FPRINTF((fp, "klog                 %s\n", lGetString(qep, QU_klog)));
    FPRINTF((fp, "prolog               %s\n", 
       (s=lGetString(qep, QU_prolog))?s:"NONE"));
    FPRINTF((fp, "epilog               %s\n", 
@@ -790,7 +734,6 @@ lListElem *qep
       (s=lGetString(qep, QU_resume_method))?s:"NONE"));
    FPRINTF((fp, "terminate_method     %s\n", 
       (s=lGetString(qep, QU_terminate_method))?s:"NONE"));
-   FPRINTF((fp, "reauth_time          %s\n", lGetString(qep, QU_reauth_time)));
    FPRINTF((fp, "notify               %s\n", lGetString(qep, QU_notify)));
    ret = fprint_cull_list(fp, "owner_list           ", 
       lGetList(qep, QU_owner_list), US_name);

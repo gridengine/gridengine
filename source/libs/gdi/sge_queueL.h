@@ -109,7 +109,6 @@ enum {
    QU_qhostname,
    QU_tmpdir,
    QU_shell,
-   QU_klog,
 
    QU_seq_no,
    QU_queue_number,
@@ -150,14 +149,10 @@ enum {
    QU_stamp,
 
    QU_min_cpu_interval,
-   QU_max_migr_time,
-   QU_max_no_migr,
 
-   QU_migr_load_thresholds,
    QU_enable_migr,
 
    QU_master,
-   QU_reauth_time,
    QU_state,
    QU_notify,
 
@@ -202,7 +197,6 @@ ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
    SGE_HOSTH(QU_qhostname)   /* qualified hostname */ /* CR - hostname change */
    SGE_STRING(QU_tmpdir)      /* temporary WD */
    SGE_STRING(QU_shell)
-   SGE_XSTRING(QU_klog)
 
    SGE_ULONG(QU_seq_no)                      /* sequence # for use by qmon */
    SGE_XULONGHU(QU_queue_number)               /* unique internal # of the queue */
@@ -241,12 +235,8 @@ ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
    SGE_XSTRING(QU_h_vmem)     /* hard virtual memory size */
    SGE_XULONG(QU_stamp)       /* for the scheduler */
    SGE_STRING(QU_min_cpu_interval)    /* min time between two ckpt cores */
-   SGE_STRING(QU_max_migr_time)       /* max time allowed for ckpting */
-   SGE_STRING(QU_max_no_migr)         /* time job can spend uninterrupted */
-   SGE_TLIST(QU_migr_load_thresholds, CE_Type) /* - max load before migrate */
    SGE_XULONG(QU_enable_migr)         /* flag controlled via qrestart */
    SGE_XULONG(QU_master)
-   SGE_XSTRING(QU_reauth_time)
    SGE_RULONG(QU_state)
    SGE_STRING(QU_notify)              /* seconds to notify job before SIGKILL/SIGSTOP */
    SGE_XLIST(QU_acl, US_Type)         /* US_Type - valid user linked list */
@@ -305,7 +295,6 @@ NAMEDEF(QUN)
    NAME("QU_qhostname")
    NAME("QU_tmpdir")
    NAME("QU_shell")
-   NAME("QU_klog")
 
    NAME("QU_seq_no")
    NAME("QU_queue_number")
@@ -345,14 +334,10 @@ NAMEDEF(QUN)
 
    NAME("QU_stamp")
    NAME("QU_min_cpu_interval")
-   NAME("QU_max_migr_time")
-   NAME("QU_max_no_migr")
 
-   NAME("QU_migr_load_thresholds")
    NAME("QU_enable_migr")
 
    NAME("QU_master")
-   NAME("QU_reauth_time")
    NAME("QU_state")
    NAME("QU_notify")
 

@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2001/11/23 09:26:01 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2001/11/23 15:20:38 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2001/11/23 09:26:01 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2001/11/23 15:20:38 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -130,11 +130,6 @@ if one of the \fBsuspend_thresholds\fP (see above for both) is exceeded
 by the current load on the host on which the queue is located.
 The time interval is also used when enabling the jobs.
 .\"
-.SS "\fBmigr_load_thresholds\fP"
-A list of load thresholds with the same semantics as that of the \fBload_thresholds\fP
-parameter (see above) except that exceeding one of the denoted
-thresholds initiates migration of the jobs from the queue.
-This parameter has no effect in this release.
 .SS "\fBpriority\fP"
 The \fBpriority\fP parameter specifies the
 .M nice 2
@@ -142,30 +137,6 @@ value at which jobs in this queue will be run. The type is number and the
 default is zero (which means no nice value is set explicitly). Negative 
 values (up to -20) correspond to a higher scheduling priority, positive 
 values (up to +20) correspond to a lower scheduling priority.
-.SS "\fBmax_migr_time\fP"
-The time reserved for checkpointing jobs to be migrated and aborted.
-Checkpointing jobs due to be aborted are first sent a SIGTSTP. Everyone
-in the concerned process group may catch this signal and may react
-appropriately.  After \fBmax_migr_time\fP seconds, a SIGKILL is sent
-and the processes are aborted.
-\fBNote:\fP If you set
-\fBmax_migr_time\fP too high a user requesting full interactive usage
-may suffer \fBmax_migr_time\fP seconds from a still running job.
-\fBMax_migr_time\fP is of type time and The default is 0 seconds.
-.SS "\fBmigr_load_thresholds\fP"
-A list of load thresholds with the same semantics as that of the \fBload_thresholds\fP
-parameter (see above) except that exceeding one of the denoted
-thresholds initiates migration of checkpointing jobs from the queue.
-It is recommended to set the migration load values high enough above
-the \fBload_thresholds\fP
-to prevent the jobs from forcing migrations by their own activity.
-.SS "\fBmax_no_migr\fP"
-The time a checkpointing job is allowed to spend in non-interruptible
-sections of the batch script. Non-interruptible sections are everything outside
-.M qrestart 1
-commands. If a job exceeds this time limit it is killed and the job owner
-is notified. The default for \fBmax_no_migr\fP is 2 minutes. It is of type
-time.
 .SS "\fBmin_cpu_interval\fP"
 The time between two automatic checkpoints in case of
 transparently checkpointing jobs. The maximum of the time requested by
@@ -321,12 +292,6 @@ shell. The shell will only forward them to the job if they are not
 recognized as valid shell options.
 .PP
 The default for \fBshell_start_mode\fP is \fIposix_compliant\fP.
-.SS "\fBklog\fP"
-The executable path of the klog utility on the queue host. It is
-used for AFS reauthentication. The type of the parameter is string;
-the default is /usr/local/bin/klog.
-.PP
-Not supported in this release.
 .SS "\fBprolog\fP"
 The executable path of a shell script that is started before execution
 of xxQS_NAMExx jobs with the same environment setting as that for the
@@ -439,13 +404,6 @@ The name of the queue.
 .IP "\fI$job_pid\fP"
 The pid of the job.
 
-.SS "\fBreauth_time\fP"
-The time gap between consecutive AFS reauthentications. \fBReauth_time\fP
-should be less than the ticket expiration time that is configured for
-the local AFS installation. The type of the parameter is time and
-the default value is 1 hour and 40 minutes, i.e. 100 minutes.
-.PP
-Not supported in this release.
 .SS "\fBnotify\fP"
 The time waited between delivery of SIGUSR1/SIGUSR2 
 notification signals and suspend/kill signals if job was submitted with

@@ -491,7 +491,6 @@ int sge_setup_qmaster()
                }
                if (ensure_attrib_available(NULL, qep, QU_load_thresholds) ||
                    ensure_attrib_available(NULL, qep, QU_suspend_thresholds) ||
-                   ensure_attrib_available(NULL, qep, QU_migr_load_thresholds) ||
                    ensure_attrib_available(NULL, qep, QU_consumable_config_list)) {
                   qep = lFreeElem(qep); 
                   DEXIT;

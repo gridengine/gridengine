@@ -171,6 +171,7 @@ u_long32 flags
    DENTER(TOP_LAYER, "read_configuration");
 
    if (!(fp = fopen(fname, "r"))) {
+      WARNING((SGE_EVENT, MSG_CONFIG_CONF_ERROROPENINGSPOOLFILE_SS, fname, strerror(errno)));
       DEXIT;
       return NULL;
    }
@@ -193,7 +194,7 @@ u_long32 flags
          first_line = 0;
          if (!strcmp(name, "conf_version")) {
             if (!(value = strtok(NULL, " \t\n"))) {
-               /* return line if value is empty */
+               WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
                fclose(fp);
                DEXIT;
                return NULL;
@@ -201,13 +202,14 @@ u_long32 flags
             sscanf(value, u32, &conf_version);
             DPRINTF(("read conf %s version " u32"\n", conf_name, conf_version));
             continue;
-         }
-         else
+         } else {
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_VERSIONNOTFOUNDONREADINGSPOOLFILE));
+         }   
       }
+
       ep = lAddElemStr(&lp, CF_name, name, CF_Type);
       if (!ep) {
-         /* return line if name is unknown */
+         WARNING((SGE_EVENT, MSG_CONFIG_CONF_ERRORSTORINGCONFIGVALUE_S, name));
          lFreeList(lp);
          fclose(fp);
          DEXIT;
@@ -224,11 +226,13 @@ u_long32 flags
                range_list_parse_from_string(&rlp, &alp, value, 
                                             0, 0, INF_NOT_ALLOWED);
                if (rlp == NULL) {
+                  WARNING((SGE_EVENT, MSG_CONFIG_CONF_INCORRECTVALUEFORCONFIGATTRIB_SS, 
+                           name, value));
                   lFreeList(alp);
                   lFreeList(lp);
                   fclose(fp);
                   DEXIT;
-                  return (NULL);
+                  return NULL;
                } else {
                   /* gids < 1000 are not allowed */
                   lListElem *rep;
@@ -237,7 +241,8 @@ u_long32 flags
                      long min;
 
                      min = lGetUlong(rep, RN_min);
-                     if (min < 1000) {
+                     if (min < 100) {
+                        WARNING((SGE_EVENT, MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I, 100));
                         lFreeList(alp);
                         lFreeList(lp);
                         fclose(fp);
@@ -259,6 +264,7 @@ u_long32 flags
          if (value) {
             lSetString(ep, CF_value, value);
          } else {
+            WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
             lFreeList(lp);
             fclose(fp);
             DEXIT;
@@ -286,6 +292,7 @@ u_long32 flags
          !strcmp(name, "rsh_daemon")) {
          if (!(value = strtok(NULL, "\t\n"))) {
             /* return line if value is empty */
+            WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
             lFreeList(lp);
             fclose(fp);
             DEXIT;
@@ -296,10 +303,9 @@ u_long32 flags
             value++;
 
          lSetString(ep, CF_value, value);
-      } 
-      else {
+      } else {
          if (!(value = strtok(NULL, " \t\n"))) {
-            /* return line if value is empty */
+            WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
             lFreeList(lp);
             fclose(fp);
             DEXIT;
@@ -310,6 +316,7 @@ u_long32 flags
 
          if (strtok(NULL, " \t\n")) {
             /* Allow only one value per line */
+            WARNING((SGE_EVENT, MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S, name));
             fclose(fp);
             DEXIT;
             return NULL;

@@ -1,3 +1,9 @@
+JG-2002-06-05-1: Bugfix:    Error handling when reading configuration at 
+                            qmaster startup was incomplete and produced 
+                            confusing error messages.
+                 Issue:     #226
+                 Bugtraq:   #4665789
+
 JG-2002-06-05-0: Bugfix:    Load values on HP-UX 11 multiprocessor machines 
                             were incorrect.
                  Issue:     #246

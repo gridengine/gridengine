@@ -46,7 +46,24 @@
 int lerrno;
 const char* get_lerror_string(int nr);
 
-const char* get_lerror_string(int nr) { 
+/****** cull/lerrno/get_lerror_string() ****************************************
+*  NAME
+*     get_lerror_string() -- Error number to message translation 
+*
+*  SYNOPSIS
+*     const char* get_lerror_string(int nr) 
+*
+*  FUNCTION
+*    Error number to message translation 
+*
+*  INPUTS
+*     int nr - Error number 
+*
+*  RESULT
+*     const char* - Error message
+*******************************************************************************/
+const char* get_lerror_string(int nr) 
+{ 
    switch(nr)
    {
        case LEMALLOC  :   
@@ -163,21 +180,12 @@ const char* get_lerror_string(int nr) {
    return "";
 }
 
-
-/* #define  MAX_LERROR     (sizeof(le_errlist)/sizeof(char*)) */
-
-int lerror()
+int lerror(void)
 {
    const char* errorText = NULL;
 
    DENTER(TOP_LAYER, "lerrno");
 
-/*
-   if (lerrno < 0 || lerrno > (int) MAX_LERROR) {
-      DEXIT;
-      return -1;
-   }
-*/
    errorText = get_lerror_string(lerrno);
    
    if (errorText == NULL) {
@@ -190,10 +198,7 @@ int lerror()
       return -1;
    }
 
-   DPRINTF(("%s\n", errorText ));
-/*
-   DPRINTF(("%s\n", le_errlist[lerrno - 1]));
-*/
+   DPRINTF(("%s\n", errorText));
 
    DEXIT;
    return 0;

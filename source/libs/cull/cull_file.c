@@ -59,19 +59,32 @@
 
 extern long compression_level;
 
-/****
- **** lWriteElemToDisk
- ****
- **** Writes the Element `ep` to the file named `prefix`/`name`.
- **** either prefix or name can be null.
- **** Returns 1 on error, else 0.
- ****/
-int lWriteElemToDisk(
-const lListElem *ep,
-const char *prefix,
-const char *name,
-const char *obj_name 
-) {
+/****** cull/file/lWriteElemToDisk() ******************************************
+*  NAME
+*     lWriteElemToDisk() -- Writes a element to file 
+*
+*  SYNOPSIS
+*     int lWriteElemToDisk(const lListElem *ep, const char *prefix, 
+*                          const char *name, const char *obj_name) 
+*
+*  FUNCTION
+*     Writes the Element 'ep' to the file named 'prefix'/'name'.
+*     Either 'prefix' or 'name can be null. 
+*
+*  INPUTS
+*     const lListElem *ep  - CULL element 
+*     const char *prefix   - Path 
+*     const char *name     - Filename 
+*     const char *obj_name - 
+*
+*  RESULT
+*     int - error state 
+*         0 - OK
+*         1 - Error
+******************************************************************************/
+int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
+                     const char *obj_name) 
+{
    stringT filename;
    sge_pack_buffer pb;
    int ret, size, fd;
@@ -184,21 +197,34 @@ const char *obj_name
    return 0;
 }
 
-/****
- **** lReadElemFromDisk
- ****
- **** Reads a lListElem of the specified type from the
- **** file `prefix`/`name`.
- **** either prefix or name can be null.
- **** Returns pointer to the read Element or Null in 
- **** case of an error.
- ****/
-lListElem *lReadElemFromDisk(
-const char *prefix,
-const char *name,
-const lDescr *type,
-const char *obj_name 
-) {
+/****** cull/file/lReadElemFromDisk() ****************************************
+*  NAME
+*     lReadElemFromDisk() -- Reads a cull element from file 
+*
+*  SYNOPSIS
+*     lListElem* lReadElemFromDisk(const char *prefix, 
+*                                  const char *name, 
+*                                  const lDescr *type, 
+*                                  const char *obj_name) 
+*
+*  FUNCTION
+*     Reads a lListElem of the specified 'type' from the file
+*     'prefix'/'name'. Either 'prefix' or 'name' can be null.
+*     Returns a pointer to the read element or NULL in case
+*     of an error 
+*
+*  INPUTS
+*     const char *prefix   - Path 
+*     const char *name     - Filename 
+*     const lDescr *type   - Type 
+*     const char *obj_name - 
+*
+*  RESULT
+*     lListElem* - Read CULL element
+*******************************************************************************/
+lListElem *lReadElemFromDisk(const char *prefix, const char *name, 
+                             const lDescr *type, const char *obj_name) 
+{
    stringT filename;
    sge_pack_buffer pb;
    SGE_STRUCT_STAT statbuf;

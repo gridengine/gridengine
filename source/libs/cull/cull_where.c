@@ -50,8 +50,6 @@
 #include "cull_parse.h"
 #include "cull_lerrnoP.h"
 
-/* -------- intern prototypes --------------------------------- */
-
 static lCondition *read_val(lDescr *dp, va_list *app);
 static lCondition *factor(lDescr *dp, va_list *app);
 static lCondition *product(lDescr *dp, va_list *app);
@@ -66,18 +64,29 @@ static lCondition *_negfactor(lDescr *dp, WhereArgList *wapp);
 static lCondition *_sum(lDescr *dp, WhereArgList *wapp);
 static lCondition *_subscope(WhereArgList *wapp);
 
-/* =========== implementation ================================= */
+#if 0 /* EB: not used */
+static lCondition *_lWhere(const char *fmt, WhereArgList wap);
+#endif
 
-/* ------------------------------------------------------------ 
-
-   comines two conditions cp0 and cp1 
-   logically with an "OR"  
-
- */
-lCondition *lOrWhere(
-const lCondition *cp0,
-const lCondition *cp1 
-) {
+/****** cull/where/lOrWhere() *************************************************
+*  NAME
+*     lOrWhere() -- Combines two conditions with an OR
+*
+*  SYNOPSIS
+*     lCondition* lOrWhere(const lCondition *cp0, const lCondition *cp1) 
+*
+*  FUNCTION
+*     Combines the conditions 'cp0' and 'cp1' logically with an OR 
+*
+*  INPUTS
+*     const lCondition *cp0 - first condition 
+*     const lCondition *cp1 - second condition 
+*
+*  RESULT
+*     lCondition* - cp0 OR cp1 
+******************************************************************************/
+lCondition *lOrWhere(const lCondition *cp0, const lCondition *cp1) 
+{
    lCondition *newcp;
 
    DENTER(TOP_LAYER, "lOrWhere");
@@ -102,16 +111,25 @@ const lCondition *cp1
    return newcp;
 }
 
-/* ------------------------------------------------------------ 
-
-   comines two conditions cp0 and cp1 
-   logically with an "AND"  
-
- */
-lCondition *lAndWhere(
-const lCondition *cp0,
-const lCondition *cp1 
-) {
+/****** cull/where/lAndWhere() ************************************************
+*  NAME
+*     lAndWhere() -- Cobines two conditions with an AND 
+*
+*  SYNOPSIS
+*     lCondition* lAndWhere(const lCondition *cp0, const lCondition *cp1) 
+*
+*  FUNCTION
+*     Combines the conditions 'cp0' and 'cp1' with an logical AND. 
+*
+*  INPUTS
+*     const lCondition *cp0 - first condition 
+*     const lCondition *cp1 - second condition 
+*
+*  RESULT
+*     lCondition* - 'cp0' AND 'cp1' 
+******************************************************************************/
+lCondition *lAndWhere(const lCondition *cp0, const lCondition *cp1) 
+{
    lCondition *newcp;
 
    DENTER(TOP_LAYER, "lAndWhere");
@@ -136,15 +154,22 @@ const lCondition *cp1
    return newcp;
 }
 
-/* ------------------------------------------------------------ 
-
-   writes a lCondition struct (for debugging purposes)
-
- */
-void lWriteWhereTo(
-const lCondition *cp,
-FILE *fp 
-) {
+/****** cull/where/lWriteWhereTo() ********************************************
+*  NAME
+*     lWriteWhereTo() -- Write a condition struct to file stream.
+*
+*  SYNOPSIS
+*     void lWriteWhereTo(const lCondition *cp, FILE *fp) 
+*
+*  FUNCTION
+*     Write a condition struct to file stream. 
+*
+*  INPUTS
+*     const lCondition *cp - condition 
+*     FILE *fp             - file stream 
+******************************************************************************/
+void lWriteWhereTo(const lCondition *cp, FILE *fp) 
+{
    int i;
    static int depth = -1;
    char space[80];
@@ -394,17 +419,30 @@ FILE *fp
    return;
 }
 
-/* ------------------------------------------------------------
-
-   lWhere builds the lCondition tree.
-   The condition is stated as a format string and an associated 
-   va_alist of the following form:
-
-   %I field ( unequal lList: J_id)
-   == comparison operator ( <, >, <=, >=, !=, ==)
-   %d value type descriptor (%s string, %d int, %u ulong) : 375
-
- */
+/****** cull/where/lWhere() ***************************************************
+*  NAME
+*     lWhere() -- Creates a condition tree 
+*
+*  SYNOPSIS
+*     lCondition* lWhere(const char *fmt, ...) 
+*
+*  FUNCTION
+*     Creates a condition tree. The condition is stated as a format 
+*     string and an associated list of additional parameters.
+*
+*  INPUTS
+*     const char *fmt - format string
+*                       %I                         - JB_job_number
+*                                                    (!= lList)
+*                       ==, <, >, <=, >=, !=, ==   - comp. operator
+*                       %s                         - string
+*                       %d                         - int
+*                       %u                         - ulong
+*     ...             - additional Arguments 
+*
+*  RESULT
+*     lCondition* - new condition 
+******************************************************************************/
 lCondition *lWhere(const char *fmt,...)
 {
    lCondition *cond;
@@ -437,9 +475,8 @@ lCondition *lWhere(const char *fmt,...)
    return cond;
 }
 
-static lCondition *subscope(
-va_list *app 
-) {
+static lCondition *subscope(va_list *app) 
+{
    lDescr *dp = NULL;
    lCondition *cp = NULL;
 
@@ -482,10 +519,8 @@ va_list *app
    return cp;
 }
 
-static lCondition *sum(
-lDescr *dp,
-va_list *app 
-) {
+static lCondition *sum(lDescr *dp, va_list *app) 
+{
    lCondition *cp, *newcp;
 
    DENTER(CULL_LAYER, "sum");
@@ -511,10 +546,8 @@ va_list *app
    return cp;
 }
 
-static lCondition *product(
-lDescr *dp,
-va_list *app 
-) {
+static lCondition *product(lDescr *dp, va_list *app) 
+{
    lCondition *cp, *newcp;
 
    DENTER(CULL_LAYER, "product");
@@ -540,10 +573,8 @@ va_list *app
    return cp;
 }
 
-static lCondition *factor(
-lDescr *dp,
-va_list *app 
-) {
+static lCondition *factor(lDescr *dp, va_list *app) 
+{
    lCondition *cp;
 
    DENTER(CULL_LAYER, "factor");
@@ -597,10 +628,8 @@ va_list *app
 
 }
 
-static lCondition *read_val(
-lDescr *dp,
-va_list *app 
-) {
+static lCondition *read_val(lDescr *dp, va_list *app) 
+{
    /*       
       without the usage of s insight throws
       a READ_OVERFLOW 
@@ -751,46 +780,45 @@ va_list *app
    return cp;
 }
 
-/* ############################################################# */
-/* ------------------------------------------------------------
+#if 0 /* EB: not used */
 
-   _lWhere builds the lCondition tree.
-   The condition is stated as a format string and an associated 
-   WhereArgList of the following form:
-
-   %I field ( unequal lList: J_id)
-   == comparison operator ( <, >, <=, >=, !=, ==)
-   %d value type descriptor (%s string, %d int, %u ulong) : 375
-
-   Ansi Prototype:
-   lCondition* _lWhere( char *fmt, WhereArgList wap) 
-
-   The WhereArg struct is built as follows:
-   struct _WhereArg {
-   lDescr      *descriptor;
-   int         field;
-   lMultitype  *value;
-   };
-   e.g. where = lWhere("%T( %I == %s && %I -> %T ( %I < %d ) )", QueueT,
-   Q_hostname, "durin.q", Q_ownerlist, OwnerT, O_ownerage, 22);
-
-   -- the corresponding WhereArgList is:
-   WhereArg whereargs[20];
-
-   whereargs[0].descriptor = QueueT;
-   whereargs[1].field      = Q_hostname;
-   whereargs[1].value.str  = "durin.q";
-   whereargs[2].field      = Q_ownerlist;
-   whereargs[2].descriptor = OwnerT;
-   whereargs[3].field      = O_ownerage;
-   whereargs[3].value.i    = 22;
-
-   where = _lWhere("%T( %I == %s && %I -> %T ( %I < %d ) )", whereargs);
- */
-lCondition *_lWhere(
-const char *fmt,
-WhereArgList wap 
-) {
+/****** cull/where/_lWhere() **************************************************
+*  NAME
+*     _lWhere() -- Builds a condition tree 
+*
+*  SYNOPSIS
+*     static lCondition* _lWhere(const char *fmt, WhereArgList wap) 
+*
+*  FUNCTION
+*     Builds a condition tree. Information for the condition tree
+*     has to be given by a format string and a argument list. 
+*
+*  INPUTS
+*     const char *fmt  - format string 
+*     WhereArgList wap - argument array 
+*
+*  RESULT
+*     lCondition* - condition 
+*
+*  EXAMPLE
+*     where0 and where1 condition are equivalent:
+*        where0 = lWhere("%T( %I == %s && %I -> %T ( %I < %d ) )", 
+*                        QueueT, Q_hostname, "durin.q", 
+*                        Q_ownerlist, OwnerT, O_ownerage, 22);
+*
+*        WhereArg whereargs[20];
+*        whereargs[0].descriptor = QueueT;
+*        whereargs[1].field      = Q_hostname;
+*        whereargs[1].value.str  = "durin.q";
+*        whereargs[2].field      = Q_ownerlist;
+*        whereargs[2].descriptor = OwnerT;
+*        whereargs[3].field      = O_ownerage;
+*        whereargs[3].value.i    = 22;
+*        where1 = _lWhere("%T( %I == %s && %I -> %T ( %I < %d ) )", 
+*                         whereargs);
+*******************************************************************************/
+static lCondition *_lWhere(const char *fmt, WhereArgList wap) 
+{
    lCondition *cond;
 
    DENTER(CULL_LAYER, "_lWhere");
@@ -819,9 +847,10 @@ WhereArgList wap
    return cond;
 }
 
-static lCondition *_subscope(
-WhereArgList *wapp 
-) {
+#endif
+
+static lCondition *_subscope(WhereArgList *wapp) 
+{
    lDescr *dp = NULL;
    lCondition *cp = NULL;
 
@@ -833,8 +862,11 @@ WhereArgList *wapp
       return NULL;
    }
    eat_token();                 /* eat %T */
-   /* Deliver descriptor & increment the WhereArgList to the next element */
-/*    DPRINTF(("(*wapp) = %p\n", *wapp)); */
+   /* 
+    * Deliver descriptor & increment the WhereArgList to 
+    * the next element 
+    */
+   /*    DPRINTF(("(*wapp) = %p\n", *wapp)); */
    dp = (*wapp)++->descriptor;
    if (!(dp)) {
       LERROR(LEDESCRNULL);
@@ -867,10 +899,8 @@ WhereArgList *wapp
    return cp;
 }
 
-static lCondition *_sum(
-lDescr *dp,
-WhereArgList *wapp 
-) {
+static lCondition *_sum(lDescr *dp, WhereArgList *wapp) 
+{
    lCondition *cp, *newcp;
 
    DENTER(CULL_LAYER, "_sum");
@@ -896,10 +926,8 @@ WhereArgList *wapp
    return cp;
 }
 
-static lCondition *_product(
-lDescr *dp,
-WhereArgList *wapp 
-) {
+static lCondition *_product(lDescr *dp, WhereArgList *wapp) 
+{
    lCondition *cp, *newcp;
 
    DENTER(CULL_LAYER, "_product");
@@ -925,10 +953,8 @@ WhereArgList *wapp
    return cp;
 }
 
-static lCondition *_factor(
-lDescr *dp,
-WhereArgList *wapp 
-) {
+static lCondition *_factor(lDescr *dp, WhereArgList *wapp) 
+{
    lCondition *cp;
 
    DENTER(CULL_LAYER, "_factor");
@@ -953,10 +979,8 @@ WhereArgList *wapp
    return cp;
 }
 
-static lCondition *_negfactor(
-lDescr *dp,
-WhereArgList *wapp 
-) {
+static lCondition *_negfactor(lDescr *dp, WhereArgList *wapp) 
+{
    lCondition *cp;
 
    DENTER(CULL_LAYER, "_negfactor");
@@ -982,10 +1006,8 @@ WhereArgList *wapp
 
 }
 
-static lCondition *_read_val(
-lDescr *dp,
-WhereArgList *wapp 
-) {
+static lCondition *_read_val(lDescr *dp, WhereArgList *wapp) 
+{
    lCondition *cp;
    int token;
 
@@ -1145,15 +1167,24 @@ WhereArgList *wapp
    return cp;
 }
 
-/* ############################################################# */
-/* ------------------------------------------------------------ 
-
-   lFreeWhere frees all conditions depending on cp.
- */
-lCondition *lFreeWhere(
-lCondition *cp 
-) {
-
+/****** cull/where/lFreeWhere() ***********************************************
+*  NAME
+*     lFreeWhere() -- Free a condition
+*
+*  SYNOPSIS
+*     lCondition* lFreeWhere(lCondition *cp) 
+*
+*  FUNCTION
+*     Free a condition.
+*
+*  INPUTS
+*     lCondition *cp - condition 
+*
+*  RESULT
+*     lCondition* - NULL
+******************************************************************************/ 
+lCondition *lFreeWhere(lCondition *cp) 
+{
    DENTER(CULL_LAYER, "lFreeWhere");
 
    if (!cp) {
@@ -1207,16 +1238,27 @@ lCondition *cp
    return NULL;
 }
 
-/* ------------------------------------------------------------ 
-
-   lCompare returns true(1) or false(0). It decides if the element ep
-   suffices the condition cp.
- */
-
-int lCompare(
-const lListElem *ep,
-const lCondition *cp 
-) {
+/****** cull/where/lCompare() *************************************************
+*  NAME
+*     lCompare() -- Decide if a element suffices a condition 
+*
+*  SYNOPSIS
+*     int lCompare(const lListElem *ep, const lCondition *cp) 
+*
+*  FUNCTION
+*     Decide if a element suffices a condition.
+*
+*  INPUTS
+*     const lListElem *ep  - element 
+*     const lCondition *cp - condition 
+*
+*  RESULT
+*     int - result
+*         0 - flase
+*         1 - true 
+******************************************************************************/
+int lCompare(const lListElem *ep, const lCondition *cp) 
+{
    int result = 0;
    const char *str1, *str2;
 
@@ -1281,26 +1323,33 @@ const lCondition *cp
          break;
 
       case lUlongT:
-         result = ulongcmp(lGetPosUlong(ep, cp->operand.cmp.pos), cp->operand.cmp.val.ul);
+         result = ulongcmp(lGetPosUlong(ep, cp->operand.cmp.pos), 
+                           cp->operand.cmp.val.ul);
          break;
       case lListT:
-         result = (lFindFirst(lGetPosList(ep, cp->operand.cmp.pos), cp->operand.cmp.val.cp) != NULL);
+         result = (lFindFirst(lGetPosList(ep, cp->operand.cmp.pos), 
+                              cp->operand.cmp.val.cp) != NULL);
          DEXIT;
          return result;
       case lFloatT:
-         result = floatcmp(lGetPosFloat(ep, cp->operand.cmp.pos), cp->operand.cmp.val.fl);
+         result = floatcmp(lGetPosFloat(ep, cp->operand.cmp.pos), 
+                           cp->operand.cmp.val.fl);
          break;
       case lDoubleT:
-         result = doublecmp(lGetPosDouble(ep, cp->operand.cmp.pos), cp->operand.cmp.val.db);
+         result = doublecmp(lGetPosDouble(ep, cp->operand.cmp.pos), 
+                            cp->operand.cmp.val.db);
          break;
       case lLongT:
-         result = longcmp(lGetPosLong(ep, cp->operand.cmp.pos), cp->operand.cmp.val.l);
+         result = longcmp(lGetPosLong(ep, cp->operand.cmp.pos), 
+                          cp->operand.cmp.val.l);
          break;
       case lCharT:
-         result = charcmp(lGetPosChar(ep, cp->operand.cmp.pos), cp->operand.cmp.val.c);
+         result = charcmp(lGetPosChar(ep, cp->operand.cmp.pos), 
+                          cp->operand.cmp.val.c);
          break;
       case lRefT:
-         result = refcmp(lGetPosRef(ep, cp->operand.cmp.pos), cp->operand.cmp.val.ref);
+         result = refcmp(lGetPosRef(ep, cp->operand.cmp.pos), 
+                         cp->operand.cmp.val.ref);
          break;
       default:
          unknownType("lCompare");
@@ -1336,7 +1385,7 @@ const lCondition *cp
 
    case STRCASECMP:
    case HOSTNAMECMP:
-      if ( (cp->operand.cmp.mt != lStringT) && (cp->operand.cmp.mt != lHostT) ) {
+      if ((cp->operand.cmp.mt != lStringT) && (cp->operand.cmp.mt != lHostT)) {
          unknownType("lCompare");
          DEXIT;
          return 0;
@@ -1366,16 +1415,18 @@ const lCondition *cp
       break;
 
    case PATTERNCMP:
-      if ( (cp->operand.cmp.mt != lStringT) && (cp->operand.cmp.mt != lHostT) ) {
+      if ((cp->operand.cmp.mt != lStringT) && (cp->operand.cmp.mt != lHostT)) {
          unknownType("lCompare");
          DEXIT;
          return 0;
       }
       if (cp->operand.cmp.mt == lStringT) {
-         result = !fnmatch(cp->operand.cmp.val.str, lGetPosString(ep, cp->operand.cmp.pos), 0);
+         result = !fnmatch(cp->operand.cmp.val.str, 
+                           lGetPosString(ep, cp->operand.cmp.pos), 0);
       } 
       if (cp->operand.cmp.mt == lHostT) {
-         result = !fnmatch(cp->operand.cmp.val.host, lGetPosHost(ep, cp->operand.cmp.pos), 0);
+         result = !fnmatch(cp->operand.cmp.val.host, 
+                           lGetPosHost(ep, cp->operand.cmp.pos), 0);
       }
       break;
 
@@ -1386,7 +1437,8 @@ const lCondition *cp
          DEXIT;
          return 0;
       }
-      result = bitmaskcmp(lGetPosUlong(ep, cp->operand.cmp.pos), cp->operand.cmp.val.ul);
+      result = bitmaskcmp(lGetPosUlong(ep, cp->operand.cmp.pos), 
+                          cp->operand.cmp.val.ul);
       break;
 
    case AND:
@@ -1419,13 +1471,24 @@ const lCondition *cp
    return result;
 }
 
-/* ------------------------------------------------------------ 
-
-   lCopyWhere copy a lCondition tree 
- */
-lCondition *lCopyWhere(
-const lCondition *cp 
-) {
+/****** cull/where/lCopyWhere() ***********************************************
+*  NAME
+*     lCopyWhere() -- Copy a condition
+*
+*  SYNOPSIS
+*     lCondition* lCopyWhere(const lCondition *cp) 
+*
+*  FUNCTION
+*     Copy a condition.
+*
+*  INPUTS
+*     const lCondition *cp - condition 
+*
+*  RESULT
+*     lCondition* - Copy of 'cp'
+******************************************************************************/
+lCondition *lCopyWhere(const lCondition *cp) 
+{
 
    lCondition *new = NULL;
 

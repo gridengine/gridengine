@@ -43,7 +43,6 @@ extern "C" {
 
 void lWriteWhatTo(const lEnumeration *ep, FILE *fp);
 lEnumeration *lWhat(const char *fmt, ...);
-lEnumeration *_lWhat(const char *fmt, const lDescr *dp, const int *nm_list, int nm);
 lEnumeration *lFreeWhat(lEnumeration *ep);
 lEnumeration *lCopyWhat(const lEnumeration *ep);
 int lCountWhat(const lEnumeration *ep, const lDescr *dp);

@@ -29,6 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <string.h>
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
@@ -36,7 +37,6 @@
 #include "sge_answerL.h"
 #include "sge_permissionL.h"
 #include "sgermon.h"
-
 
 /****** gdi/sge/sge_gdi_get_mapping_name() ************************************
 *  NAME

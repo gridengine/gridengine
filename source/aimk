@@ -1848,13 +1848,13 @@ if ( "$ADOC" == 1) then
    set REVISION = `grep GDI_VERSION libs/gdi/version.c | cut -f 2 -d '"'`
 
    echo "Creating documentation for libs: libs.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Libraries" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_LIBS >libs.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Libraries" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_LIBS -o $COMPILE_ARCH/libs.texi
 
    echo "Creating documentation for core system: core.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Core System" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_CORE >core.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Core System" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_CORE -o $COMPILE_ARCH/core.texi
 
    echo "Creating documentation for testsuite: testsuite.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Testsuite" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_TESTSUITE >testsuite.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Testsuite" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_TESTSUITE -o $COMPILE_ARCH/testsuite.texi
 
    echo "To create a html or pdf documentation, execute for example"
    echo "texi2html libs.texi   or"

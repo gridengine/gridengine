@@ -54,6 +54,9 @@
 
 /* ---------- global variable --------------------------------- */
 
+static char *_lNm2Str(const lNameSpace *nsp, int nm);
+static int _lStr2Nm(const lNameSpace *nsp, const char *str);
+
 static const lNameSpace *lNameStr = NULL;
 
 static char *multitypes[] =
@@ -68,15 +71,11 @@ static char *multitypes[] =
    "lStringT",
    "lListT",
    "lRefT",
-   "lHostT"      /* CR - hostname change */
+   "lHostT" 
 };
 
-/* =========== implementation ================================= */
-
-/* For test purposes only, replace it */
-int incompatibleType(
-const char *str 
-) {
+int incompatibleType(const char *str) 
+{
    int i;
 
    DENTER(TOP_LAYER, "incompatibleType");
@@ -110,9 +109,8 @@ int incompatibleType2(const char *fmt,...)
 }
 
 /* ------------------------------------------------------------ */
-int unknownType(
-const char *str 
-) {
+int unknownType(const char *str) 
+{
    DENTER(CULL_LAYER, "unknownType");
 
    /* abort is used, so we don't free any memory; if you change this
@@ -124,12 +122,25 @@ const char *str
    /* abort(); */
 }
 
-/* ------------------------------------------------------------ */
-
-int lGetPosViaElem(
-const lListElem *element,
-int name 
-) {
+/****** cull/multitype/lGetPosViaElem() ****************************************
+*  NAME
+*     lGetPosViaElem() -- Get Position of name within element 
+*
+*  SYNOPSIS
+*     int lGetPosViaElem(const lListElem *element, int name) 
+*
+*  FUNCTION
+*     Get Position of field 'name' within 'element' 
+*
+*  INPUTS
+*     const lListElem *element - element 
+*     int name                 - field name id 
+*
+*  RESULT
+*     int - position or -1 in case of an error
+*******************************************************************************/
+int lGetPosViaElem(const lListElem *element, int name) 
+{
    DENTER(CULL_BASIS_LAYER, "lGetPosViaElem");
 
    if (!element) {
@@ -141,12 +152,7 @@ int name
    return lGetPosInDescr(element->descr, name);
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the string representation of a name id
-
- */
-/****** cull/multitype/lNm2Str() ***********************************************
+/****** cull/multitype/lNm2Str() **********************************************
 *  NAME
 *     lNm2Str() -- returns the string representation of a name id
 *
@@ -161,22 +167,9 @@ int name
 *
 *  RESULT
 *     char* - string representation of id
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     ??? 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-char *lNm2Str(
-int nm 
-) {
+******************************************************************************/
+char *lNm2Str(int nm) 
+{
    const lNameSpace *nsp;
    static char noinit[50];
    char *cp;
@@ -202,10 +195,8 @@ int nm
    return noinit;
 }
 
-char *_lNm2Str(
-const lNameSpace *nsp,
-int nm 
-) {
+static char *_lNm2Str(const lNameSpace *nsp, int nm) 
+{
    DENTER(CULL_BASIS_LAYER, "_lNm2Str");
 
    if (!nsp) {
@@ -223,15 +214,24 @@ int nm
    return NULL;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the int representation of a name
-
- */
-
-int lStr2Nm(
-const char *str 
-) {
+/****** cull/multitype/lStr2Nm() **********************************************
+*  NAME
+*     lStr2Nm() -- Returns the int representation of a name 
+*
+*  SYNOPSIS
+*     int lStr2Nm(const char *str) 
+*
+*  FUNCTION
+*     Returns the int representation of a name 
+*
+*  INPUTS
+*     const char *str - String 
+*
+*  RESULT
+*     int - value
+******************************************************************************/
+int lStr2Nm(const char *str) 
+{
    const lNameSpace *nsp;
    int ret;
 
@@ -256,10 +256,8 @@ const char *str
    return NoName;
 }
 
-int _lStr2Nm(
-const lNameSpace *nsp,
-const char *str 
-) {
+static int _lStr2Nm(const lNameSpace *nsp, const char *str) 
+{
    int i;
    int ret = NoName;
    int found = 0;
@@ -285,15 +283,21 @@ const char *str
    return ret;
 }
 
-/* ------------------------------------------------------------ 
-
-   initializes the mechanism for lNm2Str()
-   a string vector and its size is needed
-
- */
-void lInit(
-const lNameSpace *namev 
-) {
+/****** cull/multitype/lInit() ************************************************
+*  NAME
+*     lInit() -- Initialize the mechanism for lNm2Str() 
+*
+*  SYNOPSIS
+*     void lInit(const lNameSpace *namev) 
+*
+*  FUNCTION
+*     Initialize the mechanism for lNm2Str() 
+*
+*  INPUTS
+*     const lNameSpace *namev - Namespace 
+*******************************************************************************/
+void lInit(const lNameSpace *namev) 
+{
    DENTER(CULL_LAYER, "lInit");
 
    lNameStr = namev;
@@ -301,16 +305,24 @@ const lNameSpace *namev
    DEXIT;
 }
 
-/* ------------------------------------------------------------
-
-   returns the size of a descriptor
-   excluding lEndT Descr
-
- */
-
-int lCountDescr(
-const lDescr *dp 
-) {
+/****** cull/multitype/lCountDescr() ****************************************
+*  NAME
+*     lCountDescr() -- Returns the size of a descriptor 
+*
+*  SYNOPSIS
+*     int lCountDescr(const lDescr *dp) 
+*
+*  FUNCTION
+*     Returns the size of a descriptor excluding lEndT Descr. 
+*
+*  INPUTS
+*     const lDescr *dp - pointer to descriptor 
+*
+*  RESULT
+*     int - size or -1 on error 
+******************************************************************************/
+int lCountDescr(const lDescr *dp) 
+{
    const lDescr *p;
    
    DENTER(CULL_BASIS_LAYER, "lCountDescr");
@@ -329,18 +341,25 @@ const lDescr *dp
    return (p - &dp[0]);
 }
 
-/* ------------------------------------------------------------
-
-   returns a pointer to a copied descriptor, has to be freed by the
-   user
-
-   returns NULL in case of error, a pointer otherwise
-
- */
-
-lDescr *lCopyDescr(
-const lDescr *dp 
-) {
+/****** cull/multitype/lCopyDescr() *******************************************
+*  NAME
+*     lCopyDescr() -- Copys a descriptor 
+*
+*  SYNOPSIS
+*     lDescr* lCopyDescr(const lDescr *dp) 
+*
+*  FUNCTION
+*     Returns a pointer to a copied descriptor, has to be freed by 
+*     the user. 
+*
+*  INPUTS
+*     const lDescr *dp - descriptor 
+*
+*  RESULT
+*     lDescr* - descriptor pointer or NULL in case of error 
+******************************************************************************/
+lDescr *lCopyDescr(const lDescr *dp) 
+{
    int i;
    lDescr *new = NULL;
 
@@ -380,16 +399,22 @@ const lDescr *dp
    return NULL;
 }
 
-/* ------------------------------------------------------------
-
-   writes a descriptor (for debugging purposes)
-
- */
-
-void lWriteDescrTo(
-const lDescr *dp,
-FILE *fp 
-) {
+/****** cull/multitype/lWriteDescrTo() ****************************************
+*  NAME
+*     lWriteDescrTo() -- Writes a descriptor (for debugging purpose) 
+*
+*  SYNOPSIS
+*     void lWriteDescrTo(const lDescr *dp, FILE *fp) 
+*
+*  FUNCTION
+*     Writes a descriptor (for debugging purpose) 
+*
+*  INPUTS
+*     const lDescr *dp - descriptor 
+*     FILE *fp         - output stream 
+******************************************************************************/
+void lWriteDescrTo(const lDescr *dp, FILE *fp) 
+{
    int i;
 
    DENTER(CULL_LAYER, "lWriteDescr");
@@ -409,16 +434,26 @@ FILE *fp
 
    DEXIT;
 }
-/* ------------------------------------------------------------ 
 
-   returns position of a name in a descriptor array 
-   or -1 if not found
-
- */
-int lGetPosInDescr(
-const lDescr *dp,
-int name 
-) {
+/****** cull/multitype/lGetPosInDescr() ***************************************
+*  NAME
+*     lGetPosInDescr() -- Returns position of a name in a descriptor 
+*
+*  SYNOPSIS
+*     int lGetPosInDescr(const lDescr *dp, int name) 
+*
+*  FUNCTION
+*     Returns position of a name in a descriptor array 
+*
+*  INPUTS
+*     const lDescr *dp - descriptor 
+*     int name         - namse 
+*
+*  RESULT
+*     int - position or -1 if not found 
+******************************************************************************/
+int lGetPosInDescr(const lDescr *dp, int name) 
+{
    const lDescr *ldp;
 
    if (!dp) {
@@ -436,18 +471,27 @@ int name
    return ldp - dp;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the type at specified position in a descriptor array 
-   the position must be inside the valid range of the descriptor
-   returns NoName if descriptor is NULL or pos < 0
-
- */
-int lGetPosType(
-const lDescr *dp,
-int pos 
-) {
-
+/****** cull/multitype/lGetPosType() ****************************************
+*  NAME
+*     lGetPosType() -- Returns type at position
+*
+*  SYNOPSIS
+*     int lGetPosType(const lDescr *dp, int pos) 
+*
+*  FUNCTION
+*     Returns the type at specified position in a descriptor array. The
+*     Position must be inside the valid range of the descriptor. Returns
+*     NoName if descriptor is NULL or pos < 0.
+*
+*  INPUTS
+*     const lDescr *dp - Descriptor 
+*     int pos          - Position 
+*
+*  RESULT
+*     int - Type 
+******************************************************************************/
+int lGetPosType(const lDescr *dp, int pos) 
+{
    if (!dp ) {
       LERROR(LEDESCRNULL);
       return (int) NoName;
@@ -458,10 +502,8 @@ int pos
    return (int) dp[pos].mt;
 }
 
-lList **lGetListRef(
-const lListElem *ep,
-int name 
-) {
+lList **lGetListRef(const lListElem *ep, int name) 
+{
    int pos;
 
    DENTER(CULL_BASIS_LAYER, "lGetListRef");
@@ -490,10 +532,8 @@ int name
    return &(ep->cont[pos].glp);
 }
 
-char **lGetPosStringRef(
-const lListElem *ep,
-int pos 
-) {
+char **lGetPosStringRef(const lListElem *ep, int pos) 
+{
    DENTER(CULL_BASIS_LAYER, "lGetPosStringRef");
 
    if (ep->descr[pos].mt != lStringT)
@@ -503,10 +543,8 @@ int pos
    return &(ep->cont[pos].str);
 }
 
-char **lGetPosHostRef(
-const lListElem *ep,
-int pos 
-) {
+char **lGetPosHostRef(const lListElem *ep, int pos) 
+{
    DENTER(CULL_BASIS_LAYER, "lGetPosHostRef");
 
    if (ep->descr[pos].mt != lHostT)
@@ -526,16 +564,25 @@ int pos
    ARGUMENTS ARE ALLRIGHT.
  */
 
-/* ------------------------------------------------------------ 
-
-   returns the int value at position pos 
-   (runtime type checking)
-
- */
-lInt lGetPosInt(
-const lListElem *ep,
-int pos 
-) {
+/****** cull/multitype/lGetPosInt() *******************************************
+*  NAME
+*     lGetPosInt() -- Returns the int value at position  
+*
+*  SYNOPSIS
+*     lInt lGetPosInt(const lListElem *ep, int pos) 
+*
+*  FUNCTION
+*     Returns the int value at position 'pos' 
+*
+*  INPUTS
+*     const lListElem *ep - element pointer 
+*     int pos             - position id 
+*
+*  RESULT
+*     lInt - int
+******************************************************************************/
+lInt lGetPosInt(const lListElem *ep, int pos) 
+{
    DENTER(CULL_BASIS_LAYER, "lGetPosInt");
 
    if (ep->descr[pos].mt != lIntT)
@@ -545,37 +592,56 @@ int pos
    return (lInt) ep->cont[pos].i;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the int value for field name 
-   (runtime type checking)
-
- */
-lInt lGetInt(
-const lListElem *ep,
-int name 
-) {
+/****** cull/multitype/lGetInt() **********************************************
+*  NAME
+*     lGetInt() -- Returns the int value for field name 
+*
+*  SYNOPSIS
+*     lInt lGetInt(const lListElem *ep, int name) 
+*
+*  FUNCTION
+*     Returns the int value for field name 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int name            - field name id 
+*
+*  RESULT
+*     lInt - int 
+******************************************************************************/
+lInt lGetInt(const lListElem *ep, int name) 
+{
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetInt");
 
    pos = lGetPosViaElem(ep, name);
    if (ep->descr[pos].mt != lIntT)
-      incompatibleType2(MSG_CULL_GETINT_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+      incompatibleType2(MSG_CULL_GETINT_WRONGTYPEFORFIELDXY_SS , 
+                        lNm2Str(name), multitypes[ep->descr[pos].mt]);
 
    DEXIT;
    return (lInt) ep->cont[pos].i;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the ulong value at position pos 
-   (runtime type checking)
-
- */
-lUlong lGetPosUlong(
-const lListElem *ep,
-int pos 
-) {
+/****** cull/multitype/lGetPosUlong() ****************************************
+*  NAME
+*     lGetPosUlong() -- Returns the ulong value at position pos 
+*
+*  SYNOPSIS
+*     lUlong lGetPosUlong(const lListElem *ep, int pos) 
+*
+*  FUNCTION
+*     Returns the ulong value at position pos 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - pos value 
+*
+*  RESULT
+*     lUlong - ulong
+******************************************************************************/
+lUlong lGetPosUlong(const lListElem *ep, int pos) 
+{
    DENTER(CULL_BASIS_LAYER, "lGetPosUlong");
 
    if (pos < 0) {
@@ -592,16 +658,27 @@ int pos
    return (lUlong) ep->cont[pos].ul;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the ulong value for field name 
-   (runtime type checking)
-
- */
-lUlong lGetUlong(
-const lListElem *ep,
-int name 
-) {
+/****** cull/multitype/lGetUlong() ********************************************
+*  NAME
+*     lGetUlong() -- Return 'u_long32' value for specified fieldname 
+*
+*  SYNOPSIS
+*     lUlong lGetUlong(const lListElem *ep, int name) 
+*
+*  FUNCTION
+*     Return the content of the field specified by fieldname 'name' of 
+*     list element 'ep'. The type of the field 'name' has to be of
+*     type 'u_long32'.
+*
+*  INPUTS
+*     const lListElem *ep - Pointer to list element 
+*     int name            - field name 
+*
+*  RESULT
+*     lUlong - u_long32 value
+******************************************************************************/
+lUlong lGetUlong(const lListElem *ep, int name) 
+{
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetUlong");
 
@@ -616,33 +693,43 @@ int name
    if (pos < 0) {
       /* someone has called lGetPosUlong() */
       /* makro with an invalid nm        */
-      incompatibleType2(MSG_CULL_GETULONG_NOSUCHNAMEXYINDESCRIPTOR_IS , name, lNm2Str(name));
+      incompatibleType2(MSG_CULL_GETULONG_NOSUCHNAMEXYINDESCRIPTOR_IS, name, 
+                        lNm2Str(name));
    }
 
    if (ep->descr[pos].mt != lUlongT)
-      incompatibleType2(MSG_CULL_GETULONG_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+      incompatibleType2(MSG_CULL_GETULONG_WRONGTYPEFORFIELDXY_SS, 
+                        lNm2Str(name), multitypes[ep->descr[pos].mt]);
 
    DEXIT;
    return (lUlong) ep->cont[pos].ul;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the char * value at position pos 
-   but doesn't copy the string 
-   (runtime type checking)
-
- */
-const char *lGetPosString(
-const lListElem *ep,
-int pos 
-) {
+/****** cull/multitype/lGetPosString() ****************************************
+*  NAME
+*     lGetPosString() -- Returns the string ptr value at position pos 
+*
+*  SYNOPSIS
+*     const char* lGetPosString(const lListElem *ep, int pos) 
+*
+*  FUNCTION
+*     Returns the char* value at position pos (runtime type checking) 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - pos value 
+*
+*  RESULT
+*     const char* - string pointer 
+*******************************************************************************/
+const char *lGetPosString(const lListElem *ep, int pos) 
+{
    DENTER(CULL_BASIS_LAYER, "lGetPosString");
 
    if (pos < 0) {
       /* someone has called lGetString() */
       /* makro with an invalid nm        */
-      DPRINTF(("!!!!!!!!!!!!!!!! lGetPosString() got an invalid pos !!!!!!!!!\n"));
+      DPRINTF(("!!!!!!!!!!!! lGetPosString() got an invalid pos !!!!!!!!!\n"));
       DEXIT;
       return NULL;
    }
@@ -655,24 +742,31 @@ int pos
    return (lString) ep->cont[pos].str;
 }
 
-
-/* ------------------------------------------------------------ 
-
-   returns the char * value at position pos 
-   but doesn't copy the string 
-   (runtime type checking)
-*/
- 
-const char *lGetPosHost(
-const lListElem *ep,
-int pos 
-) {
+/****** cull/multitype/lGetPosHost() ******************************************
+*  NAME
+*     lGetPosHost() -- Returns the hostname value at position pos 
+*
+*  SYNOPSIS
+*     const char* lGetPosHost(const lListElem *ep, int pos) 
+*
+*  FUNCTION
+*     Returns the hostname value at position pos 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*
+*  RESULT
+*     const char* - Hostname  
+******************************************************************************/
+const char *lGetPosHost(const lListElem *ep, int pos) 
+{
    DENTER(CULL_BASIS_LAYER, "lGetPosHost");
 
    if (pos < 0) {
       /* someone has called lGetString() */
       /* makro with an invalid nm        */
-      DPRINTF(("!!!!!!!!!!!!!!!! lGetPosHost() got an invalid pos !!!!!!!!!\n"));
+      DPRINTF(("!!!!!!!!!!!!!! lGetPosHost() got an invalid pos !!!!!!!!!\n"));
       DEXIT;
       return NULL;
    }
@@ -683,12 +777,25 @@ int pos
    return (lHost) ep->cont[pos].host;
 }
 
-
-
-int lGetType(
-const lDescr *dp,
-int nm 
-) {
+/****** cull/multitype/lGetType() *********************************************
+*  NAME
+*     lGetType() -- Return type of field within descriptor 
+*
+*  SYNOPSIS
+*     int lGetType(const lDescr *dp, int nm) 
+*
+*  FUNCTION
+*     Return type of field within descriptor.
+*
+*  INPUTS
+*     const lDescr *dp - descriptor 
+*     int nm           - field name id 
+*
+*  RESULT
+*     int - Type id or lEndT
+******************************************************************************/
+int lGetType(const lDescr *dp, int nm) 
+{
    int pos;
 
    DENTER(CULL_BASIS_LAYER, "lGetType");
@@ -703,17 +810,27 @@ int nm
    return dp[pos].mt;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the char * value for field name
-   but doesn't copy the string 
-   (runtime type checking)
-
- */
-const char *lGetString(
-const lListElem *ep,
-int name 
-) {
+/****** cull/multitype/lGetUlong() ********************************************
+*  NAME
+*     lGetString() -- Return string for specified fieldname 
+*
+*  SYNOPSIS
+*     const char *lGetString(const lListElem *ep, int name) 
+*
+*  FUNCTION
+*     Return the content of the field specified by fieldname 'name' of 
+*     list element 'ep'. The type of the field 'name' has to be of
+*     type string.
+*
+*  INPUTS
+*     const lListElem *ep - Pointer to list element 
+*     int name            - field name 
+*
+*  RESULT
+*     const char* - string pointer (no copy) 
+******************************************************************************/
+const char *lGetString(const lListElem *ep, int name) 
+{
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetString");
 
@@ -743,50 +860,26 @@ int name
    return (lString) ep->cont[pos].str;
 }
 
-
-/* ------------------------------------------------------------ 
-
-   returns the char * value for field name
-   but doesn't copy the string 
-   (runtime type checking)
-
- */
-
-
 /****** cull/multitype/lGetHost() **********************************************
 *  NAME
-*     lGetHost() -- ??? 
+*     lGetHost() -- Return hostname string for specified field 
 *
 *  SYNOPSIS
 *     const char* lGetHost(const lListElem *ep, int name) 
 *
 *  FUNCTION
-*     This procedure returns the char* value for the field name, 
+*     This procedure returns the hostname string for the field name, 
 *     but doesn't copy the string (runtime type checking)
 *
 *  INPUTS
 *     const lListElem *ep - list element pointer
-*     int name            - name of list element (e.g. EH_name)
+*     int name            - name of list element
 *
 *  RESULT
 *     const char* - value of list entry 
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     ??? 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
-const char *lGetHost(
-const lListElem *ep,
-int name 
-) {
+const char *lGetHost(const lListElem *ep, int name) 
+{
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetHost");
 
@@ -816,19 +909,25 @@ int name
    return (lHost) ep->cont[pos].host;
 }
 
-
-
-/* ------------------------------------------------------------ 
-
-   returns the List value at position pos 
-   but doesn't copy the list
-   (runtime type checking)
-
- */
-lList *lGetPosList(
-const lListElem *ep,
-int pos 
-) {
+/****** cull/multitype/lGetPosList() ******************************************
+*  NAME
+*     lGetPosList() -- Returns the CULL list at position pos (no copy) 
+*
+*  SYNOPSIS
+*     lList* lGetPosList(const lListElem *ep, int pos) 
+*
+*  FUNCTION
+*     Returns the CULL list at position pos (no copy) 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - pos value 
+*
+*  RESULT
+*     lList* - CULL list pointer
+******************************************************************************/
+lList *lGetPosList(const lListElem *ep, int pos) 
+{
    DENTER(CULL_BASIS_LAYER, "lGetPosList");
 
    if (pos < 0) {
@@ -847,17 +946,25 @@ int pos
    return (lList *) ep->cont[pos].glp;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the List value for field name
-   but doesn't copy the list
-   (runtime type checking)
-
- */
-lList *lGetList(
-const lListElem *ep,
-int name 
-) {
+/****** cull/multitype/lGetList() *********************************************
+*  NAME
+*     lGetList() -- Returns the CULL list for a field name 
+*
+*  SYNOPSIS
+*     lList* lGetList(const lListElem *ep, int name) 
+*
+*  FUNCTION
+*     Returns the CULL list for a field name 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int name            - field name value 
+*
+*  RESULT
+*     lList* - CULL list pointer 
+******************************************************************************/
+lList *lGetList(const lListElem *ep, int name) 
+{
 #ifdef __INSIGHT__
 /* JG: this code is thorougly tested and really should be ok, but insure complains */
 _Insight_set_option("suppress", "LEAK_ASSIGN");
@@ -892,16 +999,25 @@ _Insight_set_option("unsuppress", "LEAK_ASSIGN");
 #endif
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the float value at position pos 
-   (runtime type checking)
-
- */
-lFloat lGetPosFloat(
-const lListElem *ep,
-int pos 
-) {
+/****** cull/multitype/lGetPosFloat() *****************************************
+*  NAME
+*     lGetPosFloat() -- Returns the float value at position pos 
+*
+*  SYNOPSIS
+*     lFloat lGetPosFloat(const lListElem *ep, int pos) 
+*
+*  FUNCTION
+*     Returns the float value at position pos  
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*
+*  RESULT
+*     lFloat - float 
+******************************************************************************/
+lFloat lGetPosFloat(const lListElem *ep, int pos) 
+{
    DENTER(CULL_BASIS_LAYER, "lGetPosFloat");
    if (ep->descr[pos].mt != lFloatT)
       incompatibleType("lGetPosFloat");
@@ -909,16 +1025,25 @@ int pos
    return ep->cont[pos].fl;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the float value for field name
-   (runtime type checking)
-
- */
-lFloat lGetFloat(
-const lListElem *ep,
-int name 
-) {
+/****** cull/multitype/lGetFloat() ********************************************
+*  NAME
+*     lGetFloat() -- Returns float value for field name 
+*
+*  SYNOPSIS
+*     lFloat lGetFloat(const lListElem *ep, int name) 
+*
+*  FUNCTION
+*     Returns float value for field name 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int name            - field name  
+*
+*  RESULT
+*     lFloat - float
+******************************************************************************/
+lFloat lGetFloat(const lListElem *ep, int name) 
+{
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetFloat");
 
@@ -930,32 +1055,51 @@ int name
    return ep->cont[pos].fl;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the double value at position pos 
-   (runtime type checking)
-
- */
-lDouble lGetPosDouble(
-const lListElem *ep,
-int pos 
-) {
+/****** cull/multitype/lGetPosDouble() ****************************************
+*  NAME
+*     lGetPosDouble() -- Returns a double value at pos
+*
+*  SYNOPSIS
+*     lDouble lGetPosDouble(const lListElem *ep, int pos) 
+*
+*  FUNCTION
+*     Returns a double value at pos 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - pos 
+*
+*  RESULT
+*     lDouble - double value 
+*******************************************************************************/
+lDouble lGetPosDouble(const lListElem *ep, int pos) 
+{
    DENTER(CULL_BASIS_LAYER, "lGetPosDouble");
    if (ep->descr[pos].mt != lDoubleT)
       incompatibleType("lGetPosDouble");
    DEXIT;
    return ep->cont[pos].db;
 }
-/* ------------------------------------------------------------ 
 
-   returns the double value for field name
-   (runtime type checking)
-
- */
-lDouble lGetDouble(
-const lListElem *ep,
-int name 
-) {
+/****** cull/multitype/lGetDouble() *******************************************
+*  NAME
+*     lGetDouble() -- Returns the double value for field name 
+*
+*  SYNOPSIS
+*     lDouble lGetDouble(const lListElem *ep, int name) 
+*
+*  FUNCTION
+*     Returns the double value for field name 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int name            - field name value 
+*
+*  RESULT
+*     lDouble - double value 
+******************************************************************************/
+lDouble lGetDouble(const lListElem *ep, int name) 
+{
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetDouble");
 
@@ -966,51 +1110,82 @@ int name
    DEXIT;
    return ep->cont[pos].db;
 }
-/* ------------------------------------------------------------ 
 
-   returns the long value at position pos 
-   (runtime type checking)
-
- */
-lLong lGetPosLong(
-const lListElem *ep,
-int pos 
-) {
+/****** cull/multitype/lGetPosLong() ****************************************
+*  NAME
+*     lGetPosLong() -- Returns the long value at position pos 
+*
+*  SYNOPSIS
+*     lLong lGetPosLong(const lListElem *ep, int pos) 
+*
+*  FUNCTION
+*     Returns the long value at position pos 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*
+*  RESULT
+*     lLong - long 
+*******************************************************************************/
+lLong lGetPosLong(const lListElem *ep, int pos) 
+{
    DENTER(CULL_BASIS_LAYER, "lGetPosLong");
    if (ep->descr[pos].mt != lLongT)
       incompatibleType("lGetPosLong");
    DEXIT;
    return ep->cont[pos].l;
 }
-/* ------------------------------------------------------------ 
 
-   returns the long value for field name
-   (runtime type checking)
-
- */
-lLong lGetLong(
-const lListElem *ep,
-int name 
-) {
+/****** cull/multitype/lGetLong() *********************************************
+*  NAME
+*     lGetLong() -- Returns the long value for a field name 
+*
+*  SYNOPSIS
+*     lLong lGetLong(const lListElem *ep, int name) 
+*
+*  FUNCTION
+*     Returns the long value for a field name 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int name            - name 
+*
+*  RESULT
+*     lLong - long 
+******************************************************************************/
+lLong lGetLong(const lListElem *ep, int name) 
+{
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetLong");
    pos = lGetPosViaElem(ep, name);
 
    if (ep->descr[pos].mt != lLongT)
-      incompatibleType2(MSG_CULL_GETLONG_WRONGTYPEFORFIELDXY_SS, lNm2Str(name), multitypes[ep->descr[pos].mt]);
+      incompatibleType2(MSG_CULL_GETLONG_WRONGTYPEFORFIELDXY_SS, lNm2Str(name),
+                        multitypes[ep->descr[pos].mt]);
    DEXIT;
    return ep->cont[pos].l;
 }
-/* ------------------------------------------------------------ 
 
-   returns the char value at position pos 
-   (runtime type checking)
-
- */
-lChar lGetPosChar(
-const lListElem *ep,
-int pos 
-) {
+/****** cull/multitype/lGetPosChar() ******************************************
+*  NAME
+*     lGetPosChar() -- Returns the char value at position pos 
+*
+*  SYNOPSIS
+*     lChar lGetPosChar(const lListElem *ep, int pos) 
+*
+*  FUNCTION
+*     Returns the char value at position pos 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*
+*  RESULT
+*     lChar - character 
+******************************************************************************/
+lChar lGetPosChar(const lListElem *ep, int pos) 
+{
    DENTER(CULL_BASIS_LAYER, "lGetPosChar");
    if (ep->descr[pos].mt != lCharT)
       incompatibleType("lGetPosChar");
@@ -1018,16 +1193,25 @@ int pos
    return ep->cont[pos].c;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the char value for field name
-   (runtime type checking)
-
- */
-lChar lGetChar(
-const lListElem *ep,
-int name 
-) {
+/****** cull/multitype/lGetChar() *********************************************
+*  NAME
+*     lGetChar() -- Returns the char value for a field name 
+*
+*  SYNOPSIS
+*     lChar lGetChar(const lListElem *ep, int name) 
+*
+*  FUNCTION
+*     Returns the char value for a field name 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int name            - field name 
+*
+*  RESULT
+*     lChar - character
+******************************************************************************/
+lChar lGetChar(const lListElem *ep, int name) 
+{
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetChar");
    pos = lGetPosViaElem(ep, name);
@@ -1037,16 +1221,26 @@ int name
    DEXIT;
    return ep->cont[pos].c;
 }
-/* ------------------------------------------------------------ 
 
-   returns the lRef value at position pos 
-   (runtime type checking)
-
- */
-lRef lGetPosRef(
-const lListElem *ep,
-int pos 
-) {
+/****** cull/multitype/lGetPosRef() *******************************************
+*  NAME
+*     lGetPosRef() -- Returns the reference at position pos 
+*
+*  SYNOPSIS
+*     lRef lGetPosRef(const lListElem *ep, int pos) 
+*
+*  FUNCTION
+*     Returns the reference at position pos 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*
+*  RESULT
+*     lRef - reference (pointer) 
+******************************************************************************/
+lRef lGetPosRef(const lListElem *ep, int pos) 
+{
    DENTER(CULL_BASIS_LAYER, "lGetPosRef");
    if (ep->descr[pos].mt != lRefT)
       incompatibleType("lGetPosRef");
@@ -1054,38 +1248,58 @@ int pos
    return ep->cont[pos].ref;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the char value for field name
-   (runtime type checking)
-
- */
-lRef lGetRef(
-const lListElem *ep,
-int name 
-) {
+/****** cull/multitype/lGetRef() **********************************************
+*  NAME
+*     lGetRef() -- Returns the character for a field name 
+*
+*  SYNOPSIS
+*     lRef lGetRef(const lListElem *ep, int name) 
+*
+*  FUNCTION
+*     Returns the character for a field name 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int name            - field name value 
+*
+*  RESULT
+*     lRef - reference 
+******************************************************************************/
+lRef lGetRef(const lListElem *ep, int name) 
+{
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetRef");
    pos = lGetPosViaElem(ep, name);
 
    if (ep->descr[pos].mt != lRefT)
-      incompatibleType2(MSG_CULL_GETREF_WRONGTYPEFORFIELDXY_SS, lNm2Str(name), multitypes[ep->descr[pos].mt]);
+      incompatibleType2(MSG_CULL_GETREF_WRONGTYPEFORFIELDXY_SS, lNm2Str(name), 
+                        multitypes[ep->descr[pos].mt]);
    DEXIT;
    return ep->cont[pos].ref;
 }
 
-/* ------------------------------------------------------------ 
-
-   sets in the element ep at position pos the int value   
-   (runtime type checking)
-
- */
-
-int lSetPosInt(
-const lListElem *ep,
-int pos,
-int value 
-) {
+/****** cull/multitype/lSetPosInt() ****************************************
+*  NAME
+*     lSetPosInt() -- Sets the int value 
+*
+*  SYNOPSIS
+*     int lSetPosInt(const lListElem *ep, int pos, int value) 
+*
+*  FUNCTION
+*     Sets in the element 'ep' at position 'pos' the int 'value' 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*     int value           - value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lSetPosInt(const lListElem *ep, int pos, int value) 
+{
    DENTER(CULL_BASIS_LAYER, "lSetPosInt");
 
    if (!ep) {
@@ -1112,18 +1326,28 @@ int value
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   sets in the element ep for field name the int value   
-   (runtime type checking)
-
- */
-
-int lSetInt(
-lListElem *ep,
-int name,
-int value 
-) {
+/****** cull/multitype/lSetInt() **********************************************
+*  NAME
+*     lSetInt() -- Sets an int within an element 
+*
+*  SYNOPSIS
+*     int lSetInt(lListElem *ep, int name, int value) 
+*
+*  FUNCTION
+*     Sets an int within an element 
+*
+*  INPUTS
+*     lListElem *ep - element 
+*     int name      - field name id 
+*     int value     - new value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lSetInt(lListElem *ep, int name, int value) 
+{
    int pos;
    DENTER(CULL_BASIS_LAYER, "lSetInt");
 
@@ -1141,7 +1365,8 @@ int value
    }
 
    if (ep->descr[pos].mt != lIntT) {
-      incompatibleType2(MSG_CULL_SETINT_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+      incompatibleType2(MSG_CULL_SETINT_WRONGTYPEFORFIELDXY_SS, lNm2Str(name), 
+                        multitypes[ep->descr[pos].mt]);
       DEXIT;
       return -1;
    }
@@ -1150,17 +1375,29 @@ int value
    DEXIT;
    return 0;
 }
-/* ------------------------------------------------------------
 
-   sets in the element ep at position pos the ulong value   
-   (runtime type checking)
-
- */
-int lSetPosUlong(
-const lListElem *ep,
-int pos,
-lUlong value 
-) {
+/****** cull/multitype/lSetPosUlong() *****************************************
+*  NAME
+*     lSetPosUlong() -- Get ulong at a certain position 
+*
+*  SYNOPSIS
+*     int lSetPosUlong(const lListElem *ep, int pos, lUlong value) 
+*
+*  FUNCTION
+*     Get ulong at a certain position 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*     lUlong value        - new value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*******************************************************************************/
+int lSetPosUlong(const lListElem *ep, int pos, lUlong value) 
+{
    DENTER(CULL_BASIS_LAYER, "lSetPosUlong");
    if (!ep) {
       LERROR(LEELEMNULL);
@@ -1196,17 +1433,28 @@ lUlong value
    return 0;
 }
 
-/* ------------------------------------------------------------
-
-   sets in the element ep for the field name the ulong value   
-   (runtime type checking)
-
- */
-int lSetUlong(
-lListElem *ep,
-int name,
-lUlong value 
-) {
+/****** cull/multitype/lSetUlong() ********************************************
+*  NAME
+*     lSetUlong() -- Set ulong value at the given field name id 
+*
+*  SYNOPSIS
+*     int lSetUlong(lListElem *ep, int name, lUlong value) 
+*
+*  FUNCTION
+*     Set ulong value at the given field name id 
+*
+*  INPUTS
+*     lListElem *ep - element 
+*     int name      - field name id 
+*     lUlong value  - new value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lSetUlong(lListElem *ep, int name, lUlong value) 
+{
    int pos;
 
    DENTER(CULL_BASIS_LAYER, "lSetUlong");
@@ -1245,18 +1493,29 @@ lUlong value
    DEXIT;
    return 0;
 }
-/* ------------------------------------------------------------
 
-   sets in the element ep at position pos the char * value   
-   also duplicates the pointed char array
-   (runtime type checking)
-
- */
-int lSetPosString(
-const lListElem *ep,
-int pos,
-const char *value 
-) {
+/****** cull/multitype/lSetPosString() ***************************************
+*  NAME
+*     lSetPosString() -- Sets the string at a certain position 
+*
+*  SYNOPSIS
+*     int lSetPosString(const lListElem *ep, int pos, const char *value) 
+*
+*  FUNCTION
+*     Sets the string at a certain position. 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*     const char *value   - string value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
+int lSetPosString(const lListElem *ep, int pos, const char *value) 
+{
    char *str = NULL;
 
    DENTER(CULL_BASIS_LAYER, "lSetPosString");
@@ -1312,18 +1571,28 @@ const char *value
    return 0;
 }
 
-/* ------------------------------------------------------------
-
-   sets in the element ep at position pos the char * value   
-   also duplicates the pointed char array
-   (runtime type checking)
-
- */
-int lSetPosHost(
-const lListElem *ep,
-int pos,
-const char *value 
-) {
+/****** cull/multitype/lSetPosHost() ******************************************
+*  NAME
+*     lSetPosHost() -- Sets the hostname at a certain position
+*
+*  SYNOPSIS
+*     int lSetPosHost(const lListElem *ep, int pos, const char *value) 
+*
+*  FUNCTION
+*     Sets the hostname at a certain position 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*     const char *value   - new hostname 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*******************************************************************************/
+int lSetPosHost(const lListElem *ep, int pos, const char *value) 
+{
    char *str = NULL;
 
    DENTER(CULL_BASIS_LAYER, "lSetPosHost");
@@ -1379,19 +1648,28 @@ const char *value
    return 0;
 }
 
-
-/* ------------------------------------------------------------
-
-   sets in the element ep for field name the char * value   
-   also duplicates the pointed to char array
-   (runtime type checking)
-
- */
-int lSetString(
-lListElem *ep,
-int name,
-const char *value 
-) {
+/****** cull/multitype/lSetString() *******************************************
+*  NAME
+*     lSetString() -- Sets the string at the given field name id 
+*
+*  SYNOPSIS
+*     int lSetString(lListElem *ep, int name, const char *value) 
+*
+*  FUNCTION
+*     Sets the string at the given field name id 
+*
+*  INPUTS
+*     lListElem *ep     - element 
+*     int name          - field name id
+*     const char *value - new string 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+*******************************************************************************/
+int lSetString(lListElem *ep, int name, const char *value) 
+{
    char *str;
    int pos;
 
@@ -1451,16 +1729,16 @@ const char *value
    return 0;
 }
 
-/****** cull/multitype/lSetHost() ********************************************
+/****** cull/multitype/lSetHost() *********************************************
 *  NAME
-*     lSetHost() -- Set hostname for field name in for list elem
+*     lSetHost() -- Set hostname for field name in element
 *
 *  SYNOPSIS
 *     int lSetHost(lListElem *ep, int name, const char *value) 
 *
 *  FUNCTION
-*     sets in the element ep for field name the char * value   
-*     also duplicates the pointed to char array
+*     Sets in the element ep for field name the char * value.
+*     Also duplicates the pointed to char array
 *     (runtime type checking)
 *
 *
@@ -1470,25 +1748,12 @@ const char *value
 *     const char *value - new value for list element
 *
 *  RESULT
-*     -1 on error / 0 no error
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     ??? 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
+*     int - error state
+*         -1 - Error 
+*          0 - OK 
 ******************************************************************************/
-int lSetHost(
-lListElem *ep,
-int name,
-const char *value 
-) {
+int lSetHost(lListElem *ep, int name, const char *value) 
+{
    char *str;
    int pos;
 
@@ -1509,7 +1774,8 @@ const char *value
    }
 
    if (ep->descr[pos].mt != lHostT) {
-      incompatibleType2(MSG_CULL_SETHOST_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+      incompatibleType2(MSG_CULL_SETHOST_WRONGTYPEFORFIELDXY_SS, 
+                        lNm2Str(name), multitypes[ep->descr[pos].mt]);
       DEXIT;
       return -1;
    }
@@ -1547,20 +1813,29 @@ const char *value
    return 0;
 }
 
-
-
-/* ------------------------------------------------------------ 
-
-   sets in the element ep at position pos the lGenlist value   
-   doesn't copy the list
-   (runtime type checking)
-
- */
-int lSetPosList(
-const lListElem *ep,
-int pos,
-lList *value 
-) {
+/****** cull/multitype/lSetPosList() ****************************************
+*  NAME
+*     lSetPosList() -- Set list at position pos 
+*
+*  SYNOPSIS
+*     int lSetPosList(const lListElem *ep, int pos, lList *value) 
+*
+*  FUNCTION
+*     Sets in the element 'ep' at position 'pos' the lists 'value'.
+*     Doesn't copy the list. Does runtime type checking. 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*     lList *value        - value 
+*
+*  RESULT
+*     int - error state 
+*         0 - OK
+*        -1 - Error
+*******************************************************************************/
+int lSetPosList(const lListElem *ep, int pos, lList *value) 
+{
    DENTER(CULL_BASIS_LAYER, "lSetPosList");
 
    if (!ep) {
@@ -1591,11 +1866,28 @@ lList *value
    return 0;
 }
 
-int lXchgList(
-lListElem *ep,
-int name,
-lList **lpp 
-) {
+/****** cull/multitype/lXchgList() ********************************************
+*  NAME
+*     lXchgList() -- Exchange field name value list pointer 
+*
+*  SYNOPSIS
+*     int lXchgList(lListElem *ep, int name, lList **lpp) 
+*
+*  FUNCTION
+*     Exchange the list pointer which has the given field name value. 
+*
+*  INPUTS
+*     lListElem *ep - element 
+*     int name      - field name value 
+*     lList **lpp   - pointer to CULL list 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lXchgList(lListElem *ep, int name, lList **lpp) 
+{
    int pos;
    lList *tmp;
 
@@ -1614,7 +1906,8 @@ lList **lpp
    }
 
    if (ep->descr[pos].mt != lListT) {
-      incompatibleType2(MSG_CULL_XCHGLIST_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+      incompatibleType2(MSG_CULL_XCHGLIST_WRONGTYPEFORFIELDXY_SS, 
+                        lNm2Str(name), multitypes[ep->descr[pos].mt]);
       DEXIT;
       return -1;
    }
@@ -1628,13 +1921,29 @@ lList **lpp
 
 }
 
-/*-------------------------------------------------------------------------*/
-int lSwapList(
-lListElem *to,
-int nm_to,
-lListElem *from,
-int nm_from 
-) {
+/****** cull/multitype/lSwapList() ********************************************
+*  NAME
+*     lSwapList() -- Exchange two lists within two elements
+*
+*  SYNOPSIS
+*     int lSwapList(lListElem *to, int nm_to, lListElem *from, int nm_from) 
+*
+*  FUNCTION
+*     Exchange two lists within two elements. 
+*
+*  INPUTS
+*     lListElem *to   - element one 
+*     int nm_to       - field name id of a list attribute of 'to' 
+*     lListElem *from - element two 
+*     int nm_from     - field name id of a list attribute of 'from' 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
+int lSwapList(lListElem *to, int nm_to, lListElem *from, int nm_from) 
+{
    lList *tmp = NULL;
 
    DENTER(CULL_BASIS_LAYER, "lSwapList");
@@ -1656,18 +1965,28 @@ int nm_from
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   sets in the element ep for field name the lList value   
-   doesn't copy the list
-   (runtime type checking)
-
- */
-int lSetList(
-lListElem *ep,
-int name,
-lList *value 
-) {
+/****** cull/multitype/lSetList() *********************************************
+*  NAME
+*     lSetList() -- Sets a list at the given field name id 
+*
+*  SYNOPSIS
+*     int lSetList(lListElem *ep, int name, lList *value) 
+*
+*  FUNCTION
+*     Sets a list at the given field name id. List will not be copyed.
+*
+*  INPUTS
+*     lListElem *ep - element 
+*     int name      - field name id 
+*     lList *value  - new list pointer 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
+int lSetList(lListElem *ep, int name, lList *value) 
+{
    int pos;
 
    DENTER(CULL_BASIS_LAYER, "lSetList");
@@ -1702,12 +2021,26 @@ lList *value
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   sets in the element ep at position pos the float value   
-   (runtime type checking)
-
- */
+/****** cull/multitype/lSetPosFloat() *****************************************
+*  NAME
+*     lSetPosFloat() -- Set float value at given position 
+*
+*  SYNOPSIS
+*     int lSetPosFloat(const lListElem * ep, int pos, lFloat value) 
+*
+*  FUNCTION
+*     Set float value at given position. 
+*
+*  INPUTS
+*     const lListElem * ep - element 
+*     int pos              - position 
+*     lFloat value         - new float value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
 int lSetPosFloat(const lListElem * ep, int pos, lFloat value)
 {
    DENTER(CULL_BASIS_LAYER, "lSetPosFloat");
@@ -1735,12 +2068,26 @@ int lSetPosFloat(const lListElem * ep, int pos, lFloat value)
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   sets in the element ep for field name the float value   
-   (runtime type checking)
-
- */
+/****** cull/multitype/lSetFloat() ********************************************
+*  NAME
+*     lSetFloat() -- Set float value with given field name id 
+*
+*  SYNOPSIS
+*     int lSetFloat(lListElem * ep, int name, lFloat value) 
+*
+*  FUNCTION
+*     Set float value with given field name id. 
+*
+*  INPUTS
+*     lListElem * ep - element 
+*     int name       - field name id 
+*     lFloat value   - new float value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
 int lSetFloat(lListElem * ep, int name, lFloat value)
 {
    int pos;
@@ -1771,17 +2118,28 @@ int lSetFloat(lListElem * ep, int name, lFloat value)
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   sets in the element ep at position pos the double value   
-   (runtime type checking)
-
- */
-int lSetPosDouble(
-const lListElem *ep,
-int pos,
-lDouble value 
-) {
+/****** cull/multitype/lSetPosDouble() ****************************************
+*  NAME
+*     lSetPosDouble() -- Set double value at given position 
+*
+*  SYNOPSIS
+*     int lSetPosDouble(const lListElem *ep, int pos, lDouble value) 
+*
+*  FUNCTION
+*     Set double value at given position. 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*     lDouble value       - new double value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
+int lSetPosDouble(const lListElem *ep, int pos, lDouble value) 
+{
    DENTER(CULL_BASIS_LAYER, "lSetPosDouble");
    if (!ep) {
       LERROR(LEELEMNULL);
@@ -1806,17 +2164,28 @@ lDouble value
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   sets in the element ep for field name the double value   
-   (runtime type checking)
-
- */
-int lSetDouble(
-lListElem *ep,
-int name,
-lDouble value 
-) {
+/****** cull/multitype/lSetDouble() *******************************************
+*  NAME
+*     lSetDouble() -- Set double value with given field name id 
+*
+*  SYNOPSIS
+*     int lSetDouble(lListElem *ep, int name, lDouble value) 
+*
+*  FUNCTION
+*     Set double value with given field name id 
+*
+*  INPUTS
+*     lListElem *ep - element 
+*     int name      - field name id 
+*     lDouble value - new double value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+*******************************************************************************/
+int lSetDouble(lListElem *ep, int name, lDouble value) 
+{
    int pos;
 
    DENTER(CULL_BASIS_LAYER, "lSetPosDouble");
@@ -1844,17 +2213,28 @@ lDouble value
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   sets in the element ep at position pos the long value   
-   (runtime type checking)
-
- */
-int lSetPosLong(
-const lListElem *ep,
-int pos,
-lLong value 
-) {
+/****** cull/multitype/lSetPosLong() ******************************************
+*  NAME
+*     lSetPosLong() -- Set long value at given position 
+*
+*  SYNOPSIS
+*     int lSetPosLong(const lListElem *ep, int pos, lLong value) 
+*
+*  FUNCTION
+*     Set long value at given position. 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*     lLong value         - new long value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
+int lSetPosLong(const lListElem *ep, int pos, lLong value) 
+{
    DENTER(CULL_BASIS_LAYER, "lSetPosLong");
    if (!ep) {
       LERROR(LEELEMNULL);
@@ -1879,17 +2259,28 @@ lLong value
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   sets in the element ep for field name the long value   
-   (runtime type checking)
-
- */
-int lSetLong(
-lListElem *ep,
-int name,
-lLong value 
-) {
+/****** cull/multitype/lSetLong() *********************************************
+*  NAME
+*     lSetLong() -- Set long value with given field name id 
+*
+*  SYNOPSIS
+*     int lSetLong(lListElem *ep, int name, lLong value) 
+*
+*  FUNCTION
+*     Set long value with given field name id. 
+*
+*  INPUTS
+*     lListElem *ep - element 
+*     int name      - field name id 
+*     lLong value   - value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
+int lSetLong(lListElem *ep, int name, lLong value) 
+{
    int pos;
 
    DENTER(CULL_BASIS_LAYER, "lSetPosLong");
@@ -1917,12 +2308,26 @@ lLong value
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   sets in the element ep at position pos the char value   
-   (runtime type checking)
-
- */
+/****** cull/multitype/lSetPosChar() ******************************************
+*  NAME
+*     lSetPosChar() -- Sets the character a the given position 
+*
+*  SYNOPSIS
+*     int lSetPosChar(const lListElem *ep, int pos, lChar value) 
+*
+*  FUNCTION
+*     Sets the character a the given position. 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*     lChar value         - value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
 int lSetPosChar(const lListElem *ep, int pos, lChar value)
 {
    DENTER(CULL_BASIS_LAYER, "lSetPosChar");
@@ -1949,12 +2354,26 @@ int lSetPosChar(const lListElem *ep, int pos, lChar value)
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   sets in the element ep for field name the char value   
-   (runtime type checking)
-
- */
+/****** cull/multitype/lSetChar() *********************************************
+*  NAME
+*     lSetChar() -- Sets character with the given field name id 
+*
+*  SYNOPSIS
+*     int lSetChar(lListElem * ep, int name, lChar value) 
+*
+*  FUNCTION
+*     Sets character with the given field name id 
+*
+*  INPUTS
+*     lListElem * ep - element 
+*     int name       - field name id 
+*     lChar value    - new character 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
 int lSetChar(lListElem * ep, int name, lChar value)
 {
    int pos;
@@ -1984,12 +2403,26 @@ int lSetChar(lListElem * ep, int name, lChar value)
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   sets in the element ep at position pos the lRef value   
-   (runtime type checking)
-
- */
+/****** cull/multitype/lSetPosRef() *******************************************
+*  NAME
+*     lSetPosRef() -- Set pointer at given position 
+*
+*  SYNOPSIS
+*     int lSetPosRef(const lListElem * ep, int pos, lRef value) 
+*
+*  FUNCTION
+*     Set pointer at given position 
+*
+*  INPUTS
+*     const lListElem * ep - element 
+*     int pos              - position 
+*     lRef value           - pointer 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
 int lSetPosRef(const lListElem * ep, int pos, lRef value)
 {
    DENTER(CULL_BASIS_LAYER, "lSetPosRef");
@@ -2016,12 +2449,26 @@ int lSetPosRef(const lListElem * ep, int pos, lRef value)
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   sets in the element ep for field name the lRef value   
-   (runtime type checking)
-
- */
+/****** cull/multitype/lSetRef() **********************************************
+*  NAME
+*     lSetRef() -- Set pointer with the given field name id 
+*
+*  SYNOPSIS
+*     int lSetRef(lListElem * ep, int name, lRef value) 
+*
+*  FUNCTION
+*     Set pointer with the given field name id 
+*
+*  INPUTS
+*     lListElem * ep - element 
+*     int name       - field name id 
+*     lRef value     - new pointer 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
 int lSetRef(lListElem * ep, int name, lRef value)
 {
    int pos;
@@ -2052,43 +2499,31 @@ int lSetRef(lListElem * ep, int name, lRef value)
 }
 
 /* ------------------------------------------------------------ 
-
    compares two int values i0 and i1 
    return values like strcmp
-
  */
-int intcmp(
-int i0,
-int i1 
-) {
+int intcmp(int i0, int i1) 
+{
    return i0 == i1 ? 0 : (i0 < i1 ? -1 : 1);
 }
 
 /* ------------------------------------------------------------ 
-
    compares two ulong values u0 and u1 
    return values like strcmp
-
  */
-int ulongcmp(
-lUlong u0,
-lUlong u1 
-) {
+int ulongcmp(lUlong u0, lUlong u1) 
+{
    return u0 == u1 ? 0 : (u0 < u1 ? -1 : 1);
 }
 
-int bitmaskcmp(
-lUlong bm0,
-lUlong bm1 
-) {
+int bitmaskcmp(lUlong bm0, lUlong bm1) 
+{
    return ((bm0 & bm1) == bm1) ? 1 : 0;
 }
 
 /* ------------------------------------------------------------ 
-
    compares two lFloat values f0 and f1 
    return values like strcmp
-
  */
 int floatcmp(lFloat f0, lFloat f1)
 {
@@ -2096,36 +2531,26 @@ int floatcmp(lFloat f0, lFloat f1)
 }
 
 /* ------------------------------------------------------------ 
-
    compares two double values d0 and d1 
    return values like strcmp
-
  */
-int doublecmp(
-lDouble d0,
-lDouble d1 
-) {
+int doublecmp(lDouble d0, lDouble d1) 
+{
    return d0 == d1 ? 0 : (d0 < d1 ? -1 : 1);
 }
 
 /* ------------------------------------------------------------ 
-
    compares two long values l0 and l1 
    return values like strcmp
-
  */
-int longcmp(
-lLong l0,
-lLong l1 
-) {
+int longcmp(lLong l0, lLong l1) 
+{
    return l0 == l1 ? 0 : (l0 < l1 ? -1 : 1);
 }
 
 /* ------------------------------------------------------------ 
-
    compares two char values c0 and c1 
    return values like strcmp
-
  */
 int charcmp(lChar c0, lChar c1)
 {
@@ -2133,10 +2558,8 @@ int charcmp(lChar c0, lChar c1)
 }
 
 /* ------------------------------------------------------------ 
-
    compares two lRef values c0 and c1 
    return values like strcmp
-
  */
 int refcmp(lRef c0, lRef c1)
 {
@@ -2168,13 +2591,9 @@ int refcmp(lRef c0, lRef c1)
 *     NULL in case of error
 *     otherwise pointer to the added element 
 ******************************************************************************/
-lListElem *lAddSubStr(
-lListElem *ep,
-int nm,
-const char *str,
-int snm,
-const lDescr *dp 
-) {
+lListElem *lAddSubStr(lListElem *ep, int nm, const char *str, int snm,
+                      const lDescr *dp) 
+{
    lListElem *ret;
    int sublist_pos;
 
@@ -2230,13 +2649,9 @@ const lDescr *dp
 *     NULL in case of error
 *     otherwise pointer to the added element 
 ******************************************************************************/
-lListElem *lAddSubHost(
-lListElem *ep,
-int nm,
-const char *str,
-int snm,
-const lDescr *dp 
-) {
+lListElem *lAddSubHost(lListElem *ep, int nm, const char *str, int snm,
+                       const lDescr *dp) 
+{
    lListElem *ret;
    int sublist_pos;
 
@@ -2288,14 +2703,9 @@ const lDescr *dp
 *
 *  RESULT
 *     lListElem* - 
-*******************************************************************************
-*/
-lListElem *lAddElemStr(
-lList **lpp,
-int nm,
-const char *str,
-const lDescr *dp 
-) {
+******************************************************************************/
+lListElem *lAddElemStr(lList **lpp, int nm, const char *str, const lDescr *dp) 
+{
    lListElem *sep;
    int str_pos;
    int dataType;
@@ -2339,13 +2749,28 @@ const lDescr *dp
    return sep;
 }
 
-
-lListElem *lAddElemHost(
-lList **lpp,
-int nm,
-const char *str,
-const lDescr *dp 
-) {
+/****** cull/multitype/lAddElemHost() *****************************************
+*  NAME
+*     lAddElemHost() -- Adds a hostname to a hostname list 
+*
+*  SYNOPSIS
+*     lListElem* lAddElemHost(lList **lpp, int nm, const char *str, 
+*                             const lDescr *dp) 
+*
+*  FUNCTION
+*     Adds a hostname to a hostname list 
+*
+*  INPUTS
+*     lList **lpp      - list reference 
+*     int nm           - hostname field id 
+*     const char *str  - new hostname 
+*     const lDescr *dp - descriptor of new element 
+*
+*  RESULT
+*     lListElem* - new element or NULL
+******************************************************************************/
+lListElem *lAddElemHost(lList **lpp, int nm, const char *str, const lDescr *dp)
+{
    lListElem *sep;
    int str_pos;
    int dataType;
@@ -2388,8 +2813,6 @@ const lDescr *dp
    return sep;
 }
 
-
-
 /****** cull/multitype/lDelSubStr() *******************************************
 *  NAME
 *     lDelSubStr() -- removes an element from a sublist 
@@ -2411,14 +2834,9 @@ const lDescr *dp
 *  RESULT
 *     1 element was found and removed
 *     0 in case of an error 
-*******************************************************************************
-*/
-int lDelSubStr(
-lListElem *ep,
-int nm,
-const char *str,
-int snm 
-) {
+******************************************************************************/
+int lDelSubStr(lListElem *ep, int nm, const char *str, int snm) 
+{
    int ret, sublist_pos;
 
    DENTER(CULL_LAYER, "lDelSubStr");
@@ -2458,13 +2876,9 @@ int snm
 *  RESULT
 *     1 if the element was found and removed
 *     0 in case of an error 
-*******************************************************************************
-*/
-int lDelElemStr(
-lList **lpp,
-int nm,
-const char *str 
-) {
+******************************************************************************/
+int lDelElemStr(lList **lpp, int nm, const char *str) 
+{
    lListElem *ep;
    int str_pos;
    int dataType;
@@ -2520,8 +2934,6 @@ const char *str
    return 0;
 }
 
-
-
 /****** cull/multitype/lGetSubStr() *******************************************
 *  NAME
 *     lGetSubStr() -- returns element specified by a string field nm 
@@ -2544,14 +2956,9 @@ const char *str
 *  RESULT
 *     NULL if element was not found or in case of an error 
 *     otherwise pointer to an element
-*******************************************************************************
-*/
-lListElem *lGetSubStr(
-const lListElem *ep,
-int nm,
-const char *str,
-int snm 
-) {
+******************************************************************************/
+lListElem *lGetSubStr(const lListElem *ep, int nm, const char *str, int snm) 
+{
    int sublist_pos;
    lListElem *ret;
 
@@ -2573,7 +2980,7 @@ int snm
    return ret;
 }
 
-/****** cull/multitype/lGetElemStr() *******************************************
+/****** cull/multitype/lGetElemStr() ******************************************
 *  NAME
 *     lGetElemStr() -- returns element specified by a string field nm 
 *
@@ -2591,13 +2998,9 @@ int snm
 *  RESULT
 *     NULL when element was not found or if an error occured
 *     otherwise pointer to element 
-*******************************************************************************
-*/
-lListElem *lGetElemStr(
-const lList *lp,
-int nm,
-const char *str 
-) {
+******************************************************************************/
+lListElem *lGetElemStr(const lList *lp, int nm, const char *str) 
+{
    const void *iterator = NULL;
    lListElem *ret = NULL;
    DENTER(CULL_LAYER, "lGetElemStr");
@@ -2607,7 +3010,33 @@ const char *str
    return ret;
 }
 
-lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str, const void **iterator)
+/****** cull/multitype/lGetElemStrFirst() *************************************
+*  NAME
+*     lGetElemStrFirst() -- Find first element with a certain string 
+*
+*  SYNOPSIS
+*     lListElem* lGetElemStrFirst(const lList *lp, int nm, 
+*                                 const char *str, const void **iterator) 
+*
+*  FUNCTION
+*     Returns the first element within 'lp' where the attribute
+*     with field name id 'nm' is equivalent with 'str'. 'iterator'
+*     will be filled with context information which will make it 
+*     possible to use 'iterator' with lGetElemStrNext() to get
+*     the next element. 
+*      
+*
+*  INPUTS
+*     const lList *lp       - list 
+*     int nm                - field name id 
+*     const char *str       - string to be compared 
+*     const void **iterator - iterator 
+*
+*  RESULT
+*     lListElem* - first element or NULL 
+******************************************************************************/
+lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str, 
+                            const void **iterator)
 {
    lListElem *ep;
    int str_pos; 
@@ -2672,7 +3101,34 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str, const void
    return NULL;
 }
 
-lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str, const void **iterator)
+/****** cull/multitype/lGetElemStrNext() **************************************
+*  NAME
+*     lGetElemStrNext() -- Get next element with a certain string 
+*
+*  SYNOPSIS
+*     lListElem* lGetElemStrNext(const lList *lp, 
+*                                int nm, 
+*                                const char *str, 
+*                                const void **iterator) 
+*
+*  FUNCTION
+*     Returns a element within list 'lp' where the attribute with
+*     field name id 'nm' is equivalent with 'str'. The function
+*     uses 'iterator' as input. 'iterator' containes context
+*     information which where fillen in in a previous call of
+*     lGetElemStrFirst().
+*
+*  INPUTS
+*     const lList *lp       - list 
+*     int nm                - string field name id 
+*     const char *str       - string 
+*     const void **iterator - iterator 
+*
+*  RESULT
+*     lListElem* - next element or NULL
+******************************************************************************/
+lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str, 
+                           const void **iterator)
 {
    lListElem *ep;
    int str_pos;
@@ -2760,11 +3216,8 @@ lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str, const void 
 *     NULL if element was not found or in case of error
 *     otherwise pointer to element 
 ******************************************************************************/
-lListElem *lGetElemStrLike(
-const lList *lp,
-int nm,
-const char *str 
-) {
+lListElem *lGetElemStrLike(const lList *lp, int nm, const char *str) 
+{
    lListElem *ep;
    int str_pos;
    const char *s;
@@ -2843,13 +3296,9 @@ const char *str
 *     NULL in case of error
 *     or the pointer to the new element 
 ******************************************************************************/
-lListElem *lAddSubUlong(
-lListElem *ep,
-int nm,
-lUlong val,
-int snm,
-const lDescr *dp 
-) {
+lListElem *lAddSubUlong(lListElem *ep, int nm, lUlong val, int snm, 
+                        const lDescr *dp) 
+{
    lListElem *ret;
    int sublist_pos;
 
@@ -2903,12 +3352,8 @@ const lDescr *dp
 *     NULL on error
 *     or pointer to the added element 
 ******************************************************************************/
-lListElem *lAddElemUlong(
-lList **lpp,
-int nm,
-lUlong val,
-const lDescr *dp 
-) {
+lListElem *lAddElemUlong(lList **lpp, int nm, lUlong val, const lDescr *dp) 
+{
    lListElem *sep;
    int val_pos;
 
@@ -2966,14 +3411,9 @@ const lDescr *dp
 *  RESULT
 *     1 element was found and removed
 *     0 in case of an error 
-*******************************************************************************
-*/
-int lDelSubUlong(
-lListElem *ep,
-int nm,
-lUlong val,
-int snm 
-) {
+******************************************************************************/
+int lDelSubUlong(lListElem *ep, int nm, lUlong val, int snm) 
+{
    int ret, sublist_pos;
 
    DENTER(CULL_LAYER, "lDelSubUlong");
@@ -3013,13 +3453,9 @@ int snm
 *  RESULT
 *     1 element was found and removed 
 *     0 an error occured
-*******************************************************************************
-*/
-int lDelElemUlong(
-lList **lpp,
-int nm,
-lUlong val 
-) {
+******************************************************************************/
+int lDelElemUlong(lList **lpp, int nm, lUlong val) 
+{
    lListElem *ep;
    int val_pos;
 
@@ -3083,14 +3519,9 @@ lUlong val
 *  RESULT
 *     NULL if element was not found or in case of an error
 *     otherwise pointer to the element 
-*******************************************************************************
-*/
-lListElem *lGetSubUlong(
-const lListElem *ep,
-int nm,
-lUlong val,
-int snm 
-) {
+******************************************************************************/
+lListElem *lGetSubUlong(const lListElem *ep, int nm, lUlong val, int snm) 
+{
    int sublist_pos;
    lListElem *ret;
 
@@ -3133,16 +3564,39 @@ int snm
 *    NULL if element was not found or an error occured
 *    otherwise pointer to element 
 ******************************************************************************/
-lListElem *lGetElemUlong(
-const lList *lp,
-int nm,
-lUlong val 
-) {
+lListElem *lGetElemUlong(const lList *lp, int nm, lUlong val) 
+{
    const void *iterator;
    return lGetElemUlongFirst(lp, nm, val, &iterator);
 }
 
-lListElem *lGetElemUlongFirst(const lList *lp, int nm, lUlong val, const void **iterator)
+/****** cull/multitype/lGetElemUlongFirst() ***********************************
+*  NAME
+*     lGetElemUlongFirst() -- Find first ulong within a list 
+*
+*  SYNOPSIS
+*     lListElem* lGetElemUlongFirst(const lList *lp, 
+*                                   int nm, 
+*                                   lUlong val, 
+*                                   const void **iterator) 
+*
+*  FUNCTION
+*     Return the first element of list 'lp' where the attribute
+*     with field name id 'nm' is equivalent with 'val'. Context
+*     information will be stored in 'iterator'. 'iterator' might
+*     be used in lGetElemUlongNext() to get the next element.
+*
+*  INPUTS
+*     const lList *lp       - list 
+*     int nm                - ulong field anme id 
+*     lUlong val            - ulong value 
+*     const void **iterator - iterator 
+*
+*  RESULT
+*     lListElem* - element or NULL 
+******************************************************************************/
+lListElem *lGetElemUlongFirst(const lList *lp, int nm, lUlong val, 
+                              const void **iterator)
 {
    lListElem *ep = NULL;
    int val_pos;
@@ -3188,7 +3642,34 @@ lListElem *lGetElemUlongFirst(const lList *lp, int nm, lUlong val, const void **
    return NULL;
 }
 
-lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val, const void **iterator)
+/****** cull/multitype/lGetElemUlongNext() ************************************
+*  NAME
+*     lGetElemUlongNext() -- Find next ulong element within a list 
+*
+*  SYNOPSIS
+*     lListElem* lGetElemUlongNext(const lList *lp, 
+*                                  int nm, 
+*                                  lUlong val, 
+*                                  const void **iterator) 
+*
+*  FUNCTION
+*     This function might be used after a call to lGetElemUlongFirst().
+*     It expects 'iterator' to contain context information which
+*     makes it possible to find the next element within list 'lp'
+*     where the attribute with field name id 'nm' is equivalent with
+*     'val'. 
+*
+*  INPUTS
+*     const lList *lp       - list 
+*     int nm                - ulong field name id 
+*     lUlong val            - value 
+*     const void **iterator - iterator 
+*
+*  RESULT
+*     lListElem* - next element or NULL 
+******************************************************************************/
+lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val, 
+                             const void **iterator)
 {
    lListElem *ep;
    int val_pos;
@@ -3252,14 +3733,9 @@ lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val, const void **i
 *  RESULT
 *     1 if the element was found an removed 
 *     0 in case of error
-*******************************************************************************
-*/
-int lDelSubCaseStr(
-lListElem *ep,
-int nm,
-const char *str,
-int snm 
-) {
+******************************************************************************/
+int lDelSubCaseStr(lListElem *ep, int nm, const char *str, int snm) 
+{
    int ret, sublist_pos;
 
    DENTER(CULL_LAYER, "lDelSubCaseStr");
@@ -3269,7 +3745,8 @@ int snm
 
    /* run time type checking */
    if (sublist_pos < 0) {
-      CRITICAL((SGE_EVENT, MSG_CULL_DELSUBCASESTRERRORXRUNTIMETYPE_S , lNm2Str(snm)));
+      CRITICAL((SGE_EVENT, MSG_CULL_DELSUBCASESTRERRORXRUNTIMETYPE_S, 
+                lNm2Str(snm)));
       DEXIT;
       abort();
    }
@@ -3303,11 +3780,8 @@ int snm
 *     1 if the element was found and removed
 *     0 in case of error 
 ******************************************************************************/
-int lDelElemCaseStr(
-lList **lpp,
-int nm,
-const char *str 
-) {
+int lDelElemCaseStr(lList **lpp, int nm, const char *str) 
+{
    lListElem *ep;
    int str_pos;
    int dataType;
@@ -3378,14 +3852,10 @@ const char *str
 *  RESULT
 *     NULL if element was not found or in case of an error
 *     otherwise pointer to element 
-*******************************************************************************
-*/
-lListElem *lGetSubCaseStr(
-const lListElem *ep,
-int nm,
-const char *str,
-int snm 
-) {
+******************************************************************************/
+lListElem *lGetSubCaseStr(const lListElem *ep, int nm, const char *str, 
+                          int snm) 
+{
    int sublist_pos;
    lListElem *ret;
 
@@ -3430,13 +3900,9 @@ int snm
 *     NULL when element is not found or an error occured
 *     otherwise the pointer to an element 
 *
-*******************************************************************************
-*/
-lListElem *lGetElemCaseStr(
-const lList *lp,
-int nm,
-const char *str 
-) {
+******************************************************************************/
+lListElem *lGetElemCaseStr(const lList *lp, int nm, const char *str) 
+{
    lListElem *ep;
    int str_pos;
    const char *s;
@@ -3491,8 +3957,6 @@ const char *str
    return NULL;
 }
 
-
-
 /****** cull/multitype/lGetElemHost() *****************************************
 *  NAME
 *     lGetElemHost() -- returns an element specified by a hostname 
@@ -3506,20 +3970,41 @@ const char *str
 *
 *  INPUTS
 *     const lList* lp - Pointer to an element which contains a hostname 
-*     int nm          - String field containing the hostname 
+*     int nm          - host field containing the hostname 
 *     const char* str - hostname 
 *
 *  RESULT
 *     NULL when the list does not contain the element or in case of 
 *     error otherwise pointer to an element
-*******************************************************************************
-*/
-lListElem *lGetElemHost( const lList *lp, int nm, const char *str ) {
+******************************************************************************/
+lListElem *lGetElemHost( const lList *lp, int nm, const char *str ) 
+{
    const void *iterator = NULL;
    return lGetElemHostFirst(lp, nm, str, &iterator);
 }
 
-lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str, const void **iterator) {
+/****** cull/multitype/lGetElemHostFirst() ************************************
+*  NAME
+*     lGetElemHostFirst() -- lGetElemStringFirst for hostnames 
+*
+*  SYNOPSIS
+*     lListElem* lGetElemHostFirst(const lList *lp, int nm, const char *str, 
+*                                  const void **iterator) 
+*
+*  FUNCTION
+*     lGetElemStringFirst for hostnames 
+*
+*  INPUTS
+*     const lList *lp       - list 
+*     int nm                - hostname field id 
+*     const char *str       - hostname 
+*     const void **iterator - iterator 
+*
+*  RESULT
+*     lListElem* - element or NULL 
+******************************************************************************/
+lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str, 
+                             const void **iterator) {
 
    int str_pos;
    int dataType;
@@ -3583,7 +4068,31 @@ lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str, const voi
    return NULL;
 } 
 
-lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str, const void **iterator) {
+/****** cull/multitype/lGetElemHostNext() *************************************
+*  NAME
+*     lGetElemHostNext() -- lGetElemStringNext() for hostnames 
+*
+*  SYNOPSIS
+*     lListElem* lGetElemHostNext(const lList *lp, 
+*                                 int nm, 
+*                                 const char *str, 
+*                                 const void **iterator) 
+*
+*  FUNCTION
+*     lGetElemStringNext() for hostnames 
+*
+*  INPUTS
+*     const lList *lp       - list 
+*     int nm                - hostname field id 
+*     const char *str       - hostname 
+*     const void **iterator - iterator 
+*
+*  RESULT
+*     lListElem* - element or NULL 
+******************************************************************************/
+lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str, 
+                            const void **iterator) 
+{
    
    int str_pos;
    int dataType;
@@ -3650,7 +4159,6 @@ lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str, const void
    return NULL;
 }
 
-
 /****** cull/multitype/lGetSubHost() ******************************************
 *  NAME
 *     lGetSubHost() -- returns elem specified by a string field nm 
@@ -3672,14 +4180,9 @@ lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str, const void
 *  RESULT
 *     NULL if element was not found or in case of error
 *     otherwise pointer to element 
-*******************************************************************************
-*/
-lListElem *lGetSubHost(
-const lListElem *ep,
-int nm,
-const char *str,
-int snm 
-) {
+******************************************************************************/
+lListElem *lGetSubHost(const lListElem *ep, int nm, const char *str, int snm) 
+{
    int sublist_pos;
    lListElem *ret;
 
@@ -3722,13 +4225,9 @@ int snm
 *  RESULT
 *     1 if the host element was found and removed 
 *     0 in case of an error
-******************************************************************************
-*/
-int lDelElemHost(
-lList **lpp,
-int nm,
-const char *str 
-) {
+******************************************************************************/
+int lDelElemHost(lList **lpp, int nm, const char *str) 
+{
    lListElem *ep;
    int str_pos;
    const lDescr *listDescriptor = NULL;

@@ -51,24 +51,44 @@
 
 #define INDENT_STRING      "   "
 
-/*------------ internal functions ------------------------------*/
-
 static int space_comment(char *s);
+
 static int fGetLine(FILE *fp, char *line, int max_line);
+static int fGetBra(FILE *fp);
+static int fGetKet(FILE *fp);
+static int fGetDescr(FILE *fp, lDescr *dp);
+static int fGetInt(FILE *fp, lInt *value);
+static int fGetUlong(FILE *fp, lUlong *value);
+static int fGetString(FILE *fp, lString *value);
+static int fGetHost(FILE *fp, lHost *value);
+static int fGetFloat(FILE *fp, lFloat *value);
+static int fGetDouble(FILE *fp, lDouble *value);
+static int fGetLong(FILE *fp, lLong *value);
+static int fGetChar(FILE *fp, lChar *value);
+static int fGetList(FILE *fp, lList **value);
 
-/* =========== implementation ================================= */
-
-/* ===== functions used by the higher level functions ============ */
-/* ------------------------------------------------------------
-
-   writes a descriptor (for debugging purposes)
-
- */
-int lDumpDescr(
-FILE *fp,
-const lDescr *dp,
-int indent 
-) {
+/****** cull/dump_scan/lDumpDescr() ****************************************
+*  NAME
+*     lDumpDescr() -- Write a descriptor (for debugging purpose)
+*
+*  SYNOPSIS
+*     int lDumpDescr(FILE *fp, const lDescr *dp, int indent) 
+*
+*  FUNCTION
+*     Write a descriptor (for debugging purpose) 
+*
+*  INPUTS
+*     FILE *fp         - file pointer 
+*     const lDescr *dp - descriptor 
+*     int indent       -  
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lDumpDescr(FILE *fp, const lDescr *dp, int indent) 
+{
    int i, ret = ~EOF;
    char space[256];
 
@@ -90,11 +110,13 @@ int indent
       DEXIT;
       return -1;
    }
-   ret = fprintf(fp, "%s/* NUMBER OF DESCR FIELDS */ %d\n", space, lCountDescr(dp));
+   ret = fprintf(fp, "%s/* NUMBER OF DESCR FIELDS */ %d\n", space, 
+                 lCountDescr(dp));
 
    for (i = 0; dp[i].mt != lEndT && ret != EOF; i++) {
-      ret = fprintf(fp, "%s/* %-20.20s */ { %d, %d, %d }\n", space, lNm2Str(dp[i].nm),
-                    dp[i].nm, dp[i].mt, dp[i].hash == NULL ? HASH_OFF : dp[i].hash->type);
+      ret = fprintf(fp, "%s/* %-20.20s */ { %d, %d, %d }\n", space, 
+                    lNm2Str(dp[i].nm), dp[i].nm, dp[i].mt, 
+                    dp[i].hash == NULL ? HASH_OFF : dp[i].hash->type);
    }
 
    ret = fprintf(fp, "%s} /* DESCR END */\n", space);
@@ -103,15 +125,24 @@ int indent
    return (ret == EOF) ? -1 : 0;
 }
 
-/* ------------------------------------------------------------
-
-   read a descriptor from file (for debugging purposes)
-
- */
-
-lDescr *lUndumpDescr(
-FILE *fp 
-) {
+/****** cull/dump_scan/lUndumpDescr() ****************************************
+*  NAME
+*     lUndumpDescr() -- Read a descriptor from file (debug) 
+*
+*  SYNOPSIS
+*     lDescr* lUndumpDescr(FILE *fp) 
+*
+*  FUNCTION
+*     Read a descriptor from file (for debugging purposes) 
+*
+*  INPUTS
+*     FILE *fp - file stream 
+*
+*  RESULT
+*     lDescr* - descriptor 
+*******************************************************************************/
+lDescr *lUndumpDescr(FILE *fp) 
+{
    int n, i;
    lDescr *dp = NULL;
 
@@ -170,15 +201,28 @@ FILE *fp
    return dp;
 }
 
-/* ------------------------------------------------------------
-   dumps a given element to the file fname
-
- */
-int lDumpElem(
-const char *fname,
-const lListElem *ep,
-int indent 
-) {
+/****** cull/dump_scan/lDumpElem() ********************************************
+*  NAME
+*     lDumpElem() -- Dump a given element into a file 
+*
+*  SYNOPSIS
+*     int lDumpElem(const char *fname, const lListElem *ep, int indent) 
+*
+*  FUNCTION
+*     Dump a given element into a file 
+*
+*  INPUTS
+*     const char *fname   - filename 
+*     const lListElem *ep - element 
+*     int indent          - 
+*
+*  RESULT
+*     int - error state
+*        -1 - Error
+*         0 - OK
+******************************************************************************/
+int lDumpElem(const char *fname, const lListElem *ep, int indent) 
+{
    FILE *fp;
    int ret;
 
@@ -193,16 +237,28 @@ int indent
    return ret;
 }
 
-/* ------------------------------------------------------------ 
-
-   dumps a given element to the file fp 
-
- */
-int lDumpElemFp(
-FILE *fp,
-const lListElem *ep,
-int indent 
-) {
+/****** cull/dump_scan/lDumpElemFp() ******************************************
+*  NAME
+*     lDumpElemFp() -- Dump a given element into FILE stream 
+*
+*  SYNOPSIS
+*     int lDumpElemFp(FILE *fp, const lListElem *ep, int indent) 
+*
+*  FUNCTION
+*     Dump a given element into FILE stream
+*
+*  INPUTS
+*     FILE *fp            - file stream 
+*     const lListElem *ep - element 
+*     int indent          - 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
+int lDumpElemFp(FILE *fp, const lListElem *ep, int indent) 
+{
    int i, ret = ~EOF;
    lList *tlp;
    char space[256];
@@ -284,16 +340,28 @@ int indent
    return (ret == EOF) ? -1 : 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   writes a given list to 
-
- */
-int lDumpList(
-FILE *fp,
-const lList *lp,
-int indent 
-) {
+/****** cull/dump_scan/lDumpList() ********************************************
+*  NAME
+*     lDumpList() -- Writes a list to a FILE stream
+*
+*  SYNOPSIS
+*     int lDumpList(FILE *fp, const lList *lp, int indent) 
+*
+*  FUNCTION
+*     Writes a list to a FILE stream. 
+*
+*  INPUTS
+*     FILE *fp        - file stream 
+*     const lList *lp - list 
+*     int indent      - 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*******************************************************************************/
+int lDumpList(FILE *fp, const lList *lp, int indent) 
+{
    lListElem *ep;
    int i, n, ret = ~EOF;
 
@@ -318,8 +386,10 @@ int indent
 
    ret = fprintf(fp, "%s{ /* LIST BEGIN */\n", space);
 
-   ret = fprintf(fp, "%s/* LISTNAME               */ \"%s\"\n", space, lGetListName(lp));
-   ret = fprintf(fp, "%s/* NUMBER OF ELEMENTS     */ %d\n", space, n = lGetNumberOfElem(lp));
+   ret = fprintf(fp, "%s/* LISTNAME               */ \"%s\"\n", space, 
+                 lGetListName(lp));
+   ret = fprintf(fp, "%s/* NUMBER OF ELEMENTS     */ %d\n", space, 
+                 n = lGetNumberOfElem(lp));
 
    ret = lDumpDescr(fp, lGetListDescr(lp), indent);
 
@@ -333,10 +403,25 @@ int indent
 
 }
 
-lListElem *lUndumpElem(
-FILE *fp,
-const lDescr *dp 
-) {
+/****** cull/dump_scan/lUndumpElem() ******************************************
+*  NAME
+*     lUndumpElem() -- Read element from FILE stream 
+*
+*  SYNOPSIS
+*     lListElem* lUndumpElem(FILE *fp, const lDescr *dp) 
+*
+*  FUNCTION
+*     Read element from FILE stream 
+*
+*  INPUTS
+*     FILE *fp         - file stream 
+*     const lDescr *dp - descriptor 
+*
+*  RESULT
+*     lListElem* - Read element 
+******************************************************************************/
+lListElem *lUndumpElem(FILE *fp, const lDescr *dp) 
+{
    lListElem *ep;
    int n, i;
    int ret = 0;
@@ -442,32 +527,39 @@ const lDescr *dp
    return ep;
 }
 
-/*----------------------------------------------------------------------
-        lUndumpList reads a by lDumpList dumped dump into the memory
-
-        the args are:
-        FILE *fp     file pointer
-        char *name   new name of list or NULL if the old name in the dumpfile
-                     should be used as listname
-        lDescr *dp   new list descriptor or NULL if the old list descriptor
-                     should be used as list descriptor
-
-        Actually a type/name matching is only performed for the list itself 
-        and not for its sublists. 
-        If an implementation of changed sublist descriptors is
-        desired we can probably use the following syntax for lUndumpList
-        lList* lUndumpList(fp, name, formatstring, ...)
-        with formatstring like "%T(%I -> %T(%I->%T))" and the varargs list:
-        ".....", lDescr1, fieldname1, lDescr2, fieldname2, lDescr3
-        or write a wrapper around lUndumpList which parses this format and 
-        hands over the varargs list to lUndumpList
--------------------------------------------------------------------------*/
-
-lList *lUndumpList(
-FILE *fp,
-const char *name,
-const lDescr *dp 
-) {
+/****** cull/dump_scan/lUndumpList() ******************************************
+*  NAME
+*     lUndumpList() -- Reads a by lDumpList dumped dump 
+*
+*  SYNOPSIS
+*     lList* lUndumpList(FILE *fp, const char *name, const lDescr *dp) 
+*
+*  FUNCTION
+*     Reads a by lDumpList dumped dump into the memory. 
+*
+*  INPUTS
+*     FILE *fp         - file pointer 
+*     const char *name - new name of list or NULL if the old name in the
+*                        dumpfile should be used as listname 
+*     const lDescr *dp - new list descriptor or NULL if the old list
+*                        descriptor should be used as list descriptor 
+*
+*  RESULT
+*     lList* - Read list 
+*
+*  NOTES
+*     Actually a type/name matching is only performed for the list
+*     itself and not for its sublists.
+*     If an implementation of changed sublist descriptors is desired
+*     we can probably use the following syntax for lUndumpList.
+*     lList* lUndumpList(fp, name, formatstring, ...)
+*     with formatstring like "%T(%I -> %T(%I->%T))" and the varargs 
+*     list: ".....", lDescr1, fieldname1, lDescr2, fieldname2, lDescr3
+*     or write a wrapper around lUndumpList which parses this format and 
+*     hands over the varargs list to lUndumpList
+******************************************************************************/
+lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp) 
+{
    lList *lp = NULL;
    lListElem *fep, *ep;
    lDescr *fdp = NULL;
@@ -617,11 +709,8 @@ const lDescr *dp
    return lp;
 }
 
-/* ===== functions used by the higher level functions ============ */
-
-static int space_comment(
-char *s 
-) {
+static int space_comment(char *s) 
+{
    char *p, *t;
 
    DENTER(CULL_LAYER, "space_comment");
@@ -639,12 +728,8 @@ char *s
 
 }
 
-static int fGetLine(
-FILE *fp,
-char *line,
-int max_line 
-) {
-
+static int fGetLine(FILE *fp, char *line, int max_line) 
+{
    DENTER(CULL_LAYER, "fGetLine");
 
    if (!fp) {
@@ -669,9 +754,8 @@ int max_line
    return 0;
 }
 
-int fGetBra(
-FILE *fp 
-) {
+static int fGetBra(FILE *fp) 
+{
    char s[READ_LINE_LENGHT + 1];
 
    DENTER(CULL_LAYER, "fGetBra");
@@ -686,9 +770,8 @@ FILE *fp
    return strstr(s, "{") ? 0 : -1;
 }
 
-int fGetKet(
-FILE *fp 
-) {
+static int fGetKet(FILE *fp) 
+{
    char s[READ_LINE_LENGHT + 1];
 
    DENTER(CULL_LAYER, "fGetKet");
@@ -703,10 +786,8 @@ FILE *fp
    return strstr(s, "}") ? 0 : -1;
 }
 
-int fGetDescr(
-FILE *fp,
-lDescr *dp 
-) {
+int fGetDescr(FILE *fp, lDescr *dp) 
+{
    char s[READ_LINE_LENGHT + 1];
    int mt, nm, hash;
    char bra[2], comma[2], comma1[2], ket[2];
@@ -735,7 +816,8 @@ lDescr *dp
       We use this strange form of scanf to skip the 
       white space at the beginning. scanf is magic isn't it?
     */
-   if (sscanf(s, "%1s %d %1s %d %1s %d %1s", bra, &nm, comma, &mt, comma1, &hash, ket) != 7) {
+   if (sscanf(s, "%1s %d %1s %d %1s %d %1s", bra, &nm, comma, &mt, 
+              comma1, &hash, ket) != 7) {
       LERROR(LESSCANF);
       DEXIT;
       return -1;
@@ -765,10 +847,8 @@ lDescr *dp
    return 0;
 }
 
-int fGetInt(
-FILE *fp,
-int *ip 
-) {
+static int fGetInt(FILE *fp, int *ip) 
+{
    char s[READ_LINE_LENGHT + 1];
 
    DENTER(CULL_LAYER, "fGetInt");
@@ -795,10 +875,8 @@ int *ip
    return 0;
 }
 
-int fGetUlong(
-FILE *fp,
-lUlong *up 
-) {
+static int fGetUlong(FILE *fp, lUlong *up) 
+{
    char s[READ_LINE_LENGHT + 1];
 
    DENTER(CULL_LAYER, "fGetUlong");
@@ -825,10 +903,8 @@ lUlong *up
    return 0;
 }
 
-int fGetString(
-FILE *fp,
-lString *tp 
-) {
+static int fGetString(FILE *fp, lString *tp) 
+{
    int i;
    char line[READ_LINE_LENGHT + 1];
    char sp[READ_LINE_LENGHT + 1];
@@ -875,10 +951,8 @@ lString *tp
    return 0;
 }
 
-int fGetHost(
-FILE *fp,
-lHost *tp 
-) {
+static int fGetHost(FILE *fp, lHost *tp) 
+{
    int i;
    char line[READ_LINE_LENGHT + 1];
    char sp[READ_LINE_LENGHT + 1];
@@ -925,11 +999,8 @@ lHost *tp
    return 0;
 }
 
-
-int fGetFloat(
-FILE *fp,
-lFloat *flp 
-) {
+static int fGetFloat(FILE *fp, lFloat *flp) 
+{
    char s[READ_LINE_LENGHT + 1];
 
    DENTER(CULL_LAYER, "fGetFloat");
@@ -956,10 +1027,8 @@ lFloat *flp
    return 0;
 }
 
-int fGetDouble(
-FILE *fp,
-lDouble *dp 
-) {
+static int fGetDouble(FILE *fp, lDouble *dp) 
+{
    char s[READ_LINE_LENGHT + 1];
 
    DENTER(CULL_LAYER, "fGetDouble");
@@ -986,10 +1055,8 @@ lDouble *dp
    return 0;
 }
 
-int fGetLong(
-FILE *fp,
-lLong *lp 
-) {
+static int fGetLong(FILE *fp, lLong *lp) 
+{
    char s[READ_LINE_LENGHT + 1];
 
    DENTER(CULL_LAYER, "fGetLong");
@@ -1016,10 +1083,8 @@ lLong *lp
    return 0;
 }
 
-int fGetChar(
-FILE *fp,
-lChar *cp 
-) {
+static int fGetChar(FILE *fp, lChar *cp) 
+{
    char s[READ_LINE_LENGHT + 1];
 
    DENTER(CULL_LAYER, "fGetChar");
@@ -1046,10 +1111,8 @@ lChar *cp
    return 0;
 }
 
-int fGetList(
-FILE *fp,
-lList **lpp 
-) {
+int fGetList(FILE *fp, lList **lpp) 
+{
    char s[READ_LINE_LENGHT + 1];
 
    DENTER(CULL_LAYER, "fGetList");

@@ -209,30 +209,38 @@ lSortOrder *lParseSortOrderVarArg(const lDescr *dp, const char *fmt,...)
    return lParseSortOrder(dp, fmt, ap);
 }
 
-/* ------------------------------------------------------------ 
-
-   creates a sort order array due to the given va_list
-
-   Synax for the fmt:
-
-   e.g.: lParseSortOrder(dp,"%s+ %d-", H_hostname, H_memsize )
-
-   returns a sort order array which can be used for sorting
-   an list with ascending H_hostname and descending H_memsize
-
-   %d  int
-   %s  char *
-   %u    ulong
-
-   +   ascending
-   -   descending
-
- */
-lSortOrder *lParseSortOrder(
-const lDescr *dp,
-const char *fmt,
-va_list ap 
-) {
+/****** cull/sort/lParseSortOrder() *******************************************
+*  NAME
+*     lParseSortOrder() -- Creates a sort order array 
+*
+*  SYNOPSIS
+*     lSortOrder* lParseSortOrder(const lDescr *dp, const char *fmt, 
+*                                 va_list ap) 
+*
+*  FUNCTION
+*     Create a sort oder array due to the given va_list. 
+*
+*  INPUTS
+*     const lDescr *dp - descriptor 
+*     const char *fmt  - format string
+*                        %d - int
+*                        %s - char*
+*                        %u - ulong
+*                        +  - ascending
+*                        -  - descending 
+*     va_list ap       - Attributes within descriptor 
+*
+*  RESULT
+*     lSortOrder* - sort order array 
+*
+*  EXAMPLE
+*     lParseSortOrder(dp,"%s+ %d-", H_hostname, H_memsize )
+*     
+*     Returns a sort order array which can be used for sorting an list
+*     with ascending H_hostname and descending H_memsize. 
+*******************************************************************************/
+lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap) 
+{
    const char *s;
    lSortOrder *sp;
    int i, n;

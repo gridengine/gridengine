@@ -52,9 +52,7 @@ int lGetPosViaElem(const lListElem *element, int nm);
 
 void lInit(const lNameSpace *namev);
 char *lNm2Str(int nm);
-char *_lNm2Str(const lNameSpace *nmv, int nm);
 int lStr2Nm(const char *str);
-int _lStr2Nm(const lNameSpace *nsp, const char *str);
 
 char **lGetPosStringRef(const lListElem *ep, int id);
 char **lGetPosHostRef(const lListElem *ep, int id);

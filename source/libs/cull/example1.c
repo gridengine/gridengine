@@ -207,7 +207,7 @@ void usage(void)
    printf("example1 5\t Scenario: JOINSUB\n");
    printf("example1 6\t Scenario: CHANGE\n");
    printf("example1 7\t Scenario: UNDUMP\n");
-   printf("example1 8\t Scenario: WHEREARGS\n");
+   printf("example1 8\t Scenario: WHERE\n");
    printf("example1 9\t Scenario: lNm2Str/lStr2Nm\n");
    printf("example1 10\t Scenario: BITMASK\n");
    printf("example1 11\t Scenario: SPLIT\n");
@@ -244,8 +244,6 @@ int main(int argc, char *argv[])
    lEnumeration *what2 = NULL;
 
    lEnumeration *allHostFields = NULL, *allQueueFields = NULL, *allOwnerFields = NULL;
-
-   WhereArg where_args[10];
 
    /* monitoring macros */
    DENTER_MAIN(TOP_LAYER, "example1");
@@ -688,14 +686,8 @@ int main(int argc, char *argv[])
        */
       printf("\n\nQUEUELIST WITH OWNERLISTS\n\n");
       lWriteListTo(queuelist, stdout);
-
-      where_args[0].descriptor = QueueT;
-      where_args[1].field = Q_ownerlist;
-      where_args[1].descriptor = OwnerT;
-      where_args[2].field = O_owner;
-      where_args[2].value.str = "Anton";
-
-      where = _lWhere("%T(%I -> %T(%I == %s)) ", where_args);
+      where = lWhere("%T(%I -> %T(%I == %s)) ", QueueT, Q_ownerlist, OwnerT, 
+                     O_owner, "Anton");
       what = lWhat(" %T( %I %I %I %I)", QueueT, Q_load, Q_name, Q_hostname,
                    Q_ownerlist);
 
@@ -716,7 +708,6 @@ int main(int argc, char *argv[])
       cp = lNm2Str(Q_name);
       printf("Worked ok cp = %s, Q_name %d == lStr2Nm %d\n",
              cp, Q_name, lStr2Nm(cp));
-      printf("Nr.: %d\n", _lStr2Nm(qmon_nmv, "Warteschlangen Name"));
       printf("Nr.: %d Name: %s\n", i = lStr2Nm("Q_complexname"), lNm2Str(i));
       break;
 

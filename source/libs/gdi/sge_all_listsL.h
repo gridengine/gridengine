@@ -206,6 +206,7 @@ extern "C" {
       {FE_LOWERBOUND, FES, FEN},        /* feature list */
       {SU_LOWERBOUND, SUS, SUN},        /* submit user */
       {SEC_LOWERBOUND, SecurityS, SecurityN},   /* Certificate security */
+      {FCAT_LOWERBOUND, FCATS, FCATN},   /* Functional category */
 #ifdef ENABLE_438_FIX
       {FJR_LOWERBOUND, FJRS, FJRN},     /* finished job info */
       {FTR_LOWERBOUND, FTRS, FTRN},     /* finished ja_task info */

@@ -438,13 +438,18 @@ enum NameSpaceBoundaries {
 #  define LAST_UPPERBOUND SEC_UPPERBOUND
 #endif /* ENABLE_438_FIX */
 
+   /* security connection list  */
+  ,FCAT_LOWERBOUND = LAST_UPPERBOUND + 1,
+   FCAT_UPPERBOUND = FCAT_LOWERBOUND + 1*BASIC_UNIT - 1
+
+
 #ifdef QIDL
 /* this is just a fake boundary. there is no QIDL cull */
 /* i only need this to reserve some space for QIDL-only */
 /* fields in other culls (those beginning with SGE_I* */
 /* i suggest leaving these entries ALWAYS at the bottom */
 /* of this enum. don't append anything behind this */
-  ,QIDL_LOWERBOUND = LAST_UPPERBOUND + 1,
+  ,QIDL_LOWERBOUND = FCAT_UPPERBOUND + 1,
    QIDL_UPPERBOUND = QIDL_LOWERBOUND + 2*BASIC_UNIT - 1
 #endif
 };

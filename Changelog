@@ -1,3 +1,14 @@
+SG-2003-07-29-0: Bugfix     - Corrected the order of pending jobs in case of
+                            functional tickets.
+                            - added error handling to lGetRef
+                            - Implemented a new algorithm the fticket calculation.
+                              Depending on the ratio of fcategories and jobs, it
+                              can be a lot faster than the previous allgorithm
+                            - added a "\n" to a qmaster error message
+                Issue:     585
+                Review:    AH, EB
+                Changed:   sge_schedd, qmaster 
+
 JG-2003-07-22-0: Bugfix     "*_RESERVED_USAGE gives wrong values for PE jobs" 
                             was fixed for 5.3p4, but the value for vmem in case 
                             of loosely integrated parallel jobs with the pe 

@@ -234,7 +234,7 @@
 #define MSG_JOB_NOHOST4TJ_SUU         _MESSAGE(33145, _("execution host \"%s\" for transfering job "U32CFormat"."U32CFormat" doesn't exist. deleting task"))
 #define MSG_JOB_NOPE4TJ_SUU           _MESSAGE(33146, _("parallel environment \"%s\" for transfering job "U32CFormat"." U32CFormat" doesn't exist. deleting job"))
 #define MSG_JOB_DELIVER2Q_UUS         _MESSAGE(33147, _("failed to deliver job "U32CFormat"."U32CFormat" to queue \"%s\""))
-#define MSG_JOB_DECREASE_COUNT_ER     _MESSAGE(33148, _("could not decrease \"max_u_jobs\" job counter"))
+#define MSG_JOB_DECREASE_COUNT_ER     _MESSAGE(33148, _("could not decrease \"max_u_jobs\" job counter\n"))
 #define MSG_LOG_SENT2EXECD            _MESSAGE(33152, _("sent to execd"))
 #define MSG_LOG_EXITED                _MESSAGE(33153, _("job exited"))
 #define MSG_LOG_WAIT4SGEDEL           _MESSAGE(33154, _("job waits for schedds deletion"))

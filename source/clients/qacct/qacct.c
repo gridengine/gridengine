@@ -463,7 +463,7 @@ char **argv
       ** -nohist does not use history data
       ** for evaluation of -l criteria
       ** problem: -history and -nohist results
-      ** in strange initialisation
+      ** in strange initialization
       */
       else if (!strcmp("-nohist",argv[ii])) {
          nohistflag = 1;

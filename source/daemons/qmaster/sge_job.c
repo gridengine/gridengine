@@ -733,7 +733,7 @@ int sub_command
    const char *jid_str;
    lCondition *where = NULL; 
    int ret, njobs = 0;
-   u_long32 deleted_tasks;
+   u_long32 deleted_tasks = 0;
 
    DENTER(TOP_LAYER, "sge_gdi_del_job");
 
@@ -842,7 +842,6 @@ int sub_command
       deleted_tasks = 0;
       existing_tasks = job_get_ja_tasks(job);
       for (task_number = start; task_number <= end; task_number++) {
-         int spool_job = 1;
          int is_defined = job_is_ja_task_defined(job, task_number); 
 
          if (is_defined) {

@@ -46,8 +46,11 @@
 *        JOB_SPOOL_DIR,
 *        JOB_SPOOL_DIR_AS_FILE,
 *        JOB_SPOOL_FILE,
+*        TASKS_SPOOL_DIR,
 *        TASK_SPOOL_DIR,
+*        TASK_SPOOL_DIR_AS_FILE,
 *        TASK_SPOOL_FILE,
+*        PE_TASK_SPOOL_FILE,
 *        JOB_SCRIPT_DIR,
 *        JOB_SCRIPT_FILE,
 *        JOB_ACTIVE_DIR 
@@ -70,11 +73,20 @@
 *
 *     JOB_SPOOL_FILE - "./jobs/xx/yyyy/zzzz/common"
 *
-*     TASK_SPOOL_DIR - "./jobs/xx/yyyy/zzzz/1-4096"
+*     TASKS_SPOOL_DIR - "./jobs/xx/yyyy/zzzz/1-4096"
 *                      (example for task ids between 1 and 4096)
 *                      
-*     TASK_SPOOL_FILE - "./jobs/xx/yyyy/zzzz/1-4096/1"
+*     TASK_SPOOL_DIR - "./jobs/xx/yyyy/zzzz/1-4096/1"
+*                       (example for task with id 1 (directory))
+*
+*     TASK_SPOOL_DIR_AS_FILE - "./jobs/xx/yyyy/zzzz/1-4096/1"
+*                              (example for task with id 1 (file))
+*
+*     TASK_SPOOL_FILE - "./jobs/xx/yyyy/zzzz/1-4096/1/common"
 *                       (example for task with id 1)
+*
+*     PE_TASK_SPOOL_FILE - "./jobs/xx/yyyy/zzzz/1-4096/1/1"
+*                       (example for ja_task 1 pe_task 1)
 *
 *     JOB_SCRIPT_DIR - "./job_scripts"
 *
@@ -88,8 +100,11 @@ typedef enum {
    JOB_SPOOL_DIR,
    JOB_SPOOL_DIR_AS_FILE,
    JOB_SPOOL_FILE,
+   TASKS_SPOOL_DIR,
    TASK_SPOOL_DIR,
+   TASK_SPOOL_DIR_AS_FILE,
    TASK_SPOOL_FILE,
+   PE_TASK_SPOOL_FILE,
    JOB_SCRIPT_DIR,
    JOB_SCRIPT_FILE,
    JOB_ACTIVE_DIR 
@@ -104,7 +119,8 @@ typedef enum {
 *        SPOOL_DEFAULT               = 0x0000,
 *        SPOOL_HANDLE_AS_ZOMBIE      = 0x0001,
 *        SPOOL_WITHIN_EXECD          = 0x0002,
-*        SPOOL_IGNORE_TASK_INSTANCES = 0x0004
+*        SPOOL_IGNORE_TASK_INSTANCES = 0x0004,
+*        SPOOL_HANDLE_PARALLEL_TASKS = 0x0008,
 *     } sge_spool_flags_t; 
 *
 *  FUNCTION
@@ -125,12 +141,15 @@ typedef enum {
 *                          within the execd. 
 *
 *     SPOOL_IGNORE_TASK_INSTANCES - Dont't handle array tasks.
+*
+*     SPOOL_HANDLE_PARALLEL_TASKS - Spool pe tasks individually.
 ******************************************************************************/
 typedef enum {
    SPOOL_DEFAULT               = 0x0000,
    SPOOL_HANDLE_AS_ZOMBIE      = 0x0001,
    SPOOL_WITHIN_EXECD          = 0x0002,
-   SPOOL_IGNORE_TASK_INSTANCES = 0x0004
+   SPOOL_IGNORE_TASK_INSTANCES = 0x0004,
+   SPOOL_HANDLE_PARALLEL_TASKS = 0x0008
 } sge_spool_flags_t; 
 
 /****** uti/spool/sge_file_path_format_t **************************************
@@ -182,7 +201,8 @@ u_long32 sge_get_ja_tasks_per_file(void);
 char *sge_get_file_path(char *buffer, sge_file_path_id_t,
                         sge_file_path_format_t format_flags,
                         sge_spool_flags_t spool_flags,
-                        u_long32 ulong_val1, u_long32 ulong_val2);
+                        u_long32 ulong_val1, u_long32 ulong_val2,
+                        const char *string_val1);
 
 int sge_is_valid_filename2(const char *fname); 
 

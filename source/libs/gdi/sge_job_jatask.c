@@ -30,6 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
+#include <fnmatch.h>
+
 #include "sgermon.h"
 #include "sge_log.h"
 #include "def.h"   
@@ -49,6 +51,7 @@
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_prog.h"
+#include "sge_peL.h"
 
 #include "msg_gdilib.h"
 #include "msg_common.h"
@@ -1047,6 +1050,10 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 *  RESULT
 *     int - 1 -> array job
 *           0 -> non array job
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_is_parallel()
+*     gdi/job_jatask/job_is_tight_parallel()
 ******************************************************************************/
 int job_is_array(const lListElem *job)
 {
@@ -1054,7 +1061,145 @@ int job_is_array(const lListElem *job)
 
    job_get_submit_task_ids(job, &start, &end, &step);
    return (start != 1 || end != 1 || step != 1);
-}   
+}  
+
+/****** gdi/job_jatask/job_is_parallel() ***************************************
+*  NAME
+*     job_is_parallel() -- Is "job" a parallel job? 
+*
+*  SYNOPSIS
+*     int job_is_parallel(const lListELem *job) 
+*
+*  FUNCTION
+*     This function returns true (1) if "job" is a parallel job
+*     (requesting a parallel environment). 
+*
+*  INPUTS
+*     const lListELem *job - JB_Type element 
+*
+*  RESULT
+*     int - 1 -> parallel job
+*           0 -> non-parallel job
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_is_array() 
+*     gdi/job_jatask/job_is_tight_parallel()
+*******************************************************************************/
+int job_is_parallel(const lListElem *job)
+{
+   return (lGetString(job, JB_pe) != NULL);
+} 
+
+/****** gdi/job_jatask/job_is_tight_parallel() ********************************
+*  NAME
+*     job_is_tight_parallel() -- Is "job" a tightly integrated par. job?
+*
+*  SYNOPSIS
+*     int job_is_tight_parallel(const lListElem *job, 
+*                               const lList *pe_list) 
+*
+*  FUNCTION
+*     This function returns true (1) if "job" is really a tightly 
+*     integrated parallel job. 
+*
+*  INPUTS
+*     const lListElem *job - JB_Type element 
+*     const lList *pe_list - PE_Type list with all existing PEs 
+*
+*  RESULT
+*     int - 1 -> tightly integrated parallel job
+*           0 -> other type
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_is_array()
+*     gdi/job_jatask/job_is_parallel()
+*     gdi/job_jatask/job_might_be_tight_parallel()
+*******************************************************************************/
+int job_is_tight_parallel(const lListElem *job, const lList *pe_list)
+{
+   int ret = 0;
+   const char *pe_name = NULL;
+
+   DENTER(TOP_LAYER, "job_is_tight_parallel");
+   pe_name = lGetString(job, JB_pe);
+   if (pe_name != NULL) {
+      int found_pe = 0;
+      int all_are_tight = 1;
+      lListElem *pe;
+
+      for_each(pe, pe_list) {
+         if (!fnmatch(pe_name, lGetString(pe, PE_name), 0)) {
+            found_pe = 1;
+            all_are_tight &= lGetUlong(pe, PE_control_slaves);
+         }
+      }
+   
+      if (found_pe && all_are_tight) {
+         ret = 1;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** gdi/job_jatask/job_might_be_tight_parallel() **************************
+*  NAME
+*     job_might_be_tight_parallel() -- Possibly a tightly integrated job? 
+*
+*  SYNOPSIS
+*     int job_might_be_tight_parallel(const lListElem *job, 
+*                                     const lList *pe_list) 
+*
+*  FUNCTION
+*     This functions returns true (1) if "job" might be a tightly 
+*     integrated job. True will be returned if (at least one) pe 
+*     matching the requested (wildcard) pe of a job has 
+*     "contol_slaves=true" in its configuration.
+*
+*  INPUTS
+*     const lListElem *job - JB_Type element 
+*     const lList *pe_list - PE_Type list with all existing PEs 
+*
+*  RESULT
+*     int - 1 -> possibly a tightly integrated job
+*           0 -> non-parallel or not tightly integrated
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_is_array()
+*     gdi/job_jatask/job_is_parallel()
+*     gdi/job_jatask/job_is_tight_parallel()
+*     gdi/job_jatask/job_might_be_tight_parallel()
+******************************************************************************/
+int job_might_be_tight_parallel(const lListElem *job, const lList *pe_list)
+{
+   int ret = 0;
+   const char *pe_name = NULL;
+
+   DENTER(TOP_LAYER, "job_is_tight_parallel");
+   pe_name = lGetString(job, JB_pe);
+   if (pe_name != NULL) {
+      int found_pe = 0;
+      int one_is_tight = 0;
+      lListElem *pe;
+
+      DTRACE;
+
+      for_each(pe, pe_list) {
+         if (!fnmatch(pe_name, lGetString(pe, PE_name), 0)) {
+            found_pe = 1;
+            one_is_tight |= lGetUlong(pe, PE_control_slaves);
+            DTRACE;
+         }
+      }
+   
+      if (found_pe && one_is_tight) {
+         DTRACE;
+         ret = 1;
+      }
+   }
+   DEXIT;
+   return ret;
+}
 
 /****** gdi/job_jatask/job_get_submit_task_ids() ******************************
 *  NAME

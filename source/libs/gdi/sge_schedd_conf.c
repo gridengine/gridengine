@@ -44,7 +44,7 @@
 
 int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
                                       lList **answer_list,
-                                      lList *cmplx_list)
+                                      const lList *cmplx_list)
 {
    const char *load_formula = NULL;
    int ret = 1;
@@ -105,7 +105,7 @@ int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
    DEXIT;
 }
 
-lListElem* sge_locate_complex_attr(const char *name, lList *complex_list)
+lListElem* sge_locate_complex_attr(const char *name, const lList *complex_list)
 {
    lListElem *cep, *ep;
 
@@ -127,9 +127,9 @@ lListElem* sge_locate_complex_attr(const char *name, lList *complex_list)
  Iterate over all Complexes and look into their attribute lists.
  ***************************************************************/
 lListElem *find_attribute_in_complex_list(const char *attrname,
-                                          lListElem *cmplxl)
+                                          const lListElem *cmplxl)
 {
-   lListElem *attr;
+   const lListElem *attr;
    const char *str;
    int pos_CE_name, pos_CE_shortcut;
 
@@ -147,11 +147,11 @@ lListElem *find_attribute_in_complex_list(const char *attrname,
       /* attrname may be the name or a shortcut */
       if ((str = lGetPosString(attr, pos_CE_name)) && !strcmp(attrname, str)) {
          DEXIT;
-         return attr;
+         return (lListElem *)attr;
       }
       if ((str = lGetPosString(attr, pos_CE_shortcut)) && !strcmp(attrname, str)) {
          DEXIT;
-         return attr;
+         return (lListElem *)attr;
       }
    }
 

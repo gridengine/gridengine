@@ -232,7 +232,7 @@ lListElem *pe_task_sum_past_usage_list(lList *pe_task_list, const lListElem *pe_
    container = lGetElemStr(pe_task_list, PET_id, PE_TASK_PAST_USAGE_CONTAINER);
    if(container == NULL) {
       container = lCreateElem(PET_Type);
-      lSetString(container, PET_name, PE_TASK_PAST_USAGE_CONTAINER);
+      lSetString(container, PET_id, PE_TASK_PAST_USAGE_CONTAINER);
       lInsertElem(pe_task_list, NULL, container);
    }
 

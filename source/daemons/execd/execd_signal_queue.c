@@ -162,7 +162,7 @@ int answer_error;
 
                   job_write_spool_file(jep, 
                      lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), 
-                     JAT_task_number), SPOOL_WITHIN_EXECD);
+                     JAT_task_number), NULL, SPOOL_WITHIN_EXECD);
 
                }
             }
@@ -704,7 +704,7 @@ u_long32 signal
 
    /* now save this job/queue so we are up to date on restart */
    if (!getridofjob) {
-      job_write_spool_file(jep, jataskid, SPOOL_WITHIN_EXECD);
+      job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD);
       /* write mail */
       if (send_mail == 1) {
          sge_send_suspend_mail(SGE_SIGCONT,master_q ,jep, jatep); 

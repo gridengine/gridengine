@@ -102,6 +102,12 @@ const char *job_get_shell_start_mode(const lListElem *job,
 
 int job_is_array(const lListElem *job); 
 
+int job_is_parallel(const lListElem *job);
+
+int job_is_tight_parallel(const lListElem *job, const lList *pe_list);
+
+int job_might_be_tight_parallel(const lListElem *job, const lList *pe_list);
+
 void job_get_submit_task_ids(const lListElem *job, u_long32 *start, 
                              u_long32 *end, u_long32 *step); 
 

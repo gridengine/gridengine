@@ -92,6 +92,9 @@ lList *execd_config_list = NULL;
 lList *Master_Job_List = NULL;
 lList *Master_Zombie_List = NULL;
 
+/* this pointer is always NULL within execd */
+lList *Master_Pe_List = NULL;
+
 static void execd_exit_func(int i);
 static void execd_register(void);
 static void dispatcher_errfunc(const char *err_str);

@@ -639,7 +639,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    job_suc_pre(jep);
 
-   if (job_write_spool_file(jep, 0, SPOOL_DEFAULT)) {
+   if (job_write_spool_file(jep, 0, NULL, SPOOL_DEFAULT)) {
       ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, u32c(job_number)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -947,7 +947,7 @@ int sub_command
                zombie = lGetElemUlong(Master_Zombie_List, JB_job_number, 
                                       job_number);
                if (zombie) { 
-                  job_write_spool_file(zombie, 0, SPOOL_HANDLE_AS_ZOMBIE);
+                  job_write_spool_file(zombie, 0, NULL, SPOOL_HANDLE_AS_ZOMBIE);
                }
             }
             if (existing_tasks > deleted_tasks) {
@@ -1441,7 +1441,7 @@ char *commproc
       SETBIT(JDELETED, state); 
       lSetUlong(t, JAT_state, state);
       /* spool job */
-      job_write_spool_file(j, task_number, SPOOL_DEFAULT);  
+      job_write_spool_file(j, task_number, NULL, SPOOL_DEFAULT);  
    }
    DEXIT;
    return;
@@ -1582,7 +1582,7 @@ int sub_command
             lSetUlong(new_job, JB_version, lGetUlong(new_job, JB_version)+1);
 
          /* all job modifications to be saved on disk must be made in new_job */
-         if (job_write_spool_file(new_job, 0, SPOOL_DEFAULT)) {
+         if (job_write_spool_file(new_job, 0, NULL, SPOOL_DEFAULT)) {
             ERROR((SGE_EVENT, MSG_JOB_NOALTERNOWRITE_U, u32c(jobid)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             lFreeList(tmp_alp);

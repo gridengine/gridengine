@@ -36,11 +36,12 @@
 
 int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
                                       lList **answer_list,
-                                      lList *cmplx_list);
+                                      const lList *cmplx_list);
 
-lListElem* sge_locate_complex_attr(const char *name, lList *complex_list);
+lListElem* sge_locate_complex_attr(const char *name, 
+                                   const lList *complex_list);
 
 lListElem *find_attribute_in_complex_list(const char *attrname,
-                                          lListElem *first);
+                                          const lListElem *first);
 
 #endif /* __SGE_SCHEDD_CONF_H */

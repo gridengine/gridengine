@@ -321,6 +321,7 @@
 
 /* read_write_job.c */
 #define MSG_JOB_CANNOT_REMOVE_SS       _("can not remove "SFN": "SFN"\n")
+#define MSG_JOB_PE_TASK_SPOOL_FILE     _("pe task spool file")
 #define MSG_JOB_TASK_SPOOL_FILE        _("task spool file")
 #define MSG_JOB_JOB_SPOOL_FILE         _("job spool file")
 #define MSG_JOB_JOB_SPOOL_DIRECTORY    _("job spool directory")

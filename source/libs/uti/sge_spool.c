@@ -129,7 +129,8 @@ u_long32 sge_get_ja_tasks_per_file(void) {
 *     char* sge_get_file_path(char *buffer, sge_file_path_id_t id, 
 *                             sge_file_path_format_t format_flags, 
 *                             sge_spool_flags_t spool_flags, 
-*                             u_long32 ulong_val1, u_long32 ulong_val2) 
+*                             u_long32 ulong_val1, u_long32 ulong_val2,
+*                             const char *string_val1) 
 *
 *  FUNCTION
 *     ??? 
@@ -142,6 +143,7 @@ u_long32 sge_get_ja_tasks_per_file(void) {
 *                                           needed 
 *     u_long32 ulong_val1                 - 1st ulong 
 *     u_long32 ulong_val2                 - 2nd ulong 
+*     const char *string_val1             - 1st string
 *
 *  RESULT
 *     char* - equivalent with 'buffer' 
@@ -154,7 +156,8 @@ u_long32 sge_get_ja_tasks_per_file(void) {
 char *sge_get_file_path(char *buffer, sge_file_path_id_t id,
                         sge_file_path_format_t format_flags,
                         sge_spool_flags_t spool_flags,
-                        u_long32 ulong_val1, u_long32 ulong_val2)
+                        u_long32 ulong_val1, u_long32 ulong_val2,
+                        const char *string_val1)
 {
    int handle_as_zombie = spool_flags & SPOOL_HANDLE_AS_ZOMBIE;
    int first_part = format_flags & FORMAT_FIRST_PART;
@@ -167,8 +170,9 @@ char *sge_get_file_path(char *buffer, sge_file_path_id_t id,
    if (id == JOBS_SPOOL_DIR) {
       sprintf(buffer, SFN, spool_dir);
    } else if (id == JOB_SPOOL_DIR || id == JOB_SPOOL_FILE ||
-              id == TASK_SPOOL_DIR || id == TASK_SPOOL_FILE ||
-              id == JOB_SPOOL_DIR_AS_FILE) {
+              id == TASKS_SPOOL_DIR || id == TASK_SPOOL_DIR_AS_FILE ||
+              id == TASK_SPOOL_DIR || id == JOB_SPOOL_DIR_AS_FILE ||
+              id == TASK_SPOOL_FILE || id == PE_TASK_SPOOL_FILE) {
       stringT job_dir = "";
       stringT file_prefix = "";
       stringT id_range = "";
@@ -204,10 +208,13 @@ char *sge_get_file_path(char *buffer, sge_file_path_id_t id,
             }  
          }
       }
-      if (insert_dot && (id == JOB_SPOOL_FILE || id == TASK_SPOOL_FILE)) {
+      if (insert_dot && (id == JOB_SPOOL_FILE || id == TASK_SPOOL_DIR_AS_FILE ||
+                         id == TASK_SPOOL_FILE || id == PE_TASK_SPOOL_FILE)) {
          strcpy(file_prefix, "."); 
       }
-      if (id == TASK_SPOOL_DIR || id == TASK_SPOOL_FILE) {
+      if (id == TASKS_SPOOL_DIR || id == TASK_SPOOL_DIR_AS_FILE ||
+          id == TASK_SPOOL_DIR || id == TASK_SPOOL_FILE || 
+          id == PE_TASK_SPOOL_FILE) {
          u_long32 start, end;
          get_spool_dir_range(ulong_val2, &start, &end);
          sprintf(id_range, u32"-"u32, start, end);
@@ -217,11 +224,17 @@ char *sge_get_file_path(char *buffer, sge_file_path_id_t id,
       } else if (id == JOB_SPOOL_FILE) {
          sprintf(buffer, "%s/%s/%s%s", spool_dir, job_dir, 
             file_prefix, "common");
-      } else if (id == TASK_SPOOL_DIR) {
+      } else if (id == TASKS_SPOOL_DIR) {
          sprintf(buffer, "%s/%s/%s", spool_dir, job_dir, id_range);
-      } else if (id == TASK_SPOOL_FILE) {
+      } else if (id == TASK_SPOOL_DIR_AS_FILE || id == TASK_SPOOL_DIR) {
          sprintf(buffer, "%s/%s/%s/%s"u32, spool_dir, job_dir, 
                  id_range, file_prefix, ulong_val2);
+      } else if (id == TASK_SPOOL_FILE) {
+         sprintf(buffer, "%s/%s/%s/"u32"/%s%s", spool_dir, job_dir, 
+                 id_range, ulong_val2, file_prefix, "common");
+      } else if (id == PE_TASK_SPOOL_FILE) {
+         sprintf(buffer, "%s/%s/%s/"u32"/%s%s", spool_dir, job_dir, 
+                 id_range, ulong_val2, file_prefix, string_val1);
       }
    } else if (id == JOB_SCRIPT_DIR) { 
       sprintf(buffer, "%s", EXEC_DIR); 

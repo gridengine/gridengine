@@ -383,7 +383,7 @@ int slave
 
 
    lSetUlong(jelem, JB_script_size, 0);
-   if (job_write_spool_file(jelem, jataskid, SPOOL_WITHIN_EXECD)) {
+   if (job_write_spool_file(jelem, jataskid, NULL, SPOOL_WITHIN_EXECD)) {
       /* SGE_EVENT is written by job_write_spool_file() */
       sge_dstring_copy_string(&err_str, SGE_EVENT);
       DEXIT;
@@ -703,7 +703,7 @@ DTRACE;
 
 DTRACE;
 
-   if (job_write_spool_file(jep, jataskid, SPOOL_WITHIN_EXECD)) { 
+   if (job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD)) { 
       sge_dstring_copy_string(&err_str, SGE_EVENT);
       execd_job_start_failure(jep, jatep, petep, sge_dstring_get_string(&err_str), 1);
       goto Error;

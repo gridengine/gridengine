@@ -616,7 +616,7 @@ u_long now
    while (Master_Zombie_List &&
             (lGetNumberOfElem(Master_Zombie_List) > conf.zombie_jobs)) {
       dep = lFirst(Master_Zombie_List);
-      job_remove_spool_file(lGetUlong(dep, JB_job_number), 0, 
+      job_remove_spool_file(lGetUlong(dep, JB_job_number), 0, NULL, 
                             SPOOL_HANDLE_AS_ZOMBIE);
       lRemoveElem(Master_Zombie_List, dep);
    }
@@ -724,7 +724,7 @@ sge_commit_flags_t commit_flags
       /* JG: TODO: shouldn't the start time better be set on the exec host? */
       lSetUlong(jatep, JAT_start_time, now);
       job_enroll(jep, NULL, jataskid);
-      job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
+      job_write_spool_file(jep, jataskid, NULL, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
 
@@ -732,7 +732,7 @@ sge_commit_flags_t commit_flags
       lSetUlong(jatep, JAT_status, JRUNNING);
       job_log(jobid, jataskid, "job received by execd");
       job_enroll(jep, NULL, jataskid);
-      job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
+      job_write_spool_file(jep, jataskid, NULL, SPOOL_DEFAULT);
       break;
 
    case 2:
@@ -840,7 +840,7 @@ sge_commit_flags_t commit_flags
 
       sge_clear_granted_resources(jep, jatep, 1);
       job_enroll(jep, NULL, jataskid);
-      job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
+      job_write_spool_file(jep, jataskid, NULL, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
 
@@ -864,7 +864,7 @@ sge_commit_flags_t commit_flags
       }
       sge_clear_granted_resources(jep, jatep, 1);
       job_enroll(jep, NULL, jataskid);
-      job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
+      job_write_spool_file(jep, jataskid, NULL, SPOOL_DEFAULT);
       for_each(petask, lGetList(jatep, JAT_task_list)) {
          sge_add_list_event(NULL, sgeE_JOB_FINAL_USAGE, lGetUlong(jep, JB_job_number),
             lGetUlong(jatep, JAT_task_number), 
@@ -906,7 +906,7 @@ sge_commit_flags_t commit_flags
       lSetUlong(jatep, JAT_state, JQUEUED | JWAITING);
       sge_clear_granted_resources(jep, jatep, 0);
       job_enroll(jep, NULL, jataskid);
-      job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
+      job_write_spool_file(jep, jataskid, NULL, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
    }
@@ -1131,7 +1131,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
       if (lGetString(job, JB_script_file)) {
          unlink(lGetString(job, JB_exec_file));
       }
-      job_remove_spool_file(job_id, 0, 0);
+      job_remove_spool_file(job_id, 0, NULL, SPOOL_DEFAULT);
 
       /*
        * remove the job
@@ -1150,12 +1150,12 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
        * remove the task
        */
       if (is_enrolled) {
-         job_remove_spool_file(job_id, ja_task_id, 0);
+         job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_DEFAULT);
          lRemoveElem(lGetList(job, JB_ja_tasks), ja_task);
       } else {
          job_delete_not_enrolled_ja_task(job, NULL, ja_task_id);
          if (spool_job) {
-            job_write_spool_file(job, ja_task_id, SPOOL_DEFAULT);
+            job_write_spool_file(job, ja_task_id, NULL, SPOOL_DEFAULT);
          }
       }
       if (!no_events) {
@@ -1223,7 +1223,7 @@ static int sge_to_zombies(lListElem *job, lListElem *ja_task, int spool_job)
        * Spooling
        */
       if (spool_job) {
-         job_write_spool_file(zombie, ja_task_id, SPOOL_HANDLE_AS_ZOMBIE);
+         job_write_spool_file(zombie, ja_task_id, NULL, SPOOL_HANDLE_AS_ZOMBIE);
       }
    } else {
       WARNING((SGE_EVENT, "It is impossible to move task "u32" of job "u32

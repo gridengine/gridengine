@@ -952,7 +952,7 @@ int sub_command
             CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
             lSetUlong(ja_task, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, job, ja_task);
-            job_write_spool_file(job, 0, SPOOL_DEFAULT);
+            job_write_spool_file(job, lGetUlong(ja_task, JAT_task_number), NULL, SPOOL_DEFAULT);
          }
       }
    }            

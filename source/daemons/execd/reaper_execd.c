@@ -917,7 +917,7 @@ lListElem *jr
       }
 
       if (!pe_task_id_str) {
-         job_remove_spool_file(job_id, ja_task_id, SPOOL_WITHIN_EXECD);
+         job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_WITHIN_EXECD);
 
          if (lGetString(jep, JB_exec_file)) {
             int task_number = 0;
@@ -1011,7 +1011,7 @@ lListElem *jr
          }
 
          /* job */
-         job_remove_spool_file(job_id, ja_task_id, SPOOL_WITHIN_EXECD); 
+         job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_WITHIN_EXECD); 
 
          /* active dir */
          if (!keep_active && !getenv("SGE_KEEP_ACTIVE")) {

@@ -1070,7 +1070,7 @@ lList **topp  /* ticket orders ptr ptr */
             lSetUlong(jatp, JAT_state, state);
 
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatp);
-            job_write_spool_file(jep, 0, SPOOL_DEFAULT);
+            job_write_spool_file(jep, task_number, NULL, SPOOL_DEFAULT);
 
             /* update queues time stamp in schedd */
             lSetUlong(queueep, QU_last_suspend_threshold_ckeck, sge_get_gmt());
@@ -1117,7 +1117,7 @@ lList **topp  /* ticket orders ptr ptr */
             CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
             lSetUlong(jatp, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatp);
-            job_write_spool_file(jep, 0, SPOOL_DEFAULT);
+            job_write_spool_file(jep, task_number, NULL, SPOOL_DEFAULT);
 
             /* update queues time stamp in schedd */
             lSetUlong(queueep, QU_last_suspend_threshold_ckeck, sge_get_gmt());

@@ -269,7 +269,7 @@ sge_pack_buffer *pb
                         if ((ep=lAddSubHost(petask, JG_qhostname, rhost, PET_granted_destin_identifier_list, JG_Type))) {
                            lSetString(ep, JG_qname, queue_name);
                         }   
-                        job_write_spool_file(jep, 0, SPOOL_DEFAULT);
+                        job_write_spool_file(jep, jataskid, pe_task_id_str, SPOOL_DEFAULT);
                     }
 
                     /* store unscaled usage directly in sub-task */
@@ -502,11 +502,12 @@ sge_pack_buffer *pb
                      }
 
                      /* remove pe task from job/jatask */
+                     job_remove_spool_file(jobid, jataskid, pe_task_id_str,
+                                           SPOOL_DEFAULT);
                      lRemoveElem(lGetList(jatep, JAT_task_list), petask);
-                     sge_add_event(NULL, sgeE_PETASK_DEL, jobid, jataskid, pe_task_id_str, NULL);
+                     sge_add_event(NULL, sgeE_PETASK_DEL, jobid, jataskid, 
+                                   pe_task_id_str, NULL);
                      
-                     job_write_spool_file(jep, 0, SPOOL_DEFAULT);
-
                      /* get rid of this job in case a task died from XCPU/XFSZ or 
                         exited with a core dump */
                      if (failed==SSTATE_FAILURE_AFTER_JOB

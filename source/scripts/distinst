@@ -930,8 +930,6 @@ if [ $instcommon = true ]; then
       echo Installing \"man/\" and \"catman/\"
       Execute rm -rf $DEST_SGE_ROOT/man $DEST_SGE_ROOT/catman
       Execute cp -r MANSBUILD_$MANSRCDIR/SEDMAN/man $DEST_SGE_ROOT
-      Execute rm -rf $DEST_SGE_ROOT/man/man3
-      Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/man $DEST_SGE_ROOT
       Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/catman $DEST_SGE_ROOT
       Cleanup man catman
    fi

@@ -669,12 +669,12 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
       u_long32 first_id;
       int show = 0;
 
-      if (((hold_state[i] & MINUS_H_TGT_USER) && (full_listing & QSTAT_DISPLAY_USERHOLD)) || 
-          ((hold_state[i] & MINUS_H_TGT_OPERATOR) && (full_listing & QSTAT_DISPLAY_OPERATORHOLD) > 0) ||
-          ((hold_state[i] & MINUS_H_TGT_SYSTEM) && (full_listing & QSTAT_DISPLAY_SYSTEMHOLD) > 0) ||
-          ((hold_state[i] == 0) && (full_listing & QSTAT_DISPLAY_PENDING) > 0 && (full_listing & QSTAT_DISPLAY_HOLD) == 0) ||
-          (lGetUlong(job, JB_execution_time) > 0 && (full_listing & QSTAT_DISPLAY_STARTTIMEHOLD) > 0) ||
-          (lGetList(job, JB_jid_predecessor_list) != NULL && (full_listing & QSTAT_DISPLAY_JOBHOLD) > 0)
+      if (((full_listing & QSTAT_DISPLAY_USERHOLD) && (hold_state[i] & MINUS_H_TGT_USER)) ||
+          ((full_listing & QSTAT_DISPLAY_OPERATORHOLD) && (hold_state[i] & MINUS_H_TGT_OPERATOR)) ||
+          ((full_listing & QSTAT_DISPLAY_SYSTEMHOLD) && (hold_state[i] & MINUS_H_TGT_SYSTEM)) ||
+          ((full_listing & QSTAT_DISPLAY_STARTTIMEHOLD) && (lGetUlong(job, JB_execution_time) > 0)) ||
+          ((full_listing & QSTAT_DISPLAY_JOBHOLD) && (lGetList(job, JB_jid_predecessor_list) != 0)) ||
+          (!(full_listing & QSTAT_DISPLAY_HOLD))
          ) {
          show = 1;
       }

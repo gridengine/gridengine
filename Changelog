@@ -1,3 +1,11 @@
+JG-2005-02-25-0: Bugfix:    Adding/modifying a high number of complex entries 
+                            took a long time, qconf could timeout.
+                            First part of fix: Reduce the number of situations, 
+                            where a recomputation of consumables is required.
+                 Issue:     1473
+                 Bugtraq:   6222237
+                 Review:    SG
+
 JM-2005-02-23-1: Enhancem.: Added support to handle setup of startup
 							scripts in a Debian-specific way (update-rc.d).
                  Changed:   arch_variables, inst_common.sh
@@ -10,7 +18,10 @@ SG-2005-02-23-0: Bugfix:    load formula is not working for pe jobs
                  Review:    AH
 
 JG-2005-02-22-0: Enhancem.: Improved performance of search for duplicate 
-                            centries.
+                            centries. Does not yet fix the issues listed below,
+                            but provides some improvement.
+                 Issue:     1473
+                 Bugtraq:   6222237
                  Review:    SG
 
 SG-2005-02-21-0: Bugfix:    - deadlock in the qmaster with qconf -ks

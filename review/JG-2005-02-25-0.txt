@@ -1,0 +1,112 @@
+Source Code Review Form 
+=======================
+(version 1.2)
+
+Date: 2005-02-25
+
+1 Identification
+JG-2005-02-25-0: Bugfix:    Adding/modifying a high number of complex entries 
+                            took a long time, qconf could timeout.
+                            First part of fix: Reduce the number of situations, 
+                            where a recomputation of consumables is required.
+                 Issue:     1473
+                 Bugtraq:   6222237
+                 Review:    SG
+
+2 Conformance to specification
+
+2 [x] yes
+2 [ ] no - comment:
+
+
+3 Documentation
+
+3.1 user/admin guide
+3.1 [x] yes
+3.1 [ ] no - comment:
+
+3.2 man pages (user view)
+3.2 [x] yes
+3.2 [ ] no - comment:
+
+3.3 -help output
+3.3 [x] yes
+3.3 [ ] no - comment:
+
+3.4 documented interfaces (at least GDI, EVI, libs, ADOC format)
+3.4 [x] yes
+3.4 [ ] no - comment:
+
+3.5 messages, output formats
+3.5 [x] yes
+3.5 [ ] no - comment:
+
+3.6 Bugster CR and Issuezilla
+3.6 [x] yes
+3.6 [ ] no - comment:
+
+3.7 Issuezilla
+3.7 [x] yes
+3.7 [ ] no - comment:
+
+
+4 Source review
+
+4.1 Style guide conformance
+4.1 [x] yes
+4.1 [ ] no - comment:
+
+4.2 Memory leaks
+4.2 [x] yes
+4.2 [ ] no - comment:
+
+4.3 Thread safe
+4.3 [x] yes
+4.3 [ ] no
+
+
+5 Tests
+
+5.1 flawfinder diff
+No new flaws.
+5.1 [ ] yes
+5.1 [x] no - flawfinder currently not available, no new flaws expected
+
+5.2 Used memory leak debugger
+5.2 [ ] yes
+5.2 [x] no - comment: Minimal code change, no allocation of memory.
+
+5.3 Manual tests
+Description:
+Enabled reporting. The recomputation code also triggers creating reporting 
+entries for the queue consumables.
+- added centries -> no entries in reporting file
+- changed centries, e.g. attribute "requestable" -> no entries in reporting file
+- changed consumable attribute -> entries in reporting file
+- for consumables, changed default request -> entries in reporting file
+
+Successfull execution
+5.3 [x] yes
+5.3 [ ] no - comment:
+
+5.4 Testsuite covers issue
+5.4 [ ] yes
+5.4 [x] no - comment:
+
+5.5 If 5.4 = no: Testsuite issue created
+5.5 [x] yes
+5.5 [ ] no - comment:
+
+5.6 Testsuite run successfull
+5.6 [ ] yes
+5.6 [x] no - comment: no test yet, testsuite issue 1375
+
+
+6 Comments
+
+
+7 Accepted
+7 [x] yes
+7 [ ] no - comment:
+
+

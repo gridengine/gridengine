@@ -1,3 +1,8 @@
+JG-2004-02-01-0: Testsuite: Fixed setting of scheduler configuration.
+                            Shutdown qmaster separately, after execds and 
+                            scheduler have been shutdown.
+                            Do not try to shutdown sge_commd's in 6.0 systems.
+
 CR-2004-01-31-1: Bugfix:    removed debug output to stdout
                  Changed:   qconf
 

@@ -39,7 +39,7 @@ proc vdep_set_sched_conf_defaults { change_array } {
    set chgar(flush_finish_sec)        "0"
    set chgar(params)                  "none"
    if { [string compare $ts_config(product_type) "sgeee"] == 0 } {
-      set default_array(queue_sort_method)          "load"
+      set chgar(queue_sort_method)          "load"
       set chgar(reprioritize_interval)    "00:00:40"
       set chgar(share_override_tickets)        "true"
       set chgar(share_functional_shares)       "true"

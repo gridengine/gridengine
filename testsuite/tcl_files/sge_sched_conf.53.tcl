@@ -35,8 +35,10 @@ proc vdep_set_sched_conf_defaults { change_array } {
    global ts_config
    upvar $change_array chgar
 
+   set chgar(user_sort)                  "false"
+
    if { [string compare $ts_config(product_type) "sgeee"] == 0 } {
-      set default_array(queue_sort_method)          "share"
+      set chgar(queue_sort_method)          "share"
       set chgar(sgeee_schedule_interval)    "00:00:40"
       set chgar(weight_tickets_deadline)    "10000"
    }

@@ -6273,13 +6273,13 @@ global CHECK_OUTPUT
 global CHECK_USER
 global CHECK_ADMIN_USER_SYSTEM do_compile
 
-   puts $CHECK_OUTPUT "killing qmaster, scheduler and all execds in the cluster ..."
+   puts $CHECK_OUTPUT "killing scheduler and all execds in the cluster ..."
 
    set result ""
    set do_ps_kill 0
-   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ke all -ks -km" ]
+   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ke all -ks" ]
 
-   puts $CHECK_OUTPUT "qconf -ke all -ks -km returned $prg_exit_state"
+   puts $CHECK_OUTPUT "qconf -ke all -ks returned $prg_exit_state"
    if { $prg_exit_state == 0 } {
       puts $CHECK_OUTPUT $result
    } else {
@@ -6287,40 +6287,62 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
    }
 
-   sleep 5  ;# give the qmaster time
-   puts $CHECK_OUTPUT "killing all commds in the cluster ..." 
-  
-   set do_it_as_root 0
-   foreach elem $CHECK_CORE_EXECD { 
-       puts $CHECK_OUTPUT "killing commd on host $elem"
-       if { $do_it_as_root == 0 } { 
-          set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-U -k -host $elem"  ]
-       } else {
-          set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
-       } 
-       if { $prg_exit_state == 0 } {
-          puts $CHECK_OUTPUT $result
-       } else {
-          puts $CHECK_OUTPUT $result
-          if { $prg_exit_state == 255 } {
-             puts $CHECK_OUTPUT "\"sgecommdcntl -k\" must be started by root user (to get reserved port)!"
-             puts $CHECK_OUTPUT "try again as root user ..." 
-             if { [ have_root_passwd ] == -1 } {
-                set_root_passwd 
-             }
-             if { $CHECK_ADMIN_USER_SYSTEM != 1 } {
-                set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
-             }
-          }
-          if { $prg_exit_state == 0 } {
-             set do_it_as_root 1 
-             puts $CHECK_OUTPUT $result
-             puts $CHECK_OUTPUT "sgecommdcntl -k -host $elem - success"
+   # if qconf failed, we also will not be able to shutdown qmaster with qconf
+   if { ! $do_ps_kill } {
+      sleep 5  ;# give the schedd and execd's some time to shutdown
+
+      puts $CHECK_OUTPUT "killing qmaster ..."
+
+      set result ""
+      set do_ps_kill 0
+      set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-km" ]
+
+      puts $CHECK_OUTPUT "qconf -km returned $prg_exit_state"
+      if { $prg_exit_state == 0 } {
+         puts $CHECK_OUTPUT $result
+      } else {
+         set do_ps_kill 1
+         puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
+      }
+
+      sleep 5  ;# give the qmaster some time to shutdown
+   }
+
+   if { $ts_config(gridengine_version) == 53 } {
+      puts $CHECK_OUTPUT "killing all commds in the cluster ..." 
+     
+      set do_it_as_root 0
+      foreach elem $CHECK_CORE_EXECD { 
+          puts $CHECK_OUTPUT "killing commd on host $elem"
+          if { $do_it_as_root == 0 } { 
+             set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-U -k -host $elem"  ]
           } else {
-             set do_ps_kill 1
-             puts $CHECK_OUTPUT "shutdown_core_system - commdcntl error or binary not found"
+             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
+          } 
+          if { $prg_exit_state == 0 } {
+             puts $CHECK_OUTPUT $result
+          } else {
+             puts $CHECK_OUTPUT $result
+             if { $prg_exit_state == 255 } {
+                puts $CHECK_OUTPUT "\"sgecommdcntl -k\" must be started by root user (to get reserved port)!"
+                puts $CHECK_OUTPUT "try again as root user ..." 
+                if { [ have_root_passwd ] == -1 } {
+                   set_root_passwd 
+                }
+                if { $CHECK_ADMIN_USER_SYSTEM != 1 } {
+                   set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
+                }
+             }
+             if { $prg_exit_state == 0 } {
+                set do_it_as_root 1 
+                puts $CHECK_OUTPUT $result
+                puts $CHECK_OUTPUT "sgecommdcntl -k -host $elem - success"
+             } else {
+                set do_ps_kill 1
+                puts $CHECK_OUTPUT "shutdown_core_system - commdcntl error or binary not found"
+             }
           }
-       }
+      }
    }
    
    if { $do_ps_kill == 1 && $do_compile == 0} {

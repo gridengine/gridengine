@@ -696,7 +696,6 @@ char *err_str
          used_slots, used_slots+1));
    set_qslots_used(master_q, used_slots+1);
 
-   
    /***************** write out sge host file ******************************/
    if (!slave_jep) {
       if (processor_set)
@@ -732,17 +731,17 @@ char *err_str
 
          slots = (int)lGetUlong(gdil_ep, JG_slots);
          qep = lFirst(lGetList(gdil_ep, JG_queue)); 
-         q_set = lGetString(qep, QU_processors);
+         q_set = qep ? lGetString(qep, QU_processors) : NULL;
          pe_slots += slots;
          fprintf(fp, "%s %d %s %s\n", 
             lGetHost(gdil_ep, JG_qhostname),
             slots, 
             lGetString(gdil_ep, JG_qname), 
-            q_set);
+            q_set ? q_set : "<NULL>");
          if (!hostcmp(lGetHost(master_q, QU_qhostname), lGetHost(gdil_ep, JG_qhostname))) {
             host_slots += slots;
             if (q_set && strcasecmp(q_set, "UNDEFINED")) {
-               parse_ranges(lGetString(qep, QU_processors), 0, 0, &alp, &processor_set, INF_ALLOWED);
+               parse_ranges(q_set, 0, 0, &alp, &processor_set, INF_ALLOWED);
                if (lGetNumberOfElem(alp))
                   alp = lFreeList(alp);
             }

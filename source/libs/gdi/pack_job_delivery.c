@@ -48,6 +48,7 @@ lListElem *pep  /* PE_Type */
    if ((ret=cull_pack_elem(pb, jep))!=PACK_SUCCESS) {
       return ret;
    }
+
    if ((ret=cull_pack_list(pb, qlp))!=PACK_SUCCESS) {
       return ret;
    }

@@ -56,6 +56,7 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
+/* EB: TODO: queue_types definition exists multiple times */
 static const char *queue_types[] = {
    "BATCH",        
    "INTERACTIVE",  
@@ -65,6 +66,8 @@ static const char *queue_types[] = {
 };
 
 lList *Master_Queue_List = NULL;
+
+static bool queue_has_type(const lListElem *this, u_long32 type);
 
 void queue_or_job_get_states(int nm, char *str, u_long32 op)
 {
@@ -675,5 +678,53 @@ lListElem *queue_create_template(void)
    lSetString(queue, QU_h_vmem, "INFINITY");
 
    return queue;
+}
+
+static bool queue_has_type(const lListElem *this, u_long32 type) 
+{
+   bool ret = false;
+
+   if (lGetUlong(this, QU_qtype) & type) {
+      ret = true;
+   }
+   return ret;
+}
+
+bool queue_is_batch_queue(const lListElem *this) 
+{
+   return queue_has_type(this, BQ);
+}
+
+bool queue_is_interactive_queue(const lListElem *this) 
+{
+   return queue_has_type(this, IQ);
+}
+
+bool queue_is_checkointing_queue(const lListElem *this) 
+{
+   return queue_has_type(this, CQ);
+}
+
+bool queue_is_parallel_queue(const lListElem *this) 
+{
+   return queue_has_type(this, PQ);
+}
+
+bool queue_print_qtype_to_dstring(const lListElem *this, dstring *string)
+{
+   bool ret = true;
+
+   if (this != NULL && string != NULL) {
+      const char **ptr = NULL;
+      u_long32 bitmask = 1;
+
+      for (ptr = queue_types; **ptr != '\0'; ptr++) {
+         if (bitmask & lGetUlong(this, QU_qtype)) {
+            sge_dstring_sprintf_append(string, "%s ", *ptr);
+         }
+         bitmask <<= 1;
+      };
+   } 
+   return ret;
 }
 

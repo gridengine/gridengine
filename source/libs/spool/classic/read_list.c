@@ -655,36 +655,29 @@ int sge_read_queue_list_from_disk()
                
                if (!(exec_host = host_list_locate(Master_Exechost_List, 
                      lGetHost(qep, QU_qhostname)))) {
-                  if (lGetUlong(qep, QU_qtype) & TQ) { /* JG: TODO: we no longer have transfer queues */
-                     ERROR((SGE_EVENT, MSG_CONFIG_CANTRECREATEQEUEUEXFROMDISKBECAUSEOFUNKNOWNHOSTY_SS,
-                     lGetString(qep, QU_qname), lGetHost(qep, QU_qhostname)));
-                     lRemoveElem(Master_Queue_List, qep);
-                  }
-                  else {
-                     /* JG: TODO: if we get a queue and don't know the exec host:
-                      * old behaviour: create it. Does this make sense?
-                      * or better report an error?
-                      * for now, report an error, as sge_add_host_of_type
-                      * raises unsolvable dependency problems!
-                      */
+                  /* JG: TODO: if we get a queue and don't know the exec host:
+                   * old behaviour: create it. Does this make sense?
+                   * or better report an error?
+                   * for now, report an error, as sge_add_host_of_type
+                   * raises unsolvable dependency problems!
+                   */
 #if 0
-                     if (sge_add_host_of_type(lGetHost(qep, QU_qhostname), 
-				SGE_EXECHOST_LIST)) {
-                        qep = lFreeElem(qep);
-                        lFreeList(direntries);
-                        DEXIT;
-                        return -1;
-                     }
-#else
-                     ERROR((SGE_EVENT, MSG_CONFIG_CANTRECREATEQEUEUEXFROMDISKBECAUSEOFUNKNOWNHOSTY_SS,
-                     lGetString(qep, QU_qname), lGetHost(qep, QU_qhostname)));
-                     lRemoveElem(Master_Queue_List, qep);
+                  if (sge_add_host_of_type(lGetHost(qep, QU_qhostname), 
+         SGE_EXECHOST_LIST)) {
                      qep = lFreeElem(qep);
                      lFreeList(direntries);
                      DEXIT;
                      return -1;
-#endif
                   }
+#else
+                  ERROR((SGE_EVENT, MSG_CONFIG_CANTRECREATEQEUEUEXFROMDISKBECAUSEOFUNKNOWNHOSTY_SS,
+                  lGetString(qep, QU_qname), lGetHost(qep, QU_qhostname)));
+                  lRemoveElem(Master_Queue_List, qep);
+                  qep = lFreeElem(qep);
+                  lFreeList(direntries);
+                  DEXIT;
+                  return -1;
+#endif
                } 
 
                /*

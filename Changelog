@@ -1,3 +1,7 @@
+EB-2003-05-07-0  Cleanup:   wrapper functions to access QU_qtype attribute
+                            (part 1: move pe/ckpt references intgo QU_Type 
+                             object) 
+
 JG-2003-05-06-0  Bugfix:    array tasks were not deleted (bug introduced in 
                             change JG-2003-04-29-0), some cleanup.
                  Review:    EB

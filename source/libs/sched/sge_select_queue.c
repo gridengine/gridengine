@@ -626,7 +626,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
 
    if (pe) { /* parallel job */
       /* is it a parallel queue ? */
-      if (!(lGetUlong(queue, QU_qtype) & PQ)) {
+      if (!queue_is_parallel_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a parallel queue as requested by " 
             "job %d\n", queue_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELQUEUE_S,  
@@ -653,7 +653,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
 
    if (ckpt) { /* ckpt job */
       /* is it a ckpt queue ? */
-      if (!(lGetUlong(queue, QU_qtype) & CQ)) {
+      if (!queue_is_checkointing_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a checkpointing queue as requested by "
                   "job %d\n", queue_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTACKPTQUEUE_SS, queue_name);
@@ -680,17 +680,16 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    /* to be activated as soon as immediate jobs are available */
    if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { /* immediate job */
       /* is it an interactve job and an interactive queue ? */
-      if (!lGetString(job, JB_script_file) && !(lGetUlong(queue, QU_qtype) & IQ)) {
+      if (!lGetString(job, JB_script_file) && 
+          !queue_is_checkointing_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not an interactive queue as requested by "
                   "job %d\n", queue_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTINTERACTIVE_S, queue_name);
          DEXIT;
          return 7;
       } else /* is it a batch job and a batch or transfer queue ? */
-      if (lGetString(job, JB_script_file) &&
-          !(lGetUlong(queue, QU_qtype) & BQ) &&
-          !(lGetUlong(queue, QU_qtype) & TQ)) {
-         DPRINTF(("Queue \"%s\" is not a serial (batch or transfer) queue as "
+      if (lGetString(job, JB_script_file) && !queue_is_batch_queue(queue)) {
+         DPRINTF(("Queue \"%s\" is not a serial batch queue as "
                   "requested by job %d\n", queue_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
          DEXIT;
@@ -700,9 +699,8 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
 
    if (!pe && !ckpt && !JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { /* serial (batch) job */
       /* is it a batch or transfer queue */
-      if (!(lGetUlong(queue, QU_qtype) & BQ) &&
-          !(lGetUlong(queue, QU_qtype) & TQ)) {
-         DPRINTF(("Queue \"%s\" is not a serial (batch or transfer) queue as "
+      if (!queue_is_batch_queue(queue)) {
+         DPRINTF(("Queue \"%s\" is not a serial batch queue as "
                   "requested by job %d\n", queue_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
          DEXIT;
@@ -711,8 +709,8 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    }
 
    if (ckpt && !pe && lGetString(job, JB_script_file) &&
-         (lGetUlong(queue, QU_qtype) & (PQ|BQ|TQ)) == PQ) {
-      DPRINTF(("Queue \"%s\" is not a serial (batch or transfer) queue as "
+       queue_is_parallel_queue(queue) && !queue_is_batch_queue(queue)) {
+      DPRINTF(("Queue \"%s\" is not a serial batch queue as "
                "requested by job %d\n", queue_name, (int)job_id));
       schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELJOB_S, queue_name);
       DEXIT;

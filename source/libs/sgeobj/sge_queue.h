@@ -42,6 +42,7 @@ typedef enum {
    QUEUE_TAG_IGNORE_TEMPLATE = 0x0001
 } queue_tag_t;
 
+
 extern lList *Master_Queue_List;
 
 void queue_or_job_get_states(int nm, char *str, u_long32 op);
@@ -80,5 +81,15 @@ queue_validate(lListElem *queue, lList **answer_list);
 
 lListElem *
 queue_create_template(void);
+
+bool queue_is_batch_queue(const lListElem *this);
+
+bool queue_is_interactive_queue(const lListElem *this);
+
+bool queue_is_checkointing_queue(const lListElem *this);
+
+bool queue_is_parallel_queue(const lListElem *this);
+
+bool queue_print_qtype_to_dstring(const lListElem *this, dstring *string);
 
 #endif /* __SGE_QUEUE_H */

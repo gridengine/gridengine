@@ -55,12 +55,13 @@
 #include "sge_userset.h"
 #include "sge_complex.h"
 #include "sge_conf.h"
+#include "sge_queue.h"
 
 #include "msg_common.h"
 
 static const char *queue_types[] = {
-   "BATCH",        
-   "INTERACTIVE",  
+   "BATCH",
+   "INTERACTIVE",
    "CHECKPOINTING",
    "PARALLEL",
    ""

@@ -1099,7 +1099,7 @@ lList *pe_list
 
       lListElem* found = NULL;
 
-      if (!(lGetUlong(qep, QU_qtype) & PQ)) {
+      if (!queue_is_parallel_queue(qep)) {
          lSetUlong(qep, QU_tagged, 0);
          continue;
       }

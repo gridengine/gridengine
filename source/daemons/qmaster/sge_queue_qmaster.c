@@ -955,8 +955,7 @@ int sub_command
 
    if (add) {
       if (!host_list_locate(Master_Exechost_List, 
-                           lGetHost(new_queue, QU_qhostname)) &&
-         !(lGetUlong(new_queue, QU_qtype) & TQ))
+                           lGetHost(new_queue, QU_qhostname)))
          sge_add_host_of_type(lGetHost(new_queue, QU_qhostname), SGE_EXECHOST_LIST);
       queue_clear_unknown(new_queue);
    }

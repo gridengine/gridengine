@@ -1221,20 +1221,8 @@ lListElem *jatep
    if ((lGetUlong(qep, QU_state) & QUNKNOWN)==0) {
       const char *hnm, *pnm;
 
-      if (lGetUlong(qep, QU_qtype) & TQ) {
-         lListElem *hep;
-         pnm = prognames[QSTD];
-         if (!(hep=host_list_locate(Master_Exechost_List, 
-                                    lGetHost(qep, QU_qhostname)))
-            || !(hnm=lGetString(hep, EH_real_name))) {
-            ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetHost(hep, EH_name)));
-            DEXIT;
-            return -1;
-         }
-      } else {
-         pnm = prognames[EXECD]; 
-         hnm = lGetHost(qep, QU_qhostname);
-      }
+      pnm = prognames[EXECD]; 
+      hnm = lGetHost(qep, QU_qhostname);
 
       /* map hostname if we are simulating hosts */
       if(simulate_hosts == 1) {

@@ -35,7 +35,7 @@
 
 QMASTER_DIR = $(SDIR)/daemons/qmaster
 
-QMASTER_TARGETS = sge_qmaster test_sge_qmaster_timed_event
+QMASTER_TARGETS = sge_qmaster
 
 QMASTER_SRC = sge_qmaster_main.c \
               sge_c_ack.c \

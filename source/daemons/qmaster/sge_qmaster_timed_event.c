@@ -826,8 +826,7 @@ static void* deliver_events(void* anArg)
 
    DENTER(TOP_LAYER, "deliver_events");
 
-   lInit(nmv);
-   sge_setup(QMASTER, NULL);
+   sge_qmaster_thread_init();
 
    while (should_exit() == false) {
       sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);

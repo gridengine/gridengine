@@ -158,12 +158,10 @@ int main(int argc, char* argv[])
    commlib_mt_init(); /* shall be removed with new comm system */
 #endif
 
-   lInit(nmv);
-
    sigfillset(&sig_set);
    pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
 
-   sge_setup(QMASTER, NULL);
+   sge_qmaster_thread_init();
 
    become_admin_user();
 
@@ -1006,16 +1004,11 @@ static void* signal_thread(void* anArg)
 
    DENTER(TOP_LAYER, "signal_thread");
 
-   lInit(nmv);
-   sge_setup(QMASTER, NULL);
+   sge_qmaster_thread_init();
 
    sigemptyset(&sig_set);
    sigaddset(&sig_set, SIGINT);
    sigaddset(&sig_set, SIGTERM);
-   
-   /* This is to set the correct hostname for uti_state_get_qualified_hostname() - CR */
-   reresolve_me_qualified_hostname();
-   DEBUG((SGE_EVENT,"my resolved hostname name is: \"%s\"\n",uti_state_get_qualified_hostname() ));
 
    while (true)
    {
@@ -1064,12 +1057,7 @@ static void* message_thread(void* anArg)
 {
    DENTER(TOP_LAYER, "message_thread");
 
-   lInit(nmv);
-   sge_setup(QMASTER, NULL);
-
-   /* This is to set the correct hostname for uti_state_get_qualified_hostname() - CR */
-   reresolve_me_qualified_hostname();
-   DEBUG((SGE_EVENT,"my resolved hostname name is: \"%s\"\n",uti_state_get_qualified_hostname() ));
+   sge_qmaster_thread_init();
 
    while (should_terminate() == false)
    {

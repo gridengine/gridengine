@@ -1,3 +1,8 @@
+CR-2002-09-09-2  I18N:      invalid escape sequence in one of msgid
+                 Bugtraq:   #4743505
+                 Changed:   inst_sgeee usage output
+
+
 AA-2002-09-05-0  I18N:      - Calculation failure in Functional policy
                             - Wrong mnemonic on qmon main window
                             - qmon dies with changes in Edit Tickets 

@@ -78,7 +78,6 @@
 typedef struct _tCClEntry {
    String qmaster_spool_dir;
    String execd_spool_dir;
-   String qsi_common_dir;
    String binary_path;
    String mailer;
    String xterm;
@@ -111,6 +110,7 @@ typedef struct _tCClEntry {
    lList *cluster_projects;
    lList *cluster_xprojects;
    int enforce_project;
+   int enforce_user;
    String qmaster_params;
    String schedd_params;
    String execd_params;
@@ -134,10 +134,6 @@ XtResource ccl_resources[] = {
 
    { "execd_spool_dir", "execd_spool_dir", XtRString, 
       sizeof(String), XtOffsetOf(tCClEntry, execd_spool_dir), 
-      XtRImmediate, NULL },
-
-   { "qsi_common_dir", "qsi_common_dir", XtRString, 
-      sizeof(String), XtOffsetOf(tCClEntry, qsi_common_dir), 
       XtRImmediate, NULL },
 
    { "binary_path", "binary_path", XtRString, 
@@ -258,6 +254,10 @@ XtResource ccl_resources[] = {
       sizeof(int), XtOffsetOf(tCClEntry, enforce_project), 
       XtRImmediate, NULL },
 
+   { "enforce_user", "enforce_user", XtRInt, 
+      sizeof(int), XtOffsetOf(tCClEntry, enforce_user), 
+      XtRImmediate, NULL },
+
    { "shell_start_mode", "shell_start_mode", XtRInt, 
       sizeof(int), XtOffsetOf(tCClEntry, shell_start_mode), 
       XtRImmediate, NULL },
@@ -347,6 +347,7 @@ static Widget cluster_shell_start_mode = 0;
 static Widget cluster_loglevel = 0;
 static Widget cluster_ignore_fqdn = 0;
 static Widget cluster_enforce_project = 0;
+static Widget cluster_enforce_user = 0;
 
 static Widget cluster_users = 0;
 static Widget cluster_xusers = 0;
@@ -623,6 +624,7 @@ Widget parent
                            "cluster_ok", &cluster_ok,
                            "cluster_cancel", &cluster_cancel,
                            "cluster_enforce_project", &cluster_enforce_project,
+                           "cluster_enforce_user", &cluster_enforce_user,
                            "cluster_usersPB", &cluster_usersPB,
                            "cluster_xusersPB", &cluster_xusersPB,
                            "cluster_users", &cluster_users,
@@ -674,6 +676,7 @@ Widget parent
 
    if (!feature_is_enabled(FEATURE_SGEEE)) {
       XtUnmanageChild(cluster_enforce_project);
+      XtUnmanageChild(cluster_enforce_user);
       XtUnmanageChild(cluster_gid_range);
       XtVaGetValues( cluster_projectsPB,
                      XmtNlayoutIn, &cluster_projects_col,
@@ -940,6 +943,7 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
   
    if (feature_is_enabled(FEATURE_SGEEE)) {
       XtSetSensitive(cluster_enforce_project, mode);
+      XtSetSensitive(cluster_enforce_user, mode);
       XtSetSensitive(cluster_projects, mode);
       XtSetSensitive(cluster_projectsPB, mode);
       XtSetSensitive(cluster_xprojects, mode);
@@ -1026,6 +1030,7 @@ int local
    static String loglevel[] = { "log_info", "log_warning", "log_err" };
 /*    static String logmail[] = { "true", "false" }; */
    static String enforce_project[] = { "true", "false" };
+   static String enforce_user[] = { "true", "false" };
    static String ignore_fqdn[] = { "true", "false" };
    String str = NULL;
    char min_uid[20];
@@ -1071,18 +1076,6 @@ int local
          }
          new = lCopyElem(ep);
          lSetString(new, CF_value, clen->execd_spool_dir);
-         lAppendElem(lp, new);
-      }
-
-      ep = lGetElemStr(confl, CF_name, "qsi_common_dir");
-      if (clen->qsi_common_dir && clen->qsi_common_dir[0] != '\0' 
-            /* && strcmp(lGetString(ep, CF_value), clen->qsi_common_dir)*/) {
-         if (check_white(clen->qsi_common_dir)) {
-            strcpy(errstr, "No whitespace allowed in value for qsi_common_dir");
-            goto error;
-         }
-         new = lCopyElem(ep);
-         lSetString(new, CF_value, clen->qsi_common_dir);
          lAppendElem(lp, new);
       }
 
@@ -1387,13 +1380,6 @@ int local
       }
       lSetString(ep, CF_value, clen->execd_spool_dir);
 
-      ep = lGetElemStr(confl, CF_name, "qsi_common_dir");
-      if (check_white(clen->qsi_common_dir)) {
-         strcpy(errstr, "No whitespace allowed in value for qsi_common_dir");
-         goto error;
-      }
-      lSetString(ep, CF_value, clen->qsi_common_dir);
-
       ep = lGetElemStr(confl, CF_name, "binary_path");
       if (check_white(clen->binary_path)) {
          strcpy(errstr, "No whitespace allowed in value for binary_path");
@@ -1596,6 +1582,12 @@ int local
                clen->enforce_project < sizeof(enforce_project))
             str = enforce_project[clen->enforce_project];
          ep = lGetElemStr(confl, CF_name, "enforce_project");
+         lSetString(ep, CF_value, str);
+
+         if (clen->enforce_user >= 0 && 
+               clen->enforce_user < sizeof(enforce_user))
+            str = enforce_user[clen->enforce_user];
+         ep = lGetElemStr(confl, CF_name, "enforce_user");
          lSetString(ep, CF_value, str);
 
          if (clen->gid_range && clen->gid_range[0] != '\0') {
@@ -1860,9 +1852,6 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "execd_spool_dir")))
       clen->execd_spool_dir = XtNewString(lGetString(ep, CF_value));
 
-   if ((ep = lGetElemStr(confl, CF_name, "qsi_common_dir")))
-      clen->qsi_common_dir = XtNewString(lGetString(ep, CF_value));
-
    if ((ep = lGetElemStr(confl, CF_name, "binary_path")))
       clen->binary_path = XtNewString(lGetString(ep, CF_value));
 
@@ -1992,6 +1981,13 @@ tCClEntry *clen
       else
          clen->enforce_project = 1;
 
+      if ((ep = lGetElemStr(confl, CF_name, "enforce_user")))
+         str = lGetString(ep, CF_value);
+      if (str && !strcasecmp(str, "true"))
+         clen->enforce_user = 0;
+      else
+         clen->enforce_user = 1;
+
       if ((ep = lGetElemStr(confl, CF_name, "gid_range")))
          clen->gid_range = XtNewString(lGetString(ep, CF_value));
 
@@ -2074,10 +2070,6 @@ tCClEntry *clen
    if (clen->execd_spool_dir) {
       XtFree((char*)clen->execd_spool_dir);
       clen->execd_spool_dir = NULL;
-   }
-   if (clen->qsi_common_dir) {
-      XtFree((char*)clen->qsi_common_dir);
-      clen->qsi_common_dir = NULL;
    }
    if (clen->binary_path) {
       XtFree((char*)clen->binary_path);
@@ -2172,6 +2164,7 @@ tCClEntry *clen
    clen->cluster_projects = lFreeList(clen->cluster_projects);
    clen->cluster_xprojects = lFreeList(clen->cluster_xprojects);
    clen->enforce_project = 1;    
+   clen->enforce_user = 1;    
 
    if (clen->qmaster_params) {
       XtFree((char*)clen->qmaster_params);

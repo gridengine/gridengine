@@ -193,7 +193,7 @@ enum NameSpaceBoundaries {
    JC_LOWERBOUND = QR_UPPERBOUND + 1,
    JC_UPPERBOUND = JC_LOWERBOUND + 1*BASIC_UNIT - 1,
 
-   /* combined job/queue list as needed in execd/qstd to hold jobs/queues */
+   /* combined job/queue list as needed in execd to hold jobs/queues */
    JQ_LOWERBOUND = JC_UPPERBOUND + 1,
    JQ_UPPERBOUND = JQ_LOWERBOUND + 1*BASIC_UNIT - 1,
 

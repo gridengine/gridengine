@@ -70,36 +70,6 @@ lListElem *hep
    return ret;
 }
 
-/*
-** NAME
-**   notify_new_conf_2_qstd - tell sge_qstd that its conf is outdated
-** PARAMETER
-**   hep     - host element to be notified, EH_Type
-** RETURN
-**   -1      - could not send message
-**   -2      - no execd host known on that host
-** EXTERNAL
-**   prognames
-** DESCRIPTION
-**   sends the message TAG_GET_NEW_CONF to an execution daemon.
-**   This function is executed when the qmaster receives a configuration
-**   report which is not up to date.
-*/
-int notify_new_conf_2_qstd(
-lListElem *hep 
-) {
-   int ret;
-   const char *hostname;
-   
-   DENTER(BASIS_LAYER, "notify_new_conf_2_qstd");
-   
-   hostname = lGetString(hep, EH_real_name);
-   ret = notify_new_conf(hostname, QSTD);
-
-   DEXIT;
-   return ret;
-}
-
 
 /*-------------------------------------------------------------------------*/
 static int notify_new_conf(

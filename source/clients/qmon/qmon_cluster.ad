@@ -148,7 +148,6 @@ Qmon*cluster_global_layout.XmText.marginWidth:          2
 Qmon*cluster_global_layout.xmtChildren: \
    InputField  cluster_qmaster_spool_dir = qmaster_spool_dir, \
                   cluster_execd_spool_dir = execd_spool_dir, \
-                  cluster_qsi_common_dir = qsi_common_dir, \
                   cluster_binary_path = binary_path, \
                   cluster_mailer = mailer, \
                   cluster_admin_mail = administrator_mail, \
@@ -169,7 +168,8 @@ Qmon*cluster_global_layout.xmtChildren: \
    XmtChooser     cluster_shell_start_mode = shell_start_mode, \
                   cluster_ignore_fqdn = ignore_fqdn, \
                   cluster_loglevel = loglevel , \
-                  cluster_enforce_project = enforce_project; \
+                  cluster_enforce_project = enforce_project, \
+                  cluster_enforce_user = enforce_user; \
    StringList     cluster_users = cluster_users, \
                   cluster_xusers = cluster_xusers, \
                   cluster_projects = cluster_projects, \
@@ -186,7 +186,6 @@ Qmon*cluster_global_layout.layout: \
       Col { \
          Row { "@{Master Spool Dir}" <> Fixed 25 em cluster_qmaster_spool_dir }\
          Row { "@{Execd Spool Dir} " <> Fixed 25 em cluster_execd_spool_dir }\
-         Row { "@{QSI Common Dir}  " <> Fixed 25 em cluster_qsi_common_dir }\
          Row { "@{Binary Path}     " <> Fixed 25 em cluster_binary_path }\
          Row { "@{Mailer}          " <> Fixed 25 em cluster_mailer }\
          Row { "@{Xterm}           " <> Fixed 25 em cluster_xterm }\
@@ -253,6 +252,7 @@ Qmon*cluster_global_layout.layout: \
          } \
          Fixed Caption "@{Ignore FQDN}" cluster_ignore_fqdn \
          Fixed Caption "@{Enforce Project}"  cluster_enforce_project \
+         Fixed Caption "@{Enforce User}"  cluster_enforce_user \
          Fixed Caption tl "@{GID Range for Job Monitoring}" cluster_gid_range \
          <> \
       } \
@@ -285,6 +285,9 @@ Qmon*cluster_global_layout.cluster_enforce_project.chooserType: ChooserOption
 Qmon*cluster_global_layout.cluster_enforce_project.strings: \
    "@{True}", "@{False}"
 
+Qmon*cluster_global_layout.cluster_enforce_user.chooserType: ChooserOption
+Qmon*cluster_global_layout.cluster_enforce_user.strings: \
+   "@{True}", "@{False}"
 
 Qmon*cluster_global_layout.cluster_usersPB.labelType:               PIXMAP
 Qmon*cluster_global_layout.cluster_usersPB.labelPixmap:             aclask
@@ -329,7 +332,6 @@ Qmon*cluster_global_layout.cluster_reschedule_unknownPB.labelInsensitivePixmap: 
 !!
 Qmon*cluster_global_layout.cluster_qmaster_spool_dir.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_execd_spool_dir.verifyCallback: TrimAndTrail(self);
-Qmon*cluster_global_layout.cluster_qsi_common_dir.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_binary_path.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_mailer.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_admin_mail.verifyCallback: TrimAndTrail(self);

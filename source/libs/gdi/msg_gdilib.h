@@ -882,9 +882,6 @@
 #define MSG_GDI_USAGE_show_license_OPT                   "[-show-license]"
 #define MSG_GDI_UTEXT_show_license_OPT                   _("show license information")
 
-#define MSG_GDI_USAGE_qstd_OPT_QSTD_HOST                 "[-qstd <qstd host>]"
-#define MSG_GDI_UTEXT_qstd_OPT_QSTD_HOST                 _("show the status of a foreign QS")
-
 #define MSG_GDI_USAGE_JQ_DEST_OPR                        "job_queue_list"
 #define MSG_GDI_USAGE_SRVR_NM_OPR                        "server_name"
 #define MSG_GDI_USAGE_MESSAGE_OPR                        "message"

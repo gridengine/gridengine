@@ -35,7 +35,6 @@
 
 
 int notify_new_conf_2_execd(lListElem *hep);
-int notify_new_conf_2_qstd(lListElem *hep);
 
 #endif /* __QMASTER_TO_EXECD_H */
 

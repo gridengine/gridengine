@@ -604,26 +604,12 @@ sge_pack_buffer *pb
    lXchgList(report, REP_list, &jrl);
 
    /*
-   ** trigger resend of master registered jobs on execd/qstd startup after 
+   ** trigger resend of master registered jobs on execd startup after 
    ** first job report
    */
-   if (!strcmp(commproc, prognames[QSTD])) {
-      lListElem *psep;
-      for_each(psep, Master_Exechost_List) {
-         if (!hostcmp(rhost, lGetString(psep, EH_real_name)) && 
-             lGetUlong(psep, EH_startup)) {
-            lSetUlong(psep, EH_startup, 0);
-            DPRINTF(("->>Resend Trigger for host: %s\n", 
-                     lGetHost(psep, EH_name)));
-         }
-      }
+   if (lGetUlong(hep, EH_startup)) {
+      lSetUlong(hep, EH_startup, 0);
    }
-   else {   /* execd case */
-      if (lGetUlong(hep, EH_startup)) {
-         lSetUlong(hep, EH_startup, 0);
-      }
-   } 
-   
 
    DEXIT;
    return;

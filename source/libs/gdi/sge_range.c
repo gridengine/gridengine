@@ -53,7 +53,6 @@
 #include "sge_sched.h"
 #include "cull_sort.h"
 #include "usage.h"
-/* #include "qstd_status.h" */
 #include "parse.h"
 #include "parse_range.h"
 #include "sge_me.h"

@@ -68,6 +68,8 @@ int exit_on_error
       }
    }   
 
+DPRINTF(("sge_mkdir(%s)\n", path));
+
    memset(path_, 0, sizeof(path_));
    while ((unsigned char) path[i]) {
       path_[i] = path[i];

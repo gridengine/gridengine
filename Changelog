@@ -1,3 +1,9 @@
+AH-2001-11-28-0: Feature: added enforce_project switch to cluster configuration
+                 removed dead code on QSI/qstd
+
+                 This requires manual addition of a 'enforce_project' field 
+                 into the global configuration.
+
 CR-2001-11-28-1: Testsuite
                     Conformation of the testsuite because of changes from
                     CR-2001-11-28-0, Issuzilla #79, Bugtrag #4531719
@@ -6,7 +12,6 @@ CR-2001-11-28-0: Issuzilla #79, Bugtraq #4531719
                  Reject changing of qmaster_spool_dir, execd_spool_dir
                  admin_user, default_domain and ignore_fqdn in running cluster.
                  
-
 AS-2001-11-26-0: execd now exits on SIGTERM also when commd is down
                  Bugtraq #4531720
 
@@ -21,10 +26,12 @@ CR-2001-11-26-0: Testsuite:
                     AH-2001-11-23-1, Removed unused configuration parameters
 
 AH-2001-11-26-1: Fix 'minus_n=0' problem in dist/mpi/rsh wrapper script
+                 (Bugtraq #4532155)
                  Fix error in generating rmon lib dependencies
 
 AH-2001-11-26-0: Fix qmaster problem with not existing task spool 
                  directory when task file is written.
+                 (Bugtraq #4532157)
 
 JG-2001-11-26-2: Made qconf -secl use the new lHost datatype and access
                  functions (see CR-2001-11-23-1).

@@ -37,7 +37,6 @@
 struct confel {                       /* cluster configuration parameters */
     char        *qmaster_spool_dir;   /* qmaster spool directory path */
     char        *execd_spool_dir;     /* sge_spool directory base path */
-    char        *qsi_common_dir;      /* qsi command file path */
     char        *binary_path;         /* path to the Sge binaries */
     char        *mailer;              /* path to e-mail delivery agent */
     char        *xterm;               /* xterm path for interactive jobs */
@@ -52,7 +51,8 @@ struct confel {                       /* cluster configuration parameters */
     u_long32    stat_log_time;        /* how often to log stats */
     u_long32    max_unheard;          /* how long before sge_execd considered dead */
     u_long32    loglevel;             /* qmaster event logging level */
-    char        *enforce_project;     /* sge attribute: "true" or "false" */
+    char        *enforce_project;     /* SGEEE attribute: "true" or "false" */
+    char        *enforce_user;        /* SGEEE attribute: "true" or "false" */
     char        *administrator_mail;  /* list of mail addresses */
     lList       *user_lists;          /* allowed user lists */
     lList       *xuser_lists;         /* forbidden users lists */

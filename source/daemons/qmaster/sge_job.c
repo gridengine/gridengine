@@ -413,6 +413,15 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    /* check sge attributes */
    if (feature_is_enabled(FEATURE_SGEEE)) {
 
+      /* ensure user exists if enforce_user flag is set */
+      if (conf.enforce_user && !strcasecmp(conf.enforce_user, "true") && 
+               !sge_locate_user_prj(ruser, Master_User_List)) {
+         ERROR((SGE_EVENT, MSG_JOB_USRUNKNOWN_S, ruser));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      } 
+
       /* set default project */
       if (!lGetString(jep, JB_project) && ruser && Master_User_List) {
          lListElem *uep;

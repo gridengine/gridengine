@@ -54,7 +54,6 @@
 #include "sge_sched.h"
 #include "cull_sort.h"
 #include "usage.h"
-/* #include "qstd_status.h" */
 #include "sge_feature.h"
 #include "parse.h"
 #include "parse_range.h"

@@ -203,7 +203,6 @@ static void chg_conf_val(lList *lp_cfg, char *name, char **field, u_long32 *val,
 static tConfEntry conf_entries[] = {
  { "qmaster_spool_dir", 0, NULL,                1, NULL },
  { "execd_spool_dir",   1, NULL,                1, NULL },
- { "qsi_common_dir",    1, NULL,                1, NULL },
  { "binary_path",       1, NULL,                1, NULL },
  { "mailer",            1, MAILER,              1, NULL },
  { "xterm",             1, "/usr/bin/X11/xterm",1, NULL },
@@ -223,6 +222,7 @@ static tConfEntry conf_entries[] = {
  { "max_unheard",       0, MAX_UNHEARD,         1, NULL },
  { "loglevel",          0, LOGLEVEL,            1, NULL },
  { "enforce_project",   0, "false",             1, NULL },
+ { "enforce_user",      0, "false",             1, NULL },
  { "administrator_mail",0, "none",              1, NULL },
  { "set_token_cmd",     1, "none",              1, NULL },
  { "pag_cmd",           1, "none",              1, NULL },
@@ -273,11 +273,6 @@ lList *sge_set_defined_defaults(lList *lpCfg)
       pConf->value = malloc(strlen(path.cell_root) + strlen(SPOOL_DIR) + 2);
       sprintf(pConf->value, "%s/%s", path.cell_root, SPOOL_DIR);
 
-      pConf = getConfEntry("qsi_common_dir", conf_entries);
-      pConf->value = malloc(strlen(path.cell_root) + strlen(COMMON_DIR) + 
-                              strlen(QSI_DIR) + 3);
-      sprintf(pConf->value, "%s/%s/%s", path.cell_root, COMMON_DIR, QSI_DIR);
-
       pConf = getConfEntry("binary_path", conf_entries);
       pConf->value = malloc(strlen(path.sge_root) + strlen(SGE_BIN) + 2);
       sprintf(pConf->value, "%s/%s", path.sge_root, SGE_BIN);
@@ -288,8 +283,9 @@ lList *sge_set_defined_defaults(lList *lpCfg)
    lpCfg = NULL;
    i = 0;       
    while (conf_entries[i].name) {
-      if (feature_is_enabled(FEATURE_SGEEE) || 
-          strcmp("enforce_project", conf_entries[i].name)) {
+      if (feature_is_enabled(FEATURE_SGEEE) ||             
+          strcmp("enforce_project", conf_entries[i].name) || 
+          strcmp("enforce_user", conf_entries[i].name)) {
          ep = lAddElemStr(&lpCfg, CF_name, conf_entries[i].name, CF_Type);
          lSetString(ep, CF_value, conf_entries[i].value);
          lSetUlong(ep, CF_local, conf_entries[i].local);
@@ -359,7 +355,6 @@ lList *lpCfg
    
    chg_conf_val(lpCfg, "qmaster_spool_dir", &mconf->qmaster_spool_dir, NULL, 0);
    chg_conf_val(lpCfg, "execd_spool_dir", &mconf->execd_spool_dir, NULL, 0);
-   chg_conf_val(lpCfg, "qsi_common_dir", &mconf->qsi_common_dir, NULL, 0);
    chg_conf_val(lpCfg, "binary_path", &mconf->binary_path, NULL, 0);
    chg_conf_val(lpCfg, "mailer", &mconf->mailer, NULL, 0);
    chg_conf_val(lpCfg, "xterm", &mconf->xterm, NULL, 0);
@@ -406,6 +401,7 @@ lList *lpCfg
    
    chg_conf_val(lpCfg, "load_report_time", NULL, &mconf->load_report_time, TYPE_INT);
    chg_conf_val(lpCfg, "enforce_project", &mconf->enforce_project, NULL, 0);
+   chg_conf_val(lpCfg, "enforce_user", &mconf->enforce_user, NULL, 0);
    chg_conf_val(lpCfg, "stat_log_time", NULL, &mconf->stat_log_time, TYPE_TIM);
    chg_conf_val(lpCfg, "max_unheard", NULL, &mconf->max_unheard, TYPE_TIM);
    chg_conf_val(lpCfg, "loglevel", NULL, &mconf->loglevel, TYPE_LOG);
@@ -797,7 +793,6 @@ void sge_show_conf()
 
    DPRINTF(("conf.qmaster_spool_dir      >%s<\n", conf.qmaster_spool_dir));
    DPRINTF(("conf.execd_spool_dir        >%s<\n", conf.execd_spool_dir));
-   DPRINTF(("conf.qsi_common_dir         >%s<\n", conf.qsi_common_dir));
    DPRINTF(("conf.binary_path            >%s<\n", conf.binary_path));
    DPRINTF(("conf.mailer                 >%s<\n", conf.mailer));
    DPRINTF(("conf.prolog                 >%s<\n", conf.prolog));
@@ -814,6 +809,7 @@ void sge_show_conf()
    DPRINTF(("conf.xterm                  >%s<\n", conf.xterm?conf.xterm:"none"));
    DPRINTF(("conf.load_sensor            >%s<\n", conf.load_sensor?conf.load_sensor:"none"));
    DPRINTF(("conf.enforce_project        >%s<\n", conf.enforce_project?conf.enforce_project:"none"));
+   DPRINTF(("conf.enforce_user           >%s<\n", conf.enforce_user?conf.enforce_user:"none"));
    DPRINTF(("conf.set_token_cmd          >%s<\n", conf.set_token_cmd?conf.set_token_cmd:"none"));
    DPRINTF(("conf.pag_cmd                >%s<\n", conf.pag_cmd?conf.pag_cmd:"none"));
    DPRINTF(("conf.token_extend_time      >%u<\n", (unsigned) conf.token_extend_time));
@@ -866,7 +862,6 @@ sge_conf_type *conf
 ) {
    FREE(conf->qmaster_spool_dir);
    FREE(conf->execd_spool_dir);
-   FREE(conf->qsi_common_dir);
    FREE(conf->binary_path);
    FREE(conf->mailer);
    FREE(conf->xterm);
@@ -876,6 +871,7 @@ sge_conf_type *conf
    FREE(conf->shell_start_mode);
    FREE(conf->login_shells);
    FREE(conf->enforce_project);
+   FREE(conf->enforce_user);
    FREE(conf->administrator_mail);
    lFreeList(conf->user_lists);
    lFreeList(conf->xuser_lists);

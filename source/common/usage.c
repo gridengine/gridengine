@@ -1179,7 +1179,6 @@ FILE *fp
       fprintf(fp, "\n\n");
       fprintf(fp, "%s %s [options]\n",MSG_GDI_USAGE_USAGESTRING , prognames[me.who]);
                     
-      PRINTITD(MSG_GDI_USAGE_qstd_OPT_QSTD_HOST , MSG_GDI_UTEXT_qstd_OPT_QSTD_HOST );
    }
 
    fflush(fp);

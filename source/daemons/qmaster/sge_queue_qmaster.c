@@ -89,16 +89,8 @@
 #include "qidl_c_gdi.h"
 #endif
 
-#ifdef PW
-/*
-** for qsi license checking
-*/
-extern u_long32 pw_num_qsi_qs;
-#endif
-
 static int mod_queue_attributes(lList **alpp, lListElem *new_queue, lListElem *qep, int add, int sub_command);
 
-static int sge_count_qsi_queues(void);
 
 static void clear_unknown(lListElem *qep);
 
@@ -346,19 +338,6 @@ int sub_command
       if (qtype & TQ) {
          lListElem *hel;
          char pseudohostname[MAXHOSTLEN], qhostname[MAXHOSTLEN];
-#ifdef PW         
-         int nr_qsiq = 0;
-         /*
-         ** check licensed qsi queues and refuse if no more licenses
-         */
-         if ((nr_qsiq = sge_count_qsi_queues()) >= pw_num_qsi_qs) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_TOOFEWQSIQLIC_II, (int) pw_num_qsi_qs, 
-                     nr_qsiq + 1));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
-            DEXIT;
-            return STATUS_EEXIST;
-         }
-#endif         
          
          /* add the exechost for the real hostname */
          strcpy(qhostname, lGetHost(new_queue, QU_qhostname));
@@ -1390,63 +1369,3 @@ const char *obj_name   /* e.g. "pvm", "hibernator"  */
    DEXIT;
    return STATUS_OK;
 }
-
-
-/* -----------------------------------
-   sge_count_qsi_queues - count the number of currently configured qsi
-                           queues
-
-   returns: number of qsi queues
-*/
-static int sge_count_qsi_queues()
-{
-   int number_of_qsi_queues = 0;
-
-   lList *ql;
-   static lCondition *transfer_queue = NULL;
-
-   DENTER(TOP_LAYER, "sge_count_qsi_queues");
-
-   ql = lCopyList("queue list", Master_Queue_List);
-
-   if (!transfer_queue)
-      transfer_queue = lWhere("%T(%I m= %u)", QU_Type, QU_qtype, TQ);
-
-   ql = lSelectDestroy(ql, transfer_queue);
-   number_of_qsi_queues = lGetNumberOfElem(ql);
-   lFreeList(ql);
-
-   DEXIT;
-   return number_of_qsi_queues;
-}
-
-/*-----------------------------------------------------------------------
- * 
- *------------------------------------------------------------------------*/
-int check_qsiq_lic(
-int licensed_qsi_queues,
-int verbose 
-) {  
-
-   int current_qsi_queues = 0;
-   
-   DENTER(TOP_LAYER, "check_qsiq_lic");
-
-   if ((current_qsi_queues = sge_count_qsi_queues()) < 0) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTCOUNT_QSIQ_S, SGE_FUNC));
-      return 0;
-   } 
-
-   if (current_qsi_queues > licensed_qsi_queues) {
-      if (verbose)
-         CRITICAL((SGE_EVENT, MSG_SGETEXT_TOOFEWQSIQLIC_II, licensed_qsi_queues, current_qsi_queues));
-      DEXIT;
-      return 1;
-   }
-   else {
-      DEXIT;
-      return 0;
-   }
-}            
-
-

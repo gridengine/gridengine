@@ -638,36 +638,18 @@ int sub_command
             user, host);
          break;
 
-#if 0
-      case SGE_CKPT_LIST:
-         sge_add_ckpt(ep, &(answer->alp), user, host);
-         break;
-#endif
-
       default:
          if (!ao) {
             sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
             sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
             break;
          } 
-         if (request->target==SGE_EXECHOST_LIST) {
-            int qstd_mode;
-            if (!strcmp(prognames[EXECD], request->commproc) ||
-               !strcmp(prognames[QSTD], request->commproc)) {
-               if (!strcmp(prognames[EXECD], request->commproc)) {
-                  qstd_mode = 0;
-               } else {
-                  qstd_mode = 1;
-               }
-               sge_execd_startedup(ep, &(answer->alp), user, host, 
-                  request->target, qstd_mode);
-            } else {
-               sge_gdi_add_mod_generic(&(answer->alp), ep, 1, ao, 
-                  user, host, sub_command);
-            }
-         } else { 
-            sge_gdi_add_mod_generic(&(answer->alp), ep, 1, ao, user, 
-               host, sub_command);
+         if (request->target==SGE_EXECHOST_LIST && 
+               !strcmp(prognames[EXECD], request->commproc)) {
+               sge_execd_startedup(ep, &(answer->alp), user, host, request->target);
+         } else {
+            sge_gdi_add_mod_generic(&(answer->alp), ep, 1, ao, 
+               user, host, sub_command);
          }
          break;
       }

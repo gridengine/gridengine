@@ -541,11 +541,7 @@ lList *new_hl
 
    for_each(qep, new_ql) {
 
-      /*
-      ** we must remap the qhostname for qstd queues
-      */
       qhostname = lGetHost(qep, QU_qhostname);
-      
       qname = lGetString(qep, QU_qname);
       /* quarkify  QU_qname */
       id = (long) XrmStringToQuark(qname);

@@ -106,13 +106,6 @@ static int verify_scaling_list(lList **alpp, lListElem *hep);
 
 static int sge_unlink_object(lListElem *ep, int nm);
 
-#ifdef PW
-/*
-** for qsi license checking
-*/
-extern u_long32 pw_num_qsi_qs;
-#endif
-
 /* ------------------------------------------ 
 
    adds the host to host_list with type 
@@ -1144,7 +1137,7 @@ void master_notify_execds()
 }
 
 /********************************************************************
- Notify execd and qstd on a host to shutdown
+ Notify execd on a host to shutdown
  ********************************************************************/
 static void notify(
 lListElem *lel,
@@ -1153,7 +1146,6 @@ int kill_jobs,
 int force 
 ) {
    const char *hostname;
-   u_long qstd_alive;
    u_long execd_alive;
    static u_short number_one = 1;
    const char *action_str;
@@ -1170,10 +1162,9 @@ int force
 
    hostname = lGetHost(lel, EH_name);
 
-   qstd_alive = last_heard_from(prognames[QSTD], &number_one, hostname);
    execd_alive = last_heard_from(prognames[EXECD], &number_one, hostname);
 
-   if (!force && (!execd_alive && !qstd_alive)) {
+   if (!force && !execd_alive) {
       WARNING((SGE_EVENT, MSG_OBJ_NOEXECDONHOST_S, hostname));
       sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, 
                      NUM_AN_WARNING);
@@ -1189,19 +1180,6 @@ int force
       DPRINTF((SGE_EVENT));
       sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);
    }
-#ifdef PW
-   if ((qstd_alive || force) && pw_num_qsi_qs) {
-      if (notify_kill_job(lel, kill_jobs, prognames[QSTD])) {
-         INFO((SGE_EVENT, MSG_COM_NONOTIFICATIONQ_SSSS, action_str, 
-               (qstd_alive ? "" : MSG_OBJ_UNKNOWN), "qstd",  hostname));
-      } else {
-         INFO((SGE_EVENT, MSG_COM_NOTIFICATIONQ_SSSS, action_str, 
-               (qstd_alive ? "" : MSG_OBJ_UNKNOWN), "qstd", hostname));
-      }
-      DPRINTF((SGE_EVENT));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);
-   }
-#endif
 
    if(kill_jobs) {
       /* mark killed jobs as deleted */
@@ -1238,7 +1216,7 @@ int force
       }
    }
 
-   sge_mark_unheard(lel, NULL); /* for both qstd and execd */
+   sge_mark_unheard(lel, NULL); /* for both execd */
 
    DEXIT;
    return;
@@ -1313,9 +1291,7 @@ lListElem *host,
 lList **alpp,
 char *ruser,
 char *rhost,
-u_long32 target,
-int qstd_mode 
-) {
+u_long32 target) {
    lListElem *hep, *qep;
 
    DENTER(TOP_LAYER, "sge_execd_startedup");
@@ -1359,17 +1335,15 @@ int qstd_mode
    }
 
    DPRINTF(("=====>STARTING_UP: %s %s on >%s< is starting up\n", 
-      feature_get_product_name(FS_SHORT_VERSION), qstd_mode ? "qstd" : "execd", rhost));
+      feature_get_product_name(FS_SHORT_VERSION), "execd", rhost));
 
    /*
    ** loop over pseudo hosts and set EH_startup flag
    */
-   if (!qstd_mode) {
-      lSetUlong(hep, EH_startup, 1);
-      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, rhost, hep);
-   }
+   lSetUlong(hep, EH_startup, 1);
+   sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, rhost, hep);
 
-   INFO((SGE_EVENT, MSG_LOG_REGISTER_SS, qstd_mode ? "qstd" : "execd", rhost));
+   INFO((SGE_EVENT, MSG_LOG_REGISTER_SS, "execd", rhost));
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, 0);
 
    DEXIT;

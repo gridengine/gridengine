@@ -59,7 +59,7 @@ void sge_load_value_garbage_collector(u_long32 now);
 
 int sge_count_uniq_hosts(lList *ahl, lList *shl);
 
-int sge_execd_startedup(lListElem *hep, lList **alpp, char *ruser, char *rhost, u_long32 target, int qstd_mode);
+int sge_execd_startedup(lListElem *hep, lList **alpp, char *ruser, char *rhost, u_long32 target);
 
 u_long32 load_report_interval(lListElem *hep); 
 

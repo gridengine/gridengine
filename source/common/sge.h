@@ -124,7 +124,6 @@
 #define TMP_ERR_FILE_QMASTER      "/tmp/qmaster_messages"
 #define TMP_ERR_FILE_SCHEDD       "/tmp/schedd_messages"
 #define TMP_ERR_FILE_SHADOWD      "/tmp/shadowd_messages"
-#define TMP_ERR_FILE_QSTD         "/tmp/qstd_messages"
 #define TMP_ERR_FILE_QIDLD        "/tmp/qidl_messages"
 
 #define COMMON_DIR               "common"
@@ -135,7 +134,6 @@
 #define QMASTER_PID_FILE          "qmaster.pid"
 #define EXECD_PID_FILE            "execd.pid"
 #define SCHEDD_PID_FILE           "schedd.pid"
-#define QSTD_PID_FILE             "qstd.pid"
 #define SHADOWD_PID_FILE          "shadowd_%s.pid"
 
 #define DEFAULT_ACCOUNT           "sge"

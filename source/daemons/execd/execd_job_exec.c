@@ -83,10 +83,10 @@ static int handle_job(lListElem *jelem, lListElem *jatep, struct dispatch_entry 
 static int handle_task(lListElem *jelem, lListElem *jatep, struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, int *synchron);
 
 /*************************************************************************
-EXECD/QSTD function called by dispatcher
+EXECD function called by dispatcher
 
 get job from qmaster and store it in execd local structures and files
-real execution is done by the cyclic execd_ck_to_do()/qstd_ck_to_do()
+real execution is done by the cyclic execd_ck_to_do()
 
  jobs_to_start will be incremented
 

@@ -417,10 +417,9 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_TLIST(JB_qs_args, ST_Type)       /* ST_Type - contains arguments     */
                                         /* given to a foreign QS            */
    SGE_TLIST(JB_path_aliases, PA_Type)  /* path aliases list               */
-   SGE_XSTRING(JB_foreign_job_id)       /* qstd needs this to hold the name */
-                                        /* of the foreign queueing system   */
-   SGE_XULONG(JB_poll_lastgmt)          /* needed by qstd to trigger job    */
-   SGE_XULONG(JB_poll_interval)         /* status polling                   */
+   SGE_XSTRING(JB_foreign_job_id)       /* unused                           */
+   SGE_XULONG(JB_poll_lastgmt)          /* unused                           */
+   SGE_XULONG(JB_poll_interval)         /* unused                           */
 
    SGE_XSTRING(JB_pe_task_id_str)       /* string identifying pe task -     */
                                         /* e.g. pvm tid                     */

@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2001/11/28 13:43:02 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2001/11/28 14:18:48 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2001/11/28 13:43:02 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2001/11/28 14:18:48 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -605,6 +605,23 @@ for details.
 .PP
 Changing \fBenforce_project\fP will take immediate effect.
 The default for \fBenforce_project\fP is \fIfalse\fP.
+.PP
+.PP
+This value is a global configuration parameter only. It cannot be
+overwritten by the execution host local configuration.
+.\"
+.\"
+.SH "\fBenforce_user\fP"
+This parameter is only available for xxQS_NAME_EExx systems. It is not present in
+xxQS_NAME_Cxx.
+.PP
+If set to \fItrue\fB, a xxQS_NAME_EExx
+.M user 5
+must exists to allow for job submission. Jobs are rejected if no corresponding user 
+exists. 
+.PP
+Changing \fBenforce_user\fP will take immediate effect.
+The default for \fBenforce_user\fP is \fIfalse\fP.
 .PP
 .PP
 This value is a global configuration parameter only. It cannot be

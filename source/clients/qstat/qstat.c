@@ -56,7 +56,6 @@
 #include "sge_sched.h"
 #include "cull_sort.h"
 #include "usage.h"
-/* #include "qstd_status.h" */
 #include "sge_feature.h"
 #include "parse.h"
 #include "parse_range.h"
@@ -94,7 +93,6 @@ static lList *sge_parse_qstat(lList **ppcmdline, lList **pplresource, lList **pp
 static int qstat_usage(FILE *fp, char *what);
 static int qstat_show_job(lList *jid);
 static int qstat_show_job_info(void);
-/* static void qstat_qstd(char *hostname, u_long32 full_listing);  */
 
 lList *complex_list;
 lList *exechost_list = NULL;
@@ -195,12 +193,6 @@ char **argv
       SGE_EXIT(1);
    }
 
-   /*
-   ** if hostname is set we are in qstd mode
-   */
-/*    if (hostname) { */
-/*       qstat_qstd(hostname, full_listing); */
-/*    } */
 
    set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
    set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
@@ -1208,10 +1200,6 @@ lList *alp = NULL;
       if (!qselect_mode && (rp = parse_until_next_opt(sp, "-g", NULL, ppcmdline, &alp)) != sp)
          continue;
 
-      /* -qstd */
-      if (!qselect_mode && (rp = parse_until_next_opt(sp, "-qstd", NULL, ppcmdline, &alp)) != sp)
-         continue;
-
       /* -j [jid {,jid}]*/
       if (!qselect_mode && (rp = parse_until_next_opt2(sp, "-j", NULL, ppcmdline, &alp)) != sp)
          continue;
@@ -1461,9 +1449,6 @@ lList **ppljid
          continue;
       }
 
-      if(parse_string(ppcmdline, "-qstd", &alp, hostname)) 
-         break;
-
       if(parse_string(ppcmdline, "-l", &alp, &argstr)) {
          *pplresource = sge_parse_resources(*pplresource, NULL, argstr, "hard");
          FREE(argstr);
@@ -1542,8 +1527,6 @@ char *what
          fprintf(fp, "        [-ne]                           %s",MSG_QSTAT_USAGE_HIDEEMPTYQUEUES);
       fprintf(fp, "        [-pe pe_list]                   %s",MSG_QSTAT_USAGE_SELECTONLYQUEESWITHONOFTHESEPE);
       fprintf(fp, "        [-q destin_id_list]             %s",MSG_QSTAT_USAGE_PRINTINFOONGIVENQUEUE);
-      if (!qselect_mode) 
-         fprintf(fp, "        [-qstd <qstd host>]             %s",MSG_QSTAT_USAGE_SHOWSTATUSOFFOREIGNQS);
       if (!qselect_mode) 
          fprintf(fp, "        [-r]                            %s",MSG_QSTAT_USAGE_SHOWREQUESTEDRESOURCESOFJOB);
       if (!qselect_mode) {
@@ -1893,87 +1876,3 @@ static int qstat_show_job_info()
    DEXIT;
    return 0;
 }
-
-
-/*-------------------------------------------------------------------------*/
-/* qstd specific qstat functionality                                       */
-/*-------------------------------------------------------------------------*/
-/* static void qstat_qstd(hostname, full_listing)  */
-/* char *hostname; */
-/* u_long32 full_listing;  */
-/* { */
-/*    int first = 0; */
-/*    char *msg = NULL; */
-/*    u_short from_id = 0; */
-/*    u_long32 msg_len = 0; */
-/*    char unique[MAXHOSTLEN]; */
-/*    int tag = TAG_QSTD_QSTAT; */
-/*    char *str; */
-/*    int ret; */
-/*    sge_pack_buffer pb; */
-/*    u_short compressed; */
-/*  */
-/*    DENTER(TOP_LAYER, "qstat_qstd"); */
-/*  */
-/*    if(init_packbuffer(&pb, 256, 0) != PACK_SUCCESS) { */
-/*       SGE_EXIT(1); */
-/*    } */
-/*  */
-/*    if (full_listing) */
-/*       packint(&pb, REPORT_ALL); */
-/*    else */
-/*       packint(&pb, REPORT_JOB_STATUS | REPORT_SUBMITHOST | REPORT_SUBMITDIR); */
-/*  */
-/*    ret=getuniquehostname(hostname, unique, 0); */
-/*    DPRINTF(("host: '%s' unique: '%s'\n", hostname, unique)); */
-/*  */
-/*    if (ret != CL_OK) { */
-/*       CRITICAL((SGE_EVENT, MSG_QSI_NOVALIDQSIHOSTSPECIFIED)); */
-/*       SGE_EXIT(1); */
-/*    } */
-/*  */
-/*    ret = ask_commproc(unique, prognames[QSTD], 1); */
-/*    if (ret) { */
-/*       CRITICAL((SGE_EVENT, MSG_QSTAT_CANTREACHXCAUSEY_SS, prognames[QSTD], */
-/*                   cl_errstr(ret))); */
-/*       SGE_EXIT(1); */
-/*    } */
-/*  */
-/*    ret = send_message_pb(1, prognames[QSTD], 1, unique, */
-/*             TAG_QSTD_QSTAT, &pb, NULL); */
-/*    if (ret!=CL_OK) { */
-/*       fprintf(stderr, MSG_QSTAT_CANTSENDQSTATREQTOQSTD_SSSS,"qstat","qstd", */
-/*          unique, cl_errstr(ret)); */
-/*       SGE_EXIT(0); */
-/*    }      */
-/*    first = 1; */
-/*    do { */
-/*       ret = receive_message(prognames[QSTD], &from_id, unique,  */
-/*                             &tag, &msg, &msg_len, 1, &compressed);  */
-/*       if (ret == NACK_TIMEOUT) { */
-/*          if (first) { */
-/*             first = 0; */
-/*             fprintf(stderr, MSG_QSTAT_WAINTINGFORREPLYFROMQSTD_SS, "qstd",unique); */
-/*          } */
-/*          fprintf(stderr, "."); */
-/*       } */
-/*    } while (ret == NACK_TIMEOUT); */
-/*    fprintf(stderr, "\n"); */
-/*  */
-/*    if (ret!=CL_OK) { */
-/*       fprintf(stderr, MSG_QSTAT_CANTGETREPLYONQSTATREQFROMQSTD_SSSS , "qstat","qstd",hostname, cl_errstr(ret)); */
-/*       SGE_EXIT(0); */
-/*    } else { */
-/*       if (msg) { */
-/*          init_packbuffer_from_buffer(&pb, msg, msg_len, compressed); */
-/*          while (!unpackstr(&pb, &str)) { */
-/*             if (str) */
-/*                printf("%s", str); */
-/*          } */
-/*       } */
-/*    } */
-/*    FREE(hostname); */
-/*  */
-/*    SGE_EXIT(0); */
-/* } */
-

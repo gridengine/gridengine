@@ -495,8 +495,8 @@ lList **finished_jobs
    }
 
    /*--------------------------------------------------------------------
-    * CALL SGE SCHEDULER TO
-    * CALCULATE TICKETS FOR EACH JOB  - IN SUPPORT OF SGE
+    * CALL SGEEE SCHEDULER TO
+    * CALCULATE TICKETS FOR EACH JOB  - IN SUPPORT OF SGEEE
     *------------------------------------------------------------------*/
 
    if (sgeee_mode) {

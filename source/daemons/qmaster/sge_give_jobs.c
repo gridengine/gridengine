@@ -163,23 +163,9 @@ lListElem *hep
    }
    */
 
-   /* target type depends on queues type */
-   if (lGetUlong(master_qep, QU_qtype) & TQ) {
-      target = prognames[QSTD];
-      /* get qstd hostname for delivery */ 
-      rhost = lGetString(hep, EH_real_name);
-      DPRINTF(("qstd host: %s\n", rhost));
-      if (!rhost) {
-         ERROR((SGE_EVENT, MSG_OBJ_NOREALNAMEINHOST_S, lGetHost(hep, EH_name)));
-         DEXIT;
-         return -1;
-      }
-   }
-   else {
-      target = prognames[EXECD];
-      rhost = lGetHost(master_qep, QU_qhostname);
-      DPRINTF(("execd host: %s\n", rhost));
-   }
+   target = prognames[EXECD];
+   rhost = lGetHost(master_qep, QU_qhostname);
+   DPRINTF(("execd host: %s\n", rhost));
 
    /* build complex list for all queues in the gdil list */
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
@@ -255,7 +241,7 @@ lListElem *hep,
 int master 
 ) {
    int len, failed;
-   int execd_enrolled;  /* should spell execd_or_qstd_enrolled */
+   int execd_enrolled;  
    u_long32 now;
    sge_pack_buffer pb;
    u_long32 dummymid;

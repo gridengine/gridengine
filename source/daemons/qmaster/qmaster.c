@@ -189,7 +189,7 @@ char **argv
    int pw_print;
    char *pw_file;
    int license_invalid;
-   int ckpt_mode, pw_qsi_queues, pw_ckpt;
+   int ckpt_mode, pw_ckpt;
 #endif   
    lList *ref_list = NULL, *alp = NULL, *pcmdline = NULL;
    lListElem *aep;
@@ -367,12 +367,11 @@ char **argv
    makedirs();
 
 #ifdef PW
-   /* check here ckpt and qsi, sge_setup_qmaster reads in the lists first */
+   /* check here ckpt sge_setup_qmaster reads in the lists first */
    ckpt_mode = set_licensed_feature("ckpt");
-   pw_qsi_queues = check_qsiq_lic(pw_num_qsi_qs, 1);
    pw_ckpt = check_ckpt_lic(ckpt_mode, 1);
    
-   if (pw_qsi_queues || pw_ckpt) {
+   if (pw_ckpt) {
       SGE_EXIT(1);
    }
 #endif
@@ -751,8 +750,6 @@ lList *report_list
 
             if (!strcmp(prognames[EXECD], commproc))
                ret = notify_new_conf_2_execd(hep);
-            else if (!strcmp(prognames[QSTD], commproc))
-               ret = notify_new_conf_2_qstd(hep);
 
             ret = notify_new_conf_2_execd(hep);
 
@@ -786,7 +783,7 @@ lList *report_list
                process_job_report(report, hep, rhost, commproc, &pb);
 
                if (pb_filled(&pb)) {
-                  /* send all stuff packed during processing to execd/qstd */
+                  /* send all stuff packed during processing to execd */
                   sge_send_any_request(0, NULL, rhost, commproc, id, &pb, 
                                        TAG_ACK_REQUEST); 
                }

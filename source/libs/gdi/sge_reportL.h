@@ -76,8 +76,7 @@ enum {
 LISTDEF(REP_Type)
    SGE_ULONG(REP_type)        /* type of report, e.g. load report */
    SGE_HOST(REP_host)       /* hostname as it is seen by sender of report */ /* CR - hostname change */
-   SGE_STRING(REP_queue)      /* neccesary for qstd, gives queue this 
-                               * report is directed to */
+   SGE_STRING(REP_queue)      /* unused */
    SGE_LIST(REP_list)         /* list type depends on REP_type */
    SGE_ULONG(REP_version)     /* used to report software version of execd */
    SGE_ULONG(REP_seqno)       /* used to recognize old reports sent by execd */

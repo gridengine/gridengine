@@ -116,11 +116,15 @@ Content
      installation. (The exception is if you run Grid Engine, Enhanced
      Edition, on SGI systems).
 
-   o It may be more convenient to have a file with the list of hosts that
+   o Host list file
+
+     It may be more convenient to have a file with the list of hosts that
      will be installed. The format for this file is one hostname per line. 
      The names may also be typed in manually when the installation prompts.
 
-   o If any stty commands exist in the users' startup scripts, jobs
+   o Shell configuration
+
+     If any stty commands exist in the users' startup scripts, jobs
      submitted to Grid Engine may fail as there is no terminal associated
      with a Grid Engine batch job. If there are stty commands, one of the
      following must be done:
@@ -144,8 +148,8 @@ Content
    as well as to add automatic daemon startup to the init area. This requires
    logging on to each execution host as root and manually running the install
    program. Alternatively, if there is a secure machine with root rsh access
-   to all machines, the execution host install can be done from a single
-   machine.
+   to all machines, the execution host install can be done on all exec hosts
+   in a single step from the secure machine.
 
    o Step One - Install the master host
 
@@ -168,6 +172,25 @@ Content
      If the qmaster host will also be an execution host, run this command
      on it as well.
 
+     o Noninteractive installation
+
+       If you wish to run the install scripts and accept all default options
+       without interaction, you can execute them with the -auto and -fast
+       flags, for example:
+
+          ./install_execd -auto -fast
+
+       './install_execd -help' and './install_qmaster -help' will give a list
+       of all flags for each command.
+     
+     o Cluster installation
+
+       If you want to install many exec hosts simultaneously using the default
+       options, you can use the 'install_cluster.sh' script in the directory
+       $SGE_ROOT/util.  This script needs to be run from a machine which has
+       root rsh privilege on all exec hosts.  Please note that each machine
+       needs to already fulfill the prerequisite conditions listed in Steps
+       3 and 4.  'install_cluster.sh -help' will tell you its usage.
 
 7) Verify installation
 ----------------------

@@ -6571,7 +6571,36 @@ struct object_info_entry *info_entry
          if (!qlp)
             qlp = lCreateList("list", info_entry->cull_descriptor);
          add_qp = lCopyElem(*epp);
-         lSetString(add_qp, info_entry->nm_name, **spp);
+         switch(lGetType(add_qp->descr, info_entry->nm_name)) {
+            case lUlongT:
+               lSetUlong(add_qp, info_entry->nm_name, atol(**spp));
+               break;
+            case lLongT:
+               lSetLong(add_qp, info_entry->nm_name, atol(**spp));
+               break;
+            case lIntT:
+               lSetInt(add_qp, info_entry->nm_name, atoi(**spp));
+               break;
+            case lFloatT:
+               lSetDouble(add_qp, info_entry->nm_name, atof(**spp));
+               break;
+            case lDoubleT:
+               lSetDouble(add_qp, info_entry->nm_name, atof(**spp));
+               break;
+            case lCharT:
+               lSetChar(add_qp, info_entry->nm_name, **spp[0]);
+               break;
+            case lStringT:
+               lSetString(add_qp, info_entry->nm_name, **spp);
+               break;
+            case lHostT:   
+               lSetHost(add_qp, info_entry->nm_name, **spp);
+               break;
+            default:
+               sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf");
+               sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+               return 1;
+         }
          lAppendElem(qlp, add_qp);
       }
       if (!qlp) {

@@ -192,7 +192,15 @@ ExecuteAsAdmin()
       Translate 1 "Probably a permission problem. Please check file access permissions."
       Translate 1 "Check read/write permission. Check if SGE daemons are running."
       $ECHO >&2
+
       $INFOTEXT -log "Command failed: %s" $*
+      $INFOTEXT -log "Probably a permission problem. Please check file access permissions."
+      $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
+
+      if [ $AUTO = true ]; then
+         MoveLog
+      fi
+
       exit 1
    fi
    return 0
@@ -313,6 +321,10 @@ THIRD_PARTY_FILES=openssl
       "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
       "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
 
+      if [ $AUTO = true ]; then
+         MoveLog
+      fi
+
       exit 1
    fi
 }
@@ -363,6 +375,11 @@ ErrUsage()
              "   <SGE_ROOT> = SGE_ROOT directory of old 5.x installation.\n" \
              "   <SGE_CELL> = SGE_CELL name of old 5.x installation." $myname 
    $INFOTEXT -log "It seems, that you have entered a wrong option, please check the usage!"
+
+      if [ $AUTO = true ]; then
+         MoveLog
+      fi
+
    exit 1
 }
 

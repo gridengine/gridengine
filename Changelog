@@ -1,3 +1,7 @@
+MD-2004-05-25-0: Bugfix:    added many log messages
+                 Changed:   inst_sge
+                 Review:    pending
+
 AD-2004-05-25-0: Bugfix:    Configuration version increment has been lost.
                  Changed:   qmaster
                  Review:    pending

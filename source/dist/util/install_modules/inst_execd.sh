@@ -106,6 +106,11 @@ CheckQmasterInstallation()
                   "on the machine which shall run the Grid Engine qmaster\n"
       $INFOTEXT -log "\nObviously there was no qmaster installation yet!\nCall >install_qmaster<\n" \
                   "on the machine which shall run the Grid Engine qmaster\n"
+
+      if [ $AUTO = true ]; then
+         MoveLog
+      fi
+
       exit 1
    else
       $INFOTEXT "\nUsing cell: >%s<\n" $SGE_CELL_VAL
@@ -140,6 +145,11 @@ CheckQmasterInstallation()
       fi
       $INFOTEXT "Installation failed. Exit."
       $INFOTEXT -log "Installation failed. Exit."
+
+      if [ $AUTO = true ]; then
+         MoveLog
+      fi
+
       exit 1
    fi
 }
@@ -264,7 +274,12 @@ CheckHostNameResolving()
          $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Contact qmaster again (y/n) ('n' will abort) [y] >> " 
          if [ $? != 0 ]; then
             $INFOTEXT "Installation failed"
-            $INFOTEXT -log "Installation failed"
+            $INFOTEXT -log "Cannot contact qmaster! Installation failed"
+
+            if [ $AUTO = true ]; then
+               MoveLog
+            fi
+
             exit 1
          fi
       else
@@ -327,6 +342,7 @@ CheckHostNameResolving()
 
             if [ $AUTO = true ]; then
                $INFOTEXT -log "Installation failed!\nThis hostname is not known at qmaster as an administrative host."
+               MoveLog
                exit 1
             fi
            

@@ -69,6 +69,14 @@ GetCell()
     SGE_CELL=$CELL_NAME
     SGE_CELL_VAL=$CELL_NAME
     $INFOTEXT -log "Using >%s< as CELL_NAME." "$CELL_NAME"
+
+    if [ -d $SGE_ROOT/$SGE_CELL ]; then
+       $INFOTEXT -log "The cell name you have used already exists!"
+       $INFOTEXT -log "This may cause, that data can be lost!"
+       $INFOTEXT -log "Please, check this directory and remove it, or use any other cell name"
+       exit 1
+    fi 
+
    else
    while [ $is_done = "false" ]; do 
       $CLEAR
@@ -300,10 +308,17 @@ SetSpoolingOptionsBerkeleyDB()
    if [ $AUTO = "true" ]; then
       SPOOLING_SERVER=$DB_SPOOLING_SERVER
       SPOOLING_DIR="$DB_SPOOLING_DIR"
+
+      if [ "$SPOOLING_DIR" = "" ]; then
+         $INFOTEXT -log "Please enter a Berkeley DB spooling directory!"
+         MoveLog
+         exit 1
+      fi
+
       if [ -d $SPOOLING_DIR -a $SPOOLING_SERVER != "none" ]; then
          $INFOTEXT -log "The spooling directory [%s] already exists! Exiting installation!" $SPOOLING_DIR
          MoveLog
-         exit 0 
+         exit 1 
       fi
       #SpoolingCheckParams
       params_ok=1
@@ -347,6 +362,12 @@ SetSpoolingOptionsBerkeleyDB()
             SpoolingQueryChange
             if [ -d $SPOOLING_DIR ]; then
                $INFOTEXT -n -ask "y" "n" -def "n" "The spooling directory already exists! Do you want to delete it? [n] >> "
+               
+               if [ $AUTO = true ]; then
+                  $INFOTEXT -log "The spooling directory already exists!\n Please remove it or choose any other spooling directory!"
+                  exit 1
+               fi
+ 
                if [ $? = 0 ]; then
                      RM="rm -r"
                      ExecuteAsAdmin $RM $SPOOLING_DIR
@@ -834,6 +855,12 @@ GetGidRange()
          $CLEAR
          done=true
       fi
+     if [ $AUTO = true -a "$GID_RANGE" = "" ]; then
+        $INFOTEXT -log "Please enter a valid GID Range. Installation failed!"
+        MoveLog
+        exit 1
+     fi
+ 
      $INFOTEXT -log "Using >%s< as gid range." "$CFG_GID_RANGE"  
    done
 }
@@ -976,6 +1003,10 @@ StartQmaster()
                 "configuration! Installation failed!"
       $INFOTEXT -log "sge_qmaster daemon didn't start. Please check your\n" \
                      "autoinstall configuration file! Installation failed!"
+      if [ $AUTO = true ]; then
+         MoveLog
+      fi
+
       exit 1
    fi
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
@@ -1210,14 +1241,20 @@ GetQmasterPort()
               if [ $AUTO != "true" ]; then
                  $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
                       "Check again (enter [n] to specify a port number) (y/n) [y] >> "
+                 ret=$?
               else
                  $INFOTEXT -log "Setting SGE_QMASTER_PORT"
-                 `false`
+                 ret=1
               fi
 
-            if [ $? = 0 ]; then
+            if [ $ret = 0 ]; then
                :
             else
+               if [ $AUTO = true ]; then
+                  $INFOTEXT -log "Please use an unused port number!"
+                  exit 1
+               fi
+
                $INFOTEXT -n "Please enter an unused port number >> "
                INP=`Enter $SGE_QMASTER_PORT`
 
@@ -1352,16 +1389,23 @@ GetExecdPort()
               if [ $AUTO != "true" ]; then
                  $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
                       "Check again (enter [n] to specify a port number) (y/n) [y] >> "
+                 ret=$?
               else
                  $INFOTEXT -log "Setting SGE_EXECD_PORT"
-                 `false`
+                 ret=1 
               fi
 
-            if [ $? = 0 ]; then
+            if [ $ret = 0 ]; then
                :
             else
                $INFOTEXT -n "Please enter an unused port number >> "
                INP=`Enter $SGE_EXECD_PORT`
+
+               if [ $AUTO = true ]; then
+                  $INFOTEXT -log "Please use an unused port number!"
+                  exit 1
+               fi
+
 
                if [ $INP = $SGE_QMASTER_PORT ]; then
                   $INFOTEXT "Please use any other port number!!!"
@@ -1370,6 +1414,7 @@ GetExecdPort()
                      $INFOTEXT -log "Please use any other port number!!!"
                      $INFOTEXT -log "This %s port number is used by sge_qmaster" $SGE_QMASTER_PORT
                      $INFOTEXT -log "Installation failed!!!"
+
                      exit 1
                   fi
                fi

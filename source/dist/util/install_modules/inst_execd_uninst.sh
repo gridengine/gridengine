@@ -37,6 +37,22 @@
 #
 # set -x
 
+WelcomeUninstall()
+{
+   if [ $AUTO = true ]; then
+      return
+   fi
+
+   $INFOTEXT -u "Grid Engine unistallation"
+   $INFOTEXT "\nYour are going to uninstall a execution host!\n" \
+             "If you are not sure what you are doing, than please stop\n" \
+             "this procedure with <CTRL-C>, else make sure, that your Grid\n" \
+             "Engine environment is set. To do this please source the settings file.\n\n" \
+             "Bourne Shell Users: . <sge-root>/<sge-cell>/common/settings.sh\n\n " \
+             "Tcsh Users: source <sge-root>/<sge-cell>/common/settings.csh "
+
+   $INFOTEXT -wait -n "\n\nHit <ENTER>, to continue! >>"
+}
 FetchHostname()
 {
    if [ $AUTO = "true" ]; then

@@ -1,3 +1,5 @@
+CR-2002-03-19-0  Bugfix:    Fixed broken build on IRIX6 arch
+
 CR-2002-03-18-1  Bugfix:    Mail on suspend wasn't working
                  Issue:     #86
  

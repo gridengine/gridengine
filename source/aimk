@@ -1012,7 +1012,7 @@ case LINUX6:
    if ( $USE_QMAKE == 0 ) then
       set MAKE = make
    endif
-   set OFLAG = "-O"
+   set OFLAG = "-O2"
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "-O3"
       endif

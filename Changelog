@@ -1,6 +1,4 @@
-AA-2003-03-21-0  Bugfix:    fix aimk -only-depend 
-                            sge_depend warnings that lead to sge fault during
-                            aimk depend. Missing -DNeedVarargsPrototypes for
+                            imk depend. Missing -DNeedVarargsPrototypes for
                             SOLARIS*
                             aimk.site missing variable defines
                             depend rule in 3rdparty/qmake/DARWIN/Makefile

@@ -63,7 +63,7 @@
 int gethostname(char *name, int namelen);
 #endif
 
-#ifdef DARWIN
+#if defined(DARWIN) || defined(FREEBSD)
 #   define SIGCLD SIGCHLD
 #endif
 

@@ -47,6 +47,7 @@
 #include "msg_execd.h"
 #include "sge_job.h"
 #include "sge_ja_task.h"
+#include "sge_pe.h"
 #include "sge_report.h"
 
 lList *jr_list = NULL;
@@ -335,4 +336,31 @@ int answer_error
    }
    DEXIT;
    return 0;
+}
+
+int
+execd_get_acct_multiplication_factor(const lListElem *pe, 
+                                     int slots, bool task)
+{
+   int factor = 1;
+
+   /* task of tightly integrated job: default factor 1 is OK - skip it */
+   if (!task) {
+      /* only parallel jobs need factors != 0 */
+      if (pe != NULL) {
+         /* only loosely integrated job will get factor != 0 */
+         if (!lGetBool(pe, PE_control_slaves)) {
+            /* if job is first task: factor = n, else n + 1 */
+            if (lGetBool(pe, PE_job_is_first_task)) {
+               factor = slots;
+            } else {
+               factor = slots + 1;
+            }
+         }
+      }
+   }
+
+   DPRINTF(("reserved usage will be multiplied by %d\n", factor));
+
+   return factor;
 }

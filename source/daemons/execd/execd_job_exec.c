@@ -287,6 +287,10 @@ int slave
        * attach queues to the master queue gdil element and all gdil elements
        * which refer to queues which are located on this host.
        */
+       /* JG: TODO: For loose pe jobs and reserved usage activated, we need
+        *           all queues.
+        *           Qmaster has to send all and we have to remove the hostcmp.
+        */
       if (!sge_hostcmp(uti_state_get_unqualified_hostname(), lGetHost(gdil_ep, JG_qhostname)) ||
           lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)) == gdil_ep) {
 

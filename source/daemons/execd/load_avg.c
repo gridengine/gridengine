@@ -60,6 +60,7 @@
 #include "sge_os.h"
 #include "sge_job.h"
 #include "sge_queue.h"
+#include "sge_pe.h"
 #include "sge_report.h"
 
 #ifdef COMPILE_DC
@@ -675,142 +676,297 @@ static void update_job_usage(void)
    return;
 }
 
-/* calculate reserved resource usage */
-static void get_reserved_usage(lList **job_usage_list) 
+static double
+calculate_reserved_vmem(lListElem *queue, int nslots) 
 {
-   lList *temp_job_usage_list, *new_ja_task_list;
-   lListElem *q=NULL, *jep, *gdil_ep, *jatep, *new_job, *new_ja_task;
+   double vmem = 0.0;
+
+
+   if (queue != NULL) {
+      double lim, h_vmem_lim, s_vmem_lim;
+      char err_str[128];
+
+      parse_ulong_val(&h_vmem_lim, NULL, TYPE_MEM,
+                      lGetString(queue, QU_h_vmem),
+                      err_str, sizeof(err_str)-1);
+
+      parse_ulong_val(&s_vmem_lim, NULL, TYPE_MEM,
+                      lGetString(queue, QU_s_vmem),
+                      err_str, sizeof(err_str)-1);
+
+      lim = h_vmem_lim<s_vmem_lim ? h_vmem_lim : s_vmem_lim;
+
+      /* INFINITY is mapped to DBL_MAX -> use 0; we cannot account INFINITY! */
+      if (lim == DBL_MAX) {
+         lim = 0.0;
+      }
+
+      vmem = lim * nslots;
+   }
+
+   return vmem;
+}
+
+static lList *
+calculate_reserved_usage(const lListElem *ja_task, const lListElem *pe_task,
+                         u_long32 job_id, u_long32 ja_task_id, 
+                         const char *pe_task_id,
+                         const lListElem *pe, u_long32 now)
+{
+   lList *ul;
+   lListElem *u;
+   int nslots=0, total_slots=0, usage_mul_factor = 1;
+   u_long32 start_time;
    double cpu_val, vmem_val, io_val, iow_val, vmem, maxvmem;
-   u_long32 jobid;
-   char err_str[128];
-   const char *taskidstr = NULL;
+   double wall_clock_time;
+
+   lListElem *gdil_ep;
+
+   /* calculate usage */
+   if (pe_task == NULL) {
+      start_time = lGetUlong(ja_task, JAT_start_time);
+   } else {
+      start_time = lGetUlong(pe_task, PET_start_time);
+   }
+   if (start_time && start_time < now)
+      wall_clock_time = now - start_time;
+   else
+      wall_clock_time = 0;
+
+   cpu_val = vmem_val = vmem = 0;
+
+   if (pe != NULL && lGetBool(pe, PE_control_slaves)) {
+      /* tight integration:
+       * master task: ja_task contains all granted queues. Take the first
+       *              queue of this host.
+       * slave tasks: pe_ja_task contains the queue the task is running in,
+       *              but without the queue information.
+       *              Get queue name from pe_ja_task and lookup queue info
+       *              from ja_task.
+       */
+      if (pe_task == NULL) {
+         gdil_ep = lGetElemHost(lGetList(ja_task, 
+                                         JAT_granted_destin_identifier_list),
+                                JG_qhostname, 
+                                uti_state_get_qualified_hostname());
+      } else {
+         const char *queue_name;
+
+         queue_name = lGetString(lFirst(lGetList(pe_task, 
+                                        PET_granted_destin_identifier_list)),
+                                 JG_qname);
+         gdil_ep = lGetElemStr(lGetList(ja_task, 
+                                        JAT_granted_destin_identifier_list), 
+                               JG_qname, queue_name);
+      }
+
+      if (gdil_ep != NULL) {
+         vmem = calculate_reserved_vmem(lGetObject(gdil_ep, JG_queue), 1);
+      }
+
+      /* we have the master task or a slave task of a tightly integrated job:
+       * reserved usage = wallclock * 1
+       */
+      usage_mul_factor = 1;
+   } else {
+      /*loose integration:
+       * loop over granted_destin_identifier_list and sum up limits * nslots
+       * of each queue.
+       */
+      for_each (gdil_ep, lGetList(ja_task, 
+                                  JAT_granted_destin_identifier_list)) {
+         nslots = lGetUlong(gdil_ep, JG_slots);
+         total_slots += nslots;
+
+         vmem += calculate_reserved_vmem(lGetObject(gdil_ep, JG_queue), 
+                                         nslots);
+      }
+      usage_mul_factor = execd_get_acct_multiplication_factor(pe, total_slots,
+                                                              false);
+   }
+
+   /* calc reserved vmem (in GB seconds) */
+   vmem_val = (vmem / 1073741824.0) * wall_clock_time;
+
+   /* calc reserved CPU time */
+   cpu_val = usage_mul_factor * wall_clock_time;
+
+   io_val = iow_val = maxvmem = 0;
+
+#ifdef COMPILE_DC
+   if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
+      /* use PDC actual I/O if available */
+      lList *jul;
+      lListElem *uep;
+      if ((jul=ptf_get_job_usage(job_id, ja_task_id, pe_task_id))) {
+         io_val = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_IO))) ?
+                  lGetDouble(uep, UA_value) : 0;
+         iow_val = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_IOW))) ?
+                  lGetDouble(uep, UA_value) : 0;
+         maxvmem = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_MAXVMEM))) ?
+                  lGetDouble(uep, UA_value) : 0;
+         lFreeList(jul);
+      }
+   }
+#endif
+
+   /* create the reserved usage list */
+   ul = lCreateList("usage_list", UA_Type);
+
+   if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_CPU)))
+      u = lAddElemStr(&ul, UA_name, USAGE_ATTR_CPU, UA_Type);
+   lSetDouble(u, UA_value, cpu_val);
+   if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_MEM)))
+      u = lAddElemStr(&ul, UA_name, USAGE_ATTR_MEM, UA_Type);
+   lSetDouble(u, UA_value, vmem_val);
+   if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_IO)))
+      u = lAddElemStr(&ul, UA_name, USAGE_ATTR_IO, UA_Type);
+   lSetDouble(u, UA_value, io_val);
+   if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_IOW)))
+      u = lAddElemStr(&ul, UA_name, USAGE_ATTR_IOW, UA_Type);
+   lSetDouble(u, UA_value, iow_val);
+
+   if (vmem != DBL_MAX) {
+      if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_MAXVMEM)))
+         u = lAddElemStr(&ul, UA_name, USAGE_ATTR_MAXVMEM, UA_Type);
+      lSetDouble(u, UA_value, vmem);
+   }
+   if (maxvmem != 0) {
+      if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_MAXVMEM)))
+         u = lAddElemStr(&ul, UA_name, USAGE_ATTR_MAXVMEM, UA_Type);
+      lSetDouble(u, UA_value, maxvmem);
+   }
+
+   return ul;
+}
+
+static lListElem *
+calculate_reserved_usage_ja_task(const lListElem *ja_task, 
+                                 u_long32 job_id, u_long32 ja_task_id, 
+                                 const lListElem *pe, u_long32 now, 
+                                 lListElem *new_job) 
+{
+   lList *usage_list;
+   lListElem *new_ja_task;
+
+   /* create data structures */
+   if (new_job == NULL) {
+      new_job = lCreateElem(JB_Type);
+      lSetUlong(new_job, JB_job_number, job_id);
+   }
+
+   new_ja_task = lAddSubUlong(new_job, JAT_task_number, ja_task_id, 
+                              JB_ja_tasks, JAT_Type); 
+
+   usage_list = calculate_reserved_usage(ja_task, NULL, 
+                                         job_id, ja_task_id, NULL, 
+                                         pe, now);
+  
+   lSetList(new_ja_task, JAT_usage_list, usage_list);
+
+   return new_job;
+}
+
+static lListElem *
+calculate_reserved_usage_pe_task(const lListElem *ja_task, 
+                                 const lListElem *pe_task,
+                                 u_long32 job_id, u_long32 ja_task_id, 
+                                 const char *pe_task_id, 
+                                 const lListElem *pe, u_long32 now, 
+                                 lListElem *new_job) 
+{
+   lListElem *new_ja_task, *new_pe_task;
+   lList *usage_list;
+
+   /* create data structures */
+   if (new_job == NULL) {
+      new_job = lCreateElem(JB_Type);
+      lSetUlong(new_job, JB_job_number, job_id);
+   }
+
+   new_ja_task = lGetElemUlong(lGetList(new_job, JB_ja_tasks), 
+                               JAT_task_number, ja_task_id);
+   
+   if (new_ja_task == NULL) {
+      new_ja_task = lAddSubUlong(new_job, JAT_task_number, ja_task_id, 
+                                 JB_ja_tasks, JAT_Type); 
+   }
+
+   new_pe_task = lAddSubStr(new_ja_task, PET_id, pe_task_id, JAT_task_list, 
+                            PET_Type);
+   
+   usage_list = calculate_reserved_usage(ja_task, pe_task, 
+                                         job_id, ja_task_id, pe_task_id,
+                                         pe, now);
+  
+   lSetList(new_pe_task, PET_usage, usage_list);
+
+   return new_job;
+}
+
+/* calculate reserved resource usage */
+static void get_reserved_usage(lList **job_usage_list)
+{
+   lList *temp_job_usage_list;
+   const lListElem *job;
    lEnumeration *what;
    u_long32 now;
-   double wall_clock_time;
 
    DENTER(TOP_LAYER, "get_reserved_usage");
 
    now = sge_get_gmt();
    what = lWhat("%T(%I %I)", JB_Type, JB_job_number, JB_ja_tasks);
+   /* JG: TODO: why use JB_Type etc.? We only need an object containing
+    * job_id, ja_task_id, pe_task_id and a usage_list.
+    * Same structure is delivered from PTF.
+    */
 
    temp_job_usage_list = lCreateList("JobResUsageList", JB_Type);
 
-   /* We only have to loop over jobs and ja tasks.
-    * It probably does not make sense to report a reserved usage
-    * on the pe task level.
-    */
-   for_each (jep, Master_Job_List) {
-      jobid = lGetUlong(jep, JB_job_number);
-      new_job = lCreateElem(JB_Type);
-      new_ja_task_list = lCreateList("jat_list", JAT_Type);
-      lSetUlong(new_job, JB_job_number, jobid);
-      lSetList(new_job, JB_ja_tasks, new_ja_task_list);
-      lAppendElem(temp_job_usage_list, new_job);
+   for_each (job, Master_Job_List) {
+      u_long32 job_id;
+      const lListElem *pe, *ja_task;
+      lListElem *new_job = NULL;
 
-      for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-         lList *ul;
-         lListElem *u;
-         u_long32 jataskid;
-         int nslots=0, total_slots=0;
-         u_long32 start_time;
+      job_id = lGetUlong(job, JB_job_number);
 
-         start_time = lGetUlong(jatep, JAT_start_time);
-         if (start_time && start_time < now)
-            wall_clock_time = now - start_time;
-         else
-            wall_clock_time = 0;
+      for_each (ja_task, lGetList(job, JB_ja_tasks)) {
+         u_long32 ja_task_id;
+         lListElem *pe_task;
 
-         jataskid = lGetUlong(jatep, JAT_task_number);
+         ja_task_id = lGetUlong(ja_task, JAT_task_number);
 
-         new_ja_task = lCreateElem(JAT_Type);
-         lSetUlong(new_ja_task, JAT_task_number, jataskid);
-         lAppendElem(new_ja_task_list, new_ja_task);
+         /* we need the pe to be able to calculate the number of slots used
+          * as multiplication factor for usage
+          */
+         pe = lGetObject(ja_task, JAT_pe_object);
 
-         cpu_val = vmem_val = vmem = 0;
-
-         for_each (gdil_ep,
-                   lGetList(jatep, JAT_granted_destin_identifier_list)) {
-
-            double lim, h_vmem_lim, s_vmem_lim;
-
-            if (sge_hostcmp(uti_state_get_qualified_hostname(),
-                  lGetHost(gdil_ep, JG_qhostname)) ||
-                  !(q = lGetObject(gdil_ep, JG_queue)))
-               continue;
-
-            nslots = lGetUlong(gdil_ep, JG_slots);
-
-            total_slots += nslots;
-
-            parse_ulong_val(&h_vmem_lim, NULL, TYPE_TIM,
-                            lGetString(q, QU_h_vmem),
-                            err_str, sizeof(err_str)-1);
-
-            parse_ulong_val(&s_vmem_lim, NULL, TYPE_TIM,
-                            lGetString(q, QU_s_vmem),
-                            err_str, sizeof(err_str)-1);
-
-            lim = h_vmem_lim<s_vmem_lim ? h_vmem_lim : s_vmem_lim;
-
-            if (lim == DBL_MAX)
-               vmem = DBL_MAX;
-            else
-               vmem += lim * nslots;
+         /* if we have a pid for the ja_task: it's either a non parallel job
+          * or the master task of a parallel job.
+          * Produce a usage record for it.
+          */
+         if (lGetUlong(ja_task, JAT_pid) != 0) { 
+            new_job = calculate_reserved_usage_ja_task(ja_task,
+                                                       job_id, ja_task_id,
+                                                       pe, now, new_job);
          }
 
-         /* calc reserved vmem (in GB seconds) */
-         if (vmem != DBL_MAX)
-            vmem_val = (vmem / 1073741824.0) * wall_clock_time;
+         /* if we have pe tasks (tightly integrated): Produce a usage record
+          * for each of them.
+          */
+         for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
+            const char *pe_task_id;
 
-         /* calc reserved CPU time */
-         cpu_val = total_slots * wall_clock_time;
-
-         io_val = iow_val = maxvmem = 0;
-
-#ifdef COMPILE_DC
-         if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
-            /* use PDC actual I/O if available */
-            lList *jul;
-            lListElem *uep;
-            if ((jul=ptf_get_job_usage(jobid, jataskid, taskidstr))) {
-               io_val = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_IO))) ?
-                        lGetDouble(uep, UA_value) : 0;
-               iow_val = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_IOW))) ?
-                        lGetDouble(uep, UA_value) : 0;
-               maxvmem = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_MAXVMEM))) ?
-                        lGetDouble(uep, UA_value) : 0;
-               lFreeList(jul);
-            }
+            pe_task_id = lGetString(pe_task, PET_id);
+            new_job = calculate_reserved_usage_pe_task(ja_task, pe_task, 
+                                                       job_id, ja_task_id, 
+                                                       pe_task_id, 
+                                                       pe, now, new_job);
          }
-#endif
+      }
 
-         /* create the reserved usage list */
-         ul = lCreateList("usage_list", UA_Type);
-
-         if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_CPU)))
-            u = lAddElemStr(&ul, UA_name, USAGE_ATTR_CPU, UA_Type);
-         lSetDouble(u, UA_value, cpu_val);
-         if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_MEM)))
-            u = lAddElemStr(&ul, UA_name, USAGE_ATTR_MEM, UA_Type);
-         lSetDouble(u, UA_value, vmem_val);
-         if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_IO)))
-            u = lAddElemStr(&ul, UA_name, USAGE_ATTR_IO, UA_Type);
-         lSetDouble(u, UA_value, io_val);
-         if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_IOW)))
-            u = lAddElemStr(&ul, UA_name, USAGE_ATTR_IOW, UA_Type);
-         lSetDouble(u, UA_value, iow_val);
-
-         if (vmem != DBL_MAX) {
-            if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_MAXVMEM)))
-               u = lAddElemStr(&ul, UA_name, USAGE_ATTR_MAXVMEM, UA_Type);
-            lSetDouble(u, UA_value, vmem);
-         }
-         if (maxvmem != 0) {
-            if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_MAXVMEM)))
-               u = lAddElemStr(&ul, UA_name, USAGE_ATTR_MAXVMEM, UA_Type);
-            lSetDouble(u, UA_value, maxvmem);
-         }
-         lSetList(new_ja_task, JAT_usage_list, ul);
+      if (new_job != NULL) {
+         lAppendElem(temp_job_usage_list, new_job);
       }
    }
 

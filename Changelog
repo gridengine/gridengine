@@ -1,3 +1,11 @@
+JG-2003-07-10-0: Bugfix:    *_RESERVED_USAGE gives wrong values for PE jobs.
+                            NOTE: vmem for loosly integrated pe jobs is still 
+                            incorrect. Can't fix it now due to conflicts with
+                            complexes change (EB-2003-07-09-0).
+                 Issue:     580
+                 Review:    EB
+                 Changed:   sge_execd
+
 AH-2003-07-10-0: Enhancem.: In case of event client thread setup problems 
                             drmaa_init() returns error reason known by 
                             the implementation thread.

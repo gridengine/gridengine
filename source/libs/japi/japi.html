@@ -24,7 +24,7 @@ core JAPI functions was vitally influenced by the interface specification the
 <A HREF="http://www.drmaa.org">GGF DRMAA working group</A>
 developed. Note that currently only qsub(1)-ish jobs can be submitted through JAPI.</P>
 <H1>Implementation</H1>
-<P>Constraints of the protocol used by EVC, made it necessary to run a service thread 
+<P>Constraints of the protocol used by libevc, made it necessary to run a service thread 
 in background of JAPI. The purpose of this thread is to wait for new events
 sent by Grid Engine qmaster, acknowledge received events to qmaster and provide 
 information related to job states in a shared data structure that is maintained 

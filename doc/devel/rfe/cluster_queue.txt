@@ -23,13 +23,7 @@
 
      - help to provide more condensed output in command line and GUI
 
-     - make it possible, that at least certain cluster queue setups can help 
        to improve scheduler performance 
-
-   Below you will find three section. The first one defines the basic
-   idea which might be introduced into the core system of SGE. The second 
-   section is based on the Cluster Queue concept defined in section one.
-   In the third section there are some additional ideas to be discussed.
 
 -------------------------------------------------------------------------------
 1. HOMOGENEOUS HOST CHARACTERISTIC CATEGORIES
@@ -143,14 +137,7 @@
    without Options
    - Shows QIN in the "queue" column
 
-   f-Option
-   - list of all QIs
-   - "queuename" shows QIN
-
-   q-Option
-   - Shows QINS in the output even if CQNs are used as Parameter
-
-   NEW-Option (-g c)
+   f-Option (REDEFINED)
    - Summary for all CQs
    - If -q Option containes QIs then a summary of concerned
      CQ will be shown
@@ -161,6 +148,11 @@
       * "load_avg":    -
       * "states":      -
    - Information about individual jobs won't we shown in the output
+
+   NEW-Option (-g i)
+   - output format similar to the current 5.3 qstat -f output
+   - list of all QIs
+   - "queuename" shows QIN
      
     
    qsub, qalter, qsh, qrsh, qacct, qlogin
@@ -245,13 +237,7 @@
    GDI:
    - For client applications it will be possible to override 
      the CQ settings separately for each QI. This will be allowed
-     for the following attributes:
-
-         seq_no
-         priority
-         owner_list
-         user_lists
-         xuser_lists
+     for the all attributes.
 
      It is anticipated that this can be achieved by making a list out
      of each of these attributes. It might be that this is problematic due 
@@ -326,20 +312,47 @@
         the CQ definition.
 
 -------------------------------------------------------------------------------
-3. OPTIONAL ENHANCEMENTS
+3. HOSTGROUPS (HG)
 
-   Queue Groups
-   ============
+   - Make the configuration of CQs convenient
+ 
+   queue_conf(5)
+   ------------
 
-   With the current implementation if complexes a "qselect" usually will select
-   a broad range of queues (e.g.  "qselect -l mem_total=1G" will select all
-   host with 1G or more memory. The current complex attribute definition does
-   not allow to select hosts with "exactly" 1G of memory. For administration
-   purposes it should be possible to express exactly a set of hosts or queues
-   to which a config change is applied.
+   host_identifier := hostname | hostgrpname | "all"
+ 
+   - All attributes within CQs which await a hostname should accept
+     a host_identifier instead.
 
-   It should be discussed if queue (un)suspend/disbale/enable (qmod like
-   operations) should also support QG.
+
+   Daemon modifications
+   ====================
+
+   - Make HGs a tight part of the core system. (HGs are currently
+     implemented but the code is disabled because HGs where only used
+     for the user mapping functionality)
+
+
+   Client modifications
+   ====================
+
+   qmon
+   ====
+   - Until now there is no code within qmon which makes it possible
+     to configure HGs. A set of dialogs has to be introduced.
+
+   
+   Additional Questions
+   ====================
+      
+   Should it be possible to provide some system hostgroups which
+   contain all hosts automatically which have a certain set of attributes?
+
+      e.g. The "sys_solaris64_grp" contains all existing 
+           "solaris64" hostnames automatically.
+
+-------------------------------------------------------------------------------
+4. OPTIONAL ENHANCEMENTS
 
    Possible new queue attributes
    =============================

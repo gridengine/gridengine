@@ -99,10 +99,10 @@
 
 
 #define MSG_SCHEDD_INFO_CANNOTRUNATHOST_SSS           _MESSAGE(47042, _("(-l"SFN") cannot run at host "SFQ" because "SFN"" ) ) 
-#define MSG_SCHEDD_INFO_HASNOPERMISSION_S             _MESSAGE(47043, _("has no permission for "SFN" "SFQ""))
+#define MSG_SCHEDD_INFO_HASNOPERMISSION_SS            _MESSAGE(47043, _("has no permission for "SFN" "SFQ""))
 #define MSG_SCHEDD_INFO_HASINCORRECTPRJ_SSS           _MESSAGE(47044, _("(project "SFN") does not have the correct project to run in "SFN" "SFQ""))
 #define MSG_SCHEDD_INFO_HASNOPRJ_S                    _MESSAGE(47045, _("(no project) does not have the correct project to run in "SFN" "SFQ""))
-#define MSG_SCHEDD_INFO_EXCLPRJ_SS                    _MESSAGE(47046, _("(project "SFN") is not allowed to run in "SFN" "SFQ" based on the excluded project list") )   
+#define MSG_SCHEDD_INFO_EXCLPRJ_SSS                    _MESSAGE(47046, _("(project "SFN") is not allowed to run in "SFN" "SFQ" based on the excluded project list") )   
 #define MSG_SCHEDD_INFO_QUEUENOTREQUESTABLE_S         _MESSAGE(47047, _("cannot run in queue "SFQ" because queues are configured to be non requestable"))
 #define MSG_SCHEDD_INFO_NOTINHARDQUEUELST_S           _MESSAGE(47048, _("cannot run in queue "SFQ" because it is not contained in its hard queue list (-q)"))
 #define MSG_SCHEDD_INFO_NOTPARALLELQUEUE_S            _MESSAGE(47049, _("cannot run in queue "SFQ" because it is not a parallel queue") ) 

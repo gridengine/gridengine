@@ -1102,8 +1102,8 @@
 #define MSG_GDI_USAGE_i_OPT_PATH_LIST                    "[-i file_list]"
 #define MSG_GDI_UTEXT_i_OPT_PATH_LIST                    _MESSAGE(23499, _("specify standard input stream file(s)"))
 #define MSG_GDI_USAGE_b_OPT_YN                           "[-b y|n]"
-#define MSG_GDI_UTEXT_b_OPT_YN                           _MESSAGE(23499, _("handle command as binary"))
-#define MSG_PARSE_INVALIDOPTIONARGUMENTBX_S              _MESSAGE(23093, _("invalid option argument \"-b "SFN"\"\n")) 
+#define MSG_GDI_UTEXT_b_OPT_YN                           _MESSAGE(23500, _("handle command as binary"))
+#define MSG_PARSE_INVALIDOPTIONARGUMENTBX_S              _MESSAGE(23501, _("invalid option argument \"-b "SFN"\"\n")) 
 
 /* =================================================
  * global error messages 
@@ -1132,7 +1132,7 @@
 
 /* cull specific */
 #define MSG_NMNOTINELEMENT_S              _MESSAGE(60401, _("attribute "SFQ" not contained in given object\n"))
-#define MSG_INVALIDCULLDATATYPE_D         _MESSAGE(60401, _("invalid cull datatype %d\n"))
+#define MSG_INVALIDCULLDATATYPE_D         _MESSAGE(60402, _("invalid cull datatype %d\n"))
 
 /* =================================================
  * please do not enter new messages after this point,

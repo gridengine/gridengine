@@ -249,13 +249,27 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                }
                -i $sp_id eof {
                   if { $result == -100 } {
-                     puts $CHECK_OUTPUT "$expect_out(buffer)"
                   }
                   set doStop 1
                }
                -i $sp_id "_exit_status_" {
                   if { $result == -100 } {
-                     puts $CHECK_OUTPUT "$expect_out(buffer)"
+
+                     set pos [string last "\n" $expect_out(buffer)]
+                     incr pos -2
+                     set buffer_message [string range $expect_out(buffer) 0 $pos ]
+                     set pos [string last "\n" $buffer_message]
+                     incr pos 1
+                     set buffer_message [string range $buffer_message $pos end] 
+
+                     set message_txt ""
+                     append message_txt "expect out buffer is:\n"
+                     append message_txt "   \"$buffer_message\"\n"
+                     append message_txt "this doesn't match any given expression:\n"
+                     append message_txt "   \"$expected_result\"\n"
+                     append message_txt "   \"$additional_expected_result\"\n"
+                     append message_txt "   \"$additional_expected_result2\"\n"
+                     add_proc_error "handle_vi_edit" -1 $message_txt
                   }
                   set doStop 1
                }
@@ -263,6 +277,9 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
         }
      }
   close_spawn_process $id
+
+  # debug output start
+
   log_user 1
   foreach elem $vi_command_sequence {
       debug_puts "sequence: $elem"
@@ -296,6 +313,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       }
   }
   flush stdout
+  # debug output end
   if {$CHECK_DEBUG_LEVEL != 0} {
     log_user 1
   } else {

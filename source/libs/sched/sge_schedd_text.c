@@ -62,8 +62,8 @@ int nr
       case SCHEDD_INFO_CANNOTRUNATHOST_SSS      :
          return MSG_SCHEDD_INFO_CANNOTRUNATHOST_SSS       ;  
  
-      case SCHEDD_INFO_HASNOPERMISSION_S        :
-         return MSG_SCHEDD_INFO_HASNOPERMISSION_S         ;   
+      case SCHEDD_INFO_HASNOPERMISSION_SS        :
+         return MSG_SCHEDD_INFO_HASNOPERMISSION_SS         ;   
  
       case SCHEDD_INFO_HASINCORRECTPRJ_SSS      :
          return MSG_SCHEDD_INFO_HASINCORRECTPRJ_SSS       ;  
@@ -71,8 +71,8 @@ int nr
       case SCHEDD_INFO_HASNOPRJ_S               :
          return MSG_SCHEDD_INFO_HASNOPRJ_S                ;  
  
-      case SCHEDD_INFO_EXCLPRJ_SS               :
-         return MSG_SCHEDD_INFO_EXCLPRJ_SS                ; 
+      case SCHEDD_INFO_EXCLPRJ_SSS               :
+         return MSG_SCHEDD_INFO_EXCLPRJ_SSS; 
  
       case SCHEDD_INFO_QUEUENOTREQUESTABLE_S    :
          return MSG_SCHEDD_INFO_QUEUENOTREQUESTABLE_S     ;   

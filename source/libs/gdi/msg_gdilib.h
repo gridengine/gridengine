@@ -91,9 +91,6 @@
 /*
 ** parse.c
 */
-/* #define MSG_PARSE_XISNOTAVALIDOPTION_S      _MESSAGE(43037, _(""SFQ" is not a valid option\n") ) */
-/* #define MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S  _MESSAGE(43038, _("no option argument provided to "SFQ"") ) */
-/* #define MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S _MESSAGE(43039, _("ERROR! "SFN" option must have argument\n") ) */
 #define MSG_JOB_XISINVALIDJOBTASKID_S       _MESSAGE(43040, _("ERROR! "SFN" is a invalid job-task identifier\n"))
 
 
@@ -272,7 +269,6 @@
 /* #define MSG_GDI_UNEXPECTEDERRORWHILEUNPACKINGGDIREQUEST _MESSAGE(43136, _("unexpected error while unpacking gdi request\n")) */
 #define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D             _MESSAGE(43137, _("invalid value ("U32CFormat") for ar->op\n"))
 #define MSG_GDI_CANTUNPACKGDIREQUEST                       _MESSAGE(43138, _("can't unpack gdi request"    ))
-#define MSG_JOB_REJECTED_NO_TASK_LIST     _MESSAGE(43139, _("job "u32" was rejected because it was not possible to create task list\n"))
 #define MSG_JOB_JLPPNULL                  _MESSAGE(43140, _("jlpp == NULL in job_add_job()\n"))
 #define MSG_JOB_JEPNULL                   _MESSAGE(43141, _("jep == NULL in job_add_job()\n"))
 #define MSG_JOB_JOBALREADYEXISTS_S        _MESSAGE(43142, _("can't add job "SFN" - job already exists\n") ) 
@@ -398,10 +394,6 @@
 #define MSG_SGETEXT_UNKNOWNCOMPLEX_SSS             _MESSAGE(43253, _("denied: complex "SFQ" referenced in "SFN" "SFQ" does not exist\n")) 
 #define MSG_SGETEXT_COMPLEXNOTUSERDEFINED_SSS      _MESSAGE(43254, _("denied: complex "SFQ" referenced in "SFN" "SFQ" is not a user complex\n") )
 #define MSG_HOSTREFINQUEUE_SS                      _MESSAGE(43255, _("Host object "SFQ" is still referenced in queue "SFQ".\n"))
-/*
- * common/usage.c
- */
-#define MSG_GDI_USAGE_SILENT          _MESSAGE(43256, _("startup silently"))
 
 
 /*
@@ -432,11 +424,6 @@
 #define MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS       _MESSAGE(43274, _("can't find parallel task "SFN" for update in function "SFN"\n"))
 #define MSG_QUEUE_CANTFINDQUEUEFORUPDATEIN_SS      _MESSAGE(43275, _("can't find queue "SFN" for update in function "SFN"\n"))
 
-/*
- * libs/gdi/sge_answer.c
- */
-#define MSG_ANSWER_NOANSWERLIST           _MESSAGE(43276, _("no answer list - gdi request failed\n")) 
-
 /* libs/gdi/sge_pe.c
  *
  */
@@ -452,7 +439,6 @@
 /* libs/gdi/sge_ckpt.c
  *
  */
-#define MSG_SGETEXT_NO_INTERFACE_S                    _MESSAGE(43283, _("no valid checkpoint interface "SFN"\n") )   
 #define MSG_OBJ_CKPTENV_SSS           _MESSAGE(43284, _("parameter "SFN" of ckpt environment "SFQ": "SFN"\n"))
 #define MSG_OBJ_CKPTI                 _MESSAGE(43285, _("checkpoint interface"))
 #define MSG_CKPT_XISNOTASIGNALSTRING_S  _MESSAGE(43286, _(SFQ" is not a signal string (like HUP, INT, " "WINCH, ..)\n"))
@@ -474,5 +460,22 @@
  * libs/gdi/sge_object.c
  */
 #define  MSG_ERRORPARSINGVALUEFORNM_SS _MESSAGE(43292, _("error parsing value "SFQ" for attribute "SFQ"\n"))
+
+
+/*
+ * common/usage.c
+ */
+#define MSG_GDI_USAGE_SILENT          _MESSAGE(43293, _("startup silently"))
+
+
+/*
+ * libs/gdi/sge_answer.c
+ */
+#define MSG_ANSWER_NOANSWERLIST           _MESSAGE(43294, _("no answer list - gdi request failed\n")) 
+
+
+#define MSG_SGETEXT_NO_INTERFACE_S                    _MESSAGE(43295, _("no valid checkpoint interface "SFN"\n") )   
+
+
 #endif /* __MSG_GDILIB_H */
 

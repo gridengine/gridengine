@@ -141,8 +141,6 @@
 #define MSG_ERROR_NOERROROCCURED                           _MESSAGE(29082, _("No error occurred"))
 #define MSG_ERROR_INVALIDARGUMENT                          _MESSAGE(29083, _("Invalid argument"))
 #define MSG_ERROR_JOBDOESNOTEXIST                          _MESSAGE(29084, _("Job does not exist"))
-#define MSG_JOB_THEASHFORJOBXISY_UX                        _MESSAGE(29085, _("The ASH for job "U32CFormat" is "u64"\n"))
-#define MSG_JOB_MYASHIS_X                                  _MESSAGE(29086, _("My ash is "u64"\n"))
 #define MSG_ERROR_UNABLETODUMPJOBUSAGELIST                 _MESSAGE(29087, _("Unable to dump job usage list\n"))
 
 

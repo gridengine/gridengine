@@ -221,7 +221,7 @@
 /*
  * 
  */
-#define MSG_UNREC_ERROR                            _MESSAGE(49080, _("unrecoverable error - contact systems manager"))
+#define MSG_UNREC_ERROR                            _MESSAGE(49082, _("unrecoverable error - contact systems manager"))
 
 /*
  * libs/uti/sge_dirent.c

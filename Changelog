@@ -1,3 +1,8 @@
+CR-2002-11-27-3  Cleanup:   a) removed/corrected duplicate message ids
+                 Testsuite: b) handle_vi_edit() procedure reports now an error
+                               if no expected parameter string matches the 
+                               output of vi.
+
 CR-2002-11-27-2  Testsuite: removed hostname parameter in translate call. Using
                  Bugfix:    asterisk "*" instead. Now long hostnames will not
                  L10N:      influent string parsing anymore.

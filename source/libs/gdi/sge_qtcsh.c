@@ -285,7 +285,7 @@ int close_stdin /* use of qrsh's -nostdin option */
       narg_resreq = sge_quick_count_num_args (value);
    }
 
-   for (argv_iter=argv; argv_iter[0] != null; argv_iter++) {
+   for (argv_iter=argv; argv_iter[0] != NULL; argv_iter++) {
       narg_argv++; 
    }
    
@@ -324,7 +324,7 @@ int close_stdin /* use of qrsh's -nostdin option */
    }
 	 
    /* add command's arguments */
-   for (argv_iter=argv; argv_iter[0] != null; argv_iter++) {
+   for (argv_iter=argv; argv_iter[0] != NULL; argv_iter++) {
       newargv[i++] = argv_iter[0];
    }
       

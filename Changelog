@@ -1,3 +1,6 @@
+AA-2005-01-24-0: Bugfix:    labels of AFS section shwon twice
+                 Changed:   qmon
+
 CR-2005-01-21-0: Enhancem.: - finished commlib SSL framework support
                               ( not yet integrated in gdi )
                             - code cleanup

@@ -153,7 +153,8 @@ int me_who
 
 
    /******** signal handler for SIGCHLD AND SIGPIPE *******/
-   if ((me_who == EXECD) || 
+   if ((me_who == QCONF) ||
+       (me_who == EXECD) || 
        (me_who == QMASTER) ||
        (me_who == SCHEDD) || 
        (me_who == PVM_TASKER)) {

@@ -72,6 +72,11 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    set_commlib_param(CL_P_ID, id, NULL, NULL);
    set_commlib_param(CL_P_PRIO_LIST, 0, NULL, tag_priority_list);
 
+   if (me.who == QCONF) {
+      set_commlib_param(CL_P_TIMEOUT_SRCV, 3600, NULL, NULL);
+      set_commlib_param(CL_P_TIMEOUT_SSND, 3600, NULL, NULL);
+   }
+
    if (!(me.who == QMASTER || me.who == EXECD || me.who == SCHEDD || me.who == COMMDCNTL)) {
       const char *masterhost; 
 

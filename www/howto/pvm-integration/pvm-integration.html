@@ -1,5 +1,5 @@
 <HTML>
-<!--This file created 26.03.2005 16:43 Uhr by Claris Home Page version 3.0-->
+<!--This file created 26.03.2005 16:50 Uhr by Claris Home Page version 3.0-->
 <HEAD>
    <TITLE>Tight PVM Integration in Grid Engine</TITLE>
    <META NAME=GENERATOR CONTENT="Claris Home Page 3.0">
@@ -274,12 +274,12 @@ srwxr-xr-x    1 reuti    users           0 Mar 25 23:21 pvmtmp025940.0</PRE></BL
       </LI>
       
       <LI>The rsh-wrapper from the $SGE_ROOT/mpi was taken as a
-      starting point and modified, to direct the rsh call in startpvm
-      to a qrsh. In addition, the temporary directory for PVM has to
-      be set, to be the SGE created temporary directory. This is done
-      by prefixing the call to <I>pvmd</I> with "env
-      PVM_TMP=\$TMPDIR". This way PVM_TMP will be set on the target
-      node, and not on the source node.<BR>
+      starting point and modified, to direct the rsh call in
+      <I>start_pvm</I> to a qrsh. In addition, the temporary
+      directory for PVM has to be set, to be the SGE created
+      temporary directory. This is done by prefixing the call to
+      <I>pvmd</I> with "env PVM_TMP=\$TMPDIR". This way PVM_TMP will
+      be set on the target node, and not on the source node.<BR>
       <BR>
       </LI>
       

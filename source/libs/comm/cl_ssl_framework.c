@@ -2398,6 +2398,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
       tmp_error = cl_com_ssl_set_default_mode(NULL, private->ssl_obj);
       if (tmp_error != CL_RETVAL_OK) {
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+         CL_LOG(CL_LOG_ERROR,"can't set default ssl mode");
          return tmp_error;
       }
 
@@ -2488,6 +2489,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
       if (cl_com_ssl_func__SSL_get_verify_result(private->ssl_obj) != X509_V_OK) {
          CL_LOG(CL_LOG_ERROR,"Certificate doesn't verify");
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+         cl_commlib_push_application_error(CL_RETVAL_SSL_CERTIFICATE_ERROR, MSG_CL_COMMLIB_CHECK_SSL_CERTIFICATE );
          return CL_RETVAL_SSL_CERTIFICATE_ERROR;
       }
 

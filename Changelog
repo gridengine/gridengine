@@ -1,3 +1,6 @@
+CR-2005-03-21-2: Enhancem.: - (gridengine CSP mode) added error message for 
+                              invalid certificates
+
 CR-2005-03-21-1: Bugfix:    - removed unused message macros, fixed not unique
                               macro message id
 

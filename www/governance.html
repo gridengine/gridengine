@@ -1,22 +1,21 @@
 <table border="0" cellpadding="2" cellspacing="0" width="100%">
 <tr>
-<td><b><font color="#336699">GOVERNANCE GUIDELINES</font></b></td>
+<td><b><font color="#336699" size="+2">Governance Guidelines</font></b></td>
 </tr>
 </table>
-<p>
 <table border="0" cellpadding="2" cellspacing="0" width="100%">
 <tr>
 <td>
-
-<br>We believe that a governance system that is clearly outlined and fairly
+<br><br>
+We believe that a governance system that is clearly outlined and fairly
 represents the community is essential to the successful development of
 the Grid Engine project.
 <p>The Grid Engine project is about providing an enabling technology and
-the development of common interfaces, with component interoperability from
+the development of common interfaces, with system interoperability from
 the participants in the project a key metric of success. Successful evolution
 of the technology will require strong community collaboration to best meet
 the needs of individual developers and to move the project forward for
-the group benefit. A strong governance system will provide a means to manage
+the group benefit. An effective governance system will provide a means to manage
 the process of its evolution. Initially we will build on the model used
 by other open source projects, a meritocracy based on consensus.
 <p>All decision making, planning and communication will be done in the
@@ -44,39 +43,44 @@ Project Owner</li>
 
 <li>
 Board</li>
-</ul>
+</ul><br><br>
+
 <b>Users</b>
-<br>Users are the people who use the products of the Project. People in
+<p>Users are the people who use the products of the Project. People in
 this role aren't contributing code, but they are using the products, reporting
 bugs, making feature requests, and such. This is by far the most important
 category of people as, without users, there is no reason for the Project.
 When a user starts to contribute code or documentation patches, they become
 a developer.&nbsp;
-<p>How to become one: <a href="http://download.gridengine.sunsource.net/easyinstall/install.html">Download
+<p>How to become one: <a href="/project/gridengine/download.html">Download
 Grid Engine</a>, and use it to create a distributed computing environment.
+
 <p><b>Contributors</b>
-<br>Contributors are developers who contribute patches and code (by e-mail
-or via the appropriate project related mailing lists/forums), and users
+<p>Contributors are developers who contribute patches and code (by e-mail
+or via the appropriate project tools), and users
 of the Grid Engine software who want to report bugs or comments. A developer's
-contribution is always recognized. In source code, all developers who contribute
-to a source file may add their name to the list of authors for that file.
+contribution is always recognized. 
 Contributors do not have CVS check-in access. A developer who has sent
 in solid, useful patches on a project can be elevated to contributor status
 by the Module Owner or Project Owner. Integration of developers' contributions
 is at the discretion of the Module Owner, but this is an interactive, communicative
 process.
-<p>How to become one: <a href="http://download.gridengine.sunsource.net/index.html">Get
+<p>How to become one: As a developer, 
+<a href="http://gridengine.sunsource.net/servlets/ProjectSource">Get
 the source</a>, make an improvement or fix a bug, and send that code to
-the developers mailing list.
+the developers mailing list. End users similarly can make suggestions and
+submit issues.
+
 <p><b>Committers</b>
-<br>A committer has check-in access to the development, or "pre-release"
+<p>A committer has check-in access to the development, or "pre-release"
 branch of the source tree. Committers can directly make changes to the
 source base of the development branch, from which builds are made. A Committer
 that has been inactive for 6 months or more may lose his or her status
 as a Committer. In this case, or if the value of contributions of a Committer
 decreases, Committer status may be revoked by the responsible Module Owner
 or Project Owner. A Committer has authority to commit any change that is
-a bug fix, or an improved implementation of an existing capability. It
+a bug fix, or an improved implementation of an existing capability, where the 
+improvement is not also an enhancement. It
 is the responsibility of a Committer to verify with the responsible Project
 Owner or Module Owner before committing any change that is an enhancement
 to an existing feature or a new feature. A committed change must be reversed
@@ -84,13 +88,19 @@ if this is asked by the responsible Project Owner, Module Owner, or the
 Board, where the conditions cannot be immediately satisfied by the equivalent
 of a "bug fix" commit. Such a situation must be corrected before any public
 release.&nbsp;
-<br><i><font color="#FF0000">I'm really not sure what the last two sentences
-mean. Can you give a case example?</font></i>
-<p>How to become one: <a href="/project/gridengine/docs/ProjectIssues.html">Submit
+<p>How to become one: <a href="http://gridengine.sunsource.net/servlets/ProjectIssues">Submit
 a number of patches</a> via e-mail, and ask the Module Owner or Project
 Owner for commit access.
+<p>Any developer who wishes to become a Contributor, Committer or Module Owner
+- in that he/she wishes to contribute new code to
+the Concurrent Versions System (CVS) tree -- must also sign a <a
+href="/project/gridengine/Grid_Engine_contributor_agreement.pdf">Contributor
+Agreement</a>. This agreement clarifies that to your knowledge, the code
+you've submitted was developed by you, and that you have authority to provide
+it and any related IP to the Grid Engine project.
+
 <p><b>Module Owners</b>
-<br>A Module Owner is a Committer with a defined functional area of responsibility
+<p>A Module Owner is a Committer with a defined functional area of responsibility
 constituting one or more modules of a project.&nbsp;
 <p>A Module Owner has responsibility and authority to:
 <ul>
@@ -114,85 +124,38 @@ about the area are answered and contributions/issues are handled.</li>
 <li>
 Review contributions from developers and grant committer status.</li>
 </ul>
-How to become one: A Committer is made a Module Owner by the Project Owner
+<p>How to become one: A Committer is made a Module Owner by the Project Owner
 as demonstrated through a history of contributions.
 <p><b>Project Owner</b>
-<br>The Project Owner has check-in permissions on the stable branch of
-the source tree. The Project Owner has the responsibilities and authority
-of the Module Owners as shown above, and can delegate these to the Module
-Owners. The Project Owner works with Module Owners to merge contributors'
-patches, bug fixes, and new code from the development branch of the source
-tree onto the stable branch. The Project Owner is responsible for making
-sure that these contributions do not break the build.&nbsp;
-<br><i><font color="#FF0000">The definition as given above doesn't really
-apply to our case. Traditionally, we never had a distinction between the
-development and the stable branch with respect to check-in privileges.
-The stable branch is just a more sensitive area and people with check-in
-rights have to be aware of it. I also think that such a distinction cannot
-be enforced technically. If you are a contributor with check-in rights
-for the Grid Engine projects, then you can checkin everywhere underneath
-gridengine/. I, as the presumable project owner, also don't want to be
-tasked to manually ensure consistency of the stable tree. I'm ultimately
-responsible for it, but such a task clasically is carried out by someone
-who you call "gatekeeper". Since there is again no technical way to establish
-a gatekeeper role (unless the gatekeeper would be the only one with check-in
-rights) I see no reason for establishing such a role though. I think the
-Project Owner should be define by the right to appoint or deprive Module
-Owners. If you consider it useful you might add that the Project Owner
-has ample experience with the product and the product space.</font></i>
-<p>A Project Owner is responsible for the Web space for that project, at
-the project home page (accessible under CVS).
-<br><i><font color="#FF0000">Another thing I certainly would delegate.</font></i>
-<p>How to become one:
-<ul>
-<li>
-<a href="/project/gridengine/docs/ProjectAdd.html">Start a project</a> (you need
-to have written some working code to do this)</li>
+<p>The Project Owner acts as a 'benevolent dictator' for the project, and
+in this role should have ample experience with the product and the product 
+space. The Project Owner has authority to appoint or remove Module Owners.
 
-<li>
-Have the responsibility for that project handed over to you from the current
-Project Owner</li>
+<p>Fritz Ferstl will take the role of Project Owner at the beginning of the 
+project. Dr. Ferstl has held responsibility to guide the development of 
+Grid Engine technology since its inception, and is presently Engineering 
+Manager for the Grid Engine development team at Sun Microsystems.
 
-<li>
-Take over an abandoned project</li>
-
-<li>
-Initially, as Sun contributed the source base, the Project Owner and Module
-Owners of Grid Engine projects are the developers who either wrote the
-projects, or currently have responsibility for them. Undoubtedly, in the
-future, there will be non-Sun people in these roles as well.</li>
-
-<li>
-For ongoing projects moving here, or new projects that are hosted here,
-the person who started that project or currently maintains it is the Project
-Owner. If you start a project, you are the Project Owner of that project.</li>
-</ul>
-Any developer who wishes to become a Contributor, Committer, Module Owner,
-and/or Project Owner -- in that he/she wishes to contribute new code to
-the Concurrent Versions System (CVS) tree -- must also sign a <a
-href="/project/gridengine/Grid_Engine_contributor_agreement.pdf">Contributor
-Agreement</a>. This agreement clarifies that to your knowledge, the code
-you've submitted was developed by you, and that you have authority to provide
-it and any related IP to the Grid Engine project.
-<p><span class="Header"><b><font color="#990000">The Board</font></b></span>
-<p>We propose initially that the Board consists of three members, made
-up of one Sun representative and two independent, non-Sun representatives.
-The community has the opportunity to nominate the board members from now
-until Aug 23, 2001. Nominations will be accepted through the mailing list
+<p><b>The Board</b>
+<p>
+We propose initially that the Board will consists of three members, made
+up of one Sun representative and two independent, non-Sun representatives,
+and that the board be established by December 1, 2001.
+The community has the opportunity to nominate board members from now
+until November 10, 2001. Nominations will be accepted through the mailing list
 <a href="mailto:discuss@gridengine.sunsource.net">discuss@gridengine.sunsource.net</a>.
 The board members will be announced in early September 2001, and they will
 initially serve a limited term beginning at that time.
-<br><i><font color="#FF0000">Hhhhmmmm. This nomination idea is new to me
-(may be I just overlooked it previously). It sounds reasonable though.
-You are not saying how the final decision as to who gets appointed is made?
-What do you have in mind here?</font></i>
-<p>The Board is expected to have high-level duties to ensure that the Grid
-Engine project is being run in a fair and open manner. The Board exists
-as a last resort to resolve disputes and grievances. Every effort should
+<p>The role of the board is as a "court of last resort", to resolve 
+problems that are not resolved through a process of dialog. 
+As such it is more important for the individuals on the board to be 
+well familiar with the processes of open source development and 
+related issues. The Board is expected to have high-level duties to ensure that the Grid
+Engine project is being run in a fair and open manner. Every effort should
 be made to solve disputes at the community level before turning to the
 Board.
 <p>How to become one: The nomination and selection process is open to public
-discussion, and we are actively soliciting input from the open source community.
+discussion, and we are actively soliciting input from the Grid Engine community.
 Please post your comments and suggestions to the <a
 href="mailto:discuss@gridengine.sunsource.net">discuss@gridengine.sunsource.net</a>
 mailing list.
@@ -205,24 +168,8 @@ or participate in the Grid Engine project.
 <p>This governance system might change as the Grid Engine community grows,
 but we are committed to a system that is fair and open to all community
 members. If you have any questions, suggestions, and/or concerns, please
-post them on the general mailing list, <a
-href="mailto:discuss@gridengine.sunsource.net">discuss@gridengine.sunsource.net</a>.
+post them on the general mailing list.
 <br>
-
-<!--
-
-<ul>
-<li><A href="/project/www/roles.html">Roles and Responsibilities</A><br>Defines the recognized roles in the project.
-<li><A href="/project/www/communication.html">Communication</A><br>Defines how users and developers communicate.
-<li><A href="/project/www/decisions.html">Decision Making</A><br>Defines how action items are proposed and voted on.
-<li><A href="/project/www/source.html">Source Repositories</A><br>Defines how the Project's source code is organized and
-developed.
-<li><A href="/project/www/management.html">Project Management</A><br>Defines the roles and responsibilities of the
-Project Management Committee (PMC).
-</ul>
-
--->
-
 </td>
 </tr>
 </table>

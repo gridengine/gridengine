@@ -1972,7 +1972,6 @@ static void qmonCQUpdateQIMatrix(void)
    lListElem *cq = NULL;
    int row;
    int num_rows;
-   int num_fql;
    char buf[BUFSIZ];
    u_long32 qstate = U_LONG32_MAX; 
 

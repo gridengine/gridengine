@@ -1,3 +1,8 @@
+AA-2004-03-16-0: Bugfix:    - default_duration sconf param added
+                            - unused var compile warnings
+                 Changed:   qmon
+                 Review:    EB
+
 EB-2004-03-16-0: Bugfix:    Hostgroup identifiers not verified in queue_conf(5)
                  Issue:     856
                  Changed:   sge_qmaster

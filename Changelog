@@ -1,3 +1,7 @@
+JG-2002-04-05-3: Doc:       Linked both versions of the event client interface
+                            documentation (5.3 and maintrunc) from the modules
+                            overview document.
+
 JG-2002-04-05-2: Doc:       Updated HTML documentation for the event client
                             interface generated from adoc comments.
 

@@ -1499,7 +1499,7 @@ const char    *sge_mirror_get_type_name(const sge_event_type type)
    if(type < 0 || type > SGE_EMT_ALL) {
       ERROR((SGE_EVENT, MSG_MIRROR_INVALID_EVENT_GROUP_SI, "sge_mirror_get_type_name", type));
       DEXIT;
-      return NULL;
+      return "unknown";
    }
    
    if(type == SGE_EMT_ALL) {

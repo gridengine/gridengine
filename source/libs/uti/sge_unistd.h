@@ -100,6 +100,8 @@ int sge_chdir_exit(const char *path, int exit_on_error);
 int sge_chdir(const char *dir);
 
 int sge_mkdir(const char *path, int fmode, int exit_on_error);    
+int sge_mkdir2(const char *base_dir, const char *name, int fmode, 
+               int exit_on_error);    
 
 int sge_rmdir(const char *cp, char *err_str);
 

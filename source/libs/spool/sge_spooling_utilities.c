@@ -153,7 +153,14 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
       return NULL;
    }
 
-   
+   /* initialize fields */
+   for (i = 0; i < size; i++) {
+      fields[i].nm         = NoName;
+      fields[i].width      = 0;
+      fields[i].name       = NULL;
+      fields[i].sub_fields = NULL;
+   }
+
    /* do we have to strip field prefixes, e.g. "QU_" from field names? */
    if (instr->copy_field_names && instr->strip_field_prefix) {
       dstring buffer = DSTRING_INIT;
@@ -185,6 +192,7 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
                return NULL;
             }
             fields[j].name = strdup(name + strip);
+            DPRINTF(("field "SFQ" will be spooled\n", fields[j].name));
          }
          
          if (mt_get_type(descr[i].mt) == lListT) {

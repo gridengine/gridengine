@@ -94,7 +94,7 @@ sge_dirent.o   : $(SPOOLLIB_DIR)/sge_dirent.c
 #---------------------------------------------------------------------
 # test programs
 test_sge_spooling: test_sge_spooling.o sig_handlers.o $(SPOOLLIB) $(GDILIB) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o test_sge_spooling $(LFLAGS) test_sge_spooling.o sig_handlers.o $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+	$(CC) $(CFLAGS) -o test_sge_spooling $(LFLAGS) test_sge_spooling.o sig_handlers.o $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
 test_sge_spooling.o: $(SPOOLLIB_DIR)/test_sge_spooling.c
 	$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/test_sge_spooling.c

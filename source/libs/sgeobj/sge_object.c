@@ -122,24 +122,30 @@ object_get_type(const lListElem *object)
 {
    const lDescr *ret = NULL;
 
-   if (object_has_type(object, EH_Type)) {
-      ret = EH_Type;
-   } else if (object_has_type(object, AH_Type)) {
+   if (object_has_type(object, AH_Type)) {
       ret = AH_Type;
-   } else if (object_has_type(object, SH_Type)) {
-      ret = SH_Type;
-   } else if (object_has_type(object, QU_Type)) {
-      ret = QU_Type;
-   } else if (object_has_type(object, JB_Type)) {
-      ret = JB_Type;
+   } else if (object_has_type(object, CAL_Type)) {
+      ret = CAL_Type;
+   } else if (object_has_type(object, CK_Type)) {
+      ret = CK_Type;
+   } else if (object_has_type(object, EH_Type)) {
+      ret = EH_Type;
    } else if (object_has_type(object, JAT_Type)) {
       ret = JAT_Type;
-   } else if (object_has_type(object, PET_Type)) {
-      ret = PET_Type;
-   } else if (object_has_type(object, RN_Type)) {
-      ret = RN_Type;
+   } else if (object_has_type(object, JB_Type)) {
+      ret = JB_Type;
    } else if (object_has_type(object, PE_Type)) {
       ret = PE_Type;
+   } else if (object_has_type(object, PET_Type)) {
+      ret = PET_Type;
+   } else if (object_has_type(object, QU_Type)) {
+      ret = QU_Type;
+   } else if (object_has_type(object, QR_Type)) {
+      ret = QR_Type;
+   } else if (object_has_type(object, RN_Type)) {
+      ret = RN_Type;
+   } else if (object_has_type(object, SH_Type)) {
+      ret = SH_Type;
    } else if (object_has_type(object, VA_Type)) {
       ret = VA_Type;
    }
@@ -176,6 +182,9 @@ object_get_subtype(int nm)
    const lDescr *ret = NULL;
 
    switch(nm) {
+      case CK_queue_list:
+         ret = QR_Type;
+         break;
       case QU_load_thresholds:
       case QU_suspend_thresholds:
          ret = CE_Type;
@@ -233,24 +242,30 @@ object_get_primary_key(const lDescr *descr)
 {
    int ret = NoName;
 
-   if (descr == EH_Type) {
-      ret = EH_name;
-   } else if (descr == AH_Type) {
+   if (descr == AH_Type) {
       ret = AH_name;
-   } else if (descr == SH_Type) {
-      ret = SH_name;
-   } else if (descr == QU_Type) {
-      ret = QU_qname;
+   } else if (descr == CAL_Type) {
+      ret = CAL_name;
+   } else if (descr == CK_Type) {
+      ret = CK_name;
+   } else if (descr == EH_Type) {
+      ret = EH_name;
    } else if (descr == JB_Type) {
       ret = JB_job_number;
    } else if (descr == JAT_Type) {
       ret = JAT_task_number;
-   } else if (descr == PET_Type) {
-      ret = PET_id;
-   } else if (descr == RN_Type) {
-      ret = RN_min;
    } else if (descr == PE_Type) {
       ret = PE_name;
+   } else if (descr == PET_Type) {
+      ret = PET_id;
+   } else if (descr == QU_Type) {
+      ret = QU_qname;
+   } else if (descr == QR_Type) {
+      ret = QR_name;
+   } else if (descr == RN_Type) {
+      ret = RN_min;
+   } else if (descr == SH_Type) {
+      ret = SH_name;
    } else if (descr == VA_Type) {
       ret = VA_variable;
    }

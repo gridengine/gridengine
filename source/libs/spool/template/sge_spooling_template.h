@@ -1,5 +1,5 @@
-#ifndef __SGE_SPOOLING_CLASSIC_H 
-#define __SGE_SPOOLING_CLASSIC_H 
+#ifndef __SGE_SPOOLING_TEMPLATE_H 
+#define __SGE_SPOOLING_TEMPLATE_H 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -32,32 +32,49 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
-#include "sge_spooling.h"
+#include "cull.h"
 
-const char *get_spooling_method(void);
+#include "sge_spooling.h"
+#include "sge_spooling_utilities.h"
+
+/****** spool/flatfile/--Spooling-Template ************************************
+*
+*  NAME
+*     xxx spooling - spooling of data in xxx
+*
+*  FUNCTION
+*     The module provides functions and a spooling framework instantiation
+*     for data input/output xxxx
+*
+*  SEE ALSO
+****************************************************************************
+*/
+
+const char *
+get_spooling_method(void);
 
 lListElem *
-spool_classic_create_context(int argc, char *argv[]);
+spool_template_create_context(int argc, char *argv[]);
 
 bool 
-spool_classic_default_startup_func(const lListElem *rule);
+spool_template_default_startup_func(const lListElem *rule);
 bool 
-spool_classic_common_startup_func(const lListElem *rule);
+spool_template_common_startup_func(const lListElem *rule);
 
 bool 
-spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
+spool_template_default_list_func(const lListElem *type, const lListElem *rule,
                                 lList **list, const sge_event_type event_type);
 lListElem *
-spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
+spool_template_default_read_func(const lListElem *type, const lListElem *rule,
                                 const char *key, 
                                 const sge_event_type event_type);
 bool 
-spool_classic_default_write_func(const lListElem *type, const lListElem *rule, 
+spool_template_default_write_func(const lListElem *type, const lListElem *rule, 
                                  const lListElem *object, const char *key, 
                                  const sge_event_type event_type);
 bool 
-spool_classic_default_delete_func(const lListElem *type, const lListElem *rule, 
+spool_template_default_delete_func(const lListElem *type, const lListElem *rule, 
                                   const char *key, 
                                   const sge_event_type event_type);
 
-#endif /* __SGE_SPOOLING_CLASSIC_H */    
+#endif /* __SGE_SPOOLING_TEMPLATE_H */    

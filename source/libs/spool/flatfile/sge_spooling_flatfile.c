@@ -41,6 +41,8 @@
 #include <ctype.h>
 #include <unistd.h>
 
+#include "sge.h"
+#include "setup_path.h"
 #include "sgermon.h"
 #include "sge_log.h"
 
@@ -48,6 +50,7 @@
 #include "sge_stdio.h"
 #include "sge_stdlib.h"
 #include "sge_string.h"
+#include "sge_unistd.h"
 #include "sge_dstring.h"
 
 #include "gdi_utility.h"
@@ -56,14 +59,743 @@
 
 #include "msg_common.h"
 #include "msg_spoollib.h"
+#include "msg_spoollib_classic.h"
 #include "msg_spoollib_flatfile.h"
 
 #include "sge_spooling_flatfile.h"
 #include "sge_spooling_flatfile_scanner.h"
 
+static const char *spooling_method = "flatfile";
+
+const char *
+get_spooling_method(void)
+{
+   return spooling_method;
+}
+
+
+/****** spool/flatfile/spool_flatfile_create_context() ********************
+*  NAME
+*     spool_flatfile_create_context() -- create a flatfile spooling context
+*
+*  SYNOPSIS
+*     lListElem* 
+*     spool_flatfile_create_context(int argc, char *argv[])
+*
+*  FUNCTION
+*     Create a spooling context for the flatfile spooling.
+* 
+*     Two rules are created: One for spooling in the common directory, the
+*     other for spooling in the spool directory.
+*
+*     The following object type descriptions are create:
+*        - for SGE_EMT_CONFIG, referencing the rule for the common directory
+*        - for SGE_EMT_SCHEDD_CONF, also referencing the rule for the common
+*          directory
+*        - for SGE_EMT_ALL (default for all object types), referencing the rule
+*          for the spool directory
+*
+*     The function expects to get as arguments (in argv) two absolute paths:
+*        1. The path of the common directory
+*        2. The path of the spool directory
+*
+*  INPUTS
+*     int argc     - number of arguments in argv
+*     char *argv[] - argument vector
+*
+*  RESULT
+*     lListElem* - on success, the new spooling context, else NULL
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/flatfile/--Flatfile-Spooling
+*******************************************************************************/
+lListElem *
+spool_flatfile_create_context(int argc, char *argv[])
+{
+   lListElem *context, *rule, *type;
+   char *common_dir, *spool_dir;
+
+   DENTER(TOP_LAYER, "spool_flatfile_create_context");
+
+   /* check parameters - both must be set and be absolute paths */
+   if (argc < 2) {
+      ERROR((SGE_EVENT, MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR));
+      return NULL;
+   }
+
+   common_dir = argv[0];
+   spool_dir  = argv[1];
+   
+   if (common_dir == NULL || spool_dir == NULL ||
+      *common_dir != '/' || *spool_dir != '/') {
+      ERROR((SGE_EVENT, MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR));
+      return NULL;
+   }   
+
+   /* create spooling context */
+   context = spool_create_context("flatfile spooling");
+   
+   /* create rule and type for all objects spooled in the spool dir */
+   rule = spool_context_create_rule(context, 
+                                    "default rule (spool dir)", 
+                                    spool_dir,
+                                    spool_flatfile_default_startup_func,
+                                    NULL,
+                                    spool_flatfile_default_list_func,
+                                    spool_flatfile_default_read_func,
+                                    spool_flatfile_default_write_func,
+                                    spool_flatfile_default_delete_func);
+   type = spool_context_create_type(context, SGE_EMT_ALL);
+   spool_type_add_rule(type, rule, true);
+
+   /* create rule and type for all objects spooled in the common dir */
+   rule = spool_context_create_rule(context, 
+                                    "default rule (common dir)", 
+                                    common_dir,
+                                    spool_flatfile_common_startup_func,
+                                    NULL,
+                                    spool_flatfile_default_list_func,
+                                    spool_flatfile_default_read_func,
+                                    spool_flatfile_default_write_func,
+                                    spool_flatfile_default_delete_func);
+   type = spool_context_create_type(context, SGE_EMT_CONFIG);
+   spool_type_add_rule(type, rule, true);
+   type = spool_context_create_type(context, SGE_EMT_SCHEDD_CONF);
+   spool_type_add_rule(type, rule, true);
+
+   DEXIT;
+   return context;
+}
+
+/****** spool/flatfile/spool_flatfile_default_startup_func() **************
+*  NAME
+*     spool_flatfile_default_startup_func() -- setup the spool directory
+*
+*  SYNOPSIS
+*     bool
+*     spool_flatfile_default_startup_func(const lListElem *rule) 
+*
+*  FUNCTION
+*     Checks the existence of the spool directory.
+*     If the current working directory is not yet the spool direcotry,
+*     changes the current working directory.
+*     If the subdirectories for the different object types do not yet
+*     exist, they are created.
+*
+*  INPUTS
+*     const lListElem *rule - the rule containing data necessary for
+*                             the startup (e.g. path to the spool directory)
+*
+*  RESULT
+*     bool - true, if the startup succeeded, else false
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/flatfile/--Flatfile-Spooling
+*     spool/spool_startup_context()
+*******************************************************************************/
+bool
+spool_flatfile_default_startup_func(const lListElem *rule)
+{
+   const char *url;
+
+   DENTER(TOP_LAYER, "spool_flatfile_default_startup_func");
+
+   /* check spool directory */
+   url = lGetString(rule, SPR_url);
+   if (!sge_is_directory(url)) {
+      CRITICAL((SGE_EVENT, MSG_SPOOL_SPOOLDIRDOESNOTEXIST_S, url));
+      SGE_EXIT(EXIT_FAILURE);
+   }
+
+   /* create spool sub directories */
+   sge_mkdir2(url, JOB_DIR,  0755, true);
+   sge_mkdir2(url, ZOMBIE_DIR, 0755, true);
+   sge_mkdir2(url, QUEUE_DIR,  0755, true);
+   sge_mkdir2(url, EXECHOST_DIR, 0755, true);
+   sge_mkdir2(url, SUBMITHOST_DIR, 0755, true);
+   sge_mkdir2(url, ADMINHOST_DIR, 0755, true);
+   sge_mkdir2(url, COMPLEX_DIR, 0755, true);
+   sge_mkdir2(url, EXEC_DIR, 0755, true);
+   sge_mkdir2(url, PE_DIR, 0755, true);
+   sge_mkdir2(url, CKPTOBJ_DIR, 0755, true);
+   sge_mkdir2(url, USERSET_DIR, 0755, true);
+   sge_mkdir2(url, CAL_DIR, 0755, true);
+
+#ifndef __SGE_NO_USERMAPPING__
+   sge_mkdir2(url, HOSTGROUP_DIR, 0755, true);
+   sge_mkdir2(url, UME_DIR, 0755, true);
+#endif
+
+   sge_mkdir2(url, USER_DIR, 0755, true);
+   sge_mkdir2(url, PROJECT_DIR, 0755, true);
+
+   DEXIT;
+   return true;
+}
+
+/****** spool/flatfile/spool_flatfile_common_startup_func() ***************
+*  NAME
+*     spool_flatfile_common_startup_func() -- setup the common directory
+*
+*  SYNOPSIS
+*     bool
+*     spool_flatfile_common_startup_func(const lListElem *rule) 
+*
+*  FUNCTION
+*     Checks the existence of the common directory.
+*     If the subdirectory for the local configurtations does not yet exist,
+*     it is created.
+*
+*  INPUTS
+*     const lListElem *rule - rule containing data like the path to the common 
+*                             directory
+*
+*  RESULT
+*     bool - true, on success, else false
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/flatfile/--Flatfile-Spooling
+*     spool/spool_startup_context()
+*******************************************************************************/
+bool
+spool_flatfile_common_startup_func(const lListElem *rule)
+{
+   const char *url;
+
+   DENTER(TOP_LAYER, "spool_flatfile_common_startup_func");
+
+   /* check common directory */
+   url = lGetString(rule, SPR_url);
+   if (!sge_is_directory(url)) {
+      CRITICAL((SGE_EVENT, MSG_SPOOL_COMMONDIRDOESNOTEXIST_S, url));
+      SGE_EXIT(EXIT_FAILURE);
+   }
+
+   /* create directory for local configurations */
+   sge_mkdir2(url, LOCAL_CONF_DIR, 0755, true);
+
+   DEXIT;
+   return true;
+}
+
+/****** spool/flatfile/spool_flatfile_default_list_func() *****************
+*  NAME
+*     spool_flatfile_default_list_func() -- read lists through flatfile spooling
+*
+*  SYNOPSIS
+*     bool
+*     spool_flatfile_default_list_func(const lListElem *type, 
+*                                      const lListElem *rule, 
+*                                      lList **list, 
+*                                      const sge_event_type event_type) 
+*
+*  FUNCTION
+*     Depending on the object type given, calls the appropriate functions
+*     reading the correspondent list of objects using the old spooling
+*     functions.
+*
+*  INPUTS
+*     const lListElem *type           - object type description
+*     const lListElem *rule           - rule to be used 
+*     lList **list                    - target list
+*     const sge_event_type event_type - object type
+*
+*  RESULT
+*     bool - true, on success, else false
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/flatfile/--Flatfile-Spooling
+*     spool/spool_read_list()
+*******************************************************************************/
+bool
+spool_flatfile_default_list_func(const lListElem *type, const lListElem *rule,
+                                 lList **list, const sge_event_type event_type)
+{
+/*    static dstring file_name = DSTRING_INIT; */
+/*    static dstring dir_name  = DSTRING_INIT; */
+
+   DENTER(TOP_LAYER, "spool_flatfile_default_list_func");
+#if 0
+   switch(event_type) {
+      case SGE_EMT_ADMINHOST:
+         sge_read_adminhost_list_from_disk();
+         break;
+      case SGE_EMT_EXECHOST:
+         sge_read_exechost_list_from_disk();
+         break;
+      case SGE_EMT_SUBMITHOST:
+         sge_read_submithost_list_from_disk();
+         break;
+      case SGE_EMT_CALENDAR:
+         sge_read_cal_list_from_disk();
+         break;
+      case SGE_EMT_CKPT:
+         sge_read_ckpt_list_from_disk();
+         break;
+      case SGE_EMT_COMPLEX:
+         read_all_complexes();
+         break;
+      case SGE_EMT_CONFIG:
+         sge_dstring_sprintf(&file_name, "%s/%s",
+                             lGetString(rule, SPR_url), CONF_FILE);
+         sge_dstring_sprintf(&dir_name, "%s/%s",
+                             lGetString(rule, SPR_url), LOCAL_CONF_DIR);
+         read_all_configurations(&Master_Config_List, 
+                                 sge_dstring_get_string(&file_name), 
+                                 sge_dstring_get_string(&dir_name));
+         break;
+      case SGE_EMT_JOB:
+         job_list_read_from_disk(&Master_Job_List, "Master_Job_List", 0,
+                                 SPOOL_DEFAULT, NULL);
+         job_list_read_from_disk(&Master_Zombie_List, "Master_Zombie_List", 0,
+                                 SPOOL_HANDLE_AS_ZOMBIE, NULL);
+         break;
+      case SGE_EMT_MANAGER:
+         read_manop(SGE_MANAGER_LIST);
+         break;
+      case SGE_EMT_OPERATOR:
+         read_manop(SGE_OPERATOR_LIST);
+         break;
+      case SGE_EMT_SHARETREE:
+         {
+            lListElem *ep;
+            char err_str[1024];
+            ep = read_sharetree(SHARETREE_FILE, NULL, 1, err_str, 1, NULL);
+            if(*list != NULL) {
+               *list = lFreeList(*list);
+            }
+            *list = lCreateList("share tree", STN_Type);
+            lAppendElem(*list, ep);
+         }
+         break;
+      case SGE_EMT_PE:
+         sge_read_pe_list_from_disk();
+         break;
+      case SGE_EMT_PROJECT:
+         sge_read_project_list_from_disk();
+         break;
+      case SGE_EMT_QUEUE:
+         sge_read_queue_list_from_disk();
+         break;
+      case SGE_EMT_SCHEDD_CONF:
+         if(*list != NULL) {
+            *list = lFreeList(*list);
+         }
+         sge_dstring_sprintf(&file_name, "%s/%s", 
+                             lGetString(rule, SPR_url), SCHED_CONF_FILE);
+         *list = read_sched_configuration(lGetString(rule, SPR_url), sge_dstring_get_string(&file_name), 1, NULL);
+         break;
+      case SGE_EMT_USER:
+         sge_read_user_list_from_disk();
+         break;
+      case SGE_EMT_USERSET:
+         sge_read_userset_list_from_disk();
+         break;
+#ifndef __SGE_NO_USERMAPPING__
+      case SGE_EMT_USERMAPPING:
+         sge_read_user_mapping_entries_from_disk();
+         break;
+      case SGE_EMT_HOSTGROUP:
+         sge_read_host_group_entries_from_disk();
+         break;
+#endif
+      default:
+         break;
+   }
+#endif
+   DEXIT;
+   return true;
+}
+
+/****** spool/flatfile/spool_flatfile_default_read_func() *****************
+*  NAME
+*     spool_flatfile_default_read_func() -- read objects through flatfile spooling
+*
+*  SYNOPSIS
+*     lListElem* 
+*     spool_flatfile_default_read_func(const lListElem *type, 
+*                                      const lListElem *rule, 
+*                                      const char *key, 
+*                                      const sge_event_type event_type) 
+*
+*  FUNCTION
+*     Reads an individual object by calling the appropriate flatfile spooling 
+*     function.
+*
+*  INPUTS
+*     const lListElem *type           - object type description
+*     const lListElem *rule           - rule to use
+*     const char *key                 - unique key specifying the object
+*     const sge_event_type event_type - object type
+*
+*  RESULT
+*     lListElem* - the object, if it could be read, else NULL
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/flatfile/--Flatfile-Spooling
+*     spool/spool_read_object()
+*******************************************************************************/
+lListElem *
+spool_flatfile_default_read_func(const lListElem *type, const lListElem *rule,
+                                 const char *key, 
+                                 const sge_event_type event_type)
+{
+   lListElem *ep = NULL;
+
+/*    static dstring file_name = DSTRING_INIT; */
+
+   DENTER(TOP_LAYER, "spool_flatfile_default_read_func");
+#if 0
+   switch(event_type) {
+      case SGE_EMT_ADMINHOST:
+         ep = cull_read_in_host(ADMINHOST_DIR, key, CULL_READ_SPOOL, AH_name, NULL, NULL);
+         break;
+      case SGE_EMT_EXECHOST:
+         ep = cull_read_in_host(EXECHOST_DIR, key, CULL_READ_SPOOL, EH_name, NULL, NULL);
+         break;
+      case SGE_EMT_SUBMITHOST:
+         ep = cull_read_in_host(SUBMITHOST_DIR, key, CULL_READ_SPOOL, SH_name, NULL, NULL);
+         break;
+      case SGE_EMT_CALENDAR:
+         ep = cull_read_in_cal(CAL_DIR, key, 1, 0, NULL, NULL);
+         break;
+      case SGE_EMT_CKPT:
+         ep = cull_read_in_ckpt(CKPTOBJ_DIR, key, 1, 0, NULL, NULL);
+         break;
+      case SGE_EMT_COMPLEX:
+         sge_dstring_sprintf(&file_name, "%s/%s", COMPLEX_DIR, key);
+         ep = read_cmplx(sge_dstring_get_string(&file_name), key, NULL);
+         break;
+      case SGE_EMT_CONFIG:
+         sge_dstring_sprintf(&file_name, "%s/%s/%s",
+                             lGetString(rule, SPR_url), LOCAL_CONF_DIR, key);
+         ep = read_configuration(sge_dstring_get_string(&file_name), 
+                                 key, FLG_CONF_SPOOL);
+         break;
+      case SGE_EMT_JOB:
+         WARNING((SGE_EVENT, MSG_SPOOL_NOTSUPPORTEDREADINGJOB));
+         break;
+      case SGE_EMT_MANAGER:
+         WARNING((SGE_EVENT, MSG_SPOOL_NOTSUPPORTEDREADINGMANAGER));
+         break;
+      case SGE_EMT_OPERATOR:
+         WARNING((SGE_EVENT, MSG_SPOOL_NOTSUPPORTEDREADINGOPERATOR));
+         break;
+      case SGE_EMT_SHARETREE:
+         {
+            lListElem *ep;
+            char err_str[1024];
+            ep = read_sharetree(SHARETREE_FILE, NULL, 1, err_str, 1, NULL);
+         }
+         break;
+      case SGE_EMT_PE:
+         ep = cull_read_in_pe(PE_DIR, key, 1, 0, NULL, NULL);
+         break;
+      case SGE_EMT_PROJECT:
+         ep = cull_read_in_userprj(PROJECT_DIR, key, 1, 0, NULL);
+         break;
+      case SGE_EMT_QUEUE:
+         ep = cull_read_in_qconf(QUEUE_DIR, key, 1, 0, NULL, NULL);
+         break;
+      case SGE_EMT_SCHEDD_CONF:
+         sge_dstring_sprintf(&file_name, "%s/%s",
+                             lGetString(rule, SPR_url), SCHED_CONF_FILE);
+         ep = cull_read_in_schedd_conf(NULL, sge_dstring_get_string(&file_name),
+                                       1, NULL);
+         break;
+      case SGE_EMT_USER:
+         ep = cull_read_in_userprj(USER_DIR, key, 1, 0, NULL);
+         break;
+      case SGE_EMT_USERSET:
+         ep = cull_read_in_userset(USERSET_DIR, key, 1, 0, NULL); 
+         break;
+#ifndef __SGE_NO_USERMAPPING__
+      case SGE_EMT_USERMAPPING:
+         ep = cull_read_in_ume(UME_DIR, key , 1, 0, NULL); 
+         break;
+      case SGE_EMT_HOSTGROUP:
+         ep = cull_read_in_host_group(HOSTGROUP_DIR, key, 1, 0, NULL); 
+         break;
+#endif
+      default:
+         break;
+   }
+#endif
+   DEXIT;
+   return ep;
+}
+
+/****** spool/flatfile/spool_flatfile_default_write_func() ****************
+*  NAME
+*     spool_flatfile_default_write_func() -- write objects through flatfile spooling
+*
+*  SYNOPSIS
+*     bool
+*     spool_flatfile_default_write_func(const lListElem *type, 
+*                                       const lListElem *rule, 
+*                                       const lListElem *object, 
+*                                       const char *key, 
+*                                       const sge_event_type event_type) 
+*
+*  FUNCTION
+*     Writes an object through the appropriate flatfile spooling functions.
+*
+*  INPUTS
+*     const lListElem *type           - object type description
+*     const lListElem *rule           - rule to use
+*     const lListElem *object         - object to spool
+*     const char *key                 - unique key
+*     const sge_event_type event_type - object type
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/flatfile/--Flatfile-Spooling
+*     spool/spool_delete_object()
+*******************************************************************************/
+bool
+spool_flatfile_default_write_func(const lListElem *type, const lListElem *rule, 
+                                  const lListElem *object, const char *key, 
+                                  const sge_event_type event_type)
+{
+   lList *answer_list = NULL;
+   const char *url = NULL;
+   const char *directory = NULL;
+   const char *filename = NULL;
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_flatfile_default_write_func");
+
+   /* prepare filenames */
+   switch(event_type) {
+      case SGE_EMT_ADMINHOST:
+         directory = ADMINHOST_DIR;
+         filename  = key;
+         break;
+      case SGE_EMT_CALENDAR:
+         directory = CAL_DIR;
+         filename = key;
+         break;
+      case SGE_EMT_CKPT:
+         directory = CKPTOBJ_DIR;
+         filename = key;
+         break;
+      case SGE_EMT_COMPLEX:
+      case SGE_EMT_CONFIG:
+      case SGE_EMT_EXECHOST:
+      case SGE_EMT_JOB:
+      case SGE_EMT_MANAGER:
+      case SGE_EMT_OPERATOR:
+      case SGE_EMT_SHARETREE:
+      case SGE_EMT_PE:
+      case SGE_EMT_PROJECT:
+      case SGE_EMT_QUEUE:
+      case SGE_EMT_SCHEDD_CONF:
+      case SGE_EMT_SUBMITHOST:
+      case SGE_EMT_USER:
+      case SGE_EMT_USERSET:
+#ifndef __SGE_NO_USERMAPPING__
+      case SGE_EMT_USERMAPPING:
+      case SGE_EMT_HOSTGROUP:
+#endif
+      default:
+         WARNING((SGE_EVENT, "writing of "SFQ" not yet implemented\n", 
+                  sge_mirror_get_type_name(event_type)));
+         break;
+   }
+
+   url = lGetString(rule, SPR_url);
+
+   /* spool, if possible */
+   if (url != NULL && directory != NULL && filename != NULL) {
+      dstring filepath_buffer = DSTRING_INIT;
+      const char *tmpfilepath, *filepath;
+
+      /* first write to a temporary file */
+      tmpfilepath = sge_dstring_sprintf(&filepath_buffer, "%s/%s/.%s", url, directory, filename);
+     
+      /* spool */
+      tmpfilepath = spool_flatfile_write_object(&answer_list, object, NULL, 
+      &spool_flatfile_instr_config, SP_DEST_SPOOL, SP_FORM_ASCII, tmpfilepath);
+
+      if(tmpfilepath == NULL) {
+         /* spooling failed */
+         /* JG: TODO: better call a function calling ERROR and WARNING */
+         answer_list_print_err_warn(&answer_list, NULL, NULL);
+         ret = false;
+      } else {
+         /* spooling was ok: rename temporary to target file */
+         filepath = sge_dstring_sprintf(&filepath_buffer, "%s/%s/%s", url, directory, filename);
+
+         if (rename(tmpfilepath, filepath) == -1) {
+            ret = false;
+         }
+      }
+
+      FREE(tmpfilepath);
+      sge_dstring_free(&filepath_buffer);
+   }
+   
+   DEXIT;
+   return ret;
+}
+
+/****** spool/flatfile/spool_flatfile_default_delete_func() ***************
+*  NAME
+*     spool_flatfile_default_delete_func() -- delete object in flatfile spooling
+*
+*  SYNOPSIS
+*     bool
+*     spool_flatfile_default_delete_func(const lListElem *type, 
+*                                        const lListElem *rule, 
+*                                        const char *key, 
+*                                        const sge_event_type event_type) 
+*
+*  FUNCTION
+*     Deletes an object in the flatfile spooling.
+*     In most cases, the correspondent spool file is deleted, in some cases
+*     (e.g. jobs), a special remove function is called.
+*
+*  INPUTS
+*     const lListElem *type           - object type description
+*     const lListElem *rule           - rule to use
+*     const char *key                 - unique key 
+*     const sge_event_type event_type - object type
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/flatfile/--Flatfile-Spooling
+*     spool/spool_delete_object()
+*******************************************************************************/
+bool
+spool_flatfile_default_delete_func(const lListElem *type, const lListElem *rule,
+                                   const char *key, 
+                                   const sge_event_type event_type)
+{
+/*    static dstring dir_name = DSTRING_INIT; */
+
+   DENTER(TOP_LAYER, "spool_flatfile_default_delete_func");
+#if 0
+   switch(event_type) {
+      case SGE_EMT_ADMINHOST:
+         sge_unlink(ADMINHOST_DIR, key);
+         break;
+      case SGE_EMT_CALENDAR:
+         sge_unlink(CAL_DIR, key);
+         break;
+      case SGE_EMT_CKPT:
+         sge_unlink(CKPTOBJ_DIR, key);
+         break;
+      case SGE_EMT_COMPLEX:
+         sge_unlink(COMPLEX_DIR, key);
+         break;
+      case SGE_EMT_CONFIG:
+         if(sge_hostcmp(key, "global") == 0) {
+            ERROR((SGE_EVENT, MSG_SPOOL_GLOBALCONFIGNOTDELETED));
+         } else {
+            sge_dstring_sprintf(&dir_name, "%s/%s",
+                                lGetString(rule, SPR_url), LOCAL_CONF_DIR);
+            sge_unlink(sge_dstring_get_string(&dir_name), key);
+         }
+         break;
+      case SGE_EMT_EXECHOST:
+         sge_unlink(EXECHOST_DIR, key);
+         break;
+      case SGE_EMT_JOB:
+      case SGE_EMT_JATASK:   
+      case SGE_EMT_PETASK:   
+         {
+            u_long32 job_id, ja_task_id;
+            char *pe_task_id;
+            char *dup = strdup(key);
+            
+            job_parse_key(dup, &job_id, &ja_task_id, &pe_task_id);
+   
+            DPRINTF(("spooling job %d.%d %s\n", job_id, ja_task_id, 
+                     pe_task_id != NULL ? pe_task_id : "<null>"));
+            job_remove_spool_file(job_id, ja_task_id, pe_task_id, SPOOL_DEFAULT);
+            free(dup);
+         }
+         break;
+      case SGE_EMT_MANAGER:
+         write_manop(1, SGE_MANAGER_LIST);
+         break;
+      case SGE_EMT_OPERATOR:
+         write_manop(1, SGE_OPERATOR_LIST);
+         break;
+      case SGE_EMT_SHARETREE:
+         sge_unlink(NULL, key);
+         break;
+      case SGE_EMT_PE:
+         sge_unlink(PE_DIR, key);
+         break;
+      case SGE_EMT_PROJECT:
+         sge_unlink(PROJECT_DIR, key);
+         break;
+      case SGE_EMT_QUEUE:
+         sge_unlink(QUEUE_DIR, key);
+         break;
+      case SGE_EMT_SCHEDD_CONF:
+         ERROR((SGE_EVENT, MSG_SPOOL_SCHEDDCONFIGNOTDELETED));
+         break;
+      case SGE_EMT_SUBMITHOST:
+         sge_unlink(SUBMITHOST_DIR, key);
+         break;
+      case SGE_EMT_USER:
+         sge_unlink(USER_DIR, key);
+         break;
+      case SGE_EMT_USERSET:
+         sge_unlink(USERSET_DIR, key);
+         break;
+#ifndef __SGE_NO_USERMAPPING__
+      case SGE_EMT_USERMAPPING:
+         sge_unlink(UME_DIR, key);
+         break;
+      case SGE_EMT_HOSTGROUP:
+         sge_unlink(HOSTGROUP_DIR, key);
+         break;
+#endif
+      default:
+         break;
+   }
+#endif
+   DEXIT;
+   return true;
+}
+
+
+
 const spool_flatfile_instr spool_flatfile_instr_config_sublist = 
 {
-   NULL,
+   &spool_config_subinstr,
    false,
    false,
    false,

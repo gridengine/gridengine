@@ -116,13 +116,20 @@
 ****************************************************************************
 */
 
+static const char *spooling_method = "classic";
+
+const char *get_spooling_method(void)
+{
+   return spooling_method;
+}
+
 /****** spool/classic/spool_classic_create_context() ********************
 *  NAME
 *     spool_classic_create_context() -- create a classic spooling context
 *
 *  SYNOPSIS
-*     lListElem* spool_classic_create_context(const char *common_dir, 
-*                                             const char *spool_dir) 
+*     lListElem* 
+*     spool_classic_create_context(int argc, char *argv[])
 *
 *  FUNCTION
 *     Create a spooling context for the classic spooling.
@@ -137,9 +144,13 @@
 *        - for SGE_EMT_ALL (default for all object types), referencing the rule
 *          for the spool directory
 *
+*     The function expects to get as arguments (in argv) two absolute paths:
+*        1. The path of the common directory
+*        2. The path of the spool directory
+*
 *  INPUTS
-*     const char *common_dir - absolute path to the common directory
-*     const char *spool_dir  - absolute path to the spool directory
+*     int argc     - number of arguments in argv
+*     char *argv[] - argument vector
 *
 *  RESULT
 *     lListElem* - on success, the new spooling context, else NULL
@@ -148,18 +159,27 @@
 *     spool/--Spooling
 *     spool/classic/--Classic-Spooling
 *******************************************************************************/
-lListElem *spool_classic_create_context(const char *common_dir, 
-                                        const char *spool_dir)
+lListElem *
+spool_classic_create_context(int argc, char *argv[])
 {
    lListElem *context, *rule, *type;
+   char *common_dir, *spool_dir;
 
    DENTER(TOP_LAYER, "spool_classic_create_context");
 
    /* check parameters - both must be set and be absolute paths */
-   if(common_dir == NULL || spool_dir == NULL ||
+   if (argc < 2) {
+      ERROR((SGE_EVENT, MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR));
+      return NULL;
+   }
+
+   common_dir = argv[0];
+   spool_dir  = argv[1];
+   
+   if (common_dir == NULL || spool_dir == NULL ||
       *common_dir != '/' || *spool_dir != '/') {
-      CRITICAL((SGE_EVENT, MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR));
-      SGE_EXIT(EXIT_FAILURE);
+      ERROR((SGE_EVENT, MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR));
+      return NULL;
    }   
 
    /* create spooling context */
@@ -176,7 +196,7 @@ lListElem *spool_classic_create_context(const char *common_dir,
                                     spool_classic_default_write_func,
                                     spool_classic_default_delete_func);
    type = spool_context_create_type(context, SGE_EMT_ALL);
-   spool_type_add_rule(type, rule, TRUE);
+   spool_type_add_rule(type, rule, true);
 
    /* create rule and type for all objects spooled in the common dir */
    rule = spool_context_create_rule(context, 
@@ -189,9 +209,9 @@ lListElem *spool_classic_create_context(const char *common_dir,
                                     spool_classic_default_write_func,
                                     spool_classic_default_delete_func);
    type = spool_context_create_type(context, SGE_EMT_CONFIG);
-   spool_type_add_rule(type, rule, TRUE);
+   spool_type_add_rule(type, rule, true);
    type = spool_context_create_type(context, SGE_EMT_SCHEDD_CONF);
-   spool_type_add_rule(type, rule, TRUE);
+   spool_type_add_rule(type, rule, true);
 
    DEXIT;
    return context;
@@ -202,7 +222,8 @@ lListElem *spool_classic_create_context(const char *common_dir,
 *     spool_classic_default_startup_func() -- setup the spool directory
 *
 *  SYNOPSIS
-*     int spool_classic_default_startup_func(const lListElem *rule) 
+*     bool
+*     spool_classic_default_startup_func(const lListElem *rule) 
 *
 *  FUNCTION
 *     Checks the existence of the spool directory.
@@ -216,17 +237,18 @@ lListElem *spool_classic_create_context(const char *common_dir,
 *                             the startup (e.g. path to the spool directory)
 *
 *  RESULT
-*     int - TRUE, if the startup succeeded, else FALSE
+*     bool - true, if the startup succeeded, else false
 *
 *  NOTES
 *     This function should not be called directly, it is called by the
 *     spooling framework.
 *
 *  SEE ALSO
-*     spool/classic/Classic-Spooling
+*     spool/classic/--Classic-Spooling
 *     spool/spool_startup_context()
 *******************************************************************************/
-int spool_classic_default_startup_func(const lListElem *rule)
+bool
+spool_classic_default_startup_func(const lListElem *rule)
 {
    char *cwd;
    const char *url;
@@ -236,36 +258,36 @@ int spool_classic_default_startup_func(const lListElem *rule)
    /* check, if we are in the spool directory */
    cwd = getcwd(NULL, SGE_PATH_MAX);
    url = lGetString(rule, SPR_url);
-   if(strcmp(cwd, url) != 0) {
+   if (strcmp(cwd, url) != 0) {
       WARNING((SGE_EVENT, MSG_SPOOL_STARTEDINWRONGDIRECTORY_SS, url, cwd));
       sge_chdir_exit(url, TRUE);
    }
    free(cwd);
 
    /* create spool sub directories */
-   sge_mkdir(JOB_DIR,  0755, TRUE);
-   sge_mkdir(ZOMBIE_DIR, 0755, TRUE);
-   sge_mkdir(QUEUE_DIR,  0755, TRUE);
-   sge_mkdir(EXECHOST_DIR, 0755, TRUE);
-   sge_mkdir(SUBMITHOST_DIR, 0755, TRUE);
-   sge_mkdir(ADMINHOST_DIR, 0755, TRUE);
-   sge_mkdir(COMPLEX_DIR, 0755, TRUE);
-   sge_mkdir(EXEC_DIR, 0755, TRUE);
-   sge_mkdir(PE_DIR, 0755, TRUE);
-   sge_mkdir(CKPTOBJ_DIR, 0755, TRUE);
-   sge_mkdir(USERSET_DIR, 0755, TRUE);
-   sge_mkdir(CAL_DIR, 0755, TRUE);
+   sge_mkdir(JOB_DIR,  0755, true);
+   sge_mkdir(ZOMBIE_DIR, 0755, true);
+   sge_mkdir(QUEUE_DIR,  0755, true);
+   sge_mkdir(EXECHOST_DIR, 0755, true);
+   sge_mkdir(SUBMITHOST_DIR, 0755, true);
+   sge_mkdir(ADMINHOST_DIR, 0755, true);
+   sge_mkdir(COMPLEX_DIR, 0755, true);
+   sge_mkdir(EXEC_DIR, 0755, true);
+   sge_mkdir(PE_DIR, 0755, true);
+   sge_mkdir(CKPTOBJ_DIR, 0755, true);
+   sge_mkdir(USERSET_DIR, 0755, true);
+   sge_mkdir(CAL_DIR, 0755, true);
 
 #ifndef __SGE_NO_USERMAPPING__
-   sge_mkdir(HOSTGROUP_DIR, 0755, TRUE);
-   sge_mkdir(UME_DIR, 0755, TRUE);
+   sge_mkdir(HOSTGROUP_DIR, 0755, true);
+   sge_mkdir(UME_DIR, 0755, true);
 #endif
 
-   sge_mkdir(USER_DIR, 0755, TRUE);
-   sge_mkdir(PROJECT_DIR, 0755, TRUE);
+   sge_mkdir(USER_DIR, 0755, true);
+   sge_mkdir(PROJECT_DIR, 0755, true);
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 /****** spool/classic/spool_classic_common_startup_func() ***************
@@ -273,7 +295,8 @@ int spool_classic_default_startup_func(const lListElem *rule)
 *     spool_classic_common_startup_func() -- setup the common directory
 *
 *  SYNOPSIS
-*     int spool_classic_common_startup_func(const lListElem *rule) 
+*     bool
+*     spool_classic_common_startup_func(const lListElem *rule) 
 *
 *  FUNCTION
 *     Checks the existence of the common directory.
@@ -285,7 +308,7 @@ int spool_classic_default_startup_func(const lListElem *rule)
 *                             directory
 *
 *  RESULT
-*     int - TRUE, on success, else FALSE
+*     bool - true, on success, else false
 *
 *  NOTES
 *     This function should not be called directly, it is called by the
@@ -295,7 +318,8 @@ int spool_classic_default_startup_func(const lListElem *rule)
 *     spool/classic/--Classic-Spooling
 *     spool/spool_startup_context()
 *******************************************************************************/
-int spool_classic_common_startup_func(const lListElem *rule)
+bool
+spool_classic_common_startup_func(const lListElem *rule)
 {
    const char *url;
    dstring local_dir = DSTRING_INIT;
@@ -304,18 +328,18 @@ int spool_classic_common_startup_func(const lListElem *rule)
 
    /* check common directories */
    url = lGetString(rule, SPR_url);
-   if(!sge_is_directory(url)) {
+   if (!sge_is_directory(url)) {
       CRITICAL((SGE_EVENT, MSG_SPOOL_COMMONDIRDOESNOTEXIST_S, url));
       SGE_EXIT(EXIT_FAILURE);
    }
 
    /* create directory for local configurations */
    sge_dstring_sprintf(&local_dir, "%s/%s", url, LOCAL_CONF_DIR);
-   sge_mkdir(sge_dstring_get_string(&local_dir), 0755, TRUE);
+   sge_mkdir(sge_dstring_get_string(&local_dir), 0755, true);
    sge_dstring_free(&local_dir);
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 /****** spool/classic/spool_classic_default_list_func() *****************
@@ -323,10 +347,11 @@ int spool_classic_common_startup_func(const lListElem *rule)
 *     spool_classic_default_list_func() -- read lists through classic spooling
 *
 *  SYNOPSIS
-*     int spool_classic_default_list_func(const lListElem *type, 
-*                                         const lListElem *rule, 
-*                                         lList **list, 
-*                                         const sge_event_type event_type) 
+*     bool
+*     spool_classic_default_list_func(const lListElem *type, 
+*                                     const lListElem *rule, 
+*                                     lList **list, 
+*                                     const sge_event_type event_type) 
 *
 *  FUNCTION
 *     Depending on the object type given, calls the appropriate functions
@@ -340,7 +365,7 @@ int spool_classic_common_startup_func(const lListElem *rule)
 *     const sge_event_type event_type - object type
 *
 *  RESULT
-*     int - TRUE, on success, else FALSE
+*     bool - true, on success, else false
 *
 *  NOTES
 *     This function should not be called directly, it is called by the
@@ -350,15 +375,16 @@ int spool_classic_common_startup_func(const lListElem *rule)
 *     spool/classic/--Classic-Spooling
 *     spool/spool_read_list()
 *******************************************************************************/
-int spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
-                                    lList **list, const sge_event_type event_type)
+bool 
+spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
+                                lList **list, const sge_event_type event_type)
 {
    static dstring file_name = DSTRING_INIT;
    static dstring dir_name  = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "spool_classic_default_list_func");
 
-   switch(event_type) {
+   switch (event_type) {
       case SGE_EMT_ADMINHOST:
          sge_read_adminhost_list_from_disk();
          break;
@@ -403,7 +429,7 @@ int spool_classic_default_list_func(const lListElem *type, const lListElem *rule
             lListElem *ep;
             char err_str[1024];
             ep = read_sharetree(SHARETREE_FILE, NULL, 1, err_str, 1, NULL);
-            if(*list != NULL) {
+            if (*list != NULL) {
                *list = lFreeList(*list);
             }
             *list = lCreateList("share tree", STN_Type);
@@ -420,7 +446,7 @@ int spool_classic_default_list_func(const lListElem *type, const lListElem *rule
          sge_read_queue_list_from_disk();
          break;
       case SGE_EMT_SCHEDD_CONF:
-         if(*list != NULL) {
+         if (*list != NULL) {
             *list = lFreeList(*list);
          }
          sge_dstring_sprintf(&file_name, "%s/%s", 
@@ -445,7 +471,8 @@ int spool_classic_default_list_func(const lListElem *type, const lListElem *rule
          break;
    }
 
-   return TRUE;
+   DEXIT;
+   return true;
 }
 
 /****** spool/classic/spool_classic_default_read_func() *****************
@@ -453,10 +480,11 @@ int spool_classic_default_list_func(const lListElem *type, const lListElem *rule
 *     spool_classic_default_read_func() -- read objects through classic spooling
 *
 *  SYNOPSIS
-*     lListElem* spool_classic_default_read_func(const lListElem *type, 
-*                                                const lListElem *rule, 
-*                                                const char *key, 
-*                                                const sge_event_type event_type) 
+*     lListElem* 
+*     spool_classic_default_read_func(const lListElem *type, 
+*                                     const lListElem *rule, 
+*                                     const char *key, 
+*                                     const sge_event_type event_type) 
 *
 *  FUNCTION
 *     Reads an individual object by calling the appropriate classic spooling 
@@ -479,8 +507,10 @@ int spool_classic_default_list_func(const lListElem *type, const lListElem *rule
 *     spool/classic/--Classic-Spooling
 *     spool/spool_read_object()
 *******************************************************************************/
-lListElem *spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
-                                           const char *key, const sge_event_type event_type)
+lListElem *
+spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
+                                const char *key, 
+                                const sge_event_type event_type)
 {
    lListElem *ep = NULL;
 
@@ -488,7 +518,7 @@ lListElem *spool_classic_default_read_func(const lListElem *type, const lListEle
 
    DENTER(TOP_LAYER, "spool_classic_default_read_func");
 
-   switch(event_type) {
+   switch (event_type) {
       case SGE_EMT_ADMINHOST:
          ep = cull_read_in_host(ADMINHOST_DIR, key, CULL_READ_SPOOL, AH_name, NULL, NULL);
          break;
@@ -563,7 +593,8 @@ lListElem *spool_classic_default_read_func(const lListElem *type, const lListEle
          break;
    }
 
-   return NULL;
+   DEXIT;
+   return ep;
 }
 
 /****** spool/classic/spool_classic_default_write_func() ****************
@@ -571,11 +602,12 @@ lListElem *spool_classic_default_read_func(const lListElem *type, const lListEle
 *     spool_classic_default_write_func() -- write objects through classic spooling
 *
 *  SYNOPSIS
-*     int spool_classic_default_write_func(const lListElem *type, 
-*                                          const lListElem *rule, 
-*                                          const lListElem *object, 
-*                                          const char *key, 
-*                                          const sge_event_type event_type) 
+*     bool
+*     spool_classic_default_write_func(const lListElem *type, 
+*                                      const lListElem *rule, 
+*                                      const lListElem *object, 
+*                                      const char *key, 
+*                                      const sge_event_type event_type) 
 *
 *  FUNCTION
 *     Writes an object through the appropriate classic spooling functions.
@@ -588,7 +620,7 @@ lListElem *spool_classic_default_read_func(const lListElem *type, const lListEle
 *     const sge_event_type event_type - object type
 *
 *  RESULT
-*     int - TRUE on success, else FALSE
+*     bool - true on success, else false
 *
 *  NOTES
 *     This function should not be called directly, it is called by the
@@ -598,14 +630,15 @@ lListElem *spool_classic_default_read_func(const lListElem *type, const lListEle
 *     spool/classic/--Classic-Spooling
 *     spool/spool_delete_object()
 *******************************************************************************/
-int spool_classic_default_write_func(const lListElem *type, const lListElem *rule, 
-                                     const lListElem *object, const char *key, 
-                                     const sge_event_type event_type)
+bool
+spool_classic_default_write_func(const lListElem *type, const lListElem *rule, 
+                                 const lListElem *object, const char *key, 
+                                 const sge_event_type event_type)
 {
    static dstring file_name = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "spool_classic_default_write_func");
-   switch(event_type) {
+   switch (event_type) {
       case SGE_EMT_ADMINHOST:
          write_host(1, 2, object, AH_name, NULL);
          break;
@@ -620,7 +653,7 @@ int spool_classic_default_write_func(const lListElem *type, const lListElem *rul
          write_cmplx(1, sge_dstring_get_string(&file_name), lGetList(object, CX_entries), NULL, NULL);
          break;
       case SGE_EMT_CONFIG:
-         if(sge_hostcmp(lGetHost(object, CONF_hname), "global") == 0) {
+         if (sge_hostcmp(lGetHost(object, CONF_hname), "global") == 0) {
             sge_dstring_sprintf(&file_name, "%s/%s",
                                 lGetString(rule, SPR_url), CONF_FILE);
          } else {
@@ -695,7 +728,7 @@ int spool_classic_default_write_func(const lListElem *type, const lListElem *rul
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 /****** spool/classic/spool_classic_default_delete_func() ***************
@@ -703,10 +736,11 @@ int spool_classic_default_write_func(const lListElem *type, const lListElem *rul
 *     spool_classic_default_delete_func() -- delete object in classic spooling
 *
 *  SYNOPSIS
-*     int spool_classic_default_delete_func(const lListElem *type, 
-*                                           const lListElem *rule, 
-*                                           const char *key, 
-*                                           const sge_event_type event_type) 
+*     bool
+*     spool_classic_default_delete_func(const lListElem *type, 
+*                                       const lListElem *rule, 
+*                                       const char *key, 
+*                                       const sge_event_type event_type) 
 *
 *  FUNCTION
 *     Deletes an object in the classic spooling.
@@ -720,7 +754,7 @@ int spool_classic_default_write_func(const lListElem *type, const lListElem *rul
 *     const sge_event_type event_type - object type
 *
 *  RESULT
-*     int - TRUE on success, else FALSE
+*     bool - true on success, else false
 *
 *  NOTES
 *     This function should not be called directly, it is called by the
@@ -730,14 +764,16 @@ int spool_classic_default_write_func(const lListElem *type, const lListElem *rul
 *     spool/classic/--Classic-Spooling
 *     spool/spool_delete_object()
 *******************************************************************************/
-int spool_classic_default_delete_func(const lListElem *type, const lListElem *rule, 
-                                      const char *key, const sge_event_type event_type)
+bool 
+spool_classic_default_delete_func(const lListElem *type, const lListElem *rule, 
+                                  const char *key, 
+                                  const sge_event_type event_type)
 {
    static dstring dir_name = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "spool_classic_default_delete_func");
 
-   switch(event_type) {
+   switch (event_type) {
       case SGE_EMT_ADMINHOST:
          sge_unlink(ADMINHOST_DIR, key);
          break;
@@ -751,7 +787,7 @@ int spool_classic_default_delete_func(const lListElem *type, const lListElem *ru
          sge_unlink(COMPLEX_DIR, key);
          break;
       case SGE_EMT_CONFIG:
-         if(sge_hostcmp(key, "global") == 0) {
+         if (sge_hostcmp(key, "global") == 0) {
             ERROR((SGE_EVENT, MSG_SPOOL_GLOBALCONFIGNOTDELETED));
          } else {
             sge_dstring_sprintf(&dir_name, "%s/%s",
@@ -820,7 +856,8 @@ int spool_classic_default_delete_func(const lListElem *type, const lListElem *ru
          break;
    }
 
-   return TRUE;
+   DEXIT;
+   return true;
 }
 
 

@@ -34,6 +34,7 @@
 
 #include "cull.h"
 
+#include "sge_spooling.h"
 #include "sge_spooling_utilities.h"
 
 /****** spool/flatfile/--Spooling-Flatfile ************************************
@@ -119,6 +120,41 @@ typedef enum {
 
 /* JG: TODO: we need a check function:
  * - delimiters may not contain whitespace, exception \n
+ */
+
+/*
+ * spooling framework functions
+ */
+
+const char *
+get_spooling_method(void);
+
+lListElem *
+spool_flatfile_create_context(int argc, char *argv[]);
+
+bool 
+spool_flatfile_default_startup_func(const lListElem *rule);
+bool 
+spool_flatfile_common_startup_func(const lListElem *rule);
+
+bool 
+spool_flatfile_default_list_func(const lListElem *type, const lListElem *rule,
+                                 lList **list, const sge_event_type event_type);
+lListElem *
+spool_flatfile_default_read_func(const lListElem *type, const lListElem *rule,
+                                 const char *key, 
+                                 const sge_event_type event_type);
+bool 
+spool_flatfile_default_write_func(const lListElem *type, const lListElem *rule, 
+                                  const lListElem *object, const char *key, 
+                                  const sge_event_type event_type);
+bool 
+spool_flatfile_default_delete_func(const lListElem *type, const lListElem *rule,
+                                   const char *key, 
+                                   const sge_event_type event_type);
+
+/*
+ * base functions
  */
 
 typedef struct spool_flatfile_instr {

@@ -109,6 +109,7 @@ typedef struct spool_instr {
 } spool_instr;
 
 extern const spool_instr spool_config_instr;
+extern const spool_instr spool_config_subinstr;
 
 typedef struct spooling_field {
    int nm;

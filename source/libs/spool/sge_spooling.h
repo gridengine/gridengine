@@ -81,15 +81,15 @@
 *     Typedefs -- type definitions for the spooling framework
 *
 *  SYNOPSIS
-*     typedef int (*spooling_startup_func)(const lListElem *rule); 
-*     typedef int (*spooling_shutdown_func)(const lListElem *rule); 
+*     typedef bool (*spooling_startup_func)(const lListElem *rule); 
+*     typedef bool (*spooling_shutdown_func)(const lListElem *rule); 
 *
-*     typedef int (*spooling_list_func)(const lListElem *type, 
+*     typedef bool (*spooling_list_func)(const lListElem *type, 
 *                                       const lListElem *rule, 
 *                                       lList **list, 
 *                                       const sge_event_type event_type);
 *
-*     typedef int (*spooling_write_func)(const lListElem *type, 
+*     typedef bool (*spooling_write_func)(const lListElem *type, 
 *                                        const lListElem *rule, 
 *                                        const lListElem *object, 
 *                                        const char *key, 
@@ -100,7 +100,7 @@
 *                                              const char *key, 
 *                                              const sge_event_type event_type);
 *
-*     typedef int (*spooling_delete_func)(const lListElem *type, 
+*     typedef bool (*spooling_delete_func)(const lListElem *type, 
 *                                         const lListElem *rule, 
 *                                         const char *key, 
 *                                         const sge_event_type event_type);
@@ -131,20 +131,25 @@
 *
 ****************************************************************************
 */
-typedef int (*spooling_startup_func)(const lListElem *rule); 
-typedef int (*spooling_shutdown_func)(const lListElem *rule); 
 
-typedef int (*spooling_list_func)(const lListElem *type, const lListElem *rule, 
+typedef const char *(*spooling_get_method_func)(void);
+
+typedef lListElem *(*spooling_create_context_func)(int argc, char *argv[]);
+
+typedef bool (*spooling_startup_func)(const lListElem *rule); 
+typedef bool (*spooling_shutdown_func)(const lListElem *rule); 
+
+typedef bool (*spooling_list_func)(const lListElem *type, const lListElem *rule, 
                                   lList **list, const sge_event_type event_type);
                                   
-typedef int (*spooling_write_func)(const lListElem *type, const lListElem *rule, 
+typedef bool (*spooling_write_func)(const lListElem *type, const lListElem *rule, 
                                    const lListElem *object, const char *key, 
                                    const sge_event_type event_type);
 
 typedef lListElem *(*spooling_read_func)(const lListElem *type, const lListElem *rule, 
                                          const char *key, const sge_event_type event_type);
 
-typedef int (*spooling_delete_func)(const lListElem *type, const lListElem *rule, 
+typedef bool (*spooling_delete_func)(const lListElem *type, const lListElem *rule, 
                                     const char *key, const sge_event_type event_type);
 
 /* the default spooling context */

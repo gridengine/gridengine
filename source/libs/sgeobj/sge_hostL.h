@@ -260,7 +260,7 @@ enum {
 };
 
 LISTDEF(AH_Type)
-   SGE_HOST(AH_name, CULL_HASH | CULL_UNIQUE)               /* CR - hostname change */
+   SGE_HOST(AH_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
 LISTEND 
 
 NAMEDEF(AHN)

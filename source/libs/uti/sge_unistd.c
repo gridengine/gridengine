@@ -44,6 +44,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "basis_types.h"
+#include "sge_dstring.h"
 #include "msg_utilib.h"
 
 typedef enum {
@@ -385,6 +386,35 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error)
    DEXIT;
    return i;
 }   
+
+int sge_mkdir2(const char *base_dir, const char *name, int fmode, 
+               int exit_on_error)
+{
+   dstring path = DSTRING_INIT;
+   int ret;
+
+   DENTER(TOP_LAYER, "sge_mkdir");
+   
+   if (base_dir == NULL || name == NULL) {
+      if (exit_on_error) {
+         CRITICAL((SGE_EVENT,MSG_VAR_PATHISNULLINSGEMKDIR ));
+         DCLOSE;
+         SGE_EXIT(1);
+      } else {
+         ERROR((SGE_EVENT, MSG_VAR_PATHISNULLINSGEMKDIR ));
+         DEXIT;
+         return -1;
+      }
+   }
+  
+   sge_dstring_sprintf(&path, "%s/%s", base_dir, name);
+
+   ret = sge_mkdir(sge_dstring_get_string(&path), fmode, exit_on_error); 
+   sge_dstring_free(&path);
+
+   DEXIT;
+   return ret;
+}
 
 /****** uti/unistd/sge_rmdir() ************************************************
 *  NAME

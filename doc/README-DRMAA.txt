@@ -104,8 +104,10 @@ Content
 3. Getting Support
 ------------------
 
-   If you're having trouble with the DRMAA library included with the Grid
-   Engine 6 release, please visit:
+   For commercial deployments N1GE6 DRMAA is recommended.
+
+   If you're having trouble with the DRMAA library included with the Open 
+   Source Grid Engine 6 release, please visit:
 
       http://gridengine.sunsource.net/servlets/ProjectIssues
 
@@ -114,6 +116,7 @@ Content
    mailing list.  You can also browse archives of this mailing list at:
 
       http://gridengine.sunsource.net/project/gridengine/maillist.html
+
 
 
 4. Copyright

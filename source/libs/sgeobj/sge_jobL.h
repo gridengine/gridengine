@@ -591,14 +591,14 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_STRING(JB_job_name, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(JB_version, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(JB_jid_predecessor_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL) 
-   SGE_LIST(JB_jid_sucessor_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL) /* JG: TODO: typo: successor */
+   SGE_LIST(JB_jid_sucessor_list, JRE_Type, CULL_DEFAULT) /* JG: TODO: typo: successor */
    SGE_STRING(JB_session, CULL_DEFAULT | CULL_SPOOL) 
 
    SGE_STRING(JB_project, CULL_DEFAULT | CULL_SPOOL)             
    SGE_STRING(JB_department, CULL_DEFAULT | CULL_SPOOL)  
 
    SGE_STRING(JB_directive_prefix, CULL_DEFAULT | CULL_SPOOL)     
-   SGE_STRING(JB_exec_file, CULL_DEFAULT)
+   SGE_STRING(JB_exec_file, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(JB_script_file, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(JB_script_size, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(JB_script_ptr, CULL_DEFAULT)

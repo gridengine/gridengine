@@ -70,6 +70,13 @@
 /* how often will the database be checkpointed (cache written to disk) */
 #define BERKELEYDB_CHECKPOINT_INTERVAL 60
 
+#if 0
+static const int pack_part = CULL_SPOOL | CULL_SUBLIST | CULL_SPOOL_PROJECT | 
+                             CULL_SPOOL_USER;
+#else
+static const int pack_part = 0;
+#endif
+
 static const char *spooling_method = "berkeleydb";
 
 const char *get_spooling_method(void)
@@ -364,10 +371,6 @@ spool_berkeleydb_default_startup_func(lList **answer_list,
          }
       }
    }
-
-#if 1
-   prof_set_level_name(SGE_PROF_CUSTOM0, "packing", NULL);
-#endif
 
    DEXIT;
    return ret;
@@ -768,6 +771,8 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info *db,
    DBT key_dbt, data_dbt;
    DBC *dbc;
 
+   DENTER(TOP_LAYER, "spool_berkeleydb_read_list");
+
    DPRINTF(("querying objects with keys %s*\n", key));
 
    PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
@@ -802,21 +807,40 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info *db,
          break;
       } else {
          lListElem *object;
+         int cull_ret;
+
          DPRINTF(("read object with key "SFQ"\n", key_dbt.data));
-         PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
-         init_packbuffer_from_buffer(&pb, data_dbt.data, data_dbt.size, 0);
-         cull_unpack_elem(&pb, &object, descr);
+         cull_ret = init_packbuffer_from_buffer(&pb, data_dbt.data, data_dbt.size, 0);
+         if (cull_ret != PACK_SUCCESS) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_UNPACKERROR_SS,
+                                    key_dbt.data,
+                                    cull_pack_strerror(cull_ret));
+            ret = false;
+            break;
+         }
+         cull_ret = cull_unpack_elem_partial(&pb, &object, descr, pack_part);
+         if (cull_ret != PACK_SUCCESS) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_UNPACKERROR_SS,
+                                    key_dbt.data,
+                                    cull_pack_strerror(cull_ret));
+            ret = false;
+            break;
+         }
          /* we may not free the packbuffer: it references the buffer
           * delivered from the database
           * clear_packbuffer(&pb);
           */
-         PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
          if (object != NULL) {
             if (*list == NULL) {
                *list = lCreateList(key, descr);
             }
             lAppendElem(*list, object);
          }
+
          /* get next record */
 /*          memset(&key_dbt, 0, sizeof(key_dbt)); */
 /*          memset(&data_dbt, 0, sizeof(data_dbt)); */
@@ -828,7 +852,8 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info *db,
    PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    dbc->c_close(dbc);
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-
+   
+   DEXIT;
    return ret;
 }
 
@@ -1093,38 +1118,54 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info *db,
    sge_pack_buffer pb;
    DBT key_dbt, data_dbt;
    int dbret;
+   int cull_ret;
 
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
-   init_packbuffer(&pb, 8192, 0);
-   cull_pack_elem(&pb, object);
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
-   
-   memset(&key_dbt, 0, sizeof(key_dbt));
-   memset(&data_dbt, 0, sizeof(data_dbt));
-   key_dbt.data = (void *)key;
-   key_dbt.size = strlen(key) + 1;
-   data_dbt.data = pb.head_ptr;
-   data_dbt.size = pb.bytes_used;
+   DENTER(TOP_LAYER, "spool_berkeleydb_write_object");
 
-   /* Store a key/data pair. */
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-   dbret = db->db->put(db->db, db->txn, &key_dbt, &data_dbt, 0);
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-   if (dbret != 0) {
+   cull_ret = init_packbuffer(&pb, 8192, 0);
+   if (cull_ret != PACK_SUCCESS) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
-                              MSG_BERKELEY_PUTERROR_SS,
-                              key, db_strerror(dbret));
+                              MSG_BERKELEY_PACKERROR_SS,
+                              key,
+                              cull_pack_strerror(cull_ret));
       ret = false;
    } else {
-      DPRINTF(("stored object with key "SFQ", size = %d\n", key, 
-               data_dbt.size));
+      cull_ret = cull_pack_elem_partial(&pb, object, pack_part);
+      if (cull_ret != PACK_SUCCESS) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_BERKELEY_PACKERROR_SS,
+                                 key,
+                                 cull_pack_strerror(cull_ret));
+         ret = false;
+      } else { 
+         memset(&key_dbt, 0, sizeof(key_dbt));
+         memset(&data_dbt, 0, sizeof(data_dbt));
+         key_dbt.data = (void *)key;
+         key_dbt.size = strlen(key) + 1;
+         data_dbt.data = pb.head_ptr;
+         data_dbt.size = pb.bytes_used;
+
+         /* Store a key/data pair. */
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbret = db->db->put(db->db, db->txn, &key_dbt, &data_dbt, 0);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         if (dbret != 0) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_PUTERROR_SS,
+                                    key, db_strerror(dbret));
+            ret = false;
+         } else {
+            DPRINTF(("stored object with key "SFQ", size = %d\n", key, 
+                     data_dbt.size));
+         }
+      }
+
+      clear_packbuffer(&pb);
    }
-
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
-   clear_packbuffer(&pb);
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
-
+   DEXIT;
    return ret;
 }
 
@@ -1364,6 +1405,8 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info *db,
    int dbret;
    DBT cursor_dbt, delete_dbt, data_dbt;
 
+   DENTER(TOP_LAYER, "spool_berkeleydb_delete_object");
+
    if (sub_objects) {
       DBC *dbc;
 
@@ -1456,6 +1499,7 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info *db,
       }
    }
    
+   DEXIT;
    return ret;
 }
 

@@ -358,6 +358,12 @@ int main(int argc, char *argv[])
    }
 
    if (spool_get_default_context() != NULL) {
+      time_t next_trigger = 0;
+
+      if (!spool_trigger_context(&answer_list, spool_get_default_context(), 
+                                 0, &next_trigger)) {
+         ret = EXIT_FAILURE;
+      }
       if (!spool_shutdown_context(&answer_list, spool_get_default_context())) {
          ret = EXIT_FAILURE;
       }

@@ -137,8 +137,8 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    SGE_ULONG(SC_weight_tickets_functional, CULL_DEFAULT | CULL_SPOOL)      /* weight between different scheduling targets */
    SGE_ULONG(SC_weight_tickets_share, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(SC_weight_tickets_deadline, CULL_DEFAULT | CULL_SPOOL)
-   SGE_ULONG(SC_weight_tickets_deadline_active, CULL_DEFAULT)              /* prepared for setting by a schedd order */
-   SGE_ULONG(SC_weight_tickets_override, CULL_DEFAULT)
+   SGE_ULONG(SC_weight_tickets_deadline_active, CULL_DEFAULT | CULL_SPOOL)              /* prepared for setting by a schedd order */
+   SGE_ULONG(SC_weight_tickets_override, CULL_DEFAULT | CULL_SPOOL)
    SGE_BOOL(SC_share_override_tickets, CULL_DEFAULT | CULL_SPOOL)          /* Override tickets of any object instance *
                                                                             * are shared equally among all jobs       *
                                                                             * associated with the object.             */

@@ -188,6 +188,7 @@ typedef struct {
 static prof_info prof_base[SGE_PROF_ALL] = {
    { "other",           0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
    { "communication",   0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { "packing",         0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
    { "eventclient",     0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
    { "eventmaster",     0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
    { "mirror",          0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },

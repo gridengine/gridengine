@@ -433,6 +433,7 @@ if [ "$startup" = true ]; then
 
    if [ $qmaster = true -a $qmaster_host = true ]; then
       echo "   starting sge_qmaster"
+      $bin_dir/sge_commd
       $bin_dir/sge_qmaster
 
       echo "   starting sge_schedd"
@@ -443,6 +444,9 @@ if [ "$startup" = true ]; then
         \( $execd = true -a $qmaster_host = false \) -o \
         \( $execd = true -a $qmaster_host = true -a $exec_host = true \) ]; then
       echo "   starting sge_execd"
+      if [ $qmaster_host = false ]; then
+         $bin_dir/sge_commd
+      fi
       $bin_dir/sge_execd
    fi
 

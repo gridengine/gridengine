@@ -1,3 +1,9 @@
+JG-2003-11-17-0: Testsuite: Some minor fixes to make testsuite installation run 
+                            through without errors.
+                 Cleanup:   Fixed some build dependencies.
+                 Enhancem.: Partial packing of objects for use with the 
+                            Berkeley DB spooling method.
+
 AH-2003-11-14-1: Doc.:      Add supplement for AH-2003-11-13-1.
 
 AH-2003-11-14-0: Testsuite: Further changes to reflect AH-2003-11-11-0

@@ -17,13 +17,13 @@ enum {
 };
 
 LISTDEF(TEST_Type)
-   SGE_HOST   (TEST_host,              CULL_DEFAULT)
+   SGE_HOST   (TEST_host,              CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING (TEST_string,            CULL_DEFAULT)
    SGE_DOUBLE (TEST_double,            CULL_DEFAULT)
    SGE_ULONG  (TEST_ulong,             CULL_DEFAULT)
    SGE_BOOL   (TEST_bool,              CULL_DEFAULT)
-   SGE_LIST   (TEST_list, TEST_Type,   CULL_DEFAULT)
-   SGE_OBJECT (TEST_object, TEST_Type, CULL_DEFAULT)
+   SGE_LIST   (TEST_list, TEST_Type,   CULL_DEFAULT | CULL_SPOOL)
+   SGE_OBJECT (TEST_object, TEST_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_REF    (TEST_ref, TEST_Type,    CULL_DEFAULT)
 LISTEND
 
@@ -52,6 +52,8 @@ int main(int argc, char *argv[])
    int pack_ret;
    FILE *fd;
    char *buffer;
+
+   cull_mt_init();
 
    lInit(nmv);
 
@@ -101,6 +103,35 @@ int main(int argc, char *argv[])
    clear_packbuffer(&copy_pb);
 
    printf("element after packing and unpacking\n");
+   lWriteElemTo(copy, stdout);
+   copy = lFreeElem(copy);
+
+   /* test partial packing */
+   if((pack_ret = init_packbuffer(&pb, 100, 0)) != PACK_SUCCESS) {
+      printf("intializing packbuffer failed: %s\n", cull_pack_strerror(pack_ret));
+      return EXIT_FAILURE;
+   }
+
+   if((pack_ret = cull_pack_elem_partial(&pb, ep, CULL_SPOOL)) != PACK_SUCCESS) {
+      printf("partially packing element failed: %s\n", cull_pack_strerror(pack_ret));
+      return EXIT_FAILURE;
+   }
+
+   buffer = (char *)malloc(pb.bytes_used);
+   memcpy(buffer, pb.head_ptr, pb.bytes_used);
+   if((pack_ret = init_packbuffer_from_buffer(&copy_pb, buffer, pb.bytes_used, 0)) != PACK_SUCCESS) {
+      printf("initializing packbuffer from partially packed data failed: %s\n", cull_pack_strerror(pack_ret));
+      return EXIT_FAILURE;
+   }
+
+   if((pack_ret = cull_unpack_elem_partial(&copy_pb, &copy, TEST_Type, CULL_SPOOL)) != PACK_SUCCESS) {
+      printf("partially unpacking element failed: %s\n", cull_pack_strerror(pack_ret));
+      return EXIT_FAILURE;
+   }
+   clear_packbuffer(&pb);
+   clear_packbuffer(&copy_pb);
+
+   printf("element after partial packing and unpacking\n");
    lWriteElemTo(copy, stdout);
    copy = lFreeElem(copy);
 

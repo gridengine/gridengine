@@ -280,8 +280,8 @@ SLISTDEF(JAT_Type, Task)
 
    SGE_OBJECT(JAT_pe_object, PE_Type, CULL_DEFAULT)   
    SGE_ULONG(JAT_next_pe_task_id, CULL_DEFAULT)
-   SGE_DOUBLE(JAT_progress_in_former_runs, CULL_DEFAULT | CULL_SPOOL)         
-   SGE_ULONG(JAT_stop_initiate_time, CULL_DEFAULT | CULL_SPOOL)         
+   SGE_DOUBLE(JAT_progress_in_former_runs, CULL_DEFAULT | CULL_SUBLIST)         
+   SGE_ULONG(JAT_stop_initiate_time, CULL_DEFAULT | CULL_SUBLIST)         
    SGE_DOUBLE(JAT_prio, CULL_DEFAULT)         
    SGE_DOUBLE(JAT_ntix, CULL_DEFAULT)         
 LISTEND 

@@ -1,3 +1,13 @@
+EB-2002-02-14-0: Bugfix:    - Error in qdel return message if task does not 
+                              exist
+                 Issue:     #144
+                  
+
+EB-2002-02-12-0: Bugfix:    - step size will be ignored from qdel command
+                            - qmaster will core if task id range comprises 
+                              not existing task at the end   
+                 Issue:     #138 #139
+
 CR-2002-02-13-0: Testsuite: secure feature: - add user keys for submit only hosts
                                             - submit large script mod. timeout for
                                               job end waiting

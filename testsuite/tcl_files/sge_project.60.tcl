@@ -30,32 +30,5 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-proc get_queue_instance {queue host} {
-   return "${queue}@${host}"
-}
 
-#****** sge_procedures.60/queue/vdep_set_queue_defaults() **********************
-#  NAME
-#     vdep_set_queue_defaults() -- create version dependent queue settings
-#
-#  SYNOPSIS
-#     vdep_set_queue_defaults { change_array } 
-#
-#  FUNCTION
-#     Fills the array change_array with queue attributes specific for SGE 6.0
-#
-#  INPUTS
-#     change_array - the resulting array
-#
-#  SEE ALSO
-#     sge_procedures/queue/set_queue_defaults()
-#*******************************************************************************
-proc vdep_set_queue_defaults { change_array } {
-   upvar $change_array chgar
-
-   set chgar(hostlist)              "hostlist"
-   set chgar(qtype)                 "BATCH INTERACTIVE"
-   set chgar(pe_list)               "NONE"
-   set chgar(ckpt_list)             "NONE"
-}
 

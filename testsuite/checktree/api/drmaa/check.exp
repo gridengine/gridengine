@@ -130,10 +130,11 @@ proc drmaa_check {} {
    foreach host $CHECK_CORE_EXECD {
 
       set binary_arch "[resolve_arch $host]"
-      if { $binary_arch != "solaris" &&
-           $binary_arch != "solaris64" &&
-           $binary_arch != "solaris86" &&
-           $binary_arch != "glinux" } {
+      if { $binary_arch != "sol-sparc" &&
+           $binary_arch != "sol-sparc64" &&
+           $binary_arch != "sol-x86" &&
+           $binary_arch != "lx24-x86" &&
+           $binary_arch != "lx26-x86" } {
          puts $CHECK_OUTPUT "DRMAA not supported for binary architecture $binary_arch"
          continue
       }

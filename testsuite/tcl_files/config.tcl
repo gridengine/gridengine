@@ -1953,8 +1953,8 @@ proc config_product_root { only_check name config_array } {
       return -1
    }
 
-   set path_length [ string length "/bin/solaris64/sge_qmaster" ]
-   if { [string length "$value/bin/solaris64/sge_qmaster"] > 60 } {
+   set path_length [ string length "/bin/sol-sparc64/sge_qmaster" ]
+   if { [string length "$value/bin/sol-sparc64/sge_qmaster"] > 60 } {
         puts $CHECK_OUTPUT "path for product_root_directory is to long (must be <= [expr ( 60 - $path_length )] chars)"
         puts $CHECK_OUTPUT "The testsuite tries to find processes via ps output most ps output is truncated"
         puts $CHECK_OUTPUT "for longer lines."

@@ -1,3 +1,7 @@
+JG-2004-01-31-1: Testsuite: Fixed a number of installation problems caused by
+                            changed objects (queue, schedd_conf) and changed
+                            architecture names.
+
 JG-2004-01-31-0: Enhancem.: qmake can either use a parallel environment for the
                             execution of make rules, or create an individual
                             qrsh job for each make rule (dynamic allocation).

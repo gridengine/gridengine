@@ -30,32 +30,28 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-proc get_queue_instance {queue host} {
-   return "${queue}@${host}"
-}
 
-#****** sge_procedures.60/queue/vdep_set_queue_defaults() **********************
-#  NAME
-#     vdep_set_queue_defaults() -- create version dependent queue settings
-#
-#  SYNOPSIS
-#     vdep_set_queue_defaults { change_array } 
-#
-#  FUNCTION
-#     Fills the array change_array with queue attributes specific for SGE 6.0
-#
-#  INPUTS
-#     change_array - the resulting array
-#
-#  SEE ALSO
-#     sge_procedures/queue/set_queue_defaults()
-#*******************************************************************************
-proc vdep_set_queue_defaults { change_array } {
+proc vdep_set_sched_conf_defaults { change_array } {
+   global ts_config
    upvar $change_array chgar
 
-   set chgar(hostlist)              "hostlist"
-   set chgar(qtype)                 "BATCH INTERACTIVE"
-   set chgar(pe_list)               "NONE"
-   set chgar(ckpt_list)             "NONE"
-}
+   set chgar(flush_submit_sec)        "0"
+   set chgar(flush_finish_sec)        "0"
+   set chgar(params)                  "none"
+   if { [string compare $ts_config(product_type) "sgeee"] == 0 } {
+      set default_array(queue_sort_method)          "load"
+      set chgar(reprioritize_interval)    "00:00:40"
+      set chgar(share_override_tickets)        "true"
+      set chgar(share_functional_shares)       "true"
+      set chgar(max_functional_jobs_to_schedule) "200"
+      set chgar(report_pjob_tickets)             "true"
+      set chgar(max_pending_tasks_per_job)       "50"
+      set chgar(halflife_decay_list)             "none"
+      set chgar(policy_hierarchy)                "OFS"
 
+      set chgar(weight_ticket)                   "0.5"
+      set chgar(weight_waiting_time)             "0.278"
+      set chgar(weight_deadline)                 "3600000"
+      set chgar(weight_urgency)                  "0.5"
+   }
+}

@@ -5945,7 +5945,8 @@ proc compile_source { { do_only_install 0 } } {
    set depend_host_name [lindex $CHECK_SOURCE_COMPILE_HOSTS 0] 
 
    foreach help_host $CHECK_SOURCE_COMPILE_HOSTS {
-      if { [ string compare [resolve_arch $help_host] "solaris64"] == 0 } {
+      if { [ string compare [resolve_arch $help_host] "solaris64"] == 0 || 
+           [ strint compare [resolve_arch $help_host] "sol-sparc64"] == 0 } {
          puts $CHECK_OUTPUT "using host $help_host to create dependencies"
          set depend_host_name $help_host
       }
@@ -6960,6 +6961,7 @@ proc source_tcl_files {} {
    ts_source $libdir/sge_config
    ts_source $libdir/sge_procedures
    ts_source $libdir/sge_queue
+   ts_source $libdir/sge_sched_conf
 
    sleep 5
 }

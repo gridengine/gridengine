@@ -33,3 +33,32 @@
 proc get_queue_instance {queue host} {
    return "${queue}_${host}"
 }
+
+#****** sge_procedures.53/queue/vdep_set_queue_defaults() **********************
+#  NAME
+#     vdep_set_queue_defaults() -- create version dependent queue settings
+#
+#  SYNOPSIS
+#     vdep_set_queue_defaults { change_array } 
+#
+#  FUNCTION
+#     Fills the array change_array with queue attributes specific for SGE 5.3
+#
+#  INPUTS
+#     change_array - the resulting array
+#
+#  SEE ALSO
+#     sge_procedures/queue/set_queue_defaults()
+#*******************************************************************************
+proc vdep_set_queue_defaults { change_array } {
+   upvar $change_array chgar
+
+   set chgar(hostname)             "hostname"
+   set chgar(qtype)                "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
+   set chgar(complex_list)         "NONE"
+   if { $ts_config(product_type) == "sgeee" } {
+      set chgar(fshare)             "0"
+      set chgar(oticket)            "0"
+   }
+}
+

@@ -614,8 +614,11 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
    switch -- $host_arch {
 
       "solaris64" - 
+      "sol-sparc64" - 
       "solaris86" -
-      "solaris" {
+      "sol-x86" -
+      "solaris" -
+      "sol-sparc" {
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-e -o \"pid=_____pid\" -o \"pgid=_____pgid\" -o \"ppid=_____ppid\" -o \"uid=_____uid\" -o \"s=_____s\" -o \"stime=_____stime\" -o \"vsz=_____vsz\" -o \"time=_____time\" -o \"args=_____args\"" prg_exit_state 60 0 myenvironment]
          set index_names "_____pid _____pgid _____ppid _____uid _____s _____stime _____vsz _____time _____args"
@@ -731,8 +734,10 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set time_pos    7
          set command_pos 8
       }
-      
-      "glinux"    { 
+     
+      "glinux" -
+      "lx24-x86" -
+      "lx26-x86" { 
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-weo \"pid pgid ppid uid=BIGGERUID s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
          set index_names "  PID  PGID  PPID BIGGERUID S STIME   VSZ     TIME COMMAND"
@@ -746,7 +751,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set time_pos    7
          set command_pos 8
       }
-      "slinux"    { 
+      "slinux" -
+      "lx24-sparc" { 
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-weo \"pid pgid ppid uid s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
          set index_names "  PID  PGID  PPID   UID S STIME   VSZ     TIME COMMAND"
@@ -760,7 +766,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set time_pos    7
          set command_pos 8
       }
-      "alinux" {
+      "alinux" -
+      "lx24-alpha" {
          if { $additional_run == 0 } {
             # this is the first ps without any size position
             set myenvironment(COLUMNS) "500"

@@ -367,8 +367,11 @@ proc init_ps {} {
       irix6 -
       osf4 -
       solaris -
+      sol-sparc -
       solaris64 -
+      sol-sparc64 -
       solaris86 -
+      sol-x86 -
       tru64 {
          set cmd_ps(master) "ps -p $qmaster_pid -o vsz | tail -1"
          set cmd_ps(schedd) "ps -p $schedd_pid -o vsz | tail -1"
@@ -376,12 +379,13 @@ proc init_ps {} {
          #set cmd_ps(schedd) "ps -eo 'pid vsz' | awk '{print \$1 \" \" \$2}' | grep '^$schedd_pid ' | awk '{print \$2}'"
          set size_unit kB
       }
-      alinux {
+      alinux -
+      lx24-alpha {
          set cmd_ps(master) "ps lhp $qmaster_pid | awk '{print \$7}'"
          set cmd_ps(schedd) "ps lhp $schedd_pid  | awk '{print \$7}'"
          set size_unit kB
       }
-      glinux {
+      lx24-x86 {
          set cmd_ps(master) "ps -p $qmaster_pid -h -o vsz"
          set cmd_ps(schedd) "ps -p $schedd_pid -h -o vsz"
          set size_unit kB

@@ -1,3 +1,9 @@
+AH-2002-08-30-1  Bugfix:    solaris 32 bit: rlim_fd_max > 1024 can cause 32 bit 
+                            daemons to crash at startup phase
+                 Issue:     #371
+                 Bugtraq:   #4739596
+                 Changed:   sge_qmaster sge_execd sge_commd sge_schedd sge_shadowd
+
 CR-2002-08-29-1  Bugfix:    corrected mistake in writing in debug messages
                             for localization
                  Changed:   All binaries using i18n

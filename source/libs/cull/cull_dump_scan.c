@@ -941,7 +941,7 @@ static int fGetKet(FILE *fp)
    return strstr(s, "}") ? 0 : -1;
 }
 
-int fGetDescr(FILE *fp, lDescr *dp) 
+static int fGetDescr(FILE *fp, lDescr *dp) 
 {
    char s[READ_LINE_LENGHT + 1];
    int mt, nm;

@@ -195,6 +195,116 @@ proc get_file_names { path {ext "*"} } {
 }
 
 
+proc generate_html_file { file headliner content } {
+
+   global CHECK_USER
+
+   set catch_return [ catch {
+      set h_file [ open "$file" "w" ]
+   } ]
+   if { $catch_return != 0 } {
+      add_proc_error "generate_html_file" "-1" "could not open file $file for writing"
+      return
+   }
+
+   puts $h_file "<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">"
+
+   puts $h_file "<html>"
+   puts $h_file "<head>"
+   puts $h_file "   <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">"
+   puts $h_file "   <meta name=\"Author\" content=\"Grid Engine Testsuite - user ${CHECK_USER}\">"
+   puts $h_file "   <meta name=\"GENERATOR\" content=\"unknown\">"
+   puts $h_file "</head>"
+   puts $h_file "<body text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#CCCCCC\" vlink=\"#999999\" alink=\"#993300\">"
+   puts $h_file ""
+   puts $h_file "<hr WIDTH=\"100%\">"
+   puts $h_file "<center><font size=+2>$headliner</font></center>"
+   puts $h_file ""
+   puts $h_file "<hr WIDTH=\"100%\">"
+   puts $h_file "<br>&nbsp;"
+   puts $h_file "<br>&nbsp;"
+   puts $h_file ""
+   puts $h_file "$content"
+   puts $h_file ""
+   puts $h_file "</body>"
+   puts $h_file "</html>"
+
+   flush $h_file
+   close $h_file
+
+}
+
+proc create_html_table { array_name } {
+   upvar $array_name table
+
+#  table(COLS) = columns
+#  table(ROWS) = rows
+#  table(ROW number,BGCOLOR) = Background color for row
+#  table(ROW number,FNCOLOR) = Fontcolor of row
+#  table(ROW number,1 until number of COLS) = content
+#    
+# example:
+#  set test_table(COLS) 2
+#  set test_table(ROWS) 3
+#  set test_table(1,BGCOLOR) "#3366FF"
+#  set test_table(1,FNCOLOR) "#66FFFF"
+#  set test_table(1,1) "Host"
+#  set test_table(1,2) "State"
+#
+#  set test_table(2,BGCOLOR) "#009900"
+#  set test_table(2,FNCOLOR) "#FFFFFF"
+#  set test_table(2,1) "Balrog"
+#  set test_table(2,2) "ok"
+#  
+#  set test_table(3,BGCOLOR) "#CC0000"
+#  set test_table(3,FNCOLOR) "#FFFFFF"
+#  set test_table(3,1) "Elendil"
+#  set test_table(3,2) [create_html_link "linktext" "/home/cr114091/test.html"]
+#
+#
+#  set my_content    [ print_html_text "Date: [exec date]" ]
+#  append my_content [ print_html_text "Blah Blah ..." ]
+#  append my_content [ create_html_table test_table ]
+#  generate_html_file test.html "Ueberschrift" $my_content
+#
+
+
+   set back ""
+
+   append back "\n<center><table BORDER=0 COLS=${table(COLS)} WIDTH=\"80%\" NOSAVE >\n" 
+
+   for {set row 1} { $row <= $table(ROWS) } { incr row 1 } {
+      append back "<tr ALIGN=CENTER VALIGN=CENTER BGCOLOR=\"$table($row,BGCOLOR)\" NOSAVE>\n"
+      for {set col 1} { $col <= $table(COLS) } { incr col 1 } {
+         append back "<td NOSAVE><b><font color=\"$table($row,FNCOLOR)\"><font size=+1>$table($row,$col)</font></font></b></td>\n"
+      }
+      append back "</tr>\n"
+   }
+   append back "</table></center>\n"
+   return $back
+}
+
+proc create_html_link { linktext linkref } {
+   set back ""
+
+   append back "<a href=\"$linkref\">$linktext</a>" 
+
+   return $back
+}
+
+proc print_html_text { content { center 0 } } {
+   set back ""
+
+   if { $center != 0 } {
+      append back "<center>\n"
+   }
+   append back "\n<p>$content</p>\n"
+   if { $center != 0 } {
+      append back "</center>\n"
+   }
+
+}
+
 #                                                             max. column:     |
 #****** file_procedures/del_job_files() ******
 # 

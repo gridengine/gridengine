@@ -73,7 +73,8 @@ global CHECK_ACTUAL_TEST_PATH      ;# directory of current running test
 global CHECK_PRODUCT_ROOT          ;# path to sge system
 global CHECK_OUTPUT                ;# output from testsuite 
 global CHECK_CURRENT_WORKING_DIR   ;# current work directory
-
+global CHECK_HTML_DIRECTORY        ;# directory for HTML output of testsuite 
+set CHECK_HTML_DIRECTORY ""
 # globals for source code specific staff
 global CHECK_SOURCE_DIR            ;# path to source code directory (c4)
 global CHECK_SOURCE_CVS_RELEASE    ;# release name to check out e.g. V52_BRANCH
@@ -5252,6 +5253,9 @@ proc compile_source {} {
    set mail_subject "testsuite error - compile_source"
    set mail_body    "date: [exec date]\n"
 
+   set html_body [ print_html_text "date: [exec date]" 1 ]
+    
+
  
    set was_error 0
    set cvs_change_log ""
@@ -5259,16 +5263,22 @@ proc compile_source {} {
    if { ( [ string compare $CHECK_SOURCE_DIR "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_DIR "" ] == 0 ) } {
        puts $CHECK_OUTPUT "source directory unknown - check defaults file"
        mail_report $mail_subject "$mail_body source directory unknown - check defaults file" 
+       append html_body "source directory unknown - check defaults file"
+       update_compile_html_output $html_body
        return -1
    }
    if { ( [ string compare $CHECK_SOURCE_HOSTNAME "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_HOSTNAME "" ] == 0  ) } {
        puts $CHECK_OUTPUT "host for cvs checkout unknown - check defaults file"
        mail_report $mail_subject "$mail_body host for cvs checkout unknown - check defaults file"
+       append html_body "host for cvs checkout unknown - check defaults file"
+       update_compile_html_output $html_body
        return -1
    }
    if { ( [ string compare $CHECK_SOURCE_COMPILE_HOSTS "unknown" ] == 0 ) || ([ string compare $CHECK_SOURCE_COMPILE_HOSTS "" ] == 0) } {
        puts $CHECK_OUTPUT "host list to compile for unknown - check defaults file"
        mail_report $mail_subject "$mail_body host list to compile for unknown - check defaults file"
+       append html_body "host list to compile for unknown - check defaults file"
+       update_compile_html_output $html_body
        return -1
    }
 
@@ -5276,6 +5286,8 @@ proc compile_source {} {
       set catch_return [ catch {  file mkdir "$CHECK_PROTOCOL_DIR" } ]
       if { $catch_return != 0 } {
            puts $CHECK_OUTPUT "could not create directory \"$CHECK_PROTOCOL_DIR\""
+           append html_body "could not create directory \"$CHECK_PROTOCOL_DIR\""
+           update_compile_html_output $html_body
            return -1
       } 
    }
@@ -5292,6 +5304,9 @@ proc compile_source {} {
       set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs update -dP" ]
       if { $prg_exit_state != 0 } {
          add_proc_error "compile_source" -2 "cvs update -dP error:\n$output" 
+         append html_body "cvs update -dP error:\n$output"
+         update_compile_html_output $html_body
+ 
          return -1
       }
       puts $CHECK_OUTPUT "------------------------------------------"
@@ -5317,6 +5332,7 @@ proc compile_source {} {
          puts $CHECK_OUTPUT "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!"
          flush $CHECK_OUTPUT
          mail_report $mail_subject "$mail_body TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" 
+         append html_body "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!"
          exit 1 
       }
       if { $testsuite_update == 1 } {
@@ -5365,6 +5381,9 @@ proc compile_source {} {
    puts $CHECK_OUTPUT "------------------------------------------"
    if { $prg_exit_state != 0 } {
       mail_report $mail_subject "$mail_body aimk -only-depend on host $depend_host_name returned:\n$output"
+      append html_body "aimk -only-depend on host $depend_host_name returned:\n$output"
+      update_compile_html_output $html_body
+
       return -1
    }
 
@@ -5380,6 +5399,9 @@ proc compile_source {} {
 
    if { $prg_exit_state != 0 } {
       mail_report $mail_subject "$mail_body aimk $my_compile_options depend on host $depend_host_name returned:\n$output"
+      append html_body "aimk $my_compile_options depend on host $depend_host_name returned:\n$output"
+      update_compile_html_output $html_body
+
       return -1
    }
 
@@ -5397,9 +5419,20 @@ proc compile_source {} {
       set tag_state [ catch { eval exec "cat ${CHECK_SOURCE_DIR}/CVS/Tag" } cvs_tag ]
    }
 
+   set table_row 2
    foreach elem $host_list {
       # compile the staff
       puts $CHECK_OUTPUT "-> starting compiling on host $elem ..."
+
+      set html_table($table_row,BGCOLOR) "#009900"
+      set html_table($table_row,FNCOLOR) "#FFFFFF"
+      set html_table($table_row,1) $elem
+      set html_table($table_row,2) [resolve_arch $elem]
+
+      set html_table($table_row,3) "ok"    ;# error is set later
+      set html_table($table_row) "$elem"   ;# not neccessary for html table
+
+
       set prog "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/remotecompile.sh"
       set par1 "$CHECK_SOURCE_DIR"
       set par2 "$my_compile_options"
@@ -5411,18 +5444,25 @@ proc compile_source {} {
       lappend remote_spawn_list $open_spawn
       
       set myfilename "$CHECK_PROTOCOL_DIR/${elem}_compile_${cvs_tag}.out"
+
+      set html_table($table_row,4) [create_html_link "view" $myfilename]
+  
       lappend file_name_list $myfilename
       catch { file delete $myfilename }
       lappend file_list [open $myfilename w]
-     
+      incr table_row 1    
       incr num 
-   }
+   }  
+   incr table_row -1
   
    append mail_body "\n\ncompile output saved in the files:"
    foreach elem $file_name_list {
       append mail_body "\n$elem"
    }
    append mail_body "\n"
+
+   
+
 
    puts $CHECK_OUTPUT "now waiting for end of compile ..." 
    set timeout 300
@@ -5565,6 +5605,16 @@ proc compile_source {} {
    set compile_error 0
    foreach elem $compile_bad {
       set compile_error 1
+
+      for { set html_c 2 } { $html_c <= $table_row }  { incr html_c 1 } {
+          if { [ string compare $html_table($html_c) $elem ] == 0 } {
+             set html_table($html_c,BGCOLOR) "#CC0000"
+             set html_table($html_c,FNCOLOR) "#FFFFFF"
+             set html_table($html_c,3) "compile error"
+          }
+      }
+
+
       puts $CHECK_OUTPUT "\n=============\ncompile error on host $elem:\n=============\n"
       append mail_body "\n=============\ncompile error on host $elem:\n=============\n"
       foreach file $file_name_list {
@@ -5579,8 +5629,23 @@ proc compile_source {} {
          } 
       }
    }
+
+   set html_table(1,BGCOLOR) "#3366FF"
+   set html_table(1,FNCOLOR) "#66FFFF"
+
+   set html_table(COLS) 4
+   set html_table(1,1) "Host"
+   set html_table(1,2) "Arch"
+   set html_table(1,3) "State"
+   set html_table(1,4) "Compile output"
+
+   set html_table(ROWS) $table_row
+
+   append html_body [ create_html_table html_table ]
+   
    if { $compile_error != 0 } {
       mail_report $mail_subject $mail_body
+      update_compile_html_output $html_body
       return -1
    } 
 
@@ -5666,6 +5731,13 @@ proc compile_source {} {
          puts $CHECK_OUTPUT " arch on host $elem is $host_arch - successfully installed binaries"
       } else {
          puts $CHECK_OUTPUT " error installing binaries for host $elem"
+         for { set html_c 2 } { $html_c <= $table_row }  { incr html_c 1 } {
+            if { [ string compare $html_table($html_c) $elem ] == 0 } {
+               set html_table($html_c,BGCOLOR) "#CC0000"
+               set html_table($html_c,FNCOLOR) "#FFFFFF"
+               set html_table($html_c,3) "error installing binaries"
+            }
+         }
          set was_error 1
       }
    }
@@ -5686,6 +5758,7 @@ proc compile_source {} {
 
    if { $was_error != 0 } {
       mail_report $mail_subject "$mail_body - compile error(s)"
+      update_compile_html_output $html_body
       return -1
    }
    
@@ -5702,6 +5775,8 @@ proc compile_source {} {
    }
    set mail_subject "testsuite success - compile"
    mail_report $mail_subject $mail_body
+
+   update_compile_html_output $html_body
 
    # try to resolve hostnames in settings file
    set catch_return [ catch { eval exec "cp ${CHECK_DEFAULTS_FILE} ${CHECK_DEFAULTS_FILE}.[timestamp]" } ]
@@ -6168,6 +6243,15 @@ proc menu {} {
   menu
 }
 
+proc update_compile_html_output { content } {
+   global CHECK_HTML_DIRECTORY CHECK_OUTPUT
+   if { $CHECK_HTML_DIRECTORY != "" } { 
+      puts $CHECK_OUTPUT "-> UPDATING HTML FILES IN DIRECTORY: \"$CHECK_HTML_DIRECTORY\""
+      puts $CHECK_OUTPUT "-> UPDATING file index.html"
+      generate_html_file $CHECK_HTML_DIRECTORY/index.html "Nightly Build Compile Results" $content
+   }
+}
+
 proc setup_shared_lib_path {} {
    global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
 
@@ -6276,6 +6360,8 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts ""
       puts "mfile FILE            write all mails into file FILE (when mail is enabled)"
       puts ""
+      puts "html_dir              write testsuite html files into that directory"
+      puts ""
       puts "close_rlogin          don't let rlogin connections open for next command (per default the testsuite"
       puts "                      not close a rlogin connection. The testsuite will reuse the open connection"
       puts "                      for a later remote command. Use close_rlogin if the number of open file "
@@ -6367,6 +6453,20 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts $CHECK_OUTPUT " ---> using \"$CHECK_DEFAULTS_FILE\" for setup! <---"
       continue
    }
+
+   if { ( [string compare [lindex $argv $i] "--html_dir"] == 0 ) || ([string compare [lindex $argv $i] "html_dir"] == 0) } {
+      incr i
+      set help_var [lindex $argv $i]
+      set CHECK_HTML_DIRECTORY [ string trim $help_var ]
+
+      if { [llength $CHECK_HTML_DIRECTORY] != 1 } {
+         puts $CHECK_OUTPUT "can't use \"html_dir\" option without filename!"
+         exit -1 
+      }
+      puts $CHECK_OUTPUT " ---> using \"$CHECK_HTML_DIRECTORY\" for HTML output <---"
+      continue
+   }
+
   
    
 
@@ -6465,6 +6565,7 @@ set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n---
 
 
 if { $no_action == 1 } {
+
   puts "No action flag is set -> exit 1"
   exit 1
 }

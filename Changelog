@@ -1,3 +1,8 @@
+CR-2002-05-29-0: Testsuite: - added prototype functions for HTML generation
+                 Enhancem.: - new parameter for testsuite: html_dir
+                            - compile_source() procedure will generate HTML
+                              output in html_dir directory
+
 JG-2002-05-29-1: Cleanup:   make dstring functions return a const char * 
                             instead of char *
                  Issue:     #265

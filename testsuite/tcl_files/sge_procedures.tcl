@@ -4933,6 +4933,8 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
      return $return_value
 }
 
+
+
 #****** sge_procedures/get_submit_error() **************************************
 #  NAME
 #     get_submit_error() -- resolve negative error value from submit_job()
@@ -7137,9 +7139,9 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
           puts $CHECK_OUTPUT $result
        } else {
           puts $CHECK_OUTPUT $result
-          puts $CHECK_OUTPUT "\"sgecommdcntl -k\" must be started by root user (to get reserved port)!"
-          puts $CHECK_OUTPUT "try again as root user ..." 
           if { $prg_exit_state == 255 } {
+             puts $CHECK_OUTPUT "\"sgecommdcntl -k\" must be started by root user (to get reserved port)!"
+             puts $CHECK_OUTPUT "try again as root user ..." 
              if { [ have_root_passwd ] == -1 } {
                 set_root_passwd 
              }
@@ -7376,7 +7378,7 @@ proc resolve_upper_arch { host } {
      return $upper_arch_cache($host)
   }
 
-  set result [ start_remote_prog $host $CHECK_USER "$CHECK_SOURCE_DIR/c4/aimk" "-nomk" ]
+  set result [ start_remote_prog $host $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -no-mk" prg_exit_state 60 0 "" 1 0]
  
   set result [split $result "\n"]
   set result [join $result ""]
@@ -7384,7 +7386,7 @@ proc resolve_upper_arch { host } {
   set result [join $result ""]
 
   if { $prg_exit_state != 0 } {
-     add_proc_error "resolve_upper_arch" "-1" "architecture not found or aimk not found in $CHECK_SOURCE_DIR/c4"
+     add_proc_error "resolve_upper_arch" "-1" "architecture not found or aimk not found in $CHECK_SOURCE_DIR"
      return ""
   }
   set upper_arch_cache($host) $result

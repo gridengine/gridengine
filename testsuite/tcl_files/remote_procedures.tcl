@@ -445,6 +445,100 @@ proc start_remote_prog { hostname
    return $output
 }
 
+
+
+#****** remote_procedures/sendmail() *******************************************
+#  NAME
+#     sendmail() -- sendmail in mime format (first prototype)
+#
+#  SYNOPSIS
+#     sendmail { to subject body { send_html 0 } { cc "" } { bcc "" } 
+#     { from "" } { replyto "" } { organisation "" } } 
+#
+#  FUNCTION
+#     This procedure is under construction
+#
+#  INPUTS
+#     to                  - ??? 
+#     subject             - ??? 
+#     body                - ??? 
+#     { send_html 0 }     - ??? 
+#     { cc "" }           - ??? 
+#     { bcc "" }          - ??? 
+#     { from "" }         - ??? 
+#     { replyto "" }      - ??? 
+#     { organisation "" } - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc sendmail { to subject body { send_html 0 } { cc "" } { bcc "" } { from "" } { replyto "" } { organisation "" } } {
+   global CHECK_HOST CHECK_USER CHECK_OUTPUT
+
+   # setup mail message    
+   set mail_file [get_tmp_file_name]
+   set file [open $mail_file "w"]
+
+   puts $file "Mime-Version: 1.0"
+   if { $send_html != 0 } {
+      puts $file "Content-Type: text/html ; charset=ISO-8859-1"
+   } else {
+      puts $file "Content-Type: text/plain ; charset=ISO-8859-1"
+   }
+
+   if { $organisation != "" }  {
+      puts $file "Organization: $organisation"
+   }
+   if { $from != "" } {
+      puts $file "From: $from"
+   }
+   if { $replyto != "" } {
+      puts $file "Reply-To: $replyto"
+   }
+   puts $file "To: $to"
+   foreach elem $cc {
+      puts $file "Cc: $elem"
+   }
+   foreach elem $bcc {
+      puts $file "Bcc: $elem"
+   }
+   puts $file "Subject: $subject"
+   puts $file $body
+   puts $file "."
+   close $file
+
+
+   # start sendmail
+
+   # TODO: get sendmail path
+   # TODO: configure mail host in testsuite configuration
+
+   set command "/usr/lib/sendmail"
+   set arguments "-B 8BITMIME -t < $mail_file"
+
+   set result [start_remote_prog $CHECK_HOST $CHECK_USER $command $arguments prg_exit_state 60 0 "" 1 0]
+   if { $prg_exit_state != 0 } {
+      puts $CHECK_OUTPUT "COULD NOT SEND MAIL:\n$result"
+      return -1
+   }
+   return 0
+}
+
+
+
+
 #****** remote_procedures/open_remote_spawn_process() **************************
 #  NAME
 #     open_remote_spawn_process() -- open spawn process on remote host
@@ -545,7 +639,7 @@ proc open_remote_spawn_process { hostname
   debug_puts "exec_command:   $exec_command"
   debug_puts "exec_arguments: $exec_arguments"
 
-  if { [string compare $user $CHECK_USER] != 0 && [string compare $user "ts_def_con"] != 0 } {
+  if { [string compare $user $CHECK_USER] != 0 && [string compare $user "ts_def_con"] != 0  && [string compare $user "ts_def_con2"] } {
       if {[have_root_passwd] == -1} {
          add_proc_error "open_remote_spawn_process" -2 "root access required"
          return "" 
@@ -593,6 +687,14 @@ proc open_remote_spawn_process { hostname
      uplevel 1 { set open_remote_spawn__user $open_spawn_buffer }
      set using_ts_def_con 1
   }
+
+  if { $user == "ts_def_con2" } {
+     set user $CHECK_USER
+     set open_spawn_buffer $user
+     uplevel 1 { set open_remote_spawn__user $open_spawn_buffer }
+     set using_ts_def_con 2
+  }
+
   if { $con_data(pid) != 0 } {
      debug_puts "Using open rlogin connection to host \"$hostname\",user \"$user\""
 
@@ -833,8 +935,13 @@ proc open_remote_spawn_process { hostname
          }
       }
       set nr_of_shells [ uplevel 1 { set remote_spawn_nr_of_shells  } ]
-      if { $using_ts_def_con == 1 } {
-         add_open_spawn_rlogin_session $hostname "ts_def_con" $sp_id $pid $nr_of_shells
+      if { $using_ts_def_con != 0 } {
+         if { $using_ts_def_con == 1 } {
+            add_open_spawn_rlogin_session $hostname "ts_def_con" $sp_id $pid $nr_of_shells
+         }
+         if { $using_ts_def_con == 2 } {
+            add_open_spawn_rlogin_session $hostname "ts_def_con2" $sp_id $pid $nr_of_shells
+         }
       } else {
          add_open_spawn_rlogin_session $hostname $user $sp_id $pid $nr_of_shells
       }
@@ -1498,7 +1605,7 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
       set ok 0
       set mytries  5
       debug_puts "check_rlogin_session -> waiting for shell response ..."
-      if { $user == "ts_def_con" } {
+      if { $user == "ts_def_con" || $user == "ts_def_con2" } {
          set user $CHECK_USER
       }      
 

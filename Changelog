@@ -1,3 +1,10 @@
+CR-2003-01-14-3  Testsuite: modified remote procedures:
+                            - prototype for sendmail mail messages 
+                              in mime format
+                            - new extra user dummy: ts_def_con2 for
+                              start_remote_prog()
+                            - bugfix in procedure resolve_upper_arch()
+
 CR-2003-01-14-2  Testsuite: modified file procedures:
                             - get_tmp_file_name(): returned same file
                               name when calling two times in a row.

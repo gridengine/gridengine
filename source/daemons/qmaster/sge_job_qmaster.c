@@ -1,25 +1,25 @@
 /*___INFO__MARK_BEGIN__*/
-/*************************************************************************
+/**************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
  *
- *  Sun Microsystems Inc., March, 2001    
- * 
+ *  Sun Microsystems Inc., March, 2001
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
  *   Copyright: 2001 by Sun Microsystems, Inc.
@@ -102,12 +102,47 @@
 #include "msg_qmaster.h"
 #include "msg_daemons_common.h"
 
+/****** qmaster/job/spooling ***************************************************
+*
+*  NAME
+*     job spooling -- when are jobs/ja_tasks/pe_tasks spooled?
+*
+*  FUNCTION
+*     Spooling of jobs is done when
+*        - a new job is added
+*        - a job is modified (qalter)
+*        - a ja_task has been created
+*        - the jobs ja_tasks are partly deleted (not all tasks)
+*        - a job leaves qmaster (all tasks finished)
+*
+*     Spooling of ja_tasks is done when
+*        - a ja_task is created (as result of schedd start order)
+*        - a ja_task is sent to execd
+*        - a ja_task has been received (ack) by an execd
+*        - a ja_task is rescheduled
+*        - ja_task delivery to execd failed (reschedule)
+*        - the ja_task is marked as deleted
+*        - jobs are notified about exec host shutdown
+*        - for long running ja_tasks, the reported usage is spooled once a day
+*        - a ja_task is (un)suspended on threshold
+*        - a job is (un)suspended (qmod)
+*        - a job error state is cleared
+*
+*     Spooling of pe_tasks is done when
+*        - a new pe_task has been reported from execd
+*        - for long running pe_tasks, the reported usage is spooled once a day
+*        - for finished pe_tasks, usage is summed up in a container pe_task.
+*          This container is spooled whenever usage is summed up.
+*        - a pe_task is deleted
+*
+*******************************************************************************/
+
 extern int enable_forced_qdel;
 
 static const int MAX_DELETION_TIME = 3;
 
-static int mod_task_attributes(lListElem *job, lListElem *new_ja_task, lListElem *tep, 
-                               lList **alpp, char *ruser, char *rhost, int *trigger, 
+static int mod_task_attributes(lListElem *job, lListElem *new_ja_task, lListElem *tep,
+                               lList **alpp, char *ruser, char *rhost, int *trigger,
                                int is_array, int is_task_enrolled);
                                
 static int mod_job_attributes(lListElem *new_job, lListElem *jep, lList **alpp, 

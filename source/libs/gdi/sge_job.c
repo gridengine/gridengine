@@ -2025,6 +2025,39 @@ lListElem *job_list_locate(lList *job_list, u_long32 job_id)
    return job;
 }
 
+/****** gdi/job/job_add_parent_id_to_context() ********************************
+*  NAME
+*     job_add_parent_id_to_context() -- add parent jobid to job context  
+*
+*  SYNOPSIS
+*     void job_add_parent_id_to_context(lListElem *job) 
+*
+*  FUNCTION
+*     If we have JOB_ID in environment implicitly put it into the 
+*     job context variable PARENT if was not explicitly set using 
+*     "-sc PARENT=$JOBID". By doing this we preserve information 
+*     about the relationship between these two jobs. 
+*
+*  INPUTS
+*     lListElem *job - JB_Type element 
+*
+*  RESULT
+*     void - None
+*******************************************************************************/
+void job_add_parent_id_to_context(lListElem *job) 
+{
+   lListElem *context_parent = NULL;   /* VA_Type */
+   const char *job_id_string = NULL;
+   
+   job_id_string = sge_getenv("JOB_ID");
+   context_parent = lGetSubStr(job, VA_variable, CONTEXT_PARENT, JB_context); 
+   if (job_id_string != NULL && context_parent == NULL) {
+      context_parent = lAddSubStr(job, VA_variable, CONTEXT_PARENT, 
+                                  JB_context, VA_Type);
+      lSetString(context_parent, VA_value, job_id_string);
+   }
+}
+
 int job_schedd_info_update_master_list(sge_event_type type, sge_event_action action, 
                                        lListElem *event, void *clientdata)
 {
@@ -2446,4 +2479,3 @@ int job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
 
    return TRUE;
 }
-

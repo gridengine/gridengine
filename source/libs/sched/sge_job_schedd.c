@@ -52,7 +52,6 @@
 #include "sge_string.h"
 #include "sge_range.h"
 #include "sge_job.h"
-#include "jb_now.h"
 #include "sge_time.h"
 #include "sge_queue.h"
 #include "sge_userset.h"

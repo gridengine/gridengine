@@ -72,7 +72,6 @@
 #include "sge_category.h"
 #include "msg_schedd.h"
 #include "sge_schedd_text.h"
-#include "jb_now.h"
 #include "job_log.h"
 #include "sge_range.h"
 #include "sge_job.h"
@@ -956,7 +955,7 @@ int *sort_hostlist
     *------------------------------------------------------------------*/
    if (!granted) {
       /* failed scheduling this job */
-      if (JB_NOW_IS_IMMEDIATE(lGetUlong(job, JB_now))) /* immediate job */
+      if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) /* immediate job */
          /* generate order for removing it at qmaster */
          order_remove_immediate(job, ja_task, orders_list);
       DEXIT;

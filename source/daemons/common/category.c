@@ -59,7 +59,6 @@
 #include "sge_access_tree.h"
 #include "parse.h"
 #include "category.h"
-#include "jb_now.h"
 #include "sge_job.h"
 
 #include "msg_daemons_common.h"
@@ -136,7 +135,7 @@ lList *acl_list
    /*
    ** interactive jobs
    */
-   if (JB_NOW_IS_IMMEDIATE(lGetUlong(job, JB_now))) {
+   if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) {
       ep = sge_add_arg(&cmdl, 0, lIntT, "-I", "y");
       if (!ep) {
          DEXIT;

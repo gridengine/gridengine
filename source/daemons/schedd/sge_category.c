@@ -61,8 +61,6 @@
 #include "sge_category.h"
 #include "category.h"
 
-#include "jb_now.h"
-
 #include "msg_schedd.h"
 
 /* Categories of the job are managed here */

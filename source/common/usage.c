@@ -362,6 +362,10 @@ FILE *fp
       MARK(OA_ACCOUNT_STRING);
    }
 
+   if (VALID_OPT(b_OPT, me.who)) {
+      PRINTITD(MSG_GDI_USAGE_b_OPT_YN, MSG_GDI_UTEXT_b_OPT_YN);
+   }
+
    if (VALID_OPT(c_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_c_OPT_CKPT_SELECTOR ,  MSG_GDI_UTEXT_c_OPT_CKPT_SELECTOR );
       MARK(OA_CKPT_SEL);
@@ -784,7 +788,7 @@ FILE *fp
    if (VALID_OPT(now_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_now_OPT_YN, MSG_GDI_UTEXT_now_OPT_YN);
    }
-
+   
    if (VALID_OPT(M_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_M_OPT_MAIL_LIST, MSG_GDI_UTEXT_M_OPT_MAIL_LIST);
       MARK(OA_MAIL_LIST);

@@ -70,7 +70,6 @@
 #include "sge_messageL.h"
 #include "sge_string.h"
 #include "sge_security.h"
-#include "jb_now.h"
 #include "sge_range.h"
 #include "sge_job.h"
 #include "sge_hostname.h"
@@ -824,7 +823,7 @@ lList **topp  /* ticket orders ptr ptr */
          /* remove it */
          sge_commit_job(jep, jatp, 5, COMMIT_DEFAULT);
       } else {
-         if (!JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now))) {
+         if (!JOB_TYPE_IS_IMMEDIATE(lGetUlong(jep, JB_type))) {
             if(lGetString(jep, JB_script_file))
                ERROR((SGE_EVENT, MSG_JOB_REMOVENONINTERACT_U, u32c(lGetUlong(jep, JB_job_number))));
             else

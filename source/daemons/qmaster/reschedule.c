@@ -47,7 +47,6 @@
 #include "mail.h"
 #include "time_event.h"
 #include "symbols.h"
-#include "jb_now.h"
 #include "sge_time.h"
 #include "read_write_host.h"
 #include "reschedule.h"
@@ -396,9 +395,9 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
        * qsh, qlogin, qrsh, qrlogin-jobs won't be rescheduled automatically
        * (immediate jobs (qsub -now y ...) will be rescheduled)
        */
-      job_now = lGetUlong(jep, JB_now);
-      if (JB_NOW_IS_QSH(job_now) || JB_NOW_IS_QLOGIN(job_now)
-          || JB_NOW_IS_QRSH(job_now) || JB_NOW_IS_QRLOGIN(job_now)) {
+      job_now = lGetUlong(jep, JB_type);
+      if (JOB_TYPE_IS_QSH(job_now) || JOB_TYPE_IS_QLOGIN(job_now)
+          || JOB_TYPE_IS_QRSH(job_now) || JOB_TYPE_IS_QRLOGIN(job_now)) {
          INFO((SGE_EVENT, MSG_RU_INTERACTIVEJOB_SSS, mail_ids, mail_type, 
             mail_type));
          answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, 

@@ -76,12 +76,12 @@
 #include "setup_path.h"
 #include "qm_name.h"
 #include "sge_string.h" 
-#include "jb_now.h"
 #include "sge_feature.h"
 #include "sge_job.h"
 #include "sge_stdlib.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
+#include "sge_dstring.h"
 #include "sge_hostname.h"
 #include "sge_os.h"
 #include "sge_var.h"
@@ -491,53 +491,61 @@ char *err_str
    var_list_set_string(&environmentList, "LOGNAME", pw->pw_name);
 
    /*
-   ** Handling of script_file and JOB_NAME:
-   ** script_file: For batch jobs, it is the path to the spooled script file,
-   **              for interactive jobs, a fixed string (macro), e.g. JB_NOW_STR_QSH
-   ** JOB_NAME:    If a name is passed in JB_job_name or PET_name, this name is used.
-   **              Otherwise basename(script_file) is used.
-   */
+    * Handling of script_file and JOB_NAME:
+    * script_file: For batch jobs, it is the path to the spooled 
+    *              script file, for interactive jobs, a fixed string 
+    *              (macro), e.g. JOB_TYPE_STR_QSH
+    * JOB_NAME:    If a name is passed in JB_job_name or PET_name, i
+    *              this name is used.
+    *              Otherwise basename(script_file) is used.
+    */
    {
       u_long32 jb_now;
       const char *job_name;
       
       if(petep != NULL) {
-         jb_now = JB_NOW_QRSH;
+         jb_now = JOB_TYPE_QRSH;
          job_name = lGetString(petep, PET_name);
       } else {
-         jb_now = lGetUlong(jep, JB_now);
+         jb_now = lGetUlong(jep, JB_type);
          job_name = lGetString(jep, JB_job_name);
       }
 
       /* set script_file */
-      JB_NOW_CLEAR_IMMEDIATE(jb_now);
-      switch(jb_now) {
-         case JB_NOW_QSH:
-            strcpy(script_file, JB_NOW_STR_QSH);
-            break;
-         case JB_NOW_QLOGIN:
-            strcpy(script_file, JB_NOW_STR_QLOGIN);
-            break;
-         case JB_NOW_QRSH:
-            strcpy(script_file, JB_NOW_STR_QRSH);
-            break;
-         case JB_NOW_QRLOGIN:
-            strcpy(script_file, JB_NOW_STR_QRLOGIN);
-            break;
-         default:
-            if (lGetString(jep, JB_script_file) != NULL) {
-               /* JG: TODO: use some function to create path */
-               sprintf(script_file, "%s/%s/" u32, execd_spool_dir, EXEC_DIR, 
-                       job_id);
-            } else {
-               /* This is an error that will be handled in shepherd.
-               ** When we implement binary submission (Issue #25), this case
-               ** might become valid and the binary to execute might be the
-               ** first argument to execute.
-               */
-               sprintf(script_file, "none");
-            }
-            break;
+      JOB_TYPE_CLEAR_IMMEDIATE(jb_now);
+      if (jb_now & JOB_TYPE_QSH) {
+         strcpy(script_file, JOB_TYPE_STR_QSH);
+      } else if (jb_now & JOB_TYPE_QLOGIN) {
+         strcpy(script_file, JOB_TYPE_STR_QLOGIN);
+      } else if (jb_now & JOB_TYPE_QRSH) {
+         strcpy(script_file, JOB_TYPE_STR_QRSH);
+      } else if (jb_now & JOB_TYPE_QRLOGIN) {
+         strcpy(script_file, JOB_TYPE_STR_QRLOGIN);
+      } else if (jb_now & JOB_TYPE_BINARY) {
+         const char *sfile;
+         char script_file_out[SGE_PATH_MAX];
+
+         sfile = lGetString(jep, JB_script_file);
+         if (sfile != NULL) {
+            path_alias_list_get_path(lGetList(jep, JB_path_aliases), NULL, 
+                                     sfile, me.qualified_hostname, 
+                                     script_file_out, SGE_PATH_MAX);
+            strcpy(script_file, script_file_out);
+         }
+      } else {
+         if (lGetString(jep, JB_script_file) != NULL) {
+            /* JG: TODO: use some function to create path */
+            sprintf(script_file, "%s/%s/" u32, execd_spool_dir, EXEC_DIR,
+                    job_id);
+         } else {
+            /* 
+             * This is an error that will be handled in shepherd.
+             * When we implement binary submission (Issue #25), this case
+             * might become valid and the binary to execute might be the
+             * first argument to execute.
+             */
+            sprintf(script_file, "none");
+         }
       }
 
       /* set JOB_NAME */
@@ -546,6 +554,54 @@ char *err_str
       }
       
       var_list_set_string(&environmentList, "JOB_NAME", job_name);
+   }
+
+   {
+      u_long32 type = lGetUlong(jep, JB_type);
+      const char *var_name = "QRSH_COMMAND";
+
+      if (!JOB_TYPE_IS_BINARY(type)) {
+         const char *old_qrsh_command_s = NULL;
+         dstring old_qrsh_command = DSTRING_INIT;
+
+         old_qrsh_command_s = var_list_get_string(environmentList, var_name);
+         if (old_qrsh_command_s != NULL) {
+            const char delim[2] = {0xFF, '\0'};
+            const char *buffer;
+            const char *token;
+            int is_first_token = 1;
+            dstring new_qrsh_command = DSTRING_INIT;
+
+            sge_dstring_copy_string(&old_qrsh_command, old_qrsh_command_s);
+            buffer = sge_dstring_get_string(&old_qrsh_command);
+            token = sge_strtok(buffer, delim);
+            while (token != NULL) {
+               if (is_first_token) { 
+                  sge_dstring_sprintf(&new_qrsh_command, "%s/%s/" u32, 
+                                      execd_spool_dir, EXEC_DIR, job_id); 
+                  is_first_token = 0;
+               } else {
+                  sge_dstring_append(&new_qrsh_command, delim);
+                  sge_dstring_append(&new_qrsh_command, token);
+               }
+               token = sge_strtok(NULL, delim);
+            }
+            var_list_set_string(&environmentList, var_name,
+                                sge_dstring_get_string(&new_qrsh_command));
+         }
+      } else {
+         const char *sfile;
+
+         sfile = var_list_get_string(environmentList, var_name); 
+         if (sfile != NULL) {
+            char script_file_out[SGE_PATH_MAX];
+
+            path_alias_list_get_path(lGetList(jep, JB_path_aliases), NULL,
+                                     sfile, me.qualified_hostname,
+                                     script_file_out, SGE_PATH_MAX);
+            var_list_set_string(&environmentList, var_name, script_file_out);
+         }
+      }
    }
 
    var_list_set_string(&environmentList, "JOB_SCRIPT", script_file);
@@ -655,6 +711,9 @@ char *err_str
    var_list_remove_prefix_vars(environmentList, VAR_PREFIX);
 
    var_list_dump_to_file(environmentList, fp);
+
+
+
    fclose(fp);  
    /*************************** finished writing environment *****************/
 
@@ -759,6 +818,13 @@ char *err_str
                 job_id,
                 job_is_array(jep) ? ja_task_id : 0,
                 SGE_STDIN, stdin_path);
+
+   {
+      u_long32 jb_now = lGetUlong(jep, JB_type);
+      int handle_as_binary = (JOB_TYPE_IS_BINARY(jb_now) ? 1 : 0);
+
+      fprintf(fp, "handle_as_binary=%d\n", handle_as_binary);
+   }
 
    fprintf(fp, "stdout_path=%s\n", stdout_path);
    fprintf(fp, "stderr_path=%s\n", stderr_path);
@@ -942,14 +1008,14 @@ char *err_str
    if (!lGetString(jep, JB_script_file)) {
       u_long32 jb_now;
       if(petep != NULL) {
-         jb_now = JB_NOW_QRSH;
+         jb_now = JOB_TYPE_QRSH;
       } else {
-         jb_now = lGetUlong(jep, JB_now);
+         jb_now = lGetUlong(jep, JB_type);
       }
 
-      if (!(JB_NOW_IS_QLOGIN(jb_now) || 
-           JB_NOW_IS_QRSH(jb_now) || 
-           JB_NOW_IS_QRLOGIN(jb_now))) {
+      if (!(JOB_TYPE_IS_QLOGIN(jb_now) || 
+           JOB_TYPE_IS_QRSH(jb_now) || 
+           JOB_TYPE_IS_QRLOGIN(jb_now))) {
          /*
          ** get xterm configuration value
          */
@@ -1009,13 +1075,13 @@ char *err_str
    if (!lGetString(jep, JB_script_file)) {         /* interactive job  */
       u_long32 jb_now;
       if(petep != NULL) {
-         jb_now = JB_NOW_QRSH;
+         jb_now = JOB_TYPE_QRSH;
       } else {
-         jb_now = lGetUlong(jep, JB_now);    /* detect qsh case  */
+         jb_now = lGetUlong(jep, JB_type);    /* detect qsh case  */
       }
       
       /* check DISPLAY variable for qsh jobs */
-      if(JB_NOW_IS_QSH(jb_now)) {
+      if(JOB_TYPE_IS_QSH(jb_now)) {
          lList *answer_list = NULL;
 
          if(job_check_qsh_display(jep, &answer_list, FALSE) == STATUS_OK) {
@@ -1082,17 +1148,17 @@ char *err_str
    {
       u_long32 jb_now;
       if(petep != NULL) {
-         jb_now = JB_NOW_QRSH;
+         jb_now = JOB_TYPE_QRSH;
       } else {
-         jb_now = lGetUlong(jep, JB_now); 
+         jb_now = lGetUlong(jep, JB_type); 
       }
      
       if(petep != NULL) {
          fprintf(fp, "pe_task_id=%s\n", pe_task_id);
       }   
 
-      if(JB_NOW_IS_QLOGIN(jb_now) || JB_NOW_IS_QRSH(jb_now) 
-         || JB_NOW_IS_QRLOGIN(jb_now)) {
+      if(JOB_TYPE_IS_QLOGIN(jb_now) || JOB_TYPE_IS_QRSH(jb_now) 
+         || JOB_TYPE_IS_QRLOGIN(jb_now)) {
          lListElem *elem;
          char daemon[SGE_PATH_MAX];
 
@@ -1105,10 +1171,10 @@ char *err_str
         
          sprintf(daemon, "%s/utilbin/%s/", path.sge_root, arch);
         
-         if(JB_NOW_IS_QLOGIN(jb_now)) {
+         if(JOB_TYPE_IS_QLOGIN(jb_now)) {
             fprintf(fp, "qlogin_daemon=%s\n", conf.qlogin_daemon);
          } else {
-            if(JB_NOW_IS_QRSH(jb_now)) {
+            if(JOB_TYPE_IS_QRSH(jb_now)) {
                strcat(daemon, "rshd");
                if(strcasecmp(conf.rsh_daemon, "none") == 0) {
                   strcat(daemon, " -l");
@@ -1129,7 +1195,7 @@ char *err_str
                   fprintf(fp, "qrsh_pid_file=%s/pid\n", tmpdir);
                }
             } else {
-               if(JB_NOW_IS_QRLOGIN(jb_now)) {
+               if(JOB_TYPE_IS_QRLOGIN(jb_now)) {
                   strcat(daemon, "rlogind");
                   if(strcasecmp(conf.rlogin_daemon, "none") == 0) {
                      strcat(daemon, " -l");
@@ -1159,8 +1225,8 @@ char *err_str
    ** tightly integrated (qrsh) and interactive jobs dont need to access script file
    */
    if(petep == NULL) {
-      u_long32 jb_now = lGetUlong(jep, JB_now);
-      JB_NOW_CLEAR_IMMEDIATE(jb_now);            /* batch jobs can also be immediate */
+      u_long32 jb_now = lGetUlong(jep, JB_type);
+      JOB_TYPE_CLEAR_IMMEDIATE(jb_now);            /* batch jobs can also be immediate */
       if(jb_now == 0) {                          /* it is a batch job */
          if (SGE_STAT(script_file, &buf)) {
             sprintf(err_str, MSG_EXECD_UNABLETOFINDSCRIPTFILE_SS,

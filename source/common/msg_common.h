@@ -96,7 +96,6 @@
 #define MSG_FILE_ERROROPENINGXY_SS          _MESSAGE(23041, _("error opening "SFN": "SFN"\n"))
 #define MSG_ANSWER_ERRORREADINGFROMFILEX_S  _MESSAGE(23042, _("error reading from file "SFN"\n"))
 #define MSG_ANSWER_ERRORREADINGFROMSTDIN    _MESSAGE(23043, _("error reading from stdin\n"))
-#define MSG_ANSWER_SUBMITBINARIESDENIED     _MESSAGE(23044, _("denied: may not submit binaries\n"))
 #define MSG_FILE_ERROROPENFILEXFORWRITING_S _MESSAGE(23045, _("error opening file "SFQ" for writing\n"))
 #define MSG_FILE_ERRORWRITETOFILEX_S        _MESSAGE(23046, _("error writing to file "SFQ"\n"))
 #define MSG_ANSWER_ARGUMENTMISSINGFORX_S    _MESSAGE(23047, _("argument missing for "SFQ"\n"))
@@ -1072,7 +1071,7 @@
 #define MSG_GDI_USAGE_SRVR_NM_OPR                        "server_name"
 #define MSG_GDI_USAGE_MESSAGE_OPR                        "message"
 #define MSG_GDI_USAGE_JOB_ID_OPR                         "job_task_list"
-#define MSG_GDI_USAGE_SCRIPT_OPR                         "[{script|-} [script_args]]"
+#define MSG_GDI_USAGE_SCRIPT_OPR                         "[{command|-} [command_args]]"
 #define MSG_GDI_USAGE_SCRIPT_OPR_ARGS                    "[-- script_args]"
 #define MSG_GDI_UTEXT_JOB_ID_OPR                         _MESSAGE(23485, _("jobid's (and taskid's) of jobs to be altered"))
 #define MSG_GDI_UTEXT_SCRIPT_OPR_ARGS                    _MESSAGE(23486, _("arguments to be used"))
@@ -1097,8 +1096,14 @@
 #define MSG_SGETEXT_NULLPTRPASSED_S             _MESSAGE(23497, _("NULL ptr passed to "SFN"()\n"))
 #define MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S     _MESSAGE(23498, _("missing attribute "SFQ" in complexes\n"))
 
+/*
+ *
+ */
 #define MSG_GDI_USAGE_i_OPT_PATH_LIST                    "[-i file_list]"
 #define MSG_GDI_UTEXT_i_OPT_PATH_LIST                    _MESSAGE(23499, _("specify standard input stream file(s)"))
+#define MSG_GDI_USAGE_b_OPT_YN                           "[-b y|n]"
+#define MSG_GDI_UTEXT_b_OPT_YN                           _MESSAGE(23499, _("handle command as binary"))
+#define MSG_PARSE_INVALIDOPTIONARGUMENTBX_S              _MESSAGE(23093, _("invalid option argument \"-b "SFN"\"\n")) 
 
 /* =================================================
  * global error messages 

@@ -38,6 +38,58 @@
 #include "sge_messageL.h"
 #include "sge_mirror.h"
 
+/****** gdi/job/jb_now ********************************************************
+*  NAME
+*     jb_now -- macros to handle flag JB_type 
+*
+*  SYNOPSIS
+*******************************************************************************/
+
+#define JOB_TYPE_IMMEDIATE  0x01L
+#define JOB_TYPE_QSH        0x02L
+#define JOB_TYPE_QLOGIN     0x04L
+#define JOB_TYPE_QRSH       0x08L
+#define JOB_TYPE_QRLOGIN    0x10L
+#define JOB_TYPE_BINARY     0x20L
+
+#define JOB_TYPE_QXXX_MASK \
+   (JOB_TYPE_QSH | JOB_TYPE_QLOGIN | JOB_TYPE_QRSH | JOB_TYPE_QRLOGIN)
+
+#define JOB_TYPE_STR_IMMEDIATE  "IMMEDIATE"
+#define JOB_TYPE_STR_QSH        "INTERACTIVE"
+#define JOB_TYPE_STR_QLOGIN     "QLOGIN"
+#define JOB_TYPE_STR_QRSH       "QRSH"
+#define JOB_TYPE_STR_QRLOGIN    "QRLOGIN"
+
+#define JOB_TYPE_CLEAR_IMMEDIATE(jb_now) \
+   jb_now = jb_now & 0xFEL 
+
+#define JOB_TYPE_SET_IMMEDIATE(jb_now) \
+   jb_now =  jb_now | JOB_TYPE_IMMEDIATE
+
+#define JOB_TYPE_SET_QSH(jb_now) \
+   jb_now = (jb_now & (~JOB_TYPE_QXXX_MASK)) | JOB_TYPE_QSH
+
+#define JOB_TYPE_SET_QLOGIN(jb_now) \
+   jb_now = (jb_now & (~JOB_TYPE_QXXX_MASK)) | JOB_TYPE_QLOGIN
+
+#define JOB_TYPE_SET_QRSH(jb_now) \
+   jb_now = (jb_now & ~JOB_TYPE_QXXX_MASK) | JOB_TYPE_QRSH
+
+#define JOB_TYPE_SET_QRLOGIN(jb_now) \
+   jb_now = (jb_now & ~JOB_TYPE_QXXX_MASK) | JOB_TYPE_QRLOGIN
+
+#define JOB_TYPE_SET_BINARY(jb_now) \
+   jb_now = jb_now | JOB_TYPE_BINARY
+
+#define JOB_TYPE_IS_IMMEDIATE(jb_now)      (jb_now & JOB_TYPE_IMMEDIATE)
+#define JOB_TYPE_IS_QSH(jb_now)            (jb_now & JOB_TYPE_QSH)
+#define JOB_TYPE_IS_QLOGIN(jb_now)         (jb_now & JOB_TYPE_QLOGIN)
+#define JOB_TYPE_IS_QRSH(jb_now)           (jb_now & JOB_TYPE_QRSH)
+#define JOB_TYPE_IS_QRLOGIN(jb_now)        (jb_now & JOB_TYPE_QRLOGIN)
+#define JOB_TYPE_IS_BINARY(jb_now)         (jb_now & JOB_TYPE_BINARY)
+
+
 extern lList *Master_Job_List;
 extern lList *Master_Zombie_List;
 extern lList *Master_Job_Schedd_Info_List;
@@ -164,13 +216,21 @@ void job_get_state_string(char *str, u_long32 op);
 
 lListElem *job_list_locate(lList *job_list, u_long32 job_id);
 
-int job_schedd_info_update_master_list(sge_event_type type, sge_event_action action, 
-                                       lListElem *event, void *clientdata);
+void job_add_parent_id_to_context(lListElem *job);
 
-int job_update_master_list(sge_event_type type, sge_event_action action,
-                           lListElem *event, void *clientdata);
+int job_schedd_info_update_master_list(sge_event_type type, 
+                                       sge_event_action action, 
+                                       lListElem *event, 
+                                       void *clientdata);
 
-int job_check_qsh_display(const lListElem *job, lList **answer_list, int output_warning);
+int job_update_master_list(sge_event_type type, 
+                           sge_event_action action,
+                           lListElem *event, 
+                           void *clientdata);
+
+int job_check_qsh_display(const lListElem *job, 
+                          lList **answer_list, 
+                          int output_warning);
 
 int job_check_owner(const char *user_name, u_long32 job_id);
 

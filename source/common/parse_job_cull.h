@@ -32,18 +32,15 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
-
 /*
 ** flags for parse_script_file
 */
-#define FLG_HIGHER_PRIOR    0
-#define FLG_LOWER_PRIOR     1
-#define FLG_USE_NO_PSEUDOS  2
-#define FLG_DONT_ADD_SCRIPT 4
 
-void add_parent_uplink(lListElem *job);
+#define FLG_HIGHER_PRIOR         0
+#define FLG_LOWER_PRIOR          1
+#define FLG_USE_NO_PSEUDOS       2
+#define FLG_DONT_ADD_SCRIPT      4
+#define FLG_IGNORE_EMBEDED_OPTS  8
 
 lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob);
 lList *parse_script_file(const char *script_file, const char *directive_prefix, lList **option_list_ref, char **envp, u_long32 flags);

@@ -417,7 +417,7 @@ DTRACE;
             JB_soft_wallclock_gmt,
             JB_hard_wallclock_gmt,
             JB_version,
-            JB_now,
+            JB_type,
             JB_project,
   /* SGE */ JB_department,
 

@@ -79,6 +79,7 @@ struct rusage {
 #include "sge_unistd.h"
 #include "config_file.h"
 #include "sge_uidgid.h"
+#include "sge_stdlib.h"
 
 /* static functions */
 static char **read_job_args(char **args, int extra_args);
@@ -767,7 +768,6 @@ static char **read_job_args(char **preargs, int extra_args)
 
    args[i] = NULL;
 
-   /* add job args */
    for (i = 0; i < n_job_args; i++) {
       sprintf(conf_val, "job_arg%lu", i + 1);
       cp = get_conf_val(conf_val);
@@ -779,10 +779,8 @@ static char **read_job_args(char **preargs, int extra_args)
       }
    }
    args[i + n_preargs] = NULL;
-
    return args;
 }
-
 
 /*--------------------------------------------------------------------
  * set_shepherd_signal_mask
@@ -812,7 +810,35 @@ char *str_title
    /*
    ** prepare job arguments
    */
-   if (!strcasecmp("script_from_stdin", shell_start_mode)) {
+   if (atoi(get_conf_val("handle_as_binary")) && !is_rsh) {
+      int arg_id = 0;
+      dstring arguments = DSTRING_INIT;
+      int n_job_args;
+      char *cp;
+      unsigned long i;
+
+      pre_args_ptr[arg_id++] = argv0;
+      n_job_args = atoi(get_conf_val("njob_args"));
+      pre_args_ptr[arg_id++] = "-c";
+      sge_dstring_append(&arguments, script_file);
+      sge_dstring_append(&arguments, " ");
+      for (i = 0; i < n_job_args; i++) {
+         char conf_val[256];
+
+         sprintf(conf_val, "job_arg%lu", i + 1);
+         cp = get_conf_val(conf_val);
+
+         if(cp != NULL) {
+            sge_dstring_append(&arguments, cp);
+            sge_dstring_append(&arguments, " ");
+         } else {
+            sge_dstring_append(&arguments, "\"\"");
+         }
+      }
+      pre_args_ptr[arg_id++] = strdup(sge_dstring_get_string(&arguments));
+      pre_args_ptr[arg_id++] = NULL;
+      args = read_job_args(pre_args, 0);
+   } else if (!strcasecmp("script_from_stdin", shell_start_mode)) {
       /*
       ** -s makes it possible to make the shell read from stdin
       ** and yet have job arguments
@@ -823,14 +849,12 @@ char *str_title
       pre_args_ptr[1] = "-s";
       pre_args_ptr[2] = NULL;
       args = read_job_args(pre_args, 0);
-   } 
-   else if (!strcasecmp("posix_compliant", shell_start_mode)) {
+   } else if (!strcasecmp("posix_compliant", shell_start_mode)) {
       pre_args_ptr[0] = argv0;
       pre_args_ptr[1] = script_file;
       pre_args_ptr[2] = NULL;
       args = read_job_args(pre_args, 0);
-   } 
-   else if (!strcasecmp("start_as_command", shell_start_mode)) {
+   } else if (!strcasecmp("start_as_command", shell_start_mode)) {
       pre_args_ptr[0] = argv0;
       sprintf(err_str, "start_as_command: pre_args_ptr[0] = argv0; \"%s\" shell_path = \"%s\"", argv0, shell_path); 
       shepherd_trace(err_str);
@@ -838,8 +862,7 @@ char *str_title
       pre_args_ptr[2] = script_file;
       pre_args_ptr[3] = NULL;
       args = pre_args;
-   } 
-   else if (is_interactive) {
+   } else if (is_interactive) {
       int njob_args;
       pre_args_ptr[0] = script_file;
       pre_args_ptr[1] = "-display";
@@ -852,8 +875,7 @@ char *str_title
       args[njob_args + 5] = "-e";
       args[njob_args + 6] = get_conf_val("shell_path");
       args[njob_args + 7] = NULL;
-   }
-   else if (is_qlogin) {
+   } else if (is_qlogin) {
       pre_args_ptr[0] = script_file;
       if(is_rsh) {
          pre_args_ptr[1] = get_conf_val("rsh_daemon");
@@ -867,8 +889,7 @@ char *str_title
       pre_args_ptr[2] = "-d"; 
       pre_args_ptr[3] = NULL;
       args = read_job_args(pre_args, 0);
-   }
-   else {
+   } else {
       /*
       ** unix_behaviour/raw_exec
       */
@@ -899,7 +920,7 @@ char *str_title
       
          /* calculate rest length in string - 15 is just lazyness for blanks, "..." string, etc. */
          if (strlen(*pstr) < ((sizeof(err_str)  - (pc - err_str) - 15))) {
-            sprintf(pc, " %s", *pstr);
+            sprintf(pc, " \"%s\"", *pstr);
             pc += strlen(pc);
          }
          else {

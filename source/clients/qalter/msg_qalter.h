@@ -39,8 +39,8 @@
 /*
 ** qalter.c
 */
-#define MSG_QALTER_S                                    _MESSAGE(3000, _("qalter: "SFN))
-#define MSG_QALTERWARNING_S                             _MESSAGE(3001, _("qalter: warning: "SFN))
+#define MSG_QALTER                                    _MESSAGE(3000, _("qalter: "))
+#define MSG_QALTERWARNING                             _MESSAGE(3001, _("qalter: warning: "))
 #define MSG_JOB_NOJOBATTRIBUTESELECTED                  _MESSAGE(3002, _("no job attribute selected\n"))
 #define MSG_ANSWER_FAILDTOBUILDREDUCEDDESCRIPTOR        _MESSAGE(3003, _("failed to build reduced descriptor\n"))
 #define MSG_ANSWER_ALLANDJOBIDSARENOTVALID              _MESSAGE(3004, _("\'all\' AND jobids are not valid"))

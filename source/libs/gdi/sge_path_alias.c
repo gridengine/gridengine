@@ -356,9 +356,9 @@ int path_alias_list_initialize(lList **path_alias_list,
 *     const lList *path_aliases - alias table (PA_Type) 
 *     lList **alpp              - AN_Type list pointer 
 *     const char *inpath        - input path 
+*     const char *myhost        - hostname 
 *     char *outpath             - result path 
 *     int outmax                - size of "outpath" 
-*     const char *myhost        - hostname 
 *
 *  RESULT
 *     int - return state
@@ -375,11 +375,11 @@ int path_alias_list_get_path(const lList *path_aliases, lList **alpp,
    char the_path[SGE_PATH_MAX];
  
    DENTER(TOP_LAYER, "path_alias_list_get_path");
- 
+
    strncpy(outpath, inpath, outmax);
    strncpy(the_path, outpath, SGE_PATH_MAX); 
 
-   if (path_aliases) { /* use aliases */ 
+   if (path_aliases && lGetNumberOfElem(path_aliases) > 0) { 
       for_each(pap, path_aliases) {
          size_t orign_str_len = 0; 
          origin = lGetString(pap, PA_origin);
@@ -420,7 +420,9 @@ int path_alias_list_get_path(const lList *path_aliases, lList **alpp,
          /* and we have to start all over again for subsequent aliases */
          strncpy(the_path, outpath, SGE_PATH_MAX);
       }
-   } 
+   } else {
+      DPRINTF(("\"path_aliases\" containes no elements\n"));
+   }
  
    DEXIT;
    return 0;

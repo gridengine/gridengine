@@ -41,7 +41,7 @@
 #define MSG_SRC_USAGE                                    _MESSAGE(1003, _("usage:"))
 #define MSG_FORCED                                      _MESSAGE(1004, _("forced "))
 #define MSG_QDEL_not_available_OPT_USAGE_S _MESSAGE(1005, _("no usage for "SFQ" available\n"))
-#define MSG_WARNING_S                                   _MESSAGE(1006, _("warning: "SFN))
+#define MSG_WARNING                                     _MESSAGE(1006, _("warning: "))
 #define MSG_SEC_SETJOBCRED    _MESSAGE(1007, _("\nCannot set job credentials.\n"))
 #define MSG_GDI_QUEUESGEGDIFAILED              _MESSAGE(1008, _("queue: sge_gdi failed\n"))
 #define MSG_GDI_JOBSGEGDIFAILED              _MESSAGE(1009, _("job: sge_gdi failed\n"))

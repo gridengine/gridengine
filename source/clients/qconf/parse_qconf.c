@@ -1604,7 +1604,7 @@ DPRINTF(("ep: %s %s\n",
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK)
                sge_parse_return = 1;
-            answer_print_text(aep, stderr);
+            answer_print_text(aep, stderr, NULL, NULL);
          }
 
          alp = lFreeList(alp);

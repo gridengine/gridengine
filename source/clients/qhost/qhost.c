@@ -914,7 +914,7 @@ lWriteListTo(ehl, stdout);
                      JB_script_file,
                      JB_owner,
                      JB_group,
-                     JB_now,
+                     JB_type,
                      JB_pe,
                      JB_checkpoint_name,
                      JB_jid_predecessor_list,

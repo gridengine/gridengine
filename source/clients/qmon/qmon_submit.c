@@ -87,7 +87,6 @@
 #include "sge_afsutil.h"
 #include "sge_range.h"
 #include "sge_path_alias.h"
-#include "jb_now.h"
 #include "setup_path.h"
 #include "qm_name.h"
 #include "sge_security.h" 
@@ -308,6 +307,7 @@ static Widget qmonSubmitCreate(Widget parent);
 static void qmonSubmitPopdown(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitGetScript(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitInteractive(Widget w, XtPointer cld, XtPointer cad);
+static void qmonSubmitBinary(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitCheckInput(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitCommitInput(Widget w, XtPointer cld, XtPointer cad);
@@ -395,8 +395,9 @@ static Widget submit_task_hold = 0;
 static Widget submit_now = 0;
 static Widget submit_restart = 0;
 static Widget submit_main_link = 0; 
-static Widget submit_interactive = 0;
 static Widget submit_message = 0;
+static Widget submit_interactive = 0;
+static Widget submit_binary = 0;
 static Widget submit_tasks = 0;
 
 static Widget submit_edit = 0;
@@ -417,7 +418,8 @@ static Widget stdinput_list_w = 0;
 static Widget env_list_w = 0;
 static Widget ctx_list_w = 0;
 
-static tSubmitMode submit_mode_data = {SUBMIT_NORMAL, SUBMIT_NORMAL, 0};
+static tSubmitMode submit_mode_data = {SUBMIT_NORMAL, 
+                                       SUBMIT_NORMAL|SUBMIT_SCRIPT, 0};
 static tSMEntry SMData; 
 /*-------------------------------------------------------------------------*/
 
@@ -486,6 +488,7 @@ XtPointer cld, cad;
    ** reset interactive mode
    */
    XmToggleButtonSetState(submit_interactive, 0, True);
+   XmToggleButtonSetState(submit_binary, 0, True);
 
    /*
    ** reset; fill the dialog in qalter mode
@@ -541,6 +544,13 @@ XtPointer cld, cad;
          DPRINTF(("qalter batch mode\n"));
          XmToggleButtonSetState(submit_interactive, 1, True);
       }
+      if (JOB_TYPE_IS_BINARY(lGetUlong(job_to_set, JB_type))) {
+         DPRINTF(("binary submission\n"));
+         XmToggleButtonSetState(submit_binary, 1, True);
+      } else {
+         DPRINTF(("Script submission\n"));
+         XmToggleButtonSetState(submit_binary, 0, True);
+      }
 
       /*
       ** for debugging
@@ -569,6 +579,7 @@ XtPointer cld, cad;
    ** set sensitivity depending on submit mode
    ** if called in SUBMIT_QALTER_PENDING mode
    */
+
    qmonSubmitSetSensitive(submit_mode_data.mode, submit_mode_data.sub_mode);
 
    /*
@@ -746,6 +757,7 @@ Widget parent
                           "submit_main_link", &submit_main_link,
                           "submit_message", &submit_message,
                           "submit_interactive", &submit_interactive,
+                          "submit_binary", &submit_binary,
                           "submit_job_args", &submit_job_args,
                           NULL);
    
@@ -771,6 +783,8 @@ Widget parent
    /* callbacks */
    XtAddCallback(submit_interactive, XmNvalueChangedCallback, 
                      qmonSubmitInteractive, NULL);
+   XtAddCallback(submit_binary, XmNvalueChangedCallback, 
+                     qmonSubmitBinary, NULL);
    XtAddCallback(submit_main_link, XmNactivateCallback, 
                      qmonMainControlRaise, NULL);
    XtAddCallback(submit_script, XmNactivateCallback, 
@@ -867,10 +881,14 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonSubmitInteractive");
 
    if (!cbs->set) {
-      submit_mode_data.sub_mode = SUBMIT_NORMAL;
+      SETBIT(SUBMIT_NORMAL, submit_mode_data.sub_mode);
+      CLEARBIT(SUBMIT_QSH, submit_mode_data.sub_mode);
    } else {
-      submit_mode_data.sub_mode = SUBMIT_QSH;
-   }   
+      SETBIT(SUBMIT_QSH, submit_mode_data.sub_mode);
+      CLEARBIT(SUBMIT_NORMAL, submit_mode_data.sub_mode);
+   }  
+
+   XmToggleButtonSetState(submit_binary, 0, True); 
    
    /*
    ** clear the entries and set default name of job
@@ -880,7 +898,7 @@ XtPointer cld, cad;
    /*
    ** reset the sensitivity depending on state
    */
-   if (submit_mode_data.sub_mode == SUBMIT_QSH) {
+   if (ISSET(submit_mode_data.sub_mode, SUBMIT_QSH)) {
       XmtInputFieldSetString(submit_name, "INTERACTIVE"); 
       dsp = DisplayString(XtDisplay(w));
       if (!strcmp(dsp, ":0") || !strcmp(dsp, ":0.0"))
@@ -891,6 +909,35 @@ XtPointer cld, cad;
       XmtInputFieldSetString(submit_env, buf); 
       XmToggleButtonSetState(submit_now, 1, True);
    }
+
+   qmonSubmitSetSensitive(submit_mode_data.mode, submit_mode_data.sub_mode);
+
+   DEXIT;
+}   
+
+/*-------------------------------------------------------------------------*/
+static void qmonSubmitBinary(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   XmToggleButtonCallbackStruct *cbs = (XmToggleButtonCallbackStruct*) cad;
+   char buf[512];
+   String dsp;
+
+   DENTER(GUI_LAYER, "qmonSubmitBinary");
+
+   if (!cbs->set) {
+      SETBIT(SUBMIT_SCRIPT, submit_mode_data.sub_mode);
+      CLEARBIT(SUBMIT_BINARY, submit_mode_data.sub_mode);
+   } else {
+      SETBIT(SUBMIT_BINARY, submit_mode_data.sub_mode);
+      CLEARBIT(SUBMIT_SCRIPT, submit_mode_data.sub_mode);
+   }   
+   
+   /*
+    * clear the entries and set default name of job
+    */
+   qmonSubmitClear(w, NULL, NULL);
 
    qmonSubmitSetSensitive(submit_mode_data.mode, submit_mode_data.sub_mode);
 
@@ -911,7 +958,7 @@ int submode
    else
       sensitive = False;
    
-   if (submode == SUBMIT_QSH)
+   if (ISSET(submode, SUBMIT_QSH))
       sensitive2 = False;
    else
       sensitive2 = True;
@@ -980,6 +1027,7 @@ int submode
    ** action buttons
    */
    XtSetSensitive(submit_interactive, sensitive);
+   XtSetSensitive(submit_binary, sensitive && sensitive2);
    XtSetSensitive(submit_reload, sensitive);
    XtSetSensitive(submit_edit, sensitive);
    XtSetSensitive(submit_save, sensitive);
@@ -1213,8 +1261,8 @@ XtPointer cld, cad;
       /*
       ** validate input, return error message
       */
-      if ( (!SMData.job_script || SMData.job_script[0] == '\0') && 
-               submit_mode_data.sub_mode != SUBMIT_QSH ) {
+      if ((!SMData.job_script || SMData.job_script[0] == '\0') && 
+          !ISSET(submit_mode_data.sub_mode, SUBMIT_QSH)) {
          sprintf(buf, XmtLocalize(w, "Job Script required !", 
                   "Job Script required !"));
          goto error;
@@ -1306,7 +1354,7 @@ XtPointer cld, cad;
          /*
          ** start a timer for immediate jobs to check if submission succeeded
          */
-         if (JB_NOW_IS_IMMEDIATE(lGetUlong(lFirst(lp), JB_now))) {
+         if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(lFirst(lp), JB_type))) {
             job_number = lGetUlong(lFirst(lp), JB_job_number);
             qmonTimerCheckInteractive(w, (XtPointer)job_number, NULL);
          } 
@@ -1370,7 +1418,7 @@ XtPointer cld, cad;
          JB_shell_list,
          JB_env_list,
          JB_verify_suitable_queues,
-         JB_now,
+         JB_type,
          NoName
       };
       int qalter_fields[100];
@@ -1531,7 +1579,8 @@ int read_defaults
       return;
    }
 
-   if (SGE_STAT(filename, &statb) == -1 || (statb.st_mode & S_IFMT) != S_IFREG) {
+   if (ISSET(submit_mode_data.sub_mode, SUBMIT_SCRIPT) &&
+       (SGE_STAT(filename, &statb) == -1 || (statb.st_mode & S_IFMT) != S_IFREG)) {
       qmonMessageShow(w, True, "File '%s' does not exist or is no regular file !", filename);
       DEXIT;
       return;
@@ -1548,15 +1597,7 @@ int read_defaults
       strcpy(prefix, "#$");
 
    if (read_defaults) {
-      /*
-      ** first of all read the default files
-      ** this is a three stage process
-      ** $SGE_ROOT/sge_request
-      ** $HOME/.sge_request
-      ** ./.sge_request
-      */
-      alp = get_all_defaults_files(&cmdline, environ);
-
+      opt_list_append_opts_from_default_files(&cmdline, &alp, environ);
       if (alp) {
          if (qmonMessageBox(w, alp, 0) == -1) {
             lFreeList(alp);
@@ -1564,32 +1605,39 @@ int read_defaults
             return;
          }
          alp = lFreeList(alp);
-      } 
-   }
+      }
+   }   
 
    /*
    ** stage one of script file parsing
    */ 
-   alp = parse_script_file(filename, prefix, &cmdline, environ, 
-                                 FLG_HIGHER_PRIOR);
-   qmonMessageBox(w, alp, 0);
-   alp = lFreeList(alp);
-
-   if (merge_script) {
-      /*
-      ** stage one ana half of script file parsing
-      ** merge an additional script in to override settings
-      */ 
-      alp = parse_script_file(merge_script, "", &cmdline, environ, 
-                                    FLG_HIGHER_PRIOR | FLG_USE_NO_PSEUDOS);
+   if (ISSET(submit_mode_data.sub_mode, SUBMIT_SCRIPT)) {
+      alp = parse_script_file(filename, prefix, &cmdline, environ, 
+                              FLG_HIGHER_PRIOR);
       qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
 
-      if (alp) {
-         lFreeList(alp);
-         DEXIT;
-         return;
-      }
-   }   
+      if (merge_script) {
+         /*
+         ** stage one ana half of script file parsing
+         ** merge an additional script in to override settings
+         */ 
+         alp = parse_script_file(merge_script, "", &cmdline, environ, 
+                                 FLG_HIGHER_PRIOR | FLG_USE_NO_PSEUDOS);
+         qmonMessageBox(w, alp, 0);
+
+         if (alp) {
+            lFreeList(alp);
+            DEXIT;
+            return;
+         }
+      }   
+   } else {
+      alp = parse_script_file(filename, prefix, &cmdline, environ,
+                              FLG_HIGHER_PRIOR | FLG_IGNORE_EMBEDED_OPTS); 
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+   } 
 
    /*
    ** stage two of script file parsing
@@ -1898,7 +1946,7 @@ char *prefix
       }
    }
 
-   data->now = JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now));
+   data->now = JOB_TYPE_IS_IMMEDIATE(lGetUlong(jep, JB_type));
 
    data->notify = lGetBool(jep, JB_notify);
 
@@ -1941,13 +1989,20 @@ int save
    if (!reduced_job) {
       lSetString(jep, JB_directive_prefix, data->directive_prefix);
    
-      if (!save && (submit_mode_data.sub_mode != SUBMIT_QSH)) {
+      if (!save && !ISSET(submit_mode_data.sub_mode, SUBMIT_QSH)) {
          /* Job Script/Name */
          lSetString(jep, JB_script_file, data->job_script);
          job_script = sge_file2string(data->job_script, &len);
          lSetString(jep, JB_script_ptr, job_script);
          XtFree((char*)job_script);
          lSetUlong(jep, JB_script_size, len);
+      }
+
+      if (ISSET(submit_mode_data.sub_mode, SUBMIT_BINARY)) {
+         u_long32 type = lGetUlong(jep, JB_type);
+
+         JOB_TYPE_SET_BINARY(type);
+         lSetUlong(jep, JB_type, type); 
       }
    }
 
@@ -2051,13 +2106,13 @@ int save
    lSetUlong(jep, JB_restart, data->restart);
    lSetUlong(jep, JB_deadline, data->deadline);
    {
-      u_long32 jb_now = lGetUlong(jep, JB_now);
+      u_long32 jb_now = lGetUlong(jep, JB_type);
       if(data->now) {
-         JB_NOW_SET_IMMEDIATE(jb_now);
+         JOB_TYPE_SET_IMMEDIATE(jb_now);
       } else {
-         JB_NOW_CLEAR_IMMEDIATE(jb_now);
+         JOB_TYPE_CLEAR_IMMEDIATE(jb_now);
       }
-      lSetUlong(jep, JB_now, jb_now);
+      lSetUlong(jep, JB_type, jb_now);
    }   
 
    if (!reduced_job) {
@@ -2323,10 +2378,9 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonSubmitCommitInput");
 
-   if (!cbs || *(cbs) == '\0')
+   if (!cbs || *(cbs) == '\0') {
       qmonSubmitClear(w, NULL, NULL);
-   else
-      printf("Input: %s\n", cbs);
+   }
 
    DEXIT;
 }
@@ -2938,11 +2992,10 @@ XtPointer cld, cad;
    /*
    ** reset sensitivity of stderr
    */
-   if (submit_mode_data.sub_mode != SUBMIT_QSH) {
+   if (!ISSET(submit_mode_data.sub_mode, SUBMIT_QSH)) {
       XtSetSensitive(submit_stderror, True);
       XtSetSensitive(submit_stderrorPB, True);
-   }
-   else {
+   } else {
       char buf[512];
       String dsp = NULL;
 

@@ -41,7 +41,7 @@ Qmon*submit_layout.dialogTitle:  @{QMON +++ Job Submission}
 
 Qmon*submit_layout.xmtChildren: \
    Folder            submit_folder; \
-   XmToggleButton    submit_interactive; \
+   XmToggleButton    submit_interactive, submit_binary; \
    XmPushButton      submit_submit, submit_done, submit_help, \
                      submit_edit, submit_clear, submit_save, \
                      submit_load, submit_reload, submit_main_link; \
@@ -57,6 +57,7 @@ Qmon*submit_layout.layout: \
       submit_folder \
       Fixed Shadowed Col { \
          Fixed submit_interactive \
+         Fixed submit_binary \
          Fixed submit_submit \
          Fixed submit_edit \
          Fixed submit_clear \
@@ -339,6 +340,15 @@ Qmon*submit_interactive.selectPixmap:   qsh_on
 Qmon*submit_interactive.labelInsensitivePixmap:  qsh_off_ins
 Qmon*submit_interactive.selectInsensitivePixmap:  qsh_on_ins
 Qmon*submit_interactive.indicatorOn:    False
+
+Qmon*submit_binary.shadowThickness: 2
+Qmon*submit_binary.alignment:      ALIGNMENT_BEGINNING
+Qmon*submit_binary.labelType:      PIXMAP
+Qmon*submit_binary.labelPixmap:    binary_off
+Qmon*submit_binary.selectPixmap:   binary_on
+Qmon*submit_binary.labelInsensitivePixmap:  binary_off_ins
+Qmon*submit_binary.selectInsensitivePixmap:  binary_on_ins
+Qmon*submit_binary.indicatorOn:    False
 
 Qmon*submit_verify.packing: PACK_TIGHT
 Qmon*submit_verify.chooserType: ChooserOption

@@ -184,7 +184,8 @@ enum {
 *     ===========================
 *
 *     SGE_STRING(JB_directive_prefix)     
-*        Command prefix for jobscript ("qsub -C prefix") for parsing special comments in the script file.
+*        Command prefix for jobscript ("qsub -C prefix") for parsing 
+*        special comments in the script file.
 *
 *     SGE_XSTRING(JB_exec_file) ---> what is exec_file, what script_file?
 *
@@ -228,7 +229,7 @@ enum {
 *     SGE_BOOL(JB_notify)                  
 *        Notify job of impending kill/stop signal. ("qsub -notify")
 *
-*     SGE_ULONG(JB_now) 
+*     SGE_ULONG(JB_type) 
 *        Start job immediately or not at all. ("qsub -now")
 *        JG: TODO: it is no boolean, but misused for other information!
 *
@@ -469,7 +470,7 @@ enum {
 
    JB_cwd,                
    JB_notify,        
-   JB_now,
+   JB_type,
    JB_priority,         
    JB_shell_list,
    JB_verify,      
@@ -560,7 +561,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
 
    SGE_STRING(JB_cwd, CULL_DEFAULT)     
    SGE_BOOL(JB_notify, CULL_DEFAULT)  
-   SGE_ULONG(JB_now, CULL_DEFAULT)     
+   SGE_ULONG(JB_type, CULL_DEFAULT)     
    SGE_ULONG(JB_priority, CULL_DEFAULT)       
    SGE_LIST(JB_shell_list, PN_Type, CULL_DEFAULT) 
    SGE_ULONG(JB_verify, CULL_DEFAULT) 
@@ -697,7 +698,7 @@ NAMEDEF(JBN)
 
    NAME("JB_cwd")
    NAME("JB_notify")
-   NAME("JB_now")
+   NAME("JB_type")
    NAME("JB_priority")
    NAME("JB_shell_list")
    NAME("JB_verify")

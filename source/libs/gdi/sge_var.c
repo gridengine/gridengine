@@ -140,8 +140,7 @@ static const char *var_get_sharedlib_path_name(void)
 *     gdi/var/var_list_set_u32() 
 *     gdi/var/var_list_set_sharedlib_path()
 ******************************************************************************/
-void var_list_set_string(lList **varl, const char *name, 
-                                    const char *value) 
+void var_list_set_string(lList **varl, const char *name, const char *value) 
 {
    lListElem *elem;
 

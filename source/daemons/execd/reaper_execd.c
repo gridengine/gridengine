@@ -40,7 +40,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
-#include <unistd.h>
 #include <grp.h>
 
 #include "sgermon.h"
@@ -335,12 +334,9 @@ lListElem *jr
    jobid = id of job to reap
    failed = indicates a failure of job execution, see shepherd_states.h
  ************************************************************************/
-static int clean_up_job(
-lListElem *jr,
-int failed,
-int shepherd_exit_status,
-int is_array 
-) {
+static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status, 
+                        int is_array) 
+{
    dstring jobdir = DSTRING_INIT;
    dstring fname  = DSTRING_INIT;
    SGE_STRUCT_STAT statbuf;
@@ -382,22 +378,21 @@ int is_array
 #endif
 
    /* set directory for job */
-   sge_get_active_job_file_path(&jobdir,
-                                job_id, ja_task_id, pe_task_id, NULL);
-
+   sge_get_active_job_file_path(&jobdir, job_id, ja_task_id, pe_task_id, NULL);
 
    if (SGE_STAT(sge_dstring_get_string(&jobdir), &statbuf)) {
       /* This never should happen, cause if we cant create this directory on
          startup we report the job finish immediately */
-      ERROR((SGE_EVENT, MSG_JOB_CANTFINDDIRXFORREAPINGJOBYZ_SS, sge_dstring_get_string(&jobdir), 
+      ERROR((SGE_EVENT, MSG_JOB_CANTFINDDIRXFORREAPINGJOBYZ_SS, 
+             sge_dstring_get_string(&jobdir), 
              job_get_id_string(job_id, ja_task_id, pe_task_id)));
       sge_dstring_free(&jobdir);       
       return -1;        /* nothing can be done without information */
    }
 
    /* read config written by exec_job */
-   sge_get_active_job_file_path(&fname,
-                                job_id, ja_task_id, pe_task_id, "config");
+   sge_get_active_job_file_path(&fname, job_id, ja_task_id, pe_task_id, 
+                                "config");
    if (read_config(sge_dstring_get_string(&fname))) {
       /* This should happen very rarely. exec_job() should avoid this 
          condition as far as possible. One possibility for this case is, 
@@ -593,8 +588,8 @@ int is_array
          fclose(fp);
       }   
 
-   sge_get_active_job_file_path(&fname,
-                                job_id, ja_task_id, pe_task_id, "job_pid");
+   sge_get_active_job_file_path(&fname, job_id, ja_task_id, pe_task_id, 
+                                "job_pid");
       if (!SGE_STAT(sge_dstring_get_string(&fname), &statbuf)) {
          if ((fp = fopen(sge_dstring_get_string(&fname), "r"))) {
             if (!fscanf(fp, u32 , &job_pid))
@@ -604,7 +599,7 @@ int is_array
          else {
             job_pid = 0;
             ERROR((SGE_EVENT, MSG_JOB_CANTOPENJOBPIDFILEFORJOBXY_S, 
-               job_get_id_string(job_id, ja_task_id, pe_task_id)));
+                   job_get_id_string(job_id, ja_task_id, pe_task_id)));
          }
       }
    }
@@ -618,8 +613,8 @@ int is_array
    
 
    /* Currently the shepherd doesn't create this file */
-   sge_get_active_job_file_path(&fname,
-                                job_id, ja_task_id, pe_task_id, "noresources");
+   sge_get_active_job_file_path(&fname, job_id, ja_task_id, pe_task_id, 
+                                "noresources");
    if (!SGE_STAT(sge_dstring_get_string(&fname), &statbuf))
       failed = SSTATE_AGAIN;
    
@@ -648,41 +643,43 @@ int is_array
    case SSTATE_PROLOG_FAILED:
    case SSTATE_BEFORE_PESTART:
    case SSTATE_PESTART_FAILED:
+      general_failure = GFSTATE_QUEUE;
+      lSetUlong(jr, JR_general_failure, general_failure);
+      job_related_adminmail(jr, is_array);
+      break;
    case SSTATE_BEFORE_JOB:
    case SSTATE_NO_SHELL:
       {
          int job_caused_failure = 0;
+         lListElem *job = job_list_locate(Master_Job_List, job_id); 
+         lListElem *ja_task = job_search_task(job, NULL, ja_task_id);
+         lListElem *master_queue = NULL;
 
-         if (failed==SSTATE_NO_SHELL) {
-            lListElem *job = job_list_locate(Master_Job_List, job_id); 
-            lListElem *ja_task = job_search_task(job, NULL, ja_task_id);
-            lListElem *master_queue = NULL;
+         if (job && ja_task) {
+            master_queue = responsible_queue(job, ja_task, NULL);
+         }
 
-            if (job && ja_task) {
-               master_queue = responsible_queue(job, ja_task, NULL);
-            }
-
-            if (job) {
-               if (lGetList(job, JB_shell_list)) {
+         if (failed == SSTATE_NO_SHELL) {
+            if (job && lGetList(job, JB_shell_list)) {
+               job_caused_failure = 1;
+            } else if (master_queue) {
+               const char *mode = job_get_shell_start_mode(job, master_queue, 
+                                                         conf.shell_start_mode);
+               if (!strcmp(mode, "unix_behavior")) {
                   job_caused_failure = 1;
-               } else if (master_queue) {
-                  const char *shell_start_mode = job_get_shell_start_mode(job, 
-                                          master_queue, conf.shell_start_mode);
-                  if (!strcmp(shell_start_mode, "unix_behavior")) {
-                     job_caused_failure = 1;
-                  }
                }
             }
+         } else if (failed == SSTATE_BEFORE_JOB) {
+            if (job && JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&
+                !sge_is_file(lGetString(job, JB_script_file))) {
+               job_caused_failure = 1;
+            }
          }
-
-
-         if (!job_caused_failure) {
-            general_failure = GFSTATE_QUEUE;
-            lSetUlong(jr, JR_general_failure, general_failure);
-            job_related_adminmail(jr, is_array);
-            break;
-         }
+         general_failure = job_caused_failure ? GFSTATE_JOB : GFSTATE_QUEUE;
+         lSetUlong(jr, JR_general_failure, general_failure);
+         job_related_adminmail(jr, is_array);
       }
+      break;
    /*
    ** if an error occurred where the job 
    ** is source of the failure 
@@ -913,7 +910,8 @@ lListElem *jr
       if (!pe_task_id_str) {
          job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_WITHIN_EXECD);
 
-         if (lGetString(jep, JB_exec_file)) {
+         if (!JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type)) &&
+             lGetString(jep, JB_exec_file)) {
             int task_number = 0;
             lListElem *tmp_job = NULL;
 
@@ -951,7 +949,8 @@ lListElem *jr
       /* clean up active jobs entry */
       if (!pe_task_id_str) {
          ERROR((SGE_EVENT, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBXYZ_UUS, 
-                u32c(job_id),  u32c(ja_task_id), (pe_task_id_str ? pe_task_id_str : MSG_MASTER)));
+                u32c(job_id),  u32c(ja_task_id), 
+                (pe_task_id_str ? pe_task_id_str : MSG_MASTER)));
          job_log(job_id, ja_task_id, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBEXIT);
 
       /*

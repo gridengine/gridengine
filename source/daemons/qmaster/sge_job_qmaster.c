@@ -78,7 +78,6 @@
 #include "sge_ulongL.h"
 #include "setup_path.h"
 #include "sge_string.h"
-#include "jb_now.h"
 #include "sge_security.h"
 #include "sge_range.h"
 #include "sge_job.h"
@@ -177,7 +176,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    }
 
    /* check for qsh without DISPLAY set */
-   if(JB_NOW_IS_QSH(lGetUlong(jep, JB_now))) {
+   if(JOB_TYPE_IS_QSH(lGetUlong(jep, JB_type))) {
       int ret = job_check_qsh_display(jep, alpp, FALSE);
       if(ret != STATUS_OK) {
          DEXIT;
@@ -329,13 +328,11 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       }
    }
 
-   /*
-   ** if the job has no JB_script_file it is an interactive job
-   ** if it is a batch job, it must have a script file
-   */
-   if (!lGetString(jep, JB_script_ptr)  && lGetString(jep, JB_script_file)) { 
+   if ((!JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type)) && 
+        !lGetString(jep, JB_script_ptr) && lGetString(jep, JB_script_file))) {
       ERROR((SGE_EVENT, MSG_JOB_NOSCRIPT));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 
+                      ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -600,7 +597,8 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    }
 
    /* write script to file */
-   if (lGetString(jep, JB_script_file)) {
+   if (!JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type)) &&
+       lGetString(jep, JB_script_file)) {
       if (sge_string2file(lGetString(jep, JB_script_ptr), 
                        lGetUlong(jep, JB_script_size),
                        lGetString(jep, JB_exec_file))) {
@@ -664,7 +662,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    {
       lListElem *schedd = eventclient_list_locate(EV_ID_SCHEDD);
       if(schedd != NULL) {
-         if (JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now))) {
+         if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(jep, JB_type))) {
             sge_flush_events(schedd, 0);
          }
       }
@@ -2706,7 +2704,7 @@ int *trigger
       DPRINTF(("got new JB_env_list\n")); 
       
       /* check for qsh without DISPLAY set */
-      if(JB_NOW_IS_QSH(lGetUlong(new_job, JB_now))) {
+      if(JOB_TYPE_IS_QSH(lGetUlong(new_job, JB_type))) {
          int ret = job_check_qsh_display(jep, alpp, FALSE);
          if(ret != STATUS_OK) {
             DEXIT;

@@ -38,7 +38,33 @@
 #define COD_HOME_DEF_REQ_FILE   ".cod_request"
 #define GRD_HOME_DEF_REQ_FILE   ".grd_request"
 
-lList *get_all_defaults_files(lList **pcmdline, char **envp);
+void opt_list_append_opts_from_default_files(lList **pcmdline,  
+                                             lList **answer_list,
+                                             char **envp);
+
+void opt_list_append_opts_from_qsub_cmdline(lList **opts_cmdline,
+                                            lList **answer_list,
+                                            char **argv,
+                                            char **envp);
+
+void opt_list_append_opts_from_qalter_cmdline(lList **opts_cmdline,
+                                              lList **answer_list,
+                                              char **argv,
+                                              char **envp);
+
+void opt_list_append_opts_from_script(lList **opts_scriptfile,
+                                      lList **answer_list,
+                                      const lList *opts_cmdline,
+                                      char **envp);
+
+void opt_list_merge_command_lines(lList **opts_all,
+                                  lList **opts_defaults,
+                                  lList **opts_scriptfile,
+                                  lList **opts_cmdline);
+
+int opt_list_has_X(lList *opts, const char *option);
+
+int opt_list_is_X_true(lList *opts, const char *option);
 
 #endif /* __READ_DEFAULTS_H */
 

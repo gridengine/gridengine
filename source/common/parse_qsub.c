@@ -136,6 +136,7 @@ u_long32 flags
    char arg[1024 + 1];
    lListElem *ep_opt;
    int i_ret;
+   u_long32 is_qalter = flags & FLG_QALTER;
 
    DENTER(TOP_LAYER, "cull_parse_cmdline");
 
@@ -262,6 +263,49 @@ u_long32 flags
          sp++;
          continue;
       }
+
+
+/*----------------------------------------------------------------------------*/
+      /* "-b y|n" */
+
+      if (!is_qalter && !strcmp("-b", *sp)) {
+         if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
+            sprintf(str, MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
+            answer_list_add(&answer, str, STATUS_EEXIST, 
+                            ANSWER_QUALITY_WARNING);
+         }
+
+         /* next filed is "y|n" */
+         sp++;
+         if (!*sp) {
+             sprintf(str,
+             MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-b");
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, 
+                             ANSWER_QUALITY_ERROR);
+             DEXIT;
+             return answer;
+         }
+
+         DPRINTF(("\"-b %s\"\n", *sp));
+
+         if (!strcmp("y", *sp)) {
+            ep_opt = sge_add_arg(pcmdline, b_OPT, lIntT, *(sp - 1), *sp);
+            lSetInt(ep_opt, SPA_argval_lIntT, 1);
+         } else if (!strcmp("n", *sp)) {
+            ep_opt = sge_add_arg(pcmdline, b_OPT, lIntT, *(sp - 1), *sp);
+            lSetInt(ep_opt, SPA_argval_lIntT, 2);
+         } else {
+             sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTBX_S, *sp);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, 
+                             ANSWER_QUALITY_ERROR);
+             DEXIT;
+             return answer;
+         }
+
+         sp++;
+         continue;
+      }
+
 
 /*-----------------------------------------------------------------------------*/
       /* "-c [op] interval */
@@ -616,7 +660,7 @@ u_long32 flags
             answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
-         if ((flags & FLG_QALTER)) {
+         if (is_qalter) {
             /* next field is hold_list */
             sp++;
             if (!*sp) {
@@ -1667,7 +1711,7 @@ DTRACE;
          DPRINTF(("\"%s\"\n", *sp));
 
          if ((flags & FLG_USE_PSEUDOS)) {
-            if (!(flags & FLG_QALTER)) {
+            if (!is_qalter) {
                ep_opt = sge_add_arg(pcmdline, 0, lStringT, STR_PSEUDO_SCRIPT, NULL);
                lSetString(ep_opt, SPA_argval_lStringT, *sp);
                for (sp++; *sp; sp++) {
@@ -1697,7 +1741,7 @@ DTRACE;
       if (!strcmp("--", *sp)) {
          DPRINTF(("\"%s\"\n", *sp));
 
-         if ((flags & FLG_QALTER)) {
+         if (is_qalter) {
             sprintf(str,MSG_PARSE_NOJOBIDGIVENBEFORESEPARATOR);
             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             DEXIT;
@@ -1738,7 +1782,7 @@ DTRACE;
       ** in case of qalter we need jobids
       */
       if ((flags & FLG_USE_PSEUDOS)) {
-         if (!(flags & FLG_QALTER)) {
+         if (!is_qalter) {
             ep_opt = sge_add_arg(pcmdline, 0, lStringT, STR_PSEUDO_SCRIPT, NULL);
             lSetString(ep_opt, SPA_argval_lStringT, *sp);
             for (sp++; *sp; sp++) {

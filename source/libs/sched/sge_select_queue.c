@@ -58,7 +58,6 @@
 #include "schedd_message.h"
 #include "msg_schedd.h"
 #include "sge_schedd_text.h"
-#include "jb_now.h"
 #include "sge_ja_task.h"
 #include "msg_schedd.h"
 #include "sge_string.h"
@@ -678,7 +677,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    }   
 
    /* to be activated as soon as immediate jobs are available */
-   if (JB_NOW_IS_IMMEDIATE(lGetUlong(job, JB_now))) { /* immediate job */
+   if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { /* immediate job */
       /* is it an interactve job and an interactive queue ? */
       if (!lGetString(job, JB_script_file) && !(lGetUlong(queue, QU_qtype) & IQ)) {
          DPRINTF(("Queue \"%s\" is not an interactive queue as requested by "
@@ -698,7 +697,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
       }
    }
 
-   if (!pe && !ckpt && !JB_NOW_IS_IMMEDIATE(lGetUlong(job, JB_now))) { /* serial (batch) job */
+   if (!pe && !ckpt && !JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { /* serial (batch) job */
       /* is it a batch or transfer queue */
       if (!(lGetUlong(queue, QU_qtype) & BQ) &&
           !(lGetUlong(queue, QU_qtype) & TQ)) {

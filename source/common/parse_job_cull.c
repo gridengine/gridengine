@@ -56,7 +56,6 @@
 #include "sge_language.h"
 #include "sge_feature.h"
 #include "msg_common.h"
-#include "jb_now.h"
 #include "sge_range.h"
 #include "sge_job.h"
 #include "sge_stdlib.h"
@@ -101,10 +100,8 @@
 **   me
 ** DESCRIPTION
 */
-lList *cull_parse_job_parameter(
-lList *cmdline,
-lListElem **pjob 
-) {
+lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob) 
+{
    const char *cp;
    lListElem *ep;
    lList *answer = NULL;
@@ -177,7 +174,19 @@ lListElem **pjob
 
    lSetUlong(*pjob, JB_priority, BASE_PRIORITY);
 
-   DTRACE;
+
+   /*
+    * -b
+    */
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-b"))) {
+      if (lGetInt(ep, SPA_argval_lIntT) == 1) {
+         u_long32 jb_now = lGetUlong(*pjob, JB_type);
+
+         JOB_TYPE_SET_BINARY(jb_now);
+         lSetUlong(*pjob, JB_type, jb_now);
+      }
+      lRemoveElem(cmdline, ep);
+   }
 
    /*
     * -t
@@ -435,14 +444,14 @@ lListElem **pjob
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-now"))) {
-      u_long32 jb_now = lGetUlong(*pjob, JB_now);
+      u_long32 jb_now = lGetUlong(*pjob, JB_type);
       if(lGetInt(ep, SPA_argval_lIntT)) {
-         JB_NOW_SET_IMMEDIATE(jb_now);
+         JOB_TYPE_SET_IMMEDIATE(jb_now);
       } else {
-         JB_NOW_CLEAR_IMMEDIATE(jb_now);
+         JOB_TYPE_CLEAR_IMMEDIATE(jb_now);
       }
 
-      lSetUlong(*pjob, JB_now, jb_now);
+      lSetUlong(*pjob, JB_type, jb_now);
 
       lRemoveElem(cmdline, ep);
    }
@@ -638,9 +647,6 @@ lListElem **pjob
 *                              FLG_USE_NO_PSEUDOS:  do not create pseudoargs 
 *                                                   for script pointer and 
 *                                                   length
-*                              FLG_DONT_ADD_SCRIPT: do not add the script as a
-*                                                   pseudoarg if it is not yet 
-*                                                   there
 *
 *  RESULT
 *     lList* - answer list, AN_Type, or NULL if everything was ok, 
@@ -674,7 +680,7 @@ u_long32 flags
    static const char default_prefix[] = "#$";
    unsigned int dpl; /* directive_prefix length */
    FILE *fp;
-   char *filestrptr;
+   char *filestrptr = NULL;
    int script_len;
    int parsed_chars = 0;
    char **str_table;
@@ -699,182 +705,181 @@ u_long32 flags
       return answer;
    }
 
-   if (script_file && strcmp(script_file, "-")) {
-      /* are we able to access this file? */
-      if ((fp = fopen(script_file, "r")) == NULL) {
-         sprintf(error_string, MSG_FILE_ERROROPENINGXY_SS, script_file, strerror(errno));
-         answer_list_add(&answer, error_string, 
-                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return answer;
-      }
-      
-      fclose(fp);
-
-      /* read the script file in one sweep */
-      filestrptr = sge_file2string(script_file, &script_len);
-
-      if (!filestrptr) {
-         sprintf(error_string, MSG_ANSWER_ERRORREADINGFROMFILEX_S, script_file);
-         answer_list_add(&answer, error_string, 
-                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return answer;
-      }
-   } else {
-      /* no script file but input from stdin */
-      filestrptr = sge_stream2string(stdin, &script_len);
-      if (!filestrptr) {
-         answer_list_add(&answer, MSG_ANSWER_ERRORREADINGFROMSTDIN, 
-                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return answer;
-      }
-   }
-
-   /* no prefix for special comments given - try to find one in current commandline
-   ** or take default
-   */
-   if (!directive_prefix) {
-      lListElem *ep;
-
-      ep = lGetElemStr(*lpp_options, SPA_switch, "-C");
-      if (ep) {
-         directive_prefix = lGetString(ep, SPA_argval_lStringT);
-      }
-      if (!directive_prefix) {
-         directive_prefix = default_prefix;
-      }
-   }
-   dpl = strlen(directive_prefix);
-
-   /* now look for job parameters in script file */
-   s = filestrptr;
-   while(*s != 0) {
-      int length = 0;
-      char *parameters = NULL;
-      char *d = buffer;
-
-      /* copy MAX_STRING_SIZE bytes maximum */
-      while(*s != 0 && *s != '\n' && length < MAX_STRING_SIZE - 1) {
-         *d++ = *s++;
-         length++;
-         parsed_chars++;
-      }
-
-      /* terminate target string */
-      *d = 0;
-      
-      /* skip linefeed */
-      if(*s == '\n') {
-         s++;
-         parsed_chars++;
-      }
-      
-      parameters = buffer;
-
-      /*
-      ** If directive prefix is zero string then all lines except
-      ** comment lines are read, this makes it possible to parse
-      ** defaults files with this function.
-      ** If the line contains no SGE options, we set parameters to NULL.
-      */
-
-      if(dpl == 0) {
-         /* we parse a settings file (e.g. sge_request): skip comment lines */
-         if(*parameters == '#') {
-            parameters = NULL;
-         }
-      } else {
-         /* we parse a script file with special comments */
-         if(strncmp(parameters, directive_prefix, dpl) == 0) {
-            parameters += dpl;
-            while(isspace(*parameters)) {
-               parameters++;
-            }
-         } else {
-            parameters = NULL;
-         }
-      }
-
-      /* delete trailing garbage */
-      if(parameters != NULL) {
-         for(i = strlen(parameters) - 1; i >= 0; i--) {
-            if(isspace(parameters[i])) {
-               parameters[i] = 0;
-            } else {
-               break;
-            }
-         }
-      }
-
-      if(parameters != NULL && *parameters != 0) {
-         DPRINTF(("parameter in script: %s\n", parameters));
-
-         /*
-         ** here cull comes in 
-         */
-
-         /* so str_table has to be freed afterwards */
-         str_table = string_list(parameters, " \t\n", NULL);
-         
-         for (i=0; str_table[i]; i++) {
-            DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
-         }
-         sge_strip_quotes(str_table);
-         for (i=0; str_table[i]; i++) {
-            DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
-         }
-
-         /*
-         ** problem: error handling missing here and above
-         */
-         alp = cull_parse_cmdline(str_table, envp, &lp_new_opts, 0);
-
-         for_each(aep, alp) {
-            u_long32 quality;
-            u_long32 status = STATUS_OK;
-
-            status = lGetUlong(aep, AN_status);
-            quality = lGetUlong(aep, AN_quality);
-            if (quality == ANSWER_QUALITY_ERROR) {
-               DPRINTF(("%s", lGetString(aep, AN_text)));
-               do_exit = 1;
-            }
-            else {
-               DPRINTF(("Warning: %s\n", lGetString(aep, AN_text)));
-            }
-            answer_list_add(&answer, lGetString(aep, AN_text), status, quality);
-         }
-
-         lFreeList(alp);
-         if (do_exit) {
+   if (!(flags & FLG_IGNORE_EMBEDED_OPTS)) {
+      if (script_file && strcmp(script_file, "-")) {
+         /* are we able to access this file? */
+         if ((fp = fopen(script_file, "r")) == NULL) {
+            sprintf(error_string, MSG_FILE_ERROROPENINGXY_SS, script_file, 
+                    strerror(errno));
+            answer_list_add(&answer, error_string, 
+                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
+         
+         fclose(fp);
 
-         free((char*) str_table);
+         /* read the script file in one sweep */
+         filestrptr = sge_file2string(script_file, &script_len);
+
+         if (!filestrptr) {
+            sprintf(error_string, MSG_ANSWER_ERRORREADINGFROMFILEX_S, 
+                    script_file);
+            answer_list_add(&answer, error_string, 
+                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+      } else {
+         /* no script file but input from stdin */
+         filestrptr = sge_stream2string(stdin, &script_len);
+         if (!filestrptr) {
+            answer_list_add(&answer, MSG_ANSWER_ERRORREADINGFROMSTDIN, 
+                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+      }
+
+      /* 
+       * no prefix for special comments given - i
+       * try to find one in current commandline
+       * or take default
+       */
+      if (!directive_prefix) {
+         lListElem *ep;
+
+         ep = lGetElemStr(*lpp_options, SPA_switch, "-C");
+         if (ep) {
+            directive_prefix = lGetString(ep, SPA_argval_lStringT);
+         }
+         if (!directive_prefix) {
+            directive_prefix = default_prefix;
+         }
+      }
+      dpl = strlen(directive_prefix);
+
+      /* now look for job parameters in script file */
+      s = filestrptr;
+      while(*s != 0) {
+         int length = 0;
+         char *parameters = NULL;
+         char *d = buffer;
+
+         /* copy MAX_STRING_SIZE bytes maximum */
+         while(*s != 0 && *s != '\n' && length < MAX_STRING_SIZE - 1) {
+            *d++ = *s++;
+            length++;
+            parsed_chars++;
+         }
+
+         /* terminate target string */
+         *d = 0;
+         
+         /* skip linefeed */
+         if(*s == '\n') {
+            s++;
+            parsed_chars++;
+         }
+         
+         parameters = buffer;
 
          /*
-         ** -C option is ignored in scriptfile - delete all occurences
+         ** If directive prefix is zero string then all lines except
+         ** comment lines are read, this makes it possible to parse
+         ** defaults files with this function.
+         ** If the line contains no SGE options, we set parameters to NULL.
          */
-         {
-            lListElem *ep;
+
+         if(dpl == 0) {
+            /* we parse a settings file (e.g. sge_request): skip comment lines */
+            if(*parameters == '#') {
+               parameters = NULL;
+            }
+         } else {
+            /* we parse a script file with special comments */
+            if(strncmp(parameters, directive_prefix, dpl) == 0) {
+               parameters += dpl;
+               while(isspace(*parameters)) {
+                  parameters++;
+               }
+            } else {
+               parameters = NULL;
+            }
+         }
+
+         /* delete trailing garbage */
+         if(parameters != NULL) {
+            for(i = strlen(parameters) - 1; i >= 0; i--) {
+               if(isspace(parameters[i])) {
+                  parameters[i] = 0;
+               } else {
+                  break;
+               }
+            }
+         }
+
+         if(parameters != NULL && *parameters != 0) {
+            DPRINTF(("parameter in script: %s\n", parameters));
+
+            /*
+            ** here cull comes in 
+            */
+
+            /* so str_table has to be freed afterwards */
+            str_table = string_list(parameters, " \t\n", NULL);
             
-            while ((ep = lGetElemStr(lp_new_opts, SPA_switch, "-C"))) {
-               lRemoveElem(lp_new_opts, ep);
+            for (i=0; str_table[i]; i++) {
+               DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
+            }
+            sge_strip_quotes(str_table);
+            for (i=0; str_table[i]; i++) {
+               DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
+            }
+
+            /*
+            ** problem: error handling missing here and above
+            */
+            alp = cull_parse_cmdline(str_table, envp, &lp_new_opts, 0);
+
+            for_each(aep, alp) {
+               u_long32 quality;
+               u_long32 status = STATUS_OK;
+
+               status = lGetUlong(aep, AN_status);
+               quality = lGetUlong(aep, AN_quality);
+               if (quality == ANSWER_QUALITY_ERROR) {
+                  DPRINTF(("%s", lGetString(aep, AN_text)));
+                  do_exit = 1;
+               }
+               else {
+                  DPRINTF(("Warning: %s\n", lGetString(aep, AN_text)));
+               }
+               answer_list_add(&answer, lGetString(aep, AN_text), status, quality);
+            }
+
+            lFreeList(alp);
+            if (do_exit) {
+               DEXIT;
+               return answer;
+            }
+
+            free((char*) str_table);
+
+            /*
+            ** -C option is ignored in scriptfile - delete all occurences
+            */
+            {
+               lListElem *ep;
+               
+               while ((ep = lGetElemStr(lp_new_opts, SPA_switch, "-C"))) {
+                  lRemoveElem(lp_new_opts, ep);
+               }
             }
          }
       }
    }
 
-   if(parsed_chars != script_len) {
-      answer_list_add(&answer, MSG_ANSWER_SUBMITBINARIESDENIED,
-                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return answer;
-   }
-   
    if (!(flags & FLG_USE_NO_PSEUDOS)) {
       /*
       ** if script is not yet there we add it to the command line,
@@ -913,52 +918,4 @@ u_long32 flags
 
    DEXIT;
    return answer;
-}
-
-/****** src/add_parent_uplink() **********************************
-*
-*  NAME
-*     add_parent_uplink() -- add PARENT jobid to job context 
-*
-*  SYNOPSIS
-*
-*     #include "parse_job_cull.h"
-*     #include <src/parse_job_cull.h>
-* 
-*     void add_parent_uplink(lListElem *job);
-*       
-*
-*  FUNCTION
-*     If we have JOB_ID in environment implicitly put it into the 
-*     job context variable PARENT if was not explicitly set using 
-*     "-sc PARENT=$JOBID". By doing this we preserve information 
-*     about the relationship between these two jobs.
-* 
-*  INPUTS
-*    job - the job structure
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-void add_parent_uplink(
-lListElem *job 
-) {
-   char *job_id;
-   lListElem *cp;
-   if ((job_id=getenv("JOB_ID")) && 
-            !lGetSubStr(job, VA_variable, CONTEXT_PARENT, JB_context)) { 
-      cp = lAddSubStr(job, VA_variable, CONTEXT_PARENT, JB_context, VA_Type);
-      lSetString(cp, VA_value, job_id);
-   }
 }

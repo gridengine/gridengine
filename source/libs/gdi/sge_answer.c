@@ -244,18 +244,37 @@ u_long32 answer_get_status(const lListElem *answer)
 *     answer_print_text() -- Prints error text 
 *
 *  SYNOPSIS
-*     void answer_print_text(const lListElem *answer, FILE *stream) 
+*     void answer_print_text(const lListElem *answer, 
+*                            FILE *stream
+*                            const char *prefix,
+*                            const char *suffix) 
 *
 *  FUNCTION
-*     Prints the error text of "answer" to "stream"
+*     Prints "prefix", the error text of "answer" and "suffix" 
+*     to "stream".
 *
 *  INPUTS
 *     const lListElem *answer - AN_Type element 
-*     FILE *stream            - output stream 
+*     FILE *stream            - Output stream 
+*     const char *prefix      - Introductional message
+*     const char *prefix      - Final message
 *******************************************************************************/
-void answer_print_text(const lListElem *answer, FILE *stream)
+void answer_print_text(const lListElem *answer, 
+                       FILE *stream, 
+                       const char *prefix,
+                       const char *suffix)
 {
-   fprintf(stream, "%s", lGetString(answer, AN_text));
+   const char *text = lGetString(answer, AN_text);
+
+   if (prefix != NULL) {
+      fprintf(stream, "%s", prefix);
+   }
+   if (text != NULL) {
+      fprintf(stream, "%s", text);
+   }
+   if (suffix != NULL) {
+      fprintf(stream, "%s", suffix);
+   }
 }
 
 /****** gdi/answer/answer_list_add() ******************************************
@@ -399,8 +418,62 @@ void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream)
 
    for_each(answer, *answer_list) {
       answer_exit_if_not_recoverable(answer);
-      answer_print_text(answer, stream);
+      answer_print_text(answer, stream, NULL, NULL);
    }
+}
+
+/****** gdi/answer/answer_list_print_err_warn() *******************************
+*  NAME
+*     answer_list_print_err_warn() -- Print and/or exit 
+*
+*  SYNOPSIS
+*     int answer_list_print_err_warn(lList **answer_list, 
+*                                    const char *err_prefix, 
+*                                    const char *warn_prefix) 
+*
+*  FUNCTION
+*     Prints all messages contained in "answer_list". All error
+*     messages will be printed to stderr with an an initial "err_prefix".
+*     All warning and info messages will be printed to stdout with
+*     the prefix "warn_prefix". 
+*
+*     If the "answer_list" contains at least one error than this
+*     function will return with a positive return value. This value
+*     is the errror status of the first error message.
+*
+*     If there is no error contained in 'answer_list' than this function 
+*     will return with a value of 0. 
+*
+*     "*answer_list" will be freed.
+*
+*  INPUTS
+*     lList **answer_list     - AN_Type list 
+*     const char *err_prefix  - e.g. "qsub: "
+*     const char *warn_prefix - e.g. MSG_WARNING
+******************************************************************************/
+int answer_list_print_err_warn(lList **answer_list, 
+                               const char *err_prefix,
+                               const char *warn_prefix)
+{
+   int do_exit = 0;
+   lListElem *answer;   /* AN_Type */
+   u_long32 status = 0;
+
+   DENTER(TOP_LAYER, "answer_list_print_err_warn_exit");
+   for_each(answer, *answer_list) {
+      if (answer_has_quality(answer, ANSWER_QUALITY_ERROR)) {
+         answer_print_text(answer, stderr, err_prefix, NULL);
+         if (do_exit == 0) {
+            status = answer_get_status(answer);
+            do_exit = 1;
+         }
+      } else {
+         answer_print_text(answer, stdout, warn_prefix, NULL);
+      }
+   }
+   *answer_list = lFreeList(*answer_list);
+   DEXIT;
+   return (int)status;
 }
 
 /****** gdi/answer/answer_list_handle_request_answer_list() ********************
@@ -424,7 +497,6 @@ void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream)
 *
 *  RESULT
 *     int - first error or warning status code or STATUS_OK
-*
 *******************************************************************************/
 int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream) {
    lListElem *answer;
@@ -438,7 +510,7 @@ int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream) {
    for_each(answer, *answer_list) {
       if(answer_has_quality(answer, ANSWER_QUALITY_ERROR) ||
          answer_has_quality(answer, ANSWER_QUALITY_WARNING)) {
-         answer_print_text(answer, stream);
+         answer_print_text(answer, stream, NULL, NULL);
          if(first_error == STATUS_OK) {
             first_error = lGetUlong(answer, AN_status);
          }

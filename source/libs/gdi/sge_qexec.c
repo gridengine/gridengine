@@ -56,8 +56,6 @@
 #include "sge_security.h"
 #include "sge_var.h"
 
-#include "jb_now.h"
-
 static lList *remote_task_list = 0;
 static char lasterror[1024];
 

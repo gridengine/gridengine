@@ -37,7 +37,6 @@
 #include "interactive_sched.h"
 #include "sgermon.h"
 #include "sge_range.h"
-#include "jb_now.h"
 #include "sge_job.h"
 
 /*------------------------------------------------------------------
@@ -63,7 +62,7 @@ lList **opp      /* OR_Type */
       next_job = lNext(job);
 
       /* skip non immediate .. */
-      if (!JB_NOW_IS_IMMEDIATE(lGetUlong(job, JB_now)))
+      if (!JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type)))
          continue;
 
       /* .. and non idle jobs */

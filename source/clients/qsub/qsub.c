@@ -49,9 +49,10 @@
 #include "setup_path.h"
 #include "qm_name.h"
 #include "sge_unistd.h"
-#include "jb_now.h"
 #include "sge_security.h"
 #include "sge_answer.h"
+#include "sge_job.h"
+
 #include "msg_clients_common.h"
 #include "msg_qsub.h"
 
@@ -72,9 +73,8 @@ char **argv
    lList *opts_scriptfile = NULL;
    lList *opts_all = NULL;
    lListElem *job = NULL;
-   lListElem *option = NULL;
    lList *lp_jobs;
-   lList *alp;
+   lList *alp = NULL;
    lListElem *aep;
    u_long32 status = STATUS_OK;
    u_long32 quality;
@@ -82,9 +82,8 @@ char **argv
    int do_exit = 0;
    int scheduled = 0;
    int just_verify;
-   lListElem *ep;
-   const char *dprefix = NULL;
    int cl_err = 0;
+   int tmp_ret;
 
    DENTER_MAIN(TOP_LAYER, "qsub");
 
@@ -101,138 +100,60 @@ char **argv
    set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
 
    /*
-   ** begin to work
-   */
-   /*
-   ** read switches from the various defaults files
-   */
-   alp = get_all_defaults_files(&opts_defaults, environ);
-   for_each(aep, alp) {
-      const char *s;
-
-      status = lGetUlong(aep, AN_status);
-      quality = lGetUlong(aep, AN_quality);
-      if (quality == ANSWER_QUALITY_ERROR) {
-         s = lGetString(aep, AN_text);
-         if (s[strlen(s)-1] != '\n')
-            fprintf(stderr, "%s\n", s);
-         else 
-            fprintf(stderr, "%s\n", s);
-         do_exit = 1;
-      }
-      else {
-         printf(MSG_WARNING_S, lGetString(aep, AN_text));
-      }
-   }
-   lFreeList(alp);
-   if (do_exit) {
-      SGE_EXIT(status);
+    * read switches from the various defaults files
+    */
+   opt_list_append_opts_from_default_files(&opts_defaults, &alp, environ);
+   tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_WARNING);
+   if (tmp_ret > 0) {
+      SGE_EXIT(tmp_ret);
    }
 
    /*
-   ** append the commandline switches to the list
-   */
-   alp = cull_parse_cmdline(argv + 1, environ, &opts_cmdline, FLG_USE_PSEUDOS);
-
-   for_each(aep, alp) {
-      status = lGetUlong(aep, AN_status);
-      quality = lGetUlong(aep, AN_quality);
-      if (quality == ANSWER_QUALITY_ERROR) {
-         fprintf(stderr, "qsub: %s", lGetString(aep, AN_text));
-         do_exit = 1;
-      }
-      else {
-         printf(MSG_QSUB_WARNING_S, lGetString(aep, AN_text));
-      }
-   }
-   lFreeList(alp);
-   if (do_exit) {
-      SGE_EXIT(status);
+    * append the commandline switches to the list
+    */
+   opt_list_append_opts_from_qsub_cmdline(&opts_cmdline, &alp,
+                                          argv + 1, environ);
+   tmp_ret = answer_list_print_err_warn(&alp, "qsub: ", MSG_QSUB_WARNING);
+   if (tmp_ret > 0) {
+      SGE_EXIT(tmp_ret);
    }
 
-   if ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-help"))) {
+   /*
+    * show usage if -help was in commandline
+    */
+   if (opt_list_has_X(opts_cmdline, "-help")) {
       sge_usage(stdout);
       SGE_EXIT(0);
    }
 
    /*
-   ** there must always be a script to parse
-   ** even if the command line contains no script file argument
-   ** then we read it from stdin
-   */
-   option = lGetElemStr(opts_cmdline, SPA_switch, STR_PSEUDO_SCRIPT);
-   ep = lGetElemStr(opts_cmdline, SPA_switch, "-C");
-   if (ep) {
-      dprefix = lGetString(ep, SPA_argval_lStringT);
-   }
-   alp = parse_script_file(option ? 
-                              lGetString(option, SPA_argval_lStringT) : NULL, 
-      dprefix, &opts_scriptfile, environ, FLG_DONT_ADD_SCRIPT);
-   for_each(aep, alp) {
-      status = lGetUlong(aep, AN_status);
-      quality = lGetUlong(aep, AN_quality);
-      if (quality == ANSWER_QUALITY_ERROR) {
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
-         do_exit = 1;
+    * We will only read commandline options from scripfile if the script
+    * itself should not be handled as binary
+    */
+   if (opt_list_is_X_true(opts_cmdline, "-b") || 
+       opt_list_is_X_true(opts_defaults, "-b")) {
+      DPRINTF(("Skipping options from script due to -b option\n"));
+   } else {
+      opt_list_append_opts_from_script(&opts_scriptfile, &alp, 
+                                       opts_cmdline, environ);
+      tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_WARNING);
+      if (tmp_ret > 0) {
+         SGE_EXIT(tmp_ret);
       }
-      else {
-         printf(MSG_WARNING_S, lGetString(aep, AN_text));
-      }
-   }
-   lFreeList(alp);
-   if (do_exit) {
-      SGE_EXIT(status);
    }
 
    /*
-   ** order is very important here
-   */
-   if (opts_defaults) {
-      if (!opts_all) {
-         opts_all = opts_defaults;
-      }
-      else {
-         lAddList(opts_all, opts_defaults);
-      }
-      opts_defaults = NULL;
-   }
-   if (opts_scriptfile) {
-      if (!opts_all) {
-         opts_all = opts_scriptfile;
-      }
-      else {
-         lAddList(opts_all, opts_scriptfile);
-      }
-      opts_scriptfile = NULL;
-   }
-   if (opts_cmdline) {
-      if (!opts_all) {
-         opts_all = opts_cmdline;
-      }
-      else {
-         lAddList(opts_all, opts_cmdline);
-      }
-      opts_cmdline = NULL;
-   }
+    * Merge all commandline options and interprete them
+    */
+   opt_list_merge_command_lines(&opts_all, &opts_defaults, 
+                                &opts_scriptfile, &opts_cmdline);
 
    alp = cull_parse_job_parameter(opts_all, &job);
 
-   for_each(aep, alp) {
-      status = lGetUlong(aep, AN_status);
-      quality = lGetUlong(aep, AN_quality);
-      if (quality == ANSWER_QUALITY_ERROR) {
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
-         do_exit = 1;
-      }
-      else {
-         printf(MSG_WARNING_S, lGetString(aep, AN_text));
-      }
+   tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_WARNING);
+   if (tmp_ret > 0) {
+      SGE_EXIT(tmp_ret);
    }
-   lFreeList(alp);
-   if (do_exit) {
-      SGE_EXIT(status);
-   }
-
 
    DPRINTF(("Everything ok\n"));
 #ifndef NO_SGE_COMPILE_DEBUG
@@ -253,12 +174,12 @@ char **argv
 
    just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY);
 
-   add_parent_uplink(job);
+   job_add_parent_id_to_context(job);
 
    /* add job */
    lp_jobs = lCreateList("submitted jobs", JB_Type);
    lAppendElem(lp_jobs, job);
-  
+
    alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &lp_jobs, NULL, NULL);
 
    /* reinitialize 'job' with pointer to new version from qmaster */
@@ -293,7 +214,7 @@ char **argv
    }
 
    /* if error or non-immediate job (w/o -now flag): exit */
-   if(do_exit || !JB_NOW_IS_IMMEDIATE(lGetUlong(job, JB_now))) {
+   if(do_exit || !JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) {
       lFreeList(lp_jobs);
       lFreeList(alp);
       lFreeList(opts_all);

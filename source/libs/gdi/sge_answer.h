@@ -90,9 +90,10 @@ const char *answer_get_quality_text(const lListElem *answer);
 
 u_long32 answer_get_status(const lListElem *answer);
 
-void answer_print_text(const lListElem *answer, FILE *stream);
-
-
+void answer_print_text(const lListElem *answer, 
+                       FILE *stream,
+                       const char *prefix,
+                       const char *suffix);
 
 int answer_list_add(lList **answer_list, const char *text, 
                     u_long32 status, answer_quality_t quality);
@@ -103,6 +104,10 @@ int answer_list_has_quality(lList **answer_list,
 int answer_list_has_error(lList **answer_list);
 
 void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream);
+
+int answer_list_print_err_warn(lList **answer_list,
+                               const char *err_prefix,
+                               const char *warn_prefix);
 
 int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream);
 

@@ -51,6 +51,7 @@
 #include "sge_var.h"
 #include "sge_job.h"
 #include "sge_answer.h"
+#include "read_defaults.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
@@ -70,15 +71,15 @@ int argc,
 char **argv 
 ) {
    int ret = 0;
-   lList *alp, *request_list = NULL;
+   lList *alp = NULL;
+   lList *request_list = NULL;
    lList *cmdline = NULL;
-   lListElem *aep, *ep;
-   u_long32 quality, status = STATUS_OK;
-   int do_exit = 0;
+   lListElem *aep;
    int all_jobs = 0;
    int all_users = 0;
    u_long32 gdi_cmd; 
    int cl_err = 0;
+   int tmp_ret;
 
    DENTER_MAIN(TOP_LAYER, "qalter");
 
@@ -105,32 +106,19 @@ char **argv
    /*
    ** begin to work
    */
-   alp = cull_parse_cmdline(argv + 1, environ, &cmdline, 
-      FLG_USE_PSEUDOS | FLG_QALTER);
-
-   for_each(aep, alp) {
-      status = lGetUlong(aep, AN_status);
-      quality = lGetUlong(aep, AN_quality);
-      if (quality == ANSWER_QUALITY_ERROR) {
-         fprintf(stderr, MSG_QALTER_S, lGetString(aep, AN_text));
-         do_exit = 1;
-      }
-      else {
-         printf(MSG_QALTERWARNING_S, lGetString(aep, AN_text));
-      }
-   }
-   lFreeList(alp);
-   if (do_exit) {
-      sge_usage(stderr);
-      SGE_EXIT(1);
+   opt_list_append_opts_from_qalter_cmdline(&cmdline, &alp, argv + 1, environ);
+   tmp_ret = answer_list_print_err_warn(&alp, MSG_QALTER, MSG_QALTERWARNING);
+   if (tmp_ret > 0) {
+      SGE_EXIT(tmp_ret);
    }
 
-   if ((ep = lGetElemStr(cmdline, SPA_switch, "-help"))) {
+   if (opt_list_has_X(cmdline, "-help")) {
       sge_usage(stdout);
       SGE_EXIT(1);
    }
   
-   alp = qalter_parse_job_parameter(cmdline, &request_list, &all_jobs, &all_users);
+   alp = qalter_parse_job_parameter(cmdline, &request_list, &all_jobs, 
+                                    &all_users);
 
    DPRINTF(("all_jobs = %d, all_user = %d\n", all_jobs, all_users));
 
@@ -148,22 +136,9 @@ char **argv
       SGE_EXIT(0);
    }
 
-   for_each(aep, alp) {
-      status = lGetUlong(aep, AN_status);
-      quality = lGetUlong(aep, AN_quality);
-      if (quality == ANSWER_QUALITY_ERROR) {
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
-         do_exit = 1;
-      }
-      else {
-         printf( MSG_WARNING_S, lGetString(aep, AN_text));
-      }
-   }
-   lFreeList(alp);
-   if (do_exit) {
-      sge_usage(stderr);
-
-      SGE_EXIT(1);
+   tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_WARNING);
+   if (tmp_ret > 0) {
+      SGE_EXIT(tmp_ret);
    }
 
    if (me.who == QALTER) {

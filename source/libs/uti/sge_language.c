@@ -560,7 +560,7 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
    sge_error_message_t* message_p = NULL;
    long key;
 
-   DENTER(TOP_LAYER, "sge_gettext_");
+   DENTER(BASIS_LAYER, "sge_gettext_");
 
    if (msg_str == NULL) {
       DEXIT;
@@ -661,7 +661,7 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
 const char *sge_gettext__(char *x) 
 {
    char *z;
-   DENTER(GDI_LAYER, "sge_gettext__");
+   DENTER(BASIS_LAYER, "sge_gettext__");
 
    if ( (sge_language_functions.gettext_func != NULL) && 
         (sge_are_language_functions_installed == TRUE)   ) {

@@ -82,10 +82,12 @@ typedef struct _tSubmitMode {
 } tSubmitMode;
 
 enum _tSubmitSensitivityMode {
-   SUBMIT_NORMAL,
-   SUBMIT_QSH,
-   SUBMIT_QALTER_PENDING,
-   SUBMIT_QALTER_RUNNING
+   SUBMIT_NORMAL           = 0x01,
+   SUBMIT_QSH              = 0x02,
+   SUBMIT_BINARY           = 0x04,
+   SUBMIT_SCRIPT           = 0x08,
+   SUBMIT_QALTER_PENDING   = 0x10,
+   SUBMIT_QALTER_RUNNING   = 0x20
 };
 
 void qmonSubmitPopup(Widget w, XtPointer cld, XtPointer cad);

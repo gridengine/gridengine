@@ -39,7 +39,7 @@ QALTER_TARGETS = qalter
 QALTER_SRC = qalter.c 
 
 QALTER_ADD_SRC = sig_handlers.c parse_qsub.c \
-               show_job.c parse_job_cull.c usage.c sge_options.c
+               show_job.c parse_job_cull.c usage.c sge_options.c read_defaults.c
 
 QALTER_OBJS = $(QALTER_SRC:.c=.o) 
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/09/17 13:46:45 $     Revision: $Revision: 1.21 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/11/04 13:35:33 $     Revision: $Revision: 1.22 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/09/17 13:46:45 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/11/04 13:35:33 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -51,9 +51,9 @@ submit a copy of an existing xxQS_NAMExx job.
 [
 .B options
 ] [
-.B scriptfile | --
+.B command | --
 [
-.B script_args
+.B command_args
 ]]
 .PP
 .B qsh
@@ -85,7 +85,7 @@ submit a copy of an existing xxQS_NAMExx job.
 [
 .B --
 [
-.B script_args
+.B command_args
 ]]
 .PP
 .B qalter
@@ -96,7 +96,7 @@ submit a copy of an existing xxQS_NAMExx job.
 [
 .B --
 [
-.B script_args
+.B command_args
 ]]   
 .PP
 .B qresub
@@ -107,31 +107,32 @@ submit a copy of an existing xxQS_NAMExx job.
 .\"
 .\"
 .SH DESCRIPTION
+
 .I Qsub
-submits batch jobs to the xxQS_NAMExx queuing system. 
-xxQS_NAMExx supports single and multiple node jobs.
-\fBscriptfile\fP contains the commands to be
+submits batch jobs to the xxQS_NAMExx queuing system. xxQS_NAMExx supports
+single and multiple node jobs. \fBCommand\fP might be a path to a
+binary or a script (see \fB-b\fP below) which containes the commands to be
 run by the job using a shell (for example,
 .M sh 1
 or
 .M csh 1 ).
-Arguments to the job script are given by \fBscript_args\fP.
-xxQS_NAMExx flags may be entered as arguments to
-.I qsub
-or as embedded flags in the \fBscriptfile\fP if the first two
-characters of a script line either match '#$' or are equal to the prefix
-string defined with the \fB-C\fP option described below.
+Arguments to the command are given by \fBcommand_args\fP to
+.I qsub .
+If \fBcommand\fP is handled as script then it is possible to embed flags
+in the script if the first two characters of a script line either
+match '#$' or are equal to the prefix string defined with the \fB-C\fP option
+described below.
 .PP
 .I Qsh
 submits an interactive X-windows session to xxQS_NAMExx. An
 .M xterm 1
 is brought up from the executing machine with the display directed either to
-the X-server indicated by the DISPLAY environment variable or as specified 
+the X-server indicated by the DISPLAY environment variable or as specified
 with the \fI\-display qsh\fP option. Interactive jobs are not spooled if no
-resource is 
-available to execute them. They are either dispatched to a suitable machine 
+resource is
+available to execute them. They are either dispatched to a suitable machine
 for execution immediately or the user submitting the job is notified by
-.I qsh 
+.I qsh
 that appropriate resources to execute the job are not available.
 \fBxterm_args\fP are passed to the
 .M xterm 1
@@ -394,6 +395,28 @@ of the job.
 .I Qalter
 allows changing this option even while the job executes.
 .\"
+.IP "\fB\-b y|n\fP"
+Available for \fIqsub\fP, \fIqrsh\fP only. \fIQalter\fP does not allow
+changing this option. This option is only interpreted if it occures in the
+commandline. It is not possible to embed this flag in \fBcommand\fP itself.
+.sp 1
+Gives the user the possibility to indicate explicitly whether
+\fBcommand\fP should be treated as binary or script. If the value
+of \fB\-b\fP is 'y', then \fBcommand\fP  may be a binary or script.
+The \fBcommand\fP might not be accessible from the submission host.
+Nothing except the path of the \fBcommand\fP will be transfered
+from the submission host to the execution host. Path aliasing will
+be applied to the path of \fBcommand\fP before \fBcommand\fP will
+be executed.
+.sp 1
+If the value of \fB\-b\fP is 'n' then \fBcommand\fP needs to be a
+script and it will be handled as script. The script file has to be
+accessible by the submission host. It will be transfered to the
+execution host. \fIqsub\fP/\fIqrsh\fP will search directive prefixes
+within script.
+.sp 1
+\fIqsub\fP will implicitely use \fB-b n\fP whereas \fIqrsh\fP will apply
+the \fB-b y\fP option if nothing else is specified.
 .IP "\fB\-c occasion_specifier\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
@@ -465,11 +488,11 @@ Available for \fIqsub\fP only.
 defines the prefix that declares a directive to
 .I qsub
 in the
-job's scriptfile. The prefix is not a job attribute, but
+job's command. The prefix is not a job attribute, but
 affects the behavior of \fIqsub\fP. If the -C option is presented
 with the value of the directive prefix as a null string,
 .I qsub
-will not scan the scriptfile
+will not scan the command.
 .br
 The directive prefix consists of two ASCII characters which
 when appearing in the first two bytes of a script line
@@ -1325,17 +1348,17 @@ Instead of job/task_id_list it is possible to
 use the keyword 'all' to modify all jobs of the
 current user.
 .\"       
-.IP "\fBscriptfile\fP"
-Available for \fIqsub\fP only.
+.IP "\fBcommand\fP"
+Available for \fIqsub\fP and \fIqrsh\fP only.
 .sp 1
-The job's scriptfile.
+The job's scriptfile or binary.
 If not present or if the operand is the 
 single-character string '-',
 .I qsub
 reads the script from standard input.
 .\"
-.IP "\fBscript_args\fP"
-Available for \fIqsub\fP and \fIqalter\fP only.
+.IP "\fBcommand_args\fP"
+Available for \fIqsub\fP, \fIqrsh\fP and \fIqalter\fP only.
 .sp 1
 Arguments to the job. Not valid if the script is entered from standard
 input.

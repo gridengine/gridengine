@@ -308,5 +308,10 @@
 
 #define MSG_EXECD_INITPACKBUFFERFAILED_S _MESSAGE(29181, _("init_packbuffer failed: "SFN"\n"))
 
+/*
+ *
+ */
+#define MSG_EXECD_CMDNEXISTS          _MESSAGE(29182, _("The given command does not exist"))
+
 #endif /* __MSG_EXECD_H */
 

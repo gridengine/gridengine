@@ -78,6 +78,7 @@ enum {
    ext_OPT,
    notify_OPT,
    now_OPT,
+   b_OPT,
 
    masterq_OPT,
    d_OPT,

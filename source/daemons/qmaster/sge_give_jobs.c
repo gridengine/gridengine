@@ -74,7 +74,6 @@
 #include "sge_user_mapping.h"
 #include "setup_path.h"
 #include "execution_states.h"
-#include "jb_now.h"
 #include "sge_parse_num_par.h"
 #include "symbols.h"
 #include "mail.h"

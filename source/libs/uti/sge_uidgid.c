@@ -50,6 +50,8 @@
 #include "msg_common.h"
 #include "msg_utilib.h"
 
+#define UIDGID_LAYER CULL_LAYER 
+
 static uid_t admin_uid = -1;
 static gid_t admin_gid = -1;
 static int initialized = 0;
@@ -58,11 +60,11 @@ static void set_admin_user(uid_t, gid_t);
  
 static void set_admin_user(uid_t a_uid, gid_t a_gid)
 {
-   DENTER(TOP_LAYER, "set_admin_user");
+   DENTER(UIDGID_LAYER, "set_admin_user");
    admin_uid = a_uid;
    admin_gid = a_gid;
    initialized = 1;
-   DPRINTF(("uid=%ld, gid=%ld\n", (long) a_uid, (long) a_gid));
+   DPRINTF(("auid=%ld; agid=%ld\n", (long)admin_uid, (long)admin_gid));
    DEXIT;
 }     
 
@@ -97,7 +99,7 @@ int sge_set_admin_username(const char *user, char *err_str)
 {
    struct passwd *admin_user;
    int ret;
-   DENTER(TOP_LAYER, "sge_set_admin_username");
+   DENTER(UIDGID_LAYER, "sge_set_admin_username");
  
    if (initialized) {
       DEXIT;
@@ -154,7 +156,8 @@ int sge_set_admin_username(const char *user, char *err_str)
 ******************************************************************************/
 int sge_switch2admin_user(void)
 {
-   DENTER(TOP_LAYER, "sge_switch2admin_user");
+   int ret = 0;
+   DENTER(UIDGID_LAYER, "sge_switch2admin_user");
  
    if (!initialized) {
       CRITICAL((SGE_EVENT, MSG_SWITCH_USER_NOT_INITIALIZED));
@@ -163,30 +166,33 @@ int sge_switch2admin_user(void)
  
    if (getuid()) {
       DPRINTF((MSG_SWITCH_USER_NOT_ROOT));
-      DEXIT;
-      return 0;
-   }
-   else {
+      ret = 0;
+      goto exit;
+   } else {
       if (getegid() != admin_gid) {
          if (setegid(admin_gid) == -1) {
-            DEXIT;
-            return -1;
-         }
-         else
-            DPRINTF(("egid=%ld\n", (long) admin_gid));
+            DTRACE;
+            ret = -1;
+            goto exit;
+         } 
       }
  
       if (geteuid() != admin_uid) {
          if (seteuid(admin_uid) == -1) {
-            DEXIT;
-            return -1;
-         }
-         else
-            DPRINTF(("euid=%ld\n", (long) admin_uid));
+            DTRACE;
+            ret = -1;
+            goto exit;
+         } 
       }
    }
+
+exit:
+   DPRINTF(("uid=%ld; gid=%ld; euid=%ld; egid=%ld auid=%ld; agid=%ld\n", 
+            (long)getuid(), (long)getgid(), 
+            (long)geteuid(), (long)getegid(),
+            (long)admin_uid, (long)admin_gid));
    DEXIT;
-   return 0;
+   return ret;
 }                 
 
 /****** uti/uidgid/sge_switch2start_user() ************************************
@@ -216,10 +222,10 @@ int sge_switch2admin_user(void)
 ******************************************************************************/
 int sge_switch2start_user(void)
 {
+   int ret = 0;
    uid_t start_uid = getuid();
    gid_t start_gid = getgid();
- 
-   DENTER(TOP_LAYER, "sge_switch2start_user");
+   DENTER(UIDGID_LAYER, "sge_switch2start_user");
  
    if (!initialized) {
       CRITICAL((SGE_EVENT, MSG_SWITCH_USER_NOT_INITIALIZED));
@@ -228,29 +234,32 @@ int sge_switch2start_user(void)
  
    if (start_uid) {
       DPRINTF((MSG_SWITCH_USER_NOT_ROOT));
-      DEXIT;
-      return 0;
-   }
-   else {
+      ret = 0;
+      goto exit;
+   } else {
       if (start_gid != getegid()) {
          if (setegid(start_gid) == -1) {
-            DEXIT;
-            return -1;
-         }
-         else
-            DPRINTF(("gid=%ld\n", (long) start_gid));
+            DTRACE;
+            ret = -1;
+            goto exit;
+         } 
       }
       if (start_uid != geteuid()) {
          if (seteuid(start_uid) == -1) {
-            DEXIT;
-            return -1;
-         }
-         else
-            DPRINTF(("uid=%ld\n", (long) start_uid));
+            DTRACE;
+            ret = -1;
+            goto exit;
+         } 
       }
    }
+
+exit:
+   DPRINTF(("uid=%ld; gid=%ld; euid=%ld; egid=%ld auid=%ld; agid=%ld\n", 
+            (long)getuid(), (long)getgid(), 
+            (long)geteuid(), (long)getegid(),
+            (long)admin_uid, (long)admin_gid));
    DEXIT;
-   return 0;
+   return ret;
 } 
 
 /****** uti/uidgid/sge_run_as_user() ******************************************
@@ -278,7 +287,7 @@ int sge_run_as_user(void)
 {
    int ret = 0;
  
-   DENTER(TOP_LAYER, "sge_run_as_user");
+   DENTER(UIDGID_LAYER, "sge_run_as_user");
  
    if (geteuid() != getuid()) {
       if (seteuid(getuid())) {
@@ -316,7 +325,7 @@ int sge_user2uid(const char *user, uid_t *uidp, int retries)
 {
    struct passwd *pw;
 
-   DENTER(CULL_LAYER, "sge_user2uid");
+   DENTER(UIDGID_LAYER, "sge_user2uid");
 
    do {
       DPRINTF(("name: %s retries: %d\n", user, retries));
@@ -362,7 +371,7 @@ int sge_group2gid(const char *gname, gid_t *gidp, int retries)
 {
    struct group *gr;
 
-   DENTER(CULL_LAYER, "sge_group2gid");
+   DENTER(UIDGID_LAYER, "sge_group2gid");
 
    do {
       if (!retries--) {
@@ -411,7 +420,7 @@ int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
-   DENTER(CULL_LAYER, "sge_uid2user");
+   DENTER(UIDGID_LAYER, "sge_uid2user");
 
 #ifdef QIDL
    pthread_mutex_lock(&lock);
@@ -478,7 +487,7 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
-   DENTER(CULL_LAYER, "sge_gid2group");
+   DENTER(UIDGID_LAYER, "sge_gid2group");
 
 #ifdef QIDL
    pthread_mutex_lock(&lock);

@@ -53,7 +53,6 @@
 #include "msg_common.h"
 #include "sge_job_refL.h"
 #include "sge_job.h"
-#include "jb_now.h"
 #include "sge_stdlib.h"
 #include "sge_prog.h"
 #include "sge_var.h"
@@ -131,25 +130,28 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    ** the default is to decide via the queue configuration
    ** we turn this off here explicitly (2 is no)
    */
-   job_now = lGetUlong(*pjob, JB_now);
-   if (JB_NOW_IS_QSH(job_now) || JB_NOW_IS_QLOGIN(job_now)
-       || JB_NOW_IS_QRSH(job_now) || JB_NOW_IS_QRLOGIN(job_now)) {
+   job_now = lGetUlong(*pjob, JB_type);
+   if (JOB_TYPE_IS_QSH(job_now) || JOB_TYPE_IS_QLOGIN(job_now)
+       || JOB_TYPE_IS_QRSH(job_now) || JOB_TYPE_IS_QRLOGIN(job_now)) {
       lSetUlong(*pjob, JB_restart, 2);
    }
 
-   while (JB_NOW_IS_QRSH(job_now)
+   while (JOB_TYPE_IS_QRSH(job_now)
           && (ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
       lSetBool(*pjob, JB_notify, TRUE);
       lRemoveElem(cmdline, ep);
    }  
 
    /* 
-   ** turn on immediate scheduling as default - can be overwriten by option -now n 
-   */
-   lSetUlong(*pjob, JB_now, JB_NOW_IMMEDIATE);
+    * turn on immediate scheduling as default  
+    * can be overwriten by option -now n 
+    */
+   {
+      u_long32 type = lGetUlong(*pjob, JB_type);
 
-   DTRACE;
-
+      JOB_TYPE_SET_IMMEDIATE(type);
+      lSetUlong(*pjob, JB_type, type);
+   }
 
    /*
    ** -clear option is special, is sensitive to order
@@ -358,14 +360,14 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    }
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-now"))) {
-      u_long32 jb_now = lGetUlong(*pjob, JB_now);
+      u_long32 jb_now = lGetUlong(*pjob, JB_type);
       if(lGetInt(ep, SPA_argval_lIntT)) {
-         JB_NOW_SET_IMMEDIATE(jb_now);
+         JOB_TYPE_SET_IMMEDIATE(jb_now);
       } else {
-         JB_NOW_CLEAR_IMMEDIATE(jb_now);
+         JOB_TYPE_CLEAR_IMMEDIATE(jb_now);
       }
 
-      lSetUlong(*pjob, JB_now, jb_now);
+      lSetUlong(*pjob, JB_type, jb_now);
 
       lRemoveElem(cmdline, ep);
    }

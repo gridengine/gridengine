@@ -1,3 +1,10 @@
+DT-2004-05-02-0: Enhancem.: o Started DRMAA README
+                            o Cleaned up DRMAA web page
+                            o Checked JGrid into experimental directory
+                            o Fixed byte order issues in JGrid skeleton
+                 Changed:   DRMAA, JGrid
+                 Issue:     952
+
 CR-2004-05-01-0: Bugfix:    o global host list refresh (re-resolving of used 
                               host names) is now done in a separate list copy
                               to be able to unlock the list and let other 

@@ -13,7 +13,7 @@
 <H1><FONT SIZE=6 STYLE="font-size: 28pt">DRMAA C binding library for Grid Engine</FONT></H1>
 <H1>Overview</H1>
 <P>The purpose of this library is to provide an implementation of the DRMAA C binding 
-standard based on Grid Engine DRM system. The best way to circumscribe DRMAA is to cite 
+standard based on Grid Engine DRM system. The best way to describe DRMAA is to cite 
 the DRMAA-WG Charter:</P>
 <UL>
 <P>"Develop an API specification for the submission and control of jobs to one or more Distributed Resource
@@ -38,7 +38,7 @@ and
 <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/manuals.html?content-type=text/html">HTML version of Grid Engine DRMAA C binding man pages (only those in section 3 with drmaa_* prefixes)</A> 
 .</P>
 <H1>Availability</H1>
-<P>For the current 5.3 release DRMAA is and will not be available. For 6.0 it is planned to deliver 
+<P>For the current 5.3 release DRMAA is not and will not be available. For 6.0 it is planned to deliver 
 everything needed to integrate applications via DRMAA with Grid Engine including a DRMAA library that 
 can be linked dynamically. At this stage DRMAA is available as a source snapshot from the "maintrunk" 
 of the Grid Engine. To get this source snapshot you must use the cvs option "-r VMAIN_STABLE_3_TAG" when 
@@ -111,7 +111,7 @@ those libraries must be reviewed and changed were necessary.</P>
 is a good example of an application that uses the DRMAA C binding interface. 
 It illustrates submission of both single and bulk remote jobs. After submission drmaa_synchronize() call 
 is used to synchronize the remote jobs execution. The call returns after all the jobs have finished 
-executing. Finally, drmaa_wait() call is used to retrieve and print out the remote jobs execution 
+executing. Finally, drmaa_wait() call is used to retrieve and print out the remote jobs' execution 
 information.</P>
 <P>A full path for the remote command is passed as the first argument to the test program. 
 That value is directly used as &quot;drmaa_remote_command&quot; job template attribute. The C binding example uses 

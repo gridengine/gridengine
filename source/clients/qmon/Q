@@ -351,6 +351,7 @@ Qmon*XmtHelpBox.helpCursorForeground:       red
 Qmon*XmtHelpBox.helpCursorBackground:       black
 Qmon*XmtHelpBox.helpBackground:             lightgrey
 Qmon*XmtHelpBox.helpForeground:             black
+Qmon*XmtHelpBox*visibleLines:               20
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! MsgBox Colors                                                        !!

@@ -34,13 +34,13 @@ Qmon*xmtHelp: \
 No help available for this topic !
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*MainControl.?.xmtHelpTitle: Main Control Help
+Qmon*MainControl.?.xmtHelpTitle: @fBMain Control Help
 Qmon*MainControl.?.xmtHelp: \
 This is @fBQmon Main Control@fR click one of the icons to activate it.\n\
 Use @fBHelp->Context Help@fR on the icons to get further information.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*JOB_CONTROL.xmtHelpTitle: Job Control Help
+Qmon*JOB_CONTROL.xmtHelpTitle: @fBJob Control Help
 Qmon*JOB_CONTROL.xmtHelp: \
 The @fBJob Control@fR dialogue is opened by pressing the @fBJob Control Icon@fR\n\
 or by selecting @fBJob Control@fR in the @fBTask@fR menu.\n\
@@ -54,7 +54,7 @@ Three  listings are displayed one for the pending jobs, one for the running jobs
 and one for recently finished jobs.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*QUEUE_CONTROL.xmtHelpTitle: Queue Control Help
+Qmon*QUEUE_CONTROL.xmtHelpTitle: @fBQueue Control Help
 Qmon*QUEUE_CONTROL.xmtHelp: \
 The @fBQueue Control@fR dialogue is opened by pressing the @fBQueue Control Icon@fR\n\
 or by selecting @fBQueue Control@fR in the @fBTask@fR menu.\n\
@@ -64,7 +64,7 @@ state and the cluster activity. Here queues can be added, modified and deleted.\
 It also provides the means to suspend/unsuspend and to disable/enable queues.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*SUBMIT_JOB.xmtHelpTitle: Submit Job Help
+Qmon*SUBMIT_JOB.xmtHelpTitle: @fBSubmit Job Help
 Qmon*SUBMIT_JOB.xmtHelp: \
 The @fBJob Submission@fR dialogue is opened by pressing the @fBJob Submit Icon@fR\n\
 or by selecting @fBJob Submit@fR in the @fBTask@fR menu.\n\
@@ -76,7 +76,7 @@ specify its special requirements. After filling in this form the job can be subm
 to the Grid Engine system.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*COMPLEX_CONFIG.xmtHelpTitle: Complex Configuration Help
+Qmon*COMPLEX_CONFIG.xmtHelpTitle: @fBComplex Configuration Help
 Qmon*COMPLEX_CONFIG.xmtHelp: \
 The @fBComplex Configuration@fR dialogue is opened by pushing the @fBComplex Config Icon@fR\n\
 or by selecting @fBComplex Config@fR in the @fBTask@fR menu.\n\
@@ -89,7 +89,7 @@ Further information about the Grid Engine complex concept is documented in Chapt
 Grid Engine manual.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*HOST_CONFIG.xmtHelpTitle: Host Configuration Help
+Qmon*HOST_CONFIG.xmtHelpTitle: @fBHost Configuration Help
 Qmon*HOST_CONFIG.xmtHelp: \
 The @fBHost Configuration@fR dialogue is invoked by pushing the @fBHost Config Icon@fR\n\
 or by selecting @fBHost Config@fR in the @fBTask@fR menu.\n\
@@ -117,7 +117,7 @@ dialogue to add and delete hosts of the corresponding category or to modify the 
 and the access of an execution host.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*CLUSTER_CONFIG.xmtHelpTitle: Cluster Configuration Help
+Qmon*CLUSTER_CONFIG.xmtHelpTitle: @fBCluster Configuration Help
 Qmon*CLUSTER_CONFIG.xmtHelp: \
 The @fBCluster Configuration@fR dialogue pops up on pressing the @fBCluster Config Icon@fR\n\
 or by selecting @fBCluster Configuration@fR from the @fBTask@fR menu.\n\
@@ -132,7 +132,7 @@ use a configuration @fBlocal@fR to every execution host which overrides the entr
 global configuration.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*SCHED_CONFIG.xmtHelpTitle: Scheduler Configuration Help
+Qmon*SCHED_CONFIG.xmtHelpTitle: @fBScheduler Configuration Help
 Qmon*SCHED_CONFIG.xmtHelp: \
 The @fBScheduler Configuration@fR dialogue pops up on pressing the @fBScheduler Config Icon@fR\n\
 or by selecting @fBScheduler Configuration@fR from the @fBTask@fR menu.\n\
@@ -141,7 +141,7 @@ The @fBScheduler Configuration@fR dialogue allows the display and setting of sch
 specific parameters to influence the Grid Engine scheduler's behavior.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*CALENDAR_CONFIG.xmtHelpTitle: Calendar Configuration Help
+Qmon*CALENDAR_CONFIG.xmtHelpTitle: @fBCalendar Configuration Help
 Qmon*CALENDAR_CONFIG.xmtHelp: \
 The @fBCalendar Configuration@fR dialogue is opened by clicking on the @fBCalendar Configuration Icon@fR\n\
 or by selecting @fBCalendar Configuration@fR in the @fBTask@fR menu.\n\
@@ -151,7 +151,7 @@ or by selecting @fBCalendar Configuration@fR in the @fBTask@fR menu.\n\
 to the calendar specified times.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*USER_CONFIG.xmtHelpTitle: User Configuration Help
+Qmon*USER_CONFIG.xmtHelpTitle: @fBUser Configuration Help
 Qmon*USER_CONFIG.xmtHelp: \
 The @fBUser Configuration@fR dialogue is opened by clicking on the @fBUser Config Icon@fR\n\
 or by selecting @fBUser Config@fR in the @fBTask@fR menu.\n\
@@ -172,14 +172,14 @@ queues.\n\
 \n\
 @fBUsers@fR have certain access permissions (see User Access Permissions in the manuals)\n\
 but no cluster or queue management capabilities.\n\
-In @fBSGEEE@fR mode useresets are used additionally as departments. Departments can contain\n\
-tickets and influence therefore also the importance of a user's job in the SGEEE system.\n\
-For the SGEEE case users have to be defined in the @fBUser@fR tab dialogue page. These users\n\
+Useresets are used additionally as departments. Departments can contain\n\
+tickets and influence therefore also the importance of a user's job.\n\
+Users have to be defined in the @fBUser@fR tab dialogue page. These users\n\
 can then be added to the different @fBPolicy@fR dialogues and prioritized against other users.
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*PE_CONFIG.xmtHelpTitle: PE Configuration Help
+Qmon*PE_CONFIG.xmtHelpTitle: @fBPE Configuration Help
 Qmon*PE_CONFIG.xmtHelp: \
 The @fBPE Configuration@fR dialogue is opened by clicking on the @fBPE Config Icon@fR\n\
 or by selecting @fBPE Configuration@fR in the @fBTask@fR menu.\n\
@@ -191,7 +191,7 @@ The environments configured here can be used for submitting parallel jobs to one
 configured @fBParallel Environments@fR.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*PROJECT_CONFIG.xmtHelpTitle: Project Configuration
+Qmon*PROJECT_CONFIG.xmtHelpTitle: @fBProject Configuration
 Qmon*PROJECT_CONFIG.xmtHelp: \
 The @fBProject Configuration@fR dialogue is opened by clicking on the @fBProject Config Icon@fR\n\
 or by selecting @fBProject Configuration@fR in the @fBTask@fR menu.\n\
@@ -200,16 +200,16 @@ The @fBProject Configuration@fR dialogue allows the definition and manipulation 
 projects.\n\
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*TICKET_OVERVIEW.xmtHelpTitle: Ticket Overview
+Qmon*TICKET_OVERVIEW.xmtHelpTitle: @fBPolicy Configuration
 Qmon*TICKET_OVERVIEW.xmtHelp: \
-The @fBTicket Overview@fR dialogue allows the overview and manipulation of the\n\
-ticket based scheduling policies of Grid Engine.\n\
-\n\
+The @fBPolicy Configuration@fR dialogue allows the overview and manipulation of various scheduling policy modules.\n\
+Here the @fBPolicy Importance Factor@fR and parameters for @fBUrgency Policy@fR\n\
+and @fBTicket Policy@fR can be set.\n\n\
 From here access is available to the @fBShare Tree Policy@fR, to the\n\
 @fBFunctional Policy@fR and to the @fBOverride Policy@fR dialogues.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*CKPT_CONFIG.xmtHelpTitle: Checkpointing Configuration
+Qmon*CKPT_CONFIG.xmtHelpTitle: @fBCheckpointing Configuration
 Qmon*CKPT_CONFIG.xmtHelp: \
 The @fBCheckpoint Configuration@fR dialogue is opened by clicking on the @fBCheckpoint\n\
 Config Icon@fR or by selecting @fBCheckpoint Configuration@fR in the @fBTask@fR menu.\n\
@@ -221,7 +221,7 @@ and to restore and restart from this so called checkpoint at a later point of ti
 original program or job has been interrupted, e.g. by a system crash.\n\
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*BROWSER.xmtHelpTitle: Qmon Browser Help
+Qmon*BROWSER.xmtHelpTitle: @fBQmon Browser Help
 Qmon*BROWSER.xmtHelp: \
 To open the @fBObject Browser@fR click on the icon or select @fBBrowser Dialog@fR\n\
 in the @fBTask@fR menu.\n\
@@ -233,7 +233,7 @@ Apart from that the @fBBrowser@fR is opened when the @fBWhy ?@fR button of the\n
 @fBJob Control@fR dialogue is pressed to show the reasons why a job cannot be scheduled.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*EXIT.xmtHelpTitle: Exit Help
+Qmon*EXIT.xmtHelpTitle: @fBExit Help
 Qmon*EXIT.xmtHelp: \
 Pressing the @fBExit@fR icon or selecting @fBFile->Exit@fR or simply pressing @fBCtrl + C@fR\n\
 causes @fBqmon@fR to exit.
@@ -245,13 +245,13 @@ causes @fBqmon@fR to exit.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_job.job_main_layout*xmtHelpTitle: Job Control Help
+Qmon*qmon_job.job_main_layout*xmtHelpTitle: @fBJob Control Help
 Qmon*qmon_job.job_main_layout*xmtHelp: \
 The @fBJob Control@fR dialogue permits the controlling and monitoring of all running\n\
 and pending jobs known to the system.  Here it is possible to influence the jobs in\n\
 different ways:\n\
 - open the @fBSubmit Dialogue@fR with the @fBSubmit@fR button\n\
-- open the @fBTicket Overview@fR with the @fBTickets@fR button (only in SGEEE mode)\n\
+- open the @fBPolicy Configuration@fR with the @fBTickets@fR button\n\
 - @fBSuspend, Resume and Delete@fR jobs\n\
 - ask for the reason @fBWhy ?@fR a job cannot be scheduled\n\
 - change the hold state of jobs with the @fBHold@fR button\n\
@@ -278,13 +278,13 @@ job in the tabular areas in the @fBJob Control@fR dialogue.\n\
 \n\
 For most of the tasks jobs have to be selected first. To select a job the following\n\
 key + mouse combinations are used:\n\
-@f[BI]Mouse1@fR\n\
+@f[BI]Mouse1 + double click@fR\n\
 Enter the clicked to field (for columns Queue and additionally selected fields)\n\
-@f[BI]Ctrl + Mouse1@fR\n\
+@f[BI]Mouse1@fR\n\
 Begin of selection, one row is selected, already selected areas are unselected.\n\
 @f[BI]Shift + Mouse1@fR\n\
 Extend of selection, select all rows between Begin of selection and the clicked to row.\n\
-@f[BI]Ctrl + Shift + Mouse1@fR\n\
+@f[BI]Ctrl + Mouse1@fR\n\
 Toggle the selection, the clicked to row is selected if it was unselected and unselected\n\
 otherwise.\n\
 \n\
@@ -353,7 +353,7 @@ A refresh can be forced by pressing the @fBRefresh@fR button.
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_cq.cq*xmtHelpTitle: Queue Control Help
+Qmon*qmon_cq.cq*xmtHelpTitle: @fBQueue Control Help
 Qmon*qmon_cq.cq*xmtHelp: \
 The purpose of the @fBQueue Control@fR dialogue is to provide a quick overview of the\n\
 queues available and their state in the cluster.\n\
@@ -363,26 +363,26 @@ If put into an error state they can be reactivated by @fBClear Error@fR.\n\
 \n\
 The dialogue displays a tabular view of @fBCluster Queues@fR and the corresponding\n\
 @fBQueue Instances@fR for each queue in the Grid Engine system.\n\
-If the main display area is empty no queues are configured or the @fBCustomize@fR\n\
-hides the queues not fulfilling the @fIfilter criteria@fR.\n\
+If the main display area is empty no queues are configured or filters\n\
+hide the queues not fulfilling the @fIfilter criteria@fR.\n\
 If this is the case the @fBCustomize@fR button is renamed to @fBCustomize +@fR.\n\
-Under Customize it is possible to select queues according to accessability by a user, referencing\n\
+Under @fBCustomize@fR it is possible to select queues according to its accessability by a user, referencing\n\
 special parallel environments, fulfilling a queue name pattern or being in a special queue state.\n\
 \n\
 Every line in the table corresponds to a cluster queue or queue instance. To perform an action on\n\
-a queue or queue instance one (or more) entries can be selected.\n\
+a queue or queue instance one (or more) entries can be selected.\n\n\
 For cluster queues the following actions are possible:\n\n\
 @fBAdd@fR to add a new cluster queue\n\
 @fBModify@fR to delete one or more cluster queues\n\
 @fBQueue Sick ?@fR to perform a sanity check of a queue\n\
 \n\
-For cluster queues and queue instances these actions apply:\n\
+For cluster queues and queue instances these actions apply:\n\n\
 @fBSuspend@fR to suspend all queue instances of a cluster queue or\n\
 only a subset thereof\n\
 @fBResume, Disable, Enable, Reschedule, Clear Error@fR to unsuspend, disable,\n\
 enable, reschedule and clear errors like for Suspend above.\n\
 \n\
-For Queue Instances these two additional actions are available:\n\
+For Queue Instances these two additional actions are available:\n\n\
 @fBLoad@fR pops up a load dialogue for the selected queue instances.\n\
 @fBExplain@fR shows a browser listing of @fBa@fRlarm, suspend @fBA@fRlarm,\n\
 @fBE@fRrror and ambiguous @fBc@fRonfiguration reasons in the qmon browser\n\
@@ -406,6 +406,8 @@ With the @fBDone@fR button the @fBQueue Control@fR dialogue is closed.\n\
 \n\
 The @fBAdd@fR button opens the @fBQueue Configuration@fR subdialogue in @fBAdd mode@fR\n\
 to add a new queue to the Grid Engine system.\n\
+The @fBClone@fR button lets you add a new cluster queue starting with\n\
+the configuration of an already existing cluster queue.\n\
 The @fBModify@fR button opens the @fBQueue Configuration@fR subdialogue in @fBModify mode@fR.\n\
 Here exactly one queue has to be selected and the @fBModify@fR button pops up the @fBQueue\n\
 Configuration@fR dialogue with the the values of this specific queue set.\n\
@@ -417,7 +419,7 @@ across qmon sessions.
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*cq_dialog_shell*xmtHelpTitle: Queue Configuration Help
+Qmon*cq_dialog_shell*xmtHelpTitle: @fBQueue Configuration Help
 Qmon*cq_dialog_shell*xmtHelp: \
 The @fBQueue Configuration@fR subdialogue provides the means to @fBadd and modify@fR queues.\n\
 It consists of two sections, the upper part shows two input fields for the @fIQueue Name@fR\n\
@@ -425,18 +427,15 @@ and one to add a @fIhost or hostgroup name@fR to the @fIHostlist@fR. The Hostlis
 or hosts that are represented by the cluster queue.\n\
 The @fBAdd@fR and @fBDelete@fR buttons let you add a new host or hostgroup entered in the inputfield next\n\
 to the Hostlist or delete a host or hostgroup selected in the Hostlist.\n\
-The button @fBClone@fR presents a list of already existing cluster queues and a change of the queue name\n\
-allows you to start configuring a new queue with the settings of an already defined queue changing only\n\
-those parameters that shall be different.\n\
-The button @fBReset@fR resets the queue to queue template settings and @fBRefresh@fR updates\n\
-any input helpers that changed during editing e.g. the available PE or Checkpoint object lists.\n\n\
 On the right there is the @fBOk, Cancel and Help@fR button.\n\n\
+The button @fBRefresh@fR updates\n\
+any input helpers that changed during editing e.g. the available PE or Checkpoint object lists.\n\n\
 The lower part consists of a list containing @fIHost or Hostgroup@fR entries named\n\
 @fBAttributes for Host/Hostgroup@fR.\n\
 Next to this list a folder of configuration pages for the different categories of\n\
 queue attributes is presented. The following categories of queue parameters are shown:\n\
 @fBGeneral Configuration, Execution Method, Checkpointing, Load/Suspend Thresholds, Limits,\n\
-Complexes, Subordinates, User Access, Project Access and Owners.@fR\n\
+Complexes, Subordinates, User Access, Project Access, Parallel Environment and Owners.@fR\n\
 \n\
 The following steps are usually processed to define a new cluster queue:\n\n\
 @fBStep 1:@fR\n\
@@ -447,14 +446,14 @@ for the different tabbed pages.\n\n\
 @fBStep3:@fR\n\
 Define any hosts or hostgroups within this cluster queue that have special attribute values\n\
 by adding them to the list on the left, selecting it and entering the deviating values.\n\
-The fields are made editable by pressing the toggle buttons left to the attribute name.\n\
+The fields are made editable by clicking the lock icons left to the attribute name.\n\
 To access the different attribute categories select the corresponding tabbed page.\n\
 When the host or hostgroup is changed the changes are temporarily saved.\n\
-To delete a special setting either check off the corresponding attribute toggle or delete the host or hostgroup\n\
+To delete a special setting either check off the corresponding attribute lock or delete the host or hostgroup\n\
 completely from the list on the left.\n\n\
 @fBStep 4:@fR\n\
 Save or dismiss your changes by pressing @fBOk@fR or @fBCancel@fR. If an error\n\
-or misconfiguration occurs a error dialogue pops up. Otherwise the dialogue closes.\n\
+or misconfiguration occurs an error dialogue pops up. Otherwise the dialogue closes.\n\
 \n\
 The forms of the different attribute categories comprise the following fields, for a more\n\
 thorough explanation of the meaning of the different parameters refer to the @fBqueue_conf@fR\n\
@@ -546,12 +545,16 @@ empty access is unrestricted unless explicitly stated in the deny list.\n\
 There is a link to the @fBProject Configuration Dialogue@fR where it is possible to setup\n\
 projects. Click on the icon to go there.\n\
 \n\
+@fBParallel Environment@fR\n\
+@fIReferenced PE@fR allows to attach special Parallel Environment objects that have been defined already\n\
+to the cluster queue.\n\
+\n\
 @fBOwners@fR\n\
 The list of queue owners. An owner of a queue is given permission to @fBSuspend/Resume@fR\n\
 or @fBDisable/Enable@fR the queue.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_submit.submit_layout*xmtHelpTitle: Submit Job Help
+Qmon*qmon_submit.submit_layout*xmtHelpTitle: @fBSubmit Job Help
 Qmon*qmon_submit.submit_layout*xmtHelp: \
 The @fBJob Submission@fR dialogue allows to submit jobs into the Grid Engine system.\n\
 For general information on how to submit a Grid Engine job please refer to the examples given in\n\
@@ -583,6 +586,9 @@ e.g. 1-10:2,20,24-27.\n\
 blanks as on the command line.\n\
 With the @fBPriority@fR spinbox the job gets an initial priority value. Users without manager\n\
 or operator priviledges may only lower their initial priority value.\n\
+With the @fBJob Share@fR spinbox the job's can be weighted compared to other\n\
+jobs. The job share has an influence in the Share Tree Policy and  the\n\
+Functional  Policy.\n\
 The @fBStart At@fR field sets the time when the job is considered eligible for execution.\n\
 The @fBCurrent Working Directory@fR toggle button indicates whether the job is to be executed\n\
 in the current working directory (for identical directory hierarchies between the submit and\n\
@@ -626,6 +632,8 @@ released. This is done in the @fBJob Control@fR dialogue. The task range is spec
 as for the @fBJob Tasks@fR field.\n\
 @fBStart Job Immediately@fR defines if the job has to be scheduled immediately. This is always\n\
 true for @fBInteractive Jobs@fR.\n\
+The @fBJob Reservation@fR toggle indicates whether a reservation for this job\n\
+should be done.\n\
 \n\
 The button list on the right is used to perform different tasks concerning of job submission.\n\
 The button labeled with @fBBatch@fR toggles between batch and interactive mode for submitting\n\
@@ -657,13 +665,13 @@ submit command of a foreign queuing system connected to Grid Engine through the 
 Interface@fR.\n\
 In the @fBJob Dependencies@fR field the job numbers that the current job depends on, can be\n\
 entered.\n\
-In SGEEE mode the @fBDeadline@fR field is present where the deadline when a job shall be fulfilled\n\
-can be entered. This leads to an increase of the priority of this job when it approaches its deadline.\n\
+The @fBDeadline@fR field allows entering the deadline when a job shall be fulfilled.\n\
+This leads to an increase of the priority of this job when it approaches its deadline.\n\
 Only @fBDeadline Users@fR can submit deadline jobs.\n\
 \n\
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*request_shell.request*xmtHelpTitle: Requested Resources Help
+Qmon*request_shell.request*xmtHelpTitle: @fBRequested Resources Help
 Qmon*request_shell.request*xmtHelp: \
 The @fBRequested Resources@fR dialogue allows to specify the requirements a job has to fulfill.\n\
 To enter a requirement double click on one of the available resources then you can enter\n\
@@ -674,7 +682,7 @@ button or @fIClear@fR to remove all requested items.\n\
 @fBOk@fR saves the requested resources for this job submission. @fBCancel@fR dismisses any change.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!Qmon*request_shell.request*xmtHelpTitle: Requested Resources Help
+!Qmon*request_shell.request*xmtHelpTitle: @fBRequested Resources Help
 !Qmon*request_shell.request*xmtHelp: \
 !When submitting a Grid Engine job a requirement profile of the job can be specified.\n\
 !The user can specify attributes or characteristics of a host or queue which the job \n\
@@ -705,7 +713,7 @@ button or @fIClear@fR to remove all requested items.\n\
 !in the @fBJob Submission Dialogue@fR changes color.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_cplx.cplx_layout*xmtHelpTitle: Complexes Configuration Help
+Qmon*qmon_cplx.cplx_layout*xmtHelpTitle: @fBComplexes Configuration Help
 Qmon*qmon_cplx.cplx_layout*xmtHelp: \
 The definition of @fBcomplexes@fR provides all pertinent information concerning\n\
 the resource attributes a user may request for a Grid Engine job and for the interpretation\n\
@@ -714,78 +722,46 @@ of these parameters within the Grid Engine system.\n\
 To get general information about the @fBComplexes Concept@fR please refer to the\n\
 @fBGrid Engine Installation and Administration Guide and complex(5)@fR.\n\
 \n\
-The @fBComplex Configuration@fR dialogue provides the abilities to introduce so\n\
-called @fBUser Complexes@fR to the system and to remove or modify existing\n\
-complexes of the @fBGrid Engine system@fR.\n\
+The @fBComplex Configuration@fR dialogue provides the abilities to introduce\n\
+new resource attributes to the system and to remove or modify existing\n\
+ones.\n\
 \n\
-On the left side of the dialogue a list of all currently available complexes is\n\
-displayed. There should be at least the @fBhost@fR and the @fBqueue@fR\n\
-complexes which are brought into the system by the installation procedure.\n\
-The rest of the dialogue consists of a list of the attributes of the highlighted\n\
-complex and the action buttons on the right.\n\
+A set of predefined resource attributes describing queue and host characteristics are setup during installation.\n\
 \n\
-For the @fBqueue complex@fR only the @fBShortcut@fR, the @fBRelation@fR and the\n\
-@fBRequestable@fR columns may be changed. No complex attributes may be added or deleted.\n\
-The @fBhost complex@fR may be expanded by the @fBGrid Engine Administrator@fR in the course of\n\
-adding or modifying @fBuser configurable loadsensors@fR.\n\
-\n\
-By setting up @fBuser defined complexes@fR the Grid Engine administrator has the ability to\n\
-extend the set of requestable attributes in an arbitrary fashion. A user complex is\n\
-just a named collection of attributes and the according definition how these\n\
-attributes are to be handled by Grid Engine. These user defined complexes can be assigned to\n\
-a queue in order to group them or to attach special attributes to them.\n\
-\n\
-To add a new complex to the system, press @fBAdd@fR to pop up the empty complex editor\n\
-subdialogue.\n\
-In the input field named @fBName of Complex@fR the new complex name is filled in.\n\
-Now the complex attributes can be filled into the attribute matrix. It consists of\n\
-eight fields. The first field is the @fBattribute name@fR, the second field is a\n\
-@fBshortcut@fR for the attribute, the third field is the type of the attribute and tells\n\
-the system how to interpret the delivered values. Allowed types are @fBSTRING, CSTRING,\n\
-MEMORY, TIME, INT, BOOL, HOST and DOUBLE@fR. The fourth field specifies a pre-defined value\n\
-which only has an effect if it is not overwritten while determining a concrete value for the\n\
-attribute with respect to a queue, a host or the Grid Engine cluster. The value field can be\n\
-overwritten by:\n\
-- the queue configuration values of a referenced queue\n\
-- host specific and cluster related load values\n\
-- explicit  specification of a value via the complex_values parameter in the queue or host\n\
-  configuration\n\
-The fifth field specifies the @fBrelation@fR to use in comparing user requested values with\n\
+Complex attributes can be filled into the attribute matrix. It consists of\n\
+eight fields. The first field is the @fBName@fR of the attribute, the second field is a\n\
+@fBShortcut@fR for the attribute, the third field is the @fBType@fR of the attribute and tells\n\
+the system how to interpret the delivered values. Allowed types are @fBSTRING, CSTRING, RESTRING\n\
+MEMORY, TIME, INT, BOOL, HOST and DOUBLE@fR.\n\
+The fourth field specifies the @fBRelation@fR to use in comparing user requested values with\n\
 system delivered values.\n\
-The sixth field decides if a complex attribute is @fBrequestable@fR by the user, here\n\
-YES, NO and FORCED are allowed values. If FORCED is selected this atribute must be requested.\n\
-The seventh field is the @fBCONSUMABLE@fR flag. It can be set to YES and NO where YES is only meaningful\n\
+The fifth field decides if a complex attribute is @fBrequestable@fR by the user, here\n\
+YES, NO and FORCED are allowed values. If FORCED is selected this attribute must be requested.\n\
+The sixth field is the @fBConsumable@fR flag. It can be set to YES and NO where YES is only meaningful\n\
 for numeric attributes (INT, MEMORY, TIME, DOUBLE). When set to YES the consumption of the\n\
 resource can be managed by Grid Engine internal bookkeeping.\n\
-The eighth field defines a @fBDEFAULT@fR value. This is only meaningful for consumable complex\n\
+The seventh field defines a @fBDefault@fR value. This is only meaningful for consumable complex\n\
 attributes. Grid Engine assumes the resource amount denoted in the default parameter\n\
-implicitly to be consumed by jobs being dispatched to a host or queue managing the consumablei\n\
+implicitly to be consumed by jobs being dispatched to a host or queue managing the consumable\n\
 attribute. Jobs  explicitly requesting the attribute via a Resource Request override this\n\
 DEFAULT value.\n\
+The eighth field defines the @fBUrgency@fR. The urgency value allows influencing\n\
+job priorities on a per resource base.\n\
 \n\
 To enter a line to the matrix enter the information in the input fields and option menus\n\
 and press @fBAdd@fR to put it into the @fBAttributes matrix@fR. To change or delete a\n\
 line form the matrix select the line(s) with the mouse and press @fBDelete@fR or commit\n\
-the changed attribute line with @fBAdd@fR.\n\
+the changed attribute line with @fBAdd@fR or @fBModify@fR.\n\
 \n\
 To load attributes from a complex file push the @fBLoad@fR button, select the complex file\n\
 in the file selection box. This loads the values from the file into the matrix.\n\
 To save your current matrix settings to file use the @fBSave@fR button.\n\
 \n\
-After filling in the complexes they are stored permanently in the system by pressing the\n\
-@fBOk@fR button. If everything is alright the complex editor closes and the new complex\n\
-appears in the @fBComplexes@fR list and its corresponding attributes show up in the\n\
-@fBAttributesfR section.\n\
-\n\
-The @fBModify@fR button allows the change of an existing complex. It also opens the complex\n\
-editor subdialogue, which is used in the same manner as for adding a new complex.\n\
-\n\
-The @fBDelete@fR button deletes the chosen complex after asking the user for confirmation.\n\
-\n\
-The @fBDone@fR button leaves the dialogue.
+After filling in the attributes they are stored permanently in the system by pressing the\n\
+@fBOk@fR button. If everything is alright the complex editor closes and the new attributes are available for further use.\n\
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_host*xmtHelpTitle: Host Configuration Help
+Qmon*qmon_host*xmtHelpTitle: @fBHost Configuration Help
 Qmon*qmon_host*xmtHelp: \
 Grid Engine hosts are classified into four groups, depending on which Grid Engine daemons are running on\n\
 the system and how the hosts are registered at @fBsge_qmaster@fR.\n\
@@ -827,16 +803,15 @@ on the left and there corresponding configuration attributes in stacked attribut
 By selecting one of the execution hosts the corresponding attributes are displayed.\n\
 To add a new execution host press @fBAdd@fR this pops up the execution host configuration editor.\n\
 Here the hostname of the new execution host can be specified the @fBLoad Scaling@fR factors, the\n\
-@fBAccess Attributes@fR, the @fBConsumables/Fixed Attributes@fR can be changed. In SGEEE mode the\n\
-@fBUsage Scaling@fR can be adjusted.\n\
+@fBAccess Attributes@fR, the @fBConsumables/Fixed Attributes@fR and @fBUsage Scaling@fR can be changed.\n\
 \n\
 The configuration helper dialogue consists of a folder with the categories @fBScaling@fR for\n\
-@fBLoad Scaling, Usage Scaling@fR (SGEEE mode only)\n\
+@fBLoad Scaling, Usage Scaling@fR\n\
 settings, @fBConsumables/Fixed Attributes@fR for host based attachment of consumables and fixed attributes,\n\
-@fBUser Access@fR for host based accessability settings and in SGEEE mode additionally @fBProject Access@fR\n\
+@fBUser Access@fR for host based accessability settings and @fBProject Access@fR\n\
 for host based definition of project access.\n\
 The scaling can be used to weight special load or usage values for better comparability of distinct\n\
-cluster machine types. The other settings are mainly the counterpart too queue based configuration\n\
+cluster machine types. The other settings are mainly the counterpart to queue based configuration\n\
 settings on the host level. So it is possible for example to attach for all queues residing on a\n\
 special host the access permissions once on the host level.\n\
 \n\
@@ -847,17 +822,29 @@ button.\n\
 \n\
 With the @fBShutdown@fR button the corresponding @fBsge_execd@fR can be shut down.\n\
 \n\
+The @fBDone@fR button quits the dialogue.\n\n\
+@fBHost Groups@fR\n\
+\n\
+The @fBHost Group@fR tab shows already defined host groups and their\n\
+corresponding members.\n\
+@fBAdd@fR and @fBModify@fR allow the addition of a new host group or the\n\
+extension of an already existing one.\n\
+A helper dialogue is shown where the host group name can be defined (e.g.\n\
+@@myhostgroup) and the members, either host names or an existing hostgroup\n\
+can be entered.\n\
+The defined host groups can be used to access a set of hosts under\n\
+one name. This is especially useful when defining cluster queues.\n\
 The @fBDone@fR button quits the dialogue.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_cluster.cluster_layout*xmtHelpTitle: Cluster Configuration Help
+Qmon*qmon_cluster.cluster_layout*xmtHelpTitle: @fBCluster Configuration Help
 Qmon*qmon_cluster.cluster_layout*xmtHelp: \
 The @fBCluster Configuration@fR combines from two parts, the @fBglobal configuration@fR and\n\
 host specific @fBlocal configuration@fR.\n\
 It reflects any site dependencies and general parameters of the Grid Engine cluster.\n\
 The local configuration supersedes any parameters in the global configuration.\n\
 \n\
-The @fBsge_qconf(5)@fR manual gives a detailed information about the configuration entries available.\n\
+The @fBsge_conf(5)@fR manual gives a detailed information about the configuration entries available.\n\
 \n\
 The @fBCluster Configuration@fR dialogue displays a list of all configurations available in the system.\n\
 There is at least the @fBglobal configuration@fR available. @fBLocal configurations@fR are named by the\n\
@@ -868,7 +855,8 @@ local configuration overrides the corresponding entries of the global configurat
 \n\
 To modify a configuration select the corresponding configuration and press @fBModify@fR to bring the\n\
 @fBCluster Settings@fR dialogue up.\n\
-In the case of @fBglobal configuration@fR all fields are accessible. For @fBhost specific configuration@fR\n\
+In the case of @fBglobal configuration@fR all fields are accessible apart from\n\
+settings that are only changeable during system installation. For @fBhost specific configuration@fR\n\
 only parts of the dialogue can be edited. The dialogue consist of a folder with the sections\n\
 @fBGeneral Settings@fR and @fBAdvanced Settings@fR.\n\
 Pressing @fBOk@fR registers the changes with sge_qmaster. @fBCancel@fR dismisses any changes.\n\
@@ -879,16 +867,16 @@ and press the @fBDelete@fR button.\n\
 The @fBDone@fR button leaves the dialogue.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_manop*xmtHelpTitle: User Configuration Help
+Qmon*qmon_manop*xmtHelpTitle: @fBUser Configuration Help
 Qmon*qmon_manop*xmtHelp: \
 There are four user categories in Grid Engine, @fBManagers, Operators, Owners and Users@fR.\n\
 @fBManagers@fR have @fBfull capabilities@fR to manipulate Grid Engine. By default the @fBsuperuser@fR\n\
 or @fBadmin_user@fR of the master host and any machine hosting a queue have manager privileges.\n\
-In SGEEE mode the term @fBUser@fR is used additionally for registered users that can be manipulated in\n\
+The term @fBUser@fR is used additionally for registered users that can be manipulated in\n\
 the different @fBTicket Policy@fR dialogues.\n\
 \n\
 The @fBUser Configuration@fR dialogue comes up as a folder with the following categories:\n\
-@fBManager, Operator, Userset and User@fR (in SGEEE mode only).\n\
+@fBManager, Operator, Userset and User@fR.\n\
 \n\
 To add any additional users as managers select the @fBManager@fR folder page and enter a valid\n\
 username in the input field and press @fBReturn@fR or the @fBAdd@fR button. To remove any users\n\
@@ -900,8 +888,8 @@ username in the input field and press @fBReturn@fR or the @fBAdd@fR button. To r
 from the operator list select these users in the list and press the @fBDelete@fR button.\n\
 Manipulations of operators must be done on an @fBadministration host@fR.\n\
 \n\
-@fBUsersets@fR are either used as @fBAccess Lists@fR only in SGE mode or as both @fBAccess Lists\n\
-and Departments@fR in SGEEE mode. Two usersets have special meaning in SGEEE mode. @fBdeadlineusers@fR is\n\
+@fBUsersets@fR are used as @fBAccess Lists@fR and Departments@fR.\n\
+Two usersets have special meaning. @fBdeadlineusers@fR is\n\
 used to define those users who are allowed to submit @fBDeadline Jobs@fR. The @fBdefaultdepartment@fR\n\
 is attached to every user who is not a member of a administrator defined department. Users can only\n\
 be members of one department. To add a new userset, press @fBAdd@fR. In the helper dialogue choose\n\
@@ -918,11 +906,11 @@ shall be changed, select those users and press the @fBDefault Project@fR title b
 a list of configured projects. Pressing @fBOk@fR in the helper changes the project entry for the\n\
 selected users.\n\
 \n\
-The @fBDone@fR button leaves the dialogue. In SGEEE mode the @fBTickets@fR button links to the\n\
-@fBTicket Overview@fR dialogue.
+The @fBDone@fR button leaves the dialogue. The @fBTickets@fR button links to the\n\
+@fBPolicy Configuration@fR dialogue.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_pe.pe_layout*xmtHelpTitle: Parallel Environment Configuration Help
+Qmon*qmon_pe.pe_layout*xmtHelpTitle: @fBParallel Environment Configuration Help
 Qmon*qmon_pe.pe_layout*xmtHelp: \
 A parallel environment (PE) is a software package designed for concurrent computing in networked\n\
 environments or parallel platforms. Examples for two of the most common message passing environments\n\
@@ -939,14 +927,13 @@ The @fBPE modification dialogue@fR pops up having either a template PE entry or 
 The @fBName@fR input field either displays the name of the PE to modify or has to be entered as name for\n\
 the new PE. The @fBSlots@fR spinbox allows the input of the number of job slots in total which may be\n\
 occupied by all PE jobs running concurrently.\n\
-The @fBQueue List@fR section shows the queues which can be used by the PE. Modifying these resource is\n\
-done by clicking on the lists icon to the right. In the subdialogue popped up the attached queues can be\n\
-changed. The same procedure is taken to add or change the @fBUser Lists@fR and the @fBXuser Lists@fR which\n\
-are allowed/denied to access the PE.\n\
-In the @fBStart Proc Args and Stop Proc Args@fR the precise invocation sequence of the PE start-up and\n\
-stop procedures is entered.\n\
-The @fBAllocation Rule@fR entry defines the number of parallel processes to be allocated on each machine\n\
-which is used by a PE.\n\
+To add or change the @fBUser Lists@fR and the @fBXuser Lists@fR which\n\
+allow/deny access to the PE can be selected by pressing the button next to\n\
+the lists showing already attached @fBUser Lists@fR and @fBXuser Lists@fR.\n\
+In the @fBStart Proc Args and Stop Proc Args@fR the precise invocation sequence\n\
+of the PE start-up and stop procedures is entered.\n\
+Further information on the use of @fBAllocation Rule@fR, @fBUrgency Slots@fR,\n\
+@fBControl Slaves@fR and @fBJob is first Task@fR can be found in @fBsge_pe(5)@fR.\n\n\
 By pressing the @fBOk@fR button the added/modified PE configuration is checked and added to the Grid Engine\n\
 system. The @fBCancel@fR button discards any changes.\n\
 \n\
@@ -954,7 +941,7 @@ To delete a PE object, select it in the @fBPE List@fR and press @fBDelete@fR.\n\
 The @fBDone@fR button quits the dialogue.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_ckpt.ckpt_layout*xmtHelpTitle: Checkpointing Configuration Help
+Qmon*qmon_ckpt.ckpt_layout*xmtHelpTitle: @fBCheckpointing Configuration Help
 Qmon*qmon_ckpt.ckpt_layout*xmtHelp: \
 @fBGrid Engine@fR provides various levels of checkpointing support. The checkpointing\n\
 environment described here is a means to configure the different types of  checkpointing\n\
@@ -975,9 +962,6 @@ The @fBName@fR input field either displays the name of the checkpoint object to 
 or has to be entered as name for the new checkpoint object.\n\
 The @fBInterface@fR option menu allows the selection of a checkpointing interface.\n\
 Currently the types HIBERNATOR and USERDEFINED are valid.\n\
-The @fBQueue List@fR section shows the queues which can be used by the checkpoint object.\n\
-Modifying these resource is done by clicking on the lists icon to the right. In the subdialogue\n\
-popped up the attached queues can be changed.\n\
 The @fBCheckpoint Command@fR is a command-line type command string to be executed\n\
 by @fBGrid Engine@fR in order to initiate a checkpoint.\n\
 The @fBMigration Command@fR is a command-line type command string to be executed\n\
@@ -1000,25 +984,28 @@ To delete a checkpoint object, select it in the @fBCheckpoint Objects@fR list an
 The @fBDone@fR button quits the dialogue.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*sconf_shell*xmtHelpTitle: Scheduler Configuration Help
+Qmon*sconf_shell*xmtHelpTitle: @fBScheduler Configuration Help
 Qmon*sconf_shell*xmtHelp: \
 The @fBScheduler Configuration@fR dialogue permitts the setting of scheduler specific\n\
 parameters. It is subdivided in @fBGeneral Parameters and Load Adjustment@fR.\n\
+A complete description of the different scheduler relevant settings can be\n\
+found in @fBsched_conf (5)@fR.\n\
 \n\
-The @fBAlgorithm@fR field allows the setting of a different scheduling algorithm.\n\
+The @fBAlgorithm@fR allows for the selection  of  alternative  scheduling  algorithms.\n\
 The @fBSchedule Interval@fR specifies how often the scheduler is triggered.\n\
-In SGEEE mode the @fBSGEEE Schedule Interval@fR defines how often the SGEEE scheduler is activated.\n\
-The @fBMax. Jobs/User and Max. Jobs/Group@fR specifies how many jobs per user/group\n\
+The @fBReprioritize Interval@fR specifies the interval jobs are reprioritized\n\
+on the exec host based on the current ticket amount of running jobs.\n\
+\n\
+@fBDefault Duration@fR is assumed as runtime for jobs that have neither -l h_rt=\n\
+nor -l s_rt=... specified. In contrast to a time limit this setting is not\n\
+enforced.\n\
+The @fBMax. Jobs/User@fR specifies how many jobs per user\n\
 should be scheduled. If the value is zero no restrictions apply.\n\
 The queues can be sorted according to the @fBLoad Formula@fR when @fBSort by Load@fR is\n\
 selected. If @fBSort by sequence number@fR is selected the queues are sorted according to\n\
 the sequence number entered in the @fBGeneral@fR section of the @fBQueue Configuration@fR\n\
 dialogue.\n\
-The @fBEqual Share Sort@fR enables the scheduler to equalize the jobs submitted for all\n\
-users to avoid that one user can allocate all the system resources uniquely. This policy is\n\
-only available in SGE mode. No suspend of already existing jobs takes place to achieve an\n\
-equal share for the different users.\n\
-The @fBJob Scheduling Information@fB part allows enabling/disabling of job scheduling information\n\
+The @fBJob Scheduling Information@fR part allows enabling/disabling of job scheduling information\n\
 for all or part of the jobs. The inputfield serves to enter a job range as min[-max][,...] to\n\
 define for which jobs scheduling information is requested.\n\
 The @fBLoad Formula@fR is the formula of load parameters which should be used by the\n\
@@ -1026,12 +1013,18 @@ The @fBLoad Formula@fR is the formula of load parameters which should be used by
 Because the load reports are delayed @fBLoad Adjustment@fR is the value which will be added to\n\
 the load for correcting this delay. The @fBLoad Adjustment Decay Time@fR specifies the time\n\
 during which the load correction is decreased to 0.\n\
-\n\
-After having changed the scheduler configuration these changes are made permanent by pressing\n\
-@fBOk@fR. @fBCancel@fR dismisses any changes and quits the dialogue.
+When @fBFlush Submit Seconds@fR is set to 1 or larger the scheduler will be\n\
+triggered x seconds after a job was submitted to the system. Otherwise in the\n\scheduling interval.\n\
+When @fBFlush Finish Seconds@fR is set to 1 or larger the scheduler will be triggered\n\
+x seconds after a job has finished. Setting this parameter to 0 disables the\n\
+flush after a job has finished.\n\
+@fBMaximum Reservation@fR defines the maximum number of reservations scheduled\n\
+within a schedule  interval.\n\
+After having changed the scheduler configuration these changes are made permanent by pressing @fBOk@fR.\n\
+@fBCancel@fR dismisses any changes and quits the dialogue.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_cal*xmtHelpTitle: Calendar Configuration Help
+Qmon*qmon_cal*xmtHelpTitle: @fBCalendar Configuration Help
 Qmon*qmon_cal*xmtHelp: \
 The @fBCalendar Configuration@fR dialogue allows the configuration of Grid Engine calendars.\n\
 They are used to restrict the accessability of Grid Engine queues to certain dates and times.\n\
@@ -1044,31 +1037,41 @@ is shown in the @fBConfiguration@fR area.\n\
 @fBDone@fR quits the dialogue.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_tov.tov_layout*xmtHelpTitle: Ticket Overview Help
+Qmon*qmon_tov.tov_layout*xmtHelpTitle: @fBPolicy Configuration Help
 Qmon*qmon_tov.tov_layout*xmtHelp: \
-The @fBTicket Overview@fR dialogue allows the setting and manipulation of all\n\
-relevant tickets and shares of the Grid Engine system.\n\
-The main dialogue displays on the left side the currently active tickets and\n\
-allows to change the number of @fBTotal Share Tree Tickets, Total Functional Tickets@fR\n\
-and the number of @fBMaximum Deadline Initiation Tickets@fR.\n\
+The @fBPolicy Configuration@fR dialogue allows the setting and manipulation of all\n\
+relevant policy related settings as urgency, tickets and shares of the Grid Engine system.\n\
+For more detailed information consult the man page @fBsched_conf(5)@fR.\n\n\
+The main dialogue consists of four main sections.\n\
+The @fBPolicy Importance Factor@fR section allows to adjust the importance of\n\different scheduling policies compared to each other.\n\
+The @fBUrgency Policy@fR part allows the specification of @fBWeight Deadline@fR\n\
+and @fBWeight Waiting Time@fR.\n\
+The next section defines @fBTicket Policy@fR related settings.\n\
+The number of @fBTotal Share Tree Tickets and Total Functional Tickets@fR can\n\
+be defined on the right. The actual amount is visible on the left.\n\
 If changes have been made in the @fBEdit Tickets@fR part, they are made permanent\n\
 by pressing the @fBApply@fR button.\n\
 \n\
-From the @fBTicket Overview@fR the different Grid Engine policy dialogues can be reached.\n\
-It is possible to influence four different policies to change the overall scheduling behavior\n\
-of the cluster.\n\
-The four policies are @fBShare-based Policy, Functional Policy, Initiation Deadline Policy\n\
+@fBShare Override Tickets@fR and @fBShare Functional Tickets@fR toggle if shares\n\
+or functional tickets are distributed among jobs of a specific object or each\n\
+job gets the full amount of shares or functional tickets.\n\
+@fBReport Pending Job Tickets@fR enables the reporting of pending job tickets\n\
+to sge_qmaster. This influences the sort order of jobs in qstat and qmon.\n\
+@fBMaximum Functional Jobs@fR is the maximum number of pending jobs to schedule\n\
+in the  functional policy. The default value is 200.\n\
+@fBMaximum Pending Tasks Per Job@fR is the maximum number of subtasks per pending\n\
+array job to schedule. This parameter exists in order to reduce scheduling\n\
+overhead. The default value is 50.\n\
+@fBTicket Policy Hierarchy@fR defines the priority of different ticket based\n\
+policies if they are combined.\n\
+From the @fBTicket Policy@fR section the different ticket policy subdialogues can be reached.\n\
+The four ticket based policies are @fBShare-based Policy, Functional Policy, Initiation Deadline Policy\n\
 and Override Policy@fR.\n\
 Share-based and Functional Policy allow the long term adjustment of job scheduling\n\
 and resource management.\n\
 Initiation Deadline Policy and Override Policy are used to overrule the long term\n\
 policies under certain circumstances.\n\
 The ratio between the number of 'Total Share Tree and Total Functional Tickets' and the\n\
-number of 'Maximum Deadline Initiation Tickets' is important for the impact that a\n\
-deadline job has on the execution of other running jobs. If the number of 'Maximum Deadline\n\
-Initiation Tickets' is very high compared to the number of 'Total Share Tree and Total\n\
-Functional Tickets' deadline jobs get almost all the available resources as they approach\n\
-their deadline.\n\
 More details concerning the subdialogues are explained there. The different policies\n\
 are accessed via @fBShare Tree Policy, Functional Policy and Override Policy@fR.\n\
 In addition it is possible to go to the @fBUser Configuration@fR dialogue to\n\
@@ -1081,7 +1084,7 @@ With @fBDone@fR one quits the @fBTicket Overview@fR dialogue.
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_project.project_layout*xmtHelpTitle: Project Configuration Help
+Qmon*qmon_project.project_layout*xmtHelpTitle: @fBProject Configuration Help
 Qmon*qmon_project.project_layout*xmtHelp: \
 The @fBProject Configuration@fR dialogue allows the definition and manipulation\n\
 of @fBGrid Engine@fR projects. A project can be attached to a Grid Engine job and enforces\n\
@@ -1108,7 +1111,7 @@ the @fBFunctional Policy@fR and @fBOverride Policy@fR subdialogues from the\n\
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*browser_shell.browser_layout*xmtHelpTitle: Qmon Browser Help
+Qmon*browser_shell.browser_layout*xmtHelpTitle: @fBQmon Browser Help
 Qmon*browser_shell.browser_layout*xmtHelp: \
 The @fBObject Browser@fR can be used to look at additional information for the Grid Engine objects\n\
 @fBqueue and job@fR, to display the @fBstdout/stderr@fR output of qmon and to view @fBqmon messages@fR\n\
@@ -1121,7 +1124,7 @@ The @fBDone@fR button closes the @fBObject Browser@fR.
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_sharetree.sharetree*xmtHelpTitle: Share Tree Policy Help
+Qmon*qmon_sharetree.sharetree*xmtHelpTitle: @fBShare Tree Policy Help
 Qmon*qmon_sharetree.sharetree*xmtHelp: \
 The @fBShare Tree Policy@fR allows the Grid Engine manager to specify how system\n\
 resources should be shared among Grid Engine users and projects over a sliding\n\
@@ -1200,6 +1203,9 @@ specification.\n\
 The Share Tree Policy Parameters portion of the dialogue is displayed by pressing the red arrow\n\
 button at the bottom of the dialogue. The @fBCPU@fR, @fBMEM@fR, and @fBI/O@fR slider bars determine\n\
 the composition of the @fBCombined Usage@fR displayed for each node in the share tree.\n\
+The @fBHalflife Decay List@fR allows to configure different decay rates for the\n\
+finished_jobs usage types, which is used in the pending job ticket calculation\n\
+to account for jobs which have just ended.\n\
 The @fBHalflife@fR parameter specifies how fast to decay usage in the share tree. Usage will be\n\
 decayed at a rate in which half the usage will be gone after the @fBHalflife@fR period of time.\n\
 This defines the sliding window of time over which usage is tracked for the share tree.\n\
@@ -1207,7 +1213,7 @@ The @fBCompensation Factor@fR limits the amount of compensation that Grid Engine
 user in order to reach their targeted resource share.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*fticket_layout*xmtHelpTitle: Functional Policy Help
+Qmon*fticket_layout*xmtHelpTitle: @fBFunctional Policy Help
 Qmon*fticket_layout*xmtHelp: \
 The @fBFunctional Policy@fR dialogue allows the Grid Engine manager to specify how system\n\
 resources should be shared among Grid Engine @fBUsers, Departments, Projects, Job and Jobclass@fR,\n\
@@ -1226,7 +1232,7 @@ The @fBTwisted Red Arrow@fR links to the corresponding object configuration dial
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*oticket_layout*xmtHelpTitle: Override Policy Help
+Qmon*oticket_layout*xmtHelpTitle: @fBOverride Policy Help
 Qmon*oticket_layout*xmtHelp: \
 The @fBOverride Policy@fR dialogue allows the Grid Engine manager to specify how shorttrem system\n\
 resources should be overriden among Grid Engine @fBUsers, Departments, Projects, Job and Jobclass@fR,\n\
@@ -1240,4 +1246,4 @@ To register the changes with @fBsge_qmaster@fR press @fBApply@fR. The message ar
 confirms either @fBSuccess or Failure@fR.\n\
 @fBDone@fR quits the dialogue.\n\
 The @fBTwisted Red Arrow@fR links to the corresponding object configuration dialogue.
-
+"

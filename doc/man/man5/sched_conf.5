@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/04/19 10:52:09 $     Revision: $Revision: 1.16 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/05/25 16:42:34 $     Revision: $Revision: 1.17 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2004/04/19 10:52:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2004/05/25 16:42:34 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -206,14 +206,6 @@ useful if you want to define a fixed order in which queues are to be filled
 (e.g.   the cheapest resource first).
 .PP
 The default for this parameter is \fBload\fP.
-.\"
-.SS "\fBsgeee_schedule_interval\fP"
-The time period between job priority adjustments by dynamic scheduler. 
-Valid values are specified of type time as specified in
-.M queue_conf 5 .
-.PP
-When this parameter is set to 0:0:0 it disables the submition of running job tickets to
-the qmaster and the job priority adjustments on the clients.
 .\"
 .SS "\fBhalftime\fP"
 When executing under a share based policy, the scheduler "ages" (i.e. decreases)

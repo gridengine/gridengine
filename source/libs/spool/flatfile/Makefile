@@ -102,7 +102,7 @@ flatfile_scanner: $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.l $(SPOOLFLIB_D
 		$(LEX) $(LEXFLAGS) -i8 -Pspool_ -o$(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.c $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.l
 
 sge_spooling_flatfile_scanner.o: $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.c $(SPOOLFLIB_DIR)/sge_spooling_flatfile.h
-		$(CC) $(CFLAGS) $(GCC_NOERR_CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.c
+		$(CC) $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.c
 
 #---------------------------------------------------------------------
 # test programs

@@ -70,7 +70,7 @@ SCHEDD_ADD_LIBS = -lsched -lmir -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLI
 SCHEDD_LIB_DEPENDS = $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) \
                      $(SGEOBJLIB) $(SGEOBJDLIB) \
                      $(SECLIBS) $(KRBLIBS) \
-                     $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(ZLIB) $(TPLIB)
+                     $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(TPLIB)
 
 SMON_OBJS = $(SMON_SRC:.c=.o)
 

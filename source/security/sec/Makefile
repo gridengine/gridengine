@@ -30,7 +30,7 @@
 ##########################################################################
 #___INFO__MARK_END__
 SEC_SDIR = ../security/sec
-SECLIBOBJS = $(SECLIB_OBJS)
+SECLIB_OBJS = $(SECLIBOBJS)
 
 #---------------------------------------------------------------------
 include $(SEC_SDIR)/sec_dependencies
@@ -51,16 +51,16 @@ sec_messages:
 	done
 
 sec_clean:
-	rm -f libsec.a $(SECLIBOBJS)
+	rm -f libsec.a $(SECLIB_OBJS)
 
-libsec.a: $(SECLIBOBJS)
-	$(AR) $(ARFLAGS) libsec.a $(SECLIBOBJS)
+libsec.a: $(SECLIB_OBJS)
+	$(AR) $(ARFLAGS) libsec.a $(SECLIB_OBJS)
 	$(RANLIB) libsec.a
 
-libsec$(SHAREDEXT):  $(SECLIBOBJS) $(GDILIB)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libsec$(SHAREDEXT) $(SECLIBOBJS) -lgdi
+libsec$(SHAREDEXT):  $(SECLIB_OBJS) $(GDILIB)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libsec$(SHAREDEXT) $(SECLIB_OBJS) -lgdi
 
 #---------------------------------------------------------------------------
 
 sec_lib.o:	$(SEC_SDIR)/sec_lib.c
-	$(CC) $(CFLAGS) $(GCC_NOSP) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(SEC_SDIR)/sec_lib.c
+	$(CC) $(CFLAGS) $(NOERR_PROTO) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(SEC_SDIR)/sec_lib.c

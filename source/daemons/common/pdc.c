@@ -2098,9 +2098,9 @@ int psStartCollector(void)
 #endif   
 #elif defined(ALPHA)
    {
+#ifdef PDC_STANDALONE
       /* Number of CPUs */
       ncpus = sge_nprocs();
-#ifdef PDC_STANDALONE   
       if (getsysinfo(GSI_PHYSMEM, (caddr_t)&physical_memory,sizeof(int),0,NULL)==-1) {
          sprintf(ps_errstr, MSG_SGE_GETSYSINFO_GSI_PHYSMEM_FAILEDX_S ,
                  strerror(errno));

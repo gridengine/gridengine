@@ -44,7 +44,7 @@ COSHEPHERD_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lsgeobj -lsgeobjd -lcul
 
 COSHEPHERD_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) \
 	                      $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) \
-                         $(UTILIB) $(LCKLIB) $(RMONLIB) $(ZLIB)
+                         $(UTILIB) $(LCKLIB) $(RMONLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

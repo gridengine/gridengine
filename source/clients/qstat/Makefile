@@ -57,7 +57,7 @@ QSTAT_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lc
 QSTAT_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                     $(SECLIBS) $(KRBLIBS) \
 	                 $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) \
-                         $(ZLIB) $(TPLIB)
+                         $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

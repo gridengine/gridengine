@@ -35,26 +35,15 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <strings.h>
 #include <string.h>
+#include <strings.h>
 #include <limits.h>
-
-#include <netinet/tcp.h> 
-#include <netdb.h>
-#ifdef LINUX
-#include <rpc/types.h>
-#endif
 #include <sys/types.h>
 #include <sys/socket.h>
-#if defined(AIX43) || defined(sgi)
-#include <sys/param.h>
-#endif
-
 #include <netinet/in.h>
-#include <arpa/inet.h>
+#include <netdb.h>
 
 #include "sge_hostname.h"
-
 #include "cl_commlib.h"
 #include "cl_util.h"
 #include "cl_data_types.h"
@@ -63,7 +52,6 @@
 #include "cl_host_list.h"
 #include "cl_host_alias_list.h"
 #include "cl_communication.h"
-
 
 static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent );
 static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent );

@@ -97,7 +97,7 @@ QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(EVMLIB) $(GDILIB) $(SGEOBJLIB) \
                       $(SPOOLING_DEPS) $(SPOOLLIB) $(SGEOBJDLIB) \
                       $(SECLIBS) $(KRBLIBS) \
                       $(CULLLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) \
-                      $(ZLIB) $(TPLIB)
+                      $(TPLIB)
 
 QMASTER_TEST_OBJS = \
               test_sge_qmaster_timed_event.o

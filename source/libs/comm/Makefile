@@ -34,9 +34,8 @@
 #___INFO__MARK_END__
 
 ##########################################################################
-SHELL = /bin/sh
-RM    = rm -f 
-STRIP = strip
+SHELL  = /bin/sh
+RM     = rm -f 
 DEPEND = $(SOURCE)/3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(CFLAGS)
 ##########################################################################
 

@@ -32,9 +32,8 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
-SHELL = /bin/sh
-RM    = rm -f 
-STRIP = strip
+SHELL  = /bin/sh
+RM     = rm -f 
 DEPEND = ../3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(DEPEND_FLAGS)
 LEX    = flex
 ###############################################################################
@@ -51,13 +50,12 @@ messages: common_messages libs_messages clients_messages daemons_messages utilbi
 # include sub Makefiles
 ###############################################################################
 include  $(SDIR)/common/Makefile
-include  $(SDIR)/libs/Makefile
-include  $(SDIR)/security/coshepherd/Makefile
 include  $(SDIR)/security/krb/Makefile
 include  $(SDIR)/security/sec/Makefile
 include  $(SDIR)/security/gss/Makefile
+include  $(SDIR)/libs/Makefile
+include  $(SDIR)/security/coshepherd/Makefile
 include  $(SDIR)/experimental/perlgui/Makefile
 include  $(SDIR)/daemons/Makefile
 include  $(SDIR)/clients/Makefile
 include  $(SDIR)/utilbin/Makefile
-

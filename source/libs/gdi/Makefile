@@ -123,7 +123,7 @@ gdi_checkpermissions.o: 	$(GDILIB_DIR)/gdi_checkpermissions.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_checkpermissions.c
 
 sge_security.o: $(GDILIB_DIR)/sge_security.c 
-		$(CC) $(CFLAGS) $(GCC_NOERR_CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_security.c
+		$(CC) $(CFLAGS) $(NOERR_CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_security.c
 
 setup.o: $(GDILIB_DIR)/setup.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/setup.c

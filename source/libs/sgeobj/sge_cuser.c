@@ -211,5 +211,4 @@ cuser_list_map_user(const lList *this_list, lList **answer_list,
    DEXIT;
    return ret;
 }
-
 #endif

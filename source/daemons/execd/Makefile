@@ -81,7 +81,7 @@ EXECD_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd -lsched $(SECLIB) $(KRBLIB) -lcull -lc
 EXECD_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                     $(SECLIBS) $(KRBLIBS) \
                     $(CULLLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) \
-                    $(ZLIB) $(TPLIB)
+                    $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

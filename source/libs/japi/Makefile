@@ -39,11 +39,12 @@ JAPILIB 	     = libjapi$(LIBEXT)
 JAPILIB_SRC   = japi.c
 JAPILIB_OBJS  = $(JAPILIB_SRC:.c=.o)
 
-DRMAALIB 	  = libdrmaa$(SHAREDEXT)
+DRMAALIB      = libdrmaa$(SHAREDEXT)
 DRMAALIB_SRC  = drmaa.c 
-DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o) $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS) $(EVCLIB) \
-                   $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) \
-                   $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) 
+DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o) $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS) $(EVCLIB_OBJS) \
+                $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) \
+                $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(COMMLIB_OBJS) \
+                $(COMMLISTSLIB_OBJS) $(UTILIB_DRMAA_OBJS) $(LCKLIB_OBJS) 
 
 JAPI_ALL 	  = test_drmaa japilib drmaalib example
 

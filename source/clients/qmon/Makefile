@@ -34,7 +34,6 @@
 #___INFO__MARK_END__
 SHELL = /bin/sh
 RM    = rm -f 
-STRIP = strip
 DEPEND = ../3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(DEPEND_FLAGS)
 
 all: qmon
@@ -125,7 +124,7 @@ QMON_LIB_DEPENDS = $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
                    $(XLTREELIB) $(XTABLIB) $(SPOOLCLIB) $(SPOOLLIB) \
                    $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) \
                    $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) \
-                   $(RMONLIB) $(COMMLIB) $(UTILIB) $(ZLIB) $(TPLIB)
+                   $(RMONLIB) $(COMMLIB) $(UTILIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

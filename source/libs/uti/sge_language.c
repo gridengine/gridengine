@@ -34,22 +34,16 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
-
-#ifdef SGE_MT
 #include <pthread.h>
-#include "sge_mtutil.h"
-#endif
 
+#include "sge_mtutil.h"
 #include "basis_types.h"
 #include "sge_language.h"
 #include "sgermon.h"
 #include "sge_prog.h"
 #include "sge_htable.h"
 
-
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
-
-#ifdef SGE_MT
 
 /* MT-NOTE: language_mutex guards all language module function calls */
 static pthread_mutex_t language_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -60,12 +54,6 @@ static pthread_mutex_t message_id_view_mutex = PTHREAD_MUTEX_INITIALIZER;
 #   define LANGUAGE_UNLOCK()          sge_mutex_unlock("language_mutex", SGE_FUNC, __LINE__, &language_mutex)
 #   define MESSAGE_ID_VIEW_LOCK()     sge_mutex_lock("message_id_view_mutex", SGE_FUNC, __LINE__, &message_id_view_mutex)
 #   define MESSAGE_ID_VIEW_UNLOCK()   sge_mutex_unlock("message_id_view_mutex", SGE_FUNC, __LINE__, &message_id_view_mutex)
-#else
-#   define LANGUAGE_LOCK()            
-#   define LANGUAGE_UNLOCK()         
-#   define MESSAGE_ID_VIEW_LOCK()   
-#   define MESSAGE_ID_VIEW_UNLOCK()
-#endif
 
 /*
  *  environment variable "SGE_ENABLE_MSG_ID"
@@ -798,5 +786,4 @@ const char *sge_gettext__(char *x)
    DEXIT;
    return z;
 }
-  
 #endif

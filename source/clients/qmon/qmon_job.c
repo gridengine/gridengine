@@ -1156,7 +1156,6 @@ XtPointer cld, cad;
             }
             else {
                lList *range_list = NULL;
-/*                lList *jat_list = NULL; */
                lListElem *range = NULL;
                u_long32 start=1, end=1, step=1;
                /* reset all tasks */

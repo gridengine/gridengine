@@ -1,3 +1,7 @@
+AH-2004-04-15-0: Bugfix:    Fix problem with counter used to track number of JAPI 
+                            threads that rely upon JAPI background thread service.
+                 Review:    HP
+
 JG-2004-04-15-0: Enhancem.: Allow the admin to choose the spooling method 
                             (berkeleydb or classic) at installation time, if SGE
                             was build with dynamic spooling 

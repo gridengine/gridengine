@@ -1567,7 +1567,6 @@ int japi_run_job(dstring *job_id, lListElem *sge_job_template, dstring *diag)
 
    /* per thread initialization */
    if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
-      japi_dec_threads(SGE_FUNC);
       /* diag written by japi_init_mt() */
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;

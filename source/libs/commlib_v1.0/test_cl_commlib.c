@@ -96,6 +96,8 @@ extern int main(int argc, char** argv)
   printf("commlib setup ...\n");
   cl_com_setup_commlib(CL_ONE_THREAD, atoi(argv[1]),   NULL );
 
+  cl_com_set_alias_file("./alias_file");
+
   cl_com_set_status_func(my_application_status); 
 
   handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 5000, 5001, "server", 1, 2, 0 );

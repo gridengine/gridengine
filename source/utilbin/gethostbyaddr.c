@@ -36,6 +36,8 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "basis_types.h"
 #include "msg_utilbin.h"
 #include "sge_hostname.h"
@@ -44,42 +46,75 @@
 
 void usage(void)
 {
-  fprintf(stderr, "%s gethostbyaddr x.x.x.x\n", MSG_UTILBIN_USAGE );
+  fprintf(stderr, "%s gethostbyaddr [-name|-aname|-all]x.x.x.x\n", MSG_UTILBIN_USAGE );
   exit(1);
 }
 
-#ifdef ENABLE_NGC
 int main(int argc, char *argv[])
 {
   struct hostent *he = NULL;
   char* resolved_name = NULL;
   int retval = CL_RETVAL_OK;
+  char* ip_string = NULL;
   char** tp = NULL;
   char** tp2 = NULL;
+  int name_only = 0;
+  int sge_aliasing = 0;
+  int all_option = 0;
+
 #if defined(CRAY)  
   struct sockaddr_in  addr;
 #else
   struct in_addr addr;
 #endif
 
-  if (argc != 2) {
+  if (argc < 2) {
     usage();
   }
 
+  ip_string = argv[1];
+
+  if (!strcmp(argv[1], "-name")) {
+     if (argc != 3) {
+        usage(); 
+     }
+     name_only = 1;
+     ip_string = argv[2];
+  }   
+  if (!strcmp(argv[1], "-aname")) {
+     if (argc != 3) {
+        usage(); 
+     }
+     name_only = 1;
+     sge_aliasing = 1;
+     ip_string = argv[2];
+  }   
+  if (!strcmp(argv[1], "-all")) {
+     if (argc != 3) {
+        usage(); 
+     }
+     name_only = 0;
+     sge_aliasing = 1;
+     all_option = 1;
+     ip_string = argv[2];
+  }
+
+  
   retval = cl_com_setup_commlib(CL_NO_THREAD ,CL_LOG_OFF, NULL );
   if (retval != CL_RETVAL_OK) {
      fprintf(stderr,"%s\n",cl_get_error_text(retval));
      exit(1);
   }
 
-  /* cl_com_set_alias_file(sge_get_alias_path()); */
-  /* cl_com_append_host_alias("",""); */
+  if (sge_aliasing ) {
+     cl_com_set_alias_file(sge_get_alias_path());
+  }
   
 
 #if defined(CRAY)
-  addr.sin_addr.s_addr = inet_addr(argv[1]);
+  addr.sin_addr.s_addr = inet_addr(ip_string);
 #else
-  addr.s_addr = inet_addr(argv[1]);
+  addr.s_addr = inet_addr(ip_string);
 #endif
 
   retval = cl_com_cached_gethostbyaddr(&addr, &resolved_name, &he);
@@ -93,29 +128,45 @@ int main(int argc, char *argv[])
      fprintf(stderr,"%s\n","could not get hostent struct");
   }
 
-  if (he != NULL) {
-     printf(MSG_SYSTEM_HOSTNAMEIS_S,he->h_name);
-  }
-
-  if (resolved_name != NULL) {
-     printf("SGE name: %s\n",resolved_name);
-     free(resolved_name);
+  if (name_only) {
+     if (sge_aliasing) {
+        if (resolved_name != NULL) {
+           printf("%s\n",resolved_name);
+        } else {
+           fprintf(stderr,"%s\n","unexpected error");
+           exit(1);
+        }
+     } else {
+        if (he != NULL) {
+           printf("%s\n",he->h_name);
+        } else {
+           fprintf(stderr,"%s\n","could not get hostent struct");
+           exit(1);
+        }
+     }
   } else {
-     printf("SGE name: %s\n","unexpected error");
-  }
-
-  if (he != NULL) {
-     printf(MSG_SYSTEM_ALIASES );
-
-     for (tp = he->h_aliases; *tp; tp++)
-       printf("%s ", *tp);
-     printf("\n");
-  
-     printf(MSG_SYSTEM_ADDRESSES );
-
-     for (tp2 = he->h_addr_list; *tp2; tp2++)
-        printf("%s ", inet_ntoa(* (struct in_addr *) *tp2));  /* inet_ntoa() is not MT save */
-     printf("\n");    
+     if (he != NULL) {
+        printf(MSG_SYSTEM_HOSTNAMEIS_S,he->h_name);
+     }
+   
+     if (resolved_name != NULL && all_option) {
+        printf("SGE name: %s\n",resolved_name);
+        free(resolved_name);
+     } 
+   
+     if (he != NULL) {
+        printf(MSG_SYSTEM_ALIASES );
+   
+        for (tp = he->h_aliases; *tp; tp++)
+          printf("%s ", *tp);
+        printf("\n");
+     
+        printf(MSG_SYSTEM_ADDRESSES );
+   
+        for (tp2 = he->h_addr_list; *tp2; tp2++)
+           printf("%s ", inet_ntoa(* (struct in_addr *) *tp2));  /* inet_ntoa() is not MT save */
+        printf("\n");    
+     }
   }
   sge_free_hostent(&he);
 
@@ -126,50 +177,3 @@ int main(int argc, char *argv[])
   }
   return 0;
 }
-#else
-int main(int argc, char *argv[])
-{
-  struct hostent *he;
-
-#if defined(CRAY)  
-  struct sockaddr_in  addr;
-#else
-  struct in_addr addr;
-#endif
-    
-  char **tp,**tp2;
-
-
-  if (argc != 2)
-    usage();
-
-#if defined(CRAY)
-  addr.sin_addr.s_addr = inet_addr(argv[1]);
-  he = gethostbyaddr((char *)&(addr.sin_addr), sizeof(struct in_addr), AF_INET);
-#else
-  addr.s_addr = inet_addr(argv[1]);
-  he = gethostbyaddr((char *) &addr, 4, AF_INET);
-#endif
-
-  if (!he) {
-     perror(MSG_SYSTEM_GETHOSTBYADDRFAILED );
-     exit(1);
-  };
-
-  printf(MSG_SYSTEM_HOSTNAMEIS_S,he->h_name);
-  printf(MSG_SYSTEM_ALIASES );
-
-  for (tp = he->h_aliases; *tp; tp++)
-    printf("%s ", *tp);
-  printf("\n");
-  
-  printf(MSG_SYSTEM_ADDRESSES );
-
-  for (tp2 = he->h_addr_list; *tp2; tp2++)
-     printf("%s ", inet_ntoa(* (struct in_addr *) *tp2));  /* inet_ntoa() is not MT save */
-  printf("\n");    
-
-  exit(0);
-  return 0;
-}
-#endif

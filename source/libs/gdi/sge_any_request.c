@@ -156,7 +156,8 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    if (ret_val != CL_RETVAL_OK) {
       ERROR((SGE_EVENT, "cl_com_setup_commlib(): %s\n",cl_get_error_text(ret_val)));
    }
-   
+   cl_com_set_alias_file(sge_get_alias_path());
+
    /*
    set_commlib_param(CL_P_COMMDSERVICE, 0, SGE_COMMD_SERVICE, NULL);
    set_commlib_param(CL_P_NAME, 0, name, NULL);

@@ -47,7 +47,7 @@
 
 int usage(void)
 {
-  fprintf(stderr, "%s\n gethostname [-name|-aname]\n\n%s", MSG_UTILBIN_USAGE, MSG_COMMAND_USAGE_GETHOSTNAME );
+  fprintf(stderr, "%s\n gethostname [-name|-aname|-all]\n\n%s", MSG_UTILBIN_USAGE, MSG_COMMAND_USAGE_GETHOSTNAME );
   exit(1);
   return 0;
 }
@@ -59,6 +59,7 @@ int main(int argc,char *argv[]) {
    char **tp,**tp2;
    int name_only = 0;
    int sge_aliasing = 0;
+   int all_option = 0;
 
    if (argc < 1 ) {
       usage();
@@ -77,28 +78,30 @@ int main(int argc,char *argv[]) {
          name_only = 1;
          sge_aliasing = 1;
       }   
+      if (!strcmp(argv[1], "-all")) {
+         if (argc != 2) {
+            usage(); 
+         }
+         name_only = 0;
+         sge_aliasing = 1;
+         all_option = 1;
+      }
    }
   
-  if (name_only == 0 && argc != 1) {
-     usage();
-  }
+   if (name_only == 0 && argc != 1 && all_option == 0) {
+      usage();
+   }
      
-  retval = cl_com_setup_commlib(CL_NO_THREAD ,CL_LOG_OFF, NULL );
+  retval = cl_com_setup_commlib(CL_NO_THREAD ,CL_LOG_OFF, NULL);
   if (retval != CL_RETVAL_OK) {
      fprintf(stderr,"%s\n",cl_get_error_text(retval));
      exit(1);
   }
-#if 0
-  if (sge_aliasing && name_only) {
-     cl_com_set_alias_file(sge_get_alias_path());
-  }
-  
-  if (name_only == 0) {
-     cl_com_set_alias_file(sge_get_alias_path());
-  }
-#endif
 
-  /* cl_com_append_host_alias("",""); */
+  if (sge_aliasing ) {
+     cl_com_set_alias_file(sge_get_alias_path());
+  }
+
   retval = cl_com_gethostname(&resolved_name, NULL, &he);
 
   if (retval != CL_RETVAL_OK) {
@@ -126,7 +129,7 @@ int main(int argc,char *argv[]) {
      if (he != NULL) {
         printf(MSG_SYSTEM_HOSTNAMEIS_S , he->h_name);
         
-        if (resolved_name != NULL) {
+        if (resolved_name != NULL && all_option) {
            printf("SGE name: %s\n",resolved_name);
         }
 

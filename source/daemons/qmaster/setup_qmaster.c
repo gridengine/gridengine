@@ -466,6 +466,7 @@ static void communication_setup(char **anArgv)
       ERROR((SGE_EVENT, "SGE_PRIORITY_TAGS not supported by NGC\n"));
    }
 
+   cl_com_set_alias_file(sge_get_alias_path());
    resolve_error=cl_com_cached_gethostbyname((char*)uti_state_get_qualified_hostname() ,
                                              &resolved_hostname,
                                              NULL, NULL);

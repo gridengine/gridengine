@@ -221,6 +221,7 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, int debug_level , cl_log_func
    }
    pthread_mutex_unlock(&cl_com_host_list_mutex);
 
+
    /* setup global thread list */
    pthread_mutex_lock(&cl_com_thread_list_mutex);
    switch(cl_com_create_threads) {

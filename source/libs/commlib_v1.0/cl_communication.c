@@ -3432,9 +3432,9 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
    }
    ldata = (cl_host_list_data_t*) hostlist->list_data;
 
-   if (cl_commlib_get_thread_state() == CL_NO_THREAD) {
+   if (cl_commlib_get_thread_state() == CL_NO_THREAD || ldata->alias_file_changed != 0) {
       cl_com_host_list_refresh(hostlist);
-   }
+   } 
 
 
    if ( cl_host_alias_list_get_local_resolved_name(ldata->host_alias_list,unresolved_host, &alias_name) == CL_RETVAL_OK) {
@@ -3612,18 +3612,18 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
 
    if (ldata->host_alias_file == NULL) {
       cl_raw_list_unlock(hostlist);
-      CL_LOG(CL_LOG_WARNING,"host alias file is not specified");
+      CL_LOG(CL_LOG_ERROR,"host alias file is not specified");
       return CL_RETVAL_NO_ALIAS_FILE;
    }
    if (SGE_STAT(ldata->host_alias_file, &sb)) {
       cl_raw_list_unlock(hostlist);
-      CL_LOG(CL_LOG_WARNING,"host alias file is not existing");
+      CL_LOG(CL_LOG_ERROR,"host alias file is not existing");
       return CL_RETVAL_ALIAS_FILE_NOT_FOUND;
    }
    fp = fopen(ldata->host_alias_file, "r");
    if (!fp) {
       cl_raw_list_unlock(hostlist);
-      CL_LOG(CL_LOG_WARNING,"can't open host alias file");
+      CL_LOG(CL_LOG_ERROR,"can't open host alias file");
       return CL_RETVAL_OPEN_ALIAS_FILE_FAILED;
    }
    
@@ -3649,7 +3649,7 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
          continue;
       }
 
-      printf("line:\"%s\"\n",alias_file_buffer);
+      CL_LOG_STR(CL_LOG_INFO,"line:",alias_file_buffer);
       help = strtok_r(alias_file_buffer,alias_delemiters,&lasts);
       if (help != NULL) {
          cl_com_hostent_t* he = NULL;
@@ -3710,7 +3710,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
 
 
    if (ldata->alias_file_changed != 0) {
-      CL_LOG(CL_LOG_WARNING,"host alias file dirty flag is set");
+      CL_LOG(CL_LOG_INFO,"host alias file dirty flag is set");
       cl_com_read_alias_file(list_p);
    }
 
@@ -3886,7 +3886,7 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,st
    ldata = (cl_host_list_data_t*) hostlist->list_data;
 
 
-   if (cl_commlib_get_thread_state() == CL_NO_THREAD) {
+   if (cl_commlib_get_thread_state() == CL_NO_THREAD || ldata->alias_file_changed != 0) {
       cl_com_host_list_refresh(hostlist);
    }
 

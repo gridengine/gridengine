@@ -120,6 +120,8 @@ extern int main(int argc, char** argv)
      close_connection = 1;
   }
 
+  cl_com_set_alias_file("./alias_file");
+
   CL_LOG_STR(CL_LOG_INFO,"connection to server on host", argv[1]);
   CL_LOG_INT(CL_LOG_INFO,"using port",atoi(argv[2])); 
   

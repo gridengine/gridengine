@@ -1,3 +1,5 @@
+CR-2004-01-29-0: Enhancm.:  - host aliases file support (part II)
+
 SD-2004-01-28-1: Enhancem.: - Set default dynamic priority range 
                               (ptf_min_priority, ptf_max_priority) for
                               Linux to nice values 0-20
@@ -23,6 +25,9 @@ AD-2004-01-28-2: Bugfix:    Did add 'startup heartbeat'.
 JG-2004-01-28-1: Enhancem.: Added queue state and consumable information to the
                             reporting file.
                  Review:    pending
+
+CR-2004-01-28-1: Enhancm.:  - host aliases file support (part I)
+                            - TODO: activate host aliases file support
 
 EB-2004-01-28-0: Enhancem.: Changed some man-pages concerning CQs
 

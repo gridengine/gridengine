@@ -253,6 +253,8 @@ int cl_host_list_set_alias_file_dirty(cl_raw_list_t* list_p) {
 }
 
 
+
+
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
@@ -279,7 +281,7 @@ int cl_host_list_set_alias_file(cl_raw_list_t* list_p, char* host_alias_file) {
          ldata->host_alias_file = NULL;
       }
       ldata->host_alias_file = strdup(host_alias_file);
-      CL_LOG_STR(CL_LOG_WARNING,"using host alias file:",ldata->host_alias_file);
+      CL_LOG_STR(CL_LOG_INFO,"using host alias file:",ldata->host_alias_file);
       ldata->alias_file_changed = 1;
       if (ldata->host_alias_file == NULL) {
          cl_raw_list_unlock(list_p);

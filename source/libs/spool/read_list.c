@@ -579,7 +579,7 @@ int sge_read_ckpt_list_from_disk()
 
 int sge_read_queue_list_from_disk()
 {
-   lList *alp, *direntries;
+   lList *alp = NULL, *direntries;
    lListElem *qep, *direntry;
    int config_tag = 0;
    u_long32 state;
@@ -738,7 +738,7 @@ int sge_read_queue_list_from_disk()
 
 int sge_read_project_list_from_disk()
 {
-   lList *alp, *direntries;
+   lList *alp = NULL, *direntries;
    lListElem *ep, *direntry;
    int config_tag = 0;
 
@@ -829,7 +829,7 @@ int sge_read_user_list_from_disk()
 
 int sge_read_userset_list_from_disk()
 {
-   lList *alp, *direntries;
+   lList *alp = NULL, *direntries;
    lListElem *ep, *direntry;
 
    DENTER(TOP_LAYER, "sge_read_userset_list_from_disk");

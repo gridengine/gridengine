@@ -1,3 +1,11 @@
+HP-2004-11-15-0: Bugfix:    Jobs fail on NFS drives mounted without root write
+                            privileges - fchown() doesn't work as expected on
+                            Irix and True64
+                 Review:    AH
+                 Changed:   daemons/common/err_trace.c
+                 Issue:     1323
+                 Bugtraq:   6193361
+
 SG-2004-11-15-1: Bugfix:    fixed the delivery of start orders (did not work)
                  Review:    JG
                  Changed:   scheduler

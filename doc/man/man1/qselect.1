@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qselect.1,v $     Last Update: $Date: 2004/01/07 15:12:32 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: qselect.1,v $     Last Update: $Date: 2004/01/28 16:05:13 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSELECT 1 "$Date: 2004/01/07 15:12:32 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSELECT 1 "$Date: 2004/01/28 16:05:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qselect \- select queues.
 .\"
@@ -44,7 +44,7 @@ qselect \- select queues.
 ] [
 .B -pe pe_name,...
 ] [
-.B -q queue,...
+.B -q wc_queue,...
 ] [
 .B -s {r|p|s|z|hu|ho|hs|hj|ha|h}[+]
 ] [
@@ -79,11 +79,13 @@ included in the queue list output.
 Includes queues into the output which are attached to at least one of the 
 parallel environments enlisted in the comma separated option argument. 
 .\"
-.IP "\fB\-q queue,...\fP"
-Directly specifies the queues to be included in the output. This option 
-usually is only meaningful in conjunction with another
+.IP "\fB\-q wc_queue,...\fP"
+Directly specifies the wildcard queue list to be included in the output. 
+This option usually is only meaningful in conjunction with another
 .I qselect
 option to extract a subset of queue names from a list given by \fB\-q\fP.
+Description of \fIwc_queue\fP can be found in
+.M sge_types 1 .
 .\"
 .IP "\fB\-qs {a|c|d|o|s|u|A|C|D|E|S}\fP"
 This option allows to filter for queue instances in certain states.

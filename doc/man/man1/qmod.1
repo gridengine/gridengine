@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmod.1,v $     Last Update: $Date: 2004/01/22 13:23:42 $     Revision: $Revision: 1.11 $
+.\" $RCSfile: qmod.1,v $     Last Update: $Date: 2004/01/28 16:05:13 $     Revision: $Revision: 1.12 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMOD 1 "$Date: 2004/01/22 13:23:42 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMOD 1 "$Date: 2004/01/28 16:05:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmod \- modify a xxQS_NAMExx queue
 .\"
@@ -41,7 +41,7 @@ qmod \- modify a xxQS_NAMExx queue
 ] [
 .B job/task_id_list
 |
-.B queue_list
+.B wc_queue_list
 ]
 .PP
 .SH DESCRIPTION
@@ -53,7 +53,9 @@ the state of xxQS_NAMExx queues for his/her machine as well
 as the state of his/her own jobs.
 A manager/operator or root can execute
 .I qmod
-for any queue and job in a cluster.
+for any queue and job in a cluster. Find additional information concerning
+\fIwc_queue_list\fP in
+.M sge_types 1 .
 .\"
 .SH OPTIONS
 .\"
@@ -227,7 +229,8 @@ to define that port.
 .M xxqs_name_sxx_ckpt 1 ,
 .M qstat 1 ,
 .M queue_conf 5 ,
-.M xxqs_name_sxx_execd 8 .
+.M xxqs_name_sxx_execd 8 ,
+.M xxqs_name_sxx_types 1 .
 .\"
 .\"
 .SH "COPYRIGHT"

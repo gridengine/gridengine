@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/01/26 15:27:48 $     Revision: $Revision: 1.13 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/01/28 16:05:13 $     Revision: $Revision: 1.14 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2004/01/26 15:27:48 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2004/01/28 16:05:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -43,7 +43,7 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 .B -f
 ] [ \fB\-F\fP [\fBresource_name,...\fP]
 ] [
-.B -g {d|t}[+]
+.B -g {c|d|t}[+]
 ] [
 .B -help
 ] [
@@ -55,7 +55,7 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 ] [
 .B -pe pe_name,...
 ] [
-.B -q queue,...
+.B -q wc_queue_list
 ] [
 .B -qs {a|c|d|o|s|u|A|C|D|E|S}
 ] [
@@ -116,9 +116,12 @@ resource_name list. Please refer to the description of the
 \fBFull Format\fP in 
 section \fBOUTPUT FORMATS\fP below for further detail.
 .\"
-.IP "\fB\-g {d|t}[+]\fP"
+.IP "\fB\-g {c|d|t}[+]\fP"
 The \fB\-g\fP option allows for controlling grouping of displayed
 objects.
+.sp
+With \fB\-g c\fP a cluster queue summary is displayed. Find  more information
+in the section \fBOUTPUT FORMATS\fP. 
 .sp
 With \fB\-g d\fP array jobs are displayed verbosely in a one 
 line per job task fashion. By default, array jobs are grouped and all 
@@ -161,9 +164,11 @@ option argument. Status information for jobs is displayed either for those
 which execute in one of the selected queues or which are pending and 
 might get scheduled to those queues in principle.
 .\"
-.IP "\fB\-q queue,...\fP"
-Specifies the queue to which job
-information is to be displayed.
+.IP "\fB\-q wc_queue_list\fP"
+Specifies a wildcard queue list to which job
+information is to be displayed. Find the definition of \fBwc_queue_list\fP
+in
+.M sge_types 1 .
 .\"
 .IP "\fB\-qs {a|c|d|o|s|u|A|C|D|E|S}\fP"
 Similar to \fB\-f\fP. It generates the same output, but allows
@@ -232,6 +237,35 @@ Depending on the presence or absence of the \fB-explain\fP, \fB\-f\fP, \fB\-F\fP
 In case of a xxQS_NAME_EExx system, the \fB\-ext\fP and \fB\-urg\fP options may be used 
 to display additional information for each job.
 .\"
+.SS "\fBCluster Queue Format (without \-g c)\fP"
+Following the header line a section for each cluster queue
+is provided. When queue instances selection are applied (\-l \-pe, \-q, \-U)
+the cluster format contains only cluster queues of the corresponding queue
+instances.
+.IP "\(bu" 3n
+the cluster queue name.
+.IP "\(bu" 3n
+an average of the normalized load average of all queue hosts. Please note that
+only hosts with a load value are considered for this value. When queue
+selection is applied only data about selected queues is considered in this
+formula. If the load value is not available at any of the hosts '-NA-' is
+printed instead of the value from the complex attribute definition.
+.IP "\(bu" 3n
+the number of currently used slots. 
+.IP "\(bu" 3n
+the number of currently available slots.
+.IP "\(bu" 3n
+the total number of slots.
+.IP "\(bu" 3n
+the number of slots which is in at least in one of the states  'aoACDS' and in
+none of the states 'cdsuE'
+.IP "\(bu" 3n
+the number of slots which are in one of these states or in any  combination 
+of them: 'cdsuE'
+.IP "\(bu" 3n
+the \fB\-g c\fP option can be used in combination with \fB\-ext\fP. In this
+case additional collumns are added to the output. Each collumn contains
+the slot count for one of the available queue states.
 .SS "\fBReduced Format (without \-f, \-F, and \-qs)\fP"
 Following the header line a line is printed for each job
 consisting of
@@ -442,9 +476,6 @@ defined load scaling has been applied,
 `\fBc\fP' - availability derived from
 the consumable resources facility (see
 .M complexes 5 ),
-.br
-`\fBv\fP' - a default complexes configuration value 
-never overwritten by a load report or a consumable update or
 .br
 `\fBf\fP' - a fixed 
 availability definition derived from a non-consumable complex attribute or 

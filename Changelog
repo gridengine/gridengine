@@ -1,4 +1,6 @@
-AS-2002-01-24-1: Enhancem   Added PE 'make' template
+AS-2002-01-24-2: Enhancem.  added SUN MPI install support for 'distinst'"
+
+AS-2002-01-24-1: Enhancem.  Added PE 'make' template
 
 AS-2002-01-24-0: Enhancem.  Added SUNHPC loose integration package
 

@@ -32,6 +32,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -58,12 +59,14 @@ extern message *termination_message;
 extern int message_tracefd;
 
 extern char *aliasfile;
+extern char *actmasterfile;
 
 extern void deliver_message(message *mp, int local);
 extern void init_send(message *mp, int reserved_port, int commdport);
 
 void trace(char *);
 static char *mid2str(u_long32 mid);
+static int read_qmaster_name_from_file( char *master_host, const char *master_file); 
 
 void dump(void);
 
@@ -238,7 +241,7 @@ int commdport
    if (mp->flags & COMMD_CNTL) {
 
       DEBUG((SGE_EVENT, "* controlling operation"));
-
+     
       if (!h) {
          read_aliasfile(aliasfile);
          h = newhost_addr((char *) &mp->fromaddr);
@@ -263,6 +266,125 @@ int commdport
       DEBUG((SGE_EVENT, "CNTL OPERATION %d:"u32":%s from host %s", 
             operation, op_arg, op_carg, get_mainname(h)));
       trace(SGE_EVENT);
+  
+      /* secure tests for critical commd commands (only when started as root)*/ 
+      
+      
+      if (operation == O_KILL       || 
+          operation == O_TRACE      ||
+          operation == O_DUMP       || 
+          operation == O_UNREGISTER    ) {
+
+         int  sender_ok = 0;
+         host *master_host = NULL;
+         host *sender_host = NULL;
+         char master_name[MAXHOSTLEN+1] = "";
+         uid_t real_user_id;
+         uid_t effective_user_id;
+        
+         real_user_id      = getuid();
+         effective_user_id = geteuid();
+
+         DEBUG((SGE_EVENT, "real_user_id     : %d", real_user_id));
+         trace(SGE_EVENT);
+
+         DEBUG((SGE_EVENT, "effective_user_id: %d", effective_user_id)); 
+         trace(SGE_EVENT);
+
+
+         if (real_user_id == 0 || effective_user_id == 0) {
+            DEBUG((SGE_EVENT, "my process was started by root"));
+            trace(SGE_EVENT);
+         } else {
+            DEBUG((SGE_EVENT, "my process was started NOT from root"));
+            trace(SGE_EVENT);
+         }
+       
+ 
+         /* only allow reserved port connections */ 
+         if ((!mp->reserved_port) && ((real_user_id == 0) || (effective_user_id == 0) )) {
+   
+            DEBUG((SGE_EVENT, "message rejected because from of unreserved port"));
+            trace(SGE_EVENT);
+   
+            mp->ackchar = COMMD_NACK_PERM;
+            SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
+   
+            DEXIT;
+            return 0;
+         }
+
+         /* only allow connections from qmaster host or local host */
+         
+         if (read_qmaster_name_from_file(master_name,actmasterfile ) == 0) {
+            DEBUG((SGE_EVENT, "master file host name is %s", master_name )); 
+            trace(SGE_EVENT);
+            master_host = search_host( master_name ,NULL);
+            if (master_host == NULL) {
+                 int i = 0;
+  
+                 DEBUG((SGE_EVENT, "adding master host name %s", master_name ));  
+                 trace(SGE_EVENT);
+                 read_aliasfile(aliasfile);
+                 master_host = newhost_name( master_name ,&i);
+                 if (i == 0) {
+                    
+                    DEBUG((SGE_EVENT, "added new host!", master_name ));  
+                    trace(SGE_EVENT);
+
+                 } else {
+                    DEBUG((SGE_EVENT, "host allready known!", master_name ));  
+                    trace(SGE_EVENT);
+                 }
+            }
+         }
+
+         DEBUG((SGE_EVENT, "checking whether host %s is qmaster or localhost", get_mainname(h)));  /* sender host */
+         trace(SGE_EVENT);
+         if (master_host != NULL) {
+            DEBUG((SGE_EVENT, "master host is %s", get_mainname(master_host))); /* master host */
+            trace(SGE_EVENT);
+         } else {
+            DEBUG((SGE_EVENT, "master host can't be resolved")); 
+            trace(SGE_EVENT);
+         }
+         DEBUG((SGE_EVENT, "local host is %s", get_mainname(localhost)));   /* local host*/
+         trace(SGE_EVENT);
+ 
+         if (master_host != NULL) {
+            if ( matches_name(&master_host->he , get_mainname(h))  ) {
+               sender_ok = 1;
+               DEBUG((SGE_EVENT, "sender host is qmaster!"));
+               trace(SGE_EVENT);
+   
+            } else {
+               DEBUG((SGE_EVENT, "sender host is not qmaster!" ));
+               trace(SGE_EVENT);
+               
+            }
+         }
+
+         if ( matches_name(&localhost->he, get_mainname(h))  ) {
+            sender_ok = 1;
+            DEBUG((SGE_EVENT, "sender host is localhost!" ));
+            trace(SGE_EVENT);
+         } else {
+            DEBUG((SGE_EVENT, "sender host is not localhost!" ));
+            trace(SGE_EVENT);
+         }
+        
+         if (sender_ok != 1) {
+            DEBUG((SGE_EVENT, "message denied, not from qmaster or localhost"));
+            trace(SGE_EVENT);
+   
+            mp->ackchar = COMMD_NACK_PERM;
+            SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
+            DEXIT;
+            return 0;
+         }
+      }
+       
+
 
       if (operation == O_KILL)
          termination_message = mp;      /* life until message is acknowledged */
@@ -754,6 +876,76 @@ int commdport
       return 0;
    }
 }
+
+
+
+static int read_qmaster_name_from_file(
+char *master_host,
+const char *master_file
+) {
+   FILE *fp;
+   struct stat file_info;
+   char buf[MAXHOSTLEN*3+1], *cp, *first;
+   int len;
+ 
+   DENTER(TOP_LAYER, "read_qmaster_name_from_file");
+   
+   if (!master_host || !master_file) {
+      DEXIT;
+      return -1;
+   }
+
+   if (stat(master_file, &file_info) || !(fp=fopen(master_file,"r"))) {
+      DEBUG((SGE_EVENT, "fopen("SFQ") failed!", master_file ));
+      trace(SGE_EVENT);
+      DEXIT;
+      return -1;
+   }    
+
+   /* read file in one sweep and append O Byte to the end */
+   if (!(len = fread(buf, 1, MAXHOSTLEN*3, fp))) {
+   }
+   buf[len] = '\0';
+   
+   /* Skip white space including newlines */
+   cp = buf;
+   while (*cp && (*cp == ' ' || *cp == '\t' || *cp == '\n'))
+      cp++;
+   
+   first = cp;
+
+   /* read all non white space characters */
+   while (*cp && !(*cp == ' ' || *cp == '\t' || *cp == '\n'))
+      cp++;
+      
+   *cp = '\0';
+   len = cp - first;
+
+   if (len == 0) {
+      fclose(fp); 
+      DEBUG((SGE_EVENT, "no qmaster hostname in file" ));
+      trace(SGE_EVENT);
+
+      DEXIT;
+      return -1;
+   }   
+       
+   if (len > MAXHOSTLEN - 1) {
+      fclose(fp);
+      DEBUG((SGE_EVENT, "qmaster hostname to long" ));
+      trace(SGE_EVENT);
+      DEXIT;
+      return -1;
+   }
+
+   fclose(fp);
+   strcpy(master_host, first);
+   DEXIT;
+   return 0;
+}
+
+
+
 
 /**********************************************************************
   commdcntl -t gets this stuff printed

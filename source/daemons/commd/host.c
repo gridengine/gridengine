@@ -52,7 +52,6 @@ static host *hostlist = NULL;
 host *localhost = NULL;
 
 static int copy_hostent(struct hostent *heto, struct hostent *hefrom);
-static int matches_name(struct hostent *he, char *name);
 static int matches_addr(struct hostent *he, char *addr);
 static host *search_pred_alias(host *h);
 void host_initialize(void);
@@ -266,7 +265,7 @@ char *host2
 }
 
 /**********************************************************************/
-static int matches_name(
+int matches_name(
 struct hostent *he,
 char *name 
 ) {
@@ -308,8 +307,8 @@ char *addr
 
    while (hl) {
       he = &hl->he;
-      if (((name && !strcasecmp(hl->mainname, name)) || matches_name(he, name))
-          && matches_addr(he, addr)) {
+      if (((name && !strcasecmp(hl->mainname, name)) || 
+            matches_name(he, name)) && matches_addr(he, addr)) {
          while ((h1 = search_pred_alias(hl)))   /* start of alias chain */
             hl = h1;
          return hl;

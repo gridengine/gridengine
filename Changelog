@@ -1,3 +1,11 @@
+CR-2001-12-06-1: Enhancem.: commd will only allow kill, trace, dump and unregister
+                            commands when client (commdcntl) is using reserved
+                            ports. Only a commd which was not started as root
+                            will accept connections from other ports. 
+                            
+                            commdcntl can be switched to unsecure mode with -U
+                            command line parameter.
+
 CR-2001-12-06-0: Testsuite: modifications for new commdcntl -k enhancements.
 
 EB-2001-12-06-1: Enhancem.: 'max_aj_tasks' defines the maximum number of 

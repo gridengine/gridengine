@@ -167,6 +167,7 @@
 #define LICENSE_FILE              "license"
 #endif
 #define ALIAS_FILE                "host_aliases"
+#define ACT_QMASTER_FILE          "act_qmaster"
 
 /* These files exist in the qmaster and execd spool area */
 #define EXEC_DIR                  "job_scripts"

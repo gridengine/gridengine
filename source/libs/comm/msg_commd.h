@@ -77,6 +77,8 @@
 #define MSG_FILE_TOMANYFDSSTART                       _("start of \"too may open fds open\" {")
 #define MSG_FILE_TOMANYFDSEND                         _("end of \"too may open fds open\" }")
 #define MSG_MEMORY_MALLOCFAILEDFORPATHTOHOSTALIASFILE _("can't malloc() for path to host alias file")
+#define MSG_MEMORY_MALLOCFAILEDFORPATHTOACTQMASTERFILE _("can't malloc() for path to act_qmaster file")
+
 
 /* 
 ** commd/commdcntl.c
@@ -86,6 +88,7 @@
 #define MSG_COMMDCNTL_d_OPT_USAGE                     _("dump structures to")
 #define MSG_COMMDCNTL_p_OPT_USAGE                     _("port commd is waiting on\n")
 #define MSG_COMMDCNTL_S_OPT_USAGE                     _("secure mode\n")
+#define MSG_COMMDCNTL_U_OPT_USAGE                     _("switch off secure mode\n")
 #define MSG_COMMDCNTL_gid_OPT_USAGE                   _("get id of commproc\n")
 #define MSG_COMMDCNTL_unreg_OPT_USAGE                 _("unregister commproc\n")
 #define MSG_COMMDCNTL_NOCTRLOPERATIONSPECIFIED        _("no control operation specified\n")

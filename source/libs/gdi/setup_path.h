@@ -34,6 +34,7 @@
 
 #include "basis_types.h"
 #include "cull_list.h"
+#include "sge.h"
 
 /* These files and directories will be found in COMMON_DIR
  * They must be accessed with an absolute path. Do not use these defines!
@@ -42,7 +43,6 @@
 #define COMMON_DIR                "common"
 #define CONF_FILE                 "configuration"
 #define SCHED_CONF_FILE           "sched_configuration"
-#define ACT_QMASTER_FILE          "act_qmaster"
 #define KEY_FILE                  "key"
 #define ACCT_FILE                 "accounting"
 #define STAT_FILE                 "statistics"

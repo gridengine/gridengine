@@ -50,14 +50,14 @@ void usage()
 {
    printf("%s\n", feature_get_product_name(FS_SHORT_VERSION));
 
-   printf("%s\n commdcntl [-k | -t level | -d] [-p commdport] [-S] [-host dst_host]\n", MSG_USAGE);
+   printf("%s\n commdcntl [-k | -t level | -d] [-p commdport] [-U] [-host dst_host]\n", MSG_USAGE);
 
    printf("          [-gid commprocname] [-unreg commprocname id]\n");
    printf("    -k     %s",MSG_COMMDCNTL_k_OPT_USAGE);
    printf("    -t     %s",MSG_COMMDCNTL_t_OPT_USAGE);
    printf("    -d     %s \"/tmp/commd/commd.dump\"\n",MSG_COMMDCNTL_d_OPT_USAGE);
    printf("    -p     %s",MSG_COMMDCNTL_p_OPT_USAGE);
-   printf("    -S     %s",MSG_COMMDCNTL_S_OPT_USAGE);
+   printf("    -U     %s",MSG_COMMDCNTL_U_OPT_USAGE);
    printf("    -gid   %s",MSG_COMMDCNTL_gid_OPT_USAGE);
    printf("    -unreg %s",MSG_COMMDCNTL_unreg_OPT_USAGE);
    exit(1);
@@ -71,7 +71,10 @@ char **argv
    u_short operation = 0;
    u_long32 arg;
    char *carg = NULL;
-   int reserved_port = 0;
+
+   /* use allways reserved port connection for security reasons */
+   int reserved_port = 1;
+
    int commdport = 0;
    
    /* 
@@ -90,8 +93,8 @@ char **argv
             usage();
          commdport = atoi(*argv);
       }
-      if (!strcmp("-S", *argv)) {
-         reserved_port = 1;
+      if (!strcmp("-U", *argv)) {
+         reserved_port = 0;
       }
       if (!strcmp("-h", *argv)) {
          usage();
@@ -154,7 +157,9 @@ char **argv
 
    if (reserved_port) {
       i = set_commlib_param(CL_P_RESERVED_PORT, 1, NULL, NULL);
-      printf(MSG_COMMDCNTL_SETCOMMLIBPARAM2RETURNED_II , (int) 1, i);
+      if (i) {
+         printf(MSG_COMMDCNTL_SETCOMMLIBPARAM2RETURNED_II , (int) 1, i);
+      }
    }
 
    i = cntl(operation, &arg, carg);

@@ -83,6 +83,7 @@ void sighandler(int sig);
 void log_state_transition_too_many_fds_open(u_long t);
 int seek_badfd(int nfds, fd_set *rfds, fd_set *wfds);
 char *get_alias_path(char *);
+static char *get_act_master_path(char *);
 
 int main(int argc, char **argv);
 
@@ -97,6 +98,7 @@ int message_tracefd = -1;
 int messagelog_fd = -1;
 int hostname_refresh = 1;       /* resolve hostnames on a regular basis */
 char *aliasfile = NULL;         /* File used for specifying host aliases */
+char *actmasterfile = NULL;     /* File with actual qmaster name */
 u_long too_many_fds_open = 0;   /* time at which too many fds were open */
 
 extern u_long32 logginglevel;
@@ -194,10 +196,6 @@ char **argv
             commd_usage(stderr, argv);
          continue;
       }
-      if (!strcmp("-S", *argp)) {
-         port_security = 1;
-         continue;
-      }
       if (!strcmp("-ml", *argp)) {
          argp++;
          if (*argp)
@@ -259,6 +257,10 @@ char **argv
       /* expect alias file at default location */
       aliasfile = get_alias_path(me.default_cell);
    }   
+   if (actmasterfile == NULL) {
+      /* expect act_master file at default location */
+      actmasterfile = get_act_master_path(me.default_cell);
+   }
 
    /* read aliasfile */
    if (aliasfile) {
@@ -652,10 +654,9 @@ char **argv
 ) {
    fprintf(out, "%s\n", feature_get_product_name(FS_SHORT_VERSION) );
 
-   fprintf(out, "%s %s [-s service] [-p port] [-S] [-ml fname] [-ll loglevel] [-nd] [-a aliasfile][-dhr]\n", MSG_USAGE, argv[0]); 
+   fprintf(out, "%s %s [-s service] [-p port] [-ml fname] [-ll loglevel] [-nd] [-a aliasfile][-dhr]\n", MSG_USAGE, argv[0]); 
    fprintf(out, "    -s   %s [commd]\n", MSG_COMMD_s_OPT_USAGE);
    fprintf(out, "    -p   %s [commd]\n", MSG_COMMD_p_OPT_USAGE);
-   fprintf(out, "    -S   %s", MSG_COMMD_S_OPT_USAGE);
    fprintf(out, "    -ml  %s", MSG_COMMD_ml_OPT_USAGE);
    fprintf(out, "    -ll  %s", MSG_COMMD_ll_OPT_USAGE);
    fprintf(out, "    -nd  %s", MSG_COMMD_nd_OPT_USAGE);
@@ -1064,3 +1065,42 @@ char *sge_cell
    sprintf(cp, "%s/%s/%s/%s", sge_root, sge_cell, COMMON_DIR, ALIAS_FILE); 
    return cp;
 }
+
+/*-----------------------------------------------------------------------
+ * get_act_master_path
+ *-----------------------------------------------------------------------*/
+static char *get_act_master_path(
+char *sge_cell 
+) {
+   char *sge_root, *cp;
+   int len;
+   SGE_STRUCT_STAT sbuf;
+      
+   DENTER(TOP_LAYER, "get_act_master_path");
+   
+   sge_root = getenv("SGE_ROOT");
+
+   if (!sge_root || strlen(sge_root) == 0) { 
+      CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTSET));
+      exit(1); 
+   }
+
+   if (sge_root[strlen(sge_root)-1] == '/')  /*get rid of trailing slash*/
+      sge_root[strlen(sge_root)-1] = '\0';
+
+   if (SGE_STAT(sge_root, &sbuf)) {
+      CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S , sge_root));
+      exit(1);
+   }
+
+   len = strlen(sge_root) + strlen(sge_cell) + strlen(COMMON_DIR) + strlen(ACT_QMASTER_FILE) + 5;
+
+   if (!(cp = malloc(len))) {
+      CRITICAL((SGE_EVENT, MSG_MEMORY_MALLOCFAILEDFORPATHTOACTQMASTERFILE ));
+      exit(1);
+   }
+
+   sprintf(cp, "%s/%s/%s/%s", sge_root, sge_cell, COMMON_DIR,ACT_QMASTER_FILE ); 
+   return cp;
+}
+

@@ -1,3 +1,6 @@
+JG-2002-05-22-0: Doc:       Fixed description of the environment variable 
+                            SGE_TASK_ID for non array jobs in submit man page.
+
 JG-2002-05-21-0: Bugfix:    Recycling of additional group ids did not respect 
                             tightly integrated pe tasks.
                  Issue:     #263

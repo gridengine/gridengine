@@ -1753,7 +1753,7 @@ XtPointer cld, cad;
 **
 ** returns 0 on success, non-zero on failure
 */
-int show_info_for_jobs(
+static int show_info_for_jobs(
 lList *jid_list,
 FILE *fp,
 lList **alpp,
@@ -1874,7 +1874,7 @@ StringBufferT *sb
    return 0;
 }
  
-int show_info_for_job(
+static int show_info_for_job(
 FILE *fp,
 lList **alpp,
 StringBufferT *sb

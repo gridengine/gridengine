@@ -200,7 +200,8 @@ char **argv
    strcpy(progname, argv[0]);
    
    /* GENERAL SGE SETUP */
-   qmonInitSge(progname);
+   if (!(argc > 1 && !strcmp(argv[1], "-help")))
+      qmonInitSge(progname);
 
    SGE_ROOT = sge_get_root_dir(0);
    /*

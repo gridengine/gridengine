@@ -1,3 +1,6 @@
+AA-2002-01-28-1: Bugfix:    - qmon unable to contact master message fix
+                            - func proto show_info_job,..
+
 AA-2002-01-28-0: Bugfix:    - GCC_NO_STRICT_PROT broke build on alinux
                               GCC_NO_STRICT_PROT -> GCC_NOSP in aimk and security/sec/Makefile
                             - memleak fixes in security/sec/sec_lib.c  

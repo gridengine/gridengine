@@ -220,7 +220,7 @@ sge_gdi_request *answer
          ** otherwise 'invalid queue' will be printed, because these actions
          ** are not suitable for jobs.
          */
-         if ((lGetUlong(dep, ID_action) == QSUSPENDED) || (lGetUlong(dep, ID_action) == QRUNNING))
+         if ((lGetUlong(dep, ID_action) == QSUSPENDED) || (lGetUlong(dep, ID_action) == QRUNNING)|| (lGetUlong(dep, ID_action) == QERROR))
             WARNING((SGE_EVENT, MSG_QUEUE_INVALIDQORJOB_S, lGetString(dep, ID_str)));
          else
             WARNING((SGE_EVENT, MSG_QUEUE_INVALIDQ_S, lGetString(dep, ID_str)));  

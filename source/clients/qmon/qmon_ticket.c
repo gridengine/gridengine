@@ -183,12 +183,13 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonPopdownTicketOverview");
 
-   if (data_changed) 
+   if (data_changed) {
       status = XmtAskForBoolean(w, "xmtBooleanDialog", 
                      "@{ticket.asksave.Do you want to save your changes ?}", 
                      "@{Yes}", "@{No}", "@{Cancel}", XmtNoButton, 
-                        XmDIALOG_QUESTION, 
+                        /* XmDIALOG_QUESTION */ XmDIALOG_INFORMATION, 
                      False, &answer, NULL);
+   }
 
    if (status) {
       if (answer)

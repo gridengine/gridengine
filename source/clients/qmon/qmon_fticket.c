@@ -639,7 +639,7 @@ XtPointer cad
 static void set_functional_share_percentage(
 Widget mw 
 ) {
-   int total_fshare = 0;
+   double total_fshare = 0;
    String str;
    int row, max_fill, last_row, max_rows;
    double percentage;
@@ -657,7 +657,7 @@ Widget mw
       if (!str || *str == '\0')
          break;
       str = XbaeMatrixGetCell(mw, row, 1);
-      total_fshare += atoi(str);
+      total_fshare += atof(str);
    }
    
    /*
@@ -666,7 +666,7 @@ Widget mw
    max_fill = row;
    for (row=0; row<max_fill; row++) {
       str = XbaeMatrixGetCell(mw, row, 1);
-      percentage = atoi(str) * 100;
+      percentage = atof(str) * 100;
       if (total_fshare)
          percentage /= total_fshare;
       else
@@ -682,7 +682,7 @@ Widget mw
    */
    XbaeMatrixSetRowBackgrounds(mw, last_row, &JobSuspPixel, 1);
    XbaeMatrixSetCell(mw, last_row, 0, XmtLocalize2(mw, "Sum", "qmon_fticket", "Sum"));
-   sprintf(buf, "%d", total_fshare);
+   sprintf(buf, "%.0f", total_fshare);
    XbaeMatrixSetCell(mw, last_row, 1, buf);
    sprintf(buf, "%.1f %%", total_percentage);
    XbaeMatrixSetCell(mw, last_row, 2, buf);

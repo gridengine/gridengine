@@ -1276,14 +1276,14 @@ XtPointer cld, cad;
          if (qstate & QSUSPENDED_ON_SUBORDINATE)
             XFillRectangle(XtDisplay(w), XtWindow(w), suspend_gc,
                               x + 1 * sbw + 1, y + 1,
-                              sbw/2 - 1, sbh - 1); 
+                              sbw - 2, (sbh/2 + sbh % 2)); 
 
          /* queue suspended */
-         if (suspend_threshold_alarm)
+         if (suspend_threshold_alarm) {
             XFillRectangle(XtDisplay(w), XtWindow(w), suspend_gc,
-                              x + 1 * sbw + 1 + sbw/2, y + 1,
-                              sbw/2 - 1, sbh/2 - 1);
-      
+                              x + 1 * sbw + 1, y + (sbh/2 + sbh % 2),
+                              sbw - 2, (sbh/2 + sbh % 2 - 1));
+         }
          /* queue suspended */
          if ((qstate & QSUSPENDED) ) 
             XFillRectangle(XtDisplay(w), XtWindow(w), suspend_gc,

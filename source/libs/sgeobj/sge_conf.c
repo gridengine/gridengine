@@ -82,6 +82,7 @@ bool do_profiling = false;
 long ptf_max_priority = -999;
 long ptf_min_priority = -999;
 int execd_priority = 0;
+int max_dynamic_event_clients = 99;
 bool keep_active = false;
 
 /* reporting params */
@@ -506,6 +507,7 @@ int merge_configuration(lListElem *global, lListElem *local,
       disable_reschedule = false;   
       simulate_hosts = false;
       scheduler_timeout = 0;
+      max_dynamic_event_clients = 99;
 
       for (s=sge_strtok(pconf->qmaster_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
          if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
@@ -517,6 +519,10 @@ int merge_configuration(lListElem *global, lListElem *local,
          if (parse_bool_param(s, "ENABLE_FORCED_QDEL", &enable_forced_qdel)) {
             continue;
          } 
+         if (!strncasecmp(s, "MAX_DYN_EC", sizeof("MAX_DYN_EC")-1)) {
+            max_dynamic_event_clients = atoi(&s[sizeof("MAX_DYN_EC=")-1]);
+            continue;
+         }
          if (parse_bool_param(s, "NO_SECURITY", &do_credentials)) {
             /* reversed logic */
             do_credentials = !do_credentials;

@@ -62,6 +62,8 @@ extern void sge_deliver_events_immediately(u_long32);
 extern u_long32 sge_get_next_event_number(u_long32);
 extern int      sge_resync_schedd(void);
 
+extern void sge_set_max_dynamic_event_clients(u_long32 max);
+
 extern void sge_event_shutdown(void);
 
 #endif /* __SGE_M_EVENT_H */

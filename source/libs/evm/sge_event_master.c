@@ -96,14 +96,23 @@ typedef struct {
    pthread_mutex_t  mutex;                 /* used for mutual exclusion. only use in public functions   */
    pthread_cond_t   cond_var;              /* used for waiting                                          */
    pthread_mutex_t  cond_mutex;            /* used for mutual exclusion. only use in internal functions */
-   int              clients_deliver_count; /* counts the event clients, which have pending events       */
+   
+   u_long32         max_event_clients;     /* contains the max number of custom event clients, the      */
+                                           /* scheduler is not accounted for. protected by mutex.       */
+   u_long32         current_event_clients; /* counts the number of dynamic event clients. Protected by  */
+                                           /* mutex.                                                    */
+   
+   u_long32         clients_deliver_count; /* counts the event clients, which have pending events       */
                                            /* protected by cond_mutex.                                  */
-   bool             prepare_shutdown;      /* is set, when the qmaster is going down. Do not accept     */
+   bool             is_flush;              /* ensures that events are delivered right away. protected   */     
+                                           /* cond_mutex.                                               */
+   
+   bool             is_prepare_shutdown;   /* is set, when the qmaster is going down. Do not accept     */
                                            /* new event clients, when this is set to false. protected   */
                                            /* by mutex.                                                 */
-   bool             exit;                  /* true -> exit event master, and the thread should end      */
+   bool             is_exit;               /* true -> exit event master, and the thread should end      */
                                            /* protected by mutex                                        */
-   lList*           clients;               /* list of event master clients                              */
+   lList*           clients;               /* list of event master clients                              */     
                                            /* protected by mutex                                        */
 } event_master_control_t;
 
@@ -208,7 +217,7 @@ const int SOURCE_LIST[LIST_MAX][3] = {
 static bool SEND_EVENTS[sgeE_EVENTSIZE]; 
 
 static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 
-                                                PTHREAD_MUTEX_INITIALIZER, 0, false, false, NULL};
+                                                PTHREAD_MUTEX_INITIALIZER, 99, 0, 0,false, false, false, NULL};
 static pthread_once_t         Event_Master_Once = PTHREAD_ONCE_INIT;
 static pthread_t              Event_Thread;
 
@@ -216,7 +225,7 @@ static void       event_master_once_init(void);
 static void       init_send_events(void); 
 static void*      send_thread(void*);
 static bool       should_exit(void);
-static void       send_events(void);
+static void       send_events(lListElem *report, lList *report_list);
 static void       flush_events(lListElem*, int);
 static void       total_update(lListElem*);
 static void       build_subscription(lListElem*);
@@ -315,7 +324,8 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
-   if (Master_Control.prepare_shutdown) {
+   if (Master_Control.is_prepare_shutdown) {
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
       ERROR((SGE_EVENT, MSG_EVE_QMASTERISGOINGDOWN));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);      
       DEXIT;
@@ -337,7 +347,17 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
          /* delete old event client entry */
          lRemoveElem(Master_Control.clients, ep);
-      } else {
+      } 
+      else if (Master_Control.current_event_clients >= Master_Control.max_event_clients) {
+         sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+         ERROR((SGE_EVENT, MSG_TO_MANY_DYNAMIC_EC_U, Master_Control.max_event_clients));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+
+         DEXIT;
+         return STATUS_ESEMANTIC;
+      } 
+      else {
+         Master_Control.current_event_clients++;
          INFO((SGE_EVENT, MSG_EVE_REG_SUU, name, u32c(id), u32c(ed_time)));         
       }
    }
@@ -346,6 +366,15 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    /* if it already exists, delete the old one and register */
    /* the new one */
    if (id > EV_ID_ANY && id < EV_ID_FIRST_DYNAMIC) {
+      if (!manop_is_manager(ruser)) {
+         sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+         ERROR((SGE_EVENT, MSG_WRONG_USER_FORFIXEDID ));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+
+         DEXIT;
+         return STATUS_ESEMANTIC;
+      }
+   
       if ((ep = lGetElemUlong(Master_Control.clients, EV_id, id))) {
          /* we already have this special client */
          ERROR((SGE_EVENT, MSG_EVE_CLIENTREREGISTERED_SSSU, name, host, 
@@ -630,8 +659,7 @@ bool sge_event_client_registered(u_long32 aClientID)
 *     MT-NOTE: sge_remove_event_client() is NOT MT safe. 
 *
 *******************************************************************************/
-void sge_remove_event_client(u_long32 aClientID)
-{
+void sge_remove_event_client(u_long32 aClientID) {
    lListElem *client;
 
    DENTER(TOP_LAYER, "sge_remove_event_client");
@@ -663,7 +691,9 @@ void sge_remove_event_client(u_long32 aClientID)
          free(old_sub);
          lSetRef(client, EV_sub_array, NULL);
       }
-
+      if (lGetUlong(client, EV_id) >= EV_ID_FIRST_DYNAMIC) {
+         Master_Control.current_event_clients--; 
+      }
       lRemoveElem(Master_Control.clients, client);
    }
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
@@ -671,6 +701,38 @@ void sge_remove_event_client(u_long32 aClientID)
    DEXIT;
    return;
 } /* sge_remove_event_client() */
+
+
+/****** sge_event_master/sge_set_max_dynamic_event_clients() *******************
+*  NAME
+*     sge_set_max_dynamic_event_clients() -- set max number of dyn. event clients
+*
+*  SYNOPSIS
+*     void sge_set_max_dynamic_event_clients(u_long32 max) 
+*
+*  FUNCTION
+*     Sets max number of dynamic event clients
+*
+*  INPUTS
+*     u_long32 max - number of dynamic event clients
+*
+*  NOTES
+*     MT-NOTE: sge_set_max_dynamic_event_clients() is MT safe 
+*
+*******************************************************************************/
+void sge_set_max_dynamic_event_clients(u_long32 max){
+   DENTER(TOP_LAYER, "sge_set_max_dynamic_event_clients");
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   Master_Control.max_event_clients = max;
+   INFO((SGE_EVENT, MSG_SET_MAXDYNEVENTCLIENT_U, u32c(max))); 
+   
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+   
+   DEXIT;
+   return;
+}
 
 /****** evm/sge_event_master/sge_select_event_clients() ************************
 *  NAME
@@ -1256,6 +1318,9 @@ void sge_deliver_events_immediately(u_long32 aClientID)
    }
    else {
       flush_events(client, 0);
+      sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
+      Master_Control.is_flush = true;
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
       pthread_cond_signal(&Master_Control.cond_var);
    }   
 
@@ -1391,7 +1456,7 @@ void sge_event_shutdown(void)
 
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
-   Master_Control.exit = true;
+   Master_Control.is_exit = true;
 
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
@@ -1518,15 +1583,27 @@ static void init_send_events(void)
 *******************************************************************************/
 static void* send_thread(void *anArg)
 {
+   lListElem *report = NULL; 
+   lList *report_list = NULL;
+
    DENTER(TOP_LAYER, "send_thread");
 
    sge_qmaster_thread_init();
 
+   report_list = lCreateList("report list", REP_Type);
+   report = lCreateElem(REP_Type);
+   lSetUlong(report, REP_type, NUM_REP_REPORT_EVENTS);
+   lSetHost(report, REP_host, uti_state_get_qualified_hostname());
+   lAppendElem(report_list, report);
+
    while (!should_exit())
    {
-      send_events();
+      send_events(report, report_list);
    }
 
+   report_list = lFreeList(report_list);
+   report = NULL;
+   
    DEXIT;
    return NULL;
 } /* send_thread() */
@@ -1560,7 +1637,7 @@ static bool should_exit(void)
    DENTER(TOP_LAYER, "should_exit");
 
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
-   res = Master_Control.exit;
+   res = Master_Control.is_exit;
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
@@ -1583,7 +1660,9 @@ static bool should_exit(void)
 *     with a report list of type ET_Type. 
 *
 *  INPUTS
-*     void - none 
+*     lListElem *report  - a report, has to be part of the report list. All
+*                          fields have to be init, except for REP_list element.   
+*     lList *report_list - a pre-init report list
 *
 *  RESULT
 *     void - none 
@@ -1595,10 +1674,7 @@ static bool should_exit(void)
 *     MT-NOTE: will wait on the condition variable 'Master_Control.cond_var'
 *
 *******************************************************************************/
-static void send_events(void)
-{
-   lListElem *report;
-   lList *report_list;
+static void send_events(lListElem *report, lList *report_list) {
    u_long32 timeout, busy_handling;
    lListElem *event_client, *tmp;
    const char *host;
@@ -1611,13 +1687,26 @@ static void send_events(void)
    DENTER(TOP_LAYER, "send_events");
 
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
-   
-   do{ 
-      ts.tv_sec = sge_get_gmt() + EVENT_DELIVERY_INTERVAL_S;
-      ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
-      pthread_cond_timedwait(&Master_Control.cond_var, &Master_Control.cond_mutex, &ts);
-   } while(Master_Control.clients_deliver_count == 0 && (!should_exit)); 
-
+   /*
+    * did a new event array which has a flush time of 0 seconds?
+    */
+   if (!Master_Control.is_flush) {
+      /*
+       * since the ack for a delivered event might take some time, we want to selp
+       * before delivering new events. If we would change this into a while loop,
+       * the client would never sleep, because it does take some time before a event
+       * is acknowledged. A event is removed, after it got acknowledged.
+       */
+      do{ 
+         ts.tv_sec = sge_get_gmt() + EVENT_DELIVERY_INTERVAL_S;
+         ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
+         pthread_cond_timedwait(&Master_Control.cond_var, &Master_Control.cond_mutex, &ts);
+      } while(Master_Control.clients_deliver_count == 0 && (!should_exit)); 
+   }
+   /* 
+    * we are delivering events now, though we can reset the flush.
+    */
+   Master_Control.is_flush = false;
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
 
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
@@ -1673,20 +1762,9 @@ static void send_events(void)
            && (busy_handling == EV_THROTTLE_FLUSH 
                || !lGetUlong(event_client, EV_busy))
          ) {
-         lList *lp;
-         int numevents;  
-
          /* put only pointer in report - dont copy */
-         report_list = lCreateList("report list", REP_Type);
-         report = lCreateElem(REP_Type);
-         lSetUlong(report, REP_type, NUM_REP_REPORT_EVENTS);
-         lSetHost(report, REP_host, uti_state_get_qualified_hostname());
          lSetList(report, REP_list, lGetList(event_client, EV_events));
-         lAppendElem(report_list, report);
 
-         lp = lGetList(event_client, EV_events);
-         numevents = lGetNumberOfElem(lp);
-         
          ret = report_list_send(report_list, host, commproc, id, 0, NULL);
 
          /* on failure retry is triggered automatically */
@@ -1713,10 +1791,8 @@ static void send_events(void)
          /* don't delete sent events - deletion is triggerd by ack's */
          {
             lList *lp = NULL;
-
             lXchgList(report, REP_list, &lp);
          }
-         lFreeList(report_list);
 
       }
       event_client = lNext(event_client);
@@ -2185,23 +2261,29 @@ add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type,
    /* check if event clients wants flushing */
    {
       const subscription_t *subscription = lGetRef(event_client, EV_sub_array);
-
+      bool flush = false;
+      
       if (type == sgeE_QMASTER_GOES_DOWN) {
-         Master_Control.prepare_shutdown = true;
+         Master_Control.is_prepare_shutdown = true;
          lSetUlong(event_client, EV_busy, 0); /* can't be too busy for shutdown */
          flush_events(event_client, 0);
-         pthread_cond_signal(&Master_Control.cond_var);
+         flush = true;
       }
       else if (type == sgeE_SHUTDOWN) {
          flush_events(event_client, 0);
-         pthread_cond_signal(&Master_Control.cond_var);         
+         flush = true;
       }
       else if (subscription[type].flush) {
          DPRINTF(("flushing event client\n"));
          flush_events(event_client, subscription[type].flush_time);
-         if ( subscription[type].flush_time == 0) {
-            pthread_cond_signal(&Master_Control.cond_var);         
-         }   
+         flush = ( subscription[type].flush_time == 0);
+      }
+
+      if (flush) {
+         sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
+         Master_Control.is_flush = true;
+         sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
+         pthread_cond_signal(&Master_Control.cond_var);     
       }
 
    }

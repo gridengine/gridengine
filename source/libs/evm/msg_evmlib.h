@@ -56,4 +56,7 @@
 #define MSG_COM_SHUTDOWNNOTIFICATION_SUS  _MESSAGE(66013, _("sent shutdown notification to event client " SFN " with id " U32CFormat " on host " SFN "\n"))
 #define MSG_EVE_QMASTERISGOINGDOWN        _MESSAGE(66014, _("do not accept new event clients. Qmaster is going down\n"))
 #define MSG_COM_KILLED_SCHEDULER_S        _MESSAGE(66015, _("sent shutdown notification to scheduler on host "SFQ"\n"))
+#define MSG_WRONG_USER_FORFIXEDID         _MESSAGE(66016, _("only a manager can register event clients with a fixed id\n"))
+#define MSG_TO_MANY_DYNAMIC_EC_U          _MESSAGE(66017, _("cannot register event client. Only "U32CFormat" event clients are allowed in the system"))
+#define MSG_SET_MAXDYNEVENTCLIENT_U       _MESSAGE(66018, _("max dynamic event clients is set to "U32CFormat"\n"))
 #endif /* __MSG_EVMLIB_H */

@@ -5,13 +5,18 @@
 #include <errno.h>
 
 
-
 #include <pthread.h>
 
 /* this timeout is in effect with SGE commprocs */
 #define SGE_COMMPROC_TIMEOUT 60*5
 
 #include "drmaa.h"
+#include "cull_list.h"
+#include "sge_gdi.h"
+#include "sge_jobL.h"
+#include "sge_answer.h"
+#include "show_job.h"
+#include "japiP.h"
 
 #define JOB_CHUNK 8
 #define NTHREADS 3
@@ -298,12 +303,32 @@ enum {
           - repeatedly drmaa_synchronize() with a timeout is used until job is finished
           - then drmaa_exit() is called */
 
-   ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT
+   ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT,
       /*  - drmaa_init() is called
           - a single job is submitted 
           - repeatedly do drmaa_synchronize(DRMAA_TIMEOUT_NO_WAIT) + sleep() until job is finished
           - then drmaa_exit() is called */
 
+   ST_ATTRIBUTE_CHECK
+      /* Need to test all DRMAA attributes:
+         DRMAA_REMOTE_COMMAND - implicit
+         DRMAA_JS_STATE
+         DRMAA_WD
+         DRMAA_JOB_NAME
+         DRMAA_INPUT_PATH
+         DRMAA_OUTPUT_PATH
+         DRMAA_ERROR_PATH
+         DRMAA_JOIN_FILES
+         DRMAA_JOB_CATEGORY
+         DRMAA_NATIVE_SPECIFICATION - test if it works and it if clashes
+         DRMAA_BLOCK_EMAIL
+         DRMAA_START_TIME
+         DRMAA_TRANSFER_FILES
+         DRMAA_DEADLINE_TIME
+         DRMAA_WCT_HLIMIT
+         DRMAA_WCT_SLIMIT
+         DRMAA_DURATION_HLIMIT
+         DRMAA_DURATION_SLIMIT */
 };
 
 const struct test_name2number_map {
@@ -321,6 +346,7 @@ const struct test_name2number_map {
    { "ST_MULT_EXIT",                              ST_MULT_EXIT,                              0, "" },
    { "ST_SUPPORTED_ATTR",                         ST_SUPPORTED_ATTR,                         0, "" },
    { "ST_SUPPORTED_VATTR",                        ST_SUPPORTED_VATTR,                        0, "" },
+   { "ST_ATTRIBUTE_CHECK",                        ST_ATTRIBUTE_CHECK,                       2, "<sleeper_job> <exit_arg_job>" },
    { "ST_VERSION",                                ST_VERSION,                                0, "" },
    { "ST_DRM_SYSTEM",                             ST_DRM_SYSTEM,                             0, "" },
    { "ST_CONTACT",                                ST_CONTACT,                                0, "" },
@@ -400,7 +426,8 @@ char *sleeper_job = NULL,
      *exit_job = NULL,
      *mirror_job = NULL,
      *input_path = NULL,
-     *output_path = NULL;
+     *output_path = NULL,
+     *error_path = NULL;
 int ctrl_op = -1;
 
 
@@ -526,7 +553,7 @@ static int test(int *argc, char **argv[], int parse_args)
    int i;
    int job_chunk = JOB_CHUNK;
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
-   drmaa_job_template_t *jt;
+   drmaa_job_template_t *jt = NULL;
    int drmaa_errno;
 
    switch (test_case) {
@@ -2205,7 +2232,7 @@ static int test(int *argc, char **argv[], int parse_args)
          for (i=0; i<255; i++) {
   
             /* parametrize exit job with job argument */
-            sprintf(buffer, "%d", i);
+            sprintf(buffer, "%d", i % 99);
             job_argv[0] = buffer; 
             job_argv[1] = NULL;
             drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
@@ -2256,7 +2283,7 @@ static int test(int *argc, char **argv[], int parse_args)
                return 1;
             }
             drmaa_wexitstatus(&exit_status, stat, NULL, 0);
-            if (exit_status != i) {
+            if (exit_status != i % 99) {
                fprintf(stderr, "job \"%s\" returned wrong exit status %d instead of %d\n", 
                                  all_jobids[i], exit_status, i);
                return 1;
@@ -2272,7 +2299,1446 @@ static int test(int *argc, char **argv[], int parse_args)
          break;
       }
 
+   case ST_ATTRIBUTE_CHECK:
+      /* Need to test all DRMAA attributes:
+         DRMAA_REMOTE_COMMAND
+         DRMAA_V_ARGV
+          - submit exit job
+          - wait for job and check status code
+         DRMAA_JS_STATE
+         DRMAA_JOB_NAME
+          - submit job in hold state with name
+          - use drmaa_ps_job to verify state
+          - use custom routine to verfiy name
+          - release hold
+         DRMAA_WD
+         DRMAA_INPUT_PATH
+         DRMAA_OUTPUT_PATH
+          - reuse ST_INPUT_BECOMES_OUTPUT with files in /tmp
+         DRMAA_ERROR_PATH
+          - submit tar job with error path set
+          - wait for job to finish
+          - check contents of error file
+         DRMAA_JOIN_FILES
+          - submit tar job to create a sample tar file
+          - wait for job to finish
+          - submit tar job with output path and join files set
+          - wait for job to finish
+          - check contents of output file
+         DRMAA_JOB_CATEGORY
+          - submit job with job category containing -h and -N
+          - use drmaa_ps_job to verify state
+          - use sge_gdi to verify name
+          - release hold
+          - submit job with job category containing -h and -N and DRMAA_JOB_NAME
+          - use sge_gdi to verify name
+          - use drmaa_ps_job to verify state
+          - release hold
+          - wait for job to complete
+         DRMAA_NATIVE_SPECIFICATION
+          - submit job with -h and -N
+          - use drmaa_ps_job to verify state
+          - use sge_gdi to verify name
+          - release hold
+          - submit job with -h and -N and DRMAA_JOB_NAME
+          - use sge_gdi to verify name
+          - use drmaa_ps_job to verify state
+          - release hold
+          - wait for job to complete
+         DRMAA_START_TIME
+          - store the time
+          - submit job with start time +1 min
+          - wait for job to complete
+          - compare the current time to stored time
+         DRMAA_V_ENV
+          - submit echo job with output path set
+          - wait for job to finish
+          - check output file
+         DRMAA_BLOCK_EMAIL
+         DRMAA_V_EMAIL */
+      {
+         int status, job_state, exit_status, exited;
+         int failed_test = 0, test_failed = 0;
+         char diagnosis[1024];
+         const char *job_argv[4];
+         char jobid[1024], new_jobid[1024];
+         char buffer[100];
+         u_long32 jobidl;
+         lList *alp, *job_lp;
+         lListElem *job_ep;
+         const char *mirror_text = "thefoxjumps...";
+         mirror_job = "/bin/cat";
+         input_path = "test.in";
+         output_path = "test.out";
+         error_path = "test.err";
+         FILE *fp;
 
+         if (parse_args) {
+            exit_job = NEXT_ARGV(argc, argv);
+            sleeper_job = NEXT_ARGV(argc, argv);
+         }
+         
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+         report_session_key();
+
+         /*
+          *   test remote command and argv
+          */
+         do {
+            printf ("Testing remote command and argv\n");
+            printf ("Getting job template\n");
+
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            job_argv[0] = "5"; 
+            job_argv[1] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, exit_job, NULL, 0);         
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;               
+               continue;
+            }
+
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;               
+               continue;
+            }
+
+            drmaa_wexitstatus(&exit_status, status, NULL, 0);
+
+            if (exit_status != 5) {
+               fprintf(stderr, "job \"%s\" returned wrong exit status %d instead of 5\n", 
+                                 jobid, exit_status);
+               failed_test = 1;
+            }
+            else if (!failed_test) {
+               printf ("Test succeeded!\n");
+            }
+         } while (0);
+         
+         if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
+         
+         if (failed_test) test_failed = 1;
+         failed_test = 0;
+         
+         /*
+          * testing job submission state and job name
+          */
+
+         do {
+            printf ("Testing job submission state and job name\n");
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            job_argv[0] = "5"; 
+            job_argv[1] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, exit_job, NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_JS_STATE, DRMAA_SUBMISSION_STATE_HOLD, NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_JOB_NAME, "ExitTest", NULL, 0);         
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Getting job name for job %u from GDI\n", atol(jobid));
+            lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+            lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+            alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+            job_ep = lFirst (job_lp);
+            lFreeWhere (where);
+            lFreeWhat (what);
+
+            int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
+
+            if (tmp_ret > 0) {
+               fprintf (stderr, "problem talking to gdi\n");
+               failed_test = 1;
+            }
+
+            alp = lFreeList(alp);         
+
+            if (job_ep == NULL) {
+               printf ("No such job number.\n");
+               
+               failed_test = 1;
+            }
+            else if ((job_ep != NULL) && (strcmp (lGetString (job_ep, JB_job_name), "ExitTest") != 0)) {
+               fprintf(stderr, "Job \"%s\" name was \"%s\" instead of \"ExitTest\"\n", 
+                                 jobid, lGetString (job_ep, JB_job_name));
+               failed_test = 1;
+            }
+
+            job_lp = lFreeList (job_lp);
+            
+            printf ("Checking job state\n");
+            if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
+                  !=DRMAA_ERRNO_SUCCESS) {
+                fprintf(stderr, "drmaa_job_ps(\"%s\") failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
+               fprintf (stderr, "Job \"%s\" was not in hold state\n");
+               failed_test = 1;
+            }
+
+            printf ("Releasing job\n");
+            if (drmaa_control(jobid, DRMAA_CONTROL_RELEASE, diagnosis, 
+                              sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_control(%s, %s) failed: %s\n", 
+                        jobid, drmaa_ctrl2str(DRMAA_CONTROL_RELEASE), diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+            }
+            
+            if (!failed_test) {
+               printf ("Test succeeded!\n");
+            }
+         } while (0);
+         
+         if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
+         
+         if (failed_test) test_failed = 1;
+         failed_test = 0;
+         
+         /*
+          * testing working directory, input stream and output stream
+          */
+
+         do {
+            printf ("Testing working directory, input stream and output stream\n");
+
+            printf ("Writing input file\n");
+            char *abs_path = (char *)malloc (sizeof (char) * 128);
+            
+            strcpy (abs_path, "/tmp/");
+            if (!(fp = fopen (strcat (abs_path, input_path), "w"))) {
+               fprintf(stderr, "fopen(%s, w) failed: %s\n", abs_path, strerror(errno));
+               failed_test = 1;
+               continue;
+            }
+
+            fprintf(fp, "%s\n", mirror_text);
+            fclose(fp);
+            
+            printf ("Clearing output file\n");
+            strcpy (abs_path, "/tmp/");
+            if ((unlink (strcat (abs_path, output_path)) == -1) && (errno != ENOENT)) {
+               fprintf(stderr, "unlink(%s) failed: %s\n", abs_path, strerror(errno));
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            drmaa_set_attribute(jt, DRMAA_WD, "/tmp", NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, mirror_job, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_INPUT_PATH, input_path, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, output_path, NULL, 0);         
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            strcpy (abs_path, "/tmp/");
+            if (!(fp=fopen(strcat (abs_path, output_path), "r"))) {
+               fprintf(stderr, "fopen(%s) failed: %s\n", abs_path, strerror(errno));
+               failed_test = 1;
+               continue;
+            }
+            free (abs_path);
+
+            fscanf(fp, "%s", buffer);
+            if (strcmp(buffer, mirror_text)) {
+               fprintf(stderr, "Wrong output file: %s\n", buffer);
+               failed_test = 1;
+            }
+            else if (!failed_test) {
+               printf ("Test succeeded!\n");
+            }
+         } while (0);
+         
+         if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
+
+         if (failed_test) test_failed = 1;
+         failed_test = 0;
+         
+         /*
+          * testing error path
+          */
+         do {
+            printf ("Testing error stream\n");
+            
+            printf ("Clearing error file\n");
+            char *abs_path = (char *)malloc (sizeof (char) * 128);
+            
+            strcpy (abs_path, "/tmp/");
+            if ((unlink (strcat (abs_path, error_path)) == -1) && (errno != ENOENT)) {
+               fprintf(stderr, "unlink(%s) failed: %s\n", abs_path, strerror(errno));
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            drmaa_set_attribute(jt, DRMAA_WD, "/tmp", NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "/usr/bin/tar", NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_ERROR_PATH, error_path, NULL, 0);         
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            strcpy (abs_path, "/tmp/");
+            if (!(fp=fopen(strcat (abs_path, error_path), "r"))) {
+               fprintf(stderr, "fopen(%s) failed: %s\n", abs_path, strerror(errno));
+               failed_test = 1;
+               continue;
+            }
+            free (abs_path);
+
+            fscanf(fp, "%10c", buffer);
+            buffer[10] = '\0';
+            if (strcmp("Usage: tar", buffer) != 0) {
+               fprintf(stderr, "wrong output file: %s\n", buffer);
+               failed_test = 1;
+            }
+            else if (!failed_test) {
+               printf ("Test succeeded!\n");
+            }
+         } while (0);
+
+         if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
+         
+         if (failed_test) test_failed = 1;
+         failed_test = 0;
+         
+         /*
+          * testing join files
+          */
+         do {
+            printf ("Testing join files\n");
+            //First submit job to create tar file
+            char *tar_path = "test.tar";
+            char *abs_path = (char *)malloc (sizeof (char) * 128);
+            
+            printf ("Running job to prepare data\n");
+            printf ("Clearing output file\n");
+            strcpy (abs_path, "/tmp/");
+            if ((unlink (strcat (abs_path, output_path)) == -1) && (errno != ENOENT)) {
+               fprintf(stderr, "unlink(%s) failed: %s\n", abs_path, strerror(errno));
+               failed_test = 1;
+               continue;
+            }
+            
+            printf ("Clearing tar file\n");
+            strcpy (abs_path, "/tmp/");
+            if ((unlink (strcat (abs_path, tar_path)) == -1) && (errno != ENOENT)) {
+               fprintf(stderr, "unlink(%s) failed: %s\n", abs_path, strerror(errno));
+               failed_test = 1;
+               continue;
+            }
+            
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            job_argv[0] = "cvf"; 
+            job_argv[1] = tar_path;
+            job_argv[2] = input_path;
+            job_argv[3] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_WD, "/tmp", NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "/usr/bin/tar", NULL, 0);         
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            drmaa_delete_job_template(jt, NULL, 0);
+            jt = NULL;
+            
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+            
+            //submit job to read tar file
+            printf ("Running job to read data\n");
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            job_argv[0] = "tvf"; 
+            job_argv[1] = "test.tar"; 
+            job_argv[2] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_WD, "/tmp", NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "/usr/bin/tar", NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, output_path, NULL, 0);         
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            strcpy (abs_path, "/tmp/");
+            if (!(fp=fopen(strcat (abs_path, output_path), "r"))) {
+               fprintf(stderr, "fopen(%s) failed: %s\n", abs_path, strerror(errno));
+               failed_test = 1;
+               continue;
+            }
+            free (abs_path);
+
+            fscanf(fp, "%14c%*[^\n]\n", buffer);
+            buffer[14] = '\0';
+            if (strcmp("tar: blocksize", buffer) != 0) {
+               fprintf(stderr, "missing stderr from output file: %s\n", buffer);
+               failed_test = 1;
+            }
+
+            fscanf(fp, "%4c\n", buffer);
+            buffer[4] = '\0';
+            if (strcmp("-rw-", buffer) != 0) {
+               fprintf(stderr, "missing stdout from output file: %s\n", buffer);
+               failed_test = 1;
+            }
+            else if (!failed_test) {
+               printf ("Test succeeded!\n");
+            }
+         } while (0);
+
+         if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
+
+         if (failed_test) test_failed = 1;
+         failed_test = 0;
+         
+         /*
+          * testing job category
+          */
+         do {
+            printf ("Testing job category\n");
+            printf ("$SGE_ROOT/$SGE_CELL/common/sge_request should contain the following entry:\n");
+            printf ("test.cat -N ExitTest -h\n");
+            
+            //first test that it works            
+            printf ("Testing job category standalone\n");
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            job_argv[0] = "10"; 
+            job_argv[1] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, exit_job, NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_JOB_CATEGORY, "test.cat", NULL, 0);         
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            drmaa_delete_job_template(jt, NULL, 0);
+            jt = NULL;
+
+            printf ("Getting job name for job %u from GDI\n", atol(jobid));
+            lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+            lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+            alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+            job_ep = lFirst (job_lp);
+            lFreeWhere (where);
+            lFreeWhat (what);
+
+            int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
+
+            if (tmp_ret > 0) {
+               fprintf (stderr, "problem talking to gdi\n");
+               failed_test = 1;
+               continue;
+            }
+
+            alp = lFreeList(alp);         
+
+            if (job_ep == NULL) {
+               printf ("No such job number.\n");
+               
+               failed_test = 1;
+            }
+            else if ((job_ep != NULL) && (strcmp (lGetString (job_ep, JB_job_name), "ExitTest") != 0)) {
+               fprintf(stderr, "Job \"%s\" name was \"%s\" instead of \"ExitTest\"\n", 
+                                 jobid, lGetString (job_ep, JB_job_name));
+               failed_test = 1;
+            }
+
+            job_lp = lFreeList (job_lp);
+
+            printf ("Checking job state\n");
+            if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
+                  !=DRMAA_ERRNO_SUCCESS) {
+                fprintf(stderr, "drmaa_job_ps(\"%s\") failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
+               fprintf (stderr, "Job \"%s\" was not in hold state\n");
+               failed_test = 1;
+            }
+
+            printf ("Releasing job\n");
+            if (drmaa_control(jobid, DRMAA_CONTROL_RELEASE, diagnosis, 
+                              sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_control(%s, %s) failed: %s\n", 
+                        jobid, drmaa_ctrl2str(DRMAA_CONTROL_RELEASE), diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            //then test that it doesn't override DRMAA attributes
+            printf ("Testing job category v/s DRMAA attributes\n");
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            job_argv[0] = "10"; 
+            job_argv[1] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, exit_job, NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_JOB_NAME, "DRMAAExitTest", NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_JOB_CATEGORY, "test.cat", NULL, 0);         
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Getting job name for job %u from GDI\n", atol(jobid));
+            where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+            what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+            alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+            job_ep = lFirst (job_lp);
+            lFreeWhere (where);
+            lFreeWhat (what);
+
+            tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
+
+            if (tmp_ret > 0) {
+               fprintf (stderr, "problem talking to gdi\n");
+               failed_test = 1;
+            }
+
+            alp = lFreeList(alp);         
+
+            if (job_ep == NULL) {
+               printf ("No such job number.\n");
+               
+               failed_test = 1;
+            }
+            else if ((job_ep != NULL) && (strcmp (lGetString (job_ep, JB_job_name), "DRMAAExitTest") != 0)) {
+               fprintf(stderr, "Job \"%s\" name was \"%s\" instead of \"DRMAAExitTest\"\n", 
+                                 jobid, lGetString (job_ep, JB_job_name));
+               failed_test = 1;
+            }
+
+            job_lp = lFreeList (job_lp);
+
+            printf ("Checking job state\n");
+            if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
+                  !=DRMAA_ERRNO_SUCCESS) {
+                fprintf(stderr, "drmaa_job_ps(\"%s\") failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
+               fprintf (stderr, "job \"%s\" was not in hold state\n");
+               failed_test = 1;
+            }
+
+            printf ("Releasing job\n");
+            if (drmaa_control(jobid, DRMAA_CONTROL_RELEASE, diagnosis, 
+                              sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_control(%s, %s) failed: %s\n", 
+                        jobid, drmaa_ctrl2str(DRMAA_CONTROL_RELEASE), diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+            else if (!failed_test) {
+               printf ("Test succeeded!\n");
+            }
+         } while (0);
+
+         if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
+         
+         if (failed_test) test_failed = 1;
+         failed_test = 0;
+         
+         /*
+          * testing native specification
+          */
+         do {
+            printf ("Testing native specification\n");
+            //first test that it works            
+            printf ("Testing native specification standalone\n");
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            job_argv[0] = "10"; 
+            job_argv[1] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, exit_job, NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, "-h -N ExitTest", NULL, 0);         
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            drmaa_delete_job_template(jt, NULL, 0);
+            jt = NULL;
+
+            printf ("Getting job name for job %u from GDI\n", atol(jobid));
+            lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+            lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+            alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+            job_ep = lFirst (job_lp);
+            lFreeWhere (where);
+            lFreeWhat (what);
+
+            int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
+
+            if (tmp_ret > 0) {
+               fprintf (stderr, "problem talking to gdi\n");
+               failed_test = 1;
+               continue;
+            }
+
+            alp = lFreeList(alp);         
+
+            if (job_ep == NULL) {
+               printf ("No such job number.\n");
+               
+               failed_test = 1;
+            }
+            else if ((job_ep != NULL) && (strcmp (lGetString (job_ep, JB_job_name), "ExitTest") != 0)) {
+               fprintf(stderr, "Job \"%s\" name was \"%s\" instead of \"ExitTest\"\n", 
+                                 jobid, lGetString (job_ep, JB_job_name));
+               failed_test = 1;
+            }
+
+            job_lp = lFreeList (job_lp);
+
+            printf ("Checking job state\n");
+            if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
+                  !=DRMAA_ERRNO_SUCCESS) {
+                fprintf(stderr, "drmaa_job_ps(\"%s\") failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
+               fprintf (stderr, "Job \"%s\" was not in hold state\n");
+               failed_test = 1;
+            }
+
+            printf ("Releasing job\n");
+            if (drmaa_control(jobid, DRMAA_CONTROL_RELEASE, diagnosis, 
+                              sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_control(%s, %s) failed: %s\n", 
+                        jobid, drmaa_ctrl2str(DRMAA_CONTROL_RELEASE), diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            //then test that it doesn't override DRMAA attributes
+            printf ("Testing native specification v/s DRMAA attributes\n");
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            job_argv[0] = "10"; 
+            job_argv[1] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, exit_job, NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_JOB_NAME, "DRMAAExitTest", NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, "-h -N ExitTest", NULL, 0);         
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Getting job name for job %u from GDI\n", atol(jobid));
+            where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+            what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+            alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+            job_ep = lFirst (job_lp);
+            lFreeWhere (where);
+            lFreeWhat (what);
+
+            tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
+
+            if (tmp_ret > 0) {
+               fprintf (stderr, "problem talking to gdi\n");
+               failed_test = 1;
+            }
+
+            alp = lFreeList(alp);         
+
+            if (job_ep == NULL) {
+               printf ("No such job number.\n");
+               
+               failed_test = 1;
+            }
+            else if ((job_ep != NULL) && (strcmp (lGetString (job_ep, JB_job_name), "DRMAAExitTest") != 0)) {
+               fprintf(stderr, "Job \"%s\" name was \"%s\" instead of \"DRMAAExitTest\"\n", 
+                                 jobid, lGetString (job_ep, JB_job_name));
+               failed_test = 1;
+            }
+
+            job_lp = lFreeList (job_lp);
+
+            printf ("Checking job state\n");
+            if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
+                  !=DRMAA_ERRNO_SUCCESS) {
+                fprintf(stderr, "drmaa_job_ps(\"%s\") failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
+               fprintf (stderr, "job \"%s\" was not in hold state\n");
+               failed_test = 1;
+            }
+
+            printf ("Releasing job\n");
+            if (drmaa_control(jobid, DRMAA_CONTROL_RELEASE, diagnosis, 
+                              sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_control(%s, %s) failed: %s\n", 
+                        jobid, drmaa_ctrl2str(DRMAA_CONTROL_RELEASE), diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+            else if (!failed_test) {
+               printf ("Test succeeded!\n");
+            }
+         } while (0);
+
+         if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
+
+         if (failed_test) test_failed = 1;
+         failed_test = 0;
+         
+         /*
+          * testing start time
+          */
+         do {
+            time_t now, later;
+            struct tm timenow;
+            struct tm timelater;
+            char timestr[16];
+            
+            printf ("Testing start time\n");
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            job_argv[0] = "0"; 
+            job_argv[1] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, exit_job, NULL, 0);         
+            
+            time (&now);
+            localtime_r (&now, &timenow);
+            
+            timenow.tm_min++;
+            
+            /* This fails at midnight. */
+            if (timenow.tm_min == 0) {
+               timenow.tm_hour++;
+            }
+            
+            sprintf (timestr, "%.4d/%.2d/%.2d %.2d:%.2d:%.2d", timenow.tm_year + 1900,
+                     timenow.tm_mon + 1, timenow.tm_mday, timenow.tm_hour,
+                     timenow.tm_min, timenow.tm_sec);
+            printf ("%s\n", timestr);
+            
+            drmaa_set_attribute(jt, DRMAA_START_TIME, timestr, NULL, 0);         
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+            
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+            
+            printf ("Waiting for job to complete\n");            
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            time (&later);
+            
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+            
+            localtime_r (&now, &timenow);            
+            localtime_r (&later, &timelater);
+            
+            int time_diff = (((timelater.tm_hour * 60) + timelater.tm_min) * 60 + timelater.tm_sec) -
+                (((timenow.tm_hour * 60) + timenow.tm_min) * 60 + timenow.tm_sec);
+            
+            /* Allow 10 seconds for scheduling and run time.  This test will fail
+             * if run at midnight. */
+            if (time_diff > 70) {
+               printf ("Job took %d seconds longer than expected\n", time_diff - 60);
+               failed_test = 1;
+            }
+            else if (time_diff < 0) {
+               printf ("Job finished in %d seconds\n", 
+                       ((timelater.tm_hour * 60) + timelater.tm_min) * 60 + timelater.tm_sec);
+               failed_test = 1;
+            }
+            else if (!failed_test) {
+               printf ("Test succeeded!\n");
+            }
+         } while (0);
+            
+         if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
+
+         if (failed_test) test_failed = 1;
+         failed_test = 0;
+         
+         /*
+          * testing job environment
+          */
+
+         do {
+            const char *job_env[2];
+            char abs_path[128];
+            
+            printf ("Testing job environment\n");
+
+            printf ("Clearing output file\n");
+            strcpy (abs_path, "/tmp/");
+            if ((unlink (strcat (abs_path, output_path)) == -1) && (errno != ENOENT)) {
+               fprintf(stderr, "unlink(%s) failed: %s\n", abs_path, strerror(errno));
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            job_argv[0] = "$YOU_ARE_MY_SUNSHINE"; 
+            job_argv[1] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+            job_env[0] = "YOU_ARE_MY_SUNSHINE=MyOnlySunshine";
+            job_env[1] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ENV, job_env, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_WD, "/tmp", NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "/usr/bin/echo", NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, output_path, NULL, 0);         
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            strcpy (abs_path, "/tmp/");
+            if (!(fp=fopen(strcat (abs_path, output_path), "r"))) {
+               fprintf(stderr, "fopen(%s) failed: %s\n", abs_path, strerror(errno));
+               failed_test = 1;
+               continue;
+            }
+
+            fscanf(fp, "%s", buffer);
+            if (strcmp(buffer, "MyOnlySunshine")) {
+               fprintf(stderr, "Wrong output file: %s\n", buffer);
+               failed_test = 1;
+            }
+            else if (!failed_test) {
+               printf ("Test succeeded!\n");
+            }
+         } while (0);
+         
+         if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
+
+         if (failed_test) test_failed = 1;
+         failed_test = 0;
+         
+         /*
+          * testing email address
+          */
+
+         do {
+            const char *email[3];
+            
+            printf ("Testing email address\n");
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            email[0] = "dan.templeton@sun.com"; 
+            email[1] = "dan.templeton@sun.com"; 
+            email[2] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_EMAIL, email, NULL, 0);
+            job_argv[0] = "0";
+            job_argv[1] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, exit_job, NULL, 0);
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Check for email to find out if the test succeeded.\n");
+         } while (0);
+         
+         if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
+         
+         if (failed_test) test_failed = 1;
+         failed_test = 0;
+         
+         /*
+          * testing email supression
+          */
+
+         do {
+            const char *email[2];
+            
+            printf ("Testing email supression\n");
+//            printf ("Testing suppression via DRMAA_BLOCK_EMAIL\n");
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            email[0] = "dan.templeton@sun.com"; 
+            email[1] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_EMAIL, email, NULL, 0);
+            job_argv[0] = "0";
+            job_argv[1] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_BLOCK_EMAIL, "1", NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, exit_job, NULL, 0);
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+/*            
+            printf ("Testing suppression via missing DRMAA_V_EMAIL\n");
+            printf ("Getting job template\n");
+            drmaa_allocate_job_template(&jt, NULL, 0);
+
+            if (jt == NULL) {
+               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Filling job template\n");
+            job_argv[0] = "0";
+            job_argv[1] = NULL;
+            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, exit_job, NULL, 0);
+
+            printf ("Running job\n");
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               failed_test = 1;
+               continue;
+            }
+
+            printf ("Waiting for job to complete\n");
+            do {
+               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            printf("Job with job id %s finished\n", jobid);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+               failed_test = 1;
+               continue;
+            }*/
+
+            printf ("Check for email to find out if the test succeeded.\n");
+         } while (0);
+         
+         if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
+
+         if (failed_test) test_failed = 1;
+         
+         /*
+          * shutdown session
+          */
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+         
+         return test_failed;
+      }
    default:
       break;
    }

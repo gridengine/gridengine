@@ -103,10 +103,10 @@ int had_free_epoch
    ck_4_zombie_jobs(now);
    ck_4_deliver_events(now);
 
-#ifdef KERBEROS
-   krb_check_for_idle_clients();
-   krb_renew_tgts(Master_Job_List);
-#endif
+   /*
+   ** security hook
+   */
+   sge_security_ck_to_do();
 
    DEXIT;
    return;

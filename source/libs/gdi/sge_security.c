@@ -106,7 +106,6 @@ int sge_security_initialize(const char *name)
 #ifdef SECURE
       if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
          if (sec_init(name)) {
-            CRITICAL((SGE_EVENT, MSG_GDI_INITSECURITYDATAFAILED ));
             DEXIT;
             return -1;
          }
@@ -114,8 +113,7 @@ int sge_security_initialize(const char *name)
 #endif
 
 #ifdef KERBEROS
-      if(krb_init(name)){
-         CRITICAL((SGE_EVENT,MSG_GDI_INITKERBEROSSECURITYDATAFAILED ));
+      if (krb_init(name)) {
          DEXIT;
          return -1;
       }
@@ -1180,3 +1178,16 @@ int sge_security_verify_user(const char *host, const char *commproc, u_short id,
    DEXIT;
    return True;
 }   
+
+void sge_security_ck_to_do(void)
+{
+#ifdef SECURE
+   sec_clear_connectionlist();
+#endif
+   
+#ifdef KERBEROS
+   krb_check_for_idle_clients();
+   krb_renew_tgts(Master_Job_List);
+#endif
+}
+

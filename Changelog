@@ -1,3 +1,10 @@
+AA-2002-01-23-0: Feature:  Security:
+                           - change of cert/key paths
+                           - sge_security_ck_to_do() added
+                             kerberos and CSP sec funcs now in module
+                             libs/gdi/sge_security.c
+                           - clearance of connectionlist changed
+
 CR-2002-01-22-0: Testsuite: - install_core_system check will now use default
                               values for most all cluster configuration setup 
                               and report configuration changes through sge_inst 

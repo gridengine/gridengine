@@ -50,6 +50,7 @@ enum {
    SEC_Host,
    SEC_Commproc,
    SEC_Id,
+   SEC_UniqueIdentifier,
    SEC_ExpiryDate,
    SEC_SeqNoSend,
    SEC_SeqNoReceive,
@@ -68,6 +69,7 @@ LISTDEF(SecurityT)
    SGE_HOST(SEC_Host)               /* CR - hostname change */
    SGE_STRING(SEC_Commproc)
    SGE_INT(SEC_Id)
+   SGE_STRING(SEC_UniqueIdentifier)
    SGE_STRING(SEC_ExpiryDate)
    SGE_ULONG(SEC_SeqNoSend)
    SGE_ULONG(SEC_SeqNoReceive)
@@ -86,6 +88,7 @@ NAMEDEF(SecurityN)
    NAME("SEC_Host")
    NAME("SEC_Commproc")
    NAME("SEC_Id")
+   NAME("SEC_UniqueIdentifier")
    NAME("SEC_ExpiryDate")
    NAME("SEC_SeqNoSend")
    NAME("SEC_SeqNoReceive")

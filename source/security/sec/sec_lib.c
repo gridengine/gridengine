@@ -58,13 +58,14 @@
 #include "sge_exit.h"
 #include "sge_mkdir.h"
 #include "msg_sec.h"
+#include "msg_gdilib.h"
 
 #include "sec_crypto.h"          /* lib protos      */
 #include "sec_lib.h"             /* lib protos      */
 
 #define CHALL_LEN       16
 #define ValidMinutes    1          /* expiry of connection        */
-#define SGESecPath      ".SGE_SECURE"
+#define SGESecPath      ".sge"
 #define CaKey           "private/cakey.pem"
 #define CaCert          "cacert.pem"
 #define CA_DIR          "common/sgeCA"
@@ -148,7 +149,7 @@ static int sec_unpack_reconnect(sge_pack_buffer *pb,
 
 
 static void sec_error(void);
-static int sec_send_err(char *commproc, int id, char *host, sge_pack_buffer *pb, char *err_msg);
+static int sec_send_err(char *commproc, int id, char *host, sge_pack_buffer *pb, const char *err_msg);
 static int sec_set_connid(char **buffer, int *buflen);
 static int sec_get_connid(char **buffer, u_long32 *buflen);
 static int sec_update_connlist(const char *host, const char *commproc, int id);
@@ -156,14 +157,8 @@ static int sec_set_secdata(const char *host, const char *commproc, int id);
 static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int id, const char *uniqueIdentifier);
 static void sec_keymat2list(lListElem *element);
 static void sec_list2keymat(lListElem *element);
-/* static void sec_print_bytes(FILE *f, int n, char *b); */
-/* static int sec_set_verify_locations(char *file_env); */
-/* static int sec_verify_callback(int ok, X509 *xs, X509 *xi, int depth, int error); */
-/* static char *sec_make_certdir(char *rootdir); */
-/* static char *sec_make_keydir(char *rootdir); */
-/* static char *sec_make_cadir(char *cell); */
-/* static char *sec_make_userdir(char *cell); */
-static int sec_setup_path(int is_daemon);
+static int sec_verify_callback(int ok, X509_STORE_CTX *ctx);
+static void sec_setup_path(int is_daemon);
 
 static sec_exit_func_type install_sec_exit_func(sec_exit_func_type);
 
@@ -298,7 +293,7 @@ int sec_init(const char *progname)
       if (randfile) {
          RAND_load_file(randfile, 2048);
       } else {   
-         ERROR((SGE_EVENT,"set RANDFILE environment variable\n"));
+         ERROR((SGE_EVENT, MSG_SEC_RANDFILENOTSET));
          DEXIT;
          return -1;
       }
@@ -334,7 +329,7 @@ int sec_init(const char *progname)
    gsd.key_mat_len = GSD_KEY_MAT_32;
    gsd.key_mat = (u_char *) malloc(gsd.key_mat_len);
    if (!gsd.key_mat){
-      ERROR((SGE_EVENT,"failed malloc memory!\n"));
+      ERROR((SGE_EVENT, MSG_GDI_MEMORY_MALLOCFAILED));
       DEXIT;
       return -1;
    }
@@ -352,17 +347,12 @@ int sec_init(const char *progname)
    /* 
    ** setup the filenames of certificates, keys, etc.
    */
-   if (!sec_setup_path(gsd.is_daemon)) {;
-      ERROR((SGE_EVENT,"failed sec_setup_path\n"));
-      DEXIT;
-      return -1;
-   }
+   sec_setup_path(gsd.is_daemon);
 
    /* 
    ** read security related files
    */
    if(sec_files()){
-      ERROR((SGE_EVENT, "failed read security files\n"));
       DEXIT;
       return -1;
    }
@@ -622,25 +612,13 @@ static int sec_files()
 
    DENTER(GDI_LAYER,"sec_files");
 
-#if 0
-   /* 
-   ** set location of CA
-   */
-   i = sec_set_verify_locations(ca_cert_file);
-   if (i<0) {
-      ERROR((SGE_EVENT,"sec_set_verify_locations failed!\n"));
-      if (i == -1)
-         sec_error();
-      goto error;
-   }
-#endif
    /* 
    ** read Certificate from file
    */
    fp = fopen(cert_file, "r");
    if (fp == NULL) {
-       ERROR((SGE_EVENT, "Can't open Cert_file '%s': %s!!\n",
-                        cert_file, strerror(errno)));
+       ERROR((SGE_EVENT, MSG_SEC_CANTOPENCERTFILE_SS,
+              cert_file, strerror(errno)));
        i = -1;
        goto error;
    }
@@ -653,7 +631,7 @@ static int sec_files()
    fclose(fp);
 
    if (!sec_verify_certificate(gsd.x509)) {
-      ERROR((SGE_EVENT,"failed verify own certificate\n"));
+      ERROR((SGE_EVENT, MSG_SEC_FAILEDVERIFYOWNCERT));
       sec_error();
       i = -1;
       goto error;
@@ -665,8 +643,7 @@ static int sec_files()
    */
    fp = fopen(key_file, "r");
    if (fp == NULL){
-      ERROR((SGE_EVENT,"Can't open Key _file '%s': %s!\n",
-                        key_file,strerror(errno)));
+      ERROR((SGE_EVENT, MSG_SEC_CANTOPENKEYFILE_SS, key_file, strerror(errno)));
       i = -1;
       goto error;
    }
@@ -696,24 +673,35 @@ static int sec_verify_certificate(X509 *cert)
 {
    X509_STORE *ctx = NULL;
    X509_STORE_CTX csc;
-   char buf[BUFSIZ];
    int ret;
+   int err;
 
    DENTER(GDI_LAYER, "sec_verify_certificate");
 
    DPRINTF(("subject: %s\n", X509_NAME_oneline(X509_get_subject_name(cert), 0, 0)));
-   if (X509_NAME_get_text_by_OBJ(X509_get_subject_name(cert), 
-      OBJ_nid2obj(NID_uniqueIdentifier), buf, sizeof(buf))) {
-      DPRINTF(("UID: %s\n", buf));
-   }   
    DPRINTF(("ca_cert_file: %s\n", ca_cert_file));
    ctx = X509_STORE_new();
    X509_STORE_set_default_paths(ctx);
    X509_STORE_load_locations(ctx, ca_cert_file, NULL);
    X509_STORE_CTX_init(&csc, ctx, cert, NULL);
+   if (getenv("SGE_CERT_DEBUG")) {
+      X509_STORE_set_verify_cb_func(&csc, sec_verify_callback);
+   }   
    ret = X509_verify_cert(&csc);
+   err = X509_STORE_CTX_get_error(&csc);
    X509_STORE_CTX_cleanup(&csc);
    X509_STORE_free(ctx);
+   
+   switch (err) {
+      case X509_V_ERR_CERT_NOT_YET_VALID:
+         printf("certificate not yet valid\n");
+         break;
+
+      case X509_V_ERR_CERT_HAS_EXPIRED:
+         printf("certificate has expired\n");
+         break;
+   }      
+   
 
    DEXIT;
    return ret;
@@ -861,7 +849,7 @@ const char *tohost
    if (gsd->connect) {
 debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
       if (gsd->refresh_time && (X509_cmp_current_time(gsd->refresh_time) > 0)) {
-         DPRINTF(("++++ Connection still valid\n"));      
+         DPRINTF(("++++ Connection %d still valid\n", (int) gsd->connid));      
          DEXIT;      
          return 0;
       }   
@@ -895,7 +883,7 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    ** prepare packing buffer
    */
    if ((i=init_packbuffer(&pb, 8192, 0))) {
-      ERROR((SGE_EVENT,"failed init_packbuffer\n"));
+      ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED));
       goto error;
    }
 
@@ -903,7 +891,7 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    ** write data to packing buffer
    */
    if ((i=sec_pack_announce(x509_len, x509_buf, challenge, &pb))) {
-      ERROR((SGE_EVENT,"failed pack announce buffer\n"));
+      ERROR((SGE_EVENT, MSG_SEC_PACKANNOUNCEFAILED));
       goto error;
    }
 
@@ -932,11 +920,11 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    fromcommproc[0] = '\0';
    fromid = 0;
    fromtag = 0;
-   if (receive_message(fromcommproc, &fromid, fromhost, &fromtag,
-                        &pb.head_ptr, (u_long32 *) &pb.mem_size, COMMD_SYNCHRON, 
-                        &compressed)) {
-      ERROR((SGE_EVENT,"failed get sec_response from (%s:%d:%s:%d)\n",
-                fromcommproc,fromid,fromhost,fromtag));
+   if ((i = receive_message(fromcommproc, &fromid, fromhost, &fromtag,
+                        &pb.head_ptr, (u_long32 *) &pb.mem_size, 
+                        COMMD_SYNCHRON, &compressed))) {
+      ERROR((SGE_EVENT, MSG_SEC_RESPONSEFAILED_SISIS,
+             fromcommproc, fromid, fromhost, fromtag, cl_errstr(i)));
       i = -1;
       goto error;
    }
@@ -951,13 +939,13 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    ** manage error or wrong tags
    */
    if (fromtag == TAG_SEC_ERROR){
-      ERROR((SGE_EVENT,"master reports error: "));
-      ERROR((SGE_EVENT,pb.cur_ptr));
+      ERROR((SGE_EVENT, MSG_SEC_MASTERERROR));
+      ERROR((SGE_EVENT, pb.cur_ptr));
       i=-1;
       goto error;
    }
    if (fromtag != TAG_SEC_RESPOND) {
-      ERROR((SGE_EVENT,"received unexpected TAG from master\n"));
+      ERROR((SGE_EVENT, MSG_SEC_UNEXPECTEDTAG));
       i=-1;
       goto error;
    }
@@ -972,7 +960,7 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
                            &iv_len, &iv, 
                            &enc_key_mat_len, &enc_key_mat, &pb);
    if (i) {
-      ERROR((SGE_EVENT,"failed unpack response buffer\n"));
+      ERROR((SGE_EVENT, MSG_SEC_UNPACKRESPONSEFAILED));
       goto error;
    }
 
@@ -987,7 +975,7 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    tmp = x509_master_buf;
    x509_master = d2i_X509(&x509_master, &tmp, x509_master_len);
    if (!x509_master) {
-      ERROR((SGE_EVENT,"failed read master certificate\n"));
+      ERROR((SGE_EVENT, MSG_SEC_MASTERCERTREADFAILED));
       sec_error();
       i = -1;
       goto error;
@@ -1012,7 +1000,7 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    master_key = X509_get_pubkey(x509_master);
    
    if(!master_key){
-      ERROR((SGE_EVENT,"cannot extract public key from master certificate\n"));
+      ERROR((SGE_EVENT, MSG_SEC_MASTERGETPUBKEYFAILED));
       sec_error();
       i=-1;
       goto error;
@@ -1024,7 +1012,7 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    EVP_VerifyInit(&ctx, gsd->digest);
    EVP_VerifyUpdate(&ctx, challenge, CHALL_LEN);
    if (!EVP_VerifyFinal(&ctx, enc_challenge, chall_enc_len, master_key)) {
-      ERROR((SGE_EVENT,"challenge from master is bad\n"));
+      ERROR((SGE_EVENT, MSG_SEC_MASTERBADCHALLENGE));
       i = -1;
       goto error;
    }   
@@ -1141,8 +1129,9 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    ** prepare packbuffer for sending message
    */
    if ((i=init_packbuffer(&pb_respond, 4096,0))) {
-      ERROR((SGE_EVENT,"failed init_packbuffer\n"));
-      sec_send_err(commproc,id,host,&pb_respond,"failed init_packbuffer\n");
+      ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED));
+      sec_send_err(commproc, id, host, &pb_respond, 
+                   MSG_SEC_INITPACKBUFFERFAILED);
       goto error;
    }
 
@@ -1150,8 +1139,9 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    ** read announce from packing buffer
    */
    if (sec_unpack_announce(&x509_len, &x509_buf, &challenge, &pb)) {
-      ERROR((SGE_EVENT,"failed unpack announce\n"));
-      sec_send_err(commproc, id, host, &pb_respond, "failed unpack announce\n");
+      ERROR((SGE_EVENT, MSG_SEC_UNPACKANNOUNCEFAILED));
+      sec_send_err(commproc, id, host, &pb_respond, 
+                   MSG_SEC_UNPACKANNOUNCEFAILED);
       goto error;
    }
 
@@ -1164,17 +1154,19 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    x509_buf = NULL;
 
    if (!x509){
-      ERROR((SGE_EVENT,"failed read client certificate\n"));
+      ERROR((SGE_EVENT, MSG_SEC_CLIENTCERTREADFAILED));
       sec_error();
-      sec_send_err(commproc, id, host, &pb_respond, "failed read client certificate\n");
+      sec_send_err(commproc, id, host, &pb_respond, 
+                   MSG_SEC_CLIENTCERTREADFAILED);
       i = -1;
       goto error;
    }
 
    if (!sec_verify_certificate(x509)) {
-      ERROR((SGE_EVENT,"failed verify client certificate\n"));
+      ERROR((SGE_EVENT, MSG_SEC_CLIENTCERTVERIFYFAILED));
       sec_error();
-      sec_send_err(commproc, id, host, &pb_respond, "Client certificate is bad\n");
+      sec_send_err(commproc, id, host, &pb_respond, 
+                   MSG_SEC_CLIENTCERTVERIFYFAILED);
       i = -1;
       goto error;
    }
@@ -1196,9 +1188,10 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    public_key[0] = X509_get_pubkey(x509);
    
    if(!public_key[0]){
-      ERROR((SGE_EVENT,"cant get public key\n"));
+      ERROR((SGE_EVENT, MSG_SEC_CLIENTGETPUBKEYFAILED));
       sec_error();
-      sec_send_err(commproc,id,host,&pb_respond,"failed extract key from cert\n");
+      sec_send_err(commproc,id,host,&pb_respond, 
+                   MSG_SEC_CLIENTGETPUBKEYFAILED);
       i=-1;
       goto error;
    }
@@ -1212,8 +1205,8 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    enc_challenge = (u_char *) malloc(public_key_size);
 
    if (!enc_key_mat ||  !enc_challenge) {
-      ERROR((SGE_EVENT,"out of memory\n"));
-      sec_send_err(commproc,id,host,&pb_respond,"failed malloc memory\n");
+      ERROR((SGE_EVENT, MSG_GDI_MEMORY_MALLOCFAILED));
+      sec_send_err(commproc,id,host,&pb_respond, MSG_GDI_MEMORY_MALLOCFAILED);
       i=-1;
       goto error;
    }
@@ -1236,9 +1229,10 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    EVP_SignInit(&ctx, gsd.digest);
    EVP_SignUpdate(&ctx, challenge, CHALL_LEN);
    if (!EVP_SignFinal(&ctx, enc_challenge, &chall_enc_len, gsd.private_key)) {
-      ERROR((SGE_EVENT,"failed encrypt challenge MAC\n"));
+      ERROR((SGE_EVENT, MSG_SEC_ENCRYPTCHALLENGEFAILED));
       sec_error();
-      sec_send_err(commproc,id,host,&pb_respond,"failed encrypt challenge MAC\n");
+      sec_send_err(commproc, id, host, &pb_respond,
+                   MSG_SEC_ENCRYPTCHALLENGEFAILED);
       i = -1;
       goto error;
    }   
@@ -1254,18 +1248,18 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    */
    memset(iv, '\0', sizeof(iv));
    if (!EVP_SealInit(&ectx, gsd.cipher, ekey, &ekeylen, iv, public_key, 1)) {
-      ERROR((SGE_EVENT,"EVP_SealInit failed\n"));;
+      ERROR((SGE_EVENT, MSG_SEC_SEALINITFAILED));;
       EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
-      sec_send_err(commproc,id,host,&pb_respond,"failed encrypt keys\n");
+      sec_send_err(commproc,id,host,&pb_respond, MSG_SEC_SEALINITFAILED);
       i = -1;
       goto error;
    }
    if (!EVP_EncryptUpdate(&ectx, enc_key_mat, &enc_key_mat_len, gsd.key_mat, gsd.key_mat_len)) {
-      ERROR((SGE_EVENT,"failed encrypt keys\n"));
+      ERROR((SGE_EVENT, MSG_SEC_ENCRYPTKEYFAILED));
       EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
-      sec_send_err(commproc,id,host,&pb_respond,"failed encrypt keys\n");
+      sec_send_err(commproc,id,host,&pb_respond, MSG_SEC_ENCRYPTKEYFAILED);
       i = -1;
       goto error;
    }
@@ -1289,8 +1283,8 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    EVP_CIPHER_CTX_cleanup(&ectx);
 
    if (i) {
-      ERROR((SGE_EVENT,"failed write response to buffer\n"));
-      sec_send_err(commproc,id,host,&pb_respond,"failed write response to buffer\n");
+      ERROR((SGE_EVENT, MSG_SEC_PACKRESPONSEFAILED));
+      sec_send_err(commproc, id, host, &pb_respond, MSG_SEC_PACKRESPONSEFAILED);
       goto error;   
    }
 
@@ -1298,8 +1292,9 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    ** insert connection to Connection List
    */
    if (sec_insert_conn2list(gsd.connid, host, commproc, id, uniqueIdentifier)) {
-      ERROR((SGE_EVENT,"failed insert Connection to List\n"));
-      sec_send_err(commproc, id, host, &pb_respond, "failed insert you to list\n");
+      ERROR((SGE_EVENT, MSG_SEC_INSERTCONNECTIONFAILED));
+      sec_send_err(commproc, id, host, &pb_respond, 
+                   MSG_SEC_INSERTCONNECTIONFAILED);
       goto error;
    }
 
@@ -1310,7 +1305,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    
    if (send_message(0, commproc, id, host, TAG_SEC_RESPOND, pb_respond.head_ptr,
                      pb_respond.bytes_used, &dummymid, 0)) {
-      ERROR((SGE_EVENT,"Send message to (%s:%d:%s)\n", commproc,id,host));
+      ERROR((SGE_EVENT, MSG_SEC_SENDRESPONSEFAILED_SIS, commproc, id, host));
       i = -1;
       goto error;
    }
@@ -1388,7 +1383,7 @@ int inbuflen
    */
    outbuf = malloc(inbuflen + EVP_CIPHER_block_size(gsd.cipher));
    if (!outbuf) {
-      ERROR((SGE_EVENT,"failed malloc memory\n"));
+      ERROR((SGE_EVENT, MSG_GDI_MEMORY_MALLOCFAILED));
       i=-1;
       goto error;
    }
@@ -1409,13 +1404,13 @@ int inbuflen
    memset(iv, '\0', sizeof(iv));
    EVP_EncryptInit(&ctx, gsd.cipher, gsd.key_mat, iv);
    if (!EVP_EncryptUpdate(&ctx, md_value, (int*) &enc_md_len, md_value, md_len)) {
-      ERROR((SGE_EVENT,"failed encrypt MAC\n"));
+      ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMACFAILED));
       sec_error();
       i=-1;
       goto error;
    }
    if (!EVP_EncryptFinal(&ctx, md_value, (int*) &enc_md_len)) {
-      ERROR((SGE_EVENT,"failed encrypt MAC\n"));
+      ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMACFAILED));
       sec_error();
       i=-1;
       goto error;
@@ -1427,13 +1422,13 @@ int inbuflen
    EVP_EncryptInit(&ctx, gsd.cipher, gsd.key_mat, iv);
    if (!EVP_EncryptUpdate(&ctx, (unsigned char *) outbuf, (int*)&outlen,
                            (unsigned char*)inbuf, inbuflen)) {
-      ERROR((SGE_EVENT,"failed encrypt message\n"));
+      ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
       sec_error();
       i=-1;
       goto error;
    }
    if (!EVP_EncryptFinal(&ctx, (unsigned char*)outbuf, (int*) &outlen)) {
-      ERROR((SGE_EVENT,"failed encrypt message\n"));
+      ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
       sec_error();
       i=-1;
       goto error;
@@ -1446,7 +1441,7 @@ int inbuflen
    ** initialize packbuffer
    */
    if ((i=init_packbuffer(pb, md_len + outlen, 0))) {
-      ERROR((SGE_EVENT,"failed init_packbuffer\n"));
+      ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED));
       goto error;
    }
 
@@ -1458,7 +1453,7 @@ int inbuflen
                            (unsigned char *)outbuf, outlen);
    
    if (i) {
-      ERROR((SGE_EVENT,"failed pack message to buffer\n"));
+      ERROR((SGE_EVENT, MSG_SEC_PACKMSGFAILED));
       goto error;
    }
 
@@ -1469,7 +1464,7 @@ int inbuflen
       
       element = lGetElemUlong(conn_list, SEC_ConnectionID, gsd.connid);
       if (!element) {
-         ERROR((SGE_EVENT,"no list entry for connection\n"));
+         ERROR((SGE_EVENT, MSG_SEC_CONNECTIONNOENTRY));
          i = -1;
          goto error;
       }
@@ -1523,8 +1518,7 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
          ** someone wants to announce to master
          */
          if (sec_respond_announce(commproc, id, host, buffer,buflen)) {
-            ERROR((SGE_EVENT, "Failed send sec_response to (%s:%d:%s)\n",
-                     commproc, id, host));
+            ERROR((SGE_EVENT, MSG_SEC_RESPONSEFAILED_SIS, commproc, id, host));
             i = -1;
             goto error;
          }
@@ -1534,7 +1528,7 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
          ** a sec_decrypt error has occured
          */
          if (send_message(0,commproc,id,host,TAG_SEC_ANNOUNCE, buffer,buflen,&mid, compressed)) {
-            ERROR((SGE_EVENT,"Failed send summonses for announce to (%s:%d:%s)\n",commproc, id, host));
+            ERROR((SGE_EVENT, MSG_SEC_SUMMONSESFAILED_SIS, commproc, id, host));
             i = -1;
             goto error;
          }
@@ -1623,6 +1617,25 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    }
 
    if (conn_list) {
+      /*
+      ** for debugging
+      */
+      if (getenv("SGE_DEBUG_CONNLIST")) {
+         lListElem *el;
+         ASN1_UTCTIME *utctime = ASN1_UTCTIME_new();
+         for_each(el, conn_list) {
+            const char *dtime = lGetString(el, SEC_ExpiryDate);
+            utctime = d2i_ASN1_UTCTIME(NULL, (unsigned char**) &dtime, 
+                                             strlen(dtime));
+            debug_print_ASN1_UTCTIME("Valid Time: ", utctime);
+            printf("Connection: %d (%s, %s, %d)\n", 
+                      (int) lGetUlong(el, SEC_ConnectionID), 
+                      lGetHost(el, SEC_Host),
+                      lGetString(el, SEC_Commproc),
+                      lGetInt(el, SEC_Id));
+         }
+         ASN1_UTCTIME_free(utctime);
+      }
    
       /* 
       ** search list element for this connection
@@ -1985,8 +1998,7 @@ static void sec_error(void)
 
    DENTER(GDI_LAYER,"sec_error");
    while ((l=ERR_get_error())){
-      ERROR((SGE_EVENT, ERR_error_string(l, NULL)));
-      ERROR((SGE_EVENT,"\n"));
+      ERROR((SGE_EVENT, "%s\n", ERR_error_string(l, NULL)));
    }
    DEXIT;
 }
@@ -2017,7 +2029,7 @@ char *commproc,
 int id,
 char *host,
 sge_pack_buffer *pb,
-char *err_msg 
+const char *err_msg 
 ) {
    int   i;
 
@@ -2257,33 +2269,6 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
 
    DENTER(GDI_LAYER, "sec_insert_conn2list");
    
-   /*
-   ** remove any outdated entries first
-   */
-   if (conn_list) {
-      ASN1_UTCTIME *utctime = ASN1_UTCTIME_new();
-
-      element = lFirst(conn_list);
-      while (element) {
-         lListElem *del_el;
-         const char *dtime = lGetString(element, SEC_ExpiryDate);
-         utctime = d2i_ASN1_UTCTIME(NULL, (unsigned char**) &dtime, 
-                                          strlen(dtime));
-/* debug_print_ASN1_UTCTIME("utctime: ", utctime); */
-         del_el = element;
-         element = lNext(element);
-         if ((X509_cmp_current_time(utctime) < 0)) { 
-            DPRINTF(("---- removed %d (%s, %s, %d) from conn_list\n", 
-                      lGetUlong(del_el, SEC_ConnectionID), 
-                      lGetHost(del_el, SEC_Host),
-                      lGetString(del_el, SEC_Commproc),
-                      lGetInt(del_el, SEC_Id)));
-            lRemoveElem(conn_list, del_el);
-         }   
-      }
-      ASN1_UTCTIME_free(utctime);
-   }
-
    /* 
    ** delete element if some with <host,commproc,id> exists   
    */
@@ -2298,6 +2283,19 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
    }
    element = lFindFirst(conn_list, where);
    where = lFreeWhere(where);
+
+   if (!element && sec_is_daemon(commproc)) {
+      where = lWhere("%T(%I==%s && %I==%s)", SecurityT,
+                       SEC_Host, host,
+                       SEC_Commproc, commproc);
+      if (!where) {
+         ERROR((SGE_EVENT, "can't build condition\n"));
+         DEXIT;
+         return -1;
+      }
+      element = lFindFirst(conn_list, where);
+      where = lFreeWhere(where);
+   }   
 
    /* 
    ** add new element if it does not exist                  
@@ -2423,9 +2421,10 @@ static void sec_list2keymat(lListElem *element)
 /*
 ** DESCRIPTION
 **	These functions generate the pathnames for key and certificate files.
-** and stores them in module static vars
+** and stores them in module static vars and forces an SGE_EXIT if something
+** is wrong
 */
-static int sec_setup_path(
+static void sec_setup_path(
 int is_daemon 
 ) {
    SGE_STRUCT_STAT sbuf;
@@ -2433,9 +2432,14 @@ int is_daemon
 	char *user_local_dir = NULL;
 	char *ca_root = NULL;
 	char *ca_local_root = NULL;
+   char *sge_keyfile = NULL;
+   char *sge_cakeyfile = NULL;
    int len;
+   char *cp = NULL;
 
    DENTER(GDI_LAYER, "sec_setup_path");
+
+   cp = getenv("COMMD_PORT");
    
    /*
    ** malloc ca_root string and check if directory has been created during
@@ -2447,7 +2451,7 @@ int is_daemon
    sprintf(ca_root, "%s/%s/%s", sge_get_root_dir(1), 
                      sge_get_default_cell(), CA_DIR);
    if (SGE_STAT(ca_root, &sbuf)) { 
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_CAROOTNOTFOUND_S, ca_root));
+      CRITICAL((SGE_EVENT, MSG_SEC_CAROOTNOTFOUND_S, ca_root));
       SGE_EXIT(1);
    }
 
@@ -2455,18 +2459,31 @@ int is_daemon
    ** malloc ca_local_root string and check if directory has been created during
    ** install otherwise exit
    */
-   len = strlen(CA_LOCAL_DIR) + strlen(sge_get_default_cell()) + 2;
-   ca_local_root = sge_malloc(len);
-   sprintf(ca_local_root, "%s/%s", CA_LOCAL_DIR, sge_get_default_cell());
-   if (is_daemon && SGE_STAT(ca_local_root, &sbuf)) { 
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_CALOCALROOTNOTFOUND_S, ca_local_root));
-      SGE_EXIT(1);
+   if ((sge_cakeyfile=getenv("SGE_CAKEYFILE"))) {
+      ca_key_file = sge_malloc(strlen(sge_cakeyfile));
+      strcpy(ca_key_file, sge_cakeyfile);
+   } else {
+      len = strlen(CA_LOCAL_DIR) + 
+            (cp ? strlen(cp)+4:strlen(SGE_COMMD_SERVICE)) +
+            strlen(sge_get_default_cell()) + 3;
+      ca_local_root = sge_malloc(len);
+      if (cp)
+         sprintf(ca_local_root, "%s/port%s/%s", CA_LOCAL_DIR, cp, 
+                  sge_get_default_cell());
+      else
+         sprintf(ca_local_root, "%s/%s/%s", CA_LOCAL_DIR, SGE_COMMD_SERVICE, 
+                  sge_get_default_cell());
+         
+      if (is_daemon && SGE_STAT(ca_local_root, &sbuf)) { 
+         CRITICAL((SGE_EVENT, MSG_SEC_CALOCALROOTNOTFOUND_S, ca_local_root));
+         SGE_EXIT(1);
+      }
+      ca_key_file = sge_malloc(strlen(ca_local_root) + strlen(CaKey) + 2);
+      sprintf(ca_key_file, "%s/%s", ca_local_root, CaKey);
    }
-	ca_key_file = sge_malloc(strlen(ca_local_root) + strlen(CaKey) + 2);
-	sprintf(ca_key_file, "%s/%s", ca_local_root, CaKey);
 
    if (is_daemon && SGE_STAT(ca_key_file, &sbuf)) { 
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_CAKEYFILENOTFOUND_S, ca_key_file));
+      CRITICAL((SGE_EVENT, MSG_SEC_CAKEYFILENOTFOUND_S, ca_key_file));
       SGE_EXIT(1);
    }
    DPRINTF(("ca_key_file: %s\n", ca_key_file));
@@ -2475,37 +2492,47 @@ int is_daemon
 	sprintf(ca_cert_file, "%s/%s", ca_root, CaCert);
 
    if (SGE_STAT(ca_cert_file, &sbuf)) { 
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_CACERTFILENOTFOUND_S, ca_cert_file));
+      CRITICAL((SGE_EVENT, MSG_SEC_CACERTFILENOTFOUND_S, ca_cert_file));
       SGE_EXIT(1);
    }
    DPRINTF(("ca_cert_file: %s\n", ca_cert_file));
 
    /*
-   ** determine userdir: either ca_root or $HOME/.SGE_SECURE/$SGE_CELL
+   ** determine userdir: either ca_root 
+   ** or $HOME/.sge/{port$COMMD_PORT|sge_commd}/$SGE_CELL
    */
-	if (is_daemon){
-		userdir = strdup(ca_root);
-      user_local_dir = ca_local_root;
-	} else {
-      struct passwd *pw;
-      pw = sge_getpwnam(me.user_name);
-      if (!pw) {   
-         CRITICAL((SGE_EVENT, MSG_SGETEXT_USERNOTFOUND_S, me.user_name));
-         SGE_EXIT(1);
+   if ((sge_keyfile = getenv("SGE_KEYFILE"))) {
+      key_file = sge_malloc(strlen(sge_keyfile));
+      strcpy(key_file, sge_keyfile);
+   } else {   
+      if (is_daemon){
+         userdir = strdup(ca_root);
+         user_local_dir = ca_local_root;
+      } else {
+         struct passwd *pw;
+         pw = sge_getpwnam(me.user_name);
+         if (!pw) {   
+            CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, me.user_name));
+            SGE_EXIT(1);
+         }
+         userdir = sge_malloc(strlen(pw->pw_dir) + strlen(SGESecPath) +
+                             (cp ? strlen(cp) + 4 : strlen(SGE_COMMD_SERVICE)) +
+                              strlen(sge_get_default_cell()) + 4);
+         if (cp)                     
+            sprintf(userdir, "%s/%s/port%s/%s", pw->pw_dir, SGESecPath, cp, 
+                  sge_get_default_cell());
+         else         
+            sprintf(userdir, "%s/%s/%s/%s", pw->pw_dir, SGESecPath, 
+                     SGE_COMMD_SERVICE, sge_get_default_cell());
+         sge_mkdir(userdir, 0700, 1);
+         user_local_dir = userdir;
       }
-		userdir = sge_malloc(strlen(pw->pw_dir) + strlen(SGESecPath) +
-                           strlen(sge_get_default_cell()) + 3);
-      sprintf(userdir, "%s/%s/%s", pw->pw_dir, SGESecPath, 
-               sge_get_default_cell());
-      sge_mkdir(userdir, 0700, 1);
-      user_local_dir = userdir;
+
+      key_file = sge_malloc(strlen(user_local_dir) + strlen(UserKey) + 2);
+      sprintf(key_file, "%s/%s", user_local_dir, UserKey);
    }
-
-   key_file = sge_malloc(strlen(user_local_dir) + strlen(UserKey) + 2);
-   sprintf(key_file, "%s/%s", user_local_dir, UserKey);
-
    if (SGE_STAT(key_file, &sbuf)) { 
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_KEYFILENOTFOUND_S, key_file));
+      CRITICAL((SGE_EVENT, MSG_SEC_KEYFILENOTFOUND_S, key_file));
       SGE_EXIT(1);
    }
    DPRINTF(("key_file: %s\n", key_file));
@@ -2514,7 +2541,7 @@ int is_daemon
    sprintf(cert_file, "%s/%s", userdir, UserCert);
 
    if (SGE_STAT(cert_file, &sbuf)) { 
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_CERTFILENOTFOUND_S, cert_file));
+      CRITICAL((SGE_EVENT, MSG_SEC_CERTFILENOTFOUND_S, cert_file));
       SGE_EXIT(1);
    }
    DPRINTF(("cert_file: %s\n", cert_file));
@@ -2526,8 +2553,6 @@ int is_daemon
    free(userdir);
    free(ca_root);
    free(ca_local_root);
-
-	return 1;
 }
 
 static sec_exit_func_type install_sec_exit_func(
@@ -2763,14 +2788,14 @@ int sec_verify_user(const char *user, const char *commproc)
 {
    DENTER(GDI_LAYER,"sec_verify_user");
 
-   if (!sec_is_daemon(commproc)) {
+/*    if (!sec_is_daemon(commproc)) { */
       DPRINTF(("commproc = '%s' user = '%s', gsd.uniqueIdentifier = '%s'\n", 
                commproc, user, gsd.uniqueIdentifier));
       if (strcmp(user, gsd.uniqueIdentifier)) {
          DEXIT;
          return 0;
       }   
-   }
+/*    } */
       
 
    DEXIT;
@@ -2786,3 +2811,63 @@ static int sec_is_daemon(const char *progname)
    else
       return False;
 }      
+
+static int sec_verify_callback(int ok, X509_STORE_CTX *ctx)
+{
+   X509 *cert;
+   
+   printf("ok = %d\n", ok);
+   cert = X509_STORE_CTX_get_current_cert(ctx);
+   if (cert) {
+      X509_print_fp(stdout, cert);
+debug_print_ASN1_UTCTIME("not_before: ", X509_get_notBefore(cert));
+debug_print_ASN1_UTCTIME("not_after: ", X509_get_notAfter(cert));
+printf(" notBefore X509_cmp_current_time = %d\n",  X509_cmp_current_time(X509_get_notBefore(cert)));
+printf(" notAfter X509_cmp_current_time = %d\n",  X509_cmp_current_time(X509_get_notAfter(cert)));
+   }
+   else
+      printf("No cert\n");
+
+   return ok;
+}   
+
+
+
+int sec_clear_connectionlist(void)
+{
+   lListElem *element = NULL;
+
+   DENTER(GDI_LAYER, "sec_clear_connectionlist");
+   
+   /*
+   ** remove any outdated entries first
+   */
+   if (conn_list) {
+      ASN1_UTCTIME *utctime = ASN1_UTCTIME_new();
+
+      element = lFirst(conn_list);
+      while (element) {
+         lListElem *del_el;
+         const char *dtime = lGetString(element, SEC_ExpiryDate);
+         utctime = d2i_ASN1_UTCTIME(NULL, (unsigned char**) &dtime, 
+                                          strlen(dtime));
+         /* debug_print_ASN1_UTCTIME("utctime: ", utctime); */
+         del_el = element;
+         element = lNext(element);
+         if ((X509_cmp_current_time(utctime) < 0)) { 
+            DPRINTF(("---- removed %d (%s, %s, %d) from conn_list\n", 
+                      (int) lGetUlong(del_el, SEC_ConnectionID), 
+                      lGetHost(del_el, SEC_Host),
+                      lGetString(del_el, SEC_Commproc),
+                      lGetInt(del_el, SEC_Id)));
+            if (!sec_is_daemon(lGetString(del_el, SEC_Commproc))) {
+               lRemoveElem(conn_list, del_el);
+            }
+         }   
+      }
+      ASN1_UTCTIME_free(utctime);
+   }
+   DEXIT;
+   return True;
+}
+

@@ -1,4 +1,9 @@
-AS-2004-03-09-1  Bugfix:    reformat of qstat/qhost header lined for longer 
+SG-2004-03-09-0: Bugfix:    fixed a potential memory leak in the functional
+                            ticket computation.
+                 Changed:   scheduler
+                 Review:    EB
+
+AS-2004-03-09-1: Bugfix:    reformat of qstat/qhost header lined for longer 
                             arch names
                 
 AS-2004-03-09-0: Enhancem.: productization

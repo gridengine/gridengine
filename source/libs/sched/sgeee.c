@@ -3133,16 +3133,19 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          sort_list = malloc(max * sizeof(*sort_list)); 
          build_functional_categories(job_ref, num_jobs, &fcategories, hierarchy[policy_ndx].dependent);
          
-         if(!sort_list || !fcategories){
+         if((sort_list == NULL) || (fcategories == NULL)){
             /* error message to come */
-
-            if (job_ref) {
-               free(job_ref);
-            }
+            
+            FREE(sort_list);
+            FREE(job_ref);
 
             if (decay_list) {
                lFreeList(decay_list);
             }   
+
+            if (fcategories != NULL) {
+               free_fcategories(&fcategories);
+            }
             
             DEXIT;
             return sge_scheduling_run;

@@ -1355,6 +1355,10 @@ proc qrsh_qsub_gid {} {
       }   
       close $f
 
+      file attributes "$CHECK_PROTOCOL_DIR/qrsh.sh" -permissions 00755
+      wait_for_remote_file $host $QSUB_GID_USER $CHECK_PROTOCOL_DIR/qrsh.sh
+
+
       # call qsub_gid.sh, gid must be primary gid
       set output [start_remote_prog "$CHECK_HOST" $QSUB_GID_USER $CHECK_ACTUAL_TEST_PATH/qsub_gid.sh "[lindex $QSUB_GID_GROUPS 1] $CHECK_PROTOCOL_DIR/qrsh.sh"]
       set group [lindex $QSUB_GID_GROUPS 0]

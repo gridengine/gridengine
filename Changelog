@@ -1,3 +1,7 @@
+CR-2003-01-13-1  Testsuite: qrsh test: set executable file permission for
+                            generated shell script and wait for nfs to share
+                            file.
+
 CR-2003-01-13-0  Enhancem.  new qevent client. This event client is written
                             for the testsuite to get job start and job end
                             events.

@@ -44,7 +44,7 @@
 #include <limits.h>
 #include <signal.h>
 
-#if defined(DARWIN)
+#if defined(DARWIN) || defined(FREEBSD)
 #  include <sys/param.h>
 #  include <sys/mount.h>
 #elif defined(LINUX)
@@ -650,7 +650,7 @@ static bool nfs_mounted(const char *path)
 {
    bool ret=true;
 
-#if defined(LINUX) || defined(DARWIN)
+#if defined(LINUX) || defined(DARWIN) || defined(FREEBSD)
    struct statfs buf;
    statfs(path, &buf);
 #else  
@@ -658,7 +658,7 @@ static bool nfs_mounted(const char *path)
    statvfs(path, &buf);
 #endif
   
-#if defined (DARWIN)
+#if defined (DARWIN) || defined(FREEBSD)
    ret = (strcmp("nfs", buf.f_fstypename)==0);
 #elif defined(LINUX)
    ret = (buf.f_type == 0x6969);

@@ -74,11 +74,19 @@ typedef enum {
 #define NONE_STR  "NONE"
 #define NONE_LEN  4
 
-#define U32CFormat "%ld"
-#define u32c(x)  (unsigned long)(x)
+#if defined(FREEBSD)
+#  define U32CFormat "%u"  
+#  define u32c(x)  (unsigned int)(x)
 
-#define X32CFormat "%lx"
-#define x32c(x)  (unsigned long)(x)
+#  define X32CFormat "%x"
+#  define x32c(x)  (unsigned int)(x)
+#else
+#  define U32CFormat "%ld"
+#  define u32c(x)  (unsigned long)(x)
+
+#  define X32CFormat "%lx"
+#  define x32c(x)  (unsigned long)(x)
+#endif
 
 
 #if defined(IRIX)
@@ -102,6 +110,8 @@ extern "C" {
 #  define u_long32 u_int
 #elif defined(WIN32NATIVE)
 #  define u_long32 unsigned long
+#elif defined(FREEBSD)
+#  define u_long32 uint32_t
 #else
 #  define u_long32 u_long
 #endif
@@ -110,7 +120,7 @@ extern "C" {
 
 /* set u32 and x32 for 64 or 32 bit machines */
 /* uu32 for strictly unsigned, not nice, but did I use %d for an unsigned? */
-#ifdef TARGET_64BIT
+#if defined(TARGET_64BIT) || defined(FREEBSD)
 #  define u32    "%d"
 #  define uu32   "%u"
 #  define x32    "%x"
@@ -126,7 +136,11 @@ extern "C" {
    solaris (who else - it's IRIX?) uses long 
    variables for uid_t, gid_t and pid_t 
 */
-#define uid_t_fmt pid_t_fmt
+#if defined(FREEBSD)
+#  define uid_t_fmt "%u"
+#else
+#  define uid_t_fmt pid_t_fmt
+#endif
 
 #if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX)
 #  define pid_t_fmt    "%ld"
@@ -136,7 +150,7 @@ extern "C" {
 
 #if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX) 
 #  define gid_t_fmt    "%ld"
-#elif defined(LINUX86)
+#elif defined(LINUX86) || defined(FREEBSD)
 #  define gid_t_fmt    "%u"
 #else
 #  define gid_t_fmt    "%d"

@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#if defined(DARWIN)
+#if defined(DARWIN) || defined(FREEBSD)
 #  include <sys/param.h>
 #  include <sys/mount.h>
 #elif defined(LINUX)
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
      return 1;
   }
    else {  
-#if defined(LINUX) || defined(DARWIN)
+#if defined(LINUX) || defined(DARWIN) || defined(FREEBSD)
    struct statfs buf;
    statfs(argv[1], &buf);
 #else   
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
    statvfs(argv[1], &buf);
 #endif
   
-#if defined (DARWIN)
+#if defined (DARWIN) || defined(FREEBSD)
    printf("%s\n", buf.f_fstypename);
 #elif defined(LINUX)
    if (buf.f_type == 0x6969)

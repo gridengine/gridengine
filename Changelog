@@ -1,3 +1,5 @@
+BD-2003-04-08-0  Bugfix:    Make qmake actually compile under FreeBSD.
+                 Changed:   qmake
 CR-2003-04-08-0  Bugfix:    using -xO3 instead of -xO4 for SOLARIS86
                  Changed:   aimk for compiling SOLARIS86 binaries
 

@@ -1,3 +1,11 @@
+CR-2004-10-01-0: Bugfix:    Thread enabled commlib coredumps on exit on a 
+                            32bit Solaris x86 box
+                 Issue:     1283
+                 Bugtraq:   5075968
+                 Review:    MD
+                 Changed:   commlib
+
+
 JG-2004-09-29-0: Bugfix:    Automatic users were deleted even if they had jobs 
                             (running or pending).
                  Review:    SG

@@ -259,10 +259,6 @@ void *server_thread(void *t_conf) {
 
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-   /* push default cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
-   pthread_cleanup_push((void *) server_cleanup, (void*) &con );
-   pthread_cleanup_push((void *) server_cleanup_conlist, (void*) &connection_list);
 
 
    /* set thread config data */
@@ -304,8 +300,11 @@ void *server_thread(void *t_conf) {
  
       cl_com_connection_t*  connection = NULL;
 
-
+      pthread_cleanup_push((void *) server_cleanup, (void*) &con );
+      pthread_cleanup_push((void *) server_cleanup_conlist, (void*) &connection_list);
       cl_thread_func_testcancel(thread_config);
+      pthread_cleanup_pop(0); /* list cleanup */
+      pthread_cleanup_pop(0); /* server cleanup */
 
       CL_LOG_INT( CL_LOG_INFO, "--> nr of connections: ", cl_raw_list_get_elem_count(connection_list) );
 
@@ -386,9 +385,6 @@ void *server_thread(void *t_conf) {
 
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(1); /* list cleanup */
-   pthread_cleanup_pop(1); /* server cleanup */
-   pthread_cleanup_pop(0); /* default */
    return(NULL);
 }
 
@@ -422,10 +418,6 @@ void *client_thread(void *t_conf) {
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
 
-   /* push default cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
-   pthread_cleanup_push((void *) client_cleanup_function, (void*) &con );
-
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
       printf("cl_thread_set_thread_config() error\n");
@@ -449,7 +441,9 @@ void *client_thread(void *t_conf) {
    while (do_exit == 0) {
       unsigned long size;
 
+      pthread_cleanup_push((void *) client_cleanup_function, (void*) &con );
       cl_thread_func_testcancel(thread_config);
+      pthread_cleanup_pop(0);  /* client_thread_cleanup */
 
       if (con == NULL) {
          cl_com_setup_tcp_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED );
@@ -518,7 +512,5 @@ void *client_thread(void *t_conf) {
 
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(1);  /* client_thread_cleanup */
-   pthread_cleanup_pop(0);  /* default */
    return(NULL);
 }

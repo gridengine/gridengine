@@ -181,8 +181,6 @@ void *my_multi_thread(void *t_conf) {
    int do_exit = 0;
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-   /* push default cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
 
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
@@ -234,7 +232,6 @@ void *my_multi_thread(void *t_conf) {
    CL_LOG(CL_LOG_INFO, "exiting ...");
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(0); /*  cl_thread_default_cleanup_function() */
    return(NULL);
 }
 
@@ -247,8 +244,6 @@ void *my_multi_read_thread(void *t_conf) {
    int do_exit = 0;
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-   /* push default cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
 
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
@@ -266,10 +261,10 @@ void *my_multi_read_thread(void *t_conf) {
    /* ok, thread main */
    while (do_exit == 0) {
       cl_com_message_t* message = NULL;
-     cl_com_endpoint_t* sender = NULL;
-     int retval;
+      cl_com_endpoint_t* sender = NULL;
+      int retval;
 
-     CL_LOG(CL_LOG_INFO,"test cancel ...");
+      CL_LOG(CL_LOG_INFO,"test cancel ...");
       cl_thread_func_testcancel(thread_config);
 
       CL_LOG_INT(CL_LOG_INFO,"thread running:", thread_config->thread_id);
@@ -319,7 +314,6 @@ void *my_multi_read_thread(void *t_conf) {
    CL_LOG(CL_LOG_INFO, "exiting ...");
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(0); /*  cl_thread_default_cleanup_function() */
    return(NULL);
 }
 

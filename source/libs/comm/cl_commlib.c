@@ -77,16 +77,12 @@ static int cl_com_trigger(cl_com_handle_t* handle);
 
 /* threads functions */
 static void *cl_com_trigger_thread(void *t_conf);
-static void cl_com_trigger_thread_cleanup(void* none);
 
 static void *cl_com_handle_service_thread(void *t_conf);
-static void cl_com_handle_service_thread_cleanup(void* none);
 
 static void *cl_com_handle_write_thread(void *t_conf);
-static void cl_com_handle_write_thread_cleanup(void* none);
 
 static void *cl_com_handle_read_thread(void *t_conf);
-static void cl_com_handle_read_thread_cleanup(void* none);
 
 
 
@@ -5208,9 +5204,6 @@ static void *cl_com_trigger_thread(void *t_conf) {
    int do_exit = 0;
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-   /* push default cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
-   pthread_cleanup_push((void *) cl_com_trigger_thread_cleanup, (void*) NULL);
 
 
    /* set thread config data */
@@ -5256,18 +5249,9 @@ static void *cl_com_trigger_thread(void *t_conf) {
    CL_LOG(CL_LOG_INFO, "exiting ...");
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(1); /*  cl_com_trigger_thread_cleanup() */
-   pthread_cleanup_pop(0); /*  cl_thread_default_cleanup_function() */
    return(NULL);
 }
 
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_com_trigger_thread_cleanup()"
-void cl_com_trigger_thread_cleanup(void* none) {
-   CL_LOG(CL_LOG_INFO,"trigger thread cleanup ...");
-}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -5286,9 +5270,6 @@ static void *cl_com_handle_service_thread(void *t_conf) {
 
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-   /* push default cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
-   pthread_cleanup_push((void *) cl_com_handle_service_thread_cleanup, (void*) NULL);
 
 
    /* set thread config data */
@@ -5346,18 +5327,9 @@ static void *cl_com_handle_service_thread(void *t_conf) {
 
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(1); /*  cl_com_trigger_thread_cleanup() */
-   pthread_cleanup_pop(0); /*  cl_thread_default_cleanup_function() */
    return(NULL);
 }
 
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_com_handle_service_thread_cleanup()"
-void cl_com_handle_service_thread_cleanup(void* none) {
-   CL_LOG(CL_LOG_INFO,"handle service thread cleanup ...");
-}
 
 
 
@@ -5385,9 +5357,6 @@ static void *cl_com_handle_read_thread(void *t_conf) {
 
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-   /* push default cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
-   pthread_cleanup_push((void *) cl_com_handle_read_thread_cleanup, (void*) NULL);
 
 
    /* set thread config data */
@@ -5662,18 +5631,9 @@ static void *cl_com_handle_read_thread(void *t_conf) {
 
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(1); /*  cl_com_trigger_thread_cleanup() */
-   pthread_cleanup_pop(0); /*  cl_thread_default_cleanup_function() */
    return(NULL);
 }
 
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_com_handle_read_thread_cleanup()"
-void cl_com_handle_read_thread_cleanup(void* none) {
-   CL_LOG(CL_LOG_INFO,"handle read thread cleanup ...");
-}
 
 
 
@@ -5698,9 +5658,6 @@ static void *cl_com_handle_write_thread(void *t_conf) {
 
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-   /* push default cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
-   pthread_cleanup_push((void *) cl_com_handle_write_thread_cleanup, (void*) NULL);
 
 
    /* set thread config data */
@@ -5884,14 +5841,9 @@ static void *cl_com_handle_write_thread(void *t_conf) {
 
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(1); /*  cl_com_trigger_thread_cleanup() */
-   pthread_cleanup_pop(0); /*  cl_thread_default_cleanup_function() */
    return(NULL);
 }
 
-void cl_com_handle_write_thread_cleanup(void* none) {
-   CL_LOG(CL_LOG_INFO,"handle write thread cleanup ...");
-}
 
 
 #ifdef __CL_FUNCTION__

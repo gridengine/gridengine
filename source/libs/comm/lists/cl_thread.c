@@ -656,15 +656,24 @@ int cl_thread_trigger_event(cl_thread_settings_t *thread_config) {
 #endif
 #define __CL_FUNCTION__ "cl_thread_func_testcancel()"
 int cl_thread_func_testcancel(cl_thread_settings_t* thread_config) {
-
+   int ret_val = 0;
    CL_LOG(CL_LOG_INFO, "checking for cancelation ...");
 
-   if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL) != 0) {
-      pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
-      return CL_RETVAL_THREAD_CANCELSTATE_ERROR;
+
+   /* push default cleanup function */
+   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
+
+   ret_val = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
+
+   if ( ret_val == 0 ) {
+      pthread_testcancel();
+      ret_val = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
    }
-   pthread_testcancel();
-   if ( pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL) != 0) {
+
+   /* remove cleanup function from stack without execution */
+   pthread_cleanup_pop(0);  /* client_thread_cleanup */
+
+   if ( ret_val != 0) {
       return CL_RETVAL_THREAD_CANCELSTATE_ERROR;
    }
    return CL_RETVAL_OK;
@@ -757,7 +766,12 @@ void cl_thread_default_cleanup_function(cl_thread_settings_t* thread_config) {
    if (thread_config != NULL) {
       thread_config->thread_state = CL_THREAD_CANCELED;
       CL_LOG(CL_LOG_INFO,  "cl_thread_default_cleanup_function() called");
+      /*  There is no need to unset thread config - This can result in
+       *  unexpected cl_log_list - logging output.
+       */ 
+#if 0
       cl_thread_unset_thread_config();
+#endif
    }
 }
 

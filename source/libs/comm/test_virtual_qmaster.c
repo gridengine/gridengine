@@ -205,8 +205,6 @@ void *my_message_thread(void *t_conf) {
    int do_exit = 0;
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-   /* push default cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
 
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
@@ -268,8 +266,8 @@ void *my_message_thread(void *t_conf) {
             } 
          } else {
             /* no event client, just return message to sender */
-            char data[30000];
-            memset(data, 0, 30000);
+            char data[3000];
+            memset(data, 0, 3000);
             sprintf(data,"gdi response");
 #if 0
             printf(" \"%s\" -> send gdi response to %s/%s/%ld\n", thread_config->thread_name, 
@@ -278,7 +276,7 @@ void *my_message_thread(void *t_conf) {
 
             ret_val = cl_commlib_send_message(handle, sender->comp_host, sender->comp_name, sender->comp_id,
                                       CL_MIH_MAT_NAK,
-                                      (cl_byte_t*) data , 30000,
+                                      (cl_byte_t*) data , 3000,
                                       NULL, 0, 0 , 1, 0 );
             if (ret_val == CL_RETVAL_OK) {
                snd_messages++;
@@ -291,7 +289,6 @@ void *my_message_thread(void *t_conf) {
 
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(0); /*  cl_thread_default_cleanup_function() */
    return(NULL);
 }
 
@@ -304,8 +301,6 @@ void *my_event_thread(void *t_conf) {
    int do_exit = 0;
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-   /* push default cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
 
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
@@ -336,8 +331,8 @@ void *my_event_thread(void *t_conf) {
          for (i=0;i<10;i++) {
             cl_com_endpoint_t* client = event_client_array[i];
             if ( client != NULL) {
-               char help[10000];
-               memset(help, 0, 10000);
+               char help[3000];
+               memset(help, 0, 3000);
    
 
                if (first == 0) {
@@ -350,7 +345,7 @@ void *my_event_thread(void *t_conf) {
                                                                  client->comp_host, client->comp_name, client->comp_id  );
 #endif
                ret_val = cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id,
-                                                 CL_MIH_MAT_NAK, (cl_byte_t*) help , 10000,
+                                                 CL_MIH_MAT_NAK, (cl_byte_t*) help , 3000,
                                                  NULL, 0, 0 , 1, 0 );
              
                if ( ret_val != CL_RETVAL_OK) {
@@ -378,7 +373,6 @@ void *my_event_thread(void *t_conf) {
    CL_LOG(CL_LOG_INFO, "exiting ...");
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(0); /*  cl_thread_default_cleanup_function() */
    return(NULL);
 }
 

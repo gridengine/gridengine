@@ -136,12 +136,12 @@ extern int main(int argc, char** argv)
         int                retval  = 0;
         cl_com_message_t*  message = NULL;
         cl_com_endpoint_t* sender  = NULL;
-        char data[20000];
+        char data[3000];
    
         sprintf(data,"gdi request");
         retval = cl_commlib_send_message(handle, argv[3], "virtual_master", 1,
                                          CL_MIH_MAT_NAK,
-                                         (cl_byte_t*) data , 20000,
+                                         (cl_byte_t*) data , 3000,
                                          NULL, 0, 0 , 1, 0 );
         if ( retval == CL_RETVAL_OK ) {
            snd_messages++;

@@ -2131,9 +2131,15 @@ if [ "$SGE_ROOT" = "" ]; then
 fi
 
 # set infotext binary path
-INFOTEXT=$V5UTILBIN/infotext
-if [ ! -x $INFOTEXT ]; then
-   $ECHO "can't find binary \"$INFOTEXT\""
+# INFOTXT_DUMMY is needed by message parsing script
+# which is looking for $INFOTEXT and would report
+# errors in the next command. Please use INFOTXT_DUMMY
+# instead of using $INFOTEXT
+
+INFOTXT_DUMMY=$V5UTILBIN/infotext
+INFOTEXT=$INFOTXT_DUMMY
+if [ ! -x $INFOTXT_DUMMY ]; then
+   $ECHO "can't find binary \"$INFOTXT_DUMMY\""
    echo
    $ECHO "Installation failed. Exit."
    exit 1

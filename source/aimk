@@ -653,7 +653,7 @@ while ($#argv >= 1 && $?found)
       echo "Adding script messages"
       setenv BUILDARCH $BUILDARCH
       foreach f ( dist/inst_sge dist/util/setfileperm.sh dist/util/arch_variables \
-                  dist/util/qhold.sh dist/util/sgeCA/sge_ca )
+                  dist/util/qhold.sh dist/util/sgeCA/sge_ca dist/util/update_commands/sge_startupscript.sh )
          set pf = "/tmp/`basename $f`.pot"
          $TCLSH scripts/infotext_msg_parse.tcl -F $pf $f
          echo "Appending script pot file $pf" 

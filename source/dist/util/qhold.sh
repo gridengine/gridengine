@@ -85,10 +85,16 @@ fi
 
 V5BIN=$SGE_ROOT/bin/$ARCH
 V5UTILBIN=$SGE_ROOT/utilbin/$ARCH
-INFOTEXT=$V5UTILBIN/infotext
-if [ ! -x "$INFOTEXT" ]; then
+# INFOTXT_DUMMY is needed by message parsing script
+# which is looking for $INFOTEXT and would report
+# errors in the next command. Please use INFOTXT_DUMMY
+# instead of using $INFOTEXT
+
+INFOTXT_DUMMY=$V5UTILBIN/infotext
+INFOTEXT=$INFOTXT_DUMMY
+if [ ! -x "$INFOTXT_DUMMY" ]; then
    echo
-   echo "can't find binary \"$INFOTEXT\""
+   echo "can't find binary \"$INFOTXT_DUMMY\""
    echo
    exit 1         
 fi
@@ -165,7 +171,7 @@ fi
 # ensure valid hold types are given
 valid=`expr $hold_types : '[uso]*$'`
 if [ $valid = "0" ]; then
-   $INFOTEXT "invalid list of hold types" $cmdname
+   $INFOTEXT "%s: invalid list of hold types" $cmdname
    ErrUsage
 fi
 

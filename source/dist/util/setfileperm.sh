@@ -117,9 +117,15 @@ fi
 
 V5BIN=$SGE_ROOT/bin/$ARCH
 V5UTILBIN=$SGE_ROOT/utilbin/$ARCH       
-INFOTEXT=$V5UTILBIN/infotext
-if [ ! -x $INFOTEXT ]; then
-   echo "can't find binary \"$INFOTEXT\""
+# INFOTXT_DUMMY is needed by message parsing script
+# which is looking for $INFOTEXT and would report
+# errors in the next command. Please use INFOTXT_DUMMY
+# instead of using $INFOTEXT
+
+INFOTXT_DUMMY=$V5UTILBIN/infotext
+INFOTEXT=$INFOTXT_DUMMY
+if [ ! -x $INFOTXT_DUMMY ]; then
+   echo "can't find binary \"$INFOTXT_DUMMY\""
    echo "Installation failed."
    exit 1
 fi

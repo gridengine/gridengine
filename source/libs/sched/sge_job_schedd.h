@@ -190,6 +190,7 @@ void split_jobs(lList **job_list, lList **answer_list, lList *queue_list,
 
 void job_lists_split_with_reference_to_max_running(lList **job_lists[],
                                                    lList **user_list,
+                                                   const char *user_name,
                                                    int max_jobs_per_user);
 
 void job_move_first_pending_to_running(lListElem **pending_job,
@@ -197,7 +198,7 @@ void job_move_first_pending_to_running(lListElem **pending_job,
 
 void trash_splitted_jobs(lList **job_list[]);
 
-void job_lists_print(lList **job_list[]);
+void job_lists_print(lList **job_list[], const char *context);
 
 void user_list_init_jc(lList **user_list, const lList *running_list);
 

@@ -29,8 +29,11 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
 #include <string.h>
+#include <sys/times.h>
+#include <time.h>
 
 #include "sgermon.h"
 #include "sge_log.h"
@@ -190,11 +193,6 @@ void job_move_first_pending_to_running(lListElem **pending_job,
       lDechainElem(*(splitted_jobs[SPLIT_PENDING]), *pending_job);
       *pending_job = lFreeElem(*pending_job);
    }
- 
-#if 0 /* EB: debug */
-   job_lists_print(splitted_jobs);
-#endif
- 
    DEXIT;
 }              
 
@@ -232,15 +230,27 @@ void user_list_init_jc(lList **user_list, const lList *running_list)
 /* owner_or_group: either JB_owner or JB_group */
 void job_lists_split_with_reference_to_max_running(lList **job_lists[],
                                                    lList **user_list,
+                                                   const char *user_name,
                                                    int max_jobs_per_user)
 {
+#ifdef DEBUG_MAX_RUNNING
+   clock_t now, start;
+   struct tms tms_buffer;
+#endif
    DENTER(TOP_LAYER, "job_lists_split_with_reference_to_max_running");
+
    if (max_jobs_per_user != 0 && 
        job_lists[SPLIT_PENDING] != NULL && *(job_lists[SPLIT_PENDING]) != NULL &&
        job_lists[SPLIT_PENDING_EXCLUDED] != NULL) {
       lListElem *user = NULL;
+      lListElem *next_user = NULL;
 
-      /* create a hash table on JB_owner to speedup 
+#ifdef DEBUG_MAX_RUNNING
+      start = times(&tms_buffer);
+#endif
+
+      /* 
+       * create a hash table on JB_owner to speedup 
        * searching for jobs of a specific owner
        */
       {
@@ -253,11 +263,28 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
             }
          }
       }
+     
+#ifdef DEBUG_MAX_RUNNING 
+      now = times(&tms_buffer);
+      ERROR((SGE_EVENT, "cull_hash_new section %.3f s\n",
+            (now - start) * 1.0 / CLK_TCK ));
+#endif
 
-      for_each(user, *user_list) {
+
+      if (user_name == NULL) {
+         next_user = lFirst(*user_list);
+      } else {
+         next_user = lGetElemStr(*user_list, JC_name, user_name);
+      }
+      while((user = next_user)) {
          u_long32 jobs_for_user = lGetUlong(user, JC_jobs);
          const char *user_name = lGetString(user, JC_name);
 
+         if (user_name == NULL) {
+            next_user = lNext(user);
+         } else {
+            next_user = NULL;
+         }
          if (jobs_for_user >= max_jobs_per_user) {
             const void *user_iterator = NULL;
             lListElem *user_job = NULL;         /* JB_Type */
@@ -287,6 +314,13 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
             }
          }
       }
+
+#ifdef DEBUG_MAX_RUNNING
+      now = times(&tms_buffer);
+      ERROR((SGE_EVENT, "job_lists_split_with_reference_to_max_running "
+             "%.3f s\n", (now - start) * 1.0 / CLK_TCK ));
+#endif
+   
    }
    DEXIT;
 }
@@ -650,12 +684,14 @@ void trash_splitted_jobs(lList **splitted_job_lists[])
    }; 
    int i = -1;
 
+
    while (split_id_a[++i] != SPLIT_LAST) { 
       lList **job_list = splitted_job_lists[split_id_a[i]];
       lListElem *job = NULL;
       int is_first_of_category = 1;
 
-      for_each (job, *job_list) {
+      job = lFirst(*job_list);
+      if (job != NULL && scheddconf.schedd_job_info != SCHEDD_JOB_INFO_FALSE) {
          u_long32 job_id = lGetUlong(job, JB_job_number);
 
          switch (split_id_a[i]) {
@@ -717,11 +753,12 @@ void trash_splitted_jobs(lList **splitted_job_lists[])
    }
 } 
 
-void job_lists_print(lList **job_list[]) 
+void job_lists_print(lList **job_list[], const char *context) 
 {
    lListElem *job;
    int i;
 
+   DENTER(TOP_LAYER, "job_lists_print");
    for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
       u_long32 ids = 0;
 
@@ -732,9 +769,10 @@ void job_lists_print(lList **job_list[])
          }
          DPRINTF(("job_list[%s] CONTAINES "u32" JOB(S) ("u32" TASK(S))\n",
             get_name_of_split_value(i),
-            lGetNumberOfElem(*(job_list[i])), ids));
+            (u_long32) lGetNumberOfElem(*(job_list[i])), ids));
       }
    } 
+   DEXIT;
 } 
 
 int set_user_sort(

@@ -462,6 +462,7 @@ lList **splitted_job_lists[]
    user_list_init_jc(&user_list, *(splitted_job_lists[SPLIT_RUNNING]));
    job_lists_split_with_reference_to_max_running(splitted_job_lists,
                                                  &user_list,
+                                                 NULL,
                                                  scheddconf.maxujobs);
    trash_splitted_jobs(splitted_job_lists);
 
@@ -822,14 +823,16 @@ SKIP_THIS_JOB:
          orig_job = NULL;
 
          /* notify access tree */
-         if (!sgeee_mode) 
+         if (!sgeee_mode) {
             at_dispatched_a_task(job, 1);
+         }
+
          /* 
           * drop idle jobs that exceed maxujobs limit 
           * should be done after resort_job() 'cause job is referenced 
           */
          job_lists_split_with_reference_to_max_running(splitted_job_lists,
-                                           &user_list, scheddconf.maxujobs);
+               &user_list, lGetString(job, JB_owner), scheddconf.maxujobs);
          trash_splitted_jobs(splitted_job_lists);
       } else {
          schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0);

@@ -486,6 +486,14 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
    DPRINTF(("STARTING PASS 2 WITH %d PENDING JOBS\n",nr_pending_jobs ));
 
+   /*
+    * job categories are reset here, we need 
+    *  - an update of the rejected field for every new run
+    *  - the resource request dependent contribution is cached 
+    *    per job category 
+    */
+   sge_reset_job_category(); 
+
    /*--------------------------------------------------------------------
     * CALL SGEEE SCHEDULER TO
     * CALCULATE TICKETS FOR EACH JOB  - IN SUPPORT OF SGEEE
@@ -620,22 +628,17 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
    /* 
     * Calculate the total number of tickets for running jobs - to be used
-    * later for SGE job placement 
+    * later for SGEEE job placement 
     */
    if (sgeee_mode && queue_sort_method == QSM_SHARE)  {
       total_running_job_tickets = 0;
       for_each(rjob, *splitted_job_lists[SPLIT_RUNNING]) {
          for_each(rja_task, lGetList(rjob, JB_ja_tasks)) {
-            total_running_job_tickets += lGetDouble(rja_task, JAT_ticket);
+            total_running_job_tickets += lGetDouble(rja_task, JAT_tix);
          }
       }
    }
 
-   /*
-    * job categories are reset here, we need an update of the rejected field
-    * for every new run
-    */
-   sge_reset_job_category(); 
 
    if (!sgeee_mode) {
       /* 
@@ -979,7 +982,7 @@ int *sort_hostlist
       double job_stickets_per_slot;
       nslots = nslots_granted(granted, NULL);
 
-      job_tickets_per_slot =(double)lGetDouble(ja_task, JAT_ticket)/nslots;
+      job_tickets_per_slot =(double)lGetDouble(ja_task, JAT_tix)/nslots;
       job_ftickets_per_slot =(double)lGetDouble(ja_task, JAT_fticket)/nslots;
       job_otickets_per_slot =(double)lGetDouble(ja_task, JAT_oticket)/nslots;
       job_dtickets_per_slot =(double)lGetDouble(ja_task, JAT_dticket)/nslots;
@@ -1001,7 +1004,7 @@ int *sort_hostlist
          lSetDouble(granted_el, JG_sticket ,job_stickets_per_slot  * granted_slots);
 
       }
-      *total_running_job_tickets += lGetDouble(ja_task, JAT_ticket);
+      *total_running_job_tickets += lGetDouble(ja_task, JAT_tix);
    }
 
    /*------------------------------------------------------------------

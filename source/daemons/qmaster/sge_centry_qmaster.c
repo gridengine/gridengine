@@ -199,6 +199,19 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
       }
    }
 
+   /*
+    * Default (CE_urgency_weight)
+    */
+   if (ret) {
+      pos = lGetPosViaElem(reduced_elem, CE_urgency_weight);
+
+      if (pos >= 0) {
+         const char *defaultval = lGetPosString(reduced_elem, pos);
+         DPRINTF(("Got CE_default: "SFQ"\n", defaultval));
+         lSetString(centry, CE_urgency_weight, defaultval);
+      }
+   }
+
    if (ret) {
       ret = centry_elem_validate(centry, NULL, answer_list);
    }

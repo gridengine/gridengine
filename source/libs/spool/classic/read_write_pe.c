@@ -164,6 +164,15 @@ _Insight_set_option("suppress", "PARM_NULL");
    set_conf_bool(NULL, clpp, fields, "job_is_first_task", ep, 
                  PE_job_is_first_task);
 
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      /* --------- PE_urgency_slots */
+      if (!set_conf_string(alpp, clpp, fields, "urgency_slots", ep, 
+               PE_urgency_slots)) {
+         DEXIT;
+         return -1;
+      }
+   }
+
    /* PE_used_slots gets set to PE_slots */
    lSetUlong(ep, PE_used_slots, 0);
 
@@ -293,6 +302,10 @@ const lListElem *ep
    FPRINTF((fp, "job_is_first_task %s\n", lGetBool(ep, PE_job_is_first_task) ? 
                "TRUE" : "FALSE"));
 
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      /* --------- PE_urgency_slots */
+      FPRINTF((fp, "urgency_slots     %s\n", lGetString(ep, PE_urgency_slots)));
+   }
 
    /* --------- internal fields ----------------------------------- */
 
@@ -380,16 +393,7 @@ lListElem* sge_generic_pe(char *pe_name)
    /* PE_control_slaves initialized implicitly to false */
    lSetBool(pep, PE_job_is_first_task, TRUE);
 
-   {
-      lList *new_qr_list;
-      lListElem *new_qr;
-
-      new_qr_list = lCreateList("", QR_Type);
-      new_qr = lCreateElem(QR_Type);
-
-      lSetString(new_qr, QR_name, SGE_ATTRVAL_ALL);
-      lAppendElem(new_qr_list, new_qr);
-   }
+   lSetString(pep, PE_urgency_slots, SGE_ATTRVAL_MIN);
 
    DEXIT;
    return pep;

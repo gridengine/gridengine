@@ -9,3 +9,4 @@ relop       <=
 requestable YES
 consumable  YES
 default     1
+urgency     1000

@@ -9,3 +9,4 @@ relop       ==
 requestable NO
 consumable  NO
 default     NONE
+urgency     0

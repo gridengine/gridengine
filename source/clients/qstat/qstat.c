@@ -127,7 +127,6 @@ char **argv
    int a_queue_was_selected = 0;
    u_long32 full_listing = QSTAT_DISPLAY_ALL, empty_qs = 0, job_info = 0;
    u_long32 group_opt = 0;
-   lList *running_per_user = NULL;
    lSortOrder *so = NULL;
    int nqueues;
    char *hostname = NULL;
@@ -480,7 +479,7 @@ char **argv
 
       sge_print_jobs_queue(qep, job_list, pe_list, user_list,
                            exechost_list, centry_list,
-                           print_jobs_of_queue, full_listing, "");
+                           print_jobs_of_queue, full_listing, "", group_opt);
 
    }
 
@@ -525,8 +524,8 @@ char **argv
     *         print the jobs that run in these queues 
     *
     */
-   sge_print_jobs_pending(job_list, user_list, exechost_list, centry_list,
-                           &running_per_user, so, full_listing, group_opt);
+   sge_print_jobs_pending(job_list, pe_list, user_list, exechost_list, centry_list,
+                           so, full_listing, group_opt);
 
    /* 
     *
@@ -534,8 +533,8 @@ char **argv
     *          a non SGE-qstat will show them as error jobs
     *
     */
-   sge_print_jobs_finished(job_list, user_list, exechost_list,
-                              centry_list, full_listing);
+   sge_print_jobs_finished(job_list, pe_list, user_list, exechost_list,
+                              centry_list, full_listing, group_opt);
 
    /* 
     *
@@ -545,16 +544,16 @@ char **argv
     *          to ensure to print this job just to give hints whats wrong
     *
     */
-   sge_print_jobs_error(job_list, user_list, exechost_list, centry_list,
-                           full_listing);
+   sge_print_jobs_error(job_list, pe_list, user_list, exechost_list, centry_list,
+                           full_listing, group_opt);
 
    /* 
     *
     * step 7:  print recently finished jobs ('zombies') 
     *
     */
-   sge_print_jobs_zombie(zombie_list, user_list, exechost_list,
-                           centry_list,  full_listing);
+   sge_print_jobs_zombie(zombie_list, pe_list, user_list, exechost_list,
+                           centry_list,  full_listing, group_opt);
 
    lFreeList(zombie_list);
    lFreeList(job_list);
@@ -659,38 +658,50 @@ u_long32 show
          else
             jw = lAndWhere(jw, nw);
       }
-      j_all = lWhat("%T("FORMAT_I_20 FORMAT_I_10 FORMAT_I_1")", JB_Type, 
+      j_all = lWhat("%T("FORMAT_I_20 FORMAT_I_10 FORMAT_I_2 FORMAT_I_2 FORMAT_I_2 ")", JB_Type, 
                      JB_job_number, 
                      JB_owner,
                      JB_script_file,
                      JB_group,
                      JB_type,
+
                      JB_pe,
                      JB_checkpoint_name,
                      JB_jid_predecessor_list,
                      JB_env_list,
                      JB_priority,
+
                      JB_job_name,
                      JB_project,
                      JB_department,
                      JB_submission_time,
                      JB_deadline,
+
                      JB_override_tickets,
                      JB_pe_range,
                      JB_hard_resource_list,
                      JB_soft_resource_list,
                      JB_hard_queue_list,
+
                      JB_soft_queue_list,
                      JB_master_hard_queue_list,
                      JB_ja_structure, 
                      JB_ja_tasks,
                      JB_ja_n_h_ids,
+
                      JB_ja_u_h_ids,
                      JB_ja_o_h_ids,
                      JB_ja_s_h_ids,
                      JB_ja_z_ids,
                      JB_ja_template,
-                     JB_execution_time );
+
+                     JB_execution_time,
+                     JB_nurg,
+                     JB_urg,
+                     JB_rrcontr,
+                     JB_dlcontr,
+
+                     JB_wtcontr);
 
       j_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET, 
                            NULL, jw, j_all, NULL, &state);
@@ -714,7 +725,7 @@ u_long32 show
          else
             zw = lOrWhere(zw, nw);
       }
-      z_all = lWhat("%T(" FORMAT_I_20 FORMAT_I_5 FORMAT_I_2 FORMAT_I_2")", JB_Type, 
+      z_all = lWhat("%T(" FORMAT_I_20 FORMAT_I_10 FORMAT_I_2 FORMAT_I_2 FORMAT_I_1 ")", JB_Type, 
                      JB_job_number, 
                      JB_owner,
                      JB_group,
@@ -744,7 +755,12 @@ u_long32 show
                      JB_ja_z_ids,
                      JB_ja_template,
                      JB_ja_tasks,
-                     JB_execution_time );
+                     JB_execution_time,
+                     JB_nurg,
+                     JB_urg,
+                     JB_rrcontr,
+                     JB_dlcontr,
+                     JB_wtcontr );
 
       z_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ZOMBIE_LIST, SGE_GDI_GET, 
                            NULL, zw, z_all, NULL, &state);
@@ -789,7 +805,7 @@ u_long32 show
    ** pe list 
    */ 
    if (pe_l) {   
-      pe_all = lWhat("%T(%I%I%I)", PE_Type, PE_name, PE_job_is_first_task, PE_control_slaves);
+      pe_all = lWhat("%T(%I%I%I%I)", PE_Type, PE_name, PE_job_is_first_task, PE_control_slaves, PE_urgency_slots);
       pe_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET,
                            NULL, pw, pe_all, NULL, &state);
       pe_all = lFreeWhat(pe_all);
@@ -1290,6 +1306,10 @@ lList *alp = NULL;
          /* -ext option */
          if ((rp = parse_noopt(sp, "-ext", NULL, ppcmdline, &alp)) != sp)
             continue;
+
+         /* -urg option */
+         if ((rp = parse_noopt(sp, "-urg", NULL, ppcmdline, &alp)) != sp)
+            continue;
       }
 
       /* -g */
@@ -1528,6 +1548,14 @@ lList **ppljid
             }
             continue;
          }
+
+         if(parse_flag(ppcmdline, "-urg", &alp, &full)) {
+            if(full) {
+               (*pfull) |= QSTAT_DISPLAY_URGENCY;
+               full = 0;
+            }
+            continue;
+         }
       }
 
       if(parse_flag(ppcmdline, "-r", &alp, &full)) {
@@ -1541,6 +1569,7 @@ lList **ppljid
       if(parse_flag(ppcmdline, "-t", &alp, &full)) {
          if(full) {
             (*pfull) |= QSTAT_DISPLAY_TASKS;
+            *group_opt |= GROUP_NO_PETASK_GROUPS;
             full = 0;
          }
          continue;
@@ -1564,13 +1593,13 @@ lList **ppljid
       if(parse_multi_stringlist(ppcmdline, "-q", &alp, pplqueueref, QR_Type, QR_name))
          continue;
 
-      if(parse_multi_stringlist(ppcmdline, "-g", &alp, &plstringopt, ST_Type, ST_name)) {
-         *group_opt = parse_group_options(plstringopt);
-         
+      if (parse_multi_stringlist(ppcmdline, "-g", &alp, &plstringopt, ST_Type, ST_name)) {
+         *group_opt |= parse_group_options(plstringopt);
          lFreeList(plstringopt);    
          continue;
       }
    }
+
    if(lGetNumberOfElem(*ppcmdline)) {
      sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
      if (!usageshowed)
@@ -1618,8 +1647,10 @@ char *what
          fprintf(fp, "        [-f]                            %s",MSG_QSTAT_USAGE_FULLOUTPUT);
       if (!qselect_mode) 
          fprintf(fp, "        [-F [resource_attributes]]      %s",MSG_QSTAT_USAGE_FULLOUTPUTANDSHOWRESOURCESOFQUEUES);
-      if (!qselect_mode) 
+      if (!qselect_mode) {
          fprintf(fp, "        [-g {d}]                        %s",MSG_QSTAT_USAGE_DISPLAYALLJOBARRAYTASKS);
+         fprintf(fp, "        [-g {t}]                        %s",MSG_QSTAT_USAGE_DISPLAYALLPARALLELJOBTASKS);
+      }
       fprintf(fp, "        [-help]                         %s",MSG_QSTAT_USAGE_PRINTTHISHELP);
       if (!qselect_mode) 
       if (!qselect_mode) 

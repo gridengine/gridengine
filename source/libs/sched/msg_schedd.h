@@ -435,4 +435,6 @@
 #define MSG_USE_DEFAULT_CONFIG                        _MESSAGE(47401, _("Using the scheduler default configuration"))
 #define MSG_INVALID_PARAM_SETTING_S                   _MESSAGE(47402, _("Invalid scheduler param setting: "SFQ)) 
 
+#define MSG_SCHEDD_CREATEORDERS_LWHEREFORJOBFAILED      _MESSAGE(47403, _("sge_create_orders(): lWhat() for job failed\n"))
+
 #endif /* __MSG_SCHEDD_H */

@@ -67,6 +67,8 @@ typedef enum {
 } bool;
 #endif
 
+#define SGE_EPSILON 0.00001
+
 #define FALSE_STR "FALSE"
 #define TRUE_STR  "TRUE"
 

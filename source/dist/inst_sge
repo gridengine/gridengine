@@ -1778,7 +1778,12 @@ WelcomeTheUser()
       return
    fi
 
-   $INFOTEXT -u "\nWelcome to the Grid Engine installation"
+   if [ $inst = sgeee ]; then
+      $INFOTEXT -u "\nWelcome to the Grid Engine Enterprise Edition installation"
+   else 
+      $INFOTEXT -u "\nWelcome to the Grid Engine installation"
+   fi
+
    $INFOTEXT -u "\nGrid Engine qmaster host installation"
    $INFOTEXT "\nBefore you continue with the installation please read these hints:\n\n" \
              "   - Your terminal window should have a size of at least\n" \

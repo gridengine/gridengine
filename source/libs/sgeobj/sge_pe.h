@@ -42,8 +42,8 @@ pe_is_matching(const lListElem *pe, const char *wildcard);
 lList **
 pe_list_get_master_list(void);
 
-lListElem *
-pe_list_find_matching(lList *pe_list, const char *wildcard);
+const lListElem *
+pe_list_find_matching(const lList *pe_list, const char *wildcard);
 
 lListElem *
 pe_list_locate(const lList *pe_list, const char *pe_name);
@@ -55,6 +55,14 @@ pe_is_referenced(const lListElem *pe, lList **answer_list,
 
 int 
 pe_validate(lListElem *pep, lList **alpp, int startup);
+
+int 
+pe_validate_urgency_slots(lList **alpp, const char *s);
+
+int 
+pe_urgency_slots(const lListElem *pe, 
+                 const char *urgency_slot_setting, 
+                 const lList* range_list);
 
 bool 
 pe_list_do_all_exist(const lList *pe_list, lList **answer_list, 

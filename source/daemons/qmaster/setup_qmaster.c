@@ -437,6 +437,8 @@ int sge_setup_qmaster()
       }
       
       if (!sconf_set_config(&sched_conf, &answer_list)){
+         answer_list_output(&answer_list);
+         lFreeList(answer_list);
          lFreeList(sched_conf);
          DEXIT;
          return -1;

@@ -540,7 +540,7 @@ DTRACE;
 #define NM2  "%I%I"
 #define NM1  "%I"
 
-      what_job = lWhat("%T(" NM2 NM10 NM10 NM10 NM2")", JB_Type,
+      what_job = lWhat("%T(" NM10 NM10 NM10 NM5 NM2 NM2")", JB_Type,
 /*SGE*/     JB_job_number, 
             JB_script_file,
             JB_submission_time,
@@ -572,8 +572,7 @@ DTRACE;
             JB_version,
             JB_type,
             JB_project,
-            JB_department,
-/* SGEEE */
+/* SGEEE */ JB_department,
 /*            JB_jobclass, */   /*x*/
             JB_deadline,
             JB_host,
@@ -584,6 +583,12 @@ DTRACE;
             JB_ja_s_h_ids,
             JB_ja_o_h_ids,   
 	         JB_ja_tasks,
+   
+	         JB_urg,
+	         JB_nurg,
+	         JB_dlcontr,
+	         JB_wtcontr,
+	         JB_rrcontr,
 
 /*SGE*/     JB_ja_template,
             JB_category);

@@ -76,6 +76,7 @@ const char *rhost,
 gdi_object_t *object,
 int sub_command 
 ) {
+   int ret;
    const char *s, *pe_name;
 
    DENTER(TOP_LAYER, "pe_mod");
@@ -159,6 +160,26 @@ int sub_command
       lSetString(new_pe, PE_allocation_rule, s);
    }
 
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      /* -------- PE_urgency_slots */
+      if (lGetPosViaElem(pe, PE_urgency_slots)>=0) {
+         s = lGetString(pe, PE_urgency_slots);
+         if (!s)  {
+            ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
+                  lNm2Str(PE_allocation_rule), "validate_pe"));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return STATUS_EEXIST;
+         }
+
+         if ((ret=pe_validate_urgency_slots(alpp, s))!=STATUS_OK) {
+            DEXIT;
+            return ret;
+         }
+         lSetString(new_pe, PE_urgency_slots, s);
+      }
+   }
+
    DEXIT;
    return 0;
 
@@ -166,6 +187,7 @@ ERROR:
    DEXIT;
    return STATUS_EUNKNOWN;
 }
+
 
 int pe_spool(
 lList **alpp,

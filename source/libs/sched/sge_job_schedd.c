@@ -1158,6 +1158,8 @@ lListElem *dcep
    return 0;
 }
 
+
+
 /*---------------------------------------------------------*/
 int nslots_granted(
 lList *granted,
@@ -1268,3 +1270,5 @@ lList *gdil
 
    return slots;
 }
+
+

@@ -194,6 +194,7 @@ int sge_reset_job_category()
       lSetList(cat, CT_ignore_queues, NULL);
       lSetList(cat, CT_ignore_hosts, NULL);
       lSetList(cat, CT_queue_violations, NULL);
+      lSetBool(cat, CT_rc_valid, false);
    } 
    DEXIT;
    return 0;

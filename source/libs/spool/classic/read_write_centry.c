@@ -105,6 +105,12 @@ int parsing_type
       ret = (!set_conf_string(alpp, clpp, fields, "default", ep, CE_default)) ?-1:0;
    }
 
+   /* TODO: AH: only needed in EE mode */
+   /* --------- CE_urgency_weight */
+   if (ret == 0) {
+      ret = (!set_conf_string(alpp, clpp, fields, "urgency", ep, CE_urgency_weight)) ?-1:0;
+   }
+
    DEXIT;
    return ret;
 }
@@ -204,6 +210,10 @@ char *write_centry(int spool, int how, const lListElem *ep)
 
    /* --------- CE_default */
    FPRINTF((fp, "default     %s\n", lGetString(ep, CE_default)));
+
+   /* --------- CE_urgency_weight */
+   /* TODO: AH: only needed in EE mode */
+   FPRINTF((fp, "urgency     %s\n", lGetString(ep, CE_urgency_weight)));
 
    if (how!=0) {
       fclose(fp);

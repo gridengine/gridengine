@@ -325,10 +325,11 @@ enum {
 *     =================
 *
 *     SGE_STRING(JB_pe)      
-*        Name of a PE
+*        Name of requested PE or wildcard expression for matching PEs
 *
 *     SGE_LIST(JB_pe_range)
-*        PE slot range (RN_Type)    
+*        PE slot range (RN_Type). Qmaster ensure it is ascending and 
+*        normalized.
 *
 *     SGE_LIST(JB_master_hard_queue_list)  
 *        Master queue list (QR_Type). ("qsub -masterq queue_list")
@@ -418,6 +419,37 @@ enum {
 *     SGE_XULONG(JB_soft_wallclock_gmt) ---> the same as complex s_rt?
 *
 *     SGE_XULONG(JB_hard_wallclock_gmt) ---> the same as complex h_rt?
+*
+*     SGE_DOUBLE(JB_urg )         
+*        SGEEE. Absolute static urgency importance. The admin can use arbitrary
+*        weighting factors in the formula used to determine this number. So any
+*        value is possible. Needed only when scheduling code is run.
+*        Not spooled.
+*
+*     SGE_DOUBLE(JB_nurg )         
+*        SGEEE. Relative importance due to static urgency in the range between 0.0 
+*        and 1.0. No need to make this a per task attribute as long as waiting time 
+*        and deadline remain job attributes.
+*        Not spooled.
+*
+*     SGE_DOUBLE(JB_rrcontr )         
+*        SGEEE. Combined contribution to static urgency from all resources. This can 
+*        be any value. Actually this is a property of job category. This field is 
+*        needed only to provide it for diagnosis purposes it as per job information 
+*        via GDI. 
+*        Not spooled.
+*
+*     SGE_DOUBLE(JB_dlcontr )         
+*        SGEEE. Contribution to static urgency from job deadline. This can be any
+*        value. No need to make this a per task attribute as long a deadline is a 
+*        job attribute. Increases over time. 
+*        Not spooled.
+*
+*     SGE_DOUBLE(JB_wtcontr )         
+*        SGEEE. Contribution to static urgency from waiting time. This can be any
+*        value. No need to make this a per task attribute as long as waiting time 
+*        is a job attribute. Increases over time.
+*        Not spooled.
 *
 *     SGE_ULONG(JB_override_tickets)       
 *        SGEEE - override tickets assigned by admin. 
@@ -542,7 +574,12 @@ enum {
    JB_hard_wallclock_gmt,
    JB_override_tickets,
    JB_qs_args,
-   JB_path_aliases
+   JB_path_aliases,
+   JB_urg,
+   JB_nurg,
+   JB_rrcontr,
+   JB_dlcontr,
+   JB_wtcontr
 };
 
 /* 
@@ -635,7 +672,11 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_ULONG(JB_override_tickets, CULL_DEFAULT | CULL_SPOOL)   
    SGE_LIST(JB_qs_args, ST_Type, CULL_DEFAULT)   
    SGE_LIST(JB_path_aliases, PA_Type, CULL_DEFAULT | CULL_SPOOL)
-
+   SGE_DOUBLE(JB_urg, CULL_DEFAULT)         
+   SGE_DOUBLE(JB_rrcontr, CULL_DEFAULT)         
+   SGE_DOUBLE(JB_nurg, CULL_DEFAULT)         
+   SGE_DOUBLE(JB_dlcontr, CULL_DEFAULT)         
+   SGE_DOUBLE(JB_wtcontr, CULL_DEFAULT)         
 
    /* 
     * IF YOU ADD SOMETHING HERE THEN CHANGE ALSO THE ADOC COMMENT ABOVE 
@@ -773,6 +814,11 @@ NAMEDEF(JBN)
    NAME("JB_override_tickets")
    NAME("JB_qs_args")
    NAME("JB_path_aliases")
+   NAME("JB_urg")
+   NAME("JB_nurg")
+   NAME("JB_rrcontr")
+   NAME("JB_dlcontr")
+   NAME("JB_wtcontr")
 NAMEEND
 
 

@@ -52,6 +52,7 @@ SCHEDLIB_SRC = sge_select_queue.c \
               schedd_monitor.c \
               scale_usage.c \
               sgeee.c \
+              sge_urgency.c \
               sge_gdi_attributes.c \
               sge_support.c \
               schedd_message.c \
@@ -153,6 +154,9 @@ slots_used.o: $(SCHEDLIB_DIR)/slots_used.c
 
 sgeee.o: $(SCHEDLIB_DIR)/sgeee.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sgeee.c
+
+sge_urgency.o: $(SCHEDLIB_DIR)/sge_urgency.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_urgency.c
 
 sge_support.o: $(SCHEDLIB_DIR)/sge_support.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_support.c

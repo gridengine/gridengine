@@ -966,11 +966,16 @@ char *host
    u_long32 state = 0;
    u_long32 jataskid = 0;
    u_long32 jobid = 0;
+   bool migrate_on_suspend = false;
 
    DENTER(TOP_LAYER, "qmod_job_suspend");
 
    jobid = lGetUlong(jep, JB_job_number);
    jataskid = lGetUlong(jatep, JAT_task_number);
+
+   /* determine whether we actually migrate upon suspend */
+   if (lGetUlong(jep, JB_checkpoint_attr) & CHECKPOINT_SUSPEND)
+      migrate_on_suspend = true;
 
    if (VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
       /* this job is already suspended or lives in a suspended queue */
@@ -1011,6 +1016,8 @@ char *host
       CLEARBIT(JRUNNING, state);
       SETBIT(JSUSPENDED, state);
       lSetUlong(jatep, JAT_state, state);
+      if (migrate_on_suspend)
+         lSetUlong(jatep, JAT_stop_initiate_time, sge_get_gmt());
 
       sge_event_spool(answer, 0, sgeE_JATASK_MOD, 
                       jobid, jataskid, NULL, NULL, NULL,
@@ -1045,6 +1052,8 @@ char *host
          CLEARBIT(JRUNNING, state);
          SETBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
+         if (migrate_on_suspend)
+            lSetUlong(jatep, JAT_stop_initiate_time, sge_get_gmt());
          sge_event_spool(answer, 0, sgeE_JATASK_MOD,
                          jobid, jataskid, NULL, NULL, NULL,
                          jep, jatep, NULL, true, true);
@@ -1062,6 +1071,8 @@ char *host
             CLEARBIT(JRUNNING, state);
             SETBIT(JSUSPENDED, state);
             lSetUlong(jatep, JAT_state, state);
+            if (migrate_on_suspend)
+               lSetUlong(jatep, JAT_stop_initiate_time, sge_get_gmt());
             sge_event_spool(answer, 0, sgeE_JATASK_MOD, 
                             jobid, jataskid, NULL, NULL, NULL,
                             jep, jatep, NULL, true, true);

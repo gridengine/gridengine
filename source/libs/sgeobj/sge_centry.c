@@ -979,28 +979,52 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_
             case TYPE_MEM:
             case TYPE_BOO:
             case TYPE_DOUBLE:
-                              if(!parse_ulong_val(&dval, NULL, type, temp, error_msg, 199)){
-                                 answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
-                                                   MSG_INVALID_CENTRY_PARSE_DEFAULT_SS, attrname, error_msg);
-                                 ret = false;
-                              }
-                              if (dval != 0) {
-                                 answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
-                                                   MSG_INVALID_CENTRY_DEFAULT_S, attrname);
-                                 ret = false;
-                              }
-   
+               if(!parse_ulong_val(&dval, NULL, type, temp, error_msg, 199)){
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                  MSG_INVALID_CENTRY_PARSE_DEFAULT_SS, attrname, error_msg);
+                  ret = false;
+               }
+               if (dval != 0) {
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                  MSG_INVALID_CENTRY_DEFAULT_S, attrname);
+                  ret = false;
+               }
+
                break;
             case TYPE_HOST:
             case TYPE_STR:
             case TYPE_RESTR:
             case TYPE_CSTR:
-                           if (strcasecmp(temp, "NONE") != 0 ) {
-                              answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
-                                                   MSG_INVALID_CENTRY_DEFAULT_S, attrname);
-                              ret = false;
-                           }
+               if (strcasecmp(temp, "NONE") != 0 ) {
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                  MSG_INVALID_CENTRY_DEFAULT_S, attrname);
+                  ret = false;
+               }
                break;
+            default:
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+                                       MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(type));
+               ret = false;
+         }
+      }
+      else if ( (temp = lGetString(centry, CE_urgency_weight)) ) {
+      
+         switch(type){
+            case TYPE_INT:
+            case TYPE_TIM:
+            case TYPE_MEM:
+            case TYPE_BOO:
+            case TYPE_DOUBLE:
+            case TYPE_HOST:
+            case TYPE_STR:
+            case TYPE_CSTR:
+               if(!parse_ulong_val(&dval, NULL, TYPE_DOUBLE, temp, error_msg, 199)){
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                       MSG_INVALID_CENTRY_PARSE_URGENCY_SS, attrname, error_msg);
+                  ret = false;
+               }
+               break;
+
             default:
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
                                        MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(type));
@@ -1067,5 +1091,73 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_
    }
    DEXIT;
    return ret;
+}
+
+/****** sge_centry/centry_urgency_contribution() *******************************
+*  NAME
+*     centry_urgency_contribution() -- Compute urgency for a particular resource
+*
+*  SYNOPSIS
+*     double centry_urgency_contribution(int slots, const char *name, double 
+*     value, const lListElem *centry) 
+*
+*  FUNCTION
+*     The urgency contribution for a particular resource 'name' is determined 
+*     based on the 'slot' amount and using 'value' as per slot request. The
+*     urgency value in the 'centry' element is used.
+*
+*  INPUTS
+*     int slots               - The slot amount assumed.
+*     const char *name        - The resource name.
+*     double value            - The per slot request.
+*     const lListElem *centry - The centry element (CE_Type)
+*
+*  RESULT
+*     double - The resulting urgency contribution 
+*
+*  NOTES
+*     MT-NOTES: centry_urgency_contribution() is MT safe
+*******************************************************************************/
+double 
+centry_urgency_contribution(int slots, const char *name, double value, const lListElem *centry)
+{
+   double contribution, weight;
+   const char *strval;
+   u_long32 complex_type;
+   
+   DENTER(TOP_LAYER, "centry_urgency_contribution");
+
+   if (!centry || 
+       !(strval = lGetString(centry, CE_urgency_weight)) ||
+       !(parse_ulong_val(&weight, NULL, TYPE_INT, strval, NULL, 0))) {
+      DPRINTF(("no contribution for attribute\n"));
+      return 0;
+   }
+
+   switch ((complex_type=lGetUlong(centry, CE_valtype))) {
+   case TYPE_INT:
+   case TYPE_TIM:
+   case TYPE_MEM:
+   case TYPE_BOO:
+   case TYPE_DOUBLE:
+      contribution = value * weight * slots;
+      DPRINTF(("   %s: %7f * %7f * %d    ---> %7f\n", name, value, weight, slots, contribution));
+      break;
+
+   case TYPE_STR:
+   case TYPE_CSTR:
+   case TYPE_HOST:
+      contribution = weight;
+      DPRINTF(("   %s: using weight as contrib ---> %7f\n", name, weight));
+      break;
+
+   default:
+      ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(complex_type)));
+      contribution = 0;
+      break;
+   }
+
+   DEXIT;
+   return contribution;
 }
 

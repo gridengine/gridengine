@@ -684,6 +684,10 @@ if [ $instcommon = true ]; then
       echo Installing \"util/\" directory tree
       Execute rm -rf $DEST_SGE_ROOT/util
       Execute cp -r dist/util $DEST_SGE_ROOT
+      if [ $sgeee = true ]; then
+         Execute rm $DEST_SGE_ROOT/util/resources/pe/make
+         Execute sed -f dist/util/update_commands/sge2sgeee-pes.sed dist/util/resources/pe/make > $DEST_SGE_ROOT/util/resources/pe/make
+      fi
       chmod 755 $DEST_SGE_ROOT/util/*.sh $DEST_SGE_ROOT/util/arch
       chmod 755 $DEST_SGE_ROOT/util/resources/loadsensors/*
       chmod 644 $DEST_SGE_ROOT/util/sgeCA/sge_ssl*
@@ -744,7 +748,7 @@ if [ $instcommon = true ]; then
 
    if [ $instdrmaa = true ]; then
       echo Installing \"DRMAA\"
-      Execute rm -rf $DEST_SGE_ROOT/include/*
+      Execute rm -rf $DEST_SGE_ROOT/include
       Execute mkdir $DEST_SGE_ROOT/include
            
       for f in $DRMAA_HEADER_FILES; do

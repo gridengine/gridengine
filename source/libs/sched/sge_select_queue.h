@@ -88,7 +88,7 @@ int sge_split_suspended(lList **queue_list, lList **suspended);
 
 enum { DISPATCH_TYPE_NONE = 0, DISPATCH_TYPE_FAST, DISPATCH_TYPE_COMPREHENSIVE };
 
-lList *sge_replicate_queues_suitable4job(lList *queues, lListElem *job, lListElem *ja_task, lListElem *pe_list, lListElem *ckpt, int sort_seq_no, lList *complex_list, lList *host_list, lList *acl_list, const lList *load_adjustments, int ndispatched, int *last_dispatch_type, int host_order_changed);
+lList *sge_replicate_queues_suitable4job(lList *queues, lListElem *job, lListElem *ja_task, const lListElem *pe_list, const lListElem *ckpt, int sort_seq_no, lList *complex_list, lList *host_list, lList *acl_list, const lList *load_adjustments, int ndispatched, int *last_dispatch_type, int host_order_changed);
 
 
 /* 
@@ -124,6 +124,6 @@ char *trace_resource(lListElem *rep);
 
 void trace_resources(lList *resources);
 
-int available_slots_at_queue( lListElem *job, lListElem *queue, lListElem *pe, lListElem *ckpt, lList *host_list, lList *cplx_list, lList *acl_list, const lList *load_adjustments, int host_slots, int ndispatched, lListElem *global_hep,    int total_slots, lListElem *hep, int *soft_violations);
+int available_slots_at_queue( lListElem *job, lListElem *queue, const lListElem *pe, const lListElem *ckpt, lList *host_list, lList *cplx_list, lList *acl_list, const lList *load_adjustments, int host_slots, int ndispatched, lListElem *global_hep,    int total_slots, lListElem *hep, int *soft_violations);
 
 #endif

@@ -106,7 +106,8 @@ enum {
    CE_pj_doubleval,
    CE_pj_dominant,
    CE_requestable,
-   CE_tagged
+   CE_tagged,
+   CE_urgency_weight
 };
 
 SLISTDEF(CE_Type, ComplexEntry)
@@ -124,6 +125,7 @@ SLISTDEF(CE_Type, ComplexEntry)
    SGE_ULONG(CE_pj_dominant, CULL_DEFAULT)   /* per job monitoring facility */
    SGE_ULONG(CE_requestable, CULL_DEFAULT)
    SGE_ULONG(CE_tagged, CULL_DEFAULT)        /* used to tag resource request, which can be fulfilled */
+   SGE_STRING(CE_urgency_weight, CULL_DEFAULT|CULL_SPOOL) /* static weighting factor */
 LISTEND 
 
 NAMEDEF(CEN)
@@ -141,6 +143,7 @@ NAMEDEF(CEN)
    NAME("CE_pj_dominant")
    NAME("CE_requestable")
    NAME("CE_tagged")
+   NAME("CE_urgency_weight")
 NAMEEND
 
 /* *INDENT-ON* */ 

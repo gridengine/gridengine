@@ -37,9 +37,10 @@
 
 void cull_show_job(lListElem *job, int flags);
 
-void sge_show_ce_type_list(lList *reqlist); /* RE_Type */
+void sge_show_ce_type_list(lList *reqlist);
 
-void sge_show_ce_type_list_line_by_line(const char *label, const char *indent, lList *reqlist); /*RE_Type*/
+void sge_show_ce_type_list_line_by_line(const char *label, const char *indent, lList *reqlist,
+      bool display_resource_contribution, lList *centry_list, int slot); 
 
 #endif /* SHOW_JOB_H */
 

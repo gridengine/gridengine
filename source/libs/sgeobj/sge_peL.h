@@ -81,6 +81,13 @@ extern "C" {
 *     SGE_XULONG(PE_used_slots)
 *        internal field; number of used slots
 *        this field gets not spooled, updated dynamically
+*  
+*     SGE_STRING(PE_urgency_slots)
+*        Specifies what slot amount shall be used when computing jobs 
+*        static urgency in case of jobs with slot range PE requests. 
+*        The actual problem is that when determining the urgency number 
+*        the number of slots finally assigned is not yet known. The following
+*        settings are supported: min/max/avg/<fixed integer> 
 ******************************************************************************/
 enum {
    PE_name = PE_LOWERBOUND,  
@@ -92,7 +99,8 @@ enum {
    PE_allocation_rule,    
    PE_control_slaves,    
    PE_job_is_first_task,
-   PE_used_slots            
+   PE_used_slots,
+   PE_urgency_slots            
 };
 
 
@@ -107,6 +115,7 @@ ILISTDEF(PE_Type, ParallelEnvironment, SGE_PE_LIST)
    SGE_BOOL(PE_control_slaves, CULL_DEFAULT | CULL_SPOOL)
    SGE_BOOL(PE_job_is_first_task, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(PE_used_slots, CULL_DEFAULT)
+   SGE_STRING(PE_urgency_slots, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
 
 NAMEDEF(PEN)
@@ -120,6 +129,7 @@ NAMEDEF(PEN)
    NAME("PE_control_slaves")
    NAME("PE_job_is_first_task")
    NAME("PE_used_slots")
+   NAME("PE_urgency_slots")
 NAMEEND
 
 /* *INDENT-ON* */ 

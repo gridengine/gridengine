@@ -139,6 +139,10 @@ typedef struct{
    lList *c_schedd_job_info_range;
    lList *c_halflife_decay_list;   
    lList *c_params;
+   int weight_ticket;
+   int weight_waiting_time;
+   int weight_deadline;
+   int weight_urgency;
 }config_pos_type;
 
 
@@ -154,11 +158,12 @@ static policy_type_t policy_hierarchy_char2enum(char character);
 
 static int policy_hierarchy_verify_value(const char* value);
 
-config_pos_type pos = {true, 
+static config_pos_type pos = {true, 
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                       SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL};
+                       SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL, 
+                       -1, -1, -1, -1};
 
 /*
  * a list of all valid "params" parameters
@@ -248,10 +253,18 @@ static void sconf_clear_pos(void){
 
          if (pos.c_params)
             pos.c_params = lFreeList(pos.c_params);
+
+         pos.weight_ticket = -1;
+         pos.weight_waiting_time = -1;
+         pos.weight_deadline = -1;
+         pos.weight_urgency = -1;
 }
 
 static bool sconf_calc_pos(void){
    bool ret = true;
+
+   DENTER(TOP_LAYER, "sconf_calc_pos");
+
    if (pos.empty) {
       const lListElem *config = sconf_get_config(); 
 
@@ -298,10 +311,17 @@ static bool sconf_calc_pos(void){
          ret &= (pos.max_pending_tasks_per_job = lGetPosViaElem(config, SC_max_pending_tasks_per_job)) != -1;
          ret &= (pos.halflife_decay_list = lGetPosViaElem(config, SC_halflife_decay_list)) != -1;
          ret &= (pos.policy_hierarchy = lGetPosViaElem(config, SC_policy_hierarchy)) != -1;
+
+         ret &= (pos.weight_ticket = lGetPosViaElem(config, SC_weight_ticket)) != -1;
+         ret &= (pos.weight_waiting_time = lGetPosViaElem(config, SC_weight_waiting_time)) != -1;
+         ret &= (pos.weight_deadline = lGetPosViaElem(config, SC_weight_deadline)) != -1;
+         ret &= (pos.weight_urgency = lGetPosViaElem(config, SC_weight_urgency)) != -1;
       }
       else
          ret = false;
    }
+
+   DEXIT;
    return ret;
 }
 
@@ -335,6 +355,7 @@ bool sconf_set_config(lList **config, lList **answer_list){
          *config = NULL;
       }
       else{
+         answer_list_output(answer_list);
          Master_Sched_Config_List = store;
          if (!Master_Sched_Config_List){
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USE_DEFAULT_CONFIG)); 
@@ -344,7 +365,11 @@ bool sconf_set_config(lList **config, lList **answer_list){
             lAppendElem(Master_Sched_Config_List, sconf_create_default());
 
          }
-         sconf_validate_config_(NULL);
+         {
+            lList *alp = NULL;
+            ret = sconf_validate_config_(&alp);
+            answer_list_output(&alp);
+         }
       }   
    }
    else{
@@ -567,6 +592,11 @@ lListElem *sconf_create_default()
       lSetUlong(ep, SC_max_pending_tasks_per_job, 50);
       lSetString(ep, SC_halflife_decay_list, "none"); 
       lSetString(ep, SC_policy_hierarchy, policy_hierarchy_chars );
+
+      lSetDouble(ep, SC_weight_ticket, 0.5);
+      lSetDouble(ep, SC_weight_waiting_time, 0.278); 
+      lSetDouble(ep, SC_weight_deadline, 3600000 );
+      lSetDouble(ep, SC_weight_urgency, 0.5 );
    }
 
    DEXIT;
@@ -1376,6 +1406,117 @@ double sconf_get_compensation_factor(void) {
       return true;
 }
 
+/****** sge_schedd_conf/sconf_get_weight_ticket() ****************************
+*  NAME
+*     sconf_get_weight_ticket() -- ??? 
+*
+*  SYNOPSIS
+*     double sconf_get_weight_ticket(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     double - 
+*******************************************************************************/
+double sconf_get_weight_ticket(void) {
+   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   
+   if (pos.empty)
+      sconf_calc_pos();
+      
+   if (pos.weight_ticket != -1)
+      return lGetPosDouble(sc_ep, pos.weight_ticket);
+   else
+      return 0;
+}     
+
+/****** sge_schedd_conf/sconf_get_weight_waiting_time() ************************
+*  NAME
+*     sconf_get_weight_waiting_time() -- ??? 
+*
+*  SYNOPSIS
+*     double sconf_get_weight_waiting_time(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     double - 
+*******************************************************************************/
+double sconf_get_weight_waiting_time(void) {
+   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   
+   if (pos.empty)
+      sconf_calc_pos();
+      
+   if (pos.weight_waiting_time != -1)
+      return lGetPosDouble(sc_ep, pos.weight_waiting_time);
+   else
+      return 0;
+}     
+
+/****** sge_schedd_conf/sconf_get_weight_deadline() ****************************
+*  NAME
+*     sconf_get_weight_deadline() -- ??? 
+*
+*  SYNOPSIS
+*     double sconf_get_weight_deadline(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     double - 
+*******************************************************************************/
+double sconf_get_weight_deadline(void) {
+   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   
+   if (pos.empty)
+      sconf_calc_pos();
+      
+   if (pos.weight_deadline != -1)
+      return lGetPosDouble(sc_ep, pos.weight_deadline);
+   else
+      return 0;
+}     
+
+/****** sge_schedd_conf/sconf_get_weight_urgency() ****************************
+*  NAME
+*     sconf_get_weight_urgency() -- ??? 
+*
+*  SYNOPSIS
+*     double sconf_get_weight_urgency(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     double - 
+*******************************************************************************/
+double sconf_get_weight_urgency(void) {
+   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   
+   if (pos.empty)
+      sconf_calc_pos();
+      
+   if (pos.weight_urgency != -1)
+      return lGetPosDouble(sc_ep, pos.weight_urgency);
+   else
+      return 0;
+}     
 
 /****** sge_schedd_conf/sconf_get_share_override_tickets() *********************
 *  NAME
@@ -1862,6 +2003,22 @@ void sconf_print_config(void){
       /* --- SC_policy_hierarchy */
       s = lGetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy);
       INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "policy_hierarchy"));
+
+      /* --- SC_weight_ticket */
+      dval = sconf_get_weight_ticket();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_ticket"));
+
+      /* --- SC_weight_waiting_time */
+      dval = sconf_get_weight_waiting_time();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_waiting_time"));
+
+      /* --- SC_weight_deadline */
+      dval = sconf_get_weight_deadline();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_deadline"));
+
+      /* --- SC_weight_urgency */
+      dval = sconf_get_weight_urgency();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_urgency"));
    }
 
    DEXIT;
@@ -1882,7 +2039,7 @@ void sconf_print_config(void){
 *     lList **answer_list - ??? 
 *
 *  RESULT
-*     bool - 
+*     bool - false for invalid scheduler configuration
 *
 *******************************************************************************/
 bool sconf_validate_config_(lList **answer_list){
@@ -2277,7 +2434,7 @@ void sconf_ph_fill_array(policy_hierarchy_t array[])
 *     policy name. 
 *
 *  INPUTS
-*     char character - "O", "F", "S" or "D" 
+*     char character - "O", "F" or "S"
 *
 *  RESULT
 *     policy_type_t - enum value 

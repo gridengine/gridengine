@@ -254,8 +254,10 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
    DENTER(TOP_LAYER, "procfs_kill_addgrpid");
 
    /* quick return in case of invalid add. group id */
-   if (add_grp_id == 0)
+   if (add_grp_id == 0) {
+      DEXIT;
       return;
+   }
 
    max_groups = sge_sysconf(SGE_SYSCONF_NGROUPS_MAX);
    if (max_groups <= 0)

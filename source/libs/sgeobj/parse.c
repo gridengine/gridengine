@@ -521,6 +521,8 @@ lList *string_list
    for_each(str_elem, string_list) {
       if ((char) lGetString(str_elem, ST_name)[0] == 'd')
          group_opt = GROUP_NO_TASK_GROUPS;
+      if ((char) lGetString(str_elem, ST_name)[0] == 't')
+         group_opt = GROUP_NO_PETASK_GROUPS;
    }
    DEXIT; 
    return (group_opt);

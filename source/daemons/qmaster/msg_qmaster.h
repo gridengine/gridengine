@@ -792,6 +792,7 @@
 #define MSG_QINSTANCE_NOUSSOS_S         _MESSAGE(33696, _("no need to suspend queue "SFQ" it's already suspended on subordinate\n"))
 #define MSG_QINSTANCE_NOUSADM_S         _MESSAGE(33697, _("no need to suspend queue "SFQ" it's already suspended by administrator\n"))
 
+#define MSG_JOB_WILD_RANGE_AMBIGUOUS    _MESSAGE(33698, _("job rejected: PEs matching wildcard and jobs slot range would cause ambiguous urgency slot amount\n"))
 
 #endif /* __MSG_QMASTER_H */
 

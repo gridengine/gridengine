@@ -93,19 +93,19 @@ NAMEEND
  * in the sge scheduler 
  */
 enum {
-   SGEJ_ticket = SGEJ_LOWERBOUND,
+   SGEJ_priority = SGEJ_LOWERBOUND,
    SGEJ_job_number,
    SGEJ_job_reference
 };
 
 LISTDEF(SGEJ_Type)
-   SGE_DOUBLE(SGEJ_ticket, CULL_DEFAULT)
+   SGE_DOUBLE(SGEJ_priority, CULL_DEFAULT)
    SGE_ULONG(SGEJ_job_number, CULL_DEFAULT)
    SGE_REF(SGEJ_job_reference, JRL_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(SGEJN)
-   NAME("SGEJ_ticket")
+   NAME("SGEJ_priority")
    NAME("SGEJ_job_number")
    NAME("SGEJ_job_reference")
 NAMEEND

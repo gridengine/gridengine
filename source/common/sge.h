@@ -138,7 +138,9 @@
 
 /* attribute values for certain object attributes */
 #define SGE_ATTRVAL_ALL                "all"
-
+#define SGE_ATTRVAL_MIN                "min"
+#define SGE_ATTRVAL_MAX                "max"
+#define SGE_ATTRVAL_AVG                "avg"
 
 /* tmp filenames */
 #define TMP_ERR_FILE_SNBU         "/tmp/sge_messages"

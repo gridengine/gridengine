@@ -158,7 +158,7 @@ te_tab_t *tab
    const char *sval;
    static u_long32 last = 0;
    
-   DENTER(TOP_LAYER, "te_deliver");
+   DENTER(CULL_LAYER, "te_deliver");
 
    if (last > now) {
       WARNING((SGE_EVENT, MSG_SYSTEM_SYSTEMHASBEENMODIFIEDXSECONDS_I, (int)(now-last)));

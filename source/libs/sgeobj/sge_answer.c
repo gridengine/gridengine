@@ -44,7 +44,7 @@
 
 #include "msg_sgeobjlib.h"
 
-#define ANSWER_LAYER TOP_LAYER
+#define ANSWER_LAYER CULL_LAYER
 
 /****** sgeobj/answer/-AnswerList *********************************************
 *  NAME
@@ -678,6 +678,7 @@ answer_list_add(lList **answer_list, const char *text,
    int ret = false;
 
    DENTER(ANSWER_LAYER, "answer_list_add");
+
    if (answer_list != NULL) {
       lListElem *answer = lCreateElem(AN_Type);
 

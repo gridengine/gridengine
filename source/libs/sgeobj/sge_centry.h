@@ -108,5 +108,9 @@ centry_list_parse_from_string(lList *complex_attributes,
 void
 centry_list_remove_duplicates(lList *this_list);
 
+double 
+centry_urgency_contribution(int slots, const char *name, double value,                       
+                            const lListElem *centry);
+
 #endif /* __SGE_CENTRY_H */
 

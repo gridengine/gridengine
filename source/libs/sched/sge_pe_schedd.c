@@ -68,7 +68,7 @@
                         algorithm with all available host is used 
 */
 int sge_pe_slots_per_host(
-lListElem *pep,
+const lListElem *pep,
 int slots 
 ) {
    const char *alloc_rule;

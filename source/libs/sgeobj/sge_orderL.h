@@ -70,7 +70,9 @@ enum {
    OR_queuelist,
    OR_ticket,
    OR_joker,
-   OR_pe
+   OR_pe,
+   OR_ntix,
+   OR_prio
 };
 
 LISTDEF(OR_Type)
@@ -82,15 +84,21 @@ LISTDEF(OR_Type)
    SGE_ULONG(OR_job_version, CULL_DEFAULT)  /* which job version */
    SGE_LIST(OR_queuelist, OQ_Type, CULL_DEFAULT)     /* associated queue list */
    SGE_DOUBLE(OR_ticket, CULL_DEFAULT)      /* SGEEE job tickets */
-   SGE_LIST(OR_joker, CULL_ANY_SUBTYPE, CULL_DEFAULT)         /* type of this sublist depends on OR_type:  
-                               * ORT_start_job empty ORT_remove_job empty  
-                               * ORT_tickets reduced job element JB_Type
-                               * ORT_update_*_usage reduced user/prj object
-                               * UP_Type ORT_share_tree reduced share tree
-                               * root node STN_Type *
-                               * ORT_remove_immediate_job empty *
-                               * ORT_job_schedd_info SME_Type */
+   SGE_LIST(OR_joker, CULL_ANY_SUBTYPE, CULL_DEFAULT)         
+      /* 
+       * Type of this sublist depends on OR_type!  
+       *    ORT_start_job                        empty 
+       *    ORT_remove_job                       empty  
+       *    ORT_tickets                          reduced job element JB_Type
+       *    ORT_update_*_usage                   reduced user/prj object UP_Type 
+       *    ORT_share_tree                       reduced share tree root node STN_Type 
+       *    ORT_remove_immediate_job             empty 
+       *    ORT_job_schedd_info                  SME_Type 
+       *    ORT_ptickets                         reduced job element JB_Type
+       */
    SGE_STRING(OR_pe, CULL_DEFAULT)          /* which pe */
+   SGE_DOUBLE(OR_ntix, CULL_DEFAULT)        /* normalized ticket amount sent with job start order */
+   SGE_DOUBLE(OR_prio, CULL_DEFAULT)        /* priority sent with job start order */
 LISTEND 
 
 NAMEDEF(ORN)
@@ -104,6 +112,8 @@ NAMEDEF(ORN)
      NAME("OR_ticket")
      NAME("OR_joker")
      NAME("OR_pe")
+     NAME("OR_ntix")
+     NAME("OR_prio")
      NAMEEND
 #define ORS sizeof(ORN)/sizeof(char*)
 

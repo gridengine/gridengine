@@ -47,10 +47,15 @@
 #include "sge_var.h"
 #include "sge_range.h"
 #include "sge_ulong.h"
+#include "sge_centry.h"
+#include "sge_urgency.h"
 
 static void sge_show_checkpoint(int how, int op);
 static void sge_show_y_n(int op, int how);
 static void sge_show_mail_options(int op, int how);
+static void show_ce_type_list(lList *cel, const char *indent, const char *separator, 
+   bool display_resource_contribution, lList *centry_list, int slots);
+
 
 void cull_show_job(lListElem *job, int flags) 
 {
@@ -656,13 +661,11 @@ static void sge_show_mail_options(int op, int how)
    return;
 } 
 
-static void show_ce_type_list(lList *cel, const char *indent, const char *separator);
-
 void sge_show_ce_type_list(lList *rel)
 {
    DENTER(TOP_LAYER, "sge_show_ce_type_list");
 
-   show_ce_type_list(rel, "", ",");
+   show_ce_type_list(rel, "", ",", false, NULL, 0);
 
    DEXIT;
    return;
@@ -671,11 +674,13 @@ void sge_show_ce_type_list(lList *rel)
 /*************************************************************/
 /* cel CE_Type List */
 static void show_ce_type_list(lList *cel, const char *indent,
-                                  const char *separator)
+                      const char *separator, 
+                      bool display_resource_contribution, lList *centry_list, int slots)
 {
    bool first = true;
-   lListElem *ce;
-   const char *s;
+   const lListElem *ce, *centry;
+   const char *s, *name;
+   double uc = -1;
 
    DENTER(TOP_LAYER, "show_ce_type_list");
 
@@ -687,12 +692,23 @@ static void show_ce_type_list(lList *cel, const char *indent,
          printf("%s", separator);
          printf("%s", indent);
       }
+ 
+      name = lGetString(ce, CE_name);
+      if (display_resource_contribution && 
+            (centry = centry_list_locate(centry_list, name)))
+         uc = centry_urgency_contribution(slots, name, lGetDouble(ce, CE_doubleval), centry);
 
       s = lGetString(ce, CE_stringval);
       if(s) {
-         printf("%s=%s", lGetString(ce, CE_name), s);
+         if (!display_resource_contribution)
+            printf("%s=%s", name, s);
+         else 
+            printf("%s=%s (%f)", name, s, uc);
       } else {
-         printf("%s", lGetString(ce, CE_name));
+         if (!display_resource_contribution)
+            printf("%s", name);
+         else 
+            printf("%s (%f)", name, uc);
       }
    }
 
@@ -704,12 +720,15 @@ static void show_ce_type_list(lList *cel, const char *indent,
 /* rel CE_Type List */
 void sge_show_ce_type_list_line_by_line(const char *label,
                                         const char *indent,
-                                        lList *rel)
+                                        lList *rel, 
+                                        bool display_resource_contribution, 
+                                        lList *centry_list,
+                                        int slots)
 {
    DENTER(TOP_LAYER, "sge_show_ce_type_list_line_by_line");
 
    printf("%s", label);
-   show_ce_type_list(rel, indent, "\n");
+   show_ce_type_list(rel, indent, "\n", display_resource_contribution, centry_list, slots);
    printf("\n");
 
    DEXIT;

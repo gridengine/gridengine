@@ -107,6 +107,7 @@ static int compress_ressources(lList **alpp, lList *rl);
 static void set_context(lList *ctx, lListElem *job); 
 static u_long32 guess_highest_job_number(void);
 static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger);
+static int job_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range);
 
 static lCondition *job_list_filter(int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser);
 static int job_verify_predecessors(const lListElem *job, lList **alpp, lList *predecessors);
@@ -140,8 +141,6 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    char user[128];
    char group[128];
    lList *pe_range = NULL;
-   unsigned long pe_range_max = 0;
-   unsigned long pe_range_min = 0;
    dstring str_wrapper;
 
    DENTER(TOP_LAYER, "sge_gdi_add_job");
@@ -373,7 +372,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    */
    pe_name = lGetString(jep, JB_pe);
    if (pe_name) {
-      lListElem *pep;
+      const lListElem *pep;
       pep = pe_list_find_matching(Master_Pe_List, pe_name);
       if (!pep) {
          ERROR((SGE_EVENT, MSG_JOB_PEUNKNOWN_S, pe_name));
@@ -383,20 +382,10 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       }
       /* check pe_range */
       pe_range = lGetList(jep, JB_pe_range);
-      if (pe_range) {
-         lListElem *relem = NULL;
-         for_each(relem,pe_range) {
-            pe_range_min = lGetUlong(relem, RN_min);
-            pe_range_max = lGetUlong(relem, RN_max);
-            DPRINTF(("pe max = %ld, pe min = %ld\n", pe_range_max, pe_range_min));
-            if ( pe_range_max == 0 || pe_range_min == 0  ) {
-               ERROR((SGE_EVENT, MSG_JOB_PERANGEMUSTBEGRZERO ));
-               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               DEXIT;
-               return STATUS_EUNKNOWN;
-            }
-         }
-      } 
+      if (job_verify_pe_range(alpp, pe_name, pe_range)!=STATUS_OK) {
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
    }
 
    ckpt_err = 0;
@@ -1489,6 +1478,7 @@ void job_mark_job_as_deleted(lListElem *j,
 
       SETBIT(JDELETED, state);
       lSetUlong(t, JAT_state, state);
+      lSetUlong(t, JAT_stop_initiate_time, sge_get_gmt());
       spool_write_object(&answer_list, spool_get_default_context(), j,
                          job_get_key(lGetUlong(j, JB_job_number),
                                      lGetUlong(t, JAT_task_number), NULL,
@@ -2675,9 +2665,26 @@ int *trigger
 
    /* ---- JB_pe_range */
    if ((pos=lGetPosViaElem(jep, JB_pe_range))>=0) {
+      lList *pe_range;
+      const char *pe_name;
       DPRINTF(("got new JB_pe_range\n")); 
-      lSetList(new_job, JB_pe_range, 
-               lCopyList("", lGetList(jep, JB_pe_range)));
+
+      /* reject PE ranges change requests for jobs without PE request */
+      if (!(pe_name=lGetString(new_job, JB_pe))) {
+         ERROR((SGE_EVENT, "rejected: change request for PE range supported only for parallel jobs"));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+
+      pe_range = lCopyList("", lGetList(jep, JB_pe_range));
+      if (job_verify_pe_range(alpp, pe_name, pe_range)!=STATUS_OK) {
+         pe_range = lFreeList(pe_range);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+      lSetList(new_job, JB_pe_range, pe_range);
+
       *trigger |= MOD_EVENT;
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_SLOTRANGE, u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
@@ -3224,6 +3231,76 @@ static u_long32 guess_highest_job_number()
    return maxid;
 }   
       
+/****** sge_job_qmaster/job_verify_pe_range() **********************************
+*  NAME
+*     job_verify_pe_range() -- Verify validness of a jobs PE range request
+*
+*  SYNOPSIS
+*     static int job_verify_pe_range(lList **alpp, const char *pe_name, 
+*     lList *pe_range) 
+*
+*  FUNCTION
+*     Verifies a jobs PE range is valid. Currently the following is done
+*     - make PE range list normalized and ascending
+*     - ensure PE range min/max not 0
+*     - in case multiple PEs match the PE request in GEEE ensure 
+*       the urgency slots setting is non-ambiguous
+*
+*  INPUTS
+*     lList **alpp        - Returns answer list with error context.
+*     const char *pe_name - PE request
+*     lList *pe_range     - PE range to be verified
+*
+*  RESULT
+*     static int - STATUS_OK on success
+*
+*  NOTES
+*
+*******************************************************************************/
+static int job_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range) 
+{
+   lListElem *relem = NULL;
+   unsigned long pe_range_max;
+   unsigned long pe_range_min;
+
+   DENTER(TOP_LAYER, "job_verify_pe_range");
+
+   /* ensure jobs PE range list request is normalized and ascending */
+   range_list_sort_uniq_compress(pe_range, NULL); 
+
+   for_each(relem, pe_range) {
+      pe_range_min = lGetUlong(relem, RN_min);
+      pe_range_max = lGetUlong(relem, RN_max);
+      DPRINTF(("pe max = %ld, pe min = %ld\n", pe_range_max, pe_range_min));
+      if ( pe_range_max == 0 || pe_range_min == 0  ) {
+         ERROR((SGE_EVENT, MSG_JOB_PERANGEMUSTBEGRZERO ));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+   }
+
+   /* PE slot ranges used in conjunction with wildcards can cause number of slots 
+      finally being used for urgency value computation be ambiguous. We reject such 
+      jobs */ 
+   if (feature_is_enabled(FEATURE_SGEEE) && range_list_get_number_of_ids(pe_range)>1) {
+      const lListElem *reference_pe = pe_list_find_matching(Master_Pe_List, pe_name);
+      lListElem *pe;
+      int nslots = pe_urgency_slots(reference_pe, lGetString(reference_pe, PE_urgency_slots), pe_range);
+      for_each(pe, Master_Pe_List) {
+         if (pe_is_matching(pe, pe_name) && 
+               nslots != pe_urgency_slots(pe, lGetString(pe, PE_urgency_slots), pe_range)) {
+            ERROR((SGE_EVENT, MSG_JOB_WILD_RANGE_AMBIGUOUS));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return STATUS_EUNKNOWN;
+         }
+      }
+   }
+
+   DEXIT;
+   return STATUS_OK;
+}
       
 /* all modifications are done now verify schedulability */
 static int verify_suitable_queues(
@@ -3244,7 +3321,7 @@ int *trigger
    case JUST_VERIFY:
    default:
       {
-         lListElem *pep = NULL, *ckpt_ep = NULL;
+         const lListElem *pep = NULL, *ckpt_ep = NULL;
          lList *granted;
          lList *talp = NULL;
          int ngranted = 0;
@@ -3255,17 +3332,15 @@ int *trigger
 
          /* parallel */
          if ((pe_name=lGetString(jep, JB_pe))) {
+
             if (!sge_is_pattern(pe_name))
                pep = pe_list_locate(Master_Pe_List, pe_name);
             else {
+
                /* use the first matching pe if we got a wildcard -pe requests */
-               for_each (pep, Master_Pe_List) {
-   
-                  if (!fnmatch(pe_name, lGetString(pep, PE_name), 0)) {
-                     DPRINTF(("use %s as first matching pe for %s to verify schedulability\n", 
-                              lGetString(pep, PE_name), pe_name));
-                     break;
-                  }
+               if ((pep=pe_list_find_matching(Master_Pe_List, pe_name))) {
+                  DPRINTF(("use %s as first matching pe for %s to verify schedulability\n", 
+                           lGetString(pep, PE_name), pe_name));
                }
             }
             if (!pep)

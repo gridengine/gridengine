@@ -61,7 +61,7 @@
 #define MSG_QSTAT_USAGE_JOBSWITHAUSEROPERATORSYSTEMHOLD    _MESSAGE(19024, _("jobs with a user/operator/system hold, \n"))
 #define MSG_QSTAT_USAGE_JOBSWITHSTARTTIMEINFUTORE    _MESSAGE(19025, _("jobs with a start time in future or any combination only. \n"))
 #define MSG_QSTAT_USAGE_HISABBREVIATIONFORHUHOHSHJHA    _MESSAGE(19026, _("h is a abbreviation for huhohshjha\n"))
-#define MSG_QSTAT_USAGE_SHOWTASKINFO    _MESSAGE(19027, _("show task information\n"))
+#define MSG_QSTAT_USAGE_SHOWTASKINFO    _MESSAGE(19027, _("show task information (implicitly -g t)\n"))
 #define MSG_QSTAT_USAGE_VIEWONLYJOBSOFTHISUSER    _MESSAGE(19028, _("view only jobs of this user\n"))
 #define MSG_QSTAT_USAGE_SELECTQUEUESWHEREUSERXHAVEACCESS    _MESSAGE(19029, _("select only queues where these users have access\n"))
 /* #define MSG_QSTAT_USAGE_ASSUMEEMPTYCLUSTERFORREQUESTMATCHING    _message(19030, _("assume empty cluster for request matching\n")) __TS Removed automatically from testsuite!! TS__*/
@@ -75,6 +75,7 @@
 /* #define MSG_QSTAT_WAINTINGFORREPLYFROMQSTD_SS    _message(19038, _("waiting for reply from "SFN"@"SFN" ")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_QSTAT_CANTGETREPLYONQSTATREQFROMQSTD_SSSS    _message(19039, _("unable to get reply on "SFN" request from "SFN"@"SFN": "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_QSTAT_FOLLOWINGDONOTEXIST _MESSAGE(19040, _("Following jobs do not exist: "))
+#define MSG_QSTAT_USAGE_DISPLAYALLPARALLELJOBTASKS    _MESSAGE(19041, _("display all parallel job tasks (do not group)\n"))
 
 
 #endif /* __MSG_QSTAT_H */

@@ -65,17 +65,19 @@
 #include "sge_answer.h"
 #include "sge_queue.h"
 #include "sge_qinstance_state.h"
+#include "sge_urgency.h"
 #include "sge_pe.h"
 #include "sge_ulong.h"
 
-static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, char *master, dstring *task_str, u_long32 full_listing, int slots, int slot, lList *ehl, lList *cl, lList *pe_list, char *intend);
+static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, char *master, dstring *task_str, u_long32 full_listing, int
+slots, int slot, lList *ehl, lList *cl, const lList *pe_list, char *intend, u_long32 group_opt, int slots_per_line);
 
 static int sge_print_subtask(lListElem *job, lListElem *ja_task, lListElem *task, int print_hdr, int indent);
 
 static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
                            int print_jobid, char *master, u_long32 full_listing,
                            int slots, int slot, lList *exechost_list,
-                           lList *centry_list, lList *pe_list, char *indent,
+                           lList *centry_list, const lList *pe_list, char *indent,
                            u_long32 sge_ext, u_long32 group_opt);
 
 static void sge_printf_header(u_long32 full_listing, u_long32 sge_ext);
@@ -441,13 +443,14 @@ lWriteListTo(lSelect("trala", job_list, where, what), stdout);
 void sge_print_jobs_queue(
 lListElem *qep,
 lList *job_list,
-lList *pe_list,
+const lList *pe_list,
 lList *user_list,
 lList *ehl,
 lList *centry_list,
 int print_jobs_of_queue,
 u_long32 full_listing,
-char *indent 
+char *indent ,
+u_long32 group_opt
 ) {
    int first = 1;
    lListElem *jlep;
@@ -465,14 +468,18 @@ char *indent
 
    for_each(jlep, job_list) {
       int master, i;
+
       for_each(jatep, lGetList(jlep, JB_ja_tasks)) {
          if (shut_me_down) {
             SGE_EXIT(1);
-         }   
+         }
+            
          for_each (gdilep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
 
-            if(!strcmp(lGetString(gdilep, JG_qname) , lGetString(qep, QU_qname))) {
+            if(!strcmp(lGetString(gdilep, JG_qname), qnm)) {
                int slot_adjust = 0;
+               int lines_to_print;
+               int slots_per_line, slots_in_queue = lGetUlong(gdilep, JG_slots); 
 
                if (qinstance_state_is_manual_suspended(qep) ||
                    qinstance_state_is_susp_on_sub(qep) ||
@@ -488,8 +495,8 @@ char *indent
                job_tag |= TAG_FOUND_IT;
                lSetUlong(jatep, JAT_suitable, job_tag);
 
-               master = !strcmp(qnm, lGetString(lFirst(lGetList(jatep, 
-                     JAT_granted_destin_identifier_list)), JG_qname));
+               master = !strcmp(qnm, 
+                     lGetString(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qname));
 
                if (master) {
                   const char *pe_name;
@@ -501,13 +508,35 @@ char *indent
                       slot_adjust = 1;
                }
 
-               for (i=0;i<(int)lGetUlong(gdilep, JG_slots)+slot_adjust;i++) {
+               /* job distribution view ? */
+               if (!(group_opt & GROUP_NO_PETASK_GROUPS)) {
+                  /* no - condensed ouput format */
+                  if (!master && !(full_listing & QSTAT_DISPLAY_FULL)) {
+                     /* skip all slave outputs except in full display mode */
+                     continue;
+                  }
+
+                  /* print only on line per job for this queue */
+                  lines_to_print = 1;
+
+                  /* always only show the number of job slots represented by the line */
+                  if ((full_listing & QSTAT_DISPLAY_FULL))
+                     slots_per_line = slots_in_queue;
+                  else
+                     slots_per_line = sge_granted_slots(lGetList(jatep, JAT_granted_destin_identifier_list));
+               } else {
+                  /* yes */
+                  lines_to_print = (int)slots_in_queue+slot_adjust;
+                  slots_per_line = 1;
+               }
+
+               for (i=0; i<lines_to_print ;i++) {
                   int already_printed = 0;
 
                   if (!lGetNumberOfElem(user_list) || 
                      (lGetNumberOfElem(user_list) && (lGetUlong(jatep, JAT_suitable)&TAG_SELECT_IT))) {
                      if (print_jobs_of_queue && (job_tag & TAG_SHOW_IT)) {
-                        int different;
+                        int different, print_jobid;
 
                         old_jid = jid;
                         jid = lGetUlong(jlep, JB_job_number);
@@ -515,44 +544,59 @@ char *indent
                         jataskid = lGetUlong(jatep, JAT_task_number);
                         sge_dstring_sprintf(&dyn_task_str, u32, jataskid);
                         different = (jid != old_jid) || (jataskid != old_jataskid);
+
+                        if (different) 
+                           print_jobid = 1;
+                        else {
+                           if (!(full_listing & QSTAT_DISPLAY_RUNNING))
+                              print_jobid = master && (i==0);
+                           else 
+                              print_jobid = 0;
+                        }
+
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_RUNNING) &&
                               (lGetUlong(jatep, JAT_state) & JRUNNING)) {
-                           sge_print_job(jlep, jatep, qep, different,
+                           sge_print_job(jlep, jatep, qep, print_jobid,
                               (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
-                              lGetUlong(gdilep, JG_slots)+slot_adjust, i, ehl, centry_list, pe_list, indent);   
+                              slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list, indent, 
+                              group_opt, slots_per_line);   
                            already_printed = 1;
                         }
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_SUSPENDED) &&
                            ((lGetUlong(jatep, JAT_state)&JSUSPENDED) ||
                            (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_THRESHOLD) ||
                             (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_SUBORDINATE))) {
-                           sge_print_job(jlep, jatep, qep, different,
+                           sge_print_job(jlep, jatep, qep, print_jobid,
                               (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
-                              lGetUlong(gdilep, JG_slots)+slot_adjust, i, ehl, centry_list, pe_list, indent);   
+                              slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list, indent, 
+                              group_opt, slots_per_line);   
                            already_printed = 1;
                         }
 
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_USERHOLD) &&
                             (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_USER)) {
-                           sge_print_job(jlep, jatep, qep, different,
+                           sge_print_job(jlep, jatep, qep, print_jobid,
                               (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
-                              lGetUlong(gdilep, JG_slots)+slot_adjust, i, ehl, centry_list, pe_list, indent);
+                              slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list, indent, 
+                              group_opt, slots_per_line);
                            already_printed = 1;
                         }
 
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_OPERATORHOLD) &&
                             (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_OPERATOR))  {
-                           sge_print_job(jlep, jatep, qep, different,
+                           sge_print_job(jlep, jatep, qep, print_jobid,
                               (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
-                              lGetUlong(gdilep, JG_slots)+slot_adjust, i, ehl, centry_list, pe_list, indent);
+                              slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list, indent, 
+                              group_opt, slots_per_line);
                            already_printed = 1;
                         }
                             
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_SYSTEMHOLD) &&
                             (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_SYSTEM)) {
-                           sge_print_job(jlep, jatep, qep, different,
+                           sge_print_job(jlep, jatep, qep, print_jobid,
                               (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
-                              lGetUlong(gdilep, JG_slots)+slot_adjust, i, ehl, centry_list, pe_list, indent);
+                              slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list, indent, 
+                              group_opt, slots_per_line);
                            already_printed = 1;
                         }
                      }
@@ -572,10 +616,10 @@ char *indent
 /*-------------------------------------------------------------------------*/
 void sge_print_jobs_pending(
 lList *job_list,
+const lList *pe_list,
 lList *user_list,
 lList *ehl,
 lList *centry_list,
-lList **prunning_per_user,
 lSortOrder *so,
 u_long32 full_listing,
 u_long32 group_opt 
@@ -632,12 +676,12 @@ u_long32 group_opt
                                  sge_ext);
 
                if ((full_listing & QSTAT_DISPLAY_PENDING) && 
-                   group_opt != GROUP_TASK_GROUPS) {
+                   (group_opt&GROUP_NO_TASK_GROUPS)) {
                   sge_dstring_sprintf(&dyn_task_str, u32, 
                                     lGetUlong(jatep, JAT_task_number));
                   sge_print_job(jep, jatep, NULL, 1, NULL,
                                 &dyn_task_str, full_listing, 0, 0, ehl, centry_list, 
-                                NULL, "");
+                                pe_list, "", group_opt, 0);
                } else {
                   if (!ja_task_list) {
                      ja_task_list = lCreateList("", JAT_Type);
@@ -649,7 +693,7 @@ u_long32 group_opt
          }
       }
       if ((full_listing & QSTAT_DISPLAY_PENDING)  && 
-            group_opt == GROUP_TASK_GROUPS && 
+            !(group_opt&GROUP_NO_TASK_GROUPS) && 
             FoundTasks && ja_task_list) {
          lList *task_group = NULL;
 
@@ -657,7 +701,7 @@ u_long32 group_opt
             ja_task_list_print_to_string(task_group, &dyn_task_str);
 
             sge_print_job(jep, lFirst(task_group), NULL, 1, NULL, 
-                          &dyn_task_str, full_listing, 0, 0, ehl, centry_list, NULL, "");
+                          &dyn_task_str, full_listing, 0, 0, ehl, centry_list, pe_list, "", group_opt, 0);
             task_group = lFreeList(task_group);
             sge_dstring_free(&dyn_task_str);
          }
@@ -665,7 +709,7 @@ u_long32 group_opt
       }
       if (jep != nxt && full_listing & QSTAT_DISPLAY_PENDING) {
          sge_print_jobs_not_enrolled(jep, NULL, 1, NULL, full_listing,
-                                     0, 0, ehl, centry_list, NULL, "", sge_ext, 
+                                     0, 0, ehl, centry_list, pe_list, "", sge_ext, 
                                      group_opt);
       }
    }
@@ -702,7 +746,7 @@ static void sge_printf_header(u_long32 full_listing, u_long32 sge_ext)
 static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
                            int print_jobid, char *master, u_long32 full_listing,
                            int slots, int slot, lList *exechost_list,
-                           lList *centry_list, lList *pe_list, char *indent,
+                           lList *centry_list, const lList *pe_list, char *indent,
                            u_long32 sge_ext, u_long32 group_opt)
 {
    lList *range_list[8];         /* RN_Type */
@@ -711,6 +755,7 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
    dstring ja_task_id_string = DSTRING_INIT;
  
    DENTER(TOP_LAYER, "sge_print_jobs_not_enrolled");
+
    job_create_hold_id_lists(job, range_list, hold_state); 
    for (i = 0; i <= 7; i++) {
       lList *answer_list = NULL;
@@ -727,7 +772,7 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
          show = 1;
       }
       if (range_list[i] != NULL && show) { 
-         if (group_opt == GROUP_TASK_GROUPS) {
+         if (!(group_opt&GROUP_NO_TASK_GROUPS)) {
             range_list_print_to_string(range_list[i], &ja_task_id_string, 0);
             first_id = range_list_get_first_id(range_list[i], &answer_list);
             if (answer_list_has_error(&answer_list) != 1) {
@@ -745,7 +790,7 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
                lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
                sge_print_job(job, ja_task, qep, print_jobid, master,
                              &ja_task_id_string, full_listing, slots, slot,
-                             exechost_list, centry_list, pe_list, indent);
+                             exechost_list, centry_list, pe_list, indent, group_opt, 0);
                lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
                lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
                lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
@@ -764,7 +809,7 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
                   sge_dstring_sprintf(&ja_task_id_string, u32, start);
                   sge_print_job(job, ja_task, NULL, 1, NULL,
                                 &ja_task_id_string, full_listing, 0, 0, 
-                                exechost_list, centry_list, pe_list, indent);
+                                exechost_list, centry_list, pe_list, indent, group_opt, 0);
                }
             }
          }
@@ -774,18 +819,19 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
    sge_dstring_free(&ja_task_id_string);
    DEXIT;
    return STATUS_OK;
-}                          
+}                 
 
 /*-------------------------------------------------------------------------*/
 /* print the finished jobs in case of SGE                                  */
 /*-------------------------------------------------------------------------*/
 void sge_print_jobs_finished(
 lList *job_list,
+const lList *pe_list,
 lList *user_list,
 lList *ehl,
 lList *centry_list,
-u_long32 full_listing 
-) {
+u_long32 full_listing, 
+u_long32 group_opt) {
    int sge_ext;
    int first = 1;
    lListElem *jep, *jatep;
@@ -819,8 +865,7 @@ u_long32 full_listing
                   sge_dstring_sprintf(&dyn_task_str, u32, 
                                     lGetUlong(jatep, JAT_task_number));
                   sge_print_job(jep, jatep, NULL, 1, NULL, &dyn_task_str, 
-                                full_listing, 0, 0, ehl, centry_list, NULL, "");   
-                  
+                                full_listing, 0, 0, ehl, centry_list, pe_list, "", group_opt, 0);   
                }
             }
          }
@@ -835,11 +880,12 @@ u_long32 full_listing
 /*-------------------------------------------------------------------------*/
 void sge_print_jobs_error(
 lList *job_list,
+const lList *pe_list,
 lList *user_list,
 lList *ehl,
 lList *centry_list,
-u_long32 full_listing 
-) {
+u_long32 full_listing,
+u_long32 group_opt) {
    int first = 1;
    lListElem *jep, *jatep;
    int sge_ext;
@@ -864,7 +910,7 @@ u_long32 full_listing
                   printf("################################################################################%s\n", sge_ext?hashes:"");
                }
                sge_dstring_sprintf(&dyn_task_str, "u32", lGetUlong(jatep, JAT_task_number));
-               sge_print_job(jep, jatep, NULL, 1, NULL, &dyn_task_str, full_listing, 0, 0, ehl, centry_list, NULL, "");
+               sge_print_job(jep, jatep, NULL, 1, NULL, &dyn_task_str, full_listing, 0, 0, ehl, centry_list, pe_list, "", group_opt, 0);
             }
          }
       }
@@ -878,10 +924,12 @@ u_long32 full_listing
 /*-------------------------------------------------------------------------*/
 void sge_print_jobs_zombie(
 lList *zombie_list,
+const lList *pe_list,
 lList *user_list,
 lList *ehl,
 lList *centry_list,
-u_long32 full_listing 
+u_long32 full_listing,
+u_long32 group_opt
 ) {
    int sge_ext;
    lListElem *jep;
@@ -911,16 +959,29 @@ u_long32 full_listing
          ja_task = job_get_ja_task_template_pending(jep, first_task_id);
          range_list_print_to_string(z_ids, &dyn_task_str, 0);
          sge_print_job(jep, ja_task, NULL, 1, NULL, &dyn_task_str, 
-                       full_listing, 0, 0, ehl, centry_list, NULL, "");
+                       full_listing, 0, 0, ehl, centry_list, pe_list, "", group_opt, 0);
          sge_dstring_free(&dyn_task_str);
       }
    }
    DEXIT;
 }
 
+#define OPTI_PRINT8(value) \
+   if (value > 99999999 ) \
+      printf("%8.3g ", value); \
+   else  \
+      printf("%8.0f ", value)
+
+/* regular output */
 static char jhul1[] = "---------------------------------------------------------------------------------------------";
-static char jhul2[] = "-------------------------------------------------------------------------------------------------------------";
-static char jhul3[] = "---------------------------------------------------------------------------";
+/* -g t */
+static char jhul2[] = "-";
+/* -ext */
+static char jhul3[] = "-------------------------------------------------------------------------------";
+/* -t */
+static char jhul4[] = "-----------------------------------------------------";
+/* -urg */
+static char jhul5[] = "----------------------------------------------------------------";
 
 static int sge_print_job(
 lListElem *job,
@@ -934,19 +995,22 @@ int slots,
 int slot,
 lList *exechost_list,
 lList *centry_list,
-lList *pe_list,
-char *indent 
+const lList *pe_list,
+char *indent,
+u_long32 group_opt,
+int slots_per_line  /* number of slots to be printed in slots column 
+                       when 0 is passed the number of requested slots printed */
 ) {
    char state_string[8];
    static int first_time = 1;
    u_long32 jstate;
-   int sge_ext, sgeee_mode;
+   int sge_urg, sge_ext, sgeee_mode;
    lList *ql = NULL;
    lListElem *qrep, *gdil_ep=NULL;
    int running;
    const char *queue_name;
    int tsk_ext;
-   u_long tickets,otickets,dtickets,stickets,ftickets;
+   u_long tickets,otickets,stickets,ftickets;
    int is_zombie_job;
    dstring ds;
    char buffer[128];
@@ -962,32 +1026,32 @@ char *indent
    sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    sge_ext = sgeee_mode && (full_listing & QSTAT_DISPLAY_EXTENDED);
    tsk_ext = (full_listing & QSTAT_DISPLAY_TASKS);
+   sge_urg = sgeee_mode && (full_listing & QSTAT_DISPLAY_URGENCY);
 
    if (first_time) {
       first_time = 0;
       if (!(full_listing & QSTAT_DISPLAY_FULL)) {
-         printf("%s%-7.7s %-5.5s %-10.10s %-12.12s %s%-5.5s %-19.19s%s %s%s%s%s%s%s%s%s%-10.10s %s  %s%s%s%s%s%s", 
+         printf("%s%-7.7s %s %s%s %-10.10s %-12.12s %s%-5.5s %s%s%s%s%s%s%s%s%s%-10.10s %s %s%s%s%s%s%s", 
                indent,
                   "job-ID",
-                  "prior",
+               sgeee_mode?"prior ":"prior",
+               sge_urg?" nurgenc urgency  rrcontr  wtcontr  dlcontr ":"",
+               sge_ext?" ntckts ":"",
                   "name",
                   "user",
                sge_ext?"project          department ":"",
                   "state",
-                  "submit/start at",
-               sge_ext ? " deadline           "
-                       : "",
-               sge_ext ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      "
-                       : "",
+               !sge_ext?"submit/start at     ":"",
+               sge_urg ? " deadline           " : "",
+               sge_ext ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      " : "",
                sge_ext?"tckts ":"",
                sge_ext?"ovrts ":"",
                sge_ext?"otckt ":"",
-               sge_ext?"dtckt ":"",
                sge_ext?"ftckt ":"",
                sge_ext?"stckt ":"",
                sge_ext?"share ":"",
                   "queue",
-                  "master",
+               (group_opt & GROUP_NO_PETASK_GROUPS)?"master":"slots",
                   "ja-task-ID ", 
                tsk_ext?"task-ID ":"",
                tsk_ext?"state ":"",
@@ -995,7 +1059,12 @@ char *indent
                tsk_ext?"stat ":"",
                tsk_ext?"failed ":"" );
 
-         printf("\n%s%s%s%s\n", indent, jhul1, sge_ext ? jhul2 : "", tsk_ext ? jhul3 : "");
+         printf("\n%s%s%s%s%s%s\n", indent, 
+               jhul1, 
+               (group_opt & GROUP_NO_PETASK_GROUPS)?jhul2:"",
+               sge_ext ? jhul3 : "", 
+               tsk_ext ? jhul4 : "",
+               sge_urg ? jhul5 : "");
       }
    }
       
@@ -1004,26 +1073,67 @@ char *indent
    /* job number / ja task id */
    if (print_jobid)
       printf("%7d ", (int)lGetUlong(job, JB_job_number)); 
-   else 
+   else
       printf("        "); 
 
-   /* job priority */
-   printf("%5d ", ((int)lGetUlong(job, JB_priority))-BASE_PRIORITY); 
+   /* per job priority information */
+   if (sgeee_mode) {
+      if (print_jobid)
+         printf("%7.5f ", lGetDouble(jatep, JAT_prio)); /* nprio 0.0 - 1.0 */
+      else 
+         printf("        ");
 
+      if (sge_ext) {
+         if (print_jobid)
+            printf("%7.5f ", lGetDouble(jatep, JAT_ntix)); /* ntix 0.0 - 1.0 */
+         else
+            printf("        ");
+      }
 
-   /* job name */
-   printf("%-10.10s ", lGetString(job, JB_job_name)); 
+      if (sge_urg) {
+         if (print_jobid) {
+            printf("%7.5f ", lGetDouble(job, JB_nurg));
+            OPTI_PRINT8(lGetDouble(job, JB_urg));
+            OPTI_PRINT8(lGetDouble(job, JB_rrcontr));
+            OPTI_PRINT8(lGetDouble(job, JB_wtcontr));
+            OPTI_PRINT8(lGetDouble(job, JB_dlcontr));
+         } else {
+            printf("        "
+                   "         "
+                   "         "
+                   "         "
+                   "         ");
+         }
+      } 
+   } 
+   else {
+      /* job priority */
+      printf("%5d ", ((int)lGetUlong(job, JB_priority))-BASE_PRIORITY); 
+   }
 
-   /* job owner */
-   printf("%-12.12s ", lGetString(job, JB_owner)); 
+   if (print_jobid) {
+      /* job name */
+      printf("%-10.10s ", lGetString(job, JB_job_name)); 
+
+      /* job owner */
+      printf("%-12.12s ", lGetString(job, JB_owner)); 
+   } else {
+      printf("           "); 
+      printf("             "); 
+   }
 
    if (sge_ext) {
       const char *s;
 
-      /* job project */
-      printf("%-16.16s ", (s=lGetString(job, JB_project))?s:"NA"); 
-      /* job department */
-      printf("%-10.10s ", (s=lGetString(job, JB_department))?s:"NA"); 
+      if (print_jobid) {
+         /* job project */
+         printf("%-16.16s ", (s=lGetString(job, JB_project))?s:"NA"); 
+         /* job department */
+         printf("%-10.10s ", (s=lGetString(job, JB_department))?s:"NA"); 
+      } else {
+         printf("                 "); 
+         printf("           "); 
+      }
    }
 
    /* move status info into state info */
@@ -1042,19 +1152,51 @@ char *indent
       jstate |= JMIGRATING;
    }
 
-   /* write states into string */ 
-   job_get_state_string(state_string, jstate);
-   printf("%-5.5s ", state_string); 
+   if (print_jobid) {
+      /* write states into string */ 
+      job_get_state_string(state_string, jstate);
+      printf("%-5.5s ", state_string); 
+   } else {
+      printf("      "); 
+   }
 
-   /* start/submit time */
-   if (!lGetUlong(jatep, JAT_start_time) )
-      printf("%s ", sge_ctime(lGetUlong(job, JB_submission_time), &ds));
-   else
-      printf("%s ", sge_ctime(lGetUlong(jatep, JAT_start_time), &ds));
+   if (!sge_ext) {
+      if (print_jobid) {
+         /* start/submit time */
+         if (!lGetUlong(jatep, JAT_start_time) )
+            printf("%s ", sge_ctime(lGetUlong(job, JB_submission_time), &ds));
+         else {
+#if 0
+            /* AH: intermediate change to monitor JAT_stop_initiate_time 
+             * must be removed before 6.0 if really needed a better possiblity 
+             * for monitoring must be found (TODO)
+             */
+            if (getenv("JAT_stop_initiate_time") && (lGetUlong(jatep, JAT_state) & JDELETED))
+               printf("%s!", sge_ctime(lGetUlong(jatep, JAT_stop_initiate_time), &ds));
+            else
+#endif
+               printf("%s ", sge_ctime(lGetUlong(jatep, JAT_start_time), &ds));
+         }
+      } else {
+         printf("                    "); 
+      }
+   }
 
    /* is job logically running */
    running = lGetUlong(jatep, JAT_status)==JRUNNING || 
       lGetUlong(jatep, JAT_status)==JTRANSFERING;
+
+   /* deadline time */
+   if (sge_urg) {
+      if (print_jobid) { 
+         if (!lGetUlong(job, JB_deadline) )
+            printf("                    ");
+         else
+            printf("%s ", sge_ctime(lGetUlong(job, JB_deadline), &ds));
+      } else {
+         printf("                    "); 
+      }
+   }
 
    if (sge_ext) {
       lListElem *up, *pe, *task;
@@ -1088,11 +1230,6 @@ char *indent
          }
       }
 
-      /* start/submit time */
-      if (!lGetUlong(job, JB_deadline) )
-         printf("                    ");
-      else
-         printf("%s ", sge_ctime(lGetUlong(job, JB_deadline), &ds));
 
       /* scaled cpu usage */
       if (!(up = lGetElemStr(job_usage_list, UA_name, USAGE_ATTR_CPU))) 
@@ -1139,27 +1276,24 @@ char *indent
             otickets = lGetDouble(gdil_ep, JG_oticket);
             ftickets = lGetDouble(gdil_ep, JG_fticket);
             stickets = lGetDouble(gdil_ep, JG_sticket);
-            dtickets = lGetDouble(gdil_ep, JG_dticket);
          }
          else {
             if (slots) {
                tickets = lGetDouble(gdil_ep, JG_ticket) / slots;
                otickets = lGetDouble(gdil_ep, JG_oticket) / slots;
                ftickets = lGetDouble(gdil_ep, JG_fticket) / slots;
-               dtickets = lGetDouble(gdil_ep, JG_dticket) / slots;
                stickets = lGetDouble(gdil_ep, JG_sticket) / slots;
             } 
             else {
-               tickets = otickets = ftickets = stickets = dtickets = 0;
+               tickets = otickets = ftickets = stickets = 0;
             }
          }
       }
       else {
-         tickets = lGetDouble(jatep, JAT_ticket);
+         tickets = lGetDouble(jatep, JAT_tix);
          otickets = lGetDouble(jatep, JAT_oticket);
          ftickets = lGetDouble(jatep, JAT_fticket);
          stickets = lGetDouble(jatep, JAT_sticket);
-         dtickets = lGetDouble(jatep, JAT_dticket);
       }
 
 
@@ -1173,13 +1307,11 @@ char *indent
          printf("   NA ");
          printf("   NA ");
          printf("   NA ");
-         printf("   NA ");
       } else {
          if (sge_ext || lGetList(jatep, JAT_granted_destin_identifier_list)) {
             printf("%5d ", (int)tickets),
             printf("%5d ", (int)lGetUlong(job, JB_override_tickets)); 
             printf("%5d ", (int)otickets);
-            printf("%5d ", (int)dtickets);
             printf("%5d ", (int)ftickets);
             printf("%5d ", (int)stickets);
             printf("%-5.2f ", lGetDouble(jatep, JAT_share)); 
@@ -1194,14 +1326,23 @@ char *indent
          }
       }
    }
+
    /* if not full listing we need the queue's name in each line */
    if (!(full_listing & QSTAT_DISPLAY_FULL))
       printf("%-10.10s ", queue_name?queue_name:"");
 
-   if (master)
-      printf("%-8.7s", master);
-   else
-      printf("        ");
+   if ((group_opt & GROUP_NO_PETASK_GROUPS)) {
+      /* MASTER/SLAVE information needed only to show parallel job distribution */
+      if (master)
+         printf("%-7.6s", master);
+      else
+         printf("       ");
+   } else {
+      /* job slots requested/granted */
+      if (!slots_per_line)
+         slots_per_line = sge_job_slot_request(job, pe_list);
+      printf("%5d ", slots_per_line);
+   }
 
    if (sge_dstring_get_string(dyn_task_str) && job_is_array(job))
       printf("%s", sge_dstring_get_string(dyn_task_str)); 
@@ -1278,7 +1419,8 @@ char *indent
                lGetString(job, JB_checkpoint_name)); 
 
          sge_show_ce_type_list_line_by_line(QSTAT_INDENT "Hard Resources:   ",
-               QSTAT_INDENT2, lGetList(job, JB_hard_resource_list)); 
+               QSTAT_INDENT2, lGetList(job, JB_hard_resource_list), sgeee_mode?true:false, centry_list,
+               sge_job_slot_request(job, pe_list)); 
 
          /* display default requests if necessary */
          {
@@ -1314,7 +1456,7 @@ char *indent
          }
 
          sge_show_ce_type_list_line_by_line(QSTAT_INDENT "Soft Resources:   ",
-               QSTAT_INDENT2, lGetList(job, JB_soft_resource_list)); 
+               QSTAT_INDENT2, lGetList(job, JB_soft_resource_list), false, NULL, 0); 
 
          ql = lGetList(job, JB_hard_queue_list);
          if (ql) {
@@ -1350,38 +1492,6 @@ char *indent
             }
          }
    }
-
-#if 0
-
-   /* this code displays the sub-task list as a sub-list under resources */
-
-   if (print_jobid && (full_listing & QSTAT_DISPLAY_RESOURCES)) {
-      lList *task_list = lGetList(job, JB_task_list);
-      lListElem *task, *ep;
-      char *qname;
-      int no_header=0;
-
-      /* print master sub-task belonging to this queue */
-      if (task_list && queue_name &&
-          ((ep=lFirst(lGetList(job, JB_granted_destin_identifier_list)))) &&
-          ((qname=lGetString(ep, JG_qname))) &&
-          !strcmp(qname, queue_name)) {
-         sge_print_subtask(job, job, !no_header++, 1);
-      }
-         
-      /* print sub-tasks belonging to this queue */
-      for_each(task, task_list)
-         if (queue_name && 
-             ((ep=lFirst(lGetList(task, JB_granted_destin_identifier_list)))) &&
-             ((qname=lGetString(ep, JG_qname))) &&
-             !strcmp(qname, queue_name)) {
-            sge_print_subtask(job, task, !no_header++, 1);
-         }
-
-
-   }
-
-#endif
 
 #undef QSTAT_INDENT
 #undef QSTAT_INDENT2

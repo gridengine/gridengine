@@ -83,7 +83,7 @@ static int is_requested(lList *req, const char *attr);
 static void clear_resource_tags( lList *resources, u_long32 max_tag); 
 
 static int available_slots_global(lListElem *job, 
-                                  lListElem *ja_task, lListElem *pe, 
+                                  lListElem *ja_task, const lListElem *pe, 
                                   lListElem *global_host, lList *centry_list, 
                                   int global_slots,
                                   lList *acl_list,
@@ -101,7 +101,7 @@ static int sge_soft_violations(lListElem *queue, int violation, lListElem *job,l
                                lList *actual_attr, lList *centry_list, u_long32 layer, double lc_factor, u_long32 tag);
  
 static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job, 
-                                        lListElem *pe, lListElem *ckpt, 
+                                        const lListElem *pe, const lListElem *ckpt, 
                                         lList *centry_list, lList *host_list, 
                                         lList *acl_list);
 
@@ -578,7 +578,7 @@ static void clear_resource_tags( lList *resources, u_long32 max_tag) {
 
 */
 static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
-                                        lListElem *pe, lListElem *ckpt,
+                                        const lListElem *pe, const lListElem *ckpt,
                                         lList *centry_list, lList *host_list,
                                         lList *acl_list) 
 {
@@ -1661,8 +1661,8 @@ lList* sge_replicate_queues_suitable4job(
 lList *queues,       /* QU_Type */
 lListElem *job,      /* JB_Type */
 lListElem *ja_task,  /* JAT_Type */
-lListElem *pe,       /* PE_Type */
-lListElem *ckpt,     /* CK_Type */
+const lListElem *pe,       /* PE_Type */
+const lListElem *ckpt,     /* CK_Type */
 int queue_sort_method,     
 lList *centry_list,  /* CE_Type */
 lList *host_list,    /* EH_Type */
@@ -2385,8 +2385,8 @@ int host_order_changed) {
 int available_slots_at_queue(
       lListElem *job,
       lListElem *qep,
-      lListElem *pe,
-      lListElem *ckpt,
+      const lListElem *pe,
+      const lListElem *ckpt,
       lList *host_list,
       lList *centry_list,
       lList *acl_list,
@@ -2616,7 +2616,7 @@ static int available_slots_at_host(lListElem *job, lListElem *ja_task, lListElem
 static int available_slots_global(
 lListElem *job,
 lListElem *ja_task, /* either JAT_Type or NULL */
-lListElem *pe_object,
+const lListElem *pe_object,
 lListElem *global_host,
 lList *centry_list,
 int global_slots, /* 0 reinitializes other values serve as the first start value for checks */

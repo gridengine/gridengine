@@ -121,7 +121,6 @@ lList **topp  /* ticket orders ptr ptr */
    u_long32 force, state;
    u_long32 pe_slots = 0, q_slots, q_version, task_id_range = 0;
    lListElem *pe = NULL;
-   char opt_sge[256] = ""; 
    lListElem *scheduler;
 
    DENTER(TOP_LAYER, "sge_follow_order");
@@ -156,6 +155,7 @@ lList **topp  /* ticket orders ptr ptr */
     * START JOB
     * ----------------------------------------------------------------------- */
    case ORT_start_job: {
+      char opt_sge[256] = ""; 
       lList *gdil = NULL;
 
       DPRINTF(("ORDER ORT_start_job\n"));
@@ -244,9 +244,11 @@ lList **topp  /* ticket orders ptr ptr */
        
       if (feature_is_enabled(FEATURE_SGEEE)) {
          /* fill number of tickets into job */
-         lSetDouble(jatp, JAT_ticket, lGetDouble(ep, OR_ticket));
-         sprintf(opt_sge, MSG_ORD_INITIALTICKETS_U, 
-                 u32c((u_long32)lGetDouble(ep, OR_ticket)));
+         lSetDouble(jatp, JAT_tix,                   lGetDouble(ep, OR_ticket));
+         lSetDouble(jatp, JAT_ntix,                  lGetDouble(ep, OR_ntix));
+         lSetDouble(jatp, JAT_prio,                  lGetDouble(ep, OR_prio));
+
+         sprintf(opt_sge, MSG_ORD_INITIALTICKETS_U, u32c((u_long32)lGetDouble(ep, OR_ticket)));
 
          if ((oep = lFirst(lGetList(ep, OR_queuelist)))) {
             lSetDouble(jatp, JAT_oticket, lGetDouble(oep, OQ_oticket));
@@ -554,9 +556,7 @@ lList **topp  /* ticket orders ptr ptr */
             return -1;
          }
 
-         if (lGetUlong(jatp, JAT_status) == JRUNNING ||
-             lGetUlong(jatp, JAT_status) == JTRANSFERING ||
-             lGetUlong(jatp, JAT_status) == JFINISHED) {
+         if (lGetUlong(jatp, JAT_status) == JFINISHED) {
 
             WARNING((SGE_EVENT, MSG_JOB_CHANGEPTICKETS_UU, 
                      u32c(lGetUlong(jep, JB_job_number)), 
@@ -567,17 +567,14 @@ lList **topp  /* ticket orders ptr ptr */
          }
 
          /* modify jobs ticket amount */
-         lSetDouble(jatp, JAT_ticket, lGetDouble(ep, OR_ticket));
-         DPRINTF(("TICKETS: "u32"."u32" "u32" tickets\n",
-            lGetUlong(jep, JB_job_number),
-            lGetUlong(jatp, JAT_task_number),
-            (u_long32)lGetDouble(jatp, JAT_ticket)));
+         lSetDouble(jatp, JAT_tix, lGetDouble(ep, OR_ticket));
 
          /* check several fields to be updated */
          if ((joker=lFirst(lGetList(ep, OR_joker)))) {
             lListElem *joker_task;
 
             joker_task = lFirst(lGetList(joker, JB_ja_tasks));
+
             if ((pos=lGetPosViaElem(joker_task, JAT_oticket))>=0) 
                lSetDouble(jatp, JAT_oticket, lGetPosDouble(joker_task, pos));
             if ((pos=lGetPosViaElem(joker_task, JAT_dticket))>=0) 
@@ -591,7 +588,27 @@ lList **topp  /* ticket orders ptr ptr */
             if ((pos=lGetPosViaElem(joker_task, JAT_share))>=0)           
                lSetDouble(jatp, JAT_share, lGetPosDouble(joker_task, pos));
 
+            if ((pos=lGetPosViaElem(joker_task, JAT_prio))>=0) 
+               lSetDouble(jatp, JAT_prio, lGetPosDouble(joker_task, pos));
+            if ((pos=lGetPosViaElem(joker_task, JAT_ntix))>=0) 
+               lSetDouble(jatp, JAT_ntix, lGetPosDouble(joker_task, pos));
+
+            lSetDouble(jep, JB_nurg,                      lGetDouble(joker, JB_nurg));
+            lSetDouble(jep, JB_urg,                       lGetDouble(joker, JB_urg));
+            lSetDouble(jep, JB_rrcontr,                   lGetDouble(joker, JB_rrcontr));
+            lSetDouble(jep, JB_dlcontr,                   lGetDouble(joker, JB_dlcontr));
+            lSetDouble(jep, JB_wtcontr,                   lGetDouble(joker, JB_wtcontr));
          }
+         DPRINTF(("PRIORITY: "u32"."u32" %f/%f tix/ntix %f/%f urg/nurg %f prio\n",
+            lGetUlong(jep, JB_job_number),
+            lGetUlong(jatp, JAT_task_number),
+            lGetDouble(jatp, JAT_tix),
+            lGetDouble(jatp, JAT_ntix),
+            lGetDouble(jep, JB_urg),
+            lGetDouble(jep, JB_nurg),
+            lGetDouble(jatp, JAT_prio)));
+
+
       } /* just ignore them being not in SGEEE mode */
       break;
 
@@ -676,11 +693,11 @@ lList **topp  /* ticket orders ptr ptr */
          if (!skip_ticket_order) {
             bool destribute_tickets = false;
             /* modify jobs ticket amount and spool job */
-            lSetDouble(jatp, JAT_ticket, lGetDouble(ep, OR_ticket));
+            lSetDouble(jatp, JAT_tix, lGetDouble(ep, OR_ticket));
             DPRINTF(("TICKETS: "u32"."u32" "u32" tickets\n",
                lGetUlong(jep, JB_job_number),
                lGetUlong(jatp, JAT_task_number),
-               (u_long32)lGetDouble(jatp, JAT_ticket)));
+               (u_long32)lGetDouble(jatp, JAT_tix)));
 
             /* check several fields to be updated */
             if ((joker=lFirst(lGetList(ep, OR_joker)))) {
@@ -699,8 +716,15 @@ lList **topp  /* ticket orders ptr ptr */
                   lSetUlong(jatp, JAT_fshare, lGetPosUlong(joker_task, pos));
                if ((pos=lGetPosViaElem(joker_task, JAT_share))>=0)           
                   lSetDouble(jatp, JAT_share, lGetPosDouble(joker_task, pos));
-                  
+
                destribute_tickets = (lGetPosViaElem(joker_task, JAT_granted_destin_identifier_list) >-1); 
+
+               lSetDouble(jep, JB_nurg,                      lGetDouble(joker, JB_nurg));
+               lSetDouble(jep, JB_urg,                       lGetDouble(joker, JB_urg));
+               lSetDouble(jep, JB_rrcontr,                   lGetDouble(joker, JB_rrcontr));
+               lSetDouble(jep, JB_dlcontr,                   lGetDouble(joker, JB_dlcontr));
+               lSetDouble(jep, JB_wtcontr,                   lGetDouble(joker, JB_wtcontr));
+
             }
 
             /* tickets should only be further destributed in the scheduler reprioritize_interval. Only in

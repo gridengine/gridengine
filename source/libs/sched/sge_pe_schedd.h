@@ -39,7 +39,7 @@ enum {
 
 #define ALLOC_RULE_IS_BALANCED(x) (x>0)
 
-int sge_pe_slots_per_host(lListElem *pep, int slots);
+int sge_pe_slots_per_host(const lListElem *pep, int slots);
 
 int or_sge_pe_slots_per_host(lListElem *pep, lList *hosts, lListElem *h_elem, int *sm);
 

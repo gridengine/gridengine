@@ -177,4 +177,9 @@ const char *sconf_get_halflife_decay_list_str(void);
 
 const lList* sconf_get_halflife_decay_list(void);
 
+double sconf_get_weight_ticket(void);
+double sconf_get_weight_waiting_time(void);
+double sconf_get_weight_deadline(void);
+double sconf_get_weight_urgency(void);
+
 #endif /* __SGE_SCHEDD_CONF_H */

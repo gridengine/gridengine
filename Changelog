@@ -1,6 +1,31 @@
+AH-2003-11-11-0: Enhancem.: Initial revision of of Enterprise Edition
+                            policy module enhancments introducing urgency scheme
+                            as a resource request dependent policy.
+                            - removed weight_tickets_deadline from sched_conf(5)
+                            - added weight_deadline to sched_conf(5)
+                            - added weight_waiting_time to sched_conf(5)
+                            - added weight_priority to sched_conf(5)
+                            - added weight_urgency to sched_conf(5)
+                            - added urgency colunm to complex(5)
+                            - added urgency_slots to sge_pe(5)
+                            - added -urg switch to qstat(1) to allow for monitoring
+                              urgency policy
+                            - enhanced qstat(1) -r output to display contribution in
+                              static urgency scheme on a per resource basis
+                            - moved job deadline related job columns from qstat(1) -ext 
+                              to -urg output
+                            - sort job list always based on combined (ticket policy +
+                              static urgency) and new priority
+                            - changed qstat(1) to prints only one line for a parallel job
+                              and introduced -g t to retain former multi-line output for
+                              parallel jobs. qstat(1) -t option implicitely sets -g t
+                 Cleanup:   libs/sched/sgeee.c
+                 Review:    EB
+
 AD-2003-11-10-2: Cleanup:   RMON macros like 'DPRINTF' or 'DTRACE' must not
                             be used without 'DENTER/DEXIT'.
                  Changed:   rmon
+
 
 JG-2003-11-10-0: Bugfix:    Fixed the build
                  Enhancem.: Added information (host load and consumables) to

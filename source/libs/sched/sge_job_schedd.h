@@ -110,6 +110,8 @@ int get_job_contribution(double *dvalp, const char *name, lListElem *jep, lListE
 
 int nslots_granted(lList *granted, const char *qhostname);
 
+int job_slot_request(lListElem *job, lList *pe_list);
+
 int active_subtasks(lListElem *job, const char *qname);
 
 int active_nslots_granted(lListElem *job, lList *granted, const char *qhostname);

@@ -35,6 +35,7 @@
 /* Group Option Constants */
 #define GROUP_TASK_GROUPS              0x00000000
 #define GROUP_NO_TASK_GROUPS           0x00000001
+#define GROUP_NO_PETASK_GROUPS         0x00000002
 
 char **parse_noopt(char **sp, const char *shortopt, const char *longopt, lList **ppcmdline, lList **alpp);
 

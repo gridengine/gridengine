@@ -172,7 +172,7 @@ static tJobField job_items[] = {
    { 0, JAT_scaled_usage_list, "@{VMEM}", 10, 30, PrintVMEM },
    { 0, JAT_scaled_usage_list, "@{MAXVMEM}", 10, 30, PrintMAXVMEM },
 /**** SGE specific fields *****/
-   { 0, JAT_ticket, "@{Ticket}", 10, 30, PrintDoubleAsUlong},
+   { 0, JAT_tix, "@{Ticket}", 10, 30, PrintDoubleAsUlong},
    { 0, JAT_oticket, "@{OTicket}", 10, 30, PrintDoubleAsUlong},
    { 0, JAT_dticket, "@{DTicket}", 10, 30, PrintDoubleAsUlong },
    { 0, JAT_fticket, "@{FTicket}", 10, 30, PrintDoubleAsUlong },

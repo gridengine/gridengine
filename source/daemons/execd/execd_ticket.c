@@ -81,7 +81,7 @@ int answer_error;
       if (job_ticket) {
          task_ticket = lAddElemUlong(&jatasks, JAT_task_number, jataskid, JAT_Type);
          if (task_ticket)
-            lSetDouble(task_ticket, JAT_ticket, ticket);
+            lSetDouble(task_ticket, JAT_tix, ticket);
          lSetList(job_ticket, JB_ja_tasks, jatasks);
       }
    }

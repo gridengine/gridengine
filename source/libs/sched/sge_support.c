@@ -975,7 +975,7 @@ search_ancestors( lListElem *ep,
 }
 
 /*--------------------------------------------------------------------
- * sgeee_sort_jobs - sort jobs according the task-tickets and job number 
+ * sgeee_sort_jobs - sort jobs according the task-priority and job number 
  *--------------------------------------------------------------------*/
 
 void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
@@ -1013,7 +1013,7 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
 
          /* 
           * First try to find an enrolled task 
-          * It will have the most tickets
+          * It will have the highest priority
           */
          tmp_task = lFirst(lGetList(job, JB_ja_tasks));
 
@@ -1024,16 +1024,16 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
             tmp_task = lFirst(lGetList(job, JB_ja_template));
          }
 
-         lSetDouble(tmp_sge_job, SGEJ_ticket,
-                    lGetDouble(tmp_task, JAT_ticket));
+         lSetDouble(tmp_sge_job, SGEJ_priority,
+                    lGetDouble(tmp_task, JAT_prio));
       }
 
       lSetUlong(tmp_sge_job, SGEJ_job_number, lGetUlong(job, JB_job_number));
       lSetRef(tmp_sge_job, SGEJ_job_reference, job);
 #if 1
-      DPRINTF(("JOB: "u32" TICKETS: "u32"\n", 
+      DPRINTF(("JOB: "u32" PRIORITY: "u32"\n", 
          lGetUlong(tmp_sge_job, SGEJ_job_number), 
-         lGetDouble(tmp_sge_job, SGEJ_ticket)));
+         lGetDouble(tmp_sge_job, SGEJ_priority)));
 #endif
       lAppendElem(tmp_list, tmp_sge_job);
       
@@ -1043,7 +1043,7 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
    /*-----------------------------------------------------------------
     * Sort tmp list
     *-----------------------------------------------------------------*/
-   lPSortList(tmp_list, "%I- %I+", SGEJ_ticket, SGEJ_job_number);
+   lPSortList(tmp_list, "%I- %I+", SGEJ_priority, SGEJ_job_number);
 
    /*-----------------------------------------------------------------
     * rebuild job_list according sort order

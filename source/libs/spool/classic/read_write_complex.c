@@ -315,7 +315,34 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
                   SGE_EXIT(1);
 
             }
-/*             lSetDouble(ep, CE_defaultdouble, dval); */
+            break;
+         }
+      }
+
+      /* WEIGHT */
+      if (((s = sge_strtok(cp, " \t\n")) && (*s != '#'))) {
+
+         lSetString(ep, CE_urgency_weight, s);    /* save string representation */
+
+         switch (type) {
+         case TYPE_INT:
+         case TYPE_TIM:
+         case TYPE_MEM:
+         case TYPE_BOO:
+         case TYPE_DOUBLE:
+            if (!parse_ulong_val(&dval, NULL, type, s, SGE_EVENT, sizeof(SGE_EVENT)-1)) {
+               SGE_LOG(LOG_ERR, SGE_EVENT);
+               ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_S, fname));
+               if (alpp) {
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  lp = lFreeList(lp);
+                  DEXIT;
+                  return NULL;
+               }
+               else
+                  SGE_EXIT(1);
+
+            }
             break;
          }
       }
@@ -473,14 +500,14 @@ lList **alpp
    }  
 
 
-   FPRINTF((fp, "%-16s %-10s %-8s %-5s %-11s %-10s %-5s\n", 
+   FPRINTF((fp, "%-16s %-10s %-8s %-5s %-11s %-10s %-7s %-6s\n", 
 	         "#name", "shortcut", "type",
-            "relop", "requestable", "consumable", "default"));
+            "relop", "requestable", "consumable", "default", "urgency"));
    FPRINTF((fp, "#-------------------------------------------------"
-            "----------------------\n"));
+            "----------------------------\n"));
    
    for_each(ep, lpc) {
-      FPRINTF((fp, "%-16s %-10s %-8s %-5s %-11s %-10s %-5s\n", 
+      FPRINTF((fp, "%-16s %-10s %-8s %-5s %-11s %-10s %-7s %-6s\n", 
 	      lGetString(ep, CE_name), 
          lGetString(ep, CE_shortcut), 
          map_type2str(lGetUlong(ep, CE_valtype)), 
@@ -488,7 +515,8 @@ lList **alpp
          (lGetUlong(ep, CE_requestable) == REQU_FORCED) ? "FORCED" : 
          (lGetUlong(ep, CE_requestable) == REQU_YES) ? "YES" : "NO",
          (lGetBool(ep, CE_consumable)) ? "YES" : "NO",
-         lGetString(ep, CE_default)));
+         lGetString(ep, CE_default),
+         lGetString(ep, CE_urgency_weight)));
    }
 
 

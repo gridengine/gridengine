@@ -89,7 +89,11 @@ enum {
    SC_report_pjob_tickets,    
    SC_max_pending_tasks_per_job,  
    SC_halflife_decay_list, 
-   SC_policy_hierarchy
+   SC_policy_hierarchy,
+   SC_weight_ticket,
+   SC_weight_waiting_time,
+   SC_weight_deadline,
+   SC_weight_urgency
    };
 
 
@@ -134,7 +138,7 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    SGE_ULONG(SC_weight_tickets_share, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(SC_weight_tickets_deadline, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(SC_weight_tickets_deadline_active, CULL_DEFAULT)              /* prepared for setting by a schedd order */
-   SGE_ULONG(SC_weight_tickets_override, CULL_DEFAULT)               
+   SGE_ULONG(SC_weight_tickets_override, CULL_DEFAULT)
    SGE_BOOL(SC_share_override_tickets, CULL_DEFAULT | CULL_SPOOL)          /* Override tickets of any object instance *
                                                                             * are shared equally among all jobs       *
                                                                             * associated with the object.             */
@@ -153,6 +157,14 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    SGE_STRING(SC_halflife_decay_list,CULL_DEFAULT | CULL_SPOOL)            /* A list of halflife decay values (UA_Type)*/
    SGE_STRING(SC_policy_hierarchy,CULL_DEFAULT | CULL_SPOOL)               /* defines the order of the ticket         *
                                                                             * computation                             */
+   SGE_DOUBLE(SC_weight_ticket, CULL_DEFAULT | CULL_SPOOL)                 /* weight in SGEEE priority formula applied */
+                                                                           /* on normalized ticket amount             */
+   SGE_DOUBLE(SC_weight_waiting_time, CULL_DEFAULT | CULL_SPOOL)           /* weight applied in SGEEE static urgency  *
+                                                                            * formula on waiting time                 */
+   SGE_DOUBLE(SC_weight_deadline, CULL_DEFAULT | CULL_SPOOL)               /* dividend used in SGEEE static urgency   *
+                                                                            * formula with deadline initiation time   */
+   SGE_DOUBLE(SC_weight_urgency, CULL_DEFAULT | CULL_SPOOL)                /* weight in SGEEE priority formula applied *
+                                                                            * on normalized urgency */
 LISTEND 
 
 NAMEDEF(SCN)
@@ -194,6 +206,11 @@ NAMEDEF(SCN)
    NAME("SC_max_pending_tasks_per_job")
    NAME("SC_halflife_decay_list")
    NAME("SC_policy_hierarchy")
+
+   NAME("SC_weight_ticket")
+   NAME("SC_weight_waiting_time")
+   NAME("SC_weight_deadline")
+   NAME("SC_weight_urgency")
 NAMEEND
 #define SCS sizeof(SCN)/sizeof(char*)
 

@@ -428,7 +428,8 @@ u_long32 show
             sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
                                  QSTAT_DISPLAY_ALL | 
                                  ( (show & QHOST_DISPLAY_QUEUES) ?
-                                  QSTAT_DISPLAY_FULL : 0), "   ");
+                                  QSTAT_DISPLAY_FULL : 0), "   ", 
+                                  GROUP_NO_PETASK_GROUPS);
          }
       }
       

@@ -1,3 +1,9 @@
+DT-2003-11-18-1: Bugfix.:		Made changes from code review.  Mostly stylisitic.
+								 Changed:		DRMAA & read_defaults.c
+
+DT-2003-11-18-0: Bugfix.:		Fixed broken build
+								 Changed:		read_defaults.c
+
 SG-2003-11-18-0: Bugfix:    Fixed the build
 
 AD-2003-11-18-0: Bugfix:    Fixed the build

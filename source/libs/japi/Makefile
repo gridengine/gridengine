@@ -109,7 +109,7 @@ japi.o: $(JAPILIB_DIR)/japi.c
 TEST_DRMAAI_OBJS = test_drmaa.o $(DRMAALIB)
 
 test_drmaa: $(TEST_DRMAAI_OBJS) $(JAPI_LIB_DEPENDS)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.o show_job.o $(LFLAGS) -ldrmaa $(JAPI_ADD_LIBS) $(SLIBS) $(LIBS)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.o $(LFLAGS) -ldrmaa $(JAPI_ADD_LIBS) $(SLIBS) $(LIBS)
 
 test_drmaa.o: $(JAPILIB_DIR)/test_drmaa.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa.c

@@ -9,6 +9,7 @@
 #include "sge_mtutil.h"
 
 #include "drmaa.h"
+#include "msg_drmaa.h"
 #include "japi.h"
 #include "japiP.h"
 
@@ -16,7 +17,6 @@
 
 /* CLIENTS/COMMON */
 #include "read_defaults.h"
-#include "show_job.h" //For debug only.  Please remove!
 
 /* COMMON */
 #include "parse_job_cull.h"
@@ -92,10 +92,6 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[]);
 
 static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt, 
    int is_bulk, int start, int end, int step, dstring *diag);
-/*
-static int japi_drmaa_path2sge_job(drmaa_job_template_t *drmaa_jt, lListElem *jt, int is_bulk, 
-   int nm, const char *attribute_key, dstring *diag);
-*/
 static int japi_drmaa_path2path_opt(lList *attrs, lList **args,
    int is_bulk, const char *attribute_key, const char *sw, int opt, dstring *diag);
 static int japi_drmaa_path2wd_opt(lList *attrs, lList **args, int is_bulk, 
@@ -1797,66 +1793,6 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
    return DRMAA_ERRNO_SUCCESS;
 }
 
-#if 0
-/****** DRMAA/drmaa_path2sge_job() *****************************************
-*  NAME
-*     drmaa_path2sge_job() -- Transform a DRMAA job path into SGE 
-*                             counterpart and put it into the SGE job
-*
-*  SYNOPSIS
-*     static int japi_drmaa_path2sge_job(drmaa_job_template_t *drmaa_jt, 
-*     lListElem *jt, int is_bulk, int nm, const char *attribute_key, dstring 
-*     *diag) 
-*
-*  FUNCTION
-*     Transform a DRMAA job path into SGE counterpart. The following 
-*     substitutions are performed
-*         
-*        $drmaa_hd_ph$     --> $HOME
-*        $drmaa_wd_ph$     --> $CWD
-*        $drmaa_incr_ph$   --> $TASK_ID   
-*
-*     The $drmaa_incr_ph$ substitutions are performed only for bulk jobs
-*     otherwise submission fails.
-*
-*  INPUTS
-*     drmaa_job_template_t *drmaa_jt - the DRMAA job template
-*     lListElem *jt                  - the destination Grid Engine job 
-*     int is_bulk                    - 1 for bulk jobs 0 otherwise
-*     int nm                         - CULL field name used for path  
-*     const char *attribute_key      - The DRMAA job template keyword for this
-*                                      path
-*     dstring *diag                  - diagnosis inforation
-*
-*  RESULT
-*     static int - DRMAA error codes
-*
-*  NOTES
-*     MT-NOTE: japi_drmaa_path2sge_job() is MT safe
-*******************************************************************************/
-/* This method is no longer used and should be removed as soon as this DRMAA
- * implementation is complete. */
-static int japi_drmaa_path2sge_job(drmaa_job_template_t *drmaa_jt, lListElem *jt, 
-   int is_bulk, int nm, const char *attribute_key, dstring *diag)
-{
-   const char *new_path = NULL;
-   int ret_val;
-   
-   DENTER(TOP_LAYER, "japi_drmaa_path2sge_job");
-   
-   lSetList(jt, nm, NULL);
-   
-   if ((ret_val = japi_drmaa_path2sge_path (drmaa_jt->strings, is_bulk,
-                                            attribute_key, 1, &new_path,
-                                            diag)) == DRMAA_ERRNO_SUCCESS) {
-      DPRINTF(("%s = \"%s\"\n", lNm2Str(nm), new_path));
-      lAddSubStr(jt, PN_path, new_path, nm, PN_Type);
-   }   
-
-   DEXIT;
-   return ret_val;
-}
-#endif
 /****** DRMAA/drmaa_path2wd_opt() **********************************************
 *  NAME
 *     drmaa_path2wd_opt() -- Transform a DRMAA job path into SGE 
@@ -1881,8 +1817,6 @@ static int japi_drmaa_path2sge_job(drmaa_job_template_t *drmaa_jt, lListElem *jt
 *     lList *args                    - the list to which to append the switch
 *     int is_bulk                    - 1 for bulk jobs 0 otherwise
 *                                      path
-*
-*  OUTPUTS
 *     dstring *diag                  - diagnosis inforation
 *
 *  RESULT
@@ -1891,8 +1825,9 @@ static int japi_drmaa_path2sge_job(drmaa_job_template_t *drmaa_jt, lListElem *jt
 *  NOTES
 *     MT-NOTE: japi_drmaa_path2wd_opt() is MT safe
 *******************************************************************************/
-static int japi_drmaa_path2wd_opt (lList *attrs, lList **args, int is_bulk,
-                                   dstring *diag) {
+static int japi_drmaa_path2wd_opt(lList *attrs, lList **args, int is_bulk,
+                                  dstring *diag)
+{
    const char *new_path = NULL;
    int ret_val;
    
@@ -1902,7 +1837,6 @@ static int japi_drmaa_path2wd_opt (lList *attrs, lList **args, int is_bulk,
                                             DRMAA_WD, 0, &new_path,
                                             diag)) == DRMAA_ERRNO_SUCCESS) {
       if (new_path) {
-
          lListElem *ep = lGetElemStr (attrs, VA_variable, DRMAA_WD);
          const char *value = lGetString (ep, VA_value);
 
@@ -1949,8 +1883,6 @@ static int japi_drmaa_path2wd_opt (lList *attrs, lList **args, int is_bulk,
 *                                      path
 *     const char *sw                 - The qsub switch to store this under
 *     int *opt                       - The type to store this under
-*
-*  OUTPUTS
 *     dstring *diag                  - diagnosis inforation
 *
 *  RESULT
@@ -1959,11 +1891,13 @@ static int japi_drmaa_path2wd_opt (lList *attrs, lList **args, int is_bulk,
 *  NOTES
 *     MT-NOTE: japi_drmaa_path2path_opt() is MT safe
 *******************************************************************************/
-static int japi_drmaa_path2path_opt (lList *attrs, lList **args, int is_bulk,
-   const char *attribute_key, const char *sw, int opt, dstring *diag) {
+static int japi_drmaa_path2path_opt(lList *attrs, lList **args, int is_bulk,
+                                    const char *attribute_key, const char *sw,
+                                    int opt, dstring *diag)
+{
    const char *new_path = NULL;
    int ret_val;
-   lList *path_list = lCreateList("path list", PN_Type);
+   lList *path_list = lCreateList ("path list", PN_Type);
    
    DENTER (TOP_LAYER, "japi_drmaa_path2path_opt");
 
@@ -2044,8 +1978,6 @@ static int japi_drmaa_path2path_opt (lList *attrs, lList **args, int is_bulk,
 *     const char *attribute_key      - The DRMAA job template keyword for this
 *                                      path
 *     int do_wd                      - whether the WD placeholder should be used
-*
-*  OUTPUTS
 *     char **new_path                - The modified path
 *     dstring *diag                  - diagnosis inforation
 *
@@ -2055,8 +1987,10 @@ static int japi_drmaa_path2path_opt (lList *attrs, lList **args, int is_bulk,
 *  NOTES
 *     MT-NOTE: japi_drmaa_path2sge_path() is MT safe
 *******************************************************************************/
-static int japi_drmaa_path2sge_path (lList *attrs, int is_bulk,
-   const char *attribute_key, int do_wd, const char **new_path, dstring *diag) {
+static int japi_drmaa_path2sge_path(lList *attrs, int is_bulk,
+                                    const char *attribute_key, int do_wd,
+                                    const char **new_path, dstring *diag)
+{
    lListElem *ep;
 
    DENTER (TOP_LAYER, "japi_drmaa_path2sge_path");
@@ -2125,8 +2059,6 @@ static int japi_drmaa_path2sge_path (lList *attrs, int is_bulk,
 *     int end                        - end index for bulk jobs
 *     int step                       - increment for bulk jobs
 *     dstring *diag                  - diagnosis information
-*
-*  OUTPUT
 *     lListElem **jtp                - returns Grid Engine JB_Type job 
 *
 *  RESULT
@@ -2137,7 +2069,8 @@ static int japi_drmaa_path2sge_path (lList *attrs, int is_bulk,
 *
 *******************************************************************************/
 static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt, 
-   int is_bulk, int start, int end, int step, dstring *diag)
+                             int is_bulk, int start, int end, int step,
+                             dstring *diag)
 {
    lListElem *jt, *ep;
    int drmaa_errno;
@@ -2306,7 +2239,7 @@ static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt,
       }
       else {
          /* This theoretically can't happen. */
-         sge_dstring_copy_string (diag, "No job category could be found even though -cat was detected.");
+         sge_dstring_copy_string (diag, MSG_DRMAA_SWITCH_WITH_NO_CAT);
          lFreeList (alp);
          jt = lFreeElem (jt);   
          DEXIT;
@@ -2316,7 +2249,7 @@ static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt,
       
       /* We need to document a standard practice for naming job categories so
        * they don't conflict with command names.  I think something like
-       * <cat_name>.jcat would work fine. */
+       * <cat_name>.cat would work fine. */
       args = sge_get_qtask_args (job_cat, alp);
       
       if (answer_list_has_error (&alp)) {
@@ -2364,7 +2297,7 @@ static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt,
                 * loops will have to be addressed.  The best solution at that
                 * point will probably be to parse the job category before the
                 * script file and simply not allow the script file to set the
-                * job category. */
+                * job category.) */
                opt_list_append_opts_from_script (&opts_scriptfile, &alp, 
                                                  opts_all, environ);
 
@@ -2380,7 +2313,7 @@ static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt,
       }
       else {
          /* Bad job category */
-         sge_dstring_copy_string (diag, "Unknown job category");
+         sge_dstring_copy_string (diag, MSG_DRMAA_UNKNOWN_JOB_CAT);
          alp = lFreeList (alp);
          jt = lFreeElem (jt);
          DEXIT;
@@ -2391,24 +2324,8 @@ static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt,
    /*
     * Merge all commandline options and interprete them
     */
-   DPRINTF (("Before merge...\n"));
-   DPRINTF (("%d items in default\n", lGetNumberOfElem (opts_default)));
-   DPRINTF (("%d items in defaults\n", lGetNumberOfElem (opts_defaults)));
-   DPRINTF (("%d items in scriptfile\n", lGetNumberOfElem (opts_scriptfile)));
-   DPRINTF (("%d items in job cat\n", lGetNumberOfElem (opts_job_cat)));
-   DPRINTF (("%d items in native\n", lGetNumberOfElem (opts_native)));
-   DPRINTF (("%d items in drmaa\n", lGetNumberOfElem (opts_drmaa)));
-   DPRINTF (("%d items in all\n", lGetNumberOfElem (opts_all)));
    merge_drmaa_options (&opts_all, &opts_default, &opts_defaults, &opts_scriptfile,
                        &opts_job_cat, &opts_native, &opts_drmaa);
-   DPRINTF (("After merge...\n"));
-   DPRINTF (("%d items in default\n", lGetNumberOfElem (opts_default)));
-   DPRINTF (("%d items in defaults\n", lGetNumberOfElem (opts_defaults)));
-   DPRINTF (("%d items in scriptfile\n", lGetNumberOfElem (opts_scriptfile)));
-   DPRINTF (("%d items in job cat\n", lGetNumberOfElem (opts_job_cat)));
-   DPRINTF (("%d items in native\n", lGetNumberOfElem (opts_native)));
-   DPRINTF (("%d items in drmaa\n", lGetNumberOfElem (opts_drmaa)));
-   DPRINTF (("%d items in all\n", lGetNumberOfElem (opts_all)));
 
    alp = cull_parse_job_parameter (opts_all, &jt);
    
@@ -2432,8 +2349,9 @@ static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt,
 *                                               lList.
 *
 *  SYNOPSIS
-*     int opt_list_append_opts_from_drmaa_attr (lList **args, lList *attrs, lList *vattrs,
-                                                 int is_bulk, dstring *diag)
+*     int opt_list_append_opts_from_drmaa_attr(lList **args, lList *attrs,
+*                                              lList *vattrs, int is_bulk,
+*                                              dstring *diag)
 *
 *  FUNCTION
 *     All DRMAA job template attributes are translated into qsub style option
@@ -2453,8 +2371,10 @@ static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt,
 *     MT-NOTE: opt_list_append_opts_from_drmaa_attr() is MT safe
 *
 *******************************************************************************/
-static int opt_list_append_opts_from_drmaa_attr (lList **args, lList *attrs, lList *vattrs,
-                                                 int is_bulk, dstring *diag) {
+static int opt_list_append_opts_from_drmaa_attr(lList **args, lList *attrs,
+                                                lList *vattrs, int is_bulk,
+                                                dstring *diag)
+{
    int drmaa_errno;
    lListElem *ep = NULL;
    lListElem *ep_opt = NULL;
@@ -2585,8 +2505,6 @@ static int opt_list_append_opts_from_drmaa_attr (lList **args, lList *attrs, lLi
    }
 
    /* email address -- -M */
-   /* steal this code from the qsub -M option in cull_parse_cmdline
-	  * [parse_qsub.c] around line 935.*/
    if ((ep=lGetElemStr (vattrs, NSV_name, DRMAA_V_EMAIL))) {
       dstring email = DSTRING_INIT;
       char *user = NULL;
@@ -2635,21 +2553,8 @@ static int opt_list_append_opts_from_drmaa_attr (lList **args, lList *attrs, lLi
       ep_opt = sge_add_arg (args, M_OPT, lListT, "-M", sge_dstring_get_string (&email));
       lSetList (ep_opt, SPA_argval_lListT, nlp);
    }
-#if 0
-/* I don't know yet if no email address should imply implicit email suppression.
- * Since SGE automatically fills in an email for the user, I'll assume for the
- * moment that it doesn't.  This needs to be changed when the DRMAA-WG decides
- * how this attribute should work. */
-   else {
-      /* If no email addresses are specified, suppress email sending. */
-      ep_opt = sge_add_arg (args, m_OPT, lIntT, "-m", "n");
-      lSetInt (ep_opt, SPA_argval_lIntT, NO_MAIL);
-   }
-#endif
 
    /* email supression -- -m */
-   /* steal this code from the qsub -m n option in cull_parse_cmdline
-	  * [parse_qsub.c] around line 865 and sge_parse_mail_options.*/
    if ((ep=lGetElemStr (attrs, VA_variable, DRMAA_BLOCK_EMAIL))) {
       const char *value = lGetString (ep, VA_value);
       
@@ -2675,8 +2580,6 @@ static int opt_list_append_opts_from_drmaa_attr (lList **args, lList *attrs, lLi
    }
 
    /* job start time -- -a */
-   /* steal this code from the qsub -a option in cull_parse_cmdline
-	  * [parse_qsub.c] around line 155.*/
    if ((ep=lGetElemStr (attrs, VA_variable, DRMAA_START_TIME))) {
       u_long32 timeval;
       const char *value = (const char*)drmaa_time2sge_time (lGetString (ep, VA_value), diag);
@@ -2689,7 +2592,7 @@ static int opt_list_append_opts_from_drmaa_attr (lList **args, lList *attrs, lLi
       DPRINTF (("processing %s = \"%s\"\n", DRMAA_START_TIME, value));
       
       if (!ulong_parse_date_time_from_string (&timeval, NULL, value)) {
-         sge_dstring_copy_string (diag, "invalid format for job start time");
+         sge_dstring_copy_string (diag, MSG_DRMAA_INVALID_TIME_STRING);
          DEXIT;
          return DRMAA_ERRNO_DENIED_BY_DRM;
       }
@@ -2757,7 +2660,8 @@ static int opt_list_append_opts_from_drmaa_attr (lList **args, lList *attrs, lLi
 *     MT-NOTE: opt_list_append_default_drmaa_opts() is MT safe
 *
 *******************************************************************************/
-static void opt_list_append_default_drmaa_opts (lList **opts) {
+static void opt_list_append_default_drmaa_opts(lList **opts)
+{
    lListElem *ep_opt;
    DENTER (TOP_LAYER, "opt_list_append_drmaa_default_opts");
    
@@ -2812,10 +2716,11 @@ static void opt_list_append_default_drmaa_opts (lList **opts) {
 *     MT-NOTE: merge_drmaa_options() is MT safe
 *
 *******************************************************************************/
-static void merge_drmaa_options (lList **opts_all, lList **opts_default,
-                                 lList **opts_defaults, lList **opts_scriptfile,
-                                 lList **opts_job_cat, lList **opts_native,
-                                 lList **opts_drmaa) {
+static void merge_drmaa_options(lList **opts_all, lList **opts_default,
+                                lList **opts_defaults, lList **opts_scriptfile,
+                                lList **opts_job_cat, lList **opts_native,
+                                lList **opts_drmaa)
+{
    DENTER (TOP_LAYER, "merge_drmaa_options");
    
    /*
@@ -2915,7 +2820,8 @@ static void merge_drmaa_options (lList **opts_all, lList **opts_default,
 *     MT-NOTE: prune_arg_list() is MT safe
 *
 *******************************************************************************/
-static void prune_arg_list (lList *args) {
+static void prune_arg_list(lList *args)
+{
    /*  o=override, +=keep, -=remove
 o   -a date_time                           request a job start time
 +   -ac context_list                       add context variable(s)
@@ -2989,7 +2895,7 @@ o   -V                                     export all environment variables
 *     drmaa_time2sge_time() -- convert DRMAA time strings to SGE time strings
 *
 *  SYNOPSIS
-*     void drmaa_time2sge_time (const char *drmaa_time, dstring *diag)
+*     void drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
 *
 *  FUNCTION
 *     The DRMAA time string is converted into an SGE time string.  If the
@@ -3007,7 +2913,8 @@ o   -V                                     export all environment variables
 *     MT-NOTE: drmaa_time2sge_time() is MT safe
 *
 *******************************************************************************/
-char *drmaa_time2sge_time (const char *drmaa_time, dstring *diag) {
+char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
+{
    /* SGE time format is [[CC]]YY]MMDDhhmm.[ss] */
    /* DRMAA time format is [[[[CC]YY/]MM/]DD] hh:mm[:ss] [{-|+}UU:uu] */
    int year, month, day, hour, minute, second, tz_hours, tz_minutes;
@@ -3062,7 +2969,7 @@ char *drmaa_time2sge_time (const char *drmaa_time, dstring *diag) {
       }
       else {
          /* Whatever comes before the slash can only be 2 or 4 characters */
-         sge_dstring_copy_string (diag, "Error parsing DRMAA date string");
+         sge_dstring_copy_string (diag, MSG_DRMAA_TIME_PARSE_ERROR);
          DEXIT;
          return NULL;
       }
@@ -3126,7 +3033,7 @@ char *drmaa_time2sge_time (const char *drmaa_time, dstring *diag) {
     * us. */
    if (sscanf (p1, "%2d:%2d", &hour, &minute) != 2) {
       /* Hour and minute as hh:mm is required in DRMAA date strings. */
-      sge_dstring_copy_string (diag, "Error parsing DRMAA date string");
+      sge_dstring_copy_string (diag, MSG_DRMAA_TIME_PARSE_ERROR);
       DEXIT;
       return NULL;
    }
@@ -3168,7 +3075,7 @@ char *drmaa_time2sge_time (const char *drmaa_time, dstring *diag) {
        (month_set && (day > 28) && (month == 2)) ||
        (month_set && (month > 12)) ||
        (hour > 23) || (minute > 59) || (second > 59)) {
-      sge_dstring_append (diag, "Error parsing DRMAA date string");
+      sge_dstring_append (diag, MSG_DRMAA_TIME_PARSE_ERROR);
       DEXIT;
       return NULL;
    }
@@ -3268,7 +3175,7 @@ char *drmaa_time2sge_time (const char *drmaa_time, dstring *diag) {
     * whitespace between the minute/second and the tz info and because the tz
     * info is either all present or all not present. */
    if (sscanf (p1, "%1s%2d:%2d", &tz_sign, &tz_hours, &tz_minutes) == 3) {
-      /* If we read all three field, check the sign and adjust the hour and
+      /* If we read all three fields, check the sign and adjust the hour and
        * minute accordingly. */
       if (tz_sign == '+') {
          hour += tz_diff_hours - tz_hours;
@@ -3280,7 +3187,7 @@ char *drmaa_time2sge_time (const char *drmaa_time, dstring *diag) {
       }
       else {
          /* The sign must always be present and be a + or - */
-         sge_dstring_copy_string (diag, "Error parsing DRMAA date string");
+         sge_dstring_copy_string (diag, MSG_DRMAA_TIME_PARSE_ERROR);
          DEXIT;
          return NULL;
       }

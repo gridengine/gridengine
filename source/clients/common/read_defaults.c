@@ -184,12 +184,11 @@ static char *get_root_defaults_file_path () {
 *                                reading from existing file, (is just a warning)
 *                                plus all other error stati returned by 
 *                                parse_script_file, see there
-*
-*  OUTPUTS
 *     char * - user defaults file name with absolute path
 *
 *******************************************************************************/
-static char *get_user_home_defaults_file_path (lList **answer_list) {
+static char *get_user_home_defaults_file_path(lList **answer_list)
+{
    struct passwd *pwd;
    char str[256 + 1];
 #ifdef HAS_GETPWNAM_R
@@ -267,12 +266,11 @@ static char *get_user_home_defaults_file_path (lList **answer_list) {
 *                                reading from existing file, (is just a warning)
 *                                plus all other error stati returned by 
 *                                parse_script_file, see there
-*
-*  OUTPUTS
 *     char * - cwd defaults file name with absolute path
 *
 *******************************************************************************/
-static char *get_cwd_defaults_file_path (lList **answer_list) {
+static char *get_cwd_defaults_file_path(lList **answer_list)
+{
    char cwd[SGE_PATH_MAX + 1];
    char str[256 + 1];   
    char *file = NULL;
@@ -312,8 +310,7 @@ static char *get_cwd_defaults_file_path (lList **answer_list) {
 *     append_opts_from_default_files() -- parse default files 
 *
 *  SYNOPSIS
-*     void append_opts_from_default_files(
-*                                         lList **pcmdline, 
+*     void append_opts_from_default_files(lList **pcmdline, 
 *                                         lList **answer_list
 *                                         char **envp,
 *                                         char *def_files) 
@@ -340,10 +337,10 @@ static char *get_cwd_defaults_file_path (lList **answer_list) {
 *     char **def_files - paths to default files
 *
 *******************************************************************************/
-static void append_opts_from_default_files (lList **pcmdline, 
-                                     lList **answer_list,
-                                     char **envp,
-                                     char **def_files) 
+static void append_opts_from_default_files(lList **pcmdline, 
+                                           lList **answer_list,
+                                           char **envp,
+                                           char **def_files) 
 {
    lList *alp;
    lListElem *aep;

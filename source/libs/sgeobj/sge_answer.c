@@ -373,9 +373,7 @@ void answer_to_dstring(const lListElem *answer, dstring *diag)
 *     newline character.
 *
 *  INPUTS
-*     const lList *alp - AN_Type list
-*
-*  OUTPUT
+*     const lList *alp        - AN_Type list
 *     dstring *diag           - destination dstring
 *
 *  RESULT
@@ -384,7 +382,8 @@ void answer_to_dstring(const lListElem *answer, dstring *diag)
 *  NOTES
 *     MT-NOTE: answer_list_to_dstring() is MT safe
 *******************************************************************************/
-void answer_list_to_dstring(const lList *alp, dstring *diag) {
+void answer_list_to_dstring(const lList *alp, dstring *diag)
+{
    if (diag) {
       if (!alp || (lGetNumberOfElem (alp) == 0)) {
          sge_dstring_copy_string(diag, MSG_ANSWERWITHOUTDIAG);

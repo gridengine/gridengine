@@ -346,7 +346,7 @@ const struct test_name2number_map {
    { "ST_MULT_EXIT",                              ST_MULT_EXIT,                              0, "" },
    { "ST_SUPPORTED_ATTR",                         ST_SUPPORTED_ATTR,                         0, "" },
    { "ST_SUPPORTED_VATTR",                        ST_SUPPORTED_VATTR,                        0, "" },
-   { "ST_ATTRIBUTE_CHECK",                        ST_ATTRIBUTE_CHECK,                       2, "<sleeper_job> <exit_arg_job>" },
+   { "ST_ATTRIBUTE_CHECK",                        ST_ATTRIBUTE_CHECK,                       2, "<exit_arg_job> <email_addr>" },
    { "ST_VERSION",                                ST_VERSION,                                0, "" },
    { "ST_DRM_SYSTEM",                             ST_DRM_SYSTEM,                             0, "" },
    { "ST_CONTACT",                                ST_CONTACT,                                0, "" },
@@ -450,6 +450,8 @@ static void usage(void)
    fprintf(stderr, "                 the user must have read access to this file at the target machine\n");
    fprintf(stderr, "  <output_path>  is the path of an output file\n");
    fprintf(stderr, "                 the user must have write access to this file at the target machine\n");
+   fprintf(stderr, "  <email_addr>   is an email address to which to send \n");
+   fprintf(stderr, "                 job completion notices\n");
 
    exit(1);
 }
@@ -2232,7 +2234,7 @@ static int test(int *argc, char **argv[], int parse_args)
          for (i=0; i<255; i++) {
   
             /* parametrize exit job with job argument */
-            sprintf(buffer, "%d", i % 99);
+            sprintf(buffer, "%d", i);
             job_argv[0] = buffer; 
             job_argv[1] = NULL;
             drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
@@ -2283,7 +2285,7 @@ static int test(int *argc, char **argv[], int parse_args)
                return 1;
             }
             drmaa_wexitstatus(&exit_status, stat, NULL, 0);
-            if (exit_status != i % 99) {
+            if (exit_status != i) {
                fprintf(stderr, "job \"%s\" returned wrong exit status %d instead of %d\n", 
                                  all_jobids[i], exit_status, i);
                return 1;
@@ -2363,6 +2365,7 @@ static int test(int *argc, char **argv[], int parse_args)
          const char *job_argv[4];
          char jobid[1024], new_jobid[1024];
          char buffer[100];
+         char *email_addr = NULL;
          lList *alp, *job_lp;
          lListElem *job_ep;
          FILE *fp;
@@ -2374,7 +2377,7 @@ static int test(int *argc, char **argv[], int parse_args)
 
          if (parse_args) {
             exit_job = NEXT_ARGV(argc, argv);
-            sleeper_job = NEXT_ARGV(argc, argv);
+            email_addr = NEXT_ARGV(argc, argv);
          }
          
          if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
@@ -3576,9 +3579,8 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             printf ("Filling job template\n");
-            email[0] = "dan.templeton@sun.com"; 
-            email[1] = "dan.templeton@sun.com"; 
-            email[2] = NULL;
+            email[0] = email_addr; 
+            email[1] = NULL;
             drmaa_set_vector_attribute(jt, DRMAA_V_EMAIL, email, NULL, 0);
             job_argv[0] = "0";
             job_argv[1] = NULL;
@@ -3632,7 +3634,6 @@ static int test(int *argc, char **argv[], int parse_args)
             const char *email[2];
             
             printf ("Testing email supression\n");
-//            printf ("Testing suppression via DRMAA_BLOCK_EMAIL\n");
             printf ("Getting job template\n");
             drmaa_allocate_job_template(&jt, NULL, 0);
 
@@ -3643,7 +3644,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             printf ("Filling job template\n");
-            email[0] = "dan.templeton@sun.com"; 
+            email[0] = email_addr; 
             email[1] = NULL;
             drmaa_set_vector_attribute(jt, DRMAA_V_EMAIL, email, NULL, 0);
             job_argv[0] = "0";
@@ -3682,54 +3683,6 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
                continue;
             }
-
-/*            
-            printf ("Testing suppression via missing DRMAA_V_EMAIL\n");
-            printf ("Getting job template\n");
-            drmaa_allocate_job_template(&jt, NULL, 0);
-
-            if (jt == NULL) {
-               fprintf(stderr, "drmaa_allocate_job_template() failed\n");
-               failed_test = 1;
-               continue;
-            }
-
-            printf ("Filling job template\n");
-            job_argv[0] = "0";
-            job_argv[1] = NULL;
-            drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
-            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, exit_job, NULL, 0);
-
-            printf ("Running job\n");
-            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
-                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
-               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
-               sleep(1);
-            }
-
-            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
-               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
-               failed_test = 1;
-               continue;
-            }
-
-            printf ("Waiting for job to complete\n");
-            do {
-               drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
-                  &status, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
-               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
-                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
-                  sleep(1);
-               }
-            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
-
-            printf("Job with job id %s finished\n", jobid);
-
-            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
-               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
-               failed_test = 1;
-               continue;
-            }*/
 
             printf ("Check for email to find out if the test succeeded.\n");
          } while (0);

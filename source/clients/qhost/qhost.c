@@ -72,6 +72,7 @@
 #include "sge_qinstance_type.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
+#include "sge_profiling.h"
 
 #define QHOST_DISPLAY_QUEUES     (1<<0)
 #define QHOST_DISPLAY_JOBS       (1<<1)
@@ -115,12 +116,15 @@ char **argv
    int print_header = 1;
 
    DENTER_MAIN(TOP_LAYER, "qhost");
+
+   sge_prof_setup();
   
    log_state_set_log_gui(1);
 
    sge_gdi_param(SET_MEWHO, QHOST, NULL);
    if (sge_gdi_setup(prognames[QHOST], &alp) != AE_OK) {
       answer_exit_if_not_recoverable(lFirst(alp));
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
 
@@ -139,6 +143,7 @@ char **argv
       }
       lFreeList(alp);
       lFreeList(pcmdline);
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
 
@@ -163,6 +168,7 @@ char **argv
       }
       alp = lFreeList(alp);
       pcmdline = lFreeList(pcmdline);
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
 
@@ -248,6 +254,7 @@ char **argv
 
    lFreeList(ehl);
    lFreeList(alp);
+   sge_prof_cleanup();
 
    SGE_EXIT(status==STATUS_OK?0:1); /* 0 means ok - others are errors */
    DEXIT;

@@ -52,6 +52,7 @@
 #include "sge_answer.h"
 #include "read_defaults.h"
 #include "sge_centry.h"
+#include "sge_profiling.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
@@ -90,6 +91,8 @@ char **argv
    int me_who;
 
    DENTER_MAIN(TOP_LAYER, "qalter");
+
+   sge_prof_setup();
 
    /*
    ** get command name: qalter or qresub
@@ -151,6 +154,7 @@ char **argv
          show_job()
       */
       cull_show_job(lFirst(request_list), FLG_QALTER);
+      sge_prof_cleanup();
       SGE_EXIT(0);
    }
 
@@ -197,6 +201,7 @@ char **argv
       }
    }
 
+   sge_prof_cleanup();
    SGE_EXIT(ret);
    DEXIT;
    return 0;

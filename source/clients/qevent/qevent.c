@@ -63,6 +63,7 @@
 #include "sge_feature.h"
 #include "sge_spool.h"
 #include "qevent.h"
+#include "sge_profiling.h"
 
 
 #if defined(SOLARIS) || defined(ALPHA)
@@ -474,6 +475,8 @@ int main(int argc, char *argv[])
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
+   sge_prof_setup();
+
    /* dump pid to file */
    qevent_dump_pid_file();
 
@@ -601,6 +604,7 @@ int main(int argc, char *argv[])
       sge_mirror_shutdown();
 
       sge_dstring_free(enabled_options.error_message);
+      sge_prof_cleanup();
       SGE_EXIT(0);
       return 0;
    }
@@ -609,6 +613,7 @@ int main(int argc, char *argv[])
    ERROR((SGE_EVENT, "no option selected\n" ));
    qevent_show_usage();
    sge_dstring_free(enabled_options.error_message);
+   sge_prof_cleanup();
    SGE_EXIT(1);
    DEXIT;
    return 1;

@@ -55,6 +55,8 @@
 #include "sgeobj/msg_sgeobjlib.h"
 #include "sgeobj//sge_range.h"
 #include "sge_options.h"
+#include "sge_profiling.h"
+
 
 static lList *sge_parse_cmdline_qdel(char **argv, char **envp, lList **ppcmdline);
 static lList *sge_parse_qdel(lList **ppcmdline, lList **ppreflist, u_long32 *pforce, u_long32 *all_jobs, u_long32 *all_users, lList **ppuserlist);
@@ -77,6 +79,8 @@ int main(int argc, char **argv) {
    cl_com_handle_t* handle = NULL;
 
    DENTER_MAIN(TOP_LAYER, "qdel");
+
+   sge_prof_setup();   
 
    log_state_set_log_gui(1);
 
@@ -292,6 +296,7 @@ int main(int argc, char **argv) {
    lFreeList(jlp);
    lFreeList(ref_list);
    sge_gdi_shutdown();
+   sge_prof_cleanup();
    SGE_EXIT(0);
    return 0;
 
@@ -300,6 +305,7 @@ error_exit:
    lFreeList(jlp);
    lFreeList(ref_list);
    sge_gdi_shutdown();
+   sge_prof_cleanup();
    SGE_EXIT(1); 
    DEXIT;
    return 1;

@@ -69,6 +69,7 @@
 #include "sge_cqueue.h"
 
 #include "uti/sge_spool.h"
+#include "sge_profiling.h"
 
 typedef struct {
    int host;
@@ -175,6 +176,8 @@ char **argv
    char buffer[128];
 
    DENTER_MAIN(TOP_LAYER, "qacct");
+
+   sge_prof_setup();
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
@@ -1214,6 +1217,7 @@ char **argv
    /*
    ** problem: other clients evaluate some status here
    */
+   sge_prof_cleanup();
    SGE_EXIT(0);
    DEXIT;
    return 0;

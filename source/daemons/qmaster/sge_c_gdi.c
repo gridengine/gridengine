@@ -1243,7 +1243,7 @@ static int get_client_id(lListElem *anElem, int *anID)
 *     qconf -tsm
 *
 *******************************************************************************/
-void trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, sge_gdi_request *anAnswer) 
+static void trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, sge_gdi_request *anAnswer) 
 {
    uid_t uid;
    gid_t gid;

@@ -581,7 +581,7 @@ lListElem *sge_get_configuration_entry_by_name(const char *aHost, const char *an
    return elem;
 }
 
-lListElem *get_entry_from_conf(lListElem *aConf, const char *anEntryName)
+static lListElem *get_entry_from_conf(lListElem *aConf, const char *anEntryName)
 {
    lList *entries = NULL;
    lListElem *elem = NULL;

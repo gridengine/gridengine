@@ -115,7 +115,7 @@ int main(int argc,char *argv[])
 #include <sys/acct.h>
 #include <sys/stat.h>
 #include <sys/machcons.h>
-#include "sge_stat.h"
+#include "sge_unistd.h"
 #endif
 
 #if defined(LINUX) || defined(ALPHA) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined (FREEBSD) || defined(NETBSD)
@@ -2135,8 +2135,9 @@ int psStartCollector(void)
    } 
 
 #elif defined(CRAY)
-
+#ifdef PDC_STANDALONE
    ncpus = 0; /* Set in psRetrieveSysData because it is dynamic on Cray */
+#endif
 
 #endif
 #ifdef PDC_STANDALONE

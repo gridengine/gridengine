@@ -40,6 +40,10 @@
 #include "basis_types.h"
 #include "msg_utilbin.h"
 
+#ifndef h_errno
+extern int h_errno;
+#endif
+
 void usage(void)
 {
   fprintf(stderr, "%s gethostbyname [-name] <name>\n",MSG_UTILBIN_USAGE);

@@ -36,6 +36,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #include "commd.h"
 #include "commd_error.h"
@@ -47,6 +49,10 @@
 #include "sge_language.h"
 #include "sge_stat.h" 
 #include "sge_time.h" 
+
+#ifndef h_errno
+extern int h_errno;
+#endif
 
 extern void trace(char *);
 

@@ -1,3 +1,47 @@
+Bugs fixed in SGE 5.3p3 since release 5.3p2
+-------------------------------------------
+
+[NOTE Courtesy Binaries for SGE 5.3p3 will be uploaded during week 02/17-02/22]
+
+Issue   Sun BugId  Description
+------- ---------- ---------------------------------------------------------------------------------
+126     4780316    race condition if signals are to be delivered in job's startup phase
+264                array job parameters
+314     4713013    qacct may display incorrect accounting information
+380     4818741    startup failure of qrsh job is reported as regular job exit
+391     4756556    .cshrc error causes [pro|epi]log,pe-[start|stop] failure
+392     4756557    non-resolvable hosts in host_aliases file cause wrong hostname resolving
+393     4760981    Empty sge_request file causes submission error
+398     4816541    no newline character at end of sge_aliases file may crash qsub
+402     4778762    Array jobs which contain only one task (id=1) will be handled as single job
+403     4769608    qalter shows wrong priority number when using negative priorities with -p option
+416     4776016    execd does res. consuming process tracking even if no job is to be controlled
+417     4776821    qtcsh can't be used as normal tcsh
+418     4776754    complex values for user defined complexes are rejected with global host
+423     4778757    stepsize 0 in array job specification results in qmaster exception
+424     4778758    memcpy leak in execd
+430     4795475    qstat -f output broken for pe jobs on same queue
+432     4787598    schedd_job_info messages shown by qstat -j even if it is set to false
+435     4790540    sge_schedd process consumes more memory than needed if schedd_job_info=true
+436     4790547    Job notification signals won't be delivered if user redefines suspend_method ...
+437     4790592    conflicting policies can cause job being started and immediately suspended
+438     4791238    SGE may create duplicate accounting entries for parallel jobs
+439     4791908    job logging file exists but is empty in certain configurations
+440     4792036    job arguments larger than 10k crash qmaster
+441     4787623    failover to shadow master leaves sge_schedd on the original qmaster host
+446     4794242    wrong usage reported by qstat -j <jobid>
+449     4802831    cannot set -C to null string as described in man qsub
+450     4805423    STRING complex attribute handling with RELOP "!=" is broken
+455     4802171    qacct -l selection broken
+472     4807677    qrsh crash when command line arguments are longer than 4K
+478     4813188    qstat -r shows wrong dependencies
+486                scripts/util/arch: backed out hp11-64 and aix51 detection since no port available yet
+487     4815774    Uninitialized pointer cause segmentation fault in qsh/qrsh on submit only hosts
+490     4816529    qmon crash when pressing Why for a list of selected jobs
+493     4818737    SGEEE: huge scheduling times if maxujobs is set
+        4811230    qconf -Muser and qconf -Auser report no success messages
+
+
 Bugs fixed in SGE 5.3p2 since release 5.3p1
 -------------------------------------------
 

@@ -616,10 +616,14 @@ qref_resolve_hostname(lListElem *this_elem)
 
       if (back == CL_RETVAL_OK) {
          dstring new_qref_pattern = DSTRING_INIT;
-
-         sge_dstring_sprintf(&new_qref_pattern, "%s@%s",
-                             sge_dstring_get_string(&cqueue_name),
-                             resolved_name);
+         if (sge_dstring_strlen(&cqueue_name) == 0) {
+             sge_dstring_sprintf(&new_qref_pattern, "@%s",
+                                 resolved_name);
+         } else {
+            sge_dstring_sprintf(&new_qref_pattern, "%s@%s",
+                                sge_dstring_get_string(&cqueue_name),
+                                resolved_name);
+         }
          lSetString(this_elem, QR_name, 
                     sge_dstring_get_string(&new_qref_pattern));
          sge_dstring_free(&new_qref_pattern);

@@ -130,8 +130,17 @@ lList **alpp
       memset(tmp_str, 0, sizeof(tmp_str));
       memcpy(tmp_str, non_seconds, year_fieldlen);
       timeptr.tm_year=atoi(tmp_str);
-      if (i==12) 
+      if (i==12)  {
          timeptr.tm_year -= 1900;
+      }
+      else {
+         /* the date is before 1970, thus we assume, that
+            20XX is ment. This works only till 2069, but
+            that should be sufficent for now */
+         if (timeptr.tm_year < 70)
+            timeptr.tm_year += 100;
+      }  
+
       non_seconds+=year_fieldlen;
    }
    else {

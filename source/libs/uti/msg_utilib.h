@@ -233,7 +233,7 @@
 #define MSG_PROF_ALREADYACTIVE_S                _MESSAGE(49092, _(SFN": profiling is already active\n"))
 #define MSG_PROF_NOTACTIVE_S                    _MESSAGE(49093, _(SFN": profiling is not active\n"))
 #define MSG_PROF_CYCLICNOTALLOWED_SD            _MESSAGE(49094, _(SFN": cyclic measurement for level %d requested - disabling profiling\n"))
-#define MSG_PROF_RESETWHILEMEASUREMENT_S        _MESSAGE(49094, _(SFN": cannot reset profiling while a measurement is active\n"))
+#define MSG_PROF_RESETWHILEMEASUREMENT_S        _MESSAGE(49095, _(SFN": cannot reset profiling while a measurement is active\n"))
 
 #endif /* __MSG_UTILIB_H */
 

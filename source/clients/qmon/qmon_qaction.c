@@ -2336,6 +2336,7 @@ XtPointer cld, cad;
    char *qname = NULL;
    char *qhostname = NULL;
    lList *cl = NULL;
+   lList *alp = NULL;
    lList *ehl = NULL;
    lList *entries = NULL;
    lListElem *qep = NULL;
@@ -2343,6 +2344,13 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonLoadNamesQueue");
 
+   qmonMirrorMultiAnswer(CENTRY_T|EXECHOST_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    cl = qmonMirrorList(SGE_CENTRY_LIST);
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
 

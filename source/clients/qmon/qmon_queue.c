@@ -147,7 +147,7 @@ XtPointer cld, cad;
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
-   qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T, &alp);
+   qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T | CENTRY_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);

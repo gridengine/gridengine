@@ -1,8 +1,12 @@
+SG-2003-07-30-1: Bugfix:    QMON ödisplayed all queues in alarm state and displayed
+                            an error message, when the load threshold were modified.
+                 Review:    AA   
+
 AH-2003-07-30-1: Doc.:      Documented env vars affecting DRMAA library calls
                             Improved formatting of DRMAA man pages
                             Removed reference to COMMD_HOST from all man pages
-                            except for sge_execd and sgecommdcntl (#585)
-                 Issue:     585
+                            except for sge_execd and sgecommdcntl (#451)
+                 Issue:     451 
                  Review:    AA
 
 AH-2003-07-30-0: Enhancem.: Ensure drmaa_strerrno() returns NULL for unknown error 
@@ -17,7 +21,7 @@ EB-2003-07-30-0: Enhancem.: CQ APIBASE WP
                             Enable build rule for DRMAA example.
                  Doc.:      Finshed DRMAA ADOC headers.
 
-SG-2002-07-30-1: Bugfix     fixed the build
+SG-2002-07-30-0: Bugfix     fixed the build
                  Changed:   sge_schedd
 
 SG-2003-07-29-0: Bugfix     - Corrected the order of pending jobs in case of

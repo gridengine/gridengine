@@ -340,8 +340,8 @@ Widget parent
 ) {
    Widget  queue_add, queue_modify, queue_update, 
            queue_delete, queue_done, queue_suspend, queue_unsuspend,
-           queue_enable, queue_disable, queue_error, queue_tickets, 
-           queue_main_link;
+           queue_enable, queue_disable, queue_reschedule, 
+           queue_error, queue_tickets, queue_main_link;
    
    DENTER(GUI_LAYER, "qmonCreateQueueControl");
 
@@ -357,6 +357,7 @@ Widget parent
                                      "queue_unsuspend", &queue_unsuspend,
                                      "queue_enable", &queue_enable,
                                      "queue_disable", &queue_disable,
+                                     "queue_reschedule", &queue_reschedule,
                                      "queue_error", &queue_error,
                                      "queue_tickets", &queue_tickets,
                                      "queue_main_link", &queue_main_link,
@@ -393,6 +394,8 @@ Widget parent
                      qmonQueueChangeState, (XtPointer)QDISABLED);
    XtAddCallback(queue_enable, XmNactivateCallback, 
                      qmonQueueChangeState, (XtPointer)QENABLED);
+   XtAddCallback(queue_reschedule, XmNactivateCallback, 
+                     qmonQueueChangeState, (XtPointer)QRESCHEDULED);
    XtAddCallback(queue_error, XmNactivateCallback, 
                      qmonQueueChangeState, (XtPointer)QERROR);
 /*    XtAddCallback(queue_load, XmNvalueChangedCallback,  */

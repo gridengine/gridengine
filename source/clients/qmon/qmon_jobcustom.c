@@ -127,7 +127,7 @@ static HashTable JobColumnPrintHashTable = NULL;
 static HashTable NameMappingHashTable = NULL;
 
 #define FIRST_FIELD     6
-#define SGE_FIELDS      12
+#define SGEEE_FIELDS      13
 
 static tJobField job_items[] = {
    { 1, JB_job_number, "@{Id}", 12, 20, PrintJobTaskId }, 
@@ -1046,8 +1046,9 @@ XtPointer cld,cad;
    for (i=0; i<nr_fields; i++) {
       if (strlist[i]) {
          String text;
-         u_long32 temp = XrmStringToQuark(text);
+         u_long32 temp;
          XmStringGetLtoR(strlist[i], XmFONTLIST_DEFAULT_TAG, &text);
+         temp = XrmStringToQuark(text);
          if (HashTableLookup(NameMappingHashTable, 
                              &temp,
                              (const void **) &job_item)) {
@@ -1293,7 +1294,7 @@ int how
 
    num_jobs = XtNumber(job_items);
    if (!feature_is_enabled(FEATURE_SGEEE))
-      num_jobs -= SGE_FIELDS;
+      num_jobs -= SGEEE_FIELDS;
 
 #if 0
    if (how == FILL_ALL)
@@ -1415,9 +1416,10 @@ XtPointer cld
    NameMappingHashTable = HashTableCreate(5, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32);
    for (i=0; i<sizeof(job_items)/sizeof(tJobField); i++) {
       String text;
-      u_long32 temp = XrmStringToQuark(text);
+      u_long32 temp;
       XmString xstr = XmtCreateLocalizedXmString(jcu, job_items[i].name);
       XmStringGetLtoR(xstr, XmFONTLIST_DEFAULT_TAG, &text);
+      temp = XrmStringToQuark(text);
       HashTableStore(NameMappingHashTable,
                      &temp,
                      (void *)&job_items[i]);

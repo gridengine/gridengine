@@ -1181,14 +1181,19 @@ int local
          lAppendElem(lp, new);
       }
 
-      ep = lGetElemStr(confl, CF_name, "reschedule_unknown");
       if (clen->reschedule_unknown && clen->reschedule_unknown[0] != '\0'
            /* && strcmp(lGetString(ep, CF_value), clen->reschedule_unknown)*/) {
          if (check_white(clen->reschedule_unknown)) {
             strcpy(errstr, "No whitespace allowed in value for reschedule_unknown");
             goto error;
          }
-         new = lCopyElem(ep);
+         ep = lGetElemStr(confl, CF_name, "reschedule_unknown");
+         if (!ep) {
+            new = lCreateElem(CF_Type);
+            lSetString(new, CF_name, "reschedule_unknown");
+         }
+         else
+            new = lCopyElem(ep);
          lSetString(new, CF_value, clen->reschedule_unknown);
          lAppendElem(lp, new);
       }
@@ -1508,13 +1513,19 @@ int local
       }
       lSetString(ep, CF_value, clen->max_unheard);
 
-      ep = lGetElemStr(confl, CF_name, "reschedule_unknown");
-      if (check_white(clen->reschedule_unknown)) {
-         strcpy(errstr, "No whitespace allowed in value for reschedule_unknown");
-         goto error;
+      if (clen->reschedule_unknown && clen->reschedule_unknown[0] != '\0') {
+         if (check_white(clen->reschedule_unknown)) {
+            strcpy(errstr, "No whitespace allowed in value for reschedule_unknown");
+            goto error;
+         }
+         ep = lGetElemStr(confl, CF_name, "reschedule_unknown");
+         if (!ep)
+            ep = lAddElemStr(&confl, CF_name, "reschedule_unknown", CF_Type);
+         lSetString(ep, CF_value, clen->reschedule_unknown);
       }
-      lSetString(ep, CF_value, clen->reschedule_unknown);
-
+      else {
+         lDelElemStr(&confl, CF_name, "reschedule_unknown");
+      }
 
       if (clen->shell_start_mode >= 0 && 
                clen->shell_start_mode < XtNumber(shell_start_mode))

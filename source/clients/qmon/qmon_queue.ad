@@ -42,7 +42,7 @@ Qmon*queue_main_layout.xmtChildren: \
    XmPushButton   queue_add, queue_modify, queue_customize, queue_done, \
                   queue_update, queue_delete, queue_suspend, \
                   queue_unsuspend, queue_enable, queue_disable, \
-                  queue_error, queue_help, queue_tickets; \
+                  queue_reschedule, queue_error, queue_help, queue_tickets; \
    XmToggleButton queue_force;
 
 Qmon*queue_main_layout.layout: \
@@ -67,6 +67,7 @@ Qmon*queue_main_layout.layout: \
             Fixed queue_unsuspend \
             Fixed queue_disable \
             Fixed queue_enable \
+            Fixed queue_reschedule \
             Fixed queue_error \
          } \
          Fixed queue_delete \
@@ -94,6 +95,7 @@ Qmon*queue_main_layout.queue_delete.labelString:       @{Delete}
 Qmon*queue_main_layout.queue_suspend.labelString:      @{Suspend}
 Qmon*queue_main_layout.queue_unsuspend.labelString:    @{Resume}
 Qmon*queue_main_layout.queue_disable.labelString:      @{Disable}
+Qmon*queue_main_layout.queue_reschedule.labelString:   @{Reschedule}
 Qmon*queue_main_layout.queue_enable.labelString:       @{Enable}
 Qmon*queue_main_layout.queue_error.labelString:        @{Clear Error}
 Qmon*queue_main_layout.queue_help.labelString:         @{Help}

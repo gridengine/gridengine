@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.10 2003/03/19 17:44:42 andre Exp $	*/
+/*	$Id: rshd.c,v 1.11 2003/04/22 11:48:44 joga Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -83,6 +83,7 @@
 
 #include <sge_unistd.h>
 #include <setosjobid.h>
+#include <setrlimits.h>
 #include <config_file.h>
 #include <sge_uidgid.h>
 
@@ -572,6 +573,7 @@ fail:
    sge_switch2admin_user();
    foreground = 0; /* setosjobid shall write to shepherd trace file */
    setosjobid(0, &add_grp_id, pwd);
+   setrlimits(0);
    sge_switch2start_user();
    /* chdir(pwd->pw_dir); */
    

@@ -15,13 +15,16 @@ RSH_OBJS = rsh.o
 RSHD_OBJS = rshd.o
 
 RSHD_ADD_OBJS = \
-            $(SGE_ARCH_DIR)/setosjobid.o \
-            $(SGE_ARCH_DIR)/config_file.o \
-            $(SGE_ARCH_DIR)/err_trace.o \
-            $(SGE_ARCH_DIR)/sge_uidgid.o \
-            $(SGE_ARCH_DIR)/execution_states.o \
-            $(SGE_ARCH_DIR)/qlogin_starter.o \
-            $(SGE_ARCH_DIR)/setjoblimit.o
+            $(SGE_ARCH_DIR)/setosjobid.o        \
+            $(SGE_ARCH_DIR)/config_file.o       \
+            $(SGE_ARCH_DIR)/err_trace.o         \
+            $(SGE_ARCH_DIR)/sge_uidgid.o        \
+            $(SGE_ARCH_DIR)/execution_states.o  \
+            $(SGE_ARCH_DIR)/qlogin_starter.o    \
+            $(SGE_ARCH_DIR)/setjoblimit.o       \
+            $(SGE_ARCH_DIR)/setrlimits.o        \
+            $(SGE_ARCH_DIR)/sge_parse_num_par.o
+
 
 RSHD_ADD_LIBS = -L$(SGE_ARCH_DIR) -luti -lrmon
 
@@ -61,7 +64,7 @@ rshd:   $(RSHD_OBJS) $(RSHD_ADD_OBJS) $(RSHD_LIB_DEPENDS)
 		$(CC) -o $@ $(RSHD_OBJS) $(RSHD_ADD_OBJS) $(LFLAGS) $(RSHD_ADD_LIBS) $(LIBS) 
 
 rshd.o: $(REMOTE_DIR)/rshd.c
-		$(CC) $(CFLAGS) $(REMOTE_CFLAGS) -I$(SGE_DIR)/daemons/common -I$(SGE_DIR)/common -I$(SGE_DIR)/libs/uti -c $(REMOTE_DIR)/rshd.c
+		$(CC) $(CFLAGS) $(REMOTE_CFLAGS) -I$(SGE_DIR)/daemons/common -I$(SGE_DIR)/common -I$(SGE_DIR)/libs/uti -I$(SGE_DIR)/daemons/shepherd -c $(REMOTE_DIR)/rshd.c
 
 
 

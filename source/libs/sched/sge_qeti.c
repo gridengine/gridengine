@@ -90,6 +90,33 @@ struct sge_qeti_s {
  *  queue end next references point to #4 ...
  *
  */
+
+
+
+/****** sge_qeti/sge_qeti_list_add() *******************************************
+*  NAME
+*     sge_qeti_list_add() -- Adds a resource utilization to QETI resource list
+*
+*  SYNOPSIS
+*     static int sge_qeti_list_add(lList **lpp, const char *name, lList* 
+*     rue_lp, double total, bool must_exist) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **lpp      - QETI resource list
+*     const char *name - Name of the resource
+*     lList* rue_lp    - Resource utilization entry (RUE_Type)
+*     double total     - Total resource amount
+*     bool must_exist  - If true the entry must exist in 'lpp'.
+*
+*  RESULT
+*     static int -  0 on success
+*
+*  NOTES
+*     MT-NOTE: sge_qeti_list_add() is not MT safe 
+*******************************************************************************/
 static int sge_qeti_list_add(lList **lpp, const char *name, lList* rue_lp, double total, bool must_exist)
 {
    lListElem *tmp_cr_ref, *ep;
@@ -173,6 +200,21 @@ static int sge_add_qeti_resource_container(lList **qeti_to_add, lList* rue_list,
 
    DEXIT;
    return 0;
+}
+
+sge_qeti_t *sge_qeti_allocate2(lListElem *cr)
+{
+   sge_qeti_t *iter;
+   lList *rue_list;
+
+   if (!(iter = calloc(1, sizeof(sge_qeti_t)))) {
+      return NULL;
+   }
+
+   rue_list = lCreateList("", lGetElemDescr(cr));
+   lAppendElem(rue_list, cr);
+   sge_qeti_list_add(&iter->cr_refs_pe, "slots", rue_list, 10, true);
+   return iter;
 }
 
 sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt, 
@@ -328,8 +370,10 @@ static void sge_qeti_switch_to_next(u_long32 time, lList *cref_lp)
 {
    lListElem *cr_ep, *ref;
    lListElem *rue_ep;
-
+   
    DENTER(TOP_LAYER, "sge_qeti_switch_to_next");
+   
+   time--;
 
    for_each (cr_ep, cref_lp) {
       rue_ep = lGetRef(cr_ep, QETI_resource_instance);
@@ -337,7 +381,8 @@ static void sge_qeti_switch_to_next(u_long32 time, lList *cref_lp)
          DPRINTF(("   QETI NEXT: %s (finished)\n", lGetString(rue_ep, RUE_name)));
          continue;
       }
-      while (ref && time >= lGetUlong(ref, RDE_time)) {
+
+      while (ref && time < lGetUlong(ref, RDE_time)) {
          ref = lPrev(ref);
       }
 
@@ -404,6 +449,8 @@ u_long32 sge_qeti_first(sge_qeti_t *qeti)
 {
    u_long32 all_resources_queue_end_time = 0;
 
+   DENTER(TOP_LAYER, "sge_qeti_first");
+
    /* (re)init all queue end next references */
    sge_qeti_init_refs(qeti->cr_refs_pe);
    sge_qeti_init_refs(qeti->cr_refs_global);
@@ -416,13 +463,16 @@ u_long32 sge_qeti_first(sge_qeti_t *qeti)
    sge_qeti_max_end_time(&all_resources_queue_end_time, qeti->cr_refs_host);
    sge_qeti_max_end_time(&all_resources_queue_end_time, qeti->cr_refs_queue);
 
+   DPRINTF(("sge_qeti_first() determines "u32"\n", all_resources_queue_end_time));
+
    /* switch to the next entry with all queue end next references whose 
       time is larger (?) or equal to all resources queue end time */
    sge_qeti_switch_to_next(all_resources_queue_end_time, qeti->cr_refs_pe);
    sge_qeti_switch_to_next(all_resources_queue_end_time, qeti->cr_refs_global);
    sge_qeti_switch_to_next(all_resources_queue_end_time, qeti->cr_refs_host);
    sge_qeti_switch_to_next(all_resources_queue_end_time, qeti->cr_refs_queue);
-      
+     
+   DEXIT;
    return all_resources_queue_end_time;
 }
 
@@ -451,11 +501,15 @@ u_long32 sge_qeti_next(sge_qeti_t *qeti)
 {
    u_long32 all_resources_queue_end_time = DISPATCH_TIME_NOW;
 
+   DENTER(TOP_LAYER, "sge_qeti_next");
+
    /* determine all resources queue end time */
    sge_qeti_max_end_time(&all_resources_queue_end_time, qeti->cr_refs_pe);
    sge_qeti_max_end_time(&all_resources_queue_end_time, qeti->cr_refs_global);
    sge_qeti_max_end_time(&all_resources_queue_end_time, qeti->cr_refs_host);
    sge_qeti_max_end_time(&all_resources_queue_end_time, qeti->cr_refs_queue);
+
+   DPRINTF(("sge_qeti_next() determines "u32"\n", all_resources_queue_end_time));
 
    /* switch to the next entry with all queue end next references whose 
       time is larger (?) or equal to all resources queue end time */
@@ -464,6 +518,7 @@ u_long32 sge_qeti_next(sge_qeti_t *qeti)
    sge_qeti_switch_to_next(all_resources_queue_end_time, qeti->cr_refs_host);
    sge_qeti_switch_to_next(all_resources_queue_end_time, qeti->cr_refs_queue);
 
+   DEXIT;
    return all_resources_queue_end_time;
 }
 
@@ -494,52 +549,4 @@ void sge_qeti_release(sge_qeti_t *qeti)
    lFreeList(qeti->cr_refs_host);
    lFreeList(qeti->cr_refs_queue);
    free(qeti);
-}
-
-static double sge_qeti_resource_available_per_layer(lList *cref_lp, const char *resource_name, 
-      u_long32 start, u_long32 duration)
-{
-   lListElem *cref_ep, *cr;
-   double available = 0;
-
-   for_each (cref_ep, cref_lp) {
-      cr = lGetRef(cref_ep, QETI_resource_instance);
-      if (!strcmp(resource_name, lGetString(cr, RUE_name))) {
-         double total = lGetDouble(cref_ep, QETI_total);
-         if (sconf_get_qs_state()==QS_STATE_EMPTY || duration==0) {
-            available += total;
-         } else {
-            double used;
-            if (start == DISPATCH_TIME_NOW)
-               start = sconf_get_now(); 
-            used = utilization_max(cr, start, start+duration);
-            available += total-used;
-         }  
-      }
-   }
-
-   return available;
-}
-
-/* determine available amount of resource with all queues in the given time period */
-double sge_qeti_resource_available_per_queue(const char *resource_name, lListElem *job, lListElem *pe, 
-      lListElem *ckpt, lList *host_list, lList *queue_list, lList *centry_list, lList *acl_list, 
-      u_long32 start, u_long32 duration)
-{
-   sge_qeti_t *qeti;
-   double avail;
-
-   DENTER(TOP_LAYER, "sge_qeti_resource_available_per_queue");
-
-   if (!(qeti = sge_qeti_allocate(job, pe, ckpt, host_list, queue_list, centry_list, acl_list))) {
-      DEXIT;
-      return 0;
-   }
-
-
-   avail = sge_qeti_resource_available_per_layer(qeti->cr_refs_queue, resource_name, start, duration);
-   sge_qeti_release(qeti);
-
-   DEXIT;
-   return avail;
 }

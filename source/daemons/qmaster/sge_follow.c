@@ -597,6 +597,7 @@ lList **topp  /* ticket orders ptr ptr */
             lSetDouble(jep, JB_dlcontr,                   lGetDouble(joker, JB_dlcontr));
             lSetDouble(jep, JB_wtcontr,                   lGetDouble(joker, JB_wtcontr));
          }
+#if 0
          DPRINTF(("PRIORITY: "u32"."u32" %f/%f tix/ntix %f npri %f/%f urg/nurg %f prio\n",
             lGetUlong(jep, JB_job_number),
             lGetUlong(jatp, JAT_task_number),
@@ -606,7 +607,7 @@ lList **topp  /* ticket orders ptr ptr */
             lGetDouble(jep, JB_urg),
             lGetDouble(jep, JB_nurg),
             lGetDouble(jatp, JAT_prio)));
-
+#endif
 
       } /* just ignore them being not in SGEEE mode */
       break;
@@ -639,8 +640,10 @@ lList **topp  /* ticket orders ptr ptr */
             return -2;
          }
 
+#if 0
          DPRINTF(("%sORDER #%d: job("u32")->ticket = "u32"\n", 
             force?"FORCE ":"", seq_no, job_number, (u_long32)lGetDouble(ep, OR_ticket)));
+#endif
 
          jep = job_list_locate(Master_Job_List, job_number);
          if(!jep) {

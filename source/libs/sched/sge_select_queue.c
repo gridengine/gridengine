@@ -473,7 +473,12 @@ static int sge_select_pe_time(sge_assignment_t *best)
       tmp_assignment.start = pe_time;
       result = sge_parallel_assignment(&tmp_assignment);
       if (result == 0) {
+         if (best->gdil) {
+            DPRINTF(("SELECT PE TIME: earlier assignment at "u32"\n", pe_time));
+         }
          assignment_copy(best, &tmp_assignment, true);
+      } else {
+         DPRINTF(("SELECT PE TIME: no earlier assignment at "u32"\n", pe_time));
          break;
       }
    }
@@ -1348,7 +1353,7 @@ static int sge_soft_violations(lListElem *queue, int violation, lListElem *job,l
 
    for_each (attr, soft_requests) {
       switch (ri_time_by_slots(attr, load_attr, config_attr, actual_attr, centry_list, queue,
-                      &reason, false, 1, layer, lc_factor, &start_time, 0, queue_name)){
+                      &reason, false, 1, layer, lc_factor, &start_time, 0, queue_name?queue_name:"no queue")){
             /* no match */
             case -1 :   soft_violation++;
                break;
@@ -1403,7 +1408,7 @@ static int sge_soft_violations(lListElem *queue, int violation, lListElem *job,l
 
       /* store number of soft violations in queue */
       lSetUlong(queue, QU_soft_violation, soft_violation);
-   }  
+   }
 
    DEXIT;
    return soft_violation;
@@ -2326,7 +2331,7 @@ static int sge_tag_queues_suitable4job_fast_track(sge_assignment_t *a,
                       lGetUlong(qep, QU_tag), lGetUlong(qep, QU_available_at)));
             best_queue_result = 0;
 
-            if (now_assignment) {
+            if (now_assignment /* && !soft requests */ ) {
                fast_track_exit = true;
                break;
             }
@@ -2403,10 +2408,13 @@ static int sge_tag_queues_suitable4job_comprehensively(sge_assignment_t *a)
    int host_seqno = 0;
    double previous_load;
    bool previous_load_inited = false;
+   int allocation_rule, minslots;
 
    DENTER(TOP_LAYER, "sge_tag_queues_suitable4job_comprehensively");
 
    qinstance_list_set_tag(a->queue_list, 0);
+   for_each(hep, a->host_list)
+      lSetUlong(hep, EH_tagged, 0);
 
    if (use_category){
       schedd_mes_set_tmp_list(category, CT_job_messages, lGetUlong(job, JB_job_number));
@@ -2435,6 +2443,8 @@ static int sge_tag_queues_suitable4job_comprehensively(sge_assignment_t *a)
    accu_host_slots = accu_host_slots_qend = 0;
    have_master_host = false;
    max_slots_all_hosts = 0;
+   allocation_rule = sge_pe_slots_per_host(a->pe, a->slots);
+   minslots = ALLOC_RULE_IS_BALANCED(allocation_rule)?allocation_rule:1;
 
    /* first select hosts with lowest share/load 
       and then select queues with */
@@ -2462,8 +2472,11 @@ static int sge_tag_queues_suitable4job_comprehensively(sge_assignment_t *a)
       if (result != 0)
          best_result = sge_best_result(result, best_result);
 #endif
-      accu_host_slots      += hslots;
-      accu_host_slots_qend += hslots_qend;
+
+      if (hslots >= minslots)
+         accu_host_slots      += hslots;
+      if (hslots_qend >= minslots)
+         accu_host_slots_qend += hslots_qend;
       DPRINTF(("HOST(3) %s could get us %d slots (%d later on)\n", 
             eh_name, hslots, hslots_qend));
 
@@ -2701,7 +2714,8 @@ bool *previous_load_inited)
  * }
  * host_slot_max_by_T = MAX(all min(Q))
  */
-static int sge_max_host_slot_by_theshold(lListElem *hep, lList *queue_list, lList *centry_list, const  lList *load_adjustments)
+static int sge_max_host_slot_by_theshold(lListElem *hep, lList *queue_list, lList *centry_list, 
+   const lList *load_adjustments)
 {
    int avail_h = 0, avail_q;
    int avail;
@@ -3131,6 +3145,7 @@ sge_assignment_t *a
 static int sge_tags2gdil(
 sge_assignment_t *a
 ) {
+   bool now_assignment = (a->start == DISPATCH_TIME_NOW);
    int max_host_seq_no, start_seq_no, last_accu_host_slots, accu_host_slots = 0;
    int host_slots;
    lList *gdil = NULL;
@@ -3261,22 +3276,25 @@ sge_assignment_t *a
             qtagged = lGetUlong(qep, QU_tag);
             slots = MIN(a->slots-accu_host_slots, 
                MIN(host_slots, qtagged));
-            accu_host_slots += slots;
-            host_slots -= slots;
 
-            /* build gdil for that queue */
-            DPRINTF((u32": %d slots in queue %s@%s user %s (host_slots = %d)\n", 
-               a->job_id, slots, qname, eh_name, lGetString(a->job, JB_owner), host_slots));
-            if (!(gdil_ep=lGetElemStr(gdil, JG_qname, qname))) {
-               gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);
-               lSetUlong(gdil_ep, JG_qversion, lGetUlong(qep, QU_version));
-               lSetHost(gdil_ep, JG_qhostname, eh_name);
-               lSetUlong(gdil_ep, JG_slots, slots);
-            } else 
-               lSetUlong(gdil_ep, JG_slots, lGetUlong(gdil_ep, JG_slots) + slots);
+            if (slots != 0) {
+               accu_host_slots += slots;
+               host_slots -= slots;
 
-            /* untag */
-            lSetUlong(qep, QU_tag, qtagged - slots);
+               /* build gdil for that queue */
+               DPRINTF((u32": %d slots in queue %s@%s user %s (host_slots = %d)\n", 
+                  a->job_id, slots, qname, eh_name, lGetString(a->job, JB_owner), host_slots));
+               if (!(gdil_ep=lGetElemStr(gdil, JG_qname, qname))) {
+                  gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);
+                  lSetUlong(gdil_ep, JG_qversion, lGetUlong(qep, QU_version));
+                  lSetHost(gdil_ep, JG_qhostname, eh_name);
+                  lSetUlong(gdil_ep, JG_slots, slots);
+               } else 
+                  lSetUlong(gdil_ep, JG_slots, lGetUlong(gdil_ep, JG_slots) + slots);
+
+               /* untag */
+               lSetUlong(qep, QU_tag, qtagged - slots);
+            }
 
             if (!host_slots) 
                break; 
@@ -3292,11 +3310,11 @@ sge_assignment_t *a
       }
    } while (allocation_rule==ALLOC_RULE_ROUNDROBIN && accu_host_slots < a->slots);
 
-   scheduled_complex_jobs++; /* ?? */
+   if (now_assignment) 
+      scheduled_complex_jobs++;
 
    a->gdil = lFreeList(a->gdil);
    a->gdil = gdil;
-/*      ??? a->start = job_start_time; */
 
    DEXIT;
    return 0;

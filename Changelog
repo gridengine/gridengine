@@ -1,3 +1,8 @@
+AS-2002-07-31-0  CVS        Re-Tagged V53p1_TAG --> SGE 5.3p1
+-------------------------------------------------------------
+                            the courtesy binaries of this tag reflect 
+                            SGE(EE) 5.3p1.
+
 AH-2002-07-29-0  Doc:       Describe the 'all' keyword for queue_list in
                             sge_pe(5) and checkpoint(5).
                  Issue:     #319

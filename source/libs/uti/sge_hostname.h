@@ -60,6 +60,11 @@ typedef struct host {
     struct host *next;
 } host;
 
+/* These external variables are used for profiling */
+extern unsigned long gethostbyname_calls;
+extern unsigned long gethostbyname_sec;
+extern unsigned long gethostbyaddr_calls;
+extern unsigned long gethostbyaddr_sec;
 
 const char *uti_state_get_default_domain(void);
 int uti_state_get_fqdn_cmp(void);

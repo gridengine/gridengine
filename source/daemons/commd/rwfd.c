@@ -607,6 +607,7 @@ message *mp
       /* we got some data -> process it */
       mp->bufprogress += i;
       already_written += i;
+      bytes_sent += i;      /* profiling */
    }
 
    if (already_written < len) {
@@ -663,6 +664,7 @@ int sockfd
       DEXIT;
       return NULL;
    }
+   connection_accept++;    /* profiling */
 
    DEBUG((SGE_EVENT, "accepted connection on fd=%d port=%d ipaddr=%s", new_sfd,
          ntohs(cli_addr.sin_port), inet_ntoa(cli_addr.sin_addr)));
@@ -730,6 +732,7 @@ int commdport
          mp->tofd = socket(AF_INET, SOCK_STREAM, 0);
       }
 
+      sockets_created++;       /* profiling */
       if (mp->tofd < 0) {
          ERROR((SGE_EVENT,MSG_NET_OPENSTREAMSOCKETFAILED ));
          reset_message(mp, "open connection");
@@ -773,6 +776,7 @@ int commdport
          return;
       }
       else {
+         connection_errors++;    /* profiling */
          strcpy(err_str, MSG_NET_ERRORCONNECTINGTOHOST );
          strcat(err_str, tohostname);
          strcat(err_str, " :");
@@ -973,6 +977,7 @@ char *comment
       cp = cp->next;
    /* none found, so it is ok to close fd */
    if(!cp) {
+      connection_closed++;      /* profiling */
       shutdown(fd, 2);
       close(fd);
       DEBUG((SGE_EVENT, "closing fd=%d %s", fd, comment));

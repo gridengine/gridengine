@@ -230,4 +230,9 @@
 #define MSG_ENROLLFAILEDWITHSTATUS_S      _MESSAGE(39138, _("enroll failed with status: %s"))
 
 
+#define MSG_COMMDCNTL_PROFILE_ON          _MESSAGE(39139, _("enable profiling\n"))
+#define MSG_COMMDCNTL_PROFILE_OFF         _MESSAGE(39140, _("disable profiling\n"))
+#define MSG_COMMDCNTL_PROFILE_RESET       _MESSAGE(39141, _("reset profiling data\n"))
+
+
 #endif /* __MSG_COMMD_H */

@@ -474,6 +474,7 @@ int sge_log(int log_level, const char *mesg, const char *file__,
    char newline[2*4];
    int levelchar;
    char levelstring[32*4];
+   trace_func_type t;
 
    /* Make sure to have at least a one byte logging string */
    if (!mesg || mesg[0] == '\0') {
@@ -494,11 +495,9 @@ int sge_log(int log_level, const char *mesg, const char *file__,
     * commd remote monitoring is in effect independently 
     * of the current log_level 
     */
-   if (uti_state_get_mewho() == COMMD && log_level >= LOG_DEBUG) {
-      trace_func_type t = log_state_get_log_trace_func();
-      if (t)
-         t(mesg);
-   }
+   t = log_state_get_log_trace_func();
+   if (t)
+      t(mesg);
 
    /* quick exit if nothing to log */
 #ifndef WIN32NATIVE

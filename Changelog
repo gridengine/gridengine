@@ -1,3 +1,6 @@
+CR-2003-02-24-0  Enhancem.: - Added commd profiling ( /tmp/commd/err.XXX file)
+                            - New sgecommdcntl options: -profile on|off|reset
+
 JG-2003-02-24-0  Enhancem.: Use spooling framework for qmaster spooling
 
 EB-2003-02-21-1  Cleanup:   Moved functions from sgeobjlib to utilib

@@ -98,6 +98,40 @@ u_long too_many_fds_open = 0;   /* time at which too many fds were open */
 
 char logfile[256] = "/tmp/commd.errors";
 
+/* These global variables are used for profiling */
+u_long32 last_logginglevel = 0;
+int enable_commd_profile = 0;
+unsigned long new_messages = 0;
+unsigned long del_messages = 0;
+unsigned long resend_messages = 0;
+unsigned long sockets_created = 0;
+unsigned long connection_errors = 0;
+unsigned long connection_closed = 0;
+unsigned long connection_accept = 0;
+unsigned long bytes_sent = 0;
+unsigned long unique_hosts_messages = 0;
+unsigned long data_message_byte_count = 0;
+unsigned long data_message_count = 0;
+double max_med_message_size = 0.0;
+double max_kbit_per_second = 0.0;
+double max_mc_per_second = 0.0;
+double max_new_m_per_second  = 0.0;
+double max_del_m_per_second = 0.0;
+double max_resend_m_per_second = 0.0;
+double max_new_sockets_per_second = 0.0;
+double max_con_errors_per_second = 0.0;
+double max_con_closed_per_second = 0.0;
+double max_con_accepted_per_second = 0.0;
+double max_unique_hosts_messages_per_second = 0.0;
+
+
+/** profiling funcs **/
+static void reset_measurement_data(void); 
+
+
+
+
+
 /*---------------------------------------------------------------*/
 int main(
 int argc,
@@ -113,6 +147,7 @@ char **argv
    message *mp;
    char tmpstr1[1024], tmpstr2[1024], *cp;
    time_t now;
+   time_t last_loop_time = 0;         /* profiling */
    SGE_STRUCT_STAT stat_dummy;
    struct servent *se = NULL;
    int nisretry;
@@ -552,6 +587,18 @@ char **argv
       else {
          /* readfdset and writefdset indicate which fds can be handled now */
 
+
+
+         /*    This can be used for showing open file descriptors
+               and number of messages for that file descriptor 
+               (profiling)                                         
+         DEBUG((SGE_EVENT, "Profile4 timestamp=%ld, fds(%s)\n",
+            now,
+            count_different_file_descriptors()
+         )); 
+         */
+
+
          DPRINTF(("fd 0 - %d, maxfd = %d\n", FD_SETSIZE - 1, maxfd));
          /* be sure to keep track of nfd, otherwise you'll loop indefinitely */
          while(nfd) {
@@ -643,6 +690,131 @@ char **argv
          }
       }
       memorylack = 0;           /* retry getting memory every second */
+
+
+      /*
+       *  calculate profiling data (if enabled )
+       */
+      if ( now - last_loop_time > 10 && enable_commd_profile ) {
+         double last_interval_time = now - last_loop_time; 
+         double kbit_per_second = 0.0;
+         double mc_per_second = 0.0;
+         double new_m_per_second  = 0.0;
+         double del_m_per_second = 0.0;
+         double resend_m_per_second = 0.0;
+         double new_sockets_per_second = 0.0;
+         double con_errors_per_second = 0.0;
+         double con_closed_per_second = 0.0;
+         double con_accepted_per_second = 0.0;
+         double unique_hosts_messages_per_second = 0.0;
+         double med_message_size = 0.0;
+
+
+         /*
+          * normalize avg. message data size 
+          */
+         if ( data_message_count > 0 ) {
+            med_message_size = data_message_byte_count / data_message_count ;
+            med_message_size = med_message_size / 1024.0;
+         } 
+
+         /*
+          * normalize times to per second values
+          */
+         if (last_interval_time > 0) {
+            kbit_per_second = bytes_sent / last_interval_time;
+            kbit_per_second = (kbit_per_second * 8.0) / 1024.0;
+            mc_per_second = count_messages() / last_interval_time;
+            new_m_per_second = new_messages / last_interval_time;
+            del_m_per_second = del_messages / last_interval_time;
+            resend_m_per_second = resend_messages / last_interval_time;
+            new_sockets_per_second = sockets_created / last_interval_time;
+            con_errors_per_second  = connection_errors / last_interval_time;
+            con_closed_per_second   = connection_closed / last_interval_time;
+            con_accepted_per_second = connection_accept / last_interval_time;
+            unique_hosts_messages_per_second = unique_hosts_messages / last_interval_time;
+         }
+
+         /*
+          * calculate maximas
+          */
+         max_kbit_per_second = MAX(max_kbit_per_second,kbit_per_second);
+         max_mc_per_second = MAX(max_mc_per_second,mc_per_second);
+         max_new_m_per_second  = MAX(max_new_m_per_second,new_m_per_second);
+         max_del_m_per_second = MAX(max_del_m_per_second,del_m_per_second);
+         max_resend_m_per_second = MAX(max_resend_m_per_second,resend_m_per_second);
+         max_new_sockets_per_second = MAX(max_new_sockets_per_second,new_sockets_per_second);
+         max_con_errors_per_second = MAX(max_con_errors_per_second,con_errors_per_second);
+         max_con_closed_per_second = MAX(max_con_closed_per_second,con_closed_per_second);
+         max_con_accepted_per_second = MAX(max_con_accepted_per_second,con_accepted_per_second);
+         max_unique_hosts_messages_per_second = MAX(max_unique_hosts_messages_per_second,unique_hosts_messages_per_second);
+         max_med_message_size = MAX(max_med_message_size,med_message_size);
+
+         
+         last_loop_time = now;
+         last_logginglevel = log_state_get_log_level();
+         log_state_set_log_level(LOG_INFO);
+
+         /* 
+          * common  
+          *            kbit_per_second                  sent kilobytes per second for all messages
+          *            unique_hosts_messages_per_second number of UNIQUE HOST requests
+          *            med_message_size                 average message size of messages sent to commlib
+          *                                             clients or other commds
+          * messages
+          *            mc_per_second                    number of messages not yet fetched by commlib clients
+          *                                             some of these messages will be delivered to remote commds
+          *            new_m_per_second                 number of new messages (all)
+          *            del_m_per_second                 number of deleted messages (all)
+          *            resend_m_per_second              number of messages for which init_send() has been called
+          *                                             (commd-commd)
+          * socketes   
+          *            new_sockets_per_second           number of sockets created for commd-commd message transfer   
+          *            con_errors_per_second            number of commd-commd message transfer tries where connect()
+          *                                             failed
+          *            con_closed_per_second            number of closed file descriptors with all messages
+          *            con_accepted_per_second          number of connections accepted commlib clients and other 
+          *                                             commds
+          * gethostbyname
+          *            gethostbyname_calls              number of gethostbyname() calls
+          *            gethostbyname_sec                wall-clock time spent in gethostbyname() calls
+          *                                             commds
+          * gethostbyaddr
+          *            gethostbyaddr_calls              number of gethostbyaddr() calls
+          *            gethostbyaddr_sec                wall-clock time spent in gethostbyaddr() calls
+          */
+            
+         INFO((SGE_EVENT, "Profile : ==========================")); 
+
+         INFO((SGE_EVENT, "Profile1: %ld, common(KBit/s=%.3f, hostres/s=%.3f, avgmsize = %.3f Kbyte)",
+                           now , kbit_per_second , unique_hosts_messages_per_second , med_message_size
+         )); 
+         INFO((SGE_EVENT, "Profile1: %ld, messages(wait/s=%.3f, new/s=%.3f, del/s=%.3f, init_send/s=%.3f)",
+                           now , mc_per_second , new_m_per_second , del_m_per_second  , resend_m_per_second
+         )); 
+         INFO((SGE_EVENT, "Profile1: %ld, sockets(new/s: %.3f, errors/s=%.3f, closed/s=%.3f, accept/s=%.3f)",
+                           now , new_sockets_per_second , con_errors_per_second , 
+                           con_closed_per_second , con_accepted_per_second
+         )); 
+
+         INFO((SGE_EVENT, "Profile2: %ld, MAX common(KBit/s=%.3f, hostres/s=%.3f, avgmsize = %.3f Kbyte)",
+                           now , max_kbit_per_second , max_unique_hosts_messages_per_second , max_med_message_size
+         )); 
+         INFO((SGE_EVENT, "Profile2: %ld, MAX messages(wait/s=%.3f, new/s=%.3f, del/s=%.3f, init_send/s=%.3f)",
+                           now , max_mc_per_second , max_new_m_per_second , max_del_m_per_second  , max_resend_m_per_second
+         )); 
+         INFO((SGE_EVENT, "Profile2: %ld, MAX sockets(new/s: %.3f, errors/s=%.3f, closed/s=%.3f, accept/s=%.3f)",
+                           now , max_new_sockets_per_second , max_con_errors_per_second , 
+                           max_con_closed_per_second , max_con_accepted_per_second
+         )); 
+         
+         INFO((SGE_EVENT, "Profile3: %ld, gethostbyname(calls=%ld time=%lds) gethostbyaddr(calls=%ld time=%lds)",
+                           now, gethostbyname_calls, gethostbyname_sec, gethostbyaddr_calls, gethostbyaddr_sec
+         )); 
+
+         log_state_set_log_level(last_logginglevel);
+         reset_measurement_data();
+      }
    }
 }
 
@@ -687,6 +859,82 @@ void lack_of_memory()
    memorylack = 1;
    DEXIT;
 }
+
+/****** commd/reset_measurement_data() *****************************************
+*  NAME
+*     reset_measurement_data() -- reset profiling data
+*
+*  SYNOPSIS
+*     void reset_measurement_data(void) 
+*
+*  FUNCTION
+*     When a measurement interval is over this function is called to reset
+*     the global data variables.
+*
+*  SEE ALSO
+*     commd/reset_profiling_data()
+*******************************************************************************/
+void reset_measurement_data(void) 
+{
+   DENTER(TOP_LAYER, "reset_measurement_data");
+   new_messages = 0;
+   del_messages = 0;
+   sockets_created = 0;
+   resend_messages = 0;
+   connection_errors = 0;
+   connection_closed = 0;
+   connection_accept = 0;
+   bytes_sent = 0;
+   unique_hosts_messages = 0;
+   gethostbyname_calls = 0;
+   gethostbyname_sec = 0;
+   gethostbyaddr_calls = 0;
+   gethostbyaddr_sec = 0;
+   data_message_byte_count = 0;
+   data_message_count = 0;
+   DEXIT;
+}
+
+/****** commd/reset_profiling_data() *******************************************
+*  NAME
+*     reset_profiling_data() -- reset profiling data (and maximum values)
+*
+*  SYNOPSIS
+*     void reset_profiling_data(void) 
+*
+*  FUNCTION
+*     This function is called to reset all profiling data. 
+*
+*  SEE ALSO
+*     commd/reset_measurement_data()
+*
+*******************************************************************************/
+void reset_profiling_data(void)
+{
+   DENTER(TOP_LAYER, "reset_profiling_data");
+   max_med_message_size = 0.0;
+   max_kbit_per_second = 0.0;
+   max_mc_per_second = 0.0;
+   max_new_m_per_second  = 0.0;
+   max_del_m_per_second = 0.0;
+   max_resend_m_per_second = 0.0;
+   max_new_sockets_per_second = 0.0;
+   max_con_errors_per_second = 0.0;
+   max_con_closed_per_second = 0.0;
+   max_con_accepted_per_second = 0.0;
+   max_unique_hosts_messages_per_second = 0.0;
+   reset_measurement_data();
+   DEXIT;
+}
+
+void enable_commd_profiling(int flag)
+{
+   DENTER(TOP_LAYER, "enable_commd_profiling");
+   enable_commd_profile = flag;
+   DEXIT;
+}
+
+
 
 
 /* search through messages and look for those who needs reading */
@@ -933,6 +1181,7 @@ u_long now
          if (MESSAGE_STATUS(mp) == S_RDY_4_SND &&
              (!(mp->flags & (COMMD_RECEIVE | COMMD_LEAVE | COMMD_CNTL)))) {
             DEBUG((SGE_EVENT, "rescheduling message mid=%d", (int)mp->mid));
+            resend_messages++;     /* profiling */
             init_send(mp, reserved_port, commdport);
          }
          mp = next;

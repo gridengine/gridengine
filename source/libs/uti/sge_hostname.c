@@ -85,6 +85,14 @@ static host *sge_host_create(void);
 static void sge_host_delete(host *h);
 static int sge_host_alias(host *h1, host *h2);
 
+
+/* this globals are used for profiling */
+unsigned long gethostbyname_calls = 0;
+unsigned long gethostbyname_sec = 0;
+unsigned long gethostbyaddr_calls = 0;
+unsigned long gethostbyaddr_sec = 0;
+
+
 #if defined(SOLARIS)
 int gethostname(char *name, int namelen);
 #endif
@@ -156,8 +164,10 @@ static struct hostent *sge_gethostbyname(const char *name)
    DENTER(TOP_LAYER, "sge_gethostbyname");
 
    now = sge_get_gmt();
+   gethostbyname_calls++;       /* profiling */
    he = gethostbyname(name);
    time = sge_get_gmt() - now;
+   gethostbyname_sec += time;   /* profiling */
 
    /* warn about blocking gethostbyname() calls */
    if (time > MAX_RESOLVER_BLOCKING) {
@@ -197,6 +207,7 @@ static struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
 
    DENTER(TOP_LAYER, "sge_gethostbyaddr");
 
+   gethostbyaddr_calls++;      /* profiling */
    now = sge_get_gmt();
 #if defined(CRAY)
    he = gethostbyaddr((const char *)addr, sizeof(struct in_addr), AF_INET);
@@ -204,6 +215,7 @@ static struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
    he = gethostbyaddr((const char *)addr, 4, AF_INET);
 #endif
    time = sge_get_gmt() - now;
+   gethostbyaddr_sec += time;   /* profiling */
 
    /* warn about blocking gethostbyaddr() calls */
    if (time > MAX_RESOLVER_BLOCKING) {

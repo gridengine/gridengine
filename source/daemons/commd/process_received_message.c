@@ -261,9 +261,12 @@ int commdport
       /* secure tests for critical commd commands (only when started as root)*/ 
       
       
-      if (operation == O_KILL       || 
-          operation == O_TRACE      ||
-          operation == O_DUMP       || 
+      if (operation == O_KILL          || 
+          operation == O_TRACE         ||
+          operation == O_PROFILE_ON    ||
+          operation == O_PROFILE_OFF   ||
+          operation == O_PROFILE_RESET ||
+          operation == O_DUMP          || 
           operation == O_UNREGISTER    ) {
 
          int  sender_ok = 0;
@@ -356,6 +359,15 @@ int commdport
          }
          DEXIT;
          return 1;
+      }
+      if (operation == O_PROFILE_ON) {
+         enable_commd_profiling(1);
+      }
+      if (operation == O_PROFILE_OFF) {
+         enable_commd_profiling(0);
+      }
+      if (operation == O_PROFILE_RESET) {
+         reset_profiling_data();
       }
 
       if (operation == O_GETID) {
@@ -485,6 +497,7 @@ int commdport
 
       DEBUG((SGE_EVENT, "* commproc asks about UNIQUE HOST"));
 
+      unique_hosts_messages++;   /* profiling information */
       cp = unpack_string(hostname, MAXHOSTLEN, HEADERSTART(mp));
       cp = unpack_ushort(&refresh_aliases, cp);
 

@@ -81,6 +81,7 @@ message *create_message()
       message_list = m;
    }
    last_message = m;
+   new_messages++;  /* profiling */
 
    return m;
 }
@@ -152,7 +153,8 @@ int keep_fromfd,
 char *reason 
 ) {
    message *m = message_list, *last = NULL;
-
+   u_long len = 0;
+   u_long already_written = 0; 
    DENTER(TOP_LAYER, "delete_message_");
 
    while (m && (m != to_delete)) {
@@ -184,13 +186,88 @@ char *reason
    if (m == last_message)
       last_message = last;
 
+   if (enable_commd_profile) {
+      if (m->buflen > 0) {
+         len = m->buflen + m->headerlen;
+         already_written = m->bufprogress - HEADERSTART(m);
+         data_message_byte_count += already_written;
+         data_message_count++;
+      }
+   }
+
    if (m->bufstart)
       free(m->bufstart);
    free(m);
 
+   m = NULL;
+   del_messages++;  /* profiling */
    DEXIT;
    return;
 }
+
+
+/* used for profiling: count messages in list */
+unsigned long count_messages(void) {
+   message *messages = message_list;
+   unsigned long counter = 0;
+   while (messages) {
+      counter++;
+      messages = messages->next;
+   }
+   return counter;
+}
+
+
+/* this function returns a string with information
+   about the used file descriptors in the message 
+   list   (used for profiling) */
+
+/* only used for debuging */
+
+#if 0 
+char* count_different_file_descriptors(void) {
+   message *messages = message_list;
+   int i;
+   static const char* debug_buffer[8000];
+
+
+   int different_file_descriptors[1000];
+   int different_file_descriptor_count[1000];
+   const char* help[1000];
+
+
+   for (i=0;i<999;i++) {
+      different_file_descriptors[i] = -901; 
+      different_file_descriptor_count[i] = 0; 
+   }
+   while (messages) {
+      int fd = messages->tofd;
+      for (i=0;i<999;i++) {
+         if (different_file_descriptors[i] == -901) {
+            different_file_descriptors[i] = fd;
+            different_file_descriptor_count[i] = different_file_descriptor_count[i] + 1; 
+            break;
+         }
+         if (different_file_descriptors[i] == fd) {
+            different_file_descriptor_count[i] = different_file_descriptor_count[i] + 1;
+            break;
+         }
+      } 
+      messages = messages->next;
+   }
+
+   strcpy(debug_buffer,"");
+   for (i=0;i<999;i++) {
+      if (different_file_descriptors[i] == -901) {
+         break;
+      }
+      sprintf(help,"%d=%d ",different_file_descriptors[i],different_file_descriptor_count[i]);
+      strcat(debug_buffer,help);
+   }
+
+   return debug_buffer;
+} 
+#endif
 
 /**********************************************************************/
 /* finds the message for a given fd. Creates a new message for

@@ -50,15 +50,18 @@ void usage()
 {
    printf("%s\n", feature_get_product_name(FS_SHORT_VERSION));
 
-   printf("%s sgecommdcntl [-k | -t level | -d] [-p commdport] [-U] \\\n", MSG_USAGE);
-   printf("       [-host dst_host] [-gid commprocname] [-unreg commprocname id]\n");
-   printf("    -k     %s",MSG_COMMDCNTL_k_OPT_USAGE);
-   printf("    -t     %s",MSG_COMMDCNTL_t_OPT_USAGE);
-   printf("    -d     %s \"/tmp/commd/commd.dump\"\n",MSG_COMMDCNTL_d_OPT_USAGE);
-   printf("    -p     %s",MSG_COMMDCNTL_p_OPT_USAGE);
-   printf("    -U     %s",MSG_COMMDCNTL_U_OPT_USAGE);
-   printf("    -gid   %s",MSG_COMMDCNTL_gid_OPT_USAGE);
-   printf("    -unreg %s",MSG_COMMDCNTL_unreg_OPT_USAGE);
+   printf("%s sgecommdcntl [-k | -t level | -d] [-p commdport] [-U] [-profile [on|off|reset]]\\\n", MSG_USAGE);
+   printf("       [-host dst_host] [-gid commprocname] [-unreg commprocname id] \n");
+   printf("    -k             %s",MSG_COMMDCNTL_k_OPT_USAGE);
+   printf("    -t             %s",MSG_COMMDCNTL_t_OPT_USAGE);
+   printf("    -d             %s \"/tmp/commd/commd.dump\"\n",MSG_COMMDCNTL_d_OPT_USAGE);
+   printf("    -p             %s",MSG_COMMDCNTL_p_OPT_USAGE);
+   printf("    -U             %s",MSG_COMMDCNTL_U_OPT_USAGE);
+   printf("    -gid           %s",MSG_COMMDCNTL_gid_OPT_USAGE);
+   printf("    -unreg         %s",MSG_COMMDCNTL_unreg_OPT_USAGE);
+   printf("    -profile on    %s",MSG_COMMDCNTL_PROFILE_ON);
+   printf("    -profile off   %s",MSG_COMMDCNTL_PROFILE_OFF);
+   printf("    -profile reset %s",MSG_COMMDCNTL_PROFILE_RESET);
    exit(1);
 }
 
@@ -70,7 +73,7 @@ char **argv
    u_short operation = 0;
    u_long32 arg;
    char *carg = NULL;
-
+   char *profile_operation = NULL;
    int commdport = 0;
    
    /* 
@@ -123,6 +126,27 @@ char **argv
          if (!*argv)
             usage();
          arg = atoi(*argv);
+      }
+      if (!strcmp("-profile", *argv)) {
+         argv++;
+         if (!*argv)
+            usage();
+         profile_operation = (*argv);
+         if ( strcmp(profile_operation,"on") == 0) {
+             operation =  O_PROFILE_ON;  
+         }  
+         if ( strcmp(profile_operation,"off") == 0) {
+             operation =  O_PROFILE_OFF;  
+         }  
+         if ( strcmp(profile_operation,"reset") == 0) {
+             operation =  O_PROFILE_RESET;  
+         }  
+         if ( strcmp(profile_operation,"on")   != 0 && 
+             strcmp(profile_operation,"off")  != 0 &&
+             strcmp(profile_operation,"reset") != 0  )   {
+             fprintf(stderr, "unknown profile option: \"%s\"\n", profile_operation);
+             usage();
+         }
       }
       if (!strcmp("-gid", *argv)) {
          operation = O_GETID;

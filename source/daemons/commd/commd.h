@@ -42,12 +42,37 @@ extern "C" {
 #define MINID 1
 #define STRLEN_ID 4
 
+
+/* These variables are used for profiling */
+extern unsigned long unique_hosts_messages;
+extern int enable_commd_profile;
+extern unsigned long new_messages;
+extern unsigned long del_messages;
+extern int enable_commd_profile;
+extern unsigned long data_message_byte_count; 
+extern unsigned long data_message_count;
+extern unsigned long sockets_created;
+extern unsigned long connection_errors;
+extern unsigned long connection_closed;
+extern unsigned long connection_accept;
+extern unsigned long bytes_sent;
+
+/* These functions are used for profiling */
+void enable_commd_profiling(int flag);
+void reset_profiling_data(void);
+
+
+
+
 /* operations for cntl */
 #define O_KILL		1
 #define O_TRACE		2
 #define O_DUMP		3
 #define O_GETID		4
 #define O_UNREGISTER	5
+#define O_PROFILE_ON 6         /* profiling */
+#define O_PROFILE_OFF 7        /* profiling */
+#define O_PROFILE_RESET 8      /* profiling */
 
 #define MESSAGE_MAXDELIVERTIME (5*60)
 #define MAXNISRETRY 10

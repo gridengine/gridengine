@@ -1,3 +1,9 @@
+SD-2004-04-20-0: Bugfix:    Modified auto user behavior to be more intuitive
+                            Fixed qconf to display delete_time
+                            Updated documentation and man pages
+                 Changed:   qmaster, qconf
+                 Issue:     959
+               
 CR-2004-04-20-0: Bugfix:    - check for duplicate component entries before adding
                               new connections in cl_commlib_open_connection()
                             - additional error handling fixes when open a new 

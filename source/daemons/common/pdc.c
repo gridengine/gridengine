@@ -153,6 +153,7 @@ int getpagesize(void);
 #include "basis_types.h"
 #include "cull.h"
 #include "ptf.h"
+#include "sge_feature.h"
 #include "sge_language.h"
 #include "sgermon.h"
 

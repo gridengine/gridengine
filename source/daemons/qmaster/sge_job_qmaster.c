@@ -472,9 +472,8 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    /* check sge attributes */
 
-   /* if enforce_user flag is "auto" and user doesn't exist, add the user */
-   if (conf.enforce_user && !strcasecmp(conf.enforce_user, "auto") && 
-       !userprj_list_locate(Master_User_List, ruser)) {
+   /* if enforce_user flag is "auto", add or update the user */
+   if (conf.enforce_user && !strcasecmp(conf.enforce_user, "auto")) {
       int status = sge_add_auto_user(ruser, rhost, request, alpp);
       if (status != STATUS_OK) {
          DEXIT;

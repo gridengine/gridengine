@@ -152,7 +152,7 @@
       * use 1 as 'weight_priority', 0.001 as 'weight_urgency' and 0.00001 as 
         'weight_ticket' in sched_conf(5)
       * use auto_user_fshare of '100' in sge_conf(5)
-      * use auto_user_delete_time of '60' in sge_conf(5)
+      * use auto_user_delete_time of '720:0:0' in sge_conf(5)
       * use enforce_user of 'auto' in sge_conf(5)
 
       --> for jobs with the same -p priority that request the same resources 

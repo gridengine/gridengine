@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/04/20 11:38:52 $     Revision: $Revision: 1.31 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/04/20 15:47:00 $     Revision: $Revision: 1.32 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/04/20 11:38:52 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/04/20 15:47:00 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -735,15 +735,15 @@ The number of seconds of inactivity after which automatically created
 .M user 5
 objects will be deleted. User objects are created automatically if the
 .B enforce_user
-attribute is set to \fIauto\fP. If no jobs have been submitted by the
-automatically created user for the specified amount of time, the
+attribute is set to \fIauto\fP. If the user has no active or pending
+jobs for the specified amount of time, the
 object will automatically be deleted.  A value of 0 can be used to
-indicate that the user object should not
-be automatically deleted.
+indicate that the automatically created user object is permanent and
+should not be automatically deleted.
 .PP
 Changing
 .B auto_user_delete_time
-will affect the deletion time for all users of newly submitted jobs.
+will affect the deletion time for all users with active jobs.
 .PP
 This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.

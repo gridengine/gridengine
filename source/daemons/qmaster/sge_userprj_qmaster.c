@@ -68,6 +68,7 @@
 #include "sge_utility.h"
 #include "sge_utility_qmaster.h"
 #include "sge_cqueue.h"
+#include "sge_suser.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -452,6 +453,41 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent)
    for (user=lFirst(Master_User_List); user; user=next) {
       u_long32 delete_time = lGetUlong(user, UP_delete_time);
       next = lNext(user);
+#define EXTEND_AUTO_USER_DELETE_TIME
+#ifdef EXTEND_AUTO_USER_DELETE_TIME
+      if (delete_time > 0 && conf.auto_user_delete_time > 0) {
+         /*
+          * The delete time will be (re)set to a value of 1 when a new
+          * job is submitted.  If the delete time is 1 and there are
+          * no more jobs for this user, we set the actual time
+          * that the job will be deleted.
+          */
+         const char *name = lGetString(user, UP_name);
+         lList *answer_list = NULL;
+         if (delete_time == 1 && suser_get_job_counter(suser_list_find(Master_SUser_List, lGetString(user, UP_name))) == 0) {
+            delete_time = now + conf.auto_user_delete_time;
+            lSetUlong(user, UP_delete_time, delete_time);
+            /*
+             * Note: If we don't spool the delete time change,
+             * we run the risk of never deleting user entries if
+             * the qmaster is restarted at an interval which
+             * is less than the configured auto_user_delete_time.
+             */
+            sge_event_spool(&answer_list, 0, sgeE_USER_MOD,
+                            0, 0, name, NULL, NULL,
+                            user, NULL, NULL, true, true);
+         }
+         if (delete_time > 1 && delete_time < now) {
+            if (sge_del_userprj(user, &answer_list, &Master_User_List, root,
+                                 (char *)qmaster_host, 1) != STATUS_OK) {
+               /* only try to delete it once ... */
+               lSetUlong(user, UP_delete_time, 0);
+            }
+         }
+         /* output low level error messages */
+         answer_list_output(&answer_list);
+      }
+#else
       if (delete_time > 0 && delete_time < now) {
          if (sge_del_userprj(user, NULL, &Master_User_List, root,
                               (char *)qmaster_host, 1) != STATUS_OK) {
@@ -459,6 +495,7 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent)
             lSetUlong(user, UP_delete_time, 0);
          }
       }
+#endif
    }
 
    DEXIT;
@@ -481,8 +518,9 @@ sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp
 
    uep = userprj_list_locate(Master_User_List, user);
 
-   /* if permanent user already exists, we're done */
-   if (uep && lGetUlong(uep, UP_delete_time) == 0) {
+   /* if permanent user already exists or we don't need to
+    * extend the life of the automatic user, we're done */
+   if (uep && lGetUlong(uep, UP_delete_time) <= 1) {
       DEXIT;
       return STATUS_OK;
    }
@@ -508,7 +546,11 @@ sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp
       /* modify user element (extend life) */
       lSetString(ep, UP_name, user);
       if (conf.auto_user_delete_time > 0)
+#ifdef EXTEND_AUTO_USER_DELETE_TIME
+         lSetUlong(ep, UP_delete_time, 1);
+#else
          lSetUlong(ep, UP_delete_time, sge_get_gmt() + conf.auto_user_delete_time);
+#endif
       else
          lSetUlong(ep, UP_delete_time, 0);
    } else {
@@ -522,7 +564,11 @@ sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp
       else
          lSetString(ep, UP_default_project, conf.auto_user_default_project);
       if (conf.auto_user_delete_time > 0)
+#ifdef EXTEND_AUTO_USER_DELETE_TIME
+         lSetUlong(ep, UP_delete_time, 1);
+#else
          lSetUlong(ep, UP_delete_time, sge_get_gmt() + conf.auto_user_delete_time);
+#endif
       else
          lSetUlong(ep, UP_delete_time, 0);
    }
@@ -539,7 +585,7 @@ sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp
    /* set up the answer structure */
    memset(&user_answer, 0, sizeof(user_answer));
 
-   /* add the automatic user object */
+   /* add or update the automatic user object */
    sge_c_gdi(host, &user_request, &user_answer);
 
    /* report failure */

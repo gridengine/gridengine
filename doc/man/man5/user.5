@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: user.5,v $     Last Update: $Date: 2004/04/19 10:52:11 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: user.5,v $     Last Update: $Date: 2004/04/20 15:47:01 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH USER 5 "$Date: 2004/04/19 10:52:11 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH USER 5 "$Date: 2004/04/20 15:47:01 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 user \- xxQS_NAMExx user entry file format
@@ -67,8 +67,10 @@ The current functional share of the user.
 .IP "\fBdefault_project\fP"
 The default project of the user.
 .IP "\fBdelete_time\fP"
-The wall-clock time when this user will be deleted. If set to zero, this is
-a permanent user. For additional information about automatically created
+The wall-clock time, expressed as the number of seconds elapsed since
+January 1, 1970, when this user will be deleted. If set to zero, this is
+a permanent user. If set to one, the user currently has active jobs.
+For additional information about automatically created
 users, see the \fBenforce_user\fP and \fBauto_user_delete_time\fP parameters
 in 
 .M sge_conf 5 .

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# create Grid Engine 5.3 settings.[c]sh file
+# create Grid Engine settings.[c]sh file
 #
 #___INFO__MARK_BEGIN__
 ##########################################################################

@@ -861,7 +861,7 @@ XtPointer cld, cad;
          selector = USERSET_T;
          break;
       case SGE_CQUEUE_LIST:
-         selector = QUEUE_T;
+         selector = CQUEUE_T;
          break;
          
       case SGE_JOB_LIST:

@@ -74,6 +74,7 @@
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_host.h"
+#include "sge_cqueue.h"
 #include "sge_complex_schedd.h"
 #include "Matrix.h"
 #include "load_correction.h"
@@ -147,7 +148,7 @@ XtPointer cld, cad;
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
-   qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T | CENTRY_T, &alp);
+   qmonMirrorMultiAnswer(CQUEUE_T | EXECHOST_T | CENTRY_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -182,6 +183,7 @@ XtPointer cld, cad;
 
    xmui_manage(qmon_queue);
 /*    ForceUpdate(qmon_queue); */
+
    updateQueueList();
 
 #if 0
@@ -223,13 +225,18 @@ void updateQueueList(void)
    ** and get the list sorted 
    **
    */
+#ifdef FIXME   
    where = lWhere("%T(%I!=%s)", QU_Type, QU_qname, QU_TEMPLATE);
    whatall = lWhat("%T(ALL)", QU_Type);
+#else   
+   whatall = lWhat("%T(ALL)", CQ_Type);
+#endif  
    /* EB: TODO: */
    qlp = lSelect("SQL", qmonMirrorList(SGE_CQUEUE_LIST), where, whatall); 
    lFreeWhere(where);
    lFreeWhat(whatall);
 
+#ifdef FIXME
    /*
    ** additional filtering
    */
@@ -252,7 +259,7 @@ void updateQueueList(void)
    ** sort the queues according to sequence number and alphabetically
    */
    lPSortList(qlp, "%I+ %I+ %I+", QU_seq_no, QU_qhostname, QU_qname);
-
+#endif
    /*
    ** save the queue in hash table
    */
@@ -273,10 +280,11 @@ void updateQueueListCB(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
+
    lList *alp = NULL;
 
    if (qmon_queue) {
-      qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T | CENTRY_T, &alp);
+      qmonMirrorMultiAnswer(CQUEUE_T | EXECHOST_T | CENTRY_T, &alp);
       if (alp) {
          qmonMessageBox(w, alp, 0);
          alp = lFreeList(alp);
@@ -313,8 +321,8 @@ XtPointer cld, cad;
     * start queue timer for queue info and exechost timer for infos
     * of host that the queue is attached to
     */
-   qmonTimerAddUpdateProc(QUEUE_T, "updateQueueList", updateQueueList);
-   qmonStartTimer(QUEUE_T | EXECHOST_T | CENTRY_T);
+   qmonTimerAddUpdateProc(CQUEUE_T, "updateQueueList", updateQueueList);
+   qmonStartTimer(CQUEUE_T | EXECHOST_T | CENTRY_T);
    
    DEXIT;
 }
@@ -332,8 +340,8 @@ XtPointer cld, cad;
     * stop queue timer for queue info and exechost timer for infos
     * of host that the queue is attached to
     */
-   qmonStopTimer(QUEUE_T | EXECHOST_T | CENTRY_T);
-   qmonTimerRmUpdateProc(QUEUE_T, "updateQueueList");
+   qmonStopTimer(CQUEUE_T | EXECHOST_T | CENTRY_T);
+   qmonTimerRmUpdateProc(CQUEUE_T, "updateQueueList");
    
    DEXIT;
 }
@@ -405,12 +413,14 @@ Widget parent
 /*    XtAddCallback(queue_load, XmNvalueChangedCallback,  */
 /*                      qmonQueueToggleLoad, NULL); */
 
+#ifdef FIXME
    /* start the needed timers and the corresponding update routines */
    XtAddCallback(qmon_queue, XmNpopupCallback, 
                      qmonQueueStartUpdate, NULL);
    XtAddCallback(qmon_queue, XmNpopdownCallback,
                      qmonQueueStopUpdate, NULL);
-                     
+#endif
+
    /* register event handler for queue popup */
    qmonCreatePopup(queue_da, "QueuePopup", queue_popup_items, 
                            XtNumber(queue_popup_items));
@@ -545,9 +555,8 @@ lList *new_hl
 
    for_each(qep, new_ql) {
 
-      qhostname = lGetHost(qep, QU_qhostname);
-      qname = lGetString(qep, QU_qname);
-      /* quarkify  QU_qname */
+      qname = lGetString(qep, CQ_name);
+      /* quarkify  CQ_name */
       id = (long) XrmStringToQuark(qname);
       
       /*
@@ -560,8 +569,10 @@ lList *new_hl
                                           (XtPointer*) &queueIcon);
       if (already_hashed) {
          queueIcon->qp = qep;
+#ifdef FIXME         
          if (!queueIcon->arch)
             queueIcon->arch = qmonQueueGetArch(qhostname);
+#endif            
       }
       else {
          /* create a new tQueueIcon structure */
@@ -573,7 +584,7 @@ lList *new_hl
          queueIcon->selected = False;
          queueIcon->deleted = False;
          queueIcon->pixmap = 0;
-         queueIcon->arch = qmonQueueGetArch(qhostname); 
+         queueIcon->arch = "solaris"; /* qmonQueueGetArch(qhostname); */
          queueIcon->qp = qep; 
          XmtHashTableStore(QueueHashTable, 
                            (XtPointer) id, 
@@ -581,7 +592,7 @@ lList *new_hl
       }
       
       /* remove element from previous ql */
-      lDelElemStr(&prev_ql, QU_qname, qname);
+      lDelElemStr(&prev_ql, CQ_name, qname);
    }
 
    /* 
@@ -589,7 +600,7 @@ lList *new_hl
    ** free the tQueueIcon structs
    */
    for_each(qep, prev_ql) {
-      qname = lGetString(qep, QU_qname);
+      qname = lGetString(qep, CQ_name);
       id = (long) XrmStringToQuark(qname);
       if (XmtHashTableLookup( QueueHashTable, (XtPointer) id,
                                  (XtPointer *)&queueIcon)) {
@@ -623,8 +634,10 @@ tQueueIcon *qI
    /* 
    ** free architecture entry 
    */
+#ifdef FIXME   
    if (qI->arch)
       XtFree((char*) qI->arch);
+#endif   
    qI->arch = NULL;
 
    /*
@@ -681,7 +694,7 @@ lList *qlp
             break; 
 
       /* lookup queue struct qI */
-      qname = lGetString(ep, QU_qname);
+      qname = lGetString(ep, CQ_name);
       q = (long) XrmStringToQuark(qname);
 /* printf("----> q = %ld\n", q); */
 /*    XmtHashTableForEach(QueueHashTable, showQueueHashTable); */
@@ -757,7 +770,12 @@ Boolean *ctd
          if (qmonBrowserObjectEnabled(BROWSE_QUEUE)) {
             sprintf(info, "+++++++++++++++++++++++++++++++++++++++++++\n");  
             qmonBrowserShow(info);
-            browser_info = qmonQueueShowBrowserInfo(qB->qI->qp); 
+            {
+               lListElem *qp;
+               for_each(qp, lGetList(qB->qI->qp, CQ_qinstances)) {
+                  browser_info = qmonQueueShowBrowserInfo(qp); 
+               }
+            }   
             qmonBrowserShow(browser_info);
             sprintf(info, "+++++++++++++++++++++++++++++++++++++++++++\n");  
             qmonBrowserShow(info);
@@ -917,9 +935,7 @@ lListElem *qep
 
    DENTER(GUI_LAYER, "qmonQueueShowBrowserInfo");
 
-   sprintf(info, WIDTH"%s\n", "\n","Queue:", lGetString(qep, QU_qname));
-
-   sprintf(info, WIDTH"%s\n", info, "Host:", lGetHost(qep, QU_qhostname));
+   sprintf(info, WIDTH"%s\n", "\n","Queue:", lGetString(qep, QU_full_name));
 
    qtype = lGetUlong(qep, QU_qtype);
 
@@ -1102,8 +1118,26 @@ XtPointer cld, cad;
    const char *qname = NULL, *qhostname = NULL;
    unsigned long job_slots = 0, job_slots_used = 0;
    unsigned long alarm_set = 0, suspend_threshold_alarm = 0;
+   double load = 0.0;
+   u_long32 is_load_available = 0;
+   u_long32 used = 0;
+   u_long32 total = 0;
+   u_long32 suspend_manual = 0;
+   u_long32 suspend_threshold = 0;
+   u_long32 suspend_on_subordinate = 0;
+   u_long32 suspend_calendar = 0;
+   u_long32 unknown = 0;
+   u_long32 load_alarm = 0;
+   u_long32 disabled_manual = 0;
+   u_long32 disabled_calendar = 0;
+   u_long32 ambiguous = 0;
+   u_long32 orphaned = 0;
+   u_long32 error = 0;
+   u_long32 available = 0;
+   u_long32 temp_disabled = 0;
+   u_long32 manual_intervention = 0;
    int i; 
-   GC draw_gc;
+   GC draw_gc = qb_gc;
    lList *ehl = NULL;
    lList *cl = NULL;
    lListElem *q = NULL;
@@ -1146,19 +1180,19 @@ XtPointer cld, cad;
          cl = qmonMirrorList(SGE_CENTRY_LIST);
          q = qB->qI->qp;
 
-         qname     = lGetString(q, QU_qname);
-         qhostname = lGetHost(q, QU_qhostname);
-         job_slots = lGetUlong(q, QU_job_slots);
-         job_slots_used = qinstance_slots_used(q);
-         if ( sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), ehl, cl, NULL))
-            alarm_set = 1;
-         if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), ehl, cl, NULL))
-            suspend_threshold_alarm = 1;
+         qname     = lGetString(q, CQ_name);
+#ifdef FIXME         
+         cqueue_calculate_summary(q, ehl, cl, 
+                                  &load, &is_load_available, &used, &total,
+                                  &suspend_manual, &suspend_threshold,
+                                  &suspend_on_subordinate, &suspend_calendar,
+                                  &unknown, &load_alarm, &disabled_manual,
+                                  &disabled_calendar, &ambiguous, &orphaned,
+                                  &error, &available, &temp_disabled,
+                                  &manual_intervention);
 
-
-         DPRINTF(("<<Queue: %s/%s/%d/%d/%s>>\n", qname, qhostname,
-                     job_slots_used, job_slots, 
-                     qB->qI->arch ? qB->qI->arch : "*NA*" ));
+         DPRINTF(("<<Queue: %s/%f/%d/%d>>\n", qname, load, used, total);
+#endif         
       } 
       else {
          DPRINTF(("Queue Button Grid corrupted\n"));
@@ -1207,9 +1241,8 @@ XtPointer cld, cad;
                   bw + x, bw);
 
       /* draw a string into the pixmap */
-      sprintf(buf, "@f[SMALL]%s\n%s\nSlots: %ld (%ld)", 
-                  qname, qhostname, job_slots_used, 
-                  job_slots);
+      sprintf(buf, "@f[SMALL]%s\nSlots: " u32 "("u32")", 
+                  qname, used, total);
                   
       str = XmtCreateXmString(buf);
       XmStringExtent(defaultFontList, str, &sw, &sh);
@@ -1218,6 +1251,7 @@ XtPointer cld, cad;
       rect.width = width - 2 * bw;
       rect.height = height - 2 * bw;
 
+#ifdef FIXME
       /* if string is to long use unqualified hostname */
       if (sw > rect.width) {
          XmStringFree(str);
@@ -1230,6 +1264,7 @@ XtPointer cld, cad;
          str = XmtCreateXmString(buf);
          XmStringExtent(defaultFontList, str, &sw, &sh);
       }
+#endif
 
       /*
       ** draw the status bar if necessary
@@ -1240,6 +1275,7 @@ XtPointer cld, cad;
       x = bw + sbw; 
       y = height - 2 * bw - sbh;
       
+#ifdef FIXME      
       if (!qinstance_state_is_unknown(q)) {
 
          for (i=0; i<7; i++) {
@@ -1307,6 +1343,7 @@ XtPointer cld, cad;
          draw_gc = error_gc;
       else
          draw_gc = qb_gc;
+#endif
 
       qmonXmStringDraw( XtDisplay(w), XtWindow(w), draw_gc, x, y, 
                         defaultFontList, str, XmALIGNMENT_CENTER , 
@@ -1347,7 +1384,7 @@ XtPointer cld, cad;
       for (j=0; j<QUEUE_MAX_HORIZ; j++) {
          if (QBG[i][j].qI && QBG[i][j].qI->selected) {
             if (!lp) {
-               lp = lCreateList("DQ", QU_Type);
+               lp = lCreateList("DQ", CQ_Type);
             }
             lAppendElem(lp, lCopyElem(QBG[i][j].qI->qp));
          }
@@ -1359,7 +1396,7 @@ XtPointer cld, cad;
       ** open up the queue configuration dialog and give him a list 
       ** of queues to modify
       */
-      qmonQCPopup(w, (XtPointer)lp, NULL);
+      qmonQCPopup(w, (XtPointer)lGetString(lFirst(lp), CQ_name), NULL);
    }
    else {
       if (n > 1)
@@ -1391,7 +1428,7 @@ XtPointer cld, cad;
    ** we need only the queue name 
    */
    if (!what)
-      what = lWhat("%T(%I)", QU_Type, QU_qname);
+      what = lWhat("%T(%I)", CQ_Type, CQ_name);
    
    /* 
    ** get the selected queues 
@@ -1400,7 +1437,7 @@ XtPointer cld, cad;
       for (j=0; j<QUEUE_MAX_HORIZ; j++) {
          if (QBG[i][j].qI && QBG[i][j].qI->selected) {
             if (!lp) {
-               lp = lCreateList("DQ", QU_Type);
+               lp = lCreateList("DQ", CQ_Type);
             }
             lAppendElem(lp, lCopyElem(QBG[i][j].qI->qp));
          }
@@ -1416,7 +1453,7 @@ XtPointer cld, cad;
       if (answer) { 
          /* EB: TODO: */
          alp = qmonDelList(SGE_CQUEUE_LIST, qmonMirrorListRef(SGE_CQUEUE_LIST), 
-                           QU_qname, &lp, NULL, what);
+                           CQ_name, &lp, NULL, what);
 
          qmonMessageBox(w, alp, 0);
 
@@ -1462,7 +1499,7 @@ XtPointer cld, cad;
                ql = lCreateList("CQ", ST_Type);
             }
             qep = lCreateElem(ST_Type);
-            lSetString(qep, ST_name, lGetString(QBG[i][j].qI->qp, QU_qname));
+            lSetString(qep, ST_name, lGetString(QBG[i][j].qI->qp, CQ_name));
             lAppendElem(ql, qep);
          }
       }

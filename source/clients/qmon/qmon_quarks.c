@@ -47,6 +47,7 @@ XrmQuark QmonQENV_Type;
 XrmQuark QmonQCTX_Type;
 XrmQuark QmonQST_Type;
 XrmQuark QmonQSTR_Type;
+XrmQuark QmonQSTU_Type;
 XrmQuark QmonQRN_Type;
 XrmQuark QmonQTRN_Type;
 XrmQuark QmonQInt;
@@ -57,6 +58,7 @@ XrmQuark QmonQQR_Type;
 XrmQuark QmonQLT_Type;
 XrmQuark QmonQJRE_Type;
 XrmQuark QmonQPE_Type;
+XrmQuark QmonQHR_Type;
 
 
 /*-------------------------------------------------------------------------*/
@@ -81,6 +83,7 @@ void QmonInitQuarks(void)
       QmonQCTX_Type = XrmStringToQuark(QmonRCTX_Type);
       QmonQST_Type = XrmStringToQuark(QmonRST_Type);
       QmonQSTR_Type = XrmStringToQuark(QmonRSTR_Type);
+      QmonQSTU_Type = XrmStringToQuark(QmonRSTU_Type);
       QmonQRN_Type = XrmStringToQuark(QmonRRN_Type);
       QmonQTRN_Type = XrmStringToQuark(QmonRTRN_Type);
       QmonQInt = XrmStringToQuark(XtRInt);
@@ -91,6 +94,7 @@ void QmonInitQuarks(void)
       QmonQLT_Type = XrmStringToQuark(QmonRLT_Type);
       QmonQJRE_Type = XrmStringToQuark(QmonRJRE_Type);
       QmonQPE_Type = XrmStringToQuark(QmonRPE_Type);
+      QmonQHR_Type = XrmStringToQuark(QmonRHR_Type);
    
       /*
       ** init Xmt Quarks: 

@@ -50,6 +50,7 @@
 #define QmonRCTX_Type    "CTX_Type"
 #define QmonRST_Type     "ST_Type"
 #define QmonRSTR_Type    "STR_Type"
+#define QmonRSTU_Type    "STU_Type"
 #define QmonRRN_Type     "RN_Type"
 #define QmonRTRN_Type    "TRN_Type"
 #define QmonRUP_Type     "UP_Type"
@@ -58,6 +59,7 @@
 #define QmonRLT_Type     "LT_Type"
 #define QmonRJRE_Type    "JRE_Type"
 #define QmonRPE_Type     "PE_Type"
+#define QmonRHR_Type     "HR_Type"
 
 externalref XrmQuark QmonQVA_Type;
 externalref XrmQuark QmonQHS_Type;
@@ -74,6 +76,7 @@ externalref XrmQuark QmonQENV_Type;
 externalref XrmQuark QmonQCTX_Type;
 externalref XrmQuark QmonQST_Type;
 externalref XrmQuark QmonQSTR_Type;
+externalref XrmQuark QmonQSTU_Type;
 externalref XrmQuark QmonQRN_Type;
 externalref XrmQuark QmonQTRN_Type;
 externalref XrmQuark QmonQInt;
@@ -84,6 +87,7 @@ externalref XrmQuark QmonQQR_Type;
 externalref XrmQuark QmonQLT_Type;
 externalref XrmQuark QmonQJRE_Type;
 externalref XrmQuark QmonQPE_Type;
+externalref XrmQuark QmonQHR_Type;
 
 
 void QmonInitQuarks(void);

@@ -364,6 +364,10 @@ Cardinal num_args
          nologo = 1;
          DPRINTF(("-nologo set\n"));
       }
+      if (!strcmp(argv_in_out[i], "-qmon_debug")) {
+         qmon_debug = 1;
+         DPRINTF(("-qmon_debug set\n"));
+      }
       if (!strcmp(argv_in_out[i], "-help")) {
          DPRINTF(("-help set\n"));
          helpset = 1;

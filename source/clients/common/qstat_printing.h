@@ -98,4 +98,5 @@ sge_print_jobs_zombie(lList *zombie_list, const lList *pe_list,
                       lList *user_list, lList *ehl, lList *cl, 
                       u_long32 full_listing, u_long32 group_opt);
 
+
 #endif /* __QSTAT_PRINTING_H */

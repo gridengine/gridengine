@@ -1674,6 +1674,8 @@ object_set_any_type(lListElem *this_elem, int name, void *value)
       ret = lSetPosObject(this_elem, pos, *((lListElem **)value));
    } else if (type == lRefT) {
       ret = lSetPosRef(this_elem, pos, *((lRef*)value));
+   } else if (type == lListT) {
+      ret = lSetPosList(this_elem, pos, lCopyList("", *((lList **)value)));
    } else {
       /* not possible */
       ret = false;

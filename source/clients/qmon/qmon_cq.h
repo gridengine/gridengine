@@ -1,5 +1,5 @@
-#ifndef _QMON_GLOBALS_H_
-#define _QMON_GLOBALS_H_
+#ifndef __QMON_CQ_H
+#define __QMON_CQ_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,29 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <Xm/Xm.h>
 #include "qmon_proto.h"
 
-extern char*         SGE_ROOT;
-extern XtAppContext  AppContext;
-extern Widget        AppShell;
-extern GC            fg_gc, bg_gc, qb_gc, alarm_gc,
-                     error_gc, suspend_gc, running_gc, disable_gc,
-                     caldisable_gc, calsuspend_gc;
-extern Pixel         WarningPixel;
-extern Pixel         QueueSelectedPixel;
-extern Pixel         JobSuspPixel;
-extern Pixel         JobSosPixel;
-extern Pixel         JobDelPixel;
-extern Pixel         JobHoldPixel;
-extern Pixel         JobErrPixel;
-extern Pixel         TooltipForeground;
-extern Pixel         TooltipBackground;
-extern int           nologo;
-extern int           helpset;
-extern int           qmon_debug;
+void qmonCQPopup(Widget w, XtPointer cld, XtPointer cad);
 
-/* this function is used almost everywhere */
-void qmonMainControlRaise(Widget w, XtPointer cld, XtPointer cad);
 
-#endif /* _QMON_GLOBALS_H_ */
+
+
+#endif /* __QMON_CQ_H */
+

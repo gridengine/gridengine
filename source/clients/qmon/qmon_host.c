@@ -95,6 +95,7 @@ typedef struct _tHostEntry {
    lList *xacl;
    lList *prj;
    lList *xprj;
+   lList *reporting_variables;
 } tHostEntry;
 
 XtResource host_resources[] = {
@@ -141,8 +142,14 @@ XtResource host_resources[] = {
    { "xprj", "xprj", QmonRUP_Type,
       sizeof(lList *),
       XtOffsetOf(tHostEntry, xprj),
-      XtRImmediate, NULL }
+      XtRImmediate, NULL },
       
+/*---- reporting variables  ----*/
+   { "reporting_variables", "reporting_variables", QmonRSTU_Type,
+      sizeof(lList *),
+      XtOffsetOf(tHostEntry, reporting_variables),
+      XtRImmediate, NULL }
+   
 };
 
 
@@ -170,6 +177,7 @@ static void qmonExecHostSetAsk(StringConst name);
 static lList* qmonExecHostGetAsk(void);
 static void qmonHostAvailableAcls(void);
 static void qmonHostAvailableProjects(void);
+static void qmonHostAvailableReportVars(void);
 
 static void qmonExecHostAccessToggle(Widget w, XtPointer cld, XtPointer cad); 
 static void qmonExecHostAccessAdd(Widget w, XtPointer cld, XtPointer cad); 
@@ -177,6 +185,8 @@ static void qmonExecHostAccessRemove(Widget w, XtPointer cld, XtPointer cad);
 static void qmonExecHostProjectToggle(Widget w, XtPointer cld, XtPointer cad); 
 static void qmonExecHostProjectAdd(Widget w, XtPointer cld, XtPointer cad); 
 static void qmonExecHostProjectRemove(Widget w, XtPointer cld, XtPointer cad); 
+static void qmonExecHostReportVarAdd(Widget w, XtPointer cld, XtPointer cad); 
+static void qmonExecHostReportVarRemove(Widget w, XtPointer cld, XtPointer cad); 
 static void qmonPopdownHostConfig(Widget w, XtPointer cld, XtPointer cad);
 static Widget qmonCreateHostgroupAsk(Widget parent);
 static void qmonHostgroupChange(Widget w, XtPointer cld, XtPointer cad);
@@ -200,6 +210,7 @@ static Widget host_shutdown = NULL;
 
 static Widget exechost_list = NULL;
 static Widget exechost_access = 0;
+static Widget exechost_reporting_variables = 0;
 static Widget exechost_load_scaling = 0;
 static Widget exechost_consumables = 0;
 static Widget exechost_usage_scaling = 0;
@@ -220,6 +231,8 @@ static Widget project_list = 0;
 static Widget project_allow = 0;
 static Widget project_deny = 0;
 static Widget project_toggle = 0;
+static Widget reporting_variables_list = 0;
+static Widget reporting_variables_chosen = 0;
 
 static tHostEntry host_data = {NULL, NULL, NULL};
 static int add_mode = 0;
@@ -432,6 +445,20 @@ static void qmonHostFillList(void)
 }
 
 /*-------------------------------------------------------------------------*/
+static void qmonHostAvailableReportVars(void)
+{
+   lList *lp;
+   
+   DENTER(GUI_LAYER, "qmonHostAvailableReportVars");
+
+   lp = qmonMirrorList(SGE_CENTRY_LIST);
+   lPSortList(lp, "%I+", CE_name);
+   UpdateXmListFromCull(reporting_variables_list, XmFONTLIST_DEFAULT_TAG, lp, CE_name);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
 static void qmonHostAvailableAcls(void)
 {
    lList *lp;
@@ -487,6 +514,8 @@ XtPointer cld
                            "exechost_shutdown", &exechost_shutdown,
                            "exechost_consumables", &exechost_consumables,
                            "exechost_access", &exechost_access,
+                           "exechost_reporting_variables", 
+                                    &exechost_reporting_variables,
                            NULL);
 
    if (!feature_is_enabled(FEATURE_SGEEE)) {
@@ -578,6 +607,20 @@ XtPointer cld, cad;
       }
       XmTextEnableRedisplay(exechost_consumables);
     
+      /*
+      ** reporting variables
+      */
+      lsl = lGetList(ehp, EH_report_variables);
+      XmTextDisableRedisplay(exechost_reporting_variables);
+      pos = 0;
+      XmTextSetString(exechost_reporting_variables, "");
+      for_each(ep, lsl) {
+         sprintf(buf, "%s\n", lGetString(ep, STU_name));
+         XmTextInsert(exechost_reporting_variables, pos, buf);
+         pos += strlen(buf);
+      }
+      XmTextEnableRedisplay(exechost_reporting_variables);
+
       /*
       ** fill the access list into the textfield
       */
@@ -680,6 +723,7 @@ Widget parent
    Widget eh_ok, eh_cancel, eh_load_scaling, eh_usage_scaling, 
           eh_rcf, complexes_ccl;
    Widget access_add, access_remove, access_dialog;
+   Widget reporting_variables_add, reporting_variables_remove;
    Widget project_add, project_remove, project_dialog, eh_project;
 
    DENTER(GUI_LAYER, "qmonCreateExecHostAsk");
@@ -711,6 +755,10 @@ Widget parent
                            "project_toggle", &project_toggle,
                            "project_dialog", &project_dialog,
                            "eh_project", &eh_project,
+                           "reporting_variables_list", &reporting_variables_list,
+                           "reporting_variables_chosen", &reporting_variables_chosen,
+                           "reporting_variables_add", &reporting_variables_add,
+                           "reporting_variables_remove", &reporting_variables_remove,
                            NULL);
 
    /*
@@ -753,6 +801,11 @@ Widget parent
                      qmonExecHostAccessRemove, NULL);
    XtAddCallback(access_dialog, XmNactivateCallback, 
                      qmonPopupManopConfig, (XtPointer)2);
+
+   XtAddCallback(reporting_variables_add, XmNactivateCallback, 
+                     qmonExecHostReportVarAdd, NULL);
+   XtAddCallback(reporting_variables_remove, XmNactivateCallback, 
+                     qmonExecHostReportVarRemove, NULL);
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
       /*
@@ -897,6 +950,11 @@ static lList* qmonExecHostGetAsk(void)
       host_data.acl = NULL;
       lSetList(lFirst(lp), EH_xacl, host_data.xacl);
       host_data.xacl = NULL;
+      /*
+      ** reporting variables
+      */
+      lSetList(lFirst(lp), EH_report_variables, host_data.reporting_variables);
+      host_data.reporting_variables = NULL;
 
       /*
       ** usage scaling & resource_capability_factor
@@ -1032,6 +1090,16 @@ StringConst name
       host_data.xacl = NULL;
    }
 
+   /*
+   ** set reporting variables
+   */
+   if (ehp) {
+      host_data.reporting_variables = lGetList(ehp, EH_report_variables);
+   }
+   else {
+      host_data.reporting_variables = NULL;
+   }
+
    
    
    if (feature_is_enabled(FEATURE_SGEEE)) {
@@ -1100,6 +1168,11 @@ StringConst name
    ** fill the acl list
    */
    qmonHostAvailableAcls();
+
+   /*
+   ** fill the reporting variables
+   */
+   qmonHostAvailableReportVars();
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
       /*
@@ -1628,6 +1701,53 @@ XtPointer cld, cad;
 
    if (selectedItemCount)
       XmListDeleteItems(list, selectedItems, selectedItemCount); 
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+/* R E P O R T I N G  V A R I A B L E S                                    */
+/*-------------------------------------------------------------------------*/
+static void qmonExecHostReportVarAdd(Widget w, XtPointer cld, XtPointer cad) 
+{
+   XmString *selectedItems;
+   Cardinal selectedItemCount, i;
+   String text;
+   
+   DENTER(GUI_LAYER, "qmonExecHostReportVarAdd");
+
+   XtVaGetValues( reporting_variables_list,
+                  XmNselectedItems, &selectedItems,
+                  XmNselectedItemCount, &selectedItemCount,
+                  NULL);
+
+   if (selectedItemCount) {
+      for (i=0; i<selectedItemCount; i++) {
+         if (!XmStringGetLtoR(selectedItems[i], XmFONTLIST_DEFAULT_TAG, &text))
+            continue;
+         XmListAddItemUniqueSorted(reporting_variables_chosen, text);
+         XtFree(text); 
+      }
+   }
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonExecHostReportVarRemove(Widget w, XtPointer cld, XtPointer cad) 
+{
+   XmString *selectedItems;
+   Cardinal selectedItemCount;
+   
+   DENTER(GUI_LAYER, "qmonExecHostReportVarRemove");
+
+   XtVaGetValues( reporting_variables_chosen,
+                  XmNselectedItems, &selectedItems,
+                  XmNselectedItemCount, &selectedItemCount,
+                  NULL);
+
+   if (selectedItemCount)
+      XmListDeleteItems(reporting_variables_chosen, selectedItems, selectedItemCount); 
 
    DEXIT;
 }

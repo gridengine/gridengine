@@ -113,6 +113,7 @@ typedef struct _tCClEntry {
    int enforce_project;
    int enforce_user;
    String qmaster_params;
+   String reporting_params;
    String execd_params;
    String shepherd_cmd;
    String rsh_daemon;
@@ -265,6 +266,10 @@ XtResource ccl_resources[] = {
       sizeof(String), XtOffsetOf(tCClEntry, qmaster_params), 
       XtRImmediate, NULL },
 
+   { "reporting_params", "reporting_params", XtRString, 
+      sizeof(String), XtOffsetOf(tCClEntry, reporting_params), 
+      XtRImmediate, NULL },
+
    { "execd_params", "execd_params", XtRString, 
       sizeof(String), XtOffsetOf(tCClEntry, execd_params), 
       XtRImmediate, NULL },
@@ -357,6 +362,7 @@ static Widget cluster_projectsPB = 0;
 static Widget cluster_xprojectsPB = 0;
 
 static Widget cluster_qmaster_params = 0;
+static Widget cluster_reporting_params = 0;
 static Widget cluster_execd_params = 0;
 static Widget cluster_shepherd_cmd = 0;
 static Widget cluster_rsh_daemon = 0;
@@ -368,6 +374,7 @@ static Widget cluster_pag_cmd = 0;
 static Widget cluster_token_extend_time = 0;
 static Widget cluster_gid_range = 0;
 static Widget cluster_qmaster_params_label = 0;
+static Widget cluster_reporting_params_label = 0;
 static Widget cluster_set_token_cmd_label = 0;
 static Widget cluster_pag_cmd_label = 0;
 static Widget cluster_token_extend_time_label = 0;
@@ -671,6 +678,8 @@ Widget parent
                            "cluster_loglevel", &cluster_loglevel,
                            "cluster_qmaster_params", &cluster_qmaster_params,
                            "cluster_qmaster_params_label", &cluster_qmaster_params_label,
+                           "cluster_reporting_params", &cluster_reporting_params,
+                           "cluster_reporting_params_label", &cluster_reporting_params_label,
                            "cluster_execd_params", &cluster_execd_params,
                            "cluster_shepherd_cmd", &cluster_shepherd_cmd,
                            "cluster_rsh_daemon", &cluster_rsh_daemon,
@@ -956,6 +965,9 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
 
    XtSetSensitive(cluster_qmaster_params, mode);
    XtSetSensitive(cluster_qmaster_params_label, mode);
+  
+   XtSetSensitive(cluster_reporting_params, mode);
+   XtSetSensitive(cluster_reporting_params_label, mode);
   
    if (feature_is_enabled(FEATURE_SGEEE)) {
       XtSetSensitive(cluster_enforce_project, mode);
@@ -1674,6 +1686,16 @@ int local
          lDelElemStr(&confl, CF_name, "qmaster_params");
       }
 
+      if (clen->reporting_params && clen->reporting_params[0] != '\0') {
+         ep = lGetElemStr(confl, CF_name, "reporting_params");
+         if (!ep)
+            ep = lAddElemStr(&confl, CF_name, "reporting_params", CF_Type);
+         lSetString(ep, CF_value, clen->reporting_params);
+      }
+      else {
+         lDelElemStr(&confl, CF_name, "reporting_params");
+      }
+
       if (clen->execd_params && clen->execd_params[0] != '\0') {
          ep = lGetElemStr(confl, CF_name, "execd_params");
          if (!ep)
@@ -2000,6 +2022,9 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "qmaster_params")))
       clen->qmaster_params = XtNewString(lGetString(ep, CF_value));
 
+   if ((ep = lGetElemStr(confl, CF_name, "reporting_params")))
+      clen->reporting_params = XtNewString(lGetString(ep, CF_value));
+
    if ((ep = lGetElemStr(confl, CF_name, "execd_params")))
       clen->execd_params = XtNewString(lGetString(ep, CF_value));
 
@@ -2146,6 +2171,10 @@ tCClEntry *clen
    if (clen->qmaster_params) {
       XtFree((char*)clen->qmaster_params);
       clen->qmaster_params = NULL;
+   }
+   if (clen->reporting_params) {
+      XtFree((char*)clen->reporting_params);
+      clen->reporting_params = NULL;
    }
    if (clen->execd_params) {
       XtFree((char*)clen->execd_params);

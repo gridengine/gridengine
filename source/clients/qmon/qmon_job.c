@@ -105,6 +105,7 @@ static Widget job_zombie_jobs = 0;
 static Widget job_customize = 0;
 static Widget job_schedd_info = 0;
 static Widget job_delete = 0;
+static Widget job_select_all = 0;
 static Widget job_reschedule = 0;
 static Widget job_qalter = 0;
 static Widget job_suspend = 0;
@@ -121,6 +122,7 @@ static void qmonJobToMatrix(Widget w, lListElem *jep, lListElem *jat, lList *jal
 /* static void qmonSetMatrixLabels(Widget w, lDescr *dp); */
 static void qmonJobFolderChange(Widget w, XtPointer cld, XtPointer cad);
 static void qmonDeleteJobCB(Widget w, XtPointer cld, XtPointer cad);
+static void qmonSelectAllJobCB(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobPopdown(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobStartUpdate(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobStopUpdate(Widget w, XtPointer cld, XtPointer cad);
@@ -159,7 +161,7 @@ XtPointer cld, cad;
    XmtDisplayBusyCursor(w);
 
    if (!qmon_job) {
-      qmonMirrorMultiAnswer(JOB_T | QUEUE_T | EXECHOST_T | CENTRY_T | ZOMBIE_T,
+      qmonMirrorMultiAnswer(JOB_T | CQUEUE_T | EXECHOST_T | CENTRY_T | ZOMBIE_T,
                             &alp);
       if (alp) {
          qmonMessageBox(w, alp, 0);
@@ -224,7 +226,7 @@ XtPointer cld, cad;
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
-   qmonMirrorMultiAnswer(JOB_T|QUEUE_T|EXECHOST_T|ZOMBIE_T|USERSET_T|PROJECT_T, &alp);
+   qmonMirrorMultiAnswer(JOB_T|CQUEUE_T|EXECHOST_T|ZOMBIE_T|USERSET_T|PROJECT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -264,7 +266,7 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonJobStartUpdate");
   
    qmonTimerAddUpdateProc(JOB_T|ZOMBIE_T|CENTRY_T, "updateJobList", updateJobList);
-   qmonStartTimer(JOB_T | QUEUE_T | EXECHOST_T | ZOMBIE_T | CENTRY_T);
+   qmonStartTimer(JOB_T | CQUEUE_T | EXECHOST_T | ZOMBIE_T | CENTRY_T);
    
    DEXIT;
 }
@@ -277,7 +279,7 @@ XtPointer cld, cad;
 {
    DENTER(GUI_LAYER, "qmonJobStopUpdate");
   
-   qmonStopTimer(JOB_T | QUEUE_T | EXECHOST_T | CENTRY_T | ZOMBIE_T);
+   qmonStopTimer(JOB_T | CQUEUE_T | EXECHOST_T | CENTRY_T | ZOMBIE_T);
    qmonTimerRmUpdateProc(JOB_T|ZOMBIE_T|CENTRY_T, "updateJobList");
    
    DEXIT;
@@ -301,6 +303,7 @@ Widget parent
                                      "job_pending_jobs", &job_pending_jobs,
                                      "job_zombie_jobs", &job_zombie_jobs,
                                      "job_delete", &job_delete,
+                                     "job_select_all", &job_select_all,
                                      "job_error", &job_error,
                                      "job_qalter", &job_qalter,
                                      "job_priority", &job_priority,
@@ -345,6 +348,8 @@ Widget parent
 
    XtAddCallback(job_delete, XmNactivateCallback, 
                      qmonDeleteJobCB, NULL);
+   XtAddCallback(job_select_all, XmNactivateCallback, 
+                     qmonSelectAllJobCB, NULL);
    XtAddCallback(job_update, XmNactivateCallback, 
                      updateJobListCB, NULL);
    XtAddCallback(job_customize, XmNactivateCallback,  
@@ -574,9 +579,8 @@ void updateJobList(void)
    where_unfinished = lWhere("%T(!(%I->(%I m= %u)))", 
                                  JB_Type, JB_ja_tasks, JAT_status, JFINISHED);
    what = lWhat("%T(ALL)", JB_Type);
-   where_no_template = lWhere("%T(%I != %s)", QU_Type, QU_qname, 
-                                    "template");
-   what_queue = lWhat("%T(ALL)", QU_Type);
+   where_no_template = lWhere("%T(%I != %s)", CQ_Type, CQ_name, "template");
+   what_queue = lWhat("%T(ALL)", CQ_Type);
    where_notexiting = lWhere("%T(!(%I m= %u))", JAT_Type, JAT_status, JFINISHED);
    where_run = lWhere("%T((%I m= %u || %I m= %u) && (!(%I m= %u)))",
                       JAT_Type, JAT_status, JRUNNING, JAT_status, JTRANSFERING,
@@ -901,7 +905,7 @@ lList **local
    }
 
    if (jl) {
-      alp = qmonDelList(SGE_JOB_LIST, local, 
+      alp = qmonDelJobList(SGE_JOB_LIST, local, 
                         ID_str, &jl, NULL, NULL);
 
       qmonMessageBox(w, alp, 0);
@@ -922,6 +926,27 @@ lList **local
 
    DEXIT;
    return True;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonSelectAllJobCB(
+Widget w,
+XtPointer cld,
+XtPointer cad 
+) {
+   Boolean status;
+   
+   DENTER(GUI_LAYER, "qmonSelectAllJobCB");
+
+   /* set busy cursor */
+   XmtDisplayBusyCursor(w);
+
+   XbaeMatrixSelectAll(job_pending_jobs);
+
+   /* set normal cursor */
+   XmtDisplayDefaultCursor(w);
+
+   DEXIT;
 }
 
 

@@ -43,8 +43,6 @@ typedef struct object_info_entry {
    bool (*pre_gdi_function)(lList *list, lList **answer_list);
 } object_info_entry;
 
-int sge_edit(char *fname);
-
 int sge_parse_qconf(char **argv);
 
 

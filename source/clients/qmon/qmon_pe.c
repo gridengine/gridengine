@@ -126,7 +126,7 @@ XtPointer cld, cad;
    XSync(XtDisplay(qmon_pe), 0);
    XmUpdateDisplay(qmon_pe);
 
-   qmonMirrorMultiAnswer(PE_T | QUEUE_T | USERSET_T, &alp);
+   qmonMirrorMultiAnswer(PE_T | USERSET_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -137,7 +137,7 @@ XtPointer cld, cad;
    }
    
    qmonTimerAddUpdateProc(PE_T, "updatePeList", updatePeList);
-   qmonStartTimer(PE_T | QUEUE_T | USERSET_T);
+   qmonStartTimer(PE_T | USERSET_T);
    updatePeList();
    XmListSelectPos(pe_names, 1, True);
 
@@ -173,7 +173,7 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonPopdownPEConfig");
 
    XtUnmanageChild(qmon_pe);
-   qmonStopTimer(PE_T | QUEUE_T | USERSET_T);
+   qmonStopTimer(PE_T | USERSET_T);
    qmonTimerRmUpdateProc(PE_T, "updatePeList");
 
    DEXIT;

@@ -80,7 +80,8 @@ QMON_SRC =   qmon_main.c qmon_job.c qmon_submit.c qmon_menus.c qmon_util.c\
             AskForItems.c qmon_cluster.c qmon_pe.c qmon_ticket.c qmon_share.c \
             qmon_fticket.c qmon_project.c qmon_ckpt.c \
             qmon_sconf.c qmon_file.c qmon_qcustom.c qmon_preferences.c \
-            qmon_matrix.c qmon_quarks.c qmon_load.c qmon_calendar.c
+            qmon_matrix.c qmon_quarks.c qmon_load.c qmon_calendar.c \
+            qmon_cq.c
 
 QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
             $(QMON_DIR)/qmon_browser.ad \
@@ -96,6 +97,7 @@ QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
             $(QMON_DIR)/qmon_pe.ad \
             $(QMON_DIR)/qmon_ticket.ad \
             $(QMON_DIR)/qmon_share.ad \
+            $(QMON_DIR)/qmon_cq.ad \
             $(QMON_DIR)/qmon_fticket.ad \
             $(QMON_DIR)/qmon_project.ad \
             $(QMON_DIR)/qmon_ckpt.ad \
@@ -110,7 +112,8 @@ QMON_ADD_SRC = parse_job_cull.c unparse_job_cull.c \
             parse_qsub.c read_defaults.c \
             write_job_defaults.c sge_options.c usage.c \
             sge_centry_qconf.c sge_hgroup_qconf.c \
-            sge_mt_init.c
+            sge_cqueue_qconf.c sge_mt_init.c \
+            sge_cqueue_qstat.c
 
 QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o
             
@@ -263,6 +266,9 @@ qmon_fticket.o:    $(QMON_DIR)/qmon_fticket.c
 
 qmon_share.o:    $(QMON_DIR)/qmon_share.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_share.c
+
+qmon_cq.o:    $(QMON_DIR)/qmon_cq.c
+	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_cq.c
 
 qmon_project.o:    $(QMON_DIR)/qmon_project.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_project.c

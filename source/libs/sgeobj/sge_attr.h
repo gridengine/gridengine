@@ -54,6 +54,9 @@ PREFIX##_create(lList **answer_list, const char *href, TYPE value);           \
 bool                                                                          \
 PREFIX##_list_add(lList **this_list, lList **answer_list,                     \
                   lListElem **attr, int flags, lList **href_list);            \
+bool                                                                          \
+PREFIX##_list_add_set_del(lList **this_list, lList **answer_list,             \
+                  const char *hostname, void *value, bool remove);            \
 lListElem *                                                                   \
 PREFIX##_list_find(const lList *this_list, const char *href);                 \
                                                                               \
@@ -64,6 +67,10 @@ PREFIX##_list_find_value(const lList *this_list, lList **answer_list,         \
                          const char **matching_group,                         \
                          bool *is_ambiguous);                                 \
                                                                               \
+bool                                                                          \
+PREFIX##_list_find_value_href(const lList *this_list, lList **answer_list,    \
+                         const char *hostname, INTERNAL_TYPE *value,          \
+                         bool *found);                                        \
 bool                                                                          \
 PREFIX##_list_append_to_dstring(const lList *this_list, dstring *string);     \
                                                                               \

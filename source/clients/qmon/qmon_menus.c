@@ -52,6 +52,7 @@
 #include "qmon_rmon.h"
 #include "qmon_job.h"
 #include "qmon_queue.h"
+#include "qmon_cq.h"
 #include "qmon_host.h"
 #include "qmon_manop.h"
 #include "qmon_submit.h"
@@ -98,6 +99,8 @@ static XmtMenuItem task_menu_items[] = {
          qmonJobPopup, NULL },
    {XmtMenuItemPushButton, "@{Queue Control}", 'Q', "Alt<Key>Q", "Alt+Q",
          qmonQueuePopup, NULL},
+   {XmtMenuItemPushButton, "@{Cluster Queue Control}", 'C', "Alt<Key>C", "Alt+C",
+         qmonCQPopup, NULL},
    {XmtMenuItemPushButton, "@{Job Submit}", 'S', "Alt<Key>S", "Alt+S",
          qmonSubmitPopup, NULL},
    {XmtMenuItemPushButton, "@{Complex Configuration}", 'x', "Alt<Key>x", "Alt+x",
@@ -199,6 +202,7 @@ typedef struct _tCallbacksUsed {
 static tCallbacksUsed callback_array[] = {
    { qmonJobPopup, NULL, "@{@fBJob Control}" },
    { qmonQueuePopup, NULL, "@{@fBQueue Control}" },
+   { qmonCQPopup, NULL, "@{@fBCluster Queue Control}" },
    { qmonSubmitPopup, NULL, "@{@fBJob Submission}" },
    { qmonPopupCplxConfig, NULL, "@{@fBComplexes Configuration}" },
    { qmonPopupHostConfig, NULL, "@{@fBHost Configuration}" },
@@ -248,6 +252,7 @@ Widget parent
    int i;
    static String button_name[] = { 
       "JOB_CONTROL", 
+      "QUEUE_CONTROL",
       "QUEUE_CONTROL",
       "SUBMIT_JOB",
       "COMPLEX_CONFIG",

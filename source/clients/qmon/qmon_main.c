@@ -172,6 +172,7 @@ Pixel          WarningPixel, QueueSelectedPixel, JobSuspPixel, JobSosPixel,
                JobDelPixel, JobHoldPixel, JobErrPixel, TooltipForeground,
                TooltipBackground;
 int            nologo;
+int            qmon_debug;
 int            helpset;
 
 

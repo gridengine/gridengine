@@ -39,13 +39,12 @@ QCONF_TARGETS = qconf
 QCONF_SRC = qconf.c \
             parse_qconf.c \
             sge_client_access.c \
-            sge_cuser_qconf.c \
-            sge_cqueue_qconf.c
+            sge_cuser_qconf.c
 
 QCONF_ADD_SRC = \
                usage.c sge_options.c sig_handlers.c \
                sge_hgroup_qconf.c sge_centry_qconf.c \
-               sge_mt_init.c
+               sge_cqueue_qconf.c sge_mt_init.c
 
 QCONF_OBJS = $(QCONF_SRC:.c=.o) 
 
@@ -90,9 +89,6 @@ sge_client_access.o: $(QCONF_DIR)/sge_client_access.c
 
 sge_cuser_qconf.o: $(QCONF_DIR)/sge_cuser_qconf.c
 		$(CC) $(CFLAGS) -c $(QCONF_DIR)/sge_cuser_qconf.c
-
-sge_cqueue_qconf.o: $(QCONF_DIR)/sge_cqueue_qconf.c
-		$(CC) $(CFLAGS) -c $(QCONF_DIR)/sge_cqueue_qconf.c
 
 parse_qconf.o:	$(QCONF_DIR)/parse_qconf.c
 		$(CC) $(CFLAGS) $(MEMCFLAG) -c $(QCONF_DIR)/parse_qconf.c

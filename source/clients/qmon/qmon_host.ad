@@ -253,6 +253,7 @@ Qmon*exechost_layout.xmtChildren: \
       XmScrolledList exechost_list; \
       XmScrolledText exechost_load_scaling, \
                      exechost_consumables, \
+                     exechost_reporting_variables, \
                      exechost_access, \
                      exechost_usage_scaling; \
       XmTextField    exechost_rcf;
@@ -264,6 +265,7 @@ Qmon*exechost_layout.layout: \
          Caption tl "@{@fBLoad Scaling}" exechost_load_scaling \
          Caption tl "@{@fBAccess Attributes}" exechost_access \
          Caption tl "@{@fBConsumables/Fixed Attributes}" exechost_consumables \
+         Caption tl "@{@fBReporting Variables}" exechost_reporting_variables \
          Caption tl "@{@fBUsage Scaling}" exechost_usage_scaling \
          Caption tl "@{@fBResource Capability Factor}" exechost_rcf \
       } \
@@ -309,6 +311,13 @@ Qmon*exechost_access.editMode:              MULTI_LINE_EDIT
 Qmon*exechost_access.cursorPositionVisible: False
 Qmon*exechost_access.rows:                  5
 Qmon*exechost_access.columns:               25
+
+Qmon*exechost_reporting_variables.fontList:              $fixed_font
+Qmon*exechost_reporting_variables.editable:              False
+Qmon*exechost_reporting_variables.editMode:              MULTI_LINE_EDIT
+Qmon*exechost_reporting_variables.cursorPositionVisible: False
+Qmon*exechost_reporting_variables.rows:                  5
+Qmon*exechost_reporting_variables.columns:               25
 
 Qmon*exechost_usage_scaling.fontList:              $fixed_font
 Qmon*exechost_usage_scaling.editable:              False
@@ -359,7 +368,8 @@ Qmon*eh_ask_layout*eh_folder.xmtChildren: \
    XmtLayout   eh_scaling, \
                eh_complexes, \
                eh_access, \
-               eh_project; \
+               eh_reporting_variables, \
+               eh_project;
 
 Qmon*eh_ask_layout*eh_folder.eh_scaling.tabLabel: @{@fBScaling}
 Qmon*eh_ask_layout*eh_folder.eh_scaling.xmtChildren: \
@@ -600,3 +610,45 @@ Qmon*eh_project*project_deny.scrollingPolicy:   AUTOMATIC
 Qmon*eh_project*project_deny.visualPolicy:      CONSTANT
 Qmon*eh_project*project_deny.visibleItemCount:  5
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! reporting_variables
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*eh_reporting_variables.tabLabel: @{@fBReporting Variables}
+Qmon*eh_reporting_variables.xmtChildren: \
+   StringList     reporting_variables_list, \
+                  reporting_variables_chosen = reporting_variables; \
+   XmPushButton   reporting_variables_add, reporting_variables_remove;
+
+Qmon*eh_reporting_variables.layout: \
+   Row { \
+      15 em Wide Caption tl "@{@fBAvailable}" reporting_variables_list \
+      Fixed Col { \
+         <> \
+         Fixed Centered reporting_variables_add \
+         Fixed Centered reporting_variables_remove \
+         <> \
+      } \
+      15 em Wide Col { \
+         Caption tl "@{@fBSelected}" reporting_variables_chosen \
+      } \
+   }
+
+Qmon*eh_reporting_variables.reporting_variables_add.labelType:          PIXMAP
+Qmon*eh_reporting_variables.reporting_variables_add.labelPixmap:        rightarrow
+Qmon*eh_reporting_variables.reporting_variables_remove.labelType:       PIXMAP
+Qmon*eh_reporting_variables.reporting_variables_remove.labelPixmap:     leftarrow
+
+Qmon*eh_reporting_variables*scrollBarDisplayPolicy:  AS_NEEDED
+Qmon*eh_reporting_variables*listSizePolicy:          CONSTANT
+
+Qmon*eh_reporting_variables*reporting_variables_list.fontList:          $fixed_font
+Qmon*eh_reporting_variables*reporting_variables_list.selectionPolicy:   EXTENDED_SELECT
+Qmon*eh_reporting_variables*reporting_variables_list.scrollingPolicy:   AUTOMATIC
+Qmon*eh_reporting_variables*reporting_variables_list.visualPolicy:      CONSTANT
+Qmon*eh_reporting_variables*reporting_variables_list.visibleItemCount:  12
+
+Qmon*eh_reporting_variables*reporting_variables_chosen.fontList:         $fixed_font
+Qmon*eh_reporting_variables*reporting_variables_chosen.selectionPolicy:  EXTENDED_SELECT
+Qmon*eh_reporting_variables*reporting_variables_chosen.scrollingPolicy:  AUTOMATIC
+Qmon*eh_reporting_variables*reporting_variables_chosen.visualPolicy:     CONSTANT
+Qmon*eh_reporting_variables*reporting_variables_chosen.visibleItemCount: 5

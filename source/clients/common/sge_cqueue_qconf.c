@@ -50,13 +50,13 @@
 #include "sge_hgroup.h"
 #include "sge_href.h"
 #include "sge_qref.h"
+#include "sge_edit.h"
 #include "sge_cqueue_qconf.h"
-#include "parse_qconf.h"
 #include "spool/classic/read_write_cqueue.h"
 #include "spool/classic/read_write_qinstance.h"
 
 #include "msg_common.h"
-#include "msg_qconf.h"
+#include "msg_clients_common.h"
 
 bool
 cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,

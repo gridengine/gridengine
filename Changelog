@@ -1,3 +1,9 @@
+JG-2004-03-10-0: Bugfix:    Signalling a slave task of a parallel job did not
+                            signal job.
+                 Issue:     810
+                 Changed:   sge_qmaster
+                 Review:    EB
+
 MD-2004-03-09-0: Bugfix:    install_execd ignores ignore_fqdn in bootstrap(5)
                  Issue:     805
                  Changed:   inst_sge

@@ -1189,7 +1189,7 @@ lListElem *qep
              !lGetBool(pe, PE_control_slaves) */)
             continue;
 
-         qname = lGetString(qep, QU_qname);
+         qname = lGetString(qep, QU_full_name);
          for (gdil_ep=lNext(lFirst(gdil_lp)); gdil_ep; gdil_ep=lNext(gdil_ep))
             if (!strcmp(lGetString(gdil_ep, JG_qname), qname)) {
 

@@ -51,9 +51,7 @@
 
 #include "msg_common.h"
 
-#ifndef __SGE_NO_USERMAPPING__
 lList *Master_Host_Group_List = NULL;
-#endif
 
 static int sge_verify_group_entry(lList** alpp, lList* hostGroupList, lListElem* hostGroupElem, const char* extraSubgroupCheck , int ignoreSupergroupLinks);
 

@@ -358,8 +358,8 @@ total_update(lListElem *event_client)
       sge_total_update_event(event_client, sgeE_USER_LIST);
    }
 
-#ifndef __SGE_NO_USERMAPPING__
    sge_total_update_event(event_client, sgeE_HOST_GROUP_LIST);
+#ifndef __SGE_NO_USERMAPPING__
    sge_total_update_event(event_client, sgeE_USERMAPPING_ENTRY_LIST);
 #endif
 

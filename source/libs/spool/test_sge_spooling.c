@@ -68,8 +68,9 @@
 
 #ifndef __SGE_NO_USERMAPPING__
 #include "sge_usermap.h"
-#include "sge_hostgroup.h"
 #endif
+
+#include "sge_hostgroup.h"
 
 
 #include "msg_clients_common.h"
@@ -124,11 +125,9 @@ static int read_spooled_data(void)
    spool_read_list(context, &Master_Manager_List, SGE_EMT_MANAGER);
    DPRINTF(("read %d entries to Master_Manager_List\n", lGetNumberOfElem(Master_Manager_List)));
 
-#ifndef __SGE_NO_USERMAPPING__
    /* host groups */
    spool_read_list(context, &Master_Host_Group_List, SGE_EMT_HOSTGROUP);
    DPRINTF(("read %d entries to Master_Hostgroup_List\n", lGetNumberOfElem(Master_Host_Group_List)));
-#endif
 
    /* operators */
    spool_read_list(context, &Master_Operator_List, SGE_EMT_OPERATOR);
@@ -237,8 +236,8 @@ int spool_event_before(sge_event_type type, sge_event_action action,
          case SGE_EMT_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
          case SGE_EMT_USERMAPPING:
-         case SGE_EMT_HOSTGROUP:
 #endif
+         case SGE_EMT_HOSTGROUP:
             for_each(ep, *master_list) {
                lListElem *new_ep;
 
@@ -370,8 +369,8 @@ int spool_event_after(sge_event_type type, sge_event_action action,
             case SGE_EMT_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
             case SGE_EMT_USERMAPPING:
-            case SGE_EMT_HOSTGROUP:
 #endif   
+            case SGE_EMT_HOSTGROUP:
                key = lGetString(event, ET_strkey);
                spool_delete_object(context, type, key);
 
@@ -411,8 +410,8 @@ int spool_event_after(sge_event_type type, sge_event_action action,
             case SGE_EMT_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
             case SGE_EMT_USERMAPPING:
-            case SGE_EMT_HOSTGROUP:
 #endif
+            case SGE_EMT_HOSTGROUP:
                key = lGetString(event, ET_strkey);
                ep = lGetElemStr(*master_list, key_nm, lGetString(event, ET_strkey));
                if(ep == NULL) {

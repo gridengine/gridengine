@@ -618,12 +618,12 @@ typedef enum {
    sgeE_USERMAPPING_ENTRY_ADD,
    sgeE_USERMAPPING_ENTRY_DEL,
    sgeE_USERMAPPING_ENTRY_MOD,
+#endif
 
    sgeE_HOST_GROUP_LIST,
    sgeE_HOST_GROUP_ADD,
    sgeE_HOST_GROUP_DEL,
    sgeE_HOST_GROUP_MOD,
-#endif
 
    sgeE_EVENTSIZE 
 }ev_event;

@@ -265,8 +265,6 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_ah_OPT_HOSTNAME, MSG_GDI_UTEXT_ah_OPT_HOSTNAME );
    }
 
-#ifndef __SGE_NO_USERMAPPING__
-
    if (VALID_OPT(ahgrp_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_ahgrp_OPT, MSG_GDI_UTEXT_ahgrp_OPT);
    }
@@ -274,8 +272,6 @@ FILE *fp
    if (VALID_OPT(Ahgrp_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Ahgrp_OPT, MSG_GDI_UTEXT_Ahgrp_OPT);
    }
-
-#endif /* __SGE_NO_USERMAPPING__ */
 
    if (VALID_OPT(am_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_am_OPT_USER_LIST, MSG_GDI_UTEXT_am_OPT_USER_LIST);
@@ -348,7 +344,8 @@ FILE *fp
    if (VALID_OPT(Aumap_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Aumap_OPT, MSG_GDI_UTEXT_Aumap_OPT );
    }
-#endif  
+#endif 
+ 
    if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(aus_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_AUSER , MSG_GDI_UTEXT_AUSER );
    }
@@ -453,13 +450,9 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_dh_OPT_HOST_LIST , MSG_GDI_UTEXT_dh_OPT_HOST_LIST );
    }
 
-#ifndef __SGE_NO_USERMAPPING__
-
    if (VALID_OPT(dhgrp_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_dhgrp_OPT, MSG_GDI_UTEXT_dhgrp_OPT);
    }
-
-#endif /* __SGE_NO_USERMAPPING__ */
 
    if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(dl_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_dl_OPT_DATE_TIME , MSG_GDI_UTEXT_dl_OPT_DATE_TIME );
@@ -690,8 +683,6 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_Me_OPT_FNAME, MSG_GDI_UTEXT_Me_OPT_FNAME);
    }
 
-#ifndef __SGE_NO_USERMAPPING__
-
    if (VALID_OPT(mhgrp_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_mhgrp_OPT, MSG_GDI_UTEXT_mhgrp_OPT);
    }
@@ -699,8 +690,6 @@ FILE *fp
    if (VALID_OPT(Mhgrp_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Mhgrp_OPT, MSG_GDI_UTEXT_Mhgrp_OPT);
    }
-
-#endif /* __SGE_NO_USERMAPPING__ */
 
    if (VALID_OPT(mp_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_mp_OPT_PE_NAME , MSG_GDI_UTEXT_mp_OPT_PE_NAME );
@@ -955,7 +944,7 @@ FILE *fp
    if (VALID_OPT(sh_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_sh_OPT, MSG_GDI_UTEXT_sh_OPT);
    }
-#ifndef __SGE_NO_USERMAPPING__
+
    if (VALID_OPT(shgrp_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_shgrp_OPT, MSG_GDI_UTEXT_shgrp_OPT);
    }
@@ -963,7 +952,6 @@ FILE *fp
    if (VALID_OPT(shgrpl_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_shgrpl_OPT, MSG_GDI_UTEXT_shgrpl_OPT);
    }
-#endif /* __SGE_NO_USERMAPPING__ */
  
    if (VALID_OPT(sm_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_sm_OPT , MSG_GDI_UTEXT_sm_OPT );

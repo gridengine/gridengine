@@ -90,10 +90,10 @@
 #ifndef __SGE_NO_USERMAPPING__
 #include "sge_usermap.h"
 #include "read_write_ume.h"
+#endif
 
 #include "sge_hostgroup.h"
 #include "read_write_host_group.h"
-#endif
 
 
 #include "setup_path.h"
@@ -109,7 +109,6 @@
 static int reresolve_host(lListElem *ep, int nm, char *object_name, char *object_dir);
 
 
-#ifndef __SGE_NO_USERMAPPING__
 int sge_read_host_group_entries_from_disk()
 { 
   lList*     direntries = NULL; 
@@ -171,7 +170,7 @@ int sge_read_host_group_entries_from_disk()
   return ret;
 }
 
-
+#ifndef __SGE_NO_USERMAPPING__
 int sge_read_user_mapping_entries_from_disk()
 { 
   lList*     direntries = NULL; 

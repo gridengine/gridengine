@@ -225,9 +225,9 @@ spool_flatfile_default_startup_func(const lListElem *rule)
    sge_mkdir2(url, CKPTOBJ_DIR, 0755, true);
    sge_mkdir2(url, USERSET_DIR, 0755, true);
    sge_mkdir2(url, CAL_DIR, 0755, true);
+   sge_mkdir2(url, HOSTGROUP_DIR, 0755, true);
 
 #ifndef __SGE_NO_USERMAPPING__
-   sge_mkdir2(url, HOSTGROUP_DIR, 0755, true);
    sge_mkdir2(url, UME_DIR, 0755, true);
 #endif
 
@@ -408,10 +408,10 @@ spool_flatfile_default_list_func(const lListElem *type, const lListElem *rule,
       case SGE_EMT_USERMAPPING:
          sge_read_user_mapping_entries_from_disk();
          break;
+#endif
       case SGE_EMT_HOSTGROUP:
          sge_read_host_group_entries_from_disk();
          break;
-#endif
       default:
          break;
    }
@@ -530,10 +530,10 @@ spool_flatfile_default_read_func(const lListElem *type, const lListElem *rule,
       case SGE_EMT_USERMAPPING:
          ep = cull_read_in_ume(UME_DIR, key , 1, 0, NULL); 
          break;
+#endif
       case SGE_EMT_HOSTGROUP:
          ep = cull_read_in_host_group(HOSTGROUP_DIR, key, 1, 0, NULL); 
          break;
-#endif
       default:
          break;
    }
@@ -616,9 +616,9 @@ spool_flatfile_default_write_func(const lListElem *type, const lListElem *rule,
       case SGE_EMT_SUBMITHOST:
       case SGE_EMT_USER:
       case SGE_EMT_USERSET:
+      case SGE_EMT_HOSTGROUP:
 #ifndef __SGE_NO_USERMAPPING__
       case SGE_EMT_USERMAPPING:
-      case SGE_EMT_HOSTGROUP:
 #endif
       default:
          WARNING((SGE_EVENT, "writing of "SFQ" not yet implemented\n", 
@@ -779,10 +779,10 @@ spool_flatfile_default_delete_func(const lListElem *type, const lListElem *rule,
       case SGE_EMT_USERMAPPING:
          sge_unlink(UME_DIR, key);
          break;
+#endif
       case SGE_EMT_HOSTGROUP:
          sge_unlink(HOSTGROUP_DIR, key);
          break;
-#endif
       default:
          break;
    }

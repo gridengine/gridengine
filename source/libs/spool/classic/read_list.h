@@ -43,6 +43,7 @@ int sge_read_project_list_from_disk(void);
 int sge_read_queue_list_from_disk(void);
 int sge_read_user_list_from_disk(void);
 int sge_read_userset_list_from_disk(void);
+int sge_read_host_group_entries_from_disk(void);
 
 int read_all_complexes(void);
 int read_all_configurations(lList **lpp,  
@@ -51,7 +52,6 @@ int read_all_configurations(lList **lpp,
 
 #ifndef __SGE_NO_USERMAPPING__
 int sge_read_user_mapping_entries_from_disk(void);
-int sge_read_host_group_entries_from_disk(void);
 #endif
 
 #endif /* __SGE_READ_LIST_H */    

@@ -57,10 +57,10 @@
 #include "sge_schedd_conf.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
+#include "sge_hostgroup.h"
 
 #ifndef __SGE_NO_USERMAPPING__
 #include "sge_usermap.h"
-#include "sge_hostgroup.h"
 #endif
 
 #include "read_list.h"
@@ -80,8 +80,8 @@
 
 #ifndef __SGE_NO_USERMAPPING__
 #include "read_write_ume.h"
-#include "read_write_host_group.h"
 #endif
+#include "read_write_host_group.h"
 
 #include "msg_spoollib_classic.h"
 
@@ -278,8 +278,8 @@ spool_classic_default_startup_func(const lListElem *rule)
    sge_mkdir(USERSET_DIR, 0755, true);
    sge_mkdir(CAL_DIR, 0755, true);
 
-#ifndef __SGE_NO_USERMAPPING__
    sge_mkdir(HOSTGROUP_DIR, 0755, true);
+#ifndef __SGE_NO_USERMAPPING__
    sge_mkdir(UME_DIR, 0755, true);
 #endif
 
@@ -463,10 +463,10 @@ spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
       case SGE_EMT_USERMAPPING:
          sge_read_user_mapping_entries_from_disk();
          break;
+#endif
       case SGE_EMT_HOSTGROUP:
          sge_read_host_group_entries_from_disk();
          break;
-#endif
       default:
          break;
    }
@@ -585,10 +585,10 @@ spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
       case SGE_EMT_USERMAPPING:
          ep = cull_read_in_ume(UME_DIR, key , 1, 0, NULL); 
          break;
+#endif
       case SGE_EMT_HOSTGROUP:
          ep = cull_read_in_host_group(HOSTGROUP_DIR, key, 1, 0, NULL); 
          break;
-#endif
       default:
          break;
    }
@@ -719,10 +719,10 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
       case SGE_EMT_USERMAPPING:
          write_ume(1, 2, object);
          break;
+#endif
       case SGE_EMT_HOSTGROUP:
          write_host_group(1, 2, object);
          break;
-#endif
       default:
          break;
    }
@@ -848,10 +848,10 @@ spool_classic_default_delete_func(const lListElem *type, const lListElem *rule,
       case SGE_EMT_USERMAPPING:
          sge_unlink(UME_DIR, key);
          break;
+#endif
       case SGE_EMT_HOSTGROUP:
          sge_unlink(HOSTGROUP_DIR, key);
          break;
-#endif
       default:
          break;
    }

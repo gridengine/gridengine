@@ -34,9 +34,7 @@
 
 #include "sge_hostgroupL.h"
 
-#ifndef __SGE_NO_USERMAPPING__
 extern lList *Master_Host_Group_List;
-#endif
 
 /* get functions */
 lListElem* sge_get_group_elem(lList *groupList, const char *groupName);

@@ -241,10 +241,10 @@ static int show_processors(void);
 static int show_eventclients(void);
 #ifndef __SGE_NO_USERMAPPING__
 static int show_user_map_entry(char *user);
-static void show_gdi_request_answer(lList *alp);
-
-static int show_host_group_entry(char *group);
 #endif
+
+static void show_gdi_request_answer(lList *alp);
+static int show_host_group_entry(char *group);
 /* ------------------------------------------------------------- */
 static void parse_name_list_to_cull(char *name, lList **lpp, lDescr *dp, int nm, char *s);
 static int add_host_of_type(lList *arglp, u_long32 target);
@@ -257,21 +257,20 @@ static int edit_usersets(lList *arglp);
 /************************************************************************/
 static int add_chg_cmplx(char *cmplx_name, int add, char *fname);
 
-#ifndef __SGE_NO_USERMAPPING__
-static lList*     get_user_mapping_list_from_master(const char *user);
-static lList*     get_host_group_list_from_master(const char *group);
-
-static int add_user_map_entry(char *user, char *mapname, char *hostname);
-static int mod_user_map_entry(char *user);
-static int del_user_map_entry(char *user);
-static int add_user_map_entry_from_file(char *filename);
-static int mod_user_map_entry_from_file(char *filename);
-
+static lList* get_host_group_list_from_master(const char *group);
 static int add_host_group_entry(char *group);
 static int mod_host_group_entry(char *group);
 static int del_host_group_entry(char *group);
 static int add_host_group_entry_from_file(char *filename);
 static int mod_host_group_entry_from_file(char *filename);
+
+#ifndef __SGE_NO_USERMAPPING__
+static lList*     get_user_mapping_list_from_master(const char *user);
+static int add_user_map_entry(char *user, char *mapname, char *hostname);
+static int mod_user_map_entry(char *user);
+static int del_user_map_entry(char *user);
+static int add_user_map_entry_from_file(char *filename);
+static int mod_user_map_entry_from_file(char *filename);
 #endif
 static int print_cmplx(const char *cmplx_name);
 static int print_config(const char *config_name);
@@ -3897,7 +3896,6 @@ DPRINTF(("ep: %s %s\n",
 
       
 
-#ifndef __SGE_NO_USERMAPPING__
 
       /* "-shgrpl" */
       if (!strcmp("-shgrpl", *spp)) {
@@ -3906,6 +3904,7 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 
+#ifndef __SGE_NO_USERMAPPING__
 /*----------------------------------------------------------------------------*/
 
       /* "-sumapl" */
@@ -3937,8 +3936,8 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 
+#endif
 /*----------------------------------------------------------------------------*/
-
 
 
       /* "-Mhgrp user filename" */
@@ -3958,6 +3957,7 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 
+#ifndef __SGE_NO_USERMAPPING__
 /*----------------------------------------------------------------------------*/
 
       /* "-sumap user"  */
@@ -3967,9 +3967,9 @@ DPRINTF(("ep: %s %s\n",
          spp++;
          continue;
       }
+#endif
 
 /*----------------------------------------------------------------------------*/
-
       /* "-shgrp group"  */
       if (!strcmp("-shgrp", *spp)) {
          spp = sge_parser_get_next(spp);
@@ -3980,6 +3980,7 @@ DPRINTF(("ep: %s %s\n",
 
 
 
+#ifndef __SGE_NO_USERMAPPING__
 /*----------------------------------------------------------------------------*/
 
       /* "-mumap user"  */
@@ -3996,7 +3997,7 @@ DPRINTF(("ep: %s %s\n",
          spp++;
          continue;
       }
-
+#endif
 /*----------------------------------------------------------------------------*/
 
       /* "-mhgrp user"  */
@@ -4015,6 +4016,7 @@ DPRINTF(("ep: %s %s\n",
       }
 
          
+#ifndef __SGE_NO_USERMAPPING__
 /*----------------------------------------------------------------------------*/
 
       /* "-dumap user "  */
@@ -4032,6 +4034,7 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 
+#endif
 /*----------------------------------------------------------------------------*/
 
       /* "-dhgrp user "  */
@@ -4049,6 +4052,7 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 
+#ifndef __SGE_NO_USERMAPPING__
 /*----------------------------------------------------------------------------*/
 
       /* "-Aumap user mapfile"  */
@@ -4086,6 +4090,8 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 
+#endif
+
 
 /*----------------------------------------------------------------------------*/
 
@@ -4122,8 +4128,6 @@ DPRINTF(("ep: %s %s\n",
          spp++;
          continue;
       }
-
-#endif
 
 /*----------------------------------------------------------------------------*/
 
@@ -5122,7 +5126,6 @@ char *filename
 *     
 ****************************************************************************
 */
-#ifndef __SGE_NO_USERMAPPING__
 void show_gdi_request_answer(
 lList *alp 
 ) {
@@ -5138,11 +5141,6 @@ lList *alp
    }
    DEXIT;
 }
-
-#endif
-
-
-
 
 /***p** src/add_user_map_entry() **********************************
 *
@@ -5264,7 +5262,7 @@ char *hostname
    DEXIT;
    return 0; 
 }
-
+#endif
 
 /***p** src/add_host_group_entry() ********************************************
 *
@@ -5384,6 +5382,7 @@ char *group
 *  RESULT
 *     int 0 on success, -1 on error
 *******************************************************************************/
+#ifndef __SGE_NO_USERMAPPING__
 static int mod_user_map_entry(
 char *user 
 ) {
@@ -5451,6 +5450,7 @@ char *user
    DEXIT;
    return 0;  
 }
+#endif
 
 /***p** src/mod_host_group_entry() ********************************************
 *  NAME
@@ -5759,6 +5759,7 @@ char *filename
 *  RESULT
 *     int 0 on success, -1 on error
 ******************************************************************************/
+#ifndef __SGE_NO_USERMAPPING__
 static int mod_user_map_entry_from_file(
 char *filename 
 ) {
@@ -6783,6 +6784,7 @@ const char *user
    DEXIT;
    return umlp; 
 }
+#endif
 
 /****** src/get_host_group_list_from_master() *********************************
 *  NAME
@@ -6843,7 +6845,6 @@ const char *group
    return umlp; 
 }
 
-#endif /* __SGE_NO_USERMAPPING__ */
 /***p** src/show_user_map_entry() *********************************************
 *  NAME
 *     show_user_map_entry() -- print user map entries of cluster user 
@@ -6894,8 +6895,6 @@ static int show_user_map_entry(char *user)
 }
 #endif
 
-#ifndef __SGE_NO_USERMAPPING__
-
 /****** src/show_host_group_entry() *******************************************
 *  NAME
 *     show_host_group_entry() -- print houst group to stdout 
@@ -6940,4 +6939,3 @@ static int show_host_group_entry(char *group)
     DEXIT;
     return TRUE; 
 }
-#endif

@@ -235,17 +235,18 @@ enum {
    Mattr_OPT,     /* modifiy a sublist from file */
    Rattr_OPT,     /* overwrite a sublist from file */
    Dattr_OPT,     /* aelete a sublist from file */
-   Aattr_OPT      /* add a element to a sublist from file */
+   Aattr_OPT,     /* add a element to a sublist from file */
       
 #ifndef __SGE_NO_USERMAPPING__
    /* added for user mapping */
-   ,aumap_OPT,    /* add new user mapping entry */
+   aumap_OPT,    /* add new user mapping entry */
    Aumap_OPT,    /* add new user mapping entry from file */
    dumap_OPT,    /* delete user mapping entry  */
    mumap_OPT,    /* modify user mapping entry  */
    sumap_OPT,    /* show user mapping entry    */
    sumapl_OPT,   /* show user mapping entry list */
    Mumap_OPT,    /* modify user mapping entry from file */ 
+#endif
 
    /* added for host groups */
    ahgrp_OPT,    /* add new host group entry */
@@ -254,11 +255,10 @@ enum {
    mhgrp_OPT,    /* modify host group entry */
    shgrp_OPT,    /* show host group entry */
    shgrpl_OPT,   /* show host group entry list  */
-   Mhgrp_OPT    /* modify host group entry from file */
-#endif
+   Mhgrp_OPT,    /* modify host group entry from file */
 
    /* added for event clients */
-   ,secl_OPT,     /* show event client list */
+   secl_OPT,     /* show event client list */
    kec_OPT,       /* kill event client */
 
    cu_OPT         /* SGEEE sharetree - clear all user/project usage */

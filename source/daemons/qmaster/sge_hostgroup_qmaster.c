@@ -57,8 +57,6 @@
 #include "sge_unistd.h"
 #include "sge_hostgroup.h"
 
-#ifndef __SGE_NO_USERMAPPING__
-
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -128,8 +126,8 @@ lList **alpp,
 lListElem *modp, /* empty element to fill up (GRP_Type) (wenn add is 1)*/ 
 lListElem *ep,   /* element to add (GRP_Type) */
 int add,         /* is 1 on ADD mode, 0 on MOD mode */
-char *ruser,     /* user name who starts request */
-char *rhost,     /* host from where the request was started */
+const char *ruser,     /* user name who starts request */
+const char *rhost,     /* host from where the request was started */
 gdi_object_t *object,
 int sub_command 
 ) {
@@ -539,7 +537,8 @@ char *rhost
       return STATUS_EEXIST;  
    }   
 
-         
+   
+#ifndef __SGE_NO_USERMAPPING__      
    /* check if group is referenced in user mapping */
    for_each(tmp_ep,Master_Usermapping_Entry_List ) {
        const char* clusterName = NULL;
@@ -559,6 +558,7 @@ char *rhost
           }
        }
    } 
+#endif
 
 
    /* remove host file */
@@ -603,5 +603,4 @@ char *rhost
    
 }
 
-#endif /* __SGE_NO_USERMAPPING__ */
 

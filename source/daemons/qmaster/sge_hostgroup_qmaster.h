@@ -32,23 +32,17 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include "sge_c_gdi.h"
-
-
-#ifndef __SGE_NO_USERMAPPING__
 
 int hostgrp_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
 
-int hostgrp_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, char *ruser, char *rhost, gdi_object_t *object, int sub_command);
+int hostgrp_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
+                const char *ruser, const char *rhost, gdi_object_t *object, 
+                int sub_command);
 
 int hostgrp_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
 
 int sge_del_hostgrp(lListElem *cep, lList **alpp, char *ruser, char *rhost);
-
-#endif /* __SGE_NO_USERMAPPING__ */
-
 
 #endif /* _SGE_HOSTGROUP_QMASTER_H_ */
 

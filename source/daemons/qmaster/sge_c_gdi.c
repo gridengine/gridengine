@@ -129,8 +129,8 @@ static gdi_object_t gdi_object[] = {
    { SGE_ZOMBIE_LIST,       0,                NULL,     "job zombie list",         &Master_Zombie_List,            NULL,         NULL,           NULL },
 #ifndef __SGE_NO_USERMAPPING__
    { SGE_USER_MAPPING_LIST, UME_cluster_user, UME_Type, "user mapping entry",      &Master_Usermapping_Entry_List, usermap_mod,  usermap_spool,  usermap_success },
-   { SGE_HOST_GROUP_LIST,   GRP_group_name,   GRP_Type, "host group",              &Master_Host_Group_List,        hostgrp_mod,  hostgrp_spool,  hostgrp_success },
 #endif
+   { SGE_HOST_GROUP_LIST,   GRP_group_name,   GRP_Type, "host group",              &Master_Host_Group_List,        hostgrp_mod,  hostgrp_spool,  hostgrp_success },
    { SGE_DUMMY_LIST,        0,                NULL,     "general request",         NULL,                           NULL,         NULL,           NULL },
    { 0,                     0,                NULL,     NULL,                      NULL,                           NULL,         NULL,           NULL }
 };
@@ -800,11 +800,11 @@ int sub_command
          case SGE_USER_MAPPING_LIST:
             sge_del_usermap(ep, &(answer->alp), user, host);
             break;
+#endif /* __SGE_NO_USERMAPPING__ */                           
 
          case SGE_HOST_GROUP_LIST:
             sge_del_hostgrp(ep, &(answer->alp), user, host);
             break;
-#endif /* __SGE_NO_USERMAPPING__ */                           
          default:
             SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);

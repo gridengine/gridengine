@@ -147,8 +147,8 @@ static mirror_entry mirror_base[SGE_EMT_ALL] = {
 
 #ifndef __SGE_NO_USERMAPPING__
    { &Master_Usermapping_Entry_List, "USERMAPPING",       UME_Type,  UM_mapped_user,  NULL, NULL,                               NULL, NULL },
-   { &Master_Host_Group_List,        "HOSTGROUP",         GRP_Type,  GRP_group_name,  NULL, NULL,                               NULL, NULL },
 #endif
+   { &Master_Host_Group_List,        "HOSTGROUP",         GRP_Type,  GRP_group_name,  NULL, NULL,                               NULL, NULL },
 };
 
 /* Static functions for internal use */
@@ -479,13 +479,13 @@ static sge_mirror_error _sge_mirror_subscribe(sge_event_type type,
          ec_subscribe(sgeE_USERMAPPING_ENTRY_DEL);
          ec_subscribe(sgeE_USERMAPPING_ENTRY_MOD);
          break;
+#endif
       case SGE_EMT_HOSTGROUP:
          ec_subscribe(sgeE_HOST_GROUP_LIST);
          ec_subscribe(sgeE_HOST_GROUP_ADD);
          ec_subscribe(sgeE_HOST_GROUP_DEL);
          ec_subscribe(sgeE_HOST_GROUP_MOD);
          break;
-#endif
 
       default:
          /* development fault: forgot to handle a valid event group */
@@ -697,13 +697,13 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_event_type type)
          ec_unsubscribe(sgeE_USERMAPPING_ENTRY_DEL);
          ec_unsubscribe(sgeE_USERMAPPING_ENTRY_MOD);
          break;
+#endif
       case SGE_EMT_HOSTGROUP:
          ec_unsubscribe(sgeE_HOST_GROUP_LIST);
          ec_unsubscribe(sgeE_HOST_GROUP_ADD);
          ec_unsubscribe(sgeE_HOST_GROUP_DEL);
          ec_unsubscribe(sgeE_HOST_GROUP_MOD);
          break;
-#endif
 
       default:
          /* development fault: forgot to handle a valid event group */
@@ -1129,6 +1129,7 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
          case sgeE_USERMAPPING_ENTRY_MOD:
             ret = sge_mirror_process_event(SGE_EMT_USERMAPPING, SGE_EMA_MOD, event);
             break;
+#endif
 
          case sgeE_HOST_GROUP_LIST:
             ret = sge_mirror_process_event(SGE_EMT_HOSTGROUP, SGE_EMA_LIST, event);
@@ -1142,7 +1143,6 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
          case sgeE_HOST_GROUP_MOD:
             ret = sge_mirror_process_event(SGE_EMT_HOSTGROUP, SGE_EMA_MOD, event);
             break;
-#endif
 
          default:
             break;

@@ -240,8 +240,8 @@ int sge_setup_qmaster()
    sge_mkdir(CKPTOBJ_DIR, 0755, 1);
    sge_mkdir(USERSET_DIR, 0755, 1);
    sge_mkdir(CAL_DIR, 0755, 1);
-#ifndef __SGE_NO_USERMAPPING__
    sge_mkdir(HOSTGROUP_DIR, 0755, 1);
+#ifndef __SGE_NO_USERMAPPING__
    sge_mkdir(UME_DIR, 0755, 1);
 #endif
 
@@ -314,13 +314,11 @@ int sge_setup_qmaster()
    for_each(ep, Master_Manager_List) 
       DPRINTF(("%s\n", lGetString(ep, MO_name)));
 
-#ifndef __SGE_NO_USERMAPPING__
    DPRINTF(("host group definitions-----------\n"));
    if (sge_read_host_group_entries_from_disk()) {
      DEXIT;
      return -1;
    }
-#endif
 
    DPRINTF(("operator_list----------------------------\n"));
    read_manop(SGE_OPERATOR_LIST);

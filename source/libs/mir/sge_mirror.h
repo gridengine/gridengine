@@ -191,8 +191,8 @@ typedef enum {
    SGE_EMT_USERSET,
 #ifndef __SGE_NO_USERMAPPING__
    SGE_EMT_USERMAPPING,
-   SGE_EMT_HOSTGROUP,
 #endif
+   SGE_EMT_HOSTGROUP,
 
    SGE_EMT_ALL            /* must be last entry */
 } sge_event_type;

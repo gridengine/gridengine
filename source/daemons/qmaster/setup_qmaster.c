@@ -304,6 +304,28 @@ void sge_setup_job_resend(void)
    return;
 } /* sge_setup_job_resend() */
 
+/****** setup_qmaster/sge_process_qmaster_cmdline() ****************************
+*  NAME
+*     sge_process_qmaster_cmdline() -- global available function for qmaster
+*
+*  SYNOPSIS
+*     void sge_process_qmaster_cmdline(char**anArgv) 
+*
+*  FUNCTION
+*     This function simply calls the static function process_cmdline()
+*
+*  INPUTS
+*     char**anArgv - command line arguments from main()
+*
+*  NOTES
+*     MT-NOTE: sge_process_qmaster_cmdline() is NOT MT safe 
+*
+*  SEE ALSO
+*     qmaster/setup_qmaster/process_cmdline()
+*******************************************************************************/
+void sge_process_qmaster_cmdline(char**anArgv) {
+   process_cmdline(anArgv);
+}
 /****** qmaster/setup_qmaster/process_cmdline() ********************************
 *  NAME
 *     process_cmdline() -- Handle command line arguments 

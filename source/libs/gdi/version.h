@@ -34,4 +34,12 @@
 
 #define GDI_VERSION "6.0Beta2"
 
+#ifdef ADD_SUN_COPYRIGHT
+#  define GE_LONGNAME "N1 Grid Engine"
+#  define GE_SHORTNAME "N1GE"
+#else
+#  define GE_LONGNAME "Grid Engine"
+#  define GE_SHORTNAME "SGE"
+#endif
+
 #endif /* __VERISON_H */

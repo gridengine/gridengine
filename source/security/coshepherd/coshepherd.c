@@ -30,6 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/wait.h>
@@ -40,7 +41,18 @@
 #include "sgermon.h"
 #include "sge_afsutil.h"
 #include "sge_language.h"
+#include "sge_feature.h"
 #include "sge_unistd.h"
+#include "msg_common.h"
+#include "version.h"
+
+static void show_coshepherd_version(void) {
+
+   printf("%s %s\n", GE_SHORTNAME, GDI_VERSION);
+   printf("%s %s [options]\n", MSG_GDI_USAGE_USAGESTRING , "sge_coshepherd");
+   printf("   %-40.40s %s\n", MSG_GDI_USAGE_help_OPT , MSG_GDI_UTEXT_help_OPT);
+
+}
 
 int main(int argc, char *argv[])
 {
@@ -50,6 +62,7 @@ int main(int argc, char *argv[])
    int last_token_set, token_extend_time, renew_before;
    char *command, *user;
    char *tokenbuf;
+   int i;
    char err_str[1024+128];
 
    DENTER_MAIN(TOP_LAYER, "coshepherd");
@@ -64,8 +77,15 @@ int main(int argc, char *argv[])
    sge_init_language(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
+   for (i=0;i< argc;i++) {
+      if ( strcmp(argv[i],"-help") == 0) {
+         show_coshepherd_version();
+         return 1;
+      }
+   }
 
    if (argc != 4) {
+      show_coshepherd_version();
       DEXIT;
       return 1;
    }

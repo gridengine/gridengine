@@ -391,7 +391,9 @@ int sge_daemonize(fd_set *keep_open)
 *     int sge_occupy_first_three(void)
 *
 *  FUNCTION
-*     Occupy the first three filedescriptors.
+*     Occupy the first three filedescriptors, if not available. This is done
+*     to be sure that a communication by a socket will not get any "forgotten"
+*     print output from code.
 *
 *  RESULT
 *     int - error state

@@ -102,8 +102,16 @@ int cl_host_alias_list_append_host(cl_raw_list_t* list_p, char* local_resolved_n
       free(help);
       return CL_RETVAL_ALIAS_EXISTS;
    }
+
 #if 0
-   /* enable this code for 1:1 mapping - CR */
+   /* CR: 
+    *
+    * enable this code for 1:1 mapping or for virtual host mapping
+    * (e.g. my_virtual_hostname real_host_name in alias file ) 
+    *
+    * DO NOT FORGET TO ALSO ENABLE CODE IN cl_com_cached_gethostbyname() 
+    */
+
    if ( cl_host_alias_list_get_local_resolved_name(list_p, alias_name, &help ) == CL_RETVAL_OK) {
       CL_LOG_STR(CL_LOG_ERROR,"hostname for alias exists allready:", help);
       free(help);

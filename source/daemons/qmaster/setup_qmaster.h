@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+void sge_process_qmaster_cmdline(char**anArgv);
+
 int sge_setup_qmaster(char* anArgv[]);
 
 int sge_qmaster_thread_init(void);

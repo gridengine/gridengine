@@ -166,6 +166,17 @@ int main(int argc, char* argv[])
    sge_init_language(NULL,NULL);   
 #endif 
 
+   /* qmaster doesn't support any commandline anymore,
+      but we should show version string and -help option */
+   if (argc != 1) {
+      sge_mt_init();
+      sigfillset(&sig_set);
+      pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
+      sge_qmaster_thread_init();
+      sge_process_qmaster_cmdline(argv);
+      SGE_EXIT(1);
+   }
+
    daemonize_qmaster();
 
    sge_mt_init();

@@ -291,12 +291,18 @@ void prepare_enroll(const char *name)
                                                                                                     /* use execd port to connect to endpoints         */
                                           (char*)prognames[uti_state_get_mewho()], my_component_id, /* this endpoint is called "qmaster" and has id 1 */
                                           1 , 0 );                                                  /* select timeout is set to 1 second 0 usec       */
+            if (handle == NULL) {
+               CRITICAL((SGE_EVENT,MSG_GDI_CANT_CREATE_COM_HANDLE));
+            }
             break;
          case QMON:
             DPRINTF(("creating QMON GDI handle\n"));
             handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_qmaster_port(),
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
+            if (handle == NULL) {
+               CRITICAL((SGE_EVENT,MSG_GDI_CANT_CREATE_COM_HANDLE));
+            }
             break;
 
          default:
@@ -304,11 +310,13 @@ void prepare_enroll(const char *name)
             DPRINTF(("creating GDI handle\n"));
             handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_qmaster_port(),
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
+            if (handle == NULL) {
+               CRITICAL((SGE_EVENT,MSG_GDI_CANT_CREATE_COM_HANDLE));
+            }
             break;
       }
-      if (handle == NULL) {
-         CRITICAL((SGE_EVENT,MSG_GDI_CANT_CREATE_COM_HANDLE));
-      } else {
+
+      if (handle != NULL) {
          INFO((SGE_EVENT, MSG_GDI_HANDLE_CREATED_FOR_S, uti_state_get_sge_formal_prog_name() ));
       }
    } 

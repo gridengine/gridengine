@@ -165,6 +165,14 @@ char **argv
       /* sge_setup has already printed the error message */
       SGE_EXIT(1);
    }
+
+   if ((i=sge_occupy_first_three())>=0) {
+      CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFD_I, i));
+      SGE_EXIT(1);
+   }     
+   lInit(nmv);
+
+   parse_cmdline_execd(argv);   
    
 
    /* exit if we can't get communication handle (bind port) */
@@ -182,15 +190,6 @@ char **argv
         sleep(1);
       }
    }
-
-   if ((i=sge_occupy_first_three())>=0) {
-      CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFD_I, i));
-      SGE_EXIT(1);
-   }     
-
-   lInit(nmv);
-
-   parse_cmdline_execd(argv);   
 
    /* daemonizes if qmaster is unreachable */   
    sge_setup_sge_execd(tmp_err_file_name);

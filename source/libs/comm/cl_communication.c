@@ -3558,9 +3558,19 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
    } 
 
 
+#if 0
+   /* CR:
+    *
+    * enable this code for 1:1 mapping or for virtual host mapping 
+    * (e.g. my_virtual_hostname real_host_name in alias file ) 
+    *
+    * DO NOT FORGET TO ALSO ENABLE CODE IN cl_host_alias_list_append_host() 
+    */
+
    if ( cl_host_alias_list_get_local_resolved_name(ldata->host_alias_list,unresolved_host, &alias_name) == CL_RETVAL_OK) {
       CL_LOG_STR(CL_LOG_INFO,"unresolved host name is aliased to", alias_name);
    }
+#endif
 
 
    /* Try to find unresolved hostname in hostlist */

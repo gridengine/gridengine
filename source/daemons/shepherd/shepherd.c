@@ -91,6 +91,8 @@ struct rusage {
 #include "sge_dstring.h"
 #include "sge_shepconf.h"
 #include "sge_mt_init.h"
+#include "msg_common.h"
+#include "version.h"
 
 #include "sge_reportL.h"
 
@@ -504,6 +506,14 @@ static void signal_handler(int signal)
    received_signal = signal;
 }
 
+static void show_shepherd_version(void) {
+
+   printf("%s %s\n", GE_SHORTNAME, GDI_VERSION);
+   printf("%s %s [options]\n", MSG_GDI_USAGE_USAGESTRING , "sge_shepherd");
+   printf("   %-40.40s %s\n", MSG_GDI_USAGE_help_OPT , MSG_GDI_UTEXT_help_OPT);
+
+}
+
 int main(int argc, char **argv) 
 {
    char err_str[2*SGE_PATH_MAX+128];
@@ -523,6 +533,12 @@ int main(int argc, char **argv)
    dstring ds;
    char buffer[256];
 
+   if (argc >= 2) {
+      if ( strcmp(argv[1],"-help") == 0) {
+         show_shepherd_version();
+         return 1;
+      }
+   }
    sge_mt_init();
 	shepherd_trace_init( );
 

@@ -53,13 +53,6 @@
 
 #define FEATURESET_DEFAULT FEATURESET_SGE
 
-#ifdef ADD_SUN_COPYRIGHT
-#  define GE_LONGNAME "N1 Grid Engine"
-#  define GE_SHORTNAME "N1GE"
-#else
-#  define GE_LONGNAME "Grid Engine"
-#  define GE_SHORTNAME "SGE"
-#endif
 
 struct feature_state_t {
     int    already_read_from_file;

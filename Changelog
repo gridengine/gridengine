@@ -1,3 +1,16 @@
+CR-2004-05-19-0: Bugfix:    o Removed -lj Option for execd
+                            o added/fixed help output to sge_execd, sge_qmaster
+                              sge_shepherd and sge_coshepherd (IZ#1026).
+                            o fixed bug in when host_aliases are active 
+                              (all mapped host names had to be resolvable on 
+                               local host, now mapped names must not be real
+                               resolveable host names )
+                            o removed duplicate error message when execd can't
+                              create communication handle (bind tcp port)
+                 Issue:     1026
+                 Changed:   qmaster, execd, shepherd, coshepherd, libcom
+                 Review:    JG
+
 DT-2004-05-19-0: Bugfix:    o Fixed errors in DRMAA howto
                  Changed:   howto
 

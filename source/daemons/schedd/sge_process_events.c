@@ -1536,17 +1536,16 @@ int sge_process_all_events(lList *event_list) {
                                            lGetString(ep, JB_owner), 1);
                      }
                      lRemoveElem(lGetList(ep, JB_ja_tasks), ja_task);
-                     /* delete job category if necessary and delete job */
-                     if (job_get_ja_tasks(ep) == 0) {
-                        sge_delete_job_category(ep);
-                        if (!sge_mode)
-                           at_unregister_job_array(ep);
-                        lDelElemUlong(&(lists.job_list), JB_job_number, intkey);
-                     } 
                   }
                } else {
                   job_delete_not_enrolled_ja_task(ep, NULL, intkey2);
                }
+               if (job_get_ja_tasks(ep) == 0) {
+                  sge_delete_job_category(ep);
+                  if (!sge_mode)
+                     at_unregister_job_array(ep);
+                  lDelElemUlong(&(lists.job_list), JB_job_number, intkey);
+               }  
             }
          }
          break;

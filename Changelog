@@ -1,3 +1,9 @@
+EB-2002-04-29-1: Bugfix:    schedd bugs reported by Patrik Koch
+                            on dev mailing list (Mon, 15 Apr 2002) 
+                 Issues:    #243
+                 Bugtraq:   #4676340 
+                 Changed:   sge_schedd
+
 AH-2002-04-29-0: Enhancem.  make maxujobs limitation work SGE and SGEEE mode
 
 AH-2002-04-26-0: Bugfix:    - queue nsuspend > 1 was not used to suspend

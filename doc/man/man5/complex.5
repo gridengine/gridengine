@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: complex.5,v $     Last Update: $Date: 2004/01/30 17:04:04 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: complex.5,v $     Last Update: $Date: 2004/02/06 12:32:10 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH COMPLEX 5 "$Date: 2004/01/30 17:04:04 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH COMPLEX 5 "$Date: 2004/02/06 12:32:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 complex \- xxQS_NAMExx complexes configuration file format
@@ -46,23 +46,47 @@ job via the
 and for the interpretation of these parameters within the xxQS_NAMExx
 system.
 .PP
-The complex configuration files should not be accessed directly.
-In order to add or modify complexes,
+The xxQS_NAMExx complex object defines all entries which are used for 
+configuring the global, the host, and queue object. The system has a 
+set of pre defined entries, which are assigned to a host or queue per default.
+In a addition can the user define new entries and assign them to one or multiple
+objects. Each load value has to have its corresbonding complex entry object, which
+defines the type and the relational operator for it.
+.\"
+.SS "\fBdefining resource attributes\fP"
+The complex configuration should not be accessed directly.
+In order to add or modify complexe entries,
 the
 .M qconf 1
 options -Mc and \-mc should be used instead.
 While the \-Mc option take a
 .I complex
-configuration file as an argument, the \-mc option
-bring up an editor filled in with the current
-.I complex
+configuration file as an argument and overrides the current configuration, 
+the \-mc option bring up an editor filled in with the current .I complex
 configuration.
-.PP
-The xxQS_NAMExx complexes object integrates 4 different types of complexes:
-.\"
-.SS "\fBThe Queue Complex\fP"
-It is referenced by the special name "queue".
 .sp 1
+The provided list contains all definitions of resource attributes in the system. Adding
+a new entry means to provide: name, shortcut, type, relop, requestable, consumable, 
+default, and rgency. The fields are described below. Changing one is easily done by 
+updated the field to change and removing an entry by deleting its definition. An 
+attribute can only be removed, when it is not referenced in a host or queue object 
+anymore. Also does the system have a set of default resource attributes which are 
+always attrached to a host or queue. They cannot be deleted nor can the type of 
+such an attribute be changed.
+.PP
+.\"
+.SS "\fBworking with resource attributes\fP"
+Before a user can request a resource attribute it has to be attached to the global, host,
+or cqueue object. The resource attribute exists only for the objects, it got attached to(
+if it is attached to the global object(qconf -me global), it exits sytem wide, host object: 
+only on that host (qconf -me NAME): cqueue object: only on that cqueue (qconf -mq NAME).
+.sp1
+When the user attached a resource attribute to an object, one also has to assign a value
+to it; the resource limit. Another way to get a resource attribute value is done by 
+configuring a load sensor for that attribute. 
+.PP
+.\"
+.SS "\fBDefault queue resource attributes\fP"
 In its default form it contains a selection of parameters in the
 queue configuration as defined in
 .M queue_conf 5 .
@@ -91,38 +115,12 @@ h_core
 s_rss
 h_rss
 .RE
-.fi
-The queue complex can be extended if further attributes are intended to be 
-available for each queue. The queue complex defines the characteristics
-(such 
-as the data type) of the attributes it contains. A value setting for the
-queue 
-complex attributes is defined by the queue configuration for each queue in 
-case of the standard parameters enlisted above, or by the
-.B complex_values 
-entry in the queue configuration (see
-.M queue_conf 5
-for details) if a parameter has been added to the default queue
-complex. If no definition for the value in the
-.B complex_values
-entry of the queue configuration is given in the latter 
-case, the value is set as defined by the
-.B value
-field described below.
 .\"
-.SS "\fBThe Host Complex\fP"
-It is referenced by the special name "host" and
-contains the characteristics definition of all attributes which are
-intended to 
-be managed on a host basis. The standard set of host related attributes
-consists 
-of two categories, but it may be enhanced like the queue complex as
-described 
-above. The first category is built by several queue configuration
-attributes 
-which are particularly suitable to be managed on a host basis. These
-attributes 
-are:
+.SS "\fBDefault host resource attributes\fP"
+The standard set of host related attributes consists 
+of two categories. he first category is built by several queue configuration
+attributes which are particularly suitable to be managed on a host basis. These
+attributes are:
 .sp 1
 .nf
 .RS
@@ -165,73 +163,33 @@ the default host complex, while administrator defined load values
 require extension of the host complex. Please refer to the file
 <xxqs_name_sxx_root>/doc/load_parameters.asc for detailed information on the
 standard set of load values.
-.sp 1
-The host complex commonly is not only extended to include non-standard
-load parameters, but also to manage host related resources such as the
-number of software licenses being assigned to a host or the available
-disk space on a host local filesystem.
-.sp 1
-A concrete value for a particular host complex attribute is determined
-by either an associated queue configuration in the case of the queue
-configuration derived attributes, a reported load value or the explicit
-definition of a value in the
-.B complex_values
-entry of the corresponding host configuration (see 
-.M host_conf 5 ).
-If none of the above is available (e.g. the value is supposed to 
-be a load parameter, but
-.M xxqs_name_sxx_execd 8
-does not report a load value for it), the 
-.B value
-field described below is used.
 .\"
-.SS "\fBThe Global Complex\fP"
-It is referenced by the special name "global".
+.SS "\fBOverriding attributes\fP"
+One attribute can be assigned to the global object, host object, and queue object
+at the same time. On the host level it might get its value from the user
+defined resource limit and a load sensor. In case that the attribute is a consumable, 
+we have in addition to the resource limit and its load report on host level also 
+the internal usage, which the system keeps track of. The mergin is done as follows:
 .sp 1
-The entries configured in the global complex refer to cluster wide resource 
-attributes, such as the number of available "floating" licenses of a 
-particular software or the free disk space on a network wide available 
-filesystem. Global resource attributes can also be associated with load 
-reports, if the corresponding load report contains the "GLOBAL" 
-identifier (see the corresponding section in the xxQS_NAMExx Installation 
-and Administration Guide for details). Global load values can be reported 
-from any host in the cluster. There are no global load values reported by 
-xxQS_NAMExx by default and hence there is no default global complex 
-configuration.
+In general an attribute can be overridden on a lower level
+   - global by hosts and queues
+   - hosts by queues
+and load values or resource limits on the same level.
 .sp 1
-Concrete values for global complex attributes are either determined by 
-global load reports or by explicit definition in the
-.B complex_values 
-parameter of the "global" host configuration (see
-.M host_conf 5 ).
-If none of both is present (e.g. a load value has not yet been reported) the
-.B value
-field described below is used.
-.SS "\fBUser Defined Complexes\fP"
-By setting up user defined complexes the xxQS_NAMExx administration has 
-the ability to extend the set of attributes managed by xxQS_NAMExx while 
-restricting the influence of those attributes to particular queues and/or
-hosts. A 
-user complex is just a named collection of attributes and the corresponding 
-definition as to how these attributes are to be handled by xxQS_NAMExx. 
-One or more of these user defined complexes can be attached to a queue and/
-or host via the
-.B complex_list
-queue and host configuration parameter (see 
-.M queue_conf 5
-and
-.M host_conf 5 ).
-The attributes defined in all assigned 
-complexes become available to the queue and the host respectively in
-addition to the default complex attributes.
+We have one limitation for overriding attributes based on its relational 
+operator:
 .sp 1
-Concrete values for user defined complexes have to be set by the 
-.B complex_values
-parameter in the queue and host configuration or otherwise the
-.B value
-field described below is used.
-.\"
-.\"
+!=, == operators can only be overridden on the same level, but not on a 
+lower level. The user defined value always overrides the load value.
+.sp 1   
+>=, >, <=, < operators can only be overridden, when the new value is more 
+restrictive than the old one.
+.sp 1
+In the case of a consumable on host level, which has also a load sensor, the
+system checks for the current usage, and if the internal accouting is more 
+restrictive than the load sensor report, the internal value is kept; if the
+load sensour report is more restrictive, that one is kept.
+.PP
 .SH FORMAT
 The principal format of a 
 .I complex
@@ -350,7 +308,7 @@ and
 The
 .B consumable
 parameter can be set to either 'yes' ('y' abbreviated) or 'no' 
-('n'). It can be set to 'yes' only for numeric attributes (INT, MEMORY,
+('n'). It can be set to 'yes' only for numeric attributes (INT, DOUBLE, MEMORY,
 TIME - see
 .B type
 above). If set to 'yes' the 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/02/05 16:07:31 $     Revision: $Revision: 1.37 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/02/06 12:32:10 $     Revision: $Revision: 1.38 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/02/05 16:07:31 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/02/06 12:32:10 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -680,7 +680,7 @@ however.
 .IP "\fB\-help\fP"
 Prints  a listing of all options.
 .\"
-.IP "\fB\-hold_jid [job_id|job_name|reg_exp],...\fP"
+.IP "\fB\-hold_jid wc_job_list\fP"
 Available for \fIqsub\fP, \fIqrsh\fP, and \fIqalter\fP only.
 .sp 1
 Defines or redefines the job dependency list of the submitted job. A 
@@ -694,32 +694,6 @@ a job dependency to multiple jobs satisfying the regular expression
 or to all jobs with the requested name. The name dependencies are
 resolved at submittion time and can only be changed via qalter. New
 jobs or name changes of other jobs will not be taken into account.
-
-The syntax for regular expressions follows the following rules:
-.nf
-.RS
- - "*"   : matches any character and any number of chars 
-           (between 0 and inv).
- - "?"   : matches any character. It cannot be no 
-           character
- - "."   : is the character ".". It has no other meaning
- - "\\"   : escape character. "\\\\" = "\\", "\\*" = "*", 
-           "\\?" = "?"
- - "[xx]": specifies an array or a range of allowed 
-           characters for one character at a specific 
-           position
- - "|"   : logical "or". Can only be used on the highest 
-           level and cannot be escaped.
-
-Examples:
- -l arch="*linux|solaris*"  : 
-      results in "arch=linux" OR "arch=glinux" 
-      OR "arch=alinus" OR "arch=solaris" OR
-      "arch=solaris64" OR "arch=solaris86" OR ...
- -l arch="[linux|solaris]"  : 
-      results in "arch=[linux" OR "arch=solaris]"  
-.RE
-.fi
 
 .sp 1
 .I Qalter

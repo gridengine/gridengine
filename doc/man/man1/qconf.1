@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2002/01/29 15:48:07 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2002/01/30 08:55:11 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2002/01/29 15:48:07 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2002/01/30 08:55:11 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -572,6 +572,16 @@ root/manager/operator privileges.
 .\" exiting the editor. 
 .\" Requires root or manager privileges.
 .\" usermapping end
+.IP "\fB\-Auser fname\fP	\fI<add user>\fP"
+This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
+for xxQS_NAME_Cxx systems.
+.br
+Add the user defined in \fBfname\fP
+to the xxQS_NAME_EExx cluster. The format of the user
+specification is described in
+.M user 5 .
+Requires root or manager privileges.
+.\"
 .IP "\fB\-auser\fP	\fI<add user>\fP"
 This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
 for xxQS_NAME_Cxx systems.
@@ -1015,6 +1025,16 @@ attribute cannot be modified (see
 .M host_conf 5 ).
 .br
 Requires root or manager privilege. 
+.\"
+.IP "\fB\-Muser fname\fP	\fI<modify user>\fP"
+This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
+for xxQS_NAME_Cxx systems.
+.br
+Modify the user defined in \fBfname\fP
+in the xxQS_NAME_EExx cluster. The format of the user
+specification is described in
+.M user 5 .
+Requires root or manager privileges.
 .\"
 .IP "\fB\-muser user\fP	\fI<modify user>\fP"
 This option is only supported in case of a xxQS_NAME_EExx system. It is not available 

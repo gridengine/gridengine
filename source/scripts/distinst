@@ -696,12 +696,7 @@ if [ $instcommon = true ]; then
       Execute chmod 644 $DEST_SGE_ROOT/qmon/Qmon
       Execute chmod 644 $DEST_SGE_ROOT/qmon/Qmon.i18n
    
-      Execute scripts/sed_help
-      if [ $sgeee = false ]; then
-         Execute cp dist/qmon/qmon_help.ad.ge $DEST_SGE_ROOT/qmon/qmon_help.ad
-      else
-         Execute cp dist/qmon/qmon_help.ad.geee $DEST_SGE_ROOT/qmon/qmon_help.ad
-      fi
+      Execute cp dist/qmon/qmon_help.ad $DEST_SGE_ROOT/qmon
       Execute chmod 644 $DEST_SGE_ROOT/qmon/qmon_help.ad
 
       ( echo changing to $DEST_SGE_ROOT/qmon/PIXMAPS ; \

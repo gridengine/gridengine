@@ -1025,6 +1025,7 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
       XtSetSensitive(cluster_set_token_cmd_label, mode);
       XtSetSensitive(cluster_pag_cmd, mode);
       XtSetSensitive(cluster_pag_cmd_label, mode);
+      XtSetSensitive(cluster_token_extend_time, mode);
       XtSetSensitive(cluster_token_extend_time_label, mode);
    }
 

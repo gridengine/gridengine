@@ -225,7 +225,7 @@ lList **topp  /* ticket orders ptr ptr */
        
       if (feature_is_enabled(FEATURE_SGEEE)) {
 
-#if 1 /* EB: initial tickets for currently started jobs will be 0 */
+#if 0 /* EB: initial tickets for currently started jobs will be 0 */
          /* fill number of tickets into job */
          lSetDouble(jatp, JAT_ticket, 0.0);
          sprintf(opt_sge, MSG_ORD_INITIALTICKETS_U, u32c(0l));

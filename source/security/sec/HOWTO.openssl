@@ -1,3 +1,208 @@
+Setup:
+
+Installation:
+
+The security enhancement can be either added to a previously configured system or the system
+can be setup during the initial installation to support CSP security.
+
+Installation with CSP security
+------------------------------
+
+The installation is performed as usual except that the install script is called with the
+additional parameter -csp.
+In the following you see the installation steps 
+
+1. Unpack and install the Grid Engine distribution
+
+2. Install Grid Engine
+   On the master machine type:
+
+   Become superuser
+   % su 
+   
+   % ./install_qmaster -csp
+
+You need the following additional information, see the example below. 
+
+Country code:         C=US
+State:                ST=California
+Location:             L=San Francisco
+Organization:         O=8Bits
+Organizational unit:  OU=Support
+CA email address:     emailAddress=admin@eightbits.com
+
+
+
+
+
+    you get the following installation screens
+
+Initializing Certificate Authority (CA) for OpenSSL security framework
+----------------------------------------------------------------------
+
+Creating /scratch2/aa114085/sge_sec/default/common/sgeCA
+Creating /var/sgeCA/port5321/default
+Creating /scratch2/aa114085/sge_sec/default/common/sgeCA/certs
+Creating /scratch2/aa114085/sge_sec/default/common/sgeCA/crl
+Creating /scratch2/aa114085/sge_sec/default/common/sgeCA/newcerts
+Creating /scratch2/aa114085/sge_sec/default/common/sgeCA/serial
+Creating /scratch2/aa114085/sge_sec/default/common/sgeCA/index.txt
+Creating /var/sgeCA/port5321/default/userkeys
+Creating /var/sgeCA/port5321/default/private
+Hit <RETURN> to continue >> 
+
+Enter all the required information for the distinguished name for the CA certificate:
+
+You selected the following basic data for the distinguished name of
+your certificates:
+
+Country code:         C=US
+State:                ST=California
+Location:             L=San Francisco
+Organization:         O=8Bits
+Organizational unit:  OU=Support
+CA email address:     emailAddress=admin@eightbits.com
+
+
+Do you want to use these data (y/n) [y] >> 
+
+
+Creating RANDFILE from >/kernel/genunix< in >/var/sgeCA/port5321/default/private/rand.seed<
+
+1513428 semi-random bytes loaded
+Creating CA certificate and private key
+
+Using configuration from /tmp/sge_ca126095.tmp
+Generating a 1024 bit RSA private key
+....................................++++++
+............++++++
+writing new private key to '/var/sgeCA/port5321/default/private/cakey.pem'
+-----
+Hit <RETURN> to continue >>
+
+Creating Daemon certificate and key
+-----------------------------------
+
+Creating RANDFILE from >/kernel/genunix< in >/var/sgeCA/port5321/default/private/rand.seed<
+
+1513428 semi-random bytes loaded
+Using configuration from /tmp/sge_ca126095.tmp
+Generating a 1024 bit RSA private key
+...................................++++++
+.....................++++++
+writing new private key to '/var/sgeCA/port5321/default/private/key.pem'
+-----
+Using configuration from /tmp/sge_ca126095.tmp
+Check that the request matches the signature
+Signature ok
+The Subjects Distinguished Name is as follows
+countryName           :PRINTABLE:'US'
+stateOrProvinceName   :PRINTABLE:'California'
+localityName          :PRINTABLE:'San Francisco'
+organizationName      :PRINTABLE:'8Bits'
+organizationalUnitName:PRINTABLE:'Support'
+uniqueIdentifier      :PRINTABLE:'root'
+commonName            :PRINTABLE:'SGE Daemon'
+emailAddress          :IA5STRING:'none'
+Certificate is to be certified until Mar  1 16:14:23 2003 GMT (365 days)
+
+Write out database with 1 new entries
+Data Base Updated
+created and signed certificate for SGE daemons
+Creating RANDFILE from >/kernel/genunix< in >/var/sgeCA/port5321/default/userkeys/root/rand.seed<
+
+1513428 semi-random bytes loaded
+Using configuration from /tmp/sge_ca126095.tmp
+Generating a 1024 bit RSA private key
+....++++++
+.....................++++++
+writing new private key to '/var/sgeCA/port5321/default/userkeys/root/key.pem'
+-----
+Using configuration from /tmp/sge_ca126095.tmp
+Check that the request matches the signature
+Signature ok
+The Subjects Distinguished Name is as follows
+countryName           :PRINTABLE:'US'
+stateOrProvinceName   :PRINTABLE:'California'
+localityName          :PRINTABLE:'San Francisco'
+organizationName      :PRINTABLE:'8Bits'
+organizationalUnitName:PRINTABLE:'Support'
+uniqueIdentifier      :PRINTABLE:'root'
+commonName            :PRINTABLE:'SGE install user'
+emailAddress          :IA5STRING:'none'
+Certificate is to be certified until Mar  1 16:14:25 2003 GMT (365 days)
+
+Write out database with 1 new entries
+Data Base Updated
+created and signed certificate for user >root< in >/var/sgeCA/port5321/default/userkeys/root<
+Creating RANDFILE from >/kernel/genunix< in >/var/sgeCA/port5321/default/userkeys/aa114085/rand.seed<
+
+1513428 semi-random bytes loaded
+Using configuration from /tmp/sge_ca126095.tmp
+Generating a 1024 bit RSA private key
+......++++++
+...++++++
+writing new private key to '/var/sgeCA/port5321/default/userkeys/aa114085/key.pem'
+-----
+Using configuration from /tmp/sge_ca126095.tmp
+Check that the request matches the signature
+Signature ok
+The Subjects Distinguished Name is as follows
+countryName           :PRINTABLE:'US'
+stateOrProvinceName   :PRINTABLE:'California'
+localityName          :PRINTABLE:'San Francisco'
+organizationName      :PRINTABLE:'8Bits'
+organizationalUnitName:PRINTABLE:'Support'
+uniqueIdentifier      :PRINTABLE:'aa114085'
+commonName            :PRINTABLE:'SGE admin user'
+emailAddress          :IA5STRING:'none'
+Certificate is to be certified until Mar  1 16:14:26 2003 GMT (365 days)
+
+Write out database with 1 new entries
+Data Base Updated
+created and signed certificate for user >aa114085< in >/var/sgeCA/port5321/default/userkeys/aa114085<
+Hit <RETURN> to continue >> 
+
+
+Then the installation script proceeds as usual.
+
+
+
+Creating CA certificate and private key
+---------------------------------------
+
+Please give some basic parameters to create the distinguished name (DN)
+for the certificates.
+
+We will ask for
+
+   - the two letter country code
+   - the state
+   - the location, e.g city or your buildingcode
+   - the organization (e.g. your company name)
+   - the organizational unit, e.g. your department
+   - the email address of the CA administrator (you!)
+
+Hit <RETURN> to continue >> 
+
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+================================================================================
 ATTENTION !! THIS IS WORK IN PROGRESS AND SHOULD NOT BE USED 
 IN PRODUCTION ENVIRONMENTS NONETHELESS YOU ARE VERY WELCOME 
 TO TEST, ADVICE AND ENHANCE

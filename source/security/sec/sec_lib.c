@@ -40,7 +40,6 @@
 #include <string.h>
 #include <pwd.h>
 
-#include "sge_unistd.h"
 #include "commlib.h"
 #include "sge.h"
 #include "sgermon.h"
@@ -52,6 +51,7 @@
 #include "sge_arch.h"
 #include "sge_stdlib.h"
 #include "sge_uidgid.h"
+#include "sge_unistd.h"
 
 #include "msg_sec.h"
 #include "msg_gdilib.h"
@@ -184,6 +184,30 @@ static int sec_unpack_response(u_long32 *len, u_char **buf,
 static int sec_pack_message(sge_pack_buffer *pb, u_long32 connid, u_long32 enc_mac_len, u_char *enc_mac, u_char *enc_msg, u_long32 enc_msg_len);
 static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *enc_mac_len, u_char **enc_mac, u_long32 *enc_msg_len, u_char **enc_msg);
 
+/****** security/sec_lib/debug_print_ASN1_UTCTIME() *************************************
+*  NAME
+*     debug_print_ASN1_UTCTIME() -- print an ASN1_UTCTIME string prefixed by a label 
+*
+*  SYNOPSIS
+*     static void debug_print_ASN1_UTCTIME(char *label, ASN1_UTCTIME *time) 
+*
+*  FUNCTION
+*     An ASN1_UTCTIME is converted to char* and label and the time string are printed
+*
+*  INPUTS
+*     char *label        - label string 
+*     ASN1_UTCTIME *time - time in ASN1_UTCTIME format
+*
+*  RESULT
+*     static void - 
+*
+*  EXAMPLE
+*     debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
+*     debug_print_ASN1_UTCTIME("Certificate not valid before: ", X509_get_notBefore(cert));
+*
+*  SEE ALSO
+*     security/sec_lib/debug_print_buffer()
+*******************************************************************************/
 static void debug_print_ASN1_UTCTIME(char *label, ASN1_UTCTIME *time)
 {
    BIO *out;
@@ -196,6 +220,38 @@ static void debug_print_ASN1_UTCTIME(char *label, ASN1_UTCTIME *time)
    
 /* #define SEC_DEBUG    */
 #ifdef SEC_DEBUG
+/****** security/sec_lib/debug_print_buffer() ************************
+*  NAME
+*     debug_print_buffer() -- print a title, buflen and buf as a 
+*                             sequence of hex values
+*
+*  SYNOPSIS
+*     static void debug_print_buffer(char *title, unsigned char *buf,
+*                                    int buflen) 
+*
+*  FUNCTION
+*     Print a title, buflen and buf as a sequence of hex values.
+*
+*  INPUTS
+*     char *title        - title
+*     unsigned char *buf - buffer keeping a sequence of binary info 
+*     int buflen         - length of buffer
+*
+*  RESULT
+*     static void - 
+*
+*  EXAMPLE
+*     DEBUG_PRINT_BUFFER("Encrypted incoming message", 
+*                         (unsigned char*) (*buffer), (int)(*buflen));
+*
+*  NOTES
+*     Used as a macro DEBUG_PRINT_BUFFER(x,y,z) which expands to the 
+*     empty string if SEC_BEBUG is undefined and to debug_print_buffer() 
+*     if SEC_BEBUG is defined.
+*
+*  SEE ALSO
+*     security/sec_lib/debug_print_ASN1_UTCTIME()
+*******************************************************************************/
 static void debug_print_buffer(char *title, unsigned char *buf, int buflen)
 {
    int j;
@@ -244,26 +300,25 @@ static char *reconnect_file;
 static char *rand_file;
 
 
-
-/*
-** NAME
-**   sec_init
-**
-** SYNOPSIS
-**   #include "sec_lib.h"
-**
-**   int sec_init(progname)
-**   char *progname - the program name of the calling program
-**
-** DESCRIPTION
-**   This function initialices the security related data in the global
-**   gsd-struct. This must be done only once, typically before the
-**   enroll to the commd.
-**
-** RETURN VALUES
-**      0       on success
-**      -1      on failure
-*/
+/****** security/sec_lib/sec_init() ******************************************
+*  NAME
+*     sec_init() -- initialize CSP security 
+*
+*  SYNOPSIS
+*     int sec_init(const char *progname) 
+*
+*  FUNCTION
+*     This function initialices the security related data in the global 
+*     gsd-struct. This must be done only once, typically before the 
+*     enroll to the commd.
+*
+*  INPUTS
+*     const char *progname - commproc name to distinguish daemons and non-daemons 
+*
+*  RESULT
+*     int 0 on success, -1 on failure
+*
+*******************************************************************************/
 int sec_init(const char *progname) 
 {
    static int sec_initialized = 0;
@@ -342,11 +397,15 @@ int sec_init(const char *progname)
       return -1;
    }
    if(!strcmp(progname, prognames[QMASTER])) {
-      /* time after qmaster clears the connection list   */
+      /* 
+      ** time after qmaster clears the connection list   
+      */
       gsd.refresh_time = X509_gmtime_adj(gsd.refresh_time, 0);
    }
    else {
-      /* time after client makes a new announce to master   */
+      /* 
+      ** time after client makes a new announce to master   
+      */
       gsd.refresh_time = X509_gmtime_adj(gsd.refresh_time, (long) 60*ValidMinutes);
    }   
 
@@ -394,33 +453,34 @@ int sec_init(const char *progname)
    return 0;
 }
 
-/*
-** NAME
-**   sec_send_message
-**
-** SYNOPSIS
-**      #include "sec_lib.h"
-**
-**   sec_send_message(synchron,tocomproc,toid,tohost,tag,buffer,buflen,mid)
-**   int synchron    - transfer modus,
-**   char *tocomproc - name destination program,
-**   int toid        - id of communication,
-**   char *tohost    - destination host,
-**   int tag         - tag of message,
-**   char *buffer    - buffer which contains the message to send
-**   int buflen      - lenght of message,
-**   u_long32  *mid    - id for asynchronous messages;
-**
-** DESCRIPTION
-**   This function is used instead of the normal send_message call from
-**   the commlib. It checks if a client has to announce to the master and 
-**   if the message should be encrypted and then it sends the message.
-**
-** RETURN VALUES
-**      0       on success
-**      -1      on failure
-*/
-
+/****** security/sec_lib/sec_send_message() *********************************************
+*  NAME
+*     sec_send_message() -- CSP secured version of send_message()
+*
+*  SYNOPSIS
+*     int sec_send_message(int synchron, const char *tocomproc, int toid, const 
+*     char *tohost, int tag, char *buffer, int buflen, u_long32 *mid, int 
+*     compressed) 
+*
+*  FUNCTION
+*     This function is used instead of the normal send_message call from
+*     the commlib. It checks if a client has to announce to the master and 
+*     if the message should be encrypted and then it sends the message.
+*
+*  INPUTS
+*     int synchron          - transfer modus,
+*     const char *tocomproc - name destination program,
+*     int toid              - id of communication,
+*     const char *tohost    - destination host,
+*     int tag               - tag of message,
+*     char *buffer          - buffer which contains the message to send
+*     int buflen            - lenght of message,
+*     u_long32  *mid        - id for asynchronous messages;
+*     int compressed        - use zlib compression 
+*
+*  RESULT
+*     int - 0 on success, -1 on failure
+*******************************************************************************/
 int sec_send_message(
 int synchron,
 const char *tocomproc,
@@ -442,7 +502,7 @@ int compressed
    */
    if (me.who != QMASTER) {
       if (sec_announce_connection(&gsd, tocomproc,tohost)) {
-         ERROR((SGE_EVENT,"failed announce\n"));
+         ERROR((SGE_EVENT, MSG_SEC_ANNOUNCEFAILED));
          DEXIT;
          return SEC_ANNOUNCE_FAILED;
       }
@@ -456,20 +516,20 @@ int compressed
          ** (tohost, tocomproc, toid)
          */
          if (sec_set_secdata(tohost,tocomproc,toid)) {
-            ERROR((SGE_EVENT, "failed set security data\n"));
+            ERROR((SGE_EVENT, MSG_SEC_SETSECDATAFAILED));
             DEXIT;
             return SEC_SEND_FAILED;
          }
       }
       if (sec_encrypt(&pb, buffer, buflen)) {
-         ERROR((SGE_EVENT,"failed encrypt message\n"));
+         ERROR((SGE_EVENT, MSG_SEC_MSGENCFAILED));
          DEXIT;
          return SEC_SEND_FAILED;
       }
    }
    else if (me.who != QMASTER) {
       if (sec_set_connid(&buffer, &buflen)) {
-         ERROR((SGE_EVENT,"failed set connection ID\n"));
+         ERROR((SGE_EVENT, MSG_SEC_CONNIDSETFAILED));
          DEXIT;
          return SEC_SEND_FAILED;
       }
@@ -484,32 +544,34 @@ int compressed
    return i;
 }
 
-/*
-** NAME
-**   sec_receive_message
-**
-** SYNOPSIS
-**      #include "sec_lib.h"
-**
-**   int sec_receive_message(fromcommproc,fromid,fromhost,tag,
-**               buffer,buflen,synchron)
-**   char *fromcommproc - name of progname from the source,
-**   u_short *fromid    - id of message,
-**   char *fromhost     - host name of source,
-**   int *tag           - tag of received message,
-**   char **buffer      - buffer contains the received message,
-**   u_long32 *buflen     - length of message,
-**   int synchron       - transfer modus;
-**
-** DESCRIPTION
-**   This function is used instead of the normal receive message of the
-**   commlib. It handles an announce and decrypts the message if necessary.
-**   The qmaster writes this connection to his connection list.
-**
-** RETURN VALUES
-**      0       on success
-**      -1      on failure
-*/
+/****** security/sec_lib/sec_receive_message() *******************************
+*  NAME
+*     sec_receive_message() -- CSP secured version of receive_message() 
+*
+*  SYNOPSIS
+*     int sec_receive_message(char *fromcommproc, u_short *fromid, char 
+*     *fromhost, int *tag, char **buffer, u_long32 *buflen, int synchron, 
+*     u_short* compressed) 
+*
+*  FUNCTION
+*     This function is used instead of the normal receive message of the
+*     commlib. It handles an announce and decrypts the message if necessary.
+*     The qmaster writes this connection to his connection list.
+*
+*  INPUTS
+*     char *fromcommproc  - sender's commproc name 
+*     u_short *fromid     - id of message
+*     char *fromhost      - sender's hostname
+*     int *tag            - tag of received message
+*     char **buffer       - buffer contains the received message
+*     u_long32 *buflen    - length of message 
+*     int synchron        - transfer modus
+*     u_short* compressed - use zlib compression
+*
+*  RESULT
+*     int - 0 on success, -1 on failure
+*
+*******************************************************************************/
 int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, 
                         int *tag, char **buffer, u_long32 *buflen, 
                         int synchron, u_short* compressed)
@@ -526,7 +588,7 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
 
    if (*tag == TAG_SEC_ANNOUNCE) {
       if (sec_handle_announce(fromcommproc,*fromid,fromhost,*buffer,*buflen)) {
-         ERROR((SGE_EVENT,"failed handle announce for (%s:%s:%d)\n",
+         ERROR((SGE_EVENT, MSG_SEC_HANDLEANNOUNCEFAILED_SSI,
                   fromhost, fromcommproc, *fromid));
          DEXIT;
          return SEC_ANNOUNCE_FAILED;
@@ -537,10 +599,10 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
                          (unsigned char*) (*buffer), (int)(*buflen));
 
       if (sec_decrypt(buffer,buflen,fromhost,fromcommproc,*fromid)) {
-         ERROR((SGE_EVENT,"failed decrypt message (%s:%s:%d)\n",
+         ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED_SSI,
                   fromhost,fromcommproc,*fromid));
          if (sec_handle_announce(fromcommproc,*fromid,fromhost,NULL,0))
-            ERROR((SGE_EVENT,"failed handle decrypt error\n"));
+            ERROR((SGE_EVENT, MSG_SEC_HANDLEDECERRFAILED));
          DEXIT;
          return SEC_RECEIVE_FAILED;
       }
@@ -548,7 +610,7 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
    else if (me.who == QMASTER) {
       if (sec_get_connid(buffer,buflen) ||
                sec_update_connlist(fromhost,fromcommproc,*fromid)) {
-         ERROR((SGE_EVENT, "failed get connection ID\n"));
+         ERROR((SGE_EVENT, MSG_SEC_CONNIDGETFAILED));
          DEXIT;
          return SEC_RECEIVE_FAILED;
       }
@@ -559,27 +621,29 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
 }
 
 
-/*
-** NAME
-**   sec_set_encrypt
-**
-** SYNOPSIS
-**   static int sec_set_encrypt(tag)
-**   int tag - message tag of received message
-**
-** DESCRIPTION
-**   This function decides within a single switch by means of the
-**   message tag if a message is/should be encrypted. ATTENTION:
-**   every new tag, which message is not to be encrypted, must
-**   occur within this switch. Tags who are not there are encrypted
-**   by default. 
-**   (definition of tags <gridengine>/source/libs/gdi/sge_gdi_intern.h)
-**
-**
-** RETURN VALUES
-**   1   message with tag 'tag' is/should be encrypted
-**   0   message is not encrypted
-*/   
+/****** security/sec_lib/sec_set_encrypt() ***********************************
+*  NAME
+*     sec_set_encrypt() -- return encryption mode for tag
+*
+*  SYNOPSIS
+*     static int sec_set_encrypt(int tag) 
+*
+*  FUNCTION
+*     This function decides within a single switch by means of the
+*     message tag if a message is/should be encrypted. ATTENTION:
+*     every new tag, which message is not to be encrypted, must
+*     occur within this switch. Tags who are not there are encrypted
+*     by default. 
+*     (definition of tags <gridengine>/source/libs/gdi/sge_gdi_intern.h)
+*
+*  INPUTS
+*     int tag - message tag
+*
+*  RESULT
+*     static int - 0 if the message is not encrypted, 
+*                  1 if the message is encrypted 
+*
+*******************************************************************************/
 static int sec_set_encrypt(
 int tag 
 ) {
@@ -594,23 +658,24 @@ int tag
    }
 }
 
-/*
-** NAME
-**   sec_files
-**
-** SYNOPSIS
-**
-**   static int sec_files()
-**
-** DESCRIPTION
-**   This function reads security related files from hard disk
-**   (key- and certificate-file) and verifies the own certificate.
-**   It's normally called from the following sec_init function.
-**
-** RETURN VALUES
-**   0    on success
-**   -1   on failure
-*/
+/****** sec_lib/sec_files() ****************************************************
+*  NAME
+*     sec_files() -- read CSP related files  
+*
+*  SYNOPSIS
+*     static int sec_files() 
+*
+*  FUNCTION
+*     This function reads security related files from hard disk
+*     (key- and certificate-file) and verifies the own certificate.
+*     It's normally called from the following sec_init function.
+*
+*  INPUTS
+*
+*  RESULT
+*     static int - 0 on success, -1 on failure
+*
+*******************************************************************************/
 static int sec_files()
 {
    int     i = 0;
@@ -672,9 +737,27 @@ static int sec_files()
       return i;
 }
 
-/*
-** verify certificate
-*/
+/****** sec_lib/sec_verify_certificate() ***************************************
+*  NAME
+*     sec_verify_certificate() -- verify a user certificates validity
+*
+*  SYNOPSIS
+*     static int sec_verify_certificate(X509 *cert) 
+*
+*  FUNCTION
+*     Verify the user's X509 certificate. The certificate must be valid for the 
+*     time when it is used and must be signed from the corresponding CA.
+*
+*  INPUTS
+*     X509 *cert - a X509 user certificate
+*
+*  RESULT
+*     static int - 1 if certificate is valid, 0 if certificate is not valid. 
+*
+*  BUGS
+*     Revocation of certificates is not yet supported.
+*
+*******************************************************************************/
 static int sec_verify_certificate(X509 *cert)
 {
    X509_STORE *ctx = NULL;
@@ -702,11 +785,11 @@ static int sec_verify_certificate(X509 *cert)
    
    switch (err) {
       case X509_V_ERR_CERT_NOT_YET_VALID:
-         ERROR((SGE_EVENT, "certificate not yet valid\n"));
+         ERROR((SGE_EVENT, MSG_SEC_CERTNOTYETVALID));
          break;
 
       case X509_V_ERR_CERT_HAS_EXPIRED:
-         ERROR((SGE_EVENT, "certificate has expired\n"));
+         ERROR((SGE_EVENT, MSG_SEC_CERTEXPIRED));
          break;
    }      
    
@@ -802,25 +885,29 @@ static int sec_undump_connlist()
 
 #endif
 
-/*
-** NAME
-**
-** SYNOPSIS
-**
-**   static int sec_announce_connection(commproc,cell)
-**   char *commproc - the program name of the destination, 
-**   char *cell     - the host name of the destination;
-**
-** DESCRIPTION
-**   This function is used from clients to announce to the master and to
-**   receive his responce. It should be called before the first 
-**   communication and its aim is to negotiate a secret key which is
-**   used to encrypt the further communication.
-**
-** RETURN VALUES
-**      0       on success
-**      -1      on failure
-*/
+/****** security/sec_lib/sec_announce_connection() **************************
+*  NAME
+*     sec_announce_connection() -- announce a new CSP connection
+*
+*  SYNOPSIS
+*     static int sec_announce_connection(GlobalSecureData *gsd, const char 
+*     *tocomproc, const char *tohost) 
+*
+*  FUNCTION
+*     This function is used from clients to announce to the master and to
+*     receive his responce. It should be called before the first 
+*     communication and its aim is to negotiate a secret key which is
+*     used to encrypt the further communication.
+*
+*  INPUTS
+*     GlobalSecureData *gsd - security data structure
+*     const char *tocomproc - commproc name of destination
+*     const char *tohost    - destination host 
+*
+*  RESULT
+*     static int - 0 on success, -1 on failure
+*
+*******************************************************************************/
 static int sec_announce_connection(
 GlobalSecureData *gsd,
 const char *tocomproc,
@@ -877,7 +964,7 @@ const char *tohost
    x509_len = i2d_X509(gsd->x509, &tmp);
    
    if (!x509_len) {
-      ERROR((SGE_EVENT,"i2d_x509 failed\n"));
+      ERROR((SGE_EVENT, MSG_SEC_I2DX509FAILED));
       i=-1;
       goto error;
    }
@@ -1029,14 +1116,14 @@ const char *tohost
    ** decrypt secret key
    */
    if (!EVP_OpenInit(&ectx, gsd->cipher, enc_key, enc_key_len, iv, gsd->private_key)) {
-      ERROR((SGE_EVENT,"EVP_OpenInit failed decrypt keys\n"));
+      ERROR((SGE_EVENT, MSG_SEC_EVPOPENINITFAILED));
       EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
       i=-1;
       goto error;
    }
    if (!EVP_OpenUpdate(&ectx, gsd->key_mat, (int*) &(gsd->key_mat_len), enc_key_mat, (int) enc_key_mat_len)) {
-      ERROR((SGE_EVENT,"EVP_OpenUpdate failed decrypt keys\n"));
+      ERROR((SGE_EVENT, MSG_SEC_EVPOPENUPDATEFAILED));
       EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
       i = -1;
@@ -1085,27 +1172,29 @@ const char *tohost
    return i;
 }
 
-/*
-** NAME
-**    sec_respond_announce
-**
-** SYNOPSIS
-**
-**   static int sec_respond_announce(commproc,id,host,buffer,buflen)
-**   char *commproc - the program name of the source of the message, 
-**   u_short id     - the id of the communication, 
-**   char *host     - the host name of the sender, 
-**   char *buffer   - this buffer contains the incoming message, 
-**   u_long32 buflen  - the length of the message;
-**   
-** DESCRIPTION
-**   This function handles the announce of a client and sends a responce
-**   to him which includes the secret key enrypted.
-**   
-** RETURN VALUES
-**      0       on success
-**      -1      on failure
-*/
+/****** sec_lib/sec_respond_announce() *****************************************
+*  NAME
+*     sec_respond_announce() -- respond to CSP announce of client 
+*
+*  SYNOPSIS
+*     static int sec_respond_announce(char *commproc, u_short id, char *host, 
+*     char *buffer, u_long32 buflen) 
+*
+*  FUNCTION
+*     This function handles the announce of a client and sends a responce
+*     to it which includes the encrypted secret key.
+*
+*  INPUTS
+*     char *commproc  - the program name of the source of the message
+*     u_short id      - the id of the communication
+*     char *host      - the host name of the sender
+*     char *buffer    - this buffer contains the incoming message
+*     u_long32 buflen - the length of the message
+*
+*  RESULT
+*     static int - 0 on success, -1 on failure 
+*
+*******************************************************************************/
 static int sec_respond_announce(char *commproc, u_short id, char *host, 
                          char *buffer, u_long32 buflen)
 {
@@ -1347,23 +1436,26 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
       return i;
 }
 
-/*
-** NAME
-**   sec_encrypt
-**
-** SYNOPSIS
-**
-**   static int sec_encrypt(buffer,buflen)
-**   char **buffer - buffer contains the message to encrypt and finaly
-**            - the encrypted message,
-**   int *buflen   - the old and the new message length;
-**
-** DESCRIPTION
-**   This function encrypts a message, calculates the MAC.
-** RETURN VALUES
-**      0       on success
-**      -1      on failure
-*/
+/****** sec_lib/sec_encrypt() **************************************************
+*  NAME
+*     sec_encrypt() -- encrypt a message buffer 
+*
+*  SYNOPSIS
+*     static int sec_encrypt(sge_pack_buffer *pb, const char *inbuf, int 
+*     inbuflen) 
+*
+*  FUNCTION
+*     This function encrypts a message, calculates the MAC.
+*
+*  INPUTS
+*     sge_pack_buffer *pb - packbuffer that contains the encrypted message
+*     const char *inbuf   - unencrypted message
+*     int inbuflen        - length of unencrypted message 
+*
+*  RESULT
+*     static int - 0 on success, -1 on failure
+*
+*******************************************************************************/
 static int sec_encrypt(
 sge_pack_buffer *pb,
 const char *inbuf,
@@ -1498,28 +1590,30 @@ int inbuflen
       return i;
 }
 
-/*
-** NAME
-**   sec_handle_announce
-**
-** SYNOPSIS
-**
-**   static int sec_handle_announce(commproc,id,host,buffer,buflen)
-**   char *commproc - program name of the destination of responce,
-**   u_short id     - id of communication,
-**   char *host     - destination host,
-**   char *buffer   - buffer contains announce,
-**   u_long32 buflen  - lenght of announce;
-**
-** DESCRIPTION
-**   This function handles an incoming message with tag TAG_SEC_ANNOUNCE.
-**   If I am the master I send a responce to the client, if not I make
-**   an announce to the master.
-**
-** RETURN VALUES
-**      0       on success
-**      -1      on failure
-*/
+/****** security/sec_lib/sec_handle_announce() *******************************
+*  NAME
+*     sec_handle_announce() -- handle the announcement of a new CSP connection
+*
+*  SYNOPSIS
+*     static int sec_handle_announce(char *commproc, u_short id, char *host, 
+*     char *buffer, u_long32 buflen) 
+*
+*  FUNCTION
+*     This function handles an incoming message with tag TAG_SEC_ANNOUNCE.
+*     If I am the master I send a responce to the client, if not I make
+*     an announce to the master.
+*
+*  INPUTS
+*     char *commproc  - program name of the destination of responce
+*     u_short id      - id of communication
+*     char *host      - destination host
+*     char *buffer    - buffer contains announce
+*     u_long32 buflen - lenght of announce
+*
+*  RESULT
+*     static int - 0 on success, -1 on failure
+*
+*******************************************************************************/
 static int sec_handle_announce(char *commproc, u_short id, char *host, char *buffer, u_long32 buflen)
 {
    int i;
@@ -1562,7 +1656,7 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
          goto error;
       }
       if (remove(reconnect_file)) {
-         ERROR((SGE_EVENT,"failed remove reconnect file '%s'\n",
+         ERROR((SGE_EVENT, MSG_SEC_RMRECONNECTFAILED_S,
                   reconnect_file));
          i = -1;
          goto error;
@@ -1576,28 +1670,28 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
       return i;
 }
 
-/*
-** NAME
-**   sec_decrypt
-**
-** SYNOPSIS
-**
-**   static int sec_decrypt(buffer,buflen,host,commproc,id)
-**   char **buffer  - message to decrypt and message after decryption, 
-**   u_long32 *buflen - message length before and after decryption,
-**   char *host     - name of host,
-**   char *commproc - name program name,
-**   int id         - id of connection;
-**
-** DESCRIPTION
-**   This function decrypts a message from and to buffer and checks the
-**   MAC. 
-**
-** RETURN VALUES
-**      0       on success
-**      -1      on failure
-*/
-
+/****** security/sec_lib/sec_decrypt() **************************************
+*  NAME
+*     sec_decrypt() -- decrypt a message 
+*
+*  SYNOPSIS
+*     static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char 
+*     *commproc, int id) 
+*
+*  FUNCTION
+*     This function decrypts a message from and to buffer and checks the MAC. 
+*
+*  INPUTS
+*     char **buffer    - message to decrypt and message after decryption
+*     u_long32 *buflen - message length before and after decryption
+*     char *host       - name of host
+*     char *commproc   - program name
+*     int id           - id of connection
+*
+*  RESULT
+*     static int - 0 on success, -1 on failure
+*
+*******************************************************************************/
 static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commproc, int id)
 {
    int i;
@@ -1618,7 +1712,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    ** initialize packbuffer
    */
    if ((i=init_packbuffer_from_buffer(&pb, *buffer, *buflen, 0))) {
-      ERROR((SGE_EVENT,"failed init_packbuffer_from_buffer\n"));
+      ERROR((SGE_EVENT, MSG_SEC_INITPBFAILED));
       goto error;
    }
 
@@ -1628,8 +1722,8 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    i = sec_unpack_message(&pb, &connid, &enc_mac_len, &enc_mac, 
                           &enc_msg_len, &enc_msg);
    if (i) {
-      ERROR((SGE_EVENT,"failed unpack message from buffer\n"));
-      packstr(&pb,"Can't unpack your message from buffer\n");
+      ERROR((SGE_EVENT, MSG_SEC_UNPACKMSGFAILED));
+      packstr(&pb, MSG_SEC_UNPACKMSGFAILED);
       goto error;
    }
 
@@ -1659,8 +1753,8 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
       */
       element = lGetElemUlong(conn_list, SEC_ConnectionID, connid);
       if (!element) {
-         ERROR((SGE_EVENT,"no list entry for connection %d\n", (int) connid));
-         packstr(&pb,"Can't find you in connection list\n");
+         ERROR((SGE_EVENT, MSG_SEC_NOCONN_I, (int) connid));
+         packstr(&pb, SGE_EVENT);
          i = -1;
          goto error;
       }
@@ -1675,10 +1769,9 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    }
    else {
       if (gsd.connid != connid) {
-         ERROR((SGE_EVENT,"received wrong connection ID\n"));
-         ERROR((SGE_EVENT,"it is %d, but it should be %d!\n",
+         ERROR((SGE_EVENT, MSG_SEC_CONNIDSHOULDBE_II,
                   (int) connid, (int) gsd.connid));
-         packstr(&pb,"Probably you send the wrong connection ID\n");
+         packstr(&pb, SGE_EVENT);
          i = -1;
          goto error;
       }
@@ -1689,7 +1782,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    */
    *buffer = malloc(*buflen + EVP_CIPHER_block_size(gsd.cipher));
    if (!*buffer) {
-      ERROR((SGE_EVENT,"failed malloc memory\n"));
+      ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
       i = -1;
       goto error;
    }
@@ -1699,7 +1792,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    */
    memset(iv, '\0', sizeof(iv));
    if (!EVP_DecryptInit(&ctx, gsd.cipher, gsd.key_mat, iv)) {
-      ERROR((SGE_EVENT,"failed decrypt MAC\n"));
+      ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
       EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
       i = -1;
@@ -1708,14 +1801,14 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
 
    if (!EVP_DecryptUpdate(&ctx, md_value, (int*) &md_len, 
                            enc_mac, enc_mac_len)) {
-      ERROR((SGE_EVENT,"failed decrypt MAC\n"));
+      ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
       EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
       i = -1;
       goto error;
    }
    if (!EVP_DecryptFinal(&ctx, md_value, (int*) &md_len)) {
-      ERROR((SGE_EVENT,"failed decrypt MAC\n"));
+      ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
       EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
       i = -1;
@@ -1728,7 +1821,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
 
    memset(iv, '\0', sizeof(iv));
    if (!EVP_DecryptInit(&ctx, gsd.cipher, gsd.key_mat, iv)) {
-      ERROR((SGE_EVENT,"failed decrypt MAC\n"));
+      ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
       EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
       i = -1;
@@ -1736,14 +1829,14 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    }
    if (!EVP_DecryptUpdate(&ctx, (unsigned char*) *buffer, (int*) &outlen,
                            (unsigned char*)enc_msg, enc_msg_len)) {
-      ERROR((SGE_EVENT,"failed decrypt message\n"));
+      ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED));
       EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
       i = -1;
       goto error;
    }
    if (!EVP_DecryptFinal(&ctx, (unsigned char*) *buffer, (int*)&outlen)) {
-      ERROR((SGE_EVENT,"failed decrypt message\n"));
+      ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED));
       EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
       i = -1;
@@ -1786,22 +1879,23 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
 }
 
 #ifdef SEC_RECONNECT
-/*
-** NAME
-**   sec_reconnect
-**
-** SYNOPSIS
-**
-**   static int sec_reconnect()
-**
-** DESCRIPTION
-**   This function reads the security related data from disk and decrypts
-**   it for clients.
-**
-** RETURN VALUES
-**      0       on success
-**      -1      on failure
-*/
+/****** security/sec_lib/sec_reconnect() *************************************
+*  NAME
+*     sec_reconnect() -- read CSP client reconnect data from file 
+*
+*  SYNOPSIS
+*     static int sec_reconnect() 
+*
+*  FUNCTION
+*     This function reads the security related data from disk and decrypts
+*     it for clients.
+*
+*  INPUTS
+*
+*  RESULT
+*     static int - 0 on success, -1 on failure
+*
+*******************************************************************************/
 static int sec_reconnect()
 {
    FILE *fp=NULL;
@@ -1822,7 +1916,7 @@ static int sec_reconnect()
 
    /* prepare packing buffer                                       */
    if ((i=init_packbuffer(&pb, file_info.st_size, 0))) {
-      ERROR((SGE_EVENT,"failed init_packbuffer\n"));
+      ERROR((SGE_EVENT, MSG_SEC_INITPBFAILED));
       goto error;
    }
    /* 
@@ -1831,7 +1925,7 @@ static int sec_reconnect()
    bio = BIO_new_file(reconnect_file, "rb");
    i = BIO_read(bio, pb.head_ptr, file_info.st_size);
    if (!i) {
-      ERROR((SGE_EVENT,"can't read from file\n"));
+      ERROR((SGE_EVENT, MSG_SEC_CANTREAD));
       i = -1;
       goto error;
    }
@@ -1842,7 +1936,7 @@ static int sec_reconnect()
                                 (u_char*) pb.cur_ptr, (u_char*) pb.cur_ptr, 
                                  gsd.private_key->pkey.rsa, RSA_PKCS1_PADDING);
    if (nbytes <= 0) {
-      ERROR((SGE_EVENT,"failed decrypt reconnect data\n"));
+      ERROR((SGE_EVENT, MSG_SEC_DECRECONNECTFAILED));
       sec_error();
       i = -1;
       goto error;
@@ -1851,7 +1945,7 @@ static int sec_reconnect()
    i = sec_unpack_reconnect(&pb, &gsd.connid, &gsd.seq_send, &gsd.seq_receive,
                               &gsd.key_mat, &gsd.key_mat_len, &time_str, &len);
    if (i) {
-      ERROR((SGE_EVENT,"failed read reconnect from buffer\n"));
+      ERROR((SGE_EVENT, MSG_SEC_UNPACKRECONNECTFAILED));
       goto error;
    }
 
@@ -1859,7 +1953,7 @@ static int sec_reconnect()
    d2i_ASN1_UTCTIME(&gsd.refresh_time, (unsigned char **)&time_str, len);
    free((char*) ptr);
 
-debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd.refresh_time);
+   /* debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd.refresh_time); */
 
    gsd.connect = 1;
    i = 0;
@@ -1873,22 +1967,23 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd.refresh_time);
       return i;
 }
 
-/*
-** NAME
-**   sec_write_data2hd
-**
-** SYNOPSIS
-**
-**   static int sec_write_data2hd()
-**
-** DESCRIPTION
-**   This function writes the security related data to disk, encrypted
-**   with RSA private key.
-**
-** RETURN VALUES
-**      0       on success
-**      -1      on failure
-*/
+/****** security/sec_lib/sec_write_data2hd() ************************************
+*  NAME
+*     sec_write_data2hd() -- write client reconnect data to file 
+*
+*  SYNOPSIS
+*     static int sec_write_data2hd() 
+*
+*  FUNCTION
+*   This function writes the security related data to disk, encrypted
+*   with RSA private key.
+*
+*  INPUTS
+*
+*  RESULT
+*     static int - 0 on success, -1 on failure
+*
+*******************************************************************************/
 static int sec_write_data2hd()
 {
    FILE *fp=NULL;
@@ -1902,9 +1997,11 @@ static int sec_write_data2hd()
 
    DENTER(GDI_LAYER,"sec_write_data2hd");
 
-   /* prepare packing buffer                                       */
+   /* 
+   ** prepare packing buffer                                       
+   */
    if ((i=init_packbuffer(&pb, 0, 0))) {
-      ERROR((SGE_EVENT,"failed init_packbuffer\n"));
+      ERROR((SGE_EVENT, MSG_SEC_INITPBFAILED));
       i = -1;
       goto error;
    }
@@ -1919,7 +2016,7 @@ static int sec_write_data2hd()
    if (sec_pack_reconnect(&pb, gsd.connid, gsd.seq_send, gsd.seq_receive,
                            gsd.key_mat, gsd.key_mat_len, 
                            time_str, len)) {
-      ERROR((SGE_EVENT,"failed write reconnect to buffer\n"));
+      ERROR((SGE_EVENT, MSG_SEC_PACKRECONNECTFAILED));
       i = -1;
       goto error;
    }
@@ -1932,7 +2029,7 @@ static int sec_write_data2hd()
                                (u_char*)pb.head_ptr, evp->pkey.rsa, 
                                RSA_PKCS1_PADDING);
    if (nbytes <= 0) {
-      ERROR((SGE_EVENT,"failed encrypt reconnect data\n"));
+      ERROR((SGE_EVENT, MSG_SEC_ENCRECONNECTFAILED));
       sec_error();
       i = -1;
       goto error;
@@ -1943,14 +2040,15 @@ static int sec_write_data2hd()
    */
    bio = BIO_file_new(reconnect_file, "w");
    if (!bio) {
-      ERROR((SGE_EVENT,"can't open file '%s': %s\n",
+      ERROR((SGE_EVENT, MSG_SEC_CANTWRITE_SS,
                reconnect_file, strerror(errno)));
       i = -1;
       goto error;
    }
    i = BIO_write(bio, pb.head_ptr, nbytes);
    if (!i) {
-      ERROR((SGE_EVENT,"can't write to file\n"));
+      ERROR((SGE_EVENT, MSG_SEC_CANTWRITE_SS, reconnect_file, 
+               strerror(errno)));
       i = -1;
       goto error;
    }
@@ -2032,7 +2130,7 @@ const char *err_msg
       return(0);
    }
    error:
-   ERROR((SGE_EVENT,"failed send error message\n"));
+   ERROR((SGE_EVENT, MSG_SEC_SENDERRFAILED));
    DEXIT;
    return(-1);
 }
@@ -2069,7 +2167,7 @@ static int sec_set_connid(char **buffer, int *buflen)
    pb.mem_size = *buflen;
 
    if((i = packint(&pb,gsd.connid))){
-      ERROR((SGE_EVENT,"failed pack ConnID to buffer"));
+      ERROR((SGE_EVENT, MSG_SEC_PACKCONNIDFAILED));
       goto error;
    }
 
@@ -2116,7 +2214,7 @@ static int sec_get_connid(char **buffer, u_long32 *buflen)
    pb.mem_size = *buflen;
 
    if((i = unpackint(&pb,&gsd.connid))){
-      ERROR((SGE_EVENT,"failed unpack ConnID from buffer"));
+      ERROR((SGE_EVENT, MSG_SEC_UNPACKCONNIDFAILED));
       goto error;
    }
 
@@ -2157,7 +2255,7 @@ static int sec_update_connlist(const char *host, const char *commproc, int id)
 
    element = lGetElemUlong(conn_list, SEC_ConnectionID, gsd.connid);
    if (!element){
-      ERROR((SGE_EVENT,"no list entry for connection\n"));
+      ERROR((SGE_EVENT, MSG_SEC_CONNECTIONNOENTRY));
       DEXIT;
       return -1;
    }
@@ -2210,7 +2308,7 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
    element = lFindFirst(conn_list, where);
    where = lFreeWhere(where);
    if (!element) {
-      ERROR((SGE_EVENT,"no list entry for connection (%s:%s:%d)\n!",
+      ERROR((SGE_EVENT, MSG_SEC_CONNECTIONNOENTRY_SSI,
              host,commproc,id));
       DEXIT;
       return -1;
@@ -2290,7 +2388,7 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
                                  connid, SecurityT);
    }
    if (!element) {
-      ERROR((SGE_EVENT,"failed adding element to conn_list\n"));
+      ERROR((SGE_EVENT, MSG_SEC_INSERTCONNECTIONFAILED));
       DEXIT;
       return -1;
    }

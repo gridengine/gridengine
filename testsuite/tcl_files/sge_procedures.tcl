@@ -4457,7 +4457,7 @@ proc suspend_job { id } {
 #     sge_procedures/suspend_job()
 #*******************************
 proc unsuspend_job { job } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST
+  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
 
 
   set UNSUSPEND1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_UNSUSPENDTASK_SUU] "*" "*" "*" ]

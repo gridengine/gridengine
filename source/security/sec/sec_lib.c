@@ -90,6 +90,7 @@ typedef struct gsd_str {
    char uniqueIdentifier[BUFSIZ];
    u_long32 connid;
    int is_daemon;
+   int is_master;
    int connect;
    u_long32 seq_send;
    u_long32 seq_receive;
@@ -119,6 +120,7 @@ typedef struct gsd_str {
 static int sec_set_encrypt(int tag);
 static int sec_files(void);
 static int sec_is_daemon(const char *progname);
+static int sec_is_master(const char *progname);
 
 static int sec_announce_connection(GlobalSecureData *gsd, const char *tocomproc, const char *tohost);
 static int sec_respond_announce(char *commproc, u_short id, char *host, char *buffer, u_long32 buflen);
@@ -164,7 +166,7 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
 static void sec_keymat2list(lListElem *element);
 static void sec_list2keymat(lListElem *element);
 static int sec_verify_callback(int ok, X509_STORE_CTX *ctx);
-static void sec_setup_path(int is_daemon);
+static void sec_setup_path(int is_daemon, int is_master);
 
 static sec_exit_func_type install_sec_exit_func(sec_exit_func_type);
 
@@ -280,7 +282,8 @@ static void debug_print_buffer(char *title, unsigned char *buf, int buflen)
 /*
 ** FIXME
 */
-#define PREDEFINED_PW         "troet"
+/* #define PREDEFINED_PW         "troet" */
+#define PREDEFINED_PW         NULL
 
 /* #define SECRET_KEY_ERROR    */
 
@@ -350,21 +353,29 @@ int sec_init(const char *progname)
    ** load all algorithms and digests
    */
 /*    OpenSSL_add_all_algorithms(); */
+#ifdef SHA_1
+   OpenSSL_add_all_algorithms();
+/*    EVP_add_cipher(EVP_rc4()); */
+/*    EVP_add_digest(EVP_sha1()); */
+/*    EVP_add_digest_alias(SN_sha1,"ssl3-sha1"); */
+/*    EVP_add_digest_alias(SN_sha1WithRSAEncryption,SN_sha1WithRSA); */
+#else
    EVP_add_cipher(EVP_rc4());
    EVP_add_digest(EVP_md5());
    EVP_add_digest_alias(SN_md5,"ssl2-md5");
    EVP_add_digest_alias(SN_md5,"ssl3-md5");
-
+#endif
 
    /* 
    ** FIXME: am I a sge daemon? -> is_daemon() should be implemented
    */
    gsd.is_daemon = sec_is_daemon(progname);
+   gsd.is_master = sec_is_master(progname);
 
    /* 
    ** setup the filenames of randfile, certificates, keys, etc.
    */
-   sec_setup_path(gsd.is_daemon);
+   sec_setup_path(gsd.is_daemon, gsd.is_master);
 
    /* 
    ** seed PRNG, /dev/random is used if possible
@@ -387,10 +398,15 @@ int sec_init(const char *progname)
    /* 
    ** FIXME: init all the other stuff
    */
+#ifdef SHA_1   
+   gsd.digest = EVP_sha1();
+   gsd.cipher = EVP_rc4();
+#else   
    gsd.digest = EVP_md5();
    gsd.cipher = EVP_rc4();
 /*    gsd.cipher = EVP_des_cbc(); */
 /*    gsd.cipher = EVP_enc_null(); */
+#endif   
 
    gsd.key_mat_len = GSD_KEY_MAT_32;
    gsd.key_mat = (u_char *) malloc(gsd.key_mat_len);
@@ -2508,7 +2524,8 @@ static void sec_list2keymat(lListElem *element)
 ** is wrong
 */
 static void sec_setup_path(
-int is_daemon 
+int is_daemon,
+int is_master
 ) {
    SGE_STRUCT_STAT sbuf;
 	char *userdir = NULL;
@@ -2568,7 +2585,7 @@ int is_daemon
       sprintf(ca_key_file, "%s/%s/%s", ca_local_root, "private", CaKey);
    }
 
-   if (is_daemon && SGE_STAT(ca_key_file, &sbuf)) { 
+   if (is_master && SGE_STAT(ca_key_file, &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SEC_CAKEYFILENOTFOUND_S, ca_key_file));
       SGE_EXIT(1);
    }
@@ -2945,6 +2962,14 @@ static int sec_is_daemon(const char *progname)
    if (!strcmp(prognames[QMASTER],progname) ||
       !strcmp(prognames[EXECD],progname) ||
       !strcmp(prognames[SCHEDD],progname))
+      return True;
+   else
+      return False;
+}      
+
+static int sec_is_master(const char *progname)
+{
+   if (!strcmp(prognames[QMASTER],progname))
       return True;
    else
       return False;

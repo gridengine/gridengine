@@ -63,6 +63,11 @@ ErrUsage()
    "   -copy            install user certificate and private key\n" \
    "   -verify          verify a certificate\n" \
    "   -days <days>     days of validity of the certificate\n" \
+   "   -sha1            use sha-1 instead of md5 as message digest\n" \
+   "   -encryptkey      use des to encrypt the generated key with a passphrase\n" \
+   "   -days <days>     days of validity of the certificate\n" \
+   "   -cadir <dir>     overwrite CALOCALTOP and CATOP settings\n" \
+   "   -pkcs12 <file>   generate pkcs12 format files for the users in <file>\n" \
    "   -usercert <file> generate certificates and keys for the users in <file>\n" $myname
 
    exit 1
@@ -384,6 +389,29 @@ MakeUserCerts()
 }
 
 #--------------------------------------------------------------------------
+# MakePKCS12 create pkcs12 file of user certificate and keys from userfile
+# userfile contains a list of entries of the following format per user.
+#
+# <unix username>:<gecos field>:<user's email address>
+#
+# $1 = <userfile>
+#
+MakePKCS12()
+{
+   if [ ! -f "$1" ]; then
+      $INFOTEXT "no valid userfile >%s<. Exit." $1
+      exit 1
+   fi
+
+   cat $1 | while read line; do
+      unixuser=`echo $line|cut -d: -f1`
+      $INFOTEXT "Generating %s.p12." \
+         "$unixuser"
+      $P12 -export -inkey $CALOCALTOP/userkeys/$unixuser/key.pem -out $CALOCALTOP/userkeys/$unixuser/$unixuser.p12 -in $CALOCALTOP/userkeys/$unixuser/cert.pem -certfile $CALOCALTOP/cacert.pem -caname "SGE CA"
+   done   
+}
+
+#--------------------------------------------------------------------------
 # MakeCert create certificate and private key for daemon
 #
 # $1 = "daemon" or "user"
@@ -629,6 +657,8 @@ newcert=newcert.pem
 outdir=.
 indir=.
 userfile=""
+md="-md5"
+nodes="-nodes"
 
 ARGC=$#
 while [ $ARGC != 0 ]; do
@@ -657,6 +687,32 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
+   -cadir)
+      if [ $ARGC -lt 2 ]; then
+         $INFOTEXT "Error: -cadir needs argument"
+         ErrUsage
+      fi
+      CATOP="$2"
+      CALOCALTOP="$2"
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
+   -pkcs12)
+      WHICH="pkcs12"
+      if [ $ARGC -lt 2 ]; then
+         $INFOTEXT "Error: -pkcs12 needs argument"
+         ErrUsage
+      fi
+      userfile="$2"
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
+   -sha1)
+      md="-sha1"
+      ;;
+   -encryptkey)
+      nodes=""
+      ;;
    -usercert)
       WHICH="usercert"
       if [ $ARGC -lt 2 ]; then
@@ -681,7 +737,8 @@ if [ "$WHICH" = "undef" ]; then
 fi
 
 
-REQ="$OPENSSL req -nodes"
+#REQ="$OPENSSL req -nodes"
+REQ="$OPENSSL req $md $nodes"
 
 CA="$OPENSSL ca -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT \
              -outdir $CATOP/newcerts"
@@ -689,6 +746,8 @@ CA="$OPENSSL ca -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT \
 VERIFY="$OPENSSL verify"
 
 X509="$OPENSSL x509"
+
+P12="$OPENSSL pkcs12"
 
 case $WHICH in
 init)
@@ -719,6 +778,11 @@ usercert)
     ;;
 verify) 
     $VERIFY -CAfile $CATOP/$CACERT $newcert
+    RET=$?
+    ;;
+pkcs12) 
+    MakePKCS12 $userfile
+
     RET=$?
     ;;
 help)

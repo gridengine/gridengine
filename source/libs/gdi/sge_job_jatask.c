@@ -40,9 +40,12 @@
 #include "sge_answerL.h"
 #include "sge_job_jatask.h"
 #include "sge_range.h"
-#include "msg_gdilib.h"
 #include "sge_htable.h"
 #include "read_write_job.h"
+#include "sge_gdi.h"
+
+#include "msg_gdilib.h"
+#include "msg_common.h"
 
 /****** gdi/job_jatask/job_get_ja_task_template_pending() *********************
 *  NAME
@@ -1438,3 +1441,43 @@ lList* ja_task_list_split_group(lList **task_list)
    }
    return ret_list;
 }                     
+
+/****** gdi/job_jatask/job_initialize_id_lists() ******************************
+*  NAME
+*     job_initialize_id_lists() -- initialize task id range lists 
+*
+*  SYNOPSIS
+*     void job_initialize_id_lists(lListElem *job, lList **answer_list) 
+*
+*  FUNCTION
+*     Initialize the task id range lists within "job". All tasks within
+*     the JB_ja_structure element of job will be added to the
+*     JB_ja_n_h_ids list. All other id lists stored in the "job" will
+*     be deleted. 
+*
+*  INPUTS
+*     lListElem *job      - JB_Type element 
+*     lList **answer_list - AN_Type list pointer 
+*
+*  RESULT
+*     void - none 
+*
+*  SEE ALSO
+*     gdi/range/RN_Type
+*******************************************************************************/
+void job_initialize_id_lists(lListElem *job, lList **answer_list)
+{
+   lList *n_h_list = NULL;    /* RN_Type */
+
+   DENTER(TOP_LAYER, "job_initialize_id_lists");
+   n_h_list = lCopyList("", lGetList(job, JB_ja_structure));
+   if (n_h_list == NULL && answer_list != NULL) {
+      sge_add_answer(answer_list, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+   } else {
+      lSetList(job, JB_ja_n_h_ids, n_h_list);
+      lSetList(job, JB_ja_u_h_ids, NULL);
+      lSetList(job, JB_ja_o_h_ids, NULL);
+      lSetList(job, JB_ja_s_h_ids, NULL);
+   }
+   DEXIT;
+}

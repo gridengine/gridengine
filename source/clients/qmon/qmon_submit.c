@@ -1884,27 +1884,40 @@ int save
          alp = lFreeList(alp);
          return False;
       }   
-         
+        
+#if 0 /* EB: TODO review with JG */ 
       if (!range_list) {
          lListElem *tap = NULL;
          tap = lAddElemUlong(&range_list, RN_min, 1, RN_Type);
          lSetUlong(tap, RN_max, 1);
          lSetUlong(tap, RN_step, 1);
       }
+#else
+      /* initialize JB_ja_structure */
+      if (range_list == NULL) {
+         job_set_submit_task_ids(jep, 1, 1, 1);
+      } else {
+         if (!reduced_job) {
+            lSetList(jep, JB_ja_structure, range_list);
+         } 
+      } 
+#endif
 
-#if 1 /* EB: TODO*/
+#if 0 /* EB: TODO review with JG */
       if (!reduced_job) {
-         lList *n_h_list, *u_h_list, *o_h_list, *s_h_list; 
+         lList *n_h_list; 
+
+         lSetList(jep, JB_ja_structure, range_list);
 
          n_h_list = lCopyList("range list", range_list);
-         u_h_list = lCreateList("user hold list", RN_Type);
-         o_h_list = lCreateList("operator hold list", RN_Type);
-         s_h_list = lCreateList("system hold list", RN_Type);
          lSetList(jep, JB_ja_n_h_ids, n_h_list);
          lSetList(jep, JB_ja_u_h_ids, NULL);
          lSetList(jep, JB_ja_o_h_ids, NULL);
          lSetList(jep, JB_ja_s_h_ids, NULL); 
-         lSetList(jep, JB_ja_structure, range_list);
+      }
+#else
+      if (!reduced_job) {
+         job_initialize_id_lists(jep, NULL);      
       }
 #endif
    }
@@ -1923,7 +1936,7 @@ int save
          lSetList(jep, JB_ja_tasks, jat_list);
       }  
  
-#if 1 /* EB: TODO*/
+#if 0 /* EB: TODO review with JG */
       if (!reduced_job) {
          lList *n_h_list;
          lListElem *tap = NULL;
@@ -1941,6 +1954,11 @@ int save
          lSetList(jep, JB_ja_s_h_ids, NULL);
          lSetList(jep, JB_ja_structure, range_list);
       }                       
+#else
+      if (!reduced_job) {
+         job_set_submit_task_ids(jep, 1, 1, 1);
+         job_initialize_id_lists(jep, NULL); 
+      }
 #endif
    }
 

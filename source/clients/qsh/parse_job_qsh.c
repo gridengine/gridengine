@@ -268,19 +268,17 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
    ** a little redesign of cull would be nice
    ** see parse_list_simple
    */
-#if 1 /* EB: todo */   
+#if 0 /* EB: TODO review with JG */   
 {
    lList *range_list;
-   lList *n_h_list, *u_h_list, *o_h_list, *s_h_list;
+   lList *n_h_list;
 
    job_set_submit_task_ids(*pjob, 1, 1, 1);
+
    range_list = lGetList(*pjob, JB_ja_structure);
 
    n_h_list = lCopyList("range list", range_list);
-   u_h_list = lCreateList("user hold list", RN_Type);
-   o_h_list = lCreateList("operator hold list", RN_Type);
-   s_h_list = lCreateList("system hold list", RN_Type);
-   if (!n_h_list || !u_h_list || !o_h_list || !s_h_list) {
+   if (!n_h_list) {
       sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
       DEXIT;
       return answer;
@@ -289,6 +287,15 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
    lSetList(*pjob, JB_ja_u_h_ids, NULL);
    lSetList(*pjob, JB_ja_o_h_ids, NULL);
    lSetList(*pjob, JB_ja_s_h_ids, NULL);
+}
+#else
+{
+   job_set_submit_task_ids(*pjob, 1, 1, 1);
+   job_initialize_id_lists(*pjob, &answer);
+   if (answer != NULL) {
+      DEXIT;
+      return answer;
+   }
 }
 #endif
 

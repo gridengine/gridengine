@@ -324,26 +324,26 @@
 
 
 /* read_write_ume.c */
-#define MSG_UM_CONFIGTEXT1 _MESSAGE(23234, _("# configuration file for user mapping\n"))
-#define MSG_UM_CONFIGTEXT2 _MESSAGE(23235, _("#\n"))
-#define MSG_UM_CONFIGTEXT3 _MESSAGE(23236, _("# cluster_user      NAME -> unique cluster user name\n"))
-#define MSG_UM_CONFIGTEXT4 _MESSAGE(23237, _("# MAPPING_USER           -> User mapping for specified hosts/host groups\n"))
-#define MSG_UM_CONFIGTEXT5 _MESSAGE(23238, _("# MAPPINGHOST-/GROUPLIST -> [,] separated host or host group names\n"))
-#define MSG_UM_CONFIGTEXT6 _MESSAGE(23239, _("# MAPPING_USER      MAPPINGHOST-/GROUPLIST\n"))
+#define MSG_UM_CONFIGTEXT1 _MESSAGE(23234, _("configuration file for user mapping\n"))
+#define MSG_UM_CONFIGTEXT2 _MESSAGE(23235, _("\n"))
+#define MSG_UM_CONFIGTEXT3 _MESSAGE(23236, _("cluster_user      NAME -> unique cluster user name\n"))
+#define MSG_UM_CONFIGTEXT4 _MESSAGE(23237, _("MAPPING_USER           -> User mapping for specified hosts/host groups\n"))
+#define MSG_UM_CONFIGTEXT5 _MESSAGE(23238, _("MAPPINGHOST-/GROUPLIST -> [,] separated host or host group names\n"))
+#define MSG_UM_CONFIGTEXT6 _MESSAGE(23239, _("MAPPING_USER      MAPPINGHOST-/GROUPLIST\n"))
 /* read_write_host_group.c */
-#define MSG_HOSTGROUP_CONFIGTEXT1 _MESSAGE(23240, _("# configuration file for host groups\n"))
-#define MSG_HOSTGROUP_CONFIGTEXT2 _MESSAGE(23241, _("#\n"))
-#define MSG_HOSTGROUP_CONFIGTEXT3 _MESSAGE(23242, _("# group_name      NAME -> unique host group name\n"))
-#define MSG_HOSTGROUP_CONFIGTEXT4 _MESSAGE(23243, _("# each line contains a hostname\n"))
-#define MSG_HOSTGROUP_CONFIGTEXT5 _MESSAGE(23244, _("# if the first character is a '@' the following name\n"))
-#define MSG_HOSTGROUP_CONFIGTEXT6 _MESSAGE(23245, _("# is resolved as subgroup name\n"))
+#define MSG_HOSTGROUP_CONFIGTEXT1 _MESSAGE(23240, _("configuration file for host groups\n"))
+#define MSG_HOSTGROUP_CONFIGTEXT2 _MESSAGE(23241, _("\n"))
+#define MSG_HOSTGROUP_CONFIGTEXT3 _MESSAGE(23242, _("group_name      NAME -> unique host group name\n"))
+#define MSG_HOSTGROUP_CONFIGTEXT4 _MESSAGE(23243, _("each line contains a hostname\n"))
+#define MSG_HOSTGROUP_CONFIGTEXT5 _MESSAGE(23244, _("if the first character is a '@' the following name\n"))
+#define MSG_HOSTGROUP_CONFIGTEXT6 _MESSAGE(23245, _("is resolved as subgroup name\n"))
 
 
 
 /*
 ** complex.c
 */
-#define MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE _MESSAGE(23246, _("#--- # starts a comment but comments are not saved across edits -----------------------\n"))
+#define MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE _MESSAGE(23246, _(">#< starts a comment but comments are not saved across edits -----------------------\n"))
 #define MSG_PARSE_CANTPARSECPLX_S     _MESSAGE(23247, _("parse error in file "SFN"\n"))
 #define MSG_PARSE_CANTPARSECPLX_SI    _MESSAGE(23248, _("parse error in file "SFN" in line %d\n"))
 #define MSG_PARSE_INVALIDCPLXTYPE_SS    _MESSAGE(23249, _("parse error in file "SFN", unknown type "SFN"\n"))

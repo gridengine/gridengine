@@ -1,3 +1,6 @@
+RC-2004-01-22-0: Enhancem:  recognize Linux 2.6 as glinux
+                 Changed:   dist/util/arch
+
 SG-2004-01-21-1: Bugfix:    qhost -F -h Name did not display global consumables
                  Changed:   qhost
                  Issue:     607

@@ -1,3 +1,9 @@
+EB-2003-03-27-1  Bugfix:    sharetree can't be modified
+                 Issue:     515
+                 Bugtraq:   4838636
+                 Changed:   sge_qmaster
+                 Review:    AS
+
 AH-2003-03-27-0  Bugfix:    qrong qstat -j diagnosis message wrongly indicates 
                             not enough PE slots
                  Issue:     415
@@ -59,6 +65,7 @@ JG-2003-03-26-0  Bugfix:    Reject tightly integrated array jobs.
 EB-2003-03-25-0  Bugfix:    Multiple job script writes cause ETXTBSY 
                             (Text File Busy) Errors
                  Issue:     504
+                 Bugtraq:   4838650
                  Changed:   sge_execd
                  Review:    AH
 

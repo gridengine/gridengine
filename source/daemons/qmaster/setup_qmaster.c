@@ -705,6 +705,12 @@ int sge_setup_qmaster()
                   DEXIT;
                   return -1;
                }
+               if (strcmp(lGetString(ep, UP_name), lGetString(direntry, STR))) {
+                  ERROR((SGE_EVENT, MSG_QMASTER_PRJINCORRECT_S, 
+                         lGetString(direntry, STR)));
+                  DEXIT;
+                  return -1;
+               }
 
                lAppendElem(Master_Project_List, ep);
             } else {

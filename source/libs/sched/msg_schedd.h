@@ -167,10 +167,12 @@
 #define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S      _MESSAGE(47134, _("cannot run because total slots of pe "SFQ" not in range of job"))
 #define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE        _MESSAGE(47135, _("Jobs can not run because total slots of pe are not in range of job") )
 #define MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER           _MESSAGE(47136, _("Job Filter: this job got ignored in the last scheduling run, because to many other jobs with the same resource request are in the pending list before this one."))
+#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU       _MESSAGE(47137, _("cannot run in queue instance "SFQ" because the job runtime of "u32" sec. is too long") ) 
+
 /* 
 ** schedd/sge_pe_schedd.c
 */ 
-#define MSG_PE_XFAILEDPARSINGALLOCATIONRULEY_SS       _MESSAGE(47137, _("pe >"SFN"<: failed parsing allocation rule "SFQ))
+#define MSG_PE_XFAILEDPARSINGALLOCATIONRULEY_SS       _MESSAGE(47168, _("pe >"SFN"<: failed parsing allocation rule "SFQ))
 #define MSG_USER                                      _MESSAGE(47169, _("user"))
 #define MSG_PROJECT                                   _MESSAGE(47170, _("project"))
 #define MSG_NO                                              _MESSAGE(47193, _("NO"))

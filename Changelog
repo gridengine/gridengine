@@ -1,3 +1,8 @@
+SG-2004-11-05-1: Bugfix:    added an error message for the case, that a job cannot be started
+                            due to the calendar.
+                 Changed:   scheduler
+                 Review:    DT
+
 SG-2004-11-05-0: Bugfix:    the scheduler had critical errors, when host groups were added
                             or modified.
                  Changed:   mirror interface, scheduler

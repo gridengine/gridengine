@@ -5450,6 +5450,10 @@ queue_match_cal_time(lListElem *queue, const sge_assignment_t *job_info, u_long3
       }
    }
 
+   if (result != DISPATCH_OK) {
+      schedd_mes_add(lGetUlong(job_info->job, JB_job_number), SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU, lGetString(queue, QU_full_name), job_info->duration);
+   }
+
    DPRINTF(("CAL evaluation: start time: %d, duration, %d, result %d\n",cal_time, job_info->duration, result));
    
    DEXIT; 

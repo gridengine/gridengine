@@ -375,13 +375,13 @@ set COMPILE_DC       = 0
 set CC               = cc
 set CXX              = CC
 set CFLAGS           = "-D$TARGET_BITS -DQCONF_FLATFILE $INP_CFLAGS"
-set CORE_INCLUDE     = "-I../security/sec -I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I. -I$JAVA_HOME/include"
+set CORE_INCLUDE     = "-I../security/sec -I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set DEBUG_FLAG       = ""
 set INSURE_FLAG      = ""
 set NOERR_CFLAG      = ""
 set NOERR_PROTO      = ""
 set MEMCFLAG         = ""
-set JDRMAA           = ""
+set JDRMAA           = 0
 
 set LFLAGS           = "-L."
 set XLFLAGS          = ""
@@ -835,12 +835,13 @@ if ( $DEBUGGED && $USE_QMAKE ) then
    set MAKEOPT = "-verbose $MAKEOPT"
 endif
 
-if ( $JDRMAA ) then
+if ( $JDRMAA == 1 ) then
    # Make sure we can find the Java header files
-   if ( "$JAVA_HOME" == "" ) then
+   if ( $?JAVA_HOME ) then
       echo "Please set JAVA_HOME"
       exit
    endif
+   set CORE_INCLUDE = "$CORE_INCLUDE -I$JAVA_HOME/include"
 endif
 
 set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD -DENABLE_NGC $SECFLAGS"
@@ -1470,7 +1471,7 @@ default:
    exit 1
 endsw
 
-if ("$JAVA_ARCH" != "") then
+if ($JDRMAA == 1 && "$JAVA_ARCH" != "") then
    set CFLAGS = "$CFLAGS -I${JAVA_HOME}/include/${JAVA_ARCH}"
 endif
 
@@ -1737,7 +1738,7 @@ if ( "$CORE" == 1 ) then
       exit 1
    endif
 
-   if ( $JDRMAA ) then
+   if ( $JDRMAA == 1 ) then
       $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
             "LD_WRAPPER=$LD_WRAPPER" \
             "CFLAGS=$CFLAGS $CORE_INCLUDE" \

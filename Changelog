@@ -247,6 +247,7 @@ MD-2004-03-12-0: Enhancm:   - added a autoinstall readme
 
 SG-2004-03-12-2: Bugfix:    execd died, when a load sensor was restarted.
                  Issue:     835
+                 bugtraq:   5019497
                  Changed:   execd
                  Review:    AS
 
@@ -369,6 +370,7 @@ SG-2004-03-10-0: Bugfix:    scheduler crashed during functional ticket
                  Changed:   scheduler
                  Review:    CR
                  Issue:     820
+                 bugtraq:   5019584
 
 EB-2004-03-10-0: Bugfix:    qconf -mq rejects valid configuration
                  Issue:     815
@@ -943,7 +945,7 @@ SG-2004-02-25-1: Bugfix:    fixed the time bases for YY specification. It
                             referes to to the range of 1970 till 2069.
                  Chaged:    qacct, qsub, qalter,...
                  Issue:     709
-
+                 bugtraq:   5019595
                  
 SD-2004-02-25-0: Bugfix:    Fixed file descriptor leak which caused
                             execd to run out of file descriptors
@@ -1841,6 +1843,7 @@ EB-2004-01-30-0: Enhancem.: Changed some man-pages concerning CQs
 
 SG-2004-01-30-1: Bugfix:    The vmem usage did not decrease anymore.
                  Issue:     635
+                 bugtraq:   5019601
                  Changed:   execd
                  Review:    AH
 
@@ -2163,6 +2166,7 @@ SG-2004-01-22-1: Bugfix:    Removed the renaming of users via qconf. It never
                             worked and should not have been part of qconf.
                  Changed:   qconf
                  Issue:     646
+                 bugtraq:   5020131
 
 SG-2004-01-22-0: Enhancem.: 2. part of the qmod adaption
                  Changed:   qmod, qmaster
@@ -2299,6 +2303,7 @@ DT-2004-01-19-0: Bugfix:    Fixed scheduler crash when an array job with -now y
 SG-2004-01-19-1: Bugfix:    qhost -F -h Name did not display global consumables
                  Changed:   qhost
                  Issue:     607
+                 bugtraq:   5020134
 
 SG-2004-01-19-0: Enhancem.: qmod supports jobnames with new commands. The
                             old ones are still there and work on queues and
@@ -2789,7 +2794,8 @@ SG-2003-12-10-1: Bugfix:    qsh and qlogin allowed -hold_jid even so it was
                             not part of the -help output. Disabled -hold_jid
                             and -h option for qsh and qlogin. Updated the
                             man pages to reflect the changes.
-                 Changed:   submit.1, qsh, qlogin                            
+                 Changed:   submit.1, qsh, qlogin     
+                 bugtraq:   5020141
 
 SG-2003-12-10-0: Enhancem.: changed the man pages to reflect SG-2003-12-09-1
                  Changed:   submit.1
@@ -2822,6 +2828,7 @@ JG-2003-12-08-0: Bugfix:    Fixed a bug in BerkeleyDB spooling for ja_tasks.
 SG-2003-12-08-0: Bugfix:    Storing a job template in qmon set -hold_jid to
                             the wrong value (always 0)
                  Review:    AA
+                 bugtraq:   5020139
                  Changed:   qmon
 
 SG-2003-12-05-0: Bugfix:    Finished the implementation of SG-2003-12-03-2. It was

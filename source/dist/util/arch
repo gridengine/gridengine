@@ -108,6 +108,9 @@ Darwin)
 FreeBSD)
    ARCH=fbsd-$osmachine
    ;;
+NetBSD)
+    ARCH=nbsd-$osmachine
+    ;;
 IRIX*)
    case $osrelease in
    4*)

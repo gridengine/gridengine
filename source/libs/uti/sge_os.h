@@ -54,7 +54,7 @@ typedef struct fd_set {
 #endif /* FD_SETSIZE */
 #endif /* WIN32NATIVE */
 
-#if defined(LINUX) || defined(FREEBSD) || defined(DARWIN)
+#if defined(LINUX) || defined(FREEBSD) || defined(NETBSD) || defined(DARWIN)
 #  define PSCMD "/bin/ps -axc"
 #elif defined(ALPHA)
 #  define PSCMD "/bin/ps axo pid,ucomm"

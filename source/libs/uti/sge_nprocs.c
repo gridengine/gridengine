@@ -75,6 +75,11 @@
 #   include <sys/sysctl.h>
 #endif
 
+#if defined(NETBSD)
+#   include <sys/param.h>
+#   include <sys/sysctl.h>
+#endif
+
 #ifdef NPROCS_TEST
 #   include <stdio.h>
 #   include <unistd.h>
@@ -261,6 +266,20 @@ int sge_nprocs()
       nprocs = -1;
    }
 #endif
+
+#if defined(NETBSD)
+   int mib[2];
+   size_t nprocs_len;
+
+   nprocs_len = sizeof(nprocs);
+   mib[0]     = CTL_HW;
+   mib[1]     = HW_NCPU;
+
+   if (sysctl(mib, sizeof(mib)/sizeof(int), &nprocs, &nprocs_len, NULL, 0) == -1) {
+     nprocs = -1;
+   }
+#endif
+
 #if defined(INTERIX)
 /* TODO: HP: don't set nprocs==-1 to 0, overwrite it with value from
  *       external load sensor.

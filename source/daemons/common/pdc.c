@@ -118,7 +118,8 @@ int main(int argc,char *argv[])
 #include "sge_stat.h"
 #endif
 
-#if defined(LINUX) || defined(ALPHA) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined (FREEBSD)
+#if defined(LINUX) || defined(ALPHA) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined (FREEBSD) || defined(NETBSD)
+
 #include "sge_os.h"
 #endif
 
@@ -2093,7 +2094,7 @@ int psStartCollector(void)
    pagesize = getpagesize();
 
    /* retrieve static parameters */
-#if defined(LINUX) || defined(ALINUX) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined(FREEBSD)
+#if defined(LINUX) || defined(ALINUX) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined(FREEBSD) || defined(NETBSD)
 #ifdef PDC_STANDALONE
    ncpus = sge_nprocs();
 #endif   

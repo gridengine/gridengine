@@ -81,7 +81,7 @@ static const char rcsid[] =
 int rcmd(char **, u_short, char *, char *, char *, int *);
 #endif
 
-#if !defined(FREEBSD) && !defined(DARWIN) && !defined(INTERIX)
+#if !defined(FREEBSD) && !defined(NETBSD) && !defined(DARWIN) && !defined(INTERIX)
 #include <values.h>
 #endif
 

@@ -106,7 +106,7 @@ const char *var_get_sharedlib_path_name(void)
    return "LIBPATH";
 #elif defined(HPUX)
    return "SHLIB_PATH";
-#elif defined(ALPHA) || defined(IRIX) || defined(LINUX) || defined(SOLARIS) || defined(DARWIN) || defined(FREEBSD) || defined(INTERIX)
+#elif defined(ALPHA) || defined(IRIX) || defined(LINUX) || defined(SOLARIS) || defined(DARWIN) || defined(FREEBSD) || defined(NETBSD) || defined(INTERIX)
    return "LD_LIBRARY_PATH";
 #elif defined(DARWIN)
    return "DYLD_LIBRARY_PATH";

@@ -146,6 +146,20 @@ const char *sge_get_arch(void)
 #   elif defined(FREEBSD_SPARC64)
 #      define ARCHBIN "fbsd-sparc64"
 #   endif
+#elif defined(NETBSD)
+# if defined(NETBSD_ALPHA)
+#    define ARCHBIN "nbsd-alpha"
+# elif defined(NETBSD_I386)
+#    define ARCHBIN "nbsd-i386"
+# elif defined(NETBSD_POWERPC)
+#    define ARCHBIN "nbsd-powerpc"
+# elif defined(NETBSD_SPARC64)
+#    define ARCHBIN  "nbsd-sparc64":
+# elif defined(NETBSD_X86_64)
+#    define ARCHBIN "nbsd-x86_64"
+# else
+#    pragma "Define a NetBSD architecture for SGE"
+# endif
 #elif defined(DARWIN)
 #   define ARCHBIN "darwin"   
 #elif defined(INTERIX)

@@ -153,7 +153,7 @@ typedef gid_t addgrpid_t;
 #    define PTF_MAX_PRIORITY     -10
 #    define PTF_OS_MIN_PRIORITY   20
 #    define PTF_OS_MAX_PRIORITY  -20
-#  elif defined(FREEBSD)
+#  elif defined(FREEBSD) || defined(NETBSD)
 #    define ENFORCE_PRI_RANGE     1
 #    define PTF_MIN_PRIORITY      20
 #    define PTF_MAX_PRIORITY     -10

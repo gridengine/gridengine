@@ -91,6 +91,19 @@ static void uidgid_state_set_last_username(const char *user);
 static void uidgid_state_set_last_gid(gid_t gid);
 static void uidgid_state_set_last_groupname(const char *group);
 
+#ifdef SGE_THREADSAFE_UTIL
+
+static pthread_mutex_t sge_passwd_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t sge_group_mutex  = PTHREAD_MUTEX_INITIALIZER;
+
+int getpwnam_r(char *, struct passwd *, char *, size_t, struct passwd **);
+int getgrnam_r(char *, struct group *,  char *, size_t, struct group **);
+int getpwuid_r(uid_t,  struct passwd *, char *, size_t, struct passwd **);
+int getgrgid_r(gid_t , struct group *,  char *, size_t, struct group **);
+
+
+#endif
+
 
 /****** uti/uidgid/uidgid_mt_init() ************************************************
 *  NAME
@@ -446,7 +459,7 @@ int sge_run_as_user(void)
 *     const char *user - username 
 *     uid_t *uidp      - uid pointer 
 *     int retries      - number of retries 
-*
+ *
 *  NOTES
 *     MT-NOTE: sge_user2uid() is MT safe.
 *
@@ -1338,3 +1351,156 @@ bool sge_is_start_user_root(void)
    
 } /* sge_is_start_user_root() */ 
 
+
+#ifdef SGE_THREADSAFE_UTIL
+
+static int
+copygrp(struct group *tgrp, struct group *grp, char *buffer, size_t bufsize)
+{
+   size_t tlen, i;
+
+   grp->gr_name = buffer; tlen = strlen(tgrp->gr_name)+1;
+   /* array of pointers */
+   for (i = 0; tgrp->gr_mem[i] != NULL; i++);
+   grp->gr_mem = (char **)(buffer+tlen);
+   tlen += i*sizeof(void *);
+   /* array elements */
+   for (i = 0; (tgrp->gr_mem[i] != NULL) && (tlen <= bufsize); i++) {
+      grp->gr_mem[i] = buffer+tlen;
+      tlen += strlen(tgrp->gr_mem[i])+1;
+   }
+   tlen += 1; /* NULL */
+
+   if (tlen > bufsize) {
+      return ERANGE;
+   }
+
+   grp->gr_mem[i] = buffer+tlen;
+   strcpy(grp->gr_name, tgrp->gr_name);
+   grp->gr_gid = tgrp->gr_gid;
+   for (i = 0; tgrp->gr_mem[i] != NULL; i++) {
+      strcpy(grp->gr_mem[i], tgrp->gr_mem[i]);
+   }
+   *(grp->gr_mem[i]) = NULL;
+
+   return 0;
+}
+
+static int
+copypwd(struct passwd *tpwd, struct passwd *pwd, char *buffer, size_t bufsize)
+{
+   size_t tlen;
+
+   pwd->pw_name = buffer; tlen = strlen(tpwd->pw_name)+1;
+   pwd->pw_passwd = buffer+tlen; tlen += strlen(tpwd->pw_passwd)+1;
+   pwd->pw_gecos = buffer+tlen; tlen += strlen(tpwd->pw_gecos)+1;
+   pwd->pw_dir = buffer+tlen; tlen += strlen(tpwd->pw_dir)+1;
+   pwd->pw_shell = buffer+tlen; tlen += strlen(tpwd->pw_shell)+1;
+
+   if (tlen > bufsize) {
+      return ERANGE;
+   }
+
+   strcpy(pwd->pw_name, tpwd->pw_name);
+   strcpy(pwd->pw_passwd, tpwd->pw_passwd);
+   pwd->pw_uid= tpwd->pw_uid;
+   pwd->pw_gid = tpwd->pw_gid;
+   strcpy(pwd->pw_gecos, tpwd->pw_gecos);
+   strcpy(pwd->pw_dir, tpwd->pw_dir);
+   strcpy(pwd->pw_shell, tpwd->pw_shell);
+
+   return 0;
+}
+
+
+
+int getpwnam_r(char *name, struct passwd *pwd, char *buffer,
+               size_t bufsize, struct passwd **result)
+{
+   struct passwd *tpwd;
+   int res;
+
+   pthread_mutex_lock(&sge_passwd_mutex);
+   *result = NULL;
+
+   if ((tpwd = getpwnam(name)) == NULL) {
+      return 0;
+   }
+
+   res = copypwd(tpwd, pwd, buffer, bufsize);
+   if (!res)
+      *result = pwd;
+
+   pthread_mutex_unlock(&sge_passwd_mutex);
+
+   return res;
+}
+
+int getgrnam_r(char *name, struct group *grp, char *buffer,
+      size_t bufsize, struct group **result)
+{
+   struct group *tgrp;
+   int res;
+
+   pthread_mutex_lock(&sge_group_mutex);
+   *result = NULL;
+
+   if ((tgrp = getgrnam(name)) == NULL) {
+      return NULL;
+   }
+
+   res = copygrp(tgrp, grp, buffer, bufsize);
+   if (!res)
+      *result = grp;
+
+   pthread_mutex_unlock(&sge_group_mutex);
+   /* unlock */
+
+   return res;
+}
+
+int getpwuid_r(uid_t uid, struct passwd *pwd, char *buffer,
+      size_t bufsize, struct passwd **result)
+{
+   struct passwd *tpwd;
+   int res;
+
+   pthread_mutex_lock(&sge_passwd_mutex);
+   *result = NULL;
+
+   if ((tpwd = getpwuid(uid)) == NULL) {
+      return NULL;
+   }
+
+   res = copypwd(tpwd, pwd, buffer, bufsize);
+   if (!res)
+      *result = pwd;
+
+   pthread_mutex_unlock(&sge_passwd_mutex);
+
+   return res;
+}
+
+int getgrgid_r(gid_t gid, struct group *grp, char *buffer,
+      size_t bufsize, struct group **result)
+{
+   struct group *tgrp;
+   int res;
+
+   pthread_mutex_lock(&sge_group_mutex);
+   *result = NULL;
+
+   if ((tgrp = getgrgid(gid)) == NULL) {
+      return NULL;
+   }
+
+   res = copygrp(tgrp, grp, buffer, bufsize);
+   if (!res)
+      *result = grp;
+
+   pthread_mutex_unlock(&sge_group_mutex);
+
+   return res;
+}
+
+#endif /* SGE_THREADSAFE_UTIL */

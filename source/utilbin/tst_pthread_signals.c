@@ -343,7 +343,7 @@ static void ignore_signals(void)
    sigaction(SIGVTALRM, &act, NULL);
 #endif
 
-#if !defined(DARWIN) && !defined(FREEBSD)
+#if !defined(DARWIN) && !defined(FREEBSD) && !defined(NETBSD)
    sigaction(SIGPOLL, &act, NULL);
 #endif
 

@@ -127,6 +127,10 @@
 #  include <sys/resource.h>
 #  include <fcntl.h>
 #  include <kvm.h>
+#elif defined(NETBSD)
+#  include <sys/sched.h>
+#  include <sys/param.h>
+#  include <sys/sysctl.h>
 #elif defined(AIX51)
 #  include <sys/sysinfo.h>
 #  include <nlist.h>
@@ -777,6 +781,35 @@ double get_cpu_load()
    return cpu_load;
 }
 
+#elif defined(NETBSD)
+
+double get_cpu_load()
+{
+  int mib[2];
+  static long cpu_time[CPUSTATES];
+  static long cpu_old[CPUSTATES];
+  static long cpu_diff[CPUSTATES];
+  double cpu_states[CPUSTATES];
+  double cpu_load;
+  size_t size;
+
+  mib[0] = CTL_KERN;
+  mib[1] = KERN_CP_TIME;
+
+  size = sizeof(cpu_time);
+
+  sysctl(mib, sizeof(mib)/sizeof(int), &cpu_time, &size, NULL, 0);
+  percentages(CPUSTATES, cpu_states, cpu_time, cpu_old, cpu_diff);
+  cpu_load = cpu_states[0] + cpu_states[1] + cpu_states[2];
+
+  if (cpu_load < 0.0) {
+    cpu_load = -1.0;
+  }
+
+  return cpu_load;
+
+}
+
 #elif defined(TEST_AIX51)
 
 double get_cpu_load()
@@ -1110,7 +1143,7 @@ int nelem
 ) {
    int   elem = 0;   
 
-#if defined(SOLARIS) || defined(FREEBSD) || defined(DARWIN)
+#if defined(SOLARIS) || defined(FREEBSD) || defined(NETBSD) || defined(DARWIN)
    elem = getloadavg(loadavg, nelem); /* <== library function */
 #elif defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(TEST_AIX51)
    elem = get_load_avg(loadavg, nelem); 

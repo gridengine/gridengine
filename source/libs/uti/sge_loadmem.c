@@ -43,7 +43,7 @@
 #include "sge_os.h"
 #include "msg_utilib.h"
 
-#if !defined(LINUX) && !defined(CRAY) && !defined(DARWIN) && !defined(FREEBSD)
+#if !defined(LINUX) && !defined(CRAY) && !defined(DARWIN) && !defined(FREEBSD) && !defined(NETBSD)
 
 #include <unistd.h>
 
@@ -901,3 +901,33 @@ int sge_loadmem(sge_mem_info_t *mem_info)
    return 0;
 }
 #endif /* FREEBSD */
+
+#if defined(NETBSD)
+
+#include <sys/param.h>
+#include <sys/sysctl.h>
+
+int sge_loadmem(sge_mem_info_t *mem_info)
+{
+  int mib[2];
+  size_t size;
+  struct uvmexp_sysctl uvmexp;
+
+  mib[0] = CTL_VM;
+  mib[1] = VM_UVMEXP2;
+  size   = sizeof(uvmexp);
+
+  sysctl(mib, sizeof(mib)/sizeof(int), &uvmexp, &size, NULL, 0);
+
+  /* Memory */
+  mem_info->mem_total = (uvmexp.npages * uvmexp.pagesize) / (1024 * 1024);
+  mem_info->mem_free  = (uvmexp.free   * uvmexp.pagesize) / (1024 * 1024);
+
+  /* Swap */
+  mem_info->swap_total = (uvmexp.swpages * uvmexp.pagesize) / (1024 * 1024);
+  mem_info->swap_free = ((uvmexp.swpages - uvmexp.swpginuse) * uvmexp.pagesize) / (1024 * 1024);
+
+  return 0;
+}
+#endif /* NETBSD */
+

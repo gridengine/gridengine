@@ -232,6 +232,14 @@ SetArchBin()
       ARCHBIN=FREEBSD_PPC
    elif [ $i = fbsd-sparc64 ]; then
       ARCHBIN=FREEBSD_SPARC64
+   elif [ $i = nbsd-alpha ]; then
+      ARCHBIN=NETBSD_ALPHA
+   elif [ $i = nbsd-i386 ]; then
+      ARCHBIN=NETBSD_I386
+   elif [ $i = nbsd-powerpc ]; then
+      ARCHBIN=NETBSD_POWERPC
+   elif [ $i = nbsd-x86_64 ]; then
+      ARCHBIN=NETBSD_X86_64
    elif [ $i = win32-x86 ]; then
       ARCHBIN=WIN32_X86
    else

@@ -34,7 +34,7 @@
 #include <errno.h>
 #include <string.h>
 
-#if defined(DARWIN) || defined(FREEBSD)
+#if defined(DARWIN) || defined(FREEBSD) || defined(NETBSD)
 #  include <sys/param.h>
 #  include <sys/mount.h>
 #elif defined(LINUX)
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
    }
    else
    {  
-#if defined(LINUX) || defined(DARWIN) || defined(FREEBSD)
+#if defined(LINUX) || defined(DARWIN) || defined(FREEBSD) || defined(NETBSD)
    struct statfs buf;
    ret = statfs(argv[1], &buf);
 #elif defined(INTERIX)
@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
       return 2;
    }
   
-#if defined (DARWIN) || defined(FREEBSD)
+#if defined (DARWIN) || defined(FREEBSD) || defined(NETBSD)
    printf("%s\n", buf.f_fstypename);
 #elif defined(LINUX)
    if (buf.f_type == 0x6969)

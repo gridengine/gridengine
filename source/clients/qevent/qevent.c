@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#if defined(FREEBSD) || defined(DARWIN)
+#if defined(FREEBSD) || defined(NETBSD) || defined(DARWIN)
 #include <sys/time.h>
 #endif
 

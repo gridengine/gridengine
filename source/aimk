@@ -208,6 +208,26 @@ case "sx":
    set BUILDARCH = NECSX5
    set TARGET_BITS = TARGET_64BIT
    breaksw
+case "nbsd-alpha":
+   set BUILDARCH = NETBSD_ALPHA
+   set TARGET_BITS = TARGET_64BIT
+   breaksw
+case "nbsd-i386":
+   set BUILDARCH = NETBSD_I386
+   set TARGET_BITS = TARGET_32BIT
+   breaksw
+case "nbsd-powerpc":
+   set BUILDARCH = NETBSD_POWERPC
+   set TARGET_BITS = TARGET_32BIT
+   breaksw
+case "nbsd-sparc64":
+   set BUILDARCH = NETBSD_SPARC64
+   set TARGET_BITS = TARGET_64BIT
+   breaksw
+case "nbsd-x86_64":
+   set BUILDARCH = NETBSD_X86_64
+   set TARGET_BITS = TARGET_64BIT
+   breaksw
 case "sol-sparc":
    set BUILDARCH = SOLARIS
    set TARGET_BITS = TARGET_32BIT
@@ -1175,6 +1195,37 @@ case FREEBSD_*:
    set RM	= "rm -f"
    set JAVA_ARCH = ""
    breaksw 
+
+case NETBSD_*:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
+   set COMPILE_DC = 1
+   set MAKE = gmake
+   set OFLAG = "-O"
+   set ARFLAGS  = rcv
+   set CC       = gcc
+   set CXX      = g++
+   set DLLIB    = ""
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
+   set CFLAGS   = "$OFLAG -Wall -DNETBSD -D$BUILDARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M -DSGE_THREADSAFE_UTIL $DEBUG_FLAG $CFLAGS -I/usr/X11R6/include"
+   set NOERR_CFLAG = "-Wno-error"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+   set LIBS     = "$LIBS -lkvm"
+   set SHAREDLD = $CC
+   set SHARED_CFLAGS = "-fPIC"
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
+
+   set XMTDEF   = ""
+   set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
+   set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
+   set XLIBD    = "-L/usr/X11R6/lib -R/usr/X11R6/lib"
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = " -lXm -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
+   set RM       = "rm -f"
+   set JAVA_ARCH = ""
+   breaksw
+
 
 case IRIX65:
    set MAKEWINGRIDLIB   = 0

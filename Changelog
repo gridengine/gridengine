@@ -1,3 +1,5 @@
+RC-2005-03-13-1: Enhancem.: NetBSD port (forward porting from SGE 5.3)
+
 RC-2005-03-13-1: Bugfix:   fixed build (uninitialized variable)
                  Review:   Reuti
 

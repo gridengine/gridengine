@@ -308,7 +308,7 @@ MakeCAcert()
          echo uniqueIdentifier=CA >> $TMPFILE
          echo emailAddress=$CA_EMAIL >> $TMPFILE
 
-         Execute cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
+         cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
 
          umask 077
          if [ "$RANDFILE" = "" ]; then
@@ -402,7 +402,7 @@ MakeCert()
    echo uniqueIdentifier=$2 >> $TMPFILE
    echo CN=$3 >> $TMPFILE
    echo emailAddress=$4 >> $TMPFILE
-   Execute cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
+   cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
 
 
    if [ $1 = daemon ]; then

@@ -776,6 +776,11 @@ int lMergeWhat(lEnumeration **what1, lEnumeration **what2)
          (*what1)[i].ep = NULL;
          next_id++;
       }
+      tmp_result[next_id].pos = 0;
+      tmp_result[next_id].nm = NoName;
+      tmp_result[next_id].mt = lEndT;
+      tmp_result[next_id].ep = NULL;
+
       *what1 = lFreeWhat(*what1);
 
       /*
@@ -789,6 +794,8 @@ int lMergeWhat(lEnumeration **what1, lEnumeration **what2)
             if (tmp_result[j].mt == (*what2)[i].mt &&
                 tmp_result[j].nm == (*what2)[i].nm &&
                 tmp_result[j].pos == (*what2)[i].pos) {
+               /*TODO: SG is this correct? what happens, if we have a new subfilter
+                 in what2 but none in temp? */
                if (tmp_result[next_id].ep != NULL && (*what2)[i].ep != NULL) {
                   lMergeWhat(&(tmp_result[next_id].ep), &((*what2)[i].ep));
                } else {
@@ -803,15 +810,22 @@ int lMergeWhat(lEnumeration **what1, lEnumeration **what2)
             tmp_result[next_id].pos = (*what2)[i].pos;
             tmp_result[next_id].mt = (*what2)[i].mt;
             tmp_result[next_id].nm = (*what2)[i].nm;
+            
+            /*TODO: SG is this correct? what happens, if we have a new subfilter
+              in what2 but none in temp? */
             if (tmp_result[next_id].ep != NULL && (*what2)[i].ep != NULL) {
                lMergeWhat(&(tmp_result[next_id].ep), &((*what2)[i].ep));
             } else { 
                tmp_result[next_id].ep = NULL;
             }
+            /* add last element */
             next_id++;
+            tmp_result[next_id].pos = 0;
+            tmp_result[next_id].nm = NoName;
+            tmp_result[next_id].mt = lEndT;
+            tmp_result[next_id].ep = NULL;
          }
       }
-      /* add last element */
       tmp_result[next_id].pos = 0;
       tmp_result[next_id].nm = NoName;
       tmp_result[next_id].mt = lEndT;

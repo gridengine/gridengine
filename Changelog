@@ -1,3 +1,17 @@
+SG-2005-01-28-0: Bugfix:    - added a check for a valid scheduler config.
+                 Review:    pending
+                 Changed:   scheduler, qconf
+                 Issue:     1438
+                 Bugtraq:   6222811
+
+SG-2005-01-28-0: Bugfix:    - fixed qstat filtering. SG-2005-01-21-0 did
+                              not fix all issues
+                 Review:    EB
+                 Changed:   qstat
+                 Issue:     1420
+                 Bugtraq:   6218877
+                            
+
 AS-2004-11-26-0: CVS        Created V60_s10amd64_beta_TAG
 ---------------------------------------------------------
 

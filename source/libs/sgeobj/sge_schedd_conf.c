@@ -2149,10 +2149,12 @@ bool sconf_validate_config_(lList **answer_list){
    /* --- SC_load_adjustment_decay_time */
    s = sconf_get_load_adjustment_decay_time_str();
    if (!s || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0)) {
-      if (!s)
+      if (!s) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", "not defined"));
-      else
+      }   
+      else {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS, "load_adjustment_decay_time", tmp_error));    
+      }   
       answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       ret = false; 
    }
@@ -2162,6 +2164,13 @@ bool sconf_validate_config_(lList **answer_list){
       ret = false; 
    }
 
+   /* --- max_pending_tasks_per_job */
+   if (sconf_get_max_pending_tasks_per_job() == 0) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_WRONG_SETTING_SS, "max_pending_tasks_per_job", ">0"));    
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false;
+   }
+   
    /* --- SC_schedd_job_info */
    {
       char buf[4096];

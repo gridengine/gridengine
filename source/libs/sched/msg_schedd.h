@@ -273,6 +273,7 @@
 #define MSG_FALSE                               _MESSAGE(47259, _("false"))
 #define MSG_READ_PARAM_S                        _MESSAGE(47260, _("using param: "SFQ"\n"))
 #define MSG_UNKNOWN_PARAM_S                     _MESSAGE(47261, _("found unknown param: "SFQ"\n"))
+#define MSG_ATTRIB_WRONG_SETTING_SS             _MESSAGE(47262, _("invalid setting for param: "SFQ"(should be "SFQ")\n"))
 /* 
 ** schedd/schedd_message.c
 */ 

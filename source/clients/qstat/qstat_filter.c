@@ -104,8 +104,10 @@ void qstat_filter_add_core_attributes(void)
    
    tmp_what = lIntVector2What(JB_Type, nm_JB_Type);
    lMergeWhat(&what_JB_Type, &tmp_what);
+
    tmp_what = lIntVector2What(JAT_Type, nm_JAT_Type_template); 
    lMergeWhat(&what_JAT_Type_template, &tmp_what);
+   
    tmp_what = lIntVector2What(JAT_Type, nm_JAT_Type_list); 
    lMergeWhat(&what_JAT_Type_list, &tmp_what);
 }
@@ -144,8 +146,10 @@ void qstat_filter_add_ext_attributes(void)
    
    tmp_what = lIntVector2What(JB_Type, nm_JB_Type);
    lMergeWhat(&what_JB_Type, &tmp_what);
+   
    tmp_what = lIntVector2What(JAT_Type, nm_JAT_Type_template); 
    lMergeWhat(&what_JAT_Type_template, &tmp_what);
+   
    tmp_what = lIntVector2What(JAT_Type, nm_JAT_Type_list); 
    lMergeWhat(&what_JAT_Type_list, &tmp_what);
 }
@@ -240,6 +244,7 @@ void qstat_filter_add_r_attributes(void)
 
    tmp_what = lIntVector2What(JB_Type, nm_JB_Type);
    lMergeWhat(&what_JB_Type, &tmp_what);
+
    tmp_what = lIntVector2What(JAT_Type, nm_JAT_Type_template); 
    lMergeWhat(&what_JAT_Type_template, &tmp_what);
 }
@@ -259,14 +264,22 @@ void qstat_filter_add_xml_attributes(void)
 void qstat_filter_add_t_attributes(void) 
 {
    lEnumeration *tmp_what = NULL;
+   
    const int nm_JAT_Type_list[] = {
       JAT_task_list,
       NoName
    };
 
+   const int nm_JAT_Type_template[] = {
+      JAT_task_list,
+      NoName
+   };
+   
    tmp_what = lIntVector2What(JAT_Type, nm_JAT_Type_list); 
    lMergeWhat(&what_JAT_Type_list, &tmp_what);
-   
+
+   tmp_what = lIntVector2What(JAT_Type, nm_JAT_Type_template); 
+   lMergeWhat(&what_JAT_Type_template, &tmp_what); 
 }
 
 

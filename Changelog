@@ -1,3 +1,5 @@
+CR-2004-01-15-0: Bugfix:    removed dummy objects in commlib makefile
+
 JG_2004-01-15-0: Enhancem.: Separated flatfile spooling base functions from 
                             framework implementation.
                             Use flatfile spooling for qconf -mp/-Mp as 

@@ -43,7 +43,6 @@ DEPEND = $(SOURCE)/3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(CFL
 NGCLIB = libngc$(LIBEXT)
 NGCLIB_DIR = $(SOURCE)/libs/commlib_v1.0
 NGCLIB_SRC = \
-         dummy.c \
          cl_tcp_framework.c \
          cl_communication.c \
          cl_connection_list.c \
@@ -56,7 +55,6 @@ NGCLIB_SRC = \
 NGCLIB_OBJS = $(NGCLIB_SRC:.c=.o)
 
 NGCLIB_TEST_SRC = \
-         test_dummy.c \
          test_cl_tcp_framework.c \
          test_cl_commlib.c \
          test_cl_commlib_client.c \
@@ -76,7 +74,7 @@ COMMLIB = $(NGCLIB) $(NGCLISTSLIB)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-all: test_dummy test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
+all: test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
      test_cl_hostname_list test_cl_hostalias_list test_multithread_io test_status_info \
      ngclib ngclists_all
 
@@ -89,7 +87,7 @@ clean: ngclib_clean
 ngclib: $(NGCLIB) $(NGCLISTSLIB)
 
 ngclib_clean: ngclistslib_clean
-		$(RM) $(NGCLIB_OBJS) $(NGCLIB_TEST_OBJS) libngc.a libngc$(SHAREDEXT) test_dummy \
+		$(RM) $(NGCLIB_OBJS) $(NGCLIB_TEST_OBJS) libngc.a libngc$(SHAREDEXT) \
       test_cl_tcp_framework test_cl_commlib_client test_cl_commlib test_cl_hostname_list \
       test_cl_hostalias_list test_multithread_io test_status_info
 
@@ -120,8 +118,6 @@ include $(NGCLIB_DIR)/ngclib_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-dummy.o: $(NGCLIB_DIR)/dummy.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(NGCLIB_DIR)/dummy.c
 cl_tcp_framework.o: $(NGCLIB_DIR)/cl_tcp_framework.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(NGCLIB_DIR)/cl_tcp_framework.c
 cl_communication.o: $(NGCLIB_DIR)/cl_communication.c 
@@ -147,8 +143,6 @@ cl_commlib.o: $(NGCLIB_DIR)/cl_commlib.c
 
 #---------------------------------------------------------------------
 # test programs
-test_dummy: test_dummy.o $(NGCLIB) $(NGCLISTSLIB)
-	$(CC) -o test_dummy $(LFLAGS) test_dummy.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB)
 test_cl_tcp_framework: test_cl_tcp_framework.o $(NGCLIB) $(NGCLISTSLIB)
 	$(CC) -o test_cl_tcp_framework $(LFLAGS) test_cl_tcp_framework.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB)
 test_cl_commlib: test_cl_commlib.o $(NGCLIB) $(NGCLISTSLIB)
@@ -169,8 +163,6 @@ test_status_info: test_status_info.o $(NGCLIB) $(NGCLISTSLIB)
 
 
 
-test_dummy.o: $(NGCLIB_DIR)/test_dummy.c
-	$(CC) $(CFLAGS) -c $(NGCLIB_DIR)/test_dummy.c
 test_cl_tcp_framework.o: $(NGCLIB_DIR)/test_cl_tcp_framework.c
 	$(CC) $(CFLAGS) -c $(NGCLIB_DIR)/test_cl_tcp_framework.c
 test_cl_commlib.o: $(NGCLIB_DIR)/test_cl_commlib.c

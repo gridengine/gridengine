@@ -38,4 +38,5 @@ endif
 echo "usage: certificate.sh client | service"
 
 # $SGE_ROOT/utilbin/$ARCH/openssl s_client -port $SGE_QMASTER_PORT -cert $SSL_CERT_FILE -key $SSL_KEY_FILE
+# $SGE_ROOT/utilbin/$ARCH/openssl s_server -port $CL_PORT -cert $SSL_CERT_FILE -key $SSL_KEY_FILE -state -nbio -verify true -CAfile $SSL_CA_CERT_FILE
 

@@ -717,9 +717,9 @@ static int cl_com_ssl_build_symbol_table(void) {
 
 #if defined(DARWIN)
 #ifdef RTLD_NODELETE
-      cl_com_ssl_crypto_handle = dlopen ("libssl.dylib", RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
+      cl_com_ssl_crypto_handle = dlopen ("libssl.bundle", RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
 #else
-      cl_com_ssl_crypto_handle = dlopen ("libssl.dylib", RTLD_NOW | RTLD_GLOBAL );
+      cl_com_ssl_crypto_handle = dlopen ("libssl.bundle", RTLD_NOW | RTLD_GLOBAL );
 #endif /* RTLD_NODELETE */
 
 #elif defined(HP11)

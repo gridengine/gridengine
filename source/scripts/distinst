@@ -1319,6 +1319,9 @@ for i in $ARCH; do
                   exit 1
                fi
             done
+            if [ $DSTARCH = darwin ]; then
+               InstallProg "$OPENSSLBASE/$DSTARCH/lib/libssl.bundle"
+            fi   
          fi
 
          if [ $instbdb = true ]; then

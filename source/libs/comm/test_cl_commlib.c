@@ -154,6 +154,7 @@ extern int main(int argc, char** argv)
   cl_ssl_setup_t ssl_config;
 
 
+  int handle_port = 0;
   cl_com_handle_t* handle = NULL; 
   cl_com_message_t* message = NULL;
   cl_com_endpoint_t* sender = NULL;
@@ -173,6 +174,10 @@ extern int main(int argc, char** argv)
   ssl_config.ssl_refresh_time     = 0;                          /*  key alive time for connections (not used)   */
   ssl_config.ssl_password         = NULL;                       /*  password for encrypted keyfiles (not used)  */
   ssl_config.ssl_verify_func      = my_ssl_verify_func;         /*  function callback for peer user/name check  */
+
+  if (getenv("CL_PORT")) {
+     handle_port = atoi(getenv("CL_PORT"));
+  }
 
   if (argc < 2) {
       printf("param1=debug_level [param2=framework(TCP/SSL)]\n");
@@ -255,7 +260,7 @@ extern int main(int argc, char** argv)
 
   cl_com_specify_ssl_configuration(&ssl_config);
 
-  handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, 0, CL_TCP_DEFAULT, "server", 1, 1, 0 );
+  handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, handle_port, CL_TCP_DEFAULT, "server", 1, 1, 0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      cl_com_cleanup_commlib();

@@ -77,6 +77,8 @@ range_parse_from_string(lListElem **this_elem, lList **answer_list,
 
 void range_list_print_to_string(const lList *this_list, dstring *string,
                                 bool ignore_step);
+void range_to_dstring(u_long32 start, u_long32 end, int step,
+                              dstring * dyn_taskrange_str, int ignore_step);
 
 void range_list_insert_id(lList **this_list, lList **answer_list, u_long32 id);
 

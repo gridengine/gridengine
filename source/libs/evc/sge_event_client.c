@@ -1108,7 +1108,7 @@ ec_get_clientdata(void)
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
 bool 
-ec_register(bool exit_on_qmaster_down)
+ec_register(bool exit_on_qmaster_down, lList** alpp)
 {
    bool ret = false;
 
@@ -1180,6 +1180,10 @@ ec_register(bool exit_on_qmaster_down)
       } else {
          if (lGetUlong(aep, AN_quality) == ANSWER_QUALITY_ERROR) {
             ERROR((SGE_EVENT, "%s", lGetString(aep, AN_text)));
+            answer_list_add(alpp, lGetString(aep, AN_text), 
+                  lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
+            lFreeList(lp); 
+            lFreeList(alp);
             if (exit_on_qmaster_down) {
                DPRINTF(("exiting in ec_register()\n"));
                SGE_EXIT(1);
@@ -2180,7 +2184,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
       ret = false;
    } else if (ec_need_new_registration()) {
       next_event = 1;
-      ret = ec_register(exit_on_qmaster_down);
+      ret = ec_register(exit_on_qmaster_down, NULL);
    }
   
    if (ret) {

@@ -37,6 +37,7 @@
 
 #ifdef SGE_MT
 #include <pthread.h>
+#include "sge_mtutil.h"
 #endif
 
 #include "basis_types.h"
@@ -49,8 +50,21 @@
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
 
 #ifdef SGE_MT
+
 /* MT-NOTE: language_mutex guards all language module function calls */
-pthread_mutex_t language_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t language_mutex = PTHREAD_MUTEX_INITIALIZER;
+/* MT-NOTE: message_id_view_mutex guards only access to 'sge_message_id_view_flag' */
+static pthread_mutex_t message_id_view_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+#   define LANGUAGE_LOCK()            sge_mutex_lock("language_mutex", SGE_FUNC, __LINE__, &language_mutex)
+#   define LANGUAGE_UNLOCK()          sge_mutex_unlock("language_mutex", SGE_FUNC, __LINE__, &language_mutex)
+#   define MESSAGE_ID_VIEW_LOCK()     sge_mutex_lock("message_id_view_mutex", SGE_FUNC, __LINE__, &message_id_view_mutex)
+#   define MESSAGE_ID_VIEW_UNLOCK()   sge_mutex_unlock("message_id_view_mutex", SGE_FUNC, __LINE__, &message_id_view_mutex)
+#else
+#   define LANGUAGE_LOCK()            
+#   define LANGUAGE_UNLOCK()         
+#   define MESSAGE_ID_VIEW_LOCK()   
+#   define MESSAGE_ID_VIEW_UNLOCK()
 #endif
 
 /*
@@ -94,6 +108,7 @@ static htable sge_message_hash_table = NULL;
 /* this is to find out if the sge_init_language_func() was called */
 static bool sge_are_language_functions_installed = false;
 
+static int sge_get_message_id_output_implementation(void);
 
 /****** uti/language/sge_init_language() **************************************
 *  NAME
@@ -151,9 +166,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
 
   DENTER(TOP_LAYER, "sge_init_language");
 
-#ifdef SGE_MT
-   pthread_mutex_lock(&language_mutex);
-#endif
+  LANGUAGE_LOCK();
 
   DPRINTF(("****** starting localization procedure ... **********\n"));
 
@@ -283,7 +296,6 @@ int sge_init_languagefunc(char *package, char *localeDir)
      DPRINTF(("package file:     >%s.mo<\n",packName));
      DPRINTF(("language (LANG):  >%s<\n",language));
      DPRINTF(("loading message file: %s\n",pathName ));
-     
    
      /* is the package file allright */
      back = open (pathName, O_RDONLY);
@@ -333,9 +345,6 @@ int sge_init_languagefunc(char *package, char *localeDir)
      DPRINTF(("sge_init_language() called without valid sge_language_functions pointer!\n"));
      success = false;
   }
-
-
-
  
   free(packName);
   free(locDir);
@@ -380,9 +389,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
     DPRINTF(("****** starting localization procedure ... failed  **\n"));
   }
 
-#ifdef SGE_MT
-   pthread_mutex_unlock(&language_mutex);
-#endif
+  LANGUAGE_UNLOCK();
 
   DEXIT;
   return (success);
@@ -427,9 +434,9 @@ void sge_init_language_func(gettext_func_type new_gettext,
                             bindtextdomain_func_type new_bindtextdomain,
                             textdomain_func_type new_textdomain) 
 {
-#ifdef SGE_MT
-   pthread_mutex_lock(&language_mutex);
-#endif
+   DENTER(TOP_LAYER, "sge_init_language_func");
+
+   LANGUAGE_LOCK();
 
    /* initialize the functions pointer to NULL */
    sge_language_functions.gettext_func = NULL;
@@ -457,10 +464,10 @@ void sge_init_language_func(gettext_func_type new_gettext,
       sge_language_functions.textdomain_func = new_textdomain;
    } 
 
-#ifdef SGE_MT
-   pthread_mutex_unlock(&language_mutex);
-#endif
+   LANGUAGE_UNLOCK();
 
+   DEXIT;
+   return;
 }
 
 /****** uti/language/sge_set_message_id_output() *******************************
@@ -492,9 +499,9 @@ void sge_init_language_func(gettext_func_type new_gettext,
 *******************************************************************************/
 void sge_set_message_id_output(int flag) {
 
-#ifdef SGE_MT
-   pthread_mutex_lock(&language_mutex);
-#endif
+   DENTER(TOP_LAYER, "sge_set_message_id_output");
+
+   MESSAGE_ID_VIEW_LOCK();
 
    if (flag == 0) {
       sge_message_id_view_flag = 0;
@@ -502,11 +509,11 @@ void sge_set_message_id_output(int flag) {
       sge_message_id_view_flag = 1;
    }
 
-#ifdef SGE_MT
-   pthread_mutex_unlock(&language_mutex);
-#endif
-
+   MESSAGE_ID_VIEW_UNLOCK();
+   DEXIT;
+   return;
 }
+
 /****** uti/language/sge_get_message_id_output() *******************************
 *  NAME
 *     sge_get_message_id_output() -- check if message id should be added
@@ -532,26 +539,74 @@ void sge_set_message_id_output(int flag) {
 *     uti/language/sge_gettext__()
 *     uti/language/sge_get_message_id_output()
 *     uti/language/sge_set_message_id_output()
+*     uti/language/sge_get_message_id_output_implementation()
 *******************************************************************************/
-int sge_get_message_id_output(void) {
-
+int sge_get_message_id_output(void) 
+{
    int ret;
 
-#ifdef SGE_MT
-   pthread_mutex_lock(&language_mutex);
-#endif
+   DENTER(TOP_LAYER, "sge_get_message_id_output");
 
-   if (sge_enable_msg_id_to_every_message == 1) 
-      ret = 1; 
-   else if (sge_enable_msg_id == 0)
-      ret = 0;
-   else
-      ret = sge_message_id_view_flag;
+   LANGUAGE_LOCK();
+   ret = sge_get_message_id_output_implementation();
+   LANGUAGE_UNLOCK();
 
-#ifdef SGE_MT
-   pthread_mutex_unlock(&language_mutex);
-#endif
+   DEXIT;
+   return ret;
+}
 
+/****** uti/language/sge_get_message_id_output_implementation() ***************
+*  NAME
+*     sge_get_message_id_output_implementation() -- pure implementation of 
+*        sge_get_message_id_output_implementation() that does not lock
+*        language_mutex
+*
+*  SYNOPSIS
+*     int sge_get_message_id_output_implementation(void) 
+*
+*  FUNCTION
+*     When the sge_get_message_id_output() functionality is needed from within
+*     the language modules the language_mutex may not be obtained because this 
+*     mutex is already owned by the same thread. 
+*
+*  RESULT
+*     int - value of sge_message_id_view_flag
+*
+*  NOTES
+*     MT-NOTE: The caller of sge_get_message_id_output_implementation() must
+*     MT-NOTE: have obtained the language_mutex mutex due to access to 
+*     MT-NOTE: 'sge_enable_msg_id' and 'sge_enable_msg_id_to_every_message'.
+*     
+*  SEE ALSO
+*     uti/language/sge_init_language()
+*     uti/language/sge_init_language_func()
+*     uti/language/sge_gettext()
+*     uti/language/sge_gettext_()
+*     uti/language/sge_gettext__()
+*     uti/language/sge_get_message_id_output()
+*     uti/language/sge_set_message_id_output()
+*******************************************************************************/
+static int sge_get_message_id_output_implementation(void) 
+{
+   int ret;
+
+   DENTER(TOP_LAYER, "sge_get_message_id_output_implementation");
+
+   if (sge_enable_msg_id_to_every_message == 1) {
+      DEXIT;
+      return 1;
+   }
+
+   if (sge_enable_msg_id == 0) {
+      DEXIT;
+      return 0;
+   }
+
+   MESSAGE_ID_VIEW_LOCK();
+   ret = sge_message_id_view_flag;
+   MESSAGE_ID_VIEW_UNLOCK();
+
+   DEXIT;
    return ret;
 }
 
@@ -622,7 +677,7 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
    sge_error_message_t* message_p = NULL;
    long key;
 
-   DENTER(BASIS_LAYER, "sge_gettext_");
+   DENTER(TOP_LAYER, "sge_gettext_");
 
    if (msg_str == NULL) {
       DEXIT;
@@ -631,7 +686,7 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
 
    key = msg_id;
    /* check if message is not just one word (strstr) */
-   if ( (sge_get_message_id_output() != 0)  && 
+   if ( (sge_get_message_id_output_implementation() != 0)  && 
         (strstr(msg_str, " ") != NULL)   ) {  
        
       if (sge_message_hash_table == NULL) {

@@ -135,7 +135,6 @@ void uti_state_init(struct uti_state_t* state) {
    state->exit_on_error = 1;
    state->fqdn_cmp = 0;
    state->default_domain = NULL;
-
 }
 #endif
 

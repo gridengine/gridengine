@@ -108,7 +108,7 @@ proc drmaa_setup {} {
 proc drmaa_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
    global CHECK_HOST CHECK_CORE_EXECD CHECK_SOURCE_DIR CHECK_USER CHECK_CORE_MASTER
-   global CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT
+   global CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
 
 
    if { [resolve_version] <= 2 } {
@@ -136,42 +136,68 @@ proc drmaa_check {} {
          puts $CHECK_OUTPUT "DRMAA not supported for binary architecture $binary_arch"
          continue
       }
-
       set compile_arch_mt "[resolve_upper_arch $host]_MT"
       set binary_path "$CHECK_SOURCE_DIR/$compile_arch_mt"
       puts $CHECK_OUTPUT "host is $host has arch $compile_arch_mt mt bin path $binary_path"
 
       switch -- $CHECK_ACT_LEVEL {
          "0" { 
-            # -- tests without an argument
-            foreach st_test "ST_MULT_INIT ST_MULT_EXIT" {
-               puts "starting single threaded test $st_test"
-               drmaa_test $st_test $host $binary_path ""
+            # -- do all ST_DRMAA_CONTROL tests
+            drmaa_test_failing_control_operations $host $binary_path
+
+            # unset SGE_ROOT and try test_drmaa -h
+            puts "starting single threaded test test_drmaa -h without SGE_ROOT"
+            # set CHECK_DEBUG_LEVEL 2
+            set test_output [ start_remote_prog $host $CHECK_USER "unset" "SGE_ROOT\n$binary_path/test_drmaa -h" \
+                  prg_exit_state 500 0 "" 0 1]
+            # set CHECK_DEBUG_LEVEL 0
+            if { $prg_exit_state == 0 } {
+               add_proc_error drmaa_check -1 "test_drmaa -h without SGE_ROOT must exit with unequal 0 at host $host"
+               break
             }
-            
+
+            # the ST_INPUT_BECOMES_OUTPUT test
+            drmaa_test_st_input_becomes_output $host $binary_path
+
+            # -- tests without an argument
+            foreach st_test "ST_MULT_INIT ST_MULT_EXIT ST_SUPPORTED_ATTR ST_SUPPORTED_VATTR ST_VERSION \
+               ST_DRM_SYSTEM ST_CONTACT ST_EMPTY_SESSION_WAIT ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE \
+               ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE" {
+               
+               puts "starting single threaded test $st_test"
+               drmaa_test $host $binary_path $st_test ""
+            }
+           
+            # -- tests to ensure control operations on session without jobs result in DRMAA_ERRNO_SUCCESS 
+            foreach control_op "DRMAA_CONTROL_SUSPEND DRMAA_CONTROL_RESUME DRMAA_CONTROL_HOLD \
+                  DRMAA_CONTROL_RELEASE DRMAA_CONTROL_TERMINATE" {
+               puts "starting single threaded test ST_EMPTY_SESSION_CONTROL $control_op"
+               drmaa_test $host $binary_path ST_EMPTY_SESSION_CONTROL "$control_op"
+            }
+
             # -- tests with a <sleeper_job> argument
             foreach st_test "ST_SUBMIT_WAIT ST_BULK_SUBMIT_WAIT ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL \
                 ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE ST_SUBMITMIXTURE_SYNC_ALL_NODISPOSE \
                 ST_SUBMITMIXTURE_SYNC_ALLIDS_DISPOSE ST_SUBMITMIXTURE_SYNC_ALLIDS_NODISPOSE \
                 ST_SUBMIT_PAUSE_SUBMIT_SYNC ST_INPUT_FILE_FAILURE ST_OUTPUT_FILE_FAILURE \
-                ST_ERROR_FILE_FAILURE"  {
+                ST_ERROR_FILE_FAILURE ST_SUBMIT_SUSPEND_RESUME_WAIT \
+                ST_SUBMIT_POLLING_WAIT_TIMEOUT ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT \
+                ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT"  {
                puts "starting single threaded test $st_test"
-               drmaa_test $st_test $host $binary_path $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh
+               drmaa_test $host $binary_path $st_test $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh
             }
 
             # -- tests with a <exit_arg_job> argument
             puts "starting single threaded test ST_EXIT_STATUS"
-            drmaa_test ST_EXIT_STATUS $host $binary_path $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit.sh
+            drmaa_test $host $binary_path ST_EXIT_STATUS $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit.sh
    
-            # -- the ST_INPUT_BECOMES_OUTPUT test
-            # drmaa_test_st_input_becomes_output $host $binary_path
          } 
          "1" { 
             # all MT tests need a sleeper job as argument
             foreach mt_test "MT_SUBMIT_WAIT MT_SUBMIT_BEFORE_INIT_WAIT MT_EXIT_DURING_SUBMIT 
                   MT_SUBMIT_MT_WAIT MT_EXIT_DURING_SUBMIT_OR_WAIT" {
                puts "starting multi threaded test $mt_test"
-               drmaa_test $mt_test $host $binary_path $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh
+               drmaa_test $host $binary_path $mt_test $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh
             }
          } 
          "2" { 
@@ -213,59 +239,184 @@ proc drmaa_cleanup  {} {
    set_error 0 "ok"
 }
 
-
-proc drmaa_test { test_name host binary_path arguments } {
+#                                                             max. column:     |
+#
+#****** drmaa_test/drmaa_test() ******
+#  NAME
+#     drmaa_test() -- generic drmaa test
+#
+#  SYNOPSIS
+#     drmaa_test { test_name host binary_path arguments }
+#
+#  FUNCTION
+#     This procedure starts test_drmaa with the corresponding arguemnts.
+#     Exit status of test_drmaa must always be 0 otherwise test has failed.
+#
+#  INPUTS
+#     host                       - The host where 'test_drmaa' is run
+#     binary_path                - The path where 'test_drmaa' can be found
+#     test_name                  - The name of a test. To get a complete list
+#                                  of all test cases run 'test_drmaa' without args
+#     arguments                  - Additional arguments needed for the test case.
+#     user                       - Optional argument if test shall be run as user 
+#                                  other than CHECK_USER
+#
+#  EXAMPLE
+#     drmaa_test ST_SUBMIT_WAIT ori <source-path>/SOLARIS86/ $SGE_ROOT/examples/jobs/sleeper.sh
+#*******************************
+#
+proc drmaa_test { host binary_path test_name arguments {user ""} } {
    global CHECK_OUTPUT CHECK_USER
 
+   if {$user == ""} { 
+      set user $CHECK_USER
+   }
+
    puts $CHECK_OUTPUT "$binary_path/test_drmaa $test_name $arguments"
-   set test_output [ start_remote_prog $host $CHECK_USER $binary_path/test_drmaa "$test_name $arguments" prg_exit_state 500]
+   set test_output [ start_remote_prog $host $user $binary_path/test_drmaa "$test_name $arguments" prg_exit_state 500 ]
 
    puts $CHECK_OUTPUT "exit status was $prg_exit_state"
    puts $CHECK_OUTPUT "output was\n$test_output"
 
    if { $prg_exit_state != 0 } {
-      add_proc_error drmaa_check -1 "test_drmaa $test_name failed at host $host"
+      add_proc_error drmaa_check -1 "$binary_path/test_drmaa $test_name $arguments failed at host $host"
    }
 }
 
+#                                                             max. column:     |
+#
+#****** drmaa_test/drmaa_test_st_input_becomes_output() ******
+#  NAME
+#     drmaa_test_st_input_becomes_output() -- Test to ensure 
+#      input/output is treated correctly by DRMAA
+#
+#  SYNOPSIS
+#     drmaa_test_st_input_becomes_output { host binary_path }
+#
+#  FUNCTION
+#     This test creates unique file names for job input/output. These
+#     file names are passed to the test_drmaa ST_INPUT_BECOMES_OUTPUT.
+#     After test_drmaa ST_INPUT_BECOMES_OUTPUT was run the files are deleted.
+#
+#  INPUTS
+#     host                       - The host where 'test_drmaa' is run
+#     binary_path                - The path where 'test_drmaa' can be found
+#*******************************
+#
 proc drmaa_test_st_input_becomes_output { host binary_path } {
+   global CHECK_OUTPUT CHECK_USER
 
    # prepare input file
    set input_file [get_tmp_file_name]
-   set catch_return [ catch {
-       set input [ open "$input_file" "w" ]
-   } ]
-   if { $catch_return != 0 } {
-      add_proc_error "create_input" "-2" "could not open input file $input_file for writing"
-      return
-   }
-   puts $input "this input must become output"
-   flush $input
-   close $input
   
    # prepare output file name
    set output_file [get_tmp_file_name]
 
-   puts $CHECK_OUTPUT "$binary_path/test_drmaa $st_test /usr/bin/cat $input_file $output_file"
-   wait_for_remote_file $host $CHECK_USER $input_file 120
+   puts $CHECK_OUTPUT "$binary_path/test_drmaa ST_INPUT_BECOMES_OUTPUT $input_file $output_file"
+   # wait_for_remote_file $host $CHECK_USER $input_file 500
 
    # run job
-   set test_output [start_remote_prog $host $CHECK_USER $binary_path/test_drmaa "$st_test /usr/bin/cat $input_file $output_file" prg_exit_state 400]
+   set test_output [start_remote_prog $host $CHECK_USER $binary_path/test_drmaa "ST_INPUT_BECOMES_OUTPUT $input_file $output_file" prg_exit_state 500]
 
    puts $CHECK_OUTPUT "exit status was $prg_exit_state"
    puts $CHECK_OUTPUT "output was\n$test_output"
+
+   # remove input and output file
+   file delete "$input_file"
+   file delete "$output_file"
 
    if { $prg_exit_state != 0 } {
       add_proc_error drmaa_check -1 "test_drmaa $st_test failed at host $host"
       break
    }
+}
 
-   # verify output file is equal with input file
-   read_file $input_file input_array
-   wait_for_remote_file $host $CHECK_USER $output_file 120
-   read_file $output_file output_array
+#                                                             max. column:     |
+#
+#****** drmaa_test/drmaa_test_failing_control_operations() ******
+#  NAME
+#     drmaa_test_failing_control_operations() -- Test to ensure 
+#      DRMAA operations behave correctly when they operate on other 
+#      users jobs trying input/output is treated correctly by DRMAA
+#
+#  SYNOPSIS
+#     drmaa_test_failing_control_operations { host binary_path }
+#
+#  FUNCTION
+#     This test creates unique file names for job input/output. These
+#     file names are passed to the test_drmaa ST_INPUT_BECOMES_OUTPUT.
+#     After test_drmaa ST_INPUT_BECOMES_OUTPUT was run the files are deleted.
+#
+#  INPUTS
+#     host                       - The host where 'test_drmaa' is run
+#     binary_path                - The path where 'test_drmaa' can be found
+#*******************************
+#
+proc drmaa_test_failing_control_operations { host binary_path } {
+   global CHECK_OUTPUT CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER 
+   global CHECK_HOST CHECK_PRODUCT_ROOT
 
-   if { [string compare $input_array(1) $output_array(1)] != 0 } {
-      add_proc_error drmaa_check -1 "test_drmaa $st_test failed at host $host"
+   #
+   # submit sequential job in hold state as user1 
+   #
+
+   puts "going to submit a job as user $CHECK_FIRST_FOREIGN_SYSTEM_USER"
+   set job_id [ submit_job "-o /dev/null -j y -h $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 1 60 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER ]
+   puts "submitted job $job_id as user $CHECK_FIRST_FOREIGN_SYSTEM_USER"
+
+   # ensure control operations forbidden for user2 result in a DRMAA_ERRNO_AUTH_FAILURE 
+   foreach control_op "DRMAA_CONTROL_SUSPEND DRMAA_CONTROL_RESUME DRMAA_CONTROL_HOLD \
+         DRMAA_CONTROL_RELEASE DRMAA_CONTROL_TERMINATE" {
+      puts "starting single threaded test ST_DRMAA_CONTROL $control_op DRMAA_ERRNO_AUTH_FAILURE"
+      drmaa_test $host $binary_path ST_DRMAA_CONTROL "$control_op DRMAA_ERRNO_AUTH_FAILURE $job_id" $CHECK_SECOND_FOREIGN_SYSTEM_USER
+   }
+
+   # ensure suspend/unsuspend as user1 on job in hold state returns intended errno value
+   drmaa_test $host $binary_path ST_DRMAA_CONTROL "DRMAA_CONTROL_SUSPEND DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE $job_id" $CHECK_FIRST_FOREIGN_SYSTEM_USER
+   drmaa_test $host $binary_path ST_DRMAA_CONTROL "DRMAA_CONTROL_RESUME  DRMAA_ERRNO_RESUME_INCONSISTENT_STATE $job_id" $CHECK_FIRST_FOREIGN_SYSTEM_USER
+
+   # delete job as user1
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "$job_id" 1 ]
+   puts $CHECK_OUTPUT "qdel_output = \n$result"
+    
+   # ensure control operation isused as user1 on no longer existing job results in a DRMAA_ERRNO_INVALID_JOB 
+   foreach control_op "DRMAA_CONTROL_SUSPEND DRMAA_CONTROL_RESUME DRMAA_CONTROL_HOLD \
+         DRMAA_CONTROL_RELEASE DRMAA_CONTROL_TERMINATE" {
+      puts "starting single threaded test ST_DRMAA_CONTROL $control_op DRMAA_ERRNO_INVALID_JOB"
+      drmaa_test $host $binary_path ST_DRMAA_CONTROL "$control_op DRMAA_ERRNO_INVALID_JOB $job_id" $CHECK_FIRST_FOREIGN_SYSTEM_USER
+   }
+
+   #
+   # submit job array in hold state as user1 
+   #
+
+   puts "going to submit a job as user $CHECK_FIRST_FOREIGN_SYSTEM_USER"
+   set job_id [ submit_job "-t 1-2 -o /dev/null -j y -h $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 1 60 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER ]
+   puts "submitted job $job_id as user $CHECK_FIRST_FOREIGN_SYSTEM_USER"
+
+   # ensure control operations forbidden for user2 result in a DRMAA_ERRNO_AUTH_FAILURE 
+   foreach control_op "DRMAA_CONTROL_SUSPEND DRMAA_CONTROL_RESUME DRMAA_CONTROL_HOLD \
+         DRMAA_CONTROL_RELEASE DRMAA_CONTROL_TERMINATE" {
+      puts "starting single threaded test ST_DRMAA_CONTROL $control_op DRMAA_ERRNO_AUTH_FAILURE"
+      drmaa_test $host $binary_path ST_DRMAA_CONTROL "$control_op DRMAA_ERRNO_AUTH_FAILURE $job_id.1" $CHECK_SECOND_FOREIGN_SYSTEM_USER
+      drmaa_test $host $binary_path ST_DRMAA_CONTROL "$control_op DRMAA_ERRNO_AUTH_FAILURE $job_id.2" $CHECK_SECOND_FOREIGN_SYSTEM_USER
+   }
+
+   # ensure suspend/unsuspend as user1 on job in hold state returns intended errno value
+   drmaa_test $host $binary_path ST_DRMAA_CONTROL "DRMAA_CONTROL_SUSPEND DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE $job_id.1" $CHECK_FIRST_FOREIGN_SYSTEM_USER
+   drmaa_test $host $binary_path ST_DRMAA_CONTROL "DRMAA_CONTROL_SUSPEND DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE $job_id.2" $CHECK_FIRST_FOREIGN_SYSTEM_USER
+   drmaa_test $host $binary_path ST_DRMAA_CONTROL "DRMAA_CONTROL_RESUME  DRMAA_ERRNO_RESUME_INCONSISTENT_STATE $job_id.1" $CHECK_FIRST_FOREIGN_SYSTEM_USER
+   drmaa_test $host $binary_path ST_DRMAA_CONTROL "DRMAA_CONTROL_RESUME  DRMAA_ERRNO_RESUME_INCONSISTENT_STATE $job_id.2" $CHECK_FIRST_FOREIGN_SYSTEM_USER
+
+   # delete job as user1
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "$job_id" 1 ]
+   puts $CHECK_OUTPUT "qdel_output = \n$result"
+    
+   # ensure control operation isused as user1 on no longer existing job results in a DRMAA_ERRNO_INVALID_JOB 
+   foreach control_op "DRMAA_CONTROL_SUSPEND DRMAA_CONTROL_RESUME DRMAA_CONTROL_HOLD \
+         DRMAA_CONTROL_RELEASE DRMAA_CONTROL_TERMINATE" {
+      puts "starting single threaded test ST_DRMAA_CONTROL $control_op DRMAA_ERRNO_INVALID_JOB"
+      drmaa_test $host $binary_path ST_DRMAA_CONTROL "$control_op DRMAA_ERRNO_INVALID_JOB $job_id.1" $CHECK_FIRST_FOREIGN_SYSTEM_USER
+      drmaa_test $host $binary_path ST_DRMAA_CONTROL "$control_op DRMAA_ERRNO_INVALID_JOB $job_id.2" $CHECK_FIRST_FOREIGN_SYSTEM_USER
    }
 }

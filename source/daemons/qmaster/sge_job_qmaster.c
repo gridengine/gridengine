@@ -898,7 +898,7 @@ int sub_command
           !manop_is_manager(ruser)) {
          ERROR((SGE_EVENT, MSG_JOB_DELETEPERMS_SU, ruser, 
                 u32c(lGetUlong(job, JB_job_number))));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_ERROR);
          njobs++;
          /* continue with next job */ 
          continue; 
@@ -909,6 +909,8 @@ int sub_command
        */
       rn = lFirst(lGetList(idep, ID_ja_structure));
       do {
+         char *dupped_session = NULL;
+
          /*
           * delete tasks or the whole job?
           * if ID_ja_structure not empty delete specified tasks
@@ -963,8 +965,15 @@ int sub_command
 
                   tmp_task = job_get_ja_task_template_pending(job, task_number);
                   deleted_tasks++;
+                  /* In certain cases sge_commit_job() free's the job structure passed.
+                   * The session information is needed after sge_commit_job() so we make 
+                   * a copy of the job session before calling sge_commit_job(). This copy
+                   * must be free'd!
+                   */
+                  if (lGetString(job, JB_session))
+                     dupped_session = strdup(lGetString(job, JB_session));
                   sge_add_event(NULL, start_time, sgeE_JATASK_DEL, job_number, task_number,
-                                NULL, lGetString(job, JB_session), NULL);
+                                NULL, dupped_session, NULL);
                   sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED, COMMIT_NO_SPOOLING |
                      COMMIT_NO_EVENTS | COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN);
                   deleted_unenrolled_tasks = 1;
@@ -992,15 +1001,15 @@ int sub_command
                /* write only the common part - pass only the jobid, no jatask or petask id */
                lList *answer_list = NULL;
                spool_write_object(&answer_list, spool_get_default_context(), 
-                                  job, job_get_job_key(job_number), 
-                                  SGE_TYPE_JOB);
+                                  job, job_get_job_key(job_number), SGE_TYPE_JOB);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(job);
             } else {
                sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, NULL, 
-                     lGetString(job, JB_session), NULL);
+                     dupped_session, NULL);
             }
          }
+         FREE(dupped_session);
 
          /*
           * Delete enrolled ja tasks

@@ -11499,7 +11499,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
   debug_puts "highest level of test is $check_highest_level"
 
   if { $result != 0 } {
-     puts $CHECK_OUTPUT "dependencies not fulfilled! Stop!"
+     puts $CHECK_OUTPUT "dependencies ($check_needs) not fulfilled! Stop!"
      set check_errstr ""
      set check_errno ""
      foreach elem $check_functions {

@@ -63,6 +63,9 @@
 #include "sge_feature.h"
 
 static void default_exit_func(int i);
+#if defined(SGE_MT)
+static void gdi_init_mt(void);
+#endif
 
 struct gdi_state_t {
    /* gdi request base */
@@ -95,7 +98,7 @@ static void gdi_state_destroy(void* state) {
    free(state);
 }
 
-void gdi_init_mt() {
+static void gdi_init_mt(void) {
    pthread_key_create(&gdi_state_key, &gdi_state_destroy);
 } 
   

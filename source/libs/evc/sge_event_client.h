@@ -39,7 +39,7 @@
 #define DEFAULT_EVENT_DELIVERY_INTERVAL (10)
 
 bool ec_prepare_registration(ev_registration_id id, const char *name);
-bool ec_register(bool exit_on_qmaster_down);
+bool ec_register(bool exit_on_qmaster_down, lList **alpp);
 bool ec_deregister(void);
 bool ec_is_initialized(void);
 

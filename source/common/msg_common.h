@@ -175,7 +175,7 @@
 #define MSG_FILE_FILEUNCHANGED                 _MESSAGE(23114, _("file unchanged\n"))
 #define MSG_FILE_ERRORREADINGINFILE            _MESSAGE(23115, _("error reading in file\n"))
 #define MSG_EXEC_XISNOEXECHOST_S               _MESSAGE(23116, _(SFN" is no exec host\n"))
-#define MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S    _MESSAGE(23117, _("added host "SFN"to exec host list\n"))
+#define MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S    _MESSAGE(23117, _("added host "SFN" to exec host list\n"))
 #define MSG_ANSWER_INVALIDFORMAT               _MESSAGE(23118, _("invalid format\n"))
 #define MSG_QUEUE_UNABLETOWRITETEMPLATEQUEUE   _MESSAGE(23120, _("unable to write template queue"))
 #define MSG_TREE_CHANGEDSHARETREE              _MESSAGE(23121, _("changed sharetree\n"))

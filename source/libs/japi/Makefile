@@ -41,11 +41,11 @@ DEPEND = ../3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(DEPEND_FLA
 JAPILIB_DIR   = $(SDIR)/libs/japi
 
 JAPILIB 	     = libjapi$(LIBEXT)
-JAPILIB_SRC   = japi.c sge_all_listsL.c
+JAPILIB_SRC   = japi.c sge_mtutil.c sge_all_listsL.c
 JAPILIB_OBJS  = $(JAPILIB_SRC:.c=.o)
 
 DRMAALIB 	  = libdrmaa$(LIBEXT)
-DRMAALIB_SRC  = drmaa.c japi.c sge_all_listsL.c
+DRMAALIB_SRC  = drmaa.c japi.c sge_mtutil.c sge_all_listsL.c
 DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o)
 
 JAPI_ALL 	  = test_drmaa japilib drmaalib 
@@ -72,7 +72,7 @@ japilib: $(JAPILIB)
 drmaalib: $(DRMAALIB)
 	
 clean: 
-	$(RM) $(JAPI_ALL) $(JAPILIB_OBJS) $(DRMAA_DEPEND_OBJS) libjapi.a libjapi$(SHAREDEXT) $(DRMAALIB_OBJS) libdrmaa.a libdrmaa$(SHAREDEXT) test_drmaa.o test_drmaa
+	$(RM) $(JAPI_ALL) $(JAPILIB_OBJS) $(DRMAA_DEPEND_OBJS) libjapi.a libjapi$(SHAREDEXT) $(DRMAALIB_OBJS) libdrmaa.a libdrmaa$(SHAREDEXT) test_drmaa.o test_drmaa example.o example
 
 depend:
 	$(DEPEND) -f$(JAPILIB_DIR)/japi_dependencies $(JAPILIB_DIR)/*.c
@@ -105,11 +105,14 @@ include $(JAPILIB_DIR)/japi_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
+drmaa.o: $(JAPILIB_DIR)/drmaa.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/drmaa.c
+
 japi.o: $(JAPILIB_DIR)/japi.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c
 
-drmaa.o: $(JAPILIB_DIR)/drmaa.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/drmaa.c
+sge_mtutil.o: $(JAPILIB_DIR)/sge_mtutil.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/sge_mtutil.c
 
 
 #---------------------------------------------------------------------

@@ -1493,7 +1493,7 @@ u_long32 job_get_biggest_enrolled_task_id(const lListElem *job)
 *  FUNCTION
 *     This function checks whether a new job would exceed the maximum
 *     of allowed jobs per cluster ("max_jobs"). If the limit would be
-*     exceeded than the function will return 1 otherwise 0. In some
+*     exceeded then the function will return 1 otherwise 0. In some
 *     situations it may be necessary to force the registration
 *     of a new job (reading jobs from spool area). This may be done
 *     with "force_registration".

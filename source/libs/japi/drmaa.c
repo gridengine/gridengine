@@ -6,6 +6,8 @@
 
 #include <pthread.h>
 
+#include "sge_mtutil.h"
+
 #include "drmaa.h"
 #include "japi.h"
 #include "japiP.h"
@@ -65,7 +67,8 @@
 static const char *session_key_env_var = "SGE_SESSION_KEY"; 
 static const char *session_shutdown_mode_env_var = "SGE_KEEP_SESSION";
 
-static int is_supported(const char *name, const char *supported_list[]);
+static int drmaa_is_supported(const char *name, const char *supported_list[]);
+static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[]);
 
 static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt, 
    int is_bulk, int start, int end, int step, dstring *diag);
@@ -89,24 +92,26 @@ static int japi_drmaa_path2sge_job(drmaa_job_template_t *drmaa_jt, lListElem *jt
 
 static pthread_mutex_t environ_mutex;
 
+#define DRMAA_LOCK_ENVIRON()      sge_mutex_lock("drmaa_environ_mutex", SGE_FUNC, __LINE__, &environ_mutex)
+#define DRMAA_UNLOCK_ENVIRON()    sge_mutex_unlock("drmaa_environ_mutex", SGE_FUNC, __LINE__, &environ_mutex)
 
 /****** DRMAA/-DRMAA_Global_Constants *******************************************
 *  NAME
 *     Global_Constants -- global constants used in DRMAA
 *
 *  SYNOPSIS
-*     static const char *japi_supported_nonvector[];
-*     static const char *japi_supported_vector[];
+*     static const char *drmaa_supported_nonvector[];
+*     static const char *drmaa_supported_vector[];
 *     
 *  FUNCTION
-*     japi_supported_nonvector - A string array containing all supported job 
+*     drmaa_supported_nonvector - A string array containing all supported job 
 *                    template non-vector attributes.
-*     japi_supported_vector - A string array containing all supported job 
+*     drmaa_supported_vector - A string array containing all supported job 
 *                    template vector attributes.
 *  SEE ALSO
 *******************************************************************************/
 /* these non vector job template attributes are supported */
-static const char *japi_supported_nonvector[] = {
+static const char *drmaa_supported_nonvector[] = {
    DRMAA_REMOTE_COMMAND,
    DRMAA_JS_STATE,
    DRMAA_WD,
@@ -131,7 +136,7 @@ static const char *japi_supported_nonvector[] = {
 };
 
 /* these vector job template attributes are supported */
-static const char *japi_supported_vector[] = {
+static const char *drmaa_supported_vector[] = {
    DRMAA_V_ARGV,
 #if 0
    DRMAA_V_ENV,
@@ -186,11 +191,11 @@ int drmaa_init(const char *contact, char *error_diagnosis, size_t error_diag_len
       diagp = &diag;
    }
  
-   japi_lock_mutex("environ_mutex", "drmaa_init", &environ_mutex);
+   DRMAA_LOCK_ENVIRON();
    set_session = getenv(session_key_env_var)?true:false;
    if (set_session)
       sge_dstring_copy_string(&session_key_in, getenv(session_key_env_var));
-   japi_unlock_mutex("environ_mutex", "drmaa_init", &environ_mutex);
+   DRMAA_UNLOCK_ENVIRON();
 
    /*
     * env var SGE_SESSION_KEY is used 
@@ -214,9 +219,9 @@ int drmaa_init(const char *contact, char *error_diagnosis, size_t error_diag_len
          sge_dstring_get_string(&session_key_out));
 
 
-   japi_lock_mutex("environ_mutex", "drmaa_init", &environ_mutex);
+   DRMAA_LOCK_ENVIRON();
    sge_putenv(sge_dstring_get_string(&env_var));
-   japi_unlock_mutex("environ_mutex", "drmaa_init", &environ_mutex);
+   DRMAA_UNLOCK_ENVIRON();
 
    sge_dstring_free(&session_key_out);
    sge_dstring_free(&env_var);
@@ -258,25 +263,28 @@ int drmaa_exit(char *error_diagnosis, size_t error_diag_len)
    bool close_session = true;
    extern int sge_clrenv(const char *name);
 
+   DENTER(TOP_LAYER, "drmaa_exit");
+
    if (error_diagnosis) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
       diagp = &diag;
    }
 
    /* session_shutdown_mode_env_var is used to interface japi_exit(close_session) */
-   japi_lock_mutex("environ_mutex", "drmaa_init", &environ_mutex);
+   DRMAA_LOCK_ENVIRON();
    if ((s=getenv(session_shutdown_mode_env_var))) {
       close_session = false;
    }
-   japi_unlock_mutex("environ_mutex", "drmaa_init", &environ_mutex);
+   DRMAA_UNLOCK_ENVIRON();
 
    drmaa_errno = japi_exit(close_session, diagp);
 
    /* need to get rid of session key env var */
-   japi_lock_mutex("environ_mutex", "drmaa_init", &environ_mutex);
+   DRMAA_LOCK_ENVIRON();
    sge_clrenv(session_key_env_var);
-   japi_unlock_mutex("environ_mutex", "drmaa_init", &environ_mutex);
+   DRMAA_UNLOCK_ENVIRON();
 
+   DEXIT;
    return drmaa_errno;
 }
 
@@ -362,7 +370,38 @@ int drmaa_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, s
    return DRMAA_ERRNO_SUCCESS;
 }
 
-static int is_supported(const char *name, const char *supported_list[])
+
+static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[])
+{
+   drmaa_attr_names_t *vector;
+   int i;
+
+   DENTER(TOP_LAYER, "drmaa_fill_string_vector");
+
+   /* allocate iterator */
+   if (!(vector=(drmaa_attr_names_t *)japi_allocate_string_vector(JAPI_ITERATOR_STRINGS))) {
+      DEXIT;
+      return NULL;
+   }
+
+   /* copy all attribute names */
+   for (i=0; name[i]; i++) {
+      DPRINTF(("adding \"%s\"\n", name[i]));
+      if (!lAddElemStr(&(vector->it.si.strings), ST_name, name[i], ST_Type)) {
+         japi_delete_string_vector((drmaa_attr_values_t *)vector);
+         DEXIT;
+         return NULL;
+      } 
+   }
+   
+   /* initialize iterator */
+   vector->it.si.next_pos = lFirst(vector->it.si.strings);
+
+   DEXIT;
+   return vector;
+}
+
+static int drmaa_is_supported(const char *name, const char *supported_list[])
 {
    int i;
    for (i=0; supported_list[i]; i++) {
@@ -409,7 +448,7 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
       return DRMAA_ERRNO_INVALID_ARGUMENT;
    }
 
-   if (is_supported(name, japi_supported_nonvector)) {
+   if (drmaa_is_supported(name, drmaa_supported_nonvector)) {
       /* verify value */
 
       /* join files must be either 'y' or 'n' */
@@ -550,7 +589,7 @@ int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name,
       return DRMAA_ERRNO_INVALID_ARGUMENT;
    }
 
-   if (!is_supported(name, japi_supported_vector)) {
+   if (!drmaa_is_supported(name, drmaa_supported_vector)) {
       DPRINTF(("setting not supported attribute \"%s\"\n", name));
       japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, diagp);
       DEXIT;
@@ -681,12 +720,24 @@ int drmaa_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa
 int drmaa_get_attribute_names(drmaa_attr_names_t **values, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag, *diagp = NULL;
+   drmaa_attr_names_t *iter;
+
+   DENTER(TOP_LAYER, "drmaa_get_attribute_names");
+
    if (error_diagnosis) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
       diagp = &diag;
    }
 
-   /* TODO */
+   if (!(iter=drmaa_fill_string_vector(drmaa_supported_nonvector))) {
+      japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diagp);
+      DEXIT;
+      return DRMAA_ERRNO_NO_MEMORY;
+   }
+
+   *values = iter;
+
+   DEXIT;
    return DRMAA_ERRNO_SUCCESS;
 }
 
@@ -720,12 +771,24 @@ int drmaa_get_attribute_names(drmaa_attr_names_t **values, char *error_diagnosis
 int drmaa_get_vector_attribute_names(drmaa_attr_names_t **values, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag, *diagp = NULL;
+   drmaa_attr_names_t *iter;
+
+   DENTER(TOP_LAYER, "drmaa_get_vector_attribute_names");
+
    if (error_diagnosis) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
       diagp = &diag;
    }
 
-   /* TODO */
+   if (!(iter=drmaa_fill_string_vector(drmaa_supported_vector))) {
+      japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diagp);
+      DEXIT;
+      return DRMAA_ERRNO_NO_MEMORY;
+   }
+
+   *values = iter;
+
+   DEXIT;
    return DRMAA_ERRNO_SUCCESS;
 }
 
@@ -891,8 +954,19 @@ int drmaa_run_bulk_jobs(drmaa_job_ids_t **jobids, drmaa_job_template_t *jt,
 *     char *error_diagnosis    - diagnosis buffer
 *     size_t error_diag_len    - diagnosis buffer length
 *
-*  RESULT
+*  OUTPUTS
+*     drmaa_attr_values_t **jobidsp - a string array of jobids - on success
 *
+*  RESULT
+*     int - DRMAA error codes
+*        DRMAA_ERRNO_SUCCESS
+*        DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE
+*        DRMAA_ERRNO_AUTH_FAILURE
+*        DRMAA_ERRNO_RESUME_INCONSISTENT_STATE 
+*        DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE
+*        DRMAA_ERRNO_HOLD_INCONSISTENT_STATE 
+*        DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE 
+*        DRMAA_ERRNO_INVALID_JOB
 *
 *  NOTES
 *      MT-NOTE: drmaa_control() is MT safe
@@ -1149,15 +1223,55 @@ void drmaa_release_job_ids(drmaa_job_ids_t* values)
    japi_delete_string_vector((drmaa_attr_values_t*)values);
 }
 
-void drmaa_get_DRM_system(char *drm_system, size_t drm_system_len)
+int drmaa_get_DRM_system(char *drm_system, size_t drm_system_len, 
+         char *error_diagnosis, size_t error_diag_len)
 {
-   dstring drm /* , diag */;
+   dstring drm, diag;
    if (drm_system) 
       sge_dstring_init(&drm, drm_system, drm_system_len+1);
-   japi_get_drm_system(drm_system?&drm:NULL, NULL); 
-   return;
+   if (error_diagnosis) 
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+   return japi_get_drm_system(drm_system?&drm:NULL, error_diagnosis?&diag:NULL); 
 }
 
+int drmaa_get_contact(char *contact, size_t contact_len, 
+     char *error_diagnosis, size_t error_diag_len)
+{
+   dstring con, diag;
+   if (contact) 
+      sge_dstring_init(&con, contact, contact_len+1);
+   if (error_diagnosis) 
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+
+   /* So far drmaa_init(contact) is not used. Consequently 
+      we do not provide contact information here either.
+      We just return a NULL character to ensure string
+      is initialized */
+   sge_dstring_copy_string(&con, "");
+
+   return DRMAA_ERRNO_SUCCESS;
+}
+
+/* 
+ * OUT major - major version number (non-negative integer)
+ * OUT minor - minor version number (non-negative integer)
+ * Returns the major and minor version numbers of the DRMAA library;
+ * for DRMAA 1.0, 'major' is 1 and 'minor' is 0. 
+ */
+int drmaa_version(unsigned int *major, unsigned int *minor, 
+      char *error_diagnosis, size_t error_diag_len)
+{
+   dstring diag;
+   if (error_diagnosis) 
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+
+   if (major)
+      *major = 0;
+   if (minor)
+      *minor = 8;
+
+   return DRMAA_ERRNO_SUCCESS;
+}
 
 
 

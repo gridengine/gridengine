@@ -777,6 +777,8 @@
 #define MSG_HGRP_NONAMECHANGE    _MESSAGE(33682, _("unable to change hostgroup name\n"))
 #define MSG_UME_NONAMECHANGE     _MESSAGE(33683, _("unable to change user mapping name\n"))
 
+#define MSG_QMODJOB_NOTENROLLED_UU _MESSAGE(33684, _("Modify operation can not be applied on job-array task " U32CFormat"."U32CFormat " in pending/hold state\n"))
+#define MSG_QMODJOB_NOTENROLLED_U  _MESSAGE(33685, _("Modify operation can not be applied on job "U32CFormat " in pending/hold state\n"))
 
 #define MSG_JOB_MASTERTASKFAILED_S       _MESSAGE(33684, _("master task of job "SFN" failed - killing job\n"))
 #endif /* __MSG_QMASTER_H */

@@ -2,6 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 
 
 
@@ -22,68 +23,68 @@
 enum {
    ALL_TESTS = 0,    
 
-   ST_SUBMIT_WAIT = 1,    
+   ST_SUBMIT_WAIT,    
       /* - one thread 
          - submit jobs 
          - wait for jobend */
 
-   MT_SUBMIT_WAIT = 2,        
+   MT_SUBMIT_WAIT,        
       /* - multiple submission threads
          - wait is done by main thread */
 
-   MT_SUBMIT_BEFORE_INIT_WAIT = 3,
+   MT_SUBMIT_BEFORE_INIT_WAIT,
       /* - no drmaa_init() was called
          - multiple threads try to submit but fail
          - when drmaa_init() is called by main thread
            submission proceed
          - wait is done by main thread */
 
-   ST_MULT_INIT = 4,
+   ST_MULT_INIT,
       /* - drmaa_init() is called multiple times 
          - first time it must succeed - second time it must fail
          - then drmaa_exit() is called */
 
-   ST_MULT_EXIT = 5,
+   ST_MULT_EXIT,
       /* - drmaa_init() is called
          - then drmaa_exit() is called multiple times
          - first time it must succeed - second time it must fail */
 
-   MT_EXIT_DURING_SUBMIT = 6,
+   MT_EXIT_DURING_SUBMIT,
       /* - drmaa_init() is called
          - multiple submission threads submitting (delayed) a series 
            of jobs
          - during submission main thread does drmaa_exit() */
 
-   MT_SUBMIT_MT_WAIT = 7,
+   MT_SUBMIT_MT_WAIT,
       /* - drmaa_init() is called
          - multiple submission threads submit jobs and wait these jobs
          - when all threads are finished main thread calls drmaa_exit() */
 
-   MT_EXIT_DURING_SUBMIT_OR_WAIT = 8,
+   MT_EXIT_DURING_SUBMIT_OR_WAIT,
       /* - drmaa_init() is called
          - multiple submission threads submit jobs and wait these jobs
          - while submission threads are waiting their jobs the main 
            thread calls drmaa_exit() */
 
-   ST_BULK_SUBMIT_WAIT = 9,
+   ST_BULK_SUBMIT_WAIT,
       /* - drmaa_init() is called
          - a bulk job is submitted and waited 
          - then drmaa_exit() is called */
 
-   ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL = 10,
+   ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL,
       /* - drmaa_init() is called
          - bulk and sequential jobs are submitted
          - all jobs are waited individually
          - then drmaa_exit() is called */
 
-   ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE = 11,
+   ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE,
       /* - drmaa_init() is called
          - submit a mixture of single and bulk jobs
          - do drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) 
            to wait for all jobs to finish
          - then drmaa_exit() is called */
 
-   ST_SUBMITMIXTURE_SYNC_ALL_NODISPOSE = 12,
+   ST_SUBMITMIXTURE_SYNC_ALL_NODISPOSE,
       /* - drmaa_init() is called
          - submit a mixture of single and bulk jobs
          - do drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, no-dispose) 
@@ -92,14 +93,14 @@ enum {
            DRMAA_ERRNO_INVALID_JOB to reap all jobs
          - then drmaa_exit() is called */
 
-   ST_SUBMITMIXTURE_SYNC_ALLIDS_DISPOSE = 13,
+   ST_SUBMITMIXTURE_SYNC_ALLIDS_DISPOSE,
       /* - drmaa_init() is called
          - submit a mixture of single and bulk jobs
          - do drmaa_synchronize(all_jobids, dispose) 
            to wait for all jobs to finish
          - then drmaa_exit() is called */
 
-   ST_SUBMITMIXTURE_SYNC_ALLIDS_NODISPOSE = 14,
+   ST_SUBMITMIXTURE_SYNC_ALLIDS_NODISPOSE,
       /* - drmaa_init() is called
          - submit a mixture of single and bulk jobs
          - do drmaa_synchronize(all_jobids, no-dispose) 
@@ -109,7 +110,7 @@ enum {
          - then drmaa_exit() is called */
 
 
-   ST_SUBMIT_PAUSE_SUBMIT_SYNC = 15,
+   ST_SUBMIT_PAUSE_SUBMIT_SYNC,
       /* - drmaa_init() is called
          - a job is submitted 
          - do a long sleep(SGE_COMMPROC_TIMEOUT+)
@@ -117,9 +118,9 @@ enum {
          - do drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) 
          - then drmaa_exit() is called */
 
-   ST_INPUT_FILE_FAILURE = 16,
-   ST_OUTPUT_FILE_FAILURE = 17,
-   ST_ERROR_FILE_FAILURE = 18,
+   ST_INPUT_FILE_FAILURE,
+   ST_OUTPUT_FILE_FAILURE,
+   ST_ERROR_FILE_FAILURE,
       /* - drmaa_init() is called
          - a job is submitted with input/output/error path specification 
            that must cause the job to fail
@@ -128,7 +129,65 @@ enum {
          - drmaa_wait() must report drmaa_wifaborted() -> true
          - then drmaa_exit() is called */
 
-   ST_INPUT_BECOMES_OUTPUT = 19,
+   ST_SUBMIT_IN_HOLD_RELEASE,
+      /* - drmaa_init() is called
+         - a job is submitted with a user hold 
+         - use drmaa_job_ps() to verify user hold state
+         - hold state is released using drmaa_control()
+         - the job is waited
+         - then drmaa_exit() is called
+         (still requires manual testing)
+      */
+
+   ST_SUBMIT_IN_HOLD_DELETE,
+      /* - drmaa_init() is called
+         - a job is submitted with a user hold 
+         - use drmaa_job_ps() to verify user hold state
+         - job is terminated using drmaa_control()
+         - the job is waited
+         - then drmaa_exit() is called
+         (still requires manual testing)
+      */
+
+   ST_BULK_SUBMIT_IN_HOLD_SINGLE_RELEASE,
+      /* - drmaa_init() is called
+         - a bulk job is submitted with a user hold 
+         - hold state is released separately for each task using drmaa_control()
+         - the job ids are waited
+         - then drmaa_exit() is called
+         (still requires manual testing)
+      */
+
+   ST_BULK_SUBMIT_IN_HOLD_SESSION_RELEASE,
+      /* - drmaa_init() is called
+         - a bulk job is submitted with a user hold 
+         - hold state is released for the session using drmaa_control()
+         - the job ids are waited
+         - then drmaa_exit() is called
+         (still requires manual testing)
+      */
+
+   ST_BULK_SUBMIT_IN_HOLD_SESSION_DELETE,
+      /* - drmaa_init() is called
+         - a bulk job is submitted with a user hold 
+         - use drmaa_job_ps() to verify user hold state
+         - all session jobs are terminated using drmaa_control()
+         - the job ids are waited
+         - then drmaa_exit() is called
+         (still requires manual testing)
+      */
+
+   ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE,
+      /* - drmaa_init() is called
+         - a bulk job is submitted with a user hold 
+         - use drmaa_job_ps() to verify user hold state
+         - all session jobs are terminated using drmaa_control()
+         - the job ids are waited
+         - then drmaa_exit() is called
+         (still requires manual testing)
+      */
+
+   ST_INPUT_BECOMES_OUTPUT,
       /* - drmaa_init() is called
          - job input is prepared in local file 
          - a job is submitted that echoes it's input to output 
@@ -137,40 +196,114 @@ enum {
          - job output must be identical to job input
            (this requires manual testing) */
 
-   ST_SUBMIT_IN_HOLD = 20,
-      /* - drmaa_init() is called
-         - a job is submitted with a user hold 
-         - use drmaa_job_ps() to verify user hold state
-         - hold state is released *manually*
-         - the job is waited
-         - then drmaa_exit() is called
-         (still requires manual testing)
-      */
-
-   ST_BULK_SUBMIT_IN_HOLD = 21,
-      /* - drmaa_init() is called
-         - a bulk job is submitted with a user hold 
-         - hold state is released *manually*
-         - the job ids are waited
-         - then drmaa_exit() is called
-         (still requires manual testing)
-      */
-
-   ST_JOB_PS = 22,
+   ST_DRMAA_JOB_PS,
       /* - drmaa_init() is called
          - drmaa_job_ps() is used to retrieve DRMAA state 
            for each jobid passed *manually* in argv
          - then drmaa_exit() is called 
-         (still requires manual testing)
+         (requires manual testing)
       */
 
-   ST_EXIT_STATUS = 23
+   ST_DRMAA_CONTROL,
+      /* - drmaa_init() is called
+         - drmaa_control() is used to change DRMAA job state 
+           for each jobid passed *manually* in argv
+         - drmaa_control() must return with the exit status passed in argv
+         - then drmaa_exit() is called 
+         (still manual testing)
+      */
+
+   ST_EXIT_STATUS,
       /* - drmaa_init() is called
          - 255 job are submitted
          - job i returns i as exit status (8 bit)
          - drmaa_wait() verifies each job returned the 
            correct exit status
          - then drmaa_exit() is called */
+
+   ST_SUPPORTED_ATTR,
+      /* - drmaa_init() is called
+         - drmaa_get_attribute_names() is called
+         - the names of all supported non vector attributes are printed
+         - then drmaa_exit() is called */
+
+   ST_SUPPORTED_VATTR,
+      /* - drmaa_init() is called
+         - drmaa_get_vector_attribute_names() is called
+         - the names of all supported vector attributes are printed
+         - then drmaa_exit() is called */
+
+   ST_VERSION,
+      /* - drmaa_version() is called 
+         - version information is printed */
+
+   ST_CONTACT,
+      /* - drmaa_init() is called 
+         - drmaa_get_contact() is called
+         - the contact string is printed
+         - then drmaa_exit() is called */
+
+   ST_DRM_SYSTEM,
+      /* - drmaa_init() is called
+         - drmaa_get_DRM_system() is called
+         - the DRM system name is printed
+         - then drmaa_exit() is called */
+
+   ST_EMPTY_SESSION_WAIT,
+      /* - drmaa_init() is called
+         - drmaa_wait() must return DRMAA_ERRNO_INVALID_JOB
+         - then drmaa_exit() is called */
+
+   ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE,
+      /* - drmaa_init() is called
+         - drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose=true) must return DRMAA_ERRNO_SUCCESS
+         - then drmaa_exit() is called */
+
+   ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE,
+      /* - drmaa_init() is called
+         - drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose=false) must return DRMAA_ERRNO_SUCCESS
+         - then drmaa_exit() is called */
+
+   ST_EMPTY_SESSION_CONTROL,
+      /* - drmaa_init() is called
+         - drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, <passed control operation>) must return DRMAA_ERRNO_SUCCESS
+         - then drmaa_exit() is called */
+
+   ST_SUBMIT_SUSPEND_RESUME_WAIT,
+      /*  - drmaa_init() is called
+          - a single job is submitted 
+          - drmaa_job_ps() is used to actively wait until job is running
+          - drmaa_control() is used to suspend the job
+          - drmaa_job_ps() is used to verify job was suspended
+          - drmaa_control() is used to resume the job
+          - drmaa_job_ps() is used to verify job was resumed
+          - drmaa_wait() is used to wait for the jobs regular end
+          - then drmaa_exit() is called */
+
+   ST_SUBMIT_POLLING_WAIT_TIMEOUT, 
+      /*  - drmaa_init() is called
+          - a single job is submitted 
+          - repeatedly drmaa_wait() with a timeout is used until job is finished
+          - then drmaa_exit() is called */
+
+   ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT,
+      /*  - drmaa_init() is called
+          - a single job is submitted 
+          - repeatedly do drmaa_wait(DRMAA_TIMEOUT_NO_WAIT) + sleep() until job is finished
+          - then drmaa_exit() is called */
+
+   ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT,
+      /*  - drmaa_init() is called
+          - a single job is submitted 
+          - repeatedly drmaa_synchronize() with a timeout is used until job is finished
+          - then drmaa_exit() is called */
+
+   ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT
+      /*  - drmaa_init() is called
+          - a single job is submitted 
+          - repeatedly do drmaa_synchronize(DRMAA_TIMEOUT_NO_WAIT) + sleep() until job is finished
+          - then drmaa_exit() is called */
+
 };
 
 const struct test_name2number_map {
@@ -180,39 +313,58 @@ const struct test_name2number_map {
    char *opt_arguments;   /* description of test case arguments for usage output */
 } test_map[] = {
 
-   /* a automated tests - ST_* and MT_* tests */
+   /* all automated tests - ST_* and MT_* tests */
    { "ALL_AUTOMATED",                            ALL_TESTS,                              2, "<sleeper_job> <exit_arg_job>" },
 
    /* one application thread - automated tests only */
-   { "ST_SUBMIT_WAIT",                           ST_SUBMIT_WAIT,                         1, "<sleeper_job>" },
-   { "ST_MULT_INIT",                             ST_MULT_INIT,                           0, "" },
-   { "ST_MULT_EXIT",                             ST_MULT_EXIT,                           0, "" },
-   { "ST_BULK_SUBMIT_WAIT",                      ST_BULK_SUBMIT_WAIT,                    1, "<sleeper_job>" },
-   { "ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL",     ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL,   1, "<sleeper_job>" },
-   { "ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE",        ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE,      1, "<sleeper_job>" },
-   { "ST_SUBMITMIXTURE_SYNC_ALL_NODISPOSE",      ST_SUBMITMIXTURE_SYNC_ALL_NODISPOSE,    1, "<sleeper_job>" },
-   { "ST_SUBMITMIXTURE_SYNC_ALLIDS_DISPOSE",     ST_SUBMITMIXTURE_SYNC_ALLIDS_DISPOSE,   1, "<sleeper_job>" },
-   { "ST_SUBMITMIXTURE_SYNC_ALLIDS_NODISPOSE",   ST_SUBMITMIXTURE_SYNC_ALLIDS_NODISPOSE, 1, "<sleeper_job>" },
-   { "ST_SUBMIT_PAUSE_SUBMIT_SYNC",              ST_SUBMIT_PAUSE_SUBMIT_SYNC,            1, "<sleeper_job>" },
-   { "ST_EXIT_STATUS",                           ST_EXIT_STATUS,                         1, "<exit_arg_job>" },
-   { "ST_INPUT_FILE_FAILURE",                    ST_INPUT_FILE_FAILURE,                  1, "<sleeper_job>" },
-   { "ST_OUTPUT_FILE_FAILURE",                   ST_OUTPUT_FILE_FAILURE,                 1, "<sleeper_job>" },
-   { "ST_ERROR_FILE_FAILURE",                    ST_ERROR_FILE_FAILURE,                  1, "<sleeper_job>" },
+   { "ST_MULT_INIT",                              ST_MULT_INIT,                              0, "" },
+   { "ST_MULT_EXIT",                              ST_MULT_EXIT,                              0, "" },
+   { "ST_SUPPORTED_ATTR",                         ST_SUPPORTED_ATTR,                         0, "" },
+   { "ST_SUPPORTED_VATTR",                        ST_SUPPORTED_VATTR,                        0, "" },
+   { "ST_VERSION",                                ST_VERSION,                                0, "" },
+   { "ST_DRM_SYSTEM",                             ST_DRM_SYSTEM,                             0, "" },
+   { "ST_CONTACT",                                ST_CONTACT,                                0, "" },
+   { "ST_EMPTY_SESSION_WAIT",                     ST_EMPTY_SESSION_WAIT,                     0, "" },
+   { "ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE",      ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE,      0, "" },
+   { "ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE",    ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE,    0, "" },
+   { "ST_EMPTY_SESSION_CONTROL",                  ST_EMPTY_SESSION_CONTROL,                  1, "DRMAA_CONTROL_*" },
+   { "ST_SUBMIT_WAIT",                            ST_SUBMIT_WAIT,                            1, "<sleeper_job>" },
+   { "ST_BULK_SUBMIT_WAIT",                       ST_BULK_SUBMIT_WAIT,                       1, "<sleeper_job>" },
+   { "ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL",      ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL,      1, "<sleeper_job>" },
+   { "ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE",         ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE,         1, "<sleeper_job>" },
+   { "ST_SUBMITMIXTURE_SYNC_ALL_NODISPOSE",       ST_SUBMITMIXTURE_SYNC_ALL_NODISPOSE,       1, "<sleeper_job>" },
+   { "ST_SUBMITMIXTURE_SYNC_ALLIDS_DISPOSE",      ST_SUBMITMIXTURE_SYNC_ALLIDS_DISPOSE,      1, "<sleeper_job>" },
+   { "ST_SUBMITMIXTURE_SYNC_ALLIDS_NODISPOSE",    ST_SUBMITMIXTURE_SYNC_ALLIDS_NODISPOSE,    1, "<sleeper_job>" },
+   { "ST_SUBMIT_PAUSE_SUBMIT_SYNC",               ST_SUBMIT_PAUSE_SUBMIT_SYNC,               1, "<sleeper_job>" },
+   { "ST_EXIT_STATUS",                            ST_EXIT_STATUS,                            1, "<exit_arg_job>" },
+   { "ST_INPUT_FILE_FAILURE",                     ST_INPUT_FILE_FAILURE,                     1, "<sleeper_job>" },
+   { "ST_OUTPUT_FILE_FAILURE",                    ST_OUTPUT_FILE_FAILURE,                    1, "<sleeper_job>" },
+   { "ST_ERROR_FILE_FAILURE",                     ST_ERROR_FILE_FAILURE,                     1, "<sleeper_job>" },
+   { "ST_SUBMIT_IN_HOLD_RELEASE",                 ST_SUBMIT_IN_HOLD_RELEASE,                 1, "<sleeper_job>" },
+   { "ST_SUBMIT_IN_HOLD_DELETE",                  ST_SUBMIT_IN_HOLD_DELETE,                  1, "<sleeper_job>" },
+   { "ST_BULK_SUBMIT_IN_HOLD_SESSION_RELEASE",    ST_BULK_SUBMIT_IN_HOLD_SESSION_RELEASE,    1, "<sleeper_job>" },
+   { "ST_BULK_SUBMIT_IN_HOLD_SINGLE_RELEASE",     ST_BULK_SUBMIT_IN_HOLD_SINGLE_RELEASE,     1, "<sleeper_job>" },
+   { "ST_BULK_SUBMIT_IN_HOLD_SESSION_DELETE",     ST_BULK_SUBMIT_IN_HOLD_SESSION_DELETE,     1, "<sleeper_job>" },
+   { "ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE",      ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE,      1, "<sleeper_job>" },
+   { "ST_SUBMIT_SUSPEND_RESUME_WAIT",             ST_SUBMIT_SUSPEND_RESUME_WAIT,             1, "<sleeper_job>" },
+   { "ST_SUBMIT_POLLING_WAIT_TIMEOUT",            ST_SUBMIT_POLLING_WAIT_TIMEOUT,            1, "<sleeper_job>" },
+   { "ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT",        ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT,        1, "<sleeper_job>" },
+   { "ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT",     ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT,     1, "<sleeper_job>" },
+   { "ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT", ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT, 1, "<sleeper_job>" },
 
    /* multiple application threads - automated tests only */
-   { "MT_SUBMIT_WAIT",                           MT_SUBMIT_WAIT,                         1, "<sleeper_job>" },
-   { "MT_SUBMIT_BEFORE_INIT_WAIT",               MT_SUBMIT_BEFORE_INIT_WAIT,             1, "<sleeper_job>" },
-   { "MT_EXIT_DURING_SUBMIT",                    MT_EXIT_DURING_SUBMIT,                  1, "<sleeper_job>" },
-   { "MT_SUBMIT_MT_WAIT",                        MT_SUBMIT_MT_WAIT,                      1, "<sleeper_job>" },
-   { "MT_EXIT_DURING_SUBMIT_OR_WAIT",            MT_EXIT_DURING_SUBMIT_OR_WAIT,          1, "<sleeper_job>" },
+   { "MT_SUBMIT_WAIT",                           MT_SUBMIT_WAIT,                             1, "<sleeper_job>" },
+   { "MT_SUBMIT_BEFORE_INIT_WAIT",               MT_SUBMIT_BEFORE_INIT_WAIT,                 1, "<sleeper_job>" },
+   { "MT_EXIT_DURING_SUBMIT",                    MT_EXIT_DURING_SUBMIT,                      1, "<sleeper_job>" },
+   { "MT_SUBMIT_MT_WAIT",                        MT_SUBMIT_MT_WAIT,                          1, "<sleeper_job>" },
+   { "MT_EXIT_DURING_SUBMIT_OR_WAIT",            MT_EXIT_DURING_SUBMIT_OR_WAIT,              1, "<sleeper_job>" },
    
-   /* tests that require test suite to be run in an automated fashion */
-   { "ST_INPUT_BECOMES_OUTPUT",                  ST_INPUT_BECOMES_OUTPUT,                3, "<mirror_job> <input_path> <output_path>" },
+   /* tests that require test suite to be run in an automated fashion (file name creation) */
+   { "ST_INPUT_BECOMES_OUTPUT",                  ST_INPUT_BECOMES_OUTPUT,                    2, "<input_path> <output_path>" },
 
    /* tests that test_drmaa can't test in an automated fashion (so far) */
-   { "ST_SUBMIT_IN_HOLD",                        ST_SUBMIT_IN_HOLD,                      1, "<sleeper_job>" },
-   { "ST_BULK_SUBMIT_IN_HOLD",                   ST_BULK_SUBMIT_IN_HOLD,                 1, "<sleeper_job>" },
-   { "ST_JOB_PS",                                ST_JOB_PS,                              1, "<jobid> ..."   },
+   { "ST_DRMAA_JOB_PS",                          ST_DRMAA_JOB_PS,                            1, "<jobid> ..."   },
+   { "ST_DRMAA_CONTROL",                         ST_DRMAA_CONTROL,                           3, "DRMAA_CONTROL_* DRMAA_ERRNO_* <jobid> ..." },
 
    { NULL,                                       0 }
 };
@@ -227,10 +379,18 @@ static void *submit_input_mirror(int n, const char *mirror_job,
 static void *do_submit(drmaa_job_template_t *jt, int n);
 static int wait_all_jobs(void *vp);
 static int wait_n_jobs(int n);
-static const char *drmaa_state2str(int state);
 static drmaa_job_template_t *create_sleeper_job_template(int seconds, int as_bulk_job, int in_hold);
 static drmaa_job_template_t *create_exit_job_template(const char *exit_job, int as_bulk_job);
 static void report_session_key(void);
+
+int str2drmaa_state(const char *str);
+static int str2drmaa_ctrl(const char *str);
+static int str2drmaa_errno(const char *str);
+static const char *drmaa_state2str(int state);
+static const char *drmaa_ctrl2str(int control);
+static const char *drmaa_errno2str(int ctrl);
+
+static void report_wrong_job_finish(const char *comment, const char *jobid, int stat);
 
 static int test_case;
 static int is_sun_grid_engine;
@@ -241,6 +401,8 @@ char *sleeper_job = NULL,
      *mirror_job = NULL,
      *input_path = NULL,
      *output_path = NULL;
+int ctrl_op = -1;
+
 
 static void usage(void)
 {
@@ -249,7 +411,7 @@ static void usage(void)
 
    fprintf(stderr, "  <test_case> is one of the keywords below including the enlisted test case arguments\n");
    for (i=0; test_map[i].test_name; i++)
-      fprintf(stderr, "\t%-40.40s %s\n", test_map[i].test_name, test_map[i].opt_arguments);
+      fprintf(stderr, "\t%-45.45s %s\n", test_map[i].test_name, test_map[i].opt_arguments);
 
    fprintf(stderr, "  <sleeper_job>  is an executable job that sleeps <argv1> seconds\n");
    fprintf(stderr, "                 the job must be executable at the target machine\n");
@@ -269,6 +431,7 @@ int main(int argc, char *argv[])
 {
    int failed = 0;
    int i; 
+   char diag[DRMAA_ERROR_STRING_BUFFER];
 
    if (argc == 1) 
       usage();
@@ -276,7 +439,10 @@ int main(int argc, char *argv[])
    /* figure out which DRM system we are using */
    {
       char drm_name[DRMAA_DRM_SYSTEM_BUFFER];
-      drmaa_get_DRM_system(drm_name, 255 /* , NULL, 0 */);
+      if (drmaa_get_DRM_system(drm_name, 255, diag, sizeof(diag)-1)!=DRMAA_ERRNO_SUCCESS) {
+         fprintf(stderr, "drmaa_get_DRM_system() failed: %s\n", diag);
+         return 1;
+      }
       printf("Connected to DRM system \"%s\"\n", drm_name);
       if (!strncmp(drm_name, "SGE", 3))
          is_sun_grid_engine = 1;
@@ -302,27 +468,52 @@ int main(int argc, char *argv[])
          sleeper_job = NEXT_ARGV(&argc, &argv);
          exit_job    = NEXT_ARGV(&argc, &argv);
 
-         for (i=1; test_map[i].test_name && i<FIRST_NON_AUTOMATED_TEST; i++) {
+         for (i=1; test_map[i].test_name && test_map[i].test_number != FIRST_NON_AUTOMATED_TEST; i++) {
             test_case = test_map[i].test_number;
             printf("---------------------\n");
             printf("starting test #%d (%s)\n", i, test_map[i].test_name);
-            if (test(&argc, &argv, 0)!=0) {
-               printf("test #%d failed\n", i);
-               failed = 1;
-               drmaa_exit(NULL, 0);
+
+            switch (test_case) {
+            case ST_EMPTY_SESSION_CONTROL: 
+            {
+               int i;
+               const int ctrl_ops[] = { DRMAA_CONTROL_SUSPEND, DRMAA_CONTROL_RESUME, 
+                     DRMAA_CONTROL_HOLD, DRMAA_CONTROL_RELEASE, DRMAA_CONTROL_TERMINATE, -1 };
+               for (i=0; ctrl_ops[i] != -1; i++) {
+                  ctrl_op = ctrl_ops[i]; 
+                  if (test(&argc, &argv, 0)!=0) {
+                     printf("test \"%s\" with \"%s\" failed\n", 
+                           test_map[i].test_name, drmaa_ctrl2str(ctrl_ops[i]));
+                     failed = 1;
+                     drmaa_exit(NULL, 0);
+                     break;
+                  } else
+                     printf("successfully finished test \"%s\" with \"%s\"\n", 
+                              test_map[i].test_name, drmaa_ctrl2str(ctrl_ops[i]));
+               }
                break;
-            } else
-               printf("successfully finished test #%d\n", i);
+            }
+
+            default:
+               if (test(&argc, &argv, 0)!=0) {
+                  printf("test #%d failed\n", i);
+                  failed = 1;
+                  drmaa_exit(NULL, 0);
+                  break;
+               } else
+                  printf("successfully finished test #%d\n", i);
+               break;
+            }
          }
       } else {
-         printf("starting test #%d (%s)\n", test_case, test_map[i].test_name);
+         printf("starting test \"%s\"\n", test_map[i].test_name);
          if (test(&argc, &argv, 1)!=0) {
-            printf("test #%d failed\n", test_case);
+            printf("test \"%s\" failed\n", test_map[i].test_name);
             failed = 1;
             drmaa_exit(NULL, 0);
             break;
          } else
-           printf("successfully finished test #%d\n", test_case);
+           printf("successfully finished test \"%s\"\n", test_map[i].test_name);
       }
    } 
 
@@ -411,6 +602,99 @@ static int test(int *argc, char **argv[], int parse_args)
          if (wait_all_jobs(&n) != DRMAA_ERRNO_SUCCESS) {
             return 1;
          }
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+      }
+      break;
+
+   case ST_SUBMIT_POLLING_WAIT_TIMEOUT:
+   case ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT:
+   case ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT:
+   case ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT:
+      {
+         char jobid[1024];
+         const int timeout = 5;
+         const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
+
+         if (parse_args)
+            sleeper_job = NEXT_ARGV(argc, argv);
+         
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+         report_session_key();
+
+         if (!(jt = create_sleeper_job_template(5, 0, 0))) {
+            fprintf(stderr, "create_sleeper_job_template() failed\n");
+            return 1;
+         }
+
+         if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+            return 1;
+         }
+         printf("submitted job \"%s\"\n", jobid);
+
+         drmaa_delete_job_template(jt, NULL, 0);
+   
+         switch (test_case) {
+
+         case ST_SUBMIT_POLLING_WAIT_TIMEOUT:
+            while ((drmaa_errno=drmaa_wait(jobid, NULL, 0, NULL, timeout, NULL, 
+                     diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
+               if (drmaa_errno != DRMAA_ERRNO_EXIT_TIMEOUT) {
+                  fprintf(stderr, "drmaa_wait(\"%s\", timeout = %d) failed: %s (%s)\n", 
+                        jobid, timeout, diagnosis, drmaa_strerror(drmaa_errno));
+                  return 1;
+               }
+               printf("still waiting for job \"%s\" to finish\n", jobid);
+            }
+            break;
+
+         case ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT:
+            while ((drmaa_errno=drmaa_wait(jobid, NULL, 0, NULL, DRMAA_TIMEOUT_NO_WAIT, NULL, 
+                     diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
+               if (drmaa_errno != DRMAA_ERRNO_EXIT_TIMEOUT) {
+                  fprintf(stderr, "drmaa_wait(\"%s\", no timeout) failed: %s (%s)\n", 
+                        jobid, diagnosis, drmaa_strerror(drmaa_errno));
+                  return 1;
+               }
+               printf("still waiting for job \"%s\" to finish\n", jobid);
+               sleep(timeout);
+               printf("slept %d seconds\n", timeout);
+            }
+            break;
+
+         case ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT:
+            while ((drmaa_errno=drmaa_synchronize(session_all, timeout, 1,
+                     diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
+               if (drmaa_errno != DRMAA_ERRNO_EXIT_TIMEOUT) {
+                  fprintf(stderr, "drmaa_synchronize(\"%s\", timeout = %d) failed: %s (%s)\n", 
+                        jobid, timeout, diagnosis, drmaa_strerror(drmaa_errno));
+                  return 1;
+               }
+               printf("still trying to synchronize with job \"%s\" to finish\n", jobid);
+            }
+            break;
+
+         case ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT:
+            while ((drmaa_errno=drmaa_synchronize(session_all, DRMAA_TIMEOUT_NO_WAIT, 1, 
+                        diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
+               if (drmaa_errno != DRMAA_ERRNO_EXIT_TIMEOUT) {
+                  fprintf(stderr, "drmaa_synchronize(\"%s\", no timeout) failed: %s (%s)\n", 
+                        jobid, diagnosis, drmaa_strerror(drmaa_errno));
+                  return 1;
+               }
+               printf("still trying to synchronize with job \"%s\" to finish\n", jobid);
+               sleep(timeout);
+               printf("slept %d seconds\n", timeout);
+            }
+            break;
+         }
+
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
             return 1;
@@ -1282,27 +1566,41 @@ static int test(int *argc, char **argv[], int parse_args)
       }
       break;
 
-   case ST_INPUT_BECOMES_OUTPUT:
+   case ST_SUPPORTED_ATTR:
+   case ST_SUPPORTED_VATTR:
+      /* - drmaa_init() is called
+         - drmaa_get_attribute_names()/drmaa_get_vector_attribute_names() is called
+         - the names of all supported non vector/vector attributes are printed
+         - then drmaa_exit() is called */
       {
-
-         if (parse_args) {
-            mirror_job  = NEXT_ARGV(argc, argv);
-            input_path  = NEXT_ARGV(argc, argv);
-            output_path = NEXT_ARGV(argc, argv);
-         }
-
+         drmaa_attr_names_t *vector;
+         char attr_name[DRMAA_ATTR_BUFFER];
+         
          if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
             return 1;
          }
-         report_session_key();
+         
+         if (test_case == ST_SUPPORTED_ATTR)
+            drmaa_errno = drmaa_get_attribute_names(&vector, diagnosis, sizeof(diagnosis)-1);
+         else
+            drmaa_errno = drmaa_get_vector_attribute_names(&vector, diagnosis, sizeof(diagnosis)-1);
 
-         if (submit_input_mirror(1, mirror_job, input_path, output_path, NULL, 1)!=DRMAA_ERRNO_SUCCESS) {
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_get_attribute_names()/drmaa_get_vector_attribute_names() failed: %s\n", 
+                     diagnosis);
+            return 1;
+         }             
+
+         while ((drmaa_errno=drmaa_get_next_attr_name(vector, attr_name, sizeof(attr_name)-1))==DRMAA_ERRNO_SUCCESS)
+            printf("%s\n", attr_name);
+
+         if (drmaa_errno != DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE) {
+            fprintf(stderr, "drmaa_get_next_attr_name() failed: %s\n", 
+                     diagnosis);
             return 1;
          }
-         if (wait_n_jobs(1) != DRMAA_ERRNO_SUCCESS) {
-            return 1;
-         }
+
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
             return 1;
@@ -1310,8 +1608,107 @@ static int test(int *argc, char **argv[], int parse_args)
       }
       break;
 
-   case ST_SUBMIT_IN_HOLD:
+   case ST_VERSION:
+      /* - drmaa_version() is called 
+         - version information is printed */
       {
+         unsigned int major, minor;
+         if (drmaa_version(&major, &minor, diagnosis, sizeof(diagnosis)-1)
+               !=DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_version() failed: %s\n", diagnosis);
+            return 1;
+         }
+         printf("version %d.%d\n", major, minor);
+      }
+      break;
+
+   case ST_CONTACT:
+   case ST_DRM_SYSTEM:
+      {
+         char output_string[1024];
+         
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+         
+         if (test_case == ST_CONTACT)
+            drmaa_errno = drmaa_get_contact(output_string, sizeof(output_string)-1, 
+                         diagnosis, sizeof(diagnosis)-1);
+         else
+            drmaa_errno = drmaa_get_DRM_system(output_string, sizeof(output_string)-1,
+                         diagnosis, sizeof(diagnosis)-1);
+         
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_get_contact()/drmaa_get_DRM_system() failed: %s\n", diagnosis);
+            return 1;
+         }
+         printf("%s() returned \"%s\"\n", (test_case==ST_CONTACT)
+            ?"drmaa_get_contact":"drmaa_get_DRM_system", output_string);
+
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+      }
+      break;
+
+   case ST_INPUT_BECOMES_OUTPUT:
+      {
+         const char *mirror_job = "/bin/cat",
+         *input_path  = NULL,
+         *output_path = NULL;
+         FILE *fp;
+         char buffer[1024];
+         const char *mirror_text = "thefoxjumps...";
+
+         if (parse_args) {
+            input_path  = NEXT_ARGV(argc, argv);
+            output_path = NEXT_ARGV(argc, argv);
+         }
+
+         if (!(fp = fopen(input_path, "w+"))) {
+            fprintf(stderr, "fopen(w) failed: %s\n", strerror(errno));
+            return 1;
+         }
+         fprintf(fp, "%s\n", mirror_text);
+         fclose(fp);
+
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+         report_session_key();
+
+         if (submit_input_mirror(1, mirror_job, input_path, output_path, 
+               NULL, 1)!=DRMAA_ERRNO_SUCCESS) {
+            return 1;
+         }
+         if (wait_n_jobs(1) != DRMAA_ERRNO_SUCCESS) {
+            return 1;
+         }
+
+         if (!(fp=fopen(output_path, "r"))) {
+            fprintf(stderr, "fopen(%s) failed: %s\n", output_path, strerror(errno));
+            return 1;
+         }
+         fscanf(fp, "%s", buffer);
+         if (strcmp(buffer, mirror_text)) {
+            fprintf(stderr, "wrong output file: %s\n", buffer);
+            return 1;
+         }
+
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+      }
+      break;
+
+   case ST_SUBMIT_IN_HOLD_RELEASE:
+   case ST_SUBMIT_IN_HOLD_DELETE:
+      {
+         const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
          char jobid[1024];
          int job_state;
 
@@ -1344,15 +1741,41 @@ static int test(int *argc, char **argv[], int parse_args)
          }
          printf("verified user hold state for job \"%s\"\n", jobid);
 
-         printf("please release hold state of job  \"%s\"\n", jobid);
-         sleep(30);
+         if (test_case == ST_SUBMIT_IN_HOLD_RELEASE) {
+            if (drmaa_control(jobid, DRMAA_CONTROL_RELEASE, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_control(%s, DRMAA_CONTROL_RELEASE) failed: %s\n", 
+                        jobid, diagnosis);
+               return 1;
+            }
+            printf("released user hold state for job \"%s\"\n", jobid);
+         } else {
+            if (drmaa_control(jobid, DRMAA_CONTROL_TERMINATE, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_control(%s, DRMAA_CONTROL_TERMINATE) failed: %s\n", 
+                        jobid, diagnosis);
+               return 1;
+            }
+            printf("terminated job in hold state \"%s\"\n", jobid);
+         }
 
-         /* now job should be finished assumed it was scheduled immediately */
+         /* synchronize with job to finish but do not dispose job finish information */
+         if ((drmaa_errno = drmaa_synchronize(session_all, DRMAA_TIMEOUT_WAIT_FOREVER, 0, 
+                     diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
+            return 1;
+         }
+         printf("synchronized with job finish\n");
+
+         /* report job finish state */
          if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_job_ps(\"%s\")) failed: %s\n", jobid, diagnosis);
             return 1;
          }
          printf("state of job \"%s\" is now %s\n", jobid, drmaa_state2str(job_state));
+         if ((test_case == ST_SUBMIT_IN_HOLD_RELEASE && job_state != DRMAA_PS_DONE) ||
+             (test_case != ST_SUBMIT_IN_HOLD_RELEASE && job_state != DRMAA_PS_FAILED)) {
+            fprintf(stderr, "job \"%s\" terminated with unexpected state \"%s\"\n", jobid, drmaa_state2str(job_state));
+            return 1;
+         }
 
          if (wait_n_jobs(1) != DRMAA_ERRNO_SUCCESS) {
             return 1;
@@ -1364,8 +1787,16 @@ static int test(int *argc, char **argv[], int parse_args)
       }
       break;
 
-   case ST_BULK_SUBMIT_IN_HOLD:
+   case ST_BULK_SUBMIT_IN_HOLD_SESSION_RELEASE:
+   case ST_BULK_SUBMIT_IN_HOLD_SINGLE_RELEASE:
+   case ST_BULK_SUBMIT_IN_HOLD_SESSION_DELETE:
+   case ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE:
       {
+         const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
+         const char *all_jobids[JOB_CHUNK+1];
+         int job_state, pos = 0; 
+         int ctrl_op;
+
          if (parse_args)
             sleeper_job = NEXT_ARGV(argc, argv);
 
@@ -1379,7 +1810,10 @@ static int test(int *argc, char **argv[], int parse_args)
             fprintf(stderr, "create_sleeper_job_template() failed\n");
             return 1;
          }
-
+        
+         /* 
+          * Submit a bulk job in hold and verify state using drmaa_job_ps() 
+          */
          {
             drmaa_job_ids_t *jobids;
             int j;
@@ -1392,11 +1826,88 @@ static int test(int *argc, char **argv[], int parse_args)
                char jobid[100];
                drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
                printf("\t \"%s\"\n", jobid);
+
+               /* copy jobid into jobid array */
+               all_jobids[pos++] = strdup(jobid);
+
+               if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_job_ps(\"%s\")) failed: %s\n", jobid, diagnosis);
+                  return 1;
+               }
+               if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
+                  fprintf(stderr, "job \"%s\" is not in user hold state: %s\n", 
+                           jobid, drmaa_state2str(job_state));
+                  return 1;
+               }
             } 
             drmaa_release_job_ids(jobids);
          }
          drmaa_delete_job_template(jt, NULL, 0);
-         printf("please release hold state of jobs\n");
+
+         printf("verified user hold state for bulk job\n");
+
+         /*
+          * Release or terminate all jobs using drmaa_control() depending on the test case 
+          * drmaa_control() is applied muliple times on all tasks or on the whole session
+          */
+         if (test_case == ST_BULK_SUBMIT_IN_HOLD_SINGLE_RELEASE || 
+             test_case == ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE) {
+            int ctrl_op;
+            if (test_case == ST_BULK_SUBMIT_IN_HOLD_SINGLE_RELEASE)
+               ctrl_op = DRMAA_CONTROL_RELEASE;
+            else
+               ctrl_op = DRMAA_CONTROL_TERMINATE;
+
+            for (pos=0; pos<JOB_CHUNK; pos++) {
+               if (drmaa_control(all_jobids[pos], ctrl_op, diagnosis, 
+                                 sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_control(%s, %s) failed: %s\n", 
+                           all_jobids[pos], drmaa_ctrl2str(ctrl_op), diagnosis);
+                  return 1;
+               }
+            }
+         } else {
+            if (test_case == ST_BULK_SUBMIT_IN_HOLD_SESSION_RELEASE)
+               ctrl_op = DRMAA_CONTROL_RELEASE;
+            else
+               ctrl_op = DRMAA_CONTROL_TERMINATE;
+
+            if (drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, ctrl_op, diagnosis, 
+                              sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_control(%s, %s) failed: %s\n", 
+                        DRMAA_JOB_IDS_SESSION_ALL, drmaa_ctrl2str(ctrl_op), diagnosis);
+               return 1;
+            }
+         }
+         printf("released/terminated all jobs\n");
+
+         /* synchronize with job to finish but do not dispose job finish information */
+         if ((drmaa_errno = drmaa_synchronize(session_all, DRMAA_TIMEOUT_WAIT_FOREVER, 0, 
+                     diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
+            return 1;
+         }
+         printf("synchronized with job finish\n");
+
+         /* 
+          * Verify job state of all jobs in the job id array 
+          */
+         for (pos=0; pos<JOB_CHUNK; pos++) {
+            if (drmaa_job_ps(all_jobids[pos], &job_state, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_job_ps(\"%s\")) failed: %s\n", all_jobids[pos], diagnosis);
+               return 1;
+            }
+
+            printf("state of job \"%s\" is now %s\n", all_jobids[pos], drmaa_state2str(job_state));
+            if (((test_case == ST_BULK_SUBMIT_IN_HOLD_SINGLE_RELEASE || 
+                  test_case == ST_BULK_SUBMIT_IN_HOLD_SESSION_RELEASE) && job_state != DRMAA_PS_DONE) ||
+                 ((test_case == ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE || 
+                   test_case == ST_BULK_SUBMIT_IN_HOLD_SESSION_DELETE) && job_state != DRMAA_PS_FAILED)) {
+               fprintf(stderr, "job \"%s\" terminated with unexpected state \"%s\"\n", all_jobids[pos], drmaa_state2str(job_state));
+               return 1;
+            }
+         }
+
          if (wait_n_jobs(JOB_CHUNK) != DRMAA_ERRNO_SUCCESS) {
             return 1;
          }
@@ -1407,9 +1918,181 @@ static int test(int *argc, char **argv[], int parse_args)
       }
       break;
 
-   case ST_JOB_PS:
+   case ST_SUBMIT_SUSPEND_RESUME_WAIT:
+      {
+         int job_state, stat, exited, exit_status;
+         char jobid[1024];
+
+         if (parse_args)
+            sleeper_job = NEXT_ARGV(argc, argv);
+
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+  
+         /* submit a job running long enough allowing it to be suspended and resumed */
+         if (!(jt = create_sleeper_job_template(30, 0, 0))) {
+            fprintf(stderr, "create_sleeper_job_template() failed\n");
+            return 1;
+         }
+         if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+            return 1;
+         }
+         printf("submitted job \"%s\"\n", jobid);
+         drmaa_delete_job_template(jt, NULL, 0);
+
+         /* wait until job is running */
+         do {
+            if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_job_ps() failed: %s\n", diagnosis);
+               return 1;
+            }
+            if (job_state != DRMAA_PS_RUNNING)
+               sleep(1);
+         } while (job_state != DRMAA_PS_RUNNING);
+         printf("job \"%s\" is now running\n", jobid);
+
+         /* drmaa_control() is used to suspend the job */
+         if ((drmaa_errno=drmaa_control(jobid, DRMAA_CONTROL_SUSPEND, diagnosis, 
+                     sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_control(\"%s\", DRMAA_CONTROL_SUSPEND) failed: %s (%s)\n", 
+                     jobid, diagnosis, drmaa_strerror(drmaa_errno));
+            return 1;
+         }
+         printf("suspended job \"%s\"\n", jobid);
+      
+         /* drmaa_job_ps() is used to verify job was suspended */
+         if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_job_ps() failed: %s\n", diagnosis);
+            return 1;
+         }
+         if (job_state != DRMAA_PS_USER_SUSPENDED) {
+            fprintf(stderr, "drmaa_job_ps(\"%s\") failed returns unexpected job state after "
+                  "job suspension: %s\n", jobid, drmaa_state2str(job_state));
+            return 1;
+         }
+         printf("verified suspend was done for job \"%s\"\n", jobid);
+
+         /* drmaa_control() is used to resume the job */
+         if ((drmaa_errno=drmaa_control(jobid, DRMAA_CONTROL_RESUME, diagnosis, 
+                     sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_control(\"%s\", DRMAA_CONTROL_RESUME) failed: %s (%s)\n", 
+                     jobid, diagnosis, drmaa_strerror(drmaa_errno));
+            return 1;
+         }
+         printf("resumed job \"%s\"\n", jobid);
+
+         /* drmaa_job_ps() is used to verify job was resumed */
+         if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_job_ps() failed: %s\n", diagnosis);
+            return 1;
+         }
+         if (job_state != DRMAA_PS_RUNNING) {
+            fprintf(stderr, "drmaa_job_ps(\"%s\") failed returns unexpected job state after "
+                  "job resume: %s\n", jobid, drmaa_state2str(job_state));
+            return 1;
+         }
+         printf("verified resume was done for job \"%s\"\n", jobid);
+
+         /* drmaa_wait() is used to wait for the jobs regular end */
+         if ((drmaa_errno=drmaa_wait(jobid, NULL, 0, &stat, 
+               DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_wait(\"%s\") failed: %s\n", jobid, diagnosis);
+            return 1;
+         }
+
+         drmaa_wifexited(&exited, stat, NULL, 0); 
+         if (!exited || (drmaa_wexitstatus(&exit_status, stat, NULL, 0), exit_status != 0)) {
+            report_wrong_job_finish("expected regular job end", jobid, stat);
+            return 1;
+         }
+         printf("job \"%s\" finished as expected\n", jobid);
+
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+      }
+      break;
+
+   case ST_EMPTY_SESSION_WAIT:
+   case ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE:
+   case ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE:
+      {
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+   
+         switch (test_case) {
+         case ST_EMPTY_SESSION_WAIT:
+            /* drmaa_wait() must return DRMAA_ERRNO_INVALID_JOB */
+            if ((drmaa_errno=drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, NULL, 0, NULL, 
+                  DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_INVALID_JOB) {
+               fprintf(stderr, "drmaa_wait(empty session) failed: %s\n", diagnosis);
+               return 1;
+            }
+            break;
+         case ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE:
+         case ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE:
+            {
+               const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
+               /* drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL) must return DRMAA_ERRNO_SUCCESS */
+               if ((drmaa_errno=drmaa_synchronize(session_all, DRMAA_TIMEOUT_WAIT_FOREVER, 
+                    ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE?0:1, 
+                     diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_synchronize(empty session) failed: %s\n", diagnosis);
+                  return 1;
+               }
+            }
+            break;
+         }
+
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+      }
+      break;
+
+   case ST_EMPTY_SESSION_CONTROL:
+      {
+         const char *s;
+
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+   
+         /* parse control operation */
+         if (parse_args) {
+            s = NEXT_ARGV(argc, argv);
+            if ((ctrl_op = str2drmaa_ctrl(s)) == -1) {
+               fprintf(stderr, "unknown DRMAA control operation \"%s\"\n", s);
+               usage();
+            }
+         }
+
+         if ((drmaa_errno=drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, ctrl_op,
+                diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_control(empty_session, %s) failed: %s (%s)\n", 
+                  drmaa_ctrl2str(ctrl_op), diagnosis, drmaa_strerror(drmaa_errno));
+            return 1;
+         }
+
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+      }
+      break;
+
+   case ST_DRMAA_JOB_PS:
       {
          char diagnosis[1024];
+         const char *jobid;
 
          if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
@@ -1417,20 +2100,71 @@ static int test(int *argc, char **argv[], int parse_args)
          }
          report_session_key();
 
-#if 0
-         for (; *argc > 1; *argc--, *argv++) {
-/*          int state; */
+         while ( *argc > 1) {
+            int state;
 
             /* for this test args must always be parsed */
-            job_id = NEXT_ARGV(argc, argv);
-            if (drmaa_job_ps(*argv[1], &state, diagnosis, sizeof(diagnosis)-1)
+            jobid = NEXT_ARGV(argc, argv);
+            if (drmaa_job_ps(jobid, &state, diagnosis, sizeof(diagnosis)-1)
                   !=DRMAA_ERRNO_SUCCESS) {
-                fprintf(stderr, "drmaa_job_ps(\"%s\") failed: %s\n", *argv[1], diagnosis);
+                fprintf(stderr, "drmaa_job_ps(\"%s\") failed: %s\n", jobid, diagnosis);
                 return 1;
             }
-            printf("%20s %s\n", *argv[1], drmaa_state2str(state));
+            printf("%20s %s\n", jobid, drmaa_state2str(state));
          }
-#endif
+
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+      }
+      break;
+
+   case ST_DRMAA_CONTROL:
+      {
+         char diagnosis[1024];
+         const char *s, *jobid;
+         int drmaa_target_errno, drmaa_errno, drmaa_control_op = -1;
+
+         /* parse control operation */
+         s = NEXT_ARGV(argc, argv);
+         if ((drmaa_control_op = str2drmaa_ctrl(s)) == -1) {
+            fprintf(stderr, "unknown DRMAA control operation \"%s\"\n", s);
+            usage();
+         }
+         /* parse aspired errno value */
+         s = NEXT_ARGV(argc, argv);
+         if ((drmaa_target_errno = str2drmaa_errno(s)) == -1) {
+            fprintf(stderr, "unknown DRMAA errno constant \"%s\"\n", s);
+            usage();
+         }
+
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+         report_session_key();
+
+         while ( *argc > 1) {
+            jobid = NEXT_ARGV(argc, argv);
+            if ((drmaa_errno=drmaa_control(jobid, drmaa_control_op, diagnosis, sizeof(diagnosis)-1))
+                  != drmaa_target_errno) {
+
+                if (drmaa_target_errno == DRMAA_ERRNO_SUCCESS) {
+                   fprintf(stderr, "drmaa_control(\"%s\", %s) failed: %s (%s)\n", jobid, 
+                        drmaa_ctrl2str(drmaa_control_op), diagnosis, drmaa_strerror(drmaa_errno));
+                   return 1;
+                } else {
+                   fprintf(stderr, "drmaa_control(\"%s\", %s) returned with wrong errno "
+                        "(%s) instead of %s: %s\n", jobid, drmaa_ctrl2str(drmaa_control_op), 
+                        drmaa_errno2str(drmaa_errno), drmaa_errno2str(drmaa_target_errno), 
+                              drmaa_errno==DRMAA_ERRNO_SUCCESS?"<no error>":diagnosis);
+                   return 1;
+                }
+            }
+            printf("%20s %s\n", jobid, drmaa_ctrl2str(drmaa_control_op));
+         }
+
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
             return 1;
@@ -1546,31 +2280,6 @@ static int test(int *argc, char **argv[], int parse_args)
    return 0;
 }
 
-static const char *drmaa_state2str(int state)
-{
-  const struct state_descr_s {
-     char *descr;
-     int state;
-  } state_vector[] = {
-     { "DRMAA_PS_UNDETERMINED",          DRMAA_PS_UNDETERMINED },
-     { "DRMAA_PS_QUEUED_ACTIVE",         DRMAA_PS_QUEUED_ACTIVE },
-     { "DRMAA_PS_SYSTEM_ON_HOLD",        DRMAA_PS_SYSTEM_ON_HOLD },
-     { "DRMAA_PS_USER_ON_HOLD ",         DRMAA_PS_USER_ON_HOLD },
-     { "DRMAA_PS_USER_SYSTEM_ON_HOLD",   DRMAA_PS_USER_SYSTEM_ON_HOLD },
-     { "DRMAA_PS_RUNNING",               DRMAA_PS_RUNNING },
-     { "DRMAA_PS_SYSTEM_SUSPENDED",      DRMAA_PS_SYSTEM_SUSPENDED },
-     { "DRMAA_PS_USER_SUSPENDED",        DRMAA_PS_USER_SUSPENDED },
-     { "DRMAA_PS_USER_SYSTEM_SUSPENDED", DRMAA_PS_USER_SYSTEM_SUSPENDED },
-     { "DRMAA_PS_DONE",                  DRMAA_PS_DONE },
-     { "DRMAA_PS_FAILED",                DRMAA_PS_FAILED },
-     { NULL, 0 }
-  };
-  int i;
-  for (i=0; state_vector[i].descr != NULL; i++)
-      if (state_vector[i].state == state)
-         return state_vector[i].descr;
-  return "DRMAA_PS_???UNKNOWN???";
-}
 
 static void *submit_and_wait(void *vp)
 {
@@ -1783,8 +2492,6 @@ static void report_session_key(void)
    }
 }
 
-
-
 #if 0
 static init_signal_handling()
 {
@@ -1795,3 +2502,262 @@ static init_signal_handling()
    sigaction(SIGPIPE, &act, NULL);
 }
 #endif
+
+
+const struct drmaa_errno_descr_s {
+  char *descr;
+  int drmaa_errno;
+} errno_vector[] = {
+  { "DRMAA_ERRNO_SUCCESS",                      DRMAA_ERRNO_SUCCESS },
+  { "DRMAA_ERRNO_INTERNAL_ERROR",               DRMAA_ERRNO_INTERNAL_ERROR },
+  { "DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE",    DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE },
+  { "DRMAA_ERRNO_AUTH_FAILURE",                 DRMAA_ERRNO_AUTH_FAILURE },
+  { "DRMAA_ERRNO_INVALID_ARGUMENT",             DRMAA_ERRNO_INVALID_ARGUMENT },
+  { "DRMAA_ERRNO_NO_ACTIVE_SESSION",            DRMAA_ERRNO_NO_ACTIVE_SESSION },
+  { "DRMAA_ERRNO_NO_MEMORY",                    DRMAA_ERRNO_NO_MEMORY },
+  { "DRMAA_ERRNO_INVALID_CONTACT_STRING",       DRMAA_ERRNO_INVALID_CONTACT_STRING },
+  { "DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR", DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR },
+  { "DRMAA_ERRNO_DRMS_INIT_FAILED",             DRMAA_ERRNO_DRMS_INIT_FAILED },
+  { "DRMAA_ERRNO_ALREADY_ACTIVE_SESSION",       DRMAA_ERRNO_ALREADY_ACTIVE_SESSION },
+  { "DRMAA_ERRNO_DRMS_EXIT_ERROR",              DRMAA_ERRNO_DRMS_EXIT_ERROR },
+  { "DRMAA_ERRNO_INVALID_ATTRIBUTE_FORMAT",     DRMAA_ERRNO_INVALID_ATTRIBUTE_FORMAT },
+  { "DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE",      DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE },
+  { "DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES", DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES },
+  { "DRMAA_ERRNO_TRY_LATER",                    DRMAA_ERRNO_TRY_LATER },
+  { "DRMAA_ERRNO_DENIED_BY_DRM",                DRMAA_ERRNO_DENIED_BY_DRM },
+  { "DRMAA_ERRNO_INVALID_JOB",                  DRMAA_ERRNO_INVALID_JOB },
+  { "DRMAA_ERRNO_RESUME_INCONSISTENT_STATE",    DRMAA_ERRNO_RESUME_INCONSISTENT_STATE },
+  { "DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE",   DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE },
+  { "DRMAA_ERRNO_HOLD_INCONSISTENT_STATE",      DRMAA_ERRNO_HOLD_INCONSISTENT_STATE },
+  { "DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE",   DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE },
+  { "DRMAA_ERRNO_EXIT_TIMEOUT",                 DRMAA_ERRNO_EXIT_TIMEOUT },
+  { NULL, 0 }
+};
+
+
+/****** test_drmaa/str2drmaa_errno() ********************************************
+*  NAME
+*     str2drmaa_errno() -- Map string into DRMAA errno constant 
+*
+*  SYNOPSIS
+*     static int str2drmaa_errno(const char *str) 
+*
+*  FUNCTION
+*     Map string into DRMAA errno constant.
+*
+*  INPUTS
+*     const char *str - ??? 
+*
+*  RESULT
+*     static int - DRMAA_ERRNO_* constant or -1 on failre
+*******************************************************************************/
+static int str2drmaa_errno(const char *str)
+{
+  int i;
+  for (i=0; errno_vector[i].descr != NULL; i++)
+      if (!strcmp(errno_vector[i].descr, str))
+         return errno_vector[i].drmaa_errno;
+  return -1;
+}
+
+/****** test_drmaa/drmaa_errno2str() *******************************************
+*  NAME
+*     drmaa_errno2str() -- Map DRMAA errno constant into string
+*
+*  SYNOPSIS
+*     static const char* drmaa_errno2str(int drmaa_errno) 
+*
+*  FUNCTION
+*     Map DRMAA errno constant into string
+*
+*  INPUTS
+*     int drmaa_errno - Any DRMAA errno
+*
+*  RESULT
+*     static const char* - String representation
+*******************************************************************************/
+static const char *drmaa_errno2str(int drmaa_errno)
+{
+  int i;
+  for (i=0; errno_vector[i].descr != NULL; i++)
+      if (errno_vector[i].drmaa_errno == drmaa_errno)
+         return errno_vector[i].descr;
+  return "DRMAA_ERRNO_???UNKNOWN???";
+}
+
+const struct ctrl_descr_s {
+  char *descr;
+  int ctrl;
+} ctrl_vector[] = {
+  { "DRMAA_CONTROL_SUSPEND",          DRMAA_CONTROL_SUSPEND },
+  { "DRMAA_CONTROL_RESUME",           DRMAA_CONTROL_RESUME },
+  { "DRMAA_CONTROL_HOLD",             DRMAA_CONTROL_HOLD },
+  { "DRMAA_CONTROL_RELEASE",          DRMAA_CONTROL_RELEASE },
+  { "DRMAA_CONTROL_TERMINATE",        DRMAA_CONTROL_TERMINATE },
+  { NULL, 0 }
+};
+
+/****** test_drmaa/drmaa_ctrl2str() ********************************************
+*  NAME
+*     drmaa_ctrl2str() -- Map DRMAA control constant into string 
+*
+*  SYNOPSIS
+*     static const char* drmaa_ctrl2str(int ctrl) 
+*
+*  FUNCTION
+*     Map DRMAA control constant into string 
+*
+*  INPUTS
+*     int ctrl - Any DRMAA_CONTROL_* value
+*
+*  RESULT
+*     static const char* - DRMAA constant name or "unknown" string
+*
+*******************************************************************************/
+static const char *drmaa_ctrl2str(int ctrl)
+{
+  int i;
+  for (i=0; ctrl_vector[i].descr != NULL; i++)
+      if (ctrl_vector[i].ctrl == ctrl)
+         return ctrl_vector[i].descr;
+  return "DRMAA_CONTROL_???UNKNOWN???";
+}
+
+/****** test_drmaa/str2drmaa_ctrl() ********************************************
+*  NAME
+*     str2drmaa_ctrl() -- Map string into DRMAA control constant
+*
+*  SYNOPSIS
+*     static int str2drmaa_ctrl(const char *str) 
+*
+*  FUNCTION
+*     Map string into DRMAA control constant.
+*
+*  INPUTS
+*     const char *str - ??? 
+*
+*  RESULT
+*     static int - DRMAA_CONTROL_* constant or -1 on failure
+*******************************************************************************/
+static int str2drmaa_ctrl(const char *str)
+{
+  int i;
+  for (i=0; ctrl_vector[i].descr != NULL; i++) {
+      if (!strcmp(ctrl_vector[i].descr, str))
+         return ctrl_vector[i].ctrl;
+  }
+  return -1;
+}
+
+const struct state_descr_s {
+  char *descr;
+  int state;
+} state_vector[] = {
+  { "DRMAA_PS_UNDETERMINED",          DRMAA_PS_UNDETERMINED },
+  { "DRMAA_PS_QUEUED_ACTIVE",         DRMAA_PS_QUEUED_ACTIVE },
+  { "DRMAA_PS_SYSTEM_ON_HOLD",        DRMAA_PS_SYSTEM_ON_HOLD },
+  { "DRMAA_PS_USER_ON_HOLD ",         DRMAA_PS_USER_ON_HOLD },
+  { "DRMAA_PS_USER_SYSTEM_ON_HOLD",   DRMAA_PS_USER_SYSTEM_ON_HOLD },
+  { "DRMAA_PS_RUNNING",               DRMAA_PS_RUNNING },
+  { "DRMAA_PS_SYSTEM_SUSPENDED",      DRMAA_PS_SYSTEM_SUSPENDED },
+  { "DRMAA_PS_USER_SUSPENDED",        DRMAA_PS_USER_SUSPENDED },
+  { "DRMAA_PS_USER_SYSTEM_SUSPENDED", DRMAA_PS_USER_SYSTEM_SUSPENDED },
+  { "DRMAA_PS_DONE",                  DRMAA_PS_DONE },
+  { "DRMAA_PS_FAILED",                DRMAA_PS_FAILED },
+  { NULL, 0 }
+};
+
+/****** test_drmaa/drmaa_state2str() *******************************************
+*  NAME
+*     drmaa_state2str() -- Map DRMAA state constant into string
+*
+*  SYNOPSIS
+*     static const char* drmaa_state2str(int state) 
+*
+*  FUNCTION
+*     Map DRMAA state constant into string
+*
+*  INPUTS
+*     int state - Any DRMAA_PS_* value.
+*
+*  RESULT
+*     static const char* - 
+*******************************************************************************/
+static const char *drmaa_state2str(int state)
+{
+  int i;
+  for (i=0; state_vector[i].descr != NULL; i++)
+      if (state_vector[i].state == state)
+         return state_vector[i].descr;
+  return "DRMAA_PS_???UNKNOWN???";
+}
+
+/****** test_drmaa/str2drmaa_state() *******************************************
+*  NAME
+*     str2drmaa_state() -- Map string into DRMAA state constant
+*
+*  SYNOPSIS
+*     int str2drmaa_state(const char *str) 
+*
+*  FUNCTION
+*     Map string into DRMAA state constant.
+*
+*  INPUTS
+*     const char *str - 
+*
+*  RESULT
+*     static int - 
+*******************************************************************************/
+int str2drmaa_state(const char *str)
+{
+  int i;
+  for (i=0; state_vector[i].descr != NULL; i++)
+      if (!strcmp(state_vector[i].descr, str))
+         return state_vector[i].state;
+  return -1;
+}
+
+
+/****** test_drmaa/report_wrong_job_finish() ***********************************
+*  NAME
+*     report_wrong_job_finish() -- Report how job finished
+*
+*  SYNOPSIS
+*     static void report_wrong_job_finish(const char *comment, const char 
+*     *jobid, int stat) 
+*
+*  FUNCTION
+*     Report how job finished based on the stat value returned by drmaa_wait().
+*     The information is printed to stderr.
+*
+*  INPUTS
+*     const char *comment - provided by the caller
+*     const char *jobid   - provided by the caller
+*     int stat            - stat value as returned by drmaa_wait()
+*******************************************************************************/
+static void report_wrong_job_finish(const char *comment, const char *jobid, int stat)
+{
+   int aborted, exited, exit_status, signaled;
+
+   drmaa_wifaborted(&aborted, stat, NULL, 0);
+   if (aborted)
+      fprintf(stderr, "%s: job \"%s\" never ran\n", comment, jobid);
+   else {
+      drmaa_wifexited(&exited, stat, NULL, 0);
+      if (exited) {
+         drmaa_wexitstatus(&exit_status, stat, NULL, 0);
+         fprintf(stderr, "%s: job \"%s\" finished regularly with exit status %d\n",
+               comment, jobid, exit_status);
+      } else {
+         drmaa_wifsignaled(&signaled, stat, NULL, 0);
+         if (signaled) {
+            char termsig[DRMAA_SIGNAL_BUFFER+1];
+            drmaa_wtermsig(termsig, DRMAA_SIGNAL_BUFFER, stat, NULL, 0);
+            fprintf(stderr, "%s: job \"%s\" finished due to signal %s\n",
+               comment, jobid, termsig);
+         } else
+            fprintf(stderr, "%s: job \"%s\" finished with unclear conditions\n",
+               comment, jobid);
+      }
+   }
+}

@@ -86,8 +86,7 @@ RMON_ALL = rmond rmon spy knecht knecht_light knecht_long mdel \
 # source definitions
 #
 
-RMONLIB_SRC = rmon_macros$(QIDLEXT).c rmon_semaph.c \
-				rmon_monitoring_level.c
+RMONLIB_SRC = rmon_macros$(QIDLEXT).c rmon_semaph.c rmon_monitoring_level.c
 
 RMONDC_SRC = rmon_m_c_client_register.c rmon_m_c_spy_register.c \
 	rmon_m_c_monitoring_level.c rmon_m_c_mstat.c \

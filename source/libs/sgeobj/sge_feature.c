@@ -76,9 +76,14 @@ static void feature_state_destroy(void* state) {
    free(state);
 }
 
-void feature_init_mt(void) {
+static pthread_once_t feature_once_control = PTHREAD_ONCE_INIT;
+void feature_once_init(void) {
    pthread_key_create(&feature_state_key, &feature_state_destroy);
-}
+} 
+void feature_init_mt(void) {
+   pthread_once(&feature_once_control, feature_once_init);
+} 
+
 #endif
 
 /****** sge_feature/feature_set_already_read_from_file() ***********************

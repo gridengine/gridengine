@@ -491,7 +491,8 @@ const char *drmaa_strerror(int drmaa_errno);
 /* 
  * Current contact information for DRM system (string)
  */ 
-void drmaa_get_contact(char *contact, size_t contact_len);
+int drmaa_get_contact(char *contact, size_t contact_len, 
+         char *error_diagnosis, size_t error_diag_len);
 
 /* 
  * OUT major - major version number (non-negative integer)
@@ -499,7 +500,8 @@ void drmaa_get_contact(char *contact, size_t contact_len);
  * Returns the major and minor version numbers of the DRMAA library;
  * for DRMAA 1.0, 'major' is 1 and 'minor' is 0. 
  */
-void drmaa_version(unsigned int *major, unsigned int *minor);
+int drmaa_version(unsigned int *major, unsigned int *minor, 
+         char *error_diagnosis, size_t error_diag_len);
 
 
 /* 
@@ -507,7 +509,8 @@ void drmaa_version(unsigned int *major, unsigned int *minor);
  * Output (string) is implementation dependent and could contain the DRM system and the
  * implementation vendor as its parts.
  */
-void drmaa_get_DRM_system(char *drm_system, size_t drm_system_len);
+int drmaa_get_DRM_system(char *drm_system, size_t drm_system_len, 
+         char *error_diagnosis, size_t error_diag_len);
 
 #ifdef  __cplusplus
 }

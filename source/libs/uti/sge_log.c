@@ -97,8 +97,12 @@ static void log_state_destroy(void* state) {
    free(state);
 }
  
-void log_init_mt(void) {
+static pthread_once_t log_once_control = PTHREAD_ONCE_INIT;
+void log_once_init(void) {
    pthread_key_create(&log_state_key, &log_state_destroy);
+} 
+void log_init_mt(void) {
+   pthread_once(&log_once_control, log_once_init);
 } 
 
 #endif

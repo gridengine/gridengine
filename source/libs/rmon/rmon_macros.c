@@ -62,6 +62,7 @@
 
 #ifdef SGE_MT
 #include <pthread.h>
+#include "sge_mtutil.h"
 #endif
 
 #include "basis_types.h"
@@ -76,8 +77,14 @@
 #endif
 
 #ifdef SGE_MT
+/* MT-NOTE: may not use sge_mutex_lock()/sge_mutex_unlock() for this mutex !! */
 /* MT-NOTE: rmon_mutex guards access to global variable msgbuf */
 pthread_mutex_t rmon_mutex = PTHREAD_MUTEX_INITIALIZER;
+#define RMON_LOCK(func)      pthread_mutex_lock(&rmon_mutex)
+#define RMON_UNLOCK(func)    pthread_mutex_unlock(&rmon_mutex)
+#else
+#define RMON_LOCK(func)      
+#define RMON_UNLOCK(func)
 #endif
 
 #define PIPE_SIZE               4096L
@@ -623,14 +630,12 @@ void rmon_mclose()
 void rmon_menter(
 const char *func 
 ) {
-#ifdef SGE_MT
-   pthread_mutex_lock(&rmon_mutex);
-#endif
+   RMON_LOCK("rmon_menter");
+
    sprintf(msgbuf, "--> %s() {\n", func);
    mwrite(msgbuf);
-#ifdef SGE_MT
-   pthread_mutex_unlock(&rmon_mutex);
-#endif
+
+   RMON_UNLOCK("rmon_menter");
    return;
 }
 
@@ -639,15 +644,12 @@ const char *func,
 const char *file,
 int line 
 ) {
-#ifdef SGE_MT
-   pthread_mutex_lock(&rmon_mutex);
-#endif
+   RMON_LOCK("rmon_mexit");
+
    sprintf(msgbuf, "<-- %s() %s %d }\n", func, file, line);
    mwrite(msgbuf);
-#ifdef SGE_MT
-   pthread_mutex_unlock(&rmon_mutex);
-#endif
 
+   RMON_UNLOCK("rmon_mexit");
    return;
 }
 
@@ -656,14 +658,10 @@ const char *func,
 const char *file,
 int line 
 ) {
-#ifdef SGE_MT
-   pthread_mutex_lock(&rmon_mutex);
-#endif
+   RMON_LOCK("rmon_mexite");
    sprintf(msgbuf, "<-- %s() ERROR %s %d\n", func, file, line);
    mwrite(msgbuf);
-#ifdef SGE_MT
-   pthread_mutex_unlock(&rmon_mutex);
-#endif
+   RMON_UNLOCK("rmon_mexite");
 }
 
 void rmon_mtrace(
@@ -671,15 +669,11 @@ const char *func,
 const char *file,
 int line 
 ) {
-#ifdef SGE_MT
-   pthread_mutex_lock(&rmon_mutex);
-#endif
+   RMON_LOCK("rmon_mtrace");
    strcpy(msgbuf, empty);
    sprintf(&msgbuf[4], "%s:%s:%d\n", func, file, line);
    mwrite(msgbuf);
-#ifdef SGE_MT
-   pthread_mutex_unlock(&rmon_mutex);
-#endif
+   RMON_UNLOCK("rmon_mtrace");
 
    return;
 }
@@ -688,9 +682,7 @@ int line
 void rmon_mjobtrace(u_long job_id, const char *fmt,...)
 {
    va_list args;
-#ifdef SGE_MT
-   pthread_mutex_lock(&rmon_mutex);
-#endif
+   RMON_LOCK("rmon_mjobtrace");
 
    jobid = job_id;
 
@@ -702,18 +694,14 @@ void rmon_mjobtrace(u_long job_id, const char *fmt,...)
    mwrite(msgbuf);
 
    va_end(args);
-#ifdef SGE_MT
-   pthread_mutex_unlock(&rmon_mutex);
-#endif
+   RMON_UNLOCK("rmon_mjobtrace");
 }
 
 /* use like printf(char *fmt, ... ) */
 void rmon_mprintf(const char *fmt,...)
 {
    va_list args;
-#ifdef SGE_MT
-   pthread_mutex_lock(&rmon_mutex);
-#endif
+   RMON_LOCK("rmon_mprintf");
 
    va_start(args, fmt);
 
@@ -735,9 +723,7 @@ void rmon_mprintf(const char *fmt,...)
    mwrite(msgbuf);
 
    va_end(args);
-#ifdef SGE_MT
-   pthread_mutex_unlock(&rmon_mutex);
-#endif
+   RMON_UNLOCK("rmon_mprintf");
 }
 
 static void mwrite(
@@ -783,7 +769,7 @@ char *message
 /*       printf("layer: %d ", LAYER); */
 
 #if defined(SGE_MT)
-      fprintf(rmon_fp, "%6ld %6d %ld ", DEBUG_TRACEID++, (int)getpid(), pthread_self());
+      fprintf(rmon_fp, "%6ld %6d %ld ", DEBUG_TRACEID++, (int)getpid(), (long int)pthread_self());
 #else
       fprintf(rmon_fp, "%6ld %6d", DEBUG_TRACEID++, (int)getpid());
 #endif

@@ -294,8 +294,6 @@ void japi_standard_error(int drmaa_errno, dstring *ds);
 drmaa_attr_values_t *japi_allocate_string_vector(int type); 
 int japi_init_mt(dstring *diag);
 
-void japi_lock_mutex(const char *mutex_name, const char *func, pthread_mutex_t *mutex);
-void japi_unlock_mutex(const char *mutex_name, const char *func, pthread_mutex_t *mutex);
 
 #ifdef  __cplusplus
 }

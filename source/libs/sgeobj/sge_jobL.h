@@ -352,7 +352,7 @@ enum {
 *
 *     SGE_LIST(JB_ja_n_h_ids)    
 *        Just submitted array task without hold state (RN_Type).
-I        ("qsub -t tid_range")
+*        ("qsub -t tid_range")
 *
 *     SGE_LIST(JB_ja_u_h_ids)    
 *        Just submitted and user hold applied (RN_Type).

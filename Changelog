@@ -1,3 +1,21 @@
+AH-2003-07-10-0: Enhancem.: In case of event client thread setup problems 
+                            drmaa_init() returns error reason known by 
+                            the implementation thread.
+                            Implemented drmaa_control(), drmaa_version(),
+                            drmaa_get_attribute_names() and 
+                            drmaa_get_vector_attribute_names().
+                            Implemented timeouts in drmaa_wait() and 
+                            drmaa_synchronize().
+                            Introduced C module for multi-threading utilities.
+                            Always use sge_mutex_lock()/sge_mutex_unlock() to 
+                            support DPRINTF() output in case of deadlocks - 
+                            except in rmon module itself.
+                            Added mutex 'message_id_view_mutex' in 
+                            sge_language.c to fix deadlock in case of error 
+                            during sge_language.c initialization.
+                 Testsuite: Added various testsuite tests for the enhancm.
+                            Added test for schedd crash bug #545
+
 EB-2003-07-09-0: Enhancem.: Made changes with complexes according to CQ spec.
                             * data structures
                                - removed CX_Type element
@@ -57,6 +75,7 @@ SG-2003-07-03-0: Bugfix:    max_u_jobs could count too many jobs
                  Issue:     576
                  Review:    AS
                  Changed:   qmaster
+
 EB-2003-07-01-0: Bugfix:    SGEEE: qmaster crashed on qdel of tightly
                             integrated parallel job
                  Bugtraq:   4883714

@@ -1105,6 +1105,11 @@ case DARWIN:
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
    set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    set GCC_NOSP = "-Wno-strict-prototypes"
+
+   # regarding cc(1) -pthread is to be used for pthread multithreaded applications
+   # however it is rejected ...
+   set MTCFLAGS = "-DSGE_MT"
+   set MTLFLAGS = "-pthread"
    breaksw
 
 case FREEBSD_*:

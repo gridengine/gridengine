@@ -67,8 +67,6 @@
 #define RANGE_SEPARATOR_CHARS ","
 #define RANGE_LAYER BASIS_LAYER
 
-static void add_taskrange_str(u_long32 start, u_long32 end, int step,
-                              dstring * dyn_taskrange_str, int ignore_step);
 
 static bool range_is_overlapping(const lListElem *range1,
                                  const lListElem *range2);
@@ -451,7 +449,7 @@ range_list_print_to_string(const lList *this_list,
             u_long32 start, end, step;
 
             range_get_all_ids(range, &start, &end, &step);
-            add_taskrange_str(start, end, step, string, ignore_step);
+            range_to_dstring(start, end, step, string, ignore_step);
          }
       } else {
          sge_dstring_append(string, "UNDEFINED");
@@ -1441,12 +1439,12 @@ void range_list_calculate_intersection_set(lList **range_list,
    DEXIT;
 }
 
-/****** sgeobj/range/add_taskrange_str() **************************************
+/****** sgeobj/range/range_to_dstring() **************************************
 *  NAME
-*     add_taskrange_str() -- Appends a range to a dynamic string 
+*     range_to_dstring() -- Appends a range to a dynamic string 
 *
 *  SYNOPSIS
-*     static void add_taskrange_str(u_long32 start, 
+*     void range_to_dstring(u_long32 start, 
 *                                   u_long32 end, 
 *                                   int step, 
 *                                   dstring *dyn_taskrange_str) 
@@ -1464,7 +1462,7 @@ void range_list_calculate_intersection_set(lList **range_list,
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
 ******************************************************************************/
-static void add_taskrange_str(u_long32 start, u_long32 end, int step,
+void range_to_dstring(u_long32 start, u_long32 end, int step,
                               dstring * dyn_taskrange_str, int ignore_step)
 {
    char tail[256] = "";

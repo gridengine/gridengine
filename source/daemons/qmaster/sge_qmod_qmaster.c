@@ -84,7 +84,7 @@ static void signal_slave_tasks_of_job(int how, lListElem *jep, lListElem *jatep)
 
 static int sge_change_queue_state(char *user, char *host, lListElem *qep, u_long32 action, u_long32 force, lList **answer);
 
-static int sge_change_job_state(char *user, char *host, lListElem *jep, lListElem *jatep, u_long32 action, u_long32 force, lList **answer);
+static int sge_change_job_state(char *user, char *host, lListElem *jep, lListElem *jatep, u_long32 task_id, u_long32 action, u_long32 force, lList **answer);
 
 static int qmod_queue_clear(lListElem *qep, u_long32 force, lList **answer, char *user, char *host, int isoperator, int isowner);
 
@@ -194,23 +194,109 @@ sge_gdi_request *answer
             }
 
             job = job_list_locate(Master_Job_List, jobid);
-            if (job)
+            if (job) {
                jatask = lFirst(lGetList(job, JB_ja_tasks));
-            while ((tmp_task = jatask)) {
-               u_long32 task_number;
 
-               jatask = lNext(tmp_task);
-               task_number = lGetUlong(tmp_task, JAT_task_number);
-               if ((task_number >= start && task_number <= end &&
-                  ((task_number-start)%step) == 0) || alltasks) {
-                  DPRINTF(("Modify job: "u32"."u32"\n", jobid,
-                     task_number));
+               while ((tmp_task = jatask)) {
+                  u_long32 task_number;
 
-                  /* this specifies no queue, so lets prove for a job */
-                  /* change state of job: */
-                  sge_change_job_state(user, host, job, tmp_task,
-                      lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
-                  found = true;
+                  jatask = lNext(tmp_task);
+                  task_number = lGetUlong(tmp_task, JAT_task_number);
+                  if ((task_number >= start && task_number <= end &&
+                     ((task_number-start)%step) == 0) || alltasks) {
+                     DPRINTF(("Modify job: "u32"."u32"\n", jobid,
+                        task_number));
+
+                     /* this specifies no queue, so lets probe for a job */
+                     /* change state of job: */
+                     sge_change_job_state(user, host, job, tmp_task, 0,
+                         lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
+                     found = true;
+                  }
+               }
+
+               /* create more precise GDI answers also for pending jobs/tasks and jobs/tasks in hold state 
+                  When the operation is to be applied on the whole job array but no task is enrolled so far 
+                  (i.e. not found) only one single GDI answer is created. Otherwise one message is created 
+                  per task */
+               if (alltasks && job_is_array(job)) {
+                  if (!found) {
+                     sge_change_job_state(user, host, job, NULL, 0,
+                         lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
+                     found = true;
+                  }
+               } else {
+                  lListElem *range;
+                  u_long32 min, max, step;
+                  u_long32 taskid;
+
+                  DPRINTF(("start: %d end: %d step: %d alltasks: %d\n", 
+                        start, end, step, alltasks));
+
+                  /* handle all pending tasks */
+                  for_each (range, lGetList(job, JB_ja_n_h_ids)) {
+                     range_get_all_ids(range, &min, &max, &step);
+                     for (taskid=min; taskid<=max; taskid+= step) {
+                        if ((taskid >= start && taskid <= end &&
+                           ((taskid-start)%step) == 0) || alltasks) {
+                           DPRINTF(("Modify job: "u32"."u32"\n", jobid,
+                              taskid));
+                           sge_change_job_state(user, host, job, NULL, taskid,
+                               lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
+                           found = true;
+                        }
+                     }
+                  }
+
+                  /* handle all tasks in user hold */
+                  for_each (range, lGetList(job, JB_ja_u_h_ids)) {
+                     range_get_all_ids(range, &min, &max, &step);
+                     for (taskid=min; taskid<=max; taskid+= step) {
+                        if ((taskid >= start && taskid <= end &&
+                           ((taskid-start)%step) == 0) || alltasks) {
+                           DPRINTF(("Modify job: "u32"."u32"\n", jobid,
+                              taskid));
+                           sge_change_job_state(user, host, job, NULL, taskid,
+                               lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
+                           found = true;
+                        }
+                     }
+                  }
+
+                  /* handle all tasks in system hold that are not in user hold */
+                  for_each (range, lGetList(job, JB_ja_s_h_ids)) {
+                     range_get_all_ids(range, &min, &max, &step);
+                     for (taskid=min; taskid<=max; taskid+= step) {
+                        if (range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), taskid))
+                           continue;
+                        if ((taskid >= start && taskid <= end &&
+                           ((taskid-start)%step) == 0) || alltasks) {
+                           DPRINTF(("Modify job: "u32"."u32"\n", jobid,
+                              taskid));
+                           sge_change_job_state(user, host, job, NULL, taskid,
+                               lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
+                           found = true;
+                        }
+                     }
+                  }
+
+                  /* handle all tasks in operator hold that are not in user hold or system hold */
+                  for_each (range, lGetList(job, JB_ja_o_h_ids)) {
+                     range_get_all_ids(range, &min, &max, &step);
+                     for (taskid=min; taskid<=max; taskid+= step) {
+                        if (range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), taskid) ||
+                            range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), taskid))
+                           continue;
+                        if ((taskid >= start && taskid <= end &&
+                           ((taskid-start)%step) == 0) || alltasks) {
+                           DPRINTF(("Modify job: "u32"."u32"\n", jobid,
+                              taskid));
+                           sge_change_job_state(user, host, job, NULL, taskid,
+                               lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
+                           found = true;
+                        }
+                     }
+                  }
                }
             }
          }
@@ -229,7 +315,7 @@ sge_gdi_request *answer
             WARNING((SGE_EVENT, MSG_QUEUE_INVALIDQORJOB_S, lGetString(dep, ID_str)));
          else
             WARNING((SGE_EVENT, MSG_QUEUE_INVALIDQ_S, lGetString(dep, ID_str)));  
-         answer_list_add(&alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
+         answer_list_add(&alp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
       }
    }
 
@@ -237,7 +323,6 @@ sge_gdi_request *answer
    
    DEXIT;
 }
-
 
 static int sge_change_queue_state(
 char *user,
@@ -304,36 +389,47 @@ lList **answer
    return result;
 }
 
-
 static int sge_change_job_state(
 char *user,
 char *host,
 lListElem *jep,
 lListElem *jatep,
+u_long32 task_id,
 u_long32 action,
 u_long32 force,
 lList **answer 
 ) {
    lListElem *queueep;
-   u_long32 job_id, task_id;
+   u_long32 job_id;
 
    DENTER(TOP_LAYER, "sge_change_job_state");
    
+   job_id = lGetUlong(jep, JB_job_number);
+
    if (strcmp(user, lGetString(jep, JB_owner)) && !manop_is_operator(user)) {
-      WARNING((SGE_EVENT, MSG_JOB_NOMODJOBPERMS_SU, user, u32c(lGetUlong(jep, JB_job_number))));
+      WARNING((SGE_EVENT, MSG_JOB_NOMODJOBPERMS_SU, user, u32c(job_id)));
+      answer_list_add(answer, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_WARNING);
+      DEXIT;
+      return -1;
+   }
+
+   if (!jatep) {
+      /* unenrolled tasks always are not-running pending/hold */
+      if (task_id) 
+         WARNING((SGE_EVENT, MSG_QMODJOB_NOTENROLLED_UU, u32c(job_id), u32c(task_id)));
+      else 
+         WARNING((SGE_EVENT, MSG_QMODJOB_NOTENROLLED_U, u32c(job_id)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
 
-   job_id = lGetUlong(jep, JB_job_number);
    task_id = lGetUlong(jatep, JAT_task_number);
 
-   /* look for queue this job runs in */
    if (lGetString(jatep, JAT_master_queue))
       queueep = queue_list_locate(Master_Queue_List, 
                                   lGetString(jatep, JAT_master_queue));
-   else
+   else 
       queueep = NULL;
 
    switch (action) {

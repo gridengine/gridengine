@@ -1,3 +1,8 @@
+CR-2002-03-20-0             merge from V53_beta2_BRANCH
+                 Bugfix:    qselect/qstat -U is (partially) broken
+                 Issue:     #191
+
+
 AA-2002-03-19-2: Merge:     merge from V53beta2 branch
                             - AA-2002-03-19-1, AA-2002-03-18-2, AA-2002-03-18-1,
                               AA-2002-03-18-0

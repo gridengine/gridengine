@@ -82,7 +82,7 @@
 static void get_all_lists(lList **queue_l, lList **job_l, lList **complex_l, lList **exechost_l, lList **sc_l, lList **pe_l, lList **ckpt_l, lList **acl_l, lList **zombie_l, lList *qrl, lList *perl, lList *ul, u_long32 full_listing);
 static int select_by_hard_queue_list(lList *queue_list, lList *hql); 
 static int select_by_pe_list(lList *queue_list, lList *peref_list, lList *pe_list);
-static int select_by_queue_user_list(lList *queue_list, lList *queue_user_list, lList *acl_list);
+static int select_by_queue_user_list(lList *exechost_list, lList *queue_list, lList *queue_user_list, lList *acl_list);
 static lList *sge_parse_cmdline_qstat(char **argv, char **envp, lList **ppcmdline);
 static lList *sge_parse_qstat(lList **ppcmdline, lList **pplresource, lList **pplqresource, lList **pplqueueref, lList **ppluser, lList **pplqueue_user, lList **pplpe, u_long32 *pfull, u_long32 *pempty, char **hostname, u_long32 *job_info, u_long32 *group_opt, lList **ppljid);
 static int qstat_usage(FILE *fp, char *what);
@@ -273,7 +273,7 @@ char **argv
 
    /* unseclect all queues not selected by a -U (if exist) */
    if (lGetNumberOfElem(queue_user_list)>0) {
-      if ((nqueues=select_by_queue_user_list(queue_list, queue_user_list, acl_list))<0) {
+      if ((nqueues=select_by_queue_user_list(exechost_list , queue_list, queue_user_list, acl_list))<0) {
          SGE_EXIT(1);
       }
 
@@ -1127,29 +1127,111 @@ lList *pe_list
 
 */
 static int select_by_queue_user_list(
+lList *exechost_list,
 lList *queue_list,
 lList *queue_user_list,
 lList *acl_list 
 ) {
    int nqueues = 0;
-   lListElem *qu, *qep;
+   lListElem *qu = NULL;
+   lListElem *qep = NULL;
+   lListElem *ehep = NULL;
+   lList *h_acl = NULL;
+   lList *h_xacl = NULL;
+   lList *global_acl = NULL;
+   lList *global_xacl = NULL;
+   lList *config_acl = NULL;
+   lList *config_xacl = NULL;
+ 
 
    DENTER(TOP_LAYER, "select_by_queue_user_list");
 
    /* untag all queues where no of the users has access */
+
+   ehep = lGetElemHost(exechost_list, EH_name, "global"); 
+   global_acl  = lGetList(ehep, EH_acl);
+   global_xacl = lGetList(ehep, EH_xacl);
+
+   config_acl  = conf.user_lists;
+   config_xacl = conf.xuser_lists; 
+
+
    for_each(qep, queue_list) {
       int access = 0;
+      const char *host_name = NULL;
+
+      /* get exec host list element for current queue 
+         and its access lists */
+      host_name = lGetHost(qep,QU_qhostname);
+      ehep = lGetElemHost(exechost_list, EH_name, host_name); 
+      h_acl  = lGetList(ehep, EH_acl);
+      h_xacl = lGetList(ehep, EH_xacl);
+
       for_each (qu, queue_user_list) {
+         int q_access = 0;
+         int h_access = 0;
+         int gh_access = 0;
+         int conf_access = 0;
+
          const char *name = lGetString(qu, STR);
-         if ((access = (name[0]=='@')?
-               sge_has_access(NULL, &name[1], qep, acl_list): /* group */
-               sge_has_access(name, NULL, qep, acl_list))) /*user */
+         if (name == NULL)
+            continue;
+
+         DPRINTF(("-----> checking queue user: %s\n", name )); 
+
+         DPRINTF(("testing queue access lists\n"));
+         q_access = (name[0]=='@')?
+               sge_has_access(NULL, &name[1], qep, acl_list): 
+               sge_has_access(name, NULL, qep, acl_list); 
+         if (!q_access) {
+            DPRINTF(("no access\n"));
+         } else {
+            DPRINTF(("ok\n"));
+         }
+
+         DPRINTF(("testing host access lists\n"));
+         h_access = (name[0]=='@')?
+               sge_has_access_(NULL, &name[1], h_acl, h_xacl , acl_list):
+               sge_has_access_(name, NULL, h_acl, h_xacl , acl_list); 
+         if (!h_access) {
+            DPRINTF(("no access\n"));
+         }else {
+            DPRINTF(("ok\n"));
+         }
+
+         DPRINTF(("testing global host access lists\n"));
+         gh_access = (name[0]=='@')?
+               sge_has_access_(NULL, &name[1], global_acl , global_xacl , acl_list):
+               sge_has_access_(name, NULL,global_acl , global_xacl , acl_list);
+         if (!gh_access) {
+            DPRINTF(("no access\n"));
+         }else {
+            DPRINTF(("ok\n"));
+         }
+
+         DPRINTF(("testing cluster config access lists\n"));
+         conf_access = (name[0]=='@')?
+               sge_has_access_(NULL, &name[1],config_acl , config_xacl , acl_list): 
+               sge_has_access_(name, NULL, config_acl , config_xacl  , acl_list); 
+         if (!conf_access) {
+            DPRINTF(("no access\n"));
+         }else {
+            DPRINTF(("ok\n"));
+         }
+
+         access = q_access && h_access && gh_access && conf_access;
+         if (!access) {
             break;
+         }
       }
-      if (!access)
+      if (!access) {
+         DPRINTF(("no access for queue %s\n", lGetString(qep,QU_qname) ));
          lSetUlong(qep, QU_tagged, 0);
-      else 
+      }
+      else {
+         DPRINTF(("access for queue %s\n", lGetString(qep,QU_qname) ));
          nqueues++;
+      }
    }
 
    DEXIT;
@@ -1555,7 +1637,7 @@ char *what
       fprintf(fp, "destin_id_list           queue[,queue,...]\n");
       fprintf(fp, "pe_list                  pe[,pe,...]\n");
       fprintf(fp, "resource_list            resource[=value][,resource[=value],.  ..]\n");
-      fprintf(fp, "user_list                user[@host][,user[@host],...]\n");
+      fprintf(fp, "user_list                user|@group[,user|@group],...]\n");
       fprintf(fp, "resource_attributes      resource,resource,.\n");
    } else {
       /* display option usage */

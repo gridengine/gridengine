@@ -766,6 +766,49 @@ const lEnumeration *ep1
 int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm, 
                  const char *dlmt) {
 
+  return _lString2List(s, lpp, dp, nm, dlmt, 1);
+}
+
+/****** cull/_lString2List() ***************************************************
+*  NAME
+*     _lString2List() -- convert char* string into cull list 
+*
+*  SYNOPSIS
+*
+*     #include "cull_db.h"
+*     #include <cull/src/cull_db.h>
+* 
+*     int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm, 
+*                      const char *delimitor); 
+*
+*  FUNCTION
+*     parses separated strings and adds them into the cull list *lpp
+*     the string is a unique key for the list and resides at field nm
+*  
+*     if delimitor==NULL
+*        use isspace()
+*     else
+*        use delimitor
+*
+*  INPUTS
+*     const char *s         - String to parse   
+*     lList **lpp           - reference to lList*      
+*     const lDescr *dp      - list Type     
+*     int nm                - list field       
+*     const char *delimitor - string delimitor        
+*     int unique            - skip reoccuring strings if set otherwise readd
+*
+*  RESULT
+*     0 on error
+*     1 ok
+*
+*  EXAMPLE
+*     lList* stringList = NULL;
+*     _lString2List("host1, host2 host3", &stringList, ST_Type, STR, ", ", 1);
+******************************************************************************/
+int _lString2List(const char *s, lList **lpp, const lDescr *dp, int nm, 
+                 const char *dlmt, int unique) {
+
    int pos;
    int dataType;
 
@@ -783,7 +826,7 @@ int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm,
       case lStringT:
          DPRINTF(("lString2List: got lStringT data type\n"));
          for (s = sge_strtok(s, dlmt); s; s = sge_strtok(NULL, dlmt)) {
-            if (lGetElemStr(*lpp, nm, s)) {
+            if (unique && lGetElemStr(*lpp, nm, s)) {
                /* silently ignore multiple occurencies */
                continue;
             }
@@ -799,7 +842,7 @@ int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm,
       case lHostT:
          DPRINTF(("lString2List: got lHostT data type\n"));
          for (s = sge_strtok(s, dlmt); s; s = sge_strtok(NULL, dlmt)) {
-            if (lGetElemHost(*lpp, nm, s)) {
+            if (unique && lGetElemHost(*lpp, nm, s)) {
                /* silently ignore multiple occurencies */
                continue;
             }

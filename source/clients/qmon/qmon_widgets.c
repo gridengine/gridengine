@@ -63,6 +63,7 @@
 #include "qmon_message.h"
 #include "qmon_init.h"
 #include "utility.h"
+#include "parse.h"
 
 #if 0
 #include "Outline.h"
@@ -681,7 +682,7 @@ Cardinal size
       if ( type == QmonQENV_Type || type == QmonQCTX_Type )
          cull_parse_variable_list(&ret_list, str, 0); 
       if (type == QmonQST_Type) {
-         lString2List(str, &ret_list, ST_Type, STR, " ");
+         _lString2List(str, &ret_list, ST_Type, STR, " ", 0);
       }
       if (type == QmonQRN_Type) {
          ret_list = parse_ranges(str, 0, 0, &alp, NULL, INF_ALLOWED);

@@ -1031,6 +1031,7 @@ XtPointer cld, cad;
             return;
          }
 
+lWriteElemTo(jep, stdout);
          alp = write_job_defaults(jep, filename, 0);
 
          qmonMessageBox(w, alp, 0);
@@ -2338,8 +2339,8 @@ XtPointer cld, cad;
 
    if (!cbs || *(cbs) == '\0')
       qmonSubmitClear(w, NULL, NULL);
-   else
-      printf("Input: %s\n", cbs);
+/*    else */
+/*       printf("Input: %s\n", cbs); */
 
    DEXIT;
 }

@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: Xpm.c,v 1.1 2001/07/18 11:06:03 root Exp $
+ * $Id: Xpm.c,v 1.1.1.1.6.1 2005/03/23 15:01:46 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,8 +9,28 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: Xpm.c,v $
- * Revision 1.1  2001/07/18 11:06:03  root
- * Initial revision
+ * Revision 1.1.1.1.6.1  2005/03/23 15:01:46  andre
+ * AA-2005-03-23-2: Bugfix:    Core dump in `qmon`Xpm.c`CreateImage running qmon on E25K (using remote DISPLAY)
+ *                  Bugtraq:   6198937
+ *                  Issue:     1288
+ *                  Changed:   qmon
+ *
+ * AA-2005-03-23-1: Bugfix:    renewal of certificates
+ *                             added renew_all_certs.csh
+ *                             changed sge_ca
+ *                  Issue:     1515
+ *                  Bugtraq:   6232120
+ *                  Changed:   sge_ca
+ *                  Review:    CR
+ *
+ * AA-2005-03-23-0: Bugfix:    qmon and equal job arguments
+ *                  Issue:     1302
+ *                  Bugtraq:   6185208
+ *                  Changed:   qmon
+ *                  Review:    CR
+ *
+ * Revision 1.1.1.1  2001/07/18 11:06:03  root
+ * Initial checkin.
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -33,7 +53,7 @@
  * correctly for the alpha.
  *				 -- fredrik_lundh@ivab.se 10/25/94
  */
-#ifdef __alpha
+#if defined(__alpha) || defined(SOLARIS64)
 #  ifndef LONG64
 #    define	LONG64
 #  endif

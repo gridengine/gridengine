@@ -1902,10 +1902,11 @@ static int japi_drmaa_path2wd_opt (lList *attrs, lList **args, int is_bulk,
                                             DRMAA_WD, 0, &new_path,
                                             diag)) == DRMAA_ERRNO_SUCCESS) {
       if (new_path) {
-         DPRINTF (("-wd = \"%s\"\n", new_path));
 
          lListElem *ep = lGetElemStr (attrs, VA_variable, DRMAA_WD);
          const char *value = lGetString (ep, VA_value);
+
+         DPRINTF (("-wd = \"%s\"\n", new_path));
 
          ep = sge_add_arg (args, wd_OPT, lStringT, "-wd", value);
          lSetString (ep, SPA_argval_lStringT, new_path);
@@ -2714,10 +2715,10 @@ static int opt_list_append_opts_from_drmaa_attr (lList **args, lList *attrs, lLi
 
       /* job arguments -- last thing on the command line */
       if ((ep=lGetElemStr (vattrs, NSV_name, DRMAA_V_ARGV))) {
-         DPRINTF (("processing %s\n", DRMAA_V_ARGV));
-
          lList *lp = lGetList (ep, NSV_strings);
          lListElem *aep = NULL;
+
+         DPRINTF (("processing %s\n", DRMAA_V_ARGV));
 
          for_each (aep, lp) {
             DPRINTF (("arg: \"%s\"\n", lGetString (aep, ST_name)));

@@ -2365,12 +2365,12 @@ static int test(int *argc, char **argv[], int parse_args)
          char buffer[100];
          lList *alp, *job_lp;
          lListElem *job_ep;
+         FILE *fp;
          const char *mirror_text = "thefoxjumps...";
          mirror_job = "/bin/cat";
          input_path = "test.in";
          output_path = "test.out";
          error_path = "test.err";
-         FILE *fp;
 
          if (parse_args) {
             exit_job = NEXT_ARGV(argc, argv);
@@ -2489,20 +2489,22 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
-            lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-            lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-            alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-            job_ep = lFirst (job_lp);
-            lFreeWhere (where);
-            lFreeWhat (what);
-
-            int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
-
-            if (tmp_ret > 0) {
-               fprintf (stderr, "problem talking to gdi\n");
-               failed_test = 1;
+            {
+               lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst (job_lp);
+               lFreeWhere (where);
+               lFreeWhat (what);
             }
+            {
+               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
 
+               if (tmp_ret > 0) {
+                  fprintf (stderr, "problem talking to gdi\n");
+                  failed_test = 1;
+               }
+            }
             alp = lFreeList(alp);         
 
             if (job_ep == NULL) {
@@ -2572,10 +2574,10 @@ static int test(int *argc, char **argv[], int parse_args)
           */
 
          do {
+            char abs_path[128];
             printf ("Testing working directory, input stream and output stream\n");
 
             printf ("Writing input file\n");
-            char *abs_path = (char *)malloc (sizeof (char) * 128);
             
             strcpy (abs_path, "/tmp/");
             if (!(fp = fopen (strcat (abs_path, input_path), "w"))) {
@@ -2668,10 +2670,10 @@ static int test(int *argc, char **argv[], int parse_args)
           * testing error path
           */
          do {
+            char abs_path[128];
             printf ("Testing error stream\n");
             
             printf ("Clearing error file\n");
-            char *abs_path = (char *)malloc (sizeof (char) * 128);
             
             strcpy (abs_path, "/tmp/");
             if ((unlink (strcat (abs_path, error_path)) == -1) && (errno != ENOENT)) {
@@ -2753,11 +2755,11 @@ static int test(int *argc, char **argv[], int parse_args)
           * testing join files
           */
          do {
-            printf ("Testing join files\n");
             //First submit job to create tar file
             char *tar_path = "test.tar";
-            char *abs_path = (char *)malloc (sizeof (char) * 128);
-            
+            char abs_path[128]; 
+
+            printf ("Testing join files\n");
             printf ("Running job to prepare data\n");
             printf ("Clearing output file\n");
             strcpy (abs_path, "/tmp/");
@@ -2953,21 +2955,23 @@ static int test(int *argc, char **argv[], int parse_args)
             jt = NULL;
 
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
-            lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-            lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-            alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-            job_ep = lFirst (job_lp);
-            lFreeWhere (where);
-            lFreeWhat (what);
-
-            int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
-
-            if (tmp_ret > 0) {
-               fprintf (stderr, "problem talking to gdi\n");
-               failed_test = 1;
-               continue;
+            {
+               lCondition *where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst (job_lp);
+               lFreeWhere (where);
+               lFreeWhat (what);
             }
+            {
+               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
 
+               if (tmp_ret > 0) {
+                  fprintf (stderr, "problem talking to gdi\n");
+                  failed_test = 1;
+                  continue;
+               }
+            }
             alp = lFreeList(alp);         
 
             if (job_ep == NULL) {
@@ -3056,20 +3060,22 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
-            where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-            what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-            alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-            job_ep = lFirst (job_lp);
-            lFreeWhere (where);
-            lFreeWhat (what);
-
-            tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
-
-            if (tmp_ret > 0) {
-               fprintf (stderr, "problem talking to gdi\n");
-               failed_test = 1;
+            {
+               lCondition *where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst (job_lp);
+               lFreeWhere (where);
+               lFreeWhat (what);
             }
+            {
+               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
 
+               if (tmp_ret > 0) {
+                  fprintf (stderr, "problem talking to gdi\n");
+                  failed_test = 1;
+               }
+            }
             alp = lFreeList(alp);         
 
             if (job_ep == NULL) {
@@ -3174,21 +3180,23 @@ static int test(int *argc, char **argv[], int parse_args)
             jt = NULL;
 
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
-            lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-            lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-            alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-            job_ep = lFirst (job_lp);
-            lFreeWhere (where);
-            lFreeWhat (what);
-
-            int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
-
-            if (tmp_ret > 0) {
-               fprintf (stderr, "problem talking to gdi\n");
-               failed_test = 1;
-               continue;
+            {
+               lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst (job_lp);
+               lFreeWhere (where);
+               lFreeWhat (what);
             }
+            {
+               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
 
+               if (tmp_ret > 0) {
+                  fprintf (stderr, "problem talking to gdi\n");
+                  failed_test = 1;
+                  continue;
+               }
+            }
             alp = lFreeList(alp);         
 
             if (job_ep == NULL) {
@@ -3277,20 +3285,22 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
-            where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-            what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-            alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-            job_ep = lFirst (job_lp);
-            lFreeWhere (where);
-            lFreeWhat (what);
-
-            tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
-
-            if (tmp_ret > 0) {
-               fprintf (stderr, "problem talking to gdi\n");
-               failed_test = 1;
+            {
+               lCondition *where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst (job_lp);
+               lFreeWhere (where);
+               lFreeWhat (what);
             }
+            {
+               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
 
+               if (tmp_ret > 0) {
+                  fprintf (stderr, "problem talking to gdi\n");
+                  failed_test = 1;
+               }
+            }
             alp = lFreeList(alp);         
 
             if (job_ep == NULL) {
@@ -3363,7 +3373,7 @@ static int test(int *argc, char **argv[], int parse_args)
             struct tm timenow;
             struct tm timelater;
             char timestr[16];
-            
+            int time_diff;  
             printf ("Testing start time\n");
             printf ("Getting job template\n");
             drmaa_allocate_job_template(&jt, NULL, 0);
@@ -3433,7 +3443,7 @@ static int test(int *argc, char **argv[], int parse_args)
             localtime_r (&now, &timenow);            
             localtime_r (&later, &timelater);
             
-            int time_diff = (((timelater.tm_hour * 60) + timelater.tm_min) * 60 + timelater.tm_sec) -
+            time_diff = (((timelater.tm_hour * 60) + timelater.tm_min) * 60 + timelater.tm_sec) -
                 (((timenow.tm_hour * 60) + timenow.tm_min) * 60 + timenow.tm_sec);
             
             /* Allow 10 seconds for scheduling and run time.  This test will fail

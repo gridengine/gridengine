@@ -1,18 +1,20 @@
+SG-2003-11-18-0: Bugfix:    Fixed the build
+
 AD-2003-11-18-0: Bugfix:    Fixed the build
 
 DT-2003-11-17-1: Enhancem.: Implemented remaining DRMAA attributes.  Reworked
-														drmaa_job2sge_job() to reuse the parameter parsing
-														code in parse_job_cull.c, parse_qsub.c,
-														read_deaults.c, etc.  Introduced two new options:
-														-cat (job category) and -wd (set working directory).
-														Both options are only used by DRMAA right now, but
-														could easily be added to qsub et al.  Also added
-														a test to test_drmaa to test all DRMAA attributes.
-								 Changed:		libdrmaa.so and common parameter parsing routines
+                            drmaa_job2sge_job() to reuse the parameter parsing
+                            code in parse_job_cull.c, parse_qsub.c,
+                            read_deaults.c, etc.  Introduced two new options:
+                            -cat (job category) and -wd (set working directory).
+                            Both options are only used by DRMAA right now, but
+                            could easily be added to qsub et al.  Also added
+                            a test to test_drmaa to test all DRMAA attributes.
+                 Changed:   libdrmaa.so and common parameter parsing routines
 
-DT-2003-11-17-0: Bugfix.:		-b y in sge_request would override -b n on
-														commandline
-								 Changed:		qsub
+DT-2003-11-17-0: Bugfix.:   -b y in sge_request would override -b n on
+                            commandline
+                 Changed:		qsub
 
 AD-2003-11-17-0: Bugfix:    Revoke AD-2003-11-14-0. 
 
@@ -259,7 +261,7 @@ SG-2003-10-24-1: Bugfix:    The error message was wrong, when a resource was
 
 SG-2003-10-24-0: Enhancem.: Second part of the scheduler configuration cleanup.
                             The scheduler configuration is only accessable via
-                            access functions. The Maser list is only visiable
+                            access functions. The Master list is only visiable
                             within the sge_schedd_conf module. 
                             Qmon, and the function documentation needs to be 
                             updated.
@@ -294,7 +296,7 @@ SG-2003-10-17-1: Enhancem.: First part of the scheduler configuration cleanup.
                  Review:    JG
 
 SG-2003-10-17-0: Bugfix:    - qsub -w e killed the qmaster
-                            - qsub -w e did not acept any job.
+                            - qsub -w e did not accept any job.
                  Changed:   qmaster, schedd
                  Review:    JG
 

@@ -403,9 +403,6 @@ int japi_init_mt(dstring *diag)
    } 
 
    /* current major assumptions are
-      - if code was compiled with -SECURE then
-        either a MT safe OpenSSL libraries is used or
-        CSP security is not used
       - code is not compiled with -DCRYPTO
       - code is not compiled with -DKERBEROS
       - neither AFS nor DCE/KERBEROS security may be used */

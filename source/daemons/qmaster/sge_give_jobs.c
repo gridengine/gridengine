@@ -1006,8 +1006,18 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
       lSetUlong(jr, JR_wait_status, SGE_NEVERRAN_BIT);
       release_jr = true;   
    } else {
-     if (commit_flags & COMMIT_NEVER_RAN)
-        lSetUlong(jr, JR_wait_status, SGE_NEVERRAN_BIT);
+      /* JR_usage gets cleared in the process of cleaning up a finished job.
+       * It's contents get put into JAT_usage_list and eventually added to
+       * JAT_scaled_usage_list.  In the JAPI, however, it would be ugly to have
+       * to go picking through the Master_Job_List to find the accounting data.
+       * So instead we pick through it here and stick it back in JR_usage. */
+      lListElem *job = job_list_locate(Master_Job_List, lGetUlong (jr, JR_job_number));
+      lListElem *jatp = lGetElemUlong(lGetList(job, JB_ja_tasks), JAT_task_number, lGetUlong(jr, JR_ja_task_number));
+      lList *usage = lCopyList ("Scaled Usage List", lGetList (jatp, JAT_scaled_usage_list));
+      lXchgList (jr, JR_usage, &usage);
+      
+      if (commit_flags & COMMIT_NEVER_RAN)
+         lSetUlong(jr, JR_wait_status, SGE_NEVERRAN_BIT);
    } 
 
    if (diagnosis)

@@ -40,9 +40,9 @@ extern "C" {
 #include "basis_types.h"
    
 #define MSG_DRMAA_SWITCH_WITH_NO_CAT   _MESSAGE(45001, _("No job category could be found even though -cat was detected\n"))
-#define MSG_DRMAA_UNKNOWN_JOB_CAT   _MESSAGE(45002, _("Unknown job category\n"))
-#define MSG_DRMAA_INVALID_TIME_STRING   _MESSAGE(45003, _("invalid format for job start time\n"))
-#define MSG_DRMAA_TIME_PARSE_ERROR   _MESSAGE(45004, _("Error parsing DRMAA date string\n"))
+#define MSG_DRMAA_UNKNOWN_JOB_CAT      _MESSAGE(45002, _("Unknown job category\n"))
+#define MSG_DRMAA_INVALID_TIME_STRING  _MESSAGE(45003, _("invalid format for job start time\n"))
+#define MSG_DRMAA_TIME_PARSE_ERROR     _MESSAGE(45004, _("Error parsing DRMAA date string\n"))
 
 #ifdef	__cplusplus
 }

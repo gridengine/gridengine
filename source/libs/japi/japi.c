@@ -57,7 +57,7 @@
 #include "sge_range.h"
 #include "sge_object.h"
 #include "sge_feature.h"
-
+#include "sge_usageL.h"
 #include "msg_common.h"
 
 /* OBJ */
@@ -259,7 +259,7 @@ static int japi_synchronize_retry(bool sync_all, const char *job_ids[], bool dis
 static int japi_synchronize_all_retry(bool dispose);
 static int japi_synchronize_jobids_retry(const char *jobids[], bool dispose);
 static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid, u_long32 taskid, 
-   bool is_array_task, u_long32 *wjobidp, u_long32 *wtaskidp, bool *wis_task_arrayp, int *wait_status);
+   bool is_array_task, u_long32 *wjobidp, u_long32 *wtaskidp, bool *wis_task_arrayp, int *wait_status, lList **rusagep);
 static int japi_gdi_control_error2japi_error(lListElem *aep, dstring *diag, int drmaa_control_action);
 
 
@@ -2092,8 +2092,6 @@ static int japi_synchronize_jobids_retry(const char *job_ids[], bool dispose)
 *     signed long timeout          - timeout in seconds or 
 *                                    DRMAA_TIMEOUT_WAIT_FOREVER for infinite waiting
 *                                    DRMAA_TIMEOUT_NO_WAIT for immediate returning
-*
-*  OUTPUTS
 *     dstring *waited_job          - returns job id string presentation of waited job
 *     int *wait_status             - returns job finish information about exit status/
 *                                    signal/whatever
@@ -2182,14 +2180,17 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat, signed long ti
 
    {
       struct timespec ts;
+      lList *rusagep = NULL;
 
       if (timeout != DRMAA_TIMEOUT_WAIT_FOREVER) 
          sge_relative_timespec(timeout, &ts);
 
       JAPI_LOCK_JOB_LIST();
 
-      while ((wait_result=japi_wait_retry(Master_japi_job_list, wait4any, jobid, taskid, is_array_task, 
-         &waited_jobid, &waited_taskid, &waited_is_task_array, stat)) == JAPI_WAIT_UNFINISHED) {
+      while ((wait_result = japi_wait_retry(Master_japi_job_list, wait4any, jobid,
+                                          taskid, is_array_task, &waited_jobid,
+                                          &waited_taskid, &waited_is_task_array,
+                                          stat, &rusagep)) == JAPI_WAIT_UNFINISHED) {
 
          /* has japi_exit() been called meanwhile ? */
          JAPI_LOCK_EC_STATE();
@@ -2212,6 +2213,32 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat, signed long ti
             } 
          } else
             pthread_cond_wait(&Master_japi_job_list_finished_cv, &Master_japi_job_list_mutex);
+      }
+      
+      /* Build a drmaa_attr_values_t from the rusage list */
+      if (rusage != NULL) {
+         lList *slp = NULL;
+         lListElem *uep = NULL;
+         lListElem *sep = NULL;
+         char buffer[256];
+         
+         slp = lCreateList ("Usage List", ST_Type);
+         
+         if (*rusage == NULL) {
+            *rusage = japi_allocate_string_vector (JAPI_ITERATOR_STRINGS);
+         }
+         
+         for_each (uep, rusagep) {
+            sep = lCreateElem (ST_Type);
+            lAppendElem (slp, sep);
+            
+            sprintf (buffer, "%s=%.4f", lGetString (uep, UA_name), lGetDouble (uep, UA_value));
+            lSetString (sep, ST_name, strdup (buffer));
+         }
+         
+         (*rusage)->iterator_type = JAPI_ITERATOR_STRINGS;
+         (*rusage)->it.si.strings = slp;
+         (*rusage)->it.si.next_pos = lFirst (slp);
       }
 
       JAPI_UNLOCK_JOB_LIST();
@@ -2271,6 +2298,7 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat, signed long ti
 *     u_long32 *wis_task_arrayp - destination for taskid of waited job
 *     int *wait_status          - destination for status that is finally returned 
 *                                 by japi_wait()
+*     lList **rusagep           - desitnation for rusage info of waited job
 *
 *  RESULT
 *     static int - JAPI_WAIT_ALLFINISHED = there is nothing more to wait for
@@ -2281,9 +2309,9 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat, signed long ti
 *     MT-NOTE: japi_wait_retry() is MT safe
 *******************************************************************************/
 static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid, u_long32 taskid, bool is_array_task,
-u_long32 *wjobidp, u_long32 *wtaskidp, bool *wis_task_arrayp, int *wait_status)
+u_long32 *wjobidp, u_long32 *wtaskidp, bool *wis_task_arrayp, int *wait_status, lList **rusagep)
 {
-   lListElem *job; 
+   lListElem *job = NULL; 
    lListElem *task = NULL; 
    
    DENTER(TOP_LAYER, "japi_wait_retry");
@@ -2345,9 +2373,19 @@ u_long32 *wjobidp, u_long32 *wtaskidp, bool *wis_task_arrayp, int *wait_status)
 
    if (wait_status)
       *wait_status = lGetUlong(task, JJAT_stat);
+
+   if (rusagep != NULL) {
+      lList *usage_copy = lCopyList ("Usage List", lGetList (task, JJAT_rusage));
+      
+      if (*rusagep == NULL) {
+         *rusagep = usage_copy;
+      }
+      else {
+         lAddList (*rusagep, usage_copy);
+      }
+   }
+
 #if 0
-   if (rusagep)
-      *rusagep = lGetList(task, JJAT_rusage);
    if (diagnosis)
       *diagnosis = lGetString(task, JJAT_rusage);
 #endif
@@ -3520,6 +3558,8 @@ static void *japi_implementation_thread(void *p)
 
             case sgeE_JOB_FINISH:
                /* - move job/task to JJ_finished_jobs */
+               /* I think this will fail for SGEEE since SGEEE sends different
+                * events. */
                {
                   lListElem *japi_job, *japi_task;
                   u_long32 wait_status;
@@ -3556,8 +3596,8 @@ static void *japi_implementation_thread(void *p)
                         japi_task = lAddSubUlong(japi_job, JJAT_task_id, intkey2, JJ_finished_tasks, JJAT_Type);
                         lSetUlong(japi_task, JJAT_stat, wait_status);
                         lSetString(japi_task, JJAT_failed_text, err_str);
-/*                         lSetList(japi_task, JJAT_rusage, ) */
-
+                        lSetList(japi_task, JJAT_rusage, lCopyList ("job usage", lGetList (jr, JR_usage)));
+                        
                         /* signal all application threads waiting for a job to finish */
                         pthread_cond_broadcast(&Master_japi_job_list_finished_cv);
                      }

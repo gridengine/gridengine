@@ -223,7 +223,7 @@ enum {
 /* ------------------- Data types ------------------- */
 /* 
  * Agreed opaque DRMAA job template 
- * struct drmaa_job_template_s is defined elsewhere 
+ * struct drmaa_job_template_s is in japiP.h
  */
 typedef struct drmaa_job_template_s drmaa_job_template_t;
 

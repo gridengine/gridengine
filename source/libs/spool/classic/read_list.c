@@ -1127,7 +1127,6 @@ int read_all_configurations(lList **lpp,
             sprintf(real_fname, "%s/%s", local_config_dir, new_name);
 
             DPRINTF(("global_config_file: %s\n", fname));
-            sge_switch2admin_user();
             if ((ret=write_configuration(1, &alp, fname, el, NULL, FLG_CONF_SPOOL))) {
                /* answer list gets filled in write_configuration() */
                free(old_name);
@@ -1139,18 +1138,15 @@ int read_all_configurations(lList **lpp,
 
                if (rename(fname, real_fname) == -1) {
                   free(old_name);
-                  sge_switch2start_user();
                   DEXIT;
                   return -1;
                }
                sprintf(old_fname, "%s/%s", local_config_dir, old_name);
                if (sge_unlink(NULL, old_fname)) {
-                  sge_switch2start_user();
                   DEXIT;
                   return -1;
                }
             }
-            sge_switch2start_user();
          }
          lFreeList(alp);
          free(old_name);

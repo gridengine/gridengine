@@ -1,3 +1,8 @@
+AD-2004-01-26-5: Bugfix:    Did remove redundant 'sge_switch2admin_user()' and
+                            'sge_switch2start_user()' calls.
+                 Changed:   spool/classic
+                 Review:    JG
+
 AD-2004-01-26-4: Bugfix:    Did remove redundant 'sge_switch2admin_user()' and
                             'sge_switch2start_user()' calls.
                  Changed:   gdi

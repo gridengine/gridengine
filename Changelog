@@ -1,3 +1,8 @@
+CR-2002-07-09-1: Testsuite: merge from V53_beta2_BRANCH
+                 Enhancem.: - new check "functional/job_environment" testing
+                              job environment variables (e.g. JOB_NAME)
+                 Issue      #267
+
 CR-2002-07-09-0: Enhancem.: merges from V53_beta2_BRANCH
                             (CR-2002-07-09-0, CR-2002-07-08-0)
 

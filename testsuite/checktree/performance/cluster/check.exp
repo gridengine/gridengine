@@ -117,11 +117,11 @@ proc cluster_perf_init_level {} {
 
   "300" { 
            set nr_queues 50
-           set max_jobs  5000
-           set job_steps 10
+           set max_jobs  100
+           set job_steps 5
            set job_times "30"
-           set FLUSH_SUBMIT_SEC -1
-           set FLUSH_FINISH_SEC -1
+           set FLUSH_SUBMIT_SEC 0
+           set FLUSH_FINISH_SEC 0
            return  0 
         }
   }
@@ -467,10 +467,17 @@ proc cluster_perf_do_perform_test {} {
           
           for { set w1 [ expr ( $current_job_id + 1 ) ] } { $w1 <= [ expr ( $last_job_id ) ] } { incr w1 1 } {
              puts $CHECK_OUTPUT "waiting for job $w1 (last job is: $last_job_id)"
-             while { [file isfile $CHECK_PROTOCOL_DIR/$w1 ] != 1} {
+             set while_start_time [timestamp]
+             set stop 0
+             while { ([file isfile $CHECK_PROTOCOL_DIR/$w1 ] != 1) && (stop != 1)} {
                 puts -nonewline $CHECK_OUTPUT "."
                 flush $CHECK_OUTPUT
-                sleep 1
+                sleep 2
+                set now_time [timestamp]
+                if { $now_time - $while_start_time > 300 } {
+                    add_proc_error "cluster_perf_do_perform_test" -1 "timeout waiting for job file ${CHECK_PROTOCOL_DIR}/${w1}"
+                    set stop 1
+                }
              }
           }
           wait_for_end_of_all_jobs 300 

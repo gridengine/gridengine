@@ -1511,7 +1511,7 @@ proc setup_deadlineuser {} {
   set vi_commands "" 
   lappend vi_commands ":%s/entries.*$/entries  $CHECK_USER/\n"
 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mu deadlineusers" $vi_commands "modified*\"deadlineusers\"*" ]
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mu deadlineusers" $vi_commands "modified*\"deadlineusers\"" ]
   if { $result == -1 } { add_proc_error "setup_deadlineuser" -1 "timeout error" }
   if { $result != 0 } { add_proc_error "setup_deadlineuser" -1 "could not add deadlineuser $CHECK_USER" }
 

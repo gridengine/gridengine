@@ -85,13 +85,14 @@ set module_name "control_procedures.tcl"
 #     ???/???
 #*******************************
 proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"}} {
-   global CHECK_OUTPUT env CHECK_HOST CHECK_DEBUG_LEVEL
+   global CHECK_OUTPUT env CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
 
    set env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
    set result -100
    puts $CHECK_OUTPUT "starting \"$prog_binary $prog_args\""
 
-      set id [ eval open_spawn_process "$prog_binary" "$prog_args" ]
+#  set id [ eval open_spawn_process "$prog_binary" "$prog_args" ]
+   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args" ]
       set sp_id [ lindex $id 1 ] 
       puts $CHECK_OUTPUT "starting -> $prog_binary $prog_args"
       if {$CHECK_DEBUG_LEVEL != 0} {
@@ -100,24 +101,12 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          set send_line_speed 1
       } else {
          log_user 0 
-         set send_speed .001
-         set send_line_speed .05
+         set send_speed .0001
+         set send_line_speed .0001
       }
 
       set stop_line_wait 0
       set timeout 60
-      expect {
-         -i $sp_id full_buffer {
-            add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-         }
-         -i $sp_id "*" {
-            debug_puts $CHECK_OUTPUT "vi startup ..."
-         }
-         -i $sp_id default {
-            add_proc_error "handle_vi_edit" -1 "vi startup timeout"
-         }
-      }
-
 
       set start_time [ timestamp ] 
       send -i $sp_id ""
@@ -151,48 +140,12 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          set com_length [ string length $elem ]
          set com_sent 0
          expect -i $sp_id
-         send -s -i $sp_id -- "$elem"
+         if { $CHECK_DEBUG_LEVEL != 0 } {
+            send -s -i $sp_id -- "$elem"
+         } else {
+            send -i $sp_id -- "$elem"
+         }
          expect -i $sp_id
-
-        
-#         puts $CHECK_OUTPUT "elem: $elem\n"
-#         while { $com_sent < $com_length } {
-#            set send_slow "1 $send_speed" 
-#            set send_string [string index $elem $com_sent]
-#            incr com_sent 1
-#            set last_char 0
-#
-#            if { $com_sent < $com_length } { 
-#              append send_string [string index $elem $com_sent] 
-#               incr com_sent 1
-#               if { $com_sent == $com_length } {
-#                  set send_slow "1 $send_line_speed" 
-#                  set last_char 1
-#               }
-#
-#            }
-#            if { $com_sent == $com_length } {
-#                set send_slow "1 $send_line_speed"
-#                set last_char 1
-#            }
-##            puts -nonewline $CHECK_OUTPUT "$send_string"
-#
-#            send -s -i $sp_id -- "$send_string"
-#
-##            puts -nonewline $CHECK_OUTPUT ":"
-#
-#            set timeout 0
-#
-#            expect -i $sp_id
-#            
-##            puts -nonewline $CHECK_OUTPUT ":"
-#
-#            if {$CHECK_DEBUG_LEVEL == 2} {
-#               if { $last_char == 1 } {
-#                  gets stdin user_input
-#               }
-#            }
-#         }
       }
 
       # wait 1 second for new file date!!! 
@@ -220,6 +173,10 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                   set doStop 1
                   set result 0
                }
+               -i $sp_id "_exit_status_" {
+                  set doStop 1
+                  set result 0
+               }
            }
         }
       } else {
@@ -244,6 +201,9 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                   add_proc_error "handle_vi_edit" -1 "timeout error"
                }
                -i $sp_id eof {
+                  set doStop 1
+               }
+               -i $sp_id "_exit_status_" {
                   set doStop 1
                }
            }

@@ -1,3 +1,9 @@
+CR-2001-12-17-0: Testsuite: - handle_vi_edit procedure now uses now 
+                              open_remote_spawn_id procedure
+                            - bugfix in setup_queues / install_core_system check
+                            - bugfix in performance/cluster/check.exp (hanging 
+                              testsuite)
+
 JG-2001-12-17-2: Bugfix:    Bugfix for JG-2001-12-17-0 handling "none" as
                             starter_method.
 

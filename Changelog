@@ -1,3 +1,6 @@
+DT-2004-02-18-2: Bugfix:    Fixed JGrid Howto mistakes.
+                 Changed:   JGrid Howto
+
 SG-2004-02-18-2: Bugfix:    - the qmaster did not terminate, when no event
                               client was registered.
                             - the qmaster shutdown event is delivered to 

@@ -1,3 +1,5 @@
+CR-2003-03-19-1  Testsuite: new test for communication (commd) performance
+
 CR-2003-03-19-0  Testsuite: Enhanced create_html_table() to support not
                             set table entries
 

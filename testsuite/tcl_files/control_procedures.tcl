@@ -120,7 +120,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
 
 
       set start_time [ timestamp ] 
-
+      send -i $sp_id ""
       set timeout 1
       while { $stop_line_wait == 0 } {
          expect {

@@ -1,3 +1,7 @@
+CR-2001-11-22-0: Testsuite:
+                    - rework on auto_reschedule test
+                    - faster handle_vi_edit procedure
+
 AH-2001-11-21-1: Added NO_REPRIORIZATION setting in qmaster_params to allow 
                  for diabling the PTF module. Without this setting the 
                  'priority' parameter in queue_conf(5) has no effect in a 

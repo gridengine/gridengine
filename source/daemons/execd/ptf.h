@@ -114,21 +114,48 @@ typedef gid_t addgrpid_t;
 
 #ifdef PTF_NICE_BASED
 #  if defined(IRIX64)
-#    define PTF_MIN_PRIORITY (TS_PrIO_MIN)
-#    define PTF_MAX_PRIORITY (TS_PRIO_MAX)
+#    define ENFORCE_PRI_RANGE     1
+#    define PTF_MIN_PRIORITY      (TS_PRIO_MIN)
+#    define PTF_MAX_PRIORITY      (TS_PRIO_MAX)
+#    define PTF_OS_MIN_PRIORITY   (TS_PRIO_MIN)
+#    define PTF_OS_MAX_PRIORITY   (TS_PRIO_MAX)
 #    define PTF_BACKGROUND_NICE_VALUE 20
+#  elif defined(IRIX6)
+#    define ENFORCE_PRI_RANGE     1
+#    define PTF_MIN_PRIORITY      39
+#    define PTF_MAX_PRIORITY      1
+#    define PTF_OS_MIN_PRIORITY   40
+#    define PTF_OS_MAX_PRIORITY   0
 #  elif defined(SOLARIS)
-#    define PTF_MIN_PRIORITY 20
-#    define PTF_MAX_PRIORITY -10
+#    define ENFORCE_PRI_RANGE     1
+#    define PTF_MIN_PRIORITY      20
+#    define PTF_MAX_PRIORITY     -10
+#    define PTF_OS_MIN_PRIORITY   20
+#    define PTF_OS_MAX_PRIORITY  -20
 #  elif defined(ALPHA)
-#    define PTF_MIN_PRIORITY 20
-#    define PTF_MAX_PRIORITY -10
+#    define ENFORCE_PRI_RANGE     1
+#    define PTF_MIN_PRIORITY      20
+#    define PTF_MAX_PRIORITY     -10
+#    define PTF_OS_MIN_PRIORITY   20
+#    define PTF_OS_MAX_PRIORITY  -20
 #  elif defined(LINUX)
-#    define PTF_MIN_PRIORITY 20
-#    define PTF_MAX_PRIORITY -10
-#  else
-#    define PTF_MIN_PRIORITY 39
-#    define PTF_MAX_PRIORITY 1
+#    define ENFORCE_PRI_RANGE     1
+#    define PTF_MIN_PRIORITY      20
+#    define PTF_MAX_PRIORITY     -10
+#    define PTF_OS_MIN_PRIORITY   20
+#    define PTF_OS_MAX_PRIORITY  -20
+#  elif defined(CRAY)
+#    define ENFORCE_PRI_RANGE     1
+#    define PTF_MIN_PRIORITY      39
+#    define PTF_MAX_PRIORITY      1
+#    define PTF_OS_MIN_PRIORITY   39
+#    define PTF_OS_MAX_PRIORITY  -20
+#  elif defined(NECSX4) || defined(NECSX5)
+#    define ENFORCE_PRI_RANGE     0
+#    define PTF_MIN_PRIORITY      39
+#    define PTF_MAX_PRIORITY      1
+#    define PTF_OS_MIN_PRIORITY   0
+#    define PTF_OS_MAX_PRIORITY   0
 #  endif
 #  define PTF_BACKGROUND_JOB_PROPORTION 0.015
 #  define PTF_BACKGROUND_JOB_PRIORITY NDPLOMAX

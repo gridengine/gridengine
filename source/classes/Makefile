@@ -36,69 +36,146 @@
 CLASSES_DIR   = $(SDIR)/classes
 SRC_DIR       = $(CLASSES_DIR)/src
 
-JDRMAA_JAVA   = AuthorizationException.java \
-                ConflictingAttributeValuesException.java \
-                DRMAAException.java DRMAASession.java \
-                DRMAASessionFactory.java DRMCommunicationException.java \
-                DRMSExitException.java DRMSInitException.java \
-                DefaultContactStringException.java \
-                DeniedByDRMException.java ExitTimeoutException.java \
-                InconsistentStateException.java InternalException.java \
-                InvalidArgumentException.java InvalidAttributeException.java \
-                InvalidAttributeFormatException.java \
-                InvalidAttributeValueException.java \
-                InvalidContactStringException.java InvalidJobException.java \
-                JobInfo.java JobTemplate.java NoActiveSessionException.java \
-                NoResourceUsageDataException.java \
-                SessionAlreadyActiveException.java SessionException.java \
-                TryLaterException.java UnsupportedAttributeException.java \
-                SGEJobInfo.java SGEJobTemplate.java SGESession.java \
-                SGESessionFactory.java
+DRMAAJ_JAVA   = $(CLASSES_DIR)/com/sun/grid/drmaa/JobInfoImpl.java \
+                $(CLASSES_DIR)/com/sun/grid/drmaa/JobTemplateImpl.java \
+                $(CLASSES_DIR)/com/sun/grid/drmaa/SessionFactoryImpl.java \
+                $(CLASSES_DIR)/com/sun/grid/drmaa/SessionImpl.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/AlreadyActiveSessionException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/AuthorizationException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/DefaultContactStringException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/ConflictingAttributeValuesException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/DrmaaException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/DeniedByDrmException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/DrmCommunicationException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/DrmaaRuntimeException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/DrmsExitException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/DrmsInitException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/ExitTimeoutException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/FileTransferMode.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/HoldInconsistentStateException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/InconsistentStateException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/InternalException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/InvalidArgumentException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/InvalidAttributeException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/InvalidAttributeFormatException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/InvalidAttributeValueException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/InvalidContactStringException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/InvalidJobException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/InvalidJobTemplateException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/JobInfo.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/JobTemplate.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/NoActiveSessionException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/NoDefaultContactStringException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/NoResourceUsageException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/PartialTimestamp.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/PartialTimestampFormat.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/ReleaseInconsistentStateException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/ResumeInconsistentStateException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/Session.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/SessionException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/SessionFactory.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/SuspendInconsistentStateException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/TryLaterException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/UnsupportedAttributeException.java \
+                $(CLASSES_DIR)/org/ggf/drmaa/Version.java
 
-JDRMAA_CLASS  = $(JDRMAA_JAVA:.java=.class)
+DRMAAJ_CLASS  = $(DRMAAJ_JAVA:.java=.class)
 
-JDRMAALIB      = libjdrmaa$(SHAREDEXT)
-JDRMAALIB_SRC  = com_sun_grid_drmaa_SessionImpl.c
-JDRMAALIB_OBJS = $(JDRMAALIB_SRC:.c=.o)
+DRMAAJ_TEST_JAVA = $(CLASSES_DIR)/com/sun/grid/drmaa/DrmaaSuite.java \
+                   $(CLASSES_DIR)/com/sun/grid/drmaa/JobInfoImplTest.java \
+                   $(CLASSES_DIR)/com/sun/grid/drmaa/JobTemplateImplTest.java \
+                   $(CLASSES_DIR)/com/sun/grid/drmaa/SessionFactoryImplTest.java \
+                   $(CLASSES_DIR)/com/sun/grid/drmaa/SessionImplJobTest.java \
+                   $(CLASSES_DIR)/com/sun/grid/drmaa/SessionImplTest.java \
+                   $(CLASSES_DIR)/org/ggf/drmaa/DrmaaSuite.java \
+                   $(CLASSES_DIR)/org/ggf/drmaa/FileTransferModeTest.java \
+                   $(CLASSES_DIR)/org/ggf/drmaa/JobInfoTest.java \
+                   $(CLASSES_DIR)/org/ggf/drmaa/JobTemplateTest.java \
+                   $(CLASSES_DIR)/org/ggf/drmaa/PartialTimestampFormatTest.java \
+                   $(CLASSES_DIR)/org/ggf/drmaa/PartialTimestampTest.java \
+                   $(CLASSES_DIR)/org/ggf/drmaa/SessionFactoryTest.java \
+                   $(CLASSES_DIR)/org/ggf/drmaa/VersionTest.java \
+                   $(CLASSES_DIR)/DrmaaSuite.java \
+                   $(CLASSES_DIR)/TestDrmaa.java
+
+DRMAAJ_TEST_CLASS  = $(DRMAAJ_TEST_JAVA:.java=.class)
+
+DRMAAJ_EXAMPLES_JAVA = $(CLASSES_DIR)/com/sun/grid/drmaa/howto/Howto1.java \
+                       $(CLASSES_DIR)/com/sun/grid/drmaa/howto/Howto2.java \
+                       $(CLASSES_DIR)/com/sun/grid/drmaa/howto/Howto2_1.java \
+                       $(CLASSES_DIR)/com/sun/grid/drmaa/howto/Howto3.java \
+                       $(CLASSES_DIR)/com/sun/grid/drmaa/howto/Howto3_1.java \
+                       $(CLASSES_DIR)/com/sun/grid/drmaa/howto/Howto3_2.java \
+                       $(CLASSES_DIR)/com/sun/grid/drmaa/howto/Howto4.java \
+                       $(CLASSES_DIR)/com/sun/grid/drmaa/howto/Howto5.java \
+                       $(CLASSES_DIR)/com/sun/grid/drmaa/howto/Howto6.java \
+                       $(CLASSES_DIR)/DrmaaExample.java
+
+DRMAAJ_EXAMPLES_CLASS  = $(DRMAAJ_EXAMPLES_JAVA:.java=.class)
+
+DRMAAJLIB      = libjdrmaa$(SHAREDEXT)
+DRMAAJLIB_SRC  = com_sun_grid_drmaa_SessionImpl.c
+DRMAAJLIB_OBJS = $(DRMAAJLIB_SRC:.c=.o)
 
 ###############################################################################
 # global rules: all, clean
 ###############################################################################
-classes_all: jdrmaa
+classes_all: drmaaj
 
-classes_clean: jdrmaa_clean
+classes_clean: drmaaj_clean
 
-jdrmaa_clean: jdrmaa_meta_clean
-	$(RM) $(JDRMAALIB_OBJS) $(JDRMAALIB)
+drmaaj_clean: drmaaj_meta_clean
+	$(RM) $(DRMAAJLIB_OBJS) $(DRMAAJLIB)
 	$(RM) -Rf org/ggf/drmaa com/sun/grid/drmaa
 
-jdrmaa_jar_clean:
+drmaaj_jar_clean:
 	@$(RM) drmaa.jar
 
-jdrmaa_meta_clean:
+drmaaj_meta_clean:
 	@$(RM) -Rf META-INF
+
+drmaaj_doc_clean:
+	@$(RM) ../../doc/javadocs/org/ggf/drmaa/*.html
+	@$(RM) ../../doc/javadocs/com/sun/ggf/drmaa/*.html
+	@$(RM) ../../doc/javadocs/resources/*.gif
+	@$(RM) ../../doc/javadocs/*.html
 
 ###############################################################################
 # rules to build DRMAA Java binding
 ###############################################################################
-jdrmaa: jdrmaa_jar jdrmaa_lib
+drmaaj: drmaaj_jar drmaaj_lib drmaaj_test
 
-jdrmaa_jar: jdrmaa_jar_clean jdrmaa_classes jdrmaa_meta
-	$(JAVA_HOME)/$(JAVA_BINDIR)/jar cvf drmaa.jar org/ggf/drmaa/*.class com/sun/grid/drmaa/*.class DrmaaSuite.class META-INF
+drmaaj_jar: drmaaj_jar_clean drmaaj_classes drmaaj_meta
+	$(JAVA_HOME)/$(JAVA_BINDIR)/jar cvf drmaa.jar $(DRMAAJ_CLASS) META-INF
 
-jdrmaa_classes:
-	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath .:../classes/junit.jar -d . $(CLASSES_DIR)/org/ggf/drmaa/*.java $(CLASSES_DIR)/com/sun/grid/drmaa/*.java $(CLASSES_DIR)/DrmaaSuite.java
+drmaaj_test: drmaaj_jar_clean drmaaj_classes drmaaj_test_classes drmaaj_meta
+	$(JAVA_HOME)/$(JAVA_BINDIR)/jar cvf drmaa.jar $(DRMAAJ_CLASS) $(DRMAAJ_TEST_CLASS) META-INF
 
-jdrmaa_meta: jdrmaa_meta_clean
+drmaaj_all_classes: drmaaj_classes drmaaj_test_classes drmaaj_example_classes
+
+drmaaj_classes:
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath .:../classes/junit.jar -d . $(DRMAAJ_JAVA)
+
+drmaaj_test_classes:
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath .:../classes/junit.jar -d . $(DRMAAJ_TEST_JAVA)
+
+drmaaj_example_classes:
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath .:../classes/junit.jar -d . $(DRMAAJ_EXAMPLES_JAVA)
+
+drmaaj_meta: drmaaj_meta_clean
 	@mkdir META-INF
 	@mkdir META-INF/services
 	@echo com.sun.grid.drmaa.SessionFactoryImpl > META-INF/services/org.ggf.drmaa.SessionFactory
 
+drmaaj_doc: drmaaj_classes drmaaj_doc_clean
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javadoc -sourcepath $(CLASSES_DIR) -classpath . -d ../../doc/javadocs -version -overview $(CLASSES_DIR)/overview.html $(DRMAAJ_JAVA)
+
+
 ###############################################################################
 # rules to build library
 ###############################################################################
-jdrmaa_lib: $(JDRMAALIB_OBJS) drmaalib
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libjdrmaa$(JAVA_SHAREDEXT) $(JDRMAALIB_OBJS) -ldrmaa -lc $(DLLIB)
+drmaaj_lib: $(DRMAAJLIB_OBJS) drmaalib
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libjdrmaa$(JAVA_SHAREDEXT) $(DRMAAJLIB_OBJS) -ldrmaa -lc $(DLLIB)
 
 ###############################################################################
 # rules to build object codes
@@ -204,8 +281,8 @@ SGESessionFactory.class: $(CLASSES_DIR)/com/sun/grid/drmaa/SGESessionFactory.jav
 
 #------------------------------------------------------------------------------
 
-test_jdrmaa: $(CLASSES_DIR)/TestDRMAA.java
-	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/TestDRMAA.java
+test_drmaaj: $(CLASSES_DIR)/TestDRMAA.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/TestDrmaa.java
 
-jdrmaa_example: $(CLASSES_DIR)/DRMAAExample.java
-	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/DRMAAExample.java
+drmaaj_example: $(CLASSES_DIR)/DRMAAExample.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/DrmaaExample.java

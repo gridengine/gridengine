@@ -1815,7 +1815,7 @@ sge_eventclient_subscribed(const lListElem *event_client, ev_event event,
 *******************************************************************************/
 static int purge_event_list(lList* aList, ev_event anEvent) 
 {
-   int purged, pos = 0;
+   int purged = 0, pos = 0;
    lListElem *ev = NULL;
 
    DENTER(TOP_LAYER, "purge_event_list");

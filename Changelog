@@ -1,3 +1,5 @@
+EB-2002-05-08-0: Bugfix:    Fix of EB-2002-05-04-0
+
 CR-2002-05-06-0: Testsuite: Fixed testsuite dependencies
 
 AH-2002-05-06-1: Bugfix:    Fix typo in simple.sh job example
@@ -22,6 +24,7 @@ JG-2002-05-03-0: Bugfix:    Fixed messed up JB_Type from JG-2002-04-29-0.
 
 EB-2002-04-29-1: Bugfix:    schedd bugs reported by Patrik Koch 
                             on dev mailing list (Mon, 15 Apr 2002)
+                            - Memory leak in scheduler
                  Issues:    #243
                  Bugtraq:   #4676340
 

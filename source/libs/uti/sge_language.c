@@ -236,8 +236,22 @@ int sge_init_languagefunc(char *package, char *localeDir)
         char* help1 = NULL;
         help1 = sge_language_functions.setlocale_func(LC_MESSAGES, "");
         if (help1 != NULL) {
+           char* slash_pos = NULL;
            DPRINTF(("setlocale() returns \"%s\"\n",help1)); 
-           language = strdup(help1);
+           slash_pos = strstr(help1,"_");
+           if (slash_pos != NULL) {
+              char* tmp_lang = NULL;
+              DPRINTF(("cutting of language string after \"_\":\n"));
+              tmp_lang = strdup(help1);
+              slash_pos = strstr(tmp_lang,"_");
+              *slash_pos = 0;  /* cut off "_" */
+              language = strdup(tmp_lang);
+
+              free(tmp_lang);
+
+           } else {
+              language = strdup(help1);
+           }
         } else {
            DPRINTF(("setlocale() returns NULL"));   
            language = strdup(language_var);

@@ -1,10 +1,14 @@
+AS-2003-07-10-0: CVS        Created V53p4_TAG --> SGE 5.3p4
+------------------------------------------------------------
+
 CR-2003-07-10-1: Bugfix:    Fixed broken build
 
 CR-2003-07-10-0: Bugfix:    Fixed broken build
 
-SG-2003-07-09-0: enhancem.  additional profiling information about a scheduler run
-                            Some profiling code was added to get a better picture
-                            of the bottle necks within a scheduler run. 
+SG-2003-07-09-0: enhancem.  additional profiling information about a
+                            scheduler run Some profiling code was added to
+                            get a better picture of the bottle necks within
+                            a scheduler run.
                  Review:    AS
                  Changed:   sge_schedd
 
@@ -68,7 +72,7 @@ AH-2003-06-21-0: Bugfix:    Fixed bug "sge_schedd dies...".
                  Review:    EB
                  Changed:   sge_shepherd
 
-AS-2003-02-17-0: CVS        Created V53prep4_TAG --> SGE 5.3prep4
+AS-2003-06-17-0: CVS        Created V53prep4_TAG --> SGE 5.3prep4
 -----------------------------------------------------------------
 
 AS-2003-06-17-2: Bugfix:    Fix for JG-2003-06-10-0 which broke "qstat -F"

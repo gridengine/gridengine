@@ -1,3 +1,7 @@
+JG-2001-12-19-1: Bugfix:    Limits were not correctly set on hp10 platform -
+                            nonetheless most limits will have no effect due to
+                            limitations of the hp10 platform.
+
 JG-2001-12-19-0: Bugfix:    Limits did not work on glinux platform
 
 JG-2001-12-18-1: Testsuite: - Fixed qsub check_submit - now it submits jobs from

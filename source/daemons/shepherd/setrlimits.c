@@ -219,7 +219,6 @@ int trace_rlimit
    /* and clicks/disk block. */
 
 #elif !defined(HPUX)
-
    rlp.rlim_cur = s_cpu;
    rlp.rlim_max = h_cpu;
    pushlimit(RLIMIT_CPU, &rlp, trace_rlimit);
@@ -407,7 +406,7 @@ int trace_rlimit
 
 #if defined(LINUX) || ( defined(SOLARIS) && !defined(SOLARIS64) ) || defined(NECSX4) || defined(NECSX5)
 #  define limit_fmt "%ld"
-#elif defined(IRIX6) || defined(HP11)
+#elif defined(IRIX6) || defined(HP11) || defined(HP10)
 #  define limit_fmt "%lld"
 #elif defined(ALPHA) || defined(SOLARIS64)
 #  define limit_fmt "%lu"

@@ -17,6 +17,7 @@ EB-2004-03-16-0: Bugfix:    mail bomb upon abort with tightly int. par. job
 
 SG-2004-03-12-2: Bugfix:    execd died, when a load sensor was restarted.
                  Issue:     835
+                 bugtraq:   5019497
                  Changed:   execd
                  Review:    AS
 
@@ -25,6 +26,7 @@ SG-2004-03-10-0: Bugfix:    scheduler crashed during functional ticket
                  Changed:   scheduler
                  Review:    CR
                  Issue:     820
+                 bugtraq:   5019584
 
 RC-2004-03-06-1: Bugfix:    nice values should not be less than zero on Linux,
                             merging the fix from maintrunk to 5.3
@@ -53,6 +55,7 @@ SG-2004-02-25-1: Bugfix:    fixed the time bases for YY specification. It
                             referes to to the range of 1970 till 2069.
                  Chaged:    qacct, qsub, qalter,...
                  Issue:     709
+                 bugtraq:   5019595
 
 BD-2004-02-24-2: Bugfix:    If we're going to hardcode a path to tcsh
                             in qtcsh, we should use the system tcsh in
@@ -86,6 +89,7 @@ SG-2004-01-30-0: Bugfix:    The reported vmem for a job from the exec host got
                             never smaller.
                  Changed:   execd
                  Issue:     635
+                 bugtraq:   5019601
                  Review:    AH
 
 JG-2004-01-29-0: Bugfix:    If a loadsensor did output to stderr, the loadsensor
@@ -113,6 +117,7 @@ SG-2004-01-22-0: Bugfix:    a user cannot be renamed anymore. This did not work
                             instead of deleting the user.
                  Changed:   qconf
                  Issue:     646
+                 bugtraq:   5020131
 
 RC-2004-01-22-0: Enhancem:  recognize Linux 2.6 as glinux
                  Changed:   dist/util/arch
@@ -120,6 +125,7 @@ RC-2004-01-22-0: Enhancem:  recognize Linux 2.6 as glinux
 SG-2004-01-21-1: Bugfix:    qhost -F -h Name did not display global consumables
                  Changed:   qhost
                  Issue:     607
+                 bugtrag:   5020134
 
 RC-2004-01-14-0: Bugfix:    support the NEC/CRAY SX-6 'ARCH=sx'
 
@@ -147,6 +153,7 @@ SG-2003-12-18-0: Bugfix:    qdel XXXX.YY- deleted the first task in an
                             now.
                  Changed:   qdel
                  Review:    AS
+                 bugtraq:   5020143
 
 SG-2003-12-17-0: Bugfix:    The fix ensures, that a job task is not used
                             with the -hold_jid flag together and that in
@@ -162,11 +169,13 @@ SG-2003-12-10-0: Bugfix:    qsh and qlogin allowed -hold_jid even so it was
                             and -h option for qsh and qlogin. Updated the
                             man pages to reflect the changes.
                  Changed:   submit.1, qsh, qlogin   
+                 bugtraq:   5020141
 
 SG-2003-12-08-0: Bugfix:    Storing a job template in qmon set -hold_jid to
                             the wrong value (always 0)
                  Review:    AA
                  Changed:   qmon
+                 bugtraq:   5020139
 
 AS-2003-11-29-0: CVS        Created V53p5_TAG (linkage with OpenSSL 0.9.7c)
 ---------------------------------------------------------------------------

@@ -1256,7 +1256,7 @@ case SOLARIS86:
       set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
       set CXXFLAGS = "-D_LARGEFILE64_SOURCE=1 $CXXFLAGS"
       set SOL64BITFLAG = ""
-      if ( $CC == cc -o $CC == insure ) then
+      if ( $CC == cc || $CC == insure ) then
          set MEMCFLAG=-Xa
       endif
    endif

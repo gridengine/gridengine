@@ -517,7 +517,9 @@ char *sge_file2string(const char *fname, int *len)
       DEXIT;
       return NULL;
    }
- 
+
+   str[0] = '\0';
+
    /*
    ** With fread(..., size, 1, ...),
    ** Windows cannot read <size> bytes here, because in
@@ -528,30 +530,31 @@ char *sge_file2string(const char *fname, int *len)
    ** Correctly, fread returns 0, because 0 elements of
    ** size <size> were read.
    */
+   if (size > 0) {
 #ifdef WIN32 /* fread call and evaluation of return value is different */
-   i = fread(str, 1, size, fp);
-   if (i == 0) {
-      free(str);
-      fclose(fp);
-      DEXIT;
-      return NULL;
-   }
-   str[i] = '\0';    /* delimit this string */   
-   if (len) {
-      *len = i;
-   }
+      i = fread(str, 1, size, fp);
+      if (i == 0) {
+         free(str);
+         fclose(fp);
+         DEXIT;
+         return NULL;
+      }
+      str[i] = '\0';    /* delimit this string */   
+      if (len) {
+         *len = i;
+      }
 #else
-   i = fread(str, size, 1, fp);
-   if (i != 1) {
-      ERROR((SGE_EVENT, MSG_FILE_FREADFAILED_SS, fname, strerror(errno)));
-      free(str);
-      fclose(fp);
-      DEXIT;
-      return NULL;
-   }
-   str[size] = '\0';    /* delimit this string */
+      i = fread(str, size, 1, fp);
+      if (i != 1) {
+         ERROR((SGE_EVENT, MSG_FILE_FREADFAILED_SS, fname, strerror(errno)));
+         free(str);
+         fclose(fp);
+         DEXIT;
+         return NULL;
+      }
+      str[size] = '\0';    /* delimit this string */
 #endif
- 
+   } 
  
    fclose(fp);
    DEXIT;

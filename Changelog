@@ -1,3 +1,7 @@
+JG-2003-01-22-2  Bugfix:    Empty sge_request file caused submission error.
+                 IZ:        #393
+                 Bugtraq:   #4760981
+
 JG-2003-01-22-1  Bugfix:    qsub -C "" (do not parse special comments in script 
                             file) did not work.
                  IZ:        #449

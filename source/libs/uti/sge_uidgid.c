@@ -158,7 +158,14 @@ int sge_is_start_user_superuser(void)
    DENTER(UIDGID_LAYER, "sge_is_real_user_superuser");
 
 #if defined(INTERIX) || defined(WIN32)
-   ret = wl_is_start_user_superuser(); 
+   {
+      char  user_name[128];
+      uid_t uid = getuid();
+
+      if(!sge_uid2user(uid, user_name, sizeof(user_name)-1, MAX_NIS_RETRIES)) {
+         ret = wl_is_start_user_superuser(user_name); 
+      }
+   }
 #else
    if (getuid() == 0)
      ret = 1;

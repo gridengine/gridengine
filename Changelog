@@ -1,5 +1,9 @@
-HP-2004-08-26-0: Enhancem.: Changed build output path and binary path for
+HP-2004-10-13-0: Bugfix:    Checked in wrong sources yesterday
+                 Changed:   sge_uidgid, windows library
+
+HP-2004-10-12-0: Enhancem.: Changed build output path and binary path for
                             Windows version, added 'Administrator' detection.
+                 Changed:   sge_uidgid, windows library
 
 JG-2004-10-12-0: Bugfix:    Fixed broken build on AIX.
 

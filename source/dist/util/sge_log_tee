@@ -1,4 +1,4 @@
-#!/usr/bin/csh
+#!/bin/csh
 # Do not remove or modify this comment \
 exec tclsh "$0" "$1"
 

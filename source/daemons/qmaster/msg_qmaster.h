@@ -695,7 +695,7 @@
 #define MSG_JOB_DIEDTHROUGHSIG_SSUUS   _MESSAGE(33580, _("task "SFN" at "SFN" of job "U32CFormat"."U32CFormat" died through signal "SFN"\n"))
 #define MSG_JOB_TASKFAILED_SSUUU       _MESSAGE(33581, _("task "SFN" at "SFN" of job "U32CFormat"."U32CFormat" failed "U32CFormat"\n"))
 #define MSG_JOB_TASKFINISHED_SSUU      _MESSAGE(33582, _("task "SFN" at "SFN" of job "U32CFormat"."U32CFormat" finished\n"))
-#define MSG_JOB_JOBTASKFAILED_SU       _MESSAGE(33583, _("task "SFN" of job "U32CFormat" failed - killing job\n"))
+#define MSG_JOB_JOBTASKFAILED_S       _MESSAGE(33583, _("tightly integrated parallel task "SFN" failed - killing job\n"))
 #define MSG_OBJ_NOTRUNNING             _MESSAGE(33584, _("<not running>"))
 #define MSG_EXECD_UNKNOWNJ_SUUSUS      _MESSAGE(33585, _("execd "SFN" reports unknown job ("U32CFormat"."U32CFormat"/"SFN") with unknown state "U32CFormat" in queue "SFQ))
 
@@ -778,5 +778,6 @@
 #define MSG_UME_NONAMECHANGE     _MESSAGE(33683, _("unable to change user mapping name\n"))
 
 
+#define MSG_JOB_MASTERTASKFAILED_S       _MESSAGE(33684, _("master task of job "SFN" failed - killing job\n"))
 #endif /* __MSG_QMASTER_H */
 

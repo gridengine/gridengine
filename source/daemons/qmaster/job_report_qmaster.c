@@ -463,6 +463,18 @@ sge_pack_buffer *pb
                         jobid, jataskid, (status==JTRANSFERING)?"transfering":"running"));
 
                      sge_job_exit(jr, jep, jatep);
+                  } else {
+                     u_long32 failed = lGetUlong(jr, JR_failed);
+
+                     if (failed == SSTATE_FAILURE_AFTER_JOB && 
+                           !lGetString(jep, JB_checkpoint_name)) {
+                        u_long32 state  = lGetUlong(jatep, JAT_state);
+                        if (!(state & JDELETED)) {
+                           job_mark_job_as_deleted(jep, jatep);
+                           ERROR((SGE_EVENT, MSG_JOB_MASTERTASKFAILED_S, 
+                                  job_get_id_string(jobid, jataskid, NULL)));
+                        }
+                     }
                   }
                   break;
                case JFINISHED:
@@ -588,15 +600,18 @@ sge_pack_buffer *pb
                         }
                         if (failed == SSTATE_FAILURE_AFTER_JOB && 
                               !lGetString(jep, JB_checkpoint_name)) {
+                           u_long32 state  = lGetUlong(jatep, JAT_state);
+#if 0 /* JG: do not send an abort mail for each parallel task */
                            job_ja_task_send_abort_mail(jep, jatep,
                                                        uti_state_get_user_name(),
                                                        uti_state_get_qualified_hostname(),
                                                        lGetString(jr, JR_err_str)); 
-                           get_rid_of_job_due_to_report(jep, jatep, NULL,
-                                                        pb, rhost, commproc);
-                           pack_job_kill(pb, jobid, jataskid);
-                           ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_SU, 
-                                  pe_task_id_str, u32c(jobid)));
+#endif
+                           if (!(state & JDELETED)) {
+                              job_mark_job_as_deleted(jep, jatep);
+                              ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_S, 
+                                     job_get_id_string(jobid, jataskid, pe_task_id_str)));
+                           }
                         }
                      }
                   }

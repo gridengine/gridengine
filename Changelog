@@ -1,4 +1,11 @@
-JG-2003-07-02-0: Bugfix:    NSLOTS and NHOSTS incorrectly set in environment
+JG-2003-07-09-2: Bugfix:    failure of master task of a tightly integrated
+                            parallel job did not delete the job.
+                 Bugtraq:   4885930
+                 Issue:     579
+                 Review:    EB
+                 Changed:   sge_qmaster
+
+JG-2003-07-09-1: Bugfix:    NSLOTS and NHOSTS incorrectly set in environment
                             of tightly integrated tasks
                  Bugtraq:   4885906
                  Issue:     578

@@ -1380,35 +1380,6 @@ void job_ja_task_send_abort_mail(const lListElem *job,
    }
 }
 
-void get_rid_of_job_due_to_report(lListElem *j,
-                                  lListElem *t,
-                                  lList **answer_list,
-                                  sge_pack_buffer *pb,
-                                  char *pb_host,
-                                  char *commproc)
-{
-   u_long32 job_number, task_number;
-   lListElem *qep = NULL;
-
-   DENTER(TOP_LAYER, "get_rid_of_job_due_to_report");
-
-   job_number = lGetUlong(j, JB_job_number);
-   task_number = lGetUlong(t, JAT_task_number);
-   qep = queue_list_locate(Master_Queue_List, lGetString(t, JAT_master_queue));
-   if (!qep) {
-      ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDQOFJOB_S,
-             lGetString(t, JAT_master_queue)));
-      answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 
-                      ANSWER_QUALITY_ERROR);
-   }
-
-   if (pb && !sge_hostcmp(pb_host, lGetHost(qep, QU_qhostname))) {
-      pack_job_kill(pb, job_number, task_number);
-   }
-   job_mark_job_as_deleted(j, t);
-   DEXIT;
-}
-
 void get_rid_of_job_due_to_qdel(lListElem *j,
                                 lListElem *t,
                                 lList **answer_list,

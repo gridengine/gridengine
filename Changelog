@@ -1,3 +1,6 @@
+AH-2003-08-18-0: Enhancem.  Update on tight integration with Sun HPC
+                            ClusterTools 5
+
 AH-2003-08-01-0: Enhancem.  Added integration package for tight integration
                             with Sun HPC ClusterTools 5
                             Enhanced distinst to install tight integration

@@ -1,6 +1,6 @@
-pe_name           <hpc>
-queue_list        <list_of_queues_to_run_MPI_processes>
-slots             <number_of_cpus_available>
+pe_name           cre
+queue_list        <sge-queue1> <sge_queue2> ...
+slots             <sum of CPU's available in all queues of queue_list>
 user_lists        NONE
 xuser_lists       NONE
 start_proc_args   /bin/true

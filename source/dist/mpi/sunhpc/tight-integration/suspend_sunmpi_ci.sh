@@ -33,18 +33,36 @@
 #
 # Suspend an MPI job when its parent batch job is suspended
 #
+
+# Create a log file for tracing/debugging purposes.
+#
+tmpdir=$TMPDIR/suspend_sunmpi_ci.$1
+mkdir -p $tmpdir
+cd $tmpdir
+
+# create log file
+#
+F=$tmpdir/suspend_sunmpi_ci.log
+touch $F
+
 # Pass SGE $job_pid & $job_id.
 me=`basename $0`
 if [ $# -ne 2 ]; then
-   echo "$me: got wrong number of arguments" 
+   echo "$me: got wrong number of arguments" >> $F 2>&1
    exit 1
 fi
 job_pid=$1
 job_id=$2
+
+echo -------------------------------------------------------------  >> $F 2>&1
+echo `basename $0` called at `date`      >> $F 2>&1
+echo called by: `id`                    >> $F 2>&1
+echo with args: $*                      >> $F 2>&1
+
 #
 # Stop the process of SGE job, $job_pid.
 #
-/usr/bin/kill -STOP -$job_pid
+/usr/bin/kill -STOP -$job_pid >> $F 2>&1
 #
 # Determine whether it is a serial or parallel job
 #
@@ -64,8 +82,8 @@ if [ X"$PE" != X ]; then
             #
             # This version is Sun HPC ClusterTools 4.
             #
-            echo "This cluster is running Sun HPC ClusterTools 4 software." 
-            echo "The suspend method works only for Sun HPC ClusterTools 5 or later version." 
+            echo "This cluster is running Sun HPC ClusterTools 4 software." >> $F 2>&1
+            echo "The suspend method works only for Sun HPC ClusterTools 5 or later version." >> $F 2>&1
             exit 1
          else
             #
@@ -82,15 +100,16 @@ if [ X"$PE" != X ]; then
                #
                /usr/bin/echo $jobname > $TMPDIR/resume_cre_jobname
                /usr/bin/echo "This is a Sun MPI job." > $TMPDIR/mpijob
-               /opt/SUNWhpc/bin/mpkill -STOP $jobname
+	       echo "Sending STOP signal to MPI job: $jobname" >> $F 2>&1
+               /opt/SUNWhpc/bin/mpkill -STOP $jobname >> $F 2>&1
             fi 
          fi
       else
          #
          # This version is Sun HPC 3.1 or earlier 
          #
-         echo "This cluster is running Sun HPC 3.1 or earlier software." 
-         echo "The suspend method works only for Sun HPC ClusterTools 5 or later version." 
+         echo "This cluster is running Sun HPC 3.1 or earlier software." >> $F 2>&1
+         echo "The suspend method works only for Sun HPC ClusterTools 5 or later version." >> $F 2>&1
          exit 1
       fi
    fi

@@ -1,3 +1,9 @@
+SG-2004-08-03-0: Bugfix:    fixed a bug in the xml-otuput
+                 Issue:     1191
+                 Bugtraq:   5081821
+                 Changed:   qstat
+                 Review:    EB
+
 DT-2004-08-01-0: Bugfix:    o Fixed JavaDoc errors
                             o Fixed qstat man page error
                             o Updated aimk to build new JavaDocs

@@ -1,3 +1,6 @@
+CR-2002-01-18-1: Testsuite: - general performance modified cluster configuration
+                 Bugfix:      without restoring it.
+
 CR-2002-01-18-0: Testsuite: - new command line parameter: re_init_on_tcl_error
                  Enhancem.:   (if set the testsuite will do a install re_init 
                                before starting the next test)

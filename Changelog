@@ -1,11 +1,15 @@
+JG-2003-07-16-0: Testsuite: Added a testsuite function "dump_ts_config" to dump
+                            the testsuite configuration (attribute name, value 
+                            and description) to a file.
+
 EB-2003-07-15-1: Enhancem.: Bugfix for Enhancem. EB-2003-05-15-0
                             * wrong attribute reference in answer list message
                               of qconf -mattr request
-                 Changed:  sge_qmaster
+                 Changed:   sge_qmaster
 
-SG-2003-07-15-0: Bugfix:   Fixed the build
-                           Some message IDs were used twice
-                 Changed:  sge_qmaster, sge_scheduler
+SG-2003-07-15-0: Bugfix:    Fixed the build
+                            Some message IDs were used twice
+                 Changed:   sge_qmaster, sge_scheduler
 
 EB-2003-07-14-2: Enhancem.: Bugfix for Enhancem. EB-2003-07-09-0
                             * qmaster core: qmon send wrong target info

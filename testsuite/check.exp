@@ -312,7 +312,61 @@ proc debug_puts { args } {
    puts $CHECK_OUTPUT "\[host: $CHECK_HOST, debug/$CHECK_CUR_PROC_NAME\] $output" 
 }
 
+#
+#                                                             max. column:     |
+#****** check/dump_ts_config() ******
+#  NAME
+#     dump_ts_config -- dump the testsuite configuration
+#
+#  SYNOPSIS
+#     dump_ts_config { outputfile } 
+#
+#  FUNCTION
+#     Dumps the contents of the ts_config array holding the testsuite 
+#     configuration.
+#     It is written to a file with the given outputfile name in a 
+#     TAB separated ASCII file format:
+#     The fields Name, Value and Description are written where
+#     - Name is the name of the parameter
+#     - Value is the value of the parameter in the current configuration
+#     - Description is the testsuite internal description of the parameter
+#
+#  INPUTS
+#     outputfile - name of the output file 
+#
+#  EXAMPLE
+#     A call of
+#     expect check.exp execute_func dump_ts_config ts_config.txt
+#
+#     will generate a file as follows:
+#
+#     Name    Value   Description
+#     add_compile_archs       none    Forced compilation for architectures
+#     aimk_compile_options    -secure Aimk compile options
+#     checktree_root_dir   ...
+#
+#*******************************
+#
+proc dump_ts_config {outputfile} {
+   global ts_config
+  
+   set output [open "$outputfile" w]
+  
+   set names {}
+   
+   foreach name [array names ts_config] {
+      if {[string first "," $name] == -1} {
+         lappend names $name
+      }
+   }
 
+   puts $output "Name\tValue\tDescription\t"
+   foreach name [lsort -dictionary $names] {
+      puts $output [format "%s\t%s\t%s" "$name" "$ts_config($name)" "$ts_config($name,desc)"]
+   }
+
+   close $output
+}
 
 
 

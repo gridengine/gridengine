@@ -579,16 +579,16 @@ static int japi_open_session(const char *key_in, dstring *key_out, dstring *diag
       char tmp_session_key_buffer[SGE_PATH_MAX];
       dstring tmp_session_key;
       int ret;
-      long id = 0;
+      int id = 0;
 
       /* seed random function */
-      srandom(sge_get_gmt());
+      id = sge_get_gmt();
 
       sge_dstring_init(&tmp_session_key, tmp_session_key_buffer, sizeof(tmp_session_key_buffer));  
 
       /* a unique session key must be found if we got no session key */
       do {
-         id = random();
+         id = rand_r(&id);
 
          /* a session key is built from <unqualified hostname>.<pid>.<number> */
          sge_dstring_sprintf(&tmp_session_key, "%s."pid_t_fmt".%.6d", 

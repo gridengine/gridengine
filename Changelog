@@ -1,3 +1,10 @@
+JM-2004-01-20-1: Enhancem:  Revise japi.c to use rand_r() instead of
+                            (s)random() which are not reentrant. 'id'
+                            is changed from long to int to suit
+                            rand_r().
+                 Changed:   libs/japi/japi.c
+                 Reviewed:  AH
+
 EB-2004-01-20-1: Enhancem.: new switch "qconf -sick"
 
 AD-2004-01-20-0: Enhancem:  Did add 'sge_log_tee' script.

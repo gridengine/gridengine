@@ -173,7 +173,14 @@ host *uti_state_get_localhost(void)
 *     found.
 *
 *     return value must be released by function caller (don't forget the 
-*     char*‹‹ array lists inside of struct hostent)
+*     char** array lists inside of struct hostent)
+*
+*     If possible (libngc linked) use getuniquehostname() or 
+*     cl_com_cached_gethostbyname() or cl_com_gethostname() from libngc.
+*
+*     This will return an sge aliased hostname.
+*
+*
 *
 *  NOTES
 *     MT-NOTE: see sge_gethostbyname()
@@ -218,6 +225,11 @@ const char *name
 *
 *     return value must be released by function caller (don't forget the 
 *     char* array lists inside of struct hostent)
+*
+*     If possible (libngc linked) use getuniquehostname() or 
+*     cl_com_cached_gethostbyname() or cl_com_gethostname() from libngc.
+*
+*     This will return an sge aliased hostname.
 *
 *
 *  NOTES
@@ -479,7 +491,11 @@ struct hostent *sge_copy_hostent(struct hostent *orig)
 *     in gethostbyaddr() and logs when very much time has passed.
 *
 *     return value must be released by function caller (don't forget the 
-*     char*‹‹ array lists inside of struct hostent)
+*     char** array lists inside of struct hostent)
+*
+*     If possible (libngc linked) use  cl_com_cached_gethostbyaddr() 
+*     from libngc. This will return an sge aliased hostname.
+*
 *
 *  NOTES
 *     MT-NOTE: sge_gethostbyaddr() is MT safe

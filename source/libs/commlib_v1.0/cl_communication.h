@@ -33,10 +33,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#define CL_DEFINE_MAX_OPEN_CONNECTIONS               100
-#define CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT 30    /* default 30 */    /* default timeout for accepting a connection */
-#define CL_DEFINE_SYNCHRON_RECEIVE_TIMEOUT           10    /* default 10 */    /* default timeout for synchron send messages */
-#define CL_DEFINE_CLIENT_CONNECTION_LIFETIME         60    /* default 600 */   /* Cut off connection when client is not active for this time */
+#define CL_DEFINE_MAX_OPEN_CONNECTIONS               500   /* default, must be eanbed with cl_com_enable_max_connection_close() */
+#define CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT 60    /* default 60 */    /* default timeout for accepting a connection */
+#define CL_DEFINE_SYNCHRON_RECEIVE_TIMEOUT           30    /* default 30 */    /* default timeout for synchron send messages */
+#define CL_DEFINE_CLIENT_CONNECTION_LIFETIME         120   /* default 120 */   /* Cut off connection when client is not active for this time */
 
 
 #define CL_DEFINE_DATA_BUFFER_SIZE                   1024 * 4           /* 4 KB buffer for reading/writing messages */

@@ -496,6 +496,8 @@ static void communication_setup(char **anArgv)
          ERROR((SGE_EVENT, "could not create communication handle\n"));
          SGE_EXIT(1);
       }
+      /* CR - TODO: enable and test max connection close count */
+      /* cl_com_enable_max_connection_close(com_handle); */
    }
    
    if (com_handle) {

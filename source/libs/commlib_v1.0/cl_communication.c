@@ -3351,7 +3351,7 @@ int cl_com_compare_hosts( char* host1, char* host2) {
     }
     cl_raw_list_unlock(host_list);
 
-    CL_LOG(CL_LOG_INFO,"cl_com_compare_hosts() is slow!");
+    CL_LOG(CL_LOG_WARNING,"cl_com_compare_hosts() is slow!");
     CL_LOG_STR(CL_LOG_INFO,"compareing host 1:", hostbuf1);
     CL_LOG_STR(CL_LOG_INFO,"compareing host 2:", hostbuf2);
     if ( strcasecmp(hostbuf1,hostbuf2) == 0 ) {   /* hostname compare OK */

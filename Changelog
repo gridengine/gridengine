@@ -1,3 +1,6 @@
+CR-2004-01-27-2: Enhancem.: - modified default communication timeouts
+                            - added comments
+
 AD-2004-01-27-0: Bugfix:    'inst_sge' does now check for local Berkeley DB
                             spool directory on Linux.
                  Changed:   dist

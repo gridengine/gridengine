@@ -1,3 +1,8 @@
+EB-2004-11-15-0: Bugfix:    incorrect select() call in combination with
+                            loadsensors
+                 Changed:   sge_execd
+                 Review:    JG 
+
 AH-2004-11-15-0: Bugfix:    Use hp11 binaries on HP11 64 bit
                             Use lx24-x86 binaries for Linux 2.6
                  Review:    AS

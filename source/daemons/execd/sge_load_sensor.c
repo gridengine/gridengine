@@ -176,6 +176,7 @@ static int sge_ls_status(lListElem *this_ls)
 {
    fd_set writefds;
    int ret;
+   int higest_fd;
 
    DENTER(TOP_LAYER, "sge_ls_status");
 
@@ -186,10 +187,11 @@ static int sge_ls_status(lListElem *this_ls)
 
    /* build writefds */
    FD_ZERO(&writefds);
-   FD_SET(fileno((FILE *) lGetRef(this_ls, LS_in)), &writefds);
+   higest_fd = fileno((FILE *) lGetRef(this_ls, LS_in));
+   FD_SET(higest_fd, &writefds);
 
    /* is load sensor ready to read ? */
-   ret = select(FD_SETSIZE, NULL, &writefds, NULL, NULL);
+   ret = select(higest_fd + 1, NULL, &writefds, NULL, NULL);
 
    if (ret <= 0) {
       DEXIT;
@@ -583,23 +585,33 @@ static int ls_send_command(lListElem *this_ls, const char *command)
    struct timeval timeleft;
    int ret;
    FILE *file;
+   int higest_fd;
 
    DENTER(TOP_LAYER, "ls_send_command");
 
    FD_ZERO(&writefds);
-   FD_SET(fileno((FILE *) lGetRef(this_ls, LS_in)), &writefds);
+   higest_fd = fileno((FILE *) lGetRef(this_ls, LS_in));
+   FD_SET(higest_fd, &writefds);
 
    timeleft.tv_sec = 0;
    timeleft.tv_usec = 0;
 
    /* wait for writing on fd_in */
-   ret = select(FD_SETSIZE, NULL, &writefds, NULL, &timeleft);
+   ret = select(higest_fd + 1, NULL, &writefds, NULL, &timeleft);
    if (ret == -1) {
-      if (errno == EINTR) {
-         DEXIT;
-         return -1;
+      switch (errno) {
+      case EINTR:
+         DPRINTF(("select failed with EINTR\n"));
+         break;
+      case EBADF:
+         DPRINTF(("select failed with EBADF\n"));
+         break;
+      case EINVAL:
+         DPRINTF(("select failed with EINVAL\n"));
+         break;
+      default:
+         DPRINTF(("select failed with unexpected errno %d", errno));
       }
-      perror("select");
       DEXIT;
       return -1;
    }

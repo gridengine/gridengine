@@ -231,7 +231,9 @@ int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, 
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
       SEC_LOCK_RW();
       ret = sec_receive_message( handle, un_resolved_hostname,  component_name,  component_id,  synchron,   response_mid,  message, sender);
-      dump_rcv_info(message,sender);
+      if (message != NULL) {
+         dump_rcv_info(message,sender);
+      }
       SEC_UNLOCK_RW();
       DEXIT;
       return ret;
@@ -240,7 +242,9 @@ int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, 
 
    ret = cl_commlib_receive_message(handle, un_resolved_hostname,  component_name,  component_id,  
                                      synchron, response_mid,  message,  sender);
-   dump_rcv_info(message,sender);
+   if (message != NULL) {
+      dump_rcv_info(message,sender);
+   }
 
    DEXIT;
    return ret;

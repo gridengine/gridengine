@@ -1,3 +1,10 @@
+EB-2004-08-02-0: Bugfix:    Deleting a queue instance slots value actually
+                            adds it
+                 Issue:     1175
+                 Bugtraq:   5081822
+                 Changed:   qmaster
+                 Review:    SG
+
 SG-2004-08-03-0: Bugfix:    fixed a bug in the xml-otuput
                  Issue:     1191
                  Bugtraq:   5081821

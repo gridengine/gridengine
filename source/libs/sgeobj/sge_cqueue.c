@@ -1068,7 +1068,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
          /*
           * Create element if it does not exist
           */
-         if (org_elem == NULL) {
+         if (org_elem == NULL && sub_command != SGE_GDI_REMOVE) {
             if (org_list == NULL) {
                org_list = lCreateList("", lGetElemDescr(mod_elem));
                lSetList(this_elem, attribute_name, org_list);

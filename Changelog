@@ -1,3 +1,8 @@
+SG-2004-03-03-3: Bugfix:    The clients died when a wrong security mode is
+                            specified in the bootstrap file
+                 Changed:   all
+                 Review:    pending
+
 SG-2004-03-03-2: Bugfix:    the product mode is displayed again with -help
                             in the clientes
                  Changed:   all

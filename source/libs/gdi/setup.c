@@ -145,6 +145,7 @@ lList **alpp
    }
 
    if (feature_initialize_from_string(bootstrap_get_security_mode())) {
+      /*
       if (alpp == NULL || is_exit_on_error) {
          CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
       } 
@@ -153,6 +154,7 @@ lList **alpp
                          STATUS_NOCONFIG, ANSWER_QUALITY_ERROR);
       }
       sge_dstring_free(&error_dstring);
+      */
       if (!is_exit_on_error) {
          DEXIT;
          return -1;

@@ -1,3 +1,8 @@
+AH-2001-11-20-0: Bugfix: Bugtraq #4528905, IssueZilla #78
+                 Use kstat interface instead of kvm interface for retrieval
+                 of cpu percentage load value to fix problems with
+                 Solaris 7,8 running 32-bit kernels
+
 AA-2001-11-19-0: Qmon core dump in sharetree for empty sharetree when
                  using Find
 

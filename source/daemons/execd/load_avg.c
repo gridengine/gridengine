@@ -508,7 +508,7 @@ lList **lpp
 #ifdef SGE_LOADCPU
    /* this code can cause nasty problems
       this is a hack to work around the problem */
-   if (!getenv("SGE_NO_CPU_LOAD")) {
+   {
       double cpu_percentage;
 
       /* sge_getcpuload() must be called multiple 

@@ -150,14 +150,12 @@ int main(int argc, char *argv[])
 #endif /* SGE_LOADMEM */
 
 #ifdef SGE_LOADCPU
-   if (!getenv("SGE_NO_CPU_LOAD")) {
-      loads = sge_getcpuload(&total);
-      sleep(1);
-      loads = sge_getcpuload(&total);
-      if (loads != -1) {
-         print_mem_load("cpu", name,  1, total, "%");
-      }
-   } 
+   loads = sge_getcpuload(&total);
+   sleep(1);
+   loads = sge_getcpuload(&total);
+   if (loads != -1) {
+      print_mem_load("cpu", name,  1, total, "%");
+   }
 #endif /* SGE_LOADCPU */
 
 	return 0;

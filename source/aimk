@@ -1209,7 +1209,7 @@ case SOLARIS86:
       exit 1
    endif
 
-   set LOADAVGLIBS = "-lkvm"
+   set LOADAVGLIBS = "-lkvm -lkstat"
 #   set PARALLEL = "-j 1"
 #   set MAKE=gmake
    if ( $BUILDARCH == SOLARIS86 ) then

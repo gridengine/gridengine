@@ -1,3 +1,6 @@
+JG-2002-01-10-1: Testsuite: Make the number of parallel rlogin sessions 
+                            dependent on the limit for file handles.
+
 JG-2002-01-10-0: Enhancem.: Additional check of the host parameter to 
                             qconf -ke - only accepts non option parameter.
 

@@ -38,6 +38,11 @@ set module_name "remote_procedures.tcl"
 global rlogin_max_open_connections
 set rlogin_max_open_connections 20
 
+set descriptors [exec "/bin/sh" "-c" "ulimit -n"]
+puts "descriptors = $descriptors"
+set rlogin_max_open_connections [expr ($descriptors - 9) / 3]
+puts "rlogin_max_open_connections = $rlogin_max_open_connections"
+
 
 # procedures
 #                                                             max. column:     |

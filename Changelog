@@ -1,3 +1,9 @@
+EB-2001-07-23-0: Changes some html files
+                 - link to contributor agreement
+                 - added $ARCH variable to path (gethostname)
+                 - deleted empty line in client output
+                 - changed text width
+
 CR-2001-07-20-0: Testsuite:
                  - qmod reschedule test is not completely implemented
                  - qrsh test showed error because of killing a job script

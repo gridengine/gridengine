@@ -1,3 +1,5 @@
+EB-2002-01-15-0: Enhancem.: per user namespace for job dep. names
+
 CR-2002-01-16-0: Testsuite: - faster lockfile check
                             - new settings file version: 5
                                 (new foreign users/group setup)

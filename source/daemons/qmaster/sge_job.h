@@ -52,7 +52,7 @@ void job_suc_pre(lListElem *jep);
 lListElem *sge_locate_job(u_long32);
 
 /* searches by id or jobname */
-lListElem *locate_job_by_identifier(const char *s);
+lListElem *locate_job_by_identifier(const char *s, const char *owner);
 
 void get_rid_of_job(lList **alpp, lListElem *jep, lListElem *jatep, int force, 
                     sge_pack_buffer *pb, char *pb_host, char *ruser, 

@@ -1,3 +1,6 @@
+EB-2002-04-17-2: Bugfix:    error in qmasters job deletion code
+                 Issue:     #235 
+
 AA-2002-04-17-0: Bugfix:    Broken build for aix
                             correction in csp.html
 

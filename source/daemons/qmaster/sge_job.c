@@ -857,10 +857,10 @@ int sub_command
           sge_manager(ruser)) {
          ERROR((SGE_EVENT, MSG_JOB_DELETEPERMS_SU, ruser, 
                 u32c(lGetUlong(job, JB_job_number))));
-                sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
          njobs++;
          /* continue with next job */ 
-         break; 
+         continue; 
       }
 
       /*

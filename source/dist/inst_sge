@@ -87,7 +87,7 @@ ErrUsage()
 #-------------------------------------------------------------------------
 # PreCheckForFastInstall: return 0 if all conditions for an accelerated
 # installation procedure are met
-# 
+#
 PreCheckForFastInstall()
 {
 
@@ -153,7 +153,7 @@ SelectHostNameResolving()
    $CLEAR
    $ECHO
    Translate 0 "Select default hostname resolving method"
-   $ECHO "$LINES-------------------------------------"
+   $ECHO "----------------------------------------"
    $ECHO ""
    Translate 0 "Are all hosts of your cluster in one DNS domain? If this is"
    Translate 0 "the case the host names"
@@ -187,7 +187,7 @@ CheckCellDirectory()
 
    check_cell_error=0
    if [ ! -d $COMMONDIR ]; then
-      Translate 4 "common directory not found: %s" $COMMONDIR 
+      Translate 4 "common directory not found: %s" $COMMONDIR
    fi
 
    if [ ! -f $COMMONDIR/configuration ]; then
@@ -203,17 +203,17 @@ CheckCellDirectory()
       fi
       check_cell_error=1
    fi
-   
+
 
    if [ $check_cell_error != 0 ]; then
       transsaved="$transout"
       $ECHO ""
       Translate 0 "Checking cell directory"
-      $ECHO "$LINES-----------------"
+      $ECHO "-----------------------"
       $ECHO ""
       Translate 0 "Cannot find required files. The following error was returned:"
       $ECHO ""
-      $ECHO "$transsaved"
+      $ECHO "   >$transsaved<"
       $ECHO ""
       Translate 0 "Please make sure that you have installed the qmaster host before"
       Translate 0 "installing an execd host."
@@ -255,7 +255,7 @@ CheckHostNameResolving()
        $CLEAR
        $ECHO ""
        Translate 0 "Checking host name resolving"
-       $ECHO "$LINES----------------------"
+       $ECHO "----------------------------"
        $ECHO ""
        resolve_admin_hosts=`ExecuteAsAdmin $V5BIN/qconf -sh`
        resolve_this_hostname=`ExecuteAsAdmin $V5UTILBIN/gethostname -name`
@@ -293,7 +293,7 @@ CheckHostNameResolving()
        if [ $done = false ]; then
            Translate 0 "This host is unknown on the qmaster host."
            $ECHO ""
-           $ECHO "$LINES--------------------------------------"
+           $ECHO "-----------------------------------------"
            $ECHO
            Translate 0 "Please make sure that you added this host as administrative host!"
            Translate 0 "If you did not, add this host with"
@@ -316,7 +316,7 @@ CheckHostNameResolving()
                    exit 1
                fi
            fi
-           $ECHO "$LINES--------------------------------------"
+           $ECHO "$LINE--------------------------------------"
            $ECHO ""
            Translate 2 "Check again [Y/N] [Y] >> "
            INP=`Enter Y`
@@ -336,7 +336,7 @@ CheckHostNameResolving()
 
 #-------------------------------------------------------------------------
 # AskIfDefaultOkAndSetVariables
-# 
+#
 AskIfDefaultOkAndSetVariables()
 {
    eval $QSYST_ROOT=`pwd | sed 's/\/tmp_mnt//'`
@@ -349,7 +349,7 @@ AskIfDefaultOkAndSetVariables()
 
    $ECHO ""
    Translate 0 "Confirm %s default installation settings" "$QSYST"
-   $ECHO "$LINES--------------------------------------"
+   $ECHO "$LINE--------------------------------------"
    $ECHO ""
 
    Translate 0 "The following default settings can be used for an accelerated"
@@ -542,22 +542,22 @@ GetGidRange()
       $CLEAR
       $ECHO ""
       Translate 0 "%s group id range" "$QSYST"
-      $ECHO "$LINES---------------"
+      $ECHO "$LINE---------------"
       $ECHO ""
-      Translate 0 "When jobs are started under the control of SGEEE an additional group id is set"
+      Translate 0 "When jobs are started under the control of %s an additional group id is set" $QSYST
       Translate 0 "on platforms which do not support jobs. This is done to provide maximum control"
-      Translate 0 "for SGEEE jobs."
+      Translate 0 "for %s jobs." $QSYST
       Translate 0 "This additional UNIX group id range must be unused group id's in your system."
       Translate 0 "Each job will be assigned a unique id during the time it is running."
       Translate 0 "Therefore you need to provide a range of id's which will be assigned"
       Translate 0 "dynamically for jobs."
       Translate 0 "The range must be big enough to provide enough numbers for the maximum number"
-      Translate 0 "of SGEEE jobs running at a single moment on a single host. E.g. a range like"
+      Translate 0 "of %s jobs running at a single moment on a single host. E.g. a range like" $QSYST
       $ECHO ""
       Translate 0 "   20000-20100"
       $ECHO ""
-      Translate 0 "means, that SGEEE will use the group ids from 20000-20100 and provides a range"
-      Translate 0 "for 100 SGEEE jobs at the same time on a single host."
+      Translate 0 "means, that %s will use the group ids from 20000-20100 and provides a range" $QSYST
+      Translate 0 "for 100 %s jobs at the same time on a single host." $QSYST
       Translate 0 "You can change at any time the group id range in your cluster configuration."
       $ECHO ""
       Translate 2 "Please enter a range: "
@@ -575,7 +575,7 @@ GetGidRange()
 
 #-------------------------------------------------------------------------
 # GetDefaultDomain
-# 
+#
 GetDefaultDomain()
 {
    done=false
@@ -641,7 +641,7 @@ GetConfiguration()
       $CLEAR
       $ECHO ""
       Translate 0 "%s cluster configuration" "$QSYST"
-      $ECHO "$LINES----------------------"
+      $ECHO "$LINE----------------------"
 
       $ECHO ""
       Translate 0  "Please give the basic configuration parameters of your %s installation:" "$QSYST"
@@ -763,7 +763,7 @@ AddConfiguration()
    else
       PRODUCT_PREFIX=sgeee
    fi
-   
+
    if [ $resport = true ]; then
       RESPORT_PREFIX=-reserved_port
    else
@@ -816,7 +816,7 @@ AddLocalConfiguration()
    Translate 0 "Creating local configuration"
    if [ -f $LCONFDIR/$HOST ]; then
       $ECHO  "----------------------------"
-      $ECHO "" 
+      $ECHO ""
       Translate 0 "A local configuration for this host already exists."
 
       Translate 4 "Press <RETURN> to display the configuration >>"
@@ -831,7 +831,7 @@ AddLocalConfiguration()
          useold=true
       else
          Translate 4 "Creating new local configuration for this host"
- 
+
       fi
       WaitClear noclear "\n$transout >> \c"
       $CLEAR
@@ -902,7 +902,7 @@ AddCommonFiles()
 {
    for f in sge_aliases qtask sge_request; do
       if [ $f = sge_aliases ]; then
-         text="path aliases file" 
+         text="path aliases file"
       elif [ $f = qtask ]; then
         text="qtcsh sample default request file"
       else
@@ -915,6 +915,29 @@ AddCommonFiles()
    done
 
    unset text f
+}
+
+#-------------------------------------------------------------------------
+# AddPEFiles
+#    Copy files from PE template directory to qmaster spool dir
+#
+AddPEFiles()
+{
+
+   Translate 0 "Adding default PE environment for >%s<" qmake
+   for c in make; do
+      if [ -f $QMDIR/pe/$c -a -s $QMDIR/pe/$c ]; then
+         Translate 4 "PE >%s< already exists - should PE be preserved" $c
+         YesNo "$transout" y
+         if [ $? = 1 ]; then
+            Translate 0 "Overwriting existing PE >%s<" $c
+            ExecuteAsAdmin cp util/resources/pe/$c $QMDIR/pe
+         fi
+      else
+         ExecuteAsAdmin cp util/resources/pe/$c $QMDIR/pe
+      fi
+   done
+   ExecuteAsAdmin chmod $FILEPERM $QMDIR/pe/*
 }
 
 #-------------------------------------------------------------------------
@@ -937,7 +960,7 @@ ProcessQsystRoot()
    $CLEAR
    $ECHO
    Translate 0 "Checking %s directory" $QSYST_ROOT
-   $ECHO "---------$LINES---------------"
+   $ECHO "---------$LINE---------------"
    $ECHO ""
 
    done=false
@@ -951,7 +974,7 @@ ProcessQsystRoot()
          $ECHO ""
          $ECHO "   \$$QSYST_ROOT = $QSYST_ROOT_VAL"
          $ECHO ""
-         Translate 0 "If this directory is not correct (e.g. it may contain an automounter" 
+         Translate 0 "If this directory is not correct (e.g. it may contain an automounter"
          Translate 0 "prefix) enter the correct path to this directory or hit <RETURN>"
          Translate 2 "to use default\n    \"%s\" >> " $QSYST_ROOT_VAL
 
@@ -981,7 +1004,7 @@ ProcessQsystRoot()
             Translate 0 "This may be a permission problem (e.g. no read/write permission"
             Translate 0 "on a NFS mounted filesystem)."
             $ECHO ""
-            Translate 0 "Please check your permissions. You may cancel the installation now" 
+            Translate 0 "Please check your permissions. You may cancel the installation now"
             Translate 0 "and restart it or continue and try again."
             $ECHO ""
             unset $QSYST_ROOT
@@ -1025,23 +1048,24 @@ GiveHints()
       $CLEAR
       $ECHO ""
       Translate 0 "Using %s" "$QSYST"
-      $ECHO "$LINES------"
+      $ECHO "$LINE------"
       $ECHO ""
       Translate 0 "You should now enter the command:"
       $ECHO ""
-      $ECHO "        % source $QSYST_ROOT_VAL/$QSYST_CELL_VAL/common/settings.csh"
+      $ECHO "   % source $QSYST_ROOT_VAL/$QSYST_CELL_VAL/common/settings.csh"
       $ECHO ""
       Translate 0 "if you are a %s user or" "csh/tcsh"
       $ECHO ""
-      $ECHO "        # . $QSYST_ROOT_VAL/$QSYST_CELL_VAL/common/settings.sh"
+      $ECHO "   # . $QSYST_ROOT_VAL/$QSYST_CELL_VAL/common/settings.sh"
       $ECHO ""
       Translate 0 "if you are a %s user." "sh/ksh"
       $ECHO ""
-      Translate 0 " This will set or expand the following environment variables" 
+      Translate 0 " This will set or expand the following environment variables"
+      $ECHO ""
       Translate 0 "   - %s    (always necessary)" \$$QSYST_ROOT
       Translate 0 "   - %s    (if you are using a cell other than >default<)" \$$QSYST_CELL
-      Translate 0 "   - %s     (if you haven't added the service %s)" \$COMMD_PORT "$QSYST_SERVICE"
-      Translate 0 "     %s     (to find the %s binaries)" "\$PATH/\$path" "$QSYST"
+      Translate 0 "   - %s  (if you haven't added the service %s)" \$COMMD_PORT "$QSYST_SERVICE"
+      Translate 0 "     %s  (to find the %s binaries)" "\$PATH/\$path" "$QSYST"
       Translate 0 "   - %s     (to access the %s manual pages)" \$MANPATH "$QSYST"
 
       $ECHO ""
@@ -1051,7 +1075,7 @@ GiveHints()
 
       $ECHO ""
       Translate 0 "%s messages" "$QSYST"
-      $ECHO "$LINES---------"
+      $ECHO "$LINE---------"
       $ECHO ""
       Translate 0 "Messages from %s can be found in" "$QSYST"
       $ECHO ""
@@ -1079,10 +1103,10 @@ GiveHints()
 
    $CLEAR
 
-   if [ $WHICH = master ]; then
+   if [ $WHICH = qmaster ]; then
       $ECHO ""
       Translate 0 "Your %s qmaster installation is now completed" "$QSYST"
-      $ECHO "$LINES-------------------------------------------"
+      $ECHO "$LINE-------------------------------------------"
       $ECHO ""
       Translate 0 "Please now login to all hosts where you want to run an execution daemon"
       Translate 0 "and start the execution host installation procedure."
@@ -1112,7 +1136,7 @@ GiveHints()
 
 #-------------------------------------------------------------------------
 # CheckWhoInstallsQsyst
-# 
+#
 CheckWhoInstallsQsyst()
 {
    euid=`$V5UTILBIN/uidgid -euid`
@@ -1120,7 +1144,7 @@ CheckWhoInstallsQsyst()
       $CLEAR
       $ECHO ""
       Translate 0 "%s - test installation" "$QSYST"
-      $ECHO "$LINES--------------------"
+      $ECHO "$LINE--------------------"
       $ECHO ""
       Translate 0 "You are installing %s not as user >root<!" "$QSYST"
       $ECHO ""
@@ -1139,7 +1163,7 @@ CheckWhoInstallsQsyst()
       $CLEAR
       $ECHO ""
       Translate 0 "%s admin user account" "$QSYST"
-      $ECHO "$LINES-------------------"
+      $ECHO "$LINE-------------------"
       $ECHO ""
       Translate 0 "The current directory is"
       $ECHO ""
@@ -1172,7 +1196,7 @@ CheckWhoInstallsQsyst()
 
    $ECHO ""
    Translate 0 "Choosing %s admin user account" "$QSYST"
-   $ECHO "$LINES----------------------------"
+   $ECHO "$LINE----------------------------"
    $ECHO ""
    Translate 0 "You may install %s that all files are created with the user id of an" $QSYST
    Translate 0 "unprivileged user."
@@ -1193,9 +1217,9 @@ CheckWhoInstallsQsyst()
          $CLEAR
          $ECHO ""
          Translate 0 "Choosing a %s admin user name" "$QSYST"
-         $ECHO "$LINES---------------------------"
+         $ECHO "$LINE---------------------------"
          $ECHO ""
-         Translate 2 "Please enter the user name (or >%s<) >> " %s
+         Translate 2 "Please enter the user name (or >%s<) >> " root
          INP=`Enter ""`
          $V5UTILBIN/checkuser -check "$INP"
          if [ $? != 0 ]; then
@@ -1203,7 +1227,7 @@ CheckWhoInstallsQsyst()
             WaitClear clear
          else
             $ECHO
-            Translate 0 "Installing %s as user %s" $QSYST $INP
+            Translate 0 "Installing %s as user >%s<" $QSYST $INP
             $ECHO
             ADMINUSER=$INP
             if [ $ADMINUSER = root ]; then
@@ -1240,7 +1264,7 @@ CheckForCommdPort()
    if [ "$COMMD_PORT" != "" ]; then
       $ECHO ""
       Translate 0 "%s TCP/IP communication service" "$QSYST"
-      $ECHO "$LINES-----------------------------"
+      $ECHO "$LINE-----------------------------"
 
       if [ $COMMD_PORT -ge 1 -a $COMMD_PORT -le $commd_port_max ]; then
          $ECHO ""
@@ -1259,9 +1283,9 @@ CheckForCommdPort()
       else
          $ECHO ""
          Translate 0 "The environment variable"
-         $ECHO "" 
+         $ECHO ""
          $ECHO "   \$COMMD_PORT=$COMMD_PORT"
-         $ECHO "" 
+         $ECHO ""
          Translate 0 "has an invalid value (it must be in range 1..%s)." "$commd_port_max"
          $ECHO ""
          Translate 4 "Please set %s and restart\nthe installation or configure the service >%s<" \$COMMD_PORT $QSYST_SERVICE
@@ -1274,7 +1298,7 @@ CheckForCommdPort()
       $ECHO ""
       $ECHO "$QSYST \c"
       Translate 0 "TCP/IP service >%s<" "$QSYST_SERVICE"
-      $ECHO "$LINES----------------$LINES-------------"
+      $ECHO "--------------------------"
       $ECHO ""
       Translate 0 "There is no service >%s< available in your >/etc/services< file " "$QSYST_SERVICE"
       Translate 0 "or in your NIS/NIS+ database."
@@ -1312,7 +1336,7 @@ CheckForCommdPort()
             $CLEAR
             $ECHO ""
             Translate 0 "No TCP/IP service >%s< yet" "$QSYST_SERVICE"
-            $ECHO "-----------------------$LINES-------"
+            $ECHO "---------------------------------"
             $ECHO ""
             Translate 0 "There is still no service for >%s< available." "$QSYST_SERVICE"
             $ECHO ""
@@ -1397,7 +1421,7 @@ GetCell()
    $CLEAR
    $ECHO ""
    Translate 0 "%s cells" "$QSYST"
-   $ECHO "$LINES------"
+   $ECHO "$LINE------"
    $ECHO ""
    Translate 0 "%s supports multiple cells." "$QSYST"
    $ECHO ""
@@ -1442,7 +1466,7 @@ GetQmasterSpoolDir()
       $CLEAR
       $ECHO ""
       Translate 0 "%s qmaster spool directory" "$QSYST"
-      $ECHO "$LINES------------------------"
+      $ECHO "$LINE------------------------"
       $ECHO ""
       Translate 0 "The qmaster spool directory is the place where the %s qmaster" "$QSYST"
       Translate 0 "daemon stores the configuration and the state of the queuing system."
@@ -1491,10 +1515,10 @@ CheckQmasterInstallation()
    $CLEAR
    $ECHO ""
    Translate 0 "%s cells"  "$QSYST"
-   $ECHO "$LINES------"
+   $ECHO "$LINE------"
    $ECHO ""
-   Translate 0 "Please enter cell name which you used for %s qmaster installation" "$QSYST"
-   Translate 2 "or press <RETURN> to use default cell >default< >> "
+   Translate 0 "Please enter cell name which you used for %s qmaster" "$QSYST"
+   Translate 2 "installation or press <RETURN> to use default cell >default< >> "
    INP=`Enter ""`
    if [ "$INP" = "" ]; then
       eval $QSYST_CELL=default
@@ -1506,7 +1530,7 @@ CheckQmasterInstallation()
 
    SetCellDependentVariables
 
-   if [ ! -f $COMMONDIR/act_qmaster ]; then
+   if [ ! -f $COMMONDIR/act_qmaster -o ! -f $COMMONDIR/configuration ]; then
       $ECHO ""
       Translate 0 "Obviously there was no %s qmaster installation" "$QSYST"
       $ECHO ""
@@ -1521,6 +1545,26 @@ CheckQmasterInstallation()
    fi
 
    WaitClear clear
+
+   user=`grep admin_user $COMMONDIR/configuration | awk '{ print $2 }'`
+
+   if [ "$user" != "" ]; then
+      if [ `echo "$user" |tr "A-Z" "a-z"` = "none" ]; then
+         user=default
+      fi
+   fi
+
+   if [ "$ADMINUSER" != "$user" ]; then
+      if [ "$user" = default ]; then
+         Translate 0 "The admin user >%s< is different than the default >%s<" "$user" default
+      else
+         Translate 0 "The admin user >%s< doesn't match the admin username >%s<" "$user" $ADMINUSER
+      fi
+      Translate 0 "in the global cluster configuration."
+      $ECHO
+      Translate 0 "Installation failed. Exit."
+      exit 1
+   fi
 }
 
 #-------------------------------------------------------------------------
@@ -1534,7 +1578,7 @@ AddQsystStartUpScript()
    $CLEAR
    $ECHO ""
    Translate 0 "%s startup script" "$QSYST"
-   $ECHO "$LINES---------------"
+   $ECHO "$LINE---------------"
    $ECHO ""
 
    TMP_V5_STARTUP_FILE=/tmp/rcsge.$$
@@ -1574,7 +1618,7 @@ AddQsystStartUpScript()
 
       rm -f $TMP_V5_STARTUP_FILE ${TMP_V5_STARTUP_FILE}.0 ${TMP_V5_STARTUP_FILE}.1
 
-      if [ $euid = 0 -a $ADMINUSER != default -a $WHICH = "master" ]; then
+      if [ $euid = 0 -a $ADMINUSER != default -a $WHICH = "qmaster" ]; then
          AddDefaultManager $ADMINUSER
       elif [ $euid != 0 ]; then
          AddDefaultManager $USER
@@ -1646,7 +1690,7 @@ AddQsystStartUpScript()
          $ECHO "" >> $RC_FILE
          $ECHO "" >> $RC_FILE
          $ECHO "# $QSYST start up" >> $RC_FILE
-         $ECHO "#-$LINES---------" >> $RC_FILE
+         $ECHO "#-$LINE---------" >> $RC_FILE
          $ECHO $V5_STARTUP_FILE >> $RC_FILE
       else
          Translate 0 "Found a call of %s in $s. Replacing with new call." $STARTUP_FILE_NAME $RC_FILE
@@ -1690,7 +1734,7 @@ AddHostsFromFile()
    done=false
    while [ $done = false ]; do
       $CLEAR
-      $ECHO "" 
+      $ECHO ""
       Translate 0 "Adding admin and submit hosts from file"
       $ECHO "---------------------------------------"
       $ECHO ""
@@ -1718,9 +1762,9 @@ AddHostsFromFile()
 #-------------------------------------------------------------------------
 # AddHostsFromTerminal
 #    Get a list of hosts and add the mas admin and submit hosts
-#         
+#
 AddHostsFromTerminal()
-{         
+{
    stop=false
    while [ $stop = false ]; do
       $CLEAR
@@ -1742,18 +1786,18 @@ AddHostsFromTerminal()
          stop=true
       else
          WaitClear noclear
-      fi  
+      fi
   done
-}         
+}
 
 #-------------------------------------------------------------------------
 # AddHosts
-#         
+#
 AddHosts()
 {
    $ECHO ""
    Translate 0 "Adding %s hosts" "$QSYST"
-   $ECHO "-------$LINES------"
+   $ECHO "-------$LINE------"
    $ECHO ""
    Translate 0 "Please now add the list of hosts, where you will later install your execution"
    Translate 0 "daemons. These hosts will be also added as valid submit hosts."
@@ -1768,19 +1812,19 @@ AddHosts()
    $ECHO ""
    Translate 4 "Do you want to use a file which contains the list of hosts"
    YesNo "$transout" n
-   ret=$? 
+   ret=$?
    if [ $ret = 0 ]; then
       AddHostsFromFile
       ret=$?
-   fi     
+   fi
 
    if [ $ret = 1 ]; then
       AddHostsFromTerminal
-   fi     
+   fi
 
    Translate 4 "Finished adding hosts. Hit <RETURN> to continue >>"
    WaitClear clear "\n$transout \c"
-}         
+}
 
 #-------------------------------------------------------------------------
 # AddQueue
@@ -1804,7 +1848,7 @@ AddQueue()
 
    $ECHO ""
    Translate 0 "Adding a default %s queue for this host" "$QSYST"
-   $ECHO "-----------------$LINES--------------------"
+   $ECHO "-----------------$LINE--------------------"
    $ECHO ""
    Translate 0 "We can now add a sample queue for this host which"
    $ECHO ""
@@ -1941,11 +1985,11 @@ WelcomeTheUser()
    fi
 
    Translate 0 "Welcome to the %s installation" $QSYST
-   $ECHO "---------------$LINES-------------"
-   $ECHO "" 
+   $ECHO "---------------$LINE-------------"
+   $ECHO ""
    Translate 0 "%s qmaster host installation" $QSYST
-   $ECHO "$LINES--------------------------"
-   $ECHO "" 
+   $ECHO "$LINE--------------------------"
+   $ECHO ""
    Translate 0 "Before you continue with the installation please read these hints:"
    $ECHO ""
    Translate 0 "  - your terminal window should have a size of at least 80x24 characters."
@@ -1956,7 +2000,7 @@ WelcomeTheUser()
    $ECHO ""
    Translate 0 "The qmaster installation procedure will take approximately 5-10 minutes."
    $ECHO ""
-   WaitClear clear  
+   WaitClear clear
 }
 
 #--------------------------------------------------------------------------
@@ -1969,10 +2013,10 @@ WelcomeTheUserExecHost()
    fi
 
    Translate 0 "Welcome to the %s installation" "$QSYST"
-   $ECHO "---------------$LINES-------------" 
+   $ECHO "---------------$LINE-------------"
    $ECHO ""
    Translate 0 "%s execution host installation" "$QSYST"
-   $ECHO "$LINES----------------------------"
+   $ECHO "$LINE----------------------------"
    $ECHO ""
    Translate 0 "If you haven't installed the %s qmaster host yet, you must execute" "$QSYST"
    Translate 0 "this step (with >%s<) prior the execution host installation." "install_qmaster"
@@ -2000,7 +2044,7 @@ WelcomeTheUserExecHost()
 WelcomeTheUserSubmit()
 {
    Translate 0 "%s submit host installation" "$QSYST"
-   $ECHO "$LINES-------------------------"
+   $ECHO "$LINE-------------------------"
    $ECHO ""
    Translate 0 "Adding a submit host to the %s cluster is done with the command:" "$QSYST"
    $ECHO ""
@@ -2017,7 +2061,7 @@ StartQmaster()
 {
    $ECHO ""
    Translate 0 "%s qmaster and scheduler startup" "$QSYST"
-   $ECHO "$LINES------------------------------"
+   $ECHO "$LINE------------------------------"
    $ECHO ""
    Translate 0 "Starting %s qmaster and scheduler daemon. Please wait ..." "$QSYST"
 
@@ -2033,7 +2077,7 @@ StartExecd()
 {
    $ECHO ""
    Translate 0 "%s execution daemon startup" "$QSYST"
-   $ECHO "$LINES---------------------------"
+   $ECHO "$LINE-------------------------"
    $ECHO ""
    Translate 0 "Starting %s execution daemon daemon. Please wait ..." "$QSYST"
    $V5_STARTUP_FILE -execd
@@ -2114,7 +2158,7 @@ THIRD_PARTY_FILES=openssl
 SetPermissions()
 {
    $CLEAR
-   $ECHO 
+   $ECHO
    Translate 0 "Verifying and setting file permissions"
    $ECHO "--------------------------------------"
    $ECHO
@@ -2126,7 +2170,7 @@ SetPermissions()
       $ECHO
       Translate 0 "Can't set the file owner/group and permissions"
       $ECHO
-      WaitClear clear 
+      WaitClear clear
       return 0
    else
       Translate 0 "Did you install this version with >pkgadd< or did you already"
@@ -2141,8 +2185,8 @@ SetPermissions()
 
    rm -f ./tst$$ 2> /dev/null > /dev/null
    touch ./tst$$ 2> /dev/null > /dev/null
-   rm -f ./tst$$ 2> /dev/null > /dev/null
    ret=$?
+   rm -f ./tst$$ 2> /dev/null > /dev/null
    if [ $ret != 0 ]; then
       $CLEAR
       Translate 0 "Verifying and setting file permissions (continued)"
@@ -2227,7 +2271,7 @@ InitCA()
 
    if [ $csp = false ]; then
       return
-   fi 
+   fi
 
    # Initialize CA, make directories and get DN info
    #
@@ -2239,7 +2283,7 @@ InitCA()
 
    WaitClear clear
 }
-   
+
 
 
 #--------------------------------------------------------------------------
@@ -2265,13 +2309,13 @@ if [ $myname = inst_sge ]; then
    inst=sge
    QSYST=SGE
    QSYST_NAME=SGE
-   LINES=---
+   LINE=---
    BLANKS="  "
 elif [ $myname = inst_sgeee ]; then
    inst=sgeee
    QSYST=SGEEE
    QSYST_NAME=SGEEE
-   LINES=-----
+   LINE=-----
    BLANKS=""
 else
    echo  "unknown name of this script: $0"
@@ -2315,7 +2359,7 @@ if [ "$GETTEXT" != "" -a "SGE_I18N" = true ]; then
    translation=1
 else
    translation=0
-   unset LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY 
+   unset LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY
    unset LC_NUMERIC LC_TIME LANGUAGE
 fi
 
@@ -2374,10 +2418,10 @@ ARGC=$#
 while [ $ARGC != 0 ]; do
    case $1 in
    -m)
-      WHICH="master"
+      WHICH="qmaster"
       ;;
    -x)
-      WHICH="exec"
+      WHICH="execd"
       ;;
    -s)
       WHICH="submit"
@@ -2395,7 +2439,10 @@ while [ $ARGC != 0 ]; do
       fast=true
       ;;
    -auto)
-      autoinst=true
+      if [ $WHICH = execd ]; then
+         autoinst=true
+         CLEAR=:
+      fi
       ;;
    -noqueue)
       addqueue=false
@@ -2420,7 +2467,7 @@ fi
 $CLEAR
 
 case $WHICH in
-master)
+qmaster)
    autoinst=false
    WelcomeTheUser
    PreCheckForFastInstall qmaster
@@ -2448,6 +2495,7 @@ master)
    AddLocalConfiguration
    AddActQmaster
    AddDefaultComplexes
+   AddPEFiles
    AddDefaultDepartement
    AddCommonFiles
    CreateSettingsFile
@@ -2458,8 +2506,7 @@ master)
    AddHosts
    GiveHints
    ;;
-
-exec)
+execd)
    WelcomeTheUserExecHost
    PreCheckForFastInstall execd
    ret=$?
@@ -2482,11 +2529,9 @@ exec)
    AddQueue
    GiveHints
    ;;
-
 submit)
    WelcomeTheUserSubmit
    ;;
-
 esac
 
 exit 0

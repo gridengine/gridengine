@@ -381,6 +381,7 @@ set INSURE_FLAG      = ""
 set NOERR_CFLAG      = ""
 set NOERR_PROTO      = ""
 set MEMCFLAG         = ""
+set JAVA_ARCH        = ""
 set JDRMAA           = 0
 
 set LFLAGS           = "-L."
@@ -837,11 +838,12 @@ endif
 
 if ( $JDRMAA == 1 ) then
    # Make sure we can find the Java header files
-   if ( $?JAVA_HOME ) then
+   if ( ${?JAVA_HOME} == 0 ) then
       echo "Please set JAVA_HOME"
       exit
+   else
+      set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/include"
    endif
-   set CORE_INCLUDE = "$CORE_INCLUDE -I$JAVA_HOME/include"
 endif
 
 set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD -DENABLE_NGC $SECFLAGS"

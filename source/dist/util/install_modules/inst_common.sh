@@ -865,6 +865,9 @@ PrintLocalConf()
    if [ $RSH_DAEMON != "undef" ]; then
       $ECHO "rsh_daemon             $RSH_DAEMON"
    fi
+   if [ $LOADSENSOR_COMMAND != "undef" ]; then
+      $ECHO "load_sensor            $LOADSENSOR_COMMAND"
+   fi
 }
 
 

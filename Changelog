@@ -8,6 +8,7 @@ JG-2004-03-17-0: Bugfix:    fixed race condition in sge_shepherd (qlogin_starter
                             for qlogin/qrsh jobs).
                  Changed:   sge_shepherd
                  Issue:     871
+                 Bugtraq:   5018669
                  Review:    CR
 
 EB-2004-03-16-0: Bugfix:    mail bomb upon abort with tightly int. par. job
@@ -97,6 +98,7 @@ JG-2004-01-29-0: Bugfix:    If a loadsensor did output to stderr, the loadsensor
                             execd was full.
                  Changed:   all (libuti)
                  Issue:     632
+                 Bugtraq:   5018695
                  Review:    SG
 
 SG-2004-01-26-0: Bugfix:    fixed SG-2003-12-17-0. It was not possible to set

@@ -2,6 +2,8 @@ CR-2002-07-24-0: Bugfix:    wrong port output in qstat error message when qmaste
                             (merged from maintrunc)
                  Issue:     #331
                  Bugtraq:   #4719755
+                 Changed:   commdcntl infotext libcom.a libsec.a libsge.a qacct qalter qconf qdel qevent qhost qmod qmon qsh qstat qsub sge_commd sge_coshepherd sge_execd sge_qmaster sge_schedd sge_shadowd sge_share_mon sge_shepherd tstrcv tstsnd
+                            
 
 
 CR-2002-07-23-1: Testsuite: (merged from maintrunc) 

@@ -1,3 +1,9 @@
+CR-2005-01-11-0: Bugfix:    pending job task deletion may not work
+                 Changed:   qmaster
+                 Issue:     1414
+                 Bugtraq:   6216020
+                 Review:    SG
+
 CR-2005-01-07-0: Bugfix:    - master task will close connection to
                               execd after job delivery
                  Changed:   qsh, gdilib

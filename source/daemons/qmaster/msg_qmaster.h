@@ -45,10 +45,11 @@
 /*
 ** sge_follow.c
 */
-#define MSG_JOB_NOJOBID               _MESSAGE(33014, _("can't get job id\n"))
-#define MSG_JOB_NOORDERTASK_US        _MESSAGE(33015, _("invalid task number 0 for job "U32CFormat" in "SFQ" order\n"))
-#define MSG_JOB_FINDJOB_U             _MESSAGE(33016, _("unable to find job "U32CFormat" from the scheduler order package\n"))
-#define MSG_JOB_FINDJOBTASK_UU        _MESSAGE(33017, _("unable to find task "U32CFormat" of job "U32CFormat"\n"))
+#define MSG_JOB_IGNORE_DELETED_TASK_UU _MESSAGE(33013, _("ignoring obtained start order for deleted task: "U32CFormat"."U32CFormat"\n"))
+#define MSG_JOB_NOJOBID                _MESSAGE(33014, _("can't get job id\n"))
+#define MSG_JOB_NOORDERTASK_US         _MESSAGE(33015, _("invalid task number 0 for job "U32CFormat" in "SFQ" order\n"))
+#define MSG_JOB_FINDJOB_U              _MESSAGE(33016, _("unable to find job "U32CFormat" from the scheduler order package\n"))
+#define MSG_JOB_FINDJOBTASK_UU         _MESSAGE(33017, _("unable to find task "U32CFormat" of job "U32CFormat"\n"))
 
 #define MSG_ORD_OLDVERSION_UUU        _MESSAGE(33018, _("scheduler sent order for old version "U32CFormat" of job "U32CFormat"."U32CFormat"\n"))
 #define MSG_ORD_TWICE_UU              _MESSAGE(33019, _("scheduler tries to schedule job "U32CFormat"."U32CFormat" twice\n"))

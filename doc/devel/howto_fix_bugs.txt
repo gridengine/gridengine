@@ -1,0 +1,12 @@
+To gain a high level of quality and to ensure bugs will not turn up again in 
+future releases, we'll use the following procedure when fixing bugs.
+
+1. Create a testsuite test that will recognize the bug.
+2. Fix the bug.
+3. Verify bug fix with testsuite.
+4. Review.
+5. Merge the fix to other branches as necessary, repeat steps 3 (testsuite) 
+   and 4 (review).
+
+All testsuite development is done in maintrunk.
+The maintrunk testsuite can test both 5.3 and 6.0 systems.

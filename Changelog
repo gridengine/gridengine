@@ -1,3 +1,7 @@
+JG-2004-06-09-0: QA:        Added development howto's:
+                            - use of branches
+                            - procedure for fixing bugs
+
 JG-2004-06-08-0: QA:        Added review template and help text.
 
 AS-2004-06-08-0: CVS        Created V60_TAG_{BRANCH,TAG}

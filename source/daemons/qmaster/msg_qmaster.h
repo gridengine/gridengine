@@ -259,9 +259,7 @@
 #define MSG_OBJ_SHUTDOWNPERMS         _MESSAGE(33180, _("shutting down execd requires manager privileges\n"))
 #define MSG_OBJ_NOEXECDONHOST_S       _MESSAGE(33181, _("no execd known on host "SFN"\n"))
 #define MSG_COM_NONOTIFICATION_SSS    _MESSAGE(33182, _("failed sending "SFN" notification to "SFN" execd host "SFN"\n"))
-/* #define MSG_COM_NONOTIFICATIONQ_SSSS   _message(33183, _("failed sending "SFN" notification to "SFN" "SFN" host "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_COM_NOTIFICATION_SSS      _MESSAGE(33184, _("sent "SFN" notification to "SFN" execd host "SFN"\n"))
-/* #define MSG_COM_NOTIFICATIONQ_SSSS     _message(33185, _("sent "SFN" notification to "SFN" "SFN" host "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_OBJ_UNKNOWN               _MESSAGE(33186, _("unknown"))
 #define MSG_NOTIFY_SHUTDOWNANDKILL    _MESSAGE(33187, _("shutdown and kill"))
 #define MSG_NOTIFY_SHUTDOWN           _MESSAGE(33188, _("shutdown"))

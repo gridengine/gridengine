@@ -1,3 +1,9 @@
+AD-2004-02-16-0: Bugfix:    'qconf -ks' now does output message about scheduler
+                            shutdown.
+                 Changed:   qmaster, evm
+                 Review:    SG
+                 Issue:     665
+
 SG-2004-02-16-1: Bugfix:    - second part of removing SGE 
                             - fixed processing of scheduler configuration
                               in scheduler

@@ -1048,24 +1048,23 @@ static void sge_gdi_shutdown_event_client(const char *aHost, sge_gdi_request *aR
    for_each (elem, aRequest->lp)
    {
       int client_id = EV_ID_ANY;
+      int res = -1;
 
       if (get_client_id(elem, &client_id) != 0) {
          answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          continue;
       }
 
-      if (EV_ID_ANY == client_id)
-      {
-         sge_shutdown_dynamic_event_clients(user);
+      if (EV_ID_ANY == client_id) {
+         res = sge_shutdown_dynamic_event_clients(user);
+      } else {
+         res = sge_shutdown_event_client(client_id, user, uid);
       }
-      else
-      {
-         if (sge_shutdown_event_client(client_id, user, uid) != 0)
-         {
-            ERROR((SGE_EVENT, MSG_GDI_SHUTDOWNEVCLIENTFAILED_US, u32c(client_id), SGE_FUNC));
-            answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            continue;
-         }
+
+      if (res != 0 ) {
+         answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      } else {
+         answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       }
    }
 

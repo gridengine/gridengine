@@ -51,7 +51,8 @@
 
 #define MSG_EVE_TOTALUPDATENOTHANDLINGEVENT_I _MESSAGE(66010, _("event number %d is not handled by sge_total_update_event\n"))
 
-#define MSG_COM_ACKTIMEOUT4EV_ISIS    _MESSAGE(66011, _("acknowledge timeout after %d seconds for event client ("SFN":%d) on host "SFQ))
-#define MSG_COM_NOSHUTDOWNPERMS       _MESSAGE(66012, _("shutdown requires manager privileges\n"))
+#define MSG_COM_ACKTIMEOUT4EV_ISIS        _MESSAGE(66011, _("acknowledge timeout after %d seconds for event client ("SFN":%d) on host "SFQ))
+#define MSG_COM_NOSHUTDOWNPERMS           _MESSAGE(66012, _("shutdown requires manager privileges\n"))
+#define MSG_COM_SHUTDOWNNOTIFICATION_SUS  _MESSAGE(66013, _("sent shutdown notification to event client " SFN " with id " U32CFormat " on host " SFN "\n"))
 
 #endif /* __MSG_EVMLIB_H */

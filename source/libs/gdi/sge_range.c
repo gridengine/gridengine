@@ -765,8 +765,8 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
 *
 *  NOTES
 *     It may be possible that 'id' is multiply contained in 'range_list' 
-*     after using this function. Use range_list_compress() to eliminate
-*     them.
+*     after using this function. Use range_list_compress() or 
+*     range_sort_uniq_compress() to eliminate them.
 *
 *  RESULT
 *     range_list and answer_list may be modified 
@@ -774,6 +774,7 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
 *  SEE ALSO
 *     gdi/range/RN_Type 
 *     gdi/range/range_list_compress()
+*     gdi/range/range_sort_uniq_compress()
 *******************************************************************************/
 void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
 {

@@ -1,3 +1,6 @@
+EB-2002-04-25-0: Enhancem.: Summarize answer messages for array jobs
+                 Issue:     #209 (partially)
+
 JG-2002-04-22-2: Cleanup:   Function hostcmp no longer needed in qmake
                             integration (remote-sge.c).
 

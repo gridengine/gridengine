@@ -1027,7 +1027,7 @@ case DARWIN:
 
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"
-   set JAVA_ARCH = "alpha"
+   set JAVA_ARCH = ""
    unset REL
    breaksw
 

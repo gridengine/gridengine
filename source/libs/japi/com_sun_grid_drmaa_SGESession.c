@@ -251,7 +251,8 @@ JNIEXPORT jobject JNICALL Java_sun_sge_drmaa_SGESession_nativeWait
 
    length = count;
    
-   resources = (*env)->NewObjectArray(env, resources, length);   
+   clazz = FindClass (env, "Ljava/lang/String;");
+   resources = (*env)->NewObjectArray(env, length, clazz, NULL);
    
    for (count = 0; count < length; count++) {
       tmp_str = (*env)->NewStringUTF (env, resource_entries[count]);
@@ -382,6 +383,48 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SGESession_nativeGetAttri
    drmaa_job_template_t *jt = get_from_list (id);
    jObjectArray retval = NULL;
    drmaa_names_t *names = NULL;
+   char *name_array[BUFFER_LENGTH];
+   int count = 0;
+   int max = 0;
+   jclass clazz = NULL;
+   jstring tmp_str = NULL;
+   
+   errno = drmaa_get_attribute_names (names, error, BUFFER_LENGTH);
+   
+   if (errno != DRMAA_ERRNO_SUCCESS) {
+      throw_exception (errno, error);
+   
+      return NULL;
+   }
+   
+   while (drmaa_get_next_attr_value(names, buffer, BUFFER_LENGTH)
+                                                       == DRMAA_ERRNO_SUCCESS) {
+      name_array[count++] = strdup (buffer);
+   }
+   
+   errno = drmaa_get_vector_attribute_names (names, error, BUFFER_LENGTH);
+   
+   if (errno != DRMAA_ERRNO_SUCCESS) {
+      throw_exception (errno, error);
+   
+      return NULL;
+   }
+   
+   while (drmaa_get_next_attr_value(names, buffer, BUFFER_LENGTH)
+                                                       == DRMAA_ERRNO_SUCCESS) {
+      name_array[count++] = strdup (buffer);
+   }
+   
+   max = count;
+   
+   clazz = FindClass (env, "Ljava/lang/String;");
+   retval = (*env)->NewObjectArray(env, max, clazz, NULL);
+
+   for (count = 0; count < max; count++) {
+      tmp_str = (*env)->NewStringUTF (env, name_array[count]);
+      (*env)->SetObjectArrayElement(env, retval, count, tmp_str);
+      FREE (name_array[count]);
+   }
 }
 
 JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SGESession_nativeGetAttribute
@@ -391,6 +434,82 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SGESession_nativeGetAttri
    int errno = DRMAA_ERRNO_SUCCESS;
    drmaa_job_template_t *jt = get_from_list (id);
    jObjectArray retval = NULL;
+   drmaa_attr_names_t *values = NULL;
+   char buffer[BUFFER_LENGTH];
+   char *name_str = (*env)->GetStringUTFChars(env, name, NULL);
+   bool is_vector = false;
+   jclass clazz = NULL;
+   jstring tmp_str = NULL;
+   
+   errno = drmaa_get_vector_attribute_names(&values, error, BUFFER_LENGTH);
+   
+   if (errno == DRMAA_ERRNO_SUCCESS) {
+      while (drmaa_get_next_attr_value(values, buffer, BUFFER_LENGTH)
+                                                       == DRMAA_ERRNO_SUCCESS) {
+         if (strcmp (buffer, name_str) == 0) {
+            is_vector = true;
+            break;
+         }
+      }
+   }
+   else {
+      (*env)->ReleaseStringUTFChars(env, name, name_str);
+      throw_exception (errno, error);
+   
+      return NULL;
+   }
+   
+   drmaa_release_attr_values (values);
+   
+   clazz = FindClass (env, "Ljava/lang/String;");
+   
+   if (is_vector) {
+      errno = drmaa_get_vector_attribute (jt, name_str, values, error, BUFFER_LENGTH);
+      (*env)->ReleaseStringUTFChars(env, name, name_str);
+      
+      if (errno != DRMAA_ERRNO_SUCCESS) {
+         throw_exception (errno, error);
+
+         return NULL;
+      }
+      else {
+         char *names[BUFFER_LENGTH];
+         int count = 0;
+         int max = 0;
+         
+         while (drmaa_get_next_attr_value(values, buffer, BUFFER_LENGTH)
+                                                       == DRMAA_ERRNO_SUCCESS) {
+            names[count++] = strdup (buffer);
+         }
+         
+         max = count;
+         
+         retval = (*env)->NewObjectArray(env, max, clazz, NULL);
+         
+         for (count = 0; count < max; count++) {
+            tmp_str = (*env)->NewStringUTF (env, names[count]);
+            (*env)->SetObjectArrayElement(env, retval, count, tmp_str);
+            FREE (names[count]);
+         }
+      }
+   }
+   else {
+      errno = drmaa_get_attribute (jt, name_str, buffer, BUFFER_LENGTH, error, BUFFER_LENGTH);
+      (*env)->ReleaseStringUTFChars(env, name, name_str);
+      
+      if (errno != DRMAA_ERRNO_SUCCESS) {
+         throw_exception (errno, error);
+
+         return NULL;
+      }
+      else {
+         retval = (*env)->NewObjectArray(env, 1, clazz, NULL);
+         tmp_str = (*env)->NewStringUTF (env, buffer);
+         (*env)->SetObjectArrayElement(env, retval, 0, tmp_str);
+      }
+   }
+   
+   return retval;
 }
 
 JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SGESession_nativeDeleteJobTemplate

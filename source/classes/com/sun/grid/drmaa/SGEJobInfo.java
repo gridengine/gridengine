@@ -58,8 +58,10 @@ public class SGEJobInfo extends JobInfo {
    private String signal = null;
    
    /** Creates a new instance of SGEJobInfo */
-   SGEJobInfo (String jobId, int status, Map resourceUsage) {
-      super (jobId, status, resourceUsage);
+   SGEJobInfo (String jobId, int status, String[] resourceUsage, String signal) {
+      super (jobId, status, nameValuesToMap (resourceUsage));
+      
+      this.signal = signal;
    }
    
    public int getExitStatus () {
@@ -70,14 +72,6 @@ public class SGEJobInfo extends JobInfo {
       return signal;
    }
 
-   void setTerminatingSignal (String signal) {
-      this.signal = signal;
-   }
-   
-   int getSignalNumber () {
-      return ((status & SIGNAL_BITS) >> SIGNAL_OFFSET);
-   }
-   
    public boolean hasCoreDump () {
       return ((status & COREDUMP_BIT) != 0);
    }
@@ -93,4 +87,15 @@ public class SGEJobInfo extends JobInfo {
    public boolean wasAborted () {
       return ((status & NEVERRAN_BIT) != 0);
    }   
+   
+   private static Map nameValuesToMap (String[] nameValuePairs) {
+      Map map = new HashMap ();
+      
+      for (int count = 0; count < nameValuePairs.length; count++) {
+         int equals = nameValuePairs[count].indexOf ('=');
+         map.put (nameValuePairs[count].substring (0, equals), nameValuePairs[count].substring (equals + 1));
+      }
+      
+      return map;
+   }
 }

@@ -1,3 +1,6 @@
+DT-2004-04-27-1: Enhancem.: o Further progress on DRMAA Java binding
+                 Changed:   DRMAA Java binding
+
 AD-2004-04-27-0: Enhancem:  Did add support for 'gcov' tool on LINUX and DARWIN
                  Changed:   aimk
                  Review:    AH
@@ -21,7 +24,7 @@ EB-2004-04-27-1: Bugfix:    scheduling info should say "queue instance"
 JG-2004-04-27-2: Testsuite: Added support for architectures irix65 and darwin.
                             Made DRMAA test use runlevel "long".
 
-DT-2004-04-26-0: Bugfix:    o Added missing SGE_ROOT error message in
+DT-2004-04-27-0: Bugfix:    o Added missing SGE_ROOT error message in
                               japi_init()
                             o Broke up job deletes into 500 job chunks in
                               japi_control() and japi_exit()
@@ -35,7 +38,7 @@ DT-2004-04-26-0: Bugfix:    o Added missing SGE_ROOT error message in
                             o Optimized locking in EVM send_events
                             o Fixed handling of gdi_setup error messages in
                               clients
-                            o All DRMAA cals now check to be sure the session
+                            o All DRMAA calls now check to be sure the session
                               exists before continuing, either via
                               japi_init_was_called() or the regular JAPI calls.
                             - test_drmaa currently fails due to a commlib issue

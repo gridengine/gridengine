@@ -36,6 +36,7 @@
 package com.sun.grid.drmaa;
 
 import java.util.*;
+import java.util.regex.*;
 
 import org.ggf.drmaa.*;
 
@@ -60,6 +61,11 @@ public class SGEJobTemplate extends JobTemplate {
 	private static final String ERROR_PATH = "drmaa_error_path";
 	private static final String JOIN_FILES = "drmaa_join_files";
 	private static final String TRANSFER_FILES = "drmaa_tranfer_files";
+	private static final String DEADLINE_TIME = "drmaa_deadline_time";
+	private static final String HARD_WALLCLOCK_TIME_LIMIT = "drmaa_wct_hlimit";
+	private static final String SOFT_WALLCLOCK_TIME_LIMIT = "drmaa_wct_slimit";
+	private static final String HARD_RUN_DURATION_LIMIT = "drmaa_run_duration_hlimit";
+	private static final String SOFT_RUN_DURATION_LIMIT = "drmaa_run_duration_slimit";
 	private static final String HOLD = "drmaa_hold";
 	private static final String ACTIVE = "drmaa_active";
    private SGESession session = null;
@@ -257,22 +263,103 @@ public class SGEJobTemplate extends JobTemplate {
       }
    }
    
+   public void setTransferFiles (byte transfer) throws DRMAAException {
+      StringBuffer buf = new StringBuffer ();
+      
+      if ((transfer & TRANSFER_INPUT_FILES) == 1) {
+         buf.append ('i');
+      }
+      
+      if ((transfer & TRANSFER_OUTPUT_FILES) == 1) {
+         buf.append ('o');
+      }
+      
+      if ((transfer & TRANSFER_ERROR_FILES) == 1) {
+         buf.append ('e');
+      }
+      
+      this.setAttribute (TRANSFER_FILES, buf.toString ());
+   }
+   
+   public byte getTransferFiles () {
+      String buf = (String)this.getAttribute (TRANSFER_FILES).get (0);
+      byte ret = TRANSFER_NONE;
+      
+      if (buf.indexOf ('i') != -1) {
+         ret = (byte)(ret | TRANSFER_INPUT_FILES);
+      }
+      
+      if (buf.indexOf ('o') != -1) {
+         ret = (byte)(ret | TRANSFER_OUTPUT_FILES);
+      }
+      
+      if (buf.indexOf ('e') != -1) {
+         ret = (byte)(ret | TRANSFER_ERROR_FILES);
+      }
+      
+      return ret;
+   }
+   
+   public void setDeadlineTime (Date deadline) throws DRMAAException {
+      this.setAttribute (DEADLINE_TIME, this.getStringFromDate (startTime));
+   }
+   
+   public Date getDeadlineTime () {
+      return this.getDateFromString ((String)this.getAttribute (DEADLINE_TIME).get (0));
+   }
+   
+   public void setHardWallclockTimeLimit (long hardWallclockLimit) throws DRMAAException {
+      this.setAttribute (HARD_WALLCLOCK_TIME_LIMIT, Long.toString (hardWallclockLimit));
+   }
+   
+   public long getHardWallclockTimeLimit () {
+      return Long.parseLong ((String)this.getAttribute (HARD_WALLCLOCK_TIME_LIMIT).get (0));
+   }
+   
+   public void setSoftWallClockTimeLimit (long softWallclockLimit) throws DRMAAException {
+      this.setAttribute (SOFT_WALLCLOCK_TIME_LIMIT, Long.toString (softWallclockLimit));
+   }
+   
+   public long getSoftWallClockTimeLimit () {
+      return Long.parseLong ((String)this.getAttribute (SOFT_WALLCLOCK_TIME_LIMIT).get (0));
+   }
+   
+   public void setHardRunDurationLimit (long hardRunLimit) throws DRMAAException {
+      this.setAttribute (HARD_RUN_DURATION_LIMIT, Long.toString (hardRunLimit));
+   }
+   
+   public long getHardRunDurationLimit () {
+      return Long.parseLong ((String)this.getAttribute (HARD_RUN_DURATION_LIMIT).get (0));
+   }
+   
+   public void setSoftRunDurationLimit (long softRunLimit) throws DRMAAException {
+      this.setAttribute (SOFT_RUN_DURATION_LIMIT, Long.toString (softRunLimit));
+   }
+
+   public long getSoftRunDurationLimit () {
+      return Long.parseLong ((String)this.getAttribute (SOFT_RUN_DURATION_LIMIT).get (0));
+   }
+   
    private List getAttribute (String name) {
-      String[] values = session.nativeGetAttribute (name);
+      String[] values = session.nativeGetAttribute (id, name);
       
       return Arrays.asList (values);
    }
    
    private void setAttribute (String name, List value) throws DRMAAException {
-      session.nativeSetAttributeValues (name, (String[])value.toArray (new String[value.size ()]));
+      session.nativeSetAttributeValues (id, name, (String[])value.toArray (new String[value.size ()]));
    }
    
    private void setAttribute (String name, String value) throws DRMAAException {
-      session.nativeSetAttributeValue (name, value);
+      session.nativeSetAttributeValue (id, name, value);
    }   
    
+   public List getAttributeNames () {
+      return Arrays.asList (session.nativeGetAttributeNames (id));
+   }
+   
    public void delete () throws DRMAAException {
-      session.nativeDeleteJobTemplate (this);
+      session.nativeDeleteJobTemplate (id);
    }
    
    int getId () {
@@ -280,10 +367,92 @@ public class SGEJobTemplate extends JobTemplate {
    }
    
    private String getStringFromDate (Date date) {
-      return null;
+      StringBuffer dateString = new StringBuffer ();
+      Calendar cal = Calendar.getInstance ();
+      
+      cal.setTime (date);
+      
+      dateString.append (Integer.toString (cal.get (Calendar.YEAR)));
+      dateString.append ('/');
+      dateString.append (Integer.toString (cal.get (Calendar.MONTH) + 1));
+      dateString.append ('/');
+      dateString.append (Integer.toString (cal.get (Calendar.DAY_OF_MONTH)));
+      dateString.append (' ');
+      dateString.append (Integer.toString (cal.get (Calendar.HOUR_OF_DAY)));
+      dateString.append (':');
+      dateString.append (Integer.toString (cal.get (Calendar.MINUTE)));
+      dateString.append (':');
+      dateString.append (Integer.toString (cal.get (Calendar.SECOND)));
+      
+      return dateString.toString ();
    }
    
    private Date getDateFromString (String date) {
-      return null;
+      Pattern p = Pattern.compile("((((\\d\\d)?(\\d\\d)/)?(\\d\\d)/)?(\\d\\d))? (\\d\\d):(\\d\\d)(:(\\d\\d))? ((+|-) (\\d\\d):(\\d\\d))?");
+      Matcher m = p.matcher(date);
+      
+      if (m.matches()) {
+         Calendar cal = null;
+         String year12 = m.group (1);
+         String year34 = m.group (2);
+         String month = m.group (4);
+         String day = m.group (6);
+         String hour = m.group (8);
+         String minute = m.group (9);
+         String second = m.group (10);
+         String tzSign = m.group (12);
+         String tzHour = m.group (13);
+         String tzMinute = m.group (14);
+         
+         if (!tzSign.equals ("") && !tzHour.equals ("") && !tzMinute.equals ("")) {
+            StringBuffer tz = new StringBuffer ("GMT");
+            
+            tz.append (tzSign);
+            tz.append (tzHour);
+            tz.append (':');
+            tz.append (tzMinute);
+            
+            cal = Calendar.getInstance (TimeZone.getTimeZone (tz.toString ()));
+         }
+         else {
+            cal = Calendar.getInstance ();
+         }
+         
+         if (!second.equals ("")) {
+            cal.set (Calendar.SECOND, Integer.parseInt (second));
+         }
+         
+         cal.set (Calendar.MINUTE, Integer.parseInt (minute));
+         cal.set (Calendar.HOUR_OF_DAY, Integer.parseInt (hour));
+         
+         if (!day.equals ("")) {
+            cal.set (Calendar.DAY_OF_MONTH, Integer.parseInt (day));
+         
+            if (!month.equals ("")) {
+               cal.set (Calendar.MONTH, Integer.parseInt (month) - 1);
+
+               if (!year12.equals ("") && !year34.equals ("")) {
+                  cal.set (Calendar.YEAR, Integer.parseInt (year12 + year34));
+               }
+               else if (!year34.equals ("")) {
+                  cal.set (Calendar.YEAR, 2000 + Integer.parseInt (year34));
+               }
+               else if (cal.getTime ().getTime () < System.currentTimeMillis ()) {
+                  cal.add (Calendar.YEAR, 1);
+               }
+            }
+            else if (cal.getTime ().getTime () < System.currentTimeMillis ()) {
+               cal.add (Calendar.MONTH, 1);
+            }
+         }
+         else if (cal.getTime ().getTime () < System.currentTimeMillis ()) {
+            cal.add (Calendar.DAY_OF_MONTH, 1);
+         }
+         
+         return cal.getTime ();
+      }
+      else {
+         return null;
+      }
    }
 }

@@ -54,6 +54,7 @@
 #include "sge_gdi.h"
 #include "commlib.h"
 #include "read_write_complex.h"
+#include "sge_complex.h"
 #include "sge_complex_schedd.h"
 #include "sge_answer.h"
 #include "qmon_proto.h"

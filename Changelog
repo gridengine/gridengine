@@ -1,3 +1,20 @@
+CR-2003-04-04-0  Bugfix:    - commd ignored first message for commlib client
+                            in case of priority tags messages (used for
+                            qmaster <-> execd communication). The first 
+                            message was ignored when more than one message
+                            with the same priority tag was ready to send.
+                            - performance improvement in search_message()
+                              (test function parameter outside of search
+                               loop)
+                            - performance improvement in 
+                              look4timeouts_messages()
+                              (check message list for timeouts only once
+                               in a second)
+                 Issue:     523
+                 Bugtraq:   4842844
+                 Review:    AH
+                 Changed:   commd
+
 EB-2003-04-04-0  Bugfix:    jobs suspended due to calendar were handled as
                             running jobs within scheduler
                             (see EB-2003-03-26-1)

@@ -204,14 +204,14 @@ int makenew
    message *messages = message_list;
 
    DENTER(TOP_LAYER, "search_message");
-
-   while (messages) {
-      if (fd >= 0)
+   if (fd >= 0) {
+      while (messages) {
          if (messages->fromfd == fd || messages->tofd == fd) {
             DEXIT;
             return messages;
          }
-      messages = messages->next;
+         messages = messages->next;
+      }
    }
    /* if no existing message for this fd was found, check if there
       is a commproc using this fd and create a new message for
@@ -304,17 +304,25 @@ int status
          if (tag || !ip[0] || m->tag == TAG_AUTH_FAILURE)
             return m;
 #endif /* KERBEROS */
+
+         /* figure out priority of message as specified by msg tag */
+         i = 0;
+         while (i < bestpriority && ip[i] && ip[i] != m->tag)
+            i++;
+
+         /* if we don't have a best the first is the best */
          if (best) {
-            i = 0;
-            while (i < bestpriority && ip[i] && ip[i] != m->tag)
-               i++;
+            /* we have a best, check if it's priority is better */
             if (i < bestpriority && ip[i] && ip[i] == m->tag) {
+               /* we have a new bestpriority */
                bestpriority = i;
                best = m;
             }
-         }
-         else
+         } else {
+            /* this is the first message for the comprog, mark it as best */
+            bestpriority = i;
             best = m;
+         }
       }
       m = m->next;
    }
@@ -390,9 +398,16 @@ void look4timeouts_messages(
 u_long now 
 ) {
    message *mp = message_list, *next;
+   static u_long lasttime = 0;
 
    DENTER(TOP_LAYER, "look4timeouts_messages");
 
+   if (now == lasttime) {
+      /* do this only once per second */
+      DEXIT;
+      return; 
+   }
+   lasttime = now;
    while (mp) {
       next = mp->next;
       if ((MESSAGE_STATUS(mp) == S_RDY_4_SND) &&

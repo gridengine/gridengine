@@ -2391,6 +2391,7 @@ void sge_clear_job( lListElem *job, bool is_clear_all) {
       
       for_each(ja_task, lGetList(job, JB_ja_template)) {
          sge_clear_ja_task(ja_task); 
+         lSetUlong(ja_task, JAT_task_number, 1);
       }   
    }
 

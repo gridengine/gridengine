@@ -1,3 +1,10 @@
+CR-2001-09-18-0: Testsuite:
+                 - sending CR (carriage return) before starting remote command
+                   (to stop eventually switched on correct questions) on rlogin
+                   call
+                 - wait longer before sending password (some login daemons
+                   don't accept fast password typing)
+
 CR-2001-09-17-0: Fixed issue #60 "COMMPROC ALLREADY REGISTERED" error
 
 AH-2001-09-14-2: Fixed error with job array causing dispatch of the last

@@ -533,7 +533,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                 -i $spawn_id timeout {
 #                   puts -nonewline $CHECK_OUTPUT "."
                    flush $CHECK_OUTPUT
-                   send -- "echo \"__ my id is ->\`id\`<-\"\n"
+                   send -- "\necho \"__ my id is ->\`id\`<-\"\n"
                    set timeout 3
                    incr mytries -1 ; 
                    if  { $mytries < 0 } { 
@@ -640,8 +640,9 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                }
                -i $spawn_id -- "assword:" {
                   log_user 0
-                  sleep 2 
-                  send "[get_root_passwd]\n"
+                  sleep 4 
+                  set send_slow "1 .1"
+                  send -s "[get_root_passwd]\n"
                   debug_puts "root password sent" 
                   if { $CHECK_DEBUG_LEVEL != 0 } {
                      log_user 1

@@ -1,0 +1,314 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<HTML>
+   <HEAD>
+      <TITLE>Delegated File Staging mit Grid Engine 6.0</TITLE>
+   </HEAD>
+   <BODY>
+
+   <P STYLE="margin-bottom: 0cm">
+      <CENTER>
+         <FONT size='-1'>
+            <A href="filestaging6.html">English</A> | Deutsch
+         </FONT>
+      </CENTER>
+   </P>
+
+   <H1>
+      <FONT COLOR="#336699">
+         Wie funktioniert FileStaging?
+      </FONT>
+   </H1>
+
+   <P STYLE="margin-bottom: 0cm">
+      Wenn Submit Host und Execution Host nicht auf einen gemeinsamen Fileserver
+      zugreifen koennen bzw. die Verzeichnisnamen sich unterscheiden, muessen
+      die vom Job benoetigten Dateien von Submit- zum Execution Host kopiert
+      werden (per rcp oder so) und die Ergebnisdateien des Jobs umgekehrt vom
+      Execution- zum Submit Host.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Da ein solcher File Staging Mechanismus sowieso sehr flexibel sein muss
+      und voll konfigurierbar sein muss, kann man das eigentliche kopieren auch
+      gleich einem vom Administrator geschriebenen Script ueberlassen, das man
+      nur mit den noetigen Daten versorgt. Da die eigentliche Arbeit an das
+      Script delegiert wird, sprechen wir hier vom &quot;Delegated File
+      Staging&quot;. Dabei sind zwei Scripte notwendig: Das erste wird im Prolog
+      aufgerufen und kopiert die Eingangsdateien auf den Execution Host, das
+      zweite wird im Epilog aufgerufen und kopiert die Ergebnisdateien auf den
+      Submit Host.
+   </P>
+
+   <H1>
+      <FONT COLOR="#336699">
+         Was muessen die vom Administrator geschriebenen File Staging Scripte
+         koennen?
+      </FONT>
+   </H1>
+
+   <P STYLE="margin-bottom: 0cm">
+      Die Scripte muessen zumindest die stdin, stdout und stderr files vom
+      Submit- zum Execution Host (bzw. andersrum) kopieren.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Die dazu noetigen Informationen erhaelt das Script ueber
+      Kommandozeilenparameter, die in der Cluster Configuration angegeben werden
+      koennen. Mit "qconf -mconf" kann man bei "prolog" nach dem Pfad des
+      Prolog-Scripts (u.a.) folgende Variablen angeben, die beim Aufruf des
+      Prologs automatisch vom DRM mit ihrem jeweiligen Wert ersetzt werden:
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      <TABLE border=1 width="600">
+         <TR>
+            <TD width='200'>
+               $fs_stdin_file_staging
+            </TD>
+            <TD rowspan='3' width='400'>
+               <P STYLE="margin-bottom: 0cm">
+                  "1" oder "0"; sagt, ob file staging fuer die jeweilige Datei
+                  durchgefuert werden soll.
+               </P>
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdout_file_staging
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stderr_file_staging
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdin_host
+            </TD>
+            <TD rowspan='3'>
+               <P STYLE="margin-bottom: 0cm">
+                  Der Name des Submit Hosts, auf dem das stdin-File zu finden
+                  ist bzw. auf den das stdout und stderr-File kopiert werden
+                  soll. (Die ganze Aktion geschieht ja vom Execution Host aus).
+               </P>
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdout_host
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stderr_host
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdin_path
+            </TD>
+            <TD rowspan='3'>
+               <P STYLE="margin-bottom: 0cm">
+                  Der Pfad der jeweiligen Datei auf dem Submit Host.
+               </P>
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdout_path
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stderr_path
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdin_tmp_path
+            </TD>
+            <TD rowspan='3'>
+               <P STYLE="margin-bottom: 0cm">
+                  Der Pfad der jeweiligen Datei auf dem Execution Host.
+               </P>
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdout_tmp_path
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stderr_tmp_path
+            </TD>
+         </TR>
+      </TABLE>
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Ein typischer Prolog-Script-Aufruf wuerde also so aussehen:
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      <UL>
+         <CODE>
+            prolog    /..../scripts/fs_prolog.sh $fs_stdin_file_staging \</BR>
+            $fs_stdin_host $fs_stdin_path $fs_stdin_tmp_path
+         </CODE>
+      </UL>
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Und der typische Epilog-Script-Aufruf entsprechend:
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      <UL>
+         <CODE>
+            epilog   /..../scripts/fs_epilog.sh $fs_stdout_file_staging \</BR>
+            $fs_stdout_host $fs_stdout_path $fs_stdout_tmp_path \</BR>
+            $fs_stderr_file_staging $fs_stderr_host $fs_stderr_path
+            $fs_stderr_tmp_path
+         </CODE>
+      </UL>
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Im Prolog-Script muesste dann also folgendermassen kopiert werden:
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      <UL>
+         (in Pseude-Script-Sprache)<BR><BR>
+<PRE>...
+if( $1 ) then
+   rcp $2:$3 $4
+endif
+...
+</PRE>
+      </UL>
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Und im Epilog-Script analog dazu:
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      <UL>
+         (in Pseude-Script-Sprache)<BR><BR>
+<PRE>...
+if( $1 ) then
+   rcp $4 $2:$3
+endif
+
+if( $5 ) then
+   rcp $8 $6:$7
+endif
+...</PRE>
+      </UL>
+   </P>
+
+   <H1>
+      <FONT COLOR="#336699">
+         Und dann funktioniert das so?
+      </FONT>
+   </H1>
+
+   <P STYLE="margin-bottom: 0cm">
+      Fast. Der Administrator muss in der Cluster Configuration noch folgenden
+      Eintrag machen:
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      <UL>
+         <CODE>
+            delegated_file_staging   true
+         </CODE>
+      </UL>
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Erst jetzt ist file staging zur Benutzung freigegeben.
+   </P>
+
+   <H1>
+      <FONT COLOR="#336699">
+         Und wie benutzt man das ganze dann?
+      </FONT>
+   </H1>
+
+   <P STYLE="margin-bottom: 0cm">
+      Bisher nur von DRMAA aus. Fuer weitere DRMAA Infos, sehen Sie die
+      <A HREF="../drmaa.html">DRMAA Howto</A>.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Dazu muss man erstmal mit drmaa_get_attribute_names() abfragen, ob das
+      DRMAA-Attribut drmaa_transfer_files vorhanden ist (dieses Attribut ist
+      dann vorhanden, wenn in der Cluster Configuration
+      &quot;delegated_file_staging true&quot; eingetragen ist). Ist dieses
+      Attribute vorhanden, dann kann die Applikation dieses Attribut auf einen
+      der Werte "i","o","e" oder eine beliebige Kombination setzen und somit
+      veranlassen, dass die korrespondierende Datei (i - stdin, o - stdout,
+      e - stderr) per file staging kopiert wird.
+   </P>
+
+   <H1>
+      <FONT COLOR="#336699">
+         Wo findet man weitere Infos?
+      </FONT>
+   </H1>
+
+   <P STYLE="margin-bottom: 0cm">
+      Beispiele findet man hier:
+   </P>
+
+   <UL>
+      <LI><A href="scripts6/fs_prolog.sh">Prolog</A></LI>
+      <LI><A href="scripts6/fs_epilog.sh">Epilog</A></LI>
+   </UL>
+
+   <P STYLE="margin-bottom: 0cm">
+      Eine gesamte File Staging Ueberblick findet man in der
+      <A href="index.html">File Staging Howto</A>.
+   </P>
+
+   </BODY>
+</HTML>
+I. 
+
+
+
+
+
+II. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+III. 
+
+
+
+III. 
+

@@ -84,7 +84,7 @@ public class TestDRMAA {
    private static void printUsage () {
       System.out.println ("java TestDRMAA codes [duration]");
       System.out.println ("\tcodes: <number><code>[:codes]");
-      System.out.println ("\tnumber: 0-9 -- number of instances");
+      System.out.println ("\tnumber: 1-9,0=10 -- number of instances");
       System.out.println ("\tcode: W|Y|D|H|P|s|b|w|y|d|h|p");
       System.out.println ("\t\tW -- Submit and wait");
       System.out.println ("\t\tY -- Submit bulk and synchronize");
@@ -108,11 +108,15 @@ public class TestDRMAA {
       
       while (tok.hasMoreTokens ()) {
          String code = tok.nextToken ();
-         int number = 0;
+         int number = -1;
          char type = code.charAt (1);
          
          try {
             number = Integer.parseInt (code.substring (0, 1));
+            
+            if (number == 0) {
+               number = 10;
+            }
          }
          catch (NumberFormatException e) {
             throw new InvalidArgumentException ("Invalid argument: " + arg);

@@ -1261,8 +1261,9 @@ _spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
       my_fields_out = fields_out;
    }
    else {
-      my_fields_out = (int *)malloc (spool_get_number_of_fields (fields) *
+      my_fields_out = (int *)malloc ((spool_get_number_of_fields (fields) + 1) *
                                                                   sizeof (int));
+      my_fields_out[0] = NoName;
    }
 
    _spool_flatfile_read_live_object(answer_list, &object, descr, root, instr,

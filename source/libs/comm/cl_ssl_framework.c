@@ -240,21 +240,21 @@ static void                  cl_com_ssl_log_mode_settings(long mode);
 #define __CL_FUNCTION__ "cl_com_ssl_log_mode_settings()"
 static void cl_com_ssl_log_mode_settings(long mode) {
    if (mode & SSL_MODE_ENABLE_PARTIAL_WRITE) {
-      CL_LOG(CL_LOG_WARNING,"SSL_MODE_ENABLE_PARTIAL_WRITE:       on");
+      CL_LOG(CL_LOG_INFO,"SSL_MODE_ENABLE_PARTIAL_WRITE:       on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_MODE_ENABLE_PARTIAL_WRITE:       off");
+      CL_LOG(CL_LOG_INFO,"SSL_MODE_ENABLE_PARTIAL_WRITE:       off");
    }
 
    if (mode & SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER) {
-      CL_LOG(CL_LOG_WARNING,"SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER: on");
+      CL_LOG(CL_LOG_INFO,"SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER: on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER: off");
+      CL_LOG(CL_LOG_INFO,"SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER: off");
    }
 
    if (mode & SSL_MODE_AUTO_RETRY) {
-      CL_LOG(CL_LOG_WARNING,"SSL_MODE_AUTO_RETRY:                 on");
+      CL_LOG(CL_LOG_INFO,"SSL_MODE_AUTO_RETRY:                 on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_MODE_AUTO_RETRY:                 off");
+      CL_LOG(CL_LOG_INFO,"SSL_MODE_AUTO_RETRY:                 off");
    }
 }
 
@@ -264,119 +264,119 @@ static void cl_com_ssl_log_mode_settings(long mode) {
 #define __CL_FUNCTION__ "cl_com_ssl_log_option_settings()"
 static void cl_com_ssl_log_option_settings(long mode) {
    if (mode & SSL_OP_MICROSOFT_SESS_ID_BUG) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_MICROSOFT_SESS_ID_BUG:                  on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_MICROSOFT_SESS_ID_BUG:                  on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_MICROSOFT_SESS_ID_BUG:                  off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_MICROSOFT_SESS_ID_BUG:                  off");
    }
    if (mode & SSL_OP_NETSCAPE_CHALLENGE_BUG) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NETSCAPE_CHALLENGE_BUG:                 on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NETSCAPE_CHALLENGE_BUG:                 on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NETSCAPE_CHALLENGE_BUG:                 off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NETSCAPE_CHALLENGE_BUG:                 off");
    }
    if (mode & SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG:       on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG:       on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG:       off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG:       off");
    }
    if (mode & SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG:            on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG:            on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG:            off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG:            off");
    }
    if (mode & SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER:             on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER:             on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER:             off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER:             off");
    }
    if (mode & SSL_OP_MSIE_SSLV2_RSA_PADDING) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_MSIE_SSLV2_RSA_PADDING:                 on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_MSIE_SSLV2_RSA_PADDING:                 on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_MSIE_SSLV2_RSA_PADDING:                 off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_MSIE_SSLV2_RSA_PADDING:                 off");
    }
    if (mode & SSL_OP_SSLEAY_080_CLIENT_DH_BUG) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_SSLEAY_080_CLIENT_DH_BUG:               on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_SSLEAY_080_CLIENT_DH_BUG:               on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_SSLEAY_080_CLIENT_DH_BUG:               off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_SSLEAY_080_CLIENT_DH_BUG:               off");
    }
    if (mode & SSL_OP_TLS_D5_BUG) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_TLS_D5_BUG:                             on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_TLS_D5_BUG:                             on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_TLS_D5_BUG:                             off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_TLS_D5_BUG:                             off");
    }
    if (mode & SSL_OP_TLS_BLOCK_PADDING_BUG) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_TLS_BLOCK_PADDING_BUG:                  on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_TLS_BLOCK_PADDING_BUG:                  on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_TLS_BLOCK_PADDING_BUG:                  off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_TLS_BLOCK_PADDING_BUG:                  off");
    }
    if (mode & SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS:            on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS:            on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS:            off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS:            off");
    }
    if (mode & SSL_OP_ALL) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_ALL:                                    on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_ALL:                                    on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_ALL:                                    off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_ALL:                                    off");
    }
    if (mode & SSL_OP_TLS_ROLLBACK_BUG) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_TLS_ROLLBACK_BUG:                       on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_TLS_ROLLBACK_BUG:                       on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_TLS_ROLLBACK_BUG:                       off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_TLS_ROLLBACK_BUG:                       off");
    }
    if (mode & SSL_OP_SINGLE_DH_USE) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_SINGLE_DH_USE:                          on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_SINGLE_DH_USE:                          on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_SINGLE_DH_USE:                          off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_SINGLE_DH_USE:                          off");
    }
    if (mode & SSL_OP_EPHEMERAL_RSA) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_EPHEMERAL_RSA:                          on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_EPHEMERAL_RSA:                          on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_EPHEMERAL_RSA:                          off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_EPHEMERAL_RSA:                          off");
    }
    if (mode & SSL_OP_CIPHER_SERVER_PREFERENCE) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_CIPHER_SERVER_PREFERENCE:               on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_CIPHER_SERVER_PREFERENCE:               on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_CIPHER_SERVER_PREFERENCE:               off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_CIPHER_SERVER_PREFERENCE:               off");
    }
    if (mode & SSL_OP_PKCS1_CHECK_1) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_PKCS1_CHECK_1:                          on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_PKCS1_CHECK_1:                          on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_PKCS1_CHECK_1:                          off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_PKCS1_CHECK_1:                          off");
    }
    if (mode & SSL_OP_PKCS1_CHECK_2) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_PKCS1_CHECK_2:                          on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_PKCS1_CHECK_2:                          on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_PKCS1_CHECK_2:                          off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_PKCS1_CHECK_2:                          off");
    }
    if (mode & SSL_OP_NETSCAPE_CA_DN_BUG) { 
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NETSCAPE_CA_DN_BUG:                     on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NETSCAPE_CA_DN_BUG:                     on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NETSCAPE_CA_DN_BUG:                     off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NETSCAPE_CA_DN_BUG:                     off");
    }
    if (mode & SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG:        on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG:        on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG:        off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG:        off");
    }
    if (mode & SSL_OP_NO_SSLv2) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NO_SSLv2:                               on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NO_SSLv2:                               on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NO_SSLv2:                               off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NO_SSLv2:                               off");
    }
    if (mode & SSL_OP_NO_SSLv3) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NO_SSLv3:                               on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NO_SSLv3:                               on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NO_SSLv3:                               off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NO_SSLv3:                               off");
    }
    if (mode & SSL_OP_NO_TLSv1) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NO_TLSv1:                               on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NO_TLSv1:                               on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NO_TLSv1:                               off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NO_TLSv1:                               off");
    }
    if (mode & SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION) {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION: on");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION: on");
    } else {
-      CL_LOG(CL_LOG_WARNING,"SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION: off");
+      CL_LOG(CL_LOG_INFO,"SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION: off");
    }
 }
 
@@ -408,14 +408,15 @@ static int cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl) {
    const char* commlib_ciphers_string = "RC4-MD5:NULL-MD5"; /* "RC4-MD5:NULL-MD5"; */ /* or "DEFAULT" */
 
    if (ctx != NULL) {
-      CL_LOG(CL_LOG_WARNING,"setting CTX object defaults");      
+      CL_LOG(CL_LOG_INFO,"setting CTX object defaults");      
 
       /* 
        * STEP 1: set cipher list 
        */
-      CL_LOG_STR(CL_LOG_WARNING,"setting cipher list:", commlib_ciphers_string);
+      CL_LOG_STR(CL_LOG_INFO,"setting cipher list:", commlib_ciphers_string);
       if ( cl_com_ssl_func__SSL_CTX_set_cipher_list(ctx, commlib_ciphers_string) != 1) {
          CL_LOG_STR(CL_LOG_ERROR,"could not set ctx cipher list:", commlib_ciphers_string);
+         cl_commlib_push_application_error(CL_RETVAL_ERROR_SETTING_CIPHER_LIST, commlib_ciphers_string);
          return CL_RETVAL_ERROR_SETTING_CIPHER_LIST;
       }
 
@@ -423,7 +424,7 @@ static int cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl) {
       /* 
        * STEP 2: set mode 
        */
-      CL_LOG(CL_LOG_WARNING,"getting default modes");
+      CL_LOG(CL_LOG_INFO,"getting default modes");
       ctx_actual_mode = cl_com_ssl_func__SSL_CTX_get_mode(ctx);
       cl_com_ssl_log_mode_settings(ctx_actual_mode);
 
@@ -432,7 +433,7 @@ static int cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl) {
          ctx_actual_mode = commlib_mode;
          cl_com_ssl_func__SSL_CTX_set_mode(ctx,ctx_actual_mode);
 
-         CL_LOG(CL_LOG_WARNING,"setting commlib modes");
+         CL_LOG(CL_LOG_INFO,"setting commlib modes");
          ctx_actual_mode = cl_com_ssl_func__SSL_CTX_get_mode(ctx);
          cl_com_ssl_log_mode_settings(ctx_actual_mode);
       }
@@ -441,7 +442,7 @@ static int cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl) {
       /*
        * STEP 3: set options 
        */
-      CL_LOG(CL_LOG_WARNING,"getting default options");
+      CL_LOG(CL_LOG_INFO,"getting default options");
       ctx_actual_options = cl_com_ssl_func__SSL_CTX_get_options(ctx);
       cl_com_ssl_log_option_settings(ctx_actual_options);
 
@@ -451,7 +452,7 @@ static int cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl) {
          cl_com_ssl_func__SSL_CTX_set_options(ctx,ctx_actual_options);
 
          /* print the options again */
-         CL_LOG(CL_LOG_WARNING,"setting commlib options");
+         CL_LOG(CL_LOG_INFO,"setting commlib options");
          ctx_actual_options = cl_com_ssl_func__SSL_CTX_get_options(ctx);
          cl_com_ssl_log_option_settings(ctx_actual_options);
       }
@@ -461,20 +462,21 @@ static int cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl) {
       const char* helper_str = NULL;
       int prio = 0;
 
-      CL_LOG(CL_LOG_WARNING,"setting SSL object defaults");      
+      CL_LOG(CL_LOG_INFO,"setting SSL object defaults");      
 
       /* 
        * STEP 1: set cipher list 
        */
       if ( cl_com_ssl_func__SSL_set_cipher_list(ssl, commlib_ciphers_string) != 1) {
          CL_LOG_STR(CL_LOG_ERROR,"could not set ssl cipher list:", commlib_ciphers_string);
+         cl_commlib_push_application_error(CL_RETVAL_ERROR_SETTING_CIPHER_LIST, commlib_ciphers_string);
          return CL_RETVAL_ERROR_SETTING_CIPHER_LIST;
       }
 
       /* 
        * STEP 2: set mode 
        */
-      CL_LOG(CL_LOG_WARNING,"getting default modes");
+      CL_LOG(CL_LOG_INFO,"getting default modes");
       ssl_actual_mode = cl_com_ssl_func__SSL_get_mode(ssl);
       cl_com_ssl_log_mode_settings(ssl_actual_mode);
 
@@ -482,7 +484,7 @@ static int cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl) {
          ssl_actual_mode = commlib_mode;
          cl_com_ssl_func__SSL_set_mode(ssl,ssl_actual_mode);
 
-         CL_LOG(CL_LOG_WARNING,"setting commlib modes");
+         CL_LOG(CL_LOG_INFO,"setting commlib modes");
          ssl_actual_mode = cl_com_ssl_func__SSL_get_mode(ssl);
          cl_com_ssl_log_mode_settings(ssl_actual_mode);
       }
@@ -490,7 +492,7 @@ static int cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl) {
       /*
        * STEP 3: set options 
        */
-      CL_LOG(CL_LOG_WARNING,"getting default options");
+      CL_LOG(CL_LOG_INFO,"getting default options");
       ssl_actual_options = cl_com_ssl_func__SSL_get_options(ssl);
       cl_com_ssl_log_option_settings(ssl_actual_options);
       
@@ -500,7 +502,7 @@ static int cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl) {
          cl_com_ssl_func__SSL_set_options(ssl,ssl_actual_options);
 
          /* print the options again */
-         CL_LOG(CL_LOG_WARNING,"setting commlib options");
+         CL_LOG(CL_LOG_INFO,"setting commlib options");
          ssl_actual_options = cl_com_ssl_func__SSL_get_options(ssl);
          cl_com_ssl_log_option_settings(ssl_actual_options);
       }
@@ -508,9 +510,9 @@ static int cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl) {
       /*
        * Show cipher list
        */
-      CL_LOG(CL_LOG_WARNING,"supported cipher priority list:");
+      CL_LOG(CL_LOG_INFO,"supported cipher priority list:");
       while ( (helper_str = cl_com_ssl_func__SSL_get_cipher_list(ssl, prio)) != NULL) {
-         CL_LOG(CL_LOG_WARNING, helper_str );
+         CL_LOG(CL_LOG_INFO, helper_str );
          prio++;
       }
    }
@@ -533,7 +535,7 @@ static int cl_com_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
    
    err_cert = cl_com_ssl_func__X509_STORE_CTX_get_current_cert(ctx);
    if (err_cert != NULL) {
-      CL_LOG(CL_LOG_WARNING,"got client certificate");
+      CL_LOG(CL_LOG_INFO,"got client certificate");
    } else {
       CL_LOG(CL_LOG_ERROR,"client certificate error: could not get cert");
       is_ok = 0;
@@ -623,7 +625,7 @@ static int cl_com_ssl_destroy_symbol_table(void) {
       pthread_mutex_lock(&cl_com_ssl_crypto_handle_mutex);
 
       if (cl_com_ssl_crypto_handle == NULL) {
-         CL_LOG(CL_LOG_WARNING,"there is no symbol table loaded!");
+         CL_LOG(CL_LOG_ERROR,"there is no symbol table loaded!");
          pthread_mutex_unlock(&cl_com_ssl_crypto_handle_mutex);
          return CL_RETVAL_SSL_NO_SYMBOL_TABLE;
       }
@@ -1193,7 +1195,7 @@ static int cl_com_ssl_log_ssl_errors(const char* function_name) {
 
    while( (ssl_error = cl_com_ssl_func__ERR_get_error()) ) {
       cl_com_ssl_func__ERR_error_string_n(ssl_error,buffer,512);
-      snprintf(help_buf, 1024, "SSL error in %s: %s", func_name, buffer);
+      snprintf(help_buf, 1024, MSG_CL_COMMLIB_SSL_ERROR_USS, ssl_error, func_name, buffer);
       CL_LOG(CL_LOG_ERROR,help_buf);
       cl_commlib_push_application_error(CL_RETVAL_SSL_GET_SSL_ERROR, help_buf );
       had_errors = CL_TRUE;
@@ -1228,7 +1230,7 @@ static int cl_com_ssl_free_com_private(cl_com_connection_t* connection) {
       int back = 0;
       back = cl_com_ssl_func__SSL_shutdown(private->ssl_obj);
       if (back != 1) {
-         CL_LOG_INT(CL_LOG_WARNING,"do SSL shutdown returned:", back);
+         CL_LOG_INT(CL_LOG_WARNING,"SSL shutdown returned:", back);
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
       }
    }
@@ -1313,10 +1315,10 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
    }
 
    if (is_server == CL_FALSE) {
-      CL_LOG(CL_LOG_WARNING, "setting up context as client");
+      CL_LOG(CL_LOG_INFO, "setting up context as client");
    } else {
-      CL_LOG(CL_LOG_WARNING, "setting up context as server");
-      CL_LOG(CL_LOG_WARNING, "setting peer verify mode for clients");
+      CL_LOG(CL_LOG_INFO, "setting up context as server");
+      CL_LOG(CL_LOG_INFO, "setting peer verify mode for clients");
       cl_com_ssl_func__SSL_CTX_set_verify(private->ssl_ctx,
                                           SSL_VERIFY_PEER|SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
                                           cl_com_ssl_verify_callback);
@@ -1325,28 +1327,31 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
    /* load certificate chain file */
    if (cl_com_ssl_func__SSL_CTX_use_certificate_chain_file(private->ssl_ctx, private->ssl_setup->ssl_cert_pem_file) != 1) {
       CL_LOG_STR(CL_LOG_ERROR,"failed to set ssl_cert_pem_file:", private->ssl_setup->ssl_cert_pem_file);
+      cl_commlib_push_application_error(CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE, private->ssl_setup->ssl_cert_pem_file);
       cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
       return CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE;
    }
-   CL_LOG_STR(CL_LOG_WARNING,"ssl_cert_pem_file:", private->ssl_setup->ssl_cert_pem_file);
+   CL_LOG_STR(CL_LOG_INFO,"ssl_cert_pem_file:", private->ssl_setup->ssl_cert_pem_file);
 
    if (cl_com_ssl_func__SSL_CTX_load_verify_locations( private->ssl_ctx, 
                                       private->ssl_setup->ssl_CA_cert_pem_file, 
                                       NULL) != 1) {
 
       CL_LOG(CL_LOG_ERROR,"can't read trusted CA certificates file(s)");
+      cl_commlib_push_application_error(CL_RETVAL_SSL_CANT_READ_CA_LIST, private->ssl_setup->ssl_CA_cert_pem_file );
       cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
       return CL_RETVAL_SSL_CANT_READ_CA_LIST;
    }
-   CL_LOG_STR(CL_LOG_WARNING,"ssl_CA_cert_pem_file:", private->ssl_setup->ssl_CA_cert_pem_file);
+   CL_LOG_STR(CL_LOG_INFO,"ssl_CA_cert_pem_file:", private->ssl_setup->ssl_CA_cert_pem_file);
 
    /* load private key */
    if (cl_com_ssl_func__SSL_CTX_use_PrivateKey_file(private->ssl_ctx, private->ssl_setup->ssl_key_pem_file, SSL_FILETYPE_PEM) != 1) {
       CL_LOG_STR(CL_LOG_ERROR,"failed to set ssl_key_pem_file:", private->ssl_setup->ssl_key_pem_file);
+      cl_commlib_push_application_error(CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE, private->ssl_setup->ssl_key_pem_file);
       cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
       return CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE;
    }
-   CL_LOG_STR(CL_LOG_WARNING,"ssl_key_pem_file:", private->ssl_setup->ssl_key_pem_file);
+   CL_LOG_STR(CL_LOG_INFO,"ssl_key_pem_file:", private->ssl_setup->ssl_key_pem_file);
 
    return CL_RETVAL_OK;
 }
@@ -1438,7 +1443,7 @@ int cl_com_ssl_framework_cleanup(void) {
          ret_val = CL_RETVAL_OK;
       }
    } else {
-      CL_LOG(CL_LOG_WARNING,"ssl config object not initialized");
+      CL_LOG(CL_LOG_ERROR,"ssl config object not initialized");
       ret_val = CL_RETVAL_NO_FRAMEWORK_INIT;
    }
    pthread_mutex_unlock(&cl_com_ssl_global_config_mutex);
@@ -1733,10 +1738,10 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
                   CL_LOG_STR(CL_LOG_ERROR,"couldn't read all RAND data from file:", ssl_setup->ssl_rand_file );
                }
             } else {
-               CL_LOG(CL_LOG_WARNING,"no RAND file specified");
+               CL_LOG(CL_LOG_ERROR,"no RAND file specified");
             }
          } else {
-            CL_LOG(CL_LOG_WARNING,"PRNG is seeded with enough data");
+            CL_LOG(CL_LOG_INFO,"PRNG is seeded with enough data");
          }
 
          if (cl_com_ssl_func__RAND_status() != 1) {
@@ -2007,15 +2012,17 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
                break;
             }
          }
+         cl_commlib_push_application_error(CL_RETVAL_SSL_ACCEPT_ERROR, cl_com_ssl_get_error_text(ssl_error) );
          return CL_RETVAL_SSL_ACCEPT_ERROR;
       }
 
       CL_LOG(CL_LOG_INFO,"SSL Accept successful");
       connection->write_buffer_timeout_time = 0;
 
-      CL_LOG(CL_LOG_WARNING,"Checking Client Authentication");
+      CL_LOG(CL_LOG_INFO,"Checking Client Authentication");
       if (cl_com_ssl_func__SSL_get_verify_result(private->ssl_obj) != X509_V_OK) {
          CL_LOG(CL_LOG_ERROR,"client certificate doesn't verify");
+         cl_commlib_push_application_error(CL_RETVAL_SSL_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_CLIENT_CERTIFICATE_ERROR);
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
          return CL_RETVAL_SSL_CERTIFICATE_ERROR;
       }
@@ -2030,9 +2037,10 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
 
 
          if (peer_CN != NULL) {
-            CL_LOG_STR(CL_LOG_WARNING,"calling ssl verify callback with peer name:",peer_CN);
+            CL_LOG_STR(CL_LOG_INFO,"calling ssl verify callback with peer name:",peer_CN);
             if ( private->ssl_setup->ssl_verify_func(CL_SSL_PEER_NAME, CL_TRUE, peer_CN) != CL_TRUE) {
                CL_LOG(CL_LOG_ERROR, "commlib ssl verify callback function failed in peer name check");
+               cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_PEER_NAME_MATCH_ERROR);
                cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                cl_com_ssl_func__X509_free(peer);
                peer = NULL;
@@ -2040,6 +2048,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
             }
          } else {
             CL_LOG(CL_LOG_ERROR, "could not get peer_CN from peer certificate");
+            cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_PEER_CERT_GET_ERROR);
             cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
             cl_com_ssl_func__X509_free(peer);
             peer = NULL;
@@ -2051,10 +2060,11 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
                                         uniqueIdentifier, 
                                         sizeof(uniqueIdentifier))) {
             if (uniqueIdentifier != NULL) {
-               CL_LOG_STR(CL_LOG_WARNING,"unique identifier:", uniqueIdentifier);
-               CL_LOG_STR(CL_LOG_WARNING,"calling ssl_verify_func with user name:",uniqueIdentifier);
+               CL_LOG_STR(CL_LOG_INFO,"unique identifier:", uniqueIdentifier);
+               CL_LOG_STR(CL_LOG_INFO,"calling ssl_verify_func with user name:",uniqueIdentifier);
                if ( private->ssl_setup->ssl_verify_func(CL_SSL_USER_NAME, CL_TRUE, uniqueIdentifier) != CL_TRUE) {
                   CL_LOG(CL_LOG_ERROR, "commlib ssl verify callback function failed in user name check");
+                  cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_VERIFY_ERROR);
                   cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                   cl_com_ssl_func__X509_free(peer);
                   peer = NULL;
@@ -2072,6 +2082,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
 
             } else {
                CL_LOG(CL_LOG_ERROR, "could not get uniqueIdentifier from peer certificate");
+               cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_GET_ERROR);
                cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                cl_com_ssl_func__X509_free(peer);
                peer = NULL;
@@ -2079,6 +2090,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
             }
          } else {
             CL_LOG(CL_LOG_ERROR,"client certificate error: could not get identifier");
+            cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_GET_ERROR);
             cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
             cl_com_ssl_func__X509_free(peer);
             peer = NULL;
@@ -2088,6 +2100,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
          peer = NULL;
       } else {
          CL_LOG(CL_LOG_ERROR,"client did not send peer certificate");
+         cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_CLIENT_CERT_NOT_SENT_ERROR);
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
          return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
       }
@@ -2476,6 +2489,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
 
             default: {
                CL_LOG(CL_LOG_ERROR,"SSL handshake not successful and no clear cleanup");
+               cl_commlib_push_application_error(CL_RETVAL_SSL_CONNECT_ERROR, MSG_CL_COMMLIB_SSL_HANDSHAKE_ERROR);
                cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                return CL_RETVAL_SSL_CONNECT_ERROR;
             }
@@ -2484,7 +2498,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
       CL_LOG(CL_LOG_INFO,"SSL Connect successful");
       connection->write_buffer_timeout_time = 0;
 
-      CL_LOG(CL_LOG_WARNING,"Checking Server Authentication");
+      CL_LOG(CL_LOG_INFO,"Checking Server Authentication");
 
       if (cl_com_ssl_func__SSL_get_verify_result(private->ssl_obj) != X509_V_OK) {
          CL_LOG(CL_LOG_ERROR,"Certificate doesn't verify");
@@ -2502,9 +2516,10 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
                                               256);
           
          if (peer_CN != NULL) {
-            CL_LOG_STR(CL_LOG_WARNING,"calling ssl verify callback with peer name:",peer_CN);
+            CL_LOG_STR(CL_LOG_INFO,"calling ssl verify callback with peer name:",peer_CN);
             if ( private->ssl_setup->ssl_verify_func(CL_SSL_PEER_NAME, CL_FALSE, peer_CN) != CL_TRUE) {
                CL_LOG(CL_LOG_ERROR, "commlib ssl verify callback function failed in peer name check");
+               cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_VERIFY_CALLBACK_FUNC_ERROR);
                cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                cl_com_ssl_func__X509_free(peer);
                peer = NULL;
@@ -2512,6 +2527,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
             }
          } else {
             CL_LOG(CL_LOG_ERROR, "could not get peer_CN from peer certificate");
+            cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_PEER_NAME_GET_ERROR);
             cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
             cl_com_ssl_func__X509_free(peer);
             peer = NULL;
@@ -2521,6 +2537,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
          peer = NULL;
       } else {
          CL_LOG(CL_LOG_ERROR,"service did not send peer certificate");
+         cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_SERVER_CERT_NOT_SENT_ERROR);
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
          return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
       }
@@ -2608,6 +2625,7 @@ int cl_com_ssl_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
    }
    if ( connection->read_gmsh_header->dl > CL_DEFINE_MAX_MESSAGE_LENGTH ) {
       CL_LOG(CL_LOG_ERROR,"gmsh header dl entry is larger than CL_DEFINE_MAX_MESSAGE_LENGTH");
+      cl_commlib_push_application_error(CL_RETVAL_MAX_MESSAGE_LENGTH_ERROR, NULL);
       return CL_RETVAL_MAX_MESSAGE_LENGTH_ERROR;
    }
    return retval;
@@ -3256,11 +3274,13 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
 
    if (size > CL_DEFINE_MAX_MESSAGE_LENGTH) {
       CL_LOG_INT(CL_LOG_ERROR,"data to write is > max message length =", CL_DEFINE_MAX_MESSAGE_LENGTH );
+      cl_commlib_push_application_error(CL_RETVAL_MAX_READ_SIZE, NULL);
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
-   if (int_size < 4 && size > 32767 ) {
+   if (int_size < CL_COM_SSL_FRAMEWORK_MIN_INT_SIZE && size > CL_COM_SSL_FRAMEWORK_MAX_INT ) {
       CL_LOG_INT(CL_LOG_ERROR,"can't send such a long message, because on this architecture the sizeof integer is", (int)int_size );
+      cl_commlib_push_application_error(CL_RETVAL_MAX_READ_SIZE, MSG_CL_COMMLIB_SSL_MESSAGE_SIZE_EXEED_ERROR);
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
@@ -3287,19 +3307,18 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
          if (FD_ISSET(private->sockfd, &writefds)) {
             data_written = cl_com_ssl_func__SSL_write(private->ssl_obj, &message[data_complete], (int) (size - data_complete) );   
             if (data_written <= 0) {
-               CL_LOG(CL_LOG_WARNING,"SSL write not successful");
                /* Try to find out more about the connect error */
                ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_written);
                private->ssl_last_error = ssl_error;
-               CL_LOG_STR(CL_LOG_WARNING,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
                switch(ssl_error) {
                   case SSL_ERROR_SYSCALL:
                   case SSL_ERROR_WANT_READ: 
                   case SSL_ERROR_WANT_WRITE: {
+                     CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
                      break;
                   }
                   default: {
-                     CL_LOG(CL_LOG_ERROR,"SSL write error");
+                     CL_LOG_STR(CL_LOG_ERROR,"SSL write error", cl_com_ssl_get_error_text(ssl_error));
                      cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                      return CL_RETVAL_SEND_ERROR;
                   }
@@ -3320,20 +3339,18 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
       } else {
          data_written = cl_com_ssl_func__SSL_write(private->ssl_obj, &message[data_complete], (int) (size - data_complete));
          if (data_written <= 0) {
-            CL_LOG(CL_LOG_WARNING,"SSL write not successful");
-
             /* Try to find out more about the connect error */
             ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_written);
             private->ssl_last_error = ssl_error;
-            CL_LOG_STR(CL_LOG_WARNING,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
             switch(ssl_error) {
                case SSL_ERROR_SYSCALL:
                case SSL_ERROR_WANT_READ: 
                case SSL_ERROR_WANT_WRITE: {
+                  CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
                   break;
                }
                default: {
-                  CL_LOG(CL_LOG_ERROR,"SSL write error");
+                  CL_LOG_STR(CL_LOG_ERROR,"SSL write error", cl_com_ssl_get_error_text(ssl_error));
                   cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                   return CL_RETVAL_SEND_ERROR;
                }
@@ -3399,11 +3416,13 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
 
    if (size > CL_DEFINE_MAX_MESSAGE_LENGTH) {
       CL_LOG_INT(CL_LOG_ERROR,"data to read is > max message length =", CL_DEFINE_MAX_MESSAGE_LENGTH );
+      cl_commlib_push_application_error(CL_RETVAL_MAX_READ_SIZE, NULL);
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
-   if (int_size < 4 && size > 32767 ) {
+   if (int_size < CL_COM_SSL_FRAMEWORK_MIN_INT_SIZE && size > CL_COM_SSL_FRAMEWORK_MAX_INT ) {
       CL_LOG_INT(CL_LOG_ERROR,"can't read such a long message, because on this architecture the sizeof integer is", (int)int_size );
+      cl_commlib_push_application_error(CL_RETVAL_MAX_READ_SIZE, MSG_CL_COMMLIB_SSL_MESSAGE_SIZE_EXEED_ERROR);
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
@@ -3432,16 +3451,15 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
                /* Try to find out more about the connect error */
                ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_read);
                private->ssl_last_error = ssl_error;
-               CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
-           
                switch(ssl_error) {
                   case SSL_ERROR_SYSCALL:
                   case SSL_ERROR_WANT_READ: 
                   case SSL_ERROR_WANT_WRITE: {
+                     CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
                      break;
                   }
                   default: {
-                     CL_LOG(CL_LOG_ERROR,"SSL write error");
+                     CL_LOG_STR(CL_LOG_ERROR,"SSL write error:", cl_com_ssl_get_error_text(ssl_error));
                      cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                      return CL_RETVAL_READ_ERROR;
                   }
@@ -3465,16 +3483,16 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
             /* Try to find out more about the connect error */
             ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_read);
             private->ssl_last_error = ssl_error;
-            CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
            
             switch(ssl_error) {
                case SSL_ERROR_SYSCALL:
                case SSL_ERROR_WANT_READ: 
                case SSL_ERROR_WANT_WRITE: {
+                  CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
                   break;
                }
                default: {
-                  CL_LOG(CL_LOG_ERROR,"SSL read error");
+                  CL_LOG_STR(CL_LOG_ERROR,"SSL read error:", cl_com_ssl_get_error_text(ssl_error));
                   cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                   return CL_RETVAL_READ_ERROR;
                }

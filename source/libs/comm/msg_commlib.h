@@ -86,6 +86,32 @@
 #define MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE                  _MESSAGE(85045, _("compile source code with larger FD_SETSIZE value"))
 #define MSG_CL_COMMLIB_CHECK_SSL_CERTIFICATE                                  _MESSAGE(85046, _("please check certificate validity"))
 #define MSG_CL_COMMLIB_HOSTNAME_EXEEDS_MAX_HOSTNAME_LENGTH_SU                 _MESSAGE(85047, _("hostname "SFQ" exceeds MAXHOSTNAMELEN(="U32CFormat")"))
+#define MSG_CL_COMMLIB_SSL_ERROR_USS                                          _MESSAGE(85048, _("SSL error(nr.:"U32CFormat") in %s: %s"))
+
+
+#define MSG_CL_COMMLIB_SSL_CLIENT_CERTIFICATE_ERROR   _MESSAGE(85049, _("client certificate doesn't verify"))
+#define MSG_CL_COMMLIB_SSL_PEER_NAME_MATCH_ERROR      _MESSAGE(85050, _("peer name not matching"))
+#define MSG_CL_COMMLIB_SSL_PEER_CERT_GET_ERROR        _MESSAGE(85051, _("cannot get peer certificate"))
+#define MSG_CL_COMMLIB_SSL_USER_ID_VERIFY_ERROR       _MESSAGE(85052, _("user id doesn't verify"))
+#define MSG_CL_COMMLIB_SSL_USER_ID_GET_ERROR          _MESSAGE(85053, _("cannot get user id"))
+#define MSG_CL_COMMLIB_SSL_CLIENT_CERT_NOT_SENT_ERROR _MESSAGE(85054, _("client did not send peer certificate"))
+#define MSG_CL_COMMLIB_SSL_HANDSHAKE_ERROR            _MESSAGE(85055, _("SSL handshake error"))
+#define MSG_CL_COMMLIB_SSL_VERIFY_CALLBACK_FUNC_ERROR _MESSAGE(85056, _("commlib ssl verify callback function failed"))
+#define MSG_CL_COMMLIB_SSL_PEER_NAME_GET_ERROR        _MESSAGE(85057, _("could not get peer_CN from peer certificate"))
+#define MSG_CL_COMMLIB_SSL_SERVER_CERT_NOT_SENT_ERROR _MESSAGE(85058, _("service did not send peer certificate"))
+#define MSG_CL_COMMLIB_SSL_MESSAGE_SIZE_EXEED_ERROR   _MESSAGE(85059, _("message size exceeds integer size on this architecture"))
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -6316,7 +6316,6 @@ static void *cl_com_handle_read_thread(void *t_conf) {
    
                case CL_ACCEPTING: {
                   int return_value;
-                  CL_LOG(CL_LOG_WARNING,"connection state is CL_ACCEPTING");
                   if (elem->connection->data_read_flag == CL_COM_DATA_READY  ) {
                      return_value = cl_com_connection_complete_accept(elem->connection,handle->open_connection_timeout,1);
                      if (return_value != CL_RETVAL_OK && 

@@ -36,6 +36,9 @@
 #include "cl_data_types.h"
 
 
+#define CL_COM_SSL_FRAMEWORK_MAX_INT      32767
+#define CL_COM_SSL_FRAMEWORK_MIN_INT_SIZE 4
+
 /* ssl specific functions */
 int cl_com_ssl_framework_setup(void);
 

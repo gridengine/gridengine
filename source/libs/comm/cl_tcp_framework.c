@@ -726,6 +726,14 @@ int cl_com_tcp_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
       CL_LOG(CL_LOG_ERROR,"no file descriptor");
       return CL_RETVAL_PARAMS;
    }
+
+   if (size > CL_DEFINE_MAX_MESSAGE_LENGTH) {
+      CL_LOG_INT(CL_LOG_ERROR,"data to write is > max message length =", CL_DEFINE_MAX_MESSAGE_LENGTH );
+      cl_commlib_push_application_error(CL_RETVAL_MAX_READ_SIZE, NULL);
+      return CL_RETVAL_MAX_READ_SIZE;
+   }
+
+
    /*
     * INFO: this can be a boddle neck if only_one_write is not set,
     * because if the message can't be read complete, we must try it later 
@@ -847,6 +855,7 @@ int cl_com_tcp_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
 
    if (size > CL_DEFINE_MAX_MESSAGE_LENGTH) {
       CL_LOG_INT(CL_LOG_ERROR,"data to read is > max message length =", CL_DEFINE_MAX_MESSAGE_LENGTH );
+      cl_commlib_push_application_error(CL_RETVAL_MAX_READ_SIZE, NULL);
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
@@ -1016,6 +1025,7 @@ int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
    }
    if ( connection->read_gmsh_header->dl > CL_DEFINE_MAX_MESSAGE_LENGTH ) {
       CL_LOG(CL_LOG_ERROR,"gmsh header dl entry is larger than CL_DEFINE_MAX_MESSAGE_LENGTH");
+      cl_commlib_push_application_error(CL_RETVAL_MAX_MESSAGE_LENGTH_ERROR, NULL);
       return CL_RETVAL_MAX_MESSAGE_LENGTH_ERROR;
    }
    return retval;

@@ -75,26 +75,26 @@ static cl_bool_t cl_ingore_timeout = CL_FALSE;
 static cl_bool_t cl_com_default_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value) {
    switch(mode) {
       case CL_SSL_PEER_NAME: {
-         CL_LOG(CL_LOG_WARNING,"checking peer name");
+         CL_LOG(CL_LOG_INFO,"checking peer name");
          break;
       }
       case CL_SSL_USER_NAME: {
-         CL_LOG(CL_LOG_WARNING,"checking user name");
+         CL_LOG(CL_LOG_INFO,"checking user name");
          break;
       }
    }
    switch(service_mode) {
       case CL_TRUE: {
-         CL_LOG(CL_LOG_WARNING,"running in service mode");
+         CL_LOG(CL_LOG_INFO,"running in service mode");
          break;
       }
       case CL_FALSE: {
-         CL_LOG(CL_LOG_WARNING,"running in client mode");
+         CL_LOG(CL_LOG_INFO,"running in client mode");
          break;
       }
    }
    if (value != NULL) {
-      CL_LOG_STR(CL_LOG_WARNING,"compare value is:",value);
+      CL_LOG_STR(CL_LOG_INFO,"compare value is:",value);
    } else {
       CL_LOG(CL_LOG_ERROR,"compare value is not set");
    }

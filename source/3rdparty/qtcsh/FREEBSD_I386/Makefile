@@ -1,5 +1,5 @@
 # Generated automatically from Makefile.in by configure.
-# $Id: Makefile,v 1.1 2003/03/08 02:27:15 brooks Exp $
+# $Id: Makefile,v 1.2 2003/03/09 05:35:41 brooks Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -11,8 +11,8 @@
 SHELL=/bin/sh
 VERSION=6.08
 BUILD=tcsh
-srcdir=..
 VPATH=..
+srcdir=..
 
 ################################################################
 ## CFLAGS.  For various -D things, see config.h
@@ -30,7 +30,7 @@ LFLAGS= $(SGE_LOPTS)
 #LFLAGS= -Zn10000		# hpux lint
 
 
-CFLAGS = -g -O2 $(SGE_COPTS) -DFREEBSD		# This is set by autoconf.
+CFLAGS = -g -O2 -DPROG_NAME='"qtcsh"' $(SGE_COPTS) -DFREEBSD		# This is set by autoconf.
 #CFLAGS= -g			# debug
 #CFLAGS= -O			# production
 #CFLAGS= 			# Broken optimizers....
@@ -143,7 +143,7 @@ DFLAGS = -D_PATH_TCSHELL='"${DESTBIN}/tcsh"'
 ################################################################
 ## LDFLAGS.  Define something here if you need to
 ################################################################
-LDFLAGS=$(SGE_LOPTS) 		## This is set by autoconf.
+LDFLAGS= $(SGE_LOPTS)		## This is set by autoconf.
 #LDFLAGS= 			## The simplest, suitable for all.
 #LDFLAGS= -s			## Stripped. Takes less space on disk.
 #LDFLAGS= -s -n			## Pure executable. Spares paging over

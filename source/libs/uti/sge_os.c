@@ -107,7 +107,7 @@ int sge_get_pids(pid_t *pids, int max_pids, const char *name,
    DENTER(TOP_LAYER, "sge_get_pids");
    
    command_pid = sge_peopen("/bin/sh", 0, pscommand, NULL, NULL, 
-                        &fp_in, &fp_out, &fp_err);
+                        &fp_in, &fp_out, &fp_err, false);
 
    if (command_pid == -1) {
       DEXIT;
@@ -237,7 +237,7 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 #endif
 
    command_pid = sge_peopen("/bin/sh", 0, pscommand, NULL, NULL, 
-                        &fp_in, &fp_out, &fp_err);
+                        &fp_in, &fp_out, &fp_err, false);
 
    if (command_pid == -1) {
       DEXIT;

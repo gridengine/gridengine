@@ -38,6 +38,8 @@
 #include <time.h>  
 #include <unistd.h>
 
+#include "basis_types.h"
+
 /****** uti/stdio/FPRINTF() ***************************************************
 *  NAME
 *     FPRINTF() -- fprintf() macro 
@@ -60,10 +62,6 @@
 *  NOTES
 *     Don't forget to define the 'FPRINTF_ERROR'-label
 ******************************************************************************/
-#include <stdio.h>
-
-#include "basis_types.h"
-
 #define FPRINTF(x) \
    if (fprintf x == -1) { \
       goto FPRINTF_ERROR; \
@@ -93,7 +91,6 @@
 *  NOTES
 *     Don't forget to define the 'FPRINTF_ERROR'-label
 ******************************************************************************/
-
 #define FPRINTF_ASSIGN(var, x) \
    if ((var = fprintf x)== -1) { \
       goto FPRINTF_ERROR; \
@@ -101,7 +98,7 @@
 
 pid_t sge_peopen(const char *shell, int login_shell, const char *command, 
                  const char *user, char **env, FILE **fp_in, FILE **fp_out, 
-                 FILE **fp_err);
+                 FILE **fp_err, bool null_stderr);
  
 int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err, 
                 struct timeval *timeout); 

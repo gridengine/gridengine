@@ -219,9 +219,11 @@ if [ $QMASTER = "install" ]; then
  AddPEFiles
  AddDefaultDepartement
  AddCommonFiles
+ CreateSGEStartUpScripts $euid true master
+ CreateSGEStartUpScripts $euid true execd
  CreateSettingsFile
  InitCA
- AddSGEStartUpScript $euid true master
+ AddSGEStartUpScript $euid master
  StartQmaster
  AddHosts
  SetScheddConfig
@@ -253,7 +255,7 @@ if [ $EXECD = "install" ]; then
          CheckHostNameResolving
          GetLocalExecdSpoolDir
          AddLocalConfiguration_With_Qconf
-         AddSGEStartUpScript $euid true execd
+         AddSGEStartUpScript $euid execd
          StartExecd
          AddQueue
          GiveHints
@@ -284,7 +286,7 @@ if [ $EXECD = "install" ]; then
       CheckHostNameResolving
       GetLocalExecdSpoolDir
       AddLocalConfiguration_With_Qconf
-      AddSGEStartUpScript $euid true execd 
+      AddSGEStartUpScript $euid execd 
       StartExecd
       AddQueue
       GiveHints

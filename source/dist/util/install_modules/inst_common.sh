@@ -654,13 +654,21 @@ GiveHints()
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to see where Grid Engine logs messages >> "
       $CLEAR
 
+      tmp_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
+      master_spool=`dirname $tmp_spool`
+
       $INFOTEXT -u "\nGrid Engine messages"
       $INFOTEXT "\nGrid Engine messages can be found at:\n\n" \
                 "   /tmp/qmaster_messages (during qmaster startup)\n" \
                 "   /tmp/execd_messages   (during execution daemon startup)\n\n" \
                 "After startup the daemons log their messages in their spool directories.\n\n" \
                 "   Qmaster:     %s\n" \
-                "   Exec daemon: <execd_spool_dir>/<hostname>/messages\n" $QMDIR/messages
+                "   Exec daemon: <execd_spool_dir>/<hostname>/messages\n" $master_spool/messages
+
+      $INFOTEXT -u "\nGrid Engine startup scripts"
+      $INFOTEXT "\nGrid Engine startup scripts can be found at:\n\n" \
+                "   %s (qmaster and scheduler)\n" \
+                "   %s (execd)\n" $SGE_ROOT/$SGE_CELL/common/sgemaster $SGE_ROOT/$SGE_CELL/common/sgeexecd
 
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
                 "Do you want to see previous screen about using Grid Engine again (y/n) [n] >> "
@@ -720,17 +728,14 @@ PrintLocalConf()
 
 
 #-------------------------------------------------------------------------
-# AddSGEStartUpScript: Add startup script to rc files if root installs
+# CreateSGEStartUpScripts: create startup scripts 
 #
-AddSGEStartUpScript()
+CreateSGEStartUpScripts()
 {
    euid=$1
    create=$2
    hosttype=$3
 
-   $CLEAR
-   $INFOTEXT -u "\nGrid Engine startup script"
-   $ECHO
    if [ $hosttype = "master" ]; then
       TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
       STARTUP_FILE_NAME=sgemaster
@@ -813,23 +818,47 @@ AddSGEStartUpScript()
          AddDefaultOperator $USER
       fi
 
-      $INFOTEXT "Your Grid Engine cluster wide startup script is installed as:\n\n" \
-                "   %s<\n\n" $SGE_STARTUP_FILE
-      $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+      $INFOTEXT "Creating >%s< script" $STARTUP_FILE_NAME 
    fi
 
+}
+
+
+
+#-------------------------------------------------------------------------
+# AddSGEStartUpScript: Add startup script to rc files if root installs
+#
+AddSGEStartUpScript()
+{
+   euid=$1
+   hosttype=$2
+
    $CLEAR
+   if [ $hosttype = "master" ]; then
+      TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
+      STARTUP_FILE_NAME=sgemaster
+      S95NAME=S95sgemaster
+      DAEMON_NAME="qmaster/scheduler"
+   else
+      TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
+      STARTUP_FILE_NAME=sgeexecd
+      S95NAME=S95sgeexecd
+      DAEMON_NAME="execd"
+   fi
+
+   SGE_STARTUP_FILE=$SGE_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
+
 
    if [ $euid != 0 ]; then
       return 0
    fi
 
-   $INFOTEXT -u "\nGrid Engine startup script"
+   $INFOTEXT -u "\n%s startup script" $DAEMON_NAME
 
    # --- from here only if root installs ---
    $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
-             "\nWe can install the startup script that\n" \
-             "Grid Engine is started at machine boot (y/n) [y] >> "
+             "\nWe can install the startup script that will\n" \
+             "start %s at machine boot (y/n) [y] >> " $DAEMON_NAME
 
    ret=$?
    if [ $AUTO = "true" -a $ADD_TO_RC = "false" ]; then
@@ -922,6 +951,7 @@ AddSGEStartUpScript()
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
 }
+
 
 #-------------------------------------------------------------------------
 # AddDefaultManager

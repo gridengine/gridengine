@@ -99,6 +99,7 @@ proc sge_macro { macro_name } {
       "MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S" -
       "MSG_SGETEXT_CANTRESOLVEHOST_S" -
       "MSG_SGETEXT_UNKNOWN_RESOURCE_S" -
+      "MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE" -
       "MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S" -
       "MSG_JOB_MORETASKSTHAN_U" -
       "MSG_JOB_REGDELTASK_SUU" -
@@ -139,6 +140,7 @@ proc sge_macro { macro_name } {
       "MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S" { set value "" }
 
       "DISTINST_HIT_RETURN_TO_CONTINUE" { set value "\nHit <RETURN> to continue >> " } 
+      "DISTINST_HOSTNAME_KNOWN_AT_MASTER" { set value "\nThis hostname is known at qmaster as an administrative host.\n\nHit <RETURN> to continue >>" }
       "DISTINST_NOT_COMPILED_IN_SECURE_MODE" { set value "\n>sge_qmaster< binary is not compiled with >-secure< option!\n" }
       "DISTINST_ENTER_HOSTS" { set value "Host(s): " }
       "DISTINST_VERIFY_FILE_PERMISSIONS" { set value "\nWe may now verify and set the file permissions of your Grid Engine\ndistribution.\n\nThis may be useful since due to unpacking and copying of your distribution\nyour files may be unaccessible to other users.\n\nWe will set the permissions of directories and binaries to\n\n   755 - that means executable are accessible for the world\n\nand for ordinary files to\n\n   644 - that means readable for the world\n\nDo you want to verify and set your file permissions (y/n) \[y\] >> " }

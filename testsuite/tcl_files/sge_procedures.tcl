@@ -3758,6 +3758,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set NOT_REQUESTABLE [translate $CHECK_HOST 1 0 0   [sge_macro MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S] "*" ]
   set CAN_T_RESOLVE   [translate $CHECK_HOST 1 0 0   [sge_macro MSG_SGETEXT_CANTRESOLVEHOST_S] "*" ]
   set UNKNOWN_RESOURCE1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWN_RESOURCE_S] "*" ]
+  set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S] "*" ]
   set TO_MUCH_TASKS [translate $CHECK_HOST 1 0 0     [sge_macro MSG_JOB_MORETASKSTHAN_U] "*" ]
   set WARNING_OPTION_ALREADY_SET [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S] "*"]
   set ONLY_ONE_RANGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_ONLYONERANGE]]
@@ -6237,8 +6238,10 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
              }
           }
       }
+   } else {
+      shutdown_system_daemon $CHECK_CORE_MASTER "sched execd qmaster"
    }
-   
+
    if { $do_ps_kill == 1 && $do_compile == 0} {
       puts $CHECK_OUTPUT "perhaps master is not running, trying to shutdown cluster with ps information"
 

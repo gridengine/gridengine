@@ -1,3 +1,7 @@
+AS-2002-06-05-2: Change:    print edit comment when cluster config is
+                            created in inst_sge script
+                 Issue:     #213
+
 JG-2002-06-05-0: Bugfix:    Load values on HP-UX 11 multiprocessor machines 
                             were incorrect.
                  Issue:     #246

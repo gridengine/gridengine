@@ -91,6 +91,23 @@ InitCA()
    $ECHO "----------------------------------------------------------------------"
    $ECHO
 
+   if [ -d $CATOP -o -d $CALOCALTOP ]; then
+      Translate 0 "There are already directories of the CA infrastructure in"
+      $ECHO
+      $ECHO "   $CATOP "
+      Translate 0 "      or    "
+      $ECHO "   $CALOCALTOP "
+      $ECHO
+      Translate 4 "Do you want to recreate your SGE CA infrastructure"
+      YesNo "\n$transout" y
+      if [ $? != 0 ]; then
+         $ECHO
+         Translate 0 "We will not reinitialize your SGE CA infrastructure"
+         $ECHO
+         exit 0
+      fi
+   fi
+
    MakeCADirs
 
    MakeCAcert
@@ -488,24 +505,6 @@ MakeCert()
 MakeCADirs()
 {
 
-   if [ -d $CATOP -o -d $CALOCALTOP ]; then
-      Translate 0 "There are already directories of the CA infrastructure in"
-      $ECHO
-      $ECHO "   $CATOP "
-      Translate 0 "      or    "
-      $ECHO "   $CALOCALTOP "
-      $ECHO
-      Translate 4 "Do you want to recreate your SGE CA infrastructure"
-      YesNo "\n$transout" y
-      if [ $? != 0 ]; then
-         $ECHO
-         Translate 0 "We will not reinitialize your SGE CA infrastructure"
-         $ECHO
-         Translate 0 "CA initialization failed. Exit."
-         $ECHO
-         exit 1
-      fi
-   fi
 
    if [ -f $CATOP -o -f $CALOCALTOP ]; then
       Translate 0 "The CA directories"

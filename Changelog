@@ -1,3 +1,6 @@
+AA-2002-03-21-0  Bugfix:    SGE_KEYFILE, SGE_CERTFILE 
+                            sec install scripts
+
 CR-2002-03-21-4  Bugfix:    scheduler generates high CPU load for 1-2 minutes
                             when sge_commd is killed.
                  Issue:     #197

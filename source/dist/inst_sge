@@ -1896,7 +1896,7 @@ CreateSettingsFile()
       ExecuteAsAdmin $RM $QSYST_ROOT_VAL/$COMMONDIR/settings.sh
    fi
 
-   if [ -f $RM $QSYST_ROOT_VAL/$COMMONDIR/settings.csh ]; then
+   if [ -f $QSYST_ROOT_VAL/$COMMONDIR/settings.csh ]; then
       ExecuteAsAdmin $RM $QSYST_ROOT_VAL/$COMMONDIR/settings.csh
    fi
 
@@ -2220,13 +2220,32 @@ InitCA()
    #
    util/sgeCA/sge_ca -init
 
-   if [ $? != 0 ]; then
-      CAErrUsage
-   fi
-
    WaitClear clear
 }
 
+
+#--------------------------------------------------------------------------
+# CheckCSP check that there are no old certs/keys
+#
+CheckCSP()
+{
+
+   if [ $csp = false ]; then
+      return
+   fi
+
+   if [ "$COMMD_PORT" != "" ]; then
+      CA_PORT=port$COMMD_PORT
+   else
+      CA_PORT=sge_commd
+   fi
+
+   $V5UTILBIN/adminrun $ADMINUSER test -f $HOME/.sge/$CA_PORT/$SGE_CELL
+   if [ ! $? ]; then
+      Translate 1 "Please remove the old CSP security directory $HOME/.sge/$CA_PORT/$SGE_CELL. Exit."
+      exit 1
+   fi
+}
 
 
 #--------------------------------------------------------------------------
@@ -2466,6 +2485,7 @@ execd)
       CheckForCommdPort exec
    fi
    CheckCellDirectory
+   CheckCSP
    CheckHostNameResolving
    AddLocalConfiguration_With_Qconf
    AddQsystStartUpScript $euid false

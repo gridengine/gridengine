@@ -2516,6 +2516,7 @@ int is_daemon
 	char *ca_local_root = NULL;
    char *sge_cakeyfile = NULL;
    char *sge_keyfile = NULL;
+   char *sge_certfile = NULL;
    int len;
    char *cp = NULL;
 
@@ -2542,8 +2543,7 @@ int is_daemon
    ** install otherwise exit
    */
    if ((sge_cakeyfile=getenv("SGE_CAKEYFILE"))) {
-      ca_key_file = sge_malloc(strlen(sge_cakeyfile));
-      strcpy(ca_key_file, sge_cakeyfile);
+      ca_key_file = strdup(sge_cakeyfile);
    } else {
       if (getenv("SGE_NO_CA_LOCAL_ROOT")) {
          ca_local_root = ca_root;
@@ -2589,54 +2589,53 @@ int is_daemon
    **   and as fallback
    **   /var/sgeCA/{port$COMMD_PORT|SGE_COMMD_SERVICE}/$SGE_CELL/userkeys/$USER/{cert.pem,key.pem}
    */
-   if ((sge_keyfile = getenv("SGE_KEYFILE"))) {
-      key_file = sge_malloc(strlen(sge_keyfile));
-      strcpy(key_file, sge_keyfile);
-   } else {   
-      if (is_daemon){
-         userdir = strdup(ca_root);
-         user_local_dir = ca_local_root;
-      } else {
-         struct passwd *pw;
-         pw = sge_getpwnam(me.user_name);
-         if (!pw) {   
-            CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, me.user_name));
-            SGE_EXIT(1);
-         }
-         userdir = sge_malloc(strlen(pw->pw_dir) + strlen(SGESecPath) +
-                             (cp ? strlen(cp) + 4 : strlen(SGE_COMMD_SERVICE)) +
-                              strlen(sge_get_default_cell()) + 4);
-         if (cp)                     
-            sprintf(userdir, "%s/%s/port%s/%s", pw->pw_dir, SGESecPath, cp, 
-                  sge_get_default_cell());
-         else         
-            sprintf(userdir, "%s/%s/%s/%s", pw->pw_dir, SGESecPath, 
-                     SGE_COMMD_SERVICE, sge_get_default_cell());
-         user_local_dir = userdir;
+   if (is_daemon){
+      userdir = strdup(ca_root);
+      user_local_dir = ca_local_root;
+   } else {
+      struct passwd *pw;
+      pw = sge_getpwnam(me.user_name);
+      if (!pw) {   
+         CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, me.user_name));
+         SGE_EXIT(1);
       }
+      userdir = sge_malloc(strlen(pw->pw_dir) + strlen(SGESecPath) +
+                          (cp ? strlen(cp) + 4 : strlen(SGE_COMMD_SERVICE)) +
+                           strlen(sge_get_default_cell()) + 4);
+      if (cp)                     
+         sprintf(userdir, "%s/%s/port%s/%s", pw->pw_dir, SGESecPath, cp, 
+               sge_get_default_cell());
+      else         
+         sprintf(userdir, "%s/%s/%s/%s", pw->pw_dir, SGESecPath, 
+                  SGE_COMMD_SERVICE, sge_get_default_cell());
+      user_local_dir = userdir;
+   }
 
+   if ((sge_keyfile = getenv("SGE_KEYFILE"))) {
+      key_file = strdup(sge_keyfile);
+   } else {   
       key_file = sge_malloc(strlen(user_local_dir) + strlen("private") + strlen(UserKey) + 3);
       sprintf(key_file, "%s/private/%s", user_local_dir, UserKey);
+   }   
 
-      if (SGE_STAT(key_file, &sbuf)) { 
-         free(key_file);
-         key_file = sge_malloc(strlen(ca_local_root) + strlen("userkeys") + 
-                                 strlen(me.user_name) + strlen(UserKey) + 4);
-         sprintf(key_file, "%s/%s/%s/%s", ca_local_root, "userkeys", me.user_name, UserKey);
+   if (SGE_STAT(key_file, &sbuf)) { 
+      free(key_file);
+      key_file = sge_malloc(strlen(ca_local_root) + strlen("userkeys") + 
+                              strlen(me.user_name) + strlen(UserKey) + 4);
+      sprintf(key_file, "%s/%s/%s/%s", ca_local_root, "userkeys", me.user_name, UserKey);
+   }   
+
+   if (!RAND_status()) {
+      rand_file = sge_malloc(strlen(user_local_dir) + strlen("private") + strlen(RandFile) + 3);
+      sprintf(rand_file, "%s/private/%s", user_local_dir, RandFile);
+
+      if (SGE_STAT(rand_file, &sbuf)) { 
+         free(rand_file);
+         rand_file = sge_malloc(strlen(ca_local_root) + strlen("userkeys") + 
+                                 strlen(me.user_name) + strlen(RandFile) + 4);
+         sprintf(rand_file, "%s/%s/%s/%s", ca_local_root, "userkeys", me.user_name, RandFile);
       }   
-
-      if (!RAND_status()) {
-         rand_file = sge_malloc(strlen(user_local_dir) + strlen("private") + strlen(RandFile) + 3);
-         sprintf(rand_file, "%s/private/%s", user_local_dir, RandFile);
-
-         if (SGE_STAT(rand_file, &sbuf)) { 
-            free(rand_file);
-            rand_file = sge_malloc(strlen(ca_local_root) + strlen("userkeys") + 
-                                    strlen(me.user_name) + strlen(RandFile) + 4);
-            sprintf(rand_file, "%s/%s/%s/%s", ca_local_root, "userkeys", me.user_name, RandFile);
-         }   
-      }   
-   }
+   }   
    if (SGE_STAT(key_file, &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SEC_KEYFILENOTFOUND_S, key_file));
       SGE_EXIT(1);
@@ -2652,8 +2651,12 @@ int is_daemon
       }   
    }    
 
-   cert_file = sge_malloc(strlen(userdir) + strlen("certs") + strlen(UserCert) + 3);
-   sprintf(cert_file, "%s/certs/%s", userdir, UserCert);
+   if ((sge_certfile = getenv("SGE_CERTFILE"))) {
+      cert_file = strdup(sge_certfile);
+   } else {   
+      cert_file = sge_malloc(strlen(userdir) + strlen("certs") + strlen(UserCert) + 3);
+      sprintf(cert_file, "%s/certs/%s", userdir, UserCert);
+   }
 
    if (SGE_STAT(cert_file, &sbuf)) {
       free(cert_file);

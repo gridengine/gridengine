@@ -1415,13 +1415,11 @@ char *job_str
 
    DENTER(TOP_LAYER, "del_job");
 
-DTRACE;
    sge_get_file_path(job_path, JOB_SPOOL_DIR, FORMAT_DEFAULT, 
                      SPOOL_DEFAULT, atol(job_str), 0);
    if (jep) {
-DTRACE;
       strcpy(exec_path, lGetString(jep, JB_exec_file));
-DTRACE;
+
       /* remove bound jobs with lRemoveElem() use lFreeElem() for unbound ele */
       if ((jep=lGetElemUlong(Master_Job_List, JB_job_number, 
                   lGetUlong(jep, JB_job_number))))
@@ -1429,11 +1427,8 @@ DTRACE;
       else 
          lFreeElem(jep);
    } else {
-DTRACE;
       sprintf(exec_path, "%s/%s", EXEC_DIR, job_str);
    }
-
-DTRACE;
 
    if (cull_remove_jobtask_from_disk(atol(job_str), 0, 0)) {
       if (errno!=ENOENT) {
@@ -1443,8 +1438,6 @@ DTRACE;
    } else {
       INFO((SGE_EVENT, MSG_CONFIG_REMOVEDBADJOBFILEX_S , job_path));
    }
-
-DTRACE;
 
    if (unlink(exec_path)) {
       if (errno!=ENOENT) {
@@ -1496,7 +1489,7 @@ static int sge_read_job_list_from_disk(lList **jlpp, char *name, int check,
          sge_get_file_path(tmpstr, JOB_SPOOL_FILE, FORMAT_DEFAULT, 
                            flags, job_id, 0);
          jobep = cull_create_job_from_disk(job_id, 0, flags);
-         if (check && !jobep) {
+         if (!jobep) {
             del_job(NULL, job_id_str);
             continue;
          }

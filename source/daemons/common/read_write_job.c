@@ -71,7 +71,7 @@ lListElem *cull_create_job_from_disk(u_long32 job_id, u_long32 ja_task_id,
    lList *ja_tasks = NULL;
    stringT spool_path_common;
 
-   DENTER(TOP_LAYER, "job_create_job_from_file");
+   DENTER(TOP_LAYER, "cull_create_job_from_disk");
 
    sge_get_file_path(spool_path_common, JOB_SPOOL_FILE, FORMAT_DEFAULT, 
                      flags, job_id, ja_task_id);  

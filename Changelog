@@ -1,3 +1,7 @@
+EB-2001-10-05-0: minor modifications
+                 - remove/displace code
+                 - comments/formatting
+
 JG-2001-10-04-0: Generalized our hash table implementation to support any
                  data type for keys.
                  Hash table uses hash and compare functions to be specified

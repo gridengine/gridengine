@@ -451,7 +451,7 @@ u_short *compressed
       }
 
       if (sender != NULL) {
-         INFO((SGE_EVENT,"received from: %s,"U32CFormat"\n",sender->comp_host, u32c(sender->comp_id)));
+         DEBUG((SGE_EVENT,"received from: %s,"U32CFormat"\n",sender->comp_host, u32c(sender->comp_id)));
          if (fromcommproc != NULL && fromcommproc[0] == '\0') {
             strcpy(fromcommproc, sender->comp_name);
          }

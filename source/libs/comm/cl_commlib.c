@@ -3740,7 +3740,7 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
                break;
             }
    
-            CL_LOG_STR(CL_LOG_INFO,"sending to:", connection->receiver->comp_host); 
+            CL_LOG_STR(CL_LOG_DEBUG,"sending to:", connection->receiver->comp_host); 
             if (copy_data == 1) {
                help_data = (cl_byte_t*) malloc(sizeof(cl_byte_t)*size);
                if (help_data == NULL) {

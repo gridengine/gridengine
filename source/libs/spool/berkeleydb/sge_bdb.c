@@ -66,6 +66,9 @@ static const int pack_part = CULL_SPOOL | CULL_SUBLIST | CULL_SPOOL_PROJECT |
 static const int pack_part = 0;
 #endif
 
+static void 
+spool_berkeleydb_error_close(struct bdb_info *info);
+
 static void
 spool_berkeleydb_handle_bdb_error(lList **answer_list, struct bdb_info *info,
                                   int bdb_errno);
@@ -790,6 +793,7 @@ spool_berkeleydb_read_list(lList **answer_list, struct bdb_info *info,
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
                               dbname);
       sge_dstring_free(&dbname_dstring);
+      spool_berkeleydb_error_close(info);
       ret = false;
    } else {
       DPRINTF(("querying objects with keys %s*\n", key));
@@ -927,36 +931,53 @@ spool_berkeleydb_write_object(lList **answer_list, struct bdb_info *info,
             DB *db = bdb_get_db(info);
             DB_TXN *txn = bdb_get_txn(info);
 
-            memset(&key_dbt, 0, sizeof(key_dbt));
-            memset(&data_dbt, 0, sizeof(data_dbt));
-            key_dbt.data = (void *)key;
-            key_dbt.size = strlen(key) + 1;
-            data_dbt.data = pb.head_ptr;
-            data_dbt.size = pb.bytes_used;
-
-            DPRINTF(("storing object with key "SFQ", size = %d "
-                     "to env = %p, db = %p, txn = %p, txn_id = %d\n", 
-                     key, data_dbt.size, bdb_get_env(info), db, 
-                     txn, txn->id(txn)));
-
-            /* Store a key/data pair. */
-            PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-            dbret = db->put(db, txn, &key_dbt, &data_dbt, 0);
-            PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-
-            if (dbret != 0) {
-               spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+            if (db == NULL) {
+               dstring dbname_dstring = DSTRING_INIT;
+               const char *dbname;
+               
+               dbname = bdb_get_dbname(info, &dbname_dstring);
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                        ANSWER_QUALITY_ERROR, 
-                                       MSG_BERKELEY_PUTERROR_SS,
-                                       key, db_strerror(dbret));
+                                       MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                                       dbname);
+               sge_dstring_free(&dbname_dstring);
+               spool_berkeleydb_error_close(info);
                ret = false;
+            }
+
+            if (ret) {
+               memset(&key_dbt, 0, sizeof(key_dbt));
+               memset(&data_dbt, 0, sizeof(data_dbt));
+               key_dbt.data = (void *)key;
+               key_dbt.size = strlen(key) + 1;
+               data_dbt.data = pb.head_ptr;
+               data_dbt.size = pb.bytes_used;
+
+               DPRINTF(("storing object with key "SFQ", size = %d "
+                        "to env = %p, db = %p, txn = %p, txn_id = %d\n", 
+                        key, data_dbt.size, bdb_get_env(info), db, 
+                        txn, txn->id(txn)));
+
+               /* Store a key/data pair. */
+               PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+               dbret = db->put(db, txn, &key_dbt, &data_dbt, 0);
+               PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+
+               if (dbret != 0) {
+                  spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                          ANSWER_QUALITY_ERROR, 
+                                          MSG_BERKELEY_PUTERROR_SS,
+                                          key, db_strerror(dbret));
+                  ret = false;
+               }
             }
          }
 
          clear_packbuffer(&pb);
       }
    }
+
    DEXIT;
    return ret;
 }
@@ -1136,6 +1157,7 @@ spool_berkeleydb_delete_object(lList **answer_list, struct bdb_info *info,
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
                               dbname);
       sge_dstring_free(&dbname_dstring);
+      spool_berkeleydb_error_close(info);
       ret = false;
    } else {
       if (sub_objects) {

@@ -1,3 +1,9 @@
+JG-2004-03-08-1: Bugfix:    Added missing validation of database handle in 
+                            spooling write function.
+                 Cleanup:   Changed output level of a number of communication 
+                            messages from INFO to DEBUG.
+                 Review:    AD
+
 SG-2004-03-08-1: Bugfix:    fixed memory leak in scheduler
                  Changed:   scheduler
                  Review:    AH

@@ -334,11 +334,12 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
    if (synchron) {
       ack_type = CL_MIH_MAT_ACK;
    }
-   
+  
+#if 0
    SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SENDINGMESSAGE_SIU, commproc,id,
                           (unsigned long) pb->bytes_used));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-
+#endif
    i = gdi_send_sec_message( handle,
                                 (char*) rhost,(char*) commproc , id, 
                                 ack_type , 
@@ -471,7 +472,7 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffe
       } 
 
       if (sender != NULL ) {
-         INFO((SGE_EVENT,"received from: %s,"U32CFormat"\n",sender->comp_host, u32c(sender->comp_id) ));
+         DEBUG((SGE_EVENT,"received from: %s,"U32CFormat"\n",sender->comp_host, u32c(sender->comp_id) ));
          if (rhost[0] == '\0') {
             strcpy(rhost, sender->comp_host); /* If we receive from anybody return the sender */
          }

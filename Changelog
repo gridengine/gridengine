@@ -1,3 +1,6 @@
+AH-2003-06-03-0: Testsuite: Added DRMAA API tests.
+                 Review:    JG           
+                            
 AH-2003-06-02-0: Enhacem.:  Use session filtering with all non-total-update 
                             events. Since sgeE_JOB_USAGE and 
                             sgeE_JOB_FINAL_USAGE are non-total-update events 

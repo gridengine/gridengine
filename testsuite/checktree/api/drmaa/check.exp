@@ -1,0 +1,255 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# define global variable in this namespace
+global check_name 
+global check_category
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+set check_root_access_needs "yes"
+
+
+# define a level initialization procedure:
+set check_init_level_procedure "drmaa_init_level"
+
+# define test's name and run level descriptions
+set check_name            "drmaa"
+set check_category        "COMPATIBILITY SYSTEM"
+set check_highest_level   2
+set check_description(0)  "tests to verify DRMAA library: single threaded"
+set check_description(1)  "tests to verify DRMAA library: multi threaded"
+set check_description(2)  "tests to verify DRMAA library: additional interfaces"
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "drmaa_setup"
+lappend check_functions "drmaa_check"
+lappend check_functions "drmaa_cleanup"
+
+# this function is called each time before
+# a new run level is started
+proc drmaa_init_level {} {
+  global CHECK_ACT_LEVEL
+
+
+  # returning -1 causes disabling a certain runlevel
+  # here per run level settings can be prepared
+  switch -- $CHECK_ACT_LEVEL {
+     "0" { 
+           return 0
+     } 
+     "1" { 
+           return 0
+     } 
+     "2" { 
+           return -1
+     } 
+  } 
+  return -1  ;# no other level else
+}
+
+# -------- local test procedures -----------------------------------------------
+
+# change setup in a way allowing the next runlevel to start
+proc drmaa_setup {} {
+
+
+  set_error 0 "ok"
+}
+
+# here the actual test is done
+proc drmaa_check {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
+   global CHECK_HOST CHECK_CORE_EXECD CHECK_SOURCE_DIR CHECK_USER CHECK_CORE_MASTER
+   global CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT
+
+   puts $CHECK_OUTPUT "product root is $CHECK_PRODUCT_ROOT"
+   puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
+   puts $CHECK_OUTPUT "host is $CHECK_HOST"
+
+   # must forbit reschedule on job exiting with 99 
+   # otherwise drmaa_test ST_EXIT_STATUS never finishes
+   set new_config(qmaster_params) "FORBID_RESCHEDULE"
+   set_config new_config
+
+   foreach host $CHECK_CORE_EXECD {
+
+      set binary_arch "[resolve_arch $host]"
+      if { $binary_arch != "solaris" &&
+           $binary_arch != "solaris64" &&
+           $binary_arch != "solaris86" &&
+           $binary_arch != "glinux" } {
+         puts $CHECK_OUTPUT "DRMAA not supported for binary architecture $binary_arch"
+         continue
+      }
+
+      set compile_arch_mt "[resolve_upper_arch $host]_MT"
+      set binary_path "$CHECK_SOURCE_DIR/$compile_arch_mt"
+      puts $CHECK_OUTPUT "host is $host has arch $compile_arch_mt mt bin path $binary_path"
+
+      switch -- $CHECK_ACT_LEVEL {
+         "0" { 
+            # -- tests without an argument
+            foreach st_test "ST_MULT_INIT ST_MULT_EXIT" {
+               puts "starting single threaded test $st_test"
+               drmaa_test $st_test $host $binary_path ""
+            }
+            
+            # -- tests with a <sleeper_job> argument
+            foreach st_test "ST_SUBMIT_WAIT ST_BULK_SUBMIT_WAIT ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL \
+                ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE ST_SUBMITMIXTURE_SYNC_ALL_NODISPOSE \
+                ST_SUBMITMIXTURE_SYNC_ALLIDS_DISPOSE ST_SUBMITMIXTURE_SYNC_ALLIDS_NODISPOSE \
+                ST_SUBMIT_PAUSE_SUBMIT_SYNC ST_INPUT_FILE_FAILURE ST_OUTPUT_FILE_FAILURE \
+                ST_ERROR_FILE_FAILURE"  {
+               puts "starting single threaded test $st_test"
+               drmaa_test $st_test $host $binary_path $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh
+            }
+
+            # -- tests with a <exit_arg_job> argument
+            puts "starting single threaded test ST_EXIT_STATUS"
+            drmaa_test ST_EXIT_STATUS $host $binary_path $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit.sh
+   
+            # -- the ST_INPUT_BECOMES_OUTPUT test
+            # drmaa_test_st_input_becomes_output $host $binary_path
+         } 
+         "1" { 
+            # all MT tests need a sleeper job as argument
+            foreach mt_test "MT_SUBMIT_WAIT MT_SUBMIT_BEFORE_INIT_WAIT MT_EXIT_DURING_SUBMIT 
+                  MT_SUBMIT_MT_WAIT MT_EXIT_DURING_SUBMIT_OR_WAIT" {
+               puts "starting multi threaded test $mt_test"
+               drmaa_test $mt_test $host $binary_path $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh
+            }
+         } 
+         "2" { 
+            # shutdown qmaster
+            get_config config_tmp
+            if { [info exists config_tmp(qmaster_spool_dir) ] == 1 } { 
+               shutdown_master_and_scheduler $CHECK_CORE_MASTER $config_tmp(qmaster_spool_dir) 
+            }
+
+            # this test must fail when qmaster is down
+            set test_output [start_remote_prog $host $CHECK_USER $binary_path/test_drmaa ST_SUBMIT_WAIT ]
+
+            puts $CHECK_OUTPUT "exit status was $prg_exit_state"
+            puts $CHECK_OUTPUT "output was\n$test_output"
+
+            if { $prg_exit_state == 0 } {
+               add_proc_error drmaa_check -1 "test_drmaa ST_SUBMIT_WAIT failed at host $host"
+            }
+            # restart qmaster
+            startup_qmaster 
+         } 
+      } 
+   }
+
+   # undo configuration changes that were made for this test
+   set new_config(qmaster_params) "none"
+   set_config new_config
+
+   set_error 0 "ok"
+}
+
+# undo what we've done in drmaa_setup
+proc drmaa_cleanup  {} {
+
+   set_error 0 "ok"
+}
+
+
+proc drmaa_test { test_name host binary_path arguments } {
+   global CHECK_OUTPUT CHECK_USER
+
+   puts $CHECK_OUTPUT "$binary_path/test_drmaa $test_name $arguments"
+   set test_output [ start_remote_prog $host $CHECK_USER $binary_path/test_drmaa "$test_name $arguments" prg_exit_state 500]
+
+   puts $CHECK_OUTPUT "exit status was $prg_exit_state"
+   puts $CHECK_OUTPUT "output was\n$test_output"
+
+   if { $prg_exit_state != 0 } {
+      add_proc_error drmaa_check -1 "test_drmaa $test_name failed at host $host"
+   }
+}
+
+proc drmaa_test_st_input_becomes_output { host binary_path } {
+
+   # prepare input file
+   set input_file [get_tmp_file_name]
+   set catch_return [ catch {
+       set input [ open "$input_file" "w" ]
+   } ]
+   if { $catch_return != 0 } {
+      add_proc_error "create_input" "-2" "could not open input file $input_file for writing"
+      return
+   }
+   puts $input "this input must become output"
+   flush $input
+   close $input
+  
+   # prepare output file name
+   set output_file [get_tmp_file_name]
+
+   puts $CHECK_OUTPUT "$binary_path/test_drmaa $st_test /usr/bin/cat $input_file $output_file"
+   wait_for_remote_file $host $CHECK_USER $input_file 120
+
+   # run job
+   set test_output [start_remote_prog $host $CHECK_USER $binary_path/test_drmaa "$st_test /usr/bin/cat $input_file $output_file" prg_exit_state 400]
+
+   puts $CHECK_OUTPUT "exit status was $prg_exit_state"
+   puts $CHECK_OUTPUT "output was\n$test_output"
+
+   if { $prg_exit_state != 0 } {
+      add_proc_error drmaa_check -1 "test_drmaa $st_test failed at host $host"
+      break
+   }
+
+   # verify output file is equal with input file
+   read_file $input_file input_array
+   wait_for_remote_file $host $CHECK_USER $output_file 120
+   read_file $output_file output_array
+
+   if { [string compare $input_array(1) $output_array(1)] != 0 } {
+      add_proc_error drmaa_check -1 "test_drmaa $st_test failed at host $host"
+   }
+}

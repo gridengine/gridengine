@@ -3558,7 +3558,7 @@ int *trigger
       DPRINTF(("skip expensive verification of schedulability\n"));
       break;
    case ERROR_VERIFY:
-   case WARINING_VERIFY:
+   case WARNING_VERIFY:
    case JUST_VERIFY:
    default:
       {
@@ -3645,7 +3645,7 @@ int *trigger
                   (verify_mode==ERROR_VERIFY)?MSG_JOB_VERIFYERROR:MSG_JOB_VERIFYWARN)));
             answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
-            if (verify_mode != WARINING_VERIFY) {
+            if (verify_mode != WARNING_VERIFY) {
                DEXIT;
                return (verify_mode==JUST_VERIFY)?0:STATUS_ESEMANTIC;
             }

@@ -191,7 +191,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/libexec/telnetd
    RLOGIN_DAEMON=/usr/libexec/rlogind
    ROOTGROUP=wheel
-   RSH_DAEMON=/usr/sbin/in.rshd
+   RSH_DAEMON=undef
    ;;
  win32-x86)
    AWK=/bin/awk

@@ -44,12 +44,37 @@ static void remove_immediate_job(lList *job_list, lListElem *job, lList **opp,
 static void order_remove_order_and_immediate(lListElem *job, lListElem *ja_task,
                                        lList **opp);
 
-/*------------------------------------------------------------------
- * CHECK ALL REMAINING JOBS WHETHER THEY ARE IMMEDIATE JOBS
- * IMMEDIATE JOBS NEED TO BE SCHEDULED INSTANTLY OR THEY 
- * HAVE TO BE REMOVED. THIS IS DONE BY GENERATING A ORDER OF TYPE 
- * ORT_remove_immediate_job 
- *------------------------------------------------------------------*/
+/****** SCHEDD/remove_immediate_jobs()******************************************
+*  NAME
+*     remove_immediate_jobs() -- test for and remove immediate jobs which can't
+*                                be scheduled
+*
+*  SYNOPSIS
+*     int remove_immediate_jobs(lList *pending_job_list,
+                                lList *running_job_list, lList **opp)
+*
+*  FUNCTION
+*     Goes through all jobs in the pending list to see if any are immediate and
+*     not idle.  If any are, they are removed.  This is done by generating an
+*     order of type ORT_remove_immediate_job.  If any array jobs are removed,
+*     the running list is checked for tasks belonging to the job, which are
+*     also removed.  This is done by removing the ORT_start_job orders and
+*     adding an order of type ORT_remove_immediate_job.
+*
+*  INPUTS
+*     lList *pending_job_list   - The list of pending jobs for this scheduler
+*                                 pass
+*     lList *running_job_list   - The list of running jobs for this scheduler
+*                                 pass
+*     lList **opp               - The order list for this scheduler pass
+*
+*  RESULT
+*     int - Error code: 0 = OK, 1 = Errors -- always returns 0
+*
+*  NOTES
+*     MT-NOTE: remove_immediate_jobs() is MT safe
+*
+*******************************************************************************/
 int remove_immediate_jobs(
 lList *pending_job_list, /* JB_Type */
 lList *running_job_list, /* JB_Type */
@@ -95,6 +120,33 @@ lList **opp              /* OR_Type */
    return 0;
 }
 
+/****** SCHEDD/remove_immediate_job()*******************************************
+*  NAME
+*     remove_immediate_job() -- test for and remove immediate job which can't
+*                                be scheduled
+*
+*  SYNOPSIS
+*     int remove_immediate_job(lList *job_list, lListElem *job, lList **opp,
+                               int remove_orders)
+*
+*  FUNCTION
+*     Removes immediate jobs which cannot be scheduled from the given job list.
+*     his is done by generating an order of type ORT_remove_immediate_job.  If
+*     remove_orders is set, the ORT_start_job orders are first removed from the
+*     order list before adding the remove order.
+*
+*  INPUTS
+*     lList     *job_list     - The list of jobs from which the job should be
+*                               removed
+*     lListElem *job          - The job to remove
+*     lList **opp             - The order list for this scheduler pass
+*     int       remove_orders - Whether the ORT_start_job orders should also be
+*                               be removed
+*
+*  NOTES
+*     MT-NOTE: remove_immediate_job() is MT safe
+*
+*******************************************************************************/
 static void remove_immediate_job(
 lList *job_list,         /* JB_Type */
 lListElem *job,          /* JB_Type */
@@ -122,12 +174,11 @@ int remove_orders
           ja_task_id <= lGetUlong(range, RN_max);
           ja_task_id += lGetUlong(range, RN_step)) {  
          ja_task = job_get_ja_task_template_pending(job, ja_task_id);
-         if (remove_orders) {
-            order_remove_order_and_immediate(job, ja_task, opp);
-         }
-         else {
-            order_remove_immediate(job, ja_task, opp);
-         }
+         
+         /* No need to remove the orders here because tasks in JB_ja_n_h_ids
+          * haven't been scheduled, and hence don't have start orders to
+          * remove. */
+         order_remove_immediate(job, ja_task, opp);
       }
    }
    lRemoveElem(job_list, job);
@@ -135,6 +186,31 @@ int remove_orders
    DEXIT;
 }
 
+/****** SCHEDD/order_remove_order_and_immediate()*******************************
+*  NAME
+*     order_remove_order_and_immediate() -- add a remove order for the job task
+*
+*  SYNOPSIS
+*     int order_remove_order_and_immediate(lListElem *job, lListElem *ja_task,
+                                 lList **opp)
+*
+*  FUNCTION
+*     Generates an order of type ORT_remove_immediate_job for the given job
+*     task.  Also removes the ORT_start_job order for this task from the order
+*     list.
+*
+*  INPUTS
+*     lListElem *job       - The job to remove
+*     lListElem *ja_task   - The task to remove
+*     lList **opp          - The order list for this scheduler pass be removed
+*
+*  RESULT
+*     int - Error code: 0 = OK, 1 = Errors
+*
+*  NOTES
+*     MT-NOTE: order_remove_order_and_immediate() is MT safe
+*
+*******************************************************************************/
 static void order_remove_order_and_immediate(
 lListElem *job,     /* JB_Type */
 lListElem *ja_task, /* JAT_Type */
@@ -167,6 +243,30 @@ lList **opp         /* OR_Type */
    DEXIT;
 }
 
+/****** SCHEDD/order_remove_immediate()*****************************************
+*  NAME
+*     order_remove_immediate() -- add a remove order for the job task
+*
+*  SYNOPSIS
+*     int order_remove_immediate(lListElem *job, lListElem *ja_task,
+                                 lList **opp)
+*
+*  FUNCTION
+*     Generates an order of type ORT_remove_immediate_job for the given job
+*     task.
+*
+*  INPUTS
+*     lListElem *job       - The job to remove
+*     lListElem *ja_task   - The task to remove
+*     lList **opp          - The order list for this scheduler pass be removed
+*
+*  RESULT
+*     int - Error code: 0 = OK, 1 = Errors
+*
+*  NOTES
+*     MT-NOTE: order_remove_immediate() is MT safe
+*
+*******************************************************************************/
 int order_remove_immediate(
 lListElem *job,     /* JB_Type */
 lListElem *ja_task, /* JAT_Type */

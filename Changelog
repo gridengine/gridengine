@@ -1,3 +1,8 @@
+DT-2004-01-21-0: Bugfix:   drmaa_run_bulk_jobs() wasn't submiting the job as an
+                           array job.  Also cleaned up DT-2004-01-19-0.
+                 Changed:  drmaa.c, interactive_sched.c
+                 Review:   AH
+
 AD-2004-01-21-1: Bugfix:   Handling of 'SGE_DEBUG_TARGET' env var was broken
                  Changed:  rmon
 
@@ -111,7 +116,7 @@ DT-2004-01-19-0: Bugfix:    Fixed scheduler crash when an array job with -now y
                             job with -now y cannot be completely scheduled, it
                             is completely removed.
                  Changed:   schedd, sched lib
-                 Review:    pending
+                 Review:    SG
 
 SG-2004-01-19-1: Bugfix:    qhost -F -h Name did not display global consumables
                  Changed:   qhost

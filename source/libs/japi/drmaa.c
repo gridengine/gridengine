@@ -76,6 +76,7 @@
 #include "parse_qsubL.h"
 #include "parse.h"
 #include "sge_mailrecL.h"
+#include "sge_range.h"
 #include "sge_ulong.h"
 
 /* OBJ */
@@ -144,6 +145,8 @@ static int opt_list_append_opts_from_drmaa_attr (lList **args, const lList *attr
 char *drmaa_time2sge_time (const char *drmaa_time, dstring *diag);
 static char *drmaa_get_home_directory (lList *alp);
 static char *drmaa_expand_wd_path(const char *path, lList *alp);
+static int drmaa_set_bulk_range (lList **opts, int start, int end, int step,
+                                 lList **alp);
 
 /****** DRMAA/-DRMAA_Session_state *******************************************
 *  NAME
@@ -2449,6 +2452,16 @@ DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
    merge_drmaa_options (&opts_all, &opts_default, &opts_defaults, &opts_scriptfile,
                        &opts_job_cat, &opts_native, &opts_drmaa);
 
+   /* If the job is a bulk job, add the -t switch last so it takes top priority. */
+   if (is_bulk) {
+      if (drmaa_set_bulk_range (&opts_all, start, end, step, &alp) != 0) {
+         answer_list_to_dstring (alp, diag);
+         jt = lFreeElem (jt);   
+         DEXIT;
+         return DRMAA_ERRNO_DENIED_BY_DRM;
+      }
+   }
+
    alp = cull_parse_job_parameter (opts_all, &jt);
    
    if (answer_list_has_error (&alp)) {
@@ -2457,7 +2470,7 @@ DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
       DEXIT;
       return DRMAA_ERRNO_DENIED_BY_DRM;
    }
-
+   
    *jtp = jt;
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;
@@ -2802,13 +2815,6 @@ static void opt_list_append_default_drmaa_opts(lList **opts)
    ep_opt = sge_add_arg (opts, b_OPT, lIntT, "-b", "y");
    lSetInt (ep_opt, SPA_argval_lIntT, 1);
    
-   /* DRMAA sends email by default.  Since DRMAA doesn't really specify when
-    * email gets sent, we assume an innocuous default: send email when the job
-    * is done. */
-   DPRINTF (("Enabling email at end of job\n"));
-   ep_opt = sge_add_arg (opts, m_OPT, lIntT, "-m", "e");
-   lSetInt (ep_opt, SPA_argval_lIntT, MAIL_AT_EXIT);
-   
    DEXIT;
 }
 
@@ -3028,6 +3034,9 @@ o   -V                                     export all environment variables
 *
 *  OUTPUTS
 *     dstring *diag                  - errors
+*
+*  RESULT
+*     char *   - The time as a string
 *
 *  NOTES
 *     MT-NOTE: drmaa_time2sge_time() is MT safe
@@ -3347,6 +3356,9 @@ char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
 *  OUTPUTS
 *     lList *alp               - errors
 *
+*  RESULT
+*     char *   - The expanded path as a string
+*
 *  NOTES
 *     MT-NOTE: drmaa_expand_wd_path() is MT safe except on AIX4.2 and FreeBSD
 *
@@ -3412,6 +3424,9 @@ static char *drmaa_expand_wd_path(const char *path, lList *alp)
 *  OUTPUTS
 *     lList *alp               - errors
 *
+*  RESULT
+*     char *   - the home directory path as a string
+*
 *  NOTES
 *     MT-NOTE: drmaa_get_home_directory() is MT safe except on AIX4.2 and
 *     MT-NOTE: FreeBSD
@@ -3450,4 +3465,57 @@ static char *drmaa_get_home_directory (lList *alp)
    }
    
    return strdup (pwd->pw_dir);
+}
+
+/****** DRMAA/drmaa_set_bulk_range()********************************************
+*  NAME
+*     drmaa_set_bulk_range() -- set the bulk job switch for the given range
+*
+*  SYNOPSIS
+*     int drmaa_set_bulk_range(lList **opts, int start, int end, int step,
+*                              lList **alp)
+*
+*  FUNCTION
+*     Adds a "-t range" option to the opts list for the given task id range.
+*
+*  INPUTS
+*     lList **opts             - the list to which the -t option will be added
+*     int     start            - the beginning of the task id range
+*     int     end              - the end of the task id range
+*     int     step             - the increment between consequetive task ids
+*  OUTPUTS
+*     lList **alp               - errors
+*
+*  RESULT
+*     int   - error code: 1 = OK, 0 = Error
+*
+*  NOTES
+*     MT-NOTE: drmaa_set_bulk_range() is MT safe
+*
+*******************************************************************************/
+static int drmaa_set_bulk_range (lList **opts, int start, int end, int step,
+                                 lList **alp)
+{
+   char str[128];
+   lListElem *ep_opt = NULL;
+   lList *task_id_range_list = NULL;
+
+   DENTER (TOP_LAYER, "drmaa_set_bulk_range");
+   
+   sprintf (str, "%d-%d:%d", start, end, step);
+
+   range_list_parse_from_string(&task_id_range_list, alp, str,
+                                   0, 1, INF_NOT_ALLOWED);
+
+   if (task_id_range_list) {
+      ep_opt = sge_add_arg (opts, t_OPT, lStringT, "-t", str);
+      lSetList (ep_opt, SPA_argval_lListT, task_id_range_list);
+      
+      DEXIT;
+      return 0;
+   }
+   else {
+      DEXIT;
+      return 1;
+   }
 }

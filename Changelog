@@ -1,3 +1,6 @@
+CR-2002-09-30-1  Testsuite: qsh/qrsh does not accept -o/-e arguments anymore
+                 Bugfix:
+
 CR-2002-09-30-0  Testsuite: added versions 5.3.1beta9 and 5.3p2
 
 EB-2002-09-30-0  Bugfix:    EB-2002-08-29-0 fix.

@@ -1,3 +1,9 @@
+JG-2003-01-28-0  Bugfix:    qrsh crashed when job arguments exceeded 4k in size.
+                 IZ:        472
+                 Bugtraq:   4807677
+                 Review:    CR
+                 Changed:   qsh
+
 CR-2003-01-28-0  Testsuite: procedure compile_source(): Implemented loop for cvs update.
                             Sometimes the cvs update failes due to an error. The
                             testsuite will abort the compile procedure after three

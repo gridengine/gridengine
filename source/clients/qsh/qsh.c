@@ -1128,8 +1128,7 @@ static void set_job_info(lListElem *job, const char *name, int is_qlogin,
 */
 void set_command_to_env(lList *envlp, lList *opts_qrsh)
 {
-   char buffer[4096];
-   *buffer = 0;
+   dstring buffer = DSTRING_INIT;
 
    if(opts_qrsh) {
       lListElem *ep;
@@ -1141,13 +1140,13 @@ void set_command_to_env(lList *envlp, lList *opts_qrsh)
          sprintf(delimiter, "%c", 0xff);
          help = lGetString(ep, SPA_argval_lStringT);
          if (help != NULL) {
-            strcpy(buffer, help); 
+            sge_dstring_copy_string(&buffer, help); 
          } 
          while((ep = lNext(ep)) != NULL) {
             const char *arg = lGetString(ep, SPA_argval_lStringT);
-            strcat(buffer, delimiter);
+            sge_dstring_append(&buffer, delimiter);
             if (arg != NULL) {
-               strcat(buffer, arg);
+               sge_dstring_append(&buffer, arg);
             } 
          }   
       }
@@ -1159,7 +1158,8 @@ void set_command_to_env(lList *envlp, lList *opts_qrsh)
    fflush(stdout); fflush(stderr);
 #endif
 
-   var_list_set_string(&envlp, "QRSH_COMMAND", buffer);
+   var_list_set_string(&envlp, "QRSH_COMMAND", sge_dstring_get_string(&buffer));
+   sge_dstring_free(&buffer);
 }
 
 int main(int argc, char **argv) 

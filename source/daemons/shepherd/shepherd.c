@@ -77,6 +77,9 @@ struct rusage {
 #   include <sys/times.h>
 #endif
 
+#if defined(NECSX4) || defined(NECSX5)
+#   include <sys/times.h>
+#endif
 
 /* for IRIX processor set stuff */
 #if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64)
@@ -2109,10 +2112,11 @@ char *childname            /* "job", "pe_start", ...     */
 #if defined(HP10) || defined(HP11)
    struct rusage rusage_hp10;
 #endif
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX) || defined(CRAY)
+#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    struct tms t1, t2;
 #endif
 
+   memset(rusage, 0, sizeof(*rusage));
    kill_job_after_checkpoint = 0;
    inCkpt = 0;
    rest_ckpt_interval = ckpt_interval;
@@ -2137,7 +2141,7 @@ char *childname            /* "job", "pe_start", ...     */
    else
       inArena = 0;
 
-#if defined(HPUX) || defined(CRAY)
+#if defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    times(&t1);
 #endif
    
@@ -2291,7 +2295,8 @@ char *childname            /* "job", "pe_start", ...     */
       
    } while ((job_pid > 0) || (migr_cmd_pid > 0) || (ckpt_cmd_pid > 0));
 
-#if defined(HPUX) || defined(CRAY)
+#if defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+
    times(&t2);
 
    rusage->ru_utime.tv_sec  = (t2.tms_cutime - t1.tms_cutime) / sysconf(_SC_CLK_TCK);

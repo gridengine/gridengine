@@ -1,3 +1,5 @@
+SD-2002-01-23-2: Bugfix:   Initialize rusage structure to zeroes
+
 AA-2002-01-23-1: Feature:  Security:
                            - fallback key/cert paths
                            - removed gsd.refresh_time debug message

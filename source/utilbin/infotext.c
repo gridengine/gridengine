@@ -55,6 +55,7 @@ typedef struct sge_infotext_opt {
       char* yes; /* yes parameter for -ask */
       char* no;  /* no parameter for -ask */
       char* def; /* default parameter for -ask */
+      int log; /* file logging on/off */ //MD: 05.12.03
    } sge_infotext_options;
 
 
@@ -419,23 +420,24 @@ static void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* op
       output=stderr;
    }
 
-   fprintf(output,"%s",sge_dstring_get_string(&line));
-   if (options->n != 1 && line_length > 0 ) {
-      fprintf(output,"\n");
-   }
-
-   if (options->u == 1 && line_length > 0) {
-      if (options->n == 1) {
+   if ((getenv("SGE_NOMSG") != NULL && options->log == 1) || (getenv("SGE_NOMSG") == NULL && options->log == 0)) {  //MD: 05.12.03
+      fprintf(output,"%s",sge_dstring_get_string(&line));
+      if (options->n != 1 && line_length > 0 ) {
          fprintf(output,"\n");
       }
-      for(i=0;i<line_length;i++) {
-         fprintf(output,SGE_INFOTEXT_UNDERLINE);
-      }
-      if (options->n != 1) {
-         fprintf(output,"\n");
+
+      if (options->u == 1 && line_length > 0) {
+         if (options->n == 1) {
+            fprintf(output,"\n");
+         }
+         for(i=0;i<line_length;i++) {
+            fprintf(output,SGE_INFOTEXT_UNDERLINE);
+         }
+         if (options->n != 1) {
+            fprintf(output,"\n");
+         }
       }
    }
-
    sge_dstring_free(&line);  
    sge_dstring_free(&dash);
    sge_dstring_free(&line_buf_buffer);
@@ -636,7 +638,7 @@ static void sge_infotext_usage(void) {
    printf("  u - underline output\n");
    printf("  D - dash sign, e.g. -D \"->\"\n"); 
    printf("  S - nr of spaces, e.g. -S \"5\"\n\n");
-   printf("infotext [-auto 0|1|true|false] [-wait] [-ask YES NO] [-def YES|NO]\n");
+   printf("infotext [-log] [-auto 0|1|true|false] [-wait] [-ask YES NO] [-def YES|NO]\n");
    printf("         FORMAT_STRING ARGUMENTS\n\n");
    printf("YES - user answer for exit status 0, e.g. -ask \"y\"\n");
    printf("NO  - user answer for exit status 1, e.g. -ask \"n\"\n\n");
@@ -646,6 +648,7 @@ static void sge_infotext_usage(void) {
    printf("  wait - wait for return key\n");
    printf("  ask  - wait for user input\n");
    printf("  def  - default answer when user is just pressing RETURN\n\n");
+   printf("  log  - write output to log, if SGE_NOMSG is set\n");  //MD: 05.12.03 Print logfile output only!!!
    printf("used environment variables:\n");
    printf("SGE_INFOTEXT_MAX_COLUMN - column for word break (default 79)\n");
 }
@@ -701,6 +704,7 @@ int main( int argc, char* argv[] ) {
    options.no = "";
    options.yes = "";
    options.def = "";
+   options.log = 0; //MD: 05.12.03
 
    for(i=1; i< argc; i++) {
       char* arg = argv[i];
@@ -722,6 +726,11 @@ int main( int argc, char* argv[] ) {
             do_test = 1;
             break;
          }
+         if ( strcmp(option,"log") == 0) {     //MD: 05.12.03
+            options.log = 1;
+            continue;
+         }
+
          if ( strcmp(option,"__eoc__") == 0) {
             no_options = 1;
             continue;

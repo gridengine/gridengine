@@ -144,7 +144,7 @@ WelcomeTheUser()
    $ECHO
    $INFOTEXT "Please read the upgrade documentation"
    $ECHO
-   $INFOTEXT "   %s" \$SGE_ROOT/UPGRADE
+   $INFOTEXT "   %s" \$SGE_ROOT/doc/UPGRADE
    $ECHO
    $INFOTEXT "before starting this update procedure."
 

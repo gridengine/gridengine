@@ -577,8 +577,7 @@ static int read_ls(void)
          }
 
          tmp_list = lGetList(ls_elem, LS_incomplete);
-         sge_add_str2load_report(&tmp_list, name, value,
-                                 !strcasecmp("global", host));
+         sge_add_str2load_report(&tmp_list, name, value, host);
       }
    }
 
@@ -993,7 +992,7 @@ int sge_ls_get(lList **lpp)
       for_each(ep, lGetList(ls_elem, LS_complete)) {
          sge_add_str2load_report(lpp, lGetString(ep, LR_name),
                                  lGetString(ep, LR_value),
-                                 lGetUlong(ep, LR_global));
+                                 lGetHost(ep, LR_host));
       }
    }
 

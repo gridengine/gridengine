@@ -88,6 +88,10 @@ long ptf_max_priority = -999;
 long ptf_min_priority = -999;
 int keep_active = 0;
 
+/* allow the simulation of (non existent) hosts */
+int simulate_hosts = 0;
+
+
 /*
  * SGEEE pending job scheduling algorithm parameters:
  *
@@ -536,6 +540,7 @@ lList **lpp
       compression_threshold = 10 * 1024;
       use_qidle = 0;
       disable_reschedule = 0;   
+      simulate_hosts = 0;
 
       for (s=sge_strtok(pconf->qmaster_params, ",; "); s; s=sge_strtok(NULL, ",; "))
          if (!strcasecmp(s, "FORBID_RESCHEDULE")) {
@@ -554,8 +559,9 @@ lList **lpp
                     !strcasecmp(s, "DISABLE_AUTO_RESCHEDULING=1")) {
             DPRINTF(("DISABLE_AUTO_RESCHEDULING\n"));
             disable_reschedule = 1;    
-         } 
-         else if (!strncasecmp(s, "COMPRESSION_LEVEL", sizeof("COMPRESSION_LEVEL"))) {
+         } else if (!strcasecmp(s, "SIMULATE_HOSTS=1")) {
+            simulate_hosts = 1;   
+         }  else if (!strncasecmp(s, "COMPRESSION_LEVEL", sizeof("COMPRESSION_LEVEL"))) {
             char *cp;
             cp = strchr(s, '=');
             if (cp && *(cp+1)) {

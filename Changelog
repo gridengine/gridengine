@@ -1,3 +1,11 @@
+JG-2002-01-16-0: Enhancem.: Execd can send load values for another host than
+                            itself and qmaster will accept these load values.
+                            Simulation mode to make qmaster not trash load
+                            values for simulated hosts can be switched on
+                            by qmaster_param simulate_hosts=1.
+                            Performance improvement: Execd deliveres info
+                            whether a variable is static or not.
+
 CR-2002-01-16-1: Testsuite: - fixed broken migration test
                  Bugfix:    - fixed broken job_state_handling test
                             - new optional parameter for submit_job(): 

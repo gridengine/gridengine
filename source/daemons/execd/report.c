@@ -29,8 +29,12 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+#include <string.h>
+#include <strings.h>
+
 #include "sge.h"
 #include "sge_load_reportL.h"
+#include "sge_static_load.h"
 #include "sge_hostL.h"
 #include "sge_jobL.h"
 #include "sge_job_reportL.h"
@@ -127,7 +131,7 @@ int sge_add_double2load_report(
 lList **lpp,
 char *name,
 double value,
-int global,
+const char *host,
 char *units 
 ) {
    char load_string[255];
@@ -135,7 +139,7 @@ char *units
    DENTER(BASIS_LAYER, "sge_add_double2load_report");
  
    sprintf(load_string, "%f%s", value, units?units:"");
-   sge_add_str2load_report(lpp, name, load_string, global);
+   sge_add_str2load_report(lpp, name, load_string, host);
 
    DEXIT;
    return 0; 
@@ -150,7 +154,7 @@ int sge_add_int2load_report(
 lList **lpp,
 const char *name,
 int value,
-int global 
+const char *host 
 ) {
    char load_string[255];
    int ret;
@@ -158,7 +162,7 @@ int global
    DENTER(BASIS_LAYER, "sge_add_int2load_report");
 
    sprintf(load_string, "%d", value);
-   ret = sge_add_str2load_report(lpp, name, load_string, global);
+   ret = sge_add_str2load_report(lpp, name, load_string, host);
 
    DEXIT;
    return ret;
@@ -173,9 +177,10 @@ int sge_add_str2load_report(
 lList **lpp,
 const char *name,
 const char *value,
-int global 
+const char *host
 ) {
-   lListElem *ep=NULL;
+   lListElem *ep = NULL, *search_ep = NULL;
+   const void *iterator = NULL;
 
    DENTER(BASIS_LAYER, "sge_add_str2load_report");
 
@@ -184,20 +189,29 @@ int global
       return -1;
    }
 
-   ep=lGetElemStr(*lpp, LR_name, name);
+   if(*lpp != NULL) {
+      search_ep = lGetElemHostFirst(*lpp, LR_host, host, &iterator);
+      while(search_ep != NULL) {
+         DPRINTF(("---> %s\n", lGetString(search_ep, LR_name)));
+         if(strcmp(lGetString(search_ep, LR_name), name) == 0) {
+            ep = search_ep;
+            break;
+         }
+         search_ep = lGetElemHostNext(*lpp, LR_host, host, &iterator);
+      }
+   }
    
-   if (!ep) {
+   if (ep == NULL) {
+      DPRINTF(("adding new load variable %s for host %s\n", name, host));
       ep = lAddElemStr(lpp, LR_name, name, LR_Type);
+      lSetHost(ep, LR_host, host);
+      lSetUlong(ep, LR_global, (u_long32)(strcmp(host, SGE_GLOBAL_NAME) == 0 ? 1 : 0));
+      lSetUlong(ep, LR_static, sge_is_static_load_value(name));
    }
+
    lSetString(ep, LR_value, value);
-   lSetUlong(ep, LR_global, (u_long32)(global?1:0));
 
-
-   if (global)
-      lSetHost(ep, LR_host, SGE_GLOBAL_NAME);
-   else {
-      lSetHost(ep, LR_host, me.qualified_hostname);
-   }
+   DPRINTF(("load value %s for host %s: %s\n", name, host, value)); 
 
    DEXIT;
    return 0;

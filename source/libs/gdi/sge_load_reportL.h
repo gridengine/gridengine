@@ -46,6 +46,7 @@ enum {
    LR_name = LR_LOWERBOUND,
    LR_value,
    LR_global,
+   LR_static,
    LR_host
 };
 
@@ -53,13 +54,15 @@ LISTDEF(LR_Type)
    SGE_STRING(LR_name)
    SGE_STRING(LR_value)
    SGE_ULONG(LR_global)       /* ==1 global load value */
-   SGE_HOST(LR_host)        /* sender host of load value */  /* CR - hostname change */
+   SGE_ULONG(LR_static)       /* ==1 static load value */
+   SGE_HOSTH(LR_host)        /* sender host of load value */  /* CR - hostname change */
 LISTEND 
 
 NAMEDEF(LRN)
    NAME("LR_name")
    NAME("LR_value")
    NAME("LR_global")
+   NAME("LR_static")
    NAME("LR_host")
 NAMEEND
 

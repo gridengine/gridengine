@@ -95,6 +95,7 @@ extern int flush_submit_sec;
 extern int flush_finish_sec;
 extern int profile_schedd;
 extern int keep_active;
+extern int simulate_hosts;
 extern long ptf_max_priority;
 extern long ptf_min_priority;
 extern int use_qsub_gid;

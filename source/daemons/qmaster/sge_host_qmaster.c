@@ -619,7 +619,7 @@ char *rhost,
 lList *lp 
 ) {
    u_long32 now;
-   const char *report_host = NULL, *name, *value;
+   const char *report_host = NULL;
    lListElem *ep, **hepp = NULL;
    lListElem *lep;
    lListElem *global_ep = NULL, *host_ep = NULL;
@@ -630,25 +630,80 @@ lList *lp
    DENTER(TOP_LAYER, "sge_update_load_values");
    now = sge_get_gmt();
 
+   /* loop over all received load values */
    for_each(ep, lp) {
+      const char *name, *value, *host;
+      u_long32 global, is_static;
 
-      /* get name and value */
+      /* get name, value and other info */
       name = lGetString(ep, LR_name);
       value = lGetString(ep, LR_value);
+      host  = lGetHost(ep, LR_host);
+      global = lGetUlong(ep, LR_global);
+      is_static = lGetUlong(ep, LR_static);
 
-      if (!name || !value)
+      /* erroneous load report */
+      if (!name || !value || !host)
          continue;
 
-      if (lGetUlong(ep, LR_global)) 
-         hepp = &global_ep; 
-      else 
+      /* handle global or exec host? */
+      if(global) {
+         hepp = &global_ep;
+      } else {
          hepp = &host_ep;
+      }
+
+      /* we get load values for another host */
+      if(*hepp && hostcmp(lGetHost(*hepp, EH_name), host)) {
+         /* output error from previous host, if any */
+         if (report_host) {
+            INFO((SGE_EVENT, MSG_CANT_ASSOCIATE_LOAD_SS, rhost, report_host));
+         }
+         /*
+         ** if static load values (eg arch) have changed
+         ** then spool and write history
+         */
+         if (statics_changed && host_ep) {
+            write_host(1, 2, host_ep, EH_name, NULL);
+            if (!is_nohist()) {
+               write_host_history(host_ep);
+            }
+         }
+
+         /* if non static load values arrived, this indicates that 
+         ** host is not unknown - unset QUNKNOWN bit for all queues
+         ** on this host 
+         */
+         if (added_non_static) {
+            lListElem *qep;
+            u_long32 state;
+            const char* tmp_hostname;
+
+
+            tmp_hostname = lGetHost(host_ep, EH_name);
+            qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, tmp_hostname , &iterator); 
+            while (qep != NULL) {
+               state = lGetUlong(qep, QU_state);
+               CLEARBIT(QUNKNOWN, state);
+               lSetUlong(qep, QU_state, state);
+               sge_add_queue_event(sgeE_QUEUE_MOD, qep);
+               qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, tmp_hostname , &iterator); 
+            }
+         }
+
+         sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, host, *hepp);
+
+         added_non_static = 0;
+         statics_changed = 0;
+         *hepp = NULL;
+         report_host = NULL;
+      }
 
       /* update load value list of rhost */
       if ( !*hepp) {
-         *hepp = sge_locate_host(lGetHost(ep, LR_host), SGE_EXECHOST_LIST);
+         *hepp = sge_locate_host(host, SGE_EXECHOST_LIST);
          if (!*hepp) {
-            if (!lGetUlong(ep, LR_global)) {
+            if (!global) {
                report_host = lGetHost(ep, LR_host); /* this is our error indicator */
             }
             DPRINTF(("got load value for UNKNOWN host "SFQ"\n", 
@@ -665,11 +720,11 @@ lList *lp
          DPRINTF(("%s: adding load value: "SFQ" = "SFQ"\n", 
                lGetHost(ep, LR_host), name, value));
 
-         if (sge_is_static_load_value(name)) {
+         if (is_static) {
             if (!is_nohist() )
                statics_changed = 1;
          } else {
-            if (!lGetUlong(ep, LR_global))
+            if (!global)
                added_non_static = 1; /* triggers clearing of unknown state */
          }
       }
@@ -691,6 +746,7 @@ lList *lp
 
    }
 
+   /* output error from previous host, if any */
    if (report_host) {
       INFO((SGE_EVENT, MSG_CANT_ASSOCIATE_LOAD_SS, rhost, report_host));
    }
@@ -706,6 +762,10 @@ lList *lp
       }
    }
 
+   /* if non static load values arrived, this indicates that 
+   ** host is not unknown - unset QUNKNOWN bit for all queues
+   ** on this host 
+   */
    if (added_non_static) {
       lListElem *qep;
       u_long32 state;
@@ -723,12 +783,8 @@ lList *lp
       }
    }
 
-   if (global_ep) {
-      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, SGE_GLOBAL_NAME, global_ep);
-   }
-
-   if (host_ep) {
-      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host_ep, EH_name), host_ep);
+   if(*hepp) {
+      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), *hepp);
    }
 
    DEXIT;
@@ -776,11 +832,22 @@ u_long32 now
    template_host_elem = lGetElemHost(Master_Exechost_List, EH_name, SGE_TEMPLATE_NAME); 
    /* take each host including the "global" host */
    for_each(hep, Master_Exechost_List) {   
-
       if (hep == template_host_elem)
          continue;
 
       host = lGetHost(hep, EH_name);
+
+      /* do not trash load values of simulated hosts */
+      if(simulate_hosts == 1) {
+         const lListElem *simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
+         if(simhost != NULL) {
+            const char *real_host = lGetString(simhost, CE_stringval);
+            if(real_host != NULL && hostcmp(real_host, host) != 0) {
+               DPRINTF(("skip trashing load values for host %s simulated by %s\n", host, real_host));
+               continue;
+            }
+         }
+      }
 
       timeout = MAX(load_report_interval(hep)*3, conf.max_unheard); 
 

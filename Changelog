@@ -12,19 +12,27 @@ MD-2003-07-15-1  Bugfix:    Fixed some script errors (IA64 Linux port)
 MD-2003-07-15-0: Enhancem.  IA64 Linux port
                  Review:    EB
 
-BD-2003-07-11-0: Bugfix     Merge more missing FreeBSD/Darwin support code.
+AS-2003-07-14-0: CVS        Created V53p4_TAG --> SGE 5.3p4
+-----------------------------------------------------------
+
+BD-2003-07-11-0: Bugfix:    Merge more missing FreeBSD/Darwin support code.
                  Changed:   dist/util/arch, libs/uti/sge_pids.h
 
-SG-2003-07-10-0: Bugfix    Fixed broken build (HP11)
+SG-2003-07-10-0: Bugfix:    Fixed broken build (HP11)
 
-AS-2003-07-10-0: CVS        Created V53p4_TAG --> SGE 5.3p4
-------------------------------------------------------------
+AS-2003-07-11-0  Bugfix:    final fix for race condition if signals are to
+                            be delivered in job's startup phase. Block
+                            signals in execd and do not unblock in shepherd
+                            before signal handlers are setup     
+                 Issue:     126
+                 Bugtraq:   4780316
+                 Review:    AH 
 
 CR-2003-07-10-1: Bugfix:    Fixed broken build
 
 CR-2003-07-10-0: Bugfix:    Fixed broken build
 
-SG-2003-07-09-0: enhancem.  additional profiling information about a
+SG-2003-07-09-0: Enhancem.: additional profiling information about a
                             scheduler run Some profiling code was added to
                             get a better picture of the bottle necks within
                             a scheduler run.
@@ -81,7 +89,6 @@ CR-2003-06-25-0: Bugfix:    disabled infotext error output if SGE_ROOT is
                             not set.
                  Bugtraq:   4885719
                  Review:    AS
-                 Bugtraq:   4885719
                  Issue:     577
                  Changed:   utilib (all binaries)
 
@@ -151,7 +158,7 @@ AS-2003-05-27-1  Bugfix:    cannot install on Solaris 10
 SG-2003-05-26-0: Bugfix     qstat crashed, when used with the options -r -s z
                             - added the required information to the list
                  Bugtraq:   4886017
-                 Issue:     545
+                 Issue:     544
                  Changed:   qstat
                  Review:    AH
 
@@ -1373,6 +1380,8 @@ CR-2002-07-04-0  Enhancem.: I18N : added message ids (part 1)
 
 AS-2002-07-04-2  CVS        Created V53p1_rc1_TAG and V53p1_rc1_BRANCH
 ----------------------------------------------------------------------
+                            --> See "Changelog" of V53p1_rc1_BRANCH to track
+                                all fixes which were done for SGE 5.3p1
 
 AH-2002-07-02-2: Bugfix:    Fix problem with flittering load adjustment
                  Issue:     309

@@ -1,3 +1,5 @@
+CR-2001-09-17-0: Fixed issue #60 "COMMPROC ALLREADY REGISTERED" error
+
 AH-2001-09-14-2: Fixed error with job array causing dispatch of the last
                  array-job being postponed to the follow-up scheduling interval
 

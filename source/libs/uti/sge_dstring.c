@@ -38,6 +38,8 @@
 
 #define REALLOC_CHUNK   1024
 
+/* JG: TODO: Introduction uti/dstring/--Dynamic_String is missing */
+
 /****** uti/dstring/sge_dstring_append() **************************************
 *  NAME
 *     sge_dstring_append() -- strcat() for dstring's 

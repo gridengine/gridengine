@@ -1,3 +1,5 @@
+JG-2002-07-05-1: Enhancem.: new bitfield implementation in utilib.
+
 JG-2002-07-05-0: Testsuite: system_tests/qmaster/error_states: has to wait
                             for job to leave qmaster before deleting pe due 
                             to new reference checking (EB-2002-06-27-1).

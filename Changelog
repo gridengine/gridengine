@@ -1,3 +1,7 @@
+AH-2001-11-05-0: Fixes with qstat -pe <pe_name> and qselect -pe <pe_name>
+                 - 'all' keyword in PE's queue_list was not honoured
+                 - non-parallel queues were selected
+
 JG-2001-11-02-1: qstat -j aborted when writing usage of pe tasks
 
 JG-2001-11-02-0: qmake: Does not need to export variable PWD when executing 

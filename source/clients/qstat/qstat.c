@@ -1094,14 +1094,22 @@ lList *pe_list
       return 1;
    }
 
-   /* untag all queues not referenced by a pe in the selected pe list */
+   /* untag all non-parallel queues and queues not referenced 
+      by a pe in the selected pe list */
    for_each(qep, queue_list) {
       const char *qname;
 
       lListElem* found = NULL;
+
+      if (!(lGetUlong(qep, QU_qtype) & PQ)) {
+         lSetUlong(qep, QU_tagged, 0);
+         continue;
+      }
+
       qname = lGetString(qep, QU_qname);
       for_each (pe, pe_selected) 
-         if ((found=lGetSubStr(pe, QR_name, qname, PE_queue_list)))
+         if ((found=lGetSubStr(pe, QR_name, qname, PE_queue_list))
+            || (found=lGetSubCaseStr(pe, QR_name, SGE_ATTRVAL_ALL, PE_queue_list))) 
             break;
       if (!found)
          lSetUlong(qep, QU_tagged, 0);

@@ -1,3 +1,8 @@
+EB-2001-10-25-0: Modified qdel, qmon, qmaster
+                  - removed job attribute vom "Job Customize" dialog
+                  - bugfix: qdel -u <list of users>
+                  - moved messages into msg_*.h file
+
 JG-2001-10-25-0: Fixed some memory leaks
 
 JG-2001-10-23-0: Fixed a bug in the implementation of non unique hash tables:

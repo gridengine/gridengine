@@ -114,7 +114,7 @@ void sge_parse_string_list(lList **lp, const char *str, int field,
    DENTER(TOP_LAYER, "sge_parse_string_list");
 
    cp = sge_strtok(str, ",");
-   lAddElemStr(lp, field, str, descr);
+   lAddElemStr(lp, field, cp, descr);
    while((cp = sge_strtok(NULL, ","))) {
       lAddElemStr(lp, field, cp, descr);
    }

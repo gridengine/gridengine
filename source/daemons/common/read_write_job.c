@@ -58,6 +58,7 @@
 #include "sge_stat.h"
 #include "sge_hash.h"
 #include "job.h"
+#include "msg_common.h"
 
 extern lList *Master_Job_List;
 
@@ -463,7 +464,8 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
       if (remove_task_spool_file) {
          DPRINTF(("removing "SFN"\n", task_spool_file));
          if (sge_unlink(NULL, task_spool_file)) {
-            ERROR((SGE_EVENT, "can not remove "SFN": "SFN"\n", "task spool file", task_spool_file));
+            ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, 
+                   MSG_JOB_TASK_SPOOL_FILE, task_spool_file));
             DTRACE;
          }
       }
@@ -487,18 +489,20 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
       if (ja_taskid == 0) { 
          DPRINTF(("removing "SFN"\n", spoolpath_common));
          if (sge_unlink(NULL, spoolpath_common)) {
-            ERROR((SGE_EVENT, "can not remove "SFN": "SFN"\n", "job spool file", spoolpath_common)); 
+            ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, 
+                   MSG_JOB_JOB_SPOOL_FILE, spoolpath_common)); 
             DTRACE;
          }
          if (recursive_rmdir(spool_dir, error_string)) {
-            ERROR((SGE_EVENT, "can not remove "SFN": "SFN"\n", "job spool directory", spool_dir));
+            ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, 
+                   MSG_JOB_JOB_SPOOL_DIRECTORY, spool_dir));
             DTRACE;
          }
       }
    } else {
       if (sge_unlink(NULL, spool_dir)) {
-         ERROR((SGE_EVENT, "can not remove "SFN": "SFN"\n", "job spool file",
-spool_dir));
+         ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, MSG_JOB_JOB_SPOOL_FILE,
+                spool_dir));
          DTRACE;
       }
    }

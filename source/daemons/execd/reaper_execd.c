@@ -824,6 +824,7 @@ lListElem *jr
    pe_task_id_str = jr?lGetString(jr, JR_pe_task_id_str):NULL;
 
    /* try to find this job in our job list */ 
+
    jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
    while(jep != NULL) {
       if((jatep = search_task(jataskid, jep)) != NULL) {

@@ -127,7 +127,7 @@ static HashTable JobColumnPrintHashTable = NULL;
 static HashTable NameMappingHashTable = NULL;
 
 #define FIRST_FIELD     6
-#define SGE_FIELDS      13
+#define SGE_FIELDS      12
 
 static tJobField job_items[] = {
    { 1, JB_job_number, "@{Id}", 12, 20, PrintJobTaskId }, 
@@ -137,7 +137,6 @@ static tJobField job_items[] = {
    { 1, JB_owner, "@{Owner}", 10, 50, PrintString },
    { 1, JAT_status, "@{Status}", 8, 30, PrintStatus },
    { 1, 0, "@{Queue}", 10, 500, PrintGrantedQueue},
-   { 0, JB_job_file, "@{Script}", 10, 30, PrintString },
    { 0, JB_submission_time, "@{SubmitTime}", 12, 30, PrintTime },
    { 0, JAT_start_time, "@{StartTime}", 12, 30, PrintStartTime },
    { 0, JB_execution_time, "@{ScheduleTime}", 12, 30, PrintTime },

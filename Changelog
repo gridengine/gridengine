@@ -1,3 +1,6 @@
+HP-2005-01-10-0: Enhancem.: Changed name of function in libwingrid
+                 Changed:   sge_load_sensor.c
+
 EB-2005-01-10-0: Enhancem.: Changed distinst for Interix installation
                  Review:    HP
 

@@ -557,7 +557,7 @@ static int read_ls(void)
                    lGetString(ls_elem, LS_command), input));
          } else {
 #ifdef INTERIX
-            if (ws_handle_ls_results(name, value, host)) 
+            if (wl_handle_ls_results(name, value, host)) 
 #endif
             {
                tmp_list = lGetList(ls_elem, LS_incomplete);

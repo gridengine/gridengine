@@ -8,7 +8,6 @@ AD-2004-02-18-0: Bugfix:    Did fix 'qconf -secl' and 'qconf -sss'.
                  Review:    SG
                  Issue:     666
 
->>>>>>> 1.1525
 DT-2004-02-18-0: Bugfix:    Fixed backslash line continuation for all objects
                             in qconf.  Will break on spaces or commas.
                             Propogated removal of SGE/SGEEE through qconf and
@@ -27,7 +26,6 @@ SD-2004-02-17-0: Cleanup:   - Removed all jobclass references from qmon,
                  Changed:   qmon
                  Issue:     636, 643
 
->>>>>>> 1.1524
 JG-2004-02-17-0: Bugfix:    Mirror interface didn't propagate event client 
                             errors.
                             Make qevent analyze return code from mirror 

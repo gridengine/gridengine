@@ -689,8 +689,6 @@ static int startJob(char *command, char *wrapper, int noshell)
 *     else write the exit code of the child process (programExitCode).
 *     The exit code is written to a file "qrsh_exit_code" in the
 *     directory $TMPDIR.
-*     If the child process terminated normally, its exit code is written,
-*     else (if it was signaled etc.), EXIT_FAILURE is written.
 *
 *  INPUTS
 *     myExitCode      - status of qrsh_starter
@@ -715,11 +713,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
    if(myExitCode != EXIT_SUCCESS) {
       exitCode = myExitCode;
    } else {
-      if(WIFEXITED(programExitCode)) {
-         exitCode = WEXITSTATUS(programExitCode);
-      } else {
-         exitCode = EXIT_FAILURE;
-      }
+      exitCode = programExitCode;
    }
 
    if((tmpdir = getenv("TMPDIR")) == NULL) {

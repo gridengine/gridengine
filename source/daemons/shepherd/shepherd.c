@@ -1091,8 +1091,23 @@ int ckpt_type
 
    if (!strcmp("job", childname)) {
       if (search_conf_val("rsh_daemon") != NULL) {
-         exit_status = get_exit_code_of_qrsh_starter();
-      }  
+         int qrsh_exit_code = get_exit_code_of_qrsh_starter();
+
+         /* normal exit */
+         if (WIFEXITED(qrsh_exit_code)) {
+            exit_status = WEXITSTATUS(qrsh_exit_code);
+            sprintf(err_str, "job exited normally, exit code is %d\n", exit_status);
+            shepherd_trace(err_str);
+         }
+
+         /* qrsh job was signaled */
+         if (WIFSIGNALED(qrsh_exit_code)) {
+            child_signal = WTERMSIG(qrsh_exit_code);
+            exit_status = 128 + child_signal;
+            sprintf(err_str, "job exited on signal %d, exit code is %d\n", child_signal, exit_status);
+            shepherd_trace(err_str);
+         }
+      }
    
       /******* write usage to file "usage" ************/
       fp = fopen("usage", "w");

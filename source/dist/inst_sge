@@ -1585,28 +1585,21 @@ AddQsystStartUpScript()
    STARTUP_FILE_NAME=rcsge
    S95NAME=S95rcsge
 
+   Execute rm -rf ${TMP_V5_STARTUP_FILE}.0 ${TMP_V5_STARTUP_FILE}.1
+
    V5_STARTUP_FILE=$QSYST_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
 
    if [ $create = true ]; then
 
       rm -f $TMP_V5_STARTUP_FILE ${TMP_V5_STARTUP_FILE}.0
 
-      Execute sed -e "s%QSYST_ROOT%${QSYST_ROOT}%g" \
-                  -e "s%QSYST_CELL%${QSYST_CELL}%g" \
-                  -e "s%QSYST_NAME%${QSYST_NAME}%g" \
-                  -e "s%QSYST_MASTER_NAME%${QSYST_MASTER_NAME}%g" \
-                  -e "s%QSYST_SCHEDD_NAME%${QSYST_SCHEDD_NAME}%g" \
-                  -e "s%QSYST_SHADOWD_NAME%${QSYST_SHADOWD_NAME}%g" \
-                  -e "s%QSYST_EXECD_NAME%${QSYST_EXECD_NAME}%g" \
-                  -e "s%QSYST_SHEPHERD_NAME%${QSYST_SHEPHERD_NAME}%g" \
-                  -e "s%QSYST_COMMDCNTL_NAME%${QSYST_COMMDCNTL_NAME}%g" \
-                  -e "s%GENROOT%${QSYST_ROOT_VAL}%g" \
+      Execute sed -e "s%GENROOT%${QSYST_ROOT_VAL}%g" \
                   -e "s%GENCELL%${QSYST_CELL_VAL}%g" \
                   -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
                   util/startup_template > ${TMP_V5_STARTUP_FILE}.0
 
       if [ "$COMMD_PORT" != "" ]; then
-         Execute sed -e "s/GENCOMMD_PORT/COMMD_PORT=$COMMD_PORT/" \
+         Execute sed -e "s/=GENCOMMD_PORT/=$COMMD_PORT/" \
                      ${TMP_V5_STARTUP_FILE}.0 > $TMP_V5_STARTUP_FILE
       else
          Execute sed -e "/GENCOMMD_PORT/d" \
@@ -1623,21 +1616,23 @@ AddQsystStartUpScript()
       elif [ $euid != 0 ]; then
          AddDefaultManager $USER
       fi
-   fi
 
-   $ECHO ""
-   Translate 0 "Your system wide %s startup script is installed as:" "$QSYST"
-   $ECHO ""
-   $ECHO "   \"$V5_STARTUP_FILE\""
-   $ECHO ""
-   WaitClear clear
+      $ECHO ""
+      Translate 0 "Your system wide %s startup script is installed as:" "$QSYST"
+      $ECHO ""
+      $ECHO "   \"$V5_STARTUP_FILE\""
+      $ECHO ""
+      WaitClear clear
+   else
+      $CLEAR
+   fi
 
    if [ $euid != 0 ]; then
       return 0
    fi
 
    # --- from here only if root installs ---
-   Translate 4 "We can install a script that starts %s at system boot time" $QSYST
+   Translate 4 "We can install the startup script that %s is started at machine boot" $QSYST
    YesNo "\n$transout" y
 
    if [ $? = 1 ]; then

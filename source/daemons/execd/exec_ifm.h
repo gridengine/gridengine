@@ -117,11 +117,11 @@ struct psJob_s
 	double	jd_srtime_c;		/* total srun-wait time used */
 
 	uint64	jd_mem;			/* memory used (integral) in KB seconds */
-	uint64	jd_chars;		/* characters moved */
+	uint64	jd_chars;		/* characters moved in bytes */
 
-	uint64	jd_vmem;		   /* virtual memory size */
-	uint64	jd_rss;		   /* resident set size */
-	uint64	jd_himem;		/* high-water memory size */
+	uint64	jd_vmem;		   /* virtual memory size in bytes */
+	uint64	jd_rss;		   /* resident set size in bytes */
+	uint64	jd_himem;		/* high-water memory size in bytes */
 	uint64	jd_fsblks;		/* file system blocks consumed */
 	};
 /*

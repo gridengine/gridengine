@@ -265,17 +265,18 @@ SetSpoolingOptions()
          params_ok=0
          if [ $AUTO = "true" ]; then
             SPOOLING_SERVER=$DB_SPOOLING_SERVER
-            SPOOLING_DIR="$QMDIR/$DB_SPOOLING_DIR"
+            SPOOLING_DIR="$DB_SPOOLING_DIR"
             SpoolingCheckParams
             params_ok=1
             #TODO: exec rcrpc script
          fi
-         if [ $QMASTER = "install" ]; then
+         if [ $QMASTER = "install" -a $AUTO = "false" ]; then
             $INFOTEXT -ask "y" "n" -def "n" "Do you want to use a Berkely DB Spooling Server? (y/n) [n] >> "
             if [ $? = 0 ]; then
                $INFOTEXT -u "Berkely DB Setup"
                $INFOTEXT "Please, log in to your Berkeley DB spooling host and execute < inst_sgeee -db >"
-               $INFOTEXT -auto $AUTO -wait "After Berkeley DB installation with < inst_sgeee -db >, \ncontinue with <RETURN>"
+               $INFOTEXT -auto $AUTO -wait "Please do not continue, before the Berkeley DB installation with \n" \
+                                           "< inst_sgeee -db > is completed, continue with <RETURN>"
             else
                $INFOTEXT -auto $AUTO -wait "\nHit <RETURN> to continue >> "
             fi
@@ -511,7 +512,7 @@ PrintConf()
    $ECHO "projects               none"
    $ECHO "xprojects              none"
    $ECHO "enforce_project        false"
-   $ECHO "enforce_user           false"
+   $ECHO "enforce_user           auto"
    $ECHO "load_report_time       00:00:40"
    $ECHO "stat_log_time          48:00:00"
    $ECHO "max_unheard            00:05:00"
@@ -544,7 +545,7 @@ PrintConf()
    $ECHO "auto_user_oticket      0"
    $ECHO "auto_user_fshare       0"
    $ECHO "auto_user_default_project none"
-   $ECHO "auto_user_delete_time  0"
+   $ECHO "auto_user_delete_time  100"
 
 }
 

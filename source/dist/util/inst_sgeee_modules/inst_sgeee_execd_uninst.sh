@@ -57,6 +57,8 @@ FetchHostname()
         RescheduleJobs $h
         RemoveExecd $h
         RemoveQueues $h
+        RemoveSpoolDir $h
+
      else
         $INFOTEXT "%s is not an execution host" $h
         $INFOTEXT -log "%s is not an execution host" $h
@@ -146,7 +148,7 @@ RemoveQueues()
      
      for hgrp in `qconf -shgrpl`; do
        `qconf -shgrp $hgrp >> hgrp.tmp`
-       if [ `qconf -shgrp $hgrp | grep es-ergb01-01 | wc -w` = 2 ]; then
+       if [ `qconf -shgrp $hgrp | grep $exechost | wc -w` = 2 ]; then
           `cat hgrp.tmp | sed s/$exechost/NONE/ >> hgrp2.tmp`
        else
           `cat hgrp.tmp | sed s/$exechost// >> hgrp2.tmp`
@@ -173,5 +175,23 @@ RemoveExecd()
    qconf -ke $exechost
    qconf -de $exechost
  
+
+}
+
+RemoveSpoolDir()
+{
+   exechost=$1
+
+   $INFOTEXT "Checking local spooldir configuration!\n"
+
+   SPOOL_DIR=`qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
+   
+   if [ $SPOOL_DIR = "" ]; then
+      $INFOTEXT "Checking global spooldir configuration!\n"
+      SPOOL_DIR=`qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
+   fi
+
+   $INFOTEXT "Removing spool directory [%s]" $SPOOL_DIR
+   `rm -R $SPOOL_DIR`
 
 }

@@ -146,7 +146,7 @@ proc install_qmaster {} {
  set DATABASE_LOCAL_SPOOLING     [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DATABASE_LOCAL_SPOOLING]]
  set ENTER_DATABASE_SERVER_LOCAL_SPOOLING     [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_SERVER_LOCAL_SPOOLING]]
  set ENTER_DATABASE_SERVER       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_SERVER] "*"]
- set ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING    [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING]]
+ set ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING    [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING] "*"]
  set ENTER_DATABASE_DIRECTORY    [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_DIRECTORY] "*"]
  set DATABASE_DIR_NOT_ON_LOCAL_FS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DATABASE_DIR_NOT_ON_LOCAL_FS] "*"]
  set STARTUP_RPC_SERVER [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_STARTUP_RPC_SERVER] "*"]
@@ -772,16 +772,20 @@ proc install_qmaster {} {
          set spooldir [get_spool_dir $CHECK_CORE_MASTER spooldb 1]
   
          if { $spooldir == "" } {
-            set spooldir "/tmp/db_spool/$CHECK_COMMD_PORT"
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id "\n"
+         } else {
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
+            if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+            } 
+            send -i $sp_id "$spooldir\n"
          }
-
-         puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
-         if {$do_log_output == 1} {
-            puts "press RETURN"
-            set anykey [wait_for_enter 1]
-         }
-
-         send -i $sp_id "$spooldir\n"
          continue;
       }
 

@@ -41,26 +41,27 @@ SpoolingQueryChange()
 {
    if [ $BERKELEY = "install" ]; then
       $INFOTEXT -u "\nBerkeley Database spooling parameters"
-      $INFOTEXT "\nWe can use local spooling, which will go to a local filesystem" \
-                "\nor use a RPC Client/Server mechanism. In this case, qmaster will" \
+      $INFOTEXT "\nYou are going to install a RPC Client/Server machanism!" \
+                "\nIn this case, qmaster will" \
                 "\ncontact a RPC server running on a separate server machine." \
                 "\nIf you want to use the SGE shadowd, you have to use the " \
                 "\nRPC Client/Server mechanism.\n"
-      $INFOTEXT "\nEnter database server (none for local spooling)\n" \
-                "or hit <RETURN> to use default [%s] >> " $SPOOLING_SERVER
+                SPOOLING_SERVER=`hostname`
+      $INFOTEXT "\nEnter database server name or \nhit <RETURN> to use default [%s] >> " $SPOOLING_SERVER
                 SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
 
       $INFOTEXT "\nEnter the database directory\n" \
-                "or hit <RETURN> to use default [%s] >> " $SPOOLING_DIR
-                SPOOLING_DIR=`Enter $SPOOLING_DIR`
+                "or hit <RETURN> to use default [%s] >> " "/tmp/$SGE_QMASTER_PORT$SPOOLING_DIR"
+                SPOOLING_DIR=`Enter /tmp/$SGE_QMASTER_PORT/$SPOOLING_DIR`
    else
      $INFOTEXT -u "\nBerkeley Database spooling parameters"
-     $INFOTEXT "Please enter the name of your Berkeley DB Spooling Server!\n" \
-               "For local spooling without Server, type >none< else enter the Servername! >> "
-     SPOOLING_SERVER=`Enter`
-     $INFOTEXT "Please enter the Database Directory now, even if you are want to spool local\n" \
-               "it is necessary to enter this Database Directory >> " 
-     SPOOLING_DIR=`Enter`
+     #$INFOTEXT "Please enter the name of your Berkeley DB Spooling Server!\n" \
+     #          "For local spooling without Server, hit <RETURN> else enter the Servername! >> "
+               SPOOLING_SERVER="none"
+     $INFOTEXT -n "Please enter the Database Directory now, even if you want to spool local\n" \
+               "it is necessary to enter this Database Directory. \nDefault: [%s] >> " "/tmp/$SGE_QMASTER_PORT/spooldb"
+               SPOOLING_DIR="/tmp/"$SGE_QMASTER_PORT"/spooldb" 
+               SPOOLING_DIR=`Enter $SPOOLING_DIR`
    fi
  
 }
@@ -83,9 +84,9 @@ SpoolingCheckParams()
       # create a script to start the rpc server
       Makedir $SPOOLING_DIR
       CreateRPCServerScript
-      $INFOTEXT "\nNow we have to startup the rc script\n >%s< on the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
-      $INFOTEXT "If you already have a configured Berkeley DB Spooling Server, you have to restart\n"
-      $INFOTEXT "the Database with the rc script and continue with >NO<\n"
+      $INFOTEXT "\nNow we have to startup the rc script\n >%s< \non the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
+      $INFOTEXT -n "If you already have a configured Berkeley DB Spooling Server,\n you have to restart "
+      $INFOTEXT "the Database with the rc script now and continue with >NO<\n"
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Shall the installation script try to start the RPC server? (y/n) [y] >>"
 
       if [ $? = 0 -a $AUTO = "false" ]; then
@@ -96,12 +97,14 @@ SpoolingCheckParams()
          $INFOTEXT "The Berkely DB has been started with these parameters:\n\n"
          $INFOTEXT "Spooling Server Name: %s" $SPOOLING_SERVER
          $INFOTEXT "DB Spooling Directory: %s\n" $SPOOLING_DIR
-         $INFOTEXT -wait "Please remember these values, during Qmaster installation\n you will be asked for! Hit <ENTER> to continue!"
+         $INFOTEXT -wait "Please remember these values, during Qmaster installation\n you will be asked for! Hit <RETURN> to continue!"
       else
-         $INFOTEXT "Please start the rc script >%s< on the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
-         $INFOTEXT "If your database is already running, then continue with <Enter>\n"
-         $INFOTEXT -auto $AUTO "Hit <Enter> to continue! >>"
+         $INFOTEXT "Please start the rc script \n>%s< on the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
+         $INFOTEXT "If your database is already running, then continue with <RETURN>\n"
+         $INFOTEXT -auto $AUTO -wait "Hit <RETURN> to continue >>"
       fi
+
+      $INFOTEXT "The Berkely DB installation is completed now!"
 
    return 1
    fi

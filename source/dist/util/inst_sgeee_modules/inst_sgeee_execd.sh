@@ -47,7 +47,7 @@ WelcomeTheUserExecHost()
    if [ $AUTO = true ]; then
       return
    fi
-   $INFOTEXT -u "\n\n\n\n  STARTING EXECHOST INSTALLATION!!!"
+   $INFOTEXT -u "\n\n\n\n  STARTING WITH EXECHOST INSTALLATION!!!"
    sleep 1
    $CLEAR
    $INFOTEXT -u "\n\n\n\n  STARTING WITH EXECHOST INSTALLATION!!!"
@@ -384,5 +384,10 @@ GetLocalExecdSpoolDir()
       $CLEAR
    fi
 
+   if [ $AUTO = "true" ]; then
+      if [ $EXECD_SPOOL_DIR_LOCAL != "" ]; then
+         LOCAL_EXECD_SPOOL=$EXECD_SPOOL_DIR_LOCAL
+      fi
+   fi
 
 }

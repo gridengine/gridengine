@@ -83,6 +83,7 @@ FILE="undef"
 HOST="undef"
 HOSTRANGE="undef"
 LOCAL_EXECD_SPOOL="undef"
+SHELL_NAME="ssh"
 
 SGE_NOMSG="undef"
 
@@ -104,6 +105,9 @@ while [ $ARGC != 0 ]; do
    -auto)
      AUTO=true
      FILE=$2
+     if [ ! -f $2 ]; then
+        ErrUsage
+     fi
      shift
      ARGC=`expr $ARGC - 1`
      CLEAR=:
@@ -116,22 +120,14 @@ while [ $ARGC != 0 ]; do
      QMASTER="install"
      . ./util/inst_sgeee_modules/inst_sgeee_qmaster.sh
      . ./util/inst_sgeee_modules/inst_sgeee_berkeley.sh
-     ;; 
-   -dm)
-     QMASTER="deactivate"
-     #echo Deactivate qmaster
      ;;
    -um)
      QMASTER="uninstall"
-     #echo Unistall qmaster
-     ;;
+     . ./util/inst_sgeee_modules/inst_sgeee_qmaster_uninst.sh
+     ;; 
    -x)
      EXECD="install"
      . ./util/inst_sgeee_modules/inst_sgeee_execd.sh
-     ;;
-   -dx)
-     EXECD="deactivate"
-     #echo Deactivate execd
      ;;
    -ux)
      EXECD="uninstall"
@@ -147,18 +143,6 @@ while [ $ARGC != 0 ]; do
      . ./util/inst_sgeee_modules/inst_sgeee_qmaster.sh
      . ./util/inst_sgeee_modules/inst_sgeee_berkeley.sh
      ;;
-   -upd)
-     UPGRADE=true
-     #echo Upgrade gridengine
-     ;;
-   -dow)
-     DOWNGRADE=true
-     #echo Downgrade gridengine
-     ;;
-   -bup)
-     BACKUP=true
-     #echo Backup configuration
-     ;;
    -host)
      if [ $AUTO = "false" -a $QMASTER = "install" ]; then
         EXEC_HOST_LIST=$2
@@ -166,12 +150,6 @@ while [ $ARGC != 0 ]; do
         HOST=$2
      fi
      #echo Un/install exechost $2
-     shift
-     ARGC=`expr $ARGC - 1`
-     ;;
-   -hostr)
-     HOSTRANGE=$2
-     #echo un/install exechostrange $2
      shift
      ARGC=`expr $ARGC - 1`
      ;;
@@ -186,18 +164,6 @@ while [ $ARGC != 0 ]; do
    -resport)
      RESPORT=true
      #echo set resport to true
-     ;;
-   -file)
-     FILE=$2
-     #echo get infos from configfile $2
-     shift
-     ARGC=`expr $ARGC - 1`
-     ;;
-   -tar)
-     TAR=$2
-     #echo install gridengine from tarfile $2
-     shift
-     ARGC=`expr $ARGC - 1`
      ;;
    -csp)
      CSP=true
@@ -216,7 +182,7 @@ while [ $ARGC != 0 ]; do
    ARGC=`expr $ARGC - 1`
 done
 
-if [ $AUTO = "false" -a $QMASTER = "undef" -a $EXECD = "install" -a $SHADOW = "install" -a $HOST != "" ]; then
+if [ $AUTO = "false" -a $QMASTER = "undef" -a $EXECD = "install" -a $SHADOW = "install" ]; then
    ErrUsage
 fi
  
@@ -269,11 +235,6 @@ if [ $QMASTER = "install" ]; then
 fi
 
 
-#if [ $QMASTER = "uninstall" ]; then
-
-
-#fi
-
 if [ $EXECD = "install" ]; then
  if [ $AUTO = true ]; then
     GetConfigFromFile
@@ -306,7 +267,7 @@ if [ $EXECD = "install" ]; then
       else
          if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
             $INFOTEXT -log "remote installation on host %s" $h
-            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto -noremote" | rsh $h /bin/sh &
+            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto $FILE -noremote" | rsh $h /bin/sh &
          fi
 
       fi
@@ -334,15 +295,37 @@ if [ $EXECD = "install" ]; then
          MoveLog
       fi
 
-      for h in $EXEC_HOST_LIST; do
-        if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
-            $INFOTEXT "Starting remote installation on host %s" $h
-            $INFOTEXT "This part runs in automatic mode," \
-                      "be sure to have a valid configuration file"
-            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto -noremote" | rsh $h /bin/sh &
-        fi
-      done
+      if [ -f $EXEC_HOST_LIST ]; then
+         for h in `cat $EXEC_HOST_LIST`; do
+           if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
+               $INFOTEXT "Starting remote installation on host %s" $h
+               $INFOTEXT "This part runs in automatic mode," \
+                         "be sure to have a valid configuration file"
+               $INFOTEXT "Please enter the path to your autoinstall configuration file or hit <RETURN> to use >> [%s] >> " $CONFIG
+                         CONFIG=`Enter $CONFIG`
+               $INFOTEXT "Please enter which shell you want to use for remote login (rsh/ssh) or hit <RETURN> to use >> [%s] >> " $SHELL_NAME
+                         SHELL_NAME=`Enter $SHELL_NAME` 
+               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto $CONFIG -noremote" | $SHELL_NAME $h /bin/sh &
+           fi
+         done
+      else
+         for h in $EXEC_HOST_LIST; do
+           if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
+               $INFOTEXT "Starting remote installation on host %s" $h
+               $INFOTEXT "This part runs in automatic mode," \
+                         "be sure to have a valid configuration file"
+               $INFOTEXT "Please enter the path to your autoinstall configuration file or hit <RETURN> to use >> [%s] >> " $CONFIG
+                         CONFIG=`Enter $CONFIG`
+               $INFOTEXT "Please enter which shell you want to use for remote login (rsh/ssh) or hit <RETURN> to use >> [%s] >> " $SHELL_NAME
+                         SHELL_NAME=`Enter $SHELL_NAME`
+               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto $CONFIG -noremote" | $SHELL_NAME $h /bin/sh &
+           fi
+         done
+
+      fi
+
   fi
 
  
@@ -360,6 +343,11 @@ if [ $BERKELEY = "install" ]; then
    SetSpoolingOptions
    InstallServerScript $euid
 
+fi
+
+if [ $QMASTER = "uninstall" ]; then
+   . $SGE_ROOT/$SGE_CELL/common/settings.sh
+   RemoveQmaster
 fi
 
 if [ $EXECD = "uninstall" ]; then

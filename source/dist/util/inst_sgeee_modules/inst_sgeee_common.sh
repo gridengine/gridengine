@@ -324,15 +324,16 @@ ErrUsage()
    myname=`basename $0`
    $ECHO >&2
    $INFOTEXT -e \
-             "Usage: %s -m|-x|-ux [-auto [-file]] [-csp] [-resport]\n" \
-             "              [-afs] [-host] [-noremote]\n" \
+             "Usage: %s -m|-um|-x|-ux|-sm|-db [-auto filename ] [-csp]\n" \
+             "              [-resport] [-afs] [-host] [-noremote]\n" \
              "   -m         install qmaster host\n" \
+             "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
              "   -ux        uninstall execution host\n" \
              "   -sm        install shadow host\n" \
+             "   -db        install Berkeley DB on seperated Spooling Server\n" \
              "   -host      hostname for unistallation (eg. exec host)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
-             "   -file      configuration file for automatic installation\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
              "   -afs       install system with AFS functionality\n" \
@@ -342,14 +343,15 @@ ErrUsage()
              "   Examples:\n" \
              "   inst_sgeee -m -x\n" \
              "                       Installs qmaster and exechost on localhost\n" \
-             "                       in sgeee-mode\n" \
-             "   inst_sgeee -m -x -auto\n" \
-             "                       Installs qmaster and exechost using the default\n" \
-             "                       configuration file util/inst_sgeee_modules/inst_sgeee_template.conf\n" \
+             "   inst_sgeee -m -x -auto /path/to/config-file\n" \
+             "                       Installs qmaster and exechost using the given\n" \
+             "                       configuration file\n" \
+             "                       (A templete can be found in:\n" \
+             "                       util/inst_sgeee_modules/inst_sgeee_template.conf)\n" \
              "   inst_sgeee -ux -host hostname\n" \
              "                       Uninstalls execd on given executionhost\n" \
-             "   inst_sgeee -ux -host hostname -log\n" \
-             "                       Uninstalls execd logging to unistall.log" $myname 
+             "   inst_sgeee -db      Install a Berkeley DB Server on local host\n" \
+             "   inst_sgeee -sm      Install a Shadow Master Host on local host" $myname 
 
    exit 1
 }
@@ -683,7 +685,7 @@ PrintLocalConf()
    fi
 }
 
-/
+
 #-------------------------------------------------------------------------
 # AddSGEStartUpScript: Add startup script to rc files if root installs
 #
@@ -929,12 +931,3 @@ else
    touch /tmp/$LOGNAME
 fi
 }
-
-ExportCertKey()
-{
-   user=$1
-   SGE_CERTFILE=`util/sgeCA/sge_ca -env`/userkeys/$user/cert.pem
-   SGE_KEYFILE=`util/sgeCA/sge_ca -env`/userkeys/$user/key.pem
-   export SGE_CERTFILE SGE_KEYFILE
-}
-

@@ -724,7 +724,7 @@ int japi_string_vector_get_next(drmaa_attr_values_t* iter, dstring *val)
          return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
       } 
       if (val)
-         sge_dstring_copy_string(val, lGetString(iter->it.si.next_pos, STR));
+         sge_dstring_copy_string(val, lGetString(iter->it.si.next_pos, ST_name));
       iter->it.si.next_pos = lNext(iter->it.si.next_pos);
       return DRMAA_ERRNO_SUCCESS;
    default:
@@ -990,7 +990,7 @@ int japi_set_vector_attribute(drmaa_job_template_t *jt, const char *name,
    lp = lCreateList(NULL, ST_Type);
    for (i=0; value[i]; i++) {
       sep = lCreateElem(ST_Type);
-      lSetString(sep, STR, value[i]);
+      lSetString(sep, ST_name, value[i]);
       lAppendElem(lp, sep);
    }
    lSetList(ep, NSV_strings, lp);

@@ -1171,9 +1171,9 @@ XtPointer cld, cad;
          job_slots_used = qslots_used(q);
          qstate = lGetUlong(q, QU_state); 
          sge_get_states(QU_qname, qstates, qstate);
-         if ( sge_load_alarm(q, lGetList(q, QU_load_thresholds), ehl, cl, NULL))
+         if ( sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), ehl, cl, NULL))
             alarm_set = 1;
-         if (sge_load_alarm(q, lGetList(q, QU_suspend_thresholds), ehl, cl, NULL))
+         if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), ehl, cl, NULL))
             suspend_threshold_alarm = 1;
 
 

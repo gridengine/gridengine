@@ -177,11 +177,11 @@ lList *qresource_list
    printf("%-9.9s ", to_print);   
 
    state = lGetUlong(q, QU_state);
-   if (sge_load_alarm(q, lGetList(q, QU_load_thresholds), exechost_list, complex_list, NULL)) {
+   if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, complex_list, NULL)) {
       state |= QALARM;
       sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, complex_list, reason, REASON_BUF_SIZE, "load");
    }
-   if (sge_load_alarm(q, lGetList(q, QU_suspend_thresholds), exechost_list, complex_list, NULL)) {
+   if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, complex_list, NULL)) {
      state |= QSUSPEND_ALARM;
      sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), exechost_list, complex_list, reason, REASON_BUF_SIZE, "suspend");
    }

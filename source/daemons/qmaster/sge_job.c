@@ -1357,7 +1357,7 @@ char *commproc
             }   
          }
       }
-   }     
+   }
 
    if (pb && !hostcmp(pb_host, lGetHost(qep, QU_qhostname)))
       pack_job_kill(pb, job_number, task_number); 

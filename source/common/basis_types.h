@@ -156,6 +156,8 @@ typedef char stringTlong[4*MAX_STRING_SIZE];
 #define SFQ  "\"%-.100s\""
 /* save string format non-quoted */
 #define SFN  "%-.100s"
+/* non-quoted string not limited intentionally */
+#define SN_UNLIMITED  "%s"
 
 /* used for shepherd and procfs */
 #if defined(LINUX) || defined(SUN4) || defined(AIX4) || defined(HP10) || defined(HP11)

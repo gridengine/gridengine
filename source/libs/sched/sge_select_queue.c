@@ -121,7 +121,7 @@ static int ensure_forced(lListElem *job, char *main_cplx_name, char *obj_name,
                          const char *obj_kex, lList *user_complex, 
                          lList *cplx_list);
 
-static int sge_check_load_alarm(const char *name, const char *load_value,
+static int sge_check_load_alarm(char *reason, const char *name, const char *load_value,
                                 const char *limit_value, u_long32 relop,
                                 u_long32 type, lListElem *hep,
                                 lListElem *hlep, u_long32 lc_host,
@@ -943,7 +943,7 @@ static int is_requested(lList *req, const char *attr)
    return 0;
 }
 
-static int sge_check_load_alarm(const char *name, const char *load_value, 
+static int sge_check_load_alarm(char *reason, const char *name, const char *load_value, 
                                 const char *limit_value, u_long32 relop, 
                                 u_long32 type, lListElem *hep, 
                                 lListElem *hlep, u_long32 lc_host, 
@@ -952,6 +952,7 @@ static int sge_check_load_alarm(const char *name, const char *load_value,
    lListElem *job_load;
    double limit, load;
    int match;
+   char lc_diagnosis1[256], lc_diagnosis2[256];
    
    DENTER(TOP_LAYER, "sge_check_load_alarm");
 
@@ -961,19 +962,28 @@ static int sge_check_load_alarm(const char *name, const char *load_value,
       case TYPE_MEM:
       case TYPE_BOO:
       case TYPE_DOUBLE:
-         if (!parse_ulong_val(&load, NULL, type, load_value, NULL, 0) ||
-             !parse_ulong_val(&limit, NULL, type, limit_value, NULL, 0)) {
+         if (!parse_ulong_val(&load, NULL, type, load_value, NULL, 0)) {
+            if (reason) 
+               sprintf(reason, MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS, load_value, name);
+            DEXIT;
+            return 1;
+         } 
+         if (!parse_ulong_val(&limit, NULL, type, limit_value, NULL, 0)) {
+            if (reason) 
+               sprintf(reason, MSG_SCHEDD_WHYEXCEEDINVALIDTHRESHOLD_SS, name, limit_value);
             DEXIT;
             return 1;
          }
          /* load correction */
          if (((hlep && lc_host) || lc_global) &&
             (job_load = lGetElemStr(load_adjustments, CE_name, name))) {  
-            const char *s;
+            const char *load_correction_str;
             double load_correction;
 
-            s = lGetString(job_load, CE_stringval);
-            if (!parse_ulong_val(&load_correction, NULL, type, s, NULL, 0)) {
+            load_correction_str = lGetString(job_load, CE_stringval);
+            if (!parse_ulong_val(&load_correction, NULL, type, load_correction_str, NULL, 0)) {
+               if (reason) 
+                  sprintf(reason, MSG_SCHEDD_WHYEXCEEDINVALIDLOADADJUST_SS, name, load_correction_str);
                DEXIT;
                return 1;
             }
@@ -994,9 +1004,18 @@ static int sge_check_load_alarm(const char *name, const char *load_value,
                   if (nproc != 1) {
                      load_correction /= nproc;
                   }
+                  sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGHOSTNP_ISI, 
+                         (int)lc_host, load_correction_str, nproc);
+
+               } else {
+                  sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGHOST_IS, 
+                         (int)lc_host, load_correction_str);
                }
-            } else
+            } else {
                load_correction *= lc_global;
+               sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGGLOBAL_IS, 
+                         (int)lc_global, load_correction_str);
+            }
 
             /* it depends on relop in complex config
             whether load_correction is pos/neg */
@@ -1004,6 +1023,7 @@ static int sge_check_load_alarm(const char *name, const char *load_value,
             case CMPLXGE_OP:
             case CMPLXGT_OP:
                load += load_correction;
+               sprintf(lc_diagnosis2, MSG_SCHEDD_LCDIAGPOSITIVE_S, lc_diagnosis1);
                break;
 
             case CMPLXNE_OP:
@@ -1012,12 +1032,22 @@ static int sge_check_load_alarm(const char *name, const char *load_value,
             case CMPLXLE_OP:
             default:
                load -= load_correction;
+               sprintf(lc_diagnosis2, MSG_SCHEDD_LCDIAGNEGATIVE_S, lc_diagnosis1);
                break;
             }
-         }
+         } else
+            strcpy(lc_diagnosis2, MSG_SCHEDD_LCDIAGNONE);
 
          /* is threshold exceeded ? */
          if (resource_cmp(relop, load, limit)) {
+            if (reason) {
+               if (type == TYPE_BOO)
+                  sprintf(reason, MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSS, 
+                        name, load?MSG_TRUE:MSG_FALSE, lc_diagnosis2, limit_value);
+               else
+                  sprintf(reason, MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSS, 
+                        name, load, lc_diagnosis2, limit_value);
+            }
             DEXIT;
             return 1;
          }
@@ -1036,12 +1066,16 @@ static int sge_check_load_alarm(const char *name, const char *load_value,
          }
 
          if (!match) {
+            if (reason)
+               sprintf(reason, MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSS, name, load_value, limit_value);
             DEXIT;
             return 1;
          }
 
          break;
       default:
+         if (reason)
+            sprintf(reason, MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S, name);
          DEXIT;
          return 1;
    }
@@ -1093,7 +1127,7 @@ static int resource_cmp(u_long32 relop, double req, double src_dl)
       0 no
 */
 
-int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list, 
+int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *exechost_list, 
                    lList *complex_list, lList *load_adjustments) {
    lListElem *hep, *global_hep, *tep;
    u_long32 ulc_factor; 
@@ -1111,7 +1145,9 @@ int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list,
 
    hep = lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname));
 
-   if(!hep) { 
+   if(!hep) {
+      if (reason)
+         sprintf(reason, MSG_SCHEDD_WHYEXCEEDNOHOST_S, lGetHost(qep, QU_qhostname));
       /* no host for queue -> ERROR */
       DEXIT;
       return 1;
@@ -1137,6 +1173,8 @@ int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list,
 
       /* complex attriute definition */
       if (!(cep = sge_locate_complex_attr(name, complex_list))) {
+         if (reason)
+            sprintf(reason, MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S, name);
          /* no complex attribute for threshold -> ERROR */
          DEXIT;
          return 1;
@@ -1157,7 +1195,7 @@ int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list,
       limit_value = lGetString(tep, CE_stringval);
       type = lGetUlong(cep, CE_valtype);
 
-      if(sge_check_load_alarm(name, load_value, limit_value, relop, type,
+      if (sge_check_load_alarm(reason, name, load_value, limit_value, relop, type,
                               hep, hlep, lc_host, lc_global, 
                               load_adjustments)) {
          DEXIT;
@@ -1247,7 +1285,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
       limit_value = lGetString(tep, CE_stringval);
       type = lGetUlong(cep, CE_valtype);
 
-      if(sge_check_load_alarm(name, load_value, limit_value, relop, type,
+      if(sge_check_load_alarm(NULL, name, load_value, limit_value, relop, type,
                               hep, hlep, 0, 0,
                               NULL)) {
          char dom_str[5];    /* dominance as string */
@@ -1305,6 +1343,7 @@ u_long32 ttype       /* may be QU_suspend_thresholds or QU_load_thresholds */
    lCondition *where;
    lListElem *qep;
    int ret, load_alarm, nverified = 0;
+   char reason[2048];
 
    DENTER(TOP_LAYER, "sge_split_queue_load");
 
@@ -1326,16 +1365,16 @@ u_long32 ttype       /* may be QU_suspend_thresholds or QU_load_thresholds */
                            lGetElemHost(granted, JG_qhostname, lGetHost(qep, QU_qhostname))))) {
          nverified++;
 
-         if (sge_load_alarm(qep, thresholds, exechost_list, complex_list, load_adjustments)!=0) {
+         if (sge_load_alarm(reason, qep, thresholds, exechost_list, complex_list, load_adjustments)!=0) {
             load_alarm = 1;
             if (ttype==QU_suspend_thresholds) {
-               DPRINTF(("queue %s tagged to be in suspend alarm\n", 
-                     lGetString(qep, QU_qname)));
-               schedd_add_global_message(SCHEDD_INFO_QUEUEINALARM_S, lGetString(qep, QU_qname));
+               DPRINTF(("queue %s tagged to be in suspend alarm: %s\n", 
+                     lGetString(qep, QU_qname), reason));
+               schedd_add_global_message(SCHEDD_INFO_QUEUEINALARM_SS, lGetString(qep, QU_qname), reason);
             } else {
-               DPRINTF(("queue %s tagged to be overloaded\n", 
-                     lGetString(qep, QU_qname)));
-               schedd_add_global_message(SCHEDD_INFO_QUEUEOVERLOADED_S, lGetString(qep, QU_qname));
+               DPRINTF(("queue %s tagged to be overloaded: %s\n", 
+                     lGetString(qep, QU_qname), reason));
+               schedd_add_global_message(SCHEDD_INFO_QUEUEOVERLOADED_SS, lGetString(qep, QU_qname), reason);
             }
          }
       }
@@ -2293,7 +2332,7 @@ lListElem *hep;
          debit_host_consumable(job, hep, complex_list, host_slots);
       }
 
-      load_alarm = sge_load_alarm(qep, lGetList(qep, QU_load_thresholds), 
+      load_alarm = sge_load_alarm(NULL, qep, lGetList(qep, QU_load_thresholds), 
             host_list, complex_list, load_adjustments);
 
       if (global_hep) {

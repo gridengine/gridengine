@@ -1,3 +1,10 @@
+AH-2002-07-02-0: Bugfix:    Added missing newline character to error msg.
+                 Changed:   qstat, qconf
+                            
+AH-2002-06-27-0: Enhancem.: Improved load alarm/suspend alarm diagnosis 
+                            messages
+                 Changed:   sge_schedd
+                            
 CR-2002-06-26-0: Testsuite: - new default parameter for wait_for_jobpending()
                               (return if job is already started)  
                  Enhancem.: - changed timeout values for access_list and

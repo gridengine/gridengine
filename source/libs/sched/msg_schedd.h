@@ -143,8 +143,8 @@
 #define MSG_SCHEDD_INFO_CKPTNOTFOUND_                 _("cannot run because requested ckpt object not found")
 #define MSG_SCHEDD_INFO_PESLOTSNOTINRANGE_S           _("cannot run because free slots of pe "SFQ" not in range of job")
 #define MSG_SCHEDD_INFO_NOACCESSTOPE_S                _("cannot run because no access to pe "SFQ"") 
-#define MSG_SCHEDD_INFO_QUEUEINALARM_S                _("queue "SFQ" is in suspend alarm")        
-#define MSG_SCHEDD_INFO_QUEUEOVERLOADED_S             _("queue "SFQ" dropped because it is overloaded") 
+#define MSG_SCHEDD_INFO_QUEUEINALARM_SS               _("queue "SFQ" is in suspend alarm: "SN_UNLIMITED)        
+#define MSG_SCHEDD_INFO_QUEUEOVERLOADED_SS            _("queue "SFQ" dropped because it is overloaded: "SN_UNLIMITED) 
 #define MSG_SCHEDD_INFO_ALLALARMOVERLOADED_           _("All queues dropped because of overload or full")  
 #define MSG_SCHEDD_INFO_TURNEDOFF_                    _("(Collecting of scheduler job information is turned off)") 
 #define MSG_SCHEDD_INFO_JOBLIST_                      _("(Scheduler job information not available for every job)" )  
@@ -316,6 +316,26 @@
 #define MSG_SCHEDD_NOHOSTFORQUEUE                           _("\terror: no host defined for queue\n")
 #define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _("\terror: no complex attribute for threshold %s\n")
 #define MSG_SCHEDD_NOLOADVALUEFORTHRESHOLD_S                _("\terror: no load value for threshold %s\n")
+
+#define MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS                  _("invalid load value "SFQ" for theshold "SFN"\n")
+#define MSG_SCHEDD_WHYEXCEEDINVALIDTHRESHOLD_SS             _("invalid threshold value "SFN"="SFN"\n")
+#define MSG_SCHEDD_WHYEXCEEDINVALIDLOADADJUST_SS            _("invalid load correction value "SFN"="SFN"\n")
+#define MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSS                  _(SFN"="SFN" ("SN_UNLIMITED") exceeds threshold of "SFN"\n")
+#define MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSS                 _(SFN"=%f ("SN_UNLIMITED") exceeds threshold of "SFN"\n")
+#define MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSS                 _(SFN"="SFN" exceeds threshold of "SFN"\n")
+#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S                   _("unknown complex attribute type for theshold "SFN"\n")
+#define MSG_SCHEDD_WHYEXCEEDNOHOST_S                        _("no such host "SFN" for that queue\n")
+#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S                     _("no such complex attribute for threshold "SFQ"\n")
+
+#define MSG_SCHEDD_LCDIAGHOSTNP_ISI                         _("host load correction %d times "SFN" (nproc=%d)")
+#define MSG_SCHEDD_LCDIAGHOST_IS                            _("host load correction %d times "SFN)
+#define MSG_SCHEDD_LCDIAGGLOBAL_IS                          _("global load correction %d times "SFN)
+#define MSG_SCHEDD_LCDIAGPOSITIVE_S                        _("encloses "SFN)
+#define MSG_SCHEDD_LCDIAGNEGATIVE_S                        _("reduced by "SFN)
+#define MSG_SCHEDD_LCDIAGNONE                               _("no load correction applied")
+
+
+
 
 /* 
 ** schedd/sge_update_lists.c

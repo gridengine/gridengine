@@ -3352,11 +3352,11 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                destribute_ftickets(fcategories, depend);
             }
          }
+
          /* free the allocated memory */
          FREE(sort_list);
-         if (fcategories != NULL) {
-            free_fcategories(&fcategories, &ref_array);
-         }
+         free_fcategories(&fcategories, &ref_array);
+
       }
 
             break;
@@ -4673,9 +4673,9 @@ static void calculate_pending_shared_override_tickets(sge_ref_t *job_ref, int nu
             FREE(sort_list);           
          }
          /* free the allocated memory */
-         if (fcategories != NULL) {
-            free_fcategories(&fcategories, &ref_array);
-         }
+
+         free_fcategories(&fcategories, &ref_array);
+
    return;
 }
 

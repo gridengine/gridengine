@@ -1189,7 +1189,7 @@ lUlong value
 
    /* create entry in hash table */
    if(ep->descr[pos].hash != NULL) {
-      cull_hash_insert(ep, pos);
+      cull_hash_insert(ep, pos, TRUE);
    }
 
    DEXIT;
@@ -1239,7 +1239,7 @@ lUlong value
 
    /* create entry in hash table */
    if(ep->descr[pos].hash != NULL) {
-      cull_hash_insert(ep, pos);
+      cull_hash_insert(ep, pos, TRUE);
    }
    
    DEXIT;
@@ -1305,7 +1305,7 @@ const char *value
 
    /* create entry in hash table */
    if(ep->descr[pos].hash != NULL) {
-      cull_hash_insert(ep, pos);
+      cull_hash_insert(ep, pos, TRUE);
    }
    
    DEXIT;
@@ -1372,7 +1372,7 @@ const char *value
 
    /* create entry in hash table */
    if(ep->descr[pos].hash != NULL) {
-      cull_hash_insert(ep, pos);
+      cull_hash_insert(ep, pos, TRUE);
    }
    
    DEXIT;
@@ -1465,7 +1465,7 @@ const char *value
 
    /* create entry in hash table */
    if(ep->descr[pos].hash != NULL) {
-      cull_hash_insert(ep, pos);
+      cull_hash_insert(ep, pos, TRUE);
    }
    
    DEXIT;
@@ -1569,7 +1569,7 @@ const char *value
 
    /* create entry in hash table */
    if(ep->descr[pos].hash != NULL) {
-      cull_hash_insert(ep, pos);
+      cull_hash_insert(ep, pos, TRUE);
    }
    DEXIT;
    return 0;

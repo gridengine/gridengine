@@ -52,7 +52,7 @@
 *     lHash *cull_hash_copy_descr(const lDescr *descr);
 *     lHash *cull_hash_create(const lDescr *descr);
 *     void cull_hash_new(lList *lp, int name, int type);
-*     void cull_hash_insert(const lListElem *ep, const int pos);
+*     void cull_hash_insert(const lListElem *ep, const int pos, int check_presence);
 *     void cull_hash_remove(const lListElem *ep, const int pos);
 *     void cull_hash_elem(const lListElem *ep);
 *     lListElem *cull_hash_first(const lList *lp, const int pos, const void *key, const void **iterator);
@@ -295,7 +295,7 @@ void cull_hash_create_hashtables(lList *lp)
 *     cull_hash_insert() -- insert a new element in a hash table
 *
 *  SYNOPSIS
-*     void cull_hash_insert(const lListElem *ep, const int pos) 
+*     void cull_hash_insert(const lListElem *ep, const int pos, int check_presence) 
 *
 *  FUNCTION
 *     Inserts ep into the hash list for data field at position pos.
@@ -307,9 +307,10 @@ void cull_hash_create_hashtables(lList *lp)
 *     const lListElem *ep - the cull object to be stored in a hash list
 *     const int pos       - describes the data field of the objects that
 *                           is to be hashed
-*
+*     int check_presence  - for non unique hash: check if element is already
+*                           contained in list of elements with same hash key.
 *******************************************************************************/
-void cull_hash_insert(const lListElem *ep, const int pos)
+void cull_hash_insert(const lListElem *ep, const int pos, int check_presence)
 {
    char host_key[MAXHOSTLEN+1];
    lDescr *descr = NULL;
@@ -354,20 +355,30 @@ void cull_hash_insert(const lListElem *ep, const int pos)
          non_unique_hash *nuh = NULL;
          /* do we already have a list of elements with this key? */
          if(HashTableLookup(descr->hash->table, key, (const void **)&nuh) == True) {
-            if(nuh->data != ep) {
-               non_unique_hash *head = nuh; /* remember head of list */
+            if (check_presence) { 
+               /* check required: look for ep in the list of objects, if not found, insert */
+               if(nuh->data != ep) {
+                  non_unique_hash *head = nuh; /* remember head of list */
 
-               while(head->next != NULL && head->next->data != ep) {
-                  head = head->next;
-               }
+                  while(head->next != NULL && head->next->data != ep) {
+                     head = head->next;
+                  }
 
-               /* if element is already in list, do nothing, else create new list element */
-               if(head->next == NULL) {
-                  nuh = (non_unique_hash *)malloc(sizeof(non_unique_hash));
-                  head->next = nuh;
-                  nuh->data = ep;
-                  nuh->next = NULL;
+                  /* if element is already in list, do nothing, else create new list element */
+                  if(head->next == NULL) {
+                     nuh = (non_unique_hash *)malloc(sizeof(non_unique_hash));
+                     head->next = nuh;
+                     nuh->data = ep;
+                     nuh->next = NULL;
+                  }
                }
+            } else {
+               /* no check required - just insert new element as new head of non unique list */
+               non_unique_hash *second = (non_unique_hash *)malloc(sizeof(non_unique_hash));
+               second->next = nuh->next;
+               second->data = nuh->data;
+               nuh->next = second;
+               nuh->data = ep;
             }
          } else { /* no list of non unique elements for this key, create new */
             nuh = (non_unique_hash *)malloc(sizeof(non_unique_hash));
@@ -487,7 +498,7 @@ void cull_hash_elem(const lListElem *ep) {
   
    for(i = 0; ep->descr[i].mt != lEndT; i++) {
       if(ep->descr[i].hash != NULL) {
-         cull_hash_insert(ep, i);
+         cull_hash_insert(ep, i, TRUE);
       }
    }
 }
@@ -753,8 +764,8 @@ int cull_hash_new(lList *lp, int nm, lHash *template)
    }
 
    /* insert all elements into the new hash table */
-   for_each(ep, lp) {
-      cull_hash_insert(ep, pos);
+   for_each_rev(ep, lp) {
+      cull_hash_insert(ep, pos, FALSE);
    }
 
    DEXIT;

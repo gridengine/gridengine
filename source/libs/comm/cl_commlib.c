@@ -742,6 +742,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
             if (commlib_error) {
                *commlib_error = CL_RETVAL_NO_FRAMEWORK_INIT;
             }
+            pthread_mutex_unlock(&cl_com_ssl_setup_mutex);
             return NULL;
          }
         
@@ -752,6 +753,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
             if (commlib_error) {
                *commlib_error = return_value;
             }
+            pthread_mutex_unlock(&cl_com_ssl_setup_mutex);
             return NULL;
          }
 
@@ -1288,7 +1290,6 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
                   pthread_mutex_unlock(handle->messages_ready_mutex);
                   /* return for messages */
                   if (return_for_messages == CL_TRUE) {
-                     pthread_mutex_unlock(handle->messages_ready_mutex);
                      cl_raw_list_unlock(cl_com_handle_list);
                      CL_LOG(CL_LOG_INFO,"delivering MESSAGES");
                      return CL_RETVAL_MESSAGE_IN_BUFFER;
@@ -1329,7 +1330,6 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
 
                   if ( return_for_messages == CL_TRUE) {
                      /* return for messages */
-                     pthread_mutex_unlock(handle->messages_ready_mutex);
                      cl_raw_list_unlock(cl_com_handle_list);
                      CL_LOG(CL_LOG_ERROR,"delivering MESSAGES");
                      return CL_RETVAL_MESSAGE_IN_BUFFER;

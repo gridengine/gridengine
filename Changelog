@@ -1,3 +1,7 @@
+SG-2005-03-03-0: Bugfix:    fixed locking issues in the commlib
+                 Review:    AA
+                 Changed:   all
+
 SG-2005-03-02-1: Cleanup:   Changed MAXHOSTLEN to CL_MAXHOSTLEN due to a
                             collision between different defines under linux.
                  Review:    AA

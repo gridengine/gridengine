@@ -87,6 +87,11 @@ static lListElem *job_create_from_file(u_long32 job_id, u_long32 task_id,
 extern lList *Master_Job_List;
 extern lList *Master_Zombie_List;
 
+/* Here we cache the path of the last task spool dir that has been created.
+   In case a task spool dir is removed the cache is no longer a proof of the
+   existence of the task spool dir and is reinitialized */
+static stringT old_task_spool_dir = "";
+
 static lListElem *job_create_from_file(u_long32 job_id, u_long32 ja_task_id,
                                        sge_spool_flags_t flags)
 {
@@ -391,10 +396,11 @@ static int job_write_common_part(lListElem *job, u_long32 ja_task_id,
    return ret;
 }
 
+
+
 static int ja_task_write_to_disk(lListElem *ja_task, u_long32 job_id,
                                  sge_spool_flags_t flags)
 {
-   static stringT old_task_spool_dir = "";
    stringT task_spool_dir;
    stringT task_spool_file;
    stringT tmp_task_spool_file;
@@ -476,6 +482,10 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
           */  
          DPRINTF(("try to remove "SFN"\n", task_spool_dir));
          rmdir(task_spool_dir);
+
+         /* a task spool directory has been removed: reinit 
+            old_task_spool_dir to ensure mkdir() is performed */
+         old_task_spool_dir[0] = '\0';
       }
    }
 

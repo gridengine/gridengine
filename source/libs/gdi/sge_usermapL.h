@@ -64,8 +64,8 @@ enum {
 };
 
 LISTDEF(UME_Type)
-   SGE_STRING(UME_cluster_user)
-   SGE_LIST(UME_mapping_list) /* UM_Type - list */
+   SGE_STRING(UME_cluster_user, CULL_DEFAULT)
+   SGE_LIST(UME_mapping_list, UM_Type, CULL_DEFAULT) /* UM_Type - list */
 LISTEND 
 
 NAMEDEF(UMEN)
@@ -98,8 +98,8 @@ enum {
 };
 
 LISTDEF(UM_Type)
-   SGE_STRING(UM_mapped_user)
-   SGE_LIST(UM_host_list)            /* ST_Type - List */
+   SGE_STRING(UM_mapped_user, CULL_DEFAULT)
+   SGE_LIST(UM_host_list, ST_Type, CULL_DEFAULT)            /* ST_Type - List */
 LISTEND 
 
 NAMEDEF(UMN)

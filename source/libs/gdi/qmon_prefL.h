@@ -55,11 +55,11 @@ enum {
 
 ILISTDEF(PREF_Type, QmonPreferences, QMON_PREF_LIST)
    /* ------ internal fields ----------------------------------- */
-   SGE_XLIST(PREF_job_filter_resources, CE_Type)
-   SGE_XLIST(PREF_job_filter_owners, ST_Type)
-   SGE_XLIST(PREF_job_filter_fields, ST_Type)
-   SGE_BOOL(PREF_job_filter_compact)
-   SGE_XLIST(PREF_queue_filter_resources, CE_Type)
+   SGE_LIST(PREF_job_filter_resources, CE_Type, CULL_DEFAULT)
+   SGE_LIST(PREF_job_filter_owners, ST_Type, CULL_DEFAULT)
+   SGE_LIST(PREF_job_filter_fields, ST_Type, CULL_DEFAULT)
+   SGE_BOOL(PREF_job_filter_compact, CULL_DEFAULT)
+   SGE_LIST(PREF_queue_filter_resources, CE_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(PREFS)

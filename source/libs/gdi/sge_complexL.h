@@ -83,8 +83,8 @@ enum {
 };
 
 ILISTDEF(CX_Type, Complex, SGE_COMPLEX_LIST)
-   SGE_KSTRINGHU(CX_name)
-   SGE_TLIST(CX_entries, CE_Type)
+   SGE_STRING(CX_name, CULL_HASH | CULL_UNIQUE)
+   SGE_LIST(CX_entries, CE_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CXN)
@@ -112,21 +112,20 @@ enum {
 };
 
 SLISTDEF(CE_Type, ComplexEntry)
-   SGE_KSTRINGHU(CE_name)          /* full name of attribute */
-   SGE_KSTRINGHU(CE_shortcut)      /* shortcut name of attribute */
-   SGE_ULONG(CE_valtype)        /* type */
-   SGE_STRING(CE_stringval)     /* non overwritten value */
-   SGE_XDOUBLE(CE_doubleval)    /* parsed CE_stringval */
-   SGE_ULONG(CE_relop)          /* relational operator */
-   SGE_BOOL(CE_request)         /* flag requestable */
-   SGE_BOOL(CE_consumable)      /* flag consumable */
-   SGE_BOOL(CE_forced)          /* flag forced */
-   SGE_XSTRING(CE_default)      /* default request for consumable */
-   SGE_ISTRING(CE_default_val)  /* due to nameconflict w/ idl */
-   SGE_XULONG(CE_dominant)      /* monitoring facility */
-   SGE_XSTRING(CE_pj_stringval) /* per job string value */
-   SGE_XDOUBLE(CE_pj_doubleval) /* per job parsed CE_stringval */
-   SGE_XULONG(CE_pj_dominant)   /* per job monitoring facility */
+   SGE_STRING(CE_name, CULL_HASH | CULL_UNIQUE)          /* full name of attribute */
+   SGE_STRING(CE_shortcut, CULL_HASH | CULL_UNIQUE)      /* shortcut name of attribute */
+   SGE_ULONG(CE_valtype, CULL_DEFAULT)        /* type */
+   SGE_STRING(CE_stringval, CULL_DEFAULT)     /* non overwritten value */
+   SGE_DOUBLE(CE_doubleval, CULL_DEFAULT)    /* parsed CE_stringval */
+   SGE_ULONG(CE_relop, CULL_DEFAULT)          /* relational operator */
+   SGE_BOOL(CE_request, CULL_DEFAULT)         /* flag requestable */
+   SGE_BOOL(CE_consumable, CULL_DEFAULT)      /* flag consumable */
+   SGE_BOOL(CE_forced, CULL_DEFAULT)          /* flag forced */
+   SGE_STRING(CE_default, CULL_DEFAULT)      /* default request for consumable */
+   SGE_ULONG(CE_dominant, CULL_DEFAULT)      /* monitoring facility */
+   SGE_STRING(CE_pj_stringval, CULL_DEFAULT) /* per job string value */
+   SGE_DOUBLE(CE_pj_doubleval, CULL_DEFAULT) /* per job parsed CE_stringval */
+   SGE_ULONG(CE_pj_dominant, CULL_DEFAULT)   /* per job monitoring facility */
 LISTEND 
 
 NAMEDEF(CEN)

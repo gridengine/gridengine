@@ -383,11 +383,7 @@ lDescr *lCopyDescr(const lDescr *dp)
 
    /* copy hashing information */
    for(i = 0; dp[i].mt != lEndT; i++) {
-      if(dp[i].hash != NULL) {
-         new[i].hash = cull_hash_copy_descr(&dp[i]);
-      } else {
-         new[i].hash = NULL;
-      }
+      new[i].ht = NULL;
    }
 
    DEXIT;
@@ -501,7 +497,7 @@ int lGetPosType(const lDescr *dp, int pos)
    if (pos < 0) {
       return (int) NoName;
    } 
-   return (int) dp[pos].mt;
+   return mt_get_type(dp[pos].mt);
 }
 
 lList **lGetListRef(const lListElem *ep, int name) 
@@ -527,7 +523,7 @@ lList **lGetListRef(const lListElem *ep, int name)
       abort();
    }
 
-   if (ep->descr[pos].mt != lListT)
+   if (mt_get_type(ep->descr[pos].mt) != lListT)
       incompatibleType("lGetPosListRef");
 
    DEXIT;
@@ -538,7 +534,7 @@ char **lGetPosStringRef(const lListElem *ep, int pos)
 {
    DENTER(CULL_BASIS_LAYER, "lGetPosStringRef");
 
-   if (ep->descr[pos].mt != lStringT)
+   if (mt_get_type(ep->descr[pos].mt) != lStringT)
       incompatibleType("lGetPosStringRef");
 
    DEXIT;
@@ -549,7 +545,7 @@ char **lGetPosHostRef(const lListElem *ep, int pos)
 {
    DENTER(CULL_BASIS_LAYER, "lGetPosHostRef");
 
-   if (ep->descr[pos].mt != lHostT)
+   if (mt_get_type(ep->descr[pos].mt) != lHostT)
       incompatibleType("lGetPosHostRef");
 
    DEXIT;
@@ -587,7 +583,7 @@ lInt lGetPosInt(const lListElem *ep, int pos)
 {
    DENTER(CULL_BASIS_LAYER, "lGetPosInt");
 
-   if (ep->descr[pos].mt != lIntT)
+   if (mt_get_type(ep->descr[pos].mt) != lIntT)
       incompatibleType("lGetPosInt");
 
    DEXIT;
@@ -617,9 +613,9 @@ lInt lGetInt(const lListElem *ep, int name)
    DENTER(CULL_BASIS_LAYER, "lGetInt");
 
    pos = lGetPosViaElem(ep, name);
-   if (ep->descr[pos].mt != lIntT)
+   if (mt_get_type(ep->descr[pos].mt) != lIntT)
       incompatibleType2(MSG_CULL_GETINT_WRONGTYPEFORFIELDXY_SS , 
-                        lNm2Str(name), multitypes[ep->descr[pos].mt]);
+                        lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
 
    DEXIT;
    return (lInt) ep->cont[pos].i;
@@ -654,7 +650,7 @@ lUlong lGetPosUlong(const lListElem *ep, int pos)
       abort();
    }
 
-   if (ep->descr[pos].mt != lUlongT)
+   if (mt_get_type(ep->descr[pos].mt) != lUlongT)
       incompatibleType("lGetPosUlong");
    DEXIT;
    return (lUlong) ep->cont[pos].ul;
@@ -699,9 +695,9 @@ lUlong lGetUlong(const lListElem *ep, int name)
                         lNm2Str(name));
    }
 
-   if (ep->descr[pos].mt != lUlongT)
+   if (mt_get_type(ep->descr[pos].mt) != lUlongT)
       incompatibleType2(MSG_CULL_GETULONG_WRONGTYPEFORFIELDXY_SS, 
-                        lNm2Str(name), multitypes[ep->descr[pos].mt]);
+                        lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
 
    DEXIT;
    return (lUlong) ep->cont[pos].ul;
@@ -736,7 +732,7 @@ const char *lGetPosString(const lListElem *ep, int pos)
       return NULL;
    }
 
-   if (ep->descr[pos].mt != lStringT)
+   if (mt_get_type(ep->descr[pos].mt) != lStringT)
       incompatibleType("lGetPosString");
 
    DEXIT;
@@ -773,7 +769,7 @@ const char *lGetPosHost(const lListElem *ep, int pos)
       return NULL;
    }
 
-   if (ep->descr[pos].mt != lHostT)
+   if (mt_get_type(ep->descr[pos].mt) != lHostT)
       incompatibleType("lGetPosHost");
    DEXIT;
    return (lHost) ep->cont[pos].host;
@@ -809,7 +805,7 @@ int lGetType(const lDescr *dp, int nm)
    }
 
    DEXIT;
-   return dp[pos].mt;
+   return mt_get_type(dp[pos].mt);
 }
 
 /****** cull/multitype/lGetUlong() ********************************************
@@ -853,9 +849,9 @@ const char *lGetString(const lListElem *ep, int name)
       return NULL;
    }
 
-   if (ep->descr[pos].mt != lStringT)
+   if (mt_get_type(ep->descr[pos].mt) != lStringT)
       incompatibleType2(MSG_CULL_GETSTRING_WRONGTYPEFORFILEDXY_SS ,
-                        lNm2Str(name), multitypes[ep->descr[pos].mt]);
+                        lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
 
    DEXIT;
 
@@ -902,9 +898,9 @@ const char *lGetHost(const lListElem *ep, int name)
       return NULL;
    }
 
-   if (ep->descr[pos].mt != lHostT)
+   if (mt_get_type(ep->descr[pos].mt) != lHostT)
       incompatibleType2(MSG_CULL_GETHOST_WRONGTYPEFORFILEDXY_SS ,
-                        lNm2Str(name), multitypes[ep->descr[pos].mt]);
+                        lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
 
    DEXIT;
 
@@ -940,7 +936,7 @@ lList *lGetPosList(const lListElem *ep, int pos)
       abort();
    }
 
-   if (ep->descr[pos].mt != lListT)
+   if (mt_get_type(ep->descr[pos].mt) != lListT)
       incompatibleType("lGetPosList");
 
    DEXIT;
@@ -991,9 +987,9 @@ _Insight_set_option("suppress", "LEAK_ASSIGN");
       abort();
    }
 
-   if (ep->descr[pos].mt != lListT)
+   if (mt_get_type(ep->descr[pos].mt) != lListT)
       incompatibleType2(MSG_CULL_GETLIST_WRONGTYPEFORFIELDXY_SS ,
-                        lNm2Str(name), multitypes[ep->descr[pos].mt]);
+                        lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
    DEXIT;
    return (lList *) ep->cont[pos].glp;
 #ifdef __INSIGHT__
@@ -1021,7 +1017,7 @@ _Insight_set_option("unsuppress", "LEAK_ASSIGN");
 lFloat lGetPosFloat(const lListElem *ep, int pos) 
 {
    DENTER(CULL_BASIS_LAYER, "lGetPosFloat");
-   if (ep->descr[pos].mt != lFloatT)
+   if (mt_get_type(ep->descr[pos].mt) != lFloatT)
       incompatibleType("lGetPosFloat");
    DEXIT;
    return ep->cont[pos].fl;
@@ -1051,8 +1047,8 @@ lFloat lGetFloat(const lListElem *ep, int name)
 
    pos = lGetPosViaElem(ep, name);
 
-   if (ep->descr[pos].mt != lFloatT)
-      incompatibleType2(MSG_CULL_GETFLOAT_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+   if (mt_get_type(ep->descr[pos].mt) != lFloatT)
+      incompatibleType2(MSG_CULL_GETFLOAT_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
    DEXIT;
    return ep->cont[pos].fl;
 }
@@ -1077,7 +1073,7 @@ lFloat lGetFloat(const lListElem *ep, int name)
 lDouble lGetPosDouble(const lListElem *ep, int pos) 
 {
    DENTER(CULL_BASIS_LAYER, "lGetPosDouble");
-   if (ep->descr[pos].mt != lDoubleT)
+   if (mt_get_type(ep->descr[pos].mt) != lDoubleT)
       incompatibleType("lGetPosDouble");
    DEXIT;
    return ep->cont[pos].db;
@@ -1107,8 +1103,8 @@ lDouble lGetDouble(const lListElem *ep, int name)
 
    pos = lGetPosViaElem(ep, name);
 
-   if (ep->descr[pos].mt != lDoubleT)
-      incompatibleType2(MSG_CULL_GETDOUBLE_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+   if (mt_get_type(ep->descr[pos].mt) != lDoubleT)
+      incompatibleType2(MSG_CULL_GETDOUBLE_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
    DEXIT;
    return ep->cont[pos].db;
 }
@@ -1133,7 +1129,7 @@ lDouble lGetDouble(const lListElem *ep, int name)
 lLong lGetPosLong(const lListElem *ep, int pos) 
 {
    DENTER(CULL_BASIS_LAYER, "lGetPosLong");
-   if (ep->descr[pos].mt != lLongT)
+   if (mt_get_type(ep->descr[pos].mt) != lLongT)
       incompatibleType("lGetPosLong");
    DEXIT;
    return ep->cont[pos].l;
@@ -1162,9 +1158,9 @@ lLong lGetLong(const lListElem *ep, int name)
    DENTER(CULL_BASIS_LAYER, "lGetLong");
    pos = lGetPosViaElem(ep, name);
 
-   if (ep->descr[pos].mt != lLongT)
+   if (mt_get_type(ep->descr[pos].mt) != lLongT)
       incompatibleType2(MSG_CULL_GETLONG_WRONGTYPEFORFIELDXY_SS, lNm2Str(name),
-                        multitypes[ep->descr[pos].mt]);
+                        multitypes[mt_get_type(ep->descr[pos].mt)]);
    DEXIT;
    return ep->cont[pos].l;
 }
@@ -1189,7 +1185,7 @@ lLong lGetLong(const lListElem *ep, int name)
 lChar lGetPosChar(const lListElem *ep, int pos) 
 {
    DENTER(CULL_BASIS_LAYER, "lGetPosChar");
-   if (ep->descr[pos].mt != lCharT)
+   if (mt_get_type(ep->descr[pos].mt) != lCharT)
       incompatibleType("lGetPosChar");
    DEXIT;
    return ep->cont[pos].c;
@@ -1218,8 +1214,8 @@ lChar lGetChar(const lListElem *ep, int name)
    DENTER(CULL_BASIS_LAYER, "lGetChar");
    pos = lGetPosViaElem(ep, name);
 
-   if (ep->descr[pos].mt != lCharT)
-      incompatibleType2(MSG_CULL_GETCHAR_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+   if (mt_get_type(ep->descr[pos].mt) != lCharT)
+      incompatibleType2(MSG_CULL_GETCHAR_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
    DEXIT;
    return ep->cont[pos].c;
 }
@@ -1244,7 +1240,7 @@ lChar lGetChar(const lListElem *ep, int name)
 lRef lGetPosRef(const lListElem *ep, int pos) 
 {
    DENTER(CULL_BASIS_LAYER, "lGetPosRef");
-   if (ep->descr[pos].mt != lRefT)
+   if (mt_get_type(ep->descr[pos].mt) != lRefT)
       incompatibleType("lGetPosRef");
    DEXIT;
    return ep->cont[pos].ref;
@@ -1273,9 +1269,9 @@ lRef lGetRef(const lListElem *ep, int name)
    DENTER(CULL_BASIS_LAYER, "lGetRef");
    pos = lGetPosViaElem(ep, name);
 
-   if (ep->descr[pos].mt != lRefT)
+   if (mt_get_type(ep->descr[pos].mt) != lRefT)
       incompatibleType2(MSG_CULL_GETREF_WRONGTYPEFORFIELDXY_SS, lNm2Str(name), 
-                        multitypes[ep->descr[pos].mt]);
+                        multitypes[mt_get_type(ep->descr[pos].mt)]);
    DEXIT;
    return ep->cont[pos].ref;
 }
@@ -1316,7 +1312,7 @@ int lSetPosInt(const lListElem *ep, int pos, int value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lIntT) {
+   if (mt_get_type(ep->descr[pos].mt) != lIntT) {
       incompatibleType("lSetPosInt");
       DEXIT;
       return -1;
@@ -1366,9 +1362,9 @@ int lSetInt(lListElem *ep, int name, int value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lIntT) {
+   if (mt_get_type(ep->descr[pos].mt) != lIntT) {
       incompatibleType2(MSG_CULL_SETINT_WRONGTYPEFORFIELDXY_SS, lNm2Str(name), 
-                        multitypes[ep->descr[pos].mt]);
+                        multitypes[mt_get_type(ep->descr[pos].mt)]);
       DEXIT;
       return -1;
    }
@@ -1413,21 +1409,21 @@ int lSetPosUlong(const lListElem *ep, int pos, lUlong value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lUlongT) {
+   if (mt_get_type(ep->descr[pos].mt) != lUlongT) {
       incompatibleType("lSetPosUlong");
       DEXIT;
       return -1;
    }
 
    /* remove old hash entry */
-   if(ep->descr[pos].hash != NULL) {
+   if(ep->descr[pos].ht != NULL) {
       cull_hash_remove(ep, pos);
    }
    
    ep->cont[pos].ul = value;
 
    /* create entry in hash table */
-   if(ep->descr[pos].hash != NULL) {
+   if(ep->descr[pos].ht != NULL) {
       cull_hash_insert(ep, pos);
    }
 
@@ -1474,21 +1470,21 @@ int lSetUlong(lListElem *ep, int name, lUlong value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lUlongT) {
-      incompatibleType2(MSG_CULL_SETULONG_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+   if (mt_get_type(ep->descr[pos].mt) != lUlongT) {
+      incompatibleType2(MSG_CULL_SETULONG_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
       DEXIT;
       return -1;
    }
 
    /* remove old hash entry */
-   if(ep->descr[pos].hash != NULL) {
+   if(ep->descr[pos].ht != NULL) {
       cull_hash_remove(ep, pos);
    }
    
    ep->cont[pos].ul = value;
 
    /* create entry in hash table */
-   if(ep->descr[pos].hash != NULL) {
+   if(ep->descr[pos].ht != NULL) {
       cull_hash_insert(ep, pos);
    }
    
@@ -1534,14 +1530,14 @@ int lSetPosString(const lListElem *ep, int pos, const char *value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lStringT) {
+   if (mt_get_type(ep->descr[pos].mt) != lStringT) {
       incompatibleType("lSetPosString");
       DEXIT;
       return -1;
    }
 
    /* remove old hash entry */
-   if(ep->descr[pos].hash != NULL) {
+   if(ep->descr[pos].ht != NULL) {
       cull_hash_remove(ep, pos);
    }
    
@@ -1565,7 +1561,7 @@ int lSetPosString(const lListElem *ep, int pos, const char *value)
    ep->cont[pos].str = str;
 
    /* create entry in hash table */
-   if(ep->descr[pos].hash != NULL) {
+   if(ep->descr[pos].ht != NULL) {
       cull_hash_insert(ep, pos);
    }
    
@@ -1611,14 +1607,14 @@ int lSetPosHost(const lListElem *ep, int pos, const char *value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lHostT) {
+   if (mt_get_type(ep->descr[pos].mt) != lHostT) {
       incompatibleType("lSetPosHost");
       DEXIT;
       return -1;
    }
 
    /* remove old hash entry */
-   if(ep->descr[pos].hash != NULL) {
+   if(ep->descr[pos].ht != NULL) {
       cull_hash_remove(ep, pos);
    }
    
@@ -1642,7 +1638,7 @@ int lSetPosHost(const lListElem *ep, int pos, const char *value)
    ep->cont[pos].host = str;
 
    /* create entry in hash table */
-   if(ep->descr[pos].hash != NULL) {
+   if(ep->descr[pos].ht != NULL) {
       cull_hash_insert(ep, pos);
    }
    
@@ -1691,14 +1687,14 @@ int lSetString(lListElem *ep, int name, const char *value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lStringT) {
-      incompatibleType2(MSG_CULL_SETSTRING_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+   if (mt_get_type(ep->descr[pos].mt) != lStringT) {
+      incompatibleType2(MSG_CULL_SETSTRING_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
       DEXIT;
       return -1;
    }
 
    /* remove old hash entry */
-   if(ep->descr[pos].hash != NULL) {
+   if(ep->descr[pos].ht != NULL) {
       cull_hash_remove(ep, pos);
    }
    
@@ -1723,7 +1719,7 @@ int lSetString(lListElem *ep, int name, const char *value)
    ep->cont[pos].str = str;
 
    /* create entry in hash table */
-   if(ep->descr[pos].hash != NULL) {
+   if(ep->descr[pos].ht != NULL) {
       cull_hash_insert(ep, pos);
    }
    
@@ -1775,15 +1771,15 @@ int lSetHost(lListElem *ep, int name, const char *value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lHostT) {
+   if (mt_get_type(ep->descr[pos].mt) != lHostT) {
       incompatibleType2(MSG_CULL_SETHOST_WRONGTYPEFORFIELDXY_SS, 
-                        lNm2Str(name), multitypes[ep->descr[pos].mt]);
+                        lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
       DEXIT;
       return -1;
    }
 
    /* remove old hash entry */
-   if(ep->descr[pos].hash != NULL) {
+   if(ep->descr[pos].ht != NULL) {
       cull_hash_remove(ep, pos);
    }
    
@@ -1808,7 +1804,7 @@ int lSetHost(lListElem *ep, int name, const char *value)
    ep->cont[pos].host = str;
 
    /* create entry in hash table */
-   if(ep->descr[pos].hash != NULL) {
+   if(ep->descr[pos].ht != NULL) {
       cull_hash_insert(ep, pos);
    }
    DEXIT;
@@ -1851,7 +1847,7 @@ int lSetPosList(const lListElem *ep, int pos, lList *value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lListT) {
+   if (mt_get_type(ep->descr[pos].mt) != lListT) {
       incompatibleType("lSetPosList");
       DEXIT;
       return -1;
@@ -1907,9 +1903,9 @@ int lXchgList(lListElem *ep, int name, lList **lpp)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lListT) {
+   if (mt_get_type(ep->descr[pos].mt) != lListT) {
       incompatibleType2(MSG_CULL_XCHGLIST_WRONGTYPEFORFIELDXY_SS, 
-                        lNm2Str(name), multitypes[ep->descr[pos].mt]);
+                        lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
       DEXIT;
       return -1;
    }
@@ -2006,8 +2002,8 @@ int lSetList(lListElem *ep, int name, lList *value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lListT) {
-      incompatibleType2(MSG_CULL_SETLIST_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+   if (mt_get_type(ep->descr[pos].mt) != lListT) {
+      incompatibleType2(MSG_CULL_SETLIST_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
       DEXIT;
       return -1;
    }
@@ -2058,7 +2054,7 @@ int lSetPosFloat(const lListElem * ep, int pos, lFloat value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lFloatT) {
+   if (mt_get_type(ep->descr[pos].mt) != lFloatT) {
       incompatibleType("lSetPosFloat");
       DEXIT;
       return -1;
@@ -2108,8 +2104,8 @@ int lSetFloat(lListElem * ep, int name, lFloat value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lFloatT) {
-      incompatibleType2(MSG_CULL_SETFLOAT_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+   if (mt_get_type(ep->descr[pos].mt) != lFloatT) {
+      incompatibleType2(MSG_CULL_SETFLOAT_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
       DEXIT;
       return -1;
    }
@@ -2155,7 +2151,7 @@ int lSetPosDouble(const lListElem *ep, int pos, lDouble value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lDoubleT) {
+   if (mt_get_type(ep->descr[pos].mt) != lDoubleT) {
       incompatibleType("lSetPosDouble");
       DEXIT;
       return -1;
@@ -2204,8 +2200,8 @@ int lSetDouble(lListElem *ep, int name, lDouble value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lDoubleT) {
-      incompatibleType2(MSG_CULL_SETDOUBLE_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+   if (mt_get_type(ep->descr[pos].mt) != lDoubleT) {
+      incompatibleType2(MSG_CULL_SETDOUBLE_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
       DEXIT;
       return -1;
    }
@@ -2250,7 +2246,7 @@ int lSetPosLong(const lListElem *ep, int pos, lLong value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lLongT) {
+   if (mt_get_type(ep->descr[pos].mt) != lLongT) {
       incompatibleType("lSetPosLong");
       DEXIT;
       return -1;
@@ -2299,8 +2295,8 @@ int lSetLong(lListElem *ep, int name, lLong value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lLongT) {
-      incompatibleType2(MSG_CULL_SETLONG_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+   if (mt_get_type(ep->descr[pos].mt) != lLongT) {
+      incompatibleType2(MSG_CULL_SETLONG_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
       DEXIT;
       return -1;
    }
@@ -2345,7 +2341,7 @@ int lSetPosChar(const lListElem *ep, int pos, lChar value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lCharT) {
+   if (mt_get_type(ep->descr[pos].mt) != lCharT) {
       incompatibleType("lSetPosChar");
       DEXIT;
       return -1;
@@ -2394,8 +2390,8 @@ int lSetChar(lListElem * ep, int name, lChar value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lCharT) {
-      incompatibleType2(MSG_CULL_SETCHAR_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+   if (mt_get_type(ep->descr[pos].mt) != lCharT) {
+      incompatibleType2(MSG_CULL_SETCHAR_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
       DEXIT;
       return -1;
    }
@@ -2440,7 +2436,7 @@ int lSetPosRef(const lListElem * ep, int pos, lRef value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lRefT) {
+   if (mt_get_type(ep->descr[pos].mt) != lRefT) {
       incompatibleType("lSetPosRef");
       DEXIT;
       return -1;
@@ -2489,8 +2485,8 @@ int lSetRef(lListElem * ep, int name, lRef value)
       return -1;
    }
 
-   if (ep->descr[pos].mt != lRefT) {
-      incompatibleType2(MSG_CULL_SETREF_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[ep->descr[pos].mt]);
+   if (mt_get_type(ep->descr[pos].mt) != lRefT) {
+      incompatibleType2(MSG_CULL_SETREF_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
       DEXIT;
       return -1;
    }
@@ -3082,7 +3078,7 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str,
 
    *iterator = NULL;
 
-   if(lp->descr[str_pos].hash != NULL) {
+   if(lp->descr[str_pos].ht != NULL) {
       /* hash access */
       ep = cull_hash_first(lp, str_pos, str, iterator);
       DEXIT;
@@ -3174,7 +3170,7 @@ lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str,
    }
 
 
-   if(lp->descr[str_pos].hash != NULL) {
+   if(lp->descr[str_pos].ht != NULL) {
       /* hash access */
       ep = cull_hash_next(lp, str_pos, str, iterator);
       DEXIT;
@@ -3623,7 +3619,7 @@ lListElem *lGetElemUlongFirst(const lList *lp, int nm, lUlong val,
 
    *iterator = NULL;
 
-   if(lp->descr[val_pos].hash != NULL) {
+   if(lp->descr[val_pos].ht != NULL) {
       /* hash access */
       ep = cull_hash_first(lp, val_pos, &val, iterator);
       DEXIT;
@@ -3692,7 +3688,7 @@ lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val,
       return NULL;
    }
 
-   if(lp->descr[val_pos].hash != NULL) {
+   if(lp->descr[val_pos].ht != NULL) {
       /* hash access */
       ep = cull_hash_next(lp, val_pos, &val, iterator);
       DEXIT;
@@ -4040,7 +4036,7 @@ lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str,
    }
   
    *iterator = NULL;
-   if (lp->descr[str_pos].hash != NULL) {
+   if (lp->descr[str_pos].ht != NULL) {
       /* we have a hash table */
       sge_hostcpy(host_key,str);
       sge_strtoupper(host_key,MAXHOSTLEN);
@@ -4128,7 +4124,7 @@ lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str,
       return NULL;
    }
   
-   if (lp->descr[str_pos].hash != NULL) {
+   if (lp->descr[str_pos].ht != NULL) {
       /* we have a hash table */
       
       /* host_key not neccessare here */

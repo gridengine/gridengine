@@ -45,7 +45,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
-/****** uti/htable/--Introduction ***********************************************
+/****** uti/htable/--Hashtable ***********************************************
 *  NAME
 *     htable -- A Hashtable Implementation for Grid Engine 
 *

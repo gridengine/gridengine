@@ -122,10 +122,10 @@ enum {
 };
 
 LISTDEF(GRP_Type)
-   SGE_STRING(GRP_group_name)     /* individual Name of group */
-   SGE_LIST(GRP_member_list)      /* ST_Type - list */
-   SGE_LIST(GRP_subgroup_list)    /* ST_Type - list */
-   SGE_STRING(GRP_supergroup)     /* name of supergroup */
+   SGE_STRING(GRP_group_name, CULL_DEFAULT)     /* individual Name of group */
+   SGE_LIST(GRP_member_list, ST_Type, CULL_DEFAULT)      /* ST_Type - list */
+   SGE_LIST(GRP_subgroup_list, ST_Type, CULL_DEFAULT)    /* ST_Type - list */
+   SGE_STRING(GRP_supergroup, CULL_DEFAULT)     /* name of supergroup */
 LISTEND 
 
 NAMEDEF(GRPN)

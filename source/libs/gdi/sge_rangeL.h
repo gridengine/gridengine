@@ -113,9 +113,9 @@ enum {
 };
 
 SLISTDEF(RN_Type, Range)
-   SGE_ULONG(RN_min)
-   SGE_ULONG(RN_max)
-   SGE_ULONG(RN_step)
+   SGE_ULONG(RN_min, CULL_DEFAULT)
+   SGE_ULONG(RN_max, CULL_DEFAULT)
+   SGE_ULONG(RN_step, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(RNN)

@@ -1,3 +1,8 @@
+JG-2002-07-04-1: Cleanup:   Changed the macros for cull object definition to 
+                            provide easier and more flexible object type 
+                            definitions.
+                 Issue:     #305           
+
 EB-2002-07-04-0: Doc:       renamed "job array" to "array job" in 
                             the manual pages                          
 

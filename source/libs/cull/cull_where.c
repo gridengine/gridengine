@@ -259,7 +259,7 @@ void lWriteWhereTo(const lCondition *cp, FILE *fp)
          return;
       }
 
-      switch (cp->operand.cmp.mt) {
+      switch (mt_get_type(cp->operand.cmp.mt)) {
       case lIntT:
          if (!fp) {
             DPRINTF(("%s %d\n", out, cp->operand.cmp.val.i));
@@ -688,7 +688,7 @@ static lCondition *read_val(lDescr *dp, va_list *app)
    case SUBSCOPE:
       cp->op = token;
       eat_token();
-      if (cp->operand.cmp.mt != lListT) {
+      if (mt_get_type(cp->operand.cmp.mt) != lListT) {
          cp = lFreeWhere(cp);
          LERROR(LEINCTYPE);
          DEXIT;
@@ -707,33 +707,33 @@ static lCondition *read_val(lDescr *dp, va_list *app)
 
    switch (scan(NULL)) {
    case INT:
-      if (cp->operand.cmp.mt != lIntT)
+      if (mt_get_type(cp->operand.cmp.mt) != lIntT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEINTT );
       cp->operand.cmp.val.i = va_arg(*app, lInt);
       break;
 
    case STRING:
-      if ( (cp->operand.cmp.mt != lStringT ) && (cp->operand.cmp.mt != lHostT )   )
+      if ( (mt_get_type(cp->operand.cmp.mt) != lStringT ) && (mt_get_type(cp->operand.cmp.mt) != lHostT )   )
          incompatibleType(MSG_CULL_WHERE_SHOULDBESTRINGT );
-      if ( cp->operand.cmp.mt == lStringT ) {
+      if ( mt_get_type(cp->operand.cmp.mt) == lStringT ) {
          s = va_arg(*app, char *);
          cp->operand.cmp.val.str = strdup((char *) s);
          /* cp->operand.cmp.val.str = strdup(va_arg(*app, char *)); */
       } 
-      if ( cp->operand.cmp.mt == lHostT ) {
+      if ( mt_get_type(cp->operand.cmp.mt) == lHostT ) {
          s = va_arg(*app, char *);
          cp->operand.cmp.val.host = strdup((char *) s);
       }
       break;
 
    case ULONG:
-      if (cp->operand.cmp.mt != lUlongT)
+      if (mt_get_type(cp->operand.cmp.mt) != lUlongT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEULONGT);
       cp->operand.cmp.val.ul = va_arg(*app, lUlong);
       break;
 
    case FLOAT:
-      if (cp->operand.cmp.mt != lFloatT)
+      if (mt_get_type(cp->operand.cmp.mt) != lFloatT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEFLOATT);
       /* a float value is stored as a double in the va_list */
       /* so we have to read it as a double value                              */
@@ -741,19 +741,19 @@ static lCondition *read_val(lDescr *dp, va_list *app)
       break;
 
    case DOUBLE:
-      if (cp->operand.cmp.mt != lDoubleT)
+      if (mt_get_type(cp->operand.cmp.mt) != lDoubleT)
          incompatibleType( MSG_CULL_WHERE_SHOULDBEDOUBLET);
       cp->operand.cmp.val.db = va_arg(*app, lDouble);
       break;
 
    case LONG:
-      if (cp->operand.cmp.mt != lLongT)
+      if (mt_get_type(cp->operand.cmp.mt) != lLongT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBELONGT);
       cp->operand.cmp.val.l = va_arg(*app, lLong);
       break;
 
    case CHAR:
-      if (cp->operand.cmp.mt != lCharT)
+      if (mt_get_type(cp->operand.cmp.mt) != lCharT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBECHART);
 #if USING_GCC_2_96
       cp->operand.cmp.val.c = va_arg(*app, int);
@@ -763,7 +763,7 @@ static lCondition *read_val(lDescr *dp, va_list *app)
       break;
 
    case REF:
-      if (cp->operand.cmp.mt != lRefT)
+      if (mt_get_type(cp->operand.cmp.mt) != lRefT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEREFT );
       cp->operand.cmp.val.ref = va_arg(*app, lRef);
       break;
@@ -1062,7 +1062,7 @@ static lCondition *_read_val(lDescr *dp, WhereArgList *wapp)
    case SUBSCOPE:
       cp->op = token;
       eat_token();
-      if (cp->operand.cmp.mt != lListT) {
+      if (mt_get_type(cp->operand.cmp.mt) != lListT) {
          LERROR(LEINCTYPE);
          DEXIT;
          return NULL;
@@ -1080,34 +1080,34 @@ static lCondition *_read_val(lDescr *dp, WhereArgList *wapp)
 
    switch (scan(NULL)) {
    case INT:
-      if (cp->operand.cmp.mt != lIntT)
+      if (mt_get_type(cp->operand.cmp.mt) != lIntT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEINTT);
 /*       DPRINTF(("(*wapp)->value.i = %d\n", (*wapp)->value.i)); */
       cp->operand.cmp.val.i = (*wapp)++->value.i;
       break;
 
    case STRING:
-      if ( (cp->operand.cmp.mt != lStringT) && (cp->operand.cmp.mt != lHostT)   )
+      if ( (mt_get_type(cp->operand.cmp.mt) != lStringT) && (mt_get_type(cp->operand.cmp.mt) != lHostT)   )
          incompatibleType(MSG_CULL_WHERE_SHOULDBESTRINGT);
 
-      if ( cp->operand.cmp.mt == lStringT ) {
+      if ( mt_get_type(cp->operand.cmp.mt) == lStringT ) {
          /* DPRINTF(("(*wapp)->value.str = %s\n", (*wapp)->value.str)); */
          cp->operand.cmp.val.str = (*wapp)++->value.str;
       } 
-      if ( cp->operand.cmp.mt == lHostT   ) {
+      if ( mt_get_type(cp->operand.cmp.mt) == lHostT   ) {
          cp->operand.cmp.val.host = (*wapp)++->value.host;
       }
       break;
 
    case ULONG:
-      if (cp->operand.cmp.mt != lUlongT)
+      if (mt_get_type(cp->operand.cmp.mt) != lUlongT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEULONGT);
 /*       DPRINTF(("(*wapp)->value.ul = %ul\n", (*wapp)->value.ul)); */
       cp->operand.cmp.val.ul = (*wapp)++->value.ul;
       break;
 
    case FLOAT:
-      if (cp->operand.cmp.mt != lFloatT)
+      if (mt_get_type(cp->operand.cmp.mt) != lFloatT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEFLOATT);
       /* a float value is stored as a double in the va_list */
       /* so we have to read it as a double value                              */
@@ -1116,28 +1116,28 @@ static lCondition *_read_val(lDescr *dp, WhereArgList *wapp)
       break;
 
    case DOUBLE:
-      if (cp->operand.cmp.mt != lDoubleT)
+      if (mt_get_type(cp->operand.cmp.mt) != lDoubleT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEDOUBLET);
 /*       DPRINTF(("(*wapp)->value.db = %f\n", (*wapp)->value.db)); */
       cp->operand.cmp.val.db = (*wapp)++->value.db;
       break;
 
    case LONG:
-      if (cp->operand.cmp.mt != lLongT)
+      if (mt_get_type(cp->operand.cmp.mt) != lLongT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBELONGT);
 /*       DPRINTF(("(*wapp)->value.l = %ld\n", (*wapp)->value.l)); */
       cp->operand.cmp.val.l = (*wapp)++->value.l;
       break;
 
    case CHAR:
-      if (cp->operand.cmp.mt != lCharT)
+      if (mt_get_type(cp->operand.cmp.mt) != lCharT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBECHART);
 /*       DPRINTF(("(*wapp)->value.c = %c\n", (*wapp)->value.c)); */
       cp->operand.cmp.val.c = (*wapp)++->value.c;
       break;
 
    case REF:
-      if (cp->operand.cmp.mt != lRefT)
+      if (mt_get_type(cp->operand.cmp.mt) != lRefT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEREFT);
 /*       DPRINTF(("(*wapp)->value.ref = %p\n", (*wapp)->value.ref)); */
       cp->operand.cmp.val.ref = (*wapp)++->value.ref;
@@ -1155,10 +1155,10 @@ static lCondition *_read_val(lDescr *dp, WhereArgList *wapp)
       "p=" as operator is not allowed with other types than lStringT
       "h=" as operator is not allowed with other types than lStringT
     */
-   if ((cp->op == BITMASK && cp->operand.cmp.mt     != lUlongT )                                                                ||
-       ( (cp->op == STRCASECMP && cp->operand.cmp.mt  != lStringT) && (cp->op == STRCASECMP && cp->operand.cmp.mt  != lHostT) ) ||
-       ( (cp->op == HOSTNAMECMP && cp->operand.cmp.mt != lStringT) && (cp->op == HOSTNAMECMP && cp->operand.cmp.mt != lHostT) ) ||
-       ( (cp->op == PATTERNCMP && cp->operand.cmp.mt  != lStringT) && (cp->op == PATTERNCMP && cp->operand.cmp.mt  != lHostT) ))
+   if ((cp->op == BITMASK && mt_get_type(cp->operand.cmp.mt)     != lUlongT )                                                                ||
+       ( (cp->op == STRCASECMP && mt_get_type(cp->operand.cmp.mt)  != lStringT) && (cp->op == STRCASECMP && mt_get_type(cp->operand.cmp.mt)  != lHostT) ) ||
+       ( (cp->op == HOSTNAMECMP && mt_get_type(cp->operand.cmp.mt) != lStringT) && (cp->op == HOSTNAMECMP && mt_get_type(cp->operand.cmp.mt) != lHostT) ) ||
+       ( (cp->op == PATTERNCMP && mt_get_type(cp->operand.cmp.mt)  != lStringT) && (cp->op == PATTERNCMP && mt_get_type(cp->operand.cmp.mt)  != lHostT) ))
       incompatibleType(MSG_CULL_WHERE_OPERANDHITNOTOPERATORERROR );
 
    eat_token();
@@ -1204,18 +1204,18 @@ lCondition *lFreeWhere(lCondition *cp)
    case PATTERNCMP:
    case HOSTNAMECMP:
 
-      if (cp->operand.cmp.mt == lStringT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lStringT) {
          if (cp->operand.cmp.val.str) {
             free(cp->operand.cmp.val.str);
          }
       }
-      if (cp->operand.cmp.mt == lHostT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lHostT) {
          if (cp->operand.cmp.val.host) {
             free(cp->operand.cmp.val.host);
          }
       }
    case SUBSCOPE:
-      if (cp->operand.cmp.mt == lListT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lListT) {
          lFreeWhere(cp->operand.cmp.val.cp);
       }
       break;
@@ -1285,7 +1285,7 @@ int lCompare(const lListElem *ep, const lCondition *cp)
    case GREATER:
    case SUBSCOPE:
 
-      switch (cp->operand.cmp.mt) {
+      switch (mt_get_type(cp->operand.cmp.mt)) {
       case lIntT:
          result = intcmp(lGetPosInt(ep, cp->operand.cmp.pos), cp->operand.cmp.val.i);
          break;
@@ -1385,12 +1385,12 @@ int lCompare(const lListElem *ep, const lCondition *cp)
 
    case STRCASECMP:
    case HOSTNAMECMP:
-      if ((cp->operand.cmp.mt != lStringT) && (cp->operand.cmp.mt != lHostT)) {
+      if ((mt_get_type(cp->operand.cmp.mt) != lStringT) && (mt_get_type(cp->operand.cmp.mt) != lHostT)) {
          unknownType("lCompare");
          DEXIT;
          return 0;
       }
-      if (cp->operand.cmp.mt == lStringT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lStringT) {
          if (cp->op == STRCASECMP ) {
             result = SGE_STRCASECMP(lGetPosString(ep, cp->operand.cmp.pos),
                                 cp->operand.cmp.val.str);
@@ -1400,7 +1400,7 @@ int lCompare(const lListElem *ep, const lCondition *cp)
          }
          result = (result == 0);
       }
-      if (cp->operand.cmp.mt == lHostT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lHostT) {
          if (cp->op == STRCASECMP ) {
             result = SGE_STRCASECMP(lGetPosHost(ep, cp->operand.cmp.pos),
                                 cp->operand.cmp.val.host);
@@ -1415,16 +1415,16 @@ int lCompare(const lListElem *ep, const lCondition *cp)
       break;
 
    case PATTERNCMP:
-      if ((cp->operand.cmp.mt != lStringT) && (cp->operand.cmp.mt != lHostT)) {
+      if ((mt_get_type(cp->operand.cmp.mt) != lStringT) && (mt_get_type(cp->operand.cmp.mt) != lHostT)) {
          unknownType("lCompare");
          DEXIT;
          return 0;
       }
-      if (cp->operand.cmp.mt == lStringT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lStringT) {
          result = !fnmatch(cp->operand.cmp.val.str, 
                            lGetPosString(ep, cp->operand.cmp.pos), 0);
       } 
-      if (cp->operand.cmp.mt == lHostT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lHostT) {
          result = !fnmatch(cp->operand.cmp.val.host, 
                            lGetPosHost(ep, cp->operand.cmp.pos), 0);
       }
@@ -1432,7 +1432,7 @@ int lCompare(const lListElem *ep, const lCondition *cp)
 
 
    case BITMASK:
-      if (cp->operand.cmp.mt != lUlongT) {
+      if (mt_get_type(cp->operand.cmp.mt) != lUlongT) {
          unknownType("lCompare");
          DEXIT;
          return 0;
@@ -1522,7 +1522,7 @@ lCondition *lCopyWhere(const lCondition *cp)
       new->operand.cmp.mt = cp->operand.cmp.mt;
       new->operand.cmp.nm = cp->operand.cmp.nm;
 
-      switch (cp->operand.cmp.mt) {
+      switch (mt_get_type(cp->operand.cmp.mt)) {
       case lIntT:
          new->operand.cmp.val.i = cp->operand.cmp.val.i;
          break;
@@ -1558,7 +1558,7 @@ lCondition *lCopyWhere(const lCondition *cp)
          return NULL;
       }
    case SUBSCOPE:
-      if (cp->operand.cmp.mt == lListT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lListT) {
          new->operand.cmp.pos = cp->operand.cmp.pos;
          new->operand.cmp.mt = cp->operand.cmp.mt;
          new->operand.cmp.nm = cp->operand.cmp.nm;

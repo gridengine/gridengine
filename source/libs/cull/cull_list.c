@@ -56,6 +56,52 @@
 static void lWriteList_(const lList *lp, int nesting_level, FILE *fp);
 static void lWriteElem_(const lListElem *lp, FILE *fp);
 
+/****** cull/list/-Field_Attributes *************************************************
+*  NAME
+*     Field_Attributes -- Attributes of cull type fields
+*
+*  SYNOPSIS
+*     When a field of a cull object type is defined, any number of 
+*     attributes can be given to the field.
+*
+*     The syntax of the field definition is
+*        <typedef>(<field_name>, <attrib1> [|<attrib2> ...]
+*     e.g.
+*        SGE_STRING(QU_qname, CULL_HASH | CULL_UNIQUE)
+*
+*     The following attributes can be given to a field:
+*        CULL_DEFAULT       
+*           no special settings - default behaviour
+*        CULL_PRIMARY_KEY   
+*           the field is part of the primary key
+*           not yet implemented
+*        CULL_HASH          
+*           a hash table will be created on the field for lists of the 
+*           object type
+*        CULL_UNIQUE        
+*           the field value has to be unique for all objects in a list
+*           currently only used for the definition of hash tables,
+*           but it could be used for general consistency checks.
+*        CULL_SHOW          
+*           the field shall be shown in object output functions
+*           not yet implemented
+*        CULL_CONFIGURE     
+*           the field can be changed by configuration functions
+*           not yet implemented
+*        CULL_SPOOL         
+*           the field shall be spooled
+*           not yet implemented
+*
+*  NOTES
+*     Further attributes can be introduced as necessary, e.g.
+*        CULL_ARRAY - the field is an array of the specified data type
+*
+*  SEE ALSO
+*     cull/list/mt_get_type()
+*     cull/list/mt_do_hashing()
+*     cull/list/mt_is_unique()
+******************************************************************************/
+
 /****** cull/list/lCopyElem() *************************************************
 *  NAME
 *     lCopyElem() -- Copies a whole list element 
@@ -244,7 +290,7 @@ int lCopySwitch(const lListElem *sep, lListElem *dep,
       return -1;
    }
 
-   switch (dep->descr[dst_idx].mt) {
+   switch (mt_get_type(dep->descr[dst_idx].mt)) {
    case lUlongT:
       dep->cont[dst_idx].ul = sep->cont[src_idx].ul;
       /* lSetPosUlong(dep, dst_idx, lGetPosUlong(sep, src_idx)); */
@@ -577,7 +623,7 @@ static void lWriteElem_(const lListElem *ep, FILE *fp)
       fprintf(fp, "%s-------------------------------\n", space);
 
    for (i = 0; ep->descr[i].mt != lEndT; i++) {
-      switch (ep->descr[i].mt) {
+      switch (mt_get_type(ep->descr[i].mt)) {
       case lIntT:
          if (!fp)
             DPRINTF(("%s%-20.20s (Integer) = %d\n", space,
@@ -815,11 +861,9 @@ lListElem *lCreateElem(const lDescr *dp)
    }
    memcpy(ep->descr, dp, sizeof(lDescr) * (n + 1));
 
-   /* copy hashing info in descriptor */
+   /* new descr has no htables yet */
    for (i = 0; i <= n; i++) {
-      if(dp[i].hash != NULL) {
-         ep->descr[i].hash = cull_hash_copy_descr(&dp[i]);
-      }
+      ep->descr[i].ht = NULL;
    }
                   
    ep->status = FREE_ELEM;
@@ -899,11 +943,11 @@ lList *lCreateList(const char *listname, const lDescr *descr)
       lp->descr[i].mt = descr[i].mt;
       lp->descr[i].nm = descr[i].nm;
 
-      /* copy hashing information and create hashtable if necessary */
-      if(descr[i].hash != NULL) {
-         lp->descr[i].hash = cull_hash_create(&descr[i]);
+      /* create hashtable if necessary */
+      if(mt_do_hashing(lp->descr[i].mt)) {
+         lp->descr[i].ht = cull_hash_create(&descr[i]);
       } else {
-         lp->descr[i].hash = NULL;
+         lp->descr[i].ht = NULL;
       }
    }
 
@@ -994,11 +1038,11 @@ lListElem *lFreeElem(lListElem *ep)
 
    for (i = 0; ep->descr[i].mt != lEndT; i++) {
       /* remove element from hash tables */
-      if(ep->descr[i].hash != NULL) {
+      if(ep->descr[i].ht != NULL) {
          cull_hash_remove(ep, i);
       }
       
-      switch (ep->descr[i].mt) {
+      switch (mt_get_type(ep->descr[i].mt)) {
 
       case lIntT:
       case lUlongT:
@@ -1074,18 +1118,22 @@ lList *lFreeList(lList *lp)
     * remove all hash tables, 
     * it is more efficient than removing it at the end 
     */
-   if (lp->descr)
+   if (lp->descr != NULL) {
       cull_hash_free_descr(lp->descr);
+   }   
 
-   while (lp->first)
+   while (lp->first) {
       lRemoveElem(lp, lp->first);
+   }   
 
    if (lp->descr) {
       free(lp->descr);
    }   
 
-   if (lp->listname)
+   if (lp->listname) {
       free(lp->listname);
+   }
+
    free(lp);
 
    DEXIT;
@@ -1196,6 +1244,11 @@ int lCompListDescr(const lDescr *dp0, const lDescr *dp1)
    }
    if (n == m) {
       for (i = 0; i < n; i++) {
+         /* 
+          * comparing the mt field might be too restrictive
+          * former implementation mt only contained the type information 
+          * now also the various flags 
+          */
          if (dp0[i].nm != dp1[i].nm || dp0[i].mt != dp1[i].mt) {
             LERROR(LEDIFFDESCR);
             DEXIT;
@@ -1520,7 +1573,7 @@ lListElem *lDechainElem(lList *lp, lListElem *ep)
 
    /* remove hash entries */
    for(i = 0; ep->descr[i].mt != lEndT; i++) {
-      if(ep->descr[i].hash != NULL) {
+      if(ep->descr[i].ht != NULL) {
          cull_hash_remove(ep, i);
       }
    }
@@ -2108,3 +2161,92 @@ int lUniqHost(lList *lp, int keyfield)
    return 0;
 }
 
+/****** cull/list/mt_get_type() ************************************************
+*  NAME
+*     mt_get_type() -- get data type for cull object field
+*
+*  SYNOPSIS
+*     int mt_get_type(int mt) 
+*
+*  FUNCTION
+*     Returns the data type of a cull object field given the multitype 
+*     attribute of a cull descriptor.
+*
+*  INPUTS
+*     int mt - mt (multitype) struct element of a field descriptor
+*
+*  RESULT
+*     int - cull data type enum value (from _enum_lMultiType)
+*
+*  EXAMPLE
+*     switch(mt_get_type(descr[i].mt)) {
+*        case lFloatT:
+*           ...
+*     }
+*
+*  SEE ALSO
+*     
+*******************************************************************************/
+int mt_get_type(int mt)
+{
+   return mt & 0x000000FF;
+}
+
+/****** cull/list/mt_do_hashing() ************************************************
+*  NAME
+*     mt_do_hashing() -- is there hash access for a field
+*
+*  SYNOPSIS
+*     int mt_do_hashing(int mt) 
+*
+*  FUNCTION
+*     Returns the information if hashing is active for a cull object field 
+*     given the multitype attribute of a cull descriptor.
+*
+*  INPUTS
+*     int mt - mt (multitype) struct element of a field descriptor
+*
+*  RESULT
+*     int - 1, if hashing is requested, else 0
+*
+*  SEE ALSO
+*     
+*******************************************************************************/
+int mt_do_hashing(int mt)
+{
+   return mt & CULL_HASH;
+}
+
+/****** cull/list/mt_is_unique() ************************************************
+*  NAME
+*     mt_is_unique() -- is the cull object field unique 
+*
+*  SYNOPSIS
+*     int mt_is_unique(int mt) 
+*
+*  FUNCTION
+*     Returns the information if a certain cull object field is unique within
+*     a cull list given the multitype attribute of a cull descriptor.
+*
+*  INPUTS
+*     int mt - mt (multitype) struct element of a field descriptor
+*
+*  RESULT
+*     int - 1 = unique, 0 = not unique
+*
+*  EXAMPLE
+*     if(mt_is_unique(descr[i].mt)) {
+*        // check for uniqueness before inserting new elemente into a list
+*        if(lGetElemUlong(....) != NULL) {
+*           WARNING((SGE_EVENT, MSG_DUPLICATERECORD....));
+*           return NULL;
+*        }
+*     }
+*
+*  SEE ALSO
+*     
+*******************************************************************************/
+int mt_is_unique(int mt)
+{
+   return mt & CULL_UNIQUE;
+}

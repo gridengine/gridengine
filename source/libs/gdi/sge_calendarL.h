@@ -54,12 +54,12 @@ enum {
 };
 
 ILISTDEF(CAL_Type, Calendar, SGE_CALENDAR_LIST)
-   SGE_KSTRINGHU(CAL_name)
-   SGE_STRING(CAL_year_calendar)
-   SGE_STRING(CAL_week_calendar)
+   SGE_STRING(CAL_name, CULL_HASH | CULL_UNIQUE)
+   SGE_STRING(CAL_year_calendar, CULL_DEFAULT)
+   SGE_STRING(CAL_week_calendar, CULL_DEFAULT)
    /* non spooling fields */
-   SGE_XLIST(CAL_parsed_year_calendar, CA_Type)
-   SGE_XLIST(CAL_parsed_week_calendar, CA_Type)
+   SGE_LIST(CAL_parsed_year_calendar, CA_Type, CULL_DEFAULT)
+   SGE_LIST(CAL_parsed_week_calendar, CA_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CALN)
@@ -83,15 +83,15 @@ enum {
 };
 
 LISTDEF(CA_Type)
-   SGE_LIST(CA_yday_range_list)       /* TMR_Type with begin/end of type *
+   SGE_LIST(CA_yday_range_list, TMR_Type, CULL_DEFAULT)       /* TMR_Type with begin/end of type *
                                        * TM_Type using *
                                        * TM_mday/TM_mon/TM_year */
-   SGE_LIST(CA_wday_range_list)       /* TMR_Type with begin/end of type *
+   SGE_LIST(CA_wday_range_list, TMR_Type, CULL_DEFAULT)       /* TMR_Type with begin/end of type *
                                        * TM_Type using TM_wday */
-   SGE_LIST(CA_daytime_range_list)    /* TMR_Type with begin/end of type *
+   SGE_LIST(CA_daytime_range_list, TMR_Type, CULL_DEFAULT)    /* TMR_Type with begin/end of type *
                                        * TM_Type using *
                                        * TM_sec/TM_min/TM_hour */
-   SGE_ULONG(CA_state)
+   SGE_ULONG(CA_state, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CAN)
@@ -112,8 +112,8 @@ enum {
 };
 
 LISTDEF(TMR_Type)
-   SGE_LIST(TMR_begin)        /* TM_Type */
-   SGE_LIST(TMR_end)          /* TM_Type */
+   SGE_LIST(TMR_begin, TM_Type, CULL_DEFAULT)        /* TM_Type */
+   SGE_LIST(TMR_end, TM_Type, CULL_DEFAULT)          /* TM_Type */
 LISTEND 
 
 NAMEDEF(TMRN)
@@ -151,15 +151,15 @@ enum {
 };
 
 LISTDEF(TM_Type)
-   SGE_ULONG(TM_mday)         /* 1-32 */
-   SGE_ULONG(TM_mon)          /* 0-11 */
-   SGE_ULONG(TM_year)         /* The number of years since 1900. */
-   SGE_ULONG(TM_sec)          /* 0-59 */
-   SGE_ULONG(TM_min)          /* 0-59 */
-   SGE_ULONG(TM_hour)         /* 0-23 */
-   SGE_ULONG(TM_wday)         /* 0-6 */
-   SGE_ULONG(TM_yday)         /* ?? */
-   SGE_ULONG(TM_isdst)        /* 1 or 0 */
+   SGE_ULONG(TM_mday, CULL_DEFAULT)         /* 1-32 */
+   SGE_ULONG(TM_mon, CULL_DEFAULT)          /* 0-11 */
+   SGE_ULONG(TM_year, CULL_DEFAULT)         /* The number of years since 1900. */
+   SGE_ULONG(TM_sec, CULL_DEFAULT)          /* 0-59 */
+   SGE_ULONG(TM_min, CULL_DEFAULT)          /* 0-59 */
+   SGE_ULONG(TM_hour, CULL_DEFAULT)         /* 0-23 */
+   SGE_ULONG(TM_wday, CULL_DEFAULT)         /* 0-6 */
+   SGE_ULONG(TM_yday, CULL_DEFAULT)         /* ?? */
+   SGE_ULONG(TM_isdst, CULL_DEFAULT)        /* 1 or 0 */
 LISTEND 
 
 NAMEDEF(TMN)

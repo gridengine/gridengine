@@ -47,7 +47,7 @@ extern "C" {
 *  ELEMENTS
 *     Job identification
 *     ==================
-*     SGE_KSTRINGHU(PET_id)
+*     SGE_STRING(PET_id)
 *        The pe task id. It is unique per job.
 *
 *     SGE_STRING(PET_name)
@@ -139,28 +139,28 @@ enum {
 };
 
 ILISTDEF(PET_Type, Job, SGE_JOB_LIST)
-   SGE_KSTRINGHU(PET_id)
-   SGE_STRING(PET_name)
+   SGE_STRING(PET_id, CULL_HASH | CULL_UNIQUE)
+   SGE_STRING(PET_name, CULL_DEFAULT)
    
-   SGE_ULONG(PET_status)
+   SGE_ULONG(PET_status, CULL_DEFAULT)
 
-   SGE_LIST(PET_granted_destin_identifier_list)
+   SGE_LIST(PET_granted_destin_identifier_list, JG_Type, CULL_DEFAULT)
 
-   SGE_ULONG(PET_pid)
-   SGE_STRING(PET_osjobid)
-   SGE_LIST(PET_usage)
-   SGE_LIST(PET_scaled_usage)
-   SGE_LIST(PET_previous_usage)
+   SGE_ULONG(PET_pid, CULL_DEFAULT)
+   SGE_STRING(PET_osjobid, CULL_DEFAULT)
+   SGE_LIST(PET_usage, UA_Type, CULL_DEFAULT)
+   SGE_LIST(PET_scaled_usage, UA_Type, CULL_DEFAULT)
+   SGE_LIST(PET_previous_usage, UA_Type, CULL_DEFAULT)
 
-   SGE_ULONG(PET_submission_time)
-   SGE_ULONG(PET_start_time)
-   SGE_ULONG(PET_end_time)
+   SGE_ULONG(PET_submission_time, CULL_DEFAULT)
+   SGE_ULONG(PET_start_time, CULL_DEFAULT)
+   SGE_ULONG(PET_end_time, CULL_DEFAULT)
 
-   SGE_STRING(PET_cwd)
-   SGE_LIST(PET_path_aliases)
-   SGE_LIST(PET_environment)
+   SGE_STRING(PET_cwd, CULL_DEFAULT)
+   SGE_LIST(PET_path_aliases, PA_Type, CULL_DEFAULT)
+   SGE_LIST(PET_environment, VA_Type, CULL_DEFAULT)
 
-   SGE_STRING(PET_source)
+   SGE_STRING(PET_source, CULL_DEFAULT)
 LISTEND
 
 NAMEDEF(PETN)
@@ -237,14 +237,14 @@ enum {
 };
 
 ILISTDEF(PETR_Type, Job, SGE_JOB_LIST)
-   SGE_ULONG(PETR_jobid)
-   SGE_ULONG(PETR_jataskid)
-   SGE_STRING(PETR_queuename)
-   SGE_STRING(PETR_owner)
-   SGE_STRING(PETR_cwd)
-   SGE_LIST(PETR_path_aliases)
-   SGE_LIST(PETR_environment)
-   SGE_ULONG(PETR_submission_time)
+   SGE_ULONG(PETR_jobid, CULL_DEFAULT)
+   SGE_ULONG(PETR_jataskid, CULL_DEFAULT)
+   SGE_STRING(PETR_queuename, CULL_DEFAULT)
+   SGE_STRING(PETR_owner, CULL_DEFAULT)
+   SGE_STRING(PETR_cwd, CULL_DEFAULT)
+   SGE_LIST(PETR_path_aliases, PA_Type, CULL_DEFAULT)
+   SGE_LIST(PETR_environment, VA_Type, CULL_DEFAULT)
+   SGE_ULONG(PETR_submission_time, CULL_DEFAULT)
 LISTEND
 
 

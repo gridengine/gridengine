@@ -50,8 +50,8 @@ enum {
 };
 
 LISTDEF(SME_Type)
-   SGE_LIST(SME_message_list)         /* MES_Type */
-   SGE_LIST(SME_global_message_list)  /* MES_Type */
+   SGE_LIST(SME_message_list, MES_Type, CULL_DEFAULT)         /* MES_Type */
+   SGE_LIST(SME_global_message_list, MES_Type, CULL_DEFAULT)  /* MES_Type */
 LISTEND 
 
 NAMEDEF(SMEN)
@@ -71,9 +71,9 @@ enum {
 };
 
 LISTDEF(MES_Type)
-   SGE_LIST(MES_job_number_list)
-   SGE_ULONG(MES_message_number)
-   SGE_STRING(MES_message)
+   SGE_LIST(MES_job_number_list, ULNG_Type, CULL_DEFAULT)
+   SGE_ULONG(MES_message_number, CULL_DEFAULT)
+   SGE_STRING(MES_message, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(MESN)

@@ -64,8 +64,8 @@ enum {
 };
 
 SLISTDEF(VA_Type, Variable)
-   SGE_STRINGHU(VA_variable)
-   SGE_STRING(VA_value)
+   SGE_STRING(VA_variable, CULL_HASH | CULL_UNIQUE)
+   SGE_STRING(VA_value, CULL_DEFAULT)
 LISTEND
 
 NAMEDEF(VAN)

@@ -54,10 +54,10 @@ enum {
 
 
 ILISTDEF(CT_Type, Categories, SGE_CT_LIST)
-   SGE_STRINGHU(CT_str)
-   SGE_ULONG(CT_refcount)
-   SGE_ULONG(CT_rejected)
-   SGE_XLIST(CT_jobs, JR_Type)
+   SGE_STRING(CT_str, CULL_HASH | CULL_UNIQUE)
+   SGE_ULONG(CT_refcount, CULL_DEFAULT)
+   SGE_ULONG(CT_rejected, CULL_DEFAULT)
+   SGE_LIST(CT_jobs, JR_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CTN)

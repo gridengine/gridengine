@@ -315,27 +315,27 @@ enum {
 };
 
 LISTDEF(EV_Type)
-   SGE_ULONG(EV_id)
-   SGE_STRING(EV_name)
+   SGE_ULONG(EV_id, CULL_DEFAULT)
+   SGE_STRING(EV_name, CULL_DEFAULT)
    
-   SGE_HOST(EV_host)
-   SGE_STRING(EV_commproc)
-   SGE_ULONG(EV_commid)
+   SGE_HOST(EV_host, CULL_DEFAULT)
+   SGE_STRING(EV_commproc, CULL_DEFAULT)
+   SGE_ULONG(EV_commid, CULL_DEFAULT)
    
-   SGE_ULONG(EV_uid)
+   SGE_ULONG(EV_uid, CULL_DEFAULT)
    
-   SGE_ULONG(EV_d_time)
-   SGE_STRING(EV_subscription)
-   SGE_ULONG(EV_busy_handling)
+   SGE_ULONG(EV_d_time, CULL_DEFAULT)
+   SGE_STRING(EV_subscription, CULL_DEFAULT)
+   SGE_ULONG(EV_busy_handling, CULL_DEFAULT)
    
-   SGE_ULONG(EV_last_heard_from)
-   SGE_ULONG(EV_last_send_time)
-   SGE_ULONG(EV_next_send_time)
-   SGE_ULONG(EV_next_number)
-   SGE_ULONG(EV_busy)
-   SGE_LIST(EV_events)
+   SGE_ULONG(EV_last_heard_from, CULL_DEFAULT)
+   SGE_ULONG(EV_last_send_time, CULL_DEFAULT)
+   SGE_ULONG(EV_next_send_time, CULL_DEFAULT)
+   SGE_ULONG(EV_next_number, CULL_DEFAULT)
+   SGE_ULONG(EV_busy, CULL_DEFAULT)
+   SGE_LIST(EV_events, ET_Type, CULL_DEFAULT)
 
-   SGE_ULONG(EV_clientdata)
+   SGE_ULONG(EV_clientdata, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(EVN)
@@ -633,12 +633,12 @@ enum {
 };
 
 LISTDEF(ET_Type)
-   SGE_ULONG(ET_number)
-   SGE_ULONG(ET_type)
-   SGE_ULONG(ET_intkey)
-   SGE_ULONG(ET_intkey2)
-   SGE_STRING(ET_strkey)
-   SGE_LIST(ET_new_version)
+   SGE_ULONG(ET_number, CULL_DEFAULT)
+   SGE_ULONG(ET_type, CULL_DEFAULT)
+   SGE_ULONG(ET_intkey, CULL_DEFAULT)
+   SGE_ULONG(ET_intkey2, CULL_DEFAULT)
+   SGE_STRING(ET_strkey, CULL_DEFAULT)
+   SGE_LIST(ET_new_version, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(ETN)

@@ -72,7 +72,7 @@ int lGetNumberOfNodes(const lListElem *ep, const lList *lp, int nm)
 
       n = 1;
 
-      if ((pos = lGetPosViaElem(ep, nm)) >= 0 && ep->descr[pos].mt == lListT) {
+      if ((pos = lGetPosViaElem(ep, nm)) >= 0 && mt_get_type(ep->descr[pos].mt) == lListT) {
          if ((lp = lGetPosList(ep, pos)))
             n += lGetNumberOfNodes(NULL, lp, nm);
       }
@@ -114,7 +114,7 @@ int lGetNumberOfLeafs(const lListElem *ep, const lList *lp, int nm)
    if (ep) {
       int pos;
 
-      if ((pos = lGetPosViaElem(ep, nm)) >= 0 && ep->descr[pos].mt == lListT) {
+      if ((pos = lGetPosViaElem(ep, nm)) >= 0 && mt_get_type(ep->descr[pos].mt) == lListT) {
          if (!(lp = lGetPosList(ep, pos)))
             n = 1;
          else

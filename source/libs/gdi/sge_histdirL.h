@@ -56,10 +56,10 @@ enum {
 };
 
 LISTDEF(HD_Type)
-   SGE_STRING(HD_name)
-   SGE_LIST(HD_files)
-   SGE_ULONG(HD_oldest)
-   SGE_ULONG(HD_latest)
+   SGE_STRING(HD_name, CULL_DEFAULT)
+   SGE_LIST(HD_files, HF_Type, CULL_DEFAULT)
+   SGE_ULONG(HD_oldest, CULL_DEFAULT)
+   SGE_ULONG(HD_latest, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(HDN)
@@ -80,8 +80,8 @@ enum {
 };
 
 LISTDEF(HF_Type)
-   SGE_STRING(HF_name)
-   SGE_LIST(HF_entries)
+   SGE_STRING(HF_name, CULL_DEFAULT)
+   SGE_LIST(HF_entries, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(HFN)
@@ -116,24 +116,24 @@ enum {
 };
 
 LISTDEF(QAJ_Type)
-   SGE_HOST(QAJ_host)               /* CR - hostname change */
-   SGE_STRING(QAJ_queue)
-   SGE_STRING(QAJ_group)
-   SGE_STRING(QAJ_owner)
-   SGE_STRING(QAJ_project)
-   SGE_STRING(QAJ_department)
-   SGE_DOUBLE(QAJ_ru_wallclock)
-   SGE_DOUBLE(QAJ_ru_utime)
-   SGE_DOUBLE(QAJ_ru_stime)
-   SGE_DOUBLE(QAJ_ru_maxrss)
-   SGE_DOUBLE(QAJ_ru_inblock)
-   SGE_STRING(QAJ_granted_pe)
-   SGE_ULONG(QAJ_slots)
-   SGE_DOUBLE(QAJ_cpu)
-   SGE_DOUBLE(QAJ_mem)
-   SGE_DOUBLE(QAJ_io)
-   SGE_DOUBLE(QAJ_iow)
-   SGE_DOUBLE(QAJ_maxvmem)
+   SGE_HOST(QAJ_host, CULL_DEFAULT)               /* CR - hostname change */
+   SGE_STRING(QAJ_queue, CULL_DEFAULT)
+   SGE_STRING(QAJ_group, CULL_DEFAULT)
+   SGE_STRING(QAJ_owner, CULL_DEFAULT)
+   SGE_STRING(QAJ_project, CULL_DEFAULT)
+   SGE_STRING(QAJ_department, CULL_DEFAULT)
+   SGE_DOUBLE(QAJ_ru_wallclock, CULL_DEFAULT)
+   SGE_DOUBLE(QAJ_ru_utime, CULL_DEFAULT)
+   SGE_DOUBLE(QAJ_ru_stime, CULL_DEFAULT)
+   SGE_DOUBLE(QAJ_ru_maxrss, CULL_DEFAULT)
+   SGE_DOUBLE(QAJ_ru_inblock, CULL_DEFAULT)
+   SGE_STRING(QAJ_granted_pe, CULL_DEFAULT)
+   SGE_ULONG(QAJ_slots, CULL_DEFAULT)
+   SGE_DOUBLE(QAJ_cpu, CULL_DEFAULT)
+   SGE_DOUBLE(QAJ_mem, CULL_DEFAULT)
+   SGE_DOUBLE(QAJ_io, CULL_DEFAULT)
+   SGE_DOUBLE(QAJ_iow, CULL_DEFAULT)
+   SGE_DOUBLE(QAJ_maxvmem, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(QAJN)

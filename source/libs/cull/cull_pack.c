@@ -43,7 +43,6 @@
 #include "cull_hash.h"
 #include "cull_lerrnoP.h"
 #include "cull_listP.h"
-#include "cull_hashP.h"
 #include "cull_multitypeP.h"
 #include "cull_whatP.h"
 #include "cull_whereP.h"
@@ -222,12 +221,11 @@ lDescr **dpp
 
    dp[n].nm = NoName;
    dp[n].mt = lEndT;
-   dp[n].hash = NULL;
+   dp[n].ht = NULL;
 
    /* read in n lDescr fields */
    for (i = 0; i < n; i++) {
       if ((ret = unpackint(pb, &temp))) {
-         cull_hash_free_descr(dp);
          free(dp);
          DEXIT;
          return ret;
@@ -235,31 +233,13 @@ lDescr **dpp
       dp[i].nm = temp;
 
       if ((ret = unpackint(pb, &temp))) {
-         cull_hash_free_descr(dp);
          free(dp);
          DEXIT;
          return ret;
       }
       dp[i].mt = temp;
 
-      if ((ret = unpackint(pb, &temp))) {
-         cull_hash_free_descr(dp);
-         free(dp); 
-         DEXIT;
-      }
-      if(temp == HASH_OFF) {  /* no hashing */
-         dp[i].hash = NULL;  
-      } else {         /* create hashing info */
-         if((dp[i].hash = (lHash *) malloc(sizeof(lHash))) == NULL) {
-            cull_hash_free_descr(dp);
-            free(dp);
-            LERROR(LEMALLOC);
-            DEXIT;
-            return PACK_ENOMEM;
-         }
-         dp[i].hash->type = temp;
-         dp[i].hash->table = NULL;
-      } 
+      dp[i].ht = NULL;
    }
 
    *dpp = dp;
@@ -302,18 +282,6 @@ const lDescr *dp
          DEXIT;
          return ret;
       }
-      /* pack hashing information */
-      if(dp[i].hash == NULL) {
-         if((ret = packint(pb, HASH_OFF))) {
-            DEXIT;
-            return ret;
-         }
-      } else {
-         if((ret = packint(pb, dp[i].hash->type))) {
-            DEXIT;
-            return ret;
-         }
-      }
    }
 
    DEXIT;
@@ -345,7 +313,7 @@ const lDescr *dp
    n = lCountDescr(dp);
 
    for (i = 0; i < n; i++) {
-      if ((ret = cull_pack_switch(pb, &cp[i], dp[i].mt))) {
+      if ((ret = cull_pack_switch(pb, &cp[i], mt_get_type(dp[i].mt)))) {
          DEXIT;
          return ret;
       }
@@ -386,7 +354,7 @@ const lDescr *dp
    }
 
    for (i = 0; i < n; i++) {
-      if ((ret = cull_unpack_switch(pb, &(cp[i]), dp[i].mt))) {
+      if ((ret = cull_unpack_switch(pb, &(cp[i]), mt_get_type(dp[i].mt)))) {
          free(cp);
          DEXIT;
          return ret;
@@ -887,8 +855,8 @@ const lCondition *cp
          return ret;
       }
 
-      if (cp->operand.cmp.mt != lListT) {
-         if ((ret = cull_pack_switch(pb, &(cp->operand.cmp.val), cp->operand.cmp.mt))) {
+      if (mt_get_type(cp->operand.cmp.mt) != lListT) {
+         if ((ret = cull_pack_switch(pb, &(cp->operand.cmp.val), mt_get_type(cp->operand.cmp.mt)))) {
             DEXIT;
             return ret;
          }
@@ -1004,8 +972,8 @@ lCondition **cpp
       }
       cp->operand.cmp.nm = i;
 
-      if (cp->operand.cmp.mt != lListT) {
-         if ((ret = cull_unpack_switch(pb, &(cp->operand.cmp.val), cp->operand.cmp.mt))) {
+      if (mt_get_type(cp->operand.cmp.mt) != lListT) {
+         if ((ret = cull_unpack_switch(pb, &(cp->operand.cmp.val), mt_get_type(cp->operand.cmp.mt)))) {
             lFreeWhere(cp);
             DEXIT;
             return ret;

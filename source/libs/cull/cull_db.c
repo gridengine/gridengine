@@ -186,7 +186,7 @@ lList *lJoinSublist(const char *name, int nm0, const lList *lp,
       return NULL;
    }
 
-   if (tdp[pos].mt != lListT) {
+   if (mt_get_type(tdp[pos].mt) != lListT) {
       LERROR(LEINCTYPE);
       DEXIT;
       return NULL;
@@ -344,8 +344,8 @@ lList *lJoin(const char *name, int nm0, const lList *lp0,
          return NULL;
       }
 
-      if (lp0->descr[lp0_pos].mt != lp1->descr[lp1_pos].mt ||
-          lp0->descr[lp0_pos].mt == lListT) {
+      if (mt_get_type(lp0->descr[lp0_pos].mt) != mt_get_type(lp1->descr[lp1_pos].mt) ||
+          mt_get_type(lp0->descr[lp0_pos].mt) == lListT) {
          LERROR(LEDIFFDESCR);
          DEXIT;
          return NULL;
@@ -375,7 +375,7 @@ lList *lJoin(const char *name, int nm0, const lList *lp0,
             continue;
          if (nm1 != NoName) {   /* in this case take it always */
             /* This is a comparison of the join fields nm0 , nm1 */
-            switch (lp0->descr[lp0_pos].mt) {
+            switch (mt_get_type(lp0->descr[lp0_pos].mt)) {
             case lIntT:
                needed = (ep0->cont[lp0_pos].i == ep1->cont[lp1_pos].i);
                break;
@@ -712,26 +712,19 @@ int lPartialDescr(const lEnumeration *ep, const lDescr *sdp, lDescr *ddp,
       for (i = 0; sdp[i].mt != lEndT; i++) {
          ddp[*indexp].mt = sdp[i].mt;
          ddp[*indexp].nm = sdp[i].nm;
-         if(sdp[i].hash != NULL) {
-            ddp[*indexp].hash = cull_hash_copy_descr(&sdp[i]);
-         } else {
-            ddp[*indexp].hash = NULL;
-         }
+         ddp[*indexp].ht = NULL;
+
          (*indexp)++;
       }
       break;
    default:
       /* copy and check descr */
       for (i = 0; ep[i].mt != lEndT; i++) {
-         if (ep[i].mt == sdp[ep[i].pos].mt &&
+         if (mt_get_type(ep[i].mt) == mt_get_type(sdp[ep[i].pos].mt) &&
              ep[i].nm == sdp[ep[i].pos].nm) {
             ddp[*indexp].mt = sdp[ep[i].pos].mt;
             ddp[*indexp].nm = sdp[ep[i].pos].nm;
-            if(sdp[ep[i].pos].hash != NULL) {
-               ddp[*indexp].hash = cull_hash_copy_descr(&sdp[ep[i].pos]);
-            } else {
-               ddp[*indexp].hash = NULL;
-            }
+            ddp[*indexp].ht = NULL;
  
             (*indexp)++;
          }
@@ -745,7 +738,7 @@ int lPartialDescr(const lEnumeration *ep, const lDescr *sdp, lDescr *ddp,
    /* copy end mark */
    ddp[*indexp].mt = lEndT;
    ddp[*indexp].nm = NoName;
-   ddp[*indexp].hash = NULL;
+   ddp[*indexp].ht = NULL;
 
    /* 
       We don't do (*indexp)++ in order to end up correctly if

@@ -42,7 +42,6 @@
 #include "sgermon.h"
 #include "cull_dump_scan.h"
 #include "cull_listP.h"
-#include "cull_hashP.h"
 #include "cull_multitypeP.h"
 #include "cull_lerrnoP.h"
 #include "basis_types.h"
@@ -114,9 +113,8 @@ int lDumpDescr(FILE *fp, const lDescr *dp, int indent)
                  lCountDescr(dp));
 
    for (i = 0; dp[i].mt != lEndT && ret != EOF; i++) {
-      ret = fprintf(fp, "%s/* %-20.20s */ { %d, %d, %d }\n", space, 
-                    lNm2Str(dp[i].nm), dp[i].nm, dp[i].mt, 
-                    dp[i].hash == NULL ? HASH_OFF : dp[i].hash->type);
+      ret = fprintf(fp, "%s/* %-20.20s */ { %d, %d }\n", space, 
+                    lNm2Str(dp[i].nm), dp[i].nm, dp[i].mt);
    }
 
    ret = fprintf(fp, "%s} /* DESCR END */\n", space);
@@ -186,7 +184,7 @@ lDescr *lUndumpDescr(FILE *fp)
    }
    dp[i].nm = NoName;
    dp[i].mt = lEndT;
-   dp[i].hash = NULL;
+   dp[i].ht = NULL;
 
    /* read ket */
    if (fGetKet(fp)) {
@@ -283,7 +281,7 @@ int lDumpElemFp(FILE *fp, const lListElem *ep, int indent)
    ret = fprintf(fp, "%s{ \n", space);
    for (i = 0, ret = 0; ep->descr[i].nm != NoName && ret != EOF; i++) {
 
-      switch (ep->descr[i].mt) {
+      switch (mt_get_type(ep->descr[i].mt)) {
       case lIntT:
          ret = fprintf(fp, "%s/* %-20.20s */ %d\n",
                      space, lNm2Str(ep->descr[i].nm), lGetPosInt(ep, i));
@@ -464,7 +462,7 @@ lListElem *lUndumpElem(FILE *fp, const lDescr *dp)
    }
 
    for (i = 0; i < n && ret == 0; i++) {
-      switch (dp[i].mt) {
+      switch (mt_get_type(dp[i].mt)) {
       case lIntT:
          ret = fGetInt(fp, &(ep->cont[i].i));
          break;
@@ -789,8 +787,8 @@ static int fGetKet(FILE *fp)
 int fGetDescr(FILE *fp, lDescr *dp) 
 {
    char s[READ_LINE_LENGHT + 1];
-   int mt, nm, hash;
-   char bra[2], comma[2], comma1[2], ket[2];
+   int mt, nm;
+   char bra[2], comma[2], ket[2];
 
    DENTER(CULL_LAYER, "fGetDescr");
 
@@ -816,14 +814,13 @@ int fGetDescr(FILE *fp, lDescr *dp)
       We use this strange form of scanf to skip the 
       white space at the beginning. scanf is magic isn't it?
     */
-   if (sscanf(s, "%1s %d %1s %d %1s %d %1s", bra, &nm, comma, &mt, 
-              comma1, &hash, ket) != 7) {
+   if (sscanf(s, "%1s %d %1s %d %1s", bra, &nm, comma, &mt, ket) != 5) {
       LERROR(LESSCANF);
       DEXIT;
       return -1;
    }
 
-   if (bra[0] != '{' || comma[0] != ',' || comma1[0] != ',' || ket[0] != '}') {
+   if (bra[0] != '{' || comma[0] != ',' || ket[0] != '}') {
       LERROR(LESYNTAX);
       DEXIT;
       return -1;
@@ -831,17 +828,7 @@ int fGetDescr(FILE *fp, lDescr *dp)
 
    dp->nm = nm;
    dp->mt = mt;
-   if(hash == HASH_OFF) {  /* no hashing */
-      dp->hash = NULL;
-   } else {        /* create hashing info */
-      if((dp->hash = (lHash *) malloc(sizeof(lHash))) == NULL) {
-         LERROR(LEMALLOC);
-         DEXIT;
-         return -1;
-      }
-      dp->hash->type  = hash;
-      dp->hash->table = NULL;
-   }
+   dp->ht = NULL;
 
    DEXIT;
    return 0;

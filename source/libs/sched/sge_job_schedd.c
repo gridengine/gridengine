@@ -286,8 +286,8 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
          int pos = lGetPosInDescr(descr, JB_owner);
         
          if(descr != NULL && pos >= 0) {
-            if(descr[pos].hash == NULL)  {
-               cull_hash_new(*(job_lists[SPLIT_PENDING]), JB_owner, &template_hash);
+            if(descr[pos].ht == NULL)  {
+               cull_hash_new(*(job_lists[SPLIT_PENDING]), JB_owner, 0);
             }
          }
       }

@@ -49,9 +49,9 @@ enum {
 };
 
 ILISTDEF(CONF_Type, Configuration, SGE_CONFIG_LIST)
-   SGE_HOSTHU(CONF_hname)                       /* CR - hostname change */
-   SGE_XULONG(CONF_version)
-   SGE_TLIST(CONF_entries, CF_Type)
+   SGE_HOST(CONF_hname, CULL_HASH | CULL_UNIQUE)                       /* CR - hostname change */
+   SGE_ULONG(CONF_version, CULL_DEFAULT)
+   SGE_LIST(CONF_entries, CF_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CONFN)
@@ -73,10 +73,10 @@ enum {
 };
 
 SLISTDEF(CF_Type, ConfigEntry)
-   SGE_STRINGHU(CF_name)
-   SGE_STRING(CF_value)
-   SGE_LIST(CF_sublist)
-   SGE_XULONG(CF_local)
+   SGE_STRING(CF_name, CULL_HASH | CULL_UNIQUE)
+   SGE_STRING(CF_value, CULL_DEFAULT)
+   SGE_LIST(CF_sublist, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+   SGE_ULONG(CF_local, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CFN)

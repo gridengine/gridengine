@@ -100,17 +100,17 @@ enum {
 };
 
 LISTDEF(LS_Type)
-   SGE_STRING(LS_name)       
-   SGE_STRING(LS_command)   
-   SGE_STRING(LS_pid)      
-   SGE_REF(LS_in)         
-   SGE_REF(LS_out)       
-   SGE_REF(LS_err)      
-   SGE_BOOL(LS_has_to_restart) 
-   SGE_ULONG(LS_tag)         
-   SGE_LIST(LS_incomplete)  
-   SGE_LIST(LS_complete)   
-   SGE_ULONG(LS_last_mod) 
+   SGE_STRING(LS_name, CULL_DEFAULT)       
+   SGE_STRING(LS_command, CULL_DEFAULT)   
+   SGE_STRING(LS_pid, CULL_DEFAULT)      
+   SGE_REF(LS_in, SGE_ANY_SUBTYPE, CULL_DEFAULT)         /* type is FILE * */
+   SGE_REF(LS_out, SGE_ANY_SUBTYPE, CULL_DEFAULT)        /* type is FILE * */
+   SGE_REF(LS_err, SGE_ANY_SUBTYPE, CULL_DEFAULT)        /* type is FILE * */
+   SGE_BOOL(LS_has_to_restart, CULL_DEFAULT) 
+   SGE_ULONG(LS_tag, CULL_DEFAULT)         
+   SGE_LIST(LS_incomplete, LR_Type, CULL_DEFAULT)  
+   SGE_LIST(LS_complete, LR_Type, CULL_DEFAULT)   
+   SGE_ULONG(LS_last_mod, CULL_DEFAULT) 
 LISTEND 
 
 NAMEDEF(LSN)

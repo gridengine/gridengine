@@ -48,8 +48,8 @@ enum {
 };
 
 LISTDEF(JRE_Type)
-   SGE_ULONG(JRE_job_number)
-   SGE_STRING(JRE_job_name)
+   SGE_ULONG(JRE_job_number, CULL_DEFAULT)
+   SGE_STRING(JRE_job_name, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(JREN)

@@ -81,8 +81,8 @@ enum {
 };
 
 SLISTDEF(UA_Type, Usage)
-   SGE_STRINGHU(UA_name)
-   SGE_DOUBLE(UA_value)       /* 960710 SVD - changed from to */
+   SGE_STRING(UA_name, CULL_HASH | CULL_UNIQUE)
+   SGE_DOUBLE(UA_value, CULL_DEFAULT)       /* 960710 SVD - changed from to */
 LISTEND 
 
 NAMEDEF(UAN)

@@ -66,9 +66,9 @@ enum {
 };
 
 LISTDEF(AN_Type)
-   SGE_ULONG(AN_status)
-   SGE_STRING(AN_text)
-   SGE_ULONG(AN_quality)
+   SGE_ULONG(AN_status, CULL_DEFAULT)
+   SGE_STRING(AN_text, CULL_DEFAULT)
+   SGE_ULONG(AN_quality, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(ANN)

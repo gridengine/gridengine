@@ -78,10 +78,10 @@ enum {
 };
 
 SLISTDEF(PA_Type, PathAlias)
-   SGE_STRING(PA_origin)
-   SGE_HOST(PA_submit_host) 
-   SGE_HOST(PA_exec_host) 
-   SGE_STRING(PA_translation)
+   SGE_STRING(PA_origin, CULL_DEFAULT)
+   SGE_HOST(PA_submit_host, CULL_DEFAULT) 
+   SGE_HOST(PA_exec_host, CULL_DEFAULT) 
+   SGE_STRING(PA_translation, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(PAN)

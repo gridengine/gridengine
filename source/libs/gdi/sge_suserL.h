@@ -79,8 +79,8 @@ enum {
 };
 
 LISTDEF(SU_Type)
-   SGE_STRING(SU_name)
-   SGE_ULONG(SU_jobs)
+   SGE_STRING(SU_name, CULL_DEFAULT)
+   SGE_ULONG(SU_jobs, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(SUN)

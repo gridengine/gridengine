@@ -137,7 +137,6 @@ extern "C" {
       {JC_LOWERBOUND, JCS, JCN},        /* job couter used in schedd */
       {CONF_LOWERBOUND, CONFS, CONFN},  /* config */
       {CF_LOWERBOUND, CFS, CFN},        /* config list */
-      {JQ_LOWERBOUND, JQS, JQN},        /* combined job/queue list */
       {ST_LOWERBOUND, STS, STN},        /* string list */
       {JG_LOWERBOUND, JGS, JGN},        /* jobs sublist of granted destinatin 
                                          * identifiers */

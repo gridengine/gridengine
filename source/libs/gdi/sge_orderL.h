@@ -75,16 +75,16 @@ enum {
 };
 
 LISTDEF(OR_Type)
-   SGE_ULONG(OR_seq_no)       /* sequence number */
-   SGE_ULONG(OR_type)         /* command */
-   SGE_ULONG(OR_force)        /* set if force */
-   SGE_ULONG(OR_job_number)   /* which job */
-   SGE_ULONG(OR_ja_task_number)       /* which JobArray task */
-   SGE_ULONG(OR_job_version)  /* which job version */
-   SGE_LIST(OR_queuelist)     /* associated queue list */
-   SGE_DOUBLE(OR_ticket)      /* SGEEE job tickets */
-   SGE_DOUBLE(OR_pticket)     /* SGEEE job tickets */
-   SGE_LIST(OR_joker)         /* type of this sublist depends on OR_type:  
+   SGE_ULONG(OR_seq_no, CULL_DEFAULT)       /* sequence number */
+   SGE_ULONG(OR_type, CULL_DEFAULT)         /* command */
+   SGE_ULONG(OR_force, CULL_DEFAULT)        /* set if force */
+   SGE_ULONG(OR_job_number, CULL_DEFAULT)   /* which job */
+   SGE_ULONG(OR_ja_task_number, CULL_DEFAULT)       /* which JobArray task */
+   SGE_ULONG(OR_job_version, CULL_DEFAULT)  /* which job version */
+   SGE_LIST(OR_queuelist, OQ_Type, CULL_DEFAULT)     /* associated queue list */
+   SGE_DOUBLE(OR_ticket, CULL_DEFAULT)      /* SGEEE job tickets */
+   SGE_DOUBLE(OR_pticket, CULL_DEFAULT)     /* SGEEE job tickets */
+   SGE_LIST(OR_joker, CULL_ANY_SUBTYPE, CULL_DEFAULT)         /* type of this sublist depends on OR_type:  
                                * ORT_start_job empty ORT_remove_job empty  
                                * ORT_tickets reduced job element JB_Type
                                * ORT_update_*_usage reduced user/prj object
@@ -92,7 +92,7 @@ LISTDEF(OR_Type)
                                * root node STN_Type *
                                * ORT_remove_immediate_job empty *
                                * ORT_job_schedd_info SME_Type */
-   SGE_STRING(OR_pe)          /* which pe */
+   SGE_STRING(OR_pe, CULL_DEFAULT)          /* which pe */
 LISTEND 
 
 NAMEDEF(ORN)
@@ -123,14 +123,14 @@ enum {
 };
 
 LISTDEF(OQ_Type)
-   SGE_ULONG(OQ_slots)        /* number of slots on this queue */
-   SGE_STRING(OQ_dest_queue)  /* queue where job has to run */
-   SGE_ULONG(OQ_dest_version) /* version of this queue */
-   SGE_DOUBLE(OQ_ticket)       /* total SGEEE tickets for slots */
-   SGE_DOUBLE(OQ_oticket)      /* total SGEEE override tickets */
-   SGE_DOUBLE(OQ_fticket)      /* total SGEEE functional tickets */
-   SGE_DOUBLE(OQ_dticket)      /* total SGEEE deadline tickets */
-   SGE_DOUBLE(OQ_sticket)      /* total SGEEE sharetree tickets */
+   SGE_ULONG(OQ_slots, CULL_DEFAULT)        /* number of slots on this queue */
+   SGE_STRING(OQ_dest_queue, CULL_DEFAULT)  /* queue where job has to run */
+   SGE_ULONG(OQ_dest_version, CULL_DEFAULT) /* version of this queue */
+   SGE_DOUBLE(OQ_ticket, CULL_DEFAULT)       /* total SGEEE tickets for slots */
+   SGE_DOUBLE(OQ_oticket, CULL_DEFAULT)      /* total SGEEE override tickets */
+   SGE_DOUBLE(OQ_fticket, CULL_DEFAULT)      /* total SGEEE functional tickets */
+   SGE_DOUBLE(OQ_dticket, CULL_DEFAULT)      /* total SGEEE deadline tickets */
+   SGE_DOUBLE(OQ_sticket, CULL_DEFAULT)      /* total SGEEE sharetree tickets */
 LISTEND 
 
 NAMEDEF(OQN)

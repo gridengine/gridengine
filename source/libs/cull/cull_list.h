@@ -35,6 +35,7 @@
 #include <stdio.h> 
 
 #include "basis_types.h"
+#include "sge_htable.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -60,7 +61,6 @@ typedef struct _lEnumeration lEnumeration;
 typedef union _lMultiType lMultiType;
 typedef struct _lSortOrder lSortOrder;
 typedef struct _WhereArg WhereArg, *WhereArgList;
-typedef struct _lHash lHash;
 
 /* IF YOU CHANGE THIS ENUM, CHANGE cull_multitype.c/multitypes[] */
 enum _enum_lMultiType {
@@ -77,6 +77,17 @@ enum _enum_lMultiType {
    lHostT             /* CR - hostname change */
 };
 
+/* flags for the field definition 
+** reserve 8 bit for data types (currently only 4 bit in use)
+*/
+#define CULL_DEFAULT       0x00000000
+#define CULL_PRIMARY_KEY   0x00000100
+#define CULL_HASH          0x00000200
+#define CULL_UNIQUE        0x00000400
+#define CULL_SHOW          0x00000800
+#define CULL_CONFIGURE     0x00001000
+#define CULL_SPOOL         0x00002000
+
 #ifdef __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
 
 #define LISTDEF( name ) lDescr name[] = {
@@ -85,18 +96,40 @@ enum _enum_lMultiType {
 #define SLISTDEF( name, idlname ) lDescr name[] = {
 #define LISTEND {NoName, lEndT, NULL}};
 
+#define SGE_INT(name,flags)    { name, lIntT    | flags, NULL },
+#define SGE_HOST(name,flags)   { name, lHostT   | flags, NULL },
+#define SGE_STRING(name,flags) { name, lStringT | flags, NULL },
+#define SGE_FLOAT(name,flags)  { name, lFloatT  | flags, NULL },
+#define SGE_DOUBLE(name,flags) { name, lDoubleT | flags, NULL },
+#define SGE_CHAR(name,flags)   { name, lCharT   | flags, NULL },
+#define SGE_LONG(name,flags)   { name, lLongT   | flags, NULL },
+#define SGE_ULONG(name,flags)  { name, lUlongT  | flags, NULL },
+#define SGE_BOOL(name,flags)   { name, lUlongT  | flags, NULL },
+#define SGE_LIST(name,type,flags)   { name, lListT   | flags, NULL },
+#define SGE_OBJECT(name,type,flags) { name, lListT   | flags, NULL },
+#define SGE_REF(name,type,flags)    { name, lRefT    | flags, NULL },
+
+/* 
+ * For lists, objects and references the type of the subordinate object(s) 
+ * must be specified.
+ * If multiple types are thinkable or non cull data types are referenced,
+ * use the following define CULL_ANY_SUBTYPE as type
+ */
+#define CULL_ANY_SUBTYPE 0
+
+/*
 #define SGE_INT(name) { name, lIntT, NULL },
 #define SGE_RINT(name) { name, lIntT, NULL },
 #define SGE_IINT(name)
 #define SGE_IRINT(name)
 #define SGE_XINT(name) { name, lIntT, NULL },
-#define SGE_HOST(name) { name, lHostT, NULL },                    /* CR - hostname change */
+#define SGE_HOST(name) { name, lHostT, NULL },                    
 #ifdef CULL_NO_HASH
-#define SGE_HOSTH(name) { name, lHostT, NULL },                   /* CR - hostname change */
-#define SGE_HOSTHU(name) { name, lHostT, NULL },                  /* CR - hostname change */
+#define SGE_HOSTH(name) { name, lHostT, NULL },                   
+#define SGE_HOSTHU(name) { name, lHostT, NULL },                  
 #else
-#define SGE_HOSTH(name) { name, lHostT, &template_hash },         /* CR - hostname change */
-#define SGE_HOSTHU(name) { name, lHostT, &template_hash_unique }, /* CR - hostname change */
+#define SGE_HOSTH(name) { name, lHostT, &template_hash },         
+#define SGE_HOSTHU(name) { name, lHostT, &template_hash_unique }, 
 #endif
 #define SGE_STRING(name) { name, lStringT, NULL },
 #ifdef CULL_NO_HASH
@@ -198,6 +231,7 @@ enum _enum_lMultiType {
 #define SGE_XOBJECT(name, type) { name, lListT, NULL },
 
 #define SGE_REF(name) { name, lRefT, NULL },
+*/
 
 #define NAMEDEF( name ) char *name[] = {
 #define NAME( name ) name ,
@@ -211,6 +245,20 @@ enum _enum_lMultiType {
 #define SLISTDEF( name, idlname ) extern lDescr name[];
 #define LISTEND
 
+#define SGE_INT(name,flags)
+#define SGE_HOST(name,flags)
+#define SGE_STRING(name,flags)
+#define SGE_FLOAT(name,flags)
+#define SGE_DOUBLE(name,flags)
+#define SGE_CHAR(name,flags)
+#define SGE_LONG(name,flags)
+#define SGE_ULONG(name,flags)
+#define SGE_BOOL(name,flags)
+#define SGE_LIST(name,type,flags)
+#define SGE_OBJECT(name,type,flags)
+#define SGE_REF(name,type,flags)
+
+/*
 #define SGE_INT(name)
 #define SGE_IINT(name)
 #define SGE_RINT(name)
@@ -270,7 +318,6 @@ enum _enum_lMultiType {
 #define SGE_RBOOL(name)
 #define SGE_IRBOOL(name)
 #define SGE_XBOOL(name)
-
 #define SGE_LIST(name)
 #define SGE_TLIST(name, type)
 #define SGE_ILIST(name, type)
@@ -282,8 +329,8 @@ enum _enum_lMultiType {
 #define SGE_ROBJECT(name, type)
 #define SGE_IROBJECT(name, type)
 #define SGE_XOBJECT(name, type)
-
 #define SGE_REF(name)
+*/
 
 #define NAMEDEF( name ) extern char *name[];
 #define NAME( name )
@@ -300,7 +347,7 @@ struct _lNameSpace {
 struct _lDescr {
    int nm;                             /* name */
    int mt;                             /* multitype information */
-   lHash *hash;
+   htable ht;
 };
 
 /* LIST SPECIFIC FUNCTIONS */
@@ -311,7 +358,6 @@ int lGetNumberOfRemainingElem(const lListElem *ep);
 int lGetElemIndex(const lListElem *ep, const lList *lp);
 
 const lDescr *lGetElemDescr(const lListElem *ep);
-
 void lWriteElem(const lListElem *ep);
 void lWriteElemTo(const lListElem *ep, FILE *fp);
 void lWriteList(const lList *lp);
@@ -356,6 +402,10 @@ lListElem *lFindPrev(const lListElem *ep, const lCondition *cp);
 lListElem *lFindFirst(const lList *lp, const lCondition *cp);
 lListElem *lFindLast(const lList *lp, const lCondition *cp);
 
+
+int mt_get_type(int mt);
+int mt_do_hashing(int mt);
+int mt_is_unique(int mt);
 
 /* #define for_each(ep,lp) for (ep=lFirst(lp);ep;ep=lNext(ep)) */
 /* #define for_each_rev(ep,lp) for (ep=lLast(lp);ep;ep=lPrev(ep)) */

@@ -73,11 +73,11 @@ enum {
 };
 
 LISTDEF(REP_Type)
-   SGE_ULONG(REP_type)        /* type of report, e.g. load report */
-   SGE_HOST(REP_host)       /* hostname as it is seen by sender of report */ /* CR - hostname change */
-   SGE_LIST(REP_list)         /* list type depends on REP_type */
-   SGE_ULONG(REP_version)     /* used to report software version of execd */
-   SGE_ULONG(REP_seqno)       /* used to recognize old reports sent by execd */
+   SGE_ULONG(REP_type, CULL_DEFAULT)        /* type of report, e.g. load report */
+   SGE_HOST(REP_host, CULL_DEFAULT)       /* hostname as it is seen by sender of report */ /* CR - hostname change */
+   SGE_LIST(REP_list, CULL_ANY_SUBTYPE, CULL_DEFAULT)         /* list type depends on REP_type */
+   SGE_ULONG(REP_version, CULL_DEFAULT)     /* used to report software version of execd */
+   SGE_ULONG(REP_seqno, CULL_DEFAULT)       /* used to recognize old reports sent by execd */
 LISTEND 
 
 NAMEDEF(REPN)
@@ -109,24 +109,24 @@ enum {
 };
 
 LISTDEF(JR_Type)
-   SGE_ULONG(JR_job_number)   /* Job to report */
-   SGE_ULONG(JR_ja_task_number)       /* JobArray task to report */
-   SGE_STRING(JR_queue_name)  /* Queue this job (tried to) run in */
-   SGE_HOST(JR_host_name)   /* Host this job (tried to) run on */ /* CR - hostname change */
-   SGE_STRING(JR_owner)       /* Owner (User) of this job */
-   SGE_STRING(JR_group)       /* Owner (User) of this job */
-   SGE_ULONG(JR_state)        /* either JRUNNING or JEXITING, JRUNNING sent 
+   SGE_ULONG(JR_job_number, CULL_DEFAULT)   /* Job to report */
+   SGE_ULONG(JR_ja_task_number, CULL_DEFAULT)       /* JobArray task to report */
+   SGE_STRING(JR_queue_name, CULL_DEFAULT)  /* Queue this job (tried to) run in */
+   SGE_HOST(JR_host_name, CULL_DEFAULT)   /* Host this job (tried to) run on */ /* CR - hostname change */
+   SGE_STRING(JR_owner, CULL_DEFAULT)       /* Owner (User) of this job */
+   SGE_STRING(JR_group, CULL_DEFAULT)       /* Owner (User) of this job */
+   SGE_ULONG(JR_state, CULL_DEFAULT)        /* either JRUNNING or JEXITING, JRUNNING sent 
                                * * as ack for jobdelivery and cyclic */
-   SGE_ULONG(JR_failed)       /* FAILED_... */
-   SGE_ULONG(JR_general_failure)      /* 1 -> general problem */
-   SGE_STRING(JR_err_str)     /* describes failure */
-   SGE_LIST(JR_usage)         /* used resources UA_Type */
-   SGE_ULONG(JR_job_pid)      /* pid of job script */
-   SGE_ULONG(JR_ckpt_arena)   /* if there is a checkpoint in the arena */
-   SGE_STRING(JR_pe_task_id_str)
+   SGE_ULONG(JR_failed, CULL_DEFAULT)       /* FAILED_... */
+   SGE_ULONG(JR_general_failure, CULL_DEFAULT)      /* 1 -> general problem */
+   SGE_STRING(JR_err_str, CULL_DEFAULT)     /* describes failure */
+   SGE_LIST(JR_usage, UA_Type, CULL_DEFAULT)         /* used resources UA_Type */
+   SGE_ULONG(JR_job_pid, CULL_DEFAULT)      /* pid of job script */
+   SGE_ULONG(JR_ckpt_arena, CULL_DEFAULT)   /* if there is a checkpoint in the arena */
+   SGE_STRING(JR_pe_task_id_str, CULL_DEFAULT)
    /* string describing task from sight of PE
     * if this is non null this is a PE task */
-   SGE_STRING(JR_osjobid)     /* string containing osjobid for ckpt jobs */
+   SGE_STRING(JR_osjobid, CULL_DEFAULT)     /* string containing osjobid for ckpt jobs */
 LISTEND
 
 NAMEDEF(JRN)
@@ -158,8 +158,8 @@ enum {
 };
 
 LISTDEF(LIC_Type)
-   SGE_ULONG(LIC_processors)
-   SGE_STRING(LIC_arch)
+   SGE_ULONG(LIC_processors, CULL_DEFAULT)
+   SGE_STRING(LIC_arch, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(LICN)
@@ -178,11 +178,11 @@ enum {
 };
 
 LISTDEF(LR_Type)
-   SGE_STRING(LR_name)
-   SGE_STRING(LR_value)
-   SGE_ULONG(LR_global)       /* ==1 global load value */
-   SGE_ULONG(LR_static)       /* ==1 static load value */
-   SGE_HOSTH(LR_host)        /* sender host of load value */  /* CR - hostname change */
+   SGE_STRING(LR_name, CULL_DEFAULT)
+   SGE_STRING(LR_value, CULL_DEFAULT)
+   SGE_ULONG(LR_global, CULL_DEFAULT)       /* ==1 global load value */
+   SGE_ULONG(LR_static, CULL_DEFAULT)       /* ==1 static load value */
+   SGE_HOST(LR_host, CULL_HASH)        /* sender host of load value */  /* CR - hostname change */
 LISTEND
 
 NAMEDEF(LRN)

@@ -193,12 +193,8 @@ enum NameSpaceBoundaries {
    JC_LOWERBOUND = QR_UPPERBOUND + 1,
    JC_UPPERBOUND = JC_LOWERBOUND + 1*BASIC_UNIT - 1,
 
-   /* combined job/queue list as needed in execd to hold jobs/queues */
-   JQ_LOWERBOUND = JC_UPPERBOUND + 1,
-   JQ_UPPERBOUND = JQ_LOWERBOUND + 1*BASIC_UNIT - 1,
-
    /* string list */
-   ST_LOWERBOUND = JQ_UPPERBOUND + 1,
+   ST_LOWERBOUND = JC_UPPERBOUND + 1,
    ST_UPPERBOUND = ST_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* jobs granted destination identifier list */

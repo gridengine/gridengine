@@ -1,3 +1,8 @@
+DT-2004-08-11-0: Bugfix.:   o Rolled back dangerous fix from DT-2004-07-21-1
+                 Doc.:      o Cleaned up man3, man8, and submit.1 man pages
+                 Issue:     1170
+                 Review:    DT,SG
+
 MD-2004-08-10-0: Bugfix:    Refix Issue 1113
                  Issue:     1214
                  Bugtraq:   5084927

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_misc.3,v $     Last Update: $Date: 2004/04/19 10:52:05 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: drmaa_misc.3,v $     Last Update: $Date: 2004/08/11 14:01:07 $     Revision: $Revision: 1.4.4.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_misc 3 "$Date: 2004/04/19 10:52:05 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_misc 3 "$Date: 2004/08/11 14:01:07 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -85,7 +85,7 @@ drmaa_strerror, drmaa_get_contact, drmaa_version, drmaa_get_DRM_system \- Miscel
 .\"
 .\"
 .SH DESCRIPTION
-The drmaa_strerror() function returns a message text associated with the DRMAA error number 
+The drmaa_strerror() function returns a message text associated with the DRMAA error number,
 \fIdrmaa_errno\fP. For invalid DRMAA error codes `NULL' is returned.
 .\" 
 .\" 
@@ -109,9 +109,9 @@ is called.
 .\" 
 .SS "drmaa_version()"
 The drmaa_version() function returns into the integers pointed to by \fImajor\fP 
-and \fIminor\fP the major and minor version numbers of the DRMAA library,
-respectively. For a DRMAA 1.0 compliant 
-implementation `1' and `0' will be returned in \fImajor\fP and \fIminor\fP.
+and \fIminor\fP, the major and minor version numbers of the DRMAA library.
+For a DRMAA 1.0 compliant 
+implementation `1' and `0' will be returned in \fImajor\fP and \fIminor\fP, respectively.
 .PP
 .\"
 .\" 
@@ -130,8 +130,8 @@ is called.
 .\"
 .SS "drmaa_get_DRMAA_implementation()"
 The drmaa_get_DRMAA_implementation() function returns into \fIdrm_system\fP up to 
-\fIdrm_system_len\fP characters of a string containing xxQS_NAMExx product and 
-version information.  In the current implementation, the
+\fIdrm_system_len\fP characters of a string containing the xxQS_NAMExx DRMAA
+implementation version information.  In the current implementation, the
 drmaa_get_DRMAA_implementation() function returns the same result as the
 drmaa_get_DRM_system() function.
 .PP
@@ -190,7 +190,7 @@ The drmaa_get_contact(), drmaa_version(), drmaa_get_DRM_system(), and
 drmaa_get_DRMAA_implementation() will fail if:
 .\" 
 .SS "DRMAA_ERRNO_INTERNAL_ERROR"
-Unexpected or internal DRMAA error like system call failure, etc.
+Unexpected or internal DRMAA error, like system call failure, etc.
 .\" 
 .SS "DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE"
 Could not contact DRM system for this request.

@@ -1416,7 +1416,7 @@ proc get_complex { change_array complex_list } {
 #  SEE ALSO
 #     sge_procedures/get_config()
 #*******************************
-proc set_config { change_array {host global} {do_add 0} } {
+proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
   global CHECK_CORE_MASTER CHECK_USER
   upvar $change_array chgar
@@ -1451,14 +1451,20 @@ proc set_config { change_array {host global} {do_add 0} } {
   } else {
      set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_MODIFIEDINLIST_SSS] $CHECK_USER "*" "*"]
      set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_ADDEDTOLIST_SSS] $CHECK_USER "*" "*"]
+     set GIDRANGE "___ABCDEF___"
   }
 
 
   set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
 
   set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mconf $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
-  if { ($result != 0) && ($result != -3) && ($result != -4) } {
-     add_proc_error "set_config" -1 "could not add or modify configruation for host $host ($result)"
+  
+  if { ($ignore_error == 1) && ($result == -4) } {
+     # ignore error -4 
+  } else {
+    if { ($result != 0) && ($result != -3) } {
+      add_proc_error "set_config" -1 "could not add or modify configruation for host $host ($result)"
+    }
   }
   return $result
 }

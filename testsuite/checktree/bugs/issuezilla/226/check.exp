@@ -105,10 +105,7 @@ proc issue_226_check {} {
 
    # value blow 100 should be rejected
    set my_cluster_conf(gid_range) "99"
-
-   # TODO: set_config should result in an error
-   #       only then this test is successfull
-   set_config my_cluster_conf "global"
+   set_config my_cluster_conf "global" "0" "1"
  
    set_error 0 "ok"
 }

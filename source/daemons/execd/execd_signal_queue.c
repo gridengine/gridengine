@@ -60,6 +60,7 @@
 #include "sge_conf.h"
 #include "sge_job_reportL.h"
 #include "sge_usageL.h"
+#include "mail.h"
 
 #if defined(CRAY) && !defined(SIGXCPU)
 #   define SIGXCPU SIGCPULIM
@@ -135,7 +136,9 @@ int answer_error;
                            INFO((SGE_EVENT, MSG_JOB_INITMIGRSUSPQ_U, u32c(lGetUlong(jep, JB_job_number))));
                            signal = SGE_MIGRATE;
                         }   
-                        sge_execd_deliver_signal(signal, jep, jatep);
+                        if( sge_execd_deliver_signal(signal, jep, jatep) == 0) {
+                           sge_send_suspend_mail(signal,master_q ,jep, jatep); 
+                        }
                      }   
                   } 
                   else {
@@ -143,8 +146,11 @@ int answer_error;
                         we do not deliver a signal */
                      if (signal == SGE_SIGCONT) {
                         lSetUlong(master_q, QU_state, lGetUlong(master_q, QU_state) & ~QSUSPENDED);
-                        if (!VALID(JSUSPENDED, lGetUlong(jatep, JAT_state)))
-                           sge_execd_deliver_signal(signal, jep, jatep);
+                        if (!VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
+                           if ( sge_execd_deliver_signal(signal, jep, jatep) == 0) {
+                              sge_send_suspend_mail(signal,master_q ,jep, jatep); 
+                           }
+                        }
                      }
                      else
                         sge_execd_deliver_signal(signal, jep, jatep);
@@ -291,6 +297,151 @@ lListElem *jatep
 
    DEXIT;
    return getridofjob;
+}
+/****** execd_signal_queue/sge_send_suspend_mail() *****************************
+*  NAME
+*     sge_send_suspend_mail() -- send suspend / condinue mail if enabled
+*
+*  SYNOPSIS
+*     void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, 
+*     lListElem *jep, lListElem *jatep) 
+*
+*  FUNCTION
+*     This function will send the suspend/continue mail to the job owner 
+*     or to the users defined with the -M option of qsub. The mail is 
+*     only sent when the user has specified the -m s flag. 
+*
+*     The mail is sent when the execd is signaling the job with 
+*     SGE_SIGSTOP(suspend) / SGE_SIGCONT(continue)
+*
+*  INPUTS
+*     u_long32 signal     - type of signal (SGE_SIGSTOP/SGE_SIGCONT)
+*     lListElem *master_q - pointer to QU_Type  cull list element 
+*                           of job (not used)
+*     lListElem *jep      - pointer to JB_Type  cull list element 
+*                           of job 
+*     lListElem *jatep    - pointer to JAT_Type cull list element 
+*                           of job
+*******************************************************************************/
+void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep, lListElem *jatep) {
+
+   u_long32 mail_options; 
+
+   DENTER(TOP_LAYER, "sge_send_suspend_mail");
+
+   mail_options = lGetUlong(jep, JB_mail_options); 
+
+   /* only if mail at suspendsion is enabled */
+   if (VALID(MAIL_AT_SUSPENSION, mail_options)) {
+
+       lList *mail_users      = NULL; 
+
+       u_long32 mq_state      = 0;
+       u_long32 state         = 0;
+       u_long32 jobid         = 0;
+       u_long32 taskid        = 0;
+       u_long32 job_sub_time  = 0;
+       u_long32 job_exec_time = 0; 
+
+       char mail_subject[MAX_STRING_SIZE]; 
+       char mail_body[MAX_STRING_SIZE];
+       char job_sub_time_str[256];
+       char job_exec_time_str[256];
+
+       const char *job_name = NULL;
+       const char *job_master_queue = NULL;
+       const char *job_owner = NULL; 
+       const char *mail_type = "unknown";
+      
+
+
+       /* get values */       
+       if (jep != NULL) {
+          job_sub_time = lGetUlong(jep,JB_submission_time);
+          jobid        = lGetUlong(jep, JB_job_number);
+          mail_users   = lGetList(jep, JB_mail_list);
+          job_name     = lGetString(jep, JB_job_name);
+          job_owner    = lGetString(jep, JB_owner);
+        }
+
+       if (jatep != NULL) {
+          job_exec_time    = lGetUlong(jatep,JAT_start_time );
+          state            = lGetUlong(jatep, JAT_state);
+          taskid           = lGetUlong(jatep, JAT_task_number );
+          job_master_queue = lGetString(jatep, JAT_master_queue);
+       }
+
+       if (master_q != NULL) {
+          mq_state = lGetUlong(master_q, QU_state);
+       }
+       /* check strings */
+       if (job_name == NULL) {
+           job_name = "unknown";
+       }
+       if (job_master_queue == NULL) {
+           job_master_queue = "unknown";
+       }
+       if (job_owner == NULL) {
+           job_owner = "unknown";
+       }
+
+
+       /* make human readable time format */
+       sprintf(job_sub_time_str ,"%s",sge_ctime(job_sub_time ));
+       sprintf(job_exec_time_str,"%s",sge_ctime(job_exec_time));
+
+       if (signal == SGE_SIGSTOP) {
+          /* suspended */
+          if (is_array(jep)) {
+              sprintf(mail_subject,
+                      "Job-array task "u32"."u32" ("SFN") Suspended",
+                      jobid, 
+                      taskid, 
+                      job_name);
+          } else {
+              sprintf(mail_subject,
+                      "Job "u32" ("SFN") Suspended",
+                      jobid, 
+                      job_name);
+          }
+          mail_type = "job suspend";
+       } else if (signal == SGE_SIGCONT ) {
+          /* continued */
+          if (is_array(jep)) {
+              sprintf(mail_subject,
+                      "Job-array task "u32"."u32" ("SFN") Continued",
+                      jobid, 
+                      taskid, 
+                      job_name);
+          } else {
+              sprintf(mail_subject,
+                      "Job "u32" ("SFN") Continued",
+                      jobid, 
+                      job_name);
+          }
+          mail_type = "job continue";
+       } else {
+          DPRINTF(("no suspend or continue signaling\n"));
+          DEXIT;
+          return;
+       }
+
+       /* create mail body */
+       sprintf(mail_body,
+               "%s\n"     /* subject again */
+               " Master queue    = "SFN"\n"    /* JAT_master_queue" */
+               " Owner           = "SFN"\n"    /* JB_owner */
+               " Submission time = "SFN"\n"    /* JB_submission_time */
+               " Start time      = "SFN"\n",   /* JB_execution_time"  */
+               mail_subject,
+               job_master_queue,
+               job_owner,
+               job_sub_time_str,
+               job_exec_time_str);
+ 
+       cull_mail(mail_users, mail_subject, mail_body, mail_type );
+   } 
+   DEXIT;
 }
 
 /***********************************************************************
@@ -446,9 +597,14 @@ u_long32 signal
 ) {
    lListElem *jep;
    u_long32 state;
+   u_long32 mq_state;
    lListElem *master_q;
    lListElem *jatep = NULL;
    int getridofjob = 0;
+
+   int suspend_change = 0;
+   int send_mail = 0;
+
    const void *iterator;
 
    DENTER(TOP_LAYER, "signal_job");
@@ -478,6 +634,9 @@ u_long32 signal
          sge_sig2str(signal), jobid, jataskid));
    if (signal == SGE_SIGCONT) {
       state = lGetUlong(jatep, JAT_state);
+      if (ISSET(state, JSUSPENDED)) {
+         suspend_change = 1; 
+      }
       CLEARBIT(JSUSPENDED, state);
       SETBIT(JRUNNING, state);
       lSetUlong(jatep, JAT_state, state);
@@ -486,10 +645,14 @@ u_long32 signal
          and we unsuspend the job. 
          The Job should stay sleeping */
 
-      if (!(lGetUlong(master_q, QU_state) & QSUSPENDED)) 
+      if (!(lGetUlong(master_q, QU_state) & QSUSPENDED)) {
          getridofjob = sge_execd_deliver_signal(signal, jep, jatep);
-      else 
+         if ((!getridofjob) && (suspend_change == 1) ) {
+            send_mail = 1;
+         }
+      } else {
          DPRINTF(("Queue is suspended -> do nothing\n"));
+      }
    }
    else {
       if ((signal == SGE_SIGSTOP) && (lGetUlong(jep, JB_checkpoint_attr) & 
@@ -501,6 +664,9 @@ u_long32 signal
       }
       else if (signal == SGE_SIGSTOP) {
          state = lGetUlong(jatep, JAT_state);
+         if (!ISSET(state,JSUSPENDED)) {
+            suspend_change = 1;
+         } 
          SETBIT(JSUSPENDED, state);
          CLEARBIT(JRUNNING, state);
          lSetUlong(jatep, JAT_state, state);
@@ -510,9 +676,14 @@ u_long32 signal
             which is already stopped we 
             do not deliver the signal */
 
-            getridofjob = sge_execd_deliver_signal(signal, jep, jatep);
-      } 
-      else {
+         getridofjob = sge_execd_deliver_signal(signal, jep, jatep);
+         if ( (!getridofjob) && (suspend_change == 1) ) {
+            mq_state = lGetUlong(master_q, QU_state);
+            if ( (!(mq_state & QSUSPENDED)) ) {
+               send_mail = 2;
+            }
+         }
+      } else {
          if (signal == SGE_SIGKILL) {
             state = lGetUlong(jatep, JAT_state);
             SETBIT(JDELETED, state);
@@ -524,11 +695,19 @@ u_long32 signal
    }
 
    /* now save this job/queue so we are up to date on restart */
-   if (!getridofjob)
+   if (!getridofjob) {
       job_write_spool_file(jep, jataskid, SPOOL_WITHIN_EXECD);
-   else
-      DPRINTF(("Job  "u32"."u32" is no longer running\n", jobid, jataskid));
+      /* write mail */
+      if (send_mail == 1) {
+         sge_send_suspend_mail(SGE_SIGCONT,master_q ,jep, jatep); 
+      }
+      if (send_mail == 2) {
+         sge_send_suspend_mail(SGE_SIGSTOP,master_q ,jep, jatep);
+      }
 
+   } else {
+      DPRINTF(("Job  "u32"."u32" is no longer running\n", jobid, jataskid));
+   }
    DEXIT;
    return getridofjob;
 }

@@ -188,7 +188,6 @@ char **argv
       SGE_EXIT(1);
    }
 
-
    set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
    set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
 
@@ -206,6 +205,8 @@ char **argv
    }
 
    sge_stopwatch_start(0);
+
+
    get_all_lists(
       &queue_list, 
       qselect_mode?NULL:&job_list, 
@@ -835,7 +836,6 @@ u_long32 show
          SGE_EXIT(1);
       }
    }
-
    /*
    ** scheduler configuration
    */

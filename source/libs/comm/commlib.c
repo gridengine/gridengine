@@ -84,6 +84,7 @@ int gethostname(char *name, int namelen);
 #include "sgermon.h"
 #include "sge_io.h"
 #include "msg_commd.h"
+#include "msg_common.h"
 #include "sge_language.h"
 
 #ifdef QIDL
@@ -127,7 +128,6 @@ static struct commlib_state_t* commlib_state = &commlib_state_opaque;
 #ifndef WIN32 
 extern int rresvport(int *port);
 #endif
-
 int commlib_debug = 0;              /* no debug by default */
 
 char COMMLIB_BUFFER[2048];
@@ -1978,6 +1978,57 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
 
    DEXIT;
    return CL_OK;
+}
+
+
+/****** commlib/generate_commd_port_and_service_status_message() ***************
+*  NAME
+*     generate_commd_port_and_service_status_message() -- check connection error 
+*
+*  SYNOPSIS
+*     void generate_commd_port_and_service_status_message(char* buffer) 
+*
+*  FUNCTION
+*     This function is used to generate an error message when the qmaster 
+*     is unreachable. The error message is copied into a static buffer.
+*     The buffer have a length of MAX_STRING_SIZE byte.
+*     
+*  INPUTS
+*     char* buffer - buffer for error message 
+*
+*******************************************************************************/
+void generate_commd_port_and_service_status_message(char* buffer) {
+   int port             = 0;
+   char *service        = NULL;
+   char *commdhost      = NULL;
+   char *commd_port_env = NULL;
+
+   DENTER(TOP_LAYER, "generate_commd_port_and_service_status_message");
+
+   port           = get_commlib_state_commdport();
+   service        = get_commlib_state_commdservice();
+   commdhost      = get_commlib_state_commdhost();
+   commd_port_env = getenv("COMMD_PORT");   
+
+   if (service == NULL) {
+      service = "unknown";
+   }
+   if (commdhost == NULL) {
+      commdhost = "unknown";
+   }
+
+   if (buffer != NULL) {
+      if ( port < 0 ) {
+         sprintf(buffer, MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS,"COMMD_PORT", service);
+      } else if ( commd_port_env != NULL ) { 
+         sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_ENV_SIS,commdhost,port,"COMMD_PORT");
+      } else if ( commd_port_env == NULL ) {
+         sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SISS,commdhost,port,service,"COMMD_PORT");
+      } else {
+         sprintf(buffer, MSG_SGETEXT_NOQMASTER);
+      }
+   }
+   DEXIT;
 }
 
 /***************************************************************/

@@ -1,3 +1,11 @@
+CR-2002-03-18-1             (merge from V53_beta2_BRANCH)
+                 Bugfix:    Mail on suspend wasn't working
+                 Issue:     #86
+ 
+                 Bugfix:    Wrong error message when service sge_commd 
+                            is not available    
+                 Issue:     #158
+
 CR-2002-03-18-0  Testsuite: - qdel check: (merge from V53_beta2_BRANCH)
                               1) clear all error states on test cleanup
                               2) leave test loop on job submission error

@@ -62,6 +62,7 @@
 #endif
 #include "msg_utilib.h"
 #include "msg_gdilib.h"
+#include "msg_common.h"
 
 static int sge_send_receive_gdi_request(char *rhost, char *commproc, 
                                         u_short id, sge_gdi_request *out, 
@@ -418,6 +419,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
 #endif
 
       if (status != 0) {
+
          reread_qmaster_file = 1;
 
          /* failed to contact qmaster ? */
@@ -430,7 +432,8 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
                sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED );
                break;
             case -4:
-               sprintf(SGE_EVENT, MSG_SGETEXT_NOQMASTER);
+               /* fills SGE_EVENT with diagnosis information */
+               generate_commd_port_and_service_status_message(SGE_EVENT);
                break;
             case -5:
                sprintf(SGE_EVENT, MSG_GDI_SIGNALED );
@@ -619,8 +622,7 @@ static int sge_send_receive_gdi_request(char *rhost, char *commproc,
       } else if (check_isalive(rhost)) {
          DEXIT;
          return -4;
-      }
-      else {
+      } else {
          DEXIT;
          return -2;
       }   
@@ -1020,8 +1022,7 @@ sge_gdi_request *new_gdi_request()
 
 
 /*------------------------------------------------------------*/
-sge_gdi_request *free_gdi_request(sge_gdi_request *ar) 
-{
+sge_gdi_request *free_gdi_request(sge_gdi_request *ar) {
    sge_gdi_request *next;
 
    DENTER(GDI_LAYER, "free_gdi_request");
@@ -1059,8 +1060,7 @@ sge_gdi_request *free_gdi_request(sge_gdi_request *ar)
  *  This is used for answering requests.
  *---------------------------------------------------------------*/
 int sge_add_answer(lList **alpp, const char *report, u_long32 status,
-                   u_long32 quality) 
-{
+                   u_long32 quality) {
    lListElem *aep;
 
    DENTER(GDI_LAYER, "sge_add_answer");
@@ -1102,8 +1102,7 @@ int answer_list_is_error_in_list(lList **answer_list)
 }                   
 
 /*-----------------------------------------------------------------------*/
-const char *quality_text(lListElem *aep) 
-{
+const char *quality_text(lListElem *aep) {
    u_long32 q;
    static char *qt[] = {
       "ERROR",

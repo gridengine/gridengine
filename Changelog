@@ -1,3 +1,9 @@
+CR-2002-09-23-1  Bugfix:    infotext doesn't support the reorder of conversion
+                            specifications
+                 Bugtraq:   #4739811
+                 Changed:   infotext
+                            Bug not fixed for ALPHA, ALPHA5, ALINUX architecture
+
 CR-2002-09-20-0  Bugfix:    infotext doesn't support the reorder of conversion
                             specifications
                  Bugtraq:   #4739811

@@ -497,7 +497,7 @@ int sge_process_all_events(lList *event_list) {
    u_long32 number, type, intkey, intkey2;
    const char *strkey;
    int ret;
-   int sge_mode = feature_is_enabled(FEATURE_SGEEE);
+   int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    int rebuild_categories = 0, 
        rebuild_accesstree = 0;
 
@@ -598,12 +598,12 @@ int sge_process_all_events(lList *event_list) {
                for_each(ja_task, (lGetList(ep, JB_ja_tasks))) {
                   was_running = running_status(lGetUlong(ja_task, JAT_status));
                   /* decrease # of running jobs for this user */
-                  if (was_running && !sge_mode && user_sort)
+                  if (was_running && !sgeee_mode && user_sort)
                         at_dec_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
                }
                /* delete job category if necessary */
                sge_delete_job_category(ep);
-               if (!sge_mode)
+               if (!sgeee_mode)
                    at_unregister_job_array(ep);
                lDelElemUlong(&(lists.job_list), JB_job_number, intkey);
             }
@@ -642,7 +642,7 @@ int sge_process_all_events(lList *event_list) {
                /* initialize JB_nrunning */
                for_each (ja_task, lGetList(ep, JB_ja_tasks)) {
                   is_running = running_status(lGetUlong(ja_task, JAT_status));
-                  if (is_running && !sge_mode && user_sort)
+                  if (is_running && !sgeee_mode && user_sort)
                      at_inc_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
 
                   job_log(lGetUlong(ep, JB_job_number), lGetUlong(ja_task, JAT_task_number), "arrived at schedd");
@@ -652,7 +652,7 @@ int sge_process_all_events(lList *event_list) {
             
                /* add job category */
                sge_add_job_category(ep, lists.acl_list);
-               if (!sge_mode)
+               if (!sgeee_mode)
                   at_register_job_array(ep);
 
                job_get_ja_task_ids(ep, &start, &end, &step);
@@ -759,7 +759,7 @@ int sge_process_all_events(lList *event_list) {
             ** before changing anything, remove category reference 
             ** for unchanged job
             */
-            if (!sge_mode)
+            if (!sgeee_mode)
                at_unregister_job_array(ep);
             sge_delete_job_category(ep);
 
@@ -794,7 +794,7 @@ int sge_process_all_events(lList *event_list) {
             ** for changed job
             */
             sge_add_job_category(ep, lists.acl_list);
-            if (!sge_mode)
+            if (!sgeee_mode)
                at_register_job_array(ep);
          }
          break;
@@ -907,13 +907,13 @@ int sge_process_all_events(lList *event_list) {
             if (running_status(lGetUlong(ja_task, JAT_status))) {
                if (!running_status(old_status)) {
                   DPRINTF(("JATASK "u32"."u32": IDLE -> RUNNING\n", intkey, intkey2));
-                  if (!sge_mode && user_sort)
+                  if (!sgeee_mode && user_sort)
                      at_inc_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
                }
             } else {
                if (running_status(old_status)) {
                   DPRINTF(("JATASK "u32"."u32": RUNNING -> IDLE\n", intkey, intkey2));
-                  if (!sge_mode && user_sort)
+                  if (!sgeee_mode && user_sort)
                      at_dec_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
                }
             }
@@ -939,16 +939,33 @@ int sge_process_all_events(lList *event_list) {
             goto Error;
          }
 
-         if (!sge_mode)
+         if (!sgeee_mode) {
+            if (user_sort) {
+               /* changing priority requires running jobs be accounted in a different 
+                  priority subtree of the access tree. So the counter in the former priority 
+                  subtree must be decreased before it can be increased again later on */
+               for_each(ja_task, (lGetList(ep, JB_ja_tasks))) {
+                  if (running_status(lGetUlong(ja_task, JAT_status)))
+                     at_dec_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
+               }
+            }
             at_unregister_job_array(ep);
+         }
 
          /* use new scheduling priority */
          lSetUlong(ep, JB_priority, lGetUlong(lFirst(
                          lGetList(event, ET_new_version)), JB_priority));
 
-         if (!sge_mode)
+         if (!sgeee_mode) {
             at_register_job_array(ep);
-
+            if (user_sort) {
+               /* increase running counter again in new priority subtree */
+               for_each(ja_task, (lGetList(ep, JB_ja_tasks))) {
+                  if (running_status(lGetUlong(ja_task, JAT_status)))
+                     at_inc_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
+               }
+            }
+         }
          break;
 
       case sgeE_JOB_FINAL_USAGE:
@@ -995,7 +1012,7 @@ int sge_process_all_events(lList *event_list) {
             was_running = running_status(lGetUlong(ja_task, JAT_status));
             /* decrease # of running jobs for this user */
             if (type == sgeE_JOB_FINAL_USAGE && was_running && !strkey) {
-               if (!sge_mode && user_sort)
+               if (!sgeee_mode && user_sort)
                   at_dec_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
             }
 
@@ -1531,7 +1548,7 @@ int sge_process_all_events(lList *event_list) {
                      goto Error;
                   } else {
                      was_running = running_status(lGetUlong(ja_task, JAT_status));
-                     if (was_running && !sge_mode && user_sort) {
+                     if (was_running && !sgeee_mode && user_sort) {
                         at_dec_job_counter(lGetUlong(ep, JB_priority), 
                                            lGetString(ep, JB_owner), 1);
                      }
@@ -1542,7 +1559,7 @@ int sge_process_all_events(lList *event_list) {
                }
                if (job_get_ja_tasks(ep) == 0) {
                   sge_delete_job_category(ep);
-                  if (!sge_mode)
+                  if (!sgeee_mode)
                      at_unregister_job_array(ep);
                   lDelElemUlong(&(lists.job_list), JB_job_number, intkey);
                }  
@@ -1572,7 +1589,7 @@ int sge_process_all_events(lList *event_list) {
          the access tree */
       rebuild_accesstree = 1;
    }
-   if (rebuild_accesstree && !sge_mode) {
+   if (rebuild_accesstree && !sgeee_mode) {
       DPRINTF(("### ### ### ### ###     REBUILDING ACCESS TREE    ### ### ### ### ###\n"));
       sge_rebuild_access_tree(lists.job_list, user_sort);
    }

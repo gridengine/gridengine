@@ -70,10 +70,10 @@ char **argv
 
    printf ("\ntest of gettext:\n\n");
    printf ("sample text (not localized)        : %s\n", TESTSTRING);
-   printf ("sample text (localized)            : %s\n", sge_gettext__(TESTSTRING));
+   printf ("sample text (localized)            : %s\n", sge_gettext__(_(TESTSTRING)));
 
    printf (TESTSTRING2 , "not localized");
-   printf (sge_gettext__(TESTSTRING2) , "localized");
+   printf (sge_gettext__(_(TESTSTRING2)) , "localized");
   
 
 #ifdef _SGE_WCHAR_TEST_

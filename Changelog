@@ -1,3 +1,6 @@
+CR-2002-07-18-4: Bugfix     i18n messages without _() macro will not get into
+                            the gridengine.pot file. Fixed not i10n messages.
+
 CR-2002-07-18-2: Bugfix     (merge from V53_beta2_BRANCH)
                             i18n aimk compilation for SOLARIS86 did not translate
                             i18n code

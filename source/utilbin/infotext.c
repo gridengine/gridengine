@@ -593,7 +593,7 @@ void sge_infotext_welcome(void) {
    printf("\nno l10n:\n");
    printf(SGE_INFOTEXT_TESTSTRING_S, user);
    printf("\nl10n:\n");
-   printf(sge_gettext__(SGE_INFOTEXT_TESTSTRING_S), user);
+   printf(sge_gettext__(_(SGE_INFOTEXT_TESTSTRING_S)), user);
 }
 
 void sge_infotext_usage(void) {

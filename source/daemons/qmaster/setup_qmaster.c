@@ -495,8 +495,8 @@ static void communication_setup(void)
       SGE_EXIT(1);
    }
 
-   /* CR - TODO: enable and test max connection close count */
-   /* cl_com_enable_max_connection_close(com_handle); */
+   /* CR - TODO: test max connection close count */
+   cl_com_enable_max_connection_close(com_handle);
    
    if (com_handle) {
       cl_com_add_allowed_host(com_handle,com_handle->local->comp_host);

@@ -289,6 +289,9 @@ const char* cl_get_error_text(int error_id) {       /* CR check */
       case CL_RETVAL_ACCESS_DENIED: {
          return "CL_RETVAL_ACCESS_DENIED";
       }
+      case CL_RETVAL_MAX_CON_COUNT_REACHED: {
+         return "CL_RETVAL_MAX_CON_COUNT_REACHED";
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

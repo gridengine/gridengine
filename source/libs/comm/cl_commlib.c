@@ -466,17 +466,31 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
    new_handle->service_port = service_port;
    new_handle->connection_timeout = CL_DEFINE_CLIENT_CONNECTION_LIFETIME;
    new_handle->last_heard_from_timeout = CL_DEFINE_CLIENT_CONNECTION_LIFETIME; /* don't use should be removed */
-   new_handle->read_timeout = 15;
-   new_handle->write_timeout = 15;
+   new_handle->read_timeout = CL_DEFINE_READ_TIMEOUT;
+   new_handle->write_timeout = CL_DEFINE_WRITE_TIMEOUT;
    new_handle->open_connection_timeout = CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT;
-   new_handle->acknowledge_timeout = 15;
+   new_handle->acknowledge_timeout = CL_DEFINE_ACK_TIMEOUT;
    new_handle->select_sec_timeout = sec_param;
    new_handle->select_usec_timeout = usec_rest;
    new_handle->synchron_receive_timeout = CL_DEFINE_SYNCHRON_RECEIVE_TIMEOUT;  /* default from old commlib */
    new_handle->do_shutdown = 0;  /* no shutdown till now */
    new_handle->max_connection_count_reached = 0;
    new_handle->allowed_host_list = NULL;
-   new_handle->max_open_connections = CL_DEFINE_MAX_OPEN_CONNECTIONS;
+   
+   new_handle->max_open_connections = sysconf(_SC_OPEN_MAX);
+   if ( new_handle->max_open_connections < 12 ) {
+      CL_LOG_INT(CL_LOG_ERROR, "to less file descriptors:", new_handle->max_open_connections );
+      free(new_handle);
+      free(local_hostname);
+      cl_raw_list_unlock(cl_com_handle_list);
+      return NULL;
+   }
+   CL_LOG_INT(CL_LOG_INFO, "max file descriptors on this system    :", new_handle->max_open_connections);
+
+   new_handle->max_open_connections = new_handle->max_open_connections - 10;
+
+   CL_LOG_INT(CL_LOG_INFO, "max. used descriptors for communication:", new_handle->max_open_connections);
+   
    new_handle->max_con_close_state = 0;
    new_handle->read_condition = NULL;
    new_handle->write_condition = NULL;
@@ -1454,7 +1468,7 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
       cl_commlib_calculate_statistic(handle, 1);
    }
 
-   if (handle->do_shutdown == 0) {
+   if (handle->do_shutdown == 0 && handle->max_connection_count_reached == 0) {
       the_handler = handle->service_handler;
    } else {
       the_handler = NULL;
@@ -1619,6 +1633,7 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
       cl_raw_list_lock(handle->connection_list);
       elem = cl_connection_list_get_first_elem(handle->connection_list); 
       while(elem) {
+         real_open_connections++;
          if (elem->connection->data_flow_type       == CL_CM_CT_MESSAGE   &&
              elem->connection->connection_state     == CL_COM_CONNECTED   &&    
              elem->connection->connection_sub_state == CL_COM_WORK          ) {
@@ -1642,9 +1657,10 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
          elem = cl_connection_list_get_next_elem(handle->connection_list, elem);
       }
 
-      if ( real_open_connections > handle->max_open_connections ) {
+      if ( real_open_connections >= handle->max_open_connections ) {
          handle->max_connection_count_reached = 1;
-         if (rm_con != NULL) {
+         /* don't close any connection TODO: FIXME */
+         if ( 0 /* rm_con != NULL */ ) {
              CL_LOG(CL_LOG_WARNING,"max open connection count reached");
              cl_commlib_send_ccm_message(rm_con);
              rm_con->connection_sub_state = CL_COM_SENDING_CCM;
@@ -1665,6 +1681,11 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
             handle->max_connection_count_reached = 0;
          }
       }
+#if 0      
+            printf("\nopen connections    : %d\n",real_open_connections );
+            printf("allowed connections : %d\n",handle->max_open_connections);
+            printf("max count reached   : %d\n",handle->max_connection_count_reached);
+#endif
 
       cl_raw_list_unlock(handle->connection_list);
    }
@@ -3135,6 +3156,11 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       return CL_RETVAL_HANDLE_NOT_FOUND;
    }
  
+   if ( handle->max_connection_count_reached != 0) {
+      CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_MAX_CON_COUNT_REACHED));
+      return CL_RETVAL_MAX_CON_COUNT_REACHED;
+   }
+
    /* resolve hostname */
    ret_val = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL);
    if (ret_val != CL_RETVAL_OK) {
@@ -4104,7 +4130,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          CL_LOG(CL_LOG_INFO,"find connections to close ...");
          cl_connection_list_destroy_connections_to_close(handle->connection_list,1); /* OK */
 
-         if (handle->do_shutdown == 0) {
+         if (handle->do_shutdown == 0 && handle->max_connection_count_reached == 0) {
             the_handler = handle->service_handler;
          } else {
             the_handler = NULL;
@@ -4286,10 +4312,10 @@ static void *cl_com_handle_read_thread(void *t_conf) {
             cl_raw_list_lock(handle->connection_list);
             elem = cl_connection_list_get_first_elem(handle->connection_list); 
             while(elem) {
+               real_open_connections++;
                if (elem->connection->data_flow_type       == CL_CM_CT_MESSAGE   &&
                    elem->connection->connection_state     == CL_COM_CONNECTED   &&    
                    elem->connection->connection_sub_state == CL_COM_WORK          ) {
-                  real_open_connections++;
                   
                   /* select oldest connection to close */
                   if (rm_con == NULL) {
@@ -4309,9 +4335,10 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                elem = cl_connection_list_get_next_elem(handle->connection_list, elem);
             }
       
-            if ( real_open_connections > handle->max_open_connections ) {
+            if ( real_open_connections >= handle->max_open_connections ) {
                handle->max_connection_count_reached = 1;
-               if (rm_con != NULL ) {
+               /* don't close any connection TODO: FIXME */
+               if ( 0 /* rm_con != NULL */ ) {
                    CL_LOG(CL_LOG_WARNING,"max open connection count reached");
                    cl_commlib_send_ccm_message(rm_con);
                    rm_con->connection_sub_state = CL_COM_SENDING_CCM;
@@ -4333,6 +4360,11 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                }
             }
       
+#if 0      
+            printf("\nopen connections    : %d\n",real_open_connections );
+            printf("allowed connections : %d\n",handle->max_open_connections);
+            printf("max count reached   : %d\n",handle->max_connection_count_reached);
+#endif
             cl_raw_list_unlock(handle->connection_list);
          }
       }

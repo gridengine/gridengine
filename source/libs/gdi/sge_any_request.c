@@ -154,7 +154,7 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
 *******************************************************************************/
 static void general_communication_error(int cl_error) {
    DENTER(COMMD_LAYER, "general_communication_error");
-   WARNING((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S, cl_get_error_text(cl_error)));
+   DPRINTF((MSG_GDI_GENERAL_COM_ERROR_S, cl_get_error_text(cl_error)));
    gdi_general_communication_error = cl_error;
    DEXIT;
 }
@@ -182,9 +182,14 @@ static void general_communication_error(int cl_error) {
 *     sge_any_request/general_communication_error()
 *******************************************************************************/
 int sge_get_communication_error(void) {
+   int com_error = gdi_general_communication_error;
    DENTER(COMMD_LAYER, "sge_get_communication_error");
+   if ( gdi_general_communication_error != CL_RETVAL_OK) {
+      WARNING((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S, cl_get_error_text(com_error)));
+      gdi_general_communication_error = CL_RETVAL_OK;
+   }
    DEXIT;
-   return gdi_general_communication_error;
+   return com_error;
 }
 
 /*-----------------------------------------------------------------------

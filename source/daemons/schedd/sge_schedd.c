@@ -189,18 +189,17 @@ char *argv[]
       SGE_EXIT(1);
    }
    if ( (ret=cl_com_gethostname(&local_host, NULL,NULL)) != CL_RETVAL_OK) {
-      free(initial_qmaster_host); 
+      FREE(initial_qmaster_host); 
       CRITICAL((SGE_EVENT, cl_get_error_text(ret)));
       SGE_EXIT(1);
    }
 
    if (cl_com_compare_hosts((char*)master_host,local_host) != CL_RETVAL_OK) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_STARTSCHEDONMASTERHOST_S , master_host));
-      free(initial_qmaster_host); 
+      FREE(initial_qmaster_host); 
       SGE_EXIT(1);
    }
-   free(local_host);
-   local_host = NULL;
+   FREE(local_host);
 
    if (!getenv("SGE_ND")) {
       fd_set fds;
@@ -224,8 +223,7 @@ char *argv[]
    while (!done) {
       if (shut_me_down) {
          sge_mirror_shutdown();
-         free(initial_qmaster_host);
-         initial_qmaster_host = NULL;
+         FREE(initial_qmaster_host);
          sge_shutdown();
       }   
 
@@ -236,8 +234,7 @@ char *argv[]
       
       if (check_qmaster) {
          if ((ret = sge_ck_qmaster(initial_qmaster_host)) < 0) {
-            free(initial_qmaster_host);
-            initial_qmaster_host = NULL;
+            FREE(initial_qmaster_host);
             CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTGOFURTHER ));
             SGE_EXIT(1);
          } else if (ret > 0) {
@@ -273,8 +270,7 @@ char *argv[]
          }
       }
    }
-   free(initial_qmaster_host);
-   initial_qmaster_host = NULL;
+   FREE(initial_qmaster_host);
    DEXIT;
    return EXIT_SUCCESS;
 }

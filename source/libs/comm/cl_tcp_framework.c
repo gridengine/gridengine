@@ -1546,13 +1546,24 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
       }
 
       if ( connection->crm_state == CL_CRM_CS_UNDEFINED) {
+         connection->crm_state = CL_CRM_CS_CONNECTED;  /* if is ok, this is ok */
+
+         if ( strcmp( connection->local->comp_name, connection->sender->comp_name) != 0 || 
+              connection->local->comp_id != connection->sender->comp_id ) {
+
+            connection_status_text = "requested component not found";
+            connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
+            connection->crm_state = CL_CRM_CS_DENIED;
+            CL_LOG(CL_LOG_ERROR, connection_status_text );
+         } 
+      }
+
+      if ( connection->crm_state == CL_CRM_CS_CONNECTED) {
          cl_com_handle_t* handler = NULL;
          cl_raw_list_t*   connection_list = NULL; 
          cl_connection_list_elem_t* elem = NULL;
          cl_com_connection_t* tmp_con = NULL;
          int is_double = 0;
-
-         connection->crm_state = CL_CRM_CS_CONNECTED;  /* if is ok, this is ok */
 
          handler = connection->handler;
          if (handler != NULL) {
@@ -1591,17 +1602,6 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
             }
          } else {
             CL_LOG(CL_LOG_WARNING,"connection list has no handler");
-         } 
-      }
-
-      if ( connection->crm_state == CL_CRM_CS_CONNECTED ) {
-         if ( strcmp( connection->local->comp_name, connection->sender->comp_name) != 0 || 
-              connection->local->comp_id != connection->sender->comp_id ) {
-
-            connection_status_text = "requested component not found";
-            connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
-            connection->crm_state = CL_CRM_CS_DENIED;
-            CL_LOG(CL_LOG_ERROR, connection_status_text );
          } 
       }
 

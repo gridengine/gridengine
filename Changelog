@@ -1,3 +1,8 @@
+CR-2004-02-20-0: Bugfix:    reaching max possible connection count will disable
+                            accepting/creating new connections. This is the 
+                            part of fixing Issue #687
+                 Changed:   communication lib
+
 AD-2004-02-20-1: Cleanup:   Did remove obsolete code.
                  Changed:   shadowd
 
@@ -146,7 +151,7 @@ CR-2004-02-18-1: Bugfix:    - qevent will not immediately try to re-register on
                             are now handled when event client wants to get 
                             events ( function: ec_get() )
                  Changed:   event clients ( sge_schedd, qevent, qsub, japi lib)
-                 Review:    pending
+                 Review:    SG
 
 DT-2004-02-18-4: Bugfix:    Revamped JAPI signal handling to be more POSIX
                             friendly and less dangerous.

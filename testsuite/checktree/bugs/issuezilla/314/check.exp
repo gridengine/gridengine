@@ -94,7 +94,32 @@ proc issue_314_setup  {} {
 
 proc issue_314_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
- 
+
+   set A_option "-A \":\""
+   set the_command "-h $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 3600"
+
+   # try to submit one job using a colon in account string
+   set qsub_arguments "$A_option $the_command"
+   set job_id [submit_job $qsub_arguments 0]
+   if { ($job_id != -1) } {
+      add_proc_error "issue_314_check" "-1" \
+                     "qsub does not reject colon \":\" in account string"
+      return      
+   }
+
+   # submit a normal job and try to change the account string
+   set qsub_arguments "$the_command"
+   set job_id [submit_job $qsub_arguments 1]
+   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $A_option $job_id" } qalteroutput ]
+   if {$qalterresult == 0} {
+      add_proc_error "issue_314_check" "-1" \
+                     "qalter does not reject colon \":\" in account string"
+      return
+   }
+
+   # delete the submitted job
+   set qdelresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $job_id" } qdel_output ]
+
    set_error 0 "ok"
 }
 

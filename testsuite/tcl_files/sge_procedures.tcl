@@ -4741,6 +4741,8 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
   set TO_MUCH_TASKS [translate $CHECK_HOST 1 0 0     [sge_macro MSG_JOB_MORETASKSTHAN_U] "*" ]
   set WARNING_OPTION_ALREADY_SET [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S] "*"]
+  set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED] ]
+   
 
   append USAGE " qsub"
 
@@ -4793,6 +4795,12 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
              set outtext $expect_out(0,string) 
              puts $CHECK_OUTPUT "string is: \"$outtext\""
              set do_again 1
+          }
+          -i $sp_id -- $COLON_NOT_ALLOWED {
+             puts $CHECK_OUTPUT "Colon not allowed in account string" 
+             set outtext $expect_out(0,string) 
+             puts $CHECK_OUTPUT "string is: \"$outtext\""
+             set return_value -1
           }
           -i $sp_id -- $JOB_SUBMITTED {
              set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]

@@ -1369,7 +1369,7 @@ case HP1164:
 
 case LINUX5:
 case LINUX6:
-   strings /lib/libc.so.6 | grep "GNU C Library" | grep 2.2 >& /dev/null
+   strings /lib/libc.so.6 | grep "GNU C Library" | grep '2.[23]' >& /dev/null
    if ( $status == 0 ) then
       set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
    endif

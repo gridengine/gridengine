@@ -119,6 +119,7 @@ int main(int argc, char **argv)
    sge_mt_init();
    commlib_mt_init(); /* shall be removed with new comm system */
 
+   sge_getme(QMASTER);
    uti_state_set_exit_func(qmaster_shutdown);
 
    in_main_loop = 0; /* global var, used in signal handler */

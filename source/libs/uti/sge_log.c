@@ -115,6 +115,7 @@ void log_mt_init(void)
 ******************************************************************************/
 char *log_state_get_log_buffer(void)
 {
+   pthread_once(&log_once, log_once_init);
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_buffer");
    return log_state->log_buffer;
 }
@@ -135,6 +136,7 @@ char *log_state_get_log_buffer(void)
 ******************************************************************************/
 u_long32 log_state_get_log_level(void)
 {
+   pthread_once(&log_once, log_once_init);
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_level");
    return log_state->log_level;
 }
@@ -155,6 +157,7 @@ u_long32 log_state_get_log_level(void)
 ******************************************************************************/
 const char *log_state_get_log_file(void)
 {
+   pthread_once(&log_once, log_once_init);
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_file");
    return log_state->log_file;
 }
@@ -179,6 +182,7 @@ const char *log_state_get_log_file(void)
 ******************************************************************************/
 int log_state_get_log_verbose(void)
 {
+   pthread_once(&log_once, log_once_init);
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_verbose");
    return log_state->verbose;
 }
@@ -202,6 +206,7 @@ int log_state_get_log_verbose(void)
 ******************************************************************************/
 int log_state_get_log_gui(void)
 {
+   pthread_once(&log_once, log_once_init);
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_gui");
    return log_state->gui_log;
 }
@@ -226,6 +231,7 @@ int log_state_get_log_gui(void)
 ******************************************************************************/
 trace_func_type log_state_get_log_trace_func(void)
 {
+   pthread_once(&log_once, log_once_init);
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_trace_func");
    return log_state->trace_func;
 }
@@ -248,6 +254,7 @@ trace_func_type log_state_get_log_trace_func(void)
 ******************************************************************************/
 int log_state_get_log_as_admin_user(void)
 {
+   pthread_once(&log_once, log_once_init);
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_as_admin_user");
    return log_state->log_as_admin_user;
 }
@@ -270,6 +277,7 @@ int log_state_get_log_as_admin_user(void)
 ******************************************************************************/
 void log_state_set_log_level(u_long32 i)
 { 
+   pthread_once(&log_once, log_once_init);
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_level");
    log_state->log_level = i;
 }
@@ -292,6 +300,7 @@ void log_state_set_log_level(u_long32 i)
 ******************************************************************************/
 void log_state_set_log_file(char *file)
 {
+   pthread_once(&log_once, log_once_init);
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_file");
    log_state->log_file = file;
 }
@@ -315,6 +324,7 @@ void log_state_set_log_file(char *file)
 ******************************************************************************/
 void log_state_set_log_verbose(int i)
 {
+   pthread_once(&log_once, log_once_init);
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_verbose");
    log_state->verbose = i;
 }
@@ -335,6 +345,7 @@ void log_state_set_log_verbose(int i)
 ******************************************************************************/
 void log_state_set_log_gui(int i)
 {
+   pthread_once(&log_once, log_once_init);
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_gui");
    log_state->gui_log = i;
 }   
@@ -359,6 +370,7 @@ void log_state_set_log_gui(int i)
 ******************************************************************************/
 void log_state_set_log_trace_func(trace_func_type func)
 {
+   pthread_once(&log_once, log_once_init);
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_trace_func");
    log_state->trace_func = func;
 }
@@ -386,6 +398,7 @@ void log_state_set_log_trace_func(trace_func_type func)
 ******************************************************************************/
 void log_state_set_log_as_admin_user(int i)
 {
+   pthread_once(&log_once, log_once_init);
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_as_admin_user");
    log_state->log_as_admin_user = i;
 }
@@ -437,6 +450,8 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    trace_func_type t;
 
    DENTER(TOP_LAYER, "sge_log");
+
+   pthread_once(&log_once, log_once_init);
 
    /* Make sure to have at least a one byte logging string */
    if (!mesg || mesg[0] == '\0') {

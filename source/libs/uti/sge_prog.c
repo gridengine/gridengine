@@ -165,60 +165,70 @@ void prog_mt_init(void)
 ******************************************************************************/
 const char *uti_state_get_sge_formal_prog_name(void)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_sge_formal_prog_name");
    return prog_state->sge_formal_prog_name;
 }
 
 const char *uti_state_get_qualified_hostname(void)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_qualified_hostname");
    return prog_state->qualified_hostname;
 }
 
 const char *uti_state_get_unqualified_hostname(void)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_unqualified_hostname");
    return prog_state->unqualified_hostname;
 }
 
 u_long32 uti_state_get_mewho(void)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_mewho");
    return prog_state->who;
 }
 
 u_long32 uti_state_get_uid(void)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_uid");
    return prog_state->uid;
 }
 
 u_long32 uti_state_get_gid(void)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_gid");
    return prog_state->gid;
 }
 
 int uti_state_get_daemonized(void)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_daemonized");
    return prog_state->daemonized;
 }
 
 const char *uti_state_get_user_name(void)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_user_name");
    return prog_state->user_name;
 }
 
 const char *uti_state_get_default_cell(void)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_default_cell");
    return prog_state->default_cell;
 }
 
 int uti_state_get_exit_on_error(void)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_exit_on_error");
    return prog_state->exit_on_error;
 }
@@ -239,24 +249,28 @@ static void uti_state_set_sge_formal_prog_name(const char *s)
 
 void uti_state_set_qualified_hostname(const char *s)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_qualified_hostname");
    prog_state->qualified_hostname = sge_strdup(prog_state->qualified_hostname, s);
 }
 
 void uti_state_set_unqualified_hostname(const char *s)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_unqualified_hostname");
    prog_state->unqualified_hostname = sge_strdup(prog_state->unqualified_hostname, s);
 }
 
 void uti_state_set_daemonized(int daemonized)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_daemonized");
    prog_state->daemonized = daemonized;
 }
 
 void uti_state_set_mewho(u_long32 who)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_mewho");
    prog_state->who = who;
 }
@@ -287,6 +301,7 @@ static void uti_state_set_default_cell(const char *s)
 
 void uti_state_set_exit_on_error(int i)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_exit_on_error");
    prog_state->exit_on_error = i;
 }
@@ -310,6 +325,7 @@ void uti_state_set_exit_on_error(int i)
 ******************************************************************************/
 sge_exit_func_t uti_state_get_exit_func(void)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_exit_func");
    return prog_state->exit_func;
 }
@@ -332,6 +348,7 @@ sge_exit_func_t uti_state_get_exit_func(void)
 ******************************************************************************/
 void uti_state_set_exit_func(sge_exit_func_t f)
 {
+   pthread_once(&prog_once, prog_once_init);
    GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_exit_func");
    prog_state->exit_func = f;
 }
@@ -361,6 +378,8 @@ void sge_getme(u_long32 program_number)
  
    DENTER(TOP_LAYER, "sge_getme");
  
+   pthread_once(&prog_once, prog_once_init);
+
    /* get program info */
    uti_state_set_mewho(program_number);
    uti_state_set_sge_formal_prog_name(prognames[program_number]);

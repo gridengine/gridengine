@@ -1230,6 +1230,9 @@ int main(int argc, char **argv)
 
    sge_setup_sig_handlers(my_who);
 
+   set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
+   set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
+
    /*
    ** begin to work
    */

@@ -1,3 +1,6 @@
+CR-2002-03-21-2  Bugfix:   changed error messages when master commd is not
+                           reachable.
+
 CR-2002-03-21-1  Bugfix:   removed forgotten #if0 - #endif statement which
                            chauses scheduler to abort() on testsuite's 
                            path_alias check.

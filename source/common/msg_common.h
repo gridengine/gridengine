@@ -48,10 +48,10 @@
 #define MSG_NULL                   _("(NULL)")
 #define MSG_SMALLNULL                       _("(null)")
 
-#define MSG_SGETEXT_NOQMASTER                       _("unable to contact qmaster\n")
-#define MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS   _("unable to contact qmaster: NO port - check "SFQ" variable or services file for "SFQ" service\n")
-#define MSG_SGETEXT_NOQMASTER_PORT_ENV_SIS          _("unable to contact qmaster on port "SFN":%d - check "SFQ" variable\n")
-#define MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SISS _("unable to contact qmaster on port "SFN":%d - service entry "SFQ", no local "SFQ" variable\n")
+#define MSG_SGETEXT_NOQMASTER                       _("unable to contact commd at qmaster host\n")
+#define MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS   _("unable to contact commd at qmaster host "SFN" - can't resolve service "SFN"\n")
+#define MSG_SGETEXT_NOQMASTER_PORT_ENV_SI           _("unable to contact commd at qmaster host "SFN" on port %d\n")
+#define MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SIS  _("unable to contact commd at qmaster host "SFN" on port %d("SFN")\n")
 
 
 

@@ -2189,11 +2189,11 @@ void generate_commd_port_and_service_status_message(char* buffer) {
 
    if (buffer != NULL) {
       if ( port < 0 ) {
-         sprintf(buffer, MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS,"COMMD_PORT", service);
+         sprintf(buffer, MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS,commdhost, service);
       } else if ( commd_port_env != NULL ) { 
-         sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_ENV_SIS,commdhost,port,"COMMD_PORT");
+         sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_ENV_SI,commdhost,port);
       } else if ( commd_port_env == NULL ) {
-         sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SISS,commdhost,port,service,"COMMD_PORT");
+         sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SIS,commdhost,port,service);
       } else {
          sprintf(buffer, MSG_SGETEXT_NOQMASTER);
       }

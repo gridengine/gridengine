@@ -103,6 +103,7 @@
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
 #include "spool/sge_spooling.h"
+#include "uti/sge_profiling.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -711,15 +712,18 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    /* write script to file */
    if (!JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type)) &&
        lGetString(jep, JB_script_file)) {
+      PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
       if (sge_string2file(lGetString(jep, JB_script_ptr), 
                        lGetUlong(jep, JB_script_size),
                        lGetString(jep, JB_exec_file))) {
          ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, u32c(job_number), strerror(errno)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
          DEXIT;
          return STATUS_EDISK;
       }
+      PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
    }
 
    /* clean file out of memory */
@@ -3976,11 +3980,13 @@ int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, cha
    if ( lGetString(new_jep, JB_exec_file)) {
       char *str;
       int len;
+      PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
       if ((str = sge_file2string(lGetString(new_jep, JB_exec_file), &len))) {
          lSetString(new_jep, JB_script_ptr, str);
          FREE(str);
          lSetUlong(new_jep, JB_script_size, len);
       }
+      PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
    }
 
    job_initialize_id_lists(new_jep, NULL);

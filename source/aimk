@@ -972,7 +972,7 @@ if ( $JAVA > 0 || $BUILDJAVADOC == 1 || $JNI == 1 ) then
    # Make sure we can find JAVA_HOME
    if ( ${?JAVA_HOME} == 0 ) then
       echo "Please set JAVA_HOME"
-      exit
+      exit 1
    endif
 endif
 

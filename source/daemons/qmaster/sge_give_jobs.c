@@ -104,6 +104,7 @@
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
 #include "spool/sge_spooling.h"
+#include "uti/sge_profiling.h"
 
 static void 
 sge_clear_granted_resources(lListElem *jep, lListElem *ja_task, int incslots);
@@ -573,7 +574,9 @@ send_job(const char *rhost, const char *target, lListElem *jep, lListElem *jatep
    ** if exec_file is not set, then this is an interactive job
    */
    if (master && lGetString(tmpjep, JB_exec_file)) {
+      PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
       str = sge_file2string(lGetString(tmpjep, JB_exec_file), &len);
+      PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
       lSetString(tmpjep, JB_script_ptr, str);
       FREE(str);
       lSetUlong(tmpjep, JB_script_size, len);
@@ -1231,7 +1234,9 @@ sge_commit_flags_t commit_flags
       }
       if (!no_unlink) {
          release_successor_jobs(jep);
+         PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
          unlink(lGetString(jep, JB_exec_file));
+         PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
       }
       break;
 
@@ -1562,7 +1567,9 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
        * do not try to remove script file for interactive jobs 
        */
       if (lGetString(job, JB_script_file)) {
+         PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
          unlink(lGetString(job, JB_exec_file));
+         PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
       }
       {
          lList *answer_list = NULL;

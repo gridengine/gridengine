@@ -43,6 +43,7 @@
 
 #include "sge_dstring.h"
 #include "sge_log.h"
+#include "uti/sge_time.h"
 
 #include "sgermon.h"
 
@@ -1274,9 +1275,9 @@ bool prof_output_info(prof_level level, bool with_sub, const char *info)
 
       log_state_set_log_level(LOG_INFO);
       info_message = prof_get_info_string(level, with_sub, NULL);
-      INFO((SGE_EVENT, "PROF: %s%s", info, ""));
+      INFO((SGE_EVENT, "PROF(%d): %s%s", (int)thread_id, info, ""));
       for (message = strtok_r((char*)info_message, "\n", &pos); message; message = strtok_r(NULL, "\n", &pos)) {
-         INFO((SGE_EVENT, "PROF: %s", message));
+         INFO((SGE_EVENT, "PROF(%d): %s", (int)thread_id, message));
       }
 
       log_state_set_log_level(saved_logginglevel);
@@ -1342,6 +1343,9 @@ static void prof_info_init(prof_level level, pthread_t thread_id)
              break;
            case SGE_PROF_SPOOLINGIO:
              theInfo[thread_num][i].name = "spooling-io";
+             break;
+           case SGE_PROF_JOBSCRIPT:
+             theInfo[thread_num][i].name = "spooling-script";
              break;
            case SGE_PROF_GDI:
              theInfo[thread_num][i].name = "gdi";
@@ -2011,3 +2015,77 @@ void sge_update_thread_alive_time(sge_thread_name_t thread) {
    pthread_mutex_unlock(&thread_times_mutex);  
    DEXIT;  
 }
+
+/****** uti/profiling/thread_start_stop_profiling() ****************************
+*  NAME
+*     thread_start_stop_profiling() -- start profiling for thread
+*
+*  SYNOPSIS
+*     void 
+*     thread_start_stop_profiling(void) 
+*
+*  FUNCTION
+*     Checks if profiling has been enabled for the current thread.
+*     If yes, starts profiling for all levels.
+*     If profiling has been disabled for the current thread, profiling
+*     is disabled for all levels.
+*
+*  NOTES
+*     MT-NOTE: thread_start_stop_profiling() is MT safe 
+*******************************************************************************/
+void 
+thread_start_stop_profiling(void)
+{
+   if (thread_prof_active_by_id(pthread_self())) {
+      prof_start(SGE_PROF_ALL, NULL);
+   } else {
+      prof_stop(SGE_PROF_ALL, NULL);
+   }
+}
+
+/****** uti/profiling/thread_output_profiling() ********************************
+*  NAME
+*     thread_output_profiling() -- output profiling info for thread
+*
+*  SYNOPSIS
+*     void 
+*     thread_output_profiling(const char *title, time_t *next_prof_output) 
+*
+*  FUNCTION
+*     Outputs profiling information for the current thread.
+*     Information for all active profiling levels is dumped.
+*     The first line dumped is a sort of title, that can/should be used
+*     to identify the thread.
+*
+*     The variable next_prof_output will be set by this function.
+*     This variable should be initialized to 0 (zero) by the caller before the
+*     first call of this function.
+*
+*  INPUTS
+*     const char *title        - title to print as first line
+*     time_t *next_prof_output - time of next profiling output
+*
+*  NOTES
+*     MT-NOTE: thread_output_profiling() is MT safe 
+*
+*  SEE ALSO
+*     uti/profiling/prof_output_info()
+*******************************************************************************/
+void 
+thread_output_profiling(const char *title, time_t *next_prof_output)
+{
+   if (prof_is_active(SGE_PROF_ALL)) {
+      time_t now = sge_get_gmt();
+
+      if (*next_prof_output == 0) {
+         unsigned int seed = (unsigned int)pthread_self();
+         *next_prof_output = now + (rand_r(&seed) % 20);
+      } else {
+         if (now > *next_prof_output) {
+            prof_output_info(SGE_PROF_ALL, false, title);
+            *next_prof_output = now + 60;
+         }
+      }
+   }
+}
+

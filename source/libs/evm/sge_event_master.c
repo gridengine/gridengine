@@ -2266,17 +2266,7 @@ static void* event_deliver_thread(void *anArg)
    lAppendElem(report_list, report);
 
    while (!should_exit()) {
-
-     if (thread_prof_active_by_id(pthread_self())) {
-         prof_start(SGE_PROF_CUSTOM1, NULL);
-         prof_start(SGE_PROF_GDI_REQUEST, NULL);
-         prof_set_level_name(SGE_PROF_CUSTOM1, "Deliver Thread", NULL); 
-      } else {
-           prof_stop(SGE_PROF_CUSTOM1, NULL);
-           prof_stop(SGE_PROF_GDI_REQUEST, NULL);
-        }
-
-      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+      thread_start_stop_profiling();
 
       /* update thread alive time */
       sge_update_thread_alive_time(SGE_MASTER_EVENT_DELIVER_THREAD);
@@ -2342,17 +2332,8 @@ static void* event_deliver_thread(void *anArg)
       process_sends ();
       send_events(report, report_list);
 
-      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
-
-      if (prof_is_active(SGE_PROF_ALL)) {
-        time_t now = sge_get_gmt();
-
-         if (now > next_prof_output) {
-            prof_output_info(SGE_PROF_ALL, false, "profiling summary:\n");
-            prof_reset(SGE_PROF_ALL,NULL);
-            next_prof_output = now + 60;
-         }
-      }
+      thread_output_profiling("event master thread profiling summary:\n", 
+                              &next_prof_output);
    }
 
    report_list = lFreeList(report_list);

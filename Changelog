@@ -1,3 +1,7 @@
+JG-2005-03-09-0: Enhancem.: More fine grained profiling information in qmaster.
+                            Profiling for the spooling of jobs scripts.
+                 Review:    MD
+
 JG-2005-03-08-0: Testsuite: Make all tests use the setup/cleanup framework.
                  Issue:     888
 

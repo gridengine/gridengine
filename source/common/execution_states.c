@@ -75,7 +75,7 @@ int sstate
       {"shepherd returned error", ESSTATE_SHEPHERD_EXIT},
       {"before writing exit_status", ESSTATE_NO_EXITSTATUS},
       {"found unexpected error file", ESSTATE_UNEXP_ERRORFILE},
-      {"in recognising job", ESSTATE_UNKNOWN_JOB},
+      {"in recognizing job", ESSTATE_UNKNOWN_JOB},
       {"removed manually", ESSTATE_EXECD_LOST_RUNNING},
       {"assumedly before job", SSTATE_FAILURE_BEFORE_JOB},
       {"assumedly after job", SSTATE_FAILURE_AFTER_JOB},

@@ -57,6 +57,7 @@
 #include "sge_unistd.h"
 #include "sge_pe_task.h"
 #include "sge_pe.h"
+#include "uti/sge_profiling.h"
 
 #include "msg_common.h"
 #include "msg_spoollib_classic.h"
@@ -772,6 +773,7 @@ int job_remove_script_file(u_long32 job_id)
    int ret = 0;
    DENTER(TOP_LAYER, "job_remove_script_file");
 
+   PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
    sge_get_file_path(script_file, JOB_SCRIPT_FILE, FORMAT_DEFAULT,
                      SPOOL_DEFAULT, job_id, 0, NULL); 
    if (unlink(script_file)) {
@@ -784,6 +786,7 @@ int job_remove_script_file(u_long32 job_id)
    } else {
       INFO((SGE_EVENT, MSG_CONFIG_REMOVEDSCRIPTOFBADJOBFILEX_S, script_file));
    }
+   PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
    DEXIT;
    return ret;
 }

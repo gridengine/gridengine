@@ -467,7 +467,7 @@ CR-2004-10-28-1: Testsuite: commlib throughput test now uses binary_starter.sh
                             parallel
 
 JG-2004-10-28-0: Bugfix:    qmake did not export shell env vars.
-                 Bugtraq:   6090162
+                 Bugtraq:   5090162
                  Issue:     1313
                  Review:    SG
                  Testsuite: New check system_tests/clients/qmake.

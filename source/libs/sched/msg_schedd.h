@@ -502,5 +502,11 @@
 #define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S _MESSAGE(47380, _("cannot run because total slots of pe "SFQ" not in range of job"))
 #define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE   _MESSAGE(47381, _("Jobs can not run because total slots of pe are not in range of job") ) 
 
+#ifdef ENABLE_464_FIX
+#define MSG_CONSUMABLEFORTHRESHOLDS_FS   _MESSAGE(47382, _("using consumable value %f: "SFN)) 
+#define MSG_THEREISNOLOAD                _MESSAGE(47383, _("there is no load value")) 
+#define MSG_LOADISGREATER                _MESSAGE(47384, _("the load value is greater")) 
+#define MSG_CONSISTENCYPROBLEM_S         _MESSAGE(47385, _("data consistency problem with attribute "SFQ"\n")) 
+#endif
 
 #endif /* __MSG_SCHEDD_H */

@@ -106,6 +106,9 @@ int *sort_hostlist,  /* do we have to resort the hostlist? */
 lList *orders_list   /* needed to warn on jobs that were dispatched into 
                         queues and get suspended on subordinate in the very 
                         same interval */
+#ifdef ENABLE_464_FIX
+, int *changed_global_consumables /* has a global consumalble changed with this debitation */
+#endif
 ) {
    u_long32 pe_slots;
 
@@ -116,7 +119,13 @@ lList *orders_list   /* needed to warn on jobs that were dispatched into
       return -1;
    }
 
-   debit_job_from_hosts(job, granted, host_list, complex_list, sort_hostlist);
+   debit_job_from_hosts(job, granted, host_list, complex_list, sort_hostlist
+#ifdef ENABLE_464_FIX
+   , changed_global_consumables
+#endif
+   );
+   /* after debit_job_from_hosts() we must know whether a consumable value
+      of the global host has changed */
    debit_job_from_queues(job, granted, queue_list, complex_list, &pe_slots, orders_list);
 
    if (pe)

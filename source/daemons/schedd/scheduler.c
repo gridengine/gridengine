@@ -385,7 +385,11 @@ lList **splitted_job_lists[]
          lists->complex_list,
          scheddconf.job_load_adjustments,
          NULL,
-         QU_suspend_thresholds)) {
+         QU_suspend_thresholds
+#ifdef ENABLE_464_FIX
+         , 0
+#endif
+         )) {
       DPRINTF(("couldn't split queue list with regard to suspend thresholds\n"));
       DEXIT;
       return -1;
@@ -412,7 +416,11 @@ lList **splitted_job_lists[]
          lists->complex_list,  /* complex list is needed to use load values */
          scheddconf.job_load_adjustments,
          NULL,
-         QU_load_thresholds)) {
+         QU_load_thresholds
+#ifdef ENABLE_464_FIX
+         , 0
+#endif
+         )) {
       DPRINTF(("couldn't split queue list concerning load\n"));
 
       DEXIT;
@@ -976,6 +984,9 @@ int *sort_hostlist
    double old_host_tickets;    
    lListElem *granted_el;     
    lList *granted = NULL;
+#ifdef ENABLE_464_FIX
+   int changed_global_consumables;
+#endif
 
    DENTER(TOP_LAYER, "select_assign_debit");
 
@@ -1050,7 +1061,11 @@ int *sort_hostlist
    sge_inc_jc(user_list, lGetString(job, JB_owner), 1);
 
    debit_scheduled_job(job, granted, *queue_list, pe, host_list, 
-         complex_list, sort_hostlist, *orders_list);
+         complex_list, sort_hostlist, *orders_list
+#ifdef ENABLE_464_FIX
+           , &changed_global_consumables
+#endif
+           );
 
    /*------------------------------------------------------------------
     * REMOVE QUEUES THAT ARE NO LONGER USEFUL FOR FURTHER SCHEDULING
@@ -1067,7 +1082,11 @@ int *sort_hostlist
          complex_list,  /* complex list is neede to use load values */
          scheddconf.job_load_adjustments,
          granted,
-         QU_load_thresholds)) {   /* use load thresholds here */
+         QU_load_thresholds
+#ifdef ENABLE_464_FIX
+         , changed_global_consumables
+#endif
+         )) {   /* use load thresholds here */
          
       DPRINTF(("couldn't split queue list concerning load\n"));
       DEXIT;

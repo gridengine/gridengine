@@ -1190,8 +1190,10 @@ lListElem *find_attribute_in_complex_list(const char *attrname,
 
 
 /* Updates all consumable actual values of queue/host
-   for 'slots' slots of the given job. Since it is also 
-   allowed to pass negative slot amounts for purposes of undebiting
+   for 'slots' slots of the given job. Positive slots numbers
+   cause debiting, negative ones cause undebiting.
+   Returns -1 in case of an error. Otherwise the number of (un)debitations
+   that actually took place is returned.
 */
 int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list,
                      int slots, int config_nm, int actual_nm, 

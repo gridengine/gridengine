@@ -58,7 +58,11 @@ char *sge_load_alarm_reason(lListElem *queue, lList *threshold, lList *exechost_
  * split queue list into unloaded and overloaded
  * 
  */
-int sge_split_queue_load(lList **unloaded, lList **overloaded, lList *exechost_list, lList *complex_list, lList *load_adjustments, lList *granted, u_long32 ttype);
+int sge_split_queue_load(lList **unloaded, lList **overloaded, lList *exechost_list, lList *complex_list, lList *load_adjustments, lList *granted, u_long32 ttype
+#ifdef ENABLE_464_FIX
+, int changed_global_consumables
+#endif
+);
 
 /* 
  * split queue list into queues with at least n slots

@@ -325,11 +325,17 @@ lList *granted,     /* JG_Type */
 lList *host_list,   /* EH_Type */
 lList *complex_list, /* CX_Type */
 int *sort_hostlist
+#ifdef ENABLE_464_FIX
+, int *changed_global_consumables /* has a global consumable changed with this debitation */
+#endif
 ) {
    lSortOrder *so = NULL;
    lListElem *gel, *hep;
    const char *hnm;
    double old_sort_value, new_sort_value;
+#ifdef ENABLE_464_FIX
+   int i, ndebit = 0;
+#endif
 
    DENTER(TOP_LAYER, "debit_job_from_hosts");
 
@@ -354,7 +360,14 @@ int *sort_hostlist
          lSetUlong(hep, EH_load_correction_factor, ulc_factor);
       }   
 
+#ifdef ENABLE_464_FIX
+      /* keep track of debitations with global consumable */
+      i = debit_host_consumable(job, lGetElemHost(host_list, EH_name, "global"), complex_list, slots);
+      if (i>=0)
+         ndebit += i; 
+#else
       debit_host_consumable(job, lGetElemHost(host_list, EH_name, "global"), complex_list, slots);
+#endif
       debit_host_consumable(job, hep, complex_list, slots);
 
       /* compute new combined load for this host and put it into the host */
@@ -382,10 +395,18 @@ int *sort_hostlist
       lFreeSortOrder(so);
    }   
 
+#ifdef ENABLE_464_FIX
+   /* set mark inidcating global consumables changed */
+   if (changed_global_consumables)
+      *changed_global_consumables = (ndebit!=0);
+#endif
+
    DEXIT; 
    return 0;
 }
 
+/* Returns -1 in case of an error. Otherwise the number of (un)debitations
+   that actually took place is returned. */
 int debit_host_consumable(
 lListElem *jep,      /* JB_Type */
 lListElem *hep,      /* EH_Type */

@@ -126,7 +126,11 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
                                 const char *limit_value, u_long32 relop,
                                 u_long32 type, lListElem *hep,
                                 lListElem *hlep, double lc_host,
-                                double lc_global, lList *load_adjustments, int load_is_value); 
+                                double lc_global, lList *load_adjustments, int load_is_value
+#ifdef ENABLE_464_FIX
+                                , const double *consumable_value
+#endif
+); 
 
 char* trace_resource(lListElem *ep) 
 {
@@ -948,7 +952,11 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
                                 const char *limit_value, u_long32 relop, 
                                 u_long32 type, lListElem *hep, 
                                 lListElem *hlep, double lc_host, 
-                                double lc_global, lList *load_adjustments, int load_is_value) 
+                                double lc_global, lList *load_adjustments, int load_is_value
+#ifdef ENABLE_464_FIX
+                                , const double *consumable_value
+#endif
+                                ) 
 {
    lListElem *job_load;
    double limit, load;
@@ -1039,6 +1047,16 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
             }
          } else
             strcpy(lc_diagnosis2, MSG_SCHEDD_LCDIAGNONE);
+
+#ifdef ENABLE_464_FIX
+         /* consumable dominates if it is larger than 
+            the load value or if there is no load value */
+         if (consumable_value && (load > *consumable_value || load_is_value)) {
+            load = *consumable_value;
+            sprintf(lc_diagnosis2, MSG_CONSUMABLEFORTHRESHOLDS_FS, 
+               load, load_is_value?MSG_THEREISNOLOAD:MSG_LOADISGREATER);
+         }
+#endif
 
          /* is threshold exceeded ? */
          if (resource_cmp(relop, load, limit)) {
@@ -1137,7 +1155,11 @@ int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *execho
    const char *limit_value = NULL;
    double lc_host = 0, lc_global = 0;
    int load_is_value = 0;
-   
+#ifdef ENABLE_464_FIX
+   int has_consumable;
+   double consumable_value;
+#endif
+
    DENTER(TOP_LAYER, "sge_load_alarm");
 
    if (!threshold) { 
@@ -1207,9 +1229,69 @@ int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *execho
       limit_value = lGetString(tep, CE_stringval);
       type = lGetUlong(cep, CE_valtype);
 
+#define IS_NUMERIC(t) (t==TYPE_INT || t==TYPE_TIM || t==TYPE_MEM || t==TYPE_BOO || t==TYPE_DOUBLE)
+#ifdef ENABLE_464_FIX
+      has_consumable = 0;
+      if (IS_NUMERIC(type) && lGetUlong(cep, CE_consumable)) {
+         lListElem *global_capacity_entry, *global_used_entry, *host_capacity_entry, 
+                   *host_used_entry, *queue_capacity_entry, *queue_used_entry; 
+
+         /* search global host, host where queue resides and queue 
+            for corresponding consumables */
+         global_capacity_entry = lGetSubStr(global_hep, CE_name, name, EH_consumable_config_list);
+         global_used_entry     = lGetSubStr(global_hep, CE_name, name, EH_consumable_actual_list);
+
+         host_capacity_entry   = lGetSubStr(hep, CE_name, name, EH_consumable_config_list);
+         host_used_entry       = lGetSubStr(hep, CE_name, name, EH_consumable_actual_list);
+
+         queue_capacity_entry  = lGetSubStr(qep, CE_name, name, QU_consumable_config_list);
+         queue_used_entry      = lGetSubStr(qep, CE_name, name, QU_consumable_actual_list);
+
+         if ((global_capacity_entry && !global_used_entry) ||
+             (host_capacity_entry   && !host_used_entry) ||
+             (queue_capacity_entry  && !queue_used_entry)) {
+            if (reason)
+               sprintf(reason, MSG_CONSISTENCYPROBLEM_S, name);
+            DEXIT;
+            return 1;
+         }
+
+         /* build minimum value of all these consumables */
+         if (global_capacity_entry) {
+            has_consumable = 1;
+            consumable_value = lGetDouble(global_capacity_entry, CE_doubleval) - 
+                    lGetDouble(global_used_entry, CE_doubleval);
+         }
+         if (host_capacity_entry) {
+            double host_value = lGetDouble(host_capacity_entry, CE_doubleval) - 
+                                lGetDouble(host_used_entry, CE_doubleval);
+            if (has_consumable) 
+               consumable_value = MIN(consumable_value, host_value);
+            else {
+               has_consumable = 1;
+               consumable_value = host_value;
+            }
+         }
+         if (queue_capacity_entry) {
+            double queue_value = lGetDouble(queue_capacity_entry, CE_doubleval) - 
+                                 lGetDouble(queue_used_entry, CE_doubleval);
+            if (has_consumable) 
+               consumable_value = MIN(consumable_value, queue_value);
+            else {
+               has_consumable = 1;
+               consumable_value = queue_value;
+            }
+         }
+      }
+#endif
+
       if (sge_check_load_alarm(reason, name, load_value, limit_value, relop, type,
                               hep, hlep, lc_host, lc_global, 
-                              load_adjustments, load_is_value)) {
+                              load_adjustments, load_is_value
+#ifdef ENABLE_464_FIX
+                              , has_consumable?&consumable_value:NULL
+#endif
+                              )) {
          DEXIT;
          return 1;
       }   
@@ -1321,6 +1403,9 @@ lList *complex_list, /* CX_Type */
 lList *load_adjustments, /* CE_Type */
 lList *granted,      /* JG_Type */
 u_long32 ttype       /* may be QU_suspend_thresholds or QU_load_thresholds */
+#ifdef ENABLE_464_FIX
+, int changed_global_consumables
+#endif
 ) {
    lList *thresholds;
    lCondition *where;
@@ -1342,10 +1427,17 @@ u_long32 ttype       /* may be QU_suspend_thresholds or QU_load_thresholds */
       thresholds = lGetList(qep, ttype);
       load_alarm = 0;
 
-      /* do not verify load alarm anew if a job has been dispatched recently
-         but not to the host where this queue resides */
+      /* to prevent queue load alarm being checked without a need 
+         queues load alarm is checked only if 
+         - load correction is configured and is known to impact global load values 
+         - we dispatched a job to the host where the queue resides 
+         - a consumable of the global host has changed (only with ENABLE_464_FIX) */
       if (!granted || (granted && (get_global_load_correction() ||
-                           lGetElemHost(granted, JG_qhostname, lGetHost(qep, QU_qhostname))))) {
+                           lGetElemHost(granted, JG_qhostname, lGetHost(qep, QU_qhostname))
+#ifdef ENABLE_464_FIX
+                           || changed_global_consumables
+#endif
+                           ))) {
          nverified++;
 
          if (sge_load_alarm(reason, qep, thresholds, exechost_list, complex_list, load_adjustments)!=0) {

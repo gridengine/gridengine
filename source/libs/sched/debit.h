@@ -34,6 +34,10 @@
 
 /* responsible for all debitations that have to be done */
 int debit_scheduled_job(lListElem *job, lList *granted, lList *queue_list, lListElem *pe, lList *host_list, lList
-*complex_list, int *sort_hostlist, lList *orders_list);
+*complex_list, int *sort_hostlist, lList *orders_list
+#ifdef ENABLE_464_FIX
+, int *changed_global_consumables
+#endif
+);
 
 #endif /* __DEBIT_H */

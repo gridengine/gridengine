@@ -1,3 +1,17 @@
+AH-2003-04-17-0  Bugfix:    Consumable values were not considered in 
+                            load/suspend threshold.
+                 IZ:        #464
+                 Bugtraq:   #4849969
+                 Review:    AS 
+
+                            THE FIX IS INCORPORATED INTO THE SOURCE CODE
+                            BUT IT WILL ONLY BE ACTIVE IF THE SOURCE CODE
+                            IS COMPILED WITH A CERTAIN PREPROCESSOR DEFINE
+
+                               > aimk -DENABLE_464_FIX
+                 Changed:   sge_qmaster, sge_schedd, qmon, qhost, qstat, 
+                            qselect
+
 BD-2003-04-11-0  Bugfix:    Don't try to choose an external PRNG seed
                             when the default (/dev/urandom) exists.
                             

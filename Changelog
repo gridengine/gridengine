@@ -1,3 +1,5 @@
+JG-2004-11-08-0: Testsuite: Improved error diagnosis of some tests.
+
 SG-2004-11-08-0: Bugfix:    fixed SG-2004-11-03-0
                  Changed:   master
                  Review:    EB

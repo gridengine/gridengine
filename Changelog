@@ -1,7 +1,13 @@
+AS-2004-03-25-0: Enhancem.: add SGE_BINARY_PATH variable to job environment
+                 Changed:   sge_execd, submit.1
+                 Issue:     919
+                 Bugtraq:   5018757
+                 Review:    DT
+             
 MD-2004-03-22-0: Bugfix:    qalter lacks -dl option
                             qstat crashes with qstat -u ""
                  Changed:   qstat, qalter, parse.c
-                 Issue:     #599, #600
+                 Issue:     599, 600
                  Review:    AA
 
 JG-2004-03-17-0: Bugfix:    fixed race condition in sge_shepherd (qlogin_starter
@@ -36,6 +42,7 @@ RC-2004-03-06-1: Bugfix:    nice values should not be less than zero on Linux,
 
 RC-2004-03-06-0: Bugfix:    deny jobnames with a colon
                  Issue:     314
+                 Bugtraq:   5020278
                  Review:    RC, BC (patch from BC)
                  Changed:   qmaster
 
@@ -73,6 +80,7 @@ BD-2004-02-24-0: Bugfix:    Clean up FreeBSD alpha, amd64, ia64, and
 
 RC-2004-02-24-0: Bugfix:    A small bug in glibc recognition code
                  Changed:   arch
+                 Bugtraq:   5020282
                  Review:    AS
 
 JG-2004-02-19-1: Bugfix:    Fixed lGetElemHost[First|Next] in case no hashtable

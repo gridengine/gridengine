@@ -393,7 +393,7 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
 
        if (signal == SGE_SIGSTOP) {
           /* suspended */
-          if (is_array(jep)) {
+          if (job_is_array(jep)) {
               sprintf(mail_subject,
                       "Job-array task "u32"."u32" ("SFN") Suspended",
                       jobid, 
@@ -408,7 +408,7 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
           mail_type = "job suspend";
        } else if (signal == SGE_SIGCONT ) {
           /* continued */
-          if (is_array(jep)) {
+          if (job_is_array(jep)) {
               sprintf(mail_subject,
                       "Job-array task "u32"."u32" ("SFN") Continued",
                       jobid, 

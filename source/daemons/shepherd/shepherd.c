@@ -950,7 +950,7 @@ int ckpt_type
    }
    else {
       /* there are signals to deliver. Give son() a chance to start job */
-      if (get_n_sigs()>0)
+      if (get_n_sigs()>0) {
          alarm(10);
       }
    }

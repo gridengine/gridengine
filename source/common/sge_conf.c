@@ -712,9 +712,9 @@ lList **lpp
          } else if (!strcasecmp(s, "SHARE_OVERRIDE_TICKETS=false") ||
                     !strcasecmp(s, "SHARE_OVERRIDE_TICKETS=0")) {
             share_override_tickets = 0;
-         } else if (!strcasecmp(s, "SHARE_FUNCTIONAL_SHARES=true") ||
-                    !strcasecmp(s, "SHARE_FUNCTIONAL_SHARES=1")) {
-            share_functional_shares = 1;
+         } else if (!strcasecmp(s, "SHARE_FUNCTIONAL_SHARES=false") ||
+                    !strcasecmp(s, "SHARE_FUNCTIONAL_SHARES=0")) {
+            share_functional_shares = 0;
          } else if (!strcasecmp(s, "SHARE_DEADLINE_TICKETS=true") ||
                     !strcasecmp(s, "SHARE_DEADLINE_TICKETS=1")) {
             share_deadline_tickets = 1;

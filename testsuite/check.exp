@@ -42,7 +42,7 @@ global schedd_debug
 set schedd_debug 0
 
 global no_action                   ;# just used for testing/debug  procedures
-set no_action 1
+set no_action 0
 global be_quiet
 set be_quiet 0
 global write_mail_to_file
@@ -6071,8 +6071,6 @@ set mail_body "$mail_body check is running on host \"$CHECK_HOST\" architecture 
 set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n-------\n"
 
 if { $no_action == 1 } {
-  init_logfile_wait es-ergb01-01 [get_qmaster_messages_file]
-  logfile_wait
   puts "No action flag is set -> exit 1"
   exit 1
 }

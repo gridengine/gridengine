@@ -1,3 +1,12 @@
+EB-2003-04-07-0  Bugfix:    SGEEE: scheduler dispatches wrong jobs if
+                            there are jobs in the list of pending jobs
+                            which had an error state or which have 
+                            been rescheduled previously
+                 Issue:     ???
+                 Bugtraq:   ???
+                 Changed:   sge_schedd, qstat, qmon
+                 Review:    AH, (SD)
+
 CR-2003-04-04-0  Bugfix:    - commd ignored first message for commlib client
                             in case of priority tags messages (used for
                             qmaster <-> execd communication). The first 

@@ -1191,9 +1191,9 @@ int soft_field
 
    DENTER(TOP_LAYER, "parse_list_hardsoft");
 
-   hard_list = lCopyList("job hard sublist", lGetList(job, hard_field));
+   hard_list = lCopyList("job_hard_sublist", lGetList(job, hard_field));
    if (soft_field)
-      soft_list = lCopyList("job soft sublist", lGetList(job, soft_field));
+      soft_list = lCopyList("job_soft_sublist", lGetList(job, soft_field));
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, option))) {
       lp = NULL;
@@ -1237,7 +1237,7 @@ u_long32 flags
 
    DENTER(TOP_LAYER, "parse_list_simple");
 
-   destlist = lCopyList("job sublist", lGetList(job, field));
+   destlist = lCopyList("job_sublist", lGetList(job, field));
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, option))) {
       DPRINTF(("OPTION: %s\n", option));

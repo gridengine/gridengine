@@ -1,3 +1,8 @@
+SG-2004-03-03-4: Bugfix:    fixed several bugs in the qstat -xml output. The
+                            update for the XML schema file is still pending.
+                 Changed:   qstat
+                 Review:    pending
+
 SG-2004-03-03-3: Bugfix:    The clients died when a wrong security mode is
                             specified in the bootstrap file
                  Changed:   all

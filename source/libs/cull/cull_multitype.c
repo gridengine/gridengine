@@ -3510,7 +3510,7 @@ lListElem *lAddElemStr(lList **lpp, int nm, const char *str, const lDescr *dp)
 
    if (!*lpp) {
       /* ensure existence of a str list in ep */
-      *lpp = lCreateList("string sublist", dp);
+      *lpp = lCreateList("string_sublist", dp);
    }
 
    /* add new host str element to sublist */
@@ -4160,7 +4160,7 @@ lListElem *lAddElemUlong(lList **lpp, int nm, lUlong val, const lDescr *dp)
 
    if (!*lpp) {
       /* ensure existence of a val list in ep */
-      *lpp = lCreateList("ulong sublist", dp);
+      *lpp = lCreateList("ulong_sublist", dp);
    }
 
    /* add new host val element to sublist */

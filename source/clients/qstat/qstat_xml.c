@@ -153,13 +153,16 @@ void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list,
    lListElem *answer = NULL;
    lListElem *xml_elem = NULL;
    bool error = false;
+
    DENTER(TOP_LAYER, "xml_qstat_show_job");
+   
    for_each(answer, *answer_list) {
       if (lGetUlong(answer, AN_status) != STATUS_OK) {
          error = true;
          break;
       }
    }
+   
    if (error) {
       xml_elem = xml_getHead("comunication_error", *answer_list, NULL);
       lWriteElemXMLTo(xml_elem, stdout);
@@ -173,18 +176,37 @@ void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list,
          *id_list = NULL;
       }
       else {
-         xml_elem = xml_getHead("detailed_job_info", *job_list, NULL);
+         lList *XML_out = lCreateList("detailed_job_info", XMLE_Type);
+         lListElem *xmlElem = NULL;
+         lListElem *attrElem = NULL;
+        
+         /* add job infos */
+         xmlElem = lCreateElem(XMLE_Type);
+         attrElem = lCreateElem(XMLA_Type); 
+         lSetString(attrElem, XMLA_Name, "djob_info");
+         lSetObject(xmlElem, XMLE_Element, attrElem);
+         lSetBool(xmlElem, XMLE_Print, true);
+         lSetList(xmlElem, XMLE_List, *job_list);
+         lAppendElem(XML_out, xmlElem);
+
+         /* add messages */
+         xmlElem = lCreateElem(XMLE_Type);
+         attrElem = lCreateElem(XMLA_Type);         
+         lSetString(attrElem, XMLA_Name, "messages");
+         lSetObject(xmlElem, XMLE_Element, attrElem);
+         lSetBool(xmlElem, XMLE_Print, true);
+         lSetList(xmlElem, XMLE_List, *msg_list);
+         lAppendElem(XML_out, xmlElem);
+         
+         
+         xml_elem = xml_getHead("detailed_job_info", XML_out, NULL);
          
          lWriteElemXMLTo(xml_elem, stdout);
 
          xml_elem = lFreeElem(xml_elem);
          *job_list = NULL;
-
-         xml_elem = xml_getHead("message", *msg_list, NULL);
-
-         lWriteElemXMLTo(xml_elem, stdout);
-         xml_elem = lFreeElem(xml_elem);
          *msg_list = NULL;
+         
       }
    }
 

@@ -931,7 +931,7 @@ object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end,
       lList *range_list;
  
       range_elem = lCreateElem(RN_Type);
-      range_list = lCreateList("task id range", RN_Type);
+      range_list = lCreateList("task_id_range", RN_Type);
       if (range_elem == NULL || range_list == NULL) {
          range_elem = lFreeElem(range_elem);
          range_list = lFreeList(range_list);

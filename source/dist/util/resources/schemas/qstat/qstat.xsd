@@ -53,7 +53,7 @@
  
                   <xsd:complexType name="JB_jid_request_list">
                      <xsd:sequence>
-                        <xsd:complexType name="string sublist" minOccurs="0" maxoccurs="unbounded">
+                        <xsd:complexType name="string_ublist" minOccurs="0" maxoccurs="unbounded">
                            <xsd:sequence>
                               <xsd:element name="JRE_job_number" type="xsd:positiveInteger"/>
                               <xsd:element name="JRE_job_name" type="xsd:String"/>
@@ -64,7 +64,7 @@
 
                   <xsd:complexType name="JB_jid_sucessor_list">
                      <xsd:sequence>
-                        <xsd:complexType name="ulong sublist" minOccurs="0" maxoccurs="unbounded">
+                        <xsd:complexType name="ulong_sublist" minOccurs="0" maxoccurs="unbounded">
                            <xsd:sequence>
                               <xsd:element name="JRE_job_number" type="xsd:positiveInteger"/>
                            </xsd:sequence>
@@ -96,7 +96,7 @@
 
                   <xsd:complexType name="JB_env_list">
                      <xsd:sequence>
-                        <xsd:complexType name="job sublist" minOccurs="0" maxoccurs="unbounded">
+                        <xsd:complexType name="job_sublist" minOccurs="0" maxoccurs="unbounded">
                            <xsd:sequence>
                               <xsd:element name="VA_variable" type="xsd:String"/>
                               <xsd:element name="VA_value" type="xsd:String"/>
@@ -114,7 +114,7 @@
 
                   <xsd:complexType name="JB_mail_list">
                      <xsd:sequence>
-                        <xsd:complexType name="string sublist" minOccurs="0" maxoccurs="unbounded">
+                        <xsd:complexType name="string_sublist" minOccurs="0" maxoccurs="unbounded">
                            <xsd:sequence>
                               <xsd:element name="MR_user" type="xsd:String"/>
                               <xsd:element name="MR_host" type="xsd:String"/>
@@ -125,7 +125,7 @@
 
                   <xsd:complexType name="JB_ja_structure">
                      <xsd:sequence>
-                        <xsd:complexType name="task id range" minOccurs="0" maxoccurs="unbounded">
+                        <xsd:complexType name="task_id_range" minOccurs="0" maxoccurs="unbounded">
                            <xsd:sequence>
                               <xsd:element name="RN_min" type="xsd:positiveInteger"/>
                               <xsd:element name="RN_max" type="xsd:positiveInteger"/>
@@ -173,7 +173,7 @@
 
                <xsd:complexType name="JAT_granted_destin_identifier_list minOccurs="0" maxoccurs="1"">
                   <xsd:sequence>
-                     <xsd:complexType name="string sublist" minOccurs="0" maxoccurs="unbounded">
+                     <xsd:complexType name="string_sublist" minOccurs="0" maxoccurs="unbounded">
                         <xsd:sequence>
                            <xsd:element name="JG_qname" type="xsd:string"/>
                            <xsd:element name="JG_qversion" type="xsd:string"/>
@@ -203,7 +203,7 @@
               
                <xsd:complexType name="JAT_usage_list" minOccurs="0" maxoccurs="1">
                   <xsd:sequence>
-                     <xsd:complexType name="string sublist" minOccurs="0" maxoccurs="unbounded">
+                     <xsd:complexType name="string_sublist" minOccurs="0" maxoccurs="unbounded">
                         <xsd:sequence>
                            <xsd:element name="UA_name" type="xsd:positiveInteger"/>
                            <xsd:element name="UA_value" type="xsd:float"/>

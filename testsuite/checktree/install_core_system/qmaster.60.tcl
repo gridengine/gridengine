@@ -519,13 +519,13 @@ proc install_qmaster {} {
        }
    
        -i $sp_id $FILE_FOR_HOSTLIST {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(10)"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(10)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                set anykey [wait_for_enter 1]
           }
 
-          send -i $sp_id "$ANSWER_YES\n"
+          send -i $sp_id "\n"
           continue;
        }
 
@@ -611,7 +611,7 @@ proc install_qmaster {} {
       }
 
       -i $sp_id $DATABASE_DIR_NOT_ON_LOCAL_FS {
-          set_error "-1" "install_qmaster - configured database directory not on y local disk\nPlease run testsuite setup and configure Berkeley DB server and/or directory"; 
+          set_error "-2" "install_qmaster - configured database directory not on y local disk\nPlease run testsuite setup and configure Berkeley DB server and/or directory"; 
           close_spawn_process $id;
           return;  
       }
@@ -621,26 +621,18 @@ proc install_qmaster {} {
          set result [start_remote_prog $ts_config(bdb_server) "ts_def_con2" "$ts_config(product_root)/default/common/rcrpc" "start"]
          if {[string length $result] > 0} {
             puts $CHECK_OUTPUT $result
-            set_error "-1" "install_qmaster - starting Berkeley DB RPC server failed: $result"
+            set_error "-2" "install_qmaster - starting Berkeley DB RPC server failed: $result"
             close_spawn_process $id;
             return;  
          }
 
          # sleep some time to let RPC server startup and register
          sleep 2
-
-         # send RETURN to tell installation, server is running
-         puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
-         if {$do_log_output == 1} {
-            puts "press RETURN"
-            set anykey [wait_for_enter 1]
-         }
-         send -i $sp_id "\n"
          continue;
       }
 
       -i $sp_id $DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS {
-          set_error "-1" "install_qmaster - not yet ported for this platform"; 
+          set_error "-2" "install_qmaster - not yet ported for this platform"; 
           close_spawn_process $id;
           return;  
       }

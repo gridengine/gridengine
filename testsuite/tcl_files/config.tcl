@@ -288,6 +288,7 @@ proc edit_setup { array_name verify_func mod_string } {
          puts $CHECK_OUTPUT "\"$input\" is not a valid number"
       }
    }
+
    if { $no_changes == 1 } {
       return -1
    }
@@ -3056,10 +3057,8 @@ proc config_testsuite_gridengine_version { only_check name config_array } {
    } 
 
    # check parameter
-   if {[string compare $value "53"] == 0 || 
-       [string compare $value "60"] == 0} {        
-      set ts_config($name) $value
-   } else {
+   if {[string compare $value "53"] != 0 &&
+       [string compare $value "60"] != 0} {        
       puts $CHECK_OUTPUT "invalid testsuite gridengine version"
       return -1
    }
@@ -3137,9 +3136,6 @@ proc config_testsuite_bdb_server { only_check name config_array } {
       }
    }
 
-   # set parameter
-   set ts_config($name) $value
-
    return $value
 }
 
@@ -3203,9 +3199,6 @@ proc config_testsuite_bdb_dir { only_check name config_array } {
          puts $CHECK_OUTPUT "using default value"
       }
    } 
-
-   # set parameter
-   set ts_config($name) $value
 
    return $value
 }

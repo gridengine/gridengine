@@ -763,7 +763,7 @@ lList *lSelectD(const char *name, const lList *slp, const lCondition *cp,
       return NULL;
    }
 
-   if (!(dlp = lCreateList(name, dp))) {
+   if (!(dlp = lCreateListHash(name, dp, false))) {
       LERROR(LECREATELIST);
       DEXIT;
       return NULL;
@@ -784,6 +784,9 @@ lList *lSelectD(const char *name, const lList *slp, const lCondition *cp,
          }
       }
    }
+
+   /* now create the hash tables */
+   cull_hash_create_hashtables(dlp);
 
    /* 
       This is a question of philosophy.

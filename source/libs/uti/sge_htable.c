@@ -674,3 +674,15 @@ int hash_compare_string(const void *a, const void *b)
 {
    return strcmp((const char *)a, (const char *)b);
 }
+
+int hash_compute_size(int number_of_elem)
+{
+   int size = 0;
+   while (number_of_elem > 0) {
+      size++;
+      number_of_elem = number_of_elem >> 1;
+   }
+
+   return size;
+}
+

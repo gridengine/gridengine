@@ -858,8 +858,6 @@ int cull_unpack_list_partial(sge_pack_buffer *pb, lList **lpp, int flags)
       return ret;
    }
 
-   cull_hash_create_hashtables(lp);
-
    /* unpack each list element */
    for(i = 0; i < n; i++) {
       if((ret = cull_unpack_elem_partial(pb, &ep, lp->descr, flags)) != PACK_SUCCESS) {
@@ -870,6 +868,8 @@ int cull_unpack_list_partial(sge_pack_buffer *pb, lList **lpp, int flags)
       }
       lAppendElem(lp, ep);
    }
+
+   cull_hash_create_hashtables(lp);
 
    *lpp = lp;
 

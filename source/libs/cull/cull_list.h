@@ -210,6 +210,7 @@ void lWriteListTo(const lList *lp, FILE *fp);
 
 lListElem *lCreateElem(const lDescr *dp);
 lList *lCreateList(const char *listname, const lDescr *descr);
+lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash);
 lList *lCreateElemList(const char *listname, const lDescr *descr, int nr_elem);
 
 lListElem *lFreeElem(lListElem *ep);

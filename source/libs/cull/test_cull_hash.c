@@ -115,13 +115,14 @@ static const char *random_string(int length)
 long clk_tck = 0;
 const char **names = NULL;
 
-const char *HEADER_FORMAT = "%s %s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s\n";
-const char *DATA_FORMAT   = "%s %s %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf (%6d) %8.3lf (%6d) %8ld\n";
+const char *HEADER_FORMAT = "%s %s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s\n";
+const char *DATA_FORMAT   = "%s %s %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf (%6d) %8.3lf (%6d) %8ld\n";
 
 static void do_test(bool unique_hash, bool non_unique_hash, 
                     int num_objects, int num_names)
 {
    lList *lp = NULL;
+   lList *copy;
    lListElem *ep;
    clock_t now, start;
    struct tms tms_buffer;
@@ -136,6 +137,7 @@ static void do_test(bool unique_hash, bool non_unique_hash,
 
    /* measurement data */
    double  prof_create,  /* create objects */
+           prof_copy,    /* copy list including all hashtables */
            prof_rau,     /* random access by unique attrib */
            prof_inu,     /* iterate by non unique attrib */
            prof_curo,    /* change unique attrib of random object */
@@ -177,10 +179,18 @@ static void do_test(bool unique_hash, bool non_unique_hash,
 #ifdef MALLINFO
    meminfo = mallinfo();
 #endif
-   
+  
+   /* TEST: copy list */
    start = times(&tms_buffer);
+   copy = lCopyList("copy", lp);
+
+   /* measure time */
+   now = times(&tms_buffer);
+   prof_copy = (now - start) * 1.0 / clk_tck;
+   copy = lFreeList(copy);
 
    /* TEST: random access by unique attrib */
+   start = times(&tms_buffer);
    for (i = 0; i < num_objects; i++) {
       ep = lGetElemUlong(lp, NM_ULONG, rand() % num_objects);
    }
@@ -280,6 +290,7 @@ static void do_test(bool unique_hash, bool non_unique_hash,
           unique_hash ? " * " : "   ",
           non_unique_hash ? " * " : "   ",
           prof_create, 
+          prof_copy, 
           prof_rau, prof_inu, 
           prof_curo, prof_cnuro,
           prof_dru, objs_dru, prof_dinu, objs_dinu,
@@ -332,7 +343,7 @@ int main(int argc, char *argv[])
 
    /* output header */
    printf(HEADER_FORMAT, "uh ", "nuh", 
-          "create", "rau", "inu", "curo", "cnuro", 
+          "create", "copy", "rau", "inu", "curo", "cnuro", 
           "dru", "(objs)", "dinu", "(objs)", "mem(kB)");
 
    /* do tests */

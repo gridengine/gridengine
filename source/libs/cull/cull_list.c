@@ -976,6 +976,31 @@ lListElem *lCreateElem(const lDescr *dp)
 *******************************************************************************/
 lList *lCreateList(const char *listname, const lDescr *descr) 
 {
+   return lCreateListHash(listname, descr, true);
+}
+
+/****** cull/list/lCreateListHash() ********************************************
+*  NAME
+*     lCreateList() -- Create an empty list
+*
+*  SYNOPSIS
+*     lList* lCreateList(const char *listname, const lDescr *descr, bool hash) 
+*
+*  FUNCTION
+*     Create an empty list with a given descriptor and a user defined
+*     listname. 
+*     The caller can choose whether hashtables shall be created or not.
+*
+*  INPUTS
+*     const char *listname - list name 
+*     const lDescr *descr  - descriptor 
+*     bool hash            - shall hashtables be created?
+*
+*  RESULT
+*     lList* - list pointer or NULL 
+*******************************************************************************/
+lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash) 
+{
    lList *lp;
    int i, n;
 
@@ -1022,8 +1047,8 @@ lList *lCreateList(const char *listname, const lDescr *descr)
       lp->descr[i].nm = descr[i].nm;
 
       /* create hashtable if necessary */
-      if(mt_do_hashing(lp->descr[i].mt)) {
-         lp->descr[i].ht = cull_hash_create(&descr[i]);
+      if(hash && mt_do_hashing(lp->descr[i].mt)) {
+         lp->descr[i].ht = cull_hash_create(&descr[i], 0);
       } else {
          lp->descr[i].ht = NULL;
       }
@@ -1478,19 +1503,24 @@ lList *lCopyList(const char *name, const lList *src)
       name = "No list name specified";
 
 
-   if (!(dst = lCreateList(name, src->descr))) {
+   /* create new list without hashes - we'll hash it once it is filled */
+   if (!(dst = lCreateListHash(name, src->descr, false))) {
       LERROR(LECREATELIST);
       DEXIT;
       return NULL;
    }
 
-   for (sep = src->first; sep; sep = sep->next)
+   for (sep = src->first; sep; sep = sep->next) {
       if (lAppendElem(dst, lCopyElem(sep)) == -1) {
          lFreeList(dst);
          LERROR(LEAPPENDELEM);
          DEXIT;
          return NULL;
       }
+   }
+
+   /* now create the hash tables */
+   cull_hash_create_hashtables(dst);
 
    DEXIT;
    return dst;

@@ -50,7 +50,7 @@
 *     htable -- Hashtable extensions for cull lists 
 *
 *  SYNOPSIS
-*     cull_htable cull_hash_create(const lDescr *descr);
+*     cull_htable cull_hash_create(const lDescr *descr, int size);
 *
 *     void cull_hash_new(lList *lp, int name, bool unique);
 *
@@ -86,9 +86,6 @@
 *     cull/hash/cull_hash_insert()
 *     cull/hash/cull_hash_remove()
 *     cull/hash/cull_hash_elem()
-*     cull/hash/cull_hash_create()
-*     cull/hash/cull_hash_create()
-*     cull/hash/cull_hash_create()
 *******************************************************************************/
 
 /****** cull/hash/-CULL_Hashtable_Defines ****************************************************
@@ -153,37 +150,47 @@ struct _cull_htable {
 *     cull_hash_create() -- create a new hash table
 *
 *  SYNOPSIS
-*     lHash* cull_hash_create(const lDescr *descr) 
+*     cull_htable cull_hash_create(const lDescr *descr, int size) 
 *
 *  FUNCTION
 *     Creates a new hash table for a certain descriptor and returns the 
 *     hash description (lHash) for it.
+*     The initial size of the hashtable can be specified.
+*     This allows for optimization of the hashtable, as resize operations
+*     can be minimized when the final hashtable size is known at creation time,
+*     e.g. when copying complete lists.
 *
 *  INPUTS
 *     const lDescr *descr - descriptor for the data field in a 
 *                           cull object.
+*     int size            - initial size of hashtable will be 2^size
 *
 *  RESULT
-*     lHash* - initialized hash description
+*     cull_htable - initialized hash description
 *******************************************************************************/
-cull_htable cull_hash_create(const lDescr *descr)
+cull_htable cull_hash_create(const lDescr *descr, int size)
 {
    htable ht   = NULL;   /* hash table for keys */
    htable nuht = NULL;   /* hash table for non unique access */
    cull_htable ret = NULL;
 
+   /* if no size is given, use default value */
+   if (size == 0) {
+      size = MIN_CULL_HASH_SIZE;
+   }
+
    /* create hash table for object keys */
    switch(mt_get_type(descr->mt)) {
       case lStringT:
-         ht = sge_htable_create(MIN_CULL_HASH_SIZE, dup_func_string, 
+         ht = sge_htable_create(size, dup_func_string, 
                                 hash_func_string, hash_compare_string);
          break;
       case lHostT:
-         ht = sge_htable_create(MIN_CULL_HASH_SIZE, dup_func_string, 
+         ht = sge_htable_create(size, dup_func_string, 
                                 hash_func_string, hash_compare_string);
          break;
       case lUlongT:
-         ht = sge_htable_create(MIN_CULL_HASH_SIZE, dup_func_u_long32, 
+         ht = sge_htable_create(size, dup_func_u_long32, 
                                 hash_func_u_long32, hash_compare_u_long32);
          break;
       default:
@@ -195,7 +202,7 @@ cull_htable cull_hash_create(const lDescr *descr)
    /* (optionally) create hash table for non unique hash access */
    if (ht != NULL) {
       if (!mt_is_unique(descr->mt)) {
-         nuht = sge_htable_create(MIN_CULL_HASH_SIZE, dup_func_pointer, 
+         nuht = sge_htable_create(size, dup_func_pointer, 
                                   hash_func_pointer, hash_compare_pointer);
          if (nuht == NULL) {
             sge_htable_destroy(ht);
@@ -242,15 +249,24 @@ cull_htable cull_hash_create(const lDescr *descr)
 *******************************************************************************/
 void cull_hash_create_hashtables(lList *lp) 
 {
-   int i;
+   if(lp != NULL) {
+      int i, size;
+      const lListElem *ep;
+      lDescr * descr = lp->descr;
 
-   if(lp == NULL) {
-      return;
-   }
+      /* compute final size of hashtables when all elements are inserted */
+      size = hash_compute_size(lGetNumberOfElem(lp));
 
-   for(i = 0; lp->descr[i].mt != lEndT; i++) {
-      if(mt_do_hashing(lp->descr[i].mt) && lp->descr[i].ht == NULL) {
-         lp->descr[i].ht = cull_hash_create(&lp->descr[i]);
+      /* create hashtables, pass final size */
+      for(i = 0; descr[i].mt != lEndT; i++) {
+         if(mt_do_hashing(descr[i].mt) && descr[i].ht == NULL) {
+            descr[i].ht = cull_hash_create(&descr[i], size);
+         }
+      }
+   
+      /* create hash entries for all objects */
+      for_each (ep, lp) {
+         cull_hash_elem(ep);
       }
    }
 }
@@ -627,8 +643,8 @@ void cull_hash_free_descr(lDescr *descr)
 *     unique within the list or not.
 *
 *  INPUTS
-*     lList *lp  - the list to hold the new hash table
-*     int nm     - the field on which to create the hash table 
+*     lList *lp   - the list to hold the new hash table
+*     int nm      - the field on which to create the hash table 
 *     bool unique - unique contents or not 
 *
 *  RESULT
@@ -692,7 +708,7 @@ int cull_hash_new(lList *lp, int nm, bool unique)
 {
    lDescr *descr;
    lListElem *ep;
-   int pos;
+   int pos, size;
    char host_key[MAXHOSTLEN];
 
    DENTER(CULL_LAYER, "cull_hash_new");
@@ -724,7 +740,9 @@ int cull_hash_new(lList *lp, int nm, bool unique)
       descr[pos].mt |= CULL_UNIQUE;
    }
 
-   descr[pos].ht = cull_hash_create(&descr[pos]);
+   size = hash_compute_size(lGetNumberOfElem(lp));
+
+   descr[pos].ht = cull_hash_create(&descr[pos], size);
 
    if(descr[pos].ht == NULL) {
       DEXIT;

@@ -42,7 +42,7 @@
 extern "C" {
 #endif
 
-cull_htable cull_hash_create(const lDescr *descr);
+cull_htable cull_hash_create(const lDescr *descr, int size);
 int cull_hash_new(lList *lp, int name, bool unique);
 int cull_hash_new_check(lList *lp, int nm, bool unique);
 void cull_hash_insert(const lListElem *ep, void *key, cull_htable ht, bool unique);

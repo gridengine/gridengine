@@ -130,11 +130,12 @@ static void   set_message_priorities(const char*);
 *     int sge_setup_qmaster(char* anArgv[]) 
 *
 *  FUNCTION
-*     Process commandline arguments. Initialize qmaster. Initialize reporting. 
+*     Process commandline arguments. Change CWD to qmaster spool directory. Set
+*     qmaster message file name. Remove qmaster lock file. Write qmaster host
+*     to the 'act_qmaster' file. Write qmaster PID file. Initialize qmaster and
+*     reporting.  
 *
-*     NOTE: A temporary qmaster message file will be used in the beginning.
-*     The qmaster spool directory may not exist yet. This will be changed
-*     during qmaster initialization.
+*     NOTE: Before this function is invoked, qmaster must become admin user.
 *
 *  INPUTS
 *     char* anArgv[] - commandline argument vector 
@@ -148,11 +149,28 @@ static void   set_message_priorities(const char*);
 *******************************************************************************/
 int sge_setup_qmaster(char* anArgv[])
 {
+   char err_str[1024];
+
    DENTER(TOP_LAYER, "sge_setup_qmaster");
 
-   log_state_set_log_file(TMP_ERR_FILE_QMASTER);
+   umask(022); /* this needs a better solution */
 
    process_cmdline(anArgv);
+
+   sge_chdir_exit(bootstrap_get_qmaster_spool_dir(), 1);
+
+   log_state_set_log_file(ERR_FILE);
+
+   INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
+
+   qmaster_unlock(QMASTER_LOCK_FILE);
+
+   if (write_qm_name(uti_state_get_qualified_hostname(), path_state_get_act_qmaster_file(), err_str)) {
+      ERROR((SGE_EVENT, "%s\n", err_str));
+      SGE_EXIT(1);
+   }
+
+   sge_write_pid(QMASTER_PID_FILE);
 
    qmaster_init(anArgv);
 
@@ -374,8 +392,7 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
 *     static void qmaster_init(char **anArgv) 
 *
 *  FUNCTION
-*     Initialize qmaster. Set and switch to admin user. Remove the qmaster lock
-*     file. Do general setup and communication setup. 
+*     Initialize qmaster. Do general setup and communication setup. 
 *
 *  INPUTS
 *     char **anArgv - process argument vector 
@@ -389,25 +406,7 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
 *******************************************************************************/
 static void qmaster_init(char **anArgv)
 {
-   char err_str[1024];
-
    DENTER(TOP_LAYER, "qmaster_init");
-
-   umask(022); /* this needs a better solution */
-
-   if (sge_set_admin_username(bootstrap_get_admin_user(), err_str) == -1) {
-      CRITICAL((SGE_EVENT, err_str));
-      SGE_EXIT(1);
-   }
-
-   if (sge_switch2admin_user()) {
-      CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
-      SGE_EXIT(1);
-   }
-
-   INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
-
-   qmaster_unlock(QMASTER_LOCK_FILE);
 
    if (setup_qmaster()) {
       CRITICAL((SGE_EVENT, MSG_STARTUP_SETUPFAILED));
@@ -417,8 +416,6 @@ static void qmaster_init(char **anArgv)
    communication_setup(anArgv);
 
    uti_state_set_exit_func(qmaster_lock_and_shutdown); /* CWD is spool directory */
-
-   sge_write_pid(QMASTER_PID_FILE);
 
    host_list_notify_about_featureset(Master_Exechost_List, feature_get_active_featureset_id());
 
@@ -861,36 +858,6 @@ static int setup_qmaster(void)
 
    /* get aliased hostname from commd */
    reresolve_me_qualified_hostname();
-
-   /*
-   ** build and change to master spool dir
-   */
-   DPRINTF(("chdir(\"/\")----------------------------\n"));
-   sge_chdir_exit("/", 1);
-
-   DPRINTF(("Making directories----------------------------\n"));
-   sge_mkdir(bootstrap_get_qmaster_spool_dir(), 0755, 1, 0);
-
-   DPRINTF(("chdir("SFQ")----------------------------\n", 
-            bootstrap_get_qmaster_spool_dir()));
-   sge_chdir_exit(bootstrap_get_qmaster_spool_dir(), 1);
-
-   /* 
-   ** we are in the master spool dir now 
-   ** log messages into ERR_FILE in master spool dir 
-   */
-   sge_copy_append(TMP_ERR_FILE_QMASTER, ERR_FILE, SGE_MODE_APPEND);
-   unlink(TMP_ERR_FILE_QMASTER);   
-   log_state_set_log_as_admin_user(1);
-   log_state_set_log_file(ERR_FILE);
-
-   /* 
-   ** write our host name to the act_qmaster file 
-   */
-   if (write_qm_name(uti_state_get_qualified_hostname(), path_state_get_act_qmaster_file(), err_str)) {
-      ERROR((SGE_EVENT, "%s\n", err_str));
-      SGE_EXIT(1);
-   }
 
    /*
    ** read in all objects and check for correctness

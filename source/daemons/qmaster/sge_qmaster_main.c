@@ -64,8 +64,11 @@
 #include "setup.h"
 #include "sge_spool.h"
 #include "cl_commlib.h"
+#include "sge_uidgid.h"
+#include "sge_bootstrap.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "msg_daemons_common.h"
 #include "msg_utilib.h"  /* remove once 'daemonize_qmaster' did become 'sge_daemonize' */
 
 
@@ -107,6 +110,7 @@ static void*     message_thread(void*);
 
 /* misc functions */
 static void daemonize_qmaster(void);
+static void become_admin_user(void);
 static void start_heartbeat(void);
 static void increment_heartbeat(te_event_t);
 static void start_periodic_tasks(void);
@@ -159,6 +163,8 @@ int main(int argc, char* argv[])
    pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
 
    sge_setup(QMASTER, NULL);
+
+   become_admin_user();
 
    uti_state_set_exit_func(exit_func);
 
@@ -335,6 +341,49 @@ static void daemonize_qmaster(void)
    return;
 } /* daemonize_qmaster() */
 
+/****** qmaster/sge_qmaster_main/become_admin_user() ***************************
+*  NAME
+*     become_admin_user() -- Become admin user. 
+*
+*  SYNOPSIS
+*     static void become_admin_user(void) 
+*
+*  FUNCTION
+*     Get admin user from bootstrap configuration. Set admin user and change
+*     the effective UID/GID to the admin user UID/GID. 
+*
+*     Note: The effective UID does determine file access permissions.
+*
+*  INPUTS
+*     void - none
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: become_admin_user() is not MT safe 
+*
+*******************************************************************************/
+static void become_admin_user(void)
+{
+   char str[1024];
+
+   DENTER(TOP_LAYER, "become_admin_user");
+
+   if (sge_set_admin_username(bootstrap_get_admin_user(), str) == -1) {
+      CRITICAL((SGE_EVENT, str));
+      SGE_EXIT(1);
+   }
+
+   if (sge_switch2admin_user()) {
+      CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
+      SGE_EXIT(1);
+   }
+
+   DEXIT;
+   return;
+} /* become_admin_user() */
+
 /****** qmaster/sge_qmaster_main/start_heartbeat() *****************************
 *  NAME
 *     start_heartbeat() -- Start qmaster heartbeat. 
@@ -508,7 +557,7 @@ static pthread_t get_signal_thread(void)
 *     static void increment_heartbeat(te_event_t anEvent) 
 *
 *  FUNCTION
-*     Update qmaster heartbeat file and remove qmaster lock file.
+*     Update qmaster heartbeat file.
 *
 *  INPUTS
 *     te_event_t anEvent - heartbeat event 
@@ -527,8 +576,6 @@ static pthread_t get_signal_thread(void)
 static void increment_heartbeat(te_event_t anEvent)
 {
    DENTER(TOP_LAYER, "increment_heartbeat");
-
-   qmaster_unlock(QMASTER_LOCK_FILE);
 
    if (inc_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE)) {
       ERROR((SGE_EVENT, MSG_HEARTBEAT_FAILEDTOINCREMENTHEARBEATFILEXINSPOOLDIR_S, QMASTER_HEARTBEAT_FILE));

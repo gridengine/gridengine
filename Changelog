@@ -1,3 +1,10 @@
+AD-2004-01-28-1: Bugfix:    - all files are now created under the admin user
+                              UID/GID
+                            - the temporary message file in '/tmp' is no
+                              longer used.
+                            - qmaster lock file is removed on startup.
+                 Changed:   qmaster
+
 MD-2004-01-28-1: Bugfix:    - changed option -s to -sm (install shadow master) 
                  Changed:   sge_config_common.sh, sge_config
 

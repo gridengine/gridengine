@@ -36,7 +36,6 @@
 #include "sge_messageL.h"
 #include "schedd_message.h"
 #include "sgermon.h"
-#include "schedd_conf.h"
 #include "schedd_monitor.h"
 #include "sge_log.h"
 #include "sge_ulongL.h"
@@ -44,7 +43,7 @@
 #include "msg_schedd.h"
 #include "sge_range.h"
 #include "sge_job.h"
-   #include "schedd_conf.h"
+#include "sge_schedd_conf.h"
 
 static void schedd_mes_find_others(lList *job_list, int category);
 
@@ -283,30 +282,24 @@ void schedd_mes_rollback(void)
 lListElem *schedd_mes_obtain_package(void)
 {
    lListElem *ret;
+   u_long32 schedd_job_info = sconf_get_schedd_job_info();
+
    DENTER(TOP_LAYER, "schedd_mes_obtain_package");
-
 #ifndef WIN32NATIVE
-   if (scheddconf.schedd_job_info == SCHEDD_JOB_INFO_FALSE) {
-      enum schedd_job_info_key old_val = scheddconf.schedd_job_info;
-
+   if (schedd_job_info == SCHEDD_JOB_INFO_FALSE) {
       /*
        * Temporaryly we enable schedd_job_info to add one
        * message which says that schedd_job_info is disabled. 
        */
-      scheddconf.schedd_job_info = SCHEDD_JOB_INFO_TRUE;
+      sconf_enable_schedd_job_info();
       schedd_mes_add_global(SCHEDD_INFO_TURNEDOFF);
-      scheddconf.schedd_job_info = old_val;
-   } else if (scheddconf.schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
+      sconf_disable_schedd_job_info();
+   } else if (schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
       schedd_mes_add_global(SCHEDD_INFO_JOBLIST);
    } else if (lGetNumberOfElem(lGetList(sme, SME_message_list))<1 &&
             lGetNumberOfElem(lGetList(sme, SME_global_message_list))<1) {
       schedd_mes_add_global(SCHEDD_INFO_NOMESSAGE);
    }
-
-#if 0 /* EB: debug */
-   lWriteElemTo(sme, stderr);
-   lWriteElemTo(tmp_sme, stderr);
-#endif
 
    ret = sme; /* calling function is responsible to free messages! */
    sme = NULL; 
@@ -402,9 +395,9 @@ void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...)
    vsprintf(msg, fmt, args);
 #endif
 
-   if (job_number && (scheddconf.schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
-      if (scheddconf.schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
-         if (!range_list_is_id_within(scheddconf.schedd_job_info_list,
+   if (job_number && (sconf_get_schedd_job_info() != SCHEDD_JOB_INFO_FALSE)) {
+      if (sconf_get_schedd_job_info() == SCHEDD_JOB_INFO_JOB_LIST) {
+         if (!range_list_is_id_within(sconf_get_schedd_job_info_range(),
                                       job_number)) {
             DPRINTF(("Job "u32" not in scheddconf.schedd_job_info_list\n", job_number));
             return;
@@ -470,7 +463,7 @@ void schedd_mes_add_global(u_long32 message_number, ...)
 
    DENTER(TOP_LAYER, "schedd_mes_add_global");
 
-   if (scheddconf.schedd_job_info != SCHEDD_JOB_INFO_FALSE) {
+   if (sconf_get_schedd_job_info() != SCHEDD_JOB_INFO_FALSE) {
       /* Create error message */
       fmt = sge_schedd_text(message_number);
       va_start(args,message_number);

@@ -46,6 +46,7 @@
 
 #include "sge_profiling.h"
 #include "sge.h"
+#include "sge_string.h"
 #include "sge_event_client.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
@@ -64,7 +65,6 @@
 #include "cull_sort.h"
 #include "sge_event.h"
 #include "sge_feature.h"
-#include "schedd_conf.h"
 #include "schedd_monitor.h"
 #include "unparse_job_cull.h"
 #include "sge_dstring.h"
@@ -83,6 +83,8 @@
 #include "sge_userset.h"
 #include "sge_centry.h"
 #include "sge_sharetree.h"
+#include "sge_answer.h"
+#include "sge_parse_num_par.h"
 
 /* defined in sge_schedd.c */
 extern int shut_me_down;
@@ -175,7 +177,7 @@ int event_handler_default_scheduler()
 
    if (rebuild_accesstree && !sgeee_mode) {
       DPRINTF(("### ### ### ###   REBUILDING ACCESS TREE  ### ### ### ###\n"));
-      sge_rebuild_access_tree(Master_Job_List, get_user_sort());
+      sge_rebuild_access_tree(Master_Job_List, sconf_get_user_sort());
       rebuild_accesstree = 0;
    }
 
@@ -219,14 +221,14 @@ int event_handler_default_scheduler()
    copy.centry_list = lCopyList("", Master_CEntry_List);
    copy.pe_list = lCopyList("", Master_Pe_List);
    copy.share_tree = lCopyList("", Master_Sharetree_List);
-   copy.config_list = lCopyList("", Master_Sched_Config_List);
+/*   copy.config_list = lCopyList("", Master_Sched_Config_List); */
    copy.user_list = lCopyList("", Master_User_List);
    copy.project_list = lCopyList("", Master_Project_List);
    copy.ckpt_list = lCopyList("", Master_Ckpt_List);
 
    /* report number of reduced and raw (in brackets) lists */
    DPRINTF(("Q:%d(%d), AQ:%d(%d) J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
-            "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d CFG: %s\n",
+            "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d \n",
             lGetNumberOfElem(copy.queue_list),
             lGetNumberOfElem(Master_Queue_List),
             lGetNumberOfElem(copy.all_queue_list),
@@ -244,13 +246,12 @@ int event_handler_default_scheduler()
             lGetNumberOfElem(copy.user_list),
             lGetNumberOfElem(copy.project_list),
             lGetNumberOfNodes(NULL, copy.share_tree, STN_children),
-            lGetNumberOfLeafs(NULL, copy.share_tree, STN_children),
-            copy.config_list ? "YES" : "NO"
+            lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
            ));
 
    if (getenv("SGE_ND")) {
       printf("Q:%d(%d), AQ:%d(%d) J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
-         "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d CFG: %s\n",
+         "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d \n",
          lGetNumberOfElem(copy.queue_list),
          lGetNumberOfElem(Master_Queue_List),
          lGetNumberOfElem(copy.all_queue_list),
@@ -268,15 +269,13 @@ int event_handler_default_scheduler()
          lGetNumberOfElem(copy.user_list),
          lGetNumberOfElem(copy.project_list),
          lGetNumberOfNodes(NULL, copy.share_tree, STN_children),
-         lGetNumberOfLeafs(NULL, copy.share_tree, STN_children),
-         copy.config_list ? MSG_YES  : MSG_NO 
+         lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
         );
    } else {
       SCHED_MON((log_string, "-------------START-SCHEDULER-RUN-------------"));
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
-   /*prof_copy = prof_get_measurement_utime(SGE_PROF_CUSTOM7,false, NULL);*/
    prof_copy = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
 
 /* this is useful when tracing communication of schedd with qmaster */
@@ -317,11 +316,9 @@ int event_handler_default_scheduler()
    copy.share_tree = lFreeList(copy.share_tree);
    copy.user_list = lFreeList(copy.user_list);
    copy.project_list = lFreeList(copy.project_list);
-   copy.config_list = lFreeList(copy.config_list);
    copy.ckpt_list = lFreeList(copy.ckpt_list);
    
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM6);
-/*   prof_event = prof_get_measurement_utime(SGE_PROF_CUSTOM6,false, NULL);*/
    prof_event = prof_get_measurement_wallclock(SGE_PROF_CUSTOM6,true, NULL);
  
    if(prof_is_active()){
@@ -535,32 +532,83 @@ bool
 sge_process_schedd_conf_event(sge_object_type type, sge_event_action action, 
                               lListElem *event, void *clientdata)
 {
-   lListElem *ep;
+   lListElem *old;
+   lListElem *new;
 
    DENTER(TOP_LAYER, "sge_process_schedd_conf_event");
    DPRINTF(("callback processing schedd config event\n"));
 
-   ep = lFirst(Master_Sched_Config_List);
-   if (ep == NULL) {
+   old = lFirst(Master_Sched_Config_List);
+   new = lFirst(lGetList(event, ET_new_version));
+
+   if (new == NULL) {
       ERROR((SGE_EVENT, ">>>>> no scheduler configuration available <<<<<<<<\n"));
       DEXIT;
       return false;
    }
 
    /* check user_sort: if it changes, rebuild accesstree */
-   if (get_user_sort() != lGetBool(ep, SC_user_sort)) {
+   if (!old || (lGetBool(new, SC_user_sort) != lGetBool(old, SC_user_sort))) {
       rebuild_accesstree = 1;
    }
-  
-   /* remember scheduler config in global data structure */
-   sc_set(NULL, &scheddconf, ep, NULL, NULL);
+   
+   /* check for valid load formula */ 
+   {
+      const char *new_load_formula = lGetString(new, SC_load_formula);
+      lList *alpp = NULL;
 
-   /* check event client settings */
-   if (ec_get_edtime() != scheddconf.schedule_interval) {
-      ec_set_edtime(scheddconf.schedule_interval);
+      if (Master_CEntry_List != NULL &&
+          !schedd_conf_is_valid_load_formula(new, &alpp, Master_CEntry_List)) {
+            ERROR((SGE_EVENT,MSG_INVALID_LOAD_FORMULA, new_load_formula ));
+            answer_list_output(&alpp);
+            if (old)
+               lSetString(new, SC_load_formula, lGetString(old, SC_load_formula) );
+            else
+               lSetString(new, SC_load_formula, "none");
+
+      }
+      else{
+         char *copy;  
+
+         int n = strlen(new_load_formula);
+         if (n) {
+            copy = malloc(n + 1);
+            if (copy) {
+               strcpy(copy, new_load_formula);
+            }
+
+            sge_strip_blanks(copy);
+            lSetString(new, SC_load_formula, copy);
+
+            free(copy);
+         }
+      }
    }
 
-   if (use_alg(lGetString(ep, SC_algorithm))==2) {
+   /* clear the scheduler info parameter in the new configuration*/
+   lSetUlong(new, SC_is_schedd_job_info, SCHEDD_JOB_INFO_UNDEF);
+   lSetList(new, SC_schedd_job_info_range, NULL);
+
+   /* remember scheduler config in global data structure */
+   /* SG: TODO: do we need this? */
+   {
+      lList *alpp = NULL;
+      if (!sconf_validate_config(&alpp, lGetList(event, ET_new_version))){
+         answer_list_output(&alpp);
+      }
+   }
+   /* check event client settings */
+   {
+      const char *time = lGetString(new, SC_schedule_interval); 
+      u_long32 schedule_interval;  
+      if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0) ) {
+         if (ec_get_edtime() != schedule_interval) {
+           ec_set_edtime(schedule_interval);
+         }
+      }
+   }
+
+   if (use_alg(lGetString(new, SC_algorithm))==2) {
       /* changings on event handler or schedule interval can take effect 
        * only after a new registration of schedd at qmaster 
        */
@@ -610,7 +658,7 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
                   u_long32 was_running = running_status(lGetUlong(ja_task, 
                                                      JAT_status));
                   /* decrease # of running jobs for this user */
-                  if (was_running && get_user_sort()) {
+                  if (was_running && sconf_get_user_sort()) {
                      at_dec_job_counter(lGetUlong(job, JB_priority), 
                                         lGetString(job, JB_owner), 1);
                   }
@@ -637,7 +685,7 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
 
             case sgeE_JOB_MOD_SCHED_PRIORITY:
                if (!sgeee_mode) {
-                  if (get_user_sort()) {
+                  if (sconf_get_user_sort()) {
                      lListElem *ja_task;
                      /* changing priority requires running jobs be accounted in a different
                         priority subtree of the access tree. So the counter in the former priority
@@ -748,7 +796,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
 
                      /* decrease # of running jobs for this user */
                      if (running_status(lGetUlong(ja_task, JAT_status))) {
-                        if (!sgeee_mode && get_user_sort()) {
+                        if (!sgeee_mode && sconf_get_user_sort()) {
                            at_dec_job_counter(lGetUlong(job, JB_priority), 
                                               lGetString(job, JB_owner), 1);
                         }   
@@ -761,7 +809,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
             case sgeE_JOB_MOD_SCHED_PRIORITY:
                if (!sgeee_mode) {
                   at_register_job_array(job);
-                  if (get_user_sort()) {
+                  if (sconf_get_user_sort()) {
                      lListElem *ja_task;
                      /* increase running counter again in new priority subtree */
                      for_each(ja_task, (lGetList(job, JB_ja_tasks))) {
@@ -836,7 +884,7 @@ sge_process_ja_task_event_before(sge_object_type type,
             if (!running_status(old_status)) {
                DPRINTF(("JATASK "u32"."u32": IDLE -> RUNNING\n", 
                         job_id, ja_task_id));
-               if (!sgeee_mode && get_user_sort()) {
+               if (!sgeee_mode && sconf_get_user_sort()) {
                   at_inc_job_counter(lGetUlong(job, JB_priority), 
                                      lGetString(job, JB_owner), 1);
                }
@@ -845,7 +893,7 @@ sge_process_ja_task_event_before(sge_object_type type,
             if (running_status(old_status)) {
                DPRINTF(("JATASK "u32"."u32": RUNNING -> IDLE\n", 
                         job_id, ja_task_id));
-               if (!sgeee_mode && get_user_sort()) {
+               if (!sgeee_mode && sconf_get_user_sort()) {
                   at_dec_job_counter(lGetUlong(job, JB_priority), 
                                      lGetString(job, JB_owner), 1);
                }
@@ -855,7 +903,7 @@ sge_process_ja_task_event_before(sge_object_type type,
          if (ja_task != NULL) {
             if (running_status(lGetUlong(ja_task, JAT_status)) && 
                 !sgeee_mode && 
-                get_user_sort()) {
+                sconf_get_user_sort()) {
                at_dec_job_counter(lGetUlong(job, JB_priority), 
                                   lGetString(job, JB_owner), 1);
             }
@@ -971,9 +1019,13 @@ int subscribe_default_scheduler(void)
    sge_mirror_subscribe(SGE_TYPE_USER,           NULL, NULL, NULL);
   
    /* event types with callbacks */
+
+   sge_mirror_subscribe(SGE_TYPE_SCHEDD_CONF,    
+                        sge_process_schedd_conf_event, NULL, NULL);
+/*
    sge_mirror_subscribe(SGE_TYPE_SCHEDD_CONF,    NULL, 
                         sge_process_schedd_conf_event,      NULL);
-                                                
+*/                                                
    sge_mirror_subscribe(SGE_TYPE_SCHEDD_MONITOR, NULL, 
                         sge_process_schedd_monitor_event,   NULL);
                                                 

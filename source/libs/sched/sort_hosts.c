@@ -46,6 +46,7 @@
 #include "sort_hosts.h"
 #include "sge_complex_schedd.h"
 #include "sge_sched.h"
+#include "sge_schedd_conf.h"
 #include "sge_feature.h"
 #include "sge_string.h"
 #include "sge_log.h"
@@ -162,11 +163,11 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, lList *cent
    double val=0, val2=0;
    double load=0;
    int op_pos, next_op=LOAD_OP_NONE;
-
+   const char *load_formula = sconf_get_load_formula();
    DENTER(TOP_LAYER, "scaled_mixed_load");
 
    /* we'll use strtok ==> we need a safety copy */
-   if (!(tf = strdup(scheddconf.load_formula))) {
+   if (!(tf = strdup(load_formula))) {
       DEXIT;
       return ERROR_LOAD_VAL;
    }
@@ -274,9 +275,9 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, lList *cent
             load -= val;
             break;
       }
-
+      
       /* determine next_op from the safety copy of the stripped formula */
-      if (scheddconf.load_formula[cp-tf+strlen(cp)] == '+')
+      if (load_formula[cp-tf+strlen(cp)] == '+')
          next_op = LOAD_OP_PLUS;
       else
          next_op = LOAD_OP_MINUS;
@@ -350,12 +351,13 @@ int *sort_hostlist
    lListElem *gel, *hep;
    lListElem *global;
    const char *hnm;
+   u_long32 queue_sort_method = sconf_get_queue_sort_method();
    double old_sort_value, new_sort_value;
 
    DENTER(TOP_LAYER, "debit_job_from_hosts");
 
    if (feature_is_enabled(FEATURE_SGEEE) 
-       || scheddconf.queue_sort_method!=QSM_SHARE) {
+       || queue_sort_method!=QSM_SHARE) {
       so = lParseSortOrderVarArg(lGetListDescr(host_list), "%I+", EH_sort_value);
    }
 
@@ -369,7 +371,7 @@ int *sort_hostlist
       hnm = lGetHost(gel, JG_qhostname);
       hep = host_list_locate(host_list, hnm); 
 
-      if (scheddconf.load_adjustment_decay_time && lGetNumberOfElem(scheddconf.job_load_adjustments)) {
+      if (sconf_get_load_adjustment_decay_time() && lGetNumberOfElem(sconf_get_job_load_adjustments())) {
          /* increase host load for each scheduled job slot */
          ulc_factor = lGetUlong(hep, EH_load_correction_factor);
          ulc_factor += 100*slots;
@@ -392,7 +394,7 @@ int *sort_hostlist
       }
 
       if (feature_is_enabled(FEATURE_SGEEE) 
-          || scheddconf.queue_sort_method!=QSM_SHARE) {
+          || queue_sort_method!=QSM_SHARE) {
          /* change position of this host in the host_list */
          /* !!! JG: sorting always necessary, or only if sort_hostlist? */
          lResortElem(so, hep, host_list);

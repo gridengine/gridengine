@@ -123,7 +123,7 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
                                 const char *limit_value, u_long32 relop,
                                 u_long32 type, lListElem *hep,
                                 lListElem *hlep, double lc_host,
-                                double lc_global, lList *load_adjustments, int load_is_value); 
+                                double lc_global, const lList *load_adjustments, int load_is_value); 
 
 char* trace_resource(lListElem *ep) 
 {
@@ -356,7 +356,7 @@ static int sge_check_resource(lList *requested, lList *load_attr, lList *config_
       double dval=0.0;
       lListElem *default_request = NULL;
 
-      for_each(attr, actual_attr) {
+      for_each (attr, actual_attr) {
          name = lGetString(attr, CE_name);
          if (!strcmp(name, "slots"))
             continue;
@@ -409,12 +409,12 @@ static int sge_check_resource(lList *requested, lList *load_attr, lList *config_
                      DEXIT;
                      return 0;
          case 0 : /* a match was found */
-                  if( lGetUlong(attr, CE_tagged) < tag)
+                  if (lGetUlong(attr, CE_tagged) < tag)
                      lSetUlong(attr, CE_tagged, tag);
             break;
          case 1 : /* the requested element does not exist */
-                  if(tag == QUEUE_TAG){
-                     if( lGetUlong(attr, CE_tagged) == NO_TAG) {
+                  if (tag == QUEUE_TAG) {
+                     if (lGetUlong(attr, CE_tagged) == NO_TAG) {
                         DEXIT;
                         return 0 ;
                      }
@@ -1003,7 +1003,7 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
                                 const char *limit_value, u_long32 relop, 
                                 u_long32 type, lListElem *hep, 
                                 lListElem *hlep, double lc_host, 
-                                double lc_global, lList *load_adjustments, int load_is_value) 
+                                double lc_global, const lList *load_adjustments, int load_is_value) 
 {
    lListElem *job_load;
    double limit, load;
@@ -1185,7 +1185,7 @@ static int resource_cmp(u_long32 relop, double req, double src_dl)
 int 
 sge_load_alarm(char *reason, lListElem *qep, lList *threshold, 
                lList *exechost_list, lList *centry_list, 
-               lList *load_adjustments) 
+               const lList *load_adjustments) 
 {
    lListElem *hep, *global_hep, *tep;
    u_long32 ulc_factor; 
@@ -1382,7 +1382,7 @@ lList **unloaded,    /* QU_Type */
 lList **overloaded,  /* QU_Type */
 lList *exechost_list, /* EH_Type */
 lList *centry_list, /* CE_Type */
-lList *load_adjustments, /* CE_Type */
+const lList *load_adjustments, /* CE_Type */
 lList *granted,      /* JG_Type */
 u_long32 ttype       /* may be QU_suspend_thresholds or QU_load_thresholds */
 ) {
@@ -1644,7 +1644,7 @@ int queue_sort_method,
 lList *centry_list,  /* CE_Type */
 lList *host_list,    /* EH_Type */
 lList *acl_list,     /* US_Type */
-lList *load_adjustments, /* CE_Type */
+const lList *load_adjustments, /* CE_Type */
 int ndispatched,
 int *last_dispatch_type, 
 int host_order_changed) {
@@ -1764,7 +1764,7 @@ int host_order_changed) {
      
          { 
          lListElem *category = lGetRef(job, JB_category);
-         bool use_category = lGetUlong(category, CT_refcount) > MIN_JOBS_IN_CATEGORY;
+         bool use_category = (category != NULL) && lGetUlong(category, CT_refcount) > MIN_JOBS_IN_CATEGORY;
 
          if (use_category){
             schedd_mes_set_tmp_list(category, CT_job_messages, lGetUlong(job,JB_job_number ));
@@ -1803,7 +1803,7 @@ int host_order_changed) {
                         }
                      }
                         
-                     if(available_slots_at_queue(job, qep, pe, ckpt, host_list, centry_list, acl_list,
+                     if (available_slots_at_queue(job, qep, pe, ckpt, host_list, centry_list, acl_list,
                               load_adjustments, 1, ndispatched, global_hep, 1, hep, NULL)){
                   
                         lListElem *gdil_ep;
@@ -1911,7 +1911,7 @@ int host_order_changed) {
           * ------------------------------------------------------------------ */
          int global_soft_violations = 0;
          lListElem *category = lGetRef(job, JB_category);
-         bool use_category = lGetUlong(category, CT_refcount) > MIN_JOBS_IN_CATEGORY;
+         bool use_category = category != NULL && lGetUlong(category, CT_refcount) > MIN_JOBS_IN_CATEGORY;
          bool use_cviolation = use_category && lGetNumberOfElem(lGetList(category, CT_queue_violations)) > 0; 
           
          *last_dispatch_type = DISPATCH_TYPE_COMPREHENSIVE;
@@ -1996,11 +1996,7 @@ int host_order_changed) {
                      next_queue = lGetElemHostFirst(queues, QU_qhostname, eh_name, &queue_iterator); 
                      while ((qep = next_queue) != NULL) {
                         next_queue = lGetElemHostNext(queues, QU_qhostname, eh_name, &queue_iterator); 
-/*
-                     for_each (qep, queues) {
-                        if (sge_hostcmp(lGetHost(qep, QU_qhostname), eh_name))
-                           continue;
-*/
+
                         qname = lGetString(qep, QU_qname);
                         lSetUlong(qep, QU_soft_violation, MAX_ULONG32);
 
@@ -2371,7 +2367,7 @@ int available_slots_at_queue(
       lList *host_list,
       lList *centry_list,
       lList *acl_list,
-      lList *load_adjustments,
+      const lList *load_adjustments,
       int host_slots, /* maximum amount of slots at this host */
       int ndispatched,
       lListElem *global_hep,
@@ -2463,12 +2459,10 @@ int available_slots_at_queue(
       if (!(qslots = lGetDouble(cep, CE_doubleval))) {
          schedd_mes_add(job_id, SCHEDD_INFO_NOSLOTSINQUEUE_S, qname);
       }
-
       lFreeElem(cep);
 
       /* get QU_job_slots of queue */
       qslots = MIN(host_slots, qslots);
-
       for (; qslots; qslots--) {
 
          /* check if queue fulfills hard request of the job */

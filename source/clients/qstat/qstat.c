@@ -72,6 +72,7 @@
 #include "sge_ckpt.h"
 #include "sge_queue.h"
 #include "sge_centry.h"
+#include "sge_schedd_conf.h"
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_10 "%I %I %I %I %I %I %I %I %I %I "
@@ -91,7 +92,6 @@ static int qstat_show_job_info(void);
 
 lList *centry_list;
 lList *exechost_list = NULL;
-lList *sc_config = NULL;
 
 /************************************************************************/
 
@@ -209,8 +209,8 @@ char **argv
       &queue_list, 
       qselect_mode?NULL:&job_list, 
       &centry_list, 
-      &exechost_list, 
-      &sc_config, 
+      &exechost_list,
+      &Master_Sched_Config_List, 
       &pe_list,
       &ckpt_list,
       &acl_list,
@@ -820,7 +820,11 @@ u_long32 show
    /*
    ** scheduler configuration
    */
-   sc_what = lWhat("%T(%I)", SC_Type, SC_user_sort);
+
+   /* might be enough, but I am not sure */
+   /*sc_what = lWhat("%T(%I %I)", SC_Type, SC_user_sort, SC_job_load_adjustments);*/ 
+   sc_what = lWhat("%T(ALL)", SC_Type);
+
    sc_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_SC_LIST, SGE_GDI_GET, 
                         NULL, NULL, sc_what, NULL, &state);
    sc_what = lFreeWhat(sc_what);
@@ -971,11 +975,7 @@ u_long32 show
       printf("%s", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
-   if (sc_config) {
-      if (lGetBool(lFirst(*sc_l), SC_user_sort)) {
-         set_user_sort(1);
-      }
-   }
+
    alp = lFreeList(alp);
 
    /* -- apply global configuration for sge_hostcmp() scheme */

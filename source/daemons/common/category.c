@@ -49,7 +49,6 @@
 #include "cull_sort.h"
 #include "sge_event.h"
 #include "sge_feature.h"
-#include "schedd_conf.h"
 #include "schedd_monitor.h"
 #include "unparse_job_cull.h"
 #include "sge_dstring.h"

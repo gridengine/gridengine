@@ -56,8 +56,6 @@
 #include "sge_orders.h"
 #include "sge_job_schedd.h"
 
-#include "schedd_conf.h"
-
 #include "sgeee.h"
 #include "sge_support.h"
 #include "sge_schedd_conf.h"
@@ -1279,9 +1277,9 @@ combine_usage( sge_ref_t *ref )
 #endif
 
    if (ref->node) {
-
-      lList *usage_weight_list=NULL, *usage_list=NULL;
-      lListElem *usage_weight, *config, *usage_elem;
+      const lList *usage_weight_list = NULL;
+      lList *usage_list=NULL;
+      lListElem *usage_weight, *usage_elem;
       double sum_of_usage_weights = 0;
       const char *usage_name;
 
@@ -1289,12 +1287,10 @@ combine_usage( sge_ref_t *ref )
        * Sum usage weighting factors
        *-------------------------------------------------------------*/
 
-      if ((config = lFirst(all_lists->config_list))) {
-         usage_weight_list = lGetList(config, SC_usage_weight_list);
-         if (usage_weight_list) {
-            for_each(usage_weight, usage_weight_list)
-               sum_of_usage_weights += lGetDouble(usage_weight, UA_value);
-         }
+      usage_weight_list = sconf_get_usage_weight_list();
+      if (usage_weight_list) {
+          for_each(usage_weight, usage_weight_list)
+             sum_of_usage_weights += lGetDouble(usage_weight, UA_value);
       }
 
       /*-------------------------------------------------------------
@@ -2166,21 +2162,20 @@ get_functional_weighting_parameters( double sum_of_user_functional_shares,
                                      double weight[] )
 {
    double k_sum;
-   lListElem *config;
    memset(weight, 0, sizeof(double)*k_last);
 
-   if ((config = lFirst(all_lists->config_list))) {
+   if (lFirst(Master_Sched_Config_List)) {
 
       if (sum_of_user_functional_shares > 0)
-         weight[k_user] = lGetDouble(config, SC_weight_user);
+         weight[k_user] = sconf_get_weight_user();
       if (sum_of_department_functional_shares > 0)
-         weight[k_department] = lGetDouble(config, SC_weight_department);
+         weight[k_department] = sconf_get_weight_department();
       if (sum_of_project_functional_shares > 0)
-         weight[k_project] = lGetDouble(config, SC_weight_project);
+         weight[k_project] = sconf_get_weight_project();
       if (sum_of_jobclass_functional_shares > 0)
-         weight[k_jobclass] = lGetDouble(config, SC_weight_jobclass);
+         weight[k_jobclass] = sconf_get_weight_jobclass();
       if (sum_of_job_functional_shares > 0)
-         weight[k_job] = lGetDouble(config, SC_weight_job);
+         weight[k_job] = sconf_get_weight_job();
       k_sum = weight[k_user] + weight[k_department] + weight[k_project] +
               weight[k_jobclass] + weight[k_job];
    } else {
@@ -2820,16 +2815,11 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
    lListElem *job, *qep, *root = NULL;
 
-   lListElem *sge_conf = lFirst(lists->config_list);
-
    double prof_init=0, prof_pass0=0, prof_pass1=0, prof_pass2=0, prof_calc=0; 
 
-   double total_share_tree_tickets =
-            (double)lGetUlong(sge_conf, SC_weight_tickets_share);
-   double total_functional_tickets =
-            (double)lGetUlong(sge_conf, SC_weight_tickets_functional);
-   double total_deadline_tickets = 
-            (double)lGetUlong(sge_conf, SC_weight_tickets_deadline);
+   double total_share_tree_tickets = sconf_get_weight_tickets_share();
+   double total_functional_tickets = sconf_get_weight_tickets_functional();
+   double total_deadline_tickets = sconf_get_weight_tickets_deadline();
 
    static int halflife = 0;
 
@@ -2869,10 +2859,10 @@ sge_calc_tickets( sge_Sdescr_t *lists,
     * Decay usage for all users and projects if halflife changes
     *-------------------------------------------------------------*/
 
-   if (do_usage && sge_conf && halflife != lGetUlong(sge_conf, SC_halftime)) {
+   if (do_usage && sconf_is() && halflife != sconf_get_halftime()) {
       lListElem *userprj;
       int oldhalflife = halflife;
-      halflife = lGetUlong(sge_conf, SC_halftime);
+      halflife = sconf_get_halftime(); 
       /* decay up till now based on old half life (unless it's zero),
          all future decay will be based on new halflife */
       if (oldhalflife == 0)
@@ -2884,7 +2874,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
       for_each(userprj, lists->project_list)
          decay_userprj_usage(userprj, decay_list, sge_scheduling_run, curr_time);
    } else
-      calculate_default_decay_constant(lGetUlong(sge_conf, SC_halftime));
+      calculate_default_decay_constant(sconf_get_halftime());
 
    /*-------------------------------------------------------------
     * Init job_ref_count in each share tree node to zero
@@ -3219,11 +3209,10 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
    /* set scheduler configuration information to go back to GUI */
 
-   if (sge_conf) {
-      lSetUlong(sge_conf, SC_weight_tickets_deadline_active,
-		MIN(sum_of_deadline_tickets, total_deadline_tickets));
-      lSetUlong(sge_conf, SC_weight_tickets_override,
-		sum_of_active_override_tickets);
+   if (sconf_is()) {
+      sconf_set_weight_tickets_deadline_active(
+         		   MIN(sum_of_deadline_tickets, total_deadline_tickets));
+      sconf_set_weight_tickets_override(sum_of_active_override_tickets);
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
@@ -3773,7 +3762,6 @@ sge_calc_sharetree_targets( lListElem *root,
    sge_calc_node_usage(root,
                        lists->user_list,
                        lists->project_list,
-                       lists->config_list,
                        decay_list,
                        curr_time,
                        NULL,
@@ -3903,7 +3891,8 @@ sge_calc_node_targets( lListElem *root,
       }
    }
 
-/*
+/* psydo code:
+
    if compensation_factor != 0
 
       sum = 0
@@ -3927,8 +3916,7 @@ sge_calc_node_targets( lListElem *root,
     * adjust targeted proportion based on compensation factor
     *---------------------------------------------------------------*/
 
-   compensation_factor = lGetDouble(lFirst(lists->config_list),
-                  SC_compensation_factor);
+   compensation_factor = sconf_get_compensation_factor();
 
    if (compensation_factor != 0) {
       u_long compensation = 0;
@@ -4097,7 +4085,6 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
    static lEnumeration *config_what = NULL;
    lCondition *where=NULL;
    lList *up_list;
-   lList *config_list;
    lListElem *order;
    lListElem *root;
    lListElem *job;
@@ -4288,9 +4275,10 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
        * build update scheduler configuration order
        *-----------------------------------------------------------------*/
 
-      if (lists->config_list) {
+      if (sconf_is()) {
+         lList *config_list;
          norders = lGetNumberOfElem(order_list); 
-         if ((config_list = lSelect("", lists->config_list, NULL, config_what))) {
+         if ((config_list = lSelect("", Master_Sched_Config_List, NULL, config_what))) {
             if (lGetNumberOfElem(config_list)>0) {
                order = lCreateElem(OR_Type);
                lSetUlong(order, OR_seq_no, get_seq_nr());
@@ -4410,9 +4398,10 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    if ((now = sge_get_gmt()) < past)
       past = now;
 
-
-   if ( scheddconf.sgeee_schedule_interval == 0 || 
-      (now < (past + scheddconf.sgeee_schedule_interval))) { /* normal scheduling interval */
+   {
+      u_long32 sgeee_schedule_interval = sconf_get_sgeee_schedule_interval();
+   if ( sgeee_schedule_interval == 0 || 
+      (now < (past + sgeee_schedule_interval))) { /* normal scheduling interval */
 
       /* Only update qmaster with tickets of pending jobs - everything
          else will be updated on the SGEEE scheduling interval. */
@@ -4429,7 +4418,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
 
       past = now;
    }
-
+   }
    if(!has_pending_jobs || !has_queues)
       return 0;
 

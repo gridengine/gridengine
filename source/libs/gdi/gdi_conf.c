@@ -259,17 +259,18 @@ lList **conf_list
       DPRINTF((
          "Error %d merging configuration \"%s\"\n", ret, uti_state_get_qualified_hostname()));
    }
+
    /*
     * we don't keep all information, just the name and the version
     * the entries are freed
-   */
+    */
    lSetList(global, CONF_entries, NULL);
    lSetList(local, CONF_entries, NULL);
    *conf_list = lFreeList(*conf_list);
    *conf_list = lCreateList("config list", CONF_Type);
    lAppendElem(*conf_list, global);
    lAppendElem(*conf_list, local);
-
+   
    DEXIT;
    return 0;
 }

@@ -434,4 +434,10 @@
  */
 #define MSG_SCHEDD_NOVALUEFORATTR_S                       _MESSAGE(47290, _("no value for complex attribute "SFQ))
 
+/*
+ * daemons/sched/sge_process_events.c
+ */
+#define MSG_INVALID_LOAD_FORMULA                      _MESSAGE(47291, _("invalid load formula "SFQ))
+#define MSG_INCOMPLETE_SCHEDD_CONFIG                  _MESSAGE(47292, _("The scheduler configuration is incomplete"))
+
 #endif /* __MSG_SCHEDD_H */

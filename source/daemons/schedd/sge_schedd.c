@@ -389,42 +389,6 @@ static int sge_ck_qmaster(const char *former_master_host)
    }
    lp = lFreeList(lp);
 
-/*---------------------------------------------------------------*/
-#if 0
-   /* JG: this is not necessary: SCHED_CONF is sent at 
-    * event client registration 
-    */
-   DPRINTF(("Requesting scheduler configuration from qmaster\n"));
-   what = lWhat("%T(ALL)", SC_Type);
-   alp = sge_gdi(SGE_SC_LIST, SGE_GDI_GET, &lp, NULL, what);
-   what = lFreeWhat(what);
-
-   success = (lGetUlong(lFirst(alp), AN_status) == STATUS_OK);
-   if (!success) {
-      ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-      DEXIT;
-      return 1;
-   }
-
-   alp = lFreeList(alp);
-
-   if (success && !lp) {
-      INFO((SGE_EVENT, MSG_SCHEDD_GOTEMPTYCONFIGFROMMASTERUSINGDEFAULT ));
-      lp = lFreeList(lp);
-      DEXIT;
-      return 1;
-   }
-
-   alp = NULL;
-   if (sc_set(&alp, &scheddconf, lFirst(lp), NULL, NULL))
-      ERROR((SGE_EVENT, "%s", lGetString(lFirst(alp), AN_text)));
-
-   ec_set_edtime(scheddconf.schedule_interval);
-   use_alg(scheddconf.algorithm);
-
-   lp = lFreeList(lp);
-#endif
-
    DEXIT;
    return 0;
 }
@@ -491,6 +455,7 @@ static int sge_setup_sge_schedd()
    int ret;
    u_long32 saved_logginglevel;
    char err_str[1024];
+   lList *schedd_config_list = NULL;
 
    DENTER(TOP_LAYER, "sge_setup_sge_schedd");
 
@@ -500,6 +465,8 @@ static int sge_setup_sge_schedd()
    }
    sge_show_conf();
 
+   schedd_config_list = lFreeList(schedd_config_list);
+   
    /*
    ** switch to admin user
    */

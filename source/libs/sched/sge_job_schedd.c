@@ -41,7 +41,6 @@
 #include "sge_parse_num_par.h"
 #include "schedd_monitor.h"
 #include "sge_sched.h"            /*added to support SGE*/
-#include "schedd_conf.h"      /*added to support SGE*/
 #include "schedd_message.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
@@ -55,6 +54,7 @@
 #include "sge_queue.h"
 #include "sge_userset.h"
 #include "sge_centry.h"
+#include "sge_schedd_conf.h"
 
 #include "cull_hash.h"
 
@@ -995,7 +995,7 @@ int resort_jobs(lList *jc, lList *job_list, const char *owner, lSortOrder *so)
    DENTER(TOP_LAYER, "resort_jobs");
 
 
-   if (get_user_sort()) {
+   if (sconf_get_user_sort()) {
       int njobs;
       lListElem *job, *jc_owner;
 

@@ -458,7 +458,9 @@ void sge_strip_blanks(char *str)
 
    while (*str) {
       if (*str != ' ') {
-         *cp++ = *str;
+         if (cp != str)
+            *cp = *str;
+         cp++;
       }
       str++;
    };

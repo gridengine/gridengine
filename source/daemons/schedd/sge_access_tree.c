@@ -40,7 +40,7 @@
 #include "sge_access_tree.h"
 #include "sge_job_schedd.h"
 #include "sge_job.h"
-#include "schedd_conf.h"
+#include "sge_schedd_conf.h"
 
 #include "sge_access_treeL.h"
 #include "sge_ctL.h"
@@ -112,7 +112,7 @@ lListElem *job_array
    lListElem *pgr, *user = NULL, *last, *jr;
    lList *jrl;
    u_long32 priority;
-   int user_sort = get_user_sort();
+   int user_sort = sconf_get_user_sort();
 
    DENTER(TOP_LAYER, "at_register_job_array");
 
@@ -179,7 +179,7 @@ static void at_trace()
 {
 #if 0
    lListElem *u, *p, *j;
-   int user_sort = get_user_sort();
+   int user_sort = sconf_get_user_sort();
    char *s;
    lListElem *current;
 
@@ -232,7 +232,7 @@ lListElem *job
       return;
    }
 
-   if (get_user_sort()) {
+   if (sconf_get_user_sort()) {
       lListElem *user;
       const char *owner = lGetString(job, JB_owner);
       user = lGetSubStr(pgrp, USR_name, owner, PGR_subordinated_list);
@@ -353,13 +353,13 @@ void at_notice_runnable_job_arrays(
 lList *job_list 
 ) {
    lListElem *pgrp;
-
+   bool user_sort = sconf_get_user_sort();
    DENTER(TOP_LAYER, "at_notice_runnable_job_arrays");
 
    /* reinitialize the iterator in our access tree */
    current_pgrp = NULL;
    for_each (pgrp, priority_group_list) {
-      if (get_user_sort()) {
+      if (user_sort) {
          lListElem *user;
          /* use the number of running jobs from event layer as basis
             for keeping the same information in dispatch layer */
@@ -393,7 +393,7 @@ int slots
 
    DENTER(TOP_LAYER, "at_dispatched_a_task");
 
-   if (get_user_sort()) {
+   if (sconf_get_user_sort()) {
       DPRINTF(("USERSORT: got dispatch notification for %d jobs of user %s\n", 
             slots, lGetString(job, JB_owner)));
       /* debit this job */
@@ -422,7 +422,8 @@ lListElem *at_get_actual_job_array(lList *job_list)
 {
    lListElem *job_array = NULL;
    lList *usl;
-
+   bool user_sort = sconf_get_user_sort();
+   u_long32 maxujobs = sconf_get_maxujobs();
    /* this is our cursor */
    static int current_min_jobs_per_user = -1;
 
@@ -440,7 +441,7 @@ lListElem *at_get_actual_job_array(lList *job_list)
    }
 
    do { /* iterate through all priority groups */
-      if (!get_user_sort()) {
+      if (user_sort) {
          /* FCFS - simply return the current job array 
                    if it is dispatchable and still in
                    our directory of runnable jobs 
@@ -510,8 +511,8 @@ lListElem *at_get_actual_job_array(lList *job_list)
                            current_min_jobs_per_user, current_min_jobs_per_user+1));
                   current_min_jobs_per_user = current_min_jobs_per_user+1;
 
-                  if (scheddconf.maxujobs && current_min_jobs_per_user >= scheddconf.maxujobs) {
-                     DPRINTF(("USERSORT: reached maxujobs limit of %d\n", scheddconf.maxujobs));
+                  if (maxujobs && current_min_jobs_per_user >= maxujobs) {
+                     DPRINTF(("USERSORT: reached maxujobs limit of %d\n", maxujobs));
                      current_min_jobs_per_user = -1;
                   }
                } else {

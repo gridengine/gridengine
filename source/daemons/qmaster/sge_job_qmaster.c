@@ -3276,7 +3276,7 @@ int *trigger
                set_monitor_alpp(&talp);
 
             granted = sge_replicate_queues_suitable4job(Master_Queue_List, 
-                  jep, NULL, pep, ckpt_ep, scheddconf.queue_sort_method,
+                  jep, NULL, pep, ckpt_ep, sconf_get_queue_sort_method(),
                   Master_CEntry_List, Master_Exechost_List, 
                   Master_Userset_List, NULL, 0, &prev_dipatch_type, 0);
             ngranted = nslots_granted(granted, NULL);

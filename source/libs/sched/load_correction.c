@@ -38,12 +38,12 @@
 #include "load_correction.h"
 #include "sgermon.h"
 #include "sge_time.h"
-#include "schedd_conf.h"
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
 #include "sge_queue.h"
 #include "sge_host.h"
 #include "sge_centry.h"
+#include "sge_schedd_conf.h"
 
 int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
                   u_long32 decay_time) 
@@ -218,7 +218,7 @@ correct_capacities(lList *host_list, lList *centry_list)
 
          /* do load correction */
          load_correction = 0;
-         if ((job_load=lGetElemStr(scheddconf.job_load_adjustments, CE_name, attr_name))) {
+         if ((job_load=lGetElemStr(sconf_get_job_load_adjustments(), CE_name, attr_name))) {
             double lc_factor;
             const char *s = lGetString(job_load, CE_stringval);
 

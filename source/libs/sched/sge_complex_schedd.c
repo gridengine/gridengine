@@ -305,7 +305,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
       lSetUlong(cplx_el, CE_pj_dominant, layer | DOMINANT_TYPE_CONSUMABLE );
       lSetUlong(cplx_el, CE_dominant,DOMINANT_TYPE_VALUE );
       /* treat also consumables as fixed attributes when assuming an empty queuing system */
-      if (get_qs_state()==QS_STATE_FULL) {
+      if (get_qs_state() == QS_STATE_FULL) {
          if(actual_attr && (actual_el = lGetElemStr(actual_attr, CE_name, attrname))){
             char as_str[10];
             switch (lGetUlong(cplx_el, CE_relop)) {
@@ -338,8 +338,11 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
             return NULL;
          }
       }
+      else{
+         lSetDouble(cplx_el, CE_pj_doubleval, lGetDouble(cplx_el, CE_doubleval)); 
+         lSetString(cplx_el,CE_pj_stringval, lGetString(cplx_el, CE_stringval));
+      }
    }
-   
 
    /** check for a load value */
    if ( load_attr && 
@@ -383,7 +386,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                char err_str[256];
                u_long32 dom_type = DOMINANT_TYPE_LOAD;
  
-               job_load=lGetElemStr(scheddconf.job_load_adjustments, CE_name, attrname);
+               job_load=lGetElemStr(sconf_get_job_load_adjustments(), CE_name, attrname);
                if (parse_ulong_val(&dval, NULL, type, load_value, NULL, 0)) {
 
                strcpy(sval, load_value);
@@ -465,7 +468,6 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
       if (!get_queue_resource(cplx_el, queue, attrname) && created)
          cplx_el = lFreeElem(cplx_el);
    }
-
    DEXIT;
    return cplx_el;
 }
@@ -1659,7 +1661,6 @@ double req,
 double src_dl 
 ) {
    int match;
-
    switch(relop) { 
    case CMPLXEQ_OP :
       match = ( req==src_dl);
@@ -1791,7 +1792,6 @@ int force_existence
             value or a consumable resource value) plus the jobs request 
             may not exceed the maximal utilization from (global) host 
             or queue - but only if the attributes marked as consumable. */
-
          src_dl = lGetDouble(src_cplx, CE_pj_doubleval);
          
          req_all_slots = req_dl*slots;
@@ -1854,7 +1854,6 @@ int force_existence
               ((lGetUlong(src_cplx, CE_dominant) & (DOMINANT_TYPE_VALUE)) && /* (per slot not set && */
            (lGetUlong(src_cplx, CE_pj_dominant) & (DOMINANT_TYPE_VALUE)) &&  /* and per job not set) */
             force_existence)) {  
-
 
          src_dl = lGetDouble(src_cplx, CE_doubleval);
          req_all_slots = req_dl;

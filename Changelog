@@ -1,3 +1,17 @@
+SG-2003-10-17-1: Enhancem.: First part of the scheduler configuration cleanup.
+                            All copies of the scheduler configuration within
+                            the scheduler are removed. The scheduler works via
+                            access functions directly on the scheduler master
+                            configuration. A validate function is added to
+                            ensure a correct configuration settings
+                 Changed:   qmaster, schedd, qmon, qstat,...
+                 Review:    JG
+
+SG-2003-10-17-0: Bugfix:    - qsub -w e killed the qmaster
+                            - qsub -w e did not acept any job.
+                 Changed:   qmaster, schedd
+                 Review:    JG
+
 JG-2003-10-17-0: Enhancem.: Berkeley DB spooling:
                             Added trigger function that checkpoints the 
                             transaction subsystem in regular intervals and 

@@ -68,7 +68,7 @@ char **string_list(char *str, char *delis, char **pstr);
 
 int cull_parse_string_list(char **pstrlist, const char *listname, lDescr *descr, int *interpretation_rule, lList **pplist);
 
-int uni_print_list(FILE *fp, char *buff, u_long32 max_len, lList *lp, int *which_elements_rule, const char *pdelis[], unsigned long flags);
+int uni_print_list(FILE *fp, char *buff, u_long32 max_len, const lList *lp, int *which_elements_rule, const char *pdelis[], unsigned long flags);
 
 int fprint_cull_list(FILE *fp, char *str, lList *lp, int fi); 
 int fprint_thresholds(FILE *fp, char *str, lList *thresholds, int print_slots); 

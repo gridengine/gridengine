@@ -47,7 +47,7 @@ int sge_select_queue(lList *reqested_attr, lListElem *queue, lListElem *host, lL
  * is there a load alarm on this queue
  * 
  */
-int sge_load_alarm(char *reason, lListElem *queue, lList *threshold, lList *exechost_list, lList *complex_list, lList *load_adjustments);
+int sge_load_alarm(char *reason, lListElem *queue, lList *threshold, lList *exechost_list, lList *complex_list, const lList *load_adjustments);
 
 /* 
  * get reason for alarm state on queue
@@ -59,7 +59,7 @@ char *sge_load_alarm_reason(lListElem *queue, lList *threshold, lList *exechost_
  * split queue list into unloaded and overloaded
  * 
  */
-int sge_split_queue_load(lList **unloaded, lList **overloaded, lList *exechost_list, lList *complex_list, lList *load_adjustments, lList *granted, u_long32 ttype);
+int sge_split_queue_load(lList **unloaded, lList **overloaded, lList *exechost_list, lList *complex_list, const lList *load_adjustments, lList *granted, u_long32 ttype);
 
 /* 
  * split queue list into queues with at least n slots
@@ -88,7 +88,7 @@ int sge_split_suspended(lList **queue_list, lList **suspended);
 
 enum { DISPATCH_TYPE_NONE = 0, DISPATCH_TYPE_FAST, DISPATCH_TYPE_COMPREHENSIVE };
 
-lList *sge_replicate_queues_suitable4job(lList *queues, lListElem *job, lListElem *ja_task, lListElem *pe_list, lListElem *ckpt, int sort_seq_no, lList *complex_list, lList *host_list, lList *acl_list, lList *load_adjustments, int ndispatched, int *last_dispatch_type, int host_order_changed);
+lList *sge_replicate_queues_suitable4job(lList *queues, lListElem *job, lListElem *ja_task, lListElem *pe_list, lListElem *ckpt, int sort_seq_no, lList *complex_list, lList *host_list, lList *acl_list, const lList *load_adjustments, int ndispatched, int *last_dispatch_type, int host_order_changed);
 
 
 /* 
@@ -124,6 +124,6 @@ char *trace_resource(lListElem *rep);
 
 void trace_resources(lList *resources);
 
-int available_slots_at_queue( lListElem *job, lListElem *queue, lListElem *pe, lListElem *ckpt, lList *host_list, lList *cplx_list, lList *acl_list, lList *load_adjustments, int host_slots, int ndispatched, lListElem *global_hep,    int total_slots, lListElem *hep, int *soft_violations);
+int available_slots_at_queue( lListElem *job, lListElem *queue, lListElem *pe, lListElem *ckpt, lList *host_list, lList *cplx_list, lList *acl_list, const lList *load_adjustments, int host_slots, int ndispatched, lListElem *global_hep,    int total_slots, lListElem *hep, int *soft_violations);
 
 #endif

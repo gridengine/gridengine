@@ -45,7 +45,6 @@
 #include "sge_schedd_conf.h"
 #include "sge_usageL.h"
 #include "sge_ja_task.h"
-#include "schedd_conf.h"
 #include "sge_language.h"
 
 #define HOST_USAGE_ATTR_CPU     "cpu"
@@ -149,7 +148,7 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **centry)
    }
    lFreeList(alp);
    alp = NULL;
-      if (sc_set(&alp, &scheddconf, lFirst(*config), NULL, NULL))
+      if (!sconf_validate_config(&alp, config))
         fprintf(stderr, "%s\n", lGetString(lFirst(alp), AN_text));
 
 

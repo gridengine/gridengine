@@ -79,6 +79,7 @@
 #include "sge_pe.h"
 #include "sge_ckpt.h"
 #include "sge_host.h"
+#include "sge_schedd_conf.h"
 
 /* profiling info */
 extern int scheduled_fast_jobs;
@@ -87,7 +88,7 @@ extern int do_profiling;
 
 /* the global list descriptor for all lists needed by the default scheduler */
 sge_Sdescr_t lists =
-{NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+{NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
 static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist, 
                          lList **splitted_job_list[]);
@@ -253,7 +254,7 @@ int scheduler(sge_Sdescr_t *lists) {
          lGetNumberOfElem(lists->centry_list),
          lGetNumberOfElem(lists->acl_list),
          lGetNumberOfElem(lists->pe_list),
-         lGetNumberOfElem(lists->config_list),
+         lGetNumberOfElem(Master_Sched_Config_List),
          lGetNumberOfElem(lists->user_list),
          lGetNumberOfElem(lists->dept_list),
          lGetNumberOfElem(lists->project_list),
@@ -337,6 +338,9 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    lList *susp_queues = NULL;
    lListElem *rjob, *rja_task;
    lListElem *queue;  
+   u_long32 queue_sort_method; 
+   u_long32 maxujobs;
+   const lList *job_load_adjustments = NULL;
 #ifdef TEST_DEMO
    lListElem *host;
    FILE *fpdjp;
@@ -354,6 +358,11 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    int nr_pending_jobs=0;
    DENTER(TOP_LAYER, "dispatch_jobs");
 
+   queue_sort_method =  sconf_get_queue_sort_method();
+   maxujobs = sconf_get_maxujobs(); 
+   job_load_adjustments = sconf_get_job_load_adjustments();
+
+
 #ifdef TEST_DEMO
    fpdjp = fopen("/tmp/sge_debug_job_place1.out", "a");
 #endif
@@ -364,12 +373,13 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
     * of an exechost for each job started before load adjustment decay time.
     * load_adjustment_decay_time is a configuration value. 
     *---------------------------------------------------------------------*/
-
-   if (scheddconf.load_adjustment_decay_time ) {
+   {
+   u_long32 decay_time = sconf_get_load_adjustment_decay_time(); 
+   if ( decay_time ) {
       correct_load(*(splitted_job_lists[SPLIT_RUNNING]),
 		   lists->queue_list,
 		   lists->host_list,
-		   scheddconf.load_adjustment_decay_time);
+		   decay_time);
 
       /* is there a "global" load value in the job_load_adjustments?
          if so this will make it necessary to check load thresholds
@@ -377,7 +387,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
       {
          lListElem *gep, *lcep;
          if ((gep = host_list_locate(lists->host_list, "global"))) {
-            for_each (lcep, scheddconf.job_load_adjustments) {
+            for_each (lcep, job_load_adjustments) {
                const char *attr = lGetString(lcep, CE_name);
                if (lGetSubStr(gep, HL_name, attr, EH_load_list)) {
                   DPRINTF(("GLOBAL LOAD CORRECTION \"%s\"\n", attr));
@@ -387,6 +397,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
             }
          }
       }
+   }
    }
 
    set_global_load_correction(global_lc);
@@ -404,7 +415,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          &susp_queues,            /* list of queues in suspend alarm state  */
          lists->host_list,
          lists->centry_list,
-         scheddconf.job_load_adjustments,
+         job_load_adjustments,
          NULL,
          QU_suspend_thresholds)) {
       DPRINTF(("couldn't split queue list with regard to suspend thresholds\n"));
@@ -431,7 +442,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          NULL,                 /* no destination so they get trashed       */
          lists->host_list,     /* host list contains load values           */
          lists->centry_list,  /* complex list is needed to use load values */
-         scheddconf.job_load_adjustments,
+         job_load_adjustments,
          NULL,
          QU_load_thresholds)) {
       DPRINTF(("couldn't split queue list concerning load\n"));
@@ -515,7 +526,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    job_lists_split_with_reference_to_max_running(splitted_job_lists,
                                                  &user_list,
                                                  NULL,
-                                                 scheddconf.maxujobs);
+                                                 maxujobs);
 
    nr_pending_jobs = lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]));
 
@@ -556,7 +567,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          the queue load is identically to the host load
 
    */
-   switch (scheddconf.queue_sort_method) {
+   switch (queue_sort_method) {
    case QSM_SHARE:   
 
       if (sgeee_mode) {
@@ -612,7 +623,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
     * Calculate the total number of tickets for running jobs - to be used
     * later for SGE job placement 
     */
-   if (sgeee_mode && scheddconf.queue_sort_method == QSM_SHARE)  {
+   if (sgeee_mode && queue_sort_method == QSM_SHARE)  {
       total_running_job_tickets = 0;
       for_each(rjob, *splitted_job_lists[SPLIT_RUNNING]) {
          for_each(rja_task, lGetList(rjob, JB_ja_tasks)) {
@@ -799,7 +810,7 @@ SKIP_THIS_JOB:
          job_lists_split_with_reference_to_max_running(splitted_job_lists,
                                              &user_list, 
                                              lGetString(job, JB_owner),
-                                             scheddconf.maxujobs);
+                                             maxujobs);
          trash_splitted_jobs(splitted_job_lists);
       } else {
          schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0);
@@ -834,7 +845,7 @@ SKIP_THIS_JOB:
       if (lGetNumberOfElem(lists->queue_list)==0)
          break;
 #ifdef TEST_DEMO
-       if (scheddconf.queue_sort_method == QSM_SEQNUM)  {
+       if (queue_sort_method == QSM_SEQNUM)  {
             fprintf(fpdjp, "using sort_by_seq_no method - after sge_debit_job:\n");
             fprintf(fpdjp, " \n");
             fprintf(fpdjp, "QUEUE ORDER:\n");
@@ -842,7 +853,7 @@ SKIP_THIS_JOB:
                fprintf(fpdjp, "  queue %s\n", lGetString(queue, QU_qname));
             }
        }
-       if (scheddconf.queue_sort_method == QSM_LOAD)  {
+       if (queue_sort_method == QSM_LOAD)  {
             fprintf(fpdjp, "using sort_by_load method - after sge_debit_job:\n");
             for_each(host, lists->host_list) {
                fprintf(fpdjp, "load value for host %s is %f\n", lGetHost(host, EH_name), lGetDouble(host, EH_sort_value));
@@ -856,7 +867,7 @@ SKIP_THIS_JOB:
 #endif
 
       if (dispatched_a_job && !(lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]))==0) )  {
-         if (sgeee_mode && scheddconf.queue_sort_method == QSM_SHARE)  {
+         if (sgeee_mode && queue_sort_method == QSM_SHARE)  {
             sort_host_list_by_share_load(lists->host_list, lists->centry_list);
 
 #ifdef TEST_DEMO
@@ -876,7 +887,7 @@ SKIP_THIS_JOB:
             }
 #endif
 
-         } /* sgeee_mode && scheddconf.queue_sort_method == QSM_SHARE */
+         } /* sgeee_mode && queue_sort_method == QSM_SHARE */
       }
    } /* end of while */
 
@@ -934,7 +945,8 @@ int *sort_hostlist
 ) {
    int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    lListElem *hep;  
-   double old_host_tickets;    
+   double old_host_tickets; 
+   const lList *job_load_adjustments = sconf_get_job_load_adjustments();   
    lListElem *granted_el;     
    lList *granted = NULL;
 
@@ -949,11 +961,11 @@ int *sort_hostlist
       ja_task,               /* task that needs the queues              */
       pe,                    /* selects queues (queue list of pe)       */
       ckpt,                  /* selects queues (queue list of ckpt)     */
-      scheddconf.queue_sort_method ,/* sort order to use                       */
+      sconf_get_queue_sort_method() ,/* sort order to use                       */
       centry_list,         /* to interpret job requests               */
       host_list,            /* for load/architecture                   */
       acl_list,             /* use these access lists                  */
-      scheddconf.job_load_adjustments,
+      job_load_adjustments,
       ndispatched,
       dispatch_type,
       host_order_changed);
@@ -1043,7 +1055,7 @@ int *sort_hostlist
          NULL,                 /* no destination so they get trashed       */
          host_list,     /* host list contains load values           */
          centry_list, 
-         scheddconf.job_load_adjustments,
+         job_load_adjustments,
          granted,
          QU_load_thresholds)) {   /* use load thresholds here */
          

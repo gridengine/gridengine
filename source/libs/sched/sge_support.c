@@ -50,7 +50,6 @@
 #include "sge_time.h"
 #include "sge_orders.h"
 #include "sge_job_schedd.h"
-#include "schedd_conf.h"
 #include "scheduler.h"
 #include "sgeee.h"
 #include "sge_support.h"
@@ -297,7 +296,6 @@ double
 sge_calc_node_usage( lListElem *node,
                      lList *user_list,
                      lList *project_list,
-                     lList *config_list,
                      lList *decay_list,
                      u_long curr_time,
                      const char *projname,
@@ -308,8 +306,9 @@ sge_calc_node_usage( lListElem *node,
    lListElem *child_node;
    lList *children;
    lListElem *userprj = NULL;
-   lList *usage_weight_list=NULL, *usage_list=NULL;
-   lListElem *usage_weight, *config, *usage_elem;
+   const lList *usage_weight_list = NULL;
+   lList *usage_list=NULL;
+   lListElem *usage_weight, *usage_elem;
    double sum_of_usage_weights = 0;
    const char *usage_name;
    static int sn_children_pos = -1;
@@ -318,7 +317,6 @@ sge_calc_node_usage( lListElem *node,
    static int sn_usage_list_pos = -1;
    static int ua_name_pos = -1;
    static int ua_value_pos = -1;
-   static int sc_usage_weight_list_pos = -1;
    static int up_usage_pos = -1;
 
    DENTER(TOP_LAYER, "sge_calc_node_usage");
@@ -333,7 +331,6 @@ sge_calc_node_usage( lListElem *node,
       sn_name_pos = lGetPosViaElem(node, STN_name);
       ua_name_pos = lGetPosViaElem(ua_elem, UA_name);
       ua_value_pos = lGetPosViaElem(ua_elem, UA_value);
-      sc_usage_weight_list_pos = lGetPosViaElem(sc_elem, SC_usage_weight_list);
       up_usage_pos = lGetPosViaElem(up_elem, UP_usage);
       lFreeElem(ua_elem);
       lFreeElem(sc_elem);
@@ -412,8 +409,8 @@ sge_calc_node_usage( lListElem *node,
        * Sum usage weighting factors
        *-------------------------------------------------------------*/
 
-      if ((config = lFirst(config_list))) {
-         usage_weight_list = lGetPosList(config, sc_usage_weight_list_pos);
+      if (sconf_is()) {
+         usage_weight_list = sconf_get_usage_weight_list();
          if (usage_weight_list) {
             for_each(usage_weight, usage_weight_list)
                sum_of_usage_weights +=
@@ -468,8 +465,7 @@ sge_calc_node_usage( lListElem *node,
       for_each(child_node, children) {
          lListElem *nu;
          child_usage += sge_calc_node_usage(child_node, user_list,
-                                            project_list, config_list,
-                                            decay_list, curr_time,
+                                            project_list, decay_list, curr_time,
                                             projname, seqno);
 
          /*-------------------------------------------------------------
@@ -620,10 +616,9 @@ _sge_calc_share_tree_proportions( lList *share_tree,
    total_usage = sge_calc_node_usage(root,
                                      user_list,
                                      project_list,
-                                     config_list,
                                      decay_list,
                                      curr_time,
-				     NULL,
+                    				       NULL,
                                      -1);
 
    sge_calc_node_proportion(root, total_usage);

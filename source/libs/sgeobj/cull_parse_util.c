@@ -720,7 +720,7 @@ int uni_print_list(
 FILE *fp,
 char *buff,
 u_long32 max_len,
-lList *lp,
+const lList *lp,
 int *which_elements_rule,
 const char *pdelis[],
 unsigned long flags 

@@ -54,8 +54,7 @@ int sge_init_node_fields ( lListElem *root );
 void sge_calc_node_proportion(lListElem *node, double total_usage);
 
 double sge_calc_node_usage (lListElem *node, lList *user_list, 
-                            lList *project_list, lList *config_list, 
-                            lList *decay_list, u_long curr_time, 
+                            lList *project_list, lList *decay_list, u_long curr_time, 
                             const char *projname, u_long seqno );
 
 void _sge_calc_share_tree_proportions ( lList *share_tree, lList *user_list, lList *project_list, lList *config_list, lList *decay_list, u_long curr_time );

@@ -64,6 +64,8 @@ enum {
    SC_load_adjustment_decay_time,
    SC_load_formula,
    SC_schedd_job_info,
+   SC_is_schedd_job_info,
+   SC_schedd_job_info_range,
    SC_sgeee_schedule_interval,
    SC_halftime,
    SC_usage_weight_list,
@@ -94,6 +96,8 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    SGE_STRING(SC_load_adjustment_decay_time, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(SC_load_formula, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(SC_schedd_job_info, CULL_DEFAULT | CULL_SPOOL)
+   SGE_ULONG(SC_is_schedd_job_info,CULL_DEFAULT)
+   SGE_LIST(SC_schedd_job_info_range,RN_Type, CULL_DEFAULT)
 
    /* 
     * SGEEE specific configuration values
@@ -132,6 +136,8 @@ NAMEDEF(SCN)
    NAME("SC_load_adjustment_decay_time")
    NAME("SC_load_formula")
    NAME("SC_schedd_job_info")
+   NAME("SC_is_schedd_job_info")
+   NAME("SC_schedd_job_info_range")
 
    NAME("SC_sgeee_schedule_interval")
    NAME("SC_halftime")

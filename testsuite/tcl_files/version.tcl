@@ -58,39 +58,39 @@
 #  SEE ALSO
 #*******************************
 #
-proc ts_source {filebase} {
+proc ts_source {filebase {extension tcl}} {
    global ts_config
    global CHECK_OUTPUT
 
-   set ret 1
+   set sourced 0
 
    # suppress warnings when testsuite tries to resource some files
    if {[string first "not in testmode" $filebase] != -1} {
-      return $ret
+      return $sourced
    }
 
    # we need a testsuite config before sourcing files
    if {![info exists ts_config] || ![info exists ts_config(gridengine_version)]} {
       add_proc_error "ts_source" -1 "can't source version specific files before knowing the version"
-      set ret 0
    } else {
       # read a version independent file first, then the version dependent
       set version $ts_config(gridengine_version)
 
-      set filename "$filebase.tcl"
-      set sourced 0
+      set filename "${filebase}.${extension}"
 
+#puts $CHECK_OUTPUT "----> probing file $filename"
       if {[file exists $filename]} {
-         puts $CHECK_OUTPUT "reading file $filename"
-         source $filename
+         debug_puts "reading file $filename"
+         uplevel source $filename
          incr sourced
       }
 
       if { $version != "" } {
-         set filename "$filebase.$version.tcl"
+         set filename "${filebase}.${version}.${extension}"
+#puts $CHECK_OUTPUT "----> probing file $filename"
          if {[file exists $filename]} {
-            puts $CHECK_OUTPUT "reading version specific file $filename"
-            source $filename
+            debug_puts "reading version specific file $filename"
+            uplevel source $filename
             incr sourced
          }
       }
@@ -100,7 +100,7 @@ proc ts_source {filebase} {
       puts $CHECK_OUTPUT "no files sourced for filename \"$filebase.*\""
    }
 
-   return $ret
+   return $sourced
 }
 
 #                                                             max. column:     |

@@ -1,3 +1,10 @@
+JG-2004-02-10-0: Testsuite: Fixed install re_init.
+                            Allow tests that are only valid for a certain 
+                            Grid Engine version.
+                            Cleanup functional/access_lists.
+                            Fixed setup and cleanup of performance/throughput.
+                            Fixed set_queue for cluster queues.
+
 SD-2004-02-10-0: Bugfix:    - Various qmon updates for issue #643
                  Changed:   qmon
                  Issue:     643

@@ -103,6 +103,17 @@ proc validate_queue_type { change_array } {
    }
 }
 
+proc qinstance_to_cqueue { change_array } {
+   global CHECK_OUTPUT
+
+   upvar $change_array chgar
+
+   if { [info exists chgar(hostname)] } {
+      unset chgar(hostname)
+   }
+
+}
+
 #****** sge_procedures.60/queue/add_queue() ******************************************
 #  NAME
 #     add_queue() -- add a SGE 6.0 cluster queue
@@ -232,6 +243,10 @@ proc set_cqueue_specific_values { current_array change_array hostlist } {
 
    # parse each attribute to be changed
    foreach attribute [array names chgar] {
+      if { [string compare $attribute qname] == 0 } {
+         continue;
+      }
+
       puts $CHECK_OUTPUT "--> setting queue default value for attribute $attribute"
       puts $CHECK_OUTPUT "--> old_value = $currar($attribute)"
      
@@ -244,28 +259,37 @@ proc set_cqueue_specific_values { current_array change_array hostlist } {
       set value_list [split $currar($attribute) "\["]
 
       # copy the default value
-      set new_value [string trimright [lindex $value_list 0] ","]
-      puts $CHECK_OUTPUT "--> default value = $new_value"
-   
-      # copy host specific values to array
-      for {set i 1} {$i < [llength $value_list]} {incr i} {
-         set host_value [lindex $value_list $i]
-         set split_host_value [split $host_value "="]
-         set host [lindex $split_host_value 0]
-         set value [lrange $split_host_value 1 end]
-         set value [string trimright $value ",\]"]
-         puts $CHECK_OUTPUT "--> $host = $value"
-         set host_values($host) $value
-      }
-   
-      # change (or set) host specific values from chgar
-      foreach host $hostlist {
-         set host_values($host) $chgar($attribute)
-      }
+      if { $hostlist == "" } {
+         # use the new value for the cluster queue
+         set new_value $default_value
+      } else {
+         # use old cqueue value as default, set new host specific
+         set default_value [string trimright [lindex $value_list 0] ","]
+         puts $CHECK_OUTPUT "--> default value = $default_value"
+      
+         # copy host specific values to array
+         for {set i 1} {$i < [llength $value_list]} {incr i} {
+            set host_value [lindex $value_list $i]
+            set split_host_value [split $host_value "="]
+            set host [lindex $split_host_value 0]
+            set value [lrange $split_host_value 1 end]
+            set value [string trimright $value ",\]"]
+            puts $CHECK_OUTPUT "--> $host = $value"
+            set host_values($host) $value
+         }
+      
+         # change (or set) host specific values from chgar
+         foreach host $hostlist {
+            set host_values($host) $chgar($attribute)
+         }
 
-      # dump host specific values to new_value
-      foreach host [array names host_values] {
-         append new_value ",\[$host=$host_values($host)\]"
+         # dump host specific values to new_value
+         set new_value $default_value
+         foreach host [array names host_values] {
+            if {[string compare $default_value $host_values($host)] != 0} {
+               append new_value ",\[$host=$host_values($host)\]"
+            }
+         }
       }
 
       puts $CHECK_OUTPUT "--> new queue value = $new_value"
@@ -275,16 +299,18 @@ proc set_cqueue_specific_values { current_array change_array hostlist } {
    }
 
    # check if all hosts / hostgroups are in the hostlist attribute
-   set new_hosts {}
-   foreach host $hostlist {
-      if { [lsearch -exact $currar(hostlist) $host] == -1 } {
-         lappend new_hosts $host
-         puts $CHECK_OUTPUT "--> host $host is not yet in hostlist"
+   if { $hostlist != "" } {
+      set new_hosts {}
+      foreach host $hostlist {
+         if { [lsearch -exact $currar(hostlist) $host] == -1 } {
+            lappend new_hosts $host
+            puts $CHECK_OUTPUT "--> host $host is not yet in hostlist"
+         }
       }
-   }
 
-   if { [llength $new_hosts] > 0 } {
-      set chgar(hostlist) "$currar(hostlist) $new_hosts"
+      if { [llength $new_hosts] > 0 } {
+         set chgar(hostlist) "$currar(hostlist) $new_hosts"
+      }
    }
 }
 
@@ -318,6 +344,7 @@ proc set_queue { qname hostlist change_array } {
 
    # queue_type is version dependent
    validate_queue_type chgar
+   qinstance_to_cqueue chgar
 
    get_queue $qname currar
 

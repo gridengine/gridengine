@@ -116,8 +116,6 @@ set CHECK_SETTINGS_VERSION "undefined"
 global CHECK_PRODUCT_VERSION_NUMBER ;# version string of qstat -help of tested system
 set CHECK_PRODUCT_VERSION_NUMBER "unknown"
 global CHECK_PRODUCT_TYPE           ;# "sgeee" or "sge" 
-global CHECK_START_SCRIPT_NAME     ;# rcsge
-set CHECK_START_SCRIPT_NAME "rcsge"
 global CHECK_COMMD_PORT            ;# commd port
 global CHECK_ARCH                  ;# architecture of this system (e.g. irix6)
 set CHECK_ARCH "unknown"
@@ -212,6 +210,7 @@ global check_cur_proc_result       ;# 0 -> OK , != 0 means error (-2 = break tes
 
 # testsuite intern
 global CHECK_INFORMATION_FILE      ;# filename of check information (check.exp)
+global CHECK_INFORMATION_EXT       ;# fileextension of check information (check.exp)
 global CHECK_DIRECTORIES           ;# all sub directories with check's in actual checkpath
 global CHECK_REPORT_FILE           ;# filename (with path) for report
 global CHECK_MAIN_RESULTS_DIR      ;# check result root directory for all RESULTS
@@ -249,7 +248,8 @@ set CHECK_ROOT_PASSWORD    "none"
 set CHECK_ENABLED_RUNLEVELS "0"
 set CHECK_ENABLED_CATEGORIES {}
 set CHECK_DO_SETUP         0
-set CHECK_INFORMATION_FILE "check.exp"   ;# this is the filename of each check in different
+set CHECK_INFORMATION_FILE "check"   ;# this is the filename of each check in different
+set CHECK_INFORMATION_EXT  "exp"     ;# default extension for check files
                                          ;# subdirectories of "checktree"
                                          ;# every file with this name is interpreded as check routine
 
@@ -2423,17 +2423,25 @@ proc enhanced_setup {} {
 #     ???/???
 #*******************************
 proc get_check_dirs { path } {
-  global CHECK_DIRECTORIES CHECK_INFORMATION_FILE
+   global ts_config
+   global CHECK_DIRECTORIES 
+   global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT
 
-  set files [get_file_names $path] 
-  set dirs [get_dir_names $path]
-  
-  if { [lsearch $files $CHECK_INFORMATION_FILE] >= 0 }  {
-     lappend CHECK_DIRECTORIES $path;
-  } 
-  foreach element $dirs {
-     get_check_dirs "$path/$element"
-  }
+   # get all files and subdirectories
+   set files [get_file_names $path] 
+   set dirs [get_dir_names $path]
+
+   # look for check.exp and check.<version>.exp
+   set dep_name "$CHECK_INFORMATION_FILE.$ts_config(gridengine_version).$CHECK_INFORMATION_EXT"
+   set indep_name "$CHECK_INFORMATION_FILE.$CHECK_INFORMATION_EXT"
+   if { [lsearch $files $dep_name] >= 0 || [lsearch $files $indep_name] >= 0 }  {
+      lappend CHECK_DIRECTORIES $path;
+   } 
+
+   # recursive call on subdirectories
+   foreach element $dirs {
+      get_check_dirs "$path/$element"
+   }
 }
 
 
@@ -2715,15 +2723,17 @@ proc save_result {path runtime level} {
 #     ???/???
 #*******************************
 proc get_check_name {path} {
-   global CHECK_INFORMATION_FILE check_name
+   global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT
+   global check_name
+
    set check_name ""
-   source $path/$CHECK_INFORMATION_FILE
+   ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
   
    return $check_name
 }
 
 proc get_check_levels { path } {
-   global CHECK_INFORMATION_FILE check_highest_level
+   global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT
    global CHECK_ACT_LEVEL check_highest_level
 
    set saved_level $CHECK_ACT_LEVEL
@@ -2732,17 +2742,18 @@ proc get_check_levels { path } {
    unset check_init_level_procedure
 
    set levels ""
-   source $path/$CHECK_INFORMATION_FILE
-   if { $check_highest_level > 0 && [info exists check_init_level_procedure] == 1} {
-      for {set i 0} {$i <= $check_highest_level} {incr i 1} {
-         set CHECK_ACT_LEVEL $i
-         if { [$check_init_level_procedure ]  != 0 } { 
-            continue 
+   if { [ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT] } {
+      if { $check_highest_level > 0 && [info exists check_init_level_procedure] == 1} {
+         for {set i 0} {$i <= $check_highest_level} {incr i 1} {
+            set CHECK_ACT_LEVEL $i
+            if { [$check_init_level_procedure ]  != 0 } { 
+               continue 
+            }
+            lappend levels $CHECK_ACT_LEVEL
          }
-         lappend levels $CHECK_ACT_LEVEL
+      } else {
+         lappend levels 0
       }
-   } else {
-      lappend levels 0
    }
    set CHECK_ACT_LEVEL $saved_level
    return $levels
@@ -3046,8 +3057,10 @@ proc is_level_enabled { level_nr } {
 }
 
 proc get_check_category { path } {
-   global CHECK_INFORMATION_FILE check_category
-   source $path/$CHECK_INFORMATION_FILE
+   global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT
+   global check_category
+
+   ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
    return $check_category
 }
 
@@ -3098,8 +3111,9 @@ proc is_category_enabled { path } {
 #*******************************
 proc delete_tests {path { only_if_not_there 0 } } {
   global CHECK_DIRECTORIES check_errno check_errstr check_functions validate_needs check_name
-  global CHECK_INFORMATION_FILE CHECK_OUTPUT check_highest_level check_name check_description
+  global CHECK_OUTPUT check_highest_level check_name check_description
   global check_init_level_procedure CHECK_ACT_LEVEL CHECK_OUTPUT
+  global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT
 
 
   set old_check_name $check_name
@@ -3115,42 +3129,45 @@ proc delete_tests {path { only_if_not_there 0 } } {
        set check_errno ""
        set check_name ""
        set check_init_level_procedure "--"
-       source $elem/$CHECK_INFORMATION_FILE
-       set check_errstr ""
-       set check_errno ""
-       if { [ info exists check_functions ] } {
-          foreach element $check_functions {
-             lappend check_errstr "was never running" 
-             lappend check_errno "-1"
-          }
-       } else {
-          puts $CHECK_OUTPUT "no check_functions variable available!!"
-          sleep 5
-       }
-       debug_puts "sourced \"$elem/$CHECK_INFORMATION_FILE\""
 
-       set do_delete 1
-       if {$only_if_not_there == 1 } { 
-          set result [ validate_needs $check_name ]
-          if { $result == 0 } {
-             set do_delete 0
+       if {[ts_source $elem/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT]} {
+          set check_errstr ""
+          set check_errno ""
+          if { [ info exists check_functions ] } {
+             foreach element $check_functions {
+                lappend check_errstr "was never running" 
+                lappend check_errno "-1"
+             }
+          } else {
+             puts $CHECK_OUTPUT "no check_functions variable available!!"
+             sleep 5
           }
-       }
+          debug_puts "sourced \"$elem/$CHECK_INFORMATION_FILE.$CHECK_INFORMATION_EXT\""
 
-       if {$do_delete == 1} {
-          for {set i 0} {$i <= $check_highest_level} {incr i 1} {
-             if { [string compare $check_init_level_procedure "--" ] != 0 } { 
-                set CHECK_ACT_LEVEL $i
-                if { [$check_init_level_procedure ]  == 0 } { 
-                   delete_result $elem 0 $i
-                } 
-             } else {
-               delete_result $elem 0 $i
+          set do_delete 1
+          if {$only_if_not_there == 1 } { 
+             set result [ validate_needs $check_name ]
+             if { $result == 0 } {
+                set do_delete 0
              }
           }
-       }
 
-    }
+          if {$do_delete == 1} {
+             for {set i 0} {$i <= $check_highest_level} {incr i 1} {
+                if { [string compare $check_init_level_procedure "--" ] != 0 } {
+                   set CHECK_ACT_LEVEL $i
+                   if { [$check_init_level_procedure]  == 0 } { 
+                      delete_result $elem 0 $i
+                   } 
+                } else {
+# JG: TODO: this cannot work (?)
+#                  delete_result $elem 0 $i
+                }
+             }
+          }
+
+       }
+  }
   }
   set check_name $old_check_name
 }
@@ -3695,7 +3712,7 @@ proc unlock_testsuite {} {
 #     ???/???
 #*******************************
 proc run_test_level {path runcompleted level {do_save 1}} {
-   global CHECK_INFORMATION_FILE check_needs CHECK_RESULT_DIR check_name CHECK_ACTUAL_TEST_PATH
+   global check_needs CHECK_RESULT_DIR check_name CHECK_ACTUAL_TEST_PATH
    global CHECK_CORE_RESULT_DIR check_errstr CHECK_OUTPUT check_description check_functions check_errno 
    global CHECK_CUR_PROC_NAME CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_ERRORS
    global CHECK_CURRENT_WORKING_DIR check_init_level_procedure CHECK_ACT_LEVEL
@@ -3963,11 +3980,11 @@ proc run_test_level {path runcompleted level {do_save 1}} {
 #     ???/???
 #*******************************
 proc check_root_access {path} {
-
-  global check_root_access_needs CHECK_INFORMATION_FILE
+  global check_root_access_needs 
+  global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT
 
   set check_root_access_needs ""  
-  source $path/$CHECK_INFORMATION_FILE
+  ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
 
   if { [string compare "" $check_root_access_needs ] != 0 } {
      return 0
@@ -4027,7 +4044,7 @@ proc delete_temp_script_files { } {
 proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } } {
    global ts_config  
 
-  global CHECK_INFORMATION_FILE check_needs CHECK_RESULT_DIR check_name CHECK_ACTUAL_TEST_PATH
+  global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT check_needs CHECK_RESULT_DIR check_name CHECK_ACTUAL_TEST_PATH
   global CHECK_CORE_RESULT_DIR check_errstr CHECK_OUTPUT check_description check_functions check_errno 
   global CHECK_CUR_PROC_NAME CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_ERRORS check_root_access_needs
   global CHECK_CURRENT_WORKING_DIR check_highest_level check_init_level_procedure CHECK_ACT_LEVEL
@@ -4047,7 +4064,8 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
   set check_highest_level 0
   set check_init_level_procedure "--"
   set check_root_access_needs   "" 
-  source $path/$CHECK_INFORMATION_FILE
+
+  ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
   if { [string compare $run_single_test "all"] != 0 } {
      set do_only_one_test 1
      puts $CHECK_OUTPUT "running only test \"$run_single_test\""
@@ -4283,11 +4301,12 @@ proc clean_up_globals {} {
 #     ???/???
 #*******************************
 proc show_test {path full} {
-  global CHECK_INFORMATION_FILE check_errno check_needs check_highest_level 
+  global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT check_errno check_needs check_highest_level 
   global check_init_level_procedure CHECK_ACT_LEVEL check_category
 
   clean_up_globals  
-  source $path/$CHECK_INFORMATION_FILE
+
+  ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
   puts "===============================================================================" 
   puts "name:         | $check_name"
   puts -nonewline "categories:   | "
@@ -4298,7 +4317,7 @@ proc show_test {path full} {
   puts "===============================================================================" 
 
   if { $full == 1} {
-    puts "filename:     | [ format_output "              | " 61 $path/$CHECK_INFORMATION_FILE ]"
+    puts "filename:     | [ format_output "              | " 61 $path/$CHECK_INFORMATION_FILE.$CHECK_INFORMATION_EXT ]"
 
     puts "===============================================================================" 
     for {set i 0} {$i <= $check_highest_level} {incr i 1} {
@@ -4599,7 +4618,7 @@ proc set_command_line_options {} {
 #     ???/???
 #*******************************
 proc get_max_level_count {path} {
-  global CHECK_DIRECTORIES CHECK_INFORMATION_FILE check_highest_level 
+  global CHECK_DIRECTORIES CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT check_highest_level 
   global CHECK_MAX_LEVEL check_init_level_procedure CHECK_ACT_LEVEL check_name
  
   set old_check_name $check_name
@@ -4609,21 +4628,18 @@ proc get_max_level_count {path} {
   get_check_dirs $path  
   if { [info exists CHECK_DIRECTORIES] == 1 } {
     foreach elem $CHECK_DIRECTORIES {
-       
-       if { [file isfile $elem/$CHECK_INFORMATION_FILE] == 1 } {
-          set check_highest_level 0 
-          set check_init_level_procedure "--"
-          source $elem/$CHECK_INFORMATION_FILE
-          if { [string compare $check_init_level_procedure "--" ] != 0 } {
-             for {set x 0 } {$x <= $check_highest_level} {incr x 1 } {
-                set CHECK_ACT_LEVEL $x
-                if { [$check_init_level_procedure ]  == 0 } {
-                   if { [lsearch $CHECK_MAX_LEVEL $x] < 0 } {
-                      lappend CHECK_MAX_LEVEL $x
-                   }
+       set check_highest_level 0 
+       set check_init_level_procedure "--"
+       ts_source $elem/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
+       if { [string compare $check_init_level_procedure "--" ] != 0 } {
+          for {set x 0 } {$x <= $check_highest_level} {incr x 1 } {
+             set CHECK_ACT_LEVEL $x
+             if { [$check_init_level_procedure ]  == 0 } {
+                if { [lsearch $CHECK_MAX_LEVEL $x] < 0 } {
+                   lappend CHECK_MAX_LEVEL $x
                 }
-             } 
-          }
+             }
+          } 
        }
     }  
   }
@@ -4632,7 +4648,7 @@ proc get_max_level_count {path} {
 }
 
 proc get_categories {path} {
-  global CHECK_DIRECTORIES CHECK_INFORMATION_FILE check_highest_level 
+  global CHECK_DIRECTORIES CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT check_highest_level 
   global CHECK_MAX_LEVEL check_init_level_procedure CHECK_ACT_LEVEL
   global check_category
  
@@ -4642,14 +4658,12 @@ proc get_categories {path} {
   get_check_dirs $path  
   if { [info exists CHECK_DIRECTORIES] == 1 } {
     foreach elem $CHECK_DIRECTORIES {
-       if { [file isfile $elem/$CHECK_INFORMATION_FILE] == 1 } {
-          clean_up_globals
-          source $elem/$CHECK_INFORMATION_FILE
-          if { [info exists check_category] } {
-             foreach elem $check_category {
-                if { [ lsearch -exact $back $elem ] == -1 } {
-                   lappend back $elem
-                }
+       clean_up_globals
+       ts_source $elem/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
+       if { [info exists check_category] } {
+          foreach elem $check_category {
+             if { [ lsearch -exact $back $elem ] == -1 } {
+                lappend back $elem
              }
           }
        }
@@ -4887,7 +4901,6 @@ proc get_run_level_time { level } {
 #     ???/???
 #*******************************
 proc clear_screen {} {
- 
   set clear_sequence [ format "%c%c%c%c%c%c%c" 0x1b 0x5b 0x48 0x1b 0x5b 0x32 0x4a 0x00 ]
   puts -nonewline $clear_sequence
 }
@@ -4922,7 +4935,7 @@ proc clear_screen {} {
 #     ???/???
 #*******************************
 proc print_menu_header {} {
-  global CHECK_ACT_PATH CHECK_DIRECTORIES CHECK_INFORMATION_FILE CHECK_RESULT_DIR 
+  global CHECK_ACT_PATH CHECK_DIRECTORIES CHECK_RESULT_DIR 
   global CHECK_USER CHECK_REPORT_FILE CHECK_OUTPUT CHECK_HOST CHECK_BAD_RESULT_DIR 
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
   global CHECK_ENABLED_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER
@@ -6682,7 +6695,8 @@ proc ask_user_yes_or_no { question } {
 #     ???/???
 #*******************************
 proc menu {} {
-  global CHECK_ACT_PATH CHECK_DIRECTORIES CHECK_INFORMATION_FILE CHECK_RESULT_DIR 
+   global ts_config
+  global CHECK_ACT_PATH CHECK_DIRECTORIES CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT CHECK_RESULT_DIR 
   global CHECK_USER CHECK_REPORT_FILE CHECK_OUTPUT CHECK_HOST CHECK_BAD_RESULT_DIR 
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
   global CHECK_ENABLED_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER CHECK_SETUP_NAMES
@@ -6711,8 +6725,13 @@ proc menu {} {
   } else {
      puts " (10) use \"stdout\" for output"
   }
+   set dep_name "$CHECK_INFORMATION_FILE.$ts_config(gridengine_version).$CHECK_INFORMATION_EXT"
+   set indep_name "$CHECK_INFORMATION_FILE.$CHECK_INFORMATION_EXT"
+   set localtest [lsearch $files $dep_name]
+   if { $localtest < 0 } {
+      set localtest [lsearch $files $indep_name]
+   }
 
-  set localtest [lsearch $files $CHECK_INFORMATION_FILE]
   if { $localtest >= 0 } {
     puts " (11) show test descriptions of local test"
     puts " (12) run local test"

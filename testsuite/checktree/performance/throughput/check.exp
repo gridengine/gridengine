@@ -313,12 +313,12 @@ proc setup_queues {} {
  
    # disable all default queues and create host_list:
    set host_list ""
-   foreach elem $CHECK_CORE_EXECD {
-      disable_queue $elem.q
-      if { [string compare $elem $CHECK_CORE_MASTER] == 0 } { 
+   foreach host $CHECK_CORE_EXECD {
+      disable_queue [get_queue_instance "all.q" $host]
+      if { [string compare $host $CHECK_CORE_MASTER] == 0 } { 
          continue;
       }
-      lappend host_list $elem
+      lappend host_list $host
    }
 
    set max_u_jobs_parameter [expr ( [llength $host_list] * $nr_queues  * $nr_slots )]
@@ -332,21 +332,24 @@ proc setup_queues {} {
 
    # now setup submit queues for hosts in host_list:
    # set queue_list:
-   set queue_list ""
-   puts $CHECK_OUTPUT "using following host for throughput test:"
-   foreach host $host_list {
-      puts $CHECK_OUTPUT "setup queues for host $host"
-      for {set i 0} { $i < $nr_queues } { incr i 1 } {
-         set change_array(qname) "${host}_m${i}"
-         set change_array(hostname) "$host"
-         set change_array(slots) $nr_slots
-         set change_array(load_thresholds) "np_load_avg=11.75"
-         add_queue change_array 1
-         lappend queue_list "${host}_m${i}"
+   set queue_list {}
+
+   # this is the queue configuration 
+   set change_array(slots) $nr_slots
+   set change_array(load_thresholds) "np_load_avg=11.75"
+
+   # create a certain number of queues
+   for {set i 0} {$i < $nr_queues} {incr i} {
+      set qname tp_${i}
+      add_queue $qname $host_list change_array 1
+
+      # build queue_list containing a list of all queue instances
+      foreach host $host_list {
+         lappend queue_list [get_queue_instance $qname $host]
       }
    }
+   
    # show queue list:
-
    puts $CHECK_OUTPUT "using [llength $queue_list] queues to submit jobs"
 
    if { $throughput_sharetree == 1 } {
@@ -359,7 +362,7 @@ proc setup_queues {} {
 proc cleanup_queues {} {
    global CHECK_CORE_EXECD  CHECK_OUTPUT
    global queue_list event_client_bin CHECK_ARCH  CHECK_PRODUCT_ROOT
-   global stored_configuration throughput_sharetree
+   global stored_configuration throughput_sharetree nr_queues
 
    if { [llength $CHECK_CORE_EXECD] <= 1 } {
       set_error -3 "need more than one host for this test"
@@ -388,15 +391,15 @@ proc cleanup_queues {} {
    set_config stored_configuration
 
    puts $CHECK_OUTPUT "deleting queues"
-   foreach queue $queue_list {
-      puts $CHECK_OUTPUT $queue 
-      del_queue $queue
+   for {set i 0} {$i < $nr_queues} {incr i} {
+      set qname tp_${i}
+      del_queue $qname $CHECK_CORE_EXECD 1 1
    }
 
    puts $CHECK_OUTPUT "enabling default queues"
-   foreach elem $CHECK_CORE_EXECD {
-      puts $CHECK_OUTPUT $elem
-      enable_queue $elem.q     
+   foreach host $CHECK_CORE_EXECD {
+      puts $CHECK_OUTPUT $host
+      enable_queue [get_queue_instance "all.q" $host]
    }
    
    set_error 0 "ok"

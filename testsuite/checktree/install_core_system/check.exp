@@ -685,6 +685,8 @@ proc setup_conf {} {
   set params(qmaster_params) "none"
   if { $ts_config(gridengine_version) == 53 } {
      set params(schedd_params) "none"
+  } else {
+     set params(reporting_params) "accounting=true reporting=true flush_time=00:00:15 job log=true sharelog=00:10:00"
   }
   set params(execd_params) "none"
   set params(qlogin_command) "telnet"
@@ -740,6 +742,7 @@ proc setup_conf {} {
           if { [ string compare $param "execd_params" ] == 0 } { continue }
           if { [ string compare $param "finished_jobs" ] == 0 } { continue }
           if { [ string compare $param "max_unheard" ] == 0 } { continue }
+          if { [ string compare $param "reporting_params" ] == 0 } { continue }
 #          if { [ string compare $param "" ] == 0 } { continue }
 #          if { [ string compare $param "" ] == 0 } { continue }
 #          if { [ string compare $param "" ] == 0 } { continue }

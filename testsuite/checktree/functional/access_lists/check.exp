@@ -810,7 +810,7 @@ proc access_lists_pe {} {
    global access_lists_queue access_lists_host
 
    set jobargs "-o /dev/null -e /dev/null -pe access_test_pe 2 $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
-   
+
    set my_pe(pe_name)     "access_test_pe"
    set my_pe(slots)       "8"
    add_pe my_pe

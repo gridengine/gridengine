@@ -1,3 +1,7 @@
+SG-2003-11-12-0: Enhancem.: - Added reprioritize_interval to the man pages
+                            - Added share_deadline_tickets to the spool frame work
+                 Changed:   scheduler, qmaster, man-pages
+                            
 AH-2003-11-11-0: Enhancem.: Initial revision of of Enterprise Edition
                             policy module enhancments introducing urgency scheme
                             as a resource request dependent policy.

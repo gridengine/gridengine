@@ -13,13 +13,6 @@ JG-2003-09-29-0: Bugfix:    statistics file hostload twice instead of load and
                  Review:    AA, AS
                  Changed:   sge_qmaster, sge_share_mon, qrsh_starter
 
-SG-2003-09-15-2: Bugfix:    The running ticket update did not work correctly
-                            when the sgeee_scheduling interval was set to a
-                            very very long time, a sge_scheduling run was
-                            done and the sgeee_scheduling interval was set
-                            back to a normal amount of time. The scheduler
-                            had the very long sgeee_scheduling interval
-
 AA-2003-09-29-0: Bugfix:    change in openssl 0.9.7b uniqueIdentifier now
                             userId
                             additional switches for sge_ca
@@ -38,6 +31,7 @@ SG-2003-09-15-2: Bugfix:    The running ticket update did not work correctly
                             last sgeee_scheduling interval execution and
                             checks every scheduling interval, if the
                             specified time has past.
+                 Bugtraq:   4930793
                  Review:    AS
                  Changed:   scheduler
 
@@ -45,6 +39,7 @@ SG-2003-09-15-1: Bugfix:    When a pending job moved to running, it lost its
                             ticket details. It had only the total amount of
                             tickets.  This is changed now, the ftix,
                             sharetree tix and others are included now.
+                 Bugtraq:   4930793
                  Review:    AS
                  Changed:   scheduler
 
@@ -54,6 +49,7 @@ SG-2003-09-15-0: Bugfix:    Fixed a bug in the pending ticket calculation.
                             category, which lead to a wrong job order. The
                             fcategories are now defined by the references to
                             the control structures.
+                 Bugtraq:   4930793
                  Review:    AS
                  Changed:   scheduler
 
@@ -69,6 +65,7 @@ SG-2003-08-27-0: Bugfix:    scheduler handled hard requested string resource
                             scheduler)
                  Changed:   sge_schedd
                  Issue:     592
+                 Bugtraq:   4930789
                  Review:    EB
 
 AH-2003-08-18-0: Enhancem.: Update on tight integration with Sun HPC
@@ -82,6 +79,7 @@ AH-2003-08-01-0: Enhancem.: Added integration package for tight integration
 SG-2003-07-31-0: Bugfix:    global load value not working as load_threshold
                  Changed:   sge_schedd, qstat, qmon, qhost
                  Issue:     589
+                 Bugtraq:   4930786
                  Review:    AH
 
 SG-2003-07-29-0: Bugfix:    - Corrected the order of pending jobs in case of
@@ -93,6 +91,7 @@ SG-2003-07-29-0: Bugfix:    - Corrected the order of pending jobs in case of
                               than the previous allgorithm
                             - added a "\n" to a qmaster error message
                  Issue:     585
+                 Bugtraq:   4930793
                  Review:    AH, EB
                  Changed:   sge_schedd, qmaster 
 

@@ -1235,91 +1235,62 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
                             char *reason, int reason_size, 
                             const char *threshold_type) 
 {
-   lListElem *hep, *global_hep, *tep;
-   const char *load_value; 
-   const char *limit_value;
-   char buffer[1024];  /* buffer for one line */
-   
    DENTER(TOP_LAYER, "sge_load_alarm_reason");
 
    *reason = 0;
 
-   if (!threshold) { 
-      /* no threshold -> no alarm */
-      DEXIT;
-      return reason;
-   }
+   /* no threshold -> no alarm */
+   if (threshold != NULL) {
+      lList *rlp = NULL;
+      lListElem *tep;
 
-   hep = lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname));
+      /* get actual complex values for queue */
+      queue_complexes2scheduler(&rlp, qep, exechost_list, complex_list, 0);
 
-   if(!hep) { 
-      /* no host for queue -> ERROR */
-      strncat(reason, MSG_SCHEDD_NOHOSTFORQUEUE, reason_size);
-      DEXIT;
-      return reason;
-   }
+      /* check all thresholds */
+      for_each (tep, threshold) {
+         const char *name;             /* complex attrib name */
+         lListElem *cep;               /* actual complex attribute */
+         char dom_str[5];              /* dominance as string */
+         u_long32 dom_val;             /* dominance as u_long */
+         char buffer[MAX_STRING_SIZE]; /* buffer for one line */
+         const char *load_value;       /* actual load value */
+         const char *limit_value;      /* limit defined by threshold */
 
-   global_hep = lGetElemHost(exechost_list, EH_name, "global");
+         name = lGetString(tep, CE_name);
 
-   for_each (tep, threshold) {
-      lListElem *hlep = NULL, *glep = NULL, *cep  = NULL;
-      const char *name;
-      u_long32 relop, type;
-
-      name = lGetString(tep, CE_name);
-
-      /* complex attriute definition */
-      if (!(cep = sge_locate_complex_attr(name, complex_list))) {
-         /* no complex attribute for threshold -> ERROR */
-         sprintf(buffer, MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S, name);
-         strncat(reason, buffer, reason_size);
-         DEXIT;
-         continue;
-      }
-
-      relop = lGetUlong(cep, CE_relop);
-
-      if((hlep = lGetSubStr(hep, HL_name, name, EH_load_list)) == NULL) {
-         if((glep = lGetSubStr(global_hep, HL_name, name, EH_load_list)) == NULL) {
-            /* no host or global load value -> ERROR */
-            sprintf(buffer, MSG_SCHEDD_NOLOADVALUEFORTHRESHOLD_S, name);
+         /* find actual complex attribute */
+         if ((cep = lGetElemStr(rlp, CE_name, name)) == NULL) {
+            /* no complex attribute for threshold -> ERROR */
+            sprintf(buffer, MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S, name);
             strncat(reason, buffer, reason_size);
-            DEXIT;
             continue;
-         }   
-      }
+         }
 
-      if (hlep) 
-         load_value = lGetString(hlep, HL_value);
-      else
-         load_value = lGetString(glep, HL_value);
+         limit_value = lGetString(tep, CE_stringval);
 
-      limit_value = lGetString(tep, CE_stringval);
-      type = lGetUlong(cep, CE_valtype);
-
-      if(sge_check_load_alarm(NULL, name, load_value, limit_value, relop, type,
-                              hep, hlep, 0, 0,
-                              NULL, 0)) {
-         char dom_str[5];    /* dominance as string */
-         u_long32 dom_val;   /* dominance as u_long */
-
-         if (!(lGetUlong(cep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+         if (!(lGetUlong(cep, CE_pj_dominant) & DOMINANT_TYPE_VALUE)) {
             dom_val = lGetUlong(cep, CE_pj_dominant);
+            load_value = lGetString(cep, CE_pj_stringval);
          } else {
             dom_val = lGetUlong(cep, CE_dominant);
+            load_value = lGetString(cep, CE_stringval);
          }
-   
+
          monitor_dominance(dom_str, dom_val);
-         sprintf( buffer, "\talarm %s:%s=%s %s-threshold=%s\n",
-                  dom_str,
-                  name, 
-                  load_value,
-                  threshold_type,
-                  limit_value
+
+         sprintf(buffer, "\talarm %s:%s=%s %s-threshold=%s\n",
+                 dom_str,
+                 name, 
+                 load_value,
+                 threshold_type,
+                 limit_value
                 );
          strncat(reason, buffer, reason_size);
-      }   
-   } 
+      }
+
+      lFreeList(rlp);
+   }   
 
    DEXIT;
    return reason;

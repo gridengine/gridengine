@@ -95,11 +95,6 @@ static char *queue_types[] = {
 
 static char hashes[] = "##############################################################################################################";
 
-/* size of buffer for reason of alarm state */
-#ifndef REASON_BUF_SIZE
-#define REASON_BUF_SIZE 1023
-#endif
-
 int sge_print_queue(
 lListElem *q,
 lList *exechost_list,
@@ -116,11 +111,13 @@ lList *qresource_list
    static int first_time = 1;
    int sge_ext;
    char *load_avg_str;
-   char reason[REASON_BUF_SIZE + 1];
+   char load_alarm_reason[MAX_STRING_SIZE];
+   char suspend_alarm_reason[MAX_STRING_SIZE];
 
    DENTER(TOP_LAYER, "sge_print_queue");
 
-   *reason = 0;
+   *load_alarm_reason = 0;
+   *suspend_alarm_reason = 0;
 
    /* make it possible to display any load value in qstat output */
    if (!(load_avg_str=getenv("SGE_LOAD_AVG")) || !strlen(load_avg_str))
@@ -178,11 +175,11 @@ lList *qresource_list
    state = lGetUlong(q, QU_state);
    if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, complex_list, NULL)) {
       state |= QALARM;
-      sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, complex_list, reason, REASON_BUF_SIZE, "load");
+      sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, complex_list, load_alarm_reason, MAX_STRING_SIZE - 1, "load");
    }
    if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, complex_list, NULL)) {
      state |= QSUSPEND_ALARM;
-     sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), exechost_list, complex_list, reason, REASON_BUF_SIZE, "suspend");
+     sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), exechost_list, complex_list, suspend_alarm_reason, MAX_STRING_SIZE - 1, "suspend");
    }
 
    sge_get_states(QU_qname, state_string, state);
@@ -190,8 +187,11 @@ lList *qresource_list
    printf("\n");
 
    if((full_listing & QSTAT_DISPLAY_ALARMREASON)) {
-      if(*reason) {
-	printf(reason);
+      if(*load_alarm_reason) {
+	      printf(load_alarm_reason);
+      }
+      if(*suspend_alarm_reason) {
+	      printf(suspend_alarm_reason);
       }
    }
 

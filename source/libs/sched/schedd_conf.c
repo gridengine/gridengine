@@ -78,6 +78,8 @@ static int schedd_conf_is_valid_load_formula(lListElem *sc,
                                              lList **answer_list,
                                              lList *cmplx_list);
 
+static int sge_is_number(const char *string);
+
 static intprt_type load_adjustment_fields[] = { CE_name, CE_stringval, 0 };
 static intprt_type usage_fields[] = { UA_name, UA_value, 0 };
 static const char *delis[] = {"=", ",", ""};
@@ -319,6 +321,15 @@ lList *cmplx_list
    return 0;
 }
 
+static int sge_is_number(const char *string) 
+{
+   double value;
+   char *end;
+
+   value = strtod(string, &end);
+   return (*end == NULL) ? 1 : 0;
+}
+
 static int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
                                              lList **answer_list,
                                              lList *cmplx_list) 
@@ -349,26 +360,55 @@ static int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
 
    /* Check complex attributes and type */
    if (ret == 1) {
-      const char *delimitor = "+-*";
-      const char *attr, *next_attr;
+      const char *term_delim = "+-";
+      const char *term, *next_term;
 
-      next_attr = sge_strtok(load_formula, delimitor);
-      while ((attr = next_attr)) {
+      if (load_formula[0] == '+' || load_formula[0] == '-') {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_LOADFORMHASTOSTART));
+         sge_add_answer(answer_list, SGE_EVENT, STATUS_ESYNTAX, 0);
+         ret = 0;
+      }
+
+      next_term = sge_strtok(load_formula, term_delim);
+      while ((term = next_term) && ret == 1) {
+         const char *fact_delim = "*";
+         const char *fact, *next_fact, *end;
          lListElem *cmplx_attr = NULL;
 
-         next_attr = sge_strtok(NULL, delimitor);
+         next_term = sge_strtok(NULL, term_delim);
 
-         cmplx_attr = sge_locate_complex_attr(attr, cmplx_list);
-         if (cmplx_attr != NULL) {
-            int type = lGetUlong(cmplx_attr, CE_valtype);
-   
-            if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, attr));
-               sge_add_answer(answer_list, SGE_EVENT, STATUS_ESYNTAX, 0); 
+         fact = sge_strtok(term, fact_delim);
+         next_fact = sge_strtok(NULL, fact_delim);
+         end = sge_strtok(NULL, fact_delim);
+
+         /* first factor has to be a complex attr */
+         if (fact != NULL) {
+            cmplx_attr = sge_locate_complex_attr(fact, cmplx_list);
+            if (cmplx_attr != NULL) {
+               int type = lGetUlong(cmplx_attr, CE_valtype);
+      
+               if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, fact));
+                  sge_add_answer(answer_list, SGE_EVENT, STATUS_ESYNTAX, 0); 
+                  ret = 0;
+               }
+            } else {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_S, fact));
+               sge_add_answer(answer_list, SGE_EVENT, STATUS_ESYNTAX, 0);
                ret = 0;
             }
-         } else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_S, attr));
+         }
+         /* is weighting factor a number? */
+         if (next_fact != NULL) {
+            if (!sge_is_number(next_fact)) {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WEIGHTFACTNONUMB_S, next_fact));
+               sge_add_answer(answer_list, SGE_EVENT, STATUS_ESYNTAX, 0);
+               ret = 0;
+            }
+         }
+         /* multiple weighting factors? */
+         if (end != NULL) {
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_MULTIPLEWEIGHTFACT, next_fact));
             sge_add_answer(answer_list, SGE_EVENT, STATUS_ESYNTAX, 0);
             ret = 0;
          }

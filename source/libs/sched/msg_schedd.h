@@ -519,7 +519,13 @@
 /* 
 ** schedd/sge_select_queue.c
 */ 
-#define MSG_SCHEDD_LCDIAGNOLOAD                       _MESSAGE(47374, _("no load adjustment"))
+#define MSG_SCHEDD_LCDIAGNOLOAD        _MESSAGE(47374, _("no load adjustment"))
 
+/*
+ * -
+ */
+#define MSG_WEIGHTFACTNONUMB_S         _MESSAGE(47375, _("\"load_formula\" uses "SFQ" as weighting factor (only numbers are allowed)\n"))
+#define MSG_MULTIPLEWEIGHTFACT         _MESSAGE(47376, _("\"load_formula\" may not use multiple weighting factors\n"))
+#define MSG_LOADFORMHASTOSTART         _MESSAGE(47377, _("\"load_formula\" has to start with a load value or consumable resource\n"))
 
 #endif /* __MSG_SCHEDD_H */

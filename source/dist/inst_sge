@@ -58,7 +58,7 @@ ErrUsage()
    myname=`basename $0`
    $ECHO >&2
    $INFOTEXT -e \
-             "Usage: %s -m|-x|-s [-nostrict] [-fast] [-auto] [-noqueue] \\\n" \
+             "Usage: %s -m|-x|-s [-nostrict] [-fast] [-auto] [-noqueue]\n" \
              "              [-csp] [-resport] [-afs]\n" \
              "   -m         install qmaster host\n" \
              "   -x         install execution host\n" \

@@ -98,7 +98,7 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_Adminhost_List,       NULL,           NULL,                 "ADMINHOST",         AH_Type,   AH_name           },
    { &Master_Calendar_List,        NULL,           NULL,                 "CALENDAR",          CAL_Type,  CAL_name          },
    { &Master_Ckpt_List,            NULL,           NULL,                 "CKPT",              CK_Type,   CK_name           },
-   { &Master_Config_List,          NULL,           NULL,                 "CONFIG",            CONF_Type, CONF_hname        },
+   { NULL,                         NULL,           NULL,                 "CONFIG",            CONF_Type, CONF_hname        },
    { NULL,                         NULL,           NULL,                 "GLOBAL_CONFIG",     NULL,      NoName            },
    { &Master_Exechost_List,        NULL,           NULL,                 "EXECHOST",          EH_Type,   EH_name           },
    { NULL,                         NULL,           NULL,                 "JATASK",            JAT_Type,  JAT_task_number   },

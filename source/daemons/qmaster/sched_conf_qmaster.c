@@ -58,6 +58,43 @@
 static void check_reprioritize_interval(lList **alpp, char *ruser, char *rhost);
 
 
+int sge_read_sched_configuration(lListElem *aSpoolContext, lList *anAnswer)
+{
+   lList *sched_conf = NULL;
+
+   DENTER(TOP_LAYER, "sge_read_sched_configuration");
+
+   spool_read_list(&anAnswer, aSpoolContext, &sched_conf, SGE_TYPE_SCHEDD_CONF);
+
+   if (lGetNumberOfElem(sched_conf) == 0)
+   {
+      lListElem *ep = sconf_create_default();
+
+      if (sched_conf == NULL) {
+         sched_conf = lCreateList("schedd_config_list", SC_Type);
+      }
+   
+      lAppendElem(sched_conf, ep);
+      spool_write_object(&anAnswer, spool_get_default_context(), ep, "schedd_conf", SGE_TYPE_SCHEDD_CONF);
+      answer_list_output(&anAnswer);
+   }
+   
+   if (!sconf_set_config(&sched_conf, &anAnswer))
+   {
+      answer_list_output(&anAnswer);
+      lFreeList(anAnswer);
+      lFreeList(sched_conf);
+      DEXIT;
+      return -1;
+   } 
+
+   check_reprioritize_interval(&anAnswer, "local" , "local");
+
+   DEXIT;
+   return 0;
+}
+	
+
 /************************************************************
   sge_mod_sched_configuration - Master code
 
@@ -126,7 +163,7 @@ static void check_reprioritize_interval(lList **alpp, char *ruser, char *rhost)
 
    flag = (sconf_get_reprioritize_interval() != 0) ? true : false;
 
-   conf = sge_get_configuration("global");
+   conf = sge_get_configuration_for_host(SGE_GLOBAL_NAME);
 
    sge_set_conf_reprioritize(conf, flag);
 

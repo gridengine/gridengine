@@ -619,14 +619,6 @@ spool_classic_default_list_func(lList **answer_list,
 
             sge_dstring_init(&file_name, filename_buf, SGE_PATH_MAX);
             sge_dstring_init(&dir_name, dirname_buf, SGE_PATH_MAX);
-#if 0 /* debugging of reverse resolving of global symbols.
-       * seems to be broken on AIX and IRIX - or we simply don't know the 
-       * necessary compiler/linker switches?
-       */
-ERROR((SGE_EVENT, "----> object_type_get_master_list() = %p\n", object_type_get_master_list(SGE_TYPE_CONFIG)));
-ERROR((SGE_EVENT, "----> &Master_Config_List           = %p\n", &Master_Config_List));
-ERROR((SGE_EVENT, "----> list                          = %p\n", list));
-#endif
             sge_dstring_sprintf(&file_name, "%s/%s",
                                 lGetString(rule, SPR_url), CONF_FILE);
             sge_dstring_sprintf(&dir_name, "%s/%s",

@@ -999,30 +999,44 @@ void update_reschedule_unknown_timout_values(const char *config_name)
 ******************************************************************************/
 void update_reschedule_unknown_timeout(lListElem *host) 
 {
-   lListElem *config_elem = NULL; /* CF_Type */
+   lListElem *conf_entry = NULL; /* CF_Type */
    const char *hostname = NULL;
    u_long32 timeout = 0;
    
    DENTER(TOP_LAYER, "update_reschedule_unknown_timeout");
-   if (host != NULL) {
-      hostname = lGetHost(host, EH_name);
-      timeout = lGetUlong(host, EH_reschedule_unknown);
-      config_elem = get_local_conf_val(hostname, "reschedule_unknown");
-      if (config_elem != NULL) {
-         const char *value = lGetString(config_elem, CF_value);
-
-         if (!parse_ulong_val(NULL, &timeout, TYPE_TIM, value, NULL, 0)) {
-            ERROR((SGE_EVENT, MSG_OBJ_RESCHEDULEUNKN_SS, hostname, value));
-            timeout = 0;
-         } 
-      } else {
+   
+   if (NULL == host)
+   {
+      DEXIT;
+      return;
+   }
+   
+   hostname = lGetHost(host, EH_name);
+   timeout = lGetUlong(host, EH_reschedule_unknown);
+   
+   if ((conf_entry = sge_get_configuration_entry_by_name(hostname, "reschedule_unknown")) != NULL)
+   {
+      const char *value = lGetString(conf_entry, CF_value);
+      
+      if (parse_ulong_val(NULL, &timeout, TYPE_TIM, value, NULL, 0) == 0)
+      {
+         ERROR((SGE_EVENT, MSG_OBJ_RESCHEDULEUNKN_SS, hostname, value));
          timeout = 0;
       }
-      DPRINTF(("reschedule_unknown timeout for host "SFN" is "u32"\n",
-               hostname, timeout));
-      lSetUlong(host, EH_reschedule_unknown, timeout); 
+      
+      lFreeElem(conf_entry);         
    }
-   DEXIT; 
+   else
+   {
+      timeout = 0;
+   }
+   
+   DPRINTF(("%s: reschedule_unknown timeout for host "SFN" is "u32"\n", SGE_FUNC, hostname, timeout));  
+      
+   lSetUlong(host, EH_reschedule_unknown, timeout); 
+   
+   DEXIT;
+   return; 
 } 
 
 /****** qmaster/reschedule/reschedule_unknown_timeout() ***********************
@@ -1046,37 +1060,41 @@ u_long32 reschedule_unknown_timeout(lListElem *hep)
 {
    extern int new_config;
    static int not_init = 1;
-   u_long32 timeout;
-   lListElem *cfep;
-   const char *host;
+   u_long32 timeout = 0;
+   const char *host = NULL;
  
    DENTER(TOP_LAYER, "reschedule_unknown_timeout");
  
    host = lGetHost(hep, EH_name);
    timeout = lGetUlong(hep, EH_reschedule_unknown);
-   /* cache reschedule_unknown parameter in execd host to
-      prevent host name resolving */
-   DTRACE;
-   if (new_config || not_init) {
-      DTRACE;
-      if (!(cfep = get_local_conf_val(host, "reschedule_unknown"))
-          || (cfep && !parse_ulong_val(NULL, &timeout, TYPE_TIM,
-              lGetString(cfep, CF_value), NULL, 0))) {
-         DTRACE;
-         if (cfep) {
-            ERROR((SGE_EVENT, MSG_OBJ_RESCHEDULEUNKN_SS,
-               host, lGetString(cfep, CF_value)));
+
+   /* cache reschedule_unknown parameter in execd host to prevent host name resolving */
+   if (new_config || not_init)
+   {
+      lListElem *conf_entry = NULL;
+      
+      if ((conf_entry = sge_get_configuration_entry_by_name(host, "reschedule_unknown")) != NULL)
+      {
+         if (parse_ulong_val(NULL, &timeout, TYPE_TIM, lGetString(conf_entry, CF_value), NULL, 0) == 0)
+         {
+            ERROR((SGE_EVENT, MSG_OBJ_RESCHEDULEUNKN_SS, host, lGetString(conf_entry, CF_value)));
+            timeout = 0;
          }
-         timeout = 0;
+         
+         lFreeElem(conf_entry);
       }
-      DPRINTF(("reschedule_unknown timeout for host %s is "u32"\n",
-               host, timeout));
+   
+      DPRINTF(("%s: reschedule_unknown timeout for host %s is "u32"\n", SGE_FUNC, host, timeout));
+      
       lSetUlong(hep, EH_reschedule_unknown, timeout);
+      
       not_init = 0;
    }
+   
    DEXIT;
    return timeout;
 }
+
 
 /****** qmaster/reschedule/reschedule_unknown_trigger() ***********************
 *  NAME

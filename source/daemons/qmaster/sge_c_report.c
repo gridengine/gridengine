@@ -145,14 +145,13 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
          break;
       case NUM_REP_REPORT_CONF:
 
-         if (hep && !is_configuration_up_to_date(hep, Master_Config_List, 
-                                          lGetList(report, REP_list))) {
-            DPRINTF(("configuration on host %s is not up to date\n", rhost));
+         if (hep && (sge_compare_configuration(hep, lGetList(report, REP_list)) != 0))
+         {
+            DPRINTF(("%s: configuration on host %s is not up to date\n", SGE_FUNC, rhost));
 
-            ret = host_notify_about_new_conf(hep);
-            if (ret) {
+            if (host_notify_about_new_conf(hep) != 0)
+            {
                ERROR((SGE_EVENT, MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S, rhost));
-               break;
             }
          }
          break;

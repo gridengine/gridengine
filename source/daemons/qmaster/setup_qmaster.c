@@ -118,7 +118,6 @@ static int    remove_invalid_job_references(int user);
 static int    debit_all_jobs_from_qs(void);
 
 
-
 /****** qmaster/setup_qmaster/sge_setup_qmaster() ******************************
 *  NAME
 *     sge_setup_qmaster() -- setup qmaster 
@@ -718,12 +717,12 @@ static void qmaster_lock_and_shutdown(int anExitValue)
    return;
 } /* qmaster_lock_and_shutdown() */
 
+
 static int setup_qmaster(void)
 {
    lListElem *jep, *ep, *tmpqep;
    static bool first = true;
    int ret;
-   lListElem *lep = NULL;
    extern int new_config;
    lListElem *spooling_context = NULL;
    lList *answer_list = NULL;
@@ -767,31 +766,13 @@ static int setup_qmaster(void)
       answer_list_output(&answer_list);
       spooling_context = spool_get_default_context();
    }
-
-   /*
-   ** get cluster configuration
-   */
-   spool_read_list(&answer_list, spooling_context, &Master_Config_List, SGE_TYPE_CONFIG);
-   answer_list_output(&answer_list);
-
-   ret = select_configuration(uti_state_get_qualified_hostname(), Master_Config_List, &lep);
-   if (ret) {
-      if (ret == -3)
-         WARNING((SGE_EVENT, MSG_CONFIG_FOUNDNOLOCALCONFIGFORQMASTERHOST_S,
-                 uti_state_get_qualified_hostname()));
-      else {           
-         ERROR((SGE_EVENT, MSG_CONFIG_ERRORXSELECTINGCONFIGY_IS, ret, uti_state_get_qualified_hostname()));
-         DEXIT;
-         return -1;
-      }   
-   }
-   ret = merge_configuration( lGetElemHost(Master_Config_List, CONF_hname, SGE_GLOBAL_NAME), lep, &conf, NULL);
-   if (ret) {
-      ERROR((SGE_EVENT, MSG_CONFIG_ERRORXMERGINGCONFIGURATIONY_IS, ret, uti_state_get_qualified_hostname()));
+   
+   if (sge_read_configuration(spooling_context, answer_list) != 0)
+   {
       DEXIT;
       return -1;
    }
-   sge_show_conf();         
+   
    new_config = 1;
 
    /* get aliased hostname from commd */
@@ -963,63 +944,12 @@ static int setup_qmaster(void)
    /* rebuild signal resend events */
    rebuild_signal_events();
 
-   /* scheduler configuration stuff */
    DPRINTF(("scheduler config -----------------------------------\n"));
+   
+   if (sge_read_sched_configuration(spooling_context, answer_list) != 0)
    {
-      lList *sched_conf=NULL;
-      spool_read_list(&answer_list, spooling_context, &sched_conf, SGE_TYPE_SCHEDD_CONF);
-      /* JG: TODO: reading the schedd configuration may fail, 
-      * as it is not created at install time.
-      * The corresponding error message is confusing, so do not output the error.
-      * Better: Create config at install time (trough spooldefaults)
-      * answer_list_output(&answer_list);
-      */
-      if (lGetNumberOfElem(sched_conf) == 0) {
-         lListElem *ep = sconf_create_default();
-
-         if (sched_conf == NULL) {
-            sched_conf = lCreateList("schedd config list", SC_Type);
-         }
-      
-         lAppendElem(sched_conf, ep);
-         spool_write_object(&answer_list, spool_get_default_context(), ep, "schedd_conf", SGE_TYPE_SCHEDD_CONF);
-         answer_list_output(&answer_list);
-      }
-      
-      if (!sconf_set_config(&sched_conf, &answer_list)){
-         answer_list_output(&answer_list);
-         lFreeList(answer_list);
-         lFreeList(sched_conf);
-         DEXIT;
-         return -1;
-      } 
-
-      /* The REPRIORITIZE parameter of the master configuration is not spooled. It is generated
-       *  of out the reprioritze_interval flag in the scheduler. After reading in the scheduler
-       *  configuration, we have to update the master configuration.
-       */   
-       
-      {
-         lListElem *conf = NULL; 
-         lList *ep_list = NULL;
-         lListElem *ep = NULL; 
-         int reprioritize = (sconf_get_reprioritize_interval() != 0); 
-         char value[20];
-         conf = lGetElemHost(Master_Config_List, CONF_hname, "global");
-         ep_list = lGetList(conf, CONF_entries);
-
-         ep = lGetElemStr(ep_list, CF_name, REPRIORITIZE);
-         if (!ep){
-            ep = lCreateElem(CF_Type);
-            lSetString(ep, CF_name, REPRIORITIZE);
-            lAppendElem(ep_list, ep);           
-         }
-         
-         sprintf(value, "%d", reprioritize);
-         lSetString(ep, CF_value, value);
-         lSetUlong(ep, CF_local, 0);    
-      }
-      
+      DEXIT;
+      return -1;
    }
 
    /* SGEEE: read user list */
@@ -1163,4 +1093,3 @@ static int debit_all_jobs_from_qs()
    DEXIT;
    return ret;
 }
-

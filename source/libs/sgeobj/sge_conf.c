@@ -65,7 +65,9 @@
 #define SGE_BIN "bin"
 
 extern u_long32 loggingfacility;
-lList *Master_Config_List = NULL; 
+
+/* This list is *ONLY* used by the execd and should be moved eventually */
+lList *Execd_Config_List = NULL; 
 
 sge_conf_type conf = { NULL };
 

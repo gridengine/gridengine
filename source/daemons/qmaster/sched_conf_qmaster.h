@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+int sge_read_sched_configuration(lListElem *aSpoolContext, lList *anAnswer);
+
 int sge_mod_sched_configuration(lListElem *confp, lList **alpp, char *ruser, char *rhost);
 
 #endif /* _SCHED_CONF_QMASTER_H_ */

@@ -124,7 +124,7 @@ static int execd_add_conf_report(lList *report_list)
    lSetUlong(report, REP_seqno, report_seqno);
    lSetHost(report, REP_host, uti_state_get_qualified_hostname());
    lSetList(report, REP_list, 
-      lCopyList("execd config list copy", Master_Config_List));
+      lCopyList("execd config list copy", Execd_Config_List));
    lAppendElem(report_list, report);
 
    return 0;

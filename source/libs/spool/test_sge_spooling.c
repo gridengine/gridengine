@@ -101,9 +101,9 @@ static bool read_spooled_data(void)
    context = spool_get_default_context();
 
    /* cluster configuration */
-   spool_read_list(&answer_list, context, &Master_Config_List, SGE_TYPE_CONFIG);
+   sge_read_configuration(context, answer_list);
    answer_list_output(&answer_list);
-   DPRINTF(("read %d entries to Master_Config_List\n", lGetNumberOfElem(Master_Config_List)));
+   DPRINTF(("read %d entries to Master_Config_List\n", lGetNumberOfElem(sge_get_configuration())));
 
    /* cluster configuration */
    {

@@ -92,7 +92,8 @@ typedef struct confel sge_conf_type;
 
 typedef int (*tDaemonizeFunc)(void);
 
-extern lList *Master_Config_List;
+/* This list is *ONLY* used by the execd and should be moved eventually */
+extern lList *Execd_Config_List;
 
 extern sge_conf_type conf;
 

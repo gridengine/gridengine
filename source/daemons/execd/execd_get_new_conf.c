@@ -60,7 +60,7 @@ int answer_error;
 
    unpackint(pb, &dummy);
 
-   ret = get_merged_configuration(&Master_Config_List);
+   ret = get_merged_configuration(&Execd_Config_List);
 
    /*
    ** admin mail block is released on new conf

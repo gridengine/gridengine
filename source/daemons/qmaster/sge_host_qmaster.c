@@ -950,52 +950,66 @@ void sge_load_value_cleanup_handler(te_event_t anEvent)
    return;
 }
 
-u_long32 load_report_interval(
-lListElem *hep 
-) {
+u_long32 load_report_interval(lListElem *hep)
+{
    extern int new_config;
    u_long32 timeout; 
-   lListElem *cfep;
    const char *host;
 
    DENTER(TOP_LAYER, "load_report_interval");
 
    host = lGetHost(hep, EH_name);
 
-   /* cache load report interval in exec host to 
-      prevent host name resolving each epoch */
-   if (new_config || !lGetUlong(hep, EH_load_report_interval)) {
-      /* timeout may depend on the host */
-      if (!(cfep = get_local_conf_val(host, "load_report_time"))
-            || (cfep && !parse_ulong_val(NULL, &timeout, TYPE_TIM, 
-               lGetString(cfep, CF_value), NULL, 0))) {
-
-         ERROR((SGE_EVENT, MSG_OBJ_LOADREPORTIVAL_SS,
-               host, cfep != NULL ? lGetString(cfep, CF_value) : "<null>"));
-         timeout = 120;
+   /* cache load report interval in exec host to prevent host name resolving each epoch */
+   if (new_config || !lGetUlong(hep, EH_load_report_interval))
+   {
+      lListElem *conf_entry = NULL;
+      
+      if ((conf_entry = sge_get_configuration_entry_by_name(host, "load_report_time")) != NULL)
+      {
+         if (parse_ulong_val(NULL, &timeout, TYPE_TIM, lGetString(conf_entry, CF_value), NULL, 0) == 0)
+         {
+            ERROR((SGE_EVENT, MSG_OBJ_LOADREPORTIVAL_SS, host, lGetString(conf_entry, CF_value)));
+            timeout = 120;
+         }
+         
+         lFreeElem(conf_entry);
       }
-      DPRINTF(("load value timeout for host %s is "u32"\n", 
-                  host, timeout)); 
+   
+      DPRINTF(("%s: load value timeout for host %s is "u32"\n", SGE_FUNC, host, timeout));
+      
       lSetUlong(hep, EH_load_report_interval, timeout);
-   } else { 
+   }
+   else
+   { 
       timeout = lGetUlong(hep, EH_load_report_interval);
-   } 
+   }
+    
    DEXIT; 
    return timeout;
 }
 
+
 u_long32 sge_get_max_unheard_value(void) 
 {
-   lListElem *cfep = NULL;
+   lListElem *conf_entry = NULL;
    u_long32 max_unheard_secs = 0;
+   
    DENTER(TOP_LAYER, "sge_get_max_unheard_value");
-   if (!(cfep = get_local_conf_val("global", "max_unheard"))                                              ||
-       (cfep && !parse_ulong_val(NULL, &max_unheard_secs, TYPE_TIM, lGetString(cfep, CF_value), NULL, 0))  ) {
-      ERROR((SGE_EVENT, MSG_OBJ_MAXUNHEARDVALUE_SS, "global", 
-             cfep != NULL ? lGetString(cfep, CF_value) : "<null>"));
-      max_unheard_secs = 300;
+
+   if ((conf_entry = sge_get_configuration_entry_by_name(SGE_GLOBAL_NAME, "max_unheard")) != NULL)
+   {
+      if (parse_ulong_val(NULL, &max_unheard_secs, TYPE_TIM, lGetString(conf_entry, CF_value), NULL, 0) == 0)
+      {
+         ERROR((SGE_EVENT, MSG_OBJ_MAXUNHEARDVALUE_SS, SGE_GLOBAL_NAME, lGetString(conf_entry, CF_value)));
+         max_unheard_secs = 300;
+      }
+      
+      lFreeElem(conf_entry);
    }
-   DPRINTF(("max unheard value is "u32"\n", max_unheard_secs )); 
+      
+   DPRINTF(("%s: max unheard value is "u32"\n", SGE_FUNC, max_unheard_secs)); 
+   
    DEXIT; 
    return max_unheard_secs;
 }

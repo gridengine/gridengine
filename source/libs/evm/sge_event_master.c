@@ -69,6 +69,7 @@
 #include "sge_object.h"
 #include "sge_mtutil.h"
 #include "setup_qmaster.h"
+#include "configuration_qmaster.h"
 #include "cl_errors.h"
 #include "cl_commlib.h"
 #include "msg_common.h"
@@ -3199,8 +3200,19 @@ static void total_update_event(lListElem *event_client, ev_event type)
             lp = Master_CEntry_List;
             break;
          case sgeE_CONFIG_LIST:
-            lp = Master_Config_List;
-            break;
+         {
+            u_long32 id = -1;
+            lList *conf = NULL;
+            
+            id = lGetUlong(event_client, EV_id);
+            conf = sge_get_configuration();
+            
+            /* 'send_events()' will free 'conf' */
+            add_list_event_for_client(id, 0, type, 0, 0, NULL, NULL, NULL, conf, true);
+
+            DEXIT;
+            return;
+         }
          case sgeE_EXECHOST_LIST:
             lp = Master_Exechost_List;
             break;
@@ -3254,6 +3266,7 @@ static void total_update_event(lListElem *event_client, ev_event type)
             return;
       } /* switch */
 
+      /* 'send_events()' will free the copy of 'lp' */
       add_list_event_for_client (lGetUlong (event_client, EV_id), 0, type, 0, 0,
                                  NULL, NULL, NULL, 
                                  lCopyListHash (lGetListName (lp), lp, false), 

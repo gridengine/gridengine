@@ -1,3 +1,12 @@
+AD-2004-05-19-0: Bugfix:    - Did eradicate global 'Master_Config_List'.
+                              Qmaster configuration module now does use a
+                              module local list, which is properly synchronized.
+                            - Did streamline Qmaster configuration module
+                              interface.
+                 Issue:     1041
+                 Changed:   qmaster, execd, evm, sgeobj, spool
+                 Review:    pending
+
 JG-2004-05-19-1: Bugfix:    Fixed broken qdel -f output (see also IZ 664).
                  Cleanup:   Removed job_log from execd and scheduler.
                  Changed:   qmaster, schedd, execd

@@ -104,6 +104,7 @@ static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request);
 
 
 static int schedd_mod( lList **alpp, lListElem *modp, lListElem *ep, int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command );
+static int do_gdi_get_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, int *aBeforeCnt, int *anAfterCnt);
 
 /* ------------------------------ generic gdi objects --------------------- */
 /* *INDENT-OFF* */
@@ -121,7 +122,7 @@ static gdi_object_t gdi_object[] = {
    { SGE_MANAGER_LIST,      0,         NULL,      "manager",                 &Master_Manager_List,         NULL,                  NULL,         NULL,           NULL },
    { SGE_OPERATOR_LIST,     0,         NULL,      "operator",                &Master_Operator_List,        NULL,                  NULL,         NULL,           NULL },
    { SGE_PE_LIST,           PE_name,   PE_Type,   "parallel environment",    &Master_Pe_List,              NULL,                  pe_mod,       pe_spool,       pe_success },
-   { SGE_CONFIG_LIST,       0,         NULL,      "configuration",           &Master_Config_List,          NULL,                  NULL,         NULL,           NULL },
+   { SGE_CONFIG_LIST,       0,         NULL,      "configuration",           NULL,                         NULL,                  NULL,         NULL,           NULL },
    { SGE_SC_LIST,           0,         NULL,      "scheduler configuration", NULL,                         sconf_get_config_list, schedd_mod,   NULL,           NULL },
    { SGE_USER_LIST,         UP_name,   UP_Type,   "user",                    &Master_User_List,            NULL,                  userprj_mod,  userprj_spool,  userprj_success },
    { SGE_USERSET_LIST,      0,         NULL,      "userset",                 &Master_Userset_List,         NULL,                  NULL,         NULL,           NULL },
@@ -444,7 +445,6 @@ int *after
    switch (request->target) {
 #ifdef QHOST_TEST
    case SGE_QHOST:
-/* lWriteListTo(request->lp, stdout); */
       sprintf(SGE_EVENT, "SGE_QHOST\n");
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       DEXIT;
@@ -454,6 +454,10 @@ int *after
       answer->lp = sge_select_event_clients("qmaster_response", request->cp, request->enp);
       sprintf(SGE_EVENT, MSG_GDI_OKNL);
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+      DEXIT;
+      return;
+   case SGE_CONFIG_LIST:
+      do_gdi_get_config_list(request, answer, before, after);
       DEXIT;
       return;
    default:
@@ -480,6 +484,33 @@ int *after
    
    DEXIT;
    return;
+}
+
+/*
+ * Implement 'SGE_GDI_GET' for request target 'SGE_CONFIG_LIST'.
+ */ 
+static int do_gdi_get_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, int *aBeforeCnt, int *anAfterCnt)
+{
+   lList *conf = NULL;
+
+   DENTER(TOP_LAYER, "do_gdi_get_config_list");
+   
+   conf = sge_get_configuration();
+
+   *aBeforeCnt = lGetNumberOfElem(conf);
+
+   aRes->lp = lSelectHash("qmaster_response", conf, aReq->cp, aReq->enp, false);
+
+   conf = lFreeList(conf);
+
+   *anAfterCnt = lGetNumberOfElem(aRes->lp);
+
+   sprintf(SGE_EVENT, MSG_GDI_OKNL);
+
+   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+
+   DEXIT;
+   return 0;
 }
 
 /* ------------------------------------------------------------ */

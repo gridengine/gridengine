@@ -34,19 +34,18 @@
 
 #include "basis_types.h"
 
+int sge_read_configuration(lListElem *aSpoolContext, lList *anAnswer);
+
+lList*     sge_get_configuration(void);
+lListElem* sge_get_configuration_for_host(const char* aName);
+lListElem* sge_get_configuration_entry_by_name(const char *aHost, const char *anEntryName);
 
 int sge_del_configuration(lListElem *cxp, lList **alpp, char *ruser, char *rhost);
-int sge_mod_configuration(lListElem *cxp, lList **alpp, char *ruser, char *rhost);
-int is_configuration_up_to_date(lListElem *hep, lList *conf_list, lList *to_check_list);
-int select_configuration(const char *config_name, lList *lp, lListElem **cepp);
-lListElem *get_local_conf_val(const char *host, const char *name);  
-
-lListElem* sge_get_configuration(const char* aName);
-int  sge_mod_global_configuration(lList **alpp, char *ruser, char *rhost);
+int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char *aHost);
+int sge_compare_configuration(lListElem *aHost, lList *aConf);
 
 void sge_set_conf_reprioritize(lListElem *aConf, bool aFlag);
 bool sge_get_conf_reprioritize(lListElem *aConf);
-
 bool sge_conf_is_reprioritize(void);
 
 #endif /* __CONFIGURATION_QMASTER_H */

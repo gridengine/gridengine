@@ -78,7 +78,7 @@ void sge_setup_sge_execd(const char* tmp_err_file_name)
 
    DENTER(TOP_LAYER, "sge_setup_sge_execd");
 
-   if (get_conf_and_daemonize(daemonize_execd, &Master_Config_List)) {
+   if (get_conf_and_daemonize(daemonize_execd, &Execd_Config_List)) {
       SGE_EXIT(1);
    }
    sge_show_conf();         

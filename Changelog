@@ -1,3 +1,12 @@
+AS-2004-03-18-2  Bugfix:    Product name for qmon help files
+
+AS-2004-03-18-1  Enhancem.: added check for "localhost" resolving to
+                            installation procedure. Hostname may not be an
+                            alias for "localhost" or have IP 127.0.x.x
+
+AS-2004-03-18-0: Bugfix:    use 32bit binaries on HP-UX 64 bit kernel
+                            in distribution
+
 CR-2004-03-18-0: Cleanup:   added parameter check in cl_commlib_receive_message()
                  Changed:   commlib
 

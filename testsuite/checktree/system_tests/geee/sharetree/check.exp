@@ -51,8 +51,9 @@ set check_init_level_procedure "share_tree_init_level"
 
 # define test's name and run level descriptions
 set check_name            "share_tree"
-set check_highest_level   0
-set check_description(0)  "Testing grd share_tree"
+set check_highest_level   100
+set check_description(0)  "Testing grd share_tree (functional test)"
+set check_description(100)  "Testing grd share_tree"
 
 # define test's dependencies
 set check_needs           "init_core_system" 
@@ -66,19 +67,30 @@ lappend check_functions "share_tree_cleanup"
 
 
 global share_tree_job_counter 
+global share_tree_percentage_variation
 
 proc share_tree_init_level {} {
    global CHECK_ACT_LEVEL
    global CHECK_PRODUCT_TYPE
    global share_tree_job_counter
+   global share_tree_percentage_variation
 
    if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
       return 0
    }
 
+
   switch -- $CHECK_ACT_LEVEL {
-     "0" { set share_tree_job_counter 25 ; return 0    } 
-     "1" { return -1   }
+     "0" { 
+           set share_tree_job_counter       5 
+           set share_tree_percentage_variation  9
+           return 0    
+     } 
+     "100" {
+           set share_tree_job_counter       30
+           set share_tree_percentage_variation  1
+           return 0    
+     }
   } 
   return -1  ;# no other level else
 }
@@ -284,7 +296,7 @@ proc share_tree_setup  {} {
    set test_queue [lindex $CHECK_CORE_EXECD 0]
    set change_array(qname) "share_test"
    set change_array(hostname) $test_queue
-   set change_array(slots) "30"
+   set change_array(slots) "1"
    set change_array(load_thresholds) "none"
    add_queue change_array fast
 
@@ -314,6 +326,7 @@ proc share_tree_setup  {} {
    set my_config(weight_tickets_share) "10000"
    set my_config(schedule_interval)    "2:0:0"
    set my_config(usage_weight_list)    "cpu=1,mem=0,io=0"
+   set my_config(halftime)             "1"
    set_schedd_config my_config
 
    set_error 0 "ok"
@@ -344,8 +357,10 @@ proc share_tree_test {} {
    global CHECK_PRODUCT_ROOT
    global CHECK_OUTPUT
    global CHECK_PRODUCT_TYPE 
-   global CHECK_ARCH
-   global share_tree_job_counter
+   global CHECK_ARCH CHECK_TESTSUITE_ROOT
+   global share_tree_job_counter CHECK_PROTOCOL_DIR
+   global CHECK_SCRIPT_FILE_DIR
+   global share_tree_percentage_variation
 
    if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
       set_error -3 "not available for sge system"
@@ -361,9 +376,9 @@ proc share_tree_test {} {
    set prj3_id_list ""
    set counter $share_tree_job_counter
    while { $counter > 0 } {
-      lappend prj1_id_list [ submit_job "-e /dev/null -o /dev/null -P project1 $CHECK_PRODUCT_ROOT/examples/jobs/worker.sh 60"]
-      lappend prj2_id_list [ submit_job "-e /dev/null -o /dev/null -P project2 $CHECK_PRODUCT_ROOT/examples/jobs/worker.sh 60"]
-      set last_job [ submit_job "-e /dev/null -o /dev/null -P project3 $CHECK_PRODUCT_ROOT/examples/jobs/worker.sh 60"]
+      lappend prj1_id_list [ submit_job "-e /dev/null -o /dev/null -P project1 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 2 $CHECK_PROTOCOL_DIR"]
+      lappend prj2_id_list [ submit_job "-e /dev/null -o /dev/null -P project2 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 2 $CHECK_PROTOCOL_DIR"]
+      set last_job [ submit_job "-e /dev/null -o /dev/null -P project3 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 2 $CHECK_PROTOCOL_DIR"]
       lappend prj3_id_list $last_job      
       incr counter -1
    }
@@ -406,17 +421,106 @@ proc share_tree_test {} {
    set p2_abs [ expr ( int($answer(job_percent_prj2)) )  ]
    set p3_abs [ expr ( int($answer(job_percent_prj3)) )  ]
 
-   if { $p1_abs > 33 || $p1_abs < 31 } {
-      add_proc_error "share_tree_test" -1 "project1 percentage not between 31 and 33 % (value=$answer(job_percent_prj1),$p1_abs)"
+   set x $share_tree_percentage_variation
+
+   if { $p1_abs < [ expr ( 32 - $x ) ] || $p1_abs > [ expr ( 32 + $x ) ]  } {
+      add_proc_error "share_tree_test" -1 "project1 percentage not 32 +/- $x % (value=$answer(job_percent_prj1),$p1_abs)"
    }
-   if { $p2_abs > 49 || $p2_abs < 47 } {
-      add_proc_error "share_tree_test" -1 "project2 percentage not between 47 and 49 % (value=$answer(job_percent_prj2),$p2_abs)"
+   if { $p2_abs < [ expr ( 48 - $x ) ] || $p2_abs > [ expr ( 48 + $x ) ] } {
+      add_proc_error "share_tree_test" -1 "project2 percentage not 48 +/- $x % (value=$answer(job_percent_prj2),$p2_abs)"
    }
-   if { $p3_abs > 21 || $p3_abs < 19 } {
-      add_proc_error "share_tree_test" -1 "project3 percentage not between 19 and 21 % (value=$answer(job_percent_prj3),$p3_abs)"
+   if { $p3_abs < [ expr ( 20 - $x ) ] || $p3_abs > [ expr ( 20 + $x ) ] } {
+      add_proc_error "share_tree_test" -1 "project3 percentage not 20 +/- $x % (value=$answer(job_percent_prj3),$p3_abs)"
    }
 
 
+   foreach job $prj1_id_list {
+      if { [file isfile $CHECK_PROTOCOL_DIR/$job] == 1 } {
+         file delete $CHECK_PROTOCOL_DIR/$job
+      }
+   }
+   foreach job $prj2_id_list {
+      if { [file isfile $CHECK_PROTOCOL_DIR/$job] == 1 } {
+         file delete $CHECK_PROTOCOL_DIR/$job
+      }
+   }
+   foreach job $prj3_id_list {
+      if { [file isfile $CHECK_PROTOCOL_DIR/$job] == 1 } {
+         file delete $CHECK_PROTOCOL_DIR/$job
+      }
+   }
+
+   enable_queue share_test
+
+   set done 0
+   while { $done == 0 } {
+      set done 1
+      set nr_of_jobs 0
+      foreach job $prj2_id_list {
+         set file_here [file isfile $CHECK_PROTOCOL_DIR/$job]
+         if { $file_here == 0 } {
+            set done 0
+         } 
+      }
+      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+      puts -nonewline $CHECK_OUTPUT "."
+      flush $CHECK_OUTPUT
+      sleep 2
+   }
+
+     
+
+ 
+   set prj3_count 0
+   foreach job $prj3_id_list {
+      if { [file isfile $CHECK_PROTOCOL_DIR/$job] == 1 } {   
+         incr prj3_count 1
+      }
+   }
+
+   set prj1_count 0
+   foreach job $prj1_id_list {
+      if { [file isfile $CHECK_PROTOCOL_DIR/$job] == 1 } {   
+         incr prj1_count 1
+      }
+   }
+   set prj2_count 0
+   foreach job $prj2_id_list {
+      if { [file isfile $CHECK_PROTOCOL_DIR/$job] == 1 } {   
+         incr prj2_count 1
+      }
+   }
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "project1 count: $prj1_count"
+   puts $CHECK_OUTPUT "project2 count: $prj2_count"
+   puts $CHECK_OUTPUT "project3 count: $prj3_count"
+
+   set all_prj_count [ expr ( $prj1_count + $prj2_count + $prj3_count ) ]
+   puts $CHECK_OUTPUT "====================="
+   puts $CHECK_OUTPUT "sum: $all_prj_count"  
+ 
+   set all_prj_count_unit [ expr ( $all_prj_count / 100.0 ) ]
+
+   set prj1_percentage [ expr ( $prj1_count / $all_prj_count_unit ) ]
+   set prj2_percentage [ expr ( $prj2_count / $all_prj_count_unit ) ]
+   set prj3_percentage [ expr ( $prj3_count / $all_prj_count_unit ) ]
+  
+
+   puts $CHECK_OUTPUT "project1 % $prj1_percentage"
+   puts $CHECK_OUTPUT "project2 % $prj2_percentage"
+   puts $CHECK_OUTPUT "project3 % $prj3_percentage"
+
+   set x $share_tree_percentage_variation
+
+   if { $prj1_percentage < [ expr ( 32 - $x ) ] || $prj1_percentage > [ expr ( 32 + $x ) ]  } {
+      add_proc_error "share_tree_test" -1 "project1 running percentage not 32 +/- $x % (value=$prj1_percentage)"
+   }
+   if { $prj2_percentage < [ expr ( 48 - $x ) ] || $prj2_percentage > [ expr ( 48 + $x ) ] } {
+      add_proc_error "share_tree_test" -1 "project2 running percentage not 48 +/- $x % (value=$prj2_percentage)"
+   }
+   if { $prj3_percentage < [ expr ( 20 - $x ) ] || $prj3_percentage > [ expr ( 20 + $x ) ] } {
+      add_proc_error "share_tree_test" -1 "project3 running percentage not 20 +/- $x % (value=$prj3_percentage)"
+   }
 
 
 #   wait_for_jobstart $current_job_id "orker" 30 1
@@ -425,6 +529,25 @@ proc share_tree_test {} {
 
 #   wait_for_jobend $current_job_id "orker" 120
 #   wait_for_enter
+
+
+   foreach job $prj1_id_list {
+      if { [file isfile $CHECK_PROTOCOL_DIR/$job] == 1 } {
+         file delete $CHECK_PROTOCOL_DIR/$job
+      }
+   }
+   foreach job $prj2_id_list {
+      if { [file isfile $CHECK_PROTOCOL_DIR/$job] == 1 } {
+         file delete $CHECK_PROTOCOL_DIR/$job
+      }
+   }
+   foreach job $prj3_id_list {
+      if { [file isfile $CHECK_PROTOCOL_DIR/$job] == 1 } {
+         file delete $CHECK_PROTOCOL_DIR/$job
+      }
+   }
+
+
    set_error 0 "ok" 
 
 }
@@ -442,7 +565,10 @@ proc share_tree_cleanup  {} {
       return 
    }
 
+   reset_schedd_config
+
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } result
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
    wait_for_end_of_all_jobs 60
    
    foreach elem $CHECK_CORE_EXECD {
@@ -450,8 +576,6 @@ proc share_tree_cleanup  {} {
    }  
 
    del_queue "share_test"
-
-   reset_schedd_config
 
    set catch_return [ catch {  
       eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 

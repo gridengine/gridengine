@@ -1555,7 +1555,27 @@ proc setup_schedconf {} {
   global CHECK_PRODUCT_TYPE 
 
   # reset_schedd_config has global error reporting
+  get_schedd_config old_config
   reset_schedd_config 
+  get_schedd_config new_config
+
+  set arrays_old [ array names old_config ]
+  set arrays_new [ array names new_config ]
+
+  if { [ llength $arrays_old] == [ llength $arrays_new ] } {
+    foreach param $arrays_old {
+       set old  $old_config($param)
+       set new  $new_config($param)
+
+       if { [ string compare $old $new ] != 0 } {
+          if { [ string compare $param "sgeee_schedule_interval" ] == 0 } { continue }
+          if { [ string compare $param "weight_tickets_deadline" ] == 0 } { continue }
+          add_proc_error "setup_schedconf" -1 "scheduler parameter $param:\ndefault setup: $old, after testsuite reset: $new" 
+       }
+    }
+  } else {
+     add_proc_error "setup_schedconf" -1 "parameter count new/old scheduler configuration error"
+  }
 
   set_error 0 "ok"
 }

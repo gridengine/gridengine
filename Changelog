@@ -1,3 +1,11 @@
+CR-2001-11-06-0: Testsuite:
+                    - comparing reset_scheduler setup values on startup 
+                      with the default from installation
+                    - additional testing procedures for sharetree test
+                    - setting default value for rlogin_max_open_connections
+                      down to 20
+                    - procedure reset_scheduler setup value update
+
 EB-2001-11-06-0: classic_sgeee_scheduling=1 
                  => share_override_tickets=1
                  => share_functional_shares=0

@@ -36,7 +36,7 @@ global module_name
 global rlogin_spawn_session_buffer
 set module_name "remote_procedures.tcl"
 global rlogin_max_open_connections
-set rlogin_max_open_connections 30
+set rlogin_max_open_connections 20
 
 
 # procedures

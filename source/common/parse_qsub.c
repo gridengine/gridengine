@@ -2015,7 +2015,7 @@ int check_environment
       DEXIT;
       return 2;
    }
-   str_str = string_list(va_string, ", ", NULL);
+   str_str = string_list(va_string, ",", NULL);
    if (!str_str || !*str_str) {
       *lpp = NULL;
       FREE(va_string);

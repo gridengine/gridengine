@@ -1,3 +1,8 @@
+JG-2001-10-31-3: Bugfix: Parsing of command line switches -ac, -dc, -sc and -v failed
+                 if the value of the passed variable contained spaces, e.g.
+                 -v EDITOR="gvim -f",DISPLAY=elendil:0.0 created the environment
+                 variables EDITOR=gvim, -f="" and DISPLAY=elendil:0.0
+
 JG-2001-10-31-2: -cwd option for tightly integrated pe tasks (qrsh -inherit)
                  did not overwrite the jobs -cwd settings.
 

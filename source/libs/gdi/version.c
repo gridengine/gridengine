@@ -34,7 +34,7 @@
 #  include "copyright.h"
 #endif
 
-char GDI_VERSION[] = "5.3 alpha1";
+char GDI_VERSION[] = "5.3 maintrunc";
 
 char DQS_ACK[] = "\n\
 We would like to acknowledge and thank the efforts of the\n\

@@ -2784,25 +2784,35 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    if (w == seq_no_tw) {
       target = XmtNameToWidget(w, "^seq_no"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^seq_no_label"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == processors_tw) {
       target = XmtNameToWidget(w, "^processors"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^processors_label"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == tmpdir_tw) {
       target = XmtNameToWidget(w, "^tmpdir"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^tmpdir_label"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == shell_tw) {
       target = XmtNameToWidget(w, "^shell"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^shell_label"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == calendar_tw) {
       target = XmtNameToWidget(w, "^calendar"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^calendar_label"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^calendarPB"); 
       XtSetSensitive(target, set);
@@ -2811,6 +2821,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    if (w == notify_tw) {
       target = XmtNameToWidget(w, "^notify"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^notify_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^notifyPB"); 
       XtSetSensitive(target, set);
    }   
@@ -2818,64 +2830,90 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    if (w == priority_tw) {
       target = XmtNameToWidget(w, "^priority"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^priority_label"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == job_slots_tw) {
       target = XmtNameToWidget(w, "^job_slots"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^job_slots_label"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == shell_start_mode_tw) {
       target = XmtNameToWidget(w, "^shell_start_mode"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^shell_start_mode_label"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == initial_state_tw) {
       target = XmtNameToWidget(w, "^initial_state"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^initial_state_label"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == rerun_tw) {
       target = XmtNameToWidget(w, "^rerun"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^rerun_label"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == qtype_tw) {
       target = XmtNameToWidget(w, "^qtype"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^qtype_label"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == prolog_tw) {
       target = XmtNameToWidget(w, "^prolog"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^prolog_label"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == epilog_tw) {
       target = XmtNameToWidget(w, "^epilog"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^epilog_label"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == starter_method_tw) {
       target = XmtNameToWidget(w, "^starter_method"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^starter_method_label"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == suspend_method_tw) {
       target = XmtNameToWidget(w, "^suspend_method"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^suspend_method_label"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == resume_method_tw) {
       target = XmtNameToWidget(w, "^resume_method"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^resume_method_label"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == terminate_method_tw) {
       target = XmtNameToWidget(w, "^terminate_method"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^terminate_method_label"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == ckpt_reference_list_tw) {
+      target = XmtNameToWidget(w, "^ckpt_reference_list_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^ckpt_reference_listSW"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^ckpt_listSW"); 
@@ -2889,6 +2927,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == min_cpu_interval_tw) {
+      target = XmtNameToWidget(w, "^min_cpu_interval_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^min_cpu_interval"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^min_cpu_intervalPB"); 
@@ -2896,6 +2936,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == pe_reference_list_tw) {
+      target = XmtNameToWidget(w, "^pe_reference_list_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^pe_reference_listSW"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^pe_listSW"); 
@@ -2909,16 +2951,22 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == load_thresholds_tw) {
+      target = XmtNameToWidget(w, "^load_thresholds_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^load_thresholds"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == suspend_thresholds_tw) {
+      target = XmtNameToWidget(w, "^suspend_thresholds_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^suspend_thresholds"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == suspend_interval_tw) {
+      target = XmtNameToWidget(w, "^suspend_interval_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^suspend_interval"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^suspend_intervalPB"); 
@@ -2926,11 +2974,15 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == suspend_nsuspend_tw) {
+      target = XmtNameToWidget(w, "^suspend_nsuspend_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^suspend_nsuspend"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == h_rt_tw ) {
+      target = XmtNameToWidget(w, "^h_rt_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_rt"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_rtPB"); 
@@ -2938,6 +2990,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == h_cpu_tw ) {
+      target = XmtNameToWidget(w, "^h_cpu_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_cpu"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_cpuPB"); 
@@ -2945,6 +2999,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == h_fsize_tw ) {
+      target = XmtNameToWidget(w, "^h_fsize_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_fsize"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_fsizePB"); 
@@ -2952,6 +3008,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == h_data_tw ) {
+      target = XmtNameToWidget(w, "^h_data_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_data"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_dataPB"); 
@@ -2959,6 +3017,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == h_stack_tw ) {
+      target = XmtNameToWidget(w, "^h_stack_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_stack"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_stackPB"); 
@@ -2966,6 +3026,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == h_core_tw ) {
+      target = XmtNameToWidget(w, "^h_core_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_core"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_corePB"); 
@@ -2973,6 +3035,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == h_rss_tw ) {
+      target = XmtNameToWidget(w, "^h_rss_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_rss"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_rssPB"); 
@@ -2980,6 +3044,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == h_vmem_tw ) {
+      target = XmtNameToWidget(w, "^h_vmem_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_vmem"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^h_vmemPB"); 
@@ -2987,6 +3053,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == s_rt_tw ) {
+      target = XmtNameToWidget(w, "^s_rt_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_rt"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_rtPB"); 
@@ -2994,6 +3062,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == s_cpu_tw ) {
+      target = XmtNameToWidget(w, "^s_cpu_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_cpu"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_cpuPB"); 
@@ -3001,6 +3071,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == s_fsize_tw ) {
+      target = XmtNameToWidget(w, "^s_fsize_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_fsize"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_fsizePB"); 
@@ -3008,6 +3080,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == s_data_tw ) {
+      target = XmtNameToWidget(w, "^s_data_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_data"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_dataPB"); 
@@ -3015,6 +3089,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == s_stack_tw ) {
+      target = XmtNameToWidget(w, "^s_stack_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_stack"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_stackPB"); 
@@ -3022,6 +3098,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == s_core_tw ) {
+      target = XmtNameToWidget(w, "^s_core_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_core"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_corePB"); 
@@ -3029,6 +3107,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == s_rss_tw ) {
+      target = XmtNameToWidget(w, "^s_rss_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_rss"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_rssPB"); 
@@ -3036,6 +3116,8 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == s_vmem_tw ) {
+      target = XmtNameToWidget(w, "^s_vmem_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_vmem"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^s_vmemPB"); 
@@ -3043,36 +3125,50 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
    }   
 
    if (w == consumable_config_list_tw ) {
+      target = XmtNameToWidget(w, "^consumable_config_list_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^complexes_ccl"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == subordinate_list_tw ) {
+      target = XmtNameToWidget(w, "^subordinate_list_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^subordinates_attached"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == access_allow_tw ) {
+      target = XmtNameToWidget(w, "^access_allow_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^access_allowSW"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == access_deny_tw ) {
+      target = XmtNameToWidget(w, "^access_deny_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^access_denySW"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == project_allow_tw ) {
+      target = XmtNameToWidget(w, "^project_allow_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^project_allowSW"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == project_deny_tw ) {
+      target = XmtNameToWidget(w, "^project_deny_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^project_denySW"); 
       XtSetSensitive(target, set);
    }   
 
    if (w == owner_list_tw ) {
+      target = XmtNameToWidget(w, "^owner_list_label"); 
+      XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^owner_listSW"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^owner_new"); 

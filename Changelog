@@ -1,3 +1,6 @@
+AA-2004-02-21-0: Enhancem.: qmon CQ dialog, sensitivity toggling, lock icons
+                 Changed:   qmon
+
 AH-2004-02-23-0: Bugfix:    Fix broken reservation for parallel jobs.
                             Refresh CE_doubleval in JB_hard_resource_list
                             after qmaster restart.

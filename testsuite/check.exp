@@ -14294,6 +14294,7 @@ set do_install        0
 set do_compile        0
 set do_not_update     0
 set do_all            0
+set do_one_test       0
 set do_category       0
 set do_nomain         0
 set do_only_reset_config 0
@@ -14351,6 +14352,10 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "no_update             do not update source when compile option is used"
       puts ""
       puts "all RUNLEVEL          run every test automatically up to runlevel RUNLEVEL"
+      puts "                      (RUNLEVEL is a value from 0=short tests, up to 4=week tests)"
+      puts ""
+      puts "check PATH RUNLEVEL   run test in checktree sub-path automatically up to runlevel"
+      puts "                      RUNLEVEL. PATH is as check sub-path, relative to checktree."
       puts "                      (RUNLEVEL is a value from 0=short tests, up to 4=week tests)"
       puts ""
       puts "category CAT_LIST     set users category list (COMPATIBILITY SYSTEM \[...\])"
@@ -14504,7 +14509,27 @@ for { set i 0 } { $i < $argc } { incr i } {
       continue
    }
   
-
+   if { ( [string compare [lindex $argv $i] "--check"] == 0 ) || ([string compare [lindex $argv $i] "check"] == 0 ) } {
+      set do_one_test 1
+      set ru_lev [ expr ( 1 + $i ) ]
+      set do_one_test_name [ lindex $argv $ru_lev ]
+      set ru_lev [ expr ( 2 + $i ) ] 
+      set do_one_test_level [lindex $argv $ru_lev]
+      puts $CHECK_OUTPUT "path: $do_one_test_name"
+      puts $CHECK_OUTPUT "level: $do_one_test_level"
+      if { [ llength $do_one_test_level ] != 1 || [ llength $do_one_test_name ] != 1} {
+         puts $CHECK_OUTPUT "used check parameter without runlevel or checkname"
+         setup2
+         set mail_body "$mail_body product version is [get_version_info]\n"
+         set mail_body "$mail_body testsuite root directory is \"$CHECK_TESTSUITE_ROOT\"\n"
+         set mail_body "$mail_body check is running on host \"$CHECK_HOST\" architecture is \"$CHECK_ARCH\"\n"
+         set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n-------\n"
+         mail_report $mail_subject "$mail_body used check parameter without runlevel or checkname" 
+         exit -1
+      }
+      incr i
+      continue
+   } 
    if { ( [string compare [lindex $argv $i] "--all"] == 0 ) || ([string compare [lindex $argv $i] "all"] == 0 ) } {
       set do_all 1
       set ru_lev [ expr (1 + $i) ] 
@@ -14599,7 +14624,29 @@ if { $do_compile } {
       exit 0
    }
 }
+if { $do_one_test } {
+   set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT"
+   delete_tests $CHECK_ACT_PATH/$do_one_test_name
 
+   set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/$do_one_test_name"
+   set dirs [ get_dir_names $CHECK_ACT_PATH ]
+   set files [get_file_names $CHECK_ACT_PATH ]
+   
+   get_max_level_count $CHECK_ACT_PATH
+   set selected_levels ""
+   set CHECK_GUILTY_RUNLEVELS ""
+   for {set i 0} {$i<= $do_one_test_level} {incr i 1} {
+      lappend CHECK_GUILTY_RUNLEVELS [ expr ( $i * 100 )  ]
+   }
+
+   print_menu_header
+   puts $CHECK_OUTPUT "run all tests ..."
+
+   run_tests $CHECK_ACT_PATH 0
+
+   exit 0
+
+}
 
 if { $do_all } {
    set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT"

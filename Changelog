@@ -1,3 +1,6 @@
+CR-2003-01-15-2  Testsuite: New paramter to run all tests in a subtree of
+                            the checktree: check PATH RUNLEVEL
+
 AA-2003-01-15-0  Bugfix:    crash of qmon fixed: Cluster Config -> global -> Modify (Boingg)
 
 CR-2003-01-15-1  Testsuite: new performance test: throughput

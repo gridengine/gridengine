@@ -1,3 +1,10 @@
+CR-2002-07-31-1: Bugfix:    English messages show up when running install 
+                            in localized environment (fix for "fr" Solaris 8
+                            and 9)   
+                 Bugtraq:   #4719203
+                 Changed:   all binaries
+
+
 JG-2002-07-29-0: Enhancem.  Complete implementation and use of boolean and 
                             object CULL data types.
                             Added module tests for CULL list functionality

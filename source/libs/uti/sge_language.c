@@ -130,6 +130,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
   char* packName = NULL;
   char* locDir   = NULL;
   char* language = NULL;
+  char* language_var = NULL;
   char* pathName = NULL;
   char* sge_enable_msg_id_string = NULL;
   int   success  = FALSE;  
@@ -156,6 +157,11 @@ int sge_init_languagefunc(char *package, char *localeDir)
         free(language);
         language = NULL;
      }
+     if (language_var != NULL) {
+        free(language_var);
+        language_var = NULL;
+     }
+
      if (pathName != NULL) {
         free(pathName);
         pathName = NULL;
@@ -213,19 +219,31 @@ int sge_init_languagefunc(char *package, char *localeDir)
      /* try to get a language stylename (only for output of package path) */
    
      if (getenv("LANGUAGE") != NULL) {
-        language = strdup(getenv("LANGUAGE"));
+        language_var = strdup(getenv("LANGUAGE"));
      } else {
         if (getenv("LANG") != NULL) {
-          language = strdup(getenv("LANG"));
+          language_var = strdup(getenv("LANG"));
         }
      }
    
-     if (language == NULL) {
+     if (language_var == NULL) {
         DPRINTF(("environment LANGUAGE or LANG is not set; no language selected - using defaults\n"));
-        language = strdup("C");
+        language_var = strdup("C");
      } 
      
-   
+     /* get correct language value */
+     if ( sge_language_functions.setlocale_func != NULL ) {
+        char* help1 = NULL;
+        help1 = sge_language_functions.setlocale_func(LC_MESSAGES, "");
+        if (help1 != NULL) {
+           DPRINTF(("setlocale() returns \"%s\"\n",help1)); 
+           language = strdup(help1);
+        } else {
+           DPRINTF(("setlocale() returns NULL"));   
+           language = strdup(language_var);
+        }
+     }
+
      /* packName, locDir and language strings are now surely not NULL,
         so we can now try to setup the choosen language package (*.mo - file) */
      pathName = malloc(sizeof(char)*(strlen(locDir)+strlen(language)+strlen(packName)+100));
@@ -261,9 +279,25 @@ int sge_init_languagefunc(char *package, char *localeDir)
        (sge_language_functions.bindtextdomain_func != NULL) &&
        (sge_language_functions.textdomain_func != NULL    ) &&
        (sge_are_language_functions_installed == TRUE      )    ) {
-     sge_language_functions.setlocale_func(LC_MESSAGES, "");
-     sge_language_functions.bindtextdomain_func(packName, locDir );
-     sge_language_functions.textdomain_func(packName);
+     char* help1 = NULL;
+     help1 = sge_language_functions.setlocale_func(LC_MESSAGES, "");
+     if (help1 != NULL) {
+        DPRINTF(("setlocale() returns \"%s\"\n",help1)); 
+     } else {
+        DPRINTF(("setlocale() returns NULL\n"));
+     }
+     help1 = sge_language_functions.bindtextdomain_func(packName, locDir );
+     if (help1 != NULL) {
+        DPRINTF(("bindtextdomain() returns \"%s\"\n",help1));
+     }else {
+        DPRINTF(("bindtextdomain() returns NULL\n"));
+     }
+     help1 = sge_language_functions.textdomain_func(packName);
+     if (help1 != NULL) {
+        DPRINTF(("textdomain() returns \"%s\"\n",help1));
+     }else {
+        DPRINTF(("textdomain() returns NULL\n"));
+     }
   } else {
      DPRINTF(("sge_init_language() called without valid sge_language_functions pointer!\n"));
      success = FALSE;
@@ -275,10 +309,12 @@ int sge_init_languagefunc(char *package, char *localeDir)
   free(packName);
   free(locDir);
   free(language);
+  free(language_var);
   free(pathName);
   packName = NULL;
   locDir   = NULL;
   language = NULL; 
+  language_var = NULL;
   pathName = NULL;
 
   if (success == TRUE) {

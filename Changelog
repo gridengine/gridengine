@@ -7,6 +7,7 @@ MD-2004-04-21-0: Bugfix:    - library path was wrong
                             - start schedd, after comm to master is available
                             - new entry in configuration
                  Changed:   inst_sge, install_modules
+                 Issue:     972
                  Review:    CR, AS (pending)
 
 AA-2004-04-20-3: Bugfix:    dlopen for all archs but hp11 for libcrypto

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include "cl_util.h"
+#include "cl_errors.h"
 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
@@ -64,6 +65,19 @@ int cl_util_get_int_number_length(int id) {
    return (int)strlen(help);
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_util_get_double_number_length()"
+int cl_util_get_double_number_length(double id) {
+   char help[512];
+#if defined(_WIN32)
+   _snprintf(help,512,"%f",id);
+#else
+   snprintf(help,512,"%f",id);
+#endif
+   return (int)strlen(help);
+}
 
 
 #ifdef __CL_FUNCTION__
@@ -80,4 +94,218 @@ unsigned long cl_util_get_ulong_value(const char* text) {
 
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_util_get_ascii_hex_buffer()"
+int cl_util_get_ascii_hex_buffer(char* buffer, unsigned long buf_len, char** ascii_buffer, char* separator) {
+   char*         asc_buffer       = NULL;
+   unsigned long asc_buffer_size  = 0;
+   unsigned long asc_buffer_index = 0;
+   unsigned long buffer_index     = 0;
+   int           value_hi         = 0;
+   int           value_lo         = 0;
+   int           sep_length       = 0;
 
+   if (buffer == NULL || ascii_buffer == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+ 
+   if (*ascii_buffer != NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (separator == NULL) {
+      sep_length = 0;
+   } else {
+      sep_length = strlen(separator);
+   }
+   asc_buffer_size = buf_len * (2 + sep_length) + 1;
+
+   asc_buffer = (char*) malloc(sizeof(char)*asc_buffer_size);
+   if (asc_buffer == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+
+   asc_buffer_index = 0;
+   for(buffer_index = 0; buffer_index < buf_len; buffer_index++) {
+      value_hi = buffer[buffer_index] / 16;
+      value_lo = buffer[buffer_index] % 16;
+      asc_buffer[asc_buffer_index++] = cl_util_get_ascii_hex_char(value_hi);
+      asc_buffer[asc_buffer_index++] = cl_util_get_ascii_hex_char(value_lo);
+      if (separator != NULL && (buffer_index + 1) < buf_len) {
+         strcpy(&asc_buffer[asc_buffer_index], separator);
+         asc_buffer_index += sep_length;
+      }
+   }
+   asc_buffer[asc_buffer_index] = 0;
+   
+   *ascii_buffer = asc_buffer;
+
+   return CL_RETVAL_OK;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_util_get_binary_buffer()"
+int cl_util_get_binary_buffer(char* hex_buffer, char** buffer, unsigned long* buffer_lenght) {
+   int   ret_val    = CL_RETVAL_OK;
+
+   char*         bin_buffer = NULL;
+   unsigned long bin_buffer_len = 0;
+   unsigned long bin_buffer_index = 0;
+
+   unsigned long hex_buffer_index = 0;
+   unsigned long hex_buffer_len = 0;
+   int hi,lo;
+
+   if (hex_buffer == NULL || buffer == NULL || buffer_lenght == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   if (*buffer != NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   hex_buffer_len = strlen(hex_buffer);
+
+   if (hex_buffer_len % 2 != 0) {
+      return CL_RETVAL_PARAMS;
+   }
+   bin_buffer_len = hex_buffer_len / 2;
+   bin_buffer = (char*) malloc(sizeof(char) * bin_buffer_len);
+   if (bin_buffer == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+
+   while(bin_buffer_index < bin_buffer_len) {
+      hi = cl_util_get_hex_value(hex_buffer[hex_buffer_index++]);
+      lo = cl_util_get_hex_value(hex_buffer[hex_buffer_index++]);
+      bin_buffer[bin_buffer_index++] = hi * 16 + lo; 
+   }
+
+   *buffer_lenght = bin_buffer_len;
+   *buffer = bin_buffer;
+
+   return ret_val;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_util_get_hex_value()"
+int  cl_util_get_hex_value(char hex_char) {
+   int ret_val = 0;
+   switch(hex_char) {
+      case 'f':
+         ret_val = 15;
+         break;
+      case 'e':
+         ret_val = 14;
+         break;
+      case 'd':
+         ret_val = 13;
+         break;
+      case 'c':
+         ret_val = 12;
+         break;
+      case 'b':
+         ret_val = 11;
+         break;
+      case 'a':
+         ret_val = 10;
+         break;
+      case '9':
+         ret_val = 9;
+         break;
+      case '8':
+         ret_val = 8;
+         break;
+      case '7':
+         ret_val = 7;
+         break;
+      case '6':
+         ret_val = 6;
+         break;
+      case '5':
+         ret_val = 5;
+         break;
+      case '4':
+         ret_val = 4;
+         break;
+      case '3':
+         ret_val = 3;
+         break;
+      case '2':
+         ret_val = 2;
+         break;
+      case '1':
+         ret_val = 1;
+         break;
+      case '0':
+         ret_val = 0;
+         break;
+   }
+   return ret_val;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_util_get_ascii_hex_char()"
+char cl_util_get_ascii_hex_char(int value) {
+   char ret_val = '0';
+   switch(value) {
+      case 15:
+         ret_val = 'f';
+         break;
+      case 14:
+         ret_val = 'e';
+         break;
+      case 13:
+         ret_val = 'd';
+         break;
+      case 12:
+         ret_val = 'c';
+         break;
+      case 11:
+         ret_val = 'b';
+         break;
+      case 10:
+         ret_val = 'a';
+         break;
+      case 9:
+         ret_val = '9';
+         break;
+      case 8:
+         ret_val = '8';
+         break;
+      case 7:
+         ret_val = '7';
+         break;
+      case 6:
+         ret_val = '6';
+         break;
+      case 5:
+         ret_val = '5';
+         break;
+      case 4:
+         ret_val = '4';
+         break;
+      case 3:
+         ret_val = '3';
+         break;
+      case 2:
+         ret_val = '2';
+         break;
+      case 1:
+         ret_val = '1';
+         break;
+      case 0:
+         ret_val = '0';
+         break;
+   }
+   return ret_val;
+}

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qping.1,v $     Last Update: $Date: 2004/11/16 10:44:56 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: qping.1,v $     Last Update: $Date: 2004/12/01 16:12:51 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,12 +30,12 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QPING 1 "$Date: 2004/11/16 10:44:56 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QPING 1 "$Date: 2004/12/01 16:12:51 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qping \- check application status of xxQS_NAMExx daemons.
 .PP
 .SH SYNTAX
-.B "qping [-help] [-noalias] [ [ [-i <interval>] [-info] [-f] ] | [-dump] ]"
+.B "qping [-help] [-noalias] [ [ [-i <interval>] [-info] [-f] ] | [ [-dump] [ -nonewline ] ] ]"
 .B <host> <port> <name> <id>
 .\"
 .\"
@@ -254,6 +254,10 @@ Ignore host_aliases file, which is located at
 If this option is used it is not necessary to set any xxQS_NAMExx environment
 variable. 
 
+.SS "\fB\-nonewline\fP"
+Dump output will not have a linebreak within a message and binary messages are
+not unpacked.
+
 .SS "\fB\-dump\fP"
 This option allows an administrator to observe the communication protocol
 data flow of a xxQS_NAMExx service daemon. The qping -dump instruction must be started
@@ -267,6 +271,7 @@ the following specifiers separated by a space character:
 .RS
 .nf
 "h:X"   -> hide column X
+"s:X"   -> show column X
 "w:X:Y" -> set width of column X to Y
 "hn:X"  -> set hostname output parameter X. 
            X values are "long" or "short"
@@ -274,6 +279,7 @@ the following specifiers separated by a space character:
 .RE
 
 .in-3
+Start qping -help to see which columns are available.
 
 .SS "\fBhost\fP"
 Host where daemon is running.

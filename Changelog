@@ -1,3 +1,8 @@
+CR-2004-12-01-0: Enhancm.:  qping -dump now can unpack gdi requests and print
+                            out the message data
+                 Changed:   commlib qping
+                 Review:    AA
+
 SD-2004-11-30-0: Bugfix:  : Updated security.html with proper information about
                             the kerberos and GSSAPI security code.
 

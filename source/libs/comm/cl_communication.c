@@ -136,13 +136,19 @@ int cl_com_free_message(cl_com_message_t** message) {   /* CR check */
 #endif
 #define __CL_FUNCTION__ "cl_com_add_debug_message()"
 int cl_com_add_debug_message(cl_com_connection_t* connection, const char* message, cl_com_message_t* ms) {
+#define CL_DEBUG_MESSAGE_FORMAT_STRING "%.6f\t%s\t%s\t%s\t%s\t%s\t%s\t%lu\t%lu\t%lu\t%s\t%s\t%s\n"
+
    cl_com_handle_t* handle = NULL;
+   int ret_val = CL_RETVAL_OK;
    struct timeval now;
-   char tmp_buffer[1024];
+   char*          dm_buffer = NULL;
+   unsigned long  dm_buffer_len = 0;
+   char*          xml_msg_buffer = NULL;
+
    char sender[256];
    char receiver[256];
    char message_time[256];
-   char xml_buffer[1024];
+   char message_tag_number[256];
 
    const char*     message_tag = NULL;
    char*           xml_data = "n.a.";
@@ -157,9 +163,9 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
 
    double time_now = 0.0;
    double msg_time = 0.0;
-   
+   char* info      = NULL;
 
-   if (connection == NULL) {
+   if (connection == NULL || ms == NULL ) {
       return CL_RETVAL_PARAMS;
    }
    handle = connection->handler;
@@ -172,6 +178,12 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
  
    if (handle->debug_list == NULL) {
       return CL_RETVAL_PARAMS;
+   }
+
+   if (message == NULL) {
+      info = "n.a.";
+   } else {
+      info = (char*)message;
    }
 
    gettimeofday(&now,NULL);
@@ -211,74 +223,85 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    snprintf(receiver,256,"%s/%s/%lu", rcv_host, rcv_comp, rcv_id);
 
 
-   if (ms != NULL) {
-      char* info=(char*)message;
-      if (info == NULL) {
-         info = "n.a.";
-      }
-
-      if (connection->tag_name_func != NULL && ms->message_tag != 0) {
-         message_tag = connection->tag_name_func(ms->message_tag);
-      } else {
-         CL_LOG(CL_LOG_INFO,"no message tag function set");
-      }
-
-
-      switch(ms->message_df) {
-         case CL_MIH_DF_UNDEFINED:
-         case CL_MIH_DF_BIN:
-            break;
-         default: {
-            if (ms->message_length < 1023) { 
-               memcpy(xml_buffer, ms->message, ms->message_length);
-               xml_buffer[ms->message_length] = 0;
-               xml_data = xml_buffer;
-            }
-         }
-      }
-
-      if (message_tag == NULL) {
-         /* INFO: this output format has to change when CL_DEFINE_MAX_MESSAGE_ID is changed */
-           snprintf(tmp_buffer,1024,"%.6f\t%s\t%s\t%s\t%s\t%s\t%lu\t%lu\t%lu\t%lu\t%s\t%s\t%s\n",
-                                           time_now,
-                                           sender,
-                                           direction,
-                                           receiver,
-                                           cl_com_get_mih_df_string(ms->message_df), 
-                                           cl_com_get_mih_mat_string(ms->message_mat),
-                                           ms->message_tag,
-                                           ms->message_id,
-                                           ms->message_response_id,
-                                           ms->message_length,
-                                           message_time,
-                                           xml_data,
-                                           info ); 
-       } else {
-          /* INFO: this output format has to change when CL_DEFINE_MAX_MESSAGE_ID is changed */
-           snprintf(tmp_buffer,1024,"%.6f\t%s\t%s\t%s\t%s\t%s\t%s\t%lu\t%lu\t%lu\t%s\t%s\t%s\n",
-
-                                           time_now,
-                                           sender,
-                                           direction,
-                                           receiver,
-                                           cl_com_get_mih_df_string(ms->message_df), 
-                                           cl_com_get_mih_mat_string(ms->message_mat),
-                                           message_tag,
-                                           ms->message_id,
-                                           ms->message_response_id,
-                                           ms->message_length,
-                                           message_time,
-                                           xml_data,
-                                           info ); 
-
-       }
+   if (connection->tag_name_func != NULL && ms->message_tag != 0) {
+      message_tag = connection->tag_name_func(ms->message_tag);
    } else {
-      if ( message != NULL) {
-         snprintf(tmp_buffer,1024,"%d.%d: %s", (int)now.tv_sec, (int)now.tv_usec, message);
+      CL_LOG(CL_LOG_INFO,"no message tag function set");
+   }
+
+
+   switch(ms->message_df) {
+      case CL_MIH_DF_UNDEFINED:
+         break;
+           
+      case CL_MIH_DF_BIN: {
+            cl_util_get_ascii_hex_buffer((char*)ms->message, ms->message_length, &xml_msg_buffer, NULL);
+            if (xml_msg_buffer != NULL) {
+               xml_data = xml_msg_buffer;
+            }   
+         }
+         break;
+      default: {
+         xml_msg_buffer = (char*) malloc( (ms->message_length + 1) * sizeof(char) );
+         if (xml_msg_buffer != NULL) {
+            memcpy(xml_msg_buffer, ms->message, ms->message_length);
+            xml_msg_buffer[ms->message_length] = 0;
+            xml_data = xml_msg_buffer;
+         }
       }
    }
 
-   return cl_string_list_append_string(handle->debug_list, tmp_buffer, 1);
+   if (message_tag == NULL) {
+      snprintf(message_tag_number,256,"%lu", ms->message_tag );
+      message_tag = message_tag_number;
+   }
+
+   dm_buffer_len += cl_util_get_double_number_length(time_now);
+   dm_buffer_len += strlen(sender);
+   dm_buffer_len += strlen(direction);
+   dm_buffer_len += strlen(receiver);
+   dm_buffer_len += strlen(cl_com_get_mih_df_string(ms->message_df)); 
+   dm_buffer_len += strlen(cl_com_get_mih_mat_string(ms->message_mat));
+   dm_buffer_len += strlen(message_tag);
+   dm_buffer_len += cl_util_get_ulong_number_length(ms->message_id);
+   dm_buffer_len += cl_util_get_ulong_number_length(ms->message_response_id);
+   dm_buffer_len += cl_util_get_ulong_number_length(ms->message_length);
+   dm_buffer_len += strlen(message_time);
+   dm_buffer_len += strlen(xml_data);
+   dm_buffer_len += strlen(info);
+   dm_buffer_len += strlen(CL_DEBUG_MESSAGE_FORMAT_STRING);
+   dm_buffer_len += 1;
+
+   dm_buffer = (char*) malloc(sizeof(char)*dm_buffer_len);
+   if (dm_buffer == NULL) {
+      ret_val = CL_RETVAL_MALLOC;
+   } else {
+      snprintf(dm_buffer,dm_buffer_len,CL_DEBUG_MESSAGE_FORMAT_STRING,
+                         time_now,
+                         sender,
+                         direction,
+                         receiver,
+                         cl_com_get_mih_df_string(ms->message_df), 
+                         cl_com_get_mih_mat_string(ms->message_mat),
+                         message_tag,
+                         ms->message_id,
+                         ms->message_response_id,
+                         ms->message_length,
+                         message_time,
+                         xml_data,
+                         info); 
+      
+      ret_val = cl_string_list_append_string(handle->debug_list, dm_buffer , 1);
+
+      free(dm_buffer);
+      dm_buffer = NULL;
+   }
+   if (xml_msg_buffer != NULL) {
+      free(xml_msg_buffer);
+      xml_msg_buffer = NULL;
+   }
+
+   return ret_val;
 }
 
 

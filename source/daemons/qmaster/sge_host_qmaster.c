@@ -340,7 +340,7 @@ u_long32 target
          {
             lList *answer_list = NULL;
             sge_event_spool(&answer_list, 0, sgeE_ADMINHOST_DEL, 
-                            0, 0, host, NULL, NULL,
+                            0, 0, lGetHost(ep, nm), NULL, NULL,
                             NULL, NULL, NULL, true, true);
             answer_list_output(&answer_list);
          }
@@ -349,7 +349,7 @@ u_long32 target
          {
             lList *answer_list = NULL;
             sge_event_spool(&answer_list, 0, sgeE_EXECHOST_DEL, 
-                            0, 0, host, NULL, NULL,
+                            0, 0, lGetHost(ep, nm), NULL, NULL,
                             NULL, NULL, NULL, true, true);
             answer_list_output(&answer_list);
          }
@@ -358,7 +358,7 @@ u_long32 target
          {
             lList *answer_list = NULL;
             sge_event_spool(&answer_list, 0, sgeE_SUBMITHOST_DEL, 
-                            0, 0, host, NULL, NULL,
+                            0, 0, lGetHost(ep, nm), NULL, NULL,
                             NULL, NULL, NULL, true, true);
             answer_list_output(&answer_list);
          }
@@ -947,8 +947,9 @@ lListElem *hep
       if (!(cfep = get_local_conf_val(host, "load_report_time"))
             || (cfep && !parse_ulong_val(NULL, &timeout, TYPE_TIM, 
                lGetString(cfep, CF_value), NULL, 0))) {
+
          ERROR((SGE_EVENT, MSG_OBJ_LOADREPORTIVAL_SS,
-               host, lGetString(cfep, CF_value)));
+               host, cfep != NULL ? lGetString(cfep, CF_value) : "<null>"));
          timeout = 120;
       }
       DPRINTF(("load value timeout for host %s is "u32"\n", 
@@ -968,7 +969,8 @@ u_long32 sge_get_max_unheard_value(void)
    DENTER(TOP_LAYER, "sge_get_max_unheard_value");
    if (!(cfep = get_local_conf_val("global", "max_unheard"))                                              ||
        (cfep && !parse_ulong_val(NULL, &max_unheard_secs, TYPE_TIM, lGetString(cfep, CF_value), NULL, 0))  ) {
-      ERROR((SGE_EVENT, MSG_OBJ_MAXUNHEARDVALUE_SS, "global", lGetString(cfep, CF_value)));
+      ERROR((SGE_EVENT, MSG_OBJ_MAXUNHEARDVALUE_SS, "global", 
+             cfep != NULL ? lGetString(cfep, CF_value) : "<null>"));
       max_unheard_secs = 300;
    }
    DPRINTF(("max unheard value is "u32"\n", max_unheard_secs )); 

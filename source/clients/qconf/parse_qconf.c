@@ -6331,7 +6331,7 @@ const char *config_name
    else
       cfn = config_name;   
    
-   where = lWhere("%T(%I == %s)", CONF_Type, CONF_hname, cfn);
+   where = lWhere("%T(%Ih=%s)", CONF_Type, CONF_hname, cfn);
    what = lWhat("%T(ALL)", CONF_Type);
    alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_GET, &lp, where, what);
    what = lFreeWhat(what);
@@ -6426,7 +6426,7 @@ u_long32 flags
    
    DENTER(TOP_LAYER, "add_modify_config");
 
-   where = lWhere("%T(%I == %s)", CONF_Type, CONF_hname, cfn);
+   where = lWhere("%T(%Ih=%s)", CONF_Type, CONF_hname, cfn);
    what = lWhat("%T(ALL)", CONF_Type);
    alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_GET, &lp, where, what);
    what = lFreeWhat(what);

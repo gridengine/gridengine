@@ -33,6 +33,7 @@
 
 #include "sge.h"
 #include "sge_object.h"
+#include "sge_conf.h"
 #include "sge_host.h"
 #include "sge_qinstance.h"
 #include "commlib.h"
@@ -255,6 +256,7 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
          }
          break;
       case EH_name:
+      case CONF_hname:
          if (!strcmp(hostname, SGE_GLOBAL_NAME) || 
              !strcmp(hostname, SGE_TEMPLATE_NAME)) {
             strcpy(unique, hostname);

@@ -1,3 +1,15 @@
+JG-2004-04-30-0: Bugfix:   qconf -sconf had problems with short vs. long 
+                           hostnames and hostname resolution.
+                           qmaster did no hostname resolving for cluster config
+                           objects.
+                           deleting config or host objects that had a long 
+                           hostname by specifying the short hostname and vice 
+                           versa failed.
+                           Fixed a qmaster core dump.
+                 Changed:  sge_qmaster, qconf
+                 Issue:    1007, 1009
+                 Review:   SG
+
 CR-2004-04-29-2: Enhancm.:  - removed unused structure element in 
                               cl_com_hostent_t structure
                             - added new functions:

@@ -139,8 +139,11 @@ char *rhost
    }
 #endif   
 
+   /* key is the name used in object - this can be different to the name
+    * passed (config_name) due to hostname resolving.
+    */
    sge_event_spool(alpp, 0, sgeE_CONFIG_DEL,
-                   0, 0, config_name, NULL,
+                   0, 0, lGetHost(ep, CONF_hname), NULL,
                    NULL, NULL, NULL, NULL, true, true);
     
    /* now remove it from our internal list*/
@@ -196,19 +199,33 @@ char *rhost
       return STATUS_EUNKNOWN;
    }
 
+   /* resolve the hostname - it might be resolved differently on client and
+    * qmaster host.
+    */
+   if (sge_resolve_host(confp, CONF_hname) != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, config_name));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   }
+
+   /* reread config_name - it might have changed by hostname resolving and
+    * the old pointer has become invalid!
+    */
+   config_name = lGetHost(confp, CONF_hname);
+
    if ((ret=check_config(alpp, confp))) {
       /* answer list gets filled in check_config() */
       DEXIT;
       return ret; 
    }
-
-
-   if (!(ep = lGetElemHost(Master_Config_List, CONF_hname, config_name))) {
-      DTRACE;
+DPRINTF(("searching config with name "SFQ"\n", config_name));
+   ep = lGetElemHost(Master_Config_List, CONF_hname, config_name);
+   if (ep == NULL) {
       added = true; 
-   }
-   else {
+   } else {
       added = false;
+DPRINTF(("found config with name "SFQ"\n", lGetHost(ep, CONF_hname)));
    }
 
    if (added == false) {
@@ -286,6 +303,12 @@ char *rhost
       DPRINTF(("reschedule_unknown_changed = %d\n", 
                reschedule_unknown_changed));
       old_conf_version = lGetUlong(ep, CONF_version);
+      /* we want to keep the object name - the modifying object (confp) might 
+       * have another hostname due to different hostname resolving
+       */
+      lSetHost(confp, CONF_hname, lGetHost(ep, CONF_hname));
+
+      /* now remove the old config elem - it will be replaced by the new one */
       lRemoveElem(Master_Config_List, ep);
    }       
 

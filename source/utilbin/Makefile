@@ -231,7 +231,7 @@ tst_pthread_signals.o: $(UTILBIN_DIR)/tst_pthread_signals.c
 
 #---------------------------------------------------------------------
 dbstat: dbstat.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(SECLIBS) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-		$(CC) -o $@ dbstat.o version.o sge_mt_init.o $(LFLAGS) $(SPOOLING_LIBS) -lsched -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lgdi -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
+		$(CC) -o $@ dbstat.o version.o sge_mt_init.o $(LFLAGS) -lspool -lspoolloader -lspoolb -lspoold -lsched -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lgdi -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
 
 dbstat.o: $(UTILBIN_DIR)/dbstat.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/dbstat.c

@@ -265,6 +265,18 @@ int master
   
    DENTER(TOP_LAYER, "send_job");
 
+   /* map hostname if we are simulating hosts */
+   if(simulate_hosts == 1) {
+      const lListElem *simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
+      if(simhost != NULL) {
+         const char *real_host = lGetString(simhost, CE_stringval);
+         if(real_host != NULL && hostcmp(real_host, rhost) != 0) {
+            DPRINTF(("deliver job for simulated host %s to host %s\n", rhost, real_host));
+            rhost = real_host;
+         }   
+      }
+   }
+
    /* do ask_commproc() only if we are missing load reports */
    now = sge_get_gmt();
    if (last_heard_from(target, &number_one, rhost)+

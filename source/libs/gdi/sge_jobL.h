@@ -64,7 +64,8 @@ extern "C" {
 #define JFINISHED                            0x00010000
 /* used in execd to prevent slave jobs from getting started */
 #define JSLAVE                               0x00020000
-#define JPSEUDORESCHEDULED                   0x00040000
+/* used in execd to prevent simulated jobs from getting started */
+#define JSIMULATED                           0x00040000
 
 /* 
    GDI request syntax for JB_hold 

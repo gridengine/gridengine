@@ -691,7 +691,7 @@ lList *lp
             }
          }
 
-         sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, host, *hepp);
+         sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), *hepp);
 
          added_non_static = 0;
          statics_changed = 0;

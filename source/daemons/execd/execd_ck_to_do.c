@@ -77,6 +77,8 @@
 #  endif
 #endif
 
+#include "sge_stringL.h"
+
 #if COMPILE_DC
 static int repriorisation_enabled = 0;
 #endif
@@ -461,6 +463,44 @@ int answer_error
 
    clean_up_old_jobs(0);
 
+   /* check for end of simulated jobs */
+   if(simulate_hosts) {
+      for_each(jep, Master_Job_List) {
+         for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+            if((lGetUlong(jatep, JAT_status) & JSIMULATED) && lGetUlong(jep, JB_end_time) <= now) {
+               lListElem *jr = NULL;
+               u_long32 jobid, jataskid;
+               u_long32 wallclock;
+
+               jobid = lGetUlong(jep, JB_job_number);
+               jataskid = lGetUlong(jatep, JAT_task_number);
+
+               DPRINTF(("Simulated job "u32"."u32" is exiting\n", jobid, jataskid));
+
+               if ((jr=get_job_report(jobid, jataskid, NULL)) == NULL) {
+                  ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU, 
+                         u32c(jobid), u32c(jataskid)));
+                  jr = add_job_report(jobid, jataskid, NULL);
+               }
+
+               lSetUlong(jr, JR_state, JEXITING);
+               add_usage(jr, "submission_time", NULL, lGetUlong(jep, JB_submission_time));
+               add_usage(jr, "start_time", NULL, lGetUlong(jatep, JAT_start_time));
+               add_usage(jr, "end_time", NULL, lGetUlong(jep, JB_end_time));
+               wallclock = lGetUlong(jep, JB_end_time) - lGetUlong(jatep, JAT_start_time);
+               add_usage(jr, "ru_wallclock", NULL, wallclock);
+               add_usage(jr, USAGE_ATTR_CPU_ACCT, NULL, wallclock * 0.5);
+               add_usage(jr, "ru_utime", NULL, wallclock * 0.4 );
+               add_usage(jr, "ru_utime", NULL, wallclock * 0.1 );
+               add_usage(jr, "exit_status", NULL, 0);
+            
+               
+               lSetUlong(jatep, JAT_status, JEXITING | JSIMULATED);
+            }
+         }
+      }   
+   }
+
    /* do timeout calculation */
    now = sge_get_gmt();
    if ( flush_jr || now - then > conf.load_report_time) {
@@ -552,6 +592,43 @@ lListElem *slave_jatep
       return 0;
    }
 
+   now = sge_get_gmt();
+   lSetUlong(jatep, JAT_start_time, now);
+
+   /* we might simulate another host */
+   if(simulate_hosts == 1) {
+      const char *host = lGetHost(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qhostname);
+      if(hostcmp(host, me.qualified_hostname) != 0) {
+         lList *job_args;
+         u_long32 duration = 60;
+
+         DPRINTF(("Simulating job "u32"."u32"\n", 
+                  lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number)));
+         lSetUlong(jatep, JAT_status, JRUNNING | JSIMULATED);
+
+         /* set time when job shall be reported as finished */
+         job_args = lGetList(jep, JB_job_args);
+         if(lGetNumberOfElem(job_args) == 1) {
+            const char *arg = NULL;
+            char *endptr = NULL;
+            u_long32 duration_in;
+  
+            arg = lGetString(lFirst(job_args), STR);
+            if(arg != NULL) {
+               DPRINTF(("Trying to use first argument ("SFQ") as duration for simulated job\n", arg));
+               
+               duration_in = strtol(arg, &endptr, 0);
+               if(arg != endptr) {
+                  duration = duration_in;
+               }
+            }   
+         }
+
+         lSetUlong(jep, JB_end_time, now + duration);
+         return 1;
+      }
+   }
+
 #ifdef COMPILE_DC
    lSetUlong(jatep, JAT_status, JWAITING4OSJID);
    waiting4osjid = 1;
@@ -559,8 +636,6 @@ lListElem *slave_jatep
    lSetUlong(jatep, JAT_status, JRUNNING);
 #endif
 
-   now = sge_get_gmt();
-   lSetUlong(jatep, JAT_start_time, now);
    if (getenv("FAILURE_BEFORE_EXEC")) {
       pid = -1; 
       strcpy(err_str, "FAILURE_BEFORE_EXEC");

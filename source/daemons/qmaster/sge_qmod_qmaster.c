@@ -72,6 +72,10 @@
 #include "sge_security.h"
 #include "sge_job_jatask.h"
 
+#include "sge_conf.h"
+#include "sge_complexL.h"
+#include "sge_string.h"
+
 extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
 
@@ -1207,6 +1211,24 @@ lListElem *jatep
       } else {
          pnm = prognames[EXECD]; 
          hnm = lGetHost(qep, QU_qhostname);
+      }
+
+      /* map hostname if we are simulating hosts */
+      if(simulate_hosts == 1) {
+         lListElem *hep = NULL;
+         const lListElem *simhost = NULL;
+
+         hep = sge_locate_host(hnm, SGE_EXECHOST_LIST);
+         if(hep != NULL) {
+            simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
+            if(simhost != NULL) {
+               const char *real_host = lGetString(simhost, CE_stringval);
+               if(real_host != NULL && hostcmp(real_host, hnm) != 0) {
+                  DPRINTF(("deliver signal for job/queue on simulated host %s to host %s\n", hnm, real_host));
+                  hnm = real_host;
+               }   
+            }
+         }
       }
 
       if((i = init_packbuffer(&pb, 256, 0)) == PACK_SUCCESS) {

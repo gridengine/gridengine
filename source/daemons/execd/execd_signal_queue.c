@@ -63,6 +63,10 @@
 #include "msg_execd.h"
 #include "sge_job_jatask.h"
 
+#include "sge_conf.h"
+#include "sge_job_reportL.h"
+#include "sge_usageL.h"
+
 #if defined(CRAY) && !defined(SIGXCPU)
 #   define SIGXCPU SIGCPULIM
 #endif
@@ -226,6 +230,46 @@ lListElem *jatep
    INFO((SGE_EVENT, MSG_JOB_SIGNALTASK_UUS,   
          u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number)), 
          sge_sig2str(sig)));
+
+   /* for simulated hosts do nothing */
+   if(simulate_hosts == 1 && 
+      (lGetUlong(jatep, JAT_status) & JSIMULATED)) {
+
+      if(sig == SGE_SIGKILL) {
+         lListElem *jr = NULL;
+         u_long32 jobid, jataskid;
+         u_long32 wallclock;
+
+         jobid = lGetUlong(jep, JB_job_number);
+         jataskid = lGetUlong(jatep, JAT_task_number);
+         
+         DPRINTF(("Simulated job "u32"."u32" is killed\n", jobid, jataskid));
+
+         if ((jr=get_job_report(jobid, jataskid, NULL)) == NULL) {
+            ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU, 
+                   u32c(jobid), u32c(jataskid)));
+            jr = add_job_report(jobid, jataskid, NULL);
+         }
+
+         lSetUlong(jr, JR_state, JEXITING);
+         lSetUlong(jep, JB_end_time, sge_get_gmt());
+         add_usage(jr, "submission_time", NULL, lGetUlong(jep, JB_submission_time));
+         add_usage(jr, "start_time", NULL, lGetUlong(jatep, JAT_start_time));
+         add_usage(jr, "end_time", NULL, lGetUlong(jep, JB_end_time));
+         wallclock = lGetUlong(jep, JB_end_time) - lGetUlong(jatep, JAT_start_time);
+         add_usage(jr, "ru_wallclock", NULL, wallclock);
+         add_usage(jr, USAGE_ATTR_CPU_ACCT, NULL, wallclock * 0.5);
+         add_usage(jr, "ru_utime", NULL, wallclock * 0.4 );
+         add_usage(jr, "ru_utime", NULL, wallclock * 0.1 );
+         add_usage(jr, "exit_status", NULL, 137);
+         add_usage(jr, "signal", NULL, sig);
+
+         lSetUlong(jatep, JAT_status, JEXITING | JSIMULATED);
+         flush_jr = 1;
+      }
+      
+      return 0;
+   }
 
 /*
    DPRINTF(("(sig==SGE_MIGRATE) = %d (ckpt on suspend) = %d %d\n", 

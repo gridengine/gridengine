@@ -462,7 +462,7 @@ FPRINTF_ERROR:
 *     pid_t - process id
 *  
 *  NOTES
-*     MT-NOTE: sge_readpid() is not MT safe (strtok())
+*     MT-NOTE: sge_readpid() is MT safe.
 ******************************************************************************/ 
 pid_t sge_readpid(const char *fname)
 {
@@ -478,12 +478,15 @@ pid_t sge_readpid(const char *fname)
    }
  
    pid = 0;
-   while (fgets(buf, sizeof(buf), fp)) {
+   while (fgets(buf, sizeof(buf), fp))
+   {
+      char *pos = NULL;
+
       /*
        * set chrptr to the first non blank character
        * If line is empty continue with next line
        */
-       if(!(cp = strtok(buf, " \t\n"))) {
+       if(!(cp = strtok_r(buf, " \t\n", &pos))) {
           continue;
        }
  
@@ -500,7 +503,7 @@ pid_t sge_readpid(const char *fname)
  
    DEXIT;
    return pid;
-}        
+} /* sge_readpid() */        
 
 /****** uti/spool/sge_write_pid() *********************************************
 *  NAME
@@ -554,12 +557,11 @@ void sge_write_pid(const char *pid_log_file)
 *     char* - pointer to internal static buffer
 *
 *  NOTES
-*     This function uses strtok(). Lines may be up to 1024 characters
-*     long. Up to 1024 characters of the config value are copied
-*     to the static buffer.
+*     Lines may be up to 1024 characters long. Up to 1024 characters of the
+*     config value are copied to the static buffer.
 *
 *  NOTES
-*     MT-NOTE: sge_get_confval() is not MT safe
+*     MT-NOTE: sge_get_confval() is MT safe
 ******************************************************************************/
 char *sge_get_confval(const char *conf_val, const char *fname)
 {
@@ -610,11 +612,14 @@ int sge_get_confval_array(const char *fname, int n, const char *name[],
       return n;
    }
 
-   while (fgets(buf, sizeof(buf), fp)) {
+   while (fgets(buf, sizeof(buf), fp))
+   {
+      char *pos = NULL;
+
       /* set chrptr to the first non blank character
        * If line is empty continue with next line
        */
-      if(!(cp = strtok(buf, " \t\n")))
+      if(!(cp = strtok_r(buf, " \t\n", &pos)))
           continue;
 
       /* allow commentaries */
@@ -623,7 +628,7 @@ int sge_get_confval_array(const char *fname, int n, const char *name[],
    
       /* search for all requested configuration values */ 
       for (i=0; i<n; i++)
-         if (!strcasecmp(name[i], cp) && (cp = strtok(NULL, " \t\n"))) {
+         if (!strcasecmp(name[i], cp) && (cp = strtok_r(NULL, " \t\n", &pos))) {
              strncpy(value[i], cp, 512);
              cp = value[i];
              if (!--nmissing) {
@@ -638,7 +643,7 @@ int sge_get_confval_array(const char *fname, int n, const char *name[],
    fclose(fp);
    DEXIT;
    return nmissing;
-}
+} /* sge_get_confval_array() */
 
 
 

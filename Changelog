@@ -1,3 +1,9 @@
+RH-2004-08-12-0: Bugfix:     Refix Issue 1161
+                 Issue:      1161
+                 Bugtraq:    5080856
+                 Review:     CR
+                 Changed:    qconf
+
 MD-2004-08-11-1: Bugfix:    - sge backup cannot override older backups
                  Issue:       1222
                  Bugtraq:     5085508

@@ -1,3 +1,11 @@
+AS-2002-03-15-1  Install:   ignore_fqdn accidentially always set to true
+                            remove qlogin_command from default local config
+
+AS-2002-03-15-0  Install:   unset CODINE_ROOT, GRD_ROOT in inst_sge
+                            add /usr/bsd to PATH for "clear" command on SGI
+                            in various scripts in util/
+                            enhance "sgemremoterun" and "install_cluster.sh" 
+               
 AH-2002-03-15-2  Doc:       Added information about qmod [-e|-s|..] queue_list
                             syntax (wildcards).
 
@@ -20,9 +28,10 @@ JG-2002-03-13-0  Doc:       Improved the qmake man page to reflect the
 
 AA-2002-03-11-0: Bugfix:    Save Setting, Clear functionality bugs 
 
-AS-2002-03-11-2: CVS:       Created V53_beta2_2_TAG 
+AS-2002-03-11-2: CVS:       Created V53_beta2_2_TAG
+---------------------------------------------------
 
-AA-2002-03-11-0: Bugfix:    iremoved qs_args from qmon
+AA-2002-03-11-0: Bugfix:    removed qs_args from qmon
 
 AS-2002-03-11-1: Doc:       added "doc/logfile-trimming.asc" to document
                             behavior of "util/logchecker.sh".

@@ -1,4 +1,7 @@
-JG-2004-09-20-0: Testuite:  Improved test performance/throughput, added a number
+CR-2004-09-21-0: Testsuite: added a cleanup function for test
+                               bugs/issuezilla/1270
+
+JG-2004-09-20-0: Testsuite: Improved test performance/throughput, added a number
                             of charts to comparison of two clusters.
                  Review:    CR
 

@@ -45,6 +45,7 @@ set check_root_access_needs   "yes"
 set check_functions           ""
 lappend check_functions       "issue_1270_setup" ;# functions to call (in order)
 lappend check_functions       "issue_1270_run"
+lappend check_functions       "issue_1270_cleanup"
 set check_highest_level       0
 
 proc init_level {} {
@@ -89,5 +90,13 @@ proc issue_1270_run  {} {
       add_proc_error "issue_1270_run" "-1" "drmaa_synchronize() did not ignore new jobs"
    }
    
+   set_error 0 "ok"
+}
+
+proc issue_1270_cleanup {} {
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
    set_error 0 "ok"
 }

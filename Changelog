@@ -1,3 +1,6 @@
+CR-2003-04-08-0  Enhancem:  clean rule for drmaa objs
+                 Changed:   libs/japi/Makefile
+
 AH-2003-04-07-0  Enhancem:  - implemented drmaa_job_ps()
                             - fix problems with drmaa_wait() operating on 
                               individual jobids rather than on 

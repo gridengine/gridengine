@@ -69,7 +69,7 @@ japilib: $(JAPILIB)
 drmaalib: $(DRMAALIB)
 	
 clean: 
-	$(RM) $(JAPI_ALL) $(JAPILIB_OBJS) libjapi.a libjapi$(SHAREDEXT) test_drmaa.o test_drmaa
+	$(RM) $(JAPI_ALL) $(JAPILIB_OBJS) libjapi.a libjapi$(SHAREDEXT) $(DRMAALIB_OBJS) libdrmaa.a libdrmaa$(SHAREDEXT) test_drmaa.o test_drmaa
 
 depend:
 	$(DEPEND) -f$(JAPILIB_DIR)/japi_dependencies $(JAPILIB_DIR)/*.c

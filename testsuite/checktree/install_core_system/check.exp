@@ -1444,9 +1444,6 @@ proc get_local_product_root_dir { host } {
    return $binary_dir
 }
 
-
-
-
 #                                                             max. column:     |
 #****** install_core_system/setup_queues() ******
 # 

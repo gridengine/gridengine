@@ -1,3 +1,5 @@
+CR-2002-05-06-0: Testsuite: Fixed testsuite dependencies
+
 AH-2002-05-06-1: Bugfix:    Fix typo in simple.sh job example
 
 EB-2002-05-04-0: Cleanup:   Job object:

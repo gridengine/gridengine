@@ -665,6 +665,7 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
             is_last_token = true;
          }
 
+
 #if 0 
          /* 
           * It is not allowed to remove all white space because.
@@ -675,12 +676,19 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
           */
          sge_strip_blanks(token);
 #endif
+
          length = strlen(token);
          if (length >= 1) {
             const char *href_name = NULL;
             char *value = NULL;
             bool first_is_default = true;
-   
+  
+            /*
+             * There might be white space at the end of each token.
+             */
+            sge_strip_white_space_at_eol(token);
+            length = strlen(token);
+         
             /* 
              * All except the last token has to conatin a ',' as last
              * character in the string. This ',' has to be removed.
@@ -697,6 +705,12 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
                   ret = false;
                }
             }
+
+            /*
+             * There might be space after a closing brace ']'
+             */
+            sge_strip_white_space_at_eol(token);
+            length = strlen(token);
 
             /* 
              * All except the first token has to end with a ']'. Also

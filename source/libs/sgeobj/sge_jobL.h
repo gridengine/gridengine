@@ -710,51 +710,6 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    /* 
     * IF YOU ADD SOMETHING HERE THEN CHANGE ALSO THE ADOC COMMENT ABOVE 
     */
-
-
-
-   /*IDL
-   void submit()
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   void submit_array(in sge_ulong min,
-                     in sge_ulong max,
-                     in sge_ulong step)
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   void hold() 
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   void hold_task(in sge_ulong task_id) 
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   void hold_range(in sge_ulong start,
-                   in sge_ulong end,
-                   in sge_ulong step) 
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   void release() 
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   void release_task(in sge_ulong task_id) 
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   void release_range(in sge_ulong start,
-                      in sge_ulong end,
-                      in sge_ulong step) 
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   void suspend(in boolean force) 
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   void suspend_task(in sge_ulong task_id, in boolean force) 
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   void suspend_range(in sge_ulong start,
-                      in sge_ulong end,
-                      in sge_ulong step,
-                      in boolean force) 
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   void unsuspend(in boolean force)
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   void unsuspend_task(in sge_ulong task_id, in boolean force)
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   void unsuspend_range(in sge_ulong start,
-                        in sge_ulong end,
-                        in sge_ulong step,
-                        in boolean force) 
-            raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   XIDL*/
 LISTEND
 
 NAMEDEF(JBN)

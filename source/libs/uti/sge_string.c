@@ -472,6 +472,23 @@ void sge_strip_blanks(char *str)
    return;
 }
 
+/* EB: ADOC: add commets */
+
+void sge_strip_white_space_at_eol(char *str) 
+{
+   DENTER(BASIS_LAYER, "sge_strip_white_space_at_eol");
+   if (str != NULL) {
+      size_t length = strlen(str);
+
+      while (str[length - 1] == ' ' || str[length - 1] == '\t') {
+         str[length - 1] = '\0';
+         length--;
+      }
+   }
+   DEXIT;
+   return;
+}
+
 /****** uti/string/sge_delim_str() *******************************************
 *  NAME
 *     sge_delim_str() -- Trunc. a str according to a delimiter set 

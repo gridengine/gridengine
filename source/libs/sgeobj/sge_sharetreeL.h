@@ -193,12 +193,6 @@ ILISTDEF(STN_Type, ShareTreeNode, SGE_SHARETREE_LIST)
    SGE_ULONG(STN_taskid, CULL_DEFAULT)                                                 
    SGE_LIST(STN_usage_list,UA_Type, CULL_DEFAULT)                                     
    SGE_ULONG(STN_version, CULL_DEFAULT)
-   /* IDL 
-     ShareTreeNode newNode(in string name, in unsigned long shares)
-     raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-     ShareTreeNode newLeaf(in string name, in unsigned long shares)
-     raises(ObjDestroyed, Authentication, Error) context("sge_auth");
-   XIDL */
 LISTEND 
 
 NAMEDEF(STNN)

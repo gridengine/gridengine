@@ -1,3 +1,10 @@
+CR-2002-07-31-1  Bugfix:    English messages show up when running install 
+                            in localized environment (fix for "fr" Solaris 8
+                            and 9)   
+                 Bugtraq:   #4719203
+                 Changed:   all binaries
+
+
 CR-2002-07-31-0  Bugfix:    addend missing #ifdef __SGE_NO_USERMAPPING__ 
                             lines to preserve sge_options[] array
                  Changed:   qconf          

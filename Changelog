@@ -1,3 +1,9 @@
+JG-2004-11-04-0: Bugfix:    Jobs were not rescheduled to the same host they ran 
+                            on before.
+                 Issue:     1317
+                 Changed:   execd
+                 Review:    SG
+
 SG-2004-11-04-1: Bugfix:    the scheduler logs 2 error message, when job
                             was deleted by a user during a scheduling run
                             and that you was dispatched from the scheduler.
@@ -90,6 +96,7 @@ CR-2004-10-28-1: Testsuite: commlib throughput test now uses binary_starter.sh
 
 JG-2004-10-28-0: Bugfix:    qmake did not export shell env vars.
                  Bugtraq:   6090162
+                 Issue:     1313
                  Review:    SG
                  Testsuite: New check system_tests/clients/qmake.
                             Check performance/throughput: Better diagnosis of 

@@ -202,9 +202,10 @@ execd_add_job_report(lList *report_list, u_long32 now, u_long32 *next_send)
 
    /* 
     * send only one report message per second 
-    * and don't send an empty report
+    * we do send empty reports - they trigger rescheduling of a job
+    * to the same host on which it executed before.
     */
-   if (do_send && (last_send < now) && (lGetNumberOfElem(jr_list) > 0)) {
+   if (do_send && (last_send < now)) {
       lListElem *job_report;
       lList *job_report_list;
       lListElem *jr;

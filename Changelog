@@ -1,5 +1,10 @@
+AS-2002-08-22-1  Bugfix:    qhold/qrls (via qhold.sh) can print i18ned
+                            removed Translate() shell function
+                            better gid_range checking in install script
+                 Bugtraq:   #4732535           
+
 EB-2002-08-22-0  Bugfix:    Userset "defaultdepartment" accepts users in CLI
-                 Bugtraq:   #4733859
+                 Bugtraq:   #4733859, #4731347
                  Issues:    #360
                  Review:    AS
                  Changed:   sge_qmaster, qconf

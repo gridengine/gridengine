@@ -44,6 +44,7 @@
 #include <limits.h>
 #include <math.h>
 #include <sys/times.h>
+#include <time.h>
 
 #include "sge.h"
 #include "sge_all_listsL.h"
@@ -2586,8 +2587,8 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
    double weight[k_last];
 
-   clock_t start;
-   clock_t init, pass_0, pass_1, pass_2, calc;
+   clock_t start=0;
+   clock_t init=0, pass_0=0, pass_1=0, pass_2=0, calc=0;
    struct tms tms_buffer;
 
    u_long32 free_qslots = 0;
@@ -3911,8 +3912,8 @@ sge_build_sge_orders( sge_Sdescr_t *lists,
    int norders; 
    static int last_seqno = 0;
 
-   clock_t start;
-   clock_t job_orders, update_orders;
+   clock_t start=0;
+   clock_t job_orders=0, update_orders=0;
    struct tms tms_buffer;
 
    DENTER(TOP_LAYER, "sge_build_sge_orders");

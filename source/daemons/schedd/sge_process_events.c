@@ -43,6 +43,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 #include <sys/times.h>
 
 #include "def.h"
@@ -150,13 +151,12 @@ int event_handler_default_scheduler(lList *event_list)
    sge_Sdescr_t copy;   
    
    struct tms tms_buffer;
-   clock_t start;
-   clock_t copy_time;
+   clock_t start=0;
+   clock_t copy_time=0;
 
    DENTER(TOP_LAYER, "event_handler_default_scheduler");
 
    start = times(&tms_buffer);
-
 
    DPRINTF(("================[SCHEDULING-EPOCH]==================\n"));
    

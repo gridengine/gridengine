@@ -1,3 +1,8 @@
+SD-2001-11-30-0: Bugfix:    SGEEE scheduler - Moved max_pending_functional_jobs
+                            short-circuit to outer loop of pending functional
+                            jobs algorithm to correct problem where certain
+                            pending jobs were not considered for scheduling.
+
 AH-2001-11-26-2: Fix 'minus_n=0' problem in dist/mpi/rsh wrapper script
                  Fix error in generating rmon lib dependencies
 

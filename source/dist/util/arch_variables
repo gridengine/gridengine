@@ -66,6 +66,14 @@ case $ARCH in
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
    GETTEXT=/usr/bin/gettext
    ;;
+ darwin)
+   AWK=/usr/bin/awk
+   ECHO=/bin/echo
+   MAILER=/usr/bin/mail
+   QLOGIN_COMMAND=telnet
+   QLOGIN_DAEMON=/usr/libexec/telnetd
+   RLOGIN_DAEMON=/usr/libexec/rlogind
+   ;;
  alinux|glinux|slinux)
    AWK=/usr/bin/gawk
    ECHO="/bin/echo -e"

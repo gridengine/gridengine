@@ -617,7 +617,16 @@ sge_rusage_type *d
    d->io = ((pc=strtok(NULL, ":")))?atof(pc):0;
 
    /* skip job category */
-   pc=strtok(NULL, ":");
+   while ((pc=strtok(NULL, ":")) &&
+          pc[strlen(pc)-1] != ' ' &&
+          strcmp(pc, "none")) {
+      /*
+       * The job category field might contain colons (':').
+       * Therefore we have to skip all colons until we find a " :".
+       * Only if the category is "none" then ":" is the real delimiter.
+       */
+      ;
+   }
 
    d->iow = ((pc=strtok(NULL, ":")))?atof(pc):0;
 

@@ -322,11 +322,11 @@ static void communication_setup(char **anArgv)
       uti_state_set_qualified_hostname(host);
    }
 
-   com_handle = cl_com_get_handle((char*)prognames[QMASTER], 1);
+   com_handle = cl_com_get_handle("qmaster", 1);
    if (com_handle != NULL) {
-      cl_commlib_remove_messages(cl_com_get_handle((char*)prognames[QMASTER],1));
+      cl_commlib_remove_messages(cl_com_get_handle("qmaster",1));
    } else {
-      com_handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,atoi(qmaster_port), 0,(char*)prognames[QMASTER], 1, 1 , 0 );
+      com_handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,atoi(qmaster_port), 0,"qmaster", 1, 1 , 0 );
       if (com_handle == NULL) {
          ERROR((SGE_EVENT, "could not create communication handle\n"));
          SGE_EXIT(1);
@@ -487,7 +487,7 @@ static void daemonize_qmaster(void)
       answer_list_output(&answer_list);
 #ifdef ENABLE_NGC
       FD_ZERO(&fds);
-      if ( cl_commlib_set_handle_fds(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0), &fds) == CL_RETVAL_OK) {
+      if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), &fds) == CL_RETVAL_OK) {
          INFO((SGE_EVENT, "there are open file descriptors for communication\n"));
          sge_daemonize(&fds);
       } else {

@@ -1536,7 +1536,7 @@ int main(int argc, char **argv)
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
 
 #ifdef ENABLE_NGC
-      cl_commlib_shutdown_handle(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0),0);
+      cl_commlib_shutdown_handle(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),0);
 #else
       /* if we had a connection to qmaster commd (to get configuration), close it and reset commproc id */
       leave_commd();
@@ -1646,7 +1646,7 @@ int main(int argc, char **argv)
          DPRINTF(("random polling set to %d\n", random_poll));
 
 #ifdef ENABLE_NGC
-         cl_commlib_shutdown_handle(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0),0);
+         cl_commlib_shutdown_handle(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0),0);
 #else
          /* leave commd while waiting for connection / sleeping while polling */
          leave_commd();

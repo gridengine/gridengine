@@ -188,7 +188,7 @@ char *argv[]
       fd_set fds;
 #ifdef ENABLE_NGC
       FD_ZERO(&fds);
-      if ( cl_commlib_set_handle_fds(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0), &fds) == CL_RETVAL_OK) {
+      if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), &fds) == CL_RETVAL_OK) {
          INFO((SGE_EVENT, "there are open file descriptors for communication\n"));
          sge_daemonize(&fds);
       } else {
@@ -552,7 +552,7 @@ int daemonize_schedd()
 
    FD_ZERO(&keep_open);
 #ifdef ENABLE_NGC
-   if ( cl_commlib_set_handle_fds(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0), &keep_open) == CL_RETVAL_OK) {
+   if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0), &keep_open) == CL_RETVAL_OK) {
       INFO((SGE_EVENT, "there are open file descriptors for communication\n"));
       sge_daemonize(&keep_open);
    } else {

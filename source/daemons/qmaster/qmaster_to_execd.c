@@ -105,7 +105,7 @@ static int host_notify_about_X(lListElem *host,
       u_short id = 1;
       const char *commproc = prognames[progname_id];
 #ifdef ENABLE_NGC
-      cl_commlib_get_last_message_time((cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0)),
+      cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0)),
                                         (char*)hostname, (char*)commproc,id, &last_heard_from);
       if (!last_heard_from)
 #else

@@ -173,7 +173,7 @@ int dispatch( dispatch_entry*   table,
 
 
       /* svd 971202 - changed min timeout to 2 instead of 5 */
-      cl_commlib_trigger(cl_com_get_handle("execd" ,1));
+      cl_commlib_trigger(cl_com_get_handle( "execd" ,1));
 
       i = receive_message_cach_n_ack(&de, &pb, tagarray, RECEIVE_CACHESIZE, errfunc); 
 

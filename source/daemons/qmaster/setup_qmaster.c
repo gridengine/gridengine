@@ -193,7 +193,7 @@ int sge_setup_qmaster()
 
    /* pass max unheard to commlib */
 #ifdef ENABLE_NGC
-   cl_commlib_set_connection_param(cl_com_get_handle((char*)prognames[QMASTER],1), HEARD_FROM_TIMEOUT, conf.max_unheard);
+   cl_commlib_set_connection_param(cl_com_get_handle("qmaster",1), HEARD_FROM_TIMEOUT, conf.max_unheard);
 #else
    set_commlib_param(CL_P_LT_HEARD_FROM_TIMEOUT, conf.max_unheard, NULL, NULL);
 #endif

@@ -183,13 +183,11 @@ int compressed
    int ret;
    cl_com_handle_t* handle = NULL;
    cl_xml_ack_type_t ack_type;
-   u_long32 me_who;
    unsigned long dummy_mid;
    DENTER(TOP_LAYER, "gdi_send_message");
 
    /* TODO: handle Kerberos and SECURE send message */
-   me_who = uti_state_get_mewho();
-   handle = cl_com_get_handle((char*)prognames[me_who] ,0);
+   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    ack_type = CL_MIH_MAT_NAK;
    if (synchron) {
       ack_type = CL_MIH_MAT_ACK;
@@ -279,7 +277,7 @@ u_short *compressed
    /* TODO: handle Kerberos and SECURE send message */
 
 
-   handle = cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0);
+   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    ret = cl_commlib_receive_message( handle,fromhost ,fromcommproc ,fromid , synchron, 0 ,&message, &sender );
    if (message != NULL) {
       *buffer = message->message;

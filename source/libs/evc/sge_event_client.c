@@ -1187,9 +1187,9 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
 
 
 #ifdef ENABLE_NGC
-      com_handle = cl_com_get_handle((char*)prognames[uti_state_get_mewho()], 0);
+      com_handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
       if (com_handle != NULL) {
-         cl_commlib_remove_messages(cl_com_get_handle((char*)prognames[uti_state_get_mewho()],0));
+         cl_commlib_remove_messages(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0));
       }
 #else
       /* remove possibly pending messages */
@@ -2640,12 +2640,13 @@ get_event_list(int sync, lList **report_list)
    id = 0;
    tag = TAG_REPORT_REQUEST;
    /* FIX_CONST */
+   
 #ifdef ENABLE_NGC
+   id = 1;
+   DPRINTF(("try to get request form %s, id %d\n",(char*)prognames[QMASTER], id ));
    if ( (help=sge_get_any_request((char*)sge_get_master(0), (char*)prognames[QMASTER], &id, &pb, &tag, sync,0,0)) != CL_RETVAL_OK) {
-      DPRINTF(("commlib returns %s (%d)\n", cl_get_error_text(help), help ));
+      WARNING(("commlib returns %s (%d)\n", cl_get_error_text(help), help ));
       ret = false;
-
-
 #else
    if (sge_get_any_request((char*)sge_get_master(0), 
                            (char*)prognames[QMASTER], &id, &pb, &tag, sync) 

@@ -85,10 +85,10 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
       /* TODO: all communication errors are only INFO's ???  CR */
       switch(elem->log_type) {
          case CL_LOG_ERROR: 
-            INFO((SGE_EVENT,  "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            ERROR((SGE_EVENT,  "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
             break;
          case CL_LOG_WARNING:
-            INFO((SGE_EVENT,"%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            WARNING((SGE_EVENT,"%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
             break;
          case CL_LOG_INFO:
             INFO((SGE_EVENT,   "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
@@ -319,20 +319,21 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
 
 
    me_who = uti_state_get_mewho();
-   handle = cl_com_get_handle((char*)prognames[me_who] ,0);
+   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    if (handle == NULL) {
       int my_component_id = 0; /* 1 for daemons, 0=automatical for clients */
-      if ( uti_state_get_mewho() == QMASTER ||
-           uti_state_get_mewho() == EXECD   ||
-           uti_state_get_mewho() == SCHEDD  ) {
+      if ( me_who == QMASTER ||
+           me_who == EXECD   ||
+           me_who == SCHEDD  ) {
          my_component_id = 1;   
       }
-
       handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,0,atoi(getenv("SGE_QMASTER_PORT")), (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
       if (handle == NULL) {
          CRITICAL((SGE_EVENT,"can't create handle\n"));
+      } else {
+         INFO((SGE_EVENT,"local component handle created for prog_name: \"%s\"\n",uti_state_get_sge_formal_prog_name() ));
       }
-   }
+   } 
    if (synchron) {
       ack_type = CL_MIH_MAT_ACK;
    }
@@ -465,7 +466,7 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffe
    
    strcpy(host, rhost);
 
-   handle = cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0);
+   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    cl_commlib_trigger(handle);
    i = cl_commlib_receive_message( handle, rhost, commproc, usid, synchron, for_request_mid, &message, &sender);
    if (i != CL_RETVAL_OK) {

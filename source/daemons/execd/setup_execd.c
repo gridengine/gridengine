@@ -152,7 +152,7 @@ int daemonize_execd()
    } 
 
 #ifdef ENABLE_NGC
-   if ( cl_commlib_set_handle_fds(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0), &keep_open) == CL_RETVAL_OK) {
+   if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0), &keep_open) == CL_RETVAL_OK) {
       INFO((SGE_EVENT, "there are open file descriptors for communication\n"));
    }
 #else

@@ -253,7 +253,7 @@ int master
    /* do ask_commproc() only if we are missing load reports */
    now = sge_get_gmt();
 #ifdef ENABLE_NGC
-   cl_commlib_get_last_message_time((cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0)),
+   cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
                                         (char*)rhost, (char*)target,1, &last_heard_from);
    if (last_heard_from + load_report_interval(hep)*2 <= now) {
       ERROR((SGE_EVENT, MSG_COM_NOTENROLLEDONHOST_SSU, target, rhost, u32c(lGetUlong(jep, JB_job_number))));

@@ -1,3 +1,5 @@
+CR-2004-01-15-3: Bugfix:    - code clean up (function names)
+
 CR-2004-01-15-2: Bugfix:    - fixed event client where subscription 
                               ( abort() error because a used list was not subscribed)
                             - set synchron receive timeout of communication lib to

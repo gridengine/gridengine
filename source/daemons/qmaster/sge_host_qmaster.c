@@ -871,7 +871,7 @@ u_long32 now
 
       timeout = MAX(load_report_interval(hep)*3, conf.max_unheard); 
 #ifdef ENABLE_NGC
-      cl_commlib_get_last_message_time((cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0)),
+      cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
                                         (char*)host, (char*)comproc,id, &last_heard_from);
       if ( (hep != global_host_elem )  && (now > last_heard_from + timeout))
 #else
@@ -1202,7 +1202,7 @@ int force
    hostname = lGetHost(lel, EH_name);
 
 #ifdef ENABLE_NGC
-   cl_commlib_get_last_message_time((cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0)),
+   cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
                                         (char*)hostname, (char*)prognames[EXECD],1, &last_heard_from);
    execd_alive = last_heard_from;
 #else

@@ -1281,7 +1281,7 @@ lList *ticket_orders
       n = lGetNumberOfElem(to_send);
 
 #ifdef ENABLE_NGC
-      cl_commlib_get_last_message_time((cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0)),
+      cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
                                         (char*)master_host_name, (char*)prognames[EXECD],1, &last_heard_from);
       if (  hep &&  last_heard_from + 10 * conf.load_report_time > now)
 #else

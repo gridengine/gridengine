@@ -349,7 +349,7 @@ char **argv
          return 0;
       }
 #ifdef ENABLE_NGC
-      cl_commlib_trigger(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0));
+      cl_commlib_trigger(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0));
 #else
       sleep(1);	/* If there is an error dont kill the system */
 #endif

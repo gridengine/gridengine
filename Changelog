@@ -1,3 +1,13 @@
+CR-2002-04-11-4: Testsuite: - only produce warning when re_init core
+                              system resets cluster/schedd configuration
+                            - removed DEMO category
+                            - new interactive menu points:
+                              (23) compile and pre install binaries
+                              (24) compile and pre install, then install 
+                                   and run not completed tests
+                              (25) set testsuite debug level
+             
+
 CR-2002-04-11-2: Testsuite: Remove temp script files at startup of next 
                             check function instead of next check. This
                             should reduce the number of files to delete

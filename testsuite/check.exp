@@ -5919,7 +5919,7 @@ proc menu {} {
   global CHECK_USER CHECK_REPORT_FILE CHECK_OUTPUT CHECK_HOST CHECK_BAD_RESULT_DIR 
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
   global CHECK_GUILTY_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER
-  global daemon_debug
+  global daemon_debug CHECK_DEBUG_LEVEL
 
   set files [  print_menu_header ]
  
@@ -5949,6 +5949,9 @@ proc menu {} {
     puts " (20) shutdown and restart master and scheduler"
     puts " (21) only start master and scheduler daemons"
     puts " (22) check messages files of execds and qmaster"
+    puts " (23) compile source code and pre install binaries"
+    puts " (24) do (23), then (2)"
+    puts " (25) set testsuite debug level (current value: $CHECK_DEBUG_LEVEL)"
 
   
   gets stdin input; 
@@ -5961,6 +5964,39 @@ proc menu {} {
     "22" { set output [check_messages_files]
            puts $CHECK_OUTPUT $output
            wait_for_enter
+         }
+    "23" { 
+          if { [have_root_passwd] == -1 } {
+                puts $CHECK_OUTPUT "need root access ..."
+                set_root_passwd
+           }
+           set back [compile_source]
+           if { $back != 0 } {
+              puts "--> error compiling and pre installing source code"
+           } else {
+              puts "--> source code compiled and pre installed"
+           }
+           wait_for_enter
+         }
+    "24" {
+          if { [have_root_passwd] == -1 } {
+                puts $CHECK_OUTPUT "need root access ..."
+                set_root_passwd
+           }
+           set back [compile_source]
+           if { $back != 0 } {
+              puts "--> error compiling and pre installing source code"
+              wait_for_enter
+           } else {
+              puts "--> source code compiled and pre installed"
+              run_tests $CHECK_ACT_PATH 0
+              wait_for_enter
+           }
+         }
+    "25" {  incr CHECK_DEBUG_LEVEL 1 
+            if  { $CHECK_DEBUG_LEVEL > 2 } {
+                set CHECK_DEBUG_LEVEL 0
+            } 
          }
     "0" { select_runlevel }
     "1" { change_dir; }

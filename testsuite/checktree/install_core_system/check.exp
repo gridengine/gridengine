@@ -1748,7 +1748,7 @@ proc setup_conf {} {
 
 
 
-          add_proc_error "setup_conf" -1 "config parameter $param:\ndefault setup: $old, after testsuite reset: $new" 
+          add_proc_error "setup_conf" -3 "config parameter $param:\ndefault setup: $old, after testsuite reset: $new" 
        }
     }
   } else {
@@ -1968,7 +1968,7 @@ proc setup_schedconf {} {
           if { [ string compare $param "sgeee_schedule_interval" ] == 0 } { continue }
           if { [ string compare $param "weight_tickets_deadline" ] == 0 } { continue }
           if { [ string compare $param "job_load_adjustments" ] == 0 } { continue }
-          add_proc_error "setup_schedconf" -1 "scheduler parameter $param:\ndefault setup: $old, after testsuite reset: $new" 
+          add_proc_error "setup_schedconf" -3 "scheduler parameter $param:\ndefault setup: $old, after testsuite reset: $new" 
        }
     }
   } else {

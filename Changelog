@@ -1,6 +1,9 @@
-AD-2004-01-21-0: Enhancem:  - 'sge_qmaster' does now handle 'SIGTERM'.
-                            - overwork of signal handling.
-                 Changed:   qmaster
+AD-2004-01-21-1: Bugfix:   Handling of 'SGE_DEBUG_TARGET' env var was broken
+                 Changed:  rmon
+
+AD-2004-01-21-0: Enhancem: - 'sge_qmaster' does now handle 'SIGTERM'.
+                           - overwork of signal handling.
+                 Changed:  qmaster
 
 AA-2004-01-21-0: Enhancem. qmon cluster queue changes, NOT YET COMPLETED
                            to get the rest of qmon functionality operable

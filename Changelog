@@ -1,3 +1,8 @@
+AH-2004-07-13-0: Bugfix:    Revert change AH-2004-07-09-0. Bug #1113 is not fixed.A
+                 Issue:     1113
+                 Bugtraq:   5072481
+                 Review:    CR
+
 RH-2004-06-13-0: Bugfix:    qmod -e '@<host>' causes segmentation fault in qmaster
                             in the method qref_resolve_hostname (libs/sgeobj/sge_qref.c)
                             a sprintf "@%s" instead of "%s@%s" is executed if the 

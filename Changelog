@@ -1,3 +1,9 @@
+CR-2004-03-05-0  Bugfix:    fixed broken CSP install
+                 Changed:   install scripts, CULL feature list, feature
+                            functions
+                 Review:    SG, MD
+                 Issues:    778, 779
+
 DT-2004-03-04-3  Bugfix:    o qconf now validates scheduler configuration
                               settings
                  Changed:   qconf

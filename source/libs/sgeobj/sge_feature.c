@@ -230,9 +230,7 @@ void feature_initialize(void)
 {
    if (!*feature_get_master_featureset_list()) {
       lListElem *featureset;
-      lListElem *feature;
       int featureset_id;
-      int feature_id;
 
       for(featureset_id = 0;
           featureset_id < FEATURE_LAST_ENTRY;
@@ -240,14 +238,6 @@ void feature_initialize(void)
          featureset = lAddElemUlong(feature_get_master_featureset_list(), FES_id,
                                   featureset_id, FES_Type);
          lSetUlong(featureset, FES_active, 0);
-         for(feature_id = 0;
-             feature_id < FEATURE_LAST_ENTRY;
-             feature_id++) {
-            feature = lAddSubUlong(featureset, FE_id,
-                                  feature_id, FES_features, FE_Type);
-/*            lSetUlong(feature, FE_enabled,
-                            enabled_features_mask[featureset_id][feature_id]); */
-         }
       }
    }
 }
@@ -279,7 +269,7 @@ void feature_activate(feature_id_t id)
    lListElem *active_set;
    lListElem *inactive_set;
 
-   DENTER(TOP_LAYER, "featureset_activate");  
+   DENTER(TOP_LAYER, "feature_activate");  
 
    if (!*feature_get_master_featureset_list()) {
       feature_initialize();
@@ -434,16 +424,14 @@ static feature_id_t feature_get_featureset_id(const char *name)
 bool feature_is_enabled(feature_id_t id) 
 {
    lListElem *active_set;
-   lListElem *feature = NULL;
    bool ret = false;
 
    DENTER(BASIS_LAYER, "feature_is_enabled");
    active_set = lGetElemUlong(*feature_get_master_featureset_list(), FES_active, 1);
    if (active_set) {
-      feature = lGetSubUlong(active_set, FE_id, id, FES_features);
-   }
-   if (feature) {
-      ret = lGetUlong(feature, FE_enabled) ? true : false;
+      if ( lGetUlong(active_set, FES_id) == id ) {
+         ret = true;
+      }
    }
    DEXIT;
    return ret;

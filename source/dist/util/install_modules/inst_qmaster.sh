@@ -481,7 +481,7 @@ SetProductMode()
 
    if [ $CSP = true ]; then
       SEC_COUNT=`strings $SGE_BIN/sge_qmaster | grep "CRYPTO_" | wc -l`
-      if [ $SEC_COUNT -gt 2 ]; then
+      if [ $SEC_COUNT -lt 5 ]; then
          $INFOTEXT "\n>sge_qmaster< binary is not compiled with >-secure< option!\n"
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to cancel the installation >> "
          exit 1
@@ -492,15 +492,15 @@ SetProductMode()
       CSP_PREFIX=""
    fi
 
-   if [ $RESPORT = "false" ]; then
       if [ $AFS = "false" ]; then
          if [ $CSP = "false" ]; then
             PRODUCT_MODE="none"
+         else
+            PRODUCT_MODE="${CSP_PREFIX}"
          fi
+      else
+         PRODUCT_MODE="${AFS_PREFIX}"
       fi
-   else
-      PRODUCT_MODE="${AFS_PREFIX}${CSP_PREFIX}"
-   fi
 
 }
 

@@ -63,6 +63,14 @@
 #include "sec_crypto.h"          /* lib protos      */
 #include "sec_lib.h"             /* lib protos      */
 
+#if (OPENSSL_VERSION_NUMBER < 0x0090700fL) 
+#define OPENSSL_CONST
+#define NID_userId NID_uniqueIdentifier
+#else
+#define OPENSSL_CONST const
+#endif
+
+
 #define CHALL_LEN       16
 #define ValidMinutes    10          /* expiry of connection        */
 #define SGESecPath      ".sge"
@@ -79,8 +87,8 @@
 #define INC32(a)        (((a) == 0xffffffff)? 0:(a)+1)
 
 typedef struct gsd_str {
-   EVP_CIPHER *cipher;
-   EVP_MD *digest;
+   OPENSSL_CONST EVP_CIPHER *cipher;
+   OPENSSL_CONST EVP_MD *digest;
    int crypt_space;
    int block_len;
    u_char *key_mat;
@@ -1295,7 +1303,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    */
    memset(uniqueIdentifier, '\0', BUFSIZ);
    if (X509_NAME_get_text_by_OBJ(X509_get_subject_name(x509), 
-      OBJ_nid2obj(NID_uniqueIdentifier), uniqueIdentifier, 
+      OBJ_nid2obj(NID_userId), uniqueIdentifier, 
                   sizeof(uniqueIdentifier))) {
       DPRINTF(("UID: %s\n", uniqueIdentifier));
    }   

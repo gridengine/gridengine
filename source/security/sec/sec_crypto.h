@@ -41,5 +41,6 @@
 #include        "openssl/x509.h"
 #include        "openssl/pem.h"
 #include        "openssl/rand.h"
+#include        "openssl/objects.h"
 
 #endif /*__SEC_CRYPTO_H*/

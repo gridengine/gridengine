@@ -130,9 +130,6 @@ char **argv
    int i, dispatch_timeout;
    char err_str[1024];
    int priority_tags[10];
-#ifdef PW   
-   int mode_guess;
-#endif
 
    DENTER_MAIN(TOP_LAYER, "execd");
 
@@ -147,23 +144,12 @@ char **argv
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
    sge_mt_init();
-#ifdef PW
-   if ((mode_guess = product_mode_guess(argv[0])) == M_INVALID) {
-      fprintf(stderr, MSG_EXECD_PROGINVALIDNAME_S,
-              argv[0] ? argv[0] : MSG_NULL);
-      exit(1);
-   }  
-#endif
 
    /* This needs a better solution */
    umask(022);
       
    /* Initialize path for temporary logging until we chdir to spool */
    log_state_set_log_file(TMP_ERR_FILE_EXECD);
-
-#if RAND_ERROR
-   rand_error = 1;
-#endif
 
    /* exit func for SGE_EXIT() */
    in_main_loop = 0;
@@ -183,13 +169,6 @@ char **argv
    }     
 
    lInit(nmv);
-
-#ifdef PW
-   if (get_product_mode() != mode_guess) {
-      CRITICAL((SGE_EVENT, MSG_EXECD_NOPROGNAMEPROD_S, argv[0]));
-      SGE_EXIT(1);
-   }
-#endif
 
    parse_cmdline_execd(argv);   
 

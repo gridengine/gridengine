@@ -214,10 +214,6 @@ char *argv[]
    starting_up();
    sge_write_pid(SCHEDD_PID_FILE);
 
-#if RAND_ERROR
-   rand_error = 1;
-#endif
-
    in_main_loop = 1;
 
    while (!done) {

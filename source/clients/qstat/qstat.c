@@ -154,10 +154,6 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "qstat");
 
-#if RAND_ERROR
-   rand_error = 1;
-#endif
-   
    sge_mt_init();
 
    log_state_set_log_gui(0);

@@ -239,8 +239,51 @@ char **argv
       me.qualified_hostname = sge_strdup(me.qualified_hostname, s);
 
    memset(priority_tags, 0, sizeof(priority_tags));
-   priority_tags[0] = TAG_ACK_REQUEST;
+
+/*===========================================================================
+Setting message priority tags
+Old behaviour caused problems with qdel all with many jobs 
+and with bit parallel jobs as load/job reports from execd's never
+reached qmaster:
+   priority_tags[0] = TAG_ACK_REQUEST; 
    priority_tags[1] = TAG_GDI_REQUEST;
+
+New behaviour:
+   Priorities can be set via environment variable SGE_PRIORITY_TAGS.
+   SGE_PRIORITY_TAGS can contain a blank separated list of tag id's (values
+   0-n, n = enum value of the TAG_* enum in libs/gdi/sge_gdi_intern.h
+
+   To restore the old behaviour, set 
+   SGE_PRIORITY_TAGS="3 2"
+   
+============================================================================*/
+
+   {
+      char *tag_env = NULL;
+
+      tag_env = getenv("SGE_PRIORITY_TAGS");
+
+      if(tag_env != NULL) {
+         char *tag_tok = NULL;
+         char *tag_str = NULL;
+         int tag_count = 0;
+
+         INFO((SGE_EVENT, "setting SGE_PRIORITY_TAGS to %s\n", tag_env));
+         tag_tok = strdup(tag_env);
+         tag_str = strtok(tag_tok, " ");
+         while(tag_str != NULL) {
+            if(tag_count > 8) {
+               WARNING((SGE_EVENT, "SGE_PRIORITY_TAGS %s contains too many tags (max 9)\n", tag_env));
+               break;
+            }   
+            priority_tags[tag_count++] = atoi(tag_str);
+            tag_str = strtok(NULL, " ");
+         }
+
+         free(tag_tok);
+      }
+   }
+
    prepare_enroll(prognames[QMASTER], 1, priority_tags);
 
    /* marker for signal handler for SIGTERM and SIGINT to exit immediately 

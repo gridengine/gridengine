@@ -1,3 +1,9 @@
+JG-2002-03-21-0  Bugfix:   prioritization of messages to qmaster could block
+                           reports from execd's to qmaster and make the system
+                           unusable.
+                           Set "no prioritization" as default, behaviour can
+                           be changed via env variable SGE_PRIORITY_TAGS.
+
 EB-2002-03-21-0  Bugfix:   local config not written as admin user at startup
                  Issue:    #199
 

@@ -1,3 +1,12 @@
+CR-2004-01-30-0: Bugfix:    host aliases file support (part III)
+                               - host aliasing was not active when qmaster
+                                 rereads objects at startup.
+                               - reresolve qualified hostname for each qmaster 
+                                 thread at startup.
+                               - inst_sge now uses the SGE alias name for
+                                 creating startup configuration.
+                 Changes:   qmaster
+
 DT-2004-01-30-0: Bugunfix:  Rolling back ill conceived change.
                  Changes:   qmaster
 

@@ -401,16 +401,28 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
 *******************************************************************************/
 static void qmaster_init(char **anArgv)
 {
+   int ret_val;
    DENTER(TOP_LAYER, "qmaster_init");
+
+   /* communication lib must be initialized befor setup_qmaster()
+      because host name resolving is used - CR */
+   INFO   ((SGE_EVENT,"starting up multi thread communication lib\n"));
+   ret_val = cl_com_setup_commlib(CL_ONE_THREAD, CL_LOG_OFF, qmaster_log_flush_func );
+   if (ret_val != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, "cl_com_setup_commlib: %s\n",cl_get_error_text(ret_val)));
+   }
+ 
+   /* set alias file path */
+   cl_com_set_alias_file(sge_get_alias_path());
 
    if (setup_qmaster()) {
       CRITICAL((SGE_EVENT, MSG_STARTUP_SETUPFAILED));
       SGE_EXIT(1);
    }
 
-   communication_setup(anArgv);
-
    uti_state_set_exit_func(qmaster_lock_and_shutdown); /* CWD is spool directory */
+  
+   communication_setup(anArgv);
 
    host_list_notify_about_featureset(Master_Exechost_List, feature_get_active_featureset_id());
 
@@ -447,39 +459,15 @@ static void communication_setup(char **anArgv)
    const char *msg_prio = NULL;
    int enrolled = 0;
    cl_com_handle_t* com_handle = NULL;
-   int ret_val = CL_RETVAL_OK;
-   char* resolved_hostname = NULL;
-   int resolve_error;
 
    DENTER(TOP_LAYER, "communication_setup");
-
-   INFO   ((SGE_EVENT,"starting up multi thread communication\n"));
-
-   ret_val = cl_com_setup_commlib(CL_ONE_THREAD, CL_LOG_OFF, qmaster_log_flush_func );
-
-   if (ret_val != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, "cl_com_setup_commlib: %s\n",cl_get_error_text(ret_val)));
-   }
 
    if ((msg_prio = getenv("SGE_PRIORITY_TAGS")) != NULL) {
       /* TODO: message priority flags ?*/
       ERROR((SGE_EVENT, "SGE_PRIORITY_TAGS not supported by NGC\n"));
    }
 
-   cl_com_set_alias_file(sge_get_alias_path());
-   resolve_error=cl_com_cached_gethostbyname((char*)uti_state_get_qualified_hostname() ,
-                                             &resolved_hostname,
-                                             NULL, NULL);
-   
-   if ( resolve_error != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT,"cl_com_cached_gethostbyname() returned: %s", cl_get_error_text(resolve_error) ));
-   }
-
-   if (resolved_hostname != NULL) {
-      uti_state_set_qualified_hostname(resolved_hostname);
-      free(resolved_hostname);
-      resolved_hostname = NULL;
-   }
+   DEBUG((SGE_EVENT,"my resolved hostname name is: \"%s\"\n", uti_state_get_qualified_hostname()));
 
    com_handle = cl_com_get_handle((char*)prognames[QMASTER], 1);
 
@@ -853,7 +841,7 @@ static int setup_qmaster(void)
 
    /* get aliased hostname from commd */
    reresolve_me_qualified_hostname();
-
+   DEBUG((SGE_EVENT,"uti_state_get_qualified_hostname() returned \"%s\"\n",uti_state_get_qualified_hostname() ));
    /*
    ** read in all objects and check for correctness
    */

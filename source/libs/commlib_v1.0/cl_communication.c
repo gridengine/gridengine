@@ -3405,7 +3405,7 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
 
    if (hostlist == NULL) {
       int retval;
-      CL_LOG(CL_LOG_WARNING,"no global hostlist, resolving without cache");
+      CL_LOG(CL_LOG_ERROR,"no global hostlist, resolving without cache");
       retval = cl_com_gethostbyname(unresolved_host, &hostent);
       if (retval != CL_RETVAL_OK) {
          cl_com_free_hostent(&hostent);

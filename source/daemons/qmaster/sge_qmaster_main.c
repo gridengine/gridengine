@@ -1013,6 +1013,10 @@ static void* signal_thread(void* anArg)
    sigaddset(&sig_set, SIGINT);
    sigaddset(&sig_set, SIGTERM);
    
+   /* This is to set the correct hostname for uti_state_get_qualified_hostname() - CR */
+   reresolve_me_qualified_hostname();
+   DEBUG((SGE_EVENT,"my resolved hostname name is: \"%s\"\n",uti_state_get_qualified_hostname() ));
+
    while (true)
    {
       sigwait(&sig_set, &sig_num);
@@ -1062,6 +1066,10 @@ static void* message_thread(void* anArg)
 
    lInit(nmv);
    sge_setup(QMASTER, NULL);
+
+   /* This is to set the correct hostname for uti_state_get_qualified_hostname() - CR */
+   reresolve_me_qualified_hostname();
+   DEBUG((SGE_EVENT,"my resolved hostname name is: \"%s\"\n",uti_state_get_qualified_hostname() ));
 
    while (should_terminate() == false)
    {

@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
 	<META NAME="AUTHOR" CONTENT=" ">
 	<META NAME="CREATED" CONTENT="20020111;13083600">
-	<META NAME="CHANGED" CONTENT="20020419;13045300">
+	<META NAME="CHANGED" CONTENT="20030814;12383000">
 	<STYLE>
 	<!--
 		@page { size: 21.59cm 27.94cm }
@@ -16,12 +16,11 @@
 <BODY LANG="en-US">
 <H1><FONT COLOR="#336699"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Common
 problems using Grid Engine</B></FONT></FONT></H1>
+<P STYLE="margin-bottom: 0cm">Last updated: <SDFIELD TYPE=DATETIME SDNUM="1023;1033;MMM D, YYYY">Aug 14, 2003</SDFIELD></P>
 <P STYLE="margin-bottom: 0cm">The present HOWTO goes over some
 commonly seen problems experienced when using Grid Engine, and
 appropriate solutions. The information is presented in a tabular
 chart, using the following scheme:</P>
-<P STYLE="margin-bottom: 0cm"><BR>
-</P>
 <P STYLE="margin-bottom: 0cm"><BR>
 </P>
 <TABLE WIDTH=288 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0 STYLE="page-break-inside: avoid">
@@ -50,24 +49,24 @@ chart, using the following scheme:</P>
 		</TR>
 	</TBODY>
 </TABLE>
-<P STYLE="margin-bottom: 0cm"><BR>
-</P>
 <P STYLE="margin-bottom: 0cm">For problems which are not explicitly
 mentioned here, search for a symptom in the appropriate category
 which matches your problem as closely as possible, and see if the
 resolution fixes your particular case.</P>
-<P STYLE="margin-bottom: 0cm"><BR>
-</P>
 <H3>Categories:</H3>
 <UL>
 	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#batch">Batch Submit</A></P>
 	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#monitoring">Monitoring</A></P>
 	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#miscerrmsg">Miscellaneous
 	Error Messages</A></P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#performance">Performance</A></P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#configuration">Configuration</A></P>
 	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#interactive">Qrsh/Interactive
 	Jobs</A></P>
 	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#qmake">Qmake</A></P>
 	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#qmon">Qmon</A></P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#pe-ckpt">Parallel/Checkpointing</A></P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#shadow">Shadow Facility</A></P>
 </UL>
 <P STYLE="margin-bottom: 0cm"><BR>
 </P>
@@ -156,6 +155,74 @@ endif</PRE>
 			</TD>
 		</TR>
 		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>qsub
+				of a job results in the error &quot;can't set additional group id
+				for job&quot; (seen in administrator or user mail, or shepherd
+				trace file) and puts queue into error state</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Possible
+				reasons</FONT></FONT></FONT></P>
+				<OL>
+					<LI><P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>The
+					error message below can occur if the user already have 16
+					existing group ids set. SGE tries to set one more group id and
+					fails b/c usually the limit is 16.</FONT></FONT></FONT></P>
+					<LI><P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>If
+					you are not running Grid Engine as root, then the setgroups()
+					command will fail trying to set the unique group ID which is
+					used to track all the spawned processes of a job.</FONT></FONT></FONT></P>
+				</OL>
+			</TD>
+			<TD WIDTH=50%>
+				<OL>
+					<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Corresponding
+					solutions</FONT></FONT></FONT></P>
+					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Please
+					check to see how many group ids are assigned to the user using
+					'id -a'. If it's more than 16, then you need to reduce this
+					number or increase the limit in the kernel (NGROUPS_MAX).</FONT></FONT></FONT></P>
+					<LI><P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Be
+					sure to run the Grid Engine daemons as root.</FONT></FONT></FONT></P>
+				</OL>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Jobs
+				work when run from command line but fail when run via qsub</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Data
+				and executables may not be accessible where needed</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>The
+				jobs script itself must be accessible from the submit host. All
+				data and other executables needed by the script must be
+				accessible on the execute host. Usually shared via NFS.</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Unlimited
+				stack size set by default by SGE may cause some apps to crash on
+				some OS's.</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P>In the job script, use &ldquo;ulimit&rdquo; to set stack size
+				limits before calling the executable that crashes.</P>
+				<P>Or modify the queue to set smaller stack size:</P>
+				<PRE>qconf -mattr queue h_stack 8389486 &lt;queue_name&gt; (hard limit in bytes)
+qconf -mattr queue s_stack 8389486 &lt;queue_name&gt; (soft limit in bytes)</PRE>
+			</TD>
+		</TR>
+		<TR>
 			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ff8080">
 				<P><A NAME="monitoring"></A>Monitoring</P>
 			</TH>
@@ -163,7 +230,8 @@ endif</PRE>
 		<TR>
 			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
 				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Exec
-				hosts report a load of 99.99</FONT></FONT></FONT></P>
+				hosts report a load of 99.99; queue is in &ldquo;alarm&rdquo;
+				and/or &ldquo;unknown&rdquo; state</FONT></FONT></FONT></P>
 			</TD>
 		</TR>
 		<TR VALIGN=TOP>
@@ -193,13 +261,18 @@ endif</PRE>
 					up the execd as root on the host by running the
 					$SGE_ROOT/default/common/rcsge script </FONT></FONT></FONT>
 					</P>
-					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Run
+					<LI><P STYLE="margin-bottom: 0cm"><FONT SIZE=3><FONT FACE="Thorndale, serif"><FONT COLOR="#000000">Run
 					'qconf -mconf' as the Sun Grid Engine administrator and change
 					the default_domain to none. </FONT></FONT></FONT>
 					</P>
-					<LI><P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Please
-					see the AppNote/HOWTO <A HREF="http://supportforum.sun.com/gridengine/appnote_loadinfo.html" TARGET="_child">loadinfo</A> for more
-					information. </FONT></FONT></FONT>
+					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Set
+					<FONT SIZE=2>IGNORE_FQDN=TRUE </FONT>for qmaster_params in
+					cluster configuration.</FONT></FONT></FONT></P>
+					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>See
+					man page sge_h_aliases(5)</FONT></FONT></FONT></P>
+					<LI><P><FONT FACE="Thorndale, serif"><FONT COLOR="#000000">Please
+					see the AppNote/HOWTO <A HREF="http://supportforum.sun.com/gridengine/appnote_loadinfo.html" TARGET="_child">loadinfo</A>
+					for more information. </FONT></FONT>
 					</P>
 				</OL>
 			</TD>
@@ -303,6 +376,102 @@ configuration meta not defined - using global configuration </PRE><P>
 			</TD>
 		</TR>
 		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<PRE>&ldquo;critical error: can't connect commd&rdquo;
+&ldquo;<FONT SIZE=2>critical error: setup failed starting cod_schedd&rdquo;</FONT></PRE>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P>A bug on 32 bit systems: <FONT SIZE=2>rlim_fd_max &gt; 1024 </FONT><FONT SIZE=3><FONT FACE="Thorndale, serif"><FONT COLOR="#000000">in
+				/etc/system</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Set
+				rlim_fd_max to &lt; 1024. Or update to SGE 5.3p2 or higher</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P>The actual hostname &lt;myhostname&gt; of the machine is in
+				alias to /localhost in etc/hosts. Looks like this:</P>
+				<PRE>127.0.0.1   localhost  myhostname</PRE>
+			</TD>
+			<TD WIDTH=50%>
+				<P>remove &lt;myhostname&gt; as an alias to localhost and put
+				&lt;myhostname&gt; after the real IP-address in /etc/hosts</P>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P>Multiple queues cascade into error state, rendering the grid
+				unusable. 
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P>errors in a user's .cshrc/.profile result in setting all
+				queues in error state</P>
+			</TD>
+			<TD WIDTH=50%>
+				<OL>
+					<LI><P>Fix errors in users' .cshrc/.profile</P>
+					<LI><P>Use the -f option  in the first line of the jobscript
+					(i.e. Use &ldquo;!#/bin/sh -f&rdquo;) to bypass users' .cshrc or
+					.profile</P>
+				</OL>
+			</TD>
+		</TR>
+		<TR>
+			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ff8080">
+				<P><A NAME="performance"></A>Performance</P>
+			</TH>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Memory
+				leak and huge memory consumption for schedd on large systems</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Parameter
+				<CODE><FONT SIZE=2>sched_job_info=true</FONT></CODE></FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Set
+				<CODE><FONT SIZE=2>sched_job_info= false</FONT></CODE> or update
+				to release 5.3p3 or higher</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR>
+			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ff8080">
+				<P><A NAME="configuration"></A>Configuration</P>
+			</TH>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>max_u_jobs
+				doesn't work as expected.</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>It
+				doesn't work exactly the same way in all versions of the product
+				&ndash; and affects scheduling differently depending on whether
+				the product is used in SGE or SGEEE mode. </FONT></FONT></FONT>
+				</P>
+			</TD>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Update
+				to SGE 5.3p2 (or higher) which contains the latest
+				implementation. </FONT></FONT></FONT>
+				</P>
+			</TD>
+		</TR>
+		<TR>
 			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ff8080">
 				<P><A NAME="interactive"></A>Qrsh/Interactive Jobs</P>
 			</TH>
@@ -347,7 +516,7 @@ configuration meta not defined - using global configuration </PRE><P>
 					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>omit
 					this check generally by overriding qrsh's default setting &quot;-w
 					e&quot; explicitly by submitting it with &quot;-w n&quot; (can
-					also be put into $SGE_ROOT/&lt;cell&gt;/common/cod_request)</FONT></FONT></FONT></P>
+					also be put into $SGE_ROOT/&lt;cell&gt;/common/sge_request)</FONT></FONT></FONT></P>
 					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>if
 					you intend managing 'mem_free' as a consumbale resource specify
 					the 'mem_free' capacity for your hosts in 'complex_values' of
@@ -384,6 +553,30 @@ host2 [50]% qrsh -inherit host4 hostname
 				<P STYLE="margin-bottom: 0cm"><BR>
 				</P>
 				<PRE>gid_range                 20000-20100</PRE>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>when
+				I do a qrsh, I get this error..</FONT></FONT></FONT></P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<PRE>% qrsh
+error: 1: can't set additional group id for job</PRE>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>The
+				error message below can occur if the user already have 16
+				existing group ids set. SGE tries to set one more group id and
+				fails b/c usually the limit is 16.</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Please
+				check to see how many group ids are assigned to the user using
+				'id -a'. If it's more than 16, then you need to reduce this
+				number or increase the limit in the kernel.</FONT></FONT></FONT></P>
 			</TD>
 		</TR>
 		<TR>
@@ -461,6 +654,22 @@ host2$ </PRE>
 				&quot;setuid&quot; option. If it is mounted with &quot;nosuid&quot;
 				from your submit client, then qrsh (and associated commands) will
 				not work.</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Interactive
+				jobs fail when run via qsh, without error message.</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>DISPLAY
+				variable may be set incorrectly</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P>Set DISPLAY correctly. Or to get error messages for this
+				situation - upgrade to release 5.3p2 or higher</P>
 			</TD>
 		</TR>
 		<TR>
@@ -547,10 +756,146 @@ Your &quot;qrsh&quot; request could not be scheduled, try again later.</PRE>
 				installation will fail</FONT></FONT></P>
 			</TD>
 		</TR>
+		<TR>
+			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ff8080">
+				<P><A NAME="pe-ckpt"></A>Parallel/Checkpointing</P>
+			</TH>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="font-weight: medium">Parts of Sun HPC ClusterTools
+				parallel jobs (job script itself, child processes, etc) fail to
+				stop when terminated by user or by qmaster.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>The
+				user may not have supplied the necessary means (scripts) for SGE
+				to control the distributed jobs.</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P>Follow the complete HOW-TO instructions:
+				<A HREF="http://supportforum.sun.com/gridengine/appnote_hpc.html">http://supportforum.sun.com/gridengine/appnote_hpc.html</A></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Bugs
+				in early versions of loose integration package</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P>Update to SGE 5.3p2 (or higher) which includes latest MPI
+				loose integration package</P>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P>Parallel jobs that run with the tight integration of SGE5.3.x
+				and HPC CT 5 are not terminated if one of the queues has wall
+				clock limit set.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>A
+				bug in SGE  prevented correct signal delivery to all parallel
+				processes</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P>SGE 5.3p4 contains the fix; for earlier 5.3.x versions, get
+				corresponding patches from <A HREF="http://sunsolve.Sun.COM/pub-cgi/show.pl?target=patches/patch-access">Sunsolve</A>:</P>
+				<P>SGE: 113136-04 (pkgadd Solaris 32-bit); 113137-04 (pkgadd
+				Solaris 64-bit); 113138-04 (pkgadd Solaris X86); 113663-02
+				(pkgadd common pkg); 113849-03 (tar.gz Solaris 32-bit); 113850-03
+				(tar.gz Solaris 64-bit); 113851-03 (tar.gz Solaris X86);
+				113852-04 (tar.gz Linux); 113853-02 (tar.gz common package)</P>
+				<P>SGEEE: 113139-04 (pkgadd Solaris 32-bit); 113140-04 (pkgadd
+				Solaris 64-bit); 113636-03 (pkgadd common pkg); 113855-03 (tar.gz
+				Solaris 32-bit); 113856-03 (tar.gz Solaris 64-bit); 113900-02
+				(tar.gz Linux); 113857-02 (tar.gz common package)</P>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P>Parallel jobs that run with the tight integration of SGE5.3.x
+				and HPC CT 5 would not suspend and resume correctly.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Another
+				bug in SGE prevented STOP and CONT signals to be correctly
+				delivered to all processes. </FONT></FONT></FONT>
+				</P>
+			</TD>
+			<TD WIDTH=50%>
+				<P>Need to set the suspend/resume methods in the queues used for
+				the parallel jobs with the appropriate scripts. These scripts can
+				either be downloaded from the Grid Engine Project site at the
+				<A HREF="http://gridengine.sunsource.net/servlets/ProjectDownloadList">File
+				Exchange</A> or obtained from Sun support.</P>
+				<P>Releases beyond 5.3p4 will ship with these two scripts, a
+				README file and a parallel environment template.</P>
+			</TD>
+		</TR>
+		<TR>
+			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ff8080">
+				<P><A NAME="shadow"></A>Shadow Facility</P>
+			</TH>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="font-weight: medium">After failover to shadow master,
+				the schedd daemon remains running on the original qmaster</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>This
+				is a bug in earlier versions of SGE.</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P>Update to 5.3p2 or higher</P>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="font-weight: medium">Shadow host fails to own
+				mastership of SGE cluster</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Lock
+				file exists.</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P>Remove $SGE_ROOT/&lt;cell&gt;/spool/qmaster/lock file if
+				master host has crashed or can no longer function as
+				qmaster.<BR><B>NOTE:</B> to force the shadow host to take over
+				from another master, use the &ldquo;migrate&rdquo; option, ie,
+				&ldquo;rcsge -migrate&rdquo;.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Root
+				R/W access  to $SGE_ROOT directory and its sub-directories should
+				be from both master and shadow.</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P STYLE="margin-bottom: 0cm">Adjust permissions for root r/w
+				access to the $SGE_ROOT directory and its sub-directories from
+				shadow host.</P>
+				<P><B>NOTE: </B><SPAN STYLE="font-weight: medium">please s</SPAN>ee
+				the <A HREF="http://gridengine.sunsource.net/project/gridengine/howto/shadow.html">Shadow
+				Master  HOWTO</A></P>
+			</TD>
+		</TR>
 	</TBODY>
 </TABLE>
 <P STYLE="margin-bottom: 0cm"><BR>
 </P>
-<P STYLE="margin-bottom: 0cm">Last updated: <SDFIELD TYPE=DATETIME SDNUM="1033;1033;MMM D, YYYY">Apr 19, 2002</SDFIELD></P>
 </BODY>
 </HTML>

@@ -1,12 +1,12 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML>
 <HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
 	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Win32)">
+	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
 	<META NAME="AUTHOR" CONTENT=" ">
 	<META NAME="CREATED" CONTENT="20020111;13083600">
-	<META NAME="CHANGED" CONTENT="20020315;9310466">
+	<META NAME="CHANGED" CONTENT="20020319;12001100">
 	<STYLE>
 	<!--
 		H2 { font-family: "Sunsans Demi" }
@@ -15,7 +15,7 @@
 	-->
 	</STYLE>
 </HEAD>
-<BODY>
+<BODY BGCOLOR="#ffffff">
 <H1><FONT COLOR="#336699"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Command
 Line and Scripting of Administrative Tasks in Grid Engine</B></FONT></FONT></H1>
 <P STYLE="margin-bottom: 0cm">The <B>qmon(1) </B>graphical user
@@ -61,20 +61,21 @@ set</SPAN></BLOCKQUOTE>
 with the &quot;show&quot; option of <B>qconf</B> (<B>qconf -s&lt;obj&gt;</B>)
 to take an existing object, modify it, and then update the existing
 object or create a new one.</P>
-<H4>Example: Write a shell script to modify the <I>migration command
-</I><SPAN STYLE="font-style: normal">of an existing checkpoint
-environment</SPAN></H4>
+<H4>Example: Write a shell script to specify queues of a <SPAN STYLE="font-style: normal">checkpoint
+environment</SPAN> from a list in a file</H4>
 <PRE>#!/bin/sh
-# ckptmod.sh: modify the migration command 
-# of a checkpointing environment
-# Usage: ckptmod.sh &lt;checkpoint-env-name&gt; &lt;full-path-to-command&gt;
-TMPFILE=/tmp/ckptmod.$$
+# ckptq.sh: specify queues of a checkpoint from a list in a file
+# Usage: ckptq.sh &lt;checkpoint-env-name&gt; &lt;filename&gt;
+# &lt;filename&gt; contains a list of queues,
+#    separated by commas and/or newlines
 
+TMPFILE=/tmp/ckptq.$$
 CKPT=$1
-MIGMETHOD=$2
+QUEUELIST=$2
 
-qconf -sckpt $CKPT | grep -v '^migr_command' &gt; $TMPFILE
-echo &quot;migr_command $MIGMETHOD&quot; &gt;&gt; $TMPFILE
+qconf -sckpt $CKPT | grep -v 'queue_list' &gt; $TMPFILE
+echo  queue_list `cat $QUEUELIST | \
+    tr &quot;\012&quot; &quot; &quot; | tr &quot;,&quot; &quot; &quot;` &gt;&gt; $TMPFILE
 qconf -Mckpt $TMPFILE
 rm $TMPFILE</PRE>
 <HR>

@@ -1,3 +1,7 @@
+MD-2005-01-31-0: Bugfix:    distinst assumes certain files always exist
+                 Issue:     1361
+                 Review:    AS
+
 AH-2005-01-28-0: Bugfix:    Arguments to binaries sent to qsub are given 
                             to invoking shell too
                  Issue:     1442

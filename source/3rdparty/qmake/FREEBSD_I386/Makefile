@@ -43,12 +43,12 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = .
 
-ACLOCAL = aclocal14
-AUTOCONF = autoconf
-AUTOMAKE = automake14
-AUTOHEADER = autoheader
+ACLOCAL = ../missing aclocal
+AUTOCONF = ../missing autoconf
+AUTOMAKE = ../missing automake
+AUTOHEADER = ../missing autoheader
 
-INSTALL = /usr/bin/ginstall -c
+INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_SCRIPT = ${INSTALL_PROGRAM}
@@ -67,7 +67,7 @@ CC = gcc
 CPP = gcc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
-LIBOBJS =  
+LIBOBJS = 
 MAKEINFO = makeinfo
 PACKAGE = make
 PERL = perl
@@ -81,7 +81,7 @@ bin_PROGRAMS = make
 
 make_SOURCES = main.c commands.c job.c dir.c file.c misc.c read.c remake.c 		rule.c implicit.c default.c variable.c expand.c function.c 		vpath.c version.c ar.c arscan.c remote-$(REMOTE).c 		commands.h dep.h filedef.h job.h make.h rule.h variable.h 		signame.c signame.h 		getopt.c getopt1.c getopt.h
 
-make_LDADD =  glob/libglob.a
+make_LDADD =   glob/libglob.a
 
 info_TEXINFOS = make.texinfo
 man_MANS = make.1
@@ -129,16 +129,16 @@ PROGRAMS =  $(bin_PROGRAMS)
 
 
 DEFS = -DHAVE_CONFIG_H -I. -I$(srcdir) -I.
-CPPFLAGS = -I../glob
+CPPFLAGS =  -I../glob
 LDFLAGS = 
-LIBS = -lutil -lkvm
+LIBS = -lutil -lkvm 
 make_OBJECTS =  main.o commands.o job.o dir.o file.o misc.o read.o \
 remake.o rule.o implicit.o default.o variable.o expand.o function.o \
 vpath.o version.o ar.o arscan.o remote-$(REMOTE).o signame.o getopt.o \
 getopt1.o
-make_DEPENDENCIES =
+make_DEPENDENCIES =   
 make_LDFLAGS = 
-CFLAGS = -g -O2 
+CFLAGS = -g -O2
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
@@ -238,7 +238,7 @@ uninstall-binPROGRAMS:
 
 depend:
 	@echo No dependencies for 3rd_party qmake
-   
+
 .c.o:
 	$(COMPILE) -c $<
 
@@ -547,7 +547,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$/$$file $(distdir)/$$file; \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \

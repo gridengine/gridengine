@@ -37,6 +37,7 @@
 umask 022
 
 BASEDIR=/dist/SGEDIST
+MANUALPDF=/dist/SGEDIST/gridengine-download/www/SGE5_3alpha.pdf
 VERSIONDIR=SGE53
 
 HASDIR="ckpt doc examples/jobs locale mpi pvm/src qmon/PIXMAPS/big qmon/locale"
@@ -666,7 +667,7 @@ if [ $instcommon = true ]; then
       echo "   --> PS and PDF files"
       Execute rm -rf $DEST_SGE_ROOT/doc
       Execute mkdir $DEST_SGE_ROOT/doc
-      Execute cp ../doc/SGE5_3alpha.pdf $DEST_SGE_ROOT/doc
+      Execute cp $MANUALPDF $DEST_SGE_ROOT/doc
    fi
 
    # this rule must come *after* the "instdoc" rule

@@ -1222,33 +1222,20 @@ lList *acl_list)
    }   
 
    /* to be activated as soon as immediate jobs are available */
-   if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { /* immediate job */
-      /* 
-       * is it an interactve job and an interactive queue? 
-       * or
-       * is it a batch job and a batch or transfer queue?
-       */
-      if (!lGetString(job, JB_script_file) && 
-          !qinstance_is_interactive_queue(queue)) {
+   if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { 
+      if (!qinstance_is_interactive_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not an interactive queue as requested by "
                   "job %d\n", queue_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTINTERACTIVE_S, queue_name);
          DEXIT;
          return -1;
-      } else if (lGetString(job, JB_script_file) && 
-                 !qinstance_is_batch_queue(queue)) {
-         DPRINTF(("Queue \"%s\" is not a serial batch queue as "
-                  "requested by job %d\n", queue_name, (int)job_id));
-         schedd_mes_add(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
-         DEXIT;
-         return -1;
-      }
+      } 
    }
 
    if (!pe && !ckpt && !JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { /* serial (batch) job */
       /* is it a batch or transfer queue */
       if (!qinstance_is_batch_queue(queue)) {
-         DPRINTF(("Queue \"%s\" is not a serial batch queue as "
+         DPRINTF(("Queue \"%s\" is not a batch queue as "
                   "requested by job %d\n", queue_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
          DEXIT;
@@ -1258,7 +1245,7 @@ lList *acl_list)
 
    if (ckpt && !pe && lGetString(job, JB_script_file) &&
        qinstance_is_parallel_queue(queue) && !qinstance_is_batch_queue(queue)) {
-      DPRINTF(("Queue \"%s\" is not a serial batch queue as "
+      DPRINTF(("Queue \"%s\" is not a serial queue as "
                "requested by job %d\n", queue_name, (int)job_id));
       schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELJOB_S, queue_name);
       DEXIT;

@@ -1,3 +1,9 @@
+EB-2004-05-04-1: Bugfix:    qrsh <command> jobs are not scheduled to 
+                            interactive queue
+                 Changed:   sge_schedd
+                 Issue:     855
+                 Review:    JG
+
 JG-2004-05-04-1: Bugfix:    Removed debug output to stderr from qstat/qhost.
 
 JG-2004-05-04-0: Enhancem.: spooldefaults handles additional objects required 

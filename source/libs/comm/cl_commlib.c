@@ -3832,7 +3832,8 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
    }
  
    /* resolve hostname */
-   ret_val = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);
+   ret_val = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,
+                                         NULL, NULL, NULL);
    if (ret_val != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(ret_val));
       return ret_val;
@@ -3908,6 +3909,9 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
          int tcp_port = 0;
          if ( cl_com_get_known_endpoint_port(&receiver, &tcp_port) != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"no port to connect");
+            free(unique_hostname); /* don't access receiver after this */
+            unique_hostname = NULL;
+            receiver.comp_host = NULL;
             /* unlock connection list */
             pthread_mutex_unlock(handle->connection_list_mutex);
             return CL_RETVAL_NO_PORT_ERROR;

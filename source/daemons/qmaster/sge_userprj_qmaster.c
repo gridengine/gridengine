@@ -608,6 +608,8 @@ sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp
       lDelElemHost(&Master_Adminhost_List, AH_name, host);
    }
 
+   lp = lFreeList(lp);
+   
    DEXIT;
    return status;
 }

@@ -659,7 +659,7 @@ int hash_compare_long(const void *a, const void *b)
 {
    long *cast_a = (long*)a;
    long *cast_b = (long*)b;
-   return *cast_a - *cast_b;
+   return (int)(*cast_a - *cast_b);
 }
 
 int hash_compare_pointer(const void *a, const void *b) 
@@ -667,7 +667,7 @@ int hash_compare_pointer(const void *a, const void *b)
    char **cast_a = (char **)a;
    char **cast_b = (char **)b;
 /* printf("++++> %p - %p\n", *cast_a, *cast_b); */
-   return *cast_a - *cast_b;
+   return (int) (*cast_a - *cast_b);
 }
 
 int hash_compare_string(const void *a, const void *b)

@@ -1040,7 +1040,11 @@ sge_gdi_request *answer
       sge_gdi_kill_master(host, request, answer);
       break;
    case SGE_EVENT_LIST:
+      /* JG: TODO: why does sge_gdi_shutdown_event_client use two different 
+       * answer lists?
+       */
       sge_gdi_shutdown_event_client(host, request, answer, &alp);
+      answer_list_output(&alp);
       break;
    case SGE_SC_LIST: /* trigger scheduler monitoring */
       trigger_scheduler_monitoring(host, request, answer);

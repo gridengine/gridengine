@@ -326,8 +326,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    int host_order_changed = 0;  /* is passed to assign_select_debit, queue list needs new sorting */
    int sort_hostlist = 1;       /* hostlist has to be sorted. Info returned by select_assign_debit */
                                 /* e.g. if load correction was computed */
-   struct tms tms_buffer;
-   clock_t start;
 
    DENTER(TOP_LAYER, "dispatch_jobs");
 

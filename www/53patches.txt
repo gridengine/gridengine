@@ -38,6 +38,7 @@ Issue   Sun BugId  Description
 490     4816529    qmon crash when pressing Why for a list of selected jobs
 493     4818737    SGEEE: huge scheduling times if maxujobs is set
         4811230    qconf -Muser and qconf -Auser report no success messages
+496                Functional policy pending ticket calculations are not intuitive
 
 
 Bugs fixed in SGE 5.3p2 since release 5.3p1

@@ -4985,11 +4985,15 @@ global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM do_compile
 
    sleep 5  ;# give the qmaster time
    puts $CHECK_OUTPUT "killing all commds in the cluster ..." 
-
+  
+   set do_it_as_root 0
    foreach elem $CHECK_CORE_EXECD { 
        puts $CHECK_OUTPUT "killing commd on host $elem"
-
-       set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-U -k -host $elem"  ]
+       if { $do_it_as_root == 0 } { 
+          set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-U -k -host $elem"  ]
+       } else {
+          set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
+       } 
        if { $prg_exit_state == 0 } {
           puts $CHECK_OUTPUT $result
        } else {
@@ -5001,6 +5005,7 @@ global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM do_compile
              set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
           }
           if { $prg_exit_state == 0 } {
+             set do_it_as_root 1 
              puts $CHECK_OUTPUT $result
           } else {
              set do_ps_kill 1

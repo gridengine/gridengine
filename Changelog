@@ -1,3 +1,8 @@
+MD-2004-01-27-0: Bugfix:    - setting productmode sgeee to default
+                            - bugfix logfile creation
+                            - path generation
+                 Changed:   sge_config, sge_config_common.sh 
+
 SG-2004-01-27-0: Enhancem.: - added a XML print facility for CULL lists.
                             - extended qstat to print XML
                             - comments, qstat man page update, and qstat

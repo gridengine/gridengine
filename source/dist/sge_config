@@ -53,8 +53,8 @@ ECHO=echo
 # Sourcing common function module
 #
 PWD=`pwd`
-. $PWD/util/arch_variables
-. $PWD/sge_config_modules/sge_config_common.sh
+. ./util/arch_variables
+. ./sge_config_modules/sge_config_common.sh
 
 #---------------------------------------
 # commandline argument parsing
@@ -64,7 +64,7 @@ UPGRADE=false
 DOWNGRADE=false
 BACKUP=false
 AUTO=false
-SGEEE=false
+SGEEE=true
 RESCHEDULE=true
 RESPORT=false
 CSP=false
@@ -83,10 +83,11 @@ HOSTRANGE="undef"
 
 SGE_NOMSG="undef"
 LOGNAME=install.$$
-DATE=`date '+%m%d%y:%H%M%S'`
+DATE=`date '+%Y-%m-%d_%H:%M:%S'`
 
 if [ -f /tmp/$LOGNAME ]; then
    rm /tmp/$LOGNAME
+   touch /tmp/$LOGNAME
 else
    touch /tmp/$LOGNAME
 fi
@@ -113,12 +114,9 @@ while [ $ARGC != 0 ]; do
      export SGE_NOMSG
      exec 1>/tmp/$LOGNAME 2>&1
      ;;
-   -sgeee)
-     SGEEE=true
-     ;;
    -m)
      QMASTER="install"
-     . $PWD/sge_config_modules/sge_config_qmaster.sh 
+     . ./sge_config_modules/sge_config_qmaster.sh 
      ;; 
    -dm)
      QMASTER="deactivate"
@@ -130,7 +128,7 @@ while [ $ARGC != 0 ]; do
      ;;
    -x)
      EXECD="install"
-     . $PWD/sge_config_modules/sge_config_execd.sh
+     . ./sge_config_modules/sge_config_execd.sh
      ;;
    -dx)
      EXECD="deactivate"
@@ -138,7 +136,7 @@ while [ $ARGC != 0 ]; do
      ;;
    -ux)
      EXECD="uninstall"
-     . $PWD/sge_config_modules/sge_config_execd_uninst.sh
+     . ./sge_config_modules/sge_config_execd_uninst.sh
      ;;
    -s)
      SHADOW="install"
@@ -201,15 +199,6 @@ while [ $ARGC != 0 ]; do
      ;;
    -afs)
      AFS=true
-     ;;
-   -log)
-     if [ $EXECD = "uninstall" ]; then
-        exec 1>/tmp/$LOGNAME 2>&1
-     else
-        exec 1>/tmp/$LOGNAME 2>&1
-     fi
-     SGE_NOMSG=1
-     export SGE_NOMSG
      ;;
    -help)
      ErrUsage

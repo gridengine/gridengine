@@ -326,13 +326,11 @@ ErrUsage()
    myname=`basename $0`
    $ECHO >&2
    $INFOTEXT -e \
-   $INFOTEXT -e \
-             "Usage: %s -m|-x|-ux [-sgeee] [-auto [-file]] [-csp] [-resport]\n" \
-             "              [-afs] [-host] [-log] [-noremote]\n" \
+             "Usage: %s -m|-x|-ux [-auto [-file]] [-csp] [-resport]\n" \
+             "              [-afs] [-host] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -x         install execution host\n" \
              "   -ux        unistall execution host\n" \
-             "   -sgeee     install Gridengine with sgeee functionality\n" \
              "   -host      hostname for unistallation (eg. exec host)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
              "   -file      configuration file for automatic installation\n" \
@@ -340,7 +338,6 @@ ErrUsage()
              "              functionality\n" \
              "   -afs       install system with AFS functionality\n" \
              "   -resport   install system with reserved port security\n" \
-             "   -log       generate log file sge_config_modules/install.log\n" \
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
@@ -1032,8 +1029,9 @@ GiveHints()
                   "You may verify your administrative hosts with the command\n\n" \
                   "   # qconf -sh\n\n" \
                   "and you may add new administrative hosts with the command\n\n" \
-                  "   # qconf -ah <hostname>\n"
+                  "   # qconf -ah <hostname>\n\n"
        $INFOTEXT -wait "Please, hit <RETURN>"
+       $CLEAR
       return 0
    else
       $INFOTEXT -wait "Your execution daemon installation is now completed."

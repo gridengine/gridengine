@@ -55,9 +55,9 @@ int main(int argc, char *argv[])
 {
    double avg[3];
    int loads;
+   char *name = NULL;
 
 #ifdef SGE_LOADMEM
-	char *name;
    sge_mem_info_t mem_info;
 #endif
 

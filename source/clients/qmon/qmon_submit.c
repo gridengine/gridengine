@@ -1650,7 +1650,7 @@ tSMEntry *data,
 char *prefix 
 ) {
    String job_script;
-   char job_tasks[1024];
+   StringBufferT dyn_job_tasks = {NULL, 0};
    char pe_tasks[BUFSIZ];
    char pe_range[BUFSIZ];
    String job_name;
@@ -1677,11 +1677,10 @@ char *prefix
    else
       data->job_script = NULL;
 
-   strcpy(job_tasks, "");
    if (is_array(jep))
-      get_taskrange_str(lGetList(jep, JB_ja_tasks), job_tasks);
-   if (job_tasks[0] != '\0')
-      data->job_tasks = XtNewString(job_tasks);
+      get_taskrange_str(lGetList(jep, JB_ja_tasks), &dyn_job_tasks);
+   if (dyn_job_tasks.s && (dyn_job_tasks.s)[0] != '\0')
+      data->job_tasks = XtNewString(dyn_job_tasks.s);
 
    if ((job_name = lGetString(jep, JB_job_name)))
       data->job_name = XtNewString(job_name);

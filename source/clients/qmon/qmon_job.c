@@ -128,7 +128,7 @@ static Pixel qmonJobStateToColor(Widget w, lListElem *jep);
 static Boolean qmonDeleteJobForMatrix(Widget w, Widget matrix, lList **local);
 static lList* qmonJobBuildSelectedList(Widget matrix, lDescr *dp, int nm);
 /* static void qmonResizeCB(Widget w, XtPointer cld, XtPointer cad); */
-static Boolean AskForHold(Widget w, Cardinal *hold, char *tasks);
+static Boolean AskForHold(Widget w, Cardinal *hold, StringBufferT *dyn_tasks);
 static void AskHoldCancelCB(Widget w, XtPointer cld, XtPointer cad);
 static void AskHoldOkCB(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobScheddInfo(Widget w, XtPointer cld, XtPointer cad);
@@ -982,17 +982,24 @@ lDescr *dp;
 
                      if (ipp) {
                         for_each(idp, ipp) {
+                           lListElem *ip;
+
                            jep = lAddElemUlong(&jl, JB_job_number, 
                                     atol(lGetString(idp, ID_str)), dp);
                            lSetList(jep, JB_ja_structure, 
                                  lCopyList("", lGetList(idp, ID_ja_structure)));
                            get_ja_task_ids(jep, &start, &end, &step); 
-                           for (; start<=end; start+=step) {
-                              lAddElemUlong(&jat_list, JAT_task_number, 
-                                                start, JAT_Type);
+                           for_each(ip, lGetList(idp, ID_ja_structure)) {
+                              start = lGetUlong(ip, RN_min);
+                              end = lGetUlong(ip, RN_max);
+                              step = lGetUlong(ip, RN_step);
+                              for (; start<=end; start+=step) {
+                                 lAddElemUlong(&jat_list, JAT_task_number, 
+                                                   start, JAT_Type);
+                              }
                            }
-                           lSetList(jep, JB_ja_tasks, jat_list);
                         }
+                        lSetList(jep, JB_ja_tasks, jat_list);
                         ipp = lFreeList(ipp);
                      }
                   }
@@ -1117,8 +1124,8 @@ XtPointer cld, cad;
       lAddList(jl, rl);
    
    if (jl) {
-      static char tasks[BUFSIZ];
-      static char oldtasks[BUFSIZ];
+      StringBufferT dyn_tasks = {NULL, 0};
+      StringBufferT dyn_oldtasks = {NULL, 0};
 
       /*
       ** get the first job in list and its first task to preset 
@@ -1128,19 +1135,17 @@ XtPointer cld, cad;
                               lGetUlong(lFirst(jl), JB_job_number));
       new_hold = lGetUlong(lFirst(lGetList(job, JB_ja_tasks)), JAT_hold);
 
-      
-      tasks[0] = '\0'; 
-      oldtasks[0] = '\0';
       if (lGetNumberOfElem(jl) == 1 && is_array(job)) {
-         get_taskrange_str(lGetList(job, JB_ja_tasks), tasks);
-         strcpy(oldtasks, tasks);
+         get_taskrange_str(lGetList(job, JB_ja_tasks), &dyn_tasks);
+         sge_string_append(&dyn_oldtasks, dyn_tasks.s);
       }
 
-      status_ask = AskForHold(w, &new_hold, tasks); 
+      status_ask = AskForHold(w, &new_hold, &dyn_tasks); 
 
       if (jl && status_ask) {
          for_each(jep, jl) {
-            if (!strcmp(tasks, "") || !strcmp(tasks, oldtasks)) {
+            if (dyn_tasks.s && strcmp(dyn_tasks.s, "") && 
+                !strcmp(dyn_tasks.s, dyn_oldtasks.s)) {
                for_each (jatep, lGetList(jep, JB_ja_tasks)) {
                   lSetUlong(jatep, JAT_hold, new_hold | MINUS_H_CMD_SET);
                   DPRINTF(("Hold for" u32 "." u32 " is " u32 "\n", 
@@ -1159,7 +1164,7 @@ XtPointer cld, cad;
                   lSetUlong(jatep, JAT_hold, 0);
                }
  
-               range_list = parse_ranges(tasks, 0, 1, NULL, NULL, 
+               range_list = parse_ranges(dyn_tasks.s, 0, 1, NULL, NULL, 
                                           INF_NOT_ALLOWED);
  
                if (!range_list) {
@@ -1208,6 +1213,8 @@ XtPointer cld, cad;
          XbaeMatrixDeselectAll(job_running_jobs);
 
       }
+      sge_string_free(&dyn_tasks);
+      sge_string_free(&dyn_oldtasks);
    }
    else
       qmonMessageShow(w, True, "@{There are no jobs selected !}");
@@ -1463,7 +1470,7 @@ lListElem *jep
 static Boolean AskForHold(
 Widget w,
 Cardinal *hold,
-char *tasks 
+StringBufferT *dyn_tasks 
 ) {
    static tAskHoldInfo AskHoldInfo;      
    Widget shell = XmtGetShell(w);
@@ -1517,9 +1524,9 @@ char *tasks
    ** preset with default values
    */
    XmtChooserSetState(hold_flags, *hold, False);
-   if (tasks && tasks[0] != '\0') {
+   if (dyn_tasks->s && (dyn_tasks->s)[0] != '\0') {
       XtSetSensitive(hold_tasks, True);
-      XmtInputFieldSetString(hold_tasks, tasks);
+      XmtInputFieldSetString(hold_tasks, dyn_tasks->s);
    }
    else {
       XtSetSensitive(hold_tasks, False);
@@ -1558,7 +1565,8 @@ char *tasks
       String ts;
       *hold = XmtChooserGetState(hold_flags);
       ts = XmtInputFieldGetString(hold_tasks);
-      strncpy(tasks, ts ? ts : "", BUFSIZ-1); 
+      sge_string_free(dyn_tasks);
+      sge_string_append(dyn_tasks, ts ? ts : ""); 
       DEXIT;
       return True;
    }

@@ -67,9 +67,9 @@
 #include "sge_schedd_text.h"
 #include "job.h"
 
-static void add_taskrange_str(u_long32 start, u_long32 end, int step, char *taskrange_str);
+static void add_taskrange_str(u_long32 start, u_long32 end, int step, StringBufferT *dyn_taskrange_str);
 
-void get_taskrange_str(lList* task_list, char* taskrange_str) {
+void get_taskrange_str(lList* task_list, StringBufferT *dyn_taskrange_str) {
    lListElem *jatep, *nxt_jatep;
    u_long32 before_last_id = (u_long32)-1;
    u_long32 last_id = (u_long32)-1;
@@ -111,7 +111,7 @@ void get_taskrange_str(lList* task_list, char* taskrange_str) {
             step = (start!=end)?last_diff:0;
             counter = 0;
             new_start = 1;
-            add_taskrange_str(start, end, step, taskrange_str); 
+            add_taskrange_str(start, end, step, dyn_taskrange_str); 
 #if 0
             fprintf (stderr, "=>start: %ld, end: %ld, step: %ld\n", start, end, step);
 #endif
@@ -130,12 +130,12 @@ void get_taskrange_str(lList* task_list, char* taskrange_str) {
    if (before_last_id==-1 && last_id==-1 && id!=-1) {
       start = end = id;
       step = 0;
-      add_taskrange_str(start, end, step, taskrange_str); 
+      add_taskrange_str(start, end, step, dyn_taskrange_str); 
    } else if (before_last_id==-1 && last_id!=-1 && id!=-1) {
       start = last_id;
       end = id;
       step = end-start;
-      add_taskrange_str(start, end, step, taskrange_str); 
+      add_taskrange_str(start, end, step, dyn_taskrange_str); 
    } else if (before_last_id!=-1 && last_id!=-1 && id!=-1) {
       if (last_diff != diff) {
          if (counter == 1) {
@@ -158,11 +158,11 @@ void get_taskrange_str(lList* task_list, char* taskrange_str) {
          fprintf (stderr, "3 -> start: %ld, end: %ld, step: %ld\n", (long) start, (long)end, (long)step);
 #endif
       }
-      add_taskrange_str(start, end, step, taskrange_str); 
+      add_taskrange_str(start, end, step, dyn_taskrange_str); 
    }
 #if 0
    fprintf (stderr, "=>start: %ld, end: %ld, step: %ld\n", start, end, step);
-   fprintf(stderr, "String: %s\n", taskrange_str);
+   fprintf(stderr, "String: %s\n", dyn_taskrange_str->s);
 #endif
 } 
 
@@ -170,13 +170,13 @@ static void add_taskrange_str(
 u_long32 start,
 u_long32 end,
 int step,
-char *taskrange_str 
+StringBufferT *dyn_taskrange_str 
 ) {
    char tail[256]="";
 
-   
-   if (strlen(taskrange_str)>0)
-      strcat(taskrange_str, ",");
+   if (dyn_taskrange_str->size > 0) {
+      sge_string_append(dyn_taskrange_str, ",");
+   }
 
    if (start == end)
       sprintf(tail, u32, start);
@@ -185,7 +185,7 @@ char *taskrange_str
    else {
       sprintf(tail, u32"-"u32":%d", start, end, step); 
    }
-   strcat(taskrange_str, tail);
+   sge_string_append(dyn_taskrange_str, tail);
 }
 
 lList* split_task_group(

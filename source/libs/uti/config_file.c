@@ -394,9 +394,23 @@ char **allowed
    int name_len;
    const char *sp;
    size_t dp_pos = 0;
+/*
    size_t max_dst_len = dst_len - 1;
+*/
    char **spp, *value = NULL;
    int just_check = 0;
+
+
+/* CR: TODO!
+ * 
+ *   The dst_len parameter is ignored, because fixing the missing buffer overwrite   
+ *   problem caused problems in functions calling replace_params(). Every calling
+ *   function must set the correct buffer length of dst. This is currently not the
+ *   case. Therefore I disabled the buffer overwrite check by outcommenting the
+ *   "&& dp_pos < max_dst_len" and size_t max_dst_len = dst_len - 1 part.
+ *   See Issue: #1383
+ *
+ */
 
    /* does caller just want to validate */
    if (!dst) {
@@ -464,14 +478,14 @@ char **allowed
 
          /* copy value into dst buffer */
          if (!just_check) {
-            while (*value && dp_pos < max_dst_len ) {
+            while (*value /* && dp_pos < max_dst_len */ ) {
                dst[dp_pos++] = *value++;
             }
          }
          break;
 
       default:
-         if (!just_check && dp_pos < max_dst_len ) {
+         if (!just_check /* && dp_pos < max_dst_len */ ) {
             dst[dp_pos++] = *sp; 
          }
          sp++;

@@ -399,6 +399,7 @@ int master
          lSetString(tmpjep, JB_owner, mapped_user);
       }
    }
+#endif
    
    if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
       lFreeElem(tmpjep);
@@ -406,7 +407,6 @@ int master
       DEXIT;
       return -1;
    }
-#endif
 
    pack_job_delivery(&pb, tmpjep, qlp, pe);
    

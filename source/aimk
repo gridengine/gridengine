@@ -151,7 +151,7 @@ case "tru64":
 case "ia64linux":					      
    set BUILDARCH = IA64LINUX				     
    breaksw
-case "linuxamd64":
+case "lx24-amd64":
    set BUILDARCH = LINUXAMD64
    breaksw
 default:
@@ -1313,7 +1313,6 @@ case HP1164:
 
 case LINUX5:
 case LINUX6:
-case LINUXAMD64:
    strings /lib/libc.so.6 | grep "GNU C Library" | grep 2.[23] >& /dev/null
    if ( $status == 0 ) then
       set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
@@ -1644,8 +1643,9 @@ case UNICOS*:
    endif
    breaksw
 
-case IA64LINUX:						      
-   strings /lib/libc.so.6 | grep "GNU C Library" | grep 2.2 >& /dev/null
+case IA64LINUX:
+case LINUXAMD64:						      
+   strings /lib/libc.so.6 | grep "GNU C Library" | grep 2.[23] >& /dev/null
    if ( $status == 0 ) then
       set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
    endif
@@ -1704,7 +1704,7 @@ case IA64LINUX:
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
-   set XLIBD    = "-L/usr/X11R6/lib"
+   set XLIBD    = "-L/usr/X11R6/lib64"
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
 
@@ -1726,7 +1726,7 @@ endif
 
 # suppress gcc 3.3 warnings
 if ( $CC == gcc ) then
-   if ( `gcc -dumpversion` == "3.3") then
+   if ( `gcc -dumpversion| cut -f1,2 -d.` == "3.3") then
       set CFLAGS = "$CFLAGS -Wno-sign-compare -Wno-strict-aliasing"
    endif
 endif

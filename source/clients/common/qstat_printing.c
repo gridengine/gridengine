@@ -138,7 +138,7 @@ int longest_queue_length
       sprintf(temp, "%%-%d.%ds", longest_queue_length, longest_queue_length);
       printf(temp,MSG_QSTAT_PRT_QUEUENAME); 
 
-      printf(" %-5.5s %-9.9s %-8.8s %-9.9s %s\n", 
+      printf(" %-5.5s %-9.9s %-8.8s %-10.10s %s\n", 
             MSG_QSTAT_PRT_QTYPE, 
             MSG_QSTAT_PRT_USEDTOT,
             load_avg_str,
@@ -186,7 +186,7 @@ int longest_queue_length
       sprintf(to_print, "%s ", arch_string);
    else
       sprintf(to_print, "-NA- ");
-   printf("%-9.9s ", to_print);   
+   printf("%-10.10s ", to_print);   
 
    state = lGetUlong(q, QU_state);
    if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, complex_list, NULL)) {

@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
    }
    if (malloc_mb) { 
       printf("going to alloce %d mb via malloc\n", malloc_mb); fflush(stdout);
-      if (!(mmp = malloc(1024*1024*malloc_mb))) {
+      if (!(mmp = malloc(1024L*1024L* (size_t)malloc_mb))) {
          printf("failed getting %d mb mem via malloc\n", malloc_mb); fflush(stdout);
          return 1;
       } else 

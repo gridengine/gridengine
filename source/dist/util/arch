@@ -150,7 +150,7 @@ if [ -x /bin/uname ]; then
       ARCH=ia64linux
       ;;
    Linux,x86_64)
-      ARCH=linuxamd64
+      ARCH=lx24-amd64
       ;;
    Linux,*)
       rev="`/bin/uname -r`"

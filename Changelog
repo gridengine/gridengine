@@ -6,7 +6,8 @@ AH-2004-02-12-0: Enhancem:  Initial revision of resource reservation. Man pages 
                             - qstat -j schedd info messages
                             - -w e|v|w submit(1) option
                             Soft requests to be verified. Host/queue category 
-                            optimization to be revived. 
+                            optimization to be revived. Testsuite support to be 
+                            added.
                  Enhancem:  Added CULL functions lAddSubList()/lAddDouble()/
                             lAddUlong()
                  Bugfix:    Fixed schedd crash with large array jobs.

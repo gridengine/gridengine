@@ -1,4 +1,11 @@
-SG-2003-08-08-0: Bugfix:    - all queues changed into the alarm state, when
+SG-2003-08-01-1: Bugfix:    All queues for a host in qmon changed into the alarm 
+                            state, when the host complexes for the hast were 
+                            changed via qmon (only until the next update).
+
+                 Changed:   qmon
+                 Review:    AA
+
+SG-2003-08-01-0: Bugfix:    - all queues changed into the alarm state, when
                             the complex list was changed via qconf and the
                             qmon queue window was open.
                             - when the qmom queue window and the complex window

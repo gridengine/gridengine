@@ -70,6 +70,7 @@
 #include "qmon_cplx.h"
 #include "qmon_manop.h"
 #include "qmon_project.h"
+#include "qmon_queue.h"
 #include "Matrix.h"
 #include "gdi_tsm.h"
 #include "sge_feature.h"
@@ -769,6 +770,7 @@ XtPointer cld, cad;
          xehname = XmtCreateXmString(ehname);
          XmListSelectItem(exechost_list, xehname, True);
          XmStringFree(xehname);
+         updateQueueListCB(w, NULL, NULL);
       }
 
       lFreeWhat(what);

@@ -472,7 +472,11 @@ lList **topp  /* ticket orders ptr ptr */
          DEXIT;
          return -3;
       }
+
+      /* job is now sent and goes into transfering state */
       sge_commit_job(jep, jatp, NULL, COMMIT_ST_SENT, COMMIT_DEFAULT);   /* mode==0 -> really accept when execd acks */
+
+      /* set timeout for job resend */
       trigger_job_resend(sge_get_gmt(), master_host, job_number, task_number);
 
       if (pe) {

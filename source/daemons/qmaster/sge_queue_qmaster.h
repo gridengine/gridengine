@@ -41,23 +41,13 @@ int sge_gdi_delete_queue(lListElem *qep, lList **alpp, char *ruser, char *rhost)
 int sge_change_queue_version(lListElem *qep, int add, int write_history);
 
 /* old functions underlaying the gdi functions */
-int sge_add_queue(lListElem *qep);
 int sge_del_queue(const char *qname);
-
-void sge_add_queue_event(u_long32 type, lListElem *qep);
 
 int check_qsiq_lic(int licensed_qsi_queues, int verbose);
 
 #if 0
 int verify_project_list(lList **alpp, char *obj_name, char *qname, lList *project_list);
 #endif
-
-int verify_qr_list(lList **alpp, lList *qr_list, const char *attr_name, const char *obj_descr, const char *obj_name);  
-
-void queue_list_set_unknown_state_to(lList *queue_list, 
-                                     const char *hostname,
-                                     int send_events,
-                                     int new_u_state);
 
 int queue_set_initial_state(lListElem *queue, char *rhost);
 

@@ -81,7 +81,6 @@
 #include "usage.h"
 #include "setup_qmaster.h"
 #include "ck_to_do_qmaster.h"
-#include "sec.h"
 #include "sge_prog.h"
 #include "sched_conf_qmaster.h"
 #include "qmaster.h"
@@ -99,6 +98,7 @@
 #include "sge_answer.h"
 #include "sge_userprj.h"
 #include "sge_hostgroup.h"
+#include "sge_manop.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

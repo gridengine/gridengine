@@ -69,7 +69,6 @@ EXECD_ADD_SRC =  usage.c \
               sig_handlers.c \
               job_log.c \
               startprog.c \
-              utility_daemon.c \
               shutdown.c 
             
               

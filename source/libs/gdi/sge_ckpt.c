@@ -30,15 +30,24 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <strings.h>
+
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_list.h"
 
+#include "config_file.h"
+#include "sge_signal.h"
+
+#include "gdi_utility.h"
 #include "sge_answer.h"
 #include "sge_job.h"
-#include "sge_ckpt.h"
+#include "sge_queue.h"
 
+#include "msg_common.h"
 #include "msg_gdilib.h"
+
+#include "sge_ckpt.h"
 
 lList *Master_Ckpt_List = NULL;
 
@@ -164,3 +173,132 @@ int ckpt_update_master_list(sge_event_type type, sge_event_action action,
    DEXIT;
    return TRUE;
 }
+
+/****** gdi/ckpt/validate_ckpt() ******************************************
+*  NAME
+*     validate_ckpt -- validate all ckpt interface parameters 
+*
+*  SYNOPSIS
+*     int validate_ckpt(lListElem *ep, lList **alpp);
+*
+*  FUNCTION
+*     This function will test all ckpt interface parameters.
+*     If all are valid then it will return successfull.
+*
+*
+*  INPUTS
+*     ep     - element which sould be verified. 
+*     answer - answer list where the function stored error messages
+*
+*
+*  RESULT
+*     [answer] - error messages will be added to this list
+*     STATUS_OK - success
+*     STATUS_EUNKNOWN or STATUS_EEXIST - error
+******************************************************************************/ 
+int validate_ckpt(lListElem *ep, lList **alpp) 
+{
+   static char* ckpt_interfaces[] = {
+      "USERDEFINED",
+      "HIBERNATOR",
+      "TRANSPARENT",
+      "APPLICATION-LEVEL",
+      "CPR",
+      "CRAY-CKPT"
+   };
+   static struct attr {
+      int nm;
+      char *text;
+   } ckpt_commands[] = {
+      { CK_ckpt_command, "ckpt_command" },
+      { CK_migr_command, "migr_command" },
+      { CK_rest_command, "restart_command"},
+      { CK_clean_command, "clean_command"},
+      { NoName,           NULL} };
+
+   int i;
+   int found = 0;
+   const char *s, *interface;
+
+   DENTER(TOP_LAYER, "validate_ckpt_obj");
+
+   if (!ep) {
+      CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   }
+
+   /* -------- CK_name */
+   if (verify_str_key(alpp, lGetString(ep, CK_name), "checkpoint interface")) {
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   }          
+
+   /*
+   ** check if ckpt obj can be added
+   ** check allowed interfaces and license
+   */
+   if ((interface = lGetString(ep, CK_interface))) {
+      found = 0;
+      for (i=0; i < (sizeof(ckpt_interfaces)/sizeof(char*)); i++) {
+         if (!strcasecmp(interface, ckpt_interfaces[i])) {
+            found = 1;
+            break;
+         }
+      }
+
+      if (!found) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_NO_INTERFACE_S, interface));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EEXIST;
+      }
+      
+#ifdef PW
+      /* license check */
+      if (!set_licensed_feature("ckpt")) {
+         if (!strcasecmp(interface, "HIBERNATOR") ||
+             !strcasecmp(interface, "CPR") ||
+             !strcasecmp(interface, "APPLICATION-LEVEL") ||
+             !strcasecmp(interface, "CRAY-CKPT")) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_NO_CKPT_LIC));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return STATUS_EEXIST;
+         }
+      }
+#endif      
+   }                     
+
+   for (i=0; ckpt_commands[i].nm!=NoName; i++) {
+      if (replace_params(lGetString(ep, ckpt_commands[i].nm),
+               NULL, 0, ckpt_variables)) {
+         ERROR((SGE_EVENT, MSG_OBJ_CKPTENV_SSS,
+               ckpt_commands[i].text, lGetString(ep, CK_name), err_msg));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EEXIST;
+      }
+   }
+
+   /* -------- CK_queue_list */
+   if (verify_qr_list(alpp, lGetList(ep, CK_queue_list), MSG_OBJ_QLIST,
+               MSG_OBJ_CKPTI, lGetString(ep, CK_name))!=STATUS_OK) {
+      DEXIT;
+      return STATUS_EEXIST;
+   }
+
+   /* -------- CK_signal */
+   if ((s=lGetString(ep, CK_signal)) &&
+         strcasecmp(s, "none") &&
+         sge_sys_str2signal(s)==-1) {
+      ERROR((SGE_EVENT, MSG_CKPT_XISNOTASIGNALSTRING_S , s));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
+   }
+
+   DEXIT;
+   return STATUS_OK;
+}              

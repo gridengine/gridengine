@@ -34,7 +34,9 @@
 
 #include <stdio.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <time.h>  
+#include <unistd.h>
 
 /****** uti/stdio/FPRINTF() ***************************************************
 *  NAME
@@ -72,5 +74,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
  
 int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err, 
                 struct timeval *timeout); 
+
+void print_option_syntax(FILE *fp, const char *option, const char *meaning);
 
 #endif /* __SGE_STDIO_H */

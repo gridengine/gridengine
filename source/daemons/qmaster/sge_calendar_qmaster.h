@@ -46,11 +46,5 @@ int sge_del_calendar(lListElem *ep, lList **alpp, char *ruser, char *rhost);
 
 void calendar_event(u_long32 type, u_long32 when, u_long32 uval0, u_long32 uval1, const char *sval);
 
-u_long32 act_cal_state(lListElem *cep, time_t *then);
-    
-int parse_year(lList **alpp, lListElem *cal);
-
-int parse_week(lList **alpp, lListElem *cal);
-
 #endif /* __SGE_CALENDAR_QMASTER_H */
 

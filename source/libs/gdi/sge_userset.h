@@ -44,6 +44,12 @@ lListElem *userset_list_locate(lList *lp, const char *name);
 int userset_update_master_list(sge_event_type type, sge_event_action action,
                                lListElem *event, void *clientdata);
 
+int sge_verify_userset_entries(lList *u, lList **alpp, int start_up);
+
+int verify_acl_list(lList **alpp, lList *acl_list, const char *attr_name, 
+                    const char *obj_descr, const char *obj_name);
+
+
 #endif /* _SGE_USERSET_H */
 
 

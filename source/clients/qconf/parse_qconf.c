@@ -3411,7 +3411,7 @@ DPRINTF(("ep: %s %s\n",
          }
          alp = lFreeList(alp);
  
-         if (write_sched_configuration(0, 0, lFirst(lp)) == NULL) {
+         if (write_sched_configuration(0, 0, NULL, lFirst(lp)) == NULL) {
             fprintf(stderr, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION);
             spp++;
             continue;
@@ -4398,7 +4398,7 @@ lList *confl
 
    DENTER(TOP_LAYER, "edit_sched_conf");
 
-   if ((fname = write_sched_configuration(0, 1, lFirst(confl))) == NULL) {
+   if ((fname = write_sched_configuration(0, 1, NULL, lFirst(confl))) == NULL) {
       fprintf(stderr, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION);
       SGE_EXIT(1);
    }
@@ -4417,7 +4417,7 @@ lList *confl
          return NULL;
    }
    
-   if (!(newconfl = read_sched_configuration(fname, 0, &alp))) {
+   if (!(newconfl = read_sched_configuration(NULL, fname, 0, &alp))) {
       aep = lFirst(alp);
       fprintf(stderr, MSG_QCONF_CANTREADCONFIG_S, lGetString(aep, AN_text));
       unlink(fname);

@@ -247,6 +247,13 @@ sge_mirror_error sge_mirror_update_master_list_str_key(lList **list, lDescr *lis
                                                        int key_nm, const char *key, 
                                                        sge_event_action action, lListElem *event);
 
+/* Utility functions */
+lList        **sge_mirror_get_type_master_list(const sge_event_type type);
+const char    *sge_mirror_get_type_name(const sge_event_type type);
+const lDescr  *sge_mirror_get_type_descr(const sge_event_type type);
+int            sge_mirror_get_type_key_nm(const sge_event_type type);
+
+
 /* Error Handling */
 const char *sge_mirror_strerror(sge_mirror_error num);
 

@@ -48,7 +48,6 @@
 #include "setup_execd.h"
 #include "sge_load_sensor.h"
 #include "cull_file.h"
-#include "utility_daemon.h"
 #include "sge_prog.h"
 #include "sge_string.h"
 #include "reaper_execd.h"

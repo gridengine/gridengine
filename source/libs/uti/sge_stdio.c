@@ -313,3 +313,15 @@ int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err,
    DEXIT;
    return (status&0xff00) >> 8;  /* return exitcode */
 }                           
+
+void print_option_syntax(
+FILE *fp,
+const char *option,
+const char *meaning 
+) {
+   if (!meaning)
+      fprintf(fp,"   %s\n", option);
+   else
+      fprintf(fp,"   %-40.40s %s\n",  option, meaning);
+}
+

@@ -99,10 +99,14 @@ char *rhost
       old_SC_weight_tickets_override);
    lAppendElem(*confl, lCopyElem(confp));
 
-   if (write_sched_configuration(1, 2, lFirst(*confl)) == NULL) {
-      answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return -1;
+   {
+      char common_dir[SGE_PATH_MAX];
+      sprintf(common_dir, "%s"PATH_SEPARATOR"%s", path.cell_root, COMMON_DIR);
+      if (write_sched_configuration(1, 2, common_dir, lFirst(*confl)) == NULL) {
+         answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return -1;
+      }
    }
 
 

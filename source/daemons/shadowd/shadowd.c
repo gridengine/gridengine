@@ -39,6 +39,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 
+#include "sge_stdio.h"
 #include "sge_unistd.h"
 #include "sge.h"
 #include "sge_gdi_intern.h"

@@ -44,6 +44,9 @@ lListElem* sge_locate_manager(const char *cp);
 
 lListElem* sge_locate_operator(const char *cp);
 
+int sge_manager(const char *cp);
+int sge_operator(const char *cp);
+
 int manop_update_master_list(sge_event_type type, sge_event_action action,
                              lListElem *event, void *clientdata);
 

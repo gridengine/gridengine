@@ -128,23 +128,10 @@ NAMEDEF(PEN)
    NAME("PE_used_slots")
 NAMEEND
 
+/* *INDENT-ON* */ 
+
 #define PES sizeof(PEN)/sizeof(char*)
 
-enum {
-   QR_name = QR_LOWERBOUND
-};
-
-LISTDEF(QR_Type)
-   SGE_STRING(QR_name, CULL_HASH | CULL_UNIQUE)
-LISTEND 
-
-NAMEDEF(QRN)
-   NAME("QR_name")
-NAMEEND
-
-/* *INDENT-ON* */  
-
-#define QRS sizeof(QRN)/sizeof(char*)
 #ifdef  __cplusplus
 }
 #endif

@@ -82,6 +82,7 @@
 #include "sge_calendarL.h"
 #include "sge_hostgroupL.h"
 #include "sge_confL.h"
+#include "sge_spoolingL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -204,6 +205,11 @@ extern "C" {
       {FE_LOWERBOUND, FES, FEN},        /* feature list */
       {SU_LOWERBOUND, SUS, SUN},        /* submit user */
       {SEC_LOWERBOUND, SecurityS, SecurityN},   /* Certificate security */
+
+      {SPC_LOWERBOUND, SPCS, SPCN},     /* Spooling context */
+      {SPR_LOWERBOUND, SPRS, SPRN},     /* Spooling rule */
+      {SPT_LOWERBOUND, SPTS, SPTN},     /* Spooling object type */
+      {SPTR_LOWERBOUND, SPTRS, SPTRN},     /* Spooling rules for object type */
       {0, 0, NULL}
    };
 

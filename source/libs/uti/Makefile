@@ -36,11 +36,14 @@ UTILIB_DIR  = $(SDIR)/libs/uti
 
 UTILIB  = libuti$(QIDLEXT)$(LIBEXT)
 
-UTILIB_SRC = sge_afsutil.c \
+UTILIB_SRC = \
+         config_file.c \
+         sge_afsutil.c \
          sge_arch.c \
          sge_bitfield.c \
          sge_bitop.c \
          sge_crc.c \
+         sge_dirent.c \
          sge_hostname.c \
          sge_getloadavg.c \
          sge_htable.c \
@@ -100,6 +103,12 @@ include $(UTILIB_DIR)/uti_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
+sge_dirent.o   : $(UTILIB_DIR)/sge_dirent.c
+		$(CC) $(CFLAGS) -c $(UTILIB_DIR)/sge_dirent.c
+
+config_file.o:  $(UTILIB_DIR)/config_file.c
+		$(CC) $(CFLAGS) -c $(UTILIB_DIR)/config_file.c
+
 sge_hostname.o:	$(UTILIB_DIR)/sge_hostname.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_hostname.c
 

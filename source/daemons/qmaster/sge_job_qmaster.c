@@ -35,6 +35,8 @@
 #include <fnmatch.h>
 #include <ctype.h>
 
+#include "sge_stdlib.h"
+
 #include "sgermon.h"
 #include "sge_time.h"
 #include "sge_log.h"
@@ -44,8 +46,7 @@
 #include "sge_stringL.h"
 #include "sge_sched.h"
 #include "sge_feature.h"
-#include "sge_stdlib.h"
-#include "sec.h"
+#include "sge_manop.h"
 #include "mail.h"
 #include "sge_ja_task.h"
 #include "sge_requestL.h"

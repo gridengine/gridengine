@@ -351,7 +351,7 @@ static int sge_ck_qmaster()
 
 /*---------------------------------------------------------------*/
 #if 0
-   /* JG: TODO: this is not necessary: SCHED_CONF is sent at 
+   /* JG: this is not necessary: SCHED_CONF is sent at 
     * event client registration 
     */
    DPRINTF(("Requesting scheduler configuration from qmaster\n"));

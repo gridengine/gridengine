@@ -63,19 +63,77 @@
 
 #include "msg_gdilib.h"
 
+/* Static functions for internal use */
+static sge_mirror_error _sge_mirror_subscribe(sge_event_type type, 
+                                              sge_mirror_callback callback_before, 
+                                              sge_mirror_callback callback_after, 
+                                              void *clientdata);
+
+static sge_mirror_error _sge_mirror_unsubscribe(sge_event_type type);     
+
+static void sge_mirror_free_list(sge_event_type type);
+
+static sge_mirror_error sge_mirror_process_event_list(lList *event_list);
+static sge_mirror_error sge_mirror_process_event(sge_event_type type, 
+                                                 sge_event_action action, 
+                                                 lListElem *event);
+
+static int sge_mirror_process_shutdown(sge_event_type type, 
+                                             sge_event_action action, 
+                                             lListElem *event,
+                                             void *clientdata);
+static int sge_mirror_process_qmaster_goes_down(sge_event_type type, 
+                                                sge_event_action action, 
+                                                lListElem *event, 
+                                                void *clientdata);
+
 /* Datastructure for internal storage of subscription information
  * and callbacks.
  */
 typedef struct {
-   lList **list;                          /* master list */
-   sge_mirror_callback callback_before;   /* callback before mirroring */
-   sge_mirror_callback callback_default;  /* default mirroring function */
-   sge_mirror_callback callback_after;    /* callback after mirroring */
+   lList **list;                          /* master list                    */
+   const char *type_name;                 /* type name, e.g. "JB_Type"      */
+   const lDescr *descr;                   /* descriptor, e.g. JB_Type       */
+   const int key_nm;                      /* nm of key attribute            */
+   sge_mirror_callback callback_before;   /* callback before mirroring      */
+   sge_mirror_callback callback_default;  /* default mirroring function     */
+   sge_mirror_callback callback_after;    /* callback after mirroring       */
    void *clientdata;                      /* client data passed to callback */
 } mirror_entry;
 
 /* One entry per event type */
-static mirror_entry mirror_base[SGE_EMT_ALL];
+static mirror_entry mirror_base[SGE_EMT_ALL] = {
+   /* master list                    name                 descr      key              cbb   cbd                                 cba   cd   */
+   { &Master_Adminhost_List,         "ADMINHOST",         AH_Type,   AH_name,         NULL, host_update_master_list,            NULL, NULL },
+   { &Master_Calendar_List,          "CALENDAR",          CAL_Type,  CAL_name,        NULL, calendar_update_master_list,        NULL, NULL },
+   { &Master_Ckpt_List,              "CKPT",              CK_Type,   CK_name,         NULL, ckpt_update_master_list,            NULL, NULL },
+   { &Master_Complex_List,           "COMPLEX",           CX_Type,   CX_name,         NULL, complex_update_master_list,         NULL, NULL },
+   { &Master_Config_List,            "CONFIG",            CONF_Type, CONF_hname,      NULL, config_update_master_list,          NULL, NULL },
+   { NULL,                           "GLOBAL_CONFIG",     NULL,      -1,              NULL,                                     NULL, NULL, NULL },
+   { &Master_Exechost_List,          "EXECHOST",          EH_Type,   EH_name,         NULL, host_update_master_list,            NULL, NULL },
+   { NULL,                           "JATASK",            JAT_Type,  JAT_task_number, NULL, ja_task_update_master_list,         NULL, NULL },
+   { NULL,                           "PETASK",            PET_Type,  PET_id,          NULL, pe_task_update_master_list,         NULL, NULL },
+   { &Master_Job_List,               "JOB",               JB_Type,   JB_job_number,   NULL, job_update_master_list,             NULL, NULL },
+   { &Master_Job_Schedd_Info_List,   "JOB_SCHEDD_INFO",   SME_Type,  -1,              NULL, job_schedd_info_update_master_list, NULL, NULL },
+   { &Master_Manager_List,           "MANAGER",           MO_Type,   MO_name,         NULL, manop_update_master_list,           NULL, NULL },
+   { &Master_Operator_List,          "OPERATOR",          MO_Type,   MO_name,         NULL, manop_update_master_list,           NULL, NULL },
+   { &Master_Sharetree_List,         "SHARETREE",         STN_Type,  STN_name,        NULL, sharetree_update_master_list,       NULL, NULL },
+   { &Master_Pe_List,                "PE",                PE_Type,   PE_name,         NULL, pe_update_master_list,              NULL, NULL },
+   { &Master_Project_List,           "PROJECT",           UP_Type,   UP_name,         NULL, userprj_update_master_list,         NULL, NULL },
+   { &Master_Queue_List,             "QUEUE",             QU_Type,   QU_qname,        NULL, queue_update_master_list,           NULL, NULL },
+   { &Master_Sched_Config_List,      "SCHEDD_CONF",       SC_Type,   -1,              NULL, schedd_conf_update_master_list,     NULL, NULL },
+   { NULL,                           "SCHEDD_MONITOR",    NULL,      -1,              NULL, NULL,                               NULL, NULL },
+   { NULL,                           "SHUTDOWN",          NULL,      -1,              NULL, sge_mirror_process_shutdown,        NULL, NULL },
+   { NULL,                           "QMASTER_GOES_DOWN", NULL,      -1,              NULL, sge_mirror_process_qmaster_goes_down, NULL, NULL },
+   { &Master_Submithost_List,        "SUBMITHOST",        SH_Type,   SH_name,         NULL, host_update_master_list,            NULL, NULL },
+   { &Master_User_List,              "USER",              UP_Type,   UP_name,         NULL, userprj_update_master_list,         NULL, NULL },
+   { &Master_Userset_List,           "USERSET",           US_Type,   US_name,         NULL, userset_update_master_list,         NULL, NULL },
+
+#ifndef __SGE_NO_USERMAPPING__
+   { &Master_Usermapping_Entry_List, "USERMAPPING",       UME_Type,  UM_mapped_user,  NULL, NULL,                               NULL, NULL },
+   { &Master_Host_Group_List,        "HOSTGROUP",         GRP_Type,  GRP_group_name,  NULL, NULL,                               NULL, NULL },
+#endif
+};
 
 /* Static functions for internal use */
 static sge_mirror_error _sge_mirror_subscribe(sge_event_type type, 
@@ -134,11 +192,9 @@ sge_mirror_error sge_mirror_initialize(ev_registration_id id, const char *name)
 
    DENTER(TOP_LAYER, "sge_mirror_initialize");
 
-   /* initialize mirroring data structures */
+   /* initialize mirroring data structures - only changeable fields */
    for(i = 0; i < SGE_EMT_ALL; i++) {
-      mirror_base[i].list             = NULL;
       mirror_base[i].callback_before  = NULL;
-      mirror_base[i].callback_default = NULL;
       mirror_base[i].callback_after   = NULL;
       mirror_base[i].clientdata       = NULL;
    }
@@ -269,45 +325,34 @@ static sge_mirror_error _sge_mirror_subscribe(sge_event_type type,
          ec_subscribe(sgeE_ADMINHOST_ADD);
          ec_subscribe(sgeE_ADMINHOST_DEL);
          ec_subscribe(sgeE_ADMINHOST_MOD);
-         mirror_base[type].list = &Master_Adminhost_List;
-         mirror_base[type].callback_default = host_update_master_list;
          break;
       case SGE_EMT_CALENDAR:
          ec_subscribe(sgeE_CALENDAR_LIST);
          ec_subscribe(sgeE_CALENDAR_ADD);
          ec_subscribe(sgeE_CALENDAR_DEL);
          ec_subscribe(sgeE_CALENDAR_MOD);
-         mirror_base[type].list = &Master_Calendar_List;
-         mirror_base[type].callback_default = calendar_update_master_list;
          break;
       case SGE_EMT_CKPT:
          ec_subscribe(sgeE_CKPT_LIST);
          ec_subscribe(sgeE_CKPT_ADD);
          ec_subscribe(sgeE_CKPT_DEL);
          ec_subscribe(sgeE_CKPT_MOD);
-         mirror_base[type].list = &Master_Ckpt_List;
-         mirror_base[type].callback_default = ckpt_update_master_list;
          break;
       case SGE_EMT_COMPLEX:
          ec_subscribe(sgeE_COMPLEX_LIST);
          ec_subscribe(sgeE_COMPLEX_ADD);
          ec_subscribe(sgeE_COMPLEX_DEL);
          ec_subscribe(sgeE_COMPLEX_MOD);
-         mirror_base[type].list = &Master_Complex_List;
-         mirror_base[type].callback_default = complex_update_master_list;
          break;
       case SGE_EMT_CONFIG:
          ec_subscribe(sgeE_CONFIG_LIST);
          ec_subscribe(sgeE_CONFIG_ADD);
          ec_subscribe(sgeE_CONFIG_DEL);
          ec_subscribe(sgeE_CONFIG_MOD);
-         mirror_base[type].list = &Master_Config_List;
-         mirror_base[type].callback_default = config_update_master_list;
          break;
       case SGE_EMT_GLOBAL_CONFIG:
          ec_subscribe(sgeE_GLOBAL_CONFIG);
-         mirror_base[type].list = NULL;  /* no list for global config.
-                                          * regard it as a sort of trigger
+                                         /* regard it as a sort of trigger
                                           * in fact this event is not needed!
                                           * it doesn't even contain the config data!
                                           * it is sent before the CONFIG_MOD event, so
@@ -319,21 +364,15 @@ static sge_mirror_error _sge_mirror_subscribe(sge_event_type type,
          ec_subscribe(sgeE_EXECHOST_ADD);
          ec_subscribe(sgeE_EXECHOST_DEL);
          ec_subscribe(sgeE_EXECHOST_MOD);
-         mirror_base[type].list = &Master_Exechost_List;
-         mirror_base[type].callback_default = host_update_master_list;
          break;
       case SGE_EMT_JATASK:
          ec_subscribe(sgeE_JATASK_ADD);
          ec_subscribe(sgeE_JATASK_DEL);
          ec_subscribe(sgeE_JATASK_MOD);
-         mirror_base[type].list = NULL;  /* subobject of job */
-         mirror_base[type].callback_default = ja_task_update_master_list;
          break;
       case SGE_EMT_PETASK:
          ec_subscribe(sgeE_PETASK_ADD);
          ec_subscribe(sgeE_PETASK_DEL);
-         mirror_base[type].list = NULL;  /* subobject of jatask */
-         mirror_base[type].callback_default = pe_task_update_master_list;
          break;
       case SGE_EMT_JOB:
          ec_subscribe(sgeE_JOB_LIST);
@@ -343,53 +382,39 @@ static sge_mirror_error _sge_mirror_subscribe(sge_event_type type,
          ec_subscribe(sgeE_JOB_MOD_SCHED_PRIORITY);
          ec_subscribe(sgeE_JOB_USAGE);
          ec_subscribe(sgeE_JOB_FINAL_USAGE);
-         mirror_base[type].list = &Master_Job_List;
-         mirror_base[type].callback_default = job_update_master_list;
          break;
       case SGE_EMT_JOB_SCHEDD_INFO:
          ec_subscribe(sgeE_JOB_SCHEDD_INFO_LIST);
          ec_subscribe(sgeE_JOB_SCHEDD_INFO_ADD);
          ec_subscribe(sgeE_JOB_SCHEDD_INFO_DEL);
          ec_subscribe(sgeE_JOB_SCHEDD_INFO_MOD);
-         mirror_base[type].list = &Master_Job_Schedd_Info_List;
-         mirror_base[type].callback_default = job_schedd_info_update_master_list;
          break;
       case SGE_EMT_MANAGER:
          ec_subscribe(sgeE_MANAGER_LIST);
          ec_subscribe(sgeE_MANAGER_ADD);
          ec_subscribe(sgeE_MANAGER_DEL);
          ec_subscribe(sgeE_MANAGER_MOD);
-         mirror_base[type].list = &Master_Manager_List;
-         mirror_base[type].callback_default = manop_update_master_list;
          break;
       case SGE_EMT_OPERATOR:
          ec_subscribe(sgeE_OPERATOR_LIST);
          ec_subscribe(sgeE_OPERATOR_ADD);
          ec_subscribe(sgeE_OPERATOR_DEL);
          ec_subscribe(sgeE_OPERATOR_MOD);
-         mirror_base[type].list = &Master_Operator_List;
-         mirror_base[type].callback_default = manop_update_master_list;
          break;
       case SGE_EMT_SHARETREE:
          ec_subscribe(sgeE_NEW_SHARETREE);
-         mirror_base[type].list = &Master_Sharetree_List;
-         mirror_base[type].callback_default = sharetree_update_master_list;
          break;
       case SGE_EMT_PE:
          ec_subscribe(sgeE_PE_LIST);
          ec_subscribe(sgeE_PE_ADD);
          ec_subscribe(sgeE_PE_DEL);
          ec_subscribe(sgeE_PE_MOD);
-         mirror_base[type].list = &Master_Pe_List;
-         mirror_base[type].callback_default = pe_update_master_list;
          break;
       case SGE_EMT_PROJECT:
          ec_subscribe(sgeE_PROJECT_LIST);
          ec_subscribe(sgeE_PROJECT_ADD);
          ec_subscribe(sgeE_PROJECT_DEL);
          ec_subscribe(sgeE_PROJECT_MOD);
-         mirror_base[type].list = &Master_Project_List;
-         mirror_base[type].callback_default = userprj_update_master_list;
          break;
       case SGE_EMT_QUEUE:
          ec_subscribe(sgeE_QUEUE_LIST);
@@ -398,51 +423,36 @@ static sge_mirror_error _sge_mirror_subscribe(sge_event_type type,
          ec_subscribe(sgeE_QUEUE_MOD);
          ec_subscribe(sgeE_QUEUE_SUSPEND_ON_SUB);
          ec_subscribe(sgeE_QUEUE_UNSUSPEND_ON_SUB);
-         mirror_base[type].list = &Master_Queue_List;
-         mirror_base[type].callback_default = queue_update_master_list;
          break;
       case SGE_EMT_SCHEDD_CONF:
          ec_subscribe(sgeE_SCHED_CONF);
-         mirror_base[type].list = &Master_Sched_Config_List;
-         mirror_base[type].callback_default = schedd_conf_update_master_list;
          break;
       case SGE_EMT_SCHEDD_MONITOR:
          ec_subscribe(sgeE_SCHEDDMONITOR);
-         mirror_base[type].list = NULL;  /* is a trigger event */
          break;
       case SGE_EMT_SHUTDOWN:
          ec_subscribe_flush(sgeE_SHUTDOWN, 0);
-         mirror_base[type].list = NULL;  /* is a trigger event */
-         mirror_base[type].callback_default = sge_mirror_process_shutdown;
          break;
       case SGE_EMT_QMASTER_GOES_DOWN:
          ec_subscribe_flush(sgeE_QMASTER_GOES_DOWN, 0);
-         mirror_base[type].list = NULL;  /* is a trigger event */
-         mirror_base[type].callback_default = sge_mirror_process_qmaster_goes_down;
          break;
       case SGE_EMT_SUBMITHOST:
          ec_subscribe(sgeE_SUBMITHOST_LIST);
          ec_subscribe(sgeE_SUBMITHOST_ADD);
          ec_subscribe(sgeE_SUBMITHOST_DEL);
          ec_subscribe(sgeE_SUBMITHOST_MOD);
-         mirror_base[type].list = &Master_Submithost_List;
-         mirror_base[type].callback_default = host_update_master_list;
          break;
       case SGE_EMT_USER:
          ec_subscribe(sgeE_USER_LIST);
          ec_subscribe(sgeE_USER_ADD);
          ec_subscribe(sgeE_USER_DEL);
          ec_subscribe(sgeE_USER_MOD);
-         mirror_base[type].list = &Master_User_List;
-         mirror_base[type].callback_default = userprj_update_master_list;
          break;
       case SGE_EMT_USERSET:
          ec_subscribe(sgeE_USERSET_LIST);
          ec_subscribe(sgeE_USERSET_ADD);
          ec_subscribe(sgeE_USERSET_DEL);
          ec_subscribe(sgeE_USERSET_MOD);
-         mirror_base[type].list = &Master_Userset_List;
-         mirror_base[type].callback_default = userset_update_master_list;
          break;
 #ifndef __SGE_NO_USERMAPPING__
       /* JG: TODO: usermapping and hostgroup not yet implemented */
@@ -451,14 +461,12 @@ static sge_mirror_error _sge_mirror_subscribe(sge_event_type type,
          ec_subscribe(sgeE_USERMAPPING_ENTRY_ADD);
          ec_subscribe(sgeE_USERMAPPING_ENTRY_DEL);
          ec_subscribe(sgeE_USERMAPPING_ENTRY_MOD);
-         mirror_base[type].list = &Master_Usermapping_Entry_List;
          break;
       case SGE_EMT_HOSTGROUP:
          ec_subscribe(sgeE_HOST_GROUP_LIST);
          ec_subscribe(sgeE_HOST_GROUP_ADD);
          ec_subscribe(sgeE_HOST_GROUP_DEL);
          ec_subscribe(sgeE_HOST_GROUP_MOD);
-         mirror_base[type].list = &Master_Host_Group_List;
          break;
 #endif
 
@@ -532,7 +540,6 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_event_type type)
    /* type has been checked in calling function */
    /* clear callback information */
    mirror_base[type].callback_before  = NULL;
-   mirror_base[type].callback_default = NULL;
    mirror_base[type].callback_after   = NULL;
    mirror_base[type].clientdata       = NULL;
   
@@ -1385,3 +1392,60 @@ sge_mirror_error sge_mirror_update_master_list(lList **list, lDescr *list_descr,
 
    return SGE_EM_OK;
 }
+
+/* utility functions */
+
+lList **sge_mirror_get_type_master_list(const sge_event_type type)
+{
+   DENTER(TOP_LAYER, "sge_mirror_get_type_master_list");
+   if(type < 0 || type >= SGE_EMT_ALL) {
+      ERROR((SGE_EVENT, MSG_MIRROR_INVALID_EVENT_GROUP_SI, "sge_mirror_get_type_master_list", type));
+      DEXIT;
+      return NULL;
+   }
+
+   return mirror_base[type].list;
+}
+
+const char    *sge_mirror_get_type_name(const sge_event_type type)
+{
+   DENTER(TOP_LAYER, "sge_mirror_get_type_name");
+   if(type < 0 || type > SGE_EMT_ALL) {
+      ERROR((SGE_EVENT, MSG_MIRROR_INVALID_EVENT_GROUP_SI, "sge_mirror_get_type_name", type));
+      DEXIT;
+      return NULL;
+   }
+   
+   if(type == SGE_EMT_ALL) {
+      DEXIT;
+      return "default";
+   }
+
+   return mirror_base[type].type_name;
+}
+
+const lDescr *sge_mirror_get_type_descr(const sge_event_type type)
+{
+   DENTER(TOP_LAYER, "sge_mirror_get_type_descr");
+   if(type < 0 || type >= SGE_EMT_ALL) {
+      ERROR((SGE_EVENT, MSG_MIRROR_INVALID_EVENT_GROUP_SI, "sge_mirror_get_type_descr", type));
+      DEXIT;
+      return NULL;
+   }
+
+   return mirror_base[type].descr;
+}
+
+int sge_mirror_get_type_key_nm(const sge_event_type type)
+{
+   DENTER(TOP_LAYER, "sge_mirror_get_type_key_nm");
+   if(type < 0 || type >= SGE_EMT_ALL) {
+      ERROR((SGE_EVENT, MSG_MIRROR_INVALID_EVENT_GROUP_SI, "sge_mirror_get_type_key_nm", type));
+      DEXIT;
+      return -1;
+   }
+
+   return mirror_base[type].key_nm;
+}
+
+

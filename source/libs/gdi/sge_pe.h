@@ -49,4 +49,5 @@ int pe_is_matching(const lListElem *pe, const char *wildcard);
 int pe_update_master_list(sge_event_type type, sge_event_action action, 
                           lListElem *event, void *clientdata);
 
+int validate_pe(int startup, lListElem *pep, lList **alpp);
 #endif /* __SGE_PE_H */

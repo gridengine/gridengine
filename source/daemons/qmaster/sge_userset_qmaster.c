@@ -44,7 +44,7 @@
 #include "sge_userset_qmaster.h"
 #include "sge_feature.h"
 #include "sge_conf.h"
-#include "gdi_utility_qmaster.h"
+#include "gdi_utility.h"
 #include "valid_queue_user.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
@@ -399,49 +399,6 @@ const char *acl_name
 }
 
 /******************************************************
-   sge_verify_userset_entries()
-      resolves user set/department
-
-   usep
-      cull list (UE_Type)
-   alpp
-      may be NULL
-      is used to build up an answer
-      element in case of error
-
-   returns
-      STATUS_OK         - on success
-      STATUS_ESEMANTIC  - on error
- ******************************************************/
-int sge_verify_userset_entries(
-lList *userset_entries,
-lList **alpp,
-int start_up 
-) {
-   lListElem *ep;
-   int name_pos;
-
-   DENTER(TOP_LAYER, "sge_verify_userset_entries");
-
-   /*
-      resolve cull names to positions
-      for faster access in loop
-   */
-   name_pos = lGetPosInDescr(UE_Type, UE_name);
-
-   for_each(ep, userset_entries)
-      if (!lGetPosString(ep, name_pos)) {
-         ERROR((SGE_EVENT, MSG_US_INVALIDUSERNAME));
-         answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_ESEMANTIC;
-      }
-
-   DEXIT;
-   return STATUS_OK;
-}
-
-/******************************************************
    sge_verify_department_entries()
       resolves user set/department
 
@@ -719,31 +676,6 @@ lList *userset_list
 
    DEXIT;
    return 0;
-}
-
-int verify_acl_list(
-lList **alpp,
-lList *acl_list,
-const char *attr_name, /* e.g. "user_lists" */
-const char *obj_descr, /* e.g. "queue"      */
-const char *obj_name   /* e.g. "fangorn.q"  */
-) {
-   lListElem *usp;
-
-   DENTER(TOP_LAYER, "verify_acl_list");
-
-   for_each (usp, acl_list) {
-      if (!lGetElemStr(Master_Userset_List, US_name, lGetString(usp, US_name))) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNUSERSET_SSSS, lGetString(usp, US_name), 
-               attr_name, obj_descr, obj_name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
-   }
-
-   DEXIT;
-   return STATUS_OK;
 }
 
 

@@ -35,6 +35,7 @@
 #include "sge_htable.h"
 #include "sge_dstring.h"
 #include "sge_jobL.h"
+#include "sge_messageL.h"
 #include "sge_mirror.h"
 
 extern lList *Master_Job_List;
@@ -150,6 +151,11 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list);
 const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, 
                               const char *pe_task_id);
 
+const char *job_get_key(u_long32 job_id, u_long32 ja_task_id, 
+                        const char *pe_task_id);
+int job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
+                  char **pe_task_id);
+
 int job_is_pe_referenced(const lListElem *job, const lListElem *pe);
 
 int job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt);
@@ -165,5 +171,7 @@ int job_update_master_list(sge_event_type type, sge_event_action action,
                            lListElem *event, void *clientdata);
 
 int job_check_qsh_display(const lListElem *job, lList **answer_list, int output_warning);
+
+int sge_job_owner(const char *user_name, u_long32);
 
 #endif /* __SGE_JOB_H */    

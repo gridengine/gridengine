@@ -36,11 +36,17 @@
 #include "sge_log.h"
 #include "cull_list.h"
 
+#include "config_file.h"
+
+#include "gdi_utility.h"
 #include "sge_answer.h"
 #include "sge_job.h"
-#include "sge_pe.h"
+#include "sge_queue.h"
+#include "sge_userset.h"
 
 #include "msg_gdilib.h"
+
+#include "sge_pe.h"
 
 lList *Master_Pe_List = NULL;
 
@@ -216,4 +222,87 @@ int pe_update_master_list(sge_event_type type, sge_event_action action,
 
    DEXIT;
    return TRUE;
+}
+
+/* JG: TODO: ADOC, naming */
+int validate_pe(
+int startup,
+lListElem *pep,
+lList **alpp 
+) {
+   const char *s;
+   const char *pe_name;
+   int ret;
+
+   DENTER(TOP_LAYER, "validate_pe");
+
+   pe_name = lGetString(pep, PE_name);
+   if (pe_name && verify_str_key(alpp, pe_name, MSG_OBJ_PE)) {
+      ERROR((SGE_EVENT, "Invalid character in pe name of pe "SFQ, pe_name));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
+      DEXIT;
+      return STATUS_EEXIST; 
+   }
+
+   /* register our error function for use in replace_params() */
+   config_errfunc = error;
+
+   /* -------- start_proc_args */
+   s = lGetString(pep, PE_start_proc_args);
+   if (s && replace_params(s, NULL, 0, pe_variables )) {
+      ERROR((SGE_EVENT, MSG_PE_STARTPROCARGS_SS, pe_name, err_msg));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR); 
+      DEXIT;
+      return STATUS_EEXIST;
+   }
+
+   /* -------- stop_proc_args */
+   s = lGetString(pep, PE_stop_proc_args);
+   if (s && replace_params(s, NULL, 0, pe_variables )) {
+      ERROR((SGE_EVENT, MSG_PE_STOPPROCARGS_SS, pe_name, err_msg));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
+   }
+
+   /* -------- allocation_rule */
+   s = lGetString(pep, PE_allocation_rule);
+   if (!s)  {
+      ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
+            lNm2Str(PE_allocation_rule), "validate_pe"));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
+   }
+
+   if (replace_params(s, NULL, 0, pe_alloc_rule_variables )) {
+      ERROR((SGE_EVENT, MSG_PE_ALLOCRULE_SS, pe_name, err_msg));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
+   }
+
+   /* -------- PE_queue_list */
+   if ((ret=verify_qr_list(alpp, lGetList(pep, PE_queue_list), MSG_OBJ_QLIST, 
+               MSG_OBJ_PE, pe_name))!=STATUS_OK && !startup) {
+      DEXIT;
+      return ret;
+   }
+
+   /* -------- PE_user_list */
+   if ((ret=verify_acl_list(alpp, lGetList(pep, PE_user_list), MSG_OBJ_USERLIST, 
+               MSG_OBJ_PE, pe_name))!=STATUS_OK) {
+      DEXIT;
+      return ret;
+   }
+
+   /* -------- PE_xuser_list */
+   if ((ret=verify_acl_list(alpp, lGetList(pep, PE_xuser_list), MSG_OBJ_XUSERLIST, 
+               MSG_OBJ_PE, pe_name))!=STATUS_OK) {
+      DEXIT;
+      return ret;
+   }
+
+   DEXIT;
+   return STATUS_OK;
 }

@@ -499,9 +499,6 @@ sge_pack_buffer *pb
                      /* add tasks (scaled) usage to past usage container */
                      {
                         lListElem *container = lGetSubStr(jatep, PET_id, PE_TASK_PAST_USAGE_CONTAINER, JAT_task_list);
-                        /* JG: TODO: Move event client server code to libgdi, then sending events 
-                         *           can be done in usage functions 
-                         */
                         if(container == NULL) {
                            container = pe_task_sum_past_usage_list(lGetList(jatep, JAT_task_list), petask);
                            sge_add_event(NULL, sgeE_PETASK_ADD, 

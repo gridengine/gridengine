@@ -406,14 +406,28 @@ enum NameSpaceBoundaries {
 
    /* submit user */
    SU_LOWERBOUND = FE_UPPERBOUND + 1,
-   SU_UPPERBOUND = SU_LOWERBOUND + 1*BASIC_UNIT - 1
+   SU_UPPERBOUND = SU_LOWERBOUND + 1*BASIC_UNIT - 1,
+
+   /* security connection list  */
+   SEC_LOWERBOUND = FE_UPPERBOUND + 1,
+   SEC_UPPERBOUND = SEC_LOWERBOUND + 1*BASIC_UNIT - 1,
+
+   /* spooling framework */
+   SPC_LOWERBOUND = SEC_UPPERBOUND + 1,
+   SPC_UPPERBOUND = SPC_LOWERBOUND + 1 * BASIC_UNIT -1,
+
+   SPR_LOWERBOUND = SPC_UPPERBOUND + 1,
+   SPR_UPPERBOUND = SPR_LOWERBOUND + 1 * BASIC_UNIT -1,
+
+   SPT_LOWERBOUND = SPR_UPPERBOUND + 1,
+   SPT_UPPERBOUND = SPT_LOWERBOUND + 1 * BASIC_UNIT -1,
+
+   SPTR_LOWERBOUND = SPT_UPPERBOUND + 1,
+   SPTR_UPPERBOUND = SPTR_LOWERBOUND + 1 * BASIC_UNIT -1
 
    /* CHANGE LAST_UPPERBOUND below !!!!!!!!!!!!! */
       
-   /* security connection list  */
-  ,SEC_LOWERBOUND = FE_UPPERBOUND + 1,
-   SEC_UPPERBOUND = SEC_LOWERBOUND + 1*BASIC_UNIT - 1
-#  define LAST_UPPERBOUND SEC_UPPERBOUND
+#  define LAST_UPPERBOUND SPTR_UPPERBOUND
 
 #ifdef QIDL
 /* this is just a fake boundary. there is no QIDL cull */
@@ -423,6 +437,8 @@ enum NameSpaceBoundaries {
 /* of this enum. don't append anything behind this */
   ,QIDL_LOWERBOUND = LAST_UPPERBOUND + 1,
    QIDL_UPPERBOUND = QIDL_LOWERBOUND + 2*BASIC_UNIT - 1
+#  undef LAST_UPPERBOUND   
+#  define LAST_UPPERBOUND QIDL_UPPERBOUND
 #endif
 };
 

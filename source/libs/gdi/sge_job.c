@@ -40,7 +40,7 @@
 #include "cull_list.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_job.h"
+#include "sge_manop.h"
 #include "sge_range.h"
 #include "sge_htable.h"
 #include "read_write_job.h"
@@ -59,6 +59,8 @@
 
 #include "msg_gdilib.h"
 #include "msg_common.h"
+
+#include "sge_job.h"
 
 lList *Master_Job_List = NULL;
 lList *Master_Zombie_List = NULL;
@@ -2317,4 +2319,73 @@ int job_update_master_list(sge_event_type type, sge_event_action action,
    return TRUE;
 }
 
+/* JG: TODO: naming, ADOC */
+int sge_job_owner(
+const char *user_name,
+u_long32 job_number 
+
+/*
+   Determines if the user is an owner of a job.
+
+   Note: a manager/operator is implicitly an "owner".
+
+   returns : -1 if unable to locate the job.
+   0 if a valid owner
+   1 not a valid owner
+
+ */
+
+) {
+   lListElem *jep;
+
+   DENTER(TOP_LAYER, "sge_job_owner");
+
+   if (!user_name) {
+      DEXIT;
+      return -1;
+   }
+
+   if (sge_operator(user_name) == 0) {
+      DEXIT;
+      return 0;
+   }
+
+   jep = job_list_locate(Master_Job_List, job_number);
+   if (!jep) {
+      DEXIT;
+      return -1;
+   }
+
+   if (strcmp(user_name, lGetString(jep, JB_owner))) {
+      DEXIT;
+      return 1;
+   }
+
+   DEXIT;
+   return 0;
+}
+
+const char *job_get_key(u_long32 job_id, u_long32 ja_task_id, 
+                        const char *pe_task_id)
+{
+   static dstring key = DSTRING_INIT;
+   sge_dstring_sprintf(&key, "%d.%d %s", 
+                       job_id, ja_task_id, 
+                       pe_task_id != NULL ? pe_task_id : "");
+   return sge_dstring_get_string(&key);
+}
+
+int job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
+                  char **pe_task_id)
+{
+   *job_id = atoi(strtok(key, "."));
+   *ja_task_id = atoi(strtok(NULL, " "));
+   *pe_task_id = strtok(NULL, " ");
+
+   if(*pe_task_id != NULL && strlen(*pe_task_id) == 0) {
+      *pe_task_id = NULL;
+   }
+
+   return TRUE;
+}
 

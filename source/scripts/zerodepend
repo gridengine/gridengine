@@ -54,6 +54,7 @@ files=" \
        daemons/shadowd/shadowd_dependencies  \
        daemons/shepherd/shepherd_dependencies  \
        libs/gdi/gdi_dependencies  \
+       libs/spool/spool_dependencies  \
        libs/comm/comm_dependencies  \
        libs/cull/cull_dependencies  \
        libs/sched/sched_dependencies  \

@@ -814,9 +814,6 @@ sge_commit_flags_t commit_flags
          if(pe_task_list != NULL) {
             lListElem *pe_task, *container, *existing_container;
 
-            /* JG: TODO: Move event client server code to libgdi, then sending events 
-             *           can be done in usage functions 
-             */
             existing_container = lGetElemStr(pe_task_list, PET_id, PE_TASK_PAST_USAGE_CONTAINER); 
             container = pe_task_sum_past_usage_all(pe_task_list);
             if(existing_container == NULL) {

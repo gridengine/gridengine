@@ -422,4 +422,10 @@
 #define MSG_CANTFINDJOBINMASTERLIST_S                 _MESSAGE(47284, _("could not find job "SFQ" in master list\n")) 
 #define MSG_CANTFINDTASKINJOB_UU                      _MESSAGE(47285, _("could not find task "U32CFormat" in job "U32CFormat"\n")) 
 #define MSG_NODATAINEVENT                             _MESSAGE(47286, _("event contains no data"))
+
+/* 
+ * libs/sched/sge_complex_schedd.c
+ */
+#define MSG_GDI_NO_ATTRIBUTE_SSS     _MESSAGE(33080, _("denied: attribute "SFQ" is not configured for "SFN" "SFQ"\n"))
+
 #endif /* __MSG_SCHEDD_H */

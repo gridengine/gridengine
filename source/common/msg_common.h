@@ -1100,6 +1100,22 @@
 #define MSG_GDI_USAGE_i_OPT_PATH_LIST                    "[-i file_list]"
 #define MSG_GDI_UTEXT_i_OPT_PATH_LIST                    _MESSAGE(23499, _("specify standard input stream file(s)"))
 
+/* =================================================
+ * global error messages 
+ * messages that have general meaning in all modules
+ * =================================================
+ */
+
+#define MSG_UNKNOWNREASON                  _MESSAGE(60000, _("<unknown reason>"))
+
+/* =================================================
+ * please do not enter new messages after this point,
+ * if they are global messages (meaningfull for all modules)
+ * enter them in the section global error messages
+ * else above global messages, or better move your module
+ * to some library!
+ * =================================================
+ */
 
 #endif /* __MSG_COMMON_H */
 

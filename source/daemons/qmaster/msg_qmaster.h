@@ -38,19 +38,15 @@
 #define MSG_SGETEXT_MISSINGCULLFIELD_SS         _MESSAGE(33000, _("missing cull field "SFQ" in "SFN"()\n"))
 #define MSG_SGETEXT_CANTSPOOL_SS                _MESSAGE(33001, _("qmaster is unable to spool "SFN" "SFQ"\n"))
 #define MSG_OBJ_JOBS    _MESSAGE(33002, _("jobs"))
-#define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS       _MESSAGE(33003, _("cannot resolve "SFN" name "SFQ": "SFN))
-#define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS       _MESSAGE(33004, _("cannot resolve "SFN" name "SFQ))
 
 /*
 ** sge_ckptobj.c
 */
 #define MSG_OBJ_CKPT                  _MESSAGE(33005, _("checkpointing environment"))
 #define MSG_OBJ_CKPTI                 _MESSAGE(33006, _("checkpoint interface"))
-#define MSG_OBJ_CKPTENV_SSS           _MESSAGE(33007, _("parameter "SFN" of ckpt environment "SFQ": "SFN"\n"))
 #define MSG_SGETEXT_CANT_COPY_ELEM_S                  _MESSAGE(33008, _("can't copy element "SFQ"\n") )   
 #define MSG_SGETEXT_CANTCOUNT_CKPT_S                  _MESSAGE(33009, _("can't count checkpoint objects in "SFN"\n") ) 
 #define MSG_SGETEXT_NO_CKPT_LIC                       _MESSAGE(33010, _("no checkpoint license available\n") )  
-#define MSG_SGETEXT_NO_INTERFACE_S                    _MESSAGE(33011, _("no valid checkpoint interface "SFN"\n") )   
 
 
 /*
@@ -145,7 +141,6 @@
 #define MSG_GDI_TYPE_TIME_SS         _MESSAGE(33077, _("value for attribute "SFN" "SFQ" is not a time value\n"))
 #define MSG_GDI_KEYSTR_SS            _MESSAGE(33078, _("invalid "SFN" "SFQ"\n"))
 #define MSG_GDI_MULTIPLE_OCCUR_SSSS  _MESSAGE(33079, _("denied: multiple occurances of "SFN" "SFQ" in "SFN" "SFQ"\n"))
-#define MSG_GDI_NO_ATTRIBUTE_SSS     _MESSAGE(33080, _("denied: attribute "SFQ" is not configured for "SFN" "SFQ"\n"))
 #define MSG_GDI_KEYSTR_FIRSTCHAR_SC  _MESSAGE(33081, _(SFN" (\'%c\') not allowed as first character of objectname\n") ) 
 #define MSG_GDI_KEYSTR_FIRSTCHAR_S   _MESSAGE(33082, _(SFN" not allowed as first character of objectname\n") ) 
 #define MSG_GDI_KEYSTR_MIDCHAR_SC    _MESSAGE(33083, _(SFN" (\'%c\') not allowed in objectname\n") ) 
@@ -501,14 +496,11 @@
 #define MSG_PE_USEDSLOTSBELOWZERO_S   _MESSAGE(33367, _("PE_used_slots of pe "SFN" sunk under 0!\n"))
 #define MSG_PE_REVERSESLOTS_IS        _MESSAGE(33368, _("reversing %d slots on pe "SFN))
 #define MSG_PE_USEDSLOTSTOOBIG_S      _MESSAGE(33369, _("PE_used_slots of pe "SFN" is greater than PE_slots!\n") )  
-#define MSG_PE_STARTPROCARGS_SS       _MESSAGE(33370, _("parameter start_proc_args of pe "SFQ": "SFN"\n"))
-#define MSG_PE_STOPPROCARGS_SS        _MESSAGE(33371, _("parameter stop_proc_args of pe "SFQ": "SFN"\n"))
 
 /*
 ** sge_ckpt_qmaster.c
 */ 
 #define MSG_CKPT_INVALIDWHENATTRIBUTE_S _MESSAGE(33372, _("Invalid \"when\" attribute for ckpt "SFQ"\n"))
-#define MSG_CKPT_XISNOTASIGNALSTRING_S  _MESSAGE(33373, _(SFQ" is not a signal string (like HUP, INT, " "WINCH, ..)\n"))
 
 /*
 ** sge_qmod_qmaster.c
@@ -598,7 +590,6 @@
 #define MSG_QUEUE_DELQUEUETEMPLATE              _MESSAGE(33453, _("deleting queue \"template\""))
 #define MSG_QUEUE_NULLPTRPASSEDTOSGE_DEL_QUEUE  _MESSAGE(33454, _("NULL ptr passed to sge_del_queue()\n"))
 #define MSG_CALENDAR_CALENDARXREFERENCEDINQUEUEYNOTEXISTS_SS _MESSAGE(33455, _("calendar "SFQ" referenced in queue "SFQ" does not exist\n"))
-#define MSG_QUEUE_NULLPTR             _MESSAGE(33456, _("NULL ptr passed to sge_add_queue()\n"))
 #define MSG_OBJ_QUEUE                 _MESSAGE(33457, _("queue"))
 #define MSG_UNABLETODELQUEUEXREFERENCEDINCHKPTY_SS _MESSAGE(33458, _("unable to delete queue "SFQ", referenced in checkpoint definition "SFQ"\n"))
 #define MSG_UNABLETODELQUEUEXREFERENCEDINPEY_SS _MESSAGE(33459, _("unable to delete queue "SFQ", referenced in parallel environment definition "SFQ"\n"))
@@ -607,8 +598,6 @@
 #define MSG_SGETEXT_OPNOTALLOWED_S              _MESSAGE(33462, _("operation not allowed: "SFN"\n"))
 #define MSG_NOTALLOWEDTODELSUBORDINATE_SS              _MESSAGE(33463, _("deleting queue "SFQ" is not allowed because it is subordinate queue of "SFQ"\n"))
 #define MSG_SGETEXT_ACTIVEUNITS_SSIS            _MESSAGE(33464, _(""SFN" "SFQ" has %d active "SFN"\n"))
-#define MSG_SGETEXT_UNKNOWNQUEUE_SSSS                 _MESSAGE(33466, _("denied: queue "SFQ" referenced in "SFN" of "SFN" "SFQ" does not exist\n"))
-#define MSG_SGETEXT_QUEUEALLANDQUEUEARENOT_SSSS        _MESSAGE(33467, _("queuenames and keyword "SFQ" are not allowed in "SFQ" of "SFQ" "SFQ"\n"))
 #define MSG_SGETEXT_CANTCOUNT_QSIQ_S                  _MESSAGE(33468, _("can't count qsi queues in "SFN"\n") ) 
 #define MSG_AT_LEASTONEQTYPE                          _MESSAGE(33470, _("At least one queue type must be selected\n"))
 
@@ -680,9 +669,7 @@
 /*
 ** sge_userset_qmaster.c
 */
-#define MSG_US_INVALIDUSERNAME        _MESSAGE(33521, _("userset contains invalid (null) user name"))
 #define MSG_SGETEXT_NO_DEPARTMENT4USER_SS             _MESSAGE(33522, _("denied: no matching department for user "SFQ" or group "SFQ"\n") )  
-#define MSG_SGETEXT_UNKNOWNUSERSET_SSSS               _MESSAGE(33523, _("denied: userset "SFQ" referenced in "SFN" of "SFN" "SFQ" does not exist\n") ) 
 #define MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS       _MESSAGE(33524, _("denied: userset "SFQ" is still referenced in "SFN" of "SFN" "SFQ"\n") ) 
 
 
@@ -695,8 +682,6 @@
 #define MSG_CPLX_ATTRIBNOCONSUM_S     _MESSAGE(33528, _("denied: attribute "SFQ" is a string type and thus may not be consumable\n"))
 #define MSG_CPLX_ATTRIBNOCONSUMEH_SS  _MESSAGE(33529, _("denied: attribute "SFQ" in 'complex_list' of exec host "SFQ" has a string value and thus it may not be consumable\n"))
 #define MSG_CPLX_ATTRIBNOCONSUMQ_SS   _MESSAGE(33530, _("denied: attribute "SFQ" in 'complex_list' of queue "SFQ" has a string value and thus it may not be consumable\n"))
-#define MSG_FILE_NOOPENDIR_S          _MESSAGE(33531, _("can't open directory "SFQ))
-#define MSG_FILE_NOWRITEHIST_S        _MESSAGE(33532, _("can't write history for complex "SFQ))
 #define MSG_NONAME                    _MESSAGE(33533, _("<noname>"))
 #define MSG_OBJ_CPLX                  _MESSAGE(33534, _("complex"))
 #define MSG_ATTRSTILLREFINQUEUE_SS    _MESSAGE(33535, _("attribute "SFQ" still referenced in queue "SFQ" - complex not modified"))
@@ -798,23 +783,10 @@
 #define MSG_NOXKNOWNONHOSTYTOSENDCONFNOTIFICATION_SS  _MESSAGE(33603, _("no "SFN" known on host "SFN" to send conf notification\n"))
 
 /*
-** read_write_manop.c
-*/
-#define MSG_FILE_ERROROPENINGX_S    _MESSAGE(33604, _("error opening "SFN"\n"))
-
-/*
 ** setup_qmaster.c
 */
-#define MSG_SETUP_QUEUE_S                          _MESSAGE(33605, _("\tQueue "SFQ".\n"))
-#define MSG_SETUP_USERSET_S                        _MESSAGE(33606, _("\tUserset "SFQ".\n"))
-#define MSG_SETUP_USER_S                           _MESSAGE(33607, _("\tUser "SFQ".\n"))
-#define MSG_SETUP_PROJECT_S                        _MESSAGE(33608, _("\tProject "SFQ".\n"))
 #define MSG_SETUP_MAPPINGETRIES_S                  _MESSAGE(33609, _("\tMapping entries for "SFQ".\n"))
 #define MSG_SETUP_HOSTGROUPENTRIES_S               _MESSAGE(33610, _("\tHost group entries for group "SFQ".\n"))
-#define MSG_SETUP_PE_S                             _MESSAGE(33611, _("\tPE "SFQ".\n"))
-#define MSG_SETUP_CALENDAR_S                       _MESSAGE(33612, _("\tCalendar "SFQ".\n"))
-#define MSG_SETUP_COMPLEX_S                        _MESSAGE(33613, _("\tComplex "SFQ".\n"))
-#define MSG_SETUP_CKPT_S                           _MESSAGE(33614, _("\tCKPT "SFQ".\n"))
 #define MSG_SETUP_SETUPMAYBECALLEDONLYATSTARTUP    _MESSAGE(33615, _("setup may be called only at startup"))
 #define MSG_CONFIG_FOUNDNOLOCALCONFIGFORQMASTERHOST_S    _MESSAGE(33616, _("found no local configuration for qmaster host "SFQ))
 #define MSG_CONFIG_ERRORXSELECTINGCONFIGY_IS    _MESSAGE(33617, _("Error %d selecting configuration "SFQ"\n"))
@@ -823,39 +795,15 @@
 #define MSG_CONFIG_ADDINGHOSTGLOBALTOEXECHOSTLIST    _MESSAGE(33620, _("adding host global to exechost_list\n"))
 #define MSG_CONFIG_CANTWRITEMANAGERLIST       _MESSAGE(33621, _("can't write manager list\n"))
 #define MSG_CONFIG_CANTWRITEOPERATORLIST      _MESSAGE(33622, _("can't write operator list\n"))
-#define MSG_CONFIG_READINGINUSERSETS       _MESSAGE(33623, _("Reading in usersets:\n"))
-#define MSG_CONFIG_READINGFILE_SS       _MESSAGE(33624, _("reading file "SFN"/"SFN"\n"))
-#define MSG_CONFIG_READINGINQUEUES       _MESSAGE(33625, _("Reading in queues:\n"))
-#define MSG_CONFIG_QUEUEXUPDATED_S       _MESSAGE(33626, _("Queue "SFN" updated\n"))
-#define MSG_CONFIG_OBSOLETEQUEUETEMPLATEFILEDELETED       _MESSAGE(33627, _("obsolete queue template file deleted\n"))
-#define MSG_CONFIG_FOUNDQUEUETEMPLATEBUTNOTINFILETEMPLATEIGNORINGIT       _MESSAGE(33628, _("found queue 'template', but not in file 'template'; ignoring it!\n"))
-#define MSG_CONFIG_CANTRECREATEQEUEUEXFROMDISKBECAUSEOFUNKNOWNHOSTY_SS       _MESSAGE(33629, _("cannot recreate queue "SFN" from disk because of unknown host "SFN"\n"))
 #define MSG_CONFIG_CANTWRITEHISTORYFORQUEUEX_S       _MESSAGE(33630, _("can't write history for queue "SFQ"\n"))
 #define MSG_CONFIG_READINGINSCHEDULERCONFIG       _MESSAGE(33631, _("Reading in scheduler configuration\n"))
-#define MSG_CONFIG_READINGINUSERS       _MESSAGE(33632, _("Reading in users:\n"))
-#define MSG_CONFIG_READINGINPROJECTS       _MESSAGE(33633, _("Reading in projects:\n"))
 #define MSG_CONFIG_CANTLOADSHARETREEXSTARTINGUPWITHEMPTYSHARETREE_S       _MESSAGE(33634, _("cant load sharetree ("SFN"), starting up with empty sharetree"))
-#define MSG_CONFIG_READINGINEXECUTIONHOSTS       _MESSAGE(33635, _("Reading in execution hosts.\n"))
 #define MSG_CONFIG_CANTRESOLVEEXECHOSTNAMEX_S       _MESSAGE(33636, _("cannot resolve exechost name "SFQ))
-#define MSG_CONFIG_CANTWRITEHISTORYFORHOSTX_S       _MESSAGE(33637, _("cannot write history for host "SFQ"\n"))
-#define MSG_CONFIG_READINGINADMINHOSTS       _MESSAGE(33638, _("Reading in administrative hosts.\n"))
-#define MSG_CONFIG_READINGINSUBMITHOSTS       _MESSAGE(33639, _("Reading in submit hosts.\n"))
-#define MSG_CONFIG_READINGINGPARALLELENV       _MESSAGE(33640, _("Reading in parallel environments:\n"))
 #define MSG_CONFIG_READINGUSERMAPPINGENTRY _MESSAGE(33641, _("Reading in user mapping entries:\n"))
 #define MSG_CONFIG_READINGHOSTGROUPENTRYS  _MESSAGE(33642, _("Reading in host group entries:\n"))
-#define MSG_CONFIG_READINGINCALENDARS       _MESSAGE(33643, _("Reading in calendars:\n"))
-#define MSG_CONFIG_READINGINCOMPLEXES       _MESSAGE(33644, _("Reading in complexes:\n"))
-#define MSG_CONFIG_FAILEDPARSINGYEARENTRYINCALENDAR_SS       _MESSAGE(33645, _("failed parsing year entry in calendar "SFQ": "SFN"\n"))
-#define MSG_CONFIG_READINGINCKPTINTERFACEDEFINITIONS       _MESSAGE(33647, _("Reading in ckpt interface definitions:\n"))
 #define MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU       _MESSAGE(33648, _("can't find queue "SFQ" referenced in job "U32CFormat))
 #define MSG_CONFIG_FAILEDREMOVINGBADJOBFILEREASONXPLEASEDELETEYMANUALY_SS       _MESSAGE(33649, _("failed removing bad jobfile (reason: "SFN"): please delete "SFQ" manually\n"))
 #define MSG_CONFIG_REMOVEDBADJOBFILEX_S       _MESSAGE(33650, _("removed bad jobfile "SFQ"\n"))
-#define MSG_CONFIG_FAILEDREMOVINGSCRIPT_SS       _MESSAGE(33651, _("failed removing script of bad jobfile (reason: "SFN"): please delete "SFQ" manually\n"))
-#define MSG_CONFIG_REMOVEDSCRIPTOFBADJOBFILEX_S       _MESSAGE(33652, _("removed script of bad jobfile "SFQ"\n"))
-#define MSG_CONFIG_READINGINX_S       _MESSAGE(33653, _("Reading in "SFN".\n"))
-#define MSG_CONFIG_CANTFINDSCRIPTFILE_U       _MESSAGE(33654, _("can't find script file for job " U32CFormat " - deleting\n"))
-#define MSG_CONFIG_JOBFILEXHASWRONGFILENAMEDELETING_U       _MESSAGE(33655, _("job file \""U32CFormat"\" has wrong file name - deleting\n"))
-#define MSG_CONFIG_NODIRECTORY_S                              _MESSAGE(33656, _(SFQ" is no directory - skipping the entry\n"))
 
 
 /*

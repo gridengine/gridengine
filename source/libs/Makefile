@@ -37,6 +37,7 @@ include $(SDIR)/libs/uti/Makefile
 include $(SDIR)/libs/cull/Makefile
 include $(SDIR)/libs/comm/Makefile
 include $(SDIR)/libs/gdi/Makefile
+include $(SDIR)/libs/spool/Makefile
 include $(SDIR)/libs/sched/Makefile
 
 ###############################################################################
@@ -47,16 +48,16 @@ SGELIB      = libsge$(LIBEXT)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-libs: gdilib commlib culllib rmonlib schedlib utilib $(SGELIB)
+libs: gdilib spoollib commlib culllib rmonlib schedlib utilib $(SGELIB)
 
-libs_clean: gdilib_clean commlib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean $(SGELIB)_clean
+libs_clean: gdilib_clean spoollib_clean commlib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean $(SGELIB)_clean
 
 $(SGELIB)_clean: 
 	$(RM) libsge.a libsge$(SHAREDEXT)
 
-libs_depend: gdilib_depend commlib_depend culllib_depend rmonlib_depend schedlib_depend utilib_depend
+libs_depend: gdilib_depend spoollib_depend commlib_depend culllib_depend rmonlib_depend schedlib_depend utilib_depend
 
-libs_messages: gdilib_messages commlib_messages cull_messages schedlib_messages utilib_messages rmonlib_messages
+libs_messages: gdilib_messages spoollib_messages commlib_messages cull_messages schedlib_messages utilib_messages rmonlib_messages
 
 
 ###############################################################################

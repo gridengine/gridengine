@@ -42,6 +42,7 @@
 #include "sge_log.h"
 #include "sge_parse_num_par.h"
 #include "sge_static_load.h"
+#include "sge_answer.h"
 #include "sge_language.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
@@ -49,9 +50,12 @@
 #include "sge_queue.h"
 #include "sge_host.h"
 #include "sge_complex.h"
+#include "gdi_utility.h"
 
 #include "msg_common.h"
 #include "msg_schedd.h"
+
+#include "sge_complex_schedd.h"
 
 static int resource_cmp(u_long32 relop, double req_all_slots, double src_dl);
 
@@ -1216,4 +1220,93 @@ u_long32 type
    if (type<TYPE_FIRST || type>TYPE_LAST)
       type = 0;
    return typev[type];
-}   
+}
+
+int ensure_attrib_available(
+lList **alpp,
+lListElem *ep,
+int nm 
+) {
+   const char *name, *obj_name = "none", *obj_descr = "none";
+   lListElem *attr;
+   lList *resources = NULL; 
+
+   DENTER(TOP_LAYER, "ensure_attrib_available");
+
+   for_each (attr, lGetList(ep, nm)) {
+      if (!resources) { /* first time build resources list */
+         if ( nm==EH_consumable_config_list ) {
+            if (!strcmp(lGetHost(ep, EH_name), "global"))
+               global_complexes2scheduler(&resources, ep, Master_Complex_List, 0);
+            else 
+               host_complexes2scheduler(&resources, ep, Master_Exechost_List, Master_Complex_List, 0);
+            obj_name = lGetHost(ep, EH_name);
+            obj_descr = "host";
+         } else {
+            queue_complexes2scheduler(&resources, ep, Master_Exechost_List, Master_Complex_List, 0);
+            obj_name = lGetString(ep, QU_qname);
+            obj_descr = "queue";
+         }
+      }
+
+      name = lGetString(attr, CE_name);
+      if (!lGetElemStr(resources, CE_name, name)) {
+         resources = lFreeList(resources);
+         ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_SSS, name, obj_descr, obj_name));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+   }
+   resources = lFreeList(resources);
+
+   DEXIT;
+   return 0;
+}
+
+int attr_mod_threshold(
+lList **alpp,
+lListElem *qep,
+lListElem *new_ep,
+int nm,
+int primary_key,
+int sub_command,
+char *attr_name,
+char *object_name 
+) {
+   int ret;
+
+   DENTER(TOP_LAYER, "attr_mod_threshold");
+
+   /* ---- attribute nm */
+   if (lGetPosViaElem(qep, nm)>=0) {
+      lListElem *tmp_elem;
+
+      DPRINTF(("got new %s\n", attr_name));
+
+      tmp_elem = lCopyElem(new_ep); 
+      attr_mod_sub_list(alpp, tmp_elem, nm, primary_key, qep,
+         sub_command, attr_name, object_name, 0); 
+
+      ret=sge_fill_requests(lGetList(tmp_elem, nm), Master_Complex_List, 1, 0, 0);
+      if (ret) {
+         /* error message gets written by sge_fill_requests into SGE_EVENT */
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+
+      lSetList(new_ep, nm, lCopyList("", lGetList(tmp_elem, nm)));
+      lFreeElem(tmp_elem);
+
+      /* check whether this attrib is available due to complex configuration */
+      if (ensure_attrib_available(alpp, new_ep, nm)) {
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+   }
+
+   DEXIT;
+   return 0;
+}
+

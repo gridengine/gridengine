@@ -42,4 +42,10 @@ lListElem *calendar_list_locate(lList *calendar_list, const char *cal_name);
 int calendar_update_master_list(sge_event_type type, sge_event_action action,
                                 lListElem *event, void *clientdata);
 
+int parse_year(lList **alpp, lListElem *cal);
+
+int parse_week(lList **alpp, lListElem *cal);
+
+u_long32 act_cal_state(lListElem *cep, time_t *then);
+    
 #endif /* __SGE_CALENDAR_H */

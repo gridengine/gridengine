@@ -58,4 +58,16 @@ void queue_list_clear_tags(lList *queue_list);
 int queue_update_master_list(sge_event_type type, sge_event_action action,
                              lListElem *event, void *clientdata);
 
+int verify_qr_list(lList **alpp, lList *qr_list, const char *attr_name, const char *obj_descr, const char *obj_name);  
+
+void queue_list_set_unknown_state_to(lList *queue_list, 
+                                     const char *hostname,
+                                     int send_events,
+                                     int new_u_state);
+
+void sge_add_queue_event(u_long32 type, lListElem *qep);
+
+int sge_add_queue(lListElem *qep);
+
+int sge_owner(const char *cp, const lList *lp);
 #endif /* __SGE_QUEUE_H */

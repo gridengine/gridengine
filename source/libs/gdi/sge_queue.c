@@ -37,9 +37,14 @@
 #include "symbols.h"
 #include "sge.h"
 #include "sge_job.h"
-#include "sge_queue.h"
+#include "sge_manop.h"
+#include "sge_userset.h"
 #include "sge_event.h"
+#include "sge_m_event.h"
+#include "sge_answer.h"
 #include "msg_gdilib.h"
+
+#include "sge_queue.h"
 
 lList *Master_Queue_List = NULL;
 
@@ -311,3 +316,196 @@ int queue_update_master_list(sge_event_type type, sge_event_action action,
    DEXIT;
    return TRUE;
 }
+
+/* verify that all queue names in a 
+   QR_Type list refer to existing queues */
+/* JG: TODO: naming, ADOC */   
+int verify_qr_list(
+lList **alpp,
+lList *qr_list,
+const char *attr_name, /* e.g. "queue_list" */
+const char *obj_descr, /* e.g. "parallel environment", "ckpt interface" */
+const char *obj_name   /* e.g. "pvm", "hibernator"  */
+) {
+   lListElem *qrep;
+   int all_name_exists = 0;
+   int queue_exist = 0;
+
+   DENTER(TOP_LAYER, "verify_qr_list");
+
+   for_each (qrep, qr_list) {
+      if (!strcasecmp(lGetString(qrep, QR_name), SGE_ATTRVAL_ALL)) {
+         lSetString(qrep, QR_name, SGE_ATTRVAL_ALL);
+         all_name_exists = 1;
+      } else if (!queue_list_locate(Master_Queue_List, lGetString(qrep, QR_name))) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNQUEUE_SSSS, 
+            lGetString(qrep, QR_name), attr_name, obj_descr, obj_name));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      } else {
+         queue_exist = 1;
+      }
+      if (all_name_exists && queue_exist) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_QUEUEALLANDQUEUEARENOT_SSSS,
+            SGE_ATTRVAL_ALL, attr_name, obj_descr, obj_name));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+   }
+
+   DEXIT;
+   return STATUS_OK;
+}
+
+/****** gdi/queue/queue_list_set_unknown_state_to() ************************
+*  NAME
+*     queue_list_set_unknown_state_to() -- set/clear u state of queues  
+*
+*  SYNOPSIS
+*     void queue_list_set_unknown_state_to(lList *queue_list, 
+*                                          const char *hostname, 
+*                                          int send_events,
+*                                          int new_state) 
+*
+*  FUNCTION
+*     Clears or sets the unknown state of all queues in "queue_list" which 
+*     reside on host "hostname". If "hostname" is NULL than all queues
+*     mentioned in "queue_list" will get the new unknown state.
+*     
+*     Modify events for all modified queues will be generated if 
+*     "send_events" is 1 (true).
+*
+*  INPUTS
+*     lList *queue_list    - QU_Type list 
+*     const char *hostname - valid hostname or NULL 
+*     int send_events      - 0 or 1 
+*     int new_state        - new unknown state (0 or 1)
+*
+*  RESULT
+*     void - None
+*******************************************************************************/
+void queue_list_set_unknown_state_to(lList *queue_list, 
+                                     const char *hostname,
+                                     int send_events,
+                                     int new_state)
+{
+   const void *iterator = NULL;
+   lListElem *queue = NULL;
+   lListElem *next_queue = NULL;
+
+   if (hostname != NULL) {
+      next_queue = lGetElemHostFirst(queue_list, QU_qhostname, 
+                                     hostname, &iterator);
+   } else {
+      next_queue = lFirst(queue_list);
+   }
+   while ((queue = next_queue)) {
+      u_long32 state;
+
+      if (hostname != NULL) {
+         next_queue = lGetElemHostNext(queue_list, QU_qhostname, 
+                                       hostname, &iterator);
+      } else {
+         next_queue = lNext(queue);
+      }
+      state = lGetUlong(queue, QU_state);
+      if ((ISSET(state, QUNKNOWN) > 0) != (new_state > 0)) {
+         if (new_state) {
+            SETBIT(QUNKNOWN, state);
+         } else {
+            CLEARBIT(QUNKNOWN, state);
+         }
+         lSetUlong(queue, QU_state, state);
+
+         if (send_events) {
+            sge_add_queue_event(sgeE_QUEUE_MOD, queue);
+         }
+      }
+   }
+} 
+
+/* JG: TODO: naming, ADOC, is it really needed? */
+void sge_add_queue_event(
+u_long32 type,
+lListElem *qep 
+) {
+   DENTER(TOP_LAYER, "sge_add_queue_event");
+   sge_add_event(NULL, type, 0, 0, lGetString(qep, QU_qname), qep);
+   DEXIT;
+   return;
+}
+
+/* -----------------------------------
+   sge_add_queue - adds a queue to the 
+     Master_Queue_List. 
+
+   returns:
+   -1 if queue already exists or other error;
+   0 if successful;
+*/
+/* JG: TODO: naming, ADOC */
+int sge_add_queue(
+lListElem *qep 
+) {
+   static lSortOrder *so = NULL;
+
+   DENTER(TOP_LAYER, "sge_add_queue");
+
+   if (!qep) {
+      ERROR((SGE_EVENT, MSG_QUEUE_NULLPTR));
+      DEXIT;
+      return -1;
+   }
+
+   /* create SortOrder: */
+   if(!so) {
+      so = lParseSortOrderVarArg(QU_Type, "%I+", QU_qname);
+   };
+  
+   /* insert Element: */
+   if(!Master_Queue_List)
+      Master_Queue_List = lCreateList("Master_Queue_List", QU_Type);
+   lInsertSorted(so, qep, Master_Queue_List);
+
+   DEXIT;
+   return 0;
+}
+
+/* JG: TODO: naming, ADOC */
+int sge_owner(
+const char *cp,
+const lList *lp 
+
+/*
+   Note: a manager/operator is implicitly an "owner".
+ */
+) {
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "sge_owner");
+
+   if (!cp) {
+      DEXIT;
+      return -1;
+   }
+
+   if (!sge_operator(cp)) {
+      DEXIT;
+      return 0;
+   }
+
+   for_each(ep, lp) {
+      DPRINTF(("comparing user >>%s<< vs. owner_list entry >>%s<<\n", cp, 
+         lGetString(ep, US_name)));
+      if (!strcmp(cp, lGetString(ep, US_name))) {
+         DEXIT;
+         return 0;
+      }
+   }
+
+   DEXIT;
+   return -1;
+}
+

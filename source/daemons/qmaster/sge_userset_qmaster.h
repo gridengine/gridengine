@@ -41,14 +41,9 @@ int sge_del_userset(lListElem *ep, lList **alpp, lList **userset_list,
 int sge_mod_userset(lListElem *ep, lList **alpp, lList **userset_list, 
                     char *ruser, char *rhost);
 
-int sge_verify_userset_entries(lList *u, lList **alpp, int start_up);
-
 int sge_verify_department_entries(lList *userset_list, lListElem *new_userset, 
                                   lList **alpp);
 
 int set_department(lList **alpp, lListElem *job, lList *userset_list);
-
-int verify_acl_list(lList **alpp, lList *acl_list, const char *attr_name, 
-                    const char *obj_descr, const char *obj_name);
 
 #endif

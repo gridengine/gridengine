@@ -1,3 +1,10 @@
+JG-2002-10-29-0  Enhancem.  Initial part of a spooling framework supporting
+                            the current "classic" spooling.
+                            A test program is provided mirroring all spooled
+                            data to an own directory structure.
+                            Further documentation and fine tuning still to
+                            be done.
+
 JG-2002-10-24-0  Testsuite: qrsh tight integration test used unsupported
                             qrsh -inherit option -N
 
@@ -10,8 +17,9 @@ SD-2002-10-17-0  Bugfix:    SGEEE - Fixed bug in the pending functional
 AA-2002-10-16-0  BUGFIX:    openssl0.9.6g in aimk.site
 
 SD-2002-10-15-1  Bugfix:    Fix no newline problem with path aliases file
-                            If the last line in the path aliases file (sge_aliases)
-                            did not have a new line, qsub would core.
+                            If the last line in the path aliases file 
+                            (sge_aliases) did not have a new line, qsub would 
+                            core.
                  IZ:        398
                  Changed:   qsub, qsh, qmon, ...
 

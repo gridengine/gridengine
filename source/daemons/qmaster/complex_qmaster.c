@@ -49,7 +49,7 @@
 #include "opt_history.h"
 #include "path_history.h"
 #include "sge_log.h"
-#include "gdi_utility_qmaster.h"
+#include "gdi_utility.h"
 #include "sge_complex_schedd.h"
 #include "sort_hosts.h"
 #include "sge_select_queue.h"
@@ -404,94 +404,6 @@ gdi_object_t *object
    DEXIT;
    return 0;
 }
-
-/**********************************************************************
- Qmaster function to read the complexes directory
- **********************************************************************/
-int read_all_complexes()
-{
-   DIR *dir;
-   SGE_STRUCT_DIRENT *dent;
-   char fstr[256];
-   int fd;
-   lListElem *el;
-   lList *answer = NULL;
-
-
-   DENTER(TOP_LAYER, "read_all_complexes");
-
-   if (!Master_Complex_List) {
-      Master_Complex_List = lCreateList("complex list", CX_Type);
-   }
-
-   dir = opendir(COMPLEX_DIR);
-   if (!dir) {
-      ERROR((SGE_EVENT, MSG_FILE_NOOPENDIR_S, COMPLEX_DIR));
-      DEXIT;
-      return -1;
-   }
-   if (!sge_silent_get())
-      printf(MSG_CONFIG_READINGINCOMPLEXES);
-
-   while ((dent=SGE_READDIR(dir)) != NULL) {
-      if (!strcmp(dent->d_name,"..") || !strcmp(dent->d_name,".")) {
-         continue;
-      }
-      if (!sge_silent_get()) {
-         printf(MSG_SETUP_COMPLEX_S, dent->d_name);
-      }  
-      if ((dent->d_name[0] == '.')) {
-         char buffer[256]; 
-             
-         sprintf(buffer, "%s/%s", COMPLEX_DIR, dent->d_name);             
-         unlink(buffer);
-         continue;
-      }
-
-      if (verify_str_key(&answer, dent->d_name, "complex")) {
-         DEXIT;
-         return -1;
-      }    
-      sprintf(fstr, "%s/%s", COMPLEX_DIR, dent->d_name);
-      
-      if ((fd=open(fstr, O_RDONLY)) < 0) {
-         ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fstr, strerror(errno)));
-         continue;
-      }
-      close(fd);
-      el = read_cmplx(fstr, dent->d_name, &answer);
-      if (answer) {
-         ERROR((SGE_EVENT, lGetString(lFirst(answer), AN_text)));
-         answer = lFreeList(answer);
-         DEXIT;
-         return -1;
-      }
-      if (el) {
-         lAppendElem(Master_Complex_List, el);
-         /*
-         ** make a start for the history when Sge first starts up
-         ** or when history has been deleted
-         */
-         if (!is_nohist() && lGetString(el, CX_name) &&
-             !is_object_in_history(STR_DIR_COMPLEXES, 
-                lGetString(el, CX_name))) {
-            int ret;
-            
-            ret = write_complex_history(el);
-            if (ret) {
-               WARNING((SGE_EVENT, MSG_FILE_NOWRITEHIST_S, lGetString(el, CX_name)));
-            }
-         }
-
-      }
-   }
-
-   closedir(dir);
-
-   DEXIT;
-   return 0;
-}
-
 
 /**********************************************************************
  GDI: delete complex                                             

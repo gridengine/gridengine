@@ -57,7 +57,6 @@
 #include "sge_feature.h"
 #include "sge_qmod_qmaster.h"
 #include "read_write_queue.h"
-#include "sec.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"

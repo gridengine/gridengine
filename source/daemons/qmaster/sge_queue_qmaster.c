@@ -61,7 +61,7 @@
 #include "sge_log.h"
 #include "sge_time.h"
 #include "resolve_host.h"
-#include "gdi_utility_qmaster.h"
+#include "gdi_utility.h"
 #include "sge_qmod_qmaster.h"
 #include "config_file.h"
 #include "sge_userprj_qmaster.h"
@@ -77,6 +77,7 @@
 #include "sge_userset.h"
 #include "sge_complex.h"
 #include "sge_calendar.h"
+#include "sge_complex_schedd.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -1248,155 +1249,3 @@ const char *qname
    return 0;
 }
 
-/* -----------------------------------
-   sge_add_queue - adds a queue to the 
-     Master_Queue_List. 
-
-   returns:
-   -1 if queue already exists or other error;
-   0 if successful;
-*/
-int sge_add_queue(
-lListElem *qep 
-) {
-   static lSortOrder *so = NULL;
-
-   DENTER(TOP_LAYER, "sge_add_queue");
-
-   if (!qep) {
-      ERROR((SGE_EVENT, MSG_QUEUE_NULLPTR));
-      DEXIT;
-      return -1;
-   }
-
-   /* create SortOrder: */
-   if(!so) {
-      so = lParseSortOrderVarArg(QU_Type, "%I+", QU_qname);
-   };
-  
-   /* insert Element: */
-   if(!Master_Queue_List)
-      Master_Queue_List = lCreateList("Master_Queue_List", QU_Type);
-   lInsertSorted(so, qep, Master_Queue_List);
-
-   DEXIT;
-   return 0;
-}
-
-/****** qmaster/queue/queue_list_set_unknown_state_to() ************************
-*  NAME
-*     queue_list_set_unknown_state_to() -- set/clear u state of queues  
-*
-*  SYNOPSIS
-*     void queue_list_set_unknown_state_to(lList *queue_list, 
-*                                          const char *hostname, 
-*                                          int send_events,
-*                                          int new_state) 
-*
-*  FUNCTION
-*     Clears or sets the unknown state of all queues in "queue_list" which 
-*     reside on host "hostname". If "hostname" is NULL than all queues
-*     mentioned in "queue_list" will get the new unknown state.
-*     
-*     Modify events for all modified queues will be generated if 
-*     "send_events" is 1 (true).
-*
-*  INPUTS
-*     lList *queue_list    - QU_Type list 
-*     const char *hostname - valid hostname or NULL 
-*     int send_events      - 0 or 1 
-*     int new_state        - new unknown state (0 or 1)
-*
-*  RESULT
-*     void - None
-*******************************************************************************/
-void queue_list_set_unknown_state_to(lList *queue_list, 
-                                     const char *hostname,
-                                     int send_events,
-                                     int new_state)
-{
-   const void *iterator = NULL;
-   lListElem *queue = NULL;
-   lListElem *next_queue = NULL;
-
-   if (hostname != NULL) {
-      next_queue = lGetElemHostFirst(queue_list, QU_qhostname, 
-                                     hostname, &iterator);
-   } else {
-      next_queue = lFirst(queue_list);
-   }
-   while ((queue = next_queue)) {
-      u_long32 state;
-
-      if (hostname != NULL) {
-         next_queue = lGetElemHostNext(queue_list, QU_qhostname, 
-                                       hostname, &iterator);
-      } else {
-         next_queue = lNext(queue);
-      }
-      state = lGetUlong(queue, QU_state);
-      if ((ISSET(state, QUNKNOWN) > 0) != (new_state > 0)) {
-         if (new_state) {
-            SETBIT(QUNKNOWN, state);
-         } else {
-            CLEARBIT(QUNKNOWN, state);
-         }
-         lSetUlong(queue, QU_state, state);
-
-         if (send_events) {
-            sge_add_queue_event(sgeE_QUEUE_MOD, queue);
-         }
-      }
-   }
-} 
-
-void sge_add_queue_event(
-u_long32 type,
-lListElem *qep 
-) {
-   DENTER(TOP_LAYER, "sge_add_queue_event");
-   sge_add_event(NULL, type, 0, 0, lGetString(qep, QU_qname), qep);
-   DEXIT;
-   return;
-}
-
-/* verify that all queue names in a 
-   QR_Type list refer to existing queues */
-int verify_qr_list(
-lList **alpp,
-lList *qr_list,
-const char *attr_name, /* e.g. "queue_list" */
-const char *obj_descr, /* e.g. "parallel environment", "ckpt interface" */
-const char *obj_name   /* e.g. "pvm", "hibernator"  */
-) {
-   lListElem *qrep;
-   int all_name_exists = 0;
-   int queue_exist = 0;
-
-   DENTER(TOP_LAYER, "verify_qr_list");
-
-   for_each (qrep, qr_list) {
-      if (!strcasecmp(lGetString(qrep, QR_name), SGE_ATTRVAL_ALL)) {
-         lSetString(qrep, QR_name, SGE_ATTRVAL_ALL);
-         all_name_exists = 1;
-      } else if (!queue_list_locate(Master_Queue_List, lGetString(qrep, QR_name))) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNQUEUE_SSSS, 
-            lGetString(qrep, QR_name), attr_name, obj_descr, obj_name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      } else {
-         queue_exist = 1;
-      }
-      if (all_name_exists && queue_exist) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_QUEUEALLANDQUEUEARENOT_SSSS,
-            SGE_ATTRVAL_ALL, attr_name, obj_descr, obj_name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
-   }
-
-   DEXIT;
-   return STATUS_OK;
-}

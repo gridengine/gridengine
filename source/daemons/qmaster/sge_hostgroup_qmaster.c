@@ -49,7 +49,7 @@
 #include "sge_c_gdi.h"
 #include "sge_stringL.h"
 #include "sge_string.h"
-#include "gdi_utility_qmaster.h"
+#include "gdi_utility.h"
 #include "sge_usermap.h"
 #include "sge_hostgroup_qmaster.h"
 #include "sge_user_mapping.h"

@@ -37,6 +37,7 @@
 #include "sge_ja_task.h"
 #include "sge_stringL.h"
 #include "sge_pe.h"
+#include "sge_queue.h"
 #include "sge_string.h"
 #include "parse_qsubL.h"
 #include "sge_job_refL.h"

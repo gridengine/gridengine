@@ -123,3 +123,59 @@ int manop_update_master_list(sge_event_type type, sge_event_action action,
    DEXIT;
    return TRUE;
 }
+
+/* JG: TODO: naming, ADOC */
+int sge_manager(
+const char *cp 
+) {
+
+   DENTER(TOP_LAYER, "sge_manager");
+
+   if (!cp) {
+      DEXIT;
+      return -1;
+   }
+
+   if (sge_locate_manager(cp)) {
+      DEXIT;
+      return 0;
+   }
+
+   DEXIT;
+   return -1;
+
+}
+
+/***********************************************************************/
+/* JG: TODO: naming, ADOC */
+int sge_operator(
+const char *cp 
+
+/*
+   Note: a manager is implicitly an "operator".
+ */
+
+) {
+
+   DENTER(TOP_LAYER, "sge_operator");
+
+   if (!cp) {
+      DEXIT;
+      return -1;
+   }
+
+   if (sge_locate_operator(cp)) {
+      DEXIT;
+      return 0;
+   }
+
+   if (sge_locate_manager(cp)) {
+      DEXIT;
+      return 0;
+   }
+
+   DEXIT;
+   return -1;
+
+}
+

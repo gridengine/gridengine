@@ -34,14 +34,14 @@
 #include "sge.h"
 #include "basis_types.h"
 #include "job_log.h"
-#include "sge_queue_qmaster.h"
-#include "sge_host_qmaster.h"
+#include "sge_queue_qmaster.h"  /* JG: TODO: libgdi depends from qmaster! */
+#include "sge_host_qmaster.h"   /*           this has to be resolved!     */ 
 #include "sge_m_event.h"
 #include "config_file.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "gdi_utility_qmaster.h"
+#include "gdi_utility.h"
 #include "sge_answer.h"
 #include "sge_feature.h"         
 #include "version.h"

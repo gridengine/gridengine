@@ -44,4 +44,7 @@ lListElem *ckpt_list_locate(lList *ckpt_list, const char *ckpt_name);
 
 int ckpt_update_master_list(sge_event_type type, sge_event_action action, 
                             lListElem *event, void *clientdata);
+
+int validate_ckpt(lListElem *ep, lList **alpp);
+
 #endif /* __SGE_CKPT_H */

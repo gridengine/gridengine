@@ -49,8 +49,6 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
                                       const char *obj_name, 
                                       const char *ckpt_name);
 
-int validate_ckpt(lListElem *ep, lList **alpp);
-
 int check_ckpt_lic(int licensed_ckpts, int verbose);     
 
 #endif /* __SGE_CKPT_QMASTER_H */

@@ -573,6 +573,28 @@ NAMEEND
 /* *INDENT-ON* */ 
 
 #define QUS sizeof(QUN)/sizeof(char*)
+
+/* *INDENT-OFF* */ 
+
+enum {
+   QR_name = QR_LOWERBOUND
+};
+
+LISTDEF(QR_Type)
+   SGE_STRING(QR_name, CULL_HASH | CULL_UNIQUE)
+LISTEND 
+
+NAMEDEF(QRN)
+   NAME("QR_name")
+NAMEEND
+
+/* *INDENT-ON* */  
+
+#define QRS sizeof(QRN)/sizeof(char*)
+
+
+
+/* *INDENT-ON* */  
 #ifdef  __cplusplus
 }
 #endif

@@ -41,6 +41,7 @@ GDILIB_SRC = sge_all_listsL.c \
          gdi_qmod.c \
          gdi_tsm.c \
          gdi_checkpermissions.c \
+         gdi_utility.c \
          pack_job_delivery.c \
          sge_any_request.c \
          sge_gdi_request$(QIDLEXT).c \
@@ -59,6 +60,7 @@ GDILIB_SRC = sge_all_listsL.c \
          parse.c \
          parse_mail.c \
          sge_c_event.c \
+         sge_m_event$(QIDLEXT).c \
          sge_conf.c \
          sge_event.c \
          sge_mirror.c \
@@ -134,6 +136,9 @@ version.o:	$(GDILIB_DIR)/version.c
 
 gdi_setup.o:	$(GDILIB_DIR)/gdi_setup.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_setup.c
+
+gdi_utility.o:	$(GDILIB_DIR)/gdi_utility.c
+		$(CC) $(CFLAGS) -c $(GDILIB_DIR)/gdi_utility.c
 
 sge_ack.o:	$(GDILIB_DIR)/sge_ack.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_ack.c
@@ -278,6 +283,9 @@ sge_mirror.o: $(GDILIB_DIR)/sge_mirror.c
 
 sge_c_event.o: $(GDILIB_DIR)/sge_c_event.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_c_event.c
+
+sge_m_event$(QIDLEXT).o:	$(GDILIB_DIR)/sge_m_event.c
+		$(CC) -o $@ $(CFLAGS) -c $(GDILIB_DIR)/sge_m_event.c
 
 sge_usage.o: $(GDILIB_DIR)/sge_usage.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_usage.c

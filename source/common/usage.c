@@ -32,6 +32,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "sge_stdio.h"
+
 #include "usage.h"
 #include "sge_feature.h"
 
@@ -51,17 +54,6 @@ static void usage_silent(FILE *fp);
 int start_commd = 1; 
 
 static int marker[OA__END];
-
-void print_option_syntax(
-FILE *fp,
-const char *option,
-const char *meaning 
-) {
-   if (!meaning)
-      fprintf(fp,"   %s\n", option);
-   else
-      fprintf(fp,"   %-40.40s %s\n",  option, meaning);
-}
 
 void mark_argument_syntax(
 int argument_number 

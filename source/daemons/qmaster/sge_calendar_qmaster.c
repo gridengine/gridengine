@@ -44,7 +44,7 @@
 #include "sge_c_gdi.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_qmod_qmaster.h"
-#include "gdi_utility_qmaster.h"
+#include "gdi_utility.h"
 #include "sge_time.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
@@ -58,7 +58,7 @@
 #ifdef QIDL
    #include "qidl_c_gdi.h"
 #endif
-
+#if 0
 enum {
    DOT = 1,
    COLON,
@@ -114,13 +114,11 @@ static int tm_yday_cmp(lListElem *t1, lListElem *t2);
 static int tm_wday_cmp(lListElem *t1, lListElem *t2);
 static void cullify_tm(lListElem *tm_ep, struct tm *tm_now);
 static void uncullify_tm(lListElem *tm_ep, struct tm *tm_now);
-
 typedef int (*cmp_func_t)(lListElem *t1, lListElem *t2); 
 
 static int normalize_range_list(lList *rl, cmp_func_t cmp_func);
 static int in_range_list(lListElem *tm, lList *rl, cmp_func_t cmp_func);
 static int in_range(lListElem *tm, lListElem *r, cmp_func_t cmp_func);
-
 /* year and week */
 static int daytime_range_list(lList **dtrl);
 static int daytime_range(lListElem **tmr);
@@ -134,12 +132,10 @@ static int seconds(int *);
 static int action(int *sp);
 static int range_number(int min, int max, int *ip, const char *name);
 static int tm_daytime_cmp(lListElem *t1, lListElem *t2);
-
 /* week */
 static u_long32 is_week_entry_active(lListElem *tm, lListElem *week_entry, time_t *limit);
 
 static u_long32 is_year_entry_active(lListElem *tm, lListElem *year_entry, time_t *limit);
-
 
 static time_t compute_limit(int today, int active, lList *dtrl, lListElem *now);
 
@@ -148,7 +144,6 @@ static int week_day_range_list(lList **wdrl);
 static int week_day_range(lListElem **tmr);
 static void split_wday_range(lList *wdrl, lListElem *tmr);
 static int week_day(lListElem **tm);
-
 /* 
 
    NAME 
@@ -296,7 +291,6 @@ time_t *next_event
    DEXIT;
    return QENABLED;
 }
-
 /* returns state and time when state changes acording this entry */
 static u_long32 is_week_entry_active(
 lListElem *tm,         /* TM_Type */
@@ -327,7 +321,6 @@ time_t *limit
    DEXIT;
    return state;
 }
-
 /* returns state and time when state changes acording this entry */
 static u_long32 is_year_entry_active(
 lListElem *tm,         /* TM_Type */
@@ -358,7 +351,6 @@ time_t *limit
    DEXIT;
    return state;
 }
-
 static time_t compute_limit(
 int today,
 int active,
@@ -601,7 +593,6 @@ cmp_func_t cmp_func
    DEXIT;
    return 0;
 }
-
 /* disabled_year_list := disabled_year_entry[<space>disabled_year_entry] */
 static int disabled_year_list(
 lList **alpp,
@@ -1745,7 +1736,6 @@ lListElem *t2
       return t;
    return lGetUlong(t1, TM_sec) - lGetUlong(t2, TM_sec);
 }
-
 static void cullify_tm(
 lListElem *tm_ep,
 struct tm *tm_now 
@@ -1774,7 +1764,7 @@ struct tm *tm_now
    tm_now->tm_yday =  lGetUlong(tm_ep, TM_yday);
    tm_now->tm_isdst = lGetUlong(tm_ep, TM_isdst);
 }
-
+#endif 
 int calendar_mod(
 lList **alpp,
 lListElem *new_cal,
@@ -1963,6 +1953,7 @@ gdi_object_t *object
    return 0;
 }
 
+#if 0
 u_long32 act_cal_state(
 lListElem *cep,
 time_t *then 
@@ -1992,7 +1983,6 @@ time_t *then
    DEXIT;
    return new_state;
 }
-
 int parse_year(
 lList **alpp,
 lListElem *cal 
@@ -2032,3 +2022,4 @@ lListElem *cal
    DEXIT;
    return 0;
 }
+#endif

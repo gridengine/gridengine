@@ -437,5 +437,38 @@
  */
 #define MSG_ANSWER_NOANSWERLIST           _MESSAGE(43276, _("no answer list - gdi request failed\n")) 
 
+/* libs/gdi/sge_pe.c
+ *
+ */
+#define MSG_OBJ_PE                    _MESSAGE(43276, _("parallel environment"))
+#define MSG_OBJ_QLIST                 _MESSAGE(43277, _("queue list"))
+#define MSG_OBJ_USERLIST              _MESSAGE(43278, _("user list"))
+#define MSG_OBJ_XUSERLIST             _MESSAGE(43279, _("xuser list"))
+#define MSG_PE_STARTPROCARGS_SS       _MESSAGE(43280, _("parameter start_proc_args of pe "SFQ": "SFN"\n"))
+#define MSG_PE_STOPPROCARGS_SS        _MESSAGE(43281, _("parameter stop_proc_args of pe "SFQ": "SFN"\n"))
+#define MSG_SGETEXT_MISSINGCULLFIELD_SS         _MESSAGE(43282, _("missing cull field "SFQ" in "SFN"()\n"))
+#define MSG_PE_ALLOCRULE_SS           _MESSAGE(43283, _("parameter allocation_rule of pe "SFQ": "SFN"\n"))
+
+/* libs/gdi/sge_ckpt.c
+ *
+ */
+#define MSG_SGETEXT_NO_INTERFACE_S                    _MESSAGE(43283, _("no valid checkpoint interface "SFN"\n") )   
+#define MSG_OBJ_CKPTENV_SSS           _MESSAGE(43284, _("parameter "SFN" of ckpt environment "SFQ": "SFN"\n"))
+#define MSG_OBJ_CKPTI                 _MESSAGE(43285, _("checkpoint interface"))
+#define MSG_CKPT_XISNOTASIGNALSTRING_S  _MESSAGE(43286, _(SFQ" is not a signal string (like HUP, INT, " "WINCH, ..)\n"))
+
+/* 
+ * libs/gdi/sge_queue.c
+ */
+#define MSG_SGETEXT_UNKNOWNQUEUE_SSSS                 _MESSAGE(43287, _("denied: queue "SFQ" referenced in "SFN" of "SFN" "SFQ" does not exist\n"))
+#define MSG_SGETEXT_QUEUEALLANDQUEUEARENOT_SSSS        _MESSAGE(43288, _("queuenames and keyword "SFQ" are not allowed in "SFQ" of "SFQ" "SFQ"\n"))
+#define MSG_QUEUE_NULLPTR             _MESSAGE(43289, _("NULL ptr passed to sge_add_queue()\n"))
+
+/*
+ * libs/gdi/sge_userset.c
+ */
+#define MSG_SGETEXT_UNKNOWNUSERSET_SSSS               _MESSAGE(43290, _("denied: userset "SFQ" referenced in "SFN" of "SFN" "SFQ" does not exist\n") ) 
+#define MSG_US_INVALIDUSERNAME        _MESSAGE(43291, _("userset contains invalid (null) user name"))
+
 #endif /* __MSG_GDILIB_H */
 

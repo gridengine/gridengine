@@ -1,3 +1,9 @@
+AH-2002-09-02-0  Doc:       qmod man page for "-r" incorrect (user)
+                            daemons to crash at startup phase
+                 Issue:     #193
+                 Doc:       job array task index values range not documented
+                 Issue:     #283
+
 CR-2002-09-02-0  Testsuite: Merges from maintrunc
 
 EB-2002-09-02-0  Bugfix:    problems with destin_id_list syntax

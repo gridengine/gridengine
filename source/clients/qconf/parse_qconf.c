@@ -2696,11 +2696,8 @@ DPRINTF(("ep: %s %s\n",
          /* look whether name has changed. If so we have to delete the
             user with the old name */
          if (strcmp(lGetString(ep, UP_name), lGetString(newep, UP_name))) {
-            alp = sge_gdi(SGE_USER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-            aep = lFirst(alp);
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-            alp = lFreeList(alp);
+            fprintf(stderr, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, lGetString(ep, UP_name), lGetString(newep, UP_name));
+            SGE_EXIT(1);
          }
 
          lp = lFreeList(lp);

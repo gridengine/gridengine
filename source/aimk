@@ -1194,7 +1194,7 @@ case SOLARIS86:
    set COMPILE_DC = 1
 
    set LFLAGS   = "$LFLAGS $DEBUG_FLAG"
-   set LIBS     = "-lsocket -lnsl -lproject $LIBS"
+   set LIBS     = "-lsocket -lnsl $LIBS"
    set XMTDEF   = "-DXMT_CDE_BUG_FIX"
 
    set XINCD    = "-I/usr/dt/include -I/usr/openwin/include $XMTINCD $XINCD"

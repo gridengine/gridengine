@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
    int num_names;
    int entries_per_name;
    int i, j, k;
-   lList *lp, *trash;
+   lList *lp = NULL, *trash = NULL;
    lListElem *ep;
 
    lInit(nmv);

@@ -2211,7 +2211,7 @@ void generate_commd_port_and_service_status_message(int commlib_error, char* buf
            commlib_error == CL_SERVICE ||
            ( commlib_error >= CL_FIRST_FREE_EC && commlib_error != COMMD_NACK_UNKNOWN_RECEIVER) ) {
 
-         if ( port < 0 ) {
+         if ( get_commlib_state_commdport() == -1 ) {  /* struct commlib_state_t is initialized with -1 !!! */
             sprintf(buffer, MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS,commdhost, service);
          } else if ( commd_port_env != NULL ) { 
             sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_ENV_SI,commdhost,port);
@@ -2269,7 +2269,7 @@ static int get_environments()
    memcpy((char *) get_commlib_state_addr_commdaddr(), (char *) he->h_addr, get_commlib_state_commdaddr_length());
 
    /* if not allready done get port of commd */
-   if (get_commlib_state_commdport() == -1) {
+   if (get_commlib_state_commdport() == -1) {   /* struct commlib_state_t is initialized with -1 !!! */
       if ((cp = getenv("COMMD_PORT"))) {
 
 #ifndef WIN32NATIVE

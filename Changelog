@@ -1,3 +1,8 @@
+CR-2002-09-24-1  Bugfix:    linux clients use port 65535 by error if
+                            COMMD_PORT/sge_commd service not set
+                 Bugtraq:   #4750818
+                 Changed:   all clients using commlib
+
 JG-2002-09-24-0  Enhancem.: Initial Part of port for HP-UX 11 64 bit
 
 CR-2002-09-24-0  Testsuite: install_core_system check: wait for 

@@ -43,7 +43,6 @@
 #include "sge_gdi_intern.h"
 #include "sge_boundaries.h"
 #include "sge_complex_schedd.h"
-#include "sge_exit.h"
 #include "sge_histdirL.h"
 #include "sge_hostL.h"
 #include "sge_identL.h"
@@ -79,7 +78,6 @@
 #include "sge_select_queue.h"
 #include "sge_share_tree_nodeL.h"
 #include "sge_static_load.h"
-#include "sge_str_from_file.h"
 #include "sge_string.h"
 #include "sge_stringL.h"
 #include "sge_time_eventL.h"
@@ -92,14 +90,12 @@
 #include "commd_message_flags.h"
 #include "commlib.h"
 #include "debit.h"
-#include "event.h"
 #include "sgeee.h"
 /* #include "libintl.h" */
 #include "load_correction.h"
 #include "pack.h"
 #include "pack_job_delivery.h"
 #include "parse_qsubL.h"
-#include "parse_range.h"
 #include "sge_feature.h"
 #include "qmon_prefL.h"
 #include "rmon.h"
@@ -113,7 +109,6 @@
 #include "sort_hosts.h"
 #include "subordinate_schedd.h"
 #include "suspend_thresholds.h"
-#include "utility.h"
 #include "valid_queue_user.h"
 #include "zconf.h"
 #include "zlib.h"
@@ -551,7 +546,7 @@ struct _lList * perl_gdi_get(int target, lCondition* cp,  lEnumeration *enp) {
    struct _lList *alp = NULL;
 
    if (!enp) {
-      enp = _lWhat("%T(ALL)", 0, 0, 0);
+      enp = lWhatAll();
       alp = sge_gdi((u_long32)target, SGE_GDI_GET, &lp, 0, enp);
       lFreeWhat(enp);
    } else

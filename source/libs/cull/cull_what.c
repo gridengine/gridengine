@@ -47,9 +47,6 @@
 #include "cull_whatP.h"
 #include "cull_lerrnoP.h"
 
-static lEnumeration *_lWhat(const char *fmt, const lDescr *dp, 
-                            const int *nm_list, int nm);
-
 /****** cull/what/nm_set() ****************************************************
 *  NAME
 *     nm_set() -- Build a int vector 
@@ -135,7 +132,7 @@ int lReduceDescr(lDescr **dst_dpp, lDescr *src_dp, lEnumeration *enp)
    _lWhat creates an enumeration array. This is used in lWhat
    to choose special fields of a list element.
  */
-static lEnumeration *_lWhat(const char *fmt, const lDescr *dp, 
+lEnumeration *_lWhat(const char *fmt, const lDescr *dp, 
                             const int *nm_list, int nr_nm) 
 {
    int neg = 0;
@@ -376,6 +373,53 @@ lEnumeration *lWhat(const char *fmt,...)
  error:
    LERROR(error_status);
    va_end(ap);
+   DPRINTF(("error_status = %d\n", error_status));
+   DEXIT;
+   return NULL;
+}
+
+/****** cull/what/lWhatAll() *****************************************************
+*  NAME
+*     lWhatAll() -- Creates a enumeration array requesting all elements. 
+*
+*  SYNOPSIS
+*     lEnumeration* lWhatAll() 
+*
+*  FUNCTION
+*     Creates a enumeration array that requests complete elements 
+*     of whatever typed list. This is a shortcut for 
+*     lWhat("%T(ALL)", <List_type>)), cause for all the descriptor is not
+*     needed anyway, it is available from the list itself.
+*
+*  INPUTS
+*
+*  RESULT
+*     lEnumeration* - enumeration 
+******************************************************************************/
+lEnumeration *lWhatAll()
+{
+   lEnumeration *ep;
+   int error_status;
+
+   DENTER(CULL_LAYER, "lWhatAll");
+
+   if (!(ep = (lEnumeration *) malloc(sizeof(lEnumeration) * 2))) {
+      error_status = LEMALLOC;
+      goto error;
+   }
+
+   ep[0].pos = WHAT_ALL;
+   ep[0].nm = -99;
+   ep[0].mt = -99;
+   ep[1].pos = 0;
+   ep[1].nm = NoName;
+   ep[1].mt = lEndT;
+
+   DEXIT;
+   return ep;
+
+ error:
+   LERROR(error_status);
    DPRINTF(("error_status = %d\n", error_status));
    DEXIT;
    return NULL;

@@ -1,3 +1,6 @@
+AA-2002-06-13-0: Fix:       introduced lWhatAll, removed obsolete header files from SGE.i
+                            perlgui proto working again
+
 CR-2002-06-13-2: Testsuite: merged qstat -l / -q /-pe / -U option tests
                             from V53_beta2_BRANCH
                  Issue:     #286

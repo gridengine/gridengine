@@ -1,4 +1,9 @@
-AH-2003-01-22-0  Bugfix:    STRING complex attribute handling with RELOP "!=" is broken
+JG-2003-01-22-1  Bugfix:    Empty sge_request file caused submission error.
+                 IZ:        #393
+                 Bugtraq:   #4760981
+
+AH-2003-01-22-0  Bugfix:    STRING complex attribute handling with RELOP "!=" is
+                            broken
                  IZ:        #450
                  Bugtraq:   #4805423 
                  Review:    CR

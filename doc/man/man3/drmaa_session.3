@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_session.3,v $     Last Update: $Date: 2004/04/19 10:52:06 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: drmaa_session.3,v $     Last Update: $Date: 2004/08/11 14:12:49 $     Revision: $Revision: 1.4.6.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_session 3 "$Date: 2004/04/19 10:52:06 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_session 3 "$Date: 2004/08/11 14:12:49 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -53,29 +53,32 @@ drmaa_init, drmaa_exit \- Start/finish xxQS_NAMExx DRMAA session
 .\"
 .SH DESCRIPTION
 .SS "drmaa_init()"
-The drmaa_init() function initializes xxQS_NAMExx DRMAA API library for all threads 
-of the process and creates a new DRMAA Session. This routine must be called once before 
+The drmaa_init() function initializes the xxQS_NAMExx DRMAA API library for all threads 
+of the process and creates a new DRMAA session. This routine must be called once before 
 any other DRMAA call, except for 
 .M drmaa_version 3 ,
 .M drmaa_get_DRM_system 3 ,
-and
+and 
 .M drmaa_get_DRMAA_implementation 3 . 
+Except for the above listed functions, no DRMAA functions may be called before
+the drmaa_init() function \fIcompletes\fP.  Any DRMAA function which is called
+before the drmaa_init() function completes will return a DRMAA_ERRNO_NO_ACTIVE_SESSION
+error.
 \fIContact\fP is an implementation dependent string which may be used to 
 specify which xxQS_NAMExx cell to use. If 
 \fIcontact\fP 
 is NULL, the default xxQS_NAMExx cell will be used. In the current implementation 
 setting \fIcontact\fP has no effect.
 .PP
-Except for the above listed functions, no DRMAA functions may be called before
-the drmaa_init() function \fIcompletes\fP.  Any DRMAA function which is called
-before the drmaa_init() function completes will return a DRMAA_ERRNO_NO_ACTIVE_SESSION
-error.
 .\" 
 .SS "drmaa_exit()"
 The drmaa_exit() function closes the DRMAA session for all threads and must be
-called before process termination.  The drmaa-exit() function may be called only
+called before process termination.  The drmaa_exit() function may be called only
 once by a single thread in the process and may only be called after the
-drmaa_init() function has completed.
+drmaa_init() function has completed.  Any DRMAA function, other than
+.M drmaa_init 3 ,
+which is called after the drmaa_exit() function completes
+will return a DRMAA_ERRNO_NO_ACTIVE_SESSION error.
 .PP
 The drmaa_exit() function does neccessary clean up of the DRMAA session state,
 including unregistering from the
@@ -84,12 +87,6 @@ If the drmaa_exit() function
 is not called, the qmaster will store events for the DRMAA client until the
 connection times out, causing extra work for the qmaster and comsuming system
 resources.
-.PP
-If a second thread calls the drmaa_exit() function while another thread is in
-the drmaa_exit() function, the second thread will block until the first thread
-finishes.  When the first thread finishes with drmaa_exit(), the second thread
-will enter the function, discover that the session has already been closed, and
-exit.
 .PP
 Submitted jobs are not affected by the drmaa_exit() function.
 .PP
@@ -141,7 +138,7 @@ information is then provided in the buffer \fIerror_diagnosis\fP.
 The drmaa_init() and drmaa_exit() functions will fail if:
 .\" 
 .SS "DRMAA_ERRNO_INTERNAL_ERROR"
-Unexpected or internal DRMAA error like system call failure, etc.
+Unexpected or internal DRMAA error, like system call failure, etc.
 .\" 
 .SS "DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE"
 Could not contact DRM system for this request.

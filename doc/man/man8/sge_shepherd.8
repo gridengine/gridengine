@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_shepherd.8,v $     Last Update: $Date: 2004/07/30 13:04:33 $     Revision: $Revision: 1.5.6.1 $
+.\" $RCSfile: sge_shepherd.8,v $     Last Update: $Date: 2004/08/11 14:12:47 $     Revision: $Revision: 1.5.6.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SHEPHERD 8 "$Date: 2004/07/30 13:04:33 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SHEPHERD 8 "$Date: 2004/08/11 14:12:47 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_shepherd \- xxQS_NAMExx single job controlling agent
 .\"
@@ -54,22 +54,22 @@ for details).
 .PP
 The
 .I xxqs_name_sxx_shepherd
-receives information about the job to start from the
+receives information about the job to be started from the
 .M xxqs_name_sxx_execd 8 .
 During the execution of the job it actually starts up to 5 child
-processes. First a prolog script if this feature is enabled by
-the \fBprolog\fP parameter in the cluster configuration
-(see
-.M xxqs_name_sxx_conf 5 ).
-Then a parallel environment startup script if the job is a parallel job (see
+processes. First a prolog script is run if this feature is enabled by
+the \fBprolog\fP parameter in the cluster configuration. (See
+.M xxqs_name_sxx_conf 5 .)
+Next a parallel environment startup proceedure is run if the job is a parallel
+job. (See
 .M sge_pe 5
-for more information).
-Afterwards the job itself followed by a parallel environment shutdown
+for more information.)
+After that, the job itself is run, followed by a parallel environment shutdown
 procedure for parallel jobs,
 and finally an epilog script if requested by
 the \fBepilog\fP parameter in the cluster configuration. The prolog
 and epilog scripts as well as the parallel environment startup and shutdown
-procedures are to be provided by the xxQS_NAMExx administration
+procedures are to be provided by the xxQS_NAMExx administrator
 and are intended for site specific actions to be taken prior and
 after execution of the actual user job.
 .PP
@@ -77,14 +77,13 @@ After the job has finished and the epilog script is processed,
 .I xxqs_name_sxx_shepherd
 retrieves resource usage statistics about
 the job, places them in a job specific subdirectory of the
-spool directory of
 .M xxqs_name_sxx_execd 8
-for reporting through
+spool directory for reporting through
 .M xxqs_name_sxx_execd 8
 and finishes.
 
 .I xxqs_name_sxx_shepherd
-also places a exit status file in the spool directory. This exit status can
+also places an exit status file in the spool directory. This exit status can
 be viewed with qacct -j JobId (see
 .M qacct 1 );
 it is not the exit status of 
@@ -94,7 +93,7 @@ itself but of one of the methods executed by
 This exit status can have several meanings, depending on in which method
 an error occured (if any).
 The possible methods are: prolog, parallel start, job, parallel stop,
-epilog, suspend, restart, terminate, clean, migrate, checkpoint.
+epilog, suspend, restart, terminate, clean, migrate, and checkpoint.
 
 The following exit values are returned:
 .IP "0" 0.7i
@@ -127,7 +126,7 @@ requeued.
 Parallel stop: The queue is set to error state, but the job is not requeued. It
 is assumed that the job itself ran successfully and only the clean up script failed.
 .br
-Suspend, restart, terminate and clean, migrate: Always successfull.
+Suspend, restart, terminate, clean, and migrate: Always successfull.
 .br
 Checkpoint: Success, except for kernel checkpointing: checkpoint was not 
 successfull, did not happen (but migration will happen by xxQS_NAMExx).

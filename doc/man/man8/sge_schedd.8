@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_schedd.8,v $     Last Update: $Date: 2004/04/19 10:52:14 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: sge_schedd.8,v $     Last Update: $Date: 2004/08/11 14:12:47 $     Revision: $Revision: 1.7.6.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SCHEDD 8 "$Date: 2004/04/19 10:52:14 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SCHEDD 8 "$Date: 2004/08/11 14:12:47 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_schedd \- xxQS_NAMExx job scheduling agent
 .\"
@@ -43,7 +43,7 @@ xxqs_name_sxx_schedd \- xxQS_NAMExx job scheduling agent
 .\"
 .SH DESCRIPTION
 .I xxqs_name_sxx_schedd
-computes the scheduling decision in a xxQS_NAMExx cluster. The information
+computes the scheduling decisions in an xxQS_NAMExx cluster. The information
 necessary for the decision is retrieved from
 .M xxqs_name_sxx_qmaster 8
 via an event interface.
@@ -51,13 +51,12 @@ After applying the scheduling algorithm,
 .I xxqs_name_sxx_schedd
 communicates the scheduling decision back to
 .M xxqs_name_sxx_qmaster 8
-again via the xxQS_NAMExx GDI. In order to trigger a
+again via the xxQS_NAMExx GDI. In order to trigger an
 .I xxqs_name_sxx_schedd
-run,
+scheduling run,
 .M xxqs_name_sxx_qmaster 8
-samples changes in the cluster status and notifies
+samples changes in the cluster status and periodically notifies
 .I xxqs_name_sxx_schedd
-in periodical time intervals.
 .br
 .PP
 By using the \fI\-tsm\fP option of the

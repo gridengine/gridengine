@@ -157,7 +157,7 @@ extern "C" {
 #endif
 
 /* _POSIX_PATH_MAX is only 255 and this is less than in most real systmes */
-#define SGE_PATH_MAX    8192  
+#define SGE_PATH_MAX    1024
 
 #define MAX_STRING_SIZE 8192
 typedef char stringT[MAX_STRING_SIZE];

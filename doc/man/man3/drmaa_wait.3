@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_wait.3,v $     Last Update: $Date: 2004/05/28 10:36:20 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: drmaa_wait.3,v $     Last Update: $Date: 2004/08/11 14:12:50 $     Revision: $Revision: 1.5.4.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_wait 3 "$Date: 2004/05/28 10:36:20 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_wait 3 "$Date: 2004/08/11 14:12:50 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -150,21 +150,21 @@ drmaa_wifaborted \- Waiting for jobs to finish
 .\"
 .SH DESCRIPTION
 The drmaa_synchronize() function blocks the calling thread until all jobs specified in \fIjob_ids\fP 
-have failed or finished execution. If \fIjob_ids\fP contains `DRMAA_JOB_IDS_SESSION_ALL', then this 
+have failed or finished execution. If \fIjob_ids\fP contains 'DRMAA_JOB_IDS_SESSION_ALL', then this 
 function waits for all jobs submitted during this DRMAA session. The \fIjob_ids\fP pointer array
 must be \fINULL\fP terminated.  
 .PP
-To prevent blocking indefinitely in this call, the caller may use \fItimeout\fP, specifying 
+To prevent blocking indefinitely in this call, the caller may use the \fItimeout\fP, specifying 
 how many seconds to wait for this call to complete before timing out. The special value
-DRMAA_TIMEOUT_WAIT_FOREVER can be to wait indefinitely for a result. The special value
-DRMAA_TIMEOUT_NO_WAIT can be specified to return immediately. 
-If the call exits before \fItimeout\fP, all the specified jobs have completed or
+DRMAA_TIMEOUT_WAIT_FOREVER can be used to wait indefinitely for a result. The special value
+DRMAA_TIMEOUT_NO_WAIT can be used to return immediately. 
+If the call exits before \fItimeout\fP seconds, all the specified jobs have completed or
 the calling thread received an interrupt.  In both cases, the return code is DRMAA_ERRNO_EXIT_TIMEOUT. 
 .PP
 The \fIdispose\fP parameter specifies how to treat reaping information. 
-If `0' is passed to this paramter, job finish information will still be available when 
+If '0' is passed to this paramter, job finish information will still be available when 
 .M drmaa_wait 3
-is used. If `1' is passed, 
+is used. If '1' is passed, 
 .M drmaa_wait 3
 will be unable to access this job's finish information.
 .\" 
@@ -175,20 +175,20 @@ The drmaa_wait() function blocks the calling thread until a job fails or finishe
 This routine is modeled on the 
 .M wait4 3 
 routine. 
-If the special string `DRMAA_JOB_IDS_SESSION_ANY' is passed as \fIjob_id\fP, this routine 
-will wait for any job from the session. Otherwise the \fIjobi_id\fP must be the job identifier
+If the special string 'DRMAA_JOB_IDS_SESSION_ANY' is passed as \fIjob_id\fP, this routine 
+will wait for any job from the session. Otherwise the \fIjob_id\fP must be the job identifier
 of a job or array job task that was submitted during the session.
 .PP
 To prevent blocking indefinitely in this call, the caller may use \fItimeout\fP, specifying 
 how many seconds to wait for this call to complete before timing out. The special value
 DRMAA_TIMEOUT_WAIT_FOREVER can be to wait indefinitely for a result. The special value
-DRMAA_TIMEOUT_NO_WAIT can be specified to return immediately. 
-If the call exits before \fItimeout\fP, all the specified jobs have completed or
+DRMAA_TIMEOUT_NO_WAIT can be used to return immediately. 
+If the call exits before \fItimeout\fP seconds have passed, all the specified jobs have completed or
 the calling thread received an interrupt.  In both cases, the return code is DRMAA_ERRNO_EXIT_TIMEOUT. 
 .PP
 The routine reaps jobs on a successful call, so any subsequent calls to 
 .M drmaa_wait 3 
-will fail returning a DRMAA_ERRNO_INVALID_JOB error meaning that the job has already been reaped. 
+will fail returning a DRMAA_ERRNO_INVALID_JOB error, meaning that the job has already been reaped. 
 This error is the same as if the job were unknown. Returning due to an elapsed timeout or an
 interrupt does not cause the job information to be reaped.  This means that,
 in this case, it is possible to issue 
@@ -229,18 +229,18 @@ for an explanation of the resource information.
 .\" 
 .\" 
 .SS "drmaa_wifaborted()"
-The drmaa_wifaborted() function evaluates in the interger pointed to by \fIaborted\fP
-a non-zero value, if \fIstat\fP was returned by for a job that ended before entering the 
+The drmaa_wifaborted() function evaluates into the integer pointed to by \fIaborted\fP
+a non-zero value if \fIstat\fP was returned from a job that ended before entering the 
 running state.
 .PP
 .\"
 .\" 
 .\" 
 .SS "drmaa_wifexited()"
-The drmaa_wifexited() function evaluates in the integer pointed to by \fIexited\fP a 
-non-zero value, if \fIstat\fP was returned for a job that terminated normally. A 
-zero value can also indicate that altough the job has terminated normally an exit 
-status is not available or that it is not known whether the job terminated normally. 
+The drmaa_wifexited() function evaluates into the integer pointed to by \fIexited\fP a 
+non-zero value if \fIstat\fP was returned from a job that terminated normally. A 
+zero value can also indicate that although the job has terminated normally, an exit 
+status is not available, or that it is not known whether the job terminated normally. 
 In both cases 
 .M drmaa_wexitstatus 3
 will not provide exit status information. A non-zero value returned in \fIexited\fP 
@@ -254,13 +254,15 @@ and
 .\"
 .\"
 .SS "drmaa_wifsignaled()"
-The drmaa_wifsignaled() function evaluates in the integer pointed to by \fIsignaled\fP 
-a non-zero value, if \fIstat\fP was returned for a job that terminated due to the receipt of a 
-signal. A zero value can also indicate that altough the job has terminated due to the receipt of 
-a signal the signal is not available or that it is not known whether the job terminated due to 
+The drmaa_wifsignaled() function evaluates into the integer pointed to by \fIsignaled\fP 
+a non-zero value if \fIstat\fP was returned for a job that terminated due to the receipt of a 
+signal. A zero value can also indicate that although the job has terminated due to the receipt of 
+a signal, the signal is not available, or it is not known whether the job terminated due to 
 the receipt of a signal. In both cases 
 .M drmaa_wtermsig 3
-will not provide signal information.
+will not provide signal information. A non-zero value returned in \fIsignaled\fP 
+indicates signal information can be retrieved by means of 
+.M drmaa_wtermsig 3 .
 .PP
 .\"
 .\"
@@ -268,8 +270,8 @@ will not provide signal information.
 .SS "drmaa_wcoredump()"
 If
 .M drmaa_wifsignaled 3 
-returned non-zero in the \fIsignaled\fP parameter, the drmaa_wcoredump() function evaluates in the 
-integer pointed to by \fIcore_dumped\fP a non-zero value, if a core image of the terminated 
+returned a non-zero value in the \fIsignaled\fP parameter, the drmaa_wcoredump() function evaluates into the 
+integer pointed to by \fIcore_dumped\fP a non-zero value if a core image of the terminated 
 job was created. 
 .PP
 .\"
@@ -278,7 +280,7 @@ job was created.
 .SS "drmaa_wexitstatus()"
 If 
 .M drmaa_wifexited 3
-returned non-zero in the \fIexited\fP parameter, the drmaa_wexitstatus() function evaluates in the
+returned a non-zero value in the \fIexited\fP parameter, the drmaa_wexitstatus() function evaluates into the
 integer pointed to by \fIexit_code\fP the exit code that the job passed to 
 .M exit 2 
 or the value that the child process returned from main.
@@ -289,7 +291,7 @@ or the value that the child process returned from main.
 .SS "drmaa_wtermsig()"
 If 
 .M drmaa_wifsignaled 3
-returned non-zero in the \fIsignaled\fP parameter, the drmaa_wtermsig() function evaluates 
+returned a non-zero value in the \fIsignaled\fP parameter, the drmaa_wtermsig() function evaluates 
 into \fIsignal\fP up to \fIsignal_len\fP characters of a string representation of the signal 
 that caused the termination of the job. For signals declared by POSIX.1, the symbolic names 
 are returned (e.g., SIGABRT, SIGALRM). For signals not declared by POSIX, any other string 
@@ -346,7 +348,7 @@ drmaa_wifsignaled(), drmaa_wtermsig(), drmaa_wcoredump(), and drmaa_wifaborted()
 will fail if:
 .\" 
 .SS "DRMAA_ERRNO_INTERNAL_ERROR"
-Unexpected or internal DRMAA error like system call failure, etc.
+Unexpected or internal DRMAA error, like system call failure, etc.
 .\" 
 .SS "DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE"
 Could not contact DRM system for this request.

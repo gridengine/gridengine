@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/07/22 12:57:29 $     Revision: $Revision: 1.7.4.1 $
+.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/08/11 14:12:48 $     Revision: $Revision: 1.7.4.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_attributes 3 "$Date: 2004/07/22 12:57:29 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_attributes 3 "$Date: 2004/08/11 14:12:48 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -114,20 +114,22 @@ for setting and inspecting vector attributes.
 .PP
 .\" 
 .SS "drmaa_get_next_attr_name()"
-Each time drmaa_get_next_attr_name() is called it returns into the buffer \fIvalue\fP up to \fIvalue_len\fP 
-bytes of the next entry stored in the DRMAA names string vector \fIvalues\fP.
+Each time drmaa_get_next_attr_name() is called it returns into the buffer,
+\fIvalue\fP, up to \fIvalue_len\fP 
+bytes of the next entry stored in the DRMAA names string vector, \fIvalues\fP.
 .PP
 .\" 
 .SS "drmaa_release_attr_names()"
 The drmaa_release_attr_names() function releases all resources associated with the DRMAA names
-string vector \fIvalues\fP.
+string vector, \fIvalues\fP.
 .PP
 .\"
 .SS "Attribute Priorities"
 DRMAA job template attributes can be set from six different sources.  In order
-of precedence, from lowest to highest, there are: options
-set by DRMAA automatically by default, options set in the sge_request file,
-options set in the script file, options set by the drmaa_job_category
+of precedence, from lowest to highest, these are: options
+set by DRMAA automatically by default, options set in the
+.M sge_request 5
+file(s), options set in the script file, options set by the drmaa_job_category
 attribute, options set by the drmaa_native_specification attribute, and options
 set through other DRMAA attributes.
 .PP
@@ -139,33 +141,35 @@ unschedulable will cause a submit error.
 .PP
 The
 .M sge_request 5
-file, found in the $xxQS_NAMExx_ROOT/$xxQS_NAMExx_CELL/common
-directory, may contain options to be applied to all jobs.  See
+file, found in the $xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common
+directory, may contain options to be applied to all jobs.  The .sge_request file
+found in the user's home directory or the current working directory may also
+contain options to be applied to certain jobs.  See
 .M sge_request 5
 for more information.
 .PP
 If the
 .M sge_request 5
-file contains "-b no" or if the \fdrmaa_native_specification\fP attribute is set
+file contains "-b no" or if the drmaa_native_specification attribute is set
 and contains "-b no", the script file will be parsed for in-line arguments.
 Otherwise, no scripts args will be interpreted.  See
 .M qsub 1
 for more information.  
 .PP
-If the \fdrmaa_job_category\fP attribute is set, and the category it points to
+If the drmaa_job_category attribute is set, and the category it points to
 exists in one of the
 .M qtask 5
 files, the options associated with that category will be applied to the job
 template.  See
 .M qtask 5
-and the \fdrmaa_job_category\fP attribute below for more information.
+and the drmaa_job_category attribute below for more information.
 .PP
-If the \fdrmaa_native_specification\fP attribute is set, all options contained
+If the drmaa_native_specification attribute is set, all options contained
 therein will be applied to the job template.  See the
-\fdrmaa_native_specification\fP below for more information.
+drmaa_native_specification below for more information.
 .PP
 Other DRMAA attributes will override any previous settings.  For example, if
-the sge_request file contains "-j y", but the DRMAA_JOIN_FILES attribute is
+the sge_request file contains "-j y", but the drmaa_join_files attribute is
 set to "n", the ultimate result is that the input and output files will remain
 separate.
 .PP
@@ -175,15 +179,17 @@ The following DRMAA attributes correspond to the following
 .M qsub 1
 options:
 .PP
+.RS
+.nf
 DRMAA Attribute                  qsub Option
-------------------------------------------------------
+-------------------------------------------------------
 drmaa_remote_command             script file
-drmaa_v_argv                     script file arguments
+drmaa_v_argv                     script file args
 drmaa_js_state = "drmaa_hold"    -h
 drmaa_v_env                      -v
-drmaa_wd                         NONE
-drmaa_job_category               NONE
-drmaa_native_specification       NONE
+drmaa_wd = $PWD                  -cwd
+drmaa_job_category               (qtsch qtask)*
+drmaa_native_specification       ALL*
 drmaa_v_email                    -M
 drmaa_block_email = "1"          -m n
 drmaa_start_time                 -a
@@ -192,13 +198,11 @@ drmaa_input_path                 -i
 drmaa_output_path                -o
 drmaa_error_path                 -e
 drmaa_join_files                 -j
-drmaa_transfer_files             NONE
-drmaa_deadline_time              NONE
-drmaa_wct_hlimit                 NONE
-drmaa_wct_slimit                 NONE
-drmaa_run_duration_hlimit        NONE
-drmaa_run_duration_slimit        NONE
+drmaa_transfer_files             (prolog and epilog)*
+.fi
 .PP
+* See the individual attribute description below
+.RE
 .PP
 .\"
 .\"
@@ -206,46 +210,48 @@ drmaa_run_duration_slimit        NONE
 .SH "DRMAA JOB TEMPLATE ATTRIBUTES"
 .SS "drmaa_remote_command - ""<remote_command>"""
 Specifies the remote command to execute. The \fIremote_command\fP must be the path of an 
-executable that is available at the jobs execution host.  If the path is relative,
-it is assumed to be relative to the working directory set through the drmaa_wd
-attibute.  If drmaa_wd is not set, the path is assumed to be relative to the
-user's home directory.
+executable that is available at the job's execution host.  If the path is relative,
+it is assumed to be relative to the working directory, usually set through the
+drmaa_wd attribute.  If working directory is not set, the path is assumed to be
+relative to the user's home directory.
 .PP
-The file pointed to by remote command may either be an executable binary or an
-executable script.  If a script, the script must include the path to the shell
+The file pointed to by remote_command may either be an executable binary or an
+executable script.  If a script, it must include the path to the shell
 in a #! line at the beginning of the script.  By default, the remote command
 will be executed directly, as by
-.M exec 2.
+.M exec 2 .
 To have the remote command executed in a shell, such as to preserve environment
 settings, use the drmaa_native_specification attribute to include the "-shell yes"
 option.  Jobs which are executed by a wrapper shell fail differently from jobs
-which are executed directly.  A job executed by a wrapper shell which contains
-a user error, such as an invalid path to the executable, will execute successfully
-and exit with a return code of 1.  A job executed directly which contains such
-an error will enter the DRMAA_PS_FAILED state upon execution.
+which are executed directly.  When a job which contains a user error, such as an
+invalid path to the executable, is executed by a wrapper shell, the job will
+execute successfully, but exit with a return code of 1.  When a job which
+contains such an error is executed directly, it will enter the DRMAA_PS_FAILED
+state upon execution.
 .PP
 .\" 
 .\" 
 .SS "drmaa_js_state - ""{drmaa_hold|drmaa_active}"""
-Specifies the job state at submission. As string values `drmaa_hold' and `drmaa_active'
-are supported. When `drmaa_active' setting is used the job is runnable. When `drmaa_hold' 
-setting is used the job is submitted in user hold state (either DRMAA_PS_USER_ON_HOLD or
-DRMAA_PS_USER_SYSTEM_ON_HOLD). This is equivalent to 
+Specifies the job state at submission. The string values 'drmaa_hold'
+and 'drmaa_active' are supported. When 'drmaa_active' is used the job is submitted
+in a runnable state.  When 'drmaa_hold' is used the job is submitted in user
+hold state (either DRMAA_PS_USER_ON_HOLD or DRMAA_PS_USER_SYSTEM_ON_HOLD). This
+attribute is largely equivalent to  the
 .M qsub 1
-submit option `-h'. 
+submit option '-h'.
 .PP
 .\" 
 .\" 
 .SS "drmaa_wd - ""<directory_name>"""
-Specifies the directory name where the job will be executed. A `$drmaa_hd_ph$' placeholder 
+Specifies the directory name where the job will be executed. A '$drmaa_hd_ph$' placeholder 
 at the begining of the
 \fIdirectory_name\fP 
 denotes the remaining string portion as a relative directory name that is
 resolved relative to the job user's home directory at the execution 
 host. When the DRMAA job template is used for bulk job submission (see also
 .M drmaa_run_bulk_job 3 )
-the `$drmaa_incr_ph$' placeholder can be used at any position within \fIdirectory_name\fP 
-to cause a substitution with the parametric jobs index. 
+the '$drmaa_incr_ph$' placeholder can be used at any position within \fIdirectory_name\fP 
+to cause a substitution with the parametric job's index. 
 The \fIdirectory_name\fP must be specified in a syntax that is common at the host 
 where the job is executed. If set to a relative path and no placeholder is used,
 a path relative to the user's home directory is assumed.  If not set, the
@@ -260,33 +266,32 @@ must be the same on both the submission and execution hosts.
 .\" 
 .\" 
 .SS "drmaa_job_name - ""<job_name>"""
-Specifies the jobs name. Setting the job name is equivalent to use of
+Specifies the job's name. Setting the job name is equivalent to use of
 .M qsub 1
-submit option `-N' with \fIjob_name\fP as option argument. 
+submit option '-N' with \fIjob_name\fP as option argument. 
 .PP
 .SS "drmaa_input_path - ""[<hostname>]:<file_path>"""
 Specifies the standard input of the job. Unless set elsewhere, if not explicitly set in 
 the job template, the job is started with an empty input stream. If the standard input is set it 
-specifies the network path of the jobs input stream file. 
+specifies the network path of the job's input stream file. 
 .PP
-When the `drmaa_transfer_files' job 
-template attribute is supported and contains the character `i', the input file will be fetched 
+When the 'drmaa_transfer_files' job 
+template attribute is supported and contains the character 'i', the input file will be fetched 
 by xxQS_NAMExx from the specified host or from the submit host if no 
-\fIhostname\fP is specified. When the `drmaa_transfer_files' job template attribute is not 
-supported or does not contain the character `i', the input file is always expected at the 
-host where the job is executed irrespectively of a possibly 
-\fIhostname\fP specified. 
+\fIhostname\fP is specified. When the 'drmaa_transfer_files' job template attribute is not 
+supported or does not contain the character 'i', the input file is always expected at the 
+host where the job is executed regardless of any \fIhostname\fP specified. 
 .PP
-If the DRMAA job template will be used for of bulk job submission 
-(see also 
+If the DRMAA job template will be used for bulk job submission, 
+(See also
 .M drmaa_run_bulk_job 3 ) 
-the `$drmaa_incr_ph$' placeholder can be used at any position 
-within \fIfile_path\fP to cause a substitution with the parametric jobs index. A `$drmaa_hd_ph$' 
-placeholder at the begin of \fIfile_path\fP denotes the remaining portion of the 
-\fIfile_path\fP as a relative file specification resolved relative to the job users home directory 
-at the host where the file is located. A `$drmaa_wd_ph$' placeholder at the begin of \fIfile_path\fP
+the '$drmaa_incr_ph$' placeholder can be used at any position 
+within \fIfile_path\fP to cause a substitution with the parametric job's index. A '$drmaa_hd_ph$' 
+placeholder at the beginning of \fIfile_path\fP denotes the remaining portion of the 
+\fIfile_path\fP as a relative file specification resolved relative to the job user's home directory 
+at the host where the file is located. A '$drmaa_wd_ph$' placeholder at the beginning of \fIfile_path\fP
 denotes the remaining portion of the \fIfile_path\fP as a relative file specification resolved relative 
-to the jobs working directory at the host where the file is located. The \fIfile_path\fP must be specified 
+to the job's working directory at the host where the file is located. The \fIfile_path\fP must be specified 
 in a syntax that is common at the host where the file is located. If set and the file can't be read 
 the job enters the state DRMAA_PS_FAILED.
 .PP
@@ -294,24 +299,24 @@ the job enters the state DRMAA_PS_FAILED.
 .\" 
 .SS "drmaa_output_path - ""[<hostname>]:<file_path>"""
 Specifies the standard output of the job. If not explicitly set in the job template, the whereabouts of 
-the jobs output stream is not defined. If set specifies the network path of the jobs output stream file.
+the job's output stream is not defined. If set, this attribute specifies the network path of the job's output stream file.
 .PP
-When the `drmaa_transfer_files' job template attribute is supported and contains the character 'o',
+When the 'drmaa_transfer_files' job template attribute is supported and contains the character 'o',
 the output file will be transferred by xxQS_NAMExx to the specified host or to the submit host if no 
-\fIhostname\fP is specified. When the `drmaa_transfer_files' job template attribute is not supported or 
+\fIhostname\fP is specified. When the 'drmaa_transfer_files' job template attribute is not supported or 
 does not contain the character 'o', the output file is always kept at the host where the job is executed 
-irrespectively of a possibly \fIhostname\fP specified. 
+regardless of any \fIhostname\fP specified. 
 .PP
 If the DRMAA job template will be used for of bulk job submission 
 (see also 
 .M drmaa_run_bulk_job 3 ) 
-the `$drmaa_incr_ph$' placeholder can be used at any position within the \fIfile_path\fP
-to cause a substitution with the parametric jobs index. 
-A `$drmaa_hd_ph$' placeholder at the
-begin of \fIfile_path\fP denotes the remaining portion of the \fIfile_path\fP as a relative file specification 
-resolved relative to the job users home directory at the host where the file is located. A `$drmaa_wd_ph$'
-placeholder at the begin of the \fIfile_path\fP denotes the remaining portion of \fIfile_path\fP as a 
-relative file specification resolved relative to the jobs working directory at the host where the file 
+the '$drmaa_incr_ph$' placeholder can be used at any position within the \fIfile_path\fP
+to cause a substitution with the parametric job's index. 
+A '$drmaa_hd_ph$' placeholder at the
+beginning of \fIfile_path\fP denotes the remaining portion of the \fIfile_path\fP as a relative file specification 
+resolved relative to the job user's home directory at the host where the file is located. A '$drmaa_wd_ph$'
+placeholder at the beginning of the \fIfile_path\fP denotes the remaining portion of \fIfile_path\fP as a 
+relative file specification resolved relative to the job's working directory at the host where the file 
 is located. The \fIfile_path\fP must be specified in a syntax that is common at the host where the file 
 is located. If set and the file can't be written before execution the job enters the
 state DRMAA_PS_FAILED.
@@ -320,36 +325,39 @@ state DRMAA_PS_FAILED.
 .\" 
 .SS "drmaa_error_path - ""[<hostname>]:<file_path>"""
 Specifies the standard error of the job. If not explicitly set in the job template, the whereabouts of the 
-jobs error stream is not defined. If set, specifies the network path of the jobs error stream file.
+job's error stream is not defined. If set, this attribute specifies the network path of the job's error stream file.
 .PP
-When the `drmaa_transfer_files' job template attribute is supported and contains the character 'e',
+When the 'drmaa_transfer_files' job template attribute is supported and contains the character 'e',
 the output file will be transferred by xxQS_NAMExx to the specified host or to the submit host if no 
-\fIhostname\fP is specified. When the `drmaa_transfer_files' job template attribute is not supported 
+\fIhostname\fP is specified. When the 'drmaa_transfer_files' job template attribute is not supported 
 or does not contain the character 'e', the error file is always kept at the host where the
-job is executed irrespectively of a possibly \fIhostname\fP specified. 
+job is executed regardless of any \fIhostname\fP specified. 
 .PP
 If the DRMAA job template will be used for of bulk job submission 
 (see also 
 .M drmaa_run_bulk_job 3 ) 
-the `$drmaa_incr_ph$' placeholder can be used at any position within the \fIfile_path\fP
-to cause a substitution with the parametric jobs index. 
-A `$drmaa_hd_ph$' placeholder at the begin
-of the \fIfile_path\fP denotes the remaining portion of the \fIfile_path\fP as a relative file specification resolved relative to the job users home directory at
-the host where the file is located. A `$drmaa_wd_ph$' placeholder at the begin of the \fIfile_path\fP denotes the remaining portion of the
-\fIfile_path\fP as a
-relative file specification resolved relative to the jobs working directory at the host where the file is located. The \fIfile_path\fP must be specified in a
-syntax that is common at the host where the file is located. If set and the file can't be written before execution the job enters the state
+the '$drmaa_incr_ph$' placeholder can be used at any position within the \fIfile_path\fP
+to cause a substitution with the parametric job's index. 
+A '$drmaa_hd_ph$' placeholder at the beginning
+of the \fIfile_path\fP denotes the remaining portion of the \fIfile_path\fP as a
+relative file specification resolved relative to the job user's home directory at
+the host where the file is located. A '$drmaa_wd_ph$' placeholder at the beginning
+of the \fIfile_path\fP denotes the remaining portion of the \fIfile_path\fP as a
+relative file specification resolved relative to the job's working directory at
+the host where the file is located. The \fIfile_path\fP must be specified in a
+syntax that is common at the host where the file is located. If set and the file
+can't be written before execution the job enters the state
 DRMAA_PS_FAILED. The attribute name is drmaa_error_path.
 
 .PP
 .\" 
 .\" 
 .SS "drmaa_join_files - ""{y|n}"""
-Specifies if the jobs error stream should be intermixed with the output stream. 
-If not explicitly set in the job template the attribute defaults to `n'. Either 
-`y' or `n' can be specified. If `y' is specified xxQS_NAMExx will ignore the value 
-of the `drmaa_error_path' job template attribute and intermix the standard error 
-stream with the standard output stream as specified with `drmaa_output_path'.
+Specifies if the job's error stream should be intermixed with the output stream. 
+If not explicitly set in the job template the attribute defaults to 'n'. Either 'y'
+or 'n' can be specified. If 'y' is specified xxQS_NAMExx will ignore the value 
+of the 'drmaa_error_path' job template attribute and intermix the standard error 
+stream with the standard output stream as specified with 'drmaa_output_path'.
 .PP
 .\" 
 .\" 
@@ -360,7 +368,7 @@ Specifies the arguments to the job.
 .\"
 .SS "drmaa_job_category - ""<category>"""
 Specifies the DRMAA job category. The \fIcategory\fP string is used 
-by xxQS_NAMExx as reference into the 
+by xxQS_NAMExx as a reference into the 
 .M qtask 5
 file. Certain 
 .M qsub 1 
@@ -368,11 +376,14 @@ options used in the referenced qtask file line are applied to the job template
 before submission to allow site-specific resolving of resources and/or policies. 
 The cluster qtask file, the local qtask file, and the user qtask file are
 searched. Job settings resulting from job template category are overridden by
-settings resulting from the job template \fdrmaa_native_specification\fP attribute
+settings resulting from the job template drmaa_native_specification attribute
 as well as by explict DRMAA job template settings.
 .PP
 In order to avoid collisions with command names in the qtask files, it is
-recommended that DRMAA job categories names take the form: <category_name>.cat.
+recommended that DRMAA job category names take the form: <category_name>.cat.
+.PP
+The options -help, -t, -verify, and -w w|v are ignored.  The -cwd option is
+ignored unless the $SGE_DRMAA_ALLOW_CWD environment variable is set.
 .PP
 .\" 
 .\" 
@@ -446,7 +457,8 @@ See drmaa_input_path, drmaa_output_path and drmaa_error_path for information abo
 how to specify the standard input file, standard output file and standard error file.
 The file transfer mechanism itself must be configured by the administrator (see 
 .M sge_conf 5
-). When it is configured, the administrator has to enable drmaa_transfer_files. If it is not configured, "drmaa_transfer_files" is not enabled and can't be used.
+). When it is configured, the administrator has to enable drmaa_transfer_files.
+If it is not configured, "drmaa_transfer_files" is not enabled and can't be used.
 .PP
 .\"
 .\" these are optional
@@ -481,7 +493,7 @@ The file transfer mechanism itself must be configured by the administrator (see
 .IP "\fBSGE_DRMAA_ALLOW_CWD\fP" 1.5i
 Enables the parsing of the -cwd option from the sge_request file(s), job
 category, and/or the native specification attribute.  This option is disabled
-by default because the algorithm for parsing it is not thread-safe.
+by default because the algorithm for parsing the -cwd option is not thread-safe.
 .\"
 .IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
 Specifies the location of the xxQS_NAMExx standard configuration files.
@@ -529,7 +541,7 @@ The drmaa_get_attribute_names(), drmaa_get_vector_attribute_names(), and drmaa_g
 functions will fail if:
 .\" 
 .SS "DRMAA_ERRNO_INTERNAL_ERROR"
-Unexpected or internal DRMAA error like system call failure, etc.
+Unexpected or internal DRMAA error, like system call failure, etc.
 .\" 
 .SS "DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE"
 Could not contact DRM system for this request.

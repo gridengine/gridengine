@@ -212,7 +212,7 @@ static void okCB(Widget w, XtPointer cld, XtPointer cad)
    /*
    ** q wildcard filter
    */
-   queue_filter_q = XmStringToCull(misc_filter_q_sp, ST_Type, ST_name, ALL_ITEMS);
+   lp = XmStringToCull(misc_filter_q_sp, QR_Type, QR_name, ALL_ITEMS);
    queue_filter_q = lFreeList(queue_filter_q);
    queue_filter_q = lp;
    

@@ -39,6 +39,7 @@
 
 #include "sge.h"
 #include "qmon_prefL.h"
+#include "sge_qrefL.h"
 #include "sge_str.h"
 #include "qmon_preferences.h"
 #include "sge_string.h"
@@ -201,7 +202,7 @@ int parsing_type
    
    /* --------- PREF_queue_filter_q */
    if (!set_conf_list(alpp, clpp, fields, "queue_filter_q", ep, 
-                      PREF_queue_filter_q, ST_Type, ST_name)) {
+                      PREF_queue_filter_q, QR_Type, QR_name)) {
       DEXIT;
       return -1;
    }
@@ -352,7 +353,7 @@ lListElem *ep
    sep = lFirst(lGetList(ep, PREF_queue_filter_q));
    if (sep) {
       do {
-         fprintf(fp, "%s", lGetString(sep, ST_name));
+         fprintf(fp, "%s", lGetString(sep, QR_name));
          sep = lNext(sep);
          if (sep) 
             fprintf(fp, " ");

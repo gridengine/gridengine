@@ -1,3 +1,12 @@
+AA-2004-02-27-1  Bugfix:    - q filtering -> segv
+                 IZ:        725
+                 Changed:   qmon
+
+AA-2004-02-27-0  Bugfix:    - qi dialogue shows only fixed number of queues
+                            - Modify button in user configuration
+                            - cq modify queue name line insensitive
+                            - time helper dialogue
+                            - comment, msg corrections
                  IZ:        747, 739, 736, 723
                  Changed:   qmon, msg header changed -> all is recompiled
                  

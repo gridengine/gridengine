@@ -50,7 +50,7 @@ ErrUsage()
 {
    $ECHO "" >&2
    Translate "Usage:" 2
-   $ECHO     " $1 -m|-x|-s [-nostrict] [-fast] [-auto] [-noqueue] [-resport] [-afs]" >&2
+   $ECHO     " $1 -m|-x|-s [-nostrict] [-fast] [-auto] [-noqueue] [-resport] [-afs] [-csp]" >&2
    $ECHO     "       -m        \c" >&2
    Translate "install qmaster host" 2 1
    $ECHO     "       -x        \c" >&2
@@ -67,6 +67,8 @@ ErrUsage()
    Translate "install system with reserved port security" 2 1
    $ECHO     "       -afs  \c" >&2
    Translate "install system with AFS functionality" 2 1
+   $ECHO     "       -csp  \c" >&2
+   Translate "install system with Certificate security protocol functionality" 2 1
    $ECHO "" >&2
 
    exit 1
@@ -929,7 +931,13 @@ AddConfiguration()
       AFS_PREFIX=""
    fi
 
-   $ECHO ${PRODUCT_PREFIX}${RESPORT_PREFIX}${AFS_PREFIX} >> $COMMONDIR/product_mode
+   if [ $csp = true ]; then
+      CSP_PREFIX=-csp
+   else
+      CSP_PREFIX=""
+   fi
+
+   $ECHO ${PRODUCT_PREFIX}${RESPORT_PREFIX}${AFS_PREFIX}${CSP_PREFIX} >> $COMMONDIR/product_mode
    SetPerm $COMMONDIR/product_mode
 }
 

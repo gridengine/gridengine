@@ -1,0 +1,270 @@
+#!/bin/sh
+#
+# SGE/SGEEE CA script
+#
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+#
+#set -x
+#
+PATH=/bin:/usr/bin
+
+umask 022
+
+if [ x$SGE_ROOT = x ]; then
+   echo '$SGE_ROOT not set'
+   exit 1
+fi
+
+if [ x$SGE_CELL = x ]; then
+   SGE_CELL=default
+fi
+
+CATOP=$SGE_ROOT/$SGE_CELL/common/sgeCA
+CALOCALTOP=/var/sgeCA/$SGE_CELL
+CAKEY=cakey.pem
+CACERT=cacert.pem
+
+CONFIG_DIR=`dirname $0`
+OPENSSL=/vol2/tools/SW/openssl-engine-0.9.6b/solaris64/bin/openssl
+ECHO=echo
+Translate() 
+{
+  $ECHO $1
+}  
+
+REQ="$OPENSSL req -nodes -config $CONFIG_DIR/sge_ssl.cnf"
+CA="$OPENSSL ca -config $CONFIG_DIR/sge_ssl.cnf -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT -outdir $CATOP/newcerts"
+VERIFY="$OPENSSL verify"
+X509="$OPENSSL x509"
+
+#-------------------------------------------------------------------------
+# ErrUsage: print usage string, exit
+#
+ErrUsage()
+{
+   $ECHO "" >&2
+   Translate "Usage:" 2
+   $ECHO     " $1 {-ca|-testca|-cert|-req|-sign|-verify} [-days <days>] [-user <user>] [-outdir <outdir>]" >&2
+   $ECHO     "       -ca        \c" >&2
+   Translate "install CA directories and generate CA key and certificate" 2 1
+   $ECHO     "       -testca        \c" >&2
+   Translate "install CA directories and generate CA key and certificate in ./sgeCA" 2 1
+   $ECHO     "       -cert        \c" >&2
+   Translate "..." 2 1
+   $ECHO     "       -req        \c" >&2
+   Translate "..." 2 1
+   $ECHO     "       -sign     \c" >&2
+   Translate "..." 2 1
+   $ECHO     "       -verify \c" >&2
+   Translate "..." 2 1 "\$$QSYST_ROOT"
+   $ECHO     "       -days <days>     \c" >&2
+   Translate "..." 2 1
+   $ECHO     "       -user <user>  \c" >&2
+   Translate "..." 2 1
+   $ECHO     "       -outdir <outdir>  \c" >&2
+   Translate "..." 2 1
+   $ECHO "" >&2
+
+   exit 1
+}
+
+#-------------------------------------------------------------------------
+# Make directories needed by CA
+#
+MakeDirsCA()
+{
+   Translate "Making directories"
+   Write "" "$transout" "------------------" ""
+}
+
+#-----------------------------
+# CommandLine Argument Parsing
+#
+WHICH="undef"
+newreq=newreq.pem
+newcert=newcert.pem
+outdir=.
+
+ARGC=$#
+while [ $ARGC != 0 ]; do
+   case $1 in
+   -ca)
+      WHICH="ca"
+      ;;
+   -testca)
+      WHICH="ca"
+      CATOP=./sgeCA
+      CALOCALTOP=./sgeCA
+      ;;
+   -req)
+      WHICH="req"
+      ;;
+   -cert)
+      WHICH="cert"
+      ;;
+   -sign|-signreq)
+      WHICH="sign"
+      ;;
+   -xsign)
+      WHICH="xsign"
+      ;;
+   -verify)
+      WHICH="verify"
+      ;;
+   -days)
+      if [ $ARGC -lt 2 ]; then
+         $ECHO "" >&2
+         Translate "Error: -days needs argument" 2 1
+         ErrUsage $0
+      fi
+      DAYS="-days $2"
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
+   -user)
+      if [ $ARGC -lt 2 ]; then
+         $ECHO "" >&2
+         Translate "Error: -user needs argument" 2 1
+         ErrUsage $0
+      fi
+      newreq=$2_req.pem
+      newcert=$2_cert.pem
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
+   -outdir)
+      if [ $ARGC -lt 2 ]; then
+         $ECHO "" >&2
+         Translate "Error: -outdir needs argument" 2 1
+         ErrUsage $0
+      fi
+      outdir=$2
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
+   *)
+      $ECHO "" >&2
+      Translate "Error: Unknown option %s" 2 1 "$1"
+      ErrUsage $0
+      ;;
+   esac
+   shift
+   ARGC=`expr $ARGC - 1`
+done
+
+if [ "$WHICH" = "undef" ]; then
+   ErrUsage $0
+fi
+
+case $WHICH in
+ca)
+    # if explicitly asked for or it doesn't exist then setup the directory
+    # structure that Eric likes to manage things 
+    NEW="1"
+    if [ "$NEW" -a ! -f ${CATOP}/serial ]; then
+        # create the directory hierarchy
+        mkdir -p ${CALOCALTOP} 
+        mkdir ${CALOCALTOP}/private
+        mkdir ${CATOP} 
+        mkdir ${CATOP}/certs 
+        mkdir ${CATOP}/crl 
+        mkdir ${CATOP}/newcerts
+        echo "01" > ${CATOP}/serial
+        touch ${CATOP}/index.txt
+        # set file perms
+    fi
+    if [ ! -f ${CALOCALTOP}/private/$CAKEY ]; then
+        echo "CA certificate filename (or enter to create)"
+        read FILE
+
+        # ask user for existing CA certificate
+        if [ "$FILE" ]; then
+            cp $FILE ${CALOCALTOP}/private/$CAKEY
+            RET=$?
+        else
+            echo "Making CA certificate ..."
+            $REQ -new -x509 -keyout ${CALOCALTOP}/private/$CAKEY \
+                           -out ${CATOP}/$CACERT $DAYS
+            RET=$?
+        fi
+    fi
+   ;;
+
+req)
+    # create a certificate request
+    $REQ -new -keyout $outdir/$newreq -out $outdir/$newreq $DAYS
+    RET=$?
+    echo "Request (and private key) is in $outdir/$newreq"
+   ;;
+
+cert)
+    # create a certificate
+    $REQ -new -x509 -keyout $outdir/$newreq -out $outdir/$newreq $DAYS
+    RET=$?
+    echo "Certificate request is in $outdir/$newreq"
+   ;;
+
+xsign)
+    $CA -policy policy_anything -infiles $newreq
+    RET=$?
+    ;;
+
+sign) 
+    $CA -policy policy_anything -out $outdir/$newcert -infiles $newreq
+    RET=$?
+    echo RET = $RET
+    cat $newcert
+    if [ $RET = 0 ]; then
+      echo "Signed certificate is in $outdir/$newcert"
+    fi
+    ;;
+    
+signcert) 
+    echo "Cert passphrase will be requested twice - bug?"
+    $X509 -x509toreq -in $newreq -signkey $newreq -out tmp.pem
+    $CA -policy policy_anything -out $outdir/$newcert -infiles tmp.pem
+    cat $newcert
+    echo "Signed certificate is in $outdir/$newcert"
+    ;;
+
+verify) 
+    $VERIFY -CAfile $CATOP/$CACERT $newcert
+    RET=$?
+    ;;
+
+help)
+    ErrUsage $0
+    ;;
+esac
+
+exit 0

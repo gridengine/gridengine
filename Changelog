@@ -1,3 +1,7 @@
+AA-2001-12-21-0: Feature    added sge_ca script
+                            RAND_load_file
+                            sec_setup_path path changes
+
 JG-2001-12-21-0: Enhancem.  Eliminate insure compile warnings
 
 AA-2001-12-20-1: Feature:   Security: 

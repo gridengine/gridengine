@@ -7,6 +7,7 @@
 # defined.
 #HOME                    = $ENV::SGE_ROOT/default
 #RANDFILE                = $ENV::HOME/.rnd
+CATOP                    = $ENV::SGE_ROOT/default/common/sgeCA
 
 # Extra OBJECT IDENTIFIER info:
 #oid_file                = $ENV::HOME/.oid
@@ -34,7 +35,7 @@ default_ca        = CA_default                # The default ca section
 ####################################################################
 [ CA_default ]
 
-dir                  = ./sgeCA                  # Where everything is kept
+dir                  = $CATOP                  # Where everything is kept
 certs                = $dir/certs               # Where the issued certs are kept
 crl_dir              = $dir/crl                 # Where the issued crl are kept
 database             = $dir/index.txt           # database index file.
@@ -88,8 +89,9 @@ emailAddress            = optional
 default_bits            = 1024
 default_keyfile         = privkey.pem
 distinguished_name      = req_distinguished_name
-attributes              = req_attributes
+#attributes              = req_attributes
 x509_extensions         = v3_ca        # The extentions to add to the self signed cert
+prompt                  = yes
 
 # Passwords for private keys if not present they will be prompted for
 # input_password = secret
@@ -105,7 +107,7 @@ x509_extensions         = v3_ca        # The extentions to add to the self signe
 # so use this option with caution!
 string_mask = nombstr
 
-# req_extensions = v3_req # The extensions to add to a certificate request
+req_extensions = v3_req # The extensions to add to a certificate request
 
 [ req_distinguished_name ]
 countryName                         = Country Name (2 letter code)
@@ -134,6 +136,15 @@ commonName_max                      = 64
 
 emailAddress                        = Email Address
 emailAddress_max                    = 40
+
+#[ req_distinguished_name ]
+#C              = DE
+#ST             = Bavaria
+#L              = Regensburg
+#O              = Sun Microsystems
+#OU             = Gridware
+#CN             = CommonName
+#emailAddress   = EMAIL
 
 # SET-ex3                        = SET extension number 3
 

@@ -6,6 +6,13 @@ In the following sections the use of the openssl binary (version 0.9.6b)
 for building a CA & key infrastructure for SGE is outlined.
 
 
+Names from passwd
+
+ypcat passwd | cut -f 1,5 -d :
+
+
+
+
 Setup CA
 ========
 Certificate creation cmds
@@ -171,4 +178,46 @@ unsigned char XXX_certificate[972]={
 0xDE,0x27,0x11,0xD0,0x79,0x6F,0x5B,0x00,0xB4,0x89,0x84,0x70,
 };
 
+#!/bin/sh
+# print out the hash values 
+#
+for i in $*
+do
+	h=`openssl x509 -hash -noout -in $i`
+	echo "$h.0 => $i"
+done
 
+
+#!/bin/sh
+#
+# print the subject
+#
+for i in $*
+do
+	n=`openssl x509 -subject -issuer -enddate -noout -in $i`
+	echo "$i"
+	echo "$n"
+	echo "--------"
+done
+
+
+#!/bin/sh
+#
+# print out the issuer
+#
+for i in $*
+do
+	n=`openssl x509 -issuer -noout -in $i`
+	echo "$i\t$n"
+done
+
+
+#!/bin/sh
+#
+# print the subject
+#
+for i in $*
+do
+	n=`openssl x509 -subject -noout -in $i`
+	echo "$i	$n"
+done

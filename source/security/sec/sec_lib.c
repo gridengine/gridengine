@@ -67,7 +67,8 @@
 #define SGESecPath      ".SGE_SECURE"
 #define CaKey           "private/cakey.pem"
 #define CaCert          "cacert.pem"
-#define CA_DIR          "demoCA"
+#define CA_DIR          "common/sgeCA"
+#define CA_LOCAL_DIR    "/var/sgeCA"
 #define UserKey         "private/key.pem"
 #define UserCert        "certs/cert.pem"
 #define ReconnectFile   "private/reconnect.dat"
@@ -272,6 +273,7 @@ static char *reconnect_file;
 int sec_init(const char *progname) 
 {
    static int sec_initialized = 0;
+   char *randfile = NULL;
 
    DENTER(GDI_LAYER,"sec_init");
 
@@ -289,6 +291,16 @@ int sec_init(const char *progname)
    ** FIXME: rand seed needs to be improved
    */
 /*    RAND_egd("/tmp/egd"); */
+   if (!RAND_status()) {
+      randfile = getenv("RANDFILE");
+      if (randfile) {
+         RAND_load_file(randfile, 2048);
+      } else {   
+         ERROR((SGE_EVENT,"set RANDFILE environment variable\n"));
+         DEXIT;
+         return -1;
+      }
+   }
 
    /*
    ** initialize error strings
@@ -696,6 +708,7 @@ static int sec_verify_certificate(X509 *cert)
    DENTER(GDI_LAYER, "sec_verify_certificate");
 
    DPRINTF(("subject: %s\n", X509_NAME_oneline(X509_get_subject_name(cert), 0, 0)));
+   DPRINTF(("ca_cert_file: %s\n", ca_cert_file));
    ctx = X509_STORE_new();
    X509_STORE_set_default_paths(ctx);
    X509_STORE_load_locations(ctx, ca_cert_file, NULL);
@@ -2405,7 +2418,9 @@ int is_daemon
 ) {
    SGE_STRUCT_STAT sbuf;
 	char *userdir = NULL;
+	char *user_local_dir = NULL;
 	char *ca_root = NULL;
+	char *ca_local_root = NULL;
    int len;
 
    DENTER(GDI_LAYER, "sec_setup_path");
@@ -2424,13 +2439,25 @@ int is_daemon
       SGE_EXIT(1);
    }
 
-	ca_key_file = sge_malloc(strlen(ca_root) + strlen(CaKey) + 2);
-	sprintf(ca_key_file, "%s/%s", ca_root, CaKey);
+   /*
+   ** malloc ca_local_root string and check if directory has been created during
+   ** install otherwise exit
+   */
+   len = strlen(CA_LOCAL_DIR) + strlen(sge_get_default_cell()) + 2;
+   ca_local_root = sge_malloc(len);
+   sprintf(ca_local_root, "%s/%s", CA_LOCAL_DIR, sge_get_default_cell());
+   if (is_daemon && SGE_STAT(ca_local_root, &sbuf)) { 
+      CRITICAL((SGE_EVENT, MSG_SGETEXT_CALOCALROOTNOTFOUND_S, ca_local_root));
+      SGE_EXIT(1);
+   }
+	ca_key_file = sge_malloc(strlen(ca_local_root) + strlen(CaKey) + 2);
+	sprintf(ca_key_file, "%s/%s", ca_local_root, CaKey);
 
-   if (SGE_STAT(ca_key_file, &sbuf)) { 
+   if (is_daemon && SGE_STAT(ca_key_file, &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SGETEXT_CAKEYFILENOTFOUND_S, ca_key_file));
       SGE_EXIT(1);
    }
+   DPRINTF(("ca_key_file: %s\n", ca_key_file));
 
 	ca_cert_file = sge_malloc(strlen(ca_root) + strlen(CaCert) + 2);
 	sprintf(ca_cert_file, "%s/%s", ca_root, CaCert);
@@ -2439,12 +2466,14 @@ int is_daemon
       CRITICAL((SGE_EVENT, MSG_SGETEXT_CACERTFILENOTFOUND_S, ca_cert_file));
       SGE_EXIT(1);
    }
+   DPRINTF(("ca_cert_file: %s\n", ca_cert_file));
 
    /*
    ** determine userdir: either ca_root or $HOME/.SGE_SECURE/$SGE_CELL
    */
 	if (is_daemon){
 		userdir = strdup(ca_root);
+      user_local_dir = ca_local_root;
 	} else {
       struct passwd *pw;
       pw = sge_getpwnam(me.user_name);
@@ -2457,15 +2486,17 @@ int is_daemon
       sprintf(userdir, "%s/%s/%s", pw->pw_dir, SGESecPath, 
                sge_get_default_cell());
       sge_mkdir(userdir, 0700, 1);
+      user_local_dir = userdir;
    }
 
-   key_file = sge_malloc(strlen(userdir) + strlen(UserKey) + 2);
-   sprintf(key_file, "%s/%s", userdir, UserKey);
+   key_file = sge_malloc(strlen(user_local_dir) + strlen(UserKey) + 2);
+   sprintf(key_file, "%s/%s", user_local_dir, UserKey);
 
    if (SGE_STAT(key_file, &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SGETEXT_KEYFILENOTFOUND_S, key_file));
       SGE_EXIT(1);
    }
+   DPRINTF(("key_file: %s\n", key_file));
 
    cert_file = sge_malloc(strlen(userdir) + strlen(UserCert) + 2);
    sprintf(cert_file, "%s/%s", userdir, UserCert);
@@ -2474,12 +2505,15 @@ int is_daemon
       CRITICAL((SGE_EVENT, MSG_SGETEXT_CERTFILENOTFOUND_S, cert_file));
       SGE_EXIT(1);
    }
+   DPRINTF(("cert_file: %s\n", cert_file));
 
 	reconnect_file = sge_malloc(strlen(userdir) + strlen(ReconnectFile) + 2); 
    sprintf(reconnect_file, "%s/%s", userdir, ReconnectFile);
+   DPRINTF(("reconnect_file: %s\n", reconnect_file));
     
    free(userdir);
    free(ca_root);
+   free(ca_local_root);
 
 	return 1;
 }

@@ -1,3 +1,9 @@
+AA-2004-09-06-1: Bugfix:     parsing of repeated job arguments fixed
+                 Bugtraq:    5097479
+                 Issue:      1263
+                 Review:     RH
+                 Changed:    qmon
+
 AA-2004-09-06-0: Bugfix:     make culltrans compile under 6.0
                  Changed:    culltrans
                  Review:     RH

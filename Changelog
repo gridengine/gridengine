@@ -1,3 +1,11 @@
+MD-2004-10-21-0: Enhancem.: - Profiling Enhancement, profiling switchable
+                              from the configuration
+                            - added profiling to all threads
+                            - some cleanup
+                            - man pages
+                 Changed:   qmaster, schedd, execd, profiling, man
+                 Review:    HP
+
 SG-2004-10-21-1: Enhancem.: - 2/3 part of of the look ahead scheduler
                             extention.
                             - code cleanup

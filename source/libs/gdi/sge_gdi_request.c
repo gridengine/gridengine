@@ -774,6 +774,7 @@ int sge_send_gdi_request(int sync,
 
    DENTER(GDI_LAYER, "sge_send_gdi_request");
 
+   PROF_START_MEASUREMENT(SGE_PROF_GDI_REQUEST);
    /* 
    ** retrieve packbuffer size to avoid large realloc's while packing 
    */
@@ -798,18 +799,21 @@ int sge_send_gdi_request(int sync,
    case PACK_ENOMEM:
       ERROR((SGE_EVENT, MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST ));
       clear_packbuffer(&pb);
+      PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
       DEXIT;
       return -2;
 
    case PACK_FORMAT:
       ERROR((SGE_EVENT, MSG_GDI_REQUESTFORMATERROR ));
       clear_packbuffer(&pb);
+      PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
       DEXIT;
       return -3;
 
    default:
       ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST ));
       clear_packbuffer(&pb);
+      PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
       DEXIT;
       return -1;
    }
@@ -817,6 +821,8 @@ int sge_send_gdi_request(int sync,
    ret = sge_send_any_request(sync, mid, rhost, commproc, id, &pb,
                               TAG_GDI_REQUEST, response_id, alpp);
    clear_packbuffer(&pb);
+
+   PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
 
    DEXIT;
    return ret;

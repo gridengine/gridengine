@@ -82,6 +82,7 @@ typedef enum {
    SGE_PROF_SPOOLING,
    SGE_PROF_SPOOLINGIO,
    SGE_PROF_GDI,
+   SGE_PROF_GDI_REQUEST,
    SGE_PROF_HT_RESIZE,
    SGE_PROF_SCHEDULER,
    SGE_PROF_CUSTOM0,
@@ -140,7 +141,7 @@ bool thread_prof_active_by_id(pthread_t thread_id);
 bool thread_prof_active_by_name(const char* thread_name);
 void set_thread_name(pthread_t thread_id, const char* thread_name);
 void set_thread_prof_status_by_id(pthread_t thread_id, bool prof_status);
-void set_thread_prof_status_by_name(pthread_t thread_id, const char* thread_name, bool prof_status);
+int  set_thread_prof_status_by_name(const char* thread_name, bool prof_status);
 bool prof_set_level_name(prof_level level, const char *name, dstring *error);
 
 bool prof_is_active(prof_level level);
@@ -151,11 +152,63 @@ bool prof_stop(prof_level level, dstring *error);
 bool prof_start_measurement(prof_level level, dstring *error);
 bool prof_stop_measurement(prof_level level, dstring *error);
 
+/****** uti/profiling/PROF_START_MEASUREMENT() ******************************
+*  NAME
+*     PROF_START_MEASUREMENT() -- starts the measurement for the specified level 
+*
+*  SYNOPSIS
+*      PROF_START_MEASUREMENT(prof_level level) 
+*
+*  FUNCTION
+*     starts the measurement for the specified level
+*     to use profiling the sge_prof_setup() function
+*     must be called in the main program first.
+*     At the end of the main program, sge_prof_cleanup()
+*     should be called to make sure, that all that
+*     stuff becomes clean.
+*
+*  INPUTS
+*     prof_level level 
+*
+*  RESULT
+*
+*  EXAMPLE
+*     PROF_START_MEASUREMENT(SGE_PROF_GDI)
+*
+*  NOTES
+*     MT-NOTE: PROF_START_MEASUREMENT() is MT safe
+*******************************************************************************/
 #define PROF_START_MEASUREMENT(level) \
    if(prof_is_active(level)) {\
       prof_start_measurement(level,NULL);\
    }   
 
+/****** uti/profiling/PROF_STOP_MEASUREMENT() ******************************
+*  NAME
+*     PROF_STOP_MEASUREMENT() -- stops the measurement for the specified level 
+*
+*  SYNOPSIS
+*      PROF_STOP_MEASUREMENT(prof_level level) 
+*
+*  FUNCTION
+*     stops the measurement for the specified level
+*     to use profiling the sge_prof_setup() function
+*     must be called in the main program first.
+*     At the end of the main program, sge_prof_cleanup()
+*     should be called to make sure, that all that
+*     stuff becomes clean.
+*
+*  INPUTS
+*     prof_level level 
+*
+*  RESULT
+*
+*  EXAMPLE
+*     PROF_STOP_MEASUREMENT(SGE_PROF_GDI)
+*
+*  NOTES
+*     MT-NOTE: PROF_STOP_MEASUREMENT() is MT safe
+*******************************************************************************/
 #define PROF_STOP_MEASUREMENT(level) \
    if(prof_is_active(level)) {\
       prof_stop_measurement(level, NULL);\

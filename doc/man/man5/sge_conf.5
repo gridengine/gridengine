@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/07/22 15:42:36 $     Revision: $Revision: 1.34 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/10/21 12:39:28 $     Revision: $Revision: 1.35 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/07/22 15:42:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/10/21 12:39:28 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -961,6 +961,30 @@ the number of file descriptors the system has. The number of file
 descriptors are shared among the connections to all exec hosts, all 
 event clients, and file handles that the qmaster needs.
 .PP
+.IP "\fIPROF_SIGNAL\fP"
+Profiling provides the user with the possibility to get system measurements.
+This can be useful for debugging or optimisation of the system.
+By default, there are compiled-in measurement points within the source
+code. To get more measurement points, the user has to add this to
+the source code and recompile again. The profiling output
+will be done within the messages file.
+
+Enables the profiling for qmaster signal thread.
+(e.g. PROF_SIGNAL=true)
+.PP
+.IP "\fIPROF_MESSAGE\fP"
+Enables the profiling for qmaster message thread.
+(e.g. PROF_MESSAGE=true)
+.PP
+.IP "\fIPROF_DELIVER\fP"
+Enables the profiling for qmaster event deliver thread.
+(e.g. PROF_DELIVER=true)
+.PP
+.IP "\fIPROF_TEVENT\fP"
+Enables the profiling for qmaster timed event thread.
+(e.g. PROF_TEVENT=true)
+.PP
+
 Changing \fBqmaster_params\fP will take immediate effect.
 The default for \fBqmaster_params\fP is none.
 .PP
@@ -997,6 +1021,10 @@ either by removing the parameters or by setting a value of -999.
 See the "messages" file of the execution daemon for the predefined
 default value on your hosts. The values are logged during the startup of
 the execution daemon.
+.PP
+.IP "\fIPROF_EXECD\fP"
+Enables the profiling for the execution daemon.
+(e.g. PROF_EXECD=true)
 .PP
 .IP "\fINOTIFY_KILL\fP"
 The parameter allows you to change the notification signal for

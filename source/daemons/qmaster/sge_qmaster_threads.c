@@ -59,6 +59,7 @@
 #include "sge_give_jobs.h"
 #include "sge_all_listsL.h"
 #include "sge_calendar_qmaster.h"
+#include "sge_time.h"
 #include "lock.h"
 #include "qmaster_heartbeat.h"
 #include "shutdown.h"
@@ -937,6 +938,7 @@ static void* signal_thread(void* anArg)
    bool is_continue = true;
    sigset_t sig_set;
    int sig_num;
+   time_t next_prof_output = 0;
 
    DENTER(TOP_LAYER, "signal_thread");
 
@@ -949,10 +951,20 @@ static void* signal_thread(void* anArg)
    /* Set thread alive time to current time */
    sge_update_thread_alive_time(SGE_MASTER_SIGNAL_THREAD);
 
+   set_thread_name(pthread_self(),"Signal Thread");
+
    while (is_continue)
    {
       sigwait(&sig_set, &sig_num);
 
+      if (thread_prof_active_by_id(pthread_self())) {
+         prof_start(SGE_PROF_CUSTOM1, NULL);
+         prof_set_level_name(SGE_PROF_CUSTOM1, "Signal Thread", NULL); 
+      } else {
+           prof_stop(SGE_PROF_CUSTOM1, NULL);
+      }
+
+      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
       /* 
        * This thread will only wake up on signals, so the
        * alive time will not be set in an specified intervall
@@ -970,6 +982,15 @@ static void* signal_thread(void* anArg)
             break;
          default:
             ERROR((SGE_EVENT, MSG_QMASTER_UNEXPECTED_SIGNAL_I, sig_num));
+      }
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+      if (prof_is_active(SGE_PROF_ALL)) {
+        time_t now = sge_get_gmt();
+
+         if (now > next_prof_output) {
+            prof_output_info(SGE_PROF_ALL, false, "profiling summary:\n");
+            next_prof_output = now + 60;
+         }
       }
    }
 
@@ -1000,17 +1021,43 @@ static void* signal_thread(void* anArg)
 *******************************************************************************/
 static void* message_thread(void* anArg)
 {
+   time_t next_prof_output = 0;
+
    DENTER(TOP_LAYER, "message_thread");
 
    sge_qmaster_thread_init(true);
 
+   set_thread_name(pthread_self(),"Message Thread");
+
    while (should_terminate() == false)
    {
+     if (thread_prof_active_by_id(pthread_self())) {
+         prof_start(SGE_PROF_CUSTOM1, NULL);
+         prof_start(SGE_PROF_GDI_REQUEST, NULL);
+         prof_set_level_name(SGE_PROF_CUSTOM1, "Message Thread", NULL); 
+      } else {
+           prof_stop(SGE_PROF_CUSTOM1, NULL);
+           prof_stop(SGE_PROF_GDI_REQUEST, NULL);
+        }
+
+      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
       /* 
        * Update thread alive time 
        */
       sge_update_thread_alive_time(SGE_MASTER_MESSAGE_THREAD);
       sge_qmaster_process_message(anArg);
+
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+
+      if (prof_is_active(SGE_PROF_ALL)) {
+        time_t now = sge_get_gmt();
+
+         if (now > next_prof_output) {
+            prof_output_info(SGE_PROF_ALL, false, "profiling summary:\n");
+            prof_reset(SGE_PROF_ALL,NULL);
+            next_prof_output = now + 60;
+         }
+      }
    }
 
    DEXIT;

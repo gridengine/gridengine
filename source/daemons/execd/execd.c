@@ -44,6 +44,7 @@
 #include "sge_load_sensor.h"
 #include "sge_log.h"
 #include "sge_prog.h"
+#include "sge_time.h"
 #include "sgermon.h"
 #include "commlib.h"
 #include "sge_conf.h"
@@ -234,9 +235,12 @@ char **argv
    int my_pid;
    int ret_val;
    static char tmp_err_file_name[SGE_PATH_MAX];
+   time_t next_prof_output = 0;
 
    DENTER_MAIN(TOP_LAYER, "execd");
 
+   sge_prof_setup();
+   set_thread_name(pthread_self(),"Execd Thread");
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
@@ -358,6 +362,21 @@ char **argv
 
    /***** MAIN LOOP *****/
    while (shut_me_down != 1) {
+
+     if (thread_prof_active_by_id(pthread_self())) {
+         prof_start(SGE_PROF_CUSTOM1, NULL);
+         prof_set_level_name(SGE_PROF_CUSTOM1, "Execd Thread", NULL); 
+         prof_start(SGE_PROF_CUSTOM2, NULL);
+         prof_set_level_name(SGE_PROF_CUSTOM2, "Execd Dispatch", NULL); 
+         prof_start(SGE_PROF_GDI_REQUEST, NULL);
+      } else {
+           prof_stop(SGE_PROF_CUSTOM1, NULL);
+           prof_stop(SGE_PROF_CUSTOM2, NULL);
+           prof_stop(SGE_PROF_GDI_REQUEST, NULL);
+        }
+
+      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+
       /* use auto acknowlege feature of dispatcher for the following
          inbound messages */
       static int tagarray[] = { TAG_SIGJOB, TAG_SIGQUEUE, TAG_NONE };
@@ -386,8 +405,21 @@ char **argv
       }
    }
 
-   Master_Job_List = lFreeList(Master_Job_List);   
-   
+   Master_Job_List = lFreeList(Master_Job_List); 
+  
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+
+   if (prof_is_active(SGE_PROF_ALL)) {
+     time_t now = sge_get_gmt();
+
+      if (now > next_prof_output) {
+         prof_output_info(SGE_PROF_ALL, false, "profiling summary:\n");
+         prof_reset(SGE_PROF_ALL,NULL);
+         next_prof_output = now + 60;
+      }
+   }   
+
+   sge_prof_cleanup();
    sge_shutdown();
    DEXIT;
    return 0;

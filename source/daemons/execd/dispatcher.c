@@ -47,6 +47,7 @@
 #include "sge_security.h"
 #include "sig_handlers.h"
 #include "sge_profiling.h"
+#include "sge_time.h"
 
 /* number of messages to cache in server process
    the rest stays in commd */
@@ -133,6 +134,7 @@ int dispatch( dispatch_entry*   table,
    u_long32 dummyid = 0;
    sge_pack_buffer *pb = NULL, apb;
    int synchron;
+   time_t next_prof_output = 0;
 
    DENTER(TOP_LAYER, "dispatch");
 
@@ -149,6 +151,7 @@ int dispatch( dispatch_entry*   table,
 
    while (!terminate) {
 
+      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM2);
       /* Scan table to see what we are waiting for 
          We have to build a receive pattern which matches all entries in the
          dispatch. */
@@ -200,6 +203,7 @@ int dispatch( dispatch_entry*   table,
 
                if(init_packbuffer(&apb, 1024, 0) != PACK_SUCCESS) {
                   free_de(&de);
+                  PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
                   DEXIT;
                   return CL_RETVAL_MALLOC;
                }
@@ -252,11 +256,24 @@ int dispatch( dispatch_entry*   table,
       default:
          sprintf(err_str, MSG_COM_NORCVMSG_S, cl_get_error_text(i));
          free_de(&de);
+         PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
          DEXIT;
          return i;
       }
 
       DPRINTF(("====================[ DISPATCH EPOCH ]===========================\n"));
+
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
+
+      if (prof_is_active(SGE_PROF_ALL) || terminate) {
+        time_t now = sge_get_gmt();
+
+         if (now > next_prof_output) {
+            prof_output_info(SGE_PROF_ALL, false, "profiling summary:\n");
+            prof_reset(SGE_PROF_ALL,NULL);
+            next_prof_output = now + 60;
+         }
+      }
    }
 
    free_de(&de);

@@ -46,6 +46,7 @@
 #include "sge_profiling.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "sge_time.h"
 
 
 struct te_event {
@@ -831,12 +832,27 @@ static void* timed_event_thread(void* anArg)
    lListElem *le = NULL;
    te_event_t te = NULL;
    time_t now;
+   time_t next_prof_output = 0;
 
    DENTER(TOP_LAYER, "timed_event_thread");
 
    sge_qmaster_thread_init(true);
 
+   set_thread_name(pthread_self(),"TEvent Thread");
+
    while (should_exit() == false) {
+
+     if (thread_prof_active_by_id(pthread_self())) {
+         prof_start(SGE_PROF_CUSTOM1, NULL);
+         prof_start(SGE_PROF_GDI_REQUEST, NULL);
+         prof_set_level_name(SGE_PROF_CUSTOM1, "TEvent Thread", NULL); 
+      } else {
+           prof_stop(SGE_PROF_CUSTOM1, NULL);
+           prof_stop(SGE_PROF_GDI_REQUEST, NULL);
+      }
+
+      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+
       /* update thread alive time */
       sge_update_thread_alive_time(SGE_MASTER_TIMED_EVENT_THREAD);
       sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
@@ -891,6 +907,18 @@ static void* timed_event_thread(void* anArg)
          
       scan_table_and_deliver(te);
       te_free_event(te);
+
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+
+      if (prof_is_active(SGE_PROF_ALL)) {
+        time_t now = sge_get_gmt();
+
+         if (now > next_prof_output) {
+            prof_output_info(SGE_PROF_ALL, false, "profiling summary:\n");
+            prof_reset(SGE_PROF_ALL,NULL);
+            next_prof_output = now + 60;
+         }
+      }
    }
 
    DEXIT;

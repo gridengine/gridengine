@@ -39,14 +39,14 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
                  testsuidroot infotext spooldefaults spoolinit \
-                 tst_pthread_signals fstype
+                 tst_pthread_signals fstype gridping
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
                checkuser.c adminrun.c range.c  \
                languagetest.c infotext.c \
                spooldefaults.c spoolinit.c \
-               tst_pthread_signals.c fstype.c
+               tst_pthread_signals.c fstype.c gridping.c
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 
@@ -96,6 +96,14 @@ gethostbyname:	gethostbyname.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $
 
 gethostbyname.o:	$(UTILBIN_DIR)/gethostbyname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostbyname.c
+
+#---------------------------------------------------------------------
+gridping:	gridping.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
+		$(CC) -o $@ gridping.o $(LFLAGS) -luti -llck -lrmon -lcomm -lcommlists $(LIBS)
+
+gridping.o:	$(UTILBIN_DIR)/gridping.c
+		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gridping.c
+
 
 #---------------------------------------------------------------------
 gethostbyaddr:	gethostbyaddr.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)

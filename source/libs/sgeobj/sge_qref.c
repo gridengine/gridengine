@@ -545,7 +545,9 @@ qref_list_is_valid(const lList *this_list, lList **answer_list)
             lList *qref_list = NULL;
             lListElem *resolved_qref = NULL;
 
+            qref_resolve_hostname(qref_elem);
             qref_pattern = lGetString(qref_elem, QR_name);
+
             lAddElemStr(&qref_list, QR_name, qref_pattern, QR_Type);
             qref_list_resolve(qref_list, answer_list, &resolved_qref_list,
                               &found_something, master_cqueue_list,
@@ -578,3 +580,40 @@ qref_list_is_valid(const lList *this_list, lList **answer_list)
    DEXIT;
    return ret;
 }
+
+/* QR_name might be a pattern */
+void
+qref_resolve_hostname(lListElem *this_elem)
+{
+   dstring cqueue_name = DSTRING_INIT;
+   dstring host_or_hgroup = DSTRING_INIT;
+   const char *name = NULL;
+   bool has_hostname;
+   bool has_domain;
+   
+   DENTER(TOP_LAYER, "qref_resolve_hostname");
+   name = lGetString(this_elem, QR_name);
+   cqueue_name_split(name, &cqueue_name, &host_or_hgroup,
+                     &has_hostname, &has_domain);
+   if (has_hostname) {
+      char resolved_name[MAXHOSTLEN+1];
+      const char *unresolved_name = sge_dstring_get_string(&host_or_hgroup);
+      int back = getuniquehostname(unresolved_name, resolved_name, 0);
+
+      if (back == CL_RETVAL_OK) {
+         dstring new_qref_pattern = DSTRING_INIT;
+
+         sge_dstring_sprintf(&new_qref_pattern, "%s@%s",
+                             sge_dstring_get_string(&cqueue_name),
+                             resolved_name);
+         lSetString(this_elem, QR_name, 
+                    sge_dstring_get_string(&new_qref_pattern));
+         sge_dstring_free(&new_qref_pattern);
+      }
+   }
+   sge_dstring_free(&cqueue_name);
+   sge_dstring_free(&host_or_hgroup);
+   DEXIT;
+   return;
+}
+

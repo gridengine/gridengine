@@ -1,3 +1,9 @@
+EB-2004-03-16-0: Bugfix:    Host aliases not supported with -q 
+                            wc_qinstance/-masterq wc_qinstance
+                 Issue:     819
+                 Changed:   sge_qmaster
+                 Review:    JG
+
 MD-2004-03-17-1: Bugfix:    fstype was broken on IRIX 6.5
                  Changed:   fstype
                  Review:    SG

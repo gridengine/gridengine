@@ -155,6 +155,7 @@ static int                  (*cl_com_ssl_func__RAND_load_file)                  
 static const char*          (*cl_com_ssl_func__SSL_get_cipher_list)                 (SSL *ssl, int priority);
 static int                  (*cl_com_ssl_func__SSL_CTX_set_cipher_list)             (SSL_CTX *,const char *str);
 static int                  (*cl_com_ssl_func__SSL_set_cipher_list)                 (SSL *ssl, const char *str);
+static void                 (*cl_com_ssl_func__SSL_set_quiet_shutdown)              (SSL *ssl, int mode);
 
 
 
@@ -674,6 +675,7 @@ static int cl_com_ssl_destroy_symbol_table(void) {
       cl_com_ssl_func__SSL_get_cipher_list = NULL;
       cl_com_ssl_func__SSL_CTX_set_cipher_list = NULL;
       cl_com_ssl_func__SSL_set_cipher_list = NULL;
+      cl_com_ssl_func__SSL_set_quiet_shutdown = NULL;
 
 
       /*
@@ -1057,6 +1059,12 @@ static int cl_com_ssl_build_symbol_table(void) {
          had_errors++;
       }
 
+      func_name = "SSL_set_quiet_shutdown";
+      cl_com_ssl_func__SSL_set_quiet_shutdown = (void (*)(SSL *ssl, int mode))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__SSL_set_quiet_shutdown == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
 
       
 
@@ -1126,6 +1134,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__SSL_get_cipher_list                 = SSL_get_cipher_list;
       cl_com_ssl_func__SSL_CTX_set_cipher_list             = SSL_CTX_set_cipher_list;
       cl_com_ssl_func__SSL_set_cipher_list                 = SSL_set_cipher_list;
+      cl_com_ssl_func__SSL_set_quiet_shutdown              = SSL_set_quiet_shutdown;
 
       pthread_mutex_unlock(&cl_com_ssl_crypto_handle_mutex);
       CL_LOG(CL_LOG_INFO,"setting up ssl library function pointers done");
@@ -1228,6 +1237,7 @@ static int cl_com_ssl_free_com_private(cl_com_connection_t* connection) {
    /* SSL Specific shutdown */
    if (private->ssl_obj != NULL) {
       int back = 0;
+      cl_com_ssl_func__SSL_set_quiet_shutdown(private->ssl_obj, 1);
       back = cl_com_ssl_func__SSL_shutdown(private->ssl_obj);
       if (back != 1) {
          CL_LOG_INT(CL_LOG_WARNING,"SSL shutdown returned:", back);
@@ -1884,6 +1894,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
    cl_com_ssl_private_t* service_private = NULL;
    struct timeval now;
    int ret_val = CL_RETVAL_OK;
+   char tmp_buffer[1024];
 
 
    if (connection == NULL) {
@@ -1929,6 +1940,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
       private->ssl_obj = cl_com_ssl_func__SSL_new(service_private->ssl_ctx);
       if (private->ssl_obj == NULL) {
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+         cl_commlib_push_application_error(CL_RETVAL_SSL_CANT_CREATE_SSL_OBJECT, NULL);
          CL_LOG(CL_LOG_ERROR,"can't setup ssl object");
          return CL_RETVAL_SSL_CANT_CREATE_SSL_OBJECT;
       }
@@ -1936,6 +1948,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
       /* set default modes */
       ret_val = cl_com_ssl_set_default_mode(NULL, private->ssl_obj);
       if (ret_val != CL_RETVAL_OK) {
+         cl_commlib_push_application_error(ret_val, NULL);
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
          return ret_val;
       }
@@ -1944,6 +1957,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
       private->ssl_bio_socket = cl_com_ssl_func__BIO_new_socket(private->sockfd, BIO_NOCLOSE);
       if (private->ssl_bio_socket == NULL) {
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+         cl_commlib_push_application_error(CL_RETVAL_SSL_CANT_CREATE_BIO_SOCKET, NULL);
          CL_LOG(CL_LOG_ERROR,"can't setup bio socket");
          return CL_RETVAL_SSL_CANT_CREATE_BIO_SOCKET;
       }
@@ -1997,7 +2011,14 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
                   /* we had an timeout */
                   CL_LOG(CL_LOG_ERROR,"ssl accept timeout error");
                   connection->write_buffer_timeout_time = 0;
-                  cl_commlib_push_application_error(CL_RETVAL_SSL_ACCEPT_HANDSHAKE_TIMEOUT, "accept timeout error" );
+
+                  if (connection->client_host_name != NULL) {
+                     snprintf(tmp_buffer,1024, MSG_CL_COMMLIB_SSL_ACCEPT_TIMEOUT_ERROR_S, connection->client_host_name);
+                  } else {
+                     snprintf(tmp_buffer,1024, MSG_CL_COMMLIB_SSL_ACCEPT_TIMEOUT_ERROR);
+                  }
+
+                  cl_commlib_push_application_error(CL_RETVAL_SSL_ACCEPT_HANDSHAKE_TIMEOUT, tmp_buffer);
                   return CL_RETVAL_SSL_ACCEPT_HANDSHAKE_TIMEOUT;
                }
 
@@ -2008,6 +2029,13 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
 
             default: {
                CL_LOG(CL_LOG_ERROR,"SSL handshake not successful and no clear cleanup");
+               if (connection->client_host_name != NULL) {
+                  snprintf(tmp_buffer,1024, MSG_CL_COMMLIB_SSL_ACCEPT_ERROR_S, connection->client_host_name);
+               } else {
+                  snprintf(tmp_buffer,1024, MSG_CL_COMMLIB_SSL_ACCEPT_ERROR);
+               }
+
+               cl_commlib_push_application_error(CL_RETVAL_SSL_ACCEPT_ERROR, tmp_buffer);
                cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                break;
             }

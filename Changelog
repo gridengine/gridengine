@@ -1,3 +1,9 @@
+CR-2005-03-31-0: Cleanup:   o Using SSL_set_quiet_shutdown() to shutdown
+                              a broken SSL connection. (GE CSP mode)
+                            o Added hostname into SSL accept error messages
+                 Review:    MD
+                 Changed:   commlib
+
 JG-2005-03-31-0: Bugfix:    Fixed qmaster profiling:
                             - profiling was not activated at qmaster startup
                             - cpu stime and utime are not per thread values

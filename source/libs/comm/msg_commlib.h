@@ -100,6 +100,10 @@
 #define MSG_CL_COMMLIB_SSL_PEER_NAME_GET_ERROR        _MESSAGE(85057, _("could not get peer_CN from peer certificate"))
 #define MSG_CL_COMMLIB_SSL_SERVER_CERT_NOT_SENT_ERROR _MESSAGE(85058, _("service did not send peer certificate"))
 #define MSG_CL_COMMLIB_SSL_MESSAGE_SIZE_EXEED_ERROR   _MESSAGE(85059, _("message size exceeds integer size on this architecture"))
+#define MSG_CL_COMMLIB_SSL_ACCEPT_TIMEOUT_ERROR_S     _MESSAGE(85060, _("ssl accept timeout for client "SFQ""))
+#define MSG_CL_COMMLIB_SSL_ACCEPT_TIMEOUT_ERROR       _MESSAGE(85061, _("ssl accept timeout for unresolvable client"))
+#define MSG_CL_COMMLIB_SSL_ACCEPT_ERROR_S             _MESSAGE(85062, _("ssl accept error for client "SFQ""))
+#define MSG_CL_COMMLIB_SSL_ACCEPT_ERROR               _MESSAGE(85063, _("ssl accept error for unresolvable client"))
 
 
 

@@ -303,17 +303,10 @@ static void       build_subscription(lListElem*);
 static void       check_send_new_subscribed_list(const subscription_t*, const subscription_t*, lListElem*, ev_event);
 static int        eventclient_subscribed(const lListElem *, ev_event, const char*);
 static int        purge_event_list(lList* aList, ev_event anEvent); 
-static void       add_list_event_for_client(u_long32, u_long32, ev_event, u_long32, u_long32, const char*, const char*, const char*, lList*, bool);
-#if 0
-static int        add_list_event(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, lList*, int); 
-#endif
+static bool       add_list_event_for_client(u_long32, u_long32, ev_event, u_long32, u_long32, const char*, const char*, const char*, lList*, bool);
 static void       add_list_event_direct(lListElem *event_client,
                                         lListElem *event, bool select_list,
                                         bool copy_event);
-/* This method is a duplicate of add_list_event, which it calls! */
-#if 0
-static void       add_event(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, lListElem*);
-#endif
 static void       total_update_event(lListElem*, ev_event);
 static bool       list_select(subscription_t*, int, lList**, lList*, const lCondition*, const lEnumeration*, const lDescr*);
 static lListElem* elem_select(subscription_t*, lListElem*, const int[], const lCondition*, const lEnumeration*, const lDescr*, int);    
@@ -1341,7 +1334,7 @@ int sge_set_event_client_data(u_long32 aClientID, u_long32 theData)
 *     MT-NOTE: sge_add_event() is NOT MT safe.
 *
 *******************************************************************************/
-void sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
+bool sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
    u_long32 intkey2, const char *strkey, const char *strkey2, 
    const char *session, lListElem *element) 
 {
@@ -1352,8 +1345,8 @@ void sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
       lAppendElem (lp, lCopyElem (element));
    }
    
-   add_list_event_for_client (EV_ID_ANY, timestamp, type, intkey, intkey2,
-                              strkey, strkey2, session, lp, false);
+   return add_list_event_for_client (EV_ID_ANY, timestamp, type, intkey, intkey2,
+                                     strkey, strkey2, session, lp, false);
 }
 
 /****** sge_event_master/sge_add_event_for_client() ****************************
@@ -1384,7 +1377,7 @@ void sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
 *     MT-NOTE: sge_add_event_for_client() is not MT safe 
 *
 *******************************************************************************/
-void sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event anID, u_long32 anIntKey1, 
+bool sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event anID, u_long32 anIntKey1, 
                               u_long32 anIntKey2, const char *aStrKey1, const char *aStrKey2, 
                               const char *aSession, lListElem *anObject)
 {
@@ -1393,14 +1386,14 @@ void sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event 
    DENTER (TOP_LAYER, "sge_add_event_for_client");
    
    /* This doesn't check whether the id is too large, which is a possibility.
-    * The problem is that to double the check, I'd have to grab the lock, which
+    * The problem is that to do the check, I'd have to grab the lock, which
     * is not worth it.  Instead I will just rely on the calling methods not
     * doing anything stupid.  The worst that can happen is that an event gets
     * created for a client that doesn't exist, which only wastes resources. */
    if (aClientID <= EV_ID_ANY) {
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
       DEXIT;
-      return;
+      return false;
    }
    
    if (anObject != NULL) {
@@ -1408,10 +1401,9 @@ void sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event 
       lAppendElem (lp, lCopyElem (anObject));
    }
    
-   add_list_event_for_client (aClientID, aTimestamp, anID, anIntKey1, anIntKey2,
-                              aStrKey1, aStrKey2, aSession, lp, false);
-   
    DEXIT;
+   return add_list_event_for_client (aClientID, aTimestamp, anID, anIntKey1, anIntKey2,
+                                     aStrKey1, aStrKey2, aSession, lp, false);
 }
 
 /****** Eventclient/Server/sge_add_list_event() ********************************
@@ -1445,7 +1437,7 @@ void sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event 
 *     MT-NOTE: sge_add_list_event() is MT safe.
 *
 *******************************************************************************/
-void sge_add_list_event(u_long32 timestamp, ev_event type, 
+bool sge_add_list_event(u_long32 timestamp, ev_event type, 
                         u_long32 intkey, u_long32 intkey2, const char *strkey, 
                         const char *strkey2, const char *session, lList *list) 
 {
@@ -1455,8 +1447,8 @@ void sge_add_list_event(u_long32 timestamp, ev_event type,
       lp = lCopyList (lGetListName (list), list);
    }
    
-   add_list_event_for_client (EV_ID_ANY, timestamp, type, intkey, intkey2,
-                              strkey, strkey2, session, lp, false);
+   return add_list_event_for_client (EV_ID_ANY, timestamp, type, intkey, intkey2,
+                                     strkey, strkey2, session, lp, false);
 }
 
 /****** Eventclient/Server/add_list_event_for_client() *************************
@@ -1489,11 +1481,14 @@ void sge_add_list_event(u_long32 timestamp, ev_event type,
 *     const char *session     - events session key
 *     lList *list             - the list to deliver as event
 *
+*  RESULTS
+*     Whether the event was added successfully.
+*
 *  NOTES
 *     MT-NOTE: add_list_event_for_client() is MT safe.
 *
 *******************************************************************************/
-static void add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
+static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
                                       ev_event type, u_long32 intkey,
                                       u_long32 intkey2, const char *strkey,
                                       const char *strkey2, const char *session,
@@ -1502,6 +1497,8 @@ static void add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
    lListElem *evp = lCreateElem (EV_Type);
    lList *etlp = lCreateList ("Event_List", ET_Type);
    lListElem *etp = lCreateElem (ET_Type);
+   lListElem *client = NULL;
+   bool res = true;
    
    DENTER(TOP_LAYER, "add_list_event_for_client");
    
@@ -1528,10 +1525,13 @@ static void add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
       
       if (qlp == NULL) {
          qlp = lCreateList ("Event_Queue", EV_Type);
-         pthread_setspecific (Event_Queue_Key, (void *)qlp);
+         res = (pthread_setspecific (Event_Queue_Key, (void *)qlp) == 0);
       }
-      
-      lAppendElem (qlp, evp);
+
+      /* If the setspecific worked, add the event. */
+      if (res) {
+         lAppendElem (qlp, evp);
+      }
    }
    else {
       sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
@@ -1540,12 +1540,39 @@ static void add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
 
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
 
-      if (should_flush_event_client (aClientID, type, has_lock)) {
-         set_flush ();
+      if (aClientID != EV_ID_ANY) {
+         /* If we don't already hold the lock, grab it. */
+         if (!has_lock) {
+            /* If grabbing the lock fails, it's because this id is bad. */
+            if (!lock_client (aClientID, true)) {
+               res = false;
+            }
+         }
+
+         /* If we got the lock OK or already had the lock, see if we need to
+          * flush. */
+         if (res) {
+            client = get_event_client (aClientID);
+
+            /* If the client doesn't exist, return false. */
+            if (client == NULL) {
+               res = false;
+            }
+            /* Otherwise, flush the client if required. */
+            else if (should_flush_event_client (aClientID, type, true)) {
+               set_flush ();
+            }
+
+            /* If we had to aquire the lock, release it now. */
+            if (!has_lock) {
+               unlock_client (aClientID);
+            }
+         }
       }
    }
    
    DEXIT;
+   return res;
 }
 
 static void process_sends ()
@@ -4152,9 +4179,11 @@ bool sge_commit (void)
             /* Because we're in control of how events are added, we know that
              * event EV_events list will contain exactly one ET_Type.  If this
              * changes in the future, this line will need to become a loop. */
+            /* We do this without first getting a lock because this method may
+             * not need to aquire the lock.  By letting this method get the lock
+             * if it's needed, we may save some locking and unlocking. */
             flush |= should_flush_event_client (lGetUlong (ep, EV_id),
-                        lGetUlong (lFirst (lGetList (ep, EV_events)), ET_type),
-                        false);
+                 lGetUlong (lFirst (lGetList (ep, EV_events)), ET_type), false);
             
             ep = lNext (ep);
          }
@@ -4205,36 +4234,56 @@ static void set_flush (void)
    DEXIT;
 }
 
+/****** sge_event_master/should_flush_event_client() ***************************
+*  NAME
+*     should_flush_event_client() -- Tests whether an event needs to be flushed
+*
+*  SYNOPSIS
+*     static bool should_flush_event_client(lListElem *ec, ev_event type)
+*
+*  FUNCTION
+*     Tests whether a given event type for a given event client should cause a
+*     flush.  Will return false if the event client doesn't exist.
+*
+*  INPUTS
+*     lListElem *ec  - the event client who will receive the event
+*     ev_event type  - the event of the event being received
+*
+*  RESULTS
+*     Whether the events requires a flush
+*
+*  NOTE
+*     MT-NOTE: should_flush_event_client is NOT thread safe.  It expects the
+*              caller to hold Master_Control.mutex.
+*******************************************************************************/
 static bool should_flush_event_client(u_long32 id, ev_event type, bool has_lock)
 {
    bool flush = false;
    subscription_t *subscription = NULL;
-   lListElem *client = NULL;
    
    if ((type == sgeE_QMASTER_GOES_DOWN) || (type == sgeE_SHUTDOWN)) {
       flush = true;
    }
-   else if (id != EV_ID_ANY) {
-      /* Since this method gets called by functions that may or may not be
-       * holding the client lock, we have to act accordingly to preserve thread-
-       * safety and prevent deadlock. */
+   else if (id > EV_ID_ANY) {
+      lListElem *ec = NULL;
+      
       if (!has_lock) {
-         lock_client (id, true);
+         /* If grabbing the lock fails, it's because this id is bad. */
+         if (!lock_client (id, true)) {
+            return false;
+         }
       }
+
+      ec = get_event_client (id);
       
-      client = get_event_client (id);
-      
-      if (client != NULL) { 
-         subscription = lGetRef(client, EV_sub_array);
+      if (ec != NULL) {
+         subscription = lGetRef(ec, EV_sub_array);
 
          flush = ((subscription[type].flush) &&
                   (subscription[type].flush_time == 0));
       }
       
-      /* Since this method gets called by functions that may or may not be
-       * holding the client lock, we have to act accordingly to preserve thread-
-       * safety and prevent deadlock. */
-      if (!has_lock) {      
+      if (!has_lock) {
          unlock_client (id);
       }
    }
@@ -4242,10 +4291,43 @@ static bool should_flush_event_client(u_long32 id, ev_event type, bool has_lock)
    return flush;
 }
 
-void sge_set_commit_required (bool require_commit) {
+/****** sge_event_master/sge_set_commit_required() *****************************
+*  NAME
+*     sge_set_commit_required() -- Require commits for this thread's events
+*
+*  SYNOPSIS
+*     void sge_set_commit_required (bool require_commit)
+*
+*  FUNCTION
+*     Turns transactional event processing on or off.  If turned on, this means
+*     that sge_commit() must be called in order to actually send events
+*     queued with sge_add_[list_]event[_for_client]().
+*
+*  NOTE
+*     MT-NOTE: sge_set_commit_required is thread safe.  Transactional event
+*     processing is handled for each thread individually.
+*******************************************************************************/
+void sge_set_commit_required (bool require_commit)
+{
    pthread_setspecific (Event_Commit_Key, (void *)require_commit);
 }
 
+/****** sge_event_master/sge_is_commit_required() ******************************
+*  NAME
+*     sge_is_commit_required() -- Whether a commit is required
+*
+*  SYNOPSIS
+*     bool sge_is_commit_required (void)
+*
+*  FUNCTION
+*     Test whether transactional event processing is turned on.  If true, this
+*     means that sge_commit() must be called in order to actually send events
+*     queued with sge_add_[list_]event[_for_client]().
+*
+*  NOTE
+*     MT-NOTE: sge_is_commit_required is thread safe.  Transactional event
+*     processing is handled for each thread individually.
+*******************************************************************************/
 bool sge_is_commit_required (void)
 {
    return (bool)pthread_getspecific (Event_Commit_Key);

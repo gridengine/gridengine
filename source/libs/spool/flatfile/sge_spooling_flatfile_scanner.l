@@ -202,6 +202,15 @@ NL       \r?\n
 [^ \t\r\n][^\n]*[^ \t\r\n\\][ \t\r]*$  %{
                                           if (!spool_finish_line) { REJECT; }
                                           else {
+                                             /* Remove trailing whitespace. */
+                                             int count = strlen (spool_text) - 1;
+
+                                             while ((count >= 0) && isspace (spool_text[count])) {
+                                                count--;
+                                             }
+
+                                             spool_text[count + 1] = '\0';
+
                                              spool_line++;
                                              return SPFT_WORD;
                                           }

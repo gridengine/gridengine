@@ -254,7 +254,6 @@ else
 endif
 
 set   CFLAGS       = "$INP_CFLAGS"
-set   CXXFLAGS     = "$CFLAGS"
 set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set   ADD_COPYRIGHT     = 0
 set   ADD_SUN_COPYRIGHT = 0
@@ -317,7 +316,6 @@ set   GPROFFED    = 0
 set   DEBUGGED    = 0
 set   NOERR_CFLAG = ""
 set   GCC_NOERR_CFLAGS = ""
-set   GCC_NOERR_CXXFLAGS = ""
 set   GCC_NOSP = ""
 set   MEMCFLAG=""
 set   COMPILE_ARCH = ""
@@ -459,18 +457,15 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-compress"
      set CFLAGS = "-DCOMMCOMPRESS $CFLAGS"
-     set CXXFLAGS = "-DCOMMCOMPRESS $CXXFLAGS"
      set ZLIBBASE = "$SOURCE/3rdparty/zlib"
      breaksw
    case "-crypto":
       set CFLAGS  = " -DCRYPTO -I$OPENSSL_HOME/include  $CFLAGS"
-      set CXXFLAGS  = " -DCRYPTO -I$OPENSSL_HOME/include  $CXXFLAGS"
       set LFLAGS  = "-L$OPENSSL_HOME/lib $LFLAGS"
       set KLIBS = "-lcrypto"
       breaksw
    case "-D*":
       set CFLAGS = "$argv[1] $CFLAGS"
-      set CXXFLAGS = "$argv[1] $CXXFLAGS"
       breaksw
    case "-dce":
       set LIBS = " -ldce -threads $LIBS"
@@ -556,7 +551,6 @@ while ($#argv >= 1 && $?found)
       set KRBLIBS = "libkrb.a"
       set KRBLIB = "-lkrb"
       set CFLAGS  = "-DKERBEROS -I../security/krb -I$KRB_HOME/include -I$KRB_HOME/include/gssapi $CFLAGS"
-      set CXXFLAGS  = "-DKERBEROS -I../security/krb -I$KRB_HOME/include $CXXFLAGS"
       set KLFLAGS = "-L$KRB_HOME/lib"
       set KLIBS = "-lkrb5 -lk5crypto -lcom_err -lresolv"
       breaksw
@@ -602,7 +596,6 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-no-rmon":
       set CFLAGS  = "-DNO_SGE_COMPILE_DEBUG $CFLAGS"
-      set CXXFLAGS  = "-DNO_SGE_COMPILE_DEBUG $CXXFLAGS"
       setenv RMONINC  ""
       setenv RMONLIB  ""
       breaksw
@@ -744,7 +737,6 @@ while ($#argv >= 1 && $?found)
       set SECLIB = "-lsec"
       set SECLIB_OBJS = "sec_lib.o"
       set CFLAGS  = "-DSECURE -I$OPENSSL_HOME/include  $CFLAGS"
-      set CXXFLAGS  = "-DSECURE -I$OPENSSL_HOME/include  $CXXFLAGS"
 
       if ( $STATIC_SECURE == 1 ) then
          set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a"
@@ -765,7 +757,6 @@ while ($#argv >= 1 && $?found)
       set SPOOLING_LIBS   = "-lspoold -lspoolb -lspool -ldb"
       set SPOOLING_DEPS   = "libspoold libspoolb"
       set CFLAGS  = "-I$BERKELEYDB_HOME/include $CFLAGS"
-      set CXXFLAGS  = "-I$BERKELEYDB_HOME/include  $CXXFLAGS"
       set LFLAGS  = "-L$BERKELEYDB_HOME/lib $LFLAGS"
       breaksw
    case "-spool-classic":
@@ -788,7 +779,6 @@ while ($#argv >= 1 && $?found)
       set SPOOLING_LIBS   = "-lspoold -lspoolp -lspool -lpq"
       set SPOOLING_DEPS   = "libspoold libspoolp"
       set CFLAGS  = "-I$POSTGRES_HOME/include $CFLAGS"
-      set CXXFLAGS  = "-I$POSTGRES_HOME/include  $CXXFLAGS"
       set LFLAGS  = "-L$POSTGRES_HOME/lib $LFLAGS"
       breaksw
    case "-static":
@@ -857,7 +847,6 @@ case AIX43:
    set MAKE     = make
    set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set CXXFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CXXFLAGS"
    set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
@@ -868,7 +857,6 @@ case AIX43:
 
    if ( $STATIC == 1 ) then
       set CFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CFLAGS"
-      set CXXFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CXXFLAGS"
    endif
 
    set SHAREDLD = "$SOURCE/scripts/ldAix"
@@ -888,7 +876,6 @@ case AIX51:
    set MAKE     = make
    set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set CXXFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CXXFLAGS"
    set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
@@ -899,7 +886,6 @@ case AIX51:
 
    if ( $STATIC == 1 ) then
       set CFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CFLAGS"
-      set CXXFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CXXFLAGS"
    endif
 
    set SHAREDLD = "cc"
@@ -934,7 +920,6 @@ case ALINUX:
 
    set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DALINUX $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set CXXFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DALINUX $DEBUG_FLAG $CFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
    set SHAREDLD = $CC
@@ -952,7 +937,6 @@ case ALINUX:
 
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
-   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    set GCC_NOSP = "-Wno-strict-prototypes"
 
    set MTCFLAGS = "${MTCFLAGS} -pthread"
@@ -987,10 +971,8 @@ case ALPHA5:
 
    if ( $CC == gcc ) then
       set CFLAGS   = "$OFLAG -Wall -Wstrict-prototypes -Wno-error -O -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
-      set CXXFLAGS = "$OFLAG -Wstrict-prototypes -Werror -O -DALPHA -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    else
       set CFLAGS   = "$OFLAG $WFLAG -std1 -warnprotos -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS -Olimit 2000"
-      set CXXFLAGS   = "$OFLAG $WFLAG -DALPHA -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS -Olimit 2000"
    endif
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
@@ -1021,18 +1003,15 @@ case ALPHA5:
    else
       if ( $CC == cc ) then
          set CFLAGS = "-call_shared $CFLAGS"
-         set CXXFLAGS = "-call_shared $CXXFLAGS"
       endif
    endif
 
    if ( $CC == gcc ) then
       set NOERR_CFLAG = "-Wno-error"
       set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
-      set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    else
       set NOERR_CFLAG = "-w"
       set GCC_NOERR_CFLAGS = "$CFLAGS"
-      set GCC_NOERR_CXXFLAGS = "$CXXFLAGS"
    endif
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
@@ -1064,7 +1043,6 @@ case DARWIN:
 
    set CFLAGS   = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DDARWIN $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set CXXFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DDARWIN $DEBUG_FLAG $CFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
    set SHAREDLD = "$CC -dynamiclib -flat_namespace -undefined warning"
@@ -1096,7 +1074,6 @@ case DARWIN:
 
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
-   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    set GCC_NOSP = "-Wno-strict-prototypes"
 
    set MTCFLAGS = "${MTCFLAGS}"
@@ -1114,10 +1091,8 @@ case FREEBSD_*:
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
    set CFLAGS   = "$OFLAG -Wall -DFREEBSD -D$BUILDARCH $DEBUG_FLAG $CFLAGS -I/usr/X11R6/include"
-   set CXXFLAGS   = "$OFLAG -Wstrict-prototypes -DFREEBSD -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
-   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
    set LIBS     = "$LIBS -lkvm"
    set SHAREDLD = $CC
@@ -1127,7 +1102,6 @@ case FREEBSD_*:
    if ( $STATIC == 1 ) then
       echo "STATITCS"
       set CFLAGS = "-static $CFLAGS"
-      set CXXFLAGS = "-static $CXXFLAGS"
    endif
 
    set XMTDEF   = ""
@@ -1169,10 +1143,8 @@ case IRIX6*:
    endif   
 
    set CFLAGS   = "$OFLAG -D$IRIX_ARCHDEF $IRIX_ABI $DEBUG_FLAG $CFLAGS"
-   set CXXFLAGS   = "$OFLAG -D$IRIX_ARCHDEF $IRIX_ABI $DEBUG_FLAG $CXXFLAGS -DHAVE_STD"
    if ( $CC == gcc ) then
       set CFLAGS   = "-D$IRIX_ARCHDEF $DEBUG_FLAG $CFLAGS -Wall -Wstrict-prototypes -Werror"
-      set CXXFLAGS   = "-D$IRIX_ARCHDEF $DEBUG_FLAG $CXXFLAGS -Wstrict-prototypes -Werror"
    endif
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = "$IRIX_ABI $DEBUG_FLAG $LFLAGS"
@@ -1194,10 +1166,8 @@ case IRIX6*:
    if ( $CC == gcc ) then
       set NOERR_CFLAG = "-Wno-error"
       set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
-      set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    else
       set GCC_NOERR_CFLAGS = "$CFLAGS"
-      set GCC_NOERR_CXXFLAGS = "$CXXFLAGS"
    endif
 
    set SHAREDLD = $CC
@@ -1221,13 +1191,11 @@ case HP10:
          set OFLAG = "-O3"
       endif
       set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
-      set CXXFLAGS = "$OFLAG -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    else
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "+O3"
       endif
       set CFLAGS = "-Ae $OFLAG -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
-      set CXXFLAGS = "-Ae $OFLAG -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    endif
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
@@ -1243,7 +1211,6 @@ case HP10:
    endif
 
    set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
-   set CXXFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CXXFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
    set XMTDEF   = "-DNO_EDITRES"
@@ -1271,14 +1238,12 @@ case HP11:
          set OFLAG = "-O3"
       endif
       set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
-      set CXXFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    else
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "+O3"
       endif
       set CXX = "aCC"
       set CFLAGS = "-Ae $OFLAG -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
-      set CXXFLAGS = "$OFLAG -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    endif
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
@@ -1294,7 +1259,6 @@ case HP11:
    endif
 
    set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
-   set CXXFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CXXFLAGS"
    set LIBS     = "-lnsl $LIBS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
@@ -1324,14 +1288,12 @@ case HP1164:
          set OFLAG = "-O3"
       endif
       set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -DHP11 -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
-      set CXXFLAGS = "$OFLAG -Wall -Wstrict-prototypes -DHP11 -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    else
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "+O3"
       endif
       set CXX = "aCC"
       set CFLAGS = "-Ae $OFLAG -DHP11 -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
-      set CXXFLAGS = "$OFLAG -DHP11 -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    endif
 
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
@@ -1348,7 +1310,6 @@ case HP1164:
    endif
 
    set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
-   set CXXFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CXXFLAGS"
    set LIBS     = "-lnsl $LIBS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
@@ -1389,7 +1350,6 @@ case LINUX6:
       set CXX      = g++
    else
       set CFLAGS = "-Wno-error $CFLAGS"
-      set CXXFLAGS = "-Wno-error $CXXFLAGS"
       set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"
       set LIBS = "$LIBS"
    endif
@@ -1399,7 +1359,6 @@ case LINUX6:
    endif
 
    set CFLAGS = "-DLINUX -D$BUILDARCH $CFLAGS"
-   set CXXFLAGS = "-DLINUX -D$BUILDARCH $CXXFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
    set SHAREDLD = $CC
@@ -1424,10 +1383,8 @@ case LINUX6:
    else 
       set CFLAGS   = "$OFLAG $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
    endif
-   set CXXFLAGS   = "$OFLAG -Werror -Wstrict-prototypes $GLIBC20DEF $DEBUG_FLAG $CXXFLAGS"
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
-   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
    set LIBS     = "$LIBS"
    set XMTDEF   = ""
@@ -1517,7 +1474,6 @@ case SLINUX:
 
    set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set CXXFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX $DEBUG_FLAG $CFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
    set SHAREDLD = $CC
@@ -1535,7 +1491,6 @@ case SLINUX:
 
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
-   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    breaksw
 
 case SOLARIS:
@@ -1548,7 +1503,6 @@ case SOLARIS86:
    endif
 
    set LOADAVGLIBS = "-lkvm -lkstat"
-   set DIVBYZERO = "-fns -ftrap=division"
    if ( $CC == gcc ) then
       set OFLAG = "-O3"
    else
@@ -1560,24 +1514,18 @@ case SOLARIS86:
          set patchcnt = `/bin/sh -c 'ls -d /var/sadm/patch/112756-* 2> /dev/null' | wc -l`
          set haspatch = `expr $patchcnt ">=" 1`
          if ( $compversion == 5.5 && $haspatch == 1 ) then
-            set OFLAG = "-xO4"
+            set OFLAG = "-fast -xchip=pentium -xcache=generic"
          else
             echo using \"-xO3\" optimization due to compiler bug
             set OFLAG = "-xO3"
          endif
       else
-         set OFLAG = "-xO4"
+         set OFLAG = "-fast -xchip=generic -xcache=generic"
       endif
    endif
 
    set MTCFLAGS = "${MTCFLAGS} -mt"
    set MTLFLAGS = "-lpthread"
-
-   if ( $OPTIMIZATION == 1 ) then
-      if ( $BUILDARCH == SOLARIS || $BUILDARCH == SOLARIS64 ) then
-         set OFLAG = "$OFLAG -xchip=ultra2"
-      endif   
-   endif
 
    if ( $DEBUGGED == 1 ) then
       set DEBUG_FLAG = "-g"
@@ -1597,33 +1545,24 @@ case SOLARIS86:
    set DEPEND_FLAGS = "$CFLAGS -D$BUILDARCH $XMTINCD"
 
    if ( $BUILDARCH == SOLARIS64 ) then
-      if ( $CC == gcc ) then
-         set SOL64BITFLAG = "-D$BUILDARCH -DSOLARIS7"
-      else
-         set SOL64BITFLAG = "-D$BUILDARCH -xarch=v9 -DSOLARIS7"
-         set LFLAGS = "-xildoff -xarch=v9 $LFLAGS"
-         set CFLAGS = "-v $CFLAGS" 
+      if ( $CC == cc ) then
+         set SOL64BITFLAG = "-xarch=v9"
+         set LFLAGS = "-xarch=v9 -xildoff $LFLAGS"
       endif
    else
       set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
-      set CXXFLAGS = "-D_LARGEFILE64_SOURCE=1 $CXXFLAGS"
-      set SOL64BITFLAG = ""
-      if ( $CC == cc || $CC == insure ) then
-         set MEMCFLAG=-Xa
-         set LFLAGS = "$DIVBYZERO -xildoff $LFLAGS"
-      endif
-   endif
-
-   if ( $BUILDARCH == SOLARIS86 ) then
+      set SOL64BITFLAG = "-xarch=generic"
       if ( $CC == cc ) then
-#        set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE -errtags=yes" 
-         set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE,no%E_STATEMENT_NOT_REACHED,no%E_IMPLICIT_DECL_FUNC_RETURN_INT,no%E_OLD_STYLE_DECL_HIDES_PROTO,no%E_CONST_PROMOTED_UNSIGNED_LONG -errtags=yes" 
+         set MEMCFLAG = "-Xa"
+         set LFLAGS = "-xildoff $LFLAGS"
       endif
-      set CFLAGS = "$CFLAGS -D$BUILDARCH"
    endif
 
-   set CFLAGS = "$OFLAG $CFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG $DIVBYZERO"
-   set CXXFLAGS = "$OFLAG $CXXFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG $DIVBYZERO -DHAVE_STD -mt"
+   if ( $BUILDARCH == SOLARIS86 && $CC == cc ) then
+      set CFLAGS = "$CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE,no%E_STATEMENT_NOT_REACHED,no%E_IMPLICIT_DECL_FUNC_RETURN_INT,no%E_OLD_STYLE_DECL_HIDES_PROTO,no%E_CONST_PROMOTED_UNSIGNED_LONG -errtags=yes"
+   endif
+
+   set CFLAGS = "-Xc -v $OFLAG $SOL64BITFLAG -ftrap=division $CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG"
 
    set SHAREDLD = $CC
    if ( $CC == gcc ) then
@@ -1651,21 +1590,7 @@ case SOLARIS86:
    set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"
 
    set RANLIB   = "echo"
-
-   if ( $STATIC == 1 ) then
-      echo Static linking not available for SOLARIS
-      exit 1
-   else
-      if ( $CC == cc ) then
-         # set CFLAGS = "-Xa $CFLAGS"
-         set CFLAGS = "-Xc -DNLIST_STRUCT $CFLAGS"
-         set CXXFLAGS = "$CXXFLAGS"
-      endif
-   endif
-
    set GCC_NOERR_CFLAGS = "$CFLAGS -w"
-   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -w"
-
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
    breaksw
@@ -1677,15 +1602,12 @@ case UNICOS*:
    switch ($BUILDARCH)
       case UNICOS_TS:
          set CFLAGS   = "-DCRAY -DCRAYTS $DEBUG_FLAG $CFLAGS"
-         set CXXFLAGS   = "-DCRAY -DCRAYTS $DEBUG_FLAG $CXXFLAGS"
          breaksw
       case UNICOS_TS_IEEE:
          set CFLAGS   = "-DCRAY -DCRAYTS -DCRAYTSIEEE $DEBUG_FLAG $CFLAGS"
-         set CXXFLAGS   = "-DCRAY -DCRAYTS -DCRAYTSIEEE $DEBUG_FLAG $CXXFLAGS"
          breaksw
       default:
          set CFLAGS   = "-DCRAY $DEBUG_FLAG $CFLAGS"
-         set CXXFLAGS   = "-DCRAY $DEBUG_FLAG $CXXFLAGS"
    endsw
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = ""
@@ -1722,12 +1644,10 @@ set MAKEOPT = "$MAKEOPT $PARALLEL"
 
 if ( "$GCC_NOERR_CFLAGS" == "" ) then
    set GCC_NOERR_CFLAGS = "$CFLAGS"
-   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS"
 endif
 
 if ( $COMPILE_DC == 1 ) then
    set CFLAGS = "$CFLAGS -DCOMPILE_DC"
-   set CXXFLAGS = "$CXXFLAGS -DCOMPILE_DC"
 endif
 
 if ( $SHAREDLIBS == 1 ) then
@@ -1781,7 +1701,6 @@ if ( $WITH_GETTEXT == 1 ) then
    endif
    set LIBS = "$LIBINTL $LIBS"
    set CFLAGS = "$CFLAGS -D__SGE_COMPILE_WITH_GETTEXT__ $HFLAGS"
-   set CXXFLAGS = "$CXXFLAGS"
 else
    set XGETTEXT = ""
 endif

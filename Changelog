@@ -1,3 +1,7 @@
+RC-2003-04-03-0  Bugfix:    Can't compile Input.c on Linux
+                 Issue:     507
+                 Changed:   3rdparty/qmon/Xbae/Input.c                 
+
 EB-2003-04-03-0  Bugfix:    Unable to delete task array job with negative 
                             increment
                  Issue:     509

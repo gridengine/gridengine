@@ -21,8 +21,10 @@
  *
  * Author: Andrew Lister
  *
- * $Id: Input.c,v 1.1 2001/07/18 11:05:59 root Exp $
+ * $Id: Input.c,v 1.1.1.1.6.1 2003/04/03 08:06:17 ron Exp $
  */
+
+#include <stdio.h>
 
 /*#define DEBUG*/
 

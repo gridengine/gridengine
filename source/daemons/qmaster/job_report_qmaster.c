@@ -281,8 +281,11 @@ sge_pack_buffer *pb
       }
 #endif 
       queue_name = (s=lGetString(jr, JR_queue_name))?s:(char*)MSG_OBJ_UNKNOWNQ;
-      if ((pe_task_id_str = lGetString(jr, JR_pe_task_id_str)) && jep && jatep)
+      
+      if ((pe_task_id_str = lGetString(jr, JR_pe_task_id_str)) && jep && jatep) {
          petask = lGetSubStr(jatep, PET_id, pe_task_id_str, JAT_task_list); 
+      }
+      
       switch(rstate) {
       case JWRITTEN:
       case JRUNNING:   
@@ -483,7 +486,16 @@ sge_pack_buffer *pb
          break;
          
       case JSLAVE:
-         if (!jep) {
+         /* we might get load reports of pe slaves, which have finished
+            during a load report interval. We do not have any flushing
+            for slave load reports or any finish reports for them. If
+            the scheduler is fast, it might have send a remove order for
+            the job. We then get a load report for a job / task, which
+            does not exist anymore. 
+            I do nto know, if we have to send a job exit request, but at
+            least we have to ignore the load report.
+          */  
+         if (!jep || !jatep) {
             DPRINTF(("send cleanup request for slave job "u32"."u32"\n", 
                jobid, jataskid));
             pack_job_exit(pb, jobid, jataskid, pe_task_id_str);

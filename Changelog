@@ -1,3 +1,9 @@
+SG-2005-02-15-0: Bugfix:    a parallel arrayjob can kill the qmaster
+                 Changed:   qmaster
+                 Issue:     1441
+                 Bugtraq:  
+                 Review:    AH
+
 AH-2005-02-14-0: Bugfix:    Execd messages file contains incorrectly-formatted 
                             lines
                  Changed:   execd

@@ -1169,21 +1169,11 @@ proc parse_qstat {input output {jobid ""} {ext 0}} {
          set  position(13)  "127 131"           ; set   names(13)    ftckt
          set  position(14)  "133 137"           ; set   names(14)    stckt
          set  position(15)  "139 143"           ; set   names(15)    share
-         set  position(16)  "145 154"           ; set   names(16)    queue
+         set  position(16)  "145 174"           ; set   names(16)    queue
          set     rules(16)  rule_list
-
-         # if { $petask } {
-         #   set  position(17)  "192 198"           ; set   names(17)    master
-         #   set     rules(17)  rule_list
-         #    ...
-         #    ...
-         # } else {
-
-         set  position(17)  "156 161"           ; set   names(17)     slots
-         set  position(18)  "163 end"           ; set   names(18)    jatask
+         set  position(17)  "176 181"           ; set   names(17)     master
+         set  position(18)  "183 end"           ; set   names(18)    jatask
          set     rules(18)  rule_list
-
-         # }
       }
    } else {
       if { $ts_config(gridengine_version) == 53 } {
@@ -1208,11 +1198,11 @@ proc parse_qstat {input output {jobid ""} {ext 0}} {
          set   position(4)  "40 44"             ; set    names(4)    state
          set   position(5)  "46 64"             ; set    names(5)    time
          set  transform(5)  transform_date_time
-         set   position(6)  "66 75"             ; set    names(6)    queue
+         set   position(6)  "66 95"             ; set    names(6)    queue
          set      rules(6)  rule_list
-         set   position(7)  "77 82"             ; set    names(7)    master
+         set   position(7)  "97 102"            ; set    names(7)    master
          set      rules(7)  rule_list
-         set   position(8)  "84 end"            ; set    names(8)    jatask
+         set   position(8)  "104 end"           ; set    names(8)    jatask
          set      rules(8)  rule_list
       }
    }

@@ -98,6 +98,7 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 ### END INIT INFO
 #---------------------------------------------------------------------------
 
+COMMD_STARTUP_DELAY=2
 
 SGE_ROOT=GENROOT; export SGE_ROOT
 SGE_CELL=GENCELL; export SGE_CELL
@@ -434,6 +435,7 @@ if [ "$startup" = true ]; then
    if [ $qmaster = true -a $qmaster_host = true ]; then
       echo "   starting sge_qmaster"
       $bin_dir/sge_commd
+      sleep ${COMMD_STARTUP_DELAY}
       $bin_dir/sge_qmaster
 
       echo "   starting sge_schedd"
@@ -446,6 +448,7 @@ if [ "$startup" = true ]; then
       echo "   starting sge_execd"
       if [ $qmaster_host = false ]; then
          $bin_dir/sge_commd
+         sleep ${COMMD_STARTUP_DELAY}
       fi
       $bin_dir/sge_execd
    fi

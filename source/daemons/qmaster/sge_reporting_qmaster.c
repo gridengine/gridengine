@@ -72,6 +72,8 @@
  */
 #define REPORTING_WRITE_ACCOUNTING_FILE true
 
+const char REPORTING_DELIMITER = '\t';
+
 /* global dstring for accounting data */
 static dstring accounting_data = DSTRING_INIT;
 
@@ -171,32 +173,40 @@ reporting_create_acct_record(lList **answer_list,
 {
    bool ret = true;
 
-   char category_buffer[MAX_STRING_SIZE], job_buffer[MAX_STRING_SIZE];
-   dstring category_dstring, job_dstring;
+   char category_buffer[MAX_STRING_SIZE];
+   dstring category_dstring;
+   dstring job_dstring = DSTRING_INIT;
    const char *category_string, *job_string;
 
    DENTER(TOP_LAYER, "reporting_create_acct_record");
 
    sge_dstring_init(&category_dstring, category_buffer, 
                     sizeof(category_dstring));
-   sge_dstring_init(&job_dstring, job_buffer, 
-                    sizeof(job_dstring));
    category_string = sge_build_job_category(&category_dstring, job, 
                                             *(userset_list_get_master_list()));
-   job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
-                                 category_string);
-   if (job_string == NULL) {
-      ret = false;
-   } else {
-      if (REPORTING_WRITE_ACCOUNTING_FILE) {
+   /* create record for accounting file */
+   if (REPORTING_WRITE_ACCOUNTING_FILE) {
+      job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
+                                    category_string, ':');
+      if (job_string == NULL) {
+         ret = false;
+      } else {
          /* write accounting file */
          SGE_LOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
          sge_dstring_append(&accounting_data, job_string);
          SGE_UNLOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
       }
+   }
 
-      /* write reporting file */
-      ret = reporting_create_record(answer_list, "acct", job_string);
+   if (ret) {
+      /* create record in reporting file */
+      job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
+                                    category_string, REPORTING_DELIMITER);
+      if (job_string == NULL) {
+         ret = false;
+      } else {
+         ret = reporting_create_record(answer_list, "acct", job_string);
+      }
    }
 
    DEXIT;
@@ -275,10 +285,13 @@ reporting_create_host_record(lList **answer_list,
    if (host != NULL) {
       dstring host_dstring = DSTRING_INIT;
 
-      sge_dstring_sprintf(&host_dstring, "%s:"U32CFormat":%s:", 
+      sge_dstring_sprintf(&host_dstring, "%s%c"U32CFormat"%c%s%c", 
                           lGetHost(host, EH_name),
+                          REPORTING_DELIMITER,
                           report_time,
-                          "X");
+                          REPORTING_DELIMITER,
+                          "X",
+                          REPORTING_DELIMITER);
       /* dump load values */
       /* JG: TODO: we need a merged variable list that contains the variable
        * lists from global and local host - or postpone this until a mechnism
@@ -311,10 +324,13 @@ reporting_create_host_consumable_record(lList **answer_list,
    if (host != NULL) {
       dstring host_dstring = DSTRING_INIT;
 
-      sge_dstring_sprintf(&host_dstring, "%s:"U32CFormat":%s:", 
+      sge_dstring_sprintf(&host_dstring, "%s%c"U32CFormat"%c%s%c", 
                           lGetHost(host, EH_name),
+                          REPORTING_DELIMITER,
                           report_time,
-                          "X");
+                          REPORTING_DELIMITER,
+                          "X",
+                          REPORTING_DELIMITER);
 
       /* dump consumables */
       reporting_write_consumables(answer_list, &host_dstring, 
@@ -344,10 +360,13 @@ reporting_create_record(lList **answer_list,
    DENTER(TOP_LAYER, "reporting_create_record");
 
    SGE_LOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
-   sge_dstring_sprintf_append(&reporting_data, U32CFormat":%s:%s",
+   sge_dstring_sprintf_append(&reporting_data, U32CFormat"%c%s%c%s",
                               sge_get_gmt(),
+                              REPORTING_DELIMITER,
                               type,
-                              data);
+                              REPORTING_DELIMITER,
+                              data,
+                              REPORTING_DELIMITER);
    SGE_UNLOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
 
    DEXIT;

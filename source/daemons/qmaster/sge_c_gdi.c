@@ -468,7 +468,7 @@ int *after
 #endif
 
    default:
-      if (!ao) {
+      if (ao == NULL || ao->master_list == NULL) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
          answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          DEXIT;

@@ -159,7 +159,7 @@ static void sge_urgency(u_long32 now, double *min_urgency, double *max_urgency,
          dependent contribution */
       if ((cat = lGetRef(jep, JB_category)) && lGetBool(cat, CT_rc_valid)) {
          rrc = lGetDouble(cat, CT_resource_contribution);
-         DPRINTF(("  resource contribution from category cache ---> %7f\n", rrc));
+/*         DPRINTF(("  resource contribution from category cache ---> %7f\n", rrc)); */
       } else {
          lListElem *centry, *rr;
          double contribution;
@@ -197,8 +197,9 @@ static void sge_urgency(u_long32 now, double *min_urgency, double *max_urgency,
       lSetDouble(jep, JB_wtcontr, wtc);
       lSetDouble(jep, JB_urg,                      absolute_urgency);
 
-      DPRINTF(("--- job "U32CFormat" (dtc %7f + wtc %7f + rrc %7f) = asu %7f\n", 
+/*      DPRINTF(("--- job "U32CFormat" (dtc %7f + wtc %7f + rrc %7f) = asu %7f\n", 
             lGetUlong(jep, JB_job_number), dtc, wtc, rrc, absolute_urgency));
+*/            
       
       /* track min/max values */
       if (min_urgency)
@@ -245,8 +246,8 @@ static void sge_normalize_urgency(lList *job_list, double min_urgency,
       double asu = lGetDouble(jep, JB_urg);
       nsu = sge_normalize_value(asu, min_urgency, max_urgency);
          lSetDouble(jep, JB_nurg, nsu);
-         DPRINTF(("NSU(job " u32 ") = %f from %f\n", lGetUlong(jep, JB_job_number), nsu, 
-            asu));
+/*         DPRINTF(("NSU(job " u32 ") = %f from %f\n", lGetUlong(jep, JB_job_number), nsu, 
+            asu)); */
    }
 
    DEXIT;

@@ -1788,8 +1788,8 @@ ec_set_flush(ev_event event, bool flush, int interval)
          ret = ec_unset_flush(event);
          ec_mod_subscription_flush(ec, event, EV_NOT_FLUSHED, EV_NO_FLUSH);
          PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
-      } else if (interval < 0 || interval > EV_MAX_FLUSH) {
-         WARNING((SGE_EVENT, MSG_EVENT_ILLEGALFLUSHTIME_I, interval));
+/*      } else if (interval < 0 || interval > EV_MAX_FLUSH) {
+         WARNING((SGE_EVENT, MSG_EVENT_ILLEGALFLUSHTIME_I, interval)); */
       } else {
          lListElem *sub_event = lGetElemUlong(lGetList(ec, EV_subscribed), EVS_id, event);
 

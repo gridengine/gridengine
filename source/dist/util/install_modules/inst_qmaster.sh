@@ -638,7 +638,6 @@ PrintConf()
    fi
    $ECHO "shepherd_cmd           none"
    $ECHO "qmaster_params         none"
-   $ECHO "schedd_params          none"
    $ECHO "execd_params           none"
    $ECHO "reporting_params       accounting=true reporting=false flush_time=00:00:15 joblog=false sharelog=00:00:00"
    $ECHO "finished_jobs          100"

@@ -4334,11 +4334,11 @@ static void sgeee_priority(lListElem *task, u_long32 jobid, double nsu,
       SGEEE priority */
    geee_priority = weight_urgency * nsu + weight_ticket * nta +
                    weight_priority * npri;
-
+/*
    DPRINTF(("SGEEE priority (" u32 "."u32 ") %f = %f * %f + %f * %f + %f * %f\n",
       jobid, lGetUlong(task, JAT_task_number), geee_priority, 
       weight_urgency, nsu, weight_ticket, nta, weight_priority, npri));
-
+*/
    lSetDouble(task, JAT_ntix, nta);
    lSetDouble(task, JAT_prio, geee_priority);
 

@@ -1440,10 +1440,8 @@ FILE *fp
 static void showjob(
 sge_rusage_type *dusage 
 ) {
-   dstring maxvmem_string = DSTRING_INIT;
    dstring string = DSTRING_INIT;
 
-   double_print_memory_to_dstring(dusage->maxvmem, &maxvmem_string);
    printf("==============================================================\n");
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_QNAME, (dusage->qname ? dusage->qname : MSG_HISTORY_SHOWJOB_NULL));
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_HOSTNAME, (dusage->hostname ? dusage->hostname : MSG_HISTORY_SHOWJOB_NULL));
@@ -1485,8 +1483,8 @@ sge_rusage_type *dusage
 
    printf("%-13.12s%-13.0f\n",MSG_HISTORY_SHOWJOB_RUUTIME, dusage->ru_utime);    /* user time used */
    printf("%-13.12s%-13.0f\n", MSG_HISTORY_SHOWJOB_RUSTIME, dusage->ru_stime);    /* system time used */
-      printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_RUMAXRSS,  dusage->ru_maxrss);
-      printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_RUIXRSS,  dusage->ru_ixrss);   /* integral shared text size */
+      printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_RUMAXRSS,  dusage->ru_maxrss);     /* maximum resident set size */
+      printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_RUIXRSS,  dusage->ru_ixrss);       /* integral shared text size */
       printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_RUISMRSS,  dusage->ru_ismrss);     /* integral shared memory size*/
    printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_RUIDRSS,      dusage->ru_idrss);      /* integral unshared data "  */
    printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_RUISRSS,      dusage->ru_isrss);      /* integral unshared stack "  */
@@ -1505,8 +1503,16 @@ sge_rusage_type *dusage
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_MEM,          dusage->mem);
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_IO,           dusage->io);
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_IOW,          dusage->iow);
-   printf("%-13.12s%s\n",        MSG_HISTORY_SHOWJOB_MAXVMEM,      sge_dstring_get_string(&maxvmem_string));
-   sge_dstring_free(&maxvmem_string);
+
+#if 1
+   /* enable this to get unit of memory value (G,M,K) */
+   /* CR TODO: create units for complete qacct output: IZ: #1047 */
+   sge_dstring_clear(&string);
+   double_print_memory_to_dstring(dusage->maxvmem, &string);
+   printf("%-13.12s%s\n",        MSG_HISTORY_SHOWJOB_MAXVMEM,      sge_dstring_get_string(&string));
+#else
+   printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_MAXVMEM,      dusage->maxvmem);
+#endif
    sge_dstring_free(&string);
 }
 

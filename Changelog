@@ -1,37 +1,50 @@
-AH-2001-11-28-0: Feature: added enforce_project switch to cluster configuration
-                 removed dead code on QSI/qstd
+AS-2001-11-28-0: Bugfix:    remove unused and obsolete command line  
+                            parameters in qmaster,scheduler"
+                                -noread-argfile
+				-nostart-schedd
+				-nowrite-argfile
+				-truncate-argfile
+                            and scheduler:
+                                -k
+                                -salg
+                 Bugtraq:   #4532233
+		 Doc:       updated man pages sge_qmaster.8, sge_schedd.8 accordingly 
 
-                 This requires manual addition of a 'enforce_project' field 
-                 into the global configuration.
+AH-2001-11-28-0: Feature:   added enforce_project switch to cluster configuration
+                            removed dead code on QSI/qstd
 
-CR-2001-11-28-1: Testsuite
-                    Conformation of the testsuite because of changes from
-                    CR-2001-11-28-0, Issuzilla #79, Bugtrag #4531719
+                            This requires manual addition of a 'enforce_project' field 
+                            into the global configuration.
 
-CR-2001-11-28-0: Issuzilla #79, Bugtraq #4531719
-                 Reject changing of qmaster_spool_dir, execd_spool_dir
-                 admin_user, default_domain and ignore_fqdn in running cluster.
-                 
-AS-2001-11-26-0: execd now exits on SIGTERM also when commd is down
-                 Bugtraq #4531720
+CR-2001-11-28-1: Testsuite: Conformation of the testsuite because of changes from
+                            CR-2001-11-28-0, 
+                 Issuzilla: #79, 
+		 Bugtrag:   #4531719
 
-JG-2001-11-26-3: Added a subscribe/unsubscribe mechanism to the event client
-                 interface. The current implementation does not yet allow 
-                 dynamic (un)subscription, but only before a (re)registration.
-                 Sort output of qconf -secl by event client id.
-                 Insert qevent to the Grid Engine program and options handling.
+CR-2001-11-28-0: Bugfix:    Reject changing of qmaster_spool_dir, execd_spool_dir
+                            admin_user, default_domain and ignore_fqdn in running cluster.
+ 		 Issuzilla: #79
+                 Bugtraq    #4531719          
 
-CR-2001-11-26-0: Testsuite:
-                    Conformation of the testsuite because of changes from
-                    AH-2001-11-23-1, Removed unused configuration parameters
+AS-2001-11-26-0: Bugfix:    execd now exits on SIGTERM also when commd is down
+                 Bugtraq:   #4531720
 
-AH-2001-11-26-1: Fix 'minus_n=0' problem in dist/mpi/rsh wrapper script
-                 (Bugtraq #4532155)
-                 Fix error in generating rmon lib dependencies
+JG-2001-11-26-3: Feature:   Added a subscribe/unsubscribe mechanism to the event client
+                            interface. The current implementation does not yet allow 
+                            dynamic (un)subscription, but only before a (re)registration.
+                            Sort output of qconf -secl by event client id.
+                            Insert qevent to the Grid Engine program and options handling.
 
-AH-2001-11-26-0: Fix qmaster problem with not existing task spool 
-                 directory when task file is written.
-                 (Bugtraq #4532157)
+CR-2001-11-26-0: Testsuite: Conformation of the testsuite because of changes from
+                            AH-2001-11-23-1, Removed unused configuration parameters
+
+AH-2001-11-26-1: Bugfix:    Fix 'minus_n=0' problem in dist/mpi/rsh wrapper script
+                 Bugtraq:   #4532155
+                 Build:     Fix error in generating rmon lib dependencies
+
+AH-2001-11-26-0: Bugfix:    Fix qmaster problem with not existing task spool 
+                            directory when task file is written.
+                 Bugtraq:   #4532157
 
 JG-2001-11-26-2: Made qconf -secl use the new lHost datatype and access
                  functions (see CR-2001-11-23-1).

@@ -2758,6 +2758,7 @@ proc master_queue_of { job_id } {
 #
 #  SEE ALSO
 #     sge_procedures/wait_for_load_from_all_queues()
+#     sge_procedures/wait_for_unknown_load()
 #     file_procedures/wait_for_file()
 #     sge_procedures/wait_for_jobstart()
 #     sge_procedures/wait_for_end_of_transfer()
@@ -2825,6 +2826,93 @@ proc wait_for_load_from_all_queues { seconds } {
       set runtime [expr ( [timestamp] - $time) ]
       if { $runtime >= $seconds } {
           add_proc_error "wait_for_load_from_all_queues" -1 "timeout waiting for load values < 99"
+          return -1
+      }
+   }
+}
+
+
+#****** sge_procedures/wait_for_unknown_load() *********************************
+#  NAME
+#     wait_for_unknown_load() -- wait for load to get >= 99 for a list of queues
+#
+#  SYNOPSIS
+#     wait_for_unknown_load { seconds queue_array } 
+#
+#  FUNCTION
+#     This procedure is starting the qstat -f command and parse the output for
+#     the queue load values. If the load value of the given queue(s) have a value
+#     greater than 99 the procedure will return. If not an error message is
+#     generated after timeout.
+#
+#  INPUTS
+#     seconds     - number of seconds to wait before creating timeout error
+#     queue_array - an array of queue names for which to wait
+#
+#  SEE ALSO
+#     sge_procedures/wait_for_load_from_all_queues()
+#  
+#*******************************************************************************
+proc wait_for_unknown_load { seconds queue_array } {
+   global check_errno check_errstr CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
+
+   set time [timestamp]
+   while { 1 } {
+      sleep 5
+      puts $CHECK_OUTPUT "wait_for_unknown_load - waiting for queues\n\"$queue_array\"\nto get unknown load state ..."
+      set result ""
+      set catch_return [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f"} result ]
+      if { $catch_return == 0 } {
+         # split each line as listelement
+         set help [split $result "\n"]
+       
+         #remove first line
+         set help [lreplace $help 0 0]
+         set data ""
+       
+         #get every line after "----..." line 
+         set len [llength $help]
+         for {set ind 0} {$ind < $len } {incr ind 1} {
+            if {[lsearch [lindex $help $ind] "------*"] >= 0 } {
+               lappend data [lindex $help [expr ( $ind + 1 )]] 
+            }
+         }
+      
+         set qcount [ llength $data]
+         set qnames ""
+         set slots ""
+         set load ""
+      
+         # get line data information for queuename used/tot and load_avg
+         foreach elem $data {
+            set linedata $elem
+
+            set queue_name [lindex $linedata 0]
+            set load_value [lindex $linedata 3]
+            set load_values($queue_name) $load_value
+         }
+      
+         # check if load of an host is set > 99 (no exed report)
+         set failed 0
+         
+         foreach queue $queue_array {
+            if { [info exists load_values($queue)] == 1 } {
+               if { $load_values($queue) < 99 } {
+                   incr failed 1
+               } 
+            }
+         }
+
+         if { $failed == 0 } {
+            return 
+         }
+      } else {
+        puts $CHECK_OUTPUT "qstat error or binary not found"
+      }
+
+      set runtime [expr ( [timestamp] - $time) ]
+      if { $runtime >= $seconds } {
+          add_proc_error "wait_for_unknown_load" -1 "timeout waiting for load values >= 99"
           return -1
       }
    }
@@ -4271,7 +4359,8 @@ proc get_version_info {} {
 proc startup_qmaster {} {
    global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
-   global CHECK_START_SCRIPT_NAME
+   global CHECK_START_SCRIPT_NAME CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
+   global schedd_debug master_debug CHECK_DISPLAY_OUTPUT
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
       if { [have_root_passwd] != 0  } {
@@ -4284,12 +4373,28 @@ proc startup_qmaster {} {
    } 
 
    puts $CHECK_OUTPUT "starting up qmaster on host \"$CHECK_CORE_MASTER\" as user \"$startup_user\""
+   set arch [resolve_arch $CHECK_CORE_MASTER]
 
-   set output [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/default/common/$CHECK_START_SCRIPT_NAME" "-qmaster"]
-   if { [string first "found running qmaster with pid" $output] >= 0 } {
-      add_proc_error "startup_qmaster" -1 "qmaster on host $CHECK_CORE_MASTER is allready running"
-      return -1
+   if { $master_debug != 0 } {
+      puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.qmaster.$CHECK_CORE_MASTER $CHECK_PRODUCT_ROOT/bin/${arch}/sge_qmaster &" prg_exit_state 60 1 ""
+   } else {
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_qmaster" ""
    }
+   if { $schedd_debug != 0 } {
+      puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 1 ""
+   } else {
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd" ""
+   }
+   
+
+#   set output [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/default/common/$CHECK_START_SCRIPT_NAME" "-qmaster" ]
+
+#   if { [string first "found running qmaster with pid" $output] >= 0 } {
+#      add_proc_error "startup_qmaster" -1 "qmaster on host $CHECK_CORE_MASTER is allready running"
+#      return -1
+#   }
    return 0
 }
 

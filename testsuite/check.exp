@@ -34,7 +34,14 @@
 #___INFO__MARK_END__
 
 
-global no_action                   ;# just put out what would be done
+global daemon_debug 
+set daemon_debug 0
+global master_debug
+set master_debug 0
+global schedd_debug
+set schedd_debug 0
+
+global no_action                   ;# just used for testing/debug  procedures
 set no_action 0
 global be_quiet
 set be_quiet 0
@@ -83,6 +90,8 @@ set CHECK_QMASTER_INSTALL_OPTIONS ""
 set CHECK_EXECD_INSTALL_OPTIONS   ""
 
 # test system specific 
+global CHECK_DISPLAY_OUTPUT 
+set CHECK_DISPLAY_OUTPUT "undefined"
 global CHECK_SETTINGS_VERSION    ;# settings file version number
 set CHECK_SETTINGS_VERSION "undefined"
 global CHECK_PRODUCT_VERSION_NUMBER ;# version string of qstat -help of tested system
@@ -5013,6 +5022,39 @@ proc get_user_input { what } {
    return $myinput
 }
 
+
+#****** check/restart_debug_daemons() ******************************************
+#  NAME
+#     restart_debug_daemons() -- used for menu point 20/21
+#
+#  SYNOPSIS
+#     restart_debug_daemons { { shutdown 0 } } 
+#
+#  FUNCTION
+#     This procedure will shutdown and restart the qmaster and scheduler
+#
+#  INPUTS
+#     { shutdown 0 } - 0 -> do shutdown (otherwise only do starup)
+#
+#*******************************************************************************
+proc restart_debug_daemons { { shutdown 0 } } {
+   global daemon_debug master_debug schedd_debug
+   global CHECK_CORE_MASTER
+
+   if { [ have_root_passwd ] != 0 } {
+      set_root_passwd
+   }
+   if { $shutdown == 0 } {
+      get_config config_tmp
+      if { [info exists config_tmp(qmaster_spool_dir) ] != 1 } { 
+         return 
+      }
+      shutdown_master_and_scheduler $CHECK_CORE_MASTER $config_tmp(qmaster_spool_dir) 
+   }
+   startup_qmaster 
+   wait_for_load_from_all_queues 300 
+}
+
 #                                                             max. column:     |
 #****** check/ask_user_yes_or_no() ******
 # 
@@ -5093,7 +5135,7 @@ proc menu {} {
   global CHECK_USER CHECK_REPORT_FILE CHECK_OUTPUT CHECK_HOST CHECK_BAD_RESULT_DIR 
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
   global CHECK_GUILTY_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER
-
+  global daemon_debug
 
   set files [  print_menu_header ]
  
@@ -5119,12 +5161,18 @@ proc menu {} {
     puts " (12) run local test"
     puts " (13) run local test continously"
   }
+
+    puts " (20) shutdown and restart master and scheduler"
+    puts " (21) only start master and scheduler daemons"
+
   
   gets stdin input; 
 
   clear_screen
 
-  switch -- $input { 
+  switch -- $input {
+    "20" { restart_debug_daemons } 
+    "21" { restart_debug_daemons 1 }
     "0" { select_runlevel }
     "1" { change_dir; }
     "2" { run_tests $CHECK_ACT_PATH 0
@@ -5294,12 +5342,39 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "             not close a rlogin connection. The testsuite will reuse the open connection"
       puts "             for a later remote command. Use close_rlogin if the number of open file "
       puts "             descriptors is low on your system)"
+      puts ""
+      puts "master_debug    - procedure startup_qmaster will startup qmaster"
+      puts "                  in debug mode (using x host from DISPLAY,"
+      puts "                  please enable xhost display for all users)"
+      puts "schedd_debug    - procedure startup_qmaster will startup schedduler"
+      puts "                  in debug mode (using x host from DISPLAY,"
+      puts "                  please enable xhost display for all users)"
+      puts "display DISPLAY - set display for daemon debug windows"
+
       exit 1
    }
    if { ( [string compare [lindex $argv $i] "--re_init"] == 0 ) || ([string compare [lindex $argv $i] "re_init"] == 0) } {
       set check_use_installed_system 1
       continue
    }
+   if { ( [string compare [lindex $argv $i] "--master_debug"] == 0 ) || ([string compare [lindex $argv $i] "master_debug"] == 0) } {
+      set master_debug 1
+      set daemon_debug 1
+      continue
+   }
+   if { ( [string compare [lindex $argv $i] "--schedd_debug"] == 0 ) || ([string compare [lindex $argv $i] "schedd_debug"] == 0) } {
+      set schedd_debug 1
+      set daemon_debug 1
+      continue
+   }
+   if { ( [string compare [lindex $argv $i] "--display"] == 0 ) || ([string compare [lindex $argv $i] "display"] == 0) } {
+      incr i
+      set CHECK_DISPLAY_OUTPUT [lindex $argv $i]
+      continue
+   }
+
+   
+
 
    if { ( [string compare [lindex $argv $i] "--kill"] == 0 ) || ([string compare [lindex $argv $i] "kill"] == 0) } {
       set do_kill 1
@@ -5407,27 +5482,6 @@ set mail_body "$mail_body check is running on host \"$CHECK_HOST\" architecture 
 set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n-------\n"
 
 if { $no_action == 1 } {
-
-  set hosts ""   
-  foreach elem $hosts {
-     set output [start_remote_prog $elem cr114091 hostname ";id" prg_exit_state 15]
-#     puts "-------->out : $output"
-#     puts "-------->exit: $prg_exit_state"
-#     puts [exec pstree [getpid]]
-     if { [string first $elem $output ] < 0 } {
-        exit -1
-     }
-     set output [start_remote_prog $elem codadmin hostname ";id" prg_exit_state 15]
-#     puts "-------->out : $output"
-#     puts "-------->exit: $prg_exit_state"
-
-#     puts [exec pstree [getpid]]
-     if { [string first $elem $output ] < 0 } {
-        exit -1
-     }
-
-  }
-
   puts "No action flag is set -> exit 1"
   exit 1
 }
@@ -5569,6 +5623,27 @@ if { $do_only_test_perm == 1 } {
 
  
 if {$do_nomain == 0} {
+  if { $daemon_debug != 0 } {
+     if { [ string compare $CHECK_DISPLAY_OUTPUT "undefined" ] == 0 } {
+        puts "no debug x display set"
+        exit -1
+     } 
+     start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e sleep 1"
+     if { $prg_exit_state != 0 } {
+         puts "can't open display $CHECK_DISPLAY_OUTPUT as user $CHECK_USER from host $CHECK_CORE_MASTER"    
+         exit -1
+     }
+
+
+     if { [ have_root_passwd ] != 0 } {
+         set_root_passwd
+     }
+     start_remote_prog "$CHECK_CORE_MASTER" "root" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e sleep 1"
+     if { $prg_exit_state != 0 } {
+         puts "can't open display $CHECK_DISPLAY_OUTPUT as user root from host $CHECK_CORE_MASTER"    
+         exit -1
+     }
+  }
   puts "please press <RETURN>"
   gets stdin test
   menu 

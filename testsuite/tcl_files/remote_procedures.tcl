@@ -728,6 +728,19 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
       send -i $open_remote_spawn__id "$open_remote_spawn__script_name\n"
       log_user 1
    }
+
+   if { $background != 0 } {
+      set back_time 15 ;# let background process time to do his initialization
+      while { $back_time > 0 } {
+         puts -nonewline $CHECK_OUTPUT "."
+         flush $CHECK_OUTPUT
+         sleep 1
+         incr back_time -1
+      }
+      puts $CHECK_OUTPUT "hope background process is initalized now!"
+   }
+
+
    delete_file_at_startup $script_name
 
    debug_puts "number of open shells: $nr_of_shells"

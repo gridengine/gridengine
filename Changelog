@@ -1,3 +1,6 @@
+JG-2002-07-19-0: Doc:       updated qmake manpage to reflect usage of the
+                            ARCH environment variable.
+
 JG-2002-07-18-0: Bugfix:    qsh mechanism passing options to xterm was broken.
                             help output for qrsh and qlogin contained 
                             unsupported options.

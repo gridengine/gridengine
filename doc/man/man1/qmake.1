@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmake.1,v $     Last Update: $Date: 2002/03/13 09:51:25 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: qmake.1,v $     Last Update: $Date: 2002/07/19 09:11:52 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMAKE 1 "$Date: 2002/03/13 09:51:25 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMAKE 1 "$Date: 2002/07/19 09:11:52 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmake \- distributed parallel make, scheduling by xxQS_NAMExx.
 .PP
@@ -82,8 +82,15 @@ in the users .cshrc or .profile shell resource file and request slots in a
 parallel environment (see 
 .M sge_pe 5
 ).
-.\"
-.\"
+.PP
+If no resource request (xxQS_NAMExx commandline option -l) is specified, 
+qmake will use the environment variable ARCH to request the same architecture 
+for task execution as has the submit host.
+If ARCH is set, the architecture specified in ARCH will be requested by 
+inserting the option -l arch=$ARCH into the commandline options.
+If ARCH is not set, the make tasks can be executed on any available architecture.
+As this is critical for typical make (compile) jobs, a warning will be output.
+.PP
 .SH EXAMPLES
 .sp 1
 .nf
@@ -168,6 +175,11 @@ The name of the default cell, i.e. \fBdefault\fP.
 If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
+.\"
+.IP "\fBARCH\fP" 1.5i
+The architecture of the submit host. If this variable is set in 
+the submission environment, qmake 
+will request the given architecture for job execution (see DESCRIPTION above).
 .\"
 .IP "\fBCOMMD_PORT\fP" 1.5i
 If set, specifies the tcp port on which

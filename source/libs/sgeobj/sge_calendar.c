@@ -614,7 +614,7 @@ static u_long32 is_year_entry_active(lListElem *tm, lListElem *year_entry, time_
 *     const lListElem *cep       - (in) calendar (CAL_Type)
 *     lList **state_changes_list - (out) a pointer to a list pointer (CQU_Type)
 *     time_t *when               - (out) when will the next change be, or 0
-*     time_t *now                - (in) should be NULL, or the current time
+*     time_t *now                - (in) should be NULL, or the current time (only for the test programm)
 *
 *  RESULT
 *     u_long32 - new state (QI_DO_NOTHING, QI_DO_DISABLE, QI_DO_SUSPEND)
@@ -636,10 +636,8 @@ u_long32 calender_state_changes(const lListElem *cep, lList **state_changes_list
       return 0;
    }
 
-   temp_now = *now;
-
    /* build queue state change list */
-   state0 = calendar_get_current_state_and_end(cep, &temp_when, &temp_now);
+   state0 = calendar_get_current_state_and_end(cep, &temp_when, now);
    *when = temp_when;   
 
    /* calculate the next state shift. */

@@ -232,7 +232,7 @@
 #define MSG_USER_XISNOKNOWNUSER_S                 _("%s is not known as user\n")
 #define MSG_PROJECT_XISNOKNWOWNPROJECT_S          _("%s is not known as project\n")
 #define MSG_ANSWER_NEEDHOSTNAMETODELLOCALCONFIG     _("Need hostname to delete local configuration\n")
-#define MSG_ANSWER_INVALIDOPTIONARGX_S            _("invalid option argument \"%s\"")
+#define MSG_ANSWER_INVALIDOPTIONARGX_S            _("invalid option argument \"%s\"\n")
 #define MSG_SRC_X_HELP_USAGE_S                    _("Usage: %s -help\n")
 #define MSG_FILE_EDITFILEXDOESNOTEXIST_S          _("edit file %s does not exist")
 #define MSG_QCONF_EDITOREXITEDWITHERROR_I         _("editor exited with error %d")

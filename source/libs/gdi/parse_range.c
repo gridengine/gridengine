@@ -176,6 +176,8 @@ int inf_allowed
                rmax = ldummy;
 
                if (step_allowed && *dptr && *dptr == ':') {
+
+                  /* Issue 799 begin
                   rstr  = dptr+1;
                   ldummy = strtol(rstr,&dptr,10);
                   if ((ldummy == 0) && (rstr == dptr)) {
@@ -193,6 +195,51 @@ int inf_allowed
                      DEXIT;
                      return NULL;
                   }
+                  */
+
+                 const double epsilon = 1.0E-12;
+                 double       dbldummy;
+ 
+                  rstr = dptr + 1;
+                  dbldummy = strtod(rstr, &dptr);
+                  ldummy = dbldummy;
+                  
+                  if (dbldummy > 0) {
+                     if (( dbldummy - ldummy > epsilon) ||
+                        ((ldummy == 0) && (rstr == dptr))) {
+                        sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S,
+                                rstr);
+                        sge_add_answer(alpp, msg, STATUS_ESYNTAX, 0); 
+                        lFreeElem(r);
+                        DEXIT;
+                        return NULL;
+                     }
+                  }
+                  else if (dptr == rstr) {
+                     sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S,
+                             rstr);
+                     sge_add_answer(alpp, msg, STATUS_ESYNTAX, 0); 
+                     lFreeElem(r);
+                     DEXIT;
+                     return NULL;
+                  }
+                  else {
+                      sprintf( msg, MSG_GDI_NEGATIVSTEP );
+                      sge_add_answer(alpp, msg, STATUS_ESYNTAX, 0); 
+                      lFreeElem(r);
+                      DEXIT;
+                      return NULL;
+                  }
+                   
+                  if (*dptr != '\0') {
+                     sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS,
+                             rstr, dptr);
+                     sge_add_answer(alpp, msg, STATUS_ESYNTAX, 0); 
+                     lFreeElem(r);
+                     DEXIT;
+                     return NULL;
+                  }
+
                   /* finally, we got the max-value in ldummy */
                   step = ldummy;
                }

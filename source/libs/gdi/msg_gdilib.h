@@ -918,5 +918,8 @@
 #define MSG_GDI_TASKIDNOTSET          _MESSAGE(43346, _("[SGE|GRD|COD]_TASK_ID not set in environment\n"))
 #define MSG_GDI_CANNOTSTARTPETASKINARRAYTASK _MESSAGE(43347, _("cannot start a tightly integrated parallel task in an array task with array task id != 1\n"))
 
+#define MSG_GDI_NEGATIVSTEP           _MESSAGE(43347, _("Negative or zero step in range is not allowed\n" ))
+
+
 #endif /* __MSG_GDILIB_H */
 

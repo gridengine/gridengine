@@ -547,7 +547,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    /* check if job owner has access rights to the queue */
    if (!sge_has_access(lGetString(job, JB_owner), lGetString(job, JB_group), queue, acl_list)) {
       DPRINTF(("Job %d has no permission for queue %s\n", (int)job_id, queue_name));
-      schedd_add_message(job_id, SCHEDD_INFO_HASNOPERMISSION_S, "queue", queue_name);
+      schedd_mes_add(job_id, SCHEDD_INFO_HASNOPERMISSION_S, "queue", queue_name);
       DEXIT;
       return 1;
    }
@@ -555,13 +555,13 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    /* check if job can run in queue based on project */
    if ((projects = lGetList(queue, QU_projects))) {
       if ((!(project = lGetString(job, JB_project)))) {
-         schedd_add_message(job_id, SCHEDD_INFO_HASNOPRJ_S,
+         schedd_mes_add(job_id, SCHEDD_INFO_HASNOPRJ_S,
             "queue", queue_name);
          DEXIT;
          return 9;
       }
       if ((!userprj_list_locate(projects, project))) {
-         schedd_add_message(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
+         schedd_mes_add(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
             project, "queue", queue_name);
          DEXIT;
          return 9;
@@ -572,7 +572,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    if ((projects = lGetList(queue, QU_xprojects))) {
       if (((project = lGetString(job, JB_project)) &&
            userprj_list_locate(projects, project))) {
-         schedd_add_message(job_id, SCHEDD_INFO_EXCLPRJ_SS,
+         schedd_mes_add(job_id, SCHEDD_INFO_EXCLPRJ_SS,
             project, "queue", queue_name);
          DEXIT;
          return 9;
@@ -583,7 +583,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    if (lGetList(job, JB_hard_queue_list)) {
 
       if (!queues_are_requestable(cplx_list)) {
-         schedd_add_message(job_id, SCHEDD_INFO_QUEUENOTREQUESTABLE_S,  
+         schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTREQUESTABLE_S,  
             queue_name);
          DEXIT;
          return 5;
@@ -593,7 +593,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
          DPRINTF(("Queue \"%s\" is not contained in the hard "
            "queue list (-q) that was requested by job %d\n",
                queue_name, (int) job_id));
-         schedd_add_message(job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S,  
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S,  
             queue_name);
          DEXIT;
          return 5;
@@ -603,7 +603,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    /* is this queue a candidate for being the master queue? */
    if (lGetList(job, JB_master_hard_queue_list)) {
       if (!queues_are_requestable(cplx_list)) {
-         schedd_add_message(job_id, SCHEDD_INFO_QUEUENOTREQUESTABLE_S,  
+         schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTREQUESTABLE_S,  
             queue_name);
          DEXIT;
          return 5;
@@ -629,7 +629,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
       if (!(lGetUlong(queue, QU_qtype) & PQ)) {
          DPRINTF(("Queue \"%s\" is not a parallel queue as requested by " 
             "job %d\n", queue_name, (int)job_id));
-         schedd_add_message(job_id, SCHEDD_INFO_NOTPARALLELQUEUE_S,  
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELQUEUE_S,  
             queue_name);
    
          DEXIT;
@@ -643,7 +643,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
          if (!lGetSubCaseStr(pe, QR_name, SGE_ATTRVAL_ALL, PE_queue_list)) {
             DPRINTF(("Queue \"%s\" is not in queue list of PE \"%s\" requested "
                "by job %d\n", queue_name, lGetString(pe, PE_name), (int)job_id));
-            schedd_add_message(job_id, SCHEDD_INFO_NOTINQUEUELSTOFPE_SS,  
+            schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFPE_SS,  
                queue_name, lGetString(pe, PE_name));
             DEXIT;
             return 3;
@@ -656,7 +656,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
       if (!(lGetUlong(queue, QU_qtype) & CQ)) {
          DPRINTF(("Queue \"%s\" is not a checkpointing queue as requested by "
                   "job %d\n", queue_name, (int)job_id));
-         schedd_add_message(job_id, SCHEDD_INFO_NOTACKPTQUEUE_SS, queue_name);
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTACKPTQUEUE_SS, queue_name);
          DEXIT;
          return 6;
       }
@@ -669,7 +669,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
             DPRINTF(("Queue \"%s\" is not in queue list of ckpt \"%s\" "
                "requested by job %d\n", 
                queue_name, lGetString(ckpt, CK_name), (int)job_id));
-            schedd_add_message(job_id, SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS,  
+            schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS,  
                queue_name, lGetString(ckpt, CK_name));
             DEXIT;
             return 6;
@@ -683,7 +683,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
       if (!lGetString(job, JB_script_file) && !(lGetUlong(queue, QU_qtype) & IQ)) {
          DPRINTF(("Queue \"%s\" is not an interactive queue as requested by "
                   "job %d\n", queue_name, (int)job_id));
-         schedd_add_message(job_id, SCHEDD_INFO_QUEUENOTINTERACTIVE_S, queue_name);
+         schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTINTERACTIVE_S, queue_name);
          DEXIT;
          return 7;
       } else /* is it a batch job and a batch or transfer queue ? */
@@ -692,7 +692,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
           !(lGetUlong(queue, QU_qtype) & TQ)) {
          DPRINTF(("Queue \"%s\" is not a serial (batch or transfer) queue as "
                   "requested by job %d\n", queue_name, (int)job_id));
-         schedd_add_message(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
          DEXIT;
          return 4;
       }
@@ -704,7 +704,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
           !(lGetUlong(queue, QU_qtype) & TQ)) {
          DPRINTF(("Queue \"%s\" is not a serial (batch or transfer) queue as "
                   "requested by job %d\n", queue_name, (int)job_id));
-         schedd_add_message(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
          DEXIT;
          return 4;
       }
@@ -714,7 +714,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
          (lGetUlong(queue, QU_qtype) & (PQ|BQ|TQ)) == PQ) {
       DPRINTF(("Queue \"%s\" is not a serial (batch or transfer) queue as "
                "requested by job %d\n", queue_name, (int)job_id));
-      schedd_add_message(job_id, SCHEDD_INFO_NOTPARALLELJOB_S, queue_name);
+      schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELJOB_S, queue_name);
       DEXIT;
       return 4;
    }
@@ -776,7 +776,7 @@ static int requested_forced_attr(lListElem *job, lListElem *cplx,
          !is_requested(lGetList(job, JB_hard_resource_list), lGetString(attr, CE_name))) {
          DPRINTF(("job "u32" does not request 'forced' resource \"%s\" of %s %s\n",
                   lGetUlong(job, JB_job_number), lGetString(attr, CE_name), obj_name, obj_key));
-         schedd_add_message(lGetUlong(job, JB_job_number), SCHEDD_INFO_NOTREQFORCEDRES_SS, lGetString(attr, CE_name), obj_key);
+         schedd_mes_add(lGetUlong(job, JB_job_number), SCHEDD_INFO_NOTREQFORCEDRES_SS, lGetString(attr, CE_name), obj_key);
          DEXIT;
          return 0;
       }
@@ -859,7 +859,7 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
          lGetList(host, EH_xacl), acl_list)) {
       DPRINTF(("Job %d has no permission for host %s\n",
                (int)job_id, eh_name));
-      schedd_add_message(job_id, SCHEDD_INFO_HASNOPERMISSION_S,
+      schedd_mes_add(job_id, SCHEDD_INFO_HASNOPERMISSION_S,
          "host", eh_name);
       DEXIT;
       return 1;
@@ -869,14 +869,14 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
    if ((projects = lGetList(host, EH_prj))) {
    
       if ((!(project = lGetString(job, JB_project)))) {
-         schedd_add_message(job_id, SCHEDD_INFO_HASNOPRJ_S,
+         schedd_mes_add(job_id, SCHEDD_INFO_HASNOPRJ_S,
             "host", eh_name);
          DEXIT;
          return 2;
       }
 
       if ((!userprj_list_locate(projects, project))) {
-         schedd_add_message(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
+         schedd_mes_add(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
             project, "host", eh_name);
          DEXIT;
          return 3;
@@ -887,7 +887,7 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
    if ((projects = lGetList(host, EH_xprj))) {
       if (((project = lGetString(job, JB_project)) &&
            userprj_list_locate(projects, project))) {
-         schedd_add_message(job_id, SCHEDD_INFO_EXCLPRJ_SS,
+         schedd_mes_add(job_id, SCHEDD_INFO_EXCLPRJ_SS,
             project, "host", eh_name);
          DEXIT;
          return 4;
@@ -912,7 +912,7 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
              && lGetUlong(ruep, RU_task_number) == task_id) {
             DPRINTF(("RU: Job "u32"."u32" Host "SFN"\n", job_id,
                task_id, eh_name));
-            schedd_add_message(job_id, SCHEDD_INFO_CLEANUPNECESSARY_S,
+            schedd_mes_add(job_id, SCHEDD_INFO_CLEANUPNECESSARY_S,
                eh_name);
             DEXIT;
             return 5;
@@ -1373,11 +1373,11 @@ u_long32 ttype       /* may be QU_suspend_thresholds or QU_load_thresholds */
             if (ttype==QU_suspend_thresholds) {
                DPRINTF(("queue %s tagged to be in suspend alarm: %s\n", 
                      lGetString(qep, QU_qname), reason));
-               schedd_add_global_message(SCHEDD_INFO_QUEUEINALARM_SS, lGetString(qep, QU_qname), reason);
+               schedd_mes_add_global(SCHEDD_INFO_QUEUEINALARM_SS, lGetString(qep, QU_qname), reason);
             } else {
                DPRINTF(("queue %s tagged to be overloaded: %s\n", 
                      lGetString(qep, QU_qname), reason));
-               schedd_add_global_message(SCHEDD_INFO_QUEUEOVERLOADED_SS, lGetString(qep, QU_qname),
+               schedd_mes_add_global(SCHEDD_INFO_QUEUEOVERLOADED_SS, lGetString(qep, QU_qname),
 reason);
             }
          }
@@ -1454,7 +1454,7 @@ int nslots
       lListElem* mes_queue;
 
       for_each(mes_queue, *full)
-         schedd_add_global_message(SCHEDD_INFO_QUEUEFULL_, lGetString(mes_queue, QU_qname));
+         schedd_mes_add_global(SCHEDD_INFO_QUEUEFULL_, lGetString(mes_queue, QU_qname));
 
       schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED , *full, QU_qname);
       if (do_free_list) {
@@ -1513,7 +1513,7 @@ lList **suspended         /* QU_Type */
       lListElem* mes_queue;
 
       for_each(mes_queue, *suspended)
-         schedd_add_global_message(SCHEDD_INFO_QUEUESUSP_, lGetString(mes_queue, QU_qname));
+         schedd_mes_add_global(SCHEDD_INFO_QUEUESUSP_, lGetString(mes_queue, QU_qname));
  
       schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED , *suspended, QU_qname);
       if (do_free_list) {
@@ -1572,7 +1572,7 @@ lList **disabled         /* QU_Type */
       lListElem* mes_queue;
 
       for_each(mes_queue, *disabled)
-         schedd_add_global_message(SCHEDD_INFO_QUEUEDISABLED_, lGetString(mes_queue, QU_qname));
+         schedd_mes_add_global(SCHEDD_INFO_QUEUEDISABLED_, lGetString(mes_queue, QU_qname));
  
       schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED , *disabled, QU_qname);
       if (do_free_list) {
@@ -1859,7 +1859,7 @@ int host_order_changed) {
             
             if (!(allocation_rule = sge_pe_slots_per_host(pe, total_slots))) {
                max_slots_all_hosts = total_slots;
-               schedd_add_message(job_id, SCHEDD_INFO_PEALLOCRULE_S, lGetString(pe, PE_name));
+               schedd_mes_add(job_id, SCHEDD_INFO_PEALLOCRULE_S, lGetString(pe, PE_name));
                continue;
             }
             minslots = ALLOC_RULE_IS_BALANCED(allocation_rule)?allocation_rule:1;
@@ -2354,7 +2354,7 @@ lListElem *hep;
       if (load_alarm) { 
          DPRINTF(("%s (%d global slots/%d host slots) would set queue \"%s\" in load alarm state\n", 
                job_descr(job_id), total_slots, host_slots, qname));
-         schedd_add_message(job_id, SCHEDD_INFO_WOULDSETQEUEINALARM_DS,
+         schedd_mes_add(job_id, SCHEDD_INFO_WOULDSETQEUEINALARM_DS,
             host_slots, qname);
          DEXIT;
          return 0;
@@ -2387,7 +2387,7 @@ lListElem *hep;
       return 0;
    }
    if (!(qslots = lGetDouble(cep, CE_doubleval))) {
-      schedd_add_message(job_id, SCHEDD_INFO_NOSLOTSINQUEUE_S, qname);
+      schedd_mes_add(job_id, SCHEDD_INFO_NOSLOTSINQUEUE_S, qname);
    }
 
    /* get QU_job_slots of queue */
@@ -2407,7 +2407,7 @@ lListElem *hep;
                      lGetList(job, JB_hard_resource_list));
             if (*buff && (buff[strlen(buff) - 1] == '\n'))
                buff[strlen(buff) - 1] = 0;
-            schedd_add_message(job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, qname, reason);
+            schedd_mes_add(job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, qname, reason);
             
          } 
          continue;
@@ -2483,7 +2483,7 @@ static int available_slots_at_host(lList *host_resources, lListElem *job,
             if (*buff && (buff[strlen(buff) - 1] == '\n'))
                buff[strlen(buff) - 1] = 0;
 
-            schedd_add_message(job_id, SCHEDD_INFO_CANNOTRUNATHOST_SSS, 
+            schedd_mes_add(job_id, SCHEDD_INFO_CANNOTRUNATHOST_SSS, 
                buff, eh_name, reason);
          }
 /*          DPRINTF(("HOST failed %s %d slots: %s\n", eh_name, hslots, reason));    */
@@ -2545,7 +2545,7 @@ lList *acl_list;
       global_slots = num_in_range(global_slots, lGetList(job, JB_pe_range));
 
       if (!global_slots) {
-         schedd_add_message (lGetUlong(job, JB_job_number) , SCHEDD_INFO_NOSLOTSUPPORTBYPE_S, 
+         schedd_mes_add (lGetUlong(job, JB_job_number) , SCHEDD_INFO_NOSLOTSUPPORTBYPE_S, 
                   lGetString(pe_object, PE_name));
          DEXIT;
          return 0;
@@ -2584,7 +2584,7 @@ lList *acl_list;
       unparse_resources(NULL, buff, sizeof(buff) - 1, lGetList(job, JB_hard_resource_list));
       if (*buff && (buff[strlen(buff) - 1] == '\n'))
          buff[strlen(buff) - 1] = 0;
-      schedd_add_message (lGetUlong(job, JB_job_number), SCHEDD_INFO_CANNOTRUNGLOBALLY_SS,
+      schedd_mes_add (lGetUlong(job, JB_job_number), SCHEDD_INFO_CANNOTRUNGLOBALLY_SS,
               buff, reason);
    }
 

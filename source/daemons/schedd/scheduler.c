@@ -150,8 +150,8 @@ int scheduler(sge_Sdescr_t *lists) {
    start = times(&tms_buffer);
    scheduled_fast_jobs    = 0;
    scheduled_complex_jobs = 0;
-   schedd_initialize_messages();
-   schedd_log_schedd_info(1); 
+   schedd_mes_initialize();
+   schedd_mes_set_logging(1); 
 
    for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
       splitted_job_lists[i] = NULL;
@@ -203,7 +203,7 @@ int scheduler(sge_Sdescr_t *lists) {
       qlp = lSelect("", lists->all_queue_list, where, what);
 
       for_each(mes_queues, qlp)
-         schedd_add_global_message(SCHEDD_INFO_QUEUENOTAVAIL_, 
+         schedd_mes_add_global(SCHEDD_INFO_QUEUENOTAVAIL_, 
                                    lGetString(mes_queues, QU_qname));
 
       schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED, 
@@ -276,8 +276,8 @@ int scheduler(sge_Sdescr_t *lists) {
       orderlist = lFreeList(orderlist);
    }
 
-   schedd_release_messages();
-    schedd_log_schedd_info(0); 
+   schedd_mes_release();
+   schedd_mes_set_logging(0); 
 
    DEXIT;
    return 0;
@@ -325,8 +325,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
                                 /* e.g. if load correction was computed */
 
    DENTER(TOP_LAYER, "dispatch_jobs");
-
-   schedd_initialize_messages_joblist(NULL);
 
    /*---------------------------------------------------------------------
     * LOAD ADJUSTMENT
@@ -450,7 +448,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
       }
 
       DPRINTF(("queues dropped because of overload or full: ALL\n"));
-      schedd_add_global_message(SCHEDD_INFO_ALLALARMOVERLOADED_);
+      schedd_mes_add_global(SCHEDD_INFO_ALLALARMOVERLOADED_);
 
       DEXIT;
       return 0;
@@ -650,8 +648,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          host_order_changed = 0;
       }   
 
-      schedd_initialize_messages_joblist(*splitted_job_lists[SPLIT_PENDING]);
-
       dispatched_a_job = 0;
       job_id = lGetUlong(job, JB_job_number);
       DPRINTF(("-----------------------------------------\n"));
@@ -695,7 +691,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
       if ((ckpt_name = lGetString(job, JB_checkpoint_name))) {
          ckpt = ckpt_list_locate(lists->ckpt_list, ckpt_name);
          if (!ckpt) {
-            schedd_add_message(lGetUlong(job, JB_job_number), 
+            schedd_mes_add(lGetUlong(job, JB_job_number), 
                SCHEDD_INFO_CKPTNOTFOUND_);
             goto SKIP_THIS_JOB;
          }
@@ -744,7 +740,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          }
          if ( matched_pe_count == 0 ) {
             DPRINTF(("NO PE MATCHED!\n"));
-            schedd_add_message(job_id, SCHEDD_INFO_NOPEMATCH_ ); 
+            schedd_mes_add(job_id, SCHEDD_INFO_NOPEMATCH_ ); 
          }
       } else {
          DPRINTF(("handling job "u32"."u32"\n", job_id, ja_task_id)); 
@@ -770,6 +766,8 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
 SKIP_THIS_JOB:
       if (dispatched_a_job) {
+         schedd_mes_rollback();
+
          job_move_first_pending_to_running(&orig_job, splitted_job_lists);
 
          /* 
@@ -790,6 +788,8 @@ SKIP_THIS_JOB:
                                           &user_list, scheddconf.maxujobs);
          trash_splitted_jobs(splitted_job_lists);
       } else {
+         schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0);
+
          /* before deleting the element mark the category as rejected */
          cat = lGetRef(job, JB_category);
          if (cat) {

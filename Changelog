@@ -1,3 +1,12 @@
+SG-2004-07-19-0: Bugfix:    - The usage in the sharetree got lost.
+                            - fixed a mirror interface time out, which disabled
+                              sheduling intervals greater than 1 min.
+                            - fixed a mt problem on qmaster shutdown  
+                 Changed:   qmaster
+                 Issue:     1094
+                 Bugtraq:   5075346
+                 Review:    DT
+
 JG-2004-07-19-0: Testsuite: Fixed testuite setup.
 
 AD-2004-07-19-0: Bugfix:    Did fix broken qmaster locking

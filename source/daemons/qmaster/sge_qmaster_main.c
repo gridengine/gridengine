@@ -212,9 +212,11 @@ int main(int argc, char* argv[])
 
    create_and_join_threads();
 
+   qmaster_shutdown();
+
    teardown_lock_service();
 
-   qmaster_shutdown();
+   sge_shutdown();
 
    DEXIT;
    return 0;
@@ -1175,6 +1177,8 @@ static void qmaster_shutdown(void)
 {
    DENTER(TOP_LAYER, "qmaster_shutdown");
 
+   sge_userprj_spool(); /* spool the latest usage */
+
    sge_shutdown_persistence(NULL);
 
    reporting_shutdown(NULL);
@@ -1184,8 +1188,6 @@ static void qmaster_shutdown(void)
    sge_event_shutdown();
 
    sge_clean_lists();
-
-   sge_shutdown();
 
    DEXIT;
    return;

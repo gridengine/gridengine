@@ -970,7 +970,7 @@ XtPointer cld, cad;
    Boolean answer = False;
    Boolean status = False;
    lList *alp = NULL;
-   static first_time = 1;
+   static int first_time = 1;
 
    DENTER(GUI_LAYER, "qmonShareTreeUpdate");
 
@@ -1051,10 +1051,11 @@ XtPointer cld, cad;
    
    ListTreeHighlightItem(tree, root_node, True);
    ListTreeRefreshOn(tree);
-   if (first_time)
+   if (first_time) {
       first_time = 0;
-   else   
+   } else {  
       ListTreeMakeItemVisible(tree, root_node);
+   }
 
    /*
    ** set the share tree sensitive to enable editing

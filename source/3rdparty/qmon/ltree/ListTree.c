@@ -3414,10 +3414,9 @@ ListTreeItem *item;
 #endif
 {
    ListTreeWidget lw = (ListTreeWidget)w;
-   Position pos;
-   int item_pos;
+   Position item_pos;
    
-   pos = GetPosition(lw, item);
+   item_pos = GetPosition(lw, item);
    
 /* printf("topItemPos = %d, botItemPos = %d, visibleCount = %d, pos = %d\n", */
 /*            lw->list.topItemPos, lw->list.bottomItemPos, */

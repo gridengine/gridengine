@@ -78,7 +78,7 @@ Qmon*cluster_layout*cluster_change_global.labelString: @{Modify}
 Qmon*cluster_layout*cluster_delete.labelString:        @{Delete}
 Qmon*cluster_layout*cluster_help.labelString:          @{Help}
 
-Qmon*cluster_layout*scrollBarDisplayPolicy:     AS_NEEDED
+Qmon*cluster_layout*scrollBarDisplayPolicy:     STATIC
 Qmon*cluster_layout*listSizePolicy:             CONSTANT
 
 Qmon*cluster_layout*cluster_host_list.fontList:           $fixed_font

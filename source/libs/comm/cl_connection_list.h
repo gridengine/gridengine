@@ -46,7 +46,7 @@ typedef struct cl_connection_list_elem_t {
 
 
 /* basic functions */
-int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name);   /* CR check */
+int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking);   /* CR check */
 int cl_connection_list_cleanup(cl_raw_list_t** list_p);  /* CR check */
 
 

@@ -3791,13 +3791,19 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
    cl_host_list_elem_t*    act_elem = NULL;
    cl_host_list_data_t* ldata = NULL;
    int resolve_host = 0;
+   int ret_val = CL_RETVAL_OK;
 
    cl_com_host_spec_t*       elem_host = NULL;
 
    if (list_p == NULL) {
       return CL_RETVAL_PARAMS;    
    }
+   
+   gettimeofday(&now,NULL);
+
+   cl_raw_list_lock(list_p);
    if (list_p->list_data == NULL) {
+      cl_raw_list_unlock(list_p);
       CL_LOG( CL_LOG_ERROR, "hostlist not initalized");
       return CL_RETVAL_PARAMS;    
    }
@@ -3806,26 +3812,35 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
 
    if (ldata->alias_file_changed != 0) {
       CL_LOG(CL_LOG_INFO,"host alias file dirty flag is set");
+      cl_raw_list_unlock(list_p);
       cl_com_read_alias_file(list_p);
+      cl_raw_list_lock(list_p);
+      if (list_p->list_data == NULL) {
+         cl_raw_list_unlock(list_p);
+         CL_LOG( CL_LOG_ERROR, "hostlist not initalized");
+         return CL_RETVAL_PARAMS;    
+      }
+      ldata = (cl_host_list_data_t*) list_p->list_data;
    }
 
-   gettimeofday(&now,NULL);
+
    if ( now.tv_sec == ldata->last_refresh_time) {
+      cl_raw_list_unlock(list_p);
       return CL_RETVAL_OK;
    }
    ldata->last_refresh_time = now.tv_sec;
 
    CL_LOG(CL_LOG_INFO,"checking host entries");
    CL_LOG_INT(CL_LOG_INFO,"number of cached host entries:", cl_raw_list_get_elem_count(list_p));
-   
-   cl_raw_list_lock(list_p);
+
+
 
    elem = cl_host_list_get_first_elem(list_p);
    while(elem != NULL) {
       act_elem = elem;
       elem = cl_host_list_get_next_elem(list_p,elem);
       elem_host = act_elem->host_spec;
-      resolve_host = 0;
+
 
 
       if (elem_host->creation_time + ldata->entry_life_time < now.tv_sec ) {
@@ -3862,60 +3877,122 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
             resolve_host = 1;
          }
       }
+   }
+   cl_raw_list_unlock(list_p);
 
-      if ( resolve_host != 0 ) {
-         int retval = CL_RETVAL_OK;
-         cl_com_hostent_t* hostent = NULL;
-         if (elem_host->unresolved_name != NULL) {
-            CL_LOG_STR(CL_LOG_INFO,"resolving host:", elem_host->unresolved_name);
-            retval = cl_com_gethostbyname(elem_host->unresolved_name, &hostent, NULL);
-            /* free old entries */
-            cl_com_free_hostent(&(elem_host->hostent));
-            free(elem_host->resolved_name);
-            elem_host->resolved_name = NULL;
-            elem_host->hostent = hostent;
-            elem_host->resolve_error = retval;
-            elem_host->last_resolve_time = now.tv_sec;
-            if (elem_host->hostent != NULL) {
-               elem_host->resolved_name = strdup(elem_host->hostent->he->h_name);
-               if (elem_host->resolved_name == NULL) {
-                  cl_raw_list_remove_elem(list_p, act_elem->raw_elem);
-                  cl_com_free_hostspec(&elem_host);
-                  free(act_elem);
-                  CL_LOG(CL_LOG_ERROR,"malloc() error");
-                  cl_raw_list_unlock(list_p);
-                  return CL_RETVAL_MALLOC;
+   if ( resolve_host != 0 ) {
+      cl_raw_list_t* host_list_copy = NULL; 
+      /* we have to resolve at least one host in this list. Make a copy of this list
+         and resolve it, because we don't want to lock the list when hosts are resolved */ 
+      CL_LOG(CL_LOG_WARNING,"do a list copy");
+      ret_val = cl_host_list_copy(&host_list_copy, list_p );
+      if (ret_val == CL_RETVAL_OK ) {
+         elem = cl_host_list_get_first_elem(host_list_copy);
+         while(elem != NULL) {
+            resolve_host = 0;
+            act_elem = elem;
+            elem = cl_host_list_get_next_elem(host_list_copy,elem);
+            elem_host = act_elem->host_spec;
+
+
+            if (elem_host->last_resolve_time + ldata->entry_update_time < now.tv_sec) {
+               /* max update timeout is reached, resolving entry */
+               if (elem_host->unresolved_name != NULL) {
+                  CL_LOG_STR(CL_LOG_WARNING,"update timeout for elem:", elem_host->unresolved_name);
+               } else {
+                  CL_LOG(CL_LOG_WARNING,"update timeout for addr");
                }
-               CL_LOG_STR(CL_LOG_WARNING,"host resolved as:", elem_host->resolved_name);
+               resolve_host = 1;
             }
-         } else {
-            CL_LOG(CL_LOG_INFO,"resolving addr");
-            retval = cl_com_gethostbyaddr(elem_host->in_addr, &hostent,NULL);
-            /* free old entries */
-            cl_com_free_hostent(&(elem_host->hostent));
-            free(elem_host->resolved_name);
-            elem_host->resolved_name = NULL;
-            elem_host->hostent = hostent;
-            elem_host->resolve_error = retval;
-            elem_host->last_resolve_time = now.tv_sec;
-            if (elem_host->hostent != NULL) {
-               elem_host->resolved_name = strdup(elem_host->hostent->he->h_name);
-               if (elem_host->resolved_name == NULL) {
-                  cl_raw_list_remove_elem(list_p, act_elem->raw_elem);
-                  cl_com_free_hostspec(&elem_host);
-                  free(act_elem);
-                  CL_LOG(CL_LOG_ERROR,"malloc() error");
-                  cl_raw_list_unlock(list_p);
-                  return CL_RETVAL_MALLOC;
+      
+            if (elem_host->resolve_error != CL_RETVAL_OK) {
+               /* this is only for hosts with error state */
+               if (elem_host->last_resolve_time + ldata->entry_reresolve_time < now.tv_sec) {
+                  if (elem_host->unresolved_name != NULL) {
+                     CL_LOG_STR(CL_LOG_WARNING,"reresolve timeout for elem:",elem_host->unresolved_name);
+                  } else {
+                     CL_LOG(CL_LOG_WARNING,"reresolve timeout for addr");
+                  }
+                  resolve_host = 1;
                }
-               CL_LOG_STR(CL_LOG_WARNING,"host resolved as:", elem_host->resolved_name);
+            }
+
+            if ( resolve_host != 0 ) {
+               int resolve_error = CL_RETVAL_OK;
+               cl_com_hostent_t* hostent = NULL;
+
+               if (elem_host->unresolved_name != NULL) {
+                  CL_LOG_STR(CL_LOG_INFO,"resolving host:", elem_host->unresolved_name);
+                  resolve_error = cl_com_gethostbyname(elem_host->unresolved_name, &hostent, NULL);
+                  /* free old entries */
+                  cl_com_free_hostent(&(elem_host->hostent));
+                  free(elem_host->resolved_name);
+                  elem_host->resolved_name = NULL;
+                  elem_host->hostent = hostent;
+                  elem_host->resolve_error = resolve_error;
+                  elem_host->last_resolve_time = now.tv_sec;
+                  if (elem_host->hostent != NULL) {
+                     elem_host->resolved_name = strdup(elem_host->hostent->he->h_name);
+                     if (elem_host->resolved_name == NULL) {
+                        cl_raw_list_remove_elem(host_list_copy, act_elem->raw_elem);
+                        cl_com_free_hostspec(&elem_host);
+                        free(act_elem);
+                        CL_LOG(CL_LOG_ERROR,"malloc() error");
+                        continue;
+                     }
+                     CL_LOG_STR(CL_LOG_WARNING,"host resolved as:", elem_host->resolved_name);
+                  }
+               } else {
+                  CL_LOG(CL_LOG_INFO,"resolving addr");
+                  resolve_error = cl_com_gethostbyaddr(elem_host->in_addr, &hostent,NULL);
+                  /* free old entries */
+                  cl_com_free_hostent(&(elem_host->hostent));
+                  free(elem_host->resolved_name);
+                  elem_host->resolved_name = NULL;
+                  elem_host->hostent = hostent;
+                  elem_host->resolve_error = resolve_error;
+                  elem_host->last_resolve_time = now.tv_sec;
+                  if (elem_host->hostent != NULL) {
+                     elem_host->resolved_name = strdup(elem_host->hostent->he->h_name);
+                     if (elem_host->resolved_name == NULL) {
+                        cl_raw_list_remove_elem(host_list_copy, act_elem->raw_elem);
+                        cl_com_free_hostspec(&elem_host);
+                        free(act_elem);
+                        CL_LOG(CL_LOG_ERROR,"malloc() error");
+                        continue;
+                     }
+                     CL_LOG_STR(CL_LOG_WARNING,"host resolved as:", elem_host->resolved_name);
+                  }
+               }
             }
          }
+
+         /* now we have a up-to-date copy of the original host list */
+       
+         cl_raw_list_lock(list_p);
+        
+         /* first remove all entries from original list */
+         while( (elem = cl_host_list_get_first_elem(list_p)) ) {
+            elem_host = elem->host_spec;
+            cl_raw_list_remove_elem(list_p, elem->raw_elem);
+            cl_com_free_hostspec(&elem_host);
+            free(elem);
+         }
+
+         /* now dechain elements from copied list into original list */
+         while( (elem = cl_host_list_get_first_elem(host_list_copy)) ) {
+            cl_raw_list_dechain_elem(host_list_copy, elem->raw_elem);
+            cl_raw_list_append_dechained_elem(list_p, elem->raw_elem);
+         } 
+         
+         cl_raw_list_unlock(list_p);
+
+         CL_LOG(CL_LOG_WARNING,"free list copy");
+         ret_val = cl_host_list_cleanup(&host_list_copy); 
       }
    }
 
-   cl_raw_list_unlock(list_p);
-   return CL_RETVAL_OK;
+   return ret_val;
 }
 
 #ifdef __CL_FUNCTION__

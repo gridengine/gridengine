@@ -642,7 +642,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
    }
 
 
-   if (cl_connection_list_setup(&(new_handle->connection_list), "connection list") != CL_RETVAL_OK) {
+   if (cl_connection_list_setup(&(new_handle->connection_list), "connection list", 1) != CL_RETVAL_OK) {
       int mutex_ret_val;
       cl_connection_list_cleanup(&(new_handle->connection_list));
       cl_com_free_endpoint(&(new_handle->local));

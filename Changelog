@@ -1,3 +1,9 @@
+CR-2004-05-01-0: Bugfix:    o global host list refresh (re-resolving of used 
+                              host names) is now done in a separate list copy
+                              to be able to unlock the list and let other 
+                              threads use the global host list in the meantime
+                 Changed:   commlib
+
 AD-2004-04-30-1: Bugfix:    Did fix build.
                  Changed:   qmaster
 

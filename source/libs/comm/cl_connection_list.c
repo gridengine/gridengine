@@ -43,8 +43,8 @@
 #include "cl_communication.h"
 
 
-int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name) {  /* CR check */
-   return cl_raw_list_setup(list_p,list_name , 1); /* enable list locking */
+int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking) {  /* CR check */
+   return cl_raw_list_setup(list_p,list_name , enable_locking); /* enable list locking */
 }
 
 int cl_connection_list_cleanup(cl_raw_list_t** list_p) {  /* CR check */
@@ -129,6 +129,10 @@ int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connectio
    /* unlock the thread list */
    if (do_lock != 0) {
       if (  ( ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
+         if ( is_do_free == 1 ) {
+            free(elem);
+            elem = NULL;
+         }
          return ret_val;
       }
    }
@@ -151,28 +155,19 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
    cl_connection_list_elem_t* elem = NULL;
    cl_connection_list_elem_t* elem2 = NULL;
    cl_com_connection_t* connection = NULL;
-#if 1 
    cl_raw_list_t *delete_connections = NULL;
-#endif   
 
    if (list_p == NULL ) {
       return CL_RETVAL_PARAMS;
    }
-#if 1 
-   cl_raw_list_setup(&delete_connections, "delete_connections", 0);
-#endif   
 
    /* lock list */
    if (do_lock != 0) {
       if ( (ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
-#if  1     
-         cl_raw_list_cleanup(&delete_connections);
-#endif         
          return ret_val;
       }
    }
 
-   CL_LOG(CL_LOG_INFO, "checking for connections to close ...");
    elem = cl_connection_list_get_first_elem(list_p);
    while ( elem != NULL) {
       elem2 = elem;
@@ -280,14 +275,42 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
          }
       }
 
-
       if (connection->connection_state == CL_COM_CLOSING ) {
-#if 0      
+         if (delete_connections == NULL) {
+            ret_val = cl_connection_list_setup(&delete_connections, "delete_connections", 0);
+            if (ret_val != CL_RETVAL_OK) {
+               continue;
+            }
+         }
+         cl_raw_list_dechain_elem(list_p, elem2->raw_elem); 
+         cl_raw_list_append_dechained_elem(delete_connections, elem2->raw_elem);
+   
+         connection = elem2->connection;
+         if (connection->handler != NULL) {
+            connection->handler->statistic->bytes_sent +=  connection->statistic->bytes_sent;
+            connection->handler->statistic->bytes_received +=  connection->statistic->bytes_received;
+            connection->handler->statistic->real_bytes_sent +=  connection->statistic->real_bytes_sent;
+            connection->handler->statistic->real_bytes_received +=  connection->statistic->real_bytes_received;
+         }
+      }
+   } 
+
+   /* unlock list */
+   if (do_lock != 0) {
+      if ( (ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
+         CL_LOG(CL_LOG_ERROR,"error unlocking list");
+      }
+   }
+
+   if ( delete_connections != NULL ) {
+      /* remove dead connections */
+      while ( (elem2 = cl_connection_list_get_first_elem(delete_connections))!= NULL) {
          /* found connection to close  */
          cl_com_message_t* message = NULL;
          cl_message_list_elem_t* message_list_elem = NULL;
-
-         cl_raw_list_lock( connection->received_message_list );
+   
+         connection = elem2->connection;
+   
          while((message_list_elem = cl_message_list_get_first_elem(connection->received_message_list)) != NULL) {
             message = message_list_elem->message;
             if (message->message_state == CL_MS_READY) {
@@ -301,15 +324,13 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                CL_LOG_INT(CL_LOG_ERROR,"message df:", message->message_df);
                CL_LOG_INT(CL_LOG_ERROR,"message mat:", message->message_mat);
             }
-
+   
             cl_raw_list_remove_elem( connection->received_message_list,  message_list_elem->raw_elem);
             free(message_list_elem);
             cl_com_free_message(&message);
          }
-         cl_raw_list_unlock( connection->received_message_list );
          
-
-         cl_raw_list_lock( connection->send_message_list );
+   
          while((message_list_elem = cl_message_list_get_first_elem(connection->send_message_list)) != NULL) {
             message = message_list_elem->message;
             CL_LOG(CL_LOG_ERROR,"deleting unsend message for connection");
@@ -317,108 +338,20 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
             free(message_list_elem);
             cl_com_free_message(&message);
          }
-         cl_raw_list_unlock( connection->send_message_list );
-
-         cl_raw_list_remove_elem(list_p, elem2->raw_elem);
+   
+         cl_raw_list_remove_elem(delete_connections, elem2->raw_elem);
          free(elem2);
          elem2 = NULL;
-
-         if (connection->handler != NULL) {
-            connection->handler->statistic->bytes_sent = connection->handler->statistic->bytes_sent + connection->statistic->bytes_sent;
-            connection->handler->statistic->bytes_received = connection->handler->statistic->bytes_received + connection->statistic->bytes_received;
-            connection->handler->statistic->real_bytes_sent = connection->handler->statistic->real_bytes_sent + connection->statistic->real_bytes_sent;
-            connection->handler->statistic->real_bytes_received = connection->handler->statistic->real_bytes_received + connection->statistic->real_bytes_received;
-         }
-
+   
          if ( (ret_val=cl_com_close_connection(&connection)) != CL_RETVAL_OK) {  
             CL_LOG(CL_LOG_ERROR, "error closing connection");
-            if (do_lock != 0) {
-               cl_raw_list_unlock(list_p);
-            }
-            return ret_val;
          }
-         continue;
-      
-#else
-      cl_raw_list_dechain_elem(list_p, elem2->raw_elem); 
-      cl_raw_list_append_dechained_elem(delete_connections, elem2->raw_elem);
-
-      connection = elem2->connection;
-      if (connection->handler != NULL) {
-         connection->handler->statistic->bytes_sent +=  connection->statistic->bytes_sent;
-         connection->handler->statistic->bytes_received +=  connection->statistic->bytes_received;
-         connection->handler->statistic->real_bytes_sent +=  connection->statistic->real_bytes_sent;
-         connection->handler->statistic->real_bytes_received +=  connection->statistic->real_bytes_received;
-      }
-
-#endif
-      }
-   } 
-
-   /* unlock list */
-   if (do_lock != 0) {
-      if ( (ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
-         return ret_val;
-      }
-   }
-#if 1 
-   /* remove dead connections */
-   while ( (elem2 = cl_connection_list_get_first_elem(delete_connections))!= NULL) {
-      /* found connection to close  */
-      cl_com_message_t* message = NULL;
-      cl_message_list_elem_t* message_list_elem = NULL;
-
-      connection = elem2->connection;
-
-      while((message_list_elem = cl_message_list_get_first_elem(connection->received_message_list)) != NULL) {
-         message = message_list_elem->message;
-         if (message->message_state == CL_MS_READY) {
-            CL_LOG(CL_LOG_ERROR,"deleting unread message for connection");
-         }
-         if (message->message_length != 0) {
-            CL_LOG_INT(CL_LOG_ERROR,"connection sub_state:",connection->connection_sub_state);
-            CL_LOG(CL_LOG_ERROR,"deleting read message for connection");
-            CL_LOG_INT(CL_LOG_ERROR,"message length:", message->message_length);
-            CL_LOG_INT(CL_LOG_ERROR,"message state:", message->message_state);
-            CL_LOG_INT(CL_LOG_ERROR,"message df:", message->message_df);
-            CL_LOG_INT(CL_LOG_ERROR,"message mat:", message->message_mat);
-         }
-
-         cl_raw_list_remove_elem( connection->received_message_list,  message_list_elem->raw_elem);
-         free(message_list_elem);
-         cl_com_free_message(&message);
-      }
-      
-
-      while((message_list_elem = cl_message_list_get_first_elem(connection->send_message_list)) != NULL) {
-         message = message_list_elem->message;
-         CL_LOG(CL_LOG_ERROR,"deleting unsend message for connection");
-         cl_raw_list_remove_elem( connection->send_message_list,  message_list_elem->raw_elem);
-         free(message_list_elem);
-         cl_com_free_message(&message);
-      }
-
-      cl_raw_list_remove_elem(delete_connections, elem2->raw_elem);
-      free(elem2);
-      elem2 = NULL;
-
-      if ( (ret_val=cl_com_close_connection(&connection)) != CL_RETVAL_OK) {  
-         CL_LOG(CL_LOG_ERROR, "error closing connection");
-      }
-
-   }
-#endif
-#if 1
-   cl_raw_list_cleanup(&delete_connections);
-#endif   
    
+      }
+      cl_connection_list_cleanup(&delete_connections);
+   }
    return ret_val;
 }
-
-
-
-
-
 
 
 

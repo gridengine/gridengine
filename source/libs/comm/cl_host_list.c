@@ -198,7 +198,7 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_host_list_copy()"
-int cl_host_list_copy(cl_raw_list_t* source, cl_raw_list_t** destination) {
+int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source) {
    int ret_val = CL_RETVAL_OK;
    cl_host_list_data_t* ldata_source = NULL;
    cl_host_list_data_t* ldata_dest = NULL;

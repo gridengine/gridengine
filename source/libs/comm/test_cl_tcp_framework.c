@@ -291,7 +291,7 @@ void *server_thread(void *t_conf) {
       do_exit = 1;
    }
 
-   cl_connection_list_setup(&connection_list, "con list" );
+   cl_connection_list_setup(&connection_list, "con list" , 1);
 
    /* thread init done, trigger startup conditon variable*/
    cl_thread_func_startup(thread_config);

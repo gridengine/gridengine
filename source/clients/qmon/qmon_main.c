@@ -41,6 +41,10 @@
 #include <Xmt/AppRes.h>
 #include <Xmt/Include.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 /*
 ** These include file contains the description of the dialogs and is 
 ** automatically generated. The resources get into the resource database

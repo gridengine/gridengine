@@ -43,6 +43,10 @@
 #include <Xmt/InputField.h>
 #include <Xmt/Procedures.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "ListTree.h"
 #include "Matrix.h"
 #include "Tab.h"

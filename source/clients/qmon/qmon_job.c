@@ -43,6 +43,10 @@
 #include <Xmt/Chooser.h>
 #include <Xmt/InputField.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "Matrix.h"
 #include "Tab.h"
 #include "qmon_rmon.h"

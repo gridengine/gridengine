@@ -1203,67 +1203,38 @@ Appendix:
          QU_xprojects }
 
 Open Questions:
-   -------------------------------------------------------------------------------
-   Q1: Should the qacct history mechanism be reworked to support
-       new cluster queues or can it be removed?
 
-   A1: In past we already had discussions to remove it. It should
-       be removed.
    -------------------------------------------------------------------------------
-   Q2: Shouldn't syntax for heterogenous queue specification allow for
-           lists of host_identifiers?
-
-     <attr_name>   "["[host_identifier_list=]<current_attribute_syntax>"]"
-                   [,"["[host_identifier_list=]<current_attribute_syntax>"]" ]
-
-   A2: A host_identifier_list allows for condensed configuration files in
-       qconf. The same can be also achieved by the admin though by adding
-       a new hostgroup but this appears to be unnecessarily cumbersome.
-       We should comprehend it as a nice-to-have feature, thus it should be
-       treated as an optional enhancement. The GDI interface as it is does
-       not forestall implementing it later on as a qconf-specific enhancment.
-   -------------------------------------------------------------------------------
-   Q3: What can we expect from a 5.3 to 6.0 upgrade procedure? Is it possible
+   Q1: What can we expect from a 5.3 to 6.0 upgrade procedure? Is it possible
        to transform a 5.3 configuration basing on queue instances into a cluster 
        queue based configuration?
 
-   A3: For an automatic transformation of a group of 5.3 queues into a 6.0 cluster 
+   A1: For an automatic transformation of a group of 5.3 queues into a 6.0 cluster 
        queue we lack information about which queues belongs to a group. It might be 
        possible however to provide a semi-automatic upgrade procedure.
    -------------------------------------------------------------------------------
-   Q4: Do we need the brackets in case there is only one single attribute specified
-       for the implicit 'default' hostgroup?
-
-               hostname     fangorn
-                 :
-               seq_no       [1]
-                 :
-
-   A4: Without the brackets queue_conf(5) familar syntax would not change in many
-       cases. The parsing code could be written in a way allowing this.
-   -------------------------------------------------------------------------------
-   Q5: Shouldn't it be possible to provide some system host groups which
+   Q2: Shouldn't it be possible to provide some system host groups which
        contain all hosts automatically which have a certain set of attributes?
 
-   A5: The specification forsees automated maintainance of such host groups 
+   A2: The specification forsees automated maintainance of such host groups 
        by the installation procedure. The interfaces added to the Grid Engine 
        kernel are sufficient for this purpose. Making system host groups a Grid 
        Engine kernel feature would raise data integrity problems to be solved and 
        add constraints to be considered with future enhancements.
    -------------------------------------------------------------------------------
-   Q6: It should be possible to use 'all' host group as hostname attribute
+   Q3: It should be possible to use 'all' host group as hostname attribute
        for queue_conf(5).
    
-   A6: The specification forsees automated maintainance of the 'all' host group
+   A3: The specification forsees automated maintainance of the 'all' host group
        by the installation procedure. The interfaces added to the Grid Engine 
        kernel are sufficient for this purpose. Making the 'all' host group a Grid 
        Engine kernel feature would raise data integrity problems to be solved and 
        add constraints to be considered with future enhancements.
    -------------------------------------------------------------------------------
-   Q7: Do we have more detailed ideas about dialogue changes and new dialogues 
+   Q4: Do we have more detailed ideas about dialogue changes and new dialogues 
        required for qmon enhancements?
 
-   A7: Not yet. There ideas collected so far are contained in the section 
+   A4: Not yet. There ideas collected so far are contained in the section 
        "Changes with the graphical user interface". More detailed ideas are 
        desirable however especially for the dialogues mentioned under 4a) and 
        4b).

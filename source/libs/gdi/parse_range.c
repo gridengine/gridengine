@@ -413,20 +413,6 @@ lList *parse_ranges(const char *str, int just_parse, int step_allowed,
       }
    }
 
-   if ( !first && undefined && !_error) {
-      _error=1;
-      /* first was undefined - no more ranges allowed */
-      ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED ));
-      if (alpp) {
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
-         DEXIT;
-         return NULL;
-      }
-      else
-         SGE_EXIT(1);
-   }
-
-
    DEXIT;
    return *rl;
 }

@@ -166,7 +166,9 @@ lList **alpp
          return -1;
       }
       if (!task_id_range_list) {
-         /** should not happen. unknown error */
+         /*ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED ));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);*/
+
          free(str);
          DEXIT;
          return -1;

@@ -34,6 +34,9 @@
 # Define the global veriables to give them back
 global check_name check_description check_needs check_functions check_errno check_errstr row
 global check_category
+global check_init_level_procedure
+
+set check_init_level_procedure "qmod_general_init_level"
 set check_name         "qmod_general"
 set check_category     "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_root_access_needs "yes"
@@ -55,6 +58,18 @@ lappend check_functions    "removequeue"
 
 
 global test_queue
+
+proc qmod_general_init_level {} {
+   global CHECK_ACT_LEVEL
+
+  switch -- $CHECK_ACT_LEVEL {
+     "0" { 
+           return 0    
+     }
+  } 
+
+  return -1  ;# no other level else
+}
 
 #                                                             max. column:     |
 #****** qmod/addqueue() ******

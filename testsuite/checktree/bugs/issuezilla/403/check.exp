@@ -52,7 +52,7 @@ set check_init_level_procedure "issue_403_init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_403"
-set check_category        "COMPATIBILITY SYSTEM L10N"
+set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_highest_level   0
 set check_description(0)  "qalter shoes wrong errormessage when called with negative -p priority"
 

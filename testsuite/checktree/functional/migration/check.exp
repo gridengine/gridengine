@@ -35,11 +35,13 @@
 #___INFO__MARK_END__
 global check_name check_description check_needs check_functions check_errno check_errstr 
 global check_category
+global check_init_level_procedure
 set check_name         "ckpt_migration_test"
-set check_category     "COMPATIBILITY SYSTEM L10N"
+set check_category     "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_highest_level   0
 set check_description(0)  "MPI based parallel application with checkpointing and event based migration"
 set check_needs        "init_core_system"                   ;# dependencies of this check (name of other check)
+set check_init_level_procedure "migration_init_level"
 
 set check_functions    ""           ;# functions to call (in order)
 lappend check_functions "setup_queues"
@@ -72,6 +74,16 @@ set migration_pe_name "ckpt_mig_pe"
 set migration_ckpt_name "ckpt_mig_ckptobj"
 set checkpoint_job_id -1
 
+proc migration_init_level {} {
+   global CHECK_ACT_LEVEL
+
+  switch -- $CHECK_ACT_LEVEL {
+     "0" { 
+           return 0    
+     } 
+  } 
+  return -1  ;# no other level else
+}
 
 proc calendardisable_queue { queue_list } {
    global CHECK_PRODUCT_ROOT CHECK_ARCH

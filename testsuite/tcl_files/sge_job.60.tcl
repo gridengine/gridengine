@@ -37,7 +37,7 @@ proc delete_all_jobs {} {
    set ret 1
    
    puts $CHECK_OUTPUT "deleting all jobs"
-   if {[catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-u" "*" "*"} catch_result] != 0} {
+   if {[catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-u" "*" } catch_result] != 0} {
       set ret 0
    }
 

@@ -1035,7 +1035,7 @@ proc qdel_uall {} {
    if {$ts_config(gridengine_version) == 53} {
       set uall_args "-uall"
    } else {
-      set uall_args "-u '*' '*'"
+      set uall_args "-u '*'"
    }
 
    # submit jobs to delete

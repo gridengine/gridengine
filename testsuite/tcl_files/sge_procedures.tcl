@@ -4823,13 +4823,11 @@ proc is_job_running { jobid jobname } {
    }
    set check_timestamp $mytime
 
-
-
    if { $catch_state != 0 } {
-      puts $CHECK_OUTPUT "debug: $result"
+      puts $CHECK_OUTPUT "debug: catch_state: $catch_state"
+      puts $CHECK_OUTPUT "debug: result: \n$result"
       return -1
    }
-#   puts $CHECK_OUTPUT "debug: catch_state: $catch_state"
 
    # split each line as listelement
    set help [split $result "\n"]
@@ -5785,7 +5783,7 @@ proc shutdown_scheduler {hostname qmaster_spool_dir} {
          puts $CHECK_OUTPUT "killing schedd with pid $scheduler_pid on host $hostname"
 
          catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ks" } result
-
+         sleep 2
          shutdown_system_daemon $hostname sched
 
       } else {
@@ -5943,6 +5941,7 @@ proc shutdown_qmaster {hostname qmaster_spool_dir} {
          puts $CHECK_OUTPUT "killing qmaster with pid $qmaster_pid on host $hostname"
 
          catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-km" } result
+         sleep 10
 
          shutdown_system_daemon $hostname qmaster
 
@@ -6159,7 +6158,7 @@ global CHECK_ADMIN_USER_SYSTEM
                }
                puts $CHECK_OUTPUT "killing process $ps_info(pid,$elem) on host $host, kill user is $kill_user"
                puts $CHECK_OUTPUT [ start_remote_prog $host $kill_user kill $ps_info(pid,$elem) ]
-               sleep 5
+               sleep 10
                if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
                    puts $CHECK_OUTPUT "killing (SIG_KILL) process $ps_info(pid,$elem) on host $host, kill user is $kill_user"
                    puts $CHECK_OUTPUT [ start_remote_prog $host $kill_user kill "-9 $ps_info(pid,$elem)" ]
@@ -6175,7 +6174,7 @@ global CHECK_ADMIN_USER_SYSTEM
                }
             } else {
                puts $CHECK_OUTPUT "checkprog error"
-               add_proc_error "" -1 "could not shutdown \"$process_name\" on host $host"
+               add_proc_error "" -3 "could not shutdown \"$process_name\" on host $host"
             }
          }
       }

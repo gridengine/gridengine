@@ -72,16 +72,11 @@ lappend check_functions "access_lists_cleanup"
 
 proc access_lists_init_level {} {
    global CHECK_ACT_LEVEL
-   global CHECK_PRODUCT_TYPE
-   global test_array_jobs 
 
   switch -- $CHECK_ACT_LEVEL {
      "0" { 
            return 0    
      } 
-     "1" {
-           return -1
-     }
   } 
   return -1  ;# no other level else
 }

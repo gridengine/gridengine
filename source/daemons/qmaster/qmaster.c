@@ -179,8 +179,10 @@ char **argv
    u_short id;
    int status, old_timeout;
    int priority_tags[10];
+#ifdef QIDL
    char **myargv;
    int myargc;
+#endif
    int enrolled, rcv_timeout;
    time_t now, next_flush;
 #ifdef PW   

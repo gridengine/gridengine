@@ -1,3 +1,7 @@
+JG-2004-02-03-0: Testsuite: Fixed test functional/access_lists.
+                            Enhancements and bugfixes in the handling of cluster
+                            queues.
+
 AD-2004-02-03-0: Bugfix:    Did add event handler for 'TYPE_JOB_RESEND_EVENT'
                  Changed:   qmaster
                  Review:    EB

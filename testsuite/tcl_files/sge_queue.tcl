@@ -432,7 +432,9 @@ proc get_queue { q_name change_array } {
 
   foreach elem $help {
      set id [lindex $elem 0]
-     set value [string trim [lrange $elem 1 end] "{}"]
+     set value [lrange $elem 1 end]
+     set value [replace_string $value "{" ""]
+     set value [replace_string $value "}" ""]
      
      if { $id != "" } {
         set chgar($id) $value

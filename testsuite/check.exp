@@ -6692,6 +6692,8 @@ proc menu {} {
 
   delete_temp_script_files
 
+  source_tcl_files
+
   set files [  print_menu_header ]
  
   puts "  (0) select runlevels/categories"
@@ -6957,6 +6959,7 @@ proc source_tcl_files {} {
    # all the following library files may be version dependent
    ts_source $libdir/config_user
    ts_source $libdir/config_host
+
    ts_source $libdir/file_procedures
    ts_source $libdir/gettext_procedures
    ts_source $libdir/remote_procedures
@@ -6966,8 +6969,6 @@ proc source_tcl_files {} {
    ts_source $libdir/sge_procedures
    ts_source $libdir/sge_queue
    ts_source $libdir/sge_sched_conf
-
-   sleep 5
 }
 
 # Main programm:

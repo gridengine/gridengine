@@ -186,7 +186,7 @@ proc set_cqueue_default_values { current_array change_array } {
       set comma_pos [string first ",\[" $currar($attribute)]
       puts $CHECK_OUTPUT "--> comma pos = $comma_pos"
       if { $comma_pos != -1 } {
-         append new_value [string range $comma_pos end]
+         append new_value [string range $currar($attribute) $comma_pos end]
       }
 
       puts $CHECK_OUTPUT "--> new queue default value = $new_value"
@@ -347,41 +347,55 @@ proc get_queue_list {} {
    return $result
 }
 
+proc get_qinstance_list {{filter ""}} {
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH
+
+   set NO_QUEUE_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S] "*"]
+
+   # try to get qinstance list
+   if { $filter != "" } {
+      set arg1 [lindex $filter 0]
+      set arg2 [lindex $filter 1]
+      set ret [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qselect" "$arg1" "$arg2"} result]
+   } else {
+      set ret [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qselect" } result]
+   }
+   if { $ret != 0 } {
+      # command failed because queue list is empty
+      if { [string first $NO_QUEUE_DEFINED $result] >= 0 } {
+         puts $CHECK_OUTPUT $result
+         set result {}
+      } else {
+         # if command fails: output error
+         add_proc_error "get_qinstance_list" -1 "error reading queue list: $result"
+         set result {}
+      }
+   }
+
+   return $result
+}
+
 proc unassign_queues_with_pe_object { pe_obj } {
    global ts_config
    global CHECK_OUTPUT CHECK_ARCH
 
-   puts $CHECK_OUTPUT "searching for references in all defined queues ..."
+   puts $CHECK_OUTPUT "searching for references in cluster queues ..."
    set queue_list [get_queue_list]
    foreach elem $queue_list {
       puts $CHECK_OUTPUT "queue: $elem"
-      if {[info exists params]} {
-         unset params
+      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dattr" "queue" "pe_list" "$pe_obj" "$elem" } result] != 0 } {
+         # if command fails: output error
+         add_proc_error "unassign_queues_with_pe_object" -1 "error reading queue list: $result"
       }
-
-      get_queue $elem params
-      if { [string first $pe_obj $params(pe_list)] >= 0 } {
-         puts $CHECK_OUTPUT "pe obj $pe_obj is referenced in queue $elem, removing entry."
-         set new_params ""
-         set help_list [split $params(pe_list) ","]
-         set help_list2 ""
-         foreach element $help_list {
-            append help_list2 "$element "
-         }
-
-         set help_list [string trim $help_list2] 
-         foreach help_pe $help_list {
-            if { [string match $pe_obj $help_pe] != 1 } {
-               append new_params "$help_pe "
-            }
-         }
-
-         if { [llength $new_params ] == 0 } {
-            set new_params "NONE"
-         }
-
-         set mod_params(pe_list) [string trim $new_params]
-         set_queue $elem "" mod_params 
+   }
+   puts $CHECK_OUTPUT "searching for references in queue instances ..."
+   set queue_list [get_qinstance_list "-pe $pe_obj"]
+   foreach elem $queue_list {
+      puts $CHECK_OUTPUT "queue: $elem"
+      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dattr" "queue" "pe_list" "$pe_obj" "$elem" } result] != 0 } {
+         # if command fails: output error
+         add_proc_error "unassign_queues_with_pe_object" -1 "error changing pe_list: $result"
       }
    }
 }
@@ -390,73 +404,70 @@ proc unassign_queues_with_ckpt_object { ckpt_obj } {
    global ts_config
    global CHECK_OUTPUT CHECK_ARCH
 
-   puts $CHECK_OUTPUT "searching for references in all defined queues ..."
+   puts $CHECK_OUTPUT "searching for references in cluster queues ..."
    set queue_list [get_queue_list]
    foreach elem $queue_list {
       puts $CHECK_OUTPUT "queue: $elem"
-      if {[info exists params]} {
-         unset params
+      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dattr" "queue" "ckpt_list" "$ckpt_obj" "$elem" } result] != 0 } {
+         # if command fails: output error
+         add_proc_error "unassign_queues_with_ckpt_object" -1 "error reading queue list: $result"
       }
-
-      get_queue $elem params
-      if { [string first $ckpt_obj $params(ckpt_list)] >= 0 } {
-         puts $CHECK_OUTPUT "ckpt obj $ckpt_obj is referenced in queue $elem, removing entry."
-         set new_params ""
-         set help_list [split $params(ckpt_list) ","]
-         set help_list2 ""
-         foreach element $help_list {
-            append help_list2 "$element "
-         }
-
-         set help_list [string trim $help_list2] 
-         foreach help_ckpt $help_list {
-            if { [string match $ckpt_obj $help_ckpt] != 1 } {
-               append new_params "$help_ckpt "
-            }
-         }
-
-         if { [llength $new_params ] == 0 } {
-            set new_params "NONE"
-         }
-
-         set mod_params(ckpt_list) [string trim $new_params]
-         set_queue $elem "" mod_params 
+   }
+   puts $CHECK_OUTPUT "searching for references in queue instances ..."
+   set queue_list [get_qinstance_list]
+   foreach elem $queue_list {
+      puts $CHECK_OUTPUT "queue: $elem"
+      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dattr" "queue" "ckpt_list" "$ckpt_obj" "$elem" } result] != 0 } {
+         # if command fails: output error
+         add_proc_error "unassign_queues_with_ckpt_object" -1 "error changing ckpt_list: $result"
       }
    }
 }
 
 proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
-   global CHECK_OUTPUT
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH
 
-   get_queue $qname org_val
-
-   # JG: TODO: we need functions get_default_value and get_specific_value(host)
-   #           in the meantime, the hostlist parameter will be ignored!
-   if { [string match -nocase "none" $org_val(ckpt_list)] } {
-      puts $CHECK_OUTPUT "overwriting NONE value for ckpt_list in queue $qname"
-      set new_val(ckpt_list) $ckpt_obj
+   set queue_list {}
+   # if we have no hostlist: change cluster queue
+   if {[llength $hostlist] == 0} {
+      set queue_list $qname
    } else {
-      puts $CHECK_OUTPUT "adding new ckpt object to ckpt_list in queue $qname"
-      set new_val(ckpt_list) "$org_val(ckpt_list),$ckpt_obj"
+      foreach host $hostlist {
+         lappend queue_list "${qname}@${host}"
+      }
    }
 
-   set_queue $qname $hostlist new_val
+   foreach queue $queue_list {
+      puts $CHECK_OUTPUT "queue: $queue"
+      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aattr" "queue" "ckpt_list" "$ckpt_obj" "$queue" } result] != 0 } {
+         # if command fails: output error
+         add_proc_error "assign_queues_with_ckpt_object" -1 "error changing ckpt_list: $result"
+      }
+   }
 }
 
 proc assign_queues_with_pe_object { qname hostlist pe_obj } {
-   global CHECK_OUTPUT
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH
 
-   get_queue $qname org_val
-
-   if { [string match -nocase "none" $org_val(pe_list)] } {
-      puts $CHECK_OUTPUT "overwriting NONE value for pe_list in queue $qname"
-      set new_val(pe_list) $pe_obj
+   set queue_list {}
+   # if we have no hostlist: change cluster queue
+   if {[llength $hostlist] == 0} {
+      set queue_list $qname
    } else {
-      puts $CHECK_OUTPUT "adding new pe object to pe_list in queue $qname"
-      set new_val(pe_list) "$org_val(pe_list),$pe_obj"
+      foreach host $hostlist {
+         lappend queue_list "${qname}@${host}"
+      }
    }
 
-   set_queue $qname $hostlist new_val
+   foreach queue $queue_list {
+      puts $CHECK_OUTPUT "queue: $queue"
+      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aattr" "queue" "pe_list" "$pe_obj" "$queue" } result] != 0 } {
+         # if command fails: output error
+         add_proc_error "assign_queues_with_pe_object" -1 "error changing pe_list: $result"
+      }
+   }
 }
 
 proc validate_checkpointobj { change_array } {

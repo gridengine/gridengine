@@ -2083,15 +2083,21 @@ proc set_pe { pe_obj change_array } {
 
   set MODIFIED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
-  set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
 
+   if { $ts_config(gridengine_version) == 53 } {
+      set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
+   } else {
+      # JG: TODO: is it the right message? It's the only one mentioning non 
+      #           existing userset, but only for CQUEUE?
+      set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CQUEUE_UNKNOWNUSERSET_S] "*" ]
+   }
 
   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mp $pe_obj" $vi_commands $MODIFIED $ALREADY_EXISTS $NOT_EXISTS ]
   
   if {$result == -1 } { add_proc_error "set_pe" -1 "timeout error" }
   if {$result == -2 } { add_proc_error "set_pe" -1 "parallel environment \"$pe_obj\" already exists" }
   if {$result == -3 } { add_proc_error "set_pe" -1 "something (perhaps a queue) does not exist" }
-  if {$result != 0  } { add_proc_error "set_pe" -1 "could not add parallel environment \"$pe_obj\"" }
+  if {$result != 0  } { add_proc_error "set_pe" -1 "could not change parallel environment \"$pe_obj\"" }
 
   return $result
 }
@@ -3541,8 +3547,8 @@ proc is_job_id { job_id } {
 #  SEE ALSO
 #     sge_procedures/submit_job()
 #*******************************
-proc delete_job { jobid { wait_for_end 0 }} {
-  global ts_config
+proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
+   global ts_config
    global CHECK_ARCH CHECK_OUTPUT open_spawn_buffer CHECK_HOST
    global CHECK_USER
 
@@ -3557,7 +3563,16 @@ proc delete_job { jobid { wait_for_end 0 }} {
    if { [ is_job_id $jobid] } {
       # spawn process
       set program "$ts_config(product_root)/bin/$CHECK_ARCH/qdel"
-      set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$program" "$jobid" ]
+
+      # beginning with SGE 6.0 we need to specify if we want to delete jobs from
+      # other users (as admin user)
+      set args ""
+      if { $ts_config(gridengine_version) != 53 } {
+         if { $all_users } {
+            set args "-u '*'"
+         }
+      }
+      set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$program" "$args $jobid" ]
       set sp_id [ lindex $id 1 ]
       set timeout 60 	
       log_user 1

@@ -759,20 +759,10 @@ lList **finished_jobs
 
 SKIP_THIS_JOB:
       if (dispatched_a_job) {
-         int ntasks;
+         sge_move_to_running(&(lists->job_list), running_jobs, orig_job);
 
-         /* mark task as running in original job */
-         lSetUlong(lFirst(lGetList(orig_job, JB_ja_tasks)), JAT_status, JRUNNING);
-
-         /* move running task into running jobs list */
-         ntasks = lGetNumberOfElem(lGetList(orig_job, JB_ja_tasks));
-
-         sge_split_job_running(&(lists->job_list), running_jobs, "running jobs");
-
-         /* after sge_split_job_running() orig_job can be removed and job should be used instead */
+         /* after sge_move_to_running() orig_job can be removed and job should be used instead */
          orig_job = NULL;
-
-         DPRINTF(("STILL %d of formerly %d tasks\n", ntasks-1, ntasks)); 
 
          /* notify access tree */
          if (!sgeee_mode) 

@@ -1,3 +1,5 @@
+AH-2001-09-21-0: Improved array-job performance in schedd
+
 CR-2001-09-21-0: Testsuite:
                  - New procedure in file_procedures module:
                    create_path_aliasing_file()
@@ -44,13 +46,13 @@ AA-2001-08-28-0: Fixed task array job handling in qmon submit dialogue (Issue# 4
 EB-2001-08-27-0: Fixed segmentation fault in qstat, qhost, qmon (Issue# 48)
                  - large, fragmented job arrays caused segmentation
                    fault in qstat when the task id range list should be
-                   printed                                                                       - hold of a list of array tasks in the job control dialog
+                   printed                                                                       
+                 - hold of a list of array tasks in the job control dialog
                    caused only the last one to be set into the hold-state 
 
 CR-2001-08-23-2: Testsuite:
                  - using full path name for files to check in procedure
                    check_executable_files 
-
 
 CR-2001-08-23-1: Testsuite:
                  - removed add_proc_error call in compile_source procedure

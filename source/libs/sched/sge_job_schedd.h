@@ -60,6 +60,13 @@ int set_user_sort(int foo);
 int sge_split_job_running(lList **jobs, lList **running, char *running_name);
 
 /*
+ * move first task in job to running list 
+ *
+ */
+
+int sge_move_to_running(lList **jobs, lList **running, lListElem *job);
+
+/*
  * drop all finished jobs into the finished list 
  *
  */

@@ -1,3 +1,5 @@
+CR-2004-05-05-2: Testsuite: debug_starter.sh did not set SGE_ND 
+
 CR-2004-05-05-1: Bugfix:    o qmaster not responding (no client will receive a 
                               gdi response) 
                             o setting max possible component id to 65535

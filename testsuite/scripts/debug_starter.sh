@@ -39,7 +39,10 @@ echo "testsuite - debug startup script"
 OUTPUT_FILE=$1
 SGE_DEBUG_LEVEL=$2
 export SGE_DEBUG_LEVEL
+SGE_ND=1
+export SGE_ND
 echo " SGE_DEBUG_LEVEL : \"$SGE_DEBUG_LEVEL\""
+echo " SGE_ND          : 1"
 echo " id output       : `id`"
 echo " hostname        : `hostname`"
 echo " output file     : ${OUTPUT_FILE}"

@@ -87,6 +87,12 @@ else
    cmd="$RCMD_PREFIX $*"
 fi
 
+# unset TASK_ID - it might be set if a task starts another tasks 
+#                 and may not be exported in this case
+if [ "x$TASK_ID" = x ]; then
+   unset TASK_ID
+fi
+
 if [ x$just_wrap = x ]; then 
    if [ $minus_n -eq 1 ]; then
       echo $SGE_ROOT/bin/$ARC/qrsh -inherit -nostdin $rhost $cmd

@@ -1,0 +1,211 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta http-equiv="CONTENT-TYPE" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.78 [en] (X11; U; SunOS 5.9 sun4u) [Netscape]">
+   <meta name="AUTHOR" content="Paulo Bulhoes">
+   <meta name="CREATED" content="20021004;13113800">
+   <meta name="CHANGEDBY" content="Paulo Bulhoes">
+   <meta name="CHANGED" content="20021009;12365700">
+<style>
+	<!--
+		@page { margin-left: 1.25in; margin-right: 1.25in; margin-top: 1in; margin-bottom: 1in }
+	-->
+	</style>
+</head>
+<body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000" lang="en-US">
+
+<div style="margin-bottom: 0in; "><b><font size=+1>How to install the Grid
+Engine software on hosts with the Solaris</font><sup> TM</sup><font size=+1>
+Operating Environment IP Multipathing (IPMP) technology</font></b></div>
+
+<div style="margin-bottom: 0in; ">&nbsp;
+<p>This document describes how to install Grid Engine on machines with
+multiple network interafces (multi-homed host).&nbsp;&nbsp; Particular
+attention is given to the Solaris Operating Environment IP Multipathing
+technology,. The procedure presented here should work for other environments
+as well.
+<br>&nbsp;<b></b>
+<p><b>What is IP Multipathing?</b></div>
+
+<div style="margin-bottom: 0in; ">&nbsp;
+<br>IP Multipathing is a technology that allows grouping of TCP/IP interfaces
+for fail over and load balancing purposes. If an interface within an IP
+Multipathing group fails, the interface is disabled and its IP address
+is relocated to another interface in the group. Outbound IP traffic is
+distributed across the interfaces of a group.</div>
+
+<div style="margin-bottom: 0in; ">For further details on IP Multipathing,
+refer to the Solaris Operating Environment documentation, which can be
+found at:</div>
+
+<div style="margin-bottom: 0in; "><a href="http://docs.sun.com/db/doc/806-4075/6jd69oabu?a=view">http://docs.sun.com/db/doc/806-4075/6jd69oabu?a=view</a>
+.</div>
+
+<div style="margin-bottom: 0in; ">The IPMP features overview can be found
+at:</div>
+
+<div style="margin-bottom: 0in; "><a href="http://wwws.sun.com/software/solaris/ds/ds-netmultipath/index.html">http://wwws.sun.com/software/solaris/ds/ds-netmultipath/index.html</a>
+<b>.</b>
+<br>&nbsp;</div>
+
+<div style="margin-bottom: 0in; "><b></b>&nbsp;
+<br><b>Issues between IPMP and Grid Engine</b></div>
+
+<div style="margin-bottom: 0in; "></div>
+
+<div style="margin-bottom: 0in; ">The only major issue is the error messages
+while starting the Grid Engine daemons on a machine in which the main interface
+is part of an IPMP group. This occurs when the IPMP load balancing distributes
+the connections across the interfaces in the group; therefore, the IP packets
+show up at the receiving end as coming from a different host rather than
+the one associated with the main interface.</div>
+
+
+<p style="margin-bottom: 0in; ">For example, let's say we have a machine
+with three interfaces named <tt>qfe0</tt>, <tt>qfe1</tt>, and <tt>qfe3</tt>
+, where the IP addresses for these interfaces are 10.1.1.1, 10.1.1.2 and
+10.1.13 respectively. IPMP would need an extra address for each interface
+for testing, but we will ignore those in this example. Each of these addresses
+has a hostname associated with it.&nbsp; The <tt>hosts</tt> table looks
+like:
+
+<p style="margin-bottom: 0in; "><tt>&nbsp;&nbsp;&nbsp; 10.1.1.1 sge</tt>
+<div style="margin-bottom: 0in; "><tt>&nbsp;&nbsp;&nbsp; 10.1.1.2 sge-qfe1</tt></div>
+
+<div style="margin-bottom: 0in; "><tt>&nbsp;&nbsp;&nbsp; 10.1.1.3 sge-qfe2</tt></div>
+
+<div style="margin-bottom: 0in; ">&nbsp;
+<br>The machine's hostname is <tt>sge</tt>. When a connection is established
+from <tt>sge</tt> to another machine, it might go through <tt>sge</tt>,
+<tt>sge-qfe1</tt> , or <tt>sge-qfe2</tt>. Upon installation, Grid Engine&nbsp;
+will only recognize <tt>sge.W</tt>hen it receives a connection from <tt>sge-qfe2</tt>
+, it closes the connection because it is not from one of the authorized
+(or known) nodes.
+<p>To solve this issue we have to use the <tt>host_aliases</tt> files (see
+<tt><a href="http://docs.sun.com/source/816-4767-10/ref.htm#807674">sge_h_aliases</a>
+</tt>man page for details). This file can be used to "tell"&nbsp; Grid
+Engine that <tt>sge</tt>, <tt>sge-qfe1</tt>, and <tt>sge-qfe2</tt> are
+all from the same machine. The <tt>host_aliases</tt> file for this case
+would look like this:</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;</div>
+
+<div style="margin-bottom: 0in; "><tt>&nbsp;&nbsp;&nbsp; sge sge-qfe1 sge-qfe2</tt></div>
+
+<div style="margin-bottom: 0in; "><a NAME="Note"></a><b>Note: </b>If you
+make any changes to the <tt>$SGE_ROOT/$SGE_CELL/common/host_aliases</tt>
+file, all running&nbsp; Grid Engine daemons (<tt>sge_qmaster</tt>, <tt>sge_scheduler</tt>,
+<tt>sge_execd</tt> and <tt>sge_commd</tt>) must be stopped and restarted.
+Login as <tt>root</tt> to all your&nbsp; Grid Engine hosts and enter:</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;
+<br><tt>&nbsp;&nbsp;&nbsp; /etc/init.d/rcsge stop</tt></div>
+
+<div style="margin-bottom: 0in; "><tt>&nbsp;&nbsp;&nbsp; /etc/init.d/rcsge
+start</tt>
+<br>&nbsp;</div>
+
+<div style="margin-bottom: 0in; "><b></b>&nbsp;
+<br><b>How to install the Grid Engine master node with IPMP</b></div>
+
+<div style="margin-bottom: 0in; ">&nbsp;
+<br>There are at least two options:</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;
+<br>A) Ignore the error messages during installation. The procedure is:</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+1. Run <tt>inst_sge -m</tt>, ignoring the error messages during the start
+up of the daemons.</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2. Shutdown the daemons with <tt>/etc/init.d/rcsge stop</tt>. Due to the
+networking errors, some daemons fail to shutdown
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+and <b>must</b> be killed with <tt>kill -9</tt>. To check which daemons
+failed to shutdown use: <tt>ps -e | grep sge_</tt>.</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+3. Install the <tt>host_aliases</tt> file in the <tt>$SGE_ROOT/$SGE_CELL/common</tt>
+directory.</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+4. Restart the daemons with <tt>/etc/init.d/rcsge start</tt>.
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<b>Note: </b>This procedure is Operating System independent.</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;
+<br>B) Temporarily disable IPMP on the interface associated with the machine's
+hostname. The procedure is:</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+1. Identify the interface associated with the machine's hostname.</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2. Verify the interface has IPMP enabled with:</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<tt>ifconfig &lt;&lt;interface>> | grep groupname</tt>.</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+3. Take note of the group name.</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+4. Disable IPMP with: <tt>ifconfig &lt;&lt;interface>> group ""</tt> .</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+5. Install the Grid Engine master node.</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+6. Install the <tt>host_aliases </tt>file in the&nbsp; <tt>$SGE_ROOT/$SGE_CELL/common</tt>
+directory.</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+7. Restart all the Grid Engine daemons.</div>
+
+<div style="margin-bottom: 0in; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8. Re-enable IPMP: <tt>ifconfig &lt;&lt;interface>> group &lt;&lt;IPMP
+group>></tt>.
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<b>Note: </b>This procedure is valid only for Solaris<sup><font size=-1>TM</font></sup>
+8 Operating Environment or newer.
+<br>&nbsp;</div>
+
+<div style="margin-bottom: 0in; "><b></b>&nbsp;
+<br><b>How to install a Grid Engine execution host with IPMP</b></div>
+
+<div style="margin-bottom: 0in; "></div>
+
+<div style="margin-bottom: 0in; ">Once the <tt>host_aliases</tt> file is
+installed and the Grid Engine daemons are restarted, you can simply start
+the execution host installation without further problems.</div>
+
+<br>&nbsp;
+
+<p style="margin-bottom: 0in; "><b>How to enable administrative and submit
+hosts with IPMP</b>
+
+<p style="margin-bottom: 0in; ">You can either follow the same procedure
+used for the execution host (e.g. update <tt>host_aliases</tt> before installation,
+see the <a href="#Note">note on changes to the <tt>host_aliases</tt> file</a>
+), or add all the hostnames associated with the administrative, or submit
+host with:
+<p><tt>&nbsp;&nbsp;&nbsp; qconf -ah &lt;&lt;hostname>> &lt;&lt;alias 1>>
+&lt;&lt;alias 2>> ...</tt>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (for the
+administrative host) or
+<p><tt>&nbsp;&nbsp;&nbsp; qconf -as &lt;&lt;hostname>> &lt;&lt;alias 1>>
+&lt;&lt;alias 2>> ...</tt>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (for the
+submit host).
+<br>&nbsp;
+<p><b>Trademarks</b>
+<p>Sun and Solaris are trademarks or registered trademarks of Sun Microsystems,
+Inc. in the United States and other countries. Sun et Solaris sont des
+marques d&eacute;pos&eacute;es ou enregistr&eacute;es de Sun Microsystems,
+Inc. aux Etats-Unis et dans d'autres pays.
+<br>&nbsp;
+</body>
+</html>

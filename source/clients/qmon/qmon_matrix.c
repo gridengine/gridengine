@@ -60,6 +60,7 @@
 #include "qmon_matrix.h"
 #include "qmon_load.h"
 #include "qmon_message.h"
+#include "qmon_util.h"
 
 
 static Widget CreateMatrixSimple(Widget parent, String name, ArgList arglist, Cardinal argcount);
@@ -1019,8 +1020,8 @@ String *ce_entry
    }
       
    /* name type relation value */ 
-   lSetString(ep, CE_name, ce_entry[CE_NAME] ? ce_entry[CE_NAME]: "");
-   lSetString(ep, CE_shortcut, ce_entry[CE_SHORTCUT] );
+   lSetString(ep, CE_name, ce_entry[CE_NAME] ? qmon_trim(ce_entry[CE_NAME]): "");
+   lSetString(ep, CE_shortcut, ce_entry[CE_SHORTCUT] ? qmon_trim(ce_entry[CE_SHORTCUT]): "" );
 
    type = 0;
    for (i=TYPE_FIRST; !type && i<=TYPE_CE_LAST; i++) {
@@ -1069,8 +1070,9 @@ String *ce_entry
             || !strcasecmp(ce_entry[CE_CONSUMABLE], "no"))
       lSetBool(ep, CE_consumable, false);
 
-   lSetString(ep, CE_default, ce_entry[CE_DEFAULT] ? ce_entry[CE_DEFAULT]: "");
-   lSetString(ep, CE_urgency_weight, ce_entry[CE_URGENCY] ? ce_entry[CE_URGENCY]: "");
+   lSetString(ep, CE_default, ce_entry[CE_DEFAULT] ? qmon_trim(ce_entry[CE_DEFAULT]): "");
+   lSetString(ep, CE_urgency_weight, ce_entry[CE_URGENCY] ? qmon_trim(ce_entry[CE_URGENCY]): "");
+
    
    DEXIT;
    return True;

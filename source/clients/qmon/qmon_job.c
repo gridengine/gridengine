@@ -748,7 +748,7 @@ void updateJobList(void)
                if (qep) {
                   lList *st = lGetList(qep, QU_suspend_thresholds);
                   qstate = lGetUlong(qep, QU_state);
-                  if ( sge_load_alarm(NULL, qep, st, ehl, cl, NULL, QU_suspend_thresholds)) {
+                  if ( sge_load_alarm(NULL, qep, st, ehl, cl, NULL, false)) {
                      jstate = lGetUlong(jap, JAT_state);
                      jstate &= ~JRUNNING; /* unset bit jrunning */
                      /* set bit jsuspended_on_subordinate */
@@ -907,9 +907,11 @@ lList **local
 
    DENTER(GUI_LAYER, "qmonDeleteJobForMatrix");
 
+/*
    if (!user_list) {
       lAddElemStr(&user_list, ST_name, "*", ST_Type);
    }   
+*/   
    force = XmToggleButtonGetState(force_toggle);
 
    /* 
@@ -1343,6 +1345,8 @@ XtPointer cld, cad;
             }
          }
 
+lWriteListTo(jl, stdout);
+
          alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
       
          qmonMessageBox(w, alp, 0);
@@ -1753,13 +1757,19 @@ XtPointer cld, cad;
    else {
       XtSetSensitive(job_schedd_info, False);
    }
+
    if (!strcmp(XtName(cbs->tab_child), "job_running")) {
       XtSetSensitive(job_reschedule, True);
+      XtSetSensitive(job_suspend, True);
+      XtSetSensitive(job_unsuspend, True);
       current_matrix=job_running_jobs;
    }
    else {
       XtSetSensitive(job_reschedule, False);
+      XtSetSensitive(job_suspend, False);
+      XtSetSensitive(job_unsuspend, False);
    }
+
    if (!strcmp(XtName(cbs->tab_child), "job_zombie")) {
       XtSetSensitive(force_toggle, False);
       XtSetSensitive(job_suspend, False);
@@ -1774,8 +1784,6 @@ XtPointer cld, cad;
    }
    else {
       XtSetSensitive(force_toggle, True);
-      XtSetSensitive(job_suspend, True);
-      XtSetSensitive(job_unsuspend, True);
       XtSetSensitive(job_delete, True);
       XtSetSensitive(job_hold, True);
       XtSetSensitive(job_qalter, True);

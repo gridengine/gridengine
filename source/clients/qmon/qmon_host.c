@@ -1754,6 +1754,8 @@ Widget parent
                      qmonHostgroupCancel, NULL);
    XtAddCallback(hg_member_w, XmtNverifyCallback,
                       qmonHostgroupCheckName, NULL);
+   XtAddCallback(hg_member_w, XmtNinputCallback, 
+                      qmonHostgroupAddHost, NULL);
    XtAddCallback(hg_add, XmNactivateCallback, 
                      qmonHostgroupAddHost, NULL);
    XtAddCallback(hg_add_hg, XmNactivateCallback, 

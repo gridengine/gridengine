@@ -1,3 +1,13 @@
+AA-2004-04-20-1: Bugfix:    qmon fixes:
+                 - interactive jobs,
+                 - blanks in complex attributes
+                 - delete time editability
+                 - job del deleted all instead of selected jobs
+                 - hostgroup member add callback
+                 Changed:   qmon
+                 Issue:     582, 729, 840, 938, 382, 279
+                 Review:    EB
+                 
 AS-2004-04-20-0: Bugfix:    MPI PE description update
                             SunHPCT reference update
                             removed loose integration with HPCT

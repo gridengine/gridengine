@@ -179,14 +179,12 @@ Qmon*user_matrix.translations: #override\n\
          Shift<Btn1Down>: SelectCell(end)\n\
          Ctrl<Btn1Down>:   SelectCell(toggle)\n\
          <Btn1Down>:       SelectCell(begin)\n\
-         Ctrl<Btn2Down>:   ResizeColumns()\n\
-         <Btn1Up>(2):      SelectCell(edit)
+         Ctrl<Btn2Down>:   ResizeColumns()
 Qmon*user_matrix.clip.translations: #override\n\
          Shift<Btn1Down>:  SelectCell(end)\n\
          Ctrl<Btn1Down>:   SelectCell(toggle)\n\
          <Btn1Down>:       SelectCell(begin)\n\
-         Ctrl<Btn2Down>:   ResizeColumns()\n\
-         <Btn1Up>(2):      SelectCell(edit)
+         Ctrl<Btn2Down>:   ResizeColumns()
 
 !Qmon*user_matrix.xmtChildren: unmanaged XmtPopupMenu del_menu;
 !Qmon*user_matrix.menuPost: <Btn3Down>

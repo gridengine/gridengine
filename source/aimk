@@ -1346,15 +1346,11 @@ case LINUXIA64:
    
 case WIN32_X86:
    set CC = gcc
-   set MAKE = gmake
    set RM = "rm -f"
    set MAKE = gmake
 
    # Default build targets for WIN32_X86 for which we have seperate make files
-   set SGE_DEPEND       = 0
    set QMON             = 0
-   set REMOTE           = 1
-   set QMAKE            = 1
    set QTCSH            = 0
    set MAKESTRPTIME     = 0
    set MAKEFNMATCH      = 0
@@ -1367,7 +1363,10 @@ case WIN32_X86:
       set TOUCH_DIR = $COMPILE_ARCH
 
       touch $TOUCH_DIR/qmon
+      mkdir ./3rdparty/qmon/$COMPILE_ARCH/
       touch ./3rdparty/qmon/$COMPILE_ARCH/libXltree.so
+      touch ./3rdparty/qmon/$COMPILE_ARCH/libXltree.so
+      touch ./3rdparty/qtcsh/$COMPILE_ARCH/tcsh
       touch $TOUCH_DIR/sge_qmaster
       touch $TOUCH_DIR/sge_shadowd
       touch $TOUCH_DIR/berkeley_db_svc

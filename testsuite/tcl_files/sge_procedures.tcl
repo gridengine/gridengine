@@ -2848,7 +2848,7 @@ proc wait_for_load_from_all_queues { seconds } {
          # check if load of an host is set > 99 (no exed report)
          set failed 0
          foreach elem $load {
-           if {$elem >= 99} {
+           if {$elem == "-NA-" || $elem >= 99} {
               incr failed 1
            }
          }

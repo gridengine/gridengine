@@ -127,9 +127,6 @@
 #           Verifies the scheduler decisions regarding sharetree policy.
 #
 #***************************************************************************
-#
-#
-# Define the global veriables to give them back
 global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
 global check_init_level_procedure check_category
 global check_root_access_needs
@@ -203,7 +200,7 @@ set throughput_subdir ""
 # settings for the chart generation:
 # we have a certain number of data sets (xy_rows)
 global throughput_num_data_sets
-set throughput_num_data_sets 24
+set throughput_num_data_sets 26
 
 proc init_level {} {
    global ts_config
@@ -251,7 +248,7 @@ proc init_level {} {
   
    switch -- $major_level {
       "0" {
-         set job_count 90
+         set job_count 300
          set ps_interval 10
          set qstat_interval 1000
          set level_array_size 5
@@ -278,9 +275,9 @@ proc init_level {} {
          return -1
       }
    }
-#if { $minor_level != 3 } {
-#   return -1
-#}
+if { $minor_level != 2 } {
+   return -1
+}
    switch -- $minor_level {
       "0" {
          # enable queues after all jobs have been submitted
@@ -740,7 +737,7 @@ proc run_throughput_test {} {
    }
 
    # prepare results array
-   clean_current_system_status results_list result job_data schedd_data monitoring qstat_data qping_data
+   clean_current_system_status results_list result job_data schedd_data monitoring qstat_data qping_data event_data
 
    # restart qmaster and scheduler - we want to measure their size
    shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
@@ -816,6 +813,9 @@ proc run_throughput_test {} {
    # open shell on each execd host, used for submitting jobs and process info
    set spawn_list ""
    set remote_spawn_list ""
+   if {[info exists spawn_host_map]} {
+      unset spawn_host_map
+   }
 
    # start qmaster/scheduler process monitor
    set expect_bin [get_binary_path $CHECK_HOST "expect"]
@@ -823,26 +823,33 @@ proc run_throughput_test {} {
    set schedd_pid  [get_schedd_pid]
    puts $CHECK_OUTPUT "starting process monitor"
    set id [ open_remote_spawn_process $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/process_info.tcl $ts_config(product_root)" ]
-   lappend spawn_list [ lindex $id 1 ]
+   set spawn_id [lindex $id 1]
+   lappend spawn_list $spawn_id
    lappend remote_spawn_list $id
+   set spawn_host_map($spawn_id) $CHECK_HOST
 
    if { $qstat_interval > 0 } {
       # start qstat monitor
       puts $CHECK_OUTPUT "starting qstat monitor"
       set id [ open_remote_spawn_process $CHECK_HOST $CHECK_SECOND_FOREIGN_SYSTEM_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/qstat.tcl $ts_config(product_root)" ]
-      lappend spawn_list [ lindex $id 1 ]
+      set spawn_id [lindex $id 1]
+      lappend spawn_list $spawn_id
       lappend remote_spawn_list $id
+      set spawn_host_map($spawn_id) $CHECK_HOST
    }
 
    # start qping
    # TODO: we should better have a qping.tcl script as with qstat, ps_info etc.
+   # TODO: the qping processes arn't killed!
    if {$ts_config(gridengine_version) != 53} {
       set qping_host [lindex $host_list 0]
       set qping_arch [resolve_arch $qping_host]
       puts $CHECK_OUTPUT "starting qping monitor on host $qping_host"
       set id [ open_remote_spawn_process $qping_host $CHECK_FIRST_FOREIGN_SYSTEM_USER "$ts_config(product_root)/bin/$qping_arch/qping" "-i $ps_interval -f $ts_config(master_host) $ts_config(commd_port) qmaster 1"]
-      lappend spawn_list [ lindex $id 1 ]
+      set spawn_id [lindex $id 1]
+      lappend spawn_list $spawn_id
       lappend remote_spawn_list $id
+      set spawn_host_map($spawn_id) $qping_host
    }
 
    # prepare job arguments 
@@ -853,8 +860,11 @@ proc run_throughput_test {} {
       set expect_bin [get_binary_path $host "expect"]
       puts $CHECK_OUTPUT "starting submitter process on host $host"
       set id [ open_remote_spawn_process $host $CHECK_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/submitter.tcl $ts_config(product_root) $host" ]
-      lappend spawn_list [ lindex $id 1 ]
+      set spawn_id [lindex $id 1]
+      lappend spawn_list $spawn_id
       lappend remote_spawn_list $id
+      set spawn_host_map($spawn_id) $host
+      set host_spawn_map($host) $spawn_id
    }
    
    set timeout 60
@@ -899,15 +909,13 @@ proc run_throughput_test {} {
          }
          -i $spawn_list eof {
             set spawn_id $expect_out(spawn_id)
-            set host_nr [lsearch $spawn_list $spawn_id]
-            set host_name [lindex $host_list $host_nr]
+            set host_name $spawn_host_map($spawn_id)
             set error 1
             add_proc_error "run_throughput_test" -1 "got eof from host $host_name\n$expect_out(0,string)"
          }
          -i $spawn_list -- "*\n" {
             set spawn_id $expect_out(spawn_id)
-            set host_nr [lsearch $spawn_list $spawn_id]
-            set host_name [lindex $host_list $host_nr]
+            set host_name $spawn_host_map($spawn_id)
             set output $expect_out(0,string) 
             set output [ split $output "\n" ]
             foreach line $output {
@@ -1049,6 +1057,7 @@ proc run_throughput_test {} {
    set sent_jobs 0     ;# number of sent jobs
    set resend_list {}  ;# list of commands to resend
    set schedd_nr -1    ;# number of stored scheduler data
+   set events_delivered 0 ;# number of events in one event package
 
    set timeout 120
 
@@ -1066,10 +1075,8 @@ proc run_throughput_test {} {
          set sub_host   [lindex $next_submitter_list 0 ]       
          set next_submitter_list [lrange $next_submitter_list 1 end]
 
-         set host_index [lsearch $host_list $sub_host]
-
          # if we have an invalid submit host, skip it
-         if { $host_index < 0 } {
+         if { ! [info exists host_spawn_map($sub_host)] } {
             continue
          }
 
@@ -1096,7 +1103,7 @@ proc run_throughput_test {} {
          set sent_commands($sub_host) "$send_id $next_submit_command"
 
          # send submit command
-         set spawn_id [lindex $spawn_list $host_index]
+         set spawn_id $host_spawn_map($sub_host)
          send -i $spawn_id "$next_submit_command\n"
 
          # store info about sent job
@@ -1126,15 +1133,13 @@ proc run_throughput_test {} {
          }
          -i $spawn_list eof {
             set spawn_id $expect_out(spawn_id)
-            set host_nr [lsearch $spawn_list $spawn_id]
-            set host_name [lindex $host_list $host_nr]
+            set host_name $spawn_host_map($spawn_id)
             add_proc_error "run_throughput_test" -1 "$host_name EOF : $expect_out(buffer)"
             set error 1
          }
         -i $spawn_list "*\n" {
             set spawn_id $expect_out(spawn_id)
-            set host_nr [lsearch $spawn_list $spawn_id]
-            set host_name [lindex $host_list $host_nr]
+            set host_name $spawn_host_map($spawn_id)
             set output $expect_out(0,string) 
             set output [ split $output "\n" ]
             foreach line $output {
@@ -1274,6 +1279,7 @@ proc run_throughput_test {} {
 
                switch -glob -- $line {
                   "JOB_ADD*" {
+                     incr events_delivered
                      # evaluate job_id
                      # JOB_ADD (308.0:ECL_TIME=1094812995:project=NONE)
                      set job_s_pos [string first "(" $line]
@@ -1281,15 +1287,15 @@ proc run_throughput_test {} {
                      set job_e_pos [string first ")" $line]
                      incr job_e_pos -1
 
-                     set event_data [string range $line $job_s_pos $job_e_pos]
-                     set event_data [split $event_data ":"]
-                     set job_id [lindex $event_data 0] 
+                     set job_event_data [string range $line $job_s_pos $job_e_pos]
+                     set job_event_data [split $job_event_data ":"]
+                     set job_id [lindex $job_event_data 0] 
                      set help_pos [string first "." $job_id]
                      incr help_pos -1
                      set job_id [string range $job_id 0 $help_pos]
 
                      # evaluate project_name
-                     set project_name [lindex $event_data 2]
+                     set project_name [lindex $job_event_data 2]
                      set help_pos [string first "=" $project_name]
                      incr help_pos 1
                      set project_name [string range $project_name $help_pos end]
@@ -1321,6 +1327,7 @@ proc run_throughput_test {} {
                   }
 
                   "JOB_START*" {
+                     incr events_delivered
                      # evaluate job_id
                      # JOB_START (307.4:ECL_TIME=1094812970)
                      set job_s_pos [string first "(" $line]
@@ -1339,6 +1346,7 @@ proc run_throughput_test {} {
                   }
 
                   "JOB_FINISH*" {
+                     incr events_delivered
                      # evaluate job_id
                      # JOB_FINISH (307.2:ECL_TIME=1094812978)
                      set job_s_pos [string first "(" $line]
@@ -1356,6 +1364,18 @@ proc run_throughput_test {} {
                         set job_data($sub_id,run_end_time) [get_event_client_time $line]
                         set job_data($sub_id,state) "done"
                      }
+                  }
+
+                  "ECL_STATE*" {
+                     set index $event_data(count)
+                     set event_data($index,time) [get_event_client_time $line]
+                     set event_data($index,events) $events_delivered
+                     incr event_data(count)
+                     set events_delivered 0
+                  }
+
+                  "JOB_DEL*" {
+                     incr events_delivered
                   }
 
                   "*scheduled in*" {
@@ -1427,9 +1447,7 @@ proc run_throughput_test {} {
                      set run_time [lindex $prof 4]
                      set schedd_data($schedd_nr,schedd_total_time) $run_time
                   }
-                  "*PROF:*" -
-                  "JOB_DEL*" -
-                  "ECL_STATE*" {
+                  "*PROF:*" {
                      # unused output - ignore it
                   }
                   default {
@@ -1497,7 +1515,7 @@ proc run_throughput_test {} {
 
    # create reports
    if { ! $error } {
-      create_reports results_list job_data schedd_data monitoring qstat_data qping_data
+      create_reports results_list job_data schedd_data monitoring qstat_data qping_data event_data
    }
 
    set_error 0 "ok"
@@ -1795,6 +1813,8 @@ proc compare_dump_data_file { file1 file2 } {
    set table($test) "$qmaster1"
 
    set tmp_file [get_tmp_file_name]
+   spool_array_prepare $tmp_file
+
    spool_array_to_file $tmp_file "table" table
    append content [convert_spool_file_to_html $tmp_file $output_dir/index.html 1]
 
@@ -1893,9 +1913,9 @@ proc compare_dump_data_file { file1 file2 } {
    puts $CHECK_OUTPUT "reading monitoring data of test B"
    read_array_from_file_data file_data2 "monitoring" monitoring2
    puts $CHECK_OUTPUT "reading qstat data of test B"
-   read_array_from_file_data file_data1 "qstat data" qstat2
+   read_array_from_file_data file_data2 "qstat data" qstat2
    puts $CHECK_OUTPUT "reading qping data of test B"
-   read_array_from_file_data file_data1 "qping data" qping2
+   read_array_from_file_data file_data2 "qping data" qping2
    
 
 # --  1  set test "Total run time"
@@ -2046,8 +2066,6 @@ proc compare_dump_data_file { file1 file2 } {
    set tmp_file [get_tmp_file_name]
    spool_array_to_file $tmp_file "table" table
    append content [convert_spool_file_to_html $tmp_file $output_dir/index.html 1]
-
-
    
    generate_html_file $output_dir/index.html "$test_config1(gridengine_version) (A) from $test_config1(test_date)<br>file: $file1<br>vs<br>$test_config2(gridengine_version) (B) from $test_config2(test_date)<br>file: $file2" $content
 
@@ -2118,6 +2136,12 @@ proc compare_dump_data_file { file1 file2 } {
    append content [create_html_image "Scheduler orders" "schedd_orders.gif"]
    append content [create_html_image "Size of daemons" "daemon_size.gif"]
    append content [create_html_image "CPU load of daemons" "daemon_cpu.gif"]
+   if { $qstat1(count) > 0 && $qstat2(count) > 0 } {
+      append content [create_html_image "Qstat performance" "qstat.gif"]
+   }
+   if { $qping1(count) > 0 && $qping2(count) > 0 } {
+      append content [create_html_image "Qping information" "qping.gif"]
+   }
    generate_html_file $output_dir/all_charts.html $title $content
 
 
@@ -2172,7 +2196,9 @@ proc compare_dump_data_file { file1 file2 } {
    clear_xy_rows_show xy_rows
    clear_xy_rows_show xy_rows $throughput_num_data_sets
    set_xy_rows_show xy_rows 6
+   set_xy_rows_show xy_rows 7
    set_xy_rows_show xy_rows 6 $throughput_num_data_sets
+   set_xy_rows_show xy_rows 7 $throughput_num_data_sets
    create_gnuplot_xy_gif plot_data xy_rows
 
    set plot_data(title) "Throughput test results - schedd orders"
@@ -2279,7 +2305,7 @@ proc analyse_dump_data_file { file { force 0 } } {
    }
    
    file mkdir $output_dir
-  
+   # TODO: all this data is usually available - do not read it from file, but upvar 
    puts $CHECK_OUTPUT "please wait ..."
    read_array_from_file $file "online data"    results
    read_array_from_file $file "job data"       jobs
@@ -2289,6 +2315,7 @@ proc analyse_dump_data_file { file { force 0 } } {
    read_array_from_file $file "monitoring" monitoring
    read_array_from_file $file "qstat data" qstat_data
    read_array_from_file $file "qping data" qping_data
+   read_array_from_file $file "event data" event_data
    puts $CHECK_OUTPUT "Test date:          $test_config(test_date)"
    puts $CHECK_OUTPUT "gridengine version: $test_config(gridengine_version)"
 
@@ -2503,6 +2530,13 @@ proc analyse_dump_data_file { file { force 0 } } {
    append content [create_html_link "   CPU load of qmaster and scheduler" "daemon_cpu.html"]
    append content [ create_html_text "" ]
 
+   if {$event_data(count) > 0} {
+      append content [create_html_link "   Event client update interval" "event_interval.html"]
+      append content [ create_html_text "" ]
+      append content [create_html_link "   Event client number of events" "events.html"]
+      append content [ create_html_text "" ]
+   }
+
    if {$qping_data(count) > 0} {
       append content [create_html_link "   Qping information" "qping.html"]
       append content [ create_html_text "" ]
@@ -2704,6 +2738,10 @@ proc analyse_dump_data_file { file { force 0 } } {
    append content [create_html_image "Scheduler orders" "schedd_orders.gif"]
    append content [create_html_image "Daemon size" "daemon_size.gif"]
    append content [create_html_image "Daemon CPU load" "daemon_cpu.gif"]
+   if {$event_data(count) > 0} {
+      append content [create_html_image "Event client update interval" "event_interval.gif"]
+      append content [create_html_image "Event client number of events" "events.gif"]
+   }
    if {$qping_data(count) > 0} {
       append content [create_html_image "Qping information" "qping.gif"]
    }
@@ -2728,6 +2766,8 @@ proc analyse_dump_data_file { file { force 0 } } {
    calculate_monitoring_xy_rows monitoring xy_rows $test_start 0
 
    calculate_qstat_xy_rows qstat_data xy_rows $test_start 0
+
+   calculate_event_xy_rows event_data xy_rows $test_start 0
 
    calculate_qping_xy_rows qping_data xy_rows $test_start 0
 
@@ -2800,6 +2840,24 @@ proc analyse_dump_data_file { file { force 0 } } {
    set_xy_rows_show xy_rows 13
    set_xy_rows_show xy_rows 15
    create_gnuplot_xy_gif plot_data xy_rows
+
+   if { $event_data(count) > 0 } {
+      set plot_data(title) "Throughput test results - event client update interval"
+      set plot_data(output_file) "$output_dir/event_interval.gif"
+      set plot_data(xlabel) "time\[s\]"
+      set plot_data(ylabel) "s"
+      clear_xy_rows_show xy_rows
+      set_xy_rows_show xy_rows 24
+      create_gnuplot_xy_gif plot_data xy_rows
+
+      set plot_data(title) "Throughput test results - number of events"
+      set plot_data(output_file) "$output_dir/events.gif"
+      set plot_data(xlabel) "time\[s\]"
+      set plot_data(ylabel) "s"
+      clear_xy_rows_show xy_rows
+      set_xy_rows_show xy_rows 25
+      create_gnuplot_xy_gif plot_data xy_rows
+   }
 
    if { $qping_data(count) > 0 } {
       set plot_data(title) "Throughput test results - qping information"
@@ -3052,6 +3110,46 @@ proc calculate_qstat_xy_rows { results_array_name row_array_name test_start star
 }
 
 
+proc calculate_event_xy_rows { results_array_name row_array_name test_start start_numb} {
+   global ts_config
+
+   upvar $results_array_name event_data
+   upvar $row_array_name xy_rows
+
+   set pos1 [ expr ( $start_numb + 24 ) ] ;# number of clients
+   set pos2 [ expr ( $start_numb + 25 ) ] ;# number of clients
+
+   set add_info " A"
+   if { $start_numb != 0 } {
+      set add_info " B"
+   }
+
+   #  event data
+   set xy_rows($pos1,drawmode) "points"
+   set xy_rows($pos1,title) "interval $add_info"
+   set xy_rows($pos2,drawmode) "points"
+   set xy_rows($pos2,title) "events $add_info"
+
+   set idx 0
+   for {set i 0} {$i < $event_data(count)} {incr i} {
+      if {$i == 0} {
+         set value 0
+      } else {
+         set last_i [expr $i - 1]
+         set interval  [expr $event_data($i,time) - $event_data($last_i,time)]
+         set events $event_data($i,events)
+      }
+      if { $event_data($i,time) >= $test_start } {
+         set normalized_time [expr $event_data($i,time) - $test_start]
+         set xy_rows($pos1,$idx,x) $normalized_time
+         set xy_rows($pos2,$idx,x) $normalized_time
+         set xy_rows($pos1,$idx,y) $interval
+         set xy_rows($pos2,$idx,y) $events
+         incr idx
+      }
+   }
+}
+
 proc calculate_qping_xy_rows { results_array_name row_array_name test_start start_numb} {
    global ts_config
 
@@ -3197,50 +3295,6 @@ proc calculate_project_run_xy_rows { results_array_name job_array_name row_array
          add_proc_error "calculate_project_run_xy_rows" -1 "error job count all_jobs=$all_jobs, not [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ]"
       }
 
-# ---          for { set i 0 } { $i <= $last } { incr i 1 } {
-# ---             set x_time        [ expr ( $results($i,test_run_time) - $test_start) ]  ;# test run time in seconds
-# ---            
-# ---             set jobs_p1 0
-# ---             set jobs_p2 0
-# ---             set jobs_p3 0
-# ---             foreach jb $running_job_ids {
-# ---                set sub_id [get_submit_id_from_job_id jobs $jb]
-# ---                set job_project $jobs($sub_id,project)
-# ---                if { $job_project == 1 } {
-# ---                   incr jobs_p1 1
-# ---                }
-# ---                if { $job_project == 2 } {
-# ---                   incr jobs_p2 1
-# ---                }
-# ---                if { $job_project == 3 } {
-# ---                   incr jobs_p3 1
-# ---                }
-# ---             }
-# ---
-# ---             if { [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3  ) ] != $results($i,jobs_running)  } {
-# ---                add_proc_error "calculate_project_run_xy_rows" -1 "error: number of running jobs sum error"
-# ---             }
-# ---             set one_percent [ expr ( (0.000 + $results($i,jobs_running)) / 100 ) ]
-# ---             set p1_p [ expr ( $jobs_p1 *  $one_percent  ) ]
-# ---             set p2_p [ expr ( $jobs_p2 *  $one_percent  ) ]
-# ---             set p3_p [ expr ( $jobs_p3 *  $one_percent  ) ]
-# ---
-# ---
-# ---             # project 1
-# ---             set xy_rows($pos1,$pro_pos_1,x) $x_time
-# ---             set xy_rows($pos1,$pro_pos_1,y) $p1_p ;# $results($i,jobs_running)
-# ---             incr pro_pos_1 1
-# ---
-# ---             # project 2
-# ---             set xy_rows($pos2,$pro_pos_2,x) $x_time
-# ---             set xy_rows($pos2,$pro_pos_2,y) $p2_p ;# $results($i,jobs_running)
-# ---             incr pro_pos_2 1
-# ---
-# ---             # project 3
-# ---             set xy_rows($pos3,$pro_pos_3,x) $x_time
-# ---             set xy_rows($pos3,$pro_pos_3,y) $p3_p ;# $results($i,jobs_running)
-# ---             incr pro_pos_3 1
-# ---          }
    }
 }
 
@@ -3322,7 +3376,7 @@ proc calculate_test_run_xy_rows { results_array_name row_array_name start_numb }
    
 }
 
-proc create_reports { results_array job_array_name schedd_array_name monitoring_name qstat_name qping_name} {
+proc create_reports { results_array job_array_name schedd_array_name monitoring_name qstat_name qping_name event_name} {
    global ts_config
    global ts_host_config
    global CHECK_OUTPUT CHECK_PROTOCOL_DIR check_name throughput_subdir
@@ -3343,6 +3397,7 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
    upvar $monitoring_name monitoring
    upvar $qstat_name qstat_data
    upvar $qping_name qping_data
+   upvar $event_name event_data
 
    set nr_of_execd_hosts [llength $ts_config(execd_hosts)]
    incr nr_of_execd_hosts -1
@@ -3389,22 +3444,23 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
    set prot_output_file "${prot_output_dir}/saved_run.${run_nr}"
    puts $CHECK_OUTPUT "using filename:"
    puts $CHECK_OUTPUT $prot_output_file
-
+   spool_array_prepare $prot_output_file
+   
 
    # execd configuration for each host
    set host_list $ts_config(execd_hosts)
    lappend host_list "global"
    set h_list_array(host_list) $host_list
-   spool_array_to_file $prot_output_file "execd list" h_list_array
+   spool_array_add_data $prot_output_file "execd list" h_list_array
 
    set nr_of_local_spool_directories 0
    foreach execd $host_list {
       get_exechost execd_array $execd
-      spool_array_to_file $prot_output_file "execd $execd" execd_array
+      spool_array_add_data $prot_output_file "execd $execd" execd_array
       unset execd_array
 
       get_config config_array $execd
-      spool_array_to_file $prot_output_file "config execd $execd" config_array
+      spool_array_add_data $prot_output_file "config execd $execd" config_array
       if { [info exists config_array(execd_spool_dir)] } {
          incr nr_of_local_spool_directories 1
       }
@@ -3413,7 +3469,7 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
    
    # save scheduler configuration into file
    get_schedd_config schedd_config
-   spool_array_to_file $prot_output_file "schedd config" schedd_config
+   spool_array_add_data $prot_output_file "schedd config" schedd_config
 
    # set test configuration
    set test_config(end_job_count)           $end_job_count            ;# number of jobs
@@ -3427,49 +3483,26 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
    set test_config(gridengine_version)      [get_version_info]
    set test_config(test_date)               [exec date]
    
-   spool_array_to_file $prot_output_file "test configuration" test_config
+   spool_array_add_data $prot_output_file "test configuration" test_config
 
    # spool everything to file (without comment line)
-   spool_array_to_file $prot_output_file "online data"    results 0
-   spool_array_to_file $prot_output_file "job data"       jobs    0
-   spool_array_to_file $prot_output_file "scheduler data" schedd  0
-   spool_array_to_file $prot_output_file "monitoring" monitoring  0
-   spool_array_to_file $prot_output_file "qstat data" qstat_data  0
-   spool_array_to_file $prot_output_file "qping data" qping_data  0
+   spool_array_add_data $prot_output_file "online data" results
+   spool_array_add_data $prot_output_file "job data" jobs
+   spool_array_add_data $prot_output_file "scheduler data" schedd
+   spool_array_add_data $prot_output_file "monitoring" monitoring
+   spool_array_add_data $prot_output_file "qstat data" qstat_data
+   spool_array_add_data $prot_output_file "qping data" qping_data
+   spool_array_add_data $prot_output_file "event data" event_data
 
+   # now write protocol file
+   spool_array_finish $prot_output_file
+
+   # we don't want to keep the backup file - these files are huge!
    catch { file delete ${prot_output_file}.old }
 
-#   # job results
-#   calculate_average_cluster_times results cluster_results
-#   puts $CHECK_OUTPUT "total run time     : $cluster_results(total_run_time)"
-#   puts $CHECK_OUTPUT "total jobs done    : $cluster_results(total_jobs_done)"
-#   puts $CHECK_OUTPUT "total submit time  : $cluster_results(total_submit_time)"
-#   puts $CHECK_OUTPUT "submits per second : $cluster_results(submits_per_second)"
-#   puts $CHECK_OUTPUT "jobs per second    : $cluster_results(jobs_per_second)"
-#   puts $CHECK_OUTPUT "avg. slots free    : $cluster_results(avg_slots_free)"
-#   puts $CHECK_OUTPUT "total slots        : $cluster_results(total_slots)"
-#   puts $CHECK_OUTPUT "utilization        : $cluster_results(utilization)"
-#   puts $CHECK_OUTPUT "job sleep time     : $cluster_results(jobs_sleep_time)"
-#   puts $CHECK_OUTPUT "queue enable value : $cluster_results(queue_enable_value)"
-#   puts $CHECK_OUTPUT "flush submit sec   : $cluster_results(flush_submit_sec)"
-#   puts $CHECK_OUTPUT "flush finish sec   : $cluster_results(flush_finish_sec)"
-#   puts $CHECK_OUTPUT "schedule interval  : $cluster_results(schedule_interval)"
-#
-#
-#   calculate_average_job_times jobs avg_values
-#   puts $CHECK_OUTPUT ""
-#   puts $CHECK_OUTPUT "avg. submit       (count=$avg_values(jobs_submit))   : $avg_values(avg_submit) "
-#   puts $CHECK_OUTPUT "avg. run/transfer (count=$avg_values(jobs_run))   : $avg_values(avg_run)    "
-#
-#   calculate_average_schedd_times schedd avg_schedd_values
-#   puts $CHECK_OUTPUT ""
-#   puts $CHECK_OUTPUT "avg. schedd time (count=$avg_schedd_values(nr_of_schedd_runs))   : $avg_schedd_values(avg_schedd_time)"
-#   puts $CHECK_OUTPUT "avg. total schedd time (count=$avg_schedd_values(nr_of_schedd_runs))   : $avg_schedd_values(avg_schedd_total_time)"
-#
    analyse_dump_data_file $prot_output_file 1
+
    #compare_dump_directory $prot_output_dir
-#   puts $CHECK_OUTPUT "do gzip $prot_output_file ..."
-#   puts $CHECK_OUTPUT [start_remote_prog $CHECK_HOST $CHECK_USER gzip $prot_output_file prg_exit_state 60 0 "" 1 0 0]
 }
 
 proc calculate_average_cluster_times { results_array monitoring_array qstat_array cluster_results_array { dump_file "" } } {
@@ -3789,7 +3822,7 @@ proc show_current_system_status { array_name job_array_name schedd_array_name mo
    flush $CHECK_OUTPUT
 }
 
-proc clean_current_system_status { results_array array_name job_array_name schedd_array_name monitoring_name qstat_name qping_name } {
+proc clean_current_system_status { results_array array_name job_array_name schedd_array_name monitoring_name qstat_name qping_name event_name} {
    global ts_config
    global queue_list global_job_run_time nr_slots
    global result_names
@@ -3801,6 +3834,7 @@ proc clean_current_system_status { results_array array_name job_array_name sched
    upvar $monitoring_name monitor
    upvar $qstat_name qstat_data
    upvar $qping_name qping_data
+   upvar $event_name event_data
 
    # names in result_array that shall be copied in each expect loop
    set result_names "jobs_done jobs_submitted jobs_running jobs_pending total_slots free_slots queues_enabled test_run_time job_run_time"
@@ -3844,6 +3878,7 @@ proc clean_current_system_status { results_array array_name job_array_name sched
 
    set qstat_data(count) 0
    set qping_data(count) 0
+   set event_data(count) 0
 }
 
 proc clear_xy_rows_show { xy_rows_name {start 0}} {

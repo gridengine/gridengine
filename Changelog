@@ -1,3 +1,9 @@
+JG-2004-10-26-0: Testsuite: Additional charts for throughput test: Event 
+                            delivery interval and number of events delivered.
+                            Improved writing of testsuite data, e.g. dump files
+                            from throughput test.
+                            Fixed a bug in test performance/throughput.
+
 CR-2004-10-22-1: Testsuite: moved commlib_throughput test to 
                             checktree/performance/commlib
 

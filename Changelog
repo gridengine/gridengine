@@ -1,3 +1,8 @@
+EB-2003-02-05-0: Bugfix:    qstat -r shows wrong dependencies
+                 IZ:        #478
+                 Bugtraq:   #4813188
+                 Changed:   qstat
+
 CR-2003-02-05-0: Enhancem.: Modified qevent demo client for testsuite 
                             throughput test compatibility
 

@@ -1227,11 +1227,17 @@ int remove_pending_messages (char *fromcommproc, u_short fromid,
 static int reenroll_if_necessary()
 {
    int ret = 0;
+   int changed, enrolled;
 
    DENTER(COMMD_LAYER, "reenroll_if_necessary");
 
-   if (get_commlib_state_changed_flag() || 
-       !get_commlib_state_enrolled()) {
+   changed = get_commlib_state_changed_flag();
+   enrolled = get_commlib_state_enrolled();
+#ifdef COMMLIB_ENABLE_DEBUG
+   INFO((SGE_EVENT, "reenroll_if_necessary: enrolled = %d; "
+         "changed = %d\n", enrolled, changed));
+#endif
+   if (changed || !enrolled) {
       ret = force_reenroll();
    } 
       

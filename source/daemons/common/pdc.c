@@ -138,10 +138,6 @@ int main(int argc,char *argv[])
 #  define S64 "%i"
 #endif
 
-#  if DEBUG
-      static FILE *df = NULL;
-#  endif
-
 #ifdef SOLARIS
 int getpagesize(void);
 #endif
@@ -156,6 +152,10 @@ int getpagesize(void);
 #include "cull.h"
 #include "ptf.h"
 #include "sge_language.h"
+
+#ifdef DEBUGPDC
+   static FILE *df = NULL;
+#endif
 
 typedef struct {
    int job_collection_interval;  /* max job data collection interval */
@@ -487,7 +487,7 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
    static FILE *fp = NULL;
    static SGE_INO_T pacct_inode;
 
-#  if DEBUG
+#  ifdef DEBUGPDC
       if (df == NULL)
          df = fopen("/tmp/pacct.out", "w");
 #  endif
@@ -581,7 +581,7 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
                job_elem = LNK_DATA(curr, job_elem_t, link);
                job = &job_elem->job;
 
-#              if DEBUG
+#              ifdef DEBUGPDC
 
                   fprintf(df, "%d job=%d jid=%d pid=%d uid=%d gid=%d btime=%d "
                           "utime=%d stime=%d etime=%d mem=%d chars=%d\n", 
@@ -607,7 +607,7 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
                   processes which end before the psWatchJob is called
                   and for processes which end while the execd is down. */
 
-#              if DEBUG
+#              ifdef DEBUGPDC
 
                   fprintf(df, "%d precreating "F64"\n", time_stamp,
                           acct.acctbs.ac_jobid);
@@ -1571,7 +1571,7 @@ psRetrieveOSJobData(void)
 
          if ((job_elem->precreated + 30) < time_stamp) {
 
-#           if DEBUG
+#           ifdef DEBUGPDC
 
                fprintf(df, "%d deleting precreated "F64"\n", time_stamp,
                        job->jd_jid);
@@ -2146,7 +2146,7 @@ int psWatchJob(JobID_t JobID)
 {
    lnk_link_t *curr;
 
-#  if DEBUG
+#  ifdef DEBUGPDC
 
       if (df == NULL)
          df = fopen("/tmp/pacct.out", "w");

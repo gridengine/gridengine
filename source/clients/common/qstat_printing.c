@@ -1300,7 +1300,7 @@ char *indent
          if (ql) {
             printf(QSTAT_INDENT "Predecessor Jobs: ");
             for_each(qrep, ql) {
-               printf(u32, lGetUlong(qrep, JRE_job_number));
+               printf("%s", lGetString(qrep, JRE_job_name));
                printf("%s", lNext(qrep)?", ":"\n");
             }
          }

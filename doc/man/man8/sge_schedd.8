@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_schedd.8,v $     Last Update: $Date: 2001/07/20 08:19:17 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: sge_schedd.8,v $     Last Update: $Date: 2001/11/28 15:00:20 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SCHEDD 8 "$Date: 2001/07/20 08:19:17 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SCHEDD 8 "$Date: 2001/11/28 15:00:20 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_schedd \- xxQS_NAMExx job scheduling agent
 .\"
@@ -38,10 +38,6 @@ xxqs_name_sxx_schedd \- xxQS_NAMExx job scheduling agent
 .B xxqs_name_sxx_schedd
 [
 .B \-help
-] [
-.B \-k
-] [
-.B \-salg
 ]
 .\"
 .\"
@@ -82,17 +78,8 @@ the reasons for jobs and queues not being selected in that run
 .SH OPTIONS
 .\"
 .IP "\fB\-help\fP"
-Prints  a listing of all options.
+Print version number of the scheduler.
 .\"
-.IP "\fB\-k\fP"
-Initiates a controlled shutdown of a running
-.I xxqs_name_sxx_schedd
-on the same host.
-.\"
-.IP "\fB\-salg\fP"
-Display a list of feasible scheduling algorithms to
-choose from via the scheduler configuration (see
-.M sched_conf 5 ).
 .\"
 .\"
 .SH "ENVIRONMENTAL VARIABLES"

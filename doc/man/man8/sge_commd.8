@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_commd.8,v $     Last Update: $Date: 2001/07/20 08:19:17 $     Revision: $Revision: 1.3 $
+.\" $RCSfile: sge_commd.8,v $     Last Update: $Date: 2001/11/28 15:00:20 $     Revision: $Revision: 1.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_COMMD 8 "$Date: 2001/07/20 08:19:17 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_COMMD 8 "$Date: 2001/11/28 15:00:20 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_commd \- xxQS_NAMExx communication agent
 .\"
@@ -105,7 +105,8 @@ accounts.
 A file containing xxQS_NAMExx host aliases used by the
 .I xxqs_name_sxx_commd
 to resolve xxQS_NAMExx unique hostnames for all hosts in the
-cluster. The hostname resolving service of
+cluster. Overrides the usage of the default host_aliases file.
+The hostname resolving service of
 .I xxqs_name_sxx_commd
 is also used by all other xxQS_NAMExx components.
 The file format and the implication of its usage are
@@ -156,6 +157,9 @@ Sets a logging level for error tracing. The error trace information
 is written to the file \fI/tmp/commd/err.<pid>\fP. However, the
 directory \fI/tmp/commd\fP must be present, otherwise the tracing
 output is discarded. At present, 255 is the only valid logging level.
+.\"
+.IP "\fB\-ml fname\fP"
+Enables message logging to file.
 .\"
 .IP "\fB\-nd\fP"
 Do not daemonize. If started with \fB\-nd\fP,

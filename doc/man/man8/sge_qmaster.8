@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_qmaster.8,v $     Last Update: $Date: 2001/07/20 08:19:17 $     Revision: $Revision: 1.3 $
+.\" $RCSfile: sge_qmaster.8,v $     Last Update: $Date: 2001/11/28 15:00:20 $     Revision: $Revision: 1.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_QMASTER 8 "$Date: 2001/07/20 08:19:17 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_QMASTER 8 "$Date: 2001/11/28 15:00:20 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_qmaster \- xxQS_NAMExx master control daemon
 .\"
@@ -43,18 +43,10 @@ xxqs_name_sxx_qmaster \- xxQS_NAMExx master control daemon
 ] [
 .B \-nohist
 ] [
-.B \-noread-argfile
-] [
 .B \-nostart-commd
-] [
-.B \-nostart-schedd
-] [
-.B \-nowrite-argfile
 ] [
 .B \-s
 ] [
-.B \-truncate-argfile
-]
 .PP
 .B xxqs_name_sxx_qmaster -show-license
 .\"
@@ -97,34 +89,10 @@ command to allow for
 like \fI\-l\fP resource requests in the
 .M qacct 1
 command-line. This switch suppresses writing to this database.
-.IP "\fB\-noread-argfile\fP"
-On primary start-up,
-.I xxqs_name_sxx_qmaster
-writes its command-line arguments to a file. During later start-ups,
-this argument file will be read and the options contained in the file
-will be used as if supplied at the command-line. This option suppresses
-reading of the argument file.
 .IP "\fB\-nostart-commd\fP"
 Do not start-up
 .M xxqs_name_sxx_commd 8
 automatically with \fIxxqs_name_sxx_qmaster\fP.
-.\"
-.IP "\fB\-nostart-schedd\fP"
-Do not startup
-.M xxqs_name_sxx_schedd 8
-automatically with \fIxxqs_name_sxx_qmaster\fP.
-.I xxqs_name_sxx_qmaster
-currently does not start
-.M xxqs_name_sxx_schedd 8
-automatically. Thus this option has no effect.
-.\"
-.IP "\fB\-nowrite-argfile\fP"
-On primary start-up,
-.I xxqs_name_sxx_qmaster
-writes its command-line arguments to a file. During later start-ups,
-this argument file will be read and the options contained in the file
-will be used as if supplied at the command-line. This option suppresses
-writing of the argument file.
 .\"
 .IP "\fB\-s\fP"
 turns on \fIxxqs_name_sxx_qmaster\fPs silent mode. Usually
@@ -133,22 +101,6 @@ displays a license information on startup and waits for a return to
 continue. With the \fP-s\fP switch
 .I xxqs_name_sxx_qmaster
 starts up silently.
-.\"
-.IP "\fB\-show-license\fP"
-Displays the current licensing information for your xxQS_NAMExx system. This 
-option also works if your license has expired and
-.I xxqs_name_sxx_qmaster
-would exit 
-immediately otherwise. Use the displayed information to request an 
-appropriate license from your xxQS_NAMExx support contact.
-.\"
-.IP "\fB\-truncate-argfile\fP"
-On primary start-up,
-.I xxqs_name_sxx_qmaster
-writes its command-line arguments to a file. During later start-ups,
-this argument file will be read and the options contained in the file
-will be used as if supplied at the command-line. This option truncates
-the argument file.
 .\"
 .\"
 .SH "ENVIRONMENTAL VARIABLES"

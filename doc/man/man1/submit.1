@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/02/06 12:32:10 $     Revision: $Revision: 1.38 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/02/25 17:07:46 $     Revision: $Revision: 1.39 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/02/06 12:32:10 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/02/25 17:07:46 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -348,7 +348,7 @@ ss	denotes the seconds in 2 digits (default 00).
 .fi
 .sp 1
 If any of the optional date fields is omitted, the corresponding value of
-the current date is assumed.
+the current date is assumed. If CC is not specified, a YY of < 70 means 20YY.
 .br
 Usage of this option may cause unexpected results if the clocks of the
 hosts in the xxQS_NAMExx pool are out of sync. Also, the proper behavior of

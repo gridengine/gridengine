@@ -707,9 +707,9 @@ char **argv
          continue;
       }
       if ((begin_time != -1) && ((time_t) dusage.start_time < begin_time)) { 
-         DPRINTF(("job no %ld started %s", dusage.job_number, \
-            sge_ctime32(&dusage.start_time, &ds)));
-         DPRINTF(("job count starts %s\n", ctime(&begin_time)));
+/*         DPRINTF(("job no %ld started %s", dusage.job_number, \
+            sge_ctime32(&dusage.start_time, &ds)));*/
+/*         DPRINTF(("job count starts %s\n", ctime(&begin_time))); */
          continue;
       }
       if ((end_time != -1) && ((time_t) dusage.start_time > end_time)) {

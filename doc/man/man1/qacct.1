@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2004/01/14 10:33:40 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2004/02/25 17:07:46 $     Revision: $Revision: 1.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QACCT 1 "$Date: 2004/01/14 10:33:40 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QACCT 1 "$Date: 2004/02/25 17:07:46 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qacct \- report and account for xxQS_NAMExx usage
 .SH SYNOPSIS
@@ -96,7 +96,8 @@ The account for jobs to be summarized.
 .\"
 .IP "\fB\-b BeginTime\fP"
 The earliest start time for jobs to be summarized, in the format
-[[CC]YY]MMDDhhmm[.SS]. See also \fB\-d\fP option.
+[[CC]YY]MMDDhhmm[.SS]. See also \fB\-d\fP option. If CC is not
+specified, a YY of < 70 means 20YY.
 .\"
 .IP "\fB\-d Days\fP"
 The number of days to summarize and print accounting information on. If
@@ -107,7 +108,8 @@ option, count starts at \fBEndTime\fP - \fBDays\fP.
 .\"
 .IP "\fB\-e EndTime\fP"
 The latest start time for jobs to be summarized, in the format
-[[CC]YY]MMDDhhmm[.SS]. See also \fB\-d\fP option.
+[[CC]YY]MMDDhhmm[.SS]. See also \fB\-d\fP option. If CC is not
+specified, a YY of < 70 means 20YY.
 .\"
 .IP "[\fB\-f\fP \fBAcctFileName\fP]"
 The accounting file to be used. If omitted, the system

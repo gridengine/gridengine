@@ -1,3 +1,12 @@
+AA-2002-09-05-0  I18N:      - Calculation failure in Functional policy
+                            - Wrong mnemonic on qmon main window
+                            - qmon dies with changes in Edit Tickets 
+                              on Solaris64
+                            - suspend_threshold in queue icon display nearly 
+                              not visible
+                 Bugtraq:   #4742082, #4729085, #4740335
+                 IZ:        #350
+
 AS-2002-09-05-1  Bugfix:    "stop" procedure for execd had hardwired execd 
                             spool dir
                  Issue:     #219

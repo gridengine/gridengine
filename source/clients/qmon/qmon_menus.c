@@ -162,7 +162,7 @@ static XmtMenuItem mirror_menu_items[] = {
 
 
 static XmtMenuItem help_menu_items[] = {
-   {XmtMenuItemPushButton, "@{Context Help}", 'C', "Ctrl<Key>H", "Ctrl+H",
+   {XmtMenuItemPushButton, "@{Context Help}", 'H', "Ctrl<Key>H", "Ctrl+H",
          (XtCallbackProc) XmtHelpDoContextHelp, NULL},
 /*    {XmtMenuItemPushButton, "@{Help Index}", 'E', "Alt<Key>E", "Alt+E", */
 /*          qmonHelpBrowserPopup, NULL}, */

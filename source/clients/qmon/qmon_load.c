@@ -101,7 +101,7 @@ String name
    ** check input 
    */
    if (is_empty_word(name)) {
-      qmonMessageShow(matrix, True, "Name required !\n");
+      qmonMessageShow(matrix, True, "Name required !");
       DEXIT;
       return;
    }

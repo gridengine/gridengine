@@ -258,88 +258,35 @@ char *argv[]
 }
 
 /*************************************************************/
-static void usage(
-FILE *fp 
-) {
+static void usage(FILE *fp) 
+{
    DENTER(TOP_LAYER, "usage");
 
    fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
-
-   fprintf(fp, "%s schedd [options]\n", MSG_SCHEDD_USAGE );
-   fprintf(fp, "  [-help]  %s", MSG_SCHEDD_help_OPT_USAGE);
-   fprintf(fp, "  [-salg]  %s", MSG_SCHEDD_salg_OPT_USAGE);
-   fprintf(fp, "  [-k]     %s", MSG_SCHEDD_k_OPT_USAGE);
-
    SGE_EXIT(1);
 }
 
 /*************************************************************/
-static void schedd_exit_func(
-int i 
-) {
+static void schedd_exit_func(int i) 
+{
    DENTER(TOP_LAYER, "schedd_exit_func");
    leave_commd();
    DEXIT;
 }
 
 /*--------------------------------------------------------------*/
-static int parse_cmdline_schedd(
-int argc,
-char *argv[] 
-) {
+static int parse_cmdline_schedd(int argc, char *argv[]) 
+{
    int ret = 0, i;
 
-   DENTER(TOP_LAYER, "parse_cmdline_execd");
+   DENTER(TOP_LAYER, "parse_cmdline_schedd");
 
    if (argc > 1) {
-
-      while (*(++argv)) {
-
-         if (!strcmp("-help", *argv)) {
-            usage(stdout);
-         }
-
-         if (!strcmp("-salg", *argv)) {
-            /* we will not daemonize - printing is possible */
-            printf(MSG_SCHEDD_AVAILABLESCHEDDALGORITHMS );
-#define HFORMAT "   %6s%16s   %s\n"
-#define DFORMAT "   %6d%16s   %s\n"
-            printf(HFORMAT, MSG_SCHEDD_ALGNR, MSG_SCHEDD_NAME, MSG_SCHEDD_DESCRIPTION);
-            printf("   --------------------------------------------------------------------\n");
-            i = 0;
-            while (sched_funcs[i].name) {
-               printf(DFORMAT, i, sched_funcs[i].name, sched_funcs[i].descr);
-               i++;
-            }
-#undef HFORMAT
-#undef DFORMAT
-            printf("\n");
-            /* Let's go */
-            exit(0);
-         }
-
-         /* -lj */
-         if (!strcmp("-lj", *argv)) {
-            enable_job_logging(*++argv);
-            continue;
-         }
-
-         if (!strcmp("-k", *argv)) {
-            if ((i = read_pid(SCHED_PID_FILE)) > 0) {
-               kill(i, SIGTERM);
-               printf(MSG_SCHEDD_HALTINGEXISTINGSCHEDDPID_I , i);
-            }
-            else {
-               fprintf(stderr, MSG_PROC_CANTREADPIDFILE_S , SCHED_PID_FILE);
-               exit(1);
-            }
-            exit(0);
-         }
-      }
-   }
+      usage(stderr);
+   }   
 
    DEXIT;
-   return ret;
+   return 0;
 }
 
 /*----------------------------------------------------------------*

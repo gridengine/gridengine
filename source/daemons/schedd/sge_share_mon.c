@@ -426,7 +426,7 @@ print_nodes(FILE *out, lListElem *node, lListElem *parent,
 void
 usage(void)
 {
-      fprintf(stderr, "%s sge_share_mon [-cdfhilmnorsux] [node_names ...]\n", MSG_SCHEDD_USAGE); 
+      fprintf(stderr, "%s sge_share_mon [-cdfhilmnorsux] [node_names ...]\n", MSG_USAGE); 
       fprintf(stderr, "\n" );
       fprintf(stderr, "   -c count          %s", MSG_SGESHAREMON_c_OPT_USAGE );
       fprintf(stderr, "   -d delimiter      %s", MSG_SGESHAREMON_d_OPT_USAGE );

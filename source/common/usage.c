@@ -49,11 +49,6 @@ static void print_marked(FILE *fp);
 static char* get_argument_syntax(int nr);
 static void usage_silent(FILE *fp);
 
-
-int read_argfile = 1;
-int write_argfile = 0;
-int truncate_argfile = 0;
-int schedd_start = 1;
 int start_commd = 1; 
 
 static int marker[OA__END];
@@ -592,10 +587,6 @@ FILE *fp
       MARK(OA_EVENTCLIENT_LIST);
    }
 
-   if (VALID_OPT(kqs_OPT, me.who)) {
-      PRINTIT(MSG_GDI_USAGE_kqs_OPT );
-   }
-
    if (VALID_OPT(l_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_l_OPT_RESOURCE_LIST , MSG_GDI_UTEXT_l_OPT_RESOURCE_LIST );
       MARK(OA_RESOURCE_LIST);
@@ -817,12 +808,6 @@ FILE *fp
       MARK(OA_SLOT_RANGE);
    }
 
-   if (AFS) {
-      if (VALID_OPT(passwd_OPT, me.who)) {
-         PRINTIT(MSG_GDI_USAGE_passwd_OPT );
-      }
-   }
-
    if (VALID_OPT(q_OPT, me.who)) {
       if (me.who == QSUB || me.who == QALTER || me.who == QSH 
           || me.who == QLOGIN || me.who == QRSH ) {
@@ -833,10 +818,6 @@ FILE *fp
             MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_INFO);
       }
       MARK(OA_DESTIN_ID_LIST);
-   }
-
-   if (VALID_OPT(qmon_OPT, me.who)) {
-      PRINTIT(MSG_GDI_USAGE_qmon_OPT );
    }
 
    if (VALID_OPT(qs_args_OPT, me.who)) {
@@ -850,10 +831,6 @@ FILE *fp
 
    if (VALID_OPT(res_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_res_OPT, MSG_GDI_UTEXT_res_OPT);
-   }
-
-   if (VALID_OPT(reautht_OPT, me.who)) {
-      PRINTIT(MSG_GDI_USAGE_reauthh_OPT_XSECONDS);
    }
 
    if (VALID_OPT(s_OPT, me.who)) {
@@ -1133,29 +1110,8 @@ FILE *fp
       }
    }
 
-
-   if (VALID_OPT(SRVR_NM_OPR, me.who)) {
-      PRINTIT(MSG_GDI_USAGE_SRVR_NM_OPR );
-   }
-
    if (VALID_OPT(nohist_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_nohist_OPT , MSG_GDI_UTEXT_nohist_OPT );
-   }
-
-   if (VALID_OPT(noread_argfile_OPT, me.who)) {
-      PRINTITD(MSG_GDI_USAGE_noread_argfile_OPT , MSG_GDI_UTEXT_noread_argfile_OPT );
-   }
-
-   if (VALID_OPT(nowrite_argfile_OPT, me.who)) {
-      PRINTITD(MSG_GDI_USAGE_nowrite_argfile_OPT, MSG_GDI_UTEXT_nowrite_argfile_OPT );
-   }
-
-   if (VALID_OPT(truncate_argfile_OPT, me.who)) {
-      PRINTITD(MSG_GDI_USAGE_truncate_argfile_OPT , MSG_GDI_UTEXT_truncate_argfile_OPT );
-   }
-
-   if (VALID_OPT(nostart_schedd_OPT, me.who)) {
-      PRINTITD(MSG_GDI_USAGE_nostart_schedd_OPT, MSG_GDI_UTEXT_nostart_schedd_OPT );
    }
 
    if (VALID_OPT(nostart_commd_OPT, me.who)) {
@@ -1165,13 +1121,6 @@ FILE *fp
    if (VALID_OPT(verbose_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_verbose_OPT, MSG_GDI_UTEXT_verbose_OPT );
    }
-
-
-   if (me.who == QMASTER) {
-      PRINTITD(MSG_GDI_USAGE_show_license_OPT , MSG_GDI_UTEXT_show_license_OPT );
-   }
-
-
 
    print_marked(fp);
 
@@ -1193,4 +1142,3 @@ FILE *fp
    print_option_syntax(fp, "[-s]", "startup silently");
    DEXIT;
 }
-

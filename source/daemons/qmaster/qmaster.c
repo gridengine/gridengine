@@ -71,7 +71,6 @@
 #include "sge_host_qmaster.h"
 #include "sge_queue_qmaster.h"
 #include "sge_ckpt_qmaster.h"
-#include "rw_args.h"
 #include "qm_name.h"
 #include "qmaster_to_execd.h"
 #ifdef PW
@@ -263,17 +262,13 @@ char **argv
 
    /* Exits if license is only printed or invalid */
    check_license_info(sge_get_gmt(), pw, key, pw_print, pw_file);
-#endif
-#ifdef PW
    if (get_product_mode() != mode_guess) {
       CRITICAL((SGE_EVENT, MSG_STARTUP_PROGRAMDOESNOTMATCHPRODUCTMODE_S, argv[0]));
       SGE_EXIT(1);
    }      
 #endif
-   /* read arguments from file and merge with cmdline, strip progname */
-   prepare_arglist(&myargc, &myargv, argc, argv, path.qmaster_args);
 
-   alp = sge_parse_cmdline_qmaster(myargv, environ, &pcmdline);
+   alp = sge_parse_cmdline_qmaster(&argv[1], environ, &pcmdline);
    if(alp) {
       /*
       ** high level parsing error! show answer list
@@ -872,28 +867,12 @@ lList *alp = NULL;
       if ((rp = parse_noopt(sp, "-nohist", NULL, ppcmdline, &alp)) != sp)
          continue;
 
-      /* -noread-argfile */
-      if ((rp = parse_noopt(sp, "-noread-argfile", NULL, ppcmdline, &alp)) != sp)
-         continue;
-
       /* -nostart-commd */
       if ((rp = parse_noopt(sp, "-nostart-commd", NULL, ppcmdline, &alp)) != sp)
          continue;
 
-      /* -nostart-schedd */
-      if ((rp = parse_noopt(sp, "-nostart-schedd", NULL, ppcmdline, &alp)) != sp)
-         continue;
-
-      /* -nowrite-argfile */
-      if ((rp = parse_noopt(sp, "-nowrite-argfile", NULL, ppcmdline, &alp)) != sp)
-         continue;
-
       /* -s */
       if ((rp = parse_noopt(sp, "-s", NULL, ppcmdline, &alp)) != sp)
-         continue;
-
-      /* -truncate-argfile */
-      if ((rp = parse_noopt(sp, "-truncate-argfile", NULL, ppcmdline, &alp)) != sp)
          continue;
 
       /* -lj */
@@ -955,39 +934,15 @@ char *filename;
          continue;
       }
 
-      /* -noread-argfile */
-      if(parse_flag(ppcmdline, "-noread-argfile", &alp, &flag)) {
-         read_argfile = FALSE;
-         continue;
-      }
-
       /* -nostart-commd */
       if(parse_flag(ppcmdline, "-nostart-commd", &alp, &flag)) {
          start_commd = FALSE;
          continue;
       }
 
-      /* -nostart-schedd */
-      if(parse_flag(ppcmdline, "-nostart-schedd", &alp, &flag)) {
-         schedd_start = FALSE;
-         continue;
-      }
-      
-      /* -nowrite-argfile */
-      if(parse_flag(ppcmdline, "-nowrite-argfile", &alp, &flag)) {
-         write_argfile = FALSE;
-         continue;
-      }
-      
       /* -s */
       if(parse_flag(ppcmdline, "-s", &alp, &flag)) {
          set_silent(1);
-         continue;
-      }
-      
-      /* -truncate-argfile */
-      if(parse_flag(ppcmdline, "-truncate-argfile", &alp, &flag)) {
-         truncate_argfile = TRUE;
          continue;
       }
       

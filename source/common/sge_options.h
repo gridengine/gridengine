@@ -50,7 +50,6 @@ enum {
    hard_OPT,
    j_OPT,
    l_OPT,
-   ls_OPT, /* unused */
    m_OPT,
    M_OPT,
    N_OPT,
@@ -73,15 +72,11 @@ enum {
 
    MESSAGE_OPR,
    SCRIPT_OPR,
-   SRVR_NM_OPR,
    help_OPT,
    cwd_OPT,
    ext_OPT,
-   ul_OPT,
-   reautht_OPT,
    notify_OPT,
    now_OPT,
-   passwd_OPT,
 
    masterq_OPT,
    d_OPT,
@@ -106,11 +101,9 @@ enum {
    du_OPT,
    ke_OPT,
 
-   kqs_OPT,
    mc_OPT,
    mconf_OPT,
    mq_OPT,
-   qmon_OPT,
    sc_OPT,
    scl_OPT,
    sconf_OPT,
@@ -152,10 +145,6 @@ enum {
 
    Mq_OPT,
    aconf_OPT,
-   noread_argfile_OPT,
-   nowrite_argfile_OPT,
-   truncate_argfile_OPT,
-   nostart_schedd_OPT,
    nostart_commd_OPT,
    sep_OPT,
    Aconf_OPT,

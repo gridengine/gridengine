@@ -39,8 +39,6 @@
  * They must be accessed with an absolute path. Do not use these defines!
  */
 #define ROOT_DIR                  "/usr/SGE"
-#define QMASTER_ARG_FILE          "qmaster_args"
-#define SCHEDD_ARG_FILE           "schedd_args"
 #define COMMON_DIR                "common"
 #define CONF_FILE                 "configuration"
 #define SCHED_CONF_FILE           "sched_configuration"
@@ -72,8 +70,6 @@ typedef struct _sge_path_type {
     char       *local_conf_dir;
     char       *key_file;
     char       *history_dir;
-    char       *qmaster_args;
-    char       *schedd_args;
     char       *execd_args;
     char       *shadow_masters_file;
     char       *license_file;

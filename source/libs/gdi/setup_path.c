@@ -201,14 +201,6 @@ lList **alpp
    p->master_ior_file = malloc(cell_root_len + common_len + strlen(MASTER_IOR_FILE) + 1);
    sprintf(p->master_ior_file, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, MASTER_IOR_FILE);
 
-   FREE(p->qmaster_args);
-   p->qmaster_args = malloc(cell_root_len + common_len + strlen(QMASTER_ARG_FILE));
-   sprintf(p->qmaster_args, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, QMASTER_ARG_FILE);
-
-   FREE(p->schedd_args);
-   p->schedd_args = malloc(cell_root_len + common_len + strlen(SCHEDD_ARG_FILE));
-   sprintf(p->schedd_args, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, SCHEDD_ARG_FILE);
-
    DPRINTF(("sge_root         >%s<\n", p->sge_root));
    DPRINTF(("cell_root           >%s<\n", p->cell_root));
    DPRINTF(("conf_file           >%s<\n", p->conf_file));
@@ -219,8 +211,6 @@ lList **alpp
    DPRINTF(("history_dir         >%s<\n", p->history_dir));
    DPRINTF(("shadow_masters_file >%s<\n", p->shadow_masters_file));
    DPRINTF(("product_mode_file   >%s<\n", p->product_mode_file));
-   DPRINTF(("qmaster_args        >%s<\n", p->qmaster_args));
-   DPRINTF(("schedd_args         >%s<\n", p->schedd_args));
    DPRINTF(("master_ior_file     >%s<\n", p->master_ior_file));
    
    DEXIT;

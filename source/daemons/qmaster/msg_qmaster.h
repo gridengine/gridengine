@@ -781,13 +781,6 @@
 #define MSG_FILE_ERROROPENINGX_S    _("error opening %s\n")
 
 /*
-** rw_args.c
-*/
-#define MSG_RWARGS_CANTOPENCOMMANDLINEARGUMENTFILEX_S    _("can't open command line argument file \"%s\"")
-#define MSG_RWARGS_CANTALLOCATEMEMORYFORREADINGARGSFILEX_S    _("can't allocate memory for reading args file \"%s\"")
-#define MSG_RWARGS_CANTREADCOMMANDLINEARGUMENTFILEX_S    _("can't read command line argument file \"%s\"")
-
-/*
 ** setup_qmaster.c
 */
 #define MSG_SETUP_QUEUE_S                          _("\tQueue "SFQ".\n")

@@ -66,7 +66,6 @@ QMASTER_SRC =  qmaster$(QIDLEXT).c  \
               configuration_qmaster.c \
               job_report_qmaster.c \
               read_write_manop.c \
-              rw_args.c \
               qmaster_to_execd.c \
               sched_conf_qmaster.c \
               sec.c \
@@ -235,9 +234,6 @@ job_report_qmaster.o   : $(QMASTER_DIR)/job_report_qmaster.c
 
 read_write_manop.o:	$(QMASTER_DIR)/read_write_manop.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/read_write_manop.c
-
-rw_args.o:  	$(QMASTER_DIR)/rw_args.c
-		$(CC) $(CFLAGS) $(MEMCFLAG) -c $(QMASTER_DIR)/rw_args.c
 
 sched_conf_qmaster.o   : $(QMASTER_DIR)/sched_conf_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sched_conf_qmaster.c

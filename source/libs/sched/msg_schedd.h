@@ -274,25 +274,14 @@
 #define MSG_EVENT_XEVENTMODPEXGOTNONEWPE_IS                 _("%d. EVENT MOD PE %s - got no new PE")
 #define MSG_EVENT_XEVENTADDCKPTXGOTNONEWCKPTINT_IS          _("%d. EVENT ADD CKPT %s - got no new CKPT interface")
 #define MSG_EVENT_XEVENTMODCKPTXGOTNONEWCKPTINT_IS          _("%d. EVENT MOD CKPT %s - got no new CKPT interface")
-
+#define MSG_NO                                              _("NO")
+#define MSG_YES                                             _("YES")
 /* 
 ** schedd/sge_schedd.c
 */
 #define MSG_FILE_REDIRECTFILEDESCRIPTORFAILED_I             _("can't redirect file descriptor #%d\n")
 #define MSG_SCHEDD_STARTSCHEDONMASTERHOST_S                 _("please start schedd on same host as qmaster (%s).")
 #define MSG_SCHEDD_CANTGOFURTHER                            _("can't go on further")
-#define MSG_YES                            _("YES")
-#define MSG_NO                             _("NO")
-#define MSG_SCHEDD_USAGE                   _("usage:")
-#define MSG_SCHEDD_help_OPT_USAGE          _("show this help text\n")
-#define MSG_SCHEDD_salg_OPT_USAGE          _("show available scheduling algorithms\n")
-#define MSG_SCHEDD_k_OPT_USAGE             _("kill schedd at this host\n")
-#define MSG_SCHEDD_AVAILABLESCHEDDALGORITHMS                _("\nAvailable scheduling algorithms:\n\n")
-#define MSG_SCHEDD_ALGNR                                    _("alg_nr")
-#define MSG_SCHEDD_NAME                                     _("name")
-#define MSG_SCHEDD_DESCRIPTION                              _("description"   )
-#define MSG_SCHEDD_HALTINGEXISTINGSCHEDDPID_I               _("\nHalting existing scheduler pid '%d'\n\n")
-#define MSG_PROC_CANTREADPIDFILE_S                          _("cant read pid file %s\n")
 #define MSG_SCHEDD_USERXMUSTBEMANAGERFORSCHEDDULING_S       _("user \"%s\" must be manager for scheduling\n")
 #define MSG_SCHEDD_HOSTXMUSTBEADMINHOSTFORSCHEDDULING_S     _("host \"%s\" must be an admin host for scheduling")
 #define MSG_SCHEDD_GOTEMPTYCONFIGFROMMASTERUSINGDEFAULT     _("got empty scheduler configuration from qmaster using default")
@@ -405,6 +394,7 @@
 /* 
 ** schedd/sge_share_mon.c
 */ 
+#define MSG_USAGE				_("usage:")
 #define MSG_SGESHAREMON_NOSHARETREE             _("No share tree")
 #define MSG_SGESHAREMON_c_OPT_USAGE             _("number of collections (default is infinite)\n")
 #define MSG_SGESHAREMON_d_OPT_USAGE             _("delimiter between columns (default is <TAB>)\n")

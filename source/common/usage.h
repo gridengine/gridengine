@@ -84,10 +84,6 @@ enum {
    OA__END
 };
 
-extern int read_argfile;
-extern int write_argfile;
-extern int truncate_argfile;
-extern int schedd_start;
 extern int start_commd;
 
 void mark_argument_syntax(int argument_number);
@@ -95,4 +91,3 @@ void sge_usage(FILE *fp);
 void print_option_syntax(FILE *fp, const char *option, const char *meaning);
 
 #endif /* __USAGE_H */
-

@@ -1,3 +1,7 @@
+DT-2005-01-05-1: Bugfix:    o Fixed DRMAA-J PartialTimestamp bugs
+                 Docs:      o Added section to DRMAA-J howto
+                 Changed:   DRMAA, www
+
 DT-2005-01-05-0: Bugfix:    o Fixed minor DRMAA-J bugs
                             o Removed JGDI flags from aimk
                             o Reduced MAX_STRING_SIZE to 2048

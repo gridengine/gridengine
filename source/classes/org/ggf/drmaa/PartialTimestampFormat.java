@@ -437,7 +437,7 @@ public class PartialTimestampFormat extends Format {
          if (Character.isDigit (fields[2][0])) {
             pt.set (pt.DAY_OF_MONTH, Integer.parseInt (new String (fields[2])));
 //System.out.println ("DATE=" + new String (fields[2]));
-            pt.set (pt.MONTH, Integer.parseInt (new String (fields[1])));
+            pt.set (pt.MONTH, Integer.parseInt (new String (fields[1])) - 1);
 //System.out.println ("MONTH=" + new String (fields[1]));
 
             String year = new String (fields[0]).trim ();
@@ -470,7 +470,7 @@ public class PartialTimestampFormat extends Format {
                return null;
             }
             else {
-               pt.set (pt.MONTH, Integer.parseInt (month));
+               pt.set (pt.MONTH, Integer.parseInt (month) - 1);
 //System.out.println ("MONTH=" + new String (fields[0]));
             }
          }

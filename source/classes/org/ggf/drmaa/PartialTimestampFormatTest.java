@@ -144,19 +144,19 @@ public class PartialTimestampFormatTest extends TestCase {
       PartialTimestamp pt = f.parse ("2004/11/13 21:39:22 +01:00");
       this.checkPT (pt, 20, 04, 11, 13, 21, 39, 22, 60 * 60 * 1000);
       pt = f.parse ("04/11/13 21:39:21 +01:00");
-      this.checkPT (pt, pt.UNSET, 04, 11, 13, 21, 39, 21, 60 * 60 * 1000);
+      this.checkPT (pt, pt.UNSET, 04, 10, 13, 21, 39, 21, 60 * 60 * 1000);
       pt = f.parse ("11/13 21:39:21 +01:00");
-      this.checkPT (pt, pt.UNSET, pt.UNSET, 11, 13, 21, 39, 21, 60 * 60 * 1000);
+      this.checkPT (pt, pt.UNSET, pt.UNSET, 10, 13, 21, 39, 21, 60 * 60 * 1000);
       pt = f.parse ("13 21:39:21 +01:00");
       this.checkPT (pt, pt.UNSET, pt.UNSET, pt.UNSET, 13, 21, 39, 21, 60 * 60 * 1000);
       pt = f.parse ("21:39:21 +01:00");
       this.checkPT (pt, pt.UNSET, pt.UNSET, pt.UNSET, pt.UNSET, 21, 39, 21, 60 * 60 * 1000);
       pt = f.parse ("2004/11/13 21:39:21");
-      this.checkPT (pt, 20, 04, 11, 13, 21, 39, 21, pt.UNSET);
+      this.checkPT (pt, 20, 04, 10, 13, 21, 39, 21, pt.UNSET);
       pt = f.parse ("2004/11/13 21:39 +01:00");
-      this.checkPT (pt, 20, 04, 11, 13, 21, 39, pt.UNSET, 60 * 60 * 1000);
+      this.checkPT (pt, 20, 04, 10, 13, 21, 39, pt.UNSET, 60 * 60 * 1000);
       pt = f.parse ("2004/11/13 21:39:21");
-      this.checkPT (pt, 20, 04, 11, 13, 21, 39, 21, pt.UNSET);
+      this.checkPT (pt, 20, 04, 10, 13, 21, 39, 21, pt.UNSET);
       pt = f.parse ("21:39:21");
       this.checkPT (pt, pt.UNSET, pt.UNSET, pt.UNSET, pt.UNSET, 21, 39, 21, pt.UNSET);
       pt = f.parse ("21:39 +01:00");
@@ -164,21 +164,21 @@ public class PartialTimestampFormatTest extends TestCase {
       pt = f.parse ("21:39");
       this.checkPT (pt, pt.UNSET, pt.UNSET, pt.UNSET, pt.UNSET, 21, 39, pt.UNSET, pt.UNSET);
       pt = f.parse ("     2004/11/13 21:39:21 +01:00");
-      this.checkPT (pt, 20, 04, 11, 13, 21, 39, 21, 60 * 60 * 1000);
+      this.checkPT (pt, 20, 04, 10, 13, 21, 39, 21, 60 * 60 * 1000);
       pt = f.parse ("2004/11/13 21:039:21 +01:00");
-      this.checkPT (pt, 20, 04, 11, 13, 21, 03, pt.UNSET, pt.UNSET);
+      this.checkPT (pt, 20, 04, 10, 13, 21, 03, pt.UNSET, pt.UNSET);
       pt = f.parse ("2004/11/13 21:39:201 +01:00");
-      this.checkPT (pt, 20, 04, 11, 13, 21, 39, 20, pt.UNSET);
+      this.checkPT (pt, 20, 04, 10, 13, 21, 39, 20, pt.UNSET);
       pt = f.parse ("2004/11/13 21:39:21 01:00");
-      this.checkPT (pt, 20, 04, 11, 13, 21, 39, 21, pt.UNSET);
+      this.checkPT (pt, 20, 04, 10, 13, 21, 39, 21, pt.UNSET);
       pt = f.parse ("2004/11/13 21:39:21 :00");
-      this.checkPT (pt, 20, 04, 11, 13, 21, 39, 21, pt.UNSET);
+      this.checkPT (pt, 20, 04, 10, 13, 21, 39, 21, pt.UNSET);
       pt = f.parse ("2004/11/13 21:39:21 00");
-      this.checkPT (pt, 20, 04, 11, 13, 21, 39, 21, pt.UNSET);
+      this.checkPT (pt, 20, 04, 10, 13, 21, 39, 21, pt.UNSET);
       pt = f.parse ("2004/11/13 21:39: +01:00");
-      this.checkPT (pt, 20, 04, 11, 13, 21, 39, pt.UNSET, pt.UNSET);
+      this.checkPT (pt, 20, 04, 10, 13, 21, 39, pt.UNSET, pt.UNSET);
       pt = f.parse ("2004/11/13 21:39:21 *01:00");
-      this.checkPT (pt, 20, 04, 11, 13, 21, 39, 21, pt.UNSET);
+      this.checkPT (pt, 20, 04, 10, 13, 21, 39, 21, pt.UNSET);
       
       /* These should fail. */
       try {

@@ -144,11 +144,11 @@ public class PartialTimestamp extends Calendar {
    /** 3 non-leap years in milliseconds */   
    private static final long THREE_YEARS = 3 * ONE_YEAR;
    /** 3 non-leap years and 1 leap year in milliseconds */   
-   private static final long FOUR_YEARS = ONE_YEAR * 4 + 1;
+   private static final long FOUR_YEARS = ONE_YEAR * 4 + ONE_DAY;
    /** 76 non-leap years and 24 leap years in milliseconds */   
-   private static final long ONE_HUNDRED_YEARS = FOUR_YEARS * 25 - 1;
+   private static final long ONE_HUNDRED_YEARS = FOUR_YEARS * 25 - ONE_DAY;
    /** 303 non-leap years and 97 leap years in milliseconds */   
-   private static final long FOUR_HUNDRED_YEARS = ONE_HUNDRED_YEARS * 4 + 1;
+   private static final long FOUR_HUNDRED_YEARS = ONE_HUNDRED_YEARS * 4 + ONE_DAY;
    /** The fields required by the DRMAA specification */   
    private static final int[] DRMAA_FIELDS = {CENTURY, YEAR, MONTH, DAY_OF_MONTH,
                                               HOUR_OF_DAY, MINUTE, SECOND};
@@ -449,15 +449,16 @@ public class PartialTimestamp extends Calendar {
          localTime -= THREE_YEARS + ONE_DAY;
       
          int num400 = (int)(localTime / FOUR_HUNDRED_YEARS);
-         numDays = (int)(localTime % FOUR_HUNDRED_YEARS);
-         int num100 = (int)(numDays / ONE_HUNDRED_YEARS);
-         numDays = (int)(numDays % ONE_HUNDRED_YEARS);
-         int num4 = (int)(numDays / FOUR_YEARS);
-         numDays = (int)(numDays % FOUR_YEARS);
-         int num1 = (int)(numDays / ONE_YEAR);
-         numDays = (int)(numDays % ONE_YEAR);
+         localTime %= FOUR_HUNDRED_YEARS;
+         int num100 = (int)(localTime / ONE_HUNDRED_YEARS);
+         localTime %= ONE_HUNDRED_YEARS;
+         int num4 = (int)(localTime / FOUR_YEARS);
+         localTime %= FOUR_YEARS;
+         int num1 = (int)(localTime / ONE_YEAR);
+         localTime %= ONE_YEAR;
          year += num400 * 400 + num100 * 100 + num4 * 4 + num1;
-         numDays = (int)(numDays / ONE_DAY); // Zero-based
+         numDays = (int)(localTime / ONE_DAY); // Zero-based
+         localTime %= ONE_DAY;
       
          /* If this is the end of a 4- or 400-year period, and we're short one day
           * of the full leap period, then we know that it's actually Dec 31st of
@@ -487,9 +488,21 @@ public class PartialTimestamp extends Calendar {
 
       /* Sets all date fields, including month, year and day of week */
       this.setDateFields (numDays, year);
+
+      /* Because the setDateFields uses myInternalSet(), we have to go back
+       * through with set() to make sure that all the fields are recognized as
+       * set. */
+      set (CENTURY, internalGet (CENTURY));
+      set (YEAR, internalGet (YEAR));
+      set (MONTH, internalGet (MONTH));
+      set (DAY_OF_MONTH, internalGet (DAY_OF_MONTH));
+      set (DAY_OF_WEEK, internalGet (DAY_OF_WEEK));
+      set (DAY_OF_YEAR, internalGet (DAY_OF_YEAR));
+      set (DAY_OF_WEEK_IN_MONTH, internalGet (DAY_OF_WEEK_IN_MONTH));
+      set (WEEK_OF_MONTH, internalGet (WEEK_OF_MONTH));
+      set (WEEK_OF_YEAR, internalGet (WEEK_OF_YEAR));
       
       // Finally, set time fields
-      localTime = time % ONE_DAY;
       set (HOUR_OF_DAY, (int)(localTime / ONE_HOUR));
       set (HOUR, internalGet (HOUR_OF_DAY) % 12);
       set (AM_PM, internalGet (HOUR_OF_DAY) / 12);

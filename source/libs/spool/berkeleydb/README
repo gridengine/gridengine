@@ -27,6 +27,11 @@ Create a build directory. This needn't be a directory in the Berkeley DB source
 repository, it can be anywhere. You can even build for multiple platforms in 
 parallel using different build directories.
 
+Please note, that the Grid Engine build process searches include, lib and bin in a architecture dependent directory, e.g. /usr/local/sol-sparc/...
+The architecture (e.g. sol-sparc) comes from a call to dist/util/arch.
+Either you specify a path of that form in --prefix of your configure call, or
+you create a symbolic link in the install directory, e.g. create a link /usr/local/sol-sparc pointing to /usr/local.
+
 cd <builddir>
 <source-dir>/dist/configure <options>
 where <options> are

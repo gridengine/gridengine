@@ -356,10 +356,10 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
       department        = lGetStringNotNull(job, JB_department);
       account           = lGetStringNotNull(job, JB_account);
 
-      sge_dstring_sprintf(&job_dstring, U32CFormat"%c"U32CFormat"%c"U32CFormat"%c%s%c%s%c%s%c%s%c%s%c%s%c%s%c"U32CFormat"\n", 
+      sge_dstring_sprintf(&job_dstring, U32CFormat"%c"U32CFormat"%c%d%c%s%c%s%c%s%c%s%c%s%c%s%c%s%c"U32CFormat"\n", 
                           submission_time, REPORTING_DELIMITER,
                           job_number, REPORTING_DELIMITER,
-                          0, REPORTING_DELIMITER,
+                          -1, REPORTING_DELIMITER, /* means: no ja_task yet */
                           "none", REPORTING_DELIMITER,
                           job_name, REPORTING_DELIMITER,
                           owner, REPORTING_DELIMITER,
@@ -397,15 +397,28 @@ reporting_create_job_log(lList **answer_list,
    if (do_reporting && do_joblog && job != NULL) {
       dstring job_dstring = DSTRING_INIT;
 
-      u_long32 job_id = 0, ja_task_id = 0;
+      u_long32 job_id = 0;
+      int ja_task_id = -1;
       const char *pe_task_id = "none";
       u_long32 state_time = 0, jstate;
       const char *event;
       char state[20];
+      u_long32 priority, submission_time;
+      const char *job_name, *owner, *group, *project, *department, *account;
 
       job_id = lGetUlong(job, JB_job_number);
+
+      /* set ja_task_id: 
+       * -1, if we don't have a ja_task
+       *  0, if we have a non array job
+       *  task_number for array jobs
+       */
       if (ja_task != NULL) {
-         ja_task_id = lGetUlong(ja_task, JAT_task_number);
+         if (job_is_array(job)) {
+            ja_task_id = (int)lGetUlong(ja_task, JAT_task_number);
+         } else {
+            ja_task_id = 0;
+         }
       }
       if (pe_task != NULL) {
          pe_task_id = lGetStringNotNull(pe_task, PET_id);
@@ -428,7 +441,16 @@ reporting_create_job_log(lList **answer_list,
          message = "";
       }
 
-      sge_dstring_sprintf(&job_dstring, U32CFormat"%c%s%c"U32CFormat"%c"U32CFormat"%c%s%c%s%c%s%c%s%c"U32CFormat"%c%s\n", 
+      priority          = lGetUlong(job, JB_priority);
+      submission_time   = lGetUlong(job, JB_submission_time);
+      job_name          = lGetStringNotNull(job, JB_job_name);
+      owner             = lGetStringNotNull(job, JB_owner);
+      group             = lGetStringNotNull(job, JB_group);
+      project           = lGetStringNotNull(job, JB_project);
+      department        = lGetStringNotNull(job, JB_department);
+      account           = lGetStringNotNull(job, JB_account);
+
+      sge_dstring_sprintf(&job_dstring, U32CFormat"%c%s%c"U32CFormat"%c%d%c%s%c%s%c%s%c%s%c"U32CFormat"%c"U32CFormat"%c"U32CFormat"%c%s%c%s%c%s%c%s%c%s%c%s%c%s\n", 
                           event_time, REPORTING_DELIMITER,
                           event, REPORTING_DELIMITER,
                           job_id, REPORTING_DELIMITER,
@@ -438,6 +460,14 @@ reporting_create_job_log(lList **answer_list,
                           user, REPORTING_DELIMITER,
                           host, REPORTING_DELIMITER,
                           state_time, REPORTING_DELIMITER,
+                          priority, REPORTING_DELIMITER,
+                          submission_time, REPORTING_DELIMITER,
+                          job_name, REPORTING_DELIMITER,
+                          owner, REPORTING_DELIMITER,
+                          group, REPORTING_DELIMITER,
+                          project, REPORTING_DELIMITER,
+                          department, REPORTING_DELIMITER,
+                          account, REPORTING_DELIMITER,
                           message);
       /* write record to reporting buffer */
       DPRINTF((sge_dstring_get_string(&job_dstring)));

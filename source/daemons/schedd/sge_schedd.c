@@ -670,8 +670,8 @@ double utilization)
    }
 
    /* a new record */
-   fprintf(fp, U32CFormat":"U32CFormat":%s:"U32CFormat":%d:%c:%s:%s:%f\n",
-      job_id, ja_taskid, state, start_time, (int)(end_time-start_time), 
+   fprintf(fp, U32CFormat":"U32CFormat":%s:"U32CFormat":"U32CFormat":%c:%s:%s:%f\n",
+      u32c(job_id), u32c(ja_taskid), state, u32c(start_time), u32c(end_time - start_time), 
          level_char, object_name, name, utilization);
    fclose(fp);
 

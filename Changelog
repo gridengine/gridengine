@@ -1,9 +1,14 @@
+JG-2004-02-13-0: Enhancem.: Extended job log information.
+                            Improved README for Berkeley DB build.
+                 Bugfix:    Fixed broken build for lx24-amd64.           
+
 EB-2004-02-13-0: Bugfix:    Fixed broken build
 
 AH-2004-02-12-1: Bugfix:    Complex requestable field was not spooled.
 
-AH-2004-02-12-0: Enhancem:  Initial revision of resource reservation. Man pages and
-                            devel spec to follow. Source comments to be completed.
+AH-2004-02-12-0: Enhancem:  Initial revision of resource reservation. Man pages
+                            and devel spec to follow. Source comments to be 
+                            completed.
                             Currently broken
                             - qstat -j schedd info messages
                             - -w e|v|w submit(1) option

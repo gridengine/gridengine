@@ -1275,7 +1275,7 @@ static int sge_select_pe_time(sge_assignment_t *best)
          best->host_list, best->queue_list, best->centry_list, best->acl_list); 
    if (!qeti) {
       ERROR((SGE_EVENT, "could not allocate qeti object needed reservation "
-            "scheduling of parallel job "U32CFormat"\n", best->job_id));
+            "scheduling of parallel job "U32CFormat"\n", u32c(best->job_id)));
       DEXIT;
       return -1;
    }

@@ -50,7 +50,8 @@
  * Thread specific data is initialized in the spooling startup function.
  */
 struct bdb_info {
-   /* pthread_mutex_t   mtx;  */          /* lock access to this object */
+   /* JG: TODO: we need this mutex to serialize reconnect actions! */
+   pthread_mutex_t   mtx;                 /* lock access to this object */
    pthread_key_t     key;                 /* for thread specific data */
   
    const char *      server;              /* server, in case of RPC mechanism */

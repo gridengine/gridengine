@@ -55,8 +55,8 @@
 
 PATH=/bin:/usr/bin
 
-ARCH=`$CODINE_ROOT/util/arch`
-HOST=`$CODINE_ROOT/utilbin/$ARCH/gethostname -name`
+ARCH=`$SGE_ROOT/util/arch`
+HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
 
 ls_log_file=/tmp/ls.dbg
 

@@ -53,9 +53,9 @@
 
 PATH=/bin:/usr/bin
 
-ARCH=`$CODINE_ROOT/util/arch`
-HOST=`$CODINE_ROOT/utilbin/$ARCH/gethostname -name`
-FILESTAT=$CODINE_ROOT/utilbin/$ARCH/filestat
+ARCH=`$SGE_ROOT/util/arch`
+HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
+FILESTAT=$SGE_ROOT/utilbin/$ARCH/filestat
 
 end=false
 while [ $end = false ]; do
@@ -73,8 +73,8 @@ while [ $end = false ]; do
 
    ACTIVETTYS=`/usr/bsd/w -h | awk '{print "/dev/tty"$2}' `
    LASTTTY=`ls -1t $ACTIVETTYS | head -1`
-   TIMEOFLASTTTY=`$CODINE_ROOT/utilbin/$ARCH/filestat -mtime $LASTTTY`
-   TIMENOW=`$CODINE_ROOT/utilbin/$ARCH/now`
+   TIMEOFLASTTTY=`$SGE_ROOT/utilbin/$ARCH/filestat -mtime $LASTTTY`
+   TIMENOW=`$SGE_ROOT/utilbin/$ARCH/now`
    DIFF=`expr $TIMENOW - $TIMEOFLASTTTY`
 
    echo "begin"

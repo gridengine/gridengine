@@ -64,7 +64,10 @@ ErrUsage()
    "   -copy            install user certificate and private key\n" \
    "   -verify <cert>   verify a <cert>\n" \
    "   -print <cert>    print a <cert>\n" \
-   "   -extend <cert>   extend the validity of <cert>\n" \
+   "   -printkey <key>  print a <key>\n" \
+   "   -renew <user>    extend the certificate of <user>\n" \
+   "   -renew_ca        extend the CA certificate\n" \
+   "   -renew_sys       extend the daemon certificate\n" \
    "   -days <days>     days of validity of the certificate\n" \
    "   -sha1            use sha-1 instead of md5 as message digest\n" \
    "   -encryptkey      use des to encrypt the generated key with a passphrase\n" \
@@ -224,7 +227,7 @@ MakeCAcert()
 
       dndone=false
       while [ $dndone = false ]; do
-         $INFOTEXT -n "Please enter your two letter country code, e.g. >US< >> "
+         $INFOTEXT -n "Please enter your two letter country code, e.g. 'US' >> "
          INP=`Enter ""`
          if [ "$INP != " -a `echo $INP | wc -c` = 3 ]; then
             CA_C=`echo $INP | env LC_ALL=C tr "[a-z]" "[A-Z]"`
@@ -246,9 +249,9 @@ MakeCAcert()
 
       dndone=false
       while [ $dndone = false ]; do
-			$INFOTEXT -n "Please enter your location, e.g city or buildingcode >> "
-			INP=`Enter ""`
-			CA_L="$INP"
+         $INFOTEXT -n "Please enter your location, e.g city or buildingcode >> "
+         INP=`Enter ""`
+         CA_L="$INP"
          if [ "$INP" != "" ]; then
             CA_L="$INP"
             dndone=true
@@ -319,12 +322,16 @@ MakeCAcert()
          export CATOP
          Execute cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
 
-         umask 077
-         if [ "$RANDFILE" = "" ]; then
-            MakeRandFile $CALOCALTOP/private/rand.seed
-            RANDFILE=$CALOCALTOP/private/rand.seed; export RANDFILE
+         if [ $ADMINUSER != default -a $rootinstalls = true ]; then
+            # echo +++ $ADMINUSER
+            MakeRandFile $CALOCALTOP/private/rand.seed $ADMINUSER
+         else
+            # echo +++ $ME
+            MakeRandFile $CALOCALTOP/private/rand.seed $ME
          fi
+         RANDFILE=$CALOCALTOP/private/rand.seed; export RANDFILE
 
+         umask 077
          $INFOTEXT "Creating CA certificate and private key"
          ExecuteAsAdmin $REQ -config $TMPFILE1 -new -x509 \
               -keyout ${CALOCALTOP}/private/$CAKEY -out ${CATOP}/$CACERT $DAYS
@@ -353,28 +360,38 @@ MakeCAcert()
 # MakeRandFile create a random data file
 #  
 # $1 = <randfilename>
+# $2 = <owner>
 #
 MakeRandFile()
 {
+
    # OpenSSL uses /dev/urandom by default so if it's there, don't
    # polute the PRNG with predictable data.
-   rfile=""
+   rfile="/dev/urandom"
    if [ ! -r /dev/urandom ]; then
-      if [ -f /dev/random ]; then 
+      if [ -r /dev/random ]; then 
          rfile=/dev/random
-      elif [ -f /kernel/genunix ]; then
+      elif [ -r /kernel/genunix ]; then
          rfile=/kernel/genunix
-      elif [ -f /bin/vi ]; then
+      elif [ -r /bin/vi ]; then
          rfile=/bin/vi
       fi
    fi
-   if [ -n "$rfile" ]; then
-      $INFOTEXT "Creating RANDFILE from >%s< in >%s<" $rfile $1
-      ExecuteAsAdmin $OPENSSL rand -rand $rfile -out $1 2048
-   else
-      $INFOTEXT "Creating RANDFILE in >%s<" $1
-      ExecuteAsAdmin $OPENSSL rand -out $1 2048
+   $INFOTEXT "Creating RANDFILE from '%s' in '%s'" $rfile $1
+
+   RANDFILE=$rfile; export RANDFILE;
+
+   if [ $ADMINUSER != default -a $rootinstalls = true ]; then
+   	$OPENSSL rand -rand $rfile -out $1 2048
+   	$CHOWN $ADMINUSER $1
+   else 
+        $V5UTILBIN/adminrun $2 $OPENSSL rand -rand $rfile -out $1 2048
    fi
+   $V5UTILBIN/adminrun $2 $CHMOD 644 $1
+   # echo "--------------"
+   # ls -l $rfile $1
+   # echo "--------------"
+
 }
 
 #--------------------------------------------------------------------------
@@ -388,7 +405,7 @@ MakeRandFile()
 MakeUserCerts()
 {
    if [ ! -f "$1" ]; then
-      $INFOTEXT "no valid userfile >%s<. Exit." $1
+      $INFOTEXT "no valid userfile '%s'. Exit." $1
       exit 1
    fi
 
@@ -413,7 +430,7 @@ MakeUserCerts()
 MakePKCS12()
 {
    if [ ! -f "$1" ]; then
-      $INFOTEXT "no valid userfile >%s<. Exit." $1
+      $INFOTEXT "no valid userfile '%s'. Exit." $1
       exit 1
    fi
 
@@ -424,6 +441,19 @@ MakePKCS12()
       $P12 -export -inkey $CALOCALTOP/userkeys/$unixuser/key.pem -out $CALOCALTOP/userkeys/$unixuser/$unixuser.p12 -in $CALOCALTOP/userkeys/$unixuser/cert.pem -certfile $CALOCALTOP/cacert.pem -caname "SGE CA"
    done   
 }
+
+#--------------------------------------------------------------------------
+# DumpUsers dump user info 
+#
+DumpUsers()
+{
+   CERTDIR=$CALOCALTOP/userkeys
+   RSFILE=/tmp/rand
+
+   # create rand.seed file
+   MakeRandFile $RSFILE $2
+
+   RANDFILE=$RSFILE; export RANDFILE
 
 #--------------------------------------------------------------------------
 # MakeCert create certificate and private key for daemon
@@ -463,14 +493,14 @@ MakeCert()
       ExecuteAsAdmin $MKDIR $KEYDIR
    fi
 
+   # create rand.seed file
+   MakeRandFile $RSFILE $2
+
+   RANDFILE=$RSFILE; export RANDFILE
+
    if [ $rootinstalls = true ]; then
       umask 077
    fi
-
-   # create rand.seed file
-   MakeRandFile $RSFILE
-   RANDFILE=$RSFILE; export RANDFILE
-
 
    # create a certificate request
    ExecuteAsAdmin $REQ -config $TMPFILE1 -new -keyout $KEYFILE -out $REQFILE $DAYS
@@ -491,6 +521,9 @@ MakeCert()
    $RM -f $TMPFILE $TMPFILE1 
 
    if [ $1 = daemon ]; then
+      Execute $CHMOD 500 $KEYDIR
+      Execute $CHMOD 400 $KEYDIR/*
+      Execute $CHMOD 600 $KEYDIR/rand.seed
       $INFOTEXT "created and signed certificate for SGE daemons" 
    else
       if [ $rootinstalls = true ]; then
@@ -499,7 +532,165 @@ MakeCert()
          Execute $CHOWN -R $2 $KEYDIR
       fi
 
-      $INFOTEXT "created and signed certificate for user >%s< in >%s<" $2 $KEYDIR
+      $INFOTEXT "created and signed certificate for user '%s' in '%s'" $2 $KEYDIR
+   fi
+
+   umask 022
+}
+
+#--------------------------------------------------------------------------
+# RenewCA renew a selfsigned CA certificate
+#
+RenewCA()
+{
+   $INFOTEXT -u "\nRenewing CA certificate"
+
+   CAKEYDIR=$CALOCALTOP/private
+   CAKEYFILE=$CALOCALTOP/private/cakey.pem
+   CACERTFILE=$CATOP/cacert.pem
+   RSFILE=$CALOCALTOP/private/rand.seed
+   NEWCACERTFILE=$CATOP/cacert.pem.new
+   OLDCACERTFILE=$CATOP/cacert.pem.`date | tr " " "_"`
+   RANDFILE=$RSFILE; export RANDFILE
+
+   ExecuteAsAdmin $X509 -in $CACERTFILE -signkey $CAKEYFILE $DAYS -out $NEWCACERTFILE
+
+   ExecuteAsAdmin $CP $CACERTFILE $OLDCACERTFILE
+   ExecuteAsAdmin $CHMOD 644 $CACERTFILE
+   ExecuteAsAdmin $MV $NEWCACERTFILE $CACERTFILE
+   ExecuteAsAdmin $CHMOD 444 $CACERTFILE
+
+}
+
+
+#--------------------------------------------------------------------------
+# RenewCert renew a certificate
+#
+# $1 = "daemon" or "user"
+# $2 = userId   (Unix user name)
+#
+RenewCert()
+{
+   if [ $1 = daemon ]; then
+      $INFOTEXT -u "\nRenewing daemon certificate"
+   else
+      $INFOTEXT -u "\nRenewing  '%s' user certificate" "$2"
+   fi
+
+   TMPFILE=/tmp/sge_ca$$.tmp
+   TMPFILE1=/tmp/sge_ca1$$.tmp
+   $RM -f $TMPFILE $TMPFILE1
+   Execute cp $CATOP/dn.info $TMPFILE
+   echo userId=$2 >> $TMPFILE
+   echo CN="dummy" >> $TMPFILE
+   echo emailAddress="dummy" >> $TMPFILE
+   Execute cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
+
+
+   if [ $1 = daemon ]; then
+      KEYDIR=$CALOCALTOP/private
+      KEYFILE=$CALOCALTOP/private/key.pem
+      REQFILE=$CALOCALTOP/private/req.pem
+      CERTFILE=$CATOP/certs/cert.pem
+      NEWCERTFILE=$CATOP/certs/cert.pem.new
+      OLDCERTFILE=$CATOP/certs/cert.pem.old
+      RSFILE=$CALOCALTOP/private/rand.seed
+      CRLFILE=$CATOP/ca-crl.pem
+   else
+      KEYDIR=$CALOCALTOP/userkeys/$2
+      KEYFILE=$KEYDIR/key.pem
+      REQFILE=$KEYDIR/req.pem
+      CERTFILE=$KEYDIR/cert.pem
+      NEWCERTFILE=$KEYDIR/cert.pem.new
+      OLDCERTFILE=$KEYDIR/cert.pem.old
+      RSFILE=$KEYDIR/rand.seed
+      CRLFILE=$CATOP/ca-crl.pem
+   fi
+
+   # create rand.seed file
+   MakeRandFile $RSFILE $2
+   RANDFILE=$RSFILE; export RANDFILE
+
+   if [ $rootinstalls = true ]; then
+      umask 077
+   fi
+
+   # revoke the old certificate and create the certificate revocation list
+   Execute $CHMOD 511 $KEYDIR
+   if [ $1 = daemon ]; then
+      ExecuteAsAdmin $CHMOD 644 $CERTFILE
+      ExecuteAsAdmin $CHMOD 644 $RSFILE
+   else
+      Execute $CHMOD 644 $CERTFILE
+      Execute $CHMOD 644 $RSFILE
+   fi
+   ExecuteAsAdmin $CA -config $TMPFILE1 -policy policy_anything \
+                      -batch $DAYS \
+                      -revoke $CERTFILE 
+
+   if [ $? != 0 ]; then
+      $INFOTEXT "Can't revoke %s. Exit." $CERTFILE
+      exit 1
+   fi  
+
+   # create the certificate revocation list
+   ExecuteAsAdmin $CA -config $TMPFILE1 -policy policy_anything \
+                      -batch $DAYS \
+                      -gencrl -out $CRLFILE
+
+   if [ $? != 0 ]; then
+      $INFOTEXT "Can't generate revocation list %s. Exit." $CRLFILE
+      exit 1
+   fi  
+
+   # create request from certificate
+   # Execute $X509 -x509toreq -in $CERTFILE -out $REQFILE -signkey $KEYFILE 
+
+   # extend the request
+   #Execute $X509 -req $DAYS -in $REQFILE \
+   #                -signkey $CALOCALTOP/private/$CAKEY \
+   #                -out $NEWCERTFILE
+
+   # allow admin user access to user's dir
+   if [ $ADMINUSER != default -a $rootinstalls = true ]; then
+      Execute $CHOWN -R $ADMINUSER $KEYDIR
+      Execute $CHMOD 700 $KEYDIR
+   fi
+
+   # sign certificate request
+   ExecuteAsAdmin $CA -config $TMPFILE1 \
+                      -policy policy_anything -batch $DAYS \
+                      -out $NEWCERTFILE -infiles $REQFILE
+
+   if [ $? != 0 ]; then
+      $INFOTEXT "Can't renew %s. Exit." $CERTFILE
+      exit 1
+   fi  
+
+   if [ $1 = daemon ]; then
+      if [ -f $OLDCERTFILE ]; then
+	 ExecuteAsAdmin $RM -f $OLDCERTFILE
+      fi
+      ExecuteAsAdmin $CP $CERTFILE $OLDCERTFILE
+      ExecuteAsAdmin $MV $NEWCERTFILE $CERTFILE
+      ExecuteAsAdmin $CHMOD 444 $CERTFILE
+   else
+      Execute $CP $CERTFILE $OLDCERTFILE
+      Execute $MV $NEWCERTFILE $CERTFILE
+   fi
+
+   $RM -f $TMPFILE $TMPFILE1 
+
+   if [ $1 = daemon ]; then
+      $INFOTEXT "renewed certificate for SGE daemons" 
+   else
+      if [ $rootinstalls = true ]; then
+         Execute $CHMOD 500 $KEYDIR
+         Execute $CHMOD 400 $KEYDIR/*
+         Execute $CHOWN -R $2 $KEYDIR
+      fi
+
+      $INFOTEXT "renewed certificate for user '%s' in '%s'" $2 $KEYDIR
    fi
 
    umask 022
@@ -581,7 +772,8 @@ umask 022
 if [ -z "$SGE_ROOT" -o ! -d "$SGE_ROOT" ]; then
    echo
    echo ERROR: Please set your \$SGE_ROOT environment variable
-   echo and start this script again. Exit.
+   echo and start this script again.
+   echo Exit
    echo
    exit 1
 fi
@@ -606,12 +798,15 @@ fi
 
 if [ "$SGE_CELL" = "" ]; then
    SGE_CELL=default
+   export SGE_CELL
 fi
 
 if [ "$SGE_QMASTER_PORT" != "" ]; then
    CA_PORT=port$SGE_QMASTER_PORT
+   export CA_PORT
 else
    CA_PORT=sge_qmaster
+   export CA_PORT
 fi
 
 
@@ -671,6 +866,7 @@ OPENSSL=$V5UTILBIN/openssl
 WHICH="undef"
 newreq=newreq.pem
 newcert=newcert.pem
+user=""
 outdir=.
 indir=.
 userfile=""
@@ -711,6 +907,16 @@ while [ $ARGC != 0 ]; do
          ErrUsage
       fi
       WHICH="print"
+      newcert=$2
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
+   -printkey)
+      if [ $ARGC -lt 2 ]; then
+         $INFOTEXT "Error: -printkey needs argument"
+         ErrUsage
+      fi
+      WHICH="printkey"
       newcert=$2
       shift
       ARGC=`expr $ARGC - 1`
@@ -769,15 +975,35 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-   -extend)
+env) 
+    echo $CALOCALTOP
+#    SGE_CERTFILE=$CALOCALTOP/userkeys/$ADMINUSER/cert.pem
+#    SGE_KEYFILE=$CALOCALTOP/userkeys/$ADMINUSER/key.pem
+#    export SGE_KEYFILE SGE_CERTFILE
+#    echo $SGE_CERTFILE $SGE_KEYFILE
+    RET=$?
+    ;;
+   -renew)
       if [ $ARGC -lt 2 ]; then
-         $INFOTEXT "Error: -extend needs argument"
+         $INFOTEXT "Error: -renew needs argument"
          ErrUsage
       fi
-      WHICH="extend"
-      newcert=$2
+      WHICH="renew"
+      user=$2
       shift
       ARGC=`expr $ARGC - 1`
+      ;;
+   -renew_sys)
+      WHICH="renew_sys"
+      ;;
+   -renew_ca)
+      WHICH="renew_ca"
+      ;;
+   -version)
+      WHICH="version"
+      ;;
+   -dumpusers)
+      WHICH="dumpusers"
       ;;
    *)
       $INFOTEXT "Error: Unknown option %s" "$1"
@@ -793,7 +1019,6 @@ if [ "$WHICH" = "undef" ]; then
 fi
 
 
-#REQ="$OPENSSL req -nodes"
 REQ="$OPENSSL req $md $nodes"
 
 CA="$OPENSSL ca -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT \
@@ -802,6 +1027,7 @@ CA="$OPENSSL ca -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT \
 VERIFY="$OPENSSL verify"
 
 X509="$OPENSSL x509"
+X509KEY="$OPENSSL rsa"
 
 P12="$OPENSSL pkcs12"
 
@@ -840,21 +1066,32 @@ print)
     $X509 -in $newcert -text
     RET=$?
     ;;
-extend) 
-    $X509 -in $newcert -signkey $CALOCALTOP/private/$CAKEY $DAYS -out $outdir/extended_cert.pem
+printkey) 
+    $X509KEY -in $newcert -text
     RET=$?
     ;;
-env) 
-    echo $CALOCALTOP
-#    SGE_CERTFILE=$CALOCALTOP/userkeys/$ADMINUSER/cert.pem
-#    SGE_KEYFILE=$CALOCALTOP/userkeys/$ADMINUSER/key.pem
-#    export SGE_KEYFILE SGE_CERTFILE
-#    echo $SGE_CERTFILE $SGE_KEYFILE
+renew) 
+    RenewCert user $user
+    RET=$?
+    ;;
+renew_sys) 
+    RenewCert daemon $ADMINUSER
+    RET=$?
+    ;;
+renew_ca) 
+    RenewCA
     RET=$?
     ;;
 pkcs12) 
     MakePKCS12 $userfile
 
+    RET=$?
+    ;;
+version)
+    echo "sge_ca 6.0u4"
+    ;;
+dumpusers)
+    DumpUsers
     RET=$?
     ;;
 help)

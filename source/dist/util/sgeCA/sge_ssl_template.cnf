@@ -8,7 +8,6 @@
 #HOME                    = $ENV::SGE_ROOT/default
 #RANDFILE                = $ENV::HOME/.rnd
 #CACELL                   = $ENV::SGE_CELL
-#CATOP                    = $ENV::SGE_ROOT/$CACELL/common/sgeCA
 CATOP                    = $ENV::CATOP
 
 # Extra OBJECT IDENTIFIER info:

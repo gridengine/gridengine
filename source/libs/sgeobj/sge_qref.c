@@ -581,6 +581,18 @@ qref_list_is_valid(const lList *this_list, lList **answer_list)
    return ret;
 }
 
+void
+qref_list_resolve_hostname(lList *this_list) 
+{
+   lListElem *qref;
+
+   DENTER(TOP_LAYER, "qref_list_resolve_hostname");
+   for_each(qref, this_list) {
+      qref_resolve_hostname(qref);
+   }
+   DEXIT;
+}
+
 /* QR_name might be a pattern */
 void
 qref_resolve_hostname(lListElem *this_elem)

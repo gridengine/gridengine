@@ -797,7 +797,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          u_short id;
          sge_pack_buffer pb;
          u_long32 exit_status = 1;
-         u_long32 dummymid;
+         u_long32 dummymid = 0;
          int ret;
 
          /* extract address from JB_job_source */

@@ -1,3 +1,6 @@
+JG-2004-03-23-1: Bugfix:    fixed "Read from uninitialized" errors.
+                 Review:    CR
+
 JG-2004-03-23-0: Testsuite: fixed test system_tests/clients/qsub.
 
 RH-2004-03-22-0: Bugfix:    test case for issue 799 added to testsuite

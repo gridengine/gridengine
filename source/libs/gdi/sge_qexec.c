@@ -117,7 +117,7 @@ const char *s;
    lListElem *rt;
    sge_pack_buffer pb;
    u_long32 jobid, jataskid;
-   u_long32 dummymid;
+   u_long32 dummymid = 0;
    const char *env_var_name = "SGE_TASK_ID";
 
    DENTER(TOP_LAYER, "sge_qexecve");

@@ -1224,7 +1224,7 @@ lList *ticket_orders
    const char *master_host_name;
    lListElem *jep, *other_jep, *ep, *ep2, *next, *other, *jatask = NULL, *other_jatask;
    sge_pack_buffer pb;
-   u_long32 dummymid;
+   u_long32 dummymid = 0;
    int n;
    u_long32 now;
 #ifdef ENABLE_NGC

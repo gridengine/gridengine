@@ -218,7 +218,7 @@ int master
    int len, failed;
    u_long32 now;
    sge_pack_buffer pb;
-   u_long32 dummymid;
+   u_long32 dummymid = 0;
    lListElem *tmpjep, *qep, *tmpjatep, *next_tmpjatep, *tmpgdil_ep=NULL;
    lListElem *ckpt = NULL, *tmp_ckpt;
    lList *qlp;

@@ -290,7 +290,7 @@ int compressed
    if (synchron) {
       ack_type = CL_MIH_MAT_ACK;
    }
-   if (mid) {
+   if (mid != NULL) {
       dummy_mid = *mid;
    }
 
@@ -307,6 +307,10 @@ int compressed
                                      ack_type , 
                                      (cl_byte_t*)buffer ,(unsigned long)buflen,
                                      &dummy_mid , 0 ,tag,1 , synchron);
+   }
+
+   if (mid != NULL) {
+      *mid = dummy_mid;
    }
 
    DEXIT;

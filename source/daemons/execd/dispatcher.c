@@ -134,7 +134,7 @@ int dispatch( dispatch_entry*   table,
                   *te;
    int i, j, terminate, errorcode, ntab;
    u_long rcvtimeoutt=rcvtimeout;
-   u_long32 dummyid;
+   u_long32 dummyid = 0;
    sge_pack_buffer *pb = NULL, apb;
    int synchron;
 
@@ -266,7 +266,7 @@ int wait4commd;
                   *te;
    int i, j, terminate, errorcode, ntab;
    u_long rcvtimeoutt=rcvtimeout;
-   u_long32 dummyid;
+   u_long32 dummyid = 0;
    sge_pack_buffer *pb = NULL, apb;
    int synchron;
    int connect_problem_sleep;

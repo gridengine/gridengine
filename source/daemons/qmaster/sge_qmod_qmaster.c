@@ -1039,7 +1039,7 @@ lListElem *jatep
    int i;
    u_long32 next_delivery_time = 60;
    u_long32 now;
-   u_long32 dummy;
+   u_long32 dummy = 0;
    sge_pack_buffer pb;
    int sent = 0;
 

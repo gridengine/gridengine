@@ -873,7 +873,6 @@ case AIX51:
    set CXX      = xlC_r
    set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG -DGETHOSTBYADDR_R5 -DGETHOSTBYNAME_R3 $DEBUG_FLAG $CFLAGS -bnoquiet"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
    set XCFLAGS  = "-bnodelcsect -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
@@ -881,10 +880,12 @@ case AIX51:
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm  -lXt -lXext -lX11 -lm -liconv -lc"
 
-   set SHAREDLD = "xlc_r"
+   set SHAREDLD = "$SOURCE/scripts/ldAix"
    set SHARED_CFLAGS = ""
-   set SHARED_LFLAGS = "-L. $SHARED_LFLAGS -brtl -bexpall -bhalt:4 -bM:SRE -H512 -T512 -bnoentry"
-#   set SHARED_LFLAGS = "-$SHARED_LFLAGS brtl -bexpall -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+   set SHARED_LFLAGS = "$LFLAGS $KLFLAGS -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+
+   # add DEBUG_FLAGS to LFLAGS after SHARED_LFLAGS - -g isn't recognized by ld
+   set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    breaksw
 
 case ALPHA5:

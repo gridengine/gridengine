@@ -1,3 +1,9 @@
+JG-2004-04-16-0: Bugfix:    Fixed build process for shared libs on AIX43 and 
+                            AIX51.
+                            Changed README for berkeleydb: Berkeley DB has to be
+                            built with --with-mutex=POSIX/pthreads on AIX43.
+                 Review:    AA, AS
+
 CR-2004-04-16-0: Bugfix:    - flush unsent messages when a connection is going
                               down. ( Event clients will now correct unreqister
                               at qmaster )

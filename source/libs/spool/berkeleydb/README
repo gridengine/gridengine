@@ -45,6 +45,7 @@ For a list of other options (e.g. --prefix) call
 Depending on the build architecture, some additional options and parameters to 
 configure are required (just append them to the configure commandline):
 
+aix43:         --with-mutex=POSIX/pthreads
 hp11-64:       CFLAGS=+DD64 LDFLAGS=+DD64
 irix65:        CFLAGS="-n32 -mips3"
 lx24-amd64:    --with-mutex=x86/gcc-assembly

@@ -708,8 +708,8 @@ if [ $instcommon = true ]; then
 
    if [ $instckpt = true ]; then
       echo Installing \"ckpt/\"
-      Execute rm -rf $DEST_SGE_ROOT/ckpt
-      Execute cp dist/ckpt/* $DEST_SGE_ROOT/ckpt
+      Execute rm -rf $DEST_SGE_ROOT/ckpt/*
+      cp dist/ckpt/* $DEST_SGE_ROOT/ckpt
       chmod 755 $DEST_SGE_ROOT/ckpt/*_command
    fi
 

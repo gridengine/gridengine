@@ -1,3 +1,8 @@
+DT-2004-05-10-0: Enhancem.: o Began work on DRMAA howto, including example
+                              programs
+                            o Cleaned up qsub
+                 Changed:   howto, JAPI, qsub
+
 AD-2004-05-10-0: Cleanup:   - First part of 'Master_Config_List' encapsulation.
                             - 'lWriteElem_' and 'lWriteList_' now use 'stderr'
                               is no 'FILE*' argument is given.
@@ -35,7 +40,7 @@ CR-2004-05-07-0: Bugfix:    commlib:
                                  without guilty communication endpoint).
                  Changed:   commlib
 
-DT-2004-04-07-1: Bugfix:    o Added test to test_drmaa for invalid attributes
+DT-2004-05-07-1: Bugfix:    o Added test to test_drmaa for invalid attributes
                             o Did cleanup related to 966
                             o Added Java DRMAA binding to aimk and distinst
                             - use aimk -jdrmaa to include the Java binding in
@@ -44,7 +49,7 @@ DT-2004-04-07-1: Bugfix:    o Added test to test_drmaa for invalid attributes
                  Changed:   DRMAA, qsub, JAPI, aimk, distinst
                  Issue:     966
 
-DT-2004-04-07-0: Bugfix:    o Removed duplicate qconf error messages
+DT-2004-05-07-0: Bugfix:    o Removed duplicate qconf error messages
                             o Fixed build on MacOS X
                             o Fixed qsub bug introduced in DT-2004-04-06-0
                  Changed:   qconf, sgeobj, qsub
@@ -70,7 +75,7 @@ CR-2004-05-06-0: Enhancem.: added new test binaries to setup a communication
                                test_virtual_gdi_client and
                                test_virtual_qmaster
                  
-DT-2004-04-06-0: Bugfix:    o Fixed bad error messages for qconf -mc
+DT-2004-05-06-0: Bugfix:    o Fixed bad error messages for qconf -mc
                             o Fixed return code for qsub when max jobs reached
                             o Improved qconf error messages
                             o Updated DRMAA man pages

@@ -383,14 +383,10 @@ Error:
          sge_mutex_lock("qsub_exit_mutex", SGE_FUNC, __LINE__, &exit_mutex);
          
          while (!exited) {
-#if 1
             if (pthread_cond_timedwait (&exit_cv, &exit_mutex, &ts) == ETIMEDOUT) {
                DPRINTF (("Exit has not finished after 15 seconds.  Exiting.\n"));
                break;
             }
-#else
-            sleep (15);
-#endif
          }
          
          sge_mutex_unlock("qsub_exit_mutex", SGE_FUNC, __LINE__, &exit_mutex);

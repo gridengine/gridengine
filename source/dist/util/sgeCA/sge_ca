@@ -60,7 +60,7 @@ ErrUsage()
    myname=`basename $0`
    $ECHO "" >&2
    Translate 3 "Usage:"
-   $ECHO     " $1 {-init|-req|-sign|-copy|-verify|-userkeys <file>} [-days <days>]" >&2
+   $ECHO     " $1 {-init|-req|-sign|-copy|-verify|-usercert <file>} [-days <days>]" >&2
    $ECHO     "    -init           \c" >&2
    Translate 1 "initialize CA infrastructure"
    $ECHO     "    -req           \c" >&2
@@ -73,8 +73,8 @@ ErrUsage()
    Translate 1 "verify a certificate" 2 1 "\$$SGE_ROOT"
    $ECHO     "    -days <days>   \c" >&2
    Translate 1 "days of validity of the certificate"
-   $ECHO     "    -userkeys <file>   \c" >&2
-   Translate 1 "generate certificates and keys for users in <file>"
+   $ECHO     "    -usercert <file>   \c" >&2
+   Translate 1 "generate certificates and keys for the users in <file>"
    $ECHO "" >&2
 
    exit 1
@@ -112,6 +112,8 @@ InitCA()
 # CheckIfQmasterHost
 #    If our hostname given in $1 is the same as in the "act_qmaster" file
 #    echo "true" else echo "false"
+#
+# $1 = hostname
 #
 CheckIfQmasterHost()
 {
@@ -371,6 +373,31 @@ MakeRandFile()
    Translate 0 "Creating RANDFILE from >%s< in >%s<" $rfile $1
    $ECHO
    ExecuteAsAdmin $OPENSSL rand -rand $rfile -out $1 2048
+}
+
+#--------------------------------------------------------------------------
+# MakeUserCerts create user certificates and keys from userfile
+# userfile contains a list of entries of the following format per user.
+#
+# <unix username>:<gecos field>:<user's email address>
+#
+# $1 = <userfile>
+#
+MakeUserCerts()
+{
+   if [ ! -f "$1" ]; then
+      Translate 0 "no valid userfile $1. Exit."
+      exit 1
+   fi
+
+   cat $1 | while read line; do
+      unixuser=`echo $line|cut -d: -f1`
+      gecos=`echo $line|cut -d: -f2`
+      email=`echo $line|cut -d: -f3`
+      Translate 0 "Generating certificate and key for '%s' ('%s','%s')." \
+         "$unixuser" "$gecos" "$email"
+      MakeCert user "$unixuser" "$gecos" "$email"
+   done   
 }
 
 #--------------------------------------------------------------------------
@@ -641,6 +668,7 @@ newreq=newreq.pem
 newcert=newcert.pem
 outdir=.
 indir=.
+userfile=""
 
 ARGC=$#
 while [ $ARGC != 0 ]; do
@@ -670,14 +698,14 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-   -userkeys)
+   -usercert)
+      WHICH="usercert"
       if [ $ARGC -lt 2 ]; then
          $ECHO "" >&2
-         Translate "Error: -user needs argument" 2 1
+         Translate "Error: -usercert needs argument" 2 1
          ErrUsage
       fi
-      newreq=$2_req.pem
-      newcert=$2_cert.pem
+      userfile=$2
       shift
       ARGC=`expr $ARGC - 1`
       ;;
@@ -728,6 +756,9 @@ sign)
     ;;
 copy) 
     InstallKey user $ME
+    ;;
+usercert) 
+    MakeUserCerts $userfile
     ;;
 verify) 
     $VERIFY -CAfile $CATOP/$CACERT $newcert

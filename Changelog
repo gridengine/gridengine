@@ -1,3 +1,6 @@
+AA-2002-01-28-2: Feature:   - sge_ca -usercert <file> added to generate keys/certs for
+                              users in file
+
 EB-2002-01-28-0: Bugfix:    - "qselect -l h=<host with no queues>" prints
                               error message.
 

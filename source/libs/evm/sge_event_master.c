@@ -2433,7 +2433,7 @@ static void* send_thread(void *anArg)
           * this shortcut will occasionally cause this block to finish early
           * due to a well timed spurrious wakeup. */
          do {
-            DPRINTF (("Waiting before delivering events.\n"));
+/*            DPRINTF (("Waiting before delivering events.\n")); */
             ts.tv_sec = current_time + EVENT_DELIVERY_INTERVAL_S;
             ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
             pthread_cond_timedwait(&Master_Control.cond_var,

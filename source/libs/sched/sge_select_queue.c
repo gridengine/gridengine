@@ -4222,7 +4222,7 @@ lListElem *job,
 lList *granted,
 lList *global_queue_list,
 lList *centry_list,
-lList *orders_list    /* needed to warn on jobs that get dispatched and suspended
+order_t *orders    /* needed to warn on jobs that get dispatched and suspended
                         on subordinate in the very same interval */
 ) {
    int qslots, total;
@@ -4256,7 +4256,7 @@ lList *orders_list    /* needed to warn on jobs that get dispatched and suspende
                   the same scheduling interval based on the orders list */
                {
                   lListElem *order;
-                  for_each (order, orders_list) {
+                  for_each (order, orders->jobStartOrderList) {
                      if (lGetUlong(order, OR_type) != ORT_start_job)
                         continue;
                      if (lGetSubStr(order, OQ_dest_queue, lGetString(so, SO_name), OR_queuelist)) {
@@ -4264,6 +4264,16 @@ lList *orders_list    /* needed to warn on jobs that get dispatched and suspende
                         u32c(lGetUlong(order, OR_job_number)), qname, lGetString(so, SO_name)));
                      }
                   }
+                  
+                  for_each (order, orders->sent_job_StartOrderList) {
+                     if (lGetUlong(order, OR_type) != ORT_start_job)
+                        continue;
+                     if (lGetSubStr(order, OQ_dest_queue, lGetString(so, SO_name), OR_queuelist)) {
+                        WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, u32c(lGetUlong(job, JB_job_number)),
+                        u32c(lGetUlong(order, OR_job_number)), qname, lGetString(so, SO_name)));
+                     }
+                  }
+
                }
             }
          }

@@ -1000,6 +1000,7 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
 { 
    lListElem *event;
    sge_mirror_error function_ret;
+   bool no_more_events=false;
 
    DENTER(TOP_LAYER, "sge_mirror_process_event_list");
 
@@ -1008,6 +1009,9 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
 
    for_each(event, event_list) {
       sge_mirror_error ret = SGE_EM_OK;
+      if (no_more_events) {
+         break;
+      }
       num_events++;
 
       switch(lGetUlong(event, ET_type)) {
@@ -1250,6 +1254,7 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
 
          case sgeE_SHUTDOWN:
             ret = sge_mirror_process_event(SGE_TYPE_SHUTDOWN, SGE_EMA_TRIGGER, event);
+            no_more_events = true;
             break;
 
          case sgeE_SUBMITHOST_LIST:

@@ -1,3 +1,15 @@
+SG-2004-05-03-0: Enhancem.: changed the order in the order package that is send
+                            from the scheduler to the qmaster.
+                 Changed:   scheduler
+                 Review:    AH
+
+SG-2004-05-03-0: Bugfix:    fixed a bug in the mirror interface, which did accept
+                            events, after the client shutdown event. This let to
+                            one error message per event. The real fix needs to be
+                            done in the event master.
+                 Changed:   scheduler
+                 Review:    JG
+
 JG-2004-05-03-1: Testsuite: Fixed test system_tests/clients/qmod/reschedule
                             (fails due to IZ 999).
 

@@ -33,7 +33,16 @@
 /*___INFO__MARK_END__*/
 
 #include "cull.h"
- 
+
+typedef struct {
+   lList *configOrderList; /* queue suspend and unsuspend orders */
+   lList *pendingOrderList; /* job pending orders, delete immediate job orders*/
+   lList *jobStartOrderList; /* job start orders, job info orders */
+   lList *sent_job_StartOrderList; /* already send job start orders */
+}order_t;
+
+#define ORDER_INIT {NULL,NULL,NULL, NULL}
+
 lList *sge_add_schedd_info(lList *or_list);
 
 lList *sge_create_orders(lList *or_list, u_long32 type, lListElem *job, lListElem *ja_task, 
@@ -45,6 +54,9 @@ int get_seq_nr(void);
 
 lList *create_delete_job_orders(lList *finished_jobs, lList *order_list);
 
+lList *sge_join_orders(order_t *orders);
+int sge_GetNumberOfOrders(order_t *orders); 
+int sge_send_job_start_orders(order_t *orders);
 #endif /* _SGE_ORDERS_H_ */
 
 

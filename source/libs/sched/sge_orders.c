@@ -44,6 +44,7 @@
 #include "sge_event_client.h"
 #include "msg_schedd.h"
 #include "msg_common.h"
+#include "sge_profiling.h"
 
 
 lList *sge_add_schedd_info(lList *or_list) 
@@ -366,4 +367,162 @@ lList *order_list
 
 
 
+/****** sge_orders/sge_join_orders() ******************************************
+*  NAME
+*     sge_join_orders() -- generates one order list from the order structure 
+*
+*  SYNOPSIS
+*     lLlist* sge_join_orders(order_t orders) 
+*
+*  FUNCTION
+*      generates one order list from the order structure, and cleans the
+*      the order structure. The orders, which have been send allready, are
+*      removed.
+*
+*  INPUTS
+*     order_t orders - the order strucutre
+*
+*  RESULT
+*     lLlist* - a order list
+*
+*  NOTES
+*     MT-NOTE: sge_join_orders() is not  safe 
+*
+*******************************************************************************/
+lList *sge_join_orders(order_t *orders){
+      lList *orderlist=NULL;
+   
+      orderlist = orders->configOrderList;
+      orders->configOrderList = NULL;
+  
+      if (orderlist == NULL) {
+         orderlist = lCreateList("orderlist", OR_Type);
+      }
+
+      lAddList(orderlist, orders->jobStartOrderList);
+      orders->jobStartOrderList = NULL; 
+      
+      lAddList(orderlist, orders->pendingOrderList);
+      orders->pendingOrderList= NULL;
+
+      /* they have been send earlier, so we can remove them */
+      orders->sent_job_StartOrderList = lFreeList(orders->sent_job_StartOrderList);
+
+      return orderlist;
+}
+
+
+/****** sge_orders/sge_GetNumberOfOrders() *************************************
+*  NAME
+*     sge_GetNumberOfOrders() -- returns the number of orders generated
+*
+*  SYNOPSIS
+*     int sge_GetNumberOfOrders(order_t *orders) 
+*
+*  FUNCTION
+*     returns the number of orders generated
+*
+*  INPUTS
+*     order_t *orders - a structure of orders
+*
+*  RESULT
+*     int - number of orders in the structure
+*
+*  NOTES
+*     MT-NOTE: sge_GetNumberOfOrders() is  MT safe 
+*
+*******************************************************************************/
+int sge_GetNumberOfOrders(order_t *orders) {
+   int count = 0;
+
+   count += lGetNumberOfElem(orders->configOrderList);
+   count += lGetNumberOfElem(orders->pendingOrderList);
+   count += lGetNumberOfElem(orders->jobStartOrderList);
+   count += lGetNumberOfElem(orders->sent_job_StartOrderList);
+
+   return count;
+}
+
+
+/****** sge_orders/sge_send_job_start_orders() *********************************
+*  NAME
+*     sge_send_job_start_orders() -- sends the job start orders to the master
+*
+*  SYNOPSIS
+*     int sge_send_job_start_orders(order_t *orders) 
+*
+*  FUNCTION
+*     If many jobs are dispatched during one scheduling run, this function
+*     can submit the allready generated job start orders to the master, so it
+*     can start the jobs and does not need for the scheduling cycle to finish.
+*
+*     The config orders are submitted as well (queue suspend or unsuspend, job
+*     suspend or unsuspend. These orders are deleted in the function and the
+*     job start orders are moved to the send_job_StartOrderList.
+*
+*  INPUTS
+*     order_t *orders - the order structure
+*
+*  RESULT
+*     int - STATUS_OK
+*
+*  NOTES
+*     MT-NOTE: sge_send_job_start_orders() is MT safe 
+*
+*******************************************************************************/
+int sge_send_job_start_orders(order_t *orders) {
+   int ret = STATUS_OK;
+   lList *alp = NULL;
+   lList *malp = NULL;
+   static bool is_executed_once = false;
+
+   int order_id = 0;
+   state_gdi_multi state = STATE_GDI_MULTI_INIT;
+
+   DENTER(TOP_LAYER, "sge_send_orders2master");
+
+   if (is_executed_once || lGetNumberOfElem(orders->jobStartOrderList) < 50) {
+      DEXIT;
+      return ret;
+   }
+
+   is_executed_once = true;
+
+   if (orders->configOrderList != NULL) {
+
+      order_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ORDER_LIST, SGE_GDI_ADD,
+                                  orders->configOrderList, NULL, NULL, &malp, &state);
+   }        
+
+   order_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
+                                  orders->jobStartOrderList, NULL, NULL, &malp, &state);
+
+   if (orders->sent_job_StartOrderList == NULL) {
+      orders->sent_job_StartOrderList =  orders->jobStartOrderList;
+   }
+   else {
+      lAddList(orders->sent_job_StartOrderList, orders->jobStartOrderList); 
+   }
+   orders->jobStartOrderList = NULL;
+  
+   orders->configOrderList = lFreeList(orders->configOrderList);
+
+   if (alp != NULL) {
+      ret = answer_list_handle_request_answer_list(&alp, stderr);
+      DEXIT;
+      return ret;
+   }
+   else {
+      /* check result of orders */
+      if(order_id > 0) {
+         alp = sge_gdi_extract_answer(SGE_GDI_ADD, SGE_ORDER_LIST, order_id, malp, NULL);
+
+         ret = answer_list_handle_request_answer_list(&alp, stderr);
+      }
+   }
+   malp = lFreeList(malp);
+
+   DEXIT;
+   return ret;
+}
 

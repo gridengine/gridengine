@@ -36,6 +36,8 @@
 #   include "sge.h"
 #endif
 
+#include "sge_orders.h"
+
 int sge_select_queue(lList *reqested_attr, lListElem *queue, lListElem *host, lList *exechost_list,
                      lList *centry_list, int allow_non_requestable, int slots); 
 
@@ -154,7 +156,7 @@ int sge_get_string_qattr(char *dst, int dst_len, char *attrname, lListElem *q, c
  *
  */
 int debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_queue_list, 
-    lList *complex_list, lList *orders_list);
+    lList *complex_list, order_t *orders);
 
 char *trace_resource(lListElem *rep);
 

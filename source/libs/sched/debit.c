@@ -100,7 +100,7 @@
 int debit_scheduled_job(
 const sge_assignment_t *a, /* all information describing the assignemnt */
 int *sort_hostlist,  /* do we have to resort the hostlist? */
-lList *orders_list,  /* needed to warn on jobs that were dispatched into
+order_t *orders,  /* needed to warn on jobs that were dispatched into
                         queues and get suspended on subordinate in the very
                         same interval */
 bool now,             /* if true this is or will be a running job
@@ -119,7 +119,7 @@ const char *type      /* a string as forseen with serf_record_entry()
       if (a->pe)
          pe_debit_slots(a->pe, a->slots, a->job_id);
       debit_job_from_hosts(a->job, a->gdil, a->host_list, a->centry_list, sort_hostlist);
-      debit_job_from_queues(a->job, a->gdil, a->queue_list, a->centry_list, orders_list);
+      debit_job_from_queues(a->job, a->gdil, a->queue_list, a->centry_list, orders);
    }
 
    add_job_utilization(a, type);

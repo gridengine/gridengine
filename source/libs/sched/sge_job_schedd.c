@@ -47,6 +47,7 @@
 #include "cull_lerrnoP.h"
 #include "msg_schedd.h"
 #include "sge_schedd_text.h"
+#include "sge_all_listsL.h"
 #include "sge_string.h"
 #include "sge_range.h"
 #include "sge_job.h"
@@ -57,6 +58,7 @@
 #include "sge_qinstance.h"
 #include "sge_gqueue.h"
 #include "sge_answer.h"
+#include "sge_orders.h"
 
 #include "cull_hash.h"
 
@@ -151,8 +153,8 @@ const char *get_name_of_split_value(int value)
 *     sched/sge_job_schedd/split_jobs()
 *******************************************************************************/
 void job_move_first_pending_to_running(lListElem **pending_job,
-                                       lList **splitted_jobs[]) 
-{
+                                       lList **splitted_jobs[],
+                                       lList **pending_job_orders) {
    lList *ja_task_list = NULL;      /* JAT_Type */
    lList *r_ja_task_list = NULL;    /* JAT_Type */
    lListElem *ja_task = NULL;       /* JAT_Type */
@@ -238,6 +240,7 @@ void job_move_first_pending_to_running(lListElem **pending_job,
     */
    if (!job_has_tasks(*pending_job) || 
        lGetList(*pending_job, JB_ja_tasks) == NULL) { 
+      lDelElemUlong(pending_job_orders, OR_job_number, lGetUlong(*pending_job, JB_job_number));
       lDechainElem(*(splitted_jobs[SPLIT_PENDING]), *pending_job);
       *pending_job = lFreeElem(*pending_job); 
    }

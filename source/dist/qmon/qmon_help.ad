@@ -172,7 +172,7 @@ queues.\n\
 \n\
 @fBUsers@fR have certain access permissions (see User Access Permissions in the manuals)\n\
 but no cluster or queue management capabilities.\n\
-Useresets are used additionally as departments. Departments can contain\n\
+Usersets are used additionally as departments. Departments can contain\n\
 tickets and influence therefore also the importance of a user's job.\n\
 Users have to be defined in the @fBUser@fR tab dialogue page. These users\n\
 can then be added to the different @fBPolicy@fR dialogues and prioritized against other users.
@@ -872,6 +872,17 @@ Qmon*qmon_manop*xmtHelp: \
 There are four user categories in Grid Engine, @fBManagers, Operators, Owners and Users@fR.\n\
 @fBManagers@fR have @fBfull capabilities@fR to manipulate Grid Engine. By default the @fBsuperuser@fR\n\
 or @fBadmin_user@fR of the master host and any machine hosting a queue have manager privileges.\n\
+@fBOperators@fR can perform the same commands as managers except that they cannot\n\
+add, delete or modify queues.\n\
+@fBOwners@fR are restricted to suspending/unsuspending or disabling/enabling the owned\n\
+queues.\n\
+@fBUsers@fR have certain access permissions (see User Access Permissions in the manuals)\n\
+but no cluster or queue management capabilities.\n\
+Usersets are used additionally as departments. Departments can contain\n\
+tickets and influence therefore also the importance of a user's job.\n\
+Users have to be defined in the @fBUser@fR tab dialogue page. These users\n\
+can then be added to the different @fBPolicy@fR dialogues and prioritized against other users.\n\
+\n\
 The term @fBUser@fR is used additionally for registered users that can be manipulated in\n\
 the different @fBTicket Policy@fR dialogues.\n\
 \n\
@@ -893,14 +904,14 @@ Two usersets have special meaning. @fBdeadlineusers@fR is\n\
 used to define those users who are allowed to submit @fBDeadline Jobs@fR. The @fBdefaultdepartment@fR\n\
 is attached to every user who is not a member of a administrator defined department. Users can only\n\
 be members of one department. To add a new userset, press @fBAdd@fR. In the helper dialogue choose\n\
-the type of userset (in SGEEE mode only) and add any users. For access lists the @@<unix group> notation\n\
+the type of userset and add any users. For access lists the @@<unix group> notation\n\
 can be used to build an access list containing a UNIX group.\n\
 @fBOk@fR registers the new userset at sge_qmaster and @fBCancel@fR dismisses any changes.\n\
 For modification of an already existing userset select it, press @fBModify@fR and proceed as for\n\
 @fBAdd@fR.\n\
 To remove a userset select it and press @fBDelete@fR.\n\
-In SGEEE mode another category @fBUser@fR exists. Here you can add a user for the @fBSGEEE Ticket\n\
-Policies@fR and attach a default project to the user. Enter the user name in the input field\n\
+In the @fBUser@fR tab you can add a user for the @fBTicket Policies@fR and attach a default\n\
+project to the user. Enter the user name in the input field\n\
 and press @fBReturn@fR or @fBAdd@fR, this adds a new line to the matrix. If the @fIDefault Project@fR\n\
 shall be changed, select those users and press the @fBDefault Project@fR title button to pop up\n\
 a list of configured projects. Pressing @fBOk@fR in the helper changes the project entry for the\n\
@@ -945,7 +956,7 @@ Qmon*qmon_ckpt.ckpt_layout*xmtHelpTitle: @fBCheckpointing Configuration Help
 Qmon*qmon_ckpt.ckpt_layout*xmtHelp: \
 @fBGrid Engine@fR provides various levels of checkpointing support. The checkpointing\n\
 environment described here is a means to configure the different types of  checkpointing\n\
-in use for your @fBGrid Engine@fR cluster or parts thereof.\n\
+in use for your @fBGrid Engine@fR cluster or parts thereof (see @fBcheckpoint(5)@fR).\n\
 For that purpose you can  define  the  operations which  have to be executed in\n\
 initiating a checkpoint generation, a migration of a checkpoint to another host or\n\
 a restart of a checkpointed application as well as the list of queues which are\n\
@@ -961,7 +972,7 @@ checkpoint object or the checkpoint object to be modified.\n\
 The @fBName@fR input field either displays the name of the checkpoint object to be modified\n\
 or has to be entered as name for the new checkpoint object.\n\
 The @fBInterface@fR option menu allows the selection of a checkpointing interface.\n\
-Currently the types HIBERNATOR and USERDEFINED are valid.\n\
+Currently the types USERDEFINED, HIBERNATOR, TRANSPARENT, CPR, CRAY-CKPT, APPLICATION-LEVEL are valid.\n\
 The @fBCheckpoint Command@fR is a command-line type command string to be executed\n\
 by @fBGrid Engine@fR in order to initiate a checkpoint.\n\
 The @fBMigration Command@fR is a command-line type command string to be executed\n\
@@ -1041,7 +1052,7 @@ Qmon*qmon_tov.tov_layout*xmtHelpTitle: @fBPolicy Configuration Help
 Qmon*qmon_tov.tov_layout*xmtHelp: \
 The @fBPolicy Configuration@fR dialogue allows the setting and manipulation of all\n\
 relevant policy related settings as urgency, tickets and shares of the Grid Engine system.\n\
-For more detailed information consult the man page @fBsched_conf(5)@fR.\n\n\
+For more detailed information consult the man page @fBsched_conf(5)@fR and @fBsge_priority(5)@fR.\n\n\
 The main dialogue consists of four main sections.\n\
 The @fBPolicy Importance Factor@fR section allows to adjust the importance of\n\different scheduling policies compared to each other.\n\
 The @fBUrgency Policy@fR part allows the specification of @fBWeight Deadline@fR\n\
@@ -1069,9 +1080,7 @@ The four ticket based policies are @fBShare-based Policy, Functional Policy, Ini
 and Override Policy@fR.\n\
 Share-based and Functional Policy allow the long term adjustment of job scheduling\n\
 and resource management.\n\
-Initiation Deadline Policy and Override Policy are used to overrule the long term\n\
-policies under certain circumstances.\n\
-The ratio between the number of 'Total Share Tree and Total Functional Tickets' and the\n\
+Override Policy is used to overrule the long term policies under certain circumstances.\n\
 More details concerning the subdialogues are explained there. The different policies\n\
 are accessed via @fBShare Tree Policy, Functional Policy and Override Policy@fR.\n\
 In addition it is possible to go to the @fBUser Configuration@fR dialogue to\n\
@@ -1080,7 +1089,7 @@ Users allowed to submit deadline jobs are registered in the special userset\n\
 @fBdeadlineusers@fR. This is done with @fBUsers Allowed To Submit Deadline Jobs@fR.\n\
 \n\
 The @fBRefresh@fR button contacts the master daemon to get the freshest valid data.\n\
-With @fBDone@fR one quits the @fBTicket Overview@fR dialogue.
+With @fBDone@fR one quits the @fBPolicy Configuration@fR dialogue.
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1203,6 +1212,8 @@ specification.\n\
 The Share Tree Policy Parameters portion of the dialogue is displayed by pressing the red arrow\n\
 button at the bottom of the dialogue. The @fBCPU@fR, @fBMEM@fR, and @fBI/O@fR slider bars determine\n\
 the composition of the @fBCombined Usage@fR displayed for each node in the share tree.\n\
+The locks keep the current setting of one of the categories constant and allow the distribution of\n\
+the remaining ratio between the other categories.\n\
 The @fBHalflife Decay List@fR allows to configure different decay rates for the\n\
 finished_jobs usage types, which is used in the pending job ticket calculation\n\
 to account for jobs which have just ended.\n\
@@ -1216,8 +1227,7 @@ user in order to reach their targeted resource share.
 Qmon*fticket_layout*xmtHelpTitle: @fBFunctional Policy Help
 Qmon*fticket_layout*xmtHelp: \
 The @fBFunctional Policy@fR dialogue allows the Grid Engine manager to specify how system\n\
-resources should be shared among Grid Engine @fBUsers, Departments, Projects, Job and Jobclass@fR,\n\
-where Jobclass is currently identical to a Grid Engine queue.\n\
+resources should be shared among Grid Engine @fBUsers, Departments, Projects and Job@fR.\n\
 \n\
 Selecting one of the categories listed above from the @fBoption menu@fR topleft displays all\n\
 configured objects of this kind in the matrix with their current settings. To change the number\n\
@@ -1235,8 +1245,7 @@ The @fBTwisted Red Arrow@fR links to the corresponding object configuration dial
 Qmon*oticket_layout*xmtHelpTitle: @fBOverride Policy Help
 Qmon*oticket_layout*xmtHelp: \
 The @fBOverride Policy@fR dialogue allows the Grid Engine manager to specify how shorttrem system\n\
-resources should be overriden among Grid Engine @fBUsers, Departments, Projects, Job and Jobclass@fR,\n\
-where Jobclass is currently identical to a Grid Engine queue.\n\
+resources should be overriden among Grid Engine @fBUsers, Departments, Projects and Job@fR.\n\
 \n\
 Selecting one of the categories listed above from the @fBoption menu@fR topleft displays all\n\
 configured objects of this kind in the matrix with their current settings. To change the number\n\

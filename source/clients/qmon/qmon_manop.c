@@ -100,6 +100,7 @@ static Widget manop_modify = NULL;
 
 static int dialog_mode = SGE_MANAGER_LIST;
 
+static Widget manop_folder = 0;
 static Widget userset_layout = 0;
 static Widget userset_names = 0;
 static Widget userset_user_list = 0;
@@ -138,6 +139,8 @@ XtPointer cld, cad;
                               qmonPopdownManopConfig, NULL);
       XtAddEventHandler(XtParent(qmon_manop), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
+      XtAddEventHandler(XtParent(qmon_manop), StructureNotifyMask, False, 
+                        SetMaxShellSize, NULL);
    } 
    
    qmonMirrorMultiAnswer(MANAGER_T | OPERATOR_T | USERSET_T | USER_T, &alp);
@@ -154,6 +157,13 @@ XtPointer cld, cad;
    qmonManopFillList();
 
    xmui_manage(qmon_manop);
+
+   /*
+   ** switch to userset
+   */
+   if (cld) {
+      XmTabSetTabWidget(manop_folder, userset_layout, True);
+   }
 
    /* set default cursor */
    XmtDisplayDefaultCursor(w);
@@ -182,7 +192,7 @@ static Widget qmonCreateManopConfig(
 Widget parent 
 ) {
    Widget manop_layout, manop_add, manop_delete, manop_done, manop_help,
-          manop_main_link, manop_folder, user_layout, manop_tickets;
+          manop_main_link, user_layout, manop_tickets;
 
    DENTER(GUI_LAYER, "qmonCreateManopConfig");
    

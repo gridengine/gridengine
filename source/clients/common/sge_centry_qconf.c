@@ -512,7 +512,7 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
 
       /* check for duplicate names */
       next_centry_elem = lFirst(*this_list);
-      while (centry_elem = next_centry_elem) {
+      while ((centry_elem = next_centry_elem)) {
          lListElem *cmp_elem = lFirst(*this_list);
             
          while((centry_elem != cmp_elem)){

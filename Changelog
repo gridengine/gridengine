@@ -1,3 +1,16 @@
+AA-2004-08-12-0: Bugfix:     - qmon_help.ad help corrections
+                             - sge_centry_qconf.c missing parentheses break build
+                             - qmon_calendar.c NONE strings were missing for added calendars
+                             - qmon_ckpt.c Reschedule flag is part of Signal When flags
+                             - qmon_cluster.c delegated_file_staging flag added
+                             - qmon_manop.c set corresponding tab when invoked from Policy dialog
+                               dialog resize
+                             - qmon_util.c hostgroups with @f* were not displayed
+                 Issues:     reported during tests             
+                 Review:     CR
+                 Changed:    qmon
+                 
+                             
 MD-2004-08-12-0: Bugfix:     changed wrong directory of qping binary
                              autoinst shadowd
                  Changed:    inst_sge

@@ -1,3 +1,9 @@
+SG-2003-07-31-0: Bugfix:    global load value not working as load_threshold
+
+                 Changed:   sge_schedd, qstat, qmon, qhost
+                 Issue:     589
+                 Review:    AH
+
 SG-2003-07-29-0: Bugfix     - Corrected the order of pending jobs in case of
                             functional tickets.
                             - added error handling to lGetRef

@@ -1,3 +1,6 @@
+CR-2002-06-13-4: Testsuite: merged qrsh test for hold_jid and h option from
+                            maintrunc
+
 CR-2002-06-13-3: Testsuite: enhanced qstat test for -l/-q/-pe/-U option tests
                  Issue:     #286
 

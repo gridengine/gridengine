@@ -60,6 +60,8 @@ set check_root_access_needs  "yes"
 
 # define test's procedure order
 set check_functions ""
+lappend check_functions "qrsh_h"                     ;# test -h option
+lappend check_functions "qrsh_hold_jid"              ;# test -hold_jid option
 lappend check_functions "qrsh_function"              ;# is a job executed?
 lappend check_functions "qrsh_alltoall"              ;# qrsh from all hosts to all hosts
 lappend check_functions "qrsh_starter_method"        ;# does the starter method work for qrsh?
@@ -205,6 +207,194 @@ proc qrsh_function {} {
    set_error 0 "ok"
 }
 
+
+proc qrsh_h {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH 
+   global CHECK_HOST CHECK_USER
+   global open_spawn_buffer
+
+
+   if { [have_root_passwd] == -1 } {
+      set_error -3 "root access required"
+      return
+   } 
+
+
+   puts $CHECK_OUTPUT "qrsh -h functional test"
+
+   wait_for_end_of_all_jobs 30
+
+   set my_outputs "-o /dev/null -e /dev/null"
+   set arguments "$my_outputs $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
+   set job_id [submit_job $arguments]
+   delete_job $job_id  ;# now we know the last job id
+
+   incr job_id 1       ;# job id of next job !
+
+
+   set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh \
+                "-h echo qrsh sucessfully started"]
+   set sp_id [ lindex $qrsh_id 1 ] 
+  
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   wait_for_jobpending $job_id "echo" 60 
+
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   set run_result [get_standard_job_info $job_id ]
+   foreach line $run_result {
+      set tmp_job_id [lindex $line 0]
+      set tmp_job_state [ lindex $line 4 ]
+      puts $CHECK_OUTPUT "job id: $tmp_job_id, job state: $tmp_job_state"
+   }
+
+   if { $tmp_job_state != "hqw" } {
+      add_proc_error "qrsh_h" -1 "qrsh -h job is not in pending state"
+   }
+
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   set timeout 15
+   expect {
+         -i $sp_id full_buffer {
+            close_spawn_process $qrsh_id
+            set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            return
+         }
+
+         -i $sp_id default {
+            puts $CHECK_OUTPUT "qrsh -h timeout for hold state ok, now releasing job $job_id"
+         }
+         -i $sp_id "qrsh sucessfully started" {
+            add_proc_error "qrsh_h" -1 "qrsh -h failed" 
+         }
+   }
+
+   release_job $job_id
+
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   set timeout 60
+   expect {
+         -i $sp_id full_buffer {
+            close_spawn_process $qrsh_id
+            set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            return
+         }
+
+         -i $sp_id default {
+            add_proc_error "qrsh_h" -1 "qrsh -h failed for job $job_id"
+            close_spawn_process $qrsh_id
+         }
+         -i $sp_id "qrsh sucessfully started" {
+            puts $CHECK_OUTPUT "qrsh -h ok"
+            close_spawn_process $qrsh_id
+         }
+   }
+   set_error 0 "ok"
+}
+
+
+proc qrsh_hold_jid {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH 
+   global CHECK_HOST CHECK_USER
+   global open_spawn_buffer
+
+
+   if { [have_root_passwd] == -1 } {
+      set_error -3 "root access required"
+      return
+   } 
+
+
+   puts $CHECK_OUTPUT "qrsh -hold_jid functional test"
+
+   wait_for_end_of_all_jobs 30
+
+   set my_outputs "-o /dev/null -e /dev/null"
+   set arguments "$my_outputs $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 6000"
+   set hold_job_id [submit_job $arguments] 
+   set job_id [ expr ( $hold_job_id + 1 )]
+
+   set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh \
+                "-hold_jid $hold_job_id echo qrsh sucessfully started"]
+   set sp_id [ lindex $qrsh_id 1 ] 
+  
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   wait_for_jobpending $job_id "echo" 60 
+
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   set run_result [get_standard_job_info $job_id ]
+   foreach line $run_result {
+      set tmp_job_id [lindex $line 0]
+      set tmp_job_state [ lindex $line 4 ]
+      puts $CHECK_OUTPUT "job id: $tmp_job_id, job state: $tmp_job_state"
+   }
+
+   if { $tmp_job_state != "hqw" } {
+      add_proc_error "qrsh_h" -1 "qrsh -hold_jid job is not in pending state"
+   }
+
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   set timeout 15
+   expect {
+         -i $sp_id full_buffer {
+            close_spawn_process $qrsh_id
+            set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            return
+         }
+
+         -i $sp_id default {
+            puts $CHECK_OUTPUT "qrsh -hold_jid timeout for hold state ok, now deleting job $hold_job_id"
+         }
+         -i $sp_id "qrsh sucessfully started" {
+            add_proc_error "qrsh_h" -1 "qrsh -hold_jid failed" 
+         }
+   }
+
+   delete_job $hold_job_id
+
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   set timeout 60
+   expect {
+         -i $sp_id full_buffer {
+            close_spawn_process $qrsh_id
+            set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            return
+         }
+
+         -i $sp_id default {
+            add_proc_error "qrsh_h" -1 "qrsh -hold_jid failed for job $job_id"
+            close_spawn_process $qrsh_id
+         }
+         -i $sp_id "qrsh sucessfully started" {
+            puts $CHECK_OUTPUT "qrsh -hold_jid ok"
+            close_spawn_process $qrsh_id
+         }
+   }
+   set_error 0 "ok"
+}
 
 #                                                             max. column:     |
 #****** qrsh/qrsh_alltoall() ******

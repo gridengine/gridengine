@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2002/03/06 11:22:22 $     Revision: $Revision: 1.14 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2002/03/22 10:54:06 $     Revision: $Revision: 1.15 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2002/03/06 11:22:22 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2002/03/22 10:54:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -886,14 +886,6 @@ are not enough resources on the current one.
 If set to "true" or "1", the \fIreschedule_unknown\fP parameter
 is not taken into account.
 .PP
-.IP "\fINO_REPRIORITIZATION\fP"
-If set to "true" or "1", jobs are not repriorized dynamically. Without
-setting this attribute the \fBpriority\fP parameter in
-.M sched_conf 5
-has no durable effect in a SGEEE system because of dynamic reprioritization
-performed by the PTF module inside
-.M sge_execd 8 .
-.PP
 Changing \fBqmaster_params\fP will take immediate effect.
 The default for \fBqmaster_params\fP is none.
 .PP
@@ -1009,6 +1001,14 @@ This value should only be set for debugging purposes. If set to true, the
 execution daemon will not remove the spool directory maintained by
 .M xxqs_name_sxx_shepherd 8
 for a job.
+.PP
+.IP "\fINO_REPRIORITIZATION\fP"
+If set to "true" or "1", jobs are not repriorized dynamically. Without
+setting this attribute the \fBpriority\fP parameter in
+.M sched_conf 5
+has no durable effect in a SGEEE system because of dynamic reprioritization
+performed by the PTF module inside
+.M sge_execd 8 .
 .PP
 .IP "\fIPTF_MIN_PRIORITY\fP, \fIPTF_MAX_PRIORITY\fP"
 The parameters are only available in a xxQS_NAME_EExx system.

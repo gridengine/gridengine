@@ -2,7 +2,7 @@ JG-2002-06-05-1: Bugfix:    Error handling when reading configuration at
                             qmaster startup was incomplete and produced
                             confusing error messages.
                  Issue:     #226
-                 Bugtraq:   #4665789
+                 Bugtraq:   #4665780
 
 
 AS-2002-06-05-2: Change:    print edit comment when cluster config is

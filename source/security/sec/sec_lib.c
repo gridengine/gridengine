@@ -481,7 +481,7 @@ int sec_init(const char *progname)
 *     int compressed        - use zlib compression 
 *
 *  RESULT
-*     int - 0 on success, -1 on failure
+*     int - 0 on success, CL_ or SEC_ errors otherwise
 *******************************************************************************/
 int sec_send_message(
 int synchron,

@@ -70,7 +70,7 @@
 
 #include "sge_mirror.h"
 #include "spool/sge_spooling.h"
-#include "spool/dynamic/sge_spooling_loader.h"
+#include "spool/loader/sge_spooling_loader.h"
 #include "sge_event.h"
 
 /* JG: TODO: This should be a public interface in libspool

@@ -48,7 +48,7 @@
 #include "sge_answer.h"
 #include "sge_mt_init.h"
 #include "spool/sge_spooling.h"
-#include "spool/dynamic/sge_spooling_loader.h"
+#include "spool/loader/sge_spooling_loader.h"
 #include "spool/berkeleydb/sge_bdb.h"
 #include "msg_utilbin.h"
 

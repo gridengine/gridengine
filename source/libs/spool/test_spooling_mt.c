@@ -56,7 +56,7 @@
 
 /* spool */
 #include "spool/sge_spooling.h"
-#include "spool/dynamic/sge_spooling_loader.h"
+#include "spool/loader/sge_spooling_loader.h"
 
 static const int loops = 2000;
 

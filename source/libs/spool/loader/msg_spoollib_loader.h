@@ -1,5 +1,5 @@
-#ifndef __MSG_SPOOLLIB_DYNAMIC_H
-#define __MSG_SPOOLLIB_DYNAMIC_H
+#ifndef __MSG_SPOOLLIB_LOADER_H
+#define __MSG_SPOOLLIB_LOADER_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -34,9 +34,9 @@
 
 #include "basis_types.h"
 
-#define MSG_SPOOL_ERROROPENINGSHAREDLIB_SS   _MESSAGE(68000, _("error opening shared lib "SFQ": "SFN"\n"))
-#define MSG_SPOOL_SHLIBDOESNOTCONTAINSPOOLING_SS   _MESSAGE(68001, _(SFQ" does not contain a valid Grid Engine spooling method: "SFN"\n"))
-#define MSG_SPOOL_LOADINGSPOOLINGMETHOD_SS   _MESSAGE(68002, _("loading spooling method "SFQ" from "SFQ"\n"))
+/*
+ * libs/spool/sge_spooling_loader.c
+ */
+#define MSG_SPOOL_ERRORCREATINGCONTEXT_S   _MESSAGE(211000, _("error creating a "SFQ" spooling context\n"))
 
-#endif /* __MSG_SPOOLLIB_DYNAMIC_H */
-
+#endif /* __MSG_SPOOLLIB_LOADER_H */

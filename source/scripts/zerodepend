@@ -59,6 +59,7 @@ files=" \
        libs/evm/evm_dependencies  \
        libs/mir/mir_dependencies  \
        libs/spool/spool_dependencies  \
+       libs/spool/loader/spoolloader_dependencies  \
        libs/spool/berkeleydb/spoolb_dependencies  \
        libs/spool/classic/spoolc_dependencies  \
        libs/spool/dynamic/spoold_dependencies  \

@@ -45,8 +45,7 @@
 #include "sge_event_master.h"
 
 #include "spool/sge_spooling.h"
-#include "spool/dynamic/sge_spooling_loader.h"
-
+#include "spool/loader/sge_spooling_loader.h"
 
 #include "sge_persistence_qmaster.h"
 

@@ -49,7 +49,7 @@
 #include "sge_manop.h"
 #include "sge_mt_init.h"
 #include "spool/sge_spooling.h"
-#include "spool/dynamic/sge_spooling_loader.h"
+#include "spool/loader/sge_spooling_loader.h"
 #include "msg_utilbin.h"
 
 
@@ -114,15 +114,10 @@ int main(int argc, char *argv[])
 
    sge_getme(SPOOLDEFAULTS);
 
-   if (argc == 2 && strcmp(argv[1], "method") == 0) {
+   if (argc < 2) {
+      usage(argv[0]);
+   } else if (argc == 2 && strcmp(argv[1], "method") == 0) {
       printf("%s\n", get_spooling_method());
-   } else if (!sge_setup_paths(sge_get_default_cell(), NULL)) {
-      /* will never be reached, as sge_setup_paths exits on failure */
-      ret = EXIT_FAILURE;
-   } else if (!sge_bootstrap(NULL)) {
-      ret = EXIT_FAILURE;
-   } else if (feature_initialize_from_string(bootstrap_get_security_mode())) {
-      ret = EXIT_FAILURE;
    } else {
       spooling_maintenance_command cmd = SPM_info;
       /* parse commandline */

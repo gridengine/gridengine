@@ -41,7 +41,7 @@
 
 #include "spool/sge_spooling.h"
 
-lListElem *Default_Spool_Context;
+static lListElem *Default_Spool_Context;
 
 /****** spool/spool_create_context() ************************************
 *  NAME

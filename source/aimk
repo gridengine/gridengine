@@ -328,6 +328,7 @@ usage:
    echo "-qmake            -> use qmake instead of make"
    echo "-shared-libs      -> create libraries as shared libs"
    echo "-spool-classic    -> use classic flatfile spooling"
+   echo "-spool-dynamic    -> allow loading of spooling method from shared lib"
    echo "-sunman           -> create man pages for Sun branded man pages (with -man[kv])"
    echo "-umap             -> compile with usermapping and hostgroup feature"
   exit
@@ -456,12 +457,13 @@ set KLIBS             = ""
 set PERLGUI           = ""
 set PERLGUI_CLEAN     = ""
 
-# SPOOLING
+# SPOOLING - default method
 set SPOOLING_METHOD   = "berkeleydb"
-set SPOOLING_LIBS     = "-lspoold -lspoolb -lspool -ldb"
-set SPOOLING_DEPS     = "libspool libspoold libspoolb"
+set SPOOLING_LIBS     = "-lspoolloader -lspoolb -lspool -ldb"
+set SPOOLING_DEPS     = "spoolloaderlib spoolblib spoollib"
 set CFLAGS            = "-I$BERKELEYDB_HOME/include $CFLAGS"
 set LFLAGS            = "-L$BERKELEYDB_HOME/lib $LFLAGS"
+set SHARED_LFLAGS    = "$SHARED_LFLAGS -L$BERKELEYDB_HOME/lib"
 
 # Compile with gettext and libintl - we have platform dependent defaults
 switch ($BUILDARCH) 
@@ -799,8 +801,14 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-spool-classic":
       set SPOOLING_METHOD = "classic"
-      set SPOOLING_LIBS   = "-lspoold -lspoolc -lspool"
-      set SPOOLING_DEPS   = "libspool libspoold libspoolc"
+      set SPOOLING_LIBS   = "-lspoolloader -lspoolc -lspool"
+      set SPOOLING_DEPS   = "spoolloaderlib spoolclib spoollib"
+      breaksw
+   case "-spool-dynamic":
+      set SPOOLING_METHOD = "dynamic"
+      set SPOOLING_LIBS   = "-lspoolloader -lspoold -lspool"
+      set SPOOLING_DEPS   = "libspoolloader libspoold libspool libspoolc libspoolb"
+      set SPOOLING_DEPS   = "spoolloaderlib spooldlib spoollib spoolclib spoolblib"
       breaksw
    case "-sunman":
       set SGE_PRODUCT_MODE=sge
@@ -875,8 +883,8 @@ case AIX51:
 
    set SHAREDLD = "xlc_r"
    set SHARED_CFLAGS = ""
-   set SHARED_LFLAGS = "-brtl -bexpall -bhalt:4 -bM:SRE -H512 -T512 -bnoentry"
-#   set SHARED_LFLAGS = "-brtl -bexpall -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+   set SHARED_LFLAGS = "-L. $SHARED_LFLAGS -brtl -bexpall -bhalt:4 -bM:SRE -H512 -T512 -bnoentry"
+#   set SHARED_LFLAGS = "-$SHARED_LFLAGS brtl -bexpall -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
    breaksw
 
 case ALPHA5:
@@ -908,7 +916,7 @@ case ALPHA5:
 
    set SHAREDLD      = $CC
    set SHARED_CFLAGS = ""
-   set SHARED_LFLAGS = "-L. -shared -pthread"
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared -pthread"
 
    set LFLAGS   = "-pthread $DEBUG_FLAG $LFLAGS"
    set XMTDEF   = ""
@@ -958,7 +966,7 @@ case DARWIN:
 
    set SHAREDLD = "$CC -dynamiclib -flat_namespace -undefined warning"
    set SHARED_CFLAGS = "-dynamic"
-   set SHARED_LFLAGS = "-L."
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L."
    set SHAREDEXT = ".dylib"
    if ( $SHAREDLIBS == 1 ) then
       set libext = ".dylib"
@@ -1013,7 +1021,7 @@ case FREEBSD_*:
    set LIBS     = "$LIBS -lkvm"
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-fPIC"
-   set SHARED_LFLAGS = "-L. -shared" 
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared" 
    
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
@@ -1050,7 +1058,7 @@ case IRIX65:
 
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-KPIC"
-   set SHARED_LFLAGS = "-L. -shared"
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
    breaksw
 
 case HP11:
@@ -1087,10 +1095,10 @@ case HP1164:
    set SHAREDLD = ld
    if ( $CC == gcc ) then
       set SHARED_CFLAGS = "-fPIC"
-      set SHARED_LFLAGS = "-L. -shared"
+      set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
    else
       set SHARED_CFLAGS = "+z"
-      set SHARED_LFLAGS = "-L. -b +s"
+      set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -b +s"
    endif
 
    set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
@@ -1164,7 +1172,7 @@ case LINUXIA64:
 
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-fPIC"
-   set SHARED_LFLAGS = "-L. -shared"
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
 
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"
@@ -1267,7 +1275,7 @@ case SLINUX:
 
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-fPIC"
-   set SHARED_LFLAGS = "-L. -shared"
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
 
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
@@ -1349,13 +1357,13 @@ case SOLARIS86:
    set SHAREDLD = $CC
    if ( $CC == gcc ) then
       set SHARED_CFLAGS = "-fPIC"
-      set SHARED_LFLAGS = "-L. -shared"
+      set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
    else
       set SHARED_CFLAGS = "-KPIC"
       if ( $BUILDARCH == SOLARIS64 ) then
-         set SHARED_LFLAGS = "-L. -G -xarch=v9"
+         set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=v9"
       else
-         set SHARED_LFLAGS = "-L. -G"
+         set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G"
       endif
    endif
 
@@ -1446,13 +1454,13 @@ else
    set LIBEXT = ".a"
 endif
 
-# spooling library dependencies
-#
-set TMP_SPOOLING_DEPS = "$SPOOLING_DEPS"
-set SPOOLING_DEPS     = ""
-foreach lib ( $TMP_SPOOLING_DEPS )
-   set SPOOLING_DEPS = "${SPOOLING_DEPS} ${lib}${LIBEXT}"
-end
+# settings for spooling libraries - shared vs. static
+# if we use the dynamic spooling, we need shared spooling libs
+if ( $SPOOLING_METHOD == "dynamic" ) then
+   set SPOOLLIBEXT = "$SHAREDEXT"
+else
+   set SPOOLLIBEXT = $LIBEXT
+endif
 
 # for gettext
 #
@@ -1669,6 +1677,7 @@ if ( "$CORE" == 1 ) then
          "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
          "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS $KLFLAGS" \
          "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
+         "SPOOLLIBEXT=$SPOOLLIBEXT" \
          "DLLIB=$DLLIB" \
          "MEMCFLAG=$MEMCFLAG" \
          "CORE_INCLUDE=$CORE_INCLUDE" \
@@ -1735,6 +1744,7 @@ if ( "$QMON" == 1 ) then
          "INTERACTTARGETS=$INTERACTTARGETS" \
          "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
          "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS $KLFLAGS" \
+         "SPOOLLIBEXT=$SPOOLLIBEXT" \
          "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
          "DLLIB=$DLLIB" \
          "MEMCFLAG=$MEMCFLAG" \

@@ -55,7 +55,8 @@ REMOTEBINARIES="rsh rshd rlogin"
 JOBBINARIES="work"
 
 SHARED_LIBRARIES="libcom libcull libgdi librmon libsched libsge libuti \
-                  libspool libspoold libspoolc libspoolf libsgeobj libsgeobjd \
+                  libspool libspoolb libspoold libspoolc libspoolf \
+                  libsgeobj libsgeobjd \
                   libevc libevm libmir"
 
 QMON_SHARED_LIBRARIES="libXbae libXicon libXmt libXspin libXtab"

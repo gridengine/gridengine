@@ -1,3 +1,8 @@
+JG-2004-04-14-0: Enhancem.: Reintegrated and verified dynamic loading of a 
+                            spooling method.
+                 Changed:   sge_qmaster, spoolinit, spooldefaults
+                 Review:    EB
+
 CR-2004-04-13-2: Enhancem.: updated man pages (communication lib changes)
 
 CR-2004-04-13-1: Enhancem.: Added new utilbin binary: gridping

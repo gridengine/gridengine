@@ -30,28 +30,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
-#ifdef SPOOLING_dynamic
-#ifdef LINUX
-#define __USE_GNU
-#endif
-
-#include <dlfcn.h>
-
-#ifdef LINUX
-#undef __USE_GNU
-#endif
-
-#ifdef SOLARIS
-#include <link.h>
-#endif
-#endif
-
-#include "sgermon.h"
-#include "sge_log.h"
-
-#include "sge_answer.h"
-
-#include "spool/sge_spooling.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_log.h"
+#include "sgeobj/sge_answer.h"
 
 #ifdef SPOOLING_berkeleydb
 #include "spool/berkeleydb/sge_spooling_berkeleydb.h"
@@ -65,13 +46,15 @@
 #ifdef SPOOLING_postgres
 #include "spool/postgres/sge_spooling_postgres.h"
 #endif
+#ifdef SPOOLING_dynamic
+#include "spool/dynamic/sge_spooling_dynamic.h"
+#endif
 
-#include "spool/msg_spoollib.h"
-#include "spool/dynamic/msg_spoollib_dynamic.h"
+#include "spool/loader/msg_spoollib_loader.h"
 
-#include "spool/dynamic/sge_spooling_loader.h"
+#include "spool/loader/sge_spooling_loader.h"
 
-/****** spool/dynamic/spool_create_dynamic_context() *********************
+/****** spool/spool_create_dynamic_context() *********************
 *  NAME
 *     spool_create_dynamic_context() -- create a spooling context
 *
@@ -106,104 +89,37 @@ lListElem *
 spool_create_dynamic_context(lList **answer_list, 
                              const char *shlib_name, const char *args)
 {
-#ifdef SPOOLING_dynamic
-   void *shlib_handle;
-#endif
-
    const char *spooling_name;
-   spooling_create_context_func create_context;
-
    lListElem *context = NULL;
-
-   bool init_ok = true;
 
    DENTER(TOP_LAYER, "spool_create_dynamic_context");
 
 #ifdef SPOOLING_berkeleydb
    spooling_name = "berkeleydb";
-   create_context = spool_berkeleydb_create_context;
+   context = spool_berkeleydb_create_context(answer_list, args);
 #endif
 #ifdef SPOOLING_classic
    spooling_name = "classic";
-   create_context = spool_classic_create_context;
+   context = spool_classic_create_context(answer_list, args);
 #endif
 #ifdef SPOOLING_flatfile
    spooling_name = "flatfile";
-   create_context = spool_flatfile_create_context;
+   context = spool_flatfile_create_context(answer_list, args);
 #endif
 #ifdef SPOOLING_postgres
    spooling_name = "postgres";
-   create_context = spool_postgres_create_context;
+   context = spool_postgres_create_context(answer_list, args);
 #endif
 #ifdef SPOOLING_dynamic
-   {
-      spooling_get_method_func get_spooling_method;
-
-      shlib_handle = dlopen(shlib_name, RTLD_NOW);
-      if (shlib_handle == NULL) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_SPOOL_ERROROPENINGSHAREDLIB_SS, 
-                                 shlib_name, dlerror());
-         init_ok = false;
-      } else {
-         get_spooling_method = (spooling_get_method_func)
-                               dlsym(shlib_handle, "get_spooling_method");
-         if (get_spooling_method == NULL) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_SPOOL_SHLIBDOESNOTCONTAINSPOOLING_SS, 
-                                    shlib_name, dlerror());
-            init_ok = false;
-         } else {
-            char buffer[MAX_STRING_SIZE];
-            dstring create_context_func_name;
-            sge_dstring_init(&create_context_func_name, buffer, 
-                             MAX_STRING_SIZE);
-            spooling_name = get_spooling_method();
-
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_INFO, 
-                                    MSG_SPOOL_LOADINGSPOOLINGMETHOD_SS, 
-                                    spooling_name, shlib_name);
-
-            sge_dstring_sprintf(&create_context_func_name, 
-                                "spool_%s_create_context", spooling_name);
-
-            create_context = 
-                  (spooling_create_context_func) 
-                  dlsym(shlib_handle, 
-                        sge_dstring_get_string(&create_context_func_name));
-            if (create_context == NULL) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_SPOOL_SHLIBDOESNOTCONTAINSPOOLING_SS,
-                                       shlib_name, dlerror());
-               init_ok = false;
-            }
-         }
-      }
-   }
-
+   spooling_name = "dynamic";
+   context = spool_dynamic_create_context(answer_list, shlib_name, args);
 #endif
 
-   if (init_ok) {
-      context = create_context(answer_list, args);
-      if (context == NULL) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_SPOOL_ERRORCREATINGCONTEXT_S, 
-                                 spooling_name);
-      }
-   }
-
-   /* cleanup in case of initialization error */
    if (context == NULL) {
-#ifdef SPOOLING_dynamic
-      if (shlib_handle != NULL) {
-         dlclose(shlib_handle);
-      }
-#endif
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_SPOOL_ERRORCREATINGCONTEXT_S, 
+                              spooling_name);
    }
 
    DEXIT;

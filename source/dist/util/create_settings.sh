@@ -43,7 +43,7 @@ ErrUsage()
    echo
    echo "usage: `basename $0` outdir"
    echo "       \$SGE_ROOT must be set"
-   echo "       \$SGE_CELL, \$SGE_QMASTER_PORT and \$SGE_EXECD_PORT must be set if used in your environment"
+   echo "       \$SGE_CELL and \$COMMD_PORT must be set if used in your environment"
    exit 1
 }
 
@@ -66,29 +66,17 @@ echo "set DEFAULTMANPATH = \`\$SGE_ROOT/util/arch -m\`"  >> $SP_CSH
 echo "set MANTYPE = \`\$SGE_ROOT/util/arch -mt\`"        >> $SP_CSH
 echo ""                                                  >> $SP_CSH
 
-#if [ "$SGE_CELL" != "" -a "$SGE_CELL" != "default" ]; then
+if [ "$SGE_CELL" != "" -a "$SGE_CELL" != "default" ]; then
    echo "setenv SGE_CELL $SGE_CELL"                      >> $SP_CSH
-#else
-#   echo "unsetenv SGE_CELL"                              >> $SP_CSH
-#fi
-
-if [ "$SGE_QMASTER_PORT" != "" ]; then
-   echo "setenv SGE_QMASTER_PORT $SGE_QMASTER_PORT"                  >> $SP_CSH
 else
-   echo "unsetenv SGE_QMASTER_PORT"                                  >> $SP_CSH
+   echo "unsetenv SGE_CELL"                              >> $SP_CSH
 fi
 
-if [ "$SGE_EXECD_PORT" != "" ]; then
-   echo "setenv SGE_EXECD_PORT $SGE_EXECD_PORT"                      >> $SP_CSH
+if [ "$COMMD_PORT" != "" ]; then
+   echo "setenv COMMD_PORT $COMMD_PORT"                  >> $SP_CSH
 else
-   echo "unsetenv SGE_EXECD_PORT"                                    >> $SP_CSH
+   echo "unsetenv COMMD_PORT"                            >> $SP_CSH
 fi
-
-
-   echo "setenv QMASTER_SPOOL_DIR $QMDIR"                            >> $SP_CSH
-
-   echo "setenv EXECD_SPOOL_DIR $CFG_EXE_SPOOL"                      >> $SP_CSH
-
 
 echo ""                                                          >> $SP_CSH
 echo 'if ( $?MANPATH == 1 ) then'                                >> $SP_CSH
@@ -102,7 +90,7 @@ echo "set shlib_path_name = \`\$SGE_ROOT/util/arch -lib\`"       >> $SP_CSH
 
 echo "if ( \`eval echo '\$?'\$shlib_path_name\` ) then"          >> $SP_CSH
 echo "   set old_value = \`eval echo '\$'\$shlib_path_name\`"    >> $SP_CSH
-echo "   setenv \$shlib_path_name \"\$SGE_ROOT/lib/\$ARCH\":\"\$old_value\""   >> $SP_CSH
+echo "   setenv \$shlib_path_name \"\$old_value\":\"\$SGE_ROOT/lib/\$ARCH\""   >> $SP_CSH
 echo "else"                                                      >> $SP_CSH
 echo "   setenv \$shlib_path_name \$SGE_ROOT/lib/\$ARCH"         >> $SP_CSH
 echo "endif"                                                     >> $SP_CSH
@@ -117,24 +105,25 @@ echo "DEFAULTMANPATH=\`\$SGE_ROOT/util/arch -m\`"                >> $SP_SH
 echo "MANTYPE=\`\$SGE_ROOT/util/arch -mt\`"                      >> $SP_SH
 echo ""                                                          >> $SP_SH
 
-   echo "SGE_CELL=$SGE_CELL; export SGE_CELL"                          >> $SP_SH
-
-if [ "$SGE_QMASTER_PORT" != "" ]; then
-   echo "SGE_QMASTER_PORT=$SGE_QMASTER_PORT; export SGE_QMASTER_PORT"  >> $SP_SH
+if [ "$SGE_CELL" != "" -a "$SGE_CELL" != "default" ]; then
+   echo "SGE_CELL=SGE_CELL_VAL; export SGE_CELL"                 >> $SP_SH
 else
-   echo "unset SGE_QMASTER_PORT"                                       >> $SP_SH              
-fi
-if [ "$SGE_EXECD_PORT" != "" ]; then
-   echo "SGE_EXECD_PORT=$SGE_EXECD_PORT; export SGE_EXECD_PORT"        >> $SP_SH
-else
-   echo "unset SGE_EXECD_PORT"                                       >> $SP_SH    
+   echo "unset SGE_CELL"                                         >> $SP_SH
 fi
 
+if [ "$COMMD_PORT" != "" ]; then
+   echo "COMMD_PORT=$COMMD_PORT; export COMMD_PORT"              >> $SP_SH
+else
+   echo "unset COMMD_PORT"                                       >> $SP_SH              
+fi
 
-   echo "QMASTER_SPOOL_DIR=$QMDIR; export QMASTER_SPOOL_DIR"           >> $SP_SH
+if [ "$SGE_CELL" != "" -a "$SGE_CELL" != "default" ]; then
+   echo "SGE_CELL=SGE_CELL_VAL; export SGE_CELL"                 >> $SP_SH
+fi
 
-   echo "EXECD_SPOOL_DIR=$CFG_EXE_SPOOL; export EXECD_SPOOL_DIR"       >> $SP_SH
-
+if [ "$COMMD_PORT" != "" ]; then
+   echo "COMMD_PORT=$COMMD_PORT; export COMMD_PORT"              >> $SP_SH
+fi
 
 echo ""                                                          >> $SP_SH
 echo "if [ \"\$MANPATH\" = \"\" ]; then"                         >> $SP_SH
@@ -148,7 +137,7 @@ echo "old_value=\`eval echo '\$'\$shlib_path_name\`"             >> $SP_SH
 echo "if [ x\$old_value = "x" ]; then"                           >> $SP_SH
 echo "   eval \$shlib_path_name=\$SGE_ROOT/lib/\$ARCH"           >> $SP_SH
 echo "else"                                                      >> $SP_SH
-echo "   eval \$shlib_path_name=\$SGE_ROOT/lib/\$ARCH:\$old_value" >> $SP_SH
+echo "   eval \$shlib_path_name=\$old_value:\$SGE_ROOT/lib/\$ARCH" >> $SP_SH
 echo "fi"                                                        >> $SP_SH
 echo "export \$shlib_path_name"                                  >> $SP_SH
 echo "unset ARCH DEFAULTMANPATH MANTYPE shlib_path_name"         >> $SP_SH

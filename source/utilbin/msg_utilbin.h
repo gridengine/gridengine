@@ -77,6 +77,7 @@
 /* 
 ** utilbin/gethostbyaddr.c
 */ 
+#define MSG_SYSTEM_GETHOSTBYADDRFAILED       _MESSAGE(57019, _("gethostbyaddr() failed"))
 #define MSG_SYSTEM_HOSTNAMEIS_S              _MESSAGE(57020, _("Hostname: "SFN"\n"))
 #define MSG_SYSTEM_ALIASES                   _MESSAGE(57021, _("Aliases:  "))
 #define MSG_SYSTEM_ADDRESSES                 _MESSAGE(57022, _("Host Address(es): "))
@@ -87,6 +88,8 @@
 ** utilbin/gethostname.c
 */ 
 #define MSG_COMMAND_USAGE_GETHOSTNAME        _MESSAGE(57023, _("get resolved hostname of this host\n"))
+#define MSG_SYSTEM_GETHOSTNAMEFAILED         _MESSAGE(57024, _("gethostname() failed"))
+#define MSG_SYSTEM_GETHOSTBYNAMEFAILED       _MESSAGE(57025, _("gethostbyname() failed"))
 
 
 /* 
@@ -125,47 +128,5 @@
 ** utilbin/range.c
 */ 
 /* #define MSG_COMMAND_USAGE_RANGE              _message(57037, _("usage: range lower upper\n") )  __TS Removed automatically from testsuite!! TS__*/
-
-/*
- * utilbin/spooldefaults.c
- */
-
-#define MSG_SPOOLDEFAULTS_COMMANDINTRO1   _MESSAGE(57040,         _("create default entries during installation process\n"))
-#define MSG_SPOOLDEFAULTS_COMMANDINTRO2   _MESSAGE(57041,         _("following are the valid commands:\n"))
-#define MSG_SPOOLDEFAULTS_TEST            _MESSAGE(57042,         _("test                          test the spooling framework\n"))
-#define MSG_SPOOLDEFAULTS_MANAGERS        _MESSAGE(57043,         _("managers <mgr1> [<mgr2> ...]  create managers\n"))
-#define MSG_SPOOLDEFAULTS_OPERATORS       _MESSAGE(57044,         _("operators <op1> [<op2> ...]   create operators\n"))
-#define MSG_SPOOLDEFAULTS_PES             _MESSAGE(57045,         _("pes <template_dir>            create parallel environments\n"))
-#define MSG_SPOOLDEFAULTS_CONFIGURATION          _MESSAGE(57047,  _("configuration <template>      create the global configuration\n"))
-#define MSG_SPOOLDEFAULTS_LOCAL_CONF          _MESSAGE(57048,     _("local_conf <template> <name>  create a local configuration\n"))
-#define MSG_SPOOLDEFAULTS_USERSETS            _MESSAGE(57049,     _("usersets <template_dir>       create usersets\n"))
-#define MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT   _MESSAGE(57051, _("cannot create spooling context\n"))
-#define MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT  _MESSAGE(57052, _("cannot startup spooling context\n"))
-#define MSG_SPOOLDEFAULTS_COMPLEXES             _MESSAGE(57053,         _("complexes <template_dir>      create complexes\n"))
-
-/*
- * utilbin/spoolinit.c
- */
-
-#define MSG_SPOOLINIT_COMMANDINTRO0   _MESSAGE(57060, _("shlib libargs command [args]"))
-#define MSG_SPOOLINIT_COMMANDINTRO1   _MESSAGE(57061, _("database maintenance\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO2   _MESSAGE(57062, _("following are the valid commands\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO3   _MESSAGE(57063, _("init [history]    initialize the database [with history enabled]\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO4   _MESSAGE(57064, _("history on|off    switch spooling with history on or off\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO5   _MESSAGE(57065, _("backup path       backup the database to path\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO6   _MESSAGE(57066, _("purge days        remove historical data older than days\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO7   _MESSAGE(57067, _("vacuum            compress database, update statistics\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO8   _MESSAGE(57068, _("info              output information about the database\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO9   _MESSAGE(57069, _("method            output the compiled in spooling method\n"))
-
-/*
- * utilbin/dbstat
- */
-#define MSG_DBSTAT_COMMANDINTRO1   _MESSAGE(57070,         _("database query and maintenance\n"))
-#define MSG_DBSTAT_COMMANDINTRO2   _MESSAGE(57071,         _("following are the valid commands:\n"))
-#define MSG_DBSTAT_LIST            _MESSAGE(57072,         _("list [object type]  list all objects [matching object type]\n"))
-#define MSG_DBSTAT_DUMP            _MESSAGE(57073,         _("dump key            dump the objects matching key\n"))
-#define MSG_DBSTAT_DELETE          _MESSAGE(57074,         _("delete key          delete the objects matching key\n"))
-
 
 #endif /* __MSG_UTILBIN_H */

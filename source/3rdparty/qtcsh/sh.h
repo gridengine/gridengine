@@ -1,4 +1,4 @@
-/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.h,v 1.5 2004/02/09 13:19:27 andy Exp $ */
+/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.h,v 1.2 2001/10/30 10:53:45 joga Exp $ */
 /*
  * sh.h: Catch it all globals and includes file!
  */
@@ -1171,7 +1171,7 @@ extern int	tcsh;
 #define CATCH_EXEC
 #ifdef CATCH_EXEC
 #define __TCSH_SOURCE_CODE
-#include "sge_qtcsh.h"
+#include "exec_wrapper.h"
 #undef __TCSH_SOURCE_CODE
 #endif
 
@@ -1241,7 +1241,7 @@ EXTERN nl_catd catd;
  */
 #define SIGN_EXTEND_CHAR(a)	(((a) & 0x80) ? ((a) | ~0x7f) : (a))
 
-#if defined(LINUX86) || defined(IA64LINUXIA64) || defined(LINUXAMD64)
+#ifdef LINUX6
 #include <time.h>
 #endif
 

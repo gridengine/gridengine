@@ -1,12 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML>
 <HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
 	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
+	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Win32)">
 	<META NAME="AUTHOR" CONTENT="Charu Chaubal">
 	<META NAME="CREATED" CONTENT="20020801;8583283">
-	<META NAME="CHANGED" CONTENT="20030318;13395900">
+	<META NAME="CHANGEDBY" CONTENT="Charu Chaubal">
+	<META NAME="CHANGED" CONTENT="20020807;16141028">
 </HEAD>
 <BODY LANG="en-US">
 <H1>Reducing and Eliminating NFS usage by Grid Engine</H1>
@@ -156,7 +157,7 @@ should be set to a directory on the local compute host which is owned
 by the admin user and which ideally can handle intensive
 reading/writing (e.g., <CODE>/var/spool/sge</CODE>). The
 <I>execd_spool_dir</I> parameter can be specified when running the
-install_qmaster script. However, this directory must already existed
+install_execd script. However, this directory must already existed
 and be owned by the admin user, or else the script will complain and
 the execd will not function properly. Alternatively, the
 <I>execd_spool_dir</I> parameter can be changed in the cluster

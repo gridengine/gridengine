@@ -40,6 +40,7 @@
 #include "msg_utilbin.h"
 #include "sge_language.h"
 #include "sge_prog.h"
+#include "sge_os.h"
 #include "sge_host.h"
 
 void usage(void);
@@ -55,7 +56,7 @@ int main(int argc, char *argv[])
 {
    double avg[3];
    int loads;
-   char *name = NULL;
+	char *name;
 
 #ifdef SGE_LOADMEM
    sge_mem_info_t mem_info;
@@ -144,7 +145,7 @@ int main(int argc, char *argv[])
    print_mem_load(LOAD_ATTR_SWAP_USED, name, precision, mem_info.swap_total - mem_info.swap_free, m); 
    print_mem_load(LOAD_ATTR_VIRTUAL_USED, name, precision,(mem_info.mem_total + mem_info.swap_total) - 
                                           (mem_info.mem_free  + mem_info.swap_free), m); 
-#  ifdef IRIX
+#  ifdef IRIX6
    print_mem_load(LOAD_ATTR_SWAP_USED, name, precision, mem_info.swap_rsvd, m); 
 #  endif
 #endif /* SGE_LOADMEM */

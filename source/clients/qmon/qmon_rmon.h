@@ -37,6 +37,64 @@
 
 #include "sgermon.h"
 
+
+/*-----------------------------------------------------------------------
+
+#define DENTER_MAIN( layer, program ) \
+   static char SGE_FUNC[] = "main"; \
+   int old_layer; \
+   \
+   old_layer = 0; \
+   rmon_mopen(&argc,argv,program); \
+   LAYER = layer; \
+   if ( __CONDITION(TRACE) ) \
+      rmon_menter (SGE_FUNC)
+
+#define DENTER( layer, function) \
+   int old_layer; \
+   static char SGE_FUNC[] = function; \
+   \
+   old_layer = LAYER; \
+   LAYER = layer; \
+   if ( __CONDITION(TRACE) ) \
+      rmon_menter (SGE_FUNC)
+
+#define DEXIT  __CONDITION(TRACE)  ? \
+	rmon_mexit(SGE_FUNC,__FILE__,__LINE__),1   : 0, \
+LAYER=old_layer
+#define DTRACE          __CONDITION(TRACE)      ?  \
+        rmon_mtrace(SGE_FUNC,__FILE__,__LINE__),1 : 0;
+
+#define DPRINTF(x)      __CONDITION(INFOPRINT)  ?  rmon_mprintf x ,1 : 0 
+
+#define DTRACEID(x)     __CONDITION(TRACE)      ?  DEBUG_TRACEID=x,1 : 0;
+#define DJOBTRACE(x)    __CONDITION(JOBTRACE)   ?  rmon_mjobtrace x,1 : 0
+#define DCLOSE                                     rmon_mclose ()
+#define DMAYCLOSE(x)                               rmon_mmayclose(x)
+#define TRACEON         (MTYPE == RMON_LOCAL && !rmon_mliszero(&DEBUG_ON))
+#define DEXECLP(x)                                 rmon_mexeclp x
+#define DEXECVP(x)                                 rmon_mexecvp x
+#define DFORK                                      rmon_mfork
+
+
+#else
+
+#define DENTER_MAIN( layer, program ) 
+#define DENTER( layer, function) 
+#define DEXIT  
+#define DTRACE          
+#define DPRINTF(x)
+#define DTRACEID(x)
+#define DJOBTRACE(x)    
+#define DCLOSE         
+#define DMAYCLOSE(x)  
+#define TRACEON      
+#define DEXECLP(x)  
+#define DEXECVP(x) 
+#define DFORK     
+
+-------------------------------------------------------------------------*/
+
 #endif /* SGE_COMPILE_DEBUG */
 
 #endif /* QMON_RMON_H */

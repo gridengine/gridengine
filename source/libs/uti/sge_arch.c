@@ -40,6 +40,7 @@
 #include "sge_log.h"
 #include "sge.h"
 #include "msg_utilib.h"
+#include "sgermon.h"
 #include "msg_common.h"
 #include "sge_unistd.h"
 #include "sge_arch.h"
@@ -56,92 +57,57 @@
 *     host where the application is running which called this 
 *     functionon.
 *
-*  NOTES:
-*     MT-NOTE: sge_get_arch() is MT safe
-*
 *  RESULT
 *     const char* - architecture string
 ******************************************************************************/
 const char *sge_get_arch(void)
 {
-#if defined(AIX43)
+#if defined(AIX42)
+#   define ARCHBIN "aix42"
+#elif defined(AIX43)
 #   define ARCHBIN "aix43"
 #elif defined(AIX51)
 #   define ARCHBIN "aix51"
+#elif defined(ALPHA4)
+#   define ARCHBIN "osf4"
 #elif defined(ALPHA5)
 #   define ARCHBIN "tru64"
-#elif defined(IRIX65)
-#   define ARCHBIN "irix65"
-#elif defined(HPUX)
-#   if defined(HP10)
-#      define ARCHBIN "hp10"
-#   elif defined(HP11)  
-#      define ARCHBIN "hp11"
-#   elif defined(HP1164)
-#      define ARCHBIN "hp11-64"
-#   endif
+#elif defined(IRIX6)
+#   define ARCHBIN "irix6"
+#elif defined(HP10)
+#   define ARCHBIN "hp10"
+#elif defined(HP11)
+#   define ARCHBIN "hp11"
+#elif defined(HP1164)
+#   define ARCHBIN "hp11-64"
 #elif defined(SOLARIS86)
-#   define ARCHBIN "sol-x86"
+#   define ARCHBIN "solaris86"
 #elif defined(SOLARIS64)
-#   define ARCHBIN "sol-sparc64"
+#   define ARCHBIN "solaris64"
 #elif defined(SOLARIS)
-#   define ARCHBIN "sol-sparc"
-#elif defined(LINUX)
-#   if defined(ALINUX_22)
-#      define ARCHBIN "lx22-alpha"
-#   elif defined(ALINUX_24)
-#      define ARCHBIN "lx24-alpha"
-#   elif defined(ALINUX_26)
-#      define ARCHBIN "lx26-alpha"
-#   elif defined(LINUXAMD64_24)
-#      define ARCHBIN "lx24-amd64"
-#   elif defined(LINUXAMD64_26)      
-#      define ARCHBIN "lx26-amd64"
-#   elif defined(LINUXIA64_24)   
-#      define ARCHBIN "lx24-ia64" 
-#   elif defined(LINUXIA64_26)   
-#      define ARCHBIN "lx26-ia64"
-#   elif defined(SLINUX_22)   
-#      define ARCHBIN "lx22-sparc"
-#   elif defined(SLINUX_24)   
-#      define ARCHBIN "lx24-sparc"
-#   elif defined(SLINUX_26)   
-#      define ARCHBIN "lx26-sparc"
-#   elif defined(LINUX86_22)
-#      define ARCHBIN "lx22-x86"
-#   elif defined(LINUX86_24)
-#      define ARCHBIN "lx24-x86"
-#   elif defined(LINUX86_26)
-#      define ARCHBIN "lx26-x86"
-#   endif
+#   define ARCHBIN "solaris"
+#elif defined(ALINUX)
+#   define ARCHBIN "alinux"
+#elif defined(LINUX5)
+#   define ARCHBIN "linux"
+#elif defined(LINUX6)
+#   define ARCHBIN "glinux"
+#elif defined(SLINUX)
+#   define ARCHBIN "slinux"
 #elif defined(CRAY)
-#   if defined(CRAYTSIEEE)
-#      define ARCHBIN "craytsieee"
-#   elif defined(CRAYTS)
-#      define ARCHBIN "crayts"
-#   else
-#      define ARCHBIN "cray"
-#   endif
+# if defined(CRAYTSIEEE)
+#   define ARCHBIN "craytsieee"
+# elif defined(CRAYTS)
+#   define ARCHBIN "crayts"
+# else
+#   define ARCHBIN "cray"
+# endif
 #elif defined(NECSX4)
 #   define ARCHBIN "necsx4"
 #elif defined(NECSX5)
 #   define ARCHBIN "sx"   
 #elif defined(WIN32)
 #   define ARCHBIN "m$win"   
-#elif defined(FREEBSD)
-#   if defined(FREEBSD_ALPHA)
-#      define ARCHBIN "fbsd-alpha"
-#   elif defined(FREEBSD_I386)
-#      define ARCHBIN "fbsd-i386"
-#   elif defined(FREEBSD_IA64)
-#      define ARCHBIN "fbsd-ia64"
-#   elif defined(FREEBSD_PPC)
-#      define ARCHBIN "fbsd-ppc"
-#   elif defined(FREEBSD_SPARC64)
-#      define ARCHBIN "fbsd-sparc64"
-#   endif
-#elif defined(DARWIN)
-#   define ARCHBIN "darwin"   
 #else
 #   pragma "Define an architecture for SGE"
 #endif
@@ -154,10 +120,7 @@ const char *sge_get_arch(void)
 *     sge_get_root_dir() -- SGE/SGEEE installation directory 
 *
 *  SYNOPSIS
-*     const char* sge_get_root_dir(int do_exit, 
-*                                  char *buffer, 
-*                                  size_t size,
-*                                  int do_error_log ) 
+*     const char* sge_get_root_dir(int do_exit) 
 *
 *  FUNCTION
 *     This function returns the installation directory of SGE/SGEEE.
@@ -166,16 +129,16 @@ const char *sge_get_arch(void)
 *     If the environment variable does not exist or is not set then
 *     this function will handle this as error and return NULL 
 *     (do_exit = 0). If 'do_exit' is 1 and an error occures, the 
-*     function will terminate the  calling application.
+*     function will log an appropriate message and terminate the 
+*     calling application.
 *
 *  INPUTS
 *     int do_exit - Terminate the application in case of an error
-*     char *buffer - buffer to be used for error message
-*     size_t size - size of buffer
-*     int do_error_log - enable/disable error logging
 *
 *  RESULT
 *     const char* - Root directory of the SGE/SGEEE installation
+*     char *buffer - buffer to be used for error message
+*     size_t size - size of buffer
 *
 *  NOTES
 *     For compatibility reason this function accepts following
@@ -187,11 +150,8 @@ const char *sge_get_arch(void)
 *
 *     Multiple environment variables will only be accepted when they 
 *     are identical. Other cases will be handled as error.
-*
-*     MT-NOTE: sge_get_arch() is MT safe
-*
 *******************************************************************************/
-const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_error_log)
+const char *sge_get_root_dir(int do_exit, char *buffer, size_t size)
 {
    char *sge_root, *codine_root, *grd_root;
    char *s;
@@ -261,55 +221,25 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_erro
    return s;
 
 error:
-   if (do_error_log) {
-      switch(error_number) {
-         case 1:
-            if (buffer != NULL) {
-               strncpy(buffer, MSG_SGEGRDROOTNOTEQUIV, size);
-            }
-            else {
-               CRITICAL((SGE_EVENT, MSG_SGEGRDROOTNOTEQUIV));
-            }
-            
-            break;
-         case 2:
-            if (buffer != NULL) {
-               strncpy(buffer, MSG_SGECODINEROOTNOTEQUIV, size);
-            }
-            else {
-               CRITICAL((SGE_EVENT, MSG_SGECODINEROOTNOTEQUIV));
-            }
-            
-            break;
-         case 3:
-            if (buffer != NULL) {
-               strncpy(buffer, MSG_GRDCODINEROOTNOTEQUIV, size);
-            }
-            else {
-               CRITICAL((SGE_EVENT, MSG_GRDCODINEROOTNOTEQUIV));
-            }
-            
-            break;
-         case 4:
-            if (buffer != NULL) {
-               strncpy(buffer, MSG_SGEROOTNOTSET, size);
-            }
-            else {
-               CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
-            }
-            
-            break;
-         default:
-            if (buffer != NULL) {
-               strncpy(buffer, MSG_UNKNOWNERRORINSGEROOT, size);
-            }
-            else {
-               CRITICAL((SGE_EVENT, MSG_UNKNOWNERRORINSGEROOT));
-            }
-            
-            break;
-      }
+   switch(error_number) {
+      case 1:
+         CRITICAL((SGE_EVENT, MSG_SGEGRDROOTNOTEQUIV));
+         break;
+      case 2:
+         CRITICAL((SGE_EVENT, MSG_SGECODINEROOTNOTEQUIV));
+         break;
+      case 3:
+         CRITICAL((SGE_EVENT, MSG_GRDCODINEROOTNOTEQUIV));
+         break;
+      case 4:
+         CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
+         break;
+      default:
+         CRITICAL((SGE_EVENT, MSG_UNKNOWNERRORINSGEROOT));
+         break;
    }
+   if (buffer)
+      strncpy(buffer, SGE_EVENT, size);
 
    DEXIT;
    if (do_exit) {
@@ -346,9 +276,6 @@ error:
 *     Multiple environment variables will only be accepted when they are
 *     identical. Other cases will be handled as error. In case of an 
 *     error the 'DEFAULT_CELL' will be returned.
-*
-*     MT-NOTE: sge_get_default_cell() is MT safe
-*
 ******************************************************************************/
 const char *sge_get_default_cell(void)
 {
@@ -424,10 +351,6 @@ const char *sge_get_default_cell(void)
 *
 *  FUNCTION
 *     Return the path of the 'alias_file' 
-*
-*  NOTES
-*     MT-NOTE: sge_get_alias_path() is MT safe
-*
 ******************************************************************************/
 char *sge_get_alias_path(void) 
 {
@@ -445,7 +368,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
 
    DENTER(TOP_LAYER, "sge_get_alias_path");
 
-   sge_root = sge_get_root_dir(1, NULL, 0, 1);
+   sge_root = sge_get_root_dir(1, NULL, 0);
    sge_cell = sge_get_default_cell();
 
    if (SGE_STAT(sge_root, &sbuf)) {

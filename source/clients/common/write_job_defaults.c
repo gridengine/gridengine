@@ -34,15 +34,18 @@
 #include <string.h>
 
 #include "symbols.h"
+#include "sge_gdi_intern.h"
 #include "sge_ja_task.h"
 #include "sge_answer.h"
 #include "sge_string.h"
 #include "sge_time.h"
 #include "parse_qsubL.h"
-#include "sge_str.h"
-#include "sge_idL.h"
+#include "sge_stringL.h"
+#include "sge_identL.h"
 #include "sge_job_refL.h"
+#include "sge_resource.h"
 #include "sgermon.h"                       
+#include "sge_answer.h"
 #include "unparse_job_cull.h"
 #include "write_job_defaults.h"
 #include "msg_common.h"
@@ -181,14 +184,11 @@ int flags
       ** problem: exception for -l makes this function slightly
       ** less generally appliccable
       */
-#if 0      
       if ((strlen(cp) > 1) && !strncmp(cp, "-l", 2)) {
          i = fprintf(fp, "%s", cp);
          i++;
       }
-      else 
-#endif      
-      if (*cp == '-') {
+      else if (*cp == '-') {
          i = fprintf(fp, "%s ", cp);
       }
       if ((*cp == '-') && (i != (int) strlen(cp) + 1)) {

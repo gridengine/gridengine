@@ -32,13 +32,12 @@
 #include <string.h>
 
 #include "sge_all_listsL.h"
-#include "sge_any_request.h"
+#include "sge_gdi_intern.h"
 #include "qmaster_to_execd.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "commlib.h"
-#include "sge.h"
 
 #include "msg_qmaster.h"
 
@@ -96,23 +95,14 @@ static int host_notify_about_X(lListElem *host,
    const char *hostname = NULL;
    sge_pack_buffer pb;
    int ret = 0;
-#ifdef ENABLE_NGC
-   unsigned long last_heard_from;
-#endif
    DENTER(TOP_LAYER, "host_notify_about_X");
 
    hostname = lGetHost(host, EH_name);
    if (progname_id == EXECD) {
       u_short id = 1;
       const char *commproc = prognames[progname_id];
-#ifdef ENABLE_NGC
-      cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0)),
-                                        (char*)hostname, (char*)commproc,id, &last_heard_from);
-      if (!last_heard_from)
-#else
-      if (!last_heard_from(commproc, &id, hostname)) 
-#endif
-      {
+
+      if (!last_heard_from(commproc, &id, hostname)) {
          ERROR((SGE_EVENT, MSG_NOXKNOWNONHOSTYTOSENDCONFNOTIFICATION_SS,
                 commproc, hostname));
          ret = -2;
@@ -121,15 +111,11 @@ static int host_notify_about_X(lListElem *host,
    }
 
    if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
-      u_long32 dummy = 0;
+      u_long32 dummy;
 
       packint(&pb, x);
-#ifdef ENABLE_NGC
-      if (gdi_send_message_pb(0, prognames[progname_id], 1, hostname, tag, &pb, &dummy) != CL_RETVAL_OK)
-#else
-      if (gdi_send_message_pb(0, prognames[progname_id], 0, hostname, tag, &pb, &dummy))
-#endif
-      {
+      if (gdi_send_message_pb(0, prognames[progname_id], 0, hostname, tag,
+                              &pb, &dummy)) {
          ret = -1;
       } else {
          ret = 0;
@@ -201,14 +187,14 @@ int host_notify_about_kill(lListElem *host, int kill_command)
 *
 *  SYNOPSIS
 *     int host_notify_about_featureset(lListElem *host, 
-*                                      feature_id_t featureset)
+*                                      featureset_id_t featureset)
 *
 *  FUNCTION
 *     Send the given "featureset" id to the execution "host".
 *
 *  INPUTS
 *     lListElem *host            - EH_Type 
-*     feature_id_t featureset - id 
+*     featureset_id_t featureset - id 
 *
 *  RESULT
 *     int - see host_notify_about_X() 
@@ -216,7 +202,7 @@ int host_notify_about_kill(lListElem *host, int kill_command)
 *  SEE ALSO
 *     qmaster/host/host_notify_about_X()
 *******************************************************************************/
-int host_notify_about_featureset(lListElem *host, feature_id_t featureset)
+int host_notify_about_featureset(lListElem *host, featureset_id_t featureset)
 {
    return host_notify_about_X(host, featureset, TAG_NEW_FEATURES, EXECD);
 }
@@ -227,7 +213,7 @@ int host_notify_about_featureset(lListElem *host, feature_id_t featureset)
 *
 *  SYNOPSIS
 *     void host_list_notify_about_featureset(lList *host_list, 
-*                                            feature_id_t featureset) 
+*                                            featureset_id_t featureset) 
 *
 *  FUNCTION
 *     Send the given "featureset" id to all exec hosts mentioned in
@@ -235,13 +221,13 @@ int host_notify_about_featureset(lListElem *host, feature_id_t featureset)
 *
 *  INPUTS
 *     lList *host_list           - EH_Type list 
-*     feature_id_t featureset - id 
+*     featureset_id_t featureset - id 
 *
 *  RESULT
 *     void - None 
 *******************************************************************************/
 void host_list_notify_about_featureset(lList *host_list,
-                                       feature_id_t featureset)
+                                       featureset_id_t featureset)
 {
    lListElem *host;
    DENTER(TOP_LAYER, "host_list_notify_about_featureset");

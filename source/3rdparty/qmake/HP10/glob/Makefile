@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = ..
 
-ACLOCAL =  aclocal
-AUTOCONF =  autoconf
-AUTOMAKE =  automake
-AUTOHEADER =  autoheader
+ACLOCAL = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing aclocal
+AUTOCONF = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing autoconf
+AUTOMAKE = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing automake
+AUTOHEADER = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing autoheader
 
 INSTALL = ../../install-sh -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,7 +68,7 @@ CPP = cc -Ae -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS =  getloadavg.o
-MAKEINFO =  makeinfo
+MAKEINFO = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing makeinfo
 MAKE_HOST = hppa1.1-hp-hpux10.20
 PACKAGE = make
 PERL = perl
@@ -113,12 +113,12 @@ OBJECTS = $(libglob_a_OBJECTS)
 all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .S .c .o .s
-#$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-#	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps glob/Makefile
-#
-#Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
-#	cd $(top_builddir) \
-#	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps glob/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 
 mostlyclean-noinstLIBRARIES:
@@ -191,7 +191,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$d/$$file $(distdir)/$$file; \
+	    cp -pr $$/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \

@@ -45,8 +45,6 @@ echo " hostname        : `hostname`"
 echo " output file     : ${OUTPUT_FILE}"
 echo " SGE_ROOT        : ${SGE_ROOT}"
 echo " COMMD_PORT      : ${COMMD_PORT}"
-echo " SGE_QMASTER_PORT: ${SGE_QMASTER_PORT}"
-echo " SGE_EXECD_PORT  : ${SGE_EXECD_PORT}"
 echo "******************************************************"
 echo "this terminal will execute following command:"
 shift
@@ -68,8 +66,6 @@ echo "*  id output       : `id`"                              >> ${OUTPUT_FILE}
 echo "*  hostname        : `hostname`"                        >> ${OUTPUT_FILE}
 echo "*  SGE_ROOT        : ${SGE_ROOT}"                       >> ${OUTPUT_FILE}
 echo "*  COMMD_PORT      : ${COMMD_PORT}"                     >> ${OUTPUT_FILE}
-echo "*  SGE_QMASTER_PORT: ${SGE_QMASTER_PORT}"               >> ${OUTPUT_FILE}
-echo "*  SGE_EXECD_PORT  : ${SGE_EXECD_PORT}"                 >> ${OUTPUT_FILE}
 echo "******************************************************" >> ${OUTPUT_FILE}
 # rm ${OUTPUT_FILE}
 # touch ${OUTPUT_FILE}

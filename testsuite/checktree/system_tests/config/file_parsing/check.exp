@@ -135,9 +135,7 @@ proc prepare_file_and_start_job { request_file_name option_parameter job_script 
    flush $fp
    close $fp
 
-
-   puts $CHECK_OUTPUT "request file: $request_file_name"
-   puts $CHECK_OUTPUT "submitting job $job_script from directory $start_directory"
+   puts $CHECK_OUTPUT "submitting job $job_script"
    set return_value [ submit_job $job_script 0 30 "" "" $start_directory ]
    puts $CHECK_OUTPUT "return value of submit_job: $return_value"
    return $return_value

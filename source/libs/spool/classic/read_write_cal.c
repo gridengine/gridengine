@@ -154,12 +154,9 @@ const lListElem *ep
    FILE *fp;
    const char *s;
    char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX];
-   dstring ds;
-   char buffer[256];
 
    DENTER(TOP_LAYER, "write_cal");
 
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
    switch (how) {
    case 0:
       fp = stdout;
@@ -190,7 +187,7 @@ const lListElem *ep
    }
 
    if (spool && sge_spoolmsg_write(fp, COMMENT_CHAR,
-             feature_get_product_name(FS_VERSION, &ds)) < 0) {
+             feature_get_product_name(FS_VERSION)) < 0) {
       goto FPRINTF_ERROR;
    }  
 
@@ -218,4 +215,27 @@ const lListElem *ep
 FPRINTF_ERROR:
    DEXIT;
    return NULL;  
+}
+
+
+/* -----------------------------
+   
+   build up a generic cal object
+
+   returns 
+      NULL on error
+
+*/
+lListElem* sge_generic_cal(char *cal_name)
+{
+   lListElem *calp;
+
+   DENTER(TOP_LAYER, "sge_generic_cal");
+
+   calp = lCreateElem(CAL_Type);
+
+   lSetString(calp, CAL_name, cal_name?cal_name:"template");
+
+   DEXIT;
+   return calp;
 }

@@ -88,21 +88,16 @@ global submit_del_qconfig
 global submit_del_check_queue
 
 proc submit_del_setup  {} {
-   global ts_config
    global CHECK_OUTPUT CHECK_SECOND_FOREIGN_SYSTEM_USER
    global CHECK_CORE_EXECD CHECK_MAIN_RESULTS_DIR CHECK_USER
    global submit_del_qconfig CHECK_PRODUCT_ROOT CHECK_HOST
    global submit_del_check_queue
 
 
-   if { $ts_config(gridengine_version) == 53 } {
-      get_config submit_del_qconfig
-      set my_config(schedd_params) "FLUSH_SUBMIT_SEC=0,FLUSH_FINISH_SEC=0"
-      set_config my_config
-   } else {
-      set my_schedd_conf(flush_submit_sec) "1"
-      set_schedd_config(my_schedd_conf);
-   }   
+   get_config submit_del_qconfig
+   set my_config(schedd_params) "FLUSH_SUBMIT_SEC=0,FLUSH_FINISH_SEC=0"
+#   set my_config(execd_params) "KEEP_ACTIVE=1"
+   set_config my_config
 
    
    wait_for_end_of_all_jobs 100
@@ -117,7 +112,7 @@ proc submit_del_test { } {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global submit_del_qconfig submit_del_check_queue CHECK_USER
    global CHECK_CORE_EXECD CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL
-   global CHECK_L10N CHECK_HOST ts_config
+   global CHECK_L10N CHECK_HOST
 
    set arch [resolve_arch $CHECK_HOST]
    set qsub_program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
@@ -134,22 +129,17 @@ proc submit_del_test { } {
       wait_for_jobstart $elem "Sleeper" 60 1 1
    }
 
-   set catch_result [delete_all_jobs]
-
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
 
    wait_for_end_of_all_jobs 120
 
    if { $CHECK_L10N == 1 } {
-         if { $ts_config(gridengine_version) == 60 } {
-            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
-            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
-         } else {
-            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
-         }
+         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
          set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
          set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
-         if { $job_id_pos > $job_name_pos  } {
+         set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
+         if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
             add_proc_error "submit_del_test" "-1" "locale switches parameter for qsub string! This is not supported yet"
          }
          incr job_id_pos -1
@@ -211,22 +201,14 @@ proc submit_del_test { } {
 
 
 proc submit_del_cleanup  {} {
-   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD
    global submit_del_qconfig submit_del_check_queue CHECK_HOST
 
-
-   if {$ts_config(gridengine_version) == 60} {
-      reset_schedd_config
-   } else {
-      set_config submit_del_qconfig
-   }
-
-
+   set_config submit_del_qconfig
+   
 
    puts $CHECK_OUTPUT "do qdel -uall"
-   set catch_result [delete_all_jobs]
-
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
    puts $CHECK_OUTPUT $catch_result
    wait_for_end_of_all_jobs 100
 

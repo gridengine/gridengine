@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2003/07/30 12:21:52 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2001/07/20 08:19:17 $     Revision: $Revision: 1.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2003/07/30 12:21:52 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2001/07/20 08:19:17 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_shadowd \- xxQS_NAMExx shadow master daemon
 .\"
@@ -98,6 +98,14 @@ If set, specifies the tcp port on which
 is expected to listen for communication requests.
 Most installations will use a services map entry instead
 to define that port.
+.\"
+.IP "\fBCOMMD_HOST\fP" 1.5i
+If set, specifies the host on which the particular
+.M xxqs_name_sxx_commd 8
+to be used for xxQS_NAMExx communication of the
+.I xxqs_name_sxx_shadowd
+client resides.
+Per default the local host is used.
 .\"
 .\"
 .SH "FILES"

@@ -44,7 +44,7 @@
 #include "sge_job.h"
 #include "sge_pe_task.h"
 #include "sge_pe.h"
-#include "sge_qinstance.h"
+#include "sge_queue.h"
 #include "sge_log.h"
 #include "sge_time.h"
 #include "sge_usageL.h"
@@ -59,7 +59,7 @@
 #include "execd_signal_queue.h"
 #include "symbols.h"
 #include "exec_job.h"
-#include "spool/classic/read_write_job.h"
+#include "read_write_job.h"
 #include "execution_states.h"
 #include "msg_execd.h"
 #include "sge_string.h"
@@ -80,7 +80,7 @@
 #  endif
 #endif
 
-#include "sge_str.h"
+#include "sge_stringL.h"
 
 #if COMPILE_DC
 static int reprioritization_enabled = 0;
@@ -89,11 +89,6 @@ static int reprioritization_enabled = 0;
 extern volatile int dead_children;
 extern volatile int waiting4osjid;
 
-
-static bool 
-sge_execd_ja_task_is_tightly_integrated(const lListElem *ja_task);
-static bool
-sge_kill_petasks(const lListElem *job, const lListElem *ja_task);
 
 static int sge_start_jobs(void);
 static int exec_job_or_task(lListElem *jep, lListElem *jatep, lListElem *petep);
@@ -171,11 +166,10 @@ static void notify_ptf()
          }
       }
 
-      if (waiting4osjid) {
+      if (waiting4osjid)
          DPRINTF(("still waiting for osjobids\n"));
-      } else {
+      else
          DPRINTF(("got all osjobids\n"));
-      }   
    }
 
    DEXIT;
@@ -266,7 +260,7 @@ void force_job_rlimit()
             cpu_exceeded = (h_cpu < cpu_val);
             WARNING((SGE_EVENT, MSG_JOB_EXCEEDHLIM_USSFF, 
                      u32c(jobid), cpu_exceeded ? "h_cpu" : "h_vmem",
-                     q?lGetString(q, QU_full_name) : "-",
+                     q?lGetString(q, QU_qname) : "-",
                      cpu_exceeded ? cpu_val : vmem_val,
                      cpu_exceeded ? h_cpu : h_vmem));
             signal_job(jobid, jataskid, SGE_SIGKILL);
@@ -278,7 +272,7 @@ void force_job_rlimit()
             WARNING((SGE_EVENT, MSG_JOB_EXCEEDSLIM_USSFF,
                      u32c(jobid),
                      cpu_exceeded ? "s_cpu" : "s_vmem",
-                     q?lGetString(q, QU_full_name) : "-",
+                     q?lGetString(q, QU_qname) : "-",
                      cpu_exceeded ? cpu_val : vmem_val,
                      cpu_exceeded ? s_cpu : s_vmem));
             signal_job(jobid, jataskid, SGE_SIGXCPU);
@@ -294,44 +288,6 @@ void force_job_rlimit()
    DEXIT;
 }
 #endif
-
-static u_long32 
-execd_get_wallclock_limit(lList *gdil_list, int limit_nm, u_long32 now) 
-{
-   u_long32 ret = U_LONG32_MAX;
-   const lListElem *gdil;
-   const char *hostname;
-   const void *iterator;
-  
-   hostname = uti_state_get_qualified_hostname();
-   gdil = lGetElemHostFirst(gdil_list, JG_qhostname, hostname, &iterator);
-   while (gdil != NULL) {
-      const lListElem *queue;
-      const char *limit;
-      u_long32 clock_val;
-
-      queue = lGetObject(gdil, JG_queue);
-      if (queue != NULL) {
-         limit = lGetString(queue, limit_nm);
-
-         if (strcasecmp(limit, "infinity") == 0) {
-            clock_val = U_LONG32_MAX;
-         } else {   
-            parse_ulong_val(NULL, &clock_val, TYPE_TIM, limit, NULL, 0);
-         }   
-
-         ret = MIN(ret, clock_val);
-      }
-
-      gdil = lGetElemHostNext(gdil_list, JG_qhostname, hostname, &iterator);
-   }
-
-   if (ret != U_LONG32_MAX) {
-      ret += now;
-   }
-
-   return ret;
-}
 
 /******************************************************
  EXECD function
@@ -357,9 +313,10 @@ int *synchron,
 char *err_str,
 int answer_error 
 ) {
-   u_long32 now;
+   u_long32 now, clock_val;
    static u_long then = 0;
    lListElem *jep, *jatep;
+   extern int deactivate_ptf;
 
    DENTER(TOP_LAYER, "execd_ck_to_do");
 
@@ -376,11 +333,12 @@ int answer_error
    if (lGetNumberOfElem(Master_Job_List) > 0) {
       notify_ptf();
 
-      sge_switch2start_user();
-      ptf_update_job_usage();
-      sge_switch2admin_user();
-
-      if (sge_is_reprioritize()) {
+      if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
+         sge_switch2start_user();
+         ptf_update_job_usage();
+         sge_switch2admin_user();
+      }
+      if (feature_is_enabled(FEATURE_REPRIORITIZATION) && !deactivate_ptf) {
          sge_switch2start_user();
          DPRINTF(("ADJUST PRIORITIES\n"));
          ptf_adjust_job_priorities();
@@ -408,7 +366,7 @@ int answer_error
                      " queue  %s to %d\n", 
                      lGetUlong(job, JB_job_number), 
                      lGetUlong(jatask, JAT_task_number),
-                     lGetString(master_queue, QU_full_name), priority));
+                     lGetString(master_queue, QU_qname), priority));
                   ptf_reinit_queue_priority(
                      lGetUlong(job, JB_job_number),
                      lGetUlong(jatask, JAT_task_number),
@@ -424,7 +382,7 @@ int answer_error
                         lGetUlong(job, JB_job_number), 
                         lGetUlong(jatask, JAT_task_number),
                         lGetString(petask, PET_id),
-                        lGetString(master_queue, QU_full_name), priority));
+                        lGetString(master_queue, QU_qname), priority));
                      ptf_reinit_queue_priority(
                         lGetUlong(job, JB_job_number),
                         lGetUlong(jatask, JAT_task_number),
@@ -452,14 +410,24 @@ int answer_error
 
    /* resend signals to shepherds */
    for_each(jep, Master_Job_List) {
+      lListElem *master_q;
+
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-         if (!lGetUlong(jep, JB_hard_wallclock_gmt)) {
-            lList *gdil_list = lGetList(jatep, 
-                                        JAT_granted_destin_identifier_list);
-            lSetUlong(jep, JB_soft_wallclock_gmt, 
-                      execd_get_wallclock_limit(gdil_list, QU_s_rt, now));
-            lSetUlong(jep, JB_hard_wallclock_gmt, 
-                      execd_get_wallclock_limit(gdil_list, QU_h_rt, now));
+         master_q = lGetObject(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
+                               JG_queue);
+
+         if (!lGetUlong(jep, JB_hard_wallclock_gmt)) {       /* initialize everything */
+            if (strcasecmp(lGetString(master_q, QU_s_rt), "infinity")) {
+               parse_ulong_val(NULL, &clock_val, TYPE_TIM, lGetString(master_q, QU_s_rt), NULL, 0);
+               lSetUlong(jep, JB_soft_wallclock_gmt, clock_val + now);
+            } else
+               lSetUlong(jep, JB_soft_wallclock_gmt, (u_long32)(~0L>>1));
+
+            if (strcasecmp(lGetString(master_q, QU_h_rt), "infinity")) {
+               parse_ulong_val(NULL, &clock_val, TYPE_TIM, lGetString(master_q, QU_h_rt), NULL, 0);
+               lSetUlong(jep, JB_hard_wallclock_gmt, clock_val + now);
+            } else 
+               lSetUlong(jep, JB_hard_wallclock_gmt, (u_long32)(~0L>>1));
          }
 
          if (now >= lGetUlong(jep, JB_hard_wallclock_gmt) ) {
@@ -467,15 +435,10 @@ int answer_error
                 (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
                INFO((SGE_EVENT, MSG_EXECD_EXCEEDHWALLCLOCK_UU,
                     u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number)))); 
-               if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
-                  sge_kill_petasks(jep, jatep);
-               }
-               if (lGetUlong(jatep, JAT_pid) != 0) {
-                  sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGKILL, 
-                           lGetUlong(jep, JB_job_number),
-                           lGetUlong(jatep, JAT_task_number),
-                           NULL);     
-               }
+               sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGKILL, 
+                        lGetUlong(jep, JB_job_number),
+                        lGetUlong(jatep, JAT_task_number),
+                        NULL);     
                lSetUlong(jatep, JAT_pending_signal_delivery_time, now+90);
             }    
             continue;
@@ -486,15 +449,10 @@ int answer_error
                 (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
                INFO((SGE_EVENT, MSG_EXECD_EXCEEDSWALLCLOCK_UU,
                     u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number))));  
-               if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
-                  sge_kill_petasks(jep, jatep);
-               }
-               if (lGetUlong(jatep, JAT_pid) != 0) {
-                  sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGUSR1, 
-                           lGetUlong(jep, JB_job_number),
-                           lGetUlong(jatep, JAT_task_number),
-                           NULL);
-               }
+               sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGUSR1, 
+                        lGetUlong(jep, JB_job_number),
+                        lGetUlong(jatep, JAT_task_number),
+                        NULL);
                lSetUlong(jatep, JAT_pending_signal_delivery_time, now+90);         
             }
             continue;
@@ -586,85 +544,6 @@ int answer_error
    }
 }
 
-/****** execd_ck_to_do/sge_execd_ja_task_is_tightly_integrated() ***************
-*  NAME
-*     sge_execd_ja_task_is_tightly_integrated() -- is it a tightly integr. parallel job?
-*
-*  SYNOPSIS
-*     static bool 
-*     sge_execd_ja_task_is_tightly_integrated(const lListElem *ja_task) 
-*
-*  FUNCTION
-*     Checks if a certain job (ja_task) is running in a tightly integrated
-*     parallel environment.
-*
-*  INPUTS
-*     const lListElem *ja_task - ja_task (in execd context)
-*
-*  RESULT
-*     static bool - true, if it is a tightly integrated job, else false
-*
-*******************************************************************************/
-static bool 
-sge_execd_ja_task_is_tightly_integrated(const lListElem *ja_task)
-{
-   bool ret = false;
-
-   if (ja_task != NULL) {
-      const lListElem *pe;
-
-      pe = lGetObject(ja_task, JAT_pe_object);
-      if (pe != NULL) {
-         if (lGetBool(pe, PE_control_slaves)) {
-            ret = true;
-         }
-      }
-   }
-
-   return ret;
-}
-
-/****** execd_ck_to_do/sge_kill_petasks() **************************************
-*  NAME
-*     sge_kill_petasks() -- kill all pe tasks of a tightly integr. parallel job
-*
-*  SYNOPSIS
-*     static bool 
-*     sge_kill_petasks(const lListElem *job, const lListElem *ja_task) 
-*
-*  FUNCTION
-*     Kills all tasks of a tightly integrated parallel job/array task.
-*
-*  INPUTS
-*     const lListElem *job     - the job
-*     const lListElem *ja_task - the array task
-*
-*  RESULT
-*     static bool - true, if any task was found and could be signalled, 
-*                   else false
-*
-*******************************************************************************/
-static bool
-sge_kill_petasks(const lListElem *job, const lListElem *ja_task)
-{
-   bool ret = false;
-
-   if (job != NULL && ja_task != NULL) {
-      lListElem *pe_task;
-
-      for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
-         if (sge_kill(lGetUlong(pe_task, PET_pid), SGE_SIGKILL,
-                      lGetUlong(job, JB_job_number),
-                      lGetUlong(ja_task, JAT_task_number),
-                      lGetString(pe_task, PET_id)) == 0) {
-            ret = true;
-         }
-      }
-   }
-
-   return ret;
-}
-
 
 /*****************************************************************************/
 static int sge_start_jobs()
@@ -750,7 +629,7 @@ lListElem *petep
             char *endptr = NULL;
             u_long32 duration_in;
   
-            arg = lGetString(lFirst(job_args), ST_name);
+            arg = lGetString(lFirst(job_args), STR);
             if(arg != NULL) {
                DPRINTF(("Trying to use first argument ("SFQ") as duration for simulated job\n", arg));
                

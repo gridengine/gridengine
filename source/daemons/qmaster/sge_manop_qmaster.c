@@ -32,18 +32,17 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "sge_gdi_intern.h"
 #include "commlib.h"
 #include "cull.h"
 #include "sgermon.h"
 #include "sge_manop_qmaster.h"
-#include "sge_event_master.h"
+#include "read_write_manop.h"
+#include "sge_m_event.h"
 #include "sge_log.h"
 #include "sge_uidgid.h"
 #include "sge_answer.h"
 #include "sge_manop.h"
-
-#include "sge_persistence_qmaster.h"
-#include "spool/sge_spooling.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -122,10 +121,7 @@ DTRACE;
    added = lAddElemStr(lpp, MO_name, manop_name, MO_Type);
 
    /* update on file */
-   if(!sge_event_spool(alpp, 0, target == SGE_MANAGER_LIST ? sgeE_MANAGER_ADD : 
-                                                             sgeE_OPERATOR_ADD,
-                       0, 0, manop_name, NULL, NULL,
-                       added, NULL, NULL, true, true)) {
+   if (write_manop(1, target)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    
@@ -139,6 +135,8 @@ DTRACE;
    INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
             ruser, rhost, manop_name, object_name));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   sge_add_event(NULL, 0, target == SGE_MANAGER_LIST ? sgeE_MANAGER_ADD : sgeE_OPERATOR_ADD,
+                 0, 0, manop_name, added);
    DEXIT;
    return STATUS_OK;
 }
@@ -221,10 +219,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    lDechainElem(*lpp, found);
 
    /* update on file */
-   if (!sge_event_spool(alpp, 0, target == SGE_MANAGER_LIST ? 
-                                 sgeE_MANAGER_DEL : sgeE_OPERATOR_DEL,
-                           0, 0, manop_name, NULL, NULL,
-                           NULL, NULL, NULL, true, true)) {
+   if (write_manop(1, target)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    
@@ -239,6 +234,8 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
             ruser, rhost, manop_name, object_name));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   sge_add_event(NULL, 0, target == SGE_MANAGER_LIST ? sgeE_MANAGER_DEL : sgeE_OPERATOR_DEL,
+                 0, 0, manop_name, NULL);
    DEXIT;
    return STATUS_OK;
 }

@@ -42,6 +42,7 @@
 #include <netdb.h>
 
 #include "sge_all_listsL.h"
+#include "sge_gdi_intern.h"
 #include "commlib.h"
 #include "sge_string.h"
 
@@ -294,7 +295,7 @@ int krb_init(const char *progname)
 
       /* use $SGE_ROOT/keytab */
 
-      sprintf(keytab, "FILE:%s/%s", sge_get_root_dir(0, NULL, 0, 1), KRB_KEYTAB);
+      sprintf(keytab, "FILE:%s/%s", sge_get_root_dir(0, NULL, 0), KRB_KEYTAB);
       if ((rc = krb5_kt_resolve(gsd.context, keytab, &gsd.keytab))) {
 
 	 ERROR((SGE_EVENT, MSG_KRB_COULDNOTRESOLVEKEYTABX_S, error_message(rc)));

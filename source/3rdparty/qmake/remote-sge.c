@@ -40,8 +40,15 @@ Boston, MA 02111-1307, USA.  */
 #include <rpc/types.h> /* MAXHOSTNAMELEN */
 #endif
 
-#if defined(AIX43) || defined(sgi)
+#if defined(AIX43) || defined(AIX42) || defined(sgi)
 #include <sys/param.h> /* MAXHOSTNAMELEN */
+#endif
+
+#ifdef SUN4
+#define MAXHOSTNAMELEN 1024
+#define PATH_MAX 1024
+#define EXIT_FAILURE 1
+extern char *strerror(int errno);
 #endif
 
 /****** Interactive/qmake/--Introduction ***************************************
@@ -169,7 +176,7 @@ struct finished_job {
 #define WAIT_SLOT_TIME    5 /* [s]  */
 
 
-/****** Interactive/qmake/-Global_Variables ************************************
+/****** Interactive/qmake/-Global_Variables ***************************************
 *
 *  NAME
 *     global Variables -- global Variables used for remote mechanism
@@ -177,8 +184,6 @@ struct finished_job {
 *  SYNOPSIS
 *     int be_verbose;
 *     int qrsh_wrapper_cmdline;
-*
-*     int dynamic_mode;
 *
 *     char *program_name = 0;
 *
@@ -219,9 +224,6 @@ struct finished_job {
 *                            flow etc.
 *     qrsh_wrapper_cmdline - the option -v QRSH_WRAPPER[=value] was specified
 *                            in the commandline options
-*     dynamic_mode         - are tasks started with qrsh -inherit within an 
-*                            existing parallel job, or are they submitted as
-*                            individual qrsh jobs?
 *     program_name         - argv[0] that was used to start the actual process
 *     remote_description   - string that is output with --version text from 
 *                            gmake
@@ -229,10 +231,10 @@ struct finished_job {
 *                            where qmake is executing
 *     remote_enabled       - flag that indicates, if remote execution of 
 *                            commands is enabled
-*     sge_argc             - argument counter for sge options
-*     sge_argv             - argument vector for sge options
-*     sge_v_argc           - argument counter for sge -v options
-*     sge_v_argv           - argument vector for sge -v options
+*     sge_argc          - argument counter for sge options
+*     sge_argv          - argument vector for sge options
+*     sge_v_argc          - argument counter for sge -v options
+*     sge_v_argv          - argument vector for sge -v options
 *     gmake_argc           - argument counter for gmake options
 *     gmake_argv           - argument vector for gmake options
 *     pass_cwd             - do we have to pass option -cwd to qrsh for rules?
@@ -242,7 +244,7 @@ struct finished_job {
 *                            to the hostfile
 *     hostfile             - filehandle to qmake hostfile
 *     hostfile_name        - name of the qmake hostfile
-*     sge_hostfile_name    - name of the sge hostfile
+*     sge_hostfile_name - name of the sge hostfile
 *     host_count           - number of hosts resp. slots in hostfile
 *     jobid                - environment variable JOBID
 *     makelevel            - environment variable MAKELEVEL or ""
@@ -257,8 +259,6 @@ struct finished_job {
 
 int be_verbose = 0;
 int qrsh_wrapper_cmdline = 0;
-
-int dynamic_mode;
 
 static char *program_name = 0;
 
@@ -635,71 +635,65 @@ static void create_hostfile()
 
 static void init_remote()
 {
+   char *tmpdir;
+   char  buffer[1024];
+   char *c;
    int i;
+   
+   /* tmpdir from environment */
+   tmpdir = getenv("TMPDIR");
+   if(tmpdir == NULL) {
+      remote_exit(EXIT_FAILURE, "cannot read environment variable TMPDIR", strerror(errno));
+   }
+   
+   /* lockfile_name */
+   sprintf(buffer, "%s/qmake_lockfile", tmpdir);
+   lockfile_name = (char *)malloc(strlen(buffer) + 1);
+   strcpy(lockfile_name, buffer);
+   
+   /* hostfile_name */
+   sprintf(buffer, "%s/qmake_hostfile", tmpdir);
+   hostfile_name = (char *)malloc(strlen(buffer) + 1);
+   strcpy(hostfile_name, buffer);
+   
+   /* sge_hostfile_name */
+   c = getenv("PE_HOSTFILE");
+   if(c == NULL) {
+      remote_exit(EXIT_FAILURE, "cannot read environment variable PE_HOSTFILE", strerror(errno));
+   }
 
-   if (!dynamic_mode) {
-      char *tmpdir;
-      char  buffer[1024];
-      char *c;
-      
-      /* tmpdir from environment */
-      tmpdir = getenv("TMPDIR");
-      if(tmpdir == NULL) {
-         remote_exit(EXIT_FAILURE, "cannot read environment variable TMPDIR", 
-                     strerror(errno));
-      }
-      
-      /* lockfile_name */
-      sprintf(buffer, "%s/qmake_lockfile", tmpdir);
-      lockfile_name = (char *)malloc(strlen(buffer) + 1);
-      strcpy(lockfile_name, buffer);
-      
-      /* hostfile_name */
-      sprintf(buffer, "%s/qmake_hostfile", tmpdir);
-      hostfile_name = (char *)malloc(strlen(buffer) + 1);
-      strcpy(hostfile_name, buffer);
-      
-      /* sge_hostfile_name */
-      c = getenv("PE_HOSTFILE");
-      if(c == NULL) {
-         remote_exit(EXIT_FAILURE, "cannot read environment variable "
-                     "PE_HOSTFILE", strerror(errno));
-      }
+   sge_hostfile_name = (char *)malloc(strlen(c) + 1);
+   strcpy(sge_hostfile_name, c);
+  
+   if(be_verbose) {
+      fprintf(stderr, "sge hostfile = %s\n", sge_hostfile_name);
+      fprintf(stderr, "qmake  hostfile = %s\n", hostfile_name);
+      fprintf(stderr, "qmake  lockfile = %s\n", lockfile_name);
+   }
+  
+   /* hostfile */
+   create_hostfile();
 
-      sge_hostfile_name = (char *)malloc(strlen(c) + 1);
-      strcpy(sge_hostfile_name, c);
-     
-      if(be_verbose) {
-         fprintf(stderr, "sge hostfile = %s\n", sge_hostfile_name);
-         fprintf(stderr, "qmake  hostfile = %s\n", hostfile_name);
-         fprintf(stderr, "qmake  lockfile = %s\n", lockfile_name);
-      }
-     
-      /* hostfile */
-      create_hostfile();
-
+   if(remote_enabled) {
       hostfile = open(hostfile_name, O_RDWR);
       if(hostfile < 0) {
-         remote_exit(EXIT_FAILURE, "cannot open qmake hostfile", 
-                     strerror(errno));
+         remote_exit(EXIT_FAILURE, "cannot open qmake hostfile", strerror(errno));
       }
 
-      /* host_count - it is already initialized from -j option, but make sure
-       * it really matches the information from the pe_hostfile
-       */
+      /* host_count */
       host_count = get_host_count();
-   }
 
-   /* job_info */
-   jobs = (struct job_info *)malloc(host_count * sizeof(job_info));
-   if(jobs == NULL) {
-      remote_exit(EXIT_FAILURE, "malloc failed", NULL);
-   }
-
-   for(i = 0; i < host_count; i++) {
-      jobs[i].pid     = 0;
-      jobs[i].offset  = -1;
-   }
+      /* job_info */
+      jobs = (struct job_info *)malloc(host_count * sizeof(job_info));
+      if(jobs == NULL) {
+         remote_exit(EXIT_FAILURE, "malloc failed", NULL);
+      }
+   
+      for(i = 0; i < host_count; i++) {
+         jobs[i].pid     = 0;
+         jobs[i].offset  = -1;
+      }
+   }  
 }
 
 /****** Interactive/qmake/lock_hostfile() ***************************************
@@ -950,49 +944,6 @@ static const char *next_host()
    return buffer;
 }
 
-static void build_submit_argv()
-{
-   int i;
-   int v_counter = 0;
-
-   /* copy sge -v options for later calls to qrsh -inherit
-    * for dynamic mode, we also have to copy job requests (-l)
-    */
-   for(i = 0; i < sge_argc; i++) {
-      if(strcmp(sge_argv[i], "-V") == 0) {
-         v_counter++;
-      } else if(strcmp(sge_argv[i], "-v") == 0) {
-         v_counter += 2;
-         i++;
-      } else if (dynamic_mode && strcmp(sge_argv[i], "-l") == 0) {
-         v_counter += 2;
-         i++;
-      }
-   }
-   sge_v_argc = 0;
-
-   if(v_counter > 0) {
-      sge_v_argv = (char **)malloc(v_counter * sizeof(char *));
-
-      if(sge_v_argv == NULL) {
-         remote_exit(EXIT_FAILURE, "malloc failed", strerror(errno));
-      }
-   }   
-   
-   for(i = 0; i < sge_argc; i++) {
-      if(strcmp(sge_argv[i], "-v") == 0 && (i + 1) < sge_argc) {
-         sge_v_argv[sge_v_argc++] = sge_argv[i];
-         sge_v_argv[sge_v_argc++] = sge_argv[i + 1];
-      } else if(strcmp(sge_argv[i], "-V") == 0) {
-         sge_v_argv[sge_v_argc++] = sge_argv[i];
-      } else if (dynamic_mode && 
-                 strcmp(sge_argv[i], "-l") == 0 && (i + 1) < sge_argc) {
-         sge_v_argv[sge_v_argc++] = sge_argv[i];
-         sge_v_argv[sge_v_argc++] = sge_argv[i + 1];
-      }
-   }
-}
-
 /****** Interactive/qmake/parse_options() ***************************************
 *
 *  NAME
@@ -1030,12 +981,14 @@ static int parse_options(int *p_argc, char **p_argv[])
 
    int unhandled_recursive = 0;
 
+   int v_counter = 0;
+
    argc = *p_argc;
    argv = *p_argv;
    
    /* detect if there are any sge parameters and count them */
    first_gmake_option = 0;
-   for(i = 1; i < argc; i++) {
+   for(i = 0; i < argc; i++) {
       if(!strcmp(argv[i], "--")) {
          first_gmake_option = i;
          break;
@@ -1096,23 +1049,54 @@ static int parse_options(int *p_argc, char **p_argv[])
       }
    }
 
-   /* determine dynamic_mode */
-   dynamic_mode = getenv("PE") == NULL;
-
-   /* parse sge options and set some flags */
+   /* parse sge options and count number of options to include in calls of qrsh */
    for(i = 0; i < sge_argc; i++) {
-      if(strcmp(sge_argv[i], "-verbose") == 0) {
+       if(!strcmp(sge_argv[i], "-verbose")) {
          be_verbose = 1;
-      } else if(strcmp(sge_argv[i], "-cwd") == 0) {
+         continue;
+      }   
+
+      if(!strcmp(sge_argv[i], "-cwd")) {
          pass_cwd = 1;
-      } else if(strcmp(sge_argv[i], "-v") == 0) {
+         continue;
+      }   
+
+      if(!strcmp(sge_argv[i], "-V")) {
+         v_counter++;
+         continue;
+      }
+   
+      if(!strcmp(sge_argv[i], "-v")) {
+         v_counter += 2;
          i++;
          if(i < sge_argc) {
-            if(strncmp(sge_argv[i], "QRSH_WRAPPER", 
-                       sizeof("QRSH_WRAPPER") - 1) == 0) {
+            if(!strncmp(sge_argv[i], "QRSH_WRAPPER", sizeof("QRSH_WRAPPER") - 1)) {
                qrsh_wrapper_cmdline = 1;
+               continue;
             }
          }
+      }
+   }
+
+   /* copy sge -v options for later calls to qrsh -inherit */
+   sge_v_argc = 0;
+
+   if(v_counter > 0) {
+      sge_v_argv = (char **)malloc(v_counter * sizeof(char *));
+
+      if(sge_v_argv == NULL) {
+         remote_exit(EXIT_FAILURE, "malloc failed", strerror(errno));
+      }
+   }   
+   
+   for(i = 0; i < sge_argc; i++) {
+      if(!strcmp(sge_argv[i], "-v") && (i + 1) < sge_argc) {
+         sge_v_argv[sge_v_argc++] = sge_argv[i];
+         sge_v_argv[sge_v_argc++] = sge_argv[i + 1];
+      }
+
+      if(!strcmp(sge_argv[i], "-V")) {
+         sge_v_argv[sge_v_argc++] = sge_argv[i];
       }
    }
 
@@ -1128,41 +1112,12 @@ static int parse_options(int *p_argc, char **p_argv[])
    for(i = first_gmake_option + 1; i < argc; i++, gmake_argc++) {
       gmake_argv[gmake_argc] = argv[i];
    }
-  
-   /* in case of dynamic mode, set number of slots to use from -j option */
-   if (dynamic_mode) {
-      for(i = 0; i < gmake_argc; i++) {
-         if(strcmp(gmake_argv[i], "-j") == 0) {
-            i++;
-            /* no further parameter - would core dump? */
-            /* JG: TODO: in dynamic mode, -j without parameter would be ok.
-             * it would mean: allow any number of parallel jobs.
-             * to allow this, we have to change storage of job_info from 
-             * array to linked list.
-             */
-            if(i >= gmake_argc) {
-              remote_exit(EXIT_FAILURE, "-j option requires parameter", NULL);
-            }
-      
-            host_count = atoi(gmake_argv[i]);
-            break;
-         }
-      }
-     
-      if(host_count < 1) {
-         host_count = 1;
-      }
-   }
-  
+   
    /* return new gmake parameters */
    *p_argc = gmake_argc;
    *p_argv = gmake_argv;
 
    if(be_verbose) {
-      if (dynamic_mode) {
-         fprintf(stderr, "dynamic task allocation mode\n");
-      }
-      
       for(i = 0; i < sge_argc; i++) {
          fprintf(stderr, "sge_argv[%d] = %s\n", i, sge_argv[i]);
       }
@@ -1258,7 +1213,7 @@ void set_default_options()
       /* if no resource requests, insert to use same architecture */
       /* copy old sge options */
       argv = sge_argv;
-      sge_argv = (char **)malloc((sge_argc +  3) * sizeof(char *));
+      sge_argv = (char **)malloc((sge_argc + (insert_resource_request ? 3 : 0)) * sizeof(char *));
 
       if(sge_argv == NULL) {
          remote_exit(EXIT_FAILURE, "malloc failed", strerror(errno));
@@ -1390,7 +1345,6 @@ static void equalize_nslots(int *p_argc, char **p_argv[])
 *
 ****************************************************************************
 */
-#if 0
 static void equalize_pe_j()
 {
    int i;
@@ -1404,7 +1358,7 @@ static void equalize_pe_j()
          return;
       }   
    }
-  
+   
    /* gmake option -j requests more than 1 slot? */
    for(i = 0; i < gmake_argc; i++) {
       if(!strcmp(gmake_argv[i], "-j")) {
@@ -1449,16 +1403,15 @@ static void equalize_pe_j()
    /* free old sge_argv */
    free(argv);
 }
-#endif   
 
 
-/****** Interactive/qmake/submit_qmake() ***************************************
+/****** Interactive/qmake/start_qrsh() ***************************************
 *
 *  NAME
-*     submit_qmake() -- start a scheduled qmake with qrsh
+*     start_qrsh() -- start a scheduled qmake with qrsh
 *
 *  SYNOPSIS
-*     static void submit_qmake();
+*     static void start_qrsh();
 *
 *  FUNCTION
 *     Builds a new argument vector for a qrsh call to start a scheduled
@@ -1473,7 +1426,7 @@ static void equalize_pe_j()
 *
 ****************************************************************************
 */
-static void submit_qmake()
+static void start_qrsh()
 {
    int i;
    int argc;
@@ -1619,27 +1572,19 @@ void remote_options(int *p_argc, char **p_argv[])
    if(inherit_job()) {
       /* is MAKELEVEL set in environment? */
       if(makelevel == NULL) {
+         /* equalize NSLOTS with -j option */
+         equalize_nslots(p_argc, p_argv);
          makelevel = "1";
-
-         /* in non dynamic mode, equalize NSLOTS (from pe) with -j option */
-         if (!dynamic_mode) {
-            equalize_nslots(p_argc, p_argv);
-         }
       } 
       /* enable remote execution */
       remote_enabled = 1;
-      build_submit_argv();
    } else {
       /* set default sge options (architecture) */
       set_default_options();
-      build_submit_argv();
       /* equalize -pe and -j options */
-      /* JG: If no pe is given, we use dynamic allocation */
-#if 0
       equalize_pe_j();
-#endif
-      /* start a scheduled qmake with qrsh, wait for qrsh to exit and exit */
-      submit_qmake();
+      /* start qrsh, wait for qrsh to exit and exit */
+      start_qrsh();
    }
 }
 
@@ -1725,16 +1670,14 @@ void remote_cleanup ()
       if(be_verbose) {
          fprintf(stderr, "cleanup of remote mechanism\n");
       }
-
-      if (!dynamic_mode) {
-         /* close hostfile */
-         if(hostfile >= 0) {
-            close(hostfile);
-            hostfile = -1;
-         }
-         /* unlock, if exit is forced within locked situation */
-         unlock_hostfile();
+      
+      /* close hostfile */
+      if(hostfile >= 0) {
+         close(hostfile);
+         hostfile = -1;
       }
+      /* unlock, if exit is forced within locked situation */
+      unlock_hostfile();
    }
 }
 /* Return nonzero if the next job should be done remotely.  */
@@ -1788,15 +1731,7 @@ int start_remote_job_p (int first_p)
       }
 
       if(be_verbose) {
-         if (dynamic_mode) {
-            fprintf(stderr, 
-                    "enabling next task to be scheduled as Grid Engine "
-                    "job\n");
-         } else {
-            fprintf(stderr, 
-                    "enabling next task to be executed as Grid Engine "
-                    "parallel task\n");
-         }
+         fprintf(stderr, "enabling next job to be executed on remote host\n");
       }
 
       return 1;
@@ -1914,7 +1849,7 @@ static int might_be_recursive_make(char *argv[]) {
    a unique identification, and set *IS_REMOTE to zero if the job is local,
    nonzero if it is remote (meaning *ID_PTR is a process ID).  */
 
-/****** Interactive/qmake/start_remote_job() ***********************************
+/****** Interactive/qmake/start_remote_job() ***************************************
 *
 *  NAME
 *     start_remote_job() -- start a remote job
@@ -1967,32 +1902,21 @@ int start_remote_job (char **argv, char **envp,
    const char *hostname;
    int exec_remote = 1;
    int recursive_make = 0;
-
+  
    /* check for recursive make */
    if(is_recursive_make(argv[0])) {
       /* force local execution */
       exec_remote = 0;
       recursive_make = 1;
-      if (dynamic_mode) {
-         hostname = "dynamic mode";
-      } else {
-         hostname = localhost;
-         unlock_hostentry(jobs[next_job].offset);
-      }
+      hostname = localhost;
+      unlock_hostentry(jobs[next_job].offset);
       jobs[next_job].offset = -1;
    } else {
-      /* JG: TODO: shouldn't is_recursive_make and might_be_recursive_make
-       * be handled in the same way?
-       */
       if(might_be_recursive_make(argv)) {
          /* argv contains program name */
          exec_remote = 0;
-         if (dynamic_mode) {
-            hostname = "dynamic mode";
-         } else {
-            hostname = localhost;
-            unlock_hostentry(jobs[next_job].offset);
-         }
+         hostname = localhost;
+         unlock_hostentry(jobs[next_job].offset);
          jobs[next_job].offset = -1;
          /* dump environment variable RECURSIVE_QMAKE_OPTIONS */
          {
@@ -2002,22 +1926,24 @@ int start_remote_job (char **argv, char **envp,
 
             /* compute length of all sge options */
             for(i = 0; i < sge_v_argc; i++) {
-               envsize += strlen(sge_v_argv[i]);
+               envsize =+ strlen(sge_v_argv[i]);
             }
 
             /* add space for variable name, =, -inherit, [-cwd], [-verbose], \n's, \0 */
-            envsize += sizeof("RECURSIVE_QMAKE_OPTIONS") + sizeof("-inherit") + sge_v_argc;
+            envsize += strlen("RECURSIVE_QMAKE_OPTIONS") + 1 + strlen("-inherit") + sge_v_argc + 1;
             if(pass_cwd) {
-               envsize += sizeof("-cwd");
+               envsize += 1 + strlen("-cwd");
             }
 
             if(be_verbose) {
-               envsize += sizeof("-verbose");
+               envsize += 1 + strlen("-verbose");
             }
 
             envvar = (char *)malloc(envsize);
 
-            strcpy(envvar, "RECURSIVE_QMAKE_OPTIONS=-inherit");
+            strcpy(envvar, "RECURSIVE_QMAKE_OPTIONS");
+            strcat(envvar, "=");
+            strcat(envvar, "-inherit");
 
             if(pass_cwd) {
                strcat(envvar, "\n-cwd");
@@ -2039,11 +1965,7 @@ int start_remote_job (char **argv, char **envp,
          }
       } else {
          /* remote execution possible */
-         if (dynamic_mode) {
-            hostname = "dynamic mode";
-         } else {
-            hostname = next_host();
-         }
+         hostname = next_host();
       }
    }
  
@@ -2088,10 +2010,8 @@ int start_remote_job (char **argv, char **envp,
          if(be_verbose) {
             args[argc++] = "-verbose";
          }
-        
-         if (!dynamic_mode) {
-            args[argc++] = "-inherit";
-         }
+         
+         args[argc++] = "-inherit";
 
          if(stdin_fd != 0) {
             args[argc++] = "-nostdin";
@@ -2101,18 +2021,11 @@ int start_remote_job (char **argv, char **envp,
             args[argc++] = "-cwd";
          }
 
-         if (dynamic_mode) {
-            args[argc++] = "-now";
-            args[argc++] = "no";
-         }
-
          for(i = 0; i < sge_v_argc; i++) {
             args[argc++] = sge_v_argv[i];
          }
 
-         if (!dynamic_mode) {
-            args[argc++] = (char *)hostname;
-         }
+         args[argc++] = (char *)hostname;
          i = 0;
       } else {
          if(recursive_make) {
@@ -2617,10 +2530,7 @@ int main(int argc, char *argv[])
    }
 
    printf("\tcreate -pe option from -j option\n");
-   /* JG: If no pe is given, we use dynamic allocation */
-#if 0
    equalize_pe_j();
-#endif
    for(i = 0; i < sge_argc; i++) {
       printf("\t\tsge_argv[%d] = %s\n", i, sge_argv[i]);
    }   

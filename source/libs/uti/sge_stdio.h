@@ -38,8 +38,6 @@
 #include <time.h>  
 #include <unistd.h>
 
-#include "basis_types.h"
-
 /****** uti/stdio/FPRINTF() ***************************************************
 *  NAME
 *     FPRINTF() -- fprintf() macro 
@@ -62,49 +60,29 @@
 *  NOTES
 *     Don't forget to define the 'FPRINTF_ERROR'-label
 ******************************************************************************/
+
+#include <stdio.h>
+
+#include "basis_types.h"
+
 #define FPRINTF(x) \
-   if (fprintf x == -1) { \
+   __fprintf_ret = fprintf x; \
+   if (__fprintf_ret == -1) { \
       goto FPRINTF_ERROR; \
    }
 
-/****** uti/stdio/FPRINTF_ASSIGN() *******************************************
-*  NAME
-*     FPRINTF_ASSIGN() -- fprintf() macro with return value assignment 
-*
-*  SYNOPSIS
-*     #define FPRINTF_ASSIGN(var, arguments)
-*     void fprintf(FILE *stream, const char *format, ...)
-*
-*  FUNCTION
-*     This FPRINTF macro has to be used similar to the fprintf 
-*     function. It is not necessary to check the return value. 
-*     In case of an error the macro will jump to a defined label.
-*     The label name is 'FPRINTF_ERROR'. This is a variarion of 
-*     FPRINTF() that allows assigning the fprintf() return value to
-*     the variable passed as first makro argument.
-*
-*  INPUTS
-*     FILE *stream       - output stream
-*     const char *format - format string
-*     ...
-*
-*  NOTES
-*     Don't forget to define the 'FPRINTF_ERROR'-label
-******************************************************************************/
-#define FPRINTF_ASSIGN(var, x) \
-   if ((var = fprintf x)== -1) { \
-      goto FPRINTF_ERROR; \
-   }
+extern int __fprintf_ret;
 
 pid_t sge_peopen(const char *shell, int login_shell, const char *command, 
                  const char *user, char **env, FILE **fp_in, FILE **fp_out, 
-                 FILE **fp_err, bool null_stderr);
+                 FILE **fp_err);
  
 int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err, 
                 struct timeval *timeout); 
 
 void print_option_syntax(FILE *fp, const char *option, const char *meaning);
 
-bool sge_check_stdout_stream(FILE *file, int fd);
+bool 
+sge_check_stdout_stream(FILE *file, int fd);
 
 #endif /* __SGE_STDIO_H */

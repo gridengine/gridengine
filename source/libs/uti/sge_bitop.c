@@ -53,9 +53,6 @@
 *     int n         - number of bits 
 *     int direction - shift direction (SHIFT_RIGHT of SHIFT_LEFT)
 *
-*  NOTES
-*     MT-NOTE: sge_area_cshift() is MT safe
-*
 *  RESULT
 *     int - error state
 *         0 - OK
@@ -132,9 +129,6 @@ int sge_area_cshift(char *area, int area_len, int n, int direction)
 *     const char *area  - area 
 *     int area_len      - length of area 
 *
-*  NOTES
-*     MT-NOTE: sge_area_print() is MT safe
-*
 *  RESULT
 *     int - error state
 *         0 - OK
@@ -177,9 +171,6 @@ int sge_area_print(const char *fname, const char *label,
 *
 *  FUNCTION
 *     ??? 
-*
-*  NOTES
-*     MT-NOTE: sge_area_xor() is MT safe
 *
 *  INPUTS
 *     char *area      - area 
@@ -228,9 +219,6 @@ void sge_area_xor(char *area, int area_len, const char *key, int key_len)
 *     const char *a1 - 1st byte area 
 *     const char *a2 - 2nd byte area  
 *     int size       - number of bytes to be compared 
-*
-*  NOTES
-*     MT-NOTE: sge_area_cmp() is MT safe
 *
 *  RESULT
 *     int - If the return value is equal to 'size', both areas are

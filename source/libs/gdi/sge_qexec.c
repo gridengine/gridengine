@@ -43,7 +43,7 @@
 #include "commd_message_flags.h"
 #include "sge_prog.h"
 #include "sge_gdi.h"
-#include "sge_any_request.h"
+#include "sge_gdi_intern.h"
 #include "sge_uidgid.h"
 #include "sgermon.h"
 #include "pack_job_delivery.h"
@@ -51,12 +51,10 @@
 #include "sge_qexecL.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_str.h"
+#include "sge_stringL.h"
+#include "msg_gdilib.h"
 #include "sge_security.h"
 #include "sge_var.h"
-
-#include "msg_common.h"
-#include "msg_gdilib.h"
 
 static lList *remote_task_list = 0;
 static char lasterror[1024];
@@ -101,146 +99,7 @@ const char *qexec_last_err(void)
 *     sge_tid_t - the task id, if the task can be executed,
 *                 a value <= 0 indicates an error.
 *
-*  NOTES
-*     MT-NOTE: sge_qexecve() is not MT safe
 ******************************************************************************/
-#ifdef ENABLE_NGC
-sge_tid_t sge_qexecve(const char *hostname, const char *queuename,
-                      const char *cwd, const lList *environment,
-                      const lList *path_aliases)
-{
-char myname[256];
-const char *s;
-   int ret, uid;
-   sge_tid_t tid = NULL;
-   lListElem *petrep;
-   lListElem *rt;
-   sge_pack_buffer pb;
-   u_long32 jobid, jataskid;
-   u_long32 dummymid;
-
-   DENTER(TOP_LAYER, "sge_qexecve");
-
-   if(hostname == NULL) {
-      sprintf(lasterror, MSG_GDI_INVALIDPARAMETER_SS, "sge_qexecve", "hostname");
-      DEXIT;
-      return NULL;
-   }
-
-   /* resolve user */
-   if(sge_uid2user((uid=getuid()), myname, sizeof(myname)-1, MAX_NIS_RETRIES)) {
-      sprintf(lasterror, MSG_GDI_RESOLVINGUIDTOUSERNAMEFAILED_IS , 
-            uid, strerror(errno));
-      DEXIT;
-      return NULL;
-   }
-   
-   if((s=getenv("JOB_ID")) == NULL) {
-      sprintf(lasterror, MSG_GDI_MISSINGINENVIRONMENT_S, "JOB_ID");
-      DEXIT;
-      return NULL;
-   }
-
-   if(sscanf(s, u32, &jobid) != 1) {
-      sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, "JOB_ID");
-      DEXIT;
-      return NULL;
-   }
-
-   /* for compatibility we need to check SGE_, GRD_ and COD_TASK_ID */
-   {
-      int i;
-      int found = 0;
-      const char *variables[] = {
-         "SGE_TASK_ID",
-         "GRD_TASK_ID",
-         "COD_TASK_ID"
-      };
-
-      for(i = 0; i < 3; i++) {
-         if((s=getenv(variables[i])) != NULL) {
-            found = 1;
-            if(strcmp(s, "undefined") == 0) {
-               jataskid = 1;
-            } else {
-               if(sscanf(s, u32, &jataskid) != 1) {
-                  sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, variables[i]);
-                  DEXIT;
-                  return NULL;
-               }
-            }
-         }
-      }
-
-      if(!found) {
-         sprintf(lasterror, MSG_GDI_MISSINGINENVIRONMENT_S, "[SGE|GRD|COD]_TASK_ID");
-         DEXIT;
-         return NULL;
-      }
-   }
-
-   /* ---- build up pe task request structure (see gdilib/sge_petaskL.h) */
-   petrep = lCreateElem(PETR_Type);
-
-   lSetUlong(petrep, PETR_jobid, jobid);
-   lSetUlong(petrep, PETR_jataskid, jataskid);
-   lSetString(petrep, PETR_owner, myname);
-
-   if(cwd != NULL) {
-      lSetString(petrep, PETR_cwd, cwd);
-   }
-
-   if(environment != NULL) {
-      lSetList(petrep, PETR_environment, lCopyList("environment", environment));
-   }
-
-   if(path_aliases != NULL) {
-      lSetList(petrep, PETR_path_aliases, lCopyList("path_aliases", path_aliases));
-   }
-
-
-   if(queuename != NULL) {
-      lSetString(petrep, PETR_queuename, queuename);
-   }
-
-   if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
-      lFreeElem(petrep);
-      sprintf(lasterror, MSG_GDI_OUTOFMEMORY);
-      DEXIT;
-      return NULL;
-   }
-
-   pack_job_delivery(&pb, petrep, NULL, NULL);
-
-   ret = gdi_send_message_pb(1, prognames[EXECD], 1, hostname,
-            TAG_JOB_EXECUTION, &pb, &dummymid);
-
-   clear_packbuffer(&pb);
-
-   lFreeElem(petrep);
-
-   if (ret != CL_RETVAL_OK) {
-      sprintf(lasterror, MSG_GDI_SENDTASKTOEXECDFAILED_SS , hostname, cl_get_error_text(ret));
-      DEXIT;
-      return NULL;
-   }
-  
-   /* add list into our remote task list */
-   rt = lAddElemStr(&remote_task_list, RT_tid, "none", RT_Type);
-   lSetHost(rt, RT_hostname, hostname);
-   lSetUlong(rt, RT_state, RT_STATE_WAIT4ACK);
-
-   rcv_from_execd(OPT_SYNCHRON, TAG_JOB_EXECUTION);
-   tid = (sge_tid_t) lGetString(rt, RT_tid);
-
-   if(strcmp(tid, "none") == 0) {
-      tid = NULL;
-   }
-
-   DEXIT;
-   return tid;
-}
-#else
 sge_tid_t sge_qexecve(const char *hostname, const char *queuename,
                       const char *cwd, const lList *environment,
                       const lList *path_aliases)
@@ -379,14 +238,6 @@ const char *s;
    return tid;
 }
 
-#endif
-
-/*
- *
- *  NOTES
- *     MT-NOTE: sge_qwaittid() is not MT safe
- *
- */
 int sge_qwaittid(
 sge_tid_t tid,
 int *status,
@@ -405,6 +256,7 @@ int options
       DEXIT;
       return -1;
    }
+
 
    while ((rt && /* definite one searched */
             lGetUlong(rt, RT_state)!=RT_STATE_EXITED && /* not exited */
@@ -431,106 +283,7 @@ int options
    0  reaped a task cleanly  
    1  no message (asynchronuous mode)
    -1 got an error
- 
-    NOTES
-       MT-NOTE: rcv_from_execd() is not MT safe
-
 */
-#ifdef ENABLE_NGC
-static int rcv_from_execd(
-int options,
-int tag 
-) {
-   int ret;
-   char *msg = NULL;
-   u_long32 msg_len = 0;
-   sge_pack_buffer pb;
-   u_short from_id;
-   char host[1024];
-   u_short compressed;
-
-   lListElem *rt_rcv;
-   u_long32 exit_status=0;
-   sge_tid_t tid = NULL;
-
-   DENTER(TOP_LAYER, "rcv_from_execd");
-
-   host[0] = '\0';
-   from_id = 1;
-   do {
-      /* FIX_CONST */
-      ret = gdi_receive_message((char*)prognames[EXECD], &from_id, host, &tag, 
-                                &msg, &msg_len, (options & OPT_SYNCHRON) ? 1:0, &compressed);
-      if ( ret != CL_RETVAL_OK && ret != CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
-         sprintf(lasterror, MSG_GDI_MESSAGERECEIVEFAILED_SI , cl_get_error_text(ret), ret);
-         DEXIT;
-         return -1;
-      }
-   } while (options&OPT_SYNCHRON && ret == CL_RETVAL_SYNC_RECEIVE_TIMEOUT);
-
-   if (ret==CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
-      DEXIT;
-      return 1;
-   }
-
-   ret = init_packbuffer_from_buffer(&pb, msg, msg_len, compressed);     
-   if(ret != PACK_SUCCESS) {
-      sprintf(lasterror,  MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret));
-      DEXIT;
-      return -1;
-   }
-
-   switch (tag) {
-   case TAG_TASK_EXIT:
-      unpackstr(&pb, &tid);
-      unpackint(&pb, &exit_status);
-      break;
-   case TAG_JOB_EXECUTION:
-      unpackstr(&pb, &tid);
-      break;
-   default:
-      break;
-   }
-
-   clear_packbuffer(&pb);
-
-   switch (tag) {
-   case TAG_TASK_EXIT:
-      /* change state in exited task */
-      if (!(rt_rcv = lGetElemStr(remote_task_list, RT_tid, 
-            tid))) {
-         sprintf(lasterror, MSG_GDI_TASKNOTFOUND_S , 
-               tid);
-         free(tid);
-         DEXIT;
-         return -1;
-      }
-
-      lSetUlong(rt_rcv, RT_status, exit_status);
-      lSetUlong(rt_rcv, RT_state, RT_STATE_EXITED);
-      break;
-
-   case TAG_JOB_EXECUTION:
-      /* search task without taskid */
-      if (!(rt_rcv = lGetElemStr(remote_task_list, RT_tid, "none"))) {
-         sprintf(lasterror, MSG_GDI_TASKNOTFOUNDNOIDGIVEN_S , tid);
-         DEXIT;
-         return -1;
-      }
-      lSetString(rt_rcv, RT_tid, tid);
-      break;
-
-   default:
-      break;
-   }
-
-   free(tid);
-
-   DEXIT;
-   return 0;
-}
-
-#else
 static int rcv_from_execd(
 int options,
 int tag 
@@ -624,5 +377,3 @@ int tag
    DEXIT;
    return 0;
 }
-
-#endif

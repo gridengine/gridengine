@@ -32,8 +32,7 @@
 
 #include <string.h>
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
-#include "sge_any_request.h"
+#include "sge_gdi_intern.h"
 #include "gdi_checkpermissions.h"
 #include "sge_answer.h"
 #include "sge_permissionL.h"
@@ -53,7 +52,7 @@
 *     qmaster will fill up the PERM_Type list. The mapped user name 
 *     is stored in the PERM_req_username field. The function will strcpy 
 *     the name into the "buf" char array if the name is shorter than 
-*     the given "buflen". On success the function returns true. 
+*     the given "buflen". On success the function returns TRUE. 
 * 
 *  INPUTS
 *     char* requestedHost - pointer to char array; this is the name of 
@@ -63,12 +62,12 @@
 *     int   buflen        - length (sizeof) buf
 *
 *  RESULT
-*     int true on success, false if not
+*     int TRUE on success, FALSE if not
 *
 *  SEE ALSO
 *     gdilib/sge_gdi_check_permission()
 ******************************************************************************/
-bool sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
+int sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
                              int buflen) 
 {  
    lList* alp = NULL;
@@ -80,7 +79,7 @@ bool sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
 
    if (requestedHost == NULL) {
       DEXIT;
-      return false;
+      return FALSE;
    }
    
    permList = lCreateList("permissions", PERM_Type);
@@ -109,7 +108,7 @@ bool sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
          alp = NULL;
   
          DEXIT;
-         return true;
+         return TRUE;
       }
    } 
 
@@ -122,7 +121,7 @@ bool sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
    alp = NULL;
    
    DEXIT;
-   return false;
+   return FALSE;
 }
 
 /****** gdi/sge/sge_gdi_check_permission() **********************************
@@ -137,22 +136,21 @@ bool sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
 *     This function asks the qmaster for the permission (PERM_Type) 
 *     list. The option flag specifies which right should be checked. 
 *     It can be MANAGER_CHECK or/and OPERATOR_CHECK at this time. If 
-*     the caller has access the function returns true.
+*     the caller has access the function returns TRUE.
 * 
 *  INPUTS
 *     int option - check flag (MANAGER_CHECK or OPERATOR_CHECK)
 *
 *  RESULT
-*     int true if caller has the right, false if not (-10 if qmaster 
+*     int TRUE if caller has the right, FALSE if not (-10 if qmaster 
 *     not reachable)
 * 
 *  SEE ALSO
 *     gdilib/sge_gdi_get_mapping_name()
 *     gdilib/PERM_LOWERBOUND
 ******************************************************************************/
-bool sge_gdi_check_permission(lList **alpp, int option) 
-{
-  bool access_status = false;
+int sge_gdi_check_permission(lList **alpp, int option) {
+  int access_status = FALSE;
   int failed_checks = 0;
   lList* alp = NULL;
   lList* permList = NULL;
@@ -165,13 +163,7 @@ bool sge_gdi_check_permission(lList **alpp, int option)
 
   if (permList == NULL) {
      DPRINTF(("Permlist is NULL\n"));
-     if (alpp != NULL) {
-        if (*alpp == NULL) {
-           *alpp = alp;
-        } else {
-           lAddList(*alpp, alp); 
-        }       
-     }
+     alpp = &alp;
      failed_checks++;
      return -10;
   } else {
@@ -210,7 +202,7 @@ bool sge_gdi_check_permission(lList **alpp, int option)
   alp = NULL;
 
   if (failed_checks == 0) {
-    access_status = true;
+    access_status = TRUE;
   }
 
   DEXIT;

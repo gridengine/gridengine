@@ -44,9 +44,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "basis_types.h"
-#include "sge_dstring.h"
 #include "msg_utilib.h"
-#include "sge_prog.h"
 
 typedef enum {
    FILE_TYPE_NOT_EXISTING,
@@ -54,11 +52,11 @@ typedef enum {
    FILE_TYPE_DIRECTORY
 } file_type_t; 
 
-/* MT-NOTE: This module is MT safe */
-
-static int sge_domkdir(const char *, int, int, int);
+static int sge_domkdir(const char *, int, int);
 
 static file_type_t sge_get_file_type(const char *name);  
+
+static sge_exit_func_t exit_func = NULL;
 
 static file_type_t sge_get_file_type(const char *name)
 {
@@ -79,21 +77,17 @@ static file_type_t sge_get_file_type(const char *name)
    return ret;
 }             
 
-static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_not_exist) 
+static int sge_domkdir(const char *path_, int fmode, int exit_on_error) 
 {
    SGE_STRUCT_STAT statbuf;
  
-   DENTER(TOP_LAYER, "sge_domkdir");
+   DENTER(BASIS_LAYER, "sge_domkdir");
  
    if (mkdir(path_, (mode_t) fmode)) {
       if (errno == EEXIST) {
-         if (may_not_exist) {
-            DEXIT;
-            return -1;
-         } else {
-            DEXIT;
-            return 0;
-         }
+         DPRINTF(("directory \"%s\" already exists\n", path_));
+         DEXIT;
+         return 0;
       }
  
       if (!SGE_STAT(path_, &statbuf) && S_ISDIR(statbuf.st_mode)) {
@@ -190,12 +184,16 @@ int sge_unlink(const char *prefix, const char *suffix)
 ******************************************************************************/
 void sge_sleep(int sec, int usec) 
 {
-   struct timeval timeout;
+   static struct timeval timeout;
  
    timeout.tv_sec = sec;
    timeout.tv_usec = usec;
  
+#if !(defined(HPUX) || defined(HP10_01) || defined(HPCONVEX))
    select(0, (fd_set *) 0, (fd_set *) 0, (fd_set *) 0, &timeout);
+#else
+   select(0, (int *) 0, (int *) 0, (int *) 0, &timeout);
+#endif
 }       
 
 /****** uti/unistd/sge_chdir_exit() *******************************************
@@ -238,7 +236,7 @@ int sge_chdir_exit(const char *path, int exit_on_error)
    return 0;
 }           
 
-/****** uti/unistd/sge_chdir() ************************************************
+/****** sge/unistd/sge_chdir() ************************************************
 *  NAME
 *     sge_chdir() --  Replacement for chdir()
 *
@@ -291,20 +289,50 @@ int sge_chdir(const char *dir)
 ******************************************************************************/
 void sge_exit(int i) 
 {
-   sge_exit_func_t exit_func = uti_state_get_exit_func();
-   if (exit_func) 
+   if (exit_func) {
       exit_func(i);
+   }
  
+   DCLOSE;
    exit(i);
 }
  
+/****** uti/unistd/sge_install_exit_func() ************************************
+*  NAME
+*     sge_install_exit_func() -- Installs a new exit handler 
+*
+*  SYNOPSIS
+*     sge_exit_func_t sge_install_exit_func(sge_exit_func_t new) 
+*
+*  FUNCTION
+*     Installs a new exit handler and returns the old one. Exit function
+*     will be called be sge_exit()
+*
+*  INPUTS
+*     sge_exit_func_t new - new function pointer 
+*
+*  RESULT
+*     sge_exit_func_t - old function pointer 
+*
+*  SEE ALSO
+*     uti/unistd/sge_exit() 
+******************************************************************************/
+sge_exit_func_t sge_install_exit_func(sge_exit_func_t new) 
+{
+   sge_exit_func_t old;
+ 
+   old = exit_func;
+   exit_func = new;
+ 
+   return old;
+}          
 
 /****** uti/unistd/sge_mkdir() ************************************************
 *  NAME
 *     sge_mkdir() -- Create a directory (and subdirectorys)  
 *
 *  SYNOPSIS
-*     int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist) 
+*     int sge_mkdir(const char *path, int fmode, int exit_on_error) 
 *
 *  FUNCTION
 *     Create a directory 
@@ -313,15 +341,13 @@ void sge_exit(int i)
 *     const char *path  - path 
 *     int fmode         - file mode 
 *     int exit_on_error - as it says 
-*     int may_not_exist - if true an error is returned if the last component
-*                         of the path exists
 *
 *  RESULT
 *     int - error state
 *         0 - OK
 *        -1 - Error (The function may never return)
 ******************************************************************************/
-int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist) 
+int sge_mkdir(const char *path, int fmode, int exit_on_error) 
 {
    int i = 0, res=0;
    stringT path_;
@@ -344,7 +370,7 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
       path_[i] = path[i];
       if ((path[i] == '/') && (i != 0)) {
          path_[i] = (unsigned char) 0;
-         res = sge_domkdir(path_, fmode, exit_on_error, 0);
+         res = sge_domkdir(path_, fmode, exit_on_error);
          if (res) {
             DEXIT;
             return res;
@@ -354,81 +380,46 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
       i++;
    }
  
-   i = sge_domkdir(path_, fmode, exit_on_error, may_not_exist);
+   i = sge_domkdir(path_, fmode, exit_on_error);
  
    DEXIT;
    return i;
 }   
-
-int sge_mkdir2(const char *base_dir, const char *name, int fmode, 
-               int exit_on_error)
-{
-   dstring path = DSTRING_INIT;
-   int ret;
-
-   DENTER(TOP_LAYER, "sge_mkdir");
-   
-   if (base_dir == NULL || name == NULL) {
-      if (exit_on_error) {
-         CRITICAL((SGE_EVENT,MSG_VAR_PATHISNULLINSGEMKDIR ));
-         DCLOSE;
-         SGE_EXIT(1);
-      } else {
-         ERROR((SGE_EVENT, MSG_VAR_PATHISNULLINSGEMKDIR ));
-         DEXIT;
-         return -1;
-      }
-   }
-  
-   sge_dstring_sprintf(&path, "%s/%s", base_dir, name);
-
-   ret = sge_mkdir(sge_dstring_get_string(&path), fmode, exit_on_error, 0); 
-   sge_dstring_free(&path);
-
-   DEXIT;
-   return ret;
-}
 
 /****** uti/unistd/sge_rmdir() ************************************************
 *  NAME
 *     sge_rmdir() -- Recursive rmdir
 *
 *  SYNOPSIS
-*     int sge_rmdir(const char *cp, dstring *error)  
+*     int sge_rmdir(const char *cp, char *err_str)  
 *
 *  FUNCTION
 *     Remove a directory tree. In case of errors a message may be found
-*     in 'error' afterwards.
+*     in 'err_str' afterwards.
 *
 *  INPUTS
 *     const char *cp  - path 
-*     dstring *error  - destination for error message if non-NULL
+*     char *cp        - err_str 
 *
 *  RESULT
 *     int - error state
 *         0 - OK
 *        -1 - Error 
 ******************************************************************************/
-int sge_rmdir(const char *cp, dstring *error) 
+int sge_rmdir(const char *cp, char *err_str) 
 {
    SGE_STRUCT_STAT statbuf;
    SGE_STRUCT_DIRENT *dent;
    DIR *dir;
    char fname[SGE_PATH_MAX];
-
-   DENTER(TOP_LAYER, "sge_rmdir");
  
    if (!cp) {
-      if (error) 
-         sge_dstring_sprintf(error, MSG_POINTER_NULLPARAMETER);
-      DEXIT;
+      sprintf(err_str, MSG_POINTER_NULLPARAMETER);
       return -1;
    }
  
    if (!(dir = opendir(cp))) {
-      if (error) 
-         sge_dstring_sprintf(error, MSG_FILE_OPENDIRFAILED_SS , cp, strerror(errno));
-      DEXIT;
+      sprintf(err_str, MSG_FILE_OPENDIRFAILED_SS , cp, strerror(errno));
       return -1;
    }
  
@@ -439,34 +430,29 @@ int sge_rmdir(const char *cp, dstring *error)
  
 #ifndef WIN32 /* lstat not called */
          if (SGE_LSTAT(fname, &statbuf)) {
-            if (error) 
-               sge_dstring_sprintf(error, MSG_FILE_STATFAILED_SS , fname, strerror(errno));
+            sprintf(err_str,MSG_FILE_STATFAILED_SS , fname,
+                    strerror(errno));
             closedir(dir);
-            DEXIT;
             return -1;
          }
 #else
          /* so symbolic links under Windows */
          if (SGE_STAT(fname, &statbuf)) {
-            if (error) 
-               sge_dstring_sprintf(error, MSG_FILE_STATFAILED_SS , fname, strerror(errno));
+            sprintf(err_str, MSG_FILE_STATFAILED_SS , fname,
+                    strerror(errno));
             closedir(dir);
-            DEXIT;
             return -1;
          }
 #endif /* WIN32 */
  
 #if defined(NECSX4) || defined(NECSX5)
-    if (S_ISDIR(statbuf.st_mode)) 
+    if (S_ISDIR(statbuf.st_mode)) {
 #else
-    if (S_ISDIR(statbuf.st_mode) && !S_ISLNK(statbuf.st_mode)) 
+    if (S_ISDIR(statbuf.st_mode) && !S_ISLNK(statbuf.st_mode)) {
 #endif
-    {
-    if (sge_rmdir(fname, error)) {
-               if (error) 
-                  sge_dstring_sprintf(error, MSG_FILE_RECURSIVERMDIRFAILED );
+            if (sge_rmdir(fname, err_str)) {
+               fprintf(stderr, MSG_FILE_RECURSIVERMDIRFAILED );
                closedir(dir);
-               DEXIT;
                return -1;
             }
          }
@@ -475,11 +461,9 @@ int sge_rmdir(const char *cp, dstring *error)
             printf("unlink %s\n", fname);
 #else
             if (unlink(fname)) {
-               if (error) 
-                  sge_dstring_sprintf(error, MSG_FILE_UNLINKFAILED_SS,
+               sprintf(err_str, MSG_FILE_UNLINKFAILED_SS ,
                       fname, strerror(errno));
                closedir(dir);
-               DEXIT;
                return -1;
             }
 #endif
@@ -493,9 +477,7 @@ int sge_rmdir(const char *cp, dstring *error)
    printf("rmdir %s\n", cp);
 #else
    if (rmdir(cp)) {
-      if (error) 
-         sge_dstring_sprintf(error, MSG_FILE_RMDIRFAILED_SS , cp, strerror(errno));
-      DEXIT;
+      sprintf(err_str, MSG_FILE_RMDIRFAILED_SS , cp, strerror(errno));
       return -1;
    }
 #endif
@@ -503,18 +485,6 @@ int sge_rmdir(const char *cp, dstring *error)
    return 0;
 }
  
-int sge_is_executable(const char *name) 
-{
-   SGE_STRUCT_STAT stat_buffer;
-   int ret = SGE_STAT(name, &stat_buffer);
-   if (!ret) { 
-      return (stat_buffer.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH));
-   } else {
-      return 0;
-   }
-}
-
-
 /****** uti/unistd/sge_is_directory() *****************************************
 *  NAME
 *     sge_is_directory() -- Does 'name' exist and is it a directory? 
@@ -587,7 +557,11 @@ u_long32 sge_sysconf(sge_sysconf_t id)
    DENTER(BASIS_LAYER, "sge_sysconf");
    switch (id) {
       case SGE_SYSCONF_NGROUPS_MAX:
+#if defined(AIX42)
+         ret = NGROUPS;
+#else
          ret = sysconf(_SC_NGROUPS_MAX);
+#endif
       break;
       default:
          CRITICAL((SGE_EVENT, MSG_SYSCONF_UNABLETORETRIEVE_I, (int) id));

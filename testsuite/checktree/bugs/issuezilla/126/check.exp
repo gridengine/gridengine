@@ -52,7 +52,7 @@ set check_init_level_procedure "issue_126_init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_126"
-set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   0
 set check_description(0)  "qsub -t n-m:0 should not cause floating point exception in qmaster"
 
@@ -121,26 +121,29 @@ proc issue_126_check {} {
    # 1
    #
 
-   puts $CHECK_OUTPUT "using host $CHECK_HOST"
+   set host1 $CHECK_HOST
+   puts $CHECK_OUTPUT "using host $host1"
 
-   set q1 [get_requestable_queue "q1" $CHECK_HOST]
+   set queue1(qname) "q1"
+   set queue1(hostname) "$host1"
    set queue1(slots) "1"
    set queue1(seq_no) "1"
    set queue1(load_thresholds)    "np_load_avg=7.00"
    set queue1(suspend_thresholds) "np_load_avg=7"
    set queue1(prolog) "${CHECK_ACTUAL_TEST_PATH}/sleep.sh"
-   set result [ add_queue "q1" $CHECK_HOST queue1]
+   set result [ add_queue queue1 ]
    if { ($result != 0)  } {
       add_proc_error "issue_126_setup" "-1" "Could not add queue q1"
    }
 
-   set q2 [get_requestable_queue "q2" $CHECK_HOST]
+   set queue2(qname) "q2"
+   set queue2(hostname) "$host1"
    set queue2(slots) "1"
    set queue2(seq_no) "2"
    set queue2(load_thresholds)    "np_load_avg=7.00"
    set queue2(suspend_thresholds) "np_load_avg=7"
-   set queue2(subordinate_list) $q1
-   set result [ add_queue "q2" $CHECK_HOST queue2 ]
+   set queue2(subordinate_list) "q1"
+   set result [ add_queue queue2 ]
    if { ($result != 0)  } {
       add_proc_error "issue_126_setup" "-1" "Could not add queue q2"
    }
@@ -148,8 +151,7 @@ proc issue_126_check {} {
    #
    # 2
    #
-   disable_queue $q1
-   disable_queue $q2
+   disable_queue [ list "q1" "q2" ]
 
    #
    # 3
@@ -157,17 +159,16 @@ proc issue_126_check {} {
    set job_name "Sleeper"
    set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 360"
 
-   set job1_args "-l q=$q1 "
+   set job1_args "-l q=q1 "
    set job1_id [submit_job "$job1_args $job_script"]
 
-   set job2_args "-l q=$q2 "
+   set job2_args "-l q=q2 "
    set job2_id [submit_job "$job2_args $job_script"]
 
    #
    # 4
    #
-   enable_queue $q1
-   enable_queue $q2
+   enable_queue [ list "q1" "q2" ]
 
    #
    # 5
@@ -182,12 +183,11 @@ proc issue_126_check {} {
    sleep 15 
 
    set state1 [ get_suspend_state_of_job $job1_id "pid_list" 0 ]
-   puts $CHECK_OUTPUT "suspend state is \"$state1\""
    if { [string compare $state1 "T" ] != 0 } {
       #
       # Bug #126 is present
       #   
-      add_proc_error "issue_126_check" "-1" "Bug #126 is present - suspend state is \"$state1\""
+      add_proc_error "issue_126_check" "-1" "Bug #126 is present"
    }
 
    #
@@ -206,11 +206,11 @@ proc issue_126_check {} {
    # 8   
    #
    wait_for_end_of_all_jobs "10"
-   set result [ del_queue $q2 "" 1 1]
+   set result [ del_queue "q2" ]
    if { $result != 0 } {
       add_proc_error "issue_126_cleanup" "-1" "Could not delete queue q2 $result"
    }
-   set result [ del_queue $q1 "" 1 1]
+   set result [ del_queue "q1" ]
    if { $result != 0 } {
       add_proc_error "issue_126_cleanup" "-1" "Could not delete queue q1"
    }

@@ -32,7 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <sys/time.h>
+#if defined(AIX32) || defined(AIX)
+#   include <sys/select.h>
+#endif
 
 #include "sge_getloadavg.h"
 #include "sge_loadmem.h"
@@ -54,7 +56,7 @@ typedef struct fd_set {
 #endif /* FD_SETSIZE */
 #endif /* WIN32NATIVE */
 
-#if defined(LINUX) || defined(FREEBSD) || defined(DARWIN)
+#if defined(SUN4) || defined(LINUX)
 #  define PSCMD "/bin/ps -axc"
 #elif defined(ALPHA)
 #  define PSCMD "/bin/ps axo pid,ucomm"

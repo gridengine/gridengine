@@ -60,9 +60,6 @@
 *  INPUTS
 *     const char *file - filename 
 *
-*  NOTES
-*     MT-NOTE: sge_read_token() is MT safe
-*
 *  RESULT
 *     char* - pointer to a malloced buffer or 
 *             NULL if error occured
@@ -126,10 +123,6 @@ char *sge_read_token(const char *file)
 *     int token_extend_time - 2nd argument for command 
 *     char *err_str         - error message 
 *
-*  NOTES
-*     MT-NOTE: sge_afs_extend_token() is not MT safe because it uses MT unsafe 
-*     MT-NOTE: sge_peopen()
-*
 *  RESULT
 *     int - error state
 *         0 - OK
@@ -151,7 +144,7 @@ int sge_afs_extend_token(const char *command, char *tokenbuf, const char *user,
    }
 
    command_pid = sge_peopen("/bin/sh", 0, cmdbuf, NULL, NULL, 
-                        &fp_in, &fp_out, &fp_err, false);
+                        &fp_in, &fp_out, &fp_err);
    if (command_pid == -1) {
       if (err_str) {
          sprintf(err_str, MSG_TOKEN_NOSTART_S , cmdbuf);
@@ -194,9 +187,6 @@ int sge_afs_extend_token(const char *command, char *tokenbuf, const char *user,
 *  INPUTS
 *     const char *tokencmdname - command 
 *     char *buf                - NULL or buffer for error message 
-*
-*  NOTES
-*     MT-NOTE: sge_get_token_cmd() is MT safe 
 *
 *  RESULT
 *     int - error state

@@ -36,7 +36,7 @@
 #include "sge_conf.h"
 #include "sgermon.h"
 #include "cull.h"
-#include "sge_str.h"
+#include "sge_stringL.h"
 #include "sge_log.h"
 #include "sge_unistd.h"
 #include "msg_common.h"
@@ -52,7 +52,7 @@
  **** The lList has to be freed from the caller.
  **** On any error, NULL is returned.
  ****/
-lList *sge_get_dirents(const char *path) {
+lList *sge_get_dirents(char *path) {
    lList *entries = NULL;
    DIR *cwd;
    SGE_STRUCT_DIRENT *dent;
@@ -73,7 +73,7 @@ lList *sge_get_dirents(const char *path) {
          continue;             
       if (strcmp(dent->d_name, "..") == 0 || strcmp(dent->d_name, ".") == 0)
          continue;
-      lAddElemStr(&entries, ST_name, dent->d_name, ST_Type);
+      lAddElemStr(&entries, STR, dent->d_name, ST_Type);
    }
    closedir(cwd);
 
@@ -91,7 +91,7 @@ u_long32 sge_count_dirents(char *directory_name)
    for_each(dir_entry, dir_entries) {
       const char *entry;
 
-      entry = lGetString(dir_entry, ST_name);
+      entry = lGetString(dir_entry, STR);
       if (strcmp(entry, ".") && strcmp(entry, "..")) {
          entries++;
       }
@@ -111,7 +111,7 @@ int has_more_dirents(char *directory_name, u_long32 number_of_entries)
    for_each(dir_entry, dir_entries) {
       const char *entry;
  
-      entry = lGetString(dir_entry, ST_name);
+      entry = lGetString(dir_entry, STR);
       if (strcmp(entry, ".") && strcmp(entry, "..")) {
          entries++;
          if (entries > number_of_entries) {

@@ -73,15 +73,18 @@ static Widget pe_conf_list = 0;
 static Widget pe_ask_layout = 0;
 static Widget pe_name_w = 0;
 static Widget pe_slots_w = 0;
+static Widget pe_queues_w = 0;
 static Widget pe_acl_w = 0;
 static Widget pe_xacl_w = 0;
 static Widget pe_start_w = 0;
 static Widget pe_stop_w = 0;
 static Widget pe_alloc_w = 0;
-static Widget pe_urgency_w = 0;
 static Widget pe_control_slaves_w = 0;
 static Widget pe_job_is_first_task_w = 0;
+static Widget pe_all_queues_w = 0;
+static Widget pe_queuesPB = 0;
 static int add_mode = 0;
+static lList *ql_saved = NULL;
 
 /*-------------------------------------------------------------------------*/
 static void qmonPopdownPEConfig(Widget w, XtPointer cld, XtPointer cad);
@@ -93,10 +96,12 @@ static void qmonPEModify(Widget w, XtPointer cld, XtPointer cad);
 static void qmonPEDelete(Widget w, XtPointer cld, XtPointer cad);
 static void qmonPEOk(Widget w, XtPointer cld, XtPointer cad);
 static void qmonPECancel(Widget w, XtPointer cld, XtPointer cad);
+static void qmonPEAllQueues(Widget w, XtPointer cld, XtPointer cad);
 static void qmonPEResetAsk(void);
 static void qmonPESetAsk(lListElem *pep);
 static Widget qmonCreatePEAsk(Widget parent);
 static Boolean qmonPEGetAsk(lListElem *pep);
+static void qmonPEAskForQueues(Widget w, XtPointer cld, XtPointer cad);
 static void qmonPEAskForUsers(Widget w, XtPointer cld, XtPointer cad);
 
 /*-------------------------------------------------------------------------*/
@@ -126,7 +131,7 @@ XtPointer cld, cad;
    XSync(XtDisplay(qmon_pe), 0);
    XmUpdateDisplay(qmon_pe);
 
-   qmonMirrorMultiAnswer(PE_T | USERSET_T, &alp);
+   qmonMirrorMultiAnswer(PE_T | QUEUE_T | USERSET_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -137,7 +142,7 @@ XtPointer cld, cad;
    }
    
    qmonTimerAddUpdateProc(PE_T, "updatePeList", updatePeList);
-   qmonStartTimer(PE_T | USERSET_T);
+   qmonStartTimer(PE_T | QUEUE_T | USERSET_T);
    updatePeList();
    XmListSelectPos(pe_names, 1, True);
 
@@ -173,7 +178,7 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonPopdownPEConfig");
 
    XtUnmanageChild(qmon_pe);
-   qmonStopTimer(PE_T | USERSET_T);
+   qmonStopTimer(PE_T | QUEUE_T | USERSET_T);
    qmonTimerRmUpdateProc(PE_T, "updatePeList");
 
    DEXIT;
@@ -184,8 +189,8 @@ static void qmonPEFillConf(
 Widget w,
 lListElem *ep 
 ) {
-   lList *ul;
-   lListElem *uep;
+   lList *ql, *ul;
+   lListElem *qep, *uep;
    XmString *items;
    Cardinal itemCount; 
    char buf[BUFSIZ];
@@ -212,7 +217,7 @@ lListElem *ep
 
    i = 0;
 
-   /* pe name */
+   /* queue name */
    sprintf(buf, "%-20.20s %s", "PE Name", lGetString(ep, PE_name));
    items[i++] = XmStringCreateLocalized(buf);
 
@@ -220,6 +225,18 @@ lListElem *ep
    sprintf(buf, "%-20.20s %d", "Slots", (int)lGetUlong(ep, PE_slots));
    items[i++] = XmStringCreateLocalized(buf);
 
+   /* queue list */
+   ql = lGetList(ep, PE_queue_list);
+   sge_dstring_sprintf(&sb, "%-20.20s", "Queues");
+   for_each(qep, ql) {
+      (void) sge_dstring_append(&sb, " "); 
+      (void) sge_dstring_append(&sb, lGetString(qep, QR_name));
+   }
+   if (!lGetNumberOfElem(ql))
+      (void) sge_dstring_append(&sb, " NONE"); 
+/*    items[i++] = XmStringCreateLtoR(sb.s, "LIST"); */
+   items[i++] = XmStringCreateLocalized((char*)sge_dstring_get_string(&sb));
+   
    /* users list */
    ul = lGetList(ep, PE_user_list);
    sge_dstring_sprintf(&sb, "%-20.20s", "Users");
@@ -244,23 +261,18 @@ lListElem *ep
    sge_dstring_free(&sb);
    
    /* start_proc_args */
-   str = (StringConst)lGetString(ep, PE_start_proc_args);
+   str = lGetString(ep, PE_start_proc_args);
    sprintf(buf, "%-20.20s %s", "Start Proc Args", str ? str : "NONE" );
    items[i++] = XmStringCreateLocalized(buf);
 
    /* stop_proc_args */
-   str = (StringConst)lGetString(ep, PE_stop_proc_args);
+   str = lGetString(ep, PE_stop_proc_args);
    sprintf(buf, "%-20.20s %s", "Stop Proc Args", str ? str : "NONE" );
    items[i++] = XmStringCreateLocalized(buf);
 
    /* allocation_rule */
-   str = (StringConst)lGetString(ep, PE_allocation_rule);
+   str = lGetString(ep, PE_allocation_rule);
    sprintf(buf, "%-20.20s %s", "Allocation Rule", str ? str : "NONE" );
-   items[i++] = XmStringCreateLocalized(buf);
-
-   /* urgency slots */
-   str = (StringConst)lGetString(ep, PE_urgency_slots);
-   sprintf(buf, "%-20.20s %s", "Urgency Slots", str ? str : "NONE" );
    items[i++] = XmStringCreateLocalized(buf);
 
    /* control slaves */
@@ -363,34 +375,112 @@ Widget parent
                            NULL, 0,
                            "pe_ok", &pe_ok,
                            "pe_cancel", &pe_cancel,
+                           "pe_queuesPB", &pe_queuesPB,
                            "pe_usersPB", &pe_usersPB,
                            "pe_xusersPB", &pe_xusersPB,
                            "pe_name", &pe_name_w,
                            "pe_slots", &pe_slots_w,
+                           "pe_queues", &pe_queues_w,
                            "pe_users", &pe_acl_w, 
                            "pe_xusers", &pe_xacl_w,
                            "pe_start_proc_args", &pe_start_w,
                            "pe_stop_proc_args", &pe_stop_w,
                            "pe_allocation_rule", &pe_alloc_w,
-                           "pe_urgency_slots", &pe_urgency_w,
                            "pe_control_slaves", &pe_control_slaves_w,
                            "pe_job_is_first_task", &pe_job_is_first_task_w,
+                           "pe_all_queues", &pe_all_queues_w,
                            NULL);
 
    XtAddCallback(pe_ok, XmNactivateCallback, 
                      qmonPEOk, NULL);
    XtAddCallback(pe_cancel, XmNactivateCallback, 
                      qmonPECancel, NULL);
+   XtAddCallback(pe_queuesPB, XmNactivateCallback, 
+                     qmonPEAskForQueues, NULL);
    XtAddCallback(pe_usersPB, XmNactivateCallback, 
                      qmonPEAskForUsers, (XtPointer)pe_acl_w);
    XtAddCallback(pe_xusersPB, XmNactivateCallback, 
                      qmonPEAskForUsers, (XtPointer)pe_xacl_w);
+
+   XtAddCallback(pe_all_queues_w, XmNvalueChangedCallback, 
+                     qmonPEAllQueues, NULL);
 
    XtAddEventHandler(XtParent(pe_ask_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
 
    DEXIT;
    return pe_ask_layout;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonPEAllQueues(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   lList *ql_out = NULL;
+   XmToggleButtonCallbackStruct *cbs = (XmToggleButtonCallbackStruct*)cad;
+
+   DENTER(GUI_LAYER, "qmonPEAllQueues");
+   
+   if (cbs->set) {
+      ql_saved = XmStringToCull(pe_queues_w, QR_Type, QR_name, ALL_ITEMS);
+      lAddElemStr(&ql_out, QR_name, "all", QR_Type);
+      XtSetSensitive(pe_queuesPB, False);
+   }   
+   else {
+      ql_out = ql_saved;
+      ql_saved = NULL;
+      XtSetSensitive(pe_queuesPB, True);
+   }   
+
+   UpdateXmListFromCull(pe_queues_w, XmFONTLIST_DEFAULT_TAG, ql_out,
+                              QR_name);
+   ql_out = lFreeList(ql_out);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonPEAskForQueues(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   lList *ql_out = NULL;
+   lList *ql_in = NULL;
+   static lCondition *where = NULL;
+   static lEnumeration *what = NULL;
+   int status;
+
+   DENTER(GUI_LAYER, "qmonPEAskForQueues");
+   
+   /*
+   ** the template q is removed here
+   */
+   if (!where) {
+#if 1   
+      where = lWhere("%T(%I!=%s)", QU_Type, QU_qname, "template");
+#else
+      where = lWhere("%T(%I != %s && %I m= %u)", QU_Type, QU_qname, "template",
+                                 QU_qtype, 0x08);
+#endif
+      what = lWhat("%T(ALL)", QU_Type);
+   }
+
+   ql_in = lSelect("QL", qmonMirrorList(SGE_QUEUE_LIST), where, what);
+   ql_out = XmStringToCull(pe_queues_w, QR_Type, QR_name, ALL_ITEMS);
+
+   status = XmtAskForItems(w, NULL, NULL, "@{Select Queues}", ql_in, QU_qname, 
+                  "@{@fBAvailable Queues}", &ql_out, QR_Type, QR_name, 
+                  "@{@fBChosen Queues}", NULL);
+
+   if (status) {
+      UpdateXmListFromCull(pe_queues_w, XmFONTLIST_DEFAULT_TAG, ql_out,
+                              QR_name);
+   }
+   ql_out = lFreeList(ql_out);
+   ql_in = lFreeList(ql_in);
+
+   DEXIT;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -503,7 +593,7 @@ XtPointer cld, cad;
    if (pel) {
       if (qmonPEGetAsk(lFirst(pel))) {
 
-         pename = (StringConst)lGetString(lFirst(pel), PE_name);
+         pename = lGetString(lFirst(pel), PE_name);
          /*
          ** gdi call 
          */
@@ -553,6 +643,7 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonPECancel");
 
    XtUnmanageChild(pe_ask_layout);
+   ql_saved = lFreeList(ql_saved);
 
    DEXIT;
 }
@@ -608,12 +699,12 @@ lListElem *pep
 ) {
    StringConst pe_name = NULL;
    u_long32 pe_slots = 0;
+   lList *ql = NULL;
    lList *acl = NULL;
    lList *xacl = NULL;
    StringConst start_args = NULL;
    StringConst stop_args = NULL;
    StringConst alloc_rule = NULL;
-   StringConst urgency_slots = NULL;
 
    DENTER(GUI_LAYER, "qmonPESetAsk");
 
@@ -622,12 +713,25 @@ lListElem *pep
       return;
    }
 
-   pe_name = (StringConst)lGetString(pep, PE_name);
+   pe_name = lGetString(pep, PE_name);
    if (pe_name)
       XmtInputFieldSetString(pe_name_w, pe_name);
 
    pe_slots = lGetUlong(pep, PE_slots);
    XmpSpinboxSetValue(pe_slots_w, pe_slots, True);
+
+   /*
+   ** the lists have to be converted to XmString
+   */
+   ql = lGetList(pep, PE_queue_list);
+   if (lGetNumberOfElem(ql) == 1 && 
+       !strcasecmp(lGetString(lFirst(ql), QR_name), "ALL")) {
+      XmToggleButtonSetState(pe_all_queues_w, True, True);
+   } 
+   else {
+      XmToggleButtonSetState(pe_all_queues_w, False, False);
+      UpdateXmListFromCull(pe_queues_w, XmFONTLIST_DEFAULT_TAG, ql, QR_name);
+   } 
 
    acl = lGetList(pep, PE_user_list);
    UpdateXmListFromCull(pe_acl_w, XmFONTLIST_DEFAULT_TAG, acl, US_name);
@@ -635,21 +739,17 @@ lListElem *pep
    xacl = lGetList(pep, PE_xuser_list);
    UpdateXmListFromCull(pe_xacl_w, XmFONTLIST_DEFAULT_TAG, xacl, US_name);
       
-   start_args = (StringConst)lGetString(pep, PE_start_proc_args);
+   start_args = lGetString(pep, PE_start_proc_args);
    if (start_args)
       XmtInputFieldSetString(pe_start_w, start_args);
 
-   stop_args = (StringConst)lGetString(pep, PE_stop_proc_args);
+   stop_args = lGetString(pep, PE_stop_proc_args);
    if (stop_args)
       XmtInputFieldSetString(pe_stop_w, stop_args);
 
-   alloc_rule = (StringConst)lGetString(pep, PE_allocation_rule);
+   alloc_rule = lGetString(pep, PE_allocation_rule);
    if (alloc_rule)
       XmtInputFieldSetString(pe_alloc_w, alloc_rule);
-
-   urgency_slots = (StringConst)lGetString(pep, PE_urgency_slots);
-   if (urgency_slots)
-      XmtInputFieldSetString(pe_urgency_w, urgency_slots);
 
    XmToggleButtonSetState(pe_control_slaves_w, 
                lGetBool(pep, PE_control_slaves), False);
@@ -673,6 +773,8 @@ static void qmonPEResetAsk(void)
    /*
    ** the lists have to be converted to XmString
    */
+   UpdateXmListFromCull(pe_queues_w, XmFONTLIST_DEFAULT_TAG, NULL, QR_name);
+
    UpdateXmListFromCull(pe_acl_w, XmFONTLIST_DEFAULT_TAG, NULL, US_name);
     
    UpdateXmListFromCull(pe_xacl_w, XmFONTLIST_DEFAULT_TAG, NULL, US_name);
@@ -682,8 +784,6 @@ static void qmonPEResetAsk(void)
    XmtInputFieldSetString(pe_stop_w, "/bin/true");
 
    XmtInputFieldSetString(pe_alloc_w, "$pe_slots");
-
-   XmtInputFieldSetString(pe_urgency_w, "min");
 
    XmToggleButtonSetState(pe_control_slaves_w, 0, False);
 
@@ -700,12 +800,12 @@ lListElem *pep
    u_long32 pe_slots = 0;
    u_long32 pe_control_slaves = 0;
    u_long32 pe_job_is_first_task = 0;
+   lList *ql = NULL;
    lList *acl = NULL;
    lList *xacl = NULL;
    String start_args = NULL;
    String stop_args = NULL;
    String alloc_rule = NULL;
-   String urgency_slots = NULL;
 
    DENTER(GUI_LAYER, "qmonPEGetAsk");
 
@@ -729,6 +829,10 @@ lListElem *pep
    /*
    ** XmString entries --> Cull
    */
+   ql = XmStringToCull(pe_queues_w, QR_Type, QR_name, ALL_ITEMS);
+   lSetList(pep, PE_queue_list, ql);
+   ql_saved = lFreeList(ql_saved);
+
    acl = XmStringToCull(pe_acl_w, US_Type, US_name, ALL_ITEMS);
    lSetList(pep, PE_user_list, acl);
 
@@ -749,9 +853,6 @@ lListElem *pep
 
    alloc_rule = XmtInputFieldGetString(pe_alloc_w);
    lSetString(pep, PE_allocation_rule, alloc_rule);
-
-   urgency_slots = XmtInputFieldGetString(pe_urgency_w);
-   lSetString(pep, PE_urgency_slots, urgency_slots);
 
    pe_control_slaves = XmToggleButtonGetState(pe_control_slaves_w); 
    lSetBool(pep, PE_control_slaves, pe_control_slaves);

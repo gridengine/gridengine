@@ -34,7 +34,7 @@
 
 
 
-#if defined(IRIX)
+#if defined(IRIX6)
 int kill_ash(ash_t ash, int sig, int until_vanished);
 #endif
  

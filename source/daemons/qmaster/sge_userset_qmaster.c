@@ -36,23 +36,22 @@
 #include "sge_log.h"
 #include "sgermon.h"
 #include "sge_pe.h"
-#include "sge_event_master.h"
+#include "sge_queue_qmaster.h"
+#include "sge_m_event.h"
 #include "sge_userset.h"
+#include "read_write_userset.h"
+#include "read_write_queue.h"
 #include "sge_userset_qmaster.h"
 #include "sge_feature.h"
 #include "sge_conf.h"
+#include "gdi_utility.h"
 #include "valid_queue_user.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
-#include "sge_qinstance.h"
+#include "sge_queue.h"
 #include "sge_job.h"
 #include "sge_userprj.h"
 #include "sge_host.h"
-#include "sge_utility.h"
-#include "sge_cqueue.h"
-
-#include "sge_persistence_qmaster.h"
-#include "spool/sge_spooling.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -78,6 +77,7 @@ char *rhost
    const char *userset_name;
    int pos, ret;
    lListElem *found;
+   char fname[SGE_PATH_MAX], real_fname[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "sge_add_acl");
 
@@ -134,22 +134,34 @@ char *rhost
       return ret;
    }
 
-   /*
-   ** check for users defined in more than one userset if they
-   ** are used as departments
-   */
-   ret = sge_verify_department_entries(*userset_list, ep, alpp);
-   if (ret!=STATUS_OK) {
-      DEXIT;
-      return ret;
+   /* only in sge/budget mode needed */
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      /*
+      ** check for users defined in more than one userset if they
+      ** are used as departments
+      */
+      ret = sge_verify_department_entries(*userset_list, ep, alpp);
+      if (ret!=STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
    }
 
-   if (!sge_event_spool(alpp, 0, sgeE_USERSET_ADD,
-                        0, 0, userset_name, NULL, NULL,
-                        ep, NULL, NULL, true, true)) {
+   /* update on file */
+   sprintf(fname , "%s/.%s", USERSET_DIR, userset_name);
+   sprintf(real_fname , "%s/%s", USERSET_DIR, userset_name);
+   if ((ret= write_userset(alpp, ep, fname, 0, 1))) {
+      /* answer list gets filled in write_userset() */
       DEXIT;
-      return STATUS_EUNKNOWN;
-   }   
+      return ret;
+   } else {
+      if (rename(fname, real_fname) == -1) {
+         DEXIT;
+         return 1;
+      } else {
+         strcpy(fname, real_fname);
+      }      
+   }
    /* change queue versions */
    /* isn't this unnecessary? since the userset hast just been created
     * it CANNOT by used by any queue in its (x)acl.  (Archie)
@@ -160,6 +172,11 @@ char *rhost
    if (!*userset_list)
       *userset_list = lCreateList("global userset list", US_Type);
    lAppendElem(*userset_list, lCopyElem(ep));
+
+   /* it's better to send the event only when the internal lists have
+    * been updated. The CORBA part relies on this fact...
+    */
+   sge_add_event(NULL, 0, sgeE_USERSET_ADD, 0, 0, userset_name, ep);
 
    INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
             ruser, rhost, userset_name, MSG_OBJ_USERSET));
@@ -227,10 +244,9 @@ char *rhost
    }
 
    lFreeElem(lDechainElem(*userset_list, found));
-
-   sge_event_spool(alpp, 0, sgeE_USERSET_DEL, 
-                   0, 0, userset_name, NULL, NULL,
-                   NULL, NULL, NULL, true, true);
+   /* remove userset file */
+   sge_unlink(USERSET_DIR, userset_name);
+   sge_add_event(NULL, 0, sgeE_USERSET_DEL, 0, 0, userset_name, NULL);
 
    /* change queue versions */
    sge_change_queue_version_acl(userset_name);
@@ -257,6 +273,7 @@ char *rhost
    const char *userset_name;
    int pos, ret;
    lListElem *found;
+   char fname[SGE_PATH_MAX], real_fname[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "sge_mod_userset");
 
@@ -300,21 +317,23 @@ char *rhost
       return ret;
    }
 
-   /* make sure acl is valid */
-   ret = acl_is_valid_acl(ep, alpp);
-   if (ret != STATUS_OK) {
-      DEXIT;
-      return ret;
-   }
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      /* make sure acl is valid */
+      ret = acl_is_valid_acl(ep, alpp);
+      if (ret != STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
 
-   /*
-   ** check for users defined in more than one userset if they
-   ** are used as departments
-   */
-   ret = sge_verify_department_entries(*userset_list, ep, alpp);
-   if (ret!=STATUS_OK) {
-      DEXIT;
-      return ret;
+      /*
+      ** check for users defined in more than one userset if they
+      ** are used as departments
+      */
+      ret = sge_verify_department_entries(*userset_list, ep, alpp);
+      if (ret!=STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
    }
 
    /* delete old userset */
@@ -324,12 +343,21 @@ char *rhost
    lAppendElem(*userset_list, lCopyElem(ep));
 
    /* update on file */
-   if (!sge_event_spool(alpp, 0, sgeE_USERSET_MOD,
-                        0, 0, userset_name, NULL, NULL,
-                        ep, NULL, NULL, true, true)) {
+   sprintf(fname, "%s/.%s", USERSET_DIR, userset_name);
+   sprintf(real_fname, "%s/%s", USERSET_DIR, userset_name);
+   if (write_userset(alpp, ep, fname, NULL, 1)) {
       DEXIT;
       return STATUS_EDISK;
+   } else {
+      if (rename(fname, real_fname) == -1) {
+         DEXIT;
+         return 1;
+      } else {
+         strcpy(fname, real_fname);
+      }    
    }
+   sge_add_event(NULL, 0, sgeE_USERSET_MOD, 0, 0, userset_name, ep);
+
    /* change queue versions */
    sge_change_queue_version_acl(userset_name);
 
@@ -349,37 +377,20 @@ char *rhost
    having changed a complex we have to increase the versions
    of all queues containing this complex;
  **********************************************************************/
-static void 
-sge_change_queue_version_acl(const char *acl_name) 
-{
-   lListElem *cqueue = NULL;
+static void sge_change_queue_version_acl(
+const char *acl_name 
+) {
+   lListElem *qep;
 
-   DENTER(TOP_LAYER, "sge_change_queue_version_acl");
+   DENTER(TOP_LAYER, "sge_change_queue_version");
 
-   for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance = NULL;
-
-      for_each(qinstance, qinstance_list) {
-         lList *acl_list = lGetList(qinstance, QU_acl);
-         lList *xacl_list = lGetList(qinstance, QU_xacl);
-         lListElem *acl = lGetElemStr(acl_list, US_name, acl_name);
-         lListElem *xacl = lGetElemStr(xacl_list, US_name, acl_name);
-         bool is_used = ((acl != NULL) || (xacl != NULL));
-
-         if (is_used) {
-            lList *answer_list = NULL;
-
-            DPRINTF(("increasing version of queue "SFQ" because acl "SFQ
-                     " changed\n", lGetString(qinstance, QU_full_name), 
-                     acl_name));
-            qinstance_increase_qversion(qinstance);
-            sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
-                            0, 0, lGetString(qinstance, QU_qname), 
-                            lGetHost(qinstance, QU_qhostname), NULL,
-                            qinstance, NULL, NULL, false, true);
-            answer_list_output(&answer_list);
-         }
+   for_each(qep, Master_Queue_List) {
+      if (lGetElemStr(lGetList(qep, QU_acl), US_name, acl_name) ||
+          lGetElemStr(lGetList(qep, QU_xacl), US_name, acl_name)) {
+         sge_change_queue_version(qep, 0, 0);
+         cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, qep);
+         DPRINTF(("increasing version of queue "SFQ" because acl "
+                       SFQ" changed\n", lGetString(qep, QU_qname), acl_name));
       }
    }
 
@@ -674,31 +685,21 @@ const char *userset_name
 ) {
    int ret = STATUS_OK;
    lListElem *ep;
-   lListElem *cqueue;
 
    DENTER(TOP_LAYER, "verify_userset_deletion");
 
-   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance;
-
-      for_each(qinstance, qinstance_list) {
-         if (lGetElemStr(lGetList(qinstance, QU_acl), US_name, userset_name)) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, 
-                   userset_name, MSG_OBJ_USERLIST, MSG_OBJ_QUEUE, 
-                   lGetString(qinstance, QU_qname)));
-            answer_list_add(alpp, SGE_EVENT, 
-                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            ret = STATUS_EUNKNOWN;
-         }
-         if (lGetElemStr(lGetList(qinstance, QU_xacl), US_name, userset_name)) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, 
-                   userset_name, MSG_OBJ_XUSERLIST, MSG_OBJ_QUEUE, 
-                   lGetString(qinstance, QU_qname)));
-            answer_list_add(alpp, SGE_EVENT, 
-                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            ret = STATUS_EUNKNOWN;
-         }
+   for_each (ep, Master_Queue_List) {
+      if (lGetElemStr(lGetList(ep, QU_acl), US_name, userset_name)) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
+               MSG_OBJ_USERLIST, MSG_OBJ_QUEUE, lGetString(ep, QU_qname)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret = STATUS_EUNKNOWN;
+      }
+      if (lGetElemStr(lGetList(ep, QU_xacl), US_name, userset_name)) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
+               MSG_OBJ_XUSERLIST, MSG_OBJ_QUEUE, lGetString(ep, QU_qname)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret = STATUS_EUNKNOWN;
       }
    }
 
@@ -717,18 +718,20 @@ const char *userset_name
       }
    }
 
-   for_each (ep, Master_Project_List) {
-      if (lGetElemStr(lGetList(ep, UP_acl), US_name, userset_name)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
-               MSG_OBJ_USERLIST, MSG_OBJ_PRJ, lGetString(ep, UP_name)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         ret = STATUS_EUNKNOWN;
-      }
-      if (lGetElemStr(lGetList(ep, UP_xacl), US_name, userset_name)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
-               MSG_OBJ_XUSERLIST, MSG_OBJ_PRJ, lGetString(ep, UP_name)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         ret = STATUS_EUNKNOWN;
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      for_each (ep, Master_Project_List) {
+         if (lGetElemStr(lGetList(ep, UP_acl), US_name, userset_name)) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
+                  MSG_OBJ_USERLIST, MSG_OBJ_PRJ, lGetString(ep, UP_name)));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = STATUS_EUNKNOWN;
+         }
+         if (lGetElemStr(lGetList(ep, UP_xacl), US_name, userset_name)) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
+                  MSG_OBJ_XUSERLIST, MSG_OBJ_PRJ, lGetString(ep, UP_name)));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = STATUS_EUNKNOWN;
+         }
       }
    }
 

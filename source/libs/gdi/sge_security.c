@@ -32,13 +32,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <pwd.h>
-#include <pthread.h>
 
 #include "cull.h"
 #include "sgermon.h"
-#include "sge_gdiP.h"
-#include "sge_any_request.h"
-#include "sge_gdi_request.h"
+#include "sge_gdi_intern.h"
 #include "sge_log.h"
 #include "setup_path.h"
 #include "sge_string.h"
@@ -58,12 +55,7 @@
 #include "sge_job.h"
 #include "sge_answer.h"
 
-
-#include "msg_common.h"
 #include "msg_gdilib.h"
-#include "sge_hostname.h"
-#include "cl_commlib.h"
-#include "sge_mtutil.h"
 
 #ifdef CRYPTO
 #include <openssl/evp.h>
@@ -74,12 +66,12 @@
 #define ENCODE_TO_STRING   1
 #define DECODE_FROM_STRING 0
 
-static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
-static bool sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
-static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
-
+static int sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
+static int sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
+static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
 
 /****** gdi/security/sge_security_initialize() ********************************
+*
 *  NAME
 *     sge_security_initialize -- initialize sge security
 *
@@ -96,30 +88,37 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
 *  RETURN
 *     0  in case of success, something different otherwise 
 *
+*  EXAMPLE
+*
 *  NOTES
-*     MT-NOTE: sge_security_initialize() is MT safe (assumptions)
+*
+*  BUGS
+*
+*  SEE ALSO
 ******************************************************************************/
-
 int sge_security_initialize(const char *name)
 {
+   static int initialized = 0;
 
    DENTER(TOP_LAYER, "sge_security_initialize");
-
+   if (!initialized) {
 #ifdef SECURE
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      if (sec_init(name)) {
-         DEXIT;
-         return -1;
-      }
-   }     
+      if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+         if (sec_init(name)) {
+            DEXIT;
+            return -1;
+         }
+      }     
 #endif
 
 #ifdef KERBEROS
-   if (krb_init(name)) {
-      DEXIT;
-      return -1;
-   }
+      if (krb_init(name)) {
+         DEXIT;
+         return -1;
+      }
 #endif   
+      initialized = 1; 
+   }
 
    DEXIT;
    return 0;
@@ -139,8 +138,13 @@ int sge_security_initialize(const char *name)
 *  INPUTS
 *     status - exit status value
 *
+*  EXAMPLE
+*
 *  NOTES
-*     MT-NOTE: sge_security_exit() is MT safe
+*
+*  BUGS
+*
+*  SEE ALSO
 ******************************************************************************/
 void sge_security_exit(int i)
 {
@@ -148,7 +152,9 @@ void sge_security_exit(int i)
 
 #ifdef SECURE
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      sec_exit();
+      if (sec_exit_func) {
+         sec_exit_func();
+      }
    }     
 #endif
 
@@ -156,156 +162,13 @@ void sge_security_exit(int i)
 }
 
 
-int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, char* component_name, unsigned long component_id, int synchron, unsigned long response_mid, cl_com_message_t** message, cl_com_endpoint_t** sender) {
-
-   int ret;
-   DENTER(TOP_LAYER, "gdi_receive_sec_message");
-
-#ifdef SECURE   
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      ret = sec_receive_message( handle, un_resolved_hostname,  component_name,  component_id,  synchron,   response_mid,  message, sender);
-      DEXIT;
-      return ret;
-   }                      
-#endif
-
-   ret = cl_commlib_receive_message(handle, un_resolved_hostname,  component_name,  component_id,  
-                                     synchron, response_mid,  message,  sender);
-
-   DEXIT;
-   return ret;
-}
-
-int gdi_send_sec_message(cl_com_handle_t* handle,
-                            char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                            cl_xml_ack_type_t ack_type, 
-                            cl_byte_t* data, unsigned long size , 
-                            unsigned long* mid, unsigned long response_mid, unsigned long tag ,
-                            int copy_data,
-                            int wait_for_ack) {
-   int ret;
-   DENTER(TOP_LAYER, "gdi_send_sec_message");
-
-   
-#ifdef SECURE
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      ret = sec_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
-                                  ack_type, data,  size ,
-                                  mid,  response_mid,  tag , copy_data, wait_for_ack);
-      DEXIT;
-      return ret;
-   }                      
-#endif
-
-   ret = cl_commlib_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
-                                  ack_type, data,  size ,
-                                  mid,  response_mid,  tag , copy_data, wait_for_ack);
-   DEXIT;
-   return ret;
-
-}
-
 /************************************************************
    COMMLIB/SECURITY WRAPPERS
    FIXME: FUNCTIONPOINTERS SHOULD BE SET IN sge_security_initialize !!!
 
    Test dlopen functionality, stub libs or check if openssl calls can be added 
    without infringing a copyright
-
-   NOTES
-      MT-NOTE: gdi_send_message() is MT safe (assumptions)
 *************************************************************/
-#ifdef ENABLE_NGC
-int gdi_send_message(
-int synchron,
-const char *tocomproc,
-int toid,
-const char *tohost,
-int tag,
-char *buffer,
-int buflen,
-u_long32 *mid,
-int compressed 
-) {
-   int ret;
-   cl_com_handle_t* handle = NULL;
-   cl_xml_ack_type_t ack_type;
-   unsigned long dummy_mid;
-   int use_execd_handle = 0;
-   DENTER(TOP_LAYER, "gdi_send_message");
-
-
-
-
-   /* CR- TODO: This is for tight integration of qrsh -inherit
-    *       
-    *       All GDI functions normally connect to qmaster, but
-    *       qrsh -inhert want's to talk to execd. A second handle
-    *       is created. All gdi functions should accept a pointer
-    *       to a cl_com_handle_t* handle and use this handle to
-    *       send/receive messages to the correct endpoint.
-    */
-   if ( tocomproc[0] == '\0') {
-      DEBUG((SGE_EVENT,"tocomproc is empty string\n"));
-   }
-   switch (uti_state_get_mewho()) {
-      case QMASTER:
-      case EXECD:
-         use_execd_handle = 0;
-         break;
-      default:
-         if (strcmp(tocomproc,prognames[QMASTER]) == 0) {
-            use_execd_handle = 0;
-         } else {
-            if (tocomproc != NULL && tocomproc[0] != '\0') {
-               use_execd_handle = 1;
-            }
-         }
-   }
-   
- 
-   if (use_execd_handle == 0) {
-      /* normal gdi send to qmaster */
-      DEBUG((SGE_EVENT,"standard gdi request to qmaster\n"));
-      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-   } else {
-      /* we have to send a message to another component than qmaster */
-      DEBUG((SGE_EVENT,"search handle to \"%s\"\n", tocomproc));
-      handle = cl_com_get_handle("execd_handle", 0);
-      if (handle == NULL) {
-         DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", tocomproc));
-         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,-1, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
-         handle = cl_com_get_handle("execd_handle", 0);
-      }
-   }
-
-   ack_type = CL_MIH_MAT_NAK;
-   if (synchron) {
-      ack_type = CL_MIH_MAT_ACK;
-   }
-   if (mid) {
-      dummy_mid = *mid;
-   }
-
-   DEBUG((SGE_EVENT,"gdi_send_message(): sending message to %s,%s,%ld\n",(char*)tohost,(char*)tocomproc ,(unsigned long)toid));
-   ret = gdi_send_sec_message( handle, 
-                                  (char*)tohost ,(char*)tocomproc ,toid , 
-                                  ack_type , 
-                                  (cl_byte_t*)buffer ,(unsigned long)buflen,
-                                  &dummy_mid , 0 ,tag,1 , synchron);
-   if (ret != CL_RETVAL_OK) {
-      /* try again ( if connection timed out) */
-      ret = gdi_send_sec_message( handle, 
-                                     (char*)tohost ,(char*)tocomproc ,toid ,
-                                     ack_type , 
-                                     (cl_byte_t*)buffer ,(unsigned long)buflen,
-                                     &dummy_mid , 0 ,tag,1 , synchron);
-   }
-
-   DEXIT;
-   return ret;
-}
-#else
 int gdi_send_message(
 int synchron,
 const char *tocomproc,
@@ -351,125 +214,9 @@ int compressed
 
    DEXIT;
    return ret;
-}
-#endif
+}   
 
 
-/* 
- *
- *  NOTES
- *     MT-NOTE: gdi_receive_message() is MT safe (major assumptions!)
- *
- */
-#ifdef ENABLE_NGC
-int gdi_receive_message(
-char *fromcommproc,
-u_short *fromid,
-char *fromhost,
-int *tag,
-char **buffer,
-u_long32 *buflen,
-int synchron,
-u_short *compressed 
-) {
-   int ret;
-   cl_com_handle_t* handle = NULL;
-   cl_com_message_t* message = NULL;
-   cl_com_endpoint_t* sender = NULL;
-   int use_execd_handle = 0;
-
-   DENTER(TOP_LAYER, "gdi_receive_message");
-
-      /* CR- TODO: This is for tight integration of qrsh -inherit
-    *       
-    *       All GDI functions normally connect to qmaster, but
-    *       qrsh -inhert want's to talk to execd. A second handle
-    *       is created. All gdi functions should accept a pointer
-    *       to a cl_com_handle_t* handle and use this handle to
-    *       send/receive messages to the correct endpoint.
-    */
-
-
-   if ( fromcommproc[0] == '\0') {
-      DEBUG((SGE_EVENT,"fromcommproc is empty string\n"));
-   }
-   switch (uti_state_get_mewho()) {
-      case QMASTER:
-      case EXECD:
-         use_execd_handle = 0;
-         break;
-      default:
-         if (strcmp(fromcommproc,prognames[QMASTER]) == 0) {
-            use_execd_handle = 0;
-         } else {
-            if (fromcommproc != NULL && fromcommproc[0] != '\0') {
-               use_execd_handle = 1;
-            }
-         }
-   }
-
-   if (use_execd_handle == 0) {
-      /* normal gdi send to qmaster */
-      DEBUG((SGE_EVENT,"standard gdi request to qmaster\n"));
-      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-   } else {
-      /* we have to send a message to another component than qmaster */
-      DEBUG((SGE_EVENT,"search handle to \"%s\"\n", fromcommproc));
-      handle = cl_com_get_handle("execd_handle", 0);
-      if (handle == NULL) {
-         DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", fromcommproc));
-         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,-1, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
-         handle = cl_com_get_handle("execd_handle", 0);
-      }
-   } 
-
-   ret = gdi_receive_sec_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
-
-   if (ret == CL_RETVAL_CONNECTION_NOT_FOUND ) {
-      if ( fromcommproc[0] != '\0' && fromhost[0] != '\0' ) {
-          /* The connection was closed, reopen it */
-          ret = cl_commlib_open_connection(handle,fromhost,fromcommproc, *fromid);
-          INFO((SGE_EVENT,"reopen connection to %s,%s,"U32CFormat" (1)\n", fromhost , fromcommproc , u32c(*fromid)));
-          if (ret == CL_RETVAL_OK) {
-             INFO((SGE_EVENT,"reconnected successfully\n"));
-             ret = gdi_receive_sec_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
-          } 
-      } else {
-         DEBUG((SGE_EVENT,"can't reopen a connection to unspecified host or commproc (1)\n"));
-      }
-   }
-
-   if (message != NULL && ret == CL_RETVAL_OK) {
-      *buffer = (char *)message->message;
-      message->message = NULL;
-      *buflen = message->message_length;
-      if (tag) {
-         *tag = message->message_tag;
-      }
-      if (compressed) {
-         *compressed = 0;
-      }
-
-      if (sender != NULL) {
-         DEBUG((SGE_EVENT,"received from: %s,"U32CFormat"\n",sender->comp_host, u32c(sender->comp_id)));
-         if (fromcommproc != NULL && fromcommproc[0] == '\0') {
-            strcpy(fromcommproc, sender->comp_name);
-         }
-         if (fromhost != NULL) {
-            strcpy(fromhost, sender->comp_host);
-         }
-         if (fromid != NULL) {
-            *fromid = sender->comp_id;
-         }
-      }
-   }
-   cl_com_free_message(&message);
-   cl_com_free_endpoint(&sender);
-
-   DEXIT;
-   return ret;
-}
-#else
 int gdi_receive_message(
 char *fromcommproc,
 u_short *fromid,
@@ -514,7 +261,6 @@ u_short *compressed
    DEXIT;
    return ret;
 }
-#endif
 
 
 /****** gdi/security/set_sec_cred() *******************************************
@@ -540,9 +286,6 @@ u_short *compressed
 *  NOTES
 *     Hope, the above description is correct - don't know the 
 *     DCE/KERBEROS code.
-* 
-*  NOTES
-*     MT-NOTE: set_sec_cred() is MT safe (major assumptions!)
 ******************************************************************************/
 int set_sec_cred(lListElem *job)
 {
@@ -559,14 +302,14 @@ int set_sec_cred(lListElem *job)
    DENTER(TOP_LAYER, "set_sec_cred");
    
    if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
-      sprintf(binary, "%s/util/get_token_cmd", path_state_get_sge_root());
+      sprintf(binary, "%s/util/get_token_cmd", path.sge_root);
 
       if (sge_get_token_cmd(binary, NULL) != 0) {
          fprintf(stderr, MSG_QSH_QSUBFAILED);
          SGE_EXIT(1);
       }   
       
-      command_pid = sge_peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err, false);
+      command_pid = sge_peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err);
 
       if (command_pid == -1) {
          fprintf(stderr, MSG_QSUB_CANTSTARTCOMMANDXTOGETTOKENQSUBFAILED_S, binary);
@@ -590,7 +333,7 @@ int set_sec_cred(lListElem *job)
 
    if (feature_is_enabled(FEATURE_DCE_SECURITY) ||
        feature_is_enabled(FEATURE_KERBEROS_SECURITY)) {
-      sprintf(binary, "%s/utilbin/%s/get_cred", path_state_get_sge_root(), sge_get_arch());
+      sprintf(binary, "%s/utilbin/%s/get_cred", path.sge_root, sge_get_arch());
 
       if (sge_get_token_cmd(binary, NULL) != 0) {
          fprintf(stderr, MSG_QSH_QSUBFAILED);
@@ -599,7 +342,7 @@ int set_sec_cred(lListElem *job)
 
       sprintf(cmd, "%s %s%s%s", binary, "sge", "@", sge_get_master(0));
       
-      command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err, false);
+      command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err);
 
       if (command_pid == -1) {
          fprintf(stderr, MSG_QSH_CANTSTARTCOMMANDXTOGETCREDENTIALSQSUBFAILED_S, binary);
@@ -623,7 +366,7 @@ int set_sec_cred(lListElem *job)
    }
    DEXIT;
    return ret;
-} 
+}   
 
 #if 0
       
@@ -637,12 +380,12 @@ int set_sec_cred(lListElem *job)
          int ret;
          char binary[1024];
 
-         sprintf(binary, "%s/util/get_token_cmd", path_state_get_sge_root());
+         sprintf(binary, "%s/util/get_token_cmd", path.sge_root);
 
          if (sge_get_token_cmd(binary, buf))
             goto error;
 
-         command_pid = sge_peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err, false);
+         command_pid = sge_peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err);
 
          if (command_pid == -1) {
             DPRINTF(("can't start command \"%s\" to get token\n",  binary));
@@ -673,14 +416,14 @@ int set_sec_cred(lListElem *job)
          int ret;
          char line[1024];
 
-         sprintf(binary, "%s/utilbin/%s/get_cred", path_state_get_sge_root(), sge_get_arch());
+         sprintf(binary, "%s/utilbin/%s/get_cred", path.sge_root, sge_get_arch());
 
          if (sge_get_token_cmd(binary, buf) != 0)
             goto error;
 
          sprintf(cmd, "%s %s%s%s", binary, "sge", "@", sge_get_master(0));
       
-         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err, false);
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err);
 
          if (command_pid == -1) {
             DPRINTF((buf, "can't start command \"%s\" to get credentials "
@@ -711,11 +454,6 @@ int set_sec_cred(lListElem *job)
 #endif
 
 
-/*
- * 
- *  NOTES
- *     MT-NOTE: cache_sec_cred() is MT safe (assumptions)
- */
 void cache_sec_cred(lListElem *jep, const char *rhost)
 {
    DENTER(TOP_LAYER, "cache_sec_cred");
@@ -743,14 +481,16 @@ void cache_sec_cred(lListElem *jep, const char *rhost)
       env[0] = ccname;
       env[1] = NULL;
 
-      sprintf(binary, "%s/utilbin/%s/get_cred", path_state_get_sge_root(), sge_get_arch());
+      sprintf(binary, "%s/utilbin/%s/get_cred", path.sge_root, sge_get_arch());
 
       if (sge_get_token_cmd(binary, NULL) == 0) {
          char line[1024];
 
          sprintf(cmd, "%s %s%s%s", binary, "sge", "@", rhost);
 
-         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err, false);
+         sge_switch2start_user();
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         sge_switch2admin_user();
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU, 
@@ -780,12 +520,6 @@ void cache_sec_cred(lListElem *jep, const char *rhost)
    DEXIT;
 }   
 
-/*
- * 
- *  NOTES
- *     MT-NOTE: delete_credentials() is MT safe (major assumptions!)
- * 
- */
 void delete_credentials(lListElem *jep)
 {
 
@@ -813,14 +547,16 @@ void delete_credentials(lListElem *jep)
       env[0] = ccname;
       env[1] = NULL;
 
-      sprintf(binary, "%s/utilbin/%s/delete_cred", path_state_get_sge_root(), sge_get_arch());
+      sprintf(binary, "%s/utilbin/%s/delete_cred", path.sge_root, sge_get_arch());
 
       if (sge_get_token_cmd(binary, NULL) == 0) {
          char line[1024];
 
          sprintf(cmd, "%s -s %s", binary, "sge");
 
-         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err, false);
+         sge_switch2start_user();
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         sge_switch2admin_user();
 
          if (command_pid == -1) {
             strcpy(tmpstr, SGE_EVENT);
@@ -862,9 +598,6 @@ void delete_credentials(lListElem *jep)
 /* 
  * Execute command to store the client's DCE or Kerberos credentials.
  * This also creates a forwardable credential for the user.
- *
- *  NOTES
- *     MT-NOTE: store_sec_cred() is MT safe (assumptions)
  */
 int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authentication, lList** alpp)
 {
@@ -894,12 +627,14 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
       env[0] = ccname;
       env[1] = NULL;
 
-      sprintf(binary, "%s/utilbin/%s/put_cred", path_state_get_sge_root(), sge_get_arch());
+      sprintf(binary, "%s/utilbin/%s/put_cred", path.sge_root, sge_get_arch());
 
       if (sge_get_token_cmd(binary, NULL) == 0) {
          sprintf(cmd, "%s -s %s -u %s", binary, "sge", lGetString(jep, JB_owner));
 
-         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err, false);
+         sge_switch2start_user();
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         sge_switch2admin_user();
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU,
@@ -977,11 +712,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
 
 
 
-/*
- *
- *  NOTES
- *     MT-NOTE: store_sec_cred2() is MT safe (assumptions)
- */
+
 int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char* err_str)
 {
    int ret = 0;
@@ -1012,7 +743,7 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
       vep = lAddSubStr(jelem, VA_variable, "KRB5CCNAME", JB_env_list, VA_Type);
       lSetString(vep, VA_value, ccenv);
 
-      sprintf(binary, "%s/utilbin/%s/put_cred", path_state_get_sge_root(),
+      sprintf(binary, "%s/utilbin/%s/put_cred", path.sge_root,
               sge_get_arch());
 
       if (sge_get_token_cmd(binary, NULL) == 0) {
@@ -1021,7 +752,9 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
          sprintf(cmd, "%s -s %s -u %s -b %s", binary, "sge",
                  lGetString(jelem, JB_owner), lGetString(jelem, JB_owner));
 
-         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err, false);
+         sge_switch2start_user();
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         sge_switch2admin_user();
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU, binary, u32c(lGetUlong(jelem, JB_job_number))));
@@ -1062,11 +795,6 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
 }
 
 #ifdef KERBEROS
-/*
- *
- *  NOTES
- *     MT-NOTE: kerb_job() is not MT safe
- */
 int kerb_job(
 lListElem *jelem,
 struct dispatch_entry *de 
@@ -1122,13 +850,7 @@ struct dispatch_entry *de
 #endif
 
 
-/* 
- *  FUNCTION
- *     get TGT from job entry and store in client connection 
- *
- *  NOTES
- *     MT-NOTE: tgt2cc() is not MT safe (assumptions)
- */
+/* get TGT from job entry and store in client connection */
 void tgt2cc(lListElem *jep, const char *rhost, const char* target)
 {
 
@@ -1171,11 +893,6 @@ void tgt2cc(lListElem *jep, const char *rhost, const char* target)
 }
 
 
-/*
- *
- *  NOTES
- *     MT-NOTE: tgtcclr() is MT safe (assumptions)
- */
 void tgtcclr(lListElem *jep, const char *rhost, const char* target)
 {
 #ifdef KERBEROS
@@ -1190,11 +907,6 @@ void tgtcclr(lListElem *jep, const char *rhost, const char* target)
 
 /*
 ** authentication information
-**
-** NOTES
-**    MT-NOTE: sge_set_auth_info() is MT safe (assumptions)
-**    MT-NOTE: sge_set_auth_info() is not MT safe when -DCRYPTO is set
-**
 */
 int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user, 
                         gid_t gid, char *group)
@@ -1216,10 +928,6 @@ int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user,
    return 0;
 }
 
-/*
-** NOTES
-**    MT-NOTE: sge_decrypt() is MT safe (assumptions)
-*/
 int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
                         gid_t *gid, char *group)
 {
@@ -1245,11 +953,9 @@ int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user,
 
 #ifndef CRYPTO
 /*
-** standard encrypt/decrypt functions
-**
-** MT-NOTE: sge_encrypt() is MT safe
+** dummy encrypt/decrypt functions
 */
-static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
+static int sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
 {
    int len;
 
@@ -1260,19 +966,16 @@ static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
    len = strlen(intext);
    if (!change_encoding(outbuf, &outsize, (unsigned char*) intext, &len, ENCODE_TO_STRING)) {
       DEXIT;
-      return false;
+      return FALSE;
    }   
 
 /*    DPRINTF(("======== outbuf:\n"SFN"\n=========\n", outbuf)); */
 
    DEXIT;
-   return true;
+   return TRUE;
 }
 
-/*
-** MT-NOTE: standard sge_decrypt() is MT safe
-*/
-static bool sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
+static int sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 {
    unsigned char decbuf[2*SGE_SEC_BUFSIZE];
    int declen = sizeof(decbuf);
@@ -1280,7 +983,7 @@ static bool sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
    DENTER(TOP_LAYER, "sge_decrypt");
 
    if (!change_encoding(intext, &inlen, decbuf, &declen, DECODE_FROM_STRING)) {
-      return false;
+      return FALSE;
    }   
    decbuf[declen] = '\0';
 
@@ -1289,15 +992,12 @@ static bool sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 /*    DPRINTF(("======== outbuf:\n"SFN"\n=========\n", outbuf)); */
 
    DEXIT;
-   return true;
+   return TRUE;
 }
 
 #else
 
-/*
-** MT-NOTE: EVP based sge_encrypt() is not MT safe
-*/
-static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
+static int sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
 {
 
    int enclen, tmplen;
@@ -1314,33 +1014,33 @@ static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
    if (!EVP_EncryptInit(&ctx, /*EVP_enc_null() EVP_bf_cbc()*/EVP_cast5_ofb(), key, iv)) {
       printf("EVP_EncryptInit failure !!!!!!!\n");
       DEXIT;
-      return false;
+      return FALSE;
    }   
 
    if (!EVP_EncryptUpdate(&ctx, encbuf, &enclen, (unsigned char*) intext, inlen)) {
       DEXIT;
-      return false;
+      return FALSE;
    }
 
    if (!EVP_EncryptFinal(&ctx, encbuf + enclen, &tmplen)) {
       DEXIT;
-      return false;
+      return FALSE;
    }
    enclen += tmplen;
    EVP_CIPHER_CTX_cleanup(&ctx);
 
    if (!change_encoding(outbuf, &outsize, encbuf, &enclen, ENCODE_TO_STRING)) {
       DEXIT;
-      return false;
+      return FALSE;
    }   
 
 /*    DPRINTF(("======== outbuf:\n"SFN"\n=========\n", outbuf)); */
 
    DEXIT;
-   return true;
+   return TRUE;
 }
 
-static bool sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
+static int sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 {
 
    int outlen, tmplen;
@@ -1355,22 +1055,22 @@ static bool sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 
    if (!change_encoding(intext, &inlen, decbuf, &declen, DECODE_FROM_STRING)) {
       DEXIT;
-      return false;
+      return FALSE;
    }   
 
    if (!EVP_DecryptInit(&ctx, /* EVP_enc_null() EVP_bf_cbc()*/EVP_cast5_ofb(), key, iv)) {
       DEXIT;
-      return false;
+      return FALSE;
    }
    
    if (!EVP_DecryptUpdate(&ctx, (unsigned char*)outbuf, &outlen, decbuf, declen)) {
       DEXIT;
-      return false;
+      return FALSE;
    }
 
    if (!EVP_DecryptFinal(&ctx, (unsigned char*)outbuf + outlen, &tmplen)) {
       DEXIT;
-      return false;
+      return FALSE;
    }
    EVP_CIPHER_CTX_cleanup(&ctx);
 
@@ -1379,7 +1079,7 @@ static bool sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 /*    DPRINTF(("======== outbuf:\n"SFN"\n=========\n", outbuf)); */
 
    DEXIT;
-   return true;
+   return TRUE;
 }
 
 #endif
@@ -1389,15 +1089,9 @@ static bool sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 #define HIQUAD(i) (((i)&0xF0)>>4)
 #define SETBYTE(hi, lo)  ((((hi)<<4)&0xF0) | (0x0F & (lo)))
 
-/*
- *
- * NOTES
- *    MT-NOTE: change_encoding() is MT safe
- *
- */
-static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode)
+static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode)
 {
-   static const char alphabet[16] = {"*b~de,gh&j§lrn=p"};
+   static char alphabet[16] = {"*b~de,gh&j§lrn=p"};
 
    DENTER(TOP_LAYER, "change_encoding");
 
@@ -1409,7 +1103,7 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
       int enclen = *usize;
       if ((*csize) < (2*enclen+1)) {
          DEXIT;
-         return false;
+         return FALSE;
       }
 
       for (i=0,j=0; i<enclen; i++) {
@@ -1427,7 +1121,7 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
       int declen;
       if ((*usize) < (*csize)) {
          DEXIT;
-         return false;
+         return FALSE;
       }
       for (p=cbuf, declen=0; *p; p++, declen++) {
          int hi, lo, j;
@@ -1448,10 +1142,9 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
    }
       
    DEXIT;   
-   return true;
-}
+   return TRUE;
+}   
 
-/* MT-NOTE: sge_security_verify_user() is MT safe (assumptions) */
 int sge_security_verify_user(const char *host, const char *commproc, u_short id, const char *user) 
 {
    DENTER(TOP_LAYER, "sge_security_verify_user");
@@ -1478,8 +1171,7 @@ int sge_security_verify_user(const char *host, const char *commproc, u_short id,
    return True;
 }   
 
-/* MT-NOTE: sge_security_ck_to_do() is MT safe (assumptions) */
-void sge_security_event_handler(te_event_t anEvent)
+void sge_security_ck_to_do(void)
 {
 #ifdef SECURE
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
@@ -1491,4 +1183,3 @@ void sge_security_event_handler(te_event_t anEvent)
    krb_check_for_idle_clients();
 #endif
 }
-

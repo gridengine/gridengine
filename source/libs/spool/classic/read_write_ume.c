@@ -38,8 +38,8 @@
 
 #include "sgermon.h"
 #include "sge.h"
-#include "sge_cuser.h"
-#include "sge_str.h"
+#include "sge_usermap.h"
+#include "sge_stringL.h"
 #include "sge_answer.h"
 #include "read_write_ume.h"
 #include "sge_string.h"
@@ -49,22 +49,68 @@
 #include "sge_stdio.h"
 #include "sge_io.h"
 #include "sge_conf.h"
-#include "sge_attr.h"
 
 #include "msg_common.h"
 
+
 static int read_ume_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);
 
+
+
+/****** src/cull_read_in_ume() **********************************
+*
+*  NAME
+*     cull_read_in_ume() -- read in user mapping file entry 
+*
+*  SYNOPSIS
+*
+*     #include "read_write_ume.h"
+*     #include <src/read_write_ume.h>
+* 
+*     lListElem *cull_read_in_ume(char *dirname,
+*                                       char *filename, 
+*                                       int spool, 
+*                                       int flag, 
+*                                       int *tag); 
+*       
+*
+*  FUNCTION
+*     This function reads in a user mapping file for a cluster user. 
+*
+*  INPUTS
+*     char *dirname  - directory of mapping file
+*     char *filename - filename of mapping file (cluster user name)
+*     int spool      - not used
+*     int flag       - not used
+*     int *tag       - not used
+*
+*  RESULT
+*     lListElem*     - UME_Type list element.
+*
+*  EXAMPLE
+*
+*
+*  NOTES
+*
+*
+*  BUGS
+*     no bugs known
+*
+*
+*  SEE ALSO
+*     src/write_ume()
+*     
+****************************************************************************
+*/
 lListElem *cull_read_in_ume(
 const char *dirname,
 const char *filename,
 int spool,
 int flag,
-int *tag,
-int fields[]
+int *tag 
 ) {  
    lListElem *ep;
-   struct read_object_args args = { CU_Type, "user mapping entry list", read_ume_work };
+   struct read_object_args args = { UME_Type, "user mapping entry list", read_ume_work };
    int intern_tag = 0;
 
    DENTER(TOP_LAYER, "cull_read_in_ume");
@@ -75,6 +121,59 @@ int fields[]
    return ep;
 }
 
+
+
+
+/****** src/read_ume_work() **********************************
+*
+*  NAME
+*     read_ume_work() -- fill list element with data from file 
+*
+*  SYNOPSIS
+*
+*     #include "read_write_ume.h"
+*     #include <src/read_write_ume.h>
+* 
+*     static int read_ume_work(lList **alpp, 
+*                                   lList **clpp, 
+*                                   int fields[], 
+*                                   lListElem *ep,
+*                                   int spool,
+*                                   int flag,
+*                                   int *tag);
+*     
+*       
+*
+*  FUNCTION
+*     This function is a worker function for cull_read_in_ume()
+*
+*  INPUTS
+*     lList **alpp   - anser list
+*     lList **clpp   - list with parsed file contens
+*     int fields[]   - ??? (not used)
+*     lListElem *ep  - list element to fill (UME_Type) 
+*     int spool      - read only user information (not used)
+*     int flag       - ??? (not used)
+*     int *tag       - can return result (not used)
+*
+*  RESULT
+*     static int     - 0 ok , -1 is error
+*
+*  EXAMPLE
+*
+*
+*  NOTES
+*
+*
+*  BUGS
+*     no bugs known
+*
+*
+*  SEE ALSO
+*     src/cull_read_in_ume()
+*     
+****************************************************************************
+*/
 /* ------------------------------------------------------------
 
    read_ume_work()
@@ -88,70 +187,74 @@ static int read_ume_work(
 lList **alpp,   /* anser list */
 lList **clpp,   /* parsed file */
 int fields[],   /* not needed */
-lListElem *ep,  /* list element to fill of type CU_Type */
+lListElem *ep,  /* list element to fill of type UME_Type */
 int spool,      /* look above */
 int flag,       /* user flag */
 int *tag,       /* user return value */
 int parsing_type 
 ) {
-   int ret = 0;
+   lListElem* confListElem = NULL;
+   lList*     mapList = NULL;
+   const char* mappedUser = NULL;
 
    DENTER(TOP_LAYER, "read_ume_work");
+   /* try to fill the ep pointer with all data */
+   /* a return of -1 is for error state */ 
 
-   /* --------- CU_name */
-   if (ret == 0) {
-      ret = (!set_conf_string(alpp, clpp, fields, "cluster_user", ep, CU_name)) ? -1 : 0;
-   }
+   lSetString(ep, UME_cluster_user, ""); 
 
-   /* --------- CU_ruser_list */
-   if (ret == 0) {
-      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "remote_user", ep, 
-                                     CU_ruser_list, ASTR_Type, 
-                                     ASTR_href)) ? -1 : 0;
+   while ((confListElem=lFirst(*clpp)) != NULL) {
+      mappedUser = lGetString( confListElem , CF_name);
+      if (mappedUser != NULL) {
+         const char* hostList = NULL;
+         if (strcmp(mappedUser,"cluster_user") == 0) {
+            /* cluster_user keyword found */
+            hostList = lGetString(confListElem, CF_value);
+            if (hostList != NULL) {
+              DPRINTF(("cluster_user entry is '%s'\n", hostList));
+              lSetString(ep, UME_cluster_user, hostList);
+              if (mapList == NULL) {
+                mapList = lCreateList("user mapping", UM_Type);
+              } 
+            }
+         } else {
+            /* normal mapping entry */
+            hostList = lGetString( confListElem, CF_value);
+            if (hostList != NULL) {
+               lList* stringList = NULL;
+               lString2List(hostList, &stringList, ST_Type, STR, ", ");
+               if (stringList != NULL) {
+                  lListElem* mapElem = lCreateElem(UM_Type); 
+                  if (mapList == NULL) {
+                    mapList = lCreateList("user mapping", UM_Type);
+                  }
+                  lSetString(mapElem, UM_mapped_user, mappedUser);
+                  lSetList  (mapElem, UM_host_list  , stringList);
+                  lAppendElem(mapList, mapElem);
+                  DPRINTF(("Mapped User Name: '%s' has hostnames '%s'\n", mappedUser, hostList));
+               }
+            }
+         }
+      }
+      lDelElemStr(clpp, CF_name, mappedUser);   /* remove the hole element */
    }
+   lSetList  (ep     , UME_mapping_list, mapList);
 
-   /* --------- CU_ulong32 */
-   if (ret == 0) {
-      ret = (!set_conf_ulng_attr_list(alpp, clpp, fields, "ulong32", ep, 
-                                      CU_ulong32, AULNG_Type, 
-                                      AULNG_href)) ? -1 : 0;
-   }
-   
-   /* --------- CU_bool */
-   if (ret == 0) {
-      ret = (!set_conf_bool_attr_list(alpp, clpp, fields, "bool", ep, 
-                                      CU_bool, ABOOL_Type, 
-                                      ABOOL_href)) ? -1 : 0;
-   }
-
-   /* --------- CU_time */
-   if (ret == 0) {
-      ret = (!set_conf_time_attr_list(alpp, clpp, fields, "time", ep, 
-                                      CU_time, ATIME_Type,
-                                      ATIME_href)) ? -1 : 0;
-   }
-   
-   /* --------- CU_mem */
-   if (ret == 0) {
-      ret = (!set_conf_mem_attr_list(alpp, clpp, fields, "mem", ep, 
-                                     CU_mem, AMEM_Type,
-                                     AMEM_href)) ? -1 : 0;
-   }
-   
-   /* --------- CU_inter */
-   if (ret == 0) {
-      ret = (!set_conf_inter_attr_list(alpp, clpp, fields, "inter", ep, 
-                                       CU_inter, AINTER_Type,
-                                       AINTER_href)) ? -1 : 0;
-   }
    DEXIT;
-   return ret;
+   return 0;   /* everythis was very well, ->perfecto !! */
 }
+
+
+
+
+
+
+
 
 /****** src/write_ume() **********************************
 *
 *  NAME
-*     write_ume() -- save user mapping entrie (CU_Type) 
+*     write_ume() -- save user mapping entrie (UME_Type) 
 *
 *  SYNOPSIS
 *
@@ -169,7 +272,7 @@ int parsing_type
 *                       2 write for spooling with comment
 *                       (0 and 1: this parameter is not used)
 *     int how         - 0 use stdout,  1 write into tmpfile, 2 write into spoolfile
-*     lListElem *umep - CU_Type list element to store
+*     lListElem *umep - UME_Type list element to store
 *
 *  RESULT
 *     char* - pointer to filename
@@ -210,9 +313,12 @@ const lListElem *ep
 ) {
    FILE *fp;
    char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX];
+   lList* mapList = NULL;
+   lListElem* mapElem = NULL;
    DENTER(TOP_LAYER, "write_ume");
   
    DPRINTF(("writeing user mapping entry list\n"));
+   strcpy(filename, lGetString(ep, UME_cluster_user));
    switch (how) {
    case 0:
       fp = stdout;
@@ -226,9 +332,9 @@ const lListElem *ep
             return NULL;
          }
       } else {
-         sprintf(filename, "%s/.%s", UME_DIR, lGetString(ep, CU_name));
+         sprintf(filename, "%s/.%s", UME_DIR, lGetString(ep, UME_cluster_user));
          sprintf(real_filename, "%s/%s", UME_DIR, 
-            lGetString(ep, CU_name));
+            lGetString(ep, UME_cluster_user));
       }
 
       fp = fopen(filename, "w");
@@ -243,100 +349,59 @@ const lListElem *ep
       return NULL;
    }
 
-   {
-      FPRINTF((fp, "cluster_user     %s\n", 
-               lGetString(ep, CU_name))); 
+   if (spool == 2) { 
+     FPRINTF((fp,"# "SFN,MSG_UM_CONFIGTEXT1));
+     FPRINTF((fp,"# "SFN,MSG_UM_CONFIGTEXT2));
+     FPRINTF((fp,"# "SFN,MSG_UM_CONFIGTEXT3));
    }
-   {
-      const lList *str_attr_list = lGetList(ep, CU_ruser_list);
 
-      FPRINTF((fp, "remote_user      "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
+   FPRINTF((fp, "cluster_user        %s\n\n", 
+      lGetString(ep, UME_cluster_user))); 
 
-         str_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
+   if (spool == 2) {
+     FPRINTF((fp,"# "SFN,MSG_UM_CONFIGTEXT2));
+     FPRINTF((fp,"# "SFN,MSG_UM_CONFIGTEXT4));
+     FPRINTF((fp,"# "SFN,MSG_UM_CONFIGTEXT5));
+     FPRINTF((fp,"# "SFN,MSG_UM_CONFIGTEXT2));
+     FPRINTF((fp,"# "SFN,MSG_UM_CONFIGTEXT6));
+   }    
+
+   mapList = lGetList(ep, UME_mapping_list);
+   if (mapList != NULL) {
+      for_each ( mapElem, mapList ) {
+         const char* mapName = NULL;
+         lList* hostList = NULL;
  
-   }
-   {
-      const lList *ulng_attr_list = lGetList(ep, CU_ulong32);
+         mapName = lGetString( mapElem , UM_mapped_user);
+         hostList = lGetList(mapElem, UM_host_list) ;
+         if ((mapName != NULL) && (hostList != NULL)) {
+            lListElem* hostElem = NULL;
+            int i = 20;
+            FPRINTF((fp, "%s", mapName));
+            
+            i = i - strlen(mapName);
+            /* this is to get all host lists in colum 20 */
 
-      FPRINTF((fp, "ulong32          "));
-      if (ulng_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         ulng_attr_list_append_to_dstring(ulng_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
- 
-   }
-   {
-      const lList *bool_attr_list = lGetList(ep, CU_bool);
-
-      FPRINTF((fp, "bool             "));
-      if (bool_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         bool_attr_list_append_to_dstring(bool_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
- 
-   }
-   {
-      const lList *time_attr_list = lGetList(ep, CU_time);
-
-      FPRINTF((fp, "time             "));
-      if (time_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         time_attr_list_append_to_dstring(time_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "INFINITY\n"));
-      }
- 
-   }
-   {
-      const lList *mem_attr_list = lGetList(ep, CU_mem);
-
-      FPRINTF((fp, "mem              "));
-      if (mem_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         mem_attr_list_append_to_dstring(mem_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "INFINITY\n"));
-      }
- 
-   }
-   {
-      const lList *inter_attr_list = lGetList(ep, CU_inter);
-
-      FPRINTF((fp, "inter            "));
-      if (inter_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         inter_attr_list_append_to_dstring(inter_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "00:05:00\n"));
-      }
- 
-   }
+            do {
+               FPRINTF((fp, " "));
+               i=i-1;
+            } while (i> 0);
+           
+            for_each(hostElem , hostList) {
+               const char* tmpHost = NULL;
+               tmpHost = lGetString( hostElem , STR);
+               if (tmpHost != NULL) {
+                  FPRINTF((fp, "%s", tmpHost));
+                  if (lNext(hostElem)) {
+                     FPRINTF((fp, ", "));
+                  } else {
+                     FPRINTF((fp, "\n"));
+                  }
+               }
+            }
+         }
+      }  
+   } 
 
    if (how != 0) {
       fclose(fp);
@@ -358,3 +423,88 @@ FPRINTF_ERROR:
 }
 
 
+
+
+
+/****** src/sge_create_ume() **********************************
+*
+*  NAME
+*     sge_create_ume() --  returns new UME_Type element
+*
+*  SYNOPSIS
+*
+*     #include "read_write_ume.h"
+*     #include <src/read_write_ume.h>
+* 
+*     lListElem* sge_create_ume(char *ume_name, char* mapName, char* hostname)  
+*
+*  FUNCTION
+*     returns new UME_Type element
+*
+*  INPUTS
+*     char *ume_name - UME_cluster_user name
+*     char* mapName  - UM_mapped_user name
+*     char* hostname - UM_host_list entry
+*     
+*  RESULT
+*     lListElem*  -  pointer to UME_Type element
+*     NULL        -  on error
+*
+*  EXAMPLE
+*
+*
+*  NOTES
+*
+*
+*  BUGS
+*     no bugs known
+*
+*
+*  SEE ALSO
+*     src/cull_read_in_ume()
+*     src/write_ume()
+*     
+****************************************************************************
+*/
+lListElem* sge_create_ume(char *ume_name, char* mapName, char* hostname)
+{ 
+   lList*     mapList = NULL;
+   lList*     hostList = NULL;
+   lListElem* mapElem = NULL;
+   lListElem* umeElem = NULL;
+
+   DENTER(TOP_LAYER, "sge_generic_ume");  
+ 
+   if (ume_name == NULL) {
+      DEXIT;
+      return NULL;
+   }
+  
+   if (mapName != NULL) {
+
+     if (hostname != NULL) {
+        hostList = lCreateList("host list", ST_Type);
+        lAddElemStr(&hostList, STR, hostname ,ST_Type);
+     }
+
+     mapList = lCreateList("user mapping", UM_Type);
+
+     mapElem = lCreateElem(UM_Type);
+     lSetString(mapElem, UM_mapped_user, mapName);
+     
+     if (hostList != NULL) { 
+        lSetList  (mapElem, UM_host_list  , hostList);
+     }
+     lAppendElem(mapList, mapElem);
+   }
+
+   umeElem = lCreateElem(UME_Type);
+   lSetString(umeElem , UME_cluster_user, ume_name);
+   
+   if (mapList != NULL) {
+     lSetList  (umeElem , UME_mapping_list, mapList );
+   }
+
+   DEXIT;
+   return umeElem;
+}

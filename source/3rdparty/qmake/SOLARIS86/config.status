@@ -2,7 +2,7 @@
 # Generated automatically by configure.
 # Run this file to recreate the current configuration.
 # This directory was configured as follows,
-# on host ori:
+# on host schnatz:
 #
 # ../configure  --srcdir=..
 #
@@ -36,7 +36,7 @@ sed 's/%@/@@/; s/@%/@@/; s/%g$/@g/; /@g$/s/[\\&%]/\\&/g;
 
 
 s%@SHELL@%/bin/sh%g
-s%@CFLAGS@%-g -xO3%g
+s%@CFLAGS@%-g -O2%g
 s%@CPPFLAGS@% -I../glob%g
 s%@CXXFLAGS@%%g
 s%@FFLAGS@%%g
@@ -74,10 +74,10 @@ s%@host_alias@%i386-pc-solaris2.8%g
 s%@host_cpu@%i386%g
 s%@host_vendor@%pc%g
 s%@host_os@%solaris2.8%g
-s%@CC@%cc%g
+s%@CC@%gcc%g
 s%@AR@%ar%g
 s%@RANLIB@%ranlib%g
-s%@CPP@%cc -E%g
+s%@CPP@%gcc -E%g
 s%@PERL@%perl%g
 s%@build@%i386-pc-solaris2.8%g
 s%@build_alias@%i386-pc-solaris2.8%g

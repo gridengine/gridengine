@@ -321,33 +321,28 @@ proc error_states_wrong_pe {} {
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
 
    set wrong_start_pe(pe_name)    "wrong_start_pe"
-#   set wrong_start_pe(queue_list) $error_states_check_queue
+   set wrong_start_pe(queue_list) $error_states_check_queue
    set wrong_start_pe(slots)      5
    set wrong_start_pe(start_proc_args) "/tmp/no_such_file.23"
    add_pe wrong_start_pe
-   assign_queues_with_pe_object $error_states_check_queue wrong_start_pe
-
 
    set wrong_stop_pe(pe_name)    "wrong_stop_pe"
-#   set wrong_stop_pe(queue_list) $error_states_check_queue
+   set wrong_stop_pe(queue_list) $error_states_check_queue
    set wrong_stop_pe(slots)      5
    set wrong_stop_pe(stop_proc_args) "/tmp/no_such_file.23"
    add_pe wrong_stop_pe
-   assign_queues_with_pe_object $error_states_check_queue wrong_stop_pe
 
    set error_start_pe(pe_name)    "error_start_pe"
-#   set error_start_pe(queue_list) $error_states_check_queue
+   set error_start_pe(queue_list) $error_states_check_queue
    set error_start_pe(slots)      5
    set error_start_pe(start_proc_args) "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit_01.sh"
    add_pe error_start_pe
-   assign_queues_with_pe_object $error_states_check_queue error_start_pe
 
    set error_stop_pe(pe_name)    "error_stop_pe"
-#   set error_stop_pe(queue_list) $error_states_check_queue
+   set error_stop_pe(queue_list) $error_states_check_queue
    set error_stop_pe(slots)      5
    set error_stop_pe(stop_proc_args) "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit_01.sh"
    add_pe error_stop_pe
-   assign_queues_with_pe_object $error_states_check_queue error_stop_pe
 
 
 
@@ -583,10 +578,10 @@ proc error_states_cleanup  {} {
    global error_states_qconfig error_states_check_queue
 
 
-   puts $CHECK_OUTPUT "do qdel -uall"
-   set catch_result [delete_all_jobs]
-   puts $CHECK_OUTPUT $catch_result
 
+   puts $CHECK_OUTPUT "do qdel -uall"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
+   puts $CHECK_OUTPUT $catch_result
  
    puts $CHECK_OUTPUT "clearing pos. error state of queue $error_states_check_queue"
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod" "-c $error_states_check_queue" } catch_result

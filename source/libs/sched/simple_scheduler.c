@@ -36,6 +36,7 @@
 
 #include "sge_time.h"
 #include "sge_unistd.h"
+#include "sge_gdi_intern.h"
 #include "sig_handlers.h"
 #include "commlib.h"
 #include "sge_prog.h"
@@ -48,9 +49,11 @@
 #include "sge_job.h"
 #include "sge_ja_task.h"
 #include "sge_pe.h"
+#include "sge_queue.h"
 #include "sge_range.h"
 #include "sge_answer.h"
-#include "sge_strL.h"
+#include "sge_complex.h"
+#include "sge_stringL.h"
 #include "sge_orderL.h"
 
 #include "sge_ssi.h"
@@ -60,7 +63,7 @@
 #include "msg_clients_common.h"
 
 #include "sge_mirror.h"
-#include "sge_event_client.h"
+#include "sge_c_event.h"
 #include "sge_event.h"
 
 /* examples for retrieving information from SGE's master lists */
@@ -70,7 +73,7 @@ static void get_workload_info(void);
 static void get_policy_info(void);
 
 /* implementation of a simple job scheduler */
-static int remove_finished_job(sge_object_type type, sge_event_action action, 
+static int remove_finished_job(sge_event_type type, sge_event_action action, 
                                lListElem *event, void *clientdata);
 static int queue_get_free_slots(lListElem *queue);
 static void allocate_queue_slots(lList **allocated_queues, lListElem *queue, u_long32 *procs);
@@ -78,7 +81,7 @@ static void simple_scheduler(void);
 static void delete_some_jobs(void);
 
 
-static bool remove_finished_job(sge_object_type type, sge_event_action action, 
+static int remove_finished_job(sge_event_type type, sge_event_action action, 
                                lListElem *event, void *clientdata)
 {
    /* if we get a final usage event for a ja_task,
@@ -99,12 +102,12 @@ static bool remove_finished_job(sge_object_type type, sge_event_action action,
          job = job_list_locate(Master_Job_List, job_id);
          ja_task = job_search_task(job, NULL, ja_task_id);
 
-         order_list = sge_create_orders(order_list, ORT_remove_job, job, ja_task, NULL, false);
+         order_list = sge_create_orders(order_list, ORT_remove_job, job, ja_task, NULL);
          sge_send_orders2master(order_list);
       }
    }
    
-   return true;
+   return TRUE;
 }
 
 static void print_load_value(lListElem *host, const char *name, const char *format)
@@ -174,7 +177,7 @@ static void get_workload_info()
       job_id = lGetUlong(job, JB_job_number);
       user   = lGetString(job, JB_owner);
       group  = lGetString(job, JB_group);
-      ep     = queue_or_job_get_states(job, "h_rt");
+      ep     = explicit_job_request(job, "h_rt");
       if(ep != NULL) {
          wclock = lGetDouble(ep, CE_doubleval);
       }
@@ -287,7 +290,6 @@ static void get_policy_info()
       procs = lGetUlong(pe, PE_slots);
       allocation_rule = lGetString(pe, PE_allocation_rule);
 
-#if 0 /* TODO: PE <-> Queue relation is stored in Queue object */
       /* build a hostslist.
        * SGE pe's have a queuelist which may contain the keyword "all".
        * get the hostnames from the queues.
@@ -298,15 +300,14 @@ static void get_policy_info()
          const char *qname = lGetString(queue_ref, QR_name);
          
          if(strcmp(qname, "all") == 0) {  
-            /* TODO: CQ_Type not QU_Type */
-            for_each(queue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+            for_each(queue, Master_Queue_List) {
                const char *host_name = lGetHost(queue, QU_qhostname);
                if(lGetElemStr(host_list, STR, host_name) == NULL) {
                   lAddElemStr(&host_list, STR, host_name, ST_Type);
                }
             }
          } else {
-            const char *host_name = lGetHost(lGetElemStr(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), QU_full_name, qname), QU_qhostname);
+            const char *host_name = lGetHost(lGetElemStr(Master_Queue_List, QU_qname, qname), QU_qhostname);
             if(lGetElemStr(host_list, STR, host_name) == NULL) {  
                lAddElemStr(&host_list, STR, host_name, ST_Type);
             }
@@ -329,7 +330,7 @@ static void get_policy_info()
    }
 }
 
-static bool find_pending_ja_task(lListElem **job, lListElem **ja_task) {
+static int find_pending_ja_task(lListElem **job, lListElem **ja_task) {
    lListElem *sjob;
 
    /* find a pending job */
@@ -347,14 +348,14 @@ static bool find_pending_ja_task(lListElem **job, lListElem **ja_task) {
                *job = sjob;
                *ja_task = job_get_ja_task_template_pending(sjob, ja_task_id); 
                object_delete_range_id(sjob, NULL, JB_ja_n_h_ids, ja_task_id);
-               return true;
+               return TRUE;
             }
          }
       }   
    }
 
    /* no pending job found */
-   return false;
+   return FALSE;
 }
 
 static int queue_get_free_slots(lListElem *queue)
@@ -363,7 +364,7 @@ static int queue_get_free_slots(lListElem *queue)
    const char *name;
    lListElem *job;
 
-   name  = lGetString(queue, QU_full_name);
+   name  = lGetString(queue, QU_qname);
    slots = lGetUlong(queue, QU_job_slots);
 
    for_each(job, Master_Job_List) {
@@ -393,7 +394,7 @@ static void allocate_queue_slots(lList **allocated_queues, lListElem *queue, u_l
       lListElem *granted_queue;
       const char *queue_name;
 
-      queue_name = lGetString(queue, QU_full_name);
+      queue_name = lGetString(queue, QU_qname);
       DPRINTF(("found %d slots in queue %s\n", queue_free_slots, queue_name));
 
       slots = MIN(*procs, queue_free_slots);
@@ -401,7 +402,7 @@ static void allocate_queue_slots(lList **allocated_queues, lListElem *queue, u_l
       DPRINTF(("allocating %d slots in queue %s, still %d slots to allocate\n", 
                slots, queue_name, *procs));
 
-      granted_queue = lAddElemStr(allocated_queues, JG_qname, lGetString(queue, QU_full_name), 
+      granted_queue = lAddElemStr(allocated_queues, JG_qname, lGetString(queue, QU_qname), 
                                   JG_Type);
       lSetHost(granted_queue, JG_qhostname, lGetHost(queue, QU_qhostname));
       lSetUlong(granted_queue, JG_slots, slots);
@@ -441,7 +442,6 @@ static void simple_scheduler()
             procs,
             pe_name != NULL ? pe_name : "-"));
 
-#if 0 /* TODO: PE <-> Queue relation is stored in Queue object */
    /* allocate free slots
     * if no parallel environment is given or the pe contains the "all" keyword 
     * in the queue list, consider all queues.
@@ -450,7 +450,7 @@ static void simple_scheduler()
    if(pe == NULL || 
       strcmp("all", lGetString(lFirst(lGetList(pe, PE_queue_list)), QR_name)) == 0) {
       /* find suited queue(s) */
-      for_each(queue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      for_each(queue, Master_Queue_List) {
          allocate_queue_slots(&allocated_queues, queue, &procs);
          if(procs <= 0) {
             break;
@@ -459,7 +459,7 @@ static void simple_scheduler()
    } else {
       lListElem *queue_ref;
       for_each(queue_ref, lGetList(pe, PE_queue_list)) {
-         lListElem *queue = lGetElemStr(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), QU_full_name, lGetString(queue_ref, QR_name));
+         lListElem *queue = lGetElemStr(Master_Queue_List, QU_qname, lGetString(queue_ref, QR_name));
          if(queue != NULL) {
             allocate_queue_slots(&allocated_queues, queue, &procs);
             if(procs <= 0) {
@@ -468,7 +468,6 @@ static void simple_scheduler()
          }
       }
    }
-#endif
 
    /* if all requested slots could be granted, procs should be 0 */
    if(procs > 0) {
@@ -523,46 +522,45 @@ static void delete_some_jobs()
             char id[100];
             sprintf(id, U32CFormat"."U32CFormat, 
                     u32c(lGetUlong(job, JB_job_number)), u32c(lGetUlong(ja_task, JAT_task_number)));
-            sge_ssi_job_cancel(id, false);
+            sge_ssi_job_cancel(id, FALSE);
          }
       }
    }
 }
 
-static bool register_scheduler()
+static int register_scheduler()
 {
    int cl_err = 0;
-   lList *alp = NULL;
 
    DENTER(TOP_LAYER, "register_scheduler");
 
    /* register at commd */
    sge_gdi_param(SET_MEWHO, QSCHED, NULL);
-   if (sge_gdi_setup(prognames[QSCHED], &alp)!=AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
+   if ((cl_err = sge_gdi_setup(prognames[QSCHED]))) {
+      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       DEXIT;
-      return false;
+      return FALSE;
    }
 
    /* setup signal handlers */
    sge_setup_sig_handlers(QSCHED);
 
    /* hostname resolving check */
-   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
+   if (reresolve_me_qualified_hostname() != CL_OK) {
       DEXIT;
-      return false;
-   }
+      return FALSE;
+   }   
 
    /* initialize mirroring interface */
    sge_mirror_initialize(EV_ID_SCHEDD, "simple_scheduler");
-   sge_mirror_subscribe(SGE_TYPE_ALL, NULL, NULL, NULL, NULL, NULL); 
+   sge_mirror_subscribe(SGE_EMT_ALL, NULL, NULL, NULL); 
 
    /* in an sgeee system we have to explicitly remove finished jobs 
     * from qmaster 
     */
-   sge_mirror_subscribe(SGE_TYPE_JOB, remove_finished_job, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_EMT_JOB, remove_finished_job, NULL, NULL);
 
-   return true;
+   return TRUE;
 }
 
 int main(int argc, char *argv[])

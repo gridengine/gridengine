@@ -41,15 +41,17 @@
 #ifndef __BASIS_TYPES_H
 #   include "basis_types.h"
 #endif
-#include "sge_dstring.h"
 
 u_long32 sge_get_gmt(void);
 
-const char *sge_ctime(time_t, dstring *buffer); 
-const char *sge_ctime32(u_long32 *, dstring *buffer); 
-const char *sge_at_time(time_t, dstring *buffer);
+char *sge_ctime(time_t); 
+
+char *sge_ctime32(u_long32 *); 
+
+char *sge_at_time(time_t);
 
 void sge_stopwatch_start(int);
+ 
 void sge_stopwatch_log(int, const char *);  
 
 #endif /* __SGE_TIME_H */

@@ -37,13 +37,15 @@
 #include <errno.h>
 
 #include "symbols.h"
+#include "sge_gdi_intern.h"
 #include "sge_ja_task.h"
 #include "sge_string.h"
 #include "sge_time.h"
 #include "parse_qsubL.h"
-#include "sge_str.h"
-#include "sge_idL.h"
+#include "sge_stringL.h"
+#include "sge_identL.h"
 #include "sge_job_refL.h"
+#include "sge_resource.h"
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
 #include "sge_path_alias.h"
@@ -60,10 +62,7 @@
 #include "sge_io.h"
 #include "sge_prog.h"
 #include "sge_var.h"
-#include "sge_log.h"
 #include "sge_answer.h"
-#include "sge_mailrec.h"
-#include "sge_centry.h"
 
 #define USE_CLIENT_QSUB 1
 
@@ -76,7 +75,6 @@
 
 const char *default_prefix = "#$";
 
-static char *reroot_path (lListElem* pjob, const char *path, lList **alpp);
 /* static int skip_line(char *s); */
 
 /* returns true if line has only white spaces */
@@ -124,8 +122,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    if (!*pjob) {
       *pjob = lCreateElem(JB_Type);
       if (!*pjob) {
-         sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
-         answer_list_add(&answer, SGE_EVENT,
+         answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
@@ -139,8 +136,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       tmpl_task_list = lCreateList("template task list", JAT_Type);
       tmpl_task = lCreateElem(JAT_Type);
       if (!tmpl_task_list || !tmpl_task) {
-         sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
-         answer_list_add(&answer, SGE_EVENT, 
+         answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
@@ -174,7 +170,6 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
    lSetUlong(*pjob, JB_priority, BASE_PRIORITY);
 
-   lSetUlong(*pjob, JB_jobshare, 0);
 
    /*
     * -b
@@ -287,32 +282,45 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lRemoveElem(cmdline, ep);
    }
 
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-P"))) {
+         lSetString(*pjob, JB_project, lGetString(ep, SPA_argval_lStringT));
+         lRemoveElem(cmdline, ep);
+      }
+   }
+
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-cwd"))) {
       char tmp_str[SGE_PATH_MAX + 1];
-      char *path = NULL;
+      char tmp_str2[SGE_PATH_MAX + 1];
+      char tmp_str3[SGE_PATH_MAX + 1];
+      const char *env_value = job_get_env_string(*pjob, VAR_PREFIX "O_HOME");
 
       if (!getcwd(tmp_str, sizeof(tmp_str))) {
-         /* If getcwd() fails... */
          answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
                          STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
-      
-      path = reroot_path (*pjob, tmp_str, &answer);
-      
-      if (path == NULL) {
-         DEXIT;
-         return answer;
+      if (!chdir(env_value)) {
+         if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
+            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+         chdir(tmp_str);
+         if (!strncmp(tmp_str2, tmp_str, strlen(tmp_str2))) {
+            sprintf(tmp_str3, "%s%s", env_value, 
+               (char *) tmp_str + strlen(tmp_str2));
+            strcpy(tmp_str, tmp_str3);
+         }
       }
-      
-      lSetString(*pjob, JB_cwd, path);
+      lSetString(*pjob, JB_cwd, tmp_str);
       lRemoveElem(cmdline, ep);
       
       lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
-      
-      FREE (path);
    }
+   path_alias = lFreeList(path_alias);
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-C"))) {
       lSetString(*pjob, JB_directive_prefix, 
@@ -372,12 +380,12 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lList *jref_list = NULL;
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-hold_jid"))) {
          for_each(sep, lGetList(ep, SPA_argval_lListT)) {
-            DPRINTF(("-hold_jid %s\n", lGetString(sep, ST_name)));
-            lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, ST_name), JRE_Type);
+            DPRINTF(("-hold_jid %s\n", lGetString(sep, STR)));
+            lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, STR), JRE_Type);
          }
          lRemoveElem(cmdline, ep);
       }
-      lSetList(*pjob, JB_jid_request_list, jref_list);
+      lSetList(*pjob, JB_jid_predecessor_list, jref_list);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {
@@ -390,9 +398,9 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
    parse_list_hardsoft(cmdline, "-l", *pjob, 
                         JB_hard_resource_list, JB_soft_resource_list);
+   sge_compress_resources(lGetList(*pjob, JB_hard_resource_list));
+   sge_compress_resources(lGetList(*pjob, JB_soft_resource_list));
 
-   centry_list_remove_duplicates(lGetList(*pjob, JB_hard_resource_list));
-   centry_list_remove_duplicates(lGetList(*pjob, JB_soft_resource_list));
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-m"))) {
       u_long32 ul;
@@ -459,11 +467,6 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lRemoveElem(cmdline, ep);
    }
 
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-js"))) {
-      lSetUlong(*pjob, JB_jobshare, lGetUlong(ep, SPA_argval_lUlongT));
-      lRemoveElem(cmdline, ep);
-   }
-
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-P"))) {
       lSetString(*pjob, JB_project, lGetString(ep, SPA_argval_lStringT));
       lRemoveElem(cmdline, ep);
@@ -481,8 +484,8 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    parse_list_hardsoft(cmdline, "-masterq", *pjob, 
                         JB_master_hard_queue_list, 0);
    
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-R"))) {
-      lSetBool(*pjob, JB_reserve, lGetInt(ep, SPA_argval_lIntT));
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-qs_args"))) {
+      lSwapList(*pjob, JB_qs_args, ep, SPA_argval_lListT);
       lRemoveElem(cmdline, ep);
    }
 
@@ -537,53 +540,6 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lRemoveElem(cmdline, ep);
    }
 
-   /* There is technically no conflict between -cwd and -wd.  They both set the
-    * working directory, and by virtue of it's position in this method, -wd will
-    * always override -cwd.  However, at least at the moment, -wd can only come
-    * from the DRMAA attributes, and -cwd cannot come from the DRMAA attributes.
-    * Therefore, -wd should override -cwd.  Lucky me. */
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-wd"))) {
-      const char *wd = lGetString(ep, SPA_argval_lStringT);
-
-/* I've added a -wd option to cull_parse_job_parameter() to deal with the
- * DRMAA_WD attribute.  It makes sense to me that since -wd exists and is
- * handled by cull_parse_job_parameter() that -cwd should just become an alias
- * for -wd.  The code to do that is ifdef'ed out below just in case we decide
- * it's a good idea. */
-#if 0
-      if (strcmp (wd, SGE_HOME_DIRECTORY) == 0) {
-         wd = (char *)malloc (sizeof (char) * (SGE_PATH_MAX + 1));
-
-         if (!getcwd (wd, sizeof (wd))) {
-            /* If getcwd() fails... */
-            answer_list_add (&answer, MSG_ANSWER_GETCWDFAILED, 
-                             STATUS_EDISK, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
-         }
-      }
-#endif
-
-      char *path = reroot_path (*pjob, wd, &answer);
-      
-      if (path == NULL) {
-         DEXIT;
-         return answer;
-      }
-      
-      lSetString(*pjob, JB_cwd, path);
-      lRemoveElem(cmdline, ep);
-   
-      /* If -cwd didn't already set the JB_path_aliases field, set it. */
-      if (lGetList (*pjob, JB_path_aliases) == NULL) {
-         lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
-      }
-      
-      FREE (path);
-   }
-   
-   path_alias = lFreeList(path_alias);
-   
    /*
    ** no switch - must be scriptfile
    ** only for qalter and qsub, not for qsh
@@ -609,7 +565,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lp = lCopyList("job args", lGetList(*pjob, JB_job_args));
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_JOBARG))) {
-         lAddElemStr(&lp, ST_name, lGetString(ep, SPA_argval_lStringT), ST_Type);
+         lAddElemStr(&lp, STR, lGetString(ep, SPA_argval_lStringT), ST_Type);
          
          lRemoveElem(cmdline, ep);
       }
@@ -691,6 +647,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 *                 STATUS_EUNKNOWN - bad internal error like NULL pointer 
 *                                   received or no memory
 *                 STATUS_EDISK    - file could not be opened
+*                 stati returned by cull_parse_cmdline
 *
 *  NOTES
 *     Special comments in script files have to start in the first column of a 
@@ -702,7 +659,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 *     MAX_STRING_SIZE is defined in common/basis_types.h (current value 2048).
 *
 *  SEE ALSO
-*     centry_list_parse_from_string()
+*     cull_parse_cmdline()
 *     basis_types.h
 *     cod_request(5)
 *******************************************************************************/
@@ -768,14 +725,8 @@ u_long32 flags
       } else {
          /* no script file but input from stdin */
          filestrptr = sge_stream2string(stdin, &script_len);
-         if (filestrptr == NULL) {
+         if (!filestrptr) {
             answer_list_add(&answer, MSG_ANSWER_ERRORREADINGFROMSTDIN, 
-                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
-         }
-         else if (filestrptr[0] == '\0') {
-            answer_list_add(&answer, MSG_ANSWER_NOINPUT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
@@ -952,39 +903,3 @@ u_long32 flags
    DEXIT;
    return answer;
 }
-
-static char *reroot_path (lListElem* pjob, const char *path, lList **alpp) {
-   const char *home = job_get_env_string(pjob, VAR_PREFIX "O_HOME");
-   char tmp_str[SGE_PATH_MAX + 1];
-   char tmp_str2[SGE_PATH_MAX + 1];
-   char tmp_str3[SGE_PATH_MAX + 1];
-   
-   DENTER (TOP_LAYER, "reroot_path");
-   
-   strcpy (tmp_str, path);
-   
-   if (!chdir(home)) {
-      /* If chdir() succeeds... */
-      if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
-         /* If getcwd() fails... */
-         answer_list_add(alpp, MSG_ANSWER_GETCWDFAILED, 
-                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return NULL;
-      }
-
-      chdir(tmp_str);
-
-      if (!strncmp(tmp_str2, tmp_str, strlen(tmp_str2))) {
-         /* If they are equal, build a new CWD using the value of the HOME
-          * as the root instead of whatever that directory is called by
-          * the -wd path. */
-         sprintf(tmp_str3, "%s%s", home, (char *) tmp_str + strlen(tmp_str2));
-         strcpy(tmp_str, tmp_str3);
-      }
-   }
-   
-   DEXIT;
-   return strdup (tmp_str);
-}
-

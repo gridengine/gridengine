@@ -53,11 +53,9 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
 #include "commlib.h"
+#include "read_write_complex.h"
 #include "sge_complex_schedd.h"
 #include "sge_answer.h"
-#include "sge_centry.h"
-#include "sge_centry_qconf.h"
-#include "spool/classic/read_write_complex.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -76,37 +74,41 @@ enum _cplx_mode {
    CPLX_MODIFY_MODE
 };
 
+static int add_mode = 0;
+
 static Widget qmon_cplx = 0;
-static Widget attr_add = 0;
-static Widget attr_mod = 0;
-static Widget attr_del = 0;
-static Widget attr_load = 0;
-static Widget attr_save = 0;
-static Widget attr_mx = 0;
-static Widget attr_aname = 0;
-static Widget attr_atype = 0;
-static Widget attr_ashort = 0;
-static Widget attr_arel = 0;
-static Widget attr_areq = 0;
-static Widget attr_aconsumable = 0;
-static Widget attr_adefault = 0;
-static Widget attr_aurgency = 0;
+static Widget cplx_names = 0;
+static Widget cplx_ask_layout = 0;
+static Widget cplx_ask_mx = 0;
+static Widget cplx_ask_name_w = 0;
+static Widget cplx_ask_aname = 0;
+static Widget cplx_ask_avalue = 0;
+static Widget cplx_ask_atype = 0;
+static Widget cplx_ask_ashort = 0;
+static Widget cplx_ask_arel = 0;
+static Widget cplx_ask_areq = 0;
+static Widget cplx_ask_aconsumable = 0;
+static Widget cplx_ask_adefault = 0;
+static Widget cplx_attributes_title = 0;
 
 
 /*-------------------------------------------------------------------------*/
 static void qmonPopdownCplxConfig(Widget w, XtPointer cld, XtPointer cad);
 static Widget qmonCreateCplxConfig(Widget parent);
+static Widget qmonCreateCplxAsk(Widget parent);
+static void qmonCplxDelete(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCplxSelect(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCplxChange(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCplxCancel(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxOk(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCplxLoadAttr(Widget matrix);
-static void qmonCplxSaveAttr(Widget matrix);
-static void qmonCplxDelAttr(Widget matrix);
-static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode);
+static void qmonCplxShowCplx(Widget matrix, char *cx_name);
+static void qmonCplxLoadAttr(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCplxSaveAttr(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCplxAddAttr(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCplxDelAttr(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxNoEdit(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxSelectAttr(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCplxSortAttr(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCplxResetEntryLine(void);
-static void qmonCplxAtypeAttr(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCplxAconsumableAttr(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCplxScrollBar(Widget w, XtPointer cld, XtPointer cad);
 
 #if AUTOMATIC_UPDATE
 static void qmonCplxStartUpdate(Widget w, XtPointer cld, XtPointer cad);
@@ -119,23 +121,11 @@ XtPointer cld, cad;
 {
    Widget shell;
    lList *alp = NULL;
-   lList *entries = NULL;
 
    DENTER(GUI_LAYER, "qmonPopupCplxConfig");
 
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
-
-   qmonMirrorMultiAnswer(CENTRY_T, &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
-      /* set default cursor */
-      XmtDisplayDefaultCursor(w);
-      DEXIT;
-      return;
-   }
-   entries = qmonMirrorList(SGE_CENTRY_LIST);
 
    if (!qmon_cplx) {
       shell = XmtGetTopLevelShell(w);
@@ -144,26 +134,29 @@ XtPointer cld, cad;
                               qmonPopdownCplxConfig, NULL);
       XtAddEventHandler(XtParent(qmon_cplx), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
+      /*
+      ** create ask layout
+      */
+      cplx_ask_layout = qmonCreateCplxAsk(qmon_cplx);
+      XtAddEventHandler(XtParent(cplx_ask_layout), StructureNotifyMask, False, 
+                        SetMinShellSize, NULL);
+      XtAddEventHandler(XtParent(cplx_ask_layout), StructureNotifyMask, False, 
+                        SetMaxShellSize, NULL);
 
    } 
    XSync(XtDisplay(qmon_cplx), 0);
    XmUpdateDisplay(qmon_cplx);
 
-
-   /*
-   ** fill the values into the matrix
-   */
-   qmonSetCE_Type(attr_mx, entries, CE_TYPE_FULL);
-
-   /*
-   ** reset entry line
-   */
-   qmonCplxResetEntryLine();
-
-   /*
-   ** reset attr_mod sensitivity
-   */
-   XtSetSensitive(attr_mod, False);
+   qmonMirrorMultiAnswer(COMPLEX_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      /* set default cursor */
+      XmtDisplayDefaultCursor(w);
+      DEXIT;
+      return;
+   }
+   updateCplxList();
 
    XtManageChild(qmon_cplx);
    XRaiseWindow(XtDisplay(XtParent(qmon_cplx)), 
@@ -175,6 +168,34 @@ XtPointer cld, cad;
    DEXIT;
 }
 
+/*-------------------------------------------------------------------------*/
+void updateCplxList(void)
+{
+   lList *cl;
+   XmString *selectedItems;
+   Cardinal selectedItemCount;
+   Cardinal itemCount;
+   
+   DENTER(GUI_LAYER, "updateCplxList");
+
+   cl = qmonMirrorList(SGE_COMPLEX_LIST);
+   lPSortList(cl, "%I+", CX_name);
+   UpdateXmListFromCull(cplx_names, XmFONTLIST_DEFAULT_TAG, cl, CX_name);
+
+   XtVaGetValues( cplx_names,
+                  XmNselectedItems, &selectedItems,
+                  XmNselectedItemCount, &selectedItemCount,
+                  XmNitemCount, &itemCount,
+                  NULL);
+
+   if (selectedItemCount)
+      XmListSelectItem(cplx_names, selectedItems[0], True);
+   else if (itemCount)
+      XmListSelectPos(cplx_names, 1, True);
+
+   DEXIT;
+}
+
 
 /*-------------------------------------------------------------------------*/
 /* P R I V A T E                                                           */
@@ -182,65 +203,100 @@ XtPointer cld, cad;
 static Widget qmonCreateCplxConfig(
 Widget parent 
 ) {
-   Widget cplx_layout, cplx_commit, cplx_reset, cplx_main_link;
-   static XmtProcedureInfo cplx_procedures[] = {
-         {"ComplexAttributeDelete", (XmtProcedure) qmonCplxDelAttr, {XtRWidget}},
-         {"ComplexAttributeAdd", (XmtProcedure) qmonCplxAddAttr, {XtRWidget, XtRBoolean}},
-         {"ComplexAttributeModify", (XmtProcedure) qmonCplxAddAttr, {XtRWidget, XtRBoolean}},
-         {"ComplexAttributeLoad", (XmtProcedure) qmonCplxLoadAttr, {NULL}},
-         {"ComplexAttributesSave", (XmtProcedure) qmonCplxSaveAttr, {NULL}}
-   };
-
+   Widget cplx_layout, cplx_add, cplx_delete, cplx_modify, cplx_done,
+          cplx_attributes, hsb1, hsb2, cplx_main_link;
+   char buf[256];
 
    DENTER(GUI_LAYER, "qmonCreateCplxConfig");
    
    cplx_layout = XmtBuildQueryDialog( parent, "qmon_cplx",
                            NULL, 0,
-                           "cplx_commit", &cplx_commit,
-                           "cplx_reset", &cplx_reset,
+                           "cplx_names", &cplx_names,
+                           "cplx_attributes", &cplx_attributes,
+                           "cplx_add", &cplx_add,
+                           "cplx_modify", &cplx_modify,
+                           "cplx_delete", &cplx_delete,
+                           "cplx_done", &cplx_done,
+                           "cplx_attributes_title", &cplx_attributes_title,
                            "cplx_main_link", &cplx_main_link,
-                           "attr_add", &attr_add,
-                           "attr_mod", &attr_mod,
-                           "attr_del", &attr_del,
-                           "attr_load", &attr_load,
-                           "attr_save", &attr_save,
-                           "attr_mx", &attr_mx,
-                           "attr_aname", &attr_aname,
-                           "attr_ashort", &attr_ashort,
-                           "attr_atype", &attr_atype,
-                           "attr_arel", &attr_arel,
-                           "attr_areq", &attr_areq,
-                           "attr_aconsumable", &attr_aconsumable,
-                           "attr_adefault", &attr_adefault,
-                           "attr_aurgency", &attr_aurgency,
                            NULL);
 
    XtAddCallback(cplx_main_link, XmNactivateCallback, 
                      qmonMainControlRaise, NULL);
 
-   XtAddCallback(cplx_commit, XmNactivateCallback, 
-                     qmonCplxOk, NULL);
-   XtAddCallback(cplx_reset, XmNactivateCallback, 
-                     qmonPopdownCplxConfig, NULL);
-   XtAddCallback(attr_mx, XmNenterCellCallback, 
-                     qmonCplxNoEdit, NULL);
-   XtAddCallback(attr_mx, XmNselectCellCallback, 
-                     qmonCplxSelectAttr, NULL);
-   XtAddCallback(attr_mx, XmNlabelActivateCallback, 
-                     qmonCplxSortAttr, NULL);
+   XtVaGetValues( XtParent(cplx_attributes), 
+                  XmNhorizontalScrollBar, &hsb1, 
+                  NULL);
+   XtVaGetValues( XtParent(cplx_attributes_title), 
+                  XmNhorizontalScrollBar, &hsb2, 
+                  NULL);
+   XtUnmanageChild(hsb2);
 
-   XtAddCallback(attr_atype, XmtNvalueChangedCallback,
-                     qmonCplxAtypeAttr, NULL);
-   XtAddCallback(attr_aconsumable, XmtNvalueChangedCallback,
-                     qmonCplxAconsumableAttr, NULL);
+   XtAddCallback(hsb1, XmNdragCallback, 
+                  qmonCplxScrollBar, (XtPointer) hsb2);
+   XtAddCallback(hsb1, XmNincrementCallback, 
+                  qmonCplxScrollBar, (XtPointer) hsb2);
+   XtAddCallback(hsb1, XmNdecrementCallback, 
+                  qmonCplxScrollBar, (XtPointer) hsb2);
+   XtAddCallback(hsb1, XmNpageIncrementCallback, 
+                  qmonCplxScrollBar, (XtPointer) hsb2);
+   XtAddCallback(hsb1, XmNpageDecrementCallback, 
+                  qmonCplxScrollBar, (XtPointer) hsb2);
+   XtAddCallback(hsb1, XmNtoTopCallback, 
+                  qmonCplxScrollBar, (XtPointer) hsb2);
+   XtAddCallback(hsb1, XmNtoBottomCallback, 
+                  qmonCplxScrollBar, (XtPointer) hsb2);
+
+   XtAddCallback(cplx_names, XmNbrowseSelectionCallback, 
+                     qmonCplxSelect, (XtPointer) cplx_attributes);
+   XtAddCallback(cplx_done, XmNactivateCallback, 
+                     qmonPopdownCplxConfig, NULL);
+
+   XtAddCallback(cplx_add, XmNactivateCallback, 
+                     qmonCplxChange, (XtPointer)CPLX_ADD_MODE);
+   XtAddCallback(cplx_modify, XmNactivateCallback, 
+                     qmonCplxChange, (XtPointer)CPLX_MODIFY_MODE);
+   XtAddCallback(cplx_delete, XmNactivateCallback, 
+                     qmonCplxDelete, NULL); 
 
    /*
-   ** register callback procedures
+   ** set title bar
    */
-   XmtRegisterProcedures(cplx_procedures, XtNumber(cplx_procedures));
-
+   sprintf(buf, "%-20.20s %-10.10s %-10.10s %-20.20s %-5.5s %-7.7s %-10.10s %-20.20s",
+             XmtLocalize(parent, "NAME", "NAME"), 
+             XmtLocalize(parent, "SHORTCUT", "SHORTCUT"),
+             XmtLocalize(parent, "TYPE", "TYPE"),
+             XmtLocalize(parent, "VALUE", "VALUE"),
+             XmtLocalize(parent, "RELOP", "RELOP"),
+             XmtLocalize(parent, "REQ","REQ"),
+             XmtLocalize(parent, "CONSUMABLE", "CONSUMABLE"),
+             XmtLocalize(parent, "DEFAULT", "DEFAULT"));
+   XmTextSetString(cplx_attributes_title, buf);
    DEXIT;
    return cplx_layout;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonCplxScrollBar(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   XmScrollBarCallbackStruct *cbs = (XmScrollBarCallbackStruct*) cad;
+   Widget slave = (Widget)cld;
+   int max_val = 0;
+
+   DENTER(GUI_LAYER, "qmonCplxScrollBar");
+
+   XtVaGetValues( slave,
+                  XmNmaximum, &max_val,
+                  NULL);
+
+   if (cbs->value < max_val)   
+      XmScrollBarSetValues(slave, cbs->value, 1, 1, 1, True);
+
+/*    printf("Scrollbar: Value %d     Pixel %d\n", cbs->value, cbs->pixel); */
+
+   DEXIT;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -256,6 +312,297 @@ XtPointer cld, cad;
    DEXIT;
 }
 
+#if AUTOMATIC_UPDATE
+
+/*-------------------------------------------------------------------------*/
+static void qmonCplxStartUpdate(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   DENTER(GUI_LAYER, "qmonCplxStartUpdate");
+  
+   qmonTimerAddUpdateProc(COMPLEX_T, "updateCplxList", updateCplxList);
+   qmonStartTimer(COMPLEX);
+   
+   DEXIT;
+}
+
+
+/*-------------------------------------------------------------------------*/
+static void qmonCplxStopUpdate(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   DENTER(GUI_LAYER, "qmonCplxStopUpdate");
+  
+   qmonStopTimer(COMPLEX);
+   qmonTimerRmUpdateProc(COMPLEX_T, "updateCplxList");
+   
+   DEXIT;
+}
+
+#endif
+
+
+/*-------------------------------------------------------------------------*/
+static void qmonCplxSelect(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   XmListCallbackStruct *cbs = (XmListCallbackStruct*) cad;
+   Widget text_field = (Widget) cld;
+   char *cxname;
+   lListElem *ep;
+   lList *attr_list;
+   lListElem *attr;
+   char buf[1024];
+   XmTextPosition pos;
+   
+   DENTER(GUI_LAYER, "qmonCplxSelect");
+
+   if (! XmStringGetLtoR(cbs->item, XmFONTLIST_DEFAULT_TAG, &cxname)) {
+      DPRINTF(("XmStringGetLtoR failed !\n"));
+      DEXIT;
+      return;
+   }
+   ep = lGetElemStr(qmonMirrorList(SGE_COMPLEX_LIST), CX_name, cxname);
+   XtFree((char*)cxname);
+
+   /*
+   ** fill cplx text field
+   */
+   if (ep) {
+      XmTextDisableRedisplay(text_field);
+      pos = 0;
+      XmTextSetString(text_field, "");
+      attr_list = lGetList(ep, CX_entries);
+      for_each(attr, attr_list) {
+            sprintf(buf, "%-20.20s %-10.10s %-10.10s %-20.20s %-5.5s %-7.7s %-10.10s %-20.20s\n",
+            lGetString(attr, CE_name), lGetString(attr, CE_shortcut),
+            map_type2str(lGetUlong(attr, CE_valtype)), 
+            lGetString(attr, CE_stringval), 
+            map_op2str(lGetUlong(attr, CE_relop)),
+            lGetBool(attr, CE_forced) ? "FORCED" : 
+               (lGetBool(attr, CE_request) ? "YES" : "NO"),
+            lGetBool(attr, CE_consumable) ? "YES" : "NO",
+            lGetString(attr, CE_default) ? lGetString(attr, CE_default) : "");
+            XmTextInsert(text_field, pos, buf);
+            pos += strlen(buf);
+      }
+      XmTextShowPosition(text_field, 0);
+      XmTextEnableRedisplay(text_field);
+   }
+   XmTextShowPosition(cplx_attributes_title, 0);
+   
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonCplxChange(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   XmString *xcnames;
+   Cardinal xcnum;
+   String cstr;
+   long mode = (long) cld;
+
+   DENTER(GUI_LAYER, "qmonCplxChange");
+
+   if (mode == CPLX_MODIFY_MODE) {
+      /*
+      ** on opening the dialog fill in the old values
+      */
+      XtVaGetValues( cplx_names,
+                     XmNselectedItems, &xcnames,
+                     XmNselectedItemCount, &xcnum,
+                     NULL);
+      
+      if (xcnum == 1 && 
+            XmStringGetLtoR(xcnames[0], XmFONTLIST_DEFAULT_TAG, &cstr)) {
+         XmtInputFieldSetString(cplx_ask_name_w, cstr);
+         XtVaSetValues( cplx_ask_name_w,
+                        XmNeditable, False,
+                        NULL);
+         qmonCplxShowCplx(cplx_ask_mx, cstr);
+         XtFree((char*)cstr);
+         add_mode = CPLX_MODIFY_MODE;
+      } else {
+         mode = CPLX_ADD_MODE;
+      }
+   } 
+
+   if (mode == CPLX_ADD_MODE) {
+      XtVaSetValues( cplx_ask_name_w,
+                     XmNeditable, True,
+                     NULL);
+      XmtInputFieldSetString(cplx_ask_name_w, "");
+      XmtInputFieldSetString(cplx_ask_aname, "");
+      XmtInputFieldSetString(cplx_ask_ashort, "");
+      XmtChooserSetState(cplx_ask_atype, 0, False);
+      XmtInputFieldSetString(cplx_ask_avalue, "");
+      XmtChooserSetState(cplx_ask_arel, 0, False);
+      XmtChooserSetState(cplx_ask_areq, 0, False);
+      XmtChooserSetState(cplx_ask_aconsumable, 0, False);
+      XmtInputFieldSetString(cplx_ask_adefault, "");
+      qmonCplxShowCplx(cplx_ask_mx, NULL);
+      add_mode = CPLX_ADD_MODE;
+   }
+
+   XtManageChild(cplx_ask_layout);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonCplxDelete(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   lList *lp = NULL;
+   lList *alp = NULL;
+   lEnumeration *what = NULL;
+   Boolean answer;
+   
+   DENTER(GUI_LAYER, "qmonCplxDelete");
+
+   lp = XmStringToCull(cplx_names, CX_Type, CX_name, SELECTED_ITEMS);
+   
+   if (!lp) {
+      DEXIT;
+      return;
+   }
+
+   XmtAskForBoolean(w, "xmtBooleanDialog", 
+                  "@{cplx.askdel.Do you really want to\ndelete the selected complexes ?}", 
+                  "@{Delete}", "@{Cancel}", NULL, XmtNoButton, XmDIALOG_WARNING, 
+                  False, &answer, NULL);
+   if (answer) {         
+      what = lWhat("%T(ALL)", CX_Type);
+      alp = qmonDelList( SGE_COMPLEX_LIST, qmonMirrorListRef(SGE_COMPLEX_LIST), 
+                                 CX_name, &lp, NULL, what);
+
+      qmonMessageBox(w, alp, 0);
+         
+      updateCplxList();
+      XmListSelectPos(cplx_names, 1, True);
+
+      alp = lFreeList(alp);
+      lFreeWhat(what);
+   }
+   lp = lFreeList(lp);
+   
+   DEXIT;
+}
+
+
+/*-------------------------------------------------------------------------*/
+static void qmonCplxShowCplx(
+Widget matrix,
+char *cx_name 
+) {
+   lListElem *cep = NULL;
+   lList *entries = NULL;
+   
+   DENTER(GUI_LAYER, "qmonCplxShowCplx");
+   
+   /* 
+   ** get cx_entries 
+   */   
+   if (cx_name && cx_name != '\0')
+      cep = lGetElemStr(qmonMirrorList(SGE_COMPLEX_LIST), CX_name, cx_name); 
+
+   if (cep) 
+      entries = lGetList(cep, CX_entries);
+
+   /*
+   ** fill the values into the matrix
+   */
+   qmonSetCE_Type(cplx_ask_mx, entries, CE_TYPE_FULL);
+      
+   DEXIT;
+}
+
+
+
+/*-------------------------------------------------------------------------*/
+static Widget qmonCreateCplxAsk(
+Widget parent 
+) {
+   Widget cplx_ask_ok, cplx_ask_cancel, cplx_ask_add,
+          cplx_ask_del, cplx_ask_load, cplx_ask_save;
+
+   DENTER(GUI_LAYER, "qmonCreateCplxAsk");
+   
+   cplx_ask_layout = XmtBuildQueryDialog( parent, "cplx_ask_shell",
+                           NULL, 0,
+                           "cplx_ask_ok", &cplx_ask_ok,
+                           "cplx_ask_cancel", &cplx_ask_cancel,
+                           "cplx_ask_name", &cplx_ask_name_w,
+                           "cplx_ask_add", &cplx_ask_add,
+                           "cplx_ask_del", &cplx_ask_del,
+                           "cplx_ask_load", &cplx_ask_load,
+                           "cplx_ask_save", &cplx_ask_save,
+                           "cplx_ask_mx", &cplx_ask_mx,
+                           "cplx_ask_aname", &cplx_ask_aname,
+                           "cplx_ask_ashort", &cplx_ask_ashort,
+                           "cplx_ask_avalue", &cplx_ask_avalue,
+                           "cplx_ask_atype", &cplx_ask_atype,
+                           "cplx_ask_arel", &cplx_ask_arel,
+                           "cplx_ask_areq", &cplx_ask_areq,
+                           "cplx_ask_aconsumable", &cplx_ask_aconsumable,
+                           "cplx_ask_adefault", &cplx_ask_adefault,
+                           NULL);
+   
+   /* remove the traverseCell callback */
+   XtRemoveAllCallbacks(cplx_ask_mx, XmNtraverseCellCallback);
+
+   XtAddCallback(cplx_ask_ok, XmNactivateCallback, 
+                     qmonCplxOk, NULL);
+   XtAddCallback(cplx_ask_cancel, XmNactivateCallback, 
+                     qmonCplxCancel, NULL);
+#if 0                     
+   XtAddCallback(cplx_ask_load, XmNactivateCallback, 
+                     qmonCplxLoadAttr, NULL);
+   XtAddCallback(cplx_ask_save, XmNactivateCallback, 
+                     qmonCplxSaveAttr, NULL);
+   XtAddCallback(cplx_ask_add, XmNactivateCallback, 
+                     qmonCplxAddAttr, (XtPointer)cplx_ask_mx);
+   XtAddCallback(cplx_ask_del, XmNactivateCallback, 
+                     qmonCplxDelAttr, (XtPointer)cplx_ask_mx);
+#endif                     
+   XtAddCallback(cplx_ask_mx, XmNenterCellCallback, 
+                     qmonCplxNoEdit, NULL);
+   XtAddCallback(cplx_ask_mx, XmNselectCellCallback, 
+                     qmonCplxSelectAttr, NULL);
+
+   /*
+   ** register callback procedures
+   */
+   XmtVaRegisterCallbackProcedures(
+         "ComplexAttributeDelete", qmonCplxDelAttr, XtRWidget,
+         "ComplexAttributeAdd", qmonCplxAddAttr, XtRWidget,
+         "ComplexAttributeLoad", qmonCplxLoadAttr, NULL,
+         "ComplexAttributesSave", qmonCplxSaveAttr, NULL,
+         NULL);
+
+   DEXIT;
+   return cplx_ask_layout;
+}
+
+
+/*-------------------------------------------------------------------------*/
+static void qmonCplxCancel(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   DENTER(GUI_LAYER, "qmonPECancel");
+
+   XtUnmanageChild(cplx_ask_layout);
+
+   DEXIT;
+}
+
 /*-------------------------------------------------------------------------*/
 static void qmonCplxOk(w, cld, cad)
 Widget w;
@@ -263,255 +610,157 @@ XtPointer cld, cad;
 {
    static lEnumeration *what = NULL;
    lList *entries = NULL;
-   lList *old_entries = NULL;
+   lList *lp = NULL;
    lList *alp = NULL;
-   int error = 0;
+   char *cplx_name;
+   XmString xcplx_name;
    
    DENTER(GUI_LAYER, "qmonCplxOk");
 
-   if (!what)
-      what = lWhat("%T(ALL)", CE_Type);
-
-   entries = qmonGetCE_Type(attr_mx);
-   old_entries = lCopyList("", qmonMirrorList(SGE_CENTRY_LIST));
-   /* centry_list_add_del_mod_via_gdi free entries and old_entries */
-   centry_list_add_del_mod_via_gdi(&entries, &alp, &old_entries);                     
-   error = qmonMessageBox(w, alp, 0);
-   alp = lFreeList(alp);
-
-   if (error == -1) {
-      DEXIT;
-      return;
-   }   
-
-   qmonMirrorMultiAnswer(CENTRY_T, &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+   cplx_name = XmtInputFieldGetString(cplx_ask_name_w);
+   
+   if (!cplx_name || cplx_name[0] == '\0') {
+      qmonMessageShow(w, True, "Name of Complex required !");
       DEXIT;
       return;
    }
    
-   XbaeMatrixDeselectAll(attr_mx);
-   XtUnmanageChild(qmon_cplx);
-   XtPopdown(XtParent(qmon_cplx));
+   if (!(lp = lCreateElemList("CC", CX_Type, 1))) {
+      DEXIT;
+      return;
+   }
+
+   lSetString(lFirst(lp), CX_name, qmon_trim(cplx_name));
+   entries = qmonGetCE_Type(cplx_ask_mx);
+   lSetList(lFirst(lp), CX_entries, entries);
+
+   if (!what)
+      what = lWhat("%T(ALL)", CX_Type);
+
+   if (add_mode == CPLX_ADD_MODE)
+      alp = qmonAddList(SGE_COMPLEX_LIST, qmonMirrorListRef(SGE_COMPLEX_LIST), 
+                        CX_name, &lp, NULL, what);
+   else
+      alp = qmonModList(SGE_COMPLEX_LIST, qmonMirrorListRef(SGE_COMPLEX_LIST), 
+                        CX_name, &lp, NULL, what);
+      
+   qmonMessageBox(w, alp, 0);
+
+   if (lGetUlong(lFirst(alp), AN_status) == STATUS_OK) {
+      updateCplxList();
+      xcplx_name = XmtCreateXmString(cplx_name);
+      XmListSelectItem(cplx_names, xcplx_name, True);
+      XmStringFree(xcplx_name);
+      XtUnmanageChild(cplx_ask_layout);
+   }
+   lp = lFreeList(lp);
+   alp = lFreeList(alp);
 
    DEXIT;
 }
 
+
+
 /*-------------------------------------------------------------------------*/
-static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
+static void qmonCplxAddAttr(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
 {
+   Widget matrix = (Widget) cld;
    String new_str[1][8];
    int rows = 0;
    int num_columns = 8;
    int row, i;
-   int row_to_change = 0;
    String str;
    int req_state;
-   int requestable = 0;
-   int valtype = 0;
-   int consumable = 0;
-   int relop = 0;
-   Boolean ns_os_conflict = False;
-   Boolean nn_os_conflict = False;
-   Boolean ns_on_conflict = False;
-/*    Pixel color = JobErrPixel; */
-   Boolean attr_exists = False;
-   lList *alp = NULL;
-   lListElem *new_entry = NULL;
 
    DENTER(GUI_LAYER, "qmonCplxAddAttr");
 
    /*
    ** check input 
    */
-   if (is_empty_word(XmtInputFieldGetString(attr_aname))) {
+   if (is_empty_word(XmtInputFieldGetString(cplx_ask_aname))) {
       qmonMessageShow(matrix, True, "Name required !");
       DEXIT;
       return;
    }
-   if (is_empty_word(XmtInputFieldGetString(attr_ashort))) {
+   if (is_empty_word(XmtInputFieldGetString(cplx_ask_ashort))) {
       qmonMessageShow(matrix, True, "Shortcut required !");
       DEXIT;
       return;
    }
-
-   if (is_empty_word(XmtInputFieldGetString(attr_adefault))) {
+   if (XmtChooserGetState(cplx_ask_atype) == 0 && 
+         is_empty_word(XmtInputFieldGetString(cplx_ask_avalue))) {
+      qmonMessageShow(matrix, True, "Value required !");
+      DEXIT;
+      return;
+   }
+   if (is_empty_word(XmtInputFieldGetString(cplx_ask_adefault))) {
       qmonMessageShow(matrix, True, "Default required !");
       DEXIT;
       return;
    }
       
-   if (is_empty_word(XmtInputFieldGetString(attr_aurgency))) {
-      qmonMessageShow(matrix, True, "Urgency required !");
-      DEXIT;
-      return;
-   }
-
    /*
    ** get the values
    */
-   new_str[0][0] = XtNewString(XmtInputFieldGetString(attr_aname));
-   new_str[0][1] = XtNewString(XmtInputFieldGetString(attr_ashort));
-   valtype = XmtChooserGetState(attr_atype) + 1;
-   new_str[0][2] = XtNewString(map_type2str(valtype));
-   relop = XmtChooserGetState(attr_arel) + 1;
-   new_str[0][3] = XtNewString(map_op2str(relop));
-   req_state = XmtChooserGetState(attr_areq); 
-
+   new_str[0][0] = XtNewString(XmtInputFieldGetString(cplx_ask_aname));
+   new_str[0][1] = XtNewString(XmtInputFieldGetString(cplx_ask_ashort));
+   new_str[0][2] = XtNewString(map_type2str(1 +
+                        XmtChooserGetState(cplx_ask_atype)));
+   new_str[0][3] = XtNewString(XmtInputFieldGetString(cplx_ask_avalue));
+   new_str[0][4] = XtNewString(map_op2str(1 +
+                        XmtChooserGetState(cplx_ask_arel)));
+   req_state = XmtChooserGetState(cplx_ask_areq); 
    switch (req_state) {
       case 1:  
-         new_str[0][4] = XtNewString("YES");
-         requestable = REQU_YES;
+         new_str[0][5] = XtNewString("YES");
          break;
       case 2:  
-         new_str[0][4] = XtNewString("FORCED");
-         requestable = REQU_FORCED;
+         new_str[0][5] = XtNewString("FORCED");
          break;
       default:
-         new_str[0][4] = XtNewString("NO");
-         requestable = REQU_NO;
+         new_str[0][5] = XtNewString("NO");
    }
       
-   consumable = XmtChooserGetState(attr_aconsumable);   
-   new_str[0][5] = XtNewString(consumable ? "YES" : "NO");
-   new_str[0][6] = XtNewString(XmtInputFieldGetString(attr_adefault));
-   new_str[0][7] = XtNewString(XmtInputFieldGetString(attr_aurgency));
+   new_str[0][6] = XtNewString(XmtChooserGetState(cplx_ask_aconsumable) ? "YES" : "NO");
+   new_str[0][7] = XtNewString(XmtInputFieldGetString(cplx_ask_adefault));
          
-   
-   /*
-   ** check the attribute line entries
-   */
-   new_entry = lCreateElem(CE_Type);
-   lSetString(new_entry, CE_name, new_str[0][0]);
-   lSetString(new_entry, CE_shortcut, new_str[0][1]);
-   lSetUlong(new_entry, CE_valtype, valtype);
-   lSetUlong(new_entry, CE_relop, relop);
-   lSetBool(new_entry, CE_consumable, consumable);
-   lSetUlong(new_entry, CE_requestable, requestable);
-   if (consumable) {
-      lSetString(new_entry, CE_default, new_str[0][6]);
-   }   
-   lSetString(new_entry, CE_urgency_weight, new_str[0][7]);
-
-   if (!centry_elem_validate(new_entry, NULL, &alp)) {
-      qmonMessageBox(matrix, alp, 0);
-      alp = lFreeList(alp);
-      new_entry = lFreeElem(new_entry);
-      goto error;
-   }   
-
-   new_entry = lFreeElem(new_entry);
-
 
    /*
    ** add to attribute matrix, search if item already exists
    */
    rows = XbaeMatrixNumRows(matrix);
 
-   if (!modify_mode) {
-      /*
-      ** check if the name already exists
-      */
-      for (row=0; row<rows; row++) {
-         /* get name str */
-         str = XbaeMatrixGetCell(matrix, row, 0);
-         if (!str || (str && !strcmp(str, new_str[0][0])) ||
-               (str && is_empty_word(str)))
-            break;
-      }
-
-      if (str && !strcmp(str, new_str[0][0])) 
-         attr_exists = True;
-
-      row_to_change = row;
-   } else {
-      row_to_change = XbaeMatrixFirstSelectedRow(matrix);
-      if (row_to_change == -1) {
-         qmonMessageShow(matrix, True, "No attribute entry selected !");
-         goto error;
-      }   
-   }   
-   
-
-   if (!modify_mode && attr_exists) {
-      qmonMessageShow(matrix, True, "Attribute already exists !");
-      goto error;
-   }
-      
-
-   /*
-   ** check if new and old shortcut conflict 
-   */
-   for (row=0; row<rows; row++) {
-      /* get name str */
-      str = XbaeMatrixGetCell(matrix, row, 1);
-      if (str && !strcmp(str, new_str[0][1]) && !modify_mode) {
-         ns_os_conflict = True;   
-         break;
-      }   
-   }
-
-   /*
-   ** check if new name and old shortcut conflict 
-   */
-   for (row=0; row<rows; row++) {
-      /* get name str */
-      str = XbaeMatrixGetCell(matrix, row, 1);
-      if (str && !strcmp(str, new_str[0][0]) && !modify_mode) {
-         nn_os_conflict = True;   
-         break;
-      }   
-   }
-   
-   /*
-   ** check if new shortcut and old name conflict 
-   */
    for (row=0; row<rows; row++) {
       /* get name str */
       str = XbaeMatrixGetCell(matrix, row, 0);
-      if (str && !strcmp(str, new_str[0][1]) && !modify_mode) {
-         ns_on_conflict = True;   
+      if (!str || (str && !strcmp(str, new_str[0][0])) ||
+            (str && is_empty_word(str))) 
          break;
-      }   
    }
-
-   if (ns_os_conflict) {
-      qmonMessageShow(matrix, True, "New shortcut and old shortcut conflict !");
-      goto error;
-   }   
-   if (ns_on_conflict) {
-      qmonMessageShow(matrix, True, "New shortcut and old name conflict !");
-      goto error;
-   }   
-   if (nn_os_conflict) {
-      qmonMessageShow(matrix, True, "New name and old shortcut conflict !");
-      goto error;
-   }   
    
-   if (modify_mode)
-      XbaeMatrixDeleteRows(matrix, row_to_change, 1);
+   if (row !=rows)
+      XbaeMatrixDeleteRows(matrix, row, 1);
 
-   /* 
-   ** add new rows at the top 
-   */
-   if (!modify_mode)
-      row_to_change=0;
-   XbaeMatrixAddRows(matrix, row_to_change, new_str[0], NULL, NULL, 1);
-/*    XbaeMatrixSetRowBackgrounds(matrix, modify_mode ? row_to_change : 0, &color, 1); */
+   XbaeMatrixAddRows(matrix, row, new_str[0], NULL, NULL, 1);
 
-   /* reset and jump to attr_aname */
+   /* reset and jump to cplx_ask_aname */
    XbaeMatrixDeselectAll(matrix);
-   XtSetSensitive(attr_mod, False);
    /* refresh the matrix */
    XbaeMatrixRefresh(matrix);
-   XbaeMatrixMakeCellVisible(matrix, row_to_change, 0);
    
-   qmonCplxResetEntryLine();
-   XmProcessTraversal(attr_aname, XmTRAVERSE_CURRENT);
+/*    XmtInputFieldSetString(cplx_ask_name_w, ""); */
+   XmtInputFieldSetString(cplx_ask_aname, "");
+   XmtInputFieldSetString(cplx_ask_ashort, "");
+   XmtChooserSetState(cplx_ask_atype, 0, False);
+   XmtInputFieldSetString(cplx_ask_avalue, "");
+   XmtChooserSetState(cplx_ask_arel, 0, False);
+   XmtChooserSetState(cplx_ask_areq, 0, False);
+   XmtChooserSetState(cplx_ask_aconsumable, 0, False);
+   XmtInputFieldSetString(cplx_ask_adefault, "");
+   XmProcessTraversal(cplx_ask_aname, XmTRAVERSE_CURRENT);
 
-error:
 
    for (i=0; i<num_columns; i++) {
       XtFree((char*)new_str[0][i]);
@@ -522,8 +771,12 @@ error:
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCplxDelAttr( Widget matrix)
-{
+static void qmonCplxDelAttr(
+Widget w,
+XtPointer cld,
+XtPointer cad 
+) {
+   Widget matrix = (Widget) cld;
    int rows;
    int i;
    int rows_to_delete = 0;
@@ -549,9 +802,17 @@ static void qmonCplxDelAttr( Widget matrix)
 
    XbaeMatrixAddRows(matrix, rows, NULL, NULL, NULL, rows_to_delete);
 
-   /* reset entry line */
-   qmonCplxResetEntryLine();
-
+   /* reset attribute line */
+   XbaeMatrixDeselectAll(matrix);
+   XmtInputFieldSetString(cplx_ask_aname, "");
+   XmtInputFieldSetString(cplx_ask_ashort, "");
+   XmtChooserSetState(cplx_ask_atype, 0, False);
+   XmtInputFieldSetString(cplx_ask_avalue, "");
+   XmtChooserSetState(cplx_ask_arel, 0, False);
+   XmtChooserSetState(cplx_ask_areq, 0, False);
+   XmtChooserSetState(cplx_ask_aconsumable, 0, False);
+   XmtInputFieldSetString(cplx_ask_adefault, "");
+   
    /* refresh the matrix */
    XbaeMatrixRefresh(matrix);
 
@@ -560,17 +821,20 @@ static void qmonCplxDelAttr( Widget matrix)
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonCplxLoadAttr(Widget matrix)
+static void qmonCplxLoadAttr(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
 {
    static char filename[BUFSIZ];
    static char directory[BUFSIZ];
    int status;
+   lListElem *cep;
    lList *entries;
    lList *alp = NULL;
  
    DENTER(GUI_LAYER, "qmonCplxLoadAttr");
 
-   status = XmtAskForFilename(matrix, "@{File Selection}",
+   status = XmtAskForFilename(w, "@{File Selection}",
                               "@{Please type or select a filename}",
                               NULL, NULL,
                               filename, sizeof(filename),
@@ -579,10 +843,10 @@ static void qmonCplxLoadAttr(Widget matrix)
                               NULL);
 
    if (status == True) {
-      entries = read_cmplx(filename, "dummy", &alp);
+      cep = read_cmplx(filename, "dummy", &alp);
       /* fill the matrix with the values from list */ 
       if (alp) {
-         qmonMessageBox(matrix, alp, 0);
+         qmonMessageBox(w, alp, 0);
          alp = lFreeList(alp);
          DEXIT;
          return;
@@ -591,8 +855,9 @@ static void qmonCplxLoadAttr(Widget matrix)
       /*
       ** fill the values into the matrix
       */
-      qmonSetCE_Type(matrix, entries, CE_TYPE_FULL);
-      lFreeList(entries);
+      entries = lGetList(cep, CX_entries);
+      qmonSetCE_Type(cplx_ask_mx, entries, CE_TYPE_FULL);
+      cep = lFreeElem(cep);
    }        
    
    DEXIT;
@@ -600,7 +865,9 @@ static void qmonCplxLoadAttr(Widget matrix)
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonCplxSaveAttr(Widget matrix)
+static void qmonCplxSaveAttr(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
 {
    static char filename[BUFSIZ];
    static char directory[BUFSIZ];
@@ -610,7 +877,7 @@ static void qmonCplxSaveAttr(Widget matrix)
  
    DENTER(GUI_LAYER, "qmonCplxSaveAttr");
 
-   status = XmtAskForFilename(matrix, "@{File Selection}",
+   status = XmtAskForFilename(w, "@{File Selection}",
                               "@{Please type or select a filename}",
                               NULL, NULL,
                               filename, sizeof(filename),
@@ -619,10 +886,10 @@ static void qmonCplxSaveAttr(Widget matrix)
                               NULL);
 
    if (status == True) {
-      entries = qmonGetCE_Type(matrix);
+      entries = qmonGetCE_Type(cplx_ask_mx);
       /* Save Cplx Dialog Box */
       write_cmplx(0, filename, entries, NULL, &alp); 
-      qmonMessageBox(matrix, alp, 0);
+      qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
       entries = lFreeList(entries);
    }
@@ -631,103 +898,20 @@ static void qmonCplxSaveAttr(Widget matrix)
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCplxAtypeAttr(Widget w, XtPointer cld, XtPointer cad)
+static void qmonCplxNoEdit(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
 {
-   XmtChooserCallbackStruct *cbs = 
-            (XmtChooserCallbackStruct*) cad;
-   int type = cbs->state  + 1;         
-   int i;
+   XbaeMatrixEnterCellCallbackStruct *cbs = 
+            (XbaeMatrixEnterCellCallbackStruct*) cad;
 
-   DENTER(GUI_LAYER, "qmonCplxAtypeAttr");
+   DENTER(GUI_LAYER, "qmonCplxNoEdit");
 
-   if (type != TYPE_INT && type != TYPE_DOUBLE &&
-       type != TYPE_MEM && type != TYPE_TIM) {
-      XmtChooserSetSensitive(attr_aconsumable, 1, False); 
-      XmtChooserSetState(attr_aconsumable, 0, True);
-   } else {   
-      XmtChooserSetSensitive(attr_aconsumable, 1, True); 
-   }
-
-   /* reset sensitivity to true */
-   for (i=0; i<6; i++)
-      XmtChooserSetSensitive(attr_arel, i, True); 
+   cbs->doit = False;
    
-   if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST || type == TYPE_RESTR) {
-      XmtInputFieldSetString(attr_adefault, "NONE");
-      XmtChooserSetState(attr_arel, 0, False);
-      for (i=1; i<5; i++)
-         XmtChooserSetSensitive(attr_arel, i, False); 
-   }       
-   
-   if (type == TYPE_BOO) {
-      XmtInputFieldSetString(attr_adefault, "FALSE");
-      XmtChooserSetState(attr_arel, 0, False);
-      for (i=1; i<6; i++)
-         XmtChooserSetSensitive(attr_arel, i, False); 
-   }       
-
-   if (type == TYPE_MEM || type == TYPE_INT || type == TYPE_DOUBLE) {
-      XmtInputFieldSetString(attr_adefault, "0");
-   }       
-
-   if (type == TYPE_TIM) {
-      XmtInputFieldSetString(attr_adefault, "0:0:0");
-   }       
-
    DEXIT;
 }
 
-/*-------------------------------------------------------------------------*/
-static void qmonCplxAconsumableAttr(Widget w, XtPointer cld, XtPointer cad)
-{
-   XmtChooserCallbackStruct *cbs = 
-            (XmtChooserCallbackStruct*) cad;
-   int type;
-   int i;
-
-   DENTER(GUI_LAYER, "qmonCplxAconsumableAttr");
-
-   if (cbs->state != 0) { 
-      /* reset sensitivity to false for all apart from <= */
-      for (i=0; i<6; i++)
-         XmtChooserSetSensitive(attr_arel, i, False); 
-      XmtChooserSetSensitive(attr_arel, 4, True); 
-      XmtChooserSetState(attr_arel, 4, False);
-      XtSetSensitive(attr_adefault, true);
-   } else {   
-      /* set default value for all non consumables depending on type */
-      XtSetSensitive(attr_adefault, false);
-      /* reset sensitivity to true */
-      for (i=0; i<6; i++)
-         XmtChooserSetSensitive(attr_arel, i, True); 
-      
-      type = XmtChooserGetState(attr_atype) + 1;
-      if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST || type == TYPE_RESTR) {
-         XmtInputFieldSetString(attr_adefault, "NONE"); 
-         XmtChooserSetState(attr_arel, 0, False);
-         for (i=1; i<5; i++)
-            XmtChooserSetSensitive(attr_arel, i, False); 
-      }       
-      
-      if (type == TYPE_BOO) {
-         XmtInputFieldSetString(attr_adefault, "FALSE"); 
-         XmtChooserSetState(attr_arel, 0, False);
-         for (i=1; i<6; i++)
-            XmtChooserSetSensitive(attr_arel, i, False); 
-      }       
-
-      if (type == TYPE_MEM || type == TYPE_INT || type == TYPE_DOUBLE) {
-         XmtInputFieldSetString(attr_adefault, "0"); 
-      }   
-
-      if (type == TYPE_TIM) {
-         XmtInputFieldSetString(attr_adefault, "0:0:0"); 
-      }   
-
-   }
-
-   DEXIT;
-}
 /*-------------------------------------------------------------------------*/
 static void qmonCplxSelectAttr(w, cld, cad)
 Widget w;
@@ -742,129 +926,54 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonCplxSelectAttr");
 
    if (cbs->num_params && !strcmp(cbs->params[0], "begin")) {
-   
-      XtSetSensitive(attr_mod, True);
-
       /* name */
       str = XbaeMatrixGetCell(w, cbs->row, 0);
-      XmtInputFieldSetString(attr_aname, str ? str : ""); 
+      XmtInputFieldSetString(cplx_ask_aname, str ? str : ""); 
 
       /* shortcut */
       str = XbaeMatrixGetCell(w, cbs->row, 1);
-      XmtInputFieldSetString(attr_ashort, str ? str : "");
+      XmtInputFieldSetString(cplx_ask_ashort, str ? str : "");
       
       /* type */
       str = XbaeMatrixGetCell(w, cbs->row, 2);
       type = 0;
-      for (i=TYPE_FIRST; !type && i<=TYPE_CE_LAST; i++) {
+      for (i=TYPE_FIRST; !type && i<=TYPE_DOUBLE; i++) {
          if (!strcasecmp(str, map_type2str(i)))
             type = i-1;
       }
-      XmtChooserSetState(attr_atype, type, True); 
+      XmtChooserSetState(cplx_ask_atype, type, False); 
 
-      /* relop */
+      /* value */
       str = XbaeMatrixGetCell(w, cbs->row, 3);
+      XmtInputFieldSetString(cplx_ask_avalue, str ? str : "");
+      
+      /* relop */
+      str = XbaeMatrixGetCell(w, cbs->row, 4);
       relop = 0;
       for (i=CMPLXEQ_OP; !relop && i<=CMPLXNE_OP; i++) {
          if (!strcasecmp(str, map_op2str(i)))
             relop = i-1;
       }
-      XmtChooserSetState(attr_arel, relop, True); 
-
-      str = XbaeMatrixGetCell(w, cbs->row, 4);
-      if (str && !strcmp(str, "YES")) 
-         XmtChooserSetState(attr_areq, 1, True);
-      else if (str && !strcmp(str, "FORCED"))
-         XmtChooserSetState(attr_areq, 2, True);
-      else
-         XmtChooserSetState(attr_areq, 0, True);
+      XmtChooserSetState(cplx_ask_arel, relop, False); 
 
       str = XbaeMatrixGetCell(w, cbs->row, 5);
       if (str && !strcmp(str, "YES")) 
-         XmtChooserSetState(attr_aconsumable, 1, True);
+         XmtChooserSetState(cplx_ask_areq, 1, False);
+      else if (str && !strcmp(str, "FORCED"))
+         XmtChooserSetState(cplx_ask_areq, 2, False);
       else
-         XmtChooserSetState(attr_aconsumable, 0, True);
+         XmtChooserSetState(cplx_ask_areq, 0, False);
+
+      str = XbaeMatrixGetCell(w, cbs->row, 6);
+      if (str && !strcmp(str, "YES")) 
+         XmtChooserSetState(cplx_ask_aconsumable, 1, False);
+      else
+         XmtChooserSetState(cplx_ask_aconsumable, 0, False);
 
       /* default */
-      str = XbaeMatrixGetCell(w, cbs->row, 6);
-      XmtInputFieldSetString(attr_adefault, str ? str : ""); 
-
-      /* urgency */
       str = XbaeMatrixGetCell(w, cbs->row, 7);
-      XmtInputFieldSetString(attr_aurgency, str ? str : ""); 
+      XmtInputFieldSetString(cplx_ask_adefault, str ? str : ""); 
    }
-   
-   if ((XbaeMatrixGetNumSelected(w)/XbaeMatrixNumColumns(w)) != 1) {
-         XtSetSensitive(attr_mod, False);
-         qmonCplxResetEntryLine();
-   }   
-
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-static void qmonCplxResetEntryLine(void)
-{
-
-   DENTER(GUI_LAYER, "qmonCplxResetEntryLine");
-
-   /* name */
-   XmtInputFieldSetString(attr_aname, ""); 
-
-   /* shortcut */
-   XmtInputFieldSetString(attr_ashort, "");
-   
-   /* type */
-   XmtChooserSetState(attr_atype, 0, True); 
-
-   /* relop */
-   XmtChooserSetState(attr_arel, 0, True); 
-
-   /* requestable */
-   XmtChooserSetState(attr_areq, 0, True);
-
-   /* consumable */
-   XmtChooserSetState(attr_aconsumable, 0, True);
-
-   /* default */
-   XmtInputFieldSetString(attr_adefault, "0"); 
-   XtSetSensitive(attr_adefault, false);
-   
-   /* urgency */
-   XmtInputFieldSetString(attr_aurgency, "0"); 
-   
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-static void qmonCplxNoEdit(Widget w, XtPointer cld, XtPointer cad)
-{
-   XbaeMatrixEnterCellCallbackStruct *cbs = 
-            (XbaeMatrixEnterCellCallbackStruct*) cad;
-
-   DENTER(GUI_LAYER, "qmonCplxNoEdit");
-
-   cbs->doit = False;
-   
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-static void qmonCplxSortAttr(Widget w, XtPointer cld, XtPointer cad)
-{
-   XbaeMatrixLabelActivateCallbackStruct *cbs = 
-            (XbaeMatrixLabelActivateCallbackStruct *) cad;
-   lList *entries = NULL;
-   int column_nm[] = {CE_name, CE_shortcut, CE_valtype, CE_relop, CE_consumable, CE_default};
-   
-   DENTER(GUI_LAYER, "qmonCplxAttrSort");
-
-   entries = qmonGetCE_Type(attr_mx);
-   if (cbs->column > XtNumber(column_nm))
-      cbs->column=0;
-   lPSortList(entries, "%I+%I+", column_nm[cbs->column], column_nm[0]); 
-   qmonSetCE_Type(attr_mx, entries, CE_TYPE_FULL);
-   entries = lFreeList(entries);
    
    DEXIT;
 }

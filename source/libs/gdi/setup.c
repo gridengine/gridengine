@@ -35,9 +35,8 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#include "sge_bootstrap.h"
 #include "sge_prog.h"
-#include "sge_gdiP.h"
+#include "sge_gdi_intern.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "setup_path.h"
@@ -47,6 +46,7 @@
 #include "sge_feature.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
+#include "sge_prog.h"
 #include "sge_parse_num_par.h"
 #include "sge_hostname.h"
 #include "sge_spool.h"
@@ -58,118 +58,57 @@
 extern long compression_level;
 extern long compression_threshold;
 
-/****** setup/sge_setup() ******************************************************
-*  NAME
-*     sge_setup() -- Setup of some SGE components
-*
-*  SYNOPSIS
-*     int sge_setup(u_long32 sge_formal_prog_name, lList **alpp) 
-*
-*  FUNCTION
-*     Setup of some SGE components
-*
-*  INPUTS
-*     u_long32 sge_formal_prog_name - The formal program name.
-*     lList **alpp                  - returns diagnosis information 
-*                                     in case of an error.
-*
-*  RESULT
-*     int - 0 on success
-*
-*  NOTES
-*     MT-NOTE: sge_setup() is MT safe
-*******************************************************************************/
-int sge_setup(
+static int init_hostcpy_policy(void);
+
+/*******************************************************************/
+void sge_setup(
 u_long32 sge_formal_prog_name,
 lList **alpp 
 ) {
-   dstring error_dstring = DSTRING_INIT;
-   bool is_exit_on_error = uti_state_get_exit_on_error();
-
    DENTER(TOP_LAYER, "sge_setup");
 
    /*
-    * for setuid clients we must seteuid to the users uid
-    *
-    * NOTE: For qmaster uid != euid is just the normal modus operandi.
-    * Do *not* call 'sge_run_as_user()'!
-    */
-   if (QMASTER != sge_formal_prog_name) {
-      if (sge_run_as_user()) {   
-         if (alpp == NULL || is_exit_on_error) {
-            CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
-         } else {
-            answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
-         }
-         
-         SGE_EXIT(1);
-      }   
-   }
+   ** for setuid clients we must seteuid to the users uid
+   */
+   if (sge_run_as_user()) {   
+      CRITICAL((SGE_EVENT, MSG_SYSTEM_CANTRUNASCALLINGUSER));
+      SGE_EXIT(1);
+   }   
 
    sge_getme(sge_formal_prog_name);
+   memset(&path, 0, sizeof(path));
+   /* gdi lib call */ 
+   sge_setup_paths(uti_state_get_default_cell(), &path, alpp);
 
-   if (!sge_setup_paths(uti_state_get_default_cell(), &error_dstring)) {
-      if (alpp == NULL) {
-         CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
-      } else {
-         answer_list_add(alpp, sge_dstring_get_string(&error_dstring), 
-                         STATUS_NOCONFIG, ANSWER_QUALITY_ERROR);
-      }
-      sge_dstring_free(&error_dstring);
+   if (alpp && *alpp){
       DEXIT;
-      return -1;
+      return;
    }
 
-   if (!sge_bootstrap(&error_dstring)) {
-      if (alpp == NULL || is_exit_on_error) {
-         CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
-      } else {
-         answer_list_add(alpp, sge_dstring_get_string(&error_dstring), 
-                         STATUS_NOCONFIG, ANSWER_QUALITY_ERROR);
-      }
-      sge_dstring_free(&error_dstring);
-      if (!is_exit_on_error) {
-         DEXIT;
-         return -1;
-      }
+   /* gdi lib call */ 
+   if (feature_initialize_from_file(path.product_mode_file)) {
       SGE_EXIT(1);
    }
 
-   if (feature_initialize_from_string(bootstrap_get_security_mode())) {
-      /*
-      if (alpp == NULL || is_exit_on_error) {
-         CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
-      } 
-      else {
-         answer_list_add(alpp, sge_dstring_get_string(&error_dstring), 
-                         STATUS_NOCONFIG, ANSWER_QUALITY_ERROR);
-      }
-      sge_dstring_free(&error_dstring);
-      */
-      if (!is_exit_on_error) {
-         DEXIT;
-         return -1;
-      }
+   /* initialize hostcompare policy consisting 
+      of default_domain and ignore_fqdn settings */
+   if (init_hostcpy_policy()) {
       SGE_EXIT(1);
    }
-
+      
    /* qmaster and shadowd should not fail on nonexistant act_qmaster file */
+   /* gdi lib call */
    if (!(uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == SHADOWD) && !sge_get_master(1)) {
-      if (!is_exit_on_error) {
-         if (alpp) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
-                        path_state_get_act_qmaster_file()));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         }
+      if (alpp) {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
+                     path.act_qmaster_file));
+   /* gdi lib call */
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
-         return -1;
+         return;
       }
-      else {
-         CRITICAL((SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S, path_state_get_act_qmaster_file()));   
-      }
-      SGE_EXIT(1);
+      else
+         SGE_EXIT(1);
    }
 
 #ifdef COMMCOMPRESS
@@ -199,31 +138,11 @@ lList **alpp
    }
 #endif
 
-   
-
    DEXIT;
-   return 0;
+   return;
 }
 
-/****** setup/reresolve_me_qualified_hostname() ********************************
-*  NAME
-*     reresolve_me_qualified_hostname() -- resolve the own hostname
-*
-*  SYNOPSIS
-*     int reresolve_me_qualified_hostname(void) 
-*
-*  FUNCTION
-*     Resolves hostname using commlib getuniquehostname(). This is usually
-*     done to get hostname resolving results that is in compliance with
-*     sge_hostalias file in common directory.
-*
-*  RESULT
-*     int - CR_OK on success
-*
-*  NOTES
-*     MT-NOTE: reresolve_me_qualified_hostname() is MT safe
-*******************************************************************************/
-int reresolve_me_qualified_hostname(void)
+int reresolve_me_qualified_hostname()
 {
    int ret;
    char unique_hostname[MAXHOSTLEN];
@@ -233,9 +152,9 @@ int reresolve_me_qualified_hostname(void)
    /*
    ** get aliased hostname from commd
    */
-   if ((ret=getuniquehostname(uti_state_get_qualified_hostname(), unique_hostname, 0))!=CL_RETVAL_OK) {
+   if ((ret=getuniquehostname(uti_state_get_qualified_hostname(), unique_hostname, 0))!=CL_OK) {
       WARNING((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_SS, 
-               uti_state_get_qualified_hostname(), cl_get_error_text(ret)));
+               uti_state_get_qualified_hostname(), cl_errstr(ret)));
       DEXIT;
       return ret;
    }
@@ -243,6 +162,31 @@ int reresolve_me_qualified_hostname(void)
    uti_state_set_qualified_hostname(unique_hostname);
    DPRINTF(("me.qualified_hostname: %s\n", uti_state_get_qualified_hostname()));
    DEXIT;
-   return CL_RETVAL_OK;
+   return CL_OK;
 }
 
+/* initialize policy used in hostcpy() consisting of
+   default_domain and ignore_fqdn settings */
+static int init_hostcpy_policy(void)
+{
+   const char *name[2] = { "ignore_fqdn", "default_domain" };
+   u_long32 uval;
+   char value[2][1025];
+
+   DENTER(TOP_LAYER, "init_hostcpy_policy");
+
+   if (sge_get_confval_array(path.conf_file, 2, name, value)) {
+      ERROR((SGE_EVENT, MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S,
+      path.conf_file));
+      DEXIT;
+      return -1;
+   }
+
+   DPRINTF(("ignore_fqdn: %s default_domain: %s\n", value[0], value[1]));
+   parse_ulong_val(NULL, &uval, TYPE_BOO, value[0], NULL, 0);
+   uti_state_set_fqdn_cmp(!uval);
+   uti_state_set_default_domain(value[1]);
+
+   DEXIT;
+   return 0;
+}

@@ -33,5 +33,6 @@
 /*___INFO__MARK_END__*/
 
 void sge_job_exit(lListElem *jr, lListElem *jep, lListElem *jatep);
+void sge_log_dusage(lListElem *jr, lListElem *jep, lListElem *jatep);
 
 #endif /* _JOB_EXIT_H_ */

@@ -68,25 +68,6 @@ static void get_spool_dir_parts(u_long32 job_id, char *first, char *second,
                                 char *third);
 
 
-/****** sge_spool/get_spool_dir_range() ****************************************
-*  NAME
-*     get_spool_dir_range() -- ??? 
-*
-*  SYNOPSIS
-*     static void get_spool_dir_range(u_long32 ja_task_id, u_long32 *start, 
-*     u_long32 *end) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     u_long32 ja_task_id - ??? 
-*     u_long32 *start     - ??? 
-*     u_long32 *end       - ??? 
-*
-*  NOTES
-*     MT-NOTE: get_spool_dir_range() is not MT safe
-*******************************************************************************/
 static void get_spool_dir_range(u_long32 ja_task_id, u_long32 *start, 
                                 u_long32 *end)
 {
@@ -96,23 +77,6 @@ static void get_spool_dir_range(u_long32 ja_task_id, u_long32 *start,
    *end = (row + 1) * sge_get_ja_tasks_per_directory();
 }
 
-/****** sge_spool/get_spool_dir_parts() ****************************************
-*  NAME
-*     get_spool_dir_parts() -- ??? 
-*
-*  SYNOPSIS
-*     static void get_spool_dir_parts(u_long32 job_id, char *first, char 
-*     *second, char *third) 
-*
-*  INPUTS
-*     u_long32 job_id - ??? 
-*     char *first     - ??? 
-*     char *second    - ??? 
-*     char *third     - ??? 
-*
-*  NOTES
-*     MT-NOTE: get_spool_dir_parts() is MT safe
-*******************************************************************************/
 static void get_spool_dir_parts(u_long32 job_id, char *first, char *second, 
                                 char *third)
 {
@@ -123,22 +87,6 @@ static void get_spool_dir_parts(u_long32 job_id, char *first, char *second,
    sprintf(first, "%02d", (int)(job_id % 10000l));  
 }
 
-/****** sge_spool/sge_get_ja_tasks_per_directory() *****************************
-*  NAME
-*     sge_get_ja_tasks_per_directory() -- Configured number of tasks per dir
-*
-*  SYNOPSIS
-*     u_long32 sge_get_ja_tasks_per_directory(void) 
-*
-*  FUNCTION
-*     Returns the configured number of tasks per directory
-*
-*  RESULT
-*     u_long32 - the number
-*
-*  NOTES
-*     MT-NOTE: sge_get_ja_tasks_per_directory() is not MT safe
-*******************************************************************************/
 u_long32 sge_get_ja_tasks_per_directory(void) {
    static u_long32 tasks_per_directory = 0;
 
@@ -156,22 +104,6 @@ u_long32 sge_get_ja_tasks_per_directory(void) {
    return tasks_per_directory;
 }
  
-/****** sge_spool/sge_get_ja_tasks_per_file() **********************************
-*  NAME
-*     sge_get_ja_tasks_per_file() -- Configured number of tasks per file
-*
-*  SYNOPSIS
-*     u_long32 sge_get_ja_tasks_per_file(void) 
-*
-*  FUNCTION
-*     Returns the configured number of tasks per file
-*
-*  RESULT
-*     u_long32 - the number
-*
-*  NOTES
-*     MT-NOTE: sge_get_ja_tasks_per_file() is not MT safe
-*******************************************************************************/
 u_long32 sge_get_ja_tasks_per_file(void) {
    static u_long32 tasks_per_file = 0;
  
@@ -215,9 +147,6 @@ u_long32 sge_get_ja_tasks_per_file(void) {
 *
 *  RESULT
 *     char* - equivalent with 'buffer' 
-*
-*  NOTES
-*     MT-NOTE: sge_get_file_path() is not MT safe due to get_spool_dir_range()
 *
 *  SEE ALSO
 *     uti/spool/sge_file_path_id_t
@@ -340,9 +269,6 @@ char *sge_get_file_path(char *buffer, sge_file_path_id_t id,
 *     int - result
 *        0 - OK
 *        1 - Invalid filename  
-*
-*  NOTES
-*     MT-NOTE: sge_is_valid_filename2() is MT safe
 ******************************************************************************/
 int sge_is_valid_filename2(const char *fname) 
 {
@@ -386,9 +312,6 @@ int sge_is_valid_filename2(const char *fname)
 *     int - result
 *         0 - valid filename
 *         1 - invalid filename
-*
-*  NOTES
-*     MT-NOTE: sge_is_valid_filename() is MT safe
 ******************************************************************************/
 int sge_is_valid_filename(const char *fname)
 {
@@ -423,9 +346,6 @@ int sge_is_valid_filename(const char *fname)
 *
 *  RESULT
 *     -1 on error else 0
-*
-*  NOTES
-*     MT-NOTE: sge_spoolmsg_write() is not MT safe due to FPRINTF() macro
 ******************************************************************************/
 int sge_spoolmsg_write(FILE *file, const char comment_char, const char *version){
    int i;
@@ -460,9 +380,6 @@ FPRINTF_ERROR:
 *
 *  RESULT
 *     pid_t - process id
-*  
-*  NOTES
-*     MT-NOTE: sge_readpid() is MT safe.
 ******************************************************************************/ 
 pid_t sge_readpid(const char *fname)
 {
@@ -478,15 +395,12 @@ pid_t sge_readpid(const char *fname)
    }
  
    pid = 0;
-   while (fgets(buf, sizeof(buf), fp))
-   {
-      char *pos = NULL;
-
+   while (fgets(buf, sizeof(buf), fp)) {
       /*
        * set chrptr to the first non blank character
        * If line is empty continue with next line
        */
-       if(!(cp = strtok_r(buf, " \t\n", &pos))) {
+       if(!(cp = strtok(buf, " \t\n"))) {
           continue;
        }
  
@@ -503,7 +417,7 @@ pid_t sge_readpid(const char *fname)
  
    DEXIT;
    return pid;
-} /* sge_readpid() */        
+}        
 
 /****** uti/spool/sge_write_pid() *********************************************
 *  NAME
@@ -517,9 +431,6 @@ pid_t sge_readpid(const char *fname)
 *
 *  INPUTS
 *     const char *pid_log_file - filename
-*  
-*  NOTES
-*     MT-NOTE: sge_write_pid() is MT safe
 ******************************************************************************/
 void sge_write_pid(const char *pid_log_file)
 {
@@ -557,11 +468,9 @@ void sge_write_pid(const char *pid_log_file)
 *     char* - pointer to internal static buffer
 *
 *  NOTES
-*     Lines may be up to 1024 characters long. Up to 1024 characters of the
-*     config value are copied to the static buffer.
-*
-*  NOTES
-*     MT-NOTE: sge_get_confval() is MT safe
+*     This function uses strtok(). Lines may be up to 1024 characters
+*     long. Up to 1024 characters of the config value are copied
+*     to the static buffer.
 ******************************************************************************/
 char *sge_get_confval(const char *conf_val, const char *fname)
 {
@@ -569,7 +478,7 @@ char *sge_get_confval(const char *conf_val, const char *fname)
    const char *namev[1];
 
    namev[0] = conf_val;
-   if (sge_get_confval_array(fname, 1, namev, valuev, NULL)) {
+   if (sge_get_confval_array(fname, 1, namev, valuev)) {
       return NULL;
    } else {
       return valuev[0];
@@ -583,8 +492,7 @@ char *sge_get_confval(const char *conf_val, const char *fname)
 *  SYNOPSIS
 *     int sge_get_confval_array(const char *fname, int n, 
 *                               const char *name[], 
-*                               char value[][1025],
-*                               dstring *error_dstring) 
+*                               char value[][1025]) 
 *
 *  FUNCTION
 *     Reads in an array of configuration file entries
@@ -594,42 +502,36 @@ char *sge_get_confval(const char *conf_val, const char *fname)
 *
 *  BUGS
 *     Function can not differ multiple similar named entries.
-*
-*  NOTES
-*     MT-NOTE: sge_get_confval_array() is MT safe
 ******************************************************************************/
 int sge_get_confval_array(const char *fname, int n, const char *name[], 
-                          char value[][1025], dstring *error_dstring) 
+                          char value[][1025]) 
 {
    FILE *fp;
    char buf[1024], *cp;
    int i, nmissing = n;
-   bool *is_found = NULL;
    
    DENTER(TOP_LAYER, "sge_get_confval_array");
 
+#if 0
+   /*  this may cause problems if a previous call has set a char* pointer
+       to this buffer and uses the pointer after a second call, this
+       would cause a "" string for that array where the pointer is set to!
+   */
+   for (i=0; i<n; i++)
+      value[i][0] = '\0';
+#endif
+
    if (!(fp = fopen(fname, "r"))) {
-      if (error_dstring == NULL){
-         CRITICAL((SGE_EVENT, MSG_FILE_FOPENFAILED_SS, fname, strerror(errno)));
-      }
-      else {
-         sge_dstring_sprintf(error_dstring, MSG_FILE_FOPENFAILED_SS, 
-                             fname, strerror(errno));
-      }
+      ERROR((SGE_EVENT, MSG_FILE_FOPENFAILED_SS, fname, strerror(errno)));
       DEXIT;
       return n;
    }
-   is_found = malloc(sizeof(bool) * n);
-   memset(is_found, false, n * sizeof(bool));
-   
-   while (fgets(buf, sizeof(buf), fp))
-   {
-      char *pos = NULL;
 
+   while (fgets(buf, sizeof(buf), fp)) {
       /* set chrptr to the first non blank character
        * If line is empty continue with next line
        */
-      if(!(cp = strtok_r(buf, " \t\n", &pos)))
+      if(!(cp = strtok(buf, " \t\n")))
           continue;
 
       /* allow commentaries */
@@ -638,12 +540,10 @@ int sge_get_confval_array(const char *fname, int n, const char *name[],
    
       /* search for all requested configuration values */ 
       for (i=0; i<n; i++)
-         if (!strcasecmp(name[i], cp) && (cp = strtok_r(NULL, " \t\n", &pos))) {
+         if (!strcasecmp(name[i], cp) && (cp = strtok(NULL, " \t\n"))) {
              strncpy(value[i], cp, 512);
              cp = value[i];
-             is_found[i] = true;
              if (!--nmissing) {
-                FREE(is_found);
                 fclose(fp);
                 DEXIT;
                 return 0;
@@ -652,25 +552,10 @@ int sge_get_confval_array(const char *fname, int n, const char *name[],
          }
    }
 
-   for (i=0; i<n; i++) {
-      if (!is_found[i]) {
-         if (error_dstring == NULL){
-            CRITICAL((SGE_EVENT, MSG_UTI_CANNOTLOCATEATTRIBUTE_SS, name[i], fname));
-         }
-         else {
-            sge_dstring_sprintf(error_dstring, MSG_UTI_CANNOTLOCATEATTRIBUTE_SS, 
-                                name[i], fname);
-         }
-         
-         break;
-      }
-   }
-   
-   FREE(is_found);
    fclose(fp);
    DEXIT;
    return nmissing;
-} /* sge_get_confval_array() */
+}
 
 
 
@@ -691,9 +576,6 @@ int sge_get_confval_array(const char *fname, int n, const char *name[],
 *     washing_machine_t type - display type
 *        STATUS_ROTATING_BAR
 *        STATUS_DOTS
-*
-*  NOTES
-*     MT-NOTE: sge_status_set_type() is not MT safe
 ******************************************************************************/
 void sge_status_set_type(washing_machine_t type)
 {
@@ -709,9 +591,6 @@ void sge_status_set_type(washing_machine_t type)
 *
 *  FUNCTION
 *     Show next turn of rotating washing machine.
-*
-*  NOTES
-*     MT-NOTE: sge_status_next_turn() is not MT safe
 ******************************************************************************/
 void sge_status_next_turn(void)
 {
@@ -758,9 +637,6 @@ void sge_status_next_turn(void)
 *
 *  FUNCTION
 *     Last turn of washing machine.
-*
-*  NOTES
-*     MT-NOTE: sge_status_end_turn() is not MT safe
 ******************************************************************************/
 void sge_status_end_turn(void)
 {
@@ -798,9 +674,6 @@ void sge_status_end_turn(void)
 *
 *  SEE ALSO
 *     uti/spool/sge_silent_get() 
-*
-*  NOTES
-*     MT-NOTE: sge_silent_set() is not MT safe
 ******************************************************************************/
 void sge_silent_set(int i) 
 {
@@ -823,9 +696,6 @@ void sge_silent_set(int i)
 *
 *  SEE ALSO
 *     uti/spool/sge_silent_set() 
-*
-*  NOTES
-*     MT-NOTE: sge_silent_get() is not MT safe
 ******************************************************************************/
 int sge_silent_get()
 {

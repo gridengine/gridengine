@@ -501,9 +501,7 @@ proc spool_array_to_file { filename obj_name array_name { write_comment 1 } } {
          set obj_start [search_for_obj_start file_dat $obj]
          set obj_end   [search_for_obj_end file_dat $obj]
          for { set i $obj_start } { $i <= $obj_end  } { incr i 1 } {
-            if { [string first "#" $file_dat($i) ] == 0 } {
-               incr i 1
-            }
+            incr i 1
             set spec [unpack_data_line $file_dat($i)]
             incr i 1
             set spec_data [unpack_data_line $file_dat($i)]
@@ -523,7 +521,6 @@ proc spool_array_to_file { filename obj_name array_name { write_comment 1 } } {
          } 
       }
    }
-
 
    # puts $CHECK_OUTPUT "saving new data ..."
    # here we store the new data
@@ -548,7 +545,6 @@ proc spool_array_to_file { filename obj_name array_name { write_comment 1 } } {
       set new_file_dat($act_line) "OBJ_END:$obj_name:"
       set new_file_dat(0) $act_line
    }
-
 
    # now write tmp new file_dat
    save_file $filename.tmp new_file_dat
@@ -687,7 +683,7 @@ proc read_file { filename array_name } {
    
    if { [file isfile $filename] != 1 } {
       set data(0) 0
-      puts $CHECK_OUTPUT "read_file - returning empty file data structure, no such file"
+      puts $CHECK_OUTPUT "\"$filename\" is not a file"
       return
    }
    set file [open $filename "r"]
@@ -979,14 +975,10 @@ proc read_array_from_file_data { file_data obj_name array_name { enable_washing_
   if { $obj_end < 0 } {
      return -1
   }
-#  puts $CHECK_OUTPUT "start: $obj_start"
-#  puts $CHECK_OUTPUT "end: $obj_end"
   set wcount 0
   set time 0
   for { set i $obj_start } { $i <= $obj_end  } { incr i 1 } {
-     if { [string first "#" $file_dat($i)] == 0 } {
-        incr i 1
-     }
+     incr i 1
      set spec [unpack_data_line $file_dat($i)]
      incr i 1
      set spec_data [unpack_data_line $file_dat($i)]
@@ -998,7 +990,6 @@ proc read_array_from_file_data { file_data obj_name array_name { enable_washing_
         incr time 1
      }
      incr wcount 1
-     
   }
   return 0
 }
@@ -1219,18 +1210,10 @@ proc create_html_table { array_name { border 0 } { align LEFT } } {
    for {set row 1} { $row <= $table(ROWS) } { incr row 1 } {
       append back "<tr ALIGN=$align VALIGN=CENTER BGCOLOR=\"$table($row,BGCOLOR)\" NOSAVE>\n"
       for {set col 1} { $col <= $table(COLS) } { incr col 1 } {
-         if { [info exists table($row,$col)] } {
-            if { [ info exists table($row,$col,FNCOLOR) ] } {
-               append back "<td NOSAVE><b><font color=\"$table($row,$col,FNCOLOR)\"><font size=+1>$table($row,$col)</font></font></b></td>\n"
-            } else {
-               append back "<td NOSAVE><b><font color=\"$table($row,FNCOLOR)\"><font size=+1>$table($row,$col)</font></font></b></td>\n"
-            }
+         if { [ info exists table($row,$col,FNCOLOR) ] } {
+            append back "<td NOSAVE><b><font color=\"$table($row,$col,FNCOLOR)\"><font size=+1>$table($row,$col)</font></font></b></td>\n"
          } else {
-            if { [ info exists table($row,$col,FNCOLOR) ] } {
-               append back "<td NOSAVE><b><font color=\"$table($row,$col,FNCOLOR)\"><font size=+1></font></font></b></td>\n"
-            } else {
-               append back "<td NOSAVE><b><font color=\"$table($row,FNCOLOR)\"><font size=+1></font></font></b></td>\n"
-            }
+            append back "<td NOSAVE><b><font color=\"$table($row,FNCOLOR)\"><font size=+1>$table($row,$col)</font></font></b></td>\n"
          }
       }
       append back "</tr>\n"
@@ -1526,11 +1509,6 @@ proc create_shell_script { scriptfile
       if { [info exists CHECK_COMMD_PORT] } {
          puts $script "   COMMD_PORT=$CHECK_COMMD_PORT"
          puts $script "   export COMMD_PORT"
-         puts $script "   SGE_QMASTER_PORT=$CHECK_COMMD_PORT"
-         puts $script "   export SGE_QMASTER_PORT"
-         set my_execd_port [expr ($CHECK_COMMD_PORT + 1) ]
-         puts $script "   SGE_EXECD_PORT=$my_execd_port"
-         puts $script "   export SGE_EXECD_PORT"
       }
       if { [info exists CHECK_PRODUCT_ROOT] } {
          puts $script "   SGE_ROOT=$CHECK_PRODUCT_ROOT"
@@ -1539,9 +1517,6 @@ proc create_shell_script { scriptfile
       if { $source_settings_file == 1 } {
          puts $script "fi"
       }
-
-      puts $script "SGE_SINGLE_LINE=1"
-      puts $script "export SGE_SINGLE_LINE"
    
       foreach u_env [ array names users_env ] {
          set u_val [set users_env($u_env)] 
@@ -1798,7 +1773,7 @@ proc copy_directory { source target } {
 #     ??? 
 #
 #  SEE ALSO
-#     file_procedures/delete_directory()
+#     file_procedures/delete_directory
 #*******************************
 proc cleanup_spool_dir { topleveldir subdir } {
    global CHECK_COMMD_PORT CHECK_OUTPUT
@@ -1852,146 +1827,6 @@ proc cleanup_spool_dir { topleveldir subdir } {
    return $spooldir
 }
 
-
-#****** file_procedures/cleanup_spool_dir_for_host() ***************************
-#  NAME
-#     cleanup_spool_dir_for_host() -- create or cleanup spool directory
-#
-#  SYNOPSIS
-#     cleanup_spool_dir_for_host { hostname topleveldir subdir } 
-#
-#  FUNCTION
-#     This procedure will create or cleanup old entries in the qmaster or execd 
-#     spool directory
-#
-#  INPUTS
-#     hostname    - remote host where to cleanup spooldir
-#     topleveldir - path to spool toplevel directory ( updir of qmaster and execd )
-#     subdir      - this paramter is master or execd
-#
-#  RESULT
-#     if ok the procedure returns the correct spool directory. It returns  on 
-#     error 
-#
-#  SEE ALSO
-#     file_procedures/cleanup_spool_dir()
-#*******************************************************************************
-proc cleanup_spool_dir_for_host { hostname topleveldir subdir } {
-   global CHECK_COMMD_PORT CHECK_OUTPUT CHECK_DEBUG_LEVEL
-
-   set spooldir "$topleveldir"
-
-   puts $CHECK_OUTPUT "->spool toplevel directory is $spooldir"
-   
-   if { [ remote_file_isdirectory $hostname $spooldir ] == 1 } {
-      set spooldir "$spooldir/$CHECK_COMMD_PORT"
-      if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } { 
-          puts $CHECK_OUTPUT "creating directory \"$spooldir\""
-          remote_file_mkdir $hostname $spooldir
-          if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } {
-              puts $CHECK_OUTPUT "could not create directory \"$spooldir\""
-              add_proc_error "cleanup_spool_dir" "-1" "could not create directory \"$spooldir\""
-          }
-      }
-      set spooldir "$spooldir/$subdir"
-
-      if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } {
-          puts $CHECK_OUTPUT "creating directory \"$spooldir\""
-          remote_file_mkdir $hostname $spooldir
-          if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } {
-              puts $CHECK_OUTPUT "could not create directory \"$spooldir\""
-              add_proc_error "cleanup_spool_dir" "-1" "could not create directory \"$spooldir\""
-          } 
-      } else {
-         if { [string compare $spooldir "" ] != 0 } {
-             puts $CHECK_OUTPUT "deleting old spool dir entries in \"$spooldir\""
-             if { [remote_delete_directory $hostname $spooldir] != 0 } { 
-                puts $CHECK_OUTPUT "could not remove spool directory $spooldir"
-                add_proc_error "cleanup_spool_dir" -2 "could not remove spool directory $spooldir"
-             }
-             puts $CHECK_OUTPUT "creating directory \"$spooldir\""
-             remote_file_mkdir $hostname $spooldir
-             if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } {
-                puts $CHECK_OUTPUT "could not create directory \"$spooldir\" after moving to trash folder"
-                add_proc_error "cleanup_spool_dir" "-1" "could not create directory \"$spooldir\""
-             } 
-         }
-      }
-      puts $CHECK_OUTPUT "local spooldir is \"$spooldir\""
-   } else {
-      add_proc_error "cleanup_spool_dir" "-1" "toplevel spool directory \"$spooldir\" not found"
-      puts $CHECK_OUTPUT "using no spool dir"
-      set spooldir ""
-   }
-   puts "$spooldir"
-   return $spooldir
-}
-
-
-# return 0 if not
-# return 1 if is directory
-proc remote_file_isdirectory { hostname dir } {
-  start_remote_prog $hostname "ts_def_con2" "cd" "$dir" prg_exit_state 60 0 "" 1 0 1
-  if { $prg_exit_state == 0 } {
-     return 1  
-  }
-  return 0
-}
-
-proc remote_file_mkdir { hostname dir } {
-  start_remote_prog $hostname "ts_def_con2" "mkdir" "$dir" prg_exit_state 60 0 "" 1 0 1
-}
-
-proc remote_delete_directory { hostname path } { 
-   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
-
-   set return_value -1
-   puts $CHECK_OUTPUT "$hostname -> path to delete: \"$path\""
-   if {[file isdirectory "$CHECK_TESTSUITE_ROOT/testsuite_trash"] != 1} {
-      file mkdir "$CHECK_TESTSUITE_ROOT/testsuite_trash"
-   }
-
-   if { [remote_file_isdirectory $hostname $path] != 1} {
-      puts $CHECK_OUTPUT "delete_directory - no such directory: \"$path\""
-      add_proc_error "delete_directory" -1 "no such directory: \"$path\""
-      return -1     
-   }
- 
-   if { [string length $path ] > 10 } {
-      puts $CHECK_OUTPUT "delete_directory - moving \"$path\" to trash folder ..."
-      set new_name [ file tail $path ] 
-
-      start_remote_prog $hostname "ts_def_con2" "mv" "$path $CHECK_TESTSUITE_ROOT/testsuite_trash/$new_name.[timestamp]" prg_exit_state 60 0 "" 1 0 1
-      if { $prg_exit_state != 0 } {
-         puts $CHECK_OUTPUT "delete_directory - mv error"
-         puts $CHECK_OUTPUT "delete_directory - try to copy the directory"
-         start_remote_prog $hostname "ts_def_con2" "cp" "-r $path $CHECK_TESTSUITE_ROOT/testsuite_trash/$new_name.[timestamp]" prg_exit_state 60 0 "" 1 0 1
-         if { $prg_exit_state != 0 } {
-            puts $CHECK_OUTPUT "could not mv/cp directory \"$path\" to trash folder"
-            add_proc_error "delete_directory" -1 "could not mv/cp directory \"$path\" to trash folder"
-            set return_value -1
-         } else { 
-            puts $CHECK_OUTPUT "copy ok -  removing directory"
-            start_remote_prog $hostname "ts_def_con2" "rm" "-rf $path" prg_exit_state 60 0 "" 1 0 1
-            if { $prg_exit_state != 0 } {
-               puts $CHECK_OUTPUT "could not remove directory \"$path\""
-               add_proc_error "delete_directory" -1 "could not remove directory \"$path\""
-               set return_value -1
-            } else {
-               puts $CHECK_OUTPUT "done"
-               set return_value 0
-            }
-         }
-      } else {
-         set return_value 0
-      }
-   } else {
-      puts $CHECK_OUTPUT "delete_directory - path is to short. Will not delete\n\"$path\""
-      add_proc_error "delete_directory" "-1" "path is to short. Will not delete\n\"$path\""
-      set return_value -1
-   }
-  return $return_value
-}
 
 
 #                                                             max. column:     |
@@ -2075,7 +1910,7 @@ proc delete_file { filename } {
  
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
 
-   wait_for_file "$filename" 60 0 0 ;# wait for file, no error reporting!
+   wait_for_file "$filename" 200 0 0 ;# wait for file, no error reporting!
 
    if {[file isdirectory "$CHECK_TESTSUITE_ROOT/testsuite_trash"] != 1} {
       file mkdir "$CHECK_TESTSUITE_ROOT/testsuite_trash"
@@ -2237,11 +2072,9 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
    if { $is_ok == 1 } {
       puts $CHECK_OUTPUT "ok"
       puts $CHECK_OUTPUT "found prog: $output"
-      return 0;
    } else {
       puts $CHECK_OUTPUT "timeout"
       add_proc_error "wait_for_remote_file" -1 "timeout while waiting for file $path on host $hostname"
-      return -1;
    }
 }
 
@@ -2280,7 +2113,7 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
 #*******************************
 
 proc delete_directory { path } { 
-   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_USER CHECK_HOST
+   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
 
    set return_value -1
    puts $CHECK_OUTPUT "path to delete: \"$path\""
@@ -2295,39 +2128,6 @@ proc delete_directory { path } {
    }
  
    if { [string length $path ] > 10 } {
-      
-      puts $CHECK_OUTPUT "delete_directory - testing file owner ..."
-      set del_files ""
-      set dirs [get_all_subdirectories $path ]
-      foreach dir $dirs {
-         set file_attributes [file attributes $path/$dir]
-         if { [string match "*owner $CHECK_USER*" $file_attributes] != 1 } {
-            puts $CHECK_OUTPUT "directory $path/$dir not owned by user $CHECK_USER"
-            start_remote_prog $CHECK_HOST "root" chown "-R $CHECK_USER $path/$dir" prg_exit_state 60 0 "" 1 0 0
-            if { $prg_exit_state == 0 } {
-               puts $CHECK_OUTPUT "set directory owner to $CHECK_USER"
-            } else {
-               puts $CHECK_OUTPUT "error setting directory permissions!"
-            }
-         }
-         set files [get_file_names $path/$dir "*"]
-         foreach file $files { 
-            lappend del_files $path/$dir/$file
-         }
-      }
-      
-      foreach file $del_files {
-         set file_attributes [file attributes $file]
-         if { [string match "*owner $CHECK_USER*" $file_attributes] != 1 } {
-            puts $CHECK_OUTPUT "$file not owned by user $CHECK_USER"
-            start_remote_prog $CHECK_HOST "root" chown "$CHECK_USER $file" prg_exit_state 60 0 "" 1 0 0
-            if { $prg_exit_state == 0 } {
-               puts $CHECK_OUTPUT "set file owner to $CHECK_USER"
-            } else {
-               puts $CHECK_OUTPUT "error setting file permissions!"
-            }
-         }
-      }
       puts $CHECK_OUTPUT "delete_directory - moving \"$path\" to trash folder ..."
       set new_name [ file tail $path ] 
       set catch_return [ catch { 
@@ -2336,13 +2136,11 @@ proc delete_directory { path } {
       if { $catch_return != 0 } {
          puts $CHECK_OUTPUT "delete_directory - mv error:\n$result"
          puts $CHECK_OUTPUT "delete_directory - try to copy the directory"
-         
          set catch_return [ catch { 
             eval exec "cp -r $path $CHECK_TESTSUITE_ROOT/testsuite_trash/$new_name.[timestamp]" 
          } result ] 
          if { $catch_return != 0 } {
-            puts $CHECK_OUTPUT "could not mv/cp directory \"$path\" to trash folder!"
-            puts $CHECK_OUTPUT $result
+            puts $CHECK_OUTPUT "could not mv/cp directory \"$path\" to trash folder, $result"
             add_proc_error "delete_directory" -1 "could not mv/cp directory \"$path\" to trash folder, $result"
             set return_value -1
          } else { 
@@ -2696,31 +2494,31 @@ proc create_path_aliasing_file { filename data elements} {
 }
 
 
-#if { [info exists argc ] != 0 } {
-#   set TS_ROOT ""
-#   set procedure ""
-#   for { set i 0 } { $i < $argc } { incr i } {
-#      if {$i == 0} { set TS_ROOT [lindex $argv $i] }
-#      if {$i == 1} { set procedure [lindex $argv $i] }
-#   }
-#   if { $argc == 0 } {
-#      puts "usage:\nfile_procedures.tcl <CHECK_TESTSUITE_ROOT> <proc> no_main <testsuite params>"
-#      puts "options:"
-#      puts "CHECK_TESTSUITE_ROOT -  path to TESTSUITE directory"
-#      puts "proc                 -  procedure from this file with parameters"
-#      puts "no_main              -  used to source testsuite file (check.exp)"
-#      puts "testsuite params     -  any testsuite command option (from file check.exp)"
-#      puts "                        testsuite params: file <path>/defaults.sav is needed"
-#   } else {
-#      source "$TS_ROOT/check.exp"
-#      if { $be_quiet == 0 } {
-#          puts $CHECK_OUTPUT "master host is $CHECK_CORE_MASTER"
-#          puts $CHECK_OUTPUT "calling \"$procedure\" ..."
-#      }
-#      set result [ eval $procedure ]
-#      puts $result 
-#      flush $CHECK_OUTPUT
-#   }
-#} 
+if { [info exists argc ] != 0 } {
+   set TS_ROOT ""
+   set procedure ""
+   for { set i 0 } { $i < $argc } { incr i } {
+      if {$i == 0} { set TS_ROOT [lindex $argv $i] }
+      if {$i == 1} { set procedure [lindex $argv $i] }
+   }
+   if { $argc == 0 } {
+      puts "usage:\nfile_procedures.tcl <CHECK_TESTSUITE_ROOT> <proc> no_main <testsuite params>"
+      puts "options:"
+      puts "CHECK_TESTSUITE_ROOT -  path to TESTSUITE directory"
+      puts "proc                 -  procedure from this file with parameters"
+      puts "no_main              -  used to source testsuite file (check.exp)"
+      puts "testsuite params     -  any testsuite command option (from file check.exp)"
+      puts "                        testsuite params: file <path>/defaults.sav is needed"
+   } else {
+      source "$TS_ROOT/check.exp"
+      if { $be_quiet == 0 } {
+          puts $CHECK_OUTPUT "master host is $CHECK_CORE_MASTER"
+          puts $CHECK_OUTPUT "calling \"$procedure\" ..."
+      }
+      set result [ eval $procedure ]
+      puts $result 
+      flush $CHECK_OUTPUT
+   }
+} 
 
 

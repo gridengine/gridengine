@@ -29,15 +29,19 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <errno.h>
-#include <stdarg.h>
+
+/* do not compile in monitoring code */
+#ifndef NO_SGE_COMPILE_DEBUG
+#define NO_SGE_COMPILE_DEBUG
+#endif
 
 #include "msg_cull.h"
+#include <stdarg.h>
+
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_sortP.h"
@@ -47,19 +51,129 @@
 #include "cull_whatP.h"
 #include "cull_lerrnoP.h"
 #include "cull_hash.h"
-#include "cull_state.h"
 #include "pack.h"
 
-/* do not compile in monitoring code */
-#ifndef NO_SGE_COMPILE_DEBUG
-#define NO_SGE_COMPILE_DEBUG
-#endif
-
 #define CULL_BASIS_LAYER CULL_LAYER
+
+/* struct to store ALL state information of cull lib */
+struct cull_state_t {
+   int               lerrno;               /* cull errno                    */
+   char              noinit[50];           /* cull error buffer             */
+   const lSortOrder  *global_sort_order;   /* qsort() by-pass argument      */
+   int               chunk_size;           /* chunk size if packing         */
+   const lNameSpace  *name_space;          /* name vector                   */
+};
+
+#if defined(SGE_MT)
+#include <pthread.h>
+static pthread_key_t  cull_state_key;  
+#else
+static struct cull_state_t cull_state_opaque = { 
+  0,  "", NULL, CHUNK, NULL }; 
+struct cull_state_t *cull_state = &cull_state_opaque;
+#endif
 
 
 static void lWriteList_(const lList *lp, int nesting_level, FILE *fp);
 static void lWriteElem_(const lListElem *lp, int nesting_level, FILE *fp);
+
+#if defined(SGE_MT)
+static void cull_state_destroy(void* state) {
+   free(state);
+}
+   
+void cull_init_mt() {
+   pthread_key_create(&cull_state_key, &cull_state_destroy);
+}  
+   
+static void cull_state_init(struct cull_state_t* state) {
+   state->lerrno = 0;
+   state->noinit[0] = '\0';
+   state->global_sort_order = NULL;
+   state->chunk_size = CHUNK;
+   state->name_space = NULL;
+}
+#endif
+
+
+
+/****** cull/list/cull_state_get_????() ************************************
+*  NAME
+*     cull_state_get_????() - read access to cull global variables
+*
+*  FUNCTION
+*     Provides access to either global variable or per thread global variable.
+*
+******************************************************************************/
+int cull_state_get_lerrno(void) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   return cull_state->lerrno;
+}
+
+const char *cull_state_get_noinit(void) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   return cull_state->noinit;
+}
+
+const lSortOrder *cull_state_get_global_sort_order(void) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   return cull_state->global_sort_order;
+}
+
+int cull_state_get_chunk_size(void) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   return cull_state->chunk_size;
+}
+
+const lNameSpace *cull_state_get_name_space(void) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   return cull_state->name_space;
+}
+
+/****** cull/list/cull_state_set_????() ************************************
+*  NAME
+*     cull_state_set_????() - write access to cull global variables
+*
+*  FUNCTION
+*     Provides access to either global variable or per thread global variable.
+*
+******************************************************************************/
+
+void cull_state_set_lerrno(
+int errno
+) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   cull_state->lerrno = errno;
+}
+
+void cull_state_set_noinit(
+char *s
+) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   strcpy(cull_state->noinit, s);
+}
+
+void cull_state_set_global_sort_order(
+const lSortOrder *so
+) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   cull_state->global_sort_order = so;
+}
+
+void cull_state_set_chunk_size(
+int chunk_size
+) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   cull_state->chunk_size = chunk_size;
+}
+
+void cull_state_set_name_space(
+const lNameSpace  *ns
+) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   cull_state->name_space = ns;
+}
+
 
 
 /****** cull/list/-Field_Attributes *************************************************
@@ -424,9 +538,6 @@ const char *lGetListName(const lList *lp)
 *
 *  RESULT
 *     const lDescr* - destriptor 
-*  
-*  NOTES
-*     MT-NOTE: lGetListDescr() is MT safe
 ******************************************************************************/
 const lDescr *lGetListDescr(const lList *lp) 
 {
@@ -456,9 +567,6 @@ const lDescr *lGetListDescr(const lList *lp)
 *
 *  RESULT
 *     int - number of elements 
-* 
-*  NOTES
-*     MT-NOTE: lGetNumberOfElem() is MT safe
 ******************************************************************************/
 int lGetNumberOfElem(const lList *lp) 
 {
@@ -643,145 +751,130 @@ static void lWriteElem_(const lListElem *ep, int nesting_level, FILE *fp)
       space[i] = ' ';
    space[i] = '\0';
 
-   if (!fp) {
+   if (!fp)
       DPRINTF(("%s-------------------------------\n", space));
-   } else {
+   else
       fprintf(fp, "%s-------------------------------\n", space);
-   }
 
    for (i = 0; ep->descr[i].mt != lEndT; i++) {
       int changed = sge_bitfield_get(ep->changed, i);
       switch (mt_get_type(ep->descr[i].mt)) {
       case lIntT:
-         if (!fp) {
+         if (!fp)
             DPRINTF(("%s%-20.20s (Integer) %c = %d\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosInt(ep, i)));
-         } else {
+         else
             fprintf(fp, "%s%-20.20s (Integer) %c = %d\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosInt(ep, i));
-         }
          break;
       case lUlongT:
-         if (!fp) {
+         if (!fp)
             DPRINTF(("%s%-20.20s (Ulong)   %c = " u32"\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i)));
-         } else {
+         else
             fprintf(fp, "%s%-20.20s (Ulong)   %c = " u32"\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i));
-         }
          break;
       case lStringT:
          str = lGetPosString(ep, i);
-         if (!fp) {
+         if (!fp)
             DPRINTF(("%s%-20.20s (String)  %c = %s\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)"));
-         } else {
+         else
             fprintf(fp, "%s%-20.20s (String)  %c = %s\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
-         }
          break;
 
       case lHostT:
          str = lGetPosHost(ep, i);
-         if (!fp) {
+         if (!fp)
             DPRINTF(("%s%-20.20s (Host)    %c = %s\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)"));
-         } else {
+         else
             fprintf(fp, "%s%-20.20s (Host)    %c = %s\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
-         }
          break;
 
       case lListT:
          tlp = lGetPosList(ep, i);
-         if (!fp) {
+         if (!fp)
             DPRINTF(("%s%-20.20s (List)    %c = %s\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tlp ? "full {" : "empty"));
-         } else {
+         else
             fprintf(fp, "%s%-20.20s (List)    %c = %s\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tlp ? "full {" : "empty");
-         }
          if (tlp) {
             lWriteList_(tlp, nesting_level + 1, fp);
-            if (!fp) {
+            if (!fp)
                DPRINTF(("%s}\n", space));
-            } else {
+            else
                fprintf(fp, "%s}\n", space);
-            }
          }
          break;
 
       case lObjectT:
          tep = lGetPosObject(ep, i);
-         if (!fp) {
+         if (!fp)
             DPRINTF(("%s%-20.20s (Object)  %c = %s\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tep ? "object {" : "none"));
-         } else {
+         else
             fprintf(fp, "%s%-20.20s (Object)  %c = %s\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tep ? "object {" : "none");
-         }
          if (tep) {
             lWriteElem_(tep, nesting_level + 1, fp);
-            if (!fp) {
+            if (!fp)
                DPRINTF(("%s}\n", space));
-            } else {
+            else
                fprintf(fp, "%s}\n", space);
-            }
          }
          break;
       case lFloatT:
-         if (!fp) {
+         if (!fp)
             DPRINTF(("%s%-20.20s (Float)   %c = %f\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosFloat(ep, i)));
-         } else {
+         else
             fprintf(fp, "%s%-20.20s (Float)   %c = %f\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosFloat(ep, i));
-         }
          break;
       case lDoubleT:
-         if (!fp) {
+         if (!fp)
             DPRINTF(("%s%-20.20s (Double)  %c = %f\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosDouble(ep, i)));
-         } else {
+         else
             fprintf(fp, "%s%-20.20s (Double)  %c = %f\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosDouble(ep, i));
-         }
          break;
       case lLongT:
-         if (!fp) {
+         if (!fp)
             DPRINTF(("%s%-20.20s (Long)    %c = %ld\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosLong(ep, i)));
-         } else {
+         else
             fprintf(fp, "%s%-20.20s (Long)    %c = %ld\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosLong(ep, i));
-         }
          break;
       case lBoolT:
-         if (!fp) {
+         if (!fp)
             DPRINTF(("%s%-20.20s (Bool)    %c = %s\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosBool(ep, i) ? "true" : "false"));
-         } else {
+         else
             fprintf(fp, "%s%-20.20s (Bool)    %c = %s\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosBool(ep, i) ? "true" : "false");
-         }
          break;
       case lCharT:
-         if (!fp) {
+         if (!fp)
             DPRINTF(("%s%-20.20s (Char)    %c = %c\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosChar(ep, i)));
-         } else {
+         else
             fprintf(fp, "%s%-20.20s (Char)    %c = %c\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosChar(ep, i));
-         }
          break;
       case lRefT:
-         if (!fp) {
+         if (!fp)
             DPRINTF(("%s%-20.20s (Ref)     %c = %p\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosRef(ep, i)));
-         } else {
+         else
             fprintf(fp, "%s%-20.20s (Ref)     %c = %p\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosRef(ep, i));
-         }
          break;
       default:
          unknownType("lWriteElem");
@@ -1027,7 +1120,7 @@ lList *lCreateList(const char *listname, const lDescr *descr)
       }
    }
 
-   lp->changed = false;
+   lp->changed = 0;
 
    DEXIT;
    return lp;
@@ -1096,9 +1189,6 @@ lList *lCreateElemList(const char *listname, const lDescr *descr, int nr_elem)
 *
 *  RESULT
 *     lListElem* - NULL 
-*
-*  NOTES
-*     MT-NOTE: lRemoveElem() is MT safe
 ******************************************************************************/
 lListElem *lFreeElem(lListElem *ep) 
 {
@@ -1196,9 +1286,6 @@ lListElem *lFreeElem(lListElem *ep)
 *
 *  RESULT
 *     lList* - NULL 
-*
-*  NOTES
-*     MT-NOTE: lFreeList() is MT safe
 ******************************************************************************/
 lList *lFreeList(lList *lp) 
 {
@@ -1235,42 +1322,6 @@ lList *lFreeList(lList *lp)
    return NULL;
 }
 
-
-/****** cull/list/lAddSubList() ************************************************
-*  NAME
-*     lAddSubList() -- Append a list to the sublist of an element
-*
-*  SYNOPSIS
-*     int lAddSubList(lListElem *ep, int nm, const lList *to_add) 
-*
-*  FUNCTION
-*     Appends the list 'to_add' to the sublist 'nm' of the element 
-*     'ep'. The list pointer becomes invalid and the returned pointer
-*     should be used instead to access the complete sublist.
-*
-*  INPUTS
-*     lListElem *ep       - The CULL list element
-*     int nm              - The CULL field name of a sublist 
-*     const lList *to_add - The list to be added
-*
-*  RESULT
-*     lList * - Returns 
-*
-*  NOTES
-*     MT-NOTE: lAddSubList() is MT safe
-*******************************************************************************/
-lList *lAddSubList(lListElem *ep, int nm, lList *to_add)
-{
-   lList *tmp;
-   if (lGetNumberOfElem(to_add)) {
-      if ((tmp=lGetList(ep, nm)))
-         lAddList(tmp, to_add);
-      else 
-         lSetList(ep, nm, to_add);
-   }
-   return lGetList(ep, nm);
-}
-
 /****** cull/list/lAddList() **************************************************
 *  NAME
 *     lAddList() -- Concatenate two lists 
@@ -1289,9 +1340,6 @@ lList *lAddSubList(lListElem *ep, int nm, lList *to_add)
 *     int - error state
 *         0 - OK
 *        -1 - Error
-*
-*  NOTES
-*     MT-NOTE: lAddList() is MT safe
 ******************************************************************************/
 int lAddList(lList *lp0, lList *lp1) 
 {
@@ -1352,9 +1400,6 @@ int lAddList(lList *lp0, lList *lp1)
 *     int - Result of compare operation
 *         0 - equivalent
 *        -1 - not equivalent
-*
-*  NOTES
-*     MT-NOTE: lCompListDescr() is MT safe
 ******************************************************************************/
 int lCompListDescr(const lDescr *dp0, const lDescr *dp1) 
 {
@@ -1533,7 +1578,7 @@ int lInsertElem(lList *lp, lListElem *ep, lListElem *new)
    cull_hash_elem(new);
    
    lp->nelem++;
-   lp->changed = true;
+   lp->changed = 1;
 
    DEXIT;
    return 0;
@@ -1557,9 +1602,6 @@ int lInsertElem(lList *lp, lListElem *ep, lListElem *new)
 *     int - error state 
 *         0 - OK
 *        -1 - Error
-*
-*  NOTES
-*     MT-NOTE: lAppendElem() is MT safe
 ******************************************************************************/
 int lAppendElem(lList *lp, lListElem *ep) 
 {
@@ -1608,7 +1650,7 @@ _Insight_set_option("suppress", "LEAK_ASSIGN");
 
    cull_hash_elem(ep);
    lp->nelem++;
-   lp->changed = true;
+   lp->changed = 1;
 
    DEXIT;
    return 0;
@@ -1635,9 +1677,6 @@ _Insight_set_option("unsuppress", "LEAK_ASSIGN");
 *     int - error state
 *         0 - OK
 *        -1 - Error 
-*
-*  NOTES
-*     MT-NOTE: lRemoveElem() is MT safe
 *******************************************************************************/
 int lRemoveElem(lList *lp, lListElem *ep) 
 {
@@ -1671,7 +1710,7 @@ int lRemoveElem(lList *lp, lListElem *ep)
    ep->prev = ep->next = NULL;
 
    lp->nelem--;
-   lp->changed = true;
+   lp->changed = 1;
 
    lFreeElem(ep);
 
@@ -1695,9 +1734,6 @@ int lRemoveElem(lList *lp, lListElem *ep)
 *
 *  RESULT
 *     lListElem* - dechained element or NULL
-*
-*  NOTES
-*     MT-NOTE: lDechainElem() is MT safe
 ******************************************************************************/
 lListElem *lDechainElem(lList *lp, lListElem *ep) 
 {
@@ -1742,7 +1778,7 @@ lListElem *lDechainElem(lList *lp, lListElem *ep)
    ep->descr = lCopyDescr(ep->descr);
    ep->status = FREE_ELEM;
    lp->nelem--;
-   lp->changed = true;
+   lp->changed = 1;
 
    DEXIT;
    return ep;
@@ -2333,9 +2369,6 @@ int lUniqHost(lList *lp, int keyfield)
 *
 *  SEE ALSO
 *     
-*
-*  NOTES
-*     MT-NOTE: mt_get_type() is MT safe
 *******************************************************************************/
 int mt_get_type(int mt)
 {
@@ -2399,108 +2432,4 @@ int mt_do_hashing(int mt)
 int mt_is_unique(int mt)
 {
    return mt & CULL_UNIQUE;
-}
-
-bool 
-lListElem_is_pos_changed(const lListElem *ep, int pos)
-{
-   return (sge_bitfield_get(ep->changed, pos) > 0); 
-}
-
-/****** cull_list/lList_clear_changed_info() ***********************************
-*  NAME
-*     lList_clear_changed_info() -- clear changed info of a list
-*
-*  SYNOPSIS
-*     bool 
-*     lList_clear_changed_info(lList *lp) 
-*
-*  FUNCTION
-*     Clears in a list the information, if the list itself has been changed
-*     (objects added/removed) and which fields have changed in the lists
-*     objects.
-*
-*  INPUTS
-*     lList *lp - the list to update
-*
-*  RESULT
-*     bool - true on success, else false
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     cull_list/lListElem_clear_changed_info()
-*******************************************************************************/
-bool
-lList_clear_changed_info(lList *lp)
-{
-   bool ret = true;
-
-   if (lp == NULL) {
-      ret = false;
-   } else {
-      lListElem *ep;
-
-      lp->changed = false;
-
-      for_each(ep, lp) {
-         lListElem_clear_changed_info(ep);
-      }
-   }
-
-   return ret;
-}
-
-/****** cull_list/lListElem_clear_changed_info() *******************************
-*  NAME
-*     lListElem_clear_changed_info() -- clear changed info of an object
-*
-*  SYNOPSIS
-*     bool 
-*     lListElem_clear_changed_info(lListElem *ep) 
-*
-*  FUNCTION
-*     clears in an object the information, which fields have been changed.
-*     Recursively walks down sublists.
-*
-*  INPUTS
-*     lListElem *ep - the list element to update
-*
-*  RESULT
-*     bool - true on success, else false
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     cull_list/lList_clear_changed_info()
-*******************************************************************************/
-bool 
-lListElem_clear_changed_info(lListElem *ep)
-{
-   bool ret = true;
-
-   if (ep == NULL) {
-      ret = false;
-   } else {
-      int i;
-      lDescr *descr = ep->descr;
-
-      for (i = 0; ep->descr[i].nm != NoName; i++) {
-         int type = mt_get_type(descr[i].mt);
-
-         sge_bitfield_clear(ep->changed, i);
-
-         if (type == lListT) {
-            lList_clear_changed_info(ep->cont[i].glp);
-         } else if (type == lObjectT) {
-            lListElem_clear_changed_info(ep->cont[i].obj);
-         }
-      }
-   }
-
-   return ret;
 }

@@ -160,7 +160,6 @@ proc cluster_perf_init_level {} {
 #     ???/???
 #*******************************
 proc cluster_perf_setup {} {
-   global ts_config
    global CHECK_CORE_EXECD save_queue_values
    global nr_queues CHECK_CORE_MASTER
    global queue_list
@@ -177,23 +176,13 @@ proc cluster_perf_setup {} {
    set myconfig(loglevel)         "log_warning"
    set myconfig(load_report_time) "0:0:60"
   
-   if { $ts_config(gridengine_version) == 53 } {
-      if { $FLUSH_SUBMIT_SEC == -1 && $FLUSH_FINISH_SEC == -1 } {
-         set myconfig(schedd_params)    $stored_configuration(schedd_params)
-      } else {
-         set myconfig(schedd_params)    "$stored_configuration(schedd_params),FLUSH_SUBMIT_SEC=${FLUSH_SUBMIT_SEC},FLUSH_FINISH_SEC=${FLUSH_FINISH_SEC}"
-      }
-   }  
-   else {
-      if { $FLUSH_SUBMIT_SEC > 0}  {
-         set my_schedd_config(flush_submit_sec)    "$FLUSH_SUBMIT_SEC"
-      }
-      if { $FLUSH_FINISH_SEC > 0}  {
-         set my_schedd_config(flush_finish_sec)    "$FLUSH_FINISH_SEC"
-      }
+   if { $FLUSH_SUBMIT_SEC == -1 && $FLUSH_FINISH_SEC == -1 } {
+      set myconfig(schedd_params)    $stored_configuration(schedd_params)
+   } else {
+      set myconfig(schedd_params)    "$stored_configuration(schedd_params),FLUSH_SUBMIT_SEC=${FLUSH_SUBMIT_SEC},FLUSH_FINISH_SEC=${FLUSH_FINISH_SEC}"
    }
    set_config myconfig
-  
+
    set my_schedd_config(schedule_interval)          "$schedule_interval"
    set my_schedd_config(job_load_adjustments)       "none"
    set my_schedd_config(load_adjustment_decay_time) "0:0:0"

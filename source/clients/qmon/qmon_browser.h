@@ -39,11 +39,11 @@
  * !!!! Attention this depends on the ordering of the strings in
  * !!!! the checkbox/palette
  */
-#define BROWSE_STDOUT            (1<<0)
-#define BROWSE_STDERR            (1<<1)
-#define BROWSE_QUEUE             (1<<2)
-#define BROWSE_JOB               (1<<3)
-#define BROWSE_MSG               (1<<4)
+#define BROWSE_STDOUT   (1<<0)
+#define BROWSE_STDERR   (1<<1)
+#define BROWSE_QUEUE    (1<<2)
+#define BROWSE_JOB      (1<<3)
+#define BROWSE_MSG      (1<<4)
 
 
 

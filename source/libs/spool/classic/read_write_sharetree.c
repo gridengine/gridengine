@@ -45,6 +45,7 @@
 #include "sge_usageL.h"
 #include "sge_sharetree.h"
 #include "cull_parse_util.h"
+#include "sge_m_event.h"
 #include "sge_log.h"
 #include "sge_dstring.h"
 #include "scheduler.h"
@@ -57,6 +58,7 @@
 #include "sge_spool.h"
 
 static lListElem *search_unspecified_node(lListElem *ep);
+static int id_sharetree(lListElem *ep, int id);
 static lListElem *search_nodeSN(lListElem *ep, u_long32 id);
 
 
@@ -89,16 +91,12 @@ int recurse,        /* if =1 recursive write */
 int root_node 
 ) {
    FILE *fp; 
-   int print_elements[] = { STN_id, 0 };
+   intprt_type print_elements[] = { STN_id, 0 };
    const char *delis[] = {":", ",", NULL};
    lListElem *cep;
    int i;
-   dstring ds;
-   char buffer[256];
 
    DENTER(TOP_LAYER, "write_sharetree");
-
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (!ep) {
       if (!alpp) {
@@ -129,7 +127,7 @@ int root_node
       fp = fpout;
 
    if (spool && root_node && sge_spoolmsg_write(fp, COMMENT_CHAR,
-             feature_get_product_name(FS_VERSION, &ds)) < 0) {
+             feature_get_product_name(FS_VERSION)) < 0) {
       goto FPRINTF_ERROR;
    }  
 
@@ -198,7 +196,7 @@ int recurse,
 lListElem *rootelem     /* in case of a recursive call this is the root elem
                            of the tree we already read in */
 ) {
-   int print_elements[] = { STN_id, 0 };
+   intprt_type print_elements[] = { STN_id, 0 };
    int complete=0;      /* set to 1 when the node is completly read */
    lListElem *ep=NULL, *unspecified;
    lList *child_list;
@@ -227,25 +225,17 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
       val = strtok(NULL, "\n");
 
       if (!strcmp(name, "name")) {
-         if (!ep && recurse) {
+         if (!ep) {
             sprintf(errstr, MSG_STREE_UNEXPECTEDNAMEFIELD);
             DEXIT;
             return NULL;
          }
-         else if (!ep) {
-            ep = lCreateElem(STN_Type);
-            lSetString(ep, STN_name, val);
-            lSetUlong(ep, STN_type, 0);
-            lSetUlong(ep, STN_shares, 0);
-         }
-         else if ((lGetString(ep, STN_name))) {
+         if ((lGetString(ep, STN_name))) {
             sprintf(errstr, MSG_STREE_NAMETWICE_I, line);
             DEXIT;
             return NULL;
          }
-         else {
-            lSetString(ep, STN_name, val);
-         }
+         lSetString(ep, STN_name, val);
       } else if (!strcmp(name, "id")) {
          id = strtol(val, NULL, 10);
          /* if there is a rootelem given we search the tree for our id.
@@ -364,6 +354,27 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
    return ep;
 }
 
+
+/***************************************************
+ Generate a Template for a sharetreenode
+ ***************************************************/
+lListElem *getSNTemplate(void)
+{
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "getSNTemplate");
+
+   ep = lCreateElem(STN_Type);
+   lSetString(ep, STN_name, "template");
+   lSetUlong(ep, STN_type, 0);
+   lSetUlong(ep, STN_id, 0);
+   lSetUlong(ep, STN_shares, 0);
+   lSetList(ep, STN_children, NULL);
+
+   DEXIT;
+   return ep;
+}
+
 /*****************************************************
  search for a node which is not specified
  *****************************************************/ 
@@ -427,3 +438,121 @@ u_long32 id
    DEXIT;
    return NULL;
 }
+
+
+/************************************************************************
+   id_sharetree - set the sharetree node id
+************************************************************************/
+static int id_sharetree(
+lListElem *ep,
+int id  
+) {
+   lListElem *cep;
+
+   DENTER(TOP_LAYER, "id_sharetree");
+
+   lSetUlong(ep, STN_id, id++);
+
+   /* handle the children */
+   for_each(cep, lGetList(ep, STN_children)) {     
+      id = id_sharetree(cep, id);
+   }
+
+   DEXIT;
+   return id;
+}  
+
+/************************************************************************
+  show_sharetree
+
+  display a tree representation of sharetree 
+
+ ************************************************************************/
+int show_sharetree(
+lListElem *ep,
+char *indent 
+) {
+   lListElem *cep;
+   FILE *fp = stdout;
+   static int level = 0;
+   int i;
+
+   DENTER(TOP_LAYER, "show_sharetree");
+
+   if (!ep) {
+      DEXIT;
+      return -1;
+   }
+
+   for (i=0;i<level;i++)
+      fprintf(fp, "%s", indent ? indent : "");
+   fprintf(fp, "%s="u32"\n", lGetString(ep, STN_name), 
+            lGetUlong(ep, STN_shares));
+   for_each(cep, lGetList(ep, STN_children)) {
+      level++;
+      show_sharetree(cep, "   ");
+      level--;
+   }   
+
+   DEXIT;
+   return 0;
+}
+
+/************************************************************************
+  show_sharetree_path
+
+  display a path representation of sharetree 
+
+ ************************************************************************/
+int show_sharetree_path(
+lListElem *root,
+const char *path 
+) {
+   lListElem *cep;
+   lListElem *node;
+   FILE *fp = stdout;
+   ancestors_t ancestors;
+   int i;
+   dstring sb = DSTRING_INIT;
+ 
+   DENTER(TOP_LAYER, "show_sharetree_path");
+ 
+   if (!root) {
+      DEXIT;
+      return 1;
+   }
+ 
+   memset(&ancestors, 0, sizeof(ancestors));
+   if (!strcmp(path, "/")) {
+      node = root;
+   }
+   else {
+      node = search_named_node_path(root, path, &ancestors);
+   }
+ 
+   if (node) {
+      for(i=0; i<ancestors.depth; i++)
+         fprintf(fp, "/%s", lGetString(ancestors.nodes[i], STN_name));
+      if (!strcmp(path, "/"))
+         fprintf(fp, "/="u32"\n", lGetUlong(node, STN_shares));
+      else
+         fprintf(fp, "="u32"\n", lGetUlong(node, STN_shares));
+      free_ancestors(&ancestors);
+      for_each(cep, lGetList(node, STN_children)) {
+
+         if (!strcmp(path, "/"))
+            sge_dstring_sprintf(&sb, "/%s", lGetString(cep, STN_name));
+         else
+            sge_dstring_sprintf(&sb, "%s/%s", path,
+                                 lGetString(cep, STN_name));
+         show_sharetree_path(root, sge_dstring_get_string(&sb));
+      }
+   }
+   else {
+      fprintf(stderr, MSG_TREE_UNABLETOLACATEXINSHARETREE_S, path);
+   }
+ 
+   sge_dstring_free(&sb);
+   DEXIT;
+   return 0;
+}                                                                               

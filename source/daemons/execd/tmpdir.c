@@ -35,7 +35,7 @@
 #include "sge_log.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
-#include "sge_qinstance.h"
+#include "sge_queue.h"
 
 #include "msg_execd.h"
 
@@ -64,7 +64,7 @@ char *tmpdir
    DPRINTF(("making TMPDIR=%s\n", tmpdir));
 
    sge_switch2start_user();
-   sge_mkdir(tmpdir, 0755, 0, 0);
+   sge_mkdir(tmpdir, 0755, 0);
    chown(tmpdir, uid, gid);
    sge_switch2admin_user();
 
@@ -81,12 +81,9 @@ u_long32 jataskid,
 const char *queue_name 
 ) {
    stringT tmpstr;
-   char err_str_buffer[1024];
-   dstring err_str;
+   char err_str[1024];
 
    DENTER(TOP_LAYER, "sge_remove_tmpdir");
-
-   sge_dstring_init(&err_str, err_str_buffer, sizeof(err_str_buffer));
 
    if (!dir) {
       DEXIT;
@@ -95,9 +92,9 @@ const char *queue_name
 
    sprintf(tmpstr, "%s/"u32"."u32".%s", dir, jobid, jataskid, queue_name);
    DPRINTF(("recursively unlinking \"%s\"\n", tmpstr));
-   if (sge_rmdir(tmpstr, &err_str)) {
+   if (sge_rmdir(tmpstr, err_str)) {
       ERROR((SGE_EVENT, MSG_FILE_RECURSIVERMDIR_SS, 
-             tmpstr, err_str_buffer));
+             tmpstr, err_str));
       return -1;
    }
 

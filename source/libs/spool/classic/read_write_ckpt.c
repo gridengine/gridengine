@@ -36,6 +36,7 @@
 
 #include "sge.h"
 #include "cull.h"
+#include "sge_queue.h"         
 #include "config.h"
 #include "sge_answer.h"
 #include "read_write_ckpt.h"
@@ -148,6 +149,13 @@ _Insight_set_option("suppress", "PARM_NULL");
       return -1;
    }
 
+   /* --------- CK_queue_list */
+   if (!set_conf_list(alpp, clpp, fields, "queue_list", ep, CK_queue_list, 
+                        QR_Type, QR_name)) {
+      DEXIT;
+      return -1;
+   }
+   
    /* --------- CK_signal */
    if (!set_conf_string(alpp, clpp, fields, "signal", ep, CK_signal)) {
       DEXIT;
@@ -190,13 +198,10 @@ int how,
 const lListElem *ep 
 ) {
    FILE *fp;
+   lListElem *sep;
    char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX];
-   dstring ds;
-   char buffer[256];
 
    DENTER(TOP_LAYER, "write_ckpt");
-
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    switch (how) {
    case 0:
@@ -228,7 +233,7 @@ const lListElem *ep
    }
 
    if (spool && sge_spoolmsg_write(fp, COMMENT_CHAR,
-             feature_get_product_name(FS_VERSION, &ds)) < 0) {
+             feature_get_product_name(FS_VERSION)) < 0) {
       goto FPRINTF_ERROR;
    } 
 
@@ -252,6 +257,21 @@ const lListElem *ep
 
    /* --------- CK_ckpt_dir */
    FPRINTF((fp, "ckpt_dir           %s\n", lGetString(ep, CK_ckpt_dir)));
+
+   /* --------- CK_queue_list */
+   FPRINTF((fp, "queue_list         "));
+   sep = lFirst(lGetList(ep, CK_queue_list));
+   if (sep) {
+      do {
+         FPRINTF((fp, "%s", lGetString(sep, QR_name)));
+         sep = lNext(sep);
+         if (sep) 
+             FPRINTF((fp, " "));
+      } while (sep);
+      FPRINTF((fp, "\n"));
+   } else {
+      FPRINTF((fp, "NONE\n"));
+   }
 
    /* --------- CK_signal */
    FPRINTF((fp, "signal             %s\n", lGetString(ep, CK_signal)));
@@ -277,3 +297,74 @@ FPRINTF_ERROR:
    return NULL; 
 }
 
+/***f** src/sge_generic_ckpt() **********************************************
+*
+*  NAME
+*     sge_generic_ckpt -- build up a generic ckpt object
+*
+*  SYNOPSIS
+*     lListElem* sge_generic_ckpt(
+*        char *ckpt_name
+*     );
+*
+*  FUNCTION
+*     build up a generic ckpt object
+*
+*  INPUTS
+*     ckpt_name - name used for the CK_name attribute of the generic
+*               pe object. If NULL then "template" is the default name.
+*
+*  RESULT
+*     !NULL - Pointer to a new CULL object of type CK_Type
+*     NULL - Error
+*
+*  EXAMPLE
+*
+*  NOTES
+*
+*  BUGS
+*
+*  SEE ALSO
+*
+*****************************************************************************/   
+lListElem* sge_generic_ckpt(
+char *ckpt_name 
+) {
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "sge_generic_ckpt");
+
+   ep = lCreateElem(CK_Type);
+
+   if (ckpt_name)
+      lSetString(ep, CK_name, ckpt_name);
+   else
+      lSetString(ep, CK_name, "template");
+
+   lSetString(ep, CK_interface, "userdefined");
+   lSetString(ep, CK_ckpt_command, "none");
+   lSetString(ep, CK_migr_command, "none");
+   lSetString(ep, CK_rest_command, "none");
+   lSetString(ep, CK_clean_command, "none");
+   lSetString(ep, CK_ckpt_dir, "/tmp");
+   lSetString(ep, CK_when, "sx");
+   lSetString(ep, CK_signal, "none");
+   lSetUlong(ep, CK_job_pid, 0);
+
+   /* use the keyword "all" for the "queue_list" attribute */
+   {
+      lList *new_qr_list;
+      lListElem *new_qr;
+
+      new_qr_list = lCreateList("", QR_Type);
+      new_qr = lCreateElem(QR_Type);
+
+      lSetString(new_qr, QR_name, SGE_ATTRVAL_ALL);
+      lAppendElem(new_qr_list, new_qr);
+
+      lSetList(ep, CK_queue_list, new_qr_list);
+   }             
+
+   DEXIT;
+   return ep;
+}

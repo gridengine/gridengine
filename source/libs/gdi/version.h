@@ -32,6 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#define GDI_VERSION "6.0Beta"
+extern const char GDI_VERSION[];  /* set in version.c  */
 
 #endif /* __VERISON_H */

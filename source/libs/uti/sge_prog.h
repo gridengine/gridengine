@@ -32,15 +32,23 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge.h" 
 #include "basis_types.h"
+
 #include "sge_arch.h"
 
 #define SGE_PREFIX      "sge_"
+
 #define SGE_COMMD       "sge_commd"
+
 #define SGE_SHEPHERD    "sge_shepherd"
+
 #define SGE_COSHEPHERD  "sge_coshepherd"
-#define SGE_QMASTER     "sge_qmaster"
+
+#define SGE_QMASTER  "sge_qmaster"
+
 #define SGE_SHADOWD     "sge_shadowd"
+
 #define PE_HOSTFILE     "pe_hostfile"
 
 /* who - must match prognames[] in prognames.c */
@@ -67,7 +75,7 @@ enum {
  EXECD           ,       /* 19 */
  MAX_ANCILLARY   = EXECD , /* 19 */
  QEVENT,                 /* 20 */
- QUSERDEFINED    ,       /* 21 */
+ QUSERDEFINED   ,        /* 21 */
  ALL_OPT         ,       /* 22 */
 
 /* programs with numbers > ALL_OPT do not use the old parsing */
@@ -87,37 +95,32 @@ enum {
  QIDLD           ,       /* 35 */
  PVM_RMANAGER    ,       /* 36 */
  QHOST           ,       /* 37 */
- COMMDCNTL       ,       /* 38 */ 
- SPOOLDEFAULTS   ,       /* 39 */
- JAPI            ,       /* 40 */
- JAPI_EC         ,       /* 41 */
- DRMAA                   /* 42 */
+ COMMDCNTL               /* 38 */ 
 };
 
-
-typedef void (*sge_exit_func_t)(int);
 
 extern const char *prognames[];
 
 void sge_getme(u_long32 sge_formal_prog_name);
 
-const char *    uti_state_get_sge_formal_prog_name(void);
-const char *    uti_state_get_qualified_hostname(void);
-const char *    uti_state_get_unqualified_hostname(void);
-u_long32        uti_state_get_mewho(void);
-u_long32        uti_state_get_uid(void);
-u_long32        uti_state_get_gid(void);
-int             uti_state_get_daemonized(void);
-const char *    uti_state_get_user_name(void);
-const char *    uti_state_get_default_cell(void);
-int             uti_state_get_exit_on_error(void);
-sge_exit_func_t uti_state_get_exit_func(void);
+const char *uti_state_get_sge_formal_prog_name(void);
+const char *uti_state_get_qualified_hostname(void);
+const char *uti_state_get_unqualified_hostname(void);
+u_long32 uti_state_get_mewho(void);
+u_long32 uti_state_get_uid(void);
+u_long32 uti_state_get_gid(void);
+u_long32 uti_state_get_daemonized(void);
+const char *uti_state_get_user_name(void);
+const char *uti_state_get_default_cell(void);
 
 void uti_state_set_qualified_hostname(const char *s);
-void uti_state_set_daemonized(int daemonized);
-void uti_state_set_mewho(u_long32 who);
-void uti_state_set_exit_on_error(int i);
-void uti_state_set_exit_func(sge_exit_func_t f);
+void uti_state_set_daemonized(u_long32 daemonized);
+
+
+ 
+#ifdef WIN32NATIVE
+void sge_deleteme ();
+#endif
 
 #endif /* __SGE_PROGNAMES_H */
 

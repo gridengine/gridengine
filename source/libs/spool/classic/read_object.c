@@ -34,7 +34,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "sge_gdi_request.h"
+#include "sge_gdi_intern.h"
 #include "config.h"
 #include "read_object.h"
 #include "sgermon.h"

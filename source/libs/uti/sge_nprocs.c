@@ -35,16 +35,9 @@
 #   include <sys/rsg.h>
 #   include <sys/types.h>
 #   include <fcntl.h>
-#   include <sys/syssx.h>
 #endif
 
-#if defined(DARWIN)
-#   include <mach/host_info.h>
-#   include <mach/mach_host.h>
-#   include <mach/mach_init.h>
-#   include <mach/machine.h>
-#endif
-
+/* IRIX 5, 6 */
 #if defined(__sgi)
 #   include <sys/types.h>
 #   include <sys/sysmp.h>
@@ -55,7 +48,7 @@
 #   include <machine/hal_sysinfo.h>
 #endif
 
-#if defined(SOLARIS) || defined(AIX) || defined(LINUX)
+#if defined(SOLARIS) || defined(AIX)
 #   include <unistd.h>
 #endif
 
@@ -70,9 +63,18 @@
 #   include <unistd.h>
 #endif
 
-#if defined(FREEBSD)
-#   include <sys/types.h>
-#   include <sys/sysctl.h>
+#if defined(LINUX) 
+#   include <stdio.h>
+#   include <errno.h>
+#   include <string.h>
+#   define LINUX_PROCFILE "/proc/cpuinfo"
+#   define LINUX_KEYWORD "processor"
+#endif
+
+#if defined(ALINUX)
+#  include <stdlib.h>
+#  define ALINUX_PROCFILE "/proc/cpuinfo"
+#  define ALINUX_KEYWORD "cpus detected"   
 #endif
 
 #ifdef NPROCS_TEST
@@ -123,9 +125,6 @@ int sge_nprocs_rsg(rsg_id) {
 *
 *  RESULT
 *     int - number of procs
-* 
-*  NOTES
-*     MT-NOTE: sge_nprocs() is MT safe (SOLARIS, NEC, IRIX, ALPHA, HPUX, LINUX)
 ******************************************************************************/
 int sge_nprocs()
 {
@@ -139,10 +138,6 @@ int sge_nprocs()
  
 /* NEC SX 4/16, NEC SX 4/32 */
 #if defined(NECSX4) || defined(NECSX5)
-/*
- * Using RSG values alone is unreliable.
- */
-#if 0
    nprocs = 0;
    for (fsg_id=0; fsg_id<32; fsg_id++) {
       sprintf(fsg_dev_string, "/dev/rsg/%d", fsg_id);
@@ -160,70 +155,9 @@ int sge_nprocs()
    if (nprocs == 0) {
       nprocs=1;
    }
-#elif 1
-#if defined(CNFGAPNUM)
-   /*
-    * SUPER-UX >= 11.x provides a function.
-    */
-   nprocs = syssx(CNFGAPNUM);
-#else
-   {
-      /*
-       * As with sge_loadmem(), get RB info and tally
-       * it up.
-       */
-      char       fsg_dev_string[256];
-      int        fd, fsg_id;
-      rsg_id_t   id;
-      rsg_info_t info;
-      cpurb_t    cpurbs[MAXRBNUM];
-      int        i;
-
-      /* initialize */
-      for (i = 0; i < MAXRBNUM; i++) {
-         memset(&cpurbs[i], 0, sizeof(cpurb_t));
-      }
-
-      /* read in RB info (don't be fooled by RSG names) */
-      for (fsg_id = 0; fsg_id < MAXRSGNUM; fsg_id++) {
-         sprintf(fsg_dev_string, "/dev/rsg/%d", fsg_id);
-         fd = open(fsg_dev_string, O_RDONLY);
-         if (fd >= 0) {
-            if ((ioctl(fd, RSG_ID, &id) == -1) ||
-                  (ioctl(fd, RSG_INFO, &info) == -1)) {
-               close(fd);
-               continue;
-            }
-            close(fd);
-
-            /* copy for later use */
-            memcpy(&cpurbs[id.cprbid], &info.cprb, sizeof(cpurb_t));
-         }
-      }
-
-      nprocs = 0;
-      for (i = 0; i < MAXRBNUM; i++) {
-         nprocs += cpurbs[i].init_cpu;
-      }
-   }
-#endif /* CNFGAPNUM */
 #endif
 
-#endif
-
-#if defined(DARWIN)
-  struct host_basic_info cpu_load_data;
-
-  int host_count = sizeof(cpu_load_data)/sizeof(integer_t);
-  mach_port_t host_priv_port = mach_host_self();
-
-  host_info(host_priv_port, HOST_BASIC_INFO , (host_info_t)&cpu_load_data, &host_count);
-
-  nprocs =  cpu_load_data.avail_cpus;
-
-#endif
-
-
+/* IRIX 5, 6 */
 #ifdef __sgi
    nprocs = sysmp(MP_NPROCS);
 #endif
@@ -234,11 +168,11 @@ int sge_nprocs()
    getsysinfo(GSI_CPUS_IN_BOX,(char*)&nprocs,sizeof(nprocs),&start);
 #endif
 
-#if defined(SOLARIS) || defined(AIX) || defined(LINUX)
+#if defined(SOLARIS) || defined(AIX)
    nprocs = sysconf(_SC_NPROCESSORS_ONLN);
 #endif
 
-#if defined(__hpux)
+#if defined(__hpux) && !defined(HPCONVEX)
    union pstun pstatbuf;
    struct pst_dynamic dinfo;
 
@@ -250,15 +184,58 @@ int sge_nprocs()
    nprocs = dinfo.psd_proc_cnt;
 #endif
 
+#if defined(HPCONVEX)
+   nprocs = 1;
+#endif
+
 #ifdef CRAY
    nprocs = sysconf(_SC_CRAY_NCPU);
 #endif
 
-#if defined(FREEBSD)
-   size_t nprocs_len = sizeof(nprocs);
 
-   if (sysctlbyname("hw.ncpu", &nprocs, &nprocs_len, NULL, 0) == -1) {
-      nprocs = -1;
+#if defined(LINUX) 
+   int success = 0;
+   char buffer[1024];
+   int keylen;
+   FILE *fp;
+
+#  if defined(ALINUX)
+   /* cat /proc/cpuinfo | grep "cpus detected" | cut -f 2 -d ":" */  
+   char *token;
+ 
+   if ((fp = fopen(ALINUX_PROCFILE, "r"))) {
+      keylen = strlen(ALINUX_KEYWORD);
+      while (fgets(buffer, sizeof(buffer)-1, fp)) {
+         token = strtok(buffer, ":");
+         if (!strncmp(buffer, ALINUX_KEYWORD, keylen)) {
+            token = strtok(NULL, " \t\n");
+            nprocs = atoi(token);
+            success = 1;
+            break;
+         }
+      }
+      fclose(fp);
+   }                         
+#  endif
+
+   if (!success) {
+      /* cat /proc/cpuinfo|grep processor|wc -l */
+
+      if ((fp = fopen(LINUX_PROCFILE, "r"))) {
+         nprocs = 0;
+         keylen = strlen(LINUX_KEYWORD);
+         while (fgets(buffer, sizeof(buffer)-1, fp)) {
+            if (!strncmp(buffer, LINUX_KEYWORD, keylen)) {
+               nprocs++;
+               success = 1;
+            }
+         }
+         fclose(fp);
+      }
+   }
+
+   if (!success) {
+      nprocs = 1; 
    }
 #endif
 

@@ -38,10 +38,7 @@
 
 #include "basis_types.h"
 #include "sge.h"
-
-#include "sge_bootstrap.h"
-
-#include "sge_gdi.h"
+#include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
 #include "sig_handlers.h"
@@ -52,7 +49,9 @@
 #include "sge_stdlib.h"
 #include "cull_parse_util.h"
 #include "parse.h"
-#include "sge_host.h"
+#include "sge_resource.h"
+#include "resolve_host.h"
+#include "slots_used.h"
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
 #include "sge_select_queue.h"
@@ -67,19 +66,19 @@
 #include "sge_hostname.h"
 #include "sge_log.h"
 #include "sge_answer.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_ulong.h"
-#include "sge_centry.h"
+#include "sge_queue.h"
+#include "sge_complex.h"
 
 #define QHOST_DISPLAY_QUEUES     (1<<0)
 #define QHOST_DISPLAY_JOBS       (1<<1)
 #define QHOST_DISPLAY_RESOURCES  (1<<2)
 
+
 static lList *sge_parse_cmdline_qhost(char **argv, char **envp, lList **ppcmdline);
 static lList *sge_parse_qhost(lList **ppcmdline, lList **pplres, lList **ppFres, lList **pphost, lList **ppuser, u_long32 *show);
 static void qhost_usage(FILE *fp);
 static void sge_print_queues(lList *ql, lListElem *hrl, lList *jl, lList *ul, lList *ehl, lList *cl, lList *pel, u_long32 show);
+static void qtype(char *type_string, u_long32 type);
 static void sge_print_resources(lList *ehl, lList *cl, lList *resl, lListElem *host, u_long32 show);
 static void sge_print_host(lListElem *hep);
 static int reformatDoubleValue(char *result, char *format, const char *oldmem);
@@ -102,7 +101,7 @@ char **argv
    lList *ql = NULL;
    lList *jl = NULL;
    lList *pel = NULL;
-   lList *alp = NULL;
+   lList *alp;
    lListElem *aep;
    lListElem *ep;
    u_long32 status = STATUS_OK;
@@ -112,16 +111,19 @@ char **argv
    u_long32 show = 0;
    lCondition *where = NULL;
    int print_header = 1;
+   int cl_err = 0;
 
    DENTER_MAIN(TOP_LAYER, "qhost");
   
-   log_state_set_log_gui(1);
-
    sge_gdi_param(SET_MEWHO, QHOST, NULL);
-   if (sge_gdi_setup(prognames[QHOST], &alp) != AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
+   if ((cl_err = sge_gdi_setup(prognames[QHOST]))) {
+      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);
    }
+
+
+   set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
+   set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
 
    sge_setup_sig_handlers(QHOST);
 
@@ -177,17 +179,20 @@ char **argv
       show);
 
 
-   centry_list_init_double(cl);
+   complex_list_init_double_attr(cl);
 
    /*
    ** handle -l request for host
    */
    if (lGetNumberOfElem(resource_match_list)) {
+      lList *ce = NULL;
       int selected;
 
-      if (centry_list_fill_request(resource_match_list, cl, true, true, false)) {
-         /* error message gets written by centry_list_fill_request into SGE_EVENT */
-         SGE_EXIT(1);
+      for_each (ep, resource_match_list) {
+         if (sge_fill_requests(lGetList(ep,RE_entries), cl, 1, 1, 0)) {
+            /* error message gets written by sge_fill_requests into SGE_EVENT */
+            SGE_EXIT(1);
+         }
       }
       /* prepare request */
       for_each(ep, ehl) {
@@ -198,10 +203,12 @@ char **argv
 
          DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
 
-         selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 1, -1);
-
+         ce = NULL;
+         host_complexes2scheduler(&ce, ep, ehl, cl, 0);
+         selected = sge_select_queue(ce, resource_match_list, 1, NULL, 0, -1, NULL);
          if (selected) 
             lSetUlong(ep, EH_tagged, 1);
+         ce = lFreeList(ce);
       }
 
       /*
@@ -213,9 +220,7 @@ char **argv
    }
 
    /* scale load values and adjust consumable capacities */
-/*    TODO                                            */
-/*    is correct_capacities needed here ???           */
-/*    correct_capacities(ehl, cl);                    */
+   correct_capacities(ehl, cl);
 
    /* SGE_GLOBAL_NAME should be printed at first */
    lPSortList(ehl, "%I+", EH_name);
@@ -231,7 +236,7 @@ char **argv
    ** format and print the info
    */
 
-#define HEAD_FORMAT "%-23s %-13.13s%4.4s %5.5s %7.7s %7.7s %7.7s %7.7s\n"
+#define HEAD_FORMAT "%-20s %-10.10s %5.5s %5.5s %8.8s %8.8s %8.8s %8.8s\n"
 
    for_each(ep, ehl) {
       if (print_header) {
@@ -249,7 +254,6 @@ char **argv
    lFreeList(alp);
 
    SGE_EXIT(status==STATUS_OK?0:1); /* 0 means ok - others are errors */
-   DEXIT;
    return 0;
 }
 
@@ -270,9 +274,9 @@ lListElem *hep
    */
    host = lGetHost(hep, EH_name);
 
-   /* cut away domain in case of ignore_fqdn */
+   /* cut away domain in case of fqdn_cmp */
    strncpy(host_print, host, MAXHOSTLEN);
-   if (bootstrap_get_ignore_fqdn() && (s = strchr(host_print, '.')))
+   if (!uti_state_get_fqdn_cmp() && (s = strchr(host_print, '.')))
       *s = '\0';
 
    /*
@@ -357,85 +361,70 @@ lList *pel,
 u_long32 show 
 ) {
    lList *load_thresholds, *suspend_thresholds;
-   lListElem *qep, *cqueue;
+   lListElem *qep;
+   char state_string[20];
+   u_long32 state;
 
    DENTER(TOP_LAYER, "sge_print_queues");
 
-   for_each(cqueue, qlp) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+   for_each(qep, qlp) {
+      if (!sge_hostcmp(lGetHost(qep, QU_qhostname), lGetHost(host, EH_name))) {
+         char buf[80];
 
-      for_each(qep, qinstance_list) {
-         if (!sge_hostcmp(lGetHost(qep, QU_qhostname), 
-                          lGetHost(host, EH_name))) {
-            char buf[80];
-
-            if (show & QHOST_DISPLAY_QUEUES) { 
-               /*
-               ** Header/indent
-               */
-               printf("   ");
-               /*
-               ** qname
-               */
-               printf("%-20s ", lGetString(qep, QU_qname));
-               /*
-               ** qtype
-               */
-               {
-                  dstring type_string = DSTRING_INIT;
-
-                  qinstance_print_qtype_to_dstring(qep, &type_string, true);
-                  printf("%-5.5s ", sge_dstring_get_string(&type_string));
-                  sge_dstring_free(&type_string);
-               }
-
-               /* 
-               ** number of used/free slots 
-               */
-               sprintf(buf, "%d/%d ",
-                  qinstance_slots_used(qep),
-                  (int)lGetUlong(qep, QU_job_slots));
-               printf("%-9.9s", buf);
-               /*
-               ** state of queue
-               */
-               load_thresholds = lGetList(qep, QU_load_thresholds);
-               suspend_thresholds = lGetList(qep, QU_suspend_thresholds);
-               if (sge_load_alarm(NULL, qep, load_thresholds, ehl, cl, NULL)) {
-                  qinstance_state_set_alarm(qep, true);
-               }
-               if (sge_load_alarm(NULL, qep, suspend_thresholds, ehl, cl, NULL)) {
-                  qinstance_state_set_suspend_alarm(qep, true);
-               }
-               {
-                  dstring state_string = DSTRING_INIT;
-
-                  qinstance_state_append_to_dstring(qep, &state_string);
-                  printf("%s", sge_dstring_get_string(&state_string));
-                  sge_dstring_free(&state_string);
-               }
-               
-               /*
-               ** newline
-               */
-               printf("\n");
-            }
-
+         if (show & QHOST_DISPLAY_QUEUES) { 
             /*
-            ** tag all jobs, we have only fetched running jobs, so every job
-            ** should be visible (necessary for the qstat printing functions)
+            ** Header/indent
             */
-            if (show & QHOST_DISPLAY_JOBS) {
-               sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
-                                    QSTAT_DISPLAY_ALL | 
-                                    ( (show & QHOST_DISPLAY_QUEUES) ?
-                                     QSTAT_DISPLAY_FULL : 0), "   ", 
-                                     GROUP_NO_PETASK_GROUPS);
-            }
+            printf("   ");
+            /*
+            ** qname
+            */
+            printf("%-20s ", lGetString(qep, QU_qname));
+            /*
+            ** qtype
+            */
+            qtype(buf, lGetUlong(qep, QU_qtype));
+            printf("%-5.5s ", buf);
+
+            /* 
+            ** number of used/free slots 
+            */
+            sprintf(buf, "%d/%d ",
+               qslots_used(qep),
+               (int)lGetUlong(qep, QU_job_slots));
+            printf("%-9.9s", buf);
+            /*
+            ** state of queue
+            */
+            state = lGetUlong(qep, QU_state);
+            load_thresholds = lGetList(qep, QU_load_thresholds);
+            suspend_thresholds = lGetList(qep, QU_suspend_thresholds);
+            if (sge_load_alarm(NULL, qep, load_thresholds, ehl, cl, NULL))
+               state |= QALARM; 
+            if (sge_load_alarm(NULL, qep, suspend_thresholds, ehl, cl, NULL))
+               state |= QSUSPEND_ALARM; 
+            queue_get_state_string(state_string, state);
+            printf("%s", state_string);
+            
+            /*
+            ** newline
+            */
+            printf("\n");
+         }
+
+         /*
+         ** tag all jobs, we have only fetched running jobs, so every job
+         ** should be visible (necessary for the qstat printing functions)
+         */
+         if (show & QHOST_DISPLAY_JOBS) {
+            sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
+                                 QSTAT_DISPLAY_ALL | 
+                                 ( (show & QHOST_DISPLAY_QUEUES) ?
+                                  QSTAT_DISPLAY_FULL : 0), "   ");
          }
       }
+      
    }
-   DEXIT;
 }
 
 
@@ -450,7 +439,6 @@ u_long32 show
    lList *rlp = NULL;
    lListElem *rep;
    char dom[5];
-   dstring resource_string = DSTRING_INIT;
    const char *s;
    u_long32 dominant;
    int first = 1;
@@ -461,15 +449,15 @@ u_long32 show
       DEXIT;
       return;
    }
-   host_complexes2scheduler(&rlp, host, ehl, cl);
+   host_complexes2scheduler(&rlp, host, ehl, cl, 0);
    for_each (rep , rlp) {
       if (resl) {
          lListElem *r1;
          int found = 0;
          int first_item = 0;
          for_each (r1, resl) {
-            if (!strcmp(lGetString(r1, ST_name), lGetString(rep, CE_name)) ||
-                !strcmp(lGetString(r1, ST_name), lGetString(rep, CE_shortcut))) {
+            if (!strcmp(lGetString(r1, STR), lGetString(rep, CE_name)) ||
+                !strcmp(lGetString(r1, STR), lGetString(rep, CE_shortcut))) {
                found = 1;
                if (first) {
                   first = 0;
@@ -485,14 +473,10 @@ u_long32 show
 
       { 
          u_long32 type = lGetUlong(rep, CE_valtype);
-
-         sge_dstring_clear(&resource_string);
-
          switch (type) {
          case TYPE_HOST:   
          case TYPE_STR:   
          case TYPE_CSTR:   
-         case TYPE_RESTR:
             if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
                dominant = lGetUlong(rep, CE_pj_dominant);
                s = lGetString(rep, CE_pj_stringval);
@@ -501,47 +485,13 @@ u_long32 show
                s = lGetString(rep, CE_stringval);
             }
             break;
-         case TYPE_TIM:
-            if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
-               double val = lGetDouble(rep, CE_pj_doubleval);
-
-               dominant = lGetUlong(rep, CE_pj_dominant);
-               double_print_time_to_dstring(val, &resource_string);
-               s = sge_dstring_get_string(&resource_string);
-            } else {
-               double val = lGetDouble(rep, CE_doubleval);
-
-               dominant = lGetUlong(rep, CE_dominant);
-               double_print_time_to_dstring(val, &resource_string);
-               s = sge_dstring_get_string(&resource_string);
-            }
-         case TYPE_MEM:
-            if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
-               double val = lGetDouble(rep, CE_pj_doubleval);
-
-               dominant = lGetUlong(rep, CE_pj_dominant);
-               double_print_memory_to_dstring(val, &resource_string);
-               s = sge_dstring_get_string(&resource_string);
-            } else {
-               double val = lGetDouble(rep, CE_doubleval);
-
-               dominant = lGetUlong(rep, CE_dominant);
-               double_print_memory_to_dstring(val, &resource_string);
-               s = sge_dstring_get_string(&resource_string);
-            }
          default:   
             if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
-               double val = lGetDouble(rep, CE_pj_doubleval);
-
                dominant = lGetUlong(rep, CE_pj_dominant);
-               double_print_to_dstring(val, &resource_string);
-               s = sge_dstring_get_string(&resource_string);
+               s = resource_descr(lGetDouble(rep, CE_pj_doubleval), lGetUlong(rep, CE_valtype), NULL);
             } else {
-               double val = lGetDouble(rep, CE_doubleval);
-
                dominant = lGetUlong(rep, CE_dominant);
-               double_print_to_dstring(val, &resource_string);
-               s = sge_dstring_get_string(&resource_string);
+               s = resource_descr(lGetDouble(rep, CE_doubleval), lGetUlong(rep, CE_valtype), NULL);
             }
             break;
          }
@@ -560,8 +510,47 @@ u_long32 show
       }
    }
    lFreeList(rlp);
-   sge_dstring_free(&resource_string);
    DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qtype(
+char *type_string,
+u_long32 type 
+) {
+   int i;
+   char *s = type_string;
+   static char *queue_types[] = {
+      "BATCH",
+      "INTERACTIVE",
+      "CHECKPOINTING",
+      "PARALLEL",
+      ""
+   };
+
+
+   DENTER(TOP_LAYER, "qtype");
+
+
+   /* collect first characters of the queue_types array */
+   /* if the corresponding bit in type is set           */
+
+   for (i=0; type && i<=4; i++) {
+
+      DPRINTF(("i = %d qtype: %d (u_long)\n", i, (int)type));
+      if (type & 1) {
+         *s++ = queue_types[i][0];
+         *s = '\0';
+         DPRINTF(("qtype: %s (string)\n", type_string));
+      }
+      type >>= 1;
+   }
+
+   *s = '\0';
+
+
+   DEXIT;
+   return;
 }
 
 /*
@@ -581,14 +570,9 @@ u_long32 show
 static void qhost_usage(
 FILE *fp 
 ) {
-   dstring ds;
-   char buffer[256];
-
    DENTER(TOP_LAYER, "qhost_usage");
 
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
-
-   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
+   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
 
    fprintf(fp,"%s qhost [options]\n", MSG_SRC_USAGE);
          
@@ -600,12 +584,10 @@ FILE *fp
    fprintf(fp, "  [-F [resource_attribute]]  %s", MSG_QHOST_F_OPT_USAGE); 
    fprintf(fp, "  [-u user[,user,...]]       %s", MSG_QHOST_u_OPT_USAGE); 
 
-   if (fp==stderr) {
+   if (fp==stderr)
       SGE_EXIT(1);
-   } else {
+   else 
       SGE_EXIT(0);   
-   }
-   DEXIT;
 }
 
 /****
@@ -619,10 +601,11 @@ char **argv,
 char **envp,
 lList **ppcmdline 
 ) {
-   char **sp;
-   char **rp;
-   stringT str;
-   lList *alp = NULL;
+char **sp;
+char **rp;
+stringT str;
+lList *alp = NULL;
+ 
    DENTER(TOP_LAYER, "sge_parse_cmdline_qhost");
 
    rp = ++argv;
@@ -700,19 +683,14 @@ lListElem *ep;
          break;
       }
 
-      if (parse_multi_stringlist(ppcmdline, "-h", &alp, pphost, ST_Type, ST_name)) {
+      if (parse_multi_stringlist(ppcmdline, "-h", &alp, pphost, ST_Type, STR)) {
          /* 
          ** resolve hostnames and replace them in list
          */
          for_each(ep, *pphost) {
-#ifdef ENABLE_NGC
-            if (sge_resolve_host(ep, ST_name) != CL_RETVAL_OK) 
-#else
-            if (sge_resolve_host(ep, ST_name)) 
-#endif
-            {
+            if (sge_resolve_host(ep, STR)) {
                char buf[BUFSIZ];
-               sprintf(buf, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep,ST_name) );
+               sprintf(buf, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep,STR) );
                answer_list_add(&alp, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                DEXIT;
                return alp; 
@@ -722,7 +700,7 @@ lListElem *ep;
          continue;
       }
 
-      if (parse_multi_stringlist(ppcmdline, "-F", &alp, ppFres, ST_Type, ST_name)) {
+      if (parse_multi_stringlist(ppcmdline, "-F", &alp, ppFres, ST_Type, STR)) {
          (*show) |= QHOST_DISPLAY_RESOURCES;
          continue;
       }
@@ -743,12 +721,12 @@ lListElem *ep;
       }
 
       if(parse_string(ppcmdline, "-l", &alp, &argstr)) {
-         *pplres = centry_list_parse_from_string(*pplres, argstr, true);
+         *pplres = sge_parse_resources(*pplres, NULL, argstr, "hard");
          FREE(argstr);
          continue;
       }
 
-      if (parse_multi_stringlist(ppcmdline, "-u", &alp, ppuser, ST_Type, ST_name)) {
+      if (parse_multi_stringlist(ppcmdline, "-u", &alp, ppuser, ST_Type, STR)) {
          (*show) |= QHOST_DISPLAY_JOBS;
          continue;
       }
@@ -817,7 +795,7 @@ const char *oldmem
 static void get_all_lists(
 lList **queue_l,
 lList **job_l,
-lList **centry_l,
+lList **complex_l,
 lList **exechost_l,
 lList **pe_l,
 lList *hostref_list,
@@ -825,7 +803,7 @@ lList *user_list,
 u_long32 show 
 ) {
    lCondition *where= NULL, *nw = NULL, *qw = NULL, *jw = NULL, *gc_where;
-   lEnumeration *q_all = NULL, *j_all = NULL, *ce_all = NULL, 
+   lEnumeration *q_all = NULL, *j_all = NULL, *cx_all = NULL, 
                 *eh_all = NULL, *pe_all = NULL, *gc_what;
    lList *alp = NULL;
    lListElem *aep = NULL;
@@ -833,7 +811,7 @@ u_long32 show
    lListElem *jatep = NULL;
    lList *mal = NULL;
    lList *conf_l = NULL;
-   int q_id, j_id = 0, ce_id, eh_id, pe_id, gc_id;
+   int q_id, j_id = 0, cx_id, eh_id, pe_id, gc_id;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(TOP_LAYER, "get_all_lists");
@@ -858,18 +836,12 @@ lWriteListTo(ehl, stdout);
    */
 
    for_each(ep, hostref_list) {
-      nw = lWhere("%T(%I == %s)", EH_Type, EH_name, lGetString(ep, ST_name));
+      nw = lWhere("%T(%I == %s)", EH_Type, EH_name, lGetString(ep, STR));
       if (!where)
          where = nw;
       else
          where = lOrWhere(where, nw);
    }
-   /* the global host has to be retrieved as well */
-   if (where != NULL) {
-      nw = lWhere("%T(%I == %s)", EH_Type, EH_name, SGE_GLOBAL_NAME);
-      where = lOrWhere(where, nw);
-   }
-   
    nw = lWhere("%T(%I != %s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
    if (where)
       where = lAndWhere(where, nw);
@@ -886,9 +858,25 @@ lWriteListTo(ehl, stdout);
       SGE_EXIT(1);
    }
 
+   /* 
+   ** queue 
+   ** depending on the hosts to display get the attached queues
+   */
+   for_each(ep, hostref_list) {
+      nw = lWhere("%T(%I == %s)", QU_Type, QU_qhostname, lGetString(ep, STR));
+      if (!qw)
+         qw = nw;
+      else
+         qw = lOrWhere(qw, nw);
+   }
+   nw = lWhere("%T(%I != %s)", QU_Type, QU_qname, SGE_TEMPLATE_NAME);
+   if (qw)
+      qw = lAndWhere(qw, nw);
+   else
+      qw = nw; 
    q_all = lWhat("%T(ALL)", QU_Type);
-   q_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET, 
-                        NULL, NULL, q_all, NULL, &state);
+   q_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_QUEUE_LIST, SGE_GDI_GET, 
+                        NULL, qw, q_all, NULL, &state);
    q_all = lFreeWhat(q_all);
    qw = lFreeWhere(qw);
 
@@ -905,7 +893,7 @@ lWriteListTo(ehl, stdout);
 /* lWriteListTo(user_list, stdout); */
 
       for_each(ep, user_list) {
-         nw = lWhere("%T(%I p= %s)", JB_Type, JB_owner, lGetString(ep, ST_name));
+         nw = lWhere("%T(%I p= %s)", JB_Type, JB_owner, lGetString(ep, STR));
          if (!jw)
             jw = nw;
          else
@@ -921,7 +909,7 @@ lWriteListTo(ehl, stdout);
             jw = lAndWhere(jw, nw);
       }
 
-      j_all = lWhat("%T(%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I)", JB_Type, 
+      j_all = lWhat("%T(%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I)", JB_Type, 
                      JB_job_number, 
                      JB_script_file,
                      JB_owner,
@@ -932,7 +920,6 @@ lWriteListTo(ehl, stdout);
                      JB_jid_predecessor_list,
                      JB_env_list,
                      JB_priority,
-                     JB_jobshare,
                      JB_job_name,
                      JB_project,
                      JB_department,
@@ -970,10 +957,10 @@ lWriteListTo(ehl, stdout);
    /*
    ** complexes
    */
-   ce_all = lWhat("%T(ALL)", CE_Type);
-   ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
-                        NULL, NULL, ce_all, NULL, &state);
-   ce_all = lFreeWhat(ce_all);
+   cx_all = lWhat("%T(ALL)", CX_Type);
+   cx_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_COMPLEX_LIST, SGE_GDI_GET, 
+                        NULL, NULL, cx_all, NULL, &state);
+   cx_all = lFreeWhat(cx_all);
 
    if (alp) {
       printf("%s", lGetString(lFirst(alp), AN_text));
@@ -1026,7 +1013,7 @@ lWriteListTo(ehl, stdout);
    alp = lFreeList(alp);
 
    /* --- queue */
-   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_QUEUE_LIST, q_id, 
                                  mal, queue_l);
    if (!alp) {
       printf(MSG_GDI_QUEUESGEGDIFAILED);
@@ -1060,9 +1047,9 @@ lWriteListTo(ehl, stdout);
       alp = lFreeList(alp);
    }
 
-   /* --- complex attribute */
-   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
-                                 mal, centry_l);
+   /* --- complex */
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_COMPLEX_LIST, cx_id,
+                                 mal, complex_l);
    if (!alp) {
       printf(MSG_GDI_COMPLEXSGEGDIFAILED);
       SGE_EXIT(1);

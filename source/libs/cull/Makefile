@@ -37,21 +37,19 @@ CULLLIB_DIR   = $(SDIR)/libs/cull
 CULLLIB 	= libcull$(LIBEXT)
 
 CULLLIB_SRC 	= cull_list.c \
-                cull_hash.c \
-                cull_where.c \
-                cull_parse.c \
-                cull_what.c \
-                cull_multitype.c \
-                cull_db.c \
-                cull_sort.c \
-                cull_dump_scan.c \
-                cull_lerrno.c \
-                cull_pack.c \
-                cull_tree.c \
-                cull_file.c \
-                cull_state.c \
-                cull_xml.c \
-                pack.c
+                  cull_hash.c \
+                  cull_where.c \
+                  cull_parse.c \
+                  cull_what.c \
+                  cull_multitype.c \
+                  cull_db.c \
+                  cull_sort.c \
+                  cull_dump_scan.c \
+                  cull_lerrno.c \
+                  cull_pack.c \
+                  cull_tree.c \
+                  cull_file.c \
+                  pack.c
 
 CULLLIB_OBJS = $(CULLLIB_SRC:.c=.o)
 
@@ -133,12 +131,6 @@ cull_tree.o:  $(CULLLIB_DIR)/cull_tree.c
 cull_file.o:   $(CULLLIB_DIR)/cull_file.c
 	$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_file.c
 
-cull_state.o:   $(CULLLIB_DIR)/cull_state.c
-	$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_state.c
-   
-cull_xml.o:   $(CULLLIB_DIR)/cull_xml.c
-	$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_xml.c
-   
 pack.o:		$(CULLLIB_DIR)/pack.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/pack.c
 
@@ -148,7 +140,7 @@ pack.o:		$(CULLLIB_DIR)/pack.c
 EXAMPLE1_OBJS = example1.o $(CULLLIB) $(UTILIB) $(RMONLIB)
 
 example1: $(EXAMPLE1_OBJS)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example1 $(EXAMPLE1_OBJS) $(LFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o example1 $(EXAMPLE1_OBJS) $(LFLAGS) $(LIBS)
 
 example1.o: $(CULLLIB_DIR)/example1.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/example1.c
@@ -159,29 +151,23 @@ example1.o: $(CULLLIB_DIR)/example1.c
 EXAMPLE2_OBJS = example2.o $(CULLLIB) $(UTILIB) $(RMONLIB)
 
 example2: $(EXAMPLE2_OBJS)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example2 $(EXAMPLE2_OBJS) $(LFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o example2 $(EXAMPLE2_OBJS) $(LFLAGS) $(LIBS)
 
 example2.o: $(CULLLIB_DIR)/example2.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/example2.c
 
 #---------------------------------------------------------------------
 # test programs
-test_cull_list: test_cull_list.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_list $(LFLAGS) test_cull_list.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
+test_cull_list: test_cull_list.o $(CULLLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_cull_list $(LFLAGS) test_cull_list.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_cull_list.o: $(CULLLIB_DIR)/test_cull_list.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_list.c
 
 #---
-test_cull_pack: test_cull_pack.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_pack $(LFLAGS) test_cull_pack.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
+test_cull_pack: test_cull_pack.o $(CULLLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_cull_pack $(LFLAGS) test_cull_pack.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_cull_pack.o: $(CULLLIB_DIR)/test_cull_pack.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_pack.c
 
-#---
-test_cull_hash: test_cull_hash.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) -lcull -lrmon -luti -llck $(LIBS)
-
-test_cull_hash.o: $(CULLLIB_DIR)/test_cull_hash.c
-	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_hash.c

@@ -73,7 +73,6 @@ lappend check_functions "share_tree_cleanup"
 
 global share_tree_job_counter 
 global share_tree_percentage_variation
-global shartree_stored_configuration
 
 proc share_tree_init_level {} {
    global CHECK_ACT_LEVEL
@@ -300,7 +299,7 @@ proc share_tree_setup  {} {
    global CHECK_ARCH
    global CHECK_PRODUCT_ROOT
    global CHECK_HOST 
-   global shartree_stored_configuration
+
 
 
    if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
@@ -308,15 +307,6 @@ proc share_tree_setup  {} {
       return 
    }
     
-   get_config shartree_stored_configuration
-   set my_execd_params "SHARETREE_RESERVED_USAGE=true"
-   if { [string compare "none" $shartree_stored_configuration(execd_params)] != 0 } {
-      append my_execd_params ",$shartree_stored_configuration(execd_params)"
-   }
-   set myconfig(execd_params) "$my_execd_params"
-   set_config myconfig
-
-
    foreach elem $CHECK_CORE_EXECD {
       disable_queue "${elem}.q"
    }  
@@ -416,14 +406,14 @@ proc share_tree_test {} {
    set prj3_id_list ""
    set counter $share_tree_job_counter
    while { $counter > 0 } {
-      lappend prj1_id_list [ submit_job "-e /dev/null -o /dev/null -P project1 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/sleeper.sh 5 $CHECK_PROTOCOL_DIR"]
-      lappend prj2_id_list [ submit_job "-e /dev/null -o /dev/null -P project2 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/sleeper.sh 5 $CHECK_PROTOCOL_DIR"]
-      set last_job [ submit_job "-e /dev/null -o /dev/null -P project3 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/sleeper.sh 5 $CHECK_PROTOCOL_DIR"]
+      lappend prj1_id_list [ submit_job "-e /dev/null -o /dev/null -P project1 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 5 $CHECK_PROTOCOL_DIR"]
+      lappend prj2_id_list [ submit_job "-e /dev/null -o /dev/null -P project2 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 5 $CHECK_PROTOCOL_DIR"]
+      set last_job [ submit_job "-e /dev/null -o /dev/null -P project3 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 5 $CHECK_PROTOCOL_DIR"]
       lappend prj3_id_list $last_job      
       incr counter -1
    }
 
-   wait_for_jobpending $last_job "leeper" 60
+   wait_for_jobpending $last_job "orker" 60
 
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
    puts $CHECK_OUTPUT $result
@@ -490,17 +480,14 @@ proc share_tree_test {} {
       }
    }
 
-#   set mod_config(schedule_interval)    "0:0:10"
-#   set_schedd_config mod_config
    enable_queue share_test
 
    set done 0
    set my_timeout [timestamp]
-   incr my_timeout 2500
-   set nr_of_jobs 0
-   set last_job_count 0
+   incr my_timeout 10000
    while { $done == 0 && [timestamp] < $my_timeout} {
       set done 1
+      set nr_of_jobs 0
       foreach job $prj2_id_list {
          set file_here [file isfile $CHECK_PROTOCOL_DIR/$job]
          if { $file_here == 0 } {
@@ -512,20 +499,11 @@ proc share_tree_test {} {
          continue
       }
 
-      set catch_return [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat -s r" } result ]
-      set rjobout [split $result "\n"]
-      set running_jobs [llength $rjobout]
-      if { $running_jobs > 0 } {
-         incr running_jobs -2 ;# 2 header lines
-      }
-      if { $running_jobs == 0 } {
-         catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
-         puts -nonewline $CHECK_OUTPUT "."
-         flush $CHECK_OUTPUT
-      }
+      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+      puts -nonewline $CHECK_OUTPUT "."
+      flush $CHECK_OUTPUT
       sleep 2
    }
-   disable_queue share_test
    if { [timestamp] >= $my_timeout } {
       add_proc_error "share_tree_test" -1 "timeout while waiting for start of jobs"
    }
@@ -601,7 +579,6 @@ proc share_tree_cleanup  {} {
    global CHECK_ARCH 
    global CHECK_PRODUCT_ROOT
    global prj1_id_list prj2_id_list prj3_id_list
-   global shartree_stored_configuration
 
    if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
       set_error -3 "not available for sge system"
@@ -610,8 +587,7 @@ proc share_tree_cleanup  {} {
 
    reset_schedd_config
 
-   set result [delete_all_jobs]
-
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } result
 
    puts $CHECK_OUTPUT "ensure that no jobs are referenced in qmaster any longer ..."
    foreach job [concat $prj1_id_list $prj2_id_list $prj3_id_list] {
@@ -645,8 +621,6 @@ proc share_tree_cleanup  {} {
   del_prj "project1"
   del_prj "project2"
   del_prj "project3"
-
-  set_config shartree_stored_configuration
 
   set_error 0 "ok"
 }

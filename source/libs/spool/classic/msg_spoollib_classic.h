@@ -38,6 +38,7 @@
  * libs/spool/read_list.c
  */
 #define MSG_CONFIG_READINGINEXECUTIONHOSTS      _MESSAGE(61000, _("Reading in execution hosts.\n"))
+#define MSG_CONFIG_CANTWRITEHISTORYFORHOSTX_S   _MESSAGE(61001, _("cannot write history for host "SFQ"\n"))
 #define MSG_CONFIG_READINGINADMINHOSTS          _MESSAGE(61002, _("Reading in administrative hosts.\n"))
 #define MSG_CONFIG_READINGINSUBMITHOSTS         _MESSAGE(61003, _("Reading in submit hosts.\n"))
 #define MSG_CONFIG_READINGINGPARALLELENV        _MESSAGE(61004, _("Reading in parallel environments:\n"))
@@ -50,9 +51,11 @@
 #define MSG_CONFIG_READINGINQUEUES              _MESSAGE(61011, _("Reading in queues:\n"))
 #define MSG_SETUP_QUEUE_S                       _MESSAGE(61012, _("\tQueue "SFQ".\n"))
 #define MSG_CONFIG_READINGFILE_SS               _MESSAGE(61013, _("reading file "SFN"/"SFN"\n"))
+#define MSG_CONFIG_QUEUEXUPDATED_S              _MESSAGE(61014, _("Queue "SFN" updated\n"))
 #define MSG_CONFIG_OBSOLETEQUEUETEMPLATEFILEDELETED _MESSAGE(61015, _("obsolete queue template file deleted\n"))
 #define MSG_CONFIG_FOUNDQUEUETEMPLATEBUTNOTINFILETEMPLATEIGNORINGIT    _MESSAGE(61016, _("found queue 'template', but not in file 'template'; ignoring it!\n"))
-#define MSG_CONFIG_CANTRECREATEQEUEUE_SS        _MESSAGE(61017, _("cannot recreate queue "SFN" from disk because of unknown host "SFN"\n"))
+#define MSG_CONFIG_CANTRECREATEQEUEUEXFROMDISKBECAUSEOFUNKNOWNHOSTY_SS _MESSAGE(61017, _("cannot recreate queue "SFN" from disk because of unknown host "SFN"\n"))
+#define MSG_CONFIG_CANTWRITEHISTORYFORQUEUEX_S  _MESSAGE(61018, _("can't write history for queue "SFQ"\n"))
 #define MSG_CONFIG_READINGINPROJECTS            _MESSAGE(61019, _("Reading in projects:\n"))
 #define MSG_SETUP_PROJECT_S                     _MESSAGE(61020, _("\tProject "SFQ".\n"))
 #define MSG_CONFIG_READINGINUSERSETS            _MESSAGE(61021, _("Reading in usersets:\n"))
@@ -63,6 +66,9 @@
 #define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS      _MESSAGE(61026, _("cannot resolve "SFN" name "SFQ))
 #define MSG_SGETEXT_CANTSPOOL_SS                _MESSAGE(61027, _("qmaster is unable to spool "SFN" "SFQ"\n"))
 #define MSG_FILE_NOOPENDIR_S                    _MESSAGE(61028, _("can't open directory "SFQ))
+#define MSG_CONFIG_READINGINCOMPLEXES           _MESSAGE(61029, _("Reading in complexes:\n"))
+#define MSG_SETUP_COMPLEX_S                     _MESSAGE(61030, _("\tComplex "SFQ".\n"))
+#define MSG_FILE_NOWRITEHIST_S                  _MESSAGE(61031, _("can't write history for complex "SFQ))
 
 /*
  * libs/spool/read_write_manop.c
@@ -83,10 +89,9 @@
  * libs/spool/sge_spooling_classic.c
  */ 
 
-#define MSG_SPOOL_CHANGINGTOSPOOLDIRECTORY_S _MESSAGE(61039, _("changing to spool directory "SFN"\n")) 
+#define MSG_SPOOL_STARTEDINWRONGDIRECTORY_SS _MESSAGE(61039, _("process should start in the spool directory "SFQ", but we are in "SFQ"; changing to spool directory\n")) 
 #define MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR _MESSAGE(61040, _("incorrect paths given for common and/or spool directory\n"))
-#define MSG_SPOOL_COMMONDIRDOESNOTEXIST_S  _MESSAGE(61047, _("common directory "SFQ" does not exist\n"))
-#define MSG_SPOOL_SPOOLDIRDOESNOTEXIST_S  _MESSAGE(61041, _("spool directory "SFQ" does not exist\n"))
+#define MSG_SPOOL_COMMONDIRDOESNOTEXIST_S  _MESSAGE(61041, _("common directory "SFQ" does not exist\n"))
 #define MSG_SPOOL_NOTSUPPORTEDREADINGJOB _MESSAGE(61042, _("reading a single job from disk not supported in classic spooling context\n"))
 #define MSG_SPOOL_NOTSUPPORTEDREADINGMANAGER _MESSAGE(61043, _("reading a single manager from disk not supported in classic spooling context\n"))
 #define MSG_SPOOL_NOTSUPPORTEDREADINGOPERATOR _MESSAGE(61044, _("reading a single operator from disk not supported in classic spooling context\n"))
@@ -100,13 +105,7 @@
 #define MSG_CONFIG_READINGUSERMAPPINGENTRY _MESSAGE(33641, _("Reading in user mapping entries:\n"))
 #define MSG_SETUP_MAPPINGETRIES_S                  _MESSAGE(33609, _("\tMapping entries for "SFQ".\n"))
 #define MSG_SPOOL_SCHEDDCONFIGNOTDELETED _MESSAGE(61046, _("the scheduler configuration must not be deleted\n"))
-#define MSG_QMASTER_PRJINCORRECT_S       _MESSAGE(61048, _("Spoolfile for project "SFQ" containes invalid name\n"))
 
-/*
- *  
- */
-#define MSG_SETUP_COMPLEX_ATTR_S         _MESSAGE(61049, _("\tComplex attribute "SFQ".\n"))
-#define MSG_CONFIG_READINGINCOMPLEXATTRS _MESSAGE(61050, _("Reading in complex attributes.\n"))
-#define MSG_HGROUP_INCFILE_S             _MESSAGE(61051, _("Incorrect spoolfile for hostgroup "SFQ"\n"))
+
 
 #endif /* __MSG_SPOOLLIB_CLASSIC_H */

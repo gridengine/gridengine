@@ -26,12 +26,14 @@ in this Software without prior written authorization from the X Consortium.
 
 */
 
+#include <X11/Xos.h>
+#include <X11/Xfuncproto.h>
+
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 #ifndef X_NOT_POSIX
 #ifndef _POSIX_SOURCE

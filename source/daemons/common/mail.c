@@ -46,9 +46,8 @@
 #include "sge_prog.h"
 #include "sge_os.h"
 #include "sge_job.h"
-#include "sge_mailrec.h"
-
 #include "msg_daemons_common.h"
+
 
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */
@@ -129,7 +128,7 @@ const char *buf
    FILE *fp;
    stringT user_str;
 
-#if !defined(CRAY)
+#if !(defined(HPUX) || defined(HP10_01) || defined(HPCONVEX) || defined(CRAY) || defined(SINIX))
    struct rusage rusage;
 #endif
 
@@ -210,7 +209,7 @@ const char *buf
       sigprocmask(SIG_SETMASK, &io_mask, &omask);
       sigaction(SIGALRM, &sigalrm_vec, &sigalrm_ovec);
 
-#if defined(CRAY)
+#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX) || defined(CRAY) || defined(SINIX)
       pid2 = waitpid(pid, &status, 0);
 #else
       pid2 = wait3(&status, 0, &rusage);

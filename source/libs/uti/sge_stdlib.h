@@ -56,7 +56,7 @@
 *     uti/stdlib/sge_free()
 ******************************************************************************/
 #define FREE(x) \
-   if (x != NULL) { \
+   if (x) { \
       sge_free((char *)x); \
       x = NULL; \
    }
@@ -68,8 +68,9 @@ char *sge_realloc(char *ptr, int size);
 char *sge_free(char *cp);        
 
 const char *sge_getenv(const char *env_str); 
+
 int sge_putenv(const char *var);
+
 int sge_setenv(const char *name, const char *value);
-int sge_clrenv(const char *name);
 
 #endif /* __SGE_STDLIB_H */

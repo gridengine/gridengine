@@ -62,7 +62,6 @@
 #include "qmon_preferences.h"
 #include "sge_feature.h"
 #include "sge_prog.h"
-#include "sge_mt_init.h"
 
 #ifdef REPLAY_XT
 #include "ReplayXt.h"
@@ -172,7 +171,6 @@ Pixel          WarningPixel, QueueSelectedPixel, JobSuspPixel, JobSosPixel,
                JobDelPixel, JobHoldPixel, JobErrPixel, TooltipForeground,
                TooltipBackground;
 int            nologo;
-int            qmon_debug;
 int            helpset;
 
 
@@ -195,8 +193,6 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "qmon_main");
 
-   sge_mt_init();
-
    /* INSTALL SIGNAL HANDLER */
    qmonInstSignalHandler();
 
@@ -206,7 +202,7 @@ char **argv
    if (!(argc > 1 && !strcmp(argv[1], "-help")))
       qmonInitSge(progname);
 
-   SGE_ROOT = sge_get_root_dir(0, NULL, 0, 1);
+   SGE_ROOT = sge_get_root_dir(0, NULL, 0);
 
    /*
    ** Attention !!! Change the XtMalloc() above if you add additional args
@@ -455,14 +451,9 @@ Cardinal *num_params
 /*-------------------------------------------------------------------------*/
 static void qmonUsage(Widget w)
 {
-   dstring ds;
-   char buffer[256];
-
    DENTER(GUI_LAYER, "qmonUsage");
 
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
-
-   printf("%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
+   printf("%s\n", feature_get_product_name(FS_SHORT_VERSION));
    printf(XmtLocalize2(w, "usage: qmon\n", "qmon_usage", "usageTitle"));
    printf("	[-cmap]                           ");
    printf(XmtLocalize2(w, "use own colormap\n", "qmon_usage", "cmapOption"));

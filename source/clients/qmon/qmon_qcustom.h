@@ -37,12 +37,8 @@
 #include "qmon_cull.h"
 
 void qmonPopupQCU(Widget parent, XtPointer cld, XtPointer cad);
-void qmonQCUReadPreferences(void);
-lList *qmonGetQCUResourceList(void);
-lList *qmonGetQCUQrefList(void);
-lList *qmonGetQCUUserRefList(void);
-lList *qmonGetQCUPERefList(void);
-u_long32 qmonGetQCUQueueState(void);
+lList* qmonQFilterRequest(void);
+void qmonCreateQCU(Widget parent, XtPointer cld);
 
 #endif /* _QMON_QCUSTOM_H_ */
 

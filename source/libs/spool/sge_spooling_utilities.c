@@ -30,86 +30,36 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
-#include <string.h>
-
-#include "sge.h"
-
 #include "sgermon.h"
 #include "sge_log.h"
 
 #include "sge_stdlib.h"
 #include "sge_string.h"
 
-#include "commlib.h"
-
-#include "sge_answer.h"
+#include "gdi_utility.h"
 #include "sge_object.h"
-#include "sge_utility.h"
-
-#include "sge_ckpt.h"
-#include "sge_centry.h"
-#include "sge_cqueue.h"
-#include "sge_conf.h"
-#include "sge_schedd_conf.h"
-#include "sge_host.h"
-#include "sge_pe.h"
-#include "sgeobj/sge_qinstance.h"
-#include "sgeobj/sge_qinstance_state.h"
-#include "sge_userset.h"
-
-#include "sort_hosts.h"
-#include "sge_complex_schedd.h"
-#include "sge_select_queue.h"
-
-#include "sge_spooling.h"
-#include "spool/sge_spooling_utilities.h"
 
 #include "msg_common.h"
-#include "spool/msg_spoollib.h"
-#include "spool/flatfile/msg_spoollib_flatfile.h"
+#include "msg_spoollib.h"
 
+#include "sge_spooling_utilities.h"
 
-const spool_instr spool_config_subinstr = {
-   CULL_SUBLIST,
-   false,
-   false,
+const spool_instr spool_config_subinstr = 
+{
+   CULL_NAMELIST | CULL_TUPLELIST,
+   true,
+   true,
    NULL
 };
 
-const spool_instr spool_config_instr = {
+const spool_instr spool_config_instr = 
+{
    CULL_SPOOL,
    true,
    true,
    &spool_config_subinstr
 };
 
-const spool_instr spool_complex_subinstr = {
-   CULL_SPOOL,
-   false,
-   false,
-   NULL
-};
-
-const spool_instr spool_complex_instr = {
-   CULL_SPOOL,
-   false,
-   false,
-   &spool_complex_subinstr
-};
-
-const spool_instr spool_userprj_subinstr = {
-   CULL_SUBLIST,
-   false,
-   false,
-   &spool_userprj_subinstr
-};
-
-const spool_instr spool_user_instr = {
-   CULL_SPOOL | CULL_SPOOL_USER,
-   true,
-   true,
-   &spool_userprj_subinstr
-};
 
 static spooling_field *
 _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr, 
@@ -179,7 +129,7 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
    int i, j, size;
    int strip = 0;
 
-   DENTER(TOP_LAYER, "_spool_get_fields_to_spool");
+   DENTER(TOP_LAYER, "spool_get_fields_to_spool");
 
    /* we don't check descr and instr, as we know they are ok
     * (it's a static function)
@@ -203,17 +153,7 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
       return NULL;
    }
 
-   /* initialize fields */
-   for (i = 0; i < size; i++) {
-      fields[i].nm         = NoName;
-      fields[i].width      = 0;
-      fields[i].name       = NULL;
-      fields[i].sub_fields = NULL;
-      fields[i].clientdata = NULL;
-      fields[i].read_func  = NULL;
-      fields[i].write_func = NULL;
-   }
-
+   
    /* do we have to strip field prefixes, e.g. "QU_" from field names? */
    if (instr->copy_field_names && instr->strip_field_prefix) {
       dstring buffer = DSTRING_INIT;
@@ -227,9 +167,10 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
       if ((descr[i].mt & instr->selection) != 0) {
          spooling_field *sub_fields = NULL;
 
-         DPRINTF(("field "SFQ" will be spooled\n", lNm2Str(descr[i].nm)));
-
          fields[j].nm         = descr[i].nm;
+         fields[j].width      = 0;
+         fields[j].name       = NULL;
+         fields[j].sub_fields = NULL;
 
          if (instr->copy_field_names) {
             const char *name;
@@ -258,7 +199,7 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
                DEXIT;
                return NULL;
             }
-
+            
             sub_descr = object_get_subtype(descr[i].nm);
             if (sub_descr == NULL) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -270,15 +211,8 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
                return NULL;
             }
 
-            /* recursive spooling, e.g. sharetree */
-            if (instr->sub_instr == instr && descr == sub_descr) {
-               sub_fields = fields;
-               DPRINTF(("recursive structure detected for field %s\n",
-                        lNm2Str(descr[i].nm)));
-            } else {
-               sub_fields = _spool_get_fields_to_spool(answer_list, sub_descr, 
+            sub_fields = _spool_get_fields_to_spool(answer_list, sub_descr, 
                                                        instr->sub_instr);
-            }
          }
 
          fields[j++].sub_fields = sub_fields;
@@ -317,7 +251,7 @@ spool_free_spooling_fields(spooling_field *fields)
    if (fields != NULL) {
       int i;
       for (i = 0; fields[i].nm >=0; i++) {
-         if (fields[i].sub_fields != NULL && fields[i].sub_fields != fields) {
+         if (fields[i].sub_fields != NULL) {
             fields[i].sub_fields = spool_free_spooling_fields(fields[i].sub_fields);
          }
 
@@ -330,368 +264,3 @@ spool_free_spooling_fields(spooling_field *fields)
 
    return NULL;
 }
-
-/****** spool/utilities/spool_default_validate_func() ****************
-*  NAME
-*     spool_default_validate_func() -- validate objects
-*
-*  SYNOPSIS
-*     bool
-*     spool_default_validate_func(lList **answer_list, 
-*                               const lListElem *type, 
-*                               const lListElem *rule, 
-*                               const lListElem *object, 
-*                               const char *key, 
-*                               const sge_object_type object_type) 
-*
-*  FUNCTION
-*     Verifies an object.
-*
-*  INPUTS
-*     lList **answer_list - to return error messages
-*     const lListElem *type           - object type description
-*     const lListElem *rule           - rule to use
-*     const lListElem *object         - object to validate
-*     const sge_object_type object_type - object type
-*
-*  RESULT
-*     bool - true on success, else false
-*
-*  NOTES
-*     This function should not be called directly, it is called by the
-*     spooling framework.
-*
-*  SEE ALSO
-*******************************************************************************/
-bool spool_default_validate_func(lList **answer_list, 
-                          const lListElem *type, 
-                          const lListElem *rule,
-                          lListElem *object,
-                          const sge_object_type object_type)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "spool_default_validate_func");
-
-   switch(object_type) {
-      case SGE_TYPE_ADMINHOST:
-      case SGE_TYPE_EXECHOST:
-      case SGE_TYPE_SUBMITHOST:
-         {
-            int cl_ret;
-            int key_nm = object_type_get_key_nm(object_type);
-            char *old_name = strdup(lGetHost(object, key_nm));
-
-            /* try hostname resolving */
-            if (strcmp(old_name, SGE_GLOBAL_NAME) != 0) {
-               cl_ret = sge_resolve_host(object, key_nm);
-
-               /* if hostname resolving failed: create error */
-               if (cl_ret != CL_RETVAL_OK) {
-#ifdef ENABLE_NGC
-                  if (cl_ret != CL_RETVAL_GETHOSTNAME_ERROR) {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_ERROR, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_get_error_text(ret)); 
-                     ret = false;
-                  } else {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_WARNING, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_get_error_text(ret));
-                  }
-#else
-                  if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
-                      cl_ret != COMMD_NACK_TIMEOUT) {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_ERROR, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_errstr(ret)); 
-                     ret = false;
-                  } else {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_WARNING, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_errstr(ret));
-                  }
-#endif
-               } else {
-                  /* if hostname resolving changed hostname: spool */
-                  const char *new_name;
-                  new_name = lGetHost(object, key_nm);
-                  if (strcmp(old_name, new_name) != 0) {
-                     spooling_write_func write_func = 
-                             (spooling_write_func)lGetRef(rule, SPR_write_func);
-                     spooling_delete_func delete_func = 
-                             (spooling_delete_func)lGetRef(rule, SPR_delete_func);
-                     write_func(answer_list, type, rule, object, new_name, 
-                                object_type);
-                     delete_func(answer_list, type, rule, old_name, object_type);
-                  }
-               }
-               free(old_name);
-            }
-
-            if (object_type == SGE_TYPE_EXECHOST) {
-               /* trash load values - they are not valid after unspooling
-                * a host object.
-                */
-               if (ret) {
-                  ret = host_trash_load_values(object);
-               }
-
-               if (ret) {
-                  /* necessary to setup actual list of exechost */
-                  debit_host_consumable(NULL, object, Master_CEntry_List, 0);
-                  /* necessary to init double values of consumable configuration */
-                  centry_list_fill_request(lGetList(object, EH_consumable_config_list), 
-                        Master_CEntry_List, true, false, true);
-
-                  if (ensure_attrib_available(NULL, object, 
-                                              EH_consumable_config_list)) {
-                     ret = false;
-                  }
-               }
-            }
-         }
-         break;
-      case SGE_TYPE_QINSTANCE:
-         {
-            /* handle slots from now on as a consumble attribute of queue */
-            qinstance_set_conf_slots_used(object); 
-
-            /* remove all queue message, which are regenerated during the unspooling
-               the queue */
-            qinstance_message_trash_all_of_type_X(object, ~QI_ERROR);   
-
-            /* setup actual list of queue */
-            qinstance_debit_consumable(object, NULL, Master_CEntry_List, 0);
-
-            /* init double values of consumable configuration */
-            centry_list_fill_request(lGetList(object, QU_consumable_config_list), 
-                              Master_CEntry_List, true, false, true);
-
-               if (ensure_attrib_available(NULL, object, 
-                                           QU_load_thresholds) ||
-                   ensure_attrib_available(NULL, object, 
-                                           QU_suspend_thresholds) ||
-                   ensure_attrib_available(NULL, object, 
-                                           QU_consumable_config_list)) {
-                  ret = false;
-               }
-
-            if (ret) {
-               qinstance_state_set_unknown(object, true);
-               qinstance_state_set_cal_disabled(object, false);
-               qinstance_state_set_cal_suspended(object, false);
-               qinstance_set_slots_used(object, 0);
-               
-               if (host_list_locate(Master_Exechost_List, 
-                                    lGetHost(object, QU_qhostname)) == NULL) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_SPOOL_HOSTFORQUEUEDOESNOTEXIST_SS,
-                                          lGetString(object, QU_qname), 
-                                          lGetHost(object, QU_qhostname));
-                  ret = false;
-               }
-            }
-         }
-         break;
-      case SGE_TYPE_CQUEUE:
-         {
-            lList *master_list = *(centry_list_get_master_list());
-            lList *qinstance_list = NULL;
-            lListElem *qinstance = NULL;
-
-            qinstance_list = lGetList(object, CQ_qinstances);
-            for_each(qinstance, qinstance_list) {
-               lList *ccl = NULL;
-
-               /*
-                * handle slots from now on as a consumble
-                * attribute of queue
-                */
-               qinstance_set_conf_slots_used(qinstance);
-
-               /* setup actual list of queue */
-               qinstance_debit_consumable(qinstance, NULL, master_list, 0);
-
-               /* init double values of consumable configuration */
-               ccl = lGetList(qinstance, QU_consumable_config_list);
-               centry_list_fill_request(ccl, master_list, true, false, true);
-
-               if (ret) {
-                  if (ensure_attrib_available(NULL, qinstance,
-                                              QU_load_thresholds) ||
-                      ensure_attrib_available(NULL, qinstance,
-                                              QU_suspend_thresholds) ||
-                      ensure_attrib_available(NULL, qinstance,
-                                              QU_consumable_config_list)) {
-                     ret = false;
-                  }
-               }
-               if (ret) {
-                  qinstance_state_set_unknown(qinstance, true);
-                  qinstance_state_set_cal_disabled(qinstance, false);
-                  qinstance_state_set_cal_suspended(qinstance, false);
-                  qinstance_set_slots_used(qinstance, 0);
-
-                  if (host_list_locate(Master_Exechost_List,
-                                       lGetHost(qinstance, QU_qhostname)) == NULL) {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                             ANSWER_QUALITY_ERROR,
-                                             MSG_FLATFILE_HOSTNOTEXISTS_SS,
-                                             lGetString(qinstance, QU_qname),
-                                             lGetHost(qinstance, QU_qhostname));
-                     ret = false;
-                  }
-               }
-            }
-         }
-         break;
-      case SGE_TYPE_CONFIG:
-         {
-            int cl_ret;
-            char *old_name = strdup(lGetHost(object, CONF_hname));
-
-            /* try hostname resolving */
-            if (strcmp(old_name, SGE_GLOBAL_NAME) != 0) {
-               cl_ret = sge_resolve_host(object, CONF_hname);
-               /* if hostname resolving failed: create error */
-               if (cl_ret != CL_RETVAL_OK) {
-#ifdef ENABLE_NGC
-                  if (cl_ret != CL_RETVAL_GETHOSTNAME_ERROR) {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_ERROR, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_get_error_text(ret)); 
-                     ret = false;
-                  } else {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_WARNING, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_get_error_text(ret));
-                  }
-#else
-                  if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
-                      cl_ret != COMMD_NACK_TIMEOUT) {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_ERROR, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_errstr(ret)); 
-                     ret = false;
-                  } else {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_WARNING, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_errstr(ret));
-                  }
-#endif
-               } else {
-                  /* if hostname resolving changed hostname: spool */
-                  const char *new_name = lGetHost(object, CONF_hname);
-                  if (strcmp(old_name, new_name) != 0) {
-                     spooling_write_func write_func = 
-                             (spooling_write_func)lGetRef(rule, SPR_write_func);
-                     spooling_delete_func delete_func = 
-                             (spooling_delete_func)lGetRef(rule, SPR_delete_func);
-                     write_func(answer_list, type, rule, object, new_name, 
-                                object_type);
-                     delete_func(answer_list, type, rule, old_name, object_type);
-                  }
-               }
-            }
-            free(old_name);
-         }
-         break;
-      case SGE_TYPE_USERSET:
-         if (userset_validate_entries(object, answer_list, 1) != STATUS_OK) {
-            ret = false;
-         }
-         break;
-      case SGE_TYPE_CKPT:
-         if (ckpt_validate(object, answer_list) != STATUS_OK) {
-            ret = false;
-         }
-         break;
-      case SGE_TYPE_PE:
-         if (pe_validate(object, answer_list, 1) != STATUS_OK) {
-            ret = false;
-         }
-         break;
-      case SGE_TYPE_CENTRY:
-         if (!centry_elem_validate(object, Master_CEntry_List, answer_list)) {
-            ret = false;
-         }
-         break;
-      case SGE_TYPE_MANAGER:
-      case SGE_TYPE_OPERATOR:
-      case SGE_TYPE_HGROUP:
-#ifndef __SGE_NO_USERMAPPING__
-      case SGE_TYPE_CUSER:
-#endif
-      case SGE_TYPE_CALENDAR:
-      case SGE_TYPE_PROJECT:
-      case SGE_TYPE_USER:
-      case SGE_TYPE_SHARETREE:
-         /* JG: TODO: we need a function validate_sharetree.
-          * there is a function search_unspecified_node(), what is 
-          * qmaster doing?
-          */
-      case SGE_TYPE_SCHEDD_CONF:
-      case SGE_TYPE_JOB:
-      default:
-         break;
-   }
-
-   DEXIT;
-   return ret;
-}
-
-
-bool
-spool_default_validate_list_func(lList **answer_list, 
-                          const lListElem *type, const lListElem *rule,
-                          const sge_object_type object_type)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "spool_default_validate_list_func");
-
-   switch(object_type) {
-      case SGE_TYPE_ADMINHOST:
-      case SGE_TYPE_EXECHOST:
-      case SGE_TYPE_SUBMITHOST:
-      case SGE_TYPE_CONFIG:
-      case SGE_TYPE_USERSET:
-      case SGE_TYPE_CKPT:
-      case SGE_TYPE_PE:
-         break;
-      case SGE_TYPE_CENTRY:
-         centry_list_sort(Master_CEntry_List);
-         break;
-      case SGE_TYPE_MANAGER:
-      case SGE_TYPE_OPERATOR:
-      case SGE_TYPE_HGROUP:
-#ifndef __SGE_NO_USERMAPPING__
-      case SGE_TYPE_CUSER:
-#endif
-      case SGE_TYPE_CALENDAR:
-      case SGE_TYPE_PROJECT:
-      case SGE_TYPE_USER:
-      case SGE_TYPE_SHARETREE:
-         break;
-      case SGE_TYPE_SCHEDD_CONF:
-         ret = sconf_validate_config_(answer_list);
-         break;
-      case SGE_TYPE_JOB:
-      default:
-         break;
-   }
-
-   DEXIT;
-   return ret;
-}
-

@@ -34,26 +34,14 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <pthread.h>
-
-#include "sge_mtutil.h"
 #include "basis_types.h"
 #include "sge_language.h"
 #include "sgermon.h"
 #include "sge_prog.h"
 #include "sge_htable.h"
 
+
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
-
-/* MT-NOTE: language_mutex guards all language module function calls */
-static pthread_mutex_t language_mutex = PTHREAD_MUTEX_INITIALIZER;
-/* MT-NOTE: message_id_view_mutex guards only access to 'sge_message_id_view_flag' */
-static pthread_mutex_t message_id_view_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-#   define LANGUAGE_LOCK()            sge_mutex_lock("language_mutex", SGE_FUNC, __LINE__, &language_mutex)
-#   define LANGUAGE_UNLOCK()          sge_mutex_unlock("language_mutex", SGE_FUNC, __LINE__, &language_mutex)
-#   define MESSAGE_ID_VIEW_LOCK()     sge_mutex_lock("message_id_view_mutex", SGE_FUNC, __LINE__, &message_id_view_mutex)
-#   define MESSAGE_ID_VIEW_UNLOCK()   sge_mutex_unlock("message_id_view_mutex", SGE_FUNC, __LINE__, &message_id_view_mutex)
 
 /*
  *  environment variable "SGE_ENABLE_MSG_ID"
@@ -94,9 +82,8 @@ static int sge_enable_msg_id_to_every_message = 0;
 static htable sge_message_hash_table = NULL; 
 
 /* this is to find out if the sge_init_language_func() was called */
-static bool sge_are_language_functions_installed = false;
+static int sge_are_language_functions_installed = FALSE;
 
-static int sge_get_message_id_output_implementation(void);
 
 /****** uti/language/sge_init_language() **************************************
 *  NAME
@@ -126,11 +113,8 @@ static int sge_get_message_id_output_implementation(void);
 *                          "GRIDLOCALEDIR"). 
 *
 *  RESULT
-*     int state         -  true for seccess, false on error.
+*     int state         -  TRUE for seccess, FALSE on error.
 *
-*  NOTES
-*     MT-NOTE: sge_init_languagefunc() is guarded by language_mutex
-*     
 *  SEE ALSO
 *     uti/language/sge_init_language()
 *     uti/language/sge_init_language_func()
@@ -148,13 +132,11 @@ int sge_init_languagefunc(char *package, char *localeDir)
   char* language_var = NULL;
   char* pathName = NULL;
   char* sge_enable_msg_id_string = NULL;
-  int   success  = false;  
+  int   success  = FALSE;  
   int   back;
   int   stop = 0;
 
   DENTER(TOP_LAYER, "sge_init_language");
-
-  LANGUAGE_LOCK();
 
   DPRINTF(("****** starting localization procedure ... **********\n"));
 
@@ -217,7 +199,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
    
      /* no directory given, using default one */
      if (locDir == NULL) {
-        const char *sge_root = sge_get_root_dir(0, NULL, 0, 0);
+        const char *sge_root = sge_get_root_dir(0, NULL, 0);
         char* root = NULL;
         
         if (sge_root != NULL) {
@@ -284,17 +266,18 @@ int sge_init_languagefunc(char *package, char *localeDir)
      DPRINTF(("package file:     >%s.mo<\n",packName));
      DPRINTF(("language (LANG):  >%s<\n",language));
      DPRINTF(("loading message file: %s\n",pathName ));
+     
    
      /* is the package file allright */
      back = open (pathName, O_RDONLY);
      if (back >= 0) {
         DPRINTF(("found message file - ok\n"));
-        success = true;
+        success = TRUE;
         close(back);
         stop = 2;
      } else {
         DPRINTF(("could not open message file - error\n"));
-        success = false;
+        success = FALSE;
      }
      if(stop==0) {
         stop = 2;   /* only when stop = 1: Try to repeat without LOCALEDIR environment variable */
@@ -309,7 +292,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
   if ( (sge_language_functions.setlocale_func != NULL     ) &&
        (sge_language_functions.bindtextdomain_func != NULL) &&
        (sge_language_functions.textdomain_func != NULL    ) &&
-       (sge_are_language_functions_installed == true      )    ) {
+       (sge_are_language_functions_installed == TRUE      )    ) {
      char* help1 = NULL;
      help1 = sge_language_functions.setlocale_func(LC_MESSAGES, "");
      if (help1 != NULL) {
@@ -331,8 +314,11 @@ int sge_init_languagefunc(char *package, char *localeDir)
      }
   } else {
      DPRINTF(("sge_init_language() called without valid sge_language_functions pointer!\n"));
-     success = false;
+     success = FALSE;
   }
+
+
+
  
   free(packName);
   free(locDir);
@@ -345,7 +331,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
   language_var = NULL;
   pathName = NULL;
 
-  if (success == true) {
+  if (success == TRUE) {
      sge_enable_msg_id=1;
   } 
 
@@ -371,13 +357,11 @@ int sge_init_languagefunc(char *package, char *localeDir)
      DPRINTF(("error id output     : enabled\n"));
   }
 
-  if (success == true) {
+  if (success == TRUE) {
     DPRINTF(("****** starting localization procedure ... success **\n"));
   } else {
     DPRINTF(("****** starting localization procedure ... failed  **\n"));
   }
-
-  LANGUAGE_UNLOCK();
 
   DEXIT;
   return (success);
@@ -405,9 +389,6 @@ int sge_init_languagefunc(char *package, char *localeDir)
 *     bindtextdomain_func_type - pointer for bindtextdomain()
 *     textdomain_func_type     - pointer for textdomain()
 *
-*  NOTES
-*     MT-NOTE: sge_init_language_func() is guarded by language_mutex
-*     
 *  SEE ALSO
 *     uti/language/sge_init_language()
 *     uti/language/sge_init_language_func()
@@ -422,10 +403,6 @@ void sge_init_language_func(gettext_func_type new_gettext,
                             bindtextdomain_func_type new_bindtextdomain,
                             textdomain_func_type new_textdomain) 
 {
-   DENTER(TOP_LAYER, "sge_init_language_func");
-
-   LANGUAGE_LOCK();
-
    /* initialize the functions pointer to NULL */
    sge_language_functions.gettext_func = NULL;
    sge_language_functions.setlocale_func = NULL;
@@ -433,7 +410,7 @@ void sge_init_language_func(gettext_func_type new_gettext,
    sge_language_functions.textdomain_func = NULL;
 
    /* ok, the functions have now NULL pointer */
-   sge_are_language_functions_installed = true; 
+   sge_are_language_functions_installed = TRUE; 
 
    /* set the new functions */
    if (new_gettext != NULL) {
@@ -451,11 +428,6 @@ void sge_init_language_func(gettext_func_type new_gettext,
    if (new_textdomain != NULL) {
       sge_language_functions.textdomain_func = new_textdomain;
    } 
-
-   LANGUAGE_UNLOCK();
-
-   DEXIT;
-   return;
 }
 
 /****** uti/language/sge_set_message_id_output() *******************************
@@ -473,9 +445,6 @@ void sge_init_language_func(gettext_func_type new_gettext,
 *  INPUTS
 *     int flag - 0 = off ; 1 = on
 *
-*  NOTES
-*     MT-NOTE: sge_set_message_id_output() is guarded by language_mutex
-*     
 *  SEE ALSO
 *     uti/language/sge_init_language()
 *     uti/language/sge_init_language_func()
@@ -486,22 +455,12 @@ void sge_init_language_func(gettext_func_type new_gettext,
 *     uti/language/sge_set_message_id_output()
 *******************************************************************************/
 void sge_set_message_id_output(int flag) {
-
-   DENTER(CULL_LAYER, "sge_set_message_id_output");
-
-   MESSAGE_ID_VIEW_LOCK();
-
    if (flag == 0) {
       sge_message_id_view_flag = 0;
    } else {
       sge_message_id_view_flag = 1;
    }
-
-   MESSAGE_ID_VIEW_UNLOCK();
-   DEXIT;
-   return;
 }
-
 /****** uti/language/sge_get_message_id_output() *******************************
 *  NAME
 *     sge_get_message_id_output() -- check if message id should be added
@@ -516,55 +475,6 @@ void sge_set_message_id_output(int flag) {
 *  RESULT
 *     int - value of sge_message_id_view_flag
 *
-*  NOTES
-*     MT-NOTE: sge_get_message_id_output() is guarded by language_mutex
-*     
-*  SEE ALSO
-*     uti/language/sge_init_language()
-*     uti/language/sge_init_language_func()
-*     uti/language/sge_gettext()
-*     uti/language/sge_gettext_()
-*     uti/language/sge_gettext__()
-*     uti/language/sge_get_message_id_output()
-*     uti/language/sge_set_message_id_output()
-*     uti/language/sge_get_message_id_output_implementation()
-*******************************************************************************/
-int sge_get_message_id_output(void) 
-{
-   int ret;
-
-   DENTER(TOP_LAYER, "sge_get_message_id_output");
-
-   LANGUAGE_LOCK();
-   ret = sge_get_message_id_output_implementation();
-   LANGUAGE_UNLOCK();
-
-   DEXIT;
-   return ret;
-}
-
-/****** uti/language/sge_get_message_id_output_implementation() ***************
-*  NAME
-*     sge_get_message_id_output_implementation() -- pure implementation of 
-*        sge_get_message_id_output_implementation() that does not lock
-*        language_mutex
-*
-*  SYNOPSIS
-*     int sge_get_message_id_output_implementation(void) 
-*
-*  FUNCTION
-*     When the sge_get_message_id_output() functionality is needed from within
-*     the language modules the language_mutex may not be obtained because this 
-*     mutex is already owned by the same thread. 
-*
-*  RESULT
-*     int - value of sge_message_id_view_flag
-*
-*  NOTES
-*     MT-NOTE: The caller of sge_get_message_id_output_implementation() must
-*     MT-NOTE: have obtained the language_mutex mutex due to access to 
-*     MT-NOTE: 'sge_enable_msg_id' and 'sge_enable_msg_id_to_every_message'.
-*     
 *  SEE ALSO
 *     uti/language/sge_init_language()
 *     uti/language/sge_init_language_func()
@@ -574,28 +484,14 @@ int sge_get_message_id_output(void)
 *     uti/language/sge_get_message_id_output()
 *     uti/language/sge_set_message_id_output()
 *******************************************************************************/
-static int sge_get_message_id_output_implementation(void) 
-{
-   int ret;
-
-   DENTER(CULL_LAYER, "sge_get_message_id_output_implementation");
-
+int sge_get_message_id_output(void) {
    if (sge_enable_msg_id_to_every_message == 1) {
-      DEXIT;
       return 1;
-   }
-
+   } 
    if (sge_enable_msg_id == 0) {
-      DEXIT;
       return 0;
-   }
-
-   MESSAGE_ID_VIEW_LOCK();
-   ret = sge_message_id_view_flag;
-   MESSAGE_ID_VIEW_UNLOCK();
-
-   DEXIT;
-   return ret;
+   } 
+   return sge_message_id_view_flag;
 }
 
 /****** uti/language/sge_gettext() *********************************************
@@ -658,14 +554,13 @@ const char *sge_gettext(char *x) {
 *******************************************************************************/
 const char *sge_gettext_(int msg_id, const char *msg_str) 
 {
-   /* extern */
 #ifndef __SGE_COMPILE_WITH_GETTEXT__
    return msg_str;
 #else
    sge_error_message_t* message_p = NULL;
    long key;
 
-   DENTER(CULL_LAYER, "sge_gettext_");
+   DENTER(BASIS_LAYER, "sge_gettext_");
 
    if (msg_str == NULL) {
       DEXIT;
@@ -674,7 +569,7 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
 
    key = msg_id;
    /* check if message is not just one word (strstr) */
-   if ( (sge_get_message_id_output_implementation() != 0)  && 
+   if ( (sge_get_message_id_output() != 0)  && 
         (strstr(msg_str, " ") != NULL)   ) {  
        
       if (sge_message_hash_table == NULL) {
@@ -754,9 +649,6 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
 *  RESULT
 *     char*   - pointer internationalized message
 *
-*  NOTE
-*     MT-NOTE: not guarded b/c sge_gettext__() is used only in infotext utility
-* 
 *  SEE ALSO
 *     uti/language/sge_init_language()
 *     uti/language/sge_init_language_func()
@@ -772,7 +664,7 @@ const char *sge_gettext__(char *x)
    DENTER(BASIS_LAYER, "sge_gettext__");
 
    if ( (sge_language_functions.gettext_func != NULL) && 
-        (sge_are_language_functions_installed == true)   ) {
+        (sge_are_language_functions_installed == TRUE)   ) {
       z = sge_language_functions.gettext_func(x);
    } else {
       z = x;
@@ -786,4 +678,5 @@ const char *sge_gettext__(char *x)
    DEXIT;
    return z;
 }
+  
 #endif

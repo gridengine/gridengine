@@ -119,7 +119,6 @@ _Messages_.en.*.@fBOverride Policy: @fBOverride Policy
 _Messages_.en.*.@fBOwner List: @fBOwner List
 _Messages_.en.*.@fBOwners: @fBOwners
 _Messages_.en.*.@fBParallel Job Request - %s: @fBParallel Job Request - %s
-_Messages_.en.*.@fBParallel Environment: @fBParallel Environment
 _Messages_.en.*.@fBParallel Environment Configuration: @fBParallel Environment Configuration
 _Messages_.en.*.@fBPending Jobs: @fBPending Jobs
 _Messages_.en.*.@fBPolicy: @fBPolicy
@@ -135,6 +134,7 @@ _Messages_.en.*.@fBQueue Control: @fBQueue Control
 _Messages_.en.*.@fBQUEUE ACTIONS: @fBQUEUE ACTIONS
 _Messages_.en.*.@fBRequested Resources: @fBRequested Resources
 _Messages_.en.*.@fBRerun Jobs: @fBRerun Jobs
+_Messages_.en.*.@fBResource Capability Factor: @fBResource Capability Factor
 _Messages_.en.*.@fBResume Method: @fBResume Method
 _Messages_.en.*.@fBRunning Jobs: @fBRunning Jobs
 _Messages_.en.*.@fBScaling: @fBScaling
@@ -342,10 +342,6 @@ _Messages_.en.*.Finished Jobs: Finished Jobs
 _Messages_.en.*.Force: Force
 _Messages_.en.*.GByte (1024x1024x1024): GByte (1024x1024x1024)
 _Messages_.en.*.GID Range for Job Monitoring: GID Range for Job Monitoring
-_Messages_.en.*.@fBAutomatic User Defaults: @fBAutomatic User Defaults
-_Messages_.en.*.Override Tickets: Override Tickets 
-_Messages_.en.*.Functional Shares: Functional Shares 
-_Messages_.en.*.Delete Time: Delete Time
 _Messages_.en.*.SGEEE Schedule Interval required!: SGEEE Schedule Interval required!
 _Messages_.en.*.Get Environment: Get Environment
 _Messages_.en.*.Get Queue Attributes from: Get Queue Attributes from
@@ -430,9 +426,9 @@ _Messages_.en.*.Max Slots: Max Slots
 _Messages_.en.*.Max Unheard: Max Unheard
 _Messages_.en.*.cannot reach qmaster: cannot reach qmaster
 _Messages_.en.*.cannot reach %s: cannot reach %s
-_Messages_.en.*.cluster.max_aj_instances: Maximum Array\nJob Instances
-_Messages_.en.*.cluster.max_aj_tasks: Maximum Array\nJob Tasks
-_Messages_.en.*.cluster.max_job_per_user: Maximum Jobs\nPer User
+_Messages_.en.*.cluster.max_aj_instances: Maximal Array\nJob Instances
+_Messages_.en.*.cluster.max_aj_tasks: Maximal Array\nJob Tasks
+_Messages_.en.*.cluster.max_job_per_user: Maximal Jobs\nPer User
 _Messages_.en.*.MaxMigrTime: MaxMigrTime
 _Messages_.en.*.MaxNoMigr: MaxNoMigr
 _Messages_.en.*.Merge Output: Merge Output
@@ -604,6 +600,7 @@ _Messages_.en.*.Soft Request: Soft Request
 _Messages_.en.*.Soft Resources: Soft Resources
 _Messages_.en.*.Sort by load: Sort by load
 _Messages_.en.*.Sort by sequence number: Sort by sequence number
+_Messages_.en.*.Sort by share: Sort by share
 _Messages_.en.*.Start At: Start At
 _Messages_.en.*.Start Job Immediately: Start Job Immediately
 _Messages_.en.*.Start Proc Args: Start Proc Args
@@ -650,6 +647,7 @@ _Messages_.en.*.Usage: Usage
 _Messages_.en.*.User Configuration: User Configuration
 _Messages_.en.*.User Lists: User Lists
 _Messages_.en.*.User Share Tree: User Share Tree
+_Messages_.en.*.User Sort: User Sort
 _Messages_.en.*.User [%]: User [%]
 _Messages_.en.*.User/Group: User/Group
 _Messages_.en.*.User: User

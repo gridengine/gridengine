@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QHOST 1 "$Date: 2004/01/28 16:05:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QHOST 1 "$Date: 2001/07/20 08:18:59 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qhost \- show the status of xxQS_NAMExx hosts, queues, jobs
 .\"
@@ -89,7 +89,7 @@ Matching is performed on hosts.
 .\"
 .\"
 .IP "\fB\-q\fP"
-Show information about the queues instances hosted by the displayed hosts.
+Show information about the queues hosted by the displayed hosts.
 .\"
 .IP "\fB\-u user,...\fP"
 Display information only on those jobs and queues
@@ -208,6 +208,9 @@ defined load scaling has been applied,
 the consumable resources facility (see
 .M complexes 5 ),
 .br
+`\fBv\fP' - a default complexes configuration value 
+never overwritten by a load report or a consumable update or
+.br
 `\fBf\fP' - a fixed 
 availability definition derived from a non-consumable complex attribute or 
 a fixed resource limit.
@@ -282,6 +285,14 @@ If set, specifies the tcp port on which
 is expected to listen for communication requests.
 Most installations will use a services map entry instead
 to define that port.
+.\"
+.IP "\fBCOMMD_HOST\fP" 1.5i
+If set, specifies the host on which the particular
+.M xxqs_name_sxx_commd 8
+to be used for xxQS_NAMExx communication of the
+.I qstat
+client resides.
+Per default the local host is used.
 .\"
 .\"
 .SH FILES

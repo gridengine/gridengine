@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2004/02/25 15:15:51 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2002/07/29 15:54:32 $     Revision: $Revision: 1.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_PE 5 "$Date: 2004/02/25 15:15:51 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_PE 5 "$Date: 2002/07/29 15:54:32 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_pe \- xxQS_NAMExx parallel environment configuration file format
@@ -61,19 +61,17 @@ to specify the job requirement to further detail.
 The format of a
 .I xxqs_name_sxx_pe
 file is defined as follows:
-.\"
-.\"
 .SS "\fBpe_name\fP"
 The name of the parallel environment. To be used in the
 .M qsub 1
 \fB\-pe\fP switch.
-.\"
-.\"
+.SS "\fBqueue_list\fP"
+A comma separated list of queues to which parallel jobs belonging
+to this parallel environment have access to. Alternatively the keyword
+"all" can be used to give access to all queues across the cluster.
 .SS "\fBslots\fP"
 The number of parallel processes being allowed to run in total under the
 parallel environment concurrently.
-.\"
-.\"
 .SS "\fBuser_lists\fP"
 A comma separated list of user access list names (see
 .M access_list 5 ).
@@ -83,8 +81,6 @@ NONE (the default) any user has access being not explicitly excluded
 via the \fBxuser_lists\fP parameter described below.
 If a user is contained both in an access list enlisted in \fBxuser_lists\fP
 and \fBuser_lists\fP the user is denied access to the parallel environment.
-.\"
-.\"
 .SS "\fBxuser_lists\fP"
 The \fBxuser_lists\fP parameter contains a comma separated list of so called
 user access lists as described in
@@ -94,8 +90,6 @@ allowed to access the parallel environment. If the \fBxuser_lists\fP
 parameter is set to NONE (the default) any user has access. If a user
 is contained both in an access list enlisted in \fBxuser_lists\fP and
 \fBuser_lists\fP the user is denied access to the parallel environment.
-.\"
-.\"
 .SS "\fBstart_proc_args\fP"
 The invocation command line of a start-up procedure for the parallel
 environment. The start-up procedure is invoked by
@@ -148,8 +142,8 @@ The \fBprocessors\fP string as contained in the queue configuration
 of the master queue (the queue in which the start-up and stop procedures
 are started).
 .IP "\fI$queue\fP"
-The cluster queue of the master queue instance.
-.\"
+The master queue, i.e. the queue in which the start-up and stop procedures
+are started.
 .\"
 .SS "\fBstop_proc_args\fP"
 The invocation command line of a shutdown procedure for the parallel
@@ -174,8 +168,6 @@ the standard error output is redirected to \fIREQNAME\fP.pe\fIJID\fP
 .br
 The same special variables as for \fBstart_proc_args\fP
 can be used to constitute a command line.
-.\"
-.\"
 .SS "\fBallocation_rule\fP"
 The allocation rule is interpreted by
 .M xxqs_name_sxx_schedd 8
@@ -210,8 +202,6 @@ requested by the parallel job are dispatched. If more tasks are requested
 than suitable hosts are found, allocation starts again from the first host. 
 The allocation scheme walks through suitable hosts in a best-suitable-first 
 order.
-.\"
-.\"
 .SS "\fBcontrol_slaves\fP"
 This parameter can be set to TRUE or FALSE (the default). It indicates 
 whether xxQS_NAMExx is the creator of the slave tasks of a parallel application
@@ -230,8 +220,6 @@ available through your local xxQS_NAMExx support office.
 .sp 1
 Please set the control_slaves parameter to false for all other PE
 interfaces.
-.\"
-.\"
 .SS "\fBjob_is_first_task\fP"
 This parameter is only checked if
 .B control_slaves
@@ -253,39 +241,6 @@ TRUE indicates that the xxQS_NAMExx job script already contains one of
 the tasks of the parallel application, while a value of FALSE indicates
 that the 
 job script (and its child processes) is not part of the parallel program.
-.\"
-.\"
-
-.SS "\fBurgency_slots\fP"
-This parameter is only available in a xxQS_NAME_EExx system. 
-xxQS_NAME_Cxx does not support this parameter.
-.PP
-For pending jobs with a slot range PE request the number of slots 
-is not determined. This setting specifies the method to be used by 
-xxQS_NAME_EExx to assess the number of slots such jobs might finally
-get.
-.PP
-The assumed slot allocation has a meaning when determining the 
-resource resquest based priority contribution for numeric resoures
-as described in
-.M sge_priority 5 
-and is displayed when 
-.M qstat 1 
-is run without \fB\-g t\fP option.
-.PP
-The following methods are supported:
-.IP "\fB<int>\fP:" 1i
-The specified integer number is directly used as prospective slot amount.
-.IP "\fBmin\fP:" 1i
-The slot range minimum is used as prospective slot amount. If no 
-lower bound is specified with the range 1 is assumed.
-.IP "\fBmax\fP:" 1i
-The of the slot range maximum is used as prospective slot amount. 
-If no upper bound is specified with the range the absolute maximum 
-possible due to the PE's \fBslots\fP setting is assumed.
-.IP "\fBavg\fP:" 1i
-The average of all numbers occuring within the jobs PE range 
-request is assumed.
 .\"
 .\"
 .SH RESTRICTIONS

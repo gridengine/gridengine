@@ -45,8 +45,5 @@
 
 #define MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S  _MESSAGE(5008, _("no option argument provided to "SFQ""))
 
-#define MSG_CUSER_DOESNOTEXIST_S      _MESSAGE(5012, _("User mapping entry "SFQ" does not exist\n"))
-#define MSG_CUSER_FILENOTCORRECT_S    _MESSAGE(5013, _("User mapping file "SFQ" is not correct\n"))
-
 #endif /* __MSG_QCONF_H */
 

@@ -102,9 +102,6 @@ static const u_long32 crctab[256] =
 *     const char *buf - buffer 
 *     int buf_len     - size of buffer 
 *
-*  NOTES
-*     MT-NOTE: sge_cksum() is MT safe
-*
 *  RESULT
 *     u_long32 - crc
 ******************************************************************************/

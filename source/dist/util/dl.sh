@@ -32,9 +32,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-SGE_ND="true"
-export SGE_ND
-
 dl() {
    case $1 in
       0) SGE_DEBUG_LEVEL="0 0 0 0 0 0 0 0"; export SGE_DEBUG_LEVEL ;;
@@ -43,8 +40,7 @@ dl() {
       3) SGE_DEBUG_LEVEL="2 2 0 0 0 0 2 0"; export SGE_DEBUG_LEVEL ;;
       4) SGE_DEBUG_LEVEL="3 3 0 0 0 0 3 0"; export SGE_DEBUG_LEVEL ;;
       5) SGE_DEBUG_LEVEL="3 0 0 3 0 0 3 0"; export SGE_DEBUG_LEVEL ;;
-      6) SGE_DEBUG_LEVEL="32 32 32 0 0 32 32 0"; export SGE_DEBUG_LEVEL ;;
-      8|7) echo dl: $1 is a still unused debugging level ;;
+      8|7|6) echo dl: $1 is a still unused debugging level ;;
       9) SGE_DEBUG_LEVEL="2 2 2 0 0 0 0 0"; export SGE_DEBUG_LEVEL ;;
       10) SGE_DEBUG_LEVEL="3 3 3 0 0 0 0 3"; export SGE_DEBUG_LEVEL ;;
       *) echo "usage: dl <debugging_level>"

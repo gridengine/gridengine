@@ -30,11 +30,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include "sge_unistd.h"
+#include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "usage.h"
 #include "parse_qconf.h"
-#include "sge_gdi.h"
-#include "setup.h"
 #include "sig_handlers.h"
 #include "commlib.h"
 #include "sge_prog.h"
@@ -42,9 +41,6 @@
 #include "sge_log.h"
 #include "msg_clients_common.h"
 #include "msg_common.h"
-#include "sge_answer.h"
-#include "sge_mt_init.h"
-
 
 extern char **environ;
 
@@ -53,34 +49,32 @@ int main(int argc, char *argv[]);
 /************************************************************************/
 int main(int argc, char **argv)
 {
-   int ret;
-   lList *alp = NULL;
+   int cl_err = 0, ret;
    
    DENTER_MAIN(TOP_LAYER, "qconf");
 
-   sge_mt_init();
-
-   lInit(nmv);
-
-   log_state_set_log_gui(1);
-
    sge_gdi_param(SET_MEWHO, QCONF, NULL);
-   if (sge_gdi_setup(prognames[QCONF], &alp)!=AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
+   if ((cl_err = sge_gdi_setup(prognames[QCONF]))) {
+      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);
    }
 
    sge_setup_sig_handlers(QCONF);
 
-   if ((ret = reresolve_me_qualified_hostname()) != CL_RETVAL_OK) {
+   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
+      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(ret, SGE_EVENT));
+      fprintf(stderr, SGE_EVENT);
+      SGE_EXIT(1);
+   }   
+
+   if (argc == 1) {
+      sge_usage(stderr);
       SGE_EXIT(1);
    }
 
-   if (sge_parse_qconf(++argv)) {
+   if (sge_parse_qconf(++argv))
       SGE_EXIT(1);
-   } else {
+   else
       SGE_EXIT(0);
-   }
-   DEXIT;
    return 0;
 }

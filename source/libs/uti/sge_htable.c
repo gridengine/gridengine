@@ -38,9 +38,8 @@
 #include <string.h>
 #include <strings.h>
 #include <time.h>
-#include <limits.h>
-#include <unistd.h>
 #include <sys/times.h>
+#include <limits.h>
 
 #include "sge_htable.h"
 #include "sgermon.h"
@@ -79,9 +78,6 @@
 *
 *     This hash table implementation dynamically adjusts the size of the
 *     hash table when necessary.
-*
-*  NOTES
-*     MT-NOTE: This module is MT safe.
 *
 *  SEE ALSO
 *     cull/htable/--Introduction
@@ -137,6 +133,8 @@ typedef struct _htable_rec {
 *     uti/htable/sge_htable_statistics()
 ******************************************************************************/
 
+extern u_long32 logginglevel;
+
 static void sge_htable_resize(register htable ht, int grow)    
 {
    Bucket **otable;
@@ -144,14 +142,14 @@ static void sge_htable_resize(register htable ht, int grow)
    register Bucket *bucket, *next, **head;
    register int i;
    clock_t start = 0;
-   char buffer[1024];
+   static char buffer[1024];
    dstring buffer_wrapper;
 
    DENTER(BASIS_LAYER, "sge_htable_resize");
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
-   if(log_state_get_log_level() >= LOG_DEBUG) {
+   if(logginglevel >= LOG_DEBUG) {
       struct tms t_buf;
       DEBUG((SGE_EVENT, "hash stats before resizing: %s\n", 
                sge_htable_statistics(ht, &buffer_wrapper)));
@@ -183,9 +181,9 @@ static void sge_htable_resize(register htable ht, int grow)
    }
    free((char *) otable);
 
-   if(log_state_get_log_level() >= LOG_DEBUG) {
+   if(logginglevel >= LOG_DEBUG) {
       struct tms t_buf;
-      DEBUG((SGE_EVENT, "resizing of hash table took %.3fs\n", (times(&t_buf) - start) * 1.0 / sysconf(_SC_CLK_TCK)));
+      DEBUG((SGE_EVENT, "resizing of hash table took %.3fs\n", (times(&t_buf) - start) * 1.0 / CLK_TCK));
       DEBUG((SGE_EVENT, "hash stats after resizing: %s\n", sge_htable_statistics(ht, &buffer_wrapper)));
    }
    

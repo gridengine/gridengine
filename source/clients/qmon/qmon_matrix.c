@@ -40,6 +40,7 @@
 #include <Xmt/Procedures.h>
 
 #include "sge_usageL.h"
+#include "sge_requestL.h"
 
 #include "cull.h"
 #include "sge_gdi.h"
@@ -48,13 +49,10 @@
 #include "sge_range.h"
 #include "sge_answer.h"
 #include "sge_job.h"
-#include "sge_qinstance.h"
-#include "sge_subordinate.h"
-#include "sge_centry.h"
+#include "sge_queue.h"
+#include "sge_complex.h"
 #include "sge_var.h"
 #include "sge_host.h"
-#include "sge_mailrec.h"
-
 #include "qmon_rmon.h"
 #include "qmon_quarks.h"
 #include "qmon_matrix.h"
@@ -76,6 +74,10 @@ static Boolean getCE_TypeValues(lListElem *ep, const char **ce_entry);
 static Boolean setCE_TypeValues(lListElem *ep, char **ce_entry);
 static void set_CX_Type(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void get_CX_Type(Widget w, XtPointer address, XrmQuark type, Cardinal size);
+static void set_RQ_Type(Widget w, XtPointer address, XrmQuark type, Cardinal size);
+static void get_RQ_Type(Widget w, XtPointer address, XrmQuark type, Cardinal size);
+static lList* qmonGetRQ_Type(Widget w);
+static void qmonSetRQ_Type(Widget w, lList *lp);
 
 
 
@@ -110,6 +112,14 @@ static XmtWidgetType widgets[] = {
       CreateMatrix,
       set_CX_Type,
       get_CX_Type,
+      False
+   },
+   {
+      "RQ_TypeMatrix",         
+      NULL,
+      CreateMatrix,
+      set_RQ_Type,
+      get_RQ_Type,
       False
    },
    {
@@ -202,7 +212,6 @@ Cardinal argcount
    XmtVaRegisterCallbackProcedures(
          "DeleteLines", DeleteLines, XtRWidget,
          "ColumnZeroNoEdit", ColumnZeroNoEdit, NULL,
-         "ColumnNoEdit", ColumnNoEdit, NULL,
          NULL);
 
    return matrix;
@@ -451,7 +460,7 @@ Cardinal size
    else if ( type == QmonQAT_Type )
       qmonSet2xN(w, lp, AT_account, AT_cell);
    else if ( type == QmonQSO_Type )
-      qmonSet2xN(w, lp, SO_name, SO_threshold);
+      qmonSet2xN(w, lp, SO_qname, SO_threshold);
    else if ( type == QmonQUA_Type )
       qmonSet2xN(w, lp, UA_name, UA_value);
       
@@ -492,226 +501,13 @@ Cardinal size
    else if ( type == QmonQAT_Type )
       lp = qmonGet2xN(w, AT_Type, AT_account, AT_cell);
    else if ( type == QmonQSO_Type )
-      lp = qmonGet2xN(w, SO_Type, SO_name, SO_threshold);
+      lp = qmonGet2xN(w, SO_Type, SO_qname, SO_threshold);
    else if ( type == QmonQUA_Type )
       lp = qmonGet2xN(w, UA_Type, UA_name, UA_value);
 
    *(lList**)address = lp;
 }
 
-
-/*-------------------------------------------------------------------------*/
-void qmonSetNxN(
-Widget w,
-lList *lp,
-int num_fields,
-...
-) {
-   lListElem *ep;
-   int i, row;
-   int max_rows;
-   int val;
-   double dval;
-   char buf[128];
-   int *field;
-   const char **col;
-   va_list ap;
-   
-   DENTER(GUI_LAYER, "qmonSetNxN");
-   
-   /* clear the area */
-   XtVaSetValues(w, XmNcells, NULL, NULL);
-   
-   if (!lp) {
-      DEXIT;
-      return;
-   }
-
-   field = (int *)malloc(num_fields*sizeof(int));
-   col = (const char **)malloc(num_fields*sizeof(char *));
-   if (field == NULL || col == NULL) {
-      abort();
-   }
-
-#ifdef __INSIGHT__
-      _Insight_set_option("suppress", "READ_OVERFLOW");
-#endif
-
-   va_start(ap, num_fields);
-   for(i=0; i<num_fields; i++)
-      field[i] = va_arg(ap, int);
-
-#ifdef __INSIGHT__
-      _Insight_set_option("unsuppress", "READ_OVERFLOW");
-#endif
-      
-   XtVaGetValues(w, XmNrows, &max_rows, NULL);
-
-   for (ep = lFirst(lp), row = 0; ep; ep = lNext(ep), row++) {
-      if (row == max_rows) {
-         XbaeMatrixAddRows(w, 
-                           max_rows, 
-                           NULL,       /* empty rows  */
-                           NULL,       /* no lables   */
-                           NULL,       /* no different colors */
-                           1);         /* we add 1 rows      */
-         max_rows++;
-      }
-
-      memset(col, 0, num_fields*sizeof(char *));
-
-      /*
-       * get column values
-       */
-
-      for(i=0; i<num_fields; i++) {
-
-         switch (lGetType(lGetListDescr(lp), field[i])) {
-            case lStringT:
-               col[i] = (StringConst)lGetString(ep, field[i]);
-               break;
-            case lHostT:
-               col[i] = (StringConst)lGetHost(ep,field[i]);
-               break;
-            case lUlongT:
-               val = (int)lGetUlong(ep, field[i]);
-#if 0
-               if (val) {
-                  sprintf(buf, "%d", val);
-                  col[i] = buf;
-               }
-               else
-                  col[i] = NULL;
-#else
-               sprintf(buf, "%d", val);
-               col[i] = buf;
-#endif
-               break;
-            case lDoubleT:
-               dval = lGetDouble(ep, field[i]);
-               sprintf(buf, "%.2f", dval);
-               col[i] = buf;
-               break;
-         }
-      }
-
-      if (col[0]) {
-         /* FIX_CONST_GUI */
-         for(i=0; i<num_fields; i++)
-            XbaeMatrixSetCell(w, row, i, col[i] ? (String)col[i] : "");
-      }
-   }
-
-   free(field);
-   free(col);
-       
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-lList* qmonGetNxN(
-Widget w,
-lDescr *dp,
-int num_fields,
-...
-) {
-   lList *lp = NULL;
-   lListElem *ep;
-   int i, row;
-   int max_rows;
-   va_list ap;
-   char **col;
-   int *field;
-
-   DENTER(GUI_LAYER, "qmonGetNxN");
-
-   field = (int *)malloc(num_fields*sizeof(int));
-   col = (char **)malloc(num_fields*sizeof(char *));
-   if (field == NULL || col == NULL) {
-      abort();
-   }
-
-#ifdef __INSIGHT__
-   _Insight_set_option("suppress", "READ_OVERFLOW");
-#endif
-
-   va_start(ap, num_fields);
-   for(i=0; i<num_fields; i++)
-      field[i] = va_arg(ap, int);
-
-#ifdef __INSIGHT__
-   _Insight_set_option("unsuppress", "READ_OVERFLOW");
-#endif
-      
-   XtVaGetValues(w, XmNrows, &max_rows, NULL);
-   
-   for (row=0; row<max_rows; row++) {
-      memset(col, 0, num_fields*sizeof(char *));
-      for(i=0; i<num_fields; i++)
-         col[i] = XbaeMatrixGetCell(w, row, i);
-      if (col[0] && col[0][0] != '\0') {
-         if (!lp)
-            lp = lCreateList(XtName(w), dp);
-         ep = lCreateElem(dp);
-         lAppendElem(lp, ep);
-
-         /*
-          * retrieve values from columns
-          */
-
-         for(i=0; i<num_fields; i++) {
-            switch(lGetType(lGetListDescr(lp), field[i])) {
-               case lStringT: 
-                  lSetString(ep, field[i], col[i] ? col[i] : "" );
-                  break;
-               case lHostT:
-                  lSetHost(ep, field[i], col[i] ? col[i] : "");
-                  break;
-               case lUlongT:
-                  lSetUlong(ep, field[i], col[i] ? atoi(col[i]) : 0);
-                  break;
-               case lDoubleT:
-                  lSetDouble(ep, field[i], col[i] ? atof(col[i]) : 0.0);
-                  break;
-            }
-         }
-      }
-      else
-         continue;
-   }
-
-   free(field);
-   free(col);
-
-   DEXIT;
-   return lp;
-}
-
-   
-#if 1
-
-/*-------------------------------------------------------------------------*/
-void qmonSet2xN(
-Widget w,
-lList *lp,
-int field1,
-int field2 
-) {
-   qmonSetNxN(w, lp, 2, field1, field2);
-}
-
-
-/*-------------------------------------------------------------------------*/
-lList* qmonGet2xN(
-Widget w,
-lDescr *dp,
-int field1,
-int field2 
-) {
-   return qmonGetNxN(w, dp, 2, field1, field2);
-}
-
-#else
 
 /*-------------------------------------------------------------------------*/
 void qmonSet2xN(
@@ -756,10 +552,10 @@ int field2
       */
       switch (lGetType(lGetListDescr(lp), field1)) {
          case lStringT:
-            col1 = (StringConst)lGetString(ep, field1);
+            col1 = lGetString(ep, field1);
             break;
          case lHostT:
-            col1 = (StringConst)lGetHost(ep,field1);
+            col1 = lGetHost(ep,field1);
             break;
       }
       /*
@@ -767,10 +563,10 @@ int field2
       */
       switch (lGetType(lGetListDescr(lp), field2)) {
          case lStringT:
-            col2 = (StringConst)lGetString(ep, field2);
+            col2 = lGetString(ep, field2);
             break;
          case lHostT:
-            col2 = (StringConst)lGetHost(ep,field2);
+            col2 = lGetHost(ep,field2);
             break;
          case lUlongT:
             val = (int)lGetUlong(ep, field2);
@@ -864,8 +660,6 @@ int field2
    return lp;
 }
 
-#endif
-
    
 /*-------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------*/
@@ -944,6 +738,9 @@ int full
             /* FIX_CONST_GUI */
             XbaeMatrixSetCell(w, row, 2, 
                ce_entry[CE_RELOP] ? (String)ce_entry[CE_RELOP] : "");
+            /* FIX_CONST_GUI */
+            XbaeMatrixSetCell(w, row, 3, 
+               ce_entry[CE_VALUE] ? (String)ce_entry[CE_VALUE] : "");
          }
       }
       else
@@ -967,10 +764,36 @@ StringConst *ce_entry
    }
       
    /* name type relation value */ 
-   ce_entry[CE_NAME] = (StringConst)lGetString(ep, CE_name);
-   ce_entry[CE_SHORTCUT] = (StringConst)lGetString(ep, CE_shortcut);
-   ce_entry[CE_TYPE] = (StringConst)map_type2str(lGetUlong(ep, CE_valtype));
-
+   ce_entry[CE_NAME] = lGetString(ep, CE_name);
+   ce_entry[CE_SHORTCUT] = lGetString(ep, CE_shortcut);
+   switch (lGetUlong(ep, CE_valtype)) {
+   case TYPE_INT:
+      ce_entry[CE_TYPE] = "INT";
+      break;
+   case TYPE_STR:
+      ce_entry[CE_TYPE] = "STRING";
+      break;
+   case TYPE_TIM:
+      ce_entry[CE_TYPE] = "TIME";
+      break;
+   case TYPE_MEM:
+      ce_entry[CE_TYPE] = "MEMORY";
+      break;
+   case TYPE_BOO:
+      ce_entry[CE_TYPE] = "BOOL";
+      break;
+   case TYPE_HOST:
+      ce_entry[CE_TYPE] = "HOST";
+      break;
+   case TYPE_DOUBLE:
+      ce_entry[CE_TYPE] = "DOUBLE";
+      break;
+   case TYPE_CSTR:
+      ce_entry[CE_TYPE] = "CSTRING";
+      break;
+   default:
+      ce_entry[CE_TYPE] = "UNKNOWN";
+   }
    switch (lGetUlong(ep, CE_relop)) {
    case CMPLXLT_OP:
       ce_entry[CE_RELOP] = "<";
@@ -993,11 +816,11 @@ StringConst *ce_entry
    default:
       ce_entry[CE_RELOP] = "??";
    }
-   ce_entry[CE_REQUEST] = lGetUlong(ep, CE_requestable) == REQU_FORCED ? "FORCED" : 
-                           (lGetUlong(ep, CE_requestable) == REQU_YES ? "YES" : "NO");
+   ce_entry[CE_VALUE] = lGetString(ep, CE_stringval);
+   ce_entry[CE_REQUEST] = lGetBool(ep, CE_forced) ? "FORCED" : 
+                           (lGetBool(ep, CE_request) ? "YES" : "NO");
    ce_entry[CE_CONSUMABLE] = lGetBool(ep, CE_consumable) ? "YES" : "NO";
-   ce_entry[CE_DEFAULT] = (StringConst)lGetString(ep, CE_default);
-   ce_entry[CE_URGENCY] = (StringConst)lGetString(ep, CE_urgency_weight);
+   ce_entry[CE_DEFAULT] = lGetString(ep, CE_default);
       
    DEXIT;
    return True;
@@ -1008,8 +831,8 @@ static Boolean setCE_TypeValues(
 lListElem *ep,
 String *ce_entry 
 ) {
-   int i, type, relop; 
-   u_long32 requestable = REQU_NO;
+   int i, type, requestable = 0, forced = 0, relop;
+   double tmp_double;
 
    DENTER(GUI_LAYER, "setCE_TypeValues");
    
@@ -1023,7 +846,7 @@ String *ce_entry
    lSetString(ep, CE_shortcut, ce_entry[CE_SHORTCUT] );
 
    type = 0;
-   for (i=TYPE_FIRST; !type && i<=TYPE_CE_LAST; i++) {
+   for (i=TYPE_FIRST; !type && i<=TYPE_DOUBLE; i++) {
       if (!strcasecmp(ce_entry[CE_TYPE], map_type2str(i)))
          type = i;
    }
@@ -1033,6 +856,29 @@ String *ce_entry
       return False;
    }
    lSetUlong(ep, CE_valtype, type);
+   lSetString(ep, CE_stringval, ce_entry[CE_VALUE]);    /* save string representation */
+
+   switch (type) {
+   case TYPE_INT:
+   case TYPE_TIM:
+   case TYPE_MEM:
+   case TYPE_BOO:
+   case TYPE_DOUBLE:
+      if (!parse_ulong_val(&tmp_double, NULL, type, ce_entry[CE_VALUE], NULL, 0)) {
+         DPRINTF(("setCE_TypeValues: failed parsing ulong value\n"));
+         DEXIT;
+         return False;
+      }
+      lSetDouble(ep, CE_doubleval, tmp_double);
+      break;
+   case TYPE_STR:
+   case TYPE_CSTR:
+      break;
+
+   case TYPE_HOST:
+      /* may be we should test if we're able to resolve this hostname */
+      break;
+   }
 
    relop = 0;
    for (i=CMPLXEQ_OP; !relop && i<=CMPLXNE_OP; i++) {
@@ -1048,29 +894,29 @@ String *ce_entry
 
    if (!strcasecmp(ce_entry[CE_REQUEST], "y") 
             || !strcasecmp(ce_entry[CE_REQUEST], "yes"))
-      requestable = REQU_YES;
+      requestable = TRUE;
    else if (!strcasecmp(ce_entry[CE_REQUEST], "n") 
             || !strcasecmp(ce_entry[CE_REQUEST], "no"))
-      requestable = REQU_NO;
+      requestable = FALSE;
    else if (!strcasecmp(ce_entry[CE_REQUEST], "f") 
             || !strcasecmp(ce_entry[CE_REQUEST], "forced")) {
-      requestable = REQU_FORCED;
+      forced = TRUE;
+      requestable = TRUE;
    }
    else {
       DPRINTF(("invalid requestable entry: %s\n", ce_entry[CE_REQUEST]));
    }
-
-   lSetUlong(ep, CE_requestable, requestable);
+   lSetBool(ep, CE_request, requestable);
+   lSetBool(ep, CE_forced, forced);
 
    if (!strcasecmp(ce_entry[CE_CONSUMABLE], "y") 
             || !strcasecmp(ce_entry[CE_CONSUMABLE], "yes"))
-      lSetBool(ep, CE_consumable, true);
+      lSetBool(ep, CE_consumable, TRUE);
    else if (!strcasecmp(ce_entry[CE_CONSUMABLE], "n") 
             || !strcasecmp(ce_entry[CE_CONSUMABLE], "no"))
-      lSetBool(ep, CE_consumable, false);
+      lSetBool(ep, CE_consumable, FALSE);
 
    lSetString(ep, CE_default, ce_entry[CE_DEFAULT] ? ce_entry[CE_DEFAULT]: "");
-   lSetString(ep, CE_urgency_weight, ce_entry[CE_URGENCY] ? ce_entry[CE_URGENCY]: "");
    
    DEXIT;
    return True;
@@ -1163,3 +1009,285 @@ Widget w
    return lp;
 }
    
+/*-------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------*/
+static void set_RQ_Type(
+Widget w,
+XtPointer address,
+XrmQuark type,
+Cardinal size 
+) {
+   lList *lp = NULL;
+
+   /*
+    * Here special Qmon Quarks are used. Does it work ?
+    */
+
+   if (type != QmonQRQ_Type) {
+      XmtWarningMsg("XmtDialogSetDialogValues", "XbaeMatrix",
+         "Type Mismatch: Widget '%s':\n\tCan't set widget values"
+         " from a resource of type '%s'; QmonQRQ_Type expected.",
+          XtName(w), XrmQuarkToString(type));
+
+      return;
+   }
+
+   if (size == sizeof(lList*))
+      lp = *(lList**) address;
+   else
+      return;
+
+   qmonSetRQ_Type(w, lp);
+
+}
+
+
+/*-------------------------------------------------------------------------*/
+static void get_RQ_Type(
+Widget w,
+XtPointer address,
+XrmQuark type,
+Cardinal size 
+) {
+   lList *lp = NULL;
+   
+   /*
+    * Here special Qmon Quarks are used. Does it work ?
+    */
+
+   if (type != QmonQRQ_Type) {
+      XmtWarningMsg("XmtDialogSetDialogValues", "XbaeMatrix",
+         "Type Mismatch: Widget '%s':\n\tCan't get widget values"
+         " from a resource of type '%s'; QmonQRQ_Type expected.",
+          XtName(w), XrmQuarkToString(type));
+
+      return;
+   }
+
+   lp = qmonGetRQ_Type(w);
+
+/*   lWriteListTo(lp, stdout); */
+
+   *(lList**)address = lp;
+}
+
+
+
+/*-------------------------------------------------------------------------*/
+static lList* qmonGetRQ_Type(
+Widget w 
+) {
+   lList *rql = NULL;
+   lList *rel = NULL;
+   lList *cxl = NULL;
+   lListElem *ep = NULL;
+   lListElem *rep = NULL;
+   int row;
+   int max_rows;
+   int col;
+   char *column[3];
+   char ***cells = NULL;
+   int entries = 0;
+   int nr_ranges = 0;
+   lList *alp = NULL;
+
+   DENTER(GUI_LAYER, "qmonGetCE_Type");
+   
+   /* 
+    * we have a 3 column, max_rows rows matrix 
+    * - check if there are any entries
+    * - build a RQ_Type one element list
+    * - build a RE_Type one element list 
+    * - Append a RE_Type list element for every new range
+    * - Loop through the list of entries and add requested resources
+    *
+    */
+   XtVaGetValues( w, 
+                  XmNrows, &max_rows, 
+                  XmNcells, &cells,
+                  NULL);
+
+   /* check if there are any entries, if no return NULL; */
+   for (row=0; row<max_rows && !entries; row++) {  
+      for (col=0; col<3; col++) {
+         if (cells[row][col][0] != '\0') {
+            entries = 1;
+            break;
+         }
+      }
+   }
+   
+   if (!entries) {
+      DEXIT;
+      return NULL;
+   }
+
+   /* ok there are entries, create rql and rel */
+   rql = lCreateElemList(XtName(w), RQ_Type, 1);
+   if (!rql) {
+      DPRINTF(("lCreateElemList failed\n"));
+      goto error;
+   }
+   /* we need at least one RE_Type element */
+   rel = lCreateElemList("RE", RE_Type, 1);
+   if (!rel) {
+      DPRINTF(("lCreateElemList failed\n"));
+      goto error;
+   }
+
+   rep = lFirst(rel);
+
+   /* now read the entries */ 
+   for (row=0; row<max_rows;  row++) {
+      for (col=0; col<3; col++) {
+         column[col] = cells[row][col];
+         /* remove leading whitespace */
+         while (*column[col] != '\0' && isspace(*column[col]))
+            ++column[col];
+      }
+      /* skip empty lines */
+      if (column[0][0] == '\0' || column[1][0] == '\0' || column[2][0] == '\0') 
+         continue;
+         
+      /* check if a new range is needed */
+      if (column[0][0] != '\0') {
+         if (nr_ranges) {
+            /* append everything to old range */
+            if (cxl) {
+               lSetList(rep, RE_entries, cxl);
+               cxl = NULL;
+            }
+            lAppendElem(rel, rep);
+            /* create new elem */
+            if (!(rep = lCreateElem(RE_Type))) {
+               DPRINTF(("lCreateElem failed\n"));
+               goto error;
+            }
+         }
+         nr_ranges++;
+         {
+            lList *range_list = NULL;
+
+            range_list_parse_from_string(&range_list, &alp, column[0], 
+                                         0, 0, INF_ALLOWED);
+            lSetList(rep, RE_ranges, range_list);
+         }
+         if (alp) {
+            qmonMessageShow(w, True, lGetString(lFirst(alp), AN_text));
+            alp =lFreeList(alp);
+            goto error;
+         }
+      }   
+      if ( !cxl ) {
+         cxl = lCreateList("CE", CE_Type);
+         if (!cxl) {
+             DPRINTF(("lCreateList failed\n"));     
+             goto error;
+         }
+      }
+      ep = lCreateElem(CE_Type);
+      if ( !ep) {
+         DPRINTF(("lCreateElem failed\n"));     
+          goto error;
+      }
+      lSetString(ep, CE_name, column[1]);
+      lSetString(ep, CE_stringval, column[2]);
+      lAppendElem(cxl, ep);
+      ep = NULL;
+   }
+   /* we have to add the last cxl */
+   if (cxl) {
+      lSetList(lLast(rel), RE_entries, cxl);
+      cxl = NULL;
+   }
+
+   if (rel) {
+      lSetList(lFirst(rql), RQ_requests, rel);
+   }
+   else {
+      rql = lFreeList(rql);
+   }
+
+   DEXIT;
+   return rql;
+
+   error:
+      cxl = lFreeList(cxl);
+      rel = lFreeList(rel);
+      rql = lFreeList(rql);
+      return NULL;
+}
+   
+/*-------------------------------------------------------------------------*/
+static void qmonSetRQ_Type(
+Widget w,
+lList *lp 
+) {
+   lList *rel = NULL;
+   lList *ral = NULL;
+   lListElem *rep = NULL;
+   lListElem *rap = NULL;
+   lListElem *ep = NULL;
+   int row;
+   int max_rows;
+   int rn_min, rn_max;
+   char buf[BUFSIZ];
+   const char *name = NULL;
+   const char *value = NULL;
+   
+   DENTER(GUI_LAYER, "qmonSetRQ_Type");
+   
+   if (!lp) {
+      DEXIT;
+      return;
+   }
+   
+   XtVaGetValues(w, XmNrows, &max_rows, NULL);
+   
+   /* clear the area */
+   XtVaSetValues(w, XmNcells, NULL, NULL);
+   rel = lGetList(lFirst(lp), RQ_requests);
+   
+   if (!rel) {
+      DEXIT;
+      return;
+   }
+
+   
+   for (rep = lFirst(rel), row = 0; rep; rep = lNext(rep), row++) {
+      if (row == max_rows) {
+         XbaeMatrixAddRows(w, 
+                           max_rows, 
+                           NULL,       /* empty rows  */
+                           NULL,       /* no lables   */
+                           NULL,       /* no different colors */
+                           1);         /* we add 1 rows      */
+         max_rows++;
+      }
+      ral = lGetList(rep, RE_ranges);
+      if (ral) {
+         for_each(rap, ral) {
+            rn_min = (int)lGetUlong(rap, RN_min);
+            rn_max = (int)lGetUlong(rap, RN_max);
+            if (rn_min != rn_max)
+               sprintf(buf, "%d-%d,", rn_min, rn_max); 
+            else
+               sprintf(buf, "%d,", rn_min);
+         }
+         if (strlen(buf) >= 1)
+            buf[strlen(buf)-1] = '\0'; /* replace the last comma */ 
+         XbaeMatrixSetCell(w, row, 0, buf);
+      }         
+      for_each(ep, lGetList(rep, RE_entries)) {
+         name = lGetString(ep, CE_name);    
+         value = lGetString(ep, CE_stringval);
+         /* FIX_CONST_GUI */
+         XbaeMatrixSetCell(w, row, 1, name ? (String)name : "");
+         /* FIX_CONST_GUI */
+         XbaeMatrixSetCell(w, row, 2, value ? (String)value : "");
+      }
+   }
+       
+   DEXIT;
+}

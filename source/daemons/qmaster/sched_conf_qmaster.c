@@ -37,19 +37,14 @@
 #include "sgermon.h"
 #include "sge_schedd_conf.h"
 #include "sge_usageL.h"
-#include "sge_confL.h"
+#include "sched_conf.h"
 #include "sched_conf_qmaster.h"
-#include "sge_event_master.h"
+#include "sge_m_event.h"
 #include "sge_sched.h"
 #include "sge_log.h"
 #include "setup_path.h"
 #include "sge_answer.h"
-#include "sge_centry.h"
-#include "sge_conf.h"
-#include "configuration_qmaster.h"
-
-#include "sge_persistence_qmaster.h"
-#include "spool/sge_spooling.h"
+#include "sge_complex.h"
 
 #include "msg_qmaster.h"
 #include "msg_common.h"
@@ -62,13 +57,15 @@
  ************************************************************/
 int sge_mod_sched_configuration(
 lListElem *confp,
+lList **confl,    /* list to change */
 lList **alpp,
 char *ruser,
 char *rhost 
 ) {
-   lList *temp_conf_list = NULL;
-   const lListElem *config = NULL;
-   
+   u_long32 si;
+/*    lListElem *schedd = NULL; */
+   u_long32 old_SC_weight_tickets_deadline_active, old_SC_weight_tickets_override;
+
    DENTER(TOP_LAYER, "sge_mod_sched_configuration");
 
    if ( !confp || !ruser || !rhost ) {
@@ -77,56 +74,43 @@ char *rhost
       DEXIT;
       return STATUS_EUNKNOWN;
    }
-   config = sconf_get_config();
-   temp_conf_list = lCreateList("sched config", SC_Type);
-
-   if (config) {
-      lSetUlong(confp, SC_weight_tickets_override, 
-         lGetUlong(config, SC_weight_tickets_override));
-   }
-
-
-   confp = lCopyElem(confp);
-   lAppendElem(temp_conf_list, confp);
 
    /* just check and log */
-   if (!sconf_set_config(&temp_conf_list, alpp)) {
-      lFreeList(temp_conf_list);
+   if (sc_set(alpp, NULL, confp, &si, Master_Complex_List)) {
+      /* alpp gets filled by sc_set() */
+      ERROR((SGE_EVENT, lGetString(lLast(*alpp), AN_text))); 
       DEXIT;
       return STATUS_EUNKNOWN;
    }
 
-   if (!sge_event_spool(alpp, 0, sgeE_SCHED_CONF, 
-                        0, 0, "schedd_conf", NULL, NULL,
-                        confp, NULL, NULL, true, true)) {
-      answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return -1;
-   }
+   /* save internal values */
+   old_SC_weight_tickets_deadline_active = 
+      lGetUlong(lFirst(*confl), SC_weight_tickets_deadline_active);
+   old_SC_weight_tickets_override = 
+      lGetUlong(lFirst(*confl), SC_weight_tickets_override);
+
+   lFreeList(*confl);
+
+   *confl = lCreateList("sched config", SC_Type);
+
+   lSetUlong(confp, SC_weight_tickets_deadline_active, 
+      old_SC_weight_tickets_deadline_active);
+   lSetUlong(confp, SC_weight_tickets_override, 
+      old_SC_weight_tickets_override);
+   lAppendElem(*confl, lCopyElem(confp));
 
    {
-      lListElem *conf = NULL; 
-      lList *ep_list = NULL;
-      lListElem *ep = NULL; 
-      int reprioritize = (sconf_get_reprioritize_interval() != 0); 
-      char value[20];
-      conf = lCopyElem(lGetElemHost(Master_Config_List, CONF_hname, "global"));
-      ep_list = lGetList(conf, CONF_entries);
-
-      ep = lGetElemStr(ep_list, CF_name, REPRIORITIZE);
-      if (!ep){
-         ep = lCreateElem(CF_Type);
-         lSetString(ep, CF_name, REPRIORITIZE);
-         lAppendElem(ep_list, ep);           
+      char common_dir[SGE_PATH_MAX];
+      sprintf(common_dir, "%s"PATH_SEPARATOR"%s", path.cell_root, COMMON_DIR);
+      if (write_sched_configuration(1, 2, common_dir, lFirst(*confl)) == NULL) {
+         answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return -1;
       }
-      
-      sprintf(value, "%d", reprioritize);
-      lSetString(ep, CF_value, value);
-      lSetUlong(ep, CF_local, 0);    
-      
-      sge_mod_configuration(conf, alpp, ruser, rhost);
-      conf = lFreeElem(conf);
    }
+
+
+   sge_add_event(NULL, 0, sgeE_SCHED_CONF, 0, 0, NULL, confp);
 
    INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, "scheduler", 
         "scheduler configuration"));

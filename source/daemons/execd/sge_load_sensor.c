@@ -35,7 +35,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_bootstrap.h"
+#ifdef AIX32
+#   include <sys/select.h>
+#endif
+
 #include "sge_unistd.h"
 #include "sge_loadsensorL.h"
 #include "sge_load_sensor.h"
@@ -189,7 +192,11 @@ static int sge_ls_status(lListElem *this_ls)
    FD_SET(fileno((FILE *) lGetRef(this_ls, LS_in)), &writefds);
 
    /* is load sensor ready to read ? */
+#if defined(HPUX) || defined(HP10_01) || defined(HP10CONVEX)
+   ret = select(FD_SETSIZE, NULL, (int *) &writefds, NULL, NULL);
+#else
    ret = select(FD_SETSIZE, NULL, &writefds, NULL, NULL);
+#endif
 
    if (ret <= 0) {
       DEXIT;
@@ -254,7 +261,7 @@ static void sge_ls_start_ls(lListElem *this_ls)
 
    /* we need fds for select() .. */
    pid = sge_peopen("/bin/sh", 0, lGetString(this_ls, LS_command), NULL, envp,
-                &fp_in, &fp_out, &fp_err, true);
+                &fp_in, &fp_out, &fp_err);
 
    if (envp) {
       free(envp);
@@ -327,7 +334,7 @@ static lListElem *sge_ls_create_ls(char *name, const char *scriptfile)
       lSetRef(new_ls, LS_in, NULL);
       lSetRef(new_ls, LS_out, NULL);
       lSetRef(new_ls, LS_err, NULL);
-      lSetBool(new_ls, LS_has_to_restart, false);
+      lSetBool(new_ls, LS_has_to_restart, FALSE);
       lSetUlong(new_ls, LS_tag, 0);
       lSetList(new_ls, LS_incomplete, lCreateList("", LR_Type));
       lSetList(new_ls, LS_complete, lCreateList("", LR_Type));
@@ -593,7 +600,11 @@ static int ls_send_command(lListElem *this_ls, const char *command)
    timeleft.tv_usec = 0;
 
    /* wait for writing on fd_in */
+#ifdef HPUX
+   ret = select(FD_SETSIZE, NULL, (int *) &writefds, NULL, &timeleft);
+#else
    ret = select(FD_SETSIZE, NULL, &writefds, NULL, &timeleft);
+#endif
    if (ret == -1) {
       if (errno == EINTR) {
          DEXIT;
@@ -752,7 +763,7 @@ int sge_ls_start(char *scriptfiles)
    if (has_to_use_qidle) {
       char scriptfiles_buffer[1024];
 
-      sprintf(scriptfiles_buffer, "%s/%s/%s", bootstrap_get_binary_path(), sge_get_arch(),
+      sprintf(scriptfiles_buffer, "%s/%s/%s", conf.binary_path, sge_get_arch(),
               IDLE_LOADSENSOR_NAME);
       ls_elem = lGetElemStr(ls_list, LS_command, scriptfiles_buffer);
       if (!ls_elem) {
@@ -766,7 +777,7 @@ int sge_ls_start(char *scriptfiles)
    if (has_to_use_gnu_load_sensor) {
       char scriptfiles_buffer[1024];
 
-      sprintf(scriptfiles_buffer, "%s/%s/%s", bootstrap_get_binary_path(),
+      sprintf(scriptfiles_buffer, "%s/%s/%s", conf.binary_path,
               sge_get_arch(), GNU_LOADSENSOR_NAME);
       ls_elem = lGetElemStr(ls_list, LS_command, scriptfiles_buffer);
       if (!ls_elem) {
@@ -811,7 +822,7 @@ void trigger_ls_restart(void)
    sge_ls_initialize();
 
    for_each(ls, ls_list) {
-      lSetBool(ls, LS_has_to_restart, true);
+      lSetBool(ls, LS_has_to_restart, TRUE);
    }
    DEXIT;
    return;
@@ -926,7 +937,7 @@ int sge_ls_get(lList **lpp)
          INFO((SGE_EVENT, MSG_LS_RESTARTLS_S, ls_command ? ls_command : ""));
          sge_ls_stop_ls(ls_elem, 0);
          sge_ls_start_ls(ls_elem);
-         lSetBool(ls_elem, LS_has_to_restart, false);
+         lSetBool(ls_elem, LS_has_to_restart, FALSE);
       }
    }
 

@@ -34,31 +34,12 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
 #include "basis_types.h"
 #include "sge_string.h"
 #include "err_trace.h"
-#include "sge_parse_num_par.h"
 #include "config_file.h"
 #include "msg_daemons_common.h"
 
-
-char err_msg[1000] = { '0' };
-
-/* ------------------------------
-
-   register passed error string in
-   err_msg for later use
-
-*/
-void set_error(char *err_str) 
-{
-   if (err_str) {
-      strncpy(err_msg, err_str, sizeof(err_msg)-1);
-      err_msg[sizeof(err_msg)-1] = '\0';
-   }
-}
 
 /* handle the config file
    This file is used to transfer parameters to the shepherd */
@@ -68,10 +49,6 @@ typedef struct config_entry {
    struct config_entry *next;
 } config_entry;
 
-/*
- * MT-NOTE: libs/uti/config_file.c is not MT safe due to access to global 
- * MT-NOTE: variables. But currently it is used only in execd and shepherd 
- */
 static config_entry *config_list = NULL;
 
 /* these variables may get used to replace variables in pe_start */
@@ -85,22 +62,6 @@ char *pe_variables[] = {
    "pe_slots",
    "processors",
    "queue",
-   "stdin_path",
-   "stdout_path",
-   "stderr_path",
-   "merge_stderr",
-   "fs_stdin_host",
-   "fs_stdin_path",
-   "fs_stdin_tmp_path",
-   "fs_stdin_file_staging",
-   "fs_stdout_host",
-   "fs_stdout_path",
-   "fs_stdout_tmp_path",
-   "fs_stdout_file_staging",
-   "fs_stderr_host",
-   "fs_stderr_path",
-   "fs_stderr_tmp_path",
-   "fs_stderr_file_staging",
    NULL
 };
 
@@ -112,22 +73,6 @@ char *prolog_epilog_variables[] = {
    "job_name",
    "processors",
    "queue",
-   "stdin_path",
-   "stdout_path",
-   "stderr_path",
-   "merge_stderr",
-   "fs_stdin_host",
-   "fs_stdin_path",
-   "fs_stdin_tmp_path",
-   "fs_stdin_file_staging",
-   "fs_stdout_host",
-   "fs_stdout_path",
-   "fs_stdout_tmp_path",
-   "fs_stdout_file_staging",
-   "fs_stderr_host",
-   "fs_stderr_path",
-   "fs_stderr_tmp_path",
-   "fs_stderr_file_staging",
    NULL
 };
 
@@ -173,8 +118,6 @@ void (*config_errfunc)(char *) = NULL;
  - 0 Ok
  - 1 systemerror -> errno is valid
  - 2 malloc error
-
- MT-NOTE: read_config() is not MT safe
  *****************************************************/
 int read_config(
 const char *fname 
@@ -205,7 +148,7 @@ const char *fname
 
 /******************************************************/
 int add_config_entry(name, value)
-const char *name, *value;
+char *name, *value;
 {
    config_entry *new;
 
@@ -263,39 +206,6 @@ char *name
    if (config_errfunc)
       config_errfunc(err_str);
    return NULL;
-}
-
-/*****************************************************************************
- * set_conf_val
- *   Sets the value of a config entry.
- *   If the config entry already exists, it replaces the value.
- *   If the config entry does not exist, it creates a new config entry.
- *
- * Parameters:
- *   name:  Name of the config entry
- *   value: Value of the config entry
- *
- * Return Value:
- *   - NULL if a new config value was created or an error occured.
- *   - The old value of the config entry if it already existed.
- *****************************************************************************/
-char* set_conf_val( const char* name, const char* value )
-{
-   config_entry* pConfigEntry;
-   char* szOldValue=NULL;
-
-   if( !name || !value ) {
-      return NULL;
-   }
-   
-   pConfigEntry = find_conf_entry( name, config_list );
-   if( pConfigEntry ) {
-      szOldValue = pConfigEntry->value;
-      pConfigEntry->value = strdup( value );
-   } else {
-      add_config_entry( name, value );
-   }
-   return szOldValue;
 }
 
 /***************************************************/
@@ -473,6 +383,7 @@ char **allowed
             while (*value)
                *dp++ = *value++;
          }
+
          break;
 
       default:
@@ -487,80 +398,4 @@ char **allowed
       *dp = '\0';
 
    return 0;
-}
-
-bool parse_bool_param(const char *input, const char *variable, bool *value)
-{
-   bool ret = false;
-
-   DENTER(BASIS_LAYER, "parse_bool_param");
-
-   /* variable is set in input */
-   if (strncasecmp(input, variable, strlen(variable)) == 0) {
-      const char *s;
-
-      /* yes, this variable is set */
-      ret = true;
-
-      /* search position of = */
-      s = strchr(input, '=');
-
-      /* only boolean variable contained in input -> value = true */
-      if (s == NULL) {
-         *value = true;
-      } else {
-         /* skip = */
-         s++;
-         /* parse value */
-         if (*s == '1' || strcasecmp(s, "true") == 0) {
-            *value = true;
-         } else {
-            *value = false;
-         }
-      }
-
-      DPRINTF(("%s = %s\n", variable, value ? "true" : "false"));
-   }
-
-   DEXIT;
-   return ret;
-}
-
-bool parse_int_param(const char *input, const char *variable, 
-                     int *value, int type)
-{
-   bool ret = false;
-
-   DENTER(BASIS_LAYER, "parse_ulong_param");
-
-   /* variable is set in input */
-   if (strncasecmp(input, variable, strlen(variable)) == 0) {
-      const char *s;
-
-      /* yes, this variable is set */
-      ret = true;
-
-      /* search position of = */
-      s = strchr(input, '=');
-
-      /* no value contained in input -> value = 0 */
-      if (s == NULL) {
-         *value = 0;
-      } else {
-         u_long32 new_value;
-         /* skip = */
-         s++;
-         /* parse value */
-         if (parse_ulong_val(NULL, &new_value, type, s, NULL, 0)) {
-            *value = new_value;
-         } else {
-            *value = 0;
-         }
-      }
-
-      DPRINTF(("%s = %d\n", variable, value));
-   }
-
-   DEXIT;
-   return ret;
 }

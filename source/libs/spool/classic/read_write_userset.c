@@ -37,7 +37,7 @@
 #include "sge_unistd.h"
 #include "sge.h"
 #include "cull.h"
-#include "sge_gdi_request.h"
+#include "sge_gdi_intern.h"
 #include "config.h"
 #include "sge_answer.h"
 #include "read_write_userset.h"
@@ -47,6 +47,7 @@
 #include "sge_log.h"
 #include "sge_stdio.h"
 #include "sge_spool.h"
+#include "sge_answer.h"
 #include "sge_userset.h"
 
 #include "msg_common.h"
@@ -110,22 +111,24 @@ _Insight_set_option("suppress", "PARM_NULL");
       return -1;
    }
    
-   /* --------- US_type */
-   if (!set_conf_enum(alpp, clpp, fields, "type", ep, US_type, userset_types)) {
-      DEXIT;
-      return -1;
-   }
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      /* --------- US_type */
+      if (!set_conf_enum(alpp, clpp, fields, "type", ep, US_type, userset_types)) {
+         DEXIT;
+         return -1;
+      }
 
-   /* --------- US_oticket */
-   if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, US_oticket)) {
-      DEXIT;
-      return -1;
-   }
+      /* --------- US_oticket */
+      if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, US_oticket)) {
+         DEXIT;
+         return -1;
+      }
 
-   /* --------- US_fshare */
-   if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, US_fshare)) {
-      DEXIT;
-      return -1;
+      /* --------- US_fshare */
+      if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, US_fshare)) {
+         DEXIT;
+         return -1;
+      }
    }
 
    /* --------- US_entries */
@@ -151,18 +154,15 @@ FILE *fpout,
 int spool 
 ) {
    FILE *fp;
-   int print_elements[] = { UE_name, 0 };
+   intprt_type print_elements[] = { UE_name, 0 };
    const char *delis[] = {":", ",", NULL};
    const char **ptr;
    u_long32 bitmask, type;
    char filename[SGE_PATH_MAX];
    int ret;
-   dstring ds;
-   char buffer[256];
 
    DENTER(TOP_LAYER, "write_userset");
 
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
    if (!ep) {
       if (!alpp) {
          ERROR((SGE_EVENT, MSG_USERSET_NOUSERETELEMENT));
@@ -192,26 +192,27 @@ int spool
    }
 
    if (spool && sge_spoolmsg_write(fp, COMMENT_CHAR,
-             feature_get_product_name(FS_VERSION, &ds)) < 0) {
+             feature_get_product_name(FS_VERSION)) < 0) {
       goto FPRINTF_ERROR;
    } 
 
    FPRINTF((fp, "name       %s\n", lGetString(ep, US_name)));
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      /* userset type field */
+      type = lGetUlong(ep, US_type);
+      FPRINTF((fp, "type       "));
+      bitmask = 1;
+      for (ptr = userset_types; **ptr != '\0'; ptr++) {
+         if (bitmask & type) {
+            FPRINTF((fp,"%s ",*ptr));
+         }
+         bitmask <<= 1;
+      };
+      FPRINTF((fp,"\n"));
 
-   /* userset type field */
-   type = lGetUlong(ep, US_type);
-   FPRINTF((fp, "type       "));
-   bitmask = 1;
-   for (ptr = userset_types; **ptr != '\0'; ptr++) {
-      if (bitmask & type) {
-         FPRINTF((fp,"%s ",*ptr));
-      }
-      bitmask <<= 1;
-   };
-   FPRINTF((fp,"\n"));
-
-   FPRINTF((fp, "oticket    " u32 "\n", lGetUlong(ep, US_oticket)));
-   FPRINTF((fp, "fshare     " u32 "\n", lGetUlong(ep, US_fshare)));
+      FPRINTF((fp, "oticket    " u32 "\n", lGetUlong(ep, US_oticket)));
+      FPRINTF((fp, "fshare     " u32 "\n", lGetUlong(ep, US_fshare)));
+   }
 
    FPRINTF((fp, "entries    "));
    ret = uni_print_list(fp, NULL, 0, lGetList(ep, US_entries), print_elements,

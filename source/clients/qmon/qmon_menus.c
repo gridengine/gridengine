@@ -52,7 +52,6 @@
 #include "qmon_rmon.h"
 #include "qmon_job.h"
 #include "qmon_queue.h"
-#include "qmon_cq.h"
 #include "qmon_host.h"
 #include "qmon_manop.h"
 #include "qmon_submit.h"
@@ -98,33 +97,33 @@ static XmtMenuItem task_menu_items[] = {
    {XmtMenuItemPushButton, "@{Job Control}", 'J', "Alt<Key>J", "Alt+J",
          qmonJobPopup, NULL },
    {XmtMenuItemPushButton, "@{Queue Control}", 'Q', "Alt<Key>Q", "Alt+Q",
-         qmonCQPopup, NULL},
+         qmonQueuePopup, NULL},
    {XmtMenuItemPushButton, "@{Job Submit}", 'S', "Alt<Key>S", "Alt+S",
          qmonSubmitPopup, NULL},
-   {XmtMenuItemPushButton, "@{Complex Configuration}", 'X', "Alt<Key>X", "Alt+X",
+   {XmtMenuItemPushButton, "@{Complex Configuration}", 'x', "Alt<Key>x", "Alt+x",
          qmonPopupCplxConfig, NULL},
-   {XmtMenuItemPushButton, "@{Host Configuration}", 'O', "Alt<Key>O", "Alt+O",
+   {XmtMenuItemPushButton, "@{Host Configuration}", 'o', "Alt<Key>o", "Alt+o",
          qmonPopupHostConfig, NULL},
    {XmtMenuItemPushButton, "@{User Configuration}", 'U', "Alt<Key>U", "Alt+U",
          qmonPopupManopConfig, NULL},
-   {XmtMenuItemPushButton, "@{Cluster Configuration}", 'L', "Alt<Key>L", "Alt+L",
+   {XmtMenuItemPushButton, "@{Cluster Configuration}", 'l', "Alt<Key>l", "Alt+l",
          qmonPopupClusterConfig, NULL},
-   {XmtMenuItemPushButton, "@{Scheduler Configuration}", 'D', "Alt<Key>D", 
-         "Alt+D", qmonPopupSchedConfig, NULL},
+   {XmtMenuItemPushButton, "@{Scheduler Configuration}", 'd', "Alt<Key>d", 
+         "Alt+d", qmonPopupSchedConfig, NULL},
    {XmtMenuItemPushButton, "@{PE Configuration}", 'P', "Alt<Key>P", "Alt+P",
          qmonPopupPEConfig, NULL},
-   {XmtMenuItemPushButton, "@{Checkpointing Configuration}", 'K', "Alt<Key>K", 
-         "Alt+K", qmonPopupCkptConfig, NULL},
-   {XmtMenuItemPushButton, "@{Calendar Configuration}", 'A', "Alt<Key>A", "Alt+A",
+   {XmtMenuItemPushButton, "@{Checkpointing Configuration}", 'k', "Alt<Key>k", 
+         "Alt+k", qmonPopupCkptConfig, NULL},
+   {XmtMenuItemPushButton, "@{Calendar Configuration}", 'a', "Alt<Key>a", "Alt+a",
          qmonPopupCalendarConfig, NULL},
    /*
    ** the 'Ticket Overview' is only managed if SGE_MODE is true
    ** !!!!!! Attention the position is referenced in qmonCreateMainControl
    */
-   {XmtMenuItemPushButton, "@{Policy Configuration}", 'I', "Alt<Key>I", "Alt+I",
+   {XmtMenuItemPushButton, "@{Ticket Overview}", 'i', "Alt<Key>i", "Alt+i",
          qmonPopupTicketOverview, NULL},
 
-   {XmtMenuItemPushButton, "@{Project Configuration}", 'R', "Alt<Key>R", "Alt+R",
+   {XmtMenuItemPushButton, "@{Project Configuration}", 'r', "Alt<Key>r", "Alt+r",
          qmonPopupProjectConfig, NULL},
 
    {XmtMenuItemPushButton, "@{Browser Dialog}", 'B', "Alt<Key>B", "Alt+B",
@@ -135,7 +134,7 @@ static XmtMenuItem task_menu_items[] = {
 #ifdef QMON_DEBUG
 static XmtMenuItem mirror_menu_items[] = {
    {XmtMenuItemPushButton, "Queue", 'Q', "Alt<Key>J", "Alt+J",
-         qmonShowMirrorList, (XtPointer) SGE_CQUEUE_LIST},
+         qmonShowMirrorList, (XtPointer) SGE_QUEUE_LIST},
    {XmtMenuItemPushButton, "Job", 'S', "Alt<Key>S", "Alt+S",
          qmonShowMirrorList, (XtPointer) SGE_JOB_LIST},
    {XmtMenuItemPushButton, "Exechost", 'Q', "Alt<Key>Q", "Alt+Q",
@@ -144,8 +143,8 @@ static XmtMenuItem mirror_menu_items[] = {
          qmonShowMirrorList, (XtPointer) SGE_ADMINHOST_LIST},
    {XmtMenuItemPushButton, "Submithost", 'R', "Alt<Key>R", "Alt+R",
          qmonShowMirrorList, (XtPointer) SGE_SUBMITHOST_LIST},
-   {XmtMenuItemPushButton, "Complex Attributes", 'O', "Alt<Key>O", "Alt+O",
-         qmonShowMirrorList, (XtPointer) SGE_CENTRY_LIST},
+   {XmtMenuItemPushButton, "Complex", 'O', "Alt<Key>O", "Alt+O",
+         qmonShowMirrorList, (XtPointer) SGE_COMPLEX_LIST},
    {XmtMenuItemPushButton, "Manager", 'H', "Alt<Key>H", "Alt+H",
          qmonShowMirrorList, (XtPointer) SGE_MANAGER_LIST},
    {XmtMenuItemPushButton, "Operator", 'U', "Alt<Key>U", "Alt+U",
@@ -199,9 +198,9 @@ typedef struct _tCallbacksUsed {
 
 static tCallbacksUsed callback_array[] = {
    { qmonJobPopup, NULL, "@{@fBJob Control}" },
-   { qmonCQPopup, NULL, "@{@fBQueue Control}" },
-   { qmonSubmitPopup, NULL, "@{@fBSubmit Jobs}" },
-   { qmonPopupCplxConfig, NULL, "@{@fBComplex Configuration}" },
+   { qmonQueuePopup, NULL, "@{@fBQueue Control}" },
+   { qmonSubmitPopup, NULL, "@{@fBJob Submission}" },
+   { qmonPopupCplxConfig, NULL, "@{@fBComplexes Configuration}" },
    { qmonPopupHostConfig, NULL, "@{@fBHost Configuration}" },
    { qmonPopupClusterConfig, NULL, "@{@fBCluster Configuration}" },
    { qmonPopupSchedConfig, NULL, "@{@fBScheduler Configuration}" },
@@ -209,7 +208,7 @@ static tCallbacksUsed callback_array[] = {
    { qmonPopupManopConfig, NULL, "@{@fBUser Configuration}" },
    { qmonPopupPEConfig, NULL, "@{@fBParallel Environment Configuration}" },
    { qmonPopupCkptConfig, NULL, "@{@fBCheckpoint Configuration}" },
-   { qmonPopupTicketOverview, NULL, "@{@fBPolicy Configuration}" },
+   { qmonPopupTicketOverview, NULL, "@{@fBTicket Configuration}" },
    { qmonPopupProjectConfig, NULL, "@{@fBProject Configuration}" },
    { qmonBrowserOpen, NULL, "@{@fBBrowser}" },
    { qmonExitCB, NULL, "@{@fBExit}" }
@@ -309,6 +308,16 @@ DTRACE;
       XtAddEventHandler(Icon, EnterWindowMask,
                            False, qmonShowTooltip, 
                            (XtPointer) callback_array[i].tooltip);
+   }
+
+   /*
+   ** unmanage SGE specific stuff if necessary
+   */
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
+      XtUnmanageChild(task_menu_items[XtNumber(task_menu_items)-4].w);
+      XtUnmanageChild(XmtNameToWidget(MainRowCol, "*TICKET_OVERVIEW"));
+      XtUnmanageChild(task_menu_items[XtNumber(task_menu_items)-3].w);
+      XtUnmanageChild(XmtNameToWidget(MainRowCol, "*PROJECT_CONFIG"));
    }
 
    /*

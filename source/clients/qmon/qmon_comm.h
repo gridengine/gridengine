@@ -39,10 +39,10 @@
 #define ADMINHOST_T           (1<<0)
 #define SUBMITHOST_T          (1<<1)
 #define EXECHOST_T            (1<<2)
-#define CQUEUE_T              (1<<3)
+#define QUEUE_T               (1<<3)
 #define JOB_T                 (1<<4)
 #define EVENT_T               (1<<5)
-#define CENTRY_T              (1<<6)
+#define COMPLEX_T             (1<<6)
 #define ORDER_T               (1<<7)
 #define MASTER_EVENT_T        (1<<8)
 #define CONFIG_T              (1<<9)
@@ -58,8 +58,6 @@
 #define CALENDAR_T            (1<<19)
 #define JOB_SCHEDD_INFO_T     (1<<20)
 #define ZOMBIE_T              (1<<21)
-#define USER_MAPPING_T        (1<<22)
-#define HGROUP_T              (1<<23)
 
 /*
  * The different list types defined in sge_gdi_request.h
@@ -89,11 +87,6 @@ int qmonMirrorMultiAnswer(u_long32 selector, lList**answerp);
 void qmonShowMirrorList(Widget w, XtPointer cld, XtPointer cad);
 
 lList* qmonDelList(int type, lList **local, int nm, lList **lpp, lCondition *where, lEnumeration *what); 
-
-#if 0
-lList* qmonDelJobList(int type, lList **local, int nm, lList **lpp, lCondition *where, lEnumeration *what); 
-#endif
-
 lList* qmonModList(int type, lList **local, int nm, lList **lpp, lCondition *where, lEnumeration *what); 
 lList* qmonAddList(int type, lList **local, int nm, lList **lpp, lCondition *where, lEnumeration *what); 
 lList* qmonChangeStateList(int type, lList *lp, int force, int action);

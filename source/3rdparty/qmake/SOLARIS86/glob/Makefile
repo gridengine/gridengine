@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = ..
 
-ACLOCAL =  aclocal
-AUTOCONF =  autoconf
-AUTOMAKE =  automake
-AUTOHEADER =  autoheader
+ACLOCAL = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing aclocal
+AUTOCONF = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing autoconf
+AUTOMAKE = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing automake
+AUTOHEADER = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing autoheader
 
 INSTALL = ../../install-sh -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,7 +68,7 @@ CPP = cc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS = 
-MAKEINFO =  makeinfo
+MAKEINFO = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing makeinfo
 MAKE_HOST = i386-pc-solaris2.8
 PACKAGE = make
 PERL = perl
@@ -96,7 +96,7 @@ LDFLAGS =
 LIBS = -lkvm -lelf -lkstat -lposix4 
 libglob_a_LIBADD = 
 libglob_a_OBJECTS =  glob.o fnmatch.o
-CFLAGS = -g -xO3
+CFLAGS = -g -O
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
@@ -113,12 +113,12 @@ OBJECTS = $(libglob_a_OBJECTS)
 all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .S .c .o .s
-#$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-#	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps glob/Makefile
-#
-#Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
-#	cd $(top_builddir) \
-#	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps glob/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 
 mostlyclean-noinstLIBRARIES:
@@ -191,7 +191,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$d/$$file $(distdir)/$$file; \
+	    cp -pr $$/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \

@@ -52,9 +52,9 @@ set check_init_level_procedure "issue_440_init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_440"
-set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   0
-set check_description(0)  "qsub / qrsh command lines crash qmaster with arg. lines > 10 K"
+set check_description(0)  "qsub / qrsh command lines crasch qmaster with arg. lines > 10 K"
 
 # define test's dependencies
 set check_needs           "init_core_system" 
@@ -97,12 +97,10 @@ proc issue_440_setup  {} {
 
 proc issue_440_check_qsub {} {
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR issue_440_MAX_KBYTE
-   global CHECK_HOST
 
    set submit_script_path "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/cmd_line_output.sh" 
    set start_length 0
    set end_length [ expr ( 1024 * $issue_440_MAX_KBYTE ) ]
-   set submit_queue [get_queue_instance "all.q" $CHECK_HOST]
 
    # submit different command line length jobs
    while { $start_length <= $end_length } {
@@ -114,7 +112,7 @@ proc issue_440_check_qsub {} {
 
       # generate command line with corrent length
       set arg_name "argument"
-      set command_line "-q $submit_queue -S /bin/sh -o $output_file -e $error_file -N long_cmd $submit_script_path $arg_name" 
+      set command_line "-o $output_file -e $error_file -N long_cmd $submit_script_path $arg_name" 
       set arg_length 0
       while { [string length $command_line] < $start_length } {
          incr arg_length 1
@@ -124,9 +122,10 @@ proc issue_440_check_qsub {} {
          } else {
             append arg_name "_"
          }
-         set command_line "-q $submit_queue -S /bin/sh -o $output_file -e $error_file -N long_cmd $submit_script_path $arg_name" 
+         set command_line "-o $output_file -e $error_file -N long_cmd $submit_script_path $arg_name" 
       }
       puts $CHECK_OUTPUT "submitting job with command line length: [string length $command_line]"
+
 
       # submit job and wait for jobend
       set jobid [ submit_job $command_line 1 60 "" "" "" 0 ]
@@ -141,18 +140,8 @@ proc issue_440_check_qsub {} {
 
       set nr_of_lines $f_output(0)
       set output ""
-      set found_start 0
       for {set i 1 } { $i <= $nr_of_lines} {incr i 1} {
-         if { [string match "*_GE_TESTSUITE_SCRIPT_OUTPUT_END_*" $$f_output($i)] } {
-            set found_start 0
-         }
- 
-         if { $found_start == 1 } {
-            append output $f_output($i)
-         }
-         if { [string match "*_GE_TESTSUITE_SCRIPT_OUTPUT_BEGIN_*" $$f_output($i)] } {
-            set found_start 1
-         }
+         append output $f_output($i)
       }
 
       # compare argument with job output file content
@@ -184,7 +173,6 @@ proc issue_440_check_qsub {} {
 
 proc issue_440_check_qrsh {} {
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_HOST CHECK_USER issue_440_MAX_KBYTE
-   global CHECK_HOST
 
    # test script
    set submit_script_path "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/cmd_line_output.sh" 
@@ -192,12 +180,11 @@ proc issue_440_check_qrsh {} {
    # set start and end command line size
    set start_length 0
    set end_length [ expr ( 1024 * $issue_440_MAX_KBYTE ) ]
-   set submit_queue [get_queue_instance "all.q" $CHECK_HOST]
 
    # submit qrsh jobs with different command line length
    while { $start_length <= $end_length } {
       set arg_name "argument"
-      set command_line "-q $submit_queue $submit_script_path $arg_name" 
+      set command_line "$submit_script_path $arg_name" 
 
 
       # generate command line
@@ -210,7 +197,7 @@ proc issue_440_check_qrsh {} {
          } else {
             append arg_name "_"
          }
-         set command_line "-q $submit_queue $submit_script_path $arg_name" 
+         set command_line "$submit_script_path $arg_name" 
       }
       puts $CHECK_OUTPUT "submitting qrsh job with command line length: [string length $command_line]"
 
@@ -221,25 +208,9 @@ proc issue_440_check_qrsh {} {
 
       # check for errors
       if { $prg_exit_state != 0 } {
-         add_proc_error "issue_440_check_qrsh" -1 "error in qrsh job:\nqueue was $submit_queue\n$output"
+         add_proc_error "issue_440_check_qrsh" -1 "error in qrsh job:\n$output"
          set start_length $end_length
       } else {
-         set output [string trim $output]
-         set output2 [split $output "\n"]
-         set output ""
-         set found_start 0
-         foreach out_line $output2 {
-            if { [string match "*_GE_TESTSUITE_SCRIPT_OUTPUT_END_*" $out_line ] } {
-               set found_start 0
-            }
- 
-            if { $found_start == 1 } {
-               append output $out_line
-            }
-            if { [string match "*_GE_TESTSUITE_SCRIPT_OUTPUT_BEGIN_*" $out_line ] } {
-               set found_start 1
-            }
-         }
          set output [string trim $output]
          set arg_name [string trim $arg_name]
          if { [ string compare $output $arg_name ] != 0 } {
@@ -255,7 +226,7 @@ proc issue_440_check_qrsh {} {
 
 
 proc issue_440_cleanup  {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT
 
 
    # check if system is running normal
@@ -263,9 +234,8 @@ proc issue_440_cleanup  {} {
    set command_line "-o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5"
    set jobid [ submit_job $command_line ]
    wait_for_jobstart  $jobid "leeper" 60 1 1
-   wait_for_jobend $jobid "leeper" 60 
-   delete_all_jobs
-   wait_for_end_of_all_jobs 60
+   wait_for_jobend $jobid "leeper" 60
+
    set_error 0 "ok"
 }
 

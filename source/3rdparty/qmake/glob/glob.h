@@ -47,16 +47,12 @@ extern "C" {
 
 /* We need `size_t' for the following definitions.  */
 #ifndef __size_t
-#if defined __FreeBSD__
-#define __size_t size_t
-#else
 # if defined __GNUC__ && __GNUC__ >= 2
 typedef __SIZE_TYPE__ __size_t;
 # else
 /* This is a guess.  */
 typedef unsigned long int __size_t;
 # endif
-#endif
 #else
 /* The GNU CC stddef.h version defines __size_t as empty.  We need a real
    definition.  */

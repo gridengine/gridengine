@@ -45,15 +45,15 @@
 #include "sge_report.h"
 
 #ifdef NEC_ACCOUNTING_ENTRIES
-#define ARCH_COLUMN "%c%s"
+#define ARCH_COLUMN ":%s"
 #else
 #define ARCH_COLUMN ""
 #endif
 
 #define ACTFILE_FPRINTF_FORMAT \
-"%s%c%s%c%s%c%s%c%s%c"u32"%c%s%c"u32"%c"u32"%c"u32"%c"u32"%c"u32"%c"u32"%c" \
-u32"%c"u32"%c"u32"%c%f%c"u32"%c"u32"%c"u32"%c"u32"%c"u32"%c"u32"%c"u32"%c%f%c" \
-u32"%c"u32"%c"u32"%c"u32"%c"u32"%c"u32"%c%s%c%s%c%s%c%d%c"u32"%c%f%c%f%c%f%c%s%c%f%c%s%c%f" \
+"%s:%s:%s:%s:%s:"u32":%s:"u32":"u32":"u32":"u32":"u32":"u32":" \
+u32":"u32":"u32":%f:"u32":"u32":"u32":"u32":"u32":"u32":"u32":%f:" \
+u32":"u32":"u32":"u32":"u32":"u32":%s:%s:%s:%d:"u32":%f:%f:%f:%s:%f:%s:%f" \
 ARCH_COLUMN \
 "\n"
 
@@ -70,41 +70,34 @@ u32","u32","u32","u32","u32","u32","u32","u32","u32","u32"\n"
 
 /* ------------------------------------------------------------
 
-   write usage to a dstring buffer
+   write usage to a fileptr
 
-   sge_write_rusage - write rusage info to a dstring buffer
-   Returns: false, if it receives invalid data
-            true on success
+   sge_write_rusage - write rusage info to file.
+   Returns: -2 if f is NULL
+   number of characters written (> 0 indicates success)
+   EOF if failure
 
 */
-const char *
-sge_write_rusage(dstring *buffer, 
-                 lListElem *jr, lListElem *jep, lListElem *jatp, 
-                 const char *category_str, const char delimiter)
-{
+int sge_write_rusage(
+FILE *fp,
+lListElem *jr,
+lListElem *jep,
+lListElem *jatp,
+const char *category_str 
+) {
+   int fprintf_count;
    lList *usage_list;
    const char *s, *pe_task_id_str;
 #ifdef NEC_ACCOUNTING_ENTRIES
-   char arch_dep_usage_buffer[MAX_STRING_SIZE];
-   dstring arch_dep_usage_dstring;
-   char *arch_dep_usage_string;
+   char arch_dep_usage_string[256] = "";
 #endif
-   const char *ret = NULL;
-   char *qname = NULL;
 
    DENTER(TOP_LAYER, "sge_write_rusage");
 
-   /* invalid input data */
-   if (buffer == NULL) {
+   if (fp == NULL) {
       DEXIT;   
-      return ret;
+      return (-2);
    } 
-
-#ifdef NEC_ACCOUNTING_ENTRIES
-   sge_dstring_init(&arch_dep_usage_dstring, arch_dep_usage_buffer, 
-                    MAX_STRING_SIZE);
-#endif
-
    /* for tasks we take usage from job report */
    if ((pe_task_id_str=lGetString(jr, JR_pe_task_id_str)))
       usage_list = lGetList(jr, JR_usage);
@@ -115,11 +108,10 @@ sge_write_rusage(dstring *buffer,
    {
       lListElem *ep;
 
-      if (usage_list) {
+      if (usage_list)
          DPRINTF(("received usage attributes:\n"));
-      } else {
+      else
          DPRINTF(("empty usage list\n"));
-      }   
 
       for_each (ep, usage_list) {
          DPRINTF(("    \"%s\" = %f\n",
@@ -154,8 +146,7 @@ sge_write_rusage(dstring *buffer,
       if (ep)
          arch_string = "necsx5";
 
-      arch_dep_usage_string = sge_dstring_sprintf(&arch_dep_usage_dstring, 
-         NECSX_ACTFILE_FPRINTF_FORMAT,
+      sprintf(arch_dep_usage_string, NECSX_ACTFILE_FPRINTF_FORMAT,
          arch_string,    
          usage_list_get_ulong_usage(usage_list, "necsx_base_prty", 0),
          usage_list_get_ulong_usage(usage_list, "necsx_time_slice", 0),
@@ -179,77 +170,72 @@ sge_write_rusage(dstring *buffer,
          usage_list_get_ulong_usage(usage_list, "necsx_multi_single", 0),
          usage_list_get_ulong_usage(usage_list, "necsx_max_nproc", 0)
       );
+#else
+      arch_dep_usage_string[0] = '\0';
 #endif
       DPRINTF(("arch_string: %s\n", arch_dep_usage_string));
    }
-#endif 
-   {
-      char *pos = NULL;
-      const char *qi_name = NULL;
-      qi_name = lGetString(jr, JR_queue_name);
-      qname = malloc(strlen(qi_name)+1);
-      strcpy(qname, qi_name);
-      if ( (pos = strchr(qname, '@'))){
-         pos[0] = '\0';
-      }
-   }
-   
-   ret = sge_dstring_sprintf(buffer, ACTFILE_FPRINTF_FORMAT, 
-         qname, delimiter,
-          lGetHost(jr, JR_host_name), delimiter,
-          lGetString(jr, JR_group), delimiter,
-          lGetString(jr, JR_owner), delimiter,
-          lGetString(jep, JB_job_name), delimiter,
-          lGetUlong(jr, JR_job_number), delimiter,
-          lGetString(jep, JB_account), delimiter,
-          usage_list_get_ulong_usage(usage_list, "priority", 0),  delimiter,
-          usage_list_get_ulong_usage(usage_list, "submission_time", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "start_time", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "end_time", 0), delimiter,
-          lGetUlong(jr, JR_failed), delimiter,
-          usage_list_get_ulong_usage(usage_list, "exit_status", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_wallclock", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_utime", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_stime", 0), delimiter,
-          usage_list_get_double_usage(usage_list, "ru_maxrss", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_ixrss", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_ismrss", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_idrss", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_isrss", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_minflt", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_majflt", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_nswap", 0), delimiter,
-          usage_list_get_double_usage(usage_list, "ru_inblock", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_oublock", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_msgsnd", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_msgrcv", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_nsignals", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_nvcsw", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_nivcsw", 0), delimiter,
-          lGetString(jep, JB_project) ? lGetString(jep, JB_project) : "none", delimiter,
-          lGetString(jep, JB_department) ? lGetString(jep, JB_department) : "none", delimiter,
-          (s = lGetString(jatp, JAT_granted_pe)) ? s : "none", delimiter,
-          sge_granted_slots(lGetList(jatp, JAT_granted_destin_identifier_list)), delimiter,
-          job_is_array(jep) ? lGetUlong(jatp, JAT_task_number) : 0, delimiter,
-          usage_list_get_double_usage(usage_list, USAGE_ATTR_CPU_ACCT, 0), delimiter,
-          usage_list_get_double_usage(usage_list, USAGE_ATTR_MEM_ACCT, 0), delimiter,
-          usage_list_get_double_usage(usage_list, USAGE_ATTR_IO_ACCT, 0), delimiter,
-          category_str?category_str:"none", delimiter,
-          usage_list_get_double_usage(usage_list, USAGE_ATTR_IOW_ACCT, 0), delimiter,
-          pe_task_id_str?pe_task_id_str:"none", delimiter,
+#endif         
+
+
+   fprintf_count = fprintf(fp, ACTFILE_FPRINTF_FORMAT, 
+          lGetString(jr, JR_queue_name),
+          lGetHost(jr, JR_host_name),
+          lGetString(jr, JR_group),
+          lGetString(jr, JR_owner),
+          lGetString(jep, JB_job_name),
+          lGetUlong(jr, JR_job_number),
+          lGetString(jep, JB_account),
+          usage_list_get_ulong_usage(usage_list, "priority", 0), 
+          usage_list_get_ulong_usage(usage_list, "submission_time", 0),
+          usage_list_get_ulong_usage(usage_list, "start_time", 0),
+          usage_list_get_ulong_usage(usage_list, "end_time", 0),
+          lGetUlong(jr, JR_failed),
+          usage_list_get_ulong_usage(usage_list, "exit_status", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_wallclock", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_utime", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_stime", 0),
+          usage_list_get_double_usage(usage_list, "ru_maxrss", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_ixrss", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_ismrss", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_idrss", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_isrss", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_minflt", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_majflt", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_nswap", 0),
+          usage_list_get_double_usage(usage_list, "ru_inblock", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_oublock", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_msgsnd", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_msgrcv", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_nsignals", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_nvcsw", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_nivcsw", 0),
+          lGetString(jep, JB_project) ? lGetString(jep, JB_project) : "none",
+          lGetString(jep, JB_department) ? lGetString(jep, JB_department) : "none",
+          (s = lGetString(jatp, JAT_granted_pe)) ? s : "none",
+          sge_granted_slots(lGetList(jatp, JAT_granted_destin_identifier_list)),
+          job_is_array(jep) ? lGetUlong(jatp, JAT_task_number) : 0,
+          usage_list_get_double_usage(usage_list, USAGE_ATTR_CPU_ACCT, 0),
+          usage_list_get_double_usage(usage_list, USAGE_ATTR_MEM_ACCT, 0),
+          usage_list_get_double_usage(usage_list, USAGE_ATTR_IO_ACCT, 0),
+          category_str?category_str:"none",
+          usage_list_get_double_usage(usage_list, USAGE_ATTR_IOW_ACCT, 0),
+          pe_task_id_str?pe_task_id_str:"none",
           usage_list_get_double_usage(usage_list, USAGE_ATTR_MAXVMEM_ACCT, 0)
 #ifdef NEC_ACCOUNTING_ENTRIES
-          , delimiter, arch_dep_usage_string
+          ,arch_dep_usage_string
 #endif 
              );
      
-   FREE(qname);
+
    DEXIT;   
-   return ret;
+   return (fprintf_count);
 }
 
-int sge_read_rusage(FILE *f, sge_rusage_type *d) 
-{
+int sge_read_rusage(
+FILE *f,
+sge_rusage_type *d 
+) {
    static char szLine[4092] = "";
    char  *pc;
    int len;
@@ -623,8 +609,6 @@ int sge_read_rusage(FILE *f, sge_rusage_type *d)
    d->io = ((pc=strtok(NULL, ":")))?atof(pc):0;
 
    /* skip job category */
-   pc=strtok(NULL, ":");
-#if 0   
    while ((pc=strtok(NULL, ":")) &&
           strlen(pc) &&
           pc[strlen(pc)-1] != ' ' &&
@@ -636,7 +620,7 @@ int sge_read_rusage(FILE *f, sge_rusage_type *d)
        */
       ;
    }
-#endif
+
    d->iow = ((pc=strtok(NULL, ":")))?atof(pc):0;
 
    /* skip pe_taskid */

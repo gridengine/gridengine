@@ -33,7 +33,7 @@
 #include <strings.h>
 
 #include "sge.h"
-#include "sge_any_request.h"
+#include "sge_static_load.h"
 #include "sge_usageL.h"
 #include "commlib.h"
 #include "job_report_execd.h"
@@ -43,9 +43,9 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "qm_name.h"
+#include "sge_gdi_intern.h"
 #include "sge_report_execd.h"
 #include "sge_report.h"
-#include "sge_load.h"
 
 #ifndef NO_SGE_COMPILE_DEBUG
 static char* report_types[] = {
@@ -78,10 +78,11 @@ report_source *report_sources
    if (now > next_alive_time || state == STATE_ERROR) {
       DPRINTF(("ALIVE TEST OF MASTER\n"));
       next_alive_time = now + ALIVE_INTERVAL;
-      state = STATE_OK;
-      if (check_isalive(sge_get_master(state == STATE_ERROR)) != CL_RETVAL_OK) {
+     
+      if (check_isalive(sge_get_master(state == STATE_ERROR)))
          state = STATE_ERROR;
-      }
+      else 
+         state = STATE_OK;
    }
 
    if (state == STATE_OK) {
@@ -105,12 +106,14 @@ report_source *report_sources
        */
       /* send load report asynchron to qmaster */
       ret = report_list_send(report_list, sge_get_master(0), 
-                             prognames[QMASTER], 1, 0, NULL);
+                             prognames[QMASTER], 0, 0, NULL);
+
       lFreeList(report_list);
    }
    DEXIT;
    return ret;
 }
+
 /* ----------------------------------------
  
    add a double value to the load report list lpp 

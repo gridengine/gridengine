@@ -34,10 +34,15 @@
 
 #include <stdio.h> 
 
+#include "basis_types.h"
 #include "sge_htable.h"
 
 #ifdef  __cplusplus
 extern "C" {
+#endif
+
+#if !defined(SGE_MT)
+void cull_init_mt(void);
 #endif
 
 #define NoName -1
@@ -91,9 +96,8 @@ enum _enum_lMultiType {
 #define CULL_SHOW          0x00000800
 #define CULL_CONFIGURE     0x00001000
 #define CULL_SPOOL         0x00002000
-#define CULL_SUBLIST       0x00010000
-#define CULL_SPOOL_PROJECT 0x00020000
-#define CULL_SPOOL_USER    0x00040000
+#define CULL_NAMELIST      0x00010000
+#define CULL_TUPLELIST     0x00020000
 
 #ifdef __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
 
@@ -129,32 +133,6 @@ enum _enum_lMultiType {
 #define NAMEEND    };
 
 #else
-#ifdef __SGE_GDI_LIBRARY_SUBLIST_FILE__
-
-#define LISTDEF( name )
-#define XLISTDEF( name, idlname ) 
-#define ILISTDEF( name, idlname, listname ) 
-#define SLISTDEF( name, idlname ) 
-#define LISTEND
-
-#define SGE_INT(name,flags)
-#define SGE_HOST(name,flags)
-#define SGE_STRING(name,flags)
-#define SGE_FLOAT(name,flags)
-#define SGE_DOUBLE(name,flags)
-#define SGE_CHAR(name,flags)
-#define SGE_LONG(name,flags)
-#define SGE_ULONG(name,flags)
-#define SGE_BOOL(name,flags)
-#define SGE_LIST(name,type,flags) __SUBTYPE_MAPPING__ name type
-#define SGE_OBJECT(name,type,flags)
-#define SGE_REF(name,type,flags)
-
-#define NAMEDEF( name ) 
-#define NAME( name )
-#define NAMEEND
-
-#else
 
 #define LISTDEF( name ) extern lDescr name[];
 #define XLISTDEF( name, idlname ) extern lDescr name[];
@@ -179,7 +157,6 @@ enum _enum_lMultiType {
 #define NAME( name )
 #define NAMEEND
 
-#endif
 #endif
 
 struct _lNameSpace {
@@ -215,7 +192,6 @@ lListElem *lFreeElem(lListElem *ep);
 lList *lFreeList(lList *lp);
 
 int lAddList(lList *lp0, lList *lp1);
-lList *lAddSubList(lListElem *ep, int nm, lList *to_add);
 int lCompListDescr(const lDescr *dp0, const lDescr *dp1);
 lList *lCopyList(const char *name, const lList *src);
 lListElem *lCopyElem(const lListElem *src);
@@ -249,11 +225,6 @@ lListElem *lFindLast(const lList *lp, const lCondition *cp);
 int mt_get_type(int mt);
 int mt_do_hashing(int mt);
 int mt_is_unique(int mt);
-
-bool lListElem_is_pos_changed(const lListElem *ep, int pos);
-
-bool lList_clear_changed_info(lList *lp);
-bool lListElem_clear_changed_info(lListElem *lp);
 
 /* #define for_each(ep,lp) for (ep=lFirst(lp);ep;ep=lNext(ep)) */
 /* #define for_each_rev(ep,lp) for (ep=lLast(lp);ep;ep=lPrev(ep)) */

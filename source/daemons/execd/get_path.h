@@ -54,15 +54,12 @@
 int sge_get_path(lList *lp, const char *cwd, const char *owner, 
                  const char *job_name, u_long32 job_number, 
                  u_long32 task_number, int type, char *path);
-                 
-bool sge_get_fs_path( lList* lp, char* fs_host, char* fs_path );
 
 const char *sge_get_active_job_file_path(dstring *buffer, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, const char *filename);
 
 const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *ja_task, dstring *err_str);
 const char *sge_make_pe_task_active_dir(const lListElem *job, const lListElem *ja_task, const lListElem *pe_task, dstring *err_str);
 
-const char* expand_path(const char *path_in, u_long32 job_id, u_long32 ja_task_id, const char *job_name, const char *user, const char *fqhost);
 
 #endif /* __GET_PATH_H */
 

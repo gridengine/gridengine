@@ -77,18 +77,12 @@ int main(int argc, char *argv[])
    lSetChar(ep, TEST_char, 'A');
    lSetLong(ep, TEST_long, 2);
    lSetUlong(ep, TEST_ulong, 3);
-   lSetBool(ep, TEST_bool, true);
+   lSetBool(ep, TEST_bool, TRUE);
    lSetList(ep, TEST_list, NULL);
 
    lSetInt(ep, TEST_int, 100);
    lSetObject(ep, TEST_object, obj);
    lSetRef(ep, TEST_ref, ep);
-
-   lSetInt(obj, TEST_int, 50);
-
-   lAddSubStr(obj, TEST_string, "sub list element in sub object", 
-              TEST_list, TEST_Type);
-   
    printf("element after setting fields\n");
    lWriteElemTo(ep, stdout);
 
@@ -119,11 +113,6 @@ int main(int argc, char *argv[])
    enp = lFreeWhat(enp);
 
    /* test reducing of elements */
-
-   /* test clearing of changed info */
-   lListElem_clear_changed_info(ep);
-   printf("cleared changed information for object and sub elements\n");
-   lWriteElemTo(ep, stdout);
 
    /* cleanup and exit */
    lFreeElem(ep);                  

@@ -38,9 +38,7 @@
 
 #include "basis_types.h"  
 
-#include "sge_dstring.h"
-
-#ifdef IRIX
+#ifdef IRIX6
 #  define SGE_STAT(filename, buffer) stat64(filename, buffer)
 #  define SGE_LSTAT(filename, buffer) lstat64(filename, buffer)
 #  define SGE_FSTAT(filename, buffer) fstat64(filename, buffer)
@@ -63,7 +61,7 @@
 #  define SGE_OFF_T off_t
 #endif                
 
-#ifdef IRIX
+#ifdef IRIX6
 #  define SGE_READDIR(directory) readdir64(directory)
 #  define SGE_TELLDIR(directory) telldir64(directory)
 #  define SGE_SEEKDIR(directory, offset) seekdir64(directory, offset)
@@ -79,13 +77,21 @@
 #   define SETPGRP setpgrp()
 #elif defined(__sgi)
 #   define SETPGRP BSDsetpgrp(getpid(),getpid())
-#elif defined(WIN32)
+#elif defined(SUN4) || defined(WIN32)
 #   define SETPGRP setsid()
 #else
 #   define SETPGRP setpgrp(getpid(),getpid())
 #endif
 
-#define GETPGRP getpgrp()
+#ifdef SUN4
+#   define GETPGRP getpgrp(0)
+#else
+#   define GETPGRP getpgrp()
+#endif
+
+typedef void (*sge_exit_func_t)(int);
+
+sge_exit_func_t sge_install_exit_func(sge_exit_func_t);     
 
 void sge_exit(int i);
 
@@ -93,20 +99,15 @@ int sge_chdir_exit(const char *path, int exit_on_error);
 
 int sge_chdir(const char *dir);
 
-int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist);    
-int sge_mkdir2(const char *base_dir, const char *name, int fmode, 
-               int exit_on_error);    
+int sge_mkdir(const char *path, int fmode, int exit_on_error);    
 
-int sge_rmdir(const char *cp, dstring *err_str);
+int sge_rmdir(const char *cp, char *err_str);
 
 int sge_unlink(const char *prefix, const char *suffix); 
  
 int sge_is_directory(const char *name);
  
 int sge_is_file(const char *name);
-
-int sge_is_executable(const char *name); 
-
 
 void sge_sleep(int sec, int usec);
 

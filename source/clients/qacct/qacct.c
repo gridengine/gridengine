@@ -31,22 +31,25 @@
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <grp.h>
+#include <sys/types.h>
 #include <time.h>
-#include <fnmatch.h>
 
 #include "sge_unistd.h"
 #include "sge.h"
-#include "sge_any_request.h"
+#include "path_history.h"
 #include "sge_all_listsL.h"
 #include "sge_string.h"
 #include "setup_path.h"
 #include "sge_gdi.h"
+#include "sge_gdi_intern.h"
+#include "sge_resource.h"
+#include "complex_history.h"
 #include "sge_sched.h"
 #include "commlib.h"
 #include "sig_handlers.h"
 #include "execution_states.h"
+#include "sge_parse_date_time.h"
 #include "sge_feature.h"
 #include "sge_rusage.h"
 #include "sge_prog.h"
@@ -54,7 +57,6 @@
 #include "sge_log.h"
 #include "qm_name.h"
 #include "basis_types.h"
-#include "sge_dstring.h"
 #include "sge_time.h"
 #include "msg_history.h"
 #include "msg_clients_common.h"
@@ -62,11 +64,8 @@
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_range.h"
+#include "sge_queue.h"
 #include "sge_stdlib.h"
-#include "sge_ulong.h"
-#include "sge_centry.h"
-#include "sge_qinstance.h"
-#include "sge_cqueue.h"
 
 typedef struct {
    int host;
@@ -84,13 +83,17 @@ static void print_full(int length, const char* string);
 static void print_full_ulong(int length, u_long32 value); 
 static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data );
 static void showjob(sge_rusage_type *dusage);
-static void get_qacct_lists(lList **ppcomplex, lList **ppqeues, lList **ppexechosts,
-                            lList **hgrp_l);
+static void get_qacct_lists(lList **ppcomplex, lList **ppqeues, lList **ppexechosts);
 
 /*
 ** statics
 */
 static FILE *fp = NULL;
+
+/*
+** REMOVE THIS BY SPLITTING complex_history.c to resolve link dependencies
+*/
+lList *Master_Complex_List;
 
 int main(int argc, char *argv[]);
 
@@ -122,6 +125,7 @@ char **argv
    ** but host[0] aso is referenced
    */
    stringT group;
+   stringT queue;
    stringT owner;
    stringT host;
    stringT project;
@@ -130,6 +134,8 @@ char **argv
    u_long32 slots;
    char cell[SGE_PATH_MAX + 1];
    stringT complexes;
+   char history_path[SGE_PATH_MAX + 1];
+
    u_long32 job_number = 0;
    stringT job_name;
    int jobfound=0;
@@ -146,6 +152,8 @@ char **argv
    int hostflag=0;
    int jobflag=0;
    int complexflag=0;
+   int historyflag=0;
+   int nohistflag=0;
    int beginflag=0;
    int endflag=0;
    int daysflag=0;
@@ -162,24 +170,19 @@ char **argv
    sge_rusage_type totals;
    int ii, i_ret;
    lList *complex_options = NULL;
-   lList *centry_list, *queue_list, *exechost_list;
-   lList *hgrp_list, *queueref_list = NULL, *queue_name_list = NULL;
+   lList *complex_list, *queue_list, *exechost_list;
+   lList *complex_dirs, *queue_dirs, *exechost_dirs;
    lList *sorted_list = NULL;
-   lList *alp = NULL;
+   lListElem *queue_host, *global_host;
    int is_path_setup = 0;   
    u_long32 line = 0;
-   dstring ds;
-   char buffer[128];
+   int cl_err = 0;
 
    DENTER_MAIN(TOP_LAYER, "qacct");
 
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
-
-   log_state_set_log_gui(1);
-
    sge_gdi_param(SET_MEWHO, QACCT, NULL);
-   if (sge_gdi_setup(prognames[QACCT], &alp)!=AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
+   if ((cl_err = sge_gdi_setup(prognames[QACCT]))) {
+      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);
    }
 
@@ -191,6 +194,7 @@ char **argv
    memset(granted_pe, 0, sizeof(granted_pe));
    slots = 0;
    memset(group, 0, sizeof(group));
+   memset(queue, 0, sizeof(queue));
    memset(host, 0, sizeof(host));
    memset(cell, 0, sizeof(cell));
    memset(complexes, 0, sizeof(complexes));
@@ -255,13 +259,16 @@ char **argv
       ** queue
       */
       else if (!strcmp("-q", argv[ii])) {
-         queueflag = 1;
          if (argv[ii+1]) {
-            if (*(argv[ii+1]) != '-') {
-               hostflag = 1;
-               lAddElemStr(&queueref_list, QR_name, argv[++ii], QR_Type);
+            if (*(argv[ii+1])=='-') {
+               queueflag = 1;
+            }
+            else {
+               strcpy(queue, argv[++ii]);
             }
          }
+         else
+            queueflag = 1;
       }
       /*
       ** host
@@ -270,14 +277,16 @@ char **argv
          if (argv[ii+1]) {
             if (*(argv[ii+1])=='-') {
                hostflag = 1;
-            } else {
+            }
+            else {
                u_short id = 0;
                int ret;
                prepare_enroll("qacct", id, NULL);
                ret = getuniquehostname(argv[++ii], host, 0);
-               if (ret != CL_RETVAL_OK) {
+               leave_commd();
+               if (ret) {
                   fprintf(stderr, MSG_HISTORY_FAILEDRESOLVINGHOSTNAME_SS ,
-                       argv[ii], cl_get_error_text(ret));
+                       argv[ii], cl_errstr(ret));
                   show_the_way(stderr);
                   return 1;
                }
@@ -339,15 +348,13 @@ char **argv
       */
       else if (!strcmp("-b", argv[ii])) {
          if (argv[ii+1]) {
-            u_long32 tmp_begin_time;
-
-            if  (!ulong_parse_date_time_from_string(&tmp_begin_time, NULL, argv[++ii])) {
+            begin_time = sge_parse_date_time(argv[++ii], NULL, NULL);
+            if  (begin_time == -1) {
                /*
                ** problem: insufficient error reporting
                */
                show_the_way(stderr);
             }
-            begin_time = tmp_begin_time;
             DPRINTF(("begin is: %ld\n", begin_time));
             beginflag = 1; 
          }
@@ -360,15 +367,13 @@ char **argv
       */
       else if (!strcmp("-e", argv[ii])) {
          if (argv[ii+1]) {
-            u_long32 tmp_end_time;
-
-            if  (!ulong_parse_date_time_from_string(&tmp_end_time, NULL, argv[++ii])) {
+            end_time = sge_parse_date_time(argv[++ii], NULL, NULL);
+            if  (end_time == -1) {
                /*
                ** problem: insufficient error reporting
                */
                show_the_way(stderr);
             }
-            end_time = tmp_end_time;
             DPRINTF(("end is: %ld\n", end_time));
             endflag = 1; 
          }
@@ -448,10 +453,23 @@ char **argv
          }
          else
             slotsflag = 1;
-      } 
+      }
+      
+      /*
+      ** -nohist does not use history data
+      ** for evaluation of -l criteria
+      ** problem: -history and -nohist results
+      ** in strange initialisation
+      */
+      else if (!strcmp("-nohist",argv[ii])) {
+         nohistflag = 1;
+      }
       /*
       ** complex attributes
       ** option syntax is described as
+      ** -l[<range-expr>] attr[=value],...
+      ** with range not being applicable here,
+      ** so syntax is
       ** -l attr[=value],...
       */
       else if (!strcmp("-l",argv[ii])) {
@@ -460,13 +478,26 @@ char **argv
             ** add blank cause no range can be specified
             ** as described in sge_resource.c
             */
-            strcpy(complexes, argv[++ii]);
+            strcpy(complexes, " ");
+            strcat(complexes, argv[++ii]);
             complexflag = 1;
          }
          else {
             show_the_way(stderr);
          }
-      } 
+      }
+      /*
+      ** alternative path to history directory
+      */
+      else if (!strcmp("-history",argv[ii])) {
+         if (argv[ii+1]) {
+            strcpy(history_path, argv[++ii]);
+            historyflag = 1;
+         }
+         else {
+            show_the_way(stderr);
+         }
+      }
       /*
       ** alternative accounting file
       */
@@ -503,12 +534,24 @@ char **argv
    ** mounted directory.
    */
    if (!acctfile[0]) {
-     const char *acct_file = path_state_get_acct_file();
-
-     DPRINTF(("acct_file: %s\n", (acct_file ? acct_file : "(NULL)")));
-     strcpy(acctfile, acct_file);
-     
-     sge_setup_sig_handlers(QACCT);
+     DPRINTF(("path.acct_file: %s\n", \
+        (path.acct_file ? path.acct_file : "(NULL)")));
+     strcpy(acctfile, path.acct_file);
+     if (historyflag) {
+        path.history_dir = history_path;
+     }
+     else if (nohistflag) {
+        prepare_enroll(prognames[QACCT], 0, NULL);
+        if (!sge_get_master(1)) {
+           SGE_EXIT(1);
+        }
+        DPRINTF(("checking if qmaster is alive ...\n"));
+        if (check_isalive(sge_get_master(0))) {
+           ERROR((SGE_EVENT, MSG_HISTORY_QMASTERISNOTALIVE ));
+           SGE_EXIT(1);
+        }
+       sge_setup_sig_handlers(QACCT);
+     }
      is_path_setup = 1;
    }
 
@@ -554,99 +597,106 @@ char **argv
    DPRINTF((" begin_time: %s", ctime(&begin_time)));
    DPRINTF((" end_time:   %s", ctime(&end_time)));
 
-   {
-      dstring cqueue_name = DSTRING_INIT;
-      dstring host_or_hgroup = DSTRING_INIT;      
-      lListElem *qref_pattern = NULL;
-      const char *name = NULL;
-      bool has_hostname = false;
-      bool has_domain = true;
+   /*
+   ** parsing complex flags and initialising complex list
+   */
+   if (complexflag) {
+      char *c_dir, *q_dir, *e_dir;
 
-      for_each(qref_pattern, queueref_list) {
-         name = lGetString(qref_pattern, QR_name); 
-         cqueue_name_split(name,  &cqueue_name, &host_or_hgroup,
-                           &has_hostname, &has_domain);
-         if (has_domain)
-            break;
+      complex_options = sge_parse_resources(NULL, complexes, complexes  + 1, "hard");
+      if (!complex_options) {
+         /*
+         ** problem: still to tell some more to the user
+         */
+         show_the_way(stderr);
+      }
+      /* lDumpList(stdout, complex_options, 0); */
+      if (!is_path_setup) {
+         if (historyflag) {
+            path.history_dir = history_path;
+         }
+         else {
+            if (nohistflag) {
+               prepare_enroll(prognames[QACCT], 0, NULL);
+               if (!sge_get_master(1)) {
+                  SGE_EXIT(1);
+               }
+               DPRINTF(("checking if qmaster is alive ...\n"));
+               if (check_isalive(sge_get_master(0))) {
+                  ERROR((SGE_EVENT, "qmaster is not alive"));
+                  SGE_EXIT(1);
+               }
+               sge_setup_sig_handlers(QACCT);
+            }
+         }
+         is_path_setup = 1;
       }
       
-      /* the user did not specify a queue domain, therefor we need no information
-         from the qmaster, but we have to work on the user input and generate the
-         same data structure, that we would have gotten with the qmaster functions*/
-      if (!has_domain) {
-         for_each(qref_pattern, queueref_list) {
-            dstring qi_name = DSTRING_INIT;
-            char *tmp_str = NULL;
-            name = lGetString(qref_pattern, QR_name); 
-           
-            sge_dstring_sprintf(&qi_name, "%s", name); 
-           
-            if ((tmp_str = strchr(name, '@')) == NULL){
-               sge_dstring_append(&qi_name, "@*");
-            }
-            else if(*(tmp_str+1) == '\0'){
-               sge_dstring_append(&qi_name, "*");
-            }
-            
-            lAddElemStr(&queue_name_list, QR_name, sge_dstring_get_string(&qi_name), QR_Type);
-
-            sge_dstring_free(&qi_name);
-         }   
+      if (!nohistflag) {
+         c_dir = malloc(strlen(path.history_dir) + strlen(STR_DIR_COMPLEXES) + 3);
+         if (!c_dir) {
+            ERROR((SGE_EVENT, MSG_MEMORY_CANTALLOCATEMEMORY));
+            SGE_EXIT(1);
+         }
+         q_dir = malloc(strlen(path.history_dir) + strlen(STR_DIR_QUEUES) + 3);
+         if (!q_dir) {
+            ERROR((SGE_EVENT, MSG_MEMORY_CANTALLOCATEMEMORY));
+            FREE(c_dir);
+            SGE_EXIT(1);
+         }
+         e_dir = malloc(strlen(path.history_dir) + strlen(STR_DIR_EXECHOSTS) + 3);
+         if (!e_dir) {
+            ERROR((SGE_EVENT, MSG_MEMORY_CANTALLOCATEMEMORY));
+            FREE(c_dir);
+            FREE(q_dir);
+            SGE_EXIT(1);
+         }
+         strcpy(c_dir, path.history_dir);
+         if (*c_dir && c_dir[strlen(c_dir) - 1] != '/') {
+            strcat(c_dir, "/");
+         }
+         strcpy(q_dir, c_dir);
+         strcpy(e_dir, c_dir);
+         strcat(c_dir, STR_DIR_COMPLEXES);
+         strcat(q_dir, STR_DIR_QUEUES);
+         strcat(e_dir, STR_DIR_EXECHOSTS);
+    
+         i_ret = init_history_subdirs(c_dir, &complex_dirs);
+         if (i_ret) {
+            ERROR((SGE_EVENT, MSG_HISTORY_QACCTERRORXREADHISTORYSUBDIRFORCOMPLEXES_I, i_ret));
+            FREE(c_dir);
+            FREE(q_dir);
+            FREE(e_dir);
+            SGE_EXIT(1);
+         }
+         i_ret = init_history_subdirs(q_dir, &queue_dirs);
+         if (i_ret) {
+            ERROR((SGE_EVENT, MSG_HISTORY_QACCTERRORXREADHISTORYSUBDIRFORQUEUES_I, i_ret));
+            FREE(c_dir);
+            FREE(q_dir);
+            FREE(e_dir);
+            SGE_EXIT(1);
+         }
+         i_ret = init_history_subdirs(e_dir, &exechost_dirs);
+         if (i_ret) {
+            ERROR((SGE_EVENT, MSG_HISTORY_QACCTERRORXREADHISTORYSUBDIRFOREXECHOSTS_I, i_ret));
+            FREE(c_dir);
+            FREE(q_dir);
+            FREE(e_dir);
+            SGE_EXIT(1);
+         }
+         FREE(c_dir);
+         FREE(q_dir);
+         FREE(e_dir);
       }
-      if ( complexflag || (queueref_list && has_domain)) {
-         /*
-         ** parsing complex flags and initialising complex list
-         */
-         bool found_something;
-         complex_options = centry_list_parse_from_string(NULL, complexes, true);
-         if (!complex_options) {
-            /*
-            ** problem: still to tell some more to the user
-            */
-            show_the_way(stderr);
-         }
-         /* lDumpList(stdout, complex_options, 0); */
-         if (!is_path_setup) {
-            prepare_enroll(prognames[QACCT], 0, NULL);
-            if (!sge_get_master(1)) {
-               SGE_EXIT(1);
-            }
-            DPRINTF(("checking if qmaster is alive ...\n"));
-            if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) {
-               ERROR((SGE_EVENT, "qmaster is not alive"));
-               SGE_EXIT(1);
-            }
-            sge_setup_sig_handlers(QACCT);
-            is_path_setup = 1;
-         }
-         if (queueref_list && has_domain){ 
-            get_qacct_lists(NULL, &queue_list, NULL, &hgrp_list);
-            qref_list_resolve(queueref_list, NULL, &queue_name_list, 
-                           &found_something, queue_list, hgrp_list, true, true);
-            if (!found_something) {
-               fprintf(stderr, MSG_QINSTANCE_NOQUEUES);
-               SGE_EXIT(1);
-            }
-         }  
-         if (complexflag) {
-            get_qacct_lists(&centry_list, &queue_list, &exechost_list, NULL);
-         }   
-         
-      /* debug output) */
-      #if 0 
-            DPRINTF(("complex entrys:\n"));
-            lWriteList(centry_list);
-            DPRINTF(("queue instances:\n"));
-            lWriteList(queue_list);
-            DPRINTF(("exec hosts:\n"));
-            lWriteList(exechost_list);
-            DPRINTF(("host groups\n"));
-            lWriteList(hgrp_list);
-      #endif
-
-      } /* endif complexflag */
-
-   }
+      else {
+         get_qacct_lists(&complex_list, &queue_list, &exechost_list);
+         DPRINTF(("got 3 current lists: \n"));
+         lWriteList(complex_list);
+         lWriteList(queue_list);
+         lWriteList(exechost_list);
+      } /* endif !nohistflag */
+   } /* endif complexflag */
 
    fp = fopen(acctfile,"r");
    if (fp == NULL) {
@@ -694,14 +744,14 @@ char **argv
          continue;
       }
       if ((begin_time != -1) && ((time_t) dusage.start_time < begin_time)) { 
-/*         DPRINTF(("job no %ld started %s", dusage.job_number, \
-            sge_ctime32(&dusage.start_time, &ds)));*/
-/*         DPRINTF(("job count starts %s\n", ctime(&begin_time))); */
+         DPRINTF(("job no %ld started %s", dusage.job_number, \
+            sge_ctime32(&dusage.start_time)));
+         DPRINTF(("job count starts %s\n", ctime(&begin_time)));
          continue;
       }
       if ((end_time != -1) && ((time_t) dusage.start_time > end_time)) {
          DPRINTF(("job no %ld started %s", dusage.job_number, \
-            sge_ctime32(&dusage.start_time, &ds)));
+            sge_ctime32(&dusage.start_time)));
          DPRINTF(("job count ends %s", ctime(&end_time)));
          continue;
       }
@@ -714,28 +764,10 @@ char **argv
          if (sge_strnullcmp(group, dusage.group))
             continue;
       }
-      if (queue_name_list){
-         dstring qi = DSTRING_INIT;
-         lListElem *elem;
-         bool found = false;
-
-         sge_dstring_sprintf(&qi,"%s@%s", dusage.qname, dusage.hostname );
- 
-         for_each(elem, queue_name_list) {
-            if (fnmatch(lGetString(elem, QR_name), sge_dstring_get_string(&qi), 0) == 0) {
-               found = true;
-               break;
-            }
-         }
-
-         sge_dstring_free(&qi);
-         
-         if (!found){
+      if (queue[0]) {
+         if (sge_strnullcmp(queue, dusage.qname))
             continue;
-         }  
-         
       }
-
       if (project[0]) {
          if (sge_strnullcmp(project, dusage.project))
             continue;
@@ -763,18 +795,94 @@ char **argv
       
       if (complexflag) {
          lListElem *queue;
+         lList *complex_filled;
          int selected;
       
-         queue = cqueue_list_locate_qinstance(queue_list, dusage.qname);
-         if (!queue) {
-            WARNING((SGE_EVENT, MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS,
-                      (int)dusage.job_number, dusage.qname));
-            continue;
-         } 
-   
-         sconf_set_qs_state(QS_STATE_EMPTY);
+         if (!nohistflag) {
+            DPRINTF(("job_no: %ld, start_time: %ld\n", dusage.job_number, dusage.start_time));
+            i_ret = make_complex_list(complex_dirs, dusage.start_time, &complex_list);
+            if (i_ret) {
+               ERROR((SGE_EVENT, MSG_HISTORY_COMPLEXSTRUCTUREREFTOXCANTBEASSEMBLEDY_SI , 
+                  sge_ctime32(&dusage.start_time), i_ret));
+               ERROR((SGE_EVENT, MSG_HISTORY_USENOHISTTOREFTOCURCOMPLEXCONFIG ));
+               SGE_EXIT(1);
+            }
+            i_ret = find_queue_version_by_name(queue_dirs, dusage.qname, 
+                  dusage.start_time, &queue, 0);
+            if (i_ret || !queue) {
+               ERROR((SGE_EVENT, MSG_HISTORY_QUEUECONFIGFORXREFTOYCANTBEASSEMBLEDY_SSI , \
+                  dusage.qname, sge_ctime32(&dusage.start_time), i_ret));
+               ERROR((SGE_EVENT, MSG_HISTORY_USENOHISTTOREFTOCURCOMPLEXCONFIG ));
+               lFreeList(complex_list);
+               SGE_EXIT(1);         
+            }
 
-         selected = sge_select_queue(complex_options,queue, NULL, exechost_list, centry_list, 1, 1);
+            i_ret = find_host_version_by_name(exechost_dirs, dusage.hostname,
+                  dusage.start_time, &queue_host, FLG_BY_NAME_NOCASE);
+
+            if (i_ret || !queue_host) {
+               ERROR((SGE_EVENT, MSG_HISTORY_HOSTCONFIGFORHOSTXREFTOYCANTBEASSEMBLEDYFORJOBZ_SSIU, 
+                     dusage.hostname, sge_ctime32(&dusage.start_time), 
+                     i_ret, u32c(dusage.job_number)));
+               ERROR((SGE_EVENT, MSG_HISTORY_USENOHISTTOREFTOCURCOMPLEXCONFIG ));
+               SGE_EXIT(1);
+            }
+
+            i_ret = find_host_version_by_name(exechost_dirs, "global",
+                  dusage.start_time, &global_host, FLG_BY_NAME_NOCASE);
+
+            if (i_ret || !global_host) {
+               ERROR((SGE_EVENT, MSG_HISTORY_GLOBALHOSTCONFIGFORGLOBALHOSTXREFTOYCANTBEASSEMBLEDYFORJOBZ_SSID , \
+                     dusage.hostname, sge_ctime32(&dusage.start_time), i_ret, u32c(dusage.job_number)));
+               ERROR((SGE_EVENT, MSG_HISTORY_USENOHISTTOREFTOCURCOMPLEXCONFIG ));
+               SGE_EXIT(1);
+            }
+
+            exechost_list = lCreateList("Execution Host List", EH_Type);
+            lAppendElem(exechost_list, queue_host);
+            lAppendElem(exechost_list, global_host);
+         }
+         else {
+            queue = queue_list_locate(queue_list, dusage.qname);
+            if (!queue) {
+               WARNING((SGE_EVENT, MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS,
+                         (int)dusage.job_number, dusage.qname));
+               continue;
+            } 
+         }
+         complex_filled = NULL;
+   
+         set_qs_state(QS_STATE_EMPTY);
+
+         queue_complexes2scheduler(&complex_filled, queue, exechost_list, complex_list, 0);
+
+         if (!complex_filled) {
+            ERROR((SGE_EVENT, \
+               MSG_HISTORY_COMPLEXTEMPLATESCANTBEFILLEDCORRECTLYFORJOBX_D, \
+               u32c(dusage.job_number)));
+            lFreeList(complex_list);
+            lFreeElem(queue);
+            SGE_EXIT(1);
+         }
+
+         DPRINTF(("complex_filled: \n"));
+
+         {
+            lList *ccl[3];
+
+#if 0
+            ccl[0] = lGetList(global_host, EH_consumable_config_list);
+            ccl[1] = lGetList(queue_host, EH_consumable_config_list);
+            ccl[2] = lGetList(queue, QU_consumable_config_list);
+#else
+            ccl[0] = NULL;
+            ccl[1] = NULL;
+            ccl[2] = NULL;
+#endif
+
+            selected = sge_select_queue(complex_filled, complex_options, 1, NULL, 0, 1, ccl);
+         }
+         lFreeList(complex_filled);
   
          if (!selected) {
             continue;
@@ -795,9 +903,8 @@ char **argv
          } else {
             show_ja_task = 1;
          }
-        
-         if (((dusage.job_number == job_number) || !sge_patternnullcmp(dusage.job_name, job_name)) &&
-         /*!sge_strnullcmp(dusage.job_name, job_name)) && */
+         
+         if (((dusage.job_number == job_number) || !sge_strnullcmp(dusage.job_name, job_name)) &&
                show_ja_task) {
             showjob(&dusage);
             jobfound = 1;
@@ -1024,6 +1131,9 @@ char **argv
    if ( host[0] ) {
       column_sizes.host = strlen(host) + 1;
    } 
+   if ( queue[0] ) {
+      column_sizes.queue = strlen(queue) + 1;
+   } 
    if ( group[0] ) {
       column_sizes.group = strlen(group) + 1;
    } 
@@ -1046,11 +1156,17 @@ char **argv
       int dashcnt = 0;
       char title_array[500];
 
+#ifndef NO_SGE_COMPILE_DEBUG
+      if (rmon_mlgetl(&DEBUG_ON, TOP_LAYER) & INFOPRINT) { 
+         lWriteListTo(sorted_list, stdout);
+      }
+#endif
+
       if (host[0] || hostflag) {
          print_full(column_sizes.host , MSG_HISTORY_HOST);
          dashcnt += column_sizes.host ;
       }
-      if (queueflag) {
+      if (queue[0] || queueflag) {
          print_full(column_sizes.queue ,MSG_HISTORY_QUEUE );
          dashcnt += column_sizes.queue ;
       }
@@ -1119,7 +1235,10 @@ char **argv
             */
             print_full(column_sizes.host, ((cp = lGetHost(ep, QAJ_host)) ? cp : ""));
          }
-         if (queueflag) {
+         if (queue[0]) {
+            print_full(column_sizes.queue,  queue);
+         }
+         else if (queueflag) {
             if (!ep)
                break;
             print_full(column_sizes.queue, ((cp = lGetString(ep, QAJ_queue)) ? cp : ""));
@@ -1206,7 +1325,6 @@ char **argv
    ** problem: other clients evaluate some status here
    */
    SGE_EXIT(0);
-   DEXIT;
    return 0;
 }
 
@@ -1382,43 +1500,36 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
 static void show_the_way(
 FILE *fp 
 ) {
-   dstring ds;
-   char buffer[256];
-
    DENTER(TOP_LAYER, "show_the_way");
 
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
-
-   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
+   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
          
    fprintf(fp, "%s qacct [options]\n",MSG_HISTORY_USAGE );
-   fprintf(fp, " [-A account_string]               %s", MSG_HISTORY_A_OPT_USAGE); 
-   fprintf(fp, " [-b begin_time]                   %s", MSG_HISTORY_b_OPT_USAGE);
-   fprintf(fp, " [-d days]                         %s", MSG_HISTORY_d_OPT_USAGE ); 
-   fprintf(fp, " [-D [department]]                 %s", MSG_HISTORY_D_OPT_USAGE);
-   fprintf(fp, " [-e end_time]                     %s", MSG_HISTORY_e_OPT_USAGE);
-   fprintf(fp, " [-g [groupid|groupname]]          %s", MSG_HISTORY_g_OPT_USAGE );
-   fprintf(fp, " [-h [host]]                       %s", MSG_HISTORY_h_OPT_USAGE );
-   fprintf(fp, " [-help]                           %s", MSG_HISTORY_help_OPT_USAGE);
-   fprintf(fp, " [-j [[job_id|job_name|pattern]]]  %s", MSG_HISTORY_j_OPT_USAGE);
-   fprintf(fp, " [-l attr=val,...]                 %s", MSG_HISTORY_l_OPT_USAGE );
-   fprintf(fp, " [-o [owner]]                      %s", MSG_HISTORY_o_OPT_USAGE);
-   fprintf(fp, " [-pe [pe_name]]                   %s", MSG_HISTORY_pe_OPT_USAGE );
-   fprintf(fp, " [-P [project]]                    %s", MSG_HISTORY_P_OPT_USAGE );
-   fprintf(fp, " [-q [queue]                      %s", MSG_HISTORY_q_OPT_USAGE );
-   fprintf(fp, " [-slots [slots]]                  %s", MSG_HISTORY_slots_OPT_USAGE);
-   fprintf(fp, " [-t taskid[-taskid[:step]]]       %s", MSG_HISTORY_t_OPT_USAGE );
-   fprintf(fp, " [[-f] acctfile]                   %s", MSG_HISTORY_f_OPT_USAGE );
-   
-   fprintf(fp, "\n");
-   fprintf(fp, " begin_time, end_time              %s", MSG_HISTORY_beginend_OPT_USAGE );
-   fprintf(fp, " queue                             [cluster_queue|queue_instance|queue_domain|pattern]\n");
-   if (fp==stderr) {
+   fprintf(fp, " [-A account_string]          %s", MSG_HISTORY_A_OPT_USAGE); 
+   fprintf(fp, " [-help]                      %s", MSG_HISTORY_help_OPT_USAGE);
+   fprintf(fp, " [-h [host]]                  %s", MSG_HISTORY_h_OPT_USAGE );
+   fprintf(fp, " [-q [queue]]                 %s", MSG_HISTORY_q_OPT_USAGE );
+   fprintf(fp, " [-g [groupid|groupname]]     %s", MSG_HISTORY_g_OPT_USAGE );
+   fprintf(fp, " [-o [owner]]                 %s", MSG_HISTORY_o_OPT_USAGE);
+   fprintf(fp, " [-P [project]]               %s", MSG_HISTORY_P_OPT_USAGE );
+   fprintf(fp, " [-D [department]]            %s", MSG_HISTORY_D_OPT_USAGE);
+   fprintf(fp, " [-pe [pe_name]]              %s", MSG_HISTORY_pe_OPT_USAGE );
+   fprintf(fp, " [-slots [slots]]             %s", MSG_HISTORY_slots_OPT_USAGE);
+   fprintf(fp, " [-l attr=val,...]            %s", MSG_HISTORY_l_OPT_USAGE );
+   fprintf(fp, " [-b begin_time]              %s", MSG_HISTORY_b_OPT_USAGE);
+   fprintf(fp, " [-e end_time]                %s", MSG_HISTORY_e_OPT_USAGE);
+   fprintf(fp, " [-d days]                    %s", MSG_HISTORY_d_OPT_USAGE );
+   fprintf(fp, " [-j [[jobid|jobname]]]       %s", MSG_HISTORY_j_OPT_USAGE);
+   fprintf(fp, " [-t taskid[-taskid[:step]]]  %s", MSG_HISTORY_t_OPT_USAGE );
+   fprintf(fp, " [-history path]              %s", MSG_HISTORY_history_OPT_USAGE);
+   fprintf(fp, " [-nohist]                    %s", MSG_HISTORY_nohist_OPT_USAGE);
+   fprintf(fp, " [[-f] acctfile]              %s", MSG_HISTORY_f_OPT_USAGE );
+   fprintf(fp, " begin_time, end_time         %s", MSG_HISTORY_beginend_OPT_USAGE );
+  
+   if (fp==stderr)
       SGE_EXIT(1);
-   } else {
+   else 
       SGE_EXIT(0);   
-   }
-   DEXIT;
 }
 
 
@@ -1438,17 +1549,17 @@ FILE *fp
 static void showjob(
 sge_rusage_type *dusage 
 ) {
-   dstring maxvmem_string = DSTRING_INIT;
-   dstring string = DSTRING_INIT;
+   char maxvmem_usage[1000];
 
-   double_print_memory_to_dstring(dusage->maxvmem, &maxvmem_string);
    printf("==============================================================\n");
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_QNAME, (dusage->qname ? dusage->qname : MSG_HISTORY_SHOWJOB_NULL));
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_HOSTNAME, (dusage->hostname ? dusage->hostname : MSG_HISTORY_SHOWJOB_NULL));
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_GROUP, (dusage->group ? dusage->group : MSG_HISTORY_SHOWJOB_NULL));    
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_OWNER, (dusage->owner ? dusage->owner : MSG_HISTORY_SHOWJOB_NULL));
-   printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_PROJECT, (dusage->project ? dusage->project : MSG_HISTORY_SHOWJOB_NULL));
-   printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_DEPARTMENT, (dusage->department ? dusage->department : MSG_HISTORY_SHOWJOB_NULL));
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_PROJECT, (dusage->project ? dusage->project : MSG_HISTORY_SHOWJOB_NULL));
+      printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_DEPARTMENT, (dusage->department ? dusage->department : MSG_HISTORY_SHOWJOB_NULL));
+   }
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_JOBNAME, (dusage->job_name ? dusage->job_name : MSG_HISTORY_SHOWJOB_NULL));
    printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_JOBNUMBER, dusage->job_number);
    
@@ -1462,15 +1573,15 @@ sge_rusage_type *dusage
 
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_ACCOUNT, (dusage->account ? dusage->account : MSG_HISTORY_SHOWJOB_NULL ));
    printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_PRIORITY, dusage->priority);
-   printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_QSUBTIME,    sge_ctime32(&dusage->submission_time, &string));
+   printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_QSUBTIME,    sge_ctime32(&dusage->submission_time));
 
    if (dusage->start_time)
-      printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_STARTTIME, sge_ctime32(&dusage->start_time, &string));
+      printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_STARTTIME, sge_ctime32(&dusage->start_time));
    else
       printf("%-13.12s-/-\n",MSG_HISTORY_SHOWJOB_STARTTIME);
 
    if (dusage->end_time)
-      printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_ENDTIME, sge_ctime32(&dusage->end_time, &string));
+      printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_ENDTIME, sge_ctime32(&dusage->end_time));
    else
       printf("%-13.12s-/-\n",MSG_HISTORY_SHOWJOB_ENDTIME);
 
@@ -1503,23 +1614,18 @@ sge_rusage_type *dusage
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_MEM,          dusage->mem);
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_IO,           dusage->io);
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_IOW,          dusage->iow);
-   printf("%-13.12s%s\n",        MSG_HISTORY_SHOWJOB_MAXVMEM,      sge_dstring_get_string(&maxvmem_string));
-   sge_dstring_free(&maxvmem_string);
-   sge_dstring_free(&string);
+   printf("%-13.12s%s\n",  MSG_HISTORY_SHOWJOB_MAXVMEM,      resource_descr(dusage->maxvmem, TYPE_MEM, maxvmem_usage));
 }
 
 /*
 ** NAME
 **   get_qacct_lists
 ** PARAMETER
-**   ppcentries  - list pointer-pointer to be set to the complex list, CX_Type, can be NULL
-**   ppqueues    - list pointer-pointer to be set to the queues list, QU_Type, has to be set
-**   ppexechosts - list pointer-pointer to be set to the exechosts list,EH_Type, can be NULL
-**   hgrp_l      - host group list, HGRP_Type, can be NULL
-**
+**   ppcomplexes - list pointer-pointer to be set to the complex list, CX_Type
+**   ppqueues    - list pointer-pointer to be set to the queues list, QU_Type
+**   ppexechosts - list pointer-pointer to be set to the exechosts list,EH_Type
 ** RETURN
 **   none
-**
 ** EXTERNAL
 **
 ** DESCRIPTION
@@ -1531,71 +1637,53 @@ sge_rusage_type *dusage
 **   problem: exiting is against the philosophy, restricts usage to clients
 */
 static void get_qacct_lists(
-lList **ppcentries,
+lList **ppcomplexes,
 lList **ppqueues,
-lList **ppexechosts,
-lList **hgrp_l
+lList **ppexechosts 
 ) {
    lCondition *where = NULL;
    lEnumeration *what = NULL;
    lList *alp = NULL;
    lListElem *aep = NULL;
    lList *mal = NULL;
-   int ce_id = 0, eh_id = 0, q_id = 0, hgrp_id = 0;
+   int cx_id = 0, eh_id = 0, q_id = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(TOP_LAYER, "get_qacct_lists");
 
    /*
-   ** GET SGE_CENTRY_LIST 
+   ** GET SGE_COMPLEX_LIST 
    */
-   if (ppcentries) {
-      what = lWhat("%T(ALL)", CE_Type);
-      ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
-                              NULL, NULL, what, NULL, &state);
-      what = lFreeWhat(what);
+   what = lWhat("%T(ALL)", CX_Type);
+   cx_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_COMPLEX_LIST, SGE_GDI_GET,
+                           NULL, NULL, what, NULL, &state);
+   what = lFreeWhat(what);
 
-      if (alp) {
-         ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-         SGE_EXIT(1);
-      }
+   if (alp) {
+      ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
+      SGE_EXIT(1);
    }
+
    /*
    ** GET SGE_EXECHOST_LIST 
    */
-   if (ppexechosts) {
-      where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
-      what = lWhat("%T(ALL)", EH_Type);
-      eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
-                              NULL, where, what, NULL, &state);
-      what = lFreeWhat(what);
-      where = lFreeWhere(where);
+   where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
+   what = lWhat("%T(ALL)", EH_Type);
+   eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
+                           NULL, where, what, NULL, &state);
+   what = lFreeWhat(what);
+   where = lFreeWhere(where);
 
-      if (alp) {
-         ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-         SGE_EXIT(1);
-      }
+   if (alp) {
+      ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
+      SGE_EXIT(1);
    }
 
-   /*
-   ** hgroup 
-   */
-   if (hgrp_l) {
-      what = lWhat("%T(ALL)", HGRP_Type);
-      hgrp_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
-                           NULL, NULL, what, NULL, &state);
-      what = lFreeWhat(what);
-
-      if (alp) {
-         printf("%s", lGetString(lFirst(alp), AN_text));
-         SGE_EXIT(1);
-      }
-   }
    /*
    ** GET SGE_QUEUE_LIST 
    */
    what = lWhat("%T(ALL)", QU_Type);
-   q_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
+   q_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_QUEUE_LIST, SGE_GDI_GET,
                            NULL, NULL, what, &mal, &state);
    what = lFreeWhat(what);
 
@@ -1608,37 +1696,33 @@ lList **hgrp_l
    ** handle results
    */
    /* --- complex */
-   if (ppcentries) {
-      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
-                                   mal, ppcentries);
-      if (!alp) {
-         ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETCOMPLEXLISTFAILED ));
-         SGE_EXIT(1);
-      }
-      if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         ERROR((SGE_EVENT, lGetString(aep, AN_text)));
-         SGE_EXIT(1);
-      }
-      alp = lFreeList(alp);
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_COMPLEX_LIST, cx_id,
+                                 mal, ppcomplexes);
+   if (!alp) {
+      ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETCOMPLEXLISTFAILED ));
+      SGE_EXIT(1);
    }
+   if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
+      ERROR((SGE_EVENT, lGetString(aep, AN_text)));
+      SGE_EXIT(1);
+   }
+   alp = lFreeList(alp);
 
    /* --- exec host */
-   if (ppexechosts) {
-      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
-                                    mal, ppexechosts);
-      if (!alp) {
-         ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETEXECHOSTLISTFAILED ));
-         SGE_EXIT(1);
-      }
-      if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         ERROR((SGE_EVENT, lGetString(aep, AN_text)));
-         SGE_EXIT(1);
-      }
-      alp = lFreeList(alp);
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
+                                 mal, ppexechosts);
+   if (!alp) {
+      ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETEXECHOSTLISTFAILED ));
+      SGE_EXIT(1);
    }
+   if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
+      ERROR((SGE_EVENT, lGetString(aep, AN_text)));
+      SGE_EXIT(1);
+   }
+   alp = lFreeList(alp);
 
    /* --- queue */
-   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_QUEUE_LIST, q_id, 
                                  mal, ppqueues);
    if (!alp) {
       ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETQUEUELISTFAILED ));
@@ -1650,22 +1734,8 @@ lList **hgrp_l
    }
    alp = lFreeList(alp);
 
-   /* --- hgrp */
-   if (hgrp_l) {
-      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_HGROUP_LIST, hgrp_id, mal, 
-                                   hgrp_l);
-      if (!alp) {
-         printf(MSG_GDI_HGRPCONFIGGDIFAILED);
-         SGE_EXIT(1);
-      }
-      if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         printf("%s", lGetString(aep, AN_text));
-         SGE_EXIT(1);
-      }
-      alp = lFreeList(alp);
-   }
-   /* --- end */
    mal = lFreeList(mal);
+
    DEXIT;
    return;
 }

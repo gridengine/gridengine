@@ -35,6 +35,7 @@
 #include <Xmt/Dialogs.h>
 #include <Xmt/Pixmap.h>
 
+#include "sge_gdi_intern.h"
 #include "qmon_about.h"
 #include "qmon_appres.h"
 #include "sgermon.h"
@@ -47,7 +48,7 @@ static char header[] = "@fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell 
 extern char SFLN_ELN[];
 
 #ifdef ADD_SUN_COPYRIGHT
-static char mailto[] = "\nFor further information and feedback use: @fBn1ge6beta-support@@.sun.com@fR\n\n";
+static char mailto[] = "\nFor further information and feedback use: @fBsgebeta53-support@@.sun.com@fR\n\n";
 #else
 static char mailto[] = "\n";
 #endif
@@ -56,17 +57,18 @@ void qmonAboutMsg(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
-   dstring ds;
-   char buffer[256];
+   int sgeee_mode; 
+   static char *copyright = NULL;
 
    DENTER(TOP_LAYER, "qmonAboutMsg");
    
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
+   sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
+
    XmtDisplayMessage(w, "about_msg", "Help", header, 
                      "About Qmon", NULL, None, XmDIALOG_MODELESS,
                      XmDIALOG_INFORMATION, 
                      uti_state_get_user_name(), uti_state_get_qualified_hostname(), 
-                     feature_get_product_name(FS_LONG_VERSION, &ds), 
+                     feature_get_product_name(FS_LONG_VERSION), 
                      uti_state_get_default_cell(), 
                      XmtLocalize(w, mailto, "mailto_msg"), SFLN_ELN); 
 /*                      XmtLocalize(w, "copyright_msg", SFLN_ELN, NULL)); */

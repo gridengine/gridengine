@@ -76,13 +76,9 @@ int startprog(int out, int err,
  char *argv[256];
  int i;
  char *str;
- dstring ds;
- char buffer[128];
 
  DENTER(TOP_LAYER, "startprog");
-
- sge_dstring_init(&ds, buffer, sizeof(buffer));
-
+ 
  va_start(argnp, name);
 
  for (i=0; i<256; i++)
@@ -150,7 +146,7 @@ int startprog(int out, int err,
       close(2);
       dup(err);
       fprintf(stderr, "######################\n");
-      fprintf(stderr, " %s\n", sge_ctime(0, &ds));
+      fprintf(stderr, " %s\n", sge_ctime(sge_get_gmt()));
       fprintf(stderr, "######################\n");
    }
    execvp(prog_path, argv);

@@ -101,9 +101,8 @@ Qmon*fticket_layout.fticket_type.strings: \
    "@{User}", \
    "@{Department}", \
    "@{Project}", \
-   "@{Job}"
-
-!! "@{Jobclass}"
+   "@{Job}", \
+   "@{Jobclass}"
 
 
 Qmon*fticket_layout*fticket_matrix.reverseSelect:       True
@@ -132,14 +131,13 @@ Qmon*fticket_layout.fticket_ratio.xmtChildren: \
    XmScale        fticket_usc = fticket_user, \
                   fticket_ussc = fticket_userset, \
                   fticket_psc = fticket_project, \
-                  fticket_jsc = fticket_job; \
+                  fticket_jsc = fticket_job, \
+                  fticket_jcsc = fticket_jobclass; \
    XmToggleButton fticket_usc_t, \
                   fticket_ussc_t, \
                   fticket_psc_t, \
-                  fticket_jsc_t;
-
-!                fticket_jcsc = fticket_jobclass;
-!                fticket_jcsc_t;
+                  fticket_jsc_t, \
+                  fticket_jcsc_t;
 
 Qmon*fticket_layout.fticket_ratio.layout: \
    Fixed Shadowed Out 4 2 Col { \
@@ -160,13 +158,12 @@ Qmon*fticket_layout.fticket_ratio.layout: \
          Fixed Centered fticket_jsc_t \
          Fixed Centered fticket_jsc \
       } \
+      Caption tl "@{Job Class [%]}" Row { \
+         Fixed Centered fticket_jcsc_t \
+         Fixed Centered fticket_jcsc \
+      } \
       <> \
    }
-
-!      Caption tl "@{Job Class [%]}" Row {
-!         Fixed Centered fticket_jcsc_t
-!         Fixed Centered fticket_jcsc
-!      }
 
 Qmon*fticket_layout.fticket_ratio.fticket_usc_t.indicatorOn:     False
 Qmon*fticket_layout.fticket_ratio.fticket_usc_t.shadowThickness: 0
@@ -196,12 +193,12 @@ Qmon*fticket_layout.fticket_ratio.fticket_jsc_t.labelType:       PIXMAP
 Qmon*fticket_layout.fticket_ratio.fticket_jsc_t.labelPixmap:     open_lock
 Qmon*fticket_layout.fticket_ratio.fticket_jsc_t.selectPixmap:    lock
 
-!!Qmon*fticket_layout.fticket_ratio.fticket_jcsc_t.indicatorOn:    False
-!!Qmon*fticket_layout.fticket_ratio.fticket_jcsc_t.shadowThickness: 0
-!!Qmon*fticket_layout.fticket_ratio.fticket_jcsc_t.highlightThickness: 0
-!!Qmon*fticket_layout.fticket_ratio.fticket_jcsc_t.labelType:      PIXMAP
-!!Qmon*fticket_layout.fticket_ratio.fticket_jcsc_t.labelPixmap:    open_lock
-!!Qmon*fticket_layout.fticket_ratio.fticket_jcsc_t.selectPixmap:   lock
+Qmon*fticket_layout.fticket_ratio.fticket_jcsc_t.indicatorOn:    False
+Qmon*fticket_layout.fticket_ratio.fticket_jcsc_t.shadowThickness: 0
+Qmon*fticket_layout.fticket_ratio.fticket_jcsc_t.highlightThickness: 0
+Qmon*fticket_layout.fticket_ratio.fticket_jcsc_t.labelType:      PIXMAP
+Qmon*fticket_layout.fticket_ratio.fticket_jcsc_t.labelPixmap:    open_lock
+Qmon*fticket_layout.fticket_ratio.fticket_jcsc_t.selectPixmap:   lock
 
 
 Qmon*fticket_layout.fticket_ratio.fticket_usc.decimalPoints:     1
@@ -236,13 +233,13 @@ Qmon*fticket_layout.fticket_ratio.fticket_jsc.scaleMultiple:     1
 Qmon*fticket_layout.fticket_ratio.fticket_jsc.orientation:       HORIZONTAL
 Qmon*fticket_layout.fticket_ratio.fticket_jsc.showValue:         True
 
-!!Qmon*fticket_layout.fticket_ratio.fticket_jcsc.decimalPoints:    1
-!!Qmon*fticket_layout.fticket_ratio.fticket_jcsc.minimum:          0
-!!Qmon*fticket_layout.fticket_ratio.fticket_jcsc.maximum:          1000
-!!Qmon*fticket_layout.fticket_ratio.fticket_jcsc.highlightThickness: 0
-!!Qmon*fticket_layout.fticket_ratio.fticket_jcsc.scaleMultiple:    1
-!!Qmon*fticket_layout.fticket_ratio.fticket_jcsc.orientation:      HORIZONTAL
-!!Qmon*fticket_layout.fticket_ratio.fticket_jcsc.showValue:        True
+Qmon*fticket_layout.fticket_ratio.fticket_jcsc.decimalPoints:    1
+Qmon*fticket_layout.fticket_ratio.fticket_jcsc.minimum:          0
+Qmon*fticket_layout.fticket_ratio.fticket_jcsc.maximum:          1000
+Qmon*fticket_layout.fticket_ratio.fticket_jcsc.highlightThickness: 0
+Qmon*fticket_layout.fticket_ratio.fticket_jcsc.scaleMultiple:    1
+Qmon*fticket_layout.fticket_ratio.fticket_jcsc.orientation:      HORIZONTAL
+Qmon*fticket_layout.fticket_ratio.fticket_jcsc.showValue:        True
 
 
 
@@ -311,9 +308,8 @@ Qmon*oticket_layout.oticket_type.strings: \
    "@{User}", \
    "@{Department}", \
    "@{Project}", \
-   "@{Job}"
-
-!!   "@{Jobclass}"
+   "@{Job}", \
+   "@{Jobclass}"
 
 
 Qmon*oticket_layout*oticket_matrix.reverseSelect:       True

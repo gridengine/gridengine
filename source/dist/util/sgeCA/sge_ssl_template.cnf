@@ -7,8 +7,7 @@
 # defined.
 #HOME                    = $ENV::SGE_ROOT/default
 #RANDFILE                = $ENV::HOME/.rnd
-CACELL                   = $ENV::SGE_CELL
-CATOP                    = $ENV::SGE_ROOT/$CACELL/common/sgeCA
+CATOP                    = $ENV::SGE_ROOT/default/common/sgeCA
 
 # Extra OBJECT IDENTIFIER info:
 #oid_file                = $ENV::HOME/.oid
@@ -71,7 +70,7 @@ stateOrProvinceName     = match
 organizationName        = match
 organizationalUnitName  = optional
 commonName              = supplied
-userId                  = supplied
+uniqueIdentifier        = supplied
 emailAddress            = optional
 
 # For the 'anything' policy
@@ -84,7 +83,7 @@ localityName            = optional
 organizationName        = optional
 organizationalUnitName  = optional
 commonName              = supplied
-userId                  = supplied
+uniqueIdentifier        = supplied
 emailAddress            = optional
 
 ####################################################################

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmod.1,v $     Last Update: $Date: 2004/02/05 13:26:54 $     Revision: $Revision: 1.13 $
+.\" $RCSfile: qmod.1,v $     Last Update: $Date: 2002/09/02 14:56:20 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMOD 1 "$Date: 2004/02/05 13:26:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMOD 1 "$Date: 2002/09/02 14:56:20 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmod \- modify a xxQS_NAMExx queue
 .\"
@@ -39,9 +39,9 @@ qmod \- modify a xxQS_NAMExx queue
 [
 .B options
 ] [
-.B wc_job_range_list
+.B job/task_id_list
 |
-.B wc_queue_list
+.B queue_list
 ]
 .PP
 .SH DESCRIPTION
@@ -53,18 +53,11 @@ the state of xxQS_NAMExx queues for his/her machine as well
 as the state of his/her own jobs.
 A manager/operator or root can execute
 .I qmod
-for any queue and job in a cluster. Find additional information concerning
-\fIwc_queue_list\fP and \fIwc_job_list\fP in
-.M sge_types 1 .
+for any queue and job in a cluster.
 .\"
 .SH OPTIONS
 .\"
 .IP "\fB\-c\fP"
-Clears the error state of the specified jobs(s)/queue(s).
-Do not use this switch anymore, use -cj / -cq instead.
-.IP "\fB\-cj\fP"
-Clears the error state of the specified jobs(s).
-.IP "\fB\-cq\fP"
 Clears the error state of the specified queue(s).
 .IP "\fB\-d\fP"
 Disables the queue(s), i.e. no further jobs are dispatched to
@@ -89,56 +82,68 @@ manager/operator privileges.
 .\"
 .IP "\fB\-help\fP"
 Prints a listing of all options.
-.\"
 .IP "\fB\-r\fP"
 If applied to queues,
 reschedules all jobs currently running in this queue.
 If applied to running jobs, reschedules the jobs. Requires root or 
-manager privileges. Do not use this switch anymore, use -rj /-rq
-instead.
-.\"
-.IP "\fB\-rj\fP"
-If applied to running jobs, reschedules the jobs. Requires root or 
 manager privileges.
-.\"
-.IP "\fB\-rq\fP"
-If applied to queues,
-reschedules all jobs currently running in this queue.
-Requires root or manager privileges.
 .\"
 .IP "\fB\-s\fP"
 If applied to queues,
 suspends the queues and any jobs which might
-be active. If applied to running jobs, suspends the jobs. 
-Do not use this switch anymore, use -sj / -jq instead.
-.\"
-.IP "\fB\-sj\fP"
-If applied to running jobs, suspends the jobs. If a job is
+be active. If applied to running jobs, suspends the jobs. If a job is
 both suspended explicitly and via suspension of its queue, a
 following unsuspend of the queue will not release the suspension
 state on the job.
-.\"
-.IP "\fB\-sq\fP"
-If applied to queues,
-suspends the queues and any jobs which might
-be active. 
 .\"
 .IP "\fB\-us\fP"
 If applied to queues,
 unsuspends the queues and any jobs which might
-be active. If applied to jobs, unsuspends the jobs. Do not use
-this switch anymore, use -usj / -usq instead.
-.\"
-.IP "\fB\-usj\fP"
-If applied to jobs, unsuspends the jobs. If a job is
+be active. If applied to jobs, unsuspends the jobs. If a job is
 both suspended explicitly and via suspension of its queue, a
 following unsuspend of the queue will not release the suspension
 state on the job.
 .\"
-.IP "\fB\-usq\fP"
-If applied to queues,
-unsuspends the queues and any jobs which might
-be active. 
+.IP "\fB\-verify\fP"
+performs no modifications but just prints what would be done if
+\fB\-verify\fB was not present.
+.\"
+.IP "\fBjob/task_id_list | queue_list\fP"
+The jobs or queues upon which
+.I qmod
+is supposed to operate. The \fBjob/task_id_list\fP is
+specified by one of the following forms:
+.sp 1
+.ta 0.5i
+    \fIjob_id[.task_range][,job_id[.task_range],...]\fP
+.br
+    \fIjob_id[.task_range][ job_id[.task_range] ...]\fP
+.ta 0.0i
+.sp 1
+If present, the \fItask_range\fP restricts the effect of the \fIqmod\fP
+operation to the array job task range specified as suffix to the job id
+(see the \fB\-t\fP option to
+.M qsub 1
+for further details on array jobs).
+.sp 1
+The task range specifier has the
+form n[-m[:s]][,n[-m[:s]], ...] or n[-m[:s]][ n[-m[:s]] ...] and thus
+consists of a comma or blank separated
+list of range specifiers n[-m[:s]]. The ranges are concatenated to the
+complete task id range. Each range may be a single number, a simple
+range of the form n-m or a range with a step size.
+.sp 1
+The \fIqueue_list\fP is specified by one of the following forms:
+.sp 1
+.ta 0.5i
+    \fIqueuename[,queuename ...]\fP
+.br
+    \fIqueuename[ queuename ...]\fP
+.ta 0.0i
+.sp 1
+Alternatively a wildcard charcter "*" can be used for specifying
+queues,  e.g. "s*" will select all queues starting with "s".
+.\"
 .\"
 .SH "ENVIRONMENTAL VARIABLES"
 .\" 
@@ -174,6 +179,14 @@ is expected to listen for communication requests.
 Most installations will use a services map entry instead
 to define that port.
 .\"
+.IP "\fBCOMMD_HOST\fP" 1.5i
+If set, specifies the host on which the particular
+.M xxqs_name_sxx_commd 8
+to be used for xxQS_NAMExx communication of the
+.I qmod
+client resides.
+Per default the local host is used.
+.\"
 .\"
 .SH FILES
 .nf
@@ -188,8 +201,7 @@ to define that port.
 .M xxqs_name_sxx_ckpt 1 ,
 .M qstat 1 ,
 .M queue_conf 5 ,
-.M xxqs_name_sxx_execd 8 ,
-.M xxqs_name_sxx_types 1 .
+.M xxqs_name_sxx_execd 8 .
 .\"
 .\"
 .SH "COPYRIGHT"

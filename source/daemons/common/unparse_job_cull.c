@@ -33,16 +33,19 @@
 
 #include "symbols.h"
 #include "sge_options.h"
+#include "sge_gdi_intern.h"
 #include "sge_ja_task.h"
-#include "sge_str.h"
+#include "sge_stringL.h"
 #include "sge_pe.h"
-#include "sge_qinstance.h"
+#include "sge_queue.h"
 #include "sge_string.h"
 #include "parse_qsubL.h"
 #include "sge_job_refL.h"
+#include "sge_requestL.h"
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
 #include "unparse_job_cull.h"
+#include "sge_resource.h"
 #include "parse.h"
 #include "sgermon.h"
 #include "cull_parse_util.h"
@@ -57,10 +60,6 @@
 #include "sge_range.h"
 #include "sge_job.h"
 #include "sge_userset.h"
-#include "sge_mailrec.h"
-#include "sge_centry.h"
-#include "sge_qref.h"
-
 #include "msg_daemons_common.h"
 
 static char *sge_unparse_checkpoint_attr(int opr, char *string);
@@ -141,13 +140,15 @@ int flags
       ep_opt = sge_add_noarg(pcmdline, cwd_OPT, "-cwd", NULL);
    }
 
-   /*
-    * -P
-    */
-   if (sge_unparse_string_option(job, JB_project, "-P",
-            pcmdline, &answer) != 0) {
-      DEXIT;
-      return answer;
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      /*
+       * -P
+       */
+      if (sge_unparse_string_option(job, JB_project, "-P",
+               pcmdline, &answer) != 0) {
+         DEXIT;
+         return answer;
+      }
    }
 
    /*
@@ -178,13 +179,13 @@ int flags
    /*
    ** -hold_jid
    */
-   if ((lp = lGetList(job, JB_jid_request_list))) {
-      int fields[] = { JRE_job_name, 0 };
+   if ((lp = lGetList(job, JB_jid_predecessor_list))) {
+      intprt_type fields[] = { JRE_job_number, 0 };
       const char *delis[] = {NULL, ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 0);
       if (ret) {
-         DPRINTF(("Error %d formatting jid_request_list as -hold_jid\n", ret));
+         DPRINTF(("Error %d formatting jid_predecessor_list as -hold_jid\n", ret));
          sprintf(str, MSG_LIST_ERRORFORMATINGJIDPREDECESSORLISTASHOLDJID);
          answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return answer;
@@ -194,27 +195,18 @@ int flags
    }
 
    /*
-   ** -i
-   */
-   if (sge_unparse_path_list(job, JB_stdin_path_list, "-i", pcmdline, 
-                     &answer) != 0) {
-      DEXIT;
-      return answer;
-   }
-
-   /*
    ** -j
    */
    if ((ul = lGetBool(job, JB_merge_stderr))) {
       ep_opt = sge_add_arg(pcmdline, j_OPT, lIntT, "-j", "y");
-      lSetInt(ep_opt, SPA_argval_lIntT, true);
+      lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
    }
    
    /*
    ** -jid
    */
    if ((lp = lGetList(job, JB_job_identifier_list))) {
-      int fields[] = { JRE_job_number, 0};
+      intprt_type fields[] = { JRE_job_number, 0};
       const char *delis[] = {"", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
@@ -227,15 +219,6 @@ int flags
       }
       ep_opt = sge_add_arg(pcmdline, jid_OPT, lListT, "-jid", str);
       lSetList(ep_opt, SPA_argval_lListT, lCopyList("jid list", lp));      
-   }
-
-   /*
-   ** -js
-   */
-   if ((ul = lGetUlong(job, JB_jobshare)) != 0)  {
-      sprintf(str, u32, ul);
-      ep_opt = sge_add_arg(pcmdline, js_OPT, lUlongT, "-js", str);
-      lSetUlong(ep_opt, SPA_argval_lUlongT, ul);
    }
 
    /*
@@ -301,7 +284,7 @@ int flags
          }
       }
       if (lp_new) {
-         int fields[] = { MR_user, MR_host, 0 };
+         intprt_type fields[] = { MR_user, MR_host, 0 };
          const char *delis[] = {"@", ",", NULL};
 
          ret = uni_print_list(NULL, str, sizeof(str) - 1, lp_new, fields, delis, 
@@ -385,7 +368,7 @@ int flags
    ** is not in the manual anyway
    */
    if ((lp = lGetList(job, JB_hard_queue_list))) {
-      int fields[] = { QR_name, 0 };
+      intprt_type fields[] = { QR_name, 0 };
       const char *delis[] = {"@", ",", NULL};
 
       ep_opt = sge_add_noarg(pcmdline, hard_OPT, "-hard", NULL);
@@ -402,7 +385,7 @@ int flags
       lSetInt(ep_opt, SPA_argval_lIntT, 1); /* means hard */
    }
    if ((lp = lGetList(job, JB_soft_queue_list))) {
-      int fields[] = { QR_name, 0 };
+      intprt_type fields[] = { QR_name, 0 };
       const char *delis[] = {"@", ",", NULL};
 
       ep_opt = sge_add_noarg(pcmdline, soft_OPT, "-soft", NULL);
@@ -420,13 +403,6 @@ int flags
    }
 #endif
    
-   /*
-   ** -R
-   */
-   if ((ul = lGetBool(job, JB_reserve))) {
-      ep_opt = sge_add_arg(pcmdline, R_OPT, lIntT, "-R", "y");
-      lSetInt(ep_opt, SPA_argval_lIntT, true);
-   }
 
    /*
    ** -r
@@ -443,15 +419,8 @@ int flags
    /*
    ** -S
    */
-#if 1   
-   if (sge_unparse_path_list(job, JB_shell_list, "-S", pcmdline, 
-                     &answer) != 0) {
-      DEXIT;
-      return answer;
-   }
-#else
    if ((lp = lGetList(job, JB_shell_list))) {
-      int fields[] = { PN_host, PN_file_host, PN_path, PN_file_staging, 0 };
+      intprt_type fields[] = { PN_host, PN_path, 0 };
       const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
@@ -464,7 +433,6 @@ int flags
       ep_opt = sge_add_arg(pcmdline, S_OPT, lListT, "-S", str);
       lSetList(ep_opt, SPA_argval_lListT, lCopyList("shell list", lp));
    }
-#endif
 
    /*
    ** -v, -V
@@ -472,7 +440,7 @@ int flags
    ** declare a job generated with -V as default
    */
    if ((lp = lGetList(job, JB_env_list))) {
-      int fields[] = { VA_variable, VA_value, 0};
+      intprt_type fields[] = { VA_variable, VA_value, 0};
       const char *delis[] = {"=", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
@@ -511,7 +479,7 @@ int flags
    */
    if ((flags & FLG_FULL_CMDLINE) &&
       (lp = lGetList(job, JB_job_args))) {
-      int fields[] = { ST_name, 0};
+      intprt_type fields[] = { STR, 0};
       const char *delis[] = {NULL, " ", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
@@ -716,6 +684,8 @@ lList **alpp
    DENTER(TOP_LAYER, "sge_unparse_resource_list");
 
    if ((lp = lGetList(job, nm))) {
+      lList *lp_one;
+      lListElem *ep;
       lListElem *ep_opt;
       int hard = (nm == JB_hard_resource_list);
       
@@ -723,28 +693,38 @@ lList **alpp
          ep_opt = sge_add_noarg(pcmdline, hard_OPT, "-hard", NULL);
       else
          ep_opt = sge_add_noarg(pcmdline, soft_OPT, "-soft", NULL);
+      for_each (ep, lp) {
+         /*
+         ** if there is more than one element this means there are -l's with
+         ** ranges as well as with no ranges, so the list must be unparsed
+         ** into several -l statements
+         */
+         lp_one = lCreateList("-l 1 elem", RE_Type);
+         lAppendElem(lp_one, lCopyElem(ep));
+         ret = unparse_resources(NULL, str, sizeof(str) - 1, lp_one);
+         if (ret) {
+            lFreeList(lp_one);
+            DPRINTF(("Error %d formatting hard_resource_list as -l\n", ret));
+            sprintf(str, MSG_LIST_ERRORFORMATINGHARDRESOURCELISTASL);
+            answer_list_add(alpp, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            return ret;
+         }
+         lFreeList(lp_one);
+         if (*str && (str[strlen(str) - 1] == '\n')) {
+            str[strlen(str) - 1] = 0;
+         }
+         ep_opt = sge_add_arg(pcmdline, l_OPT, lListT, "-l", str);
 
-      ret = centry_list_append_to_string(lp, str, sizeof(str) - 1);
-      if (ret) {
-         DPRINTF(("Error %d formatting hard_resource_list as -l\n", ret));
-         sprintf(str, MSG_LIST_ERRORFORMATINGHARDRESOURCELISTASL);
-         answer_list_add(alpp, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         return ret;
+         if (hard)
+            lSetList(ep_opt, SPA_argval_lListT, lCopyList("hard res", lp));
+         else
+            lSetList(ep_opt, SPA_argval_lListT, lCopyList("soft res", lp));
+
+         if (hard) 
+            lSetInt(ep_opt, SPA_argval_lIntT, 1); /* means hard */
+         else
+            lSetInt(ep_opt, SPA_argval_lIntT, 2); /* means soft */
       }
-      if (*str && (str[strlen(str) - 1] == '\n')) {
-         str[strlen(str) - 1] = 0;
-      }
-      ep_opt = sge_add_arg(pcmdline, l_OPT, lListT, "-l", str);
-
-      if (hard)
-         lSetList(ep_opt, SPA_argval_lListT, lCopyList("hard res", lp));
-      else
-         lSetList(ep_opt, SPA_argval_lListT, lCopyList("soft res", lp));
-
-      if (hard) 
-         lSetInt(ep_opt, SPA_argval_lIntT, 1); /* means hard */
-      else
-         lSetInt(ep_opt, SPA_argval_lIntT, 2); /* means soft */
    }
    DEXIT;
    return ret;
@@ -818,7 +798,7 @@ lList **alpp
    DENTER(TOP_LAYER, "sge_unparse_path_list");
 
    if ((lp = lGetList(job, nm))) {
-      int fields[] = { PN_host, PN_path, 0 };
+      intprt_type fields[] = { PN_host, PN_path, 0 };
       const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
@@ -851,7 +831,7 @@ lList **alpp
    DENTER(TOP_LAYER, "sge_unparse_id_list");
 
    if ((lp = lGetList(job, nm))) {
-      int fields[] = { QR_name, 0 };
+      intprt_type fields[] = { QR_name, 0 };
       const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
@@ -861,7 +841,6 @@ lList **alpp
          answer_list_add(alpp, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return ret;
       }
-
       ep_opt = sge_add_arg(pcmdline, q_OPT, lListT, option, str);
       lSetList(ep_opt, SPA_argval_lListT, lCopyList(option, lp));
    }
@@ -888,10 +867,10 @@ lList **alpp
 
    for_each (ap, acl) 
       if (sge_contained_in_access_list(owner, group, ap, alpp)) 
-         lAddElemStr(&lp, ST_name, lGetString(ap, US_name), ST_Type);
+         lAddElemStr(&lp, STR, lGetString(ap, US_name), ST_Type);
 
    if (lGetNumberOfElem(lp) > 0) {
-      int fields[] = { ST_name, 0 };
+      intprt_type fields[] = { STR, 0 };
       const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);

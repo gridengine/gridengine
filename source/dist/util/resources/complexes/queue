@@ -1,0 +1,22 @@
+#name            shortcut   type   value           relop requestable  consumable default
+#---------------------------------------------------------------------------------------
+qname            q          STRING NONE            ==    YES         NO         NONE
+hostname         h          HOST   unknown         ==    YES         NO         NONE
+tmpdir           tmp        STRING NONE            ==    NO          NO         NONE
+calendar         c          STRING NONE            ==    YES         NO         NONE
+seq_no           seq        INT    0               ==    NO          NO         0
+rerun            re         INT    0               ==    NO          NO         0
+s_rt             s_rt       TIME   0:0:0           <=    YES         NO         0:0:0
+h_rt             h_rt       TIME   0:0:0           <=    YES         NO         0:0:0
+s_cpu            s_cpu      TIME   0:0:0           <=    YES         NO         0:0:0
+h_cpu            h_cpu      TIME   0:0:0           <=    YES         NO         0:0:0
+s_data           s_data     MEMORY 0               <=    YES         NO         0
+h_data           h_data     MEMORY 0               <=    YES         NO         0
+s_stack          s_stack    MEMORY 0               <=    YES         NO         0
+h_stack          h_stack    MEMORY 0               <=    YES         NO         0
+s_core           s_core     MEMORY 0               <=    YES         NO         0
+h_core           h_core     MEMORY 0               <=    YES         NO         0
+s_rss            s_rss      MEMORY 0               <=    YES         NO         0
+h_rss            h_rss      MEMORY 0               <=    YES         NO         0
+min_cpu_interval mci        TIME   0:0:0           <=    NO          NO         0:0:0
+#--- # starts a comment but comments are not saved across edits ------------------------

@@ -55,8 +55,6 @@
 #define USER_SYM                           'u'
 #define USER                               0x00000080
 
-/* EB: TODO: remove obsolete definitions */
-
 #define ALARM_SYM                          'a'
 #define SUSPEND_ALARM_SYM                  'A'
 #define SUSPEND_ON_COMP_SYM                'c'  /* NOT PART OF P1003.15D12! */

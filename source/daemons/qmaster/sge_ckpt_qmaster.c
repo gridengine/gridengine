@@ -31,14 +31,17 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
 
 #include "sge.h"
 #include "sge_pe.h"
 #include "sge_ja_task.h"
 #include "sge_ckpt_qmaster.h"
+#include "job_log.h"
+#include "sge_queue_qmaster.h"
 #include "sge_host_qmaster.h"
-#include "sge_event_master.h"
+#include "read_write_queue.h"
+#include "read_write_ckpt.h"
+#include "sge_m_event.h"
 #include "config_file.h"
 #include "sge_userset_qmaster.h"
 #include "sge_signal.h"
@@ -46,23 +49,19 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_job_schedd.h"
+#include "gdi_utility.h"
 #include "sge_stdlib.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
 #include "sge_ckpt.h"
-#include "sge_qinstance.h"
+#include "sge_queue.h"
 #include "sge_job.h"
-#include "sge_utility.h"
-#include "sge_todo.h"
-#include "sge_utility_qmaster.h"
-#include "symbols.h"
-
-#include "sge_persistence_qmaster.h"
-#include "spool/sge_spooling.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
+/* #include "pw_def.h" */
+/* #include "pw_proto.h"  */
 #include "sge_parse_num_par.h"
 
 /****** qmaster/ckpt/ckpt_mod() ***********************************************
@@ -184,8 +183,12 @@ int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add,
    /* ---- CK_job_pid */
    attr_mod_ulong(ckpt, new_ckpt, CK_job_pid, "job_pid"); 
 
+   /* ---- CK_queue_list */
+   attr_mod_sub_list(alpp, new_ckpt, CK_queue_list, 
+      QR_name, ckpt, sub_command, SGE_ATTR_QUEUE_LIST, SGE_OBJ_CKPT, 0);  
+
    /* validate ckpt data */
-   if (ckpt_validate(new_ckpt, alpp) != STATUS_OK) {
+   if (validate_ckpt(new_ckpt, alpp) != STATUS_OK) {
       goto ERROR;
    }
 
@@ -225,25 +228,18 @@ ERROR:
 *     STATUS_EEXIST - an error occured
 ******************************************************************************/
 int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object) 
-{  
-   lList *answer_list = NULL;
-   bool dbret;
-
+{
    DENTER(TOP_LAYER, "ckpt_spool");
 
-   dbret = spool_write_object(&answer_list, spool_get_default_context(), ep, 
-                              lGetString(ep, CK_name), SGE_TYPE_CKPT);
-   answer_list_output(&answer_list);
-
-   if (!dbret) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_PERSISTENCE_WRITE_FAILED_S,
-                              lGetString(ep, CK_name));
+   if (!write_ckpt(1, 2, ep)) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
+            object->object_name, lGetString(ep, CK_name)));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
    }
-
    DEXIT;
-   return dbret ? 0 : 1;
+   return 0;
 }
 
 /****** qmaster/ckpt/ckpt_success() *******************************************
@@ -282,9 +278,11 @@ int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
 
    ckpt_name = lGetString(ep, CK_name);
 
-   sge_add_event( 0, old_ep ? sgeE_CKPT_MOD : sgeE_CKPT_ADD, 0, 0, 
-                 ckpt_name, NULL, NULL, ep);
-   lListElem_clear_changed_info(ep);
+   sge_change_queue_version_qr_list(lGetList(ep, CK_queue_list), 
+         old_ep ? lGetList(old_ep, CK_queue_list) : NULL,
+         MSG_OBJ_CKPTI, ckpt_name);
+
+   sge_add_event(NULL, 0, old_ep?sgeE_CKPT_MOD:sgeE_CKPT_ADD, 0, 0, ckpt_name, ep);
 
    DEXIT;
    return 0;
@@ -362,8 +360,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    {
       lList *local_answer_list = NULL;
 
-      if (ckpt_is_referenced(found, &local_answer_list, Master_Job_List,
-                             *(object_type_get_master_list(SGE_TYPE_CQUEUE)))) {
+      if (ckpt_is_referenced(found, &local_answer_list, Master_Job_List)) {
          lListElem *answer = lFirst(local_answer_list);
 
          ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
@@ -376,13 +373,16 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* remove ckpt file 1st */
-   if (!sge_event_spool(alpp, 0, sgeE_CKPT_DEL, 0, 0, ckpt_name, NULL, NULL,
-                        NULL, NULL, NULL, true, true)) {
+   if (sge_unlink(CKPTOBJ_DIR, ckpt_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CKPT, ckpt_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EDISK;
    }
+
+   sge_add_event(NULL, 0, sgeE_CKPT_DEL, 0, 0, ckpt_name, NULL);
+   sge_change_queue_version_qr_list(lGetList(found, CK_queue_list),
+      NULL, "checkpoint interface", ckpt_name);
 
    /* now we can remove the element */
    lRemoveElem(*lpp, found);
@@ -394,49 +394,46 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    return STATUS_OK;
 }                     
 
-const char *get_checkpoint_when(int bitmask)
+void sge_change_queue_version_qr_list(lList *nq, lList *oq, 
+                                      const char *obj_name,
+                                      const char *ckpt_name) 
 {
-   int i = 0;
-   static char when[32];
-   DENTER(TOP_LAYER, "get_checkpoint_string");
+   const char *q_name;
+   lListElem *qrep, *qep;
 
-   if (is_checkpoint_when_valid(bitmask) && !(bitmask & NO_CHECKPOINT)) {
-      if (bitmask & CHECKPOINT_SUSPEND) {
-         when[i++] = CHECKPOINT_SUSPEND_SYM;
+   DENTER(TOP_LAYER, "sge_change_queue_version_qr_list");
+
+   /*
+      change version of all queues in new queue list of new ckpt interface
+   */
+   for_each (qrep, nq) {
+      q_name = lGetString(qrep, QR_name);
+      if ((qep = queue_list_locate(Master_Queue_List, q_name))) {
+         sge_change_queue_version(qep, 0, 0);
+         cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, 
+            qep);
+         DPRINTF(("increasing version of queue \"%s\" because %s"
+            " \"%s\" has changed\n", q_name, obj_name, ckpt_name));
       }
-      if (bitmask & CHECKPOINT_AT_SHUTDOWN) {
-         when[i++] = CHECKPOINT_AT_SHUTDOWN_SYM;
-      }
-      if (bitmask & CHECKPOINT_AT_MINIMUM_INTERVAL) {
-         when[i++] = CHECKPOINT_AT_MINIMUM_INTERVAL_SYM;
-      }
-      if (bitmask & CHECKPOINT_AT_AUTO_RES) {
-         when[i++] = CHECKPOINT_AT_AUTO_RES_SYM;
-      }
-   } else {
-      when[i++] = NO_CHECKPOINT_SYM;
    }
-   when[i] = '\0';
+
+   /*
+      change version of all queues in
+      old queue list and not in the new one
+   */
+   for_each (qrep, oq) {
+      q_name = lGetString(qrep, QR_name);
+      if (!lGetElemStr(nq, QR_name, q_name) 
+          && (qep = queue_list_locate(Master_Queue_List, q_name))) {
+         sge_change_queue_version(qep, 0, 0);
+         cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, 
+            qep);
+         DPRINTF(("increasing version of queue \"%s\" because %s"
+               " \"%s\" has changed\n", q_name, obj_name, ckpt_name));
+      }
+   }
 
    DEXIT;
-   return when;
-}
-
-int is_checkpoint_when_valid(int bitmask)
-{
-   int ret = 0;
-   int mask = 0;
-
-   DENTER(TOP_LAYER, "is_checkpoint_when_valid");
-   mask = CHECKPOINT_SUSPEND | CHECKPOINT_AT_SHUTDOWN
-      | CHECKPOINT_AT_MINIMUM_INTERVAL | CHECKPOINT_AT_AUTO_RES;
-
-   if (bitmask == NO_CHECKPOINT
-       || ((bitmask & mask) == bitmask)) {
-      ret = 1;
-   }
-   DEXIT;
-   return ret;
-}
-
+   return;
+}                 
 

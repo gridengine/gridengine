@@ -38,6 +38,7 @@
 #include "sge_gdi.h"
 
 #include "sge_all_listsL.h"
+#include "sge_gdi_intern.h"
 #include "sgermon.h"
 #include "sge_time.h"
 #include "sort_hosts.h"
@@ -45,6 +46,7 @@
 #include "sge_schedd_conf.h"
 #include "sge_usageL.h"
 #include "sge_ja_task.h"
+#include "schedd_conf.h"
 #include "sge_language.h"
 
 #define HOST_USAGE_ATTR_CPU     "cpu"
@@ -72,7 +74,7 @@ typedef struct {
 } format_t;
 
 static int
-setup_lists(lList **jobs, lList **hosts, lList **config, lList **centry)
+setup_lists(lList **jobs, lList **hosts, lList **config, lList **complex)
 {
    lList *alp;
    lListElem *aep;
@@ -116,11 +118,11 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **centry)
    lFreeList(alp);
 
    /*
-    * get centry list
+    * get complex list
     */
 
-   what = lWhat("%T(ALL)", CE_Type);
-   alp=sge_gdi(SGE_CENTRY_LIST, SGE_GDI_GET, centry, NULL, what);
+   what = lWhat("%T(ALL)", CX_Type);
+   alp=sge_gdi(SGE_COMPLEX_LIST, SGE_GDI_GET, complex, NULL, what);
    lFreeWhat(what);
 
    aep = lFirst(alp);
@@ -148,7 +150,7 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **centry)
    }
    lFreeList(alp);
    alp = NULL;
-      if (!sconf_validate_config(&alp, config))
+      if (sc_set(&alp, &scheddconf, lFirst(*config), NULL, NULL))
         fprintf(stderr, "%s\n", lGetString(lFirst(alp), AN_text));
 
 
@@ -589,7 +591,7 @@ lListElem *hep, *running_job_elem, *rjq;
 
 */
 
-int calculate_host_pcts(lList *hosts, lList *centry)
+int calculate_host_pcts(lList *hosts, lList *complex)
 {
    double total_resource_capability_factor=0, total_sge_load=0;
    lListElem *hep;
@@ -877,7 +879,7 @@ void host_usage(void)
 
 int main(int argc, char **argv)
 {
-   lList *jobs, *hosts, *config, *centry;
+   lList *jobs, *hosts, *config, *complex;
    int interval=15;
    int err=0;
    int count=-1;
@@ -986,14 +988,14 @@ int main(int argc, char **argv)
    if ((name_count = argc - optind) > 0)
        names = &argv[optind];
 
-   sge_gdi_setup("sge_host_mon", NULL);
+   sge_gdi_setup("sge_host_mon");
 
    if (header)
       print_host_hdr(outfile, &format);
 
    while(count == -1 || count-- > 0) {
 
-      setup_lists(&jobs, &hosts, &config, &centry);
+      setup_lists(&jobs, &hosts, &config, &complex);
 
 
 /* Calculate usage and usage percentages on a host basis for cpu, mem,  and io.  Calculate host tickets and ticket percentages on a host basis.  Also calculate EH_num_running_jobs. */
@@ -1007,19 +1009,19 @@ int main(int argc, char **argv)
 #endif
 /* Calculate EH_sge_load_pct and EH_resource_capability_factor_pct on a host basis.  */ 
 #ifdef notdef
-      calculate_host_pcts(hosts, centry);
+      calculate_host_pcts(hosts, complex);
 #endif
 
    switch (scheddconf.queue_sort_method) {
    case QSM_SEQNUM:
-      sort_host_list(hosts, centry);
+      sort_host_list(hosts, complex);
       break;
    case QSM_LOAD:
-      sort_host_list(hosts, centry);
+      sort_host_list(hosts, complex);
       break;
    case QSM_SHARE:
-      sort_host_list(hosts, centry);
-      sort_host_list_by_share_load(hosts, centry);
+      sort_host_list(hosts, complex);
+      sort_host_list_by_share_load(hosts, complex);
       break;
 }
 #ifdef notdef 

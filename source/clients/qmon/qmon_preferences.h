@@ -34,7 +34,8 @@
 
 #include "qmon_prefL.h"
 
-lListElem* qmonGetPreferences(void);
+extern lListElem *qmon_preferences;
+
 void qmonReadPreferences(void);
 lList* qmonWritePreferences(void);
 

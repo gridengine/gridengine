@@ -135,24 +135,6 @@ NAMEEND
 *        function pointer to a shutdown function,
 *        e.g. disconnecting from a database or closing file handles.
 *
-*     SGE_REF(SPR_maintenance_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
-*        function pointer to a maintenance function for 
-*           - creating the database tables / directories in case of 
-*             filebased spooling
-*           - switching between spooling with/without history
-*           - backup
-*           - cleaning up / compressing database
-*           - etc.
-*
-*     SGE_REF(SPR_trigger_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
-*        function pointer to a trigger function.
-*        A trigger function is used to trigger regular actions, e.g.
-*        checkpointing and cleaning the transaction log in case of the
-*        Berkeley DB or vacuuming in case of PostgreSQL.
-*
-*     SGE_REF(SPR_transaction_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
-*        function pointer to a function beginning and ending transactions.
-*
 *     SGE_REF(SPR_list_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 *        pointer to a function reading complete lists (master lists)
 *        from the spooling data source.
@@ -166,12 +148,6 @@ NAMEEND
 *
 *     SGE_REF(SPR_delete_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 *        pointer to a function deleting a single object.
-*
-*     SGE_REF(SPR_validate_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
-*        pointer to a function validating a single object.
-*
-*     SGE_REF(SPR_validate_list_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
-*        pointer to a function validating a list of objects.
 *
 *     SGE_REF(SPR_clientdata, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 *        clientdata; any pointer, can be used to store and
@@ -198,15 +174,10 @@ enum {
    SPR_url,                          /* an url, e.g. base dir, database url */
    SPR_startup_func,                 /* function pointer: startup, e.g. connect to database */
    SPR_shutdown_func,                /* function pointer: shutdown, e.g. disconnect from db */
-   SPR_maintenance_func,             /* function pointer: maintenance, e.g. backup of db */
-   SPR_trigger_func,                 /* function pointer: trigger */
-   SPR_transaction_func,             /* function pointer: transaction */
    SPR_list_func,                    /* function pointer: read master list */
    SPR_read_func,                    /* function pointer: read an object */
    SPR_write_func,                   /* function pointer: write an object */
    SPR_delete_func,                  /* function pointer: delete an object */
-   SPR_validate_func,                /* function pointer: validate an object */
-   SPR_validate_list_func,           /* function pointer: validate a list */
    SPR_clientdata                    /* any rule specific data */
 };
 
@@ -215,15 +186,10 @@ LISTDEF(SPR_Type)
    SGE_STRING(SPR_url, CULL_DEFAULT)
    SGE_REF(SPR_startup_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_shutdown_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
-   SGE_REF(SPR_maintenance_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
-   SGE_REF(SPR_trigger_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
-   SGE_REF(SPR_transaction_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_list_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_read_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_write_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_delete_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
-   SGE_REF(SPR_validate_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
-   SGE_REF(SPR_validate_list_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_clientdata, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 LISTEND
 
@@ -232,15 +198,10 @@ NAMEDEF(SPRN)
    NAME("SPR_url")
    NAME("SPR_startup_func")
    NAME("SPR_shutdown_func")
-   NAME("SPR_maintenance_func")
-   NAME("SPR_trigger_func")
-   NAME("SPR_transaction_func")
    NAME("SPR_list_func")
    NAME("SPR_read_func")
    NAME("SPR_write_func")
    NAME("SPR_delete_func")
-   NAME("SPR_validate_func")
-   NAME("SPR_validate_list_func")
    NAME("SPR_clientdata")
 NAMEEND
 
@@ -254,8 +215,8 @@ NAMEEND
 *  ELEMENTS
 *     SGE_ULONG(SPT_type, CULL_HASH | CULL_UNIQUE)
 *        Unique type identifier.
-*        See enum sge_object_type in libs/gdi/sge_mirror.h
-*        SGE_TYPE_ALL describes a default type entry for all
+*        See enum sge_event_type in libs/gdi/sge_mirror.h
+*        SGE_EMT_ALL describes a default type entry for all
 *        object types.
 *
 *     SGE_STRING(SPT_name, CULL_DEFAULT)
@@ -269,7 +230,7 @@ NAMEEND
 *
 *  FUNCTION
 *     Objects to be spooled have a certain type that can be identified
-*     by the sge_object_type enum.
+*     by the sge_event_type enum.
 *     A spooling context can contain information about individual
 *     types and/or define a default behaviour for all (not individually
 *     handled) types.
@@ -291,7 +252,7 @@ NAMEEND
 */
 
 enum {
-   SPT_type = SPT_LOWERBOUND,      /* sge_object_type, SGE_TYPE_ALL = default */
+   SPT_type = SPT_LOWERBOUND,      /* sge_event_type, SGE_EMT_ALL = default */
    SPT_name,                       /* name of the type, e.g. "JB_Type" */
    SPT_rules                       /* list of rules to spool this object type */
 };
@@ -365,29 +326,6 @@ NAMEEND
 
 
 /* *INDENT-ON* */
-
-enum {
-   SPM_key = SPM_LOWERBOUND,     /* pointer to object */
-   SPM_id,                       /* id of object in database */
-   SPM_tag,                      /* tagging of keys to find deleted objects */
-   SPM_sublist                   /* list of keys from subobjects */
-};
-
-LISTDEF(SPM_Type)
-   SGE_STRING(SPM_key, CULL_HASH | CULL_UNIQUE)
-   SGE_STRING(SPM_id, CULL_DEFAULT)
-   SGE_BOOL(SPM_tag, CULL_DEFAULT)
-   SGE_LIST(SPM_sublist, SPM_Type, CULL_DEFAULT)
-LISTEND
-
-NAMEDEF(SPMN)
-   NAME("SPM_key")
-   NAME("SPM_id")
-   NAME("SPM_tag")
-   NAME("SPM_sublist")
-NAMEEND
-
-#define SPMS sizeof(SPMN)/sizeof(char *)
 
 #ifdef  __cplusplus
 }

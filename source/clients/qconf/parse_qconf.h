@@ -32,9 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef QCONF_FLATFILE
-#include "spool/sge_spooling_utilities.h"
-#endif
+
+
+int sge_parse_qconf(char **argv);
+
+   
 
 typedef struct object_info_entry {
    u_long32 target;
@@ -42,17 +44,9 @@ typedef struct object_info_entry {
    lDescr *cull_descriptor;
    char *attribute_name;
    int nm_name;
-#ifndef QCONF_FLATFILE
    int (*read_objectname_work)(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);    
    lListElem *(*cull_read_in_object)(const char *dirname, const char *filename, int spool, int type, int *tag, int fields[]);
-#else
-   spooling_field *fields;
-#endif
-   bool (*pre_gdi_function)(lList *list, lList **answer_list);
 } object_info_entry;
-
-int sge_parse_qconf(char **argv);
-
 
 #endif /* __PARSE_QCONF_H */
 

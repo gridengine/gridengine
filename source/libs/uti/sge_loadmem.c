@@ -43,7 +43,7 @@
 #include "sge_os.h"
 #include "msg_utilib.h"
 
-#if !defined(LINUX) && !defined(CRAY) && !defined(DARWIN) && !defined(FREEBSD)
+#if !defined(LINUX) && !defined(SUN4) && !defined(HPUX) && !defined(CRAY)
 
 #include <unistd.h>
 
@@ -55,7 +55,6 @@ static int page2M_right(int size);
 
 #define page2M(size) ((*p_page2M)(size))
 
-/* MT-NOTE: only execd and utilities use code that depends on the modules global variables */
 
 static int pageshift;
 
@@ -134,7 +133,6 @@ char *argv[]
 #include <sys/rsg.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <sys/syssx.h>
 
 int loadmem_rsg(int rsg_id, sge_mem_info_t *mem_info_l, 
                 sge_mem_info_t *mem_info_s) 
@@ -240,12 +238,6 @@ int loadmem_small_large(sge_mem_info_t *mem_info_l, sge_mem_info_t *mem_info_s)
 ******************************************************************************/
 int sge_loadmem(sge_mem_info_t *mem_info) 
 {
-/* 
- * Do NOT calculate memory from RSG values. Instead,
- * use the RB values. RSGs can be configured to share
- * RBs, in which case, a memory total will be inflated.
- */
-#if 0
    sge_mem_info_t mem_info_s, mem_info_l;
    int ret;
 
@@ -255,84 +247,6 @@ int sge_loadmem(sge_mem_info_t *mem_info)
    mem_info->swap_total = mem_info_l.swap_total + mem_info_s.swap_total;
    mem_info->swap_free = mem_info_l.swap_free + mem_info_s.swap_free;
    return ret;
-#else
-   {
-      char       fsg_dev_string[256];
-      int        fd, fsg_id;
-      int        spagesize, lpagesize;
-      float      spagefactor, lpagefactor;
-      rsg_id_t   id;
-      rsg_info_t info;
-      memrb_t    sprbs[MAXRBNUM], lprbs[MAXRBNUM];
-      int        i;
-
-      /* initialize */
-      for (i = 0; i < MAXRBNUM; i++) {
-         memset(&sprbs[i], 0, sizeof(memrb_t));
-         memset(&lprbs[i], 0, sizeof(memrb_t));
-      }
-
-      /* read in RB info (don't be fooled by RSG names) */
-      for (fsg_id = 0; fsg_id < MAXRSGNUM; fsg_id++) {
-         sprintf(fsg_dev_string, "/dev/rsg/%d", fsg_id);
-         fd = open(fsg_dev_string, O_RDONLY);
-         if (fd >= 0) {
-            if ((ioctl(fd, RSG_ID, &id) == -1) ||
-                  (ioctl(fd, RSG_INFO, &info) == -1)) {
-               close(fd);
-               continue;
-            }
-            close(fd);
-
-            /* copy for later use */
-            memcpy(&sprbs[id.sprbid], &info.sprb, sizeof(memrb_t));
-            memcpy(&lprbs[id.lprbid], &info.lprb, sizeof(memrb_t));
-         }
-      }
-
-      /* large pages = 1MB, 4MB, or 16MB
-       * small pages = 32K (always)
-       *
-       * _SC_PAGESIZE (for sysconf()) is application page size;
-       * PAGESIZE (for syssx()) is system page size;
-       * we want PAGESIZE
-       */
-      spagesize = 32 << 10;                    /* KB */
-      lpagesize = syssx(PAGESIZE);             /* MB */
-      spagefactor = spagesize/(1024.0*1024.0); /* MB */
-      lpagefactor = lpagesize;                 /* MB */
-
-      /* tally up RB values (in MB, floats) */
-      mem_info->mem_total = 0;
-      mem_info->mem_free = 0;
-      mem_info->swap_total = 0;
-      mem_info->swap_free = 0;
-      for (i = 0; i < MAXRBNUM; i++) {
-         int     spfree, lpfree;
-         memrb_t *sprb_p, *lprb_p;
-         int     x;
-   
-         /* helpers */
-         sprb_p = &sprbs[i];
-         lprb_p = &lprbs[i];
-         spfree = sprb_p->init_mem-sprb_p->using_pgs;
-         lpfree = lprb_p->init_mem-lprb_p->using_pgs;
-   
-         /* calculate */
-         mem_info->mem_total += (sprb_p->init_mem*spagefactor)+
-            lprb_p->init_mem*lpagefactor;
-         mem_info->mem_free += (spfree*spagefactor)+
-            lpfree*lpagefactor;
-   
-         mem_info->swap_total += (sprb_p->init_swap*spagefactor)+
-            lprb_p->init_swap*lpagefactor;
-         mem_info->swap_free += ((sprb_p->availsmem-spfree)*spagefactor)+
-            (lprb_p->availsmem-lpfree)*lpagefactor;
-      }
-
-      return 0;
-   }
-#endif
 }
 
 #endif /* NECSX4 || NECSX5 */
@@ -438,7 +352,7 @@ int sge_loadmem(sge_mem_info_t *mem_info)
 #endif /* SOLARIS */
 
 /*--------------------------------------------------------------------------*/
-#if defined(HPUX)
+#if defined(HP10) || defined(HP11)
 #include <sys/param.h>
 #include <sys/pstat.h>
 
@@ -551,7 +465,7 @@ int sge_loadmem(sge_mem_info_t *mem_info)
 
    return 0;
 }
-#endif /* HPUX */
+#endif /* HP10 */
 
 
 /*--------------------------------------------------------------------------*/
@@ -619,7 +533,7 @@ int sge_loadmem(sge_mem_info_t *mem_info)
 
 
 /*--------------------------------------------------------------------------*/
-#if defined(IRIX)
+#if defined(IRIX6)
 #include <stdio.h>
 #include <sys/sysinfo.h>
 #include <sys/sysmp.h>
@@ -664,7 +578,7 @@ int sge_loadmem(sge_mem_info_t *mem_info)
    mem_info->swap_rsvd = ((double)swaprsrv * 512)/(1024.0*1024.0);
    return 0;
 }
-#endif /* IRIX */
+#endif /* IRIX6 */
 
 
 /*--------------------------------------------------------------------------*/
@@ -795,110 +709,3 @@ int sge_loadmem(sge_mem_info_t *mem_info)
    return 0;
 }
 #endif /* CRAY */
-
-#if defined(DARWIN)
-#include <mach/mach_init.h>
-#include <mach/mach_host.h>
-#include <mach/host_info.h>
-#include <sys/stat.h>
-
-int sge_loadmem(sge_mem_info_t *mem_info)
-{
-
-    vm_statistics_data_t vm_info;
-    mach_msg_type_number_t info_count;
-    struct host_basic_info cpu_load_data;
-    int host_count = sizeof(cpu_load_data)/sizeof(integer_t);
-    mach_port_t host_priv_port = mach_host_self();
-
-    host_info(host_priv_port, HOST_BASIC_INFO , (host_info_t)&cpu_load_data, &host_count);
-
-    mem_info->mem_total = cpu_load_data.memory_size / (1024*1024);
-
-
-    info_count = HOST_VM_INFO_COUNT;
-    host_statistics(mach_host_self (), HOST_VM_INFO, (host_info_t)&vm_info, &info_count);
-    mem_info->mem_free = vm_info.free_count*vm_page_size / (1024*1024);
-
-    return 0;
-}
-
-#endif /* DARWIN */
-
-#if defined(FREEBSD)
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#include <fcntl.h>
-#include <kvm.h>
-
-int sge_loadmem(sge_mem_info_t *mem_info) 
-{
-   int			i, n;
-   int			swap_count, usedswap_count;
-   size_t		tmpsize;
-   unsigned int		page_size;
-   unsigned int		page_count;
-   unsigned int		free_count, cache_count, inactive_count;
-   kvm_t		*kd;
-   struct kvm_swap	kswap[16];
-
-   tmpsize = sizeof(page_size);
-   if (sysctlbyname("vm.stats.vm.v_page_size", &page_size, &tmpsize,
-      NULL, 0) == -1)
-      return -1;
-   tmpsize = sizeof(page_count);
-   if (sysctlbyname("vm.stats.vm.v_page_count", &page_count, &tmpsize,
-      NULL, 0) == -1)
-      return -1;
-   mem_info->mem_total = (page_count * page_size) / (1024.0*1024.0);
-
-   /*
-    * The concept of free memory doesn't make much sense when you're
-    * talking about the FreeBSD vm, but we'll fake it as the number of
-    * pages marked free, inactive, or cache.
-    */
-   tmpsize = sizeof(free_count);
-   if (sysctlbyname("vm.stats.vm.v_free_count", &free_count, &tmpsize,
-      NULL, 0) == -1)
-      return -1;
-   tmpsize = sizeof(cache_count);
-   if (sysctlbyname("vm.stats.vm.v_cache_count", &cache_count, &tmpsize,
-      NULL, 0) == -1)
-      return -1;
-   tmpsize = sizeof(inactive_count);
-   if (sysctlbyname("vm.stats.vm.v_inactive_count", &inactive_count, &tmpsize,
-      NULL, 0) == -1)
-      return -1;
-   mem_info->mem_free =
-      ((free_count + cache_count + inactive_count) * page_size) /
-      (1024.0*1024.0);
-
-   /*
-    * Grovel around in kernel memory to find out how much swap we have.
-    * This only works if we're in group kmem so to let other programs
-    * maintain limited functionality, we'll just report zero if we can't
-    * open /dev/mem.
-    *
-    * XXX: On 5.0+ we should really use the new sysctl interface to
-    * swap stats.
-    */
-   swap_count = 0;
-   usedswap_count = 0;
-   if ((kd = kvm_open(NULL, NULL, NULL, O_RDONLY, "sge_loadmem")) != NULL) {
-      n = kvm_getswapinfo(kd, kswap, sizeof(kswap)/sizeof(kswap[0]), 0);
-      kvm_close(kd);
-      if (n == -1)
-         return -1;
-
-      for (i = 0; i < n; i++) {
-         swap_count += kswap[i].ksw_total;
-         usedswap_count += kswap[i].ksw_used;
-      }
-   }
-   mem_info->swap_total = (swap_count * page_size) / (1024.0*1024.0);
-   mem_info->swap_free = ((swap_count - usedswap_count) * page_size) /
-      (1024.0*1024.0);
-
-   return 0;
-}
-#endif /* FREEBSD */

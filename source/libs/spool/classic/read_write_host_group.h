@@ -32,18 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int
-read_host_group_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
-int spool, int flag, int *tag, int parsing_type);
-
-lListElem *cull_read_in_host_group(const char *dirname, const char *filename, int spool, int flag, int *tag, int fields[]);
-
+lListElem *cull_read_in_host_group(const char *dirname, const char *filename, int spool, int flag, int *tag);
 char *write_host_group(int spool, int how, const lListElem *hostGroupElement);
-
-int
-read_centry_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
-int spool, int flag, int *tag, int parsing_type);
-
-char *write_centry(int spool, int how, const lListElem *hostGroupElement);
 
 #endif /* _READ_WRITE_HOST_GROUP_H */

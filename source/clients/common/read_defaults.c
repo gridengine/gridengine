@@ -36,7 +36,12 @@
 #include <sys/types.h>
 
 #include "sgermon.h"
+#include "sge_gdi_intern.h"
 #include "sge_answer.h"
+#include "parse_job_cull.h"
+#include "parse_qsubL.h"
+#include "parse_qsub.h"
+#include "read_defaults.h"
 #include "setup_path.h"
 #include "sge_unistd.h"
 #include "msg_common.h"
@@ -45,19 +50,9 @@
 #include "sge_uidgid.h"
 #include "sge_io.h"
 #include "sge_prog.h"
-#include "parse_job_cull.h"
-#include "parse_qsubL.h"
-#include "parse_qsub.h"
-#include "read_defaults.h"
+#include "sge_answer.h"
 
-
-static char *get_root_defaults_file_path (void);
-static char *get_user_home_defaults_file_path (lList **answer_list);
-static char *get_cwd_defaults_file_path (lList **answer_list);
-static void append_opts_from_default_files (lList **pcmdline, 
-                                     lList **answer_list,
-                                     char **envp,
-                                     char **def_files);
+static char *def_files[3 + 1];
 
 /****** sge/opt/opt_list_append_opts_from_default_files() *********************
 *  NAME
@@ -89,12 +84,24 @@ static void append_opts_from_default_files (lList **pcmdline,
 *                                parse_script_file, see there
 *     char **envp      - environment pointer 
 *
+*  NOTES
+*     path.sge_root and me.user_name will be used by this function
+*
+*     problem: make user a parameter?
 *******************************************************************************/
 void opt_list_append_opts_from_default_files(lList **pcmdline, 
                                              lList **answer_list,
                                              char **envp) 
 {
-   char *def_files[3 + 1];
+   lList *alp;
+   lListElem *aep;
+   struct passwd *pwd;
+   char str[256 + 1];
+   char cwd[SGE_PATH_MAX + 1];
+   char **pstr;
+   char **ppstr;
+   SGE_STRUCT_STAT buf;
+   int do_exit = 0;
    
    DENTER(TOP_LAYER, "opt_list_append_opts_from_default_files");
 
@@ -103,17 +110,71 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
    }
 
    /* the sge root defaults file */
-   def_files[0] = get_root_defaults_file_path ();
+   def_files[0] = malloc(strlen(path.cell_root) + 
+                         strlen(SGE_COMMON_DEF_REQ_FILE) + 2);
+   sprintf(def_files[0], "%s/%s", path.cell_root, SGE_COMMON_DEF_REQ_FILE);
 
    /*
     * the defaults file in the user's home directory
     */
-   def_files[1] = get_user_home_defaults_file_path (answer_list);
+   pwd = sge_getpwnam(uti_state_get_user_name());
+   if (!pwd) {
+      sprintf(str, MSG_USER_INVALIDNAMEX_S, uti_state_get_user_name());
+      answer_list_add(answer_list, str, STATUS_ENOSUCHUSER, 
+                      ANSWER_QUALITY_ERROR);
+      return;
+   }
+   if (!pwd->pw_dir) {
+      sprintf(str, MSG_USER_NOHOMEDIRFORUSERX_S, uti_state_get_user_name());
+      answer_list_add(answer_list, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+      return;
+   }
+
+   def_files[1] = malloc(strlen(pwd->pw_dir) + 
+                         strlen(SGE_HOME_DEF_REQ_FILE) + 2);
+   strcpy(def_files[1], pwd->pw_dir);
+   if (*def_files[1] && (def_files[1][strlen(def_files[1]) - 1] != '/')) {
+      strcat(def_files[1], "/");
+   }
+   strcat(def_files[1], SGE_HOME_DEF_REQ_FILE);
+
+   if (!sge_is_file(def_files[1])) {
+      strcpy(def_files[1], pwd->pw_dir);
+      if (*def_files[1] && (def_files[1][strlen(def_files[1]) - 1] != '/')) {
+         strcat(def_files[1], "/");
+      }
+      if (feature_is_enabled(FEATURE_SGEEE)) {
+         strcat(def_files[1], GRD_HOME_DEF_REQ_FILE);
+      } else {
+         strcat(def_files[1], COD_HOME_DEF_REQ_FILE);
+      }
+   }
 
    /*
     * the defaults file in the current working directory
     */
-   def_files[2] = get_cwd_defaults_file_path (answer_list);
+   if (!getcwd(cwd, sizeof(cwd))) {
+      sprintf(str, MSG_FILE_CANTREADCURRENTWORKINGDIR);
+      answer_list_add(answer_list, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+   }
+   
+   def_files[2] = malloc(strlen(cwd) + strlen(SGE_HOME_DEF_REQ_FILE) + 2);
+   strcpy(def_files[2], cwd);
+   if (*def_files[2] && (def_files[2][strlen(def_files[2]) - 1] != '/')) {
+      strcat(def_files[2], "/");
+   }
+   strcat(def_files[2], SGE_HOME_DEF_REQ_FILE);
+   if (!sge_is_file(def_files[2])) {
+      strcpy(def_files[2], cwd);
+      if (*def_files[2] && (def_files[2][strlen(def_files[2]) - 1] != '/')) {
+         strcat(def_files[2], "/");
+      }
+      if (feature_is_enabled(FEATURE_SGEEE)) {
+         strcat(def_files[2], GRD_HOME_DEF_REQ_FILE); 
+      } else {
+         strcat(def_files[2], COD_HOME_DEF_REQ_FILE);
+      }
+   }
 
 
    def_files[3] = NULL;
@@ -121,225 +182,6 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
    /*
     * now read all the defaults files, unaware of where they came from
     */
-    append_opts_from_default_files (pcmdline,  answer_list, envp, def_files);
-    
-   DEXIT;
-   return;
-}
-
-/****** sge/opt/get_root_defaults_file_path() **********************************
-*  NAME
-*     get_root_defaults_file_path() -- find root default file path
-*
-*  SYNOPSIS
-*     char *get_root_defaults_file_path () 
-*
-*  FUNCTION
-*     This function returns the path of the root defaults file.
-*
-*  OUTPUTS
-*     char * - root defaults file name with absolute path
-*
-*******************************************************************************/
-static char *get_root_defaults_file_path () {
-   char *file = NULL;
-   
-   DENTER (TOP_LAYER, "get_root_defaults_file_path");
-   
-   file = (char *)malloc(strlen(path_state_get_cell_root()) +
-                       strlen(SGE_COMMON_DEF_REQ_FILE) + 3);
-   
-   sprintf (file, "%s/%s", path_state_get_cell_root(),
-            SGE_COMMON_DEF_REQ_FILE);
-   
-   DEXIT;
-   return file;
-}
-
-/****** sge/opt/get_user_home_defaults_file_path() *****************************
-*  NAME
-*     get_user_home_defaults_file_path() -- find user default file path
-*
-*  SYNOPSIS
-*     char *get_user_home_defaults_file_path (lList **answer_list) 
-*
-*  FUNCTION
-*     This function returns the path to the defaults file in the user's home
-*     directory
-*
-*  INPUTS
-*     lList* - answer list, AN_Type or NULL if everything ok
-*        possible errors:
-*           STATUS_ENOSUCHUSER - could not retrieve passwd info on me.user_name
-*           STATUS_EDISK       - home directory for user is missing or cwd 
-*                                cannot be read or file could not be opened 
-*                                (is just a warning)
-*           STATUS_EEXIST      - (parse_script_file), (is just a warning)
-*           STATUS_EUNKNOWN    - (parse_script_file), error opening or 
-*                                reading from existing file, (is just a warning)
-*                                plus all other error stati returned by 
-*                                parse_script_file, see there
-*     char * - user defaults file name with absolute path
-*
-*******************************************************************************/
-static char *get_user_home_defaults_file_path(lList **answer_list)
-{
-   struct passwd *pwd;
-   char str[256 + 1];
-#ifdef HAS_GETPWNAM_R
-   struct passwd pw_struct;
-   char buffer[2048];
-#endif
-
-   char *file = NULL;
-   
-   DENTER (TOP_LAYER, "get_user_home_defaults_file_path");
-
-#ifdef HAS_GETPWNAM_R
-   pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
-#else
-   pwd = sge_getpwnam(uti_state_get_user_name());
-#endif
-   if (!pwd) {
-      sprintf(str, MSG_USER_INVALIDNAMEX_S, uti_state_get_user_name());
-      answer_list_add(answer_list, str, STATUS_ENOSUCHUSER, 
-                      ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return NULL;
-   }
-   if (!pwd->pw_dir) {
-      sprintf(str, MSG_USER_NOHOMEDIRFORUSERX_S, uti_state_get_user_name());
-      answer_list_add(answer_list, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return NULL;
-   }
-
-   file = (char *)malloc(strlen(pwd->pw_dir) + 
-                         strlen(SGE_HOME_DEF_REQ_FILE) + 2);
-   strcpy(file, pwd->pw_dir);
-   if (*file && (file[strlen(file) - 1] != '/')) {
-      strcat(file, "/");
-   }
-   strcat(file, SGE_HOME_DEF_REQ_FILE);
-
-   if (!sge_is_file(file)) {
-      strcpy(file, pwd->pw_dir);
-      if (*file && (file[strlen(file) - 1] != '/')) {
-         strcat(file, "/");
-      }
-
-      strcat(file, GRD_HOME_DEF_REQ_FILE);
-   }
-   
-   DEXIT;
-   return file;
-}
-
-/****** sge/opt/get_cwd_defaults_file_path() ***********************************
-*  NAME
-*     get_cwd_defaults_file_path() -- find cwd default file path
-*
-*  SYNOPSIS
-*     char *get_cwd_defaults_file_path () 
-*
-*  FUNCTION
-*     This function returns the path of the defaults file in the current working
-*     directory
-*
-*  INPUTS
-*     lList* - answer list, AN_Type or NULL if everything ok
-*        possible errors:
-*           STATUS_ENOSUCHUSER - could not retrieve passwd info on me.user_name
-*           STATUS_EDISK       - home directory for user is missing or cwd 
-*                                cannot be read or file could not be opened 
-*                                (is just a warning)
-*           STATUS_EEXIST      - (parse_script_file), (is just a warning)
-*           STATUS_EUNKNOWN    - (parse_script_file), error opening or 
-*                                reading from existing file, (is just a warning)
-*                                plus all other error stati returned by 
-*                                parse_script_file, see there
-*     char * - cwd defaults file name with absolute path
-*
-*******************************************************************************/
-static char *get_cwd_defaults_file_path(lList **answer_list)
-{
-   char cwd[SGE_PATH_MAX + 1];
-   char str[256 + 1];   
-   char *file = NULL;
-   
-   DENTER (TOP_LAYER, "get_cwd_defaults_file_name");
-
-   if (!getcwd(cwd, sizeof(cwd))) {
-      sprintf(str, MSG_FILE_CANTREADCURRENTWORKINGDIR);
-      answer_list_add(answer_list, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-   }
-   
-   file = (char *)malloc(strlen(cwd) + strlen(SGE_HOME_DEF_REQ_FILE) + 2);
-   
-   strcpy(file, cwd);
-   if (*file && (file[strlen(file) - 1] != '/')) {
-      strcat(file, "/");
-   }
-   strcat(file, SGE_HOME_DEF_REQ_FILE);
-   if (!sge_is_file(file)) {
-      strcpy(file, cwd);
-      if (*file && (file[strlen(file) - 1] != '/')) {
-         strcat(file, "/");
-      }
-
-      strcat(file, GRD_HOME_DEF_REQ_FILE); 
-   }
-   
-   DEXIT;
-   return file;
-}
-
-/****** sge/opt/append_opts_from_default_files() *******************************
-*  NAME
-*     append_opts_from_default_files() -- parse default files 
-*
-*  SYNOPSIS
-*     void append_opts_from_default_files(lList **pcmdline, 
-*                                         lList **answer_list
-*                                         char **envp,
-*                                         char *def_files) 
-*
-*  FUNCTION
-*     This function reads the defaults files pointed to by def_files[] if they
-*     exist and parses them into an options list. 
-*
-*  INPUTS
-*     lList **pcmdline - pointer to SPA_Type list, if list is NULL, it is
-*                        created if the files contain any options 
-*     lList* - answer list, AN_Type or NULL if everything ok
-*        possible errors:
-*           STATUS_ENOSUCHUSER - could not retrieve passwd info on me.user_name
-*           STATUS_EDISK       - home directory for user is missing or cwd 
-*                                cannot be read or file could not be opened 
-*                                (is just a warning)
-*           STATUS_EEXIST      - (parse_script_file), (is just a warning)
-*           STATUS_EUNKNOWN    - (parse_script_file), error opening or 
-*                                reading from existing file, (is just a warning)
-*                                plus all other error stati returned by 
-*                                parse_script_file, see there
-*     char **envp      - environment pointer 
-*     char **def_files - paths to default files
-*
-*******************************************************************************/
-static void append_opts_from_default_files(lList **pcmdline, 
-                                           lList **answer_list,
-                                           char **envp,
-                                           char **def_files) 
-{
-   lList *alp;
-   lListElem *aep;
-   char **pstr;
-   char **ppstr;
-   SGE_STRUCT_STAT buf;
-   int do_exit = 0;
-   
-   DENTER(TOP_LAYER, "append_opts_from_default_files");
-
    for (pstr = def_files; *pstr; pstr++) {
       int already_read;
 
@@ -394,8 +236,6 @@ static void append_opts_from_default_files(lList **pcmdline,
          for (pstr = def_files; *pstr; free(*pstr++)) {
             ;
          }
-         
-         DEXIT;
          return;
       }
    }
@@ -403,9 +243,11 @@ static void append_opts_from_default_files(lList **pcmdline,
    for (pstr = def_files; *pstr; free(*pstr++)) {
       ;
    }
-   
+
    DEXIT;
+   return;
 }
+
 /****** sge/opt/opt_list_append_opts_from_qsub_cmdline() **********************
 *  NAME
 *     opt_list_append_opts_from_qsub_cmdline() -- parse opts from cmd line 

@@ -41,14 +41,14 @@
 #include <pwd.h>
 #include <grp.h>
 #include <signal.h>
-#include <fcntl.h>
  
 #include "sge_unistd.h"
 #include "sgermon.h"
 #include "basis_types.h"
-#include "msg_common.h"
 #include "msg_utilib.h"
 #include "sge_log.h"     
+
+int __fprintf_ret; 
 
 #ifdef NO_SGE_COMPILE_DEBUG
 #   undef SGE_EXIT
@@ -57,20 +57,6 @@
  
 static void addenv(char *, char *);
  
-/****** sge_stdio/addenv() *****************************************************
-*  NAME
-*     addenv() -- putenv() wrapper
-*
-*  SYNOPSIS
-*     static void addenv(char *key, char *value) 
-*
-*  INPUTS
-*     char *key   - ??? 
-*     char *value - ??? 
-*
-*  NOTES
-*     MT-NOTE: addenv() is MT safe
-*******************************************************************************/
 static void addenv(char *key, char *value)
 {
    char *str;
@@ -125,15 +111,12 @@ static void addenv(char *key, char *value)
 *  RESULT
 *     pid_t - process id
 *
-*  NOTES
-*     MT-NOTE: sge_peopen() is not MT safe because static (?) function variable
-*
 *  SEE ALSO
 *     uti/stdio/sge_peclose()
 ******************************************************************************/ 
 pid_t sge_peopen(const char *shell, int login_shell, const char *command,
                  const char *user, char **env,  FILE **fp_in, FILE **fp_out,
-                 FILE **fp_err, bool null_stderr)
+                 FILE **fp_err)
 {
    static pid_t pid;
    int pipefds[3][2];
@@ -151,8 +134,8 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
    DENTER(TOP_LAYER, "sge_peopen");
  
    /* open pipes - close on failure */
-   for (i=0; i<3; i++) {
-      if (pipe(pipefds[i]) != 0) {
+   for (i=0; i<3; i++)
+      if (pipe(pipefds[i])) {
          while (--i >= 0) {
             close(pipefds[i][0]);
             close(pipefds[i][1]);
@@ -162,42 +145,18 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
          DEXIT;
          return -1;
       }
-   }
-
-   pid = fork();
-   if (pid == 0) {  /* child */
+ 
+   if (!(pid = fork())) {  /* son */
+ 
       close(pipefds[0][1]);
       close(pipefds[1][0]);
       close(pipefds[2][0]);
-
-      /* shall we redirect stderr to /dev/null? */
-      if (null_stderr) {
-         /* open /dev/null */
-         int fd = open("/dev/null", O_WRONLY);
-         if (fd == -1) {
-            sprintf(err_str, MSG_ERROROPENINGFILEFORWRITING_SS, "/dev/null", 
-                    strerror(errno));
-            write(2, err_str, strlen(err_str));
-            SGE_EXIT(1);
-         }
-
-         /* set stderr to /dev/null */
-         close(2);
-         dup(fd);
-
-         /* we don't need the stderr the pipe - close it */
-         close(pipefds[2][1]);
-      } else {
-         /* redirect stderr to the pipe */
-         close(2);
-         dup(pipefds[2][1]);
-      }
-
-      /* redirect stdin and stdout to the pipes */
       close(0);
       close(1);
+      close(2);
       dup(pipefds[0][0]);
       dup(pipefds[1][1]);
+      dup(pipefds[2][1]);
  
       if (user) {
  
@@ -274,24 +233,12 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
       return -1;
    }
  
-   /* close the childs ends of the pipes */
-   close(pipefds[0][0]);
-   close(pipefds[1][1]);
-   close(pipefds[2][1]);
-  
-   /* return filehandles for stdin and stdout */
    *fp_in  = fdopen(pipefds[0][1], "a");
    *fp_out = fdopen(pipefds[1][0], "r");
-
-   /* is stderr redirected to /dev/null? */
-   if (null_stderr) {
-      /* close the pipe and return NULL as filehandle */
-      close(pipefds[2][0]);
-      *fp_err = NULL;
-   } else {
-      /* return filehandle for stderr */
-      *fp_err = fdopen(pipefds[2][0], "r");
-   }
+   *fp_err = fdopen(pipefds[2][0], "r");
+   close(pipefds[0][0]);
+   close(pipefds[1][1]);
+   close(pipefds[2][1]); 
 
    DEXIT;
    return pid;
@@ -320,9 +267,6 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
 *
 *  SEE ALSO
 *     uti/stdio/peopen()
-*
-*  NOTES
-*     MT-NOTE: sge_peclose() is MT safe
 ******************************************************************************/
 int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err,
                 struct timeval *timeout)
@@ -368,24 +312,8 @@ int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err,
  
    DEXIT;
    return (status&0xff00) >> 8;  /* return exitcode */
-}
+}                           
 
-/****** sge_stdio/print_option_syntax() ****************************************
-*  NAME
-*     print_option_syntax() -- prints syntax of an option
-*
-*  SYNOPSIS
-*     void print_option_syntax(FILE *fp, const char *option, const char 
-*     *meaning) 
-*
-*  INPUTS
-*     FILE *fp            - ??? 
-*     const char *option  - ??? 
-*     const char *meaning - ??? 
-*
-*  NOTES
-*     MT-NOTE: print_option_syntax() is MT safe
-*******************************************************************************/
 void print_option_syntax(
 FILE *fp,
 const char *option,
@@ -397,25 +325,8 @@ const char *meaning
       fprintf(fp,"   %-40.40s %s\n",  option, meaning);
 }
 
-
-/****** sge_stdio/sge_check_stdout_stream() ************************************
-*  NAME
-*     sge_check_stdout_stream() -- ??? 
-*
-*  SYNOPSIS
-*     bool sge_check_stdout_stream(FILE *file, int fd) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     FILE *file - ??? 
-*     int fd     - ??? 
-*
-*  NOTES
-*     MT-NOTE: sge_check_stdout_stream() is MT safe
-*******************************************************************************/
-bool sge_check_stdout_stream(FILE *file, int fd)
+bool 
+sge_check_stdout_stream(FILE *file, int fd)
 {
    if (fileno(file) != fd) {
       return false;
@@ -427,4 +338,3 @@ bool sge_check_stdout_stream(FILE *file, int fd)
 
    return true;
 }
-

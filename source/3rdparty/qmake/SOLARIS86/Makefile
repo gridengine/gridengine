@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = .
 
-ACLOCAL = aclocal
-AUTOCONF = autoconf
-AUTOMAKE = automake
-AUTOHEADER = autoheader
+ACLOCAL = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing aclocal
+AUTOCONF = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing autoconf
+AUTOMAKE = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing automake
+AUTOHEADER = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing autoheader
 
 INSTALL = ../install-sh -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,7 +68,7 @@ CPP = cc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS = 
-MAKEINFO = makeinfo
+MAKEINFO = /home/joga/develop/opensource/gridengine/source/3rdparty/qmake/missing makeinfo
 PACKAGE = make
 PERL = perl
 RANLIB = ranlib
@@ -166,8 +166,8 @@ OBJECTS = $(make_OBJECTS)
 all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .c .o
-#$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-#	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps Makefile
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps Makefile
 
 #Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 #	cd $(top_builddir) \

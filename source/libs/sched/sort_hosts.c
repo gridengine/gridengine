@@ -34,24 +34,23 @@
 #include <string.h>
 #include <stdlib.h>
 
-#if !defined(WIN32) && !defined(DARWIN) && !defined(FREEBSD)
+#ifndef WIN32
 #   include <malloc.h>
 #endif
 
 #include "sgermon.h"
 #include "sge.h"
+#include "sge_gdi_intern.h"
 #include "cull.h"
 #include "sge_all_listsL.h"
 #include "sge_parse_num_par.h"
 #include "sort_hosts.h"
 #include "sge_complex_schedd.h"
 #include "sge_sched.h"
-#include "sge_schedd_conf.h"
 #include "sge_feature.h"
 #include "sge_string.h"
 #include "sge_log.h"
 #include "sge_host.h"
-#include "sge_qinstance.h"
 #include "msg_schedd.h"
 
 static char load_ops[]={
@@ -78,8 +77,8 @@ enum {
 };
 
 /* prototypes */
-static double scaled_mixed_load( lListElem *global, lListElem *host, const lList *centry_list);
-static int get_load_value(double *dvalp, lListElem *global, lListElem *host, const lList *centry_list, const char *attrname);
+static double scaled_mixed_load(lList *tcl);
+static int get_load_value(double *dval, lList *tcl, char *name);
 
 /*************************************************************************
 
@@ -93,34 +92,33 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
 
    input parameters:
       hl             :  the host list to be sorted
-      centry_list    :  the complex entry list
+      cplx_list      :  the complex list
       formula        :  the load evaluation formula (containing no blanks)
 
    output parameters:
       hl             :  the sorted host list
 
 *************************************************************************/
-/* TODO SG: change from complex list to accessing the necisary parts directly */
+
 int sort_host_list(
 lList *hl,           /* EH_Type */ 
-lList *centry_list   /* CE_Type */
+lList *cplx_list     /* CX_Type */
 ) {
    lListElem *hlp;
-   lListElem *global;
    const char *host;
    double load;
-/*   lList *tcl = NULL;*/
-
+   lList *tcl = NULL;
    
    DENTER(TOP_LAYER, "sort_host_list");
-
-   global = host_list_locate(hl, "global");
 
    for_each (hlp, hl) {
       host = lGetHost(hlp,EH_name);
       if (strcmp(host,"global")) { /* don't treat global */
+
          /* build complexes for that host */
-         lSetDouble(hlp, EH_sort_value, load = scaled_mixed_load(global, hlp, centry_list));
+         host_complexes2scheduler(&tcl, hlp, hl, cplx_list, 0);
+         lSetDouble(hlp, EH_sort_value, load = scaled_mixed_load(tcl));
+         tcl = lFreeList(tcl);  
          DPRINTF(("%s: %f\n", lGetHost(hlp, EH_name), load));
       }
    }
@@ -158,17 +156,18 @@ lList *centry_list   /* CE_Type */
                        0 means no load correction, 
                        n load correction for n new jobs
 *************************************************************************/
-static double scaled_mixed_load( lListElem *global, lListElem *host, const lList *centry_list)
-{
+static double scaled_mixed_load(
+lList *tcl 
+) {
    char *cp, *tf, *ptr, *ptr2, *par_name, *op_ptr=NULL;
    double val=0, val2=0;
    double load=0;
    int op_pos, next_op=LOAD_OP_NONE;
-   const char *load_formula = sconf_get_load_formula();
+
    DENTER(TOP_LAYER, "scaled_mixed_load");
 
    /* we'll use strtok ==> we need a safety copy */
-   if (!(tf = strdup(load_formula))) {
+   if (!(tf = strdup(scheddconf.load_formula))) {
       DEXIT;
       return ERROR_LOAD_VAL;
    }
@@ -184,8 +183,7 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
       if (!(val = strtol(cp, &ptr, 0)) && ptr == cp) {
          /* it is not an integer ==> it's got to be a load value */
          if (!(par_name = sge_delim_str(cp,&ptr,load_ops)) ||
-/*               get_load_value(&val, tcl, par_name, source_name)) {*/
-               get_load_value(&val, global, host, centry_list, par_name)) {
+               get_load_value(&val, tcl, par_name)) {
             if (par_name)
                free(par_name);
             free(tf);
@@ -215,7 +213,7 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
          if (!(val2 = (double)strtol(ptr,&ptr2,0)) && ptr2 == ptr) {
             /* it is not an integer ==> it's got to be a load value */
             if (!(par_name = sge_delim_str(ptr,NULL,load_ops)) ||
-               get_load_value(&val2, global, host, centry_list, par_name)) {
+               get_load_value(&val2, tcl, par_name)) {
                if (par_name)
                   free(par_name);
                free(tf);
@@ -276,9 +274,9 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
             load -= val;
             break;
       }
-      
+
       /* determine next_op from the safety copy of the stripped formula */
-      if (load_formula[cp-tf+strlen(cp)] == '+')
+      if (scheddconf.load_formula[cp-tf+strlen(cp)] == '+')
          next_op = LOAD_OP_PLUS;
       else
          next_op = LOAD_OP_MINUS;
@@ -296,46 +294,28 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
    get_load_value
 
  ***********************************************************************/
-static int get_load_value(double *dvalp, lListElem *global, lListElem *host, const lList *centry_list, const char *attrname) 
-{
+static int get_load_value(
+double *dvalp,
+lList *tcl,
+char *name 
+) {
    lListElem *cep;
-   u_long32 dominant;
 
    DENTER(TOP_LAYER, "get_load_value");
 
    /* search complex */
-
-   if(!(cep = get_attribute_by_name(global, host, NULL, attrname, centry_list))){
-/*   if (!(cep = lGetElemStr(tcl, CE_name, name))) {*/
-      /* 
-       * admin has forgotten to configure complex for 
-       * load value in load formula 
-       */
-
-      ERROR((SGE_EVENT, MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_SS , attrname, lGetHost(host, EH_name) ));
+   if (!(cep = lGetElemStr(tcl, CE_name, name))) {
+      /* admin has forgotten to configure complex for load value in load formula */
+      ERROR((SGE_EVENT, MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_S , name));
       DEXIT;
       return 1;
    }
 
-   if (lGetUlong(cep, CE_pj_dominant) & DOMINANT_TYPE_VALUE) {
+   if ((lGetUlong(cep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) 
       *dvalp = lGetDouble(cep, CE_doubleval);
-      dominant = lGetUlong(cep, CE_dominant);
-   } else {
+   else
       *dvalp = lGetDouble(cep, CE_pj_doubleval);
-      dominant = lGetUlong(cep, CE_pj_dominant);
-   }
 
-   cep = lFreeElem(cep);
-
-   /*
-    * No value available.
-    */
-/*
-   if (dominant & DOMINANT_TYPE_VALUE) {
-      DEXIT;
-      return 1;
-   }
-*/
    DEXIT;
    return 0;
 }
@@ -345,54 +325,59 @@ int debit_job_from_hosts(
 lListElem *job,     /* JB_Type */
 lList *granted,     /* JG_Type */
 lList *host_list,   /* EH_Type */
-lList *centry_list, /* CE_Type */
+lList *complex_list, /* CX_Type */
 int *sort_hostlist
 ) {
    lSortOrder *so = NULL;
    lListElem *gel, *hep;
-   lListElem *global;
    const char *hnm;
-
    double old_sort_value, new_sort_value;
 
    DENTER(TOP_LAYER, "debit_job_from_hosts");
 
-   so = lParseSortOrderVarArg(lGetListDescr(host_list), "%I+", EH_sort_value);
-
-   global = host_list_locate(host_list, "global");
+   if (feature_is_enabled(FEATURE_SGEEE) 
+       || scheddconf.queue_sort_method!=QSM_SHARE) {
+      so = lParseSortOrderVarArg(lGetListDescr(host_list), "%I+", EH_sort_value);
+   }
 
    /* debit from hosts */
    for_each(gel, granted) {  
       u_long32 ulc_factor;
+      lList *tcl;
       int slots = lGetUlong(gel, JG_slots);
 
       hnm = lGetHost(gel, JG_qhostname);
       hep = host_list_locate(host_list, hnm); 
 
-      if (sconf_get_load_adjustment_decay_time() && lGetNumberOfElem(sconf_get_job_load_adjustments())) {
+      if (scheddconf.load_adjustment_decay_time && lGetNumberOfElem(scheddconf.job_load_adjustments)) {
          /* increase host load for each scheduled job slot */
          ulc_factor = lGetUlong(hep, EH_load_correction_factor);
          ulc_factor += 100*slots;
          lSetUlong(hep, EH_load_correction_factor, ulc_factor);
       }   
 
-      debit_host_consumable(job, host_list_locate(host_list, "global"), centry_list, slots);
-      debit_host_consumable(job, hep, centry_list, slots);
+      debit_host_consumable(job, host_list_locate(host_list, "global"), complex_list, slots);
+      debit_host_consumable(job, hep, complex_list, slots);
 
       /* compute new combined load for this host and put it into the host */
       old_sort_value = lGetDouble(hep, EH_sort_value); 
-
-      new_sort_value = scaled_mixed_load(global, hep, centry_list);
-
+      tcl = NULL;
+      host_complexes2scheduler(&tcl, hep, host_list, complex_list, 0);
+      new_sort_value = scaled_mixed_load(tcl);
       if(new_sort_value != old_sort_value) {
          lSetDouble(hep, EH_sort_value, new_sort_value);
-         if (sort_hostlist)
-            *sort_hostlist = 1;
+         *sort_hostlist = 1;
          DPRINTF(("Increasing sort value of Host %s from %f to %f\n", 
             hnm, old_sort_value, new_sort_value));
       }
+      tcl = lFreeList(tcl);  
 
-      lResortElem(so, hep, host_list);
+      if (feature_is_enabled(FEATURE_SGEEE) 
+          || scheddconf.queue_sort_method!=QSM_SHARE) {
+         /* change position of this host in the host_list */
+         /* !!! JG: sorting always necessary, or only if sort_hostlist? */
+         lResortElem(so, hep, host_list);
+      }
    }
 
    if(so) {
@@ -403,16 +388,13 @@ int *sort_hostlist
    return 0;
 }
 
-/*
- * jep: JB_Type
- * hep: EH_Type
- * centry_list: CE_Type
- */
-int 
-debit_host_consumable(lListElem *jep, lListElem *hep, lList *centry_list, int slots) 
-{
-   return rc_debit_consumable(jep, hep, centry_list, slots, 
-                           EH_consumable_config_list, 
-                           EH_resource_utilization, 
-                           lGetHost(hep, EH_name));
+int debit_host_consumable(
+lListElem *jep,      /* JB_Type */
+lListElem *hep,      /* EH_Type */
+lList *complex_list, /* CX_Type */
+int slots 
+) {
+   return debit_consumable(jep, hep, complex_list, slots,
+         EH_consumable_config_list, EH_consumable_actual_list, 
+         lGetHost(hep, EH_name));
 }

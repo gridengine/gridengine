@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: XmToggleB.c,v 1.2 2004/02/04 14:10:22 andre Exp $
+ * $Id: XmToggleB.c,v 1.1 2001/07/18 11:06:03 root Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,16 +9,8 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: XmToggleB.c,v $
- * Revision 1.2  2004/02/04 14:10:22  andre
- * AA-2004-02-04-1: Enhancem.: Cluster Queues qmon
- *                             - Xmt/XmToggleB.c -> callback is called now !!!
- *                             - explain, q filters still missing
- *                             - reuse of some qconf, qstat functionality in qmon
- *                  Review:    Pending
- *                  Changed:   qmon, qstat, qconf, qhost
- *
- * Revision 1.1.1.1  2001/07/18 11:06:03  root
- * Initial checkin.
+ * Revision 1.1  2001/07/18 11:06:03  root
+ * Initial revision
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -64,7 +56,7 @@ Cardinal size;
 	state = *(unsigned int *)address;
     else return;
     
-    XmToggleButtonSetState(w, state, True);
+    XmToggleButtonSetState(w, state, False);
 }
 
 #if NeedFunctionPrototypes

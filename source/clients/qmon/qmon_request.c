@@ -49,7 +49,7 @@
 #include "qmon_rmon.h"
 #include "commlib.h"
 #include "sge_gdi.h"
-#include "sge_host.h"
+#include "resolve_host.h"
 #include "sge_all_listsL.h"
 #include "qmon_cull.h"
 #include "qmon_request.h"
@@ -101,9 +101,9 @@ XtPointer cld, cad;
    lList *hrl = NULL;
    lList *srl = NULL;
    lList *rll = NULL;
+   lListElem *rep = NULL;
    lListElem *ep = NULL;
    lListElem *rp = NULL;
-   lList *alp = NULL;
    
    DENTER(GUI_LAYER, "qmonRequestPopup");
 
@@ -152,22 +152,19 @@ XtPointer cld, cad;
    */
    XtVaSetValues(request_rtype, XmtNlabel, qmonSubmitRequestType(), NULL);
 
-   qmonMirrorMultiAnswer(CENTRY_T, &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
-      /* set normal cursor */
-      XmtDisplayDefaultCursor(w);
-      DEXIT;
-      return;
-   }
-   rll = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), 
+   /*
+   ** at the moment the hard_resource list from the submit dialog 
+   ** is an RE_Type List, we need only the RE_entries list
+   ** there should be only one RE_Type element at the moment
+   */
+   rll = qmonGetResources(qmonMirrorList(SGE_COMPLEX_LIST), 
                                        REQUESTABLE_RESOURCES);
 
    hrl = qmonSubmitHR();
    hard_requests = lFreeList(hard_requests);
    if (hrl) {
-      hard_requests = lCopyList("hr", hrl);
+      rep = lFirst(hrl);
+      hard_requests = lCopyList("hr", lGetList(rep, RE_entries));
       for_each(ep, hard_requests) {
          rp = lGetElemStr(rll, CE_name, lGetString(ep, CE_name));
          if (!rp)
@@ -182,7 +179,8 @@ XtPointer cld, cad;
    srl = qmonSubmitSR();
    soft_requests = lFreeList(soft_requests);
    if (srl) {
-      soft_requests = lCopyList("sr", srl);
+      rep = lFirst(srl);
+      soft_requests = lCopyList("sr", lGetList(rep, RE_entries));
       for_each(ep, soft_requests) {
          rp = lGetElemStr(rll, CE_name, lGetString(ep, CE_name));
          if (!rp)
@@ -338,28 +336,31 @@ XtPointer cld, cad;
 
 /*-------------------------------------------------------------------------*/
 lList *qmonGetResources(
-lList *ce_list,
+lList *cx_list,
 int how 
 ) {
+   lListElem *ep = NULL;
    lList *lp = NULL;
    lList *entries = NULL;
    lCondition *where = NULL;
 
+
    DENTER(GUI_LAYER, "qmonGetResources");
 
-   entries = ce_list;
-   
-   if (entries) {
-      if (!lp) 
-         lp = lCopyList("CE_entries", entries);
-      else
-         lAddList(lp, lCopyList("CE_entries", entries));
+   for_each(ep, cx_list) {
+      entries = lGetList(ep, CX_entries);
+      if (entries) {
+         if (!lp) 
+            lp = lCopyList("CX_entries", entries);
+         else
+            lAddList(lp, lCopyList("CX_entries", entries));
+      }
    }
 
    lUniqStr(lp, CE_name);
 
    if (how == REQUESTABLE_RESOURCES) { 
-      where = lWhere("%T(%I == %u)", CE_Type, CE_requestable, REQU_YES);
+      where = lWhere("%T(%I != %b)", CE_Type, CE_request, 0);
       if (where)
          lp = lSelectDestroy(lp, where); 
    }
@@ -459,8 +460,6 @@ int type
       case TYPE_STR:
          pix = qmonGetIcon("str");
          break;
-      case TYPE_RESTR:
-         pix = qmonGetIcon("unknown");
       case TYPE_BOO:
          pix = qmonGetIcon("bool");
          break;
@@ -498,7 +497,7 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonRequestEditResource");
 
-   rll = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), 
+   rll = qmonGetResources(qmonMirrorList(SGE_COMPLEX_LIST), 
                                        REQUESTABLE_RESOURCES); 
 
    if (!how)
@@ -612,26 +611,23 @@ int maxlen
          if (stringval[0] == '\0')
             status = False;
          break;
-       case TYPE_RESTR:
-         status = XmtAskForString(w, NULL, "@{Enter a string value}", stringval, maxlen, NULL);
-         if (stringval[0] == '\0')
-            status = False;
-         break;
       case TYPE_HOST:
          status = XmtAskForString(w, NULL, "@{Enter a valid hostname}", stringval, maxlen, NULL);
          if (status && stringval[0] != '\0') {
             /* try to resolve hostname */
             ret=sge_resolve_hostname(stringval, unique, EH_name);
             switch ( ret ) {
-               case CL_RETVAL_GETHOSTNAME_ERROR:
-                  qmonMessageShow(w, True, "Can't resolve host '%s'", stringval);
+               case COMMD_NACK_UNKNOWN_HOST:
+                  qmonMessageShow(w, True, "Can't resolve host '%s'", 
+                                       stringval);
                   status = False;
                   break;
-               case CL_RETVAL_OK:
+               case CL_OK:
                   strcpy(stringval, unique);
                   break; 
                default:
-                  DPRINTF(("sge_resolve_hostname() failed resolving: %s\n", cl_get_error_text(ret)));
+                  DPRINTF(("sge_resolve_hostname() failed resolving: %s\n",
+                  cl_errstr(ret)));
             }
          }
          else

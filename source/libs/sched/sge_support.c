@@ -43,24 +43,28 @@
 #endif
 
 #include "sge_all_listsL.h"
+#include "sge_gdi_intern.h"
 #include "commlib.h"
 #include "sgermon.h"
 #include "sge_prog.h"
+#include "sge_c_event.h"
 #include "sge_schedd.h"
 #include "sge_time.h"
 #include "sge_orders.h"
 #include "sge_job_schedd.h"
+#include "schedd_conf.h"
 #include "scheduler.h"
 #include "sgeee.h"
 #include "sge_support.h"
 #include "sge_schedd_conf.h"
 #include "sge_usageL.h"
 #include "sge_userprj.h"
-#include "sgeobj/sge_sharetree.h"
 
 const long sge_usage_interval = SGE_USAGE_INTERVAL;
 static double sge_decay_rate;
 static double sge_decay_constant;
+static lListElem *search_ancestors(lListElem *ep, char *name,
+                                   ancestors_t *ancestors, int depth);
 
 /*--------------------------------------------------------------------
  * decay_usage - decay usage for the passed usage list
@@ -68,7 +72,7 @@ static double sge_decay_constant;
 
 static void
 decay_usage( lList *usage_list,
-             const lList *decay_list,
+             lList *decay_list,
              u_long curr_time,
              u_long usage_time_stamp )
 {
@@ -116,7 +120,7 @@ decay_usage( lList *usage_list,
 
 void
 decay_userprj_usage( lListElem *userprj,
-                     const lList *decay_list,
+                     lList *decay_list,
                      u_long seqno,
                      u_long curr_time )
 {
@@ -293,9 +297,10 @@ sge_init_node_fields( lListElem *root )
 
 double
 sge_calc_node_usage( lListElem *node,
-                     const lList *user_list,
-                     const lList *project_list,
-                     const lList *decay_list,
+                     lList *user_list,
+                     lList *project_list,
+                     lList *config_list,
+                     lList *decay_list,
                      u_long curr_time,
                      const char *projname,
                      u_long seqno )
@@ -305,9 +310,8 @@ sge_calc_node_usage( lListElem *node,
    lListElem *child_node;
    lList *children;
    lListElem *userprj = NULL;
-   const lList *usage_weight_list = NULL;
-   lList *usage_list=NULL;
-   lListElem *usage_weight, *usage_elem;
+   lList *usage_weight_list=NULL, *usage_list=NULL;
+   lListElem *usage_weight, *config, *usage_elem;
    double sum_of_usage_weights = 0;
    const char *usage_name;
    static int sn_children_pos = -1;
@@ -316,6 +320,7 @@ sge_calc_node_usage( lListElem *node,
    static int sn_usage_list_pos = -1;
    static int ua_name_pos = -1;
    static int ua_value_pos = -1;
+   static int sc_usage_weight_list_pos = -1;
    static int up_usage_pos = -1;
 
    DENTER(TOP_LAYER, "sge_calc_node_usage");
@@ -330,6 +335,7 @@ sge_calc_node_usage( lListElem *node,
       sn_name_pos = lGetPosViaElem(node, STN_name);
       ua_name_pos = lGetPosViaElem(ua_elem, UA_name);
       ua_value_pos = lGetPosViaElem(ua_elem, UA_value);
+      sc_usage_weight_list_pos = lGetPosViaElem(sc_elem, SC_usage_weight_list);
       up_usage_pos = lGetPosViaElem(up_elem, UP_usage);
       lFreeElem(ua_elem);
       lFreeElem(sc_elem);
@@ -408,8 +414,8 @@ sge_calc_node_usage( lListElem *node,
        * Sum usage weighting factors
        *-------------------------------------------------------------*/
 
-      if (sconf_is()) {
-         usage_weight_list = sconf_get_usage_weight_list();
+      if ((config = lFirst(config_list))) {
+         usage_weight_list = lGetPosList(config, sc_usage_weight_list_pos);
          if (usage_weight_list) {
             for_each(usage_weight, usage_weight_list)
                sum_of_usage_weights +=
@@ -464,7 +470,8 @@ sge_calc_node_usage( lListElem *node,
       for_each(child_node, children) {
          lListElem *nu;
          child_usage += sge_calc_node_usage(child_node, user_list,
-                                            project_list, decay_list, curr_time,
+                                            project_list, config_list,
+                                            decay_list, curr_time,
                                             projname, seqno);
 
          /*-------------------------------------------------------------
@@ -593,9 +600,10 @@ sge_calc_node_proportion( lListElem *node,
 
 void
 _sge_calc_share_tree_proportions( lList *share_tree,
-                                  const lList *user_list,
-                                  const lList *project_list,
-                                  const lList *decay_list,
+                                  lList *user_list,
+                                  lList *project_list,
+                                  lList *config_list,
+                                  lList *decay_list,
                                   u_long curr_time )
 {
    lListElem *root;
@@ -603,19 +611,21 @@ _sge_calc_share_tree_proportions( lList *share_tree,
 
    DENTER(TOP_LAYER, "sge_calc_share_tree_proportions");
 
-   if (!share_tree || !((root=lFirst(share_tree)))) {
+   if (!share_tree || !config_list || !((root=lFirst(share_tree)))) {
       DEXIT;
       return;
    }
 
-   calculate_default_decay_constant( sconf_get_halftime());
+   calculate_default_decay_constant(lGetUlong(lFirst(config_list),
+         SC_halftime));
 
    total_usage = sge_calc_node_usage(root,
                                      user_list,
                                      project_list,
+                                     config_list,
                                      decay_list,
                                      curr_time,
-                    				       NULL,
+				     NULL,
                                      -1);
 
    sge_calc_node_proportion(root, total_usage);
@@ -627,98 +637,14 @@ _sge_calc_share_tree_proportions( lList *share_tree,
 
 void
 sge_calc_share_tree_proportions( lList *share_tree,
-                                 const lList *user_list,
-                                 const lList *project_list,
-                                 const lList *decay_list )
+                                 lList *user_list,
+                                 lList *project_list,
+                                 lList *config_list,
+                                 lList *decay_list )
 {
    _sge_calc_share_tree_proportions(share_tree, user_list, project_list,
-                                    decay_list, sge_get_gmt());
+                                    config_list, decay_list, sge_get_gmt());
    return;
-}
-
-
-/*--------------------------------------------------------------------
- * set_share_tree_project_flags - set the share tree project flag for
- *       node and descendants
- *--------------------------------------------------------------------*/
-
-void
-set_share_tree_project_flags( const lList *project_list,
-                              lListElem *node )
-{
-   lList *children;
-   lListElem *child;
-
-   if (!project_list || !node)
-      return;
-
-   if (userprj_list_locate(project_list, lGetString(node, STN_name)))
-      lSetUlong(node, STN_project, 1);
-   else
-      lSetUlong(node, STN_project, 0);
-
-   children = lGetList(node, STN_children);
-   if (children) {
-      for_each(child, children) {
-         set_share_tree_project_flags(project_list, child);
-      }
-   }
-   return;
-}
-
-
-void
-sge_add_default_user_nodes( lListElem *root_node,
-                            const lList *user_list,
-                            const lList *project_list )
-{
-   lListElem *user, *project, *pnode, *dnode;
-   const char *proj_name, *user_name;
-
-   /*
-    * do for each project and for no project
-    *    if default node exists
-    *       do for each user
-    *          if user maps to default node
-    *             add temp node as sibling to default node
-    *          endif
-    *       end do
-    *    endif
-    * end do
-    */
-
-   set_share_tree_project_flags(project_list, root_node);
-
-   for_each(project, project_list) {
-      proj_name = lGetString(project, UP_name);
-      if (search_userprj_node(root_node, "default", proj_name, NULL)) {
-         for_each(user, user_list) {
-            user_name = lGetString(user, UP_name);
-            if (((dnode=search_userprj_node(root_node, user_name, proj_name, &pnode))) &&
-                strcmp("default", lGetString(dnode, STN_name)) == 0) {
-               lListElem *node = lCopyElem(dnode);
-               lSetString(node, STN_name, user_name);
-               lSetUlong(node, STN_temp, 1);
-               lAppendElem(lGetList(pnode, STN_children), node);
-            }
-         }
-      }
-   }
-
-      proj_name = NULL;
-      if (search_userprj_node(root_node, "default", proj_name, NULL)) {
-         for_each(user, user_list) {
-            user_name = lGetString(user, UP_name);
-            if (((dnode=search_userprj_node(root_node, user_name, proj_name, &pnode))) &&
-                strcmp("default", lGetString(dnode, STN_name)) == 0) {
-               lListElem *node = lCopyElem(dnode);
-               lSetString(node, STN_name, user_name);
-               lSetUlong(node, STN_temp, 1);
-               lAppendElem(lGetList(pnode, STN_children), node);
-            }
-         }
-      }
-
 }
 
 
@@ -726,13 +652,11 @@ sge_add_default_user_nodes( lListElem *root_node,
  Search the share tree for the node corresponding to the
  user / project combination
  ********************************************************/
-static lListElem *
-search_userprj_node_work( lListElem *ep,      /* branch to search */
-                          const char *username,
-                          const char *projname,
-                          lListElem **pep,    /* parent of found node */
-                          lListElem *root )
-
+lListElem *
+search_userprj_node( lListElem *ep,      /* root of the tree */
+                     const char *username,
+                     const char *projname,
+                     lListElem **pep )   /* parent of found node */
 {
    lListElem *cep, *fep;
    static int sn_children_pos = -1;
@@ -761,7 +685,6 @@ search_userprj_node_work( lListElem *ep,      /* branch to search */
     */
 
    if (lGetPosUlong(ep, sn_project_pos) &&
-        ep != root &&
        (!projname || strcmp(nodename, projname))) {
       DEXIT;
       return NULL;
@@ -788,12 +711,8 @@ search_userprj_node_work( lListElem *ep,      /* branch to search */
             return ep;
          }
 
-         return search_userprj_node_work(ep, username, NULL, pep, ep);
-
-#if 0
-
          for_each(cep, children) {
-            if ((fep = search_userprj_node_work(cep, username, NULL, pep, ep))) {
+            if ((fep = search_userprj_node(cep, username, NULL, pep))) {
                if (pep && (cep == fep))
                   *pep = ep;
                DEXIT;
@@ -808,14 +727,13 @@ search_userprj_node_work( lListElem *ep,      /* branch to search */
           */
 
          for_each(cep, children) {
-            if ((fep = search_userprj_node_work(cep, "default", NULL, pep, root))) {
+            if ((fep = search_userprj_node(cep, "default", NULL, pep))) {
                if (pep && (cep == fep))
                   *pep = ep;
                DEXIT;
                return fep;
             }
          }
-#endif
 
          /*
           * user was not found, fall thru and return NULL
@@ -828,7 +746,7 @@ search_userprj_node_work( lListElem *ep,      /* branch to search */
           */
 
          for_each(cep, children) {
-            if ((fep = search_userprj_node_work(cep, username, projname, pep, root))) {
+            if ((fep = search_userprj_node(cep, username, projname, pep))) {
                if (pep && (cep == fep))
                   *pep = ep;
                DEXIT;
@@ -854,20 +772,13 @@ search_userprj_node_work( lListElem *ep,      /* branch to search */
        */
 
       for_each(cep, children) {
-         if ((fep = search_userprj_node_work(cep, username, projname, pep, root))) {
+         if ((fep = search_userprj_node(cep, username, projname, pep))) {
             if (pep && (cep == fep))
                *pep = ep;
             DEXIT;
             return fep;
          }
       }
-
-      /*
-       * if we've searched the entire tree, search for default user
-       */
-
-      if (ep == root && strcmp(username, "default"))
-         return search_userprj_node(ep, "default", NULL, pep);
 
       /*
        * user was not found, fall thru and return NULL
@@ -880,23 +791,198 @@ search_userprj_node_work( lListElem *ep,      /* branch to search */
 }
 
 
-/********************************************************
- Search the share tree for the node corresponding to the
- user / project combination
- ********************************************************/
-lListElem *
-search_userprj_node( lListElem *ep,      /* root of the tree */
-                     const char *username,
-                     const char *projname,
-                     lListElem **pep )   /* parent of found node */
 
+/********************************************************
+ Search for a share tree node with a given name in a
+ share tree
+ ********************************************************/
+lListElem *search_named_node( lListElem *ep,  /* root of the tree */
+                              const char *name )
 {
-   return search_userprj_node_work(ep, username, projname, pep, ep);
+   lListElem *cep, *fep;
+   static int sn_children_pos = -1;
+   static int sn_name_pos = -1;
+
+   DENTER(TOP_LAYER, "search_named_node");
+
+   if (!ep || !name) {
+      DEXIT;
+      return NULL;
+   }
+
+   if (sn_name_pos == -1) {
+      sn_children_pos = lGetPosViaElem(ep, STN_children);
+      sn_name_pos = lGetPosViaElem(ep, STN_name);
+   }
+
+   if (strcmp(lGetPosString(ep, sn_name_pos), name) == 0) {
+      DEXIT;
+      return ep;
+   }
+
+   for_each(cep, lGetPosList(ep, sn_children_pos)) {
+      if ((fep = search_named_node(cep, name))) {
+         DEXIT;
+         return fep;
+      }
+   }
+      
+   DEXIT;
+   return NULL;
 }
 
 
+/********************************************************
+ Free internals of ancestors structure
+ ********************************************************/
+void free_ancestors( ancestors_t *ancestors )
+{
+   if (ancestors && ancestors->nodes) {
+      free(ancestors->nodes);
+      ancestors->nodes = NULL;
+   }
+}
+
+
+/********************************************************
+ Search for a share tree node with a given path in a
+ share tree
+ ********************************************************/
+
+static lListElem *
+search_by_path( lListElem *ep,  /* root of the [sub]tree */
+                const char *name,
+                const char *path,
+                int delim,
+                ancestors_t *ancestors,
+                int depth )
+{
+   lList *children;
+   lListElem *ret = NULL, *child;
+   char *buf=NULL, *bufp;
+
+   if (name == NULL)
+      delim = '.';
+
+   if (name == NULL || !strcmp(name, "*") ||
+       !strcmp(name, lGetString(ep, STN_name))) {
+      if (*path == 0) {
+         if (name) {
+            ret = ep;
+            if (ancestors && depth > 0) {
+               ancestors->depth = depth;
+               ancestors->nodes =
+                     (lListElem **)malloc(depth * sizeof(lListElem *));
+               ancestors->nodes[depth-1] = ep;
+            }
+         }
+         return ret;
+      }
+
+      /* get next component from path */
+
+      bufp = buf = (char *)malloc(strlen(path)+1);
+      if (*path == '.' || *path == '/')
+         delim = *path++;
+      while (*path && *path != '.' && *path != '/')
+         *bufp++ = *path++;
+      *bufp = 0;
+      name = buf;
+   } else if (delim == '/')
+      return NULL;
+
+   if ((children = lGetList(ep, STN_children)))
+      for(child=lFirst(children); child && !ret; child = child->next)
+         ret = search_by_path(child, name, path, delim, ancestors, depth+1);
+
+   if (ret && ancestors && ancestors->nodes && depth > 0)
+      ancestors->nodes[depth-1] = ep;
+   if (buf) free(buf);
+   return ret;
+}
+
+
+/********************************************************
+ Search for a share tree node with a given path in a
+ share tree
+ ********************************************************/
+lListElem *
+search_named_node_path( lListElem *ep,  /* root of the tree */
+                        const char *path,
+                        ancestors_t *ancestors )
+{
+   return search_by_path(ep, NULL, path, 0, ancestors, 0);
+}
+
+
+/********************************************************
+ Search for a share tree node with a given name in a
+ share tree returning an array of ancestor nodes. The
+ array is contained in the ancestors_t structure which
+ consist of the depth and a dynamically allocated array
+ of lListElem pointers for each node.  The nodes are
+ ordered from the root node to the found node. The 
+ caller is reponsible for freeing the nodes array.
+ ********************************************************/
+
+#ifdef notdef
+
+lListElem *search_ancestor_list( lListElem *ep,  /* root of the tree */
+                                 char *name,
+                                 ancestors_t *ancestors )
+{
+   if (ancestors)
+      return search_ancestors(ep, name, ancestors, 1);
+   else
+      return search_named_node(ep, name);
+}
+
+#endif
+
+static
+lListElem *
+search_ancestors( lListElem *ep,
+                  char *name,
+                  ancestors_t *ancestors,
+                  int depth )
+{
+   lListElem *cep, *fep;
+   static int sn_children_pos = -1;
+   static int sn_name_pos = -1;
+
+   DENTER(TOP_LAYER, "search_named_node");
+
+   if (!ep || !name) {
+      DEXIT;
+      return NULL;
+   }
+
+   if (sn_name_pos == -1) {
+      sn_children_pos = lGetPosViaElem(ep, STN_children);
+      sn_name_pos = lGetPosViaElem(ep, STN_name);
+   }
+   if (strcmp(lGetPosString(ep, sn_name_pos), name) == 0) {
+      ancestors->depth = depth;
+      ancestors->nodes = (lListElem **)malloc(depth * sizeof(lListElem *));
+      ancestors->nodes[depth-1] = ep;
+      DEXIT;
+      return ep;
+   }
+
+   for_each(cep, lGetPosList(ep, sn_children_pos)) {
+      if ((fep = search_ancestors(cep, name, ancestors, depth+1))) {
+         ancestors->nodes[depth-1] = ep;
+         DEXIT;
+         return fep;
+      }
+   }
+      
+   DEXIT;
+   return NULL;
+}
+
 /*--------------------------------------------------------------------
- * sgeee_sort_jobs - sort jobs according the task-priority and job number 
+ * sgeee_sort_jobs - sort jobs according the task-tickets and job number 
  *--------------------------------------------------------------------*/
 
 void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
@@ -928,33 +1014,14 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
       
       nxt_job = lNext(nxt_job);
       tmp_sge_job = lCreateElem(SGEJ_Type);
-
-      {
-         lListElem *tmp_task; /* JAT_Type */
-
-         /* 
-          * First try to find an enrolled task 
-          * It will have the highest priority
-          */
-         tmp_task = lFirst(lGetList(job, JB_ja_tasks));
-
-         /* 
-          * If there is no enrolled task than take the template element 
-          */
-         if (tmp_task == NULL) {
-            tmp_task = lFirst(lGetList(job, JB_ja_template));
-         }
-
-         lSetDouble(tmp_sge_job, SGEJ_priority,
-                    lGetDouble(tmp_task, JAT_prio));
-      }
-
+      lSetDouble(tmp_sge_job, SGEJ_ticket, 
+         lGetDouble(lFirst(lGetList(job, JB_ja_template)), JAT_ticket));
       lSetUlong(tmp_sge_job, SGEJ_job_number, lGetUlong(job, JB_job_number));
       lSetRef(tmp_sge_job, SGEJ_job_reference, job);
 #if 1
-      DPRINTF(("JOB: "u32" PRIORITY: "u32"\n", 
+      DPRINTF(("JOB: "u32" TICKETS: "u32"\n", 
          lGetUlong(tmp_sge_job, SGEJ_job_number), 
-         lGetDouble(tmp_sge_job, SGEJ_priority)));
+         lGetDouble(tmp_sge_job, SGEJ_ticket)));
 #endif
       lAppendElem(tmp_list, tmp_sge_job);
       
@@ -964,7 +1031,7 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
    /*-----------------------------------------------------------------
     * Sort tmp list
     *-----------------------------------------------------------------*/
-   lPSortList(tmp_list, "%I- %I+", SGEJ_priority, SGEJ_job_number);
+   lPSortList(tmp_list, "%I- %I+", SGEJ_ticket, SGEJ_job_number);
 
    /*-----------------------------------------------------------------
     * rebuild job_list according sort order

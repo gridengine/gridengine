@@ -31,13 +31,14 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include "sge_conf.h"
-#include "gdi_conf.h"
 #include "dispatcher.h"
 #include "execd_get_new_conf.h"
 #include "sge_load_sensor.h"
 #include "sgermon.h"
 #include "admin_mail.h"
 #include "sge_string.h"
+
+extern lList *execd_config_list;
 
 /*
 ** DESCRIPTION
@@ -60,7 +61,7 @@ int answer_error;
 
    unpackint(pb, &dummy);
 
-   ret = get_merged_configuration(&Master_Config_List);
+   ret = get_merged_configuration(&execd_config_list);
 
    /*
    ** admin mail block is released on new conf

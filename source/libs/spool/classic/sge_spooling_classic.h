@@ -32,53 +32,22 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
-#include "spool/sge_spooling.h"
+#include "sge_spooling.h"
 
-const char *get_spooling_method(void);
+lListElem *spool_classic_create_context(const char *config_dir, 
+                                        const char *spool_dir);
 
-lListElem *
-spool_classic_create_context(lList **answer_list, const char *args);
+int spool_classic_default_startup_func(const lListElem *rule);
+int spool_classic_common_startup_func(const lListElem *rule);
 
-bool 
-spool_classic_default_startup_func(lList **answer_list, 
-                                   const lListElem *rule, bool check);
-bool 
-spool_classic_common_startup_func(lList **answer_list, 
-                                  const lListElem *rule, bool check);
-
-bool 
-spool_classic_default_maintenance_func(lList **answer_list, 
-                                       const lListElem *rule,
-                                       const spooling_maintenance_command cmd,
-                                       const char *args);
-
-bool 
-spool_classic_common_maintenance_func(lList **answer_list, 
-                                      const lListElem *rule,
-                                      const spooling_maintenance_command cmd,
-                                      const char *args);
-
-bool 
-spool_classic_default_list_func(lList **answer_list, 
-                                const lListElem *type, 
-                                const lListElem *rule, lList **list, 
-                                const sge_object_type object_type);
-lListElem *
-spool_classic_default_read_func(lList **answer_list, 
-                                const lListElem *type, 
-                                const lListElem *rule, const char *key, 
-                                const sge_object_type object_type);
-bool 
-spool_classic_default_write_func(lList **answer_list, 
-                                 const lListElem *type, 
-                                 const lListElem *rule, 
-                                 const lListElem *object, const char *key, 
-                                 const sge_object_type object_type);
-bool 
-spool_classic_default_delete_func(lList **answer_list, 
-                                  const lListElem *type, 
-                                  const lListElem *rule, 
-                                  const char *key, 
-                                  const sge_object_type object_type);
+int spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
+                                    lList **list, const sge_event_type event_type);
+lListElem *spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
+                                           const char *key, const sge_event_type event_type);
+int spool_classic_default_write_func(const lListElem *type, const lListElem *rule, 
+                                     const lListElem *object, const char *key, 
+                                     const sge_event_type event_type);
+int spool_classic_default_delete_func(const lListElem *type, const lListElem *rule, 
+                                      const char *key, const sge_event_type event_type);
 
 #endif /* __SGE_SPOOLING_CLASSIC_H */    

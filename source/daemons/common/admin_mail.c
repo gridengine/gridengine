@@ -38,7 +38,7 @@
 #include "sge_usageL.h"
 #include "sge_time.h"
 #include "execution_states.h"
-#include "sge_mailrec.h"
+#include "parse_mail.h"
 #include "admin_mail.h"
 #include "mail.h"
 #include "sgermon.h"
@@ -78,8 +78,7 @@ int admail_states[MAX_SSTATE + 1] = {
 /* 26 SSTATE_OPEN_OUTPUT         */   0,
 /* 27 SSTATE_NO_SHELL            */   0,
 /* 28 SSTATE_NO_CWD              */   0,
-/* 29 SSTATE_AFS_PROBLEM         */   0,
-/* 30 SSTATE_APPERROR            */   0 };
+/* 29 SSTATE_AFS_PROBLEM         */   0 };
 
 u_long32 admail_times[MAX_SSTATE + 1];
 
@@ -117,12 +116,8 @@ int is_array
    FILE *fp;
    int start = 0;
    const char *job_owner;   
-   dstring ds;
-   char buffer[128];
 
    DENTER(TOP_LAYER, "job_related_adminmail");
-
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    DPRINTF(("sizeof(admail_times) : %d\n", sizeof(admail_times)));
    if (first) {
@@ -143,11 +138,11 @@ int is_array
    if (!(h=lGetHost(jr, JR_host_name)))
       h = MSG_MAIL_UNKNOWN_NAME;
    if ((ep=lGetSubStr(jr, UA_name, "start_time", JR_usage)))
-      strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value), &ds));
+      strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value)));
    else   
       strcpy(sge_mail_start, MSG_MAIL_UNKNOWN_NAME);
    if ((ep=lGetSubStr(jr, UA_name, "end_time", JR_usage)))
-      strcpy(sge_mail_end, sge_ctime((u_long32)lGetDouble(ep, UA_value), &ds));
+      strcpy(sge_mail_end, sge_ctime((u_long32)lGetDouble(ep, UA_value)));
    else   
       strcpy(sge_mail_end, MSG_MAIL_UNKNOWN_NAME);
 
@@ -162,9 +157,6 @@ int is_array
    
    if (failed) {
       const char *err_str;
-      dstring ds;
-      char buffer[256];
-      sge_dstring_init(&ds, buffer, sizeof(buffer));
 
       if (failed <= MAX_SSTATE) {
          /*
@@ -200,7 +192,7 @@ int is_array
       if (!(err_str=lGetString(jr, JR_err_str)))
          err_str = MSG_MAIL_UNKNOWN_REASON;
 
-      ret = mailrec_parse(&lp_mail, conf.administrator_mail);
+      ret = cull_parse_mail_list(&lp_mail, conf.administrator_mail);
       if (ret) {
          ERROR((SGE_EVENT, MSG_MAIL_PARSE_S,
             (conf.administrator_mail ? conf.administrator_mail : MSG_NULL)));
@@ -225,10 +217,10 @@ int is_array
       }
       if (is_array)
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_SUU, 
-                 feature_get_product_name(FS_SHORT_VERSION, &ds), u32c(jobid), u32c(jataskid));
+                 feature_get_product_name(FS_SHORT_VERSION), u32c(jobid), u32c(jataskid));
       else
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_SU, 
-                 feature_get_product_name(FS_SHORT_VERSION, &ds), u32c(jobid));
+                 feature_get_product_name(FS_SHORT_VERSION), u32c(jobid));
       sprintf(sge_mail_body,
               MSG_MAIL_BODY_USSSSSSSS,
               u32c(jobid),

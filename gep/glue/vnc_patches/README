@@ -41,26 +41,26 @@ Downloads for Solaris
 ---------------------
 
 vnc-3.3.3r2_javasrc.tgz
-vnc-3.3.7-sparc_solaris_2.5.tar.gz
-vnc-3.3.7-documentation.tar.gz
+vnc-3.3.5-sparc_solaris_2.5.tar.gz
+vnc-3.3.5-documentation.tar.gz
 
 
 Installation and application of these patches
 ---------------------------------------------
 
-Unpack vnc-3.3.7-sparc_solaris_2.5.tar.gz in $GEP_ROOT and 
-vnc-3.3.3r2_javasrc.tgz in $GEP_ROOT/vnc-3.3.7-sparc_solaris_2.5 
+Unpack vnc-3.3.5-sparc_solaris_2.5.tar.gz in $SGP_ROOT and 
+vnc-3.3.3r2_javasrc.tgz in $SGP_ROOT/vnc-3.3.5-sparc_solaris_2.5 
 and apply the delivered patches as outlined here.
 
-In $GEP_ROOT do (as root; check 1st, if make and java is in your path):
+In $SGP_ROOT do (as root; check 1st, if make and java is in your path):
 
-# gzip -dc /tmp/vnc-3.3.7-sparc_solaris_2.5.tar.gz | tar xvf - 
-# cd vnc-3.3.7-sparc_solaris_2.5
+# gzip -dc /tmp/vnc-3.3.5-sparc_solaris_2.5.tar.gz | tar xvf - 
+# cd vnc-3.3.5-sparc_solaris_2.5
 # gzip -dc /tmp/vnc-3.3.3r2_javasrc.tgz| tar xvf -
 # cd ..
 # vnc_patches/applyVncPatches
 
-Check permissions, if everything is alright proceed with the GEP installation.
+Check permissions, if everything is alright proceed with the SGP installation.
 
 # ./install -gp
 

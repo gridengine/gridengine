@@ -47,7 +47,7 @@
 #include "commlib.h"
 #include "execd_signal_queue.h"
 #include "sig_handlers.h"
-#include "spool/classic/read_write_job.h"
+#include "read_write_job.h"
 #include "sge_prog.h"
 #include "symbols.h"
 #include "sge_time.h"
@@ -57,9 +57,9 @@
 #include "sge_conf.h"
 #include "sge_usageL.h"
 #include "mail.h"
+#include "admin_mail.h"
 #include "get_path.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
+#include "sge_queue.h"
 #include "sge_report_execd.h"
 #include "sge_report.h"
 
@@ -133,7 +133,8 @@ int answer_error;
                      /* if the queue gets suspended and the job is already suspended
                         we do not deliver a signal */
                      if (signal == SGE_SIGSTOP) {
-                        qinstance_state_set_manual_suspended(master_q, true);
+                        lSetUlong(master_q, QU_state, lGetUlong(master_q, QU_state) | 
+                              QSUSPENDED);
                         if (!VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
                            if (lGetUlong(jep, JB_checkpoint_attr)& CHECKPOINT_SUSPEND) {
                               INFO((SGE_EVENT, MSG_JOB_INITMIGRSUSPQ_U, u32c(lGetUlong(jep, JB_job_number))));
@@ -143,11 +144,12 @@ int answer_error;
                               sge_send_suspend_mail(signal,master_q ,jep, jatep); 
                            }
                         }   
-                     } else {
+                     } 
+                     else {
                         /* if the signal is a unsuspend and the job is suspended
                            we do not deliver a signal */
                         if (signal == SGE_SIGCONT) {
-                           qinstance_state_set_manual_suspended(master_q, false);
+                           lSetUlong(master_q, QU_state, lGetUlong(master_q, QU_state) & ~QSUSPENDED);
                            if (!VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
                               if ( sge_execd_deliver_signal(signal, jep, jatep) == 0) {
                                  sge_send_suspend_mail(signal,master_q ,jep, jatep); 
@@ -357,11 +359,7 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
        const char *job_master_queue = NULL;
        const char *job_owner = NULL; 
        const char *mail_type = "unknown";
-
-       dstring ds;
-       char buffer[128];
       
-       sge_dstring_init(&ds, buffer, sizeof(buffer));
 
 
        /* get values */       
@@ -396,8 +394,8 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
 
 
        /* make human readable time format */
-       sprintf(job_sub_time_str ,"%s",sge_ctime(job_sub_time, &ds));
-       sprintf(job_exec_time_str,"%s",sge_ctime(job_exec_time, &ds));
+       sprintf(job_sub_time_str ,"%s",sge_ctime(job_sub_time ));
+       sprintf(job_exec_time_str,"%s",sge_ctime(job_exec_time));
 
        if (signal == SGE_SIGSTOP) {
           /* suspended */
@@ -515,8 +513,7 @@ const char *pe_task_id
       direct_signal = 0;        /* communication has to be done via file */
    }
 
-   DPRINTF(("signalling job/task "SFN", pid "pid_t_fmt" with %d\n", 
-            job_get_id_string(job_id, ja_task_id, pe_task_id), pid, sig));
+   DPRINTF(("signalling pid "pid_t_fmt" with %d\n", pid, sig));
    if (!direct_signal) {
       dstring fname = DSTRING_INIT;
       FILE *fp;
@@ -654,7 +651,7 @@ u_long32 signal
          and we unsuspend the job. 
          The Job should stay sleeping */
 
-      if (!qinstance_state_is_manual_suspended(master_q)) {
+      if (!(lGetUlong(master_q, QU_state) & QSUSPENDED)) {
          getridofjob = sge_execd_deliver_signal(signal, jep, jatep);
          if ((!getridofjob) && (suspend_change == 1) ) {
             send_mail = 1;
@@ -688,7 +685,7 @@ u_long32 signal
          getridofjob = sge_execd_deliver_signal(signal, jep, jatep);
          if ( (!getridofjob) && (suspend_change == 1) ) {
             mq_state = lGetUlong(master_q, QU_state);
-            if (!qinstance_state_is_manual_suspended(master_q)) {
+            if ( (!(mq_state & QSUSPENDED)) ) {
                send_mail = 2;
             }
          }

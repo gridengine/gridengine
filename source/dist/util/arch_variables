@@ -32,7 +32,7 @@
 ##########################################################################
 #___INFO__MARK_END__
 #
-# Get Grid Engine architecture and set architecture dependent variables.
+# Get Grid Engine architecture and set architecutre dependent variables.
 # This script is *sourced* by the installation procedure
 #
 # There are also a couple of shell functions defined which are used by other
@@ -50,10 +50,8 @@ else
    exit 1
 fi
 
-ROOTGROUP=root
-
 case $ARCH in
- sol-*)
+ solaris|solaris64|solaris86)
    AWK=/usr/bin/nawk
    ECHO=/usr/bin/echo
    RC_FILE=sysv_rc
@@ -66,7 +64,7 @@ case $ARCH in
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
    GETTEXT=/usr/bin/gettext
    ;;
- lx*)
+ alinux|glinux|slinux)
    AWK=/usr/bin/gawk
    ECHO="/bin/echo -e"
    if [ -x /sbin/insserv ]; then
@@ -86,7 +84,7 @@ case $ARCH in
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
    GETTEXT=/usr/bin/gettext
    ;;
- tru64)
+ osf4|tru64)
    AWK=/usr/bin/nawk
    ECHO=/usr/bin/echo
    RC_FILE=sysv_rc
@@ -98,7 +96,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/sbin/telnetd
    RLOGIN_DAEMON=/usr/sbin/rlogind
    ;;
- irix*)
+ irix6|irix65)
    AWK=/usr/bin/nawk
    ECHO=/sbin/echo
    RC_FILE=sysv_rc
@@ -110,7 +108,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/etc/telnetd
    RLOGIN_DAEMON=/usr/etc/rlogind
    ;;
- hp*)
+ hp10|hp11|hp11-64)
    AWK=/usr/bin/awk
    ECHO=/bin/echo
    RC_FILE=sysv_rc
@@ -122,7 +120,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/lbin/telnetd
    RLOGIN_DAEMON=/usr/lbin/rlogind
    ;;
- aix*)
+ aix42|aix43)
    AWK=/usr/bin/nawk
    ECHO=/usr/bin/echo
    RC_FILE=/etc/rc
@@ -132,7 +130,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/sbin/telnetd
    RLOGIN_DAEMON=/usr/sbin/rlogind
    ;;
- cray*)
+ cray|crayts|craytsieee)
    AWK=/usr/bin/nawk
    ECHO=/bin/echo
    RC_FILE=/etc/rc
@@ -142,7 +140,7 @@ case $ARCH in
    QLOGIN_DAEMON=/etc/telnetd
    RLOGIN_DAEMON=/etc/rlogind
    ;;
- nec*|sx*)
+ necsx4|necsx5)
    AWK=/usr/bin/nawk
    ECHO=/usr/bin/echo
    RC_FILE=
@@ -151,37 +149,6 @@ case $ARCH in
    QLOGIN_COMMAND=telnet
    QLOGIN_DAEMON=/usr/sbin/in.telnetd
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
-   ;;
- fbsd-*)
-   AWK=/usr/bin/awk
-   ECHO="/bin/echo"
-   RC_FILE=fbsd
-   RC_PREFIX=/usr/local/etc/rc.d
-   RC_SUFFIX=.sh
-   XTERM=/usr/X11R6/bin/xterm
-   MAILER=/usr/bin/mail
-   QLOGIN_COMMAND=telnet
-   QLOGIN_DAEMON=/usr/libexec/telnetd
-   RLOGIN_DAEMON=/usr/libexec/rlogind
-   GETTEXT=/usr/local/bin/gettext
-   ROOTGROUP=wheel
-   ;;
- darwin)
-   AWK=/usr/bin/awk
-   ECHO=/bin/echo
-   RC_FILE=SGE
-   RC_DIR=SGE
-   RC_PREFIX=/Library/StartupItems
-   if [ -x /sw/bin/Eterm ]; then
-      XTERM=/sw/bin/Eterm
-   else
-      XTERM=/usr/bin/X11/xterm
-   fi
-   MAILER=/usr/bin/mail
-   QLOGIN_COMMAND=telnet
-   QLOGIN_DAEMON=/usr/libexec/telnetd
-   RLOGIN_DAEMON=/usr/libexec/rlogind
-   ROOTGROUP=wheel
    ;;
  *)
    echo "Architecture $ARCH not supported by this procedure!"
@@ -460,7 +427,7 @@ TruncCreateAndMakeWriteable()
 #
 SetAdminUser()
 {
-   cfgname=$SGE_ROOT/$SGE_CELL/common/bootstrap
+   cfgname=$SGE_ROOT/$SGE_CELL/common/configuration
  
    if [ -f $cfgname ]; then
       user=`env LC_ALL=C grep admin_user $cfgname | env LC_ALL=C awk '{ print $2 }'`

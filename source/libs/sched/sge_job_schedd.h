@@ -49,8 +49,6 @@ void sge_dec_jc(lList** jcpp, const char *name, int slots);
 
 int resort_jobs(lList *jc, lList *job_list, const char *owner, lSortOrder *so);
 
-int job_get_next_task(lListElem *job, lListElem **task_ret, u_long32 *id_ret);
-
 /*
  * drop all running jobs into the running list 
  *
@@ -107,6 +105,8 @@ lList *filter_max_running_1step(lList *pending_jobs, lList *running_jobs, lList 
 lList *filter_max_running(lList *pending_jobs, lList *jct_list, int max_jobs, int elem);
 
 void trace_job_sort(lList *job_list);
+
+int get_job_contribution(double *dvalp, const char *name, lListElem *jep, lListElem *dcep);
 
 int nslots_granted(lList *granted, const char *qhostname);
 
@@ -182,28 +182,21 @@ enum {
    SPLIT_LAST
 };
 
-void 
-split_jobs(lList **job_list, lList **answer_list, lList *queue_list,
-           u_long32 max_aj_instances, lList **result_lists[]); 
+void split_jobs(lList **job_list, lList **answer_list, lList *queue_list,
+                u_long32 max_aj_instances, lList **result_lists[]); 
 
-void 
-job_lists_split_with_reference_to_max_running(lList **job_lists[],
-                                              lList **user_list,
-                                              const char *user_name,
-                                              int max_jobs_per_user);
+void job_lists_split_with_reference_to_max_running(lList **job_lists[],
+                                                   lList **user_list,
+                                                   int max_jobs_per_user);
 
-void 
-job_move_first_pending_to_running(lListElem **pending_job,
-                                  lList **result_lists[]);
+void job_move_first_pending_to_running(lListElem **pending_job,
+                                       lList **result_lists[]);
 
-void 
-trash_splitted_jobs(lList **job_list[]);
+void trash_splitted_jobs(lList **job_list[]);
 
-void 
-job_lists_print(lList **job_list[]);
+void job_lists_print(lList **job_list[]);
 
-void 
-user_list_init_jc(lList **user_list, lList **splitted_job_lists[]);
+void user_list_init_jc(lList **user_list, const lList *running_list);
 
 #endif /* __SGE_JOB_SCHEDD_H */
 

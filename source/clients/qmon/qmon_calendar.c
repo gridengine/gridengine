@@ -399,7 +399,7 @@ XtPointer cld, cad;
    
    if (cal) {
       if (qmonCalendarGetAsk(lFirst(cal))) {
-         calname = (StringConst)lGetString(lFirst(cal), CAL_name);
+         calname = lGetString(lFirst(cal), CAL_name);
          /*
          ** gdi call 
          */
@@ -516,15 +516,15 @@ lListElem *calp
       return;
    }
 
-   cal_name = (StringConst)lGetString(calp, CAL_name);
+   cal_name = lGetString(calp, CAL_name);
    if (cal_name)
       XmtInputFieldSetString(cal_name_w, cal_name);
 
-   year_calendar = (StringConst)lGetString(calp, CAL_year_calendar);
+   year_calendar = lGetString(calp, CAL_year_calendar);
    if (year_calendar)
       XmtInputFieldSetString(cal_year_w, year_calendar);
 
-   week_calendar = (StringConst)lGetString(calp, CAL_week_calendar);
+   week_calendar = lGetString(calp, CAL_week_calendar);
    if (week_calendar)
       XmtInputFieldSetString(cal_week_w, week_calendar);
 

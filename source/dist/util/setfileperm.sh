@@ -46,7 +46,7 @@
 # permissions.
 #
 
-PATH=/bin:/usr/bin:/usr/sbin
+PATH=/bin:/usr/bin
 
 SECFILELIST="bin lib utilbin"
 
@@ -214,7 +214,7 @@ done
 # These files and dirs are owned by root for security reasons
 for f in $SECFILELIST; do
    if [ -d $f -o -f $f ]; then
-      SetFilePerm $f root $ROOTGROUP
+      SetFilePerm $f root root
    fi
 done
 

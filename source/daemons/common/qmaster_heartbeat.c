@@ -34,6 +34,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include "sge_log.h" 
 #include "sgermon.h"
 #include "sge_log.h"
 #include "qmaster_heartbeat.h"

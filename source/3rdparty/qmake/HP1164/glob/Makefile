@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = ..
 
-ACLOCAL =  aclocal
-AUTOCONF =  autoconf
-AUTOMAKE =  automake
-AUTOHEADER =  autoheader
+ACLOCAL = /cod_home/jg114090/V53_beta2_BRANCH/source/3rdparty/qmake/missing aclocal
+AUTOCONF = /cod_home/jg114090/V53_beta2_BRANCH/source/3rdparty/qmake/missing autoconf
+AUTOMAKE = /cod_home/jg114090/V53_beta2_BRANCH/source/3rdparty/qmake/missing automake
+AUTOHEADER = /cod_home/jg114090/V53_beta2_BRANCH/source/3rdparty/qmake/missing autoheader
 
 INSTALL = ../../install-sh -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,7 +68,7 @@ CPP = cc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS =  getloadavg.o
-MAKEINFO =  makeinfo
+MAKEINFO = /cod_home/jg114090/V53_beta2_BRANCH/source/3rdparty/qmake/missing makeinfo
 MAKE_HOST = hppa2.0w-hp-hpux11.11
 PACKAGE = make
 PERL = perl
@@ -96,7 +96,7 @@ LDFLAGS =
 LIBS = -lelf 
 libglob_a_LIBADD = 
 libglob_a_OBJECTS =  glob.o fnmatch.o
-CFLAGS = -g +DD64
+CFLAGS = -g
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
@@ -113,12 +113,12 @@ OBJECTS = $(libglob_a_OBJECTS)
 all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .S .c .o .s
-#$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-#	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps glob/Makefile
-#
-#Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
-#	cd $(top_builddir) \
-#	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps glob/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 
 mostlyclean-noinstLIBRARIES:

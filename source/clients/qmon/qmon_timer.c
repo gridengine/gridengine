@@ -34,8 +34,8 @@
 
 #include "commlib.h"
 #include "sge_all_listsL.h"
+#include "sge_gdi_intern.h"
 #include "sge_answer.h"
-#include "sge_any_request.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_timer.h"
@@ -54,10 +54,9 @@ static char *sge_gdi_list_timers[] = {
    "SUBMITHOST",
    "EXECHOST",
    "QUEUE",
-   "CQUEUE",
    "JOB",
    "EVENT",
-   "CENTRY",
+   "COMPLEX",
    "ORDER",
    "MASTER_EVENT",
    "CONFIG",
@@ -73,8 +72,6 @@ static char *sge_gdi_list_timers[] = {
    "CALENDAR",
    "SCHEDD_INFO",
    "ZOMBIE_JOBS",
-   "USER_MAPPING",
-   "HGROUP",
    "END"
 };
 
@@ -85,10 +82,10 @@ static tQmonPoll QmonListTimer[] = {
    { SGE_ADMINHOST_LIST, 0, 1, 0, NULL },  
    { SGE_SUBMITHOST_LIST, 0, 1, 0, NULL },  
    { SGE_EXECHOST_LIST, 0, 1, 0, NULL },  
-   { SGE_CQUEUE_LIST, 0, 1, 0, NULL },  
+   { SGE_QUEUE_LIST, 0, 1, 0, NULL },  
    { SGE_JOB_LIST, 0, 1, 0, NULL },  
    { SGE_EVENT_LIST, 0, 1, 0, NULL },  
-   { SGE_CENTRY_LIST, 0, 1, 0, NULL },  
+   { SGE_COMPLEX_LIST, 0, 1, 0, NULL },  
    { SGE_ORDER_LIST, 0, 1, 0, NULL },  
    { SGE_MASTER_EVENT, 0, 1, 0, NULL },  
    { SGE_CONFIG_LIST, 0, 1, 0, NULL },  
@@ -104,8 +101,6 @@ static tQmonPoll QmonListTimer[] = {
    { SGE_CALENDAR_LIST, 0, 1, 0, NULL },
    { SGE_JOB_SCHEDD_INFO, 0, 1, 0, NULL },
    { SGE_ZOMBIE_LIST, 0, 1, 0, NULL },
-   { SGE_USER_MAPPING_LIST, 0, 1, 0, NULL },
-   { SGE_HGROUP_LIST, 0, 1, 0, NULL },
    { 0, 0, 0, 0, NULL}
 };
 
@@ -391,14 +386,18 @@ XtIntervalId *id
    ** and leave the timerproc
    */
    status = check_isalive(sge_get_master(0));
+   DPRINTF(("check_isalive() returns %d (%s)\n", status, cl_errstr(status)));
 
-   DPRINTF(("check_isalive() returns %d (%s)\n", status, cl_get_error_text(status)));
-   if (status != CL_RETVAL_OK) {
-      sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster: %s", "cannot reach qmaster: %s"), cl_get_error_text(status));
+   if (status != CL_OK) {
+      if (status == CL_UNKNOWN_RECEIVER)
+         sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster", "cannot reach qmaster"));
+      else
+         sprintf(msg, XmtLocalize(AppShell, "cannot reach %s", "cannot reach %s"), cl_errstr(status));
+
       contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
                                                 msg, "@{Retry}", "@{Abort}",
                                                 XmtYesButton, NULL);
-            /*
+      /*
       ** we don't want to retry, so go down
       */
       if (!contact_ok) {

@@ -38,12 +38,12 @@
 #include "load_correction.h"
 #include "sgermon.h"
 #include "sge_time.h"
+#include "schedd_conf.h"
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
+#include "sge_complex.h"
+#include "sge_queue.h"
 #include "sge_host.h"
-#include "sge_centry.h"
-#include "sge_schedd_conf.h"
-#include "sge_qinstance.h"
 
 int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
                   u_long32 decay_time) 
@@ -93,7 +93,7 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
             u_long32 slots;
             
             qnm = lGetString(granted_queue, JG_qname);
-            qep = qinstance_list_locate2(queue_list, qnm);
+            qep = queue_list_locate(queue_list, qnm);
             if (qep == NULL) {
                DPRINTF(("Unable to find queue \"%s\" from gdil "
                         "list of job "u32"."u32"\n", qnm, job_id, ja_task_id));
@@ -161,9 +161,10 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
  *  attributes where also load values are available
  *
  */
-int 
-correct_capacities(lList *host_list, lList *centry_list) 
-{
+int correct_capacities(
+lList *host_list,
+lList *complex_list 
+) {
    lListElem *hep, *ep, *cep; 
    lListElem *job_load, *scaling, *total, *inuse_rms;
    u_long32 type, relop;
@@ -179,7 +180,7 @@ correct_capacities(lList *host_list, lList *centry_list)
          const char *attr_name = lGetString(ep, HL_name);
  
          /* seach for appropriate complex attribute */
-         if (!(cep=centry_list_locate(centry_list, attr_name)))
+         if (!(cep=complex_list_locate_attr(complex_list, attr_name)))
             continue;
 
          type = lGetUlong(cep, CE_valtype);
@@ -206,7 +207,7 @@ correct_capacities(lList *host_list, lList *centry_list)
             continue;
          if (!(total=lGetSubStr(hep, CE_name, attr_name, EH_consumable_config_list)))
             continue;
-         if (!(inuse_rms=lGetSubStr(hep, CE_name, attr_name, EH_resource_utilization)))
+         if (!(inuse_rms=lGetSubStr(hep, CE_name, attr_name, EH_consumable_actual_list)))
             continue;
 
          relop = lGetUlong(cep, CE_relop);
@@ -218,7 +219,7 @@ correct_capacities(lList *host_list, lList *centry_list)
 
          /* do load correction */
          load_correction = 0;
-         if ((job_load=lGetElemStr(sconf_get_job_load_adjustments(), CE_name, attr_name))) {
+         if ((job_load=lGetElemStr(scheddconf.job_load_adjustments, CE_name, attr_name))) {
             double lc_factor;
             const char *s = lGetString(job_load, CE_stringval);
 
@@ -233,14 +234,14 @@ correct_capacities(lList *host_list, lList *centry_list)
 
          /* use scaled load value to deduce the amount */
          full_capacity = lGetDouble(total, CE_doubleval);
-         inuse_ext = full_capacity - lGetDouble(inuse_rms, RUE_utilized_now) - dval;
+         inuse_ext = full_capacity - lGetDouble(inuse_rms, CE_doubleval) - dval;
 
          if (inuse_ext > 0.0) {
             lSetDouble(total, CE_doubleval, full_capacity - inuse_ext);
 
             DPRINTF(("%s:%s %8.3f --> %8.3f (ext: %8.3f = all %8.3f - ubC %8.3f - load %8.3f) lc = %8.3f\n",
                host_name, attr_name, full_capacity, lGetDouble(total, CE_doubleval),
-               inuse_ext, full_capacity, lGetDouble(inuse_rms, RUE_utilized_now), dval, load_correction));
+               inuse_ext, full_capacity, lGetDouble(inuse_rms, CE_doubleval), dval, load_correction));
          } else
             DPRINTF(("ext: %8.3f <= 0\n", inuse_ext));
       }

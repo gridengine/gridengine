@@ -6,14 +6,14 @@
 
 <web-app>
     <servlet>
-        <servlet-name>GEPServlet</servlet-name>
+        <servlet-name>SunTCP</servlet-name>
         <servlet-class>
-            com.sun.gep.GEPServlet
+            com.sun.gep.SunTCP
         </servlet-class>
         <init-param>
-            <param-name>gep_root</param-name>
+            <param-name>sgp_root</param-name>
             <param-value>
-                GEP_ROOT/
+                SGP_ROOT/
             </param-value>
             <description></description>
         </init-param>
@@ -52,59 +52,56 @@
             </param-value>
             <description></description>
         </init-param>
+        <load-on-startup/>
+    </servlet>
+    <servlet>
+        <servlet-name>AdminTCP</servlet-name>
+        <servlet-class>
+            com.sun.gep.AdminTCP
+        </servlet-class>
         <init-param>
-            <param-name>gep_su_script</param-name>
+            <param-name>sgp_root</param-name>
             <param-value>
-                .suntcp-su
+                SGP_ROOT/
             </param-value>
             <description></description>
         </init-param>
         <init-param>
-            <param-name>gep_list</param-name>
+            <param-name>app_home</param-name>
             <param-value>
-                .suntcp-list
+                APP_HOME/
             </param-value>
             <description></description>
         </init-param>
         <init-param>
-            <param-name>gep_app</param-name>
+            <param-name>sge_root</param-name>
             <param-value>
-                .suntcp-app
+                SGE_ROOT/
             </param-value>
             <description></description>
         </init-param>
         <init-param>
-            <param-name>gep_app_form</param-name>
+            <param-name>sge_cell</param-name>
             <param-value>
-                .suntcp-form
+                SGE_CELL
             </param-value>
             <description></description>
         </init-param>
         <init-param>
-            <param-name>gep_qsub_script</param-name>
+            <param-name>commd_port</param-name>
             <param-value>
-                .suntcp-qsub
-            </param-value>
-            <description></description>
-        </init-param>
-        <init-param>
-            <param-name>gep_project_dir</param-name>
-            <param-value>
-                /suntcp/
-            </param-value>
-            <description></description>
-        </init-param>
-        <init-param>
-            <param-name>gep_project</param-name>
-            <param-value>
-                .suntcp-project
+                COMMD_PORT
             </param-value>
             <description></description>
         </init-param>
         <load-on-startup/>
     </servlet>
-    <servlet-mapping>
-       <servlet-name>GEPServlet</servlet-name>
-       <url-pattern>/GEPServlet</url-pattern>
-    </servlet-mapping>
+<servlet-mapping>
+    <servlet-name>SunTCP</servlet-name>
+    <url-pattern>/SunTCP</url-pattern>
+</servlet-mapping>
+<servlet-mapping>
+    <servlet-name>AdminTCP</servlet-name>
+    <url-pattern>/AdminTCP</url-pattern>
+</servlet-mapping>
 </web-app>

@@ -55,7 +55,6 @@ typedef struct sge_infotext_opt {
       char* yes; /* yes parameter for -ask */
       char* no;  /* no parameter for -ask */
       char* def; /* default parameter for -ask */
-      int log; /* file logging on/off */
    } sge_infotext_options;
 
 
@@ -65,7 +64,7 @@ static void  sge_infotext_welcome(void);
 static void  sge_infotext_raw(char* format_string);
 static void  sge_infotext_usage(void);
 static int   sge_infotext_get_nr_of_substrings(char* buffer, char* substring);
-#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || __GNUC__ == 3
+#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164) || __GNUC__ == 3
 static char* sge_infotext_string_replace(dstring* buf, char* arg, char* what, char* with, int only_first );
 #endif
 static char* sge_infotext_string_input_parsing(dstring* buf,char* string);
@@ -139,7 +138,7 @@ static char* sge_infotext_make_line_break(dstring* buffer, char* text) {
 }
 
 
-static char* sge_infotext_build_test_msgstr(dstring* buffer, char* text) {
+char* sge_infotext_build_test_msgstr(dstring* buffer, char* text) {
    int h;
    char app_text[2];
 
@@ -168,7 +167,7 @@ static char* sge_infotext_build_test_msgstr(dstring* buffer, char* text) {
    return (char*) sge_dstring_get_string(buffer);
 }
 
-static const char* sge_infotext_build_dash(dstring* dash_buf, sge_infotext_options* options) {
+const char* sge_infotext_build_dash(dstring* dash_buf, sge_infotext_options* options) {
    int i;
  
    sge_dstring_copy_string(dash_buf,"");
@@ -184,7 +183,7 @@ static const char* sge_infotext_build_dash(dstring* dash_buf, sge_infotext_optio
 
 
 
-static char* sge_infotext_get_next_word(dstring* buf, char* text) {
+char* sge_infotext_get_next_word(dstring* buf, char* text) {
    char* p1;
    char* buffer;
    int i,b,not_last,nr_spaces;
@@ -242,7 +241,7 @@ static char* sge_infotext_get_next_word(dstring* buf, char* text) {
    return p1;
 }
 
-static void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options, char* text) {
+void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options, char* text) {
    char* column_var = NULL;
    int max_column = 79;
    char* tp = NULL;
@@ -379,7 +378,7 @@ static void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* 
 }
 
 
-static void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, dstring* line_arg) {
+void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, dstring* line_arg) {
    int i;
    FILE* output;
    int line_length;
@@ -420,31 +419,30 @@ static void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* op
       output=stderr;
    }
 
-   if ((getenv("SGE_NOMSG") != NULL && options->log == 1) || (getenv("SGE_NOMSG") == NULL && options->log == 0)) {
-      fprintf(output,"%s",sge_dstring_get_string(&line));
-      if (options->n != 1 && line_length > 0 ) {
+   fprintf(output,"%s",sge_dstring_get_string(&line));
+   if (options->n != 1 && line_length > 0 ) {
+      fprintf(output,"\n");
+   }
+
+   if (options->u == 1 && line_length > 0) {
+      if (options->n == 1) {
          fprintf(output,"\n");
       }
-
-      if (options->u == 1 && line_length > 0) {
-         if (options->n == 1) {
-            fprintf(output,"\n");
-         }
-         for(i=0;i<line_length;i++) {
-            fprintf(output,SGE_INFOTEXT_UNDERLINE);
-         }
-         if (options->n != 1) {
-            fprintf(output,"\n");
-         }
+      for(i=0;i<line_length;i++) {
+         fprintf(output,SGE_INFOTEXT_UNDERLINE);
+      }
+      if (options->n != 1) {
+         fprintf(output,"\n");
       }
    }
+
    sge_dstring_free(&line);  
    sge_dstring_free(&dash);
    sge_dstring_free(&line_buf_buffer);
 }
 
 
-static char* sge_infotext_string_input_parsing(dstring* string_buffer,char* string) {
+char* sge_infotext_string_input_parsing(dstring* string_buffer,char* string) {
     char* h1 = NULL;
     char* h2 = NULL;
     char buf[10];
@@ -503,7 +501,7 @@ static char* sge_infotext_string_input_parsing(dstring* string_buffer,char* stri
     return (char*)sge_dstring_get_string(string_buffer);
 }
 
-static char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
+char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
     char* h1 = NULL;
     char buf[10];
 
@@ -538,7 +536,7 @@ static char* sge_infotext_string_output_parsing(dstring* string_buffer,char* str
 }
 
 
-#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || __GNUC__ == 3
+#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164) || __GNUC__ == 3
 static char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
    int i;
    char* p1;
@@ -578,7 +576,7 @@ static char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what
 }
 #endif
 
-static int  sge_infotext_get_nr_of_substrings(char* buffer, char* substring) {
+int  sge_infotext_get_nr_of_substrings(char* buffer, char* substring) {
    char* p1 = NULL;
    char* buf = NULL;
    int nr = 0;
@@ -595,7 +593,7 @@ static int  sge_infotext_get_nr_of_substrings(char* buffer, char* substring) {
  
 
 
-static void sge_infotext_welcome(void) {
+void sge_infotext_welcome(void) {
 
    char* user = NULL;
    user = getenv("USER");
@@ -610,7 +608,7 @@ static void sge_infotext_welcome(void) {
 
 }
 
-static void sge_infotext_raw(char* format_string) {
+void sge_infotext_raw(char* format_string) {
    const char* buffer = NULL;
    dstring tmp_buf = DSTRING_INIT;
 
@@ -620,7 +618,7 @@ static void sge_infotext_raw(char* format_string) {
 }
 
 
-static void sge_infotext_usage(void) {
+void sge_infotext_usage(void) {
    printf("Version: %s\n", GDI_VERSION);
    printf("usage:\n");
    printf("infotext -help    : show help\n");
@@ -638,7 +636,7 @@ static void sge_infotext_usage(void) {
    printf("  u - underline output\n");
    printf("  D - dash sign, e.g. -D \"->\"\n"); 
    printf("  S - nr of spaces, e.g. -S \"5\"\n\n");
-   printf("infotext [-log] [-auto 0|1|true|false] [-wait] [-ask YES NO] [-def YES|NO]\n");
+   printf("infotext [-auto 0|1|true|false] [-wait] [-ask YES NO] [-def YES|NO]\n");
    printf("         FORMAT_STRING ARGUMENTS\n\n");
    printf("YES - user answer for exit status 0, e.g. -ask \"y\"\n");
    printf("NO  - user answer for exit status 1, e.g. -ask \"n\"\n\n");
@@ -648,7 +646,6 @@ static void sge_infotext_usage(void) {
    printf("  wait - wait for return key\n");
    printf("  ask  - wait for user input\n");
    printf("  def  - default answer when user is just pressing RETURN\n\n");
-   printf("  log  - write output to log, if SGE_NOMSG is set\n");
    printf("used environment variables:\n");
    printf("SGE_INFOTEXT_MAX_COLUMN - column for word break (default 79)\n");
 }
@@ -657,7 +654,10 @@ static void sge_infotext_usage(void) {
 /*-------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------*/
-int main( int argc, char* argv[] ) {
+int main(
+int argc,
+char **argv 
+) {
    int no_options = 0;
    int ret_val = 0;
    int show_help = 0;
@@ -704,10 +704,10 @@ int main( int argc, char* argv[] ) {
    options.no = "";
    options.yes = "";
    options.def = "";
-   options.log = 0;
 
    for(i=1; i< argc; i++) {
       char* arg = argv[i];
+
       if (arg[0] == '-' && arg_start == 0 && no_options == 0) {
          int o_start = 0;
          char* option = NULL;
@@ -726,11 +726,6 @@ int main( int argc, char* argv[] ) {
             do_test = 1;
             break;
          }
-         if ( strcmp(option,"log") == 0) {
-            options.log = 1;
-            continue;
-         }
-
          if ( strcmp(option,"__eoc__") == 0) {
             no_options = 1;
             continue;
@@ -916,7 +911,7 @@ int main( int argc, char* argv[] ) {
    }
 
    if (real_args < string_arguments) {
-      printf("infotext: too few arguments\n");
+      printf("to less arguments\n");
       exit(10);
    }
 
@@ -1044,7 +1039,7 @@ int main( int argc, char* argv[] ) {
    DPRINTF(("pass 4\n"));
    {
       if (real_args > 0) {
-#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || __GNUC__ == 3
+#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164) || __GNUC__ == 3
       for(i=0;i<real_args;i++) {
 /*      printf("argument[%d]: \"%s\"\n",i,argv[first_arg +i]); */
          sge_dstring_copy_string(&buffer, sge_infotext_string_replace(&tmp_buf, (char*)sge_dstring_get_string(&buffer2),"%s",argv[first_arg +i],1));

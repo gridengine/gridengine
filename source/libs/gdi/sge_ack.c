@@ -31,55 +31,32 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
-#include "sge_gdiP.h"
-#include "sge_any_request.h"
+#include "sge_gdi_intern.h"
 #include "sge_prog.h"
 #include "pack.h"
 #include "commlib.h"
 #include "qm_name.h"
-#include "sgeobj/sge_answer.h"
 
-/****** sge_ack/sge_send_ack_to_qmaster() **************************************
-*  NAME
-*     sge_send_ack_to_qmaster() -- ??? 
-*
-*  SYNOPSIS
-*     int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val, 
-*     u_long32 ulong_val_2) 
-*
-*  FUNCTION
-*     Sends an acknowledge to qmaster.
-*
-*  INPUTS
-*     int sync             - ??? 
-*     u_long32 type        - ??? 
-*     u_long32 ulong_val   - ??? 
-*     u_long32 ulong_val_2 - ??? 
-*
-*  RESULT
-*     int - CL_OK on success
-*
-*  NOTES
-*     MT-NOTE: sge_send_ack_to_qmaster() is MT safe (assumptions)
-*******************************************************************************/
-int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val, 
-                            u_long32 ulong_val_2, lList **alpp) 
-{
+int sge_send_ack_to_qmaster(
+int sync,
+u_long32 type,
+u_long32 ulong_val,
+u_long32 ulong_val_2
+) {
    int ret;
    sge_pack_buffer pb;
 
    /* send an ack to the qmaster for the events */
    if(init_packbuffer(&pb, 3*sizeof(u_long32), 0) != PACK_SUCCESS) {
-      return CL_RETVAL_MALLOC;
+      return CL_MALLOC;
    }
 
    packint(&pb, type);
    packint(&pb, ulong_val);
    packint(&pb, ulong_val_2);
-   ret = sge_send_any_request(sync, NULL, sge_get_master(0), prognames[QMASTER],
-                              1, &pb, TAG_ACK_REQUEST, 0, alpp);
+   ret = sge_send_any_request(sync, NULL, sge_get_master(0), 
+         prognames[QMASTER], 1, &pb, TAG_ACK_REQUEST);
    clear_packbuffer(&pb);
-   answer_list_output (alpp);
 
    return ret;
 }

@@ -36,7 +36,7 @@
 #include <pwd.h>
 
 /* for service provider info (SPI) entries and projects */
-#if defined(IRIX)
+#if defined(IRIX6)
 #   include <sys/extacct.h>
 #   include <proj.h>
 #endif
@@ -148,7 +148,7 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
 
 
          if(sge_switch2start_user() == 0) {
-#     if defined(IRIX)
+#     if defined(IRIX6)
       {
          /* The following block contains the operations necessary for
           * IRIX6.2 (and later) to set array session handles (ASHs) and

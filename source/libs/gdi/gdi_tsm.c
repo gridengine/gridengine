@@ -29,16 +29,11 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
 #include "sge_all_listsL.h"
-#include "sge_gdiP.h"
+#include "sge_gdi_intern.h"
 #include "gdi_tsm.h"
 #include "sge_answer.h"
 #include "sgermon.h"
-#include "parse.h"
-
-#include "msg_common.h"
-#include "msg_gdilib.h"
 
 /*
 ** NAME
@@ -52,8 +47,6 @@
 **
 ** DESCRIPTION
 **
-** NOTES
-**    MT-NOTE: gdi_tsm() is MT safe (assumptions)
 */
 lList *gdi_tsm(
 const char *schedd_name,
@@ -84,12 +77,13 @@ const char *cell
 **
 ** DESCRIPTION
 **
-** NOTES
-**    MT-NOTE: gdi_kill() is MT safe (assumptions)
 */
-lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags, 
-                u_long32 action_flag ) 
-{
+lList *gdi_kill(
+lList *id_list,
+const char *cell,
+u_long32 option_flags,
+u_long32 action_flag 
+) {
    lList *alp = NULL, *tmpalp;
 
    DENTER(TOP_LAYER, "gdi_kill");
@@ -150,4 +144,3 @@ lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags,
    DEXIT;
    return alp;
 }
-

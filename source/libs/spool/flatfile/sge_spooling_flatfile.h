@@ -34,8 +34,7 @@
 
 #include "cull.h"
 
-#include "spool/sge_spooling.h"
-#include "spool/sge_spooling_utilities.h"
+#include "sge_spooling_utilities.h"
 
 /****** spool/flatfile/--Spooling-Flatfile ************************************
 *
@@ -63,47 +62,123 @@
 ****************************************************************************
 */
 
+/****** spool/flatfile/-Spooling-Flatfile-Typedefs ***************************
+*
+*  NAME
+*     Typedefs -- type definitions for spooling utility functions
+*
+*  SYNOPSIS
+*     <to be documented after the module is finished>
+*
+*  FUNCTION
+*     spool_flatfile_destination
+*        Used to specify the destination of an output function, e.g. 
+*        streams like stdin or stdout, temporary file or named file.
+*
+*     spool_flatfile_format
+*        Format to use for output, e.g. ASCII, XML, CULL.
+*
+*     spool_flatfile_instr
+*        Instruction for spooling. 
+*        Describes which fields to spool, formatting, spooling of sublists ...
+*
+*  NOTES
+*     May not allow really comprehensive output in all possible variations,
+*     but it seems to be sufficient for all spooling and output done in
+*     Grid Engine.
+*
+*  SEE ALSO
+****************************************************************************
+*/
+
+typedef enum {
+   SP_DEST_STDOUT,
+   SP_DEST_STDERR,
+   SP_DEST_TMP,
+   SP_DEST_SPOOL
+} spool_flatfile_destination;
+
+typedef enum {
+   SP_FORM_ASCII,
+   SP_FORM_XML,
+   SP_FORM_CULL
+} spool_flatfile_format;
 
 /*
- * spooling framework functions
+ * - output field name and value or only field name
+ * - output a header that contains all field names of a sub list
+ * - alignment: if field names are shown, align all values horizontally.
+ * - delimiter for use between field name and value, if alignment is active,
+ *   it may be repeated
+ * - delimiter between fields
+ * - delimiter between records
+ * - for nested structures: record begin and record end sign
+ *
+ * parsing of such spooled data will accept any whitespaces between tokens
  */
 
+/* JG: TODO: we need a check function:
+ * - delimiters may not contain whitespace, exception \n
+ */
+
+typedef struct spool_flatfile_instr {
+   const spool_instr *spool_instr;
+   bool show_field_names;
+   bool show_field_header;
+   bool align_names;
+   bool align_data;
+   const char *name_value_delimiter;
+   const char *field_delimiter;
+   const char *record_delimiter;
+   const char *record_start;
+   const char *record_end;
+   const struct spool_flatfile_instr *sub_instr;
+} spool_flatfile_instr;
+
+extern const spool_flatfile_instr spool_flatfile_instr_messages;
+extern const spool_flatfile_instr spool_flatfile_instr_accounting;
+extern const spool_flatfile_instr spool_flatfile_instr_config;
+extern const spool_flatfile_instr spool_flatfile_instr_config_list;
+extern const spool_flatfile_instr spool_flatfile_instr_complex;
+
 const char *
-get_spooling_method(void);
+spool_flatfile_write_object(lList **answer_list, const lListElem *object,
+                            const spooling_field *fields,
+                            const spool_flatfile_instr *instr,
+                            const spool_flatfile_destination destination,
+                            const spool_flatfile_format format, 
+                            const char *filepath);
+
+const char *
+spool_flatfile_write_list(lList **answer_list,
+                          const lList *list,
+                          const spooling_field *fields,
+                          const spool_flatfile_instr *instr,
+                          const spool_flatfile_destination destination,
+                          const spool_flatfile_format format,
+                          const char *filepath);
 
 lListElem *
-spool_flatfile_create_context(lList **answer_list, const char *args);
+spool_flatfile_read_object(lList **answer_list, const lDescr *descr, 
+                           const spooling_field *fields_in, int fields_out[],
+                           const spool_flatfile_instr *instr,
+                           const spool_flatfile_format format,
+                           FILE *file,
+                           const char *filepath);
+lList *
+spool_flatfile_read_list(lList **answer_list, const lDescr *descr, 
+                         const spooling_field *fields_in, int fields_out[],
+                         const spool_flatfile_instr *instr,
+                         const spool_flatfile_format format,
+                         FILE *file,
+                         const char *filepath);
 
 bool 
-spool_flatfile_default_startup_func(lList **answer_list, 
-                                    const lListElem *rule, bool check);
-bool 
-spool_flatfile_common_startup_func(lList **answer_list, 
-                                   const lListElem *rule, bool check);
+spool_flatfile_align_object(lList **answer_list,
+                            spooling_field *fields);
 
-bool 
-spool_flatfile_default_list_func(lList **answer_list, 
-                                 const lListElem *type, 
-                                 const lListElem *rule,
-                                 lList **list, 
-                                 const sge_object_type object_type);
-lListElem *
-spool_flatfile_default_read_func(lList **answer_list, 
-                                 const lListElem *type, 
-                                 const lListElem *rule,
-                                 const char *key, 
-                                 const sge_object_type object_type);
-bool 
-spool_flatfile_default_write_func(lList **answer_list, 
-                                  const lListElem *type, 
-                                  const lListElem *rule, 
-                                  const lListElem *object, 
-                                  const char *key, 
-                                  const sge_object_type object_type);
-bool 
-spool_flatfile_default_delete_func(lList **answer_list, 
-                                   const lListElem *type, 
-                                   const lListElem *rule,
-                                   const char *key, 
-                                   const sge_object_type object_type);
+bool
+spool_flatfile_align_list(lList **answer_list, const lList *list, 
+                          spooling_field *fields);
+
 #endif /* __SGE_SPOOLING_FLATFILE_H */    

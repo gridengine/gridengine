@@ -32,12 +32,12 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_gdi.h"
 #include "usage.h"
+#include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
 #include "sge_prog.h"
@@ -47,17 +47,13 @@
 #include "gdi_checkpermissions.h"
 #include "sge_feature.h"
 #include "sge_unistd.h"
-#include "sge_str.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qdel.h"
-#include "sgeobj/msg_sgeobjlib.h"
-#include "sgeobj//sge_range.h"
-#include "sge_options.h"
 
 static lList *sge_parse_cmdline_qdel(char **argv, char **envp, lList **ppcmdline);
-static lList *sge_parse_qdel(lList **ppcmdline, lList **ppreflist, u_long32 *pforce, u_long32 *all_jobs, u_long32 *all_users, lList **ppuserlist);
+static lList *sge_parse_qdel(lList **ppcmdline, lList **ppreflist, u_long32 *pforce, u_long32 *pverify, u_long32 *all_jobs, u_long32 *all_users, lList **ppuserlist);
 static int qdel_usage(FILE *fp, char *what);
 
 extern char **environ;
@@ -69,20 +65,18 @@ int main(int argc, char **argv) {
    /* lListElem *rep, *nxt_rep, *jep, *aep, *jrep, *idep; */
    lListElem *aep, *idep;
    lList *jlp = NULL, *alp = NULL, *pcmdline = NULL, *ref_list = NULL, *user_list=NULL;
-   u_long32 force = 0, all_users = 0, all_jobs = 0;
+   u_long32 force = 0, verify = 0, all_users = 0, all_jobs = 0;
    int cmd;
    int wait;
    unsigned long status = 0;
-   bool have_master_privileges;
-   cl_com_handle_t* handle = NULL;
+   int have_master_privileges;
+   int cl_err = 0;
 
    DENTER_MAIN(TOP_LAYER, "qdel");
 
-   log_state_set_log_gui(1);
-
    sge_gdi_param(SET_MEWHO, QDEL, NULL);
-   if (sge_gdi_setup(prognames[QDEL], &alp) != AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
+   if ((cl_err = sge_gdi_setup(prognames[QDEL]))) {
+      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);
    }
 
@@ -99,9 +93,10 @@ int main(int argc, char **argv) {
       SGE_EXIT(1);
    }
 
-   alp = sge_parse_qdel(&pcmdline, &ref_list, &force, &all_jobs, &all_users, &user_list);
+   alp = sge_parse_qdel(&pcmdline, &ref_list, &force, &verify, &all_jobs, &all_users, &user_list);
 
    DPRINTF(("force     = "u32"\n", force));
+   DPRINTF(("verify    = "u32"\n", verify));
    DPRINTF(("all_users = "u32"\n", all_users));
    DPRINTF(("all_jobs  = "u32"\n", all_jobs));
 
@@ -118,27 +113,32 @@ int main(int argc, char **argv) {
    if (user_list) {
       lListElem *id;
 
-
-      if (lGetNumberOfElem(ref_list) == 0){
-         id = lAddElemStr(&ref_list, ID_str, "0", ID_Type);
-         lSetList(id, ID_user_list, user_list);
-      }
-      else{
-         for_each(id, ref_list){
-         lSetList(id, ID_user_list, user_list);
-         }
-      }
+      id = lAddElemStr(&ref_list, ID_str, "0", ID_Type);
+      lSetList(id, ID_user_list, user_list);
    }
    if (all_users) {
       lAddElemStr(&ref_list, ID_str, "0", ID_Type);
    }
 
-   handle=cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-   cl_com_set_synchron_receive_timeout(handle, 10*60);
+   if (verify) {
+      for_each(idep, ref_list) {
+         printf(MSG_JOB_XDELETIONOFJOBY_SS,force?MSG_FORCED:"",lGetString(idep, ID_str));
+      }
+      goto default_exit;
+   }
+
+   /* set timeout */
+   set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
+   set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);   
 
    /* prepare gdi request for 'all' and '-uall' parameters */
    cmd = SGE_GDI_DEL;
-
+   if (all_users) {
+      cmd |= SGE_GDI_ALL_USERS;
+   }
+   if (all_jobs) {
+      cmd |= SGE_GDI_ALL_JOBS;
+   }
 
    /* Are there jobs which should be deleted? */
    if (!ref_list) {
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
    }
 
    /* Has the user the permission to use the the '-f' (forced) flag */
-   have_master_privileges = false;
+   have_master_privileges = FALSE;
    if (force == 1) {
       have_master_privileges = sge_gdi_check_permission(&alp, MANAGER_CHECK);
       if (have_master_privileges == -10) {
@@ -169,6 +169,7 @@ int main(int argc, char **argv) {
          alp = NULL;
       }
    }
+
    /* delete the job */
    {
       int delete_mode;
@@ -185,7 +186,7 @@ int main(int argc, char **argv) {
        *         -> normal deletion
        */
       if (force == 1) {
-         if (have_master_privileges == true) {
+         if (have_master_privileges == TRUE) {
             delete_mode = 1;
          } else {
             delete_mode = 7;
@@ -195,13 +196,11 @@ int main(int argc, char **argv) {
       }
       while (delete_mode) {
          int no_forced_deletion = delete_mode & 2;
-         bool do_again;
-         bool first_try = true;
-         const int MAX_DELETE_JOBS = 500;
-         lList *part_ref_list = NULL;
-         lList *cp_ref_list = lCopyList("", ref_list);
+         int do_again;
+         int error_occured;
+         int first_try = 1;
 
-         for_each(idep, cp_ref_list) {
+         for_each(idep, ref_list) {
             lSetUlong(idep, ID_force, !no_forced_deletion);
          } 
 
@@ -212,61 +211,36 @@ int main(int argc, char **argv) {
           * transaction (STATUS_OK_DOAGAIN). In this case the client has 
           * to redo the transaction.
           */ 
+         do_again = 0;
          do {
-            do_again = false;
-
-            if (part_ref_list == NULL) {
-               int i;
-               int max = MIN(lGetNumberOfElem(cp_ref_list), MAX_DELETE_JOBS); 
-               lListElem *temp_ref = NULL;
-
-               first_try = true;
-
-               part_ref_list = lCreateList("part_del_jobs", ID_Type);
-               for (i = 0; i < max; i++){
-                  const char* job = NULL;
-                  temp_ref = lFirst(cp_ref_list);
-                  job = lGetString(temp_ref, ID_str);
-                  /* break if we got job ids first and hit a job name now */
-                  if (!isdigit(job[0]) && (i > 0)) {
-                     break;
-                  }   
-                  temp_ref = lDechainElem(cp_ref_list, temp_ref);
-                  lAppendElem(part_ref_list, temp_ref);
-                  /* break, if we got a job name by it self */
-                  if (!isdigit(job[0])){
-                     break;
-                  }   
-               }
+            if (do_again) {
+               /*
+                * Give other clients (gdi requests) the chance to
+                * be handled by the commd before we repeat this request
+                */
+               sleep(1);
             }
-            
-            alp = sge_gdi(SGE_JOB_LIST, cmd, &part_ref_list, NULL, NULL);
-
+            do_again = 0;
+            error_occured = 0;
+            alp = sge_gdi(SGE_JOB_LIST, cmd, &ref_list, NULL, NULL);
             for_each(aep, alp) {
                status = lGetUlong(aep, AN_status);
 
                if (delete_mode != 5 && 
-                   ((first_try  && status != STATUS_OK_DOAGAIN) ||
-                    (!first_try && status == STATUS_OK))) {
-                  
+                   ((first_try == 1 && status != STATUS_OK_DOAGAIN) ||
+                    (first_try == 0 && status == STATUS_OK))) {
                   printf("%s", lGetString(aep, AN_text) );
-                  
                }
-               /* but a job name might have extended to more than MAX_DELETE_JOBS */
+               if (status != STATUS_OK && 
+                   status != STATUS_OK_DOAGAIN) {
+                  error_occured = 1;
+               }
                if (status == STATUS_OK_DOAGAIN) {
-                  do_again = true;
+                  do_again = 1;
                }
             }
-
-            if (!do_again){
-               part_ref_list = lFreeList(part_ref_list);
-            }
-            alp = lFreeList(alp);
-
-            first_try = false;
-         } while (do_again || (lGetNumberOfElem(cp_ref_list) > 0));
-
-         cp_ref_list = lFreeList(cp_ref_list);
+            first_try = 0;
+         } while ((all_users || all_jobs) && do_again && !error_occured);
 
          if (delete_mode == 7) {
             /* 
@@ -288,6 +262,7 @@ int main(int argc, char **argv) {
       }
    }
 
+default_exit:
    lFreeList(alp);
    lFreeList(jlp);
    lFreeList(ref_list);
@@ -301,7 +276,6 @@ error_exit:
    lFreeList(ref_list);
    sge_gdi_shutdown();
    SGE_EXIT(1); 
-   DEXIT;
    return 1;
 }
 
@@ -329,8 +303,16 @@ lList *alp = NULL;
       if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, &alp)) != sp)
          continue;
       
+      /* -verify */
+      if ((rp = parse_noopt(sp, "-verify", NULL, ppcmdline, &alp)) != sp)
+         continue;
+
       /* -f option */
       if ((rp = parse_noopt(sp, "-f", "--force", ppcmdline, &alp)) != sp)
+         continue;
+
+      /* -uall */
+      if ((rp = parse_noopt(sp, "-uall", NULL, ppcmdline, &alp)) != sp)
          continue;
 
       /* -u */
@@ -340,7 +322,7 @@ lList *alp = NULL;
 
          sp++;
          if (*sp) {
-            str_list_parse_from_string(&user_list, *sp, ",");
+            sge_parse_string_list(&user_list, *sp, STR, ST_Type);
 
             ep_opt = sge_add_arg(ppcmdline, 0, lListT, *(sp - 1), *sp);
             lSetList(ep_opt, SPA_argval_lListT, user_list);
@@ -349,53 +331,16 @@ lList *alp = NULL;
          rp = sp;
          continue;
       }
-
-      if (!strcmp("-t", *sp)) {
-         lList *task_id_range_list = NULL;
-         lListElem *ep_opt;
-
-         /* next field is path_name */
-         sp++;
-         if (*sp == NULL) {
-             printf(str,MSG_PARSE_TOPTIONMUSTHAVEALISTOFTASKIDRANGES);
-             answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-             goto error;
-         }
-
-         DPRINTF(("\"-t %s\"\n", *sp));
-
-         range_list_parse_from_string(&task_id_range_list, &alp, *sp,
-                                      0, 1, INF_NOT_ALLOWED);
-         if (!task_id_range_list) {
-            goto error; 
-         }
-
-         range_list_sort_uniq_compress(task_id_range_list, &alp);
-         if (lGetNumberOfElem(task_id_range_list) > 1) {
-            answer_list_add(&alp, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, 0);
-            goto error;
-         }
-
-         ep_opt = sge_add_arg(ppcmdline, t_OPT, lListT, *(sp - 1), *sp);
-         lSetList(ep_opt, SPA_argval_lListT, task_id_range_list);
-
-         sp++;
-         rp = sp;
-         continue;
-      }
-
+ 
       /* job id's */
       if ((rp = parse_param(sp, "jobs", ppcmdline, &alp)) != sp) {
          continue;
       }
 
-
       /* oops */
       sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
-      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-
-error:      
       qdel_usage(stderr, NULL);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -414,6 +359,7 @@ static lList *sge_parse_qdel(
 lList **ppcmdline,
 lList **ppreflist,
 u_long32 *pforce,
+u_long32 *pverify,
 u_long32 *palljobs,
 u_long32 *pallusers,
 lList **ppuserlist 
@@ -421,7 +367,6 @@ lList **ppuserlist
 lList *alp = NULL;
 u_long32 helpflag;
 lListElem *ep;
-stringT str;
 
    DENTER(TOP_LAYER, "sge_parse_qdel");
 
@@ -439,26 +384,35 @@ stringT str;
       if(parse_flag(ppcmdline, "-f", &alp, pforce)) 
          continue;
 
+      if(parse_flag(ppcmdline, "-verify", &alp, pverify)) 
+         continue;
+
+      if(parse_flag(ppcmdline, "-uall", &alp, pallusers))
+         continue;
+
       while ((ep = lGetElemStr(*ppcmdline, SPA_switch, "-u"))) {
          lXchgList(ep, SPA_argval_lListT, ppuserlist);
          lRemoveElem(*ppcmdline, ep);
       } 
 
-      if(parse_multi_stringlist(ppcmdline, "-u", &alp, ppuserlist, ST_Type, ST_name)) {
+      if(parse_multi_stringlist(ppcmdline, "-u", &alp, ppuserlist, ST_Type, STR)) {
          continue;  
       }
 
-      if(parse_multi_jobtaskslist(ppcmdline, "jobs", &alp, ppreflist, true, 0)) {
+      if(parse_multi_jobtaskslist(ppcmdline, "jobs", &alp, ppreflist)) {
+         if (lGetNumberOfElem(*ppreflist) == 1
+             && !strcmp(lGetString(lFirst(*ppreflist), ID_str), "all")) 
+            (*palljobs) = 1; 
          continue;
       }
-
-       /* we get to this point, than there are -t options without job names. We have to write an error message */
-      if ((ep = lGetElemStr(*ppcmdline, SPA_switch, "-t")) != NULL) {
-         sprintf(str, MSG_JOB_LONELY_TOPTION_S, lGetString(ep, SPA_switch_arg));
-         answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-        
-         break;
-      }
+   }
+   if ((*pallusers || *ppuserlist) && *ppreflist) {
+      answer_list_add(&alp, MSG_OPTION_SELECTUSERSANDJOBIDSTOGETHERNOTALLOWED, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+   }
+   if (*ppuserlist && *pallusers) {
+      answer_list_add(&alp, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
    }
 
    DEXIT;
@@ -481,27 +435,24 @@ static int qdel_usage(
 FILE *fp,
 char *what 
 ) {
-   dstring ds;
-   char buffer[256];
-
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
-
-   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
+   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
 
    if(!what) {
       /* display full usage */
-      fprintf(fp, "%s qdel [options] job_task_list\n", MSG_SRC_USAGE);      
-      fprintf(fp, "  [-f]                               %s",  MSG_QDEL_f_OPT_USAGE);
-      fprintf(fp, "  [-help]                            %s",  MSG_QDEL_help_OPT_USAGE);
-      fprintf(fp, "  [-u user_list]                     %s",  MSG_QDEL_del_list_3_OPT_USAGE); 
-      fprintf(fp, "\n");
-      fprintf(fp, "  job_task_list                      %s",  MSG_QDEL_del_list_1_OPT_USAGE);
-      fprintf(fp, "  \"*\"                                %s",  MSG_QDEL_del_list_2_OPT_USAGE);
-      fprintf(fp, "  -u \"*\"                             %s\n",  MSG_QDEL_del_list_4_OPT_USAGE);
-      fprintf(fp, "job_task_list  job_tasks[' 'job_tasks[' '...]]\n");
-      fprintf(fp, "job_tasks      {job_id['.'task_id_range]|job_name|pattern}[ -t task_id_range]\n");
-      fprintf(fp, "task_id_range  task_id['-'task_id[':'step]]\n");
-      fprintf(fp, "user_list      {user|pattern}[','{user|pattern}[','...]]\n");
+      fprintf(fp, "%s qdel [options]\n", MSG_SRC_USAGE);      
+
+      
+      fprintf(fp, "  [-f]             %s",  MSG_QDEL_f_OPT_USAGE);
+      fprintf(fp, "  [-help]          %s",  MSG_QDEL_help_OPT_USAGE);
+      fprintf(fp, "  [-verify]        %s",  MSG_QDEL_verify_OPT_USAGE);
+      fprintf(fp, "  job_task_list|   %s",  MSG_QDEL_del_list_1_OPT_USAGE);
+      fprintf(fp, "  'all'|           %s",  MSG_QDEL_del_list_2_OPT_USAGE);
+      fprintf(fp, "  -u user_list|    %s",  MSG_QDEL_del_list_3_OPT_USAGE);
+      fprintf(fp, "  -uall            %s\n",  MSG_QDEL_del_list_4_OPT_USAGE);
+      fprintf(fp, "job_task_list      job_tasks{job_tasks}\n");
+      fprintf(fp, "job_tasks          job_id['.'task_id_range]\n");
+      fprintf(fp, "task_id_range      task_id['-'task_id[':'step]]\n");
+      fprintf(fp, "user_list          user{','user}\n");
    } else {
       /* display option usage */
       fprintf(fp, MSG_QDEL_not_available_OPT_USAGE_S, what);

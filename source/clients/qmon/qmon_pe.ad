@@ -103,16 +103,17 @@ Qmon*pe_ask_shell.pe_ask_layout.XmtInputField.marginHeight:      2
 
 Qmon*pe_ask_shell.pe_ask_layout.xmtChildren: \
    InputField     pe_name; \
+   XmScrolledList pe_queues; \
    Spinbox        pe_slots; \
    XmScrolledList pe_users; \
    XmScrolledList pe_xusers; \
    InputField     pe_start_proc_args; \
    InputField     pe_stop_proc_args; \
    InputField     pe_allocation_rule; \
-   InputField     pe_urgency_slots; \
    XmToggleButton pe_control_slaves; \
    XmToggleButton pe_job_is_first_task; \
-   XmPushButton   pe_ok, pe_cancel, pe_usersPB, pe_xusersPB;
+   XmToggleButton pe_all_queues; \
+   XmPushButton   pe_ok, pe_cancel, pe_queuesPB, pe_usersPB, pe_xusersPB;
 
 Qmon*pe_ask_layout.layout: \
    Row { \
@@ -122,6 +123,16 @@ Qmon*pe_ask_layout.layout: \
             Centered Caption "@{Slots}" pe_slots \
          } \
          Equal Row { \
+            Row { \
+               Stretchable Caption tl "@{Queue List}" 2 in pe_queues \
+               Col {\
+                  <> \
+                  Fixed FlushLeft pe_queuesPB \
+                  ## \
+                  pe_all_queues \
+                  <> \
+               } \
+            } \
             Row { \
                Stretchable Caption tl "@{User Lists}" 2 in pe_users \
                Fixed Centered pe_usersPB \
@@ -134,7 +145,6 @@ Qmon*pe_ask_layout.layout: \
          Fixed Caption tl "@{Start Proc Args}" pe_start_proc_args \
          Fixed Caption tl "@{Stop Proc Args} " pe_stop_proc_args \
          Fixed Caption tl "@{Allocation Rule}" pe_allocation_rule \
-         Fixed Caption tl "@{Urgency Slots}" pe_urgency_slots \
          Row { \
             Fixed pe_control_slaves \
             Fixed pe_job_is_first_task \
@@ -152,6 +162,9 @@ Qmon*pe_ask_layout.pe_control_slaves.labelString: @{@fBControl Slaves}
 Qmon*pe_ask_layout.pe_job_is_first_task.alignment: ALIGNMENT_BEGINNING
 Qmon*pe_ask_layout.pe_job_is_first_task.labelString: @{@fBJob is first task}
 
+Qmon*pe_ask_layout.pe_all_queues.alignment: ALIGNMENT_BEGINNING
+Qmon*pe_ask_layout.pe_all_queues.labelString: @{All}
+
 Qmon*pe_ask_layout.pe_ok.labelString:     @{Ok}
 Qmon*pe_ask_layout.pe_cancel.labelString: @{Cancel}
 
@@ -163,8 +176,18 @@ Qmon*pe_ask_layout.pe_slots.spinboxStyle:      SPINBOX_STACKED_RIGHT
 Qmon*pe_ask_layout*scrollBarDisplayPolicy:     AS_NEEDED
 Qmon*pe_ask_layout*listSizePolicy:             CONSTANT
 
+Qmon*pe_ask_layout*pe_queues.fontList:         $fixed_font
+Qmon*pe_ask_layout*pe_queues.selectionPolicy:  BROWSE_SELECT
+Qmon*pe_ask_layout*pe_queues.visibleItemCount: 5
+
+Qmon*pe_ask_layout*scrollBarDisplayPolicy:     AS_NEEDED
+Qmon*pe_ask_layout*listSizePolicy:             CONSTANT
+
 Qmon*pe_ask_layout*pe_users.selectionPolicy:   BROWSE_SELECT
 Qmon*pe_ask_layout*pe_users.visibleItemCount:  5
+
+Qmon*pe_ask_layout*scrollBarDisplayPolicy:     AS_NEEDED
+Qmon*pe_ask_layout*listSizePolicy:             CONSTANT
 
 Qmon*pe_ask_layout*pe_xusers.selectionPolicy:  BROWSE_SELECT
 Qmon*pe_ask_layout*pe_xusers.visibleItemCount: 5

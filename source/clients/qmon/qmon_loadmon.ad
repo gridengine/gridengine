@@ -46,7 +46,7 @@ Qmon*lmon.xmtChildren: \
 Qmon*lmon.layout: \
    Shadowed Out 4 2 Centered lmon_matrix \
    Fixed Shadowed Col { \
-      Fixed lmon_ok \
+      Fixed Centered lmon_ok \
    }
 
 Qmon*lmon.lmon_ok.labelString:            @{Ok}
@@ -54,8 +54,8 @@ Qmon*lmon.lmon_ok.activateCallback:       XtUnmanageChild(*lmon);
 
 
 Qmon*lmon*lmon_matrix.buttonLabels: True
-Qmon*lmon*lmon_matrix.rows: 20
-Qmon*lmon*lmon_matrix.visibleRows: 20
+Qmon*lmon*lmon_matrix.rows: 7
+Qmon*lmon*lmon_matrix.visibleRows: 7
 Qmon*lmon*lmon_matrix.columns: 3
 Qmon*lmon*lmon_matrix.columnWidths: 25, 30, 30
 Qmon*lmon*lmon_matrix.columnMaxLengths: 100, 100, 100
@@ -63,15 +63,5 @@ Qmon*lmon*lmon_matrix.columnLabels: @{Attribute}, @{Slot-Limits/Fixed Attributes
 Qmon*lmon*lmon_matrix.gridType:             GRID_COLUMN_SHADOW
 Qmon*lmon*lmon_matrix.cellShadowType:       SHADOW_IN
 Qmon*lmon*lmon_matrix.cellShadowThickness: 1
-
-Qmon*lmon*lmon_matrix.translations: \
-#override\n\
-         <Btn1Down>:       SelectCell(begin)\n\
-         Ctrl<Btn2Down>:   ResizeColumns()
-
-Qmon*lmon*lmon_matrix.translations: \
-#override\n\
-         <Btn1Down>:       SelectCell(begin)\n\
-         Ctrl<Btn2Down>:   ResizeColumns()
 
 Qmon*lmon*lmon_matrix.enterCellCallback: ColumnNoEdit();

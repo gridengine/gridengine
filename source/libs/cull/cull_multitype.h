@@ -40,10 +40,6 @@
 extern "C" {
 #endif
 
-#define for_each_attr(ATTR, LDP) for (ATTR = LDP->nm; ATTR != NoName; LDP++, ATTR = LDP->nm)
-
-extern const char *multitypes[];
-
 typedef int (*lCmpFunction)(lListElem *, lListElem *, int);
 
 void lWriteDescrTo(const lDescr *dp, FILE *fp);
@@ -118,9 +114,6 @@ int lSetChar(lListElem *ep, int name, lChar value);
 int lSetBool(lListElem *ep, int name, lBool value);
 int lSetObject(lListElem *ep, int name, lListElem *value);
 int lSetRef(lListElem *ep, int name, lRef value);
-
-int lAddDouble(lListElem *ep, int name, lDouble offset);
-int lAddUlong(lListElem *ep, int name, lUlong offset);
 
 int intcmp(lInt i0, lInt i1);
 int ulongcmp(lUlong u0, lUlong u1);
@@ -213,6 +206,7 @@ lListElem *lGetSubHost(const lListElem *ep, int nm, const char *str, int snm);
 lListElem *lGetElemHost(const lList *lp, int nm, const char *str);
 lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str, const void **iterator);
 lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str, const void **iterator);
+
 
 #ifdef  __cplusplus
 }

@@ -32,6 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_mod_sched_configuration(lListElem *confp, lList **alpp, char *ruser, char *rhost);
+int sge_mod_sched_configuration(lListElem *confp, lList **confl, lList **alpp, char *ruser, char *rhost);
 
 #endif /* _SCHED_CONF_QMASTER_H_ */

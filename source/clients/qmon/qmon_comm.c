@@ -37,11 +37,10 @@
 #include <Xmt/Xmt.h>
 #include <Xmt/Dialogs.h>
 
-#include "sge_unistd.h"
 #include "commlib.h"
 #include "sge_gdi.h"
-#include "sge_any_request.h"
-#include "sge_utility.h"
+#include "gdi_qmod.h"
+#include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "sge_answer.h"
 #include "qmon_rmon.h"
@@ -56,8 +55,6 @@
 #include "sge_feature.h"
 #include "qmon_init.h"
 #include "sge_job.h"
-#include "sge_id.h"
-#include "gdi_tsm.h"
 
 #define for_each2(ep1, lp1, ep2, lp2) \
    for (ep1=lFirst(lp1), ep2=lFirst(lp2); ep1 && ep2;\
@@ -74,10 +71,10 @@ static tQmonMirrorList QmonMirrorList[] = {
    { 0, SGE_ADMINHOST_LIST, ADMINHOST_T, NULL, 0, NULL, NULL },
    { 0, SGE_SUBMITHOST_LIST, SUBMITHOST_T, NULL, 0, NULL, NULL },
    { 0, SGE_EXECHOST_LIST, EXECHOST_T, NULL, 0, NULL, NULL },
-   { 0, SGE_CQUEUE_LIST, CQUEUE_T, NULL, 0, NULL, NULL },
+   { 0, SGE_QUEUE_LIST, QUEUE_T, NULL, 0, NULL, NULL },
    { 0, SGE_JOB_LIST, JOB_T, NULL, 0, NULL, NULL },
    { 0, SGE_EVENT_LIST, EVENT_T, NULL, 0, NULL, NULL },
-   { 0, SGE_CENTRY_LIST, CENTRY_T, NULL, 0, NULL, NULL },
+   { 0, SGE_COMPLEX_LIST, COMPLEX_T, NULL, 0, NULL, NULL },
    { 0, SGE_ORDER_LIST, ORDER_T, NULL, 0, NULL, NULL },
    { 0, SGE_MASTER_EVENT, MASTER_EVENT_T, NULL, 0, NULL, NULL },
    { 0, SGE_CONFIG_LIST, CONFIG_T, NULL, 0, NULL, NULL },
@@ -92,9 +89,7 @@ static tQmonMirrorList QmonMirrorList[] = {
    { 0, SGE_CKPT_LIST, CKPT_T, NULL, 0, NULL, NULL },
    { 0, SGE_CALENDAR_LIST, CALENDAR_T, NULL, 0, NULL, NULL },
    { 0, SGE_JOB_SCHEDD_INFO, JOB_SCHEDD_INFO_T, NULL, 0, NULL, NULL },
-   { 0, SGE_ZOMBIE_LIST, ZOMBIE_T, NULL, 0, NULL, NULL },
-   { 0, SGE_USER_MAPPING_LIST, USER_MAPPING_T, NULL, 0, NULL, NULL },
-   { 0, SGE_HGROUP_LIST, HGROUP_T, NULL, 0, NULL, NULL }
+   { 0, SGE_ZOMBIE_LIST, ZOMBIE_T, NULL, 0, NULL, NULL }
 };
    
 static char *sge_gdi_list_types[] = {
@@ -102,10 +97,10 @@ static char *sge_gdi_list_types[] = {
    "ADMINHOST",
    "SUBMITHOST",
    "EXECHOST",
-   "CQUEUE",
+   "QUEUE",
    "JOB",
    "EVENT",
-   "CENTRY",
+   "COMPLEX",
    "ORDER",
    "MASTER_EVENT",
    "CONFIG",
@@ -120,9 +115,7 @@ static char *sge_gdi_list_types[] = {
    "CHECKPOINT",
    "CALENDAR",
    "JOB_SCHEDD_INFO",
-   "ZOMBIE_JOBS",
-   "USER_MAPPING",
-   "HGROUP"
+   "ZOMBIE_JOBS"
 };
 
 
@@ -136,10 +129,10 @@ void qmonMirrorListInit(void)
    QmonMirrorList[SGE_ADMINHOST_LIST].what = lWhat("%T(ALL)", AH_Type);
    QmonMirrorList[SGE_SUBMITHOST_LIST].what = lWhat("%T(ALL)", SH_Type);
    QmonMirrorList[SGE_EXECHOST_LIST].what = lWhat("%T(ALL)", EH_Type);
-   QmonMirrorList[SGE_CQUEUE_LIST].what = lWhat("%T(ALL)", CQ_Type);
+   QmonMirrorList[SGE_QUEUE_LIST].what = lWhat("%T(ALL)", QU_Type);
    QmonMirrorList[SGE_JOB_LIST].what = lWhat("%T(ALL)", JB_Type);
    QmonMirrorList[SGE_EVENT_LIST].what = lWhat("%T(ALL)", EV_Type);
-   QmonMirrorList[SGE_CENTRY_LIST].what = lWhat("%T(ALL)", CE_Type);
+   QmonMirrorList[SGE_COMPLEX_LIST].what = lWhat("%T(ALL)", CX_Type);
    QmonMirrorList[SGE_ORDER_LIST].what = lWhat("%T(ALL)", OR_Type);
    QmonMirrorList[SGE_MASTER_EVENT].what = lWhat("%T(ALL)", EV_Type);
    QmonMirrorList[SGE_CONFIG_LIST].what = lWhat("%T(ALL)", CONF_Type);
@@ -155,8 +148,6 @@ void qmonMirrorListInit(void)
    QmonMirrorList[SGE_CALENDAR_LIST].what = lWhat("%T(ALL)", CAL_Type);
    QmonMirrorList[SGE_JOB_SCHEDD_INFO].what = lWhat("%T(ALL)", SME_Type);
    QmonMirrorList[SGE_ZOMBIE_LIST].what = lWhat("%T(ALL)", JB_Type);
-   QmonMirrorList[SGE_USER_MAPPING_LIST].what = lWhat("%T(ALL)", CU_Type);
-   QmonMirrorList[SGE_HGROUP_LIST].what = lWhat("%T(ALL)", HGRP_Type);
 
    DEXIT;
 }
@@ -209,6 +200,15 @@ lList **answerp
 
    sge_stopwatch_start(0);
 
+   /*
+   ** mask the sgeee lists in SGE mode
+   */
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
+      selector &= ~PROJECT_T;
+      selector &= ~SHARETREE_T;
+      selector &= ~USER_T;
+   }   
+
    for (i=0; i<XtNumber(QmonMirrorList); i++) {
       if (selector & (1<<i))
          count++;
@@ -218,12 +218,15 @@ lList **answerp
    ** ask if the master is available, if not show warning dialog
    ** and leave the timerproc
    */
-
    status = check_isalive(sge_get_master(0));
+   DPRINTF(("check_isalive() returns %d (%s)\n", status, cl_errstr(status)));
 
-   DPRINTF(("check_isalive() returns %d (%s)\n", status, cl_get_error_text(status)));
-   if (status != CL_RETVAL_OK) {
-      sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster: %s", "cannot reach qmaster: %s"), cl_get_error_text(status));
+   if (status != CL_OK) {
+      if (status == CL_UNKNOWN_RECEIVER)
+         sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster", "cannot reach qmaster"));
+      else
+         sprintf(msg, XmtLocalize(AppShell, "cannot reach %s", "cannot reach %s"), cl_errstr(status));
+
       contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
                                                 msg, "@{Retry}", "@{Abort}",
                                                 XmtYesButton, NULL);
@@ -292,176 +295,6 @@ lList **answerp
       DEXIT;
       return -1;
 }
-
-#if 0
-/*-------------------------------------------------------------------------*/
-lList* qmonDelJobList(
-int type,
-lList **local,
-int nm,
-lList **lpp,
-lCondition *where,
-lEnumeration *what 
-) {
-
-   lList *alp = NULL;
-   lListElem *alep = NULL;
-   lListElem *ep = NULL;
-   const lDescr *listDescriptor = NULL;
-   int dataType;
-   u_long32 force = 0, verify = 0, all_users = 0, all_jobs = 0;
-   int cmd = 0;
-   bool have_master_privileges;
-   lListElem *idep = NULL;
-   lListElem *aep = NULL;
-   lList *user_list = NULL;
-   unsigned long status = 0;
-   int wait;
-
-   DENTER(GUI_LAYER, "qmonDelJobList");
-
-   if (!lpp) {
-      answer_list_add(&alp, "lpp is NULL", 
-                      STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return alp;
-   }
-
-   /* 
-    * get the answer list for error reporting 
-    * alp contains several answer elements for 
-    * SGE_GDI_DEL
-    */
-   sge_stopwatch_start(0);
-
-   /* prepare gdi request for 'all' and '-uall' parameters */
-   cmd = SGE_GDI_DEL;
-   if (all_users) {
-      cmd |= SGE_GDI_ALL_USERS;
-   }
-   if (all_jobs) {
-      cmd |= SGE_GDI_ALL_JOBS;
-   }
-
-#if 0
-   /* Has the user the permission to use the '-f' (forced) flag */
-   have_master_privileges = false;
-   if (force == 1) {
-      have_master_privileges = sge_gdi_check_permission(&alp, MANAGER_CHECK);
-      if (have_master_privileges == -10) {
-         /* -10 indicates no connection to qmaster */
-
-         /* fills SGE_EVENT with diagnosis information */
-         if (alp != NULL) {
-            if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
-               fprintf(stderr, "%s", lGetString(aep, AN_text));
-            }
-            lFreeList(alp);
-            alp = NULL;
-         }
-         goto error_exit;
-      }  
-      if (alp != NULL) {
-         lFreeList(alp);
-         alp = NULL;
-      }
-   }
-#endif
-
-   /* delete the job */
-   {
-      int delete_mode;
-
-      /* 
-       * delete_mode:
-       *    1 => admin user used '-f'     
-       *         -> forced deletion
-       *    7 => non admin user used '-f' 
-       *         -> first try normal deletion
-       *         -> wait a minute
-       *         -> forced deletion (delete_mode==5)
-       *    3 => normal qdel
-       *         -> normal deletion
-       */
-      if (force == 1) {
-         if (have_master_privileges == true) {
-            delete_mode = 1;
-         } else {
-            delete_mode = 7;
-         }
-      } else {
-         delete_mode = 3;
-      }
-      while (delete_mode) {
-         int no_forced_deletion = delete_mode & 2;
-         int do_again;
-         int error_occured;
-         int first_try = 1;
-
-         for_each(idep, *lpp) {
-            lSetUlong(idep, ID_force, !no_forced_deletion);
-         } 
-
-         /*
-          * Send delete request to master. If the master is not able to
-          * execute the whole request when the 'all' or '-uall' flag was
-          * specified, then the master may discontinue the 
-          * transaction (STATUS_OK_DOAGAIN). In this case the client has 
-          * to redo the transaction.
-          */ 
-         do_again = 0;
-         do {
-
-            do_again = 0;
-            error_occured = 0;
-            alp = sge_gdi(SGE_JOB_LIST, cmd, lpp, NULL, NULL);
-printf("Number of jobs (%d): %d\n", do_again, lGetNumberOfElem(*lpp));            
-            for_each(aep, alp) {
-               status = lGetUlong(aep, AN_status);
-
-               if (delete_mode != 5 && 
-                   ((first_try == 1 && status != STATUS_OK_DOAGAIN) ||
-                    (first_try == 0 && status == STATUS_OK))) {
-/*                   printf("%s", lGetString(aep, AN_text) ); */
-               }
-               if (status != STATUS_OK && 
-                   status != STATUS_OK_DOAGAIN) {
-                  error_occured = 1;
-               }
-               if (status == STATUS_OK_DOAGAIN) {
-                  do_again = 1;
-               }
-            }
-            first_try = 0;
-         } while ((user_list != NULL || all_users || all_jobs) && do_again && !error_occured);
-
-         if (delete_mode == 7) {
-            /* 
-             * loop for one minute
-             * this should prevent non-admin-users from using the '-f'
-             * option regularly
-             */
-            for(wait = 12; wait > 0; wait--) {
-               printf(".");
-               fflush(stdout);
-               sleep(5);
-            } 
-            printf("\n");
-
-            delete_mode = 5;
-         } else {
-            delete_mode = 0;
-         } 
-      }
-   }
-   
-   sge_stopwatch_log(0, "SGE_GDI_DEL:");
-   
-   DEXIT;
-   return alp; 
-
-}
-#endif
 
 
 /*-------------------------------------------------------------------------*/
@@ -729,7 +562,7 @@ lList *lp,
 int force,
 int action 
 ) {
-   lList *id_list = NULL;
+
    lList *alp = NULL;
    
    DENTER(GUI_LAYER, "qmonChangeStateList");
@@ -745,11 +578,8 @@ int action
     * alp contains several answer elements for 
     */
    sge_stopwatch_start(0);
-  
-   if (id_list_build_from_str_list(&id_list, &alp, lp, action, force)) {
-      alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
-      id_list = lFreeList(id_list);
-   }
+   
+   alp = gdi_qmod(lp, force, action);
 
    qmonMirrorMultiAnswer(l2s(type), &alp);
    

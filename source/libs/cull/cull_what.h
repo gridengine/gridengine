@@ -53,8 +53,6 @@ int lReduceDescr(lDescr **dst_dpp, lDescr *src_dp, lEnumeration *enp);
 lEnumeration *lIntVector2What(const lDescr *dp, const int intv[]);
 void nm_set(int job_field[], int nm);
 
-lListElem *lWhatToElem(const lEnumeration *where);
-lEnumeration *lWhatFromElem(const lListElem *what);
 #ifdef  __cplusplus
 }
 #endif

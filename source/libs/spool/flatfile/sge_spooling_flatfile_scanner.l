@@ -7,50 +7,42 @@
  */
 
 %option noyywrap
-%array
+
 
 %{
-/* need this for the system calls below */
+/* need this for the call to atof() below */
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <ctype.h>
 
-#include "spool/flatfile/sge_spooling_flatfile_scanner.h"
-#include "basis_types.h"
+#include "sge_spooling_flatfile_scanner.h"
 
 #define YY_BREAK
 #define YY_NO_UNPUT
-#ifndef YYLMAX
-#  define YYLMAX MAX_STRING_SIZE
-#endif
+
 int spool_line;
-int spool_return_whitespace;
-int spool_finish_line;
-static int spool_cat_line;
-static char spool_tmp_str[MAX_STRING_SIZE];
+bool spool_return_whitespace;
 
 int spool_scanner_initialize(FILE *input)
 {
    spool_line = 1;
-   spool_return_whitespace = 0;
-   spool_finish_line = 0;
-   spool_cat_line = 0;
-   spool_restart(input);
+   spool_return_whitespace = false;
+   spool_in = input;
 
    return spool_lex();
 }
 
 void spool_scanner_shutdown(void)
 {
+   spool__delete_buffer(YY_CURRENT_BUFFER);
 }
 
 %}
 
-DIGIT    "-"?[0-9]
-ID       [a-zA-Z0-9_/.#$\-]*
+DIGIT    [0-9]
+ID       [a-z/\$][a-z0-9_/\.\-\$]*
 COLON    :
-DELIMITER [,;:|={}[\]]
+DELIMITER [,:|=]
 COMPOP   [=<>!]
 NL       \r?\n
 
@@ -66,13 +58,11 @@ NL       \r?\n
 
 {COMPOP}{COMPOP}  return SPFT_COMPOP;
 
-{DELIMITER}      return SPFT_DELIMITER;
+{DELIMITER}+      return SPFT_DELIMITER;
 
 {ID}        return SPFT_WORD;
 
-#[^\n]*{NL}   spool_line++; break;        /* eat up comments */
-
-[\\][ \t\r]*{NL}  spool_line++; break;    /* Ignore newlines preceeded by \ */
+#[^\n]*{NL}   spool_line++; break;       /* eat up comments */
 
 {NL}          { 
                   /* JG: TODO: has to be initialized for each scan run */
@@ -89,135 +79,11 @@ NL       \r?\n
                   break;
                } 
 
-                  /* Match whole lines not ending in \ */
-^[^\n]*[^ \t\r\n\\][ \t\r]*$  %{
-                                 if (!spool_cat_line) { REJECT; }
-                                 else {
-                                    int count;
-                                    char *tmp_str = spool_text;
-                                    
-                                    /* Remove leading spaces */
-                                    while (isspace (*tmp_str)) {
-                                       tmp_str++;
-                                    }
-
-                                    strcat (spool_tmp_str, tmp_str);
-                                    strcpy (spool_text, spool_tmp_str);
-                                    spool_cat_line = 0;
-
-                                    /* Remove trailing spaces */
-                                    for (count = strlen (spool_text) - 1; count >= 0; count--) {
-                                       if (!isspace (spool_text[count])) {
-                                          spool_text[count + 1] = '\0';
-                                          break;
-                                       }
-                                    }
-
-                                    if (count == -1) {
-                                       spool_text[0] = '\0';
-                                    }
-
-                                    spool_tmp_str[0] = '\0';
-                                    spool_line++;
-
-                                    return SPFT_WORD;
-                                 }
-                              %}
-                /* Match whole lines ending in \ */
-^[^\n]*[\\][ \t\r]*\n %{
-                        if (!spool_cat_line) { REJECT; }
-                        else {
-                           char *tmp_str = spool_text;
-
-                           /* Remove leading spaces */
-                           while (isspace (*tmp_str)) {
-                              tmp_str++;
-                           }
-
-                           strcat (spool_tmp_str, tmp_str);
-                           tmp_str = (char *)strrchr (spool_tmp_str, '\\') - 1;
-
-                           /* Remove trailing spaces and backslash */
-                           while (tmp_str != spool_tmp_str) {
-                              if (!isspace (*tmp_str)) {
-                                 /* If the last character is a comma, don't add
-                                  * any spaces */
-                                 if (*tmp_str == ',') {
-                                    tmp_str[1] = '\0';
-                                 }
-                                 /* Otherwise, add a single space to the end*/
-                                 else {
-                                    tmp_str[1] = ' ';
-                                    tmp_str[2] = '\0';
-                                 }
-
-                                 break;
-                              }
-
-                              tmp_str--;
-                           }
-
-                           if (spool_tmp_str == tmp_str) {
-                              spool_tmp_str[0] = '\0';
-                           }
-
-                           spool_line++;
-
-                           break;
-                        }
-                      %}
-                    /* Match remainders of lines not ending in \ */
-[^ \t\r\n][^\n]*[^ \t\r\n\\][ \t\r]*$  %{
-                                          if (!spool_finish_line) { REJECT; }
-                                          else {
-                                             spool_line++;
-                                             return SPFT_WORD;
-                                          }
-                                       %}
-                   /* Match remainders of lines ending in \ */
-[^ \t\r\n][^\n]*[\\][ \t\r]*\n  %{
-                                    if (!spool_finish_line) { REJECT; }
-                                    else {
-                                       char *tmp_str = NULL;
-
-                                       spool_cat_line = 1;
-                                       strcpy (spool_tmp_str, spool_text);
-                                       tmp_str = (char *)strrchr (spool_tmp_str, '\\') - 1;
-
-                                       /* Remove trailing spaces and backslash */
-                                       while (tmp_str != spool_tmp_str) {
-                                          if (!isspace (*tmp_str)) {
-                                             /* If the last character is a comma, don't add
-                                              * any spaces */
-                                             if (*tmp_str == ',') {
-                                                tmp_str[1] = '\0';
-                                             }
-                                             /* Otherwise, add a single space to the end*/
-                                             else {
-                                                tmp_str[1] = ' ';
-                                                tmp_str[2] = '\0';
-                                             }
-
-                                             break;
-                                          }
-
-                                          tmp_str--;
-                                       }
-
-                                       if (spool_tmp_str == tmp_str) {
-                                          spool_tmp_str[0] = '\0';
-                                       }
-
-                                       spool_line++;
-
-                                       break;
-                                    }
-                                %}
 .           return SPFT_UNKNOWN;
 
 %%
 
-#ifdef BUILD_FLATFILE_SCANNER_MAIN 
+#if 0
 int main(int argc, char *argv[])
 {
    int ret;

@@ -77,6 +77,7 @@ static Widget ckpt_ckpt_dir_w = 0;
 static Widget ckpt_when_w = 0;
 static Widget ckpt_reschedule_w = 0;
 static Widget ckpt_signal_w = 0;
+static Widget ckpt_queues_w = 0;
 static int add_mode = 0;
 
 static String ckpt_interface_types[] = { 
@@ -102,6 +103,7 @@ static void qmonCkptResetAsk(void);
 static void qmonCkptSetAsk(lListElem *pep);
 static Widget qmonCreateCkptAsk(Widget parent);
 static Boolean qmonCkptGetAsk(lListElem *pep);
+static void qmonCkptAskForQueues(Widget w, XtPointer cld, XtPointer cad);
 
 /*-------------------------------------------------------------------------*/
 void qmonPopupCkptConfig(w, cld, cad)
@@ -130,7 +132,7 @@ XtPointer cld, cad;
    XSync(XtDisplay(qmon_ckpt), 0);
    XmUpdateDisplay(qmon_ckpt);
 
-   qmonMirrorMultiAnswer(CKPT_T, &alp);
+   qmonMirrorMultiAnswer(CKPT_T | QUEUE_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -142,7 +144,7 @@ XtPointer cld, cad;
 
    
    qmonTimerAddUpdateProc(CKPT_T, "updateCkptList", updateCkptList);
-   qmonStartTimer(CKPT_T);
+   qmonStartTimer(CKPT_T | QUEUE_T);
    updateCkptList();
    XmListSelectPos(ckpt_names, 1, True);
 
@@ -178,7 +180,7 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonPopdownCkptConfig");
 
    XtUnmanageChild(qmon_ckpt);
-   qmonStopTimer(CKPT_T);
+   qmonStopTimer(CKPT_T | QUEUE_T);
    qmonTimerRmUpdateProc(CKPT_T, "updateCkptList");
 
    DEXIT;
@@ -189,6 +191,8 @@ static void qmonCkptFillConf(
 Widget w,
 lListElem *ep 
 ) {
+   lList *ql;
+   lListElem *qep;
    XmString *items;
    Cardinal itemCount; 
    char buf[BUFSIZ];
@@ -208,7 +212,7 @@ lListElem *ep
       return;
    }
    
-   itemCount = 9;
+   itemCount = 10;
    items = (XmString*) XtMalloc(sizeof(XmString)*itemCount); 
 
    i = 0;
@@ -246,6 +250,17 @@ lListElem *ep
                lGetString(ep, CK_ckpt_dir));
    items[i++] = XmStringCreateLtoR(buf, "LIST");
 
+   /* queue list */
+   ql = lGetList(ep, CK_queue_list);
+   sprintf(buf, "%-20.20s", "Queues");
+   for_each(qep, ql) {
+      strcat(buf, " "); 
+      strcat(buf, lGetString(qep, QR_name));
+   }
+   if (!lGetNumberOfElem(ql))
+      strcat(buf, " NONE");
+   items[i++] = XmStringCreateLtoR(buf, "LIST");
+   
    /* CK_when */
    sprintf(buf, "%-20.20s %s", "Checkpoint When", lGetString(ep, CK_when));
    items[i++] = XmStringCreateLtoR(buf, "LIST");
@@ -336,7 +351,7 @@ Widget parent
 static Widget qmonCreateCkptAsk(
 Widget parent 
 ) {
-   Widget ckpt_ok, ckpt_cancel;
+   Widget ckpt_ok, ckpt_cancel, ckpt_queuesPB;
 
    DENTER(GUI_LAYER, "qmonCreateCkptAsk");
    
@@ -344,6 +359,7 @@ Widget parent
                            NULL, 0,
                            "ckpt_ok", &ckpt_ok,
                            "ckpt_cancel", &ckpt_cancel,
+                           "ckpt_queuesPB", &ckpt_queuesPB,
                            "ckpt_name", &ckpt_name_w,
                            "ckpt_interface", &ckpt_interface_w,
                            "ckpt_ckpt_command", &ckpt_ckpt_command_w,
@@ -354,17 +370,62 @@ Widget parent
                            "ckpt_when", &ckpt_when_w,
                            "ckpt_reschedule", &ckpt_reschedule_w,
                            "ckpt_signal", &ckpt_signal_w,
+                           "ckpt_queues", &ckpt_queues_w,
                            NULL);
 
    XtAddCallback(ckpt_ok, XmNactivateCallback, 
                      qmonCkptOk, NULL);
    XtAddCallback(ckpt_cancel, XmNactivateCallback, 
                      qmonCkptCancel, NULL);
+   XtAddCallback(ckpt_queuesPB, XmNactivateCallback, 
+                     qmonCkptAskForQueues, NULL);
    XtAddEventHandler(XtParent(ckpt_ask_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
 
    DEXIT;
    return ckpt_ask_layout;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonCkptAskForQueues(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   lList *ql_out = NULL;
+   lList *ql_in = NULL;
+   static lCondition *where = NULL;
+   static lEnumeration *what = NULL;
+   int status;
+
+   DENTER(GUI_LAYER, "qmonCkptAskForQueues");
+   
+   /*
+   ** the template q is removed here
+   */
+   if (!where) {
+#if 1   
+      where = lWhere("%T(%I!=%s)", QU_Type, QU_qname, "template");
+#else
+      where = lWhere("%T(%I != %s && %I m= %u)", QU_Type, QU_qname, "template",
+                                 QU_qtype, 0x08);
+#endif
+      what = lWhat("%T(ALL)", QU_Type);
+   }
+   ql_in = lSelect("QL", qmonMirrorList(SGE_QUEUE_LIST), where, what);
+   ql_out = XmStringToCull(ckpt_queues_w, QR_Type, QR_name, ALL_ITEMS);
+
+   status = XmtAskForItems(w, NULL, NULL, "@{Select Queues}", ql_in, QU_qname, 
+                  "@{@fBAvailable Queues}", &ql_out, QR_Type, QR_name, 
+                  "@{@fBChosen Queues}", NULL);
+
+   if (status) {
+      UpdateXmListFromCull(ckpt_queues_w, XmFONTLIST_DEFAULT_TAG, ql_out,
+                              QR_name);
+   }
+   ql_out = lFreeList(ql_out);
+   ql_in = lFreeList(ql_in);
+
+   DEXIT;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -447,7 +508,7 @@ XtPointer cld, cad;
    
    if (ckptl) {
       if (qmonCkptGetAsk(lFirst(ckptl))) {
-         ckpt_name = (StringConst)lGetString(lFirst(ckptl), CK_name);
+         ckpt_name = lGetString(lFirst(ckptl), CK_name);
          /*
          ** gdi call 
          */
@@ -556,6 +617,7 @@ lListElem *ckp
    StringConst ckpt_ckpt_dir = NULL;
    StringConst ckpt_when = NULL;
    StringConst ckpt_signal = NULL;
+   lList *ql = NULL;
    int i;
    int state = 0;
    int reschedule = 0;
@@ -567,11 +629,11 @@ lListElem *ckp
       return;
    }
 
-   ckpt_name = (StringConst)lGetString(ckp, CK_name);
+   ckpt_name = lGetString(ckp, CK_name);
    if (ckpt_name)
       XmtInputFieldSetString(ckpt_name_w, ckpt_name);
 
-   ckpt_interface = (StringConst)lGetString(ckp, CK_interface);
+   ckpt_interface = lGetString(ckp, CK_interface);
    if (ckpt_interface) {
       for (i=0; i<XtNumber(ckpt_interface_types); i++) {
          if (!strcasecmp(ckpt_interface, ckpt_interface_types[i])) {
@@ -583,27 +645,27 @@ lListElem *ckp
    else
       XmtChooserSetState(ckpt_interface_w, 0, False);
 
-   ckpt_ckpt_command = (StringConst)lGetString(ckp, CK_ckpt_command);
+   ckpt_ckpt_command = lGetString(ckp, CK_ckpt_command);
    if (ckpt_ckpt_command)
       XmtInputFieldSetString(ckpt_ckpt_command_w, ckpt_ckpt_command);
 
-   ckpt_migr_command = (StringConst)lGetString(ckp, CK_migr_command);
+   ckpt_migr_command = lGetString(ckp, CK_migr_command);
    if (ckpt_migr_command)
       XmtInputFieldSetString(ckpt_migr_command_w, ckpt_migr_command);
 
-   ckpt_rest_command = (StringConst)lGetString(ckp, CK_rest_command);
+   ckpt_rest_command = lGetString(ckp, CK_rest_command);
    if (ckpt_rest_command)
       XmtInputFieldSetString(ckpt_rest_command_w, ckpt_rest_command);
 
-   ckpt_clean_command = (StringConst)lGetString(ckp, CK_clean_command);
+   ckpt_clean_command = lGetString(ckp, CK_clean_command);
    if (ckpt_clean_command)
       XmtInputFieldSetString(ckpt_clean_command_w, ckpt_clean_command);
 
-   ckpt_ckpt_dir = (StringConst)lGetString(ckp, CK_ckpt_dir);
+   ckpt_ckpt_dir = lGetString(ckp, CK_ckpt_dir);
    if (ckpt_ckpt_dir)
       XmtInputFieldSetString(ckpt_ckpt_dir_w, ckpt_ckpt_dir);
 
-   ckpt_when = (StringConst)lGetString(ckp, CK_when);
+   ckpt_when = lGetString(ckp, CK_when);
    if (ckpt_when && strchr(ckpt_when, 's'))
       state |= 1;
    if (ckpt_when && strchr(ckpt_when, 'm'))
@@ -619,9 +681,16 @@ lListElem *ckp
    XmtChooserSetState(ckpt_when_w, state, False);
    XmtChooserSetState(ckpt_reschedule_w, reschedule, False);
    
-   ckpt_signal = (StringConst)lGetString(ckp, CK_signal);
+   ckpt_signal = lGetString(ckp, CK_signal);
    if (ckpt_signal)
       XmtInputFieldSetString(ckpt_signal_w, ckpt_signal);
+
+   /*
+   ** the lists have to be converted to XmString
+   */
+   ql = lGetList(ckp, CK_queue_list);
+   UpdateXmListFromCull(ckpt_queues_w, XmFONTLIST_DEFAULT_TAG, ql, QR_name);
+
 
    DEXIT;
 }
@@ -643,6 +712,10 @@ static void qmonCkptResetAsk(void)
    XmtChooserSetState(ckpt_when_w, state, False);
    XmtChooserSetState(ckpt_reschedule_w, 0, False);
    XmtInputFieldSetString(ckpt_signal_w, "NONE");
+   /*
+   ** the lists have to be converted to XmString
+   */
+   UpdateXmListFromCull(ckpt_queues_w, XmFONTLIST_DEFAULT_TAG, NULL, QR_name);
 
    DEXIT;
 }
@@ -659,6 +732,7 @@ lListElem *ckp
    String ckpt_clean_command = NULL;
    String ckpt_ckpt_dir = NULL;
    String ckpt_signal = NULL;
+   lList *ql = NULL;
    int state;
    int i;
    char ckpt_when[20];
@@ -758,6 +832,13 @@ lListElem *ckp
    }
    lSetString(ckp, CK_signal, ckpt_signal);
   
+   /*
+   ** XmString entries --> Cull
+   */
+   ql = XmStringToCull(ckpt_queues_w, QR_Type, QR_name, ALL_ITEMS);
+   lSetList(ckp, CK_queue_list, ql);
+
+
    DEXIT;
    return True;
 }

@@ -33,8 +33,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <pthread.h>
-#include <fnmatch.h>
 
 #include "sgermon.h"
 #include "sge_stdlib.h"
@@ -68,9 +66,6 @@
 *
 *  EXAMPLE
 *     sge_basename("/usr/local/bin/flex", '/'); returns "flex"
-*
-*  NOTES
-*     MT-NOTE: sge_basename() is MT safe
 ******************************************************************************/
 const char *sge_basename(const char *name, int delim) 
 {
@@ -125,7 +120,6 @@ const char *sge_basename(const char *name, int delim)
 *  NOTES
 *     This routine is called "dirname" in opposite to "basename"
 *     but is mostly used to strip off the domainname of a FQDN     
-*     MT-NOTE: sge_dirname() is MT safe
 ******************************************************************************/
 char *sge_dirname(const char *name, int delim) 
 {
@@ -179,9 +173,6 @@ char *sge_dirname(const char *name, int delim)
 *
 *  RESULT
 *     char* - first/next token of str.
-*
-*  NOTES
-*     MT-NOTE: sge_strtok() is not MT safe, use sge_strtok_r() instead
 *
 *  SEE ALSO
 *     uti/string/sge_strtok_r()     
@@ -282,9 +273,6 @@ char *sge_strtok(const char *str, const char *delimitor)
 *  SEE ALSO
 *     uti/string/sge_strtok()     
 *     uti/string/sge_free_saved_vars()
-*
-*  NOTES
-*     MT-NOTE: sge_strtok_r() is MT safe
 ******************************************************************************/
 char *sge_strtok_r(const char *str, const char *delimitor, 
                    struct saved_vars_s **context) 
@@ -374,9 +362,6 @@ char *sge_strtok_r(const char *str, const char *delimitor,
 *
 *  SEE ALSO
 *     uti/string/sge_strtok_r() 
-*
-*  NOTES
-*     MT-NOTE: sge_free_saved_vars() is MT safe
 ******************************************************************************/
 void sge_free_saved_vars(struct saved_vars_s *context) 
 {
@@ -402,9 +387,6 @@ void sge_free_saved_vars(struct saved_vars_s *context)
 *
 *  RESULT
 *     char* - malloced string
-*
-*  NOTES
-*     MT-NOTE: sge_strdup() is MT safe
 ******************************************************************************/
 char *sge_strdup(char *old, const char *s) 
 {
@@ -443,9 +425,6 @@ char *sge_strdup(char *old, const char *s)
 *
 *  INPUTS
 *     char *str - pointer to string to be condensed 
-*
-*  NOTES
-*     MT-NOTE: sge_strip_blanks() is MT safe
 ******************************************************************************/
 void sge_strip_blanks(char *str) 
 {
@@ -460,31 +439,12 @@ void sge_strip_blanks(char *str)
 
    while (*str) {
       if (*str != ' ') {
-         if (cp != str)
-            *cp = *str;
-         cp++;
+         *cp++ = *str;
       }
       str++;
    };
    *cp = '\0';
 
-   DEXIT;
-   return;
-}
-
-/* EB: ADOC: add commets */
-
-void sge_strip_white_space_at_eol(char *str) 
-{
-   DENTER(BASIS_LAYER, "sge_strip_white_space_at_eol");
-   if (str != NULL) {
-      size_t length = strlen(str);
-
-      while (str[length - 1] == ' ' || str[length - 1] == '\t') {
-         str[length - 1] = '\0';
-         length--;
-      }
-   }
    DEXIT;
    return;
 }
@@ -519,9 +479,6 @@ void sge_strip_white_space_at_eol(char *str)
 *
 *  RESULT
 *     char* - Truncated copy of 'str' (Has to be freed by the caller!)
-*
-*  NOTES
-*     MT-NOTE: sge_delim_str() is MT safe
 ******************************************************************************/
 char *sge_delim_str(char *str, char **delim_pos, const char *delim) 
 {
@@ -578,9 +535,6 @@ char *sge_delim_str(char *str, char **delim_pos, const char *delim)
 *         0 - strings are the same or both NULL 
 *        -1 - a < b or a is NULL
 *         1 - a > b or b is NULL
-*
-*  NOTES
-*     MT-NOTE: sge_strnullcmp() is MT safe
 ******************************************************************************/
 int sge_strnullcmp(const char *a, const char *b) 
 {
@@ -595,47 +549,6 @@ int sge_strnullcmp(const char *a, const char *b)
    }
    return strcmp(a, b);
 }
-
-/****** sge_string/sge_patternnullcmp() ****************************************
-*  NAME
-*     sge_patternnullcmp() -- like fnmatch 
-*
-*  SYNOPSIS
-*     int sge_patternnullcmp(const char *str, const char *pattern) 
-*
-*  FUNCTION
-*     Like fnmatch() apart from the handling of NULL strings.
-*     These are treated as being less than any not-NULL strings.
-*     Important for sorting lists where NULL strings can occur. 
-*
-*  INPUTS
-*     const char *str     - string 
-*     const char *pattern - pattern to match 
-*
-*  RESULT
-*     int - result
-*         0 - strings are the same or both NULL 
-*        -1 - a < b or a is NULL
-*         1 - a > b or b is NULL
-*
-*
-*  NOTES
-*   MT-NOTE: fnmatch uses static variables, not MT safe
-*******************************************************************************/
-int sge_patternnullcmp(const char *str, const char *pattern) 
-{
-   if (!str && pattern) {
-      return -1;
-   }
-   if (str && !pattern) {
-      return 1;
-   }
-   if (!str && !pattern) {
-      return 0;
-   }
-   return fnmatch(pattern, str, 0);
-}
-
 
 /****** uti/string/sge_strnullcasecmp() ***************************************
 *  NAME
@@ -658,9 +571,6 @@ int sge_patternnullcmp(const char *str, const char *pattern)
 *         0 - strings are the same minus case or both NULL 
 *        -1 - a < b or a is NULL
 *         1 - a > b or b is NULL
-*
-*  NOTES
-*     MT-NOTE: sge_strnullcasecmp() is MT safe
 ******************************************************************************/
 int sge_strnullcasecmp(const char *a, const char *b) 
 {
@@ -690,9 +600,6 @@ int sge_strnullcasecmp(const char *a, const char *b)
 *     int - result
 *         0 - no wildcard pattern
 *         1 - it is a wildcard pattern  
-*
-*  NOTES
-*     MT-NOTE: sge_is_pattern() is MT safe
 ******************************************************************************/
 int sge_is_pattern(const char *s) 
 {
@@ -722,10 +629,6 @@ int sge_is_pattern(const char *s)
 *     int - result
 *         0 - It is no integer
 *         1 - It is a integer
-*
-*  NOTES
-*     MT-NOTE: sge_strisint() is MT safe
-*
 ******************************************************************************/
 int sge_strisint(const char *str) 
 {
@@ -752,9 +655,6 @@ int sge_strisint(const char *str)
 *  INPUTS
 *     char *buffer - string 
 *     int max_len  - number of chars 
-*
-*  NOTES
-*     MT-NOTE: sge_strtoupper() is MT safe
 ******************************************************************************/
 void sge_strtoupper(char *buffer, int max_len) 
 {
@@ -788,9 +688,6 @@ void sge_strtoupper(char *buffer, int max_len)
 *
 *  RESULT
 *     char** - copy of 'cpp'
-*
-*  NOTES
-*     MT-NOTE: sge_stradup() is MT safe
 ******************************************************************************/
 char **sge_stradup(char **cpp, int n)
 {
@@ -850,9 +747,6 @@ char **sge_stradup(char **cpp, int n)
 *
 *  INPUTS
 *     char **cpp - Array of string pointers 
-*
-*  NOTES
-*     MT-NOTE: sge_strafree() is MT safe
 ******************************************************************************/
 void sge_strafree(char **cpp)
 {
@@ -884,14 +778,8 @@ void sge_strafree(char **cpp)
 *     char **cpp     - pointer to array of strings 
 *     int n          - number of chars 
 *
-*  NOTES:
-*     MT-NOTE: sge_stramemncpy() is MT safe
-*
 *  RESULT
 *     char** - NULL or pointer a string
-*
-*  NOTES
-*     MT-NOTE: sge_stramemncpy() is MT safe
 ******************************************************************************/
 char **sge_stramemncpy(const char *cp, char **cpp, int n)
 {
@@ -921,9 +809,6 @@ char **sge_stramemncpy(const char *cp, char **cpp, int n)
 *
 *  RESULT
 *     char** - NULL or pointer a string
-*
-*  NOTES
-*     MT-NOTE: sge_stracasecmp() is MT safe
 ******************************************************************************/
 char **sge_stracasecmp(const char *cp, char **cpp)
 {
@@ -947,9 +832,6 @@ char **sge_stracasecmp(const char *cp, char **cpp)
 *
 *  INPUTS
 *     char *str - string (e.g. path) 
-*
-*  NOTES
-*     MT-NOTE: sge_compress_slashes() is MT safe
 *******************************************************************************/
 void sge_compress_slashes(char *str)
 {
@@ -983,9 +865,6 @@ void sge_compress_slashes(char *str)
 *
 *  INPUTS
 *     char **pstr - string to be modified 
-*
-*  NOTES
-*     MT-NOTE: sge_strip_quotes() is MT safe
 ******************************************************************************/
 void sge_strip_quotes(char **pstr) 
 {
@@ -1007,174 +886,11 @@ void sge_strip_quotes(char **pstr)
    return;
 }
 
-/****** uti/string/sge_strlen() ***********************************************
-*  NAME
-*     sge_strlen() -- replacement for strlen() 
-*
-*  SYNOPSIS
-*     int sge_strlen(const char *str) 
-*
-*  FUNCTION
-*     replacement for strlen 
-*
-*  INPUTS
-*     const char *str - NULL or pointer to string 
-*
-*  RESULT
-*     int - length of string or 0 if NULL pointer
-*
-*  NOTES
-*     MT-NOTE: sge_strlen() is MT safe
-*******************************************************************************/
 int sge_strlen(const char *str)
 {
-   int ret = 0;
-
-   if (str != NULL) {
-      ret = strlen(str);
-   }
-   return ret;
-}
-
-/*
-** problem: modifies input string,
-** this is the most frequently used mode
-** but allocating extra memory (as it was in
-** sge_string2list) should also be possible
-** problem: default delimiters should be possible
-** note: there is a similar cull function lString2List
-*/
-/*
-** NAME
-**   string_list
-** PARAMETER
-**   str       -    string to be parsed
-**   delis     -    string containing delimiters
-**   pstr      -    NULL or string array to return
-** RETURN
-**   NULL      -    error
-**   char **   -    pointer to an array of strings containing
-**                  the string list
-** EXTERNAL
-**
-** DESCRIPTION
-**
-** NOTES
-**     MT-NOTE: string_list() is MT safe
-**
-*/
-char **string_list(char *str, char *delis, char **pstr) 
-{
-   unsigned int i = 0, j = 0;
-   int is_space = 0;
-   int found_first_quote = 0;
-   char **head;
-
-   DENTER(BASIS_LAYER, "string_list");
-
-   if (!str) {
-      DEXIT;
-      return NULL;
+   if(str == NULL) {
+      return 0;
    }
 
-   while (strchr(delis, str[0])) {
-      str++;
-   }
-   if (str[0] == '\0') {
-      DEXIT;
-      return NULL;
-   }
-
-   /*
-    * not more items than length of string is possible
-    */
-   if (!pstr) {
-      head = malloc((sizeof(void *)) * (strlen(str) + 1));
-      if (!head) {
-         DEXIT;
-         return NULL;
-      }
-   }
-   else {
-      head = pstr;
-   }
-
-   while (1) {
-      while (str[i] && strchr(delis, str[i])) {
-         i++;
-      }
-      if (str[i] == '\0') {
-         break;
-      }
-      head[j] = &str[i];
-      j++;
-      /*
-      ** parse one string
-      */
-      is_space = 0;
-      while (str[i] && !is_space) {
-         if (str[i] == '"') {
-            found_first_quote = 1;
-         }
-         i++;
-         if (found_first_quote) {
-            is_space = 0;
-         }
-         else {
-            is_space = (strchr(delis, str[i]) != NULL);
-         }
-         if (found_first_quote && (str[i] == '"')) {
-            found_first_quote = 0;
-         }
-      }
-      if (str[i] == '\0') {
-         break;
-      }
-
-      str[i] = '\0';
-      i++;
-   }
-   head[j] = NULL;
-
-   DEXIT;
-   return head;
-}
-
-/****** uti/string/sge_strerror() **********************************************
-*  NAME
-*     sge_strerror() -- replacement for strerror
-*
-*  SYNOPSIS
-*     const char* 
-*     sge_strerror(int errnum) 
-*
-*  FUNCTION
-*     Returns a string describing an error condition set by system 
-*     calls (errno).
-*
-*     Wrapper arround strerror. Access to strerrror is serialized by the
-*     use of a mutex variable to make strerror thread safe.
-*
-*  INPUTS
-*     int errnum        - the errno to explain
-*     dstring *buffer   - buffer into which the error message is written
-*
-*  RESULT
-*     const char* - pointer to a string explaining errnum
-*
-*  NOTES
-*     MT-NOTE: sge_strerror() is MT safe
-*******************************************************************************/
-const char *
-sge_strerror(int errnum, dstring *buffer)
-{
-   static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
-   const char *ret;
-
-   pthread_mutex_lock(&mtx);
-   ret = strerror(errnum);
-   ret = sge_dstring_copy_string(buffer, ret);
-   pthread_mutex_unlock(&mtx);
-
-   return ret;
+   return strlen(str);
 }

@@ -59,7 +59,7 @@
 #  define NSIG (SIGUSR2+1)
 #endif
 
-const sig_mapT sig_map[] = 
+sig_mapT sig_map[] = 
 {
    {SGE_SIGHUP, SIGHUP, "HUP"},
    {SGE_SIGINT, SIGINT, "INT"},
@@ -87,9 +87,11 @@ const sig_mapT sig_map[] =
    {SGE_SIGTTIN, SIGTTIN, "TTIN"},
    {SGE_SIGTTOU, SIGTTOU, "TTOU"},
    {SGE_SIGIO, SIGIO, "IO"},
+#if !defined(HPUX)
    {SGE_SIGXCPU, SIGXCPU, "XCPU"},
 #ifndef CRAY
    {SGE_SIGXFSZ, SIGXFSZ, "XFSZ"},
+#endif
 #endif
 #if !(defined(CRAY) || defined(NECSX4) || defined(NECSX5))
    {SGE_SIGVTALRM, SIGVTALRM, "VTALRM"},
@@ -118,14 +120,10 @@ const sig_mapT sig_map[] =
 *
 *  RESULT
 *     int - system signal
-*
-*  NOTES
-*     MT-NOTE: sge_unmap_signal() is MT safe
-*
 ******************************************************************************/
 int sge_unmap_signal(u_long32 sge_sig) 
 {
-   const sig_mapT *mapptr=sig_map;
+   sig_mapT *mapptr=sig_map;
 
    while (mapptr->sge_sig) {
       if (mapptr->sge_sig == sge_sig) {
@@ -151,14 +149,10 @@ int sge_unmap_signal(u_long32 sge_sig)
 *
 *  RESULT
 *     u_long32 - SGE/EE Signal
-*
-*  NOTES
-*     MT-NOTE: sge_map_signal() is MT safe
-*
 ******************************************************************************/
 u_long32 sge_map_signal(int sys_sig) 
 {
-   const sig_mapT *mapptr=sig_map;
+   sig_mapT *mapptr=sig_map;
 
    while (mapptr->sge_sig) {
       if (mapptr->sig == sys_sig) {
@@ -186,14 +180,10 @@ u_long32 sge_map_signal(int sys_sig)
 *
 *  RESULT
 *     u_long32 - SGE/EE signal 
-*
-*  NOTES
-*     MT-NOTE: sge_str2signal() is MT safe
-*
 ******************************************************************************/
 u_long32 sge_str2signal(const char *str) 
 {
-   const sig_mapT *mapptr=sig_map;
+   sig_mapT *mapptr=sig_map;
    u_long32 signum;
 
    /* look for signal names in mapping table */
@@ -234,14 +224,10 @@ u_long32 sge_str2signal(const char *str)
 *
 *  RESULT
 *     u_long32 - SGE/EE signal
-*
-*  NOTES
-*     MT-NOTE: sge_sys_str2signal() is MT safe
-*
 ******************************************************************************/
 u_long32 sge_sys_str2signal(const char *str) 
 {
-   const sig_mapT *mapptr=sig_map;
+   sig_mapT *mapptr=sig_map;
    u_long32 signum;
 
    /* look for signal names in mapping table */
@@ -276,14 +262,10 @@ u_long32 sge_sys_str2signal(const char *str)
 *
 *  RESULT
 *     const char* - signal string
-*
-*  NOTES
-*     MT-NOTE: sge_sig2str() is MT safe
-*
 ******************************************************************************/
 const char *sge_sig2str(u_long32 sge_sig) 
 {
-   const sig_mapT *mapptr;
+   sig_mapT *mapptr;
 
    /* look for signal names in mapping table */
    for (mapptr=sig_map; mapptr->sge_sig; mapptr++) {
@@ -310,14 +292,10 @@ const char *sge_sig2str(u_long32 sge_sig)
 *
 *  RESULT
 *     const char* - signal string
-*
-*  NOTES
-*     MT-NOTE: sge_sys_sig2str() is MT safe
-*
 ******************************************************************************/
 const char *sge_sys_sig2str(u_long32 sys_sig) 
 {
-   const sig_mapT *mapptr;
+   sig_mapT *mapptr;
 
    /* look for signal names in mapping table */
    for (mapptr=sig_map; mapptr->sge_sig; mapptr++) {
@@ -342,10 +320,6 @@ const char *sge_sys_sig2str(u_long32 sys_sig)
 *  INPUTS
 *     int sig_num         - signal number
 *     err_func_t err_func - callback function to report errors
-*
-*  NOTES
-*     MT-NOTE: sge_set_def_sig_mask() is MT safe
-*
 ******************************************************************************/
 void sge_set_def_sig_mask(int sig_num, err_func_t err_func)
 {
@@ -355,7 +329,7 @@ void sge_set_def_sig_mask(int sig_num, err_func_t err_func)
  
    errno = 0;
    for (i=1; i < NSIG; i++) {
-#if !defined(HPUX)
+#if !defined(HP10) && !defined(HP10_01) && !defined(HPCONVEX) && !defined(HP11)
       if (i != SIGKILL && i != SIGSTOP && i != sig_num)
 #else
       if (i != SIGKILL && i != SIGSTOP &&
@@ -377,7 +351,7 @@ void sge_set_def_sig_mask(int sig_num, err_func_t err_func)
  
 }   
 
-/****** uti/signal/sge_unblock_all_signals() **********************************
+/****** sge_set_def_sig_mask/sge_unblock_all_signals() **************************
 *  NAME
 *     sge_unblock_all_signals()
 *
@@ -386,10 +360,6 @@ void sge_set_def_sig_mask(int sig_num, err_func_t err_func)
 *
 *  FUNCTION
 *     Allow for all signals.
-*
-*  NOTES
-*     MT-NOTE: sge_unblock_all_signals() is MT safe
-*
 *******************************************************************************/
 void sge_unblock_all_signals(void)
 {

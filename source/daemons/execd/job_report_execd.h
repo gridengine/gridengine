@@ -48,7 +48,4 @@ int add_usage(lListElem *jr, char *name, const char *uval_as_str, double val);
 
 int execd_c_ack(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, int *synchron, char *err_str, int answer_error);
 
-int
-execd_get_acct_multiplication_factor(const lListElem *pe, 
-                                     int slots, bool task);
 #endif /* _JOB_REPORT_EXECD_H_ */

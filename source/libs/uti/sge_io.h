@@ -33,7 +33,6 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_crc.h"
-#include "sge_tmpnam.h"
 
 /****** uti/io/sge_mode_t *****************************************************
 *  NAME
@@ -79,6 +78,8 @@ char *sge_file2string(const char *fname, int *len);
 char *sge_stream2string(FILE *fp, int *len);
  
 int sge_string2file(const char *str, int len, const char *fname); 
+
+char *sge_tmpnam(char *fname); 
  
 #endif /* __SGE_IO_H */
 

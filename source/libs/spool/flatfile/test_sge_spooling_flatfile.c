@@ -43,9 +43,10 @@
 #include "sge_all_listsL.h"
 
 #include "sge_answer.h"
+#include "sge_queue.h"
 
-#include "spool/sge_spooling_utilities.h"
-#include "spool/flatfile/sge_spooling_flatfile.h"
+#include "sge_spooling_utilities.h"
+#include "sge_spooling_flatfile.h"
 
 int main(int argc, char *argv[])
 {

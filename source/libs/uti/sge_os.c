@@ -55,7 +55,7 @@
 #   include <rpcsvc/ypclnt.h>
 #endif
  
-#if defined(AIX)
+#if defined(AIX32) || defined(AIX)
 #   include <sys/select.h>
 #endif    
 
@@ -92,9 +92,6 @@
 *         0 - No program with given name found
 *        >0 - Number of processes with "name" 
 *        -1 - Error
-*
-*  NOTES
-*     MT-NOTES: sge_get_pids() is not MT safe
 ******************************************************************************/
 int sge_get_pids(pid_t *pids, int max_pids, const char *name, 
              const char *pscommand) 
@@ -107,7 +104,7 @@ int sge_get_pids(pid_t *pids, int max_pids, const char *name,
    DENTER(TOP_LAYER, "sge_get_pids");
    
    command_pid = sge_peopen("/bin/sh", 0, pscommand, NULL, NULL, 
-                        &fp_in, &fp_out, &fp_err, false);
+                        &fp_in, &fp_out, &fp_err);
 
    if (command_pid == -1) {
       DEXIT;
@@ -173,9 +170,6 @@ int sge_get_pids(pid_t *pids, int max_pids, const char *name,
 *     int - result state
 *         0 - pid was not found
 *         1 - pid was found
-*
-*  NOTES
-*     MT-NOTES: sge_contains_pid() is MT safe
 ******************************************************************************/
 int sge_contains_pid(pid_t pid, pid_t *pids, int npids) 
 {
@@ -212,9 +206,6 @@ int sge_contains_pid(pid_t pid, pid_t *pids, int npids)
 *         0 - Process with "pid" has "name"
 *         1 - No such pid or pid has other name
 *        -1 - error occurred (mostly sge_peopen() failed) 
-*
-*  NOTES
-*     MT-NOTES: sge_checkprog() is not MT safe
 ******************************************************************************/
 int sge_checkprog(pid_t pid, const char *name, const char *pscommand) 
 {
@@ -222,14 +213,28 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
    char buf[1000], *ptr;
    pid_t command_pid, pidfound;
    int len, last, notfound;
+#if defined(QIDL) && defined(SOLARIS64)
+   sigset_t sigset, osigset;
+#endif
 
    DENTER(TOP_LAYER, "sge_checkprog");
 
+#if defined(QIDL) && defined(SOLARIS64)
+   {
+      sigemptyset(&sigset);
+      sigaddset(&sigset, SIGCLD);
+      sigprocmask(SIG_BLOCK, &sigset, &osigset);
+   }
+#endif
+
    command_pid = sge_peopen("/bin/sh", 0, pscommand, NULL, NULL, 
-                        &fp_in, &fp_out, &fp_err, false);
+                        &fp_in, &fp_out, &fp_err);
 
    if (command_pid == -1) {
       DEXIT;
+#if defined(QIDL) && defined(SOLARIS64) 
+      sigprocmask(SIG_SETMASK, &osigset, NULL);
+#endif  
       return -1;
    }
 
@@ -275,6 +280,10 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 
    sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
 
+#if defined(QIDL) && defined(SOLARIS64) 
+   sigprocmask(SIG_SETMASK, &osigset, NULL);
+#endif  
+   
    DEXIT;
    return notfound;
 }
@@ -298,9 +307,6 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 *     int - Successfull?
 *         1 - Yes
 *         0 - No
-*
-*  NOTES
-*     MT-NOTES: sge_daemonize() is not MT safe
 ******************************************************************************/
 int sge_daemonize(fd_set *keep_open)
 {
@@ -399,9 +405,6 @@ int sge_daemonize(fd_set *keep_open)
 *         0 - there are problems with stdin
 *         1 - there are problems with stdout
 *         2 - there are problems with stderr
-*
-*  NOTES
-*     MT-NOTE: sge_occupy_first_three() is MT safe
 ******************************************************************************/
 int sge_occupy_first_three(void)
 {
@@ -447,9 +450,6 @@ int sge_occupy_first_three(void)
 *
 *  INPUTS
 *     fd_set *keep_open - bitmask
-*
-*  NOTES
-*     MT-NOTE: sge_close_all_fds() is MT safe
 ******************************************************************************/
 void sge_close_all_fds(fd_set *keep_open)
 {
@@ -461,8 +461,7 @@ _Insight_set_option("suppress", "USER_ERROR");
    int maxfd;
  
 #ifndef WIN32NATIVE
-   maxfd = sysconf(_SC_OPEN_MAX) > FD_SETSIZE ? \
-     FD_SETSIZE : sysconf(_SC_OPEN_MAX);
+   maxfd = sysconf(_SC_OPEN_MAX);
 #else /* WIN32NATIVE */
    maxfd = FD_SETSIZE;
    /* detect maximal number of fds under NT/W2000 (env: Files)*/

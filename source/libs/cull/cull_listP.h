@@ -83,11 +83,24 @@ struct _lListElem {
 struct _lList {
    int nelem;                   /* number of elements in the list            */
    char *listname;              /* name of the list                          */
-   bool changed;                /* the list has been changed                 */
+   int changed;                 /* the list has been changed                 */
    lDescr *descr;               /* pointer to the descriptor array           */
    lListElem *first;            /* pointer to the first element of the list  */
    lListElem *last;             /* pointer to the last element of the list   */
 };
+
+
+void cull_state_set_lerrno(int i);
+void cull_state_set_noinit(char *s);
+void cull_state_set_global_sort_order(const lSortOrder *so);
+void cull_state_set_chunk_size(int chunk_size);
+void cull_state_set_name_space(const lNameSpace *ns);
+
+int cull_state_get_lerrno(void);
+const char *cull_state_get_noinit(void);
+const lSortOrder *cull_state_get_global_sort_order(void);
+int cull_state_get_chunk_size(void);
+const lNameSpace *cull_state_get_name_space(void);
 
 #ifdef  __cplusplus
 }

@@ -35,9 +35,66 @@
 #include "cull.h"
 #include "subordinate_schedd.h"
 #include "sgermon.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_subordinate.h"
+#include "sge_queue.h"
+
+/* -----------------------------------------------
+
+   test suspend on subordinate (nice neuron)
+
+    A1            C1
+      \          /
+       \        /
+        \      /
+  A2--------->B-------> C2
+        /      \
+       /        \
+      /          \
+    A3            C3
+
+   a queue C subordinated by B must be suspended if
+   the used slots of queue B meet the thresold for C
+
+*/
+int tst_sos(
+int used,      /* number of slots actually used in queue B     */
+int total,     /* total number of slots in queue B               */
+int own_sos,   /* this queue B is suspended because of a queue A */
+lListElem *so  /* SO_Type referencing to a queue C               */
+) {
+   u_long32 threshold;
+
+   DENTER(TOP_LAYER, "tst_sos");
+
+   /* --- no recursive suspends
+      1st check if B is suspended by
+      one or more other queues A
+   */
+#if RECURSIVE_SUBORDINATES
+   if (own_sos) {
+      DPRINTF(("TSTSOS: self suspended\n"));
+      DEXIT;
+      return 1;
+   }
+#endif
+
+   /*
+      then check if B's usage meets the threshold
+      for suspension of the subordinated queue C
+   */
+   if (!(threshold=lGetUlong(so, SO_threshold))) {
+      /* queue must be full for suspend of queue C */
+      DPRINTF(("TSTSOS: %sfull -> %ssuspended\n", (used>=total)?"":"not ", 
+         (used>=total)?"":"not "));
+      DEXIT;
+         return (used>=total);
+   } 
+
+   /* used slots greater or equal threshold */
+   DPRINTF(("TSTSOS: "u32" slots used (limit "u32") -> %ssuspended\n", 
+      used, threshold, ( (u_long32)(used) >= threshold)?"":"not "));
+   DEXIT;
+   return ( (u_long32) (used) >= threshold);
+}
 
 /*
 qname: name of a queue that needs suspension on subordinate
@@ -46,12 +103,12 @@ qlist: complete queue list for recursivly suspension of other queues
 int sos_schedd(const char *qname, lList *qlist) 
 {
    lListElem *q;
-   u_long32 sos;
+   u_long32 sos, state;
    int ret = 0;
 
    DENTER(TOP_LAYER, "sos_schedd");
 
-   q = qinstance_list_locate2(qlist, qname);
+   q = queue_list_locate(qlist, qname);
    if (!q) {
       /* 
          In the qlist we got is only a subset of all
@@ -71,7 +128,9 @@ int sos_schedd(const char *qname, lList *qlist)
    if (sos==1) {
       DPRINTF(("QUEUE %s GETS SUSPENDED ON SUBORDINATE\n", qname));
       /* state transition */
-      qinstance_state_set_susp_on_sub(q, true);
+      state = lGetUlong(q, QU_state);
+      state |= QSUSPENDED_ON_SUBORDINATE;
+      lSetUlong(q, QU_state, state);
    }
 
    DEXIT;

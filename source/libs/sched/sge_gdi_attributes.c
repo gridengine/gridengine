@@ -42,12 +42,13 @@
 #include "sge_ja_task.h"
 #include "sge_answer.h"
 #include "sgermon.h"
-#include "sge_host.h"
+#include "resolve_host.h"
 #include "msg_schedd.h"
 #include "sge_string.h"
 #include "sge_prog.h"
 #include "sge_job.h"
-#include "sge_centry.h"
+#include "sge_host.h"
+#include "sge_complex.h"
 
 /* scheduling library */
 #include "sge_complex_schedd.h"
@@ -63,7 +64,7 @@ const char *attr_name
 
    DENTER(TOP_LAYER, "sge_gdi_myhost_scaling");
   
-   sge_gdi_setup("scaling", NULL);
+   sge_gdi_setup("scaling");
    scaling = sge_gdi_host_scaling(uti_state_get_qualified_hostname(), attr_name);
    sge_gdi_shutdown();
 
@@ -78,7 +79,7 @@ const char *attr_name
 
    DENTER(TOP_LAYER, "sge_gdi_myhost_attribute");
 
-   sge_gdi_setup("attributes", NULL);
+   sge_gdi_setup("attributes");
    attr = sge_gdi_host_attribute(uti_state_get_qualified_hostname(), attr_name);
    sge_gdi_shutdown();
 
@@ -99,7 +100,7 @@ u_long32 jobid
       DEXIT;
       return 0; 
    } 
-   sge_gdi_setup("nslots", NULL);
+   sge_gdi_setup("nslots");
    nslots = sge_gdi_host_nslots(uti_state_get_qualified_hostname(), jobid);
 
    sge_gdi_shutdown();
@@ -129,7 +130,7 @@ const char *attr_name
    }
 
    /* resolve hostname */
-   if (sge_resolve_hostname(hostname, unique, EH_name) != CL_RETVAL_OK) {
+   if (sge_resolve_hostname(hostname, unique, EH_name)) {
       fprintf(stderr, MSG_NET_UNKNOWNHOSTNAME_S , hostname);
       DEXIT;
       return -1;
@@ -179,7 +180,7 @@ const char *hostname,
 const char *attr_name 
 ) {
    int global, ret;
-   lList *alp, *centry_list = NULL, *exechost_list = NULL, *attributes = NULL;
+   lList *alp, *complex_list = NULL, *exechost_list = NULL, *attributes = NULL;
    static char attribute_value[1024];
    lListElem *cep, *aep, *hep;
    lEnumeration *what;
@@ -197,7 +198,7 @@ const char *attr_name
    }
 
    /* resolve hostname */
-   if (sge_resolve_hostname(hostname, unique, EH_name) != CL_RETVAL_OK) {
+   if (sge_resolve_hostname(hostname, unique, EH_name)) {
       fprintf(stderr, MSG_NET_UNKNOWNHOSTNAME_S , hostname);
       DEXIT;
       return NULL;
@@ -227,8 +228,8 @@ const char *attr_name
    lFreeList(alp);
 
    /* get complexes */
-   what = lWhat("%T(ALL)", CE_Type);
-   alp = sge_gdi(SGE_CENTRY_LIST, SGE_GDI_GET, &centry_list, NULL, what);
+   what = lWhat("%T(ALL)", CX_Type);
+   alp = sge_gdi(SGE_COMPLEX_LIST, SGE_GDI_GET, &complex_list, NULL, what);
    lFreeWhat(what);
    
    /* evaluate answer list */
@@ -247,7 +248,7 @@ const char *attr_name
    /* search for host */
    if (!(hep=host_list_locate(exechost_list, unique))) {
       fprintf(stderr, MSG_LIST_NOEXECHOSTOBJECT_S , unique);
-      lFreeList(centry_list);
+      lFreeList(complex_list);
       lFreeList(exechost_list);
       DEXIT;
       return NULL;
@@ -255,10 +256,10 @@ const char *attr_name
 
    /* build attributes */
    if ((ret = global?
-         global_complexes2scheduler(&attributes, hep, centry_list ):
-         host_complexes2scheduler(&attributes, hep, exechost_list, centry_list))) {
+         global_complexes2scheduler(&attributes, hep, complex_list, 0):
+         host_complexes2scheduler(&attributes, hep, exechost_list, complex_list, 0))) {
       fprintf(stderr, MSG_LIST_FAILEDBUILDINGATTRIBUTESFORHOST_S , unique);
-      lFreeList(centry_list);
+      lFreeList(complex_list);
       lFreeList(exechost_list);
       DEXIT;
       return NULL;
@@ -269,7 +270,7 @@ const char *attr_name
       fprintf(stderr, MSG_LIST_NOATTRIBUTEXFORHOSTY_SS , 
             attr_name, unique);
       lFreeList(attributes);
-      lFreeList(centry_list);
+      lFreeList(complex_list);
       lFreeList(exechost_list);
       DEXIT;
       return NULL;
@@ -285,7 +286,7 @@ const char *attr_name
       attribute_value[0] = '\0';
 
    lFreeList(attributes);
-   lFreeList(centry_list);
+   lFreeList(complex_list);
    lFreeList(exechost_list);
    DEXIT;
    return attribute_value;
@@ -314,7 +315,7 @@ u_long32 jobid
    }
 
    /* resolve hostname */
-   if (sge_resolve_hostname(hostname, unique, EH_name) != CL_RETVAL_OK) {
+   if (sge_resolve_hostname(hostname, unique, EH_name)) {
       fprintf(stderr, MSG_NET_UNKNOWNHOSTNAME_S , hostname);
       DEXIT;
       return 0;

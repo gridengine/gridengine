@@ -39,7 +39,6 @@ enum {
    a_OPT,
    A_OPT,
    c_OPT,
-   cat_OPT,
    cl_OPT,
    cell_OPT,
    C_OPT,
@@ -51,7 +50,6 @@ enum {
    hard_OPT,
    i_OPT,
    j_OPT,
-   js_OPT,
    l_OPT,
    m_OPT,
    M_OPT,
@@ -64,7 +62,6 @@ enum {
    res_OPT,
    s_OPT,
    soft_OPT,
-   sync_OPT,
    S_OPT,
    t_OPT,
    u_OPT,
@@ -82,7 +79,6 @@ enum {
    notify_OPT,
    now_OPT,
    b_OPT,
-   wd_OPT,
 
    masterq_OPT,
    d_OPT,
@@ -111,6 +107,7 @@ enum {
    mconf_OPT,
    mq_OPT,
    sc_OPT,
+   scl_OPT,
    sconf_OPT,
    sh_OPT,
    sm_OPT,
@@ -122,6 +119,7 @@ enum {
    sul_OPT,
    jid_OPT,
    gc_OPT,  /* dummy from qconf to qmaster to get complex */
+   Ac_OPT,
    ae_OPT,
    Ae_OPT,
 
@@ -144,6 +142,7 @@ enum {
    spl_OPT, /* show pe object list */
    sconfl_OPT,  /* show list of local configurations */
    dconf_OPT,   /* delete local configuration */
+   nohist_OPT,  /* do not write history */
    starthist_OPT,  /* flush history */
 
    Mq_OPT,
@@ -158,7 +157,6 @@ enum {
    Mp_OPT, /* mod pe object from file */
    tsm_OPT, 
    msconf_OPT,   /* modify SGE scheduler configuration */
-   Msconf_OPT,   /* mofify SGE scheduler configuration from file*/
    lj_OPT,
    aus_OPT,     /* SGE add user */
    Aus_OPT,     /* SGE add user from file */
@@ -200,8 +198,10 @@ enum {
 
    dul_OPT,      /* "-dul <user_set>," in qconf */
    display_OPT,  /* -display option for qsh */
+   qs_args_OPT,  /* -qs_args option for qsub, qalter */
+   mqattr_OPT,   /* modify particular queue attribute */
+   Mqattr_OPT,   /* modify particular queue attributes from file */
    sss_OPT,      /* show scheduler state */
-   sick_OPT,     /* show deficient configurations */
    ssconf_OPT,   /* show scheduler configuration */
 
    /* calendar management */
@@ -235,19 +235,17 @@ enum {
    Mattr_OPT,     /* modifiy a sublist from file */
    Rattr_OPT,     /* overwrite a sublist from file */
    Dattr_OPT,     /* aelete a sublist from file */
-   Aattr_OPT,     /* add a element to a sublist from file */
-   sobjl_OPT,     /* show object list which matches conf value */
+   Aattr_OPT      /* add a element to a sublist from file */
       
 #ifndef __SGE_NO_USERMAPPING__
    /* added for user mapping */
-   aumap_OPT,    /* add new user mapping entry */
+   ,aumap_OPT,    /* add new user mapping entry */
    Aumap_OPT,    /* add new user mapping entry from file */
    dumap_OPT,    /* delete user mapping entry  */
    mumap_OPT,    /* modify user mapping entry  */
    sumap_OPT,    /* show user mapping entry    */
    sumapl_OPT,   /* show user mapping entry list */
    Mumap_OPT,    /* modify user mapping entry from file */ 
-#endif
 
    /* added for host groups */
    ahgrp_OPT,    /* add new host group entry */
@@ -255,17 +253,15 @@ enum {
    dhgrp_OPT,    /* delete host group entry  */
    mhgrp_OPT,    /* modify host group entry */
    shgrp_OPT,    /* show host group entry */
-   shgrp_tree_OPT,        /* show host group entry as tree*/
-   shgrp_resolved_OPT,    /* show host group entry with resolved hostlist */
    shgrpl_OPT,   /* show host group entry list  */
-   Mhgrp_OPT,    /* modify host group entry from file */
+   Mhgrp_OPT    /* modify host group entry from file */
+#endif
 
    /* added for event clients */
-   secl_OPT,     /* show event client list */
+   ,secl_OPT,     /* show event client list */
    kec_OPT,       /* kill event client */
 
-   cu_OPT,        /* SGEEE sharetree - clear all user/project usage */
-   R_OPT         /* SGEEE sharetree - clear all user/project usage */
+   cu_OPT         /* SGEEE sharetree - clear all user/project usage */
 };
 
 /* macros used in parsing */

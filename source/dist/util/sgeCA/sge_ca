@@ -38,7 +38,7 @@
 
 # Reset PATH to a safe value  
 #
-PATH=/bin:/usr/bin:/usr/sbin:/usr/ucb
+PATH=/bin:/usr/bin:/usr/ucb
 
 # Easy way to prevent clearing of screen
 #
@@ -56,21 +56,13 @@ ErrUsage()
 {
    myname=`basename $0`
    $INFOTEXT -e \
-   "\nUsage: %s <command>\n" \
-   "   -env             export SGE_CERTFILE and SGE_KEYFILE for daemon\n" \
+   "\nUsage: %s {-init|-req|-sign|-copy|-verify|-usercert <file>} [-days <days>]\n" \
    "   -init            initialize CA infrastructure\n" \
    "   -req             generate a certificate request and private key\n" \
    "   -sign            sign a certificate request\n" \
    "   -copy            install user certificate and private key\n" \
-   "   -verify <cert>   verify a <cert>\n" \
-   "   -print <cert>    print a <cert>\n" \
-   "   -extend <cert>   extend the validity of <cert>\n" \
+   "   -verify          verify a certificate\n" \
    "   -days <days>     days of validity of the certificate\n" \
-   "   -sha1            use sha-1 instead of md5 as message digest\n" \
-   "   -encryptkey      use des to encrypt the generated key with a passphrase\n" \
-   "   -outdir <dir>    write to directory <dir>\n" \
-   "   -cadir <dir>     overwrite CALOCALTOP and CATOP settings\n" \
-   "   -pkcs12 <file>   generate pkcs12 format files for the users in <file>\n" \
    "   -usercert <file> generate certificates and keys for the users in <file>\n" $myname
 
    exit 1
@@ -313,7 +305,7 @@ MakeCAcert()
          echo OU="$CA_OU" >> $TMPFILE
          ExecuteAsAdmin $CP $TMPFILE $CATOP/dn.info
          echo CN="SGE Certificate Authority" >> $TMPFILE
-         echo userId=CA >> $TMPFILE
+         echo uniqueIdentifier=CA >> $TMPFILE
          echo emailAddress=$CA_EMAIL >> $TMPFILE
 
          Execute cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
@@ -355,25 +347,15 @@ MakeCAcert()
 #
 MakeRandFile()
 {
-   # OpenSSL uses /dev/urandom by default so if it's there, don't
-   # polute the PRNG with predictable data.
-   rfile=""
-   if [ ! -r /dev/urandom ]; then
-      if [ -f /dev/random ]; then 
-         rfile=/dev/random
-      elif [ -f /kernel/genunix ]; then
-         rfile=/kernel/genunix
-      elif [ -f /bin/vi ]; then
-         rfile=/bin/vi
-      fi
+   if [ -f /dev/random ]; then 
+      rfile=/dev/random
+   elif [ -f /kernel/genunix ]; then
+      rfile=/kernel/genunix
+   elif [ -f /bin/vi ]; then
+      rfile=/bin/vi
    fi
-   if [ -n "$rfile" ]; then
-      $INFOTEXT "Creating RANDFILE from >%s< in >%s<" $rfile $1
-      ExecuteAsAdmin $OPENSSL rand -rand $rfile -out $1 2048
-   else
-      $INFOTEXT "Creating RANDFILE in >%s<" $1
-      ExecuteAsAdmin $OPENSSL rand -out $1 2048
-   fi
+   $INFOTEXT "Creating RANDFILE from >%s< in >%s<" $rfile $1
+   ExecuteAsAdmin $OPENSSL rand -rand $rfile -out $1 2048
 }
 
 #--------------------------------------------------------------------------
@@ -402,33 +384,10 @@ MakeUserCerts()
 }
 
 #--------------------------------------------------------------------------
-# MakePKCS12 create pkcs12 file of user certificate and keys from userfile
-# userfile contains a list of entries of the following format per user.
-#
-# <unix username>:<gecos field>:<user's email address>
-#
-# $1 = <userfile>
-#
-MakePKCS12()
-{
-   if [ ! -f "$1" ]; then
-      $INFOTEXT "no valid userfile >%s<. Exit." $1
-      exit 1
-   fi
-
-   cat $1 | while read line; do
-      unixuser=`echo $line|cut -d: -f1`
-      $INFOTEXT "Generating %s.p12." \
-         "$unixuser"
-      $P12 -export -inkey $CALOCALTOP/userkeys/$unixuser/key.pem -out $CALOCALTOP/userkeys/$unixuser/$unixuser.p12 -in $CALOCALTOP/userkeys/$unixuser/cert.pem -certfile $CALOCALTOP/cacert.pem -caname "SGE CA"
-   done   
-}
-
-#--------------------------------------------------------------------------
 # MakeCert create certificate and private key for daemon
 #
 # $1 = "daemon" or "user"
-# $2 = userId   (Unix user name)
+# $2 = uniqueIdentifier   (Unix user name)
 # $3 = commonname         (e.g. passwd gecos field)
 # $4 = email address
 #
@@ -440,7 +399,7 @@ MakeCert()
    TMPFILE1=/tmp/sge_ca1$$.tmp
    $RM -f $TMPFILE $TMPFILE1
    Execute cp $CATOP/dn.info $TMPFILE
-   echo userId=$2 >> $TMPFILE
+   echo uniqueIdentifier=$2 >> $TMPFILE
    echo CN=$3 >> $TMPFILE
    echo emailAddress=$4 >> $TMPFILE
    Execute cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
@@ -468,8 +427,6 @@ MakeCert()
 
    # create rand.seed file
    MakeRandFile $RSFILE
-   RANDFILE=$RSFILE; export RANDFILE
-
 
    # create a certificate request
    ExecuteAsAdmin $REQ -config $TMPFILE1 -new -keyout $KEYFILE -out $REQFILE $DAYS
@@ -575,29 +532,31 @@ MakeCADirs()
 # THE MAIN PROCEDURE
 #--------------------------------------------------------------------------
 
+#----------------------------------
+# GET ARCH + ARCH SPECIFIC DEFAULTS
+#
+
 umask 022
 
 if [ -z "$SGE_ROOT" -o ! -d "$SGE_ROOT" ]; then
-   echo
-   echo ERROR: Please set your \$SGE_ROOT environment variable
-   echo and start this script again. Exit.
-   echo
+   $INFOTEXT -e \
+      "\nERROR: Please set your \$SGE_ROOT environment variable\n" \
+      "and start this script again.\n"
    exit 1
 fi
 
 if [ ! -f "$SGE_ROOT/util/arch" ]; then
-   echo
-   echo ERROR: The shell script \"$SGE_ROOT/util/arch\" does not exist.
-   echo Please verify your distribution and restart this script. Exit.
-   echo
+   $INFOTEXT -e \
+      "ERROR: The shell script \"\$SGE_ROOT/util/arch\" does not exist.\n" \
+      "Please verify your distribution and restart this script.\n"
    exit 1
 fi
 
 if [ ! -f $SGE_ROOT/util/arch_variables ]; then
-   echo
-   echo ERROR: Missing shell script \"$SGE_ROOT/util/arch_variables\".
-   echo Please verify your distribution and restart this script. Exit.
-   echo
+   $INFOTEXT -e \
+      "\nERROR: Missing shell script \"\$SGE_ROOT/util/arch_variables\".\n" \
+      "Please verify your distribution and restart this script.\n"
+   
    exit 1
 fi
 
@@ -607,38 +566,35 @@ if [ "$SGE_CELL" = "" ]; then
    SGE_CELL=default
 fi
 
-if [ "$SGE_QMASTER_PORT" != "" ]; then
-   CA_PORT=port$SGE_QMASTER_PORT
+if [ "$COMMD_PORT" != "" ]; then
+   CA_PORT=port$COMMD_PORT
 else
-   CA_PORT=sge_qmaster
+   CA_PORT=sge_commd
 fi
 
+#-------------------------------------------------------------------------
+# setup i18n
 
-#---------------------------------------
-# setup INFOTEXT begin
-#---------------------------------------
+if [ "$GETTEXT" != "" -a "SGE_I18N" = true ]; then
+   unset TEXTDOMAINDIR TEXTDOMAIN
+   TEXTDOMAINDIR="`/bin/pwd`/locale"
+   TEXTDOMAIN=gridengine
+   translation=1
+else
+   translation=0
+   unset LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY
+   unset LC_NUMERIC LC_TIME LANGUAGE
+fi
+
+# end of internationalization setup
+#-------------------------------------------------------------------------
+
+# Set variable $ADMINUSER
+#
+SetAdminUser
 
 V5BIN=$SGE_ROOT/bin/$ARCH
 V5UTILBIN=$SGE_ROOT/utilbin/$ARCH
-# INFOTXT_DUMMY is needed by message parsing script
-# which is looking for $INFOTEXT and would report
-# errors in the next command. Please use INFOTXT_DUMMY
-# instead of using $INFOTEXT
-
-INFOTXT_DUMMY=$V5UTILBIN/infotext
-INFOTEXT=$INFOTXT_DUMMY
-if [ ! -x $INFOTXT_DUMMY ]; then
-   echo "can't find binary \"$INFOTXT_DUMMY\""
-   echo "Installation failed."
-   exit 1
-fi
-SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
-
-#---------------------------------------
-# setup INFOTEXT end
-#---------------------------------------
-
-SetAdminUser
 
 CATOP=$SGE_ROOT/$SGE_CELL/common/sgeCA
 
@@ -652,6 +608,7 @@ else
 fi
 
 ME=`whoami`
+
 if [ "$ME" = "" ]; then
    $INFOTEXT "Can't determine your username with \"%s\" command. Exit" whoami
    exit 1
@@ -663,6 +620,35 @@ CACERT=cacert.pem
 CONFIG_DIR=$SGE_ROOT/util/sgeCA
 OPENSSL=$V5UTILBIN/openssl
 
+
+#---------------------------------------
+# setup INFOTEXT begin
+#---------------------------------------
+
+# set column break for automatic line break 
+SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
+
+# export locale directory 
+if [ "$SGE_ROOT" = "" ]; then 
+   TMP_SGE_ROOT=`pwd | sed 's/\/tmp_mnt//'`
+   GRIDLOCALEDIR="$TMP_SGE_ROOT/locale"
+   export GRIDLOCALEDIR
+fi
+
+# set infotext binary path
+INFOTXT_DUMMY=$V5UTILBIN/infotext
+INFOTEXT=$INFOTXT_DUMMY
+if [ ! -f $INFOTXT_DUMMY ]; then
+   $ECHO "can't find \"$INFOTXT_DUMMY\""
+   $ECHO "Installation failed."
+   exit 1
+fi
+#---------------------------------------
+# setup INFOTEXT end
+#---------------------------------------
+
+
+
 #-----------------------------
 # CommandLine Argument Parsing
 #
@@ -672,15 +658,10 @@ newcert=newcert.pem
 outdir=.
 indir=.
 userfile=""
-md="-md5"
-nodes="-nodes"
 
 ARGC=$#
 while [ $ARGC != 0 ]; do
    case $1 in
-   -env)
-      WHICH="env"
-      ;;
    -init)
       WHICH="init"
       ;;
@@ -694,24 +675,7 @@ while [ $ARGC != 0 ]; do
       WHICH="copy"
       ;;
    -verify)
-      if [ $ARGC -lt 2 ]; then
-         $INFOTEXT "Error: -verify needs argument"
-         ErrUsage
-      fi
       WHICH="verify"
-      newcert=$2
-      shift
-      ARGC=`expr $ARGC - 1`
-      ;;
-   -print)
-      if [ $ARGC -lt 2 ]; then
-         $INFOTEXT "Error: -print needs argument"
-         ErrUsage
-      fi
-      WHICH="print"
-      newcert=$2
-      shift
-      ARGC=`expr $ARGC - 1`
       ;;
    -days)
       if [ $ARGC -lt 2 ]; then
@@ -722,41 +686,6 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-   -outdir)
-      if [ $ARGC -lt 2 ]; then
-         $INFOTEXT "Error: -outdir needs argument"
-         ErrUsage
-      fi
-      outdir="$2"
-      shift
-      ARGC=`expr $ARGC - 1`
-      ;;
-   -cadir)
-      if [ $ARGC -lt 2 ]; then
-         $INFOTEXT "Error: -cadir needs argument"
-         ErrUsage
-      fi
-      CATOP="$2"
-      CALOCALTOP="$2"
-      shift
-      ARGC=`expr $ARGC - 1`
-      ;;
-   -pkcs12)
-      WHICH="pkcs12"
-      if [ $ARGC -lt 2 ]; then
-         $INFOTEXT "Error: -pkcs12 needs argument"
-         ErrUsage
-      fi
-      userfile="$2"
-      shift
-      ARGC=`expr $ARGC - 1`
-      ;;
-   -sha1)
-      md="-sha1"
-      ;;
-   -encryptkey)
-      nodes=""
-      ;;
    -usercert)
       WHICH="usercert"
       if [ $ARGC -lt 2 ]; then
@@ -764,16 +693,6 @@ while [ $ARGC != 0 ]; do
          ErrUsage
       fi
       userfile=$2
-      shift
-      ARGC=`expr $ARGC - 1`
-      ;;
-   -extend)
-      if [ $ARGC -lt 2 ]; then
-         $INFOTEXT "Error: -extend needs argument"
-         ErrUsage
-      fi
-      WHICH="extend"
-      newcert=$2
       shift
       ARGC=`expr $ARGC - 1`
       ;;
@@ -791,8 +710,7 @@ if [ "$WHICH" = "undef" ]; then
 fi
 
 
-#REQ="$OPENSSL req -nodes"
-REQ="$OPENSSL req $md $nodes"
+REQ="$OPENSSL req -nodes"
 
 CA="$OPENSSL ca -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT \
              -outdir $CATOP/newcerts"
@@ -800,8 +718,6 @@ CA="$OPENSSL ca -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT \
 VERIFY="$OPENSSL verify"
 
 X509="$OPENSSL x509"
-
-P12="$OPENSSL pkcs12"
 
 case $WHICH in
 init)
@@ -832,27 +748,6 @@ usercert)
     ;;
 verify) 
     $VERIFY -CAfile $CATOP/$CACERT $newcert
-    RET=$?
-    ;;
-print) 
-    $X509 -in $newcert -text
-    RET=$?
-    ;;
-extend) 
-    $X509 -in $newcert -signkey $CALOCALTOP/private/$CAKEY $DAYS -out $outdir/extended_cert.pem
-    RET=$?
-    ;;
-env) 
-    echo $CALOCALTOP
-#    SGE_CERTFILE=$CALOCALTOP/userkeys/$ADMINUSER/cert.pem
-#    SGE_KEYFILE=$CALOCALTOP/userkeys/$ADMINUSER/key.pem
-#    export SGE_KEYFILE SGE_CERTFILE
-#    echo $SGE_CERTFILE $SGE_KEYFILE
-    RET=$?
-    ;;
-pkcs12) 
-    MakePKCS12 $userfile
-
     RET=$?
     ;;
 help)

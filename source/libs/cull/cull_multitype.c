@@ -58,7 +58,7 @@ static char *_lNm2Str(const lNameSpace *nsp, int nm);
 static int _lStr2Nm(const lNameSpace *nsp, const char *str);
 
 
-const char *multitypes[] =
+static char *multitypes[] =
 {
    "lEndT",
    "lFloatT",
@@ -333,9 +333,6 @@ void lInit(const lNameSpace *namev)
 *
 *  RESULT
 *     int - size or -1 on error 
-*
-*  NOTES
-*     MT-NOTE: lCountDescr() is MT safe
 ******************************************************************************/
 int lCountDescr(const lDescr *dp) 
 {
@@ -824,7 +821,7 @@ int lGetType(const lDescr *dp, int nm)
    return mt_get_type(dp[pos].mt);
 }
 
-/****** cull/multitype/lGetString() ********************************************
+/****** cull/multitype/lGetUlong() ********************************************
 *  NAME
 *     lGetString() -- Return string for specified fieldname 
 *
@@ -1427,21 +1424,8 @@ lRef lGetPosRef(const lListElem *ep, int pos)
 lRef lGetRef(const lListElem *ep, int name) 
 {
    int pos;
-   DENTER(CULL_BASIS_LAYER, "lGetRef");   
-   
-   if (!ep) {
-      CRITICAL((SGE_EVENT, MSG_CULL_POINTER_GETREF_NULLELEMENTFORX_S ,
-               lNm2Str(name)));
-      DEXIT;
-      abort();
-   }
-
+   DENTER(CULL_BASIS_LAYER, "lGetRef");
    pos = lGetPosViaElem(ep, name);
-   if (pos < 0) {
-      /* someone has called lGetPosUlong() */
-      /* makro with an invalid nm        */
-      incompatibleType2(MSG_CULL_GETREF_NOSUCHNAMEXYINDESCRIPTOR_IS , name, lNm2Str(name));
-   }
 
    if (mt_get_type(ep->descr[pos].mt) != lRefT)
       incompatibleType2(MSG_CULL_GETREF_WRONGTYPEFORFIELDXY_SS, lNm2Str(name), 
@@ -1674,99 +1658,6 @@ int lSetUlong(lListElem *ep, int name, lUlong value)
       }
       
       ep->cont[pos].ul = value;
-
-      /* create entry in hash table */
-      if(ep->descr[pos].ht != NULL) {
-         cull_hash_insert(ep, pos);
-      }
-
-      /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
-   }
-
-   DEXIT;
-   return 0;
-}
-
-/****** cull_multitype/lAddDouble() ********************************************
-*  NAME
-*     lAddDouble() -- Adds a lDouble offset to the lDouble field
-*
-*  SYNOPSIS
-*     lAddDouble(lListElem *ep, int name, lDouble offset)
-*
-*  FUNCTION
-*     The 'offset' is added to the lDouble field 'name' of
-*     the CULL element 'ep'.
-*
-*  INPUTS
-*     lListElem *ep  - element
-*     int name       - field name id
-*     lDouble offset - the offset
-*
-*  RESULT
-*     int - error state
-*         0 - OK
-*        -1 - Error
-*******************************************************************************/
-
-/****** cull_multitype/lAddUlong() *********************************************
-*  NAME
-*     lAddUlong() -- Adds a lUlong offset to the lUlong field
-*
-*  SYNOPSIS
-*     int lAddUlong(lListElem *ep, int name, lUlong offset) 
-*
-*  FUNCTION
-*     The 'offset' is added to the lUlong field 'name' of
-*     the CULL element 'ep'.
-*
-*  INPUTS
-*     lListElem *ep - element
-*     int name      - field name id
-*     lUlong offset - the offset
-*
-*  RESULT
-*     int - 
-*
-*  EXAMPLE
-*     int - error state
-*         0 - OK
-*        -1 - Error
-*******************************************************************************/
-int lAddUlong(lListElem *ep, int name, lUlong offset) 
-{
-   int pos;
-
-   DENTER(CULL_BASIS_LAYER, "lAddUlong");
-
-   if (!ep) {
-      LERROR(LEELEMNULL);
-      DEXIT;
-      return -1;
-   }
-
-   pos = lGetPosViaElem(ep, name);
-   if (pos < 0) {
-      DPRINTF(("!!!!!!!!!! lSetUlong(): %s not found in element !!!!!!!!!!\n",
-               lNm2Str(name)));
-      DEXIT;
-      return -1;
-   }
-
-   if (mt_get_type(ep->descr[pos].mt) != lUlongT) {
-      incompatibleType2(MSG_CULL_SETULONG_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
-      DEXIT;
-      return -1;
-   }
-
-   if (offset != 0) {
-      /* remove old hash entry */
-      if(ep->descr[pos].ht != NULL) {
-         cull_hash_remove(ep, pos);
-      }
-      
-      ep->cont[pos].ul += offset;
 
       /* create entry in hash table */
       if(ep->descr[pos].ht != NULL) {
@@ -2113,6 +2004,7 @@ int lSetHost(lListElem *ep, int name, const char *value)
    int changed;
 
    DENTER(CULL_BASIS_LAYER, "lSetHost");
+
    if (!ep) {
       LERROR(LEELEMNULL);
       DEXIT;
@@ -2150,11 +2042,13 @@ int lSetHost(lListElem *ep, int name, const char *value)
          changed = strcmp(value, str);
       }
    }
+
    if(changed) {
       /* remove old hash entry */
       if(ep->descr[pos].ht != NULL) {
          cull_hash_remove(ep, pos);
       }
+      
       /* strdup new string value */
       /* do so before freeing the old one - they could point to the same object! */
       if (value) {
@@ -2166,10 +2060,12 @@ int lSetHost(lListElem *ep, int name, const char *value)
       } else {
          str = NULL;               /* value is NULL */
       }
+
       /* free old string value */
       if (ep->cont[pos].host) {
          free(ep->cont[pos].host);
       }   
+
 
       ep->cont[pos].host = str;
 
@@ -2177,9 +2073,11 @@ int lSetHost(lListElem *ep, int name, const char *value)
       if(ep->descr[pos].ht != NULL) {
          cull_hash_insert(ep, pos);
       }
+
       /* remember that field changed */
       sge_bitfield_set(ep->changed, pos);
    }
+
    DEXIT;
    return 0;
 }
@@ -2507,9 +2405,6 @@ int lSetObject(lListElem *ep, int name, lListElem *value)
 *     int - error state
 *         0 - OK
 *        -1 - Error 
-*
-*  NOTES
-*     MT-NOTE: lAddSubList() is MT safe
 ******************************************************************************/
 int lSetList(lListElem *ep, int name, lList *value) 
 {
@@ -2712,7 +2607,6 @@ int lSetPosDouble(const lListElem *ep, int pos, lDouble value)
    return 0;
 }
 
-
 /****** cull/multitype/lSetDouble() *******************************************
 *  NAME
 *     lSetDouble() -- Set double value with given field name id 
@@ -2767,62 +2661,6 @@ int lSetDouble(lListElem *ep, int name, lDouble value)
    DEXIT;
    return 0;
 }
-
-/****** cull_multitype/lAddDouble() ********************************************
-*  NAME
-*     lAddDouble() -- Adds a double offset to the double field
-*
-*  SYNOPSIS
-*     lAddDouble(lListElem *ep, int name, lDouble offset) 
-*
-*  FUNCTION
-*     The 'offset' is added to the double field 'name' of 
-*     the CULL element 'ep'.
-*
-*  INPUTS
-*     lListElem *ep  - element
-*     int name       - field name id 
-*     lDouble offset - the offset
-*
-*  RESULT
-*     int - error state
-*         0 - OK
-*        -1 - Error 
-*******************************************************************************/
-int lAddDouble(lListElem *ep, int name, lDouble value)
-{
-   int pos;
-
-   DENTER(CULL_BASIS_LAYER, "lSetPosDouble");
-   if (!ep) {
-      LERROR(LEELEMNULL);
-      DEXIT;
-      return -1;
-   }
-
-   pos = lGetPosViaElem(ep, name);
-   if (pos < 0) {
-      LERROR(LENEGPOS);
-      DEXIT;
-      return -1;
-   }
-
-   if (mt_get_type(ep->descr[pos].mt) != lDoubleT) {
-      incompatibleType2(MSG_CULL_SETDOUBLE_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
-      DEXIT;
-      return -1;
-   }
-
-   if (value != 0.0) {
-      ep->cont[pos].db += value;
-      /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
-   }
-
-   DEXIT;
-   return 0;
-}
-
 
 /****** cull/multitype/lSetPosLong() ******************************************
 *  NAME
@@ -3383,11 +3221,6 @@ lListElem *lAddSubStr(lListElem *ep, int nm, const char *str, int snm,
 
    ret = lAddElemStr(&(ep->cont[sublist_pos].glp), nm, str, dp);
 
-   /* remember that field changed */
-   if (ret != NULL) {
-      sge_bitfield_set(ep->changed, sublist_pos);
-   }
-
    DEXIT;
    return ret;
 }
@@ -3445,11 +3278,6 @@ lListElem *lAddSubHost(lListElem *ep, int nm, const char *str, int snm,
    }
 
    ret = lAddElemHost(&(ep->cont[sublist_pos].glp), nm, str, dp);
-
-   /* remember that field changed */
-   if (ret != NULL) {
-      sge_bitfield_set(ep->changed, sublist_pos);
-   }
 
    DEXIT;
    return ret;
@@ -3510,7 +3338,7 @@ lListElem *lAddElemStr(lList **lpp, int nm, const char *str, const lDescr *dp)
 
    if (!*lpp) {
       /* ensure existence of a str list in ep */
-      *lpp = lCreateList("string_sublist", dp);
+      *lpp = lCreateList("string sublist", dp);
    }
 
    /* add new host str element to sublist */
@@ -3575,7 +3403,7 @@ lListElem *lAddElemHost(lList **lpp, int nm, const char *str, const lDescr *dp)
 
    if (!*lpp) {
       /* ensure existence of a str list in ep */
-      *lpp = lCreateList("", dp);
+      *lpp = lCreateList("host sublist", dp);
    }
 
    /* add new host str element to sublist */
@@ -3625,11 +3453,6 @@ int lDelSubStr(lListElem *ep, int nm, const char *str, int snm)
    }
 
    ret = lDelElemStr(&(ep->cont[sublist_pos].glp), nm, str);
-
-   /* remember that field changed */
-   if (ret == 1) {
-      sge_bitfield_set(ep->changed, sublist_pos);
-   }
 
    DEXIT;
    return ret;
@@ -3836,6 +3659,7 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str,
    }
 
    listDescriptor = lGetListDescr(lp);
+
 
    /* get position of nm in sdp */
    str_pos = lGetPosInDescr(listDescriptor, nm);
@@ -4102,11 +3926,6 @@ lListElem *lAddSubUlong(lListElem *ep, int nm, lUlong val, int snm,
 
    ret = lAddElemUlong(&(ep->cont[sublist_pos].glp), nm, val, dp);
 
-   /* remember that field changed */
-   if (ret != NULL) {
-      sge_bitfield_set(ep->changed, sublist_pos);
-   }
-
    DEXIT;
    return ret;
 }
@@ -4160,7 +3979,7 @@ lListElem *lAddElemUlong(lList **lpp, int nm, lUlong val, const lDescr *dp)
 
    if (!*lpp) {
       /* ensure existence of a val list in ep */
-      *lpp = lCreateList("ulong_sublist", dp);
+      *lpp = lCreateList("ulong sublist", dp);
    }
 
    /* add new host val element to sublist */
@@ -4211,11 +4030,6 @@ int lDelSubUlong(lListElem *ep, int nm, lUlong val, int snm)
    }
 
    ret = lDelElemUlong(&(ep->cont[sublist_pos].glp), nm, val);
-
-   /* remember that field changed */
-   if (ret == 1) {
-      sge_bitfield_set(ep->changed, sublist_pos);
-   }
 
    DEXIT;
    return ret;
@@ -4540,11 +4354,6 @@ int lDelSubCaseStr(lListElem *ep, int nm, const char *str, int snm)
 
    ret = lDelElemCaseStr(&(ep->cont[sublist_pos].glp), nm, str);
 
-   /* remember that field changed */
-   if (ret == 1) {
-      sge_bitfield_set(ep->changed, sublist_pos);
-   }
-
    DEXIT;
    return ret;
 }
@@ -4849,7 +4658,6 @@ lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str,
          if (s != NULL) {
             sge_hostcpy(cmphost, s);
             if ( !SGE_STRCASECMP(cmphost, uhost) ) {
-               *iterator = ep;
                DEXIT;
                return ep; 
             }
@@ -4942,15 +4750,12 @@ lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str,
          if (s != NULL) {
             sge_hostcpy(cmphost, s);
             if ( !SGE_STRCASECMP(cmphost, uhost) ) {
-               *iterator = ep;
                DEXIT;
                return ep; 
             }
          } 
       }
    }
-   *iterator = NULL;
-
    DEXIT;
    return NULL;
 }
@@ -5075,5 +4880,4 @@ int lDelElemHost(lList **lpp, int nm, const char *str)
    DEXIT;
    return 1;
 }
-
 

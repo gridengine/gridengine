@@ -35,9 +35,8 @@
 #include "cull.h"
 #include "sge_report_execd.h"
 #include "sge_usageL.h"
-#include "sge_ack.h"
+#include "sge_gdi_intern.h"
 #include "job_report_execd.h"
-#include "sge_any_request.h"
 #include "reaper_execd.h"
 #include "sge_signal.h"
 #include "execd_signal_queue.h"
@@ -47,7 +46,6 @@
 #include "msg_execd.h"
 #include "sge_job.h"
 #include "sge_ja_task.h"
-#include "sge_pe.h"
 #include "sge_report.h"
 
 lList *jr_list = NULL;
@@ -63,11 +61,10 @@ void trace_jr()
    for_each (jr, jr_list) {
       const char *s;
 
-      if ((s=lGetString(jr, JR_pe_task_id_str))) {
+      if ((s=lGetString(jr, JR_pe_task_id_str)))
          DPRINTF(("Jobtask "u32"."u32" task %s\n", lGetUlong(jr, JR_job_number), lGetUlong(jr, JR_ja_task_number), s));
-      } else {
+      else
          DPRINTF(("Jobtask "u32"."u32"\n", lGetUlong(jr, JR_job_number), lGetUlong(jr, JR_ja_task_number)));
-      }   
    }
    DEXIT;
 }
@@ -200,7 +197,7 @@ int add_usage(lListElem *jr, char *name, const char *val_as_str, double val)
       return -1;
    }
 
-   /* check if we already have an usage value with this name */
+   /* check if we still have a usage value with this name */
    usage = lGetSubStr(jr, UA_name, name, JR_usage);
    if (!usage) {
       if (!(usage = lAddSubStr(jr, UA_name, name, JR_usage, UA_Type))) {
@@ -226,7 +223,7 @@ int add_usage(lListElem *jr, char *name, const char *val_as_str, double val)
       val = parsed;
    }
       
-   lSetDouble(usage, UA_value, val /*val>old_val?val:old_val*/); 
+   lSetDouble(usage, UA_value, val>old_val?val:old_val); 
 
    DEXIT;
    return 0;
@@ -337,34 +334,4 @@ int answer_error
    }
    DEXIT;
    return 0;
-}
-
-int
-execd_get_acct_multiplication_factor(const lListElem *pe, 
-                                     int slots, bool task)
-{
-   int factor = 1;
-
-   DENTER(TOP_LAYER, "execd_get_acct_multiplication_factor");
-
-   /* task of tightly integrated job: default factor 1 is OK - skip it */
-   if (!task) {
-      /* only parallel jobs need factors != 0 */
-      if (pe != NULL) {
-         /* only loosely integrated job will get factor != 0 */
-         if (!lGetBool(pe, PE_control_slaves)) {
-            /* if job is first task: factor = n, else n + 1 */
-            if (lGetBool(pe, PE_job_is_first_task)) {
-               factor = slots;
-            } else {
-               factor = slots + 1;
-            }
-         }
-      }
-   }
-
-   DPRINTF(("reserved usage will be multiplied by %d\n", factor));
-
-   DEXIT;
-   return factor;
 }

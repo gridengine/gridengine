@@ -1,0 +1,540 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\"
+.\" $RCSfile: lDbFuncs.3,v $     Last Update: $Date: 2001/07/20 08:19:02 $     Revision: $Revision: 1.3 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB      \" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T    \" switch to typewriter font
+.ft CW      \" probably want CW if you don't have TA font
+..
+.\"
+.de TY      \" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M    \" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH DB_FUNCS 3 "$Date: 2001/07/20 08:19:02 $" "xxRELxx" "xxQS_NAMExx List Library"
+.\"
+.SH NAME
+lSelect, lSelectDestroy, lSplit, lJoinSubList, lJoin, lWhere (_lWhere), lOrWhere, 
+lAndWhere, lFreeWhere, lWhat, lFreeWhat, lWriteWhere, lWriteWhat, lCountWhat
+.PP
+generic list database functions
+.\"
+.\"
+.SH SYNOPSIS
+.B #include """cull.h"""
+.PP
+.\"
+.nf
+\fBlList* lSelect(\fP
+.RS
+\fBchar *newname,\fP
+\fBlList *sourcelist,\fP
+\fBlCondition *condition,\fP
+\fBlEnumeration *enumeration\fP
+.RE
+.fi
+\fB);\fP
+.PP
+.\"
+.nf
+\fBlList* lSelectDestroy(\fP
+.RS
+\fBlList *sourcelist,\fP
+\fBlCondition *condition,\fP
+.RE
+.fi
+\fB);\fP
+.PP
+.\"
+.nf
+\fBint lSplit(\fP
+.RS
+\fBlList **sourcelist,\fP
+\fBlList **not_matched_list,\fP
+\fBchar *not_matched_list_name,\fP
+\fBlCondition *condition,\fP
+.RE
+.fi
+\fB);\fP
+.PP
+.\"
+.nf
+\fBlList* lJoinSublist(\fP
+.RS
+\fBchar *newname,\fP
+\fBint joinfield,\fP
+\fBlList *list1,\fP
+\fBlCondition *where1,\fP
+\fBlEnumeration *what1,\fP
+\fBlDescr *subdescr,\fP
+\fBlCondition *where2,\fP
+\fBlEnumeration *what2\fP
+.RE
+.fi
+\fB);\fP
+.PP
+.\"
+.nf
+\fBlList* lJoin(\fB
+.RS
+\fBchar *newname,\fP
+\fBint joinfield1,\fP
+\fBlList *lp0,\fP
+\fBlCondition *where1,\fP
+\fBlEnumeration *what1,\fP
+\fBint joinfield2,\fP
+\fBlList *lp1,\fP
+\fBlCondition *where2,\fP
+\fBlEnumeration *what2\fP
+.RE
+.fi
+\fB);\fP
+.PP
+.\"
+\fBlCondition* lWhere( char *format, ... );\fP
+.PP
+.\"
+\fBlCondition* _lWhere(char *format, WhereArgList arglist);\fP
+.PP
+.\"
+\fBlCondition* lOrWhere( lCondition *cp0, lCondition *cp1);\fP
+.PP
+.\"
+\fBlCondition* lAndWhere( lCondition *cp0, lCondition *cp1);\fP
+.PP
+.\"
+\fBvoid lFreeWhere( lCondition *condition );\fP
+.PP
+.\"
+\fBvoid lWriteWhere( lCondition *condition );\fP
+.PP
+.\"
+\fBlEnumeration* lWhat( char *format, ... );\fP
+.PP
+.\"
+\fBvoid lFreeWhat( lEnumeration *enumeration );\fP
+.PP
+.\"
+\fBvoid lWriteWhat( lEnumeration *enumeration );\fP
+.PP
+.\"
+.nf
+\fBint lCountWhat(\fP
+.RS
+\fBlEnumeration *enumeration,\fP
+\fBlDescr *descriptor\fP
+.RE
+.fi
+\fB);\fP
+.\"
+.\"
+.SH DESCRIPTION
+.IP "\fBlSelect\fP"
+creates a new list extracting those elements from the source list
+fulfilling the conditions stated in \fBcondition\fP. The new list
+elements contain only the fields given by \fBenumeration\fP.
+The first argument is the name of the newly created list, the second
+argument is the source list, the third argument are the conditions that
+the selection requires and the fourth argument chooses the fields that
+shall be contained in the result list elements. Thus the new list is
+restricted to the interesting fields contained in the list element.
+If there are matching elements a pointer to the result list is returned, 
+otherwise NULL is returned.
+For the construction of conditions and enumerations see
+.I lWhere
+and
+.I lWhat
+below.
+.\"
+.IP "\fBlSelectDestroy\fP"
+removes the elements not fulfilling the conditions stated in \fBcondition\fP
+from the source list. 
+The first argument is the source list, the second argument are the conditions 
+that the selection requires. Thus the new list consists only of elements
+fulfilling the stated condition (Attention: for further use of the original
+list, you have to do a lCopyList before lSelectDestroy).
+A pointer to the result list is returned. If the reduced list contains no
+elements the list is completely freed and NULL is returned.
+For the construction of conditions see
+.I lWhere
+below.
+.\"
+.IP "\fBlSplit\fP"
+splits the source list into two distinct parts. The source list contains all
+elements fulfilling the condition stated in \fBcondition\fP and the elements
+not fulfilling this condition are contained in the list specified as second 
+argument. 
+The first argument is the address of the source list, the second argument 
+is the address of a list pointer which must be NULL. If you are not interested
+in the not matched list set not_matched_list and not_matched_list_name to NULL.
+The third argument is the name of the not_matched list. The fourth argument
+is a condition.  
+(Attention: for further use of the original list, you have to do a lCopyList 
+ before lSplit).
+The all elements of the source list match the condition the source list
+remains unchanged and the unmatched list is NULL.
+If no element matches the condition the not_matched list contains all
+elements and the source list is NULL.
+In case of success 0 is returned, otherwise -1.
+For the construction of conditions see
+.I lWhere
+below.
+.\"
+.IP "\fBlJoinSublist\fP"
+joins a list with one of its sub-lists.
+.I lJoinSublist
+gets as
+the first argument the name of the newly created list. The second argument 
+is the join field (of type lListT), the third argument is the main list, the
+following two arguments are the condition and enumeration for the main list,
+the sixth argument is the sub-list descriptor and the last two fields are
+the conditions and field enumerations for the sub-list.
+.br
+For every main list element fulfilling the condition \fBwhere1\fP there is
+a join performed with the by \fBjoinfield\fP specified sub-list of the list element.
+Only those elements in the sub-list that match the conditions stated in
+\fBwhere2\fP. The joined elements contain the fields enumerated in \fBwhat1\fP and 
+\fBwhat2\fP.
+.br
+The joined list is returned when there were matching elements in the list
+and the sub-list. Otherwise NULL is returned.
+.br
+For the construction of conditions and enumerations see
+.I lWhere
+and
+.I lWhat
+below.
+.\"
+.IP "\fBlJoin\fP"
+joins two different lists together. The first argument is the name of the 
+joined list, the second argument specifies the field over
+which the join has to be taken as it is addressed in \fBlist1\fP,
+it follow the conditions and field selectors
+\fBwhere1\fP and \fBwhat1\fP and the same is repeated for the second
+list \fBlist2\fP.
+.br
+Every list element of \fBlist1\fP is combined with every element of \fBlist2\fP if
+the contents of the join fields \fBjoinfield1\fP and \fBjoinfield2\fP is equal and
+if they match the conditions stated in \fBwhere1\fP (list elements of \fBlist1\fP) and
+\fBwhere2\fP (list elements of \fBlist2\fP).
+The combined list elements contain the fields enumerated in \fBwhat1\fP and
+\fBwhat2\fP.
+.br
+The joined list is returned if matching elements have been created. Otherwise
+NULL is returned.
+.br
+For the construction of conditions and enumerations see
+.I lWhere
+and
+.I lWhat
+below.
+.\"
+.IP "\fBlWhere / _lWhere\fP"
+build a structure describing a set of conditions which are used by
+several list library functions.
+.br
+.I lWhere
+gets as argument a format string expressing the conditions. It is
+possible to have cascaded levels of conditions using brackets, the logical
+AND (&&), OR (||) and NOT (!) operator.
+If NULL is delivered as condition structure no restrictions on the list are
+performed (i.e. all elements match).
+.sp 1
+The syntax of the format string takes the following form:
+.sp 1
+	cond: %T ( negsimple [{ && | || } {negsimple |
+.br
+			%I -> cond } ] )
+.br
+	negsimple: {simple | ! ( simple ) }
+.br
+	simple: %I relop valuetype [{&& | ||} simple ...] 
+.br
+	relop: { < | > | == | != | <= | >= | m= | c= | p= }
+.br
+	valuetype: { %d | %s | %u | %f | %g | %o | %c }
+.sp 1
+For valuetype the specifiers represent in the order as above 
+.sp 1
+	{ int | string | unsigned long | float | double |
+.br
+		long | char }
+.sp 1
+The relop specifiers have the following meaning:
+.sp 1
+	<
+.br
+	>
+.br
+	<=
+.br
+	>=
+.br
+	==
+.br
+	!=   comparison of numeric types as in the
+.br
+	     C language
+.br
+	==   case sensitive comparison of strings
+.br
+	c=   case insensitive comparison of strings
+.br
+	m=   bitmask evaluation operator
+.br
+	p=   pattern matching string comparison
+.sp 1
+The following examples will show the usage:
+.sp 1
+	where1 = lWhere( "%T(%I==%s && %I->%T(%I<%d ||
+.br
+			%I>%u || %I m= %u ))",
+.br
+			type1, field1, "Hello", field2, subtype,
+.br
+			subfield1, 12, subfield2, 34,
+.br
+			bitmasksubfield, IDLE | RUNNING );
+.br
+	where2 = lWhere( "%T(!(%I==%s))", type1, field1,
+.br
+			"Hello");
+.sp 1
+The condition 'where1' says:
+.sp 1
+field1 of list element with descriptor type1 must contain "Hello" AND
+the sub-list stored in field2 with descriptor subtype has a field
+subfield1 and subfield2 shall fulfill subfield1 < 12 OR subfield2 > 34
+OR in the bitmasksubfield the bits for RUNNING and IDLE are set.
+Bitmasks are stored in an unsigned long (ulong_32).
+.sp 1
+The condition 'where2' says:
+.sp 1
+NOT ( field1 == "Hello" ) for field1 of a list with descriptor type1.
+.sp 1
+.I _lWhere
+is equal to
+.I lWhere
+concerning the format string describing the 
+condition. The variable argument list of
+.I lWhere
+is replaced by an array of
+arguments delivering the required information.
+.sp 1
+The WhereArg struct is built as follows:
+.sp 1
+	struct _WhereArg {
+.br
+		lDescr      *descriptor;
+.br
+		int         field;
+.br
+		lMultitype  *value;
+.br
+	};
+.sp 1
+The translation of the varargs
+.I lWhere
+functionality to the WhereArgList mechanism is shown below:
+.sp 1
+	where = lWhere("%T( %I == %s && %I ->
+.br
+			%T ( %I < %d ) )", 
+.br
+			QueueT, Q_hostname, "durin.q", 
+.br
+			Q_ownerlist, OwnerT, O_ownerage, 22);
+.sp 1
+The corresponding WhereArgList is:
+.sp 1
+	WhereArg whereargs[20];
+.sp 1
+	whereargs[0].descriptor = QueueT;
+.br
+	whereargs[1].field      = Q_hostname;
+.br
+	whereargs[1].value.str  = "durin.q";
+.br
+	whereargs[2].field      = Q_ownerlist;
+.br
+	whereargs[2].descriptor = OwnerT;
+.br
+	whereargs[3].field      = O_ownerage;
+.br
+	whereargs[3].value.i    = 22;
+.sp 1
+	where = _lWhere("%T( %I == %s && %I ->
+.br
+			%T ( %I < %d ) )", 
+.br
+			whereargs);
+.\"
+.IP "\fBlOrWhere\fP"
+build a new condition from two conditions connecting them with a
+\fIlogical or\fP. 
+If one of the incoming conditions is NULL, NULL is returned.
+.\"
+.IP "\fBlAndWhere\fP"
+build a new condition from two conditions connecting them with a
+\fIlogical and\fP.
+If one of the incoming conditions is NULL, NULL is returned.
+.\"
+.IP "\fBlFreeWhere\fP"
+release the memory allocated by
+.I lWhere
+for a condition structure.
+If the specified condition structure is NULL the function simply
+returns.
+.\"
+.IP "\fBlWriteWhere\fP"
+writes a condition structure to stdout for debugging purposes. As argument
+a lCondition pointer is specified.
+.\"
+.IP "\fBlWhat\fP"
+builds a field enumeration structure to choose a subset of fields, no
+fields at all or all fields in a list element.
+The function gets as first argument a format string describing the
+following variable argument list.
+The built field enumeration is type specific, also if all or no fields
+are specified (i.e. one needs a what structure for every descriptor type)
+.sp 1
+The syntax of the format string is:
+.sp 1
+	what: %T ( { ALL | NONE | {%I [ %I ...] |
+		! ( %I [%I...] ) } } )
+.sp 1
+%T specifies the descriptor type for
+\fIlWhat\fP, the rest specifies ALL fields,
+no fields or the fields listed with %I [%I...].
+.sp 1
+The following examples shall make things clearer:
+.sp 1
+	all_what = lWhat("%T(ALL)", QueueT);
+.sp 1
+select all fields in QueueT.
+.sp 1
+	some_what = lWhat("%T(%I %I %I)", QueueT,
+		Q_load, Q_name, Q_hostname);
+.sp 1
+select the fields Q_load, Q_name, Q_hostname from QueueT.
+.sp 1
+	notsome_what = lWhat("%T( !(%I %I %I))",
+		QueueT, Q_load, Q_name, Q_hostname);
+.sp 1
+select all the fields of QueueT without QueueT, Q_load, Q_name, Q_hostname.
+.sp 1
+	none_what = lWhat("%T(NONE)",QueueT);
+.sp 1
+select no field at all.
+.\"
+.IP "\fBlFreeWhat\fP"
+release the memory allocated for a field enumeration structure. If
+the argument is NULL, the function simply returns.
+.\"
+.IP "\fBlWriteWhat\fP"
+writes a field enumeration structure to stdout for debugging purposes.
+.\"
+.IP "\fBlCountWhat\fP"
+count the number of fields defined in a field enumeration structure.
+As argument a pointer to a field enumeration structure and a list
+descriptor must be provided.
+If one of the arguments is NULL, -1 is returned. Otherwise the number
+of fields is returned.
+.\"
+.\"
+.SH "RETURN VALUES"
+In case of error the return value is -1 or NULL, otherwise 0 or a valid
+pointer to the corresponding struct is returned.
+.\"
+.\"
+.SH ERRORS
+The following errors may occur. The touched functions are stated in parentheses.
+.IP "\fBLELISTNULL\fP"
+List pointer is NULL. (\fIlSelect\fP)
+.IP "\fBLEENUMNULL\fP"
+Field enumeration is NULL. (\fIlSelect\fP, \fIlFreeWhat\fP, \fIlWriteWhat\fP, \fIlCountWhat\fP)
+.IP "\fBLECOUNTWHAT\fP"
+.I lCountWhat
+failed. (\fIlSelect\fP)
+.IP "\fBLEMALLOC\fP"
+.M Malloc 3
+failed. (\fIlSelect\fP, \fIlWhat\fP)
+.IP "\fBLEPARTIALDESCR\fP"
+Building a new partial descriptor failed. (\fIlSelect\fP)
+.IP "\fBLECREATELIST\fP"
+.I lCreateList
+failed. (\fIlSelect\fP, \fIlJoinSublist\fP, \fIlJoin\fP)
+.IP "\fBLEELEMNULL\fP"
+List element is NULL. (\fIlSelect\fP)
+.IP "\fBLECOPYELEMPART\fP"
+Copying parts of the element failed. (\fIlSelect\fP)
+.IP "\fBLEAPPENDELEM\fP"
+.I lAppendElem
+failed. (\fIlSelect\fP, \fIlJoinSublist\fP, \fIlJoin\fP)
+.IP "\fBLEGETNROFELEM\fP"
+.I lGetNumberOfElem
+failed. (\fIlSelect\fP)
+.IP "\fBLENULLARGS\fP"
+Unallowed use of NULL arguments. (\fIlJoinSublist\fP, \fIlJoin\fP)
+.IP "\fBLEDESCRNULL\fP"
+List descriptor is NULL. (\fIlJoinSublist\fP, \fIlWhere\fP, \fIlCountWhat\fP)
+.IP "\fBLENAMENOT\fP"
+Name not contained in descriptor. (\fIlJoinSublist\fP, \fIlJoin\fP, \fIlWhat\fP)
+.IP "\fBLEFALSEFIELD\fP"
+Not a valid field name specified in enumeration. (\fIlJoinSublist\fP)
+.IP "\fBLEJOINDESCR\fP"
+Joining of descriptors failed. (\fIlJoinSublist\fP, \fIlJoin\fP)
+.IP "\fBLEJOIN\fP"
+.I lJoin
+failed. (\fIlJoinSublist\fP)
+.IP "\fBLEADDLIST\fP"
+.I lAddList
+failed. (\fIlJoinSublist\fP)
+.IP "\fBLEDIFFDESCR\fP"
+List descriptors are unequal. (\fIlJoin\fP)
+.IP "\fBLEJOINCOPYELEM\fP"
+.I lJoinCopyElem
+failed. (\fIlJoin\fP)
+.IP "\fBLENOFORMATSTR\fP"
+No format string specified. (\fIlWhere\fP, \fIlWhat\fP)
+.IP "\fBLEPARSECOND\fP"
+Parsing a condition structure failed. (\fIlWhere\fP)
+.IP "\fBLECONDNULL\fP"
+.I lCondition
+pointer is NULL. (\fIlFreeWhere\fP, \fIlWriteWhere\fP)
+.IP "\fBLEOPUNKNOWN\fP"
+Unknown operator found. (\fIlFreeWhere\fP, \fIlWriteWhere\fP)
+.IP "\fBLESYNTAX\fP"
+A syntax error occurred. (\fIlWhat\fP)
+.IP "\fBLECOUNTDESCR\fP"
+Counting the number of descriptor fields failed. (\fIlWhat\fP, \fIlCountWhat\fP)
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M list_intro 3 .
+.\"
+.\"
+.SH COPYRIGHT
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

@@ -217,37 +217,10 @@
  * 
  */
 #define MSG_UNREC_ERROR                            _MESSAGE(49082, _("unrecoverable error - contact systems manager"))
-#define MSG_GDI_VALUETHATCANBESETTOINF                  _MESSAGE(49083, _("value that can be set to infinity"))
-#define MSG_GDI_UNRECOGNIZEDVALUETRAILER_SS             _MESSAGE(49084, _("Error! Unrecognized value-trailer '%20s' near '%20s'\nI expected multipliers k, K, m and M.\nThe value string is probably badly formed!\n" ))
-#define MSG_GDI_UNEXPECTEDENDOFNUMERICALVALUE_SC        _MESSAGE(49085, _("Error! Unexpected end of numerical value near "SFN".\nExpected one of ',', '/' or '\\0'. Got '%c'\n" ))
-#define MSG_GDI_NUMERICALVALUEFORHOUREXCEEDED_SS        _MESSAGE(49086, _("Error! numerical value near %20s for hour exceeded.\n'%20s' is no valid time specifier!\n"))
-#define MSG_GDI_NUMERICALVALUEINVALID_SS                _MESSAGE(49087, _("Error! numerical value near %20s invalid.\n'%20s' is no valid time specifier!\n" ))
-#define MSG_GDI_NUMERICALVALUEFORMINUTEEXCEEDED_SS      _MESSAGE(49088, _("Error! numerical value near %20s for minute exceeded.\n'%20s' is no valid time specifier!\n"))
-#define MSG_GDI_NUMERICALVALUEINVALIDNONUMBER_SS        _MESSAGE(49089, _("Error! numerical value near %20s invalid.\n>%20s< contains no valid decimal or fixed float number\n"))
-#define MSG_GDI_NUMERICALVALUEINVALIDNOHEXOCTNUMBER_SS  _MESSAGE(49090, _("Error! numerical value near "SFN" invalid.\n'"SFN"' contains no valid hex or octal number\n"))
 
 /*
- * sge_profiling.c
+ * libs/uti/sge_dirent.c
  */
-#define MSG_PROF_INVALIDLEVEL_SD                _MESSAGE(49091, _(SFN": invalid profiling level %d\n"))
-#define MSG_PROF_ALREADYACTIVE_S                _MESSAGE(49092, _(SFN": profiling is already active\n"))
-#define MSG_PROF_NOTACTIVE_S                    _MESSAGE(49093, _(SFN": profiling is not active\n"))
-#define MSG_PROF_CYCLICNOTALLOWED_SD            _MESSAGE(49094, _(SFN": cyclic measurement for level %d requested - disabling profiling\n"))
-#define MSG_PROF_RESETWHILEMEASUREMENT_S        _MESSAGE(49095, _(SFN": cannot reset profiling while a measurement is active\n"))
-
-/*
- * libs/uti/sge_bootstrap
- */
-#define MSG_UTI_CANNOTRESOLVEBOOTSTRAPFILE     _MESSAGE(49100, _("cannot resolve name of bootstrap file\n"))
-#define MSG_UTI_CANNOTBOOTSTRAP_S              _MESSAGE(49101, _("cannot bootstrap from file "SFN"\n"))
-#define MSG_UTI_CANNOTLOCATEATTRIBUTE_SS       _MESSAGE(49102, _("cannot read attribute <"SFN"> from bootstrap file "SFN"\n"))
-
-/* 
-** libs/uti/setup_path.c
-*/
-#define MSG_UTI_SGEROOTNOTADIRECTORY_S                   _MESSAGE(49110, _("$SGE_ROOT="SFN" is not a directory\n"))
-#define MSG_UTI_DIRECTORYNOTEXIST_S                      _MESSAGE(49111, _("directory doesn't exist: "SFN"\n"))
-#define MSG_SGETEXT_NOSGECELL_S                _MESSAGE(49112, _("cell directory "SFQ" doesn't exist\n"))
 
 #endif /* __MSG_UTILIB_H */
 

@@ -48,6 +48,7 @@
 
 #include "sge.h"
 #include "sge_gdi.h"
+#include "sge_gdi_intern.h"
 #include "basis_types.h"
 #include "sge_prog.h"
 #include "qmon_util.h"
@@ -121,10 +122,8 @@ StringConst s
    }
       
    browser = XmtNameToWidget(BrowserShell, "*browser");   
-   if (s) {
-      XmtCliPuts(s, browser);
-      XmtCliFlush(browser);
-   }   
+   XmtCliPuts(s, browser);
+   XmtCliFlush(browser);
 
    /*    XBell(XtDisplay(browser), 0); */
 

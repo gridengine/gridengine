@@ -46,8 +46,10 @@
 #include "msg_execd.h"
 #include "sge_unistd.h"
 #include "sge_job.h"
-#include "sge.h"
 
+static const char* expand_path(const char *path_in, u_long32 job_id, 
+                               u_long32 ja_task_id, const char *job_name, 
+                               const char *user, const char *fqhost);
 
 static int getHomeDir(char *exp_path, const char *user);
 
@@ -57,10 +59,9 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
 {
    lListElem *ep;
    const char *path = NULL, *host;
-
    DENTER(TOP_LAYER, "sge_get_path");
 
-   *pathstr = '\0';
+   strcpy(pathstr, "");
 
    /*
     * check if there's a path for this host
@@ -87,10 +88,10 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
    /*
     * prepend cwd to path
     */
-   if (path && path[0]!='\0' && path[0] != '/') {
+   if (path && path[0] != '/') {
       /* got relative path from -e/-o */
       sprintf(pathstr, "%s/%s", cwd, path);
-   } else if (path && path[0]!='\0' ) { 
+   } else if (path) { 
       /* got absolute path from -e/-o */
       strcpy(pathstr, path);
    } else if (type == SGE_STDIN) {
@@ -99,66 +100,12 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
       /* no -e/-o directive (but not for shells) */
       strcpy(pathstr, cwd);
    }
-
+ 
    DEXIT;
    return 0;
 }
 
-/****** execd/fileio/sge_get_fs_path() ********************************
-*  NAME
-*     sge_get_fs_path() -- Retrieve the file staging host and path
-*
-*  SYNOPSIS
-*     bool sge_get_fs_path( lList* lp, char* fs_host, char* fs_path )
-*
-*  FUNCTION
-*     Retrieves the file staging host and path from the
-*     job list element.
-*
-*  INPUTS
-*     lList *lp        - pointer to the path sublist
-*     char  *fs_host   - buffer to hold the host name
-*     char  *fs_path   - buffer to hold the file path
-*
-*  RESULT
-*     bool - Is file staging enabled for this (stdin/stdout/stderr)
-*            path sublist?
-*
-*  EXAMPLES
-*
-*  NOTES
-*
-*  SEE ALSO
-*******************************************************************************/
-bool sge_get_fs_path( lList* lp, char* fs_host, char* fs_path )
-{
-   lListElem* ep;
-   bool       bFileStaging=false;
-
-   DENTER(TOP_LAYER, "sge_get_fs_path");
-
-   if( lp && (ep=lFirst( lp ))) {
-      bFileStaging = lGetBool( ep, PN_file_staging );
- 
-      if( bFileStaging ) {
-         if( lGetHost( ep, PN_file_host )) {
-            strcpy( fs_host, lGetHost( ep, PN_file_host ));
-         }
-         /*else {
-            strcpy( fs_host, 
-               var_list_get_string( lGetList( lpJobList, JB_env_list ), VAR_PREFIX "O_HOST" ));
-         }
-         */
-         if( lGetString( ep, PN_path )) {
-            strcpy( fs_path, lGetString( ep, PN_path ));
-         }
-      }
-   }
-   DEXIT;
-   return bFileStaging;
-}
-
-const char* expand_path(
+static const char* expand_path(
 const char *in_path,
 u_long32 job_id,
 u_long32 ja_task_id,
@@ -172,6 +119,7 @@ const char *host
    char tmp[255];
    
    DENTER(TOP_LAYER, "expand_path");
+   
    exp_path[0] = '\0';
 
    if (in_path) {
@@ -370,7 +318,6 @@ const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *j
    const char *path;
    int result;
 
-
    DENTER(TOP_LAYER, "sge_make_ja_task_active_dir");
    
    if(err_str != NULL) {
@@ -410,17 +357,11 @@ const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *j
          
          /* if it couldn't be renamed: try to remove it */
          if(success == 0) {
-            dstring error_string;
-            char error_string_buffer[MAX_STRING_SIZE];
-
-            sge_dstring_init(&error_string, error_string_buffer, sizeof(error_string_buffer));
-
             DPRINTF(("could not rename old active job dir "SFN" - removing it\n", path));
 
-            if(sge_rmdir(path, &error_string)) {
+            if(sge_rmdir(path, SGE_EVENT)) {
                if(err_str != NULL) {
-                  SGE_ADD_MSG_ID(sge_dstring_sprintf(err_str, MSG_FILE_RMDIR_SS, path, 
-                        sge_dstring_get_string(&error_string)));
+                  SGE_ADD_MSG_ID(sge_dstring_sprintf(err_str, MSG_FILE_RMDIR_SS, path, SGE_EVENT));
                } else {
                   ERROR((SGE_EVENT, MSG_FILE_RMDIR_SS, path, SGE_EVENT));
                   DEXIT;

@@ -69,9 +69,6 @@
 *  
 *  SEE ALSO
 *     uti/io/sge_writenbytes()
-*  
-*  NOTES
-*     MT-NOTE: sge_readnbytes() is MT safe
 ******************************************************************************/
 int sge_readnbytes(register int sfd, register char *ptr, register int n) 
 {
@@ -125,9 +122,6 @@ int sge_readnbytes(register int sfd, register char *ptr, register int n)
 *
 *  SEE ALSO
 *     uti/io/sge_readnbytes()
-*
-*  NOTES
-*     MT-NOTE: sge_writenbytes() is MT safe
 ******************************************************************************/
 int sge_writenbytes(register int sfd, register const char *ptr, 
                     register int n) 
@@ -187,9 +181,6 @@ int sge_writenbytes(register int sfd, register const char *ptr,
 *     int - Identical?
 *         0 - Yes.
 *         1 - No they are not equivalent.
-*
-*  NOTES
-*     MT-NOTE: sge_filecmp() is MT safe
 ******************************************************************************/
 int sge_filecmp(const char *name0, const char *name1)
 {
@@ -244,17 +235,13 @@ int sge_filecmp(const char *name0, const char *name1)
 *
 *  SEE ALSO
 *     uti/io/sge_mode_t
-*
-*  NOTES
-*     MT-NOTE: sge_copy_append() is MT safe
 ******************************************************************************/
 int sge_copy_append(char *src, const char *dst, sge_mode_t mode)
 {
 #define CPBUF 1024
 
    char buf[CPBUF];
-   int fdsrc, fddst, modus, rs, ws;
-   bool error;
+   int fdsrc, fddst, error, modus, rs, ws;
 
    DENTER(TOP_LAYER, "sge_copy_append");
   
@@ -284,21 +271,21 @@ int sge_copy_append(char *src, const char *dst, sge_mode_t mode)
       return -1;
    }    
     
-   error = false;
-   while (true) {
+   error = FALSE;
+   while (TRUE) {
       rs = read(fdsrc, buf, 512);
       if (rs == -1 && errno == EINTR)
          continue;
       else if (rs == -1)
-         error = true;
+         error = TRUE;
     
       if (!error && rs > 0) {      
-         while (true) {   
+         while (TRUE) {   
             ws = write(fddst, buf, rs);
             if (ws == -1 && errno == EINTR)   
                continue;
             else if (ws == -1) {
-               error = true;
+               error = TRUE;
                break;
             } 
             else
@@ -343,9 +330,6 @@ int sge_copy_append(char *src, const char *dst, sge_mode_t mode)
 *
 *  SEE ALSO
 *     uti/io/sge_string2bin()
-*
-*  NOTES
-*     MT-NOTE: sge_bin2string() is MT safe
 ******************************************************************************/
 char *sge_bin2string(FILE *fp, int size) 
 {
@@ -371,7 +355,7 @@ char *sge_bin2string(FILE *fp, int size)
    dstbuflen = size;
    lastpos = 0;
 
-   error = false;
+   error = FALSE;
 
    while (1) {
       i = read(fd, inbuf, BUFFER);
@@ -397,7 +381,7 @@ char *sge_bin2string(FILE *fp, int size)
 
          if (lastpos + len > dstbuflen) {
             if ((dstbuf = realloc(dstbuf, lastpos + len + chunksize)) == NULL) {
-               error = true;
+               error = TRUE;
                break;
             }   
             dstbuflen = lastpos + len + chunksize;
@@ -413,7 +397,7 @@ char *sge_bin2string(FILE *fp, int size)
       }
       else {
          if (errno != EINTR) {
-            error=true;
+            error=TRUE;
             break;
          }
       }
@@ -452,9 +436,6 @@ char *sge_bin2string(FILE *fp, int size)
 *
 *  SEE ALSO
 *     uti/io/sge_bin2string()
-*
-*  NOTES
-*     MT-NOTE: sge_string2bin() is MT safe
 ******************************************************************************/
 int sge_string2bin(FILE *fp, const char *buf) 
 {
@@ -508,9 +489,6 @@ int sge_string2bin(FILE *fp, const char *buf)
 *  SEE ALSO
 *     uti/io/sge_string2file()
 *     uti/io/sge_stream2string()
-*
-*  NOTES
-*     MT-NOTE: sge_file2string() is MT safe
 ******************************************************************************/
 char *sge_file2string(const char *fname, int *len)
 {
@@ -603,9 +581,6 @@ char *sge_file2string(const char *fname, int *len)
 *  SEE ALSO
 *     uti/io/sge_file2string()
 *     uti/io/sge_string2file()
-*
-*  NOTES
-*     MT-NOTE: sge_stream2string() is MT safe
 ******************************************************************************/ 
 char *sge_stream2string(FILE *fp, int *len)
 {
@@ -670,9 +645,6 @@ char *sge_stream2string(FILE *fp, int *len)
 *  SEE ALSO
 *     uti/io/sge_file2string()  
 *     uti/io/sge_stream2string()
-*
-*  NOTES
-*     MT-NOTE: sge_string2file() is MT safe
 ******************************************************************************/ 
 int sge_string2file(const char *str, int len, const char *fname)
 {
@@ -703,3 +675,54 @@ int sge_string2file(const char *str, int len, const char *fname)
    return 0;
 }          
 
+/****** uti/io/sge_tmpnam() ***************************************************
+*  NAME
+*     sge_tmpnam() -- Replacement for tmpnam() 
+*
+*  SYNOPSIS
+*     char* sge_tmpnam(char *fname) 
+*
+*  FUNCTION
+*     Replacement for tmpnam() 
+*
+*  INPUTS
+*     char *fname - filename 
+*
+*  RESULT
+*     char* - filename 
+*
+*  NOTE
+*     This function does NOT support static buffers with WIN32
+******************************************************************************/
+char *sge_tmpnam(char *fname)
+{
+#ifndef WIN32  /* tmpnam */
+   return tmpnam(fname);
+#else
+   char *basename;
+ 
+   if (!fname) {
+      /*
+      ** static buffer not supported
+      */
+      return NULL;
+   }
+   if (!tmpnam(fname)) {
+      return NULL;
+   }
+ 
+   /*
+   ** tmpnam in GNUWIN32 returns /tmp/sdsdfsdf
+   ** external programs cannot resolve GNU mounts
+   */
+   basename = strrchr(fname, '/');
+   if (!basename) {
+      return fname;
+   }
+   /*
+   ** evaluation of TEMP var missing here
+   */
+   memmove(fname, basename + 1, strlen(basename + 1) + 1);
+   return fname;
+#endif
+}           

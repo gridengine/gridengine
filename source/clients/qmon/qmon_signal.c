@@ -48,17 +48,6 @@ void qmonSIGALRM(int dummy)
    XtAppAddTimeOut(AppContext, 0, qmonSignalMsg, message);
 }
 
-void qmonSIGPIPE(int dummy)
-{
-
-#if 0
-   static char message[BUFSIZ];
-   
-   sprintf(message, "SIGPIPE arrived");
-   XtAppAddTimeOut(AppContext, 0, qmonSignalMsg, message);
-#endif   
-}
-
 /*-------------------------------------------------------------------------*/
 void qmonSignalMsg(
 XtPointer cld,
@@ -71,7 +60,6 @@ XtIntervalId *id
 void qmonInstSignalHandler(void)
 {
    signal(SIGALRM, qmonSIGALRM );
-   signal(SIGPIPE, qmonSIGPIPE );
 /*    signal(SIGINT, qmonExitFunc(0)); */
 }
 

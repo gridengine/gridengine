@@ -35,18 +35,17 @@
 #include <strings.h>
 
 #include "cull.h"
-#include "sge_gdi.h"
+#include "sge_gdi_intern.h"
 #include "sgermon.h"
 #include "sge_log.h"
 
-#include "sge_answer.h"
 #include "sge_job.h"
 #include "sge_ja_task.h"
-#include "sge_object.h"
-#include "sge_qinstance.h"
+#include "sge_queue.h"
 #include "sge_range.h"
+#include "sge_answer.h"
 
-#include "sge_idL.h"
+#include "sge_identL.h"
 #include "sge_orderL.h"
 
 #include "sge_orders.h"
@@ -55,7 +54,7 @@
 #include "sge_ssi.h"
 
 
-static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_task_id)
+static int parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_task_id)
 {
    char *copy;
 
@@ -68,34 +67,34 @@ static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_
 
    if(*job_id > 0 && *ja_task_id > 0) {
       DEXIT;
-      return true;
+      return TRUE;
    }
 
    WARNING((SGE_EVENT, MSG_SSI_ERRORPARSINGJOBIDENTIFIER_S, id));
 
    DEXIT;
-   return false;
+   return FALSE;
 }
 
-/****** schedlib/ssi/sge_ssi_job_cancel() **************************************
+/****** schedlib/ssi/sge_ssi_job_cancel() *******************************************
 *  NAME
 *     sge_ssi_job_cancel() -- delete or restart a job
 *
 *  SYNOPSIS
-*     bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule) 
+*     int sge_ssi_job_cancel(const char *job_identifier, int reschedule) 
 *
 *  FUNCTION
 *     Delete the given job.
-*     If reschedule is set to true, reschedule the job.
+*     If reschedule is set to TRUE, reschedule the job.
 *
 *  INPUTS
 *     const char *job_identifier - job identifier in the form 
 *                                  <jobid>.<ja_task_id>, e.g. 123.1
-*     bool reschedule            - if true, reschedule job
+*     int reschedule             - if TRUE, reschedule job
 *
 *  RESULT
-*     bool - true, if the job could be successfully deleted (rescheduled),
-*           else false.
+*     int - TRUE, if the job could be successfully deleted (rescheduled),
+*           else FALSE.
 *
 *  NOTES
 *     The reschedule parameter is igored in the current implementation.
@@ -103,7 +102,7 @@ static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_
 *  SEE ALSO
 *     schedlib/ssi/sge_ssi/job_start()
 *******************************************************************************/
-bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule) 
+int sge_ssi_job_cancel(const char *job_identifier, int reschedule) 
 {
    u_long32 job_id, ja_task_id;
    lList *ref_list = NULL, *alp;
@@ -115,12 +114,12 @@ bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule)
    /* reschedule not yet implemented */
    if(reschedule) {
       DEXIT;
-      return false;
+      return FALSE;
    }
 
    if(!parse_job_identifier(job_identifier, &job_id, &ja_task_id)) {
       DEXIT;
-      return false;
+      return FALSE;
    }
 
    /* create id structure */
@@ -138,16 +137,16 @@ bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule)
    answer_list_on_error_print_or_exit(&alp, stderr);
 
    DEXIT;
-   return true;
+   return TRUE;
 }
 
 
-/****** schedlib/ssi/sge_ssi_job_start() ***************************************
+/****** libsched/ssi/sge_ssi_job_start() ********************************************
 *  NAME
 *     sge_ssi_job_start() -- start a job
 *
 *  SYNOPSIS
-*     bool sge_ssi_job_start(const char *job_identifier, const char *pe, 
+*     int sge_ssi_job_start(const char *job_identifier, const char *pe, 
 *                           task_map tasks[]) 
 *
 *  FUNCTION
@@ -167,13 +166,13 @@ bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule)
 *     task_map tasks[]           - mapping host->number of tasks
 *
 *  RESULT
-*     bool - true on success, else false
+*     int - TRUE on success, else FALSE
 *
 *  SEE ALSO
 *     libsched/ssi/--Simple-Scheduler-Interface
 *     libsched/ssi/-Simple-Scheduler-Interface-Typedefs
 *******************************************************************************/
-bool sge_ssi_job_start(const char *job_identifier, const char *pe, task_map tasks[])
+int sge_ssi_job_start(const char *job_identifier, const char *pe, task_map tasks[])
 {
    u_long32 job_id, ja_task_id;
    lListElem *job, *ja_task;
@@ -187,7 +186,7 @@ bool sge_ssi_job_start(const char *job_identifier, const char *pe, task_map task
 
    if(!parse_job_identifier(job_identifier, &job_id, &ja_task_id)) {
       DEXIT;
-      return false;
+      return FALSE;
    }
 
    /* create job element */
@@ -210,32 +209,31 @@ bool sge_ssi_job_start(const char *job_identifier, const char *pe, task_map task
       if(tasks[i].host_name == NULL) {
          ERROR((SGE_EVENT, MSG_SSI_MISSINGHOSTNAMEINTASKLIST));
          DEXIT;
-         return false;
+         return FALSE;
       }
 
       DPRINTF(("job requests %d slots on host %s\n", tasks[i].procs, tasks[i].host_name));
-  
-      queue = lGetElemHost(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
-                           QU_qhostname, tasks[i].host_name);
+
+      queue = lGetElemHost(Master_Queue_List, QU_qhostname, tasks[i].host_name);
       if(queue == NULL) {
          ERROR((SGE_EVENT, MSG_SSI_COULDNOTFINDQUEUEFORHOST_S, tasks[i].host_name));
          DEXIT;
-         return false;
+         return FALSE;
       }
 
-      granted_queue = lAddElemStr(&granted, JG_qname, lGetString(queue, QU_full_name), JG_Type);
+      granted_queue = lAddElemStr(&granted, JG_qname, lGetString(queue, QU_qname), JG_Type);
       lSetUlong(granted_queue, JG_qversion, lGetUlong(queue, QU_version));
       lSetHost(granted_queue, JG_qhostname, lGetHost(queue, QU_qhostname));
       lSetUlong(granted_queue, JG_slots, tasks[i].procs);
    }
 
    /* create and send order */
-   order_list = sge_create_orders(order_list, ORT_start_job, job, ja_task, granted, false, true);
+   order_list = sge_create_orders(order_list, ORT_start_job, job, ja_task, granted);
    sge_send_orders2master(order_list);
 
    order_list = lFreeList(order_list);
 
    DEXIT;
-   return true;
+   return TRUE;
 }
 

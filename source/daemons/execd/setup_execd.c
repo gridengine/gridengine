@@ -34,17 +34,15 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "sge_bootstrap.h"
-
 #include "sgermon.h"
 #include "sge.h"
-#include "setup.h"
 #include "sge_conf.h"
-#include "gdi_conf.h"
+#include "rw_configuration.h"
 #include "sge_log.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_str.h"
+#include "sge_stringL.h"
+#include "sge_gdi_intern.h"
 #include "job_report_execd.h"
 #include "execd_ck_to_do.h"
 #include "setup_execd.h"
@@ -55,7 +53,7 @@
 #include "reaper_execd.h"
 #include "execution_states.h"
 #include "sge_feature.h"
-#include "spool/classic/read_write_job.h"
+#include "read_write_job.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
 #include "sge_io.h"
@@ -67,6 +65,7 @@
 #include "msg_execd.h"
 
 extern char execd_spool_dir[SGE_PATH_MAX];
+extern lList *execd_config_list;
 extern lList *jr_list;
 
 char execd_messages_file[SGE_PATH_MAX];
@@ -78,7 +77,7 @@ void sge_setup_sge_execd()
 
    DENTER(TOP_LAYER, "sge_setup_sge_execd");
 
-   if (get_conf_and_daemonize(daemonize_execd, &Master_Config_List)) {
+   if (get_conf_and_daemonize(daemonize_execd, &execd_config_list)) {
       SGE_EXIT(1);
    }
    sge_show_conf();         
@@ -86,7 +85,7 @@ void sge_setup_sge_execd()
    /*
    ** switch to admin user
    */
-   if (sge_set_admin_username(bootstrap_get_admin_user(), err_str)) {
+   if (sge_set_admin_username(conf.admin_user, err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }
@@ -102,10 +101,10 @@ void sge_setup_sge_execd()
    DPRINTF(("chdir(\"/\")----------------------------\n"));
    sge_chdir_exit("/",1);
    DPRINTF(("Making directories----------------------------\n"));
-   sge_mkdir(conf.execd_spool_dir, 0755, 1, 0);
+   sge_mkdir(conf.execd_spool_dir, 0755, 1);
    DPRINTF(("chdir(\"%s\")----------------------------\n", conf.execd_spool_dir));
    sge_chdir_exit(conf.execd_spool_dir,1);
-   sge_mkdir(uti_state_get_unqualified_hostname(), 0755, 1, 0);
+   sge_mkdir(uti_state_get_unqualified_hostname(), 0755, 1);
    DPRINTF(("chdir(\"%s\",me.unqualified_hostname)--------------------------\n",
             uti_state_get_unqualified_hostname()));
    sge_chdir_exit(uti_state_get_unqualified_hostname(), 1); 
@@ -115,18 +114,18 @@ void sge_setup_sge_execd()
    sge_switch2start_user();
    unlink(TMP_ERR_FILE_EXECD);
    sge_switch2admin_user();
-   log_state_set_log_as_admin_user(1);
+   sge_log_set_auser(1);
    sprintf(execd_messages_file, "%s/%s/%s", conf.execd_spool_dir, 
            uti_state_get_unqualified_hostname(), ERR_FILE);
-   log_state_set_log_file(execd_messages_file);
+   error_file = execd_messages_file;
 
    sprintf(execd_spool_dir, "%s/%s", conf.execd_spool_dir, 
            uti_state_get_unqualified_hostname());
    
    DPRINTF(("Making directories----------------------------\n"));
-   sge_mkdir(EXEC_DIR, 0775, 1, 0);
-   sge_mkdir(JOB_DIR, 0775, 1, 0);
-   sge_mkdir(ACTIVE_DIR,  0775, 1, 0);
+   sge_mkdir(EXEC_DIR, 0775, 1);
+   sge_mkdir(JOB_DIR, 0775, 1);
+   sge_mkdir(ACTIVE_DIR,  0775, 1);
 
    DEXIT;
    return;
@@ -140,9 +139,6 @@ int daemonize_execd()
 
    DENTER(TOP_LAYER, "daemonize_execd");
 
-   if (uti_state_get_daemonized()) {
-      return 1;
-   }
    FD_ZERO(&keep_open); 
 
    /* ask load sensor to fill in it's fd's */
@@ -154,7 +150,12 @@ int daemonize_execd()
       FD_SET(fd, &keep_open);
    } 
 
-   cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0), &keep_open);
+   if(!commlib_state_get_closefd()) {
+      int fd = commlib_state_get_sfd();
+      if (fd>=0) {
+         FD_SET(fd, &keep_open);
+      }
+   }
 
    ret = sge_daemonize(&keep_open);
 

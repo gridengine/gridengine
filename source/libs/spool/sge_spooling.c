@@ -33,30 +33,26 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
-#include "sge_profiling.h"
+#include "msg_spoollib.h"
 
-#include "sge_answer.h"
-
-#include "spool/msg_spoollib.h"
-
-#include "spool/sge_spooling.h"
+#include "sge_spooling.h"
 
 lListElem *Default_Spool_Context;
+
+/* creation and maintenance of the spooling context */
 
 /****** spool/spool_create_context() ************************************
 *  NAME
 *     spool_create_context() -- create a new spooing context
 *
 *  SYNOPSIS
-*     lListElem *
-*     spool_create_context(lList **answer_list, const char *name);
+*     lListElem* spool_create_context(const char *name) 
 *
 *  FUNCTION
 *     Create a new spooling context.
 *
 *  INPUTS
-*     lList **answer_list  - to return error messages
-*     const char *name     - name of the context
+*     const char *name - name of the context
 *
 *  RESULT
 *     lListElem* - the new spooling context
@@ -64,7 +60,7 @@ lListElem *Default_Spool_Context;
 *  EXAMPLE
 *     lListElem *context;
 *     
-*     context = spool_create_context(answer_list, "my spooling context");
+*     context = spool_create_context("my spooling context");
 *     ...
 *
 *
@@ -78,23 +74,21 @@ lListElem *Default_Spool_Context;
 *     spool/spool_free_context()
 *     spool/classic/spool_classic_create_context()
 *******************************************************************************/
-lListElem *
-spool_create_context(lList **answer_list, const char *name)
+lListElem *spool_create_context(const char *name)
 {
-   lListElem *ep = NULL;
+   lListElem *ep;
 
    DENTER(TOP_LAYER, "spool_create_context");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
-   if (name == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_CONTEXTNEEDSNAME);
-   } else {
-      ep = lCreateElem(SPC_Type);
-      lSetString(ep, SPC_name, name);
+   if(name == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_CONTEXTNEEDSNAME));
+      DEXIT;
+      return NULL;
    }
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
+   ep = lCreateElem(SPC_Type);
+   lSetString(ep, SPC_name, name);
+
    DEXIT;
    return ep;
 }
@@ -104,16 +98,14 @@ spool_create_context(lList **answer_list, const char *name)
 *     spool_free_context() -- free resources of a spooling context
 *
 *  SYNOPSIS
-*     lListElem* 
-*     spool_free_context(lList **answer_list, lListElem *context) 
+*     lListElem* spool_free_context(lListElem *context) 
 *
 *  FUNCTION
 *     Performs a shutdown of the spooling context and releases
 *     all allocated resources.
 *
 *  INPUTS
-*     lList **answer_list  - to return error messages
-*     lListElem *context   - the context to free
+*     lListElem *context - the context to free
 *
 *  RESULT
 *     lListElem* - NULL
@@ -121,29 +113,26 @@ spool_create_context(lList **answer_list, const char *name)
 *  EXAMPLE
 *     lListElem *context;
 *     ...
-*     context = spool_free_context(answer_list, context);
+*     context = spool_free_context(context);
 *
 *  SEE ALSO
 *     spool/--Spooling
 *     spool/spool_create_context()
 *     spool/spool_shutdown_context()
 *******************************************************************************/
-lListElem *
-spool_free_context(lList **answer_list, lListElem *context)
+lListElem *spool_free_context(lListElem *context)
 {
    DENTER(TOP_LAYER, "spool_free_context");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
   
-   if (context == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S, 
-                              SGE_FUNC);
-   } else {
-      spool_shutdown_context(answer_list, context);
-      context = lFreeElem(context);
+   if(context == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NOVALIDCONTEXT_S, "spool_free_context"));
+      DEXIT;
+      return NULL;
    }
+  
+   spool_shutdown_context(context);
+   context = lFreeElem(context);
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
    DEXIT;
    return context;
 }
@@ -154,219 +143,116 @@ spool_free_context(lList **answer_list, lListElem *context)
 *     spool_startup_context() -- startup a spooling context
 *
 *  SYNOPSIS
-*     bool 
-*     spool_startup_context(lList **answer_list, lListElem *context, bool check)
+*     int spool_startup_context(lListElem *context) 
 *
 *  FUNCTION
-*     Starts up the spooling context.
-*     Checks consistency of the spooling context.
+*     Checks consistency of the spooling context, e.g. a default rule exists 
+*     for  all types handled by the context.
 *
-*     Then the startup callback for all rules will be called, which will 
-*     startup the different rules.
-*
-*     For file based spooling, this can been to chdir into the spool directory,
-*     for database spooling it means opening the database connection.
-*
-*     If the parameter check is set to true, the startup callbacks
-*     check the data base, e.g. if the spooling database
-*     was created for the current Grid Engine version.
-*     This check shall be done for all operations, except when creating the
-*     database.
-*
+*     If the context is OK, the startup callback for all rules will be called.
+*     These startup callbacks will for example create spool directories,
+*     connect to a database system etc.
 *
 *  INPUTS
-*     lList **answer_list  - to return error messages
-*     lListElem *context   - the context to startup
-*     bool check           - check database?
+*     lListElem *context - the context to startup
 *
 *  RESULT
-*     bool - true, if the context is OK and all startup callbacks reported
+*     int - TRUE, if the context is OK and all startup callbacks reported
 *                 success,
-*            else false
+*           else FALSE
 *
 *  SEE ALSO
 *     spool/--Spooling
 *     spool/spool_shutdown_context()
 *******************************************************************************/
-bool 
-spool_startup_context(lList **answer_list, lListElem *context, bool check)
+int spool_startup_context(lListElem *context)
 {
-   bool ret = true;
+   lListElem *rule, *type;
 
    DENTER(TOP_LAYER, "spool_startup_context");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
-   if (context == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
-                              SGE_FUNC);
-      ret = false;
-   } else if (lGetNumberOfElem(lGetList(context, SPC_types)) == 0) {
-      /* check consistency: the context has to contain types */
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_SPOOL_CONTEXTCONTAINSNOTYPES_S, 
-                              lGetString(context, SPC_name));
-      ret = false;
-   } else {
-      lListElem *rule, *type;
-
-      /* each type needs at least one rule and exactly one default rule */
-      for_each (type, lGetList(context, SPC_types)) {
-         lListElem *type_rule;
-         int default_rules = 0;
-         
-         if (lGetNumberOfElem(lGetList(type, SPT_rules)) == 0) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_SPOOL_TYPECONTAINSNORULES_SS, 
-                                    lGetString(type, SPT_name),
-                                    lGetString(context, SPC_name));
-            ret = false;
-            goto error;
-         }
-
-         /* count default rules */
-         for_each (type_rule, lGetList(type, SPT_rules)) {
-            if(lGetBool(type_rule, SPTR_default)) {
-               default_rules++;
-            }
-         }
-         
-         if (default_rules == 0) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_SPOOL_TYPEHASNODEFAULTRULE_SS,
-                                    lGetString(type, SPT_name),
-                                    lGetString(context, SPC_name));
-            ret = false;
-            goto error;
-         }
-
-         if (default_rules > 1) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_SPOOL_TYPEHASMORETHANONEDEFAULTRULE_SS,
-                                    lGetString(type, SPT_name),
-                                    lGetString(context, SPC_name));
-            ret = false;
-            goto error;
-         }
-      }
-    
-      /* the context has to contain rules */
-      if (lGetNumberOfElem(lGetList(context, SPC_rules)) == 0) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_SPOOL_CONTEXTCONTAINSNORULES_S, 
-                                 lGetString(context, SPC_name));
-         ret = false;
-         goto error;
-      }
-      
-      for_each (rule, lGetList(context, SPC_rules)) {
-         spooling_startup_func func = (spooling_startup_func)
-                                      lGetRef(rule, SPR_startup_func);
-         if (func != NULL) {
-            if (!func(answer_list, rule, check)) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_SPOOL_STARTUPOFRULEFAILED_SS,
-                                       lGetString(rule, SPR_name), 
-                                       lGetString(context, SPC_name));
-               ret = false;
-               goto error;
-            }
-         }
-      }
+   if(context == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NOVALIDCONTEXT_S, "spool_startup_context"));
+      DEXIT;
+      return FALSE;
    }
 
-error:
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ret;
-}
+   /* check consistency */
+   /* the context has to contain types */
+   if(lGetNumberOfElem(lGetList(context, SPC_types)) == 0) {
+      ERROR((SGE_EVENT, MSG_SPOOL_CONTEXTCONTAINSNOTYPES_S, 
+             lGetString(context, SPC_name)));
+      DEXIT;
+      return FALSE;
+   }
+  
+   /* each type needs at least one rule and exactly one default rule */
+   for_each(type, lGetList(context, SPC_types)) {
+      lListElem *type_rule;
+      int default_rules = 0;
+      
+      if(lGetNumberOfElem(lGetList(type, SPT_rules)) == 0) {
+         ERROR((SGE_EVENT, MSG_SPOOL_TYPECONTAINSNORULES_SS, 
+                lGetString(type, SPT_name),
+                lGetString(context, SPC_name)));
+         DEXIT;
+         return FALSE;
+      }
 
-/****** spool/spool_maintain_context() **********************************
-*  NAME
-*     spool_maintain_context() -- maintain a context
-*
-*  SYNOPSIS
-*     bool 
-*     spool_maintain_context(lList **answer_list, lListElem *context,
-*                            const spooling_maintenance_command cmd,
-*                            const char *args) 
-*
-*  FUNCTION
-*     Do maintenance on spooling context's database.
-*     Calls the maintenance callback for all defined spooling rules.
-*     These callbacks will
-*        - initialize the database
-*        - backup
-*        - switch between spooling with/without history
-*        - etc.
-*
-*  INPUTS
-*     lList **answer_list - to return error messages
-*     lListElem *context  - the context to maintain
-*     const char *args    - arguments to maintenance callback
-*
-*  RESULT
-*     bool - true, if all maintenance callbacks reported success,
-*            else false
-*
-*  SEE ALSO
-*     spool/--Spooling
-*     spool/spool_startup_context()
-*******************************************************************************/
-bool 
-spool_maintain_context(lList **answer_list, lListElem *context, 
-                       const spooling_maintenance_command cmd,
-                       const char *args)
-{
-   bool ret = true;
+      /* count default rules */
+      for_each(type_rule, lGetList(type, SPT_rules)) {
+         if(lGetBool(type_rule, SPTR_default)) {
+            default_rules++;
+         }
+      }
+      
+      if(default_rules == 0) {
+         ERROR((SGE_EVENT, MSG_SPOOL_TYPEHASNODEFAULTRULE_SS,
+                lGetString(type, SPT_name),
+                lGetString(context, SPC_name)));
+         DEXIT;
+         return FALSE;
+      }
 
-   DENTER(TOP_LAYER, "spool_maintain_context");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
-
-   if (context == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
-                              SGE_FUNC);
-      ret = false;
-   } else {
-      lListElem *rule;
-
-      for_each (rule, lGetList(context, SPC_rules)) {
-         spooling_maintenance_func func = (spooling_maintenance_func)
-                                       lGetRef(rule, SPR_maintenance_func);
-         if (func != NULL) {
-            if (!func(answer_list, rule, cmd, args)) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_SPOOL_MAINTENANCEOFRULEFAILED_SS,
-                                       lGetString(rule, SPR_name), 
-                                       lGetString(context, SPC_name));
-               ret = false;
-               break;
-            }
+      if(default_rules > 1) {
+         ERROR((SGE_EVENT, MSG_SPOOL_TYPEHASMORETHANONEDEFAULTRULE_SS,
+                lGetString(type, SPT_name),
+                lGetString(context, SPC_name)));
+         DEXIT;
+         return FALSE;
+      }
+   }
+  
+   /* the context has to contain rules */
+   if(lGetNumberOfElem(lGetList(context, SPC_rules)) == 0) {
+      ERROR((SGE_EVENT, MSG_SPOOL_CONTEXTCONTAINSNORULES_S, 
+             lGetString(context, SPC_name)));
+      DEXIT;
+      return FALSE;
+   }
+   
+   for_each(rule, lGetList(context, SPC_rules)) {
+      spooling_startup_func func = (spooling_startup_func)lGetRef(rule, SPR_startup_func);
+      if(func != NULL) {
+         if(!func(rule)) {
+            ERROR((SGE_EVENT, "startup of rule "SFQ" in context "SFQ" failed\n",
+                   lGetString(rule, SPR_name), lGetString(context, SPC_name)));
+            DEXIT;
+            return FALSE;
          }
       }
    }
    
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
    DEXIT;
-   return ret;
+   return TRUE;
 }
-
 
 /****** spool/spool_shutdown_context() **********************************
 *  NAME
 *     spool_shutdown_context() -- shutdown a context
 *
 *  SYNOPSIS
-*     bool 
-*     spool_shutdown_context(lList **answer_list, lListElem *context) 
+*     int spool_shutdown_context(lListElem *context) 
 *
 *  FUNCTION
 *     Shut down a spooling context.
@@ -378,130 +264,42 @@ spool_maintain_context(lList **answer_list, lListElem *context,
 *     spool_startup_context()
 *
 *  INPUTS
-*     lList **answer_list  - to return error messages
 *     lListElem *context - the context to shutdown
 *
 *  RESULT
-*     bool - true, if all shutdown callbacks reported success,
-*            else false
+*     int - TRUE, if all shutdown callbacks reported success,
+*           else FALSE
 *
 *  SEE ALSO
 *     spool/--Spooling
 *     spool/spool_startup_context()
 *******************************************************************************/
-bool 
-spool_shutdown_context(lList **answer_list, lListElem *context)
+int spool_shutdown_context(lListElem *context)
 {
-   bool ret = true;
+   lListElem *rule;
 
    DENTER(TOP_LAYER, "spool_shutdown_context");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
-   if (context == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
-                              SGE_FUNC);
-      ret = false;
-   } else {
-      lListElem *rule;
-
-      for_each (rule, lGetList(context, SPC_rules)) {
-         spooling_shutdown_func func = (spooling_shutdown_func)
-                                       lGetRef(rule, SPR_shutdown_func);
-         if (func != NULL) {
-            if (!func(answer_list, rule)) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_SPOOL_SHUTDOWNOFRULEFAILED_SS,
-                                       lGetString(rule, SPR_name), 
-                                       lGetString(context, SPC_name));
-               ret = false;
-               break;
-            }
+   if(context == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NOVALIDCONTEXT_S, "spool_shutdown_context"));
+      DEXIT;
+      return FALSE;
+   }
+  
+   for_each(rule, lGetList(context, SPC_rules)) {
+      spooling_shutdown_func func = (spooling_shutdown_func)lGetRef(rule, SPR_shutdown_func);
+      if(func != NULL) {
+         if(!func(rule)) {
+            ERROR((SGE_EVENT, "shutdown of rule "SFQ" in context "SFQ" failed\n",
+                   lGetString(rule, SPR_name), lGetString(context, SPC_name)));
+            DEXIT;
+            return FALSE;
          }
       }
    }
    
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
    DEXIT;
-   return ret;
-}
-
-bool
-spool_trigger_context(lList **answer_list, lListElem *context,
-                      time_t trigger, time_t *next_trigger)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "spool_trigger_context");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
-
-   if (context == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
-                              SGE_FUNC);
-      ret = false;
-   } else {
-      lListElem *rule;
-
-      for_each (rule, lGetList(context, SPC_rules)) {
-         spooling_trigger_func func = (spooling_trigger_func)
-                                       lGetRef(rule, SPR_trigger_func);
-         if (func != NULL) {
-            if (!func(answer_list, rule, trigger, next_trigger)) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_SPOOL_TRIGGEROFRULEFAILED_SS,
-                                       lGetString(rule, SPR_name), 
-                                       lGetString(context, SPC_name));
-               ret = false;
-               break;
-            }
-         }
-      }
-   }
-   
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ret;
-}
-
-bool spool_transaction(lList **answer_list, lListElem *context, 
-                       spooling_transaction_command cmd)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "spool_transaction");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
-
-   if (context == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
-                              SGE_FUNC);
-      ret = false;
-   } else {
-      lListElem *rule;
-
-      for_each (rule, lGetList(context, SPC_rules)) {
-         spooling_transaction_func func = (spooling_transaction_func)
-                                       lGetRef(rule, SPR_transaction_func);
-         if (func != NULL) {
-            if (!func(answer_list, rule, cmd)) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_SPOOL_TRANSACTIONOFRULEFAILED_SS,
-                                       lGetString(rule, SPR_name), 
-                                       lGetString(context, SPC_name));
-               ret = false;
-               break;
-            }
-         }
-      }
-   }
-   
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ret;
+   return TRUE;
 }
 
 
@@ -536,8 +334,7 @@ void spool_set_default_context(lListElem *context)
 *     spool_get_default_context() -- retrieve the default spooling context 
 *
 *  SYNOPSIS
-*     lListElem* 
-*     spool_get_default_context(void) 
+*     lListElem* spool_get_default_context(void) 
 *
 *  FUNCTION
 *     Retrieves a spooling context that has been set earlier using the function
@@ -551,8 +348,7 @@ void spool_set_default_context(lListElem *context)
 *     spool/--Spooling
 *     spool/spool_set_default_context()
 *******************************************************************************/
-lListElem *
-spool_get_default_context(void)
+lListElem *spool_get_default_context(void)
 {
    return Default_Spool_Context;
 }
@@ -562,8 +358,8 @@ spool_get_default_context(void)
 *     spool_context_search_rule() -- search a certain rule 
 *
 *  SYNOPSIS
-*     lListElem* 
-*     spool_context_search_rule(const lListElem *context, const char *name) 
+*     lListElem* spool_context_search_rule(const lListElem *context, 
+*                                          const char *name) 
 *
 *  FUNCTION
 *     Searches a certain rule (given by its name) in a given spooling context.
@@ -578,8 +374,7 @@ spool_get_default_context(void)
 *  SEE ALSO
 *     spool/--Spooling
 *******************************************************************************/
-lListElem *
-spool_context_search_rule(const lListElem *context, const char *name)
+lListElem *spool_context_search_rule(const lListElem *context, const char *name)
 {
    return lGetElemStr(lGetList(context, SPC_rules), SPR_name, name);
 }
@@ -589,30 +384,25 @@ spool_context_search_rule(const lListElem *context, const char *name)
 *     spool_context_create_rule() -- create a rule in a spooling context
 *
 *  SYNOPSIS
-*     lListElem* 
-*     spool_context_create_rule(lList **answer_list, lListElem *context, 
-*                               const char *name, const char *url, 
-*                               spooling_startup_func startup_func, 
-*                               spooling_shutdown_func shutdown_func,
-*                               spooling_maintenance_func maintenance_func,
-*                               spooling_list_func list_func, 
-*                               spooling_read_func read_func, 
-*                               spooling_write_func write_func, 
-*                               spooling_delete_func delete_func) 
-*                               spooling_validate_func validate_func) 
+*     lListElem* spool_context_create_rule(lListElem *context, 
+*                                          const char *name, 
+*                                          const char *url, 
+*                                          spooling_startup_func startup_func, 
+*                                          spooling_shutdown_func shutdown_func,
+*                                          spooling_list_func list_func, 
+*                                          spooling_read_func read_func, 
+*                                          spooling_write_func write_func, 
+*                                          spooling_delete_func delete_func) 
 *
 *  FUNCTION
 *     Creates a rule in the given context and assigns it the given attributes.
 *
 *  INPUTS
-*     lList **answer_list  - to return error messages
 *     lListElem *context                   - the context to contain the new rule
 *     const char *name                     - the name of the rule
 *     const char *url                      - the name of the url
 *     spooling_startup_func startup_func   - startup function for the rule
 *     spooling_shutdown_func shutdown_func - shutdown function
-*     spooling_maintenance_func shutdown_func - maintenance function 
-*                                               (initializaion, backup, etc.)
 *     spooling_list_func list_func         - function reading a list of objects
 *     spooling_read_func read_func         - function reading an individual 
 *                                            object 
@@ -620,10 +410,6 @@ spool_context_search_rule(const lListElem *context, const char *name)
 *                                            object
 *     spooling_delete_func delete_func     - function deleting an individual 
 *                                            object
-*     spooling_validate_func validate_func     - function validateing an individual 
-*                                                object
-*     spooling validate_list_func validate_list_func - function for validating 
-*                                                      the new list
 *
 *  RESULT
 *     lListElem* - the new rule, if it could be created, else NULL
@@ -631,67 +417,55 @@ spool_context_search_rule(const lListElem *context, const char *name)
 *  SEE ALSO
 *     spool/--Spooling
 *******************************************************************************/
-lListElem *
-spool_context_create_rule(lList **answer_list, lListElem *context, 
-                          const char *name, const char *url,
-                          spooling_startup_func startup_func, 
-                          spooling_shutdown_func shutdown_func, 
-                          spooling_maintenance_func maintenance_func, 
-                          spooling_trigger_func trigger_func, 
-                          spooling_transaction_func transaction_func, 
-                          spooling_list_func list_func, 
-                          spooling_read_func read_func, 
-                          spooling_write_func write_func, 
-                          spooling_delete_func delete_func,
-                          spooling_validate_func validate_func,
-                          spooling_validate_list_func validate_list_func)
+lListElem *spool_context_create_rule(lListElem *context, 
+                                     const char *name, 
+                                     const char *url,
+                                     spooling_startup_func startup_func, 
+                                     spooling_shutdown_func shutdown_func, 
+                                     spooling_list_func list_func, 
+                                     spooling_read_func read_func, 
+                                     spooling_write_func write_func, 
+                                     spooling_delete_func delete_func)
 {
-   lListElem *ep = NULL;
+   lList *lp;
+   lListElem *ep;
 
    DENTER(TOP_LAYER, "spool_context_create_rule");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
-   if (context == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
-                              SGE_FUNC);
-   } else if (lGetElemStr(lGetList(context, SPC_rules), SPR_name, name) 
-             != NULL) {
-      /* check for duplicates */
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_SPOOL_RULEALREADYEXISTS_SS, 
-                              name, lGetString(context, SPC_name));
-   } else {
-      lList *lp;
-
-      /* create rule */
-      ep = lCreateElem(SPR_Type);
-      lSetString(ep, SPR_name, name);
-      lSetString(ep, SPR_url, url);
-      lSetRef(ep, SPR_startup_func, (void *)startup_func);
-      lSetRef(ep, SPR_shutdown_func, (void *)shutdown_func);
-      lSetRef(ep, SPR_maintenance_func, (void *)maintenance_func);
-      lSetRef(ep, SPR_trigger_func, (void *)trigger_func);
-      lSetRef(ep, SPR_transaction_func, (void *)transaction_func);
-      lSetRef(ep, SPR_list_func, (void *)list_func);
-      lSetRef(ep, SPR_read_func, (void *)read_func);
-      lSetRef(ep, SPR_write_func, (void *)write_func);
-      lSetRef(ep, SPR_delete_func, (void *)delete_func);
-      lSetRef(ep, SPR_validate_func, (void *)validate_func);
-      lSetRef(ep, SPR_validate_list_func, (void *)validate_list_func);
-
-      /* append rule to rule list */
-      lp = lGetList(context, SPC_rules);
-      if (lp == NULL) {
-         lp = lCreateList("spooling rules", SPR_Type);
-         lSetList(context, SPC_rules, lp);
-      }
-
-      lAppendElem(lp, ep);
+   if(context == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NOVALIDCONTEXT_S, "spool_context_create_rule"));
+      DEXIT;
+      return NULL;
    }
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
+   /* check for duplicates */
+   if(lGetElemStr(lGetList(context, SPC_rules), SPR_name, name) != NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_RULEALREADYEXISTS_SS, 
+             name, lGetString(context, SPC_name)));
+      DEXIT;
+      return NULL;
+   }
+
+   /* create rule */
+   ep = lCreateElem(SPR_Type);
+   lSetString(ep, SPR_name, name);
+   lSetString(ep, SPR_url, url);
+   lSetRef(ep, SPR_startup_func, (void *)startup_func);
+   lSetRef(ep, SPR_shutdown_func, (void *)shutdown_func);
+   lSetRef(ep, SPR_list_func, (void *)list_func);
+   lSetRef(ep, SPR_read_func, (void *)read_func);
+   lSetRef(ep, SPR_write_func, (void *)write_func);
+   lSetRef(ep, SPR_delete_func, (void *)delete_func);
+
+   /* append rule to rule list */
+   lp = lGetList(context, SPC_rules);
+   if(lp == NULL) {
+      lp = lCreateList("spooling rules", SPR_Type);
+      lSetList(context, SPC_rules, lp);
+   }
+
+   lAppendElem(lp, ep);
+
    DEXIT; 
    return ep;
 }
@@ -701,9 +475,8 @@ spool_context_create_rule(lList **answer_list, lListElem *context,
 *     spool_context_search_type() -- search an object type description
 *
 *  SYNOPSIS
-*     lListElem* 
-*     spool_context_search_type(const lListElem *context, 
-*                               const  sge_object_type object_type) 
+*     lListElem* spool_context_search_type(const lListElem *context, 
+*                                          const  sge_event_type event_type) 
 *
 *  FUNCTION
 *     Searches the object type description with the given type in the 
@@ -714,7 +487,7 @@ spool_context_create_rule(lList **answer_list, lListElem *context,
 *
 *  INPUTS
 *     const lListElem *context        - the context to search
-*     const sge_object_type object_type - the object type to search
+*     const sge_event_type event_type - the object type to search
 *
 *  RESULT
 *     lListElem* - an object type description or NULL, if none was found.
@@ -722,18 +495,16 @@ spool_context_create_rule(lList **answer_list, lListElem *context,
 *  SEE ALSO
 *     spool/--Spooling
 *******************************************************************************/
-lListElem *
-spool_context_search_type(const lListElem *context, 
-                          const sge_object_type object_type)
+lListElem *spool_context_search_type(const lListElem *context, const sge_event_type event_type)
 {
    lListElem *ep;
 
    /* search fitting rule */
-   ep = lGetElemUlong(lGetList(context, SPC_types), SPT_type, object_type);
+   ep = lGetElemUlong(lGetList(context, SPC_types), SPT_type, event_type);
 
    /* if no specific rule is found, return default rule */
-   if (ep == NULL) {
-      ep = lGetElemUlong(lGetList(context, SPC_types), SPT_type, SGE_TYPE_ALL);
+   if(ep == NULL) {
+      ep = lGetElemUlong(lGetList(context, SPC_types), SPT_type, SGE_EMT_ALL);
    }
    
    return ep;
@@ -744,23 +515,21 @@ spool_context_search_type(const lListElem *context,
 *     spool_context_create_type() -- create an object type description 
 *
 *  SYNOPSIS
-*     lListElem* 
-*     spool_context_create_type(lList **answer_list, lListElem *context, 
-*                               const sge_object_type object_type) 
+*     lListElem* spool_context_create_type(lListElem *context, 
+*                                          const sge_event_type event_type) 
 *
 *  FUNCTION
 *     Creates a new description how a certain object type shall be 
 *     spooled.
 *
-*     If the given object_type is SGE_TYPE_ALL, the description will
+*     If the given event_type is SGE_EMT_ALL, the description will
 *     be the default for object types that are not individually
 *     handled.
 *
 *  INPUTS
-*     lList **answer_list  - to return error messages
 *     lListElem *context              - the context to contain the new 
 *                                       description
-*     const sge_object_type object_type - the object type
+*     const sge_event_type event_type - the object type
 *
 *  RESULT
 *     lListElem* - the new object type description
@@ -768,38 +537,33 @@ spool_context_search_type(const lListElem *context,
 *  SEE ALSO
 *     spool/--Spooling
 *******************************************************************************/
-lListElem *
-spool_context_create_type(lList **answer_list, lListElem *context, 
-                          const sge_object_type object_type)
+lListElem *spool_context_create_type(lListElem *context, const sge_event_type event_type)
 {
-   lListElem *ep = NULL;
+   lList *lp;
+   lListElem *ep;
 
    DENTER(TOP_LAYER, "spool_context_create_type");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
-   if (context == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
-                              SGE_FUNC);
-   } else {
-      lList *lp;
-
-      /* create new type */
-      ep = lCreateElem(SPT_Type);
-      lSetUlong(ep, SPT_type, object_type);
-      lSetString(ep, SPT_name, object_type_get_name(object_type));
-    
-      /* append it to the types list of the context */
-      lp = lGetList(context, SPC_types);
-      if (lp == NULL) {
-         lp = lCreateList("spooling object types", SPT_Type);
-         lSetList(context, SPC_types, lp);
-      }
-
-      lAppendElem(lp, ep);
+   if(context == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NOVALIDCONTEXT_S, "spool_context_create_type"));
+      DEXIT;
+      return NULL;
+   }
+ 
+   /* create new type */
+   ep = lCreateElem(SPT_Type);
+   lSetUlong(ep, SPT_type, event_type);
+   lSetString(ep, SPT_name, sge_mirror_get_type_name(event_type));
+ 
+   /* append it to the types list of the context */
+   lp = lGetList(context, SPC_types);
+   if(lp == NULL) {
+      lp = lCreateList("spooling object types", SPT_Type);
+      lSetList(context, SPC_types, lp);
    }
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
+   lAppendElem(lp, ep);
+
    DEXIT;
    return ep;
 }
@@ -809,8 +573,7 @@ spool_context_create_type(lList **answer_list, lListElem *context,
 *     spool_type_search_default_rule() -- search the default rule
 *
 *  SYNOPSIS
-*     lListElem* 
-*     spool_type_search_default_rule(const lListElem *spool_type) 
+*     lListElem* spool_type_search_default_rule(const lListElem *spool_type) 
 *
 *  FUNCTION
 *     Searches and returns the default spooling rule for a certain object type.
@@ -824,22 +587,19 @@ spool_context_create_type(lList **answer_list, lListElem *context,
 *  SEE ALSO
 *     spool/--Spooling
 *******************************************************************************/
-lListElem *
-spool_type_search_default_rule(const lListElem *spool_type)
+lListElem *spool_type_search_default_rule(const lListElem *spool_type)
 {  
    lList *lp;
    lListElem *ep;
-   lListElem *rule = NULL;
 
    lp = lGetList(spool_type, SPT_rules);
-   for_each (ep, lp) {
-      if (lGetBool(ep, SPTR_default)) {
-         rule = (lListElem *)lGetRef(ep, SPTR_rule);
-         break;
+   for_each(ep, lp) {
+      if(lGetBool(ep, SPTR_default)) {
+         return (lListElem *)lGetRef(ep, SPTR_rule);
       }
    }
 
-   return rule;
+   return NULL;
 }
 
 /****** spool/spool_type_add_rule() *************************************
@@ -847,16 +607,14 @@ spool_type_search_default_rule(const lListElem *spool_type)
 *     spool_type_add_rule() -- adds a rule for a spooling object type 
 *
 *  SYNOPSIS
-*     lListElem* 
-*     spool_type_add_rule(lList **answer_list, lListElem *spool_type, 
-*                         const lListElem *rule, lBool is_default) 
+*     lListElem* spool_type_add_rule(lListElem *spool_type, 
+*                                    const lListElem *rule, lBool is_default) 
 *
 *  FUNCTION
 *     Adds a spooling rule to an object type description.
 *     The rule can be installed as default rule for this object type.
 *
 *  INPUTS
-*     lList **answer_list  - to return error messages
 *     lListElem *spool_type - the object type description
 *     const lListElem *rule - the rule to add 
 *     lBool is_default      - is the rule the default rule?
@@ -870,48 +628,47 @@ spool_type_search_default_rule(const lListElem *spool_type)
 *     spool/spool_context_create_type()
 *     spool/spool_context_create_rule()
 *******************************************************************************/
-lListElem *
-spool_type_add_rule(lList **answer_list, lListElem *spool_type, 
-                    const lListElem *rule, lBool is_default)
+lListElem *spool_type_add_rule(lListElem *spool_type, const lListElem *rule, lBool is_default)
 {
-   lListElem *ep = NULL;
+   lList *lp;
+   lListElem *ep;
 
    DENTER(TOP_LAYER, "spool_type_add_rule");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
    if(spool_type == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_SPOOL_NOVALIDSPOOLTYPE_S, SGE_FUNC);
-   } else if(rule == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDRULE_S,
-                              SGE_FUNC);
-   } else if(is_default && spool_type_search_default_rule(spool_type) != NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_SPOOL_TYPEALREADYHASDEFAULTRULE_S, 
-                              lGetString(spool_type, SPT_name));
-   } else {
-      lList *lp;
-
-      /* create mapping object */
-      ep = lCreateElem(SPTR_Type);
-      lSetBool(ep, SPTR_default, is_default);
-      lSetString(ep, SPTR_rule_name, lGetString(rule, SPR_name));
-      lSetRef(ep, SPTR_rule, (void *)rule);
-
-      /* append it to the list of mapping for this type */
-      lp = lGetList(spool_type, SPT_rules);
-      if (lp == NULL) {
-         lp = lCreateList("spooling object type rules", SPTR_Type);
-         lSetList(spool_type, SPT_rules, lp);
-      }
-      
-      lAppendElem(lp, ep);
+      ERROR((SGE_EVENT, MSG_SPOOL_NOVALIDSPOOLTYPE_S, "spool_type_add_rule"));
+      DEXIT;
+      return NULL;
    }
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
+   if(rule == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NOVALIDRULE_S, "spool_type_add_rule"));
+      DEXIT;
+      return NULL;
+   }
+
+   if(is_default && spool_type_search_default_rule(spool_type) != NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_TYPEALREADYHASDEFAULTRULE_S, 
+             lGetString(spool_type, SPT_name)));
+      DEXIT;
+      return NULL;
+   }
+
+   /* create mapping object */
+   ep = lCreateElem(SPTR_Type);
+   lSetBool(ep, SPTR_default, is_default);
+   lSetString(ep, SPTR_rule_name, lGetString(rule, SPR_name));
+   lSetRef(ep, SPTR_rule, (void *)rule);
+
+   /* append it to the list of mapping for this type */
+   lp = lGetList(spool_type, SPT_rules);
+   if(lp == NULL) {
+      lp = lCreateList("spooling object type rules", SPTR_Type);
+      lSetList(spool_type, SPT_rules, lp);
+   }
+   
+   lAppendElem(lp, ep);
+  
    DEXIT;
    return ep;
 }
@@ -921,9 +678,8 @@ spool_type_add_rule(lList **answer_list, lListElem *spool_type,
 *     spool_read_list() -- read a list of objects from spooled data
 *
 *  SYNOPSIS
-*     bool
-*     spool_read_list(lList **answer_list, const lListElem *context, 
-*                     lList **list, const sge_object_type object_type) 
+*     int spool_read_list(const lListElem *context, lList **list, 
+*                         const sge_event_type event_type) 
 *
 *  FUNCTION
 *     Read the list of objects associated with a certain object type
@@ -933,76 +689,67 @@ spool_type_add_rule(lList **answer_list, lListElem *spool_type,
 *     for the given object type.
 *
 *  INPUTS
-*     lList **answer_list  - to return error messages
 *     const lListElem *context        - the context to use for reading
 *     lList **list                    - the target list
-*     const sge_object_type object_type - the object type
+*     const sge_event_type event_type - the object type
 *
 *  RESULT
-*     int - true, on success, false, if an error occured
+*     int - TRUE, on success, FALSE, if an error occured
 *
 *  EXAMPLE
-*     spool_read_list(context, &Master_Job_List, SGE_TYPE_JOB);
+*     spool_read_list(context, &Master_Job_List, SGE_EMT_JOB);
 *     will read the job list.
 *
 *  SEE ALSO
 *     spool/--Spooling
 *******************************************************************************/
-bool 
-spool_read_list(lList **answer_list, const lListElem *context, 
-                lList **list, const sge_object_type object_type)
+int spool_read_list(const lListElem *context, lList **list, const sge_event_type event_type)
 {
-   bool ret = false;
+   lListElem *type;
+   lListElem *rule;
+   spooling_list_func func;
+
+   int ret;
 
    DENTER(TOP_LAYER, "spool_read_list");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
-   if (context == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
-                              SGE_FUNC);
-   } else {
-      lListElem *type;
-
-      /* find the object type description */
-      type = spool_context_search_type(context, object_type);
-      if (type == NULL) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS, 
-                                 object_type_get_name(object_type), 
-                                 lGetString(context, SPC_name));
-      } else {
-         lListElem *rule;
-
-         /* use the default rule to read list */
-         rule = spool_type_search_default_rule(type);
-         if (rule == NULL) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_SPOOL_NODEFAULTRULEFORTYPEINCONTEXT_SS,
-                                    object_type_get_name(object_type), 
-                                    lGetString(context, SPC_name));
-         } else {
-            spooling_list_func func;
-
-            /* read and call the list callback function */
-            func = (spooling_list_func)lGetRef(rule, SPR_list_func);
-            if (func == NULL) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_SPOOL_CORRUPTRULEINCONTEXT_SSS,
-                                       lGetString(rule, SPR_name), 
-                                       lGetString(context, SPC_name),
-                                       SGE_FUNC);
-            } else {
-               ret = func(answer_list, type, rule, list, object_type);
-            }
-         }
-      }
+   if(context == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NOVALIDCONTEXT_S, "spool_read_list"));
+      DEXIT;
+      return FALSE;
    }
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
+   /* find the object type description */
+   type = spool_context_search_type(context, event_type);
+   if(type == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS, 
+             sge_mirror_get_type_name(event_type), lGetString(context, SPC_name)));
+      DEXIT;
+      return FALSE;
+   }
+
+   /* use the default rule to read list */
+   rule = spool_type_search_default_rule(type);
+   if(rule == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NODEFAULTRULEFORTYPEINCONTEXT_SS,
+             sge_mirror_get_type_name(event_type), lGetString(context, SPC_name)));
+      DEXIT;
+      return FALSE;
+   }
+
+   /* read and call the list callback function */
+   func = (spooling_list_func)lGetRef(rule, SPR_list_func);
+   if(func == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_CORRUPTRULEINCONTEXT_SSS,
+             lGetString(rule, SPR_name), lGetString(context, SPC_name),
+             "spooling_list_func"));
+      DEXIT;
+      return FALSE;
+   }
+
+
+   ret = func(type, rule, list, event_type);
+
    DEXIT;
    return ret;
 }
@@ -1012,9 +759,9 @@ spool_read_list(lList **answer_list, const lListElem *context,
 *     spool_read_object() -- read a single object from spooled data
 *
 *  SYNOPSIS
-*     lListElem* 
-*     spool_read_object(lList **answer_list, const lListElem *context, 
-*                       const  sge_object_type object_type, const char *key) 
+*     lListElem* spool_read_object(const lListElem *context, 
+*                                  const  sge_event_type event_type, 
+*                                  const char *key) 
 *
 *  FUNCTION
 *     Read an objects characterized by its type and a unique key
@@ -1024,9 +771,8 @@ spool_read_list(lList **answer_list, const lListElem *context,
 *     for the given object type.
 *
 *  INPUTS
-*     lList **answer_list  - to return error messages
 *     const lListElem *context        - the context to use
-*     const sge_object_type object_type - object type
+*     const sge_event_type event_type - object type
 *     const char *key                 - unique key
 *
 *  RESULT
@@ -1035,61 +781,51 @@ spool_read_list(lList **answer_list, const lListElem *context,
 *  SEE ALSO
 *     spool/--Spooling
 *******************************************************************************/
-lListElem *
-spool_read_object(lList **answer_list, const lListElem *context, 
-                  const sge_object_type object_type, const char *key)
+lListElem *spool_read_object(const lListElem *context, const sge_event_type event_type, const char *key)
 {
-   lListElem *result = NULL;
+   lListElem *type;
+   lListElem *rule;
+   lListElem *result;
+   spooling_read_func func;
 
    DENTER(TOP_LAYER, "spool_read_object");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
-   if (context == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
-                              SGE_FUNC);
-   } else {
-      lListElem *type;
-
-      /* find the object type description */
-      type = spool_context_search_type(context, object_type);
-      if (type == NULL) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS,
-                                 object_type_get_name(object_type), 
-                                 lGetString(context, SPC_name));
-      } else {
-         lListElem *rule;
-
-         /* use the default rule to read object */
-         rule = spool_type_search_default_rule(type);
-         if (rule == NULL) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_SPOOL_NODEFAULTRULEFORTYPEINCONTEXT_SS,
-                                    object_type_get_name(object_type), 
-                                    lGetString(context, SPC_name));
-         } else {
-            spooling_read_func func;
-
-            /* retrieve and execute the read callback */
-            func = (spooling_read_func)lGetRef(rule, SPR_read_func);
-            if (func == NULL) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_SPOOL_CORRUPTRULEINCONTEXT_SSS,
-                                       lGetString(rule, SPR_name), 
-                                       lGetString(context, SPC_name),
-                                       SGE_FUNC);
-            } else {
-               result = func(answer_list, type, rule, key, object_type);
-            }
-         }
-      }
+   if(context == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NOVALIDCONTEXT_S, "spool_read_object"));
+      DEXIT;
+      return NULL;
+   }
+  
+   /* find the object type description */
+   type = spool_context_search_type(context, event_type);
+   if(type == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS,
+             sge_mirror_get_type_name(event_type), lGetString(context, SPC_name)));
+      DEXIT;
+      return FALSE;
    }
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
+   /* use the default rule to read object */
+   rule = spool_type_search_default_rule(type);
+   if(rule == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NODEFAULTRULEFORTYPEINCONTEXT_SS,
+             sge_mirror_get_type_name(event_type), lGetString(context, SPC_name)));
+      DEXIT;
+      return FALSE;
+   }
+
+   /* retrieve and execute the read callback */
+   func = (spooling_read_func)lGetRef(rule, SPR_read_func);
+   if(func == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_CORRUPTRULEINCONTEXT_SSS,
+             lGetString(rule, SPR_name), lGetString(context, SPC_name),
+             "spooling_read_func"));
+      DEXIT;
+      return FALSE;
+   }
+
+   result = func(type, rule, key, event_type);
+
    DEXIT;
    return result;
 }
@@ -1099,10 +835,8 @@ spool_read_object(lList **answer_list, const lListElem *context,
 *     spool_write_object() -- write (spool) a single object 
 *
 *  SYNOPSIS
-*     bool 
-*     spool_write_object(lList **answer_list, const lListElem *context, 
-*                             const lListElem *object, const char *key, 
-*                             const sge_object_type object_type) 
+*     int spool_write_object(const lListElem *context, const lListElem *object, 
+*                            const char *key, const sge_event_type event_type) 
 *
 *  FUNCTION
 *     Writes a single object using the given spooling context.
@@ -1110,90 +844,78 @@ spool_read_object(lList **answer_list, const lListElem *context,
 *     description for the given object type.
 *
 *  INPUTS
-*     lList **answer_list  - to return error messages
 *     const lListElem *context        - context to use
 *     const lListElem *object         - object to spool
 *     const char *key                 - unique key
-*     const sge_object_type object_type - type of the object
+*     const sge_event_type event_type - type of the object
 *
 *  RESULT
-*     bool - true, if writing was successfull, else false
+*     int - TRUE, if writing was successfull, else FALSE
 *
 *  SEE ALSO
 *     spool/--Spooling
 *******************************************************************************/
-bool 
-spool_write_object(lList **answer_list, const lListElem *context, 
-                   const lListElem *object, const char *key, 
-                   const sge_object_type object_type)
+int spool_write_object(const lListElem *context, const lListElem *object, const char *key, const sge_event_type event_type)
 {
-   int ret = false;
+   lListElem *type;
+   lListElem *type_rule, *rule;
+   lList *type_rules;
+
+   int ret = TRUE;
 
    DENTER(TOP_LAYER, "spool_write_object");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
-   if (context == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
-                              SGE_FUNC);
-   } else {
-      lListElem *type;
-
-      /* find the object type description */
-      type = spool_context_search_type(context, object_type);
-      if (type == NULL) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS,
-                                 object_type_get_name(object_type), 
-                                 lGetString(context, SPC_name));
-      } else {
-         lList *type_rules;
-
-         /* loop over all rules and call the writing callbacks */
-         type_rules = lGetList(type, SPT_rules);
-         if (type_rules == NULL || lGetNumberOfElem(type_rules) == 0) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_SPOOL_NORULESFORTYPEINCONTEXT_SS,
-                                    object_type_get_name(object_type), 
-                                    lGetString(context, SPC_name));
-         } else {
-            lListElem *type_rule;
-
-            ret = true;
-
-            /* spool using multiple rules */
-            for_each (type_rule, type_rules) {
-               lListElem *rule;
-               spooling_write_func func;
-
-               rule = (lListElem *)lGetRef(type_rule, SPTR_rule);
-               func = (spooling_write_func)lGetRef(rule, SPR_write_func);
-               if (func == NULL) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_SPOOL_CORRUPTRULEINCONTEXT_SSS,
-                                          lGetString(rule, SPR_name), 
-                                          lGetString(context, SPC_name),
-                                          SGE_FUNC);
-                         ret = false;
-               } else {
-                  if(!func(answer_list, type, rule, object, key, object_type)) {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_WARNING, 
-                                             MSG_SPOOL_RULEINCONTEXTFAILEDWRITING_SS,
-                                             lGetString(rule, SPR_name), 
-                                             lGetString(context, SPC_name));
-                     ret = false;
-                  }
-               }
-            }
-         }
-      }
+   /* we cannot spool free objects */
+   if(object->status == FREE_ELEM) {
+      ERROR((SGE_EVENT, MSG_SPOOL_CANNOTSPOOLFREEOBJECT));
+      DEXIT;
+      return FALSE;
    }
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
+   if(context == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NOVALIDCONTEXT_S, "spool_write_object"));
+      DEXIT;
+      return FALSE;
+   }
+  
+   /* find the object type description */
+   type = spool_context_search_type(context, event_type);
+   if(type == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS,
+             sge_mirror_get_type_name(event_type), lGetString(context, SPC_name)));
+      DEXIT;
+      return FALSE;
+   }
+
+   /* loop over all rules and call the writing callbacks */
+   type_rules = lGetList(type, SPT_rules);
+   if(type_rules == NULL || lGetNumberOfElem(type_rules) == 0) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NORULESFORTYPEINCONTEXT_SS,
+             sge_mirror_get_type_name(event_type), lGetString(context, SPC_name)));
+      DEXIT;
+      return FALSE;
+   }
+
+   /* spool using multiple rules */
+   for_each(type_rule, type_rules) {
+      spooling_write_func func;
+      rule = (lListElem *)lGetRef(type_rule, SPTR_rule);
+      func = (spooling_write_func)lGetRef(rule, SPR_write_func);
+      if(func == NULL) {
+         ERROR((SGE_EVENT, MSG_SPOOL_CORRUPTRULEINCONTEXT_SSS,
+                lGetString(rule, SPR_name), lGetString(context, SPC_name),
+                "spooling_write_func"));
+         DEXIT;
+         return FALSE;
+      }
+
+      if(!func(type, rule, object, key, event_type)) {
+         WARNING((SGE_EVENT, MSG_SPOOL_RULEINCONTEXTFAILEDWRITING_SS,
+                  lGetString(rule, SPR_name), lGetString(context, SPC_name)));
+         ret = FALSE;
+      }
+   }
+  
    DEXIT;
    return ret;
 }
@@ -1203,9 +925,9 @@ spool_write_object(lList **answer_list, const lListElem *context,
 *     spool_delete_object() -- delete a single object 
 *
 *  SYNOPSIS
-*     bool 
-*     spool_delete_object(lList **answer_list, const lListElem *context, 
-*                         const sge_object_type object_type, const char *key) 
+*     int spool_delete_object(const lListElem *context, 
+*                             const sge_event_type event_type, 
+*                             const char *key) 
 *
 *  FUNCTION
 *     Deletes a certain object characterized by type and a unique key
@@ -1214,88 +936,70 @@ spool_write_object(lList **answer_list, const lListElem *context,
 *     object type.
 *
 *  INPUTS
-*     lList **answer_list  - to return error messages
 *     const lListElem *context        - the context to use
-*     const sge_object_type object_type - object type
+*     const sge_event_type event_type - object type
 *     const char *key                 - unique key
 *
 *  RESULT
-*     bool - true, if all rules reported success, else false
+*     int - TRUE, if all rules reported success, else FALSE
 *
 *  SEE ALSO
 *     spool/--Spooling
 *******************************************************************************/
-bool 
-spool_delete_object(lList **answer_list, const lListElem *context, 
-                    const sge_object_type object_type, const char *key)
+int spool_delete_object(const lListElem *context, const sge_event_type event_type, const char *key)
 {
-   int ret = false;
+   lListElem *type;
+   lListElem *type_rule, *rule;
+   lList *type_rules;
+
+   int ret = TRUE;
 
    DENTER(TOP_LAYER, "spool_delete_object");
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
-   if (context == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
-                              SGE_FUNC);
-   } else {
-      lListElem *type;
-
-      /* find the object type description */
-      type = spool_context_search_type(context, object_type);
-      if (type == NULL) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS,
-                                 object_type_get_name(object_type), 
-                                 lGetString(context, SPC_name));
-      } else {
-         lList *type_rules;
-
-         /* loop over all rules and call the deleting callbacks */
-         type_rules = lGetList(type, SPT_rules);
-         if (type_rules == NULL || lGetNumberOfElem(type_rules) == 0) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_SPOOL_NORULESFORTYPEINCONTEXT_SS,
-                                    object_type_get_name(object_type), 
-                                    lGetString(context, SPC_name));
-         } else {
-            lListElem *type_rule;
-
-            ret = true;
-
-            /* delete object using all spooling rules */
-            for_each (type_rule, type_rules) {
-               lListElem *rule;
-               spooling_delete_func func;
-
-               rule = (lListElem *)lGetRef(type_rule, SPTR_rule);
-               func = (spooling_delete_func)lGetRef(rule, SPR_delete_func);
-               if (func == NULL) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_SPOOL_CORRUPTRULEINCONTEXT_SSS,
-                                          lGetString(rule, SPR_name), 
-                                          lGetString(context, SPC_name),
-                                          SGE_FUNC);
-                  ret = false;
-               } else {
-                  if (!func(answer_list, type, rule, key, object_type)) {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_WARNING, 
-                                             MSG_SPOOL_RULEINCONTEXTFAILEDWRITING_SS,
-                                             lGetString(rule, SPR_name), 
-                                             lGetString(context, SPC_name));
-                     ret = false;
-                  }
-               }
-            }
-         }
-      }
+   if(context == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NOVALIDCONTEXT_S, "spool_delete_object"));
+      DEXIT;
+      return FALSE;
+   }
+  
+   /* find the object type description */
+   type = spool_context_search_type(context, event_type);
+   if(type == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS,
+             sge_mirror_get_type_name(event_type), lGetString(context, SPC_name)));
+      DEXIT;
+      return FALSE;
    }
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
+   /* loop over all rules and call the deleting callbacks */
+   type_rules = lGetList(type, SPT_rules);
+   if(type_rules == NULL || lGetNumberOfElem(type_rules) == 0) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NORULESFORTYPEINCONTEXT_SS,
+             sge_mirror_get_type_name(event_type), lGetString(context, SPC_name)));
+      DEXIT;
+      return FALSE;
+   }
+
+   /* delete object using all spooling rules */
+   for_each(type_rule, type_rules) {
+      spooling_delete_func func;
+      rule = (lListElem *)lGetRef(type_rule, SPTR_rule);
+      func = (spooling_delete_func)lGetRef(rule, SPR_delete_func);
+      if(func == NULL) {
+         ERROR((SGE_EVENT, MSG_SPOOL_CORRUPTRULEINCONTEXT_SSS,
+                lGetString(rule, SPR_name), lGetString(context, SPC_name),
+                "spooling_delete_func"));
+         DEXIT;
+         return FALSE;
+      }
+
+      if(!func(type, rule, key, event_type)) {
+         WARNING((SGE_EVENT, MSG_SPOOL_RULEINCONTEXTFAILEDWRITING_SS,
+                  lGetString(rule, SPR_name), lGetString(context, SPC_name)));
+         ret = FALSE;
+      }
+   }
+  
    DEXIT;
    return ret;
 }
@@ -1305,24 +1009,22 @@ spool_delete_object(lList **answer_list, const lListElem *context,
 *     spool_compare_objects() -- compare objects by spooled data
 *
 *  SYNOPSIS
-*     bool
-*     spool_compare_objects(lList **answer_list, const lListElem *context, 
-*                           const sge_object_type object_type, 
-*                           const lListElem *ep1, const lListElem *ep2) 
+*     int spool_compare_objects(const lListElem *context, 
+*                               const sge_event_type event_type, 
+*                               const lListElem *ep1, const lListElem *ep2) 
 *
 *  FUNCTION
 *     Compares two objects by comparing only the attributes that shall be 
 *     spooled.
 *
 *  INPUTS
-*     lList **answer_list  - to return error messages
 *     const lListElem *context        - context to use
-*     const sge_object_type object_type - type of the object
+*     const sge_event_type event_type - type of the object
 *     const lListElem *ep1            - object 1
 *     const lListElem *ep2            - object 2
 *
 *  RESULT
-*     bool - false, if the objects have no differences, else true
+*     int - 0, if the objects have no differences, else != 0
 *
 *  NOTES
 *     Not yet implemented. 
@@ -1332,24 +1034,16 @@ spool_delete_object(lList **answer_list, const lListElem *context,
 *  SEE ALSO
 *     spool/--Spooling
 *******************************************************************************/
-bool
-spool_compare_objects(lList **answer_list, const lListElem *context, 
-                      const sge_object_type object_type, 
-                      const lListElem *ep1, const lListElem *ep2)
+int spool_compare_objects(const lListElem *context, const sge_event_type event_type, const lListElem *ep1, const lListElem *ep2)
 {
-   bool ret = false;
-
    DENTER(TOP_LAYER, "spool_compare_objects");
 
-   if (context == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
-                              SGE_FUNC);
+   if(context == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_NOVALIDCONTEXT_S, "spool_compare_objects"));
+      DEXIT;
+      return 0;
    }
 
-   ret = true;
-
    DEXIT; 
-   return ret;
+   return 1;
 }
-

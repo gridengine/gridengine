@@ -52,17 +52,6 @@
 #define FLG_USE_PSEUDOS 1
 #define FLG_QALTER      2
 
-/* I've added a -wd option to cull_parse_job_parameter() to deal with the
- * DRMAA_WD attribute.  It makes sense to me that since -wd exists and is
- * handled by cull_parse_job_parameter() that -cwd should just become an alias
- * for -wd.  Code to do that is ifdef'ed out below just in case we decide
- * it's a good idea. */
-#if 0
-/*
-** marker to indicate that a -wd was originally a -cwd
-*/
-#define SGE_HOME_DIRECTORY "$$HOME$$"
-#endif
 
 lList *cull_parse_cmdline(char **arg_list, char **envp, lList **pcmdline, u_long32 flags);
 

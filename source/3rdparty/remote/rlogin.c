@@ -64,9 +64,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#if !defined(FREEBSD) && !defined(DARWIN)
 #include <values.h>
-#endif
 
 #ifdef CRAY
 /* SA_RESTART is not supported on the Cray */
@@ -122,11 +120,31 @@ struct termios deftty;
 int noescape;
 u_char escapechar = '~';
 
+#ifdef SUN4
+#if 0
+struct winsize {
+	unsigned short ws_row, ws_col;
+	unsigned short ws_xpixel, ws_ypixel;
+};
+#endif
+#else
 #define	get_window_size(fd, wp)	ioctl(fd, TIOCGWINSZ, wp)
+#endif
 
 #ifdef SOLARIS
 #include <sys/rlioctl.h>
 #include <sys/sockio.h>
+#endif
+
+#ifdef SUN4
+extern char *optarg;
+extern int optind;
+int rcmd(char **, u_short, char *, char *, char *, int *);
+
+#define SA_RESTART 0
+#define IPTOS_LOWDELAY 0x10
+#define IP_TOS 3
+#define _POSIX_VDISABLE 0
 #endif
 
 struct	winsize winsize; 
@@ -155,11 +173,18 @@ void		writeroob (int);
 #ifdef	KERBEROS
 void		warning (const char *, ...);
 #endif
+#ifdef SUN4
+int		get_window_size (int, struct winsize *);
+#endif
 /*
 int getNetworkPort(int port) {
    short port_short;
 
+#ifdef SUN4
+   if(port <= (256 * 256)) {
+#else   
    if(port <= (MAXSHORT)) {
+#endif   
       port_short = port % (256 * 256);
       return htons(port_short);
    } else {
@@ -321,11 +346,7 @@ main(argc, argv)
 		if (len + len2 < sizeof(term)) {
 /*			(void)snprintf(term + len, len2 + 1, "/%d", ospeed); */
          char Buffer[32];
-#ifndef DARWIN         
          sprintf(Buffer, "/%d", ospeed);
-#else         
-         sprintf(Buffer, "/%ld", ospeed);
-#endif
          strncpy(term + len, Buffer, len2 + 1);
 	   }
    }
@@ -1056,6 +1077,29 @@ usage()
 #endif
 	exit(1);
 }
+
+/*
+ * The following routine provides compatibility (such as it is) between older
+ * Suns and others.  Suns have only a `ttysize', so we convert it to a winsize.
+ */
+#ifdef SUN4
+int
+get_window_size(fd, wp)
+	int fd;
+	struct winsize *wp;
+{
+	struct ttysize ts;
+	int error;
+
+	if ((error = ioctl(0, TIOCGSIZE, &ts)) != 0)
+		return (error);
+	wp->ws_row = ts.ts_lines;
+	wp->ws_col = ts.ts_cols;
+	wp->ws_xpixel = 0;
+	wp->ws_ypixel = 0;
+	return (0);
+}
+#endif
 
 u_int
 getescape(p)

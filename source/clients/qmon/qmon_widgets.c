@@ -48,12 +48,12 @@
 #include "Tab.h"
 
 #include "sge_all_listsL.h"
+#include "sge_gdi_intern.h"
 #include "parse_qsub.h"
-#include "sge_ulong.h"
 #include "sge_time.h"
-#include "sge_mailrec.h"
+#include "parse_mail.h"
+#include "sge_parse_date_time.h"
 #include "sge_range.h"
-#include "sge_qinstance.h"
 #include "qmon_quarks.h"
 #include "qmon_widgets.h"
 #include "qmon_rmon.h"
@@ -308,10 +308,6 @@ Cardinal size
 ) {
    int value = 0;
    String str = NULL;
-   dstring ds;
-   char buffer[128];
-
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (type != QmonQCardinal )  {
       XmtWarningMsg("XmtDialogSetDialogValues", "TimeInput",
@@ -327,8 +323,8 @@ Cardinal size
    else
       return;
 
-   if (value != 0 && sge_at_time(value, &ds)!=NULL) 
-      str = buffer;
+   if (value != 0)
+      str = sge_at_time(value);
 
    if (str)
       XmtInputFieldSetString(w, str);
@@ -357,12 +353,8 @@ Cardinal size
    }
    str = XmtInputFieldGetString(w);
 
-   if (str && str[0] != '\0') {
-      u_long32 tmp_date_time;
-
-      ulong_parse_date_time_from_string(&tmp_date_time, NULL, str);
-      value = (Cardinal)tmp_date_time;
-   }
+   if (str && str[0] != '\0')
+      value = (Cardinal)sge_parse_date_time(str, NULL, NULL);
 
    *(Cardinal*)address = value;
 }
@@ -381,9 +373,8 @@ Cardinal size
     * Here special Qmon Quarks are used. Does it work ?
     */
 
-   if (type != QmonQUS_Type && type != QmonQMR_Type && 
-       type != QmonQUP_Type && type != QmonQSTR_Type && 
-       type != QmonQSTU_Type && type != QmonQHR_Type) {
+   if (type != QmonQUS_Type && type != QmonQCX_Type &&
+       type != QmonQMR_Type && type != QmonQUP_Type) {
       XmtWarningMsg("XmtDialogSetDialogValues", "XbaeMatrix",
          "Type Mismatch: Widget '%s':\n\tCan't set widget values"
          " from a resource of type '%s'",
@@ -412,10 +403,10 @@ Cardinal size
       UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, UP_name);
    }
    
-   if (type == QmonQHR_Type) {
-      UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, HR_name);
+   if (type == QmonQCX_Type) {
+      UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, CX_name);
    }
-   
+
    if (type == QmonQMR_Type) {
       String *str_table = NULL;
       Cardinal itemCount;
@@ -441,8 +432,8 @@ Cardinal size
       }
 
       for (ep=lFirst(lp), i=0; ep; ep=lNext(ep), i++) {
-         str1 = (StringConst)lGetString(ep, MR_user);
-         str2 = (StringConst)lGetHost(ep, MR_host);
+         str1 = lGetString(ep, MR_user);
+         str2 = lGetHost(ep, MR_host);
          if (str1) {
             if (!str2)
                strncpy(buf, str1, BUFSIZ);
@@ -456,14 +447,6 @@ Cardinal size
       UpdateXmList(w, str_table, size, XmFONTLIST_DEFAULT_TAG);
       StringTableFree(str_table, size);
    }   
-   
-   if (type == QmonQSTR_Type) {
-      UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, ST_name);
-   }
-
-   if (type == QmonQSTU_Type) {
-      UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, STU_name);
-   }
       
    XmtLayoutEnableLayout(parent);
 
@@ -482,9 +465,8 @@ Cardinal size
     * Here special Qmon Quarks are used. Does it work ?
     */
 
-   if (type != QmonQUS_Type && type != QmonQMR_Type && 
-       type != QmonQUP_Type && type != QmonQSTR_Type && 
-       type != QmonQSTU_Type && type != QmonQHR_Type) {
+   if (type != QmonQUS_Type && type != QmonQCX_Type &&
+       type != QmonQMR_Type && type != QmonQUP_Type) {
       XmtWarningMsg("XmtDialogSetDialogValues", "XbaeMatrix",
          "Type Mismatch: Widget '%s':\n\tCan't get widget values"
          " from a resource of type '%s'",
@@ -500,20 +482,12 @@ Cardinal size
       lp = XmStringToCull(w, UP_Type, UP_name, ALL_ITEMS);
    }
          
+   if (type == QmonQCX_Type) {
+      lp = XmStringToCull(w, CX_Type, CX_name, ALL_ITEMS);
+   }
+
    if (type == QmonQMR_Type) {
       lp = XmStringToCull(w, MR_Type, MR_user, ALL_ITEMS);
-   }
-
-   if (type == QmonQSTR_Type) {
-      lp = XmStringToCull(w, ST_Type, ST_name, ALL_ITEMS);
-   }
-
-   if (type == QmonQSTU_Type) {
-      lp = XmStringToCull(w, STU_Type, STU_name, ALL_ITEMS);
-   }
-
-   if (type == QmonQHR_Type) {
-      lp = XmStringToCull(w, HR_Type, HR_name, ALL_ITEMS);
    }
 
    *(lList**)address = lp;
@@ -621,11 +595,11 @@ Cardinal size
       strcpy(buf, "");
       for_each(ep, list) {
          if (first_time) {
-            strcpy(buf, lGetString(ep, ST_name));
+            strcpy(buf, lGetString(ep, STR));
             first_time = 0;
          }
          else
-            sprintf(buf, "%s %s", buf, lGetString(ep, ST_name));
+            sprintf(buf, "%s %s", buf, lGetString(ep, STR));
       }
       str = buf;
    }
@@ -671,17 +645,10 @@ Cardinal size
          for_each(ep, list) {
             if (first_time) {
                first_time = 0;
-               if (lGetString(ep, JRE_job_name))
-                  sprintf(buf, "%s", lGetString(ep, JRE_job_name));
-               else
-                  sprintf(buf, u32, lGetUlong(ep, JRE_job_number));
+               sprintf(buf, "%s", lGetString(ep, JRE_job_name));
             }
-            else {
-               if (lGetString(ep, JRE_job_name))
-                  sprintf(buf, "%s %s", buf, lGetString(ep, JRE_job_name));
-               else  
-                  sprintf(buf, "%s "u32, buf, lGetUlong(ep, JRE_job_number)); 
-            }   
+            else
+               sprintf(buf, "%s %s", buf, lGetString(ep, JRE_job_name));
          }
       }
       str = buf;
@@ -719,13 +686,13 @@ Cardinal size
       if ( type == QmonQENV_Type || type == QmonQCTX_Type )
          var_list_parse_from_string(&ret_list, str, 0); 
       if (type == QmonQST_Type) {
-         lString2List(str, &ret_list, ST_Type, ST_name, " ");
+         lString2List(str, &ret_list, ST_Type, STR, " ");
       }
       if (type == QmonQRN_Type) {
          range_list_parse_from_string(&ret_list, &alp, str,
                                       0, 0, INF_ALLOWED);
          if (alp) {
-            qmonMessageShow(w, True, (StringConst)lGetString(lFirst(alp), AN_text));
+            qmonMessageShow(w, True, lGetString(lFirst(alp), AN_text));
             alp =lFreeList(alp);
          }
       }
@@ -733,7 +700,7 @@ Cardinal size
          range_list_parse_from_string(&ret_list, &alp, str,
                                       0, 1, INF_NOT_ALLOWED);
          if (alp) {
-            qmonMessageShow(w, True, (StringConst)lGetString(lFirst(alp), AN_text));
+            qmonMessageShow(w, True, lGetString(lFirst(alp), AN_text));
             alp =lFreeList(alp);
          }
       }
@@ -741,7 +708,7 @@ Cardinal size
          cull_parse_path_list(&ret_list, str);
       }
       if (type == QmonQMR_Type) {
-         mailrec_parse(&ret_list, str);
+         cull_parse_mail_list(&ret_list, str);
       }
       if (type == QmonQQR_Type) {
          lString2List(str, &ret_list, QR_Type, QR_name, ",");
@@ -751,7 +718,7 @@ Cardinal size
          lListElem *ep = NULL;
          cull_parse_jid_hold_list(&sl, str); 
          for_each (ep, sl) {
-            lAddElemStr(&ret_list, JRE_job_name, lGetString(ep, ST_name), JRE_Type);
+            lAddElemStr(&ret_list, JRE_job_name, lGetString(ep, STR), JRE_Type);
          }
          sl = lFreeList(sl);
       }
@@ -814,15 +781,15 @@ int type
          strcat(pair_string, comma);
 
       if (nm1 == PN_host ) {
-         field1 = (StringConst)lGetHost(ep, nm1);
+         field1 = lGetHost(ep, nm1);
       } else {
-         field1 = (StringConst)lGetString(ep, nm1);
+         field1 = lGetString(ep, nm1);
       }
 
       if (nm2 == MR_host) {
-         field2 = (StringConst)lGetHost(ep, nm2);
+         field2 = lGetHost(ep, nm2);
       } else {
-         field2 = (StringConst)lGetString(ep, nm2);
+         field2 = lGetString(ep, nm2);
       }
       
       if (field1 && field1[0] != '\0') {

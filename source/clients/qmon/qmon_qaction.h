@@ -35,21 +35,98 @@
 #include <Xm/Xm.h>
 #include "qmon_proto.h"
 
+/* 
+ * typedefs for all the resources connected to the dialogs 
+ * additional typedefs for transfer cull <--> structs
+ */
+
+/* queue configuration parameters -> gdilib/sge_queueL.h */
+
+typedef struct _tQCEntry {
+/*---- general queue config -----*/
+   char qname[100];
+   char qhostname[100];
+   int  qtype;
+   char processors[256];
+   int  priority;
+   int  job_slots;
+   int  rerun;
+   char tmpdir[256];
+   char calendar[256];
+   char shell[256];
+   int  shell_start_mode;
+   char notify[20];
+   int  seq_no;
+   int initial_state;
+/*---- methods -----*/
+   const char *prolog;
+   const char *epilog;
+   const char *starter_method;
+   const char *suspend_method;
+   const char *resume_method;
+   const char *terminate_method;
+/*---- checkpointing -----*/
+   char min_cpu_interval[20];
+/*---- load thresholds ----*/
+   lList* load_thresholds;
+/*---- suspend thresholds ----*/
+   lList* suspend_thresholds;
+   char suspend_interval[20];
+   int    nsuspend;
+/*---- queue limits  ----*/
+   lList* limits_hard;
+   lList* limits_soft;
+   /*
+   char s_rt[20];
+   char h_rt[20];
+   char s_cpu[20];
+   char h_cpu[20];
+   char s_fsize[20];
+   char h_fsize[20];
+   char s_data[20];
+   char h_data[20];
+   char s_stack[20];
+   char h_stack[20];
+   char s_core[20];
+   char h_core[20];
+   char s_rss[20];
+   char h_rss[20];
+   char s_vmem[20];
+   char h_vmem[20];
+   */
+/*---- complexes  ----*/
+   lList *complexes;
+   lList *consumable_config_list;
+/*---- user access ---*/
+   lList *acl;
+   lList *xacl;
+/*---- project access ---*/
+   lList *prj;
+   lList *xprj;
+/*---- owner list ----*/
+   lList *owner_list;
+/*---- subordinate list ----*/
+   lList *subordinates;
+}  tQCEntry;
+
+   
+typedef struct _tAction {
+   String label;
+   XtCallbackProc callback;
+} tAction;
+
 enum {
    QC_ADD,
-   QC_CLONE,
    QC_MODIFY,
    QC_DELETE
 };
 
-typedef struct _tQCAction {
-   int action;
-   const char *qname;
-} tQCAction;   
-
 /*-------------------------------------------------------------------------*/
 void qmonQCPopup(Widget w, XtPointer cld, XtPointer cad);
 void updateQCQ(void);
+void updateQCC(void);
+void updateQCA(void);
+void updateQCP(void);
 void qmonQCPopdown(Widget w, XtPointer cld, XtPointer cad);
 
 #endif /* _QMON_QACTION_H_ */

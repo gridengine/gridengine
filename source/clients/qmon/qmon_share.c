@@ -62,7 +62,6 @@
 #include "sge_gdi.h"
 #include "sge_support.h"
 #include "sge_answer.h"
-#include "sge_string.h"
 
 enum _modes {
    ADD_MODE,
@@ -90,7 +89,6 @@ typedef struct _tSTNUserData {
    double actual_proportion;
    double targetted_share;
    double usage;
-   int temp;
 } tSTNUserData;
 
 typedef struct _tSTNEntry {
@@ -108,7 +106,6 @@ typedef struct _tSTREntry {
    int mem_weight;
    int io_weight;
    Cardinal halftime;
-   char *halflife_decay_list;
    double   compensation_factor;
 } tSTREntry;
 
@@ -123,7 +120,6 @@ static Widget st_copy = 0;
 static Widget st_cut = 0;
 static Widget st_paste = 0;
 static Widget st_halflife_unit = 0;
-static Widget st_halflife_decay_list = 0;
 static Widget st_message = 0;
 
 /* static int sharetree_mode = STT_USER;  User Sharetree */
@@ -192,11 +188,6 @@ static XtResource ratio_resources[] = {
       XtOffsetOf(tSTREntry, halftime),
       XtRImmediate, NULL },
 
-   { "halflife_decay_list", "halflife_decay_list", XtRString,
-      sizeof(String),
-      XtOffsetOf(tSTREntry, halflife_decay_list),
-      XtRImmediate, (XtPointer) 0 },
-
    { "compensation_factor", "compensation_factor", XmtRDouble,
       sizeof(double),
       XtOffsetOf(tSTREntry, compensation_factor),
@@ -241,7 +232,7 @@ static double calculate_share(ListTreeItem *item);
 static lList *buildShac(lListElem *parent, int depth);
 static ListTreeItem* CullToTree(Widget tree, ListTreeItem *parent, lList *shac);
 static lList* TreeToCull(Widget tree, ListTreeItem *item);
-static void CullToParameters(tSTREntry *data, const lListElem *sep);
+static void CullToParameters(tSTREntry *data, lListElem *sep);
 static void ParametersToCull(lListElem *sep, tSTREntry *data);
 static void qmonShareTreeSetValues(ListTreeItem *item);
 static void node_data(ListTreeItem *node, Cardinal share, lListElem *ep);
@@ -1102,23 +1093,11 @@ XtPointer cld, cad;
    share_tree = qmonMirrorList(SGE_SHARETREE_LIST);
    ul = qmonMirrorList(SGE_USER_LIST);
    pl = qmonMirrorList(SGE_PROJECT_LIST);
-   
-   /* TODO: SG: needs a better solution */
-   /* do we have to do this Andre? */
-   if (!sconf_is()){
-      scl = lCopyList("", qmonMirrorList(SGE_SC_LIST));
-      sconf_set_config(&scl, NULL);
-   }
-
-   /*
-    * add default user nodes for display purposes
-    */
-   sge_add_default_user_nodes(lFirst(share_tree), ul, pl);
-
+   scl = qmonMirrorList(SGE_SC_LIST);
    /*
    ** fill the share tree with the actual values
    */
-   sge_calc_share_tree_proportions(share_tree, ul, pl, NULL);
+   sge_calc_share_tree_proportions(share_tree, ul, pl, scl, NULL);
 
    ListTreeRefreshOff(tree);
    /*
@@ -1164,9 +1143,8 @@ XtPointer cld, cad;
    /*
    ** refresh the Sharetree Parameters section 
    */
-/*   if (scl) { */
-   if (sconf_is()) {
-      CullToParameters(&ratio_data, sconf_get_config());
+   if (scl) {
+      CullToParameters(&ratio_data, lFirst(scl));
       XmtDialogSetDialogValues(st_ratio, &ratio_data);
    }
    
@@ -1501,14 +1479,12 @@ lListElem *ep
       user_data->actual_proportion = lGetDouble(ep, STN_actual_proportion); 
       user_data->targetted_share = lGetDouble(ep, STN_m_share);
       user_data->usage = lGetDouble(ep, STN_combined_usage);
-      user_data->temp = lGetUlong(ep, STN_temp);
    }
    else {
       user_data->share = share;
       user_data->actual_proportion = 0;
       user_data->targetted_share = 0;
       user_data->usage = 0;
-      user_data->temp = 0;
    }
    
    DEXIT;
@@ -1587,15 +1563,13 @@ ListTreeItem *item
       node = ListTreeFirstChild(item);
 
    while (node) {
+      ep = lAddElemStr(&lp, STN_name, node->text, STN_Type);
       data = (tSTNUserData*)node->user_data;
-      if (!data->temp) {
-         ep = lAddElemStr(&lp, STN_name, node->text, STN_Type);
-         lSetUlong(ep, STN_shares, data->share);
+      lSetUlong(ep, STN_shares, data->share);
 /*       lSetUlong(ep, STN_type, sharetree_mode); */
 
-         if (ListTreeFirstChild(node))
-            lSetList(ep, STN_children, TreeToCull(tree, node));
-      }
+      if (ListTreeFirstChild(node))
+         lSetList(ep, STN_children, TreeToCull(tree, node));
       
       node = ListTreeNextSibling(node);
    }
@@ -1607,7 +1581,7 @@ ListTreeItem *item
 /*-------------------------------------------------------------------------*/
 static void CullToParameters(
 tSTREntry *data,
-const lListElem *sep 
+lListElem *sep 
 ) {
    lList *usage_weight_list;
    lListElem *ep;
@@ -1668,9 +1642,6 @@ const lListElem *sep
       XmtChooserSetState(st_halflife_unit, 1, False);
    }
 
-   data->halflife_decay_list = sge_strdup(data->halflife_decay_list,
-                                    lGetString(sep, SC_halflife_decay_list));
-
    DEXIT;
 }
 
@@ -1714,12 +1685,6 @@ tSTREntry *data
       state = 1;
 
    lSetUlong(sep, SC_halftime, data->halftime * state);
-
-   if (data->halflife_decay_list && data->halflife_decay_list[0] !='\0')
-      lSetString(sep, SC_halflife_decay_list, data->halflife_decay_list);
-   else   
-      lSetString(sep, SC_halflife_decay_list, "none");
-
 
    DEXIT;
 }

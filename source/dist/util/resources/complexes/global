@@ -1,0 +1,6 @@
+#name           shortcut   type   value           relop requestable consumable default
+#--------------------------------------------------------------------------------------------
+day             dy         STRING unknown         !=    YES         NO         none
+weekend         we         BOOL   false           ==    YES         NO         0 
+month           mt         STRING unknown         ==    YES         NO         none
+#--- # starts a comment but comments are not saved across edits -----------------------------

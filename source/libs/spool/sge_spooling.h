@@ -32,10 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
-#include <time.h>
-
 #include "sge_mirror.h"
-#include "spool/sge_spoolingL.h"
+#include "sge_spoolingL.h"
 
 /****** spool/--Spooling ***************************************
 *
@@ -76,48 +74,36 @@
 *
 ****************************************************************************
 */
+
 /****** spool/-Spooling-Typedefs ***************************************
 *
 *  NAME
 *     Typedefs -- type definitions for the spooling framework
 *
 *  SYNOPSIS
-*     typedef bool (*spooling_startup_func)(lList **answer_list,
-*                                           const lListElem *rule, 
-*                                           bool check); 
-*     typedef bool (*spooling_shutdown_func)(lList **answer_list, 
-*                                            const lListElem *rule); 
+*     typedef int (*spooling_startup_func)(const lListElem *rule); 
+*     typedef int (*spooling_shutdown_func)(const lListElem *rule); 
 *
-*     typedef bool (*spooling_list_func)(lList **answer_list,
-*                                        const lListElem *type, 
+*     typedef int (*spooling_list_func)(const lListElem *type, 
+*                                       const lListElem *rule, 
+*                                       lList **list, 
+*                                       const sge_event_type event_type);
+*
+*     typedef int (*spooling_write_func)(const lListElem *type, 
 *                                        const lListElem *rule, 
-*                                        lList **list, 
-*                                        const sge_object_type object_type);
+*                                        const lListElem *object, 
+*                                        const char *key, 
+*                                        const sge_event_type event_type);
 *
-*     typedef bool (*spooling_write_func)(lList **answer_list,
-*                                         const lListElem *type, 
-*                                         const lListElem *rule, 
-*                                         const lListElem *object, 
-*                                         const char *key, 
-*                                         const sge_object_type object_type);
-*
-*     typedef lListElem *(*spooling_read_func)(lList **answer_list,
-*                                              const lListElem *type, 
+*     typedef lListElem *(*spooling_read_func)(const lListElem *type, 
 *                                              const lListElem *rule, 
 *                                              const char *key, 
-*                                              const sge_object_type object_type);
+*                                              const sge_event_type event_type);
 *
-*     typedef bool (*spooling_delete_func)(lList **answer_list,
-*                                          const lListElem *type, 
-*                                          const lListElem *rule, 
-*                                          const char *key, 
-*                                          const sge_object_type object_type);
-*
-*     typedef bool (*spooling_validate_func)(lList **answer_list,
-*                                          const lListElem *type,
-*                                          const lListElem *rule, 
-*                                          lListElem *object, 
-*                                          const sge_object_type object_type);
+*     typedef int (*spooling_delete_func)(const lListElem *type, 
+*                                         const lListElem *rule, 
+*                                         const char *key, 
+*                                         const sge_event_type event_type);
 *
 *  FUNCTION
 *     These functions have to be provided by a target implementation for the 
@@ -145,172 +131,64 @@
 *
 ****************************************************************************
 */
+typedef int (*spooling_startup_func)(const lListElem *rule); 
+typedef int (*spooling_shutdown_func)(const lListElem *rule); 
 
-typedef enum {
-   SPM_init,
-   SPM_history,
-   SPM_backup,
-   SPM_purge,
-   SPM_vacuum,
-   SPM_info
-} spooling_maintenance_command;
-
-typedef enum {
-   STC_begin,
-   STC_commit,
-   STC_rollback
-} spooling_transaction_command;
-
-typedef const char *
-(*spooling_get_method_func)(void);
-
-typedef lListElem *
-(*spooling_create_context_func)(lList **answer_list, const char *args);
-
-typedef bool
-(*spooling_startup_func)(lList **answer_list, const lListElem *rule, 
-                         bool check); 
-typedef bool
-(*spooling_shutdown_func)(lList **answer_list, const lListElem *rule); 
-
-typedef bool 
-(*spooling_maintenance_func)(lList **answer_list, const lListElem *rule, 
-                             const spooling_maintenance_command cmd, 
-                             const char *args);
-
-typedef bool
-(*spooling_trigger_func)(lList **answer_list, const lListElem *rule, 
-                         time_t trigger, time_t *next_trigger);
+typedef int (*spooling_list_func)(const lListElem *type, const lListElem *rule, 
+                                  lList **list, const sge_event_type event_type);
                                   
-typedef bool
-(*spooling_transaction_func)(lList **answer_list, const lListElem *rule, 
-                             spooling_transaction_command cmd);
-                                  
-typedef bool
-(*spooling_list_func)(lList **answer_list, 
-                      const lListElem *type, const lListElem *rule, 
-                      lList **list, 
-                      const sge_object_type object_type);
-                                  
-typedef bool
-(*spooling_write_func)(lList **answer_list, 
-                       const lListElem *type, const lListElem *rule, 
-                       const lListElem *object, const char *key, 
-                       const sge_object_type object_type);
+typedef int (*spooling_write_func)(const lListElem *type, const lListElem *rule, 
+                                   const lListElem *object, const char *key, 
+                                   const sge_event_type event_type);
 
-typedef lListElem *
-(*spooling_read_func)(lList **answer_list, 
-                      const lListElem *type, const lListElem *rule, 
-                      const char *key, 
-                      const sge_object_type object_type);
+typedef lListElem *(*spooling_read_func)(const lListElem *type, const lListElem *rule, 
+                                         const char *key, const sge_event_type event_type);
 
-typedef bool
-(*spooling_delete_func)(lList **answer_list, 
-                        const lListElem *type, const lListElem *rule, 
-                        const char *key, 
-                        const sge_object_type object_type);
+typedef int (*spooling_delete_func)(const lListElem *type, const lListElem *rule, 
+                                    const char *key, const sge_event_type event_type);
 
-typedef bool
-(*spooling_validate_func)(lList **answer_list, 
-                        const lListElem *type, const lListElem *rule, 
-                        lListElem *object, 
-                        const sge_object_type object_type);
-
-typedef bool
-(*spooling_validate_list_func)(lList **answer_list, 
-                        const lListElem *type, const lListElem *rule, 
-                        const sge_object_type object_type);
+/* the default spooling context */
+extern lListElem *Default_Spool_Context;
 
 /* creation and maintenance of the spooling context */
-lListElem *
-spool_create_context(lList **answer_list, const char *name);
+lListElem *spool_create_context(const char *name);
+lListElem *spool_free_context(lListElem *context);
 
-lListElem *
-spool_free_context(lList **answer_list, lListElem *context);
+void spool_set_default_context(lListElem *context);
+lListElem *spool_get_default_context(void);
 
-void 
-spool_set_default_context(lListElem *context);
+lListElem *spool_context_search_rule(const lListElem *context, const char *name);
+lListElem *spool_context_create_rule(lListElem *context, 
+                                     const char *name, const char *url,
+                                     spooling_startup_func startup_func, 
+                                     spooling_shutdown_func shutdown_func, 
+                                     spooling_list_func list_func, 
+                                     spooling_read_func read_func, 
+                                     spooling_write_func write_func, 
+                                     spooling_delete_func delete_func);
 
-lListElem *
-spool_get_default_context(void);
+lListElem *spool_context_search_type(const lListElem *context, const sge_event_type event_type);
+lListElem *spool_context_create_type(lListElem *context, const sge_event_type event_type);
 
-lListElem *
-spool_context_search_rule(const lListElem *context, const char *name);
-
-lListElem *
-spool_context_create_rule(lList **answer_list, lListElem *context, 
-                          const char *name, const char *url,
-                          spooling_startup_func startup_func, 
-                          spooling_shutdown_func shutdown_func, 
-                          spooling_maintenance_func maintenance_func,
-                          spooling_trigger_func trigger_func,
-                          spooling_transaction_func transaction_func,
-                          spooling_list_func list_func, 
-                          spooling_read_func read_func, 
-                          spooling_write_func write_func, 
-                          spooling_delete_func delete_func,
-                          spooling_validate_func validate_func,
-                          spooling_validate_list_func validate_list_func);
-
-lListElem *
-spool_context_search_type(const lListElem *context, 
-                          const sge_object_type object_type);
-
-lListElem *
-spool_context_create_type(lList **answer_list, lListElem *context, 
-                          const sge_object_type object_type);
-
-lListElem *
-spool_type_search_default_rule(const lListElem *spool_type);
-
-lListElem 
-*spool_type_add_rule(lList **answer_list, lListElem *spool_type, 
-                     const lListElem *rule, lBool is_default);
+lListElem *spool_type_search_default_rule(const lListElem *spool_type);
+lListElem *spool_type_add_rule(lListElem *spool_type, const lListElem *rule, lBool is_default);
 
 /* startup and shutdown */
-bool 
-spool_startup_context(lList **answer_list, lListElem *context, bool check);
-
-bool 
-spool_shutdown_context(lList **answer_list, lListElem *context);
-
-bool
-spool_maintain_context(lList **answer_list, lListElem *context, 
-                       const spooling_maintenance_command cmd,
-                       const char *args);
-
-bool
-spool_trigger_context(lList **answer_list, lListElem *context, 
-                      time_t trigger, time_t *next_trigger);
-
-bool spool_transaction(lList **answer_list, lListElem *context, 
-                       spooling_transaction_command cmd);
+int spool_startup_context(lListElem *context);
+int spool_shutdown_context(lListElem *context);
 
 /* reading */
-bool 
-spool_read_list(lList **answer_list, const lListElem *context, 
-                lList **list, const sge_object_type object_type);
-
-lListElem *
-spool_read_object(lList **answer_list, const lListElem *context, 
-                  const sge_object_type object_type, const char *key);
+int spool_read_list(const lListElem *context, lList **list, const sge_event_type event_type);
+lListElem *spool_read_object(const lListElem *context, const sge_event_type event_type, const char *key);
 
 /* writing */
-bool 
-spool_write_object(lList **answer_list, const lListElem *context, 
-                   const lListElem *object, const char *key, 
-                   const sge_object_type object_type);
+int spool_write_object(const lListElem *context, const lListElem *object, const char *key, const sge_event_type event_type);
 
 /* deleting */
-bool 
-spool_delete_object(lList **answer_list, const lListElem *context, 
-                    const sge_object_type object_type, const char *key);
+int spool_delete_object(const lListElem *context, const sge_event_type event_type, const char *key);
 
 /* compare spooled attributes of 2 objects */
-bool
-spool_compare_objects(lList **answer_list, const lListElem *context, 
-                      const sge_object_type object_type, 
-                      const lListElem *ep1, const lListElem *ep2);
+int spool_compare_objects(const lListElem *context, const sge_event_type event_type, const lListElem *ep1, const lListElem *ep2);
 
-const char *get_spooling_method(void);
+
 #endif /* __SGE_SPOOLING_H */    

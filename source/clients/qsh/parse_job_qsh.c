@@ -35,10 +35,12 @@
 #include <stdlib.h>
 
 #include "symbols.h"
+#include "sge_gdi_intern.h"
 #include "sge_string.h"
 #include "sge_time.h"
 #include "parse_qsubL.h"
-#include "sge_str.h"
+#include "sge_stringL.h"
+#include "sge_resource.h"
 #include "dispatcher.h"
 #include "parse_job_cull.h"
 #include "parse_qsub.h"
@@ -46,7 +48,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_parse_util.h"
-#include "sge_host.h"
+#include "resolve_host.h"
 #include "sge_path_alias.h"
 #include "msg_common.h"
 #include "sge_job_refL.h"
@@ -56,8 +58,7 @@
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_range.h"
-#include "sge_mailrec.h"
-#include "sge_centry.h"
+#include "sge_host.h"
 
 /*
 ** NAME
@@ -116,7 +117,6 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    }
 
    lSetUlong(*pjob, JB_priority, BASE_PRIORITY);
-   lSetUlong(*pjob, JB_jobshare, 0);
    lSetUlong(*pjob, JB_verify_suitable_queues, SKIP_VERIFY);
 
    /*
@@ -132,7 +132,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
    while (JOB_TYPE_IS_QRSH(job_now)
           && (ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
-      lSetBool(*pjob, JB_notify, true);
+      lSetBool(*pjob, JB_notify, TRUE);
       lRemoveElem(cmdline, ep);
    }  
 
@@ -258,11 +258,26 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
+      int in_hold_state = 0;
+
       if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_USER) {
          lSetList(*pjob, JB_ja_u_h_ids, lCopyList("user hold ids",
             lGetList(*pjob, JB_ja_n_h_ids)));
+         in_hold_state = 1;
       }
-      lSetList(*pjob, JB_ja_n_h_ids, NULL);
+      if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_OPERATOR) {
+         lSetList(*pjob, JB_ja_o_h_ids, lCopyList("operator hold ids",
+            lGetList(*pjob, JB_ja_n_h_ids)));
+         in_hold_state = 1;
+      }
+      if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_SYSTEM) {
+         lSetList(*pjob, JB_ja_s_h_ids, lCopyList("system hold ids",
+            lGetList(*pjob, JB_ja_n_h_ids)));
+         in_hold_state = 1;
+      }
+      if (in_hold_state) {
+         lSetList(*pjob, JB_ja_n_h_ids, lCreateList("no hold list", RN_Type));
+      }
       lRemoveElem(cmdline, ep);
    }
 
@@ -272,13 +287,14 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
       lList *jref_list = NULL;
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-hold_jid"))) {
          for_each(sep, lGetList(ep, SPA_argval_lListT)) {
-            DPRINTF(("-hold_jid %s\n", lGetString(sep, ST_name)));
-            lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, ST_name), JRE_Type);
+            DPRINTF(("-hold_jid %s\n", lGetString(sep, STR)));
+            lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, STR), JRE_Type);
          }
          lRemoveElem(cmdline, ep);
       }
-      lSetList(*pjob, JB_jid_request_list, jref_list);
+      lSetList(*pjob, JB_jid_predecessor_list, jref_list);
    }
+
 
    /* not needed in job struct */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-hard"))) {
@@ -297,8 +313,9 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
    parse_list_hardsoft(cmdline, "-l", *pjob, 
                         JB_hard_resource_list, JB_soft_resource_list);
-   centry_list_remove_duplicates(lGetList(*pjob, JB_hard_resource_list));
-   centry_list_remove_duplicates(lGetList(*pjob, JB_soft_resource_list));
+   sge_compress_resources(lGetList(*pjob, JB_hard_resource_list));
+   sge_compress_resources(lGetList(*pjob, JB_soft_resource_list));
+
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-m"))) {
       u_long32 ul;
@@ -349,11 +366,6 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-p"))) {
       lSetUlong(*pjob, JB_priority, 
          BASE_PRIORITY + lGetInt(ep, SPA_argval_lIntT));
-      lRemoveElem(cmdline, ep);
-   }
-
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-js"))) {
-      lSetUlong(*pjob, JB_jobshare, lGetUlong(ep, SPA_argval_lUlongT));
       lRemoveElem(cmdline, ep);
    }
 
@@ -448,7 +460,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-verify"))) {
-      lSetUlong(*pjob, JB_verify, true);
+      lSetUlong(*pjob, JB_verify, TRUE);
       lRemoveElem(cmdline, ep);
    }
 
@@ -458,7 +470,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
       lp = lCopyList("job args", lGetList(*pjob, JB_job_args));
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_JOBARG))) {
-         lAddElemStr(&lp, ST_name, lGetString(ep, SPA_argval_lStringT), ST_Type);
+         lAddElemStr(&lp, STR, lGetString(ep, SPA_argval_lStringT), ST_Type);
          
          lRemoveElem(cmdline, ep);
       }
@@ -503,7 +515,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
     * only needed for qsh 
     */
    if(uti_state_get_mewho() == QSH) {
-      job_check_qsh_display(*pjob, &answer, false);
+      job_check_qsh_display(*pjob, &answer, FALSE);
    }
 
    DEXIT;

@@ -48,6 +48,10 @@
 #include <string.h>
 #include <netdb.h>
 
+#ifdef AIX41
+#  include <sys/select.h>
+#endif
+
 #include "basis_types.h"
 #include "sge_prog.h"
 #include "config_file.h"
@@ -470,7 +474,7 @@ int qlogin_starter(const char *cwd, char *daemon)
    SHEPHERD_TRACE((err_str, "bound to port %d\n", port));
  
    /* send necessary info to qrsh: port + utilbin directory + active job directory */
-   sge_root = sge_get_root_dir(0, NULL, 0, 1);
+   sge_root = sge_get_root_dir(0, NULL, 0);
    arch = getenv("ARC");
    
    if (sge_root == NULL || arch == NULL) {

@@ -34,8 +34,8 @@
 #include <Xmt/Dialogs.h>
 
 #include "sge_gdi.h"
-#include "sge_str.h"
-#include "sge_centry.h"
+#include "sge_stringL.h"
+#include "sge_complex.h"
 
 #include "qmon_rmon.h"
 #include "qmon_matrix.h"
@@ -85,6 +85,13 @@ String name
    int row;
    String str;
    String new_row[2];
+#if 0
+   int num_columns = 2;
+   int i;
+   lList *cl = NULL;
+   lList *ce = NULL;
+   lListElem *cep = NULL;
+#endif
 
    DENTER(GUI_LAYER, "qmonLoadAddEntry");
 
@@ -96,6 +103,27 @@ String name
       DEXIT;
       return;
    }
+
+#if 0
+   /*
+   ** is it a valid load name ?
+   */
+   cl = qmonMirrorList(SGE_COMPLEX_LIST);
+   cep = lGetElemStr(cl, CX_name, "host");
+   
+   if (cep && name && name[0] != '\0') {
+      ce = lGetList(cep, CX_entries);
+      cep = lGetElemStr(ce, CE_name, name);
+      /*
+      ** don't get out of the field
+      */
+      if (!cep) {
+         qmonMessageShow(w, True, "No valid load parameter name !\n");
+         DEXIT;
+         return;
+      }
+   }
+#endif
 
    /*
    ** add to attribute matrix, search if item already exists
@@ -179,42 +207,3 @@ lList *entries
    DEXIT;
 }
 
-
-/*-------------------------------------------------------------------------*/
-void qmonLoadNames(
-Widget w,
-XtPointer cld, 
-XtPointer cad) 
-{
-   lList *cl = NULL;
-   lList *alp = NULL;
-   lList *entries = NULL;
-   static lCondition *where = NULL;
-   static lEnumeration *what = NULL; 
-
-   DENTER(GUI_LAYER, "qmonLoadNamesQueue");
-
-   qmonMirrorMultiAnswer(CENTRY_T, &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
-      DEXIT;
-      return;
-   }
-   cl = qmonMirrorList(SGE_CENTRY_LIST);
-
-   if (!where)
-      where = lWhere("%T(%I != %s)", CE_Type, CE_name, "slots");
-   if(!what)
-      what = lWhatAll();
-
-   entries = lSelect(lGetListName(cl), cl, where, what);
-
-
-   ShowLoadNames(w, entries);
-
-   /*
-   ** free the copied list
-   */
-   entries = lFreeList(entries);
-}         

@@ -37,8 +37,7 @@
 #include "sge_conf.h"
 #include "sge_job.h"
 #include "sge_ja_task.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
+#include "sge_queue.h"
 #include "sge_orderL.h"
 #include "sge_time.h"
 #include "sge_select_queue.h"
@@ -97,7 +96,7 @@ lList **orderlist
          /* generate suspend order for found job */
          found = 1;
          *orderlist = sge_create_orders(*orderlist, 
-            ORT_suspend_on_threshold, jep, ja_task, NULL, false, true);
+            ORT_suspend_on_threshold, jep, ja_task, NULL);
 
          DPRINTF(("++++ suspending job "u32"/"u32" on threshold\n", 
             lGetUlong(jep, JB_job_number), lGetUlong(ja_task, JAT_task_number)));
@@ -109,7 +108,7 @@ lList **orderlist
 
       if (i==0 && !found) {
          DPRINTF(("found no jobs for sot in queue %s\n", 
-            lGetString(qep, QU_full_name)));
+            lGetString(qep, QU_qname)));
       }
    }
    
@@ -132,10 +131,6 @@ lList **orderlist
    now = sge_get_gmt();
    for_each (qep, queue_list) {
       u_long32 interval;
-      dstring ds;
-      char buffer[128];
-
-      sge_dstring_init(&ds, buffer, sizeof(buffer));
 
       /* are suspend thresholds enabled? */
       parse_ulong_val(NULL, &interval, TYPE_TIM,
@@ -152,11 +147,11 @@ lList **orderlist
          (lGetUlong(qep, QU_last_suspend_threshold_ckeck) + 
          interval> now)) {
          char tmp[128];
-         strcpy(tmp, sge_ctime(lGetUlong(qep, QU_last_suspend_threshold_ckeck), &ds));
+         strcpy(tmp, sge_ctime(lGetUlong(qep, QU_last_suspend_threshold_ckeck)));
          DPRINTF(("queue was last checked at %s (interval = %s, now = %s)\n",
             tmp,
             lGetString(qep, QU_suspend_interval),
-            sge_ctime(now, &ds)));
+            sge_ctime(now)));
          continue;
       }
 
@@ -171,7 +166,7 @@ lList **orderlist
          /* generate unsuspend order for found job */
          found = 1;
          *orderlist = sge_create_orders(*orderlist, ORT_unsuspend_on_threshold, 
-            jep, ja_task, NULL, false, true);
+            jep, ja_task, NULL) ;
 
          DPRINTF(("---- unsuspending job "u32"/"u32" on threshold\n", 
             lGetUlong(jep, JB_job_number), lGetUlong(ja_task, JAT_task_number)));
@@ -183,7 +178,7 @@ lList **orderlist
       
       if (i==0 && !found) {
          DPRINTF(("found no jobs for usot in queue %s\n", 
-            lGetString(qep, QU_full_name)));
+            lGetString(qep, QU_qname)));
       }
    }
 
@@ -192,20 +187,22 @@ lList **orderlist
 }
    
 
-static int 
-select4suspension(lList *job_list, lListElem *qep, lListElem **jepp, 
-                  lListElem **ja_taskp) 
-{
-   u_long32 jstate;
+static int select4suspension(
+lList *job_list,
+lListElem *qep,
+lListElem **jepp,
+lListElem **ja_taskp 
+) {
+   u_long32 jstate, qstate;
    lListElem *jep, *jshortest = NULL, *shortest = NULL, *ja_task;
    const char *qnm;
 
    DENTER(TOP_LAYER, "select4suspension");
 
-   qnm = lGetString(qep, QU_full_name);
-   if (qinstance_state_is_manual_suspended(qep) ||
-       qinstance_state_is_susp_on_sub(qep) ||
-       qinstance_state_is_cal_suspended(qep)) {
+   qnm = lGetString(qep, QU_qname);
+   qstate = lGetUlong(qep, QU_state);
+   if ((qstate & (QSUSPENDED|QCAL_SUSPENDED)) 
+      || (qstate & QSUSPENDED_ON_SUBORDINATE)) {
       DEXIT;
       return -1;
    }
@@ -267,7 +264,7 @@ lListElem **ja_taskp
 
    DENTER(TOP_LAYER, "select4unsuspension");
 
-   qnm = lGetString(qep, QU_full_name);
+   qnm = lGetString(qep, QU_qname);
 
    for_each (jep, job_list) {
       for_each (ja_task, lGetList(jep, JB_ja_tasks)) {

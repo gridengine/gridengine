@@ -183,34 +183,50 @@ int me_who
 }
 
 /********************************************************/
-static void sge_alarmclock(int dummy)
-{
+static void sge_alarmclock(
+int dummy 
+) {
+   DENTER(TOP_LAYER, "sge_alarmclock");
+
+   DEXIT;
    return;
 }
 
 /***************************************************************************/
-static void sge_terminate(int dummy)
-{
+static void sge_terminate(
+int dummy 
+) {
+   DENTER(TOP_LAYER, "sge_terminate");
+
    if (!in_main_loop) {
-      cl_com_ignore_timeouts(CL_TRUE);
-      cl_com_cleanup_commlib();
-      /* leave_commd() */
+      DEXIT;
+      leave_commd();
       exit(1);
    }
    else {
-      cl_com_ignore_timeouts(CL_TRUE);
+      DPRINTF(("sge_terminate(): shut_me_down => 1\n"));
       shut_me_down = 1;
+      DEXIT;
    }
 }
 
 /***************************************************************************/
-void sge_reap(int dummy)
-{
+void sge_reap(
+int dummy 
+) {
+   DENTER(TOP_LAYER, "sge_reap");
+
    dead_children = 1;
+   DEXIT;
 }
 
 /***************************************************************************/
-static void sge_sigpipe_handler(int dummy)
-{
+static void sge_sigpipe_handler(
+int dummy 
+) {
+
+   DENTER(TOP_LAYER, "sge_sigpipe_handler");
+   
    sigpipe_received = 1;
+   DEXIT;
 }

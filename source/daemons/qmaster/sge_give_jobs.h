@@ -32,39 +32,44 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_qmaster_timed_event.h"
-
-
 #define MAX_JOB_DELIVER_TIME (5*60)
 
 typedef enum {
    COMMIT_DEFAULT          = 0x0000,
    COMMIT_NO_SPOOLING      = 0x0001,   /* don't spool the job */
    COMMIT_NO_EVENTS        = 0x0002,   /* don't create events */
-   COMMIT_UNENROLLED_TASK  = 0x0004,   /* handle unenrolled pending tasks */ 
-   COMMIT_NEVER_RAN        = 0x0008    /* job never ran */
+   COMMIT_UNENROLLED_TASK  = 0x0004    /* handle unenrolled pending tasks */ 
 } sge_commit_flags_t; 
-
-/* sge_commit_job() state transitions */
-typedef enum {
-   COMMIT_ST_SENT = 0,               /* job was sent and is now transfering    */
-   COMMIT_ST_ARRIVED = 1,            /* job was reported as running by execd       */
-   COMMIT_ST_RESCHEDULED = 2,        /* job gets rescheduled                       */             
-   COMMIT_ST_FINISHED_FAILED = 3,    /* GE job finished or failed (FINISH/ABORT)   */
-   COMMIT_ST_FINISHED_FAILED_EE = 4, /* GEEE job finished or failed (FINISH/ABORT) */
-   COMMIT_ST_DEBITED_EE = 5,         /* remove after GEEE scheduler debited usage  */
-   COMMIT_ST_NO_RESOURCES = 6,       /* remove interacive job (FINISH/ABORT)       */
-   COMMIT_ST_DELIVERY_FAILED = 7,    /* delivery failed and rescheduled            */
-   COMMIT_ST_FAILED_AND_ERROR = 8    /* job failed and error state set             */
-} sge_commit_mode_t;
 
 int sge_give_job(lListElem *jep, lListElem *jatep, lListElem *master_qep, lListElem *pep, lListElem *hep);
 
-void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr, sge_commit_mode_t mode, sge_commit_flags_t commit_flags);
+void sge_commit_job(lListElem *jep, lListElem *jatep, int mode, sge_commit_flags_t commit_flags);
 
-void sge_zombie_job_cleanup_handler(te_event_t anEvent);
+void ck_4_zombie_jobs(u_long now);
 
-void sge_job_resend_event_handler(te_event_t anEvent);
+void resend_job(u_long32 type, u_long32 when, u_long32 jobid, u_long32 jataskid, const char *queue);
+
+#if 0
+
+void reschedule_unknown_event(u_long32 type, u_long32 when, u_long32 jobid, u_long32 jataskid, char *queue);   
+
+int skip_restarted_job(lListElem *host, lListElem *job_report, u_long32 job_number, u_long32 task_number);
+
+int reschedule_jobs(lListElem *ep, lList **answer);   
+
+int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *qep, lList **answer);
+
+lListElem* add_to_reschedule_unknown_list(lListElem *hostr, u_long32 job_number, u_long32 task_number, u_long32 tag);
+
+lListElem* get_from_reschedule_unknown_list(lListElem *host, u_long32 job_number, u_long32 task_number);
+
+void delete_from_reschedule_unknown_list(lListElem *host); 
+
+void update_reschedule_unknown_list(lListElem *host);
+
+void update_reschedule_unknown_list_for_job(lListElem *host, u_long32 job_number, u_long32 task_number);  
+
+#endif /* 0 */
 
 void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 tid);
 

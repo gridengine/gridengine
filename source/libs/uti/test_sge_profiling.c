@@ -41,67 +41,30 @@ int main(int argc, char *argv[])
 {
    int i;
    double x, y;
-   dstring error = DSTRING_INIT;
 
    /* initialize */
-   if(!prof_start(&error)) {
-      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
-      sge_dstring_clear(&error);
-   }
-
-   if(!prof_set_level_name(SGE_PROF_CUSTOM1, "sublevel1", &error)) {
-      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
-      sge_dstring_clear(&error);
-   }
-   if(!prof_set_level_name(SGE_PROF_CUSTOM2, "sublevel2", &error)) {
-      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
-      sge_dstring_clear(&error);
-   }
-   printf("after start:\n");
-
-   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
+   profiling_start();
+   printf("after start:    %s\n", profiling_get_info_string());
 
    /* sleep and measure time */
+   PROFILING_START_MEASUREMENT;
    sleep(5);
-   printf("after sleep(5):\n");
-   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
-
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
-   sleep(1);
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM2);
-   sleep(2);
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
-   sleep(1);
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM2);
-   sleep(2);
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
-   printf("after nested profiling:\n");
-   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
+   PROFILING_STOP_MEASUREMENT;
+   printf("after sleep(5): %s\n", profiling_get_info_string());
 
    /* work and measure time */
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+   PROFILING_START_MEASUREMENT;
    for(i = 0; i < 1000000; i++) {
       x = sin(i % 10);
       y = cos(i % 10);
    }
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
-   printf("after working: \n");
-   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
-   printf("with subusage: \n");
-   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, true, &error));
+   PROFILING_STOP_MEASUREMENT;
+   printf("after working:  %s\n", profiling_get_info_string());
 
    /* reset profiling, verify data */
-   if(!prof_reset(&error)) {
-      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
-      sge_dstring_clear(&error);
-   }
-   printf("after reset: \n");
-   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
+   profiling_reset();
+   printf("after reset:    %s\n", profiling_get_info_string());
 
-   if(!prof_stop(&error)) {
-      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
-      sge_dstring_clear(&error);
-   }
+   profiling_stop();
    return EXIT_SUCCESS;
 }

@@ -48,12 +48,12 @@
 #include "config.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_qinstance.h"
+#include "sge_queue.h"
 #include "sge_os.h"
 #include "sge_log.h"
 #include "sge_usage.h"
-#include "sge_any_request.h"
 #include "sge_time.h"
+#include "slots_used.h"
 #include "admin_mail.h"
 #include "mail.h"
 #include "exec_job.h"
@@ -73,6 +73,7 @@
 #include "sge_string.h"
 #include "sge_afsutil.h"
 #include "sge_parse_num_par.h"
+#include "sge_conf.h"
 #include "setup_path.h"
 #include "get_path.h"
 #include "msg_common.h"
@@ -81,26 +82,24 @@
 #include "sge_security.h" 
 #include "sge_feature.h"
 #include "sge_spool.h"
-#include "spool/classic/read_write_job.h"
+#include "read_write_job.h"
 #include "sge_job.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
 #include "sge_var.h"
 #include "sge_report.h"
-#include "sge_ulong.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
 static void unregister_from_ptf(u_long32 jobid, u_long32 jataskid, const char *pe_task_id, lListElem *jr);
 #endif
 
-static int clean_up_job(lListElem *jr, int failed, int signal, int is_array, const lListElem *pe);
+static int clean_up_job(lListElem *jr, int failed, int signal, int is_array);
 static void convert_attribute(lList **cflpp, lListElem *jr, char *name, u_long32 udefau);
-static int extract_ulong_attribute(lList **cflpp, char *name, u_long32 *valuep); 
 
 static lListElem *execd_job_failure(lListElem *jep, lListElem *jatep, lListElem *petep, const char *error_string, int general, int failed);
-static int read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, u_long32 jataskid, int failed, int usage_mul_factor);
-static void build_derived_final_usage(lListElem *jr, int usage_mul_factor);
+static int read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, u_long32 jataskid, int failed);
+static void build_derived_final_usage(lListElem *jr);
 
 static void examine_job_task_from_file(int startup, char *dir, lListElem *jep, lListElem *jatep, lListElem *petep, pid_t *pids, int npids);
 
@@ -256,8 +255,7 @@ void sge_reap_children_execd()
             lSetUlong(jatep, JAT_status, JEXITING);
          }
 
-         clean_up_job(jr, failed, exit_status, job_is_array(jep),
-                      lGetObject(jatep, JAT_pe_object));
+         clean_up_job(jr, failed, exit_status, job_is_array(jep));
 
          flush_jr = 1; /* trigger direct sending of job reports */ 
 
@@ -317,7 +315,7 @@ lListElem *jr
    if (ptf_error) {
       WARNING((SGE_EVENT, MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US,
          u32c(job_id), ptf_errstr(ptf_error)));
-   } else {
+   } else if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
       if (usage) {
          lXchgList(jr, JR_usage, &usage);
          lFreeList(usage);
@@ -340,7 +338,7 @@ lListElem *jr
    failed = indicates a failure of job execution, see shepherd_states.h
  ************************************************************************/
 static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status, 
-                        int is_array, const lListElem *pe) 
+                        int is_array) 
 {
    dstring jobdir = DSTRING_INIT;
    dstring fname  = DSTRING_INIT;
@@ -350,7 +348,6 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    u_long32 job_id, job_pid, ckpt_arena, general_failure = 0, ja_task_id;
    const char *pe_task_id = NULL;
    lListElem *du;
-   int usage_mul_factor;
 
    DENTER(TOP_LAYER, "clean_up_job");
 
@@ -508,12 +505,11 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             *new_line = '\0';
          DPRINTF(("ERRORFILE: %256s\n", error));
       }
-      else if (feof(fp)) {
+      else if (feof(fp)) 
          DPRINTF(("empty error file\n"));
-      } else {
+      else
          ERROR((SGE_EVENT, MSG_JOB_CANTREADERRORFILEFORJOBXY_S, 
             job_get_id_string(job_id, ja_task_id, pe_task_id)));
-      }      
       fclose(fp);
    }
    else {
@@ -531,20 +527,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    ** read_dusage gets the failed parameter to decide what should be there
    */
    
-   /* to report correct usage for loosly integrated parallel jobs,
-    * we have to compute a multiplication factor for acct_reserved_usage
-    */
-
-   {
-      const char *s;
-      int slots;
-
-      slots = (s=get_conf_val("pe_slots"))?atoi(s):1;
-      usage_mul_factor = execd_get_acct_multiplication_factor(pe, slots, 
-                                                         pe_task_id != NULL);
-   }
-
-   if (read_dusage(jr, sge_dstring_get_string(&jobdir), job_id, ja_task_id, failed, usage_mul_factor)) {
+   if (read_dusage(jr, sge_dstring_get_string(&jobdir), job_id, ja_task_id, failed)) {
       if (!*error) {
          sprintf(error, MSG_JOB_CANTREADUSAGEFILEFORJOBXY_S, 
             job_get_id_string(job_id, ja_task_id, pe_task_id));
@@ -554,8 +537,6 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          failed = SSTATE_FAILURE_AFTER_JOB;
       DTRACE;
    }
-
-   
 
    /* map system signals into sge signals to make signo's exchangable */
    du=lGetSubStr(jr, UA_name, "signal", JR_usage);
@@ -691,20 +672,12 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
                   job_caused_failure = 1;
                }
             }
-         }
-/* bugfix 476: But is this enough? Do we have to handle some states some
-   where else? Now a queue is allways setin error state. When a job start
-   failed. 
- */
-#if 1            
-         else if (failed == SSTATE_BEFORE_JOB) {
-            
+         } else if (failed == SSTATE_BEFORE_JOB) {
             if (job && JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&
                 !sge_is_file(lGetString(job, JB_script_file))) {
                job_caused_failure = 1;
             }
          }
-#endif         
          general_failure = job_caused_failure ? GFSTATE_JOB : GFSTATE_QUEUE;
          lSetUlong(jr, JR_general_failure, general_failure);
          job_related_adminmail(jr, is_array);
@@ -717,7 +690,6 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_OPEN_OUTPUT:
    case SSTATE_NO_CWD:
    case SSTATE_AFS_PROBLEM:
-   case SSTATE_APPERROR:
       general_failure = GFSTATE_JOB;
       lSetUlong(jr, JR_general_failure, general_failure);
       job_related_adminmail(jr, is_array);
@@ -774,10 +746,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
     *           communication of qrsh with other components instead of qrsh socket.
     */
    if (pe_task_id != NULL) {
-#if 0
-      lListElem *petep = NULL, *uep = NULL;
-#endif
-      lListElem *jep = NULL, *jatep = NULL;
+      lListElem *jep = NULL, *jatep = NULL, *petep = NULL, *uep = NULL;
       const void *iterator;
 
       jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, job_id, &iterator);
@@ -789,12 +758,8 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          jep = lGetElemUlongNext(Master_Job_List, JB_job_number, job_id, &iterator);
       }
 
-      /* CR: TODO: This code is not active because there is no one who calls 
-       *           sge_qwaittid() to receive task exit message. Activate this
-       *           code when sge_qwaittid() is needed.
-       */
-#if 0
-      if (jatep && (petep = lGetSubStr(jatep, PET_id, pe_task_id, JAT_task_list))) {
+      if (jatep && (petep = lGetSubStr(jatep, PET_id, pe_task_id, 
+            JAT_task_list))) {
          const char *host, *commproc;
          u_short id;
          sge_pack_buffer pb;
@@ -819,12 +784,11 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             /* send a task exit message to the submitter of this task */
             ret=gdi_send_message_pb(0, commproc, id, host, TAG_TASK_EXIT, &pb, &dummymid);
             DPRINTF(("%s sending task exit message for pe-task \"%s\" to %s: %s\n",
-                  (ret!=CL_RETVAL_OK)?"failed":"success", pe_task_id, 
-                  lGetString(petep, PET_source), cl_get_error_text(ret)));
+                  ret?"failed":"success", pe_task_id, 
+                  lGetString(petep, PET_source), ret?cl_errstr(ret):""));
             clear_packbuffer(&pb);
          }
       }
-#endif
    }
 
    sge_dstring_free(&fname);
@@ -844,8 +808,7 @@ lListElem *jr
    char *exec_file, *script_file, *tmpdir, *job_owner, *qname; 
    dstring jobdir = DSTRING_INIT;
    char fname[SGE_PATH_MAX];
-   char err_str_buffer[1024];
-   dstring err_str;
+   char err_str[1024];
    SGE_STRUCT_STAT statbuf;
    lListElem *jep, *petep = NULL, *jatep = NULL;
    lListElem *master_q;
@@ -853,8 +816,6 @@ lListElem *jr
    const void *iterator;
 
    DENTER(TOP_LAYER, "remove_acked_job_exit");
-
-   sge_dstring_init(&err_str, err_str_buffer, sizeof(err_str_buffer));
 
    if (ja_task_id == 0) {
       ERROR((SGE_EVENT, MSG_SHEPHERD_REMOVEACKEDJOBEXITCALLEDWITHX_U, u32c(job_id)));
@@ -931,16 +892,16 @@ lListElem *jr
                                       job_id, ja_task_id, pe_task_id,
                                       NULL);
          DPRINTF(("removing active dir: %s\n", sge_dstring_get_string(&jobdir)));
-         if (sge_rmdir(sge_dstring_get_string(&jobdir), &err_str)) {
+         if (sge_rmdir(sge_dstring_get_string(&jobdir), err_str)) {
             ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
-                   sge_dstring_get_string(&jobdir), err_str_buffer));
+                   sge_dstring_get_string(&jobdir), err_str));
          }
       }
 
       /* increment # of free slots. In case no slot is used any longer 
          we have to remove queues tmpdir for this job */
-      used_slots = qinstance_slots_used(master_q) - 1;
-      qinstance_set_slots_used(master_q, used_slots);
+      used_slots = qslots_used(master_q) - 1;
+      set_qslots_used(master_q, used_slots);
       if (!used_slots) {
          sge_switch2start_user();
          sge_remove_tmpdir(lGetString(master_q, QU_tmpdir), 
@@ -1017,9 +978,9 @@ lListElem *jr
                   The pain with this case is, that we have not much information
                   to report this job to qmaster. */
 
-               if (sge_rmdir(sge_dstring_get_string(&jobdir), &err_str)) {
+               if (sge_rmdir(sge_dstring_get_string(&jobdir), err_str)) {
                   ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
-                         sge_dstring_get_string(&jobdir), err_str_buffer));
+                         sge_dstring_get_string(&jobdir), err_str));
                }
             }
 
@@ -1051,9 +1012,9 @@ lListElem *jr
          /* active dir */
          if (!keep_active && !getenv("SGE_KEEP_ACTIVE")) {
             DPRINTF(("removing active dir: %s\n", sge_dstring_get_string(&jobdir)));
-            if (sge_rmdir(sge_dstring_get_string(&jobdir), &err_str)) {
+            if (sge_rmdir(sge_dstring_get_string(&jobdir), err_str)) {
                ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
-                      sge_dstring_get_string(&jobdir), err_str_buffer));
+                      sge_dstring_get_string(&jobdir), err_str));
             }
          }
       }
@@ -1316,7 +1277,7 @@ int startup
          {
             char path[SGE_PATH_MAX];
             sprintf(path, ACTIVE_DIR"/%s", jobdir);
-            sge_rmdir(path, NULL);
+            sge_rmdir(path, SGE_EVENT);
          }
          continue;
       }
@@ -1408,8 +1369,7 @@ int npids
             jr = add_job_report(jobid, jataskid, pe_task_id_str, NULL);
          }
          lSetUlong(jr, JR_state, JEXITING);
-         clean_up_job(jr, ESSTATE_NO_PID, 0, job_is_array(jep),
-                      lGetObject(jatep, JAT_pe_object));  /* failed before execution */
+         clean_up_job(jr, ESSTATE_NO_PID, 0, job_is_array(jep));  /* failed before execution */
       }
       DEXIT;
       return;
@@ -1481,7 +1441,7 @@ int npids
       return;
    }
 
-   clean_up_job(jr, 0, 0, job_is_array(jep), lGetObject(jatep, JAT_pe_object));
+   clean_up_job(jr, 0, 0, job_is_array(jep));  
    lSetUlong(jr, JR_state, JEXITING);
    
    flush_jr = 1;  /* trigger direct sending of job reports */
@@ -1501,8 +1461,7 @@ lListElem *jr,
 const char *jobdir,
 u_long32 jobid,
 u_long32 jataskid,
-int failed,
-int usage_mul_factor
+int failed 
 ) {
    char pid_file[SGE_PATH_MAX];
    FILE *fp;
@@ -1526,17 +1485,9 @@ int usage_mul_factor
    }
 
    if (failed != ESSTATE_NO_CONFIG) {
-      dstring buffer = DSTRING_INIT;
-      const char *qinstance_name = NULL;
       char *owner;
-   
-      qinstance_name = sge_dstring_sprintf(&buffer, SFN"@"SFN,
-                                           get_conf_val("queue"),
-                                           get_conf_val("host"));
-      lSetString(jr, JR_queue_name, qinstance_name);
-      qinstance_name = NULL;
-      sge_dstring_free(&buffer);
 
+      lSetString(jr, JR_queue_name, get_conf_val("queue"));
       lSetHost(jr, JR_host_name, get_conf_val("host"));
       lSetString(jr, JR_owner, owner = get_conf_val("job_owner"));
       if (owner) {
@@ -1572,13 +1523,9 @@ int usage_mul_factor
       if (fp) {
          char buf[10000];
          lList *cflp = NULL;
-         u_long32 wait_status;
 
          read_config_list(fp, &cflp, NULL, CF_Type, CF_name, CF_value, 0, "=", 0, buf, sizeof(buf));
          fclose(fp);
-
-         if (extract_ulong_attribute(&cflp, "wait_status", &wait_status)==0)
-            lSetUlong(jr, JR_wait_status, wait_status);
 
          convert_attribute(&cflp, jr, "exit_status",   1);
          convert_attribute(&cflp, jr, "signal",        0);
@@ -1604,7 +1551,6 @@ int usage_mul_factor
          convert_attribute(&cflp, jr, "ru_nsignals",   0);
          convert_attribute(&cflp, jr, "ru_nvcsw",      0);
          convert_attribute(&cflp, jr, "ru_nivcsw",     0);
-
 
 #ifdef NEC_ACCOUNTING_ENTRIES
          /* Additional accounting information for NEC SX-4 SX-5 */
@@ -1638,7 +1584,7 @@ int usage_mul_factor
 #endif
 #endif   
 
-         build_derived_final_usage(jr, usage_mul_factor);
+         build_derived_final_usage(jr);
          cflp = lFreeList(cflp);
       }
       else {
@@ -1654,11 +1600,10 @@ int usage_mul_factor
    {
       lListElem *ep;
 
-      if (lGetList(jr, JR_usage)) {
+      if (lGetList(jr, JR_usage))
          DPRINTF(("resulting usage attributes:\n"));
-      } else {
+      else
          DPRINTF(("empty usage list\n"));
-      }   
 
       for_each (ep, lGetList(jr, JR_usage)) {
          DPRINTF(("    \"%s\" = %f\n",
@@ -1672,17 +1617,22 @@ int usage_mul_factor
 }
 
 
-static void build_derived_final_usage(lListElem *jr, int usage_mul_factor) 
-{
+static void build_derived_final_usage(
+lListElem *jr 
+) {
    lList *usage_list;
    double ru_cpu, pdc_cpu;
    double cpu, r_cpu,
           mem, r_mem,
           io, iow, r_io, r_iow, maxvmem, r_maxvmem;
    double h_vmem = 0, s_vmem = 0;
+   int slots;
+   char *s;
 
    DENTER(TOP_LAYER, "build_derived_final_usage");
 
+   /* take # of slots from shepherds config file */
+   slots = (s=get_conf_val("pe_slots"))?atoi(s):1;
    parse_ulong_val(&h_vmem, NULL, TYPE_MEM, get_conf_val("h_vmem"), NULL, 0);
    parse_ulong_val(&s_vmem, NULL, TYPE_MEM, get_conf_val("s_vmem"), NULL, 0);
    h_vmem = MIN(s_vmem, h_vmem);
@@ -1695,12 +1645,9 @@ static void build_derived_final_usage(lListElem *jr, int usage_mul_factor)
    pdc_cpu = usage_list_get_double_usage(usage_list, USAGE_ATTR_CPU, 0);
    cpu = MAX(ru_cpu, pdc_cpu);
 
-   /* r_cpu  = h_rt * usage_mul_factor
-    * (see execd_get_acct_multiplication_factor) 
-    */
+   /* r_cpu  = h_rt * slots */
    r_cpu = (usage_list_get_double_usage(usage_list, "end_time", 0) -
-           usage_list_get_double_usage(usage_list, "start_time", 0)) *
-           usage_mul_factor;
+           usage_list_get_double_usage(usage_list, "start_time", 0))*slots;
 
    /* mem    = PDC "mem" usage or zero */
    mem = usage_list_get_double_usage(usage_list, USAGE_ATTR_MEM, 0);
@@ -1781,24 +1728,6 @@ u_long32 udefault
 }
 
 
-/*****************************************************************/
-
-static int extract_ulong_attribute(
-lList **cflpp,
-char *name,
-u_long32 *valuep
-) {
-   const char *s;
-   int ret;
-
-   if (!(s = get_conf_value(NULL, *cflpp, CF_name, CF_value, name)))
-      return -1;
-   ret = sscanf(s, u32, valuep);
-   lDelElemStr(cflpp, CF_name, name);
-   return (ret == 1)?0:-1;
-}
-
-
 /* send mail to users if requested */
 void reaper_sendmail(
 lListElem *jep,
@@ -1810,20 +1739,19 @@ lListElem *jr
    char sge_mail_body[10*2048];
    char sge_mail_start[128];
    char sge_mail_end[128];
+   char wallclock[128];
+   char utime[128];
+   char stime[128];
+   char buf0[100], buf1[100];
    u_long32 jobid, taskid, failed, ru_utime, ru_stime, ru_wallclock;
    double ru_cpu = 0.0, ru_maxvmem = 0.0;
    int exit_status = -1, signo = -1;
    const char *q, *h, *u;
    lListElem *ep;
    const char *pe_task_id_str;
-   dstring ds;
-   char buffer[128];
-   dstring cpu_string = DSTRING_INIT;
-   dstring maxvmem_string = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "reaper_sendmail");
 
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
    mail_users = lGetList(jep, JB_mail_list);
    mail_options = lGetUlong(jep, JB_mail_options); 
    pe_task_id_str = lGetString(jr, JR_pe_task_id_str);
@@ -1842,12 +1770,12 @@ lListElem *jr
     */
 
    if ((ep=lGetSubStr(jr, UA_name, "start_time", JR_usage)))
-      strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value), &ds));
+      strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value)));
    else   
       strcpy(sge_mail_start, MSG_MAIL_UNKNOWN_NAME);
 
    if ((ep=lGetSubStr(jr, UA_name, "end_time", JR_usage)))
-      strcpy(sge_mail_end, sge_ctime((u_long32)lGetDouble(ep, UA_value), &ds));
+      strcpy(sge_mail_end, sge_ctime((u_long32)lGetDouble(ep, UA_value)));
    else   
       strcpy(sge_mail_end, MSG_MAIL_UNKNOWN_NAME);
 
@@ -1879,19 +1807,12 @@ lListElem *jr
    if ((ep=lGetSubStr(jr, UA_name, "exit_status", JR_usage)))
       exit_status = (int)lGetDouble(ep, UA_value);
    
-   double_print_time_to_dstring(ru_cpu, &cpu_string);
-   double_print_memory_to_dstring(ru_maxvmem, &maxvmem_string);
-
 	/* send job exit mail only for master task */ 
    if ((VALID(MAIL_AT_EXIT, mail_options)) && !failed && !pe_task_id_str) {
-      dstring utime_string = DSTRING_INIT;
-      dstring stime_string = DSTRING_INIT;
-      dstring wtime_string = DSTRING_INIT;
-
       DPRINTF(("mail VALID at EXIT\n"));
-      double_print_time_to_dstring(ru_utime, &utime_string);
-      double_print_time_to_dstring(ru_stime, &stime_string);
-      double_print_time_to_dstring(ru_wallclock, &wtime_string);
+      resource_descr(ru_utime, TYPE_TIM, utime);
+      resource_descr(ru_stime, TYPE_TIM, stime);
+      resource_descr(ru_wallclock, TYPE_TIM, wallclock);
       if (job_is_array(jep)) {
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_JA_TASK_COMP_UUS, 
                  u32c(jobid), u32c(taskid), lGetString(jep, JB_job_name));
@@ -1903,11 +1824,11 @@ lListElem *jr
                  h,
                  sge_mail_start, 
                  sge_mail_end,
-                 sge_dstring_get_string(&utime_string),
-                 sge_dstring_get_string(&stime_string),
-                 sge_dstring_get_string(&wtime_string),
-                 (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
-                 (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
+                 utime,
+                 stime,
+                 wallclock,
+                 (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
+                 (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1),
                  exit_status);
       } else {
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_JOB_COMP_US,
@@ -1920,18 +1841,15 @@ lListElem *jr
                  h,
                  sge_mail_start, 
                  sge_mail_end,
-                 sge_dstring_get_string(&utime_string),
-                 sge_dstring_get_string(&stime_string),
-                 sge_dstring_get_string(&wtime_string),
-                 (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
-                 (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
+                 utime,
+                 stime,
+                 wallclock,
+                 (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
+                 (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1),
                  exit_status);
       }
 
       cull_mail(mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_COMP);
-      sge_dstring_free(&utime_string);
-      sge_dstring_free(&stime_string);
-      sge_dstring_free(&wtime_string);
    }
 
    if (((VALID(MAIL_AT_ABORT, mail_options)) 
@@ -1945,8 +1863,6 @@ lListElem *jr
          action = MSG_MAIL_ACTION_MIGR;
       } else if (failed==SSTATE_AGAIN) {
          action = MSG_MAIL_ACTION_RESCH;
-      } else if (failed==SSTATE_APPERROR) {
-         action = MSG_MAIL_ACTION_APPERROR;
       } else if (lGetUlong(jr, JR_general_failure)==GFSTATE_JOB) {
          action = MSG_MAIL_ACTION_ERR;
          comment = MSG_MAIL_ACTION_ERR_COMMENT;
@@ -1985,8 +1901,8 @@ lListElem *jr
                  exitstr, 
                  sge_sig2str(signo),
                  u, q, h, sge_mail_start, sge_mail_end,
-                 (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
-                 (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
+                 (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
+                 (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1),
                  get_sstate_description(failed), 
                  err_str, 
                  comment);
@@ -2011,8 +1927,8 @@ lListElem *jr
                  exitstr, 
                  sge_sig2str(signo),
                  u, q, h, sge_mail_start, sge_mail_end,
-                 (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
-                 (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
+                 (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
+                 (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1),
                  get_sstate_description(failed), 
                  err_str, 
                  comment);
@@ -2021,8 +1937,6 @@ lListElem *jr
       cull_mail(mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_STATE);
    }
 
-   sge_dstring_free(&cpu_string);
-   sge_dstring_free(&maxvmem_string);
    DEXIT;
    return ;
 }

@@ -38,6 +38,8 @@ lListElem *cull_read_in_ckpt(const char *dirname, const char *filename, int spoo
 
 char *write_ckpt(int spool, int how, const lListElem *ep);
 
+lListElem *sge_generic_ckpt(char *ckpt_name);
+
 int read_ckpt_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);   
 
 #endif /* _READ_WRITE_CKPT_H */

@@ -34,8 +34,7 @@
 #include <stdlib.h>
 
 #include "sge_unistd.h"
-#include "sge_any_request.h"
-#include "sge_gdiP.h"
+#include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "usage.h"
 #include "sig_handlers.h"
@@ -49,7 +48,7 @@
 #include "sge_mirror.h"
 #include "sge_event.h"
 
-bool print_event(sge_object_type type, sge_event_action action, 
+int print_event(sge_event_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
 {
    char buffer[1024];
@@ -61,34 +60,33 @@ bool print_event(sge_object_type type, sge_event_action action,
 
 
    /* create a callback error to test error handling */
-   if(type == SGE_TYPE_GLOBAL_CONFIG) {
-      return false;
+   if(type == SGE_EMT_GLOBAL_CONFIG) {
+      return FALSE;
    }
    
-   return true;
+   return TRUE;
 }
 
 int main(int argc, char *argv[])
 {
    int cl_err = 0;
-   lList *alp = NULL;
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
    sge_gdi_param(SET_MEWHO, QEVENT, NULL);
-   if (sge_gdi_setup(prognames[QEVENT], &alp)!=AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
+   if ((cl_err = sge_gdi_setup(prognames[QEVENT]))) {
+      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);
    }
 
    sge_setup_sig_handlers(QEVENT);
 
-   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
+   if (reresolve_me_qualified_hostname() != CL_OK) {
       SGE_EXIT(1);
-   }
+   }   
 
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
-   sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_EMT_ALL, print_event, NULL, NULL);
    
    while(!shut_me_down) {
       sge_mirror_process_events();

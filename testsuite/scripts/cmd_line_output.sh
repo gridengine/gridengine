@@ -32,9 +32,5 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
-echo "_GE_TESTSUITE_SCRIPT_OUTPUT_BEGIN_"
 echo $*
-echo "_GE_TESTSUITE_SCRIPT_OUTPUT_END_"
-sleep 10
 exit 0
-

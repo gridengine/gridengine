@@ -37,9 +37,9 @@
 /*#define USER_CHECK        (1<<2)
 #define SGE_USER_CHECK (1<<3)
 */
-bool sge_gdi_get_mapping_name(const char *requestedHost, char *buf, int buflen);
+int sge_gdi_get_mapping_name(const char *requestedHost, char *buf, int buflen);
                                             /* requestedHost is for getting information for this host */
-bool sge_gdi_check_permission(lList **alpp, int option); 
+int sge_gdi_check_permission(lList **alpp, int option); 
                                             /* option is MANAGER_CHECK, OPERATOR_CHECK, USER_CHECK ... */
                                             
                                             /* returns TRUE on success, FALSE if user has not the rights */

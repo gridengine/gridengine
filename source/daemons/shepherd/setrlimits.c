@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#if defined(DARWIN) || defined(FREEBSD)
+#if defined(SUN4)
 #   include <sys/time.h>
 #endif
 
@@ -44,19 +44,21 @@
 #   include <sys/category.h>
 #endif
 
+#if defined(HP10_01) || defined(HPCONVEX)
+#   define _KERNEL
+#endif
+
 #include <sys/resource.h>
 
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(HP10_01) || defined(HPCONVEX)
+#   undef _KERNEL
+#endif
+
+#if defined(IRIX6)
 #   define RLIMIT_STRUCT_TAG rlimit64
 #else
 #   define RLIMIT_STRUCT_TAG rlimit
 #endif
-
-#if defined(DARWIN)
-#   include <sys/time.h>
-#   include <sys/types.h>
-#endif
-
 
 #include "basis_types.h"
 #include "sge_parse_num_par.h"
@@ -72,56 +74,6 @@ static void pushlimit(int, struct RLIMIT_STRUCT_TAG *, int trace_rlimit);
 
 static int get_resource_info(u_long32 resource, char **name, int *resource_type);
 #endif
-
-static int rlimcmp(sge_rlim_t r1, sge_rlim_t r2);
-static int sge_parse_limit(sge_rlim_t *rlvalp, char *s, char *error_str,
-                           int error_len);
-
-/*
- * compare two sge_rlim_t values
- *
- * returns
- * r1 <  r2      < 0
- * r1 == r2      == 0
- * r1 >  r2      > 0
- */
-static int rlimcmp(sge_rlim_t r1, sge_rlim_t r2) 
-{
-   if (r1 == r2)
-      return 0;
-   if (r1==RLIM_INFINITY)
-      return 1;
-   if (r2==RLIM_INFINITY)
-      return -1;
-   return (r1>r2)?1:-1;
-}
-
-/* -----------------------------------------
-
-NAME
-   sge_parse_limit()
-
-DESCR
-   is a wrapper around sge_parse_num_val()
-   for migration to code that returns an
-   error and does not exit()
-
-PARAM
-   uvalp - where to write the parsed value
-   s     - string to parse
-
-RETURN
-      1 - ok, value in *uvalp is valid
-      0 - parsing error
-
-*/
-static int sge_parse_limit(sge_rlim_t *rlvalp, char *s, char *error_str,
-                    int error_len)
-{
-   sge_parse_num_val(rlvalp, NULL, s, s, error_str, error_len);
-
-   return 1;
-}
 
 void setrlimits(
 int trace_rlimit 
@@ -143,7 +95,10 @@ int trace_rlimit
 #ifdef CRAY
    long clock_tick;
 #else
+#if !defined(HPUX)
+/*  */
    struct RLIMIT_STRUCT_TAG rlp;
+#endif
 #endif
 
 #define PARSE_IT(dstp, attr) \
@@ -158,8 +113,10 @@ int trace_rlimit
    PARSE_IT(&h_data, "h_data");
    PARSE_IT(&s_stack, "s_stack");
    PARSE_IT(&h_stack, "h_stack");
+#ifndef SINIX 
    PARSE_IT(&s_rss, "s_rss");
    PARSE_IT(&h_rss, "h_rss");
+#endif
    PARSE_IT(&s_fsize, "s_fsize");
    PARSE_IT(&h_fsize, "h_fsize");
    PARSE_IT(&s_vmem, "s_vmem");
@@ -261,7 +218,7 @@ int trace_rlimit
    /* Too bad they didn't have a sysconf call to get bytes/click */
    /* and clicks/disk block. */
 
-#else
+#elif !defined(HPUX)
    rlp.rlim_cur = s_cpu;
    rlp.rlim_max = h_cpu;
    pushlimit(RLIMIT_CPU, &rlp, trace_rlimit);
@@ -408,7 +365,7 @@ static int get_resource_info(u_long32 resource, char **name,
  */
 
 
-#if !defined(CRAY)
+#if !defined(CRAY) && !defined(HPUX)
 static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp, 
                       int trace_rlimit) 
 {
@@ -427,8 +384,12 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
 
    /* Process limit */
    if ((resource_type & RES_PROC)) {
-#if defined(IRIX6)
+#if defined(IRIX5) || defined(IRIX6)
+#if defined(IRIX5)
+      getrlimit(resource,&dlp);
+#else
       getrlimit64(resource,&dlp);
+#endif
       if (rlp->rlim_cur>dlp.rlim_max)
          rlp->rlim_cur=dlp.rlim_max;
       if (rlp->rlim_max>dlp.rlim_max)
@@ -439,18 +400,18 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
       if (rlp->rlim_max < rlp->rlim_cur)
          rlp->rlim_cur = rlp->rlim_max;
 
-#if defined(NECSX4) || defined(NECSX5)
+#if defined(LINUX) || ( defined(SOLARIS) && !defined(SOLARIS64) ) || defined(NECSX4) || defined(NECSX5)
 #  define limit_fmt "%ld"
-#elif defined(IRIX) || defined(HPUX) || defined(DARWIN) || defined(FREEBSD)
+#elif defined(IRIX6) || defined(HP11) || defined(HP10)
 #  define limit_fmt "%lld"
-#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
+#elif defined(ALPHA) || defined(SOLARIS64)
 #  define limit_fmt "%lu"
 #else
 #  define limit_fmt "%d"
 #endif
 
       sge_switch2start_user();
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#ifdef IRIX6
       ret = setrlimit64(resource, rlp);
 #else
       ret = setrlimit(resource,rlp);
@@ -464,7 +425,7 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
             shepherd_trace(trace_str);
       }
       else {
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#ifdef IRIX6
          getrlimit64(resource,&dlp);
 #else
          getrlimit(resource,&dlp);
@@ -493,23 +454,22 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
       if (rlp->rlim_max < rlp->rlim_cur)
          rlp->rlim_cur = rlp->rlim_max;
 
+      if (
 #if defined(NECSX4) || defined(NECSX5)
-      /*
-       * SUPER-UX only allows uid==euid==0 (superuser) to set
-       * job limits thus the switch2start_user() and
-       * switch2admin_user() calls
-       */
-      sge_switch2start_user();
-      if (setrlimitj(get_rlimits_os_job_id(), resource, rlp)) {
+         setrlimitj(get_rlimits_os_job_id(), resource, rlp)
+#else
+         0
+#endif
+      ) {
          /* exit or not exit ? */
          sprintf(trace_str, "setrlimitj(%s, {"limit_fmt", "limit_fmt"}) "
             "failed: %s", limit_str, rlp->rlim_cur, rlp->rlim_max,
             strerror(errno));
-      } else {
+      } else {         
+#if defined(NECSX4) || defined(NECSX5)
          getrlimitj(get_rlimits_os_job_id(), resource,&dlp);
-      }
-      sge_switch2admin_user();
 #endif
+      }
 
       if (trace_rlimit) {
          sprintf(trace_str, "Job %s setting: (soft "limit_fmt" hard "limit_fmt

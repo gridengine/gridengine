@@ -457,7 +457,6 @@ int main(argc, argv)
    if (printed)
       printf("\n");
    exit(0);
-   return 0;
 }
 
 struct filepointer *getfile(file)

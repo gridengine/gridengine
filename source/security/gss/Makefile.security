@@ -37,7 +37,7 @@ SHELL = /bin/sh
 .c.o:
 	$(CC) $(CFLAGS) -c $(SDIR)/$<
 
-security_all:	get_cred put_cred delete_cred renew_cred starter_cred
+all:	get_cred put_cred delete_cred renew_cred starter_cred
 
 delete_cred:	delete_cred.o sge_gsslib.o
 	$(CC) -o $@ $(LFLAGS) delete_cred.o sge_gsslib.o $(LIBS)
@@ -75,14 +75,14 @@ k5dcelogin.o:	$(SDIR)/k5dcelogin.c
 clean:
 	rm -f k5dcelogin.o delete_cred.o get_cred.o put_cred.o sge_gsslib.o get_cred put_cred delete_cred renew_cred starter_cred k5dcelogin
 
-install:	security_all
+install:	all
 	cp get_cred put_cred delete_cred starter_cred renew_cred $$SGE_ROOT/utilbin/$(ARCH)
 	cd $$SGE_ROOT/utilbin/$(ARCH); chmod 755 get_cred put_cred delete_cred starter_cred renew_cred
 
 install_k5dcelogin:	k5dcelogin
 	cp k5dcelogin $$SGE_ROOT/utilbin/$(ARCH)
 
-install_single_key:	security_all
+install_single_key:	all
 	cp $(SDIR)/get_cred.sh $(SDIR)/put_cred.sh get_cred put_cred delete_cred starter_cred renew_cred $$SGE_ROOT/utilbin/$(ARCH)
 	cd $$SGE_ROOT/utilbin/$(ARCH); mv get_cred get_cred.orig; mv put_cred put_cred.orig; mv get_cred.sh get_cred; mv put_cred.sh put_cred; chmod 755 get_cred.orig put_cred.orig get_cred put_cred delete_cred starter_cred renew_cred
 

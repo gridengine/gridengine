@@ -1,4 +1,4 @@
-
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
-#include <string.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <pwd.h>
@@ -42,6 +41,7 @@
 #include "sge_signal.h"
 #include "sge_unistd.h"
 #include "setosjobid.h"
+#include "sge_unistd.h"
 
 #if defined(CRAY)
 #   if !defined(SIGXCPU)
@@ -74,13 +74,16 @@ struct rusage {
 #include "basis_types.h"
 #include "execution_states.h"
 #include "qlogin_starter.h"
+#include "sge_unistd.h"
 #include "config_file.h"
 #include "sge_uidgid.h"
+#include "sge_stdlib.h"
 
 /* static functions */
 static char **read_job_args(char **args, int extra_args);
 static char *build_path(int type);
-extern int  shepherd_state;
+
+extern int shepherd_state;
 extern char shepherd_job_dir[];
 
 /************************************************************************
@@ -97,16 +100,11 @@ int truncate_stderr_out
    char *stdin_path = NULL;
    char *stdout_path = NULL;
    char *stderr_path = NULL; 
-   char fs_stdin_path[SGE_PATH_MAX] = "\"\"";
-   char fs_stdout_path[SGE_PATH_MAX] = "\"\"";
-   char fs_stderr_path[SGE_PATH_MAX] = "\"\"";
-   char *stdin_path_for_fs = NULL;
    char *shell_path = NULL;
    char *cwd;
    struct passwd *pw=NULL;
-   char err_str[MAX_STRING_SIZE];
+   char err_str[256];
    int merge_stderr;
-   int fs_stdin, fs_stdout, fs_stderr;
    pid_t pid, ppid, pgrp, newpgrp;
    int i;
    int min_gid, min_uid;
@@ -125,11 +123,6 @@ int truncate_stderr_out
    gid_t gid;
    char *tmp_str;
    char *starter_method;
-   char* tmpdir;
-   const char *fs_stdin_file="", *fs_stdout_file="", *fs_stderr_file="";
-   char fs_stdin_tmp_path[SGE_PATH_MAX] = "\"\"",
-        fs_stdout_tmp_path[SGE_PATH_MAX] = "\"\"",
-        fs_stderr_tmp_path[SGE_PATH_MAX] = "\"\"";
 
    foreground = 0; /* VX sends SIGTTOU if trace messages go to foreground */
 
@@ -167,6 +160,7 @@ int truncate_stderr_out
       }   
 
       shepherd_trace("processing qlogin job");
+      
       qlogin_starter = 1;
    } 
 
@@ -288,7 +282,7 @@ int truncate_stderr_out
        use_qsub_gid = 0;
        gid = 0;
     }
-/* --- switch to intermediate user */                                                                      
+                                                                      
    if(qlogin_starter) { 
       ret = sge_set_uid_gid_addgrp(target_user, intermediate_user, 0, 0, 
                                    0, err_str, use_qsub_gid, gid);
@@ -330,14 +324,8 @@ int truncate_stderr_out
         as it is done by normal shellscript starts
       - We can feed the shellscript to stdin of a started shell */
 
-
-   tmpdir = get_conf_val( "tmpdir" );
-
    merge_stderr = atoi(get_conf_val("merge_stderr"));
-   fs_stdin  = atoi(get_conf_val("fs_stdin_file_staging"));
-   fs_stdout = atoi(get_conf_val("fs_stdout_file_staging"));
-   fs_stderr = atoi(get_conf_val("fs_stderr_file_staging"));
-   
+
    if (!strcmp(childname, "pe_start") ||
        !strcmp(childname, "pe_stop") ||
        !strcmp(childname, "prolog") ||
@@ -355,161 +343,24 @@ int truncate_stderr_out
       shell_start_mode = "unix_behaviour";
 
       if (!strcmp(childname, "prolog") || !strcmp(childname, "epilog")) {
-         stdin_path = strdup( "/dev/null" );
-         if( fs_stdin ) {
-            /* we need the jobs stdin_path here in prolog,
-               because the file must be copied */
-            stdin_path_for_fs = build_path( SGE_STDIN );
-         }
-         stdout_path = build_path( SGE_STDOUT );
-         if( !merge_stderr ) {
-            stderr_path = build_path( SGE_STDERR );
-         }
+         stdin_path = "/dev/null";
+         stdout_path = build_path(SGE_STDOUT);
+         if (!merge_stderr)
+            stderr_path  = build_path(SGE_STDERR);
       } else {
-         /* childname is "pe_start" or "pe_stop" */
-         stdin_path = strdup( "/dev/null" );
-         stdin_path_for_fs = build_path( SGE_STDIN );
-
+         stdin_path = "/dev/null";
          stdout_path  = build_path(SGE_PAR_STDOUT);
-         if (!merge_stderr) {
+         if (!merge_stderr)
             stderr_path  = build_path(SGE_PAR_STDERR);
-         }
       }
    } else {
       shell_path = get_conf_val("shell_path");
       use_login_shell = atoi(get_conf_val("use_login_shell"));
-
-      stdin_path = build_path( SGE_STDIN );
-      stdin_path_for_fs = strdup( stdin_path );
-      stdout_path = build_path( SGE_STDOUT );
-      if( !merge_stderr ) {
-         stderr_path = build_path( SGE_STDERR );
-      }
-   }
-
-   if( fs_stdin ) {
-      /* Generate fs_input_tmp_path (etc.) from tmpdir+stdin_path */
-      if( stdin_path_for_fs && strlen( stdin_path_for_fs )>0 ) {
-         fs_stdin_file = strrchr( stdin_path_for_fs, '/' )+1;
-         sprintf( fs_stdin_tmp_path, "%s/%s", tmpdir, fs_stdin_file );
-      }
-
-      /* Set fs_input_path to old stdin_path and then
-         stdin_path to just generated fs_input_tmp_path */
-      if( stdin_path_for_fs && strlen( stdin_path_for_fs )>0 ) {
-         strcpy( fs_stdin_path, stdin_path_for_fs );
-      }
-
-      /* Modify stdin_path, stdout_path and stderr_path only if
-         file staging is wanted! */
-      /* prolog, pe_start, epilog, pe_stop always get /dev/null as stdin_path,
-       only the job gets the file staged stdin file */ 
-      if( strcmp( childname, "prolog" ) &&
-          strcmp( childname, "pe_start" ) &&
-          strcmp( childname, "epilog" ) &&
-          strcmp( childname, "pe_stop" )) {
-         stdin_path = realloc( stdin_path, strlen( fs_stdin_tmp_path )+1 );            
-         strcpy( stdin_path, fs_stdin_tmp_path );
-      }
-   }
-
-   if( fs_stdout ) {
-      if( stdout_path && strlen( stdout_path )>0 ) {
-         fs_stdout_file = strrchr( stdout_path, '/' )+1;
-         sprintf( fs_stdout_tmp_path, "%s/%s", tmpdir, fs_stdout_file );
-      }
-
-      if( stdout_path && strlen( stdout_path )>0 ) {
-         strcpy( fs_stdout_path, stdout_path );
-      }
-
-      /* prolog, pe_start, job, epilog and pe_stop get the
-         file staged output (and error) file */
-      stdout_path = realloc( stdout_path, strlen(fs_stdout_tmp_path)+1 );
-      strcpy( stdout_path, fs_stdout_tmp_path );
-   }
-
-   if( fs_stderr ) {
-      if( stderr_path && strlen( stderr_path )>0 ) {
-         fs_stderr_file = strrchr( stderr_path, '/' )+1;
-         sprintf( fs_stderr_tmp_path, "%s/%s", tmpdir, fs_stderr_file );
-      }
-
-      if( stderr_path && strlen( stderr_path )>0 ) {
-         strcpy( fs_stderr_path, stderr_path );
-      }
-  
-      if( !merge_stderr ) {
-         stderr_path = realloc( stderr_path, strlen(fs_stderr_tmp_path)+1 );
-         strcpy( stderr_path, fs_stderr_tmp_path );
-      }
-   }
-
-   /* Now we have all paths generated, so we must
-      write it to the config struct */
-   set_conf_val( "stdin_path", stdin_path );
-   set_conf_val( "stdout_path", stdout_path );
-   set_conf_val( "stderr_path", stderr_path );
-   set_conf_val( "fs_stdin_path", fs_stdin_path );
-   set_conf_val( "fs_stdout_path", fs_stdout_path );
-   set_conf_val( "fs_stderr_path", fs_stderr_path );
-   set_conf_val( "fs_stdin_tmp_path", fs_stdin_tmp_path );
-   set_conf_val( "fs_stdout_tmp_path", fs_stdout_tmp_path );
-   set_conf_val( "fs_stderr_tmp_path", fs_stderr_tmp_path );
-  
-#if 0
-   /* <DEBUGGING> */
-   sprintf( err_str, "## stdin_path=%s", get_conf_val( "stdin_path" ));
-   shepherd_trace( err_str );
-   sprintf( err_str, "## stdout_path=%s", get_conf_val( "stdout_path" ));
-   shepherd_trace( err_str );
-   if( !merge_stderr ) {
-      sprintf( err_str, "## stderr_path=%s", get_conf_val( "stderr_path" ));
-      shepherd_trace( err_str );
-   }      
-   sprintf( err_str, "## fs_stdin_path=%s", get_conf_val( "fs_stdin_path" ));
-   shepherd_trace( err_str );
-   sprintf( err_str, "## fs_stdout_path=%s", get_conf_val( "fs_stdout_path" ));
-   shepherd_trace( err_str );
-   sprintf( err_str, "## fs_stderr_path=%s", get_conf_val( "fs_stderr_path" ));
-   shepherd_trace( err_str );
-   sprintf( err_str, "## fs_stdin_host=%s", get_conf_val( "fs_stdin_host" ));
-   shepherd_trace( err_str );
-   sprintf( err_str, "## fs_stdout_host=%s", get_conf_val( "fs_stdout_host" ));
-   shepherd_trace( err_str );
-   sprintf( err_str, "## fs_stderr_host=%s", get_conf_val( "fs_stderr_host" ));
-   shepherd_trace( err_str );
-   sprintf( err_str, "## fs_stdin_tmp_path=%s", get_conf_val( "fs_stdin_tmp_path" ));
-   shepherd_trace( err_str );
-   sprintf( err_str, "## fs_stdout_tmp_path=%s", get_conf_val( "fs_stdout_tmp_path" ));
-   shepherd_trace( err_str );
-   sprintf( err_str, "## fs_stderr_tmp_path=%s", get_conf_val( "fs_stderr_tmp_path" ));
-   shepherd_trace( err_str );
-   sprintf( err_str, "## merge_stderr=%s", get_conf_val( "merge_stderr" ));
-   shepherd_trace( err_str );
-   sprintf( err_str, "## fs_stdin_file_staging=%s", get_conf_val( "fs_stdin_file_staging" ));
-   shepherd_trace( err_str );
-   sprintf( err_str, "## fs_stdout_file_staging=%s", get_conf_val( "fs_stdout_file_staging" ));
-   shepherd_trace( err_str );
-   sprintf( err_str, "## fs_stderr_file_staging=%s", get_conf_val( "fs_stderr_file_staging" ));
-   shepherd_trace( err_str );
-   /* </DEBUGGING> */
-#endif
-
-   /* Now we have to generate the command line for prolog, pe_start, epilog or pe_stop
-      from the config values */
-   if(!strcmp(childname, "prolog")) {
-      replace_params( get_conf_val("prolog"),
-         script_file, sizeof(script_file)-1, prolog_epilog_variables );
-   } else if(!strcmp(childname, "epilog")) {
-      replace_params( get_conf_val("epilog"),
-         script_file, sizeof(script_file)-1, prolog_epilog_variables );
-   } else if(!strcmp(childname, "pe_start")) {
-      replace_params( get_conf_val("pe_start"),
-         script_file, sizeof(script_file)-1, pe_variables );
-   } else if(!strcmp(childname, "pe_stop")) {
-      replace_params( get_conf_val("pe_stop"),
-         script_file, sizeof(script_file)-1, pe_variables );
+ 
+      stdin_path = build_path(SGE_STDIN);  
+      stdout_path = build_path(SGE_STDOUT);
+      if (!merge_stderr)
+         stderr_path  = build_path(SGE_STDERR);
    }
 
    cwd = get_conf_val("cwd");
@@ -581,36 +432,32 @@ int truncate_stderr_out
          shepherd_error(err_str);
       }
    }
+
    /* open stdout - not for interactive jobs */
    if (!is_interactive && !is_qlogin) {
-      if (truncate_stderr_out) {
+      if (truncate_stderr_out)
          out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
-      } else {
+      else
          out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
-      }
-      
       if (out==-1) {
          sprintf(err_str, "error: can't open output file \"%s\": %s", 
                  stdout_path, strerror(errno));
          shepherd_state = SSTATE_OPEN_OUTPUT;
          shepherd_error(err_str);
       }
-      
-      if (out!=1) {
+      if (out!=1)
          shepherd_error("error: fd out is not 1");
-      }   
 
       /* open stderr */
       if (merge_stderr) {
          shepherd_trace("using stdout as stderr");
          dup2(1, 2);
-      } else {
-         if (truncate_stderr_out) {
+      }
+      else {
+         if (truncate_stderr_out) 
             err = open(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
-         } else {
+         else
             err = open(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
-         }
-
          if (err == -1) {
             sprintf(err_str, "error: can't open output file \"%s\": %s", 
                     stderr_path, strerror(errno));
@@ -693,8 +540,6 @@ int truncate_stderr_out
               job_id, host, queue);
    }
 
-
-/* ---- switch to target user */
    if (intermediate_user) {
       if(qlogin_starter) {
          ret = sge_set_uid_gid_addgrp(target_user, NULL, 0, 0, 0, 
@@ -753,6 +598,7 @@ int truncate_stderr_out
          }
       }
    }
+
    start_command(childname, shell_path, script_file, argv0, shell_start_mode, is_interactive, is_qlogin, is_rsh, is_rlogin, str_title);
    return;
 }
@@ -773,7 +619,7 @@ int set_environment()
       return 1;
    }
 
-#if defined(IRIX)
+#if defined(IRIX6)
    {
       FILE *fp;
       ash_t ash;
@@ -880,10 +726,10 @@ static char **disassemble_proc_args(const char *script_file, char **preargs, int
    args[i] = NULL;
 
    /* add procedure args */
-   for (s = sge_strtok(script_file, PROC_ARG_DELIM); s; s = sge_strtok(NULL, PROC_ARG_DELIM)) {
+   for (s = sge_strtok(script_file, PROC_ARG_DELIM); s; s = sge_strtok(NULL, PROC_ARG_DELIM))
       args[i++] = strdup(s);
-   }
    args[i] = NULL;
+
    return args;
 }
 
@@ -904,7 +750,7 @@ static char **read_job_args(char **preargs, int extra_args)
   
    /* get number of job args */ 
    n_job_args = atoi(get_conf_val("njob_args"));
-
+   
    if (!(n_preargs + n_job_args))
       return NULL;
   
@@ -914,9 +760,8 @@ static char **read_job_args(char **preargs, int extra_args)
       return NULL;
   
    /* copy preargs */ 
-   for (i = 0; i < n_preargs; i++) {
+   for (i = 0; i < n_preargs; i++)
       args[i] = strdup(preargs[i]);
-   }
 
    args[i] = NULL;
 
@@ -973,7 +818,6 @@ char *str_title
       n_job_args = atoi(get_conf_val("njob_args"));
       pre_args_ptr[arg_id++] = "-c";
       sge_dstring_append(&arguments, script_file);
-      
       sge_dstring_append(&arguments, " ");
       for (i = 0; i < n_job_args; i++) {
          char conf_val[256];
@@ -1137,10 +981,7 @@ int type
    }
 
    base = get_conf_val(name);
-
-   /* Try to get information about 'base' */
-   if( SGE_STAT(base, &statbuf)) {
-      /* An error occured */
+   if (SGE_STAT(base, &statbuf)) {
       if (errno != ENOENT) {
          char *t;
          sprintf(err_str, "can't stat() \"%s\" as %s: %s",
@@ -1160,12 +1001,11 @@ int type
       return base; /* does not exist - must be path of file to be created */
    }
 
-   if( !(S_ISDIR(statbuf.st_mode))) {
+   if (!(S_ISDIR(statbuf.st_mode))) {
       return base;
    } else {
-      /* 'base' is a existing directory, but not a file! */
       if (type == SGE_STDIN) {
-         sprintf(err_str, SFQ" is a directory not a file\n", base);
+         sprintf(err_str, SFQ" id a directory not a file\n", base);
          shepherd_state = SSTATE_OPEN_OUTPUT; /* job's failure */
          shepherd_error(err_str);
          return "/dev/null";
@@ -1173,22 +1013,20 @@ int type
          job_name = get_conf_val("job_name");
          job_id = get_conf_val("job_id");
          ja_task_id = get_conf_val("ja_task_id");
-
          if (!(path = (char *)malloc(pathlen=(strlen(base) + strlen(job_name) 
                        + strlen(job_id) + strlen(ja_task_id) + 25)))) {
-            sprintf(err_str, "malloc(%d) failed for %s@", pathlen, name);
+            sprintf(err_str, "malloc(%d) failed for %s@",
+               pathlen, name);
             shepherd_error(err_str);
          }
 
-         if (atoi(ja_task_id)) {
+         if (atoi(ja_task_id))
             sprintf(path, "%s/%s.%s%s.%s", base, job_name, postfix, job_id,
                ja_task_id);
-         } else {
+         else
             sprintf(path, "%s/%s.%s%s", base, job_name, postfix, job_id);
-         }
       }
    }
 
    return path;
 }
-

@@ -48,13 +48,11 @@
 #include "sge_sharetree_qmaster.h"
 #include "sge_userprj_qmaster.h"
 #include "cull_parse_util.h"
-#include "sge_event_master.h"
+#include "sge_m_event.h"
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_userprj.h"
-
-#include "sge_persistence_qmaster.h"
-#include "spool/sge_spooling.h"
+#include "read_write_sharetree.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -132,16 +130,14 @@ char *rhost
    }
 
    lSetUlong(ep, STN_version, prev_version+1);
+   sge_add_event(NULL, 0, sgeE_NEW_SHARETREE, 0, 0, NULL, ep);
 
    /* now insert new element */
    lAppendElem(*lpp, lCopyElem(ep));
   
    /* write sharetree to file */
-   if (!sge_event_spool(alpp, 0, sgeE_NEW_SHARETREE,
-                        0, 0, NULL, NULL, NULL,
-                        ep, NULL, NULL, true, true)) {
-
-      /* answer list gets filled in sge_event_spool() */
+   if ((ret=write_sharetree(alpp, ep, SHARETREE_FILE, NULL, 1, 1, 1))) {
+      /* answer list gets filled in write_sharetree() */
       DEXIT;
       return ret;
    }
@@ -179,13 +175,9 @@ char *rhost
       return STATUS_EEXIST;
    }
 
-   sge_event_spool(alpp, 0, sgeE_NEW_SHARETREE, 
-                   0, 0, NULL, NULL, NULL,
-                   NULL, NULL, NULL, true, true);
-
    lFreeList(*lpp);
    *lpp = NULL;
-   
+   sge_add_event(NULL, 0, sgeE_NEW_SHARETREE, 0, 0, NULL, NULL);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDLIST_SSS, ruser, rhost, MSG_OBJ_SHARETREE));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
@@ -361,7 +353,6 @@ lList **found  /* tmp list that contains one entry for each found u/p */
 
          /* non project sub-tree leaf nodes must be a user or a project */
          if (!userprj_list_locate(user_list, name) &&
-             strcmp(name, "default") &&
              ((objname=MSG_JOB_PROJECT) &&
               !userprj_list_locate(project_list, name))) {
 

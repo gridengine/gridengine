@@ -31,6 +31,8 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+# libs/japi/japi_dependencies 
+
 files=" \
        clients/common/common_dependencies \
        clients/qacct/qacct_dependencies  \
@@ -46,31 +48,22 @@ files=" \
        clients/qsub/qsub_dependencies  \
        clients/qevent/qevent_dependencies  \
        common/common_dependencies  \
+       daemons/commd/commd_dependencies  \
        daemons/common/common_dependencies  \
        daemons/execd/execd_dependencies  \
        daemons/qmaster/qmaster_dependencies  \
        daemons/schedd/schedd_dependencies  \
        daemons/shadowd/shadowd_dependencies  \
        daemons/shepherd/shepherd_dependencies  \
-       libs/japi/japi_dependencies \
-       libs/sgeobj/sgeobj_dependencies  \
        libs/gdi/gdi_dependencies  \
-       libs/evc/evc_dependencies  \
-       libs/evm/evm_dependencies  \
-       libs/mir/mir_dependencies  \
        libs/spool/spool_dependencies  \
-       libs/spool/berkeleydb/spoolb_dependencies  \
        libs/spool/classic/spoolc_dependencies  \
-       libs/spool/dynamic/spoold_dependencies  \
        libs/spool/flatfile/spoolf_dependencies  \
-       libs/spool/postgres/spoolp_dependencies  \
+       libs/comm/comm_dependencies  \
        libs/cull/cull_dependencies  \
        libs/sched/sched_dependencies  \
        libs/uti/uti_dependencies  \
        libs/rmon/rmon_dependencies  \
-       libs/comm/commlib_dependencies  \
-       libs/comm/lists/commlistslib_dependencies \
-       libs/lck/lck_dependencies  \
        utilbin/utilbin_dependencies \
        security/coshepherd/coshepherd_dependencies \
        security/sec/sec_dependencies \

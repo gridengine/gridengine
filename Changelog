@@ -1,69 +1,70 @@
 AH-2003-03-27-0  Bugfix:    qrong qstat -j diagnosis message wrongly indicates 
                             not enough PE slots
-                 Issue:     #415
-                 Bugtraq:   #4775325
-                 Review:    AS
+                 Issue:     415
+                 Bugtraq:   4775325
                  Changed:   qstat, sge_qmaster, sge_schedd
+                 Review:    AS
 
 JG-2003-03-27-0  Bugfix:    qstat -alarm was broken.
-                 Issue:     #469, #489
-                 Bugtraq:   #481579
+                 Issue:     469, 489
+                 Bugtraq:   481579
                  Changed:   qstat
                  Review:    AH
 
 EB-2003-03-27-0  Bugfix:    maxujobs scheduler config functionality is broken
-                 Issue:     #514
-                 Bugtraq:   #4838549
+                 Issue:     514
+                 Bugtraq:   4838549
                  Changed:   sge_schedd
-                 Review:    STILL HAS TO BE DONE
+                 Review:    AH 
 
 EB-2003-03-26-1  Bugfix:    maxujobs does not count suspended jobs
                             or running/suspended jobs which have an hold 
                             applied, a new starttime attached or new
                             job dependencies defined after the job has been 
                             started.
-                 Issue:     #511
+                 Issue:     511
+                 Bugtraq:   4838595
                  Changed:   sge_schedd
                  Review:    AH 
 
 JG-2003-03-26-3  Bugfix:    spooling integrity improvement was missing for 
                             sharetree, projects and users
-                 Issue:     #501
-                 Bugtraq:   #4822746
+                 Issue:     501
+                 Bugtraq:   4822746
                  Changed:   sge_qmaster
                  Review:    EB
 
 AH-2003-03-26-1  Bugfix:    NOTIFY_SUSP signal only sent for first suspension 
                             of job
-                 Isssue:    #510
-                 Bugtraq:   #4835832
+                 Isssue:    510
+                 Bugtraq:   4835832
                  Changed:   sge_shepherd
                  Review:    EB
 
 JG-2003-03-26-2  Bugfix:    deleted sharetree showed up again after qmaster 
                             restart, as the spool file was not deleted.
-                 Changed:   sge_qmaster
-                 Review:    EB
                  Issue:     499
                  Bugtraq:   4822742
+                 Changed:   sge_qmaster
+                 Review:    EB
 
 JG-2003-03-26-1  Bugfix:    Some Makefiles passed CFLAGS to linker.
 
 JG-2003-03-26-0  Bugfix:    Reject tightly integrated array jobs.
-                 Changed:   sge_qmaster, qsh
-                 Review:    EB
                  Issue:     485
                  Bugtraq:   4813965
+                 Changed:   sge_qmaster, qsh
+                 Review:    EB
 
 EB-2003-03-25-0  Bugfix:    Multiple job script writes cause ETXTBSY 
                             (Text File Busy) Errors
+                 Issue:     504
                  Changed:   sge_execd
                  Review:    AH
-                 Issue:     #504
 
 AH-2003-03-25-0  Bugfix:    GEEE: allow qalter -p for running jobs
-                 Isssue:    #502
-                 Bugtraq:   #4824104
+                 Isssue:    502
+                 Bugtraq:   4824104
                  Changed:   sge_qmaster
 
 JG-2003-03-24-0  Enhancem.: Added aimk switch -purify to instrument code for
@@ -99,13 +100,13 @@ JG-2003-03-18-0  Bugfix:    Fixed too small buffer in sge logging.
 
 EB-2003-03-17-0  Bugfix:    qsh/qrsh/qlogin might core with segementation 
                             violation
-                 Issue:     #508
-                 Bugtraq:   #4833346
+                 Issue:     508
+                 Bugtraq:   4833346
                  Review:    JG
                  Changed:   qsh
 
 AA-2003-03-13-0  Bugfix:    sge->sgeee upgrade failed, corrected
-                 Issue:     #506
+                 Issue:     506
                  Bugtraq:   
                  Review     AS
                  Changed    util/sge_update.sh
@@ -129,14 +130,14 @@ CR-2003-03-03-0  Enhancem.  - new function in sge_dir.h: sge_is_executable()
 AH-2003-02-27-0  Bugfix:    overriding queue limits with job request limits 
                             is incomplete for OS architecture dependent 
                              resource limits (NEC)
-                 Issue:      #503
+                 Issue:     503
                  Review     AS
                  Changed    sge_qmaster
 
 EB-2003-02-17-0  Bugfix:    qhost -q -l arch=xx crashes if a grid execution
                             host is down
-                 Issue:     #492
-                 Bugtraq:   #4819479
+                 Issue:     492
+                 Bugtraq:   4819479
                  Review:    JG
                  Changed:   qhost
 

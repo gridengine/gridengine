@@ -1203,10 +1203,9 @@ char *str_title
          }
       }
       
-      /* DT: TODO: Why are we passing the argument list twice? */
       pre_args_ptr[arg_id++] = strdup(sge_dstring_get_string(&arguments));
       pre_args_ptr[arg_id++] = NULL;
-      args = read_job_args(pre_args, 0);
+      args = pre_args;
    /* No need to test for binary since this option excludes binary */
    } else if (!strcasecmp("script_from_stdin", shell_start_mode)) {
       /*

@@ -1,3 +1,6 @@
+DT-2003-11-24-0: Enhancem.: Added rusage to DRMAA and JAPI
+                 Changed:   japi.c, drmaa.c, sge_give_jobs.c
+
 AD-2003-11-24-0: Bugfix:    Fixed the build
 
 AH-2003-11-21-1: Bugfix:    Fix complex(5) urgency verification problem
@@ -5,7 +8,7 @@ AH-2003-11-21-1: Bugfix:    Fix complex(5) urgency verification problem
 AH-2003-11-21-0: Bugfix:    Fix schedd/qstat/... crash
                  Review:    EB
 
-DT-2003-11-21-0: Enhancem.: Fixed broken build (AIX51) and added test for
+DT-2003-11-21-1: Enhancem.: Fixed broken build (AIX51) and added test for
 													  usage information from drmaa_wait()
 								 Changed:   test_drmaa.c
 

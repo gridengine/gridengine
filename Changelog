@@ -1,3 +1,9 @@
+SG-2005-02-23-0: Bugfix:    load formula is not working for pe jobs
+                 Changed:   scheduler
+                 Bugtraq:   6232074
+                 Issue:     1454
+                 Review:    AH
+
 JG-2005-02-22-0: Enhancem.: Improved performance of search for duplicate 
                             centries.
                  Review:    SG

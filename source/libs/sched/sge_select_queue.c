@@ -3057,14 +3057,7 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
             if (*previous_load_inited && (*previous_load < lGetDouble(hep, EH_sort_value))) {
                (*host_seqno)++;
             }   
-            else {
-               if (!previous_load_inited) {
-                  *previous_load_inited = true;
-               } 
-               else {
-                  /* DPRINTF(("SKIP INCREMENTATION OF HOST_SEQNO\n")) */ ;
-               }   
-            }
+            *previous_load_inited = true;
             *previous_load = lGetDouble(hep, EH_sort_value);
             lSetUlong(qep, QU_host_seq_no, *host_seqno);
 
@@ -3074,8 +3067,6 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
                suited_as_master_host = true; 
             }
 
-            /* prepare sort by sequence number of queues */
-            lSetUlong(qep, QU_host_seq_no, *host_seqno);
 
             DPRINTF(("QUEUE %s TIME: %d + %d -> %d  QEND: %d + %d -> %d (%d soft violations)\n", qname, 
                accu_queue_slots,      qslots,      accu_queue_slots+       qslots, 

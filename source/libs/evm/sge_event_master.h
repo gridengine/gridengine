@@ -36,12 +36,13 @@
 #include "sge_eventL.h"
 
 
-extern int  sge_add_event_client(lListElem*, lList**, lList**, char*, char*);
-extern int  sge_mod_event_client(lListElem*, lList**, lList**, char*, char*);
-extern bool sge_event_client_registered(u_long32);
-extern void sge_remove_event_client(u_long32);
-extern int  sge_shutdown_event_client(u_long32, const char*, uid_t);
-extern int  sge_shutdown_dynamic_event_clients(const char*);
+extern int    sge_add_event_client(lListElem*, lList**, lList**, char*, char*);
+extern int    sge_mod_event_client(lListElem*, lList**, lList**, char*, char*);
+extern bool   sge_event_client_registered(u_long32);
+extern void   sge_remove_event_client(u_long32);
+extern lList* sge_select_event_clients(const char*, const lCondition*, const lEnumeration*);
+extern int    sge_shutdown_event_client(u_long32, const char*, uid_t);
+extern int    sge_shutdown_dynamic_event_clients(const char*);
 
 extern u_long32 sge_get_event_client_data(u_long32);
 extern int      sge_set_event_client_data(u_long32, u_long32);

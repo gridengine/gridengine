@@ -666,6 +666,50 @@ void sge_remove_event_client(u_long32 aClientID)
    return;
 } /* sge_remove_event_client() */
 
+/****** evm/sge_event_master/sge_select_event_clients() ************************
+*  NAME
+*     sge_select_event_clients() -- select event clients 
+*
+*  SYNOPSIS
+*     lList* sge_select_event_clients(const char *aNewList, const lCondition 
+*     *aCond, const lEnumeration *anEnum) 
+*
+*  FUNCTION
+*     Select event clients.  
+*
+*  INPUTS
+*     const char *aNewList       - name of the result list returned. 
+*     const lCondition *aCond    - where condition 
+*     const lEnumeration *anEnum - what enumeration
+*
+*  RESULT
+*     lList* - list with elements of type 'EV_Type'.
+*
+*  NOTES
+*     MT-NOTE: sge_select_event_clients() is MT safe 
+*     MT-NOTE:
+*     MT-NOTE: The elements contained in the result list are copies of the
+*     MT-NOTE: respective event client list elements.
+*
+*******************************************************************************/
+lList* sge_select_event_clients(const char *aNewList, const lCondition *aCond, const lEnumeration *anEnum)
+{
+   lList *lst = NULL;
+
+   DENTER(TOP_LAYER, "sge_select_event_clients");
+
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   lst = lSelect(aNewList, (const lList*)Master_Control.clients, aCond, anEnum);
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   DEXIT;
+   return lst;
+} /* sge_select_event_clients() */
+
 /****** evm/sge_event_master/sge_shutdown_event_client() ***********************
 *  NAME
 *     sge_shutdown_event_client() -- shutdown an event client 

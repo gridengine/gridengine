@@ -438,7 +438,12 @@ int *after
       DEXIT;
       return;
 #endif
-
+   case SGE_EVENT_LIST:
+      answer->lp = sge_select_event_clients("qmaster_response", request->cp, request->enp);
+      sprintf(SGE_EVENT, MSG_GDI_OKNL);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+      DEXIT;
+      return;
    default:
       if (ao == NULL || (ao->master_list == NULL && ao->getMasterList == NULL)) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));

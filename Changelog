@@ -1,3 +1,8 @@
+AD-2004-02-18-0: Bugfix:    Did fix 'qconf -secl' and 'qconf -sss'.
+                 Changed:   qmaster, evm
+                 Review:    SG
+                 Issue:     666
+
 DT-2004-02-18-0: Bugfix:    Fixed backslash line continuation for all objects
                             in qconf.  Will break on spaces or commas.
                             Propogated removal of SGE/SGEEE through qconf and

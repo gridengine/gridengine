@@ -200,10 +200,10 @@ bool ja_task_add_finished_pe_task(lListElem *ja_task, const char *pe_task_id)
       return false;
    }
 
-   pe_task = lAddSubStr(ja_task, FPET_id, pe_task_id, jat_finished_task_list, 
-                        fpet_type);
+   pe_task = lAddSubStr(ja_task, FPET_id, pe_task_id, JAT_finished_task_list, 
+                        FPET_Type);
 
-   dexit;
+   DEXIT;
    return true;
 }
 

@@ -114,7 +114,7 @@
    -----
     
    aq- mq- dq- option
-   mattr- dattr- rattr- aattr-Optionen fuer die queue:
+   mattr- dattr- rattr- aattr- options for the queue:
    - Modifications apply to all QIs of a QC
    - "hostname" may be a list of hostnames
     
@@ -341,7 +341,6 @@
    ====
    - Until now there is no code within qmon which makes it possible
      to configure HGs. A set of dialogs has to be introduced.
-
    
    Additional Questions
    ====================

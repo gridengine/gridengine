@@ -1,3 +1,12 @@
+AS-2004-03-01-2  Enhancem.: make all test binaries for commlib and japi by default
+                            - needed for testsuite
+
+AS-2004-03-01-1  Enhancem.: renamed some install files and directories
+                            - moved startup template scripts to util/rctemplates 
+                            - renamed startup template scripts to xxx_template
+                              where "xxx" is the same name as the final name
+                            - renamed 'inst_sgeee_modules' to 'install_modules'
+
 DT-2004-03-01-0  Enhancem.: o Updated qconf man pages for backslash line
                               continuation.
                             o Created script to fix lFree* assignment errors.

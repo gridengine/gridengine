@@ -1,3 +1,8 @@
+SG-2003-06-10-0: Bugix:     I added a new bug while fixing issue 540
+                            The qmaster creashed in a special error case.
+                  Review:   AA
+                  Changed:  qmaster
+
 CR-2003-06-05-0: Testsuite: fixed bug in throughput test for old scheduler
                             time info messages without system and user time
 

@@ -2361,6 +2361,7 @@ proc enhanced_setup {} {
    set check_name "enhanced_setup"
 
    set env(COMMD_PORT) $CHECK_COMMD_PORT;
+   set env(SGE_QMASTER_PORT) $CHECK_COMMD_PORT;
    set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
 
    set_users_environment $CHECK_HOST

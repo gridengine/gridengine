@@ -61,7 +61,7 @@
 #     ???/???
 #*******************************
 proc install_qmaster {} {
-   global ts_config
+ global ts_config
  global CHECK_USER check_errstr 
  global CHECK_CORE_EXECD CHECK_CORE_MASTER CORE_INSTALLED CORE_INSTALLED CHECK_OUTPUT 
  global open_spawn_buffer CHECK_TESTSUITE_ROOT env CHECK_COMMD_PORT local_master_spool_set

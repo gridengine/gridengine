@@ -1103,10 +1103,10 @@ proc reset_schedd_config {} {
          set default_array(halflife_decay_list)             "none"
          set default_array(policy_hierarchy)                "OFS"
 
-         set default_array(weight_ticket)                   "1"
-         set default_array(weight_waiting_time)             "1"
-         set default_array(weight_deadline)                 "1000000"
-         set default_array(weight_urgency)                  "0"
+         set default_array(weight_ticket)                   "0.5"
+         set default_array(weight_waiting_time)             "0.278"
+         set default_array(weight_deadline)                 "3600000"
+         set default_array(weight_urgency)                  "0.5"
      } else {
          set default_array(weight_tickets_deadline)    "10000"
      }

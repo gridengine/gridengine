@@ -3,7 +3,6 @@
 #
 # global CHECK_ACT_PATH          ;# actual checkpath
 # gloabl CHECK_ACTUAL_TEST_PATH  ;# this directory
-# global CHECK_COMMD_PORT        ;# commd port
 # global CHECK_USER              ;# user who start test
 # global CHECK_ARCH              ;# architecture of this system (e.g. irix6)
 # global CHECK_HOST              ;# hostname of this system (e.g. DWAIN)

@@ -532,7 +532,11 @@ enum NameSpaceBoundaries {
 
    /* structure to compute consumable load alarms */
    QRL_LOWERBOUND = LDR_UPPERBOUND +1,
-   QRL_UPPERBOUND = QRL_LOWERBOUND  + 1 * BASIC_UNIT -1
+   QRL_UPPERBOUND = QRL_LOWERBOUND  + 1 * BASIC_UNIT -1,
+      
+   CCT_LOWERBOUND = QRL_UPPERBOUND +1,
+   CCT_UPPERBOUND = CCT_LOWERBOUND + 1 * BASIC_UNIT -1
+
       
 #  define LAST_UPPERBOUND QRL_LOWERBOUND
 

@@ -476,8 +476,8 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
                      PN_path, FLG_LIST_MERGE);
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-p"))) {
-      lSetUlong(*pjob, JB_priority, 
-         BASE_PRIORITY + lGetInt(ep, SPA_argval_lIntT));
+      int pri = lGetInt(ep, SPA_argval_lIntT);
+      lSetUlong(*pjob, JB_priority, BASE_PRIORITY + pri);
       lRemoveElem(cmdline, ep);
    }
 

@@ -820,12 +820,16 @@ sge_set_job_cnts( sge_ref_t *ref,
 {
    u_long up_job_cnt = queued ? UP_pending_job_cnt : UP_job_cnt;
    u_long us_job_cnt = queued ? US_pending_job_cnt : US_job_cnt;
-   if (ref->user)
+   if (ref->user) {
       lSetUlong(ref->user, up_job_cnt, lGetUlong(ref->user, up_job_cnt)+1);
-   if (ref->project)
+   }   
+   if (ref->project) {
       lSetUlong(ref->project, up_job_cnt, lGetUlong(ref->project,up_job_cnt)+1);
-   if (ref->dept)
+   }   
+   if (ref->dept) {
       lSetUlong(ref->dept, us_job_cnt, lGetUlong(ref->dept, us_job_cnt)+1);
+   }
+
    return;
 }
 
@@ -4039,17 +4043,16 @@ void sge_do_priority(lList *running_jobs, lList *pending_jobs)
    lListElem *jep;
    const double min_priority = 0;
    const double max_priority = 2048;
+   double priority;
 
    for_each(jep, running_jobs) {
-      lSetDouble(jep, JB_nppri,
-                 sge_normalize_value((double)lGetUlong(jep, JB_priority),
-                                     min_priority, max_priority));
+      priority = (double)lGetUlong(jep, JB_priority);
+      lSetDouble(jep, JB_nppri, sge_normalize_value(priority, min_priority, max_priority));
    }
 
    for_each(jep, pending_jobs) {
-      lSetDouble(jep, JB_nppri,
-                 sge_normalize_value((double)lGetUlong(jep, JB_priority),
-                                     min_priority, max_priority));
+      priority = (double)lGetUlong(jep, JB_priority);
+      lSetDouble(jep, JB_nppri, sge_normalize_value(priority, min_priority, max_priority));
    }
 }
 

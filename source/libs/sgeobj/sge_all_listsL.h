@@ -252,6 +252,8 @@ extern "C" {
       {LDR_LOWERBOUND, LDRS, LDRN},             /* queue consumables load alarm structure */
       {QRL_LOWERBOUND, QRL_S, QRL_N},           /* queue consumables load alarm structure */
 
+      {CCT_LOWERBOUND, CCTS, CCTN},
+      
       {0, 0, NULL}
    };
 

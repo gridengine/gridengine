@@ -317,8 +317,10 @@ CheckHostNameResolving()
 #
 AskIfDefaultOkAndSetVariables()
 {
-   eval $QSYST_ROOT=`pwd | sed 's/\/tmp_mnt//'`
-   export $QSYST_ROOT
+   if [ "`eval echo '$'$QSYST_ROOT`" = "" ]; then
+      eval $QSYST_ROOT=`pwd | sed 's/\/tmp_mnt//'`
+      export $QSYST_ROOT
+   fi
    QSYST_ROOT_VAL=`eval echo '$'$QSYST_ROOT`
 
    QMDIR=$QSYST_ROOT_VAL/$QSYST_CELL_VAL/spool/qmaster

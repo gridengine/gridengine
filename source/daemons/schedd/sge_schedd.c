@@ -685,10 +685,11 @@ static void sge_subscribe_schedd(void)
 
    ec_subscribe_flush(sgeE_GLOBAL_CONFIG, 0);
 
+   ec_subscribe(sgeE_JATASK_ADD);
    ec_subscribe_flush(sgeE_JATASK_DEL, flush_finish_sec);
    ec_subscribe_flush(sgeE_JATASK_MOD, flush_finish_sec);
 
-   ec_subscribe(sgeE_PETASK_ADD);
+   ec_subscribe(sgeE_PETASK_ADD); /* JG: TODO: why don't we have a PETASK_MOD event? */
    ec_subscribe(sgeE_PETASK_DEL);
 
    ec_subscribe(sgeE_JOB_LIST);

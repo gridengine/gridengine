@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_mirror.h"
+
 #include "sge_pe_taskL.h"
 
 #define PE_TASK_PAST_USAGE_CONTAINER "past_usage"
@@ -44,4 +46,8 @@ lListElem *pe_task_sum_past_usage_all(lList *pe_task_list);
 lListElem *pe_task_sum_past_usage_list(lList *pe_task_list, 
                                        const lListElem *pe_task);
 
+int pe_task_update_master_list(sge_event_type type, sge_event_action action,
+                               lListElem *event, void *clientdata);
+
+int pe_task_update_master_list_usage(lListElem *event);
 #endif /* __SGE_PETASK_H */

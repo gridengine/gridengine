@@ -337,7 +337,7 @@ enum {
 *
 *     SGE_LIST(JB_ja_structure)  
 *        Elements describe task id range structure during the
-*        submittion time of a (array) job (RN_Type). 
+*        submission time of a (array) job (RN_Type). 
 *        ("qsub -t tid_range")
 *
 *     SGE_LIST(JB_ja_n_h_ids)    

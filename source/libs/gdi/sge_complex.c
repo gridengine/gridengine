@@ -355,3 +355,61 @@ int complex_list_verify(lList *complex_list, lList **alpp,
    return ret;
 }       
 
+
+/****** gdi/complex/complex_update_master_list() *****************************
+*  NAME
+*     complex_update_master_list() -- update the master list of complexes
+*
+*  SYNOPSIS
+*     int complex_update_master_list(sge_event_type type, 
+*                                    sge_event_action action, 
+*                                    lListElem *event, void *clientdata) 
+*
+*  FUNCTION
+*     Update the global master list of complexes based on an
+*     event.
+*     The function is called from the event mirroring interface.
+*
+*  INPUTS
+*     sge_event_type type     - event type
+*     sge_event_action action - action to perform
+*     lListElem *event        - the raw event
+*     void *clientdata        - client data
+*
+*  RESULT
+*     int - TRUE, if update is successfull, else FALSE
+*
+*  NOTES
+*     The function should only be called from the event mirror interface.
+*
+*  SEE ALSO
+*     Eventmirror/--Eventmirror
+*     Eventmirror/sge_mirror_update_master_list()
+*     Eventmirror/sge_mirror_update_master_list_str_key()
+*******************************************************************************/
+int complex_update_master_list(sge_event_type type, sge_event_action action, 
+                               lListElem *event, void *clientdata)
+{
+   lList **list;
+   lDescr *list_descr;
+   int     key_nm;
+   
+   const char *key;
+
+
+   DENTER(TOP_LAYER, "complex_update_master_list");
+
+   list = &Master_Complex_List;
+   list_descr = CX_Type;
+   key_nm = CX_name;
+
+   key = lGetString(event, ET_strkey);
+
+   if(sge_mirror_update_master_list_str_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
+      DEXIT;
+      return FALSE;
+   }
+
+   DEXIT;
+   return TRUE;
+}

@@ -836,7 +836,11 @@ int sge_process_all_events(lList *event_list)
                goto Error;
             }
             
-            ja_task = job_search_task(ep, NULL, intkey2, 1);
+            ja_task = job_search_task(ep, NULL, intkey2);
+            /* JG: TODO: This situation should not exist - handle it as error */
+            if(ja_task == NULL) {
+               ja_task = job_create_task(ep, NULL, intkey2);
+            }
             if (!ja_task) {
                /* usually caused by the precautionally sent delete event */
                WARNING((SGE_EVENT,MSG_JOB_CANTFINDJOBARRAYTASKXYTOMODIFY_UU,
@@ -1583,6 +1587,11 @@ int sge_process_all_events(lList *event_list)
          /* ======================================================
           * JA-TASK 
           */
+      case sgeE_JATASK_ADD:
+         /* JG: TODO: insert jatask into job.
+          *           see TODO in libs/sched//sge_job_schedd.c
+          */
+          break;
       case sgeE_JATASK_DEL:
          {
             u_long32 was_running;

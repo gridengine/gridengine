@@ -32,8 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull_list.h"
 #include "sge_complexL.h"
+#include "sge_mirror.h"
 
 extern lList *Master_Complex_List;
 
@@ -47,5 +47,8 @@ lListElem* complex_list_locate_attr(lList *complex_list, const char *name);
 
 int complex_list_verify(lList *complex_list, lList **alpp,
                         const char *obj_name, const char *qname); 
+
+int complex_update_master_list(sge_event_type type, sge_event_action action,
+                               lListElem *event, void *clientdata);
 
 #endif /* __SGE_COMPLEX_H */

@@ -33,7 +33,11 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_sharetreeL.h"
+#include "sge_mirror.h"
 
 extern lList *Master_Sharetree_List;
+
+int sharetree_update_master_list(sge_event_type type, sge_event_action action,
+                                 lListElem *event, void *clientdata);
 
 #endif /* __SGE_SHARETREE_H */

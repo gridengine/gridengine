@@ -43,3 +43,62 @@ lListElem *calendar_list_locate(lList *calendar_list, const char *cal_name)
 {
    return lGetElemStr(calendar_list, CAL_name, cal_name);
 }
+
+/****** gdi/calendar/calendar_update_master_list() *****************************
+*  NAME
+*     calendar_update_master_list() -- update the master list of calendars
+*
+*  SYNOPSIS
+*     int calendar_update_master_list(sge_event_type type, 
+*                                     sge_event_action action, 
+*                                     lListElem *event, void *clientdata) 
+*
+*  FUNCTION
+*     Update the global master list of calendars
+*     based on an event.
+*     The function is called from the event mirroring interface.
+*
+*  INPUTS
+*     sge_event_type type     - event type
+*     sge_event_action action - action to perform
+*     lListElem *event        - the raw event
+*     void *clientdata        - client data
+*
+*  RESULT
+*     int - TRUE, if update is successfull, else FALSE
+*
+*  NOTES
+*     The function should only be called from the event mirror interface.
+*
+*  SEE ALSO
+*     Eventmirror/--Eventmirror
+*     Eventmirror/sge_mirror_update_master_list()
+*     Eventmirror/sge_mirror_update_master_list_str_key()
+*     Eventmirror/sge_mirror_update_master_list_host_key()
+*******************************************************************************/
+int calendar_update_master_list(sge_event_type type, sge_event_action action, 
+                                lListElem *event, void *clientdata)
+{
+   lList **list;
+   lDescr *list_descr;
+   int     key_nm;
+   
+   const char *key;
+
+
+   DENTER(TOP_LAYER, "calendar_update_master_list");
+
+   list = &Master_Calendar_List;
+   list_descr = CAL_Type;
+   key_nm = CAL_name;
+
+   key = lGetString(event, ET_strkey);
+
+   if(sge_mirror_update_master_list_str_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
+      DEXIT;
+      return FALSE;
+   }
+
+   DEXIT;
+   return TRUE;
+}

@@ -468,6 +468,7 @@ sge_pack_buffer *pb
                   if (petask == NULL) {
                      petask = lAddSubStr(jatep, PET_id, pe_task_id_str, JAT_task_list, PET_Type);
                      lSetUlong(petask, PET_status, JRUNNING);
+                     sge_add_event(NULL, sgeE_PETASK_ADD, jobid, jataskid, pe_task_id_str, petask);
                   }
 
                   /* store unscaled usage directly in sub-task */

@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_confL.h"
+#include "sge_mirror.h"
 
 struct confel {                       /* cluster configuration parameters */
     char        *qmaster_spool_dir;   /* qmaster spool directory path */
@@ -166,4 +167,6 @@ int get_conf_and_daemonize(tDaemonizeFunc dfunc, lList **conf_list);
 int get_configuration(char *config_name, lListElem **gepp, lListElem **lepp);
 int get_merged_configuration(lList **conf_list);
 
+int config_update_master_list(sge_event_type type, sge_event_action action, 
+                              lListElem *event, void *clientdata);
 #endif /* __SGE_CONF_H */

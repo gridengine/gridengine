@@ -1146,7 +1146,7 @@ const char *queue
 
    if (!queue) {
       if (!(jep = job_list_locate(Master_Job_List, jobid)) || 
-          !(jatep=job_search_task(jep, NULL, jataskid, 0))) {
+          !(jatep=job_search_task(jep, NULL, jataskid))) {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALTASK_UU, u32c(jobid), u32c(jataskid)));
          DEXIT;
          return;

@@ -618,7 +618,7 @@ u_long32 signal
    /* search appropriate array task and job */
    jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
    while(jep != NULL) {
-      jatep = job_search_task(jep, NULL, jataskid, 0);
+      jatep = job_search_task(jep, NULL, jataskid);
 
       if(jatep != NULL) {
          break;

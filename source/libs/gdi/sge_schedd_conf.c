@@ -143,3 +143,68 @@ lListElem *find_attribute_in_complex_list(const char *attrname,
    return NULL;
 }
 
+/****** gdi/schedd_conf/schedd_conf_update_master_list() *****************************
+*  NAME
+*     schedd_conf_update_master_list() -- update the master list of scheduler configurations
+*
+*  SYNOPSIS
+*     int schedd_conf_update_master_list(sge_event_type type, 
+*                                        sge_event_action action, 
+*                                        lListElem *event, void *clientdata) 
+*
+*  FUNCTION
+*     Update the global master list of scheduler configurations
+*     based on an event.
+*     The function is called from the event mirroring interface.
+*     The list only contains one element that is replaced when a 
+*     modify event arrives.
+*
+*  INPUTS
+*     sge_event_type type     - event type
+*     sge_event_action action - action to perform
+*     lListElem *event        - the raw event
+*     void *clientdata        - client data
+*
+*  RESULT
+*     int - TRUE, if update is successfull, else FALSE
+*
+*  NOTES
+*     The function should only be called from the event mirror interface.
+*
+*  SEE ALSO
+*     Eventmirror/--Eventmirror
+*******************************************************************************/
+int schedd_conf_update_master_list(sge_event_type type, sge_event_action action, 
+                                       lListElem *event, void *clientdata)
+{
+   lList **list;
+   lDescr *list_descr;
+
+   lList *data_list;
+   lListElem *ep = NULL;
+   
+   DENTER(TOP_LAYER, "schedd_conf_update_master_list");
+
+   list = &Master_Sched_Config_List;
+   list_descr = SC_Type;
+
+   /* We always update the whole list (consisting of one list element) */
+   if(*list != NULL) {
+      *list = lFreeList(*list);
+   }
+
+   if((data_list = lGetList(event, ET_new_version)) != NULL) {
+      if((ep = lFirst(data_list)) != NULL) {
+         ep = lDechainElem(data_list, ep);
+      }
+   }
+
+   /* if neccessary, create list and copy schedd info */
+   if(ep != NULL) {
+      *list = lCreateList("schedd config", list_descr);
+      lAppendElem(*list, ep);
+   }
+
+   DEXIT;
+   return TRUE;
+}

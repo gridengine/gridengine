@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_schedd_confL.h"
+#include "sge_mirror.h"
 
 extern lList *Master_Sched_Config_List;
 
@@ -42,5 +43,8 @@ int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
 
 lListElem *find_attribute_in_complex_list(const char *attrname,
                                           const lListElem *first);
+
+int schedd_conf_update_master_list(sge_event_type type, sge_event_action action, 
+                                       lListElem *event, void *clientdata);
 
 #endif /* __SGE_SCHEDD_CONF_H */

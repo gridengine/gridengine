@@ -655,7 +655,7 @@ int is_array
 
          if (failed==SSTATE_NO_SHELL) {
             lListElem *job = job_list_locate(Master_Job_List, job_id); 
-            lListElem *ja_task = job_search_task(job, NULL, ja_task_id, 0);
+            lListElem *ja_task = job_search_task(job, NULL, ja_task_id);
             lListElem *master_queue = NULL;
 
             if (job && ja_task) {
@@ -751,7 +751,7 @@ int is_array
 
       jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, job_id, &iterator);
       while(jep != NULL) {
-         jatep = job_search_task(jep, NULL, ja_task_id, 0);
+         jatep = job_search_task(jep, NULL, ja_task_id);
          if(jatep != NULL) {
             break;
          }
@@ -829,7 +829,7 @@ lListElem *jr
 
    jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, job_id, &iterator);
    while(jep != NULL) {
-      jatep = job_search_task(jep, NULL, ja_task_id, 0);
+      jatep = job_search_task(jep, NULL, ja_task_id);
       if(jatep != NULL) {
          break;
       }
@@ -1258,7 +1258,7 @@ int startup
       /* seek job to this jobdir */
       jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
       while(jep != NULL) {
-         jatep = job_search_task(jep, NULL, jataskid, 0);
+         jatep = job_search_task(jep, NULL, jataskid);
          if(jatep != NULL) {
             break;
          }

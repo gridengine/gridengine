@@ -37,6 +37,7 @@
 #include "sge_dstring.h"
 
 #define REALLOC_CHUNK   1024
+#define BUFFER_SIZE 20000
 
 /* JG: TODO: Introduction uti/dstring/--Dynamic_String is missing */
 
@@ -148,7 +149,7 @@ const char* sge_dstring_append_dstring(dstring *sb, const dstring *a)
 ******************************************************************************/
 const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 {
-   char buf[BUFSIZ];
+   char buf[BUFFER_SIZE];
    va_list ap;
 
    va_start(ap, format);
@@ -190,7 +191,7 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 ******************************************************************************/
 const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
 {
-   char buf[BUFSIZ];
+   char buf[BUFFER_SIZE];
    va_list ap;
 
    va_start(ap, format);

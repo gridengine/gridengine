@@ -132,3 +132,79 @@ int host_is_referenced(const lListElem *host,
    }
    return ret;
 }
+
+/****** gdi/host/host_update_master_list() *****************************
+*  NAME
+*     host_update_master_list() -- update the master hostlists
+*
+*  SYNOPSIS
+*     int host_update_master_list(sge_event_type type, 
+*                                 sge_event_action action, 
+*                                 lListElem *event, void *clientdata) 
+*
+*  FUNCTION
+*     Update the global master lists of hosts
+*     based on an event.
+*     The function is called from the event mirroring interface.
+*     Updates admin, submit or execution host list depending
+*     on the event received.
+*
+*  INPUTS
+*     sge_event_type type     - event type
+*     sge_event_action action - action to perform
+*     lListElem *event        - the raw event
+*     void *clientdata        - client data
+*
+*  RESULT
+*     int - TRUE, if update is successfull, else FALSE
+*
+*  NOTES
+*     The function should only be called from the event mirror interface.
+*
+*  SEE ALSO
+*     Eventmirror/--Eventmirror
+*     Eventmirror/sge_mirror_update_master_list()
+*     Eventmirror/sge_mirror_update_master_list_host_key()
+*******************************************************************************/
+int host_update_master_list(sge_event_type type, sge_event_action action, 
+                            lListElem *event, void *clientdata)
+{
+   lList **list;
+   lDescr *list_descr;
+   int     key_nm;
+   
+   const char *key;
+
+
+   DENTER(TOP_LAYER, "host_update_master_list");
+
+   switch(type) {
+      case SGE_EMT_ADMINHOST:
+         list = &Master_Adminhost_List;
+         list_descr = AH_Type;
+         key_nm = AH_name;
+         break;
+      case SGE_EMT_EXECHOST:
+         list = &Master_Exechost_List;
+         list_descr = EH_Type;
+         key_nm = EH_name;
+         break;
+      case SGE_EMT_SUBMITHOST:
+         list = &Master_Submithost_List;
+         list_descr = SH_Type;
+         key_nm = SH_name;
+         break;
+      default:
+         return FALSE;
+   }
+
+   key = lGetString(event, ET_strkey);
+
+   if(sge_mirror_update_master_list_host_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
+      DEXIT;
+      return FALSE;
+   }
+
+   DEXIT;
+   return TRUE;
+}

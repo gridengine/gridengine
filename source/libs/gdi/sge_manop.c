@@ -33,6 +33,8 @@
 #include "cull.h"
 #include "sge_manop.h"
 
+#include "sgermon.h"
+
 lList *Master_Manager_List = NULL;
 lList *Master_Operator_List = NULL;
 
@@ -52,3 +54,72 @@ lListElem* sge_locate_operator(const char *cp)
    return manop_list_locate(Master_Operator_List, cp);
 }
 
+/****** gdi/manop/manop_update_master_list() *****************************
+*  NAME
+*     manop_update_master_list() -- update the master list of managers/operators
+*
+*  SYNOPSIS
+*     int manop_update_master_list(sge_event_type type, 
+*                                  sge_event_action action, 
+*                                  lListElem *event, void *clientdata) 
+*
+*  FUNCTION
+*     Update the global master lists of managers and operators
+*     based on an event.
+*     The function is called from the event mirroring interface.
+*     Depending on the event, either the manager or the operator
+*     list is updated.
+*
+*  INPUTS
+*     sge_event_type type     - event type
+*     sge_event_action action - action to perform
+*     lListElem *event        - the raw event
+*     void *clientdata        - client data
+*
+*  RESULT
+*     int - TRUE, if update is successfull, else FALSE
+*
+*  NOTES
+*     The function should only be called from the event mirror interface.
+*
+*  SEE ALSO
+*     Eventmirror/--Eventmirror
+*     Eventmirror/sge_mirror_update_master_list()
+*     Eventmirror/sge_mirror_update_master_list_str_key()
+*******************************************************************************/
+int manop_update_master_list(sge_event_type type, sge_event_action action, 
+                             lListElem *event, void *clientdata)
+{
+   lList **list;
+   lDescr *list_descr;
+   int     key_nm;
+   
+   const char *key;
+
+
+   DENTER(TOP_LAYER, "manop_update_master_list");
+
+   list_descr = MO_Type;
+   key_nm = MO_name;
+
+   switch(type) {
+      case SGE_EMT_MANAGER:
+         list = &Master_Manager_List;
+         break;
+      case SGE_EMT_OPERATOR:  
+         list = &Master_Operator_List;
+         break;
+      default:
+         return FALSE;
+   }
+
+   key = lGetString(event, ET_strkey);
+
+   if(sge_mirror_update_master_list_str_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
+      DEXIT;
+      return FALSE;
+   }
+
+   DEXIT;
+   return TRUE;
+}

@@ -97,7 +97,7 @@ lListElem *jep
    lAppendElem(jr_list, jr);
 
    if(jep != NULL) {
-      jatep = job_search_task(jep, NULL, jataskid, 0);
+      jatep = job_search_task(jep, NULL, jataskid);
       if (jatep != NULL) { 
          lListElem *petep = NULL;
          if(petaskid != NULL) {

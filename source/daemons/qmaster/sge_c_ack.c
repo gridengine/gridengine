@@ -138,7 +138,7 @@ u_long32 ack_ulong2
          DEXIT;
          return;
       }
-      jatep = job_search_task(jep, NULL, ack_ulong2, 0);
+      jatep = job_search_task(jep, NULL, ack_ulong2);
       if (jatep == NULL) {
          ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, u32c(ack_ulong2), u32c(ack_ulong)));
          DEXIT;

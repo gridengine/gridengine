@@ -193,7 +193,11 @@ lList **topp  /* ticket orders ptr ptr */
       }
 
       /* search and enroll task */
-      jatp = job_search_task(jep, NULL, task_number, 1);
+      jatp = job_search_task(jep, NULL, task_number);
+      if(jatp == NULL) {
+         jatp = job_create_task(jep, NULL, task_number);
+         sge_add_event(NULL, sgeE_JATASK_ADD, job_number, task_number, NULL, jatp);
+      }
       if (!jatp) {
          WARNING((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), 
                   u32c(job_number)));
@@ -517,7 +521,7 @@ lList **topp  /* ticket orders ptr ptr */
             DEXIT;
             return -2;
          }
-         jatp = job_search_task(jep, NULL, task_number, 0);
+         jatp = job_search_task(jep, NULL, task_number);
          if (!jatp) {
             jatp = job_get_ja_task_template_pending(jep, task_number);
          }
@@ -626,7 +630,7 @@ lList **topp  /* ticket orders ptr ptr */
             DEXIT;
             return -2;
          }
-         jatp = job_search_task(jep, NULL, task_number, 0);
+         jatp = job_search_task(jep, NULL, task_number);
          if (!jatp) {
             ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
                   u32c(task_number), u32c(job_number)));
@@ -794,7 +798,11 @@ lList **topp  /* ticket orders ptr ptr */
          DEXIT;
          return -1;
       }
-      jatp = job_search_task(jep, NULL, task_number, 1);
+      jatp = job_search_task(jep, NULL, task_number);
+      if(jatp == NULL) {
+         jatp = job_create_task(jep, NULL, task_number);
+         sge_add_event(NULL, sgeE_JATASK_ADD, job_number, task_number, NULL, jatp);
+      }
       if (!jatp) {
          ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), u32c(job_number)));
          sge_add_event(NULL, sgeE_JATASK_DEL, job_number, task_number, NULL, NULL);
@@ -1034,7 +1042,7 @@ lList **topp  /* ticket orders ptr ptr */
          task_number = lGetUlong(ep, OR_ja_task_number);
 
          if (!(jep = job_list_locate(Master_Job_List, jobid))
-            || !(jatp = job_search_task(jep, NULL, task_number, 0))
+            || !(jatp = job_search_task(jep, NULL, task_number))
             || !lGetList(jatp, JAT_granted_destin_identifier_list)) {
             /* don't panic - it is probably an exiting job */
             WARNING((SGE_EVENT, MSG_JOB_SUSPOTNOTRUN_UU, u32c(jobid), u32c(task_number)));
@@ -1082,7 +1090,7 @@ lList **topp  /* ticket orders ptr ptr */
          task_number = lGetUlong(ep, OR_ja_task_number);
 
          if (!(jep = job_list_locate(Master_Job_List, jobid))
-            || !(jatp = job_search_task(jep, NULL,task_number, 0))
+            || !(jatp = job_search_task(jep, NULL,task_number))
             || !lGetList(jatp, JAT_granted_destin_identifier_list)) {
             /* don't panic - it is probably an exiting job */  
             WARNING((SGE_EVENT, MSG_JOB_UNSUSPOTNOTRUN_UU, u32c(jobid), u32c(task_number)));
@@ -1176,7 +1184,7 @@ lList *ticket_orders
 
       /* seek job element */
       if (!(jep = job_list_locate(Master_Job_List, jobid)) || 
-          !(jatask = job_search_task(jep, NULL, jataskid, 0))) { 
+          !(jatask = job_search_task(jep, NULL, jataskid))) { 
          ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBTASK_UU, u32c(jobid), u32c(jataskid)));
          lRemoveElem(ticket_orders, ep);
       }
@@ -1199,7 +1207,7 @@ lList *ticket_orders
          next = lNext(other);
 
          other_jep = job_list_locate(Master_Job_List, lGetUlong(other, OR_job_number)); 
-         other_jatask = job_search_task(other_jep, NULL, lGetUlong(other, OR_ja_task_number), 0);
+         other_jatask = job_search_task(other_jep, NULL, lGetUlong(other, OR_ja_task_number));
          if (!other_jep || !other_jatask) {
             ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBTASK_UU, u32c(jobid), u32c(jataskid)));
             lRemoveElem(ticket_orders, other);

@@ -407,6 +407,7 @@ NAMEEND
 *     
 *        sgeE_GLOBAL_CONFIG               global config changed, replace by sgeE_CONFIG_MOD
 *     
+*        sgeE_JATASK_ADD                  event add array job task
 *        sgeE_JATASK_DEL                  event delete array job task
 *        sgeE_JATASK_MOD                  event modify array job task
 *     
@@ -495,6 +496,8 @@ NAMEEND
 *  NOTES
 *     This list of events will increase as further event situations
 *     are identified and interfaced.
+*     
+*     IF YOU ADD EVENTS HERE, ALSO UPDATE sge_mirror!
 *
 *  SEE ALSO
 *     Eventclient/-Subscription
@@ -536,6 +539,7 @@ typedef enum {
 
    sgeE_GLOBAL_CONFIG,              /* + global config changed, replace by sgeE_CONFIG_MOD */
 
+   sgeE_JATASK_ADD,                 /* + event add array job task */
    sgeE_JATASK_DEL,                 /* + event delete array job task */
    sgeE_JATASK_MOD,                 /* + event modify array job task */
 
@@ -630,6 +634,11 @@ enum {
    ET_intkey2,               /* a int key for use by a specific event type */
    ET_strkey,                /* a str key for use by a specific event type */
    ET_new_version            /* new version of the changed object */
+                             /* JG: TODO: we should have different fields for 
+                              *           objects (SGE_OBJECT) and
+                              *           lists   (SGE_LIST), as we now have
+                              *           proper handling for objects.
+                              */
 };
 
 LISTDEF(ET_Type)

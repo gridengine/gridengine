@@ -35,6 +35,7 @@
 #include "sge_htable.h"
 #include "sge_dstring.h"
 #include "sge_jobL.h"
+#include "sge_mirror.h"
 
 extern lList *Master_Job_List;
 extern lList *Master_Zombie_List;
@@ -81,8 +82,8 @@ lListElem *job_get_ja_task_template_hold(const lListElem *job,
 lListElem *job_get_ja_task_template_pending(const lListElem *job,
                                             u_long32 ja_task_id);
 
-lListElem *job_search_task(lListElem *job, lList **answer_list, 
-                           u_long32 ja_task_id, int enroll_if_not_existing);
+lListElem *job_search_task(const lListElem *job, lList **answer_list, u_long32 ja_task_id);
+lListElem *job_create_task(lListElem *job, lList **answer_list, u_long32 ja_task_id);
 
 void job_add_as_zombie(lListElem *zombie, lList **answer_list, 
                        u_long32 ja_task_id);
@@ -156,6 +157,12 @@ int job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt);
 void job_get_state_string(char *str, u_long32 op);
 
 lListElem *job_list_locate(lList *job_list, u_long32 job_id);
+
+int job_schedd_info_update_master_list(sge_event_type type, sge_event_action action, 
+                                       lListElem *event, void *clientdata);
+
+int job_update_master_list(sge_event_type type, sge_event_action action,
+                           lListElem *event, void *clientdata);
 
 int job_check_qsh_display(const lListElem *job, lList **answer_list, int output_warning);
 

@@ -61,6 +61,7 @@ GDILIB_SRC = sge_all_listsL.c \
          sge_c_event.c \
          sge_conf.c \
          sge_event.c \
+         sge_mirror.c \
          sge_resource.c \
          sge_feature.c \
          sge_security.c \
@@ -271,5 +272,17 @@ sge_usermap.o: $(GDILIB_DIR)/sge_usermap.c
 sge_event.o: $(GDILIB_DIR)/sge_event.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_event.c
 
+sge_mirror.o: $(GDILIB_DIR)/sge_mirror.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_mirror.c
+
 sge_c_event.o: $(GDILIB_DIR)/sge_c_event.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_c_event.c
+
+#---------------------------------------------------------------------
+# test programs
+test_sge_mirror: test_sge_mirror.o sig_handlers.o $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_sge_mirror $(LFLAGS) test_sge_mirror.o sig_handlers.o $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+
+test_sge_mirror.o: $(GDILIB_DIR)/test_sge_mirror.c
+	$(CC) $(CFLAGS) -c $(GDILIB_DIR)/test_sge_mirror.c
+

@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_dstring.h"
+#include "sge_mirror.h"
 
 #include "sge_ja_taskL.h"
 
@@ -43,5 +44,10 @@ void ja_task_list_print_to_string(const lList *ja_task_list,
                                   dstring *range_string);
 
 lList* ja_task_list_split_group(lList **ja_task_list);
+
+int ja_task_update_master_list(sge_event_type type, sge_event_action action,
+                               lListElem *event, void *clientdata);
+
+int ja_task_update_master_list_usage(lListElem *event);
 
 #endif /* __SGE_JA_TASK_H */

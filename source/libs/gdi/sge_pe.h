@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_peL.h"
+#include "sge_mirror.h"
 
 extern lList *Master_Pe_List;
 
@@ -44,5 +45,8 @@ int pe_is_referenced(const lListElem *pe, lList **answer_list,
                      const lList *master_job_list);
 
 int pe_is_matching(const lListElem *pe, const char *wildcard);
+
+int pe_update_master_list(sge_event_type type, sge_event_action action, 
+                          lListElem *event, void *clientdata);
 
 #endif /* __SGE_PE_H */

@@ -488,7 +488,7 @@ const char *queue
    DENTER(TOP_LAYER, "resend_job");
 
    jep = job_list_locate(Master_Job_List, jobid);
-   jatep = job_search_task(jep, NULL, jataskid, 0);
+   jatep = job_search_task(jep, NULL, jataskid);
    now = sge_get_gmt();
 
    if(!jep || !jatep) {

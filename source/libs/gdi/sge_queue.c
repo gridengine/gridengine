@@ -224,4 +224,60 @@ void queue_list_clear_tags(lList *queue_list)
    queue_list_set_tag(queue_list, QUEUE_TAG_DEFAULT, 0);
 } 
 
+/****** gdi/queue/queue_update_master_list() *****************************
+*  NAME
+*     queue_update_master_list() -- update the master list of queues
+*
+*  SYNOPSIS
+*     int queue_update_master_list(sge_event_type type, 
+*                                  sge_event_action action, 
+*                                  lListElem *event, void *clientdata) 
+*
+*  FUNCTION
+*     Update the global master list of queues
+*     based on an event.
+*     The function is called from the event mirroring interface.
+*
+*  INPUTS
+*     sge_event_type type     - event type
+*     sge_event_action action - action to perform
+*     lListElem *event        - the raw event
+*     void *clientdata        - client data
+*
+*  RESULT
+*     int - TRUE, if update is successfull, else FALSE
+*
+*  NOTES
+*     The function should only be called from the event mirror interface.
+*
+*  SEE ALSO
+*     Eventmirror/--Eventmirror
+*     Eventmirror/sge_mirror_update_master_list()
+*     Eventmirror/sge_mirror_update_master_list_str_key()
+*******************************************************************************/
+int queue_update_master_list(sge_event_type type, sge_event_action action, 
+                             lListElem *event, void *clientdata)
+{
+   lList **list;
+   lDescr *list_descr;
+   int     key_nm;
+   
+   const char *key;
 
+
+   DENTER(TOP_LAYER, "queue_update_master_list");
+
+   list = &Master_Queue_List;
+   list_descr = QU_Type;
+   key_nm = QU_qname;
+
+   key = lGetString(event, ET_strkey);
+
+   if(sge_mirror_update_master_list_str_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
+      DEXIT;
+      return FALSE;
+   }
+
+   DEXIT;
+   return TRUE;
+}

@@ -34,6 +34,7 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_queueL.h"
+#include "sge_mirror.h"
 
 typedef enum {
    QUEUE_TAG_DEFAULT         = 0x0000,
@@ -53,5 +54,8 @@ void queue_list_set_tag(lList *queue_list,
                         u_long32 tag_value);
 
 void queue_list_clear_tags(lList *queue_list);
+
+int queue_update_master_list(sge_event_type type, sge_event_action action,
+                             lListElem *event, void *clientdata);
 
 #endif /* __SGE_QUEUE_H */

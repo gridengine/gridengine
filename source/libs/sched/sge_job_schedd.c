@@ -216,7 +216,13 @@ void job_move_first_pending_to_running(lListElem **pending_job,
 
       n_h_ids = lGetList(*pending_job, JB_ja_n_h_ids);
       ja_task_id = range_list_get_first_id(n_h_ids, NULL);
-      ja_task = job_search_task(*pending_job, NULL, ja_task_id, 1);
+      ja_task = job_search_task(*pending_job, NULL, ja_task_id);
+      /* JG: TODO: do we need the ja_task instance here or can we
+       *           wait until the JATASK_ADD event arrives from qmaster?
+       */
+      if(ja_task == NULL) {
+         ja_task = job_create_task(*pending_job, NULL, ja_task_id);
+      }
       ja_task_list = lGetList(*pending_job, JB_ja_tasks);
    }
    lDechainElem(ja_task_list, ja_task);

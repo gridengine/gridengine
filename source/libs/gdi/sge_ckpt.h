@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_ckptL.h"
+#include "sge_mirror.h"
 
 extern lList *Master_Ckpt_List;
 
@@ -41,4 +42,6 @@ int ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
 
 lListElem *ckpt_list_locate(lList *ckpt_list, const char *ckpt_name);
 
+int ckpt_update_master_list(sge_event_type type, sge_event_action action, 
+                            lListElem *event, void *clientdata);
 #endif /* __SGE_CKPT_H */

@@ -33,12 +33,16 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_usersetL.h"
+#include "sge_mirror.h"
 
 extern lList *Master_Userset_List;
 
 int is_deadline_user(char *username, lList *lp);
 
 lListElem *userset_list_locate(lList *lp, const char *name);
+
+int userset_update_master_list(sge_event_type type, sge_event_action action,
+                               lListElem *event, void *clientdata);
 
 #endif /* _SGE_USERSET_H */
 

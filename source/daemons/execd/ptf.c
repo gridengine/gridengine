@@ -2024,7 +2024,7 @@ int ptf_get_usage(lList **job_usage_list)
             lAppendElem(temp_usage_list, tmp_job);
          }
 
-         tmp_ja_task = job_search_task(tmp_job, NULL, ja_task_id, 0);
+         tmp_ja_task = job_search_task(tmp_job, NULL, ja_task_id);
          if(tmp_ja_task == NULL) {
             tmp_ja_task = lAddSubUlong(tmp_job, JAT_task_number, ja_task_id, JB_ja_tasks, JAT_Type);
          }

@@ -168,53 +168,56 @@ const char *event_text(const lListElem *event)
       break;
 
    /* -------------------- */
+   case sgeE_JATASK_ADD:
+      sprintf(buffer, MSG_EVENT_ADDJATASK_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
+      break;
    case sgeE_JATASK_DEL:
-      sprintf(buffer, MSG_EVENT_DELJATASK_UUU, u32c (number), u32c(intkey), u32c(intkey2));
+      sprintf(buffer, MSG_EVENT_DELJATASK_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
    case sgeE_JATASK_MOD:
-      sprintf(buffer, MSG_EVENT_MODJATASK_UUU, u32c(number) , u32c(intkey) ,u32c(intkey2));
+      sprintf(buffer, MSG_EVENT_MODJATASK_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
 
    /* -------------------- */
    case sgeE_PETASK_ADD:
-      sprintf(buffer, MSG_EVENT_ADDPETASK_UUUS, u32c(number), u32c(intkey), u32c(intkey2), strkey);
+      sprintf(buffer, MSG_EVENT_ADDPETASK_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
    case sgeE_PETASK_DEL:
-      sprintf(buffer, MSG_EVENT_DELPETASK_UUUS, u32c(number), u32c(intkey), u32c(intkey2), strkey);
+      sprintf(buffer, MSG_EVENT_DELPETASK_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
 #if 0      
    /* JG: we'll have it soon ;-) */
    case sgeE_PETASK_MOD:
-      sprintf(buffer, MSG_EVENT_MODPETASK_UUUS, u32c(number), u32c(intkey), u32c(intkey2), strkey);
+      sprintf(buffer, MSG_EVENT_MODPETASK_UUUS, u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
 #endif
 
    /* -------------------- */
    case sgeE_JOB_LIST:
-      sprintf(buffer, MSG_EVENT_JOBLISTXELEMENTS_II, (int)number, n);
+      sprintf(buffer, MSG_EVENT_JOBLISTXELEMENTS_UI, u32c(number), n);
       break;
    case sgeE_JOB_ADD:
-      sprintf(buffer, MSG_EVENT_ADDJOB_III, (int)number, (int)intkey, (int)intkey2);
+      sprintf(buffer, MSG_EVENT_ADDJOB_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
    case sgeE_JOB_DEL:
-      sprintf(buffer, MSG_EVENT_DELJOB_III, (int)number, (int)intkey, (int)intkey2);
+      sprintf(buffer, MSG_EVENT_DELJOB_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
    case sgeE_JOB_MOD:
-      sprintf(buffer, MSG_EVENT_MODJOB_III, (int)number, (int)intkey, (int)intkey2);
+      sprintf(buffer, MSG_EVENT_MODJOB_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
    case sgeE_JOB_MOD_SCHED_PRIORITY:
-      sprintf(buffer, MSG_EVENT_MODSCHEDDPRIOOFJOBXTOY_IDI, 
-            (int)number, 
-            u32c(intkey),
+      sprintf(buffer, MSG_EVENT_MODSCHEDDPRIOOFJOBXTOY_USI, 
+            u32c(number), 
+            job_get_id_string(intkey, intkey2, strkey),
             ((int)lGetUlong(lFirst(lp), JB_priority))-BASE_PRIORITY);
       break;
    case sgeE_JOB_USAGE:
-      sprintf(buffer, MSG_EVENT_JOBXUSAGE_II, 
-         (int)number, (int)intkey);
+      sprintf(buffer, MSG_EVENT_JOBXUSAGE_US, 
+         u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
    case sgeE_JOB_FINAL_USAGE:
-      sprintf(buffer, MSG_EVENT_JOBXFINALUSAGE_II, 
-         (int)number, (int)intkey);
+      sprintf(buffer, MSG_EVENT_JOBXFINALUSAGE_US, 
+         u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
 
    /* -------------------- */

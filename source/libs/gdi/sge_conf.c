@@ -1463,3 +1463,62 @@ void policy_hierarchy_print_array(policy_hierarchy_t array[])
    DEXIT;
 }
 
+/****** gdi/config/config_update_master_list() *****************************
+*  NAME
+*     config_update_master_list() -- update the master list of configurations
+*
+*  SYNOPSIS
+*     int config_update_master_list(sge_event_type type, 
+*                                     sge_event_action action, 
+*                                     lListElem *event, void *clientdata) 
+*
+*  FUNCTION
+*     Update the global master list of host or global configurations 
+*     based on an event.
+*     The function is called from the event mirroring interface.
+*
+*  INPUTS
+*     sge_event_type type     - event type
+*     sge_event_action action - action to perform
+*     lListElem *event        - the raw event
+*     void *clientdata        - client data
+*
+*  RESULT
+*     int - TRUE, if update is successfull, else FALSE
+*
+*  NOTES
+*     The function should only be called from the event mirror interface.
+*
+*  SEE ALSO
+*     Eventmirror/--Eventmirror
+*     Eventmirror/sge_mirror_update_master_list()
+*     Eventmirror/sge_mirror_update_master_list_host_key()
+*******************************************************************************/
+int config_update_master_list(sge_event_type type, sge_event_action action, 
+                              lListElem *event, void *clientdata)
+{
+   lList **list;
+   lDescr *list_descr;
+   int     key_nm;
+   
+   const char *key;
+
+
+   DENTER(TOP_LAYER, "config_update_master_list");
+
+   list = &Master_Config_List;
+   list_descr = CONF_Type;
+   key_nm = CONF_hname;
+
+   key = lGetString(event, ET_strkey);
+
+   if(sge_mirror_update_master_list_host_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
+      DEXIT;
+      return FALSE;
+   }
+
+   /* JG: TODO: Anything else to do? Call some function parsing the config? */
+
+   DEXIT;
+   return TRUE;
+}

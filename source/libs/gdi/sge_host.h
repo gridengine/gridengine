@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_hostL.h"
+#include "sge_mirror.h"
 
 extern lList *Master_Exechost_List;
 extern lList *Master_Adminhost_List;
@@ -43,5 +44,7 @@ lListElem *host_list_locate(lList *host_list, const char *hostname);
 int host_is_referenced(const lListElem *host, lList **answer_list,
                        const lList *queue_list);
 
+int host_update_master_list(sge_event_type type, sge_event_action action, 
+                            lListElem *event, void *clientdata);
 #endif /* __SGE_HOST_H */
 

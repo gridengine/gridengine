@@ -2213,7 +2213,7 @@ int *trigger
                   lListElem *dst_ja_task = NULL;
                   int is_enrolled = 1;
 
-                  dst_ja_task = job_search_task(new_job, NULL, ja_task_id, 0);
+                  dst_ja_task = job_search_task(new_job, NULL, ja_task_id);
                   if (dst_ja_task == NULL) {
                      is_enrolled = 0;
                      dst_ja_task = 

@@ -246,7 +246,7 @@ int slave
     */
    jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
    while(jep != NULL) {
-      jep_jatep = job_search_task(jep, NULL, jataskid, 0);
+      jep_jatep = job_search_task(jep, NULL, jataskid);
       if(jep_jatep != NULL) {
          DPRINTF(("Job "u32"."u32" is already running - skip the new one\n", 
                   jobid, jataskid));
@@ -630,7 +630,7 @@ int *synchron
 
    jep=lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
    while(jep != NULL) {
-      jatep = job_search_task(jep, NULL, jataskid, 0);
+      jatep = job_search_task(jep, NULL, jataskid);
       if(jatep != NULL) {
          break;
       }

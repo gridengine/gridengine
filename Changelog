@@ -1,3 +1,7 @@
+JG-2002-09-23-0  Enhancem.  Created a gdi library interface (sge_mirror) 
+                            for the mirroring of qmaster lists.
+                 IZ:        #351           
+
 CR-2002-09-23-0  Bugfix:    infotext doesn't support the reorder of conversion
                             specifications (merge)
                  Bugtraq:   #4739811

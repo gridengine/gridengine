@@ -1,3 +1,6 @@
+AS-2004-02-27    Bugfix:    corrected wrong exit status from tests"
+                 Changed:   aimk
+
 CR-2004-02-27-0: Bugfix:    - Use thread signal handler for qsub only when 
                               -sync yes or -now yes is used (when a thread is
                               started) otherwise the default sge signal handler
@@ -38,9 +41,10 @@ EB-2004-02-26-1: Bugfix:    qmon shows invalid messages if
                  Review:    AA
 
 CR-2004-02-26-1: Bugfix:    using cl_com_ignore_timeouts() in default signal
-                            handler to induce communication functions to return
-                            without timeout in order to terminate sge client
-                            programs immediately after sending TERM signal.
+                            handler to induce communication functions to
+                            return without timeout in order to terminate sge
+                            client programs immediately after sending TERM
+                            signal.
                  Changed:   all binaries
                  Issue:     686 ( fixes all client programs expect "qsub" )
 
@@ -64,8 +68,8 @@ EB-2004-02-26-0: Bugfix:    qstat -explain did not show messages
                  Issue:     705, 688
                  Review:    SG 
 
-SG-2004-02-25-1: Bugfix:    fixed the time bases for YY specification. It referes to
-                            to the range of 1970 till 2069.
+SG-2004-02-25-1: Bugfix:    fixed the time bases for YY specification. It
+                            referes to to the range of 1970 till 2069.
                  Chaged:    qacct, qsub, qalter,...
                  Issue:     709
 
@@ -86,7 +90,8 @@ DT-2004-02-25-0: Bugfix:    o Fixed qconf -sq queue@hostname output.
                  Issue:     701, 704
                  Changed:   DRMAA, qconf
 
-SG-2004-02-25-0: Bugfix:    extended the scheduler check for invalid configurations.
+SG-2004-02-25-0: Bugfix:    extended the scheduler check for invalid
+                            configurations.
                  Issue:     695
                  Changed:   scheduler
 
@@ -142,9 +147,9 @@ AS-2004-02-20-1: Cleanup    aimk cleanup, makefile cleanup, porting
 MD-2004-02-20-1: Bugfix:    - fixed wrong schedd default configuration
                  Changed:   schedd templatefiles (installation)
 
-CR-2004-02-20-0: Bugfix:    reaching max possible connection count will disable
-                            accepting/creating new connections. This is the 
-                            part of fixing Issue #687
+CR-2004-02-20-0: Bugfix:    reaching max possible connection count will
+                            disable accepting/creating new connections. This
+                            is the part of fixing Issue #687
                  Changed:   communication lib
 
 AD-2004-02-20-1: Cleanup:   Did remove obsolete code.
@@ -242,16 +247,17 @@ SG-2004-02-19-2: Bugfix:    - impemented qhold and qrls in qalter and removed
 AD-2004-02-19-0: Cleanup:   Did remove '-nostart-commd' command line argument.
                  Changed:   qmaster, common, man
 
-AH-2004-02-19-1: Bugfix:    sge_schedd crashed when parallel jobs were assigned 
-                            into more than one queues instance of the same host.
+AH-2004-02-19-1: Bugfix:    sge_schedd crashed when parallel jobs were
+                            assigned into more than one queues instance of
+                            the same host.
 
 AS-2004-02-19-0  Cleanup:   removed/add compiler warning level switches
                             compile with +O2 on HP11 due to compiler bug
                             Unify HP11 and HP1164 settings in one section
                             Remove Solaris x86 suppress warning settings
 
-AH-2004-02-19-0: Bugfix:    Jobs were not scheduled into second queue instance 
-                            of a host
+AH-2004-02-19-0: Bugfix:    Jobs were not scheduled into second queue
+                            instance of a host
                  Review:    JG
                  Issue:     672
 
@@ -288,21 +294,21 @@ MD-2004-02-18-0: Bugfix:    - cleanup during execd uninst
                             - testsuite adaption
                  Changed:   inst_sgeee, testsuite
 
-CR-2004-02-18-1: Bugfix:    - qevent will not immediately try to re-register on
-                            event client timeout
+CR-2004-02-18-1: Bugfix:    - qevent will not immediately try to re-register
+                              on event client timeout
                             - 2nd started scheduler will exit
-                            - communication errors and event client timeout is
-                            are now handled when event client wants to get 
-                            events ( function: ec_get() )
+                            - communication errors and event client timeout
+                              is are now handled when event client wants to
+                              get events ( function: ec_get() )
                  Changed:   event clients ( sge_schedd, qevent, qsub, japi lib)
                  Review:    SG
 
 DT-2004-02-18-4: Bugfix:    Revamped JAPI signal handling to be more POSIX
-                            friendly and less dangerous.
-                            Reworked JAPI event client thread so that it doesn't
-                            hang the process whenever something goes wrong.
-                            JAPI now shares one comm lib connection between the
-                            main thread and the event client thread.
+                            friendly and less dangerous.  Reworked JAPI
+                            event client thread so that it doesn't hang the
+                            process whenever something goes wrong.  JAPI now
+                            shares one comm lib connection between the main
+                            thread and the event client thread.
                  Changed:   JAPI
                  Review:    pending
 
@@ -319,9 +325,9 @@ SG-2004-01-18-3: Bugfix:    - fixed qmaster crash in case of "qhold all"
                  Review:    MD
                  Issue:     670
 
-DT-2004-02-18-3: Bugfix:    Moved basic sharetree functionality out of libsched
-                            into libsgeobj to try to eliminate odd dependencies.
-                            Still a work in progress.
+DT-2004-02-18-3: Bugfix:    Moved basic sharetree functionality out of
+                            libsched into libsgeobj to try to eliminate odd
+                            dependencies.  Still a work in progress.
                  Changed:   sge_support, sge_sharetree
                  Review:    JG
 
@@ -390,8 +396,8 @@ AA-2004-02-17-0: Bugfix:    Shell attribute was missing in Qconfig
                  Changed:   qmon
                  Review:    EB
 
-AH-2004-02-17-0: Bugfix:    Fixed dispatching of parallel jobs with reservation 
-                            disabled.
+AH-2004-02-17-0: Bugfix:    Fixed dispatching of parallel jobs with
+                            reservation disabled.
                  Review:    EB
 
 DT-2004-02-17-0: Bugfix:    Fixed segv in qconf -msconf
@@ -443,7 +449,8 @@ CR-2004-02-16-0: Testsuite: Fixed still existing problem:
                             to a remote shell when a former job start is
                             not yet executed. 
 
-AA-2004-02-16-0: Bugfix:    dependencies in Makefiles from ancient paths ;) removed
+AA-2004-02-16-0: Bugfix:    dependencies in Makefiles from ancient paths
+                            removed
 
 JG-2004-02-16-0: Testsuite: Checked and fixed test functional/usage.
                             Source tcl_files/private.tcl to enable private
@@ -486,21 +493,21 @@ JG-2004-02-14-0: Testsuite: Checked and/or fixed following testsuite tests:
 
 SG-2004-02-14-0: Bugfix:    fixed the build for linux
 
-DT-2004-02-13-0: Enhancem:  qconf now uses flatfile spooling instead of classic
-                            spooling.  Might be broken for EH and PE because of
-                            the new RUE type.  Not yet fully cleaned and
-                            commented.
+DT-2004-02-13-0: Enhancem:  qconf now uses flatfile spooling instead of
+                            classic spooling.  Might be broken for EH and PE
+                            because of the new RUE type.  Not yet fully
+                            cleaned and commented.
                  Bugfix:    Fixed a variety of classic spooling, qconf, and
                             other bugs.
                  Changed:   Flatfile spooling, classic spooling, qconf, sgeobj
                  Review:    JG
 
-CR-2004-02-13-1: Testsuite: throughput test: don't send job start command
-                            to a remote shell when a former job start is
-                            not yet executed.
+CR-2004-02-13-1: Testsuite: throughput test: don't send job start command to
+                            a remote shell when a former job start is not
+                            yet executed.
 
-CR-2004-02-13-0: Testsuite: fixed bug when setting up user portlist in
-                            user configuration
+CR-2004-02-13-0: Testsuite: fixed bug when setting up user portlist in user
+                            configuration
 
 SG-2004-02-13-0: Cleanup:   first part of removing sge from sgeee
                  Changed:   all
@@ -519,15 +526,15 @@ EB-2004-02-13-0: Bugfix:    Fixed broken build
 
 AH-2004-02-12-1: Bugfix:    Complex requestable field was not spooled.
 
-AH-2004-02-12-0: Enhancem:  Initial revision of resource reservation. Man pages
-                            and devel spec to follow. Source comments to be 
-                            completed.
+AH-2004-02-12-0: Enhancem:  Initial revision of resource reservation. Man
+                            pages and devel spec to follow. Source comments
+                            to be completed.
                             Currently broken
                             - qstat -j schedd info messages
                             - -w e|v|w submit(1) option
-                            Soft requests to be verified. Host/queue category 
-                            optimization to be revived. Testsuite support to be 
-                            added.
+                            Soft requests to be verified. Host/queue
+                            category optimization to be revived. Testsuite
+                            support to be added.
                  Enhancem:  Added CULL functions lAddSubList()/lAddDouble()/
                             lAddUlong()
                  Bugfix:    Fixed schedd crash with large array jobs.
@@ -536,7 +543,7 @@ AH-2004-02-12-0: Enhancem:  Initial revision of resource reservation. Man pages
                  Review:    FF/EB
                             
 AD-2004-02-12-0: Bugfix:    Finish 'AD-2004-02-08-0'. Event Master (evm) is
-                            now a self-contained modul and does use it's own
+                            now a self-contained modul and does use its own
                             thread to send events to event clients.
                  Issue:     656
                  Changed:   evm, qmaster
@@ -548,9 +555,9 @@ CR-2004-02-11-3: Cleanup:   - removed unused static function
                               qmaster_log_flush_func()
 
 CR-2004-02-11-2: Bugfix:    - qmaster communication is now multithreaded again
-                            - qmaster can now bind port < 1024 as root 
-                              (setup of communication is done earlier in startup
-                               phase of qmaster)
+                            - qmaster can now bind port < 1024 as root
+                              (setup of communication is done earlier in
+                              startup phase of qmaster)
                  Changed:   qmaster
                  Review:    AD
 
@@ -574,16 +581,16 @@ CR-2004-02-11-1: Testsuite: Reworked throghput performance test
 
 CR-2004-02-11-0: Cleanup:   Fixed message macro name in qsub
 
-JG-2004-02-11-1: Cleanup:   Cleanup and enhancement of error messages in case of
-                            spooling errors.
+JG-2004-02-11-1: Cleanup:   Cleanup and enhancement of error messages in
+                            case of spooling errors.
                  Review:    pending
 
 DT-2004-02-11-0: Bugfix:    Fixed aimk -help output.
                             Made the -secure transition more user friendly.
                  Changed:   aimk
 
-CR-2004-02-11-0: Testsuite: Testsuite will not use -secure switch for aimk. This
-                            switch is not supported by aimk anymore.
+CR-2004-02-11-0: Testsuite: Testsuite will not use -secure switch for aimk.
+                            This switch is not supported by aimk anymore.
 
 JG-2004-02-11-0: Testsuite: performance/throughput was broken for SGE 5.3.
                             Fixed bugs/issuezilla/126, bugs/issuezilla/140, 
@@ -1078,8 +1085,8 @@ AD-2004-01-28-3: Bugfix:    'startup heartbeat' went into wrong directory.
 AD-2004-01-28-2: Bugfix:    Did add 'startup heartbeat'.
                  Changed:   qmaster
 
-JG-2004-01-28-1: Enhancem.: Added queue state and consumable information to the
-                            reporting file.
+JG-2004-01-28-1: Enhancem.: Added queue state and consumable information to
+                            the reporting file.
                  Review:    SG
 
 CR-2004-01-28-1: Enhancm.:  - host aliases file support (part I)
@@ -1113,7 +1120,8 @@ AD-2004-01-28-0: Bugfix:    'inc_qmaster_heartbeat()' should only be called
                             from within the heartbeat event handler.
                  Changed:   qmaster
 
-DT-2004-01-28-0: Bugfix:    Fixed install script wrt new SGE_EXECD_PORT variable
+DT-2004-01-28-0: Bugfix:    Fixed install script wrt new SGE_EXECD_PORT
+                            variable
                  Changed:   inst_sge
 
 CR-2004-01-28-0: Bugfix:    - correct commlib shutdown for qmon
@@ -1172,7 +1180,6 @@ JG-2004-01-27-1: Bugfix:    Fixed aimk LFLAGS for HP11.
                             spooling.
                  Review:    SG
                             
-
 JG-2004-01-27-0: Bugfix:    Fixed aimk LFLAGS for HP1164.
                             Fixed a number of build problems for tru64.
                  Review:    EB

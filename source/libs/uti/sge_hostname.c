@@ -535,6 +535,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
    he = gethostbyaddr((const char *)addr, 4, AF_INET);
 #endif
 
+   l_errno = h_errno;
    sge_mutex_unlock("hostbyaddr", SGE_FUNC, __LINE__, &hostbyaddr_mutex);
 #endif
 
@@ -545,11 +546,11 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
    if (time > MAX_RESOLVER_BLOCKING) {
       WARNING((SGE_EVENT, "gethostbyaddr(%s) took %d seconds and returns %s\n", 
             inet_ntoa(*addr), time, he?"success":
-          (h_errno == HOST_NOT_FOUND)?"HOST_NOT_FOUND":
-          (h_errno == TRY_AGAIN)?"TRY_AGAIN":
-          (h_errno == NO_RECOVERY)?"NO_RECOVERY":
-          (h_errno == NO_DATA)?"NO_DATA":
-          (h_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>"));
+          (l_errno == HOST_NOT_FOUND)?"HOST_NOT_FOUND":
+          (l_errno == TRY_AGAIN)?"TRY_AGAIN":
+          (l_errno == NO_RECOVERY)?"NO_RECOVERY":
+          (l_errno == NO_DATA)?"NO_DATA":
+          (l_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>"));
    }
 
    DEXIT;

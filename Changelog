@@ -1,3 +1,6 @@
+DT-2004-01-12-0: Bugfix:    Fixed uninitialized error code in sge_gethostbyaddr
+                 Changed:   sge_hostname.c
+
 SG-2004-01-11-0: Bugfix:    Fixed the build
 
 DT-2004-01-09-2: Enhancem.: More minor updates to test_drmaa.  Updated comments

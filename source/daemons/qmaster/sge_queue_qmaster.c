@@ -496,7 +496,7 @@ int sub_command
          sub_command, SGE_ATTR_COMPLEX_VALUES, SGE_OBJ_QUEUE)) 
       goto ERROR;            
    
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
+   if (feature_is_enabled(FEATURE_SGEEE)) {
       attr_mod_ulong(qep, new_queue, QU_fshare, "functional share");
       attr_mod_ulong(qep, new_queue, QU_oticket, "override tickets");
 

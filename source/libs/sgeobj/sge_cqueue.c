@@ -143,14 +143,14 @@ cqueue_name_split(const char *name, dstring *cqueue_name, dstring *host_domain,
          sge_dstring_sprintf(cqueue_name, "%s", name);
          first++;
          if (*first == '@') {
-            has_hostname = false;
-            has_domain = true;
+            *has_hostname = false;
+            *has_domain = true;
          } else if (*first == '\0') {
-            has_hostname = false;
-            has_domain = false;
+            *has_hostname = false;
+            *has_domain = false;
          } else {
-            has_hostname = true;
-            has_domain = false;
+            *has_hostname = true;
+            *has_domain = false;
          }
          sge_dstring_sprintf(host_domain, "%s", first);
 

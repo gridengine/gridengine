@@ -1,3 +1,5 @@
+SG-2003-09-15-0: Bugfix.:   Fixed the build
+
 EB-2003-09-11-0: Enhancem.: Event handling for CQ and QI 
 
 AA-2003-09-11-0: Bugfix:    fixed resizing of load dialog queue control
@@ -69,9 +71,9 @@ SG-2003-08-27-1: Bugfix:    Fixed a bug, which I added during some code cleanup
 
                  Changed:   sge_schedd
 
-SG-2003-08-26-1: Bugfix:    The scheduler handled strings in a hard and hard 
+SG-2003-08-26-1: Bugfix:    The scheduler handled strings in a hard request and hard 
                             with a soft request differently, when it was defined 
-                            in a host and overwritten in a queue.
+                            on host level and overwritten in a queue.
 
                  Changed:   sge_schedd
                  Issue:     589

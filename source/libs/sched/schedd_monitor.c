@@ -102,7 +102,7 @@ int schedd_log(const char *logstr) {
          return -1;
       }
 
-      DPRINTF(("Logging: %s%s\n", time_str, logstr));
+/*       DPRINTF(("Logging: %s%s\n", time_str, logstr)); */
 
       fprintf(fp, "%s", time_str);
       fprintf(fp, "%s\n", logstr);

@@ -160,8 +160,6 @@ void suser_increase_job_counter(lListElem *suser)
       u_long32 jobs = lGetUlong(suser, SU_jobs) + 1;
 
       lSetUlong(suser, SU_jobs, jobs);
-      DPRINTF((U32CFormat" jobs are registered for user "SFQ"\n",
-               jobs, lGetString(suser, SU_name)));
    }
 }
 
@@ -191,8 +189,6 @@ void suser_decrease_job_counter(lListElem *suser)
       u_long32 jobs = lGetUlong(suser, SU_jobs) - 1;
       
       lSetUlong(suser, SU_jobs, jobs);
-      DPRINTF((U32CFormat" jobs are registered for user "SFQ"\n",
-               jobs, lGetString(suser, SU_name)));
    }
 }
 

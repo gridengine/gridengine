@@ -89,7 +89,6 @@
 /* #define MSG_SHEPHERD_CANTDELCREDENTIALSFORJOBXYBINARYNOTEXIST_US    _message(29036, _("could not delete credentials for job " U32CFormat" - "SFN" binary does not exist")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_FILE_CANTREMOVEDIRECTORY_SS    _MESSAGE(29037, _("can't remove directory "SFQ": "SFN))
 #define MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBXYZ_UUS    _MESSAGE(29038, _("acknowledge for unknown job "U32CFormat"."U32CFormat"/"SFN))
-#define MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBEXIT    _MESSAGE(29039, _("acknowledge for unknown job's exit"))
 #define MSG_SHEPHERD_CANTFINDACTIVEJOBSDIRXFORREAPINGJOBY_SU    _MESSAGE(29040, _("can't find active jobs directory "SFQ" for reaping job "U32CFormat ))
 #define MSG_SHEPHERD_INCORRECTCONFIGFILEFORJOBXY_UU    _MESSAGE(29041, _("incorrect config file for job "U32CFormat"."U32CFormat""))
 #define MSG_SHEPHERD_CANTSTARTJOBXY_US     _MESSAGE(29042, _("can't start job \""U32CFormat"\": "SFN))
@@ -113,11 +112,6 @@
 #define MSG_SHEPHERD_CANTOPENPIDFILEXFORJOBYZ_SUU    _MESSAGE(29060, _("can't open pid file "SFQ" for job "U32CFormat"."U32CFormat))
 #define MSG_SHEPHERD_CANTOPENUSAGEFILEXFORJOBYZX_SUUS    _MESSAGE(29061, _("can't open usage file "SFQ" for job "U32CFormat"."U32CFormat": "SFN))
 #define MSG_SHEPHERD_EXECDWENTDOWNDURINGJOBSTART _MESSAGE(29062, _("execd went down during job start"))
-#define MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER _MESSAGE(29063, _(" reporting job finish to qmaster"))
-#define MSG_SHEPHERD_GOTACKFORJOBEXIT              _MESSAGE(29064, _(" got ack for job exit"))
-#define MSG_SHEPHERD_REPORINGJOBSTARTFAILURETOQMASTER _MESSAGE(29065, _(" reporting job start failure to qmaster"))
-#define MSG_SHEPHERD_REPORINGJOBPROBLEMTOQMASTER _MESSAGE(29066, _(" reporting problems with running job to qmaster"))
-#define MSG_SHEPHERD_ACKINGUNKNWONJOB                 _MESSAGE(29067, _(" ack'ing unknown job"))
 #define MSG_JR_ERRSTR_EXECDDONTKNOWJOB _MESSAGE(29068, _("execd doesn't know this job"))
 #define MSG_EXECD_GOTACKFORPETASKBUTISNOTINSTATEEXITING_S _MESSAGE(29069, _("get exit ack for pe task "SFN" but task is not in state exiting"))
 
@@ -233,7 +227,6 @@
 */
 #define MSG_COM_UNPACKFEATURESET      _MESSAGE(29134, _("unpacking featureset from job execution message\n"))
 #define MSG_COM_UNPACKJOB             _MESSAGE(29135, _("unpacking job from job execution message\n"))
-#define MSG_COM_RECEIVED              _MESSAGE(29136, _("received"))
 #define MSG_COM_UNPACKINGQ            _MESSAGE(29137, _("unpacking queue list from job execution message\n"))
 #define MSG_JOB_MISSINGQINGDIL_SU     _MESSAGE(29138, _("missing queue "SFQ" found in gdil of job "U32CFormat"\n"))
 #define MSG_EXECD_NOWRITESCRIPT_SIUS  _MESSAGE(29139, _("can't write script file "SFQ" wrote only %d of "U32CFormat" bytes: "SFN))

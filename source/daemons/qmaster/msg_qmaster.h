@@ -546,8 +546,6 @@
 ** configuration_qmaster.c
 */
 #define MSG_SGETEXT_CANT_DEL_CONFIG_S           _MESSAGE(33541, _("can't delete configuration "SFQ" from list\n"))
-#define MSG_CONF_DELLOCCONFFORXWITHEXECDSPOOLDENIED_S  _MESSAGE(33542, _("Deleting local configuration for "SFQ" with a local execd_spool_dir setting only supported in a shut-down cluster.\n"))
-#define MSG_CONF_CANTSELECTCONFIGURATIONFORHOST_SI _MESSAGE(33545, _("can't select configuration for host "SFQ": %d"))
 #define MSG_CONF_CANTMERGECONFIGURATIONFORHOST_S _MESSAGE(33546, _("can't merge configuration for host "SFQ" \n"))
 #define MSG_CONF_CHANGEPARAMETERXONLYSUPONSHUTDOWN_S _MESSAGE(33547, _("Changing parameter "SFQ" only supported in a shut-down cluster.\n"))
 #define MSG_CONF_NAMEISNULLINCONFIGURATIONLISTOFX_S _MESSAGE(33548, _("name == NULL in configuration list of "SFQ"\n"))
@@ -684,7 +682,6 @@
 #define MSG_LOG_WAIT4SGEDEL           _MESSAGE(33804, _("job waits for schedds deletion"))
 #define MSG_LOG_DELSGE                _MESSAGE(33805, _("job deleted by schedd"))
 #define MSG_LOG_DELIMMEDIATE          _MESSAGE(33806, _("immediate job deleted by schedd"))
-#define MSG_LOG_JATASKEXIT            _MESSAGE(33807, _("ja task exited") )  
 #define MSG_QMASTER_UNEXPECTED_SIGNAL_I    _MESSAGE(33810, _("received unexpected signal %d\n"))
 #define MSG_JOB_DEADLINETIME               _MESSAGE(33811, _("deadline time"))
 #define MSG_COM_NOSCHEDMONPERMS   _MESSAGE(33815, _("starting scheduler monitoring requires manager privileges\n"))

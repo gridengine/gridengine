@@ -203,7 +203,7 @@ char **argv
    if (!(argc > 1 && !strcmp(argv[1], "-help")))
       qmonInitSge(progname);
 
-   SGE_ROOT = sge_get_root_dir(0, NULL, 0);
+   SGE_ROOT = sge_get_root_dir(0, NULL, 0, 1);
 
    /*
    ** Attention !!! Change the XtMalloc() above if you add additional args

@@ -150,6 +150,7 @@ const char *sge_get_arch()
 *     int do_exit - Terminate the application in case of an error
 *     char *buffer - buffer to be used for error message
 *     size_t size - size of buffer
+*     int do_error_log - enable/disable error logging
 *
 *  RESULT
 *     const char* - Root directory of the SGE/SGEEE installation
@@ -165,7 +166,7 @@ const char *sge_get_arch()
 *     Multiple environment variables will only be accepted when they are
 *     identical. Other cases will be handled as error.
 *******************************************************************************/
-const char *sge_get_root_dir(int do_exit, char *buffer, size_t size)
+const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_error_log)
 {
    char *sge_root, *codine_root, *grd_root;
    char *s;
@@ -235,22 +236,24 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size)
    return s;
 
 error:
-   switch(error_number) {
-      case 1:
-         CRITICAL((SGE_EVENT, MSG_SGEGRDROOTNOTEQUIV));
-         break;
-      case 2:
-         CRITICAL((SGE_EVENT, MSG_SGECODINEROOTNOTEQUIV));
-         break;
-      case 3:
-         CRITICAL((SGE_EVENT, MSG_GRDCODINEROOTNOTEQUIV));
-         break;
-      case 4:
-         CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
-         break;
-      default:
-         CRITICAL((SGE_EVENT, MSG_UNKNOWNERRORINSGEROOT));
-         break;
+   if (do_error_log) {
+      switch(error_number) {
+         case 1:
+            CRITICAL((SGE_EVENT, MSG_SGEGRDROOTNOTEQUIV));
+            break;
+         case 2:
+            CRITICAL((SGE_EVENT, MSG_SGECODINEROOTNOTEQUIV));
+            break;
+         case 3:
+            CRITICAL((SGE_EVENT, MSG_GRDCODINEROOTNOTEQUIV));
+            break;
+         case 4:
+            CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
+            break;
+         default:
+            CRITICAL((SGE_EVENT, MSG_UNKNOWNERRORINSGEROOT));
+            break;
+      }
    }
    if (buffer)
       strncpy(buffer, SGE_EVENT, size);
@@ -374,7 +377,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
 
    DENTER(TOP_LAYER, "get_alias_path");
 
-   sge_root = sge_get_root_dir(1, NULL, 0);
+   sge_root = sge_get_root_dir(1, NULL, 0, 1);
    sge_cell = sge_get_default_cell();
 
    if (SGE_STAT(sge_root, &sbuf)) {

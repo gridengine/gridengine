@@ -211,7 +211,7 @@ char *localeDir
    
      /* no directory given, using default one */
      if (locDir == NULL) {
-        const char *sge_root = sge_get_root_dir(0, NULL, 0);
+        const char *sge_root = sge_get_root_dir(0, NULL, 0, 0);
         char* root = NULL;
         
         if (sge_root != NULL) {

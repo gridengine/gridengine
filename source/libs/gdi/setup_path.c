@@ -76,7 +76,7 @@ lList **alpp
    
    DENTER(TOP_LAYER, "sge_setup_paths");
    
-   if (!(sge_root = sge_get_root_dir(alpp?0:1, buffer, sizeof(buffer)-1))) {
+   if (!(sge_root = sge_get_root_dir(alpp?0:1, buffer, sizeof(buffer)-1, 1))) {
       /* in exit-on-error case program already exited */
       sge_add_answer(alpp, buffer, STATUS_EDISK, 0);
       DEXIT;

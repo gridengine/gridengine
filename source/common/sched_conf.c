@@ -146,7 +146,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
             return NULL;
          }
       } else {
-         const char *sge_root_dir = sge_get_root_dir(1, NULL, 0);
+         const char *sge_root_dir = sge_get_root_dir(1, NULL, 0, 1);
          const char *sge_cell = sge_get_default_cell();
 
          sprintf(fname, "%s/%s/%s/.%s", sge_root_dir, sge_cell, 

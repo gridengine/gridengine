@@ -1,3 +1,8 @@
+CR-2003-06-25-0: Bugfix:    disabled infotext error output if SGE_ROOT is
+                            not set.
+                 Review:    AS
+                 Changed:   utilib (all binaries)
+
 AH-2003-06-21-0: Bugfix:    Fixed bug "sge_schedd dies...". 
                  Issue:     545
                  Bugtraq:   4859658

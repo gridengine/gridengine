@@ -1,3 +1,7 @@
+MD-2004-02-03-0: Bugfix:    - Text
+                            - fixed install_qmaster, install_execd
+                 Changed:   - inst_sgeee
+
 SG-2004-02-03-0: Bugfix:    - added the user id to the qdel error messages.
                             - some code cleanup
                  Changed:   qmaster

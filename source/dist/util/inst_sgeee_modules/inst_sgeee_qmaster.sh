@@ -272,8 +272,8 @@ SetSpoolingOptions()
          fi
          if [ $QMASTER = "install" ]; then
             $INFOTEXT "If you want to use a Berkeley DB spooling server, then"
-            $INFOTEXT "\nplease, log in to your Berkeley DB spooling host first and execute < inst_sgeee -db >\n"
-            $INFOTEXT -auto $AUTO -wait "After Berkeley DB installation, continue with < Enter >"
+            $INFOTEXT "\nplease, log in to your Berkeley DB spooling host first and execute < inst_sgeee -db >"
+            $INFOTEXT -auto $AUTO -wait "After Berkeley DB installation or local Spooling, continue with < Enter >"
             SpoolingQueryChange
             CheckLocalFilesystem $SPOOLING_DIR
          else

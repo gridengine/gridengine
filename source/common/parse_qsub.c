@@ -1287,16 +1287,25 @@ DTRACE;
          /* next field is "y|n" */
          sp++;
          if (!*sp) {
-             sprintf(str,
-             MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-r");
-             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
+            sprintf(str,
+            MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-r");
+            answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
          }
 
          DPRINTF(("\"-r %s\"\n", *sp));
 
-         if (set_yn_option (pcmdline, r_OPT, *(sp - 1), *sp, &answer) == 0) {
+         if (!strcmp("y", *sp)) {
+            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
+            lSetInt(ep_opt, SPA_argval_lIntT, 1);
+         } else if (!strcmp("n", *sp)) {
+            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
+            lSetInt(ep_opt, SPA_argval_lIntT, 2);
+         } else {
+            sprintf(str,MSG_PARSE_INVALIDOPTIONARGUMENTRX_S, *sp);
+            answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            DEXIT;
             return answer;
          }
 

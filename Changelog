@@ -1,3 +1,8 @@
+EB-2004-05-10-0: Bugfix:    jobs submitted with option -r n can be rescheduled
+                 Changed:   qalter, qsub
+                 Issue:     999
+                 Review:    DT
+
 JG-2004-05-10-0: Testsuite: Fixed test system_tests/qmaster/size.
 
 CR-2004-05-10-0: Bugfix:    commlib:

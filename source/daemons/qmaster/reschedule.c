@@ -407,7 +407,7 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
        */
       if (!force && lGetUlong(jep, JB_restart) == 2) {
          INFO((SGE_EVENT, MSG_RU_NOT_RESTARTABLE_SS, 
-            mail_type, mail_ids));
+               mail_type, mail_ids));
          answer_list_add(answer, SGE_EVENT, 
                          STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          continue;
@@ -487,8 +487,10 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
 
          if (qep && !strcmp(lGetString(first_granted_queue,
             JG_qname), lGetString(qep, QU_full_name))) {
+            DTRACE;
             queue = qep;
          } else {
+            DTRACE;
             queue = cqueue_list_locate_qinstance(
                            *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
                            lGetString(first_granted_queue, JG_qname));

@@ -1,3 +1,7 @@
+AD-2004-03-26-0: Cleanup:   Did fix build for Mac OS X 10.3
+                 Changed:   common, qconf
+                 Review:    AH
+
 JG-2004-03-25-0: Enhancem.: Enhanced test program for CULL hashing.
 
 EB-2004-03-25-0: Bugfix:    qconf  -mq rejects pe_list config that is 

@@ -283,23 +283,6 @@ static const spool_flatfile_instr qconf_param_sfi =
    { NoName, NoName, NoName }
 };
 
-static const spool_flatfile_instr qconf_sub_param_sfi = 
-{
-   NULL,
-   false,
-   false,
-   false,
-   false,
-   true,
-   '\0',
-   ' ',
-   '\0',
-   '\0',
-   '\n',
-   NULL,
-   { NoName, NoName, NoName }
-};
-
 static const spool_flatfile_instr qconf_comma_sfi = 
 {
    NULL,
@@ -313,23 +296,6 @@ static const spool_flatfile_instr qconf_comma_sfi =
    '\0',
    '\0',
    '\0',
-   &qconf_sub_name_value_comma_sfi,
-   { NoName, NoName, NoName }
-};
-
-static const spool_flatfile_instr qconf_sub_name_value_comma_braced_sfi = 
-{
-   NULL,
-   false,
-   false,
-   false,
-   false,
-   false,
-   '\0',
-   '=',
-   ',',
-   '[',
-   ']',
    &qconf_sub_name_value_comma_sfi,
    { NoName, NoName, NoName }
 };

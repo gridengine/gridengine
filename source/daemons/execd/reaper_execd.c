@@ -96,6 +96,8 @@
 #include "sge_security.h" 
 #include "sge_dirent.h"
 #include "sge_feature.h"
+#include "sge_directoy.h"
+#include "read_write_job.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -799,7 +801,6 @@ lListElem *jr
 ) {
    char *exec_file, *script_file, *tmpdir, *job_owner, *qname; 
    char jobdir[SGE_PATH_MAX];
-   char job_file[SGE_PATH_MAX];
    char fname[SGE_PATH_MAX];
    char err_str[1024];
    SGE_STRUCT_STAT statbuf;
@@ -832,8 +833,6 @@ lListElem *jr
       DEXIT;
       return;
    }
-   sprintf(job_file, "%s/"u32"."u32"", JOB_DIR, jobid, jataskid);
-
    if (jep && jatep) {
       int used_slots;
    
@@ -911,8 +910,7 @@ lListElem *jr
       }
 
       if (!pe_task_id_str) {
-         DPRINTF(("removing job file %s\n", job_file));
-         unlink(job_file);
+         cull_remove_jobtask_from_disk(jobid, jataskid, SPOOL_WITHIN_EXECD);
 
          if (lGetString(job, JB_exec_file)) {
             int task_number = 0;
@@ -1004,8 +1002,7 @@ lListElem *jr
          }
 
          /* job */
-         DPRINTF(("removing job file %s\n", job_file));
-         unlink(job_file);
+         cull_remove_jobtask_from_disk(jobid, jataskid, SPOOL_WITHIN_EXECD); 
 
          /* active dir */
          if (!getenv("SGE_KEEP_ACTIVE")) {

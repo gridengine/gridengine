@@ -651,7 +651,7 @@ int sge_process_all_events(lList *event_list) {
                   at_register_job_array(ep);
                sge_add_job_category(ep, lists.acl_list);
 
-               get_ja_task_ids(ep, &start, &end, &step);
+               job_get_ja_task_ids(ep, &start, &end, &step);
                if (is_array(ep)) {
                   DPRINTF(("Added job-array "u32"."u32"-"u32":"u32"\n", lGetUlong(ep, JB_job_number),
                      start, end, step));

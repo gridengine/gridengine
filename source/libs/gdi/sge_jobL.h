@@ -257,9 +257,14 @@ enum {
    JB_tgt,
    JB_cred,
    JB_context,
+   JB_category,
+
    JB_ja_structure,
-   JB_ja_tasks,
-   JB_category
+   JB_ja_n_h_ids,
+   JB_ja_u_h_ids,
+   JB_ja_s_h_ids,
+   JB_ja_o_h_ids,
+   JB_ja_tasks
 };
    
 ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
@@ -424,11 +429,16 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_XSTRING(JB_tgt)                  /* Kerberos client TGT              */
    SGE_XSTRING(JB_cred)                 /* DCE / Kerberos credentials       */
    SGE_TLIST(JB_context, VA_Type)       /* custom attributes,(name,val)pairs*/
+   SGE_REF(JB_category)                 /* category string ref for scheduler */
 
    SGE_RLIST(JB_ja_structure, RN_Type)  /* Elements describe task id range */ 
-                                             
+
+   SGE_RLIST(JB_ja_n_h_ids, RN_Type)    /* just submitted and no hold state */
+   SGE_RLIST(JB_ja_u_h_ids, RN_Type)    /* just submitted with user hold */
+   SGE_RLIST(JB_ja_s_h_ids, RN_Type)    /* just submitted with system hold */
+   SGE_RLIST(JB_ja_o_h_ids, RN_Type)    /* just submitted with operator hold */
+
    SGE_RLIST(JB_ja_tasks, JAT_Type)     /* List of JobArray Tasks */
-   SGE_REF(JB_category)                 /* category string ref for scheduler */
 
    /*IDL
    void submit()
@@ -580,9 +590,13 @@ NAMEDEF(JBN)
    NAME("JB_tgt")
    NAME("JB_cred")
    NAME("JB_context")
-   NAME("JB_ja_structure")
-   NAME("JB_ja_tasks")
    NAME("JB_category")
+   NAME("JB_ja_structure")
+   NAME("JB_ja_n_h_ids")
+   NAME("JB_ja_u_h_ids")
+   NAME("JB_ja_s_h_ids")
+   NAME("JB_ja_o_h_ids")
+   NAME("JB_ja_tasks")
 NAMEEND
 
 

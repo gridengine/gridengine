@@ -60,7 +60,7 @@
 #include "complex.h"
 #include "utility.h"
 #include "qstat_printing.h"
-#include "qstat_util.h"
+#include "sge_range.h"
 #include "load_correction.h"
 #include "sge_conf.h"
 #include "msg_common.h"

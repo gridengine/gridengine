@@ -617,7 +617,6 @@ int double_keys
    int is_there;
    int type;
 
-
    DENTER(BASIS_LAYER, "cull_compress_definition_list");
 
    for_each(ep_one, lp) {

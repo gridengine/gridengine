@@ -34,4 +34,8 @@
 
 lList *sge_get_dirents(char *path);
 
+u_long32 sge_count_dirents(char *path);
+
+int has_more_dirents(char *directory_name, u_long32 number_of_entries);
+
 #endif /* __UTILITY_DAEMON_H */

@@ -67,6 +67,7 @@
 #include "msg_daemons_common.h"
 #include "msg_execd.h"
 #include "sge_feature.h"
+#include "read_write_job.h"
 
 extern char execd_spool_dir[];
 extern lList *execd_config_list;
@@ -140,7 +141,6 @@ void sge_setup_sge_execd()
 /*-------------------------------------------------------------------*/
 void sge_setup_old_jobs()
 {
-   stringT str;
    lListElem *jep, *tep, *direntry, *jatep;
    lList *direntries;
 
@@ -152,8 +152,16 @@ void sge_setup_old_jobs()
 
    direntries = sge_get_dirents(JOB_DIR);
    for_each(direntry, direntries) {
-      sprintf(str, "%s/%s", JOB_DIR, lGetString(direntry, STR));
-      jep = lReadElemFromDisk(str, NULL, JB_Type, "job");
+      stringT job_id_string;
+      char *ja_task_id_string;
+      u_long32 job_id, ja_task_id; 
+
+      strcpy(job_id_string, lGetString(direntry, STR));
+      ja_task_id_string = strchr(job_id_string, '.');
+      *(ja_task_id_string++) = 0;
+      job_id = atol(job_id_string);
+      ja_task_id = atol(ja_task_id_string);
+      jep = cull_create_job_from_disk(job_id, ja_task_id, SPOOL_WITHIN_EXECD);
       if (jep) {
          u_long32 jobid;
 

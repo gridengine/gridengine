@@ -153,7 +153,8 @@ int answer_error;
                   found = lGetUlong(jep, JB_job_number);
 
                   cull_write_jobtask_to_disk(jep, 
-                     lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), JAT_task_number));
+                     lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), 
+                     JAT_task_number), SPOOL_WITHIN_EXECD);
 
                }
             }
@@ -482,7 +483,7 @@ u_long32 signal
 
    /* now save this job/queue so we are up to date on restart */
    if (!getridofjob)
-      cull_write_jobtask_to_disk(jep, jataskid);
+      cull_write_jobtask_to_disk(jep, jataskid, SPOOL_WITHIN_EXECD);
    else
       DPRINTF(("Job  "u32"."u32" is no longer running\n", jobid, jataskid));
 

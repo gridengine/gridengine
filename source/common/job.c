@@ -40,15 +40,11 @@
 #include "sge_me.h"
 #include "sge_rangeL.h"
 
-
 extern lList *Master_Job_List;
 
 /**********************************************************************
 */
-lListElem *search_task(
-u_long32 jataskid,
-lListElem *job 
-) {
+lListElem *search_task(u_long32 jataskid, lListElem *job) {
    return job?lGetSubUlong(job, JAT_task_number, jataskid, JB_ja_tasks):NULL;
 }
 
@@ -57,31 +53,59 @@ lListElem *job
     ==JTYPE_JOB          -  job is a real job
     ==JTYPE_JOB_ARRAY    -  job is job array
  */
-int is_array(
-lListElem *job 
-) {
-   return lGetList(job, JB_ja_structure) ? JTYPE_JOB_ARRAY : JTYPE_JOB;
+int is_array(lListElem *job) 
+{
+   lListElem *range_elem = NULL;
+   u_long32 start, end, step;
+   
+   range_elem = lFirst(lGetList(job, JB_ja_structure));
+   job_get_ja_task_ids(job, &start, &end, &step);
+   return (start != 1 || end != 1 || step != 1) ? JTYPE_JOB_ARRAY : JTYPE_JOB;
 }
 
 /***********************************************************************/
-int get_ja_task_ids(
-lListElem *job,
-u_long32 *start,
-u_long32 *end,
-u_long32 *step 
-) {
-   lListElem *elem1;
+int job_get_ja_task_ids(lListElem *job, u_long32 *start, u_long32 *end, 
+                        u_long32 *step) 
+{
+   lListElem *range_elem = NULL; /* RN_Type */
 
-   if ((elem1 = lFirst(lGetList(job, JB_ja_structure)))) {
-      *start = lGetUlong(elem1, RN_min);
-      *end = lGetUlong(elem1, RN_max);
-      *step = lGetUlong(elem1, RN_step) ? lGetUlong(elem1, RN_step) : 1;
+   range_elem = lFirst(lGetList(job, JB_ja_structure));
+   if (range_elem) {
+      u_long32 tmp_step;
+
+      *start = lGetUlong(range_elem, RN_min);
+      *end = lGetUlong(range_elem, RN_max);
+      tmp_step = lGetUlong(range_elem, RN_step);
+      *step = tmp_step ? tmp_step : 1;
+   } else {
+      *start = *end = *step = 1; 
    }
-   else {
-      *start = *end = 0; 
-      *step = 1;
+   return 0;
+}
+
+int job_set_ja_task_ids(lListElem *job, u_long32 start, u_long32 end, 
+                    u_long32 step)
+{
+   lListElem *range_elem;
+
+   range_elem = lFirst(lGetList(job, JB_ja_structure));
+   if (!range_elem) {
+      lList *range_list;
+
+      range_elem = lCreateElem(RN_Type);
+      range_list = lCreateList("task id range", RN_Type);
+      if (!range_elem || !range_list) {
+         range_elem = lFreeElem(range_elem);
+         range_list = lFreeList(range_list);
+         return 1;
+      }
+      lAppendElem(range_list, range_elem);
+      lSetList(job, JB_ja_structure, range_list);
    }
-   return 1;
+   lSetUlong(range_elem, RN_min, start);
+   lSetUlong(range_elem, RN_max, end);
+   lSetUlong(range_elem, RN_step, step);
+   return 0;
 }
 
 

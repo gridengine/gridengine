@@ -284,7 +284,7 @@ sge_pack_buffer *pb
                         lSetList(task_task, JAT_granted_destin_identifier_list, NULL);
                         if ((ep=lAddSubStr(task_task, JG_qhostname, rhost, JAT_granted_destin_identifier_list, JG_Type)))
                            lSetString(ep, JG_qname, queue_name);
-                        cull_write_job_to_disk(jep);
+                        cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
                     }
 
                     /* store unscaled usage directly in sub-task */
@@ -506,7 +506,7 @@ sge_pack_buffer *pb
                      sprintf(failed_msg, u32" %s %s", failed, err_str?":":"", err_str?err_str:"");
                      lSetString(task, JB_sge_o_mail, failed_msg);
                      sge_log_dusage(jr, jep, jatep);
-                     cull_write_job_to_disk(jep);
+                     cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
 
 
                      /* get rid of this job in case a task died from XCPU/XFSZ or 

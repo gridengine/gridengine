@@ -74,6 +74,7 @@ UTILIB_SRC = sge_afsutil.c \
          sge_timestop.c \
          sge_tmpnam.c \
          sge_spoolmsg.c \
+         sge_directoy.c \
          sge_uidgid$(QIDLEXT).c 
 
 UTILIB_OBJS = $(UTILIB_SRC:.c=.o)
@@ -195,6 +196,9 @@ sge_tmpnam.o: 	$(UTILIB_DIR)/sge_tmpnam.c
 
 sge_spoolmsg.o: 	$(UTILIB_DIR)/sge_spoolmsg.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_spoolmsg.c
+
+sge_directoy.o:   $(UTILIB_DIR)/sge_directoy.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_directoy.c
 
 sge_nprocs.o:	$(UTILIB_DIR)/sge_nprocs.c
 		$(CC) $(CFLAGS) $(COD_NPROCS_CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_nprocs.c

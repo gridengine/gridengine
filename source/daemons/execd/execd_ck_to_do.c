@@ -158,7 +158,8 @@ static void notify_ptf()
                }
             }
             if (write_job)
-               cull_write_jobtask_to_disk(jep, lGetUlong(jatep, JAT_task_number));
+               cull_write_jobtask_to_disk(jep, 
+                  lGetUlong(jatep, JAT_task_number), SPOOL_WITHIN_EXECD);
          }
       }
 
@@ -516,7 +517,8 @@ static int sge_start_jobs()
 
          /* now save this job so we are up to date on restart */
          if (state_changed)
-            cull_write_jobtask_to_disk(jep, lGetUlong(jatep, JAT_task_number));
+            cull_write_jobtask_to_disk(jep, lGetUlong(jatep, JAT_task_number), 
+               SPOOL_WITHIN_EXECD);
       }
    }
 

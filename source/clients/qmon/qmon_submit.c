@@ -90,7 +90,7 @@
 #include "sge_peopen.h"
 #include "sge_copy_append.h"
 #include "sge_arch.h"
-#include "qstat_util.h"
+#include "sge_range.h"
 #include "job.h"
 #include "path_aliases.h"
 #include "jb_now.h"
@@ -1873,6 +1873,33 @@ int save
          lSetUlong(tap, RN_max, 1);
          lSetUlong(tap, RN_step, 1);
       }
+
+#if 1 /* EB: TODO*/
+      {
+         lList *n_h_list, *u_h_list, *o_h_list, *s_h_list; 
+
+         n_h_list = lCopyList("range list", range_list);
+         u_h_list = lCreateList("user hold list", RN_Type);
+         o_h_list = lCreateList("operator hold list", RN_Type);
+         s_h_list = lCreateList("system hold list", RN_Type);
+         lSetList(jep, JB_ja_n_h_ids, n_h_list);
+         lSetList(jep, JB_ja_u_h_ids, u_h_list);
+         lSetList(jep, JB_ja_o_h_ids, o_h_list);
+         lSetList(jep, JB_ja_s_h_ids, s_h_list); 
+
+         for_each (range, range_list) {
+            start = lGetUlong(range, RN_min);
+            end = lGetUlong(range, RN_max);
+            step = lGetUlong(range, RN_step);
+            for (; start<=end; start+=step) {
+               lAddElemUlong(&jat_list, JAT_task_number, start, JAT_Type);
+            }
+         }
+         lSetList(jep, JB_ja_tasks, jat_list);
+         lSetList(jep, JB_ja_structure, range_list);
+      }
+
+#else
       for_each (range, range_list) {
          start = lGetUlong(range, RN_min);
          end = lGetUlong(range, RN_max);
@@ -1883,6 +1910,7 @@ int save
       }
       lSetList(jep, JB_ja_structure, range_list);
       lSetList(jep, JB_ja_tasks, jat_list);
+#endif
    }
    else {   
       if (reduced_job) {
@@ -1897,7 +1925,30 @@ int save
          lSetList(jep, JB_ja_structure, NULL);
          lAddElemUlong(&jat_list, JAT_task_number, 1, JAT_Type);
          lSetList(jep, JB_ja_tasks, jat_list);
-      }   
+      }  
+ 
+#if 1 /* EB: TODO*/
+      {
+         lList *n_h_list, *u_h_list, *o_h_list, *s_h_list;
+         lListElem *tap = NULL;
+         lList *range_list = NULL;
+
+         tap = lAddElemUlong(&range_list, RN_min, 1, RN_Type);
+         lSetUlong(tap, RN_max, 1);
+         lSetUlong(tap, RN_step, 1);
+
+         n_h_list = lCopyList("range list", range_list);
+         u_h_list = lCreateList("user hold list", RN_Type);
+         o_h_list = lCreateList("operator hold list", RN_Type);
+         s_h_list = lCreateList("system hold list", RN_Type);
+
+         lSetList(jep, JB_ja_n_h_ids, n_h_list);
+         lSetList(jep, JB_ja_u_h_ids, u_h_list);
+         lSetList(jep, JB_ja_o_h_ids, o_h_list);
+         lSetList(jep, JB_ja_s_h_ids, s_h_list);
+         lSetList(jep, JB_ja_structure, range_list);
+      }                       
+#endif
    }
 
    if (!data->job_name || data->job_name[0] == '\0') {
@@ -2049,6 +2100,11 @@ int save
             }
          }
       }
+#if 1 /* EB: */
+      lSetList(jep, JB_ja_u_h_ids, lCopyList("user hold ids",
+            lGetList(jep, JB_ja_n_h_ids))); 
+      lSetList(jep, JB_ja_n_h_ids, lCreateList("no hold list", RN_Type));
+#endif
    }
    else {
       lListElem *jap;

@@ -81,6 +81,7 @@
 #include "sge_string.h"
 #include "sge_security.h"
 #include "jb_now.h"
+#include "sge_range.h"
 
 extern lList *Master_Userset_List;
 extern lList *Master_Project_List;
@@ -1040,7 +1041,7 @@ DTRACE;
             lSetUlong(jatp, JAT_state, state);
 
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatp);
-            cull_write_job_to_disk(jep);
+            cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
 
             /* update queues time stamp in schedd */
             lSetUlong(queueep, QU_last_suspend_threshold_ckeck, sge_get_gmt());
@@ -1087,7 +1088,7 @@ DTRACE;
             CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
             lSetUlong(jatp, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatp);
-            cull_write_job_to_disk(jep);
+            cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
 
             /* update queues time stamp in schedd */
             lSetUlong(queueep, QU_last_suspend_threshold_ckeck, sge_get_gmt());

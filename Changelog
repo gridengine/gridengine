@@ -1,3 +1,6 @@
+EB-2001-10-04-0: (Issue #7)
+                 - changed spool behaviour for (array) jobs
+
 AH-2001-10-02-0: Schedd: Moved code handling 'forced' attributes to a section 
                  handling other static matchings. Static matchings can be done
                  independently of consumables/load values and thus needs be done

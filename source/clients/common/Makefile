@@ -35,7 +35,6 @@
 CLIENTS_COMMON_DIR = $(SDIR)/clients/common
 
 CLIENTS_COMMON_SRC = qstat_printing.c \
-                     qstat_util.c \
                      read_defaults.c \
                      show_job.c \
                      write_job_defaults.c
@@ -70,9 +69,6 @@ include $(CLIENTS_COMMON_DIR)/common_dependencies
 ###############################################################################
 qstat_printing.o:     $(CLIENTS_COMMON_DIR)/qstat_printing.c
 	   $(CC) $(CFLAGS) -c $(CLIENTS_COMMON_DIR)/qstat_printing.c
-
-qstat_util.o:     $(CLIENTS_COMMON_DIR)/qstat_util.c
-	   $(CC) $(CFLAGS) -c $(CLIENTS_COMMON_DIR)/qstat_util.c
 
 read_defaults.o : $(CLIENTS_COMMON_DIR)/read_defaults.c
 		$(CC) $(CFLAGS) -c $(CLIENTS_COMMON_DIR)/read_defaults.c

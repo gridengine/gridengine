@@ -39,7 +39,6 @@ QSTAT_TARGETS = qstat
 QSTAT_SRC = qstat.c
 
 QSTAT_ADD_SRC = \
-               qstat_util.c \
                qstat_printing.c \
                complex.c \
                show_job.c \

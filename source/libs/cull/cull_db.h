@@ -52,7 +52,7 @@ lDescr *lJoinDescr(const lDescr *sdp0, const lDescr *sdp1, const lEnumeration *e
 
 int lPartialDescr(const lEnumeration *enp, const lDescr *sdp, lDescr *ddp, int *indexp);
 
-int lString2List(char *s, lList **lpp, const lDescr *dp, int nm, const char *delimitor);
+int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm, const char *delimitor);
 int lString2ListNone(char *s, lList **lpp, const lDescr *dp, int nm, const char *delimitor);
 
 int lDiffListStr(int nm, lList **lpp1, lList **lpp2);

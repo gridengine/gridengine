@@ -709,8 +709,7 @@ const lEnumeration *ep1
    return ddp;
 }
 
-/****** cull/lString2List() **********************************
-*
+/****** cull/lString2List() ***************************************************
 *  NAME
 *     lString2List() -- convert char* string into cull list 
 *
@@ -719,27 +718,24 @@ const lEnumeration *ep1
 *     #include "cull_db.h"
 *     #include <cull/src/cull_db.h>
 * 
-*     int lString2List(char *s, lList **lpp, lDescr *dp, int nm, 
-*                      char *delimitor)); 
-*       
+*     int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm, 
+*                      const char *delimitor); 
 *
 *  FUNCTION
-*     parses separated strings and adds them
-*     into the cull list *lpp
-*     the string is a unique key for the
-*     list and resides at field nm
+*     parses separated strings and adds them into the cull list *lpp
+*     the string is a unique key for the list and resides at field nm
 *  
 *     if delimitor==NULL
-*     use isspace()
+*        use isspace()
 *     else
-*     use delimitor
+*        use delimitor
 *
 *  INPUTS
-*     char *s         - String to parse   
-*     lList **lpp     - reference to lList*      
-*     lDescr *dp      - list Type     
-*     int nm          - list field       
-*     char *delimitor - string delimitor        
+*     const char *s         - String to parse   
+*     lList **lpp           - reference to lList*      
+*     const lDescr *dp      - list Type     
+*     int nm                - list field       
+*     const char *delimitor - string delimitor        
 *
 *  RESULT
 *     0 on error
@@ -747,43 +743,10 @@ const lEnumeration *ep1
 *
 *  EXAMPLE
 *     lList* stringList = NULL;
-*     lString2List("host1, host2, host3 host4", &stringList, ST_Type, STR, ", ");
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
-/* ----------------------------------------
-
-   parses separated strings and adds them
-   into the cull list *lpp
-   the string is a unique key for the
-   list and resides at field nm
-
-   if delimitor==NULL
-   use isspace()
-   else
-   use delimitor
-
-   returns
-   0 on error
-   1 ok
- */
-int lString2List(
-char *s,
-lList **lpp,
-const lDescr *dp,
-int nm,
-const char *dlmt 
-) {
+*     lString2List("host1, host2 host3", &stringList, ST_Type, STR, ", ");
+******************************************************************************/
+int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm, 
+                 const char *dlmt) {
    DENTER(TOP_LAYER, "lString2List");
 
    if (!s) {
@@ -793,7 +756,8 @@ const char *dlmt
 
    for (s = sge_strtok(s, dlmt); s; s = sge_strtok(NULL, dlmt)) {
       if (lGetElemStr(*lpp, nm, s)) {
-         continue; /* silently ignore multiple occurencies */
+         /* silently ignore multiple occurencies */
+         continue;
       }
       if (!lAddElemStr(lpp, nm, s, dp)) {
          lFreeList(*lpp);

@@ -1,49 +1,61 @@
-#ifndef _READ_WRITE_JOB_H_
-#define _READ_WRITE_JOB_H_
+#ifndef _SGE_DIRECTORY_H_
+#define _SGE_DIRECTORY_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
  ************************************************************************/
-/*___INFO__MARK_END__*/
+/*___INFO__MARK_END__*/  
 
-#include "sge_directoy.h"
+#include "basis_types.h"
 
-lListElem *cull_create_job_from_disk(u_long32 job_id, u_long32 task_id,
-                                     sge_spool_flags_t flags);
+typedef enum {
+   JOBS_SPOOL_DIR,
+   JOB_SPOOL_DIR,
+   JOB_SPOOL_FILE,
+   TASK_SPOOL_DIR,
+   TASK_SPOOL_FILE
+} sge_file_path_id_t;
 
-int cull_write_jobtask_to_disk(lListElem *jep, u_long32 ja_taskid, 
-                               sge_spool_flags_t flags);
+typedef enum {
+   SPOOL_DEFAULT             = 0x0000,
+   SPOOL_HANDLE_AS_ZOMBIE    = 0x0001,
+   SPOOL_WITHIN_EXECD        = 0x0002
+} sge_spool_flags_t; 
 
-int cull_remove_jobtask_from_disk(u_long32 job_id, u_long32 ja_taskid, 
-                                sge_spool_flags_t flags);
+typedef enum {
+   FORMAT_DEFAULT      = 0x0000,
+   FORMAT_DOT_FILENAME = 0x0001
+} sge_file_path_format_t;
 
-#endif /* _READ_WRITE_JOB_H_ */
+char *sge_get_file_path(char *buffer, sge_file_path_id_t,
+                        sge_file_path_format_t format_flags,
+                        sge_spool_flags_t spool_flags,
+                        u_long32 ulong_val1, u_long32 ulong_val2);
 
-
-
+#endif /* _SGE_DIRECTORY_H_ */

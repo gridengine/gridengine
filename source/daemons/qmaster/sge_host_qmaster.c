@@ -1210,7 +1210,7 @@ int force
                   SETBIT(JDELETED, state);
                   lSetUlong(jatep, JAT_state, state);
                   /* spool job */
-                  cull_write_job_to_disk(jep);
+                  cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
                }
             }
          }

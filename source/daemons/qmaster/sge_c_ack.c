@@ -182,7 +182,7 @@ u_long32 ack_ulong2
       DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
       lSetUlong(jatep, JAT_pending_signal, 0);
       te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, ack_ulong, ack_ulong2);
-      cull_write_job_to_disk(jep);
+      cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT); 
       break;
    }
 

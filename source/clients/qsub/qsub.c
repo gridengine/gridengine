@@ -264,7 +264,7 @@ char **argv
    /* add job */
    lp_jobs = lCreateList("submitted jobs", JB_Type);
    lAppendElem(lp_jobs, job);
-   
+  
    alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &lp_jobs, NULL, NULL);
 
    /* reinitialize 'job' with pointer to new version from qmaster */

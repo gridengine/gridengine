@@ -70,7 +70,7 @@
 #include "sge_feature.h"
 #include "parse_range.h"
 #include "sge_hash.h"
-#include "qstat_util.h"
+#include "sge_range.h"
 #include "job.h"
 #include "qmon_preferences.h"
 #include "qmon_message.h"

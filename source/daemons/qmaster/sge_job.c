@@ -1,11 +1,10 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
- *  Sun Microsystems Inc., March, 2001
- * 
+ *
+ *  Sun Microsystems Inc., March, 2001    
  * 
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
@@ -101,6 +100,8 @@
 #include "sge_string.h"
 #include "jb_now.h"
 #include "sge_security.h"
+#include "sge_range.h"
+#include "sge_job_jatask.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Exechost_List;
@@ -135,23 +136,13 @@ static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_fl
 static u_long32 sge_get_job_number(void);
 static int sge_add_job(lListElem *jep, int check);
 static void get_rid_of_schedd_job_messages(u_long32 job_number);
-
 /*-------------------------------------------------------------------------*/
 /* sge_gdi_add_job                                                       */
 /*    called in sge_c_gdi_add                                              */
 /*-------------------------------------------------------------------------*/
-
-
- 
-/* submit needs to know user and group */
-int sge_gdi_add_job(
-lListElem *jep,
-lList **alpp,
-lList **lpp,
-char *ruser,
-char *rhost,
-sge_gdi_request *request 
-) {
+int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
+                    char *rhost, sge_gdi_request *request) 
+{
    int ckpt_err;
    lListElem *reqep, *qep, *jatp;
    char *pe_name, *project, *ckpt_name;
@@ -533,27 +524,17 @@ sge_gdi_request *request
 
    lSetUlong(jep, JB_submission_time, sge_get_gmt());
 
-   /* we are very generous here: if the user does not supply ja_tasks,
-    * we assume a single-task job */
-   if(!lGetList(jep, JB_ja_tasks)) {
-      lListElem* task;
-      lList* tasklist = lCreateList("tasks", JAT_Type);
-      lAppendElem(tasklist, (task = lCreateElem(JAT_Type)));
-      lSetUlong(task, JAT_task_number, 1);
-      lSetList(jep, JB_ja_tasks, tasklist);
-   } else {
-      lListElem *task;
+   {
+      int ret;
 
-      for_each(task, lGetList(jep, JB_ja_tasks)) {
-         if (lGetUlong(task, JAT_task_number) == 0) {
-            ERROR((SGE_EVENT, MSG_JOB_TASKIDZERO_U, u32c(job_number)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
+      ret = job_initialize_ja_tasks(jep);
+      if (ret != STATUS_OK) {
+         DEXIT;
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0); 
+         return ret;  
       }
    }
-  
+
    /* initialize state */
    for_each (jatp, lGetList(jep, JB_ja_tasks)) {
       lSetUlong(jatp, JAT_status, JIDLE);
@@ -631,7 +612,7 @@ sge_gdi_request *request
 
    job_suc_pre(jep);
 
-   if (cull_write_job_to_disk(jep)) {
+   if (cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT)) {
       ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, u32c(job_number)));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
       DEXIT;
@@ -641,7 +622,7 @@ sge_gdi_request *request
    if (!is_array(jep)) {
       DPRINTF(("Added Job "u32"\n", lGetUlong(jep, JB_job_number)));
    } else {
-      get_ja_task_ids(jep, &start, &end, &step);
+      job_get_ja_task_ids(jep, &start, &end, &step);
       DPRINTF(("Added JobArray "u32"."u32"-"u32":"u32"\n", 
                 lGetUlong(jep, JB_job_number), start, end, step));
    }
@@ -856,6 +837,7 @@ int sub_command
                continue;
             }   
 
+#if 0
             /* spool job after the deletion of the last task */      
             if (jatask) {
                u_long32 next_task_number;
@@ -866,6 +848,7 @@ int sub_command
                   spool_job = 0;
                }
             } 
+#endif
 
             if (lGetString(tmp_task, JAT_master_queue)) {
                get_rid_of_job(alpp, job, tmp_task, lGetUlong(idep, ID_force), 
@@ -1272,7 +1255,7 @@ char *commproc
       SETBIT(JDELETED, state); 
       lSetUlong(t, JAT_state, state);
       /* spool job */
-      cull_write_job_to_disk(j);  
+      cull_write_jobtask_to_disk(j, 0, SPOOL_DEFAULT);  
    }
    DEXIT;
    return;
@@ -1412,7 +1395,7 @@ int sub_command
             lSetUlong(new_job, JB_version, lGetUlong(new_job, JB_version)+1);
 
          /* all job modifications to be saved on disk must be made in new_job */
-         if (cull_write_job_to_disk(new_job)) {
+         if (cull_write_jobtask_to_disk(new_job, 0, SPOOL_DEFAULT)) {
             ERROR((SGE_EVENT, MSG_JOB_NOALTERNOWRITE_U, u32c(jobid)));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
             lFreeList(tmp_alp);
@@ -1702,7 +1685,7 @@ int is_array
             break;
       }
 
-      lSetUlong(new_ja_task, JAT_hold, hold); 
+      job_set_hold_state(job, new_ja_task, hold); 
 
       /* (un)set hold held */
       if (!hold)
@@ -2946,18 +2929,13 @@ sge_gdi_request *request
 
    /* reinit state of all job array tasks - same is done by qsub */
    {
-      long start = 1, end = 1, step = 1;
-      lListElem *range;
-      lList *rn_list; 
+      u_long32 start, end, step;
       lList *jat_list = NULL;
 
-      if ((rn_list = lGetList(new_jep, JB_ja_structure)) && (range=lFirst(rn_list))) {
-         start = lGetUlong(range, RN_min);
-         end = lGetUlong(range, RN_max);
-         step = lGetUlong(range, RN_step);
-      }
-      for (; start<=end; start+=step)
+      job_get_ja_task_ids(new_jep, &start, &end, &step);
+      for (; start<=end; start+=step) {
          lAddElemUlong(&jat_list, JAT_task_number, start, JAT_Type);
+      }
       lSetList(new_jep, JB_ja_tasks, jat_list);
    }
 
@@ -2975,3 +2953,4 @@ sge_gdi_request *request
    DEXIT;
    return ret;
 }
+

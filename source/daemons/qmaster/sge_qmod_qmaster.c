@@ -348,7 +348,7 @@ lList **answer
          if (VALID(JERROR, lGetUlong(jatep, JAT_state))) {
             lSetUlong(jatep, JAT_state, lGetUlong(jatep, JAT_state) & ~JERROR);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-            cull_write_job_to_disk(jep);
+            cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
             if (is_array(jep)) {
                INFO((SGE_EVENT, MSG_JOB_CLEARERRORTASK_SSUU, user, host, u32c(job_id), u32c(task_id)));
             } else {
@@ -905,7 +905,7 @@ char *host
       lSetUlong(jatep, JAT_state, state);
 
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-      cull_write_job_to_disk(jep);
+      cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
    }
    else {   /* job wasn't suspended yet */
       if (queueep) {
@@ -937,7 +937,7 @@ char *host
          SETBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
          sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-         cull_write_job_to_disk(jep);
+         cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
       }
       else {
          if (!i) {
@@ -953,7 +953,7 @@ char *host
             SETBIT(JSUSPENDED, state);
             lSetUlong(jatep, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-            cull_write_job_to_disk(jep);
+            cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
          }
       }
    }
@@ -995,7 +995,7 @@ char *host
          CLEARBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
          sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-         cull_write_job_to_disk(jep);
+         cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
          DEXIT;
          return;
       } 
@@ -1079,7 +1079,7 @@ char *host
          CLEARBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
          sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-         cull_write_job_to_disk(jep);
+         cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
       }
       else {
          /* set job state only if communication works */
@@ -1096,7 +1096,7 @@ char *host
             CLEARBIT(JSUSPENDED, state);
             lSetUlong(jatep, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-            cull_write_job_to_disk(jep);
+            cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
          }
       }
    }

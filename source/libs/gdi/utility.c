@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <errno.h>
 
 #ifndef WIN32NATIVE
 #	include <grp.h>
@@ -617,6 +618,7 @@ char *suffix
    status = unlink(str);
 
    if (status) {
+      ERROR((SGE_EVENT, "ERROR: "SFN"\n", strerror(errno)));
       DEXIT;
       return -1;
    }

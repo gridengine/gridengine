@@ -347,7 +347,7 @@ int slave
 
 
    lSetUlong(jelem, JB_script_size, 0);
-   if (cull_write_jobtask_to_disk(jelem, jataskid)) {
+   if (cull_write_jobtask_to_disk(jelem, jataskid, SPOOL_WITHIN_EXECD)) {
       /* SGE_EVENT is written by cull_write_jobtask_to_disk() */
       strcpy(err_str, SGE_EVENT);
       DEXIT;
@@ -718,7 +718,7 @@ int *synchron;
    }
 
    lSetUlong(jelem, JB_script_size, 0);
-   if (cull_write_jobtask_to_disk(jelem, jataskid)) {
+   if (cull_write_jobtask_to_disk(jelem, jataskid, SPOOL_WITHIN_EXECD)) {
       strcpy(err_str, SGE_EVENT);
       execd_job_start_failure(jelem, jatask, err_str, 1);
       goto Error;

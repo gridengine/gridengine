@@ -67,7 +67,7 @@
 #include "sge_string.h"
 #include "show_job.h"
 #include "qstat_printing.h"
-#include "qstat_util.h"
+#include "sge_range.h"
 #include "sge_schedd_text.h"
 #include "qm_name.h"
 #include "load_correction.h"

@@ -98,6 +98,8 @@
 #include "sge_peL.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "sge_range.h"
+#include "sge_job_jatask.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"
@@ -716,14 +718,16 @@ int spool_job
 
       now = sge_get_gmt();
       lSetUlong(jatep, JAT_start_time, now);
-      cull_write_job_to_disk(jep);
+      job_enroll(jep, lGetUlong(jatep, JAT_task_number));
+      cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
 
    case 1:
       lSetUlong(jatep, JAT_status, JRUNNING);
       job_log(jid, tid, "job received by execd");
-      cull_write_job_to_disk(jep);
+      job_enroll(jep, lGetUlong(jatep, JAT_task_number));
+      cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
       break;
 
    case 2:
@@ -809,7 +813,8 @@ int spool_job
       }
 
       sge_clear_granted_resources(jep, jatep, 1);
-      cull_write_job_to_disk(jep);
+      job_enroll(jep, lGetUlong(jatep, JAT_task_number));
+      cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       sge_flush_events(FLUSH_EVENTS_JOB_FINISHED);
       break;
@@ -832,7 +837,8 @@ int spool_job
       if (conf.zombie_jobs > 0)
          sge_to_zombies(jep, jatep, spool_job);
       sge_clear_granted_resources(jep, jatep, 1);
-      cull_write_job_to_disk(jep);
+      job_enroll(jep, lGetUlong(jatep, JAT_task_number));
+      cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
       for_each(task, lGetList(jatep, JAT_task_list)) {
          lListElem* task_ja_task;
 
@@ -875,7 +881,8 @@ int spool_job
       lSetUlong(jatep, JAT_status, JIDLE);
       lSetUlong(jatep, JAT_state, JQUEUED | JWAITING);
       sge_clear_granted_resources(jep, jatep, 0);
-      cull_write_job_to_disk(jep);
+      job_enroll(jep, lGetUlong(jatep, JAT_task_number));
+      cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       sge_flush_events(FLUSH_EVENTS_JOB_FINISHED);
       break;
@@ -1090,19 +1097,11 @@ int spool_job
       sge_add_event(sgeE_JATASK_DEL, jid, lGetUlong(jatep, JAT_task_number), 
                      NULL, NULL);
 
-
       /*
       ** remove the task
       */
+      cull_remove_jobtask_from_disk(jid, tid, 0);
       lRemoveElem(lGetList(jep, JB_ja_tasks), jatep);
-
-      /*
-      ** the job still exists, another task has been finished
-      */
-      if (spool_job) {
-         cull_write_job_to_disk(jep);
-      }
-   
    } else {
       /* Remove the job with the last task */
       job_log(jid, tid, MSG_LOG_EXITED);
@@ -1118,8 +1117,7 @@ int spool_job
          unlink(lGetString(jep, JB_exec_file));
       }
       sge_add_event(sgeE_JOB_DEL, jid, lGetUlong(jatep, JAT_task_number), NULL, NULL);
-
-      unlink(lGetString(jep, JB_job_file));
+      cull_remove_jobtask_from_disk(jid, 0, 0);
 
       /*
       ** remove the job
@@ -1139,7 +1137,7 @@ int spool_job
 ) {
    lListElem *zombie = NULL;
    lListElem *zombie_task = NULL;
-   u_long32 jid;
+   u_long32 jid, tid;
    
    DENTER(TOP_LAYER, "sge_to_zombies");
    
@@ -1148,6 +1146,7 @@ int spool_job
 
    
    jid = lGetUlong(jep, JB_job_number);
+   tid = lGetUlong(jatep, JAT_task_number);
    /*
    ** add task to zombie list
    */
@@ -1172,9 +1171,9 @@ int spool_job
       lSetList(zombie, JB_ja_tasks, tasks);
       lAppendElem(Master_Zombie_List, zombie);
    }
-   if (spool_job) {
-      cull_write_zombiejob_to_disk(zombie);
-   }
+
+   cull_write_jobtask_to_disk(zombie, tid, SPOOL_HANDLE_AS_ZOMBIE);
+
    DEXIT;
    return True;
 }

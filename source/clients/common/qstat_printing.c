@@ -66,7 +66,7 @@
 #include "show_job.h"
 #include "sge_string_append.h"
 #include "qstat_printing.h"
-#include "qstat_util.h"
+#include "sge_range.h"
 #include "job.h"
 #include "sig_handlers.h"
 #include "msg_clients_common.h"

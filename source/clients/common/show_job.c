@@ -71,10 +71,6 @@ DTRACE;
    }
 DTRACE;
 
-   if (lGetPosViaElem(job, JB_job_file)>=0)
-      if (lGetString(job, JB_job_file))
-         printf("job_file:                   %s\n", lGetString(job, JB_job_file));
-
    if (lGetPosViaElem(job, JB_exec_file)>=0)
       if (lGetString(job, JB_exec_file))
          printf("exec_file:                  %s\n", lGetString(job, JB_exec_file));
@@ -483,7 +479,7 @@ DTRACE;
    if (lGetPosViaElem(job, JB_ja_structure)>=0) {
       u_long32 start, end, step;
 
-      get_ja_task_ids(job, &start, &end, &step);
+      job_get_ja_task_ids(job, &start, &end, &step);
       if (is_array(job))
          printf("job-array tasks             "u32"-"u32":"u32"\n", start, end, step);
    }

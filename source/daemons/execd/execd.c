@@ -250,8 +250,6 @@ char **argv
    /* daemonizes if qmaster is unreachable */   
    sge_setup_sge_execd();
 
-   /* EB: */
-
    if (!getenv("SGE_ND"))
       daemonize_execd();
 

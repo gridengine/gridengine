@@ -1266,7 +1266,6 @@ int force
    const char *hostname;
    u_long execd_alive;
    static u_short number_one = 1;
-   const char *action_str;
    u_long32 state;
    lListElem *jep;
    lList *mail_users, *gdil;

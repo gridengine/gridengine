@@ -53,7 +53,7 @@ typedef enum {
    JL_MIGRATE,       /* a migration was requested */
    JL_DELETED,       /* the job has been deleted */
    JL_FINISHED,      /* the job has finished */
-   JL_ERROR,         /* job is in error state */
+   JL_ERROR          /* job is in error state */
 } job_log_t;
 
 bool

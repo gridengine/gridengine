@@ -209,7 +209,7 @@ NAMEEND
  */
 enum {
    PARA_name = PARA_LOWERBOUND,
-   PARA_value,
+   PARA_value
 };
 
 ILISTDEF(PARA_Type, Params, SGE_PARA_LIST)

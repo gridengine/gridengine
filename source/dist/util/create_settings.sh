@@ -97,7 +97,6 @@ echo "endif"                                                     >> $SP_CSH
 echo "unset ARCH DEFAULTMANPATH MANTYPE shlib_path_name"         >> $SP_CSH
 
 
-
 echo "SGE_ROOT=$SGE_ROOT; export SGE_ROOT"                        > $SP_SH
 echo ""                                                          >> $SP_SH
 echo "ARCH=\`\$SGE_ROOT/util/arch\`"                             >> $SP_SH
@@ -106,7 +105,7 @@ echo "MANTYPE=\`\$SGE_ROOT/util/arch -mt\`"                      >> $SP_SH
 echo ""                                                          >> $SP_SH
 
 if [ "$SGE_CELL" != "" -a "$SGE_CELL" != "default" ]; then
-   echo "SGE_CELL=SGE_CELL_VAL; export SGE_CELL"                 >> $SP_SH
+   echo "SGE_CELL=$SGE_CELL; export SGE_CELL"                    >> $SP_SH
 else
    echo "unset SGE_CELL"                                         >> $SP_SH
 fi
@@ -115,14 +114,6 @@ if [ "$COMMD_PORT" != "" ]; then
    echo "COMMD_PORT=$COMMD_PORT; export COMMD_PORT"              >> $SP_SH
 else
    echo "unset COMMD_PORT"                                       >> $SP_SH              
-fi
-
-if [ "$SGE_CELL" != "" -a "$SGE_CELL" != "default" ]; then
-   echo "SGE_CELL=SGE_CELL_VAL; export SGE_CELL"                 >> $SP_SH
-fi
-
-if [ "$COMMD_PORT" != "" ]; then
-   echo "COMMD_PORT=$COMMD_PORT; export COMMD_PORT"              >> $SP_SH
 fi
 
 echo ""                                                          >> $SP_SH

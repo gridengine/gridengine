@@ -130,19 +130,19 @@ com_sun_grid_drmaa_SessionImpl.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.
 
 #---------------------------------------------------------------------
 
-test_drmaa: test_drmaa.o drmaalib
+test_drmaa: test_drmaa.o $(DRMAALIB)
 	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
 
 test_drmaa.o: $(JAPILIB_DIR)/test_drmaa.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa.c
 
-test_drmaa_sync: test_drmaa_sync.o drmaalib
+test_drmaa_sync: test_drmaa_sync.o $(DRMAALIB)
 	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_sync.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
 
 test_drmaa_sync.o: $(JAPILIB_DIR)/test_drmaa_sync.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_sync.c
 
-example: example.o drmaalib
+example: example.o $(DRMAALIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example example.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
 
 example.o: $(JAPILIB_DIR)/example.c

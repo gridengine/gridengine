@@ -477,11 +477,21 @@ int sub_command
       }
 
       if (lGetPosViaElem(ep, EH_report_variables)>=0) {
+         const lListElem *var;
          attr_mod_sub_list(alpp, new_host, EH_report_variables, STU_name, ep,
             sub_command, "report_variables", SGE_OBJ_EXECHOST, 0);
-         /* JG: TODO: we have to check for valid centry names */
+     
+         /* check if all report_variables are valid complex variables */
+         for_each(var, lGetList(ep, EH_report_variables)) {
+            const char *name = lGetString(var, STU_name);
+            if (centry_list_locate(Master_CEntry_List, name) == NULL) {
+               ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, name));
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 
+                               ANSWER_QUALITY_ERROR);
+               goto ERROR;
+            }
+         }
       }
-
    }
 
    DEXIT;
@@ -551,7 +561,7 @@ int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
       {
          lListElem *jep;
          const char *host = lGetHost(ep, EH_name);
-         int slots, global_host = !strcmp("global", host);
+         int slots, global_host = !strcmp(SGE_GLOBAL_NAME, host);
 
          lSetList(ep, EH_resource_utilization, NULL);
          debit_host_consumable(NULL, ep, Master_CEntry_List, 0);
@@ -566,6 +576,17 @@ int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
          }
 
          sge_change_queue_version_exechost(host);
+
+         if (global_host) {
+            host_list_merge(Master_Exechost_List);
+         } else {
+            const lListElem *global_ep;
+
+            global_ep = lGetElemHost(Master_Exechost_List, EH_name, 
+                                     SGE_GLOBAL_NAME);
+            host_merge(ep, global_ep);
+         }
+
          sge_add_event( 0, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 
                        0, 0, host, NULL, NULL, ep);
          lListElem_clear_changed_info(ep);

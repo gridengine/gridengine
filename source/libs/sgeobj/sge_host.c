@@ -43,6 +43,8 @@
 #include "sge_centry.h"
 #include "sge_load.h"
 
+#include "sgeobj/sge_str.h"
+
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
@@ -281,15 +283,23 @@ host_is_centry_referenced(const lListElem *this_elem, const lListElem *centry)
    bool ret = false;
 
    DENTER(TOP_LAYER, "host_is_centry_referenced");
+
    if (this_elem != NULL) {
       const char *name = lGetString(centry, CE_name);
-      lList *centry_list = lGetList(this_elem, EH_consumable_config_list);
-      lListElem *centry_ref = lGetElemStr(centry_list, CE_name, name);
 
-      if (centry_ref != NULL) {
+      /* centry may be referenced in "complex_values" */
+      if (lGetElemStr(lGetList(this_elem, EH_consumable_config_list),
+                      CE_name, name) != NULL) {
          ret = true;
+      } else {
+      /* and/or in "report_variables */
+         if (lGetElemStr(lGetList(this_elem, EH_report_variables),
+                         STU_name, name) != NULL) {
+            ret = true;
+         }
       }
    }
+
    DEXIT;
    return ret;
 }
@@ -342,3 +352,120 @@ host_trash_load_values(lListElem *host)
    DEXIT;
    return ret;
 }
+
+/****** sgeobj/host/host_list_merge() ******************************************
+*  NAME
+*     host_list_merge() -- merge global host settings into exec hosts
+*
+*  SYNOPSIS
+*     bool 
+*     host_list_merge(lList *this_list) 
+*
+*  FUNCTION
+*     Merges settings from the global host to the exec hosts objects.
+*     Currently this applies only to the report_variables attribute.
+*
+*  INPUTS
+*     lList *this_list - the exec host list to work on
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     MT-NOTE: host_list_merge() is MT safe 
+*
+*  SEE ALSO
+*     sgeobj/host/host_merge()
+*******************************************************************************/
+bool
+host_list_merge(lList *this_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "host_list_merge");
+   
+   if (this_list != NULL) {
+      const lListElem *global_host;
+
+      /* we merge global settings into host settings */
+      global_host = lGetElemHost(this_list, EH_name, SGE_GLOBAL_NAME);
+      if (global_host != NULL) {
+         lListElem *host;
+
+         /* do merge for all hosts except global */
+         for_each (host, this_list) {
+            if (host != global_host) {
+               /* on error continue, but return error status */
+               if (!host_merge(host, global_host)) {
+                  ret = false;
+               }
+            }
+         }
+      }
+   }
+   
+   DEXIT;
+   return ret;
+}
+
+/****** sge_host/host_merge() **************************************************
+*  NAME
+*     host_merge() -- merge global host settings into an exec host
+*
+*  SYNOPSIS
+*     bool 
+*     host_merge(lListElem *host, const lListElem *global_host) 
+*
+*  FUNCTION
+*     Merges settings from the global host object into a specific exec host.
+*     Use the global settings, if no host specific settings are done.
+*     Currently this applies only to the report_variables attribute.
+*
+*  INPUTS
+*     lListElem *host              - the host object to hold the merged config
+*     const lListElem *global_host - the global host object
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     MT-NOTE: host_merge() is MT safe 
+*
+*  SEE ALSO
+*     sgeobj/host/host_list_merge()
+*******************************************************************************/
+bool 
+host_merge(lListElem *host, const lListElem *global_host)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "host_merge");
+
+   if (host != NULL && global_host != NULL) {
+      const lList *local_list = lGetList(host, EH_report_variables);
+
+      /* if we have a local list: use this one */
+      if (local_list != NULL && lGetNumberOfElem(local_list) != 0) {
+         lSetList(host, EH_merged_report_variables, 
+                  lCopyList("", local_list));
+      } else {
+         const lList *global_list;
+      
+         global_list = lGetList(global_host, EH_report_variables);
+         /* if we have no local list, but a global one, use this one */
+         if (global_list != NULL && lGetNumberOfElem(global_list) != 0) {
+            lSetList(host, EH_merged_report_variables, 
+                     lCopyList("", global_list));
+         } else {
+            /* if no report variables are configured in local and global object,
+             * delete the merged list.
+             */
+            lSetList(host, EH_merged_report_variables, NULL);
+         }
+      }
+   }
+   
+   DEXIT;
+   return ret;
+}
+

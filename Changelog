@@ -1,3 +1,16 @@
+JG-2004-04-05-1: Bugfix:    Fixed parsing of report_variables in qconf. It now 
+                            uses a comma separated list of variables. Adjusted 
+                            man page accordingly.
+                            Check if entries listed as report_variables exist 
+                            as complex variables.
+                            Prevent complex variables from being deleted while 
+                            they are still referenced in report_variables.
+                            Allow the setting of default report_variables in the
+                            global host object.
+                 Changed:   qmaster, qconf
+                 Issue:     1008
+                 Review:    EB
+
 SG-2004-05-05-1: Bugfix:    event master:
                             - event ack are processed before a client can
                               deregister

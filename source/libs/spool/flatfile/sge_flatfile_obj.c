@@ -658,7 +658,7 @@ static int write_PE_free_slots(const lListElem *ep, int nm, dstring *buffer, lLi
  * classic spooling uses two different field delimiters to represent the
  * field values. */
 spooling_field *sge_build_EH_field_list (bool spool, bool to_stdout,
-                                            bool history)
+                                         bool history)
 {
    /* There are 14 possible EH_Type fields. */
    spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*14);
@@ -710,9 +710,9 @@ spooling_field *sge_build_EH_field_list (bool spool, bool to_stdout,
    create_spooling_field (&fields[count++], EH_usage_scaling_list, 21,
                           "usage_scaling", HS_sub_fields,
                           &qconf_sub_name_value_comma_sfi, NULL, NULL);
-   create_spooling_field (&fields[count++], EH_report_variables, 21, "report_variables",
-                          STU_sub_fields, NULL, NULL, NULL);
-   
+   create_spooling_field (&fields[count++], EH_report_variables, 21, 
+                          "report_variables", STU_sub_fields, 
+                          &qconf_sub_name_value_comma_sfi, NULL, NULL);
    create_spooling_field (&fields[count++], NoName, 21, NULL, NULL, NULL, NULL,
                           NULL);
    

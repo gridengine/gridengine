@@ -261,6 +261,10 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory)
             sge_unlink(directory, host);
          }
       }
+
+      /* merge global and local objects */
+      host_list_merge(*list);
+      
       direntries = lFreeList(direntries);
    }
 

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2004/04/19 10:52:08 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2004/05/05 15:32:40 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOST_CONF 5 "$Date: 2004/04/19 10:52:08 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOST_CONF 5 "$Date: 2004/05/05 15:32:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 host_conf \- xxQS_NAMExx execution host configuration file format
@@ -232,9 +232,12 @@ projects are denied access other than those denied access based on the
 access to the host.
 .\"
 .IP "\fBreport_variables\fP"
-The \fBreport_variables\fP parameter contains list of variables that shall be
-written to the reporting file.
+The \fBreport_variables\fP parameter contains a comma separated list of 
+variables that shall be written to the reporting file.
 The variables listed here will be written to the reporting file when a load report arrives from an execution host.
+.sp 1
+Default settings can be done in the global host. Host specific settings for 
+report_variables will overwrite settings from the global host.
 .\"
 .\"
 .SH "SEE ALSO"

@@ -646,7 +646,10 @@ spool_default_validate_list_func(lList **answer_list,
 
    switch(object_type) {
       case SGE_TYPE_ADMINHOST:
+         break;
       case SGE_TYPE_EXECHOST:
+         host_list_merge(Master_Exechost_List);
+         break;
       case SGE_TYPE_SUBMITHOST:
       case SGE_TYPE_CONFIG:
       case SGE_TYPE_USERSET:

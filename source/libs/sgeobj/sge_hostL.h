@@ -121,7 +121,10 @@ enum {
                               * reports, because reports are send
                               * asynchronous and we have no guarantee that 
                               * they arrive in order at qmaster */
-   EH_report_variables       /* list of variables written to the report file */
+   EH_report_variables,      /* list of variables written to the report file */
+   EH_merged_report_variables /* list of variables written to the report file,
+                              * merged from global host and actual host
+                              */
 };
 
 ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
@@ -166,6 +169,7 @@ ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
    SGE_LIST(EH_reschedule_unknown_list, RU_Type, CULL_DEFAULT) /* JG: TODO: shall it be spooled? Problem: composed primary key */
    SGE_ULONG(EH_report_seqno, CULL_DEFAULT)
    SGE_LIST(EH_report_variables, STU_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(EH_merged_report_variables, STU_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(EHN)
@@ -210,6 +214,7 @@ NAMEDEF(EHN)
    NAME("EH_reschedule_unknown_list")
    NAME("EH_report_seqno")
    NAME("EH_report_variables")
+   NAME("EH_merged_report_variables")
 NAMEEND
 
 #define EHS sizeof(EHN)/sizeof(char*)

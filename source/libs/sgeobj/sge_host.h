@@ -61,5 +61,11 @@ host_trash_load_values(lListElem *host);
 lListElem *
 host_list_locate(const lList *this_list, const char *hostname);
 
+bool
+host_list_merge(lList *this_list);
+
+bool 
+host_merge(lListElem *host, const lListElem *global_host);
+
 #endif /* __SGE_HOST_H */
 

@@ -822,14 +822,9 @@ reporting_create_host_record(lList **answer_list,
    if (do_reporting && host != NULL) {
       dstring load_dstring = DSTRING_INIT;
 
-      /* dump load values */
-      /* JG: TODO: we need a merged variable list that contains the variable
-       * lists from global and local host - or postpone this until a mechnism
-       * similar to cluster_queues is found? 
-       */
       reporting_write_load_values(answer_list, &load_dstring, 
                                   lGetList(host, EH_load_list), 
-                                  lGetList(host, EH_report_variables));
+                                  lGetList(host, EH_merged_report_variables));
 
       /* As long as we have no host status information, dump host data only if we have
        * load values to report.

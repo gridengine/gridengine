@@ -511,6 +511,7 @@ ec_config_changed(void);
 *     static int need_register  = 1;
 *     static lListElem *ec      = NULL;
 *     static u_long32 ec_reg_id = 0;
+*     static u_long32 next_event = 1;
 *
 *  FUNCTION
 *     config_changed - the configuration changed (subscription or event 
@@ -518,6 +519,7 @@ ec_config_changed(void);
 *     need_register  - the client is not registered at the server
 *     ec             - event client object holding configuration data
 *     ec_reg_id      - the id used to register at the qmaster
+*     next_event     - the sequence number of the next event we are waiting for
 *
 *  NOTES
 *     These global variables should be part of the event client object.
@@ -525,10 +527,11 @@ ec_config_changed(void);
 *     allowing one client to connect to multiple event client servers.
 *
 *******************************************************************************/
-static int config_changed = 0;
-static int need_register  = 1;
-static lListElem *ec      = NULL;
-static u_long32 ec_reg_id = 0;
+static int config_changed  = 0;
+static int need_register   = 1;
+static lListElem *ec       = NULL;
+static u_long32 ec_reg_id  = 0;
+static u_long32 next_event = 1;
 
 /****** Eventclient/Client/ec_prepare_registration() ***************************
 *  NAME
@@ -1051,6 +1054,7 @@ ec_register(void)
          lFreeList(alp);
 
          config_changed = 0;
+         need_register = 0;
          
          DEXIT;
          return 1;
@@ -1129,6 +1133,13 @@ ec_deregister(void)
       DEXIT;
       return false;
    }
+
+   /* clear state of this event client instance */
+   ec = lFreeElem(ec);
+   need_register = 1;
+   ec_reg_id = 0;
+   config_changed = 0;
+   next_event = 1;
 
    DEXIT;
    return true;
@@ -1969,7 +1980,6 @@ ec_get(lList **event_list)
 {  
    int ret = -1;
    lList *report_list = NULL;
-   static u_long32 next_event = 1;
    u_long32 wrong_number;
 
    DENTER(TOP_LAYER, "ec_get");
@@ -1985,8 +1995,6 @@ ec_get(lList **event_list)
       if (!ec_register()) {
          DEXIT;
          return -1;
-      } else {
-         need_register = 0;
       }
    }
       

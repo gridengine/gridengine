@@ -1,3 +1,11 @@
+AH-2002-02-28-0  Enhancem.: Event client was not restartable. To fix this the 
+                            whole event client state is resetted when 
+                            ec_deregister() is called. Also a problem has
+                            been fixed that could cause two event client 
+                            instances registered at qmaster depending how
+                            event client interface calls were used.
+                 Review:    JG
+
 JG-2002-02-28-0  Enhancem.: Integrated multi level profiling into scheduler.
                  Review:    EB
 

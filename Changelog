@@ -1,3 +1,5 @@
+JG-2004-09-23-0: Bugfix:    Fixed broken build.
+
 CR-2004-09-23-0: Bugfix:    more precise error messages for communication 
                             errors
                  Review:    JG

@@ -238,8 +238,9 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
 *     sge_any_request/sge_get_communication_error()
 *******************************************************************************/
 static void general_communication_error(int cl_error, const char* error_message) {
-   DENTER(TOP_LAYER, "general_communication_error");
    bool do_log = false;
+
+   DENTER(TOP_LAYER, "general_communication_error");
 
    sge_mutex_lock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
 

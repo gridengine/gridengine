@@ -45,10 +45,6 @@
 
 #include "cl_commlib.h"
 
-#ifndef h_errno
-extern int h_errno;
-#endif
-
 void usage(void)
 {
   fprintf(stderr, "%s gethostbyname [-name|-aname|-all] <name>\n",MSG_UTILBIN_USAGE);
@@ -64,6 +60,7 @@ int main(int argc, char *argv[]) {
    int sge_aliasing = 0;
    int all_option = 0;
    char* unresolved_name = NULL;
+   int system_error = 0;
 
    
 
@@ -109,10 +106,22 @@ int main(int argc, char *argv[]) {
      cl_com_set_alias_file(sge_get_alias_path());
   }
 
-  retval = cl_com_cached_gethostbyname(unresolved_name, &resolved_name, NULL, &he);
+  retval = cl_com_cached_gethostbyname(unresolved_name, &resolved_name, NULL, &he, &system_error);
 
   if (retval != CL_RETVAL_OK) {
-     fprintf(stderr,"%s\n",cl_get_error_text(retval));
+     char* err_text = cl_com_get_h_error_string(system_error);
+     if (err_text == NULL) {
+        err_text = strdup(strerror(system_error));
+        if (err_text == NULL) {
+           err_text = strdup("unexpected error");
+        }
+     }
+     if (unresolved_name == NULL) {
+        unresolved_name = "NULL";
+     }
+     fprintf(stderr,"error resolving host "SFQ": %s (%s)\n",unresolved_name,cl_get_error_text(retval),err_text );
+     free(err_text); 
+     err_text = NULL;
      cl_com_cleanup_commlib();
      exit(1);
   }

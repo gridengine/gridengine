@@ -224,12 +224,12 @@ const char *name
       return NULL;
    }
 
-   he = sge_gethostbyname(name);
+   he = sge_gethostbyname(name,NULL);
    if (he == NULL) {
       for (i = 0; i < MAX_NIS_RETRIES && he == NULL; i++) {
          DPRINTF(("Couldn't resolve hostname %s\n", name));
          sleep(1);
-         he = sge_gethostbyname(name);
+         he = sge_gethostbyname(name,NULL);
       }
    }
 
@@ -265,12 +265,12 @@ const char *name
 *     MT-NOTE: except on the aforementioned platforms, MT calls to
 *     MT-NOTE: gethostbyname() must go through sge_gethostbyname() to be MT safe.
 *******************************************************************************/
-struct hostent *sge_gethostbyname(const char *name)
+struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
 {
    struct hostent *he = NULL;
    time_t now;
    int time;
-   int l_errno;
+   int l_errno = 0;
    
    DENTER(TOP_LAYER, "sge_gethostbyname");
 
@@ -421,6 +421,9 @@ struct hostent *sge_gethostbyname(const char *name)
           (l_errno == NO_DATA)?"NO_DATA":
           (l_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>"));
    }
+   if (system_error_retval != NULL) {
+      *system_error_retval = l_errno;
+   }
 
    DEXIT;
    return he;
@@ -530,7 +533,7 @@ struct hostent *sge_copy_hostent(struct hostent *orig)
 *     MT-NOTE: platforms, MT calls to gethostbyaddr() must go through
 *     MT-NOTE: sge_gethostbyaddr() to be MT safe.
 *******************************************************************************/
-struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
+struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_retval)
 {
    struct hostent *he = NULL;
    time_t now;
@@ -682,6 +685,9 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
           (l_errno == NO_RECOVERY)?"NO_RECOVERY":
           (l_errno == NO_DATA)?"NO_DATA":
           (l_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>"));
+   }
+   if (system_error_retval != NULL) {
+      *system_error_retval = l_errno;
    }
 
    DEXIT;

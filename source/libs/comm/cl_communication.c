@@ -53,8 +53,8 @@
 #include "cl_host_alias_list.h"
 #include "cl_communication.h"
 
-static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent );
-static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent );
+static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent, int* system_error );
+static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent, int* system_error_retval );
 static cl_bool_t cl_ingore_timeout = CL_FALSE;
 
 
@@ -2924,23 +2924,54 @@ int cl_com_free_hostspec(cl_com_host_spec_t **hostspec) {
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_get_h_error_string()"
+char* cl_com_get_h_error_string(int h_error) {
+
+   if (h_error == HOST_NOT_FOUND) {
+      return strdup("h_errno = HOST_NOT_FOUND");
+   }
+   if (h_error == TRY_AGAIN) {
+      return strdup("h_errno = TRY_AGAIN");
+   }
+   if (h_error == NO_RECOVERY) {
+      return strdup("h_errno = NO_RECOVERY");
+   }
+
+   if ( NO_DATA == NO_ADDRESS && h_error == NO_DATA) {
+      return strdup("h_errno = NO_DATA or NO_ADDRESS");
+   } else {
+      if (h_error == NO_DATA) {
+         return strdup("h_errno = NO_DATA");
+      }
+      if (h_error == NO_ADDRESS) {
+         return strdup("h_errno = NO_ADDRESS");
+      }
+   }
+   return NULL;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_gethostname()"
-int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct hostent **he_copy ) {  /* CR check */
+int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct hostent **he_copy , int* system_error_value) {  /* CR check */
 
    char localhostname[CL_MAXHOSTNAMELEN_LENGTH + 1];
    int retval = CL_RETVAL_OK;
    
+   
    if (gethostname(localhostname,CL_MAXHOSTNAMELEN_LENGTH) != 0) {
       CL_LOG(CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_LOCAL_HOSTNAME_ERROR));
+      if (system_error_value != NULL) {
+         *system_error_value = errno;
+      }
       return CL_RETVAL_LOCAL_HOSTNAME_ERROR;
    }
    CL_LOG_STR( CL_LOG_DEBUG, "local gethostname() returned: ", localhostname);
-
-   retval = cl_com_cached_gethostbyname(localhostname, unique_hostname, copy_addr, he_copy );
+   retval = cl_com_cached_gethostbyname(localhostname, unique_hostname, copy_addr, he_copy , system_error_value);
    return retval;
 }
 
@@ -3038,7 +3069,7 @@ static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent ) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_gethostbyname()"
-static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent ) {
+static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent, int* system_error ) {
 
    struct hostent* he = NULL;
    cl_com_hostent_t *hostent_p = NULL;   
@@ -3063,7 +3094,7 @@ static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent ) {
    hostent_p->he_data_buffer = NULL;
    
    /* use sge_gethostbyname() */
-   he = sge_gethostbyname(host);
+   he = sge_gethostbyname(host, system_error);
    if (he == NULL) {
       CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_UNKOWN_HOST_ERROR));
       cl_com_free_hostent(&hostent_p);       /* could not find host */
@@ -3178,7 +3209,7 @@ static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_gethostbyaddr()"
-static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent ) {
+static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent, int* system_error_retval) {
 
    struct hostent *he = NULL; 
    cl_com_hostent_t *hostent_p = NULL;   
@@ -3204,7 +3235,7 @@ static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent
    hostent_p->he_data_buffer = NULL;
 
    /* use sge_gethostbyaddr() */  
-   he = sge_gethostbyaddr(addr);
+   he = sge_gethostbyaddr(addr, system_error_retval);
    
    if (he == NULL) {
       CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_UNKOWN_HOST_ERROR));
@@ -3450,7 +3481,7 @@ int cl_com_compare_hosts( char* host1, char* host2) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_cached_gethostbyname()"
-int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, struct in_addr *copy_addr ,struct hostent **he_copy ) {
+int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, struct in_addr *copy_addr ,struct hostent **he_copy, int* system_error_value ) {
    cl_host_list_elem_t*    elem = NULL;
    cl_host_list_elem_t*    act_elem = NULL;
    cl_com_host_spec_t*       elem_host = NULL;
@@ -3482,7 +3513,7 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
    if (hostlist == NULL) {
       int retval;
       CL_LOG(CL_LOG_ERROR,"no global hostlist, resolving without cache");
-      retval = cl_com_gethostbyname(unresolved_host, &hostent);
+      retval = cl_com_gethostbyname(unresolved_host, &hostent, system_error_value);
       if (retval != CL_RETVAL_OK) {
          cl_com_free_hostent(&hostent);
          return retval;
@@ -3597,7 +3628,7 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
          return CL_RETVAL_MALLOC;
       }
 
-      retval = cl_com_gethostbyname(hostspec->unresolved_name, &hostent);
+      retval = cl_com_gethostbyname(hostspec->unresolved_name, &hostent, system_error_value);
       hostspec->hostent = hostent;
       hostspec->resolve_error = retval;
       gettimeofday(&now,NULL);
@@ -3729,7 +3760,7 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
       help = strtok_r(alias_file_buffer,alias_delemiters,&lasts);
       if (help != NULL) {
          cl_com_hostent_t* he = NULL;
-         if ( cl_com_gethostbyname(help, &he) == CL_RETVAL_OK) {
+         if ( cl_com_gethostbyname(help, &he, NULL) == CL_RETVAL_OK) {
             main_name = strdup(help); /* he->he->h_name */
             cl_com_free_hostent(&he);
             if (main_name == NULL) {
@@ -3849,7 +3880,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
          cl_com_hostent_t* hostent = NULL;
          if (elem_host->unresolved_name != NULL) {
             CL_LOG_STR(CL_LOG_INFO,"resolving host:", elem_host->unresolved_name);
-            retval = cl_com_gethostbyname(elem_host->unresolved_name, &hostent);
+            retval = cl_com_gethostbyname(elem_host->unresolved_name, &hostent, NULL);
             /* free old entries */
             cl_com_free_hostent(&(elem_host->hostent));
             free(elem_host->resolved_name);
@@ -3871,7 +3902,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
             }
          } else {
             CL_LOG(CL_LOG_INFO,"resolving addr");
-            retval = cl_com_gethostbyaddr(elem_host->in_addr, &hostent);
+            retval = cl_com_gethostbyaddr(elem_host->in_addr, &hostent,NULL);
             /* free old entries */
             cl_com_free_hostent(&(elem_host->hostent));
             free(elem_host->resolved_name);
@@ -3903,7 +3934,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_cached_gethostbyaddr()"
-int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,struct hostent **he_copy ) {
+int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,struct hostent **he_copy, int* system_error_val ) {
    cl_host_list_elem_t*    elem = NULL;
    cl_host_list_elem_t*    act_elem = NULL;
    cl_com_host_spec_t*       elem_host = NULL;
@@ -3912,7 +3943,7 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,st
    int ret_val = CL_RETVAL_OK;
    char* alias_name = NULL;
    int resolve_name_ok = 0;
-   int function_return = CL_RETVAL_GETHOSTNAME_ERROR;
+   int function_return = CL_RETVAL_GETHOSTADDR_ERROR;
    
 
    hostlist = cl_com_get_host_list();
@@ -3938,7 +3969,7 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,st
       cl_com_hostent_t* hostent = NULL;
 
       CL_LOG(CL_LOG_WARNING,"no global hostlist, resolving without cache");
-      retval = cl_com_gethostbyaddr(addr, &hostent);
+      retval = cl_com_gethostbyaddr(addr, &hostent, system_error_val);
       if (retval != CL_RETVAL_OK) {
          cl_com_free_hostent(&hostent);
          return retval;
@@ -3986,7 +4017,7 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,st
       if (elem_host->resolved_name == NULL) {
          CL_LOG(CL_LOG_INFO,"found addr in cache - not resolveable");
          cl_raw_list_unlock(hostlist);
-         return CL_RETVAL_GETHOSTNAME_ERROR;
+         return CL_RETVAL_GETHOSTADDR_ERROR;
       }
       CL_LOG_STR(CL_LOG_INFO,"found addr in cache, resolved name:",elem_host->resolved_name);
 
@@ -4024,7 +4055,7 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,st
       memcpy(hostspec->in_addr,addr,sizeof(struct in_addr) );
 
       /* resolve host with cl_com_gethostbyaddr() */
-      retval = cl_com_gethostbyaddr(addr, &hostent);
+      retval = cl_com_gethostbyaddr(addr, &hostent, system_error_val);
       hostspec->hostent = hostent;
       hostspec->resolve_error = retval;
       gettimeofday(&now,NULL);
@@ -4034,10 +4065,10 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,st
 
       if (hostspec->hostent != NULL) {
          /* CHECK for correct resolving */
-         retval = cl_com_cached_gethostbyname( hostent->he->h_name, &hostname , NULL, he_copy);
+         retval = cl_com_cached_gethostbyname( hostent->he->h_name, &hostname , NULL, he_copy, NULL);
          if (retval != CL_RETVAL_OK) {
              CL_LOG_STR(CL_LOG_WARNING,"can't resolve host name", hostent->he->h_name);
-             hostspec->resolve_error = CL_RETVAL_GETHOSTNAME_ERROR;
+             hostspec->resolve_error = CL_RETVAL_GETHOSTADDR_ERROR;
              /* add dummy host entry */
              cl_raw_list_lock(hostlist);
              function_return = cl_host_list_append_host(hostlist, hostspec, 0);
@@ -4047,7 +4078,7 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,st
                 return function_return;
              }
              cl_raw_list_unlock(hostlist);
-             return CL_RETVAL_GETHOSTNAME_ERROR;
+             return CL_RETVAL_GETHOSTADDR_ERROR;
          }
          resolve_name_ok = 1;
          ret_val = cl_host_alias_list_get_alias_name(ldata->host_alias_list,hostent->he->h_name , &alias_name );
@@ -4068,7 +4099,7 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,st
          if (resolve_name_ok != 1) {     /* hostname compare OK */
 
             CL_LOG(CL_LOG_ERROR,"host resolving by address returns not the same host name as resolving by name");
-            hostspec->resolve_error = CL_RETVAL_GETHOSTNAME_ERROR;
+            hostspec->resolve_error = CL_RETVAL_GETHOSTADDR_ERROR;
             /* add dummy host entry */
             cl_raw_list_lock(hostlist);
              function_return = cl_host_list_append_host(hostlist, hostspec, 0);
@@ -4078,7 +4109,7 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,st
                 return function_return;
              }
              cl_raw_list_unlock(hostlist);
-             return CL_RETVAL_GETHOSTNAME_ERROR;
+             return CL_RETVAL_GETHOSTADDR_ERROR;
          } 
          /* if names are equal -> perfect ! , return resolved hostname */
          *unique_hostname = hostname;
@@ -4092,7 +4123,7 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,st
             return function_return;
          }
          cl_raw_list_unlock(hostlist);
-         return CL_RETVAL_GETHOSTNAME_ERROR;
+         return CL_RETVAL_GETHOSTADDR_ERROR;
       }
       cl_com_free_hostspec(&hostspec);
    }

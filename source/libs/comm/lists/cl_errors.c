@@ -139,6 +139,9 @@ const char* cl_get_error_text(int error_id) {       /* CR check */
       case CL_RETVAL_GETHOSTNAME_ERROR         : {
          return "can't resolve host name";
       }
+      case CL_RETVAL_GETHOSTADDR_ERROR         : {
+         return "can't resolve ip address";
+      }
       case CL_RETVAL_SEND_TIMEOUT              : {
          return "got send timeout";
       }

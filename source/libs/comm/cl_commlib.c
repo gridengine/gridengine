@@ -430,7 +430,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       elem = cl_handle_list_get_next_elem(cl_com_handle_list, elem);
    }
 
-   return_value = cl_com_gethostname(&local_hostname, NULL, NULL);
+   return_value = cl_com_gethostname(&local_hostname, NULL, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
       cl_raw_list_unlock(cl_com_handle_list);
@@ -1368,7 +1368,7 @@ int cl_com_add_allowed_host(cl_com_handle_t* handle, char* hostname) {
       CL_LOG(CL_LOG_ERROR,"no host specified");
       return CL_RETVAL_PARAMS;
    }
-   retval = cl_com_cached_gethostbyname(hostname, &resolved_name, NULL, NULL );
+   retval = cl_com_cached_gethostbyname(hostname, &resolved_name, NULL, NULL, NULL );
    if (retval != CL_RETVAL_OK) {
       CL_LOG_STR(CL_LOG_ERROR,"could not resolve host",hostname);
       return retval;
@@ -3048,7 +3048,7 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
    }
 
    /* resolve hostname */
-   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, NULL, NULL);
+   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, NULL, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       return return_value;
    }
@@ -3176,7 +3176,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
    }
 
    /* resolve hostname */
-   ret_val = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL);
+   ret_val = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);
    if (ret_val != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(ret_val));
       return ret_val;
@@ -3390,7 +3390,7 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
       return CL_RETVAL_UNKNOWN_ENDPOINT;
    }
    /* resolve hostname */
-   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL);
+   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
       return return_value;
@@ -3488,7 +3488,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
    CL_LOG_INT(CL_LOG_WARNING,"to component_id   :",component_id );
 
    /* resolve hostname */
-   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL);
+   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
       return return_value;
@@ -3700,7 +3700,7 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
 
 
    /* resolve hostname */
-   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL);
+   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
       return return_value;
@@ -3875,7 +3875,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
    }
 
    /* resolve hostname */
-   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, NULL, NULL);
+   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, NULL, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       return return_value;
    }
@@ -4636,7 +4636,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) {
       /* TODO: refresh host alias file? But it's never used */
       CL_LOG(CL_LOG_ERROR,"getuniquehostname() refresh of alias file not implemented");
    }
-   ret_val = cl_com_cached_gethostbyname((char*)hostin, &resolved_host, NULL, NULL );
+   ret_val = cl_com_cached_gethostbyname((char*)hostin, &resolved_host, NULL, NULL, NULL );
    if (resolved_host != NULL) {
       if (strlen(resolved_host) > MAXHOSTLEN ) {
          free(resolved_host);

@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
   int name_only = 0;
   int sge_aliasing = 0;
   int all_option = 0;
+  int system_error = 0;
 
 #if defined(CRAY)  
   struct sockaddr_in  addr;
@@ -117,9 +118,21 @@ int main(int argc, char *argv[])
   addr.s_addr = inet_addr(ip_string);
 #endif
 
-  retval = cl_com_cached_gethostbyaddr(&addr, &resolved_name, &he);
+  retval = cl_com_cached_gethostbyaddr(&addr, &resolved_name, &he, &system_error);
   if (retval != CL_RETVAL_OK) {
-     fprintf(stderr,"%s\n",cl_get_error_text(retval));
+     char* err_text = cl_com_get_h_error_string(system_error);
+     if (err_text == NULL) {
+        err_text = strdup(strerror(system_error));
+        if (err_text == NULL) {
+           err_text = strdup("unexpected error");
+        }
+     }
+     if ( ip_string == NULL) {
+         ip_string = "NULL";
+     }
+     fprintf(stderr,"error resolving ip "SFQ": %s (%s)\n",ip_string,cl_get_error_text(retval),err_text ); 
+     free(err_text); 
+     err_text = NULL;
      cl_com_cleanup_commlib();
      exit(1);
   }

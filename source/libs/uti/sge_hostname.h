@@ -110,8 +110,8 @@ bool sge_is_hgroup_ref(const char *string);
 
 /* resolver library wrappers */
 struct hostent *sge_gethostbyname_retry(const char *name);
-struct hostent *sge_gethostbyname(const char *name);
-struct hostent *sge_gethostbyaddr(const struct in_addr *addr);
+struct hostent *sge_gethostbyname(const char *name, int* system_error_retval);
+struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_retval);
 
 void sge_free_hostent( struct hostent** he );
 struct hostent *sge_copy_hostent (struct hostent *orig);

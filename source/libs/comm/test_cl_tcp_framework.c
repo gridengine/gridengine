@@ -274,7 +274,7 @@ void *server_thread(void *t_conf) {
    /* setup thread */
    CL_LOG(CL_LOG_INFO, "starting initialization ...");
 
-   cl_com_gethostname(&local_hostname,NULL, NULL);
+   cl_com_gethostname(&local_hostname,NULL, NULL, NULL);
    local_host = cl_com_create_endpoint(local_hostname, "server", 1 );
    free(local_hostname);
    local_hostname = NULL;
@@ -433,7 +433,7 @@ void *client_thread(void *t_conf) {
 
    /* setup thread */
    CL_LOG( CL_LOG_INFO, "starting initialization ...");
-   cl_com_gethostname(&local_hostname,NULL,NULL);
+   cl_com_gethostname(&local_hostname,NULL,NULL, NULL);
    local_host    = cl_com_create_endpoint(local_hostname, thread_config->thread_name, 0 );
    remote_host   = cl_com_create_endpoint(local_hostname, "server", 1 );
    sender_host   = cl_com_create_endpoint(local_hostname, thread_config->thread_name, 0 );

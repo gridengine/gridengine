@@ -80,7 +80,7 @@ main(int argc, char** argv)
   printf("loop\n\n\n");
      while( argv[arg] != NULL) {
         printf("resolving host \"%s\" ...\n", argv[arg]);
-        retval = cl_com_cached_gethostbyname(argv[arg],&rhost,NULL,NULL);
+        retval = cl_com_cached_gethostbyname(argv[arg],&rhost,NULL,NULL,NULL);
         printf("%s\n",cl_get_error_text(retval));
    
         if (rhost != NULL) {
@@ -91,7 +91,7 @@ main(int argc, char** argv)
    
         printf("cl_com_gethostbyaddr ... %s\n", inet_ntoa(addr)); /* inet_ntoa() is not MT save */
 
-        retval = cl_com_cached_gethostbyaddr(&addr, &rhost, NULL);
+        retval = cl_com_cached_gethostbyaddr(&addr, &rhost, NULL, NULL);
         printf("%s\n",cl_get_error_text(retval));
    
         if (retval == CL_RETVAL_OK) {
@@ -103,7 +103,7 @@ main(int argc, char** argv)
         printf("cl_com_gethostbyaddr ... %s\n",inet_ntoa(addr2) ); /* inet_ntoa() is not MT save */
 
    
-        retval = cl_com_cached_gethostbyaddr(&addr2, &rhost, NULL);
+        retval = cl_com_cached_gethostbyaddr(&addr2, &rhost, NULL, NULL);
         printf("%s\n",cl_get_error_text(retval));
    
         if (retval == CL_RETVAL_OK) {

@@ -464,7 +464,7 @@ void sge_getme(u_long32 program_number)
 
    /* Fetch hostnames */
    SGE_ASSERT((gethostname(tmp_str, sizeof(tmp_str)) == 0));
-   SGE_ASSERT(((hent = sge_gethostbyname(tmp_str)) != NULL));
+   SGE_ASSERT(((hent = sge_gethostbyname(tmp_str,NULL)) != NULL));
 
    DTRACE;
 
@@ -481,7 +481,7 @@ void sge_getme(u_long32 program_number)
       struct hostent *hent2 = NULL;
       memcpy(tmp_addr, hent->h_addr, hent->h_length);
       DTRACE;
-      SGE_ASSERT(((hent2 = sge_gethostbyaddr((const struct in_addr *)&tmp_addr)) != NULL));
+      SGE_ASSERT(((hent2 = sge_gethostbyaddr((const struct in_addr *)&tmp_addr, NULL)) != NULL));
       DTRACE;
 
       uti_state_set_qualified_hostname(hent2->h_name);

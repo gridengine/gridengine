@@ -184,11 +184,11 @@ char *argv[]
    sge_schedd_mirror_register();
 
    master_host = sge_get_master(0);
-   if ( (ret=cl_com_cached_gethostbyname((char*)master_host, &initial_qmaster_host, NULL,NULL)) != CL_RETVAL_OK) {
+   if ( (ret=cl_com_cached_gethostbyname((char*)master_host, &initial_qmaster_host, NULL,NULL,NULL)) != CL_RETVAL_OK) {
       CRITICAL((SGE_EVENT, cl_get_error_text(ret)));
       SGE_EXIT(1);
    }
-   if ( (ret=cl_com_gethostname(&local_host, NULL,NULL)) != CL_RETVAL_OK) {
+   if ( (ret=cl_com_gethostname(&local_host, NULL,NULL,NULL)) != CL_RETVAL_OK) {
       FREE(initial_qmaster_host); 
       CRITICAL((SGE_EVENT, cl_get_error_text(ret)));
       SGE_EXIT(1);

@@ -1,3 +1,15 @@
+CR-2004-03-03-0  Bugfix:    - additional parameter for cl_com_gethostname(), 
+                              cl_com_cached_gethostbyname(), 
+                              cl_com_cached_gethostbyaddr(),sge_gethostbyname()
+                              and sge_gethostbyaddr() which returns system error.
+                            - new function cl_com_get_h_error_string() which 
+                              converts system error into a string.
+                            - cl_com_cached_gethostbyaddr() returns new error:
+                              CL_RETVAL_GETHOSTADDR_ERROR
+                 Issue:     674
+                 Changed:   commlib, gethostbyname, gethostbyaddr, gethostname
+                 Review:    pending
+
 EB-2004-03-03-0  Bugfix:    - job will be shown twice in qstat/qmon after 
                               restart of sge_qmaster
                             - dbstat utility is unable to show certain objects

@@ -485,7 +485,7 @@ static void communication_setup(void)
          char *host = NULL;
          int res = -1; 
 
-         res = cl_com_gethostname(&host, NULL, NULL);
+         res = cl_com_gethostname(&host, NULL, NULL,NULL);
 
          CRITICAL((SGE_EVENT, MSG_QMASTER_FOUNDRUNNINGQMASTERONHOSTXNOTSTARTING_S, ((CL_RETVAL_OK == res ) ? host : "unknown")));
 

@@ -609,7 +609,9 @@ int sge_process_all_events(lList *event_list)
 
       case sgeE_JOB_ADD:
          {
+#if 0 /* EB: review with AH */
             u_long32 is_running;
+#endif
 
             if (!n) {
                ERROR((SGE_EVENT, MSG_EVENT_XEVENTADDJOBGOTNONEWJOB_IUU ,
@@ -618,6 +620,7 @@ int sge_process_all_events(lList *event_list)
                goto Error;
             }
 
+#if 0 /* EB: review with AH */ 
             ep = lGetElemUlong(lists.job_list, JB_job_number, intkey);
             if (ep) {
                for_each(ja_task, lGetList(ep, JB_ja_tasks)) {
@@ -631,11 +634,14 @@ int sge_process_all_events(lList *event_list)
                }
             } else {
                u_long32 start, end, step;
-               if (!lists.job_list)
-                  lists.job_list = lCreateList("new job list", JB_Type);
-               data_list = lGetList(event, ET_new_version);
-               ep = lDechainElem(data_list, lFirst(data_list));
+#endif 
 
+            if (!lists.job_list)
+               lists.job_list = lCreateList("new job list", JB_Type);
+            data_list = lGetList(event, ET_new_version);
+            ep = lDechainElem(data_list, lFirst(data_list));
+
+#if 0 /* EB: review with AH */
                /* initialize JB_nrunning */
                for_each (ja_task, lGetList(ep, JB_ja_tasks)) {
                   is_running = running_status(lGetUlong(ja_task, JAT_status));
@@ -644,6 +650,8 @@ int sge_process_all_events(lList *event_list)
 
                   job_log(lGetUlong(ep, JB_job_number), lGetUlong(ja_task, JAT_task_number), "arrived at schedd");
                }
+#endif
+
                /* put it in sort order into the list */
                lAppendElem(lists.job_list, ep);
             
@@ -659,7 +667,10 @@ int sge_process_all_events(lList *event_list)
                } else {
                   DPRINTF(("Added job "u32"\n", lGetUlong(ep, JB_job_number)));
                } 
+
+#if 0 /* EB: review with AH */
             }
+#endif
 
          }
          break;
@@ -1531,6 +1542,7 @@ int sge_process_all_events(lList *event_list)
                         at_dec_job_counter(lGetUlong(ep, JB_priority), 
                                            lGetString(ep, JB_owner), 1);
                      lRemoveElem(lGetList(ep, JB_ja_tasks), ja_task);
+#if 0 /* EB: review with AH */  
                      /* delete job category if necessary and delete job */
                      if (job_get_ja_tasks(ep) == 0) {
                         sge_delete_job_category(ep);
@@ -1538,10 +1550,19 @@ int sge_process_all_events(lList *event_list)
                            at_unregister_job_array(ep);
                         lDelElemUlong(&(lists.job_list), JB_job_number, intkey);
                      } 
+#endif
                   }
                } else {
                   job_delete_not_enrolled_ja_task(ep, NULL, intkey2);
                }
+#if 1 /* EB: review with AH */
+               if (job_get_ja_tasks(ep) == 0) {
+                  sge_delete_job_category(ep);
+                  if (!sge_mode)
+                     at_unregister_job_array(ep);
+                  lDelElemUlong(&(lists.job_list), JB_job_number, intkey);
+               }
+#endif 
             }
          }
          break;

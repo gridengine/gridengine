@@ -652,7 +652,9 @@ void split_jobs(lList **job_list, lList **answer_list,
             lAppendElem(*(result_list[i]), target_job[i]);
          }
       }
+#if 0 /* EB: review with AH */
       job = NULL;
+#endif
 
       /*
        * Do we have remaining tasks which won't fit into the target lists?
@@ -672,6 +674,10 @@ void split_jobs(lList **job_list, lList **answer_list,
             job = lCopyElem(job);
             lInsertElem(*job_list, previous_job, job);
          }
+      } else {
+#if 1 /* EB: review with AH */
+         job = NULL;
+#endif
       } 
 
       /* 

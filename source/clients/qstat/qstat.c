@@ -136,6 +136,8 @@ char **argv
    int nqueues;
    char *hostname = NULL;
    int cl_err = 0;
+   int longest_queue_length=10;
+
 
    DENTER_MAIN(TOP_LAYER, "qstat");
 
@@ -469,31 +471,39 @@ char **argv
     *
     */
 
-   correct_capacities(exechost_list, complex_list);
-   lPSortList(queue_list, "%I+ %I+", QU_seq_no, QU_qname);
-   for_each (qep, queue_list) {
-      int print_jobs_of_queue = 0;
-      /* here we have the queue */
-      if (lGetUlong(qep, QU_tagged) & TAG_SHOW_IT) {
-         if ((full_listing & QSTAT_DISPLAY_NOEMPTYQ) && !qslots_used(qep)) {
-            continue;
-         }
-         else {
-            sge_print_queue(qep, exechost_list, complex_list, 
-                              full_listing, qresource_list);
-            print_jobs_of_queue = 1;
+      correct_capacities(exechost_list, complex_list);
+      lPSortList(queue_list, "%I+ %I+", QU_seq_no, QU_qname);
+	   if(getenv("SGE_LONG_QNAMES")){ 
+         for_each(qep, queue_list) {
+            int length;
+            const char *queue_name =lGetString(qep, QU_qname);
+            if( (length = strlen(queue_name)) >longest_queue_length){
+               longest_queue_length = length;
+            }
          }
       }
+      for_each (qep, queue_list) {
+         int print_jobs_of_queue = 0;
+         /* here we have the queue */
+         if (lGetUlong(qep, QU_tagged) & TAG_SHOW_IT) {
+            if ((full_listing & QSTAT_DISPLAY_NOEMPTYQ) && !qslots_used(qep)) {
+               continue;
+            }
+            else {
+             sge_print_queue(qep, exechost_list, complex_list, 
+                                 full_listing, qresource_list, longest_queue_length);
+               print_jobs_of_queue = 1;
+            }
+         }
 
-      if (shut_me_down) {
-         SGE_EXIT(1);
+         if (shut_me_down) {
+            SGE_EXIT(1);
+         }
+
+       sge_print_jobs_queue(qep, job_list, pe_list, user_list,
+                              exechost_list, complex_list,
+                              print_jobs_of_queue, full_listing, "", longest_queue_length);
       }
-
-      sge_print_jobs_queue(qep, job_list, pe_list, user_list,
-                           exechost_list, complex_list,
-                           print_jobs_of_queue, full_listing, "");
-   }
-
    /* 
     *
     * step 3.5: remove all jobs that we found till now 
@@ -540,7 +550,7 @@ char **argv
     *
     */
    sge_print_jobs_pending(job_list, user_list, exechost_list, complex_list,
-                           &running_per_user, so, full_listing, group_opt);
+                           &running_per_user, so, full_listing, group_opt, longest_queue_length);
 
    /* 
     *
@@ -748,6 +758,7 @@ u_long32 show
                      JB_soft_resource_list,
                      JB_hard_queue_list,
                      JB_soft_queue_list,
+                     JB_master_hard_queue_list,
                      JB_ja_structure,
                      JB_ja_n_h_ids,
                      JB_ja_u_h_ids,

@@ -1875,12 +1875,37 @@ char *time_str
 }
 
 /***************************************************************************/
+
+
+/****** parse_qsub/cull_parse_path_list() **************************************
+*  NAME
+*     cull_parse_path_list() -- ??? 
+*
+*  SYNOPSIS
+*     int cull_parse_path_list(lList **lpp, char *path_str) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **lpp    - ??? 
+*     char *path_str - ??? 
+*
+*  RESULT
+*     int - error code
+*        0 = okay
+*        1 =
+*        2 =
+*        3 =
+*        4 =
+* 
+*******************************************************************************/
 int cull_parse_path_list(
 lList **lpp,
 char *path_str 
 
 /*
-   [host:]path[,[host:]path...]
+   [[host]:]path[,[[host]:]path...]
 
    str0 - path
    str1 - host
@@ -1931,15 +1956,17 @@ char *path_str
 
    for (pstr = str_str; *pstr; pstr++) {
       /* cell given ? */
-      if (**pstr == ':') {
+      if (*pstr[0] == ':') {/* :host */
          cell = NULL;
-         path = sge_strtok(*pstr, ":");
+         path = *pstr+1;
       }
-      else if (strstr(*pstr, ":")) {
-         cell = sge_strtok(*pstr, ":");
-         path = sge_strtok(NULL, ":");
+      else if ( (path = strstr(*pstr, ":")) ){ /*host:path*/
+         path[0] = '\0';
+         cell = strdup(*pstr); 
+         path[0] = ':';
+         path += 1;
       }
-      else {
+      else {/*path */
          cell = NULL;
          path = *pstr;
       }
@@ -1953,6 +1980,7 @@ char *path_str
       lSetString(ep, PN_path, path);
       if (cell) {
          lSetHost(ep, PN_host, cell);
+         FREE(cell);
       }
    }
 

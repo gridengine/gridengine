@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2002/07/11 15:21:09 $     Revision: $Revision: 1.5.2.1 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2003/06/04 12:13:23 $     Revision: $Revision: 1.5.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2002/07/11 15:21:09 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2003/06/04 12:13:23 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -478,6 +478,8 @@ If the \fB\-r\fP option was specified together with \fIqstat\fP,
 the following information for each displayed job is printed (a single line
 for each of the following job characteristics):
 .IP "\(bu" 3n
+The job and master queue name.
+.IP "\(bu" 3n
 The hard and soft resource requirements of the job as specified
 with the
 .M qsub 1
@@ -581,6 +583,9 @@ detail in which debug information is generated is defined.
 If set, specifies the tcp port on which
 .M xxqs_name_sxx_commd 8
 is expected to listen for communication requests.
+.\"
+.IP "\fBSGE_LONG_QNAMES\fP" 1.5i
+If set, all queue names will be displayed in there full length.
 Most installations will use a services map entry instead
 to define that port.
 .\"

@@ -1,3 +1,30 @@
+SG-2003-06-04-0  Bugfix    the queue name was truncated to 10 chars
+                           - the "-r" option got an extra info-line: "master queue:",
+                           which displayes the full queue name
+                           - for all other outputs enables the env variable "SGE_LONG_QNAMES"
+                           the output of long queue names. 
+                IZ:        #555
+                Changed:   qstat
+                Review:    AH, AA
+
+SG-2003-05-26-0: Bugfix    qstat crashed, when used with the options -r -s z
+                           - added the required information to the list
+                IZ:        #545
+                Changed:   qstat
+                Review:    AH
+
+SG-2003-05-22-0: Bugfix:    enabled output file names to have a ":" inside for qsub
+                            - changed the hostname file definition for the c
+                              parameters -e, -o -S
+                            - updated the man pages
+                            - implemented a hostname resolving, returning an error
+                              if the name could not be found.
+                            - implemented a check, if the files are only specified
+                              once per machine.
+                IZ:         #540
+                Changed:    qsub, qsh, qalter, sge_qmaster, qmon
+                Review:     AH, 
+
 AA-2003-05-27-0  Bugfix:    sge_ca script -usercert needs RANDFILE env var
                  Bugtraq:   4749151
                  Changed:   util/sgeCA/sge_ca

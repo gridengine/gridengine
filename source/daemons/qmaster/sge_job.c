@@ -101,6 +101,7 @@
 #include "sge_job_jatask.h"
 #include "qmaster.h"
 #include "sge_suser.h"
+#include "resolve_host.h"
 
 #include "msg_schedd.h"
 #include "msg_common.h"
@@ -142,6 +143,7 @@ static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_fl
 static u_long32 sge_get_job_number(void);
 static void get_rid_of_schedd_job_messages(u_long32 job_number);
 static int job_check_qsh_display(lListElem *job, lList **answer_list);
+int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, int name);
 /*-------------------------------------------------------------------------*/
 /* sge_gdi_add_job                                                       */
 /*    called in sge_c_gdi_add                                              */
@@ -263,6 +265,30 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
          }
       }
    }
+
+
+   /*
+    * resolve host names. If this is not possible and error is produced
+    */
+   {
+      int status;
+      if( (status=job_resolve_host_for_path_list(jep, alpp, JB_stdout_path_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      }
+
+      if( (status=job_resolve_host_for_path_list(jep, alpp, JB_stderr_path_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      }
+
+      if( (status = job_resolve_host_for_path_list(jep, alpp,JB_shell_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      }
+   }
+
+
 
    /*
     * Is the max. size of array jobs exceeded?
@@ -2558,7 +2584,16 @@ int *trigger
 
    /* ---- JB_stderr_path_list */
    if ((pos=lGetPosViaElem(jep, JB_stderr_path_list))>=0) {
-      DPRINTF(("got new JB_stderr_path_list\n")); 
+      int status;
+      DPRINTF(("got new JB_stderr_path_list\n"));
+
+
+      if( (status=job_resolve_host_for_path_list(jep, alpp, JB_stderr_path_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      } 
+
+ 
       lSetList(new_job, JB_stderr_path_list, 
             lCopyList("", lGetList(jep, JB_stderr_path_list)));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_STDERRPATHLIST, u32c(jobid));
@@ -2567,7 +2602,7 @@ int *trigger
 
    /* ---- JB_merge_stderr */
    if ((pos=lGetPosViaElem(jep, JB_merge_stderr))>=0) {
-      DPRINTF(("got new JB_merge_stderr\n")); 
+      DPRINTF(("got new JB_merge_stderr\n"));
       lSetUlong(new_job, JB_merge_stderr, lGetUlong(jep, JB_merge_stderr));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_MERGEOUTPUT, u32c(jobid));
       sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
@@ -2776,7 +2811,16 @@ int *trigger
 
    /* ---- JB_stdout_path_list */
    if ((pos=lGetPosViaElem(jep, JB_stdout_path_list))>=0) {
-      DPRINTF(("got new JB_stdout_path_list\n")); 
+   int status;
+   DPRINTF(("got new JB_stdout_path_list\n"));
+
+
+      if( (status=job_resolve_host_for_path_list(jep, alpp, JB_stdout_path_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      }
+
+ 
       lSetList(new_job, JB_stdout_path_list, 
                lCopyList("", lGetList(jep, JB_stdout_path_list)));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_STDOUTPATHLIST, u32c(jobid));
@@ -2898,7 +2942,15 @@ int *trigger
 
    /* ---- JB_shell_list */
    if ((pos=lGetPosViaElem(jep, JB_shell_list))>=0) {
+
+      int status;
       DPRINTF(("got new JB_shell_list\n")); 
+      if( (status = job_resolve_host_for_path_list(jep, alpp,JB_shell_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      }
+
+
       lSetList(new_job, JB_shell_list, 
                lCopyList("", lGetList(jep, JB_shell_list)));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_SHELLLIST, u32c(jobid));
@@ -3803,6 +3855,80 @@ ftref_del_ja_task(u_long32 job_id, u_long32 ja_task_id)
    DEXIT;
    return TRUE;
 }
-   
+/****** sge_job/job_resolve_host_for_path_list() *******************************
+*  NAME
+*     job_resolve_host_for_path_list() -- is a hostname valid 
+*
+*  SYNOPSIS
+*     int job_resolve_host_for_path_list(const lListElem *job, lList 
+*     **answer_list, int name) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     const lListElem *job - the submited cull list 
+*     lList **answer_list  - AN_Type element
+*     int name             - a JB_Type ( JB_stderr_path_list or JB_stout_path_list)
+*
+*  RESULT
+*     int - error code ( STATUS_OK, or ...) 
+*
+*******************************************************************************/
+
+int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, int name)
+{
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "job_resolve_host_for_path_list");
+
+   for_each( ep, lGetList(job, name) ){
+      int res=sge_resolve_host(ep, PN_host);
+
+      if( (res!=0) && (res!=-1) && (res!=1)){ /* 0 = everything is fine, 1 = no host specified*/
+         const char *hostname = lGetHost(ep, PN_host);
+
+         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hostname));
+         sge_add_answer(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }  
+      else if(res==-1){/*something in the data-structure is wrong */
+         ERROR((SGE_EVENT, MSG_PARSE_NULLPOINTERRECEIVED));
+         sge_add_answer(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+      /* ensure, that each hostname is only specified once */
+      {
+         const char *hostname = lGetHost(ep, PN_host);       
+         lListElem *temp;         
+
+         for(temp= lPrev(ep); temp; temp = lPrev(temp)){
+            const char *temp_hostname = lGetHost(temp, PN_host);
+
+            if(hostname == NULL){
+               if(temp_hostname == NULL){
+                  ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hostname));
+                  sge_add_answer(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            
+                  DEXIT;
+                  return STATUS_EUNKNOWN;
+               }
+            } 
+            else if(strcmp(hostname, temp_hostname)==0){
+               ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hostname));
+               sge_add_answer(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 0);
+
+               DEXIT;
+               return STATUS_EUNKNOWN;
+            }
+         } 
+      }
+   }
+   DEXIT;
+   return STATUS_OK;
+}
+
 #endif /* ENABLE_438_FIX */
 

@@ -63,9 +63,9 @@
 #define TAG_FOUND_IT      0x02
 #define TAG_SELECT_IT     0x04
 
-int sge_print_queue(lListElem *queue, lList *exechost_list, lList *complex_list, u_long32 full_listing, lList *resources);
-void sge_print_jobs_queue(lListElem *qep, lList *job_list, lList *pe_list, lList *user_list, lList *ehl, lList *cl, int print_jobs_of_queue, u_long32 full_listing, char *indent);
-void sge_print_jobs_pending(lList *job_list, lList *user_list, lList *ehl, lList *cl, lList **prunning_jobs_per_user, lSortOrder *so, u_long32 full_listing, u_long32 group_opt);
+int sge_print_queue(lListElem *queue, lList *exechost_list, lList *complex_list, u_long32 full_listing, lList *resources, int longest_queue_length);
+void sge_print_jobs_queue(lListElem *qep, lList *job_list, lList *pe_list, lList *user_list, lList *ehl, lList *cl, int print_jobs_of_queue, u_long32 full_listing, char *indent, int queue_name_length);
+void sge_print_jobs_pending(lList *job_list, lList *user_list, lList *ehl, lList *cl, lList **prunning_jobs_per_user, lSortOrder *so, u_long32 full_listing, u_long32 group_opt, int queue_name_length);
 void sge_print_jobs_finished(lList *job_list, lList *user_list, lList *ehl, lList *cl, u_long32 full_listing);
 void sge_print_jobs_error(lList *job_list, lList *user_list, lList *ehl, lList *cl, u_long32 full_listing);
 

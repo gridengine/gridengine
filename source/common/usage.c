@@ -78,8 +78,6 @@ static char* get_argument_syntax(int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_DATE_TIME; 
      case OA_DESTIN_ID_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST; 
-     case OA_DESTIN_ID_LIST2:
-         return MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST2;
      case OA_HOLD_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST; 
      case OA_HOST_ID_LIST:
@@ -146,6 +144,22 @@ static char* get_argument_syntax(int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST;
      case OA_HOST_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_HOST_LIST;
+     case OA_WC_CQUEUE:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_CQUEUE;
+     case OA_WC_HOST:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_HOST;
+     case OA_WC_HOSTGROUP:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_HOSTGROUP;
+     case OA_WC_QINSTANCE:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_QINSTANCE;
+     case OA_WC_QDOMAIN:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_QDOMAIN;
+     case OA_WC_QUEUE:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE;
+     case OA_WC_QUEUE_LIST:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE_LIST;
+     case OA_OBJECT_NAME2:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME2;
 
      default:
          break; 
@@ -612,7 +626,13 @@ FILE *fp
    if (VALID_OPT(masterq_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_masterq_OPT_DESTIN_ID_LIST, 
          MSG_GDI_UTEXT_masterq_OPT_DESTIN_ID_LIST_BIND );
-      MARK(OA_DESTIN_ID_LIST2);
+      MARK(OA_WC_CQUEUE);
+      MARK(OA_WC_HOST);
+      MARK(OA_WC_HOSTGROUP);
+      MARK(OA_WC_QINSTANCE);
+      MARK(OA_WC_QDOMAIN);
+      MARK(OA_WC_QUEUE);
+      MARK(OA_WC_QUEUE_LIST);
    }
 
    if (VALID_OPT(mattr_OPT, uti_state_get_mewho())) {
@@ -705,20 +725,8 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_mq_OPT_QUEUE , MSG_GDI_UTEXT_mq_OPT_QUEUE );
    }
 
-   if (VALID_OPT(mqattr_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST,
-         MSG_GDI_UTEXT_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST);
-      MARK(OA_DESTIN_ID_LIST);
-   }
-
    if (VALID_OPT(Mq_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Mq_OPT_FNAME, MSG_GDI_UTEXT_Mq_OPT_FNAME);
-   }
-
-   if (VALID_OPT(Mqattr_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_Mqattr_OPT_FNAME_DESTIN_ID_LIST, 
-         MSG_GDI_UTEXT_Mqattr_OPT_FNAME_DESTIN_ID_LIST );
-      MARK(OA_DESTIN_ID_LIST);
    }
 
    if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(mstnode_OPT, uti_state_get_mewho())) {
@@ -828,7 +836,13 @@ FILE *fp
          PRINTITD(MSG_GDI_USAGE_q_OPT_DESTIN_ID_LIST, 
             MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_INFO);
       }
-      MARK(OA_DESTIN_ID_LIST2);
+      MARK(OA_WC_CQUEUE);
+      MARK(OA_WC_HOST);
+      MARK(OA_WC_HOSTGROUP);
+      MARK(OA_WC_QINSTANCE);
+      MARK(OA_WC_QDOMAIN);
+      MARK(OA_WC_QUEUE);
+      MARK(OA_WC_QUEUE_LIST);
    }
 
    if (VALID_OPT(r_OPT, uti_state_get_mewho())) {
@@ -933,11 +947,21 @@ FILE *fp
    if (VALID_OPT(shgrp_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_shgrp_OPT, MSG_GDI_UTEXT_shgrp_OPT);
    }
+   if (VALID_OPT(shgrp_tree_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_shgrp_tree_OPT, MSG_GDI_UTEXT_shgrp_tree_OPT);
+   }
+   if (VALID_OPT(shgrp_resolved_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_shgrp_resolved_OPT, MSG_GDI_UTEXT_shgrp_resolved_OPT);
+   }
 
    if (VALID_OPT(shgrpl_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_shgrpl_OPT, MSG_GDI_UTEXT_shgrpl_OPT);
    }
  
+   if (VALID_OPT(sick_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_sick_OPT , MSG_GDI_UTEXT_sick_OPT );
+   }
+
    if (VALID_OPT(sm_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_sm_OPT , MSG_GDI_UTEXT_sm_OPT );
    }
@@ -945,6 +969,12 @@ FILE *fp
    if (VALID_OPT(so_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_so_OPT , MSG_GDI_UTEXT_so_OPT );
    }
+
+   if (VALID_OPT(sobjl_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_sobjl_OPT, MSG_GDI_UTEXT_sobjl_OPT);
+      MARK(OA_OBJECT_NAME2); 
+      MARK(OA_ATTRIBUTE_NAME); 
+   } 
 
    if (VALID_OPT(soft_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_soft_OPT ,  MSG_GDI_UTEXT_soft_OPT );

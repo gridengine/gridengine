@@ -208,7 +208,8 @@ enumeration_create_reduced_cq(bool fetch_all_qi, bool fetch_all_nqi)
       }
    }
    sge_dstring_sprintf_append(&format_string, "%s", ")");
-   ret = _lWhat(sge_dstring_get_string(&format_string), CQ_Type, name_array, ++names);
+   ret = _lWhat(sge_dstring_get_string(&format_string), CQ_Type, 
+                name_array, ++names);
    sge_dstring_free(&format_string);
    
    DEXIT;
@@ -726,57 +727,6 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                   }
                }
 
-
-#if 0
-               /*
-                * Reject settings for domains/hosts which are not part of
-                * the hostlist specification
-                */
-               if (ret & in_master) {
-                  lList *hostlist = lGetList(cqueue, CQ_hostlist);
-                  lList *master_list = *(hgroup_list_get_master_list());
-                  lList *hosts = NULL;
-                  lList *groups = NULL;
-                  lListElem *elem = NULL;
-
-                  ret &= href_list_find_all_references(hostlist, answer_list,
-                                                       master_list, &hosts,
-                                                       &groups);
-                  if (ret) {
-                     for_each(elem, list) {
-                        const char *host_hgroup = lGetHost(elem,
-                              cqueue_attribute_array[index].href_attr);
-                        lList *tmp_host_hgroup = NULL;
-                        
-                        href_list_add(&tmp_host_hgroup, 
-                                      answer_list, host_hgroup);
-                        href_list_resolve_hostnames(tmp_host_hgroup,
-                                                    answer_list);
-                        host_hgroup = lGetHost(lFirst(tmp_host_hgroup), 
-                                               HR_name);
-                        lSetHost(elem, cqueue_attribute_array[index].href_attr,
-                                 host_hgroup);
-                        if (strcmp(HOSTREF_DEFAULT, host_hgroup) != 0 &&
-                            !href_list_has_member(hostlist, host_hgroup) &&
-                            !href_list_has_member(hosts, host_hgroup) &&
-                            !href_list_has_member(groups, host_hgroup)) {
-                           SGE_ADD_MSG_ID(sprintf(SGE_EVENT,
-                                          MSG_CQUEUE_NOTINHOSTLIST_S, 
-                                          host_hgroup));
-                           answer_list_add(answer_list, SGE_EVENT,
-                                           STATUS_EUNKNOWN, 
-                                           ANSWER_QUALITY_ERROR);
-                           ret = false;
-                           break;
-                        }
-                        tmp_host_hgroup = lFreeList(tmp_host_hgroup);
-                     }
-                  }
-                  hosts = lFreeList(hosts);
-                  groups = lFreeList(groups);
-               }
-#endif
-
                if (ret && 
                    cqueue_attribute_array[index].verify_function != NULL &&
                    (cqueue_attribute_array[index].verify_client || in_master)) {
@@ -852,7 +802,6 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
                lSetList(this_elem, attribute_name, org_list);
             } 
             org_elem = lCreateElem(lGetElemDescr(mod_elem));
-            /* EB: TODO: error message and error handling */
             lSetHost(org_elem, sublist_host_name, name);
             lAppendElem(org_list, org_elem);
          }
@@ -1014,7 +963,6 @@ cqueue_verify_processors(lListElem *cqueue, lList **answer_list,
          range_list_parse_from_string(&range_list, answer_list, 
                                       processors_string,
                                       JUST_PARSE, 0, INF_ALLOWED);
-         /* EB: TODO: CLEANUP: range_list_parse_from_string should return error */
          if (*answer_list) {
             ret = false;
          }

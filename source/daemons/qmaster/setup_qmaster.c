@@ -1245,7 +1245,7 @@ static int debit_all_jobs_from_qs()
             debit_host_consumable(jep, hep = host_list_locate(
                      Master_Exechost_List, lGetHost(qep, QU_qhostname)), 
                      Master_CEntry_List, slots);
-            qinstance_debit_consumable(jep, qep, Master_CEntry_List, slots);
+            qinstance_debit_consumable(qep, jep, Master_CEntry_List, slots);
             if (!master_hep)
                master_hep = hep;
          }

@@ -459,7 +459,7 @@ bool spool_default_validate_func(lList **answer_list,
             qinstance_set_conf_slots_used(object); 
 
             /* setup actual list of queue */
-            qinstance_debit_consumable(NULL, object, Master_CEntry_List, 0);
+            qinstance_debit_consumable(object, NULL, Master_CEntry_List, 0);
 
             /* init double values of consumable configuration */
             centry_list_fill_request(lGetList(object, QU_consumable_config_list), 
@@ -509,7 +509,7 @@ bool spool_default_validate_func(lList **answer_list,
                qinstance_set_conf_slots_used(qinstance);
 
                /* setup actual list of queue */
-               qinstance_debit_consumable(NULL, qinstance, master_list, 0);
+               qinstance_debit_consumable(qinstance, NULL, master_list, 0);
 
                /* init double values of consumable configuration */
                ccl = lGetList(qinstance, QU_consumable_config_list);

@@ -2964,7 +2964,7 @@ lList *orders_list   /* needed to warn on jobs that get dispatched and suspended
 
          DPRINTF(("REDUCING SLOTS OF QUEUE %s BY %d\n", qname, tagged));
 
-         qinstance_debit_consumable(job, qep, centry_list, tagged);
+         qinstance_debit_consumable(qep, job, centry_list, tagged);
       }
    }
 

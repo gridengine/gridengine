@@ -55,6 +55,7 @@
 #include "sge_centry.h"
 #include "sge_schedd_conf.h"
 #include "sge_qinstance.h"
+#include "sge_gqueue.h"
 
 #include "cull_hash.h"
 

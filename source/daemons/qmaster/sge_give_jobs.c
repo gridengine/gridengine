@@ -742,7 +742,7 @@ sge_commit_flags_t commit_flags
                   answer_list_output(&answer_list);
                   lListElem_clear_changed_info(hep);
                }
-               qinstance_debit_consumable(jep, qinstance, Master_CEntry_List, slots);
+               qinstance_debit_consumable(qinstance, jep, Master_CEntry_List, slots);
                /* this info is not spooled */
                qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD); 
                lListElem_clear_changed_info(qinstance);
@@ -1176,7 +1176,7 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
-            qinstance_debit_consumable(job, queue, Master_CEntry_List, -tmp_slot);
+            qinstance_debit_consumable(queue, job, Master_CEntry_List, -tmp_slot);
          }
 
          /* this info is not spooled */

@@ -2009,11 +2009,15 @@ char *what
       if (!qselect_mode) {
          fprintf(fp, "        [-ext]                          %s",MSG_QSTAT_USAGE_VIEWALSOSCHEDULINGATTRIBUTES);
       }
+      if (!qselect_mode) {
+         fprintf(fp, "        [-explain c|a|A]                %s",MSG_QSTAT_USAGE_EXPLAINOPT);
+      }
       if (!qselect_mode) 
          fprintf(fp, "        [-f]                            %s",MSG_QSTAT_USAGE_FULLOUTPUT);
       if (!qselect_mode) 
          fprintf(fp, "        [-F [resource_attributes]]      %s",MSG_QSTAT_USAGE_FULLOUTPUTANDSHOWRESOURCESOFQUEUES);
       if (!qselect_mode) {
+         fprintf(fp, "        [-g {c}]                        %s",MSG_QSTAT_USAGE_DISPLAYCQUEUESUMMARY);
          fprintf(fp, "        [-g {d}]                        %s",MSG_QSTAT_USAGE_DISPLAYALLJOBARRAYTASKS);
          fprintf(fp, "        [-g {t}]                        %s",MSG_QSTAT_USAGE_DISPLAYALLPARALLELJOBTASKS);
       }
@@ -2025,7 +2029,7 @@ char *what
       if (!qselect_mode) 
          fprintf(fp, "        [-ne]                           %s",MSG_QSTAT_USAGE_HIDEEMPTYQUEUES);
       fprintf(fp, "        [-pe pe_list]                   %s",MSG_QSTAT_USAGE_SELECTONLYQUEESWITHONOFTHESEPE);
-      fprintf(fp, "        [-q destin_id_list]             %s",MSG_QSTAT_USAGE_PRINTINFOONGIVENQUEUE);
+      fprintf(fp, "        [-q wc_queue_list]             %s",MSG_QSTAT_USAGE_PRINTINFOONGIVENQUEUE);
       fprintf(fp, "        [-qs {a|c|d|o|s|u|A|C|D|E|S}]   %s",MSG_QSTAT_USAGE_PRINTINFOCQUEUESTATESEL);
       if (!qselect_mode) 
          fprintf(fp, "        [-r]                            %s",MSG_QSTAT_USAGE_SHOWREQUESTEDRESOURCESOFJOB);
@@ -2047,12 +2051,18 @@ char *what
          fprintf(fp, "        [-dq]                           %s",MSG_QSTAT_USAGE_DUMPCOMPLETEQUEUELISTTOSTDOUT);
       }
       fprintf(fp, "\n");
-      fprintf(fp, "destin_id_list           queue[,queue,...]\n");
       fprintf(fp, "pe_list                  pe[,pe,...]\n");
-      fprintf(fp, "job_identifier_list      [job_id|job_mame|pattern]{, [job_id|job_mame|pattern]}\n");
+      fprintf(fp, "job_identifier_list      [job_id|job_name|pattern]{, [job_id|job_name|pattern]}\n");
       fprintf(fp, "resource_list            resource[=value][,resource[=value],...]\n");
       fprintf(fp, "user_list                user|@group[,user|@group],...]\n");
       fprintf(fp, "resource_attributes      resource,resource,.\n");
+      fprintf(fp, "wc_cqueue                %s\n", MSG_QSTAT_HELP_WCCQ);
+      fprintf(fp, "wc_host                  %s\n", MSG_QSTAT_HELP_WCHOST);
+      fprintf(fp, "wc_hostgroup             %s\n", MSG_QSTAT_HELP_WCHG);
+      fprintf(fp, "wc_qinstance             wc_cqueue@wc_host\n");
+      fprintf(fp, "wc_qdomain               wc_cqueue@wc_hostgroup\n");
+      fprintf(fp, "wc_queue                 wc_cqueue|wc_qdomain|wc_qinstance\n");
+      fprintf(fp, "wc_queue_list            wc_queue[,wc_queue,...]\n");
    } else {
       /* display option usage */
       fprintf(fp, MSG_QDEL_not_available_OPT_USAGE_S,what);

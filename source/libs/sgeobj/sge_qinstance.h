@@ -115,8 +115,8 @@ qinstance_is_calendar_referenced(const lListElem *this_elem,
                                  const lListElem *calendar);
 
 int
-qinstance_debit_consumable(lListElem *jep, lListElem *qep, lList *centry_list,
-                           int slots);
+qinstance_debit_consumable(lListElem *this_elem, lListElem *job, 
+                           lList *centry_list, int slots);
 
 void
 qinstance_check_unknown_state(lListElem *this_elem);
@@ -124,16 +124,9 @@ qinstance_check_unknown_state(lListElem *this_elem);
 
 /* EB: TODO: queue -> qinstance */
 
-extern const char *queue_types[];
-
-extern lList *Master_Queue_List;
-
 int queue_reference_list_validate(lList **alpp, lList *qr_list,
                                   const char *attr_name, const char *obj_descr,
                                   const char *obj_name);
-
-bool
-gqueue_is_suspended(const lList *this_list, const lList *qinstance_list);
 
 int
 debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots,

@@ -450,7 +450,7 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
 
       lSetList(this_elem, QU_consumable_actual_list, NULL);
       qinstance_set_conf_slots_used(this_elem);
-      qinstance_debit_consumable(NULL, this_elem, centry_list, 0);
+      qinstance_debit_consumable(this_elem, NULL, centry_list, 0);
 
       for_each(job, job_list) {
          lList *ja_task_list = lGetList(job, JB_ja_tasks);
@@ -469,7 +469,7 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
             }
          }
          if (slots > 0) {
-            qinstance_debit_consumable(job, this_elem, centry_list, slots);
+            qinstance_debit_consumable(this_elem, job, centry_list, slots);
          }
       }
    }
@@ -595,45 +595,8 @@ qinstance_check_unknown_state(lListElem *this_elem)
    return;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-/* EB: TODO: queue -> qinstance */
-
-/* this_list: JG_Type */
-bool 
-gqueue_is_suspended(const lList *this_list, const lList *qinstance_list) 
-{
-   bool ret = false;
-   lListElem *gqueue;
-
-   DENTER(TOP_LAYER, "gqueue_is_suspended");
-   for_each(gqueue, this_list) {
-      const char *queue_name = lGetString(gqueue, JG_qname);
-      lListElem *qinstance = qinstance_list_locate2(qinstance_list, queue_name);
-   
-      if (qinstance_state_is_manual_suspended(qinstance) ||
-          qinstance_state_is_susp_on_sub(qinstance) ||
-          qinstance_state_is_cal_suspended(qinstance)) {
-         ret = true;
-         break;
-      }
-   }
-   DEXIT;
-   return ret;   
-}
-
-/* EB: TODO: CLEANUP change order of parameter */
 int 
-qinstance_debit_consumable(lListElem *jep, lListElem *qep, lList *centry_list,
+qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list,
                            int slots)
 {
    return debit_consumable(jep, qep, centry_list, slots,

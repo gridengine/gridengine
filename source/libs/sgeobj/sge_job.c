@@ -614,7 +614,6 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
 
    object_delete_range_id(job, answer_list, JB_ja_n_h_ids, ja_task_number);
 
-   /* EB: CLEANUP: should we add a new CULL function? */
    ja_task = lGetSubUlong(job, JAT_task_number, ja_task_number, JB_ja_tasks);
    if (ja_task == NULL) {
       lListElem *template_task = NULL;
@@ -2487,9 +2486,6 @@ job_get_contribution(const lListElem *this_elem, lList **answer_list,
    DEXIT;
    return ret;
 }
-
-
-/* EB: TODO: rename */
 
 void queue_or_job_get_states(int nm, char *str, u_long32 op)
 {

@@ -1843,8 +1843,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                       sub_command == SGE_GDI_APPEND) {
 
                      if (!no_info && sub_command == SGE_GDI_APPEND) {
-                        /* EB: TODO: move to msg file */
-                        INFO((SGE_EVENT, "No modification because "SFQ" already exists in "SFQ" of "SFQ"\n",
+                        INFO((SGE_EVENT, MSG_OBJECT_ALREADYEXIN_SSS,
                               rstring, sub_list_name, object_name));
                         answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
                                         ANSWER_QUALITY_INFO);

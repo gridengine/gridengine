@@ -663,7 +663,7 @@ int sge_read_cqueue_list_from_disk(void)
                   qinstance_set_conf_slots_used(qinstance);
 
                   /* setup actual list of queue */
-                  qinstance_debit_consumable(NULL, qinstance, master_list, 0);
+                  qinstance_debit_consumable(qinstance, NULL, master_list, 0);
 
                   ccl = lGetList(qinstance, QU_consumable_config_list);
                   centry_list_fill_request(ccl, master_list, 

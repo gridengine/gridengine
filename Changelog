@@ -1,3 +1,7 @@
+EB-2004-01-20-0: Enhancem.: core implementation for qconf -sick
+                            - cleanup
+                            - TODO items
+
 DT-2004-01-19-0: Bugfix:    Fixed scheduler crash when an array job with -now y
                             could not be completely scheduled.  Now if an array
                             job with -now y cannot be completely scheduled, it
@@ -463,6 +467,7 @@ EB-2003-12-15-0: Bugfix:    removed unused messages
 
 EB-2003-12-13-0: Enhancem.: Cluster Queue (merged from CQ_BRANCH)
                  Changed:   all
+                 Review:    AH
 
                  All changes applied to the CQ_BRANCH have been merged to
                  MAINTRUNC. This also means that (nearly) all work packeges 

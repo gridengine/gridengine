@@ -83,6 +83,7 @@
 #include "sge_cqueue.h"
 #include "sge_event.h"
 #include "sge_feature.h"
+#include "sge_gqueue.h"
 #include "sge_id.h"
 #include "sge_job.h"
 #include "sge_object.h"

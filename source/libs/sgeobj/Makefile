@@ -55,6 +55,7 @@ SGEOBJLIB_SRC = \
          sge_ckpt.c \
          sge_cuser.c \
          sge_event.c \
+         sge_gqueue.c \
          sge_host.c \
          sge_hgroup.c \
          sge_href.c \
@@ -165,6 +166,9 @@ sge_ckpt.o: $(SGEOBJLIB_DIR)/sge_ckpt.c
 
 sge_event.o:	$(SGEOBJLIB_DIR)/sge_event.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_event.c
+
+sge_gqueue.o:	$(SGEOBJLIB_DIR)/sge_gqueue.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_gqueue.c
 
 sge_host.o: $(SGEOBJLIB_DIR)/sge_host.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_host.c

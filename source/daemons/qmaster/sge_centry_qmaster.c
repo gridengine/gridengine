@@ -267,7 +267,7 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
 
       for_each(qinstance, qinstance_list) {
          lSetList(qinstance, QU_consumable_actual_list, NULL);
-         qinstance_debit_consumable(NULL, qinstance, Master_CEntry_List, 0);
+         qinstance_debit_consumable(qinstance, NULL, Master_CEntry_List, 0);
       }
    }
    for_each (hep, Master_Exechost_List) {
@@ -296,7 +296,7 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
             qslots = lGetUlong(gdil, JG_slots);
             debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
                   lGetHost(qep, QU_qhostname)), Master_CEntry_List, qslots);
-            qinstance_debit_consumable(jep, qep, Master_CEntry_List, qslots);
+            qinstance_debit_consumable(qep, jep, Master_CEntry_List, qslots);
             slots += qslots;
          }
          debit_host_consumable(jep, host_list_locate(Master_Exechost_List,

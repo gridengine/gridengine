@@ -144,8 +144,8 @@
 #define MSG_PARSE_WRONGSTDOUTPATHLISTFORMATXSPECTOOOPTION_S              _MESSAGE(23087, _("ERROR! Wrong stdout path list format "SFQ" specified to -o option\n"))
 #define MSG_PARSE_PEOPTIONMUSTHAVEPENAMEARGUMENT              _MESSAGE(23088, _("ERROR! -pe option must have pe_name argument\n"))
 #define MSG_PARSE_PEOPTIONMUSTHAVERANGEAS2NDARGUMENT              _MESSAGE(23089, _("ERROR! -pe option must have range as 2nd argument\n"))
-#define MSG_PARSE_QOPTIONMUSTHAVEDESTIDLISTARGUMENT              _MESSAGE(23090, _("ERROR! -q option must have destination identifier list argument\n"))
-#define MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOQOPTION_S              _MESSAGE(23091, _("ERROR! Wrong destination identifier list format "SFQ" specified to -q option\n"))
+#define MSG_PARSE_QOPTIONMUSTHAVEDESTIDLISTARGUMENT              _MESSAGE(23090, _("ERROR! -q option must have queue list argument\n"))
+#define MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOQOPTION_S              _MESSAGE(23091, _("ERROR! Wrong queue list format "SFQ" specified to -q option\n"))
 #define MSG_PARSE_INVALIDOPTIONARGUMENTRX_S              _MESSAGE(23093, _("invalid option argument \"-r "SFN"\"\n"))
 #define MSG_PARSE_SCOPTIONMUSTHAVECONTEXTLISTARGUMENT              _MESSAGE(23094, _("ERROR! -sc option must have context list argument\n"))
 #define MSG_PARSE_WRONGCONTEXTLISTFORMATSCX_S              _MESSAGE(23095, _("ERROR! Wrong context list format -sc "SFQ"\n"))
@@ -362,7 +362,6 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_CKPT_SEL             "ckpt_selector           `n' `s' `m' `x' <interval> "
 #define MSG_GDI_ARGUMENTSYNTAX_OA_DATE_TIME            "date_time               [[CC]YY]MMDDhhmm[.SS]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST       "destin_id_list          queue[ queue ...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST2      "destin_id_list          queue[,queue,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST            "hold_list               `n' `u' `s' `o' `U' `S' `O'"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST         "host_id_list            host[ host ...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID_LIST          "job_id_list             job_id[,job_id,...]"
@@ -392,10 +391,19 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_VARIABLE_LIST        "variable_list           variable[=value][,variable[=value],...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PROJECT_LIST         "project_list            project[,project,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME          "obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\"|\"hostgroup\""
+#define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME2         "obj_nm2                 \"queue\"|\"exechost\""
 #define MSG_GDI_ARGUMENTSYNTAX_OA_ATTRIBUTE_NAME       "attr_nm                 (see man pages)"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_ID_LIST       "obj_id_lst              objectname [ objectname ...]" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST     "evid_list               all | evid[,evid,...]" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_LIST     "host_list               all | hostname[,hostname,...]" 
+#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_CQUEUE            "wc_cqueue               wildcard expression matching a cluster queue"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_HOST              "wc_host                 wildcard expression matching a host"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_HOSTGROUP         "wc_hostgroup            wildcard expression matching a hostgroup"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QINSTANCE         "wc_qinstance            wc_cqueue@wc_host"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QDOMAIN           "wc_qdomain              wc_cqueue@wc_hostgroup"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE             "wc_queue                wc_cqueue|wc_qdomain|wc_qinstance"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE_LIST        "wc_queue_list           wc_queue[,wc_queue,...]"
+
 
 #define MSG_GDI_USAGE_USAGESTRING                     _MESSAGE(23289, _("usage:"))
 
@@ -444,8 +452,8 @@
 #define MSG_GDI_USAGE_Ap_OPT_FNAME                       "[-Ap fname]"
 #define MSG_GDI_UTEXT_Ap_OPT_FNAME                       _MESSAGE(23306, _("add a new parallel environment from file"))
 
-#define MSG_GDI_USAGE_aq_OPT_Q_TEMPLATE                  "[-aq [q_template]]"
-#define MSG_GDI_UTEXT_aq_OPT_Q_TEMPLATE                  _MESSAGE(23307, _("add a new queue using the given template"))
+#define MSG_GDI_USAGE_aq_OPT_Q_TEMPLATE                  "[-aq ]"
+#define MSG_GDI_UTEXT_aq_OPT_Q_TEMPLATE                  _MESSAGE(23307, _("add a new cluster queue"))
 
 #define MSG_GDI_USAGE_as_OPT_HOSTNAME                    "[-as hostname]"
 #define MSG_GDI_UTEXT_as_OPT_HOSTNAME                    _MESSAGE(23308, _("add a submit host"))
@@ -665,14 +673,8 @@
 #define MSG_GDI_USAGE_mq_OPT_QUEUE                       "[-mq [queue]]"
 #define MSG_GDI_UTEXT_mq_OPT_QUEUE                       _MESSAGE(23380, _("modify a queue"))
 
-#define MSG_GDI_USAGE_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST   "[-mqattr attr_name value destin_id_list]"
-#define MSG_GDI_UTEXT_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST   _MESSAGE(23381, _("modify particular queue attributes"))
-
 #define MSG_GDI_USAGE_Mq_OPT_FNAME                       "[-Mq fname]"
 #define MSG_GDI_UTEXT_Mq_OPT_FNAME                       _MESSAGE(23382, _("modify a queue from file"))
-
-#define MSG_GDI_USAGE_Mqattr_OPT_FNAME_DESTIN_ID_LIST    "[-Mqattr fname destin_id_list]"
-#define MSG_GDI_UTEXT_Mqattr_OPT_FNAME_DESTIN_ID_LIST    _MESSAGE(23383, _("modify particular queue attributes from file"))
 
 #define MSG_GDI_USAGE_mu_OPT_LISTNAME_LIST               "[-mu listname_list]"
 #define MSG_GDI_UTEXT_mu_OPT_LISTNAME_LIST               _MESSAGE(23384, _("modify the given userset list"))
@@ -727,11 +729,11 @@
 
 #define MSG_GDI_USAGE_passwd_OPT                         "[-passwd]"
                        
-#define MSG_GDI_USAGE_masterq_OPT_DESTIN_ID_LIST         "[-masterq destin_id_list]"
+#define MSG_GDI_USAGE_masterq_OPT_DESTIN_ID_LIST         "[-masterq wc_queue_list]"
 #define MSG_GDI_UTEXT_masterq_OPT_DESTIN_ID_LIST_BIND    _MESSAGE(23401, _("bind master task to queue(s)"))
 
 
-#define MSG_GDI_USAGE_q_OPT_DESTIN_ID_LIST               "[-q destin_id_list]"
+#define MSG_GDI_USAGE_q_OPT_DESTIN_ID_LIST               "[-q wc_queue_list]"
 #define MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_BIND          _MESSAGE(23402, _("bind job to queue(s)"))
 #define MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_INFO          _MESSAGE(23403, _("print information on given queue"))
 
@@ -1080,6 +1082,17 @@
 #define MSG_OBJ_XUSERLIST                  _MESSAGE(60606, _("xuser list"))
 #define MSG_QCONF_ONLYONERANGE             _MESSAGE(60607, _("ERROR! -t option only allows one range specification\n"))
 #define MSG_FILE_NOTCHANGED                _MESSAGE(60608, _("Object has not been changed\n"))
+
+#define MSG_GDI_USAGE_sobjl_OPT            "[-sobjl obj_nm2 attr_nm val]"
+#define MSG_GDI_UTEXT_sobjl_OPT            _MESSAGE(60609, _("show objects which match the given value")) 
+
+#define MSG_GDI_USAGE_shgrp_tree_OPT       "[-shgrp_tree group]"
+#define MSG_GDI_UTEXT_shgrp_tree_OPT       _MESSAGE(60610, _("show host group and used hostgroups as tree")) 
+#define MSG_GDI_USAGE_shgrp_resolved_OPT   "[-shgrp_resolved group]"
+#define MSG_GDI_UTEXT_shgrp_resolved_OPT   _MESSAGE(60611, _("show host group with resolved hostlist"))  
+
+#define MSG_GDI_USAGE_sick_OPT             "[-sick]"
+#define MSG_GDI_UTEXT_sick_OPT             _MESSAGE(60611, _("show deficient configurations"))
 
 /*
  * Objects and components

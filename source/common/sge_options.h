@@ -198,9 +198,8 @@ enum {
 
    dul_OPT,      /* "-dul <user_set>," in qconf */
    display_OPT,  /* -display option for qsh */
-   mqattr_OPT,   /* modify particular queue attribute */
-   Mqattr_OPT,   /* modify particular queue attributes from file */
    sss_OPT,      /* show scheduler state */
+   sick_OPT,     /* show deficient configurations */
    ssconf_OPT,   /* show scheduler configuration */
 
    /* calendar management */
@@ -235,6 +234,7 @@ enum {
    Rattr_OPT,     /* overwrite a sublist from file */
    Dattr_OPT,     /* aelete a sublist from file */
    Aattr_OPT,     /* add a element to a sublist from file */
+   sobjl_OPT,     /* show object list which matches conf value */
       
 #ifndef __SGE_NO_USERMAPPING__
    /* added for user mapping */
@@ -253,6 +253,8 @@ enum {
    dhgrp_OPT,    /* delete host group entry  */
    mhgrp_OPT,    /* modify host group entry */
    shgrp_OPT,    /* show host group entry */
+   shgrp_tree_OPT,        /* show host group entry as tree*/
+   shgrp_resolved_OPT,    /* show host group entry with resolved hostlist */
    shgrpl_OPT,   /* show host group entry list  */
    Mhgrp_OPT,    /* modify host group entry from file */
 

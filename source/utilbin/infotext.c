@@ -104,10 +104,18 @@ static char* sge_infotext_make_line_break(dstring* buffer, char* text) {
 
    line = 0;
    for (h=0; h < strlen(text) ; h++) {
-      if (line > 75 && text[h] == ' ' ) {
+      if ((line > 65 && text[h] == ' ') ) {
          line = 0;
          sge_dstring_append(buffer,"\"\n\"");
       }
+
+      if (h>=2) {
+         if ( text [h-2] == '\\' && text[h-1] == 'n'  ) {
+             line = 0;
+             sge_dstring_append(buffer,"\"\n\"");
+         }
+      }
+
       hbuf[0] = text[h];
       sge_dstring_append(buffer, hbuf);
       line++;

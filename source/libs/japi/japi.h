@@ -325,7 +325,7 @@ void japi_standard_error(int drmaa_errno, dstring *ds);
 drmaa_attr_values_t *japi_allocate_string_vector(int type); 
 int japi_init_mt(dstring *diag);
 
-bool japi_is_delegated_file_staging_enabled(void);
+bool japi_is_delegated_file_staging_enabled(dstring *diag);
 
 #ifdef  __cplusplus
 }

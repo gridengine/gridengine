@@ -1,3 +1,15 @@
+DT-2004-05-24-0: Bugfix:    o Cleaned up flatfile spooling error codes
+                            o Cleaned up qconf error messages
+                            o Reworked JAPI initialization to delay GDI calls
+                              until necessary
+                            o Expanded DRMAA Java binding test program
+                            o Renamed DRMAA README
+                            o Added -help_arch to distinst
+                            o Updated DRMAA man pages
+                 Changed:   qconf, flatfile spooling, JAPI, DRMAA
+                 Issue:     1005, 1025
+                 Review:    AH, SG
+
 SG-2004-05-24-1: Bugfix:    The monitor switch in the scheduler would not turn
                             off, after removing the monitor entry from the 
                             params in the scheduler config.

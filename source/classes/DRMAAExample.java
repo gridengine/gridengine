@@ -47,7 +47,7 @@ public class DRMAAExample {
 		JobTemplate jt = createJobTemplate (jobPath, 5, true);
 		
 		List allJobIds = new LinkedList ();
-		Set jobIds = null;
+		List jobIds = null;
 		boolean retry = true;
 		
 		for (int count = 0; count < NBULKS; count++) {

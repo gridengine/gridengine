@@ -702,7 +702,7 @@ spool_flatfile_open_file(lList **answer_list,
 
          /* check stdout file handle */
          if (!sge_check_stdout_stream(file, STDOUT_FILENO)) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+            answer_list_add_sprintf(answer_list, STATUS_EDISK, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_STDFILEHANDLECLOSEDORCORRUPTED_S,
                                     "<stdout>");
@@ -720,7 +720,7 @@ spool_flatfile_open_file(lList **answer_list,
 
          /* check stderr file handle */
          if (!sge_check_stdout_stream(file, STDERR_FILENO)) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+            answer_list_add_sprintf(answer_list, STATUS_EDISK, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_STDFILEHANDLECLOSEDORCORRUPTED_S,
                                     "<stderr>");
@@ -752,7 +752,7 @@ spool_flatfile_open_file(lList **answer_list,
             /* open file */
             file = fopen(filepath_in, "w");
             if (file == NULL) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+               answer_list_add_sprintf(answer_list, STATUS_EDISK, 
                                        ANSWER_QUALITY_ERROR, 
                                        MSG_ERROROPENINGFILEFORWRITING_SS, 
                                        filepath_in, strerror(errno));
@@ -765,7 +765,7 @@ spool_flatfile_open_file(lList **answer_list,
       case SP_DEST_SPOOL:
          /* check file name */
          if (filepath_in == NULL || *filepath_in == 0) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+            answer_list_add_sprintf(answer_list, STATUS_ESEMANTIC, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_INVALIDFILENAMENULLOREMPTY);
             return NULL;
@@ -774,7 +774,7 @@ spool_flatfile_open_file(lList **answer_list,
          /* open file */
          file = fopen(filepath_in, "w");
          if (file == NULL) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+            answer_list_add_sprintf(answer_list, STATUS_EDISK,
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_ERROROPENINGFILEFORWRITING_SS, 
                                     filepath_in, strerror(errno));
@@ -827,7 +827,7 @@ spool_flatfile_close_file(lList **answer_list, FILE *file, const char *filepath,
    }
 
    if (fclose(file) != 0) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+      answer_list_add_sprintf(answer_list, STATUS_EDISK,
                               ANSWER_QUALITY_ERROR, 
                               MSG_ERRORCLOSINGFILE_SS, 
                               filepath != NULL ? filepath : "<null>", 
@@ -866,7 +866,7 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
 
    /* write data */
    if (fwrite(data, sizeof(char), data_len, file) != data_len) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+      answer_list_add_sprintf(answer_list, STATUS_EDISK,
                               ANSWER_QUALITY_ERROR, MSG_ERRORWRITINGFILE_SS,
                               result, strerror(errno));
       spool_flatfile_close_file(answer_list, file, result, destination);
@@ -924,7 +924,7 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
       
       pos = lGetPosInDescr(descr, fields[i].nm);
       if (pos < 0) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+         answer_list_add_sprintf(answer_list, STATUS_ESEMANTIC,
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_NMNOTINELEMENT_S,
                                  lNm2Str(fields[i].nm));
@@ -1192,7 +1192,7 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
 
       file = fopen(filepath, "r");
       if (file == NULL) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+         answer_list_add_sprintf(answer_list, STATUS_EDISK,
                                  ANSWER_QUALITY_ERROR, 
                                  MSG_ERROROPENINGFILEFORREADING_SS,
                                  filepath, strerror(errno));
@@ -1338,7 +1338,7 @@ FF_DEBUG("eof detected");
          /* read field name from file */
 FF_DEBUG("read field name");
          if (*token != SPFT_WORD) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
                                     ANSWER_QUALITY_ERROR,
                                     MSG_PARSINGOBJECTNOATTRIBUTE_D,
                                     spool_line);
@@ -1367,7 +1367,7 @@ FF_DEBUG("read field name");
             
             /* not found -> error */
             if (nm == NoName) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
                                        ANSWER_QUALITY_ERROR,
                                        MSG_UNKNOWNATTRIBUTENAME_S, spool_text);
                stop = true;
@@ -1391,7 +1391,7 @@ FF_DEBUG("return whitespace");
 FF_DEBUG("read name_value_delimiter");
                if (!is_delimiter(*token) || 
                    *spool_text != instr->name_value_delimiter) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                  answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
                                           ANSWER_QUALITY_ERROR,
                                           MSG_PARSINGOBJECTNAMEVALUESEP_SD,
                                           output_delimiter(instr->name_value_delimiter),
@@ -1426,7 +1426,7 @@ FF_DEBUG(lNm2Str(nm));
       /* check if nm is an attribute of current object type */
       pos = lGetPosInDescr(descr, nm);
       if (pos < 0) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
                                  ANSWER_QUALITY_ERROR,
                                  MSG_ATTRIBUTENOTINOBJECT_S,
                                  (fields[field_index].name != NULL) ?
@@ -1441,7 +1441,7 @@ FF_DEBUG(lNm2Str(nm));
           * If add_nm_to_set returns -1, it means that the field already exists
           * in the field list.  In this case, return an error. */
          if (add_nm_to_set(fields_out, nm) == -1) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
                                     ANSWER_QUALITY_ERROR,
                                     MSG_FLATFILE_DUPLICATEATTRIB_S,
                                     (fields[field_index].name != NULL) ?
@@ -1595,7 +1595,7 @@ FF_DEBUG("empty list");
                   if (instr->field_delimiter != '\0') {
                      if (!is_delimiter(*token) ||
                          *spool_text != instr->field_delimiter) {
-                        answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                        answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
                                        ANSWER_QUALITY_ERROR,
                                        MSG_PARSINGOBJECTUNKNOWNTRAILER_DS,
                                        spool_line,
@@ -1671,7 +1671,7 @@ FF_DEBUG("skipping field delimiter");
          if (instr->field_delimiter != '\0') {
             if (!is_delimiter(*token) ||
                 *spool_text != instr->field_delimiter) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
                                        ANSWER_QUALITY_ERROR,
                                        MSG_PARSINGOBJECTUNKNOWNTRAILER_DS,
                                        spool_line,
@@ -1765,7 +1765,7 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
 
       file = fopen(filepath, "r");
       if (file == NULL) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+         answer_list_add_sprintf(answer_list, STATUS_EDISK,
                                  ANSWER_QUALITY_ERROR, 
                                  MSG_ERROROPENINGFILEFORREADING_SS,
                                  filepath, strerror(errno));
@@ -1863,7 +1863,7 @@ FF_DEBUG("detected end_token");
          if (instr->record_delimiter != '\0') {
             if (!is_delimiter(*token) || 
                 *spool_text != instr->record_delimiter) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
                                        ANSWER_QUALITY_ERROR,
                                        MSG_PARSINGLISTBADRECORDSEP_DS,
                                        spool_line,
@@ -1880,7 +1880,7 @@ FF_DEBUG("detected record_delimiter");
       if (instr->record_start != '\0') {
          if (!is_delimiter(*token) ||
             *spool_text != instr->record_start) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
                                     ANSWER_QUALITY_ERROR,
                                     MSG_PARSINGLISTBADRECORDSTART_DS,
                                     spool_line,
@@ -1912,7 +1912,7 @@ FF_DEBUG("detected record_start");
       if (instr->record_end != '\0') {
          if (!is_delimiter(*token) ||
             *spool_text != instr->record_end) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
                                     ANSWER_QUALITY_ERROR,
                                     MSG_PARSINGLISTBADRECORDEND_DS,
                                     spool_line,

@@ -4,6 +4,7 @@
  * Created on May 4, 2004, 6:16 PM
  */
 
+import java.io.*;
 import java.util.*;
 
 import org.ggf.drmaa.*;
@@ -33,26 +34,31 @@ public class TestDRMAA {
       DRMAASession.Version version = session.getVersion ();
       
       System.out.println ("Version: " + Integer.toString (version.getMajor ()) + "." + Integer.toString (version.getMinor ()));
-      System.out.println ("");
-      System.out.println ("Starting test threads...");
       System.out.println ("--------------------------------------------------");
+      System.out.println ("");
+      
+      log ("0: Starting test threads...");
       
       new Thread (new SubmitWaitTester (1)).start ();
-      new Thread (new BulkSubmitSyncTester (2)).start ();
-      new Thread (new SubmitDeleteTester (3)).start ();
-      new Thread (new SubmitHoldReleaseTester (4)).start ();
-      new Thread (new SubmitSuspendResumeTester (5)).start ();
-      new Thread (new SubmitTester (6, 5)).start ();
-      new Thread (new BulkSubmitTester (7, 5)).start ();
-      new Thread (new WaitTester (8)).start ();
-      new Thread (new SyncTester (9)).start ();
-
-      synchronized (lock) {
+//      new Thread (new BulkSubmitSyncTester (2)).start ();
+//      new Thread (new SubmitDeleteTester (3)).start ();
+//      new Thread (new SubmitHoldReleaseTester (4)).start ();
+//      new Thread (new SubmitSuspendResumeTester (5)).start ();
+//      new Thread (new SubmitTester (6, 5)).start ();
+//      new Thread (new BulkSubmitTester (7, 5)).start ();
+//      new Thread (new WaitTester (8)).start ();
+//      new Thread (new SyncTester (9)).start ();      
+      
+      sleep (5);
+      
+      synchronized (lock) {         
          lock.notifyAll ();
       }
       
-      Thread.sleep (60);
+      log ("0: Sleeping");
+      sleep (60);
       
+      log ("0: Exiting");
       session.exit ();
    }
    
@@ -60,22 +66,33 @@ public class TestDRMAA {
     * @param args the command line arguments
     */
    public static void main (String[] args) throws Exception {
+      new TestDRMAA ();
+      
+      System.exit (0);
    }
-
+   
    static synchronized void log (String message) {
       System.out.println (message);
    }
    
    private abstract class Tester implements Runnable {
       private int id = 0;
-      protected JobTemplate jt = null;      
+      protected JobTemplate jt = null;
       
       Tester (int id) {
          this.id = id;
       }
-
+      
       void log (String message) {
          TestDRMAA.log (Integer.toString (id) + ": " + message);
+      }
+      
+      void log (Throwable e) {
+         StringWriter sout = new StringWriter ();
+         PrintWriter pout = new PrintWriter (sout);
+         e.printStackTrace (pout);
+         pout.close ();
+         TestDRMAA.log (Integer.toString (id) + ": " + sout.toString ());
       }
       
       public void run () {
@@ -85,7 +102,7 @@ public class TestDRMAA {
             }
          }
          catch (InterruptedException e) {
-            e.printStackTrace ();
+            log (e);
             return;
          }
          
@@ -100,19 +117,19 @@ public class TestDRMAA {
                break;
             }
             catch (Exception e) {
-               e.printStackTrace();
+               log (e);
             }
          }
       }
       
       public abstract void test () throws DRMAAException;
-         
+      
       public void cleanup () {
          try {
             jt.delete ();
          }
          catch (DRMAAException e) {
-            e.printStackTrace ();
+            log (e);
          }
       }
    }
@@ -129,15 +146,15 @@ public class TestDRMAA {
          
          for (int count = 0; count < 10; count++) {
             jobId = session.runJob (jt);
-
+            
             log ("Submitted job " + jobId);
          }
-
+         
          for (int count = 0; count < 10; count++) {
             JobInfo status = null;
-
+            
             status = session.wait (DRMAASession.JOB_IDS_SESSION_ANY, DRMAASession.TIMEOUT_WAIT_FOREVER);
-
+            
             /* report how job finished */
             if (status.wasAborted ()) {
                log ("job \"" + jobId + "\" never ran");
@@ -164,9 +181,9 @@ public class TestDRMAA {
       
       public void test () throws DRMAAException {
          List jobIds = session.runBulkJobs (jt, 1, 20, 1);
-
+         
          log ("Submitted " + jobIds.size () + " jobs");
-
+         
          session.synchronize (jobIds, DRMAASession.TIMEOUT_WAIT_FOREVER, true);
          
          log ("All jobs have finished");
@@ -186,9 +203,9 @@ public class TestDRMAA {
       
       public void test () throws DRMAAException {
          List jobIds = session.runBulkJobs (jt, 1, 20, 1);
-
+         
          log ("Submitted " + jobIds.size () + " jobs");
-      
+         
          if (sleep > 0) {
             sleep (sleep);
          }
@@ -203,7 +220,7 @@ public class TestDRMAA {
          
          this.sleep = sleep;
          
-         jt = createJobTemplate ("/tmp/dant/examples/sleeper.sh", sleep, true);
+         jt = createJobTemplate ("/tmp/dant/examples/sleeper.sh", sleep, false);
          
          if (sleep > 0) {
             sleep (sleep);
@@ -212,7 +229,7 @@ public class TestDRMAA {
       
       public void test () throws DRMAAException {
          String jobId = session.runJob (jt);
-
+         
          log ("Submitted job " + jobId);
       }
    }
@@ -223,20 +240,27 @@ public class TestDRMAA {
       }
       
       public void test () throws DRMAAException {
-         JobInfo info = session.wait (DRMAASession.JOB_IDS_SESSION_ANY,
-                                      DRMAASession.TIMEOUT_WAIT_FOREVER);
+         JobInfo info = null;
          
-         if (info.wasAborted ()) {
-            log ("job \"" + info.getJobId () + "\" never ran");
+         try {
+            info = session.wait (DRMAASession.JOB_IDS_SESSION_ANY,
+            DRMAASession.TIMEOUT_WAIT_FOREVER);
+            
+            if (info.wasAborted ()) {
+               log ("job \"" + info.getJobId () + "\" never ran");
+            }
+            else if (info.hasExited ()) {
+               log ("job \"" + info.getJobId () + "\" finished regularly with exit status " + info.getExitStatus ());
+            }
+            else if (info.hasSignaled ()) {
+               log ("job \"" + info.getJobId () + "\" finished due to signal " + info.getTerminatingSignal ());
+            }
+            else {
+               log ("job \"" + info.getJobId () + "\" finished with unclear conditions");
+            }
          }
-         else if (info.hasExited ()) {
-            log ("job \"" + info.getJobId () + "\" finished regularly with exit status " + info.getExitStatus ());
-         }
-         else if (info.hasSignaled ()) {
-            log ("job \"" + info.getJobId () + "\" finished due to signal " + info.getTerminatingSignal ());
-         }
-         else {
-            log ("job \"" + info.getJobId () + "\" finished with unclear conditions");
+         catch (NoResourceUsageDataException e) {
+            log ("job \"" + info.getJobId () + "\" has already been reaped");
          }
       }
    }
@@ -248,7 +272,7 @@ public class TestDRMAA {
       
       public void test () throws DRMAAException {
          session.synchronize (DRMAASession.JOB_IDS_SESSION_ALL,
-                              DRMAASession.TIMEOUT_WAIT_FOREVER, false);
+         DRMAASession.TIMEOUT_WAIT_FOREVER, false);
          
          log ("All jobs have finished");
       }
@@ -265,9 +289,9 @@ public class TestDRMAA {
          String jobId = null;
          
          jobId = session.runJob (jt);
-
+         
          log ("Submitted job " + jobId);
-
+         
          session.control (jobId, DRMAASession.TERMINATE);
          
          log ("Deleted job " + jobId);
@@ -285,13 +309,13 @@ public class TestDRMAA {
          String jobId = null;
          
          jobId = session.runJob (jt);
-
+         
          log ("Submitted job " + jobId);
-
+         
          session.control (jobId, DRMAASession.HOLD);
          
          log ("Job state is " + statusToString (session.getJobProgramStatus (jobId)));
-
+         
          sleep (20);
          
          log ("Job state is " + statusToString (session.getJobProgramStatus (jobId)));
@@ -299,7 +323,7 @@ public class TestDRMAA {
          session.control (jobId, DRMAASession.RELEASE);
          
          log ("Job state is " + statusToString (session.getJobProgramStatus (jobId)));
-
+         
          sleep (20);
          
          log ("Job state is " + statusToString (session.getJobProgramStatus (jobId)));
@@ -317,13 +341,13 @@ public class TestDRMAA {
          String jobId = null;
          
          jobId = session.runJob (jt);
-
+         
          log ("Submitted job " + jobId);
-
+         
          session.control (jobId, DRMAASession.SUSPEND);
          
          log ("Job state is " + statusToString (session.getJobProgramStatus (jobId)));
-
+         
          sleep (20);
          
          log ("Job state is " + statusToString (session.getJobProgramStatus (jobId)));
@@ -331,7 +355,7 @@ public class TestDRMAA {
          session.control (jobId, DRMAASession.RESUME);
          
          log ("Job state is " + statusToString (session.getJobProgramStatus (jobId)));
-
+         
          sleep (20);
          
          log ("Job state is " + statusToString (session.getJobProgramStatus (jobId)));
@@ -381,9 +405,9 @@ public class TestDRMAA {
       }
    }
    
-   static void sleep (long time) {
+   static void sleep (int time) {
       try {
-         Thread.sleep (time);
+         Thread.sleep (time * 1000);
       }
       catch (InterruptedException e) {
          // Don't care

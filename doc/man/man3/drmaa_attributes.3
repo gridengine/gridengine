@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/05/06 17:48:25 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/05/24 16:28:12 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_attributes 3 "$Date: 2004/05/06 17:48:25 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_attributes 3 "$Date: 2004/05/24 16:28:12 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -381,8 +381,8 @@ Specifies xxQS_NAMExx native
 options which will be interpreted as part of the DRMAA job template.  All
 options available to
 .M qsub 1 
-may be used in the \fInative_specification\fP, except for -help, -t, -verify,
-and -w. Options set in the \fnative specification\fP will be 
+command may be used in the \fInative_specification\fP, except for -help, -t,
+-verify, and -w. Options set in the \fnative specification\fP will be 
 overridden by the corresponding DRMAA attributes.  See
 .M qsub 1
 for more information on qsub options.

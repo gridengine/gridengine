@@ -123,7 +123,7 @@ extern char **environ;
 static const char *session_key_env_var = "SGE_SESSION_KEY"; 
 static const char *session_shutdown_mode_env_var = "SGE_KEEP_SESSION";
 
-static int drmaa_is_attribute_supported(const char *name, bool vector);
+static int drmaa_is_attribute_supported(const char *name, bool vector, dstring *diag);
 static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[]);
 
 static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_jt, 
@@ -148,6 +148,8 @@ static char *drmaa_get_home_directory (lList *alp);
 static char *drmaa_expand_wd_path(const char *path, lList *alp);
 static int drmaa_set_bulk_range (lList **opts, int start, int end, int step,
                                  lList **alp);
+static drmaa_attr_names_t *drmaa_fill_supported_nonvector_attributes (dstring *diag);
+static drmaa_attr_names_t *drmaa_fill_supported_vector_attributes (dstring *diag);
 
 /****** DRMAA/-DRMAA_Session_state *******************************************
 *  NAME
@@ -517,7 +519,6 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[])
       return NULL;
    }
 
-   /* 1. copy static attribute names */
    for (i=0; name[i]; i++) {
       DPRINTF(("adding \"%s\"\n", name[i]));
       if (!lAddElemStr(&(vector->it.si.strings), ST_name, name[i], ST_Type)) {
@@ -527,18 +528,6 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[])
       } 
    }
 
-   /* 2. add administrator defined attributes */
-   if( japi_is_delegated_file_staging_enabled()) {
-      DPRINTF(("adding \"%s\"\n", DRMAA_TRANSFER_FILES ));
-
-      if(!lAddElemStr(&(vector->it.si.strings),
-                        ST_name, DRMAA_TRANSFER_FILES, ST_Type)) {
-         japi_delete_string_vector((drmaa_attr_values_t *)vector);
-         DEXIT;
-         return NULL;
-      } 
-   }
-   
    /* initialize iterator */
    vector->it.si.next_pos = lFirst(vector->it.si.strings);
 
@@ -558,8 +547,9 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[])
 *
 *  INPUTS
 *     const char *name  - name of the attribute
-*     int               - true:  attribute is a vector attribute.
+*     bool vector       - true:  attribute is a vector attribute.
 *                         false: attribute is a scalar attribute. 
+*     dstring *diag     - error info
 *
 *  RESULT
 *    bool - DRMAA_ERRNO_SUCCESS if attribute is supported,
@@ -568,15 +558,15 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[])
 *  NOTES
 *      MT-NOTE: drmaa_is_attribute_supported() is MT safe
 *******************************************************************************/
-static int drmaa_is_attribute_supported(const char *name, bool vector)
+static int drmaa_is_attribute_supported(const char *name, bool vector, dstring *diag)
 {
    drmaa_attr_names_t *p_attr;
    lListElem* ep;
       
    if( vector ) {
-      p_attr = drmaa_fill_string_vector( drmaa_supported_vector );
+      p_attr = drmaa_fill_supported_vector_attributes (diag);
    } else {
-      p_attr = drmaa_fill_string_vector( drmaa_supported_nonvector );
+      p_attr = drmaa_fill_supported_nonvector_attributes (diag);
    }
 
    ep = lGetElemStr( p_attr->it.si.strings, ST_name, name );
@@ -637,7 +627,7 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
       return ret;
    }
 
-   ret = drmaa_is_attribute_supported(name, false);
+   ret = drmaa_is_attribute_supported(name, false, diagp);
    if (ret == DRMAA_ERRNO_SUCCESS) {
       /* verify value */
 
@@ -804,7 +794,7 @@ int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name,
       return ret;
    }
 
-   if (drmaa_is_attribute_supported(name, true)!=DRMAA_ERRNO_SUCCESS) {
+   if (drmaa_is_attribute_supported(name, true, diagp)!=DRMAA_ERRNO_SUCCESS) {
       DPRINTF(("setting not supported attribute \"%s\"\n", name));
       japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, diagp);
       DEXIT;
@@ -965,7 +955,7 @@ int drmaa_get_attribute_names(drmaa_attr_names_t **values, char *error_diagnosis
       return ret;
    }
 
-   if (!(iter=drmaa_fill_string_vector(drmaa_supported_nonvector))) {
+   if (!(iter=drmaa_fill_supported_nonvector_attributes (diagp))) {
       japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diagp);
       DEXIT;
       return DRMAA_ERRNO_NO_MEMORY;
@@ -1023,7 +1013,7 @@ int drmaa_get_vector_attribute_names(drmaa_attr_names_t **values, char *error_di
       return ret;
    }
 
-   if (!(iter=drmaa_fill_string_vector(drmaa_supported_vector))) {
+   if (!(iter=drmaa_fill_supported_vector_attributes (diagp))) {
       japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diagp);
       DEXIT;
       return DRMAA_ERRNO_NO_MEMORY;
@@ -3826,4 +3816,26 @@ static int drmaa_set_bulk_range (lList **opts, int start, int end, int step,
       DEXIT;
       return 1;
    }
+}
+
+static drmaa_attr_names_t *drmaa_fill_supported_vector_attributes (dstring *diag)
+{
+   return drmaa_fill_string_vector (drmaa_supported_vector);
+}
+
+static drmaa_attr_names_t *drmaa_fill_supported_nonvector_attributes (dstring *diag)
+{
+   drmaa_attr_names_t *p = NULL;
+   
+   p = drmaa_fill_string_vector (drmaa_supported_nonvector);
+   
+   if (japi_is_delegated_file_staging_enabled(diag)) {
+      if (!lAddElemStr(&(p->it.si.strings),
+                       ST_name, DRMAA_TRANSFER_FILES, ST_Type)) {
+         japi_delete_string_vector ((drmaa_attr_values_t *)p);
+         return NULL;
+      } 
+   }
+   
+   return p;
 }

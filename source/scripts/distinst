@@ -115,6 +115,7 @@ ErrUsage()
    echo "       -allall        = all binaries + common + doc"
    echo "       -basedir <dir> = define base directory for distribution"
    echo "       -bin           = all binaries and libraries"
+   echo "       -help_arch     = show architectures table"
    echo "       -libs          = all libraries"
    echo "       -local         = install in \$SGE_ROOT"
    echo "       -mansrc <dir>  = take man pages from MANSBUILD_<dir>"
@@ -236,6 +237,53 @@ SetArchBin()
          ARCHBIN=undefined
       fi
    fi
+}
+
+#-------------------------------------------------------------------------
+#
+ArchTable()
+{
+   echo "Arch Name             Platform"
+   echo "-------------------------------------------"
+   echo "aix51                 AIX 5.1"
+   echo "aix43                 AIX 4.3"
+   echo "hp10                  HP-UX 10.x"
+   echo "hp11                  HP-UX 11.x"
+   echo "hp11-64               HP-UX 11.x 64bit"
+   echo "irix65                Irix 6.5"
+   echo "lx22-alpha            Alpha Linux v2.2 kernel"
+   echo "lx24-alpha            Alpha Linux v2.4 kernel"
+   echo "lx26-alpha            Alpha Linux v2.6 kernel"
+   echo "lx24-amd64            AMD Linux v2.4 kernel"
+   echo "lx26-amd64            AMD Linux v2.6 kernel"
+   echo "lx24-ia64             IA64 Linux v2.4 kernel"
+   echo "lx26-ia64             IA64 Linux v2.6 kernel"
+   echo "lx22-sparc            SPARC Linux v2.2 kernel"
+   echo "lx24-sparc            SPARC Linux v2.4 kernel"
+   echo "lx26-sparc            SPARC Linux v2.6 kernel"
+   echo "lx22-x86              x86 Linux v2.2 kernel"
+   echo "lx24-x86              x86 Linux v2.4 kernel"
+   echo "lx26-x86              x86 Linux v2.6 kernel"
+   echo "osf4                  OSF 4.x"
+   echo "tru64                 TRU64 UNIX"
+   echo "sol-x86               Solaris x86"
+   echo "sol-sparc             Solaris SPARC"
+   echo "sol-sparc64           Solaris SPARC 64bit"
+   echo "cray                  UNICOS"
+   echo "crayts                UNICOS TS"
+   echo "craytsieee            UNICOS TS IEEE"
+   echo "necsx4                NECSX 4.x"
+   echo "necsx5                NECSX 5.x"
+   echo "sx                    NECSX 5.x"
+   echo "necsx6                NECSX 6.x"
+   echo "darwin                MacOS 10.x"
+   echo "fbsd-alpha            Alpha FreeBSD"
+   echo "fbsd-amd64            AMD64 FreeBSD"
+   echo "fbsd-i386             x86 FreeBSD"
+   echo "fbsd-ia64             IA64 FreeBSD"
+   echo "fbsd-ppc              PowerPC FreeBSD"
+   echo "fbsd-sparc64          SPARC FreeBSD 64bit"
+   exit 0
 }
 
 #-------------------------------------------------------------------------
@@ -478,6 +526,9 @@ while [ $# -ge 1 ]; do
       ;;
    -h|-help)
       ErrUsage
+      ;;
+   -help_arch)
+      ArchTable
       ;;
    -resetprog)
       PROG=""

@@ -38,8 +38,6 @@
 #include <pthread.h>
 #include <pwd.h>
 
-#define JOIN_ECT
-
 #include "sge_mtutil.h"
 #include "drmaa.h"
 #include "japi.h"
@@ -192,11 +190,11 @@ static pthread_once_t japi_once_control = PTHREAD_ONCE_INIT;
 *                    session. Code using japi_session_key must be made reentant
 *                    with mutex japi_session_mutex. It is assumed the session key 
 *                    is not changed during an active session.
-*     japi_delegated_file_staging_is_enabled - A bool indicating if delegated file
+*     japi_delegated_file_staging_is_enabled - An int indicating if delegated file
 *                    staging is enabled in the cluster configuration.
-*                    No need for a mutex as long as the only function which sets 
-*                    this variable (japi_read_dynamic_attributes()) is called from
-*                    japi_init() before different threads are created.
+*                    should always be accessed via
+*                    japi_is_delegated_file_staging_enabled() which protects the
+*                    variable with a mutex.
 *
 *                    
 *  NOTES
@@ -213,8 +211,8 @@ static lList *japi_ec_alp;
 /* ---- japi_session --------------------------------- */
 
 enum { 
-   JAPI_SESSION_ACTIVE,       
-   JAPI_SESSION_INITIALIZING,  
+   JAPI_SESSION_ACTIVE,
+   JAPI_SESSION_INITIALIZING,
    JAPI_SESSION_SHUTTING_DOWN,
    JAPI_SESSION_INACTIVE
 };
@@ -298,7 +296,10 @@ static const char *JAPI_SINGLE_SESSION_KEY = "JAPI_SSK";
 static int prog_number = JAPI;
 static bool multi_threaded = false;
 static error_handler_t error_handler = NULL;
-static bool japi_delegated_file_staging_is_enabled = false;
+static int japi_delegated_file_staging_is_enabled = -1;
+/* This variable is only used by japi_init() and hence does not need to be
+ * protected by a mutex. */
+static bool virgin_session = true;
 
 #define MAX_JOBS_TO_DELETE 500
 
@@ -405,7 +406,6 @@ static void japi_dec_threads(const char *func)
 int japi_init_mt(dstring *diag)
 {
    lList *alp = NULL;
-   cl_com_handle_t* handle = NULL;
    int gdi_errno;
    
    bootstrap_mt_init();
@@ -422,7 +422,7 @@ int japi_init_mt(dstring *diag)
       - neither AFS nor DCE/KERBEROS security may be used */
 
    /* as long as signal handling is not restored japi_init_mt() is
-      good place to install library signal handling */  
+      good place to install library signal handling */
    japi_use_library_signals();
 
    gdi_errno = sge_gdi_setup(prognames[prog_number], &alp);
@@ -430,31 +430,9 @@ int japi_init_mt(dstring *diag)
    if ((gdi_errno != AE_OK) && (gdi_errno != AE_ALREADY_SETUP)) {
       answer_to_dstring(lFirst(alp), diag);
       lFreeList(alp);
-      japi_session = JAPI_SESSION_INACTIVE;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
 
-   /* Make sure the commlib handle exists  If it doesn't, create it. */
-   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
-   
-   if (handle == NULL) {
-/* Not sure which way is better. */
-#if 0
-      prepare_enroll(prognames[prog_number], 0, NULL);
-      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
-#else
-      handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,
-                                    sge_get_qmaster_port(),
-                                    (char*)prognames[uti_state_get_mewho()], 0,
-                                    1, 0);      
-#endif
-   }
-
-   if (handle == NULL) {
-      sge_dstring_sprintf (diag, MSG_JAPI_NO_HANDLE);
-      return DRMAA_ERRNO_INTERNAL_ERROR;
-   }
-   
    return DRMAA_ERRNO_SUCCESS;
 }
 
@@ -524,6 +502,7 @@ int japi_init(const char *contact, const char *session_key_in,
               error_handler_t handler, dstring *diag)
 {
    int ret;
+   cl_com_handle_t* handle = NULL;
   
    DENTER(TOP_LAYER, "japi_init");
 
@@ -551,13 +530,46 @@ int japi_init(const char *contact, const char *session_key_in,
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
 
-   ret = japi_read_dynamic_attributes(diag);
-   if(ret != DRMAA_ERRNO_SUCCESS) {
-      /* diag was set in drmaa_read_dynamic_attributes() */
-      DEXIT;
-      return ret;
-   }
+   /* Bugfix: Issuezilla 1025
+    * The problem is that the commlib handle was being created in japi_mt_init()
+    * even when there was no actual need of a communications channel.  The
+    * reason the handle is created at all is that if it is not, calling
+    * japi_init() followed by japi_exit() followed by japi_init() again would
+    * result in functions like japi_run_job() getting a dead handle.  Once the
+    * handle is closed, it has to be explicitly reopened.  (Because this is
+    * really only an init issue, it's safe to move this code in japi_init().)
+    * The answer is to not create the handle the first time japi_init() is
+    * called.  Since the handle hasn't been closed yet, it doesn't need to be
+    * explicitly created.  If japi_init() gets called more than once, it's fair
+    * to assume that later calls will be doing something more than just
+    * initializing to prep for outputing usage information.  At least, that's
+    * how it looks right now. */
+   /* Besides, it looks like creating the handle wasn't the real problem.  The
+    * real problem was the call to read_dynamic_attributes() from japi_init().
+    * This bug fix is still a good idea, though. */
+   /* No need to worry about locking for this global since it is only used in
+    * japi_init(), and only one thread may be in japi_init() at a time. */
+   if (!virgin_session) {
+      /* Make sure the commlib handle exists  If it doesn't, create it. */
+      handle = cl_com_get_handle ((char*)uti_state_get_sge_formal_prog_name(), 0);
 
+      if (handle == NULL) {
+         handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,
+                                       sge_get_qmaster_port(),
+                                       (char*)prognames[uti_state_get_mewho()],
+                                       0, 1, 0);      
+      }
+
+      if (handle == NULL) {
+         JAPI_UNLOCK_SESSION();
+         sge_dstring_sprintf (diag, MSG_JAPI_NO_HANDLE);
+         return DRMAA_ERRNO_INTERNAL_ERROR;
+      }
+   }
+   else {
+      virgin_session = false;
+   }
+      
    if (enable_wait) {
       /* spawn implementation thread japi_implementation_thread() */
       ret = japi_enable_job_wait (session_key_in, session_key_out, handler,
@@ -3823,8 +3835,9 @@ int japi_wifcoredump(int *core_dumped, int stat, dstring *diag)
 *******************************************************************************/
 void japi_standard_error(int drmaa_errno, dstring *diag)
 {
-   if (diag)
+   if (diag) {
       sge_dstring_copy_string(diag, japi_strerror(drmaa_errno));
+   }
 }
 
 
@@ -4693,9 +4706,28 @@ int japi_was_init_called(dstring* diag)
 *  NOTES
 *     MT-NOTES: japi_is_delegated_file_staging_enabled() is MT safe
 *******************************************************************************/
-bool japi_is_delegated_file_staging_enabled()
+bool japi_is_delegated_file_staging_enabled(dstring *diag)
 {
-   return japi_delegated_file_staging_is_enabled;
+   bool ret = false;
+   
+   DENTER(TOP_LAYER, "japi_is_delegated_file_staging_enabled");
+   
+   JAPI_LOCK_SESSION();
+   if (japi_delegated_file_staging_is_enabled == -1) {
+      /* This function call does a GDI call, meaning it could take a while,
+       * leaving the session mutex locked.  However, this only happens once.
+       * The less noticable way to make this call is to call it from
+       * japi_init().  The problem there, however, is documented as Issuezilla
+       * bug #1025.  This is the next best solution and doesn't appear to cause
+       * any noticable problems. */
+      japi_read_dynamic_attributes (diag);
+   }
+   
+   ret = (japi_delegated_file_staging_is_enabled == 1);
+   JAPI_UNLOCK_SESSION();
+   
+   DEXIT;
+   return ret;
 }
 
 /****** japi/japi_read_dynamic_attributes() ***********************************
@@ -4719,7 +4751,8 @@ bool japi_is_delegated_file_staging_enabled()
 *           on error.
 *
 *  NOTES
-*     MT-NOTES: japi_read_dynamic_attributes() is MT safe
+*     MT-NOTES: japi_read_dynamic_attributes() is not MT safe.  It assumes that
+*               the calling thread holds the session mutex.
 *******************************************************************************/
 static int japi_read_dynamic_attributes(dstring *diag)
 {
@@ -4732,7 +4765,6 @@ static int japi_read_dynamic_attributes(dstring *diag)
 
    DENTER(TOP_LAYER, "japi_read_dynamic_attributes");   
 
-   JAPI_LOCK_SESSION();
    if((ret=get_configuration("global", &config, NULL))<0) {
       switch( ret ) {
          case -2:
@@ -4746,15 +4778,15 @@ static int japi_read_dynamic_attributes(dstring *diag)
             drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
             break;
          case -5:
-            /* -5 there is noc global configuration
+            /* -5 there is no global configuration
              * This means that "delegated_file_staging" is not set.
              * This is not an error for us, not set means default value.
              */
             drmaa_errno = DRMAA_ERRNO_SUCCESS;
             break;
-         }
+      }
+      
       japi_standard_error(drmaa_errno, diag);
-      JAPI_UNLOCK_SESSION();
       DEXIT;
       return drmaa_errno;
    }
@@ -4766,16 +4798,14 @@ static int japi_read_dynamic_attributes(dstring *diag)
          pStr = lGetString(ep, CF_value);
          
          if (strcasecmp( pStr, "true") ==0) {
-            japi_delegated_file_staging_is_enabled = true;
+            japi_delegated_file_staging_is_enabled = 1;
          }
          else {
-            japi_delegated_file_staging_is_enabled = false;
+            japi_delegated_file_staging_is_enabled = 0;
          }
-         
       }
    }
 
-   JAPI_UNLOCK_SESSION();
    DEXIT;
    return drmaa_errno;
 }

@@ -168,7 +168,7 @@ static const spool_flatfile_instr qconf_sfi =
    false,
    true,
    false,
-   '\0',
+   ' ',
    '\n',
    '\0',
    '\0',
@@ -6809,6 +6809,7 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
             MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S, "qconf"));
          answer_list_add(alpp, SGE_EVENT, 
                          STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         DEXIT;
          return 1;
       }                
       DTRACE;
@@ -6819,6 +6820,7 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
                                         NULL, **spp);
             
       if (answer_list_output(alpp)) {
+         DEXIT;
          return 1;
       }
 #else
@@ -6845,12 +6847,33 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
       
       unlink (filename);
       FREE (filename);
-      FREE (name);
-      FREE (value);
-      
-      if (answer_list_output(alpp)) {
+
+      /* Bugfix: Issuezilla #1005
+       * Since we're writing the information from the command line to a file so
+       * we can read it, the error messages that come back from the flatfile
+       * spooling will sound a little odd.  To avoid this, we hijack the answer
+       * list and replace the error messages with ones that will make better
+       * sense. */
+      if (answer_list_has_error (alpp)) {
+         lListElem *aep = NULL;
+         
+         for_each (aep, *alpp) {
+            if (answer_has_quality (aep, ANSWER_QUALITY_ERROR) &&
+                (answer_get_status (aep) == STATUS_ESYNTAX)) {
+               sprintf (SGE_EVENT, MSG_PARSE_BAD_ATTR_ARGS_SS, name, value);
+               lSetString (aep, AN_text, SGE_EVENT);
+            }
+         }
+         
+         FREE (name);
+         FREE (value);
+         
+         DEXIT;
          return 1;
       }
+      
+      FREE (name);
+      FREE (value);
 #else
       lListElem *cfep = NULL;
       lList *cflp = NULL;
@@ -6885,26 +6908,22 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
       }
 #endif
    }
+
    /* add object name to int vector and transform
       it into an lEnumeration */
-
-   DTRACE;
-
    if (add_nm_to_set(fields, info_entry->nm_name) < 0) {
       SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, "qconf", 
          info_entry->attribute_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      DEXIT;
       return 1;
    }
 
-   DTRACE;
-
    if (!(what = lIntVector2What(info_entry->cull_descriptor, fields))) {
       SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf"));
+      DEXIT;
       return 1;
    }     
-
-   DTRACE;
 
    while (!sge_next_is_an_opt(*spp)) { 
       *spp = sge_parser_get_next(*spp);
@@ -6939,20 +6958,51 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
          default:
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf"));
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            DEXIT;
             return 1;
       }
       lAppendElem(qlp, add_qp);
    }
 
-   DTRACE;
-
    if (!qlp) {
       SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_MQATTR_MISSINGOBJECTLIST_S, 
          "qconf"));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      DEXIT;
       return 1;
    }
 
+   /* Bugfix: Issuezilla #1025
+    * If we get a list value of NONE with -mattr, complain.  This comes after
+    * the complaint about not including the object list on purpose.  That order
+    * seems to make the most sense for error reporting, even though it means we
+    * do some unnecessary work. */
+   if ((sub_command == SGE_GDI_CHANGE) && (lGetType ((*epp)->descr, fields[0]) == lListT)) {
+      lList *lp = lGetList (*epp, fields[0]);
+      
+      /* NONE translates into a list with one entry.  That entry has the default
+       * href value and a NULL list.*/
+      if ((lp == NULL) || (lGetNumberOfElem (lp) == 1)) {
+         lListElem *ep = lFirst (lp);
+         int count = 1;
+         int nm = 0;
+
+         /* Look for the list and see if it's NULL.  These should all be very
+          * simple CULL structures which should only contain an lHostT and an
+          * lListT. */
+         for (nm = ep->descr[0].nm; nm != NoName; nm = ep->descr[count++].nm) {            
+            if (lGetType (ep->descr, nm) == lListT) {
+               if (lGetList (ep, nm) == NULL) {
+                  SGE_ADD_MSG_ID (sprintf(SGE_EVENT, MSG_QCONF_CANT_MODIFY_NONE));
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  DEXIT;
+                  return 1;
+               }
+            }
+         }
+      }
+   }
+   
    if (info_entry->pre_gdi_function == NULL || 
       info_entry->pre_gdi_function(qlp, alpp)) {
       *alpp = sge_gdi(info_entry->target, SGE_GDI_MOD | sub_command, &qlp, 

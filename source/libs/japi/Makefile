@@ -117,7 +117,7 @@ include $(JAPILIB_DIR)/howto/Makefile
 jdrmaa: $(JDRMAALIB_OBJS) $(DRMAALIB) $(DRMAALIB_OBJS)
 	@rm $(DRMAALIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT) $(JDRMAALIB_OBJS) $(DRMAALIB_OBJS) $(SLIBS) $(LIBS) -lc
-	$(JAVA_HOME)/bin/javac -classpath $(CLASSES_DIR) -d $(CLASSES_DIR) $(CLASSES_DIR)/org/ggf/drmaa/*.java $(CLASSES_DIR)/com/sun/grid/drmaa/*.java
+	$(JAVA_HOME)/bin/javac -classpath $(CLASSES_DIR) -d $(CLASSES_DIR) $(CLASSES_DIR)/org/ggf/drmaa/*.java $(CLASSES_DIR)/com/sun/grid/drmaa/*.java $(CLASSES_DIR)/*.java
 	@cd $(CLASSES_DIR); $(JAVA_HOME)/bin/jar cvf $(SOURCE)/$(COMPILE_ARCH)/drmaa.jar org/ggf/drmaa/*.class com/sun/grid/drmaa/*.class; cd $(SOURCE)/$(COMPILE_ARCH)
 
 ###############################################################################

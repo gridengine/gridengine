@@ -1317,7 +1317,7 @@ object_parse_list_from_string(lListElem *this_elem, lList **answer_list,
          lListElem *first_elem = lFirst(tmp_list);
          const char *first_string = lGetString(first_elem, nm);
 
-         if (strcasecmp("NONE", first_string)) {
+         if (strcasecmp(NONE_STR, first_string)) {
             lSetPosList(this_elem, pos, tmp_list);
          } else {
             tmp_list = lFreeList(tmp_list);

@@ -84,6 +84,8 @@ int sge_setup(
 u_long32 sge_formal_prog_name,
 lList **alpp 
 ) {
+   dstring error_dstring = DSTRING_INIT;
+
    DENTER(TOP_LAYER, "sge_setup");
 
    /*
@@ -101,19 +103,26 @@ lList **alpp
 
    sge_getme(sge_formal_prog_name);
 
-   {
-      dstring error_dstring = DSTRING_INIT;
-
-      if (!sge_setup_paths(uti_state_get_default_cell(), &error_dstring)) {
+   if (!sge_setup_paths(uti_state_get_default_cell(), &error_dstring)) {
+      if (alpp == NULL) {
+         CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
+      } else {
          answer_list_add(alpp, sge_dstring_get_string(&error_dstring), 
-                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         sge_dstring_free(&error_dstring);
-         DEXIT;
-         return -1;
+                         STATUS_NOCONFIG, ANSWER_QUALITY_ERROR);
       }
+      sge_dstring_free(&error_dstring);
+      DEXIT;
+      return -1;
    }
 
-   if (!sge_bootstrap(NULL)) {
+   if (!sge_bootstrap(&error_dstring)) {
+      if (alpp == NULL) {
+         CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
+      } else {
+         answer_list_add(alpp, sge_dstring_get_string(&error_dstring), 
+                         STATUS_NOCONFIG, ANSWER_QUALITY_ERROR);
+      }
+      sge_dstring_free(&error_dstring);
       if (!uti_state_get_exit_on_error()) {
          DEXIT;
          return -1;
@@ -122,6 +131,13 @@ lList **alpp
    }
 
    if (feature_initialize_from_string(bootstrap_get_product_mode())) {
+      if (alpp == NULL) {
+         CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
+      } else {
+         answer_list_add(alpp, sge_dstring_get_string(&error_dstring), 
+                         STATUS_NOCONFIG, ANSWER_QUALITY_ERROR);
+      }
+      sge_dstring_free(&error_dstring);
       if (!uti_state_get_exit_on_error()) {
          DEXIT;
          return -1;

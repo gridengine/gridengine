@@ -57,6 +57,7 @@ enum {
    STATUS_ENOOPR,            /* operation needs operator privileges */
    STATUS_NOQMASTER,         /* failed to reach sge_qmaster */
    STATUS_NOCOMMD,           /* failed to reach commd */
+   STATUS_NOCONFIG,          /* missing dir/conf (cell, common, bootstrap) */
    STATUS_EDISK,             /* disk operation failed */
    STATUS_ENOSUCHUSER,       /* can't resolve user */
    STATUS_NOSUCHGROUP,       /* can't resolve group */

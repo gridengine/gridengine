@@ -1,3 +1,8 @@
+JG-2003-10-13-0: Enhancem.: Bootstrapping: Updated man pages.
+                 Bugfix:    If directories SGE_ROOT, SGE_ROOT/SGE_CELL and
+                            SGE_ROOT/SGE_CELL/common were missing, no error
+                            message was output by SGE components.
+
 AD-2003-10-13-0: Enhancem.: Added target 'lcklib'. 
                  Changed:   ./libs/Makefile
 

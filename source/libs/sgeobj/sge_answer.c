@@ -158,11 +158,12 @@ bool answer_is_recoverable(const lListElem *answer)
 
    DENTER(ANSWER_LAYER, "answer_is_recoverable");
    if (answer != NULL) {
-      const int max_non_recoverable = 3;
+      const int max_non_recoverable = 4;
       const u_long32 non_recoverable[] = {
          STATUS_NOQMASTER,
          STATUS_NOCOMMD,
-         STATUS_ENOKEY
+         STATUS_ENOKEY,
+         STATUS_NOCONFIG
       };
       u_long32 status = lGetUlong(answer, AN_status);
       int i;

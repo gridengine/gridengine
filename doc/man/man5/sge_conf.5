@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2003/09/15 15:09:05 $     Revision: $Revision: 1.20 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2003/10/13 09:39:12 $     Revision: $Revision: 1.21 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2003/09/15 15:09:05 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2003/10/13 09:39:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -77,29 +77,6 @@ The paragraphs that follow provide brief descriptions of the individual
 parameters that compose the global and local configurations for a
 xxQS_NAMExx cluster:
 .\"
-.SH "\fBqmaster_spool_dir\fP"
-The location where the master spool directory resides. Only the
-.M xxqs_name_sxx_qmaster 8
-and 
-.M xxqs_name_sxx_shadowd 8
-need to have access to this directory. It needs read/write permission for
-root, however. The master spool directory \- in particular the jobs
-directory and the message
-log file \- may become quite large depending on the size of the
-cluster and the number of jobs. Be sure to allocate enough disk space
-and regularly clean off the log files, e.g. via a
-.M cron 8
-job.
-.PP
-Being a parameter set at installation time changing \fBqmaster_spool_dir\fP
-in a running system is not supported.
-.PP
-The default location for the
-master spool directory is <xxqs_name_sxx_root>/<cell>/spool/qmaster.
-.PP
-This value is a global configuration parameter only. It cannot be
-overwritten by the execution host local configuration.
-.\"
 .\"
 .SH "\fBexecd_spool_dir\fP"
 The execution daemon spool directory path. Again, a feasible spool
@@ -123,29 +100,6 @@ in a running system is not supported.
 .PP
 The default location for the execution daemon spool
 directory is <xxqs_name_sxx_root>/<cell>/spool.
-.PP
-The global configuration entry for this value
-may be overwritten by the execution host local configuration.
-.\"
-.\"
-.SH "\fBbinary_path\fP"
-The directory path where the xxQS_NAMExx binaries reside. It is used within
-xxQS_NAMExx components to locate and startup other xxQS_NAMExx programs.
-.PP
-The path name given here is searched for binaries as well as any directory
-below with a directory name equal to the current operating system
-architecture. Therefore, /usr/xxQS_NAME_Sxx/bin will work for all architectures,
-if the corresponding binaries are located in subdirectories named aix43,
-cray, glinux, hp10, irix6, osf4, solaris, etc.
-.PP
-Each
-.M xxqs_name_sxx_execd 8
-may have its private binary path.
-Changing the binary path will have immediate effect for 
-.M xxqs_name_sxx_execd 8 .
-.PP
-The default location for the binary path is
-<xxqs_name_sxx_root>/bin
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
@@ -618,8 +572,8 @@ or
 .M xxqs_name_sxx_execd 8
 use to produce informative, warning or error messages which are logged
 to the \fImessages\fP files in the master and execution daemon
-spool directories (see the description of the \fBqmaster_spool_dir\fP
-and the \fBexecd_spool_dir\fP parameter above). The following message
+spool directories (see the description of the 
+\fBexecd_spool_dir\fP parameter above). The following message
 levels are available:
 .\"
 .IP "\fIlog_err\fP"
@@ -1102,25 +1056,6 @@ if rsh and rshd components are used which are provided with xxQS_NAMExx
 not be changed from the default).
 .\"
 .\"
-.SH "\fBadmin_user\fP"
-Administrative user account used by xxQS_NAMExx for all internal file
-handling (status spooling, message logging, etc.). Can be used in cases
-where the root account does not have the corresponding file access
-permissions (e.g. on a shared file system without global root read/write
-access).
-.PP
-Being a parameter set at installation time changing \fBadmin_user\fP in
-a running system is not supported. Changing it manually on a shut-down cluster
-is possible, but if access to the xxQS_NAMExx spooling area is interrupted, 
-this will result in unpredictable behaviour.
-
-The \fBadmin_user\fP parameter has no default value, but instead it is
-defined during the master installation procedure.
-.PP
-This value is a global configuration parameter only. It cannot be
-overwritten by the execution host local configuration.
-.\"
-.\"
 .SH "\fBfinished_jobs\fP"
 xxQS_NAMExx stores a certain number of \fIjust finished\fP jobs to provide
 post mortem status information. The \fBfinished_jobs\fP parameter defines the
@@ -1257,46 +1192,6 @@ is none.
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.
 .\"
-.\"
-.SH "\fBignore_fqdn\fP"
-Ignore fully qualified domain name component of hostnames. Should be set 
-if all hosts belonging to a xxQS_NAMExx cluster are part of a single DNS 
-domain. It is switched on if set to either "true" or "1". Switching it 
-on may solve problems with load reports due to different hostname 
-resolutions across the cluster.
-.sp 1
-Being a parameter set at installation time changing
-.B ignore_fqdn
-in a running system is not supported. The default for
-.B ignore_fqdn
-is "true".
-.PP
-This value is a global configuration parameter only. It cannot be
-overwritten by the execution host local configuration.
-.\"
-.\"
-.SH "\fBdefault_domain\fP"
-Only needed if your xxQS_NAMExx cluster covers hosts belonging to more than
-a single DNS domain. In this case it can be used if your hostname resolving 
-yields both qualified and unqualified hostnames for the hosts in one of the 
-DNS domains. 
-The value of
-.B default_domain
-is appended to the unqualified hostname to define a fully qualified hostname.
-The 
-.B default_domain
-parameter will have no effect if 
-.B ignore_fqdn
-is set to "true".
-.sp 1
-Being a parameter set at installation time changing
-.B default_domain
-in a running system is not supported. The default for
-.B default_domain
-is "none", in which case it will not be used.
-.PP
-This value is a global configuration parameter only. It cannot be
-overwritten by the execution host local configuration.
 .\"
 .\"
 .\"

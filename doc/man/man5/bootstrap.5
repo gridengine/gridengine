@@ -1,0 +1,185 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\" $RCSfile: bootstrap.5,v $     Last Update: $Date: 2003/10/13 09:39:12 $     Revision: $Revision: 1.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2003/10/13 09:39:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.\"
+.SH NAME
+xxqs_name_sxx_conf \- xxQS_NAMExx bootstrap file
+.\"
+.\"
+.SH DESCRIPTION
+.I bootstrap
+contains parameters that are needed for the startup of xxQS_NAMExx components.
+It is created during the xxqs_name_sxx_qmaster installation.
+Modifying
+.I bootstrap
+in a running system is not supported.
+.PP
+.\"
+.SH FORMAT
+.\"
+The paragraphs that follow provide brief descriptions of the individual
+parameters that compose the bootstrap configuration for a
+xxQS_NAMExx cluster:
+.\"
+.SH "\fBadmin_user\fP"
+Administrative user account used by xxQS_NAMExx for all internal file
+handling (status spooling, message logging, etc.). Can be used in cases
+where the root account does not have the corresponding file access
+permissions (e.g. on a shared file system without global root read/write
+access).
+.PP
+Being a parameter set at installation time changing \fBadmin_user\fP in
+a running system is not supported. Changing it manually on a shut-down cluster
+is possible, but if access to the xxQS_NAMExx spooling area is interrupted, 
+this will result in unpredictable behaviour.
+
+The \fBadmin_user\fP parameter has no default value, but instead it is
+defined during the master installation procedure.
+.\"
+.\"
+.SH "\fBdefault_domain\fP"
+Only needed if your xxQS_NAMExx cluster covers hosts belonging to more than
+a single DNS domain. In this case it can be used if your hostname resolving 
+yields both qualified and unqualified hostnames for the hosts in one of the 
+DNS domains. 
+The value of
+.B default_domain
+is appended to the unqualified hostname to define a fully qualified hostname.
+The 
+.B default_domain
+parameter will have no effect if 
+.B ignore_fqdn
+is set to "true".
+.sp 1
+Being a parameter set at installation time changing
+.B default_domain
+in a running system is not supported. The default for
+.B default_domain
+is "none", in which case it will not be used.
+.\"
+.\"
+.SH "\fBignore_fqdn\fP"
+Ignore fully qualified domain name component of hostnames. Should be set 
+if all hosts belonging to a xxQS_NAMExx cluster are part of a single DNS 
+domain. It is switched on if set to either "true" or "1". Switching it 
+on may solve problems with load reports due to different hostname 
+resolutions across the cluster.
+.sp 1
+Being a parameter set at installation time changing
+.B ignore_fqdn
+in a running system is not supported. The default for
+.B ignore_fqdn
+is "true".
+.\"
+.\"
+.SH "\fBspooling_method\fP"
+Defines how 
+.M xxqs_name_sxx_qmaster 8
+writes its configuration and the status information of a running cluster.
+.PP
+Different spooling methods can be chosen at compile time or by use of shared
+libraries.
+.PP
+The default spooling method is \fIberkeleydb\fP.
+.\"
+.\"
+.SH "\fBspooling_lib\fP"
+If the spooling framework was compiled to allow dynamic loading of spooling
+shared libraries, this parameter names the shared library to load during
+the bootstrapping process of
+.M xxqs_name_sxx_qmaster 8
+to access the spooled configuration and status data.
+.PP
+For systems with statically linked spooling methods, this parameter is set to
+\fInone\fP.
+.PP
+The default spooling library is \fInone\fP.
+.\"
+.\"
+.SH "\fBspooling_params\fP"
+Defines parameters to the chosen spooling method.
+.PP
+Each spooling method has a certain set of parameters that are needed to initialize the spooling framework, e.g. to open database files or to connect to a certain database server.
+.PP
+The default spooling parameters (for spooling method \fIberkeleydb\fP) is (TBD).
+.\"
+.\"
+.SH "\fBbinary_path\fP"
+The directory path where the xxQS_NAMExx binaries reside. It is used within
+xxQS_NAMExx components to locate and startup other xxQS_NAMExx programs.
+.PP
+The path name given here is searched for binaries as well as any directory
+below with a directory name equal to the current operating system
+architecture. Therefore, /usr/xxQS_NAME_Sxx/bin will work for all architectures,
+if the corresponding binaries are located in subdirectories named aix43,
+cray, glinux, hp10, irix6, osf4, solaris, etc.
+.PP
+The default location for the binary path is
+<xxqs_name_sxx_root>/bin
+.PP
+.\"
+.\"
+.SH "\fBqmaster_spool_dir\fP"
+The location where the master spool directory resides. Only the
+.M xxqs_name_sxx_qmaster 8
+and 
+.M xxqs_name_sxx_shadowd 8
+need to have access to this directory. 
+The master spool directory \- in particular the job_scripts
+directory and the messages
+log file \- may become quite large depending on the size of the
+cluster and the number of jobs. Be sure to allocate enough disk space
+and regularly clean off the log files, e.g. via a
+.M cron 8
+job.
+.PP
+Being a parameter set at installation time changing \fBqmaster_spool_dir\fP
+in a running system is not supported.
+.PP
+The default location for the
+master spool directory is <xxqs_name_sxx_root>/<cell>/spool/qmaster.
+.PP
+.\"
+.\"
+.SH "\fBproduct_mode\fP"
+The product mode defines the set of features the installed cluster is using.
+.PP
+Both the basic product modes sge (xxQS_NAMExx standard mode) and 
+sgeee (xxQS_NAMExx Enterprise Edition) as well as additional features
+(AFS, DCE, KERBEROS, RESERVED_PORT security model, CSP security model) are 
+specified by this parameter.
+.\"
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

@@ -144,6 +144,7 @@ void sge_clean_lists(void) {
 
    for(;gdi_object[i].target != 0 ; i++) {
       if (gdi_object[i].master_list != NULL) {
+/*          fprintf(stderr, "---> freeing list %s, it has %d elems\n", gdi_object[i].object_name, lGetNumberOfElem(*gdi_object[i].master_list)); */
          *gdi_object[i].master_list = lFreeList(*gdi_object[i].master_list);
       }   
    }

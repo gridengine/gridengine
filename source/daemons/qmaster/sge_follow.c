@@ -843,6 +843,7 @@ lList **topp  /* ticket orders ptr ptr */
          return -1;
       }
       jatp = job_search_task(jep, NULL, task_number);
+#if 0
       if(jatp == NULL) {
          jatp = job_create_task(jep, NULL, task_number);
          /* JG: TODO: where is jatask spooled? */
@@ -857,8 +858,26 @@ lList **topp  /* ticket orders ptr ptr */
          DEXIT;
          return -1;
       }
+#else
+      /* if ja task doesn't exist yet, create it */
+      if (jatp == NULL) {
+         jatp = job_create_task(jep, NULL, task_number);
+      }
 
+      /* new jatask has to be spooled and event sent */
+      if (jatp != NULL) {
+         sge_event_spool(alpp, 0, sgeE_JATASK_ADD, 
+                         job_number, task_number, NULL, NULL, 
+                         lGetString(jep, JB_session),
+                         jep, jatp, NULL, true, true);
 
+      } else {
+         ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), 
+                u32c(job_number)));
+         DEXIT;
+         return -1;
+      }
+#endif
       if (or_type==ORT_remove_job) {
 
          if (lGetUlong(jatp, JAT_status) != JFINISHED) {
@@ -886,7 +905,9 @@ lList **topp  /* ticket orders ptr ptr */
             DEXIT;
             return -1;
          }
-         INFO((SGE_EVENT, MSG_JOB_NOFREERESOURCEIA_U, u32c(lGetUlong(jep, JB_job_number))));
+         INFO((SGE_EVENT, MSG_JOB_NOFREERESOURCEIA_UU, 
+               u32c(lGetUlong(jep, JB_job_number)), 
+               u32c(lGetUlong(jatp, JAT_task_number))));
 
          /* remove it */
          sge_commit_job(jep, jatp, NULL, COMMIT_ST_NO_RESOURCES, COMMIT_DEFAULT | COMMIT_NEVER_RAN);

@@ -79,7 +79,7 @@
 #define MSG_JOB_REMOVENONINTERACT_U   _MESSAGE(33038, _("scheduler tried to remove non interactive job "U32CFormat" by use of a ORT_remove_immediate_job order\n"))
 #define MSG_JOB_REMOVENONIMMEDIATE_U  _MESSAGE(33039, _("scheduler tried to remove non immediate job "U32CFormat" by use of a ORT_remove_immediate_job order\n"))
 #define MSG_JOB_REMOVENOTIDLEIA_U     _MESSAGE(33040, _("scheduler tried to remove interactive job "U32CFormat" but it is not in JIDLE state\n"))
-#define MSG_JOB_NOFREERESOURCEIA_U    _MESSAGE(33041, _("no free resource for interactive job "U32CFormat"\n"))
+#define MSG_JOB_NOFREERESOURCEIA_UU   _MESSAGE(33041, _("no free resource for interactive job "U32CFormat"."U32CFormat"\n"))
 #define MSG_MAIL_CREDITLOWSUBJ_SUS    SFN": Credit low for job " U32CFormat " ("SFN")\n"
 /* #define MSG_MAIL_CREDITLOWBODY_USSFF  _message(33042, _("Your job " U32CFormat " ("SFN") attached to project "SFQ" has\nfallen below low credit limit.\nActual Credit: %.2f   Low Credit Limit: %.2f\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_JOB_SUSPOTNOTRUN_UU       _MESSAGE(33043, _("got ORT_suspend_on_threshold order for non running task "U32CFormat"."U32CFormat"\n"))

@@ -1,3 +1,12 @@
+JG-2004-05-19-0: Bugfix:    Qmaster logged errors when immediate array job 
+                            couldn't be scheduled.
+                 Issue:     1037
+                            If qmaster was shutdown before finished jobs were 
+                            deleted via schedd order, these jobs showed up again
+                            as running after qmaster restart.
+                 Changed:   qmaster
+                 Review:    SG
+
 DT-2004-05-18-0: Cleanup:   o Cleaned up some code and comments
                             o Added test program for DRMAA Java binding
                             o Cleaned up JNI code for DRMAA Java binding

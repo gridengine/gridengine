@@ -910,6 +910,10 @@ sge_commit_flags_t commit_flags
                          NULL, NULL, lGetString(jep, JB_session), 
                          lGetList(jatep, JAT_scaled_usage_list));
 
+      sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD, 
+                      jobid, jataskid, NULL, NULL, session,
+                      jep, jatep, NULL, false, true);
+
       /* finished all ja-tasks => remove job script */
       for_each(tmp_ja_task, lGetList(jep, JB_ja_tasks)) {
          if (lGetUlong(tmp_ja_task, JAT_status) != JFINISHED)

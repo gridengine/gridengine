@@ -496,12 +496,6 @@ proc submit_testjobs { { user "" } { additional_job_args "" }} {
      }
   }
 
-#  puts $CHECK_OUTPUT "returning joblist:"
-#  foreach elem $joblist {
-#     puts $CHECK_OUTPUT $elem
-#  }
-#  wait_for_enter
-
   return $joblist
 }
 

@@ -553,12 +553,6 @@ proc share_tree_test {} {
    }
 
 
-#   wait_for_jobstart $current_job_id "orker" 30 1
-#   wait_for_jobstart $current_job_id2 "orker" 30 1
-#   wait_for_jobstart $current_job_id3 "orker" 30 1
-
-#   wait_for_jobend $current_job_id "orker" 120
-#   wait_for_enter
 
 
    foreach job $prj1_id_list {

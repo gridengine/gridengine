@@ -337,7 +337,6 @@ proc job_state_handling_max_aj_instances {} {
              set correct_text [ translate $CHECK_HOST 1 0 0 [ sge_macro MSG_SCHEDD_INFO_MAX_AJ_INSTANCES_ ]]
 #             puts $CHECK_OUTPUT "schedd_info_text: $scheduling_info_text"
 #             puts $CHECK_OUTPUT "correct_text    : $correct_text"
-#             wait_for_enter
              if { [ string first "not all array task may be started due to 'max_aj_instances'" $scheduling_info_text ] < 0 &&
                   [ string first $correct_text $scheduling_info_text ] < 0 } {
                 add_proc_error "job_state_handling_hold_pending_running_finished" -1 "scheduling info not \"not all array task may be started due to 'max_aj_instances'\"" 
@@ -412,11 +411,8 @@ proc job_state_handling_max_aj_tasks {} {
       set array1 [submit_job $jobargs 0]
       wait_for_jobstart $array1 "leeper" 100
       wait_for_end_of_transfer $array1 100
-#      wait_for_enter
       set array_states [get_job_state $array1 0]
-#      wait_for_enter
       set array_states [get_job_state $array1 1]
-#      wait_for_enter
       set array_tasks_found [llength $array_states]
       set guilty_task_ids "1 3 5 7 9"
       set task_ids ""

@@ -169,11 +169,6 @@
 */
 #define MSG_SYSCONF_UNABLETORETRIEVE_I                _MESSAGE(49057, _("unable to retrieve value for system limit (%d)\n") )   
 
-/*
-**  former SGE_TEXT:
-*/
-#define MSG_SGETEXT_SHOULD_BE_ROOT_S            _MESSAGE(49058, _("should be root to start "SFN"\n"))
-
 /* 
 ** utilib/sge_uidgid.c
 */ 

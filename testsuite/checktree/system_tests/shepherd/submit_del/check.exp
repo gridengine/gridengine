@@ -205,8 +205,6 @@ proc submit_del_test { } {
    wait_for_end_of_all_jobs 120
 
    puts $CHECK_OUTPUT "pass 2 completed"
-
-   wait_for_enter
    set_error 0 "ok"
 }
 

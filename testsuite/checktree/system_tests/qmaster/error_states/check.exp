@@ -272,7 +272,6 @@ proc error_states_no_default_queue_shell {} {
    wait_for_jobend $job_id "exit" 60
 
 
-#   wait_for_enter
    set my_conf(shell_start_mode) "unix_behavior"
    set_queue $error_states_check_queue my_conf
    set job_id [submit_job "-q $error_states_check_queue $jobargs" ]

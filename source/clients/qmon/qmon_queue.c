@@ -273,13 +273,16 @@ Widget w;
 XtPointer cld, cad;
 {
    lList *alp = NULL;
-   qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T | CENTRY_T, &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
-      return;
+
+   if (qmon_queue) {
+      qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T | CENTRY_T, &alp);
+      if (alp) {
+         qmonMessageBox(w, alp, 0);
+         alp = lFreeList(alp);
+         return;
+      }
+      updateQueueList();
    }
-   updateQueueList();
 }
 
 /*-------------------------------------------------------------------------*/

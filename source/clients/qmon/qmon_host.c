@@ -163,7 +163,7 @@ static void qmonExecHostChange(Widget w, XtPointer cld, XtPointer cad);
 static void qmonExecHostSelect(Widget w, XtPointer cld, XtPointer cad);
 static void qmonExecHostCheckName(Widget w, XtPointer cld, XtPointer cad);
 static void qmonExecHostCheckScaling(Widget w, XtPointer cld, XtPointer cad);
-static void qmonExecHostSetAsk(String name);
+static void qmonExecHostSetAsk(StringConst name);
 static lList* qmonExecHostGetAsk(void);
 static void qmonHostAvailableAcls(void);
 static void qmonHostAvailableProjects(void);
@@ -771,7 +771,9 @@ XtPointer cld, cad;
          XmListSelectItem(exechost_list, xehname, True);
          XmStringFree(xehname);
          updateQueueListCB(w, NULL, NULL);
-      }
+      } else {
+         qmonExecHostSetAsk(ehname);
+      }   
 
       lFreeWhat(what);
       ehl = lFreeList(ehl);
@@ -879,7 +881,7 @@ static lList* qmonExecHostGetAsk(void)
 
 /*-------------------------------------------------------------------------*/
 static void qmonExecHostSetAsk(
-String name 
+StringConst name 
 ) {
    lListElem *ehp = NULL;
    lListElem *ep;

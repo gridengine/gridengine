@@ -425,6 +425,7 @@ static Widget ckpt_reference_list = 0;
 static Widget pe_reference_list = 0;
 
 static int dialog_mode = QC_ADD;
+static int dont_close = 0;
 
 static tAction actions[] = {
    { "Add", qmonQCAdd },
@@ -895,7 +896,8 @@ XtPointer cld, cad;
    
    actions[dialog_mode].callback(w, NULL, NULL);
 
-   qmonQCPopdown(w, NULL, NULL);
+   if (!dont_close)
+      qmonQCPopdown(w, NULL, NULL);
 
    DEXIT;
 }
@@ -1161,7 +1163,11 @@ XtPointer cld, cad;
       if ( lFirst(alp) && lGetUlong(lFirst(alp), AN_status) == STATUS_OK ) {
 /*          updateQCQ(); */
          updateQueueList();
+         dont_close = 0;
       }
+      else {
+         dont_close = 1;
+      }   
    }
 
    lFreeWhat(what);

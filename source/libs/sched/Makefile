@@ -45,7 +45,6 @@ SCHEDLIB_SRC = sge_select_queue.c \
               sge_pe_schedd.c \
               debit.c \
               subordinate_schedd.c \
-              slots_used.c \
               load_correction.c \
               suspend_thresholds.c \
               schedd_monitor.c \
@@ -145,9 +144,6 @@ suspend_thresholds.o: $(SCHEDLIB_DIR)/suspend_thresholds.c
 
 schedd_monitor.o: $(SCHEDLIB_DIR)/schedd_monitor.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/schedd_monitor.c
-
-slots_used.o: $(SCHEDLIB_DIR)/slots_used.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/slots_used.c
 
 sgeee.o: $(SCHEDLIB_DIR)/sgeee.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sgeee.c

@@ -254,14 +254,10 @@ int event_handler_default_scheduler()
    copy.ckpt_list = lCopyList("", Master_Ckpt_List);
 
    /* report number of reduced and raw (in brackets) lists */
-   DPRINTF(("Q:%d(%d), AQ:%d(%d) J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
+   DPRINTF(("Q:%d, AQ:%d J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
             "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d \n",
             lGetNumberOfElem(copy.queue_list),
-            /* EB: TODO: */
-            lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE))),
             lGetNumberOfElem(copy.all_queue_list),
-            /* EB: TODO: */
-            lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE))),
             lGetNumberOfElem(copy.job_list),
             lGetNumberOfElem(Master_Job_List),
             lGetNumberOfElem(copy.host_list),
@@ -279,14 +275,10 @@ int event_handler_default_scheduler()
            ));
 
    if (getenv("SGE_ND")) {
-      printf("Q:%d(%d), AQ:%d(%d) J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
+      printf("Q:%d, AQ:%d J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
          "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d \n",
          lGetNumberOfElem(copy.queue_list),
-         /* EB: TODO: */
-         lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE))),
          lGetNumberOfElem(copy.all_queue_list),
-         /* EB: TODO: */
-         lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE))),
          lGetNumberOfElem(copy.job_list),
          lGetNumberOfElem(Master_Job_List),
          lGetNumberOfElem(copy.host_list),

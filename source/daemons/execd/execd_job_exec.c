@@ -588,10 +588,6 @@ job_get_queue_for_task(lListElem *jatep, lListElem *petep,
 
    DENTER(TOP_LAYER, "job_get_queue_for_task");
 
-#if 1 /* EB: TODO: debug */
-   lWriteListTo(lGetList(jatep, JAT_granted_destin_identifier_list), stderr);
-#endif
-
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       /* if a certain queuename is requested, check only this queue */
       if (queuename != NULL && 

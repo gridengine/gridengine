@@ -47,7 +47,6 @@
 #include "sge_utility.h"
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
-#include "sge_static_load.h"
 #include "sge_job_schedd.h"
 #include "sge_c_gdi.h"
 #include "mail.h"

@@ -53,8 +53,6 @@
 #include "sge_str.h"
 #include "sge_load.h"
 
-#include "sge_static_load.h"
-
 static int intprt_as_scaling[] = { HS_name, HS_value, 0 };
 static int intprt_as_load[] = { HL_name, HL_value, 0 };
 static int intprt_as_load_thresholds[] = { CE_name, CE_stringval, 0 };

@@ -1068,7 +1068,7 @@ lListElem *jatep
          packint(&pb, how); 
 
 
-         i = gdi_send_message_pb(0, pnm, 0, hnm, jep ? TAG_SIGJOB: TAG_SIGQUEUE, 
+         i = gdi_send_message_pb(0, pnm, 1, hnm, jep ? TAG_SIGJOB: TAG_SIGQUEUE, 
                           &pb, &dummy);
          clear_packbuffer(&pb);
       } else {

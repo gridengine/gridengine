@@ -1,3 +1,10 @@
+EB-2004-01-19-2: Bugfix:    several bugfixes
+                            - fixed "test_drmaa ST_DRMAA_JOB_PS <jid>"
+                            - communication between master and execd was broken
+                              qdel, qmod ... work properly again 
+                            - removed obsolete files
+                            - fixed CQ-TODO-Sections
+
 AD-2004-01-19-0: Bugfix:    Debug level (dl) scripts now set "SGE_ND" env var,
                             if needed.
                  Changed:   util

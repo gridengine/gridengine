@@ -48,6 +48,8 @@
 #include "sge_answer.h"
 #include "show_job.h"
 #include "japiP.h"
+#include "rmon_monitoring_level.h"
+#include "sgermon.h"
 
 #define JOB_CHUNK 8
 #define NTHREADS 3
@@ -508,6 +510,8 @@ int main(int argc, char *argv[])
    int failed = 0;
    int i; 
    char diag[DRMAA_ERROR_STRING_BUFFER];
+
+   DENTER_MAIN(TOP_LAYER, "qsub");
 
    if (argc == 1) 
       usage();

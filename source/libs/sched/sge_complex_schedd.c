@@ -42,7 +42,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_parse_num_par.h"
-#include "sge_static_load.h"
 #include "sge_answer.h"
 #include "sge_language.h"
 #include "sge_string.h"

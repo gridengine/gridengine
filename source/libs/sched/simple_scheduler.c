@@ -287,7 +287,7 @@ static void get_policy_info()
       procs = lGetUlong(pe, PE_slots);
       allocation_rule = lGetString(pe, PE_allocation_rule);
 
-#if 0 /* EB: TODO: PE <-> Queue relation is stored in Queue object */
+#if 0 /* TODO: PE <-> Queue relation is stored in Queue object */
       /* build a hostslist.
        * SGE pe's have a queuelist which may contain the keyword "all".
        * get the hostnames from the queues.
@@ -298,7 +298,7 @@ static void get_policy_info()
          const char *qname = lGetString(queue_ref, QR_name);
          
          if(strcmp(qname, "all") == 0) {  
-            /* EB: TODO: CQ_Type not QU_Type */
+            /* TODO: CQ_Type not QU_Type */
             for_each(queue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
                const char *host_name = lGetHost(queue, QU_qhostname);
                if(lGetElemStr(host_list, STR, host_name) == NULL) {
@@ -441,7 +441,7 @@ static void simple_scheduler()
             procs,
             pe_name != NULL ? pe_name : "-"));
 
-#if 0 /* EB: TODO: PE <-> Queue relation is stored in Queue object */
+#if 0 /* TODO: PE <-> Queue relation is stored in Queue object */
    /* allocate free slots
     * if no parallel environment is given or the pe contains the "all" keyword 
     * in the queue list, consider all queues.

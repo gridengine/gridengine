@@ -80,6 +80,7 @@
 #include "sge_gdiP.h"
 
 /* SGEOBJ */
+#include "sge_cqueue.h"
 #include "sge_event.h"
 #include "sge_feature.h"
 #include "sge_id.h"
@@ -2652,8 +2653,10 @@ enum {
 *  NOTES
 *     MT-NOTE: japi_sge_state_to_drmaa_state() is MT safe
 *******************************************************************************/
-static int japi_sge_state_to_drmaa_state(lListElem *job, lList *queue_list, bool is_array_task,
-   u_long32 jobid, u_long32 taskid, int *remote_ps, dstring *diag)
+static int 
+japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list, 
+                              bool is_array_task, u_long32 jobid, 
+                              u_long32 taskid, int *remote_ps, dstring *diag)
 {
    bool task_finished = false;
    lListElem *ja_task;
@@ -2805,9 +2808,20 @@ static int japi_sge_state_to_drmaa_state(lListElem *job, lList *queue_list, bool
        *   - suspended because queue is suspended on subordinate 
        *   - suspended because queue is suspended by calendar 
        */
-      if ((ja_task_state & JSUSPENDED_ON_THRESHOLD) || 
-          gqueue_is_suspended(lGetList(ja_task, JAT_granted_destin_identifier_list), queue_list)) {
+      if (ja_task_state & JSUSPENDED_ON_THRESHOLD) {
          *remote_ps |= DRMAA_PS_SUBSTATE_SYSTEM_SUSP;
+      } else {
+         lListElem *cqueue = NULL;
+
+         for_each(cqueue, cqueue_list) {
+            lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+            lList *qdil_list = lGetList(ja_task, JAT_granted_destin_identifier_list);
+
+            if (gqueue_is_suspended(qdil_list, qinstance_list)) {
+               *remote_ps |= DRMAA_PS_SUBSTATE_SYSTEM_SUSP;
+               break;
+            }
+         }
       }
 
       DEXIT; /* ???  */
@@ -2839,7 +2853,7 @@ static int japi_sge_state_to_drmaa_state(lListElem *job, lList *queue_list, bool
 *
 *  SYNOPSIS
 *     static int japi_get_job_and_queues(u_long32 jobid, lList 
-*     **retrieved_queue_list, lList **retrieved_job_list, dstring *diag) 
+*     **retrieved_cqueue_list, lList **retrieved_job_list, dstring *diag) 
 *
 *  FUNCTION
 *     We use GDI GET to get jobs status. Additionally also the queue list 
@@ -2848,7 +2862,7 @@ static int japi_sge_state_to_drmaa_state(lListElem *job, lList *queue_list, bool
 *
 *  INPUTS
 *     u_long32 jobid               - the jobs id
-*     lList **retrieved_queue_list - resulting queue list
+*     lList **retrieved_cqueue_list - resulting queue list
 *     lList **retrieved_job_list   - resulting job list
 *     dstring *diag                - diagnosis info
 *
@@ -2858,7 +2872,7 @@ static int japi_sge_state_to_drmaa_state(lListElem *job, lList *queue_list, bool
 *  NOTES
 *     MT-NOTES: japi_get_job_and_queues() is MT safe
 *******************************************************************************/
-static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_queue_list, 
+static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list, 
       lList **retrieved_job_list, dstring *diag)
 {
    lList *mal = NULL;
@@ -2871,24 +2885,23 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_queue_list,
 
    /* we need all queues */
    {
-      lCondition *queue_selection;
-      lEnumeration *queue_fields;
+      lCondition *cqueue_selection;
+      lEnumeration *cqueue_fields;
 
-      queue_selection = lWhere("%T(%I != %s)", QU_Type, QU_qname, SGE_TEMPLATE_NAME);
-      queue_fields = lWhat("%T(%I%I)", QU_Type, QU_qname, QU_state);
-      if (!queue_selection || !queue_fields) {
+      cqueue_selection = lWhere("%T(%I != %s)", CQ_Type, CQ_name, SGE_TEMPLATE_NAME);
+      cqueue_fields = lWhat("%T(%I%I)", CQ_Type, CQ_name, CQ_qinstances);
+      if (!cqueue_selection || !cqueue_fields) {
          japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diag);
          DEXIT;
          return DRMAA_ERRNO_NO_MEMORY;
       }
 
-      /* EB: TODO: get list of CQs instead of Qs */
       qu_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, 
-                            SGE_GDI_GET, NULL, queue_selection, queue_fields, 
+                            SGE_GDI_GET, NULL, cqueue_selection, cqueue_fields, 
                             NULL, &state);
 
-      queue_selection = lFreeWhere(queue_selection);
-      queue_fields = lFreeWhat(queue_fields);
+      cqueue_selection = lFreeWhere(cqueue_selection);
+      cqueue_fields = lFreeWhat(cqueue_fields);
    }
 
    /* prepare GDI GET JOB selection */
@@ -2919,9 +2932,8 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_queue_list,
       job_fields = lFreeWhat(job_fields);
    }
 
-   /* EB: TODO: get list of CQs instead of Qs */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, qu_id, mal, 
-                                retrieved_queue_list);
+                                retrieved_cqueue_list);
 
    if (!(aep = lFirst(alp))) {
       sge_dstring_copy_string(diag, "sge_gdi() failed returning answer list");
@@ -3070,8 +3082,8 @@ static int japi_parse_jobid(const char *job_id_str, u_long32 *jp, u_long32 *tp,
 int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
 {
    u_long32 jobid, taskid;
-   lList *retrieved_job_list = NULL,
-         *retrieved_queue_list = NULL;
+   lList *retrieved_job_list = NULL;
+   lList *retrieved_cqueue_list = NULL;
    int drmaa_errno;
    bool is_array_task;
 
@@ -3116,7 +3128,7 @@ int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
       return drmaa_errno;
    }
 
-   drmaa_errno = japi_get_job_and_queues(jobid, &retrieved_queue_list, &retrieved_job_list, diag);
+   drmaa_errno = japi_get_job_and_queues(jobid, &retrieved_cqueue_list, &retrieved_job_list, diag);
    if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
       japi_dec_threads(SGE_FUNC);
       /* diag written by japi_get_job_and_queues() */
@@ -3124,12 +3136,15 @@ int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
       return drmaa_errno;
    }
 
-   drmaa_errno = japi_sge_state_to_drmaa_state(lFirst(retrieved_job_list), retrieved_queue_list, is_array_task, jobid, taskid, remote_ps, diag);
+   drmaa_errno = japi_sge_state_to_drmaa_state(lFirst(retrieved_job_list), 
+                                               retrieved_cqueue_list, 
+                                               is_array_task, jobid, taskid, 
+                                               remote_ps, diag);
 
    japi_dec_threads(SGE_FUNC);
 
    retrieved_job_list = lFreeList(retrieved_job_list);
-   retrieved_queue_list = lFreeList(retrieved_queue_list);
+   retrieved_cqueue_list = lFreeList(retrieved_cqueue_list);
 
    DEXIT;
    return drmaa_errno;

@@ -34,7 +34,6 @@
 
 #include "sge.h"
 #include "sge_any_request.h"
-#include "sge_static_load.h"
 #include "sge_usageL.h"
 #include "commlib.h"
 #include "job_report_execd.h"

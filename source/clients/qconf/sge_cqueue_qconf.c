@@ -425,7 +425,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                                                  QU_qhostname, hostname);
 
                         if (qinstance != NULL) {
-                           write_qinstance(0, 0, qinstance, NULL);
+                           write_qinstance(0, 0, qinstance);
                            found_something = true;
                         }
                      }
@@ -454,7 +454,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                         hostname = lGetHost(qinstance, QU_qhostname);
                         if (!fnmatch(h_pattern, hostname, 0) ||
                             !sge_hostcmp(h_pattern, hostname)) {
-                           write_qinstance(0, 0, qinstance, NULL);
+                           write_qinstance(0, 0, qinstance);
                            found_something = true;
                         }
                      }

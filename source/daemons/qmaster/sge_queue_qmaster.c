@@ -44,7 +44,6 @@
 #include "sge_feature.h"
 #include "sge_c_gdi.h"
 #include "sge_host_qmaster.h"
-#include "sge_queue_qmaster.h"
 #include "subordinate_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_select_queue.h"

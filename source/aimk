@@ -879,6 +879,10 @@ case AIX43:
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3 -qstrict"
    endif   
+
+   if ( $DEBUGGED == 1 ) then
+      set OFLAG = ""
+   endif
    
    set CXX      = xlC
    set MAKE     = make

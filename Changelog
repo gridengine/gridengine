@@ -1,3 +1,5 @@
+JG-2004-05-10-0: Enhancem.  Backported test_cull_hash test program from 6.0.
+
 RC-2004-04-26-0: Bugfix:    Fixed the build (removed used variable)
                  Changed:   qmaster
 

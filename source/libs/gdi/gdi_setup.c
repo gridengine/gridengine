@@ -51,6 +51,8 @@
 #include "qm_name.h"
 #include "sge_security.h"
 #include "sge_answer.h"
+#include "sge_uidgid.h"
+#include "setup_path.h"
 
 static void default_exit_func(int i);
 
@@ -98,12 +100,20 @@ void gdi_init_mt() {
 } 
   
 void do_once_init(void) {
+   /* uti */
    uti_init_mt();
    log_init_mt();
-   path_init_mt();
+   uidgid_init_mt();
+
+   /* cull */
    cull_init_mt();
+
+   /* commlib */
    commlib_init_mt();
+
+   /* gdi */
    gdi_init_mt();
+   path_init_mt();
 }
 
 static void gdi_state_init(struct gdi_state_t* state) {

@@ -36,6 +36,12 @@ static void *submit_sleeper(void *vp)
    return NULL;
 }
 
+enum {
+   ST_SUBMIT_WAIT = 0, 
+   MT_SUBMIT_WAIT,
+   MT_SUBMIT_BEFORE_INIT_WAIT
+};
+
 int main(int argc, char *argv[])
 {
    char jobid[100];
@@ -44,16 +50,18 @@ int main(int argc, char *argv[])
 
    DENTER_MAIN(TOP_LAYER, "test_japi");
 
-   if (drmaa_init(NULL) != DRMAA_ERRNO_SUCCESS) {
-      fprintf(stderr, "drmaa_init() failed\n");
-      DEXIT;
-      return 1;
+   if (test_case != MT_SUBMIT_BEFORE_INIT_WAIT) {
+      if (drmaa_init(NULL) != DRMAA_ERRNO_SUCCESS) {
+         fprintf(stderr, "drmaa_init() failed\n");
+         DEXIT;
+         return 1;
+      }
    }
 
-   if (0) {
+   if (test_case == ST_SUBMIT_WAIT) {
       for (i=0; i<3; i++) 
          submit_sleeper(NULL);
-   } else {
+   } else { /* MT_SUBMIT_WAIT */
       pthread_t submitter_threads[3];
       for (i=0; i<3; i++) {
          pthread_create(&submitter_threads[i], NULL, submit_sleeper, NULL);

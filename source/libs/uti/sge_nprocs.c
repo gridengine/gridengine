@@ -125,6 +125,10 @@ int sge_nprocs_rsg(rsg_id) {
 *
 *  RESULT
 *     int - number of procs
+* 
+*  NOTES
+*     MT-NOTE: sge_nprocs() is MT safe (SOLARIS, NEC, IRIX, ALPHA, HPUX)
+*     MT-NOTE: sge_nprocs() is not MT safe (LINUX), use strtok_r() instead 
 ******************************************************************************/
 int sge_nprocs()
 {

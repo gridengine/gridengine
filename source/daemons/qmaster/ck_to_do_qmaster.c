@@ -190,12 +190,13 @@ lList *actual,
 lList *total  
 ) {
    char *act, *tot;
+   char resource_text[100];
 
    lListElem *cep, *total_ep; 
    for_each (cep, actual) {
       total_ep = lGetElemStr(total, CE_name, lGetString(cep, CE_name));
-      act = strdup(resource_descr(lGetDouble(cep, CE_doubleval), lGetUlong(cep, CE_valtype), NULL));
-      tot = strdup(resource_descr(lGetDouble(total_ep, CE_doubleval), lGetUlong(total_ep, CE_valtype), NULL));
+      act = strdup(resource_descr(lGetDouble(cep, CE_doubleval), lGetUlong(cep, CE_valtype), resource_text));
+      tot = strdup(resource_descr(lGetDouble(total_ep, CE_doubleval), lGetUlong(total_ep, CE_valtype), resource_text));
       fprintf(fp, "%s=%s=%s", lGetString(cep, CE_name), tot?tot:"", act?act:""); 
       if (tot)
          free(tot);

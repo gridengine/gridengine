@@ -108,6 +108,7 @@ lList *qresource_list
    char state_string[8];
    char to_print[80];
    char arch_string[80];
+   char resource_text[100];
    u_long32 state;
    double load_avg;
    static int first_time = 1;
@@ -231,10 +232,10 @@ lList *qresource_list
             default:   
                if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
                   dominant = lGetUlong(rep, CE_pj_dominant);
-                  s = resource_descr(lGetDouble(rep, CE_pj_doubleval), lGetUlong(rep, CE_valtype), NULL);
+                  s = resource_descr(lGetDouble(rep, CE_pj_doubleval), lGetUlong(rep, CE_valtype), resource_text);
                } else {
                   dominant = lGetUlong(rep, CE_dominant);
-                  s = resource_descr(lGetDouble(rep, CE_doubleval), lGetUlong(rep, CE_valtype), NULL);
+                  s = resource_descr(lGetDouble(rep, CE_doubleval), lGetUlong(rep, CE_valtype), resource_text);
                }
                break;
             }
@@ -267,6 +268,7 @@ int print_hdr,
 int indent 
 ) {
    char task_state_string[8];
+   char resource_text[100];
    u_long32 tstate, tstatus;
    int task_running;
    const char *str;
@@ -340,7 +342,7 @@ int indent
       if (!(up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_CPU))) 
          printf("%-10.10s ", task_running?"NA":""); 
       else 
-         printf("%s ", resource_descr(lGetDouble(up, UA_value), TYPE_TIM, NULL));
+         printf("%s ", resource_descr(lGetDouble(up, UA_value), TYPE_TIM, resource_text));
 
       /* scaled mem usage */
       if (!(up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_MEM))) 

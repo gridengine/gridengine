@@ -48,6 +48,8 @@
 
 #include "sge.h"
 #include "sge_log.h"
+#include "sge_time.h"
+#include "sge_dstring.h"
 #include "sgermon.h"
 #include "sge_prog.h"
 #include "sge_uidgid.h"
@@ -394,13 +396,30 @@ void log_state_set_log_as_admin_user(int i) {
 
 #ifndef WIN32NATIVE
 
+/****** sge_log/sge_do_log() ***************************************************
+*  NAME
+*     sge_do_log() -- SGE logging function
+*
+*  SYNOPSIS
+*     static void sge_do_log(int log_level, int levelchar, const char *err_str, 
+*     const char *newline) 
+*
+*  INPUTS
+*     int log_level       - ??? 
+*     int levelchar       - ??? 
+*     const char *err_str - ??? 
+*     const char *newline - ??? 
+*
+*  NOTES
+*     MT-NOTE: sge_do_log() is not MT safe due to sge_switch2admin_user()
+*     MT-NOTE: sge_do_log() can be used however in MT applications if no 
+*     MT-NOTE: admin user switching takes place
+*******************************************************************************/
 static void sge_do_log(int log_level, int levelchar, const char *err_str, 
                        const char *newline) 
 {
    int fd;
    char msg2log[1024], date[256], tmp_date[256];
-   time_t now;
-   char *tmp_ctime;
    int switch_back = 0;
 
    /* LOG_CRIT LOG_ERR LOG_WARNING LOG_NOTICE LOG_INFO LOG_DEBUG */
@@ -411,9 +430,10 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str,
    }
 
    if ((fd = open(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
-      now = time((time_t *) NULL);
-      tmp_ctime = ctime(&now);
-      sprintf(tmp_date, "%s", tmp_ctime);
+      char time_buf[256];
+      dstring ds;
+      sge_dstring_init(&ds, time_buf, sizeof(time_buf));
+      sprintf(tmp_date, "%s", sge_ctime(0, &ds));
       sscanf(tmp_date, "%[^\n]", date);
 
       sprintf(msg2log, "%s|%s|%s|%c|%s%s",
@@ -433,7 +453,6 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str,
 
    return;
 }
-
 #endif
 
 
@@ -466,11 +485,19 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str,
 *     uti/log/NOTICE
 *     uti/log/INFO
 *     uti/log/DEBUG
+*
+*  NOTES
+*     MT-NOTE: sge_log() is not MT safe due to sge_switch2admin_user()
+*     MT-NOTE: sge_log() can be used in clients where no admin user switching 
+*     MT-NOTE: takes place
+*     MT-NOTE: sge_log() is not MT safe due rmon_condition()
+*     MT-NOTE: sge_log() can be used if DENTER_MAIN() is called only by one 
+*     MT-NOTE: thread
 ******************************************************************************/
 int sge_log(int log_level, const char *mesg, const char *file__, 
             const char *func__, int line__) 
 {
-   static char buf[128*4];
+   char buf[128*4];
    char newline[2*4];
    int levelchar;
    char levelstring[32*4];

@@ -438,6 +438,7 @@ u_long32 show
    lList *rlp = NULL;
    lListElem *rep;
    char dom[5];
+   char resource_text[100];
    const char *s;
    u_long32 dominant;
    int first = 1;
@@ -487,10 +488,10 @@ u_long32 show
          default:   
             if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
                dominant = lGetUlong(rep, CE_pj_dominant);
-               s = resource_descr(lGetDouble(rep, CE_pj_doubleval), lGetUlong(rep, CE_valtype), NULL);
+               s = resource_descr(lGetDouble(rep, CE_pj_doubleval), lGetUlong(rep, CE_valtype), resource_text);
             } else {
                dominant = lGetUlong(rep, CE_dominant);
-               s = resource_descr(lGetDouble(rep, CE_doubleval), lGetUlong(rep, CE_valtype), NULL);
+               s = resource_descr(lGetDouble(rep, CE_doubleval), lGetUlong(rep, CE_valtype), resource_text);
             }
             break;
          }

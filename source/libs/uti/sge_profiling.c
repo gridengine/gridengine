@@ -79,6 +79,9 @@
 *     uti/profiling/profiling_get_total_utime()
 *     uti/profiling/profiling_get_total_stime()
 *     uti/profiling/profiling_get_info_string()
+*
+*  NOTES
+*     MT-NOTE: this module is not MT safe due to access to global variables
 *******************************************************************************/
 
 /****** uti/profiling/-Defines *************************************************
@@ -148,6 +151,9 @@ static struct tms tms_end;
 *     uti/profiling/profiling_stop()
 *     uti/profiling/profiling_start_measurement()
 *     uti/profiling/profiling_stop_measurement()
+*
+*  NOTES
+*     MT-NOTE: profiling_start() is not MT safe
 *******************************************************************************/
 void profiling_start(void)
 {
@@ -174,6 +180,9 @@ void profiling_start(void)
 *     uti/profiling/profiling_start()
 *     uti/profiling/profiling_start_measurement()
 *     uti/profiling/profiling_stop_measurement()
+*
+*  NOTES
+*     MT-NOTE: profiling_start() is not MT safe
 *******************************************************************************/
 void profiling_stop(void)
 {
@@ -193,6 +202,9 @@ void profiling_stop(void)
 *
 *  SEE ALSO
 *     uti/profiling/profiling_stop_measurement()
+*
+*  NOTES
+*     MT-NOTE: profiling_start_measurement() is not MT safe
 *******************************************************************************/
 void profiling_start_measurement(void)
 {
@@ -213,6 +225,9 @@ void profiling_start_measurement(void)
 *
 *  SEE ALSO
 *     uti/profiling/profiling_start_measurement()
+*
+*  NOTES
+*     MT-NOTE: profiling_stop_measurement() is not MT safe
 *******************************************************************************/
 void profiling_stop_measurement(void)
 {
@@ -229,6 +244,9 @@ void profiling_stop_measurement(void)
 *
 *  FUNCTION
 *     Reset usage and timing information to 0.
+*
+*  NOTES
+*     MT-NOTE: profiling_reset() is not MT safe
 *******************************************************************************/
 void profiling_reset(void)
 {
@@ -253,6 +271,8 @@ void profiling_reset(void)
 *  RESULT
 *     double - the wallclock time
 *
+*  NOTES
+*     MT-NOTE: profiling_get_measurement_wallclock() is not MT safe
 *******************************************************************************/
 double profiling_get_measurement_wallclock(void)
 {
@@ -273,6 +293,8 @@ double profiling_get_measurement_wallclock(void)
 *  RESULT
 *     double - the utime consumed during the last measurement
 *
+*  NOTES
+*     MT-NOTE: profiling_get_measurement_utime() is not MT safe
 *******************************************************************************/
 double profiling_get_measurement_utime(void)
 {
@@ -293,6 +315,8 @@ double profiling_get_measurement_utime(void)
 *  RESULT
 *     double - the system cpu time 
 *
+*  NOTES
+*     MT-NOTE: profiling_get_measurement_stime() is not MT safe
 *******************************************************************************/
 double profiling_get_measurement_stime(void)
 {
@@ -314,6 +338,8 @@ double profiling_get_measurement_stime(void)
 *  RESULT
 *     double - total wallclock time 
 *
+*  NOTES
+*     MT-NOTE: profiling_get_total_wallclock() is not MT safe
 *******************************************************************************/
 double profiling_get_total_wallclock(void)
 {
@@ -334,6 +360,9 @@ double profiling_get_total_wallclock(void)
 *
 *  RESULT
 *     double - total busy time
+*
+*  NOTES
+*     MT-NOTE: profiling_get_total_busy() is not MT safe
 *******************************************************************************/
 double profiling_get_total_busy(void)
 {
@@ -354,6 +383,8 @@ double profiling_get_total_busy(void)
 *  RESULT
 *     double - total user cpu time
 *
+*  NOTES
+*     MT-NOTE: profiling_get_total_utime() is not MT safe
 *******************************************************************************/
 double profiling_get_total_utime(void)
 {
@@ -374,6 +405,8 @@ double profiling_get_total_utime(void)
 *  RESULT
 *     double - total system cpu time
 *
+*  NOTES
+*     MT-NOTE: profiling_get_total_stime() is not MT safe
 *******************************************************************************/
 double profiling_get_total_stime(void)
 {
@@ -407,6 +440,8 @@ double profiling_get_total_stime(void)
 *     "wc = 0.190s, utime = 0.120s, stime = 0.000s, runtime 9515s, busy 105s, 
 *     utilization 1%"
 *
+*  NOTES
+*     MT-NOTE: profiling_get_info_string() is not MT safe
 *******************************************************************************/
 const char *profiling_get_info_string(void)
 {   

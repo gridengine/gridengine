@@ -66,6 +66,9 @@
 *
 *  EXAMPLE
 *     sge_basename("/usr/local/bin/flex", '/'); returns "flex"
+*
+*  NOTES
+*     MT-NOTE: sge_basename() is MT safe
 ******************************************************************************/
 const char *sge_basename(const char *name, int delim) 
 {
@@ -120,6 +123,7 @@ const char *sge_basename(const char *name, int delim)
 *  NOTES
 *     This routine is called "dirname" in opposite to "basename"
 *     but is mostly used to strip off the domainname of a FQDN     
+*     MT-NOTE: sge_dirname() is MT safe
 ******************************************************************************/
 char *sge_dirname(const char *name, int delim) 
 {
@@ -173,6 +177,9 @@ char *sge_dirname(const char *name, int delim)
 *
 *  RESULT
 *     char* - first/next token of str.
+*
+*  NOTES
+*     MT-NOTE: sge_strtok() is not MT safe, use sge_strtok_r() instead
 *
 *  SEE ALSO
 *     uti/string/sge_strtok_r()     
@@ -273,6 +280,9 @@ char *sge_strtok(const char *str, const char *delimitor)
 *  SEE ALSO
 *     uti/string/sge_strtok()     
 *     uti/string/sge_free_saved_vars()
+*
+*  NOTES
+*     MT-NOTE: sge_strtok_r() is MT safe
 ******************************************************************************/
 char *sge_strtok_r(const char *str, const char *delimitor, 
                    struct saved_vars_s **context) 
@@ -362,6 +372,9 @@ char *sge_strtok_r(const char *str, const char *delimitor,
 *
 *  SEE ALSO
 *     uti/string/sge_strtok_r() 
+*
+*  NOTES
+*     MT-NOTE: sge_free_saved_vars() is MT safe
 ******************************************************************************/
 void sge_free_saved_vars(struct saved_vars_s *context) 
 {
@@ -387,6 +400,9 @@ void sge_free_saved_vars(struct saved_vars_s *context)
 *
 *  RESULT
 *     char* - malloced string
+*
+*  NOTES
+*     MT-NOTE: sge_strdup() is MT safe
 ******************************************************************************/
 char *sge_strdup(char *old, const char *s) 
 {
@@ -425,6 +441,9 @@ char *sge_strdup(char *old, const char *s)
 *
 *  INPUTS
 *     char *str - pointer to string to be condensed 
+*
+*  NOTES
+*     MT-NOTE: sge_strip_blanks() is MT safe
 ******************************************************************************/
 void sge_strip_blanks(char *str) 
 {
@@ -479,6 +498,9 @@ void sge_strip_blanks(char *str)
 *
 *  RESULT
 *     char* - Truncated copy of 'str' (Has to be freed by the caller!)
+*
+*  NOTES
+*     MT-NOTE: sge_delim_str() is MT safe
 ******************************************************************************/
 char *sge_delim_str(char *str, char **delim_pos, const char *delim) 
 {
@@ -535,6 +557,9 @@ char *sge_delim_str(char *str, char **delim_pos, const char *delim)
 *         0 - strings are the same or both NULL 
 *        -1 - a < b or a is NULL
 *         1 - a > b or b is NULL
+*
+*  NOTES
+*     MT-NOTE: sge_strnullcmp() is MT safe
 ******************************************************************************/
 int sge_strnullcmp(const char *a, const char *b) 
 {
@@ -571,6 +596,9 @@ int sge_strnullcmp(const char *a, const char *b)
 *         0 - strings are the same minus case or both NULL 
 *        -1 - a < b or a is NULL
 *         1 - a > b or b is NULL
+*
+*  NOTES
+*     MT-NOTE: sge_strnullcasecmp() is MT safe
 ******************************************************************************/
 int sge_strnullcasecmp(const char *a, const char *b) 
 {
@@ -600,6 +628,9 @@ int sge_strnullcasecmp(const char *a, const char *b)
 *     int - result
 *         0 - no wildcard pattern
 *         1 - it is a wildcard pattern  
+*
+*  NOTES
+*     MT-NOTE: sge_is_pattern() is MT safe
 ******************************************************************************/
 int sge_is_pattern(const char *s) 
 {
@@ -629,6 +660,10 @@ int sge_is_pattern(const char *s)
 *     int - result
 *         0 - It is no integer
 *         1 - It is a integer
+*
+*  NOTES
+*     MT-NOTE: sge_strisint() is MT safe
+*
 ******************************************************************************/
 int sge_strisint(const char *str) 
 {
@@ -655,6 +690,9 @@ int sge_strisint(const char *str)
 *  INPUTS
 *     char *buffer - string 
 *     int max_len  - number of chars 
+*
+*  NOTES
+*     MT-NOTE: sge_strtoupper() is MT safe
 ******************************************************************************/
 void sge_strtoupper(char *buffer, int max_len) 
 {
@@ -688,6 +726,9 @@ void sge_strtoupper(char *buffer, int max_len)
 *
 *  RESULT
 *     char** - copy of 'cpp'
+*
+*  NOTES
+*     MT-NOTE: sge_stradup() is MT safe
 ******************************************************************************/
 char **sge_stradup(char **cpp, int n)
 {
@@ -747,6 +788,9 @@ char **sge_stradup(char **cpp, int n)
 *
 *  INPUTS
 *     char **cpp - Array of string pointers 
+*
+*  NOTES
+*     MT-NOTE: sge_strafree() is MT safe
 ******************************************************************************/
 void sge_strafree(char **cpp)
 {
@@ -778,8 +822,14 @@ void sge_strafree(char **cpp)
 *     char **cpp     - pointer to array of strings 
 *     int n          - number of chars 
 *
+*  NOTES:
+*     MT-NOTE: sge_stramemncpy() is MT safe
+*
 *  RESULT
 *     char** - NULL or pointer a string
+*
+*  NOTES
+*     MT-NOTE: sge_stramemncpy() is MT safe
 ******************************************************************************/
 char **sge_stramemncpy(const char *cp, char **cpp, int n)
 {
@@ -809,6 +859,9 @@ char **sge_stramemncpy(const char *cp, char **cpp, int n)
 *
 *  RESULT
 *     char** - NULL or pointer a string
+*
+*  NOTES
+*     MT-NOTE: sge_stracasecmp() is MT safe
 ******************************************************************************/
 char **sge_stracasecmp(const char *cp, char **cpp)
 {
@@ -832,6 +885,9 @@ char **sge_stracasecmp(const char *cp, char **cpp)
 *
 *  INPUTS
 *     char *str - string (e.g. path) 
+*
+*  NOTES
+*     MT-NOTE: sge_compress_slashes() is MT safe
 *******************************************************************************/
 void sge_compress_slashes(char *str)
 {
@@ -865,6 +921,9 @@ void sge_compress_slashes(char *str)
 *
 *  INPUTS
 *     char **pstr - string to be modified 
+*
+*  NOTES
+*     MT-NOTE: sge_strip_quotes() is MT safe
 ******************************************************************************/
 void sge_strip_quotes(char **pstr) 
 {
@@ -901,6 +960,9 @@ void sge_strip_quotes(char **pstr)
 *
 *  RESULT
 *     int - length of string or 0 if NULL pointer
+*
+*  NOTES
+*     MT-NOTE: sge_strlen() is MT safe
 *******************************************************************************/
 int sge_strlen(const char *str)
 {
@@ -934,6 +996,9 @@ int sge_strlen(const char *str)
 ** EXTERNAL
 **
 ** DESCRIPTION
+**
+** NOTES
+**     MT-NOTE: string_list() is MT safe
 **
 */
 char **string_list(char *str, char *delis, char **pstr) 

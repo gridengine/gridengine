@@ -57,6 +57,20 @@ int __fprintf_ret;
  
 static void addenv(char *, char *);
  
+/****** sge_stdio/addenv() *****************************************************
+*  NAME
+*     addenv() -- putenv() wrapper
+*
+*  SYNOPSIS
+*     static void addenv(char *key, char *value) 
+*
+*  INPUTS
+*     char *key   - ??? 
+*     char *value - ??? 
+*
+*  NOTES
+*     MT-NOTE: addenv() is MT safe
+*******************************************************************************/
 static void addenv(char *key, char *value)
 {
    char *str;
@@ -110,6 +124,9 @@ static void addenv(char *key, char *value)
 *
 *  RESULT
 *     pid_t - process id
+*
+*  NOTES
+*     MT-NOTE: sge_peopen() is not MT safe because static (?) function variable
 *
 *  SEE ALSO
 *     uti/stdio/sge_peclose()
@@ -267,6 +284,9 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
 *
 *  SEE ALSO
 *     uti/stdio/peopen()
+*
+*  NOTES
+*     MT-NOTE: sge_peclose() is MT safe
 ******************************************************************************/
 int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err,
                 struct timeval *timeout)
@@ -312,8 +332,24 @@ int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err,
  
    DEXIT;
    return (status&0xff00) >> 8;  /* return exitcode */
-}                           
+}
 
+/****** sge_stdio/print_option_syntax() ****************************************
+*  NAME
+*     print_option_syntax() -- prints syntax of an option
+*
+*  SYNOPSIS
+*     void print_option_syntax(FILE *fp, const char *option, const char 
+*     *meaning) 
+*
+*  INPUTS
+*     FILE *fp            - ??? 
+*     const char *option  - ??? 
+*     const char *meaning - ??? 
+*
+*  NOTES
+*     MT-NOTE: print_option_syntax() is MT safe
+*******************************************************************************/
 void print_option_syntax(
 FILE *fp,
 const char *option,
@@ -325,8 +361,25 @@ const char *meaning
       fprintf(fp,"   %-40.40s %s\n",  option, meaning);
 }
 
-bool 
-sge_check_stdout_stream(FILE *file, int fd)
+
+/****** sge_stdio/sge_check_stdout_stream() ************************************
+*  NAME
+*     sge_check_stdout_stream() -- ??? 
+*
+*  SYNOPSIS
+*     bool sge_check_stdout_stream(FILE *file, int fd) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     FILE *file - ??? 
+*     int fd     - ??? 
+*
+*  NOTES
+*     MT-NOTE: sge_check_stdout_stream() is MT safe
+*******************************************************************************/
+bool sge_check_stdout_stream(FILE *file, int fd)
 {
    if (fileno(file) != fd) {
       return false;
@@ -338,3 +391,4 @@ sge_check_stdout_stream(FILE *file, int fd)
 
    return true;
 }
+

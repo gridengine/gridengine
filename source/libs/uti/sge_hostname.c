@@ -152,8 +152,9 @@ void uti_state_set_fqdn_cmp(int value)
 *     in gethostbyname() and logs when very much time has passed.
 *
 *  NOTES
-*     MT-NOTE: gethostbyname() is not MT safe, should use gethostbyname_r() instead 
-*     MT-NOTE: sge_gethostbyname() used only in qmaster, commd and some utilities 
+*     MT-NOTE: sge_gethostbyname() is not MT safe
+*     MT-NOTE: to make it MT safe gethostbyname_r() interface must be used
+*     MT-NOTE: and it must have same interface as gethostbyname_r()
 *******************************************************************************/
 static struct hostent *sge_gethostbyname(const char *name)
 {
@@ -184,9 +185,9 @@ static struct hostent *sge_gethostbyname(const char *name)
    return he;
 }
 
-/****** uti/host/sge_gethostbyname() ****************************************
+/****** uti/host/sge_gethostbyaddr() ****************************************
 *  NAME
-*     sge_gethostbyaddr() -- gethostbyname() wrapper
+*     sge_gethostbyaddr() -- gethostbyaddr() wrapper
 *
 *  SYNOPSIS
 *     struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
@@ -196,8 +197,9 @@ static struct hostent *sge_gethostbyname(const char *name)
 *     in gethostbyaddr() and logs when very much time has passed.
 *
 *  NOTES
-*     MT-NOTE: gethostbyaddr() is not MT safe, should use gethostbyaddr_r() instead 
-*     MT-NOTE: sge_gethostbyaddr() used only in qmaster, commd and some utilities 
+*     MT-NOTE: sge_gethostbyaddr() is not MT safe
+*     MT-NOTE: to make it MT safe gethostbyaddr_r() interface must be used
+*     MT-NOTE: and it must have same interface as gethostbyaddr_r()
 *******************************************************************************/
 static struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
 {
@@ -232,6 +234,17 @@ static struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
    return he;
 }
 
+/****** sge_hostname/sge_host_list_initialize() ********************************
+*  NAME
+*     sge_host_list_initialize() -- intialize host list
+*
+*  SYNOPSIS
+*     void sge_host_list_initialize(void) 
+*
+*  NOTES
+*     MT-NOTE: gethostbyaddr() is not MT safe, due to access to global variables
+*
+*******************************************************************************/
 void sge_host_list_initialize(void)
 {
    char localname[MAXHOSTLEN];
@@ -260,7 +273,20 @@ void sge_host_list_initialize(void)
    DEXIT;
 }
 
-/**********************************************************************/
+/****** sge_hostname/sge_host_create() *****************************************
+*  NAME
+*     sge_host_create() -- create a new host in host list
+*
+*  SYNOPSIS
+*     static host* sge_host_create(void) 
+*
+*  RESULT
+*     static host* - returns host created
+*
+*  NOTES
+*     MT-NOTE: sge_host_create() is not MT safe due to access to global variable
+*
+*******************************************************************************/
 static host *sge_host_create(void)
 {
    host *new = (host *) malloc(sizeof(host));
@@ -276,9 +302,20 @@ static host *sge_host_create(void)
    return new;
 }
 
-/********************************/
-/* delete host with all aliases */
-/********************************/
+/****** sge_hostname/sge_host_delete() *****************************************
+*  NAME
+*     sge_host_delete() -- delete host in host list with all aliases 
+*
+*  SYNOPSIS
+*     static void sge_host_delete(host *h) 
+*
+*  INPUTS
+*     host *h - host to be deleted
+*
+*  NOTES
+*     MT-NOTE: sge_host_delete() is not MT safe due to access to global variable
+*
+*******************************************************************************/
 static void sge_host_delete(host *h) 
 {
    host *last = NULL, *hl = hostlist;
@@ -321,6 +358,10 @@ static void sge_host_delete(host *h)
 *  INPUTS
 *     const struct in_addr addr - inet-address 
 *
+*  NOTES
+*     MT-NOTE: sge_host_new_addr() is not MT safe as it uses MT unsafe 
+*     MT-NOTE: sge_host_create()
+*
 *  RESULT
 *     host* - host entry
 ******************************************************************************/
@@ -362,6 +403,9 @@ host *sge_host_new_addr(const struct in_addr *addr)
 *  INPUTS
 *     const char *name    - hostname
 *     int *not_really_new - 
+*
+*  NOTES
+*     MT-NOTE: sge_host_new_name() is not MT safe as it uses sge_host_copy_entry()
 *
 *  RESULT
 *     host* - host entry
@@ -408,9 +452,29 @@ host *sge_host_new_name(const char *name, int *not_really_new)
    return new;
 }
 
-/*********************************************/
-/* search host who's aliasptr points to host */
-/*********************************************/
+/****** sge_hostname/sge_host_search_pred_alias() ******************************
+*  NAME
+*     sge_host_search_pred_alias() -- search host who's aliasptr points to host 
+*
+*  SYNOPSIS
+*     static host* sge_host_search_pred_alias(host *h) 
+*
+*  INPUTS
+*     host *h - host we search for
+*
+*  RESULT
+*     static host* - found host if contained in host list
+*
+*  NOTES
+*     MT-NOTE: sge_host_search_pred_alias() is not MT safe due to access to 
+*     MT-NOTE: global variable
+*
+*  BUGS
+*     ??? 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
 static host *sge_host_search_pred_alias(host *h) 
 {
    host *hl = hostlist;
@@ -421,11 +485,30 @@ static host *sge_host_search_pred_alias(host *h)
    return hl;
 }
 
-/***********************************************************************/
-/* Alias 2 hostnames. This is neccesary for hosts with more than one   */
-/* interface and if we cant use DNS to specify more interfaces for one */
-/* host. The 2 hosts have to be created before we call this function.  */
-/***********************************************************************/
+/****** sge_hostname/sge_host_alias() ******************************************
+*  NAME
+*     sge_host_alias() -- alias two hosts
+*
+*  SYNOPSIS
+*     static int sge_host_alias(host *h1, host *h2) 
+*
+*  FUNCTION
+*     Alias 2 hostnames. This is neccesary for hosts with more than one  
+*     interface and if we cant use DNS to specify more interfaces for one
+*     host. The 2 hosts have to be created before we call this function.
+*
+*  INPUTS
+*     host *h1 - first host 
+*     host *h2 - second host 
+*
+*  RESULT
+*     static int - always 0 ?? 
+*
+*  NOTES
+*     MT-NOTE: sge_host_alias() is not MT safe as it uses unsafe 
+*     MT-NOTE: sge_host_search_pred_alias()
+*
+*******************************************************************************/
 static int sge_host_alias(host *h1, host *h2) 
 {
    host *h3;
@@ -445,8 +528,24 @@ static int sge_host_alias(host *h1, host *h2)
    return 0;
 }
 
-/**********************************************************************/
-static int matches_name(struct hostent *he, const char *name) 
+/****** sge_hostname/matches_name() ********************************************
+*  NAME
+*     matches_name() -- ??? 
+*
+*  SYNOPSIS
+*     static int matches_name(struct hostent *he, const char *name) 
+*
+*  INPUTS
+*     struct hostent *he - ???
+*     const char *name   - ??? 
+*
+*  RESULT
+*     static int - ???
+*
+*  NOTES
+*     MT-NOTE: matches_name() is MT safe
+*******************************************************************************/
+static int matches_name(struct hostent *he, const char *name)    
 {
    if (!name)
       return 1;
@@ -457,7 +556,20 @@ static int matches_name(struct hostent *he, const char *name)
    return 0;
 }
 
-/**********************************************************************/
+/****** sge_hostname/matches_addr() ********************************************
+*  NAME
+*     matches_addr() -- ??? 
+*
+*  SYNOPSIS
+*     static int matches_addr(hostent *he, char *addr) 
+*
+*  INPUTS
+*     struct hostent *he - ??? 
+*     char *addr  - ??? 
+*
+*  NOTES
+*     MT-NOTE: matches_addr() is MT safe
+*******************************************************************************/
 static int matches_addr(struct hostent *he, char *addr) 
 {
    if (!addr) {
@@ -487,6 +599,10 @@ static int matches_addr(struct hostent *he, char *addr)
 *  INPUTS
 *     const char *name - hostname 
 *     char *addr       - address 
+*
+*  NOTES
+*     MT-NOTE: sge_host_search() is not MT safe due to access to hostlist 
+*     MT-NOTE: global variable
 *
 *  RESULT
 *     host* - host entry
@@ -524,6 +640,9 @@ host *sge_host_search(const char *name, char *addr)
 *  INPUTS
 *     host *h  - host entry 
 *     FILE *fp - file 
+*
+*  NOTES
+*     MT-NOTE: sge_host_print() is MT safe
 ******************************************************************************/
 void sge_host_print(host *h, FILE *fp) 
 {
@@ -560,6 +679,10 @@ void sge_host_print(host *h, FILE *fp)
 *
 *  INPUTS
 *     FILE *fp - filename 
+*  
+*  NOTES
+*     MT-NOTE: sge_host_list_print() is not MT safe due to access to hostlist 
+*     MT-NOTE: global variable
 ******************************************************************************/
 void sge_host_list_print(FILE *fp) 
 {
@@ -573,9 +696,26 @@ void sge_host_list_print(FILE *fp)
    }
 }
 
-/**********************************************************************/
+/****** sge_hostname/sge_host_copy_entry() *************************************
+*  NAME
+*     sge_host_copy_entry() -- ??? 
+*
+*  SYNOPSIS
+*     static int sge_host_copy_entry(hostent *heto, hostent *hefrom) 
+*
+*  INPUTS
+*     struct hostent *heto   - ??? 
+*     struct hostent *hefrom - ??? 
+*
+*  RESULT
+*     static int - ???
+*
+*  NOTES
+*     MT-NOTE: sge_host_copy_entry() is MT safe
+*******************************************************************************/
 static int sge_host_copy_entry(struct hostent *heto, struct hostent *hefrom) 
 {
+
    if (heto->h_name)
       free((char *) heto->h_name);
    sge_strafree(heto->h_aliases);
@@ -612,6 +752,10 @@ static int sge_host_copy_entry(struct hostent *heto, struct hostent *hefrom)
 *     int - error state
 *         0 - OK
 *        -1 - Error
+* 
+*  NOTES:
+*     MT-NOTE: sge_host_list_read_aliasfile() is not MT safe 
+*     MT-NOTE: due to strtok(), hostlist global variable access 
 ******************************************************************************/
 int sge_host_list_read_aliasfile(char *fname) 
 {
@@ -703,6 +847,9 @@ _Insight_set_option("suppress", "LEAK_SCOPE");
 *
 *  RESULT
 *     const char* - mainname
+* 
+*  NOTES:
+*     MT-NOTE: sge_host_get_aliased_name() is not MT safe
 ******************************************************************************/
 const char *sge_host_get_aliased_name(const char *name)
 {
@@ -724,13 +871,16 @@ const char *sge_host_get_aliased_name(const char *name)
 *
 *  FUNCTION
 *     This function looks for changes in the resolve tables. 
+* 
+*  NOTES:
+*     MT-NOTE: sge_host_list_refresh() is not MT safe
 ******************************************************************************/
 void sge_host_list_refresh(void)
 {
    host *hl = hostlist;
    struct hostent *he;
 
-   DENTER(TOP_LAYER, "refresh_hostlist");
+   DENTER(TOP_LAYER, "sge_host_list_refresh");
 
    while (hl) {
       he = sge_gethostbyname(hl->he.h_name);
@@ -760,6 +910,9 @@ void sge_host_list_refresh(void)
 *
 *  RESULT
 *     char* - mainname 
+*
+*  NOTES:
+*     MT-NOTE: sge_host_get_mainname() is not MT safe
 ******************************************************************************/
 char *sge_host_get_mainname(host *h) 
 {
@@ -796,6 +949,9 @@ char *sge_host_get_mainname(host *h)
 *  BUGS
 *     As it uses gethostbyname() it overwrites the buffer 
 *     used by this function to return struct hostent *he !
+*
+*  NOTES:
+*     MT-NOTE: sge_host_resolve_name_local() is not MT safe
 ******************************************************************************/
 const char *sge_host_resolve_name_local(const char *unresolved)
 {  
@@ -839,6 +995,9 @@ const char *sge_host_resolve_name_local(const char *unresolved)
 *
 *  SEE ALSO
 *     uti/hostname/sge_hostcmp()
+*
+*  NOTES:
+*     MT-NOTE: sge_hostcpy() is MT safe
 ******************************************************************************/
 void sge_hostcpy(char *dst, const char *raw)
 {
@@ -894,6 +1053,9 @@ void sge_hostcpy(char *dst, const char *raw)
 *
 *  SEE ALSO
 *     uti/hostname/sge_hostcpy()
+*
+*  NOTES:
+*     MT-NOTE: sge_hostcmp() is MT safe
 ******************************************************************************/
 int sge_hostcmp(const char *h1, const char*h2)
 {

@@ -339,6 +339,9 @@ void uti_state_set_exit_func(sge_exit_func_t f)
 *
 *  INPUTS
 *     u_long32 program_number - uniq internal program number
+*
+*  NOTES
+*     MT-NOTE: sge_getme() is MT safe
 ******************************************************************************/
 void sge_getme(u_long32 program_number)
 {
@@ -435,6 +438,9 @@ NULL));
 *
 *  FUNCTION
 *     Show content of me structure in debug output
+*
+*  NOTES
+*     MT-NOTE: sge_show_me() is MT safe
 ******************************************************************************/
 static void sge_show_me(void)
 {

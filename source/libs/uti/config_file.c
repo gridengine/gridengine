@@ -49,7 +49,10 @@ typedef struct config_entry {
    struct config_entry *next;
 } config_entry;
 
-/* MT-NOTE: only execd and shepherd depend on config_list global variable */
+/*
+ * MT-NOTE: libs/uti/config_file.c is not MT safe due to access to global 
+ * MT-NOTE: variables. But currently it is used only in execd and shepherd 
+ */
 static config_entry *config_list = NULL;
 
 /* these variables may get used to replace variables in pe_start */
@@ -119,6 +122,8 @@ void (*config_errfunc)(char *) = NULL;
  - 0 Ok
  - 1 systemerror -> errno is valid
  - 2 malloc error
+
+ MT-NOTE: read_config() is not MT safe
  *****************************************************/
 int read_config(
 const char *fname 

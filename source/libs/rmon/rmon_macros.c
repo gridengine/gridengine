@@ -150,6 +150,25 @@ int errno
 
 
 
+/****** rmon_macros/rmon_condition() *******************************************
+*  NAME
+*     rmon_condition() -- is monitoring enabled for layer/class?
+*
+*  SYNOPSIS
+*     int rmon_condition(register int layer, register int class) 
+*
+*  INPUTS
+*     register int layer - ??? 
+*     register int class - ??? 
+*
+*  RESULT
+*     int - 1 true 
+*           0 false
+*
+*  NOTES
+*     MT-NOTES: rmon_condition() is not MT safe due to read access to global
+*     MT-NOTES: variable. Write access currently only in one thread
+*******************************************************************************/
 int rmon_condition(
 register int layer,
 register int class 

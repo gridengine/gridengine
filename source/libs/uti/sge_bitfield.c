@@ -52,6 +52,9 @@
 *  EXAMPLE
 *     See main program (module test) in libs/uti/sge_bitfield.c
 *
+*  NOTES
+*     MT-NOTE: this module is MT safe
+*
 *  SEE ALSO
 *     uti/bitfield/sge_bitfield_new()
 *     uti/bitfield/sge_bitfield_free()
@@ -97,6 +100,9 @@
 *     bitfield - a new bitfield or NULL, if the creation of the bitfield 
 *                failed
 *
+*  NOTES
+*     MT-NOTE: sge_bitfield_new() is MT safe
+*
 *  SEE ALSO
 *     uti/bitfield/sge_bitfield_free()
 *******************************************************************************/
@@ -133,6 +139,9 @@ bitfield sge_bitfield_new(int size)
 *  INPUTS
 *     bitfield bf - the bitfield to destroy
 *
+*  NOTES
+*     MT-NOTE: sge_bitfield_free() is MT safe
+*
 *  RESULT
 *     bitfield - NULL
 *******************************************************************************/
@@ -161,6 +170,9 @@ bitfield sge_bitfield_free(bitfield bf)
 *  INPUTS
 *     bitfield bf - the bitfield to manipulate
 *     int bit     - the bit to set
+*
+*  NOTES
+*     MT-NOTE: sge_bitfield_set() is MT safe
 *
 *  RESULT
 *     int - 1 on success, 
@@ -196,6 +208,9 @@ int sge_bitfield_set(bitfield bf, int bit)
 *     bitfield bf - the bitfield to read from
 *     int bit     - the bit to read
 *
+*  NOTES
+*     MT-NOTE: sge_bitfield_get() is MT safe
+*
 *  RESULT
 *     int - 0 or 1 as value of the bit,
 *           -1 on error
@@ -228,6 +243,9 @@ int sge_bitfield_get(bitfield bf, int bit)
 *     bitfield bf - the bitfield to manipulate
 *     int bit     - the bit to clear
 *
+*  NOTES
+*     MT-NOTE: sge_bitfield_clear() is MT safe
+*
 *  RESULT
 *     int - 0 on success,
 *           -1 on error
@@ -259,6 +277,9 @@ int sge_bitfield_clear(bitfield bf, int bit)
 *     Prints the contents of a bitfield.
 *     For each bit one digit (0/1) is printed.
 *     If NULL is passed as file descriptor, output is sent to stdout.
+*
+*  NOTES
+*     MT-NOTE: sge_bitfield_print() is MT safe
 *
 *  INPUTS
 *     bitfield  bf - the bitfield to output

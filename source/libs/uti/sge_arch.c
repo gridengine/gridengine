@@ -57,6 +57,9 @@
 *     host where the application is running which called this 
 *     functionon.
 *
+*  NOTES:
+*     MT-NOTE: sge_get_arch() is MT safe
+*
 *  RESULT
 *     const char* - architecture string
 ******************************************************************************/
@@ -150,6 +153,9 @@ const char *sge_get_arch(void)
 *
 *     Multiple environment variables will only be accepted when they 
 *     are identical. Other cases will be handled as error.
+*
+*     MT-NOTE: sge_get_arch() is MT safe
+*
 *******************************************************************************/
 const char *sge_get_root_dir(int do_exit, char *buffer, size_t size)
 {
@@ -276,6 +282,9 @@ error:
 *     Multiple environment variables will only be accepted when they are
 *     identical. Other cases will be handled as error. In case of an 
 *     error the 'DEFAULT_CELL' will be returned.
+*
+*     MT-NOTE: sge_get_default_cell() is MT safe
+*
 ******************************************************************************/
 const char *sge_get_default_cell(void)
 {
@@ -351,6 +360,10 @@ const char *sge_get_default_cell(void)
 *
 *  FUNCTION
 *     Return the path of the 'alias_file' 
+*
+*  NOTES
+*     MT-NOTE: sge_get_alias_path() is MT safe
+*
 ******************************************************************************/
 char *sge_get_alias_path(void) 
 {

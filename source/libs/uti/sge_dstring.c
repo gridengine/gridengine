@@ -54,6 +54,9 @@
 *     dstring *sb   - dynamic string 
 *     const char *a - string 
 *
+*  NOTES
+*     MT-NOTE: sge_dstring_append() is MT safe
+*
 *  RESULT
 *     const char* - result string
 ******************************************************************************/
@@ -126,6 +129,9 @@ const char* sge_dstring_append(dstring *sb, const char *a)
 *     dstring *sb      - dynamic string 
 *     const dstring *a - string 
 *
+*  NOTES
+*     MT-NOTE: sge_dstring_append_dstring() is MT safe
+*
 *  RESULT
 *     const char* - result string
 ******************************************************************************/
@@ -154,6 +160,8 @@ const char* sge_dstring_append_dstring(dstring *sb, const dstring *a)
 *     const char* - result string 
 *
 *  NOTES
+*     MT-NOTE: sge_dstring_sprintf() is MT safe
+*
 *     JG: TODO (265): Do not use a fixed size buffer and vprintf!
 *                     This undoes the benefits of a dynamic string
 *                     implementation.
@@ -200,6 +208,8 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 *     const char* - result string 
 *
 *  NOTES
+*     MT-NOTE: sge_dstring_vsprintf() is MT safe
+*
 *     JG: TODO (265): Do not use a fixed size buffer and vprintf!
 *                     This undoes the benefits of a dynamic string
 *                     implementation.
@@ -245,6 +255,8 @@ const char* sge_dstring_vsprintf(dstring *sb, const char *format, va_list ap)
 *     const char* - result string 
 *
 *  NOTES
+*     MT-NOTE: sge_dstring_sprintf_append() is MT safe
+*
 *     JG: TODO (265): Do not use a fixed size buffer and vprintf!
 *                     This undoes the benefits of a dynamic string
 *                     implementation.
@@ -279,6 +291,9 @@ const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
 *  INPUTS
 *     dstring *sb - destination dstring 
 *     char* str   - source string 
+*
+*  NOTES
+*     MT-NOTE: sge_dstring_copy_string() is MT safe
 *
 *  RESULT
 *     const char* - result string 
@@ -325,6 +340,9 @@ const char *sge_dstring_copy_string(dstring *sb, const char *str)
 *     dstring *sb1 - destination dstring
 *     const dstring *sb2 - source dstring 
 *
+*  NOTES
+*     MT-NOTE: sge_dstring_copy_dstring() is MT safe
+*
 *  RESULT
 *     const char* - result string buffer 
 *******************************************************************************/
@@ -359,6 +377,9 @@ const char *sge_dstring_copy_dstring(dstring *sb1, const dstring *sb2)
 *  FUNCTION
 *     Frees a dynamically allocated string 
 *
+*  NOTES
+*     MT-NOTE: sge_dstring_free() is MT safe
+*
 *  INPUTS
 *     dstring *sb - dynamic string 
 ******************************************************************************/
@@ -380,6 +401,9 @@ void sge_dstring_free(dstring *sb)
 *
 *  FUNCTION
 *     Set a dstring to an empty string.
+*
+*  NOTES
+*     MT-NOTE: sge_dstring_clear() is MT safe
 *
 *  INPUTS
 *     dstring *sb - dynamic string 
@@ -413,6 +437,9 @@ void sge_dstring_clear(dstring *sb)
 *  INPUTS
 *     const dstring *string - pointer to dynamic string 
 *
+*  NOTES
+*     MT-NOTE: sge_dstring_get_string() is MT safe
+*
 *  RESULT
 *     const char* - pointer to string buffer
 *******************************************************************************/
@@ -434,6 +461,9 @@ const char *sge_dstring_get_string(const dstring *string)
 *
 *  INPUTS
 *     const dstring *string - pointer to dynamic string 
+*
+*  NOTES
+*     MT-NOTE: sge_dstring_strlen() is MT safe
 *
 *  RESULT
 *     size_t - string length
@@ -463,6 +493,9 @@ size_t sge_dstring_strlen(const dstring *string)
 *  INPUTS
 *     const dstring *string - pointer to dynamic string 
 *
+*  NOTES
+*     MT-NOTE: sge_dstring_remaining() is MT safe
+*
 *  RESULT
 *     size_t - remaining chars
 *******************************************************************************/
@@ -472,7 +505,6 @@ size_t sge_dstring_remaining(const dstring *string)
 
    if (string && string->is_static) {
       int n = string->size - strlen(string->s);
-/*       DPRINTF(("remaining: %d\n", n)); */
       DEXIT;
       return (n<0)?0:n;
    } else {
@@ -493,6 +525,9 @@ size_t sge_dstring_remaining(const dstring *string)
 *
 *  INPUTS
 *     const dstring *string - pointer to dynamic string 
+*
+*  NOTES
+*     MT-NOTE: sge_dstring_init() is MT safe
 *
 *  RESULT
 *     size_t - remaining chars

@@ -59,7 +59,7 @@
 #  define NSIG (SIGUSR2+1)
 #endif
 
-sig_mapT sig_map[] = 
+const sig_mapT sig_map[] = 
 {
    {SGE_SIGHUP, SIGHUP, "HUP"},
    {SGE_SIGINT, SIGINT, "INT"},
@@ -120,10 +120,14 @@ sig_mapT sig_map[] =
 *
 *  RESULT
 *     int - system signal
+*
+*  NOTES
+*     MT-NOTE: sge_unmap_signal() is MT safe
+*
 ******************************************************************************/
 int sge_unmap_signal(u_long32 sge_sig) 
 {
-   sig_mapT *mapptr=sig_map;
+   const sig_mapT *mapptr=sig_map;
 
    while (mapptr->sge_sig) {
       if (mapptr->sge_sig == sge_sig) {
@@ -149,10 +153,14 @@ int sge_unmap_signal(u_long32 sge_sig)
 *
 *  RESULT
 *     u_long32 - SGE/EE Signal
+*
+*  NOTES
+*     MT-NOTE: sge_map_signal() is MT safe
+*
 ******************************************************************************/
 u_long32 sge_map_signal(int sys_sig) 
 {
-   sig_mapT *mapptr=sig_map;
+   const sig_mapT *mapptr=sig_map;
 
    while (mapptr->sge_sig) {
       if (mapptr->sig == sys_sig) {
@@ -180,10 +188,14 @@ u_long32 sge_map_signal(int sys_sig)
 *
 *  RESULT
 *     u_long32 - SGE/EE signal 
+*
+*  NOTES
+*     MT-NOTE: sge_str2signal() is MT safe
+*
 ******************************************************************************/
 u_long32 sge_str2signal(const char *str) 
 {
-   sig_mapT *mapptr=sig_map;
+   const sig_mapT *mapptr=sig_map;
    u_long32 signum;
 
    /* look for signal names in mapping table */
@@ -224,10 +236,14 @@ u_long32 sge_str2signal(const char *str)
 *
 *  RESULT
 *     u_long32 - SGE/EE signal
+*
+*  NOTES
+*     MT-NOTE: sge_sys_str2signal() is MT safe
+*
 ******************************************************************************/
 u_long32 sge_sys_str2signal(const char *str) 
 {
-   sig_mapT *mapptr=sig_map;
+   const sig_mapT *mapptr=sig_map;
    u_long32 signum;
 
    /* look for signal names in mapping table */
@@ -262,10 +278,14 @@ u_long32 sge_sys_str2signal(const char *str)
 *
 *  RESULT
 *     const char* - signal string
+*
+*  NOTES
+*     MT-NOTE: sge_sig2str() is MT safe
+*
 ******************************************************************************/
 const char *sge_sig2str(u_long32 sge_sig) 
 {
-   sig_mapT *mapptr;
+   const sig_mapT *mapptr;
 
    /* look for signal names in mapping table */
    for (mapptr=sig_map; mapptr->sge_sig; mapptr++) {
@@ -292,10 +312,14 @@ const char *sge_sig2str(u_long32 sge_sig)
 *
 *  RESULT
 *     const char* - signal string
+*
+*  NOTES
+*     MT-NOTE: sge_sys_sig2str() is MT safe
+*
 ******************************************************************************/
 const char *sge_sys_sig2str(u_long32 sys_sig) 
 {
-   sig_mapT *mapptr;
+   const sig_mapT *mapptr;
 
    /* look for signal names in mapping table */
    for (mapptr=sig_map; mapptr->sge_sig; mapptr++) {
@@ -320,6 +344,10 @@ const char *sge_sys_sig2str(u_long32 sys_sig)
 *  INPUTS
 *     int sig_num         - signal number
 *     err_func_t err_func - callback function to report errors
+*
+*  NOTES
+*     MT-NOTE: sge_set_def_sig_mask() is MT safe
+*
 ******************************************************************************/
 void sge_set_def_sig_mask(int sig_num, err_func_t err_func)
 {
@@ -360,6 +388,10 @@ void sge_set_def_sig_mask(int sig_num, err_func_t err_func)
 *
 *  FUNCTION
 *     Allow for all signals.
+*
+*  NOTES
+*     MT-NOTE: sge_unblock_all_signals() is MT safe
+*
 *******************************************************************************/
 void sge_unblock_all_signals(void)
 {

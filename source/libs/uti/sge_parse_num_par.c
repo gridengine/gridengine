@@ -122,6 +122,8 @@ RETURN
       1 - ok, value in *uvalp is valid
       0 - parsing error
 
+NOTES
+   MT-NOTE: parse_ulong_val() is MT safe
 */
 int parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type, 
                     const char *s, char *error_str, int error_len) 
@@ -130,6 +132,7 @@ int parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
 }
 
 /* enable_infinity enhancement: if 0 no infinity value is allowed */
+/*    MT-NOTE: extended_parse_ulong_val() is MT safe */
 int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
                              const char *s, char *error_str, int error_len,
                              int enable_infinity) 
@@ -206,6 +209,7 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
 }
 
 /*----------------------------------------------------------------------*/
+/*    MT-NOTE: sge_parse_loglevel_val() is MT safe */
 bool sge_parse_loglevel_val(u_long32 *uval, const char *s) 
 {
    bool ret = true;
@@ -240,6 +244,9 @@ bool sge_parse_loglevel_val(u_long32 *uval, const char *s)
  * return:
  *    bitmask of checkpoint specifers
  *    0 if attr_str == NULL or nothing set or value may be a time value
+ *
+ * NOTES
+ *    MT-NOTE: sge_parse_checkpoint_attr() is MT safe
  *-----------------------------------------------------------*/
 int sge_parse_checkpoint_attr(const char *attr_str) 
 {
@@ -276,14 +283,32 @@ int sge_parse_checkpoint_attr(const char *attr_str)
    return opr;
 }
 
+
+/****** sge_parse_num_par/resource_descr() *************************************
+*  NAME
+*     resource_descr() -- fill buffer with resource description 
+*
+*  SYNOPSIS
+*     char* resource_descr(double dval, u_long32 type, char *buffer) 
+*
+*  INPUTS
+*     double dval   - value to be printed
+*     u_long32 type - TYPE_TIM/TYPE_MEM/...
+*     char *buffer  - buffer
+*
+*  RESULT
+*     char* - points to the buffer passed
+*
+*  NOTES
+*     MT-NOTE: resource_descr() is MT safe
+*******************************************************************************/
 char *resource_descr(double dval, u_long32 type, char *buffer) 
 {
    int secs, minutes, hours, days;
    char c;
-   static char text[100];
 
-   if (!buffer)
-      buffer = text;
+   if (!buffer) 
+      return NULL;
 
    if (dval==DBL_MAX) {
       return "infinity";
@@ -338,6 +363,9 @@ char *resource_descr(double dval, u_long32 type, char *buffer)
  * 
  * if the result would exceed sge_rlim_t
  * the result is set to RLIM_INFINITY
+ *
+ * NOTES
+ *     MT-NOTE: mul_infinity() is MT safe
  */
 sge_rlim_t mul_infinity(sge_rlim_t rlim, sge_rlim_t muli) 
 {
@@ -357,6 +385,9 @@ sge_rlim_t mul_infinity(sge_rlim_t rlim, sge_rlim_t muli)
  * 
  * if the result would exceed sge_rlim_t
  * the result is set to RLIM_INFINITY
+ *
+ * NOTES
+ *     MT-NOTE: add_infinity() is MT safe
  */
 static sge_rlim_t add_infinity(sge_rlim_t rlim, sge_rlim_t offset) 
 {
@@ -384,6 +415,9 @@ static sge_rlim_t add_infinity(sge_rlim_t rlim, sge_rlim_t offset)
  *                M : Multiplier = 1024*1024
  *                g : Multiplier = 1000*1000*1000
  *                G : Multiplier = 1024*1024*1024
+ *
+ * NOTES
+ *     MT-NOTE: get_multiplier() is MT safe
  **********************************************************************/
 
 static double get_multiplier(sge_rlim_t *rlimp, char **dptr, 
@@ -464,6 +498,8 @@ static double get_multiplier(sge_rlim_t *rlimp, char **dptr,
  *    in case of a parsing error the err_str gets filled with an error
  *    message
  *
+ * NOTES
+ *     MT-NOTE: sge_parse_num_val() is MT safe
  **********************************************************************/
 
 u_long32 

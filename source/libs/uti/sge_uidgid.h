@@ -49,6 +49,10 @@
 #   define MAX_NIS_RETRIES 10
 #endif    
 
+#if defined(SGE_MT)
+void uidgid_init_mt(void);
+#endif
+
 int sge_set_admin_username(const char *username, char *err_str);
  
 int sge_switch2admin_user(void);

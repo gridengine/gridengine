@@ -385,7 +385,7 @@ int drmaa_get_attribute(job_template_t *jt, const char *name, char *value, size_
 }
 
 /* Adds ('name', 'values') pair to list of vector attributes in job template 'jt'.
- * Only vector attributes may be passed.
+ * Only vector attributes may be passed. 
  */
 int drmaa_set_vector_attribute(job_template_t *jt, const char *name, char *value[])
 {
@@ -423,6 +423,7 @@ int drmaa_set_vector_attribute(job_template_t *jt, const char *name, char *value
  */
 int drmaa_get_vector_attribute(job_template_t *jt, const char *name /* , vector of attribute values */ )
 {
+/*       sge_stradup()/sge_strafree() */
    return DRMAA_ERRNO_SUCCESS;
 }
 

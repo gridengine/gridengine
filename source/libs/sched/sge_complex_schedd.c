@@ -957,7 +957,7 @@ int force_existence
    const char *s;
    const char *name;
    const char *offer;
-   char dom_str[5]  /* , r1str[100], r2str[100] */ ; 
+   char dom_str[5], resource_text[100];  /* , r1str[100], r2str[100] */
    char availability_text1[2048];
    char availability_text2[2048]; 
 
@@ -1056,7 +1056,7 @@ int force_existence
          if (type==TYPE_BOO)
             sprintf(availability_text1, "%s:%s=%s", dom_str, name, src_dl?"true":"false");
          else  
-            sprintf(availability_text1, "%s:%s=%s", dom_str, name, resource_descr(src_dl, type, NULL));
+            sprintf(availability_text1, "%s:%s=%s", dom_str, name, resource_descr(src_dl, type, resource_text));
 
 #if 0
          if (type==TYPE_BOO) {
@@ -1085,7 +1085,7 @@ int force_existence
          if (type==TYPE_BOO)
             sprintf(availability_text2, "%s:%s=%s", dom_str, name, src_dl?"true":"false");
          else
-            sprintf(availability_text2, "%s:%s=%s", dom_str, name, resource_descr(src_dl, type, NULL));
+            sprintf(availability_text2, "%s:%s=%s", dom_str, name, resource_descr(src_dl, type, resource_text));
 
 #if 0
          if (type==TYPE_BOO) {

@@ -67,6 +67,36 @@ static int catch_exec_initialized = 0;
 
 static int init_qtask_config(lList **alpp, print_func_t ostream);
 
+/****** sge_qtcsh/init_qtask_config() ******************************************
+*  NAME
+*     init_qtask_config() -- ??? 
+*
+*  SYNOPSIS
+*     static int init_qtask_config(lList **alpp, print_func_t ostream) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **alpp         - ??? 
+*     print_func_t ostream - ??? 
+*
+*  RESULT
+*     static int - 
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTES: init_qtask_config() is not MT safe as it uses unsafe 
+*     MT-NOTES: sge_getpwnam()
+*
+*  BUGS
+*     ??? 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
 static int init_qtask_config(
 lList **alpp,
 print_func_t ostream 

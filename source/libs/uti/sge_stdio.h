@@ -59,6 +59,7 @@
 *
 *  NOTES
 *     Don't forget to define the 'FPRINTF_ERROR'-label
+*     MT-NOTE: FPRINTF() macro is not MT safe
 ******************************************************************************/
 
 #include <stdio.h>
@@ -82,7 +83,6 @@ int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err,
 
 void print_option_syntax(FILE *fp, const char *option, const char *meaning);
 
-bool 
-sge_check_stdout_stream(FILE *file, int fd);
+bool sge_check_stdout_stream(FILE *file, int fd);
 
 #endif /* __SGE_STDIO_H */

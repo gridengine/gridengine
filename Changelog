@@ -1,3 +1,7 @@
+AH-2003-02-24-0  Enhancem.: Documented MT safety of utilib
+                            made some funcs MT safe
+                 Review:    JG
+
 JG-2003-02-24-1  Doc.:      Updated module documentation to contain new 
                             libraries libsgeobj, libevc, libevm and libmir.
                             Changed ADOC generation code in aimk to create 

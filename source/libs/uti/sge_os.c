@@ -92,6 +92,9 @@
 *         0 - No program with given name found
 *        >0 - Number of processes with "name" 
 *        -1 - Error
+*
+*  NOTES
+*     MT-NOTES: sge_get_pids() is not MT safe
 ******************************************************************************/
 int sge_get_pids(pid_t *pids, int max_pids, const char *name, 
              const char *pscommand) 
@@ -170,6 +173,9 @@ int sge_get_pids(pid_t *pids, int max_pids, const char *name,
 *     int - result state
 *         0 - pid was not found
 *         1 - pid was found
+*
+*  NOTES
+*     MT-NOTES: sge_contains_pid() is MT safe
 ******************************************************************************/
 int sge_contains_pid(pid_t pid, pid_t *pids, int npids) 
 {
@@ -206,6 +212,9 @@ int sge_contains_pid(pid_t pid, pid_t *pids, int npids)
 *         0 - Process with "pid" has "name"
 *         1 - No such pid or pid has other name
 *        -1 - error occurred (mostly sge_peopen() failed) 
+*
+*  NOTES
+*     MT-NOTES: sge_checkprog() is not MT safe
 ******************************************************************************/
 int sge_checkprog(pid_t pid, const char *name, const char *pscommand) 
 {
@@ -307,6 +316,9 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 *     int - Successfull?
 *         1 - Yes
 *         0 - No
+*
+*  NOTES
+*     MT-NOTES: sge_daemonize() is not MT safe
 ******************************************************************************/
 int sge_daemonize(fd_set *keep_open)
 {
@@ -405,6 +417,9 @@ int sge_daemonize(fd_set *keep_open)
 *         0 - there are problems with stdin
 *         1 - there are problems with stdout
 *         2 - there are problems with stderr
+*
+*  NOTES
+*     MT-NOTE: sge_occupy_first_three() is MT safe
 ******************************************************************************/
 int sge_occupy_first_three(void)
 {
@@ -450,6 +465,9 @@ int sge_occupy_first_three(void)
 *
 *  INPUTS
 *     fd_set *keep_open - bitmask
+*
+*  NOTES
+*     MT-NOTE: sge_close_all_fds() is MT safe
 ******************************************************************************/
 void sge_close_all_fds(fd_set *keep_open)
 {

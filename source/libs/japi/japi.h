@@ -219,6 +219,47 @@ int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose);
  */
 int drmaa_wait(const char *job_id, char *job_id_out, int job_id_size, int *stat, signed long timeout, char *rusage[]);
 
+#if 0
+drmaa_wifexited(OUT exited, IN stat,  INOUT drmaa_context_error_buf)
+    Evaluates into 'exited' a non-zero value if stat was returned for a
+    job that terminated normally. A zero value can also indicate that
+    altough the job has terminated normally an exit status is not available
+    or that it is not known whether the job terminated normally. In both
+    cases drmaa_wexitstatus() will not provide exit status information.
+    A non-zero 'exited' value indicates more detailed diagnosis can be provided
+    by means of drmaa_wifsignaled(), drmaa_wtermsig() and drmaa_wcoredump().
+
+drmaa_wexitstatus(OUT exited, IN stat,  INOUT drmaa_context_error_buf)
+     If the OUT parameter 'exited' of drmaa_wifexited() is non-zero,
+     this function evaluates into 'exit_code' the exit code that the
+     job passed to _exit() (see exit(2)) or exit(3C), or the value that
+     the child process returned from main.
+
+drmaa_wifsignaled(OUT signaled, IN stat, INOUT drmaa_context_error_buf )
+     Evaluates into 'signaled' a non-zero value if status was returned
+     for a job that terminated due to the receipt of a signal. A zero value
+     can also indicate that altough the job has terminated due to the receipt
+     of a signal the signal is not available or that it is not known whether
+     the job terminated due to the receipt of a signal. In both cases
+     drmaa_wtermsig() will not provide signal information.
+
+drmaa_wtermsig(OUT signal, IN stat, INOUT drmaa_context_error_buf )
+     If the OUT parameter 'signaled' of drmaa_wifsignaled(stat) is
+     non-zero, this function evaluates into signal a string representation of the signal
+     that caused the termination of the job. For signals declared by POSIX, the symbolic
+     names are returned (e.g., SIGABRT, SIGALRM).
+     For signals not declared by POSIX, any other string may be returned.
+
+drmaa_wcoredump(OUT core_dumped, IN stat, INOUT drmaa_context_error_buf )
+     If the OUT parameter 'signaled' of drmaa_wifsignaled(stat) is
+     non-zero, this function evaluates into 'core_dumped' a non-zero value
+     if a core image of the terminated job was created.
+
+drmaa_wifaborted( OUT aborted, IN stat, INOUT drmaa_context_error_buf )
+      Evaluates into 'aborted' a non-zero value if 'stat'
+      was returned for a job that ended before entering the running state.
+#endif
+
 
 /* 
  * Get the program status of the job identified by 'job_id'.

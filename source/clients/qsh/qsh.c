@@ -1352,9 +1352,10 @@ char **argv
    lList *opts_all = NULL;
    lList *opts_qrsh = NULL;
    lListElem *job = NULL;
-   lList *lp_jobs;
-   lList *alp;
-   lListElem *aep;
+   lList *lp_jobs = NULL;
+   lList *alp = NULL;
+
+   lListElem *aep = NULL;
    u_long32 status = STATUS_OK;
    u_long32 quality;
    u_long32 job_id = 0;
@@ -1378,7 +1379,7 @@ char **argv
 
    int alp_error;
 
-   lListElem *ep;
+   lListElem *ep = NULL;
 
    int sock;
    int cl_err = 0;

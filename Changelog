@@ -1,11 +1,15 @@
-AA-2002-11-21-0  Bugfix     aix51 arch in util/arch script
+CR-2002-11-22-1  Bugfix:    Uninitialized pointer cause segmentation fault in 
+                            qsh/qrsh on submit only hosts.
+                 Changed:   qsh/qrsh
 
-CR-2002-11-19-1  L10N       removed message definition macro only used in
+AA-2002-11-21-0  Bugfix:    aix51 arch in util/arch script
+
+CR-2002-11-19-1  L10N:      removed message definition macro only used in
                             ptf module for IRIX6 / IRIX64 architecture. The
                             message should not be l10n-ed.
-                 Changed    execd (on IRIX6/IRIX64 )
+                 Changed:   execd (on IRIX6/IRIX64 )
 
-CR-2002-11-19-0  L10N       Code cleanup/enhancements for testsuite l10n
+CR-2002-11-19-0  L10N:      Code cleanup/enhancements for testsuite l10n
                             modulation.
                             - removed unused message definitions from msg_xxx.h files
                             - new printf() format carsting specifier macro: 
@@ -17,9 +21,9 @@ CR-2002-11-19-0  L10N       Code cleanup/enhancements for testsuite l10n
 
 AH-2002-11-18-0  Bugfix:    Complex values for user defined complexes  
                             are rejected with global host.
-                 IZ         418
-                 Bugtraq    4776754
-                 Review     AS
+                 IZ:        418
+                 Bugtraq:   4776754
+                 Review:    AS
 
 EB-2002-11-18-0  Testsuite: Test for issue #423 and #402
                  IZ:        425, 426

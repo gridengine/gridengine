@@ -1,3 +1,10 @@
+RH-2005-03-23-0: Bugfix:    misleading qstat -j message when the scheduler 
+                            is not running
+                 Issue:     1435
+                 Bugtraq:   6244229
+                 Changed:   qmaster
+                 Review:    SG
+
 RH-2005-03-22-1: Bugfix:    qsub -b y must fail if no command is specified
                  Cleanup:   shepherd_trace calls ifdef'ed
                  Issue:     1365

@@ -189,7 +189,7 @@
 #define MSG_SGETEXT_NOSUBMITHOST_S               _MESSAGE(33127, _("denied: host "SFQ" is no submit host\n"))
 #define MSG_SGETEXT_NOSUBMITORADMINHOST_S        _MESSAGE(33128, _("denied: host "SFQ" is neither submit nor admin host\n"))
 #define MSG_SGETEXT_ALREADYEXISTS_SS             _MESSAGE(33129, _(""SFN" "SFQ" already exists\n"))
-
+#define MSG_SGETEXT_JOBINFOMESSAGESOUTDATED            _MESSAGE(33130, _("Can not get job info messages, scheduler is not available\n"))
 #define MSG_GDI_EVENTCLIENTIDFORMAT_S      _MESSAGE(33131, _("invalid event client id format " SFQ "\n"))
 
 

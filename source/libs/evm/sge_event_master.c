@@ -463,6 +463,8 @@ static bool       should_flush_event_client (u_long32 id, ev_event type,
 
 static void blockEvents(lListElem *event_client, ev_event ev_type, bool isBlock);
 
+
+
 /****** Eventclient/Server/sge_add_event_client() ******************************
 *  NAME
 *     sge_add_event_client() -- register a new event client
@@ -1116,6 +1118,48 @@ u_long32 sge_get_max_dynamic_event_clients(void){
    DEXIT;
    return actual_value;
 }
+
+/****** Eventclient/Server/sge_add_event_client() ******************************
+*  NAME
+*     sge_has_event_client() -- Is a event client registered
+*
+*  SYNOPSIS
+*     #include "sge_event_master.h"
+*
+*    bool sge_has_event_client(u_long32 aClientID)
+*
+*  FUNCTION
+*    Searches if the event client list, if a client
+*    with this id is available
+*
+*  INPUTS
+*     u_long32 aClientID  - id of the event client
+*
+*  RESULT
+*     bool - TRUE if client is in the event client list
+*
+*  NOTES
+*     MT-NOTE: sge_has_event_client() is MT safe, it uses the internal locks
+*
+*******************************************************************************/
+bool sge_has_event_client(u_long32 aClientID) {
+   
+   bool ret;
+   
+   DENTER(TOP_LAYER, "sge_has_event_client");
+   pthread_once(&Event_Master_Once, event_master_once_init);
+   
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
+               &Master_Control.mutex);
+
+   ret = get_event_client(aClientID) != NULL;
+   
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
+                    &Master_Control.mutex);
+   DEXIT;
+   return ret;
+}
+
 
 
 /****** evm/sge_event_master/sge_select_event_clients() ************************

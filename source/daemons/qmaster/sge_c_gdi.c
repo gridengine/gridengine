@@ -464,10 +464,18 @@ int *after
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);        
          break;
       default:
+      
          SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
 
-         if (ao == NULL || (ao->master_list == NULL && ao->getMasterList == NULL))
-         {
+         /* Issue 1365
+            If the scheduler is not available the information in the job info
+            messages are outdated. In this case we have to reject the request.
+         */
+         if ( request->target == SGE_JOB_SCHEDD_INFO && 
+              !sge_has_event_client(EV_ID_SCHEDD) ) {
+            answer_list_add(&(answer->alp),MSG_SGETEXT_JOBINFOMESSAGESOUTDATED, 
+                            STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+         } else if (ao == NULL || (ao->master_list == NULL && ao->getMasterList == NULL)) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          }

@@ -1,3 +1,6 @@
+EB-2002-11-15-0  Testsuite: Added new tests which will find bug #126
+                 IZ:        #427
+
 EB-2002-11-20-0  Bugfix:    race condition if signals are to be delivered in
                             job's startup phase
                  IZ:        #126

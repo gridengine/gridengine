@@ -50,7 +50,7 @@ if [ -f scripts/distinst.private ]; then
 fi
 
 
-HASDIR="ckpt doc examples/jobs locale mpi pvm/src qmon/PIXMAPS/big qmon/locale"
+HASDIR="ckpt doc examples/jobs locale mpi pvm qmon/PIXMAPS/big qmon/locale"
 HASARCHDIR="bin lib examples/jobsbin utilbin"
 
 DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_commd sge_schedd \
@@ -349,11 +349,11 @@ elif [ $cmdname = myinst ]; then
    setfileperm=false
 elif [ $cmdname = sgeinst ]; then 
    # This special rule creates a distribution which will be provided by Sun
-   VERSIONDIR=SGE53beta1
+   VERSIONDIR=SGE53beta2
    SGE_PRODUCT_MODE=sge
 elif [ $cmdname = sgeeeinst ]; then
    # This special rule creates a distribution which will be provided by Sun
-   VERSIONDIR=SGEEE53beta1
+   VERSIONDIR=SGEEE53beta2
    SGE_PRODUCT_MODE=sgeee
    sgeee=true
 else
@@ -641,8 +641,8 @@ if [ $instcommon = true ]; then
       Execute cp -r dist/util $DEST_SGE_ROOT
       chmod 755 $DEST_SGE_ROOT/util/*.sh $DEST_SGE_ROOT/util/arch
       chmod 755 $DEST_SGE_ROOT/util/resources/loadsensors/*
-      chmod 644 $DEST_SGE_ROOT/util/sgeCA/*
-      chmod 755 $DEST_SGE_ROOT/util/sgeCA/sge_ca $DEST_SGE_ROOT/util/sgeCA/mk_dntable
+      chmod 644 $DEST_SGE_ROOT/util/sgeCA/sge_ssl*
+      chmod 755 $DEST_SGE_ROOT/util/sgeCA/sge_ca
    fi
    
    if [ $instexamples = true ]; then
@@ -679,8 +679,8 @@ if [ $instcommon = true ]; then
 
    if [ $instpvm = true ]; then
       echo Installing \"pvm\"
-      rm -f $DEST_SGE_ROOT/pvm/*
-      Execute rm -f $DEST_SGE_ROOT/pvm/src/*
+      Execute rm -rf $DEST_SGE_ROOT/pvm/*
+      Execute mkdir $DEST_SGE_ROOT/pvm/src
            
       for f in $PVMSCRIPTS; do
          Execute cp dist/pvm/$f $DEST_SGE_ROOT/pvm
@@ -699,6 +699,7 @@ if [ $instcommon = true ]; then
 
    if [ $instmpi = true ]; then
       echo Installing \"mpi/\"
+      rm -rf $DEST_SGE_ROOT/mpi/*
       for f in $MPIFILES; do
          Execute cp dist/mpi/$f $DEST_SGE_ROOT/mpi
       done
@@ -717,7 +718,7 @@ if [ $instcommon = true ]; then
       echo "   --> PS and PDF files"
       Execute rm -rf $DEST_SGE_ROOT/doc
       Execute mkdir $DEST_SGE_ROOT/doc
-      Execute cp $MANUALPDF $DEST_SGE_ROOT/doc/SGE53beta1_doc.pdf
+      Execute cp $MANUALPDF $DEST_SGE_ROOT/doc/SGE53beta2_doc.pdf
    fi
 
    # this rule must come *after* the "instdoc" rule

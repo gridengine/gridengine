@@ -68,6 +68,7 @@ SGEOBJLIB_SRC = \
          sge_pe.c \
          sge_pe_task.c \
          sge_queue.c \
+         sge_qinstance.c \
          sge_range.c \
          sge_resource.c \
          sge_report.c \
@@ -200,6 +201,9 @@ sge_pe_task.o: $(SGEOBJLIB_DIR)/sge_pe_task.c
 
 sge_queue.o: $(SGEOBJLIB_DIR)/sge_queue.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_queue.c
+
+sge_qinstance.o: $(SGEOBJLIB_DIR)/sge_qinstance.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qinstance.c
 
 sge_range.o: $(SGEOBJLIB_DIR)/sge_range.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_range.c

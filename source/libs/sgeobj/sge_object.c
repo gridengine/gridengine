@@ -422,12 +422,17 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
          {
             lList *list = lGetList(object, nm);
             lListElem *elem = NULL;
+            bool printed = false;
 
             for_each(elem, list) { 
                sge_dstring_sprintf_append(&tmp_dstring, "%s", lGetString(elem, ST_name));
                if (lNext(elem)) {
                   sge_dstring_sprintf_append(&tmp_dstring, " ");
                }
+               printed = true;
+            }
+            if (!printed) {
+               sge_dstring_sprintf_append(&tmp_dstring, "NONE");
             }
             result = sge_dstring_get_string(&tmp_dstring);
          }
@@ -436,12 +441,17 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
          {
             lList *list = lGetList(object, nm);
             lListElem *elem = NULL;
+            bool printed = false;
 
             for_each(elem, list) { 
                sge_dstring_sprintf_append(&tmp_dstring, "%s", lGetString(elem, US_name));
                if (lNext(elem)) {
                   sge_dstring_sprintf_append(&tmp_dstring, " ");
                }
+               printed = true;
+            }
+            if (!printed) {
+               sge_dstring_sprintf_append(&tmp_dstring, "NONE");
             }
             result = sge_dstring_get_string(&tmp_dstring);
          }
@@ -450,12 +460,17 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
          {
             lList *list = lGetList(object, nm);
             lListElem *elem = NULL;
+            bool printed = false;
 
             for_each(elem, list) { 
                sge_dstring_sprintf_append(&tmp_dstring, "%s", lGetString(elem, UP_name));
                if (lNext(elem)) {
                   sge_dstring_sprintf_append(&tmp_dstring, " ");
                }
+               printed = true;
+            }
+            if (!printed) {
+               sge_dstring_sprintf_append(&tmp_dstring, "NONE");
             }
             result = sge_dstring_get_string(&tmp_dstring);
          }
@@ -1941,7 +1956,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
             }
          }
       }
-   } else if (sub_command == SGE_GDI_SET) {
+   } else if (sub_command == SGE_GDI_SET || sub_command == SGE_GDI_SET_ALL) {
       /*
       ** Overwrite the complete list
       */

@@ -144,7 +144,8 @@ cqueue_add(lList **answer_list, const char *name)
          ret &= cqueue_provide_modify_context(&cqueue, answer_list);
       }
       if (ret) {
-         ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, SGE_GDI_ADD); 
+         ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
+                                           SGE_GDI_ADD | SGE_GDI_SET_ALL); 
       } 
    }  
   
@@ -166,7 +167,8 @@ cqueue_add_from_file(lList **answer_list, const char *filename)
          ret = false;
       }
       if (ret) {
-         ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, SGE_GDI_ADD); 
+         ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
+                                           SGE_GDI_ADD | SGE_GDI_SET_ALL); 
       } 
    }  
   
@@ -193,7 +195,8 @@ cqueue_modify(lList **answer_list, const char *name)
          ret &= cqueue_provide_modify_context(&cqueue, answer_list);
       }
       if (ret) {
-         ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, SGE_GDI_MOD);
+         ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
+                                           SGE_GDI_MOD | SGE_GDI_SET_ALL);
       }
       if (cqueue) {
          cqueue = lFreeElem(cqueue);
@@ -221,7 +224,8 @@ cqueue_modify_from_file(lList **answer_list, const char *filename)
          ret = false;
       }
       if (ret) {
-         ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, SGE_GDI_MOD);
+         ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
+                                           SGE_GDI_MOD | SGE_GDI_SET_ALL);
       }
       if (cqueue != NULL) {
          cqueue = lFreeElem(cqueue);

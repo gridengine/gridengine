@@ -935,6 +935,7 @@ DTRACE;
          break;
       case SGE_GDI_ADD:
       case SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION:
+      case SGE_GDI_ADD | SGE_GDI_SET_ALL:
          DPRINTF(("unpacking SGE_GDI_ADD request\n"));
          break;
       case SGE_GDI_DEL:
@@ -950,6 +951,7 @@ DTRACE;
       case SGE_GDI_MOD | SGE_GDI_APPEND:
       case SGE_GDI_MOD | SGE_GDI_REMOVE:
       case SGE_GDI_MOD | SGE_GDI_CHANGE:
+      case SGE_GDI_MOD | SGE_GDI_SET_ALL:
          DPRINTF(("unpacking SGE_GDI_MOD request\n"));
          break;
       case SGE_GDI_TRIGGER:
@@ -965,7 +967,7 @@ DTRACE;
          DPRINTF(("unpacking copy request\n"));
          break;
       default:
-         ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D , u32c(ar->op)));
+         ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D, u32c(ar->op)));
          goto error;
       }
 
@@ -1008,6 +1010,7 @@ int sge_pack_gdi_request(sge_pack_buffer *pb, sge_gdi_request *ar)
          break;
       case SGE_GDI_ADD:
       case SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION:
+      case SGE_GDI_ADD | SGE_GDI_SET_ALL:
          DPRINTF(("packing SGE_GDI_ADD request\n"));
          break;
       case SGE_GDI_DEL:
@@ -1025,6 +1028,7 @@ int sge_pack_gdi_request(sge_pack_buffer *pb, sge_gdi_request *ar)
       case SGE_GDI_MOD | SGE_GDI_APPEND:
       case SGE_GDI_MOD | SGE_GDI_REMOVE:
       case SGE_GDI_MOD | SGE_GDI_CHANGE:
+      case SGE_GDI_MOD | SGE_GDI_SET_ALL:
 
          DPRINTF(("packing SGE_GDI_MOD request\n"));
          break;

@@ -65,14 +65,6 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-typedef struct _list_attribute_struct {
-   int attribute_name;
-   int sub_host_name;
-   int sub_value_name;
-   int subsub_key;
-   const char *attribute_name_str;
-} list_attribute_struct;
-
 int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem, 
                int add, const char *remote_user, const char *remote_host,
                gdi_object_t *object, int sub_command) 
@@ -177,47 +169,41 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
          }
       }
    }
-   
+
+#if 0   
    if (ret) {
       int index;
-/* *INDENT-OFF* */
-      list_attribute_struct array[] = {
-         { CQ_consumable_config_list,  ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_COMPLEX_VALUES    },
-         { CQ_load_thresholds,         ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_LOAD_THRESHOLD    },
-         { CQ_suspend_thresholds,      ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_SUSPEND_THRESHOLD },
-         { CQ_projects,                APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_PROJECTS          },
-         { CQ_xprojects,               APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_XPROJECTS         },
-         { CQ_acl,                     AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_USER_LISTS        },
-         { CQ_xacl,                    AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_XUSER_LISTS       },
-         { CQ_owner_list,              AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_OWNER_LIST        },
-         { CQ_ckpt_list,               ASTRLIST_href, ASTRLIST_value,   ST_name,    SGE_ATTR_CKPT_LIST         },
-         { CQ_pe_list,                 ASTRLIST_href, ASTRLIST_value,   ST_name,    SGE_ATTR_PE_LIST           },
-         { CQ_subordinate_list,        ASOLIST_href,  ASOLIST_value,    SO_qname,   SGE_ATTR_SUBORDINATE_LIST  },
-         { NoName,                     NoName,        NoName,           NoName,     NULL                       }
+      int array[] = {
+         CQ_consumable_config_list, CQ_load_thresholds,  CQ_suspend_thresholds,
+         CQ_projects,               CQ_xprojects,        CQ_acl, 
+         CQ_xacl,                   CQ_owner_list,       CQ_ckpt_list, 
+         CQ_pe_list,                CQ_subordinate_list, NoName
       };
-/* *INDENT-ON* */
 
       index = 0;
-      while (array[index].attribute_name != NoName && ret) {
-         pos = lGetPosViaElem(reduced_elem, array[index].attribute_name);
+      while (array[index] != NoName && ret) {
+         pos = lGetPosViaElem(reduced_elem, array[index]);
 
          if (pos >= 0) {
             ret &= cqueue_mod_sublist(cqueue, answer_list, reduced_elem, 
-                                      sub_command,
-                                      array[index].attribute_name, 
-                                      array[index].sub_host_name,
-                                      array[index].sub_value_name, 
-                                      array[index].subsub_key,
-                                      array[index].attribute_name_str, 
-                                      SGE_OBJ_CQUEUE);
+                                sub_command, array[index], 
+                                cqueue_attr_get_href_attr(array[index]),
+                                cqueue_attr_get_value_attr(array[index]), 
+                                cqueue_attr_get_primary_key_attr(array[index]),
+                                cqueue_attr_get_name(array[index]), 
+                                SGE_OBJ_CQUEUE);
          }
          index++;
       }
    }
-
+#endif
    
    if (ret) {
       int index;
+      int array[] = { 
+         CQ_suspend_interval, NoName
+      };
+#if 0
       int array[] = { 
          CQ_seq_no,  CQ_nsuspend, CQ_job_slots,        CQ_fshare,
          CQ_oticket, CQ_rerun,    CQ_suspend_interval, CQ_min_cpu_interval,
@@ -228,6 +214,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
          CQ_h_rt,    CQ_s_cpu,    CQ_h_cpu,
          NoName
       };
+#endif
 
       index = 0;
       while (array[index] != NoName && ret) {
@@ -236,6 +223,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
          if (pos >= 0) {
             lList *list = lGetPosList(reduced_elem, pos);
 
+lWriteListTo(list, stderr);
             lSetList(cqueue, array[index], lCopyList("", list));
          }
          index++;

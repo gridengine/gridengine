@@ -87,6 +87,7 @@
 #include "sge_attrL.h"
 #include "sge_helperL.h"
 #include "sge_cqueueL.h"
+#include "sge_qinstanceL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -220,6 +221,7 @@ extern "C" {
       {ASOLIST_LOWERBOUND, ASOLISTS, ASOLISTN},    /* CQ SO_Type-list sublist */
       {AQTLIST_LOWERBOUND, AQTLISTS, AQTLISTN},    /* CQ qtype sublist */
       {CQ_LOWERBOUND, CQS, CQN},                /* Cluster Queue list */
+      {QI_LOWERBOUND, QIS, QIN},                /* Queue Instance list */
       {FCAT_LOWERBOUND, FCATS, FCATN},          /* Functional category */
 
       {0, 0, NULL}

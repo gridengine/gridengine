@@ -1,5 +1,5 @@
-#ifndef __SGE_CQUEUE_H
-#define __SGE_CQUEUE_H
+#ifndef __SGE_QINSTANCE_H
+#define __SGE_QINSTANCE_H
 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
@@ -33,43 +33,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_cqueueL.h"
+#include "sge_dstring.h"
+#include "sge_qinstanceL.h"
 
-extern lList *Master_CQueue_List;
-
-bool
-cqueue_attr_is_sublist_type(int cqueue_attr);
-
-int
-cqueue_attr_get_href_attr(int cqueue_attr);
-
-int 
-cqueue_attr_get_value_attr(int cqueue_attr);
-
-int
-cqueue_attr_get_primary_key_attr(int cqueue_attr);
-
-const char*
-cqueue_attr_get_name(int cqueue_attr);
-
-lListElem *
-cqueue_create(lList **answer_list, const char *name);
-
-lList **
-cqueue_list_get_master_list(void);
-
-bool
-cqueue_list_add_cqueue(lListElem *queue);
-
-lListElem *
-cqueue_list_locate(const lList *this_list, const char *name);
-
-bool
-cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
-                   lListElem *reduced_elem, int sub_command,
-                   int attribute_name, int sublist_host_name,
-                   int sublist_value_name, int subsub_key,
-                   const char *attribute_name_str,
-                   const char *object_name_str);
-
-#endif /* __SGE_CQUEUE_H */
+#endif /* __SGE_QINSTANCE_H */

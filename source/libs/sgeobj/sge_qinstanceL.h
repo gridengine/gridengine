@@ -1,5 +1,5 @@
-#ifndef __SGE_CQUEUE_H
-#define __SGE_CQUEUE_H
+#ifndef __SGE_QINSTANCEL_H
+#define __SGE_QINSTANCEL_H
 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
@@ -33,43 +33,39 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_cqueueL.h"
+#include "sge_boundaries.h"
+#include "cull.h"
 
-extern lList *Master_CQueue_List;
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
-bool
-cqueue_attr_is_sublist_type(int cqueue_attr);
+/* *INDENT-OFF* */ 
 
-int
-cqueue_attr_get_href_attr(int cqueue_attr);
+enum {
+   QI_name = QI_LOWERBOUND,
+   QI_hostname,
+   QI_seq_no
+};
 
-int 
-cqueue_attr_get_value_attr(int cqueue_attr);
+SLISTDEF(QI_Type, QInstance)
+   SGE_HOST(QI_hostname, CULL_PRIMARY_KEY | CULL_HASH | CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QI_name, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_ULONG(QI_seq_no, CULL_SPOOL | CULL_CONFIGURE)
+LISTEND 
 
-int
-cqueue_attr_get_primary_key_attr(int cqueue_attr);
+NAMEDEF(QIN)
+   NAME("QI_name")
+   NAME("QI_hostname")
+   NAME("QI_seq_no")
+NAMEEND
 
-const char*
-cqueue_attr_get_name(int cqueue_attr);
+#define QIS sizeof(QIN)/sizeof(char*)
 
-lListElem *
-cqueue_create(lList **answer_list, const char *name);
+/* *INDENT-ON* */ 
 
-lList **
-cqueue_list_get_master_list(void);
+#ifdef  __cplusplus
+}
+#endif
 
-bool
-cqueue_list_add_cqueue(lListElem *queue);
-
-lListElem *
-cqueue_list_locate(const lList *this_list, const char *name);
-
-bool
-cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
-                   lListElem *reduced_elem, int sub_command,
-                   int attribute_name, int sublist_host_name,
-                   int sublist_value_name, int subsub_key,
-                   const char *attribute_name_str,
-                   const char *object_name_str);
-
-#endif /* __SGE_CQUEUE_H */
+#endif /* __SGE_QINSTANCEL_H */

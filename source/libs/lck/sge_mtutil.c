@@ -32,6 +32,7 @@
 
 #include <stdlib.h>
 #include <pthread.h>
+#include <string.h>
 #include <sys/time.h>
 
 #include "sgermon.h"
@@ -62,19 +63,25 @@
 *
 *  NOTES
 *     MT-NOTE: sge_mutex_lock() is MT-safe
+*     MT-NOTE: 
+*     MT-NOTE: This function is considered being MT-safe, even though is does
+*     MT-NOTE: use 'strerror()'. The error message returned from 'strerror()'
+*     MT-NOTE: is not stored and used imediately.
 *
 *  SEE ALSO
 *     sge_mtutil/sge_mutex_unlock()
 *******************************************************************************/
 void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)
 {
+   int res = -1;
+
    DENTER(BASIS_LAYER, "sge_mutex_lock");
 
    DLOCKPRINTF(("%s() line %d: about to lock mutex \"%s\"\n", func, line, mutex_name));
 
-   if (pthread_mutex_lock(mutex) != 0)
+   if (( res = pthread_mutex_lock(mutex)) != 0)
    {
-      CRITICAL((SGE_EVENT, MSG_LCK_MUTEXLOCKFAILED_SS, func, mutex_name));
+      CRITICAL((SGE_EVENT, MSG_LCK_MUTEXLOCKFAILED_SSS, func, mutex_name, strerror(res)));
       abort();
    }
 
@@ -107,17 +114,23 @@ void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_
 *
 *  NOTES
 *     MT-NOTE: sge_mutex_unlock() is MT-safe
+*     MT-NOTE: 
+*     MT-NOTE: This function is considered being MT-safe, even though is does
+*     MT-NOTE: use 'strerror()'. The error message returned from 'strerror()'
+*     MT-NOTE: is not stored and used imediately.
 *
 *  SEE ALSO
 *     sge_mtutil/sge_mutex_lock()
 *******************************************************************************/
 void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)
 {
+   int res = -1;
+
    DENTER(BASIS_LAYER, "sge_mutex_unlock");
 
-   if (pthread_mutex_unlock(mutex) != 0)
+   if (( res = pthread_mutex_unlock(mutex)) != 0)
    {
-      CRITICAL((SGE_EVENT, MSG_LCK_MUTEXUNLOCKFAILED_SS, func, mutex_name));
+      CRITICAL((SGE_EVENT, MSG_LCK_MUTEXUNLOCKFAILED_SSS, func, mutex_name, strerror(res)));
       abort();
    }
 

@@ -38,7 +38,7 @@
 /*
  * sge_mtutil.c
  */
-#define MSG_LCK_MUTEXLOCKFAILED_SS _MESSAGE(71000, _(SFQ" failed to lock "SFQ"\n"))
-#define MSG_LCK_MUTEXUNLOCKFAILED_SS _MESSAGE(71001, _(SFQ" failed to unlock "SFQ"\n"))
+#define MSG_LCK_MUTEXLOCKFAILED_SSS _MESSAGE(71000, _(SFQ" failed to lock "SFQ" error: "SFQ"\n"))
+#define MSG_LCK_MUTEXUNLOCKFAILED_SSS _MESSAGE(71001, _(SFQ" failed to unlock "SFQ" error: "SFQ"\n"))
 
 #endif /* __MSG_LCKLIB_H__ */

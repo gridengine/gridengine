@@ -1,3 +1,8 @@
+EB-2003-07-14-0: Enhancem.: Bugfix for Enhancem. EB-2003-07-09-0
+                            * handle load_formula in schedd correctly
+                              (missing attributes will result in high load)
+                 Changed:   sge_schedd
+
 EB-2003-07-11-0: Enhancem.: Bugfixes for Enhancem. EB-2003-07-09-0
                             * handle attributes only as forced attributes if
                               forced is specified in centry definition

@@ -293,27 +293,39 @@ lList *tcl
    get_load_value
 
  ***********************************************************************/
-static int get_load_value(
-double *dvalp,
-lList *tcl,
-char *name 
-) {
+static int get_load_value(double *dvalp, lList *tcl, char *name) 
+{
    lListElem *cep;
+   u_long32 dominant;
 
    DENTER(TOP_LAYER, "get_load_value");
 
    /* search complex */
    if (!(cep = lGetElemStr(tcl, CE_name, name))) {
-      /* admin has forgotten to configure complex for load value in load formula */
+      /* 
+       * admin has forgotten to configure complex for 
+       * load value in load formula 
+       */
       ERROR((SGE_EVENT, MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_S , name));
       DEXIT;
       return 1;
    }
 
-   if ((lGetUlong(cep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) 
+   if (lGetUlong(cep, CE_pj_dominant) & DOMINANT_TYPE_VALUE) {
       *dvalp = lGetDouble(cep, CE_doubleval);
-   else
+      dominant = lGetUlong(cep, CE_dominant);
+   } else {
       *dvalp = lGetDouble(cep, CE_pj_doubleval);
+      dominant = lGetUlong(cep, CE_pj_dominant);
+   }
+
+   /*
+    * No value available.
+    */
+   if (dominant & DOMINANT_TYPE_VALUE) {
+      DEXIT;
+      return 1;
+   }
 
    DEXIT;
    return 0;

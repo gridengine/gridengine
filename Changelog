@@ -1,3 +1,7 @@
+JG-2002-04-12-0: Doc:       Added howto describing how to use ssh as
+                            transport mechanism for qrsh.
+                 Issue:     #228
+
 CR-2002-04-12-0: Bugfix:    corrected spelling mistakes
 
 CR-2002-04-11-4: Testsuite: - only produce warning when re_init core

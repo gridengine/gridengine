@@ -1,0 +1,94 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.76C-CCK-MCD  [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+</head>
+<body>
+&nbsp;
+<table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+<tr>
+<td>
+<h2>
+<font color="#336699">Using ssh with qrsh</font></h2>
+</td>
+</tr>
+</table>
+
+<table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+<tr>
+<td>In the default setup qrsh will use the remote mechanisms (rsh/rlogin)
+to establish interactive sessions.
+<br>qrsh without a command will use rlogin,
+<br>qrsh with a command will establish a rsh connection.
+<p>To enable the rsh/rlogin mechanism, special rsh and rlogin binaries
+are provided with Grid Engine (utilbin/$ARCH/rsh /rlogin).
+<p>To have full accounting and process control for interactive jobs, an
+extended rshd comes with Grid&nbsp;Engine.
+<p>As an alternative, Grid Engine can be configured to use ssh instead
+to start interactive jobs.
+<br>&nbsp;
+<h3>
+Advantages of using ssh:</h3>
+
+<ul>
+<li>
+secure connection</li>
+
+<li>
+no need to have suid root programs installed (rsh and rlogin have to be
+suid root)</li>
+
+<li>
+possibility to attach a tty to remotely executed commands (ssh option -t)</li>
+</ul>
+
+<h3 STYLE="margin-bottom: 0in">
+Disadvantages:</h3>
+
+<ul>
+<li STYLE="margin-bottom: 0in">
+no complete accounting</li>
+
+<li STYLE="margin-bottom: 0in">
+no process control (reprioritization)</li>
+</ul>
+</td>
+</tr>
+</table>
+
+<h3>
+How to setup ssh for qrsh:</h3>
+
+<ul>
+<li>
+Have ssh working, all keys created ...</li>
+
+<li>
+Set the parameters rsh_daemon and rlogin_daemon in your cluster configuration
+to ssh:</li>
+
+<p><br>rsh_daemon&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /usr/sbin/sshd
+-i<br>
+rlogin_daemon&nbsp;&nbsp;&nbsp;&nbsp; /usr/sbin/sshd -i
+<br><br>
+If you have execution hosts with different architectures that have different
+paths to ssh, you will have to make these settings for each execution host
+individualy (qconf -mconf host), else you can change the global cluster
+configuration (qconf -mconf).
+<li>
+Set the parameters rsh_command and rlogin_command in your cluster configuration
+to ssh:</li>
+
+<p><br>rsh_command&nbsp;&nbsp;&nbsp;&nbsp; /usr/bin/ssh
+<br>rlogin_command&nbsp; /usr/bin/ssh
+<p>If you have submit hosts with different architectures that have different
+paths to ssh, you will have to make these settings for each submit host
+individualy (qconf -mconf host), else you can change the global cluster
+configuration (qconf -mconf).
+<br>&nbsp;
+<br>&nbsp;
+<br>&nbsp;</ul>
+
+</body>
+</html>

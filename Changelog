@@ -1,3 +1,5 @@
+CR-2004-11-16-3: Bugfix:    fixed duplicate message id: 33818
+
 MD-2004-11-16-0: Bugfix:    backup/restore does not work under Linux and others.
                  Changed:   inst_commen.sh
                  Issue:     1328

@@ -74,6 +74,7 @@ void washing_machine_next_turn(void)
       }
       break;
    default:
+      break;
    }
 }
 
@@ -86,11 +87,14 @@ void washing_machine_end_turn(void)
          printf(" \b");
          fflush(stdout);
       }
+      break;
    case WASHING_MACHINE_DOTS:
       if (!silent()) { 
          printf("\n");
          fflush(stdout);
       }
+      break;
    default:
+      break;
    }
 }

@@ -940,8 +940,7 @@
 #define MSG_JOB_REJECTED_NO_TASK_LIST  _("job "u32" was rejected because it was not possible to create task list\n")
 #define MSG_JOB_JLPPNULL              _("jlpp == NULL in job_add_job()\n")
 #define MSG_JOB_JEPNULL               _("jep == NULL in job_add_job()\n")
-#define MSG_JOB_JOBALREADYEXISTS_U    _("can't add job \"" U32CFormat "\" - job
-already exists\n") 
+#define MSG_JOB_JOBALREADYEXISTS_U    _("can't add job \"" U32CFormat "\" - job already exists\n") 
 
 #endif /* __MSG_GDILIB_H */
 

@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <netdb.h>
 
 #include "sge_log.h"
 #include "sge.h"
@@ -83,6 +84,15 @@ int *enrolled
       DEXIT;
       return 0;
    }
+   { /* resolve master name - there is no commd at this time so 
+        host name resolving must be accomplished without commd */ 
+      struct hostent *he;
+      if ((he = gethostbyname(master))) {
+         DPRINTF(("gethostbyname(%s) returns %s\n", master, he->h_name));
+         if (strcasecmp(master, he->h_name))
+            strcpy(master, he->h_name);
+      }
+   }
 
    /* get qmaster spool dir, try to read pidfile and check if qmaster is running */
    if (!hostcmp(master, me.qualified_hostname)) {
@@ -97,11 +107,9 @@ int *enrolled
             }
          }   
       }
-   }   
+   }
 
    set_commlib_param(CL_P_COMMDHOST, 0, master, NULL); 
-
-
    set_commlib_param(CL_P_NAME, 0, prognames[QMASTER], NULL);
    set_commlib_param(CL_P_ID, 1, NULL, NULL);
 

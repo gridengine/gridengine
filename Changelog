@@ -1,3 +1,6 @@
+AH-2001-12-03-0: Bugfix:    Resolve hostname contained in 'act_qmaster' file 
+                            before comparing it with me.qualified_hostname
+
 JG-2001-12-03-0: Testsuite: parsing of qstat -ext output did not return
                             correct cpu value.
 

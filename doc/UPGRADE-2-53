@@ -85,18 +85,18 @@ Content
         - tests of checkpointing environments
         - load sensor scripts
         - cluster and queue configuration settings like
-           prolog, epilog, terminate-, suspendmethods
+           prolog, epilog, terminate, suspend methods
         - command tests (qsub, qrsh, qlogin, qsh)
 
    If you modified original sample scripts and configuration examples and
    you are referencing these files located in the original distribution or
-   if you decide not using the compatibility mode for environment variables
+   if you decide not to use the compatibility mode for environment variables
    (which is suggested), these additional tests may take several hours to
    ensure the full functionality of Grid Engine 5.3.
 
-   The upgrade procedure will be easier to carry out if you have access for
+   The upgrade procedure will be easier to carry out if you have access to
    user root (rsh or ssh) without providing a password to all your execution
-   hosts (this not necessarily need to be your qmaster machine).
+   hosts (this does not necessarily need to be your qmaster machine).
 
 
 2) Installation changes compared to previous versions
@@ -141,8 +141,7 @@ Content
 
    now has the name
 
-       rcsge
-
+       <sge_root>/<cell>/rcsge
 
    The per machine startup script, which is often installed in
 
@@ -160,7 +159,7 @@ Content
 
        S95rcsge
 
-    It is be necessary to delete the old local startup scripts and the
+    It is necessary to delete the old local startup scripts and the
     symbolic links and replace them with the new startup script.
 
 
@@ -177,12 +176,12 @@ Content
        GRD_STDOUT_PATH      --> SGE_STDOUT_PATH
 
    SGE(EE) 5.3 supports a compatibility mode where the old names of
-   variables still can be used3. The upgrade script will ask if you want to
+   variables still can be used. The upgrade script will ask if you want to
    set this mode.
 
-   Only SGE(EE) 5.3 will support this mode. SGE(EE) will not support anymore
-   this compatibility mode. It is recommended not using this compatibility
-   mode.
+   Only SGE(EE) 5.3 will support this mode. Future SGE(EE) versions may not
+   support this compatibility mode anymore. It is not recommended to use
+   this compatibility mode.
 
 
    2.4) Service name for communication daemon
@@ -227,25 +226,20 @@ Content
          - backing up your old CODINE/GRD/SGE system (see (5))
          - deleting old files and directories        (see (6))
          - unpacking the distribution                (see (7))
-         - running the update script                 (see (8))
-         - editing configuration files              (see (7a)) *
-         - copying new startup script (5.0 only)    (see (7b)) 
-         - additional steps for GRD              (see (8)) *
-
+         - rename the service                        (see (8))
+         - decide about "admin_user"                 (see (9))
+         - run the update script                     (see (10))
+         - install new startup script on every host  (see (11))
+         - restart Grid Engine                       (see (12))
 
    It is recommended that after making a backup of your old CODINE/GRD/SGE
    cluster, to delete all files of the old distribution. See (5) and (6) for
    more information.
 
-
-   Depending in the size of your cluster and your experience with CODINE/GRD
-   this update procedure will take between 30 minutes and 2-3 hours.
-
-
 4) Cluster shutdown: No running daemons, no running or pending jobs
 -------------------------------------------------------------------
 
-   Make sure to shutdown your cluster before upgrading. There may be no
+   Make sure to shutdown your cluster before upgrading. There must be no
    running or pending jobs at qmaster or at the execution hosts. You should
    also make sure that there are no more running communication daemons
    (cod_commd, grd_commd, sge_commd) or a running scheduler daemon
@@ -266,7 +260,7 @@ Content
       --> Execute the last command from every execution host and from
           the master host.
 
-   To be absolutely sure that there a no old jobs in your configuration
+   To be absolutely sure that there are no old jobs in your configuration
    you should delete the execution daemon spool directories and the spooled
    jobs in the qmaster spool directories:
 
@@ -293,8 +287,7 @@ Content
          <qmaster_spool_dir>/messages
          <qmaster_spool_dir>/schedd/messages
 
-
-   You may make the backup with the command:
+   You can make the backup with the command:
 
       % tar cvf OLDSGE-BACKUP.tar <your_sge_root_dir>
 
@@ -305,14 +298,13 @@ Content
                            $CODINE_ROOT/default/spool/qmaster
 
 
-
 6) Deleting directories of the old CODINE/GRD/SGE system
 --------------------------------------------------------
 
    6.1 Do not delete old cluster configuration
    -------------------------------------------
 
-   You may not delete your old cluster configuration. Thus you may not
+   You must not delete your old cluster configuration. Thus you must not
    delete your 'common' directory which is located in:
 
       <your_sge_root>/<cell>/common
@@ -321,7 +313,7 @@ Content
 
        <your_sge_root>/default/common
    
-   You may also not delete your qmaster spool directory (the path to your
+   You also must not delete your qmaster spool directory (the path to your
    qmaster spool directory is defined in the global cluster configuration).
    Often the qmaster spool directory is located in:
 
@@ -331,7 +323,7 @@ Content
    6.2 Check any references in configuration to old files
    ------------------------------------------------------
 
-   If you made any local changes to file of the distribution, please make
+   If you made any local changes to files of the distribution, please make
    sure to make a separate backup of these files. Typically these might be
    files which where modified and are now referenced in your cluster
    configuration or are used by jobs from your users:
@@ -411,14 +403,15 @@ Content
    either your fileserver or a machine where the NFS mount point is
    configured appropriately. 
 
-   Installing the distribution need to be done by user 'root'. The NFS
+   Installing the distribution needs to be done by user 'root'. The NFS
    clients must not mount the $SGE_ROOT directory with the '-nosuid'  NFS
    mount option - otherwise the 'qrsh' command (and related commands like
    'qmake' and 'qtcsh') will not work. If you cannot mount the $SGE_ROOT
+   without the '-nosuid' you can configure the path to your "qrsh" command
+   in the global and local cluster configuration.
 
    It is not necessary to allow read/write permissions for user root to
    install and run SGE successfully.
-
 
    7.2) Installing SGE with 'pkgadd' on Solaris
    --------------------------------------------
@@ -451,20 +444,21 @@ Content
       # cd <your_sge_root>
       # util/setfileperm.sh <adminuser> <unixgroup> <your_sge_root>
 
-    where
+   where
 
-       <adminuser> is the Unix user account under which the spool files by
-       SGE should be created
+      <adminuser> is the Unix user account under which the spool files by
+      SGE should be created (Please see section (9) for more information
+      about the "adminuser" feature of SGE).
 
-       <unixgroup> is the groupname 
+      <unixgroup> is the groupname 
 
-       <your_sge_root> is the absolute path where your $SGE_ROOT directory
-       is located
+      <your_sge_root> is the absolute path where your $SGE_ROOT directory
+      is located
 
-     Example:
+   Example:
 
-        # cd <your_sge_root>
-        # util/setfileperm.sh sgeadmin adm `/bin/pwd`
+      # cd <your_sge_root>
+      # util/setfileperm.sh sgeadmin adm `/bin/pwd`
 
 
 8) Rename the service codine_commd/grd_commd
@@ -483,7 +477,7 @@ Content
 
    The purpose of this feature is to support to start and run Grid Engine
    daemons on NFS clients where user root has no read/write permissions.
-   For security reasons many site do not want to export their NFS file
+   For security reasons many sites do not want to export their NFS file
    systems to the NFS clients and granting read/write permissions for user
    root. If you want to configure Grid Engine to use the 'adminuser', you
    should now carry out the following steps:
@@ -548,13 +542,13 @@ Content
    ----------------------------------------
 
    If you are using the 'adminuser' feature, please login as the 'adminuser'
-   or run the update script with the "adminrun" command as outline above.
+   or run the update script with the "adminrun" command as outlined above.
 
 
    10.2 Set SGE_ROOT and environment variables
    -------------------------------------------
 
-   Please now set your SGE_ROOT variable (and SGE_CELL variable if
+   Please now set your SGE_ROOT variable and SGE_CELL variable if
    applicable (if you used the default cell name 'default' this is not
    necessary) and start the upgrade script. Make sure that the setting of
    $SGE_ROOT does not contain any automounter prefixes like '/tmp_mnt' and
@@ -637,35 +631,47 @@ Content
    Please call the script
 
       # cd $SGE_ROOT
-      # util/sge_startupscript.sh  
+      # util/update_commands/sge_startupscript.sh
 
    to
-      - remove you old startup script
+
+      - remove your old startup script
       - add the new startup script
 
    On IBM AIX and on Cray Unicos this procedure is not supported.
-   The procedure will fail to delete the old startup scripts of you copied
-   or renamed them to a different place.
+
+   The procedure will fail to delete the old startup scripts if you copied
+   or renamed the script.
 
    On Linux systems with the "/sbin/insserv" binary (e.g. SuSe 7.1 or
    higher) the script will install the new startup script with that
    mechanism (and try to remove the old startup script with 
-   "/sbin/insserv -r"
+   "/sbin/insserv -r".
 
-   
    You need to replace the startup script on all exec hosts. If you have
    access for user root without providing a password from one of your
    machines you may use the script
 
       # cd $SGE_ROOT
-      # util/remoterun -all util/sge_startscript.sh 
+      # util/sgeremoterun -all -- util/update_commands/sge_startupscript.sh
 
-   to login to all hosts for which an execution host in your
-   qmaster spool directory is configured and run the script in the command
-   line.
+   to login to all hosts for which an execution host in your qmaster spool
+   directory is configured and run the script in the command line.
 
-   'remoterun' by default uses 'rsh', with the parameter '-ssh' remoterun
+   'sgeremoterun' by default uses 'rsh', with the parameter '-ssh' remoterun
    will use 'ssh' to login to the remote host.
+
+   Call "sgeremoterun" without any parameters to see all supported command
+   line options:
+
+   usage: util/sgeremoterun [-noexec] [-ssh] [-all] [-noqmaster] \
+                            [host1]... -- command
+
+      -noexec    do nothing, just print what would be done
+      -ssh       uses "ssh" instad of "rsh"
+      -sshpath   path where ssh is installed of not in /bin:/usr/bin:/usr/local/bin
+      -all       run command on all execution hosts found in qmaster spool dir.
+      -noqmaster do not run command on current qmaster host
 
 
 12) Restart SGE

@@ -1,3 +1,6 @@
+AH-2004-01-03-0  Bugfix:    Fix qstat bug with PEs using agv in urgency slots
+                 Issue:     710
+
 MD-2004-01-03-1  Bugfix:    - DB_CONFIG file copy as adminuser
                  Changed:   inst_sgeee
 

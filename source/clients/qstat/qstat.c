@@ -1064,7 +1064,7 @@ u_long32 show
    ** pe list 
    */ 
    if (pe_l) {   
-      pe_all = lWhat("%T(%I%I%I%I)", PE_Type, PE_name, PE_job_is_first_task, PE_control_slaves, PE_urgency_slots);
+      pe_all = lWhat("%T(%I%I%I%I%I)", PE_Type, PE_name, PE_slots, PE_job_is_first_task, PE_control_slaves, PE_urgency_slots);
       pe_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET,
                            NULL, pw, pe_all, NULL, &state);
       pe_all = lFreeWhat(pe_all);

@@ -41,7 +41,7 @@ fi
 
 horig='../dist/qmon/qmon_help.ad'
 hn1ge='../dist/qmon/qmon_help.ad.geee'
-h='../dist/qmon/qmon_help.ad.ge'
+hsge='../dist/qmon/qmon_help.ad.ge'
 
 #------------------------------
         

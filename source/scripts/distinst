@@ -818,7 +818,7 @@ if [ $instcommon = true ]; then
       Execute cp dist/qmon/Qmon $DEST_SGE_ROOT/qmon
       Execute chmod 644 $DEST_SGE_ROOT/qmon/Qmon
    
-      Execute cp dist/qmon/qmon_help.ad
+      Execute cp dist/qmon/qmon_help.ad.ge $DEST_SGE_ROOT/qmon/qmon_help.ad
       Execute chmod 644 $DEST_SGE_ROOT/qmon/qmon_help.ad
 
       ( echo changing to $DEST_SGE_ROOT/qmon/PIXMAPS ; \

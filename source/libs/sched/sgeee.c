@@ -4353,6 +4353,10 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    /* calculate tickets for running jobs */
    seqno = sge_calc_tickets(lists, running_jobs, NULL, NULL, 0, &max_tix);
 
+   if (max_tix == -1) { /* we have no running jobs and the tickets are disabled. */
+      max_tix = 0;
+   }
+
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM3);
 
    /* use min/max tix for normalizing 

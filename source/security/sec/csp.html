@@ -15,45 +15,15 @@
 	</STYLE>
 </HEAD>
 <BODY>
-<DIV TYPE=HEADER>
-	<TABLE WIDTH=100% BORDER=0 CELLPADDING=4 CELLSPACING=0>
-		<COL WIDTH=223*>
-		<COL WIDTH=33*>
-		<THEAD>
-			<TR VALIGN=TOP>
-				<TD WIDTH=87%>
-					<P CLASS="first-line-indent">Titel: <SDFIELD TYPE=DOCINFO SUBTYPE=TITLE></SDFIELD>Certificate
-					Security Protocol</P>
-				</TD>
-				<TD WIDTH=13%>
-					<P><FONT FACE="Times"><FONT SIZE=2 STYLE="font-size: 11pt"><SDFIELD TYPE=DATETIME SDVAL="37316.5979108796" SDNUM="1033;0;M/D/YY">3/1/02</SDFIELD></FONT></FONT></P>
-				</TD>
-			</TR>
-		</THEAD>
-		<TBODY>
-			<TR VALIGN=TOP>
-				<TD WIDTH=87%>
-					<P><FONT FACE="Times"><FONT SIZE=2 STYLE="font-size: 11pt">URL:
-					<SDFIELD TYPE=FILENAME FORMAT=PATHNAME>/home/aa114085/GRIDWARE/DOCS/SECURITY/csp.html</SDFIELD></FONT></FONT></P>
-				</TD>
-				<TD WIDTH=13%>
-					<P><FONT FACE="Times"><FONT SIZE=2 STYLE="font-size: 11pt"><SDFIELD TYPE=DATETIME SDVAL="37316.5979108796" SDNUM="1033;1033;HH:MM:SS">14:20:59</SDFIELD></FONT></FONT></P>
-				</TD>
-			</TR>
-		</TBODY>
-	</TABLE>
-	<P><BR><BR>
-	</P>
-</DIV>
 <H1>Certificate Security Protocol (CSP)</H1>
 <P>In order to make the Grid Engine internal communication more
 secure, Grid Engine has been enhanced by a certificate based security
 layer that sits on top between the GDI and comlib layer. The security
 layer is based on OpenSSLs libcrypto and uses RSA for secret key
 exchange and rc4 (keylength 128bit) for encryption. The
-implementation originated from a diploma thesis realised in 1996.
-(<A HREF="file:///thorstenbieder/">http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/security/security.html?content-type=text/html#Enhanced
-Security Using OpenSSL</A>) Instead of transfering messages in clear
+implementation originated from a <A HREF=doc/diplomarbeit.ps>
+diploma thesis </a> realised in 1996.
+Instead of transfering messages in clear
 text, the messages are encrypted with a secret key. The secret key is
 exchanged via a public/private key protocol. The user presents its
 certificate to SGE to prove its identity and receives the certificate
@@ -72,24 +42,20 @@ Grid Engine, the steps involved are very similar to the standard
 setup. Apart from the standard setup of Grid Engine the following
 additional steps are necessary:</P>
 <UL>
-	<LI><DD STYLE="margin-left: 0in; margin-bottom: 0.2in">Generation of
+	<LI>Generation of
 	the CA system keys and certificates on the master machine<BR>This is
 	done by calling the install procedures with the -csp flag 
-	</DD></UL>
-<UL>
-	<LI><DD STYLE="margin-left: 0in; margin-bottom: 0.2in">Distribution
+	<LI>Distribution
 	of the system keys and certificates to the execution and submit
 	hosts<BR>It is the task of the system administrator to do it in a
 	secure way (the keys must be transmitted to the execution/submit
-	hosts in a secure manner e.g via ssh.</DD></UL>
-<UL>
-	<LI><DD STYLE="margin-left: 0in; margin-bottom: 0.2in">Generation of
+	hosts in a secure manner e.g via ssh.
+	<LI>Generation of
 	User keys and certificates<BR>This can be done automatically by the
 	sysadmin after master installation. 
-	</DD></UL>
-<UL>
-	<LI><DD STYLE="margin-left: 0in; margin-bottom: 0.2in">Admittance of
-	new users by the sysadmin</DD></UL>
+	<LI>Admittance of new users by the sysadmin
+</UL>
+
 <P>The security enhancement can be either added to a previously
 configured system or the system can be setup to support CSP security
 during the installation. The installation is performed as usual
@@ -539,5 +505,8 @@ MD5 Fingerprint=F9:FA:AB:86:F3:71:E4:7F:18:82:78:7D:5E:51:7B:B5
 </TABLE>
 <H3><BR><BR>
 </H3>
+<center>
+<p>Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+</center>
 </BODY>
 </HTML>

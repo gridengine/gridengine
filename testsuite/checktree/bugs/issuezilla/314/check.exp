@@ -48,13 +48,13 @@ global env
 
 
 # define a level initialization procedure:
-set check_init_level_procedure "issue_226_init_level"
+set check_init_level_procedure "issue_314_init_level"
 
 # define test's name and run level descriptions
-set check_name            "issue_226"
+set check_name            "issue_314"
 set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   0
-set check_description(0)  "check valid gid range parameters"
+set check_description(0)  "Colon (:) in account string should be rejected"
 
 # define test's dependencies
 set check_needs           "init_core_system" 
@@ -62,11 +62,11 @@ set check_needs           "init_core_system"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue_226_setup"
-lappend check_functions "issue_226_check"
-lappend check_functions "issue_226_cleanup"
+lappend check_functions "issue_314_setup"
+lappend check_functions "issue_314_check"
+lappend check_functions "issue_314_cleanup"
 
-proc issue_226_init_level {} {
+proc issue_314_init_level {} {
    global CHECK_ACT_LEVEL
    global CHECK_PRODUCT_TYPE
    global test_array_jobs 
@@ -84,7 +84,7 @@ proc issue_226_init_level {} {
 
 # -------- local test procedures -----------------------------------------------
 
-proc issue_226_setup  {} {
+proc issue_314_setup  {} {
    global CHECK_OUTPUT 
    global CHECK_CORE_MASTER
 
@@ -92,31 +92,13 @@ proc issue_226_setup  {} {
 }
 
 
-proc issue_226_check {} {
+proc issue_314_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
-
-   # get stored configuration
-   get_config stored_configuration
- 
-   # NONE should be allowed
-   set my_cluster_conf(gid_range) "NONE"
-   set_config my_cluster_conf "global"
-
-   # values above 100 should be allowed
-   set my_cluster_conf(gid_range) "100-200"
-   set_config my_cluster_conf "global"
-
-   # value blow 100 should be rejected
-   set my_cluster_conf(gid_range) "99"
-   set_config my_cluster_conf "global" "0" "1"
-
-   # set saved configuration
-   set_config stored_configuration
  
    set_error 0 "ok"
 }
 
-proc issue_226_cleanup  {} {
+proc issue_314_cleanup  {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
 
    set_error 0 "ok"

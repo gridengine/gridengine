@@ -1,3 +1,5 @@
+DT-2005-01-19-0: Testuite:  o Fixed drmaa-j test
+
 DT-2005-01-18-0: Cleanup:   o Made JAPI Makefile more readable
                             o Made class and jar file compilation cleaner
                  Bugfix:    o Added new test target for Ant for testing binaries

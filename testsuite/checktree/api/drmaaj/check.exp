@@ -85,7 +85,7 @@ proc drmaaj_init_level {} {
 proc drmaaj_check {} {
    global ts_config
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_CORE_EXECD
-   global CHECK_HOST CHECK_SOURCE_DIR CHECK_ARCH CHECK_USER
+   global CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
 
    if { $ts_config(gridengine_version) == 53 } {
       set_error -3 "drmaaj_check - sge/ee version \"5.3\" doesn't support multi threading"
@@ -129,15 +129,16 @@ proc drmaaj_check {} {
             puts $CHECK_OUTPUT "DRMAA-J not supported for binary architecture $binary_arch"
             continue
          }
-      }   
+      }
 
       set compile_arch_mt "[resolve_build_arch $host]"
-      set classpath "$CHECK_SOURCE_DIR/CLASSES/drmaa-test.jar:$CHECK_TESTSUITE_ROOT/lib/junit.jar"
+      set classpath "$CHECK_PRODUCT_ROOT/lib/drmaa.jar:$CHECK_TESTSUITE_ROOT/lib/drmaa-test.jar:$CHECK_TESTSUITE_ROOT/lib/junit.jar"
       puts $CHECK_OUTPUT "host is $host has arch $compile_arch_mt with classpath $classpath"
 
       set options ""
 
-      if { $CHECK_ARCH == "sol-sparc64" } {
+      if { $binary_arch == "sol-sparc64" } {
+         puts $CHECK_OUTPUT "using 64-bit VM"
          set options "-d64 $options"
       }
 

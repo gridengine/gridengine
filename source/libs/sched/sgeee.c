@@ -2924,10 +2924,10 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          int dependent;
       } policy_hierarchy_t;
       policy_hierarchy_t hierarchy[4] = {
-          OVERRIDE_POLICY, 0,
-          FUNCTIONAL_POLICY, 0,
-          SHARE_TREE_POLICY, 0,
-          DEADLINE_POLICY, 0
+          {OVERRIDE_POLICY, 0},
+          {FUNCTIONAL_POLICY, 0},
+          {SHARE_TREE_POLICY, 0},
+          {DEADLINE_POLICY, 0}
       };
       int policy_ndx;
 

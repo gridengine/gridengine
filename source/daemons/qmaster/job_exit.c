@@ -292,7 +292,7 @@ lListElem *jatep
 
    FILE *fp;
    int write_result;
-   char *category_str;
+   const char *category_str;
    SGE_STRUCT_STAT statbuf;
    int write_comment;
 
@@ -327,7 +327,7 @@ lListElem *jatep
       return;
    }
    if (category_str)
-      free(category_str); 
+      free((char *)category_str); 
    else if (write_result == -2) {
       /* The file should be open... */
       ERROR((SGE_EVENT, MSG_FILE_WRITEACCT));

@@ -75,11 +75,11 @@
 /*-------------------------------------------------------------------------*/
 /* build the category string                                               */
 /*-------------------------------------------------------------------------*/
-char* sge_build_job_category(
+const char* sge_build_job_category(
 lListElem *job,
 lList *acl_list 
 ) {
-   char *cats = NULL;
+   const char *cats = NULL;
    dstring sb = DSTRING_INIT;
    lList *cmdl = NULL;
    lListElem *ep;

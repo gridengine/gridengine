@@ -91,7 +91,7 @@ lList *CATEGORY_LIST = NULL;
 int sge_add_job_category( lListElem *job, lList *acl_list) {
 
    lListElem *cat = NULL;
-   char *cstr;
+   const char *cstr;
    u_long32 rc = 0, jobid;
    static char no_requests[] = "no-requests";
 
@@ -123,7 +123,7 @@ int sge_add_job_category( lListElem *job, lList *acl_list) {
    ** free cstr
    */
    if (cstr)
-      free(cstr);
+      free((char *)cstr);
 
    DEXIT;
    return 0;

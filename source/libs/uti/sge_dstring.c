@@ -43,7 +43,7 @@
 *     sge_dstring_append() -- strcat() for dstring's 
 *
 *  SYNOPSIS
-*     char* sge_dstring_append(dstring *sb, const char *a) 
+*     const char* sge_dstring_append(dstring *sb, const char *a) 
 *
 *  FUNCTION
 *     Append 'a' after 'sb' 
@@ -53,9 +53,9 @@
 *     const char *a - string 
 *
 *  RESULT
-*     char* - result string
+*     const char* - result string
 ******************************************************************************/
-char* sge_dstring_append(dstring *sb, const char *a) 
+const char* sge_dstring_append(dstring *sb, const char *a) 
 {
    int n, m;
 
@@ -100,7 +100,7 @@ char* sge_dstring_append(dstring *sb, const char *a)
 *     sge_dstring_append() -- strcat() for dstring's 
 *
 *  SYNOPSIS
-*     char* sge_dstring_append(dstring *sb, const dstring *a) 
+*     const char* sge_dstring_append(dstring *sb, const dstring *a) 
 *
 *  FUNCTION
 *     Append 'a' after 'sb' 
@@ -110,9 +110,9 @@ char* sge_dstring_append(dstring *sb, const char *a)
 *     const dstring *a - string 
 *
 *  RESULT
-*     char* - result string
+*     const char* - result string
 ******************************************************************************/
-char* sge_dstring_append_dstring(dstring *sb, const dstring *a) 
+const char* sge_dstring_append_dstring(dstring *sb, const dstring *a) 
 {
    return sge_dstring_append(sb, sge_dstring_get_string(a));
 }
@@ -122,7 +122,7 @@ char* sge_dstring_append_dstring(dstring *sb, const dstring *a)
 *     sge_dstring_sprintf() -- sprintf() for dstring's 
 *
 *  SYNOPSIS
-*     char* sge_dstring_sprintf(dstring *sb, const char *format, ...) 
+*     const char* sge_dstring_sprintf(dstring *sb, const char *format, ...) 
 *
 *  FUNCTION
 *     see sprintf() 
@@ -133,7 +133,7 @@ char* sge_dstring_append_dstring(dstring *sb, const dstring *a)
 *     ...                - additional parameters 
 *
 *  RESULT
-*     char* - result string 
+*     const char* - result string 
 *
 *  NOTES
 *     JG: TODO (265): Do not use a fixed size buffer and vprintf!
@@ -143,7 +143,7 @@ char* sge_dstring_append_dstring(dstring *sb, const dstring *a)
 *                     all platforms) or find other means to prevent buffer
 *                     overflows.
 ******************************************************************************/
-char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
+const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 {
    char buf[BUFSIZ];
    va_list ap;
@@ -161,7 +161,7 @@ char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 *     sge_dstring_sprintf_append() -- sprintf() and append for dstring's 
 *
 *  SYNOPSIS
-*     char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...) 
+*     const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...) 
 *
 *  FUNCTION
 *     See sprintf() 
@@ -174,7 +174,7 @@ char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 *     ...                - additional parameters 
 *
 *  RESULT
-*     char* - result string 
+*     const char* - result string 
 *
 *  NOTES
 *     JG: TODO (265): Do not use a fixed size buffer and vprintf!
@@ -184,7 +184,7 @@ char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 *                     all platforms) or find other means to prevent buffer
 *                     overflows.
 ******************************************************************************/
-char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
+const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
 {
    char buf[BUFSIZ];
    va_list ap;
@@ -202,7 +202,7 @@ char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
 *     sge_dstring_copy_string() -- copy string into dstring 
 *
 *  SYNOPSIS
-*     char* sge_dstring_copy_string(dstring *sb, char* str) 
+*     const char* sge_dstring_copy_string(dstring *sb, char* str) 
 *
 *  FUNCTION
 *     Copy string into dstring 
@@ -212,11 +212,11 @@ char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
 *     char* str   - source string 
 *
 *  RESULT
-*     char* - result string 
+*     const char* - result string 
 *******************************************************************************/
-char *sge_dstring_copy_string(dstring *sb, char *str) 
+const char *sge_dstring_copy_string(dstring *sb, const char *str) 
 {
-   char *ret = NULL;
+   const char *ret = NULL;
 
    DENTER(TOP_LAYER, "sge_dstring_copy_string");
    if (sb != NULL && sb->s != NULL) {
@@ -236,21 +236,21 @@ char *sge_dstring_copy_string(dstring *sb, char *str)
 *     sge_dstring_copy_dstring() -- strcpy() for dstrings's 
 *
 *  SYNOPSIS
-*     char* sge_dstring_copy_dstring(dstring *sb1, dstring *sb2) 
+*     const char* sge_dstring_copy_dstring(dstring *sb1, const dstring *sb2) 
 *
 *  FUNCTION
 *     strcpy() for dstrings's 
 *
 *  INPUTS
 *     dstring *sb1 - destination dstring
-*     dstring *sb2 - source dstring 
+*     const dstring *sb2 - source dstring 
 *
 *  RESULT
-*     char* - result string buffer 
+*     const char* - result string buffer 
 *******************************************************************************/
-char *sge_dstring_copy_dstring(dstring *sb1, dstring *sb2) 
+const char *sge_dstring_copy_dstring(dstring *sb1, const dstring *sb2) 
 {
-   char *ret = NULL;
+   const char *ret = NULL;
    DENTER(TOP_LAYER, "sge_dstring_copy_dstring");
 
    if (sb1 != NULL && sb1->s != NULL) {

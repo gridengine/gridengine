@@ -34,7 +34,7 @@
 
 
 
-char* sge_build_job_category(lListElem *job, lList *acl_list);
+const char* sge_build_job_category(lListElem *job, lList *acl_list);
 
 #endif /* __CATEGORY_H */
 

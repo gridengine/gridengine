@@ -91,7 +91,7 @@ FILE *fp,
 lListElem *jr,
 lListElem *jep,
 lListElem *jatp,
-char *category_str 
+const char *category_str 
 ) {
    int fprintf_count;
    lListElem *ep;

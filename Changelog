@@ -1,3 +1,7 @@
+JG-2002-05-29-1: Cleanup:   make dstring functions return a const char * 
+                            instead of char *
+                 Issue:     #265
+
 JG-2002-05-29-0: Cleanup:   use of library functions, typos,
                             improved job_get_id_string()
                  Issue:     #258           

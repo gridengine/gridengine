@@ -56,20 +56,20 @@ typedef struct {
 
 
 /* JG: TODO: functions returning a string should do so as const char * */
-char* sge_dstring_append(dstring *sb, const char *a);
-char* sge_dstring_append_dstring(dstring *sb, const dstring *a);
+const char* sge_dstring_append(dstring *sb, const char *a);
+const char* sge_dstring_append_dstring(dstring *sb, const dstring *a);
 
-char* sge_dstring_sprintf(dstring *sb, const char *fmt, ...);
-char* sge_dstring_sprintf_append(dstring *sb, const char *fmt, ...);
+const char* sge_dstring_sprintf(dstring *sb, const char *fmt, ...);
+const char* sge_dstring_sprintf_append(dstring *sb, const char *fmt, ...);
 
 void sge_dstring_clear(dstring *sb);
 void sge_dstring_free(dstring *sb);
 
 const char *sge_dstring_get_string(const dstring *string);
 
-char* sge_dstring_copy_string(dstring *sb, char* str);
+const char* sge_dstring_copy_string(dstring *sb, const char* str);
 
-char* sge_dstring_copy_dstring(dstring *sb1, dstring *sb2);
+const char* sge_dstring_copy_dstring(dstring *sb1, const dstring *sb2);
 
 size_t sge_dstring_strlen(const dstring *string);
 

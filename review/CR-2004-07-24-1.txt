@@ -6,7 +6,7 @@ Date: 2004-07-24
 
 1 Identification
 
-1.1 Issue         : 1041
+1.1 Issue         : 1141
 1.2 Bugtraq       : 5077589
 1.3 Summary       : schedd and qmaster get out of sync - no scheduling for long time
 1.4 Changelog ID  : CR-2004-07-24-1

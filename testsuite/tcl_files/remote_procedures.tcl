@@ -1443,7 +1443,7 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
        debug_puts "-->sending $nr_of_shells exit(s) to shell on id $sp_id"
        for {set i 0} {$i < $nr_of_shells } {incr i 1} {
           send -s -i $sp_id "exit\n"
-          set timeout 30
+          set timeout 15
           expect { 
               -i $sp_id full_buffer {
                  add_proc_error "close_spawn_process" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
@@ -1456,7 +1456,7 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
               }
           }
        }
-       set timeout 30
+       set timeout 10
        set my_tries 6
        while { $do_stop != 1 } {
           expect {

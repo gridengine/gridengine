@@ -1,3 +1,6 @@
+MD-2003-07-15-2  Bugfix:    Added 3rdparty/qmake/IA64LINUX/glob
+                            + Makefile
+
 MD-2003-07-15-1  Bugfix:    Fixed some script errors (IA64 Linux port)
                             Added 3rdparty/qtcsh/IA64LINUX directory
                             + Makefile

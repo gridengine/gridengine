@@ -30,7 +30,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 SEC_SDIR = ../security/sec
-SECLIB = $(KRBLIBS)
 SECLIBOBJS = $(SECLIB_OBJS)
 
 #---------------------------------------------------------------------
@@ -40,7 +39,7 @@ include $(SEC_SDIR)/sec_dependencies
 # rules 
 #----------------------------------------------------------------------------
 
-sec_all:	$(SECLIB) 
+sec_all:	libsec.a
 
 sec_depend:
 	$(DEPEND) -f$(SEC_SDIR)/sec_dependencies $(SEC_SDIR)/*.c
@@ -52,13 +51,16 @@ sec_messages:
 	done
 
 sec_clean:
-	rm -f $(SECLIB) $(SECLIBOBJS)
+	rm -f libsec.a $(SECLIBOBJS)
 
-$(SECLIB):	$(SECLIBOBJS)
-	$(AR) $(ARFLAGS) $@ $?
-	$(RANLIB) $@
+libsec.a: $(SECLIBOBJS)
+	$(AR) $(ARFLAGS) libsec.a $(SECLIBOBJS)
+	$(RANLIB) libsec.a
+
+libsec$(SHAREDEXT):  $(SECLIBOBJS)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libsec$(SHAREDEXT) $(SECLIBOBJS)
 
 #---------------------------------------------------------------------------
 
 sec_lib.o:	$(SEC_SDIR)/sec_lib.c
-	$(CC) $(CFLAGS) -c $(SEC_SDIR)/sec_lib.c
+	$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(SEC_SDIR)/sec_lib.c

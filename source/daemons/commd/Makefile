@@ -44,9 +44,9 @@ COMMD_OBJS = $(COMMD_SRC:.c=.o)
 
 COMMD_ADD_OBJS = $(COMMD_ADD_SRC:.c=.o)
 
-COMMD_ADD_LIBS = -lgdi $(KRBLIBS) -lcull -lcom -luti -lrmon
+COMMD_ADD_LIBS = -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-COMMD_LIB_DEPENDS =  $(GDILIB) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+COMMD_LIB_DEPENDS =  $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
 
 COMMD_TARGETS_OBJS = commdcntl.o tstsnd.o tstrcv.o
 
@@ -71,10 +71,10 @@ commd_messages:
 # rules to build binaries
 ###############################################################################
 sge_commd:	$(COMMD_OBJS) $(COMMD_ADD_OBJS) $(COMMD_LIB_DEPENDS)
-	$(CC) $(CFLAGS) $(LFLAGS) -o $@ $(COMMD_OBJS) $(COMMD_ADD_OBJS) $(COMMD_ADD_LIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LFLAGS) -o $@ $(COMMD_OBJS) $(COMMD_ADD_OBJS) $(COMMD_ADD_LIBS) $(SLIBS) $(LIBS)
 
 commdcntl:	commdcntl.o $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(KRBLIBS)
-	$(CC) $(CFLAGS) $(LFLAGS) -o $@ commdcntl.o $(COMMD_ADD_OBJS) $(COMMD_ADD_LIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LFLAGS) -o $@ commdcntl.o $(COMMD_ADD_OBJS) $(COMMD_ADD_LIBS) $(SLIBS) $(LIBS)
 
 tstsnd:	tstsnd.o $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
 	$(CC) $(CFLAGS) $(LFLAGS) -o $@ tstsnd.o $(COMMD_ADD_OBJS) -lcull -lcom -luti -lrmon $(LIBS)

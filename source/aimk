@@ -280,9 +280,12 @@ set   GCC_NOERR_CXXFLAGS = ""
 set   MEMCFLAG=""
 set   COMPILE_ARCH = ""
 set   INTERACTTARGETS = "qmake qtcsh"
+set   SLIBS=""
 # SECURE
 set   SEC	  = 0
 set   SECTARGETS  = ""
+set   SECLIBS = ""
+set   SECLIB = ""
 set   SECLIB_OBJS = ""
 set   SECDEPEND   = ""
 set   SECCLEAN   = ""
@@ -490,8 +493,8 @@ while ($#argv >= 1 && $?found)
       set KRBCLEAN = "krb_clean"
       set KRBLIBS = "libkrb.a"
       set KRBLIB = "-lkrb"
-      set CFLAGS  = " -DKERBEROS -I../security/krb -I$KRB_HOME/include -I$KRB_HOME/include/gssapi $CFLAGS"
-      set CXXFLAGS  = " -DKERBEROS -I../security/krb -I$KRB_HOME/include $CXXFLAGS"
+      set CFLAGS  = "-DKERBEROS -I../security/krb -I$KRB_HOME/include -I$KRB_HOME/include/gssapi $CFLAGS"
+      set CXXFLAGS  = "-DKERBEROS -I../security/krb -I$KRB_HOME/include $CXXFLAGS"
       set KLFLAGS = "-L$KRB_HOME/lib"
       set KLIBS = "-lkrb5 -lk5crypto -lcom_err -lresolv"
       breaksw
@@ -637,12 +640,13 @@ while ($#argv >= 1 && $?found)
       set SECTARGETS = "sec_all"
       set SECDEPEND = "sec_depend"
       set SECCLEAN = "sec_clean"
+      set SECLIBS = "libsec.a"
+      set SECLIB = "-lsec"
       set SECLIB_OBJS = "sec_lib.o"
-      set KRBLIBS = "libsec.a"
-      set CFLAGS  = " -DSECURE -I../security/sec -I$OPENSSL_HOME/include  $CFLAGS"
-      set CXXFLAGS  = " -DSECURE -I../security/sec -I$OPENSSL_HOME/include  $CXXFLAGS"
-      set LFLAGS  = "-L$OPENSSL_HOME/lib $LFLAGS"
-      set KLIBS = "-lcrypto"
+      set CFLAGS  = "-DSECURE -I../security/sec -I$OPENSSL_HOME/include  $CFLAGS"
+      set CXXFLAGS  = "-DSECURE -I../security/sec -I$OPENSSL_HOME/include  $CXXFLAGS"
+      set KLFLAGS  = "-L$OPENSSL_HOME/lib"
+      set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a"
       breaksw
    case "-shared":
       set STATIC = 0
@@ -1249,7 +1253,7 @@ case SOLARIS86:
          set SOL64BITFLAG = "-D$BUILDARCH -DSOLARIS7"
       else
          set SOL64BITFLAG = "-D$BUILDARCH -xarch=v9 -DSOLARIS7"
-         set LFLAGS = "-xarch=v9 $LFLAGS"
+         set LFLAGS = "-xildoff -xarch=v9 $LFLAGS"
          set CFLAGS = "-v $CFLAGS" 
       endif
    else
@@ -1293,7 +1297,7 @@ case SOLARIS86:
 
    set XINCD    = "-I/usr/dt/include -I/usr/openwin/include $XMTINCD $XINCD"
    set XLIBD    = "-L/usr/dt/lib -L/usr/openwin/lib"
-   set XCFLAGS  = "-DNeedFunctionPrototypes $XMTDEF $XINCD"
+   set XCFLAGS  = "-Xc -DNeedFunctionPrototypes $XMTDEF $XINCD"
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXt -lXext -lX11 -lw -lgen"
 
@@ -1557,9 +1561,9 @@ if ( "$CORE" == 1 ) then
    $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" "CFLAGS=$CFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
        "SDIR=$SDIR" "SOURCE=$SOURCE" \
        "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
-       "SECLIB_OBJS=$SECLIB_OBJS" \
+       "SECLIB_OBJS=$SECLIB_OBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
        "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
-       "KRBLIBS=$KRBLIBS" "GSSDEPEND=$GSSDEPEND" "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "LIBS= $GSSLIBS $KLIBS $LIBS $LINK_ZLIB" \
+       "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS $LINK_ZLIB" \
        "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
        "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
        "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
@@ -1611,10 +1615,13 @@ if ( "$QMON" == 1) then
    cd $COMPILE_ARCH
 
    $MAKE $MAKEOPT -f $SOURCE/clients/qmon/Makefile \
-       "MAKE=$MAKE" "CC=$CC" "CFLAGS=$CFLAGS $CORE_INCLUDE" "SDIR=$SDIR" \
-       "SOURCE=$SOURCE" "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" \
-       "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
-       "KRBLIBS=$KRBLIBS" "MSDIR=$MSDIR" "LIBS=$KLIBS $LIBS $LINK_ZLIB" \
+       "MAKE=$MAKE" "CC=$CC" "CFLAGS=$CFLAGS $CORE_INCLUDE" "SDIR=$SDIR" "SOURCE=$SOURCE"\
+       "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" \
+       "SECLIB=$SECLIB" "SECLIBS=$SECLIBS" \
+       "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" \
+       "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" \
+       "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
+       "MSDIR=$MSDIR" "LIBS=$KLIBS $LIBS $LINK_ZLIB" \
        "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
        "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
        "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \

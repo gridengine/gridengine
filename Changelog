@@ -1,4 +1,4 @@
-EB-2002-02-27-0  Enhancem.: removed one dependency between libgdi and libsgeobj
+EB-2002-02-27-0  Enhancem.: removed dependencies between libgdi and libsgeobj
 
 AH-2003-02-27-1  Bugfix:    overriding queue limits with job request limits
                             is incomplete for OS architecture dependent

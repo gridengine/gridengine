@@ -42,6 +42,12 @@
 
 #include "msg_sgeobjlib.h"
 
+/*
+**
+** NOTES
+**    MT-NOTE: all function in this module are not MT safe
+*/
+
 static void sge_show_ce_type_list(lList *cel, const char *indent, const char *separator);
 
 

@@ -572,15 +572,10 @@ int cl_log_list_log(int log_type,int line, const char* function_name,const char*
 #define __CL_FUNCTION__ "cl_log_list_log_int()"
 int cl_log_list_log_int(int log_type,int line, const char* function_name,const char* module_name, const char* log_text, int param) {  /* CR check */
    int ret_val;
-   char* my_int_buffer = NULL;
+   char my_int_buffer[512];
 
-   my_int_buffer = (char*) malloc(  sizeof(char) * cl_util_get_int_number_length(param) + 1 );
-   if (my_int_buffer == NULL) {
-      return CL_RETVAL_MALLOC;
-   }
    sprintf(my_int_buffer, "%d", param);
    ret_val = cl_log_list_log( log_type, line,  function_name, module_name,  log_text,  my_int_buffer);
-   free(my_int_buffer);
    return ret_val;
 }
 

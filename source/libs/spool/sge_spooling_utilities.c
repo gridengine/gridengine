@@ -414,8 +414,9 @@ bool spool_default_validate_func(lList **answer_list,
                      delete_func(answer_list, type, rule, old_name, object_type);
                   }
                }
-               free(old_name);
             }
+
+            free(old_name);
 
             if (object_type == SGE_TYPE_EXECHOST) {
                /* trash load values - they are not valid after unspooling

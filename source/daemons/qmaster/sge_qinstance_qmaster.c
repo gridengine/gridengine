@@ -334,7 +334,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                                            hostname, &new_value, 
                                            matching_host_or_group,
                                            matching_group, is_ambiguous);
-               new_list = lCopyList("", new_value);
+               new_list = new_value;
                new_value = NULL;
                centry_list_fill_request(new_list, Master_CEntry_List, 
                                         true, true, false);
@@ -347,7 +347,8 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
 #ifdef QINSTANCE_MODIFY_DEBUG
                   DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
-                  lSetList(this_elem, attribute_name, lCopyList("", new_value));
+                  /* the following lSetList will free old_value */
+                  lSetList(this_elem, attribute_name, new_value);
                   *has_changed_conf_attr = true;
                   if (attribute_name == QU_consumable_config_list) {
                      qinstance_reinit_consumable_actual_list(this_elem, 
@@ -378,7 +379,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                      lSetUlong(this_elem, QU_gdi_do_later, GDI_DO_LATER);
                   }
    
-                  lSetList(this_elem, attribute_name, lCopyList("", new_value));
+                  lSetList(this_elem, attribute_name, new_value);
                   *has_changed_conf_attr = true;
                }
             }

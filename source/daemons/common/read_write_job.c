@@ -700,17 +700,6 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
    } 
    first_direnties = lFreeList(first_direnties);
 
-   /*
-    * for Master_Zombie_List we must sort the list by end time
-    */
-   if (flags & SPOOL_HANDLE_AS_ZOMBIE) {
-      lSortOrder *so; 
-
-      so = lParseSortOrderVarArg(JB_Type, "%I+", JB_end_time);
-      lSortList(*job_list, so);
-      lFreeSortOrder(so);
-   }
-
    if (*job_list) {
       sge_status_end_turn();
    }      

@@ -148,7 +148,9 @@ static tJobField job_items[] = {
    { 0, JAT_start_time, "@{StartTime}", 12, 30, PrintStartTime },
    { 0, JB_execution_time, "@{ScheduleTime}", 12, 30, PrintTime },
    { 0, JB_account, "@{AccountString}", 15, 50, PrintString },
+#if 0 /* JG: removed JB_cell from job object */   
    { 0, JB_cell, "@{Cell}", 10, 30, PrintString },
+#endif   
    { 0, JB_cwd, "@{CWD}", 10, 30, PrintString },
    { 0, JB_stderr_path_list, "@{StderrPaths}", 15, 100, PrintPathList },
    { 0, JAT_hold, "@{Hold}", 10, 30, PrintHold },

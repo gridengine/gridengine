@@ -253,11 +253,11 @@ lListElem *jatep
          }
 
          lSetUlong(jr, JR_state, JEXITING);
-         lSetUlong(jep, JB_end_time, sge_get_gmt());
+         lSetUlong(jatep, JAT_end_time, sge_get_gmt());
          add_usage(jr, "submission_time", NULL, lGetUlong(jep, JB_submission_time));
          add_usage(jr, "start_time", NULL, lGetUlong(jatep, JAT_start_time));
-         add_usage(jr, "end_time", NULL, lGetUlong(jep, JB_end_time));
-         wallclock = lGetUlong(jep, JB_end_time) - lGetUlong(jatep, JAT_start_time);
+         add_usage(jr, "end_time", NULL, lGetUlong(jatep, JAT_end_time));
+         wallclock = lGetUlong(jatep, JAT_end_time) - lGetUlong(jatep, JAT_start_time);
          add_usage(jr, "ru_wallclock", NULL, wallclock);
          add_usage(jr, USAGE_ATTR_CPU_ACCT, NULL, wallclock * 0.5);
          add_usage(jr, "ru_utime", NULL, wallclock * 0.4 );

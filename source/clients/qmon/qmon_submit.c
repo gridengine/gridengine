@@ -1716,6 +1716,7 @@ char *prefix
          data->directive_prefix = XtNewString("#$");
    }
 
+#if 0 /* JG: removed JB_cell from job object */     
    if ((cell = lGetString(jep, JB_cell)))
       data->cell = XtNewString(cell);
    else {
@@ -1725,6 +1726,7 @@ char *prefix
       else
          data->cell = XtNewString("default");
    }
+#endif   
 
    if ((project = lGetString(jep, JB_project)))
       data->project = XtNewString(project);
@@ -2012,7 +2014,9 @@ int save
          lSetList(jep, JB_path_aliases, lCopyList("PathAliases", path_alias));
          path_alias = lFreeList(path_alias);
       }
+#if 0 /* JG: removed JB_cell from job object */     
       lSetString(jep, JB_cell, data->cell);
+#endif      
    }
 
    lSetString(jep, JB_account, data->account_string);

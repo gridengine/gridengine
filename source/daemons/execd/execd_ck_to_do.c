@@ -467,7 +467,7 @@ int answer_error
    if(simulate_hosts) {
       for_each(jep, Master_Job_List) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-            if((lGetUlong(jatep, JAT_status) & JSIMULATED) && lGetUlong(jep, JB_end_time) <= now) {
+            if((lGetUlong(jatep, JAT_status) & JSIMULATED) && lGetUlong(jatep, JAT_end_time) <= now) {
                lListElem *jr = NULL;
                u_long32 jobid, jataskid;
                u_long32 wallclock;
@@ -486,8 +486,8 @@ int answer_error
                lSetUlong(jr, JR_state, JEXITING);
                add_usage(jr, "submission_time", NULL, lGetUlong(jep, JB_submission_time));
                add_usage(jr, "start_time", NULL, lGetUlong(jatep, JAT_start_time));
-               add_usage(jr, "end_time", NULL, lGetUlong(jep, JB_end_time));
-               wallclock = lGetUlong(jep, JB_end_time) - lGetUlong(jatep, JAT_start_time);
+               add_usage(jr, "end_time", NULL, lGetUlong(jatep, JAT_end_time));
+               wallclock = lGetUlong(jatep, JAT_end_time) - lGetUlong(jatep, JAT_start_time);
                add_usage(jr, "ru_wallclock", NULL, wallclock);
                add_usage(jr, USAGE_ATTR_CPU_ACCT, NULL, wallclock * 0.5);
                add_usage(jr, "ru_utime", NULL, wallclock * 0.4 );
@@ -625,7 +625,7 @@ lListElem *slave_jatep
             }   
          }
 
-         lSetUlong(jep, JB_end_time, now + duration);
+         lSetUlong(jatep, JAT_end_time, now + duration);
          return 1;
       }
    }

@@ -968,10 +968,6 @@ char *err_str
    add_or_replace_env_int(environmentList, "NHOSTS", nhosts);
 
    add_or_replace_env_int(environmentList, "RESTARTED", (int) lGetUlong(job_jatep, JAT_job_restarted));
-   add_or_replace_env(environmentList, "FIRST_HOST", 
-         lGetHost(job_jep, JB_first_host) ? lGetHost(job_jep, JB_first_host) : "UNKNOWN");
-   add_or_replace_env(environmentList, "LAST_HOST", 
-         lGetHost(job_jep, JB_last_host) ? lGetHost(job_jep, JB_last_host) : "UNKNOWN");   
 
    /*
    ** interactive and login jobs have no script file

@@ -129,9 +129,11 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
    }
    lSetHost(*pjob, JB_sge_o_host, 
       ((cp = sge_getenv("HOST")) ? cp : me.unqualified_hostname));
+#if 0 /* JB: removed JB_cell from job object */      
    if (lGetString(*pjob, JB_cell)) {
       lSetString(*pjob, JB_cell, me.default_cell);
    }
+#endif   
 
    lSetUlong(*pjob, JB_priority, BASE_PRIORITY);
    lSetUlong(*pjob, JB_verify_suitable_queues, SKIP_VERIFY);
@@ -210,12 +212,14 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
       lRemoveElem(cmdline, ep);
    }
 
+#if 0 /* JG: removed JB_cell from job object */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-cell"))) {
       lSetString(*pjob, JB_cell, lGetString(ep, SPA_argval_lStringT));
       me.default_cell = sge_strdup(me.default_cell, 
          lGetString(ep, SPA_argval_lStringT));
       lRemoveElem(cmdline, ep);
    }
+#endif   
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-cwd"))) {
       char tmp_str[SGE_PATH_MAX + 1];

@@ -105,7 +105,8 @@ int flags
       DEXIT;
       return answer;
    }
-   
+  
+#if 0 /* JG: removed JB_cell from job object */  
    /*
    ** -cell
    ** we make no difference between the default value and some other value
@@ -118,6 +119,7 @@ int flags
       DEXIT;
       return answer;
    }
+#endif   
 
 
    /*

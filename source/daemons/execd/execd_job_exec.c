@@ -589,14 +589,14 @@ int *synchron;
    }
 
    /* generate unique task id by combining consecutive number 1-max(u_long32) */
-   tid = MAX(1, lGetUlong(jep, JB_task_id_range));
+   tid = MAX(1, lGetUlong(jep, JB_next_pe_task_id));
    sprintf(new_task_id, "%d.%s", tid, me.unqualified_hostname);
    task_str = new_task_id;
-   lSetString(jelem, JB_pe_task_id_str, task_str);
+   lSetString(jelem, JB_next_pe_task_id, task_str);
    DPRINTF(("using pe_task_id_str %s for job "u32"\n", task_str, jobid));
 
    /* set taskid for next task to be started */
-   lSetUlong(jep, JB_task_id_range, tid+1);
+   lSetUlong(jep, JB_next_pe_task_id, tid+1);
 
    if (!lGetString(jelem, JB_job_name))
       lSetString(jelem, JB_job_name, 

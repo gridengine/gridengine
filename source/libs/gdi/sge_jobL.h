@@ -147,7 +147,6 @@ enum {
 
 /* reserved names for JB_context */
 #define CONTEXT_IOR "IOR"
-#define QLOGIN_PORT "_QLOGIN_PORT"
 #define CONTEXT_PARENT "PARENT"
 
 /****** gdi/job_jatask/JB_Type ************************************************
@@ -155,25 +154,62 @@ enum {
 *     JB_Type - CULL job element 
 *
 *  ELEMENTS
-*     SGE_ULONG(JB_job_number)
+*     Job identification and dependencies
+*     ===================================
+*
+*     SGE_ULONG(JB_job_number) ---> JB_id
 *        Uniq job number.
 *
-*     SGE_STRING(JB_job_file)            
-*        UNUSED. MAY BE DELETED IN THE NEXT MAIN RELEASE
+*     SGE_STRING(JB_job_name) 
+*        Job name ("qsub/qalter -N job_name")  
 *
-*     SGE_XSTRING(JB_exec_file)
+*     SGE_XULONG(JB_version)
+*
+*     SGE_LIST(JB_jid_predecessor_list)
+*        Predecessor jobs (JRE_Type only JRE_job_name)
+*  
+*     SGE_LIST(JB_jid_sucessor_list)  
+*        Sucessor jobs (JRE_Type only JRE_job_number)
+*
+*     Project/Department
+*     ==================
+*
+*     SGE_STRING(JB_project)
+*        Project name (qsub -P project_name)
+*
+*     SGE_STRING(JB_department)
+*        Department name. Set by schedd, saved (once) to qmaster.
+*
+*     Data related to job script
+*     ===========================
+*
+*     SGE_STRING(JB_directive_prefix)     
+*        Command prefix for jobscript ("qsub -C prefix") for parsing special comments in the script file.
+*
+*     SGE_XSTRING(JB_exec_file) ---> what is exec_file, what script_file?
 *
 *     SGE_STRING(JB_script_file)
 *
-*     SGE_ULONG(JB_script_size)
+*     SGE_ULONG(JB_script_size) ---> really needed?
 *
-*     SGE_STRING(JB_script_ptr)
+*     SGE_STRING(JB_script_ptr) ---> what is it?
+*
+*     Time information
+*     ================
 *
 *     SGE_RULONG(JB_submission_time)
 *
-*     SGE_RULONG(JB_end_time)
+*     SGE_ULONG(JB_execution_time)         
+*        When should the job start ("qsub/qalter -a date_time")
 *
-*     SGE_RSTRING(JB_owner)
+*     SGE_ULONG(JB_deadline)      
+*        SGEEE. Deadline initiation time. (qsub -dl date_time)
+*        Not spooled.
+*
+*     User related information
+*     ========================
+*
+*     SGE_RSTRING(JB_owner) ---> rename to JB_user to be consistent?
 *
 *     SGE_RULONG(JB_uid)
 *
@@ -181,7 +217,42 @@ enum {
 *
 *     SGE_RULONG(JB_gid)
 *
-*     SGE_STRING(JB_sge_o_home)
+*     SGE_STRING(JB_account)  
+*        Account string ("qsub/qalter -A account string")
+*
+*     Submission environment
+*     ======================
+*
+*     SGE_STRING(JB_cwd)      
+*        Current working directory during qsub ("qsub -cwd")
+*
+*     SGE_BOOL(JB_notify)                  
+*        Notify job of impending kill/stop signal. ("qsub -notify")
+*
+*     SGE_BOOL(JB_now) 
+*        Start job immediately or not at all. ("qsub -now")
+*
+*     SGE_ULONG(JB_priority) 
+*        Priority ("qsub/qalter -p priority")     
+*
+*     SGE_LIST(JB_shell_list, PN_Type)    
+*        Command interpreter to be used (PN_Type).
+*        ("qsub/qalter -S shell")
+*
+*     SGE_ULONG(JB_verify)             
+*        Triggers "verify" messages. (qsub -verify)
+*
+*     SGE_LIST(JB_env_list)      
+*        Export these env variables (VA_Type). ("qsub -V").
+*
+*     SGE_TLIST(JB_context, VA_Type)       
+*        Custom attributes (name,val) pairs (VA_Type). 
+*        ("qsub/qalter -ac/-dc context_list")
+*
+*     SGE_LIST(JB_job_args)  
+*        Job arguments (ST_Type). 
+*
+*     SGE_STRING(JB_sge_o_home)      ---> merge all sge_o* to one object? Or put into environment?
 *
 *     SGE_STRING(JB_sge_o_log_name)
 *
@@ -197,41 +268,37 @@ enum {
 *
 *     SGE_HOST(JB_sge_o_host)
 *
-*     SGE_ULONG(JB_execution_time)         
-*        When should the job start ("qsub/qalter -a date_time")
-*
-*     SGE_STRING(JB_account)  
-*        Account string ("qsub/qalter -A account string")
-*
-*     SGE_ULONG(JB_checkpoint_attr)  
+*     Checkpointing/Restart
+*     =====================
+*     SGE_ULONG(JB_checkpoint_attr)  ----> merge all checkpointing stuff to one object?
 *        Checkpoint attributes ("qsub/qalter -c interval_flags")   
 *
 *     SGE_STRING(JB_checkpoint_object)    
 *        Name of ckpt object ("qsub/qalter -ckpt ckpt_name")
 *
 *     SGE_LIST(JB_checkpoint_object_list, CK_Type)
-*        Ckpt object which will be send from qmaster to execd.
+*        Ckpt object which will be sent from qmaster to execd.
 *
 *     SGE_ULONG(JB_checkpoint_interval)    
 *        Checkpoint frequency ("qsub/qalter -c seconds")
 *
-*     SGE_STRING(JB_cell)
-*        Cell name ("all_commands -cell cell_name")
+*     SGE_BOOL(JB_restart)                 
+*        Is job rerunable? ("qsub/qalter -r y/n")
 *
-*     SGE_STRING(JB_cwd)      
-*        Current working directory during qsub ("qsub -cwd")
+*     Job I/O
+*     =======
 *
-*     SGE_STRING(JB_directive_prefix)     
-*        Command prefix for jobscript ("qsub -C pefix")
+*     SGE_LIST(JB_stdout_path_list) 
+*        Pathname for stdout (PN_Type). ("qsub/qalter -o path_name")
 *
-*     SGE_LIST(JB_stderr_path_list) 
+*     SGE_LIST(JB_stderr_path_list)   
 *        Std error path streams (PN_Type). ("qsub/qalter "-e path_name")
-*
-*     SGE_ULONG(JB_full_listing)           
-*        UNUSED. MAY BE DELETED IN THE NEXT MAIN RELEASE
 *
 *     SGE_BOOL(JB_merge_stderr)   
 *        Merge stdout and stderr? ("qsub/qalter -j y|n")
+*
+*     Resource requests
+*     =================
 *
 *     SGE_LIST(JB_hard_resource_list, RE_Type) 
 *        Hard resource requirements/limits/restrictions (RE_Type).
@@ -241,87 +308,23 @@ enum {
 *        Soft resource requirements/limits/restrictions (RE_Type).
 *        ("qsub -l resource_list")
 *
+*     SGE_LIST(JB_hard_queue_list) ----> why separated from other requests?
+*        Hard queue list (QR_Type). ("qsub -q dest_identifier")
+*
+*     SGE_LIST(JB_soft_queue_list) ----> why separated from other requests?
+*        Soft queue list (QR_Type). ("qsub/qselect -q dest_identifier")
+*
+*     Mail options
+*     ============
+*
 *     SGE_ULONG(JB_mail_options)           
 *        Mail options  ("qsub/qalter -m mail_options")
 *
 *     SGE_LIST(JB_mail_list)    
 *        Mail recipiants (MR_Type). ("qsub/qalter -M mail_list)
 *
-*     SGE_BOOL(JB_notify)                  
-*        Notify job of impending kill/stop signal. ("qsub -notify")
-*
-*     SGE_BOOL(JB_now) 
-*        Start job immediately or not at all. ("qsub -now")
-*
-*     SGE_STRING(JB_job_name) 
-*        Job name ("qsub/qalter -N job_name")  
-*
-*     SGE_LIST(JB_stdout_path_list) 
-*        Pathname for stdout (PN_Type). ("qsub/qalter -o path_name")
-*
-*     SGE_ULONG(JB_priority) 
-*        Priority ("qsub/qalter -p priority")     
-*
-*     SGE_ULONG(JB_passwd)  
-*        UNUSED. MAY BE DELETED IN THE NEXT MAIN RELEASE.
-*
-*     SGE_LIST(JB_passwd_list)             
-*        UNUSED. MAY BE DELETED IN THE NEXT MAIN RELEASE.
-*        
-*     SGE_LIST(JB_hard_queue_list) 
-*        Hard queue list (QR_Type). ("qsub -q dest_identifier")
-*
-*     SGE_LIST(JB_soft_queue_list)
-*        Soft queue list (QR_Type). ("qsub/qselect -q dest_identifier")
-*
-*     SGE_ULONG(JB_reauth_time)        
-*        UNUSED. MAY BE DELETED IN THE NEXT MAIN RELEASE.
-*
-*     SGE_BOOL(JB_restart)                 
-*        Is job rerunable? ("qsub/qalter -r y/n")
-*
-*     SGE_ULONG(JB_signal)     
-*        UNUSED. MAY BE DELETED IN THE NEXT MAIN RELEASE.
-*
-*     SGE_LIST(JB_shell_list, PN_Type)    
-*        Command interpreter to be used (PN_Type).
-*        ("qsub/qalter -S shell")
-*
-*     SGE_LIST(JB_user_list)               
-*        List of usernames (qsub/qalter -u username_list).
-*
-*     SGE_ULONG(JB_unlog)               
-*        UNUSED. MAY BE DELETED IN THE NEXT MAIN RELEASE.
-*
-*     SGE_ULONG(JB_verify)             
-*        Triggers "verify" messages. (qsub -verify)
-*
-*     SGE_LIST(JB_env_list)      
-*        Export these env variables (VA_Type). ("qsub -V").
-*
-*     SGE_LIST(JB_job_args)  
-*        Job arguments (ST_Type). 
-*
-*     SGE_XULONG(JB_task_id_range)         
-*        PE task id range for jobs at this host (execd).
-*
-*     SGE_HOST(JB_first_host)
-*        UNUSED. MAY BE DELETED IN THE NEXT MAIN RELEASE.
-*
-*     SGE_HOST(JB_last_host) 
-*        UNUSED. MAY BE DELETED IN THE NEXT MAIN RELEASE.
-*
-*     SGE_LIST(JB_master_hard_queue_list)  
-*        Master queue list (QR_Type). ("qsub -masterq queue_list")
-*
-*     SGE_LIST(JB_job_identifier_list)  
-*        (ID_Type)
-*
-*     SGE_STRING(JB_message)
-*        
-*     SGE_STRING(JB_job_source)
-*
-*     SGE_ULONG(JB_ext)
+*     Parallel Job info
+*     =================
 *
 *     SGE_STRING(JB_pe)      
 *        Name of a PE
@@ -329,84 +332,17 @@ enum {
 *     SGE_LIST(JB_pe_range)
 *        PE slot range (RN_Type)    
 *
-*     SGE_ULONG(JB_scheduling_priority)  
-*        UNUSED. MAY BE DELETED IN THE NEXT MAIN RELEASE.
+*     SGE_LIST(JB_master_hard_queue_list)  
+*        Master queue list (QR_Type). ("qsub -masterq queue_list")
 *
-*     SGE_LIST(JB_jid_predecessor_list)
-*        Predecessor jobs (JRE_Type only JRE_job_name)
-*  
-*     SGE_LIST(JB_jid_sucessor_list)  
-*        Sucessor jobs (JRE_Type only JRE_job_number)
-*
-*     SGE_XULONG(JB_pvm_pid)
-*
-*     SGE_XULONG(JB_verify_suitable_queues)  
-*
-*     SGE_XULONG(JB_sig)
-*
-*     SGE_XULONG(JB_notified)
-*
-*     SGE_XULONG(JB_nrunning)
-*
-*     SGE_XULONG(JB_reauth_gmt)
-*
-*     SGE_XULONG(JB_soft_wallclock_gmt)
-*
-*     SGE_XULONG(JB_hard_wallclock_gmt)
-*
-*     SGE_XULONG(JB_suspend_enable)
-*
-*     SGE_XULONG(JB_soc_xsoc)
-*
-*     SGE_XULONG(JB_force)
-*
-*     SGE_XULONG(JB_version)
-*
-*     SGE_STRING(JB_project)
-*        Project name (qsub -P project_name)
-*
-*     SGE_STRING(JB_department)    
-*        Department name. Set by schedd, saved (once) to qmaster.
-*
-*     SGE_XSTRING(JB_jobclass)
-*        Job class name. Local to schedd. Identical to master_queue.
-*        Not spooled.
-*
-*     SGE_ULONG(JB_deadline)      
-*        SGEEE. Deadline initiation time. (qsub -dl date_time)
-*        Not spooled.
-*
-*     SGE_HOST(JB_host)                    
-*        SGEEE - host job is executing on. Local to schedd. 
-*        Not spooled.
-*
-*     SGE_ULONG(JB_override_tickets)       
-*        SGEEE - override tickets assigned by admin. 
-*        (qalter -ot tickets).
-*
-*     SGE_LIST(JB_qs_args)       
-*        Arguments for foreign queuing system (ST_Type).
-*
-*
-*     SGE_LIST(JB_path_aliases)  
-*        Path aliases list (PA_Type).
-*
-*     SGE_STRING(JB_foreign_job_id)  
-*        UNUSED. MAY BE DELETED IN THE NEXT MAIN RELEASE.
-*
-*     SGE_ULONG(JB_poll_lastgmt) 
-*        UNUSED. MAY BE DELETED IN THE NEXT MAIN RELEASE.
-*
-*     SGE_ULONG(JB_poll_interval)
-*        UNUSED. MAY BE DELETED IN THE NEXT MAIN RELEASE.
-*
-*     SGE_STRING(JB_pe_task_id_str)       
+*     SGE_STRING(JB_pe_task_id_str)      ----> move to petask object 
 *        String identifying pe task (e.g. pvm tid)
 *
-*     SGE_LIST(JB_pe_object)    
+*     SGE_LIST(JB_pe_object)   
 *        PE object (PE_Type).
 *
-*     SGE_XULONG(JB_tagged)
+*     Security related data
+*     =====================
 *
 *     SGE_XSTRING(JB_tgt)                  
 *        Kerberos client TGT 
@@ -414,12 +350,8 @@ enum {
 *     SGE_XSTRING(JB_cred)                 
 *        DCE/Kerberos credentials 
 *
-*     SGE_TLIST(JB_context, VA_Type)       
-*        Custom attributes (name,val) pairs (VA_Type). 
-*        ("qsub/qalter -ac/-dc context_list")
-*
-*     SGE_REF(JB_category)
-*        Category string reference used in schedd.
+*     Data related to array jobs
+*     ==========================
 *
 *     SGE_LIST(JB_ja_structure)  
 *        Elements describe task id range structure during the
@@ -453,7 +385,56 @@ I        ("qsub -t tid_range")
 *     SGE_LIST(JB_ja_tasks)     
 *        List of array tasks (in case of array jobs) or one task 
 *        (in case of a job) (JAT_Type).
-
+*
+*     Data used only in scheduler
+*     ===========================
+*
+*     SGE_XSTRING(JB_jobclass)
+*        Job class name. Local to schedd. Identical to master_queue.
+*        Not spooled.
+*
+*     SGE_HOST(JB_host)                    
+*        SGEEE - host job is executing on. Local to schedd. 
+*        Not spooled.
+*
+*     SGE_REF(JB_category)
+*        Category string reference used in schedd.
+*
+*     Misc
+*     ====
+*
+*     SGE_LIST(JB_user_list)               
+*        List of usernames (qsub/qalter -u username_list). ---> qsub -u does not exist. Not part of a job, but only userd for qalter request as where condition. Could most probably be passed via lCondition.
+*
+*     SGE_XULONG(JB_next_pe_task_id)         
+*        Used locally in execd to store next pe task id for this job on this execd.
+*
+*     SGE_LIST(JB_job_identifier_list) ---> condition for qalter? Then it should better be passed via condition. 
+*        (ID_Type)
+*
+*     SGE_STRING(JB_job_source)
+*        Submitter (host:commproc:id) of a pe task. Only needed in execd.
+*
+*     SGE_XULONG(JB_verify_suitable_queues)   ---> qalter?
+*
+*     SGE_XULONG(JB_nrunning)
+*
+*     SGE_XULONG(JB_soft_wallclock_gmt) ---> the same as complex s_rt?
+*
+*     SGE_XULONG(JB_hard_wallclock_gmt) ---> the same as complex h_rt?
+*
+*     SGE_ULONG(JB_override_tickets)       
+*        SGEEE - override tickets assigned by admin. 
+*        (qalter -ot tickets).
+*
+*     SGE_LIST(JB_qs_args) ---> qsi? 
+*        Arguments for foreign queuing system (ST_Type).
+*        Either delete it, or recycle it to be used with starter_method.
+*
+*     SGE_LIST(JB_path_aliases)  
+*        Path aliases list (PA_Type).
+*
+*
 *  FUNCTION
 *     JB_Type elements make only sense in conjunction with JAT_Type
 *     elements.  One element of each type is necessary to hold all
@@ -482,18 +463,39 @@ I        ("qsub -t tid_range")
 ******************************************************************************/
 enum {
    JB_job_number = JB_LOWERBOUND,
-   JB_job_file,                     /* unused */
+   JB_job_name,     
+   JB_version,
+   JB_jid_predecessor_list,
+   JB_jid_sucessor_list,
+
+   JB_project,
+   JB_department,
+   
+   JB_directive_prefix, 
    JB_exec_file,
    JB_script_file,
    JB_script_size,
    JB_script_ptr,
+   
    JB_submission_time,
-   JB_end_time,
+   JB_execution_time,
+   JB_deadline,
+
    JB_owner,
    JB_uid,
-   
    JB_group,
    JB_gid,
+   JB_account,
+
+   JB_cwd,                
+   JB_notify,        
+   JB_now,
+   JB_priority,         
+   JB_shell_list,
+   JB_verify,      
+   JB_env_list,
+   JB_context,
+   JB_job_args,
    JB_sge_o_home,
    JB_sge_o_log_name,
    JB_sge_o_path,
@@ -503,94 +505,32 @@ enum {
    JB_sge_o_workdir,
    JB_sge_o_host,
   
-   JB_execution_time,
-   JB_account,
    JB_checkpoint_attr,
    JB_checkpoint_object,
    JB_checkpoint_object_list,
    JB_checkpoint_interval, 
-   JB_cell,              
-   JB_cwd,                
-   JB_directive_prefix, 
+   JB_restart,      
+
+   JB_stdout_path_list,
    JB_stderr_path_list,
-  
-   JB_full_listing,    
    JB_merge_stderr, 
+
    JB_hard_resource_list,
    JB_soft_resource_list,
-   JB_mail_options,     
-   JB_mail_list,
-   JB_notify,        
-   JB_now,
-   JB_job_name,     
-   JB_stdout_path_list,
-  
-   JB_priority,         
-   JB_passwd,          
-   JB_passwd_list,    
    JB_hard_queue_list,
    JB_soft_queue_list,
-   JB_reauth_time,   
-   JB_restart,      
-   JB_signal,    
-   JB_shell_list,
-   JB_user_list, 
-   
-   JB_unlog,  
-   JB_verify,      
-   JB_env_list,
-   JB_job_args,
-   JB_task_id_range,    
-   JB_first_host,
-   JB_last_host,
-   JB_master_hard_queue_list,
-   JB_job_identifier_list,
-   JB_message,
-  
-   JB_job_source,
-   JB_ext,
+
+   JB_mail_options,     
+   JB_mail_list,
+
    JB_pe,
    JB_pe_range,
-   JB_scheduling_priority,
-   JB_jid_predecessor_list,
-   JB_jid_sucessor_list,
-   JB_pvm_pid,
-   JB_verify_suitable_queues,
-   JB_sig,
-
-   /* 
-    * IF YOU CHANGE SOMETHING HERE THEN CHANGE ALSO THE ADOC COMMENT ABOVE 
-    */
-  
-   JB_notified,
-   JB_nrunning,
-   JB_reauth_gmt,
-   JB_soft_wallclock_gmt,
-   JB_hard_wallclock_gmt,
-   JB_suspend_enable,
-   JB_soc_xsoc,
-   JB_force,
-   JB_version,
-   JB_project,
-  
-   JB_department,
-   JB_jobclass,
-   JB_deadline,
-   JB_host,
-   JB_override_tickets,
-   JB_qs_args,
-   JB_path_aliases,
-   JB_foreign_job_id,
-   JB_poll_lastgmt,
-   JB_poll_interval,
-  
+   JB_master_hard_queue_list,
    JB_pe_task_id_str,
    JB_pe_object,
-   JB_tagged,
+  
    JB_tgt,
    JB_cred,
-   JB_context,
-   JB_category,
 
    JB_ja_structure,
    JB_ja_n_h_ids,
@@ -599,7 +539,23 @@ enum {
    JB_ja_o_h_ids,
    JB_ja_z_ids,
    JB_ja_template,
-   JB_ja_tasks
+   JB_ja_tasks,
+
+   JB_jobclass,
+   JB_host,
+   JB_category,
+
+   JB_user_list, 
+   JB_next_pe_task_id,    
+   JB_job_identifier_list,
+   JB_job_source,
+   JB_verify_suitable_queues,
+   JB_nrunning,
+   JB_soft_wallclock_gmt,
+   JB_hard_wallclock_gmt,
+   JB_override_tickets,
+   JB_qs_args,
+   JB_path_aliases
 };
 
 /* 
@@ -608,18 +564,41 @@ enum {
    
 ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_KULONGH(JB_job_number)             
-   SGE_XSTRING(JB_job_file)         
+   SGE_STRING(JB_job_name)     
+   SGE_XULONG(JB_version)
+   SGE_XLIST(JB_jid_predecessor_list,JRE_Type) 
+   SGE_ILIST(JB_jid_predecessor_list, JB_Type) 
+
+   SGE_XSTRING(JB_project)             
+   SGE_IOBJECT(JB_project, UP_Type)  
+   SGE_XSTRING(JB_department)  
+   SGE_IROBJECT(JB_department, US_Type) 
+
+   SGE_XSTRING(JB_directive_prefix)     
    SGE_XSTRING(JB_exec_file)
    SGE_STRING(JB_script_file)
    SGE_ULONG(JB_script_size)
    SGE_STRING(JB_script_ptr)
+
    SGE_RULONG(JB_submission_time)
-   SGE_RULONG(JB_end_time)
+   SGE_ULONG(JB_execution_time)  
+   SGE_ULONG(JB_deadline) 
+
    SGE_RSTRING(JB_owner)
    SGE_RULONG(JB_uid)
-
    SGE_RSTRING(JB_group)
    SGE_RULONG(JB_gid)
+   SGE_STRING(JB_account)      
+
+   SGE_STRING(JB_cwd)     
+   SGE_BOOL(JB_notify)  
+   SGE_BOOL(JB_now)     
+   SGE_ULONG(JB_priority)       
+   SGE_TLIST(JB_shell_list, PN_Type) 
+   SGE_XULONG(JB_verify) 
+   SGE_TLIST(JB_env_list, VA_Type)  
+   SGE_TLIST(JB_context, VA_Type)  
+   SGE_TLIST(JB_job_args, ST_Type)  
    SGE_STRING(JB_sge_o_home)
    SGE_STRING(JB_sge_o_log_name)
    SGE_STRING(JB_sge_o_path)
@@ -629,100 +608,40 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_STRING(JB_sge_o_workdir)
    SGE_HOST(JB_sge_o_host)         
 
-   SGE_ULONG(JB_execution_time)  
-   SGE_STRING(JB_account)      
    SGE_ULONG(JB_checkpoint_attr)     
    SGE_XSTRING(JB_checkpoint_object)   
    SGE_IOBJECT(JB_checkpoint_object, CK_Type) 
    SGE_XOBJECT(JB_checkpoint_object_list, CK_Type)
    SGE_ULONG(JB_checkpoint_interval)   
-   SGE_XSTRING(JB_cell) 
-   SGE_STRING(JB_cwd)     
-   SGE_XSTRING(JB_directive_prefix)     
-   SGE_TLIST(JB_stderr_path_list, PN_Type) 
+   SGE_BOOL(JB_restart)  
 
-   SGE_XULONG(JB_full_listing)  
+   SGE_TLIST(JB_stdout_path_list, PN_Type) 
+   SGE_TLIST(JB_stderr_path_list, PN_Type) 
    SGE_BOOL(JB_merge_stderr)     
+
    SGE_TLIST(JB_hard_resource_list, RE_Type) 
    SGE_TLIST(JB_soft_resource_list, RE_Type) 
-   SGE_ULONG(JB_mail_options) 
-   SGE_TLIST(JB_mail_list, MR_Type)  
-   SGE_BOOL(JB_notify)  
-   SGE_BOOL(JB_now)     
-   SGE_STRING(JB_job_name)     
-   SGE_TLIST(JB_stdout_path_list, PN_Type) 
-
-   /* 
-    * IF YOU CHANGE SOMETHING HERE THEN CHANGE ALSO THE ADOC COMMENT ABOVE 
-    */
-
-   SGE_ULONG(JB_priority)       
-   SGE_XULONG(JB_passwd)     
-   SGE_LIST(JB_passwd_list)     
    SGE_XLIST(JB_hard_queue_list, QR_Type) 
    SGE_ILIST(JB_hard_queue_list, QU_Type)
    SGE_XLIST(JB_soft_queue_list, QR_Type) 
    SGE_ILIST(JB_soft_queue_list, QU_Type)
-   SGE_XULONG(JB_reauth_time) 
-   SGE_BOOL(JB_restart)  
-   SGE_XULONG(JB_signal)  
-   SGE_TLIST(JB_shell_list, PN_Type) 
-   SGE_LIST(JB_user_list)  
-
-   SGE_XULONG(JB_unlog)    
-   SGE_XULONG(JB_verify) 
-   SGE_TLIST(JB_env_list, VA_Type)  
-   SGE_TLIST(JB_job_args, ST_Type)  
-   SGE_XULONG(JB_task_id_range) 
-   SGE_HOST(JB_first_host)   
-   SGE_HOST(JB_last_host)     
-   SGE_LIST(JB_master_hard_queue_list)  
-   SGE_LIST(JB_job_identifier_list)    
-   SGE_XSTRING(JB_message)
-
-   SGE_XSTRING(JB_job_source)
-   SGE_XULONG(JB_ext)
+   SGE_ULONG(JB_mail_options) 
+   SGE_TLIST(JB_mail_list, MR_Type)  
    SGE_XSTRING(JB_pe)              
    SGE_TLIST(JB_pe_range, RN_Type)     
-   SGE_XULONG(JB_scheduling_priority)   
-   SGE_XLIST(JB_jid_predecessor_list,JRE_Type) 
-   SGE_ILIST(JB_jid_predecessor_list, JB_Type) 
-   SGE_LIST(JB_jid_sucessor_list)
-   SGE_XULONG(JB_pvm_pid)
-   SGE_XULONG(JB_verify_suitable_queues)  
-   SGE_XULONG(JB_sig)
+   SGE_LIST(JB_master_hard_queue_list)  
+   SGE_XSTRING(JB_pe_task_id_str) 
+   SGE_OBJECT(JB_pe_object, PE_Type)   
 
-   SGE_XULONG(JB_notified)
    SGE_XULONG(JB_nrunning)
-   SGE_XULONG(JB_reauth_gmt)
    SGE_XULONG(JB_soft_wallclock_gmt)
    SGE_XULONG(JB_hard_wallclock_gmt)
-   SGE_XULONG(JB_suspend_enable)
-   SGE_XULONG(JB_soc_xsoc)
-   SGE_XULONG(JB_force)
-   SGE_XULONG(JB_version)
-   SGE_XSTRING(JB_project)             
-   SGE_IOBJECT(JB_project, UP_Type)  
-
-   SGE_XSTRING(JB_department)  
-   SGE_IROBJECT(JB_department, US_Type) 
-   SGE_XSTRING(JB_jobclass) 
-   SGE_ULONG(JB_deadline) 
-   SGE_HOST(JB_host)       
    SGE_ULONG(JB_override_tickets)   
    SGE_TLIST(JB_qs_args, ST_Type)   
    SGE_TLIST(JB_path_aliases, PA_Type)  
-   SGE_XSTRING(JB_foreign_job_id)
-   SGE_XULONG(JB_poll_lastgmt)   
-   SGE_XULONG(JB_poll_interval)    
 
-   SGE_XSTRING(JB_pe_task_id_str) 
-   SGE_OBJECT(JB_pe_object, PE_Type)   
-   SGE_XULONG(JB_tagged)
    SGE_XSTRING(JB_tgt)      
    SGE_XSTRING(JB_cred)   
-   SGE_TLIST(JB_context, VA_Type)  
-   SGE_REF(JB_category)    
 
    SGE_RLIST(JB_ja_structure, RN_Type)  
    SGE_RLIST(JB_ja_n_h_ids, RN_Type) 
@@ -732,6 +651,16 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_RLIST(JB_ja_z_ids, RN_Type)   
    SGE_RLIST(JB_ja_template, JAT_Type)  
    SGE_RLIST(JB_ja_tasks, JAT_Type)  
+
+   SGE_XSTRING(JB_jobclass) 
+   SGE_HOST(JB_host)       
+   SGE_REF(JB_category)    
+   SGE_LIST(JB_user_list)  
+
+   SGE_XULONG(JB_next_pe_task_id) 
+   SGE_LIST(JB_job_identifier_list)    
+
+   SGE_XSTRING(JB_job_source)
 
    /* 
     * IF YOU ADD SOMETHING HERE THEN CHANGE ALSO THE ADOC COMMENT ABOVE 
@@ -785,18 +714,39 @@ LISTEND
 
 NAMEDEF(JBN)
    NAME("JB_job_number")
-   NAME("JB_job_file")
+   NAME("JB_job_name")
+   NAME("JB_version")
+   NAME("JB_jid_predecessor_list")
+   NAME("JB_jid_sucessor_list")
+
+   NAME("JB_project")
+   NAME("JB_department")
+   
+   NAME("JB_directive_prefix")
    NAME("JB_exec_file")
    NAME("JB_script_file")
    NAME("JB_script_size")
    NAME("JB_script_ptr")
+   
    NAME("JB_submission_time")
-   NAME("JB_end_time")
+   NAME("JB_execution_time")
+   NAME("JB_deadline")
+   
    NAME("JB_owner")
    NAME("JB_uid")
-
    NAME("JB_group")
    NAME("JB_gid")
+   NAME("JB_account")
+
+   NAME("JB_cwd")
+   NAME("JB_notify")
+   NAME("JB_now")
+   NAME("JB_priority")
+   NAME("JB_shell_list")
+   NAME("JB_verify")
+   NAME("JB_env_list")
+   NAME("JB_context")
+   NAME("JB_job_args")
    NAME("JB_sge_o_home")
    NAME("JB_sge_o_log_name")
    NAME("JB_sge_o_path")
@@ -806,90 +756,33 @@ NAMEDEF(JBN)
    NAME("JB_sge_o_workdir")
    NAME("JB_sge_o_host")
 
-   NAME("JB_execution_time")
-   NAME("JB_account")
    NAME("JB_checkpoint_attr")
    NAME("JB_checkpoint_object")
    NAME("JB_checkpoint_object_list")
    NAME("JB_checkpoint_interval")
-   NAME("JB_cell")
-   NAME("JB_cwd")
-   NAME("JB_directive_prefix")
+   NAME("JB_restart")
+
+   NAME("JB_stdout_path_list")
    NAME("JB_stderr_path_list")
-   
-   NAME("JB_full_listing")
    NAME("JB_merge_stderr")
+
    NAME("JB_hard_resource_list")
    NAME("JB_soft_resource_list")
-   NAME("JB_mail_options")
-   NAME("JB_mail_list")
-   NAME("JB_notify")
-   NAME("JB_now")
-   NAME("JB_job_name")
-   NAME("JB_stdout_path_list")
-   
-   NAME("JB_priority")
-   NAME("JB_passwd")
-   NAME("JB_passwd_list")
    NAME("JB_hard_queue_list")
    NAME("JB_soft_queue_list")
-   NAME("JB_reauth_time")
-   NAME("JB_restart")
-   NAME("JB_signal")
-   NAME("JB_shell_list")
-   NAME("JB_user_list")
    
-   NAME("JB_unlog")
-   NAME("JB_verify")
-   NAME("JB_env_list")
-   NAME("JB_job_args")
-   NAME("JB_task_id_range")
-   NAME("JB_first_host")
-   NAME("JB_last_host")
-   NAME("JB_master_hard_queue_list")
-   NAME("JB_job_identifier_list")
-   NAME("JB_message")
-   
-   NAME("JB_job_source")
-   NAME("JB_ext")
+   NAME("JB_mail_options")
+   NAME("JB_mail_list")
+
    NAME("JB_pe")
    NAME("JB_pe_range")
-   NAME("JB_scheduling_priority")
-   NAME("JB_jid_predecessor_list")
-   NAME("JB_jid_sucessor_list")
-   NAME("JB_pvm_pid")
-   NAME("JB_verify_suitable_queues")
-   NAME("JB_sig")
-   
-   NAME("JB_notified")
-   NAME("JB_nrunning")
-   NAME("JB_reauth_gmt")
-   NAME("JB_soft_wallclock_gmt")
-   NAME("JB_hard_wallclock_gmt")
-   NAME("JB_suspend_enable")
-   NAME("JB_soc_xsoc")
-   NAME("JB_force")
-   NAME("JB_version")
-   NAME("JB_project")
-   
-   NAME("JB_department")
-   NAME("JB_jobclass")
-   NAME("JB_deadline")
-   NAME("JB_host")
-   NAME("JB_override_tickets")
-   NAME("JB_qs_args")
-   NAME("JB_path_aliases")
-   NAME("JB_foreign_job_id")
-   NAME("JB_poll_lastgmt")
-   NAME("JB_poll_interval")
-   
+   NAME("JB_master_hard_queue_list")
    NAME("JB_pe_task_id_str")
    NAME("JB_pe_object")
-   NAME("JB_tagged")
+   
    NAME("JB_tgt")
    NAME("JB_cred")
-   NAME("JB_context")
-   NAME("JB_category")
+
    NAME("JB_ja_structure")
    NAME("JB_ja_n_h_ids")
    NAME("JB_ja_u_h_ids")
@@ -898,6 +791,22 @@ NAMEDEF(JBN)
    NAME("JB_ja_z_ids")
    NAME("JB_ja_template")
    NAME("JB_ja_tasks")
+
+   NAME("JB_jobclass")
+   NAME("JB_host")
+   NAME("JB_category")
+   
+   NAME("JB_user_list")
+   NAME("JB_next_pe_task_id")
+   NAME("JB_job_identifier_list")
+   NAME("JB_job_source")
+   NAME("JB_verify_suitable_queues")
+   NAME("JB_nrunning")
+   NAME("JB_soft_wallclock_gmt")
+   NAME("JB_hard_wallclock_gmt")
+   NAME("JB_override_tickets")
+   NAME("JB_qs_args")
+   NAME("JB_path_aliases")
 NAMEEND
 
 

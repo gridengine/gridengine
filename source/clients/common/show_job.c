@@ -83,11 +83,6 @@ DTRACE;
          printf("submission_time:            %s", ctime((time_t *) &ultime));
       }
 
-   if (lGetPosViaElem(job, JB_end_time)>=0)
-      if ((ultime = lGetUlong(job, JB_end_time))) {
-         printf("end_time:                   %s", ctime((time_t *) &ultime));
-      }
-
    if (lGetPosViaElem(job, JB_owner)>=0) {
       if (lGetString(job, JB_owner))
          printf("owner:                      %s\n", lGetString(job, JB_owner));
@@ -165,10 +160,6 @@ DTRACE;
          printf("%d seconds\n", (int) lGetUlong(job, JB_checkpoint_interval));
       }
 
-   if (lGetPosViaElem(job, JB_cell)>=0)
-      if (lGetString(job, JB_cell))
-         printf("cell:                       %s\n", lGetString(job, JB_cell));
-
    if (lGetPosViaElem(job, JB_cwd)>=0) {
       if (lGetString(job, JB_cwd))
          printf("cwd:                        %s\n", lGetString(job, JB_cwd));
@@ -197,10 +188,6 @@ DTRACE;
          uni_print_list(stdout, NULL, 0, lGetList(job, JB_stderr_path_list), fields, 
             delis, FLG_NO_DELIS_STRINGS);
       }
-
-   if (lGetPosViaElem(job, JB_full_listing)>=0)
-      if (lGetUlong(job, JB_full_listing))
-         printf("full_listing:               %s\n", "-f");
 
    if (lGetPosViaElem(job, JB_merge_stderr)>=0)
       if (lGetUlong(job, JB_merge_stderr)) {
@@ -286,20 +273,12 @@ DTRACE;
             fields, delis, FLG_NO_DELIS_STRINGS);
       }
 
-   if (lGetPosViaElem(job, JB_reauth_time)>=0)
-      if (lGetUlong(job, JB_reauth_time))
-         printf("reauth_time:                %d\n", (int) lGetUlong(job, JB_reauth_time));
-
    if (lGetPosViaElem(job, JB_restart)>=0)
       if (lGetUlong(job, JB_restart)) {
          printf("restart:                    ");
          sge_show_y_n((lGetUlong(job, JB_restart)==2)?0:1, SGE_STDOUT);
          printf("\n");
       }
-
-   if (lGetPosViaElem(job, JB_signal)>=0)
-      if (lGetUlong(job, JB_signal))
-         printf("signal:                     %d\n", (int) lGetUlong(job, JB_signal));
 
    if (lGetPosViaElem(job, JB_shell_list)>=0)
       if (lGetList(job, JB_shell_list)) {
@@ -363,10 +342,6 @@ DTRACE;
             fields, delis, 0);
       }
 
-   if (lGetPosViaElem(job, JB_message)>=0)
-      if (lGetString(job, JB_message))
-         printf("message:                    %s\n", lGetString(job, JB_message));
-
    if (lGetPosViaElem(job, JB_script_size)>=0)
       if (lGetUlong(job, JB_script_size))
          printf("script_size:                "uu32"\n", lGetUlong(job, JB_script_size));
@@ -383,10 +358,6 @@ DTRACE;
       if (lGetString(job, JB_job_source))
          printf("job_source:                 %s\n", lGetString(job, JB_job_source));
 
-   if (lGetPosViaElem(job, JB_ext)>=0)
-      if (lGetUlong(job, JB_ext))
-         printf("ext:                        %s\n", "-ext");
-
    if (lGetPosViaElem(job, JB_pe)>=0)
       if (lGetString(job, JB_pe)) {
          char str[256 + 1];
@@ -395,11 +366,6 @@ DTRACE;
          printf("parallel environment:  %s range: %s\n",
             lGetString(job, JB_pe), str);
       }
-
-   if (lGetPosViaElem(job, JB_scheduling_priority)>=0)
-      if (lGetUlong(job, JB_scheduling_priority))
-         printf("scheduling_priority:        %d\n", 
-            (int) lGetUlong(job, JB_scheduling_priority));
 
    if (lGetPosViaElem(job, JB_jid_predecessor_list)>=0)
       if (lGetList(job, JB_jid_predecessor_list)) {
@@ -421,26 +387,9 @@ DTRACE;
             fields, delis, 0);
       }
 
-   if (lGetPosViaElem(job, JB_pvm_pid)>=0)
-      if (lGetUlong(job, JB_pvm_pid))
-         printf("pvm_pid:                    %d\n", (int) lGetUlong(job, JB_pvm_pid));
-
    if (lGetPosViaElem(job, JB_verify_suitable_queues)>=0)
       if (lGetUlong(job, JB_verify_suitable_queues))
          printf("verify_suitable_queues:     %d\n", (int)lGetUlong(job, JB_verify_suitable_queues));
-
-   if (lGetPosViaElem(job, JB_sig)>=0)
-      if (lGetUlong(job, JB_sig))
-         printf("sig:                        %d\n", (int) lGetUlong(job, JB_sig));
-
-   if (lGetPosViaElem(job, JB_notified)>=0)
-      if (lGetUlong(job, JB_notified))
-         printf("notified:                   %d\n", (int) lGetUlong(job, JB_notified));
-
-   if (lGetPosViaElem(job, JB_reauth_gmt)>=0)
-      if ((ultime = lGetUlong(job, JB_reauth_gmt))) {
-         printf("reauth_gmt:                 %s", ctime((time_t *) &ultime));
-      }
 
    if (lGetPosViaElem(job, JB_soft_wallclock_gmt)>=0)
       if ((ultime = lGetUlong(job, JB_soft_wallclock_gmt))) {
@@ -451,18 +400,6 @@ DTRACE;
       if ((ultime = lGetUlong(job, JB_hard_wallclock_gmt))) {
          printf("hard_wallclock_gmt:         %s", ctime((time_t *) &ultime));
       }
-
-   if (lGetPosViaElem(job, JB_suspend_enable)>=0)
-      if (lGetUlong(job, JB_suspend_enable))
-         printf("suspend_enable:             %d\n", (int) lGetUlong(job, JB_suspend_enable));
-
-   if (lGetPosViaElem(job, JB_soc_xsoc)>=0)
-      if (lGetUlong(job, JB_soc_xsoc))
-         printf("soc_xsoc:                   %d\n", (int) lGetUlong(job, JB_soc_xsoc));
-
-   if (lGetPosViaElem(job, JB_force)>=0)
-      if (lGetUlong(job, JB_force))
-         printf("force:                      %d\n", (int) lGetUlong(job, JB_force));
 
    if (lGetPosViaElem(job, JB_version)>=0)
       if (lGetUlong(job, JB_version))

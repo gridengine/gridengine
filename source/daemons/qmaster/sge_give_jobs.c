@@ -204,7 +204,7 @@ lListElem *hep
          }
 
          /* start with 1 as first consecutive taskid at each node */
-         lSetUlong(jep, JB_task_id_range, 1);
+         lSetUlong(jep, JB_next_pe_task_id, 1);
 
          if (send_job(lGetHost(gdil_ep, JG_qhostname), target, jep, jatep, pe, slave_hep, 0)) {
             ret = -1;   
@@ -218,7 +218,7 @@ lListElem *hep
 
    if (!sent_slaves) {
       /* wait till all slaves are acked */
-      lSetUlong(jep, JB_task_id_range, 0);
+      lSetUlong(jep, JB_next_pe_task_id, 0);
       ret = send_job(rhost, target, jep, jatep, pe, hep, 1);
    }
 

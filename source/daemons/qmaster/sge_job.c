@@ -578,9 +578,6 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       lAddSubUlong(jep, JAT_task_number, 0, JB_ja_template, JAT_Type);
    }
 
-   sprintf(str, "%s/%d", JOB_DIR, (int)job_number);
-   lSetString(jep, JB_job_file, str);
-
    /*
    ** with interactive jobs, JB_exec_file is not set
    */

@@ -1487,9 +1487,6 @@ lListElem *jep
    sprintf(info, WIDTH"%s\n", info, "SGE_O_HOST:", str ? str : ""); 
 #endif
 
-   str = lGetString(jep, JB_cell);
-   sprintf(info, WIDTH"%s\n", info, "Cell:", str ? str : "default"); 
-
 #if 0
    str = lGetString(jep, JB_directive_prefix);
    sprintf(info, WIDTH"%s\n", info, "Directive Prefix:", str ? str : "#$"); 

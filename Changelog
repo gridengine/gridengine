@@ -1,3 +1,8 @@
+JG-2002-04-29-0: Cleanup:   Job object:
+                            - removed unused attributes and corresponging code
+                            - moved JB_end_time to jatask object
+                            - reordered attributes to reflect logical relations
+
 EB-2002-04-29-0: Cleanup:   removed old code/comments/debug code
 
 CR-2002-04-29-0: Testsuite: added sleep in compile_source() procedure to

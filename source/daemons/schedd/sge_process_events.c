@@ -376,7 +376,6 @@ DTRACE;
             JB_job_number, 
             JB_script_file,
             JB_submission_time,
-            JB_end_time, /* x*/
             JB_owner,
             JB_uid,      /* x*/
             JB_group,
@@ -399,7 +398,6 @@ DTRACE;
             JB_master_hard_queue_list,
             JB_pe,
             JB_pe_range,
-            JB_scheduling_priority,
             JB_jid_predecessor_list,
             JB_soft_wallclock_gmt,
             JB_hard_wallclock_gmt,
@@ -697,7 +695,6 @@ int sge_process_all_events(lList *event_list)
             {
                JB_job_number,
                JB_submission_time,
-               JB_end_time,
                JB_uid,
                JB_gid,
                JB_execution_time,
@@ -705,7 +702,6 @@ int sge_process_all_events(lList *event_list)
                JB_checkpoint_interval,
                JB_mail_options, /* may be we want to send mail */
                JB_priority,
-               JB_scheduling_priority,
                JB_soft_wallclock_gmt,
                JB_hard_wallclock_gmt,
                JB_version,

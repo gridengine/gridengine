@@ -42,14 +42,17 @@ extern "C" {
 *     JAT_Type - CULL array task 
 *
 *  ELEMENTS
-*     SGE_ULONG(JAT_task_number)
+*     SGE_ULONG(JAT_task_number) --->  JAT_id
 *        Unique task number assigned during task creation.
 *
-*     SGE_ULONG(JAT_status)
+*     SGE_ULONG(JAT_status) ---> merge status, state and hold
 *        First part of the state (see also JAT_hold, JAT_state)
 *
 *     SGE_ULONG(JAT_start_time)
 *        Tasks start time.
+*
+*     SGE_ULONG(JAT_end_time)
+*        Tasks end time.
 *
 *     SGE_ULONG(JAT_hold) 
 *        Second part of the state (user, operator, system hold) 
@@ -64,19 +67,19 @@ extern "C" {
 *     SGE_LIST(JAT_granted_destin_identifier_list)
 *        Granted destination identifier list (JG_Type)
 *
-*     SGE_STRING(JAT_master_queue)
+*     SGE_STRING(JAT_master_queue) ---> == first element of JAT_granted_destin_identifier_list?
 *        Master queue
 * 
 *     SGE_ULONG(JAT_state)
 *        Third part of state (see also JAT_hold, JAT_status) 
 *
-*     SGE_ULONG(JAT_pvm_ckpt_pid)
+*     SGE_ULONG(JAT_pvm_ckpt_pid) --->  still used? Any reference to PVM?
 *
 *     SGE_ULONG(JAT_pending_signal)
 *
 *     SGE_ULONG(JAT_pending_signal_delivery_time)
 *
-*     SGE_ULONG(JAT_pid)
+*     SGE_ULONG(JAT_pid) ---> move up
 *
 *     SGE_STRING(JAT_osjobid)
 *        SGEEE - Unique id which applies to all os processes started 
@@ -125,16 +128,14 @@ extern "C" {
 *        SGEEE - Job targeted proportion set by schedd. Saved to qmaster.
 *        Not spooled.
 *
-*     SGE_ULONG(JAT_suitable)
+*     SGE_ULONG(JAT_suitable) ---> only for output.
 *        
-*     SGE_LIST(JAT_task_list, JB_Type)
+*     SGE_LIST(JAT_task_list, JB_Type) --> other type: PETask object
 *        Parallel task information (JB_Type). Each of those JB_Type
 *        elements has exact one JAT_Type subelement.
 *
 *     SGE_LIST(JAT_previous_usage_list)
 *
-*     SGE_REF(JAT_reference)
-* 
 *  FUNCTION
 *     JAT_Type elements make only sense in conjunction with JB_Type 
 *     elements.  One element of each type is necessary to hold all 
@@ -173,6 +174,7 @@ enum {
    JAT_task_number = JAT_LOWERBOUND,
    JAT_status,
    JAT_start_time,
+   JAT_end_time,
    JAT_hold,
    JAT_granted_pe,
 
@@ -200,14 +202,14 @@ enum {
    JAT_suitable,
    JAT_task_list,
 
-   JAT_previous_usage_list,
-   JAT_reference
+   JAT_previous_usage_list
 };
 
 SLISTDEF(JAT_Type, Task)
    SGE_KULONGHU(JAT_task_number)
    SGE_RULONG(JAT_status)
    SGE_RULONG(JAT_start_time)
+   SGE_RULONG(JAT_end_time)
    SGE_RULONG(JAT_hold)       
    SGE_XSTRING(JAT_granted_pe)
    SGE_IOBJECT(JAT_granted_pe, PE_Type)
@@ -238,13 +240,13 @@ SLISTDEF(JAT_Type, Task)
    SGE_XLIST(JAT_task_list, JB_Type)
 
    SGE_LIST(JAT_previous_usage_list)
-   SGE_REF(JAT_reference)
 LISTEND 
 
 NAMEDEF(JATN)
    NAME("JAT_task_number")
    NAME("JAT_status")
    NAME("JAT_start_time")
+   NAME("JAT_end_time")
    NAME("JAT_hold")
    NAME("JAT_granted_pe")
    NAME("JAT_job_restarted")

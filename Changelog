@@ -1,3 +1,14 @@
+CR-2004-06-18-1: Testsuite: - new check for CR-2004-06-18-0 ( issues 1096 and 1098)
+                            - new configuration parameter: reserved_port
+                            - fixed testsuite problem on shutdown of multi threaded 
+                              qmaster process(es!) on linux systems.
+
+CR-2004-06-18-0: Bugfix:    o sge_qmaster will not start unless run only as "root"
+                            o qmaster cannot bind port below 1024 on Linux
+                 Changed:   qmaster
+                 Issue:     1096, 1098
+                 Bugtraq:   5063987
+
 DT-2004-06-17-0: Bugfix:    o Fixed bad link in DRMAA howto (again)
                             o Added copyright placeholders to Java source files
                             o Renamed DRMAA Java binding README

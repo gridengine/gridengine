@@ -5794,8 +5794,9 @@ proc shutdown_scheduler {hostname qmaster_spool_dir} {
    if { ($ps_info($scheduler_pid,error) == 0) } {
       if { [ is_pid_with_name_existing $hostname $scheduler_pid "sge_schedd" ] == 0 } { 
          puts $CHECK_OUTPUT "killing schedd with pid $scheduler_pid on host $hostname"
-
+         puts $CHECK_OUTPUT "do a qconf -ks ..."
          catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ks" } result
+         puts $CHECK_OUTPUT $result
          sleep 2
          shutdown_system_daemon $hostname sched
 
@@ -5952,12 +5953,12 @@ proc shutdown_qmaster {hostname qmaster_spool_dir} {
       if { [ is_pid_with_name_existing $hostname $qmaster_pid "sge_qmaster" ] == 0 } { 
 
          puts $CHECK_OUTPUT "killing qmaster with pid $qmaster_pid on host $hostname"
+         puts $CHECK_OUTPUT "do a qconf -km ..."
 
          catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-km" } result
+         puts $CHECK_OUTPUT $result
          sleep 10
-
          shutdown_system_daemon $hostname qmaster
-
       } else {
          add_proc_error "shutdown_qmaster" "-1" "qmaster pid $qmaster_pid not found"
          set qmaster_pid -1
@@ -6152,13 +6153,16 @@ global CHECK_ADMIN_USER_SYSTEM
    }
 
    set found_p [ ps_grep "$ts_config(product_root)/" $host ]
+   set nr_of_found_qmaster_processes_or_threads 0
 
    foreach process_name $process_names {
 
       puts $CHECK_OUTPUT "looking for \"$process_name\" processes on host $host ..."
       foreach elem $found_p {
          if { [ string first $process_name $ps_info(string,$elem) ] >= 0 } {
+            puts $CHECK_OUTPUT "actuel ps info: $ps_info(string,$elem)"
             if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
+               incr nr_of_found_qmaster_processes_or_threads 1
                puts $CHECK_OUTPUT "found running $process_name with pid $ps_info(pid,$elem) on host $host"
                puts $CHECK_OUTPUT $ps_info(string,$elem)
                if { [ have_root_passwd ] == -1 } {
@@ -6186,8 +6190,10 @@ global CHECK_ADMIN_USER_SYSTEM
                    puts $CHECK_OUTPUT "pid:$ps_info(pid,$elem) process killed (host: $host)"
                }
             } else {
-               puts $CHECK_OUTPUT "checkprog error"
-               add_proc_error "" -3 "could not shutdown \"$process_name\" on host $host"
+               if { $nr_of_found_qmaster_processes_or_threads == 0 } {
+                  puts $CHECK_OUTPUT "checkprog error"
+                  add_proc_error "" -3 "could not shutdown \"$process_name\" on host $host"
+               }
             }
          }
       }

@@ -924,10 +924,10 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
                trigger_write = CL_TRUE;
                elem->connection->connection_sub_state = CL_COM_SENDING_CCM;
             }
-            CL_LOG_STR(CL_LOG_ERROR,"wait for connection removal, current state is", 
+            CL_LOG_STR(CL_LOG_INFO,"wait for connection removal, current state is", 
                        cl_com_get_connection_state(elem->connection));
             if ( ignore_timeout == CL_TRUE ) {
-               CL_LOG(CL_LOG_WARNING,"we are connected, don't ignore timeouts");
+               CL_LOG(CL_LOG_INFO,"we are connected, don't ignore timeouts");
                ignore_timeout = CL_FALSE;
             }
          }

@@ -1884,6 +1884,95 @@ proc config_commd_port { only_check name config_array } {
    return $value
 }
 
+#****** config/config_reserved_port() **********************************************
+#  NAME
+#     config_reserved_port() -- reserved option setup
+#
+#  SYNOPSIS
+#     config_reserved_port { only_check name config_array } 
+#  FUNCTION
+#     Testsuite configuration setup - called from verify_config()
+#
+#  INPUTS
+#     only_check   - 0: expect user input
+#                    1: just verify user input
+#     name         - option name (in ts_config array)
+#     config_array - config array name (ts_config)
+#
+#  SEE ALSO
+#     check/setup2()
+#     check/verify_config()
+#
+#*******************************************************************************
+proc config_reserved_port { only_check name config_array } {
+   global CHECK_OUTPUT 
+   global CHECK_COMMD_PORT
+   global CHECK_USER
+   global ts_user_config
+
+   upvar $config_array config
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+   set value $actual_value
+
+   if { $actual_value == "" } {
+
+      if { [ info exists ts_user_config($CHECK_USER,portlist) ] } {
+         for {set i 0} { $i < [llength $ts_user_config($CHECK_USER,portlist)] } { incr i 1 } {
+            set act_tmp_value [ lindex $ts_user_config($CHECK_USER,portlist) $i ]
+            if { $act_tmp_value < 1024 } {
+               set value $act_tmp_value
+               break
+            }
+         }
+      } else {
+         set value $default_value
+      }
+   }
+
+   if { $only_check == 0 } {
+#     # do setup  
+      puts $CHECK_OUTPUT "" 
+      puts $CHECK_OUTPUT "Please enter an unused port number < 1024. This port is used to test"
+      puts $CHECK_OUTPUT "port binding." 
+      puts $CHECK_OUTPUT "or press >RETURN< to use the default value."
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT "(default: $value)"
+      set ok 0
+      while { $ok == 0 } {
+         puts -nonewline $CHECK_OUTPUT "> "
+         set input [ wait_for_enter 1]
+      
+         if { [ string length $input] > 0 } {
+            if { [ expr ( $input % 2 ) ] == 0  } {
+               set value $input
+               set ok 1
+            } else {
+               puts $CHECK_OUTPUT "value is not even"
+               set ok 0
+            }
+         } else {
+            puts $CHECK_OUTPUT "using default value"
+            set ok 1
+         }
+      }
+   } 
+
+   if { $value <= 1  } {
+      puts $CHECK_OUTPUT "Port $value is <= 1"
+      return -1;
+   }
+
+   if { $value >= 1024 } {
+      puts $CHECK_OUTPUT "Port $value is >= 1024"
+      return -1;
+   }
+
+   return $value
+}
+
+
 #****** config/config_product_root() ********************************************
 #  NAME
 #     config_product_root() -- product root setup
@@ -3746,6 +3835,7 @@ proc config_build_ts_config {} {
    set ts_config($parameter,onchange)   ""
    set ts_config($parameter,pos)        $ts_pos
    incr ts_pos 1
+
 }
 
 proc config_build_ts_config_1_1 {} {
@@ -3923,13 +4013,42 @@ proc config_build_ts_config_1_6 {} {
    set ts_config($parameter,onchange)   "stop"
    set ts_config($parameter,pos)        $insert_pos
 
-   # now we have a configuration version 1.5
+   # now we have a configuration version 1.6
    set ts_config(version) "1.6"
 }
+proc config_build_ts_config_1_7 {} {
+   global ts_config
+
+   # insert new parameter after product_feature parameter
+   set insert_pos $ts_config(commd_port,pos)
+   incr insert_pos 1
+
+   # move positions of following parameters
+   set names [array names ts_config "*,pos"]
+   foreach name $names {
+      if { $ts_config($name) >= $insert_pos } {
+         set ts_config($name) [ expr ( $ts_config($name) + 1 ) ]
+      }
+   }
+
+   # new parameter reserved port
+   set parameter "reserved_port"
+   set ts_config($parameter)            ""
+   set ts_config($parameter,desc)       "Port < 1024 to test root bind() of this port"
+   set ts_config($parameter,default)    ""
+   set ts_config($parameter,setup_func) "config_reserved_port"
+   set ts_config($parameter,onchange)   ""
+   set ts_config($parameter,pos)        $insert_pos
+
+   # now we have a configuration version 1.7
+   set ts_config(version) "1.7"
+}
+  
+
 
 # MAIN
 global actual_ts_config_version      ;# actual config version number
-set actual_ts_config_version "1.6"
+set actual_ts_config_version "1.7"
 
 # first source of config.tcl: create ts_config
 if {![info exists ts_config]} {
@@ -3940,5 +4059,6 @@ if {![info exists ts_config]} {
    config_build_ts_config_1_4
    config_build_ts_config_1_5
    config_build_ts_config_1_6
+   config_build_ts_config_1_7
 }
 

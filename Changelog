@@ -1,3 +1,10 @@
+EB-2004-12-22-0: Bigfix:    The qstat -ext -xml command is broken with
+                            N1GE6 Update 2 patch
+                 Changed:   qstat
+                 Issue:     1401
+                 Bugtraq:   6211243
+                 Review:    JG
+
 MD-2004-12-22-0: Bugfix:    uninstall of exec host doesn't work
                  Issue:     1392
                  Bugtraq:   6211725

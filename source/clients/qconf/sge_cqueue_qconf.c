@@ -30,6 +30,7 @@
  ************************************************************************/
 
 #include <fnmatch.h>
+#include <string.h>
 
 #include "sge.h"
 #include "sgermon.h"
@@ -37,10 +38,13 @@
 #include "sge_log.h"
 #include "sge_gdi.h"
 #include "sge_unistd.h"
+#include "sge_string.h"
 #include "sge_hostname.h"
 
+#include "sge_attr.h"
 #include "sge_answer.h"
 #include "sge_cqueue.h"
+#include "sge_feature.h"
 #include "sge_object.h"
 #include "sge_qinstance.h"
 #include "sge_hgroup.h"
@@ -205,6 +209,68 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
       }
       multi_answer_list = lFreeList(multi_answer_list);
       cqueue_where = lFreeWhere(cqueue_where);
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+cqueue_hgroup_get_all_via_gdi(lList **answer_list,
+                              lList **hgrp_list, lList **cq_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "cqueue_hgroup_get_all_via_gdi");
+   if (hgrp_list != NULL && cq_list != NULL) {
+      state_gdi_multi state = STATE_GDI_MULTI_INIT;
+      lEnumeration *hgrp_what = NULL; 
+      lEnumeration *cqueue_what = NULL;
+      int hgrp_id = 0; 
+      int cq_id = 0;
+      lList *local_answer_list = NULL;
+      lList *multi_answer_list = NULL;
+
+      /* HGRP */
+      hgrp_what = lWhat("%T(ALL)", HGRP_Type);
+      hgrp_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST,
+                              SGE_GDI_GET, NULL, NULL, hgrp_what, NULL, &state);
+      hgrp_what = lFreeWhat(hgrp_what);
+
+      /* CQ */
+      cqueue_what = lWhat("%T(ALL)", CQ_Type);
+      cq_id = sge_gdi_multi(answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
+                            SGE_GDI_GET, NULL, NULL, cqueue_what,
+                            &multi_answer_list, &state);
+      cqueue_what = lFreeWhat(cqueue_what);
+
+      /* HGRP */
+      local_answer_list = sge_gdi_extract_answer(SGE_GDI_GET,
+                      SGE_HGROUP_LIST, hgrp_id, multi_answer_list, hgrp_list);
+      if (local_answer_list != NULL) {
+         lListElem *answer = lFirst(local_answer_list);
+
+         if (lGetUlong(answer, AN_status) != STATUS_OK) {
+            lDechainElem(local_answer_list, answer);
+            answer_list_add_elem(answer_list, answer);
+            ret = false;
+         }
+      }
+      local_answer_list = lFreeList(local_answer_list);
+      
+      /* CQ */   
+      local_answer_list = sge_gdi_extract_answer(SGE_GDI_GET, 
+                   SGE_CQUEUE_LIST, cq_id, multi_answer_list, cq_list);
+      if (local_answer_list != NULL) {
+         lListElem *answer = lFirst(local_answer_list);
+
+         if (lGetUlong(answer, AN_status) != STATUS_OK) {
+            lDechainElem(local_answer_list, answer);
+            answer_list_add_elem(answer_list, answer);
+            ret = false;
+         }
+      } 
+      local_answer_list = lFreeList(local_answer_list);
+      multi_answer_list = lFreeList(multi_answer_list);
    }
    DEXIT;
    return ret;
@@ -519,6 +585,139 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
       ret &= cqueue_set_template_attributes(cqueue, answer_list);
       write_cqueue(0, 0, cqueue);
    }
+   DEXIT;
+   return ret;
+}
+
+bool 
+cqueue_list_sick(lList **answer_list)
+{
+   bool ret = true;
+   lList *hgroup_list = NULL;
+   lList *cqueue_list = NULL;
+   bool local_ret;
+
+   DENTER(TOP_LAYER, "cqueue_sick");
+
+   local_ret = cqueue_hgroup_get_all_via_gdi(answer_list, 
+                                             &hgroup_list, &cqueue_list);
+   if (local_ret) {
+      lListElem *cqueue = NULL;
+
+      for_each(cqueue, cqueue_list) {
+         cqueue_sick(cqueue, answer_list, hgroup_list);
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+cqueue_sick(lListElem *cqueue, lList **answer_list, lList *master_hgroup_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "cqueue_sick");
+
+   /*
+    * Warn about:
+    *    - unused setting for attributes
+    *    - hgroup settings were not all hosts are contained in hostlist
+    */
+   {
+      const char *cqueue_name = lGetString(cqueue, CQ_name);
+      lList *used_hosts = NULL;
+      lList *used_groups = NULL;
+      lList **answer_list = NULL;
+      int index;
+      
+      /*
+       * resolve href list of cqueue
+       */
+      href_list_find_all_references(lGetList(cqueue, CQ_hostlist), answer_list,
+                                    master_hgroup_list, &used_hosts,
+                                    &used_groups);
+
+      index = 0;
+      while (cqueue_attribute_array[index].cqueue_attr != NoName) {
+         /*
+          * Skip geee attributes in ge mode
+          */
+         if (cqueue_attribute_array[index].is_sgeee_attribute == false ||
+             feature_is_enabled(FEATURE_SGEEE)) {
+            lList *attr_list = lGetList(cqueue,
+                                    cqueue_attribute_array[index].cqueue_attr);
+            lListElem *next_attr = lFirst(attr_list);
+            lListElem *attr = NULL;
+
+            /*
+             * Test each attribute setting if it is really used in the
+             * current configuration
+             */
+            while((attr = next_attr) != NULL) { 
+               const char *name = lGetHost(attr, 
+                                      cqueue_attribute_array[index].href_attr);
+
+               next_attr = lNext(attr);
+               if (is_hgroup_name(name)) {
+                  if (strcmp(name, HOSTREF_DEFAULT)) {
+                     lListElem *hgroup = NULL;
+                     lList *used_hgroup_hosts = NULL;
+                     lList *used_hgroup_groups = NULL;
+                     lList *add_hosts = NULL;
+                     lList *equity_hosts = NULL;
+
+                     hgroup = hgroup_list_locate(master_hgroup_list, name);
+               
+                     /*
+                      * hgroup specific setting:
+                      *    make sure each host of hgroup is part of 
+                      *    resolved list
+                      */
+                     hgroup_find_all_references(hgroup, answer_list, 
+                                                master_hgroup_list, 
+                                                &used_hgroup_hosts,
+                                                &used_hgroup_groups);
+                     href_list_compare(used_hgroup_hosts, answer_list,
+                                       used_hosts, &add_hosts, NULL,
+                                       &equity_hosts, NULL);
+
+
+
+                     if (lGetNumberOfElem(add_hosts)) {
+                        printf("default value of "SFQ" is overwritten for "
+                                "hostgroup "SFQ" in queue "SFQ". Not all "
+                                "hosts of "SFQ" are contained in the hostlist "
+                                "specification of queue "SFQ".\n",
+                                cqueue_attribute_array[index].name,
+                                name, cqueue_name, name, cqueue_name);
+                     }
+  
+                     add_hosts = lFreeList(add_hosts);
+                     equity_hosts = lFreeList(equity_hosts); 
+                     used_hgroup_hosts = lFreeList(used_hgroup_hosts);
+                     used_hgroup_groups = lFreeList(used_hgroup_groups);
+                  }
+               } else {
+                  /*
+                   * host specific setting:
+                   *    make sure the host is contained in resolved list 
+                   */ 
+                  if (!href_list_has_member(used_hosts, name)) {
+                     printf("unused setting for attribute "SFQ
+                            " and host "SFQ" in queue "SFQ".\n",
+                            cqueue_attribute_array[index].name,
+                            name, cqueue_name);
+                  }
+               }
+            }
+         }
+         index++;
+      }
+      used_hosts = lFreeList(used_hosts);
+      used_groups = lFreeList(used_groups);
+   }
+   
    DEXIT;
    return ret;
 }

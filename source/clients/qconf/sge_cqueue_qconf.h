@@ -40,6 +40,10 @@ bool
 cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
                           lList **hgrp_list, lList **cq_list);
 
+bool
+cqueue_hgroup_get_all_via_gdi(lList **answer_list, 
+                              lList **hgrp_list, lList **cq_list);
+
 bool 
 cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
                            u_long32 gdi_command);
@@ -65,5 +69,11 @@ cqueue_add_from_file(lList **answer_list, const char *filename);
 
 bool 
 cqueue_modify_from_file(lList **answer_list, const char *filename);
+
+bool
+cqueue_list_sick(lList **answer_list);
+
+bool
+cqueue_sick(lListElem *cqueue, lList **answer_list, lList *hgroup_list);
 
 #endif /* __SGE_CQUEUE_QCONF */

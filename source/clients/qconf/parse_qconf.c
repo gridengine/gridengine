@@ -4291,6 +4291,15 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 
+      if (!strcmp("-sick", *spp)) {
+         lList *answer_list = NULL;
+
+         cqueue_list_sick(&answer_list);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+
 
 /*----------------------------------------------------------------------------*/
 

@@ -1461,6 +1461,14 @@ DTRACE;
             return answer;
          }
 
+         range_list_sort_uniq_compress(task_id_range_list, &answer);
+         if (lGetNumberOfElem(task_id_range_list) > 1) {
+            answer_list_add(&answer, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, 0);
+            DEXIT;
+            return answer;
+         }
+
+
          ep_opt = sge_add_arg(pcmdline, t_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, task_id_range_list);
 

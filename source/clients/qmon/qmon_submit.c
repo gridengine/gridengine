@@ -2030,7 +2030,16 @@ int save
          qmonMessageBox(qmon_submit, alp, 0);
          alp = lFreeList(alp);
          return False;
-      }   
+      }  
+      range_list_sort_uniq_compress(range_list, &alp);
+      if (lGetNumberOfElem(range_list) > 1) {
+         answer_list_add(&alp, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, 0);
+         qmonMessageBox(qmon_submit, alp, 0);
+         alp = lFreeList(alp);
+         return False; 
+      }
+ 
+ 
         
       /* initialize JB_ja_structure */
       if (range_list == NULL) {

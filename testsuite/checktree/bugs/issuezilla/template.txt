@@ -1,0 +1,6 @@
+Issue:      <number, e.g. 799>
+Synopsis:   <text, e.g. qsub -t Ignore Negative Step>
+
+This bug is verified in the following testsuite check:
+Check:      <path, e.g. system_tests/clients/qsub>
+Function:   <check function, e.g. check_option_t>

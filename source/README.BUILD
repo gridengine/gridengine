@@ -269,12 +269,6 @@ Content
    hosts for a first time configuration and startup of your Grid engine
    daemons.
 
-   See the file
-
-      dist/README.inst_sge
-
-   for an overview on what "inst_sge" does.
-
 
 9) Copyright
 ------------

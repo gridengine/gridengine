@@ -381,9 +381,10 @@ proc init_ps {} {
          set cmd_ps(schedd) "ps lhp $schedd_pid  | awk '{print \$7}'"
          set size_unit kB
       }
-      glinux {
-         set cmd_ps(master) "ps -p $qmaster_pid -h -o vsz"
-         set cmd_ps(schedd) "ps -p $schedd_pid -h -o vsz"
+      "glinux" - 
+      "lx24-amd64" {
+         set cmd_ps(master) "ps -p $qmaster_pid --no-heading -o vsz"
+         set cmd_ps(schedd) "ps -p $schedd_pid --no-heading -o vsz"
          set size_unit kB
       }
       "hp10" - 

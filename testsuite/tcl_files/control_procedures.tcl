@@ -583,7 +583,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       }
  
       
-      "glinux"    { 
+      "glinux" -
+      "lx24-amd64" { 
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-weo \"pid pgid ppid uid s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
          set index_names "  PID  PGID  PPID   UID S STIME   VSZ     TIME COMMAND"

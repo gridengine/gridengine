@@ -84,6 +84,7 @@
 /* profiling info */
 extern int scheduled_fast_jobs;
 extern int scheduled_complex_jobs;
+extern int do_profiling;
 
 /* the global list descriptor for all lists needed by the default scheduler */
 sge_Sdescr_t lists =
@@ -475,7 +476,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
                     *(splitted_job_lists[SPLIT_PENDING]),
                     orderlist);     
 
-      if (profile_schedd) {
+      if (do_profiling) {
          clock_t now = times(&tms_buffer);
          extern u_long32 logginglevel;
          u_long32 saved_logginglevel = logginglevel;
@@ -516,7 +517,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          return -1;
       }
 
-      if (profile_schedd) {
+      if (do_profiling) {
          clock_t now = times(&tms_buffer);
          extern u_long32 logginglevel;
          u_long32 saved_logginglevel = logginglevel;
@@ -553,7 +554,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
       sgeee_sort_jobs(splitted_job_lists[SPLIT_PENDING]);
 
-      if (profile_schedd) {
+      if (do_profiling) {
          clock_t now = times(&tms_buffer);
          extern u_long32 logginglevel;
          u_long32 saved_logginglevel = logginglevel;
@@ -907,7 +908,7 @@ SKIP_THIS_JOB:
       }
    } /* end of while */
 
-   if (sgeee_mode && profile_schedd) {
+   if (sgeee_mode && do_profiling) {
       clock_t now = times(&tms_buffer);
       extern u_long32 logginglevel;
       u_long32 saved_logginglevel = logginglevel;

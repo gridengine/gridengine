@@ -61,6 +61,12 @@ void usage(void)
   fprintf(stderr, "   -i    : set ping interval time\n");
   fprintf(stderr, "   -info : show full status information and exit\n");
   fprintf(stderr, "   -f    : show full status information on each ping interval\n");
+  fprintf(stderr, "   host  : host name of running component\n");
+  fprintf(stderr, "   port  : port number of running component\n");
+  fprintf(stderr, "   name  : name of running component (e.g.: \"qmaster\" or \"execd\")\n");
+  fprintf(stderr, "   id    : id of running component (e.g.: 1 for daemons)\n\n");
+
+  fprintf(stderr, "example:\nqping -info clustermaster 5000 qmaster 1\n");
   exit(1);
 }
 

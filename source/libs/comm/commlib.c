@@ -1620,9 +1620,9 @@ int buflen
                          sleep(1); 
                          continue;
 /*                     }  */
-                     closeconnection(1);
+/*                     closeconnection(1);
                      DEXIT;
-                     return CL_CONNECT;
+                     return CL_CONNECT; */
                   }
 
                   connected_flag = 1;

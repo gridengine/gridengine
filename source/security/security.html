@@ -1,0 +1,206 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta http-equiv="CONTENT-TYPE" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.76C-CCK-MCD Netscape [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+   <meta name="CREATED" content="20010611;10370600">
+   <meta name="CHANGEDBY" content="Andre Alefeld">
+   <meta name="CHANGED" content="20010611;11590200">
+</head>
+<body>
+
+<h2>
+<b><font color="#990000">SECURITY</font></b></h2>
+<font color="#000000">In default mode Grid Engine is installed without
+any additional security measures.&nbsp; The assumption is made that the
+Grid Engine cluster is not exposed to any malicious attacks.</font>
+<br><font color="#000000">The hosts that belong to the Grid Engine cluster
+are classified into four categories, where a host can belong to more than
+one of them:</font>
+<ul>
+<li>
+<font color="#000000">master host</font></li>
+
+<br><font color="#000000">Here runs the Grid Engine master daemon sge_qmaster.</font>
+<li>
+<font color="#000000">execution hosts</font></li>
+
+<br><font color="#000000">Here run the Grid Engine execution daemons sge_execd.
+These nodes are allowed to execute Grid Engine jobs.</font>
+<li>
+<font color="#000000">administrative hosts</font></li>
+
+<br><font color="#000000">Administrative tasks like the granting of permissions
+and the maintanence of resources are only allowed from these hosts.</font>
+<li>
+<font color="#000000">submit hosts</font></li>
+
+<br><font color="#000000">Submit hosts allow for submitting and controlling
+batch jobs.</font></ul>
+<font color="#000000">Apart from the host based access restrictions the
+users are classified into the categories:</font>
+<ul>
+<li>
+<font color="#000000">managers</font></li>
+
+<br><font color="#000000">They have full capabilities to manipulate Grid
+Engine.</font>
+<li>
+<font color="#000000">operators</font></li>
+
+<br><font color="#000000">They can perform the same commands as managers
+apart from adding/deleting/modifying queues.</font>
+<li>
+<font color="#000000">owners</font></li>
+
+<br><font color="#000000">They can suspend/unsuspend or enable/disable
+the queues they are registered as owners.</font>
+<li>
+<font color="#000000">users</font></li>
+
+<br><font color="#000000">They must have a valid login on at least one
+submit and one execution host. Their access can be limited to a subset
+of them by installing access lists.</font></ul>
+<font color="#000000">These mechanisms rely on the assumption that the
+user is who he claims to be and the host is the host that it claims to
+be and that this information can be trusted.</font>
+<br><font color="#000000">To enhance the security standard there exist
+currently three approaches:</font>
+<ul>
+<li>
+<font color="#000000"><a href="#Enhanced Security Using Reserved Ports">Grid
+Engine using reserved ports</a></font></li>
+
+<li>
+<font color="#000000"><a href="#Enhanced Security Using Kerberos/DCE Authentication">Grid
+Engine version using Kerberos/DCE authentication</a></font></li>
+
+<li>
+<font color="#000000"><a href="#Enhanced Security Using Kerberos">Grid
+Engine version using Kerberos</a></font></li>
+
+<li>
+<font color="#000000"><a href="#Enhanced Security Using OpenSSL">Grid Engine
+version using SSL&nbsp; (work in progress)</a></font></li>
+</ul>
+<a NAME="Enhanced Security Using Reserved Ports"></a><font color="#990000">Enhanced
+Security Using Reserved Ports</font>
+<p><font color="#000000">The simplest security mechanism is the communication
+between Grid Engine components over reserved ports. So any client who is
+not communicating</font>
+<br><font color="#000000">from a priviledged port number is rejected. The
+mechanism used is very similar to the authentication mechanism known from
+rsh/rlogin command suite.</font>
+<br><font color="#000000">To make use of this security mechanism the following
+steps are necessary:</font>
+<ul>
+<li>
+<font color="#000000">the shared Grid Engine installation directory must
+be exported setuid root</font></li>
+</ul>
+
+<ul>
+<li>
+<font color="#000000">the installation is performed as root with './inst_sge
+-m -resport' for qmaster and './inst_sge -x -resport' for execd</font></li>
+
+<br><font color="#000000">The client binaries are installed setuid root
+to be able to connect to Grid Engine from reserved ports.</font></ul>
+<font color="#000000">What can you expect ?</font>
+<p><font color="#000000">The communication over reserved ports assures
+that only messages that are send from a port in the range 0-1023 are accepted.
+This means that only</font>
+<br><font color="#000000">a program that has been setuid root can send
+such messages. So it can be assured that the client programs you are using
+are the ones that have been</font>
+<br><font color="#000000">installed by the Grid Engine administrator.</font>
+<br><font color="#000000">This implies that the following criteria must
+be valid:</font>
+<ul>
+<li>
+<font color="#000000">there is no possibility to replace a host in the
+network by another machine e.g. a Linux laptop where the intruder can install
+its</font></li>
+
+<br><font color="#000000">own version of Grid Engine binaries and setuid
+root them.</font>
+<li>
+<font color="#000000">the Grid Engine executables should not be replaceable
+by someone else than root (this must be checked during installation)</font></li>
+
+<li>
+<font color="#000000">all hosts where root access can be gained are trusted</font></li>
+</ul>
+<font color="#000000">Here are the steps that are performed by a Grid Engine
+command as qsub using reserved ports:</font>
+<ul>
+<li>
+<font color="#000000">qsub is started as setuid root program</font></li>
+
+<li>
+<font color="#000000">qsub changes its effective user id to the users id
+after starting</font></li>
+
+<li>
+<font color="#000000">client specific processing is executed a message
+for qmaster is prepared</font></li>
+
+<li>
+<font color="#000000">change the effective user id to root and get a socket
+file descriptor in the priviledged port space, change back to the user's
+id</font></li>
+
+<li>
+<font color="#000000">send the message to qmaster using the file descriptor
+in the priviledged port space</font></li>
+
+<li>
+<font color="#000000">qmaster receives the message if it has not been send
+from the priviledged port space it will be rejected</font></li>
+
+<li>
+<font color="#000000">check the standard Grid Engine host and user permissions
+and allow or reject the request</font></li>
+
+<li>
+<font color="#000000">qmaster processes the request and sends back any
+answers</font></li>
+</ul>
+<font color="#000000">This applies to any other client command.</font>
+<p><a NAME="Enhanced Security Using Kerberos/DCE Authentication"></a><font color="#990000">Enhanced
+Security Using Kerberos/DCE Authentication</font>
+<p><font color="#000000">Grid Engine can be run in a Kerberos/DCE environment
+using the corresponding authentication mechanisms. A detailed description
+how to integrate Grid Engine in such an enviroment can be found <a href="gss/doc/README.html">here</a>.</font>
+<p><a NAME="Enhanced Security Using Kerberos"></a><font color="#990000">Enhanced
+Security Using Kerberos</font>
+<p>The Grid Engine has been prepared for usage in a Kerberos V environment.
+A former version of Grid Engine (aka Codine/GRD) is in use in a production
+environment with Kerberos support. Although several source code changes
+have been applied to the current version, it should be easy to integrate
+Grid Engine into a Kerberos V environment. A description of the integration
+tasks and setup instructions can be found in the following documents:
+<ul>
+<li>
+<a href="krb/doc/ReleaseNotes.html">Release&nbsp;Notes</a></li>
+
+<li>
+<a href="krb/doc/Implementation.html">Implementation</a></li>
+
+<li>
+<a href="krb/doc/DesignNotes.html">Original Design Notes</a></li>
+</ul>
+
+<p><br><a NAME="Enhanced Security Using OpenSSL"></a><font color="#990000">Enhanced
+Security Using SSL</font>
+<p><font color="#000000">A prototype of Grid Engine supporting SSL has
+been developed in the context of a diploma thesis. Although the original
+work is a bit outdated and needs adaption to the newest SSL libraries,
+it is certainly a good starting point. The original diploma thesis (in
+german) outlining the architecture of this security approach can be found
+<a href="sec/doc/diplomarbeit.ps">here.</a></font>
+<center>
+<p>Copyright 2001 Sun Microsystems, Inc. All rights reserved.</center>
+</body>
+</html>

@@ -146,6 +146,7 @@ usage:
    echo "-debug            -> compile with debug information"
    echo "-f                -> specify other Makefile instead of common/Makefile"
    echo "-gcc              -> use gcc instead of system compiler"
+   echo "-gettext          -> build the gettext libraries"
    echo "-gprof            -> enable gprof profiling"
    echo "-gss              -> enable gss security"
    echo "-help             -> show this help"
@@ -231,7 +232,7 @@ set   CXX         = CC
 set   FC          = f77
 set   LFLAGS      = "-L."
 set   LIBS        = "-lm"
-set   GETTEXTBASE = "$SDIR/3rdparty/gettext"
+set   GETTEXTBASE = "$SOURCE/3rdparty/gettext-0.10.35"
 set   MAKEZLIB    = 0
 set   ZLIBBASE    = ""
 set   PTHRDSFLAGS = ""
@@ -1255,17 +1256,18 @@ endif
 if ( $WITH_GETTEXT == 1 ) then
    set   XGETTEXT    = "$GETTEXTBASE/$BUILDARCH/bin/xgettext --strict --foreign-user -k -k'sge_gettext' --language=C -j -o $MESSAGES"
    if ( "$?MYILIB" ) then
-      set LIBINTL = "$MYILIB"
-      echo "Using $LIBINTL for i18n support"
+      set LFLAGS = "-L $MYILIB"
+      echo "Using $MYILIB path for i18n support"
    else
-      if ( $COMPILE_ARCH == "SOLARIS" || $COMPILE_ARCH == "SOLARIS64" ) then
-         set LIBINTL = ""
-      else
-         set LIBINTL = "$GETTEXTBASE/$BUILDARCH/lib/libintl.a"
-      endif
+#      if ( $COMPILE_ARCH == "SOLARIS" || $COMPILE_ARCH == "SOLARIS64" ) then
+#         set LIBINTL = ""
+#      else
+         set LFLAGS = "-L$GETTEXTBASE/$BUILDARCH/lib $LFLAGS"
+         set LIBINTL = "-lintl -lnlsut"
+#      endif
    endif
    set LIBS = "$LIBINTL $LIBS"
-   set CFLAGS = "$CFLAGS -D__SGE_COMPILE_WITH_GETTEXT__"
+   set CFLAGS = "$CFLAGS -D__SGE_COMPILE_WITH_GETTEXT__ -I$GETTEXTBASE/$BUILDARCH/include"
    set CXXFLAGS = "$CXXFLAGS"
 else
    set XGETTEXT = ""
@@ -1328,14 +1330,17 @@ endif
 if ( "$BUILDGETTEXT" == 1 ) then
    echo ________G_E_T_T_E_X_T___________
 
-   # do it here
-
+   cd $SOURCE/3rdparty/gettext-0.10.35
+   $SOURCE/scripts/install.gridware $COMPILE_ARCH
    if ( $status != 0 ) then
       echo not done
       exit 1
+   else
+      cd $SOURCE
+      echo done
+      exit 0
    endif
 
-   cd $SOURCE
 endif   
 
 

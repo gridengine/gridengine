@@ -32,6 +32,7 @@
 #ifndef WIN32NATIVE
 #	include <unistd.h>
 #	include <sys/time.h>
+#	include <time.h>
 #endif /* WIN32NATIVE */
 #include <sys/types.h>
 #include <sys/stat.h>

@@ -727,9 +727,17 @@ char *err_str
          int slots;
          lList *alp = NULL;
          const char *q_set;
+#ifndef ENABLE_213_FIX
+         lListElem *qep;
+#endif
 
          slots = (int)lGetUlong(gdil_ep, JG_slots);
+#ifdef ENABLE_213_FIX
          q_set = lGetString(gdil_ep, JG_processors);
+#else
+         qep = lFirst(lGetList(gdil_ep, JG_queue));
+         q_set = qep ? lGetString(qep, QU_processors) : NULL;
+#endif
          pe_slots += slots;
          fprintf(fp, "%s %d %s %s\n", 
             lGetHost(gdil_ep, JG_qhostname),

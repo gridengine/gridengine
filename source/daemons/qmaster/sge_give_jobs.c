@@ -369,8 +369,8 @@ int master
       const char *src_qname = lGetString(gdil_ep, JG_qname);
       lListElem *src_qep = lGetElemStr(Master_Queue_List, QU_qname, src_qname);
 
+#ifdef ENABLE_213_FIX /* EB #213 */
       lSetString(gdil_ep, JG_processors, lGetString(src_qep, QU_processors));
-#if ENABLE_213_FIX /* EB #213 */
       /*
        * send only master queue and slave queues which reside on the
        * same hosts as 'rhost'

@@ -709,8 +709,10 @@ enum {
    JG_dticket,
    JG_sticket,
    JG_jcoticket,
-   JG_jcfticket,
-   JG_processors
+   JG_jcfticket
+#ifdef ENABLE_213_FIX /* EB #213 */
+   , JG_processors
+#endif
 };
 
 SLISTDEF( JG_Type, GrantedQueue )
@@ -731,7 +733,9 @@ SLISTDEF( JG_Type, GrantedQueue )
    SGE_RDOUBLE(JG_sticket)   /* SGEEE sharetree tickets assigned to slots    */
    SGE_XDOUBLE(JG_jcoticket) /* SGEEE job class override tickets             */
    SGE_XDOUBLE(JG_jcfticket) /* SGEEE job class functional tickets           */
+#ifdef ENABLE_213_FIX /* EB #213 */
    SGE_STRING(JG_processors) /* processor set id */
+#endif
 LISTEND
 
 NAMEDEF( JGN )
@@ -750,7 +754,9 @@ NAMEDEF( JGN )
    NAME( "JG_sticket" )
    NAME( "JG_jcoticket" )
    NAME( "JG_jcfticket" )
+#ifdef ENABLE_213_FIX /* EB #213 */
    NAME( "JG_processors" )
+#endif
 NAMEEND
 
 /* *INDENT-ON* */

@@ -1,3 +1,7 @@
+EB-2001-07-25-0: (Issue# 5) qmaster - qconf:
+                 - qconf -so|sm does not show comments anymore.
+                 - Comments will only be inserted into spoolfiles.  
+
 CR-2001-07-23-0: Bugfix: qstat -j (Issue#: 2) causes 
                  "operation not implemented for target" error
 

@@ -104,8 +104,10 @@ int target
 
    while (fscanf(fp, "%[^\n]\n", str) == 1) {
       ep = lCreateElem(MO_Type);
-      lSetString(ep, MO_name, str);
-      lAppendElem(*lpp, ep);
+      if (str[0] != COMMENT_CHAR) {
+         lSetString(ep, MO_name, str);
+         lAppendElem(*lpp, ep);
+      }
    }
 
    fclose(fp);
@@ -122,8 +124,13 @@ int target
 
    writes either manager or operator list to disk
 
+   spool:
+      1 write for spooling
+      0 write only user controlled fields
+               
 */
 int write_manop(
+int spool,
 int target 
 ) {
    FILE *fp;
@@ -160,7 +167,7 @@ int target
       return 1;
    }
 
-   if (sge_spoolmsg_write(fp, COMMENT_CHAR,
+   if (spool && sge_spoolmsg_write(fp, COMMENT_CHAR,
              feature_get_product_name(FS_VERSION)) < 0) {
       goto FPRINTF_ERROR;
    }  

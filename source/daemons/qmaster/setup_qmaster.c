@@ -339,7 +339,7 @@ int sge_setup_qmaster()
    if (!lGetElemStr(Master_Manager_List, MO_name, "root")) {
       lAddElemStr(&Master_Manager_List, MO_name, "root", MO_Type);
 
-      if (write_manop(SGE_MANAGER_LIST)) {
+      if (write_manop(1, SGE_MANAGER_LIST)) {
          CRITICAL((SGE_EVENT, MSG_CONFIG_CANTWRITEMANAGERLIST)); 
          return -1;
       }
@@ -360,7 +360,7 @@ int sge_setup_qmaster()
    if (!lGetElemStr(Master_Operator_List, MO_name, "root")) {
       lAddElemStr(&Master_Operator_List, MO_name, "root", MO_Type);
 
-      if (write_manop(SGE_OPERATOR_LIST)) {
+      if (write_manop(1, SGE_OPERATOR_LIST)) {
          CRITICAL((SGE_EVENT, MSG_CONFIG_CANTWRITEOPERATORLIST)); 
          return -1;
       }

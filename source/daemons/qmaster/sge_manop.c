@@ -124,7 +124,7 @@ DTRACE;
    added = lAddElemStr(lpp, MO_name, manop_name, MO_Type);
 
    /* update on file */
-   if (write_manop(target)) {
+   if (write_manop(1, target)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
    
@@ -220,7 +220,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    lDechainElem(*lpp, found);
 
    /* update on file */
-   if (write_manop(target)) {
+   if (write_manop(1, target)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
    

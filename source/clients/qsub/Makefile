@@ -47,12 +47,13 @@ QSUB_OBJS = $(QSUB_SRC:.c=.o)
 
 QSUB_ADD_OBJS = $(QSUB_ADD_SRC:.c=.o) 
 
-QSUB_ADD_LIBS = -ljapi -levc -levm -lgdi -lsgeobj -lsgeobjd -lsched $(SECLIB) $(KRBLIB) \
-                 -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) -lgdi
+QSUB_ADD_LIBS = -ljapi -levc -levm -lgdi -lsgeobj -lsgeobjd -lsched \
+                -lcull -lcomm -lcommlists -luti -llck -lrmon -lgdi \
+                $(SECLIB) $(KRBLIB) $(DLLIB) 
 
-QSUB_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
-                   $(SECLIBS) $(KRBLIBS) \
-                   $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) \
+QSUB_LIB_DEPENDS = $(EVCLIB) $(EVMLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
+                   $(SECLIBS) $(KRBLIBS) $(SCHEDLIB) \
+                   $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) $(UTILIB) $(RMONLIB) \
                    $(TPLIB) $(JAPILIB)
 
 ###############################################################################

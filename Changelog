@@ -1,3 +1,8 @@
+AH-2004-02-20-0: Bugfix:    Made libdrmaa.so again a self-contained library 
+                            that requires no other Grid Engine libraries to
+                            be linked against DRMAA application.
+                            Added DRMAA example to default build rule.
+
 AD-2004-02-20-0: Bugfix:    Generate error message if qmaster is already
                             running.
                  Changed:   qmaster, shadowd, daemons/common

@@ -63,7 +63,8 @@ typedef enum {
 typedef enum {
    EV_BUSY_NO_HANDLING = 0,
    EV_BUSY_UNTIL_ACK,
-   EV_BUSY_UNTIL_RELEASED
+   EV_BUSY_UNTIL_RELEASED,
+   EV_THROTTLE_FLUSH
 } ev_busy_handling;
 
 
@@ -83,8 +84,12 @@ enum {
 
    /* event request description */
    EV_d_time,                /* delivery interval for events */
+   EV_flush_delay,           /* flush delay paramter */
+   /* je kleiner EV_flush_delay eines Event client
+      desto unmittelbarer das Drosseln des Event-flushens */
    EV_subscription,          /* subscription information */
    EV_busy_handling,         /* how to handle busy-states */
+   EV_session,               /* session key to be used for filtering subscribed events */
 
    /* dynamic data */
    EV_last_heard_from,         /* used to trash unheard event clients */
@@ -109,8 +114,10 @@ LISTDEF(EV_Type)
    SGE_ULONG(EV_uid, CULL_DEFAULT)
    
    SGE_ULONG(EV_d_time, CULL_DEFAULT)
+   SGE_ULONG(EV_flush_delay, CULL_DEFAULT)
    SGE_STRING(EV_subscription, CULL_DEFAULT)
    SGE_ULONG(EV_busy_handling, CULL_DEFAULT)
+   SGE_STRING(EV_session, CULL_DEFAULT)
    
    SGE_ULONG(EV_last_heard_from, CULL_DEFAULT)
    SGE_ULONG(EV_last_send_time, CULL_DEFAULT)
@@ -133,8 +140,10 @@ NAMEDEF(EVN)
    NAME("EV_uid")
 
    NAME("EV_d_time")
+   NAME("EV_flush_delay")
    NAME("EV_subscription")
    NAME("EV_busy_handling")
+   NAME("EV_session")
 
    NAME("EV_last_heard_from")
    NAME("EV_last_send_time")
@@ -147,6 +156,9 @@ NAMEDEF(EVN)
 NAMEEND
 
 #define EVS sizeof(EVN)/sizeof(char*)
+
+
+
 
 
 /* documentation see libs/evc/sge_event_client.c */
@@ -273,6 +285,26 @@ typedef enum {
 
    sgeE_EVENTSIZE 
 }ev_event;
+
+#define IS_LIST_EVENT(x) \
+  (((x)==sgeE_ADMINHOST_LIST) || \
+  ((x)==sgeE_CALENDAR_LIST) || \
+  ((x)==sgeE_CKPT_LIST) || \
+  ((x)==sgeE_COMPLEX_LIST) || \
+  ((x)==sgeE_CONFIG_LIST) || \
+  ((x)==sgeE_EXECHOST_LIST) || \
+  ((x)==sgeE_JOB_LIST) || \
+  ((x)==sgeE_JOB_SCHEDD_INFO_LIST) || \
+  ((x)==sgeE_MANAGER_LIST) || \
+  ((x)==sgeE_OPERATOR_LIST) || \
+  ((x)==sgeE_PE_LIST) || \
+  ((x)==sgeE_PROJECT_LIST) || \
+  ((x)==sgeE_QUEUE_LIST) || \
+  ((x)==sgeE_SUBMITHOST_LIST) || \
+  ((x)==sgeE_USER_LIST) || \
+  ((x)==sgeE_USERSET_LIST) || \
+  ((x)==sgeE_HGROUP_LIST))
+
 
 enum {
    ET_number = ET_LOWERBOUND,/* number of the event */

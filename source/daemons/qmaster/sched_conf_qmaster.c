@@ -101,7 +101,7 @@ char *rhost
    lAppendElem(*confl, lCopyElem(confp));
 
    if (!sge_event_spool(alpp, 0, sgeE_SCHED_CONF, 
-                        0, 0, NULL, 
+                        0, 0, NULL, NULL,
                         confp, NULL, NULL, true, true)) {
       answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;

@@ -346,7 +346,7 @@ gdi_object_t *object
 
    DENTER(TOP_LAYER, "complex_success");
 
-   sge_add_event(NULL, 0, old_ep?sgeE_COMPLEX_MOD:sgeE_COMPLEX_ADD, 0, 0, lGetString(ep, CX_name), ep);
+   sge_add_event(NULL, 0, old_ep?sgeE_COMPLEX_MOD:sgeE_COMPLEX_ADD, 0, 0, lGetString(ep, CX_name), NULL, ep);
    lListElem_clear_changed_info(ep);
 
    /* throw away all old actual values lists and rebuild them from scratch */
@@ -450,7 +450,7 @@ char *rhost
 
    /* If this is the qmaster we delete the complex from disk */
    sge_event_spool(alpp, 0, sgeE_COMPLEX_DEL, 
-                   0, 0, cmplxname, 
+                   0, 0, cmplxname, NULL,
                    NULL, NULL, NULL, true, true);
 
    /* change versions of corresponding queues */ 
@@ -489,16 +489,15 @@ const char *cmplx_name
       
       /* event has already been sent in sge_change_queue_version */
       sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                      0, 0, lGetString(ep, QU_qname), 
+                      0, 0, lGetString(ep, QU_qname), NULL,
                       ep, NULL, NULL, false, true);
    }
 
    for_each(ep, Master_Exechost_List) {
       sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
-                      0, 0, lGetHost(ep, EH_name), 
+                      0, 0, lGetHost(ep, EH_name), NULL,
                       ep, NULL, NULL, true, false);
    }
-
    answer_list_output(&answer_list);
 
    DEXIT;

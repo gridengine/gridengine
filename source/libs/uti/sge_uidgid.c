@@ -1002,6 +1002,77 @@ struct passwd *sge_getpwnam(const char *name)
  
    return pw;
 }
+  
+/****** uti/uidgid/sge_getpwnam_r() *******************************************
+*  NAME
+*     sge_getpwnam() -- Return password file entry for certain user 
+*
+*  SYNOPSIS
+*     struct passwd* sge_getpwnam(const char *name) 
+*
+*  FUNCTION
+*     Return password file entry for certain user.
+*      
+*  INPUTS
+*     const char *name - Username 
+*
+*  NOTE
+*     MT-NOTE: sge_getpwnam() is not MT safe; should use getpwname_r() instead
+*
+*  RESULT
+*     struct passwd* - see getpwnam()
+*******************************************************************************/
+#ifdef HAS_GETPWNAM_R
+struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw_struct, char *buffer, int buflen)
+{
+#ifndef WIN32 /* var not needed */
+   int i = MAX_NIS_RETRIES;
+#endif
+   struct passwd *pw;
+ 
+   pw = NULL;
+ 
+#ifndef WIN32 /* getpwnam not called */
+   while (i-- && !pw)
+      if (getpwnam_r(name, pw_struct, buffer, buflen, &pw)!=0)
+         pw = NULL;
+#else
+   {
+      char *pcHome;
+      char *pcEnvHomeDrive;
+      char *pcEnvHomePath;
+ 
+      pcEnvHomeDrive = getenv("HOMEDRIVE");
+      pcEnvHomePath  = getenv("HOMEPATH");
+ 
+      if (!pcEnvHomeDrive || !pcEnvHomePath) {
+         return pw;
+      }
+      pcHome = malloc(strlen(pcEnvHomeDrive) + strlen(pcEnvHomePath) + 1);
+      if (!pcHome) {
+         return NULL;
+      }
+      strcpy(pcHome, pcEnvHomeDrive);
+      strcat(pcHome, pcEnvHomePath);
+ 
+      pw = malloc(sizeof(struct passwd));
+      if (!pw) {
+         return NULL;
+      }
+      memset(pw, 0, sizeof(sizeof(struct passwd)));
+      pw->pw_dir = pcHome;
+ 
+   }
+#endif
+ 
+   /* sometime on failure struct is non NULL but name is empty */
+   if (pw && !pw->pw_name)
+      pw = NULL;
+ 
+   return pw;
+}
+#endif /* HAS_GETPWNAM_R */
+  
 
 bool sge_get_home_dir(dstring *path, const char *user) 
 {

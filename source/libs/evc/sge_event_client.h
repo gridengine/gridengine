@@ -61,8 +61,16 @@ int ec_get_edtime(void);
 bool ec_set_busy_handling(ev_busy_handling handling);
 ev_busy_handling ec_get_busy_handling(void);
 
+bool ec_set_flush_delay(int flush_delay);
+int ec_get_flush_delay(void);
+
 bool ec_set_busy(int busy);
 bool ec_get_busy(void);
+
+bool ec_set_session(const char *session);
+const char *ec_get_session(void);
+
+ev_registration_id ec_get_id(void);
 
 void ec_set_clientdata(u_long32 data);
 u_long32 ec_get_clientdata(void);

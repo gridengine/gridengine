@@ -186,7 +186,7 @@ int sge_del_usermap(lListElem *this_elem, lList **answer_list,
    
          if (cuser != NULL) {
             if (sge_event_spool(answer_list, 0, sgeE_CUSER_DEL,
-                                0, 0, name,
+                                0, 0, name, NULL,
                                 NULL, NULL, NULL, true, true)) {
                lRemoveElem(master_cuser_list, cuser);
 

@@ -168,7 +168,7 @@ int drmaa_get_attribute(drmaa_job_template_t *jt, const char *name, char *value,
  *      MT-NOTE: drmaa_set_vector_attribute() is MT safe
  */
 int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name, 
-      char *value[], char *error_diagnosis, size_t error_diag_len)
+      const char *value[], char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
    if (error_diagnosis) 
@@ -182,7 +182,7 @@ int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name,
  *
  *      MT-NOTE: drmaa_get_vector_attribute() is MT safe
  */
-int drmaa_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa_string_vector_t **values, char *error_diagnosis, size_t error_diag_len)
+int drmaa_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa_attr_values_t **values, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
    if (error_diagnosis) 
@@ -198,7 +198,7 @@ int drmaa_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa
  *
  *      MT-NOTE: drmaa_get_attribute_names() is MT safe
  */
-int drmaa_get_attribute_names(drmaa_string_vector_t **values, char *error_diagnosis, size_t error_diag_len)
+int drmaa_get_attribute_names(drmaa_attr_names_t **values, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
    if (error_diagnosis) 
@@ -213,7 +213,7 @@ int drmaa_get_attribute_names(drmaa_string_vector_t **values, char *error_diagno
  *
  *      MT-NOTE: drmaa_get_vector_attribute_names() is MT safe
  */
-int drmaa_get_vector_attribute_names(drmaa_string_vector_t **values, char *error_diagnosis, size_t error_diag_len)
+int drmaa_get_vector_attribute_names(drmaa_attr_names_t **values, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
    if (error_diagnosis) 
@@ -282,13 +282,13 @@ int drmaa_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, cha
 *  NOTES
 *      MT-NOTE: drmaa_run_bulk_jobs() is MT safe
 *******************************************************************************/
-int drmaa_run_bulk_jobs(drmaa_string_vector_t **jobids, drmaa_job_template_t *jt, 
+int drmaa_run_bulk_jobs(drmaa_job_ids_t **jobids, drmaa_job_template_t *jt, 
       int start, int end, int incr, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
    if (error_diagnosis) 
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
-   return japi_run_bulk_jobs(jobids, jt, start, end, incr, error_diagnosis?&diag:NULL);
+   return japi_run_bulk_jobs((drmaa_attr_values_t **)jobids, jt, start, end, incr, error_diagnosis?&diag:NULL);
 }
 
 /****** DRMAA/drmaa_control() ****************************************************
@@ -356,7 +356,7 @@ int drmaa_control(const char *jobid, int action, char *error_diagnosis, size_t e
 *  NOTES
 *      MT-NOTE: drmaa_synchronize() is MT safe
 *******************************************************************************/
-int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose, char *error_diagnosis, size_t error_diag_len)
+int drmaa_synchronize(const char *job_ids[], signed long timeout, int dispose, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
    if (error_diagnosis) 
@@ -416,7 +416,7 @@ int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose, char *e
 *      MT-NOTE: drmaa_wait() is MT safe
 *******************************************************************************/
 int drmaa_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int *stat, signed long timeout, 
-   drmaa_string_vector_t **rusage, char *error_diagnosis, size_t error_diag_len)
+   drmaa_attr_values_t **rusage, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
    dstring waited_job;
@@ -486,24 +486,38 @@ const char *drmaa_strerror(int drmaa_errno)
    return japi_strerror(drmaa_errno);
 }
 
-int drmaa_string_vector_get_first(drmaa_string_vector_t* values, char *value, int value_len)
-{
-   dstring val;
-   if (value) 
-      sge_dstring_init(&val, value, value_len+1);
-   return japi_string_vector_get_first(values, value?&val:NULL);
-}
-
-int drmaa_string_vector_get_next(drmaa_string_vector_t* values, char *value, int value_len)
+int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int value_len)
 {
    dstring val;
    if (value) 
       sge_dstring_init(&val, value, value_len+1);
    return japi_string_vector_get_next(values, value?&val:NULL);
 }
+int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int value_len)
+{
+   dstring val;
+   if (value) 
+      sge_dstring_init(&val, value, value_len+1);
+   return japi_string_vector_get_next((drmaa_attr_values_t*)values, value?&val:NULL);
+}
+int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, int value_len)
+{
+   dstring val;
+   if (value) 
+      sge_dstring_init(&val, value, value_len+1);
+   return japi_string_vector_get_next((drmaa_attr_values_t*)values, value?&val:NULL);
+}
 
-void drmaa_delete_string_vector(drmaa_string_vector_t* values)
+void drmaa_release_attr_values(drmaa_attr_values_t* values)
 {
    japi_delete_string_vector(values);
+}
+void drmaa_release_attr_names(drmaa_attr_names_t* values)
+{
+   japi_delete_string_vector((drmaa_attr_values_t*)values);
+}
+void drmaa_release_job_ids(drmaa_job_ids_t* values)
+{
+   japi_delete_string_vector((drmaa_attr_values_t*)values);
 }
 

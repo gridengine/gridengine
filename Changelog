@@ -1,3 +1,34 @@
+AH-2003-05-08-0  Enhancem.: Use commd commproc timeout as maximum for event delivery time. 
+                            Introduced EV_THROTTLE_FLUSH "busy handling" to facilitate
+                            large number of JAPI event clients. 
+                            Introduced session key based event filtering to facilitate
+                            large numbers of JAPI event clients.
+                            Added ec_get_id().
+                            Ensure qmaster adds no new event client in case the commproc
+                            registering the event client is already associated with an
+                            event client.
+
+                            Use latest DRMAA C binding.
+                            Introduced sge_getpwnam_r() to fix race condition in 
+                            drmaa_run_job().
+                            Block SIGPIPE in JAPI library.
+                            Introduced intermediate SGE_JAPI_SESSION env var interface
+                            in JAPI library to set JAPI session. 
+                            Introduced SGE_JAPI_EDTIME env var interface in JAPI 
+                            library to set event delivery time.
+                            Introduced SGE_JAPI_FLUSH_DELAY_RATE env var interface in 
+                            JAPI library to set event throttle flush rate.
+                            Use gdi_kill(EVENTCLIENT_KILL) to quicken event client 
+                            thread disengagemnt on drama_exit().
+                            Do a leave_commd() in thread that calls drama_exit()
+                            and in event client thread.
+                            Implemented drmaa_synchronize().
+
+                            Added four drmaa_synchronize() test cases.
+                            Added a test case to verify DRMAA reenrolls transparently
+                            at commd after a commproc timeout in commd.
+                 Review:    TBD
+
 CR-2003-05-08-0  Testsuite: - optimized start_remote_tcl_prog() and execute_func 
                               parameter
 

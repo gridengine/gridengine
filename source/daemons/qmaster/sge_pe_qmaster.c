@@ -213,7 +213,7 @@ gdi_object_t *object
          old_ep ? lGetList(old_ep, PE_queue_list) : NULL, 
          "parallel environment", pe_name);
 
-   sge_add_event(NULL, 0, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, pe_name, ep);
+   sge_add_event(NULL, 0, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, pe_name, NULL, ep);
    lListElem_clear_changed_info(ep);
 
    DEXIT;
@@ -279,7 +279,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    /* remove host file */
    if (!sge_event_spool(alpp, 0, sgeE_PE_DEL,
                         0, 0, pe, 
-                        NULL, NULL, NULL, true, true)) {
+                        NULL, NULL, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, pe));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;

@@ -79,6 +79,10 @@ int sge_add_group(gid_t newgid, char *err_str);
 
 struct passwd *sge_getpwnam(const char *name); 
 
+#ifdef HAS_GETPWNAM_R
+struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw_struct, char *buffer, int buflen);
+#endif
+
 bool sge_get_home_dir(dstring *path, const char *user);
  
 #endif /* __SGE_UIDGID_H */

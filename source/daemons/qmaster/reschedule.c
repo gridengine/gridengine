@@ -620,7 +620,7 @@ lListElem* add_to_reschedule_unknown_list(lListElem *host, u_long32 job_number,
       {
          lList *answer_list = NULL;
          sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
-                         0, 0, lGetHost(host, EH_name), 
+                         0, 0, lGetHost(host, EH_name), NULL,
                          host, NULL, NULL, true, true);
          answer_list_output(&answer_list);
       }
@@ -709,7 +709,7 @@ void delete_from_reschedule_unknown_list(lListElem *host)
             {
                lList *answer_list = NULL;
                sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
-                               0, 0, lGetHost(host, EH_name), 
+                               0, 0, lGetHost(host, EH_name), NULL,
                                host, NULL, NULL, true, true);
                answer_list_output(&answer_list);
             }
@@ -760,7 +760,7 @@ void update_reschedule_unknown_list(lListElem *host)
             {
                lList *answer_list = NULL;
                sge_event_spool(NULL, 0, sgeE_EXECHOST_MOD, 
-                               0, 0, lGetHost(host, EH_name), 
+                               0, 0, lGetHost(host, EH_name), NULL,
                                host, NULL, NULL, true, true);
                answer_list_output(&answer_list);
             }

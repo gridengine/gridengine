@@ -313,6 +313,7 @@ sge_pack_buffer *pb
                        if (new_task) {
                           sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
                                           jobid, jataskid, pe_task_id_str, 
+                                          lGetString(jep, JB_session),
                                           jep, jatep, petask, true, true);
                        } else {
                           /* do not spool usage of pe task (?) */
@@ -491,9 +492,10 @@ sge_pack_buffer *pb
                         lList *answer_list = NULL;
                         petask = lAddSubStr(jatep, PET_id, pe_task_id_str, JAT_task_list, PET_Type);
                         lSetUlong(petask, PET_status, JRUNNING);
+
                         /* finished pe task will not be spooled (?) */
                         sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
-                                        jobid, jataskid, pe_task_id_str, 
+                                        jobid, jataskid, pe_task_id_str, lGetString(jep, JB_session), 
                                         jep, jatep, petask, true, false);
                         answer_list_output(&answer_list);
                      }
@@ -531,7 +533,7 @@ sge_pack_buffer *pb
                               container = pe_task_sum_past_usage_list(lGetList(jatep, JAT_task_list), petask);
                               /* usage container will not be spooled (?) */
                               sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
-                                            jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, 
+                                            jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, lGetString(jep, JB_session),  
                                             jep, jatep, container, true, false);
                               answer_list_output(&answer_list);
                            } else {
@@ -548,7 +550,7 @@ sge_pack_buffer *pb
                         {
                            lList *answer_list = NULL;
                            sge_event_spool(&answer_list, 0, sgeE_PETASK_DEL, 
-                                          jobid, jataskid, pe_task_id_str, 
+                                          jobid, jataskid, pe_task_id_str, NULL,
                                           NULL, NULL, NULL, true, true);
                            answer_list_output(&answer_list);
                         }

@@ -171,6 +171,9 @@ enum {
 *     SGE_LIST(JB_jid_sucessor_list)  
 *        Sucessor jobs (JRE_Type only JRE_job_number)
 *
+*     SGE_STRING(JB_session) 
+*        Jobs session (JAPI session tag for job event selection)  
+*
 *     Project/Department
 *     ==================
 *
@@ -460,6 +463,7 @@ enum {
    JB_version,
    JB_jid_predecessor_list,
    JB_jid_sucessor_list,
+   JB_session,
 
    JB_project,
    JB_department,
@@ -551,6 +555,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_ULONG(JB_version, CULL_DEFAULT)
    SGE_LIST(JB_jid_predecessor_list, JRE_Type, CULL_DEFAULT) 
    SGE_LIST(JB_jid_sucessor_list, JRE_Type, CULL_DEFAULT) 
+   SGE_STRING(JB_session, CULL_DEFAULT) 
 
    SGE_STRING(JB_project, CULL_DEFAULT)             
    SGE_STRING(JB_department, CULL_DEFAULT)  
@@ -688,6 +693,7 @@ NAMEDEF(JBN)
    NAME("JB_version")
    NAME("JB_jid_predecessor_list")
    NAME("JB_jid_sucessor_list")
+   NAME("JB_session")
 
    NAME("JB_project")
    NAME("JB_department")

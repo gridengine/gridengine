@@ -317,7 +317,7 @@ u_long32 target
          {
             lList *answer_list = NULL;
             sge_event_spool(&answer_list, 0, sgeE_ADMINHOST_DEL, 
-                            0, 0, host, 
+                            0, 0, host, NULL,
                             NULL, NULL, NULL, true, true);
             answer_list_output(&answer_list);
          }
@@ -326,7 +326,7 @@ u_long32 target
          {
             lList *answer_list = NULL;
             sge_event_spool(&answer_list, 0, sgeE_EXECHOST_DEL, 
-                            0, 0, host, 
+                            0, 0, host, NULL, 
                             NULL, NULL, NULL, true, true);
             answer_list_output(&answer_list);
          }
@@ -335,7 +335,7 @@ u_long32 target
          {
             lList *answer_list = NULL;
             sge_event_spool(&answer_list, 0, sgeE_SUBMITHOST_DEL, 
-                            0, 0, host, 
+                            0, 0, host, NULL,
                             NULL, NULL, NULL, true, true);
             answer_list_output(&answer_list);
          }
@@ -578,19 +578,18 @@ gdi_object_t *object
          }
 
          sge_change_queue_version_exechost(host);
-         sge_add_event(NULL, 0, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 0, 0, host, ep);
+         sge_add_event(NULL, 0, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 0, 0, host, NULL, ep);
          lListElem_clear_changed_info(ep);
-
       }
       break;
 
       case AH_name:
-         sge_add_event(NULL, 0, old_ep?sgeE_ADMINHOST_MOD:sgeE_ADMINHOST_ADD, 0, 0, lGetHost(ep, AH_name), ep);
+         sge_add_event(NULL, 0, old_ep?sgeE_ADMINHOST_MOD:sgeE_ADMINHOST_ADD, 0, 0, lGetHost(ep, AH_name), NULL, ep);
          lListElem_clear_changed_info(ep);
       break;
 
       case SH_name:
-         sge_add_event(NULL, 0, old_ep?sgeE_SUBMITHOST_MOD:sgeE_SUBMITHOST_ADD, 0, 0, lGetHost(ep, SH_name), ep);
+         sge_add_event(NULL, 0, old_ep?sgeE_SUBMITHOST_MOD:sgeE_SUBMITHOST_ADD, 0, 0, lGetHost(ep, SH_name), NULL, ep);
          lListElem_clear_changed_info(ep);
       break;
    }
@@ -701,7 +700,7 @@ lList *lp
             queue_list_set_unknown_state_to(Master_Queue_List, tmp_hostname, 1, 0);
          }
 
-         sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), *hepp);
+         sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), NULL, *hepp);
 
          added_non_static = 0;
          statics_changed = 0;
@@ -775,7 +774,7 @@ lList *lp
    if (global_ep) {
       lList *answer_list = NULL;
       sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
-                      0, 0, SGE_GLOBAL_NAME,
+                      0, 0, SGE_GLOBAL_NAME, NULL,
                       global_ep, NULL, NULL, true, false);
       answer_list_output(&answer_list);
    }
@@ -787,7 +786,7 @@ lList *lp
    if (host_ep) {
       lList *answer_list = NULL;
       sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
-                      0, 0, lGetHost(host_ep, EH_name), 
+                      0, 0, lGetHost(host_ep, EH_name), NULL,
                       host_ep, NULL, NULL, true, statics_changed);
       answer_list_output(&answer_list);
    }
@@ -1007,7 +1006,7 @@ const char *exechost_name
 
          /* event has already been sent in sge_change_queue_version */
          sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                         0, 0, lGetString(qep, QU_qname), 
+                         0, 0, lGetString(qep, QU_qname), NULL,
                          qep, NULL, NULL, false, true);
          answer_list_output(&answer_list);
       }
@@ -1021,7 +1020,7 @@ const char *exechost_name
 
          /* event has already been sent in sge_change_queue_version */
          sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                         0, 0, lGetString(qep, QU_qname), 
+                         0, 0, lGetString(qep, QU_qname), NULL,
                          qep, NULL, NULL, false, true);
          answer_list_output(&answer_list);
          qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, exechost_name, &iterator); 
@@ -1318,7 +1317,7 @@ u_long32 target) {
 
          /* event has already been sent in sge_change_queue_version */
          sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                         0, 0, lGetString(qep, QU_qname), 
+                         0, 0, lGetString(qep, QU_qname), NULL,
                          qep, NULL, NULL, false, true);
          answer_list_output(&answer_list);
       } 
@@ -1332,7 +1331,7 @@ u_long32 target) {
    ** loop over pseudo hosts and set EH_startup flag
    */
    lSetUlong(hep, EH_startup, 1);
-   sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, rhost, hep);
+   sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, rhost, NULL, hep);
    lListElem_clear_changed_info(hep);
 
    INFO((SGE_EVENT, MSG_LOG_REGISTER_SS, "execd", rhost));

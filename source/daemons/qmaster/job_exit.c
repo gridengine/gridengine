@@ -284,7 +284,7 @@ lListElem *jatep
                /* queueep will be spooled anyway below */
                if (qep != queueep) {
                   sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                                  0, 0, lGetString(qep, QU_qname), 
+                                  0, 0, lGetString(qep, QU_qname), NULL,
                                   qep, NULL, NULL, true, true);
                }
             }
@@ -292,7 +292,7 @@ lListElem *jatep
       }
 
       sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                      0, 0, lGetString(queueep, QU_qname), 
+                      0, 0, lGetString(queueep, QU_qname), NULL,
                       queueep, NULL, NULL, true, spool_queueep);
       answer_list_output(&answer_list);
    }

@@ -141,7 +141,7 @@ int rebuild_cache
       lSetUlong(qep, QU_state, state);
 
       /* this info is not spooled */
-      sge_add_event(NULL, 0, sgeE_QUEUE_SUSPEND_ON_SUB, 0, 0, lGetString(qep, QU_qname), NULL); 
+      sge_add_event(NULL, 0, sgeE_QUEUE_SUSPEND_ON_SUB, 0, 0, lGetString(qep, QU_qname), NULL, NULL); 
       lListElem_clear_changed_info(qep);
    } else {
       DPRINTF(("QUEUE %s: already suspended on subordinate\n", lGetString(qep, QU_qname)));
@@ -247,7 +247,7 @@ int rebuild_cache
       lSetUlong(qep, QU_state, state);
 
       /* this info is not spooled */
-      sge_add_event(NULL, 0, sgeE_QUEUE_UNSUSPEND_ON_SUB, 0, 0, lGetString(qep, QU_qname), NULL); 
+      sge_add_event(NULL, 0, sgeE_QUEUE_UNSUSPEND_ON_SUB, 0, 0, lGetString(qep, QU_qname), NULL, NULL); 
       lListElem_clear_changed_info(qep);
    } else {
       DPRINTF(("QUEUE %s: still suspended on subordinate\n", lGetString(qep, QU_qname)));

@@ -97,6 +97,10 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
    char **ppstr;
    SGE_STRUCT_STAT buf;
    int do_exit = 0;
+#ifdef HAS_GETPWNAM_R
+   struct passwd pw_struct;
+   char buffer[2048];
+#endif
    
    DENTER(TOP_LAYER, "opt_list_append_opts_from_default_files");
 
@@ -112,7 +116,12 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
    /*
     * the defaults file in the user's home directory
     */
+
+#ifdef HAS_GETPWNAM_R
+   pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
+#else
    pwd = sge_getpwnam(uti_state_get_user_name());
+#endif
    if (!pwd) {
       sprintf(str, MSG_USER_INVALIDNAMEX_S, uti_state_get_user_name());
       answer_list_add(answer_list, str, STATUS_ENOSUCHUSER, 

@@ -641,7 +641,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    job_suc_pre(jep);
 
    if (!sge_event_spool(alpp, 0, sgeE_JOB_ADD, 
-                        job_number, 0, NULL,
+                        job_number, 0, NULL, NULL,
                         jep, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, u32c(job_number)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
@@ -939,7 +939,7 @@ int sub_command
                   sge_commit_job(job, tmp_task, 3, COMMIT_NO_SPOOLING |
                      COMMIT_NO_EVENTS | COMMIT_UNENROLLED_TASK);
                   sge_add_event(NULL, start_time, sgeE_JATASK_DEL, job_number, task_number,
-                                NULL, NULL);
+                                NULL, lGetString(job, JB_session), NULL);
                   deleted_unenrolled_tasks = 1;
                   showmessage = 1;
                   if (!alltasks) {
@@ -970,7 +970,8 @@ int sub_command
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(job);
             } else {
-               sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, NULL, NULL);
+               sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, NULL, 
+                     lGetString(job, JB_session), NULL);
             }
          }
 
@@ -1703,7 +1704,7 @@ lListElem *jatask
    DENTER(TOP_LAYER, "sge_add_job_event");
    sge_add_event(NULL, 0, type, lGetUlong(jep, JB_job_number), 
                 jatask?lGetUlong(jatask, JAT_task_number):0, 
-                NULL, jep);
+                NULL, lGetString(jep, JB_session), jep);
    DEXIT;
    return;
 }
@@ -1716,7 +1717,7 @@ lListElem *jatask
    DENTER(TOP_LAYER, "sge_add_jatask_event");
    sge_add_event(NULL, 0, type, lGetUlong(jep, JB_job_number), 
                   lGetUlong(jatask, JAT_task_number),
-                  NULL, jatask);
+                  NULL, lGetString(jep, JB_session), jatask);
    DEXIT;
    return;  
 }        

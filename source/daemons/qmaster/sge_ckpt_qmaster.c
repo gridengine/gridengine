@@ -286,7 +286,7 @@ int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
          old_ep ? lGetList(old_ep, CK_queue_list) : NULL,
          MSG_OBJ_CKPTI, ckpt_name);
 
-   sge_add_event(NULL, 0, old_ep?sgeE_CKPT_MOD:sgeE_CKPT_ADD, 0, 0, ckpt_name, ep);
+   sge_add_event(NULL, 0, old_ep?sgeE_CKPT_MOD:sgeE_CKPT_ADD, 0, 0, ckpt_name, NULL, ep);
    lListElem_clear_changed_info(ep);
 
    DEXIT;
@@ -379,7 +379,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
 
    /* remove ckpt file 1st */
    if (!sge_event_spool(alpp, 0, sgeE_CKPT_DEL,
-                            0, 0, ckpt_name,
+                            0, 0, ckpt_name, NULL,
                             NULL, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CKPT, ckpt_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -420,7 +420,7 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
 
          /* event has already been sent in sge_change_queue_version */
          sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 0, 0, 
-                      lGetString(qep, QU_qname), qep, NULL, NULL, false, true);
+                      lGetString(qep, QU_qname), NULL, qep, NULL, NULL, false, true);
          answer_list_output(&answer_list);
          DPRINTF(("increasing version of queue \"%s\" because %s"
             " \"%s\" has changed\n", q_name, obj_name, ckpt_name));
@@ -440,7 +440,7 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
 
          /* event has already been sent in sge_change_queue_version */
          sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 0, 0, 
-                      lGetString(qep, QU_qname), qep, NULL, NULL, false, true);
+                      lGetString(qep, QU_qname), NULL, qep, NULL, NULL, false, true);
          answer_list_output(&answer_list);
          DPRINTF(("increasing version of queue \"%s\" because %s"
                " \"%s\" has changed\n", q_name, obj_name, ckpt_name));

@@ -51,6 +51,7 @@
 *     bool 
 *     sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event, 
 *                     u_long32 intkey1, u_long32 intkey2, const char *strkey, 
+*                     const char *session,
 *                     lListElem *object, lListElem *sub_object1, 
 *                     lListElem *sub_object2, bool send_event, bool spool) 
 *
@@ -68,6 +69,7 @@
 *     u_long32 intkey1       - an integer key (job_id)
 *     u_long32 intkey2       - a second integer key (ja_task_id)
 *     const char *strkey     - a string key (all other keys)
+*     const char *session    - events session key
 *     lListElem *object      - the object to spool and send
 *     lListElem *sub_object1 - optionally a sub object (ja_task)
 *     lListElem *sub_object2 - optionally a sub sub object (pe_task)
@@ -90,6 +92,7 @@
 bool 
 sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event, 
                 u_long32 intkey1, u_long32 intkey2, const char *strkey, 
+                const char *session, 
                 lListElem *object, lListElem *sub_object1, 
                 lListElem *sub_object2, bool send_event, bool spool)
 {
@@ -358,8 +361,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
    /* send event only, if spooling succeeded */
    if (ret) {
       if (send_event) {
-         sge_add_event(NULL, timestamp, event, intkey1, intkey2, strkey, 
-                       element);
+         sge_add_event(NULL, timestamp, event, intkey1, intkey2, strkey, session, element);
       }
 
       /* clear the changed bits */

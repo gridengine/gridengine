@@ -542,7 +542,7 @@ New behaviour:
 
       if (shut_me_down) {
          /* we have to deliver events before shutting down */
-         sge_add_event(NULL, now, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL);
+         sge_add_event(NULL, now, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL, NULL);
          set_event_client_busy(NULL, 0); /* send event, even if event clients are busy */
          ck_4_deliver_events(now);
 #ifdef QIDL
@@ -574,6 +574,7 @@ New behaviour:
 
       now = sge_get_gmt();
       next_flush = sge_next_flush(now);
+      DPRINTF(("next_flush: "u32" now: "u32"\n", next_flush, now));
       
       old_timeout = commlib_state_get_timeout_srcv();
 
@@ -812,7 +813,7 @@ static int update_license_data(lListElem *hep, lList *lp_lic)
       DPRINTF(("%s has " u32 " processors\n",
          lGetHost(hep, EH_name), processors));
       sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
-                      0, 0, lGetHost(hep, EH_name), 
+                      0, 0, lGetHost(hep, EH_name), NULL,
                       hep, NULL, NULL, true, true);
       answer_list_output(&answer_list);
    }

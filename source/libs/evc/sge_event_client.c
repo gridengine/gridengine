@@ -39,6 +39,7 @@
 #include "sge_ack.h"
 #include "sge_unistd.h"
 #include "commlib.h"
+#include "commproc.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_profiling.h"
@@ -220,12 +221,44 @@
 *                                 It will stay in the busy state until it
 *                                 is explicitly released by the client 
 *                                 (calling ec_set_busy(0)) 
+*        EV_THROTTLE_FLUSH      - when delivering events qmaster sends
+*                                 events in the regular event delivery 
+*                                 intervals. Each time events are sent the 
+*                                 busy counter (EV_busy) is increased. 
+*                                 The busy counter is set to 0 only when events 
+*                                 are acknowledged by the event client. Event 
+*                                 flushing is delayed depending on the busy 
+*                                 counter the more event flushing is delayed.
 *                                 
 *  NOTES
 *
 *  SEE ALSO
 *     Eventclient/Client/ec_set_busy_handling()
 *     Eventclient/Client/ec_set_busy()
+****************************************************************************
+*/
+/****** Eventclient/-Session filtering *************************************
+*
+*  NAME
+*     Session filtering -- Filtering of events using a session key.
+*
+*  FUNCTION
+*     For JAPI event clients event subscription is not sufficient to
+*     track only those events that are related to a JAPI session.
+*     
+*     When session filtering is used The following rules are applied 
+*     to decide whether subscribed events are sent or not:
+*
+*     - Events that are associated with a specific session are not
+*       sent when session filtering is used but the session does not 
+*       match. 
+*     - Events that are not associated with a specific session are 
+*       not sent. The only exception are list events, these events are
+*       always sent but a more fine grained filtering is applied.
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_set_session()
+*     Eventclient/Client/ec_get_session()
 ****************************************************************************
 */
 /****** Eventclient/--EV_Type ***************************************
@@ -710,7 +743,10 @@ ec_need_new_registration(void)
 *
 *  FUNCTION
 *     Set the interval qmaster will use to send events to the client.
-*     Any number > 0 is a valid interval in seconds.
+*     Any number > 0 is a valid interval in seconds. However the interval 
+*     my not be larger than the commd commproc timeout. Otherwise the event 
+*     client encounters receive timeouts and this is returned as an error 
+*     by ec_get().
 *
 *  INPUTS
 *     int interval - interval [s]
@@ -719,8 +755,10 @@ ec_need_new_registration(void)
 *     int - 1, if the value was changed, else 0
 *
 *  NOTES
-*     The maximum interval should be limited. A too big interval makes 
-*     qmaster spool lots of events and consume a lot of memory.
+*     The maximum interval is limited to the commd commproc timeout.
+*     The maximum interval should be limited also by the application. 
+*     A too big interval makes qmaster spool lots of events and consume 
+*     a lot of memory.
 *
 *  SEE ALSO
 *     Eventclient/Client/ec_get_edtime()
@@ -738,7 +776,7 @@ ec_set_edtime(int interval)
       ret = (lGetUlong(ec, EV_d_time) != interval);
 
       if (ret > 0) {
-         lSetUlong(ec, EV_d_time, interval);
+         lSetUlong(ec, EV_d_time, MIN(interval, COMMPROC_TIMEOUT-5));
          ec_config_changed();
       }
    }
@@ -782,6 +820,92 @@ ec_get_edtime(void)
    DEXIT;
    return interval;
 }
+
+/****** Eventclient/Client/ec_set_flush_delay() *****************************
+*  NAME
+*     ec_set_flush_delay() -- set flush delay parameter
+*
+*  SYNOPSIS
+*     #include "sge_event_client.h"
+*
+*     bool 
+*     ec_set_flush_delay(u_long32 flush_delay) 
+*
+*  FUNCTION
+*
+*  INPUTS
+*     int flush_delay - flush delay parameter
+*
+*  RESULT
+*     bool - true, if the value was changed, else false
+*
+*  NOTES
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_get_flush_delay()
+*     Eventclient/-Busy-state
+*     Eventclient/Client/ec_commit()
+*     Eventclient/Client/ec_get()
+*******************************************************************************/
+bool 
+ec_set_flush_delay(int flush_delay) 
+{
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "ec_set_flush_delay");
+   
+   if (ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+   } else {
+      ret = (lGetUlong(ec, EV_flush_delay) != flush_delay);
+
+      if (ret) {
+         lSetUlong(ec, EV_flush_delay, flush_delay);
+         ec_config_changed();
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** Eventclient/Client/ec_get_flush_delay() *****************************
+*  NAME
+*     ec_get_flush_delay() -- get configured flush delay paramter
+*
+*  SYNOPSIS
+*     #include "sge_event_client.h"
+*
+*     int 
+*     ec_get_flush_delay(void) 
+*
+*  FUNCTION
+*     Returns the policy currently configured.
+*
+*  RESULT
+*     flush_delay - current flush delay parameter setting
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_set_flush_delay()
+*     Eventclient/-Busy-state
+*******************************************************************************/
+int 
+ec_get_flush_delay(void) 
+{
+   int flush_delay = 0;
+
+   DENTER(TOP_LAYER, "ec_get_flush_delay");
+
+   if (ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+   } else {
+      flush_delay = lGetUlong(ec, EV_flush_delay);
+   }
+
+   DEXIT;
+   return flush_delay;
+}
+
 
 /****** Eventclient/Client/ec_set_busy_handling() *****************************
 *  NAME
@@ -1715,6 +1839,108 @@ ec_get_busy(void)
    DEXIT;
    return ret;
 }
+
+/****** sge_event_client/ec_set_session() **************************************
+*  NAME
+*     ec_set_session() -- Specify session key for event filtering.
+*
+*  SYNOPSIS
+*     bool ec_set_session(const char *session) 
+*
+*  FUNCTION
+*     Specifies a session that is used in event master for event
+*     filtering.
+*
+*  INPUTS
+*     const char *session - the session key
+*
+*  RESULT
+*     bool - true = success, false = failed
+*
+*  SEE ALSO
+*     Eventclient/-Session filtering
+*     Eventclient/Client/ec_get_session()
+*******************************************************************************/
+bool ec_set_session(const char *session)
+{
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "ec_set_session");
+
+   if (ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+   } else {
+      lSetString(ec, EV_session, session);
+
+      /* force communication to qmaster - we may be out of sync */
+      ec_config_changed();
+      ret = true;
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** sge_event_client/ec_get_session() **************************************
+*  NAME
+*     ec_get_session() -- Get session key used for event filtering.
+*
+*  SYNOPSIS
+*     const char* ec_get_session(void) 
+*
+*  FUNCTION
+*     Returns session key that is used in event master for event
+*     filtering.
+*
+*  RESULT
+*     const char* - the session key
+*
+*  SEE ALSO
+*     Eventclient/-Session filtering
+*     Eventclient/Client/ec_set_session()
+*******************************************************************************/
+const char *ec_get_session(void)
+{
+   const char *ret = NULL;
+
+   DENTER(TOP_LAYER, "ec_get_session");
+
+   if (ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+   } else {
+      ret = lGetString(ec, EV_session);
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** sge_event_client/ec_get_id() *******************************************
+*  NAME
+*     ec_get_id() -- Return event client id.
+*
+*  SYNOPSIS
+*     ev_registration_id ec_get_id(void) 
+*
+*  FUNCTION
+*     Return event client id.
+*
+*  RESULT
+*     ev_registration_id - the event client id
+*******************************************************************************/
+ev_registration_id ec_get_id(void)
+{
+   DENTER(TOP_LAYER, "ec_get_id");
+   if (ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      DEXIT;
+      return -1;
+   }
+   
+   DEXIT;
+   return lGetUlong(ec, EV_id);
+}
+
 /****** Eventclient/Client/ec_config_changed() ********************************
 *  NAME
 *     ec_config_changed() -- tell system the config has changed

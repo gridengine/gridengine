@@ -177,7 +177,7 @@ char *rhost
    te_delete(TYPE_CALENDAR_EVENT, cal_name, 0, 0);
 
    sge_event_spool(alpp, 0, sgeE_CALENDAR_DEL, 
-                   0, 0, cal_name, 
+                   0, 0, cal_name, NULL,
                    NULL, NULL, NULL, true, true);
    lDelElemStr(&Master_Calendar_List, CAL_name, cal_name);
 
@@ -233,7 +233,7 @@ gdi_object_t *object
    DPRINTF(("CALENDAR: %s\n", cal_name));
 
    sge_add_event(NULL, 0, old_cep ? sgeE_CALENDAR_MOD : sgeE_CALENDAR_ADD, 
-         0, 0, cal_name, cep);
+         0, 0, cal_name, NULL, cep);
    lListElem_clear_changed_info(cep);
 
    new_state = act_cal_state(cep, &next_event);

@@ -3,9 +3,14 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+
+
 #include <pthread.h>
 
 #define DRMAA_HOOKS
+
+/* this timeout is in effect with SGE commprocs */
+#define SGE_COMMPROC_TIMEOUT 60*5
 
 #include "drmaa.h"
 
@@ -74,7 +79,47 @@ enum {
          - all jobs are waited individually
          - then drmaa_exit() is called */
 
-   ST_INPUT_BECOMES_OUTPUT = 11,
+   ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE = 11,
+      /* - drmaa_init() is called
+         - submit a mixture of single and bulk jobs
+         - do drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) 
+           to wait for all jobs to finish
+         - then drmaa_exit() is called */
+
+   ST_SUBMITMIXTURE_SYNC_ALL_NODISPOSE = 12,
+      /* - drmaa_init() is called
+         - submit a mixture of single and bulk jobs
+         - do drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, no-dispose) 
+           to wait for all jobs to finish
+         - do drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY) until 
+           DRMAA_ERRNO_INVALID_JOB to reap all jobs
+         - then drmaa_exit() is called */
+
+   ST_SUBMITMIXTURE_SYNC_ALLIDS_DISPOSE = 13,
+      /* - drmaa_init() is called
+         - submit a mixture of single and bulk jobs
+         - do drmaa_synchronize(all_jobids, dispose) 
+           to wait for all jobs to finish
+         - then drmaa_exit() is called */
+
+   ST_SUBMITMIXTURE_SYNC_ALLIDS_NODISPOSE = 14,
+      /* - drmaa_init() is called
+         - submit a mixture of single and bulk jobs
+         - do drmaa_synchronize(all_jobids, no-dispose) 
+           to wait for all jobs to finish
+         - do drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY) until 
+           DRMAA_ERRNO_INVALID_JOB to reap all jobs
+         - then drmaa_exit() is called */
+
+   ST_SUBMIT_PAUSE_SUBMIT_SYNC = 15,
+      /* - drmaa_init() is called
+         - a job is submitted 
+         - do a long sleep(SGE_COMMPROC_TIMEOUT+)
+         - another job is submitted 
+         - do drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) 
+         - then drmaa_exit() is called */
+
+   ST_INPUT_BECOMES_OUTPUT = 16,
       /* - drmaa_init() is called
          - job input is prepared in local file 
          - a job is submitted that echoes it's input to output 
@@ -83,7 +128,7 @@ enum {
          (still requires manual testing)
       */
 
-   ST_SUBMIT_IN_HOLD = 12,
+   ST_SUBMIT_IN_HOLD = 17,
       /* - drmaa_init() is called
          - a job is submitted with a user hold 
          - use drmaa_job_ps() to verify user hold state
@@ -93,7 +138,7 @@ enum {
          (still requires manual testing)
       */
 
-   ST_BULK_SUBMIT_IN_HOLD = 13,
+   ST_BULK_SUBMIT_IN_HOLD = 18,
       /* - drmaa_init() is called
          - a bulk job is submitted with a user hold 
          - hold state is released *manually*
@@ -102,7 +147,7 @@ enum {
          (still requires manual testing)
       */
 
-   ST_JOB_PS = 14
+   ST_JOB_PS = 19
       /* - drmaa_init() is called
          - drmaa_job_ps() is used to retrieve DRMAA state 
            for each jobid passed *manually* in argv
@@ -111,9 +156,9 @@ enum {
       */
 };
 
-#define NO_TEST ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL+1
+#define NO_TEST ST_SUBMITMIXTURE_SYNC_ALLIDS_NODISPOSE+1
 
-static int test(int argc, char *argv[]);
+static int test(int *argc, char **argv[]);
 static void *submit_and_wait(void *vp);
 static void *submit_sleeper_single(void *vp);
 static void *submit_sleeper(int n);
@@ -133,39 +178,44 @@ int main(int argc, char *argv[])
    int i; 
 
    if (argc == 1) {
-      fprintf(stderr, "usage: test_japi <test_case>\n"
+      fprintf(stderr, "usage: test_drmaa <test_case>\n"
                       "       <test_case> is a number: 0-%d\n"
                       "       see src for a detailed test case description\n", NO_TEST-1);
       return 1;
    }
 
-   test_case = atoi(argv[1]);
-   argc--; argv++;
-   
-   if (test_case == ALL_TESTS)
-      for (i=ST_SUBMIT_WAIT; i<NO_TEST; i++) {
-         test_case = i;
-         printf("---------------------\n");
-         printf("starting test #%d\n", i);
-         if (test(argc, argv)!=0) {
-            printf("test #%d failed\n", i);
+
+   while (argc > 1) { 
+      test_case = atoi(argv[1]);
+      argc--; argv++;
+
+      if (test_case == ALL_TESTS)
+         for (i=ST_SUBMIT_WAIT; i<NO_TEST; i++) {
+            test_case = i;
+            printf("---------------------\n");
+            printf("starting test #%d\n", i);
+            if (test(&argc, &argv)!=0) {
+               printf("test #%d failed\n", i);
+               failed = 1;
+               break;
+            } else
+               printf("successfully finished test #%d\n", i);
+         }
+      else {
+         printf("starting test #%d\n", test_case);
+         if (test(&argc, &argv)!=0) {
+            printf("test #%d failed\n", test_case);
             failed = 1;
+            break;
          } else
-            printf("successfully finished test #%d\n", i);
+           printf("successfully finished test #%d\n", test_case);
       }
-   else {
-      printf("starting test #%d\n", test_case);
-      if (test(argc, argv)!=0) {
-         printf("test #%d failed\n", test_case);
-         failed = 1;
-      } else
-        printf("successfully finished test #%d\n", test_case);
-   }
-   
+   } 
+
    return failed;
 }
 
-static int test(int argc, char *argv[])
+static int test(int *argc, char **argv[])
 {
    int i;
    int job_chunk = JOB_CHUNK;
@@ -381,7 +431,7 @@ static int test(int argc, char *argv[])
          }
          for (i=0; i<NBULKS; i++) {
             char jobid[100];
-            drmaa_string_vector_t *jobids;
+            drmaa_job_ids_t *jobids;
             int j;
             if ((drmaa_errno=drmaa_run_bulk_jobs(&jobids, jt, 1, JOB_CHUNK, 1, diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
                printf("failed submitting bulk job (%s): %s\n", drmaa_strerror(drmaa_errno), diagnosis);
@@ -389,17 +439,14 @@ static int test(int argc, char *argv[])
             } 
             printf("submitted bulk job with jobids:\n");
             for (j=0; j<JOB_CHUNK; j++) {
-               if (j==0)
-                  drmaa_string_vector_get_first(jobids, jobid, sizeof(jobid)-1);
-               else
-                  drmaa_string_vector_get_next(jobids, jobid, sizeof(jobid)-1);
+               drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
                printf("\t \"%s\"\n", jobid);
             } 
-            drmaa_delete_string_vector(jobids);
+            drmaa_release_job_ids(jobids);
          }
          drmaa_delete_job_template(jt, NULL, 0);
 
-         if (wait_n_jobs(job_chunk) != DRMAA_ERRNO_SUCCESS) {
+         if (wait_n_jobs(JOB_CHUNK*NBULKS) != DRMAA_ERRNO_SUCCESS) {
             return 1;
          }
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
@@ -428,7 +475,7 @@ static int test(int argc, char *argv[])
             return 1;
          }
          for (i=0; i<NBULKS; i++) {
-            drmaa_string_vector_t *jobids;
+            drmaa_job_ids_t *jobids;
             int j;
 
             while ((drmaa_errno=drmaa_run_bulk_jobs(&jobids, jt, 1, JOB_CHUNK, 1, diagnosis,
@@ -443,14 +490,11 @@ static int test(int argc, char *argv[])
 
             printf("submitted bulk job with jobids:\n");
             for (j=0; j<JOB_CHUNK; j++) {
-               if (j==0)
-                  drmaa_string_vector_get_first(jobids, jobid, sizeof(jobid)-1);
-               else
-                  drmaa_string_vector_get_next(jobids, jobid, sizeof(jobid)-1);
+               drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
                strncpy(all_jobids[pos++], jobid, sizeof(jobid)-1);
                printf("\t \"%s\"\n", jobid);
             } 
-            drmaa_delete_string_vector(jobids);
+            drmaa_release_job_ids(jobids);
             sleep(1);
          }
          drmaa_delete_job_template(jt, NULL, 0);
@@ -497,6 +541,460 @@ static int test(int argc, char *argv[])
             }
             printf("waited job \"%s\"\n", all_jobids[pos]);
          }
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+      }
+      break;
+
+   case ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE:
+      /* - drmaa_init() is called
+         - submit a mixture of single and bulk jobs
+         - do drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) 
+           to wait for all jobs to finish
+         - then drmaa_exit() is called */
+      {
+         const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
+         char jobid[100];
+         
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+
+         /*
+          *   submit some bulk jobs
+          */
+         if (!(jt = create_sleeper_job_template(5, 1, 0))) {
+            fprintf(stderr, "create_sleeper_job_template() failed\n");
+            return 1;
+         }
+         for (i=0; i<NBULKS; i++) {
+            drmaa_job_ids_t *jobids;
+            int j;
+
+            while ((drmaa_errno=drmaa_run_bulk_jobs(&jobids, jt, 1, JOB_CHUNK, 1, diagnosis,
+                       sizeof(diagnosis)-1))==DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_bulk_jobs() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            } 
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_bulk_jobs() failed: %s\n", diagnosis);
+               return 1;
+            }
+
+            printf("submitted bulk job with jobids:\n");
+            for (j=0; j<JOB_CHUNK; j++) {
+               drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
+               printf("\t \"%s\"\n", jobid);
+            } 
+            drmaa_release_job_ids(jobids);
+            sleep(1);
+         }
+         drmaa_delete_job_template(jt, NULL, 0);
+
+         /*
+          *   submit some sequential jobs
+          */
+         if (!(jt = create_sleeper_job_template(5, 0, 0))) {
+            fprintf(stderr, "create_sleeper_job_template() failed\n");
+            return 1;
+         }
+         for (i=0; i<JOB_CHUNK; i++) {
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               return 1;
+            }
+            printf("\t \"%s\"\n", jobid);
+         }
+         drmaa_delete_job_template(jt, NULL, 0);
+
+         /*
+          *   synchronize with all jobs
+          */
+         drmaa_errno = drmaa_synchronize(session_all, DRMAA_TIMEOUT_WAIT_FOREVER, 1, diagnosis, sizeof(diagnosis)-1);
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
+            return 1;
+         }
+         printf("waited all jobs\n");
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+         break;
+      }
+
+   case ST_SUBMITMIXTURE_SYNC_ALL_NODISPOSE:
+
+      /* - drmaa_init() is called
+         - submit a mixture of single and bulk jobs
+         - do drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, no-dispose) 
+           to wait for all jobs to finish
+         - do drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY) until 
+           DRMAA_ERRNO_INVALID_JOB to reap all jobs
+         - then drmaa_exit() is called */
+
+      {
+         const char *all_jobids[NBULKS*JOB_CHUNK + JOB_CHUNK+1];
+         const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
+         char jobid[100];
+         int pos = 0;
+         
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+
+         /*
+          *   submit some bulk jobs
+          */
+         if (!(jt = create_sleeper_job_template(5, 1, 0))) {
+            fprintf(stderr, "create_sleeper_job_template() failed\n");
+            return 1;
+         }
+         for (i=0; i<NBULKS; i++) {
+            drmaa_job_ids_t *jobids;
+            int j;
+
+            while ((drmaa_errno=drmaa_run_bulk_jobs(&jobids, jt, 1, JOB_CHUNK, 1, diagnosis,
+                       sizeof(diagnosis)-1))==DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_bulk_jobs() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            } 
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_bulk_jobs() failed: %s\n", diagnosis);
+               return 1;
+            }
+
+            printf("submitted bulk job with jobids:\n");
+            for (j=0; j<JOB_CHUNK; j++) {
+               drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
+               all_jobids[pos++] = strdup(jobid);
+               printf("\t \"%s\"\n", jobid);
+            } 
+            drmaa_release_job_ids(jobids);
+            sleep(1);
+         }
+         drmaa_delete_job_template(jt, NULL, 0);
+
+         /*
+          *   submit some sequential jobs
+          */
+         if (!(jt = create_sleeper_job_template(5, 0, 0))) {
+            fprintf(stderr, "create_sleeper_job_template() failed\n");
+            return 1;
+         }
+         for (i=0; i<JOB_CHUNK; i++) {
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               return 1;
+            }
+            printf("\t \"%s\"\n", jobid);
+            all_jobids[pos++] = strdup(jobid);
+         }
+         drmaa_delete_job_template(jt, NULL, 0);
+
+         /*
+          *   synchronize with all jobs
+          */
+         drmaa_errno = drmaa_synchronize(session_all, DRMAA_TIMEOUT_WAIT_FOREVER, 0, diagnosis, sizeof(diagnosis)-1);
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
+            return 1;
+         }
+         printf("synchronized with all jobs\n");
+
+         /*
+          *   wait all those jobs
+          */
+         for (pos=0; pos<NBULKS*JOB_CHUNK + JOB_CHUNK; pos++) {
+            do {
+               int stat;
+               drmaa_errno = drmaa_wait(all_jobids[pos], jobid, sizeof(jobid)-1, 
+                  &stat, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", all_jobids[pos], diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", all_jobids[pos], diagnosis);
+               return 1;
+            }
+            printf("waited job \"%s\"\n", all_jobids[pos]);
+         }
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+         break;
+      }
+
+   case ST_SUBMITMIXTURE_SYNC_ALLIDS_DISPOSE:
+      /* - drmaa_init() is called
+         - submit a mixture of single and bulk jobs
+         - do drmaa_synchronize(all_jobids, dispose) 
+           to wait for all jobs to finish
+         - then drmaa_exit() is called */
+      {
+         const char *all_jobids[NBULKS*JOB_CHUNK + JOB_CHUNK+1];
+         char jobid[100];
+         int pos = 0;
+         
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+
+         /*
+          *   submit some bulk jobs
+          */
+         if (!(jt = create_sleeper_job_template(5, 1, 0))) {
+            fprintf(stderr, "create_sleeper_job_template() failed\n");
+            return 1;
+         }
+         for (i=0; i<NBULKS; i++) {
+            drmaa_job_ids_t *jobids;
+            int j;
+
+            while ((drmaa_errno=drmaa_run_bulk_jobs(&jobids, jt, 1, JOB_CHUNK, 1, diagnosis,
+                       sizeof(diagnosis)-1))==DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_bulk_jobs() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            } 
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_bulk_jobs() failed: %s\n", diagnosis);
+               return 1;
+            }
+
+            printf("submitted bulk job with jobids:\n");
+            for (j=0; j<JOB_CHUNK; j++) {
+               drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
+               printf("\t \"%s\"\n", jobid);
+               all_jobids[pos++] = strdup(jobid);
+            } 
+            drmaa_release_job_ids(jobids);
+            sleep(1);
+         }
+         drmaa_delete_job_template(jt, NULL, 0);
+
+         /*
+          *   submit some sequential jobs
+          */
+         if (!(jt = create_sleeper_job_template(5, 0, 0))) {
+            fprintf(stderr, "create_sleeper_job_template() failed\n");
+            return 1;
+         }
+         for (i=0; i<JOB_CHUNK; i++) {
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               return 1;
+            }
+            printf("\t \"%s\"\n", jobid);
+            all_jobids[pos++] = strdup(jobid);
+         }
+         drmaa_delete_job_template(jt, NULL, 0);
+
+         /*
+          *   synchronize with all jobs
+          */
+         drmaa_errno = drmaa_synchronize(all_jobids, DRMAA_TIMEOUT_WAIT_FOREVER, 1, diagnosis, sizeof(diagnosis)-1);
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
+            return 1;
+         }
+         printf("waited all jobs\n");
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+         break;
+      }
+
+   case ST_SUBMITMIXTURE_SYNC_ALLIDS_NODISPOSE:
+
+      /* - drmaa_init() is called
+         - submit a mixture of single and bulk jobs
+         - do drmaa_synchronize(all_jobids, no-dispose) 
+           to wait for all jobs to finish
+         - do drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY) until 
+           DRMAA_ERRNO_INVALID_JOB to reap all jobs
+         - then drmaa_exit() is called */
+
+      {
+         const char *all_jobids[NBULKS*JOB_CHUNK + JOB_CHUNK+1];
+         char jobid[100];
+         int pos = 0;
+         
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+
+         /*
+          *   submit some bulk jobs
+          */
+         if (!(jt = create_sleeper_job_template(5, 1, 0))) {
+            fprintf(stderr, "create_sleeper_job_template() failed\n");
+            return 1;
+         }
+         for (i=0; i<NBULKS; i++) {
+            drmaa_job_ids_t *jobids;
+            int j;
+
+            while ((drmaa_errno=drmaa_run_bulk_jobs(&jobids, jt, 1, JOB_CHUNK, 1, diagnosis,
+                       sizeof(diagnosis)-1))==DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_bulk_jobs() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            } 
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_bulk_jobs() failed: %s\n", diagnosis);
+               return 1;
+            }
+
+            printf("submitted bulk job with jobids:\n");
+            for (j=0; j<JOB_CHUNK; j++) {
+               drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
+               all_jobids[pos++] = strdup(jobid);
+               printf("\t \"%s\"\n", jobid);
+            } 
+            drmaa_release_job_ids(jobids);
+            sleep(1);
+         }
+         drmaa_delete_job_template(jt, NULL, 0);
+
+         /*
+          *   submit some sequential jobs
+          */
+         if (!(jt = create_sleeper_job_template(5, 0, 0))) {
+            fprintf(stderr, "create_sleeper_job_template() failed\n");
+            return 1;
+         }
+         for (i=0; i<JOB_CHUNK; i++) {
+            while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+               fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+               sleep(1);
+            }
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               return 1;
+            }
+            printf("\t \"%s\"\n", jobid);
+            all_jobids[pos++] = strdup(jobid);
+         }
+         drmaa_delete_job_template(jt, NULL, 0);
+
+         /*
+          *   synchronize with all jobs
+          */
+         drmaa_errno = drmaa_synchronize(all_jobids, DRMAA_TIMEOUT_WAIT_FOREVER, 0, diagnosis, sizeof(diagnosis)-1);
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
+            return 1;
+         }
+         printf("synchronized with all jobs\n");
+
+         /*
+          *   wait all those jobs
+          */
+         for (pos=0; pos<NBULKS*JOB_CHUNK + JOB_CHUNK; pos++) {
+            do {
+               int stat;
+               drmaa_errno = drmaa_wait(all_jobids[pos], jobid, sizeof(jobid)-1, 
+                  &stat, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, diagnosis, sizeof(diagnosis)-1);
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", all_jobids[pos], diagnosis); 
+                  sleep(1);
+               }
+            } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed: %s\n", all_jobids[pos], diagnosis);
+               return 1;
+            }
+            printf("waited job \"%s\"\n", all_jobids[pos]);
+         }
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+         break;
+      }
+
+   case ST_SUBMIT_PAUSE_SUBMIT_SYNC:
+      /* - drmaa_init() is called
+         - a job is submitted
+         - do a long sleep(ST_SUBMIT_PAUSE_SUBMIT_SYNC+)
+         - another job is submitted
+         - do drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose)
+         - then drmaa_exit() is called */
+      {
+         const char *all_jobids[2+1];
+         char jobid[100];
+         int pos = 0;
+         
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+
+         /*
+          *   submit some sequential jobs
+          */
+         if (!(jt = create_sleeper_job_template(5, 0, 0))) {
+            fprintf(stderr, "create_sleeper_job_template() failed\n");
+            return 1;
+         }
+         for (i=0; i<2; i++) {
+            drmaa_errno = drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                     sizeof(diagnosis)-1);
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               return 1;
+            }
+            printf("\t \"%s\"\n", jobid);
+            all_jobids[pos++] = strdup(jobid);
+
+            /* 
+             * enforce SGE commproc timeout 
+             * this timeout must be handled transparently by DRMAA implementation
+             */
+            if (i==0) {
+               printf("sleeping %d seconds\n", SGE_COMMPROC_TIMEOUT+30);
+               sleep(SGE_COMMPROC_TIMEOUT+30);
+            }
+         }
+         drmaa_delete_job_template(jt, NULL, 0);
+
+         /*
+          *   synchronize with all jobs
+          */
+         drmaa_errno = drmaa_synchronize(all_jobids, DRMAA_TIMEOUT_WAIT_FOREVER, 1, diagnosis, sizeof(diagnosis)-1);
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
+            return 1;
+         }
+         printf("waited all jobs\n");
+
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
             return 1;
@@ -585,7 +1083,7 @@ static int test(int argc, char *argv[])
          }
 
          {
-            drmaa_string_vector_t *jobids;
+            drmaa_job_ids_t *jobids;
             int j;
             if ((drmaa_errno=drmaa_run_bulk_jobs(&jobids, jt, 1, JOB_CHUNK, 1, diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
                printf("failed submitting bulk job (%s): %s\n", drmaa_strerror(drmaa_errno), diagnosis);
@@ -594,13 +1092,10 @@ static int test(int argc, char *argv[])
             printf("submitted bulk job with jobids:\n");
             for (j=0; j<JOB_CHUNK; j++) {
                char jobid[100];
-               if (j==0)
-                  drmaa_string_vector_get_first(jobids, jobid, sizeof(jobid)-1);
-               else
-                  drmaa_string_vector_get_next(jobids, jobid, sizeof(jobid)-1);
+               drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
                printf("\t \"%s\"\n", jobid);
             } 
-            drmaa_delete_string_vector(jobids);
+            drmaa_release_job_ids(jobids);
          }
          drmaa_delete_job_template(jt, NULL, 0);
          printf("please release hold state of jobs\n");
@@ -617,21 +1112,23 @@ static int test(int argc, char *argv[])
    case ST_JOB_PS:
       {
          char diagnosis[1024];
-         int state;
+/*          int state; */
 
          if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
             return 1;
          }
 
-         for (; argc > 1; argc--, argv++) {
-            if (drmaa_job_ps(argv[1], &state, diagnosis, sizeof(diagnosis)-1)
+#if 0
+         for (; *argc > 1; *argc--, *argv++) {
+            if (drmaa_job_ps(*argv[1], &state, diagnosis, sizeof(diagnosis)-1)
                   !=DRMAA_ERRNO_SUCCESS) {
-                fprintf(stderr, "drmaa_job_ps(\"%s\") failed: %s\n", argv[1], diagnosis);
+                fprintf(stderr, "drmaa_job_ps(\"%s\") failed: %s\n", *argv[1], diagnosis);
                 return 1;
             }
-            printf("%20s %s\n", argv[1], drmaa_state2str(state));
+            printf("%20s %s\n", *argv[1], drmaa_state2str(state));
          }
+#endif
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
             return 1;
@@ -698,7 +1195,7 @@ static void *submit_sleeper_single(void *vp)
 
 static drmaa_job_template_t *create_sleeper_job_template(int seconds, int as_bulk_job, int in_hold)
 {
-   char *job_argv[2];
+   const char *job_argv[2];
    drmaa_job_template_t *jt = NULL;
    char buffer[100];
 
@@ -711,10 +1208,15 @@ static drmaa_job_template_t *create_sleeper_job_template(int seconds, int as_bul
    drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
    drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);
 
+#if 0
    if (!as_bulk_job)
       drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID", NULL, 0);
    else
       drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID."DRMAA_PLACEHOLDER_INCR, NULL, 0);
+#else
+   /* no output please */
+   drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, "/dev/null", NULL, 0);
+#endif
 
    if (in_hold) 
       drmaa_set_attribute(jt, DRMAA_JS_STATE, DRMAA_SUBMISSION_STATE_HOLD, NULL, 0);
@@ -768,7 +1270,9 @@ static void *do_submit(drmaa_job_template_t *jt, int n)
    for (i=0; i<n; i++) {
       /* submit job */
       while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
-         if (test_case == MT_EXIT_DURING_SUBMIT && drmaa_errno == DRMAA_ERRNO_NO_ACTIVE_SESSION) {
+         if ((test_case == MT_EXIT_DURING_SUBMIT_OR_WAIT || 
+              test_case == MT_EXIT_DURING_SUBMIT) 
+              && drmaa_errno == DRMAA_ERRNO_NO_ACTIVE_SESSION) {
             break;
          }
          printf("failed submitting job (%s) retry: %s\n", drmaa_strerror(drmaa_errno), diagnosis);
@@ -839,3 +1343,14 @@ static int wait_n_jobs(int n)
 
    return drmaa_errno;
 }
+
+#if 0
+static init_signal_handling()
+{
+   struct sigaction nact;
+   
+   nact.sa_handler = SIG_IGN;
+
+   sigaction(SIGPIPE, &act, NULL);
+}
+#endif

@@ -35,7 +35,21 @@ struct drmaa_string_array_iterator_s {
  * Transparent use of two different iterators 
  */
 enum { JAPI_ITERATOR_BULK_JOBS, JAPI_ITERATOR_STRINGS };
-struct drmaa_string_vector_s {
+struct drmaa_attr_names_s {
+   int iterator_type; 
+   union {
+      struct drmaa_bulk_jobid_iterator_s ji;
+      struct drmaa_string_array_iterator_s si;
+   } it;
+};
+struct drmaa_attr_values_s {
+   int iterator_type; 
+   union {
+      struct drmaa_bulk_jobid_iterator_s ji;
+      struct drmaa_string_array_iterator_s si;
+   } it;
+};
+struct drmaa_job_ids_s {
    int iterator_type; 
    union {
       struct drmaa_bulk_jobid_iterator_s ji;

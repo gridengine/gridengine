@@ -126,6 +126,9 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
 *     static int - error state
 *        -1 - Error
 *         0 - OK 
+*
+*  NOTES
+*     MT-NOTE: path_alias_read_from_file() is MT safe
 ******************************************************************************/
 static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
                                      char *file_name)
@@ -141,7 +144,7 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
    SGE_STRUCT_STAT sb;
    int ret = 0;
 
-   DENTER(TOP_LAYER, "path_alias_read_from_file");
+   DENTER(GDI_LAYER, "path_alias_read_from_file");
 
    if (!path_alias_list || !file_name) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
@@ -260,6 +263,10 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
 *     int - return state
 *        -1 - error
 *         0 - OK
+*
+*  NOTES
+*     MT-NOTE: path_alias_list_initialize() is MT safe if getpwnam_r() 
+*     MT-NOTE: can be used
 ******************************************************************************/
 int path_alias_list_initialize(lList **path_alias_list, 
                                lList **alpp,
@@ -277,8 +284,14 @@ int path_alias_list_initialize(lList **path_alias_list,
     */
    {
       struct passwd *pwd;
-
+#ifdef HAS_GETPWNAM_R
+      struct passwd pw_struct;
+      char buffer[2048];
+      pwd = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer));
+#else
       pwd = sge_getpwnam(user);
+#endif
+
       if (!pwd) {
          sprintf(err, MSG_USER_INVALIDNAMEX_S, user);
          answer_list_add(alpp, err, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
@@ -358,6 +371,9 @@ int path_alias_list_initialize(lList **path_alias_list,
 *  RESULT
 *     int - return state
 *        0 - OK
+*
+*  NOTES
+*     MT-NOTE: path_alias_list_get_path() is MT safe
 *******************************************************************************/
 int path_alias_list_get_path(const lList *path_aliases, lList **alpp,
                              const char *inpath, const char *myhost,

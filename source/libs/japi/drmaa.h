@@ -192,26 +192,10 @@ enum {
 typedef struct drmaa_job_template_s drmaa_job_template_t;
 
 /* ---------- C/C++ language binding specific interfaces -------- */
-/*
- * Proposed to support handling of output vector arguments 
- * 
- * This is a C/C++ language specific opaque data type
- */
-typedef struct drmaa_string_vector_s drmaa_string_vector_t;
 
-/*
- * Proposed to support handling of output vector arguments 
- * 
- * These are C language specific interfaces
- */
-
-/*
- * get first string attribute from iterator 
- * 
- * returns DRMAA_ERRNO_SUCCESS or DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE 
- * if no such exists 
- */
-int drmaa_string_vector_get_first(drmaa_string_vector_t* values, char *value, int value_len);
+typedef struct drmaa_attr_names_s drmaa_attr_names_t;
+typedef struct drmaa_attr_values_s drmaa_attr_values_t;
+typedef struct drmaa_job_ids_s  drmaa_job_ids_t;
 
 /*
  * get next string attribute from iterator 
@@ -219,12 +203,20 @@ int drmaa_string_vector_get_first(drmaa_string_vector_t* values, char *value, in
  * returns DRMAA_ERRNO_SUCCESS or DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE 
  * if no such exists 
  */
-int drmaa_string_vector_get_next(drmaa_string_vector_t* values, char *value, int value_len);
+
+int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int value_len);
+int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int value_len);
+int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, int value_len);
 
 /* 
- * release opaque iterator 
+ * release opaque string vector 
+ *
+ * Opaque string vectors can be used without any constraint
+ * until the release function has been called.
  */
-void drmaa_delete_string_vector( drmaa_string_vector_t* values );
+void drmaa_release_attr_names( drmaa_attr_names_t* values );
+void drmaa_release_attr_values( drmaa_attr_values_t* values );
+void drmaa_release_job_ids( drmaa_job_ids_t* values );
 
 /* ------------------- init/exit routines ------------------- */
 /*
@@ -275,14 +267,14 @@ int drmaa_get_attribute(drmaa_job_template_t *jt, const char *name, char *value,
 /* Adds ('name', 'values') pair to list of vector attributes in job template 'jt'.
  * Only vector attributes may be passed.
  */
-int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name, char *value[], char *error_diagnosis, size_t error_diag_len);
+int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name, const char *value[], char *error_diagnosis, size_t error_diag_len);
 
 
 /* 
  * If 'name' is an existing vector attribute name in the job template 'jt',
  * then the values of 'name' are returned; otherwise, NULL is returned.
  */
-int drmaa_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa_string_vector_t **values, char *error_diagnosis, size_t error_diag_len);
+int drmaa_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa_attr_values_t **values, char *error_diagnosis, size_t error_diag_len);
 
 
 /* 
@@ -290,13 +282,13 @@ int drmaa_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa
  * value type is String. This set will include supported DRMAA reserved 
  * attribute names and native attribute names. 
  */
-int drmaa_get_attribute_names( drmaa_string_vector_t **values, char *error_diagnosis, size_t error_diag_len);
+int drmaa_get_attribute_names( drmaa_attr_names_t **values, char *error_diagnosis, size_t error_diag_len);
 
 /*
  * Returns the set of supported attribute names whose associated 
  * value type is String Vector.  This set will include supported DRMAA reserved 
  * attribute names and native attribute names. */
-int drmaa_get_vector_attribute_names(drmaa_string_vector_t **values, char *error_diagnosis, size_t error_diag_len);
+int drmaa_get_vector_attribute_names(drmaa_attr_names_t **values, char *error_diagnosis, size_t error_diag_len);
 
 /* ------------------- job submission routines ------------------- */
 
@@ -320,7 +312,7 @@ int drmaa_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, cha
  * For example:
  * drmaa_set_attribute(pjt, "stderr", drmaa_incr_ph + ".err" ); (C++/java string syntax used)
  */
-int drmaa_run_bulk_jobs( drmaa_string_vector_t **jobids, drmaa_job_template_t *jt, int start, int end, int incr, char *error_diagnosis, size_t error_diag_len);
+int drmaa_run_bulk_jobs( drmaa_job_ids_t **jobids, drmaa_job_template_t *jt, int start, int end, int incr, char *error_diagnosis, size_t error_diag_len);
 
 /* ------------------- job control routines ------------------- */
 
@@ -356,7 +348,7 @@ int drmaa_control(const char *jobid, int action, char *error_diagnosis, size_t e
  * True=1 "fake reap", i.e. dispose of the rusage data
  * False=0 do not reap
  */ 
-int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose, char *error_diagnosis, size_t error_diag_len);
+int drmaa_synchronize(const char *job_ids[], signed long timeout, int dispose, char *error_diagnosis, size_t error_diag_len);
 
 
 /* 
@@ -378,7 +370,7 @@ int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose, char *e
  * issue drmaa_wait multiple times for the same job_id.
  */
 int drmaa_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int *stat, 
-   signed long timeout, drmaa_string_vector_t **rusage, 
+   signed long timeout, drmaa_attr_values_t **rusage, 
    char *error_diagnosis, size_t error_diagnois_len);
 
 /* 

@@ -35,6 +35,7 @@
 
 #include "drmaa.h"
 #include "sge_dstring.h"
+#include "basis_types.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -89,14 +90,14 @@ int japi_get_attribute(drmaa_job_template_t *jt, const char *name, dstring *val,
 /* Adds ('name', 'values') pair to list of vector attributes in job template 'jt'.
  * Only vector attributes may be passed.
  */
-int japi_set_vector_attribute(drmaa_job_template_t *jt, const char *name, char *value[], dstring *diag);
+int japi_set_vector_attribute(drmaa_job_template_t *jt, const char *name, const char *value[], dstring *diag);
 
 
 /* 
  * If 'name' is an existing vector attribute name in the job template 'jt',
  * then the values of 'name' are returned; otherwise, NULL is returned.
  */
-int japi_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa_string_vector_t **values, dstring *diag);
+int japi_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa_attr_values_t **values, dstring *diag);
 
 
 /* 
@@ -104,13 +105,13 @@ int japi_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa_
  * value type is String. This set will include supported DRMAA reserved 
  * attribute names and native attribute names. 
  */
-int japi_get_attribute_names(drmaa_string_vector_t **values, dstring *diag);
+int japi_get_attribute_names(drmaa_attr_names_t **values, dstring *diag);
 
 /*
  * Returns the set of supported attribute names whose associated 
  * value type is String Vector.  This set will include supported DRMAA reserved 
  * attribute names and native attribute names. */
-int japi_get_vector_attribute_names(drmaa_string_vector_t **values, dstring *diag);
+int japi_get_vector_attribute_names(drmaa_attr_names_t **values, dstring *diag);
 
 /* ------------------- job submission routines ------------------- */
 
@@ -134,7 +135,7 @@ int japi_run_job(dstring *jobid, drmaa_job_template_t *jt, dstring *diag);
  * For example:
  * drmaa_set_attribute(pjt, "stderr", drmaa_incr_ph + ".err" ); (C++/java string syntax used)
  */
-int japi_run_bulk_jobs(drmaa_string_vector_t **values, drmaa_job_template_t *jt, int start, int end, int incr, dstring *diag);
+int japi_run_bulk_jobs(drmaa_attr_values_t **values, drmaa_job_template_t *jt, int start, int end, int incr, dstring *diag);
 
 /* ------------------- job control routines ------------------- */
 
@@ -170,7 +171,7 @@ int japi_control(const char *jobid, int action, dstring *diag);
  * True=1 "fake reap", i.e. dispose of the rusage data
  * False=0 do not reap
  */ 
-int japi_synchronize(char *job_ids[], signed long timeout, int dispose, dstring *diag);
+int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, dstring *diag);
 
 
 /* 
@@ -192,7 +193,7 @@ int japi_synchronize(char *job_ids[], signed long timeout, int dispose, dstring 
  * issue drmaa_wait multiple times for the same job_id.
  */
 int japi_wait(const char *job_id, dstring *job_id_out, int *stat, signed long timeout, 
-   drmaa_string_vector_t **rusage, dstring *diag);
+   drmaa_attr_values_t **rusage, dstring *diag);
 
 /* 
  * Evaluates into 'exited' a non-zero value if stat was returned for a
@@ -292,16 +293,12 @@ void japi_version(unsigned int *major, unsigned int *minor);
  */
 void japi_get_DRM_system(char *drm_system, size_t drm_system_len);
 
-/* get first string attribute from iterator 
-DRMAA_ERRNO_SUCCESS or DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE if no such exists */
-int japi_string_vector_get_first(drmaa_string_vector_t* values, dstring *val);
-
 /* get next string attribute from iterator 
 DRMAA_ERRNO_SUCCESS or DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE if no such exists */
-int japi_string_vector_get_next(drmaa_string_vector_t* values, dstring *val);
+int japi_string_vector_get_next(drmaa_attr_values_t* values, dstring *val);
 
 /* release opaque iterator */
-void japi_delete_string_vector(drmaa_string_vector_t* values);
+void japi_delete_string_vector(drmaa_attr_values_t* values);
 
 #ifdef  __cplusplus
 }

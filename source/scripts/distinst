@@ -108,28 +108,29 @@ ErrUsage()
    echo "       -mansrc <dir>  = take man pages from MANSBUILD_<dir>"
    echo "       -noexit        = do not exit on installation errors"
    echo "       -noinst        = no install, show target arch"
+   echo "       -nosource      = do not source \"distinst.private\""
    echo "       -resetarch     = set PROG="" (useful to override distinst.privat)"
    echo "       -resetprog     = set ARCH="" (useful to override distinst.privat)"
    echo "       -tcc           = create file .COMMON_CHANGED if common changed"
    echo "       -v             = more verbose"
    echo "       -vdir <dir>    = define version directory for distribution"
    echo "<other progs>:"
-   echo "       \"ckpt\"        = checkpointing support files"
-   echo "       \"common\"      = arch. independent, no man/ and no doc/"
-   echo "       \"distcommon\"  = arch. independent stuff + man + doc/"
-   echo "       \"doc\"         = doc/ directory tree"
-   echo "       \"examples\"    = examples/ directory tree without binaries"
-   echo "       \"iscript\"     = install script"
-   echo "       \"jobs\"        = examples/jobsbin/ example binaries"
-   echo "       \"man\"         = manual pages"
-   echo "       \"mpi\"         = MPI scripts"
-   echo "       \"pvm\"         = PVM source files and scripts"
-   echo "       \"qmontree\"    = PIXMAPS, resource-, help-, copyright files"
-   echo "       \"sec\"         = DCE/Kerberos security modules"
-   echo "       \"secbin\"      = DCE/Kerberos security binaries"
-   echo "       \"txtdoc\"      = doc/ directory tree without PS and PDF files"
-   echo "       \"utilbin\"     = utilbin/\$ARCH/*"
-   echo "       \"utiltree\"    = util/ directory tree"
+   echo "       \"ckpt\"       = checkpointing support files"
+   echo "       \"common\"     = arch. independent, no man/ and no doc/"
+   echo "       \"distcommon\" = arch. independent stuff + man + doc/"
+   echo "       \"doc\"        = doc/ directory tree"
+   echo "       \"examples\"   = examples/ directory tree without binaries"
+   echo "       \"iscript\"    = install script"
+   echo "       \"jobs\"       = examples/jobsbin/ example binaries"
+   echo "       \"man\"        = manual pages"
+   echo "       \"mpi\"        = MPI scripts"
+   echo "       \"pvm\"        = PVM source files and scripts"
+   echo "       \"qmontree\"   = PIXMAPS, resource-, help-, copyright files"
+   echo "       \"sec\"        = DCE/Kerberos security modules"
+   echo "       \"secbin\"     = DCE/Kerberos security binaries"
+   echo "       \"txtdoc\"     = doc/ directory tree without PS and PDF files"
+   echo "       \"utilbin\"    = utilbin/\$ARCH/*"
+   echo "       \"utiltree\"   = util/ directory tree"
    exit 0
 }
 
@@ -314,7 +315,8 @@ SetFilePerm()
 }
 
 #-------------------------------------------------------------------------
-#
+# MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN
+
 # Main targets and target directories
 #
 # BASEDIR      -> base dir for distribution
@@ -389,8 +391,12 @@ if [ -f scripts/distinst.private ]; then
    exit 1
 fi
 
-if [ -f distinst.private ]; then
-   . ./distinst.private
+if [ "$1" != -nosource ]; then
+   if [ -f distinst.private ]; then
+      . ./distinst.private
+   fi
+else
+   shift
 fi
 
 #-------------------------------------------------------------------------

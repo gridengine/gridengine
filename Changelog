@@ -1,3 +1,9 @@
+AD-2003-06-12-0: Testsuite: Added test for issue #193 under bugs/issuezilla
+                            Code has been fixed previsouly
+                 IZ:        #193
+                 Changed:   sge_procedures.tcl
+                 Review:    JG
+
 JG-2003-06-12-0: Bugfix:    Binary submission (qrsh default mode) was broken.
                  Review:    AA
                  Changed:   qsub, qrsh, qsh, qlogin

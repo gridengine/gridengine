@@ -8170,8 +8170,85 @@ proc resolve_host { name { long 0 } } {
   return $newname
 }
 
+#                                                             max. column:     |
+#****** sge_procedures/add_operator() ******
+# 
+#  NAME
+#     add_operator
+#
+#  SYNOPSIS
+#     add_operator { anOperator } 
+#
+#  FUNCTION
+#     Add user ''anOperator'' to operator list.
+#
+#  INPUTS
+#     anOperator - Operator to add
+#
+#  RESULT
+#     0 - Operator has been successfully added
+#    -1 - Otherwise 
+#
+#  SEE ALSO
+#     sge_procedures/delete_operator
+#
+#*******************************
+#
+proc add_operator { anOperator } {
+   global CHECK_OUTPUT
 
+   catch {eval exec "qconf" "-ao $anOperator" } result
+   puts $CHECK_OUTPUT $result
 
+   set result [string trim $result]
+   if {[string match "*added*$anOperator*" $result]} {
+      return 0
+   } elseif {[string match "*$anOperator*already exists" $result]} {
+      return 0
+   } else {
+      return -1
+   }
+}
+
+#                                                             max. column:     |
+#****** sge_procedures/delete_operator() ******
+# 
+#  NAME
+#     delete_operator
+#
+#  SYNOPSIS
+#     delete_operator { anOperator } 
+#
+#  FUNCTION
+#     Delete user ''anOperator'' from operator list.
+#
+#  INPUTS
+#     anOperator - Operator to delete
+#
+#  RESULT
+#     0 - Operator has been successfully deleted
+#    -1 - Otherwise 
+#
+#  SEE ALSO
+#     sge_procedures/add_operator
+#
+#*******************************
+#
+proc delete_operator {anOperator} {
+   global CHECK_OUTPUT
+
+   catch {eval exec "qconf" "-do $anOperator" } result
+   puts $CHECK_OUTPUT $result
+
+   set result [string trim $result]
+   if {[string match "*removed*$anOperator*" $result]} {
+      return 0
+   } elseif {[string match "*$anOperator*does not exist" $result]} {
+      return 0
+   } else {
+      return -2
+   }
+}
 
 
 # main

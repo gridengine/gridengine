@@ -64,7 +64,7 @@ extern char *actmasterfile;
 extern void deliver_message(message *mp, int local);
 extern void init_send(message *mp, int reserved_port, int commdport);
 
-void trace(char *);
+void trace(const char *);
 static char *mid2str(u_long32 mid);
 static int read_qmaster_name_from_file( char *master_host, const char *master_file); 
 
@@ -889,9 +889,8 @@ const char *master_file
   a negative return value from write. If this happens we shutdown the
   socket and allows another commdcntl to connect.
  **********************************************************************/
-void trace(
-char *str 
-) {
+void trace(const char *str) 
+{
    char nl = '\n';
    int i;
 

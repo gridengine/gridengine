@@ -37,7 +37,6 @@
 #include <errno.h>
 
 #include "sge.h"
-#include "def.h"
 #include "sgermon.h"
 #include "sge_ja_task.h"
 #include "sge_schedd_conf.h"

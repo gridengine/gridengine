@@ -49,8 +49,8 @@
 
 #include "msg_utilib.h"
 
-static void sge_do_log(int log_level, int levelchar, char *err_str, 
-                       char *newline);
+static void sge_do_log(int log_level, int levelchar, const char *err_str, 
+                       const char *newline);
 
 u_long32 logginglevel = LOG_WARNING;
 
@@ -65,8 +65,8 @@ trace_func_type trace_func = NULL;
 
 #ifndef WIN32NATIVE
 
-static void sge_do_log(int log_level, int levelchar, char *err_str, 
-                       char *newline) 
+static void sge_do_log(int log_level, int levelchar, const char *err_str, 
+                       const char *newline) 
 {
    int fd;
    char msg2log[1024], date[256], tmp_date[256];
@@ -221,8 +221,8 @@ void sge_log_set_auser(int i) {
 *     uti/log/INFO
 *     uti/log/DEBUG
 ******************************************************************************/
-int sge_log(int log_level, char *mesg, char *file__, 
-            char *func__, int line__) 
+int sge_log(int log_level, const char *mesg, const char *file__, 
+            const char *func__, int line__) 
 {
    static char buf[128*4];
    char newline[2*4];

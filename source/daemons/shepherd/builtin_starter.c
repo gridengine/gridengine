@@ -39,6 +39,7 @@
 #include <errno.h>
 
 #include <sge_string.h>
+#include <sge_stdlib.h>
 #include <sge_signal.h>
 #include <sge_unistd.h>
 #include <setosjobid.h>
@@ -72,16 +73,11 @@ struct rusage {
 #include "setrlimits.h"
 #include "get_path.h"
 #include "basis_types.h"
-#include "setenv.h"
 #include "execution_states.h"
 #include "am_chdir.h"
 #include "qlogin_starter.h"
-
-/* from src */
+#include "sge_unistd.h"
 #include "config_file.h"
-#include "sge_pgrp.h"
-
-/* from utilib */
 #include "sge_uidgid.h"
 
 /* static functions */

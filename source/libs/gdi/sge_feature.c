@@ -32,7 +32,6 @@
 #include <string.h>
 
 #include "sge.h"
-#include "def.h"
 #include "basis_types.h"
 #include "job_log.h"
 #include "sge_queue_qmaster.h"

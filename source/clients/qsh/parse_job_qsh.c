@@ -34,7 +34,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "def.h"
 #include "symbols.h"
 #include "sge_gdi_intern.h"
 #include "sge_string.h"

@@ -33,7 +33,6 @@
 #include <string.h>
 
 #include "sge.h"
-#include "def.h"
 #include "sge_pe.h"
 #include "sge_ja_task.h"
 #include "sge_ckpt_qmaster.h"

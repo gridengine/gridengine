@@ -45,7 +45,6 @@
 
 #include "sgermon.h"
 #include "sge.h"
-#include "def.h"
 #include "symbols.h"
 #include "config.h"
 #include "sge_ja_task.h"

@@ -34,7 +34,6 @@
 #include <errno.h>
 
 #include "sge.h"
-#include "def.h"
 #include "sge_feature.h"
 #include "commlib.h"
 #include "sge_gdi_intern.h"

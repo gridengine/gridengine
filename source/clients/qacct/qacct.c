@@ -37,7 +37,6 @@
 
 #include "sge_unistd.h"
 #include "sge.h"
-#include "def.h"
 #include "path_history.h"
 #include "sge_all_listsL.h"
 #include "sge_string.h"
@@ -66,6 +65,7 @@
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_queue.h"
+#include "sge_stdlib.h"
 
 typedef struct {
    int host;

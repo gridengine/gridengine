@@ -51,7 +51,6 @@
 #include "sge_gdi.h"
 #include "sge_answer.h"
 #include "commlib.h"
-#include "def.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"

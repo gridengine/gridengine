@@ -43,7 +43,6 @@
 #endif
 
 #include "sge.h"
-#include "def.h"
 #include "symbols.h"
 #include "sge_log.h"
 #include "sge_conf.h"

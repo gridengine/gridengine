@@ -41,7 +41,6 @@
 
 #include "sge_unistd.h"
 #include "sge.h"
-#include "def.h"
 #include "sge_options.h"
 #include "sge_gdi_intern.h"
 #include "sge_pe.h"

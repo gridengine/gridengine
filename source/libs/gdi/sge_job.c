@@ -37,7 +37,6 @@
 
 #include "sgermon.h"
 #include "sge_log.h"
-#include "def.h"   
 #include "cull_list.h"
 #include "sge_ja_task.h"
 #include "sge_job.h"
@@ -1553,7 +1552,7 @@ void job_initialize_id_lists(lListElem *job, lList **answer_list)
 
    DENTER(TOP_LAYER, "job_initialize_id_lists");
    n_h_list = lCopyList("", lGetList(job, JB_ja_structure));
-   if (n_h_list == NULL && answer_list != NULL) {
+   if (n_h_list == NULL) {
       answer_list_add(answer_list, MSG_MEM_MEMORYALLOCFAILED, 
                       STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
    } else {

@@ -43,7 +43,6 @@
 #include "basis_types.h"
 #include "sgermon.h" 
 #include "sge_string.h"
-#include "def.h"
 #include "sge_stringL.h"
 #include "commlib.h"
 #include "sge_log.h"

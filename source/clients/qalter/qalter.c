@@ -33,7 +33,6 @@
 #include <stdlib.h>
 
 #include "sge_unistd.h"
-#include "def.h"
 #include "symbols.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"

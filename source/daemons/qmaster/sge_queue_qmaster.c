@@ -34,7 +34,6 @@
 
 #include "sge_conf.h"
 #include "sge.h"
-#include "def.h"
 #include "commlib.h"
 #include "sge_ja_task.h"
 #include "sge_requestL.h"

@@ -71,7 +71,7 @@ void init_send(message *mp, int reserved_port, int commdport);
 static char *fdsetstr(fd_set *fds, char *);
 static void schedule_resends(int port_security, int port, u_long now);
 void dump(void);
-void trace(char *);
+void trace(const char *);
 
 /** local funcs **/
 static void commd_usage(FILE *out, char **argv);

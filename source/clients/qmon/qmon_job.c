@@ -61,7 +61,6 @@
 #include "qmon_request.h"
 #include "qmon_util.h"
 #include "basis_types.h"
-#include "def.h"
 #include "sge_sched.h"
 #include "sge_signal.h"
 #include "sge_time.h"

@@ -34,7 +34,6 @@
 
 #include "sgermon.h"
 #include "sge_log.h"
-#include "def.h"   
 #include "cull_list.h"
 
 #include "sge_answer.h"

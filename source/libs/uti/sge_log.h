@@ -44,19 +44,18 @@
 #   include "basis_types.h"
 #endif
 
+#include "msg_utilib.h"
+
 extern stringTlong SGE_EVENT;
 extern char *error_file;
 
-/* hook for commd trace() */
-typedef void (*trace_func_type)(char *);
+typedef void (*trace_func_type)(const char *);
 extern trace_func_type trace_func;
-
 
 void sge_log_set_auser(int i);
 void sge_log_set_verbose(int i);
 int sge_log_is_verbose(void);
 void sge_log_set_qmon(int i);
-
 
 #define SGE_LOG(level,msg) sge_log(level, msg, __FILE__, SGE_FUNC, __LINE__ );
 
@@ -222,7 +221,42 @@ void sge_log_set_qmon(int i);
                         sge_log(LOG_DEBUG,  SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
 #endif
 #endif
-int sge_log(int log_level, char *mesg, char *file__, char *func__, int line__);
+
+/****** uti/log/SGE_ASSERT() **************************************************
+*  NAME
+*     SGE_ASSERT() -- Log a message and exit if assertion is false 
+*
+*  SYNOPSIS
+*     #define SGE_ASSERT(expression)
+*     void SGE_ASSERT(int expression) 
+*
+*  FUNCTION
+*     Log a critical message and exit if assertion is false.
+*
+*  INPUTS
+*     expression   - a logical expression 
+******************************************************************************/
+#if defined(_AIX) || defined(SVR3)
+#  define SGE_ASSERT(x) \
+   if (x) { \
+      ; \
+   } else { \
+      sge_log(LOG_CRIT, # x ,__FILE__,SGE_FUNC,__LINE__); \
+      sge_log(LOG_CRIT, MSG_UNREC_ERROR,__FILE__,SGE_FUNC,__LINE__); \
+      abort(); \
+   }
+#else
+#  define SGE_ASSERT(x) \
+   if (x) { \
+      ; \
+   } else { \
+      sge_log(LOG_CRIT, MSG_UNREC_ERROR,__FILE__,SGE_FUNC,__LINE__); \
+      abort(); \
+   }
+#endif
+
+int sge_log(int log_level, const char *mesg, const char *file__, 
+            const char *func__, int line__);
 
 #endif /* __SGE_LOG_H */
 

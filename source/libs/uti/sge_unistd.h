@@ -73,6 +73,22 @@
 #  define SGE_STRUCT_DIRENT struct dirent
 #endif       
 
+#if defined(_UNICOS) || defined(SOLARIS) || defined(__hpux) || defined(LINUX) || defined(AIX4) || defined(SINIX) || defined(NECSX4) || defined(NECSX5)
+#   define SETPGRP setpgrp()
+#elif defined(__sgi)
+#   define SETPGRP BSDsetpgrp(getpid(),getpid())
+#elif defined(SUN4) || defined(WIN32)
+#   define SETPGRP setsid()
+#else
+#   define SETPGRP setpgrp(getpid(),getpid())
+#endif
+
+#ifdef SUN4
+#   define GETPGRP getpgrp(0)
+#else
+#   define GETPGRP getpgrp()
+#endif
+
 typedef void (*sge_exit_func_t)(int);
 
 sge_exit_func_t sge_install_exit_func(sge_exit_func_t);     

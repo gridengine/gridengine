@@ -49,7 +49,6 @@
 #include "symbols.h"
 #include "jb_now.h"
 #include "sge_time.h"
-#include "def.h"
 #include "read_write_host.h"
 #include "reschedule.h"
 #include "msg_qmaster.h"

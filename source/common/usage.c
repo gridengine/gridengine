@@ -35,7 +35,6 @@
 #include "usage.h"
 #include "sge_feature.h"
 
-#include "def.h"
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_prog.h"

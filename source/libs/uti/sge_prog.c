@@ -38,10 +38,10 @@
 #include <sys/socket.h>  
 
 #include "sge.h"
-#include "def.h"
 #include "sgermon.h"
 #include "sge_prog.h"
 #include "sge_log.h"
+#include "sge_stdlib.h"
 #include "sge_string.h"
 #include "sge_unistd.h"
 
@@ -125,8 +125,6 @@ void sge_getme(u_long32 program_number)
  
    DENTER(TOP_LAYER, "sge_getme");
  
-   DTRACE;
- 
    if (first) {
       memset(&me, 0, sizeof(me));
       first = FALSE;
@@ -140,13 +138,17 @@ void sge_getme(u_long32 program_number)
    me.who = program_number;
    me.sge_formal_prog_name = sge_strdup(me.sge_formal_prog_name,
                                         prognames[me.who]);
- 
+
    /* Fetch hostnames */
    SGE_ASSERT((gethostname(tmp_str, sizeof(tmp_str)) == 0));
    SGE_ASSERT(((hent = gethostbyname(tmp_str)) != NULL));
- 
+
+   DTRACE;
+
    me.qualified_hostname = strdup(hent->h_name);
    me.unqualified_hostname = sge_dirname(me.qualified_hostname, '.');
+
+   DTRACE;
  
    /* Bad resolving in some networks leads to short qualified host names */
    if (!strcmp(me.qualified_hostname, me.unqualified_hostname)) {
@@ -154,15 +156,23 @@ void sge_getme(u_long32 program_number)
  
       memcpy(tmp_addr, hent->h_addr, hent->h_length);
  
+      DTRACE;
+
       SGE_ASSERT(((hent2 = gethostbyaddr(tmp_addr, hent->h_length, AF_INET)) !=
 NULL));
+
+      DTRACE;
  
       FREE(me.qualified_hostname);
       FREE(me.unqualified_hostname);
+
+      DTRACE;
  
       me.qualified_hostname = strdup(hent->h_name);
       me.unqualified_hostname = sge_dirname(me.qualified_hostname, '.');
    }
+
+   DTRACE;
  
  
    /* SETPGRP; */

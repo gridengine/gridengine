@@ -46,7 +46,6 @@
 #include "sge_string.h"
 #include "sgermon.h"
 #include "sge_conf.h"
-#include "def.h"
 #include "sge_stdio.h"
 #include "sge_prog.h"
 #include "sge_report_execd.h"

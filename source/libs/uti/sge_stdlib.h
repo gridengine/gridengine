@@ -32,6 +32,35 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <stdlib.h>
+
+/****** uti/stdlib/FREE() *****************************************************
+*  NAME
+*     FREE() -- replacement for sge_free()
+*
+*  SYNOPSIS
+*     #define FREE(x)
+*     void FREE(char *cp) 
+*
+*  FUNCTION
+*     Replacement for sge_free(). Accepts NULL pointers.
+*     After a call of this macro "cp" will be NULL.
+*
+*  INPUTS
+*     char *cp - pointer to a memory block 
+*
+*  RESULT
+*     char* - NULL
+*
+*  SEE ALSO
+*     uti/stdlib/sge_free()
+******************************************************************************/
+#define FREE(x) \
+   if (x) { \
+      sge_free((char *)x); \
+      x = NULL; \
+   }
+
 char *sge_malloc(int size);
 
 char *sge_realloc(char *ptr, int size);
@@ -39,5 +68,9 @@ char *sge_realloc(char *ptr, int size);
 char *sge_free(char *cp);        
 
 const char *sge_getenv(const char *env_str); 
+
+int sge_putenv(const char *var);
+
+int sge_setenv(const char *name, const char *value);
 
 #endif /* __SGE_STDLIB_H */

@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#include "def.h"
 #include "sge_conf.h"
 #include "sge.h"
 #include "sge_pe.h"

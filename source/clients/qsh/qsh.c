@@ -71,7 +71,6 @@
 #include "sge_job.h"
 #include "sge_qexec.h"
 #include "qm_name.h"
-#include "sge_pgrp.h"
 #include "sge_signal.h"
 #include "sge_unistd.h"
 #include "jb_now.h"

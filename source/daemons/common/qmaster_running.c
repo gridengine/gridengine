@@ -41,7 +41,6 @@
 #include "sgermon.h"
 #include "commlib.h"
 #include "sge_conf.h"
-#include "def.h"
 #include "qm_name.h"
 #include "qmaster_running.h"
 #include "setup_path.h"

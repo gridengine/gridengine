@@ -74,7 +74,6 @@ struct rusage {
 #include "basis_types.h"
 #include "config_file.h"
 #include "err_trace.h"
-#include "setenv.h"
 #include "sge_uidgid.h"
 #include "setosjobid.h"
 

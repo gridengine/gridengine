@@ -77,7 +77,6 @@ lList **alpp
 
    sge_getme(sge_formal_prog_name);
    memset(&path, 0, sizeof(path));
-
    /* gdi lib call */ 
    sge_setup_paths(me.default_cell, &path, alpp);
 

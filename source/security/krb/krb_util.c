@@ -48,7 +48,6 @@
 #include "commlib.h"
 
 #include "sge.h"
-#include "def.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time.h"

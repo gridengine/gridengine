@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 
 #include "sge.h"
-#include "def.h"
 #include "sgermon.h"
 #include "basis_types.h"
 #include "sge_ja_task.h"

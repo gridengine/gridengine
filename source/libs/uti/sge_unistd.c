@@ -41,7 +41,6 @@
 #endif  
 
 #include "sge_unistd.h"
-#include "def.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "basis_types.h"

@@ -34,6 +34,34 @@
 
 #include <stdio.h>
 
+/****** uti/bitfield/BIT_MANIPULATION_MAKROS() ********************************
+*  NAME
+*     ISSET(),VALID(),SETBIT(),CLEARBIT() - Bit manipulation makros 
+*
+*  SYNOPSIS
+*     #define ISSET(a,b)      ((a&b)==b)
+*     #define VALID(a,b)      ((a|b)==b)
+*     #define SETBIT(a,b)     (b=(a)|b);
+*     #define CLEARBIT(a,b)   (b &= (~(a)));
+*
+*  FUNCTION
+*     Makros to get/set/clear bits in native variables. 
+*
+*  INPUTS
+*     int,long,u_long32... a - Bitmask
+*     int,long,u_long32... b - Variable 
+*
+*  RESULT
+*     b will be modified
+*
+*  NOTE
+*     These Makros can't be used in combination with the bitfield type.
+*******************************************************************************/
+#define ISSET(a,b)      ((a&b)==b)
+#define VALID(a,b)      ((a|b)==b)
+#define SETBIT(a,b)     (b=(a)|b);
+#define CLEARBIT(a,b)   (b &= (~(a)));
+
 typedef struct {
    int size;
    char *bf;

@@ -53,7 +53,6 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
 #include "commlib.h"
-#include "def.h"
 #include "read_write_complex.h"
 #include "sge_complex_schedd.h"
 #include "sge_answer.h"

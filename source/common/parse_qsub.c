@@ -32,7 +32,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "def.h"
 #include "symbols.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"

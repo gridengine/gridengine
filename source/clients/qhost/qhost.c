@@ -38,7 +38,6 @@
 
 #include "basis_types.h"
 #include "sge.h"
-#include "def.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
@@ -47,6 +46,7 @@
 #include "sgermon.h"
 #include "sge_feature.h"
 #include "sge_unistd.h"
+#include "sge_stdlib.h"
 #include "cull_parse_util.h"
 #include "parse.h"
 #include "sge_resource.h"

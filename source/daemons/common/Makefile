@@ -45,7 +45,6 @@ DAEMONS_COMMON_SRC = admin_mail.c \
                     qmaster_heartbeat.c \
                     qmaster_running.c \
                     read_write_job.c \
-                    setenv.c \
                     setosjobid.c \
                     shutdown.c \
                     startprog.c \
@@ -115,9 +114,6 @@ qmaster_running.o:	$(DAEMONS_COMMON_DIR)/qmaster_running.c
 
 read_write_job.o:	$(DAEMONS_COMMON_DIR)/read_write_job.c
 		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/read_write_job.c
-
-setenv.o:	$(DAEMONS_COMMON_DIR)/setenv.c
-		$(CC) -I$(DAEMONS_COMMON_DIR) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/setenv.c
 
 setosjobid.o: $(DAEMONS_COMMON_DIR)/setosjobid.c
 		$(CC) -I$(DAEMONS_COMMON_DIR) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/setosjobid.c

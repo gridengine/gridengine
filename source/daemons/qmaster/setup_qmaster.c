@@ -35,7 +35,6 @@
 #include <errno.h>
 
 #include "sge.h"
-#include "def.h"
 #include "sge_conf.h"
 #include "commlib.h"
 #include "subordinate_qmaster.h"
@@ -113,6 +112,8 @@
 #include "sge_usermap.h"
 
 #include "msg_common.h"
+
+#define CONFIG_TAG_OBSOLETE_VALUE         0x0001
 
 #ifndef __SGE_NO_USERMAPPING__
 static int sge_read_user_mapping_entries_from_disk(void);

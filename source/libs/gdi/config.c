@@ -34,7 +34,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#include "def.h"
 #include "cull.h"
 #include "sge_gdi_intern.h"
 #include "sge_parse_num_par.h"

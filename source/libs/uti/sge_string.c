@@ -35,9 +35,9 @@
 #include <ctype.h>
 
 #include "sgermon.h"
+#include "sge_stdlib.h"
 #include "sge_string.h"
 #include "sge_log.h"
-#include "def.h"
 #include "msg_utilib.h"
 
 #define IS_DELIMITOR(c,delimitor) \

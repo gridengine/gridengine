@@ -34,7 +34,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "def.h"
 #include "sgermon.h"
 #include "basis_types.h"
 #include "sge_prog.h"

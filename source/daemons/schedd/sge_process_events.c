@@ -44,7 +44,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "def.h"
 #include "sge.h"
 #include "sge_gdi_intern.h"
 #include "sge_c_event.h"

@@ -30,7 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -43,8 +42,9 @@
 #include <sys/stat.h>
 
 #include "basis_types.h"
-#include "sge_pgrp.h"
+#include "sge_stdlib.h"
 #include "sge_string.h"
+#include "sge_unistd.h"
 #include "sge_uidgid.h"
 #include "config_file.h"
 #include "msg_qrsh.h"
@@ -52,54 +52,6 @@
 #define MAX_ENVIRONMENT_LENGTH 4096
 
 pid_t child_pid = 0;
-
-/****** Interactive/qrsh/sge_putenv() **********************************************
-*  NAME
-*     sge_putenv() -- put an environment variable to environment
-*
-*  SYNOPSIS
-*     static int sge_putenv(const char *var) 
-*
-*  FUNCTION
-*     Duplicates the given environment variable and calls the system call
-*     putenv.
-*
-*  INPUTS
-*     const char *var - variable to put in the form <name>=<value>
-*
-*  RESULT
-*     static int - 1 on success, else 0
-*
-*  NOTES
-*     This function should probably be part of utilib.
-*     Or sge_setenv's restrictions could be removed.
-*
-*  SEE ALSO
-*     sge_setenv()
-*
-*******************************************************************************/
-static int sge_putenv(const char *var)
-{
-   char *duplicate;
-
-   if(var == NULL) {
-      return 0;
-   }
-
-   duplicate = strdup(var);
-
-   if(duplicate == NULL) {
-      fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-      return 0;
-   }
-
-   if(putenv(duplicate) != 0) {
-      fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-      return 0;
-   }
-
-   return 1;
-}
 
 /****** Interactive/qrsh/setEnvironment() ***************************************
 *

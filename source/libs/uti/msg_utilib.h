@@ -211,5 +211,10 @@
 #define MSG_NET_GETHOSTNAMEFAILED                  _MESSAGE(49078, _("gethostname failed"))
 #define MSG_NET_RESOLVINGLOCALHOSTFAILED           _MESSAGE(49079, _("failed resolving local host"))
 
+/*
+ * 
+ */
+#define MSG_UNREC_ERROR                            _MESSAGE(49080, _("unrecoverable error - contact systems manager"))
+
 #endif /* __MSG_UTILIB_H */
 

@@ -21,7 +21,6 @@ RSHD_ADD_OBJS = \
             $(SGE_ARCH_DIR)/sge_uidgid.o \
             $(SGE_ARCH_DIR)/execution_states.o \
             $(SGE_ARCH_DIR)/qlogin_starter.o \
-            $(SGE_ARCH_DIR)/setenv.o \
             $(SGE_ARCH_DIR)/setjoblimit.o
 
 RSHD_ADD_LIBS = -L$(SGE_ARCH_DIR) -luti -lrmon

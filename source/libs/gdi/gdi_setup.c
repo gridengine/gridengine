@@ -33,7 +33,6 @@
 #include <signal.h>
 
 #ifdef WIN32NATIVE
-//#	include "def.h"
 #	include "win32nativetypes.h"
 #endif /* WIN32NATIVE */
 

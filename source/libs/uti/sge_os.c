@@ -60,7 +60,6 @@
 #endif    
 
 #include "sgermon.h"
-#include "sge_pgrp.h"    
 #include "sge_unistd.h"
 #include "sge_stdio.h"
 #include "sge_os.h"

@@ -34,7 +34,6 @@
 #include <string.h>
 
 #include "sgermon.h"
-#include "def.h"
 #include "sge.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"

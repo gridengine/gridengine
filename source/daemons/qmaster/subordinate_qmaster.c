@@ -33,7 +33,6 @@
 
 #include "sgermon.h"
 #include "sge_log.h"
-#include "def.h"
 #include "sge_conf.h"
 #include "slots_used.h"
 #include "sge_sched.h"

@@ -35,9 +35,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "def.h"
 #include "sge.h"
 #include "sge_conf.h"
+#include "sge_stdlib.h"
 #include "cull.h"
 #include "commlib.h"
 #include "sge_parse_num_par.h"

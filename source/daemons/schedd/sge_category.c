@@ -34,7 +34,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "def.h"
 #include "sge_gdi_intern.h"
 #include "sge_c_event.h"
 #include "sge_ja_task.h"

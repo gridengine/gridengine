@@ -35,7 +35,6 @@
 #include <fnmatch.h>
 
 #include "sge.h"
-#include "def.h"
 #include "symbols.h"
 #include "sge_ja_task.h"
 #include "sge_stringL.h"

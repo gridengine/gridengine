@@ -54,7 +54,6 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "sge.h"
-#include "def.h"
 #include "sge_sched.h"
 #include "qmon_rmon.h"
 #include "qmon_queue.h"

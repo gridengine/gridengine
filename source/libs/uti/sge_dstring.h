@@ -54,8 +54,6 @@ typedef struct {
    size_t size;
 } dstring;
 
-
-/* JG: TODO: functions returning a string should do so as const char * */
 const char* sge_dstring_append(dstring *sb, const char *a);
 const char* sge_dstring_append_dstring(dstring *sb, const dstring *a);
 

@@ -33,7 +33,6 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "def.h"
 #include "sge.h"
 #include "sge_ja_task.h"
 #include "sge_job_refL.h"

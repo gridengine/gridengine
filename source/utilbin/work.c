@@ -42,7 +42,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#include "sge_pgrp.h"
+#include "sge_unistd.h"
 
 #ifdef SUN4
 extern char *sys_errlist[];

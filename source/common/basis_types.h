@@ -49,8 +49,13 @@
 #  define _SGE_GETTEXT__(x) (x)
 #endif
 
+#ifndef FALSE
+#   define FALSE                (0)
+#endif
 
-
+#ifndef TRUE
+#   define TRUE                 (1)
+#endif
 
 #define U32CFormat "%ld"
 #define u32c(x)  (unsigned long)(x)

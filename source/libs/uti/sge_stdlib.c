@@ -35,7 +35,7 @@
 #include <string.h>
 
 #include "sge_stdlib.h"
-#include "def.h"  
+#include "sge_dstring.h"
 #include "sgermon.h"
 #include "sge_log.h" 
 #include "msg_utilib.h"
@@ -143,7 +143,7 @@ char *sge_realloc(char *ptr, int size)
 ******************************************************************************/
 char *sge_free(char *cp) 
 {
-   FREE(cp);
+   free(cp);
    return NULL;
 }  
 
@@ -165,6 +165,10 @@ char *sge_free(char *cp)
 *
 *  RESULT
 *     const char* - value
+*
+*  SEE ALSO
+*     uti/stdlib/sge_putenv()
+*     uti/stdlib/sge_setenv() 
 ******************************************************************************/
 const char *sge_getenv(const char *env_str) 
 {
@@ -190,4 +194,81 @@ const char *sge_getenv(const char *env_str)
    return (cp);
 }    
 
+/****** uti/stdlib/sge_putenv() ***********************************************
+*  NAME
+*     sge_putenv() -- put an environment variable to environment
+*
+*  SYNOPSIS
+*     static int sge_putenv(const char *var) 
+*
+*  FUNCTION
+*     Duplicates the given environment variable and calls the system call
+*     putenv.
+*
+*  INPUTS
+*     const char *var - variable to put in the form <name>=<value>
+*
+*  RESULT
+*     static int - 1 on success, else 0
+*
+*  SEE ALSO
+*     uti/stdlib/sge_setenv() 
+*     uti/stdlib/sge_getenv()
+*******************************************************************************/
+int sge_putenv(const char *var)
+{
+   char *duplicate;
 
+   if(var == NULL) {
+      return 0;
+   }
+
+   duplicate = strdup(var);
+
+   if(duplicate == NULL) {
+      return 0;
+   }
+
+   if(putenv(duplicate) != 0) {
+      return 0;
+   }
+
+   return 1;
+}
+
+/****** uti/stdlib/sge_setenv() ***********************************************
+*  NAME
+*     sge_setenv() -- Change or add an environment variable 
+*
+*  SYNOPSIS
+*     int sge_setenv(const char *name, const char *value) 
+*
+*  FUNCTION
+*     Change or add an environment variable 
+*
+*  INPUTS
+*     const char *name  - variable name 
+*     const char *value - new value 
+*
+*  RESULT
+*     int - error state
+*         1 - success
+*         0 - error 
+*
+*  SEE ALSO
+*     uti/stdlib/sge_putenv() 
+*     uti/stdlib/sge_getenv()
+*******************************************************************************/
+int sge_setenv(const char *name, const char *value)
+{
+   int ret = 0;
+
+   if (name != NULL && value != NULL) {
+      dstring variable = DSTRING_INIT;
+
+      sge_dstring_sprintf(&variable, "%s=%s", name, value);
+      ret = sge_putenv(sge_dstring_get_string(&variable));
+      sge_dstring_free(&variable);
+   }
+   return ret;
+}

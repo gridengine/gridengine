@@ -38,7 +38,6 @@
 #	include <unistd.h>
 #endif
 #include <stdlib.h>
-#include "def.h"
 #include "commlib.h"
 #include "sge_stdlib.h"
 #include "sge_gdi_intern.h"

@@ -33,7 +33,6 @@
 #include "sgermon.h"
 #include "sge_string.h"
 #include "sge_log.h"
-#include "def.h"
 #include "cull_list.h"
 #include "symbols.h"
 #include "sge.h"

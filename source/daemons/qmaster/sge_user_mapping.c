@@ -44,9 +44,8 @@
 #include "sgermon.h" 
 #include "sge_string.h"
 #include "sge_user_mapping.h"
-#include "def.h"
-/* #include "cull_list.h" */
 #include "sge_stringL.h"
+#include "sge_stdlib.h"
 #include "commlib.h"
 #include "sge_log.h"
 #include "msg_common.h"

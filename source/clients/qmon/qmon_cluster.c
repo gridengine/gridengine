@@ -55,7 +55,6 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
 #include "commlib.h"
-#include "def.h"
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "qmon_proto.h"

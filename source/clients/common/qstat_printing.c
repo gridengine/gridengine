@@ -37,7 +37,6 @@
 
 #include "sge_unistd.h"
 #include "sgermon.h"
-#include "def.h"
 #include "symbols.h"
 #include "sge.h"
 #include "sge_time.h"

@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.6 2002/05/31 08:27:53 joga Exp $	*/
+/*	$Id: rshd.c,v 1.7 2002/07/26 14:08:01 ernst Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -81,7 +81,7 @@
 #include <sys/filio.h>
 #endif
 
-#include <sge_pgrp.h>
+#include <sge_unistd.h>
 #include <setosjobid.h>
 #include <config_file.h>
 #include <sge_uidgid.h>

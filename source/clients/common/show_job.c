@@ -32,7 +32,6 @@
 #include <time.h>
 #include <string.h>
 
-#include "def.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "sge_resource.h"

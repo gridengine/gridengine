@@ -36,7 +36,6 @@
 #include <ctype.h>
 
 #include "sgermon.h"
-#include "def.h"
 #include "sge_time.h"
 #include "sge_log.h"
 #include "sge.h"
@@ -45,6 +44,7 @@
 #include "sge_stringL.h"
 #include "sge_sched.h"
 #include "sge_feature.h"
+#include "sge_stdlib.h"
 #include "sec.h"
 #include "mail.h"
 #include "sge_ja_task.h"

@@ -49,7 +49,6 @@
 #include <fcntl.h>    
 #include <errno.h>    
 
-#include "def.h"
 #include "sge_all_listsL.h"
 #include "complex_history.h"
 #include "sge_sched.h"
@@ -59,6 +58,7 @@
 #include "path_history.h"
 #include "sgermon.h"
 #include "sge_log.h"
+#include "sge_stdlib.h"
 #include "sge_string.h"
 #include "read_write_host.h"
 #include "setup_path.h"

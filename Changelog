@@ -42,7 +42,6 @@ SG-2004-07-12-0: Bugfix:    - qstat -j -xml printed unparsable xml-output
                  Bugtraq:   -NA-
                  Review:    AA
 
->>>>>>> 1.2086.2.19
 AH-2004-07-09-0: Bugfix:    Deleted pending job appears in qstat
                  Changed:   qstat, qhost
                  Issue:     1113

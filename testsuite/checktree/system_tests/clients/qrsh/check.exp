@@ -69,7 +69,7 @@ lappend check_functions "qrsh_batch"                 ;# run qrsh in batch mode
 lappend check_functions "qrsh_limits"                ;# limits (e.g. cpu) passed correctly
 lappend check_functions "qrsh_trap"                  ;# started command traps SIGINT
 
-#set check_functions "qrsh_accounting"
+#set check_functions "qrsh_terminate"
 
 # test specific global variables
 global qrsh_hostlist
@@ -247,8 +247,9 @@ proc qrsh_alltoall {} {
 
 
    foreach source $qrsh_hostlist {
+      set source_arch [resolve_arch $source]
       foreach dest $qrsh_hostlist {
-         set qrsh_id [open_remote_spawn_process "$source" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh" "-l hostname=$dest echo qrsh sucessfully started"]
+         set qrsh_id [open_remote_spawn_process "$source" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$source_arch/qrsh" "-l hostname=$dest echo qrsh sucessfully started"]
          set sp_id [ lindex $qrsh_id 1 ]                              
          set timeout 60
          expect {
@@ -260,7 +261,7 @@ proc qrsh_alltoall {} {
             -i $sp_id default {
                close_spawn_process $qrsh_id
                set_error -1 "qrsh from host $source to host $dest failed"
-               return
+               continue
             }
             -i $sp_id "qrsh sucessfully started" {
                close_spawn_process $qrsh_id
@@ -499,6 +500,10 @@ proc qrsh_accounting {} {
       sleep 5
 
       if { $job_id != "" } {
+         if {[info exists qacct_info]} {
+            unset qacct_info
+         }
+
          if { [get_qacct $job_id] == 0 } {
             add_proc_error "qrsh_accounting"  -1 "qacct for job $job_id on host $host failed"
          } else {
@@ -842,8 +847,9 @@ proc qrsh_terminate {} {
 
    foreach host $qrsh_hostlist {
       # start qrsh job (shell script that outputs its pid)
-      if {[file exists $terminate_out_file]} {
-         start_remote_prog $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER rm $terminate_out_file
+      start_remote_prog $host $CHECK_FIRST_FOREIGN_SYSTEM_USER ls $terminate_out_file exit_code
+      if {$exit_code == 0} {
+         start_remote_prog $host $CHECK_FIRST_FOREIGN_SYSTEM_USER rm $terminate_out_file
       }
 
       set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 120"]
@@ -891,24 +897,34 @@ proc qrsh_terminate {} {
          get_ps_info $job_pid $host
          # qdel 
          delete_job $job_id
-         wait_for_file $terminate_out_file 120 
+
+         for {set i 0} {$i < 60} {incr i} {
+            after 1000
+            start_remote_prog $host $CHECK_USER ls $terminate_out_file exit_code
+            if {$exit_code == 0} {
+               puts $CHECK_OUTPUT "terminate method has been started"
+               break
+            } else {
+               puts $CHECK_OUTPUT "waiting for terminate method"
+            }
+         }   
+        
+         # wait for terminate method to finish
          sleep 2
          # check contents of terminate.out
-         if {! [file exists $terminate_out_file]} {
-            set_error -1 "outputfile of terminate method does not exist on host $host"
+         set line [start_remote_prog $host $CHECK_USER cat $terminate_out_file exit_code]
+         if {$exit_code != 0} {
+            add_proc_error "qrsh_terminate" -1 "error reading from terminate method output file on host $host"
          } else {
-            set f [open $terminate_out_file r]
-            set line ""
-            gets $f line
             if {[scan $line "job_id=%d job_pid=%d" t_job_id t_job_pid] != 2} {
-               set_error -1 "error reading from terminate method output file on host $host"
+               add_proc_error "qrsh_terminate" -1 "error reading from terminate method output file on host $host"
             } else {
                # t_job_pid should be ppid of job_pid
                if { ! [info exists ps_info($job_pid,ppid)] } {
-                  set_error -1 "info about ppid of pid $job_pid not available on host $host"
+                  add_proc_error "qrsh_terminate" -1 "info about ppid of pid $job_pid not available on host $host"
                } else {   
                   if { $ps_info($job_pid,ppid) != $t_job_pid} {
-                     set_error -1 "wrong job_pid passed to terminate method for job $job_id on host $host, should be $ps_info($job_pid,ppid) but is $t_job_pid"
+                     add_proc_error "qrsh_terminate" -1 "wrong job_pid passed to terminate method for job $job_id on host $host, should be $ps_info($job_pid,ppid) but is $t_job_pid"
                   }
                }
             }
@@ -916,7 +932,7 @@ proc qrsh_terminate {} {
          # check if shell script is still running
          get_ps_info $job_pid $host
          if { $ps_info($job_pid,error) == 0 } {
-            set_error -1 "process of deleted job $job_pid on host $host is still running"
+            add_proc_error "qrsh_terminate" -1 "process of deleted job $job_pid on host $host is still running"
          }
       }
       
@@ -926,12 +942,12 @@ proc qrsh_terminate {} {
          expect {
             -i $sp_id full_buffer {
                close_spawn_process $qrsh_id
-               add_proc_error "qrsh_suspend" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+               add_proc_error "qrsh_terminate" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                set done 1
             }
             -i $sp_id timeout {
                close_spawn_process $qrsh_id
-               add_proc_error "qrsh_suspend" -1 "timeout waiting for qrsh to host $host to finish"
+               add_proc_error "qrsh_terminate" -1 "timeout waiting for qrsh to host $host to finish"
                set done 1
             }
             -i $sp_id "_exit_status_" {
@@ -940,16 +956,16 @@ proc qrsh_terminate {} {
             }
             -i $sp_id eof {
                close_spawn_process $qrsh_id
-               add_proc_error "qrsh_suspend" -1 "open_remote_spawn_process closed connection (eof)"
+               add_proc_error "qrsh_terminate" -1 "open_remote_spawn_process closed connection (eof)"
                set done 1
             }
          }
       }
 
-      if {[file exists $terminate_out_file]} {
-         start_remote_prog $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER rm $terminate_out_file
+      start_remote_prog $host $CHECK_FIRST_FOREIGN_SYSTEM_USER ls $terminate_out_file exit_code
+      if {$exit_code == 0} {
+         start_remote_prog $host $CHECK_FIRST_FOREIGN_SYSTEM_USER rm $terminate_out_file
       }
-
    }
 
    # reset terminate method

@@ -1,3 +1,8 @@
+JG-2001-12-10-1: Testsuite: fixed qrsh test:
+                            - accounting wrongly reported errors
+                            - terminate test did no longer work for 
+                              remote hosts
+
 CR-2001-12-10-1: Feature:   remove unnecessary libs linked to commd
 
 JG-2001-12-10-0: Bugfix:    qrsh/qlogin: if client command (rsh/rlogin/telnet)

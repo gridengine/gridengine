@@ -129,7 +129,7 @@ while [ $ARGC != 0 ]; do
    -x)
      EXECD="install"
      . ./util/install_modules/inst_execd.sh
-     if [ $2 = "-upd" ]; then
+     if [ "$2" = "-upd" ]; then
          UPDATE=true
          shift
          ARGC=`expr $ARGC - 1`

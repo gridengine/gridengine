@@ -144,17 +144,7 @@ GetPathToBinaries()
 #    echo "root" if admin user retrieval fails
 GetAdminUser()
 {
-   cfgname=$SGE_ROOT/$SGE_CELL/common/bootstrap
-   user=none
-
-   if [ -f $cfgname ]; then
-      user=`grep admin_user $cfgname | awk '{ print $2 }'`
-   fi
-
-   if [ `echo $user|tr "A-Z" "a-z"` = "none" ]; then
-      user=root
-   fi
-   echo $user
+   echo GENADMINUSER
 }
 
 #---------------------------------------------------------------------------
@@ -199,14 +189,9 @@ ExecuteAsAdmin()
    if [ $ADMINUSER = default ]; then
       $*
    else
-      $utilbin_dir/adminrun $ADMINUSER $*
+      $utilbin_dir/adminrun $ADMINUSER $* &
    fi
 
-   if [ $? != 0 ]; then
-      echo "Probably a permission problem. Please check file access permissions."
-      echo "Check read/write permission. Check if SGE daemons are running."
-      exit 1
-   fi
    return 0
 }
 
@@ -301,8 +286,7 @@ if [ "$startup" = true ]; then
 
    #CheckSpoolDir
    #CheckIfLocal SPOOLING_DIR
-   # TODO: should better run under admin_user account!
-   $utilbin_dir/berkeley_db_svc $BDBHOMES &
+   ExecuteAsAdmin $utilbin_dir/berkeley_db_svc $BDBHOMES
 else
    echo Stopping Berkeley DB
    Shutdown

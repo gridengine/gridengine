@@ -104,7 +104,7 @@ SpoolingCheckParams()
       if [ $? = 0 -a $AUTO = "false" ]; then
          $INFOTEXT -log "Starting rpc server on host %s!" $SPOOLING_SERVER
          $INFOTEXT "Starting rpc server on host %s!" $SPOOLING_SERVER
-         ExecuteAsAdmin $SGE_ROOT/$COMMONDIR/sgebdb start &
+         $SGE_ROOT/$COMMONDIR/sgebdb start &
          sleep 5
          $INFOTEXT "The Berkeley DB has been started with these parameters:\n\n"
          $INFOTEXT "Spooling Server Name: %s" $SPOOLING_SERVER
@@ -127,6 +127,7 @@ CreateRPCServerScript()
    RPCSCRIPT=$SGE_ROOT/$COMMONDIR/sgebdb
    Execute sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
                -e "s%GENCELL%${SGE_CELL_VAL}%g" \
+               -e "s%GENADMINUSER%${ADMINUSER}%g" \
                -e "s%SPOOLING_DIR%${SPOOLING_DIR}%g" \
                -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
                util/rctemplates/sgebdb_template > ${RPCSCRIPT}

@@ -1,3 +1,9 @@
+MD-2004-11-17-0: Bugfix:    - backup fails if root is mapped to nobody
+                 Review:    pending
+                 Issue:     1344
+                 Bugtraq:   6196578
+                 Changed:   inst_common.sh
+
 SG-2004-11-17-0: Bugfix:    - the deletion of the queue calendar did not reset
                               the cal for the scheduler.
                  Review:    EB

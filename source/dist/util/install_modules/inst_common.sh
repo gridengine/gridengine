@@ -182,7 +182,11 @@ ExecuteAsAdmin()
    if [ $ADMINUSER = default ]; then
       $*
    else
-      $SGE_UTILBIN/adminrun $ADMINUSER $*
+      if [ -f $SGE_UTILBIN/adminrun ]; then
+         $SGE_UTILBIN/adminrun $ADMINUSER $*
+      else
+         $SGE_ROOT/utilbin/$SGE_ARCH/adminrun $ADMINUSER $*
+      fi
    fi
 
    if [ $? != 0 ]; then
@@ -1123,8 +1127,10 @@ CheckRunningDaemon()
 BackupConfig()
 {
    DATE=`date '+%Y-%m-%d_%H_%M_%S'`
-   BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd" 
-   BUP_SPOOL_FILE_LIST="jobseqnum"
+   BUP_COMMON_FILE_LIST_TMP="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd" 
+   BUP_SPOOL_FILE_LIST_TMP="jobseqnum"
+   BUP_COMMON_FILE_LIST=""
+   BUP_SPOOL_FILE_LIST=""
 
 
    $INFOTEXT -u "SGE Configuration Backup"
@@ -1177,10 +1183,7 @@ BackupConfig()
                    fi
    done
 
-   $INFOTEXT  -auto $AUTO -ask "y" "n" -def "y" -n "\nIf you are using different tar versions (gnu tar/ solaris tar), this option\n" \
-                                                   "can make some trouble. In some cases the tar packages may be corrupt.\n" \
-                                                   "Using the same tar binary for packing and unpacking works without problems!\n\n" \
-                                                   "Shall the backup function create a tar/gz package with your files? (y/n) [y] >>"
+   $INFOTEXT  -auto $AUTO -ask "y" "n" -def "y" -n "\nShall the backup function create a tar.Z package with your files? (y/n) [y] >>"
 
    if [ $? = 0 -a $AUTO != "true" ]; then
       TAR=true
@@ -1195,14 +1198,16 @@ BackupConfig()
 
    CPF="cp -f"
 
-   for f in $BUP_COMMON_FILE_LIST; do
+   for f in $BUP_COMMON_FILE_LIST_TMP; do
       if [ -f $SGE_ROOT/$SGE_CELL/common/$f ]; then
+         BUP_COMMON_FILE_LIST="$BUP_COMMON_FILE_LIST $f"
          ExecuteAsAdmin $CPF $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
       fi
    done
 
-   for f in $BUP_SPOOL_FILE_LIST; do
+   for f in $BUP_SPOOL_FILE_LIST_TMP; do
       if [ -f $master_spool/$f ]; then
+         BUP_SPOOL_FILE_LIST="$BUP_SPOOL_FILE_LIST $f"
          ExecuteAsAdmin $CPF $master_spool/$f $backup_dir
       fi
    done
@@ -1215,24 +1220,24 @@ BackupConfig()
          bup_file=$BACKUP_FILE
       fi
       cd $backup_dir
-      #TAR="tar -cvf"
-      #ZIP="gzip -9"
+      TAR="tar -cvf"
 
-         GZIP=`which gzip`
-         tar -cvf $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
-         $GZIP -9 $bup_file  
-
-      #ExecuteAsAdmin $TAR $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
-      #ExecuteAsAdmin $ZIP $bup_file 
+         ZIP="compress"
+         ret=$?
+         ExecuteAsAdmin $TAR $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
+         if [ $ret -eq 0 ]; then
+            ExecuteAsAdmin $ZIP $bup_file 
+         else
+            $INFOTEXT -n "compress could not be found! The tar archive won't be compressed!\n"
+         fi   
 
       cd $SGE_ROOT
       $INFOTEXT -n "\n... backup completed"
-      $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir/$bup_file".gz"
+      $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir/$bup_file".Z"
 
       cd $backup_dir     
-      #RMF="rm -f" 
-      rm -f $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
-      #ExecuteAsAdmin $RMF $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
+      RMF="rm -f" 
+      ExecuteAsAdmin $RMF $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
 
       cd $SGE_ROOT
 
@@ -1262,7 +1267,7 @@ BackupConfig()
 RestoreConfig()
 {
    DATE=`date '+%H_%M_%S'`
-   BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd"
+   BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd" 
    BUP_SPOOL_FILE_LIST="jobseqnum"
 
    MKDIR="mkdir -p"
@@ -1282,15 +1287,15 @@ RestoreConfig()
                 SGE_CELL=`Enter default`
 
 
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nIs your backupfile in tar/gz format? (y/n) [y] "
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nIs your backupfile in tar.Z format? (y/n) [y] "
 
 
    if [ $? = 0 ]; then
       loop_stop=false
       while [ $loop_stop = "false" ]; do
          $INFOTEXT -n "\nPlease enter the full path and name of your backup file." \
-                      "\nDefault: [%s]" $SGE_ROOT/$SGE_CELL/backup/backup.tar.gz
-         bup_file=`Enter $SGE_ROOT/$SGE_CELL/backup/backup.tar.gz`
+                      "\nDefault: [%s]" $SGE_ROOT/$SGE_CELL/backup/backup.tar.Z
+         bup_file=`Enter $SGE_ROOT/$SGE_CELL/backup/backup.tar.Z`
          
          if [ -f $bup_file ]; then
             loop_stop="true"
@@ -1304,9 +1309,15 @@ RestoreConfig()
       cp $bup_file /tmp/bup_tmp_$DATE
       cd /tmp/bup_tmp_$DATE/
       
-      GZIP=`which gzip`
-      $GZIP -d /tmp/bup_tmp_$DATE/*.gz 
-      tar -xvf /tmp/bup_tmp_$DATE/*.tar
+      ZIP="uncompress"
+      TAR="tar -xvf"
+      if [ $? -eq 0 ]; then
+         ExecuteAsAdmin $ZIP -d /tmp/bup_tmp_$DATE/*.Z 
+         ExecuteAsAdmin $TAR /tmp/bup_tmp_$DATE/*.tar
+      else
+         $INFOTEXT -n "uncompress could not be found! Can't extract the backup file\n"
+         exit 1
+      fi
       cd $SGE_ROOT 
       db_home=`cat /tmp/bup_tmp_$DATE/bootstrap | grep "spooling_params" | awk '{ print $2 }'`  
       ADMINUSER=`cat /tmp/bup_tmp_$DATE/bootstrap | grep "admin_user" | awk '{ print $2 }'`
@@ -1324,10 +1335,8 @@ RestoreConfig()
       else
          ExecuteAsAdmin $MKDIR $db_home
       fi
-      #ExecuteAsAdmin touch $db_home/sge
       DB_LOAD="$SGE_UTILBIN/db_load -f" 
       ExecuteAsAdmin $DB_LOAD /tmp/bup_tmp_$DATE/*.dump -h $db_home sge
-#      $SGE_UTILBIN/db_load -f /tmp/bup_tmp_$DATE/*.dump -h $db_home sge
 
          if [ -d $SGE_ROOT/$SGE_CELL ]; then
             if [ -d $SGE_ROOT/$SGE_CELL/common ]; then

@@ -61,29 +61,27 @@ int cl_connection_list_append_connection(cl_raw_list_t* list_p,cl_com_connection
       return CL_RETVAL_PARAMS;
    }
 
+   /* add new element list */
+   new_elem = (cl_connection_list_elem_t*) malloc(sizeof(cl_connection_list_elem_t));
+   if (new_elem == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+
+   new_elem->connection = connection;
+
    /* lock the list */
    if (do_lock != 0) {
       if (  ( ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
          return ret_val;
       }
    }
-
-   /* add new element list */
-   new_elem = (cl_connection_list_elem_t*) malloc(sizeof(cl_connection_list_elem_t));
-   if (new_elem == NULL) {
-      if (do_lock != 0) {
-         cl_raw_list_unlock(list_p);
-      }
-      return CL_RETVAL_MALLOC;
-   }
-
-   new_elem->connection = connection;
+   
    new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
    if ( new_elem->raw_elem == NULL) {
-      free(new_elem);
       if (do_lock != 0) {
          cl_raw_list_unlock(list_p);
       }
+      free(new_elem);
       return CL_RETVAL_MALLOC;
    }
    
@@ -100,6 +98,7 @@ int cl_connection_list_append_connection(cl_raw_list_t* list_p,cl_com_connection
 int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connection_t* connection, int do_lock ) {  /* CR check */
    int function_return = CL_RETVAL_CONNECTION_NOT_FOUND;
    int ret_val = CL_RETVAL_OK;
+   int is_do_free = 0;
    cl_connection_list_elem_t* elem = NULL;
    
 
@@ -119,8 +118,7 @@ int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connectio
       if (elem->connection == connection) {
          /* found matching element */
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
-         free(elem);
-         elem = NULL;
+         is_do_free = 1;
          function_return = CL_RETVAL_OK;
          break;
       }
@@ -134,6 +132,12 @@ int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connectio
          return ret_val;
       }
    }
+
+   if (is_do_free == 1) {
+      free(elem);
+      elem = NULL;
+   }
+   
    return function_return;
 }
 
@@ -147,15 +151,23 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
    cl_connection_list_elem_t* elem = NULL;
    cl_connection_list_elem_t* elem2 = NULL;
    cl_com_connection_t* connection = NULL;
-
+#if 1 
+   cl_raw_list_t *delete_connections = NULL;
+#endif   
 
    if (list_p == NULL ) {
       return CL_RETVAL_PARAMS;
    }
+#if 1 
+   cl_raw_list_setup(&delete_connections, "delete_connections", 0);
+#endif   
 
    /* lock list */
    if (do_lock != 0) {
       if ( (ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
+#if  1     
+         cl_raw_list_cleanup(&delete_connections);
+#endif         
          return ret_val;
       }
    }
@@ -184,18 +196,24 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                  connection->connection_sub_state = CL_COM_DONE_FLUSHED;
                  CL_LOG(CL_LOG_INFO,"setting connection state to close this connection");
             } else {
-               cl_message_list_elem_t* melem;
                CL_LOG(CL_LOG_ERROR,"wait for empty message buffers");
+#if 0  
+               {
+               cl_message_list_elem_t* melem;
                CL_LOG_INT(CL_LOG_WARNING,"receive buffer:",cl_raw_list_get_elem_count(connection->received_message_list) );
                cl_raw_list_lock(connection->received_message_list);
+               
                melem = cl_message_list_get_first_elem(connection->received_message_list);
                if (melem != NULL) {
                   CL_LOG_INT(CL_LOG_WARNING,"message_df    =",melem->message->message_df );
                   CL_LOG_INT(CL_LOG_WARNING,"message_state =",melem->message->message_state );
                }
+
                cl_raw_list_unlock(connection->received_message_list);
 
                CL_LOG_INT(CL_LOG_WARNING,"send buffer   :",cl_raw_list_get_elem_count(connection->send_message_list) );
+               }
+#endif               
             }
          }
       }
@@ -264,6 +282,7 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
 
 
       if (connection->connection_state == CL_COM_CLOSING ) {
+#if 0      
          /* found connection to close  */
          cl_com_message_t* message = NULL;
          cl_message_list_elem_t* message_list_elem = NULL;
@@ -319,6 +338,20 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
             return ret_val;
          }
          continue;
+      
+#else
+      cl_raw_list_dechain_elem(list_p, elem2->raw_elem); 
+      cl_raw_list_append_dechained_elem(delete_connections, elem2->raw_elem);
+
+      connection = elem2->connection;
+      if (connection->handler != NULL) {
+         connection->handler->statistic->bytes_sent +=  connection->statistic->bytes_sent;
+         connection->handler->statistic->bytes_received +=  connection->statistic->bytes_received;
+         connection->handler->statistic->real_bytes_sent +=  connection->statistic->real_bytes_sent;
+         connection->handler->statistic->real_bytes_received +=  connection->statistic->real_bytes_received;
+      }
+
+#endif
       }
    } 
 
@@ -328,6 +361,57 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
          return ret_val;
       }
    }
+#if 1 
+   /* remove dead connections */
+   while ( (elem2 = cl_connection_list_get_first_elem(delete_connections))!= NULL) {
+      /* found connection to close  */
+      cl_com_message_t* message = NULL;
+      cl_message_list_elem_t* message_list_elem = NULL;
+
+      connection = elem2->connection;
+
+      while((message_list_elem = cl_message_list_get_first_elem(connection->received_message_list)) != NULL) {
+         message = message_list_elem->message;
+         if (message->message_state == CL_MS_READY) {
+            CL_LOG(CL_LOG_ERROR,"deleting unread message for connection");
+         }
+         if (message->message_length != 0) {
+            CL_LOG_INT(CL_LOG_ERROR,"connection sub_state:",connection->connection_sub_state);
+            CL_LOG(CL_LOG_ERROR,"deleting read message for connection");
+            CL_LOG_INT(CL_LOG_ERROR,"message length:", message->message_length);
+            CL_LOG_INT(CL_LOG_ERROR,"message state:", message->message_state);
+            CL_LOG_INT(CL_LOG_ERROR,"message df:", message->message_df);
+            CL_LOG_INT(CL_LOG_ERROR,"message mat:", message->message_mat);
+         }
+
+         cl_raw_list_remove_elem( connection->received_message_list,  message_list_elem->raw_elem);
+         free(message_list_elem);
+         cl_com_free_message(&message);
+      }
+      
+
+      while((message_list_elem = cl_message_list_get_first_elem(connection->send_message_list)) != NULL) {
+         message = message_list_elem->message;
+         CL_LOG(CL_LOG_ERROR,"deleting unsend message for connection");
+         cl_raw_list_remove_elem( connection->send_message_list,  message_list_elem->raw_elem);
+         free(message_list_elem);
+         cl_com_free_message(&message);
+      }
+
+      cl_raw_list_remove_elem(delete_connections, elem2->raw_elem);
+      free(elem2);
+      elem2 = NULL;
+
+      if ( (ret_val=cl_com_close_connection(&connection)) != CL_RETVAL_OK) {  
+         CL_LOG(CL_LOG_ERROR, "error closing connection");
+      }
+
+   }
+#endif
+#if 1
+   cl_raw_list_cleanup(&delete_connections);
+#endif   
+   
    return ret_val;
 }
 

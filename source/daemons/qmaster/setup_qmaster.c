@@ -61,7 +61,6 @@
 #include "sge_userset_qmaster.h"
 #include "sge_ckpt_qmaster.h"
 #include "sge_utility.h"
-#include "setup.h"
 #include "setup_qmaster.h"
 #include "sge_prog.h"
 #include "sgermon.h"
@@ -74,7 +73,6 @@
 #include "msg_qmaster.h"
 #include "reschedule.h"
 #include "sge_job.h"
-#include "sge_spool.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
 #include "sge_io.h"
@@ -104,7 +102,6 @@
 #include "sge_persistence_qmaster.h"
 #include "msg_common.h"
 #include "spool/sge_spooling.h"
-
 
 
 static void   process_cmdline(char**);
@@ -375,8 +372,7 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
 *     static void qmaster_init(char **anArgv) 
 *
 *  FUNCTION
-*     Initialize qmaster. Do general setup and communication setup. Transfer
-*     qmaster into a daemon. Write qmaster pid file and startup message.
+*     Initialize qmaster. Do general setup and communication setup. 
 *
 *  INPUTS
 *     char **anArgv - process argument vector 
@@ -393,12 +389,6 @@ static void qmaster_init(char **anArgv)
    DENTER(TOP_LAYER, "qmaster_init");
 
    umask(022); /* this needs a better solution */
-
-   lInit(nmv); /* set CULL namespace */
-
-   sge_setup(QMASTER, NULL); /* misc setup */
-
-   INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
 
    communication_setup(anArgv);
 

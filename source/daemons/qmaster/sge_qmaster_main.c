@@ -57,9 +57,12 @@
 #include "sge_qmaster_timed_event.h"
 #include "sge_host_qmaster.h"
 #include "sge_give_jobs.h"
+#include "sge_all_listsL.h"
 #include "lock.h"
 #include "qmaster_heartbeat.h"
 #include "shutdown.h"
+#include "setup.h"
+#include "sge_spool.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "msg_utilib.h"  /* remove once 'daemonize_qmaster' did become 'sge_daemonize' */
@@ -140,8 +143,13 @@ int main(int argc, char* argv[])
    commlib_mt_init(); /* shall be removed with new comm system */
 #endif
 
-   sge_getme(QMASTER);
+   lInit(nmv);
+   sge_setup(QMASTER, NULL);
+   sge_write_pid(QMASTER_PID_FILE);
+
    uti_state_set_exit_func(exit_func);
+
+   INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
 
    sigfillset(&sig_set);
    pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
@@ -799,7 +807,8 @@ static void* signal_thread(void* anArg)
 
    DENTER(TOP_LAYER, "signal_thread");
 
-   sge_getme(QMASTER);
+   lInit(nmv);
+   sge_setup(QMASTER, NULL);
 
    ignore_signals();
 
@@ -850,7 +859,8 @@ static void* message_thread(void* anArg)
 {
    DENTER(TOP_LAYER, "message_thread");
 
-   sge_getme(QMASTER);
+   lInit(nmv);
+   sge_setup(QMASTER, NULL);
 
    while (should_terminate() == false)
    {

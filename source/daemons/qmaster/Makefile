@@ -106,7 +106,7 @@ QMASTER_TEST_OBJS = \
 QMASTER_TEST_PROGS = \
               test_sge_qmaster_timed_event
 
-QMASTER_TEST_ADD_LIBS = -lsgeobj -lsgeobjd -lcull -luti -llck -lrmon
+QMASTER_TEST_ADD_LIBS = $(QMASTER_ADD_LIBS)
 
 QMASTER_TEST_LIB_DEPENDS = $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) \
                            $(UTILIB) $(LCKLIB) $(RMONLIB)

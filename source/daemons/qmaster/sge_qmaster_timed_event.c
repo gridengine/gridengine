@@ -36,11 +36,12 @@
 #include <errno.h>
 
 #include "cull.h"
-#include "sge_time_eventL.h"
+#include "sge_all_listsL.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_mtutil.h"
 #include "sge_prog.h"
+#include "setup.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -825,7 +826,8 @@ static void* deliver_events(void* anArg)
 
    DENTER(TOP_LAYER, "deliver_events");
 
-   sge_getme(QMASTER);
+   lInit(nmv);
+   sge_setup(QMASTER, NULL);
 
    while (should_exit() == false) {
       sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);

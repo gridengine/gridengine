@@ -1,3 +1,6 @@
+AD-2004-01-16-0: Bugfix:    Did fix initialization issues
+                 Changed:   qmaster
+
 CR-2004-01-16-1: Bugfix:    - JAPI: ensure japi_init()/drmaa_init() does not 
                               return before initial event arrived
                             - new formal prog names: "JAPI" and "JAPI_EC" as

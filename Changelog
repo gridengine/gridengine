@@ -1,3 +1,8 @@
+JG-2004-04-07-0: Enhancem.: Berkeley DB spooling: Write two databases: 
+                            A configuration database and a job database.
+                 Changed:   sge_qmaster, spoolinit, spooldefaults, dbstat
+                 Review:    EB
+
 SG-2004-04-07-0: Bugfix:    - The or operator for complex entries with the type
                               RESTRING was broken.
                             - a minor issue in event master. It might deliver

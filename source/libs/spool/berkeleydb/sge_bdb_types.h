@@ -59,6 +59,13 @@
  * Thread specific data is initialized in the spooling startup function.
  */
 
+typedef enum {
+   BDB_CONFIG_DB = 0,
+   BDB_JOB_DB,
+   
+   BDB_ALL_DBS
+} bdb_database;
+
 typedef struct _bdb_info *bdb_info;
 
 bdb_info
@@ -74,7 +81,7 @@ DB_ENV *
 bdb_get_env(bdb_info info);
 
 DB *
-bdb_get_db(bdb_info info);
+bdb_get_db(bdb_info info, const bdb_database database);
 
 DB_TXN *
 bdb_get_txn(bdb_info info);
@@ -85,11 +92,14 @@ bdb_get_next_clear(bdb_info info);
 time_t
 bdb_get_next_checkpoint(bdb_info info);
 
+bool 
+bdb_get_recover(bdb_info info);
+
 void
 bdb_set_env(bdb_info info, DB_ENV *env);
 
 void
-bdb_set_db(bdb_info info, DB *db);
+bdb_set_db(bdb_info info, DB *db, const bdb_database database);
 
 void
 bdb_set_txn(bdb_info info, DB_TXN *txn);
@@ -100,6 +110,9 @@ bdb_set_next_clear(bdb_info info, const time_t next);
 void
 bdb_set_next_checkpoint(bdb_info info, const time_t next);
 
+void 
+bdb_set_recover(bdb_info info, bool recover);
+
 const char *
 bdb_get_dbname(bdb_info info, dstring *buffer);
 
@@ -108,5 +121,8 @@ bdb_lock_info(bdb_info info);
 
 void
 bdb_unlock_info(bdb_info info);
+
+const char *
+bdb_get_database_name(const bdb_database database);
 
 #endif /* __SGE_BDB_TYPES_H */    

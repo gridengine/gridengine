@@ -55,15 +55,16 @@ struct _bdb_info {
    const char *      path;                /* the database path */
 
    DB_ENV *          env;                 /* global database environment */
-   DB *              db;                  /* global database object */
+   DB **             db;                  /* global database object */
 
    time_t            next_clear;          /* time of next logfile clear */
    time_t            next_checkpoint;     /* time of next checkpoint */
+   bool              recover;             /* shall we recover on open? */
 };
 
 typedef struct bdb_connection {
    DB_ENV *    env;                 /* thread specific database environment */
-   DB *        db;                  /* thread specific database object */
+   DB **        db;                 /* thread specific database object */
    DB_TXN *    txn;                 /* transaction handle, always per thread */
 } bdb_connection;
 
@@ -110,7 +111,7 @@ bdb_destroy_connection(void *connection);
 bdb_info
 bdb_create(const char *server, const char *path) 
 {
-   int ret;
+   int ret, i;
    bdb_info info = (bdb_info) malloc(sizeof(struct _bdb_info));
 
    pthread_mutex_init(&(info->mtx), NULL);
@@ -121,10 +122,15 @@ bdb_create(const char *server, const char *path)
    info->server = server;
    info->path   = path;
    info->env    = NULL;
-   info->db     = NULL;
+
+   info->db     = (DB **)malloc(BDB_ALL_DBS * sizeof(DB *));
+   for (i = 0; i < BDB_ALL_DBS; i++) {
+      info->db[i] = NULL;
+   }
 
    info->next_clear = 0;
    info->next_checkpoint = 0;
+   info->recover = true;
 
    return info;
 }
@@ -137,8 +143,15 @@ bdb_create(const char *server, const char *path)
 static void
 bdb_init_connection(bdb_connection *con)
 {
+   int i;
+
    con->env = NULL;
-   con->db  = NULL;
+
+   con->db     = (DB **)malloc(BDB_ALL_DBS * sizeof(DB *));
+   for (i = 0; i < BDB_ALL_DBS; i++) {
+      con->db[i] = NULL;
+   }
+
    con->txn = NULL;
 }
 
@@ -164,6 +177,7 @@ bdb_destroy_connection(void *connection)
    }
 
    if (con->db != NULL) {
+      FREE(con->db);
       /* error */
    }
 
@@ -293,16 +307,16 @@ bdb_get_env(bdb_info info)
 *     spool/berkeleydb/bdb_set_db()
 *******************************************************************************/
 DB *
-bdb_get_db(bdb_info info)
+bdb_get_db(bdb_info info, const bdb_database database)
 {
    DB *db = NULL;
 
    if (info->server == NULL) {
-      db = info->db;
+      db = info->db[database];
    } else {
       GET_SPECIFIC(bdb_connection, con, bdb_init_connection, info->key, 
                    "bdb_get_db");
-      db = con->db;
+      db = con->db[database];
    }
 
    return db;
@@ -350,6 +364,12 @@ time_t
 bdb_get_next_checkpoint(bdb_info info)
 {
    return info->next_checkpoint;
+}
+
+bool
+bdb_get_recover(bdb_info info) 
+{
+   return info->recover;
 }
 
 /****** spool/berkeleydb/bdb_set_env() *****************************************
@@ -411,14 +431,14 @@ bdb_set_env(bdb_info info, DB_ENV *env)
 *     spool/berkeleydb/bdb_get_db()
 *******************************************************************************/
 void
-bdb_set_db(bdb_info info, DB *db)
+bdb_set_db(bdb_info info, DB *db, const bdb_database database)
 {
    if (info->server == NULL) {
-      info->db  = db;
+      info->db[database]  = db;
    } else {
       GET_SPECIFIC(bdb_connection, con, bdb_init_connection, info->key, 
                    "bdb_set_db");
-      con->db = db;
+      con->db[database] = db;
    }
 }
 
@@ -462,6 +482,12 @@ void
 bdb_set_next_checkpoint(bdb_info info, const time_t next)
 {
    info->next_checkpoint = next;
+}
+
+void
+bdb_set_recover(bdb_info info, bool recover)
+{
+   info->recover = recover;
 }
 
 /****** spool/berkeleydb/bdb_get_dbname() **************************************
@@ -520,5 +546,25 @@ bdb_unlock_info(bdb_info info)
    DENTER(TOP_LAYER, "bdb_unlock_info");
    sge_mutex_unlock("bdb mutex", SGE_FUNC, __LINE__, &(info->mtx));
    DEXIT;
+}
+
+const char *
+bdb_get_database_name(const bdb_database database)
+{
+   const char *ret;
+
+   switch (database) {
+      case BDB_CONFIG_DB:
+         ret = "sge";
+         break;
+      case BDB_JOB_DB:
+         ret = "sge_job";
+         break;
+      default:
+         ret = NULL;
+         break;
+   };
+
+   return ret;
 }
 

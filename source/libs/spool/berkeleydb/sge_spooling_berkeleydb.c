@@ -252,23 +252,21 @@ spool_berkeleydb_default_shutdown_func(lList **answer_list,
                                     const lListElem *rule)
 {
    bool ret = true;
-   const char *url;
 
    bdb_info info;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_default_shutdown_func");
 
-   url = lGetString(rule, SPR_url);
    info = (bdb_info)lGetRef(rule, SPR_clientdata);
 
    if (info == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              url);
+                              lGetString(rule, SPR_url));
       ret = false;
    } else {
-      ret = spool_berkeleydb_close_database(answer_list, info, url);
+      ret = spool_berkeleydb_close_database(answer_list, info);
    }
 
    DEXIT;
@@ -382,18 +380,16 @@ spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule,
                               time_t trigger, time_t *next_trigger)
 {
    bool ret = true;
-   const char *url;
    bdb_info info;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_trigger_func");
 
-   url = lGetString(rule, SPR_url);
    info = (bdb_info)lGetRef(rule, SPR_clientdata);
    if (info == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_WARNING, 
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              url);
+                              lGetString(rule, SPR_url));
       ret = false;
 
       /* nothing can be done - but set new trigger!! */
@@ -595,6 +591,7 @@ spool_berkeleydb_default_list_func(lList **answer_list,
             case SGE_TYPE_CQUEUE:
                /* read all cluster queues */
                ret = spool_berkeleydb_read_list(answer_list, info, 
+                                                BDB_CONFIG_DB,
                                                 list, descr,
                                                 key);
                if (ret) {
@@ -610,6 +607,7 @@ spool_berkeleydb_default_list_func(lList **answer_list,
                                                qinstance_table,
                                                qname);
                      ret = spool_berkeleydb_read_list(answer_list, info,
+                                                      BDB_CONFIG_DB,
                                                       &qinstance_list, QU_Type,
                                                       key);
                      if (ret && qinstance_list != NULL) {
@@ -624,6 +622,7 @@ spool_berkeleydb_default_list_func(lList **answer_list,
             case SGE_TYPE_JOB:
                /* read all jobs */
                ret = spool_berkeleydb_read_list(answer_list, info, 
+                                                BDB_JOB_DB,
                                                 list, descr,
                                                 key);
                if (ret) {
@@ -639,6 +638,7 @@ spool_berkeleydb_default_list_func(lList **answer_list,
                                                ja_task_table,
                                                job_id);
                      ret = spool_berkeleydb_read_list(answer_list, info,
+                                                      BDB_JOB_DB,
                                                       &task_list, JAT_Type,
                                                       key);
                      /* reading ja_tasks succeeded */
@@ -659,7 +659,8 @@ spool_berkeleydb_default_list_func(lList **answer_list,
                                                         pe_task_table,
                                                         job_id, ja_task_id);
                               
-                              ret = spool_berkeleydb_read_list(answer_list, info,
+                              ret = spool_berkeleydb_read_list(answer_list, 
+                                                      info, BDB_JOB_DB,
                                                       &pe_task_list, PET_Type,
                                                       key);
                               if (ret) {
@@ -681,6 +682,7 @@ spool_berkeleydb_default_list_func(lList **answer_list,
                break;
             default:
                ret = spool_berkeleydb_read_list(answer_list, info, 
+                                                BDB_CONFIG_DB,
                                                 list, descr,
                                                 key);
                break;
@@ -784,9 +786,16 @@ spool_berkeleydb_default_read_func(lList **answer_list,
    }
  
    if (ret) {
+      bdb_database database = BDB_CONFIG_DB;
+
       switch (object_type) {
+         case SGE_TYPE_JATASK:
+         case SGE_TYPE_PETASK:
+         case SGE_TYPE_JOB:
+            database = BDB_JOB_DB;
+            /* no break, further handling in default branch */
          default:
-            ep = spool_berkeleydb_read_object(answer_list, info, key);
+            ep = spool_berkeleydb_read_object(answer_list, info, database, key);
             if (ep != NULL) {
                spooling_validate_func validate = 
                   (spooling_validate_func)lGetRef(rule, SPR_validate_func);
@@ -935,6 +944,7 @@ spool_berkeleydb_default_write_func(lList **answer_list,
                                               key);
 
                   ret = spool_berkeleydb_write_object(answer_list, info, 
+                                                      BDB_CONFIG_DB,
                                                       object, dbkey);
                }
                break;
@@ -1069,6 +1079,7 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
                                            key);
 
                ret = spool_berkeleydb_delete_object(answer_list, info, 
+                                                    BDB_CONFIG_DB,
                                                     dbkey, false);
                break;
          }

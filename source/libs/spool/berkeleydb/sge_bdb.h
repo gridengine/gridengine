@@ -56,8 +56,8 @@ spool_berkeleydb_check_reopen_database(lList **answer_list,
                                        bdb_info info);
 
 bool 
-spool_berkeleydb_close_database(lList **answer_list, bdb_info info,
-                                const char *url);
+spool_berkeleydb_close_database(lList **answer_list, bdb_info info);
+
 bool
 spool_berkeleydb_start_transaction(lList **answer_list, bdb_info info);
 
@@ -71,10 +71,12 @@ spool_berkeleydb_trigger(lList **answer_list, bdb_info info,
 
 bool 
 spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
+                           const bdb_database database,
                            lList **list, const lDescr *descr,
                            const char *key);
 bool 
 spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
+                              const bdb_database database,
                               const lListElem *object, const char *key);
 bool
 spool_berkeleydb_write_pe_task(lList **answer_list, bdb_info info,
@@ -95,6 +97,7 @@ spool_berkeleydb_write_cqueue(lList **answer_list, bdb_info info,
 
 bool
 spool_berkeleydb_delete_object(lList **answer_list, bdb_info info, 
+                               const bdb_database database,
                                const char *key, bool sub_objects);
 bool
 spool_berkeleydb_delete_pe_task(lList **answer_list, bdb_info info,
@@ -111,9 +114,11 @@ spool_berkeleydb_delete_cqueue(lList **answer_list, bdb_info info,
 
 bool
 spool_berkeleydb_read_keys(lList **answer_list, bdb_info info,
+                           const bdb_database database,
                            lList **list, const char *key);
 
 lListElem *
 spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
+                             const bdb_database database,
                              const char *key);
 #endif /* __SGE_BDB_H */    

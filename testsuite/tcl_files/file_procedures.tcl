@@ -236,10 +236,14 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #     value from the started command. 
 #
 #  INPUTS
-#     scriptfile     - full path and name of scriptfile to generate 
-#     exec_command   - command to execute 
-#     exec_arguments - command parameters 
-#     {envlist ""}   - array with environment settings to export
+#     scriptfile      - full path and name of scriptfile to generate 
+#     exec_command    - command to execute 
+#     exec_arguments  - command parameters 
+#     { envlist }     - array with environment settings to export
+#     { script_path } - path to script binary (default "/bin/sh")
+#     { no_setup }    - if 0 (default): full testsuite framework script
+#                                       initialization
+#                       if not 0:       no testsuite framework init.
 #
 #  RESULT
 #     no results 
@@ -259,7 +263,7 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #     file_procedures/create_path_aliasing_file()
 #
 #*******************************
-proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} } {
+proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} { script_path "/bin/sh" } { no_setup 0 } } {
    global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_COMMD_PORT CHECK_PRODUCT_ROOT
    global CHECK_DEBUG_LEVEL 
  
@@ -274,42 +278,48 @@ proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} }
    
 
    # script header
-   puts $script "#!/bin/sh"
+   puts $script "#!${script_path}"
    puts $script "# Automatic generated script from Grid Engine Testsuite"
    puts $script "# The script will execute a special command with arguments"
    puts $script "# and it should be deleted after use. So if this file exists, please delete it"
 
-   # script command
-   puts $script "trap 'echo \"_exit_status_:(1)\"' 0"
-   puts $script "umask 022"
-   puts $script "if \[ -f $CHECK_PRODUCT_ROOT/default/common/settings.sh \]; then"
-
-   puts $script "   . $CHECK_PRODUCT_ROOT/default/common/settings.sh"
-   puts $script "else"
-   puts $script "   unset GRD_ROOT"
-   puts $script "   unset CODINE_ROOT"
-   puts $script "   unset GRD_CELL"
-   puts $script "   unset CODINE_CELL"
-   puts $script "   COMMD_PORT=$CHECK_COMMD_PORT"
-   puts $script "   SGE_ROOT=$CHECK_PRODUCT_ROOT"
-   puts $script "   export COMMD_PORT"
-   puts $script "   export SGE_ROOT"
-   puts $script "fi"
-
-   foreach u_env [ array names users_env ] {
-      set u_val [set users_env($u_env)] 
-      debug_puts "setting $u_env to $u_val"
-      puts $script "${u_env}=${u_val}"
-      puts $script "export ${u_env}"
+   if { $no_setup == 0 } { 
+      # script command
+      puts $script "trap 'echo \"_exit_status_:(1)\"' 0"
+      puts $script "umask 022"
+      puts $script "if \[ -f $CHECK_PRODUCT_ROOT/default/common/settings.sh \]; then"
+   
+      puts $script "   . $CHECK_PRODUCT_ROOT/default/common/settings.sh"
+      puts $script "else"
+      puts $script "   unset GRD_ROOT"
+      puts $script "   unset CODINE_ROOT"
+      puts $script "   unset GRD_CELL"
+      puts $script "   unset CODINE_CELL"
+      puts $script "   COMMD_PORT=$CHECK_COMMD_PORT"
+      puts $script "   SGE_ROOT=$CHECK_PRODUCT_ROOT"
+      puts $script "   export COMMD_PORT"
+      puts $script "   export SGE_ROOT"
+      puts $script "fi"
+   
+      foreach u_env [ array names users_env ] {
+         set u_val [set users_env($u_env)] 
+         debug_puts "setting $u_env to $u_val"
+         puts $script "${u_env}=${u_val}"
+         puts $script "export ${u_env}"
+      }
+   
+   
+      puts $script "echo \"_start_mark_:(\$?)\""
    }
 
-
-   puts $script "echo \"_start_mark_:(\$?)\""
    puts $script "$exec_command $exec_arguments"
-   puts $script "exit_val=\"\$?\""
-   puts $script "trap 0"
-   puts $script "echo \"_exit_status_:(\$exit_val)\""
-   puts $script "echo \"script done.\""
+
+   if { $no_setup == 0 } { 
+      puts $script "exit_val=\"\$?\""
+      puts $script "trap 0"
+      puts $script "echo \"_exit_status_:(\$exit_val)\""
+      puts $script "echo \"script done.\""
+   }
    flush $script
    close $script
 

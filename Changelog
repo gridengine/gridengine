@@ -1,3 +1,17 @@
+CR-2002-02-28-1: Testsuite: (MERGED from maintrunc)
+                 Enhancem.: - new test: system_tests/sheperd/submit_del
+                              testing sheperd signaling with sheperd wrapper
+                              script.
+                 Issue:     #125  (Part 1)
+                 Bugfix:    - fixed spelling mistake in system_tests/clients/qdel
+                            - removed unused variable in system_tests/shadowd/migrate
+
+CR-2002-02-28-0: Testsuite: (MERGED from maintrunc) 
+                 Bugfix:    - wrong error message in wait_for_end_of_all_jobs()
+                 Enhancem.  - submit_job() generates output for timeout and eof
+                              error
+                 Enhancem.  - 2 new parameters for create_shell_script()
+
 JG-2002-02-27-0: Doc:       Documented the qrsh -noshell option in the
                             qrsh/submit man page.
                  Issue:     #132

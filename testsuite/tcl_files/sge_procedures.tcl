@@ -3701,7 +3701,7 @@ proc wait_for_end_of_all_jobs { seconds } {
       if { $seconds > 0 } {
          set runtime [expr ( [timestamp] - $time) ]
          if { $runtime >= $seconds } {
-             add_proc_error "wait_for_end_of_all_jobs" -1 "timeout waiting for load values < 99"
+             add_proc_error "wait_for_end_of_all_jobs" -1 "timeout waiting for end of all jobs"
              return -1
          }
       }
@@ -4052,9 +4052,11 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
           add_proc_error "submit_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
        }
        -i $sp_id timeout {
+          puts $CHECK_OUTPUT "submit_job - timeout(1)"
           set return_value -1 
        }
        -i $sp_id eof {
+          puts $CHECK_OUTPUT "submit_job - end of file unexpected"
           set return_value -1
        }
        -i $sp_id "job*has been submitted" {
@@ -4076,6 +4078,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
                 add_proc_error "submit_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
              }
              -i $sp_id timeout {
+                puts $CHECK_OUTPUT "submit_job - timeout(2)"
                 set return_value -1 
              }
              -i $sp_id "_exit_status_" {
@@ -4870,7 +4873,6 @@ proc get_job_state { jobid { not_all_equal 0 } { taskid task_id } } {
    add_proc_error "get_job_state" -1 "more than one job id found with different states"
    return -1
 }
-
 
 # wait for start of job ($jobid,$jobname) ; timeout after $seconds
 # results : -1 on timeout ; 0 on jobstart

@@ -227,7 +227,7 @@ int scheduler(sge_Sdescr_t *lists) {
    /* send job_start_orders */
    sge_send_job_start_orders(&orders);
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
+   PROF_START_MEASUREMENT(SGE_PROF_SCHEDLIB4);
    {
       int clean_jobs[] = {SPLIT_WAITING_DUE_TO_PREDECESSOR,
                           SPLIT_WAITING_DUE_TO_TIME,
@@ -260,9 +260,8 @@ int scheduler(sge_Sdescr_t *lists) {
   
    /* generated scheduler messages, thus we have to call it */
    trash_splitted_jobs(splitted_job_lists); 
-  
-   orders.jobStartOrderList= sge_add_schedd_info(orders.jobStartOrderList);
 
+   orders.jobStartOrderList= sge_add_schedd_info(orders.jobStartOrderList);
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
    if (prof_is_active()) {
@@ -278,7 +277,7 @@ int scheduler(sge_Sdescr_t *lists) {
    if(prof_is_active()) {
       u_long32 saved_logginglevel = log_state_get_log_level();
 
-      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0); 
 
       log_state_set_log_level(LOG_INFO);
       INFO((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d sequential, %d parallel, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e),  %d J(x),%d J(all),  %d C, %d ACL, %d PE, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
@@ -293,7 +292,7 @@ int scheduler(sge_Sdescr_t *lists) {
          lGetNumberOfElem(lists->host_list), 
          lGetNumberOfElem(lists->queue_list),
          lGetNumberOfElem(lists->all_queue_list),
-         lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING])),
+         lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]) + lGetNumberOfElem(*(splitted_job_lists[SPLIT_NOT_STARTED])) ),
          lGetNumberOfElem(*(splitted_job_lists[SPLIT_RUNNING])),
          lGetNumberOfElem(*(splitted_job_lists[SPLIT_SUSPENDED])),
          lGetNumberOfElem(*(splitted_job_lists[SPLIT_HOLD])),
@@ -379,7 +378,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                          lList **splitted_job_lists[]) 
 {
    lList *user_list=NULL, *group_list=NULL;
-   lListElem *orig_job, *job, *cat;
+   lListElem *orig_job, *job, *cat=NULL;
    lList *non_avail_queues = NULL;
    lList *consumable_load_list = NULL;
 
@@ -389,9 +388,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    const lList *job_load_adjustments = NULL;
    double total_running_job_tickets=0; 
    int nreservation = 0;
-#if 0
-   int dipatch_type = DISPATCH_TYPE_NONE;
-#endif
+
    lListElem *ja_task;
    int global_lc = 0;
    int sort_hostlist = 1;       /* hostlist has to be sorted. Info returned by select_assign_debit */
@@ -696,15 +693,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
       job_id = lGetUlong(job, JB_job_number);
 
-      /*------------------------------------------------------------------ 
-       * check if the category of this job has already been rejected 
-       * if yes:  goto SKIP_THIS_JOB 
-       * if no:   add the new category to the category list and if this
-       *          job is rejected mark the categories rejected field
-       *          for the following jobs
-       *------------------------------------------------------------------*/
-  
-
       if (job_get_next_task(job, &ja_task, &ja_task_id)!=0) {
          DPRINTF(("Found job "u32" with no job array tasks\n", job_id));
       } else { 
@@ -779,7 +767,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                                              &user_list, 
                                              lGetString(job, JB_owner),
                                              maxujobs);
-/*         trash_splitted_jobs(splitted_job_lists); */
          break;
 
       case 1: /* reservation */
@@ -793,7 +780,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
          /* here no reservation was made for a job that couldn't be started now 
             or the job is not dispatchable at all */
-         schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0);
+         schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0, cat);
 
          /* before deleting the element mark the category as rejected */
          if ((result == -1 || result == 1) && (cat = lGetRef(job, JB_category))) {

@@ -180,11 +180,19 @@ bool sge_is_job_category_rejected_(lRef cat)
 }
 
 /*-------------------------------------------------------------------------*/
-void sge_reject_category(
-lRef cat 
-) {
+void sge_reject_category( lRef cat ) {
    lSetUlong(cat, CT_rejected, 1);
 }
+
+bool sge_is_job_category_message_added(lRef cat) {
+   return lGetBool(cat, CT_messages_added) ? true : false;
+}
+
+/*-------------------------------------------------------------------------*/
+void sge_set_job_category_message_added( lRef cat ) {
+   lSetBool(cat, CT_messages_added, true);
+}
+
 
 /*-------------------------------------------------------------------------*/
 /* rebuild the category references                                         */
@@ -215,6 +223,7 @@ int sge_reset_job_category()
       lSetList(cat, CT_ignore_queues, NULL);
       lSetList(cat, CT_ignore_hosts, NULL);
       lSetList(cat, CT_queue_violations, NULL);
+      lSetBool(cat, CT_messages_added, false);
       lSetBool(cat, CT_rc_valid, false);
    }
    DEXIT;

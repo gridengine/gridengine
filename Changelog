@@ -1,3 +1,21 @@
+SG-2004-06-09-3: Enhancem.: updated doc/devel/review.txt
+                 Review:    JG
+
+SG-2004-06-09-2: Bugfix:    The scheduler did not corectly compress the scheduler
+                            info messages, which lead to a hugh memory consumption
+                            in bigger clusters with even a low amount of jobs
+                            in the system.
+                 Changed:   scheduler                            
+                 Review:    JG
+
+SG-2004-06-09-1: Bugfix:    - fixed minor issues in the scheduler profiling
+                 Changed:   scheduler
+                 Review:    EB
+
+SG-2004-06-09-0: Bugfix:    - fixed the build for Linux with spool-classic
+                 Changed:   aimk
+                 Review:    JG
+
 JG-2004-06-09-0: QA:        Added development howto's:
                             - use of branches
                             - procedure for fixing bugs
@@ -5,7 +23,6 @@ JG-2004-06-09-0: QA:        Added development howto's:
 JG-2004-06-08-0: QA:        Added review template and help text.
 
 AS-2004-06-08-0: CVS        Created V60_TAG_{BRANCH,TAG}
---------------------------------------------------------
 
 DT-2004-06-04-1: Bugfix:    o Fixed DRMAA Java binding build on Linux
                             o Added per thread init to japi_exit

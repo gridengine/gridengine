@@ -55,6 +55,7 @@ lList *sge_add_schedd_info(lList *or_list)
    DENTER(TOP_LAYER, "sge_add_schedd_info");
 
    sme = schedd_mes_obtain_package();
+
    if (!sme || (lGetNumberOfElem(lGetList(sme, SME_message_list))<1 
          && lGetNumberOfElem(lGetList(sme, SME_global_message_list))<1)) {
       DEXIT;

@@ -1772,9 +1772,8 @@ if ( "$CORE" == 1 ) then
    # spooledit is only available if berkeleydb is available.
    # if we build with spooling method classic, touch spooledit
    if ( $SPOOLING_METHOD == classic ) then
-      touch libspoolb.a spooledit.o
-      sleep 1
-      touch spooledit
+      touch -t 202012312358 libspoolb.a spooledit.o
+      touch -t 202012312359 spooledit
    endif
 
    # we must map the symbolic spooling lib names the target filenames,

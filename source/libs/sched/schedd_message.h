@@ -58,7 +58,7 @@ void schedd_mes_set_logging(int bval);
 
 int schedd_mes_get_logging(void);
 
-void schedd_mes_commit(lList *job_list, int ignore_category);
+void schedd_mes_commit(lList *job_list, int ignore_category, lRef jid_category);
 
 void schedd_mes_rollback(void);
 

@@ -44,6 +44,7 @@
 #include "sge_range.h"
 #include "sge_job.h"
 #include "sge_schedd_conf.h"
+#include "sge_ctL.h"
 
 static void schedd_mes_find_others(lList *job_list, int category);
 
@@ -222,13 +223,24 @@ void schedd_mes_release(void)
 *     messages contained in "tmp_sme". 
 *
 *  INPUTS
-*     lList *job_list - JB_Type list 
+*     lList *job_list     - JB_Type list 
+*     int ignore_category - if set to true, the messages with be generated for all jobs
+*                           in the list
+*     lRef jid_category   - if not NULL, the function uses the category to ensure, that
+*                           every message is only added per category once.
 *******************************************************************************/
-void schedd_mes_commit(lList *job_list, int ignore_category)
-{
+void schedd_mes_commit(lList *job_list, int ignore_category, lRef jid_category) {
+
    if (sme && tmp_sme) {
       lList *sme_mes_list = NULL;
       lList *tmp_sme_list = NULL;
+      
+      if (jid_category != NULL) {
+         if (lGetBool(jid_category, CT_messages_added) ) {
+            return;
+         }
+         lSetBool(jid_category, CT_messages_added, true);
+      }
 
       /*
        * Try to find other jobs which apply also for created message

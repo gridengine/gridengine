@@ -935,9 +935,7 @@ int sub_command
                   deleted_unenrolled_tasks = 1;
                   showmessage = 1;
                   if (!alltasks) {
-#if 1 /* EB: #209 review with JG */
                      range_list_insert_id(&range_list, NULL, task_number);
-#endif
                   }         
                }
             }
@@ -1004,9 +1002,7 @@ int sub_command
                      sge_commit_job(job, tmp_task, 3, spool_job);
                      showmessage = 1;
                      if (!alltasks) {
-#if 1 /* EB: #209 review with JG */
                         range_list_insert_id(&range_list, NULL, task_number);
-#endif
                      }
                   }
                } else {
@@ -1016,7 +1012,6 @@ int sub_command
             }
          }
 
-#if 1 /* EB: #209 review with JG */
          if (range_list && showmessage) {
             if (range_list_get_number_of_ids(range_list) > 1) {
                dstring tid_string = {NULL, 0};
@@ -1034,7 +1029,7 @@ int sub_command
             } 
             sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
          }
-#endif
+
          if (alltasks && showmessage) {
             get_rid_of_schedd_job_messages(job_number);
             INFO((SGE_EVENT, MSG_JOB_DELETEJOB_SU, ruser, u32c(job_number)));

@@ -1,5 +1,8 @@
-AH-2001-11-28-1:            Enhanced accounting(5) file format for max vmem. and PE taskid
-                            string.
+AS-2001-11-29-0: Doc:       pseudo output variable $TASK_ID had wrong name
+                            $SGE_TASK_ID.
+
+AH-2001-11-28-1: Feature:   Enhanced accounting(5) file format for max vmem.
+                            and PE taskid string. 
 
 AS-2001-11-28-0: Bugfix:    remove unused and obsolete command line  
                             parameters in qmaster,scheduler"
@@ -11,12 +14,13 @@ AS-2001-11-28-0: Bugfix:    remove unused and obsolete command line
                                 -k
                                 -salg
                  Bugtraq:   #4532233
-		 Doc:       updated man pages sge_qmaster.8, sge_schedd.8 accordingly 
+		 Doc:       updated man pages sge_qmaster.8, sge_schedd.8
+                            accordingly
 
-AH-2001-11-28-0: Feature:   added enforce_project switch to cluster configuration
-                            removed dead code on QSI/qstd
-                            This requires manual addition of a 'enforce_project' field 
-                            into the global configuration.
+AH-2001-11-28-0: Feature:   added enforce_project switch to cluster
+                            configuration removed dead code on QSI/qstd. This
+                            requires manual addition of a 'enforce_project'
+                            field into the global configuration.
 
 CR-2001-11-28-1: Testsuite: Conformation of the testsuite because of changes from
                             CR-2001-11-28-0, 
@@ -31,16 +35,20 @@ CR-2001-11-28-0: Bugfix:    Reject changing of qmaster_spool_dir, execd_spool_di
 AS-2001-11-26-0: Bugfix:    execd now exits on SIGTERM also when commd is down
                  Bugtraq:   #4531720
 
-JG-2001-11-26-3: Feature:   Added a subscribe/unsubscribe mechanism to the event client
-                            interface. The current implementation does not yet allow 
-                            dynamic (un)subscription, but only before a (re)registration.
-                            Sort output of qconf -secl by event client id.
-                            Insert qevent to the Grid Engine program and options handling.
+JG-2001-11-26-3: Feature:   Added a subscribe/unsubscribe mechanism to the
+                            event client interface. The current
+                            implementation does not yet allow dynamic
+                            (un)subscription, but only before a
+                            (re)registration.  Sort output of qconf -secl by
+                            event client id.  Insert qevent to the Grid
+                            Engine program and options handling.
 
-CR-2001-11-26-0: Testsuite: Conformation of the testsuite because of changes from
-                            AH-2001-11-23-1, Removed unused configuration parameters
+CR-2001-11-26-0: Testsuite: Conformation of the testsuite because of changes
+                            from AH-2001-11-23-1, Removed unused
+                            configuration parameters
 
-AH-2001-11-26-1: Bugfix:    Fix 'minus_n=0' problem in dist/mpi/rsh wrapper script
+AH-2001-11-26-1: Bugfix:    Fix 'minus_n=0' problem in dist/mpi/rsh wrapper
+                            script
                  Bugtraq:   #4532155
                  Build:     Fix error in generating rmon lib dependencies
 
@@ -48,13 +56,14 @@ AH-2001-11-26-0: Bugfix:    Fix qmaster problem with not existing task spool
                             directory when task file is written.
                  Bugtraq:   #4532157
 
-JG-2001-11-26-2: Feature:   Made qconf -secl use the new lHost datatype and access
-                            functions (see CR-2001-11-23-1).
+JG-2001-11-26-2: Feature:   Made qconf -secl use the new lHost datatype and
+                            access functions (see CR-2001-11-23-1).
 
 AA-2001-11-26-1: Bugfix:    Completion for qmon (-> AH-2001-11-23-1) 
 
-JG-2001-11-26-1: Bugfix:    Fixed a (non critical) read to uninitialized memory in 
-                            the code retrieving memory load values on solaris.
+JG-2001-11-26-1: Bugfix:    Fixed a (non critical) read to uninitialized
+                            memory in the code retrieving memory load values
+                            on Solaris.
 
 JG-2001-11-26-0: Feature:   Added qconf options -secl (show event client list) and
                             -kec (kill event client).

@@ -1,6 +1,11 @@
+JG-2002-03-28-0  Merge:     merged JG-2002-03-27-0 from V53_beta2_BRANCH
+                 Testsuite: large_cluster test:
+                            - fixed problems due to change of runlevel
+                            - output cluster utilization in test report
+
 AH-2002-03-27-1  Enhancm.:  Changed Maintrunk GRM_GDI_VERSION to a very high value
                             and renamed from "5.3beta2" this version to 
-                            "pre6.0 (Maintrunk)"
+                            "pre6.0 (Maintrunc)"
 
 CR-2002-03-27-2  Merge:     merged inst_sge from V53_beta2_BRANCH
 

@@ -1,3 +1,6 @@
+CR-2004-11-19-1: Testsuite  - new test: commlib deadlock test
+                            - fixed bug in issue test 1270
+
 MD-2004-11-19-0: Bugfix:    Bugfix fix. backup/restore problem. compress/gzip
                             is now supported. backup/restore checks, if host is
                             mastermachine.

@@ -34,18 +34,19 @@
 # Define the global veriables to give them back
 global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
 global check_init_level_procedure check_category
+global check_root_access_needs
 
 set check_init_level_procedure "init_level"
 
 set check_category            "COMPATIBILITY SYSTEM VERIFIED"
-set check_name                "issue_1270"
-set check_description(0)      "drmaa_syncronize() doesn't ignore new jobs"
+set check_name                "commlib_deadlock"
+set check_description(0)      "qmaster cannot bind port below 1024 on Linux"
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 set check_root_access_needs   "yes"
 set check_functions           ""
-lappend check_functions       "issue_1270_setup" ;# functions to call (in order)
-lappend check_functions       "issue_1270_run"
-lappend check_functions       "issue_1270_cleanup"
+lappend check_functions       "commlib_deadlock_setup"          ;# functions to call (in order)
+lappend check_functions       "commlib_deadlock_run"
+lappend check_functions       "commlib_deadlock_cleanup"
 set check_highest_level       0
 
 proc init_level {} {
@@ -65,38 +66,51 @@ proc init_level {} {
    return -1
 }
 
-proc issue_1270_setup  {} {
+
+
+
+
+
+proc commlib_deadlock_setup {} {
    global ts_config CHECK_HOST
-   set arch [resolve_arch $CHECK_HOST]
-   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qdel" "\"*\"" } result ]
 
-   if { $catch_result != 0 } {
-      add_proc_error "issue_1270_setup" "-1" "could not delete preexisting jobs"
+   set_error 0 "ok"
+}
+proc commlib_deadlock_run  {} {
+   global ts_config  CHECK_OUTPUT CHECK_USER CHECK_SCRIPT_FILE_DIR
+   set runs 1 
+   set qping_script_path "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/qping.sh"
+   set arch [resolve_arch $ts_config(master_host)]
+   set qping_arguments "$ts_config(product_root)/bin/$arch/qping $ts_config(master_host) $ts_config(commd_port) qmaste 1 100"
+
+   while { $runs <= 10 } {
+      puts $CHECK_OUTPUT "run $runs of 10"
+      set output [start_remote_prog $ts_config(master_host) $CHECK_USER $qping_script_path $qping_arguments prg_exit_state 300]
+      puts $CHECK_OUTPUT "exit state: $prg_exit_state"
+      if { $prg_exit_state == 1} {
+         shutdown_system_daemon $ts_config(master_host) qmaster
+         startup_qmaster 0
+         add_proc_error "commlib_deadlock_run" -1 "commlib deadlock found"
+         break
+      }
+      incr runs 1
    }
 
    set_error 0 "ok"
 }
 
-proc issue_1270_run  {} {
-   global ts_config
 
-   set up_arch [resolve_build_arch $ts_config(master_host)]
-   set client_binary $ts_config(source_dir)/$up_arch/test_drmaa_sync
-   set client_args "$ts_config(product_root)/examples/jobs/sleeper.sh"
-
-   set catch_result [ catch {  eval exec "$client_binary" "$client_args" } result ]
-
-   if { $catch_result <= 0 } {
-      add_proc_error "issue_1270_run" "-1" "drmaa_synchronize() did not ignore new jobs"
-   }
-   
-   set_error 0 "ok"
-}
-
-proc issue_1270_cleanup {} {
-
-   delete_all_jobs
-   wait_for_end_of_all_jobs 60
+proc commlib_deadlock_cleanup {} {
+   global ts_config 
 
    set_error 0 "ok"
 }
+
+
+
+
+
+
+
+
+

@@ -65,7 +65,7 @@
 *******************************************************************************/
 void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)
 {
-   DENTER(TOP_LAYER, "sge_mutex_lock");
+   DENTER(BASIS_LAYER, "sge_mutex_lock");
 
    DLOCKPRINTF(("%s() line %d: about to lock mutex \"%s\"\n", func, line, mutex_name));
 
@@ -110,7 +110,7 @@ void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_
 *******************************************************************************/
 void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)
 {
-   DENTER(TOP_LAYER, "sge_mutex_unlock");
+   DENTER(BASIS_LAYER, "sge_mutex_unlock");
 
    if (pthread_mutex_unlock(mutex) != 0)
    {

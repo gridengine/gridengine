@@ -511,7 +511,7 @@
 /* #define MSG_SGETEXT_CANTCOUNT_QSIQ_S                  _message(33468, _("can't count qsi queues in "SFN"\n") )  __TS Removed automatically from testsuite!! TS__*/
 
 /*
-** qmaster.c
+** sge_qmaster_main.c
 */
 #define MSG_SETTING_PRIORITY_TAGS_S             _MESSAGE(33472, _("setting SGE_PRIORITY_TAGS to "SFN"\n"))
 #define MSG_TOO_MANY_PRIORITY_TAGS_S            _MESSAGE(33473, _("SGE_PRIORITY_TAGS "SFN" contains too many tags (max 9)\n"))
@@ -631,7 +631,7 @@
 
 
 /*
-** qmaster.c
+** sge_qmaster_main.c
 */
 #define MSG_COMMD_CANTENROLLTOCOMMD_S              _MESSAGE(33588, _("can't enroll to commd: "SFN))
 #define MSG_COMMD_FOUNDRUNNINGCOMMDONLOCALHOST              _MESSAGE(33589, _("found running commd on local host"))
@@ -729,6 +729,11 @@
 #define MSG_LOG_DELSGE                _MESSAGE(33805, _("job deleted by schedd"))
 #define MSG_LOG_DELIMMEDIATE          _MESSAGE(33806, _("immediate job deleted by schedd"))
 #define MSG_LOG_JATASKEXIT            _MESSAGE(33807, _("ja task exited") )  
+
+/*
+ * sge_qmaster_main.c
+ */
+#define MSG_QMASTER_UNEXPECTED_SIGNAL_I    _MESSAGE(33810, _("received unexpected signal %d\n"))
 
 #endif
 

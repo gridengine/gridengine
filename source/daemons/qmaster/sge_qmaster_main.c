@@ -63,6 +63,7 @@
 #include "shutdown.h"
 #include "setup.h"
 #include "sge_spool.h"
+#include "cl_commlib.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "msg_utilib.h"  /* remove once 'daemonize_qmaster' did become 'sge_daemonize' */
@@ -86,6 +87,7 @@ static void unlock_callback(sge_locktype_t, sge_lockmode_t, sge_locker_t);
 static sge_locker_t id_callback(void);
 
 /* thread management */
+static void  create_and_join_threads(void);
 static void  inc_thread_count(void);
 static bool  should_terminate(void);
 static void  wait_for_thread_termination(void);
@@ -94,7 +96,6 @@ static void* message_thread(void*);
 
 /* misc functions */
 static void daemonize_qmaster(void);
-static void ignore_signals(void);
 static void start_heartbeat(void);
 static void increment_heartbeat(te_event_t);
 static void start_periodic_tasks(void);
@@ -110,8 +111,10 @@ static void exit_func(int);
 *     int main(int argc, char* argv[]) 
 *
 *  FUNCTION
-*     Qmaster entry point. Setup qmaster. Create and run threads. If all
-*     threads did terminate, shutdown qmaster. 
+*     Qmaster entry point.
+*
+*     NOTE: The main thread must block all signals before any additional thread
+*     is created. Failure to do so will ruin signal handling!
 *
 *  INPUTS
 *     int argc     - number of commandline arguments 
@@ -123,11 +126,7 @@ static void exit_func(int);
 *******************************************************************************/
 int main(int argc, char* argv[])
 {
-   enum { NUM_THRDS = 2 };
-
    sigset_t sig_set;
-   pthread_t thrds[NUM_THRDS];
-   int i;
 
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
@@ -144,30 +143,26 @@ int main(int argc, char* argv[])
 #endif
 
    lInit(nmv);
-   sge_setup(QMASTER, NULL);
-   uti_state_set_exit_func(exit_func);
 
    sigfillset(&sig_set);
    pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
 
+   sge_setup(QMASTER, NULL);
+
+   uti_state_set_exit_func(exit_func);
+
    start_heartbeat();
 
    sge_setup_qmaster(argv);  /* setup communication etc. */
+
    setup_lock_service();
-
-   pthread_create(&(thrds[0]), NULL, signal_thread, NULL);
-   inc_thread_count();
-
-   pthread_create(&(thrds[1]), NULL, message_thread, NULL);
-   inc_thread_count();
 
    start_periodic_tasks();
 
-   for (i = 0; i < NUM_THRDS; i++) {
-      pthread_join(thrds[i], NULL);
-   }
-   
+   create_and_join_threads();
+
    teardown_lock_service();
+
    qmaster_shutdown();
 
    DEXIT;
@@ -363,6 +358,50 @@ static void start_heartbeat(void)
    DEXIT;
    return;
 } /* start_heartbeat(void) */
+
+/****** qmaster/sge_qmaster_main/create_and_join_threads() *********************
+*  NAME
+*     create_and_join_threads() -- create and join qmaster threads
+*
+*  SYNOPSIS
+*     static void create_and_join_threads(void) 
+*
+*  FUNCTION
+*     Create and join qmaster threads. This function does block until all 
+*     created threads could have been joined.
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: create_and_join_threads() is not MT safe 
+*
+*******************************************************************************/
+static void create_and_join_threads(void)
+{
+   enum { NUM_THRDS = 2 };
+
+   pthread_t tids[NUM_THRDS];
+   int i;
+
+   DENTER(TOP_LAYER, "create_and_join_threads");
+
+   pthread_create(&(tids[0]), NULL, signal_thread, NULL);
+   inc_thread_count();
+
+   pthread_create(&(tids[1]), NULL, message_thread, NULL);
+   inc_thread_count();
+
+   for (i = 0; i < NUM_THRDS; i++) {
+      pthread_join(tids[i], NULL);
+   }
+
+   DEXIT;
+   return;
+} /* create_and_join_threads() */
 
 /****** qmaster/sge_qmaster_main/increment_heartbeat() *************************
 *  NAME
@@ -781,7 +820,9 @@ static bool should_terminate(void)
 *     Signal handling thread function. Establish recognized signal set. Enter
 *     signal wait loop. Wait for signal. Handle signal.
 *
-*     If signal is 'SIGINT', kick-off shutdown.
+*     If signal is 'SIGINT' or 'SIGTERM', kick-off shutdown.
+*
+*     NOTE: The signal thread will terminate on return of this function.
 *
 *  INPUTS
 *     void* anArg - not used 
@@ -806,10 +847,9 @@ static void* signal_thread(void* anArg)
    lInit(nmv);
    sge_setup(QMASTER, NULL);
 
-   ignore_signals();
-
    sigemptyset(&sig_set);
    sigaddset(&sig_set, SIGINT);
+   sigaddset(&sig_set, SIGTERM);
    
    while (true)
    {
@@ -819,13 +859,12 @@ static void* signal_thread(void* anArg)
 
       switch (sig_num) {
          case SIGINT:
+         case SIGTERM:
             wait_for_thread_termination();
             DEXIT;
             return NULL;
          default:
-            /* TODO-AD: add error message */
-            DPRINTF(("%s: did not handle signal %d\n", SGE_FUNC, sig_num));
-            ;
+            ERROR((SGE_EVENT, MSG_QMASTER_UNEXPECTED_SIGNAL_I, sig_num));
       }
    }
 
@@ -833,7 +872,7 @@ static void* signal_thread(void* anArg)
    return NULL;
 } /* signal_thread() */
 
-/****** sge_qmaster_main/message_thread() **************************************
+/****** qmaster/sge_qmaster_main/message_thread() ******************************
 *  NAME
 *     message_thread() -- message thread function 
 *
@@ -869,57 +908,6 @@ static void* message_thread(void* anArg)
    DEXIT;
    return NULL;
 } /* message_thread() */
-
-/****** qmaster/sge_qmaster_main/ignore_signals() ******************************
-*  NAME
-*     ignore_signals() -- ignore signals 
-*
-*  SYNOPSIS
-*     static void ignore_signals(void) 
-*
-*  FUNCTION
-*     Ignore all signals which should not be recognized.
-*
-*  INPUTS
-*     void - none 
-*
-*  RESULT
-*     void - none 
-*
-*  NOTES
-*     MT-NOTE; ignore_signals() is NOT MT safe. 
-*
-*******************************************************************************/
-static void ignore_signals(void)
-{
-   struct sigaction act;
-
-   DENTER(TOP_LAYER, "ignore_signals");
-
-   act.sa_handler = SIG_IGN;
-
-   sigaction(SIGALRM, &act, NULL);
-   sigaction(SIGPIPE, &act, NULL);
-   sigaction(SIGUSR1, &act, NULL);
-   sigaction(SIGUSR2, &act, NULL);
-   sigaction(SIGABRT, &act, NULL);
-   sigaction(SIGCHLD, &act, NULL);
-   sigaction(SIGCONT, &act, NULL);
-   sigaction(SIGHUP, &act, NULL);
-   sigaction(SIGQUIT, &act, NULL);
-   sigaction(SIGTERM, &act, NULL);
-   sigaction(SIGTSTP, &act, NULL);
-   sigaction(SIGTTIN, &act, NULL);
-   sigaction(SIGTTOU, &act, NULL);
-   sigaction(SIGURG, &act, NULL);
-   sigaction(SIGVTALRM, &act, NULL);
-#if !defined(DARWIN)
-   sigaction(SIGPOLL, &act, NULL);
-#endif
-
-   DEXIT;
-   return;
-} /* ignore_signals() */
 
 /****** qmaster/sge_qmaster_main/wait_for_thread_termination() *****************
 *  NAME
@@ -964,11 +952,13 @@ static void wait_for_thread_termination(void)
 
    sge_mutex_unlock("qmaster_mutex", SGE_FUNC, __LINE__, &Qmaster_Control.mutex);
 
+   DPRINTF(("%s: all threads but one did terminate\n", SGE_FUNC));
+
    DEXIT;
    return;
 } /* wait_for_thread_termination() */
 
-/****** sge_qmaster_main/qmaster_shutdown() ************************************
+/****** qmaster/sge_qmaster_main/qmaster_shutdown() ****************************
 *  NAME
 *     qmaster_shutdown() -- shutdown qmaster 
 *
@@ -977,7 +967,8 @@ static void wait_for_thread_termination(void)
 *
 *  FUNCTION
 *     Clean up qmaster. Notify clients about shutdown. Shutdown persistence and
-*     reporting service. Shutdown timed event delivery.
+*     reporting service. Shutdown timed event delivery. Clean-up communication
+*     library.
 *
 *     This function must be the VERY last function which qmaster does invoke.
 *
@@ -1011,6 +1002,8 @@ static void qmaster_shutdown(void)
    reporting_shutdown(NULL);
 
    te_shutdown();
+
+   cl_com_cleanup_commlib();
 
    sge_shutdown();
 

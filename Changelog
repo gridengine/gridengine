@@ -1,3 +1,7 @@
+AD-2004-01-21-0: Enhancem:  - 'sge_qmaster' does now handle 'SIGTERM'.
+                            - overwork of signal handling.
+                 Changed:   qmaster
+
 AA-2004-01-21-0: Enhancem. qmon cluster queue changes, NOT YET COMPLETED
                            to get the rest of qmon functionality operable
                            again (indexes for lists changed with the intro

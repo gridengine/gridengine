@@ -39,6 +39,7 @@ umask 022
 BASEDIR=/dist/SGEDIST
 MANUALPDF=/dist/SGEDIST/gridengine-download/www/SGE5_3alpha.pdf
 VERSIONDIR=SGE53
+SGE_PRODUCT_MODE=ge
 
 HASDIR="ckpt doc examples/jobs locale mpi pvm/src qmon/PIXMAPS/big qmon/locale"
 HASARCHDIR="bin lib examples/jobsbin utilbin"
@@ -287,7 +288,6 @@ SetFilePerm()
 ARCH=""
 PROG=""
 verbose=false
-
 instjobs=false
 instsharedlibs=true
 instckpt=false
@@ -331,6 +331,15 @@ elif [ $cmdname = myinst ]; then
    exit_on_error=false
    localinst=true
    setfileperm=false
+elif [ $cmdname = sgeinst ]; then 
+   # This special rule creates a distribution with Sun Microsystems copyrights
+   VERSIONDIR=SGE53beta1
+   SGE_PRODUCT_MODE=sge
+elif [ $cmdname = sgeeeinst ]; then
+   # This special rule creates a distribution with Sun Microsystems copyrights
+   VERSIONDIR=SGEEE53beta1
+   SGE_PRODUCT_MODE=sgeee
+   sgeee=true
 else
    echo echo Unsupported command name: $cmdname.
    echo
@@ -376,7 +385,17 @@ while [ $# -ge 1 ]; do
       ;;
    -sgeee)
       sgeee=true
+      if [ $SGE_PRODUCT_MODE = ge ]; then
+         SGE_PRODUCT_MODE=geee
+      fi
       UTILITYBINARIES="$UTILITYBINARIES $SGEEE_UTILITYBINARIES"
+      ;;
+   -sunsge)
+      SGE_PRODUCT_MODE=sge
+      ;;
+   -sunsgeee)
+      SGE_PRODUCT_MODE=sgeee
+      sgeee=true
       ;;
    -v)
       verbose=true
@@ -399,7 +418,10 @@ while [ $# -ge 1 ]; do
          exit 1
       fi
       ;;
-   -*)
+   --)
+      break
+      ;;
+   --*)
       echo option \"$1\" is not supported. Installation failed
       exit 1
       ;;
@@ -611,6 +633,22 @@ if [ $instcommon = true ]; then
       Execute rm -f $DEST_SGE_ROOT/qmon/PIXMAPS/big/*.xpm
       Execute cp dist/qmon/PIXMAPS/small/*.xpm $DEST_SGE_ROOT/qmon/PIXMAPS
       Execute cp dist/qmon/PIXMAPS/big/toolbar*.xpm $DEST_SGE_ROOT/qmon/PIXMAPS/big
+
+      # use special intro- and logo xpm's if Sun creates a distribution.
+      # courtesy binaries provided by Sun have a special intro logo
+      if [ $SGE_PRODUCT_MODE = sge ]; then
+         echo using SGE pixmaps for Sun distribution
+         cp /off_home/codine/sun-copyright/intro-sge.xpm $DEST_SGE_ROOT/qmon/PIXMAPS
+         cp /off_home/codine/sun-copyright/logo-sge.xpm  $DEST_SGE_ROOT/qmon/PIXMAPS
+      elif [ $SGE_PRODUCT_MODE = sgeee ]; then
+         echo using SGEEE pixmaps for Sun distribution
+         cp /off_home/codine/sun-copyright/intro-sgeee.xpm $DEST_SGE_ROOT/qmon/PIXMAPS/intro-sge.xpm
+         cp /off_home/codine/sun-copyright/logo-sgeee.xpm  $DEST_SGE_ROOT/qmon/PIXMAPS/logo-sge.xpm
+      elif [ -f /off_home/codine/copyright/intro-sge.xpm ]; then
+         echo using SGE pixmaps for Sun courtesy binary distribution
+         cp /off_home/codine/copyright/intro-sge.xpm $DEST_SGE_ROOT/qmon/PIXMAPS
+      fi
+
       Execute chmod 644 $DEST_SGE_ROOT/qmon/PIXMAPS/*.xpm
       Execute chmod 644 $DEST_SGE_ROOT/qmon/PIXMAPS/big/*.xpm
 
@@ -660,8 +698,8 @@ if [ $instcommon = true ]; then
    if [ $instman = true ]; then
       echo Installing \"man/\" and \"catman/\"
       Execute rm -rf $DEST_SGE_ROOT/man $DEST_SGE_ROOT/catman
-      Execute cp -r MANSBUILD/SEDMAN/man $DEST_SGE_ROOT
-      Execute cp -r MANSBUILD/ASCMAN/catman $DEST_SGE_ROOT
+      Execute cp -r MANSBUILD_$SGE_PRODUCT_MODE/SEDMAN/man $DEST_SGE_ROOT
+      Execute cp -r MANSBUILD_$SGE_PRODUCT_MODE/ASCMAN/catman $DEST_SGE_ROOT
    fi
 
    if [ $instdoc = true ]; then
@@ -715,10 +753,10 @@ if [ $instcommon = true ]; then
       SetFilePerm $DEST_SGE_ROOT
    fi
 
-   # Remove CVS directories and backup files
-   echo Removing CVS and backup files
+   # Remove CVS directories, ".#" files, backup files
+   echo Removing CVS and backup files and '.#*' files
    find $DEST_SGE_ROOT -name CVS -type d -exec rm -rf {} \; 2>/dev/null
-   find $DEST_SGE_ROOT \( -name "*~" -o -name "*.bak" \) \
+   find $DEST_SGE_ROOT \( -name "*~" -o -name "*.bak" -o -name ".#*" \) \
                           -type f -exec rm -f {} \;
    echo common part done
    echo

@@ -196,6 +196,7 @@ proc install_shadowd {} {
       set CHECK_ADMINUSER_ACCOUNT      [translate $shadow_host 0 1 0 [sge_macro DISTINST_CHECK_ADMINUSER_ACCOUNT] "*" "*" "*" "*" ]
       set CHECK_ADMINUSER_ACCOUNT_ANSWER      [translate $shadow_host 0 1 0 [sge_macro DISTINST_CHECK_ADMINUSER_ACCOUNT_ANSWER] ]
       set SHADOW_INFO                  [translate $shadow_host 0 1 0 [sge_macro DISTINST_SHADOW_INFO] ]
+      set SHADOW_ROOT                  [translate $shadow_host 0 1 0 [sge_macro DISTINST_SHADOW_ROOT] "*" ]
       set SHADOW_CELL                  [translate $shadow_host 0 1 0 [sge_macro DISTINST_SHADOW_CELL] ]
 
       cd "$ts_config(product_root)"
@@ -216,7 +217,7 @@ proc install_shadowd {} {
       set sp_id [ lindex $id 1 ] 
 
 
-      set timeout 300
+      set timeout 30
      
       set do_log_output 0 ;# 1 _LOG
       if { $CHECK_DEBUG_LEVEL == 2 } {
@@ -348,6 +349,17 @@ proc install_shadowd {} {
             }
 
             -i $sp_id $HIT_RETURN_TO_CONTINUE { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "\n"
+               continue;
+            }
+
+            -i $sp_id $SHADOW_ROOT { 
                puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
                if {$do_log_output == 1} {
                     puts "press RETURN"

@@ -261,7 +261,7 @@ unsigned long sge_qmaster_application_status(char** info_message) {
 *  FUNCTION
 *     This function will check the file descriptor limit for the qmaster. If
 *     soft limit < hard limit the soft limit will set to the hard limit, but
-*     max. to 8192 file descriptors, even when the hard limit is higher.
+*     max. to FD_SETSIZE file descriptors, even when the hard limit is higher.
 *
 *  NOTES
 *     MT-NOTE: set_file_descriptor_limit() is not MT safe because the limit
@@ -272,7 +272,7 @@ unsigned long sge_qmaster_application_status(char** info_message) {
 static void set_file_descriptor_limit(void) {
 
    /* define the max qmaster file descriptor limit */
-#define SGE_MAX_QMASTER_SOFT_FD_LIMIT 8192
+#define SGE_MAX_QMASTER_SOFT_FD_LIMIT FD_SETSIZE
 
 #if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
    struct rlimit64 qmaster_rlimits;

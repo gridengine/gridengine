@@ -1,3 +1,6 @@
+CR-2005-03-17-1: Bugfix:   change for CR-2005-03-17-0
+                 Changed:  qmaster hard/soft limit limit setting
+
 HP-2005-03-17-0: Bugfix:   Replaced direct compare of UID to 0 with function call to
                            sge_is_start_user_superuser(), removed
                            sge_is_start_user_root() from library because it did the

@@ -1,3 +1,7 @@
+AS-2004-03-09-1  Bugfix:    reformat of qstat/qhost header line for longer arch names"
+                
+AS-2004-03-09-0: Enhancem.: productization
+
 DT-2004-03-09-0: Enhancem.: o Finished defining native methods for JNI calls in
                               DRMAA Java binding
                             o Added SISSL header to all DRMAA Java binding

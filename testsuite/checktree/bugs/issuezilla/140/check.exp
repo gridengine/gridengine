@@ -101,6 +101,7 @@ proc issue_140_setup  {} {
 proc issue_140_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT
   
+   # test running job array
    puts $CHECK_OUTPUT "Starting job ..."
    set arguments "-o /dev/null -e /dev/null -t 1-3"
    set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
@@ -113,6 +114,22 @@ proc issue_140_check {} {
    delete_job "${job_id}.1-4"
 
    wait_for_jobend $job_id "Sleeper" 60
+
+
+   # test pending job array
+   puts $CHECK_OUTPUT "test with pending jobs ..."
+   puts $CHECK_OUTPUT "Starting job ..."
+   set arguments "-o /dev/null -e /dev/null -h -t 1-3"
+   set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+
+   puts $CHECK_OUTPUT "Waiting for job ${job_id} to get in pending state ..."
+   wait_for_jobpending $job_id "Sleeper" 60
+ 
+   puts $CHECK_OUTPUT "Delete job array $job_id.1-4"
+   delete_job "${job_id}.1-4"
+
+   wait_for_end_of_all_jobs 60 
+
    set_error 0 "ok"
 }
 

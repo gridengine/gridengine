@@ -28,16 +28,17 @@ AA-2002-05-27-0: I18N.:     I18N/L10N changes
 CR-2002-05-23-1: Enhancem.: Testsuite update of install_core_system check:
                             new messages for L10N caused timeouts.
 
-AA-2002-05-23-0: Bugfix:    - qmon_messages.ad for L10N 
+AA-2002-05-23-0: Bugfix:    qmon_messages.ad for l10n 
 
-CR-2002-05-22-3: Bugfix:    - infotext message output on linux
+CR-2002-05-22-3: Bugfix:    infotext message output on linux
 
-CR-2002-05-22-2: Bugfix:    - infotext binary
+CR-2002-05-22-2: Bugfix:    infotext binary
 
-CR-2002-05-22-1: Enhancem.: New script for i18n: Extract messages from install
-                            scripts (file: source/scripts/infotext_msg_parse.tcl)
+CR-2002-05-22-1: Enhancem.: New script for i18n: Extract messages from
+                            install scripts (file:
+                            source/scripts/infotext_msg_parse.tcl)
 
-CR-2002-05-22-0: Bugfix:    - infotext binary
+CR-2002-05-22-0: Enhancem.: added "infotext" binary for l10n 
 
 JG-2002-05-22-0: Doc:       Fixed description of the environment variable 
                             SGE_TASK_ID for non array jobs in submit man page.
@@ -46,16 +47,15 @@ JG-2002-05-21-0: Bugfix:    Recycling of additional group ids did not respect
                             tightly integrated pe tasks.
                  Issue:     #263
 
-CR-2002-05-21-0: Bugfix:    - smaller bugfixes for infotext binary
+CR-2002-05-21-0: Bugfix:    smaller bugfixes for infotext binary
 
 CR-2002-05-16-0: Enhancem.: - i18n changes for inst_sge (part 1)
-                            - renamed sge_printf into infotext
+                            - renamed sge_printf into "infotext"
                               (INteractive Formatted lOcalized TEXT)
                             - added infotext features
                               (-wait -auto -ask options)
                             - MERGED FROM MAINTRUNC
                             - added dstring modules
-
 
 EB-2002-05-06-0: Bugfix:    qhost -j is broken
                  Issue:     #259
@@ -66,22 +66,22 @@ CR-2002-05-14-0: Change:    removed sge_printf build from Makfile
 
 CR-2002-05-13-0: Enhancem.: added sge_printf utilbin source files
 
-AH-2002-05-13-0: Change:    Do no longer flush events immediately after orders 
-                            arrival to 'guarantee' scheduling is done not more 
-                            often than specified with schedule_interval in 
-                            sched_conf(5). 
-                 Changed:   sge_qmaster
+AH-2002-05-13-0: Change:    Do no longer flush events immediately after
+                            orders arrival to 'guarantee' scheduling is done
+                            not more often than specified with
+                            schedule_interval in sched_conf(5).
+                 Changes:   sge_qmaster
 
 EB-2002-04-13-0: Bugfix:    qconf -se shows "reschedule_unknown_list" param. 
                  Issues:    #248 
-                 Changed:   sge_qmaster, qacct, qconf
+                 Changes:   sge_qmaster, qacct, qconf
 
 CR-2002-05-06-0: Testsuite: fixed check dependencies
 
 AH-2002-05-06-0: Bugfix:    Fix typo in simple.sh job example
 
 CR-2002-05-03-0: Testsuite: - removed rsh with rlogin calls
-                 Bugfix:    - compile source has set wrong LIBPATH on AIX
+                            - compile source has set wrong LIBPATH on AIX
                             - timeout setting changed for some tests
                             - additional cleanup for some tests
                             - added more error output 
@@ -98,14 +98,14 @@ JG-2002-04-30-0: Bugfix:    Buffer for task_id of pe task was too small.
                             This could cause a buffer overflow and probably
                             crashes of execd.
                  Bugtraq:   #4677087    
-                 Changed:   sge_execd           
+                 Changes:   sge_execd           
 
 EB-2002-04-29-1: Bugfix:    schedd bugs reported by Patrik Koch
                             on dev mailing list (Mon, 15 Apr 2002) 
                             - Memory leak
                  Issues:    #243
                  Bugtraq:   #4676340 
-                 Changed:   sge_schedd
+                 Changes:   sge_schedd
 
 AH-2002-04-29-0: Change:    In the sched_conf(5) man page it was wrongly 
                             documented that the maxujobs setting is only in 
@@ -127,7 +127,7 @@ AH-2002-04-26-0: Bugfix:    - queue nsuspend > 1 was not used to suspend
                               logging and break user sort policy
                  Issue:     #240
                  Bugtraq:   #4675416
-                 Changed:   sge_schedd
+                 Changes:   sge_schedd
 
 CR-2002-04-25-1: Testsuite: - access_list test:
                               -> submit jobs with 30 sec instead of 15 secs
@@ -163,7 +163,7 @@ JG-2002-04-19-0: Bugfix:    Interactive jobs of any user failed if root had
                  Enhancem.: More detailed description in error output
                  Issue:     #237
                  Bugtraq:   #4670669
-                 Changed:   sge_shepherd qsh rshd
+                 Changes:   sge_shepherd qsh rshd
 
 JG-2002-04-18-1: Enhancem.  Improved verbose output in qmake.
                             Start tasks on localhost also per qrsh - slower, 
@@ -177,10 +177,10 @@ JG-2002-04-18-0: Bugfix:    If more then 1 task of a parallel job was started
                             an entry in the jobs config.
                  Issue:     #236
                  Bugtraq:   #4670664
-                 Changed:   sge_shepherd, sge_execd, qrsh_starter
+                 Changes:   sge_shepherd, sge_execd, qrsh_starter
 
-CR-2002-04-17-0: Testsuite: fixed tcl error on using help command line parameter
-                 Bugfix:    
+CR-2002-04-17-0: Testsuite: fixed tcl error on using help command line
+                            parameter
 
 JG-2002-04-16-0: Enhancem.: In simulation mode (qmaster_param simulate_hosts=1)
                             one qsub call can submit any number of identical 
@@ -209,12 +209,13 @@ EB-2002-04-11-0: Bugfix:    Solaris processor sets / Migration script
                             - fix: checkpointed job migration on bad exit state
                  Issue:     #229, #174
                  Bugtraq:   #4668148
-                 Changed:   shepherd
+                 Changes:   sge_shepherd
 
 JG-2002-04-11-0: Bugfix:    In simulation mode, job reports were not flushed 
                             at (simulated) job end.
 
 JG-2002-04-08-0  Bugfix:    qrsh -h did debug output (a job object).
+                 Changes:   qrsh
 
 CR-2002-04-08-0  Bugfix:    Fixed compiler warning in ptf.c
 
@@ -249,15 +250,14 @@ CR-2002-03-28-2  Testsuite: merges from maintrunc
                             - added new version: "SGEEE pre6.0 (Maintrunk)"
                             - added new version: "SGE pre6.0 (Maintrunk)"
 
-
 JG-2002-03-28-2: Testsuite: - sge_procedures: new functions shutdown_qmaster, 
                               shutdown_scheduler and startup_scheduler.
                             - large_cluster test: shutdown scheduler before 
                               initializing new test to get time for first 
                               scheduling.
 
-AS-2002-03-28-0: CVS:       Created V53_TAG
--------------------------------------------
+AS-2002-03-28-0: CVS:       Created V53_TAG. --> SGE 5.3
+--------------------------------------------------------
 
 JG-2002-03-28-1  Testsuite: Create HTML output after each run level.
 

@@ -3665,13 +3665,21 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set GDI_NEGATIVSTEP [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_NEGATIVSTEP]] 
   set GDI_INITIALPORTIONSTRINGNODECIMAL_S [translate $CHECK_HOST 0 0 0 [sge_macro MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S] "*" ] 
 
+
   if { $ts_config(gridengine_version) == 60 } {
-     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED]]
+#     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED]]
+#     "Colon (':') not allowed in account string"
+
+#      "Unable to run job: : not allowed in objectname."
+      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_S] ":" ]
+
+
   } else {
      set help_translation  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_COLON]]
      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_SC] "$help_translation" ":" ]
   }
-   
+
+
   append USAGE " qsub"
 
   if { $show_args == 1 } {

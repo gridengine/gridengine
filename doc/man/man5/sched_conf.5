@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2001/11/23 15:20:38 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2002/04/29 12:12:53 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2001/11/23 15:20:38 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2002/04/29 12:12:53 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -155,12 +155,7 @@ results.
 .SS "\fBmaxujobs\fP"
 The maximum number of jobs any user may have running in a xxQS_NAMExx
 cluster at the same time. If set to 0 (default) the users may run an arbitrary
-number of jobs. If the \fBuser_sort\fP scheduling policy is active (see
-below) the scheduler allows at the most \fBmaxujobs\fP in 
-each priority group
-.sp 1
-The \fBmaxujobs\fP parameter has no effect in a xxQS_NAME_EExx system. xxQS_NAME_EExx provides
-more sophisticated means to control share entitlement.
+number of jobs. 
 .SS "\fBschedule_interval\fP"
 At the time
 .M xxqs_name_sxx_schedd 8

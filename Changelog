@@ -1,3 +1,5 @@
+AH-2002-04-29-1: Enhancem.  make maxujobs limitation work SGE and SGEEE mode
+
 CR-2002-04-29-1: Testsuite: - check if qmaster/scheduler are alive before starting
                               any test
                             - modified timeouts of some tests

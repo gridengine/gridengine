@@ -400,7 +400,7 @@ void split_jobs(lList **job_list, lList **answer_list,
    lListElem *job = NULL;
    lListElem *next_job = NULL;
    lListElem *previous_job = NULL;
-   DENTER(TOP_LAYER, "job_split_with_reference_to_state");
+   DENTER(TOP_LAYER, "split_jobs");
 
    next_job = lFirst(*job_list);
    while ((job = next_job)) {

@@ -4794,11 +4794,13 @@ proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
 #      puts $CHECK_OUTPUT $line
       if { [lindex $line 0] == $jobid } {
          lappend back $line
+         continue
       }
       if { $add_empty != 0 } {
          if { [llength $line] == 8 } {
             lappend back "-1 $line"
             puts $CHECK_OUTPUT "adding empty job lines" 
+            continue
          }
       }
       if { $get_all != 0 } {

@@ -1,3 +1,6 @@
+CR-2002-05-28-0: Testsuite: test new qrsh options -h and -hold_jid
+                 Issue:     #66
+
 JG-2002-05-28-0: Cleanup:   common function calls to create the active job 
                             directories in execd. 
                             Replace static buffers for building paths by 

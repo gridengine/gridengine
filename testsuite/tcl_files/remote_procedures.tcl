@@ -343,7 +343,6 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
    close_spawn_process $id
 
 
-   log_user 1
    # parse output: cut leading sequence 
    set help_str [ split $output "\n" ]
    set index 0
@@ -821,7 +820,6 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
    uplevel 1 { 
       send -i $open_remote_spawn__id "unset correct\n"
       send -i $open_remote_spawn__id "$open_remote_spawn__script_name\n"
-      log_user 1
    }
 
    if { $background == 2 } {

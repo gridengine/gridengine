@@ -430,7 +430,9 @@ attr_list_append_to_dstring(const lList *this_list, dstring *string,
    DENTER(HOSTATTR_LAYER, "attr_list_append_to_dstring");
 
    for_each(attr, this_list) {
-      const char *href = lGetHost(attr, href_nm);
+      const char *href;
+
+      href = lGetHost(attr, href_nm);
 
       if (href != NULL && !strcmp(href, HOSTREF_DEFAULT)) {
          object_append_field_to_dstring(attr, NULL, &default_string, value_nm,
@@ -805,3 +807,6 @@ TEMPLATE_ATTR_IMPL(bool_attr, bool, ABOOL_Type, ABOOL_href, ABOOL_value)
 
 TEMPLATE_ATTR_IMPL(time_attr, const char *, ATIME_Type, ATIME_href, ATIME_value) 
 TEMPLATE_ATTR_IMPL(mem_attr, const char *, AMEM_Type, AMEM_href, AMEM_value) 
+
+TEMPLATE_ATTR_IMPL(inter_attr, const char *, AINTER_Type, AINTER_href, AINTER_value) 
+

@@ -422,15 +422,8 @@
 #define MSG_GDI_USAGE_a_OPT_DATE_TIME                    "[-a date_time]"
 #define MSG_GDI_UTEXT_a_OPT_DATE_TIME                    _MESSAGE(23290, _("request a job start time"))
 
-
-#define MSG_GDI_USAGE_ac_OPT_COMPLEX_NAME                "[-ac complex_name]"
-#define MSG_GDI_UTEXT_ac_OPT_COMPLEX_NAME                _MESSAGE(23291, _("add a new complex" ))
-
 #define MSG_GDI_USAGE_ac_OPT_CONTEXT_LIST                "[-ac context_list]"
 #define MSG_GDI_UTEXT_ac_OPT_CONTEXT_LIST                _MESSAGE(23292, _("add context variable(s)"))
-
-#define MSG_GDI_USAGE_Ac_OPT_COMPLEX_NAME_FNAME          "[-Ac complex_name fname]"
-#define MSG_GDI_UTEXT_Ac_OPT_COMPLEX_NAME_FNAME          _MESSAGE(23293, _("add a new complex from file"))
 
 #define MSG_GDI_USAGE_acal_OPT_FNAME                     "[-acal calendar_name]"
 #define MSG_GDI_UTEXT_acal_OPT_FNAME                     _MESSAGE(23294, _("add a new calendar"))
@@ -539,9 +532,6 @@
 
 #define MSG_GDI_USAGE_d_OPT                              "[-d]"
 #define MSG_GDI_UTEXT_d_OPT                              _MESSAGE(23329, _("disable"))
-
-#define MSG_GDI_USAGE_dc_OPT_COMPLEXNAME                 "[-dc complexname]"
-#define MSG_GDI_UTEXT_dc_OPT_COMPLEXNAME                 _MESSAGE(23330, _("remove a complex"))
 
 #define MSG_GDI_USAGE_dc_OPT_SIMPLE_COMPLEX_LIST         "[-dc simple_context_list]"
 #define MSG_GDI_UTEXT_dc_OPT_SIMPLE_COMPLEX_LIST         _MESSAGE(23331, _("remove context variable(s)"))
@@ -656,14 +646,14 @@
 #define MSG_GDI_USAGE_m_OPT_MAIL_OPTIONS                 "[-m mail_options]"
 #define MSG_GDI_UTEXT_m_OPT_MAIL_OPTIONS                 _MESSAGE(23367, _("define mail notification events"))
 
-#define MSG_GDI_USAGE_mc_OPT_COMPLEX                     "[-mc [complex]]"
-#define MSG_GDI_UTEXT_mc_OPT_COMPLEX                     _MESSAGE(23368, _("modify a complex"))
+#define MSG_GDI_USAGE_mc_OPT_COMPLEX                     "[-mc ]"
+#define MSG_GDI_UTEXT_mc_OPT_COMPLEX                     _MESSAGE(23368, _("modify complex attributes"))
 
 #define MSG_GDI_USAGE_mckpt_OPT_CKPT_NAME                "[-mckpt ckpt_name]"
 #define MSG_GDI_UTEXT_mckpt_OPT_CKPT_NAME                _MESSAGE(23369, _("modify a ckpt interface definition"))
 
-#define MSG_GDI_USAGE_Mc_OPT_COMPLEX_NAME_FNAME          "[-Mc complex_name fname]"
-#define MSG_GDI_UTEXT_Mc_OPT_COMPLEX_NAME_FNAME          _MESSAGE(23370, _("modify a complex from file"))
+#define MSG_GDI_USAGE_Mc_OPT_COMPLEX_NAME_FNAME          "[-Mc fname]"
+#define MSG_GDI_UTEXT_Mc_OPT_COMPLEX_NAME_FNAME          _MESSAGE(23370, _("modify complex attributes from file"))
 
 #define MSG_GDI_USAGE_mcal_OPT_CALENDAR_NAME             "[-mcal calendar_name]"
 #define MSG_GDI_UTEXT_mcal_OPT_CALENDAR_NAME             _MESSAGE(23371, _("modify calendar"))
@@ -788,8 +778,8 @@
 
 #define MSG_GDI_USAGE_s_OPT_SIGNAL                       "[-s signal]"
 
-#define MSG_GDI_USAGE_sc_OPT_COMPLEX_LIST                "[-sc complex_list]"
-#define MSG_GDI_UTEXT_sc_OPT_COMPLEX_LIST_SHOW           _MESSAGE(23408, _("show given complexes"))
+#define MSG_GDI_USAGE_sc_OPT_COMPLEX_LIST                "[-sc ]"
+#define MSG_GDI_UTEXT_sc_OPT_COMPLEX_LIST_SHOW           _MESSAGE(23408, _("show complex attributes"))
 #define MSG_GDI_USAGE_sc_OPT_CONTEXT_LIST                "[-sc context_list]"
 #define MSG_GDI_UTEXT_sc_OPT_CONTEXT_LIST_SET            _MESSAGE(23409, _("set job context (replaces old context)"    ))
 
@@ -804,9 +794,6 @@
 
 #define MSG_GDI_USAGE_sckptl_OPT                         "[-sckptl]"
 #define MSG_GDI_UTEXT_sckptl_OPT                         _MESSAGE(23413, _("show all ckpt interface definitions"))
-
-#define MSG_GDI_USAGE_scl_OPT                            "[-scl]"
-#define MSG_GDI_UTEXT_scl_OPT                            _MESSAGE(23414, _("show a list of all complexes"))
 
 #define MSG_GDI_USAGE_sconf_OPT_HOSTLISTORGLOBAL         "[-sconf [host_list|global]]"
 #define MSG_GDI_UTEXT_sconf_OPT_HOSTLISTORGLOBAL         _MESSAGE(23415, _("show configurations"))

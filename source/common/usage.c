@@ -215,19 +215,9 @@ FILE *fp
    }  
 
    if (VALID_OPT(ac_OPT, uti_state_get_mewho())) {
-      if (uti_state_get_mewho() == QCONF)
-         PRINTITD(MSG_GDI_USAGE_ac_OPT_COMPLEX_NAME , 
-            MSG_GDI_UTEXT_ac_OPT_COMPLEX_NAME);
-      else {
-         PRINTITD(MSG_GDI_USAGE_ac_OPT_CONTEXT_LIST, 
-            MSG_GDI_UTEXT_ac_OPT_CONTEXT_LIST );
-         MARK(OA_COMPLEX_LIST);
-      }
-   }
-
-   if (VALID_OPT(Ac_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_Ac_OPT_COMPLEX_NAME_FNAME, 
-         MSG_GDI_UTEXT_Ac_OPT_COMPLEX_NAME_FNAME );
+      PRINTITD(MSG_GDI_USAGE_ac_OPT_CONTEXT_LIST, 
+         MSG_GDI_UTEXT_ac_OPT_CONTEXT_LIST );
+      MARK(OA_COMPLEX_LIST);
    }
 
    if (VALID_OPT(acal_OPT, uti_state_get_mewho())) {
@@ -422,12 +412,8 @@ FILE *fp
    }    
 
    if (VALID_OPT(dc_OPT, uti_state_get_mewho())) {
-      if (uti_state_get_mewho() == QCONF)
-         PRINTITD(MSG_GDI_USAGE_dc_OPT_COMPLEXNAME , MSG_GDI_UTEXT_dc_OPT_COMPLEXNAME );
-      else {
-         PRINTITD(MSG_GDI_USAGE_dc_OPT_SIMPLE_COMPLEX_LIST , MSG_GDI_UTEXT_dc_OPT_SIMPLE_COMPLEX_LIST );
-         MARK(OA_SIMPLE_CONTEXT_LIST);
-      }
+      PRINTITD(MSG_GDI_USAGE_dc_OPT_SIMPLE_COMPLEX_LIST , MSG_GDI_UTEXT_dc_OPT_SIMPLE_COMPLEX_LIST );
+      MARK(OA_SIMPLE_CONTEXT_LIST);
    }
 
    if (VALID_OPT(dcal_OPT, uti_state_get_mewho())) {
@@ -914,10 +900,6 @@ FILE *fp
 
    if (VALID_OPT(sckptl_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_sckptl_OPT, MSG_GDI_UTEXT_sckptl_OPT);
-   }
-
-   if (VALID_OPT(scl_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_scl_OPT, MSG_GDI_UTEXT_scl_OPT);
    }
 
    if (VALID_OPT(sconf_OPT, uti_state_get_mewho())) {

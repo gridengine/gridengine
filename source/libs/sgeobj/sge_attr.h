@@ -86,6 +86,8 @@ TEMPLATE_ATTR_PROTO(time_attr, const char *)
 
 TEMPLATE_ATTR_PROTO(mem_attr, const char *)                    
 
+TEMPLATE_ATTR_PROTO(inter_attr, const char *)                    
+
 #undef ATTR_TYPE_PROTOTYPES 
 
 #endif /* __SGE_ATTR_H__ */

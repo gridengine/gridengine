@@ -155,6 +155,16 @@ int usermap_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem, 
       }
    }
 
+   if (ret) {
+      pos = lGetPosViaElem(reduced_elem, CU_inter);
+   
+      if (pos >= 0) {
+         lList *hostattr_list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cuser, CU_inter, lCopyList("", hostattr_list));
+      }
+   }
+
    DEXIT;
    if (ret) {
       return 0;

@@ -127,6 +127,23 @@ NAMEEND
 
 #define AMEMS sizeof(AMEMN)/sizeof(char*)
 
+enum {
+   AINTER_href = AINTER_LOWERBOUND,
+   AINTER_value                    
+};
+
+LISTDEF(AINTER_Type)
+   SGE_HOST(AINTER_href, CULL_HASH | CULL_UNIQUE)
+   SGE_STRING(AINTER_value, CULL_DEFAULT)
+LISTEND 
+
+NAMEDEF(AINTERN)
+   NAME("AINTER_href")
+   NAME("AINTER_value")
+NAMEEND
+
+#define AINTERS sizeof(AINTERN)/sizeof(char*)
+
 /* *INDENT-ON* */  
 
 #ifdef  __cplusplus

@@ -107,7 +107,6 @@ enum {
    mconf_OPT,
    mq_OPT,
    sc_OPT,
-   scl_OPT,
    sconf_OPT,
    sh_OPT,
    sm_OPT,
@@ -119,7 +118,6 @@ enum {
    sul_OPT,
    jid_OPT,
    gc_OPT,  /* dummy from qconf to qmaster to get complex */
-   Ac_OPT,
    ae_OPT,
    Ae_OPT,
 

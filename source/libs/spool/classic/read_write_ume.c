@@ -137,6 +137,13 @@ int parsing_type
                                      CU_mem, AMEM_Type,
                                      AMEM_href)) ? -1 : 0;
    }
+   
+   /* --------- CU_inter */
+   if (ret == 0) {
+      ret = (!set_conf_inter_attr_list(alpp, clpp, fields, "inter", ep, 
+                                       CU_inter, AINTER_Type,
+                                       AINTER_href)) ? -1 : 0;
+   }
    DEXIT;
    return ret;
 }
@@ -312,6 +319,21 @@ const lListElem *ep
          sge_dstring_free(&string);
       } else {
          FPRINTF((fp, "INFINITY\n"));
+      }
+ 
+   }
+   {
+      const lList *inter_attr_list = lGetList(ep, CU_inter);
+
+      FPRINTF((fp, "inter            "));
+      if (inter_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         inter_attr_list_append_to_dstring(inter_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "00:05:00\n"));
       }
  
    }

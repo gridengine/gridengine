@@ -692,6 +692,9 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
       case ATIME_value:
          ret = object_parse_time_from_string(object, answer_list, nm, value);
          break;
+      case AINTER_value:
+         ret = object_parse_inter_from_string(object, answer_list, nm, value);
+         break;
       default:
          ret = object_parse_raw_field_from_string(object, answer_list, nm, 
                                                   value);
@@ -1147,6 +1150,36 @@ object_parse_time_from_string(lListElem *this_elem, lList **answer_list,
    bool ret = true;
 
    DENTER(OBJECT_LAYER, "object_parse_time_from_string");
+   if (this_elem != NULL && string != NULL) {
+      int pos = lGetPosViaElem(this_elem, name);
+
+      if (parse_ulong_val(NULL, NULL, TYPE_TIM, string, NULL, 0)) {
+         lSetPosString(this_elem, pos, string);
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ERRORPARSINGVALUEFORNM_SS,
+                                 string, lNm2Str(name));
+         ret = false;
+      }
+   } else {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                              ANSWER_QUALITY_ERROR,
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+object_parse_inter_from_string(lListElem *this_elem, lList **answer_list,
+                               int name, const char *string)
+{
+   bool ret = true;
+
+   DENTER(OBJECT_LAYER, "object_parse_inter_from_string");
    if (this_elem != NULL && string != NULL) {
       int pos = lGetPosViaElem(this_elem, name);
 

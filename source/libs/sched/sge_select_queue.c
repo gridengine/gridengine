@@ -1133,10 +1133,10 @@ int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *execho
                    lList *complex_list, lList *load_adjustments) {
    lListElem *hep, *global_hep, *tep;
    u_long32 ulc_factor; 
-   const char *load_value; 
-   const char *limit_value;
+   const char *load_value = NULL; 
+   const char *limit_value = NULL;
    double lc_host = 0, lc_global = 0;
-   int load_is_value;
+   int load_is_value = 0;
    
    DENTER(TOP_LAYER, "sge_load_alarm");
 
@@ -1185,17 +1185,23 @@ int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *execho
 
       relop = lGetUlong(cep, CE_relop);
 
-      if ((hlep = lGetSubStr(hep, HL_name, name, EH_load_list)) == NULL && 
-         (glep = lGetSubStr(global_hep, HL_name, name, EH_load_list)) == NULL) {
+      if (hep != NULL) {
+         hlep = lGetSubStr(hep, HL_name, name, EH_load_list);
+         if (hlep != NULL) {
+            load_value = lGetString(hlep, HL_value);
+            load_is_value = 0;
+         }
+      } else if (global_hep != NULL) {
+         glep = lGetSubStr(global_hep, HL_name, name, EH_load_list);
+         if (glep != NULL) {
+            load_value = lGetString(glep, HL_value);
+            load_is_value = 0;
+         }
+      }
+      if (glep == NULL && hlep == NULL) {
          /* use complex default as value */
          load_value = lGetString(cep, CE_stringval);
          load_is_value = 1;
-      } else if (hlep) {
-         load_value = lGetString(hlep, HL_value);
-         load_is_value = 0;
-      } else {
-         load_value = lGetString(glep, HL_value);
-         load_is_value = 0;
       }
 
       limit_value = lGetString(tep, CE_stringval);

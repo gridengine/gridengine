@@ -40,5 +40,8 @@ int
 read_qinstance_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
                     int spool, int flag, int *tag, int parsing_type);
 
+char *
+write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1);
+
 #endif /* _READ_WRITE_QINSTANCE_H */
 

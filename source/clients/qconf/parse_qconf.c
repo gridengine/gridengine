@@ -38,6 +38,7 @@
 #include <sys/wait.h>
 #include <limits.h>
 #include <ctype.h>
+#include <fnmatch.h>
 
 #include "sge_unistd.h"
 #include "sge.h"
@@ -64,6 +65,7 @@
 #include "spool/classic/read_write_cal.h"
 #include "spool/classic/read_write_queue.h"
 #include "spool/classic/read_write_cqueue.h"
+#include "spool/classic/read_write_qinstance.h"
 #include "spool/classic/read_write_ume.h"
 #include "spool/classic/read_write_host_group.h"
 #include "spool/classic/read_write_host.h"
@@ -102,6 +104,9 @@
 #include "sge_cqueue_qconf.h"
 #include "sge_edit.h"
 #include "sge_cqueue.h"
+#include "sge_qinstance.h"
+#include "sge_hgroup.h"
+#include "sge_href.h"
 
 #include "msg_common.h"
 #include "msg_qconf.h"
@@ -4093,99 +4098,24 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 
-#if 1 /* EB: TODO: implement -scq switch */
-      /* "-scq [destin_id[,destin_id,...]]" */
+      /* "-scq [pattern[,pattern,...]]" */
       if (!strcmp("-scq", *spp)) {
+         lList *answer_list = NULL;
+
          if(*(spp+1) && strncmp("-", *(spp+1), 1)) {
-            /* queues specified */
             while(*(spp+1) && strncmp("-", *(spp+1), 1)) {
                spp++;
                if (strncmp("-", *spp, 1)) {
                   lString2List(*spp, &arglp, QR_Type, QR_name, ", ");
                }
             }
-
-lWriteListTo(arglp, stderr);
-{
-   lListElem *qref;
-   bool fetch_all_hgrp = false;
-   bool fetch_all_qi = false;
-   bool fetch_all_nqi = false;
-
-   for_each(qref, arglp) {
-      dstring cqueue_name = DSTRING_INIT;
-      dstring host_domain = DSTRING_INIT;
-      const char *name = lGetString(qref, QR_name);
-      bool has_hostname, has_domain;
-
-      cqueue_name_split(name, &cqueue_name, &host_domain, 
-                        &has_hostname, &has_domain);
-
-      fetch_all_hgrp = fetch_all_hgrp || has_domain;
-      fetch_all_qi = fetch_all_qi || (has_domain || has_hostname);
-      fetch_all_nqi = fetch_all_nqi || (!has_domain && !has_hostname);
-     
-      fprintf(stderr, "%s\n", sge_dstring_get_string(&cqueue_name));
-      if (has_domain || has_hostname) 
-         fprintf(stderr, "%s\n", sge_dstring_get_string(&host_domain));
-      
-      sge_dstring_free(&cqueue_name);
-      sge_dstring_free(&host_domain);
-   }
-
-   {
-      lList *hgrp_list = NULL;
-      lList *cq_list = NULL;
-      lList *answer_list = NULL;
-      bool local_ret;
-
-      local_ret = cqueue_hgrp_get_via_gdi(&answer_list, &hgrp_list, &cq_list,
-                                          fetch_all_hgrp, fetch_all_qi, 
-                                          fetch_all_nqi);
-      if (local_ret) {
-         lWriteListTo(cq_list, stderr);
-         lWriteListTo(hgrp_list, stderr);
-      } else {
+         }
+         cqueue_show(&answer_list, arglp);
+         arglp = lFreeList(arglp);
          show_gdi_request_answer(answer_list);
-      }
-   }
-
-   
-   fprintf(stderr, "%d %d %d\n", (int) fetch_all_hgrp, (int) fetch_all_qi,
-           (int) fetch_all_nqi);
-}
-
-#if 0
-
-                  for_each(argep, arglp) {
-                     where = lWhere("%T( %I==%s )", QU_Type, QU_qname, lGetString(argep, QR_name));
-                     what = lWhat("%T(ALL)", QU_Type);
-                     alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_GET, &lp, where, what);
-                     where = lFreeWhere(where);
-                     what = lFreeWhat(what);
-
-                     if(lp)
-                        cull_write_qconf(0, 1, NULL, NULL, NULL, lFirst(lp));
-                     else {
-                        fprintf(stderr, MSG_QUEUE_UNABLE2FINDQ_S, lGetString(argep, QR_name));
-                        sge_parse_return = 1;
-                     }
-                     aep = lFirst(alp);
-                     answer_exit_if_not_recoverable(aep);
-                     if(answer_get_status(aep) != STATUS_OK) {
-                        fprintf(stderr, "%s", lGetString(aep, AN_text));
-                     }
-                     lFreeList(alp);
-
-                     printf("\n");
-                  }
-                  arglp = lFreeList(arglp);
-#endif
-         } 
          spp++;
          continue;
       }
-#endif
 #endif
 
 /*----------------------------------------------------------------------------*/

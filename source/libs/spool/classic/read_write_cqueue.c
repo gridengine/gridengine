@@ -44,6 +44,7 @@
 #include "sge_unistd.h"
 #include "sge_answer.h"
 #include "read_write_cqueue.h"
+#include "read_write_qinstance.h"
 #include "sge_string.h"
 #include "sge_log.h"
 #include "config.h"
@@ -1253,6 +1254,9 @@ write_cqueue(int spool, int how, const lListElem *ep)
       }
  
    }
+   if (how == 0) {
+      FPRINTF((fp, "\n"));
+   }
 
    if (how == 2) {
       lList *qinstances = lGetList(ep, CQ_qinstances);
@@ -1289,6 +1293,8 @@ write_cqueue(int spool, int how, const lListElem *ep)
                DEXIT;
                return NULL;
             } 
+
+            write_qinstance(0, 4, qinstance, qi_fp);
 
             FPRINTF((qi_fp, "qname              %s\n", 
                      lGetString(qinstance, QI_name)));

@@ -30,6 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <fnmatch.h>
+
 #include "sgermon.h"
 #include "sge_string.h"
 #include "sge_log.h"
@@ -190,7 +192,6 @@ enumeration_create_reduced_cq(bool fetch_all_qi, bool fetch_all_nqi)
          names++;
          name_array[names] = attr;
          sge_dstring_sprintf_append(&format_string, "%s", "%I");
-         fprintf(stderr, "%s\n", lNm2Str(attr));
       }
    }
    sge_dstring_sprintf_append(&format_string, "%s", ")");
@@ -333,6 +334,35 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
       }
    }
  
+   DEXIT;
+   return ret;
+}
+
+bool
+cqueue_list_find_all_matching_references(const lList *this_list,
+                                         lList **answer_list,
+                                         const char *cqueue_pattern,
+                                         lList **qref_list)
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_list_find_all_matching_references");
+   if (this_list != NULL && cqueue_pattern != NULL && qref_list != NULL) {
+      lListElem *cqueue;
+
+      for_each(cqueue, this_list) {
+         const char *cqueue_name = lGetString(cqueue, CQ_name);
+         
+         if (!fnmatch(cqueue_pattern, cqueue_name, 0)) {
+            if (*qref_list == NULL) {
+               *qref_list = lCreateList("", QR_Type);
+            }
+            if (*qref_list != NULL) {
+               lAddElemStr(qref_list, QR_name, cqueue_name, QR_Type);
+            }
+         }
+      }
+   }
    DEXIT;
    return ret;
 }

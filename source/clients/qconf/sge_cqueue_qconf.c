@@ -29,6 +29,8 @@
  *
  ************************************************************************/
 
+#include <fnmatch.h>
+
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_conf.h"
@@ -37,11 +39,15 @@
 #include "sge_unistd.h"
 
 #include "sge_answer.h"
+#include "sge_queue.h"
 #include "sge_cqueue.h"
+#include "sge_qinstance.h"
 #include "sge_hgroup.h"
+#include "sge_href.h"
 #include "sge_cqueue_qconf.h"
 #include "parse_qconf.h"
 #include "spool/classic/read_write_cqueue.h"
+#include "spool/classic/read_write_qinstance.h"
 
 #include "msg_common.h"
 #include "msg_qconf.h"
@@ -97,21 +103,48 @@ cqueue_get_via_gdi(lList **answer_list, const char *name)
 }
 
 bool
-cqueue_hgrp_get_via_gdi(lList **answer_list, lList **hgrp_list, 
-                        lList **cq_list, 
-                        bool fetch_all_hgrp, bool fetch_all_qi, 
-                        bool fetch_all_nqi)
+cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
+                          lList **hgrp_list, lList **cq_list)
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "cqueue_hgrp_get_via_gdi");
+   DENTER(TOP_LAYER, "cqueue_hgroup_get_via_gdi");
    if (hgrp_list != NULL && cq_list != NULL) {
       state_gdi_multi state = STATE_GDI_MULTI_INIT;
       lList *multi_answer_list = NULL;
+      lCondition *cqueue_where = NULL;
+      lListElem *qref = NULL;
+      bool fetch_all_hgroup = false;
+      bool fetch_all_qi = false;
+      bool fetch_all_nqi = false;
       int hgrp_id = 0; 
       int cq_id = 0;
 
-      if (ret && fetch_all_hgrp) { 
+      for_each(qref, qref_list) {
+         dstring cqueue_name = DSTRING_INIT;
+         dstring host_domain = DSTRING_INIT;
+         const char *name = lGetString(qref, QR_name);
+         bool has_hostname, has_domain;
+         lCondition *add_cqueue_where = NULL;
+
+         cqueue_name_split(name, &cqueue_name, &host_domain,
+                           &has_hostname, &has_domain);
+
+         fetch_all_hgroup = fetch_all_hgroup || has_domain;
+         fetch_all_qi = fetch_all_qi || (has_domain || has_hostname);
+         fetch_all_nqi = fetch_all_nqi || (!has_domain && !has_hostname);
+
+         add_cqueue_where = lWhere("%T(%I p= %s)", CQ_Type, CQ_name, 
+                                   sge_dstring_get_string(&cqueue_name));
+         if (cqueue_where == NULL) {
+            cqueue_where = add_cqueue_where;
+         } else {
+            cqueue_where = lOrWhere(cqueue_where, add_cqueue_where);   
+         }
+         sge_dstring_free(&cqueue_name);
+         sge_dstring_free(&host_domain);
+      }
+      if (ret && fetch_all_hgroup) { 
          lEnumeration *what = lWhat("%T(ALL)", HGRP_Type);
         
          hgrp_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST, 
@@ -123,11 +156,11 @@ cqueue_hgrp_get_via_gdi(lList **answer_list, lList **hgrp_list,
          
          what = enumeration_create_reduced_cq(fetch_all_qi, fetch_all_nqi);
          cq_id = sge_gdi_multi(answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
-                               SGE_GDI_GET, NULL, NULL, what,
+                               SGE_GDI_GET, NULL, cqueue_where, what,
                                &multi_answer_list, &state);
          what = lFreeWhat(what);
       }
-      if (ret && fetch_all_hgrp) {
+      if (ret && fetch_all_hgroup) {
          lList *local_answer_list = NULL;
          
          local_answer_list = sge_gdi_extract_answer(SGE_GDI_GET, 
@@ -157,9 +190,10 @@ cqueue_hgrp_get_via_gdi(lList **answer_list, lList **hgrp_list,
                ret = false;
             }
          } 
-         lFreeList(local_answer_list);
+         local_answer_list = lFreeList(local_answer_list);
       }
-      lFreeList(multi_answer_list);
+      multi_answer_list = lFreeList(multi_answer_list);
+      cqueue_where = lFreeWhere(cqueue_where);
    }
    DEXIT;
    return ret;
@@ -324,24 +358,120 @@ cqueue_delete(lList **answer_list, const char *name)
 }
 
 bool 
-cqueue_show(lList **answer_list, const char *name)
+cqueue_show(lList **answer_list, const lList *qref_pattern_list)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "cqueue_show");
-   if (name != NULL) {
-      lListElem *cqueue = cqueue_get_via_gdi(answer_list, name); 
-   
-      if (cqueue != NULL) {
-         write_cqueue(0, 0, cqueue);
-         cqueue = lFreeElem(cqueue);
-      } else {
-         sprintf(SGE_EVENT, MSG_CUSER_DOESNOTEXIST_S, name);
-         answer_list_add(answer_list, SGE_EVENT,
-                         STATUS_ERROR1, ANSWER_QUALITY_ERROR); 
-         ret = false;
-      }
+   if (qref_pattern_list != NULL) {
+      lList *hgroup_list = NULL;
+      lList *cqueue_list = NULL;
+      lListElem *qref_pattern;
+      bool local_ret;
+
+      local_ret = cqueue_hgroup_get_via_gdi(answer_list, qref_pattern_list,
+                                            &hgroup_list, &cqueue_list);
+      if (local_ret) {
+         for_each(qref_pattern, qref_pattern_list) {
+            dstring cqueue_name = DSTRING_INIT;
+            dstring host_domain = DSTRING_INIT;
+            const char *cq_pattern = NULL;
+            const char *name = NULL;
+            bool has_hostname;
+            bool has_domain;
+            lList *qref_list = NULL;
+            lListElem *qref = NULL;
+            bool found_something = false;
+
+            name = lGetString(qref_pattern, QR_name);
+            cqueue_name_split(name, &cqueue_name, &host_domain,
+                              &has_hostname, &has_domain);
+            cq_pattern = sge_dstring_get_string(&cqueue_name);
+            cqueue_list_find_all_matching_references(cqueue_list, NULL,
+                                                     cq_pattern, &qref_list);
+            if (has_domain) {
+               const char *d_pattern = sge_dstring_get_string(&host_domain);
+               lList *href_list = NULL;
+
+               hgroup_list_find_all_matching_references(hgroup_list, NULL,
+                                                        d_pattern,
+                                                        &href_list);
+               for_each(qref, qref_list) {
+                  const char *cqueue_name = lGetString(qref, QR_name);
+                  const lListElem *cqueue = NULL;
+
+                  cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
+                  if (cqueue != NULL) {
+                     const lList *qinstance_list = NULL;
+                     const lListElem *href = NULL;
+
+                     qinstance_list = lGetList(cqueue, CQ_qinstances);
+                     for_each(href, href_list) {
+                        const char *hostname = lGetHost(href, HR_name);
+                        const lListElem *qinstance;
+
+                        qinstance = lGetElemHost(qinstance_list,
+                                                 QI_hostname, hostname);
+
+                        if (qinstance != NULL) {
+                           write_qinstance(0, 0, qinstance, NULL);
+                           found_something = true;
+                        }
+                     }
+                  }
+               }
+
+               href_list = lFreeList(href_list);
+               qref_list = lFreeList(qref_list);
+            } else if (has_hostname) {
+               const char *h_pattern = sge_dstring_get_string(&host_domain);
+
+               for_each(qref, qref_list) {
+                  const char *cqueue_name = NULL;
+                  const lListElem *cqueue = NULL;
+
+                  cqueue_name = lGetString(qref, QR_name);
+                  cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
+                  if (cqueue != NULL) {
+                     const lList *qinstance_list = NULL;
+                     const lListElem *qinstance = NULL;
+
+                     qinstance_list = lGetList(cqueue, CQ_qinstances);
+                     for_each(qinstance, qinstance_list) {
+                        const char *hostname = NULL;
+
+                        hostname = lGetHost(qinstance, QI_hostname);
+                        if (!fnmatch(h_pattern, hostname, 0)) {
+                           write_qinstance(0, 0, qinstance, NULL);
+                           found_something = true;
+                        }
+                     }
+                  }
+               }
+            } else {
+               for_each(qref, qref_list) {
+                  const char *cqueue_name = lGetString(qref, QR_name);
+                  lListElem *cqueue = NULL;
+
+                  cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
+                  if (cqueue != NULL) {
+                     write_cqueue(0, 0, cqueue);
+                     found_something = true;
+                  }
+               }
+            }
+            if (!found_something) {
+               sprintf(SGE_EVENT, MSG_CUSER_NOQMATCHING_S, name);
+               answer_list_add(answer_list, SGE_EVENT,
+                               STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+               ret = false;
+            }
+            sge_dstring_free(&host_domain);
+            sge_dstring_free(&cqueue_name);
+         }
+      } 
    }
    DEXIT;
    return ret;
 }
+

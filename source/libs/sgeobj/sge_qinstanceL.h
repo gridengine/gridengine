@@ -173,6 +173,8 @@ SLISTDEF(QI_Type, QInstance)
 
    SGE_LIST(QI_subordinate_list, SO_Type, CULL_SPOOL | CULL_CONFIGURE)
 
+/* EB: TODO: Add internal attributes */
+   
 LISTEND 
 
 NAMEDEF(QIN)

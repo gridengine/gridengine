@@ -39,6 +39,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <fnmatch.h>
 
 #include "basis_types.h"
 #include "sgermon.h" 
@@ -291,7 +292,7 @@ hgroup_add_references(lListElem *this_elem, lList **answer_list,
 *  INPUTS
 *     const lListElem *this_elem - HGRP_Type 
 *     lList **answer_list        - AN_Type list 
-*     lList *master_list         - HGRP_Type list 
+*     const lList *master_list   - HGRP_Type list 
 *     lList **used_hosts         - HR_Type list 
 *     lList **used_groups        - HR_Type list 
 *
@@ -302,7 +303,7 @@ hgroup_add_references(lListElem *this_elem, lList **answer_list,
 ******************************************************************************/
 bool 
 hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,
-                           lList *master_list, lList **used_hosts,
+                           const lList *master_list, lList **used_hosts,
                            lList **used_groups)
 {
    bool ret = true;
@@ -347,7 +348,7 @@ hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,
 *  INPUTS
 *     const lListElem *this_elem - HGRP_Type 
 *     lList **answer_list        - AN_Type 
-*     lList *master_list         - HGRP_Type 
+*     const lList *master_list   - HGRP_Type 
 *     lList **used_hosts         - HR_Type 
 *     lList **used_groups        - HR_Type 
 *
@@ -358,7 +359,7 @@ hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,
 *******************************************************************************/
 bool 
 hgroup_find_references(const lListElem *this_elem, lList **answer_list,
-                       lList *master_list, lList **used_hosts,
+                       const lList *master_list, lList **used_hosts,
                        lList **used_groups)
 {
    bool ret = true;
@@ -402,7 +403,7 @@ hgroup_find_references(const lListElem *this_elem, lList **answer_list,
 *  INPUTS
 *     const lListElem *this_elem - HGRP_Type element 
 *     lList **answer_list        - AN_Type list 
-*     lList *master_list         - list of all existing HGRP_Type elements 
+*     const lList *master_list   - list of all existing HGRP_Type elements 
 *     lList **occupants_groups   - HR_Type list 
 *
 *  RESULT
@@ -411,8 +412,8 @@ hgroup_find_references(const lListElem *this_elem, lList **answer_list,
 *        false - Error 
 *******************************************************************************/
 bool hgroup_find_all_referencees(const lListElem *this_elem, 
-                               lList **answer_list, lList *master_list, 
-                               lList **occupants_groups)
+                                 lList **answer_list, const lList *master_list, 
+                                 lList **occupants_groups)
 {
    bool ret = true;
 
@@ -455,7 +456,7 @@ bool hgroup_find_all_referencees(const lListElem *this_elem,
 *  INPUTS
 *     const lListElem *this_elem - HGRP_Type 
 *     lList **answer_list        - AN_Type 
-*     lList *master_list         - HGRP_Type master list 
+*     const lList *master_list   - HGRP_Type master list 
 *     lList **occupants_groups   - HR_Type 
 *
 *  RESULT
@@ -465,7 +466,7 @@ bool hgroup_find_all_referencees(const lListElem *this_elem,
 *******************************************************************************/
 bool 
 hgroup_find_referencees(const lListElem *this_elem, lList **answer_list,
-                        lList *master_list, lList **occupants_groups)
+                        const lList *master_list, lList **occupants_groups)
 {
    bool ret = true;
 
@@ -530,6 +531,42 @@ hgroup_list_exists(const lList *this_list, lList **answer_list,
             answer_list_add(answer_list, SGE_EVENT,
                             STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             break;      
+         }
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+hgroup_list_find_all_matching_references(const lList *this_list,
+                                         lList **answer_list,
+                                         const char *hgroup_pattern,
+                                         lList **used_hosts) 
+{
+   bool ret = true;
+
+   DENTER(HOSTREF_LAYER, "hgroup_list_find_all_matching_references");
+   if (this_list != NULL && hgroup_pattern != NULL) {
+      lListElem *hgroup;
+
+      for_each(hgroup, this_list) {
+         const char *hgroup_name = lGetHost(hgroup, HGRP_name);
+
+         if (!fnmatch(hgroup_pattern, hgroup_name, 0)) {
+            lList *tmp_used_hosts = NULL;
+            lListElem *tmp_href = NULL;
+
+            ret = hgroup_find_all_references(hgroup, NULL, this_list,
+                                             &tmp_used_hosts, NULL);
+            for_each(tmp_href, tmp_used_hosts) {
+               if (used_hosts != NULL) {
+                  const char *hostname = lGetHost(tmp_href, HR_name);
+
+                  lAddElemHost(used_hosts, HR_name, hostname, HR_Type);
+               }
+            }
+            tmp_used_hosts = lFreeList(tmp_used_hosts);
          }
       }
    }

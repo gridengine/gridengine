@@ -89,7 +89,7 @@ int parsing_type
 ) {
    int ret = 0;
 
-   DENTER(TOP_LAYER, "read_cqueue_work");
+   DENTER(TOP_LAYER, "read_qinstance_work");
 
    /* --------- QI_name */
    if (ret == 0) {
@@ -109,4 +109,72 @@ int parsing_type
    DEXIT;
    return ret;
 }
+
+char *
+write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1) 
+{
+   FILE *fp;
+   char filename[SGE_PATH_MAX];
+
+   DENTER(TOP_LAYER, "write_cqueue");
+ 
+   switch (how) {
+   case 0:
+      fp = stdout;
+      break;
+   case 1:
+      if (!sge_tmpnam(filename)) {
+         CRITICAL((SGE_EVENT, MSG_TMPNAM_GENERATINGTMPNAM));
+         DEXIT;
+         return NULL;
+      }
+
+      fp = fopen(filename, "w");
+      if (!fp) {
+         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+         DEXIT;
+         return NULL;
+      }
+      break;
+   case 4:
+      fp = fp1;
+      break;
+   default:
+      DEXIT;
+      return NULL;
+   }
+
+   if (how == 0) {
+      FPRINTF((fp, "qname              %s\n", 
+               lGetString(ep, QI_name)));
+      FPRINTF((fp, "hostname           %s\n", 
+               lGetHost(ep, QI_hostname)));
+      FPRINTF((fp, "seq_no             %d\n", 
+               (int) lGetUlong(ep, QI_seq_no)));
+   }
+   if (how == 4) {
+      /*
+       * Spool only non-CQ attributes
+       */
+      FPRINTF((fp, "qname              %s\n", 
+               lGetString(ep, QI_name)));
+      FPRINTF((fp, "hostname           %s\n", 
+               lGetHost(ep, QI_hostname)));
+      FPRINTF((fp, "seq_no             %d\n", 
+               (int) lGetUlong(ep, QI_seq_no)));
+   }
+   if (how == 0) {
+      FPRINTF((fp, "\n"));
+   }
+
+   if (how > 0 && how < 4) {
+      fclose(fp);
+   }
+   DEXIT;
+   return how==1?sge_strdup(NULL, filename):filename;
+FPRINTF_ERROR:
+   DEXIT;
+   return NULL;  
+}
+
 

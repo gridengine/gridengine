@@ -52,23 +52,23 @@ hgroup_add_references(lListElem *this_elem, lList **answer_list,
 
 bool 
 hgroup_find_references(const lListElem *this_elem, lList **answer_list,
-                       lList *master_list, lList **used_hosts,
+                       const lList *master_list, lList **used_hosts,
                        lList **used_groups);
 
 bool 
 hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,
-                           lList *master_list, lList **used_hosts,
+                           const lList *master_list, lList **used_hosts,
                            lList **used_groups);
 
 bool 
 hgroup_find_referencees(const lListElem *this_elem,
                         lList **answer_list,
-                        lList *master_list, lList **occupants_groups);
+                        const lList *master_list, lList **occupants_groups);
 
 bool 
 hgroup_find_all_referencees(const lListElem *this_elem, 
                             lList **answer_list,
-                            lList *master_list, lList **used_groups);
+                            const lList *master_list, lList **used_groups);
 
 /* --- */
 
@@ -81,6 +81,12 @@ hgroup_list_get_master_list(void);
 bool
 hgroup_list_exists(const lList *this_list, lList **answer_list,
                    const lList *href_list);
+
+bool
+hgroup_list_find_all_matching_references(const lList *this_list,
+                                         lList **answer_list,
+                                         const char *hgroup_pattern,
+                                         lList **used_hosts);
 
 
 #endif /* __SGE_GROUPS_H__ */

@@ -76,4 +76,10 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
                    const char *attribute_name_str,
                    const char *object_name_str);
 
+bool
+cqueue_list_find_all_matching_references(const lList *this_list,
+                                         lList **answer_list,
+                                         const char *cqueue_pattern,
+                                         lList **qref_list);
+
 #endif /* __SGE_CQUEUE_H */

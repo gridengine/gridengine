@@ -1,3 +1,5 @@
+EB-2003-10-24-0  Bugfix:    broken build
+
 SG-2003-10-24-2: Enhancem.: updated the testsuite to deal with the new 
                             configuration settings
                  Changed:   testsuite    

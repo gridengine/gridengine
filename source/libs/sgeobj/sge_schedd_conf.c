@@ -123,6 +123,7 @@ typedef struct{
    int weight_tickets_functional;
    int weight_tickets_share;
    int weight_tickets_deadline;
+
    int weight_tickets_deadline_active;
    int weight_tickets_override;
    int share_override_tickets;
@@ -155,8 +156,9 @@ static int policy_hierarchy_verify_value(const char* value);
 
 config_pos_type pos = {true, 
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1, -1, -1, -1, -1, -1, -1, -1,
-                       SCHEDD_JOB_INFO_UNDEF, NULL, NULL};
+                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  
+                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                       SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL};
 
 /*
  * a list of all valid "params" parameters

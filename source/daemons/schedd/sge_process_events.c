@@ -212,6 +212,10 @@ int event_handler_default_scheduler()
       }
       copy.queue_list = lSelect("sel_qi_list", copy.all_queue_list, where_queue, what_queue2);
       copy.dis_queue_list = lSelect("dis_qi_list", copy.all_queue_list, where_queue2, what_queue2);
+
+
+lWriteListTo(copy.dis_queue_list, stdout);
+      
    }
 
 
@@ -514,13 +518,27 @@ DTRACE;
             );         /* only known queues              */
            
          where_queue2 = lWhere("%T("
-            " (%I m= %u) || (%I m= %u))", 
+            " ((%I m= %u) || (%I m= %u)) &&" 
+            " !(%I m= %u) &&" 
+            " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
+            " !(%I m= %u))",
             queue_des,    
             QU_state, QI_CAL_SUSPENDED, 
-            QU_state, QI_CAL_DISABLED
+            QU_state, QI_CAL_DISABLED,
+            
+            QU_state, QI_SUSPENDED,        /* only not suspended queues      */
+            QU_state, QI_SUSPENDED_ON_SUBORDINATE, 
+            QU_state, QI_ERROR,            /* no queues in error state       */
+            QU_state, QI_UNKNOWN,
+            QU_state, QI_DISABLED,
+            QU_state, QI_AMBIGUOUS,
+            QU_state, QI_ORPHANED
             );         /* only known queues              */
 
-         
          if (where_queue == NULL) {
             CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORQUEUEFAILED));
          }

@@ -111,6 +111,7 @@ typedef int               (*cl_log_func_t)              (cl_raw_list_t* log_list
 typedef unsigned long     (*cl_app_status_func_t)       (char** info_message);
 typedef void              (*cl_error_func_t)            (int cl_error, const char* error_message);
 typedef const char*       (*cl_tag_name_func_t)         (unsigned long tag);
+typedef void              (*cl_app_debug_client_func_t) (int cl_connected, int debug_level);
 
 
 typedef struct cl_log_list_data_type {                      /* list specific data */

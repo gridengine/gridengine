@@ -76,10 +76,6 @@ typedef enum cl_max_count_def {
    CL_ON_MAX_COUNT_OFF
 } cl_max_count_t;
 
-typedef enum cl_debug_client_def {
-   CL_DEBUG_CLIENT_OFF = 0,
-   CL_DEBUG_CLIENT_ON
-} cl_debug_client_t;
 
 typedef enum cl_host_resolve_method_def {
    CL_SHORT = 1,
@@ -206,6 +202,29 @@ typedef enum cl_ssl_verify_mode_type {
 /* callback for verify peer names */
 typedef cl_bool_t    (*cl_ssl_verify_func_t)  (cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value );
 
+typedef enum cl_debug_client_def {
+   CL_DEBUG_CLIENT_OFF = 0,
+   CL_DEBUG_CLIENT_ALL,
+   CL_DEBUG_CLIENT_MSG,
+   CL_DEBUG_CLIENT_APP
+} cl_debug_client_t;
+
+
+
+/*
+ *  this structure has the following setup functions:
+ *
+ *  cl_com_create_debug_client_setup(),
+ *  cl_com_free_debug_client_setup() 
+ *
+ */
+
+typedef struct cl_debug_client_setup_type {
+   cl_debug_client_t dc_mode;            /* debug_client_mode */
+   cl_bool_t         dc_dump_flag;       /* flag for sending message data */
+   int               dc_app_log_level;   /* application log level */
+   cl_raw_list_t*    dc_debug_list;      /* debug list */
+} cl_debug_client_setup_t;
 /*
  *  this structure has the following setup functions:
  *
@@ -254,8 +273,8 @@ typedef struct cl_com_connection_type cl_com_connection_t;
 typedef struct cl_com_handle {
    cl_ssl_setup_t*           ssl_setup;         /* used for SSL framework */
 
-   cl_debug_client_t         debug_client_mode; /* used for debug clients */
-   cl_raw_list_t*            debug_list;        /* used for debug clients */
+   cl_debug_client_setup_t*  debug_client_setup; /* used for debug clients */
+
    cl_framework_t            framework;        /* framework type CL_CT_TCP, CL_CT_SSL */
    cl_tcp_connect_t          tcp_connect_mode; /* used for reserved port selection for tcp connect */
    cl_xml_connection_type_t  data_flow_type;   /* data_flow type CL_CM_CT_STREAM, CL_CM_CT_MESSAGE  */

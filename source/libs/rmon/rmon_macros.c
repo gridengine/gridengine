@@ -39,6 +39,7 @@
 #include <pthread.h>
 #include <errno.h>
 
+#include "sge_mtutil.h"
 #include "msg_rmon.h"
 
 #define DEBUG RMON_LOCAL
@@ -56,16 +57,27 @@ enum {
 };
 
 monitoring_level DEBUG_ON = { {0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L} };
+monitoring_level DEBUG_ON_STORAGE = { {0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L} };
 
 static const char* empty = "    ";
 
 static u_long mtype = RMON_NONE;
+static u_long mtype_storage = RMON_NONE;
 static FILE* rmon_fp;
 
 static void mwrite(char *message);
 static int set_debug_level_from_env(void);
 static int set_debug_target_from_env(void);
 
+#ifdef DEBUG_CLIENT_SUPPORT
+static pthread_mutex_t rmon_print_callback_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t rmon_condition_mutex = PTHREAD_MUTEX_INITIALIZER;
+static rmon_print_callback_func_t rmon_print_callback = NULL;
+#define RMON_CALLBACK_FUNC_LOCK()      pthread_mutex_lock(&rmon_print_callback_mutex)
+#define RMON_CALLBACK_FUNC_UNLOCK()    pthread_mutex_unlock(&rmon_print_callback_mutex)
+#define RMON_CONDITION_LOCK()          pthread_mutex_lock(&rmon_condition_mutex)
+#define RMON_CONDITION_UNLOCK()        pthread_mutex_unlock(&rmon_condition_mutex)
+#endif
 
 /****** rmon/Introduction ******************************************************
 *  NAME
@@ -124,12 +136,93 @@ static int set_debug_target_from_env(void);
 *******************************************************************************/
 int rmon_condition(int layer, int class)
 {
+   int ret_val;
 #define MLGETL(s, i) ((s)->ml[i]) /* for the sake of speed */
-
-   return ((mtype != RMON_NONE) && (class & MLGETL(&DEBUG_ON, layer))) ? 1 : 0;
-
+   /*
+    * NOTE:
+    * 
+    * This is only a static u_long value used as flag for switching
+    * debug printing on/off. Therefore we don't need a mutex lock
+    * at this point.
+    */ 
+#ifdef DEBUG_CLIENT_SUPPORT
+   if ( mtype == RMON_NONE ) {
+      return 0;
+   }
+   
+   /* if debug printing is on we use a lock for further layer checking */
+   RMON_CONDITION_LOCK();
+#endif
+   ret_val = ((mtype != RMON_NONE) && (class & MLGETL(&DEBUG_ON, layer))) ? 1 : 0;
+#ifdef DEBUG_CLIENT_SUPPORT
+   RMON_CONDITION_UNLOCK();
+#endif
+   return ret_val;
 #undef MLGETL
 } /* rmon_condition() */
+
+
+/****** rmon_macros/rmon_debug_client_callback() ****************************
+*  NAME
+*     rmon_debug_client_callback() -- callback for debug clients
+*
+*  SYNOPSIS
+*     static void rmon_debug_client_callback(int dc_connected, int debug_level) 
+*
+*  FUNCTION
+*     Is called when a debug client is connected/disconnected or on
+*     debug level changes. Use cl_com_application_debug() to send debug
+*     messages to the connected qping -dump client.
+*
+*  INPUTS
+*     int dc_connected - 1 debug client is connected
+*                        0 no debug client is connected
+*     int debug_level  - debug level from 0 (off) to 5(DPRINTF)
+*  NOTES
+*     MT-NOTE: rmon_debug_client_callback() is MT safe 
+*              (but is called from commlib thread, which means that no
+*               qmaster thread specifc setup is done), just use global
+*               thread locking methods which are initalized when called, or
+*               initalized at compile time)
+*
+*******************************************************************************/
+void rmon_debug_client_callback(int dc_connected, int debug_level) {
+#ifdef DEBUG_CLIENT_SUPPORT
+   RMON_CONDITION_LOCK();
+
+   /* we are saving the old value of the DEBUG_ON structure into DEBUG_ON_STORAGE */
+   if (dc_connected) {
+      /* TODO: support rmon debug levels with $SGE_DEBUG_LEVEL string ? 
+       *       if so, the debug_level parameter should be a string value
+       */
+      (&DEBUG_ON)->ml[TOP_LAYER]   = 2; 
+      if (debug_level > 1) {
+         (&DEBUG_ON)->ml[TOP_LAYER]   = 3; 
+      }
+      mtype = RMON_LOCAL;
+   } else {
+      (&DEBUG_ON)->ml[TOP_LAYER]   = (&DEBUG_ON_STORAGE)->ml[TOP_LAYER]; 
+      mtype = mtype_storage;
+   }
+   RMON_CONDITION_UNLOCK();
+#else
+   return;
+#endif
+}
+
+void rmon_set_print_callback(rmon_print_callback_func_t function_p) {
+#ifdef DEBUG_CLIENT_SUPPORT
+   if (function_p != NULL) {
+      RMON_CALLBACK_FUNC_LOCK();
+      rmon_print_callback = *function_p;
+      RMON_CALLBACK_FUNC_UNLOCK();
+   }
+#else
+   return;
+#endif
+}
+
+
 
 /****** rmon_macros/rmon_is_enabled() ******************************************
 *  NAME
@@ -202,6 +295,7 @@ void rmon_mopen(int *argc, char *argv[], char *programname)
    }
 
    mtype = RMON_LOCAL;
+   mtype_storage = mtype;
 
    return;
 } /* rmon_mopen */
@@ -367,15 +461,28 @@ void rmon_mprintf(const char *fmt,...)
 static void mwrite(char *message)
 {
    static u_long traceid = 0;
+   unsigned long tmp_pid    = (unsigned long) getpid();
+   unsigned long tmp_thread = (unsigned long) pthread_self();
 
 #if !defined(DARWIN6)
    flockfile(rmon_fp);
 #endif
 
-   fprintf(rmon_fp, "%6ld %6d %ld ", traceid++, (int)getpid(), (long int)pthread_self());
+#ifdef DEBUG_CLIENT_SUPPORT
+   /* if there is a callback function, don't call standard function */
+   RMON_CALLBACK_FUNC_LOCK();
+   if (rmon_print_callback != NULL) {
+      rmon_print_callback(message, traceid, tmp_pid, tmp_thread);
+   }
+   RMON_CALLBACK_FUNC_UNLOCK();
+#endif
+   
+
+   fprintf(rmon_fp, "%6ld %6d %ld ", traceid, (int)tmp_pid, (long int)tmp_thread);
    fprintf(rmon_fp, "%s", message);
    fflush(rmon_fp);
 
+   traceid++;
 #if !defined(DARWIN6)
    funlockfile(rmon_fp);
 #endif
@@ -425,6 +532,7 @@ static int set_debug_level_from_env(void)
 
    for (i = 0; i < N_LAYER; i++) {
       rmon_mlputl(&DEBUG_ON, i, l[i]);
+      rmon_mlputl(&DEBUG_ON_STORAGE, i, l[i]);
    }
 
    free((char *)s);

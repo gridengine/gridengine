@@ -347,7 +347,7 @@ extern int main(int argc, char** argv)
      if (message != NULL) {
           CL_LOG_STR(CL_LOG_INFO,"received message from",sender->comp_host);
 
-/*        printf("received message from \"%s\"\n", sender->comp_host); */
+/*        printf("received message from \"%s/%s/%ld\"\n", sender->comp_host, sender->comp_name, sender->comp_id); */
 
 
 

@@ -36,6 +36,7 @@
 #include <sys/types.h>
 
 #include "rmon_monitoring_level.h"
+typedef void              (*rmon_print_callback_func_t) (const char *message, unsigned long traceid, unsigned long pid, unsigned long thread_id);
 
 extern monitoring_level DEBUG_ON;
 
@@ -46,6 +47,8 @@ void rmon_menter(const char *func);
 void rmon_mtrace(const char *func, const char *file, int line);
 void rmon_mprintf(const char *fmt, ...);
 void rmon_mexit(const char *func, const char *file, int line);
+void rmon_debug_client_callback(int dc_connected, int debug_level);
+void rmon_set_print_callback(rmon_print_callback_func_t function_p);
 
 #define __CONDITION(x) rmon_condition(TOP_LAYER, x)
 

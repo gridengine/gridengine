@@ -218,11 +218,17 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
       nr_of_connections = cl_raw_list_get_elem_count(handle->connection_list);
    }
 
-   if (handle->debug_client_mode == CL_DEBUG_CLIENT_OFF) {
-      return CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED;
+   /* don't add default case for this switch! */
+   switch(handle->debug_client_setup->dc_mode) {
+      case CL_DEBUG_CLIENT_OFF:
+      case CL_DEBUG_CLIENT_APP: 
+         return CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED;
+      case CL_DEBUG_CLIENT_MSG:
+      case CL_DEBUG_CLIENT_ALL:
+         break;
    }
  
-   if (handle->debug_list == NULL) {
+   if (handle->debug_client_setup->dc_debug_list == NULL) {
       return CL_RETVAL_PARAMS;
    }
 
@@ -282,24 +288,25 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
       CL_LOG(CL_LOG_INFO,"no message tag function set");
    }
 
-
-   switch(ms->message_df) {
-      case CL_MIH_DF_UNDEFINED:
-         break;
-           
-      case CL_MIH_DF_BIN: {
-            cl_util_get_ascii_hex_buffer((unsigned char*)ms->message, ms->message_length, &xml_msg_buffer, NULL);
+   if (handle->debug_client_setup->dc_dump_flag == CL_TRUE) {
+      switch(ms->message_df) {
+         case CL_MIH_DF_UNDEFINED:
+            break;
+              
+         case CL_MIH_DF_BIN: {
+               cl_util_get_ascii_hex_buffer((unsigned char*)ms->message, ms->message_length, &xml_msg_buffer, NULL);
+               if (xml_msg_buffer != NULL) {
+                  xml_data = xml_msg_buffer;
+               }   
+            }
+            break;
+         default: {
+            xml_msg_buffer = (char*) malloc( (ms->message_length + 1) * sizeof(char) );
             if (xml_msg_buffer != NULL) {
+               memcpy(xml_msg_buffer, ms->message, ms->message_length);
+               xml_msg_buffer[ms->message_length] = 0;
                xml_data = xml_msg_buffer;
-            }   
-         }
-         break;
-      default: {
-         xml_msg_buffer = (char*) malloc( (ms->message_length + 1) * sizeof(char) );
-         if (xml_msg_buffer != NULL) {
-            memcpy(xml_msg_buffer, ms->message, ms->message_length);
-            xml_msg_buffer[ms->message_length] = 0;
-            xml_data = xml_msg_buffer;
+            }
          }
       }
    }
@@ -350,7 +357,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
                          commlib_time,
                          nr_of_connections); 
       
-      ret_val = cl_string_list_append_string(handle->debug_list, dm_buffer , 1);
+      ret_val = cl_string_list_append_string(handle->debug_client_setup->dc_debug_list, dm_buffer , 1);
 
       free(dm_buffer);
       dm_buffer = NULL;
@@ -363,6 +370,71 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    return ret_val;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_create_debug_client_setup()"
+int cl_com_create_debug_client_setup(cl_debug_client_setup_t** new_setup,
+                                     cl_debug_client_t dc_mode,             /* debug_client_mode */
+                                     cl_bool_t         dc_dump_flag,        /* flag for sending message data */
+                                     int               dc_app_log_level) {  /* application log level */
+
+   int return_value = CL_RETVAL_OK;
+   cl_debug_client_setup_t* tmp_setup = NULL;
+
+   if (new_setup == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   if (*new_setup != NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   tmp_setup = (cl_debug_client_setup_t*) malloc(sizeof(cl_debug_client_setup_t));
+   if (tmp_setup == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+
+   tmp_setup->dc_debug_list = NULL;
+   if ((return_value=cl_string_list_setup(&(tmp_setup->dc_debug_list), "debug list")) != CL_RETVAL_OK) {
+      CL_LOG(CL_LOG_ERROR,"could not setup debug client information list");
+      cl_com_free_debug_client_setup(&tmp_setup);
+      return CL_RETVAL_MALLOC;
+   }
+
+   /* set values */   
+   tmp_setup->dc_mode = dc_mode;
+   tmp_setup->dc_dump_flag = dc_dump_flag;
+   tmp_setup->dc_app_log_level = dc_app_log_level;
+
+   *new_setup = tmp_setup;
+
+   return CL_RETVAL_OK;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_free_debug_client_setup()"
+int cl_com_free_debug_client_setup(cl_debug_client_setup_t** dc_setup) {
+   
+   int ret_val = CL_RETVAL_OK;
+   if (dc_setup == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   if (*dc_setup == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   ret_val = cl_string_list_cleanup(&((*dc_setup)->dc_debug_list));
+   if (ret_val != CL_RETVAL_OK) {
+      return ret_val;
+   }
+
+
+   free(*dc_setup);
+   dc_setup = NULL;
+
+   return ret_val;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -3664,19 +3736,28 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
          }
    
          if (connection->handler != NULL) {
-            if (connection->handler->debug_client_mode != CL_DEBUG_CLIENT_OFF) {
-               cl_com_message_t* dummy_message = NULL;
-               cl_com_create_message(&dummy_message);
-               if (dummy_message != NULL) {
-                  dummy_message->message_df = CL_MIH_DF_CM;
-                  dummy_message->message_mat = CL_MIH_MAT_NAK;
-                  gettimeofday(&dummy_message->message_receive_time,NULL);
-                  gettimeofday(&dummy_message->message_remove_time,NULL);
-                  dummy_message->message = (cl_byte_t*) &(connection->data_read_buffer[(connection->data_read_buffer_processed - connection->read_gmsh_header->dl)]);
-                  dummy_message->message_length = connection->read_gmsh_header->dl;
-                  cl_com_add_debug_message(connection, NULL , dummy_message);
-                  dummy_message->message = NULL;
-                  cl_com_free_message(&dummy_message);
+            switch(connection->handler->debug_client_setup->dc_mode) {
+               /* don't add default case for this switch! */
+               case CL_DEBUG_CLIENT_ALL:
+               case CL_DEBUG_CLIENT_MSG: {
+                  cl_com_message_t* dummy_message = NULL;
+                  cl_com_create_message(&dummy_message);
+                  if (dummy_message != NULL) {
+                     dummy_message->message_df = CL_MIH_DF_CM;
+                     dummy_message->message_mat = CL_MIH_MAT_NAK;
+                     gettimeofday(&dummy_message->message_receive_time,NULL);
+                     gettimeofday(&dummy_message->message_remove_time,NULL);
+                     dummy_message->message = (cl_byte_t*) &(connection->data_read_buffer[(connection->data_read_buffer_processed - connection->read_gmsh_header->dl)]);
+                     dummy_message->message_length = connection->read_gmsh_header->dl;
+                     cl_com_add_debug_message(connection, NULL , dummy_message);
+                     dummy_message->message = NULL;
+                     cl_com_free_message(&dummy_message);
+                  }
+                  break;
+               }
+               case CL_DEBUG_CLIENT_OFF:
+               case CL_DEBUG_CLIENT_APP: {
+                  break;
                }
             }
          }
@@ -4015,10 +4096,8 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                      /* this is switched off automatically in cl_commlib_handle_debug_clients() */
                      handler = connection->handler;
                      if (handler != NULL) {
-                        if ( handler->debug_client_mode == CL_DEBUG_CLIENT_OFF) {
-                           CL_LOG(CL_LOG_ERROR,"enable debug client message creation");
-                           handler->debug_client_mode = CL_DEBUG_CLIENT_ON;
-                        }
+                        CL_LOG(CL_LOG_ERROR,"enable debug client message creation");
+                        handler->debug_client_setup->dc_mode = CL_DEBUG_CLIENT_ALL;
                      }
                   }
                }
@@ -4204,29 +4283,38 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             }
 
             if (connection->handler != NULL) {
-               if (connection->handler->debug_client_mode != CL_DEBUG_CLIENT_OFF) {
-                  cl_com_message_t* dummy_message = NULL;
-                  cl_com_create_message(&dummy_message);
-                  if (dummy_message != NULL) {
-                     int   crm_pos = 0;
-                     dummy_message->message_df = CL_MIH_DF_CRM;
-                     dummy_message->message_mat = CL_MIH_MAT_NAK;
-                     gettimeofday(&dummy_message->message_insert_time,NULL);
-                     gettimeofday(&dummy_message->message_send_time,NULL);
-                     
-                     for (crm_pos = 0; crm_pos < connection->data_write_buffer_pos - 3; crm_pos++) {
-                        if ( connection->data_write_buffer[crm_pos]   == '<' && 
-                             connection->data_write_buffer[crm_pos+1] == 'c' &&
-                             connection->data_write_buffer[crm_pos+2] == 'r' &&
-                             connection->data_write_buffer[crm_pos+3] == 'm' ) {
-                           dummy_message->message = (cl_byte_t*) &connection->data_write_buffer[crm_pos];
-                           dummy_message->message_length = connection->data_write_buffer_pos - crm_pos;
-                           break;
+               switch(connection->handler->debug_client_setup->dc_mode) {
+                  /* don't add default case for this switch! */
+                  case CL_DEBUG_CLIENT_ALL:
+                  case CL_DEBUG_CLIENT_MSG: {
+                     cl_com_message_t* dummy_message = NULL;
+                     cl_com_create_message(&dummy_message);
+                     if (dummy_message != NULL) {
+                        int   crm_pos = 0;
+                        dummy_message->message_df = CL_MIH_DF_CRM;
+                        dummy_message->message_mat = CL_MIH_MAT_NAK;
+                        gettimeofday(&dummy_message->message_insert_time,NULL);
+                        gettimeofday(&dummy_message->message_send_time,NULL);
+                        
+                        for (crm_pos = 0; crm_pos < connection->data_write_buffer_pos - 3; crm_pos++) {
+                           if ( connection->data_write_buffer[crm_pos]   == '<' && 
+                                connection->data_write_buffer[crm_pos+1] == 'c' &&
+                                connection->data_write_buffer[crm_pos+2] == 'r' &&
+                                connection->data_write_buffer[crm_pos+3] == 'm' ) {
+                              dummy_message->message = (cl_byte_t*) &connection->data_write_buffer[crm_pos];
+                              dummy_message->message_length = connection->data_write_buffer_pos - crm_pos;
+                              break;
+                           }
                         }
+                        cl_com_add_debug_message(connection, NULL , dummy_message);
+                        dummy_message->message = NULL;
+                        cl_com_free_message(&dummy_message);
                      }
-                     cl_com_add_debug_message(connection, NULL , dummy_message);
-                     dummy_message->message = NULL;
-                     cl_com_free_message(&dummy_message);
+                     break;
+                  }
+                  case CL_DEBUG_CLIENT_OFF:
+                  case CL_DEBUG_CLIENT_APP: {
+                     break;
                   }
                }
             }

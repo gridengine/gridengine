@@ -66,7 +66,20 @@ static void general_communication_error(int cl_err, const char* error_message);
 static int   last_general_communication_error = CL_RETVAL_OK;
 static char* last_general_communication_error_string = NULL;
 static int gdi_general_communication_error = CL_RETVAL_OK;
+#ifdef DEBUG_CLIENT_SUPPORT
+static void gdi_rmon_print_callback_function(const char *message, unsigned long traceid, unsigned long pid, unsigned long thread_id);
+#endif
 
+#ifdef DEBUG_CLIENT_SUPPORT
+static void gdi_rmon_print_callback_function(const char *message, unsigned long traceid, unsigned long pid, unsigned long thread_id) {
+   cl_com_handle_t* handle = NULL;
+
+   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   if (handle != NULL) {
+      cl_com_application_debug(handle, message);
+   }
+}
+#endif
 
 /****** sge_any_request/sge_dump_message_tag() *************************************
 *  NAME
@@ -410,6 +423,13 @@ void prepare_enroll(const char *name)
    if (ret_val != CL_RETVAL_OK) {
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
+#ifdef DEBUG_CLIENT_SUPPORT
+   /* set debug client callback function to rmon's debug client callback */
+   ret_val = cl_com_set_application_debug_client_callback_func(rmon_debug_client_callback);
+   if (ret_val != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+   }
+#endif
 
    /* init sge security module */   
    if (sge_security_initialize(name)) {
@@ -525,7 +545,11 @@ void prepare_enroll(const char *name)
       }
    } 
 
- 
+#ifdef DEBUG_CLIENT_SUPPORT
+   /* set rmon callback for message printing (after handle creation) */
+   rmon_set_print_callback(gdi_rmon_print_callback_function);
+#endif
+
    /* this is for testsuite socket bind test (issue 1096 ) */
    if ( getenv("SGE_TEST_SOCKET_BIND") != NULL) {
       struct timeval now;

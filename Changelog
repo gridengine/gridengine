@@ -1,7 +1,15 @@
+CR-2005-02-04-0: Enhancem.: - use qping as rmon debug client (part 1)
+                            - qping rmon client support can be enabled
+                              by setting -DDEBUG_CLIENT_SUPPORT at 
+                              compile time
+                            - qping now can send debug instructions to the
+                              connected endpoint
+                 Review:    MD
+
 CR-2005-02-03-0: Bugfix:    fixed broken build for hp11
                  Review:    AA
 
-RD-2005-02-03-0: Enhance.:  - code cleanup
+RD-2005-02-03-0: Enhancem.: - code cleanup
                             kvm dependency and code removed
                  Review:    MD
 

@@ -119,6 +119,7 @@ int cl_com_setup_callback_functions(cl_com_connection_t* connection);
 
 /* allow application to send messages to connected debug clients */
 int cl_com_application_debug(cl_com_handle_t* handle, const char* message);
+int cl_com_set_application_debug_client_callback_func(cl_app_debug_client_func_t);
 
 
 

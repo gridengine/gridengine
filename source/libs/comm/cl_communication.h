@@ -86,6 +86,13 @@ int cl_com_free_hostspec(cl_com_host_spec_t **hostspec);
 int cl_com_print_host_info(cl_com_hostent_t *hostent_p );                 /* CR check */
 
 
+int cl_com_create_debug_client_setup(cl_debug_client_setup_t** new_setup,
+                                     cl_debug_client_t dc_mode,
+                                     cl_bool_t         dc_dump_flag,
+                                     int               dc_app_log_level);
+
+int cl_com_free_debug_client_setup(cl_debug_client_setup_t** new_setup);
+
 int cl_com_create_ssl_setup(cl_ssl_setup_t** new_setup,
                             cl_ssl_method_t  ssl_method,
                             char*            ssl_CA_cert_pem_file,

@@ -56,6 +56,7 @@
 #include "msg_commlib.h"
 
 #define CL_DO_COMMLIB_DEBUG 0
+static void cl_com_default_application_debug_client_callback(int dc_connected, int debug_level);
 
 static int cl_commlib_check_callback_functions(void);
 static int cl_commlib_check_connection_count(cl_com_handle_t* handle);
@@ -164,6 +165,10 @@ static cl_error_func_t   cl_com_error_status_func = NULL;
 /* global application function pointer for getting tag id names */
 static pthread_mutex_t cl_com_tag_name_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cl_tag_name_func_t   cl_com_tag_name_func = NULL;
+
+/* global application function pointer for debug clients */
+static pthread_mutex_t cl_com_debug_client_callback_func_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cl_app_debug_client_func_t cl_com_debug_client_callback_func = cl_com_default_application_debug_client_callback;
 
 static pthread_mutex_t  cl_com_ssl_setup_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cl_ssl_setup_t*  cl_com_ssl_setup_config = NULL;
@@ -763,8 +768,19 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    new_handle->local = NULL;
    new_handle->tcp_connect_mode = tcp_connect_mode;
-   new_handle->debug_client_mode = CL_DEBUG_CLIENT_OFF;
-   new_handle->debug_list = NULL;
+
+   new_handle->debug_client_setup = NULL;
+   if ((return_value = cl_com_create_debug_client_setup(&(new_handle->debug_client_setup),CL_DEBUG_CLIENT_OFF, CL_TRUE, 0)) != CL_RETVAL_OK) {
+      CL_LOG(CL_LOG_ERROR,"can't setup debug client structure");
+      free(local_hostname);
+      free(new_handle);
+      cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = CL_RETVAL_NO_FRAMEWORK_INIT;
+      }
+      return NULL;
+   }  
+
    new_handle->messages_ready_for_read = 0;
    new_handle->messages_ready_mutex = NULL;
    new_handle->connection_list_mutex = NULL;
@@ -995,11 +1011,6 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    if (new_handle->service_provider == CL_TRUE) {
       /* create service */
       cl_com_connection_t* new_con = NULL;
-
-      /* This list is only for debug clients (comp_name = "debug_client" )*/
-      if ((return_value=cl_string_list_setup(&(new_handle->debug_list), "debug list")) != CL_RETVAL_OK) {
-         CL_LOG(CL_LOG_ERROR,"could not setup debug information list");
-      }
 
       CL_LOG(CL_LOG_INFO,"creating service ...");
       return_value = cl_com_setup_connection(new_handle, &new_con);
@@ -1360,15 +1371,15 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
                if (  have_message_connections == CL_FALSE ) {
                   /* close stream connections after message connections */
    
-                  if (handle->debug_client_mode != CL_DEBUG_CLIENT_OFF) {
+                  if (handle->debug_client_setup->dc_mode != CL_DEBUG_CLIENT_OFF) {
                      /* don't close STREAM connection when there are debug clients
                      and debug data list is not empty */
    
-                     cl_raw_list_lock(handle->debug_list);
-                     if (cl_raw_list_get_elem_count(handle->debug_list) == 0) {
+                     cl_raw_list_lock(handle->debug_client_setup->dc_debug_list);
+                     if (cl_raw_list_get_elem_count(handle->debug_client_setup->dc_debug_list) == 0) {
                         elem->connection->connection_state = CL_CLOSING;
                      }
-                     cl_raw_list_unlock(handle->debug_list);
+                     cl_raw_list_unlock(handle->debug_client_setup->dc_debug_list);
                   } else {
                      /* debug clients are not connected, just close stream connections */
                      elem->connection->connection_state = CL_CLOSING;
@@ -1490,7 +1501,6 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
       if (handle->service_provider == CL_TRUE) {
          cl_com_connection_request_handler_cleanup(handle->service_handler);
          cl_com_close_connection(&(handle->service_handler));
-         cl_string_list_cleanup(&(handle->debug_list));
       }
    
       cl_connection_list_cleanup(&(handle->connection_list));
@@ -1514,6 +1524,8 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
       }
       cl_com_free_handle_statistic(&(handle->statistic));
  
+      cl_com_free_debug_client_setup(&(handle->debug_client_setup));
+
       cl_com_free_ssl_setup(&(handle->ssl_setup));
 
       free(handle);
@@ -2503,60 +2515,185 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
    }
 
    if (connection->data_flow_type == CL_CM_CT_STREAM) {
-      return_value = cl_com_create_message(&message);
-      if (return_value != CL_RETVAL_OK) {
-         return return_value;   
-      }
-      gettimeofday(&now,NULL);
-      connection->read_buffer_timeout_time = now.tv_sec + connection->handler->read_timeout;
+      cl_bool_t is_debug_client = CL_FALSE;
 
-      return_value = cl_com_read(connection, connection->data_read_buffer, connection->data_buffer_size, &size);
-
-      connection->read_buffer_timeout_time = 0;
-
-      if (return_value != CL_RETVAL_OK && return_value != CL_RETVAL_UNCOMPLETE_READ) {
-         cl_com_free_message(&message);
-         return return_value;
-      }
-
-      
-      CL_LOG_STR(CL_LOG_INFO,"received stream message from:", connection->receiver->comp_host);
-      message->message_state  = CL_MS_READY;         /* set message state */
-      message->message_mat    = CL_MIH_MAT_NAK;      /* no acknoledge for stream messages */
-      message->message_length = size;                    /* set message size */
-      gettimeofday(&message->message_receive_time,NULL);   /* set receive time */
-
-
-      /* Touch endpoint, he is still active */
-      if ( cl_com_connection_get_connect_port(connection ,&connect_port) == CL_RETVAL_OK) {
-         cl_endpoint_list_define_endpoint(cl_com_get_endpoint_list(),
-                                          connection->remote, 
-                                          connect_port, 
-                                          connection->auto_close_type, CL_FALSE );
-      }
-      
-      /* set last transfer time of connection */
-      memcpy(&connection->last_transfer_time, &message->message_receive_time ,sizeof (struct timeval));
-
-      message->message = (cl_byte_t*) malloc(sizeof(cl_byte_t) * size);
-      if (message->message == NULL) {
-         cl_com_free_message(&message);
-         return CL_RETVAL_MALLOC;   
-      }
-      memcpy(message->message, connection->data_read_buffer , sizeof(cl_byte_t) * size);
-      return_value = cl_message_list_append_message(connection->received_message_list, message, 1);
-      if (return_value == CL_RETVAL_OK) {
-         if (connection->handler != NULL) { 
-            cl_com_handle_t* handle = connection->handler;
-            /* increase counter for ready messages */
-            pthread_mutex_lock(handle->messages_ready_mutex);
-            handle->messages_ready_for_read = handle->messages_ready_for_read + 1;
-            pthread_mutex_unlock(handle->messages_ready_mutex);
+      if ( connection->remote != NULL ) {
+         if ( connection->remote->comp_name != NULL) {
+            if (strcmp(connection->remote->comp_name, CL_COM_DEBUG_CLIENT_NAME) == 0) {
+               is_debug_client = CL_TRUE;
+            }
          }
       }
-      connection->statistic->bytes_received = connection->statistic->bytes_received + size;
-      connection->statistic->real_bytes_received = connection->statistic->real_bytes_received + size;
-      return return_value;
+
+      if (is_debug_client == CL_TRUE) {
+         int pos = 0;
+         gettimeofday(&now,NULL);
+         connection->read_buffer_timeout_time = now.tv_sec + connection->handler->read_timeout;
+         return_value = cl_com_read(connection, &(connection->data_read_buffer[connection->data_read_buffer_pos]), connection->data_buffer_size - connection->data_read_buffer_pos , &size);
+         connection->read_buffer_timeout_time = 0;
+
+         if (return_value != CL_RETVAL_OK && return_value != CL_RETVAL_UNCOMPLETE_READ) {
+            return return_value;
+         }
+
+         connection->data_read_buffer_pos += size;
+
+
+         while( connection->data_read_buffer_pos > 0) {
+            int unparsed_string_start = -1;
+            for (pos = 0; pos < connection->data_read_buffer_pos; pos++) {
+               if ( connection->data_read_buffer[pos] == 0 ) {
+                  unparsed_string_start = pos + 1;
+                  cl_bool_t changed_mode = CL_FALSE;
+   
+                  /* TODO: implement clean commando syntax parser for debug_clients, etc. */
+                  if (strcmp("set tag ALL",(char*)connection->data_read_buffer) == 0) {
+                     connection->handler->debug_client_setup->dc_mode = CL_DEBUG_CLIENT_ALL;
+                     changed_mode = CL_TRUE;
+                  }
+                  if (strcmp("set tag MSG",(char*)connection->data_read_buffer) == 0) {
+                     connection->handler->debug_client_setup->dc_mode = CL_DEBUG_CLIENT_MSG;
+                     changed_mode = CL_TRUE;
+                  }
+                  if (strcmp("set tag APP",(char*)connection->data_read_buffer) == 0) {
+                     connection->handler->debug_client_setup->dc_mode = CL_DEBUG_CLIENT_APP;
+                     changed_mode = CL_TRUE;
+                  }
+                  if (strcmp("set dump OFF",(char*)connection->data_read_buffer) == 0) {
+                     connection->handler->debug_client_setup->dc_dump_flag = CL_FALSE;
+                  }
+                  if (strcmp("set dump ON",(char*)connection->data_read_buffer) == 0) {
+                     connection->handler->debug_client_setup->dc_dump_flag = CL_TRUE;
+                  }
+                  if (strcmp("set debug OFF",(char*)connection->data_read_buffer) == 0) {
+                     connection->handler->debug_client_setup->dc_app_log_level = 0;
+                     changed_mode = CL_TRUE;
+                  }
+                  if (strcmp("set debug ERROR",(char*)connection->data_read_buffer) == 0) {
+                     connection->handler->debug_client_setup->dc_app_log_level = 1;
+                     changed_mode = CL_TRUE;
+                  }
+                  if (strcmp("set debug WARNING",(char*)connection->data_read_buffer) == 0) {
+                     connection->handler->debug_client_setup->dc_app_log_level = 2;
+                     changed_mode = CL_TRUE;
+                  }
+                  if (strcmp("set debug INFO",(char*)connection->data_read_buffer) == 0) {
+                     connection->handler->debug_client_setup->dc_app_log_level = 3;
+                     changed_mode = CL_TRUE;
+                  }
+                  if (strcmp("set debug DEBUG",(char*)connection->data_read_buffer) == 0) {
+                     connection->handler->debug_client_setup->dc_app_log_level = 4;
+                     changed_mode = CL_TRUE;
+                  }
+                  if (strcmp("set debug DPRINTF",(char*)connection->data_read_buffer) == 0) {
+                     connection->handler->debug_client_setup->dc_app_log_level = 5;
+                     changed_mode = CL_TRUE;
+                  }
+
+                  if (changed_mode == CL_TRUE) {
+                     switch(connection->handler->debug_client_setup->dc_mode) {
+                        case CL_DEBUG_CLIENT_MSG:
+                        case CL_DEBUG_CLIENT_OFF: {
+                           pthread_mutex_lock(&cl_com_debug_client_callback_func_mutex);
+                           if (cl_com_debug_client_callback_func != NULL) {
+                              cl_com_debug_client_callback_func(0, connection->handler->debug_client_setup->dc_app_log_level);
+                           }
+                           pthread_mutex_unlock(&cl_com_debug_client_callback_func_mutex);
+                           break;
+                        }
+                        case CL_DEBUG_CLIENT_ALL:
+                        case CL_DEBUG_CLIENT_APP: {
+                           pthread_mutex_lock(&cl_com_debug_client_callback_func_mutex);
+                           if (cl_com_debug_client_callback_func != NULL) {
+                              cl_com_debug_client_callback_func(1, connection->handler->debug_client_setup->dc_app_log_level);
+                           }
+                           pthread_mutex_unlock(&cl_com_debug_client_callback_func_mutex);
+                           break;
+                        }
+                     }
+                  }
+                  break; /* found complete string */
+               }
+            }
+            if (unparsed_string_start != -1) {
+               int i = 0;
+               /* ok we had a complete string, now remove unused string from buffer */
+               for (pos = unparsed_string_start; pos < connection->data_read_buffer_pos; pos++) {
+                  connection->data_read_buffer[i++] = connection->data_read_buffer[pos];
+               }
+               connection->data_read_buffer_pos -= unparsed_string_start;
+            } else {
+               break; /* following string isn't complete */
+            }
+         }
+
+         /* Touch endpoint, he is still active */
+         if ( cl_com_connection_get_connect_port(connection ,&connect_port) == CL_RETVAL_OK) {
+            cl_endpoint_list_define_endpoint(cl_com_get_endpoint_list(),
+                                             connection->remote, 
+                                             connect_port, 
+                                             connection->auto_close_type, CL_FALSE );
+         }
+         gettimeofday(&connection->last_transfer_time,NULL);   /* set receive time */
+         connection->statistic->bytes_received = connection->statistic->bytes_received + size;
+         connection->statistic->real_bytes_received = connection->statistic->real_bytes_received + size;
+         return return_value;
+      } else {
+         return_value = cl_com_create_message(&message);
+         if (return_value != CL_RETVAL_OK) {
+            return return_value;   
+         }
+         gettimeofday(&now,NULL);
+         connection->read_buffer_timeout_time = now.tv_sec + connection->handler->read_timeout;
+   
+         return_value = cl_com_read(connection, connection->data_read_buffer, connection->data_buffer_size, &size);
+   
+         connection->read_buffer_timeout_time = 0;
+   
+         if (return_value != CL_RETVAL_OK && return_value != CL_RETVAL_UNCOMPLETE_READ) {
+            cl_com_free_message(&message);
+            return return_value;
+         }
+   
+         
+         CL_LOG_STR(CL_LOG_INFO,"received stream message from:", connection->receiver->comp_host);
+         message->message_state  = CL_MS_READY;         /* set message state */
+         message->message_mat    = CL_MIH_MAT_NAK;      /* no acknoledge for stream messages */
+         message->message_length = size;                    /* set message size */
+         gettimeofday(&message->message_receive_time,NULL);   /* set receive time */
+   
+   
+         /* Touch endpoint, he is still active */
+         if ( cl_com_connection_get_connect_port(connection ,&connect_port) == CL_RETVAL_OK) {
+            cl_endpoint_list_define_endpoint(cl_com_get_endpoint_list(),
+                                             connection->remote, 
+                                             connect_port, 
+                                             connection->auto_close_type, CL_FALSE );
+         }
+         
+         /* set last transfer time of connection */
+         memcpy(&connection->last_transfer_time, &message->message_receive_time ,sizeof (struct timeval));
+   
+         message->message = (cl_byte_t*) malloc(sizeof(cl_byte_t) * size);
+         if (message->message == NULL) {
+            cl_com_free_message(&message);
+            return CL_RETVAL_MALLOC;   
+         }
+         memcpy(message->message, connection->data_read_buffer , sizeof(cl_byte_t) * size);
+         return_value = cl_message_list_append_message(connection->received_message_list, message, 1);
+         if (return_value == CL_RETVAL_OK) {
+            if (connection->handler != NULL) { 
+               cl_com_handle_t* handle = connection->handler;
+               /* increase counter for ready messages */
+               pthread_mutex_lock(handle->messages_ready_mutex);
+               handle->messages_ready_for_read = handle->messages_ready_for_read + 1;
+               pthread_mutex_unlock(handle->messages_ready_mutex);
+            }
+         }
+         connection->statistic->bytes_received = connection->statistic->bytes_received + size;
+         connection->statistic->real_bytes_received = connection->statistic->real_bytes_received + size;
+         return return_value;
+      }
    }
 
    if (connection->data_flow_type == CL_CM_CT_MESSAGE) {
@@ -3184,12 +3321,12 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
       return CL_RETVAL_PARAMS;
    }
 
-   if (handle->debug_client_mode == CL_DEBUG_CLIENT_OFF) {
+   if (handle->debug_client_setup->dc_mode == CL_DEBUG_CLIENT_OFF) {
       CL_LOG(CL_LOG_INFO,"debug clients not enabled");
       return CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED;
    }
 
-   if (handle->debug_list == NULL) {
+   if (handle->debug_client_setup->dc_debug_list == NULL) {
       CL_LOG(CL_LOG_INFO,"debug clients not supported");
       return CL_RETVAL_UNKNOWN;
    }
@@ -3198,23 +3335,23 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
       cl_raw_list_lock(handle->connection_list);
    }
 
-   cl_raw_list_lock(handle->debug_list);
-   CL_LOG_INT(CL_LOG_INFO, "elements to flush:", (int)cl_raw_list_get_elem_count(handle->debug_list));
-   cl_raw_list_unlock(handle->debug_list);
+   cl_raw_list_lock(handle->debug_client_setup->dc_debug_list);
+   CL_LOG_INT(CL_LOG_INFO, "elements to flush:", (int)cl_raw_list_get_elem_count(handle->debug_client_setup->dc_debug_list));
+   cl_raw_list_unlock(handle->debug_client_setup->dc_debug_list);
 
    while(list_empty == CL_FALSE) {
       log_string = NULL;
-      cl_raw_list_lock(handle->debug_list);
-      string_elem = cl_string_list_get_first_elem(handle->debug_list);
+      cl_raw_list_lock(handle->debug_client_setup->dc_debug_list);
+      string_elem = cl_string_list_get_first_elem(handle->debug_client_setup->dc_debug_list);
       if (string_elem != NULL) {
-         cl_raw_list_remove_elem(handle->debug_list, string_elem->raw_elem);
+         cl_raw_list_remove_elem(handle->debug_client_setup->dc_debug_list, string_elem->raw_elem);
          log_string = string_elem->string;
          had_data_to_flush = CL_TRUE;
          free(string_elem);
       } else {
          list_empty = CL_TRUE;
       }
-      cl_raw_list_unlock(handle->debug_list);
+      cl_raw_list_unlock(handle->debug_client_setup->dc_debug_list);
       
       if (log_string != NULL) {
          elem = cl_connection_list_get_first_elem(handle->connection_list);
@@ -3225,6 +3362,7 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
                   cl_com_message_t* message = NULL;
                   char* message_text = strdup(log_string);
 
+                  /* flush debug client */
                   if (message_text != NULL) {
                      CL_LOG_STR_STR_INT(CL_LOG_INFO, "flushing debug client:",
                                         connection->remote->comp_host,
@@ -3256,7 +3394,12 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
    if ( had_data_to_flush == CL_TRUE && flushed_client == CL_FALSE ) {
       /* no connected debug clients, turn off debug message flushing */
       CL_LOG(CL_LOG_ERROR,"disable debug client message creation");
-      handle->debug_client_mode = CL_DEBUG_CLIENT_OFF;
+      handle->debug_client_setup->dc_mode = CL_DEBUG_CLIENT_OFF;
+      pthread_mutex_lock(&cl_com_debug_client_callback_func_mutex);
+      if (cl_com_debug_client_callback_func != NULL) {
+         cl_com_debug_client_callback_func(0, handle->debug_client_setup->dc_app_log_level);
+      }
+      pthread_mutex_unlock(&cl_com_debug_client_callback_func_mutex);
    }
 
    if (lock_list == CL_TRUE) {
@@ -3322,6 +3465,32 @@ int cl_com_get_actual_statistic_data(cl_com_handle_t* handle, cl_com_handle_stat
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
+#define __CL_FUNCTION__ "cl_com_set_application_debug_client_callback_func()"
+int cl_com_set_application_debug_client_callback_func(cl_app_debug_client_func_t debug_client_callback_func ) {
+   pthread_mutex_lock(&cl_com_debug_client_callback_func_mutex);
+   cl_com_debug_client_callback_func = *debug_client_callback_func;
+   pthread_mutex_unlock(&cl_com_debug_client_callback_func_mutex);
+   return CL_RETVAL_OK;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_default_application_debug_client_callback()"
+static void cl_com_default_application_debug_client_callback(int dc_connected, int debug_level) {
+   if (dc_connected == 1) {
+      CL_LOG(CL_LOG_INFO,"a application debug client is connected");
+   } else {
+      CL_LOG(CL_LOG_INFO,"no application debug client connected");
+   }
+
+   CL_LOG_INT(CL_LOG_INFO,"debug level is:", debug_level);
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
 #define __CL_FUNCTION__ "cl_com_application_debug()"
 int cl_com_application_debug(cl_com_handle_t* handle, const char* message) {
 #define CL_DEBUG_DMT_APP_MESSAGE_FORMAT_STRING "%lu\t%.6f\t%s\n"
@@ -3331,13 +3500,23 @@ int cl_com_application_debug(cl_com_handle_t* handle, const char* message) {
    unsigned long                dm_buffer_len     = 0;
    cl_com_debug_message_tag_t   debug_message_tag = CL_DMT_APP_MESSAGE;
    struct timeval now;
+   unsigned long i;
+   int found_last = 0;
 
 
    if (handle == NULL || message == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   if (handle->debug_client_mode == CL_DEBUG_CLIENT_OFF) {
-      return CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED;
+
+   
+   /* don't add default case for this switch! */
+   switch(handle->debug_client_setup->dc_mode) {
+      case CL_DEBUG_CLIENT_OFF:
+      case CL_DEBUG_CLIENT_MSG: 
+         return CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED;
+      case CL_DEBUG_CLIENT_APP:
+      case CL_DEBUG_CLIENT_ALL:
+         break;
    }
 
    gettimeofday(&now,NULL);
@@ -3357,7 +3536,20 @@ int cl_com_application_debug(cl_com_handle_t* handle, const char* message) {
                          (unsigned long)debug_message_tag,
                          time_now,
                          message);
-      ret_val = cl_string_list_append_string(handle->debug_list, dm_buffer , 1);
+
+      /* 
+       * remove all "\n" execpt the last one, because any additional "\n" in application message
+       * would break qping message format parsing. 
+       */ 
+      for(i=dm_buffer_len - 1 ; i > 0 ; i--) {
+         if ( dm_buffer[i] == '\n' ) {
+            if (found_last == 1) {
+               dm_buffer[i] = ' ';
+            }
+            found_last = 1;
+         }
+      }
+      ret_val = cl_string_list_append_string(handle->debug_client_setup->dc_debug_list, dm_buffer , 1);
       free(dm_buffer);
       dm_buffer = NULL;
    }
@@ -3538,6 +3730,14 @@ static int cl_commlib_finish_request_completeness(cl_com_connection_t* connectio
    if (connection == NULL) {
       return CL_RETVAL_PARAMS;
    }
+
+   /* reset buffer variables (used for STREAM debug_clients) */
+   connection->data_write_buffer_pos = 0;
+   connection->data_write_buffer_processed = 0;
+   connection->data_write_buffer_to_send = 0;
+
+   connection->data_read_buffer_processed = 0;
+   connection->data_read_buffer_pos = 0;
 
    if (connection->was_accepted == CL_TRUE) {
       int connect_port = 0;
@@ -3993,7 +4193,6 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
             /* TODO: filter messages for endpoint, if specified and open connection if necessary  (use cl_commlib_open_connection()) */
             if (endpoint_match == 1) {
                /* ok, the endpoint matches the given parameters */  
-   
                /* try to find complete received message in received message list of this connection */
                cl_raw_list_lock(connection->received_message_list);
                message_elem = cl_message_list_get_first_elem(connection->received_message_list);
@@ -4002,7 +4201,6 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                   if (message_elem->message->message_state == CL_MS_READY) {
                      int match = 1;  /* always match the message */
                     
-         
                      /* try to find response for mid */
                      /* TODO: Just return a matchin response_mid !!!  0 = match all else match response_id */
                      if (response_mid != 0) {

@@ -68,21 +68,21 @@ static int    cl_show[]         = {1,1 ,1,1 ,1,1,1 ,1,1,1,1,0 ,0,1,1};
 static int    cl_alignment[]    = {1,0 ,1,0 ,1,1,1 ,1,1,1,1,0 ,0,1,1};
 static int    cl_column_width[] = {0,0 ,0,30,0,0,22,0,0,0,0,20,5,0,0};
 static char*  cl_description[] = {
-                       "time of debug output creation",
-                       "endpoint service name where debug client is connected",
-                       "message direction",
-                       "name of participating communication endpoint",
-                       "message data format",
-                       "message acknowledge type",
-                       "message tag information",
-                       "message id",
-                       "message response id",
-                       "message length",
-                       "time when message was sent/received",
-                       "commlib xml protocol output",
-                       "additional information",
-                       "commlib linger time",
-                       "nr. of connections"
+          /* 00 */               "time of debug output creation",                       
+          /* 01 */               "endpoint service name where debug client is connected",
+          /* 02 */               "message direction",
+          /* 03 */               "name of participating communication endpoint",
+          /* 04 */               "message data format",
+          /* 05 */               "message acknowledge type",
+          /* 06 */               "message tag information",
+          /* 07 */               "message id",
+          /* 08 */               "message response id",
+          /* 09 */               "message length",
+          /* 10 */               "time when message was sent/received",
+          /* 11 */               "message content dump (xml/bin/cull)",
+          /* 12 */               "additional information",
+          /* 13 */               "commlib linger time",
+          /* 14 */               "nr. of connections"
 };
 
 static char* cl_names[] = {
@@ -97,7 +97,7 @@ static char* cl_names[] = {
                        "msg rid",
                        "msg len",
                        "msg time",
-                       "xml dump",
+                       "msg dump",
                        "info",
                        "msg ltime",
                        "con count"
@@ -233,6 +233,9 @@ static void qping_convert_time(char* buffer, char* dest, cl_bool_t show_hour) {
    struct tm *tm;
    help=strtok(buffer, ".");
    help2=strtok(NULL,".");
+   if (help2 == NULL) {
+      help2 = "NULL";
+   }
    i = atoi(help);
 #ifndef HAS_LOCALTIME_R
    tm = localtime(&i);
@@ -965,7 +968,7 @@ static void usage(void)
   int max_name_length = 0;
   int i=0;
   fprintf(stderr, "%s %s\n", GE_SHORTNAME, GDI_VERSION);
-  fprintf(stderr, "%s qping [-help] [-noalias] [-ssl|-tcp] [ [ [-i <interval>] [-info] [-f] ] | [ [-dump_tag tag] [-dump] [-nonewline] ] ] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
+  fprintf(stderr, "%s qping [-help] [-noalias] [-ssl|-tcp] [ [ [-i <interval>] [-info] [-f] ] | [ [-dump_tag tag [param] ] [-dump] [-nonewline] ] ] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
   fprintf(stderr, "   -i         : set ping interval time\n");
   fprintf(stderr, "   -info      : show full status information and exit\n");
   fprintf(stderr, "   -f         : show full status information on each ping interval\n");
@@ -975,9 +978,10 @@ static void usage(void)
   fprintf(stderr, "   -dump      : dump communication traffic (see \"communication traffic output options\" for additional information)\n");
   fprintf(stderr, "                   (provides the same output like -dump_tag MSG)\n");
   fprintf(stderr, "   -dump_tag  : dump communication traffic (see \"communication traffic output options\" for additional information)\n");
-  fprintf(stderr, "                   tag=ALL - show all\n");
-  fprintf(stderr, "                   tag=APP - show application messages\n");
-  fprintf(stderr, "                   tag=MSG - show commlib protocol messages\n");
+  fprintf(stderr, "                   tag=ALL <debug level> - show all\n");
+  fprintf(stderr, "                   tag=APP <debug level> - show application messages\n");
+  fprintf(stderr, "                   tag=MSG               - show commlib protocol messages\n");
+  fprintf(stderr, "                   <debug level>         - ERROR, WARNING, INFO, DEBUG or DPRINTF\n");
   fprintf(stderr, "   -nonewline : dump output will not have a linebreak within a message\n");
   fprintf(stderr, "   -help      : show this info\n");
   fprintf(stderr, "   host       : host name of running component\n");
@@ -1054,6 +1058,7 @@ int main(int argc, char *argv[]) {
    int   option_tcp        = 0;
    int   option_dump       = 0;
    int   option_nonewline  = 1;
+   int   option_debuglevel = 0;
    int   parameter_count   = 4;
    int   commlib_error = CL_RETVAL_OK;
 
@@ -1124,9 +1129,57 @@ int main(int argc, char *argv[]) {
              if ( argv[i] != NULL) {
                 if (strcmp(argv[i],"ALL") == 0) {
                    dump_tag = 1;
+                   parameter_count++;
+                   parameter_start++;
+                   i++;
+                   if (argv[i] != NULL) {
+                      if (strcmp(argv[i],"ERROR") == 0) {
+                         option_debuglevel = 1;
+                      }
+                      if (strcmp(argv[i],"WARNING") == 0) {
+                         option_debuglevel = 2;
+                      }
+                      if (strcmp(argv[i],"INFO") == 0) {
+                         option_debuglevel = 3;
+                      }
+                      if (strcmp(argv[i],"DEBUG") == 0) {
+                         option_debuglevel = 4;
+                      }
+                      if (strcmp(argv[i],"DPRINTF") == 0) {
+                         option_debuglevel = 5;
+                      }
+                      if (option_debuglevel == 0) {
+                         fprintf(stderr, "unexpected debug level\n");
+                         exit(1);
+                      }
+                   }
                 }
                 if (strcmp(argv[i],"APP") == 0) {
                    dump_tag = 2;
+                   parameter_count++;
+                   parameter_start++;
+                   i++;
+                   if (argv[i] != NULL) {
+                      if (strcmp(argv[i],"ERROR") == 0) {
+                         option_debuglevel = 1;
+                      }
+                      if (strcmp(argv[i],"WARNING") == 0) {
+                         option_debuglevel = 2;
+                      }
+                      if (strcmp(argv[i],"INFO") == 0) {
+                         option_debuglevel = 3;
+                      }
+                      if (strcmp(argv[i],"DEBUG") == 0) {
+                         option_debuglevel = 4;
+                      }
+                      if (strcmp(argv[i],"DPRINTF") == 0) {
+                         option_debuglevel = 5;
+                      }
+                      if (option_debuglevel == 0) {
+                         fprintf(stderr, "unexpected debug level\n");
+                         exit(1);
+                      }
+                   }
                 }
                 if (strcmp(argv[i],"MSG") == 0) {
                    dump_tag = 3;
@@ -1389,6 +1442,7 @@ int main(int argc, char *argv[]) {
          
          if ( retval != CL_RETVAL_OK) {
             if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {
+                char command_buffer[256];
                 printf("open connection to \"%s/%s/"U32CFormat"\" ... " ,resolved_comp_host , comp_name, u32c(comp_id) );
                 retval = cl_commlib_open_connection(handle, resolved_comp_host , comp_name, comp_id);
                 printf("%s\n", cl_get_error_text(retval));
@@ -1396,6 +1450,82 @@ int main(int argc, char *argv[]) {
                    printf("please start qping as root\n");
                    break;       
                 }
+
+
+                /*
+                 * set message tag we want to receive from endpoint 
+                 */
+                switch(dump_tag) {
+                   case 1: {
+                      snprintf(command_buffer,256,"set tag ALL");
+                      break;
+                   }
+                   case 2: {
+                      snprintf(command_buffer,256,"set tag APP");
+                      break;
+                   }
+                   case 3: {
+                      snprintf(command_buffer,256,"set tag MSG");
+                      break;
+                   }
+                }
+                cl_commlib_send_message(handle,
+                                    resolved_comp_host, comp_name, comp_id,
+                                    CL_MIH_MAT_NAK, 
+                                    (cl_byte_t*)command_buffer, strlen(command_buffer)+1, 
+                                    NULL, 0, 0, CL_TRUE, CL_FALSE);
+
+                /*
+                 * set if we want the message dump 
+                 */
+
+                if (cl_show[11] != 0) {
+                   snprintf(command_buffer,256,"set dump ON");
+                } else {
+                   snprintf(command_buffer,256,"set dump OFF");
+                }
+                cl_commlib_send_message(handle,
+                                    resolved_comp_host, comp_name, comp_id,
+                                    CL_MIH_MAT_NAK, 
+                                    (cl_byte_t*)command_buffer, strlen(command_buffer)+1, 
+                                    NULL, 0, 0, CL_TRUE, CL_FALSE);
+
+                            
+                /*
+                 * set debug level 
+                 */
+                switch(option_debuglevel) {
+                   case 1: {
+                      snprintf(command_buffer,256,"set debug ERROR");
+                      break;
+                   }
+                   case 2: {
+                      snprintf(command_buffer,256,"set debug WARNING");
+                      break;
+                   }
+                   case 3: {
+                      snprintf(command_buffer,256,"set debug INFO");
+                      break;
+                   }
+                   case 4: {
+                      snprintf(command_buffer,256,"set debug DEBUG");
+                      break;
+                   }
+                   case 5: {
+                      snprintf(command_buffer,256,"set debug DPRINTF");
+                      break;
+                   }
+                   default: {
+                      snprintf(command_buffer,256,"set debug OFF");
+                      break;
+                   }
+                }
+
+                cl_commlib_send_message(handle,
+                                    resolved_comp_host, comp_name, comp_id,
+                                    CL_MIH_MAT_NAK, 
+                                    (cl_byte_t*)command_buffer, strlen(command_buffer)+1, 
+                                    NULL, 0, 0, CL_TRUE, CL_FALSE);
             }
          } else {
             int i;

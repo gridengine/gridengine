@@ -766,7 +766,8 @@ proc qrsh_accounting {} {
          }
       }
 
-      sleep 5
+      # wait for accounting file to be flushed (esp. for 6.0)
+      sleep 30
 
       if { $job_id != "" } {
          if {[info exists qacct_info]} {

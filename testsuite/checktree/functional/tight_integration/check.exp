@@ -52,7 +52,7 @@ set check_init_level_procedure "tight_integration_init_level"
 
 # define test's name and run level descriptions
 set check_name            "tight_integration"
-set check_category        "COMPATIBILITY SYSTEM"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level   1
 set check_description(0)  "check tightly integrated parallel jobs submitted with qsub"
 set check_description(1)  "check tightly integrated parallel jobs submitted with qrsh"
@@ -115,9 +115,7 @@ proc tight_integration_setup  {} {
    set pe(xuser_lists)        none
    set pe(start_proc_args)    none
    set pe(stop_proc_args)     none
-# JG: TODO: round_robin is broken - make testsuite test run at all
-#   set pe(allocation_rule)    "\$round_robin"
-   set pe(allocation_rule)    "\$pe_slots"
+   set pe(allocation_rule)    "\$round_robin"
    set pe(control_slaves)     TRUE
    set pe(job_is_first_task)  FALSE
 
@@ -130,8 +128,6 @@ proc tight_integration_setup  {} {
 proc tight_integration_cleanup  {} {
    global CHECK_PRODUCT_TYPE
 
-   # workaround: in sgeee a job still exists in qmaster after it exited for some time
-   #             therefore the pe cannot be deleted
    del_pe tight
 
    set_error 0 "ok"
@@ -524,8 +520,9 @@ proc tight_integration_massive {} {
    # check if test can run at all in this cluster
    set total_slots 0
    foreach host $CHECK_CORE_EXECD {
-      get_queue "$host.q" queue_conf
+      get_queue [get_queue_instance "all.q" $host] queue_conf
       incr total_slots $queue_conf(slots)
+      unset queue_conf
    }
    if {$total_slots < [expr $TIGHT_INTEGRATION_MASSIVE_SLOTS + 1]} {
       add_proc_error tight_integration_massive -3 "test cannot run massive parallel job with $TIGHT_INTEGRATION_MASSIVE_SLOTS tasks + the master task - cluster only has $total_slots slots"

@@ -32,13 +32,14 @@ Content
 7) Unpacking the SGE distribution
    7.1) Prerequisites
    7.2) Installing SGE with 'pkgadd' on Solaris
+   7.3) Installing SGE 'tar.gz' distribution
 8) Rename the service codine_commd/grd_commd
 9) Decide about using the 'adminuser' feature
 10) Running the update script
    10.1) Login as user root or as 'adminuser'
    10.2) Set SGE_ROOT and environment variables
    10.3) Run the update script
-11) Installing the new startup script on the local machine
+11) Installing the new startup script locally an all execution hosts
 12) Restart SGE
 13) Copyright
 
@@ -67,7 +68,7 @@ Content
    We estimate the following time for the various steps of the upgrade:
 
    Reading this document and preparing the upgrade:  0:30-2 hours
-   Shutting down all SGE daemons and verify this:    1-3 minutes per host
+   Shutting down all SGE daemons, verification:      1-3 minutes per host
    Deleting old spool files:                         
       - spool directories on shared file system      5 minutes
       - spool directories installed locally          1-3 minutes per host
@@ -96,7 +97,7 @@ Content
 
    The upgrade procedure will be easier to carry out if you have access to
    user root (rsh or ssh) without providing a password to all your execution
-   hosts (this does not necessarily need to be your qmaster machine).
+   hosts (this does not necessarily need to be from your qmaster machine).
 
 
 2) Installation changes compared to previous versions
@@ -122,12 +123,12 @@ Content
       sge_shadowd
       sge_shepherd
    
-   The command "{cod|grd}commdcntl" has been renamed to 'sgecommdcntl'
+   The command "{cod|grd}commdcntl" has been renamed to 'sgecommdcntl'.
 
    It is not supported to rename any of the binaries of the distribution!
 
-   If you use any scripts which monitor the daemons, you need to make sure
-   to check for the new names.
+   If you use any scripts or tools in your SGE cluster which monitor Grid
+   Engine daemons, you need to make sure to check for the new names.
 
 
    2.2) Daemon startup scripts
@@ -147,21 +148,24 @@ Content
 
        /etc/init.d/{codine5|grd5}
 
-    and the symbolic link which is often installed in
+   and the symbolic link which is often installed in
 
        /etc/rc2.d/S95{codine5|grd5}
 
-    is now called
+   is now called
 
-       rcsge
+       rcsge 
 
-    and
+   and
 
        S95rcsge
 
-    It is necessary to delete the old local startup scripts and the
-    symbolic links and replace them with the new startup script.
+   It is necessary to delete the old local startup scripts and the symbolic
+   links and replace them with the new startup script.
 
+   On Linux systems with the "insserv" binary (see section (11) below), the
+   number for the "S95rcsge" script will be determined dynamically.
+    
 
    2.3) Environment variables
    --------------------------
@@ -180,8 +184,12 @@ Content
    set this mode.
 
    Only SGE(EE) 5.3 will support this mode. Future SGE(EE) versions may not
-   support this compatibility mode anymore. It is not recommended to use
-   this compatibility mode.
+   support this compatibility mode anymore. 
+
+   It is not recommended to use this compatibility mode. If the size of a
+   typical user environment is already near its limit you may encounter
+   problems with the proper setting of all environment variables when a job
+   is started.
 
 
    2.4) Service name for communication daemon
@@ -190,7 +198,6 @@ Content
    The communication daemon (commd) service names has changed from
 
        codine_commd/grd_commd --> sge_commd
-
 
    The old name of the service is not anymore supported.
 
@@ -236,6 +243,7 @@ Content
    cluster, to delete all files of the old distribution. See (5) and (6) for
    more information.
 
+
 4) Cluster shutdown: No running daemons, no running or pending jobs
 -------------------------------------------------------------------
 
@@ -249,7 +257,7 @@ Content
    cluster and execute an appropriate 'ps' command. You might want to 'grep'
    for the string 'cod_', 'grd_' or 'sge_' in your 'ps' output to identify
    remaining CODINE/GRD/SGE processes (if you execute the commands described
-   in the next paragraph, all CODINE/GRD components should be gone).
+   in the next section, all CODINE/GRD components should be gone).
 
    You can shutdown your CODINE/GRD/SGE cluster with the following commands:
 
@@ -262,7 +270,7 @@ Content
 
    To be absolutely sure that there are no old jobs in your configuration
    you should delete the execution daemon spool directories and the spooled
-   jobs in the qmaster spool directories:
+   jobs in the qmaster spool directory:
 
       # rm -rf <execd_spool_dir>/<hostname>
       # rm -rf <qmaster_spool_dir>/jobs
@@ -270,15 +278,15 @@ Content
       # rm -rf <qmaster_spool_dir>/zombies
 
 
-5) Backup of the old CODINE/GRD system
---------------------------------------
+5) Backup of the old CODINE/GRD/SGE system
+------------------------------------------
 
    Before beginning the upgrade procedure it is highly recommended to make
    a backup of your old CODINE/GRD/SGE system.
 
    To minimize the size of the backup you may safely delete:
 
-      - the execd spool directories (no configuration is stored here):
+      - the execd spool directories (no configuration is stored here) in:
                    
          <execd_spool>/<hostname>
 
@@ -294,8 +302,8 @@ Content
    You should also create a separate backup of your CODINE/GRD/SGE
    configuration (assuming everything is installed in standard locations):
 
-      % tar cvf CONFIG.tar $CODINE_ROOT/default/common \
-                           $CODINE_ROOT/default/spool/qmaster
+      % tar cvf OLDSGE-CONFIG.tar $CODINE_ROOT/default/common \
+                                  $CODINE_ROOT/default/spool/qmaster
 
 
 6) Deleting directories of the old CODINE/GRD/SGE system
@@ -339,9 +347,9 @@ Content
    6.3 Delete old distribution installed with 'pkgadd' on Solaris
    --------------------------------------------------------------
 
-   If you installed SGE(EE) 5.2.x or SGE(EE) 5.3beta1 on Solaris with
+   If you installed SGE(EE) 5.2.x or SGE(EE) 5.3beta on Solaris with
    "pkgadd" it is typically safe to remove the following packages (not all
-   are usually available on your system):
+   of these packages are usually available on your system):
 
       SDRMdoc
       SDRMcomm
@@ -403,25 +411,26 @@ Content
    either your fileserver or a machine where the NFS mount point is
    configured appropriately. 
 
-   Installing the distribution needs to be done by user 'root'. The NFS
-   clients must not mount the $SGE_ROOT directory with the '-nosuid'  NFS
+   Installation of the distribution needs to be done by user 'root'. The NFS
+   clients must not mount the $SGE_ROOT directory with the '-nosuid' NFS
    mount option - otherwise the 'qrsh' command (and related commands like
-   'qmake' and 'qtcsh') will not work. If you cannot mount the $SGE_ROOT
-   without the '-nosuid' you can configure the path to your "qrsh" command
-   in the global and local cluster configuration.
+   'qmake' and 'qtcsh') will not work. If you cannot mount $SGE_ROOT without
+   the '-nosuid' you can configure the path to your "qrsh" command in the
+   global and local cluster configuration.
 
    It is not necessary to allow read/write permissions for user root to
    install and run SGE successfully.
+
 
    7.2) Installing SGE with 'pkgadd' on Solaris
    --------------------------------------------
 
    If you plan to install SGE for Solaris with 'pkgadd' please make sure to
    remove all previous 'SDRM*' packages or all directories of the
-   distribution which are mentioned in the previous paragraph.
+   distribution which are mentioned in the previous section.
 
    The default base directory ($SGE_ROOT) and default 'adminuser' has
-   changed to
+   changed to:
 
       Base directory: /gridware/sge (or /gridware/sgeee)   
       Adminuser:      sgeadmin
@@ -429,9 +438,20 @@ Content
    You should select your previous base directory and your previous
    'adminuser' name for the new installation.
 
-   If you downloaded the SGE distribution as tar files please login to the
-   machine where user root has appropriate file permissions, login as user
-   root and execute the following commands:
+   It is recommended to install SGE with 'pkgadd' on Solaris if it's
+   technically possible (file server is a Solaris machine are file system is
+   mounted by a Solaris machine). This will allow you to manage the software
+   and patches with standard mechanisms provided by Sun. If you are going to
+   install SGE for other binary architectures you can easily add and unpack
+   the 'tar.gz' files for these architectures in your $SGE_ROOT directory.
+
+
+   7.3) Installing SGE 'tar.gz' distribution
+   -----------------------------------------
+
+   If you downloaded the SGE distribution as 'tar.gz' files please login to
+   the machine where user root has appropriate file permissions, login as
+   user root and execute the following commands:
 
       # cd <your_sge_root>
       # umask 022
@@ -444,16 +464,17 @@ Content
       # cd <your_sge_root>
       # util/setfileperm.sh <adminuser> <unixgroup> <your_sge_root>
 
-   where
+   where 
 
-      <adminuser> is the Unix user account under which the spool files by
-      SGE should be created (Please see section (9) for more information
-      about the "adminuser" feature of SGE).
+      <adminuser>     is the Unix user account under which the spool files
+                      by SGE should be created (Please see section (9) for
+                      more information about the "adminuser" functionality
+                      of SGE).
 
-      <unixgroup> is the groupname 
+      <unixgroup>     is the Unix group name.
 
       <your_sge_root> is the absolute path where your $SGE_ROOT directory
-      is located
+                      is located.
 
    Example:
 
@@ -472,40 +493,36 @@ Content
 9) Decide about using the 'adminuser' feature
 ---------------------------------------------
 
-   Since CODINE/GRD 5.0 version, Grid Engine supports the so called
-   'adminuser' user feature.
+   Since CODINE/GRD 5.0, Grid Engine supports the so called 'adminuser' user
+   feature.
 
    The purpose of this feature is to support to start and run Grid Engine
-   daemons on NFS clients where user root has no read/write permissions.
+   daemons on NFS clients where user root has no read/write permissions. 
    For security reasons many sites do not want to export their NFS file
    systems to the NFS clients and granting read/write permissions for user
    root. If you want to configure Grid Engine to use the 'adminuser', you
    should now carry out the following steps:
 
-   - create the 'adminuser' account on all your Grid Engine hosts (qmaster
-     and execution hosts) or create the 'adminuser' in your NIS passwd
-     database. 
+   a) create the 'adminuser' account on all your Grid Engine hosts (qmaster
+      and execution hosts) or create the 'adminuser' in your NIS passwd
+      database.
 
-     The recommended username is 'sgeadmin'. The home directory of the
-     adminuser can be anywhere. The 'adminuser' does not need to have a home
-     directory, if you start the update script with the command:
+      The recommended username is 'sgeadmin'. The password for the
+      'adminuser' should have the same protection as the password for user
+      root. The password for the SGE 'adminuser' may not be given to any
+      users who are not entitled to get the 'root' password on your systems.
 
-         $SGE_ROOT/utilbin/adminrun sgeadmin <command>
-  
-     To start and run Grid Engine, it is not necessary to create a home
-     directory for the 'adminuser'.
+   b) login as user root on your NFS file server or on a NFS client where
+      user root has read/write permissions in the $SGE_ROOT directory
 
-   - login as user root on your NFS file server or on a NFS client where
-     user root has read/write permissions in the $SGE_ROOT directory
-
-   - if you did not install the Grid Engine 5.3 distribution with 'pkgadd'
-     on Solaris run the script:
+   c) if you did not install the Grid Engine 5.3 distribution with 'pkgadd'
+      on Solaris please run the script:
 
          $SGE_ROOT/util/setfileperm.sh <adminuser> <group> <your_sge_root>
 
-     to set the file permissions of your Grid Engine distribution
+      to set the file permissions of your Grid Engine distribution
 
-   - edit your global cluster configuration file
+   d) edit your global cluster configuration file
 
         $SGE_ROOT/<cell>/common/configuration
 
@@ -515,15 +532,15 @@ Content
 
      and enter the name of the 'adminuser' , e.g.
 
-       admin_user   sgeadmin
+        admin_user   sgeadmin
 
-   - change (recursively) the owner of the following directories
+   e) change (recursively) the owner of the following directories
 
-        $SGE_ROOT/<cell>/common/
-        <qmaster_spool_directory>
-        <execd_spool_directory>/hostname
+         $SGE_ROOT/<cell>/common/
+         <qmaster_spool_directory>
+         <execd_spool_directory>/hostname
 
-     to the 'adminuser', e.g
+      to the 'adminuser', e.g
 
          # chown -R sgeadmin $SGE_ROOT/default/common
          # chown -R sgeadmin $SGE_ROOT/default/spool/*
@@ -620,8 +637,8 @@ Content
        *-<version>
 
 
-11) Installing the new startup script on the local machines
------------------------------------------------------------
+11) Installing the new startup script locally an all execution hosts
+--------------------------------------------------------------------
 
    You should now remove the old per machine startup script and install the
    new script. Depending on your operating system the startup script is
@@ -692,7 +709,6 @@ Content
       # cd $SGE_ROOT
       # util/sgeremoterun -all $SGE_ROOT/$COD_CELL/common/rcsge -execd
 
-
 13) Copyright
 -------------
 ___INFO__MARK_BEGIN__
@@ -701,7 +717,7 @@ ___INFO__MARK_BEGIN__
    distribution. See the directory '<sge_root>/3rdparty' for a summary of
    other copyrights of this Grid Engine distribution.
 
-   The Contents of this file are made available subject to the terms of   
+   The Contents of this file are made available subject to the terms of
    the Sun Industry Standards Source License Version 1.2
  
    Sun Microsystems Inc., March, 2001

@@ -51,16 +51,16 @@ Verified Owner  Issue    Bugtraq   Short description (see 5.3 Changelog for more
          AS                         Documentation update for loose Sun HPC cluster tools integration
          AS              4733092    requirement for installation process of exec host with non root user
          AS              4735258    CLI: Wrong info for usage
-         AS              4822799    cannot install on Solaris 10
-         AS      2003-07-16-0       fix to enable checkout of current sticky tag version in scripts/mk_ascman
+AS       AS              4822799    cannot install on Solaris 10
+AS       AS      2003-07-16-0       fix to enable checkout of current sticky tag version in scripts/mk_ascman
          AS      219     4742133    rcsge startup script has hardwired execd_spool_dir for "stop" procedure
          AS      333     4740407    SGEEE: Insufficient checking for PTF_{MIN,MAX}_PRIORITY in execd_params
          AS      346     4727457    Proper $SGE_CELL setting fails with non default cell in settings.sh
          AS      359     4732545    gethostbyaddr in ~/solaris64 doesn't work.
          AS      486                scripts/util/arch: backed out hp11-64 and aix51 detection since no port available yet
          AS      503                overriding queue limits with job request limits incomplete for NEC
-         AS      506     4847819    sge->sgeee upgrade failed
-         AS      521     4869772    resource limits not correctly set for Linux x86
+N/A      AS      506     4847819    sge->sgeee upgrade failed
+AS       AS      521     4869772    resource limits not correctly set for Linux x86
          AS      568                Allow "-" sign as first character of load_formula
 
          CB      627     4958080    suspend and resume with HPC Cluster tools 5 not properly working

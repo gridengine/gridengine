@@ -1,3 +1,8 @@
+CR-2001-10-31-0: Testsuite:
+                   Added new test for share tree in
+                   checktree/system_tests/grd/sharetree/check.exp
+
+
 JG-2001-10-31-3: Bugfix: Parsing of command line switches -ac, -dc, -sc and -v failed
                  if the value of the passed variable contained spaces, e.g.
                  -v EDITOR="gvim -f",DISPLAY=elendil:0.0 created the environment

@@ -1149,6 +1149,9 @@ proc setup_queues {} {
       sleep 1
   } 
 
+  puts $CHECK_OUTPUT "\nremoving share tree"
+  catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dstree" } result
+  puts $CHECK_OUTPUT $result
 
   puts $CHECK_OUTPUT "\nremoving ckpt objects ..."
   catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sckptl" } result

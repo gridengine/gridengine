@@ -42,7 +42,7 @@ JAPILIB_OBJS  = $(JAPILIB_SRC:.c=.o)
 
 DRMAALIB         = libdrmaa$(SHAREDEXT)
 DRMAALIB_SRC_NJ  = drmaa.c
-DRMAALIB_SRC_ALL = $(DRMAALIB_SRC_NJ) com_sun_grid_drmaa_SessionImpl.c
+DRMAALIB_SRC_ALL = $(DRMAALIB_SRC_NJ) com_sun_grid_drmaa_SessionImpl.c com_sun_grid_util_SGEUtil.c
 # This computed macro is here to allow libdrmaa to be built with or without
 # JNI files
 DRMAALIB_SRC     = $(DRMAALIB_SRC_$(DRMAA_TARGET))
@@ -128,6 +128,9 @@ japi.o: $(JAPILIB_DIR)/japi.c
 
 com_sun_grid_drmaa_SessionImpl.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c
+
+com_sun_grid_util_SGEUtil.o: $(CLASSES_DIR)/com_sun_grid_util_SGEUtil.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLASSES_DIR)/com_sun_grid_util_SGEUtil.c
 
 #---------------------------------------------------------------------
 

@@ -3169,10 +3169,12 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
 *******************************************************************************/
 static void total_update_event(lListElem *event_client, ev_event type) 
 {
-   lList *lp = NULL;
+   lList *lp = NULL; /* lp should be set, if we have to make a copy */
+   lList *copy_lp = NULL; /* copy_lp should be used for a copy of the org. list */
    char buffer[1024];
    dstring buffer_wrapper;
    const char *session = NULL;
+   u_long32 id;
 
    DENTER(TOP_LAYER, "total_update_event");
    
@@ -3180,12 +3182,16 @@ static void total_update_event(lListElem *event_client, ev_event type)
    
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
    session = lGetString(event_client, EV_session);
+   id = lGetUlong(event_client, EV_id);
 
    /* This test bothers me.  Technically, the GDI thread should just drop the
     * event in the send queue and forget about it.  However, doing this test
     * here could prevent the queuing of events that will later be determined
     * to be useless. */
    if (eventclient_subscribed(event_client, type, NULL)) {
+   
+      id = lGetUlong(event_client, EV_id);
+      
       switch (type) {
          case sgeE_ADMINHOST_LIST:
             lp = Master_Adminhost_List;
@@ -3199,20 +3205,11 @@ static void total_update_event(lListElem *event_client, ev_event type)
          case sgeE_CENTRY_LIST:
             lp = Master_CEntry_List;
             break;
-         case sgeE_CONFIG_LIST:
-         {
-            u_long32 id = -1;
-            lList *conf = NULL;
-            
-            id = lGetUlong(event_client, EV_id);
-            conf = sge_get_configuration();
-            
-            /* 'send_events()' will free 'conf' */
-            add_list_event_for_client(id, 0, type, 0, 0, NULL, NULL, NULL, conf, true);
-
-            DEXIT;
-            return;
-         }
+         case sgeE_CONFIG_LIST: 
+            /* sge_get_configuration() returns a copy already, we do not need to make 
+               one later */
+            copy_lp = sge_get_configuration();
+            break;
          case sgeE_EXECHOST_LIST:
             lp = Master_Exechost_List;
             break;
@@ -3266,11 +3263,12 @@ static void total_update_event(lListElem *event_client, ev_event type)
             return;
       } /* switch */
 
+      if (lp != NULL) {
+         copy_lp = lCopyListHash(lGetListName(lp), lp, false);
+      }
       /* 'send_events()' will free the copy of 'lp' */
-      add_list_event_for_client (lGetUlong (event_client, EV_id), 0, type, 0, 0,
-                                 NULL, NULL, NULL, 
-                                 lCopyListHash (lGetListName (lp), lp, false), 
-                                 true);
+      add_list_event_for_client (id, 0, type, 0, 0, NULL, NULL, NULL, 
+                                 copy_lp, true);
    } /* if */
 
    DEXIT;

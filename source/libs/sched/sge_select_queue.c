@@ -776,8 +776,9 @@ int sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
 
 /* host */
    if(!ret){
-      if(!host)
+      if(host == NULL) {
          host = host_list_locate(exechost_list, lGetHost(queue, QU_qhostname));
+      }   
       load_attr = lGetList(host, EH_load_list); 
       config_attr = lGetList(host, EH_consumable_config_list);
       actual_attr = lGetList(host, EH_resource_utilization);
@@ -2541,7 +2542,6 @@ static void fill_category_use_t(sge_assignment_t *a, category_use_t *use_categor
    DEXIT;
    return;
 }
-
 
 /****** sge_select_queue/sge_tag_queues_suitable4job_comprehensively() *********
 *  NAME

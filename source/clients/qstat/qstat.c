@@ -422,18 +422,25 @@ char **argv
             const lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
             for_each(qep, qinstance_list) {
+               lListElem *host = NULL;
 
-               if (!(lGetUlong(qep, QU_tag) & TAG_SHOW_IT))
+               if (!(lGetUlong(qep, QU_tag) & TAG_SHOW_IT)) {
                   continue;
-
-               ret = sge_select_queue(lGetList(jep, JB_hard_resource_list), qep, 
-                     host_list_locate(exechost_list, lGetHost(qep, QU_qhostname)), 
-                     exechost_list, centry_list, true, 1);
-
-               if (ret==1) {
-                  show_job = 1;
-                  break;
                }
+               
+               host = host_list_locate(exechost_list, lGetHost(qep, QU_qhostname));
+               
+               if (host != NULL) {
+                  ret = sge_select_queue(lGetList(jep, JB_hard_resource_list), qep, 
+                                         host, exechost_list, centry_list, true, 1);
+
+                  if (ret==1) {
+                     show_job = 1;
+                     break;
+                  }
+               }
+               /* we should have an error message here, even so it should not happen, that
+                 we have queue instances without a host, but.... */
             }
          }   
 
@@ -1541,6 +1548,7 @@ u_long32 *isXML
          continue;
       }
       if (parse_string(ppcmdline, "-s", &alp, &argstr)) {
+
          if (argstr) {
             static char noflag = '$';
             static char* flags[] = {

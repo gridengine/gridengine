@@ -759,10 +759,12 @@ static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *
    
    DENTER(BASIS_LAYER, "get_attribute_list");
    
-   if (global)
+   if (global != NULL) {
       size += lGetNumberOfElem(lGetList(global, EH_load_list));
-   if (host)
+   }   
+   if (host != NULL) {
       size +=  lGetNumberOfElem( lGetList(host, EH_load_list));
+   }   
 
    filter = malloc(size * sizeof(char*)); 
    memset(filter, 0, size * sizeof(char*));

@@ -40,7 +40,7 @@ extern lList *Master_Submithost_List;
 
 
 bool host_is_referenced(const lListElem *host, lList **answer_list,
-                        const lList *queue_list);
+                        const lList *queue_list, const lList *hgrp_list);
 
 const char *host_get_load_value(lListElem *host, const char *name);
 

@@ -669,6 +669,7 @@ int *all_users
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-verify"))) {
       lRemoveElem(cmdline, ep);
       verify = 1;
+      nm_set(job_field, JB_env_list);
    } 
   
    if (job_field[1] == NoName) {

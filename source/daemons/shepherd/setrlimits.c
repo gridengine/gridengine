@@ -404,7 +404,7 @@ int trace_rlimit
       if (rlp->rlim_max < rlp->rlim_cur)
          rlp->rlim_cur = rlp->rlim_max;
 
-#if defined(ALINUX) || defined(LINUX5) || ( defined(SOLARIS) && !defined(SOLARIS64) ) || defined(NECSX4) || defined(NECSX5)
+#if defined(ALINUX) || defined(LINUX5) || defined(IA64LINUX) || ( defined(SOLARIS) && !defined(SOLARIS64) ) || defined(NECSX4) || defined(NECSX5)
 #  define limit_fmt "%ld"
 #elif defined(LINUX6) || defined(IRIX6) || defined(HP11) || defined(HP10) || defined(DARWIN) || defined(FREEBSD)
 #  define limit_fmt "%lld"

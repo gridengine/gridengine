@@ -143,6 +143,9 @@ if [ -x /bin/uname ]; then
    Linux,sparc)
       ARCH=slinux
       ;;
+   Linux,ia64)
+      ARCH=ia64linux
+      ;;
    Linux,*)
       rev="`/bin/uname -r`"
       case $rev in
@@ -237,7 +240,7 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
    solaris|solaris64)
       DEFAULTMANPATH=/usr/share/man
       ;;
-   alinux|glinux)
+   alinux|glinux|ia64linux)
       if [ "`which manpath 2>/dev/null`" != "" ]; then
          DEFAULTMANPATH=`manpath 2>/dev/null`
       else

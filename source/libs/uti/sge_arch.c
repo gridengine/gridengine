@@ -123,6 +123,8 @@ const char *sge_get_arch()
 # endif
 #elif defined(DARWIN)
 #   define ARCHBIN "darwin"   
+#elif defined(IA64LINUX)
+#   define ARCHBIN "ia64linux"
 #else
 #   pragma "Define an architecture for SGE"
 #endif

@@ -116,7 +116,13 @@ PreCheckForFastInstall()
    fi
 
 
-   this_dir_user=`$V5UTILBIN/filestat -owner .`
+   this_dir_user=`$V5UTILBIN/filestat -owner . 2> /dev/null`
+   ret=$?
+   if [ $ret != 0 ]; then
+      $INFOTEXT "\nCan't resolve user name from current directory.\n" \
+                "Installation failed. Exit.\n"
+      exit 1           
+   fi
 
    if [ $this_dir_user = root ]; then
       touch ./tst$$ 2> /dev/null > /dev/null
@@ -1037,7 +1043,13 @@ CheckWhoInstallsQsyst()
    fi
 
    # from here only root
-   this_dir_user=`$V5UTILBIN/filestat -owner .`
+   this_dir_user=`$V5UTILBIN/filestat -owner . 2> /dev/null`
+   ret=$?
+   if [ $ret != 0 ]; then
+      $INFOTEXT "\nCan't resolve user name from current directory.\n" \
+                "Installation failed. Exit.\n"
+      exit 1           
+   fi
 
    if [ $this_dir_user != root ]; then
       $CLEAR

@@ -1,3 +1,7 @@
+CR-2002-06-25-0: Bugfix:    script syntax error in exe host installation
+                 Issue:     #297
+                 Bugtraq:   #4705893
+
 CR-2002-06-24-0: Enhancem.  I18N : added message ids, switched off per default
                             later: use qmaster/execd parameter to enable
                                    error id output change "on the fly".

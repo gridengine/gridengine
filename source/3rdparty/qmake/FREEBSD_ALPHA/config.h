@@ -375,5 +375,5 @@
 /* #undef _LARGE_FILES */
 
 /* Build host information. */
-#define MAKE_HOST "alpha-unknown-freebsd
+#define MAKE_HOST "alpha-unknown-freebsd"
 

@@ -1,0 +1,11 @@
+The idl files contained in this directory are part of Orbacus 3.3
+
+They are used in "qidl", an experimatial project for Grid Engine.
+Sourcecode concering qidl can be found in:
+
+   gridengine/source/experimental/qidl/src
+
+The full orbacus dirstibution can be downloaded here:
+   
+   ftp://ftp.orbacus.com/pub/OB/3.3
+   http://www.orbacus.com

@@ -36,7 +36,7 @@
 
 #include "sge_dstring.h"
 
-/****** sgeobj/Object/--Object-Handling ***************************************
+/****** sgeobj/object/--Object-Handling ***************************************
 *
 *  NAME
 *     Object Handling -- utilities for sgeobj object access
@@ -71,7 +71,7 @@
       lSetString(ep, nm, NULL); \
    }
 
-/****** sgeobj/Object/--Object-Typedefs ***************************************
+/****** sgeobj/object/--Object-Typedefs ***************************************
 *
 *  NAME
 *     Object-Typedefs -- typedefs for generic object handling

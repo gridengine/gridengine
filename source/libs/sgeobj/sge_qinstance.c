@@ -297,6 +297,30 @@ bool qinstance_check_owner(const lListElem *this_elem, const char *user_name)
    return ret;
 }
 
+/****** sgeobj/qinstance/qinstance_is_pe_referenced() *************************
+*  NAME
+*     qinstance_is_pe_referenced() -- Is the PE object referenced 
+*
+*  SYNOPSIS
+*     bool 
+*     qinstance_is_pe_referenced(const lListElem *this_elem, 
+*                                const lListElem *pe) 
+*
+*  FUNCTION
+*     Is the given PE ("pe") referenced in the qinstance element "this_elem". 
+*
+*  INPUTS
+*     const lListElem *this_elem - QU_Type element 
+*     const lListElem *pe        - PE_Type element 
+*
+*  RESULT
+*     bool - test result 
+*        true  - is referenced 
+*        false - is not referenced 
+*
+*  NOTES
+*     MT-NOTE: qinstance_is_pe_referenced() is MT safe 
+*******************************************************************************/
 bool
 qinstance_is_pe_referenced(const lListElem *this_elem, const lListElem *pe)
 {
@@ -314,6 +338,30 @@ qinstance_is_pe_referenced(const lListElem *this_elem, const lListElem *pe)
    return ret;
 }
 
+/****** sgeobj/qinstance/qinstance_is_calendar_referenced() *******************
+*  NAME
+*     qinstance_is_calendar_referenced() -- is the calendar referenced 
+*
+*  SYNOPSIS
+*     bool 
+*     qinstance_is_calendar_referenced(const lListElem *this_elem, 
+*                                      const lListElem *calendar) 
+*
+*  FUNCTION
+*     Is the "calendar" referenced in the qinstance "this_elem". 
+*
+*  INPUTS
+*     const lListElem *this_elem - QU_Type element 
+*     const lListElem *calendar  - CAL_Type element 
+*
+*  RESULT
+*     bool - test result 
+*        true  - is referenced
+*        false - is not referenced 
+*
+*  NOTES
+*     MT-NOTE: qinstance_is_calendar_referenced() is MT safe 
+*******************************************************************************/
 bool
 qinstance_is_calendar_referenced(const lListElem *this_elem, 
                                  const lListElem *calendar)
@@ -334,6 +382,27 @@ qinstance_is_calendar_referenced(const lListElem *this_elem,
    return ret;
 }
 
+/****** sgeobj/qinstance/qinstance_is_a_pe_referenced() ***********************
+*  NAME
+*     qinstance_is_a_pe_referenced() -- is a PE referenced
+*
+*  SYNOPSIS
+*     bool qinstance_is_a_pe_referenced(const lListElem *this_elem) 
+*
+*  FUNCTION
+*     Test is at least one PE is referenced by qinstance "this_elem" 
+*
+*  INPUTS
+*     const lListElem *this_elem - QU_Type 
+*
+*  RESULT
+*     bool - test result
+*        true  - an PE is referenced
+*        false - no PE is referenced ("NONE")
+*
+*  NOTES
+*     MT-NOTE: qinstance_is_a_pe_referenced() is MT safe 
+*******************************************************************************/
 bool
 qinstance_is_a_pe_referenced(const lListElem *this_elem)
 {
@@ -347,6 +416,31 @@ qinstance_is_a_pe_referenced(const lListElem *this_elem)
    return ret;
 }
 
+/****** sgeobj/qinstance/qinstance_is_ckpt_referenced() ***********************
+*  NAME
+*     qinstance_is_ckpt_referenced() -- Is the CKTP referenced 
+*
+*  SYNOPSIS
+*     bool 
+*     qinstance_is_ckpt_referenced(const lListElem *this_elem, 
+*                                  const lListElem *ckpt) 
+*
+*  FUNCTION
+*     Tests if the given CKPT object ("ckpt") is referenced in
+*     the qinstance "this_elem". 
+*
+*  INPUTS
+*     const lListElem *this_elem - QU_Type element
+*     const lListElem *ckpt      - CKPT_Type element
+*
+*  RESULT
+*     bool - test result
+*        true  - CKPT is referenced
+*        false - CKPT is not referenced
+*
+*  NOTES
+*     MT-NOTE: qinstance_is_ckpt_referenced() is MT safe 
+*******************************************************************************/
 bool
 qinstance_is_ckpt_referenced(const lListElem *this_elem, const lListElem *ckpt)
 {
@@ -365,6 +459,27 @@ qinstance_is_ckpt_referenced(const lListElem *this_elem, const lListElem *ckpt)
    return ret;
 }
 
+/****** sgeobj/qinstance/qinstance_is_a_ckpt_referenced() *********************
+*  NAME
+*     qinstance_is_a_ckpt_referenced() -- Is an CKPT object referenced 
+*
+*  SYNOPSIS
+*     bool qinstance_is_a_ckpt_referenced(const lListElem *this_elem) 
+*
+*  FUNCTION
+*     Is an CKPT object referenced in "this_elem". 
+*
+*  INPUTS
+*     const lListElem *this_elem - CKPT_Type element 
+*
+*  RESULT
+*     bool - test result
+*        true  - a CKPT is referenced
+*        false - no CKPT is referenced
+*
+*  NOTES
+*     MT-NOTE: qinstance_is_a_ckpt_referenced() is MT safe 
+*******************************************************************************/
 bool
 qinstance_is_a_ckpt_referenced(const lListElem *this_elem)
 {
@@ -378,6 +493,31 @@ qinstance_is_a_ckpt_referenced(const lListElem *this_elem)
    return ret;
 } 
 
+/****** sgeobj/qinstance/qinstance_is_centry_referenced() *********************
+*  NAME
+*     qinstance_is_centry_referenced() -- Is the given CENTRY object referenced 
+*
+*  SYNOPSIS
+*     bool 
+*     qinstance_is_centry_referenced(const lListElem *this_elem, 
+*                                    const lListElem *centry) 
+*
+*  FUNCTION
+*     Is the given CENTRY object ("centry") referenced by the qinstance
+*     "this_elem". 
+*
+*  INPUTS
+*     const lListElem *this_elem - QU_Type element 
+*     const lListElem *centry    - CE_Type element
+*
+*  RESULT
+*     bool - test result
+*        true  - is referenced
+*        fasle - is not referenced
+*
+*  NOTES
+*     MT-NOTE: qinstance_is_centry_referenced() is MT safe 
+*******************************************************************************/
 bool
 qinstance_is_centry_referenced(const lListElem *this_elem, 
                                const lListElem *centry)
@@ -407,6 +547,29 @@ qinstance_is_centry_referenced(const lListElem *this_elem,
    return ret;
 }
 
+/****** sgeobj/qinstance/qinstance_is_centry_a_complex_value() ****************
+*  NAME
+*     qinstance_is_centry_a_complex_value() -- Is it a complex_value 
+*
+*  SYNOPSIS
+*     bool 
+*     qinstance_is_centry_a_complex_value(const lListElem *this_elem, 
+*                                         const lListElem *centry) 
+*
+*  FUNCTION
+*     Is the given "centry" in the list of complex_values of "this_elem".
+*
+*  INPUTS
+*     const lListElem *this_elem - QU_Type element 
+*     const lListElem *centry    - CE_Type element 
+*
+*  RESULT
+*     bool - test result
+*        true  - it is a complex value
+*        false - no complex value
+*  NOTES
+*     MT-NOTE: qinstance_is_centry_a_complex_value() is MT safe 
+*******************************************************************************/
 bool
 qinstance_is_centry_a_complex_value(const lListElem *this_elem,
                                     const lListElem *centry)
@@ -419,6 +582,30 @@ qinstance_is_centry_a_complex_value(const lListElem *this_elem,
    return ret;
 }
 
+/****** sgeobj/qinstance/qinstance_reinit_consumable_actual_list() ************
+*  NAME
+*     qinstance_reinit_consumable_actual_list() -- as it says 
+*
+*  SYNOPSIS
+*     bool 
+*     qinstance_reinit_consumable_actual_list(lListElem *this_elem, 
+*                                             lList **answer_list) 
+*
+*  FUNCTION
+*     Reinitialize the consumable actual values. 
+*
+*  INPUTS
+*     lListElem *this_elem - QU_Type element 
+*     lList **answer_list  - AN_Type element 
+*
+*  RESULT
+*     bool - error result
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: qinstance_reinit_consumable_actual_list() is MT safe 
+*******************************************************************************/
 bool
 qinstance_reinit_consumable_actual_list(lListElem *this_elem,
                                         lList **answer_list)
@@ -461,6 +648,37 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
    return ret;
 }
 
+/****** sgeobj/qinstance/qinstance_list_find_matching() ***********************
+*  NAME
+*     qinstance_list_find_matching() -- find certain qinstances 
+*
+*  SYNOPSIS
+*     bool 
+*     qinstance_list_find_matching(const lList *this_list, 
+*                                  lList **answer_list, 
+*                                  const char *hostname_pattern, 
+*                                  lList **qref_list) 
+*
+*  FUNCTION
+*     Finds all qinstances in "this_list" whose hostname part matches
+*     the "hostname_pattern" (fnmatch pattern) and stores the
+*     qinstance name in "qref_list". In case of any error "answer_list"
+*     will be filled.
+*
+*  INPUTS
+*     const lList *this_list       - QU_Type list 
+*     lList **answer_list          - AN_Type list 
+*     const char *hostname_pattern - fnmatch hostname pattern 
+*     lList **qref_list            - QR_Type list
+*
+*  RESULT
+*     bool - error result
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: qinstance_list_find_matching() is MT safe 
+*******************************************************************************/
 bool
 qinstance_list_find_matching(const lList *this_list, lList **answer_list,
                              const char *hostname_pattern, lList **qref_list)
@@ -488,14 +706,32 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
    return ret;
 }
 
-int 
+/****** sgeobj/qinstance/qinstance_slots_used() *******************************
+*  NAME
+*     qinstance_slots_used() -- Returns the number of currently used slots 
+*
+*  SYNOPSIS
+*     int qinstance_slots_used(const lListElem *this_elem) 
+*
+*  FUNCTION
+*     Returns the number of currently used slots. 
+*
+*  INPUTS
+*     const lListElem *this_elem - QU_Type element 
+*
+*  RESULT
+*     int - number of slots
+*
+*  NOTES
+*     MT-NOTE: qinstance_slots_used() is MT safe 
+*******************************************************************************/
+int
 qinstance_slots_used(const lListElem *this_elem) 
 {
    int ret = 1000000;
    lListElem *slots;
 
    DENTER(QINSTANCE_LAYER, "qinstance_slots_used");
-
    slots = lGetSubStr(this_elem, RUE_name, "slots", QU_resource_utilization);
    if (slots != NULL) {
       ret = lGetDouble(slots, RUE_utilized_now);
@@ -508,6 +744,26 @@ qinstance_slots_used(const lListElem *this_elem)
    return ret;
 }
 
+/****** sgeobj/qinstance/qinstance_set_slots_used() ***************************
+*  NAME
+*     qinstance_set_slots_used() -- Modifies the number of used slots 
+*
+*  SYNOPSIS
+*     void qinstance_set_slots_used(lListElem *this_elem, int new_slots) 
+*
+*  FUNCTION
+*     Modifies the number of used slots 
+*
+*  INPUTS
+*     lListElem *this_elem - QU_Type 
+*     int new_slots        - new slot value 
+*
+*  RESULT
+*     void - NONE 
+*
+*  NOTES
+*     MT-NOTE: qinstance_set_slots_used() is MT safe 
+*******************************************************************************/
 void
 qinstance_set_slots_used(lListElem *this_elem, int new_slots) 
 {
@@ -581,12 +837,13 @@ qinstance_check_unknown_state(lListElem *this_elem)
 }
 
 int 
-qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list, int slots)
+qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list, 
+                           int slots)
 {
    return rc_debit_consumable(jep, qep, centry_list, slots,
-                           QU_consumable_config_list, 
-                           QU_resource_utilization,
-                           lGetString(qep, QU_qname));
+                              QU_consumable_config_list, 
+                              QU_resource_utilization,
+                              lGetString(qep, QU_qname));
 }
 
 /****** lib/sgeobj/debit_consumable() ****************************************
@@ -594,8 +851,10 @@ qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list, i
 *     rc_debit_consumable() -- Debit/Undebit consumables from resource container
 *
 *  SYNOPSIS
-*     int rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, 
-*             int slots, int config_nm, int actual_nm, const char *obj_name)
+*     int 
+*     rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, 
+*                         int slots, int config_nm, int actual_nm, 
+*                         const char *obj_name)
 *
 *  FUNCTION
 *     Updates all consumable actual values of a resource container
@@ -632,8 +891,9 @@ qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list, i
 ********************************************************************************
 */
 int 
-rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots, 
-                 int config_nm, int actual_nm, const char *obj_name) 
+rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, 
+                    int slots, int config_nm, int actual_nm, 
+                    const char *obj_name) 
 {
    lListElem *cr, *cr_config, *dcep;
    double dval;

@@ -2375,27 +2375,29 @@ bool job_has_valid_account_string(const lListElem *job, lList **answer_list)
    return ret;
 }
 
-/****** sge_job/job_resolve_host_for_path_list() *******************************
+/****** sgeobj/job/job_resolve_host_for_path_list() ***************************
 *  NAME
-*     job_resolve_host_for_path_list() -- is a hostname valid 
+*     job_resolve_host_for_path_list() -- resolves hostnames in path lists 
 *
 *  SYNOPSIS
-*     int job_resolve_host_for_path_list(const lListElem *job, lList 
-*     **answer_list, int name) 
+*     int 
+*     job_resolve_host_for_path_list(const lListElem *job, 
+*                                    lList **answer_list, int name) 
 *
 *  FUNCTION
-*     ??? 
+*     Resolves hostnames in path lists. 
 *
 *  INPUTS
 *     const lListElem *job - the submited cull list 
 *     lList **answer_list  - AN_Type element
-*     int name             - a JB_Type ( JB_stderr_path_list or JB_stout_path_list)
+*     int name             - a JB_Type (JB_stderr_path_list or 
+*                                       JB_stout_path_list)
 *
 *  RESULT
-*     int - error code ( STATUS_OK, or ...) 
-*
+*     int - error code (STATUS_OK, or ...) 
 *******************************************************************************/
-int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, int name)
+int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, 
+                                   int name)
 {
    bool ret_error=false;
    lListElem *ep;

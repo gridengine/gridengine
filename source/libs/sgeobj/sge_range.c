@@ -549,8 +549,7 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
    return end;
 }
 
-
-/****** sge_range/range_list_get_average() *************************************
+/****** sgeobj/range/range_list_get_average() *********************************
 *  NAME
 *     range_list_get_average() -- Return average of all numbers in range.
 *
@@ -587,10 +586,8 @@ double range_list_get_average(const lList *this_list, u_long32 upperbound)
          n++;
       }
    }
-
-   return (n>0)?(sum/n):0;
+   return (n > 0) ? (sum/n) : 0;
 }
-
 
 /******asgeobj/range/range_list_sort_uniq_compress() **************************
 *  NAME

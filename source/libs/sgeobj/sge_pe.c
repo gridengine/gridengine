@@ -215,7 +215,7 @@ bool pe_is_referenced(const lListElem *pe, lList **answer_list,
    return ret;
 }
 
-/****** gdi/pe/pe_validate() ***************************************************
+/****** sgeobj/pe/pe_validate() ***********************************************
 *  NAME
 *     pe_validate() -- validate a parallel environment
 *

@@ -807,7 +807,7 @@ void answer_list_replace(lList **answer_list, lList **new_list)
    DEXIT;
 }
 
-/****** sge/answer/answer_list_append_list() ***********************************
+/****** sgeobj/answer/answer_list_append_list() *******************************
 *  NAME
 *     answer_list_append_list() -- Append two lists 
 *

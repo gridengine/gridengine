@@ -230,7 +230,7 @@ u_long32 suser_get_job_counter(lListElem *suser)
    return ret;
 }
 
-/****** gdi/suser/suser_check_new_job() ************************************
+/****** sgeobj/suser/suser_check_new_job() ************************************
 *  NAME
 *     suser_check_new_job() -- checks, if a job can be registered
 *
@@ -330,7 +330,7 @@ int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
    return ret;
 }
 
-/****** gdi/suser/suser_get_job_count(const lListElem *job) **************************************
+/****** sgeobj/suser/suser_get_job_count() ************************************
 *  NAME
 *     suser_job_count() - number of jobs for a given user
 *
@@ -338,6 +338,7 @@ int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
 *     void suser_job_count(const lListElem *job) 
 *
 *  FUNCTION
+*     number of jobs for a given user
 *
 *  INPUTS
 *     const lListElem *job - JB_Type element 

@@ -43,7 +43,7 @@
 #include "sge_qinstance_state.h"
 #include "msg_sgeobjlib.h"
 
-/****** sgelib/qinstance/--State_Chart() **************************************
+/****** sgeobj/qinstance_state/--State_Chart() ********************************
 *
 *         /---------------------------------------------------\
 *         |                     exists                        |
@@ -214,8 +214,9 @@ bool qinstance_has_state(const lListElem *this_elem, u_long32 bit) {
    bool ret = true;
 
    if (bit != U_LONG32_MAX) {
-      return (lGetUlong(this_elem, QU_state) & bit) ? true : false;
+      ret = (lGetUlong(this_elem, QU_state) & bit) ? true : false;
    }
+   return ret;
 }
 
 /****** sgeobj/qinstance_state/transition_is_valid_for_qinstance() ************

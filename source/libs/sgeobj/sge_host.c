@@ -425,7 +425,7 @@ host_list_merge(lList *this_list)
    return ret;
 }
 
-/****** sge_host/host_merge() **************************************************
+/****** sgeobj/host/host_merge() **********************************************
 *  NAME
 *     host_merge() -- merge global host settings into an exec host
 *

@@ -60,6 +60,19 @@ performance benefit on the throughput of your cluster:</P>
 	set 'job_load_adjustments' to 'none' and
 	'load_adjustment_decay_time' to '0' in the scheduler configuration
 	sched_conf(5).</P>
+	<LI><P><b>scheduling-on-demand</b></P>
+	<P>The default for Grid Engine is to start scheduling runs in a fixed 
+   schedule interval (see schedule_interval in schedd_conf(5)). The good 
+   thing with fixed intervals is that they limit the cpu time consumption 
+   of the qmaster/scheduler. The bad thing is that it throttles the scheduler 
+   artificially resulting in a limited throughput. In many compute farms 
+   there are machines specifically dedicated to qmaster/scheduler and in 
+   such setups there is no reason for throttling the scheduler.</P>
+   <P>Scheduling-on-demand can be configured using the FLUSH_SUBMIT_SEC and 
+   FLUSH_FINISH_SEC settings in the schedd_params section of 
+   the global cluster configuration sge_conf(5). If scheduling-on-demand 
+   is activated the throuput of a compute farm is only limited by the power 
+   of the machine hosting qmaster/scheduler.</P>
 </UL>
 <p></p>
 </table>

@@ -1,4 +1,10 @@
-SG-2003-06-10-0: Bugix:     I added a new bug while fixing issue 540
+JG-2003-06-10-0: Bugfix:    An incomplete resource request (-l =1) caused 
+                            qmaster to crash.
+                 Bugtraq:   4876169
+                 Review:    AS
+                 Changed:   sge_qmaster, qsub, qsh, qhost, qalter, qstat
+
+SG-2003-06-10-0: Bugfix:    I added a new bug while fixing issue 540
                             The qmaster creashed in a special error case.
                   Review:   AA
                   Changed:  qmaster

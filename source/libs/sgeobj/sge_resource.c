@@ -40,6 +40,7 @@
 #include "sge_range.h"
 #include "sge_complex.h"
 
+#include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
 /*
@@ -102,8 +103,22 @@ sge_parse_resources(lList *complex_attributes,
       ** recursive strtoks didnt work
       */
       attr = cp;
-      if ((value = strchr(cp, '=')))
+      if ((value = strchr(cp, '='))) {
          *value++ = 0;
+      }
+
+      if (attr == NULL || *attr == '\0') {
+         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, ""));
+         lFreeList(complex_attributes);
+         DEXIT;
+         return NULL;
+      }
+      if (value == NULL || *value == '\0') {
+         ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, attr));
+         lFreeList(complex_attributes);
+         DEXIT;
+         return NULL;
+      }
 
       lSetString(complex_attribute, CE_name, attr);
       lSetString(complex_attribute, CE_stringval, value);

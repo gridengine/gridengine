@@ -1,3 +1,6 @@
+CR-2001-12-10-0: Testsuite: using catch to prevent testsuite abort when a test 
+                            produces a tcl error.
+
 EB-2001-12-10-0: Bugfix:    Fix in sgeee scheduler where pending tickets 
                             are moved into the template for pending tasks 
 

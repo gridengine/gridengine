@@ -3440,8 +3440,16 @@ proc run_test_level {path runcompleted level {do_save 1}} {
          set CHECK_CUR_PROC_RESULTS "" 
          set CHECK_CUR_PROC_NAME $elem
          set set_error_proc_called 0  
- 
-         $elem
+
+         # this starts the test procedure
+         set catch_return [ catch { $elem } errMsg ]
+         if { $catch_return != 0 } {
+            puts $CHECK_OUTPUT $errMsg
+            add_proc_error "run_test_level" "-2" "catch returns not 0\n${errMsg}" 
+            set_error -2 "tcl error"
+            return -1 
+         } 
+#         $elem
 
          
          # examine public procedure error states

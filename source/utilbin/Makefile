@@ -77,8 +77,8 @@ include $(UTILBIN_DIR)/utilbin_dependencies
 ###############################################################################
 # rules to build object codes and binaries
 ###############################################################################
-uidgid:		uidgid.o
-		$(CC) -o $@  uidgid.o $(LFLAGS)
+uidgid:		uidgid.o 
+		$(CC) -o $@  uidgid.o $(LFLAGS) $(LIBS)
 
 uidgid.o:	$(UTILBIN_DIR)/uidgid.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/uidgid.c

@@ -413,7 +413,6 @@ static int sec_set_connid(char **buffer, int *buflen);
 static int sec_get_connid(char **buffer, u_long32 *buflen);
 static int sec_update_connlist(const cl_com_endpoint_t *sender);
 
-static void sec_error(void);
 static int sec_send_err(const cl_com_endpoint_t *sender, sge_pack_buffer *pb,
                         const char *err_msg, u_long32 request_mid, lList **alp);
 static int sec_insert_conn2list(u_long32 connid, const cl_com_endpoint_t *sender, const char *uniqueIdentifier);
@@ -532,9 +531,37 @@ static void debug_print_buffer(char *title, unsigned char *buf, int buflen)
    printf("------------------------------------------------------\n");
 }
 
+/*
+** NAME
+**   sec_error
+**
+** SYNOPSIS
+**   
+**   static void sec_error()
+**
+** DESCRIPTION
+**      This function prints error messages from crypto library
+**
+** NOTES
+**      MT-NOTE: sec_error() is MT safe
+*/
+static void sec_error(void)
+{
+   long   l;
+
+   DENTER(GDI_LAYER,"sec_error");
+   while ((l=sec_ERR_get_error())){
+      ERROR((SGE_EVENT, "%s\n", sec_ERR_error_string(l, NULL)));
+   }
+   DEXIT;
+}
+
+
 #  define DEBUG_PRINT(x, y)              printf(x,y)
 #  define DEBUG_PRINT_BUFFER(x,y,z)      debug_print_buffer(x,y,z)
+#  define sge_sec_error()                sec_error() 
 #else
+#  define sge_sec_error()
 #  define DEBUG_PRINT(x,y)
 #  define DEBUG_PRINT_BUFFER(x,y,z)
 #endif /* SEC_DEBUG */
@@ -1580,10 +1607,21 @@ int sec_receive_message(cl_com_handle_t* cl_handle,char* un_resolved_hostname, c
       /*
       ** reset connect state to force reannouncement
       */
+#if 0      
       if (message != NULL && *message != NULL /* && 
-               (*message)->message_tag == TAG_GDI_REQUEST */) {
+               (*message)->message_tag == TAG_GDI_REQUEST) { */
+         DPRINTF(("<<<<< resetting connect state >>>>>\n"));
          sec_state_set_connect(0);
       }
+#endif
+
+#if 1
+/* printf("\n\n===============> cl_commlib_receive_message: %d\n\n", i); */
+      if (i == CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
+         DPRINTF(("<<<<< resetting connect state >>>>>\n"));
+         sec_state_set_connect(0);
+      }
+#endif      
       DEXIT;
       return i;
    }
@@ -1786,7 +1824,7 @@ static int sec_files()
 
    gsd.x509 = sec_PEM_read_X509(fp, NULL, NULL, PREDEFINED_PW);
    if (gsd.x509 == NULL) {
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }
@@ -1794,7 +1832,7 @@ static int sec_files()
 
    if (!sec_verify_certificate(gsd.x509)) {
       ERROR((SGE_EVENT, MSG_SEC_FAILEDVERIFYOWNCERT));
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }
@@ -1812,7 +1850,7 @@ static int sec_files()
    fclose(fp);
 
    if (!gsd.private_key) {
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }   
@@ -2185,7 +2223,7 @@ const cl_com_endpoint_t *sender
    x509_master = sec_d2i_X509(NULL, &tmp, x509_master_len);
    if (!x509_master) {
       ERROR((SGE_EVENT, MSG_SEC_MASTERCERTREADFAILED));
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }
@@ -2197,7 +2235,7 @@ const cl_com_endpoint_t *sender
 
 
    if (!sec_verify_certificate(x509_master)) {
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }
@@ -2210,7 +2248,7 @@ const cl_com_endpoint_t *sender
    
    if(!master_key){
       ERROR((SGE_EVENT, MSG_SEC_MASTERGETPUBKEYFAILED));
-      sec_error();
+      sge_sec_error();
       i=-1;
       goto error;
    }
@@ -2239,14 +2277,14 @@ const cl_com_endpoint_t *sender
    if (!sec_EVP_OpenInit(&ectx, gsd->cipher, enc_key, enc_key_len, iv, gsd->private_key)) {
       ERROR((SGE_EVENT, MSG_SEC_EVPOPENINITFAILED));
       sec_EVP_CIPHER_CTX_cleanup(&ectx);
-      sec_error();
+      sge_sec_error();
       i=-1;
       goto error;
    }
    if (!sec_EVP_OpenUpdate(&ectx, sec_state_get_key_mat(), (int*) &tmp_key_mat_len, enc_key_mat, (int) enc_key_mat_len)) {
       ERROR((SGE_EVENT, MSG_SEC_EVPOPENUPDATEFAILED));
       sec_EVP_CIPHER_CTX_cleanup(&ectx);
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }
@@ -2391,7 +2429,7 @@ u_long32 response_id)
 
    if (!x509){
       ERROR((SGE_EVENT, MSG_SEC_CLIENTCERTREADFAILED));
-      sec_error();
+      sge_sec_error();
       sec_send_err(sender, &pb_respond, MSG_SEC_CLIENTCERTREADFAILED,
                    response_id, &alp);
       i = -1;
@@ -2401,7 +2439,7 @@ u_long32 response_id)
 
    if (!sec_verify_certificate(x509)) {
       ERROR((SGE_EVENT, MSG_SEC_CLIENTCERTVERIFYFAILED));
-      sec_error();
+      sge_sec_error();
       sec_send_err(sender, &pb_respond, MSG_SEC_CLIENTCERTVERIFYFAILED,
                    response_id, &alp);
       i = -1;
@@ -2430,7 +2468,7 @@ u_long32 response_id)
    
    if(!public_key[0]){
       ERROR((SGE_EVENT, MSG_SEC_CLIENTGETPUBKEYFAILED));
-      sec_error();
+      sge_sec_error();
       sec_send_err(sender,&pb_respond, MSG_SEC_CLIENTGETPUBKEYFAILED,
                    response_id, &alp);
       i=-1;
@@ -2476,7 +2514,7 @@ u_long32 response_id)
    sec_EVP_SignUpdate(&ctx, challenge, CHALL_LEN);
    if (!sec_EVP_SignFinal(&ctx, enc_challenge, (unsigned int*) &chall_enc_len, gsd.private_key)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTCHALLENGEFAILED));
-      sec_error();
+      sge_sec_error();
       sec_send_err(sender, &pb_respond, MSG_SEC_ENCRYPTCHALLENGEFAILED,
                    response_id, &alp);
       i = -1;
@@ -2498,7 +2536,7 @@ u_long32 response_id)
    if (!sec_EVP_SealInit(&ectx, gsd.cipher, ekey, &ekeylen, iv, public_key, 1)) {
       ERROR((SGE_EVENT, MSG_SEC_SEALINITFAILED));;
       sec_EVP_CIPHER_CTX_cleanup(&ectx);
-      sec_error();
+      sge_sec_error();
       sec_send_err(sender,&pb_respond, MSG_SEC_SEALINITFAILED, response_id,
                    &alp);
       i = -1;
@@ -2508,7 +2546,7 @@ u_long32 response_id)
    if (!sec_EVP_EncryptUpdate(&ectx, enc_key_mat, (int *)&enc_key_mat_len, sec_state_get_key_mat(), sec_state_get_key_mat_len())) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTKEYFAILED));
       sec_EVP_CIPHER_CTX_cleanup(&ectx);
-      sec_error();
+      sge_sec_error();
       sec_send_err(sender,&pb_respond, MSG_SEC_ENCRYPTKEYFAILED, response_id,
                    &alp);
       i = -1;
@@ -2669,13 +2707,13 @@ const int inbuflen
    sec_EVP_EncryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv);
    if (!sec_EVP_EncryptUpdate(&ctx, md_value, (int*) &enc_md_len, md_value, md_len)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMACFAILED));
-      sec_error();
+      sge_sec_error();
       i=-1;
       goto error;
    }
    if (!sec_EVP_EncryptFinal(&ctx, md_value, (int*) &enc_md_len)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMACFAILED));
-      sec_error();
+      sge_sec_error();
       i=-1;
       goto error;
    }
@@ -2688,13 +2726,13 @@ const int inbuflen
       if (!sec_EVP_EncryptUpdate(&ctx, (unsigned char *) outbuf, (int*)&outlen,
                               (unsigned char*)inbuf, inbuflen)) {
          ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
-         sec_error();
+         sge_sec_error();
          i=-1;
          goto error;
       }
       if (!sec_EVP_EncryptFinal(&ctx, (unsigned char*)outbuf, (int*) &outlen)) {
          ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
-         sec_error();
+         sge_sec_error();
          i=-1;
          goto error;
       }
@@ -2813,7 +2851,7 @@ static int sec_handle_announce(cl_com_handle_t* cl_handle, const cl_com_endpoint
    } else if (gsd.is_daemon) {
       sec_state_set_connect(0);
    } else {
-      printf("You should reconnect - please try command again!\n");
+/*       printf("You should reconnect - please try command again!\n"); */
       sec_state_set_connect(0);
 
       if (SGE_STAT(reconnect_file,&file_info) < 0) {
@@ -2981,7 +3019,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t 
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
       sec_EVP_CIPHER_CTX_cleanup(&ctx);
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }
@@ -2991,7 +3029,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t 
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
       sec_EVP_CIPHER_CTX_cleanup(&ctx);
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }
@@ -2999,7 +3037,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t 
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
       sec_EVP_CIPHER_CTX_cleanup(&ctx);
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }
@@ -3013,7 +3051,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t 
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
       sec_EVP_CIPHER_CTX_cleanup(&ctx);
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }
@@ -3022,7 +3060,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t 
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED));
       sec_EVP_CIPHER_CTX_cleanup(&ctx);
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }
@@ -3030,7 +3068,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t 
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED));
       sec_EVP_CIPHER_CTX_cleanup(&ctx);
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }
@@ -3134,7 +3172,7 @@ static int sec_reconnect()
                                  gsd.private_key->pkey.rsa, RSA_PKCS1_PADDING);
    if (nbytes <= 0) {
       ERROR((SGE_EVENT, MSG_SEC_DECRECONNECTFAILED));
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }
@@ -3246,7 +3284,7 @@ static int sec_write_data2hd()
                                RSA_PKCS1_PADDING);
    if (nbytes <= 0) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRECONNECTFAILED));
-      sec_error();
+      sge_sec_error();
       i = -1;
       goto error;
    }
@@ -3283,31 +3321,6 @@ static int sec_write_data2hd()
 
 
 /*===========================================================================*/
-
-/*
-** NAME
-**   sec_error
-**
-** SYNOPSIS
-**   
-**   static void sec_error()
-**
-** DESCRIPTION
-**      This function prints error messages from crypto library
-**
-** NOTES
-**      MT-NOTE: sec_error() is MT safe
-*/
-static void sec_error(void)
-{
-   long   l;
-
-   DENTER(GDI_LAYER,"sec_error");
-   while ((l=sec_ERR_get_error())){
-      ERROR((SGE_EVENT, "%s\n", sec_ERR_error_string(l, NULL)));
-   }
-   DEXIT;
-}
 
 /*
 ** NAME

@@ -47,7 +47,7 @@ static char header[] = "@fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell 
 extern char SFLN_ELN[];
 
 #ifdef ADD_SUN_COPYRIGHT
-static char mailto[] = "\nFor further information and feedback use: @fBn1ge6beta-support@@.sun.com@fR\n\n";
+static char mailto[] = "\n";
 #else
 static char mailto[] = "For further information and feedback please subscribe to the \"dev\" mailing list:\n\n   http://gridengine.sunsource.net/project/gridengine/maillist.html\n\n";
 #endif

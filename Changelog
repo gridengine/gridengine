@@ -1,3 +1,7 @@
+AA-2004-05-27-0: Bugfix:    - qmon_about mailto text
+                            - CSP reconnect problem
+                 Changed:   all
+
 DT-2004-05-27-0: Bugfix:    o Added DRMAA example programs to distinst
                             o Updated DRMAA README
                  Changed:   distinst, docs

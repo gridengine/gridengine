@@ -65,7 +65,7 @@ SpoolingQueryChange()
         SPOOLING_DIR=`Enter $SPOOLING_DIR`
      else
         SPOOLING_SERVER=none
-        $INFOTEXT -n "\nPlease enter the Database Directory now, even if you want to spool locally\n" \
+        $INFOTEXT -n "\nPlease enter the Database Directory now, even if you want to spool locally,\n" \
                      "it is necessary to enter this Database Directory. \n\nDefault: [%s] >> " `dirname $QMDIR`"/spooldb" 
                   SPOOLING_DIR=`dirname $QMDIR`"/spooldb" 
                   SPOOLING_DIR=`Enter $SPOOLING_DIR`        
@@ -104,7 +104,7 @@ SpoolingCheckParams()
       if [ $? = 0 -a $AUTO = "false" ]; then
          $INFOTEXT -log "Starting rpc server on host %s!" $SPOOLING_SERVER
          $INFOTEXT "Starting rpc server on host %s!" $SPOOLING_SERVER
-         exec $SGE_ROOT/$COMMONDIR/sgebdb start &
+         ExecuteAsAdmin $SGE_ROOT/$COMMONDIR/sgebdb start &
          sleep 5
          $INFOTEXT "The Berkeley DB has been started with these parameters:\n\n"
          $INFOTEXT "Spooling Server Name: %s" $SPOOLING_SERVER
@@ -173,18 +173,14 @@ InstallServerScript()
    $INFOTEXT -u "\nBerkeley DB startup script"
 
    # --- from here only if root installs ---
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
              "\nWe can install the startup script that\n" \
-             "Grid Engine is started at machine boot (y/n) [n] >> "
+             "Grid Engine is started at machine boot (y/n) [y] >> "
+   ret=$?
 
-   if [ $AUTO = "true" -a $ADD_TO_RC = "false" ]; then
+   if [ $ret = 1 -o $AUTO = "true" -a $ADD_TO_RC = "false" ]; then
       $CLEAR
       return
-   else
-      if [ $? = 1 ]; then
-         $CLEAR
-         return
-      fi
    fi
 
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d

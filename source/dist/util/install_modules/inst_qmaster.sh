@@ -495,7 +495,7 @@ SelectHostNameResolving()
      $INFOTEXT "\nAre all hosts of your cluster in one DNS domain? If this is\n" \
                "the case the hostnames\n\n" \
                "   >hostA< and >hostA.foo.com<\n\n" \
-               "would be treated as eqal, because the DNS domain name >foo.com<\n" \
+               "would be treated as equal, because the DNS domain name >foo.com<\n" \
                "is ignored when comparing hostnames.\n\n"
 
      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \

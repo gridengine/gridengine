@@ -1,3 +1,10 @@
+MD-2004-05-24-0: Bugfix:    - Berkeley DB RPC server is running as user root
+                            - inst_sge -db doesn't install rc script (typo)
+                            - typos
+                 Changed:   inst_sge
+                 Issue:     1060, 1059
+                 Review:    AA
+
 DT-2004-05-24-0: Bugfix:    o Cleaned up flatfile spooling error codes
                             o Cleaned up qconf error messages
                             o Reworked JAPI initialization to delay GDI calls

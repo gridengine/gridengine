@@ -54,7 +54,7 @@
 *
 *     void cull_hash_new(lList *lp, int name, int unique);
 *
-*     void cull_hash_insert(const lListElem *ep, const int pos);
+*     void cull_hash_insert(const lListElem *ep, const int pos, );
 *
 *     void cull_hash_remove(const lListElem *ep, const int pos);
 *
@@ -81,6 +81,14 @@
 *
 *  SEE ALSO
 *     uti/hash/--Hashtable
+*     cull/hash/cull_hash_create()
+*     cull/hash/cull_hash_new()
+*     cull/hash/cull_hash_insert()
+*     cull/hash/cull_hash_remove()
+*     cull/hash/cull_hash_elem()
+*     cull/hash/cull_hash_create()
+*     cull/hash/cull_hash_create()
+*     cull/hash/cull_hash_create()
 *******************************************************************************/
 
 /****** cull/hash/-CULL_Hashtable_Defines ****************************************************
@@ -355,6 +363,7 @@ void cull_hash_remove(const lListElem *ep, const int pos)
                      non_unique_hash *found = nuh->next;
                      nuh->next = found->next;
                      free(found);
+                     break;
                   } else {
                      nuh = nuh->next;
                   }

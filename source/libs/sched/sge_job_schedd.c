@@ -346,8 +346,16 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
 
                lDechainElem(*(job_lists[SPLIT_PENDING]), user_job);
                if (*(job_lists[SPLIT_PENDING_EXCLUDED]) == NULL) {
+                  lDescr *descr = user_job->descr;
+                  int pos = lGetPosInDescr(descr, JB_owner);
+        
+                  if (pos >= 0) {
+                     if (descr[pos].ht != NULL)  {
+                        FREE(descr[pos].ht);
+                     }
+                  }
                   *(job_lists[SPLIT_PENDING_EXCLUDED]) =
-                                      lCreateList("", lGetElemDescr(user_job));
+                                      lCreateList("", descr);
                }
 
                lAppendElem(*(job_lists[SPLIT_PENDING_EXCLUDED]), user_job);

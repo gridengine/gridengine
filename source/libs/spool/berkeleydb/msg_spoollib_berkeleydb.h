@@ -54,9 +54,9 @@
 #define MSG_BERKELEY_COULDNTCLOSEENVIRONMENT_SS _MESSAGE(70015, _("couldn't close database environment: "SFN": "SFN"\n"))
 #define MSG_BERKELEY_COULDNTESETUPLOCKDETECTION_S _MESSAGE(70016, _("couldn't setup deadlock detection: "SFN"\n"))
 #define MSG_BERKELEY_TXNALREADYOPEN _MESSAGE(70017, _("cannot open new transaction: There is already one open\n"))
-#define MSG_BERKELEY_ERRORSTARTINGTRANSACTION_S _MESSAGE(70016, _("error starting a transaction: "SFN"\n"))
-#define MSG_BERKELEY_TXNNOTOPEN _MESSAGE(70016, _("cannot close transaction: There is no open transaction\n"))
-#define MSG_BERKELEY_ABORTINGTRANSACTION _MESSAGE(70016, _("aborting transaction (rollback)\n"))
-#define MSG_BERKELEY_ERRORENDINGTRANSACTION_S _MESSAGE(70016, _("error ending a transaction: "SFN"\n"))
+#define MSG_BERKELEY_ERRORSTARTINGTRANSACTION_S _MESSAGE(70018, _("error starting a transaction: "SFN"\n"))
+#define MSG_BERKELEY_TXNNOTOPEN _MESSAGE(70019, _("cannot close transaction: There is no open transaction\n"))
+#define MSG_BERKELEY_ABORTINGTRANSACTION _MESSAGE(70020, _("aborting transaction (rollback)\n"))
+#define MSG_BERKELEY_ERRORENDINGTRANSACTION_S _MESSAGE(70021, _("error ending a transaction: "SFN"\n"))
 
 #endif /* __MSG_SPOOLLIB_BERKELEYDB_H */

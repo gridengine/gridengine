@@ -2,11 +2,6 @@
  Some Notes to the Jqmon
 ###########################
 
-Hartmut Gilde
-Date: 10.03.2000
-
-(Further detail and information can also be found in the "Diplomarbeit" written by Christian Birzer / Michael Röhrl)
-
 ############################
 
 
@@ -212,7 +207,10 @@ For the current version of Jqmon they are no longer needed.
 
 So the class structure may be simplified eventually.
 	
-	
+
+Copyright: 2001 by Sun Microsystems, Inc.
+ 
+All Rights Reserved.	
 	
 
 

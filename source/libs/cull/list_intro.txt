@@ -1,6 +1,11 @@
+
+
+
 LIST_INTRO(3)     Grid Engine List Library          LIST_INTRO(3)
 
-
+Copyright: 2001 by Sun Microsystems, Inc.
+ 
+All Rights Reserved.
 
 NAME
      Grid Engine List Library - a library providing generic list func-

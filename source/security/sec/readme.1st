@@ -4,3 +4,7 @@ binary directory of Grid Engine. After that you can build the Grid Engine
 code with 'aimk -secure'.
 
 The current implementation is not completely buildable.
+
+Copyright: 2001 by Sun Microsystems, Inc.
+ 
+All Rights Reserved.

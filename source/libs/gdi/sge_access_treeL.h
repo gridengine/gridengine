@@ -2,7 +2,6 @@
 #define __SGE_ACCESS_TREEL_H
 
 /*___INFO__MARK_BEGIN__*/
-
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -32,7 +31,6 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-
 /*___INFO__MARK_END__*/
 #ifndef __SGE_SORTL_H
 #define __SGE_SORTL_H

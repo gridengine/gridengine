@@ -1,6 +1,5 @@
 #!/usr/bin/perl -w
 
-# Qmon.pl, 2001-Mar-11, Markus Grabert
 
 use SGE;
 use Cull;

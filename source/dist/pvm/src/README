@@ -93,3 +93,8 @@ The default rule of the Makefile creates the binaries:
 If you don't have "libgpvm3", you may delete "spmd" from the "all:" rule in
 the Makefile. "Spmd" is not necessary for setting up the Grid Engine/Grid Engine Enterprise Edition parallel
 environment.
+
+   Copyright: 2001 by Sun Microsystems, Inc.
+ 
+   All Rights Reserved.
+

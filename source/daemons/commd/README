@@ -729,3 +729,9 @@ Special requests are requests from a commproc to the responsible commd. The
 are sent like messages to the commd. process_received_message() does the
 handling of these requests and sends back acknowledge to the commprocs.
 E.g. enroll() done by a commproc generates a special request.
+
+
+
+
+Copyright: 2001 by Sun Microsystems, Inc.
+ 

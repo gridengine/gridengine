@@ -1063,6 +1063,10 @@ proc get_spool_dir {host subdir} {
    if {[file exists $spool_config ]} {
       set f [open $spool_config r]
       while { [gets $f line] > 0 } {
+         if { [string first "#" $line ] == 0 } {
+            continue 
+         }  
+
          set string_tmp [lindex $line 0]
          puts $CHECK_OUTPUT "->$string_tmp"
          if {[string compare -nocase $host $string_tmp] == 0} {

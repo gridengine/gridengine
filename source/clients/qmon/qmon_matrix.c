@@ -321,6 +321,8 @@ XtPointer cld, cad;
          i++;
    }
 
+   DPRINTF(("rows_old = %d, rows_to_delete = %d, max_rows = %d\n", 
+            rows_old, rows_to_delete, max_rows));
    if ((rows_old - rows_to_delete) < max_rows) 
       XbaeMatrixAddRows(matrix, rows, NULL, NULL, NULL, (max_rows - rows));
 

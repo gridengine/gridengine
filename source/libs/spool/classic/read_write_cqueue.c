@@ -50,6 +50,7 @@
 #include "sge_io.h"
 #include "sge_conf.h"
 #include "sge_attr.h"
+#include "sge_feature.h"
 
 #include "msg_common.h"
 
@@ -119,18 +120,21 @@ int parsing_type
                                       AULNG_href)) ? -1 : 0;
    }
 
-   /* --------- CQ_fshare */
-   if (ret == 0) {
-      ret = (!set_conf_ulng_attr_list(alpp, clpp, fields, "fshare", ep, 
-                                      CQ_fshare, AULNG_Type, 
-                                      AULNG_href)) ? -1 : 0;
-   }
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
 
-   /* --------- CQ_oticket */
-   if (ret == 0) {
-      ret = (!set_conf_ulng_attr_list(alpp, clpp, fields, "oticket", ep, 
-                                      CQ_oticket, AULNG_Type, 
-                                      AULNG_href)) ? -1 : 0;
+      /* --------- CQ_fshare */
+      if (ret == 0) {
+         ret = (!set_conf_ulng_attr_list(alpp, clpp, fields, "fshare", ep, 
+                                         CQ_fshare, AULNG_Type, 
+                                         AULNG_href)) ? -1 : 0;
+      }
+
+      /* --------- CQ_oticket */
+      if (ret == 0) {
+         ret = (!set_conf_ulng_attr_list(alpp, clpp, fields, "oticket", ep, 
+                                         CQ_oticket, AULNG_Type, 
+                                         AULNG_href)) ? -1 : 0;
+      }
    }
 
    /* --------- CQ_rerun */
@@ -276,8 +280,92 @@ int parsing_type
    /* --------- CQ_tmpdir */
    if (ret == 0) {
       ret = (!set_conf_str_attr_list(alpp, clpp, fields, "tmpdir", ep,
-                                     CQ_tmpdir, AINTER_Type,
-                                     AINTER_href)) ? -1 : 0;
+                                     CQ_tmpdir, ASTR_Type,
+                                     ASTR_href)) ? -1 : 0;
+   }
+
+   /* --------- CQ_shell */
+   if (ret == 0) {
+      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "shell", ep,
+                                     CQ_shell, ASTR_Type,
+                                     ASTR_href)) ? -1 : 0;
+   }
+
+   /* --------- CQ_calendar */
+   if (ret == 0) {
+      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "calendar", ep,
+                                     CQ_calendar, ASTR_Type,
+                                     ASTR_href)) ? -1 : 0;
+   }
+
+   /* --------- CQ_priority */
+   if (ret == 0) {
+      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "priority", ep,
+                                     CQ_priority, ASTR_Type,
+                                     ASTR_href)) ? -1 : 0;
+   }
+
+   /* --------- CQ_processors */
+   if (ret == 0) {
+      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "processors", ep,
+                                     CQ_processors, ASTR_Type,
+                                     ASTR_href)) ? -1 : 0;
+   }
+
+   /* --------- CQ_prolog */
+   if (ret == 0) {
+      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "prolog", ep,
+                                     CQ_prolog, ASTR_Type,
+                                     ASTR_href)) ? -1 : 0;
+   }
+
+   /* --------- CQ_epilog */
+   if (ret == 0) {
+      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "epilog", ep,
+                                     CQ_epilog, ASTR_Type,
+                                     ASTR_href)) ? -1 : 0;
+   }
+
+   /* --------- CQ_shell_start_mode */
+   if (ret == 0) {
+      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "shell_start_mode", ep,
+                                     CQ_shell_start_mode, ASTR_Type,
+                                     ASTR_href)) ? -1 : 0;
+   }
+
+   /* --------- CQ_starter_method */
+   if (ret == 0) {
+      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "starter_method", ep,
+                                     CQ_starter_method, ASTR_Type,
+                                     ASTR_href)) ? -1 : 0;
+   }
+
+   /* --------- CQ_suspend_method */
+   if (ret == 0) {
+      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "suspend_method", ep,
+                                     CQ_suspend_method, ASTR_Type,
+                                     ASTR_href)) ? -1 : 0;
+   }
+
+   /* --------- CQ_resume_method */
+   if (ret == 0) {
+      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "resume_method", ep,
+                                     CQ_resume_method, ASTR_Type,
+                                     ASTR_href)) ? -1 : 0;
+   }
+
+   /* --------- CQ_terminate_method */
+   if (ret == 0) {
+      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "terminate_method", ep,
+                                     CQ_terminate_method, ASTR_Type,
+                                     ASTR_href)) ? -1 : 0;
+   }
+
+   /* --------- CQ_initial_state */
+   if (ret == 0) {
+      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "initial_state", ep,
+                                     CQ_initial_state, ASTR_Type,
+                                     ASTR_href)) ? -1 : 0;
    }
 
    /* --------- CQ_pe_list */
@@ -462,6 +550,34 @@ write_cqueue(int spool, int how, const lListElem *ep)
       }
    }
    {
+      const lList *str_attr_list = lGetList(ep, CQ_load_thresholds);
+
+      FPRINTF((fp, "load_thresholds    "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         celist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_suspend_thresholds);
+
+      FPRINTF((fp, "suspend_thresholds "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         celist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
       const lList *ulng_attr_list = lGetList(ep, CQ_nsuspend);
 
       FPRINTF((fp, "nsuspend           "));
@@ -473,6 +589,120 @@ write_cqueue(int spool, int how, const lListElem *ep)
          sge_dstring_free(&string);
       } else {
          FPRINTF((fp, "0\n"));
+      }
+   }
+   {
+      const lList *inter_attr_list = lGetList(ep, CQ_suspend_interval);
+
+      FPRINTF((fp, "suspend_interval   "));
+      if (inter_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         inter_attr_list_append_to_dstring(inter_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "00:05:00\n"));
+      }
+ 
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_priority);
+
+      FPRINTF((fp, "priority           "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         str_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "0\n"));
+      }
+ 
+   }
+   {
+      const lList *inter_attr_list = lGetList(ep, CQ_min_cpu_interval);
+
+      FPRINTF((fp, "min_cpu_interval   "));
+      if (inter_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         inter_attr_list_append_to_dstring(inter_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "00:05:00\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_processors);
+
+      FPRINTF((fp, "processors         "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         str_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "UNDEFINED\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_qtype);
+
+      FPRINTF((fp, "qtype              "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         qtlist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_ckpt_list);
+
+      FPRINTF((fp, "ckpt_list          "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         strlist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_pe_list);
+
+      FPRINTF((fp, "pe_list            "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         strlist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
+      const lList *bool_attr_list = lGetList(ep, CQ_rerun);
+
+      FPRINTF((fp, "rerun              "));
+      if (bool_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         bool_attr_list_append_to_dstring(bool_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "FALSE\n"));
       }
    }
    {
@@ -490,48 +720,373 @@ write_cqueue(int spool, int how, const lListElem *ep)
       }
    }
    {
-      const lList *ulng_attr_list = lGetList(ep, CQ_fshare);
+      const lList *str_attr_list = lGetList(ep, CQ_tmpdir);
 
-      FPRINTF((fp, "fshare             "));
-      if (ulng_attr_list != NULL) {
+      FPRINTF((fp, "tmpdir             "));
+      if (str_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
-         ulng_attr_list_append_to_dstring(ulng_attr_list, &string);
+         str_attr_list_append_to_dstring(str_attr_list, &string);
          FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
          sge_dstring_free(&string);
       } else {
-         FPRINTF((fp, "1\n"));
+         FPRINTF((fp, "NONE\n"));
+      }
+ 
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_shell);
+
+      FPRINTF((fp, "shell              "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         str_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "/bin/csh\n"));
+      }
+ 
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_prolog);
+
+      FPRINTF((fp, "prolog             "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         str_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+ 
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_epilog);
+
+      FPRINTF((fp, "epilog             "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         str_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+ 
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_shell_start_mode);
+
+      FPRINTF((fp, "shell_start_mode   "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         str_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+ 
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_starter_method);
+
+      FPRINTF((fp, "starter_method     "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         str_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+ 
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_suspend_method);
+
+      FPRINTF((fp, "suspend_method     "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         str_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+ 
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_resume_method);
+
+      FPRINTF((fp, "resume_method      "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         str_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+ 
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_terminate_method);
+
+      FPRINTF((fp, "terminate_method   "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         str_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+ 
+   }
+   {
+      const lList *inter_attr_list = lGetList(ep, CQ_notify);
+
+      FPRINTF((fp, "notify             "));
+      if (inter_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         inter_attr_list_append_to_dstring(inter_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "00:00:60\n"));
+      }
+ 
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_owner_list);
+
+      FPRINTF((fp, "owner_list         "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         usrlist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
       }
    }
    {
-      const lList *ulng_attr_list = lGetList(ep, CQ_oticket);
+      const lList *str_attr_list = lGetList(ep, CQ_acl);
 
-      FPRINTF((fp, "oticket            "));
-      if (ulng_attr_list != NULL) {
+      FPRINTF((fp, "user_lists         "));
+      if (str_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
-         ulng_attr_list_append_to_dstring(ulng_attr_list, &string);
+         usrlist_attr_list_append_to_dstring(str_attr_list, &string);
          FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
          sge_dstring_free(&string);
       } else {
-         FPRINTF((fp, "1\n"));
+         FPRINTF((fp, "NONE\n"));
       }
    }
    {
-      const lList *bool_attr_list = lGetList(ep, CQ_rerun);
+      const lList *str_attr_list = lGetList(ep, CQ_xacl);
 
-      FPRINTF((fp, "rerun              "));
-      if (bool_attr_list != NULL) {
+      FPRINTF((fp, "xuser_lists        "));
+      if (str_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
-         bool_attr_list_append_to_dstring(bool_attr_list, &string);
+         usrlist_attr_list_append_to_dstring(str_attr_list, &string);
          FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
          sge_dstring_free(&string);
       } else {
-         FPRINTF((fp, "FALSE\n"));
+         FPRINTF((fp, "NONE\n"));
       }
    }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_subordinate_list);
 
+      FPRINTF((fp, "subordinate_list   "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         solist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_consumable_config_list);
+
+      FPRINTF((fp, "complex_values     "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         celist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_projects);
+
+      FPRINTF((fp, "projects           "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         prjlist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_xprojects);
+
+      FPRINTF((fp, "xprojects          "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         prjlist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_calendar);
+
+      FPRINTF((fp, "calendar           "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         str_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+ 
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_initial_state);
+
+      FPRINTF((fp, "initial_state      "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         str_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "default\n"));
+      }
+ 
+   }
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      {
+         const lList *ulng_attr_list = lGetList(ep, CQ_fshare);
+
+         FPRINTF((fp, "fshare             "));
+         if (ulng_attr_list != NULL) {
+            dstring string = DSTRING_INIT;
+
+            ulng_attr_list_append_to_dstring(ulng_attr_list, &string);
+            FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+            sge_dstring_free(&string);
+         } else {
+            FPRINTF((fp, "1\n"));
+         }
+      }
+      {
+         const lList *ulng_attr_list = lGetList(ep, CQ_oticket);
+
+         FPRINTF((fp, "oticket            "));
+         if (ulng_attr_list != NULL) {
+            dstring string = DSTRING_INIT;
+
+            ulng_attr_list_append_to_dstring(ulng_attr_list, &string);
+            FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+            sge_dstring_free(&string);
+         } else {
+            FPRINTF((fp, "1\n"));
+         }
+      }
+   }
+   {
+      const lList *time_attr_list = lGetList(ep, CQ_s_rt);
+
+      FPRINTF((fp, "s_rt               "));
+      if (time_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         time_attr_list_append_to_dstring(time_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "INFINITY\n"));
+      }
+ 
+   }
+   {
+      const lList *time_attr_list = lGetList(ep, CQ_h_rt);
+
+      FPRINTF((fp, "h_rt               "));
+      if (time_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         time_attr_list_append_to_dstring(time_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "INFINITY\n"));
+      }
+ 
+   }
+   {
+      const lList *time_attr_list = lGetList(ep, CQ_s_cpu);
+
+      FPRINTF((fp, "s_cpu              "));
+      if (time_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         time_attr_list_append_to_dstring(time_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "INFINITY\n"));
+      }
+ 
+   }
+   {
+      const lList *time_attr_list = lGetList(ep, CQ_h_cpu);
+
+      FPRINTF((fp, "h_cpu              "));
+      if (time_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         time_attr_list_append_to_dstring(time_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "INFINITY\n"));
+      }
+ 
+   }
    {
       const lList *mem_attr_list = lGetList(ep, CQ_s_fsize);
 
@@ -711,294 +1266,6 @@ write_cqueue(int spool, int how, const lListElem *ep)
          FPRINTF((fp, "INFINITY\n"));
       }
  
-   }
-   {
-      const lList *time_attr_list = lGetList(ep, CQ_s_rt);
-
-      FPRINTF((fp, "s_rt               "));
-      if (time_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         time_attr_list_append_to_dstring(time_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "INFINITY\n"));
-      }
- 
-   }
-   {
-      const lList *time_attr_list = lGetList(ep, CQ_h_rt);
-
-      FPRINTF((fp, "h_rt               "));
-      if (time_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         time_attr_list_append_to_dstring(time_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "INFINITY\n"));
-      }
- 
-   }
-   {
-      const lList *time_attr_list = lGetList(ep, CQ_s_cpu);
-
-      FPRINTF((fp, "s_cpu              "));
-      if (time_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         time_attr_list_append_to_dstring(time_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "INFINITY\n"));
-      }
- 
-   }
-   {
-      const lList *time_attr_list = lGetList(ep, CQ_h_cpu);
-
-      FPRINTF((fp, "h_cpu              "));
-      if (time_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         time_attr_list_append_to_dstring(time_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "INFINITY\n"));
-      }
- 
-   }
-   {
-      const lList *inter_attr_list = lGetList(ep, CQ_suspend_interval);
-
-      FPRINTF((fp, "suspend_interval   "));
-      if (inter_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         inter_attr_list_append_to_dstring(inter_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "00:05:00\n"));
-      }
- 
-   }
-   {
-      const lList *inter_attr_list = lGetList(ep, CQ_min_cpu_interval);
-
-      FPRINTF((fp, "min_cpu_interval   "));
-      if (inter_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         inter_attr_list_append_to_dstring(inter_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "00:05:00\n"));
-      }
- 
-   }
-   {
-      const lList *inter_attr_list = lGetList(ep, CQ_notify);
-
-      FPRINTF((fp, "notify             "));
-      if (inter_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         inter_attr_list_append_to_dstring(inter_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "00:00:60\n"));
-      }
- 
-   }
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_tmpdir);
-
-      FPRINTF((fp, "tmpdir             "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         str_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
- 
-   }
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_pe_list);
-
-      FPRINTF((fp, "pe_list            "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         strlist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
-   }
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_ckpt_list);
-
-      FPRINTF((fp, "ckpt_list          "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         strlist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
-   }
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_owner_list);
-
-      FPRINTF((fp, "owner_list         "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         usrlist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
-   }
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_acl);
-
-      FPRINTF((fp, "user_lists         "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         usrlist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
-   }
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_xacl);
-
-      FPRINTF((fp, "xuser_lists        "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         usrlist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
-   }
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_projects);
-
-      FPRINTF((fp, "projects           "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         prjlist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
-   }
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_xprojects);
-
-      FPRINTF((fp, "xprojects          "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         prjlist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
-   }
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_load_thresholds);
-
-      FPRINTF((fp, "load_thresholds    "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         celist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
-   }
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_suspend_thresholds);
-
-      FPRINTF((fp, "suspend_thresholds "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         celist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
-   }
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_consumable_config_list);
-
-      FPRINTF((fp, "complex_values     "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         celist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
-   }
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_subordinate_list);
-
-      FPRINTF((fp, "subordinate_list   "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         solist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
-   }
-   {
-      const lList *str_attr_list = lGetList(ep, CQ_qtype);
-
-      FPRINTF((fp, "qtype              "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         solist_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
    }
 #if 0 /* EB: TODO: APIBASE */ 
    {

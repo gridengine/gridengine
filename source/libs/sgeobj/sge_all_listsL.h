@@ -213,7 +213,6 @@ extern "C" {
       {ATIME_LOWERBOUND, ATIMES, ATIMEN},       /* CQ time limit sublist */
       {AMEM_LOWERBOUND, AMEMS, AMEMN},          /* CQ memory limit sublist */
       {AINTER_LOWERBOUND, AINTERS, AINTERN},    /* CQ interval sublist */
-      {ASTRING_LOWERBOUND, ASTRINGS, ASTRINGN}, /* CQ string sublist */
       {ASTRLIST_LOWERBOUND, ASTRLISTS, ASTRLISTN}, /* CQ ST_Type-list sublist */
       {AUSRLIST_LOWERBOUND, AUSRLISTS, AUSRLISTN}, /* CQ US_Type-list sublist */
       {APRJLIST_LOWERBOUND, APRJLISTS, APRJLISTN}, /* CQ UP_Type-list sublist */

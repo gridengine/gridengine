@@ -522,6 +522,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    }
 
    lWriteElemTo(cqueue, stderr);
+   lWriteElemTo(reduced_elem, stderr);
    
    DEXIT;
    if (ret) {

@@ -518,14 +518,18 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
 
             for (ptr = queue_types; **ptr != '\0'; ptr++) {
                if (bitmask & qtype) {
+                  if (qtype_defined) {
+                     sge_dstring_sprintf_append(&tmp_dstring, " ");
+                  } 
+                  sge_dstring_sprintf_append(&tmp_dstring, "%s", *ptr);
                   qtype_defined = true;
-                  sge_dstring_sprintf_append(&tmp_dstring, "%s ", *ptr);
                }
                bitmask <<= 1;
             };
             if (!qtype_defined) {
                sge_dstring_sprintf_append(&tmp_dstring, "NONE");
             }
+            result = sge_dstring_get_string(&tmp_dstring);
          }
          break;
    }
@@ -1438,7 +1442,7 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
                   char *endptr = NULL;
                   u_long32 value = strtol(value_str, &endptr, 10);
 
-                  if (*endptr == NULL) {
+                  if (*endptr == '\0') {
                      lSetUlong(tmp_elem, SO_threshold, value);
                   } else {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
@@ -1481,7 +1485,7 @@ object_parse_qtlist_from_string(lListElem *this_elem, lList **answer_list,
       u_long32 value;
       int pos = lGetPosViaElem(this_elem, name);
 
-      if (!sge_parse_bitfield_str(string, queue_types, &value, "", 
+      if (sge_parse_bitfield_str(string, queue_types, &value, "", 
                                  answer_list, true)) {
          lSetPosUlong(this_elem, pos, value);
       } else {

@@ -69,6 +69,7 @@
 #include "sge_gdi_request.h"
 #include "sge_manop.h"
 #include "qmaster_heartbeat.h"
+#include "sge_cuser.h"
 
 
 static void qmaster_init(char **anArgv);
@@ -80,10 +81,6 @@ static void qmaster_lock_and_shutdown(int anExitValue);
 static void process_cmdline(char **anArgv);
 static lList *parse_cmdline_qmaster(char **argv, lList **ppcmdline);
 static lList *parse_qmaster(lList **ppcmdline, lList **ppreflist, u_long32 *help);
-
-#ifndef __SGE_NO_USERMAPPING__
-static bool sge_map_gdi_request(sge_gdi_request*);
-#endif
 
 
 /****** main() ***************************************************************
@@ -596,7 +593,7 @@ void increment_heartbeat(time_t now)
 *     true  - user was mapped and pApiRequest is changed
 *     false - pApiRequest is unchanged, no guilty user mapping entry
 ******************************************************************************/
-static bool sge_map_gdi_request(sge_gdi_request *pApiRequest)
+bool sge_map_gdi_request(sge_gdi_request *pApiRequest)
 {
    const char *mapped_user = NULL;
    uid_t uid;
@@ -641,5 +638,5 @@ static bool sge_map_gdi_request(sge_gdi_request *pApiRequest)
 
    DEXIT;
    return true;
-} /* sge_map_gdi_request */
+} 
 #endif

@@ -46,7 +46,7 @@
 #include "sge_c_gdi.h"
 #include "sge_c_ack.h"
 #include "sge_c_report.h"
-
+#include "qmaster.h"
 
 /****** sge_qmaster_process_message() *********************************************
 *  NAME

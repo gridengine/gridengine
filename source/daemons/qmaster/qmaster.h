@@ -35,7 +35,13 @@
 #include "sge_gdiP.h"
 
 int main(int argc, char *argv[]);
+ 
 void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *answer);
+
 void increment_heartbeat(time_t now);
+
+#ifndef __SGE_NO_USERMAPPING__
+bool sge_map_gdi_request(sge_gdi_request*);
+#endif
 
 #endif /* _QMASTER_H_ */

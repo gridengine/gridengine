@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.1 2001/07/18 11:06:07 root Exp $	*/
+/*	$Id: rshd.c,v 1.2 2002/01/09 07:23:48 joga Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -568,7 +568,7 @@ fail:
    /* chdir(active_jobs_dir); */
    switch2admin_user();
    foreground = 0; /* setosjobid shall write to shepherd trace file */
-   setosjobid(NULL, 0, &add_grp_id, pwd);
+   setosjobid(0, &add_grp_id, pwd);
    switch2start_user();
    /* chdir(pwd->pw_dir); */
    

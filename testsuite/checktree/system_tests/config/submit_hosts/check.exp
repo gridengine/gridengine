@@ -183,7 +183,7 @@ proc submit_hosts_test {} {
    foreach submit_host $CHECK_SUBMIT_ONLY_HOSTS { 
       set actual_id [ expr ( $actual_id + 1 ) ]
       wait_for_jobstart $actual_id "leeper" 60
-#      wait_for_end_of_transfer $actual_id 60
+      wait_for_end_of_transfer $actual_id 60
       delete_job $actual_id
    }
 #   wait_for_enter

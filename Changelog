@@ -1,3 +1,9 @@
+CR-2002-02-13-0: Testsuite: secure feature: - add user keys for submit only hosts
+                                            - submit large script mod. timeout for
+                                              job end waiting
+                                            - submit hosts test: wait for end of
+                                              transfer before deleting job
+
 AS-2002-02-13-3: CVS:       Created V53_beta2_1_TAG
 ---------------------------------------------------
 

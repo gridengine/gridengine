@@ -52,6 +52,8 @@ FetchHostname()
         $INFOTEXT "Disabling queues now!"
         $INFOTEXT -log "Disabling queues now!"
         DisableQueue $h
+        SuspendQueue $h
+        SuspendJobs $h
         RescheduleJobs $h
         RemoveExecd $h
         RemoveQueues $h
@@ -76,6 +78,35 @@ DisableQueue()
 
    done
 
+
+}
+
+SuspendQueue()
+{
+   exechost=$1
+
+   for q in `qstat -f | grep $exechost | cut -d" " -f1`; do
+
+     $INFOTEXT "Suspending queue %s now" $q
+     $INFOTEXT -log "Suspending queue %s now" $q
+     qmod -sq $q
+
+   done
+
+
+}
+
+SuspendJobs()
+{
+   exechost=$1
+
+   for q in `qstat -f | grep $exechost | cut -d" " -f1`; do
+
+     $INFOTEXT "Suspending Checkpointing Jobs on queue %s now!" $q 
+     $INFOTEXT -log "Suspending Checkpointing Jobs on queue %s now!" $q 
+     qmod -sj $q
+
+   done
 
 }
 

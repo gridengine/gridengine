@@ -76,6 +76,7 @@ ADD_TO_RC=false
 QMASTER="undef"
 EXECD="undef"
 SHADOW="undef"
+BERKELEY="undef"
 TAR="undef"
 FILE="undef"
 HOST="undef"
@@ -141,6 +142,10 @@ while [ $ARGC != 0 ]; do
    -sm)
      SHADOW="install"
      #echo Install Shadowhost
+     ;;
+   -db)
+     BERKELEY="install"
+     . ./sge_config_modules/sge_config_qmaster.sh
      ;;
    -upd)
      UPGRADE=true
@@ -341,6 +346,20 @@ if [ $EXECD = "install" ]; then
  
 fi
 
+if [ $BERKELEY = "install" ]; then
+ 
+   BasicSettings
+   ProcessSGERoot
+   GetCell
+   COMMONDIR=$SGE_CELL/common
+   Makedir $SGE_CELL
+   Makedir $COMMONDIR 
+   SetSpoolingOptions
+   AddBootstrap
+   InitSpoolingDatabase
+
+
+fi
 
 if [ $EXECD = "uninstall" ]; then
  

@@ -1,3 +1,9 @@
+MD-2004-01-30-0: Enhancem.: - Added standalone DB installation funktionality
+                 Bugfix:    - Smoother remove of execd's and queues
+                            - deactivated /etc/services entries are not ignored
+                              anymore
+                 Changed:   -sge_config
+
 CR-2004-01-29-1: Enhancem.: Added support for /etc/services tcp entries:
                             "sge_qmaster" and "sge_execd"
 

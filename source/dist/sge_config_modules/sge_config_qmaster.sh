@@ -321,8 +321,9 @@ SpoolingCheckParams()
       $INFOTEXT -e "\nThe database directory >%s<\n" \
                    "is not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" $SPOOLING_DIR
          return 0
+      else
+         return 1
       fi
-      return 1
    else 
       # TODO: we should check if the hostname can be resolved
       # create a script to start the rpc server
@@ -370,7 +371,7 @@ CheckLocalFilesystem()
          fi
          ;;
       *linux)
-         df -l $FS | grep $FS >/dev/null 2>&1
+         df -l $FS >/dev/null 2>&1
          if [ $? -eq 0 ]; then
             return 1
          else
@@ -1212,8 +1213,10 @@ GetQmasterPort()
                elif [ $INP -le 1024 -a $euid != 0 ]; then
                   $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
                else
-                  ser=`awk '{ print $2 }' /etc/services | grep "^${INP}/tcp"`
-                  if [ "$ser" = "$INP/tcp" ]; then
+                  #ser=`awk '{ print $2 }' /etc/services | grep "^${INP}/tcp"`
+                  `cat /etc/services | grep -v "^#" | grep ${INP}`
+
+                  if [ $? = 0 ]; then
                      $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
                   else
                      done=true
@@ -1364,8 +1367,9 @@ GetExecdPort()
                elif [ $INP -le 1024 -a $euid != 0 ]; then
                   $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
                else
-                  ser=`awk '{ print $2 }' /etc/services | grep "^${INP}/tcp"`
-                  if [ "$ser" = "$INP/tcp" ]; then
+                  #ser=`awk '{ print $2 }' /etc/services | grep "^${INP}/tcp"`
+                  `cat /etc/services | grep -v "^#" | grep ${INP}`
+                  if [ $? = 0 ]; then
                      $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
                   else
                      done=true

@@ -1,3 +1,9 @@
+CR-2003-06-18-0: Testsuite: added new testsuite version names:
+                            - SGE_5.3prep4
+                            - SGEEE_5.3prep4
+                            - SGE_5.3p4
+                            - SGEEE_5.3p4
+
 EB-2003-06-17-0: Bugfix:    Checkpointed job was migrated on bad exit status
                             Restarted kernel/app level checkpointing jobs
                             where rescheduled forever

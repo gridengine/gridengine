@@ -53,7 +53,7 @@ set check_init_level_procedure "tight_integration_init_level"
 # define test's name and run level descriptions
 set check_name            "tight_integration"
 set check_category        "COMPATIBILITY SYSTEM"
-set check_highest_level   1
+set check_highest_level   0
 set check_description(0)  "check tightly integrated parallel jobs submitted with qsub"
 set check_description(1)  "check tightly integrated parallel jobs submitted with qrsh"
 
@@ -65,6 +65,10 @@ set check_needs           "init_core_system"
 set check_functions ""
 lappend check_functions "tight_integration_setup"
 lappend check_functions "tight_integration_function"
+lappend check_functions "tight_integration_iz_578";# env vars NSLOTS and NHOSTS
+lappend check_functions "tight_integration_master_killed"
+lappend check_functions "tight_integration_slave_killed"
+lappend check_functions "tight_integration_iz_575";# wallclock limit for tasks
 lappend check_functions "tight_integration_massive"
 lappend check_functions "tight_integration_cleanup"
 
@@ -106,7 +110,6 @@ proc tight_integration_setup  {} {
 
    # create parallel environment
    set pe(pe_name)            tight
-#   set pe(queue_list)         all
    set pe(slots)              1000
    set pe(user_lists)         none
    set pe(xuser_lists)        none
@@ -164,7 +167,7 @@ proc tight_integration_submit {cwd options script args} {
 
       qrsh {
          puts $CHECK_OUTPUT "submitting job using qrsh, reading from stdout/stderr"
-         set command "/bin/sh -c \\\"cd $cwd;$CHECK_PRODUCT_ROOT/bin/[resolve_arch $CHECK_HOST]/qrsh $options ./$script $job_args\\\""
+         set command "/bin/sh -c \\\"cd $cwd;$CHECK_PRODUCT_ROOT/bin/[resolve_arch $CHECK_HOST]/qrsh -noshell $options ./$script $job_args\\\""
          set sid [uplevel 1 open_spawn_process "\"$command\""]
       }
 
@@ -178,29 +181,31 @@ proc tight_integration_submit {cwd options script args} {
    return $sid
 }
 
-proc tight_integration_monitor {id started_var finished_var jobid_var} {
-   global CHECK_OUTPUT
+proc tight_integration_monitor {id started_var finished_var jobid_var info_var {iz_578 0}} {
+   global CHECK_OUTPUT CHECK_HOST
 
    upvar $started_var  started
    upvar $finished_var finished
    upvar $jobid_var    jobid
+   upvar $info_var     info
+
+   set ret "unknown"
 
    set sp_id [lindex $id 1]
-   set job_finished 0
    set timeout 180
 
-
+   
    expect_user {
       -i $sp_id timeout {
          add_proc_error tight_integration_monitor -1 "timeout waiting for tasks output"
-         set job_finished 1
+         set ret "timeout"
       }
       -i $sp_id full_buffer {
          add_proc_error tight_integration_monitor -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-         set job_finished 1
+         set ret "error"
       }
       -i $sp_id eof {
-         set job_finished 1
+         set ret "eof"
       }
       # workaround for a feature lacking in expect:
       # We have to parse complete lines.
@@ -213,33 +218,86 @@ proc tight_integration_monitor {id started_var finished_var jobid_var} {
             if {[string length [string trim $line]] > 0} {
                #puts $CHECK_OUTPUT "processing line: $line"
                switch -glob $line {
-                  "petask ??? started*" {
+                  "petask ??? with pid ???????? started on host*" {
                      set task [lindex $line 1]
+                     lappend info(tasks) $task
+                     set info($task,pid) [lindex $line 4]
+                     set info($task,host) [lindex $line 8]
                      incr started
                      puts $CHECK_OUTPUT "task $task started, total started: $started"
+                     set ret "task started"
                   }
-                  "petask ??? finished*" {
+                  "petask ??? with pid ???????? finished*" {
                      set task [lindex $line 1]
                      incr finished
                      puts $CHECK_OUTPUT "task $task finished, total finished: $finished"
+                     set ret "task finished"
                   }
-                  "master task started with job id*" {
+                  "master task started with job id ?????? and pid*" {
                      set jobid [lindex $line 6]
+                     lappend info(tasks) master
+                     set info(master,pid) [lindex $line 9]
+                     set info(master,host) $CHECK_HOST
                      puts $CHECK_OUTPUT "job $jobid started"
+                     set ret "master started"
                   }
                   "master task submitted all sub tasks*" {
                      puts $CHECK_OUTPUT "master task submitted all tasks"
+                     set ret "master submitted"
                   }
                   "master task exiting*" {
                      puts $CHECK_OUTPUT "job $jobid exited"
-                     set job_finished 1
+                     set ret "master finished"
+                  }
+                  "NSLOTS ??? NHOSTS ??? NQUEUES*" {
+                     if {$iz_578} {
+                        set nslots  [lindex $line 1]
+                        set nhosts  [lindex $line 3]
+                        set nqueues [lindex $line 5]
+                        puts $CHECK_OUTPUT "nslots = $nslots, nhosts = $nhosts, nqueues = $nqueues"
+                        if {$nslots == 0 || $nhosts == 0 || $nqueues == 0} {
+                           add_proc_error tight_integration_monitor -1 "invalid environment setting for NSLOTS, NHOSTS, NQUEUES for pe task (Issue 578 present): $line"
+                           set ret "error"
+                           break
+                        }
+                     }
+                     set ret "task running"
                   }
                   default {
                      add_proc_error tight_integration_monitor -1 "unexpected job output $line"
+                     set ret "error"
                   }
                }
             }
          }
+      }
+   }
+
+   return $ret
+}
+
+proc tight_integration_job_finished {job_state} {
+   global CHECK_OUTPUT
+
+   switch -exact $job_state {
+      "unknown" -
+      "timeout" -
+      "eof" -
+      "master finished" -
+      "error" {
+         set job_finished 1
+      }
+      
+      "task started" -
+      "task running" -
+      "task finished" -
+      "master started" -
+      "master submitted" {
+         set job_finished 0
+      }
+
+      default {
+         set job_finished 1
       }
    }
 
@@ -259,7 +317,9 @@ proc tight_integration_function {} {
    set jobid 0
    set job_finished 0
    while {$job_finished == 0} {
-      set job_finished [tight_integration_monitor $id started finished jobid]
+      set job_state [tight_integration_monitor $id started finished jobid info]
+      puts $CHECK_OUTPUT "job state: $job_state"
+      set job_finished [tight_integration_job_finished $job_state]
    }
 
    if {$started != $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS} {
@@ -274,6 +334,199 @@ proc tight_integration_function {} {
 
    wait_for_jobend $jobid tightf 60 0 1
 
+
+   set_error 0 "ok"
+}
+
+# check if tasks are killed when they hit a wallclock limit
+proc tight_integration_iz_575 {} {
+   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_HOST CHECK_USER 
+   global CHECK_CORE_EXECD
+   global TIGHT_INTEGRATION_FUNCTIONAL_SLOTS TIGHT_INTEGRATION_FUNCTIONAL_DURATION
+   puts $CHECK_OUTPUT "tight_integration: iz 575 task wallclock limit"
+
+   if {[resolve_version] < 3} {
+      add_proc_error "tight_integration_iz_575" -3 "iz 575 does not run in 5.3 systems"
+      set_error 0 "ok"
+      return
+   }
+
+   # set wallclock limit on one slave queue
+   if {[llength $CHECK_CORE_EXECD] < 2} {
+      add_proc_error "tight_integration_iz_575" -3 "iz 575 test needs at least 2 execution hosts"
+      set_error 0 "ok"
+      return
+   }
+
+   # set wallclock limit on all slave queues
+   set queue_list {}
+   foreach host $CHECK_CORE_EXECD {
+      if {[string compare $host $CHECK_HOST] != 0} {
+         lappend queue_list "$host.q"
+      }
+   }
+
+   set queue_conf(h_rt) "0:0:30"
+   foreach queue $queue_list {
+      set_queue $queue queue_conf
+   }
+
+   # submit job
+   set id [tight_integration_submit $CHECK_ACTUAL_TEST_PATH "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" pe_job.sh "./sleep.sh 1 3600"]
+
+   set started 0
+   set finished 0
+   set jobid 0
+   set job_finished 0
+
+   # wait until all tasks are started
+   while {$job_finished == 0 && $started < $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS} {
+      set job_state [tight_integration_monitor $id started finished jobid info]
+      puts $CHECK_OUTPUT "job state: $job_state"
+      set job_finished [tight_integration_job_finished $job_state]
+   }
+
+   # if startup was ok
+   if {$job_finished == 0} {
+      # job has to go into deleted state after rt limit - allow for 5s delay
+      if {[wait_for_job_state $jobid "dr" 35] == -1} {
+         if {[is_job_running $jobid tightf] == -1} {
+            puts $CHECK_OUTPUT "didn't see dr state, but job vanished - OK!"
+         } else {
+            add_proc_error "tight_integration_iz_575" -1 "slave tasks should have been killed due to runtime limit and set the job into dr state - issue 575 present"
+            delete_job $jobid
+         }
+      }
+   }
+
+   close_spawn_process $id
+
+   wait_for_jobend $jobid tightf 60 0 1
+
+   # reset queue runtime limit
+   set queue_conf(h_rt) "INFINITY"
+   foreach queue $queue_list {
+      set_queue $queue queue_conf
+   }
+
+   set_error 0 "ok"
+}
+
+# check NSLOTS, NHOSTS, NQUEUES for tasks
+proc tight_integration_iz_578 {} {
+   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_HOST
+   global TIGHT_INTEGRATION_FUNCTIONAL_SLOTS TIGHT_INTEGRATION_FUNCTIONAL_DURATION
+   puts $CHECK_OUTPUT "tight_integration: Issue 578 NSLOTS NHOSTS NQUEUES"
+
+   set id [tight_integration_submit $CHECK_ACTUAL_TEST_PATH "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" pe_job.sh "./sleep.sh 1 $TIGHT_INTEGRATION_FUNCTIONAL_DURATION"]
+
+   set started 0
+   set finished 0
+   set jobid 0
+   set job_finished 0
+   while {$job_finished == 0} {
+      set job_state [tight_integration_monitor $id started finished jobid info 1]
+      puts $CHECK_OUTPUT "job state: $job_state"
+      set job_finished [tight_integration_job_finished $job_state]
+   }
+
+   close_spawn_process $id
+
+   wait_for_jobend $jobid tightf 60 0 1
+
+
+   set_error 0 "ok"
+}
+
+# master task killed -> job has to be deleted
+proc tight_integration_master_killed {} {
+   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_HOST CHECK_USER
+   global TIGHT_INTEGRATION_FUNCTIONAL_SLOTS TIGHT_INTEGRATION_FUNCTIONAL_DURATION
+   puts $CHECK_OUTPUT "tight_integration: master task killed - issue 579"
+
+   set id [tight_integration_submit $CHECK_ACTUAL_TEST_PATH "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" pe_job.sh "./sleep.sh 1 3600"]
+
+   set started 0
+   set finished 0
+   set jobid 0
+   set job_finished 0
+
+   # wait until all tasks are started
+   while {$job_finished == 0 && $started < $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS} {
+      set job_state [tight_integration_monitor $id started finished jobid info]
+      puts $CHECK_OUTPUT "job state: $job_state"
+      set job_finished [tight_integration_job_finished $job_state]
+   }
+
+   # if startup was ok
+   if {$job_finished == 0} {
+      # wait for job to be running
+      wait_for_job_state $jobid "r" 60
+
+      # kill pid of master task and wait some seconds
+      puts $CHECK_OUTPUT "killing master task: pid $info(master,pid) on host $info(master,host)"
+      start_remote_prog $info(master,host) $CHECK_USER kill "-9 $info(master,pid)"
+
+      if {[wait_for_job_state $jobid "dr" 60] == -1} {
+         if {[is_job_running $jobid tightf] == -1} {
+            puts $CHECK_OUTPUT "didn't see dr state, but job vanished - OK!"
+         } else {
+            add_proc_error "tight_integration_master_killed" -1 "failed master task does not cause the job to be deleted (issue 579 present)"
+            delete_job $jobid
+         }
+      }
+   }
+
+   close_spawn_process $id
+
+   wait_for_jobend $jobid tightf 60 0 1
+
+   set_error 0 "ok"
+}
+
+# slave task killed -> job has to be deleted
+proc tight_integration_slave_killed {} {
+   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_HOST CHECK_USER
+   global TIGHT_INTEGRATION_FUNCTIONAL_SLOTS TIGHT_INTEGRATION_FUNCTIONAL_DURATION
+   puts $CHECK_OUTPUT "tight_integration: slave task killed"
+
+   set id [tight_integration_submit $CHECK_ACTUAL_TEST_PATH "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" pe_job.sh "./sleep.sh 1 3600"]
+
+   set started 0
+   set finished 0
+   set jobid 0
+   set job_finished 0
+
+   # wait until all tasks are started
+   while {$job_finished == 0 && $started < $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS} {
+      set job_state [tight_integration_monitor $id started finished jobid info]
+      puts $CHECK_OUTPUT "job state: $job_state"
+      set job_finished [tight_integration_job_finished $job_state]
+   }
+
+   # if startup was ok
+   if {$job_finished == 0} {
+      # wait for job to be running
+      wait_for_job_state $jobid "r" 60
+
+      # kill pid of master task and wait some seconds
+      # we take task 1: if we have more than one host, it will be on a slave host
+      puts $CHECK_OUTPUT "killing slave task: process group $info(1,pid) on host $info(1,host)"
+      start_remote_prog $info(1,host) $CHECK_USER kill "-9 -$info(1,pid)"
+
+      if {[wait_for_job_state $jobid "dr" 60] == -1} {
+         if {[is_job_running $jobid tightf] == -1} {
+            puts $CHECK_OUTPUT "didn't see dr state, but job vanished - OK!"
+         } else {
+            add_proc_error "tight_integration_slave_killed" -1 "failed slave task does not cause the job to be deleted"
+            delete_job $jobid
+         }
+      }
+   }
+
+   close_spawn_process $id
+
+   wait_for_jobend $jobid tightf 60 0 1
 
    set_error 0 "ok"
 }
@@ -303,7 +556,8 @@ proc tight_integration_massive {} {
    set job_finished 0
    
    while {$job_finished == 0} {
-      set job_finished [tight_integration_monitor $id started finished jobid]
+      set job_state [tight_integration_monitor $id started finished jobid info]
+      set job_finished [tight_integration_job_finished $job_state]
    }
 
    if {$started != $TIGHT_INTEGRATION_MASSIVE_SLOTS} {

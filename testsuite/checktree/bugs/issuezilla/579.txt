@@ -1,0 +1,4 @@
+Issue 579:  failure of master task of a tightly integrated parallel job does not
+            delete the job
+Test:       functional/tight_integration
+Function:   tight_integration_master_killed

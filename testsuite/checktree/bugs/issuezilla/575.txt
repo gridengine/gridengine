@@ -1,0 +1,4 @@
+Issue 575:  Parallel jobs exceeding wall clock time are not killed.
+
+Test:       functional/tight_integration
+Function:   tight_integration_iz_575

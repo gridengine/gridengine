@@ -1,0 +1,5 @@
+Issue 578:  NSLOTS and NHOSTS incorrectly set in environment of tightly 
+            integrated tasks
+
+Test:       functional/tight_integration
+Function:   tight_integration_iz_578.

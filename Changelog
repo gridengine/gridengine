@@ -1,3 +1,13 @@
+JG-2003-07-11-0: Testsuite: Enhanced tight_integration test to
+                            - check setting of NSLOTS and NHOSTS in tasks 
+                              environment (issue 578)
+                            - check shutdown of job when the master task fails 
+                              (issue 579)
+                            - check shutdown of job when a slave task fails
+                            - check if job is shutdown when a slave task exceeds
+                              a wallclock limit (issue 575)
+                 Review:    CR
+
 JG-2003-07-10-0: Bugfix:    *_RESERVED_USAGE gives wrong values for PE jobs.
                             NOTE: vmem for loosly integrated pe jobs is still 
                             incorrect. Can't fix it now due to conflicts with

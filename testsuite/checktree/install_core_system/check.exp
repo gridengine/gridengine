@@ -1991,7 +1991,7 @@ proc setup_queues {} {
   puts $CHECK_OUTPUT "\nremoving share tree ..."
   set SHARETREE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_SHARETREE] ]
   set DOES_NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXIST_S] $SHARETREE]
-  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDLIST_SSS] $CHECK_USER $CHECK_HOST $SHARETREE]
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDLIST_SSS] $CHECK_USER "*" $SHARETREE]
   catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dstree" } result
   if { [string first $DOES_NOT_EXISTS $result] >= 0 } {
      puts $CHECK_OUTPUT "sharetree does not exist"

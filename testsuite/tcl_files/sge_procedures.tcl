@@ -1820,7 +1820,7 @@ proc set_queue { q_name change_array } {
   } 
   set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
   set NOT_A_QUEUENAME [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QUEUE_XISNOTAQUEUENAME_S] $q_name ]
-  set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER $CHECK_HOST $q_name $QUEUE ]
+  set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $q_name $QUEUE ]
   set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mq ${q_name}" $vi_commands $MODIFIED $NOT_A_QUEUENAME]
   if { $result == -2 } {
     add_proc_error "set_queue" -1 "$q_name is not a queue"
@@ -2019,7 +2019,7 @@ proc add_queue { change_array {fast_add 0} } {
      set catch_return [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Aq ${tmpfile}" } result ]
      puts $CHECK_OUTPUT $result
      set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
-     set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER $CHECK_HOST $default_array(qname) $QUEUE ]
+     set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $default_array(qname) $QUEUE ]
      if { [string first "added" $result ] < 0 && [string first $ADDED $result] < 0 } {
         add_proc_error "add_queue" "-1" "qconf error or binary not found"
         return
@@ -2039,7 +2039,7 @@ proc add_queue { change_array {fast_add 0} } {
 
   set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
   set ALREADY_EXISTS [ translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] $QUEUE $chgar(qname)]
-  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER $CHECK_HOST $chgar(qname) $QUEUE ]
+  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $chgar(qname) $QUEUE ]
 
   set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-aq" $vi_commands $ADDED $ALREADY_EXISTS ]  
   if { $result != 0 } {
@@ -2319,7 +2319,7 @@ proc del_access_list { list_name } {
   } result ]
    puts $CHECK_OUTPUT $result
   set USER [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_USERSET]]
-  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER $CHECK_HOST $list_name $USER]
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $list_name $USER]
   puts $CHECK_OUTPUT $REMOVED
   if { [string first "removed" $result ] < 0 && [string first $REMOVED $result ] < 0} {
      add_proc_error "add_access_list" "-1" "could not delete access_list $list_name"
@@ -2373,7 +2373,7 @@ proc del_queue { q_name } {
   } result ]
 
   set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
-  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER $CHECK_HOST $q_name $QUEUE ]
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $q_name $QUEUE ]
   if { [string first "removed" $result ] < 0 && [string first $REMOVED $result ] < 0 } {
      add_proc_error "del_queue" "-1" "could not delete queue $q_name"
      return -1
@@ -2707,7 +2707,7 @@ proc disable_queue { queuelist } {
         } else {
            # try to find localized output
            foreach q_name $queues {
-              set HAS_DISABLED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_DISABLEQ_SSS] $q_name $CHECK_USER $CHECK_HOST ]
+              set HAS_DISABLED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_DISABLEQ_SSS] $q_name $CHECK_USER "*" ]
               if { [ string first $HAS_DISABLED $result ] >= 0 } {
                  incr nr_disabled 1
                  break
@@ -2793,7 +2793,7 @@ proc enable_queue { queuelist } {
         } else {
            # try to find localized output
            foreach q_name $queues {
-              set BEEN_ENABLED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_ENABLEQ_SSS] $q_name $CHECK_USER $CHECK_HOST ]
+              set BEEN_ENABLED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_ENABLEQ_SSS] $q_name $CHECK_USER "*" ]
               if { [ string first $BEEN_ENABLED $result ] >= 0 } {
                  incr nr_enabled 1
                  break
@@ -2936,7 +2936,7 @@ proc add_checkpointobj { change_array } {
   set my_args "-ackpt $my_ckpt_name"
  
   set ALREADY_EXISTS [ translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $chgar(ckpt_name)]
-  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER $CHECK_HOST $chgar(ckpt_name) "checkpoint interface" ]
+  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $chgar(ckpt_name) "checkpoint interface" ]
   set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
 
   set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $ADDED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 

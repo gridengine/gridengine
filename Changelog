@@ -1,3 +1,7 @@
+CR-2002-11-27-2  Testsuite: removed hostname parameter in translate call. Using
+                 Bugfix:    asterisk "*" instead. Now long hostnames will not
+                 L10N:      influent string parsing anymore.
+
 CR-2002-11-27-1  Testsuite: a) submit_del check: debug modifications
                             b) new procedure: 
                                check_c_source_code_files_for_macros()

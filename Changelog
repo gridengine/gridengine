@@ -1,3 +1,5 @@
+CR-2003-03-12-0  Bugfix:    - qevent compile error for tru64
+
 AA-2003-03-12-0  Bugfix:    util/sge_upgrade.sh syntax errors
 
 CR-2003-03-05-0  Bugfix:    Missing "return" in main() function reports

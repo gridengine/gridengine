@@ -2214,6 +2214,57 @@ proc set_users_environment {{variable_name env}} {
    return 0
 }
 
+proc show_setup_information { } {
+
+   global CHECK_OUTPUT
+
+   clear_screen
+   puts $CHECK_OUTPUT "Testsuite Setup Information"
+   puts $CHECK_OUTPUT "==========================="
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "If you are starting the testsuite for the first time you should read this short"
+   puts $CHECK_OUTPUT "setup guide to make it easier for you to understand the setup questions."
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "The testsuite needs 3 user accounts:\n"
+   puts $CHECK_OUTPUT " a) testsuite user:   The user who is starting the testsuite\n"
+   puts $CHECK_OUTPUT " b) first_foreign_system_username:  "
+   puts $CHECK_OUTPUT "                      Test user account (used for submitting, deleting jobs)"
+   puts $CHECK_OUTPUT "                      This user must be member of two system groups (use <SPACE>"
+   puts $CHECK_OUTPUT "                      to seperate the groups)\n"
+   puts $CHECK_OUTPUT " c) second_foreign_system_username:"
+   puts $CHECK_OUTPUT "                      Test user account (used for submitting, deleting jobs)"
+   puts $CHECK_OUTPUT "                      This user must be member of a system group where b) is not"
+   puts $CHECK_OUTPUT "                      group member.\n"
+ 
+   wait_for_enter
+
+   clear_screen
+   puts $CHECK_OUTPUT "Testsuite Setup Information"
+   puts $CHECK_OUTPUT "==========================="
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "The 3 user accounts must have rsh access to the cluster hosts. (.rhost file)\n"
+   puts $CHECK_OUTPUT "Every output to stdout in\n"
+   puts $CHECK_OUTPUT " /etc/csh.cshrc, /etc/csh.login, \$HOME/.cshrc, \$HOME/.login , ...\n"
+   puts $CHECK_OUTPUT "is not allowed. The testsuite will use e.g. rsh \$EXEC_HOST pwd to get the"
+   puts $CHECK_OUTPUT "working directory on that host. Any output made in the files would influence"
+   puts $CHECK_OUTPUT "the result of the rsh call.\n" 
+
+   puts $CHECK_OUTPUT "Each of the 3 user must have read access to\n"
+   puts $CHECK_OUTPUT "   - testsuite directory"
+   puts $CHECK_OUTPUT "   - source code directory"
+   puts $CHECK_OUTPUT "   - installation directory (\$SGE_ROOT)"   
+  
+   wait_for_enter
+
+   clear_screen
+   puts $CHECK_OUTPUT "Testsuite Setup Information"
+   puts $CHECK_OUTPUT "==========================="
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "All path statements have to be absolute. The use of links may cause troubles."
+    
+   wait_for_enter
+}
+
 #                                                             max. column:     |
 #****** check/setup() ******
 # 
@@ -2290,6 +2341,8 @@ proc setup { {do_only_hostname_resolving 0} } {
         set have_defaults 1
         #setup on --setup flag!
      }
+  } else {
+     show_setup_information
   }
 
   if { $have_defaults == 0 && $do_only_hostname_resolving == 0 } {
@@ -2304,6 +2357,7 @@ proc setup { {do_only_hostname_resolving 0} } {
       puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
       set CHECK_HOST [ gethostname ]
       set setup_ok 0
+
       set edit_result [ edit_defaults ]
       if { $edit_result < 0 } {
          puts $CHECK_OUTPUT "edit defaults: error ; stop"
@@ -2342,6 +2396,8 @@ proc setup { {do_only_hostname_resolving 0} } {
              puts $CHECK_OUTPUT "echo \"hello $host\" doesn't work"
              set setup_ok -1
          }
+         get_binary_path $host "expect"       
+         get_binary_path $host "vim"
       }
 
 
@@ -2565,7 +2621,6 @@ proc setup { {do_only_hostname_resolving 0} } {
 
   check_executable_files
 
- 
   if { $be_quiet == 0 } { 
      puts "       architecture:         $CHECK_ARCH";
      puts "       local host:           $CHECK_HOST";
@@ -5779,12 +5834,14 @@ for { set i 0 } { $i < $argc } { incr i } {
       set do_close_rlogin 1
       continue
    }
-
+   
 
    if {([string compare [lindex $argv $i] "--help"] == 0) || ([string compare [lindex $argv $i] "help"] == 0) } {
       puts "usage: expect check.exp \[options\]"
       puts "\noptions are:"
       puts "help                  show this"
+      puts ""
+      puts "setup_help            show setup informations"
       puts ""
       puts "install               just install core system and exit"
       puts ""
@@ -5834,6 +5891,13 @@ for { set i 0 } { $i < $argc } { incr i } {
 
       exit 1
    }
+
+   if {([string compare [lindex $argv $i] "--setup_help"] == 0) || ([string compare [lindex $argv $i] "setup_help"] == 0) } {
+      show_setup_information
+      exit 1
+   }
+   
+
    if { ( [string compare [lindex $argv $i] "--re_init"] == 0 ) || ([string compare [lindex $argv $i] "re_init"] == 0) } {
       set check_use_installed_system 1
       continue

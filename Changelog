@@ -1,3 +1,8 @@
+SG-2004-11-05-0: Bugfix:    the scheduler had critical errors, when host groups were added
+                            or modified.
+                 Changed:   mirror interface, scheduler
+                 Review:    JG
+
 SG-2004-11-04-2: Bugfix:    qconf -ks gives bad error message if scheduler isn't running
                  Issue:     1319
                  Changed:   qmaster

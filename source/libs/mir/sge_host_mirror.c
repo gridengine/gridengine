@@ -35,6 +35,7 @@
 #include "sge_log.h"
 
 #include "sge_host.h"
+#include "sge_hgroup.h" 
 
 #include "sge_mirror.h"
 #include "sge_host_mirror.h"
@@ -103,6 +104,10 @@ host_update_master_list(sge_object_type type, sge_event_action action,
 /*         list_descr = SH_Type; */
          key_nm = SH_name;
          break;
+      case SGE_TYPE_HGROUP:
+         list = &Master_HGroup_List;
+         key_nm = HGRP_name;
+         break;
       default:
          return false;
    }
@@ -111,6 +116,7 @@ host_update_master_list(sge_object_type type, sge_event_action action,
 
    if (sge_mirror_update_master_list_host_key(list, list_descr, key_nm, key, 
                                               action, event) != SGE_EM_OK) {
+
       DEXIT;
       return false;
    }

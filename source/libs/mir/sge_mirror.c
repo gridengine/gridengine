@@ -73,6 +73,9 @@
 #include "sge_pe_task_mirror.h"
 #include "sge_sharetree_mirror.h"
 #include "sge_sched_conf_mirror.h"
+#include "sge_hgroupL.h"
+#include "sge_hostL.h"
+
 
 #include "sge_mirror.h"
 
@@ -151,7 +154,7 @@ static mirror_description mirror_base[SGE_TYPE_ALL] = {
    { NULL, host_update_master_list,                NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
-   { NULL, generic_update_master_list,             NULL, NULL },
+   { NULL, host_update_master_list,                NULL, NULL }, /*hgroup*/
    { NULL, generic_update_master_list,             NULL, NULL },
 #ifndef __SGE_NO_USERMAPPING__
    { NULL, NULL,                                   NULL, NULL },
@@ -1528,6 +1531,7 @@ sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr,
    DENTER(TOP_LAYER, "sge_mirror_update_master_list_str_key");
 
    ep = lGetElemStr(*list, key_nm, key);
+
    ret = sge_mirror_update_master_list(list, list_descr, ep, key, action, event);
 
    DEXIT;

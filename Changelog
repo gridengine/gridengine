@@ -1,3 +1,6 @@
+AD-2004-01-26-1: Bugfix:    Do communication setup after qmaster setup.
+                 Changed:   qmaster
+
 JG-2004-01-26-0: Bugfix:    Fixed a problem with berkeley db spooling of queue 
                             instances.
                             Use mutexes in qmaster reporting instead of locks.

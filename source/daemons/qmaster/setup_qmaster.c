@@ -394,12 +394,12 @@ static void qmaster_init(char **anArgv)
 
    INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
 
-   communication_setup(anArgv);
-
    if (setup_qmaster()) {
       CRITICAL((SGE_EVENT, MSG_STARTUP_SETUPFAILED));
       SGE_EXIT(1);
    }
+
+   communication_setup(anArgv);
 
    uti_state_set_exit_func(qmaster_lock_and_shutdown); /* CWD is spool directory */
 
@@ -501,6 +501,8 @@ static void communication_setup(char **anArgv)
       cl_commlib_remove_messages(com_handle);
    }
 
+   cl_commlib_set_connection_param(cl_com_get_handle("qmaster",1), HEARD_FROM_TIMEOUT, conf.max_unheard);
+
    DEXIT;
    return;
 } /* communication_setup() */
@@ -554,6 +556,8 @@ static void communication_setup(char **anArgv)
    } /* !enrolled */
 
    reset_last_heard(); /* commlib call to mark all commprocs as unknown */
+
+   set_commlib_param(CL_P_LT_HEARD_FROM_TIMEOUT, conf.max_unheard, NULL, NULL);
 
    DEXIT;
    return;
@@ -856,13 +860,6 @@ static int setup_qmaster(void)
    }
    sge_show_conf();         
    new_config = 1;
-
-   /* pass max unheard to commlib */
-#ifdef ENABLE_NGC
-   cl_commlib_set_connection_param(cl_com_get_handle("qmaster",1), HEARD_FROM_TIMEOUT, conf.max_unheard);
-#else
-   set_commlib_param(CL_P_LT_HEARD_FROM_TIMEOUT, conf.max_unheard, NULL, NULL);
-#endif
 
    /* get aliased hostname from commd */
    reresolve_me_qualified_hostname();

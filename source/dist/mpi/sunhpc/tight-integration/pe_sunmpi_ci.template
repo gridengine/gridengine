@@ -1,0 +1,11 @@
+pe_name           <hpc>
+queue_list        <list_of_queues_to_run_MPI_processes>
+slots             <number_of_cpus_available>
+user_lists        NONE
+xuser_lists       NONE
+start_proc_args   /bin/true
+stop_proc_args    /bin/true
+allocation_rule   $fill_up
+control_slaves    TRUE
+job_is_first_task FALSE
+

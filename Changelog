@@ -1,4 +1,4 @@
-AS-2004-03-18-2  Bugfix:    Product name for qmon help files
+AS-2004-03-18-2  Bugfix:    Product name for qmon help file qmon_help.ad
 
 AS-2004-03-18-1  Enhancem.: added check for "localhost" resolving to
                             installation procedure. Hostname may not be an
@@ -22,12 +22,13 @@ EB-2004-03-17-1: Bugfix:    qstat shows queue in A state although
                  Issue:     832
                  Changed:   qstat, qhost, qmon 
 
-DT-2004-03-17-0: Bugfix:    o qsub -sync y now survives the qmaster going down.
-                            o JAPI allows client to register an error message
-                              callback for error messages from the event client
-                              thread.
-                            o qsub prints message when the qmaster goes away and
-                              comes back.
+DT-2004-03-17-0: Bugfix:    o qsub -sync y now survives the qmaster going
+                              down.
+                            o JAPI allows client to register an error
+                              message callback for error messages from the
+                              event client thread.
+                            o qsub prints message when the qmaster goes away
+                              and comes back.
                             o Left over checkin from DRMAA Java binding
                             o Left over checkin from Flatfile Spooling
                  Changed:   JAPI, qsub, DRMAA
@@ -38,8 +39,8 @@ MD-2004-03-17-3  Bugfix:    merged fixes from beta branch to maintrunc
                             adapted testsuite to changed message parts
                  Changed:   inst_sge, testsuite
 
-CR-2004-03-17-1  Bugfix:    fixed performance problem in communication library 
-                            in multithreaded mode.
+CR-2004-03-17-1  Bugfix:    fixed performance problem in communication
+                            library in multithreaded mode.
                  Changed:   commlib
                  Review:    SG
 
@@ -56,18 +57,18 @@ CR-2004-03-17-0: Bugfix:    CSP install failed on irix architecture
 SG-2004-03-17-0: Enhancem.: - Limited the number of dynamic event clients with a
                               new qmaster_params entry: max_dyn_ec=XXX. 
                             - some cleanup in the event master thread
-                            - ensured that event clients with a fixed id are run
-                              by a manager.
+                            - ensured that event clients with a fixed id are
+                              run by a manager.
                  Changed:   qmaster, man-page  
                  Review:    AA
                  
-JG-2004-03-17-0: Bugfix:    fixed race condition in sge_shepherd (qlogin_starter
-                            for qlogin/qrsh jobs).
+JG-2004-03-17-0: Bugfix:    fixed race condition in sge_shepherd
+                            (qlogin_starter for qlogin/qrsh jobs).
                  Changed:   sge_shepherd
                  Issue:     871
                  Review:    CR
-                 Bugfix:    qstat -f output cluster queue name instead of queue
-                            instance name.
+                 Bugfix:    qstat -f output cluster queue name instead of
+                            queue instance name.
                  Changed:   qstat
                  Review:    SG
 
@@ -97,7 +98,8 @@ AA-2004-03-16-0: Bugfix:    - default_duration sconf param added
                  Changed:   qmon
                  Review:    EB
 
-EB-2004-03-16-0: Bugfix:    Hostgroup identifiers not verified in queue_conf(5)
+EB-2004-03-16-0: Bugfix:    Hostgroup identifiers not verified in
+                            queue_conf(5)
                  Issue:     856
                  Changed:   sge_qmaster
                  Review:    SG 
@@ -200,9 +202,9 @@ SG-2004-03-12-0: Bugfix:    fixed problem with fix for issue 831
                  Changed:   qmaster
                  Review:    EB
 
-JG-2004-03-11-0: Enhancem.: Additional information about the build process of 
-                            the Berkeley DB (architecture dependend configure 
-                            options).
+JG-2004-03-11-0: Enhancem.: Additional information about the build process
+                            of the Berkeley DB (architecture dependend
+                            configure options).
 
 AH-2004-03-11-2: Enhancem.: Fix problem of frequent "cannot resend unknown 
                             job" messages.
@@ -242,7 +244,8 @@ AH-2004-03-11-0: Enhancem.: Allow inst_berkeley.sh to continue even without
                             directory.
                  Review:    MD
    
-EB-2004-03-11-0: Bugfix:    removing a suspend threshold doesn't unsuspend jobs
+EB-2004-03-11-0: Bugfix:    removing a suspend threshold doesn't unsuspend
+                            jobs
                  Issue:     831
                  Changed:   sge_qmaster
                  Review:    SG

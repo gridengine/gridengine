@@ -39,7 +39,7 @@ recommended instead.</P>
 <H2>b) Project based strict priority dispatching</H2>
 <P>The objective of this setup is to implement a strict hierarchy of
 job classes. Strict means that jobs of higher privileged job classes are started
-before less priviledged jobs if appropriate resources are available. Jobs get submitted 
+before less priviledged jobs if appropriate resources are available. Jobs are submitted 
 into a job class by submitting into a corresponding project</P>
 <P>HOWTO:</P>
 <UL>
@@ -55,7 +55,7 @@ into a job class by submitting into a corresponding project</P>
    </UL>
 	<LI><P>access to higher privileged projects can be controlled via project acl/xacl</P>
 </UL>
-<H1>2. Control resource shares at any time</H1>
+<H1>2. Functional policy - control resource shares at any time</H1>
 All the setups in this category have in common that the functional policy is 
 used as main policy. Setups using the functional policy as main policy ensure that 
 a certain share is guaranteed to each user, project or department at any time, i.e. 
@@ -113,7 +113,7 @@ FCFS scheduling is used among jobs of the same department.</P>
       <P>departmentC (5)</P>
    </UL>
 </UL>
-<H1>3. Control resource shares over time</H1>
+<H1>3. Share-tree policy - control resource shares over time</H1>
 All the setups in this category have in common that the share-tree policy is 
 used as main policy. Setups using the share-tree policy as main policy ensure
 that a certain share is guaranteed to the instances configured in the share-tree
@@ -122,8 +122,7 @@ were consumed in the past than supposed (share-tree share) are prefered when
 dispatching jobs to idle resources. All the same full resource utilization is 
 guaranteed, because unused share proportions are still available for pending 
 jobs associated to other share-tree branches.
-<H2>a) Project based share-tree scheduling with FCFS within each
-project</H2>
+<H2>a) Project based share-tree scheduling with FCFS within each project</H2>
 <P>The objective of this setup is to guarantee over time a certain
 share assignment of all the resources combined in the SGEEE cluster
 to different projects. A FCFS scheduling is used among jobs of the
@@ -140,8 +139,7 @@ root ------ projectA (75)
  +--------- projectB (25)
 </PRE>
 </UL>
-<H2>b) Project based share-tree scheduling with equal share for each
-user within each project</H2>
+<H2>b) Project based share-tree scheduling with equal share for each user within each project</H2>
 <P>The objective of this setup is to guarantee over time a certain
 share assignment of all the resources combined in the SGEEE cluster
 to different projects. An equal share is targeted among the jobs
@@ -161,7 +159,6 @@ root ------ projectA (75) ------- default (10)
 	<LI><P>add the user &quot;default&quot; as leaf in the tree below
 	each of these projects</P>
 </UL>
-
 <H2>c) Project based share-tree scheduling with per user individual
 shares within each project</H2>
 <P>The objective of this setup is to guarantee over time a certain
@@ -199,5 +196,27 @@ root ------ projectA (75) ------- default (5)
 </PRE>
 </P>
 </UL>
+<H1>4. Manual intervening into automated policies</H1>
+<P>There are cases in which it becomes necessary for the administrator to intervene
+manually, to break the automated policies (functional, share-tree) in order to prefer 
+a certain group of jobs for some reason. In such cases the override policy is used by 
+the administrator. One could throw in: "Why not simply changing the settings of the 
+automated policy temporarily, if it's not appropriate?".</P>
+<P>This is true at least for the functional policy. Not depending past 
+usage, changes on the functional policy have an immediate effect on scheduling 
+behavior. The share-tree policy however is significantly influenced by past usage. 
+To effectuate an immediate, but temporary preferation of all jobs belonging to certain 
+share-tree node entity (department, project, user) one had to make the scheduler 
+"extrude past usage" temporarily. This appears to be quite circumstantial.</P>
+<P>The override policy allows temporarily prefering those jobs by directly assigning 
+override tickets, which is much more intuitive. Another benefit of using override 
+tickets over the way of changing the automated policy is that it leaves the automated
+policy setup for long-term untouched.</P> 
+<P>There override policy can be used in two different variations. When the 
+SHARE_OVERRIDE_TICKETS=false setting is used in the schedd_params section of 
+sge_conf(5) the full ticket amount assigned to one of the object instances (user, 
+department, project, job) is assigned to each corresponding single job, this is the 
+default. When the SHARE_OVERRIDE_TICKETS=true setting is used these tickets are shared 
+equally between all corresponding jobs.</P>
 </BODY>
 </HTML>

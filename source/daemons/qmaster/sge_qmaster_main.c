@@ -90,7 +90,7 @@ typedef struct {
 
 
 static qmaster_control_t Qmaster_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, INVALID_THREAD, false, 0};
-static pthread_mutex_t*  Global_Locks;
+static pthread_mutex_t   Global_Lock;
 
 /* lock service provider */
 static void setup_lock_service(void);
@@ -639,11 +639,6 @@ static void start_periodic_tasks(void)
    te_add_event(ev);
    te_free_event(ev);
 
-   te_register_event_handler(sge_remote_event_delivery_handler, TYPE_REMOTE_EVENT_DELIVERY_EVENT);
-   ev = te_new_event(1, TYPE_REMOTE_EVENT_DELIVERY_EVENT, RECURRING_EVENT, 0, 0, "remote-event-delivery");
-   te_add_event(ev);
-   te_free_event(ev);
-
    te_register_event_handler(sge_security_event_handler, TYPE_SECURITY_EVENT);
    ev = te_new_event(10, TYPE_SECURITY_EVENT, RECURRING_EVENT, 0, 0, "security-event");
    te_add_event(ev);
@@ -683,19 +678,14 @@ static void start_periodic_tasks(void)
 static void setup_lock_service(void)
 {
    pthread_mutexattr_t attr;
-   int n, i;
 
    DENTER(TOP_LAYER, "setup_lock_service");
 
-   n = sge_num_locktypes();
-   Global_Locks = (pthread_mutex_t *)malloc(n * sizeof(pthread_mutex_t));
-
    pthread_mutexattr_init(&attr);
    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+   pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_PRIVATE);
 
-   for(i = 0; i < n; i++) {
-      pthread_mutex_init(&(Global_Locks[i]), &attr);
-   }
+   pthread_mutex_init(&Global_Lock, &attr);
 
    sge_set_lock_callback(lock_callback);
    sge_set_unlock_callback(unlock_callback);
@@ -727,18 +717,10 @@ static void setup_lock_service(void)
 *******************************************************************************/
 static void teardown_lock_service(void)
 {
-   int n, i;
-
    DENTER(TOP_LAYER, "teardown_lock_service");
 
-   n = sge_num_locktypes();
-
-   for (i = 0; i < n; i++) {
-      pthread_mutex_destroy(&(Global_Locks[i]));
-   }
+   pthread_mutex_destroy(&Global_Lock);
    
-   free(Global_Locks);
-
    DEXIT;
    return;
 } /* teardown_lock_service() */
@@ -773,7 +755,7 @@ static void lock_callback(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker
 {
    DENTER(TOP_LAYER, "lock_callback");
 
-   sge_mutex_lock(sge_type_name(aType), SGE_FUNC, __LINE__, &(Global_Locks[aType]));
+   sge_mutex_lock(sge_type_name(aType), SGE_FUNC, __LINE__, &Global_Lock);
 
    DEXIT;
    return;
@@ -810,7 +792,7 @@ static void unlock_callback(sge_locktype_t aType, sge_lockmode_t aMode, sge_lock
 {
    DENTER(TOP_LAYER, "unlock_callback");
 
-   sge_mutex_unlock(sge_type_name(aType), SGE_FUNC, __LINE__, &(Global_Locks[aType]));
+   sge_mutex_unlock(sge_type_name(aType), SGE_FUNC, __LINE__, &Global_Lock);
 
    DEXIT;
    return;
@@ -1064,6 +1046,7 @@ static void* message_thread(void* anArg)
    while (should_terminate() == false)
    {
       sge_qmaster_process_message(anArg);
+      sge_remote_event_delivery_handler(NULL);
    }
 
    DEXIT;

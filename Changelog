@@ -1,3 +1,17 @@
+DT-2003-11-17-1: Enhancem.: Implemented remaining DRMAA attributes.  Reworked
+														drmaa_job2sge_job() to reuse the parameter parsing
+														code in parse_job_cull.c, parse_qsub.c,
+														read_deaults.c, etc.  Introduced two new options:
+														-cat (job category) and -wd (set working directory).
+														Both options are only used by DRMAA right now, but
+														could easily be added to qsub et al.  Also added
+														a test to test_drmaa to test all DRMAA attributes.
+								 Changed:		libdrmaa.so and common parameter parsing routines
+
+DT-2003-11-17-0: Bugfix.:		-b y in sge_request would override -b n on
+														commandline
+								 Changed:		qsub
+
 AD-2003-11-17-0: Bugfix:    Revoke AD-2003-11-14-0. 
 
 JG-2003-11-17-0: Testsuite: Some minor fixes to make testsuite installation run 
@@ -644,7 +658,7 @@ SG-2003-08-26-1: Bugfix:    The scheduler handled strings in a hard request and 
                             boolean switch is introduced. When REPORT_PJOB_TICKETS=0 
                             is set, the scheduler resets all pending job tickets 
                             to 0 on the qmaster side and does not report any more 
-                            pending tickets. The default is REPORT_PJOB_TICKETS=1.ö
+                            pending tickets. The default is REPORT_PJOB_TICKETS=1.?
 
                  Changed:   sge_schedd
                  Review:    EB 

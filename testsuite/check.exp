@@ -127,6 +127,8 @@ global CHECK_GROUP                 ;# group of user who start test
 global CHECK_HOST                  ;# hostname of this system (e.g. DWAIN)
 global CHECK_CORE_EXECD            ;# known execd hostnames
 set CHECK_CORE_EXECD ""
+global CHECK_ADDITIONAL_COMPILE_HOSTS
+set CHECK_ADDITIONAL_COMPILE_HOSTS ""
 global CHECK_SUBMIT_ONLY_HOSTS     ;# list of submithosts (no execd/commd running)
 set CHECK_SUBMIT_ONLY_HOSTS ""
 global CHECK_CORE_MASTER           ;# qmaster hostname
@@ -634,7 +636,7 @@ set ts_host_config($parameter,pos)        2
 
 global ts_config                     ;# new testsuite configuration array
 global actual_ts_config_version      ;# actual config version number
-set actual_ts_config_version "1.1"
+set actual_ts_config_version "1.2"
 
 
 # ts_config defaults 
@@ -757,6 +759,16 @@ set ts_config($parameter,setup_func) "config_$parameter"
 set ts_config($parameter,onchange)   "install"
 set ts_config($parameter,pos)        $ts_pos
 incr ts_pos 1
+
+set parameter "add_compile_archs"
+set ts_config($parameter)            ""
+set ts_config($parameter,desc)       "Forced compilation for architectures"
+set ts_config($parameter,default)    "none"
+set ts_config($parameter,setup_func) "config_$parameter"
+set ts_config($parameter,onchange)   ""
+set ts_config($parameter,pos)        $ts_pos
+incr ts_pos 1
+
 
 set parameter "commd_port"
 set ts_config($parameter)            ""
@@ -5311,6 +5323,134 @@ proc config_submit_only_hosts { only_check name config_array } {
    return $value
 }
 
+
+#****** check/config_add_compile_archs() ***************************************
+#  NAME
+#     config_add_compile_archs() -- forced compilation setup
+#
+#  SYNOPSIS
+#     config_add_compile_archs { only_check name config_array } 
+#
+#  FUNCTION
+#     Testsuite configuration setup - called from verify_config()
+#
+#  INPUTS
+#     only_check   - 0: expect user input
+#                    1: just verify user input
+#     name         - option name (in ts_config array)
+#     config_array - config array name (ts_config)
+#
+#  SEE ALSO
+#     check/setup2()
+#     check/verify_config()
+#*******************************************************************************
+proc config_add_compile_archs { only_check name config_array } {
+   global CHECK_OUTPUT 
+   global CHECK_HOST CHECK_ADDITIONAL_COMPILE_HOSTS
+   global ts_host_config
+
+   upvar $config_array config
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+   set value $actual_value
+
+   if { $actual_value == "" } {
+      set value $default_value
+   }
+
+   if { $only_check == 0 } {
+#      # do setup  
+       if { $value == "none" } {
+          set value ""
+       }
+       puts $CHECK_OUTPUT "" 
+       set selected $value
+       while { 1 } {
+          clear_screen
+          puts $CHECK_OUTPUT "----------------------------------------------------------"
+          puts $CHECK_OUTPUT $description
+          puts $CHECK_OUTPUT "----------------------------------------------------------"
+
+          set selected [lsort $selected]
+          puts $CHECK_OUTPUT "\nSelected additional compile architectures:"
+
+          puts $CHECK_OUTPUT "----------------------------------------------------------"
+          foreach elem $selected { puts $CHECK_OUTPUT $elem }
+          puts $CHECK_OUTPUT "----------------------------------------------------------"
+
+          host_config_hostlist_show_compile_hosts ts_host_config arch_array
+          puts $CHECK_OUTPUT "\n"
+          puts -nonewline $CHECK_OUTPUT "Please enter architecture/number or return to exit: "
+         
+          set new_arch [wait_for_enter 1]
+          if { [ string length $new_arch ] == 0 } {
+             break
+          }
+          if { [string is integer $new_arch] } {
+             if { $new_arch >= 1 && $new_arch <= $arch_array(count) } {
+                set new_arch $arch_array($new_arch,arch)
+             }
+          }
+          # now we have arch string in new_arch
+          set found_arch 0
+          foreach host $ts_host_config(hostlist) {
+             if { $ts_host_config($host,compile) == 1 } {
+                set compile_arch $ts_host_config($host,arch)
+                if { [ string compare $compile_arch $new_arch ] == 0 } {
+                   set found_arch 1
+                   continue
+                }
+             }
+          }
+          if { $found_arch == 0 } {
+             puts $CHECK_OUTPUT "architecture \"$new_arch\" not found in list"
+             wait_for_enter
+             continue
+          }
+
+          if { [ lsearch -exact $selected $new_arch ] < 0 } {
+             append selected " $new_arch"
+          } else {
+             set index [lsearch $selected $new_arch ]
+             set selected [ lreplace $selected $index $index ]
+          }
+       }
+       
+       set value [string trim $selected]
+       if { $value == "" } {
+          set value "none"
+       }
+   } 
+
+   if { [string compare $value "none"] != 0 }  {
+      set add_compile_host_list ""
+      foreach arch $value {
+         set found_arch 0
+         foreach host $ts_host_config(hostlist) {
+             if { $ts_host_config($host,compile) == 1 } {
+                set compile_arch $ts_host_config($host,arch)
+                if { [ string compare $compile_arch $arch ] == 0 } {
+                   set found_arch 1
+                   lappend add_compile_host_list $host
+                   continue
+                }
+             }
+         }
+         if { $found_arch == 0 } {
+            puts $CHECK_OUTPUT "could not find compile host with architecture \"$arch\""
+            return -1
+         }
+      } 
+      set CHECK_ADDITIONAL_COMPILE_HOSTS $add_compile_host_list
+   } else {
+      set CHECK_ADDITIONAL_COMPILE_HOSTS ""
+   }
+
+   return $value
+}
+
+
 #****** check/config_commd_port() **********************************************
 #  NAME
 #     config_commd_port() -- commd port option setup
@@ -5864,7 +6004,33 @@ proc update_ts_config_version {} {
       wait_for_enter
       return 0
    }
-   puts $CHECK_OUTPUT "\nunexpected version"
+   if { $ts_config(version) == "1.1" && $actual_ts_config_version == "1.2" } {
+      puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.1 to 1.2 ..."
+      set insert_pos $ts_config(submit_only_hosts,pos)   ;# new entry after submit_only_hosts
+      incr insert_pos 1
+       
+      set names [array names ts_config "*,pos"]
+      foreach name $names {
+         if { $ts_config($name) >= $insert_pos } {
+            set ts_config($name) [ expr ( $ts_config($name) + 1 ) ]
+         }
+      }
+      set parameter "add_compile_archs"
+      set ts_config($parameter)            ""
+      set ts_config($parameter,desc)       "Forced compilation for architectures"
+      set ts_config($parameter,default)    "none"
+      set ts_config($parameter,setup_func) "config_$parameter"
+      set ts_config($parameter,onchange)   ""
+      set ts_config($parameter,pos) $insert_pos
+
+      set ts_config(version) "1.2"
+     
+      show_config ts_config
+      wait_for_enter
+      return 0
+   }
+   
+   puts $CHECK_OUTPUT "\nunexpected version $ts_config(version), need version $actual_ts_config_version"
    return -1
 }
 
@@ -6438,6 +6604,7 @@ proc user_config_userlist { only_check name config_array } {
 #  SEE ALSO
 #     check/setup_host_config()
 #     check/verify_host_config()
+#     check/host_config_hostlist_show_compile_hosts()
 #*******************************************************************************
 proc host_config_hostlist_show_hosts { array_name } {
    global CHECK_OUTPUT
@@ -6478,6 +6645,75 @@ proc host_config_hostlist_show_hosts { array_name } {
       }
    }
 }
+
+#****** check/host_config_hostlist_show_compile_hosts() ************************
+#  NAME
+#     host_config_hostlist_show_compile_hosts() -- show compile hosts
+#
+#  SYNOPSIS
+#     host_config_hostlist_show_compile_hosts { array_name save_array } 
+#
+#  FUNCTION
+#     This procedure shows the list of compile hosts
+#
+#  INPUTS
+#     array_name - ts_host_config array
+#     save_array - array to store compile host informations
+#
+#  RESULT
+#     save_array(count)     -> number of compile hosts (starting from 1)
+#     save_array($num,arch) -> compile architecture
+#     save-array($num,host) -> compile host name
+#
+#  SEE ALSO
+#     check/host_config_hostlist_show_hosts()
+#*******************************************************************************
+proc host_config_hostlist_show_compile_hosts { array_name save_array } {
+   global CHECK_OUTPUT
+   upvar $array_name config
+   upvar $save_array back
+
+   if { [ info exists back ] } {
+      unset back
+   }
+
+   puts $CHECK_OUTPUT "\nCompile architecture list:\n"
+   if { [llength $config(hostlist)] == 0 } {
+      puts $CHECK_OUTPUT "no hosts defined"
+   }
+
+   set index 0
+  
+   set max_arch_length 0
+   foreach host $config(hostlist) {
+      if { $config($host,compile) == 1 } {
+         lappend arch_list $config($host,arch)
+         set host_list($config($host,arch)) $host
+         set arch_length [string length $config($host,arch) ]
+         if { $max_arch_length < $arch_length } {
+            set max_arch_length $arch_length
+         }
+      }
+   }
+   set arch_list [lsort $arch_list]
+   foreach arch $arch_list {
+      set host $host_list($arch)
+      if { $config($host,compile) == 1 } {
+         incr index 1 
+         set back(count) $index
+         set back($index,arch) $config($host,arch)
+         set back($index,host) $host 
+
+         set arch_length [string length $config($host,arch)]
+         if { $index <= 9 } {
+            puts $CHECK_OUTPUT "    $index) $config($host,arch) [get_spaces [expr ( $max_arch_length - $arch_length ) ]] ($host)"
+         } else {
+            puts $CHECK_OUTPUT "   $index) $config($host,arch) [get_spaces [expr ( $max_arch_length - $arch_length ) ]] ($host)" 
+         }
+      } 
+   }
+}
+
 
 #****** check/user_config_userlist_show_users() ********************************
 #  NAME
@@ -12793,7 +13029,7 @@ proc compile_source { { do_only_install 0 } } {
 
    global CHECK_SOURCE_DIR CHECK_OUTPUT CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
-   global CHECK_PRODUCT_FEATURE
+   global CHECK_PRODUCT_FEATURE CHECK_ADDITIONAL_COMPILE_HOSTS
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
    global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
@@ -12815,8 +13051,12 @@ proc compile_source { { do_only_install 0 } } {
    set was_error 0
    set cvs_change_log ""
 
-   
-
+   foreach host $CHECK_ADDITIONAL_COMPILE_HOSTS {
+      if { [ lsearch -exact $CHECK_SOURCE_COMPILE_HOSTS $host ] < 0 } {
+         lappend CHECK_SOURCE_COMPILE_HOSTS $host
+         puts $CHECK_OUTPUT "adding additional compile host $host"
+      }
+   }
 
    if { $CHECK_PACKAGE_DIRECTORY != "none" } {
        puts $CHECK_OUTPUT "can not compile -> using product packages"

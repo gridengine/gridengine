@@ -1,3 +1,8 @@
+CR-2002-11-21-1  Testsuite: new testsuite configuration parameter: add_compile_archs
+                              - new ts_config_version is 1.2
+                              - Forced compilation for specified architectures
+                              
+
 CR-2002-11-21-0  Testsuite: remove source code macro dump file after source
                             code update ( procedure compile_source() ) and
                             create a new one.

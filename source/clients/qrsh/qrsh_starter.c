@@ -52,7 +52,7 @@
 
 pid_t child_pid = 0;
 
-/****** qrsh_starter/setEnvironment() ***************************************
+/****** Interactive/qrsh_starter/setEnvironment() ***************************************
 *
 *  NAME
 *     setEnvironment() -- set environment from file
@@ -87,14 +87,6 @@ pid_t child_pid = 0;
 *                 - a PWD entry is found, but changing to the named directory fails
 *                 - necessary memory cannot be allocated
 *                 - the variable QRSH_COMMAND is not found
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 *
 ****************************************************************************
 */
@@ -158,7 +150,7 @@ static char *setEnvironment(const char *envFileName, char **wrapper)
    return command;
 }
 
-/****** qrsh_starter/write_pid_file() ***************************************
+/****** Interactive/qrsh_starter/write_pid_file() ***************************************
 *
 *  NAME
 *     write_pid_file()  -- write a pid to file pid in $TMPDIR
@@ -178,14 +170,6 @@ static char *setEnvironment(const char *envFileName, char **wrapper)
 *     0, if an error occured. Possible error situations are:
 *        - the environement variable TMPDIR cannot be read
 *        - the file cannot be opened
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 *
 ****************************************************************************
 */
@@ -221,7 +205,7 @@ static int write_pid_file(pid_t pid)
    return 1;
 }
 
-/****** qrsh_starter/forward_signal() ***************************************
+/****** Interactive/qrsh_starter/forward_signal() ***************************************
 *
 *  NAME
 *     forward_signal() -- forward a signal to qrsh_starter's child
@@ -236,16 +220,6 @@ static int write_pid_file(pid_t pid)
 *  INPUTS
 *     sig - the signal to forward
 *
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*
 ****************************************************************************
 */
 static void forward_signal(int sig)
@@ -255,7 +229,7 @@ static void forward_signal(int sig)
    }
 }
 
-/****** qrsh_starter/split_command() *******************************************
+/****** Interactive/qrsh_starter/split_command() *******************************************
 *  NAME
 *     split_command() -- split commandline into tokens
 *
@@ -279,14 +253,8 @@ static void forward_signal(int sig)
 *  RESULT
 *     static int - the number of arguments or 0 if an error occured
 *
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     qrsh_starter/join_command()
+*     Interactive/qrsh_starter/join_command()
 *
 *******************************************************************************/
 static int split_command(char *command, char ***cmdargs) {
@@ -333,7 +301,7 @@ static int split_command(char *command, char ***cmdargs) {
    return argc;
 }
 
-/****** qrsh_starter/join_command() ********************************************
+/****** Interactive/qrsh_starter/join_command() ********************************************
 *  NAME
 *     join_command() -- join arguments to a single string
 *
@@ -353,14 +321,8 @@ static int split_command(char *command, char ***cmdargs) {
 *  RESULT
 *     static char* - the resulting commandline or NULL, if an error occured.
 *
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     qrsh_starter/split_command()
+*     Interactive/qrsh_starter/split_command()
 *
 *******************************************************************************/
 static char *join_command(int argc, char **argv) {
@@ -392,7 +354,7 @@ static char *join_command(int argc, char **argv) {
 }
 
 
-/****** qrsh_starter/startJob() ***************************************
+/****** Interactive/qrsh_starter/startJob() ***************************************
 *
 *  NAME
 *     startJob() -- start a shell with commands to execute
@@ -429,16 +391,10 @@ static char *join_command(int argc, char **argv) {
 *        - necessary memory cannot be allocated
 *        - executing the shell failed
 *
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     qrsh_starter/write_pid_file()
-*     qrsh_starter/split_command()
-*     qrsh_starter/join_command()
+*     Interactive/qrsh_starter/write_pid_file()
+*     Interactive/qrsh_starter/split_command()
+*     Interactive/qrsh_starter/join_command()
 *
 ****************************************************************************
 */
@@ -555,7 +511,7 @@ static int startJob(char *command, char *wrapper, int noshell)
    return EXIT_FAILURE; 
 }
 
-/****** qrsh_starter/writeExitCode() ***************************************
+/****** Interactive/qrsh_starter/writeExitCode() ***************************************
 *
 *  NAME
 *    writeExitCode() -- write exit code of child process to file
@@ -581,14 +537,6 @@ static int startJob(char *command, char *wrapper, int noshell)
 *     EXIT_FAILURE, if one of the following errors occured:
 *        - the environment variable TMPDIR cannot be read
 *        - the file $TMPDIR/qrsh_exit_code cannot be written
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 *
 ****************************************************************************
 */
@@ -636,7 +584,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
    return EXIT_SUCCESS;
 }
 
-/****** qrsh_starter/--Introduction-qrsh_starter ***************************************
+/****** Interactive/qrsh_starter/--Introduction ***************************************
 *
 *  NAME
 *     qrsh_starter -- start a command special correct environment
@@ -674,12 +622,8 @@ static int writeExitCode(int myExitCode, int programExitCode)
 *     env > ~/myenvironment
 *     rsh <hostname> qrsh_starter ~/myenvironment 
 *
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     qsh/--Introduction-qsh
+*     Interactive/qsh/--Introduction
 *
 ****************************************************************************
 */

@@ -367,6 +367,7 @@ lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show)
              * User Hold 
              */
             if ((show & QSTAT_DISPLAY_USERHOLD) == QSTAT_DISPLAY_USERHOLD) {
+               /* unenrolled jobs in user hold state ... */
                tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_u_h_ids, 
                            RN_Type, RN_min, 0);
                if (nw == NULL) {
@@ -374,6 +375,16 @@ lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show)
                } else {
                   nw = lOrWhere(nw, tmp_nw);
                } 
+#if 1 /* EB: TODO: Review #1439 */
+               /* ... or enrolled jobs with an user  hold */
+               tmp_nw = lWhere("%T((%I -> %T(%I m= %u)))", JB_Type,
+                               JB_ja_tasks, JAT_Type, JAT_hold, MINUS_H_TGT_USER);
+               if (nw == NULL) {
+                  nw = tmp_nw;
+               } else {
+                  nw = lOrWhere(nw, tmp_nw);
+               }
+#endif
             }
             /*
              * Operator Hold 
@@ -386,6 +397,15 @@ lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show)
                } else {
                   nw = lOrWhere(nw, tmp_nw);
                } 
+#if 1 /* EB: TODO: Review #1439 */
+               tmp_nw = lWhere("%T((%I -> %T(%I m= %u)))", JB_Type,
+                               JB_ja_tasks, JAT_Type, JAT_hold, MINUS_H_TGT_OPERATOR);
+               if (nw == NULL) {
+                  nw = tmp_nw;
+               } else {
+                  nw = lOrWhere(nw, tmp_nw);
+               }
+#endif
             }
             /*
              * System Hold 
@@ -398,6 +418,15 @@ lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show)
                } else {
                   nw = lOrWhere(nw, tmp_nw);
                } 
+#if 1 /* EB: TODO: Review #1439 */
+               tmp_nw = lWhere("%T((%I -> %T(%I m= %u)))", JB_Type,
+                               JB_ja_tasks, JAT_Type, JAT_hold, MINUS_H_TGT_SYSTEM);
+               if (nw == NULL) {
+                  nw = tmp_nw;
+               } else {
+                  nw = lOrWhere(nw, tmp_nw);
+               }
+#endif
             }
             /*
              * Start Time Hold 

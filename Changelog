@@ -2,6 +2,7 @@ EB-2003-02-21-1  Cleanup:   Moved functions from sgeobjlib to utilib
 
 AH-2003-02-21-0  Enhancem.: Initial step to JAPI job API that will be used
                             for implementing DRMAA interface
+                 Review:    AS
 
 EB-2003-02-21-0  Cleanup:   replaced int by bool where applicable
 

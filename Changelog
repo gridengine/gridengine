@@ -1,3 +1,6 @@
+CR-2002-07-22-0: Testsuite: New version strings for 5.3.1beta3 and beta4
+                 Enhancem.:
+
 CR-2002-07-19-0: Bugfix:    fixed broken build for some architectures 
                             (CR-2002-07-18-4)
 

@@ -8273,7 +8273,7 @@ proc setup_host_config { file { force 0 }} {
 #*******************************************************************************
 proc setup_user_config { file { force 0 }} {
    global CHECK_OUTPUT
-   global ts_user_config actual_ts_user_config_version
+   global ts_user_config actual_ts_user_config_version do_nomain
    
 
    if { [read_array_from_file $file "testsuite user configuration" ts_user_config ] == 0 } {
@@ -8282,53 +8282,56 @@ proc setup_user_config { file { force 0 }} {
          exit -1
       }
       # got config
-      
-      if { [verify_user_config ts_user_config 1 err_list $force ] != 0 } {
-         # configuration problems
-         foreach elem $err_list {
-            puts $CHECK_OUTPUT "$elem"
-         } 
-         set not_ok 1
-         while { $not_ok } {
-            if { [verify_user_config ts_user_config 0 err_list $force ] != 0 } {
-               set not_ok 1
-               puts $CHECK_OUTPUT "User configuration error. Stop."
-               foreach elem $err_list {
-                  puts $CHECK_OUTPUT "error in: $elem"
-               } 
-               puts $CHECK_OUTPUT "try again? (y/n)"
-               set answer [wait_for_enter 1]
-               if { $answer == "n" } {
-                  puts $CHECK_OUTPUT "Do you want to save your changes? (y/n)"
+     
+      if { $do_nomain == 0 } {
+         if { [verify_user_config ts_user_config 1 err_list $force ] != 0 } {
+            # configuration problems
+            foreach elem $err_list {
+               puts $CHECK_OUTPUT "$elem"
+            } 
+            set not_ok 1
+            while { $not_ok } {
+               if { [verify_user_config ts_user_config 0 err_list $force ] != 0 } {
+                  set not_ok 1
+                  puts $CHECK_OUTPUT "User configuration error. Stop."
+                  foreach elem $err_list {
+                     puts $CHECK_OUTPUT "error in: $elem"
+                  } 
+                  puts $CHECK_OUTPUT "try again? (y/n)"
                   set answer [wait_for_enter 1]
-                  if { $answer == "y" } {
-                     if { [ save_user_configuration $file] != 0} {
-                        puts $CHECK_OUTPUT "Could not save user configuration"
-                        wait_for_enter
+                  if { $answer == "n" } {
+                     puts $CHECK_OUTPUT "Do you want to save your changes? (y/n)"
+                     set answer [wait_for_enter 1]
+                     if { $answer == "y" } {
+                        if { [ save_user_configuration $file] != 0} {
+                           puts $CHECK_OUTPUT "Could not save user configuration"
+                           wait_for_enter
+                        }
                      }
+                     return
+                  } else {
+                    continue
                   }
-                  return
                } else {
-                 continue
+                 set not_ok 0
                }
-            } else {
-              set not_ok 0
+            }
+            if { [ save_user_configuration $file] != 0} {
+               puts $CHECK_OUTPUT "Could not save user configuration"
+               wait_for_enter
+               return
+            }
+
+         }
+         if { $force == 1 } {
+            if { [ save_user_configuration $file] != 0} {
+               puts $CHECK_OUTPUT "Could not save user configuration"
+               wait_for_enter
             }
          }
-         if { [ save_user_configuration $file] != 0} {
-            puts $CHECK_OUTPUT "Could not save user configuration"
-            wait_for_enter
-            return
-         }
-
+         return
       }
-      if { $force == 1 } {
-         if { [ save_user_configuration $file] != 0} {
-            puts $CHECK_OUTPUT "Could not save user configuration"
-            wait_for_enter
-         }
-      }
-      return
+      return 
    } else {
       puts $CHECK_OUTPUT "could not open user config file \"$file\""
       puts $CHECK_OUTPUT "press return to create new user configuration file"

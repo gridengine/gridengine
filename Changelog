@@ -1,3 +1,8 @@
+JG-2002-12-18-0  Bugfix:    Fixed problem with ACK mechanism between qmaster 
+                            and execd.
+                 IZ:        #352
+                 Testsuite: Fixed problem retrieving local spool directory.
+
 CR-2002-12-18-0  Testsuite: Fixed bug which will result in a timeout error
                             when testsuite tries to delete a local spool
                             directory on a remote host

@@ -2359,6 +2359,9 @@ proc setup_execd_conf {} {
 
   foreach host $CHECK_CORE_EXECD {
      puts $CHECK_OUTPUT "get configuration for host $host ..."
+     if [info exists tmp_config] {
+        unset tmp_config
+     }
      get_config tmp_config $host
      set elements [array names tmp_config]
      set counter 0

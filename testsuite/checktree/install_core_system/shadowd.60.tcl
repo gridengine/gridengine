@@ -75,6 +75,8 @@ proc install_shadowd {} {
 
    if {! $check_use_installed_system} {
       set feature_install_options ""
+      # JG: TODO: this code is duplicated in execd.??.tcl,
+      # create a function copy_certificates
       if { $ts_config(product_feature) == "csp" } {
             set feature_install_options "-csp"
             set my_csp_host_list $CHECK_CORE_SHADOWD
@@ -116,6 +118,9 @@ proc install_shadowd {} {
                     puts $CHECK_OUTPUT "copy tar file \"$TAR_FILE\"\nto \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
                     set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "cp" "$TAR_FILE $CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" ]
                     puts $CHECK_OUTPUT $result
+                    
+                     # tar file will be on nfs - wait for it to be visible
+                     wait_for_remote_file $shadow_host $CHECK_USER "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar"
                     
                     puts $CHECK_OUTPUT "copy tar file \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\"\nto \"$TAR_FILE\" on host $shadow_host ..."
                     set result [ start_remote_prog "$shadow_host" "root" "cp" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar $TAR_FILE" ]

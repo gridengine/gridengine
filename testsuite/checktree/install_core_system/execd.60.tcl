@@ -116,6 +116,9 @@ proc install_execd {} {
                     puts $CHECK_OUTPUT "copy tar file \"$TAR_FILE\"\nto \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
                     set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "cp" "$TAR_FILE $CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" prg_exit_state 300 ]
                     puts $CHECK_OUTPUT $result
+
+                     # tar file will be on nfs - wait for it to be visible
+                     wait_for_remote_file $exec_host $CHECK_USER "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar"
                     
                     puts $CHECK_OUTPUT "copy tar file \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\"\nto \"$TAR_FILE\" on host $exec_host ..."
                     set result [ start_remote_prog "$exec_host" "root" "cp" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar $TAR_FILE" prg_exit_state 300 ]

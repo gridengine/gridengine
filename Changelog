@@ -1,3 +1,8 @@
+EB-2004-03-11-0: Bugfix:    removing a suspend threshold doesn't unsuspend jobs
+                 Issue:     831
+                 Changed:   sge_qmaster
+                 Review:    SG
+
 MD-2004-03-11-1: Bugfix:    set default "y" for startup script inst
                  Changed:   inst_sge
 

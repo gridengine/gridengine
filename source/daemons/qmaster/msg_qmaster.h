@@ -305,6 +305,7 @@
 #define MSG_JOB_SENDKILLTOXFORJOBYZ_SUU _("send kill to "SFQ" for job "U32CFormat"."U32CFormat)
 #define MSG_JOB_NORESUBPERMS_SSS      _("job rejected: %s@%s is not allowed to resubmit jobs of user %s\n")
 #define MSG_JOB_NOPERMS_SS            _("job rejected: %s@%s is not allowed to submit jobs\n")
+#define MSG_JOB_MORETASKSTHAN_U       _("job rejected: You try to submit a job with more than "U32CFormat" tasks\n")
 #define MSG_JOB_UID2LOW_II            _("job rejected: your user id %d is lower than minimum user id %d of cluster configuration\n")
 #define MSG_JOB_GID2LOW_II            _("job rejected: your group id %d is lower than minimum group id %d of cluster configuration\n")
 #define MSG_JOB_QNOTREQUESTABLE       _("job was rejected because job requests a queue while queues are not configured as requestable\n")

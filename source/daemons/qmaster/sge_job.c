@@ -217,6 +217,21 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    lSetString(jep, JB_group, group);
    lSetUlong(jep, JB_gid, gid);
 
+   /*
+    * Is the max. size of array jobs exceeded?
+    */
+   if (conf.max_aj_tasks > 0) {
+      lList *range_list = lGetList(jep, JB_ja_structure);
+      u_long32 submit_size = range_list_get_number_of_ids(range_list);
+   
+      if (submit_size > conf.max_aj_tasks) {
+         ERROR((SGE_EVENT, MSG_JOB_MORETASKSTHAN_U, conf.max_aj_tasks));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      } 
+   }
+
    /* fill name and shortcut for all requests
     * fill numeric values for all bool, time, memory and int type requests
     * use the Master_Complex_List for all fills

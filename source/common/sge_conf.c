@@ -199,7 +199,8 @@ static void chg_conf_val(lList *lp_cfg, char *name, char **field, u_long32 *val,
 #define FINISHED_JOBS             "0"
 #define RESCHEDULE_UNKNOWN        "0:0:0"
 #define IGNORE_FQDN               "true"
-#define MAX_AJ_INSTANCES          "50"
+#define MAX_AJ_INSTANCES          "2000"
+#define MAX_AJ_TASKS              "75000"
 
 static tConfEntry conf_entries[] = {
  { "qmaster_spool_dir", 0, NULL,                1, NULL },
@@ -245,6 +246,7 @@ static tConfEntry conf_entries[] = {
  { "reschedule_unknown",1, RESCHEDULE_UNKNOWN,  1, NULL },
  { "ignore_fqdn",       0, IGNORE_FQDN,         1, NULL },
  { "max_aj_instances",  0, MAX_AJ_INSTANCES,    1, NULL },
+ { "max_aj_tasks",      0, MAX_AJ_TASKS,        1, NULL },
  { NULL,                0, NULL,                0, 0,   }
 };
 
@@ -428,6 +430,7 @@ lList *lpCfg
    chg_conf_val(lpCfg, "ignore_fqdn", NULL, &uval_tmp, TYPE_TIM);  
          fqdn_cmp = !uval_tmp;  /* logic of ignore_fqdn and fqdn_cmp are contrary */
    chg_conf_val(lpCfg, "max_aj_instances", NULL, &mconf->max_aj_instances, TYPE_INT);
+   chg_conf_val(lpCfg, "max_aj_tasks", NULL, &mconf->max_aj_tasks, TYPE_INT);
 
    DEXIT;
 }
@@ -835,6 +838,7 @@ void sge_show_conf()
    DPRINTF(("conf.reschedule_unknown     >%u<\n", (unsigned) conf.reschedule_unknown));
    DPRINTF(("ignore_fqdn                 >%d<\n", !fqdn_cmp));
    DPRINTF(("conf.max_aj_instances       >%u<\n", (unsigned) conf.max_aj_instances));
+   DPRINTF(("conf.max_aj_tasks           >%u<\n", (unsigned) conf.max_aj_tasks));
    
 
    for_each (ep, conf.user_lists) {

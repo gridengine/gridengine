@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#define GDI_VERSION "6.0u2"
+#define GDI_VERSION "6.0u3"
 
 #ifdef ADD_SUN_COPYRIGHT
 #  define GE_LONGNAME "N1 Grid Engine"

@@ -309,7 +309,7 @@ enum {
           - repeatedly do drmaa_synchronize(DRMAA_TIMEOUT_NO_WAIT) + sleep() until job is finished
           - then drmaa_exit() is called */
 
-   ST_ATTRIBUTE_CHECK
+   ST_ATTRIBUTE_CHECK,
       /* Need to test all DRMAA attributes:
          DRMAA_REMOTE_COMMAND - implicit
          DRMAA_JS_STATE
@@ -323,12 +323,14 @@ enum {
          DRMAA_NATIVE_SPECIFICATION - test if it works and it if clashes
          DRMAA_BLOCK_EMAIL
          DRMAA_START_TIME
-         DRMAA_TRANSFER_FILES
-         DRMAA_DEADLINE_TIME
-         DRMAA_WCT_HLIMIT
-         DRMAA_WCT_SLIMIT
-         DRMAA_DURATION_HLIMIT
-         DRMAA_DURATION_SLIMIT */
+         DRMAA_V_ARGV
+         DRMAA_V_EMAIL
+         DRMAA_V_ENV */
+   ST_USAGE_CHECK
+      /* - one thread 
+         - submit jobs 
+         - wait for jobend
+         - print job usage */
 };
 
 const struct test_name2number_map {
@@ -391,6 +393,7 @@ const struct test_name2number_map {
    /* tests that test_drmaa can't test in an automated fashion (so far) */
    { "ST_DRMAA_JOB_PS",                          ST_DRMAA_JOB_PS,                            1, "<jobid> ..."   },
    { "ST_DRMAA_CONTROL",                         ST_DRMAA_CONTROL,                           3, "DRMAA_CONTROL_* DRMAA_ERRNO_* <jobid> ..." },
+   { "ST_USAGE_CHECK",                            ST_USAGE_CHECK,                            1, "<exit_job>" },
 
    { NULL,                                       0 }
 };
@@ -2532,7 +2535,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
-               fprintf (stderr, "Job \"%s\" was not in hold state\n", lGetString(job_ep, JB_job_name));
+               fprintf (stderr, "Job \"%s\" was not in hold state\n", jobid);
                failed_test = 1;
             }
 
@@ -2758,7 +2761,7 @@ static int test(int *argc, char **argv[], int parse_args)
           * testing join files
           */
          do {
-            //First submit job to create tar file
+            /* First submit job to create tar file */
             char *tar_path = "test.tar";
             char abs_path[128]; 
 
@@ -2832,7 +2835,7 @@ static int test(int *argc, char **argv[], int parse_args)
                continue;
             }
             
-            //submit job to read tar file
+            /* submit job to read tar file */
             printf ("Running job to read data\n");
             printf ("Getting job template\n");
             drmaa_allocate_job_template(&jt, NULL, 0);
@@ -2923,7 +2926,7 @@ static int test(int *argc, char **argv[], int parse_args)
             printf ("$SGE_ROOT/$SGE_CELL/common/sge_request should contain the following entry:\n");
             printf ("test.cat -N ExitTest -h\n");
             
-            //first test that it works            
+            /* first test that it works */
             printf ("Testing job category standalone\n");
             printf ("Getting job template\n");
             drmaa_allocate_job_template(&jt, NULL, 0);
@@ -2999,7 +3002,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
-               fprintf (stderr, "Job \"%s\" was not in hold state\n", lGetString(job_ep, JB_job_name));
+               fprintf (stderr, "Job \"%s\" was not in hold state\n", jobid);
                failed_test = 1;
             }
 
@@ -3030,7 +3033,7 @@ static int test(int *argc, char **argv[], int parse_args)
                continue;
             }
 
-            //then test that it doesn't override DRMAA attributes
+            /* then test that it doesn't override DRMAA attributes */
             printf ("Testing job category v/s DRMAA attributes\n");
             printf ("Getting job template\n");
             drmaa_allocate_job_template(&jt, NULL, 0);
@@ -3103,7 +3106,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
-               fprintf (stderr, "job \"%s\" was not in hold state\n", lGetString(job_ep, JB_job_name));
+               fprintf (stderr, "job \"%s\" was not in hold state\n", jobid);
                failed_test = 1;
             }
 
@@ -3148,7 +3151,7 @@ static int test(int *argc, char **argv[], int parse_args)
           */
          do {
             printf ("Testing native specification\n");
-            //first test that it works            
+            /* first test that it works */
             printf ("Testing native specification standalone\n");
             printf ("Getting job template\n");
             drmaa_allocate_job_template(&jt, NULL, 0);
@@ -3224,7 +3227,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
-               fprintf (stderr, "Job \"%s\" was not in hold state\n", lGetString(job_ep, JB_job_name));
+               fprintf (stderr, "Job \"%s\" was not in hold state\n", jobid);
                failed_test = 1;
             }
 
@@ -3255,7 +3258,7 @@ static int test(int *argc, char **argv[], int parse_args)
                continue;
             }
 
-            //then test that it doesn't override DRMAA attributes
+            /* then test that it doesn't override DRMAA attributes */
             printf ("Testing native specification v/s DRMAA attributes\n");
             printf ("Getting job template\n");
             drmaa_allocate_job_template(&jt, NULL, 0);
@@ -3328,7 +3331,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
-               fprintf (stderr, "job \"%s\" was not in hold state\n", lGetString(job_ep, JB_job_name));
+               fprintf (stderr, "job \"%s\" was not in hold state\n", jobid);
                failed_test = 1;
             }
 
@@ -3700,6 +3703,66 @@ static int test(int *argc, char **argv[], int parse_args)
          }
          
          return test_failed;
+      }
+   case ST_USAGE_CHECK:
+      {
+         char jobid[1024], value[128], new_jobid[1024];
+         drmaa_attr_values_t *rusage = NULL;
+         int status;
+
+         if (parse_args)
+            exit_job = NEXT_ARGV(argc, argv);
+         
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+         
+         report_session_key();
+
+         jt = create_exit_job_template(exit_job, 0);
+
+         printf ("Running job\n");
+         while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                  sizeof(diagnosis)-1)) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+            fprintf(stderr, "drmaa_run_job() failed - retry: %s\n", diagnosis);
+            sleep(1);
+         }
+
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+            return 1;
+         }
+
+         if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
+         
+         printf ("Waiting for job to complete\n");
+         do {
+            drmaa_errno = drmaa_wait(jobid, new_jobid, sizeof(jobid)-1, 
+               &status, DRMAA_TIMEOUT_WAIT_FOREVER, &rusage, diagnosis, sizeof(diagnosis)-1);
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_wait(%s) failed - retry: %s\n", jobid, diagnosis); 
+               sleep(1);
+            }
+         } while (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
+
+         printf("Job with job id %s finished\n", jobid);
+
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+            return 1;
+         }
+         
+         if (rusage == NULL) {
+            fprintf (stderr, "drmaa_wait(%s) did not return usage information\n", jobid);
+            return 1;
+         }
+         
+         while ((drmaa_errno=drmaa_get_next_attr_value(rusage, value, 127))==DRMAA_ERRNO_SUCCESS) {
+            printf("%s\n", value);
+         }
+         
+         break;
       }
    default:
       break;

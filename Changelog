@@ -1,3 +1,7 @@
+DT-2003-11-21-0: Enhancem.: Fixed broken build (AIX51) and added test for
+													  usage information from drmaa_wait()
+								 Changed:   test_drmaa.c
+
 DT-2003-11-21-0: Bugfix:	  Fixed scheduler startup issue -- cleaned up event
 														client changes
 								 Changed:	  sge_process_events.c

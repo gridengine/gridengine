@@ -237,6 +237,12 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
          lListElem *range = NULL;
 
          for_each(range, range_list) { 
+            if (range_is_id_within(range, 0)) {
+               ERROR((SGE_EVENT, MSG_JOB_NULLNOTALLOWEDT));
+               sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+               DEXIT;
+               return STATUS_EUNKNOWN;
+            }
             range_correct_end(range);
          }
       }

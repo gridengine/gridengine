@@ -1,3 +1,7 @@
+EB-2002-03-15-0: Bugfix:    qmaster code accepted qsub -t task specification
+                            which included the id 0 => loop in schedd
+                 Issue:     #192
+
 AS-2002-03-15-1  Install:   ignore_fqdn accidentially always set to true
                             remove qlogin_command from default local config
 

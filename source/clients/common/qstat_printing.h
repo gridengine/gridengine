@@ -102,5 +102,8 @@ sge_print_jobs_zombie(lList *zombie_list, const lList *pe_list,
                       u_long32 full_listing, u_long32 group_opt,
                       int longest_queue_length);
 
+const char* 
+sge_get_dominant_stringval(lListElem *rep, u_long32 *dominant_p, 
+                           dstring *resource_string_p);
 
 #endif /* __QSTAT_PRINTING_H */

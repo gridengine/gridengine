@@ -275,13 +275,7 @@ char **argv
       sleep(check_interval);
 
       if (shut_me_down) {
-         u_long32 old_ll = log_state_get_log_level();
-         log_state_set_log_level(LOG_INFO);
-         INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SS, 
-               feature_get_product_name(FS_VERSION, &ds),
-               feature_get_featureset_name(feature_get_active_featureset_id())));
-         log_state_set_log_level(old_ll);
-         SGE_EXIT(0);
+         sge_shutdown();
       }   
 
       heartbeat = get_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE);

@@ -63,6 +63,7 @@ typedef struct _TOVEntry {
    Cardinal total_functional_tickets;
    Cardinal override_tickets;
    Boolean  share_override_ticket;
+   Boolean report_pjob_tickets;
    Boolean  share_functional_ticket;
    int max_pending_tasks_per_job;
    int max_functional_jobs;
@@ -74,7 +75,7 @@ typedef struct _TOVEntry {
    char *policy_hierarchy;
 } tTOVEntry;
 
-static tTOVEntry cdata = {0, 0, 0, False, False, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, NULL};
+static tTOVEntry cdata = {0, 0, 0, False, False, False, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, NULL};
 static Boolean data_changed = False;
 
 static Widget qmon_tov = 0;
@@ -115,6 +116,11 @@ XtResource tov_resources[] = {
    { "max_pending_tasks_per_job", "max_pending_tasks_per_job", XtRInt,
       sizeof(int),
       XtOffsetOf(tTOVEntry, max_pending_tasks_per_job),
+      XtRImmediate, (XtPointer) 0 },
+
+   { "report_pjob_tickets", "report_pjob_tickets", XtRBoolean,
+      sizeof(Boolean),
+      XtOffsetOf(tTOVEntry, report_pjob_tickets),
       XtRImmediate, (XtPointer) 0 },
 
    { "share_override_ticket", "share_override_ticket", XtRBoolean,
@@ -400,6 +406,10 @@ XtPointer cld, cad;
       cdata.max_functional_jobs = data.max_functional_jobs;
       data_changed = True;
    }
+   if (data.report_pjob_tickets != cdata.report_pjob_tickets) {
+      cdata.report_pjob_tickets = data.report_pjob_tickets;
+      data_changed = True;
+   }
    if (data.weight_deadline != cdata.weight_deadline) {
       cdata.weight_deadline = data.weight_deadline;
       data_changed = True;
@@ -531,6 +541,7 @@ static Boolean qmonTOVEntryReset(tTOVEntry *tov_data)
    tov_data->total_functional_tickets = 0;
    tov_data->override_tickets = 0;
    tov_data->share_override_ticket = False;
+   tov_data->report_pjob_tickets = False;
    tov_data->share_functional_ticket = False;
    tov_data->max_pending_tasks_per_job = 0;
    tov_data->max_functional_jobs = 0;
@@ -575,6 +586,8 @@ lListElem *scep
                                             SC_weight_tickets_override);
    tov_data->share_override_ticket = (Boolean)lGetBool(scep,
                                             SC_share_override_tickets);
+   tov_data->report_pjob_tickets = (Boolean)lGetBool(scep,
+                                            SC_report_pjob_tickets);
    tov_data->share_functional_ticket = (Boolean)lGetBool(scep,
                                             SC_share_functional_shares);
    tov_data->max_pending_tasks_per_job = (int)lGetUlong(scep,
@@ -612,6 +625,7 @@ tTOVEntry *tov_data
                (u_long32)tov_data->total_functional_tickets);
 
    lSetBool(scep, SC_share_override_tickets, tov_data->share_override_ticket);
+   lSetBool(scep, SC_report_pjob_tickets, tov_data->report_pjob_tickets);
    lSetBool(scep, SC_share_functional_shares, tov_data->share_functional_ticket);
    lSetUlong(scep, SC_max_pending_tasks_per_job, 
                (u_long32)tov_data->max_pending_tasks_per_job);

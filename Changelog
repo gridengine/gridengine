@@ -1,3 +1,10 @@
+AA-2004-05-11-0: Bugfix:    - Startup logging contains 'none'
+                            - qhost does not print overwritten ARCH
+                            - qmon policy dialog, missing show pending job tickets
+                 Issue:     861, 813
+                 Review:    EB
+                 Changed:   qhost, qstat, qmon
+                 
 EB-2004-05-11-0: Bugfix:    Changed msg id
 
 JG-2004-05-11-0: Bugfix:    If the CULL definition of an object was extended by

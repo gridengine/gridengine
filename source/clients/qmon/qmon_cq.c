@@ -76,6 +76,7 @@
 #include "sge_select_queue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
+#include "sge_qinstance_type.h"
 #include "load_correction.h"
 #include "sge_parse_num_par.h"
 #include "sge_complex_schedd.h"

@@ -82,7 +82,7 @@ static lList *sge_parse_qhost(lList **ppcmdline, lList **pplres, lList **ppFres,
 static void qhost_usage(FILE *fp);
 static void sge_print_queues(lList *ql, lListElem *hrl, lList *jl, lList *ul, lList *ehl, lList *cl, lList *pel, u_long32 show);
 static void sge_print_resources(lList *ehl, lList *cl, lList *resl, lListElem *host, u_long32 show);
-static void sge_print_host(lListElem *hep);
+static void sge_print_host(lListElem *hep, lList *centry_list);
 static int reformatDoubleValue(char *result, char *format, const char *oldmem);
 static void get_all_lists(lList **ql, lList **jl, lList **cl, lList **ehl, lList **pel, lList *hl, lList *ul, u_long32 show);
 
@@ -241,7 +241,7 @@ char **argv
              MSG_HEADER_MEMTOT, MSG_HEADER_MEMUSE, MSG_HEADER_SWAPTO, MSG_HEADER_SWAPUS);
          printf("-------------------------------------------------------------------------------\n");
       }
-      sge_print_host(ep);
+      sge_print_host(ep, cl);
       sge_print_resources(ehl, cl, resource_list, ep, show);
       sge_print_queues(ql, ep, jl, NULL, ehl, cl, pel, show);
    }   
@@ -257,12 +257,16 @@ char **argv
 
 /*-------------------------------------------------------------------------*/
 static void sge_print_host(
-lListElem *hep 
+lListElem *hep,
+lList *centry_list
 ) {
    lListElem *lep;
    char *s,host_print[MAXHOSTLEN+1];
-   const char *host, *arch, *num_proc;
-   char load_avg[20], mem_total[20], mem_used[20], swap_total[20], swap_used[20];
+   const char *host;
+   char load_avg[20], mem_total[20], mem_used[20], swap_total[20], 
+        swap_used[20], num_proc[20], arch_string[80];
+   dstring rs = DSTRING_INIT;     
+   u_long32 dominant = 0;
 
    DENTER(TOP_LAYER, "sge_print_host");
    
@@ -279,67 +283,90 @@ lListElem *hep
    /*
    ** arch
    */
-   lep=lGetSubStr(hep, HL_name, "arch", EH_load_list);
-   if (lep)
-      arch = lGetString(lep, HL_value); 
+   lep=get_attribute_by_name(NULL, hep, NULL, LOAD_ATTR_ARCH, centry_list, DISPATCH_TIME_NOW, 0);
+   if (lep) {
+      strncpy(arch_string, sge_get_dominant_stringval(lep, &dominant, &rs), 
+               sizeof(arch_string)-1); 
+      sge_dstring_clear(&rs);
+      lep = lFreeElem(lep);
+   }            
    else
-      arch = "-";
+      strcpy(arch_string, "-");
    
    /*
    ** num_proc
    */
-   lep=lGetSubStr(hep, HL_name, "num_proc", EH_load_list);
-   if (lep)
-      num_proc = lGetString(lep, HL_value); 
+   lep=get_attribute_by_name(NULL, hep, NULL, "num_proc", centry_list, DISPATCH_TIME_NOW, 0);
+   if (lep) {
+      strncpy(num_proc, sge_get_dominant_stringval(lep, &dominant, &rs),
+               sizeof(num_proc)-1); 
+      sge_dstring_clear(&rs);
+      lep = lFreeElem(lep);
+   }            
    else
-      num_proc = "-";
+      strcpy(num_proc, "-");
 
    /*
    ** load_avg
    */
-   lep=lGetSubStr(hep, HL_name, "load_avg", EH_load_list);
-   if (lep)
-      reformatDoubleValue(load_avg, "%.2f%c", lGetString(lep, HL_value)); 
+   lep=get_attribute_by_name(NULL, hep, NULL, "load_avg", centry_list, DISPATCH_TIME_NOW, 0);
+   if (lep) {
+      reformatDoubleValue(load_avg, "%.2f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
+      sge_dstring_clear(&rs);
+      lep = lFreeElem(lep);
+   }            
    else
       strcpy(load_avg, "-");
-   
+
    /*
    ** mem_total
    */
-   lep=lGetSubStr(hep, HL_name, "mem_total", EH_load_list);
-   if (lep)
-      reformatDoubleValue(mem_total, "%.1f%c", lGetString(lep, HL_value)); 
+   lep=get_attribute_by_name(NULL, hep, NULL, "mem_total", centry_list, DISPATCH_TIME_NOW, 0);
+   if (lep) {
+      reformatDoubleValue(mem_total, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
+      sge_dstring_clear(&rs);
+      lep = lFreeElem(lep);
+   }            
    else
       strcpy(mem_total, "-");
-   
+
    /*
    ** mem_used
    */
-   lep=lGetSubStr(hep, HL_name, "mem_used", EH_load_list);
-   if (lep)
-      reformatDoubleValue(mem_used, "%.1f%c", lGetString(lep, HL_value)); 
+   lep=get_attribute_by_name(NULL, hep, NULL, "mem_used", centry_list, DISPATCH_TIME_NOW, 0);
+   if (lep) {
+      reformatDoubleValue(mem_used, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
+      sge_dstring_clear(&rs);
+      lep = lFreeElem(lep);
+   }            
    else
       strcpy(mem_used, "-");
-   
+
    /*
    ** swap_total
    */
-   lep=lGetSubStr(hep, HL_name, "swap_total", EH_load_list);
-   if (lep)
-      reformatDoubleValue(swap_total, "%.1f%c", lGetString(lep, HL_value)); 
+   lep=get_attribute_by_name(NULL, hep, NULL, "swap_total", centry_list, DISPATCH_TIME_NOW, 0);
+   if (lep) {
+      reformatDoubleValue(swap_total, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
+      sge_dstring_clear(&rs);
+      lep = lFreeElem(lep);
+   }            
    else
       strcpy(swap_total, "-");
-   
+
    /*
    ** swap_used
    */
-   lep=lGetSubStr(hep, HL_name, "swap_used", EH_load_list);
-   if (lep)
-      reformatDoubleValue(swap_used, "%.1f%c", lGetString(lep, HL_value)); 
+   lep=get_attribute_by_name(NULL, hep, NULL, "swap_used", centry_list, DISPATCH_TIME_NOW, 0);
+   if (lep) {
+      reformatDoubleValue(swap_used, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
+      sge_dstring_clear(&rs);
+      lep = lFreeElem(lep);
+   }            
    else
       strcpy(swap_used, "-");
-   
-   printf(HEAD_FORMAT, host_print ? host_print: "-", arch, num_proc, load_avg, 
+
+   printf(HEAD_FORMAT, host_print ? host_print: "-", arch_string, num_proc, load_avg, 
                      mem_total, mem_used, swap_total, swap_used);
 
    DEXIT;

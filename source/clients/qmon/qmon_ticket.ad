@@ -59,6 +59,7 @@ Qmon*tov_layout.xmtChildren: \
                      tov_done, tov_apply, tov_update, tov_help; \
    XmtMsgLine        tov_message;\
    XmToggleButton    share_override_ticket = share_override_ticket, \
+                     report_pjob_tickets = report_pjob_tickets, \
                      share_functional_ticket = share_functional_ticket; \
    Spinbox           max_pending_tasks_per_job = max_pending_tasks_per_job, \
                      max_functional_jobs = max_functional_jobs;
@@ -116,6 +117,7 @@ Qmon*tov_layout.layout: \
             = \
             share_override_ticket \
             share_functional_ticket \
+            report_pjob_tickets \
             Caption tl "@{Maximum Functional Jobs}" \
                Row { max_functional_jobs <> } \
             Caption tl "@{Maximum Pending Tasks Per Job}" \
@@ -175,6 +177,9 @@ Qmon*tov_layout*tov_help.labelString:                   @{Help}
 
 Qmon*tov_layout*share_override_ticket.labelString:    @{Share Override Tickets}
 Qmon*tov_layout*share_override_ticket.alignment:      ALIGNMENT_BEGINNING
+
+Qmon*tov_layout*report_pjob_tickets.labelString:    @{Report Pending Job Tickets}
+Qmon*tov_layout*report_pjob_tickets.alignment:      ALIGNMENT_BEGINNING
 
 Qmon*tov_layout*share_functional_ticket.labelString:  @{Share Functional Tickets}
 Qmon*tov_layout*share_functional_ticket.alignment:    ALIGNMENT_BEGINNING

@@ -329,7 +329,6 @@ lList *XmStringToCull(Widget list, lDescr *dp, int nm, int selected)
    Cardinal itemCount;
    String *strings;
    lList *lp = NULL;
-   lListElem *ep = NULL;
    int i;
    int dataType;
    
@@ -354,10 +353,10 @@ lList *XmStringToCull(Widget list, lDescr *dp, int nm, int selected)
             dataType = lGetPosType(dp, lGetPosInDescr(dp, nm));
             switch (dataType) {
                case lStringT:
-                  ep = lAddElemStr(&lp, nm, strings[i], dp);
+                  lAddElemStr(&lp, nm, strings[i], dp);
                   break;
                case lHostT:
-                  ep = lAddElemHost(&lp, nm, strings[i], dp);
+                  lAddElemHost(&lp, nm, strings[i], dp);
                   break;
                default:
                   DPRINTF(("XmStringToCull - unexpected data type\n"));

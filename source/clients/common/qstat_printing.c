@@ -260,8 +260,8 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
       lList *rlp;
       lListElem *rep;
       char dom[5];
+      u_long32 dominant = 0;
       const char *s;
-      u_long32 dominant;
 
       rlp = NULL;
 
@@ -286,72 +286,7 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
             }
          }
          sge_dstring_clear(&resource_string);
-
-         { 
-            u_long32 type = lGetUlong(rep, CE_valtype);
-            switch (type) {
-            case TYPE_HOST:   
-            case TYPE_STR:   
-            case TYPE_CSTR:  
-            case TYPE_RESTR:
-               if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
-                  dominant = lGetUlong(rep, CE_pj_dominant);
-                  s = lGetString(rep, CE_pj_stringval);
-               } else {
-                  dominant = lGetUlong(rep, CE_dominant);
-                  s = lGetString(rep, CE_stringval);
-               }
-               break;
-            case TYPE_TIM: 
-
-               if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
-                  double val = lGetDouble(rep, CE_pj_doubleval);
-
-                  dominant = lGetUlong(rep, CE_pj_dominant);
-                  double_print_time_to_dstring(val, &resource_string);
-                  s = sge_dstring_get_string(&resource_string);
-               } else {
-                  double val = lGetDouble(rep, CE_doubleval);
-
-                  dominant = lGetUlong(rep, CE_dominant);
-                  double_print_time_to_dstring(val, &resource_string);
-                  s = sge_dstring_get_string(&resource_string);
-               }
-               break;
-            case TYPE_MEM:
-
-               if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
-                  double val = lGetDouble(rep, CE_pj_doubleval);
-
-                  dominant = lGetUlong(rep, CE_pj_dominant);
-                  double_print_memory_to_dstring(val, &resource_string);
-                  s = sge_dstring_get_string(&resource_string);
-               } else {
-                  double val = lGetDouble(rep, CE_doubleval);
-
-                  dominant = lGetUlong(rep, CE_dominant);
-                  double_print_memory_to_dstring(val, &resource_string);
-                  s = sge_dstring_get_string(&resource_string);
-               }
-               break;
-            default:   
-
-               if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
-                  double val = lGetDouble(rep, CE_pj_doubleval);
-
-                  dominant = lGetUlong(rep, CE_pj_dominant);
-                  double_print_to_dstring(val, &resource_string);
-                  s = sge_dstring_get_string(&resource_string);
-               } else {
-                  double val = lGetDouble(rep, CE_doubleval);
-
-                  dominant = lGetUlong(rep, CE_dominant);
-                  double_print_to_dstring(val, &resource_string);
-                  s = sge_dstring_get_string(&resource_string);
-               }
-               break;
-            }
-         }
+         s = sge_get_dominant_stringval(rep, &dominant, &resource_string);
          monitor_dominance(dom, dominant); 
          printf("\t%s:%s=%s\n", dom, lGetString(rep, CE_name), s);
 /*
@@ -376,6 +311,75 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
    return 1;
 }
 
+const char* sge_get_dominant_stringval(lListElem *rep, u_long32 *dominant_p, dstring *resource_string_p)
+{ 
+   const char *s = NULL;
+   
+   u_long32 type = lGetUlong(rep, CE_valtype);
+   switch (type) {
+   case TYPE_HOST:   
+   case TYPE_STR:   
+   case TYPE_CSTR:  
+   case TYPE_RESTR:
+      if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+         *dominant_p = lGetUlong(rep, CE_pj_dominant);
+         s = lGetString(rep, CE_pj_stringval);
+      } else {
+         *dominant_p = lGetUlong(rep, CE_dominant);
+         s = lGetString(rep, CE_stringval);
+      }
+      break;
+   case TYPE_TIM: 
+
+      if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+         double val = lGetDouble(rep, CE_pj_doubleval);
+
+         *dominant_p = lGetUlong(rep, CE_pj_dominant);
+         double_print_time_to_dstring(val, resource_string_p);
+         s = sge_dstring_get_string(resource_string_p);
+      } else {
+         double val = lGetDouble(rep, CE_doubleval);
+
+         *dominant_p = lGetUlong(rep, CE_dominant);
+         double_print_time_to_dstring(val, resource_string_p);
+         s = sge_dstring_get_string(resource_string_p);
+      }
+      break;
+   case TYPE_MEM:
+
+      if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+         double val = lGetDouble(rep, CE_pj_doubleval);
+
+         *dominant_p = lGetUlong(rep, CE_pj_dominant);
+         double_print_memory_to_dstring(val, resource_string_p);
+         s = sge_dstring_get_string(resource_string_p);
+      } else {
+         double val = lGetDouble(rep, CE_doubleval);
+
+         *dominant_p = lGetUlong(rep, CE_dominant);
+         double_print_memory_to_dstring(val, resource_string_p);
+         s = sge_dstring_get_string(resource_string_p);
+      }
+      break;
+   default:   
+
+      if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+         double val = lGetDouble(rep, CE_pj_doubleval);
+
+         *dominant_p = lGetUlong(rep, CE_pj_dominant);
+         double_print_to_dstring(val, resource_string_p);
+         s = sge_dstring_get_string(resource_string_p);
+      } else {
+         double val = lGetDouble(rep, CE_doubleval);
+
+         *dominant_p = lGetUlong(rep, CE_dominant);
+         double_print_to_dstring(val, resource_string_p);
+         s = sge_dstring_get_string(resource_string_p);
+      }
+      break;
+   }
+   return s;
+}
 
 static int sge_print_subtask(
 lListElem *job,

@@ -41,8 +41,8 @@
 ** global deamon messages
 */
 #define MSG_MASTER                         _MESSAGE(27001, _("master"))
-#define MSG_STARTUP_STARTINGUP_SS          _MESSAGE(27002, _("starting up "SFN" ("SFN")"))
-#define MSG_SHADOWD_CONTROLLEDSHUTDOWN_SS  _MESSAGE(27003, _("controlled shutdown "SFN" ("SFN")"))
+#define MSG_STARTUP_STARTINGUP_S           _MESSAGE(27002, _("starting up "SFN))
+#define MSG_SHADOWD_CONTROLLEDSHUTDOWN_S   _MESSAGE(27003, _("controlled shutdown "SFN))
 #define MSG_ERROR_CANTSWITCHTOADMINUSER    _MESSAGE(27004, _("can't switch to amin_user"))
 
 /*

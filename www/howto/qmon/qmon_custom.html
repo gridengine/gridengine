@@ -1,0 +1,113 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
+	<META NAME="AUTHOR" CONTENT=" ">
+	<META NAME="CREATED" CONTENT="20020111;13083600">
+	<META NAME="CHANGED" CONTENT="20030625;14254500">
+	<STYLE>
+	<!--
+		H2 { font-family: "Sunsans Demi" }
+		H3 { font-family: "Sunsans Demi" }
+		P.text-body-indent { margin-left: 0.5cm }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" BGCOLOR="#ffffff">
+<H1>Customization of Qmon</H1>
+<P STYLE="margin-bottom: 0cm">The <B>qmon(1) </B>graphical user
+interface can be used to perform all administrative tasks in Grid
+Engine, as well as providing users with a way to submit and monitor
+jobs. By default, both adminstrative and operational features appear
+together in a single GUI. This HOWTO goes over ways to customize the
+behavior of qmon so that only certain functions are operable. It also
+shows how to make the GUI buttons larger, for greater ease of use.</P>
+<H3>Contents</H3>
+<OL>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#Specifying which buttons are active|outline">Specifying
+	which buttons are active</A></P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#Changing the size of the main screen buttons|outline">Changing
+	the size of the main screen buttons</A></P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#Setting Administrator Defaults|outline">Setting
+	administrator defaults</A></P>
+</OL>
+<HR>
+<H2><A NAME="Specifying which buttons are active|outline"></A>Specifying
+which buttons are active</H2>
+<P STYLE="margin-bottom: 0cm">In order to restrict the buttons active
+in the main panel of <B>qmon</B>, a wrapper script must be created
+that calls the actual binary with a modified environment variable:</P>
+<P CLASS="text-body-indent"><CODE>#!/bin/ksh<BR># wrapper script for
+qmon to change default appearance<BR>export
+XFILESEARCHPATH=$SGE_ROOT/qmon/Qmon<BR>qmon.real</CODE></P>
+<P STYLE="margin-bottom: 0cm">Rename the <CODE>qmon</CODE> binary to
+<CODE>qmon.bin</CODE>.  Note this must be done individually for all
+architecture binaries of qmon, eg, all of  <CODE>$SGE_ROOT/bin/*/qmon</CODE></P>
+<P STYLE="margin-bottom: 0cm">Next, the file <CODE>$SGE_ROOT/qmon/Qmon</CODE>
+must be modified to reflect the changes. Add the end of the file, add
+the following:</P>
+<PRE STYLE="margin-left: 2cm">!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! CHANGES
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!Qmon*JOB_CONTROL.sensitive:        False
+!Qmon*QUEUE_CONTROL.sensitive:      False
+!Qmon*SUBMIT_JOB.sensitive:         False
+Qmon*COMPLEX_CONFIG.sensitive:     False
+Qmon*HOST_CONFIG.sensitive:        False
+Qmon*CLUSTER_CONFIG.sensitive:     False
+Qmon*SCHED_CONFIG.sensitive:       False
+Qmon*CALENDAR_CONFIG.sensitive:    False
+Qmon*USER_CONFIG.sensitive:        False
+Qmon*PE_CONFIG.sensitive:          False
+Qmon*CKPT_CONFIG.sensitive:        False
+!Qmon*BROWSER.sensitive:            False
+Qmon*TICKET_OVERVIEW.sensitive:    False
+Qmon*PROJECT_CONFIG.sensitive:     False
+!Qmon*EXIT.sensitive:               False
+Qmon*MainMenuBar.sensitive:        False</PRE><P STYLE="margin-bottom: 0cm">
+This disables the admininstrative functions and the menu bar (which
+is another path to administrative functions). If you uncomment
+(remove the !)</P>
+<PRE STYLE="margin-left: 2cm">!Qmon*QUEUE_CONTROL.sensitive: False</PRE><P STYLE="margin-bottom: 0cm">
+then users cannot see the Queue Control either. Basically, any button
+which is not commented out by a &ldquo;!&rdquo; becomes disabled.</P>
+<H2><A NAME="Changing the size of the main screen buttons|outline"></A>
+Changing the size of the main screen buttons</H2>
+<P STYLE="margin-bottom: 0cm">The default button size on the main
+screen of qmon is small and the function of the button cannot be seen
+without hovering the pointer over it to view the tooltip. You can
+change the size of these buttons and make them large enough to read
+the action written on them.</P>
+<P STYLE="margin-bottom: 0cm">To do this, change the same Qmon file
+as above from:</P>
+<PRE STYLE="margin-left: 2cm">!! Qmon*pixmapFilePath:  %R/qmon/PIXMAPS/big/%N.xpm:%R/qmon/PIXMAPS/%N.xpm<BR>Qmon*pixmapFilePath:   %R/qmon/PIXMAPS/%N.xpm</PRE><P STYLE="margin-bottom: 0cm">
+to</P>
+<PRE STYLE="margin-left: 2cm">Qmon*pixmapFilePath:  %R/qmon/PIXMAPS/big/%N.xpm:%R/qmon/PIXMAPS/%N.xpm
+!! Qmon*pixmapFilePath:   %R/qmon/PIXMAPS/%N.xpm</PRE>
+<HR>
+<P STYLE="margin-bottom: 0cm">Below is a screenshot of the window
+resulting from both of the above modifications:</P>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<IMG SRC="qmon_custom.gif" NAME="Customized Qmon appearance" ALIGN=LEFT WIDTH=593 HEIGHT=208 BORDER=0><BR CLEAR=LEFT>
+<HR>
+<H2 STYLE="margin-top: 0cm; margin-bottom: 0cm"><A NAME="Setting Administrator Defaults|outline"></A>
+Setting Administrator Defaults</H2>
+<P STYLE="margin-bottom: 0cm">Using a wrapper script and modified
+Qmon resource file, the changes are global.  However, these changes
+can be overridden for individual users, such as the SGE admin user. 
+To have user-specific settings, do the following:</P>
+<OL>
+	<LI><P STYLE="margin-bottom: 0cm">create a private copy of the Qmon
+	resource in the home directory of the user, which specifies all
+	desired features.  For example, have big buttons, and do not disable
+	any of them.</P>
+	<LI><P STYLE="margin-bottom: 0cm">have the user invoke the qmon.real
+	binary (as opposed to the wrapper script)</P>
+</OL>
+<P STYLE="margin-bottom: 0cm">In this way, the SGE admin user can
+re-enable the administrative functions in <B>qmon</B>.</P>
+</BODY>
+</HTML>

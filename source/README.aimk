@@ -1,4 +1,4 @@
-              README.aimk
+                             README.aimk
 			     -----------
 
 Content
@@ -6,8 +6,16 @@ Content
 
 1) What 'aimk' is
 2) What 'aimk' does
-3) Command line options of aimk
-4) Copyright
+3) The files 'aimk.site' and 'aimk.private'
+4) 'aimk' options
+   4.1) Short help on line options
+   4.2) Compiling without openSSL support
+   4.3) Restricting compile targets
+   4.4) 'cc' or 'gcc'
+   4.5) Creating the dependency tool
+   4.6) Passing flags to the compiler
+   4.7) Creating man pages
+5) Copyright
 
 
 1) What 'aimk' is
@@ -17,12 +25,12 @@ Content
    the 'aimk' script of PVM (Parallel Virtual Machine).
  
    It is not, as the name indicates architecture independent at all. It is
-   highly dependent from the underlying operating system and calls
-   the makefiles with the appropriate parameters (compiler flags etc.).
-   This scheme allows to keep the makefiles quite simple and makes it
-   possible to use plain 'make' on operating systems where the standard make
-   utility does not offer a lot of sophisticated options which are available
-   in modern make utilities.
+   highly dependent from the underlying operating system and calls the
+   makefiles with the appropriate parameters (compiler flags etc.). This
+   scheme allows to keep the makefiles quite simple and makes it possible to
+   use plain 'make' on operating systems where the standard make utility
+   does not offer a lot of sophisticated options which are available in
+   modern make utilities.
 
 
 2) What 'aimk' does
@@ -31,8 +39,9 @@ Content
    The script 'aimk' is a wrapper for the various makefiles and other
    scripts which are called to compile Grid Engine. By default 'aimk' will
    build all binaries, but it accepts options to restrict the build process
-   for certain parts of Grid Engine. Not all options of 'aimk' work together. 
-   This limitation is usually not detected by the command line parsing.
+   for certain parts of Grid Engine. Not all options of 'aimk' work
+   together. This limitation is usually not detected by the command line
+   parsing.
 
    When 'aimk' is started, it first determines the current operating system
    by calling the script 'dist/util/arch'. This script returns a string
@@ -43,24 +52,51 @@ Content
    anymore supported), aimk will print out an error message and exit.
 
    Unrecognized command line options, also beginning with a dash ('-') are
-   passed to make.
+   passed to make. This can cause unexpected error messages of 'make' if a
+   typo in the command line is passed to 'make'.
 
    'aimk' sources a script 'aimk.site'. This script contains paths and
-   variables to tools which you need to build special parts of Grid Engine.
-   You don't need most of them to create a Grid Engine distribution.
-   
+   variables to tools which you need to build special parts of Grid Engine. 
 
-3) Command line options of aimk
+   
+3) The files 'aimk.site' and 'aimk.private'
+-------------------------------------------
+
+  'aimk' is written in csh. The scripts 'aimk.site' and 'aimk.private'
+  (optional) need to use csh syntax since they are sourced by 'aimk'.
+
+  The file 'aimk.site' contains a few definitions of paths to tools which
+  are needed to build Grid Engine. You need to adjust this script to your
+  needs or you can create your custom 'aimk.private' file which overrides
+  the settings in 'aimk.site'.
+
+  You can also enter your favorite command lines option to 'aimk.private',
+  e.g as follows:
+
+    # aimk.private
+    # add "-only-qmon" and "-j 4" flag to aimk
+    set  argv = ( -only-qmon -j 4 $* )
+
+4) Command line options of aimk
 -------------------------------
+
+   4.1 Short help on line options
+   ------------------------------
 
    Show a brief summary of its command line options:
 
       % aimk -help
-   
 
-   Often it requires some changes to compile the modules which are based on
-   third party modules (like qmake) or the GUI (qmon). You can call 'aimk' to
-   restrict the compilation target.
+   4.2 Compiling without openSSL support
+   -------------------------------------
+
+   'aimk' by default compiles Grid Engine with openSSL support. If you want
+   to compile Grid Engine without openSSL support call:
+   
+      % aimk -no-secure
+
+   4.3 Restricting compile targets
+   -------------------------------
 
    Common options are (the -only-* options are mutually exclusive):
 
@@ -68,40 +104,71 @@ Content
       % aimk -only-qmon   compile qmon only
       % aimk -only-qmake  compile qmake only
       % aimk -only-qtcsh  compile qtcsh only
-   
 
-   By default the system compiler is used (cc, gcc on Linux). The flags
+   To compile Grid Engine without one or more default targets use the flags:
+
+      -no-core
+      -no-qmake 
+      -no-qmon
+      -no-qtcsh
+      -no-remote  (rsh, rshd, rlogin targets)
+
+   For creating the SGE qmaster daemon you only would enter:
+
+      % aimk -only-core sge_qmaster
+
+   4.4 'cc' or 'gcc'
+   -----------------
+
+   By default the system compiler is used (cc, gcc on Linux). The flags:
 
       -cc
       -gcc
 
-   override this default. Note, that this option usually does not work and
-   will require further modifications to aimk.
+   override this default. Note, that this option often does not work since
+   it has not been tested and ported wit gcc yet. The use of "gcc" on
+   operating systems where this compiler is not installed by default will
+   usually require changes to aimk.
 
+   4.5 Creating the dependency tool
+   --------------------------------
 
-   The tool for creating Makefile dependencies 'sge_depend' is created with
+   The tool for creating Makefile dependencies 'sge_depend' is created with:
 
       % aimk -only-depend
 
-   Makefile dependencies are created with
+   Makefile dependencies are created with:
 
       % aimk depend
 
-   Technically it means that the target 'depend' is passed to all makefiles.
 
-   For creating the SGE qmaster daemon you only would enter
+   4.6 Passing flags to the compiler
+   ---------------------------------
 
-      % aimk sge_qmaster
+   To pass a "-Dmydefine" to the compiler CFLAGS, enter:
 
-   or to avoid error or warning messages from other makefiles
+     % aimk -Dmydefine ....
 
-      % aimk -only-core sge_qmaster
+   Other flags which are passed to the compiler as CFLAGS can be set in the
+   command line through the environment variable 'SGE_INPUT_CFLAGS', e.g.
 
+      setenv SGE_INPUT_CFLAGS "-xyz -Dmydefine"
+
+   Note that there are no equivalent command line options or environment
+   variables for setting LFLAGS for the linker.
+
+
+   4.7 Creating man pages
+   ----------------------
+
+   The man pages in CVS contain a few macros 
+   
    To create man pages you enter
 
       % aimk -man       create man pages in nroff format
+      % aimk -mankv     dto. but check out from CVS with "-kv flag"
       % aimk -htmlman   create man pages in nroff and html format
-      % aimk -catman    create man pages in catman format
+      % aimk -catman    create man pages in catman format (e.g. for SGI)
 
    To build man pages in nroff format you need to define the variable
    GROFFPATH in 'aimk.site'. This is where 'groff' is installed. For html
@@ -112,7 +179,7 @@ Content
    compression of all pages regardless of their size).
 
 
-4) Copyright
+5) Copyright
 ------------
 
    The Contents of this file are made available subject to the terms of

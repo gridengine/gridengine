@@ -39,10 +39,11 @@
 
 # Make sure to avoid confusion between shell variables and environment
 # variables
-unsetenv buildarch BUILDARCH COMPILE_ARCH
-
+#
+set noglob
+unsetenv buildarch BUILDARCH COMPILE_ARCH LD_LIBRARY_PATH
 set COMPILE_ARCH = ""
-set buildarch = UNKNOWN
+set buildarch    = UNKNOWN
 
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
@@ -55,7 +56,7 @@ expr $buildarch : UNSUPPORTED > /dev/null
 if ( $status == 0 ) then
    echo script dist/util/arch does not support \"$buildarch\"
    exit 1
-else if (  $buildarch == UNKNOWN ) then
+else if ( $buildarch == UNKNOWN ) then
    echo script dist/util/arch does not recognize your operating systems
    exit 1
 endif
@@ -334,9 +335,12 @@ usage:
 
 start:
 
+#-----------------------------------------------------------------------------------
+# Variables below define default behavior and default compiler and linker
+# flags which are passed to make
+#
+
 # Master settings
-unsetenv LD_LIBRARY_PATH
-set noglob
 set SOURCE           = `pwd`
 set SDIR             = ".."
 set MSDIR            = ""

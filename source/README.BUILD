@@ -1,25 +1,25 @@
 			Grid Engine Build Page
 			----------------------
 
-
 Content
 -------
 
-0) Overview and files referenced in this document
-1) Prerequisites
-2) Building the dependency tool 'sge_depend'
-3) Creating dependencies
-4) Compiling Grid Engine
-5) Creating man pages and qmon help file
-6) Installing Grid Engine
-   6.1) Creating a local distribution
-   6.2) Creating a distribution repository
-7) Creating a distribution from a distribution repository
-8) Installing Grid Engine
-9) Copyright
+ 1) Overview and files referenced in this document
+ 2) Prerequisites
+ 3) Building the dependency tool 'sge_depend'
+ 4) Building the Berkeley DB database
+ 5) Creating dependencies
+ 6) Compiling Grid Engine
+ 7) Creating man pages and qmon help file
+ 8) Installing Grid Engine
+    8.1) Creating a local distribution
+    8.2) Creating a distribution repository
+ 9) Creating a distribution from a distribution repository
+10) Installing Grid Engine
+11) Copyright
 
 
-0) Overview and files referenced in this document
+1) Overview and files referenced in this document
 -------------------------------------------------
 
    This document gives you a brief overview about the steps how to compile,
@@ -27,16 +27,23 @@ Content
    and the files referenced here, if you are going to compile and run Grid
    Engine the first time.
 
-   Files referenced in this document:
+   Files and URL's referenced in this document
+   -------------------------------------------
 
-      README.BUILD      (this file)
-      README.aimk
-      dist/README.arch
-      scripts/README.distinst
-      scripts/README.mk_dist
+   Description             File
+   ------------------------------------   
+   this file               README.BUILD    
+   build wrapper           README.aimk
+   architecture mapping    dist/README.arch
+   distribution install    scripts/README.distinst
+   tar.gz distribution     scripts/README.mk_dist
+   Berkeley DB build       libs/spool/berkeleydb/README
+   Dependency tool         http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty
+   access to CVS           http://gridengine.sunsource.net/servlets/ProjectSource
+   getting source snapshot http://gridengine.sunsource.net/servlets/ProjectDownloadList
+    
 
-  
-1) Prerequisites
+2) Prerequisites
 ----------------
 
    You first need to checkout the Grid Engine sources. Please refer to
@@ -44,17 +51,25 @@ Content
       http://gridengine.sunsource.net/servlets/ProjectSource
 
    for more information about downloading the source with CVS. If you are
-   unpacking a tar.gz tarball of the sources, please look at
+   unpacking a tar.gz Tarbell of the sources, please look at
 
       http://gridengine.sunsource.net/servlets/ProjectDownloadList
 
    Snapshots of the source code usually have a name in the form
   
-       gridengine_<CVSTAG>.tar.gz
+       sge-<CVSTAG>-src.tar.gz
+
+    e.g.
+
+      sge-V53p5_TAG-src.tar.gz
+
+   which corresponds to the source code of SGE 5.3p5.
 
    To compile and install Grid Engine, the following steps need to be
    carried out:
 
+      - read requirements about Berkeley DB (see below)
+      - get and compile openSSL library (optional)
       - create dependency tool and dependencies with 'aimk'
       - compile binaries with 'aimk'
       - create a distribution repository with 'distinst'
@@ -71,18 +86,25 @@ Content
 
    The following commands assume that your current working directory is
 
-       gridengine/source
-
-   Beginning with Grid Engine 6.0 sge_qmaster will use a Berkley DB database
-   for spooling of its configuration and state information.
-   The Berkeley DB include files and libraries have to be installed in order
-   to build Grid Engine.
-   See libs/spool/berkeleydb/README for details about installing and using
-   the Berkeley DB.
+      gridengine/source
 
 
+3) Building the Berkeley DB database
+------------------------------------
 
-2) Building the dependency tool 'sge_depend'
+   Beginning with Grid Engine 6.0 sge_qmaster will use a Berkeley DB database
+   for spooling of its configuration and state information.  The Berkeley DB
+   include files and libraries have to be installed in order to build Grid
+   Engine.
+
+   See the file 
+
+      libs/spool/berkeleydb/README
+
+   for details about installing and using Berkeley DB.
+
+
+4) Building the dependency tool 'sge_depend'
 --------------------------------------------
 
    The Grid Engine project uses a tool 'sge_depend' to create header
@@ -91,8 +113,11 @@ Content
 
        #include "header.h"
 
-   See http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty/sge_depend/sge_depend.html?content-type=text/html for more information about
-   'sge_depend'.
+   See 
+
+      http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty/sge_depend/sge_depend.html?content-type=text/html
+
+   for more information about 'sge_depend'.
 
    To build 'sge_depend' enter:
 
@@ -102,13 +127,13 @@ Content
 
       3rdparty/sge_depend/<ARCH>/sge_depend
 
-   See the file 'README.aimk' for how 'aimk' works.
+   See the file 'README.aimk' for more information how 'aimk' works.
 
 
-3) Creating dependencies
+5) Creating dependencies
 ------------------------
 
-   The header dependency files are created in every directory.
+   The header dependency files are created in every source directory.
    They are included by the makefiles and therefore they must exist. The
    dependencies will be created for every .c Files in the source code
    repository.
@@ -130,7 +155,7 @@ Content
    platform. They are shared for all target architectures.
 
 
-4) Compiling Grid Engine
+6) Compiling Grid Engine
 ------------------------
   
    By default the script aimk compiles 'everything'. This may cause problems
@@ -138,24 +163,24 @@ Content
    available (yet) on your system. Therefore aimk provides a couple of
    useful switches to select only parts of Grid Engine for compilation:
 
-   Try to call 
+   Enter
 
       % aimk -help' 
 
-   to see a list of all options. Not all options actually may work, esp. not
-   in all combinations. Some options like the security related options
-   enable compilation of code which is under development and is likely to be
-   untested.
+   to see a list of all aimk options. Not all options actually may work,
+   esp. not in all combinations. Some options like the security related
+   options enable compilation of code which is under development and is
+   likely to be untested.
 
-   Useful options:
+   Useful aimk options:
 
-      -no-qmon  	      don't compile qmon
+      -no-qmon  	don't compile qmon
       -no-qmake         don't compile qmake
       -no-qtcsh         don't compile qtcsh
       -no-remote        don't compile remote modules rsh, rshd, rlogin
 
    To compile the core system (daemons, command line clients, no interactive
-   commands (qsh only)) you'll enter:
+   commands (qsh only), no qmon) you'll enter:
 
       % aimk -only-core
 
@@ -170,13 +195,15 @@ Content
    by tuning aimk.
 
    By default the Grid Engine libraries are linked statically to the
-   binaries. Shared libraries are also supported, but installation is a bit
-   more complicated.
+   binaries. Shared libraries are also supported, but their installation is
+   not yet supported. The DRMAA library is always created and installed as
+   a shared library. Some third party libraries (e.g. 'libXltree' used by
+   qmon) are created as shared libraries due to copyright requirements).
 
    See 'README.aimk' for more information on all compilation issues.
 
 
-5) Creating man pages and qmon help file
+7) Creating man pages and qmon help file
 ----------------------------------------
 
    Man pages in nroff format are created with
@@ -198,17 +225,15 @@ Content
       % aimk -only-qmon qmon_help
 
 
-6) Staging for Installation
+8) Staging for Installation
 ---------------------------
 
    Once Grid Engine is compiled it can be prepared for installation by
    staging it to an appropriate place. Two types are supported. The script
-   'scripts/distinst' is responsible for this purpose. If called as
-   'myinst' it will copy the files directly to a local installation in the
-   directory $SGE_ROOT. This option is useful for quickly testing the
-   results of your compilation. If the script is called as 'distinst' it
-   will copy the files to a distribution directory where you can create
-   customized distributions in tar format etc.
+   'scripts/distinst' is responsible for this purpose. It either copies the
+   files directly to a local installation in the directory in $SGE_ROOT or
+   it copies the files to a distribution directory where you can create
+   customized distributions, e.g. in tar format for further redistribution.
 
    See the file
 
@@ -216,40 +241,45 @@ Content
 
    for more details about options of the 'distinst' script.
 
+   8.1) Creating a local distribution
+   ----------------------------------
 
-6.1) Creating a local distribution
-----------------------------------
+      You can copy Grid Engine binaries and other parts of the distribution
+      directly to a local installation. The purpose of this shortcut is to
+      quickly install and run Grid Engine after compilation or other changes of
+      the distribution.
 
-   You can copy Grid Engine binaries and other parts of the distribution
-   directly to a local installation. The purpose of this shortcut is to
-   quickly install and run Grid Engine after compilation or other changes of
-   the distribution.
+      Create your <sge_root> root directory and set the environment variable
+      $SGE_ROOT to <sge_root> and call
 
-   If 'scripts/distinst' is invoked as 'myinst' (create a symlink:
-   "ln -s scripts/distinst myinst") it will check for the variable SGE_ROOT
-   and take this directory as staging target.
+         scripts/distinst -local -noexit -allall <arch1> <arch2> ...
 
-   By default 'myinst' in this mode will issue only warnings if one or more 
-   targets cannot be installed successfully.
+      Since some of binaries need to be installed SUID-root you need to login
+      as user root to install a fully operable Grid Engine distribution. 
+
+      The "-local" switch requires that the variable $SGE_ROOT is set, the
+      "-noexit" switch causes the script to print warnings instead of exiting
+      of some install targets (e.g. binaries or man pages) do not exist. The
+      "-allall" target copies all files including man pages and binaries of
+      the targets <arch1>, <arch2> to $SGE_ROOT.
+
+   8.2) Creating a distribution repository
+   ---------------------------------------
+
+      If you are planning to create a distribution which later should be
+      used to create further distributions (currently tar.gz is supported),
+      the files are first copied to a distribution repository. From that
+      distribution repository you later can create distributions. The base
+      directory for the distribution repository is defined in the 'distinst'
+      script and can be overridden with command line parameters.
+      
+      By default distinst in this mode will have a "strict" behavior. It
+      will exit, if one of the installation targets cannot be installed
+      successfully.  This is done to ensure that a distribution will only
+      contain a valid set of files.
 
 
-6.2) Creating a distribution repository
----------------------------------------
-
-   If you are planning to create a distribution which later should be used
-   to create further distributions (currently tar.gz is supported), the
-   files are first copied to a distribution repository. From that
-   distribution repository you later can create distributions. The base
-   directory for the distribution repository is defined in the 'distinst'
-   script or can be overridden with command line parameters.
-   
-   By default distinst in this mode will have a "strict" behavior. It will
-   exit, if one of the installation targets cannot be installed
-   successfully.  This is done to ensure that a distribution will only
-   contain a valid set of files.
-
-
-7) Creating a distribution from a distribution repository
+9) Creating a distribution from a distribution repository
 ---------------------------------------------------------
 
    If you need to create a Grid Engine distribution for further
@@ -264,28 +294,19 @@ Content
 
      scripts/README.mk_dist
 
-   how to create a Grid Engine distribution
+   how to create a Grid Engine distribution.
 
 
-8) Installing Grid Engine
--------------------------
+10) Installing Grid Engine
+--------------------------
 
-   After installing the distribution (either after you installed it with
-   "myinst" or after unpacking a distribution in tar format or in any other
-   format which is supported by "mk_dist"), you need to run the installation
-   script "inst_sge" (or a wrapper) on your master host and on all execution
-   hosts for a first time configuration and startup of your Grid engine
-   daemons.
-
-   See the file
-
-      dist/README.inst_sge
-
-   for an overview on what "inst_sge" does.
+   After installing the distribution you need to run the installation script
+   "inst_sge" (or a wrapper) on your master host and on all execution hosts
+   for a first time configuration and startup of your Grid engine daemons.
 
 
-9) Copyright
-------------
+11) Copyright
+-------------
 
    The Contents of this file are made available subject to the terms of
    the Sun Industry Standards Source License Version 1.2

@@ -21,66 +21,42 @@ Content
    appropriate binaries.  The architecture string is generated and returned
    by the script 'dist/util/arch' by printing it to STDOUT.
 
-   'aimk', for instance, uses the architecture string to define the names
-   of subdirectories where the binaries of a Grid Engine distribution later
-   will be stored. Thus it is possible to easily create a distribution for
-   a heterogenous cluster of Grid engine hosts in a shared directory.
-   'aimk' will map this lower case strings to upper case strings. The name
-   of the upper case strings will be used to create subdirectories where
-   the compilation will create object files and binaries for a single
+   'aimk', for instance, uses the architecture string to define the names of
+   subdirectories where the binaries of a Grid Engine distribution later
+   will be stored. Thus it is possible to easily create a distribution for a
+   heterogenous cluster of Grid engine hosts in a shared directory.  'aimk'
+   will map this lower case strings to upper case strings. The name of the
+   upper case strings will be used to create subdirectories where the
+   compilation will create object files and binaries for a single
    architecture target. This scheme makes it possible to use the same Grid
-   Engine source code distribution for compilation on a variety of
-   different operating systems.
+   Engine source code distribution for compilation on a variety of different
+   operating systems.
 
-   Currently the 'arch' script returns the following strings:
+   Currently the 'arch' script returns the following strings. This list may
+   be incomplete.
 
    arch	compile arch		description
    ----------------------------------------------------------------------
-   aix42	AIX42		IBM AIX 4.2.x
    aix43	AIX43		IBM AIX 4.3.x, 32bit
-   aix51        AIX51 	        runs only on AIX 5.1.x, 64bit kernel
-   alinux	ALINUX		Linux for Alpha AXP, glibc
-   cray		UNICOS		Cray Unicos 10.0.x XMP, YMP, J90, C90, SV1, 
-                                   and compatible hardware
+   aix51        AIX51 	        IBM AIX 5.1.x, 64bit kernel
+   cray		UNICOS		Cray Unicos 10.0.x XMP, YMP, J90, C90, SV1
    crayts	UNICOS_TS	Cray Unicos 10.0.x T90
    craytsieee	UNICOS_TS_IEEE	Cray Unicos 10.0.x T90 with IEEE hardware
-   glinux	LINUX6		Linux x86, 2.[24] kernel, glibc >= 2.1
-   hp10		HP10		HP HP-UX 10.20
-   hp11		HP11		HP HP-UX 11.00, 32bit
-   hp11-64	HP1164	HP HP-UX 11.00, 64bit
-   irix6	IRIX6		SGI Irix 6.2-6.5, 32+64bit
+   hp11		HP11		HP HP-UX 11 32bit
+   hp11-64	HP1164	        HP HP-UX 11.00 64bit
+   irix65	IRIX65		SGI Irix 6.5,
+   lx22-axp	ALINUX		Linux for Alpha AXP, glibc
+   lx24-amd64   LINUXAMD64_24   Linux AMD64, 2.4 kernel
+   lx24-x86	LINUX86_24	Linux x86, 2.4 kernel
    necsx4	NECSX4		NEC SX4, SUPER-UX
    necsx5	NECSX5		NEC SX5, SUPER-UX
-   osf4		ALPHA4		Compaq Digital Unix 4.x
-   solaris	SOLARIS		Sun, Sparc Solaris 2.6, 7, 8, 32bit
-   solaris64	SOLARIS64       Sun, Sparc, Solaris 7, 8, 64bit
-   solaris86	SOLARIS86       Sun, x86, Solaris 8
+   sol-sparc	SOLARIS		Sun, Sparc Solaris 7, 8, 9 32bit
+   sol-sparc64	SOLARIS64       Sun, Sparc, Solaris 7, 8, 9 64bit
+   sol-x86	SOLARIS86       Sun, x86, Solaris 8, 9
    tru64	ALPHA5          Compaq Tru64 Unix 5.0, 5.1
 
-   Often a binary set compiled on an older operating system will run
-   without any problems on a newer OS version. The reverse is almost never
-   true.
-
-   Currently the following dependencies are known. If a binary set runs on
-   multiple OS versions, only compilation on the older OS version and
-   running on the same or newer version is tested.
-
-   aix42:	runs only on AIX 4.2.x
-   aix43:	runs only on AIX 4.3.x, 32bit kernel
-   alinux:	tested on 2.2.x kernels with glibc 2.1 and 2.2
-   cray:	Cray Unicos 10.0.x, XMP, YMP, J90, C90, SV1 etc.
-   crayts:      Cray Unicos 10.0.x, T90
-   craytsieee:  Cray Unicos 10.0.x, T90 with IEEE hardware
-   glinux:	binaries compiled on kernel 2.2 with glibc 2.1 run
-                on kernel 2.4 with glibc 2.2	
-   necsx4:	port to NEC SX 4, does not support every NEC feature
-   necsx5:	port to NEC SX 5, does not support every NEC feature
-   osf4:	runs on Digital Unix 4.x,
-   solaris:	runs on Solaris 2.6, 7, 8, 32bit, needs to be compiled
-                runs on Solaris 2.5.x if it should run on 2.5.x
-   solaris64:	runs on Solaris 7, 8, 64bit kernel
-   tru64:	runs on Compaq Tru64 Unix 5.0, 5.1
-
+   Often a binary set compiled on an older operating system will run without
+   any problems on a newer OS version. The reverse is almost never true.
 
 2) Copyright
 ------------

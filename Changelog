@@ -1,3 +1,9 @@
+JG-2002-06-13-0: Enhancem.  qtcsh: If a command is started in the background 
+                            using qrsh, the qrsh option -nostdin is used to 
+                            avoid qrsh being suspended.
+                 Issue:     #287
+                 Bugtraq:   #4701640
+
 CR-2002-06-13-4: Testsuite: merged qrsh test for hold_jid and h option from
                             maintrunc
 

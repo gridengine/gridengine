@@ -35,7 +35,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: sh.exec.c,v 1.1 2001/07/18 11:06:04 root Exp $")
+RCSID("$Id: sh.exec.c,v 1.1.1.1.6.1 2002/06/13 12:12:29 joga Exp $")
 
 #include "tc.h"
 #include "tw.h"
@@ -155,7 +155,7 @@ static char qrshmode_verbose_false[] = "non-verbose";
 static Char *justabs[] = {STRNULL, 0};
 
 static	void	pexerr		__P((void));
-static	void	texec		__P((Char *, Char **));
+static	void	texec		__P((Char *, Char **, int));
 static	int	hashname	__P((Char *));
 static	int 	iscommand	__P((Char *));
 
@@ -377,7 +377,7 @@ doexec(t)
 	    }
 #endif /* COHERENT */
 
-	    texec(*av, av);
+	    texec(*av, av, t->t_dflg & F_AMPERSAND);
 }
 	else {
 	    dp = Strspl(*pv, sav);
@@ -407,7 +407,7 @@ doexec(t)
 	    }
 #endif /* COHERENT */
 
-	    texec(dp, av);
+	    texec(dp, av, t->t_dflg & F_AMPERSAND);
 #ifdef VFORK
 	    Vdp = 0;
 #endif /* VFORK */
@@ -453,9 +453,10 @@ pexerr()
  * Also do shell scripts here.
  */
 static void
-texec(sf, st)
+texec(sf, st, background)
     Char   *sf;
     register Char **st;
+    int background;
 {
     register char **t;
     register char *f;
@@ -494,7 +495,7 @@ texec(sf, st)
    if (expath) {
       char *tt = (char *)malloc(strlen(f)+1);
       strcpy(tt, f);
-      (void) sge_execv(tt, t, short2str(expath));
+      (void) sge_execv(tt, t, short2str(expath), background);
       free(tt);
       f = short2str(sf);
    } else
@@ -602,7 +603,7 @@ texec(sf, st)
    if (expath) {
       char *tt = (char *)malloc(strlen(f)+1);
       strcpy(tt, f);
-      (void) sge_execv(tt, t, short2str(expath));
+      (void) sge_execv(tt, t, short2str(expath), background);
       free(tt);
       f = short2str(sf);
    } else

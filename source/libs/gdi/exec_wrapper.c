@@ -222,9 +222,10 @@ Error:
 }
 
 int sge_execv(
-char *path,   /* this is how tcsh tries to start the command */
+char *path,    /* this is how tcsh tries to start the command */
 char *argv[],
-char *expath  /* this is how user typed in the command */
+char *expath,  /* this is how user typed in the command */
+int close_stdin /* use of qrsh's -nostdin option */
 ) {
    const char *value; 
    char *taskname = NULL, *s, *resreq;
@@ -241,8 +242,8 @@ char *expath  /* this is how user typed in the command */
 
 #if 1
    if (mode_verbose)
-      fprintf(stderr, "sge_execv(path = %s, taskname = %s, expath = %s)\n", 
-         path, taskname?taskname:"<no remote execution>", expath);
+      fprintf(stderr, "sge_execv(path = %s, taskname = %s, expath = %s, close_stdin = %d)\n", 
+         path, taskname?taskname:"<no remote execution>", expath, close_stdin);
 #endif
 
    if (!mode_remote || 
@@ -266,6 +267,7 @@ char *expath  /* this is how user typed in the command */
    }
    newargv = (char **)malloc(sizeof(char *) * (
       1 +                                /* qrsh */
+      (close_stdin?1:0) +                /* -nostdin */
       (mode_verbose?1:0) +               /* -verbose */
       2 +                                /* -now [y|n] */
       narg_resreq +                      /* resource requests to qrsh */
@@ -276,6 +278,9 @@ char *expath  /* this is how user typed in the command */
    /* build argv for qrsh */
    i = 0;
    newargv[i++] = strdup("qrsh");
+
+   if (close_stdin) 
+      newargv[i++] = strdup("-nostdin");
 
    if (mode_verbose) 
       newargv[i++] = strdup("-verbose");

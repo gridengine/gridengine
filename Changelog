@@ -1,3 +1,6 @@
+CR-2003-02-14-1  Testsuite: throughput test now sets maxujobs parameter
+                            in scheduler configuration 
+
 EB-2003-02-14-1  Testsuite: new test which will find #226
                  Issue:     #364
 

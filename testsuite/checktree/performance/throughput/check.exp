@@ -299,14 +299,6 @@ proc setup_queues {} {
 
    set_config myconfig
  
-   set my_schedd_config(schedule_interval)    "$run_throughput_test_SCHEDULE_INTERVAL"
-   set my_schedd_config(job_load_adjustments) "none"
-   set my_schedd_config(schedd_job_info)      "false"
-   set_schedd_config my_schedd_config
-  
-
-
-
    # disable all default queues and create host_list:
    set host_list ""
    foreach elem $CHECK_CORE_EXECD {
@@ -316,7 +308,16 @@ proc setup_queues {} {
       }
       lappend host_list $elem
    }
-   
+
+   set max_u_jobs_parameter [expr ( [llength $host_list] * $nr_queues  * $nr_slots )]
+
+
+   set my_schedd_config(schedule_interval)    "$run_throughput_test_SCHEDULE_INTERVAL"
+   set my_schedd_config(job_load_adjustments) "none"
+   set my_schedd_config(schedd_job_info)      "false"
+   set my_schedd_config(maxujobs)             $max_u_jobs_parameter 
+   set_schedd_config my_schedd_config
+
 
    # now setup submit queues for hosts in host_list:
    # set queue_list:

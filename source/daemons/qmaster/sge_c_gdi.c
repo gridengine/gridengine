@@ -113,7 +113,7 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 
 static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user);
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, char *commproc, int mod, lListElem *ep);
-static int sge_chck_get_perm_host(lList **alpp, u_long32 target, char *host, char *commproc);
+static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request);
 
 
 /* ------------------------------ generic gdi objects --------------------- */
@@ -223,6 +223,7 @@ sge_gdi_request *answer
    char group[128];
 
    DENTER(TOP_LAYER, "sge_c_gdi");
+
 
    answer->op = request->op;
    answer->target = request->target;
@@ -414,7 +415,7 @@ int *after
 
    DENTER(GDI_LAYER, "sge_c_gdi_get");
 
-   if (sge_chck_get_perm_host(&(answer->alp), request->target, request->host, request->commproc)) {
+   if (sge_chck_get_perm_host(&(answer->alp), request )) {
       DEXIT;
       return;
    }
@@ -1245,6 +1246,7 @@ char *user
    return 0;
 }
 
+
 static int sge_chck_mod_perm_host(
 lList **alpp,
 u_long32 target,
@@ -1353,12 +1355,24 @@ lListElem *ep
 
 static int sge_chck_get_perm_host(
 lList **alpp,
-u_long32 target,
-char *host,
-char *commproc
+sge_gdi_request *request
 ) {
-
+   u_long32 target;
+   char *host     = NULL;
+   char *commproc = NULL;
+   static int last_id = -1; 
+   
    DENTER(TOP_LAYER, "sge_chck_get_perm_host");
+
+   /* reset the last_id counter on first sequence number we won't
+      log the same error message twice in an api multi request */
+   if (request->sequence_id == 1) {
+      last_id = -1;
+   }
+
+   target = request->target;
+   host = request->host;
+   commproc = request->commproc;
 
    /* check permissions of host */
    switch (target) {
@@ -1390,8 +1404,16 @@ char *commproc
       /* host must be admin or submit host */
       if ( !sge_locate_host(host, SGE_ADMINHOST_LIST) &&
            !sge_locate_host(host, SGE_SUBMITHOST_LIST)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
+
+         if (last_id != request->id) {     /* only log the first error
+                                              in an api multi request */
+            ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
+         } else {    
+            sprintf(SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host);
+         }
          sge_add_answer(alpp, SGE_EVENT, STATUS_EDENIED2HOST, 0);
+         last_id = request->id;       /* this indicates that the error
+                                         is allready locked */
          DEXIT;
          return 1;
       }
@@ -1402,8 +1424,15 @@ char *commproc
       if ( !sge_locate_host(host, SGE_ADMINHOST_LIST) &&
            !sge_locate_host(host, SGE_SUBMITHOST_LIST) &&
            !sge_locate_host(host, SGE_EXECHOST_LIST)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
+         if (last_id != request->id) {  /* only log the first error
+                                              in an api multi request */
+            ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
+         } else {
+            sprintf(SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host);
+         }
          sge_add_answer(alpp, SGE_EVENT, STATUS_EDENIED2HOST, 0);
+         last_id = request->id;       /* this indicates that the error
+                                         is allready locked */
          DEXIT;
          return 1;
       }

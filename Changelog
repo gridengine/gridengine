@@ -1,3 +1,6 @@
+CR-2002-03-26-1  Bugfix:    qstat -f -> 
+                            8 x times logging: "... neither submit nor admin host"
+
 CR-2002-03-26-0  Bugfix:    can't resolve hostname "%-.100s" from act_qmaster file
                             message
 

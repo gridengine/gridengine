@@ -37,9 +37,6 @@
 int sos_using_gdil(lList *gdil, u_long32 jobid);
 int usos_using_gdil(lList *gdil, u_long32 jobid);
 
-int sos(lListElem *qep, int just_rebuild_cache);
-int usos(lListElem *qep, int just_rebuild_cache);
-
 int count_suspended_on_subordinate(lListElem *queueep); 
 
 /* parameters for check_subordinate_list(how) */

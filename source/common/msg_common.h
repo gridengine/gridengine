@@ -104,7 +104,7 @@
 #define MSG_USER_INVALIDNAMEX_S                      _MESSAGE(23050, _("invalid user name \"%s\"\n"))
 #define MSG_USER_NOHOMEDIRFORUSERX_S                 _MESSAGE(23051, _("missing home directory for user \"%s\"\n"))
 #define MSG_ANSWER_GETUNIQUEHNFAILEDRESX_S  _MESSAGE(23052, _("getuniquehostname() failed resolving: %s\n"))
-#define MSG_OBJ_UNABLE2FINDQ_S        _MESSAGE(23053, _("unable to find queue \"%s\"\n"))
+#define MSG_QUEUE_UNABLE2FINDQ_S        _MESSAGE(23053, _("unable to find queue \"%s\"\n"))
 #define MSG_OBJ_USER                  _MESSAGE(23054, _("user"))
 #define MSG_OBJ_GROUP                 _MESSAGE(23055, _("group"))
 #define MSG_OBJ_USERPRJ               _MESSAGE(23056, _("user/project"))
@@ -236,7 +236,7 @@
 #define MSG_QCONF_CANTSTARTEDITORX_S              _MESSAGE(23166, _("can't start editor %s"))
 #define MSG_FILE_CANTCREATETEMPFILE               _MESSAGE(23168, _("could not generate temporary filename\n"))
 #define MSG_QCONF_CANTREADCONFIG_S                _MESSAGE(23169, _("can't read configuration: %s\n"))
-#define MSG_QCONF_CANTREADX_S                     _MESSAGE(23170, _("cant read %s\n"))
+#define MSG_QCONF_CANTREADUSER                    _MESSAGE(23170, _("cant read user\n"))
 #define MSG_QCONF_CANTREADSHARETREEX_S            _MESSAGE(23171, _("cant read sharetree: %s\n"))
 #define MSG_QCONF_NOXDEFINED_S                    _MESSAGE(23172, _("no %s defined\n"))
 #define MSG_TABLE_HOST                            "HOST"
@@ -291,7 +291,7 @@
 ** sge_sharetree.c
 */
 #define MSG_TREE_UNABLETOLACATEXINSHARETREE_S     _MESSAGE(23213, _("Unable to locate %s in sharetree\n"))
-#define MSG_OBJ_NOSTREEELEM           _MESSAGE(23214, _("no sharetree element"))
+#define MSG_STREE_NOSTREEELEM           _MESSAGE(23214, _("no sharetree element"))
 #define MSG_STREE_UNEXPECTEDNAMEFIELD  _MESSAGE(23215, _("unexpected name field"))
 #define MSG_STREE_UNEXPECTEDTYPEFIELD  _MESSAGE(23216, _("unexpected type field"))
 #define MSG_STREE_UNEXPECTEDVERSIONFIELD  _MESSAGE(23217, _("unexpected version field"))
@@ -423,6 +423,8 @@
 #define MSG_GDI_NOCONFIGFROMMASTER    _MESSAGE(23291, _("could not get configuration from qmaster - using defaults\n"))
 #define MSG_GDI_NEITHERSGECODGRDSETTINGSGE _MESSAGE(23292, _("neither SGE nor COD nor GRD environment for jobs configured, setting SGE environment\n"))
 #define MSG_GDI_INVALIDPOLICYSTRING   _MESSAGE(23293, _("Invalid policy hierachy string. Disabling policy hierachy.\n"))
+
+#define MSG_QCONF_CANTREADPROJECT                    _MESSAGE(23294, _("cant read project\n"))
 
 #endif /* __MSG_COMMON_H */
 

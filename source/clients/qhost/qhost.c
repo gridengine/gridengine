@@ -526,7 +526,6 @@ u_long32 type
       "INTERACTIVE",
       "CHECKPOINTING",
       "PARALLEL",
-      "TRANSFER",
       ""
    };
 

@@ -265,7 +265,6 @@ static void qmonQCClone(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCResetAll(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCAction(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCToggleAction(Widget w, XtPointer cld, XtPointer cad);
-static void qmonQCToggleType(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCAccessToggle(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCAccessAdd(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCAccessRemove(Widget w, XtPointer cld, XtPointer cad);
@@ -607,8 +606,6 @@ Widget parent
    /* 
    ** General Config
    */
-   XtAddCallback(qtype, XmtNvalueChangedCallback, 
-                     qmonQCToggleType, NULL);
    XtAddCallback(notifyPB, XmNactivateCallback, 
                      qmonQCTime, (XtPointer)notify);
    XtAddCallback(calendarPB, XmNactivateCallback, 
@@ -1601,42 +1598,6 @@ XtPointer cld, cad;
    DEXIT;
 }
 
-
-/*-------------------------------------------------------------------------*/
-/* G E N E R A L    P A G E                                                */
-/*-------------------------------------------------------------------------*/
-static void qmonQCToggleType(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
-{
-   XmtChooserCallbackStruct *cbs = (XmtChooserCallbackStruct*) cad;
-   int i;
-   
-   DENTER(GUI_LAYER, "qmonQCToggleType");
-
-   /* 
-   ** The item depends on the order of the items in the checkbox
-   ** 4 stands for transfer queue
-   */
-   DPRINTF(("cbs->state = %d\n", cbs->state ));
-   if (cbs->item == 4) {
-      if ((cbs->state & TQ) == TQ) {
-         XmtChooserSetState(w, TQ, False);
-         for (i=0; i<4; i++)
-            XmtChooserSetSensitive(w, i, False);
-      }
-      else {
-         XmtChooserSetState(w, 0, False);
-         for (i=0; i<4; i++)
-            XmtChooserSetSensitive(w, i, True);
-         XmtChooserSetState(w, BQ, False);
-      }
-   }
-   if (cbs->state == 0)
-      XmtChooserSetState(w, BQ, False);
-      
-   DEXIT;
-}   
 
 
 /*-------------------------------------------------------------------------*/

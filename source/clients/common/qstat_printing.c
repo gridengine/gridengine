@@ -90,7 +90,6 @@ static char *queue_types[] = {
    "INTERACTIVE",  
    "CHECKPOINTING",
    "PARALLEL",
-   "TRANSFER",
    ""
 };
 

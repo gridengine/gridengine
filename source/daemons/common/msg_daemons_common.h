@@ -37,7 +37,7 @@
 
 
 
-#define MSG_OBJ_UNKNOWNREASON         _MESSAGE(27000, _("<unknown reason>"))
+#define MSG_UNKNOWNREASON         _MESSAGE(27000, _("<unknown reason>"))
 /*
 ** global deamon messages
 */

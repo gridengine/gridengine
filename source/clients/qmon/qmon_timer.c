@@ -390,12 +390,12 @@ XtIntervalId *id
 
    if (status != CL_OK) {
       if (status == CL_UNKNOWN_RECEIVER)
-         sprintf(msg, "can't reach qmaster\n");
+         sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster", "cannot reach qmaster"));
       else
-         sprintf(msg, "can't reach:\n%s\n", cl_errstr(status));
+         sprintf(msg, XmtLocalize(AppShell, "cannot reach %s", "cannot reach %s"), cl_errstr(status));
 
       contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
-                                                msg, "Retry", "Abort",
+                                                msg, "@{Retry}", "@{Abort}",
                                                 XmtYesButton, NULL);
       /*
       ** we don't want to retry, so go down
@@ -419,7 +419,10 @@ XtIntervalId *id
    ep = lFirst(lp);
 
    if (!ep) {
-      sprintf(msg, "No free slots for interactive job %d !", (int) job_number);
+      sprintf(msg, 
+              XmtLocalize(AppShell, "No free slots for interactive job %d !",
+                          "No free slots for interactive job %d !"), 
+                          (int) job_number);
       qmonMessageShow(AppShell, True, msg);
       cont = False;
    }

@@ -1,3 +1,9 @@
+AA-2002-08-22-0  I18N:      bunch of fixes for l10n
+                 Bugtraq:   #4733802, #4733201, #4733089, #4733043,
+                            #4731976, #4731990, #4731967, #4731958,
+                            #4731944, #4731935, #4731273, #4729700
+                  
+
 AS-2002-08-22-2  I18N:      some msgs. are not anymore dynamically created
 
 AS-2002-08-22-1  Bugfix:    qhold/qrls (via qhold.sh) can print i18ned

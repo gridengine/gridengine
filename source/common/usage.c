@@ -1156,6 +1156,6 @@ static void usage_silent(
 FILE *fp 
 ) {
    DENTER(TOP_LAYER, "usage_silent");
-   print_option_syntax(fp, "[-s]", "startup silently");
+   print_option_syntax(fp, "[-s]", MSG_GDI_USAGE_SILENT);
    DEXIT;
 }

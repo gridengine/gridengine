@@ -922,8 +922,7 @@ lListElem *qep
    lListElem *ep;
    int qtype;
    char buf[BUFSIZ];
-   String qtypes[] = { "BATCH", "INTERACTIVE", "CHECKPOINT", "PARALLEL", 
-                     "TRANSFER" };
+   String qtypes[] = { "BATCH", "INTERACTIVE", "CHECKPOINT", "PARALLEL" }; 
    const char *str, *str2;
 
    DENTER(GUI_LAYER, "qmonQueueShowBrowserInfo");
@@ -934,7 +933,7 @@ lListElem *qep
 
    qtype = lGetUlong(qep, QU_qtype);
    buf[0] = '\0';
-   for (i=0; i<5; i++) {
+   for (i=0; i<sizeof(qtypes); i++) {
       if (qtype & (1<<i))
          sprintf(buf, "%s%s ", buf, qtypes[i]); 
    }      

@@ -929,5 +929,11 @@
 #define MSG_JOB_JEPNULL               _MESSAGE(43343, _("jep == NULL in job_add_job()\n"))
 #define MSG_JOB_JOBALREADYEXISTS_U    _MESSAGE(43344, _("can't add job \"" U32CFormat "\" - job already exists\n") ) 
 
+/*
+** common/usage.c
+*/
+#define MSG_GDI_USAGE_SILENT          _MESSAGE(43345, _("startup silently"))
+
+
 #endif /* __MSG_GDILIB_H */
 

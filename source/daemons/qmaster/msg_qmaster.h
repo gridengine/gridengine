@@ -36,9 +36,9 @@
 #include "basis_types.h"
 
 #define MSG_SGETEXT_CANTSPOOL_SS                _MESSAGE(33000, _("qmaster is unable to spool "SFN" "SFQ"\n"))
-#define MSG_OBJ_JOBS    _MESSAGE(33001, _("jobs"))
-#define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS       _MESSAGE(33002, _("cannot resolve %s name "SFQ": %s"))
-#define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS       _MESSAGE(33003, _("cannot resolve %s name "SFQ))
+#define MSG_OBJ_JOBS                            _MESSAGE(33001, _("jobs"))
+#define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS     _MESSAGE(33002, _("cannot resolve %s name "SFQ": %s"))
+#define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS      _MESSAGE(33003, _("cannot resolve %s name "SFQ))
 
 
 
@@ -47,11 +47,11 @@
 */
 #define MSG_OBJ_CKPT                  _MESSAGE(33004, _("checkpointing environment"))
 #define MSG_OBJ_CKPTI                 _MESSAGE(33005, _("checkpoint interface"))
-#define MSG_OBJ_CKPTENV               _MESSAGE(33006, _("parameter %s of ckpt environment \"%s\": %s\n"))
-#define MSG_SGETEXT_CANT_COPY_ELEM_S                  _MESSAGE(33007, _("can't copy element "SFQ"\n") )   
-#define MSG_SGETEXT_CANTCOUNT_CKPT_S                  _MESSAGE(33008, _("can't count checkpoint objects in "SFN"\n") ) 
-#define MSG_SGETEXT_NO_CKPT_LIC                       _MESSAGE(33009, _("no checkpoint license available\n") )  
-#define MSG_SGETEXT_NO_INTERFACE_S                    _MESSAGE(33010, _("no valid checkpoint interface "SFN"\n") )   
+#define MSG_OBJ_CKPTENV_SSS           _MESSAGE(33006, _("parameter %s of ckpt environment \"%s\": %s\n"))
+#define MSG_SGETEXT_CANT_COPY_ELEM_S  _MESSAGE(33007, _("can't copy element "SFQ"\n") )   
+#define MSG_SGETEXT_CANTCOUNT_CKPT_S  _MESSAGE(33008, _("can't count checkpoint objects in "SFN"\n") ) 
+#define MSG_SGETEXT_NO_CKPT_LIC       _MESSAGE(33009, _("no checkpoint license available\n") )  
+#define MSG_SGETEXT_NO_INTERFACE_S    _MESSAGE(33010, _("no valid checkpoint interface "SFN"\n") )   
 
 
 /*
@@ -807,7 +807,6 @@
 #define MSG_CONFIG_READINGINCALENDARS       _MESSAGE(33640, _("Reading in calendars:\n"))
 #define MSG_CONFIG_READINGINCOMPLEXES       _MESSAGE(33641, _("Reading in complexes:\n"))
 #define MSG_CONFIG_FAILEDPARSINGYEARENTRYINCALENDAR_SS       _MESSAGE(33642, _("failed parsing year entry in calendar "SFQ": %s\n"))
-#define MSG_UNKNOWNREASON       _MESSAGE(33643, _("unknown reason"))
 #define MSG_CONFIG_READINGINCKPTINTERFACEDEFINITIONS       _MESSAGE(33644, _("Reading in ckpt interface definitions:\n"))
 #define MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU       _MESSAGE(33645, _("can't find queue "SFQ" referenced in job "U32CFormat))
 #define MSG_CONFIG_FAILEDREMOVINGBADJOBFILEREASONXPLEASEDELETEYMANUALY_SS       _MESSAGE(33646, _("failed removing bad jobfile (reason: %s): please delete "SFQ" manually\n"))

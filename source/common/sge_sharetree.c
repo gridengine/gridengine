@@ -104,11 +104,11 @@ int root_node
 
    if (!ep) {
       if (!alpp) {
-         ERROR((SGE_EVENT, MSG_OBJ_NOSTREEELEM));
+         ERROR((SGE_EVENT, MSG_STREE_NOSTREEELEM));
          SGE_EXIT(1);
       } 
       else {
-         sge_add_answer(alpp, MSG_OBJ_NOSTREEELEM, STATUS_EEXIST, 0);
+         sge_add_answer(alpp, MSG_STREE_NOSTREEELEM, STATUS_EEXIST, 0);
          DEXIT;
          return -1;
       }

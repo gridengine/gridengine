@@ -643,7 +643,7 @@ lList **alpp
    for (i=0; ckpt_commands[i].nm!=NoName; i++) {
       if (replace_params(lGetString(ep, ckpt_commands[i].nm),
                NULL, 0, ckpt_variables)) {
-         ERROR((SGE_EVENT, MSG_OBJ_CKPTENV,
+         ERROR((SGE_EVENT, MSG_OBJ_CKPTENV_SSS,
                ckpt_commands[i].text, lGetString(ep, CK_name), err_msg));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
          DEXIT;

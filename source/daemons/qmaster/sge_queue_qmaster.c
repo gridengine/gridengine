@@ -327,30 +327,9 @@ int sub_command
 
    /* ---- QU_qtype */      
    if (lGetPosViaElem(qep, QU_qtype)>=0) {
-      /* special case for transfer queues:
-         The hostname entered is the name of the host the qstd runs on. But qstd
-         gives us loadvalues from the queueing system that lies behind. So we need
-         a pseudohost object storing this load values. The name of the pseudohost 
-         is pseudo.<queuename> */
       u_long32 qtype;
 
       qtype = lGetUlong(qep, QU_qtype);
-      if (qtype & TQ) {
-         lListElem *hel;
-         char pseudohostname[MAXHOSTLEN], qhostname[MAXHOSTLEN];
-         
-         /* add the exechost for the real hostname */
-         strcpy(qhostname, lGetHost(new_queue, QU_qhostname));
-         if (!sge_locate_host(qhostname, SGE_EXECHOST_LIST))
-            sge_add_host_of_type(qhostname, SGE_EXECHOST_LIST);
-
-         /* enter the pseudohostname to the queue */
-         lSetHost(new_queue, QU_qhostname, pseudohostname);
-
-         /* enter the real host name to the pseudo host object */
-         hel = sge_locate_host(pseudohostname, SGE_EXECHOST_LIST);
-         lSetString(hel, EH_real_name, qhostname);
-      }
       if (sub_command == SGE_GDI_APPEND || sub_command == SGE_GDI_CHANGE) {
          qtype = lGetUlong(new_queue, QU_qtype) | qtype;
       } else if (sub_command == SGE_GDI_REMOVE) {

@@ -636,10 +636,17 @@ while ($#argv >= 1 && $?found)
          echo ""
          echo "==========READY FOR TRANSLATION========="
          echo ""
+      else
+         echo "Must be done on glinux"
+         exit 1
       endif
       exit 0
       breaksw
    case  "-pot"
+      if ( $buildarch != glinux ) then
+         echo "Must be done on fangorn"
+         exit 1
+      endif   
       $0 -intl -only-core messages
       echo "Adding script messages"
       setenv BUILDARCH $BUILDARCH
@@ -651,6 +658,8 @@ while ($#argv >= 1 && $?found)
          cat $pf >> dist/locale/gridenginenotuniq.pot
          rm $pf
       end
+      echo "Uniqing pot file"
+      scripts/msgmerge.csh merge
       exit 0
       breaksw
    case "-pr-geee":  

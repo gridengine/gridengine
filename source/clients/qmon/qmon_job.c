@@ -1419,7 +1419,7 @@ lListElem *jep
    sprintf(info, WIDTH"%s\n", info, "Job Name:", 
                   lGetString(jep, JB_job_name));
    sprintf(info, WIDTH"%s\n", info, "Job Script:", 
-                  lGetString(jep, JB_script_file));
+                  lGetString(jep, JB_script_file) ? lGetString(jep, JB_script_file): "-NA-");
    sprintf(info, WIDTH"%s\n", info, "Owner:", 
                   lGetString(jep, JB_owner));
    sprintf(info, WIDTH"%d\n", info, "Priority:", 

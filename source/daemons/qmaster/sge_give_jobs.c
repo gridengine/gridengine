@@ -1022,7 +1022,7 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
 
          sge_add_queue_event(sgeE_QUEUE_MOD, queue);
       } else {
-         ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDQ_S, queue_name));
+         ERROR((SGE_EVENT, MSG_QUEUE_UNABLE2FINDQ_S, queue_name));
       }
    }
 

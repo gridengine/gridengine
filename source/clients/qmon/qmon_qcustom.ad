@@ -71,11 +71,11 @@ Qmon*qfilter.layout: \
       Col { \
          Row { \
             Col { \
-               Caption tl "@{@fBFilter Resources}" 25 em qfilter_sr \
+               Caption tl "@{@fBFilter Resources}" 30 em qfilter_sr \
                Fixed Centered qfilter_clear \
             } \
             # \
-            Caption tl "@{@fBAvailable Resources}" 25 em qfilter_ar \
+            Caption tl "@{@fBAvailable Resources}" 30 em qfilter_ar \
          } \
       } \
    }

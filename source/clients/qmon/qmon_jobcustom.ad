@@ -71,7 +71,7 @@ Qmon*jobfield.xmtChildren: \
 Qmon*jobfield.layout: \
    Row { \
       Etched Through 4 2 Caption tc "@{@fBAvailable Fields}" \
-         25 em jobfield_available\
+         30 em jobfield_available\
       Fixed Col { \
          <>\
          Fixed Centered jobfield_add \
@@ -80,7 +80,7 @@ Qmon*jobfield.layout: \
          <>\
       } \
       Etched Through 4 2 Caption tc "@{@fBSelected Fields}" \
-         25 em jobfield_selected \
+         30 em jobfield_selected \
    }
 
 
@@ -114,11 +114,11 @@ Qmon*jobfilter.layout: \
       Col { \
          Row { \
             Col { \
-               Caption tl "@{@fBFilter Resources}" 15 em jobfilter_sr \
+               Caption tl "@{@fBFilter Resources}" 20 em jobfilter_sr \
                Fixed Centered jobfilter_clear \
             } \
             # \
-            Caption tl "@{@fBAvailable Resources}" 15 em jobfilter_ar \
+            Caption tl "@{@fBAvailable Resources}" 20 em jobfilter_ar \
          } \
          Caption tl "@{@fBFilter by Owner}" jobfilter_owner \
          Row { jobfilter_arrays_compressed <> } \

@@ -3356,7 +3356,7 @@ DPRINTF(("ep: %s %s\n",
                      if(lp)
                         cull_write_qconf(0, 1, NULL, NULL, NULL, lFirst(lp));
                      else {
-                        fprintf(stderr, MSG_OBJ_UNABLE2FINDQ_S, lGetString(argep, QR_name));
+                        fprintf(stderr, MSG_QUEUE_UNABLE2FINDQ_S, lGetString(argep, QR_name));
                         sge_parse_return = 1;
                      }
                      aep = lFirst(alp);
@@ -4471,7 +4471,10 @@ int user        /* =1 user, =0 project */
    newep = cull_read_in_userprj(NULL, fname, 0, user, NULL);
    
    if (!newep) {
-      fprintf(stderr, MSG_QCONF_CANTREADX_S, user?MSG_OBJ_USER:MSG_JOB_PROJECT);
+      if (user)
+         fprintf(stderr, MSG_QCONF_CANTREADUSER);
+      else   
+         fprintf(stderr, MSG_QCONF_CANTREADPROJECT);
       unlink(fname);
       SGE_EXIT(1);
    }

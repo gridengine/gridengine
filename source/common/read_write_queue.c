@@ -65,7 +65,6 @@ static char *queue_types[] = {
    "INTERACTIVE",  
    "CHECKPOINTING",
    "PARALLEL",
-   "TRANSFER",
    ""
 };
 
@@ -694,11 +693,6 @@ lListElem *qep
    }
 
    FPRINTF((fp, "qname                %s\n", lGetString(qep, QU_qname)));
-
-   /* for transfer queues qhostname is name of pseudohost
-      that points (real hostname) to hostname to be printed
-      for user */
-
    FPRINTF((fp, "hostname             %s\n", lGetHost(qep, QU_qhostname)));
    FPRINTF((fp, "seq_no               %d\n", (int) lGetUlong(qep, QU_seq_no)));
  

@@ -87,7 +87,7 @@ static void qmonHideTooltip(Widget w, XtPointer cld, XEvent *ev, Boolean *ctd);
 
 static XmtMenuItem file_menu_items[] = {
                                                  /* callback--v, cld--v */
-   {XmtMenuItemPushButton, "@{Exit}", 'x', "Ctrl<Key>C", "Ctrl-C",
+   {XmtMenuItemPushButton, "@{Exit}", '\0', "Ctrl<Key>C", "Ctrl-C",
 	 qmonExitCB, NULL},
    {XmtMenuItemEnd}
 };

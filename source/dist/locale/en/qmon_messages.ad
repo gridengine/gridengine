@@ -105,6 +105,7 @@ _Messages_.en.*.@fBLoad/Suspend Thresholds: @fBLoad/Suspend Thresholds
 _Messages_.en.*.@fBManager: @fBManager
 _Messages_.en.*.@fBMax Jobs/Group: @fBMax Jobs/Group
 _Messages_.en.*.@fBMax Jobs/User: @fBMax Jobs/User
+_Messages_.en.*.@fBMessage: @fBMessage
 _Messages_.en.*.@fBMethod Parameters: @fBMethod Parameters
 _Messages_.en.*.@fBName of Complex: @fBName of Complex
 _Messages_.en.*.@fBNode Attributes: @fBNode Attributes
@@ -187,6 +188,7 @@ _Messages_.en.*.@f[SMALL]Error: @f[SMALL]Error
 _Messages_.en.*.@f[SMALL]Running: @f[SMALL]Running
 _Messages_.en.*.@f[SMALL]Suspended: @f[SMALL]Suspended
 _Messages_.en.*.APPLICATION-LEVEL: APPLICATION-LEVEL
+_Messages_.en.*.Abort: Abort
 _Messages_.en.*.Abort of Job: Abort of Job
 _Messages_.en.*.About: About
 _Messages_.en.*.Access List: Access List
@@ -248,7 +250,7 @@ _Messages_.en.*.Cancel: Cancel
 _Messages_.en.*.Cannot start editor !: Cannot start editor !
 _Messages_.en.*.Category: Category
 _Messages_.en.*.Cell: Cell
-_Messages_.en.*.Change Checkpoint Object: Change Checkpoint Object
+_Messages_.en.*.Add/Modify Checkpoint Object: Add/Modify Checkpoint Object
 _Messages_.en.*.Change global configuration: Change global configuration
 _Messages_.en.*.Checkpoint Command: Checkpoint Command
 _Messages_.en.*.Checkpoint Object: Checkpoint Object
@@ -282,6 +284,7 @@ _Messages_.en.*.Complex Configuration: Complex Configuration
 _Messages_.en.*.Complexes: Complexes
 _Messages_.en.*.Configuration: Configuration
 _Messages_.en.*.Consumable: Consumable
+_Messages_.en.*.CONSUMABLE: CONSUMABLE
 _Messages_.en.*.Context Help: Context Help
 _Messages_.en.*.Context Variable List: Context Variable List
 _Messages_.en.*.Context for Job: Context for Job
@@ -290,7 +293,7 @@ _Messages_.en.*.Copy: Copy
 _Messages_.en.*.Credit Formula required!: Credit Formula required!
 _Messages_.en.*.Current Working Directory: Current Working Directory
 _Messages_.en.*.Customize: Customize
-_Messages_.en.*.Customize+: Customize+
+_Messages_.en.*.Customize +: Customize +
 _Messages_.en.*.Cut: Cut
 _Messages_.en.*.DOUBLE: DOUBLE
 _Messages_.en.*.DTicket: DTicket
@@ -300,6 +303,7 @@ _Messages_.en.*.Deadline: Deadline
 _Messages_.en.*.Default Domain: Default Domain
 _Messages_.en.*.Default Project: Default Project
 _Messages_.en.*.Default: Default
+_Messages_.en.*.DEFAULT: DEFAULT
 _Messages_.en.*.Default required !: Default required !
 _Messages_.en.*.Delete: Delete
 _Messages_.en.*.Deny Access: Deny Access
@@ -312,6 +316,7 @@ _Messages_.en.*.Edit: Edit
 _Messages_.en.*.Enable: Enable
 _Messages_.en.*.End of Job: End of Job
 _Messages_.en.*.Enforce Project: Enforce Project
+_Messages_.en.*.Enforce User: Enforce User
 _Messages_.en.*.Enter Owner: Enter Owner
 _Messages_.en.*.Enter a memory value: Enter a memory value
 _Messages_.en.*.Enter a new priority for the selected jobs: Enter a new priority for the selected jobs
@@ -365,6 +370,7 @@ _Messages_.en.*.Host: Host
 _Messages_.en.*.Hostname: Hostname
 _Messages_.en.*.Hour: Hour
 _Messages_.en.*.Hours: Hours
+_Messages_.en.*.Ignore FQDN: Ignore FQDN
 _Messages_.en.*.I/O [%]: I/O [%]
 _Messages_.en.*.INFINITY: INFINITY
 _Messages_.en.*.INT: INT
@@ -425,6 +431,8 @@ _Messages_.en.*.Master Queue List: Master Queue List
 _Messages_.en.*.Master Spool Dir: Master Spool Dir
 _Messages_.en.*.Max Slots: Max Slots
 _Messages_.en.*.Max Unheard: Max Unheard
+_Messages_.en.*.cannot reach qmaster: cannot reach qmaster
+_Messages_.en.*.cannot reach %s: cannot reach %s
 _Messages_.en.*.cluster.max_aj_instances: Maximal Array\nJob Instances
 _Messages_.en.*.cluster.max_aj_tasks: Maximal Array\nJob Tasks
 _Messages_.en.*.cluster.max_job_per_user: Maximal Jobs\nPer User
@@ -441,7 +449,9 @@ _Messages_.en.*.MinCpuTime: MinCpuTime
 _Messages_.en.*.Minute: Minute
 _Messages_.en.*.Modify: Modify
 _Messages_.en.*.NO: NO
+_Messages_.en.*.No free slots for interactive job %d !: No free slots for interactive job %d !
 _Messages_.en.*.Name: Name
+_Messages_.en.*.NAME: NAME
 _Messages_.en.*.Name required !: Name required !
 _Messages_.en.*.Name of Complex required !: Name of Complex required !
 _Messages_.en.*.Netscape Help: Netscape Help
@@ -460,6 +470,7 @@ _Messages_.en.*.Notify Job: Notify Job
 _Messages_.en.*.Notify: Notify
 _Messages_.en.*.OTicket: OTicket
 _Messages_.en.*.Ok: Ok
+_Messages_.en.*.Okay: Okay
 _Messages_.en.*.On Job Suspend: On Job Suspend
 _Messages_.en.*.On Min CPU Interval: On Min CPU Interval
 _Messages_.en.*.On Shutdown of Execd: On Shutdown of Execd
@@ -534,6 +545,8 @@ _Messages_.en.*.Range required for Parallel Environment !: Range required for Pa
 _Messages_.en.*.Refresh: Refresh
 _Messages_.en.*.Relation: Relation
 _Messages_.en.*.Reload: Reload
+_Messages_.en.*.RELOP: RELOP
+_Messages_.en.*.REQ: REQ
 _Messages_.en.*.Remove Lines: Remove Lines
 _Messages_.en.*.Request Resources: Request Resources
 _Messages_.en.*.Request for serial job: Request for serial job
@@ -548,7 +561,9 @@ _Messages_.en.*.Restart depends on Queue: Restart depends on Queue
 _Messages_.en.*.Restart: Restart
 _Messages_.en.*.Resume Method: Resume Method
 _Messages_.en.*.Resume: Resume
+_Messages_.en.*.Retry: Retry
 _Messages_.en.*.STRING: STRING
+_Messages_.en.*.SHORTCUT: SHORTCUT
 _Messages_.en.*.STicket: STicket
 _Messages_.en.*.Save Settings: Save Settings
 _Messages_.en.*.Save: Save
@@ -616,6 +631,7 @@ _Messages_.en.*.Suspend of Job: Suspend of Job
 _Messages_.en.*.Suspend: Suspend
 _Messages_.en.*.System: System
 _Messages_.en.*.TIME: TIME
+_Messages_.en.*.TYPE: TYPE
 _Messages_.en.*.TRANSPARENT: TRANSPARENT
 _Messages_.en.*.Targeted Resource Share: Targeted Resource Share
 _Messages_.en.*.Task: Task
@@ -647,6 +663,7 @@ _Messages_.en.*.Userset Name: Userset Name
 _Messages_.en.*.Userset List Name required !: Userset List Name required !
 _Messages_.en.*.Usersets: Usersets
 _Messages_.en.*.Value: Value
+_Messages_.en.*.VALUE: VALUE
 _Messages_.en.*.Value required !: Value required !
 _Messages_.en.*.Variable: Variable
 _Messages_.en.*.Verify Mode: Verify Mode
@@ -690,6 +707,7 @@ Qmon*XmtDisplayMessage.helpTitle: Help
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*about_msg.message: @fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell @fB'%s'@fR.\n%s%s
 Qmon*mailto_msg.message: \nFor further information and feedback use: @fBge-feedback@@eng.sun.com@fR\n\n
+Qmon*onemailaddress.message: There must be at least one mail address.
 Qmon*cancelLabelString: Cancel
 Qmon*okLabelString: Ok
 Qmon*helpLabelString: Help
@@ -699,12 +717,19 @@ Qmon*filterLabelString: Filter
 Qmon*applyLabelString: Apply
 Qmon*xmtBooleanDialog*title: Question
 _Messages_.en.*.XmtAskForInteger.title: Enter an integer 
+_Messages_.en.*.XmtAskForInteger.badInput: Please enter an integer.
+_Messages_.en.*.XmtAskForInteger.tooSmall: Please enter a larger number.
+_Messages_.en.*.XmtAskForInteger.tooBig: Please enter a smaller number.
 _Messages_.en.*.XmtAskForDouble.title: Enter a double
+_Messages_.en.*.XmtAskForDouble.badInput: Please enter a number.
+_Messages_.en.*.XmtAskForString.title: Enter a String
+_Messages_.en.*.XmtAskForString.title: Enter a String
 _Messages_.en.*.XmtAskForString.title: Enter a String
 _Messages_.en.*.XmtAskForFile.title: Select a File
 _Messages_.en.*.XmtAskForTime.title: Time
 _Messages_.en.*.XmtAskForMemory.title: Memory
 _Messages_.en.*.XmtAskForItem.title: Select an Item
+_Messages_.en.*.XmtAskForItem.noMatch: Please select an item that appears\non the list.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 _Messages_.en.*.XmtHelpDisplayContextHelp.noHelp: There is no help available there.
 _Messages_.en.*.XmtHelpDisplayContextHelp.dialogTitle: Help On Context
@@ -723,6 +748,7 @@ _Messages_.en.*.project.askdel: Do you really want to delete the\nselected Proje
 _Messages_.en.*.userset.askdel: Do you really want to delete\nthe selected userset lists ?
 _Messages_.en.*.queue.askdel: Do you really want to\ndelete the selected queues ?
 _Messages_.en.*.stree.asksave: Do you want to save your changes ?
+_Messages_.en.*.stree.askdel: Do you really want to\nclear the usage ?
 _Messages_.en.*.ticket.asksave: Do you want to save your changes ?
 _Messages_.en.*.calendar.askdel: Do you really want to delete the\nselected Calendar Configuration ?
 _Messages_.en.*.ckpt.askdel: Do you really want to delete the\nselected Checkpointing Configuration ?

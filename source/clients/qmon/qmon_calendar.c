@@ -193,14 +193,16 @@ lListElem *ep
    i = 0;
 
    /* year calendar */
-   sge_string_printf(&sb, "%-20.20s ", "Year");
-   sge_string_append(&sb, (s=lGetString(ep, CAL_year_calendar))?s:"NONE");
+   sge_string_printf(&sb, "%-20.20s ", XmtLocalize(w, "Year", "Year"));
+   sge_string_append(&sb, (s=lGetString(ep, CAL_year_calendar))?s:
+                              XmtLocalize(w, "NONE", "NONE"));
    items[i++] = XmStringCreateLtoR(sb.s, "LIST");
    sge_string_free(&sb);
 
    /* week calendar */
-   sge_string_printf(&sb, "%-20.20s ", "Week");
-   sge_string_append(&sb, (s=lGetString(ep, CAL_week_calendar))?s:"NONE");
+   sge_string_printf(&sb, "%-20.20s ", XmtLocalize(w, "Week", "Week"));
+   sge_string_append(&sb, (s=lGetString(ep, CAL_week_calendar))?s:
+                              XmtLocalize(w, "NONE", "NONE"));
    items[i++] = XmStringCreateLtoR(sb.s, "LIST");
    sge_string_free(&sb);
 

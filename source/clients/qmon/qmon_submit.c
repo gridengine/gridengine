@@ -1212,13 +1212,21 @@ XtPointer cld, cad;
          pe = strtok(theInput, " ");
          pe_range = strtok(NULL, "\n");
          if (!(pe_range && pe_range[0] != '\0')) {
-            sprintf(buf, "Parallel Environment requires valid name and valid range !");
+            sprintf(buf, 
+               XmtLocalize(w, 
+               "Parallel Environment requires valid name and valid range !", 
+               "Parallel Environment requires valid name and valid range !")
+            );
             goto error;
          }
          else {
             parse_ranges(pe_range, 1, 0, &alp, NULL, INF_ALLOWED);
             if (alp) {
-               sprintf(buf, "Parallel Environment requires valid name and valid range !");
+               sprintf(buf, 
+                  XmtLocalize(w, 
+                  "Parallel Environment requires valid name and valid range !", 
+                  "Parallel Environment requires valid name and valid range !")
+               );
                alp = lFreeList(alp);
                goto error;
             }
@@ -1227,13 +1235,21 @@ XtPointer cld, cad;
 
       if (!(lp = lCreateElemList("JobSubmitList", JB_Type, 1))) {
          DPRINTF(("lCreateElemList failure\n"));
-         sprintf(buf, "Job submission failed\n");
+         sprintf(buf, 
+                 XmtLocalize(w, 
+                             "Job submission failed", 
+                             "Job submission failed")
+         );
          goto error;
       }
 
       if (!qmonSMToCull(&SMData, lFirst(lp), 0)) {
          DPRINTF(("qmonSMToCull failure\n"));
-         sprintf(buf, "Job submission failed\n");
+         sprintf(buf, 
+                 XmtLocalize(w, 
+                             "Job submission failed", 
+                             "Job submission failed")
+         );
          goto error;
       }
 
@@ -2968,7 +2984,7 @@ XtPointer cld, cad;
    }
 
    if (selectedItemCount == itemCount) {
-      XmtDisplayWarning(w, NULL, "There must be at least one mail address");
+      XmtDisplayWarning(w, "onemailaddress", "There must be at least one mail address.");
       DEXIT;
       return;
    }

@@ -1072,10 +1072,6 @@ int sub_command
             }
 #endif            
 
-fprintf(stderr, "deleted_unenrolled_tasks: %d\n", deleted_unenrolled_tasks);
-fprintf(stderr, "existing_tasks: %ld\n", existing_tasks);
-fprintf(stderr, "deleted_tasks: %ld\n", deleted_tasks);
-
             if (existing_tasks > deleted_tasks) {
                dstring buffer = DSTRING_INIT;
                /* write only the common part - pass only the jobid, no jatask or petask id */

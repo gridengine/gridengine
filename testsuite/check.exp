@@ -3131,8 +3131,7 @@ proc delete_tests {path { only_if_not_there 0 } } {
                       delete_result $elem 0 $i
                    } 
                 } else {
-# JG: TODO: this cannot work (?)
-#                  delete_result $elem 0 $i
+                   delete_result $elem 0 $i
                 }
              }
           }

@@ -569,6 +569,14 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    job_number = sge_get_job_number();
    lSetUlong(jep, JB_job_number, job_number);
 
+   /*
+    * only operators and managers are allowed to submit
+    * jobs with higher priority than 0 (=BASE_PRIORITY)
+    * we silently lower it to 0 in case someone tries to cheat
+    */
+   if (lGetUlong(jep, JB_priority)>BASE_PRIORITY && sge_operator(ruser))
+      lSetUlong(jep, JB_priority, BASE_PRIORITY);
+
    lSetUlong(jep, JB_submission_time, sge_get_gmt());
 
    lSetList(jep, JB_ja_tasks, NULL);

@@ -1,3 +1,8 @@
+AH-2002-05-29-0: Bugfix:    Fix bug allowing non-privileged users to submit jobs 
+                            with priority higher than 0
+                 Issue:     #271
+                 Bugtraq:   #4692957
+
 JG-2002-05-29-0: Enhancem.  Allow specification of arguments to 
                             [rsh|rlogin|qlogin]_[daemon|command]
                  Issue:     #232

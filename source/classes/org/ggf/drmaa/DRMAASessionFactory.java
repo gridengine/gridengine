@@ -33,7 +33,7 @@
  * Created on June 18, 2003, 10:07 AM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
 import java.io.*;
 import java.util.Properties;
@@ -50,7 +50,7 @@ import java.util.Properties;
  * session.init ("Sun ONE Grid Engine");<BR>
  * <BR>
  * //Get the job template<BR>
- * JobTemplate jt = session.getJobTemplate ();<BR>
+ * JobTemplate jt = session.createJobTemplate ();<BR>
  * <BR>
  * //Set some attributes<BR>
  * jt.setAttribute (JobTemplate.REMOTE_COMMAND, "uptime");<BR>

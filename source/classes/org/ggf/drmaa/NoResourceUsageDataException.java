@@ -28,30 +28,32 @@
  * 
  ************************************************************************/
 /*
- * InvalidContextStringException.java
+ * NoResourceUsageInformationException.java
  *
- * Created on June 17, 2003, 10:35 AM
+ * Created on June 18, 2003, 11:59 AM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
-/** Initialization failed due to invalid contact string.
+/** This error code is returned by DRMAASession.wait() when a job has finished
+ * but no rusage and stat data could be provided.
  * @author dan.templeton@sun.com
+ * @see DRMAASession#wait()
  */
-public class InvalidContactStringException extends DRMAAException {
+public class NoResourceUsageDataException extends DRMAAException {
 	
 	/**
-	 * Creates a new instance of <code>InvalidContextStringException</code> without detail message.
+	 * Creates a new instance of <code>NoResourceUsageInformationException</code> without detail message.
 	 */
-	public InvalidContactStringException () {
+	public NoResourceUsageDataException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>InvalidContextStringException</code> with the specified detail message.
+	 * Constructs an instance of <code>NoResourceUsageInformationException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public InvalidContactStringException (String msg) {
+	public NoResourceUsageDataException (String msg) {
 		super (msg);
 	}
 }

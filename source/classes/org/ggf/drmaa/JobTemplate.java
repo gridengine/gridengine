@@ -33,7 +33,7 @@
  * Created on June 17, 2003, 10:40 AM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
 import java.util.List;
 import java.util.Set;

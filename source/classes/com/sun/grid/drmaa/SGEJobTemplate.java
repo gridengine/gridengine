@@ -28,30 +28,56 @@
  * 
  ************************************************************************/
 /*
- * InvalidAttributeFormatException.java
+ * SGEJobTemplate.java
  *
- * Created on June 17, 2003, 11:02 AM
+ * Created on March 4, 2004, 10:09 AM
  */
 
 package com.sun.grid.drmaa;
 
-/** The format for the job attribute value is invalid.
- * @author dan.templeton@sun.com
+import java.util.*;
+
+import org.ggf.drmaa.*;
+
+/**
+ *
+ * @author  dan.templeton@sun.com
  */
-public class InvalidAttributeFormatException extends InvalidArgumentException {
-	
-	/**
-	 * Creates a new instance of <code>InvalidAttributeFormatException</code> without detail message.
-	 */
-	public InvalidAttributeFormatException () {
-	}
-	
-	
-	/**
-	 * Constructs an instance of <code>InvalidAttributeFormatException</code> with the specified detail message.
-	 * @param msg the detail message.
-	 */
-	public InvalidAttributeFormatException (String msg) {
-		super (msg);
-	}
+public class SGEJobTemplate extends JobTemplate {
+   private SGESession session = null;
+   private int id = -1;
+   
+   /** Creates a new instance of SGEJobTemplate */
+   SGEJobTemplate (SGESession session, int id) {
+      this.session = session;
+      this.id = id;
+   }
+   
+   public List getAttribute (String name) {
+      String[] values = session.nativeGetAttribute (name);
+      
+      return Arrays.asList (values);
+   }
+   
+   public Set getAttributeNames () {
+      String[] names = session.nativeGetAttributeNames ();
+      
+      return new HashSet (Arrays.asList (names));
+   }
+   
+   public void setAttribute (String name, List value) throws DRMAAException {
+      session.nativeSetAttributeValues (name, (String[])value.toArray (new String[value.size ()]));
+   }
+   
+   public void setAttribute (String name, String value) throws DRMAAException {
+      session.nativeSetAttributeValue (name, value);
+   }   
+   
+   public void delete () throws DRMAAException {
+      session.nativeDeleteJobTemplate (this);
+   }
+   
+   int getId () {
+      return id;
+   }
 }

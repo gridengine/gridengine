@@ -28,30 +28,31 @@
  * 
  ************************************************************************/
 /*
- * DRMSExitException.java
+ * ConflictingAttributeValuesException.java
  *
- * Created on June 17, 2003, 11:00 AM
+ * Created on June 17, 2003, 11:03 AM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
-/** DRM system disengagement failed.
+/** The value of this attribute is conflicting with a previously set
+ * attributes.
  * @author dan.templeton@sun.com
  */
-public class DRMSExitException extends SessionException {
+public class ConflictingAttributeValuesException extends InvalidAttributeException {
 	
 	/**
-	 * Creates a new instance of <code>DRMSExitException</code> without detail message.
+	 * Creates a new instance of <code>ConflictingAttributeValuesException</code> without detail message.
 	 */
-	public DRMSExitException () {
+	public ConflictingAttributeValuesException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>DRMSExitException</code> with the specified detail message.
+	 * Constructs an instance of <code>ConflictingAttributeValuesException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public DRMSExitException (String msg) {
+	public ConflictingAttributeValuesException (String msg) {
 		super (msg);
 	}
 }

@@ -28,34 +28,30 @@
  * 
  ************************************************************************/
 /*
- * SGESessionFactory.java
+ * NoActiveSessionException.java
  *
- * Created on March 3, 2004, 12:04 PM
+ * Created on June 17, 2003, 11:00 AM
  */
 
-package sun.sge.drmaa;
+package org.ggf.drmaa;
 
-import com.sun.grid.drmaa.*;
-
-/**
- *
- * @author  dan.templeton@sun.com
+/** Exit routine failed because there is no active session.
+ * @author dan.templeton@sun.com
  */
-public class SGESessionFactory extends DRMAASessionFactory {
-   private SGESession thisSession = null;
-   
-   /** Creates a new instance of SGESessionFactory */
-   public SGESessionFactory () {
-   }
-   
-	/** Gets a DRMAASession object appropriate for the DRM in use.
-	 * @return a DRMAASession object appropriate for the DRM in use
-	 */	
-	public DRMAASession getSession () {
-		if (thisSession == null) {
-			thisSession = new SGESession ();
-		}
-		
-		return thisSession;
+public class NoActiveSessionException extends SessionException {
+	
+	/**
+	 * Creates a new instance of <code>NoActiveSessionException</code> without detail message.
+	 */
+	public NoActiveSessionException () {
+	}
+	
+	
+	/**
+	 * Constructs an instance of <code>NoActiveSessionException</code> with the specified detail message.
+	 * @param msg the detail message.
+	 */
+	public NoActiveSessionException (String msg) {
+		super (msg);
 	}
 }

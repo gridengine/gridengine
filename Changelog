@@ -1,3 +1,13 @@
+DT-2004-03-15-0: Bugfix:    o Fixed qconf line continuation in cases of long,
+                              unbreakable lines.
+                            o Fixed qconf parsing of trailing whitespace.
+                            o Moved DRMAA Java binding into more appropriate
+                              packages.
+                            o Added SISSL header to spooling parser.
+                 Changed:   Flatfile spooling, DRMAA
+                 Issue:     818, 836
+                 Review:    JG
+
 RH-2004-03-15-0: Bugfix:    Negative numbers for step in range parsing are
                             not allowed.
                  Changed:   all
@@ -12,6 +22,7 @@ AH-2004-03-15-0: Doc:       Made some fixes to calendar_conf(5) to make
 
 CR-2004-03-15-0: Testsuite: Adjustments for new GE install script output
 
+>>>>>>> 1.1732
 AD-2004-03-12-1: Bugfix:    Did fix quote error.
                  Changed:   inst_execd.sh
                  Review:    AS

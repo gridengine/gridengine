@@ -28,30 +28,30 @@
  * 
  ************************************************************************/
 /*
- * InitException.java
+ * SessionAlreadyActiveException.java
  *
- * Created on June 17, 2003, 10:46 AM
+ * Created on June 17, 2003, 10:36 AM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
-/** A problem occured with the DRM session preventing the routine from completing.
+/** Initialization failed due to existing DRMAA session.
  * @author dan.templeton@sun.com
  */
-public class SessionException extends DRMAAException {
+public class SessionAlreadyActiveException extends SessionException {
 	
 	/**
-	 * Creates a new instance of <code>InitException</code> without detail message.
+	 * Creates a new instance of <code>SessionAlreadyActiveException</code> without detail message.
 	 */
-	public SessionException () {
+	public SessionAlreadyActiveException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>InitException</code> with the specified detail message.
+	 * Constructs an instance of <code>SessionAlreadyActiveException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public SessionException (String msg) {
+	public SessionAlreadyActiveException (String msg) {
 		super (msg);
 	}
 }

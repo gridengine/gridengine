@@ -33,7 +33,7 @@
  * Created on June 18, 2003, 11:42 AM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
 import java.util.*;
 

@@ -28,31 +28,30 @@
  * 
  ************************************************************************/
 /*
- * AuthorizationException.java
+ * AttributeException.java
  *
- * Created on June 17, 2003, 1:00 PM
+ * Created on June 17, 2003, 10:47 AM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
-/** The specified request is not processed successfully due to
- * authorization failure.
+/** The value or format of an attribute is invalid.
  * @author dan.templeton@sun.com
  */
-public class AuthorizationException extends DRMAAException {
-	
-	/**
-	 * Creates a new instance of <code>AuthorizationException</code> without detail message.
-	 */
-	public AuthorizationException () {
-	}
-	
-	
-	/**
-	 * Constructs an instance of <code>AuthorizationException</code> with the specified detail message.
-	 * @param msg the detail message.
-	 */
-	public AuthorizationException (String msg) {
-		super (msg);
-	}
+public class InvalidAttributeException extends DRMAAException {
+   
+   /**
+    * Creates a new instance of <code>AttributeException</code> without detail message.
+    */
+   public InvalidAttributeException () {
+   }
+   
+   
+   /**
+    * Constructs an instance of <code>AttributeException</code> with the specified detail message.
+    * @param msg the detail message.
+    */
+   public InvalidAttributeException (String msg) {
+      super (msg);
+   }
 }

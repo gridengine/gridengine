@@ -33,11 +33,11 @@
  * Created on March 3, 2004, 3:04 PM
  */
 
-package sun.sge.drmaa;
+package com.sun.grid.drmaa;
 
 import java.util.*;
 
-import com.sun.grid.drmaa.*;
+import org.ggf.drmaa.*;
 
 /**
  *
@@ -102,7 +102,7 @@ public class SGESession extends DRMAASession {
 //      return RUNNING;
 //   }
    
-   public JobTemplate getJobTemplate () throws DRMAAException {
+   public JobTemplate createJobTemplate () throws DRMAAException {
       int id = nativeAllocateJobTemplate ();
       
       return new SGEJobTemplate (this, id);

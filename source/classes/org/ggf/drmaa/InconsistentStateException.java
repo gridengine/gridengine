@@ -28,30 +28,39 @@
  * 
  ************************************************************************/
 /*
- * InvalidJobException.java
+ * InvalidStateException.java
  *
- * Created on June 18, 2003, 10:47 AM
+ * Created on June 18, 2003, 10:44 AM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
-/** The job specified by the 'jobId' does not exist.
+/** The job cannot be moved to the requested state.
  * @author dan.templeton@sun.com
  */
-public class InvalidJobException extends DRMAAException {
+public class InconsistentStateException extends DRMAAException {
+	public static final int HOLD = 0;
+	public static final int RELEASE = 1;
+	public static final int RESUME = 2;
+	public static final int SUSPEND = 3;
+	
+	private int state;
 	
 	/**
-	 * Creates a new instance of <code>InvalidJobException</code> without detail message.
+	 * Creates a new instance of <code>InvalidStateException</code> without detail message.
 	 */
-	public InvalidJobException () {
+	public InconsistentStateException (int state) {
+		this.state = state;
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>InvalidJobException</code> with the specified detail message.
+	 * Constructs an instance of <code>InvalidStateException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public InvalidJobException (String msg) {
+	public InconsistentStateException (int state, String msg) {
 		super (msg);
+		
+		this.state = state;
 	}
 }

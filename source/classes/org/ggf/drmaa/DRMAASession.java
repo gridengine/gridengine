@@ -33,7 +33,7 @@
  * Created on June 17, 2003, 10:33 AM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
 import java.util.*;
 
@@ -137,7 +137,7 @@ public abstract class DRMAASession {
 	 * </UL>
 	 * @return a blank JobTemplate object
 	 */
-	public abstract JobTemplate getJobTemplate () throws DRMAAException;
+	public abstract JobTemplate createJobTemplate () throws DRMAAException;
    
    /** Submit a job with attributes defined in the job template 'jt'.
 	 * The returned job identifier SHALL be a String, identical to that returned

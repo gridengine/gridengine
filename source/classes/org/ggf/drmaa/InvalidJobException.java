@@ -28,30 +28,30 @@
  * 
  ************************************************************************/
 /*
- * CommunicationException.java
+ * InvalidJobException.java
  *
- * Created on June 17, 2003, 10:41 AM
+ * Created on June 18, 2003, 10:47 AM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
-/** Could not contact DRM system for this request.
+/** The job specified by the 'jobId' does not exist.
  * @author dan.templeton@sun.com
  */
-public class DRMCommunicationException extends DRMAAException {
+public class InvalidJobException extends DRMAAException {
 	
 	/**
-	 * Creates a new instance of <code>CommunicationException</code> without detail message.
+	 * Creates a new instance of <code>InvalidJobException</code> without detail message.
 	 */
-	public DRMCommunicationException () {
+	public InvalidJobException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>CommunicationException</code> with the specified detail message.
+	 * Constructs an instance of <code>InvalidJobException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public DRMCommunicationException (String msg) {
+	public InvalidJobException (String msg) {
 		super (msg);
 	}
 }

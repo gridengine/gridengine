@@ -33,12 +33,12 @@
  * Created on March 4, 2004, 10:17 AM
  */
 
-package sun.sge.drmaa;
+package com.sun.grid.drmaa;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.sun.grid.drmaa.*;
+import org.ggf.drmaa.*;
 
 /**
  *

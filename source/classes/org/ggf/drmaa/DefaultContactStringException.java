@@ -28,39 +28,31 @@
  * 
  ************************************************************************/
 /*
- * InvalidStateException.java
+ * DefaultContactStringException.java
  *
- * Created on June 18, 2003, 10:44 AM
+ * Created on June 17, 2003, 10:37 AM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
-/** The job cannot be moved to the requested state.
+/** DRMAA could not use the default contact string to connect to DRM
+ * system.
  * @author dan.templeton@sun.com
  */
-public class InconsistentStateException extends DRMAAException {
-	public static final int HOLD = 0;
-	public static final int RELEASE = 1;
-	public static final int RESUME = 2;
-	public static final int SUSPEND = 3;
-	
-	private int state;
+public class DefaultContactStringException extends DRMAAException {
 	
 	/**
-	 * Creates a new instance of <code>InvalidStateException</code> without detail message.
+	 * Creates a new instance of <code>DefaultContactStringException</code> without detail message.
 	 */
-	public InconsistentStateException (int state) {
-		this.state = state;
+	public DefaultContactStringException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>InvalidStateException</code> with the specified detail message.
+	 * Constructs an instance of <code>DefaultContactStringException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public InconsistentStateException (int state, String msg) {
+	public DefaultContactStringException (String msg) {
 		super (msg);
-		
-		this.state = state;
 	}
 }

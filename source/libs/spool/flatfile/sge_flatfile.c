@@ -1493,7 +1493,8 @@ FF_DEBUG("detected end_token");
                   record_end = true;
                   continue;
                }
-               /* if it's a space that doesn't have a special meaning, ignore it */
+               /* if it's a space that doesn't have a special meaning,
+                * ignore it */
                if (!found_value && (*spool_text == ' ')) {
                   *token = spool_lex();
                }
@@ -2080,11 +2081,6 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
    
    str_buf[0] = '\0';
    
-   /* We can only break on spaces here because breaking on commas would cause a
-    * space to be inserted by the lex scanner when it parsed the line.  I don't
-    * think the flatfile spooling could deal with both spaces and commas
-    * delimiting a list.  Besides, all the really long lines use spaces instead
-    * of commas. */
    while (strlen (strp) > MAX_LINE_LENGTH - word) {
       /* Account for newlines */
       char *newlp = strchr (strp, '\n');
@@ -2147,12 +2143,24 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
       /* Break on the last available whitespace or comma */
       /* We have to account for the fact that on all lines after the first, the
        * line length in decreased by the indentation. */
-      /* We know that on the first line strp[word] is not a space, so we can
-       * just skip it.  On later lines, we know the first character is not a
-       * space, so can skip it too. */
-      for (index = MAX_LINE_LENGTH - word; index >= 1; index--) {
-         if (isspace (strp[index]) || (strp[index] == ',')) {
-            break;
+      /* On the first line, we have to start looking at the end of the line and
+       * stop looking before we reach the delimiter before the second word. */
+      if (first_line) {
+         for (index = MAX_LINE_LENGTH - 1; index > word; index--) {
+            if (isspace (strp[index]) || (strp[index] == ',')) {
+               break;
+            }
+         }
+      }
+      /* On later lines, we start looking at the end of the line, adjusted for
+       * the amount of space we will indent it, and we stop looking at the
+       * second character on the line since having the first character as a
+       * break point is useless. */
+      else {
+         for (index = MAX_LINE_LENGTH - word - 1; index >= 1; index--) {
+            if (isspace (strp[index]) || (strp[index] == ',')) {
+               break;
+            }
          }
       }
       
@@ -2178,9 +2186,26 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
       }
       else {
          /* Break on the first whitespace past the end of the line */
-         for (index = MAX_LINE_LENGTH - word; strp[index] != '\0'; index++) {
-            if (isspace (strp[index]) || (strp[index] == '\n') || (strp[index] == ',')) {
-               break;
+         /* Break on the last available whitespace or comma */
+         /* We have to account for the fact that on all lines after the first, the
+          * line length in decreased by the indentation. */
+         /* On the first line, we start looking at the end of the line. */
+         if (first_line) {
+            for (index = MAX_LINE_LENGTH; strp[index] != '\0'; index++) {
+               if (isspace (strp[index]) || (strp[index] == ',') ||
+                   (strp[index] == '\n')) {
+                  break;
+               }
+            }
+         }
+         /* On later lines, we start looking at the end of the line, adjusted for
+          * the amount of space we will indent it. */
+         else {
+            for (index = MAX_LINE_LENGTH - word; strp[index] != '\0'; index++) {
+               if (isspace (strp[index]) || (strp[index] == ',') ||
+                   (strp[index] == '\n')) {
+                  break;
+               }
             }
          }
 

@@ -28,31 +28,31 @@
  * 
  ************************************************************************/
 /*
- * ExitTimeoutException.java
+ * AuthorizationException.java
  *
- * Created on June 18, 2003, 11:34 AM
+ * Created on June 17, 2003, 1:00 PM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
-/** We have encountered a time-out condition for DRMAASession.synchronize()
- * or DRMAASession.wait().
+/** The specified request is not processed successfully due to
+ * authorization failure.
  * @author dan.templeton@sun.com
  */
-public class ExitTimeoutException extends DRMAAException {
+public class AuthorizationException extends DRMAAException {
 	
 	/**
-	 * Creates a new instance of <code>ExitTimeoutException</code> without detail message.
+	 * Creates a new instance of <code>AuthorizationException</code> without detail message.
 	 */
-	public ExitTimeoutException () {
+	public AuthorizationException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>ExitTimeoutException</code> with the specified detail message.
+	 * Constructs an instance of <code>AuthorizationException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public ExitTimeoutException (String msg) {
+	public AuthorizationException (String msg) {
 		super (msg);
 	}
 }

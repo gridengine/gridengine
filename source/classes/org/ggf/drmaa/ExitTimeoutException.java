@@ -28,32 +28,31 @@
  * 
  ************************************************************************/
 /*
- * NoResourceUsageInformationException.java
+ * ExitTimeoutException.java
  *
- * Created on June 18, 2003, 11:59 AM
+ * Created on June 18, 2003, 11:34 AM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
-/** This error code is returned by DRMAASession.wait() when a job has finished
- * but no rusage and stat data could be provided.
+/** We have encountered a time-out condition for DRMAASession.synchronize()
+ * or DRMAASession.wait().
  * @author dan.templeton@sun.com
- * @see DRMAASession#wait()
  */
-public class NoResourceUsageDataException extends DRMAAException {
+public class ExitTimeoutException extends DRMAAException {
 	
 	/**
-	 * Creates a new instance of <code>NoResourceUsageInformationException</code> without detail message.
+	 * Creates a new instance of <code>ExitTimeoutException</code> without detail message.
 	 */
-	public NoResourceUsageDataException () {
+	public ExitTimeoutException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>NoResourceUsageInformationException</code> with the specified detail message.
+	 * Constructs an instance of <code>ExitTimeoutException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public NoResourceUsageDataException (String msg) {
+	public ExitTimeoutException (String msg) {
 		super (msg);
 	}
 }

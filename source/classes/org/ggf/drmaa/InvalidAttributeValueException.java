@@ -28,31 +28,30 @@
  * 
  ************************************************************************/
 /*
- * DeniedByDRMException.java
+ * InvalidAttributeValueException.java
  *
- * Created on June 17, 2003, 12:55 PM
+ * Created on June 17, 2003, 11:03 AM
  */
 
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
-/** The DRM system rejected the job. The job will never be accepted
- * due to DRM configuration or job template settings.
+/** The value for the job attribute is invalid.
  * @author dan.templeton@sun.com
  */
-public class DeniedByDRMException extends DRMAAException {
+public class InvalidAttributeValueException extends InvalidArgumentException {
 	
 	/**
-	 * Creates a new instance of <code>DeniedByDRMException</code> without detail message.
+	 * Creates a new instance of <code>InvalidAttributeValueException</code> without detail message.
 	 */
-	public DeniedByDRMException () {
+	public InvalidAttributeValueException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>DeniedByDRMException</code> with the specified detail message.
+	 * Constructs an instance of <code>InvalidAttributeValueException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public DeniedByDRMException (String msg) {
+	public InvalidAttributeValueException (String msg) {
 		super (msg);
 	}
 }

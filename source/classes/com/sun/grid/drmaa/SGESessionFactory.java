@@ -28,56 +28,34 @@
  * 
  ************************************************************************/
 /*
- * SGEJobTemplate.java
+ * SGESessionFactory.java
  *
- * Created on March 4, 2004, 10:09 AM
+ * Created on March 3, 2004, 12:04 PM
  */
 
-package sun.sge.drmaa;
+package com.sun.grid.drmaa;
 
-import java.util.*;
-
-import com.sun.grid.drmaa.*;
+import org.ggf.drmaa.*;
 
 /**
  *
  * @author  dan.templeton@sun.com
  */
-public class SGEJobTemplate extends JobTemplate {
-   private SGESession session = null;
-   private int id = -1;
+public class SGESessionFactory extends DRMAASessionFactory {
+   private SGESession thisSession = null;
    
-   /** Creates a new instance of SGEJobTemplate */
-   SGEJobTemplate (SGESession session, int id) {
-      this.session = session;
-      this.id = id;
+   /** Creates a new instance of SGESessionFactory */
+   public SGESessionFactory () {
    }
    
-   public List getAttribute (String name) {
-      String[] values = session.nativeGetAttribute (name);
-      
-      return Arrays.asList (values);
-   }
-   
-   public Set getAttributeNames () {
-      String[] names = session.nativeGetAttributeNames ();
-      
-      return new HashSet (Arrays.asList (names));
-   }
-   
-   public void setAttribute (String name, List value) throws DRMAAException {
-      session.nativeSetAttributeValues (name, (String[])value.toArray (new String[value.size ()]));
-   }
-   
-   public void setAttribute (String name, String value) throws DRMAAException {
-      session.nativeSetAttributeValue (name, value);
-   }   
-   
-   public void delete () throws DRMAAException {
-      session.nativeDeleteJobTemplate (this);
-   }
-   
-   int getId () {
-      return id;
-   }
+	/** Gets a DRMAASession object appropriate for the DRM in use.
+	 * @return a DRMAASession object appropriate for the DRM in use
+	 */	
+	public DRMAASession getSession () {
+		if (thisSession == null) {
+			thisSession = new SGESession ();
+		}
+		
+		return thisSession;
+	}
 }

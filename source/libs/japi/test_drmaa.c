@@ -488,6 +488,20 @@ static const char *drmaa_state2str(int state);
 static const char *drmaa_ctrl2str(int control);
 static const char *drmaa_errno2str(int ctrl);
 
+static int set_path_attribute_plus_colon(drmaa_job_template_t *jt, const char *name, 
+   const char *value, char *error_diagnosis, size_t error_diag_len);
+
+
+static int set_path_attribute_plus_colon(drmaa_job_template_t *jt, const char *name, 
+   const char *value, char *error_diagnosis, size_t error_diag_len)
+{
+   char path_buffer[10000];
+   strcpy(path_buffer, ":"); 
+   strcat(path_buffer, value);
+   return drmaa_set_attribute(jt, name, path_buffer, error_diagnosis, error_diag_len);         
+}
+
+
 static void report_wrong_job_finish(const char *comment, const char *jobid, int stat);
 
 typedef struct {
@@ -862,7 +876,7 @@ static int test(int *argc, char **argv[], int parse_args)
 
          if (parse_args)
             sleeper_job = NEXT_ARGV(argc, argv);
-
+         printf("sleeper_job = %s\n", sleeper_job);
          for (i=0; i<NTHREADS; i++) {
             pthread_create(&submitter_threads[i], NULL, submit_sleeper_single, &job_chunk);
          }
@@ -1629,16 +1643,16 @@ static int test(int *argc, char **argv[], int parse_args)
          switch (test_case) {
          case ST_OUTPUT_FILE_FAILURE:
             drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);
-            drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, "/etc/passwd", NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":/etc/passwd", NULL, 0);
             break;
 
          case ST_ERROR_FILE_FAILURE:
             drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "n", NULL, 0);
-            drmaa_set_attribute(jt, DRMAA_ERROR_PATH, "/etc/passwd", NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_ERROR_PATH, ":/etc/passwd", NULL, 0);
             break;
 
          case ST_INPUT_FILE_FAILURE:
-            drmaa_set_attribute(jt, DRMAA_INPUT_PATH, "<not existing file>", NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_INPUT_PATH, ":<not existing file>", NULL, 0);
             break;
          }
 
@@ -2704,6 +2718,7 @@ static int test(int *argc, char **argv[], int parse_args)
 
          do {
             char abs_path[128];
+
             printf ("Testing working directory, input stream and output stream\n");
 
             printf ("Writing input file\n");
@@ -2738,8 +2753,8 @@ static int test(int *argc, char **argv[], int parse_args)
             printf ("Filling job template\n");
             drmaa_set_attribute(jt, DRMAA_WD, "/tmp", NULL, 0);
             drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, mirror_job, NULL, 0);
-            drmaa_set_attribute(jt, DRMAA_INPUT_PATH, input_path, NULL, 0);
-            drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, output_path, NULL, 0);         
+            set_path_attribute_plus_colon(jt, DRMAA_INPUT_PATH, input_path, NULL, 0);
+            set_path_attribute_plus_colon(jt, DRMAA_OUTPUT_PATH, output_path, NULL, 0);
 
             printf ("Running job\n");
             while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
@@ -2823,7 +2838,7 @@ static int test(int *argc, char **argv[], int parse_args)
             printf ("Filling job template\n");
             drmaa_set_attribute(jt, DRMAA_WD, "/tmp", NULL, 0);
             drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "/usr/bin/tar", NULL, 0);         
-            drmaa_set_attribute(jt, DRMAA_ERROR_PATH, error_path, NULL, 0);         
+            set_path_attribute_plus_colon(jt, DRMAA_ERROR_PATH, error_path, NULL, 0);
 
             printf ("Running job\n");
             while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
@@ -2879,7 +2894,7 @@ static int test(int *argc, char **argv[], int parse_args)
          if (failed_test) test_failed = 1;
          failed_test = 0;
          printf("=====================\n");
-         
+
          /*
           * testing join files
           */
@@ -2977,7 +2992,7 @@ static int test(int *argc, char **argv[], int parse_args)
             drmaa_set_attribute(jt, DRMAA_WD, "/tmp", NULL, 0);
             drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "/usr/bin/tar", NULL, 0);         
             drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);         
-            drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, output_path, NULL, 0);         
+            set_path_attribute_plus_colon(jt, DRMAA_OUTPUT_PATH, output_path, NULL, 0);
 
             printf ("Running job\n");
             while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
@@ -3635,7 +3650,7 @@ static int test(int *argc, char **argv[], int parse_args)
             drmaa_set_vector_attribute(jt, DRMAA_V_ENV, job_env, NULL, 0);
             drmaa_set_attribute(jt, DRMAA_WD, "/tmp", NULL, 0);
             drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "/usr/bin/echo", NULL, 0);
-            drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, output_path, NULL, 0);         
+            set_path_attribute_plus_colon(jt, DRMAA_OUTPUT_PATH, output_path, NULL, 0);
 
             printf ("Running job\n");
             while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
@@ -4148,7 +4163,7 @@ static drmaa_job_template_t *create_exit_job_template(const char *exit_job, int 
    drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);
 
    /* no output please */
-   drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, "/dev/null", NULL, 0);
+   drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":/dev/null", NULL, 0);
 
    return jt;
 }
@@ -4200,6 +4215,7 @@ static void *submit_input_mirror(int n, const char *mirror_job,
 {
    drmaa_job_template_t *jt = NULL;
    void *p;
+   char buffer[10000];
 
    drmaa_allocate_job_template(&jt, NULL, 0);
    drmaa_set_attribute(jt, DRMAA_WD, DRMAA_PLACEHOLDER_HD, NULL, 0);
@@ -4209,12 +4225,21 @@ static void *submit_input_mirror(int n, const char *mirror_job,
    else
       drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "n", NULL, 0);
 
-   if (input_path)
-      drmaa_set_attribute(jt, DRMAA_INPUT_PATH, input_path, NULL, 0);
-   if (output_path)
-      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, output_path, NULL, 0);
-   if (error_path)
-      drmaa_set_attribute(jt, DRMAA_ERROR_PATH, error_path, NULL, 0);
+   if (input_path) {
+      strcpy(buffer, ":");
+      strcat(buffer, input_path);
+      drmaa_set_attribute(jt, DRMAA_INPUT_PATH, buffer, NULL, 0);
+   }
+   if (output_path) {
+      strcpy(buffer, ":");
+      strcat(buffer, output_path);
+      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, buffer, NULL, 0);
+   }
+   if (error_path) {
+      strcpy(buffer, ":");
+      strcat(buffer, error_path);
+      drmaa_set_attribute(jt, DRMAA_ERROR_PATH, buffer, NULL, 0);
+   }
 
    p = do_submit(jt, n);
 

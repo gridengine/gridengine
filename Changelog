@@ -1,3 +1,9 @@
+JG-2004-04-20-2: Enhancem.: qmake: In dynamic allocation mode it is now possible
+                            to specify resource requests for individual make 
+                            rules.
+                 Changed:   qmake
+                 Review:    SG
+
 AA-2004-04-20-2: Bugfix:    fixed install script, typo, tmp dir
                  Review:    MD
                  Changed:   inst_qmaster.sh, inst_execd.sh

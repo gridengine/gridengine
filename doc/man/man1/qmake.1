@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmake.1,v $     Last Update: $Date: 2004/04/19 10:52:00 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: qmake.1,v $     Last Update: $Date: 2004/04/20 14:56:43 $     Revision: $Revision: 1.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMAKE 1 "$Date: 2004/04/19 10:52:00 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMAKE 1 "$Date: 2004/04/20 14:56:43 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmake \- distributed parallel make, scheduling by xxQS_NAMExx.
 .PP
@@ -104,6 +104,13 @@ when submitting a qmake job, each make rule will generate an individual
 xxQS_NAMExx qrsh job.
 All resource requests given to qmake will be inherited by the jobs processing 
 the make rules.
+.PP
+In dynamic allocation mode, additional resource requests for individual rules
+can be specified by preceeding the rule by the definition of an environment
+variable SGE_RREQ. The rule then takes the form
+SGE_RREQ="<request>" <rule>, e.g.
+SGE_RREQ="-l lic=1" cc -c ...
+If such makefile rules are executed in a make utility other than qmake, the environment variable SGE_RREQ will be set in the environment established for the rule's execution - without any effect.
 .SH EXAMPLES
 .sp 1
 .nf
@@ -132,6 +139,29 @@ The qmake job will be started on a machine of architecture sol-sparc, this
 resource request will also be inherited by the make tasks, i.e. all jobs 
 created for the execution of make tasks will request the architecture sol-sparc.
 .sp 1
+If the following Makefile is submitted with the above commandline, additional
+resource requests will be made for individual rules:
+For the compile and link rules, compiler licenses (comp) and linker licenses (link) will be requested, in addition to the resource request made for the whole job (-l arch=sol-sparc) on the commandline.
+.sp 1
+.nf
+.RS
+all: test
+
+clean:
+	rm -f test main.o functions.o
+
+test: main.o functions.o
+	SGE_RREQ="-l link=1" ld -o test main.o functions.o
+
+main.o: main.c
+	SGE_RREQ="-l comp=1" cc -c -DALIASPATH=\"/usr/local/share/locale:.\" -o main.o main.c
+
+functions.o: functions.c
+	SGE_RREQ="-l comp=1" cc -c -DALIASPATH=\"/usr/local/share/locale:.\" -o functions.o functions.c
+.RE
+.fi
+.sp 2
+The commandline
 .nf
 .RS
 qmake -cwd -v PATH -l arch=sol-sparc64 -pe make 3 --

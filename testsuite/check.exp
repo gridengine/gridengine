@@ -4971,7 +4971,7 @@ proc config_master_host { only_check name config_array } {
    global CHECK_OUTPUT 
    global CHECK_HOST
    global CHECK_CORE_MASTER
-   global ts_host_config
+   global ts_host_config do_nomain
 
    upvar $config_array config
    set actual_value  $config($name)
@@ -5017,7 +5017,7 @@ proc config_master_host { only_check name config_array } {
    } 
 
    debug_puts "master host: $value"
-   if { [ string compare $value $CHECK_HOST] != 0 } {
+   if { [ string compare $value $CHECK_HOST] != 0 && $do_nomain == 0} {
       puts $CHECK_OUTPUT "Master host must be local host"
       return -1
    }
@@ -5055,7 +5055,7 @@ proc config_master_host { only_check name config_array } {
 #     check/config_execd_hosts()
 #*******************************************************************************
 proc config_execd_hosts_set_compile_hosts { value } {
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT do_nomain
    global CHECK_SOURCE_COMPILE_HOSTS
    global ts_host_config
 
@@ -5127,7 +5127,7 @@ proc config_execd_hosts_set_compile_hosts { value } {
 #     check/verify_config()
 #*******************************************************************************
 proc config_execd_hosts { only_check name config_array } {
-   global CHECK_OUTPUT 
+   global CHECK_OUTPUT do_nomain
    global CHECK_HOST
    global CHECK_CORE_EXECD
    global CHECK_CORE_PROCESSORS
@@ -5229,7 +5229,7 @@ proc config_execd_hosts { only_check name config_array } {
        }
    } 
 
-   if { [ string compare [lindex $value 0] $CHECK_HOST] != 0 } {
+   if { [ string compare [lindex $value 0] $CHECK_HOST] != 0  && $do_nomain == 0} {
       puts $CHECK_OUTPUT "First execd host must be local host"
       return -1
    }
@@ -8787,7 +8787,7 @@ proc modify_setup2 {} {
 proc setup2 { } {
    global ts_config ts_host_config ts_user_config actual_ts_config_version
    global CHECK_OUTPUT CHECK_DO_SETUP
-   global CHECK_DEFAULTS_FILE 
+   global CHECK_DEFAULTS_FILE do_nomain
    global env be_quiet be_quiet
    global check_name CHECK_ACT_LEVEL have_defaults
    global CHECK_USER CHECK_CURRENT_WORKING_DIR

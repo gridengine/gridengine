@@ -1,3 +1,7 @@
+CR-2002-12-18-0  Testsuite: Fixed bug which will result in a timeout error
+                            when testsuite tries to delete a local spool
+                            directory on a remote host
+
 JG-2002-12-17-0  Enhancem.  Improved performance / scalability for job submit.
 
 JG-2002-12-16-0  Bugfix:    qrsh without command reported "protocol error".

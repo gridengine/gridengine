@@ -1,3 +1,7 @@
+EB-2004-04-27-1: Bugfix:    scheduling info should say "queue instance"
+                 Issue:     965
+                 Changed:   sge_schedd
+
 JG-2004-04-27-2: Testsuite: Added support for architectures irix65 and darwin.
                             Made DRMAA test use runlevel "long".
 

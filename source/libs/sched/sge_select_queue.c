@@ -2867,7 +2867,6 @@ static int sge_max_host_slot_by_threshold(sge_assignment_t *a, lListElem *host, 
                 DPRINTF(("the consumable "SFN" used in queue "SFN" as load threshold has no instance at queue, host or global level\n", 
                          name, lGetString(qep, QU_full_name))); 
                 return 0;
-               continue;
             }    
 
             load_value = lGetString(centry, CE_pj_stringval);

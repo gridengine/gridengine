@@ -328,10 +328,10 @@ int nr
       case SCHEDD_INFO_PEALLOCRULE              :
          return MSG_SCHEDD_INFO_PEALLOCRULE               ;  
 
-      case SCHEDD_INFO_NOPEMATCH  :
-         return MSG_SCHEDD_INFO_NOPEMATCH ;
+      case SCHEDD_INFO_NOPEMATCH:
+         return MSG_SCHEDD_INFO_NOPEMATCH;
 
-      case SCHEDD_INFO_CLEANUPNECESSARY :
+      case SCHEDD_INFO_CLEANUPNECESSARY:
          return MSG_SCHEDD_INFO_CLEANUPNECESSARY;
 
       case SCHEDD_INFO_MAX_AJ_INSTANCES:

@@ -89,6 +89,8 @@ bool cqueue_calculate_summary(const lListElem *cqueue,
       lListElem *qinstance = NULL;
       double host_load_avg = 0.0;
       u_long32 load_slots = 0;
+      u_long32 used_available = 0;
+      u_long32 used_slots = 0;
 
       *load = 0.0;
       *is_load_available = false;
@@ -102,10 +104,11 @@ bool cqueue_calculate_summary(const lListElem *cqueue,
          u_long32 slots = lGetUlong(qinstance, QU_job_slots);
          bool has_value_from_object;
 
-         (*used) += qinstance_slots_used(qinstance);
+         used_slots = qinstance_slots_used(qinstance);
+         (*used) += used_slots;
          (*total) += slots;
 
-         if (!sge_get_double_qattr(&host_load_avg, LOAD_ATTR_LOAD_AVG, 
+         if (!sge_get_double_qattr(&host_load_avg, LOAD_ATTR_NP_LOAD_AVG, 
                                    qinstance, exechost_list, centry_list, 
                                    &has_value_from_object)) {
             if (has_value_from_object) {
@@ -134,6 +137,7 @@ bool cqueue_calculate_summary(const lListElem *cqueue,
             *temp_disabled += slots;
          } else {
             *available += slots;
+            used_available += used_slots;
          }
          if (qinstance_state_is_unknown(qinstance)) {
             *unknown += slots;
@@ -170,7 +174,7 @@ bool cqueue_calculate_summary(const lListElem *cqueue,
          }
       }  
       *load /= load_slots;
-      *available -= *used;
+      *available -= used_available;
    }
    DEXIT;
    return ret;

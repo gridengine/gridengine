@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_submit.3,v $     Last Update: $Date: 2004/08/11 13:38:20 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: drmaa_submit.3,v $     Last Update: $Date: 2004/11/12 15:40:05 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_submit 3 "$Date: 2004/08/11 13:38:20 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_submit 3 "$Date: 2004/11/12 15:40:05 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -93,7 +93,7 @@ returned into the buffer, \fIjob_id\fP.
 .SS "drmaa_run_bulk_jobs()"
 The drmaa_run_bulk_jobs() submits a xxQS_NAMExx array job very much as if the
 .M qsub 1 
-option `-t \fIstart\fP-\fIend\fP:\fIincr\fP' had been used along with the addirional
+option `-t \fIstart\fP-\fIend\fP:\fIincr\fP' had been used along with the additional
 attributes defined in the DRMAA job 
 template, \fIjt\fP.  The same constraints regarding value ranges are also in effect
 for the parameters \fIstart\fP, \fIend\fP, and \fIincr\fP as for

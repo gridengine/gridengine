@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_wait.3,v $     Last Update: $Date: 2004/08/11 13:38:21 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: drmaa_wait.3,v $     Last Update: $Date: 2004/11/12 15:40:05 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_wait 3 "$Date: 2004/08/11 13:38:21 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_wait 3 "$Date: 2004/11/12 15:40:05 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -162,7 +162,7 @@ If the call exits before \fItimeout\fP seconds, all the specified jobs have comp
 the calling thread received an interrupt.  In both cases, the return code is DRMAA_ERRNO_EXIT_TIMEOUT. 
 .PP
 The \fIdispose\fP parameter specifies how to treat reaping information. 
-If '0' is passed to this paramter, job finish information will still be available when 
+If '0' is passed to this parameter, job finish information will still be available when 
 .M drmaa_wait 3
 is used. If '1' is passed, 
 .M drmaa_wait 3
@@ -202,7 +202,7 @@ or finished job are returned.
 .PP
 If \fIstat\fP is not a null pointer, then on return from a successful 
 .M drmaa_wait 3
-call, the status of the job is stored in the interger pointed to by \fIstat\fP.
+call, the status of the job is stored in the integer pointed to by \fIstat\fP.
 \fIstat\fP indicates whether job failed or finished and other information. The 
 information encoded in the integer value can be accessed via 
 .M drmaa_wifaborted 3

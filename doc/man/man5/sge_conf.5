@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/11/12 15:09:09 $     Revision: $Revision: 1.37 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/11/12 15:40:07 $     Revision: $Revision: 1.38 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/11/12 15:09:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/11/12 15:40:07 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -155,7 +155,7 @@ may use a set of private
 .B load_sensor
 programs or scripts. Changing
 .B load_sensor
-will take effect after two load report intervalls (see
+will take effect after two load report intervals (see
 \fBload_report_time\fB). A load sensor will be restarted automatically if
 the file modification time of the load sensor executable changes.
 .PP
@@ -249,7 +249,7 @@ the host where the stdin file has to be copied from before the job is started.
 When delegated file staging is requested for the stdout/stderr file, this is the
 name of the host where the stdout/stderr file has to be copied to after the job has run.
 .IP "\fI$fs_stdin_path\fP"
-When delgated file staging is requested for the stdin file, this is the pathname
+When delegated file staging is requested for the stdin file, this is the pathname
 of the stdin file on the host $fs_stdin_host.
 .IP "\fI$fs_stdout_path\fP"
 .IP "\fI$fs_stderr_path\fP"
@@ -567,7 +567,7 @@ Parallel jobs are only rescheduled if the host on which their
 master task executes is in unknown state. Checkpointing jobs will only be
 rescheduled when the
 .B when
-option of the corresponding checkpointing environment containes an
+option of the corresponding checkpointing environment contains an
 appropriate flag. (see
 .M checkpoint 5 ).
 Interactive jobs (see
@@ -946,7 +946,7 @@ Without this parameter jobs returning the value 100 are set to error state
 This can be used to set the job to error state when a starting condition
 of the application is not fulfilled before the application itself has been 
 started, or when a clean up procedure (e.g. in the epilog) decides that it is
-neccessary to run the job again, by returning 100 in the prolog, pe_start, 
+necessary to run the job again, by returning 100 in the prolog, pe_start, 
 job script, pe_stop or epilog script.
 .PP
 .IP "\fIDISABLE_AUTO_RESCHEDULING\fP"
@@ -963,11 +963,8 @@ event clients, and file handles that the qmaster needs.
 .PP
 .IP "\fIPROF_SIGNAL\fP"
 Profiling provides the user with the possibility to get system measurements.
-This can be useful for debugging or optimisation of the system.
-By default, there are compiled-in measurement points within the source
-code. To get more measurement points, the user has to add this to
-the source code and recompile again. The profiling output
-will be done within the messages file.
+This can be useful for debugging or optimisation of the system. The profiling 
+output will be done within the messages file.
 
 Enables the profiling for qmaster signal thread.
 (e.g. PROF_SIGNAL=true)
@@ -1014,9 +1011,9 @@ execution daemon will not remove the spool directory maintained by
 for a job.
 .PP
 .IP "\fIPTF_MIN_PRIORITY\fP, \fIPTF_MAX_PRIORITY\fP"
-The maximum/minumum priority which xxQS_NAMExx will assign to a job.
-Typically this is a negative/postive value in the range of -20
-(maximum) to 19 (minimum) for systems which allow setting of priorties
+The maximum/minimum priority which xxQS_NAMExx will assign to a job.
+Typically this is a negative/positive value in the range of -20
+(maximum) to 19 (minimum) for systems which allow setting of priorities
 with the
 .M nice 2
 system call. Other systems may provide different ranges.
@@ -1097,7 +1094,7 @@ The following values are recognized:
 .\"
 .IP "\fIaccounting\fP"
 If this parameter is set to true, the accounting file is written.
-The accounting file is prerequisit for using the \fBqacct\fP command.
+The accounting file is prerequisite for using the \fBqacct\fP command.
 .PP
 .IP "\fIreporting\fP"
 If this parameter is set to true, the reporting file is written.
@@ -1137,9 +1134,9 @@ for further information about sharelog.
 .SH "\fBfinished_jobs\fP"
 xxQS_NAMExx stores a certain number of \fIjust finished\fP jobs to provide
 post mortem status information. The \fBfinished_jobs\fP parameter defines the
-number of finshed jobs being stored. If this maximum number is reached, the
-eldest finshed job will be discarded for every new job being added to the
-finshed job list.
+number of finished jobs being stored. If this maximum number is reached, the
+eldest finished job will be discarded for every new job being added to the
+finished job list.
 .PP
 Changing \fBfinished_jobs\fP will take immediate effect.
 The default for \fBfinished_jobs\fP is 0.
@@ -1211,7 +1208,7 @@ is given, a specialized xxQS_NAMExx component is used. The command is
 automatically started with the target host and port number as parameters
 like required for
 .M telnet 1 .
-The xxQS_NAMExx rlogin client has been extened
+The xxQS_NAMExx rlogin client has been extended
 to accept and use the port number argument. You can only use clients, such
 as \fIssh\fP, which also understand this syntax.
 .sp 1
@@ -1257,7 +1254,7 @@ automatically started with the target host and port number as parameters
 like required for
 .M telnet 1
 plus the command with its arguments to be
-executed remotely. The xxQS_NAMExx rsh client has been extened to accept
+executed remotely. The xxQS_NAMExx rsh client has been extended to accept
 and use the port number argument. You can only use clients, such as
 \fIssh\fP, which also understand this syntax.
 .sp 1

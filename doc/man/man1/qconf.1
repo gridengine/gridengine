@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2004/08/31 15:04:57 $     Revision: $Revision: 1.19 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2004/11/12 15:40:02 $     Revision: $Revision: 1.20 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2004/08/31 15:04:57 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2004/11/12 15:40:02 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -308,7 +308,7 @@ instance name. Find more information concerning different queue names in
 .M sge_types 1 .
 Depending on the type of the obj_instance this adds to the cluster queues
 attribute sublist the cluster queues implicit default configuration value or
-the queue domain configuration value or queue instance configuartion value.
+the queue domain configuration value or queue instance configuration value.
 The queue
 .B load_thesholds
 parameter is an example of a list attribute. With the \fB\-aattr\fP option,
@@ -976,7 +976,7 @@ Shows a tree like structure of host group.
 .\" 
 .IP "\fB\-shgrp_resolved\fP       \fI<show host group hosts>\fP"
 Shows a list of all hosts which are part of the definition of
-host group. If the host group definition containes sub host groups
+host group. If the host group definition contains sub host groups
 than also these groups are resolved and the hostnames are printed.
 .\" 
 .IP "\fB\-sm\fP	\fI<show managers>\fP"

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2004/09/06 12:07:37 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2004/11/12 15:40:07 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SGE_PRIORITY 5 "$Date: 2004/09/06 12:07:37 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SGE_PRIORITY 5 "$Date: 2004/11/12 15:40:07 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sge_priority \- xxQS_NAMExx job priorities
@@ -96,7 +96,7 @@ requirements of a job into a single numeric value.
 with an "hrr" for each hard resource request.
 Depending on the resource type two different methods are used to 
 determine the value to be used for "hrr" here. For numeric type resource
-requests the "hrr" representes how much of a resource a job requests (on a
+requests the "hrr" represents how much of a resource a job requests (on a
 per-slot basis and on how many slots) and how "important" this resource is
 considered in comparison to other resources. This is expressed by the
 formula:

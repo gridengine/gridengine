@@ -91,13 +91,16 @@ static void gdi_state_destroy(void* state) {
 static void gdi_init_mt(void) {
    pthread_key_create(&gdi_state_key, &gdi_state_destroy);
 } 
-  
+ 
+/* per process initialization */
 void gdi_once_init(void) {
+
    /* uti */
    uidgid_mt_init();
 
    bootstrap_mt_init();
    feature_mt_init();
+   sge_prof_setup();
 
    /* sec */
 #ifdef SECURE

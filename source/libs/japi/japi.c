@@ -44,6 +44,7 @@
 #include "msg_japi.h"
 #include "sge.h"
 #include "sge_answer.h"
+#include "sge_profiling.h"
 
 /* CULL */
 #include "cull_list.h"
@@ -406,7 +407,10 @@ int japi_init_mt(dstring *diag)
 {
    lList *alp = NULL;
    int gdi_errno;
-   
+  
+   DENTER(TOP_LAYER, "japi_init_mt");
+
+   sge_prof_setup();
    bootstrap_mt_init();
    feature_mt_init();
 
@@ -429,9 +433,11 @@ int japi_init_mt(dstring *diag)
    if ((gdi_errno != AE_OK) && (gdi_errno != AE_ALREADY_SETUP)) {
       answer_to_dstring(lFirst(alp), diag);
       lFreeList(alp);
+      DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
 
+   DEXIT;
    return DRMAA_ERRNO_SUCCESS;
 }
 

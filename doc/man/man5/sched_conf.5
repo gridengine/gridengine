@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/08/30 13:59:52 $     Revision: $Revision: 1.21 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/11/12 15:40:07 $     Revision: $Revision: 1.22 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2004/08/30 13:59:52 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2004/11/12 15:40:07 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -318,7 +318,7 @@ separated list of job ids.
 The user can obtain the collected information with the command qstat -j.
 .\"
 .SS "\fBparams\fP"
-This is foreseen for passing additional paramters to the N1 Grid Engine
+This is foreseen for passing additional parameters to the xxQS_NAMExx
 scheduler. The following values are recognized:
 .\"
 .IP "\fIJC_FILTER\fP"
@@ -331,7 +331,7 @@ category have a FIFO order and can be limited to the number of free slots
 in the system.
 
 A exception are jobs, which request a resource reservation. They are included 
-regardsless of the number of jobs in a category. 
+regardless of the number of jobs in a category. 
 
 This setting is turned off per default, because in very rare cases, the scheduler
 can make a wrong decision. It is also advised to turn report_pjob_tickets off. 
@@ -365,7 +365,7 @@ The reporting should be turned of in a system with very large amount of jobs by
 setting this param to "false".
 .\"
 .SS "\fBhalflife_decay_list\fP"
-The halflive_decay_list allows to configure different decay rates for the 
+The halflife_decay_list allows to configure different decay rates for the 
 "finished_jobs usage types, which is used in the pending job ticket calculation
 to account for jobs which have just ended. This allows the user the pending jobs
 algorithm to count finished jobs against a user or project for a configurable decayed 
@@ -401,7 +401,7 @@ The special value "NONE" switches off policy hierarchies.
 .\"
 .SS "\fBshare_override_tickets\fP"
 If set to "true" or "1", override tickets of any override object instance  
-are shared equaly among all running jobs associated with the object. The pending
+are shared equally among all running jobs associated with the object. The pending
 jobs will get as many override tickets, as they would have, when they were
 running. If set to "false" or "0", each job gets the full value of the override tickets       
 associated with the object. The default value is "true".                   
@@ -450,7 +450,7 @@ down performance impacts.
 When job reservation is enabled through max_reservation 
 .M sched_conf 5 
 parameter the default duration is assumed as runtime for jobs that have 
-neiter -l h_rt=... nor -l s_rt=... specified. In contrast to a h_rt/s_rt 
+neither -l h_rt=... nor -l s_rt=... specified. In contrast to a h_rt/s_rt 
 time limit the default_duration is not enforced.
 .\"
 .\"

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_qstat.5,v $     Last Update: $Date: 2004/10/13 11:59:48 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: sge_qstat.5,v $     Last Update: $Date: 2004/11/12 15:40:07 $     Revision: $Revision: 1.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_REQUEST 5 "$Date: 2004/10/13 11:59:48 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_QSTAT 5 "$Date: 2004/11/12 15:40:07 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sge_qstat \- xxQS_NAMExx default qstat file format
@@ -37,13 +37,13 @@ sge_qstat \- xxQS_NAMExx default qstat file format
 .\"
 .SH DESCRIPTION
 .I sge_qstat
-defines the commandline switches, which will be used by qstat per default.
+defines the command line switches, which will be used by qstat per default.
 If available, the default sge_qstat file is read and processed by 
 .M qstat 1 .
 .PP
 There is a cluster global and a user private sge_qstat file. The user private
 file has the highest precedence and is  followed by the cluster global 
-sge_qstat file. Commandline switches used with 
+sge_qstat file. Command line switches used with 
 .M qstat 1
 overwrite all switches contained in user private or cluster global 
 sge_qstat file.
@@ -85,7 +85,7 @@ qstat
 has the same effect as if qstat was executed with:
 .PP
 .nf
-qsub -p rs -u <current_user>
+qstat -s rs -u <current_user>
 .fi
 .PP
 .\"
@@ -94,9 +94,8 @@ qsub -p rs -u <current_user>
 .SH "FILES"
 .nf
 .ta \w'<xxqs_name_sxx_root>/   'u
-\fI<xxqs_name_sxx_root>/<cell>/common/sge_request\fP global defaults file
-.ta \w'$HOME/.sge_request   'u
-\fI$HOME/.sge_request\fP	user private defaults file
+\fI<xxqs_name_sxx_root>/<cell>/common/sge_qstat\fP global defaults file
+\fI$HOME/.sge_qstat\fP	user private defaults file
 .fi
 .\"
 .\"

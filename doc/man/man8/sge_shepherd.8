@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_shepherd.8,v $     Last Update: $Date: 2004/08/11 13:38:23 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: sge_shepherd.8,v $     Last Update: $Date: 2004/11/12 15:40:08 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SHEPHERD 8 "$Date: 2004/08/11 13:38:23 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SHEPHERD 8 "$Date: 2004/11/12 15:40:08 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_shepherd \- xxQS_NAMExx single job controlling agent
 .\"
@@ -60,7 +60,7 @@ During the execution of the job it actually starts up to 5 child
 processes. First a prolog script is run if this feature is enabled by
 the \fBprolog\fP parameter in the cluster configuration. (See
 .M xxqs_name_sxx_conf 5 .)
-Next a parallel environment startup proceedure is run if the job is a parallel
+Next a parallel environment startup procedure is run if the job is a parallel
 job. (See
 .M sge_pe 5
 for more information.)
@@ -91,7 +91,7 @@ it is not the exit status of
 itself but of one of the methods executed by 
 .I xxqs_name_sxx_shepherd.
 This exit status can have several meanings, depending on in which method
-an error occured (if any).
+an error occurred (if any).
 The possible methods are: prolog, parallel start, job, parallel stop,
 epilog, suspend, restart, terminate, clean, migrate, and checkpoint.
 
@@ -126,10 +126,10 @@ requeued.
 Parallel stop: The queue is set to error state, but the job is not requeued. It
 is assumed that the job itself ran successfully and only the clean up script failed.
 .br
-Suspend, restart, terminate, clean, and migrate: Always successfull.
+Suspend, restart, terminate, clean, and migrate: Always successful.
 .br
 Checkpoint: Success, except for kernel checkpointing: checkpoint was not 
-successfull, did not happen (but migration will happen by xxQS_NAMExx).
+successful, did not happen (but migration will happen by xxQS_NAMExx).
 .\"
 .\"
 .SH RESTRICTIONS

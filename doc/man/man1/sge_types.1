@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2004/07/26 13:03:38 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2004/11/12 15:40:03 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2004/07/26 13:03:38 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2004/11/12 15:40:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -38,7 +38,7 @@ sge_types - xxQS_NAMExx type descriptions
 .SH DESCRIPTION
 .\"
 The xxQS_NAMExx
-user interface consists of several programs and files. Some commandline 
+user interface consists of several programs and files. Some command line 
 switches and several file attributes are types. The syntax for these
 types is explained in this page.
 .PP
@@ -100,7 +100,7 @@ range of the form n-m or a range with a step size.
 .SS "\fBwc_host\fP"
 A wildcard host specification (\fIwc_host\fP) is a 
 wildcard expression which might match one or more hosts used in the cluster.
-The first character of that string never begins with an at-charcter '@' even
+The first character of that string never begins with an at-character '@' even
 if the expression begins with a wildcard character.
 .PP
 .\"
@@ -116,7 +116,7 @@ a*	all host beginning with an 'a'
 .SS "\fBwc_hostgroup\fP"
 A wildcard hostgroup specification (\fIwc_hostgroup\fP) is a 
 wildcard expression which might match one or more hostgroups.
-The first charcter of that string is always a at-charcter '@'.
+The first character of that string is always a at-character '@'.
 .PP
 More information concerning hostgroups can be found in
 .M hostgroup 5
@@ -132,7 +132,7 @@ e.g.
 .\"
 .SS "\fBwc_job\fP"
 The wildcard job specification is a placeholder for job ids, job names 
-include job name wildcard expressions. A job id allways references one
+include job name wildcard expressions. A job id always references one
 job, while the names and patterns might reference multiple jobs.
 .sp 1
 wc_job := job-id | job-name | pattern
@@ -190,7 +190,7 @@ e.g.
 .SS "\fBwc_cqueue\fP"
 A wildcard cluster queue specification (\fIwc_cqueue\fP) is a 
 wildcard expression which might match one or more cluster queues used in the cluster.
-That string never contains an at-charcter '@' even if the expression begins with a 
+That string never contains an at-character '@' even if the expression begins with a 
 wildcard character.
 .PP
 .\"
@@ -238,7 +238,7 @@ specification (\fIwc_qdomain\fP) or a wildcard queue instance specification
 e.g.
 .RS
 .ta \w'XXXXXXXXXXXXXXXXX'u
-big_*1	cluster queues which beginn with 
+big_*1	cluster queues which begin with 
 	"big_" and end with "1"
 big_11@@solaris	@solaris queue domain
 *@fangorn	all qinstances residing on host 

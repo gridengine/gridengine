@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: complex.5,v $     Last Update: $Date: 2004/04/19 10:52:08 $     Revision: $Revision: 1.11 $
+.\" $RCSfile: complex.5,v $     Last Update: $Date: 2004/11/12 15:40:06 $     Revision: $Revision: 1.12 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH COMPLEX 5 "$Date: 2004/04/19 10:52:08 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH COMPLEX 5 "$Date: 2004/11/12 15:40:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 complex \- xxQS_NAMExx complexes configuration file format
@@ -50,7 +50,7 @@ The xxQS_NAMExx complex object defines all entries which are used for
 configuring the global, the host, and queue object. The system has a 
 set of pre defined entries, which are assigned to a host or queue per default.
 In a addition can the user define new entries and assign them to one or multiple
-objects. Each load value has to have its corresbonding complex entry object, which
+objects. Each load value has to have its corresponding complex entry object, which
 defines the type and the relational operator for it.
 .\"
 .SS "\fBdefining resource attributes\fP"
@@ -71,7 +71,7 @@ default, and rgency. The fields are described below. Changing one is easily done
 updated the field to change and removing an entry by deleting its definition. An 
 attribute can only be removed, when it is not referenced in a host or queue object 
 anymore. Also does the system have a set of default resource attributes which are 
-always attrached to a host or queue. They cannot be deleted nor can the type of 
+always attached to a host or queue. They cannot be deleted nor can the type of 
 such an attribute be changed.
 .PP
 .\"
@@ -186,7 +186,7 @@ lower level. The user defined value always overrides the load value.
 restrictive than the old one.
 .sp 1
 In the case of a consumable on host level, which has also a load sensor, the
-system checks for the current usage, and if the internal accouting is more 
+system checks for the current usage, and if the internal accounting is more 
 restrictive than the load sensor report, the internal value is kept; if the
 load sensour report is more restrictive, that one is kept.
 .PP
@@ -296,7 +296,7 @@ user in order to request a queue or a class of queues.
 If the entry is set to 'forced' or 'f' the 
 attribute has to be requested by a job or it is rejected.
 .sp
-To enable resource request enforcement the existance of the
+To enable resource request enforcement the existence of the
 resource has to be defined. This can be done on a cluster global, per host
 and per queue basis. The definition of resource availability is performed 
 with the complex_values entry in

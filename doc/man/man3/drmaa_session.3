@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_session.3,v $     Last Update: $Date: 2004/08/11 13:38:21 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: drmaa_session.3,v $     Last Update: $Date: 2004/11/12 15:40:05 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_session 3 "$Date: 2004/08/11 13:38:21 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_session 3 "$Date: 2004/11/12 15:40:05 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -80,12 +80,12 @@ drmaa_init() function has completed.  Any DRMAA function, other than
 which is called after the drmaa_exit() function completes
 will return a DRMAA_ERRNO_NO_ACTIVE_SESSION error.
 .PP
-The drmaa_exit() function does neccessary clean up of the DRMAA session state,
+The drmaa_exit() function does necessary clean up of the DRMAA session state,
 including unregistering from the
 .M qmaster 8 .
 If the drmaa_exit() function
 is not called, the qmaster will store events for the DRMAA client until the
-connection times out, causing extra work for the qmaster and comsuming system
+connection times out, causing extra work for the qmaster and consuming system
 resources.
 .PP
 Submitted jobs are not affected by the drmaa_exit() function.

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/10/19 15:34:56 $     Revision: $Revision: 1.26 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/11/12 15:40:03 $     Revision: $Revision: 1.27 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2004/10/19 15:34:56 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2004/11/12 15:40:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -54,6 +54,8 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 .B -ne
 ] [
 .B -pe pe_name,...
+] [
+.B -pri 
 ] [
 .B -q wc_queue_list
 ] [
@@ -97,7 +99,7 @@ Command line can be used to override the flags contained in the files.
 .\"
 .SH OPTIONS
 .IP "\fB\-explain a|A|c|E\fP"
-\'c' displays the reason for the configuration ambigous state of a queue
+\'c' displays the reason for the configuration ambiguous state of a queue
 instance. 'a' shows the reason for the alarm state. Suspend alarm state
 reasons will be displayed by 'A'. 'E' displays the reason for a queue
 instance error state.
@@ -173,7 +175,7 @@ queues on which information is requested. Matching is performed
 on queues based on non-mutable resource availability information 
 only. That means load values are always ignored except the 
 so-called static load values (i.e. "arch", "num_proc", "mem_total", "swap_total" and 
-"virtual_total") ones. Also consumbale utilization is ignored.
+"virtual_total") ones. Also consumable utilization is ignored.
 The pending jobs are restricted to jobs that might run in 
 one of the above queues. In a similar fashion also the queue-job
 matching bases only on non-mutable resource availability 
@@ -190,6 +192,11 @@ at least one of the parallel environments enlisted in the comma separated
 option argument. Status information for jobs is displayed either for those 
 which execute in one of the selected queues or which are pending and 
 might get scheduled to those queues in principle.
+\"
+.IP "\fB\-pri\fP"
+Displays additional information for each job related to the job priorities in 
+general.
+(see OUTPUT FORMATS below).
 .\"
 .IP "\fB\-q wc_queue_list\fP"
 Specifies a wildcard queue list to which job
@@ -257,10 +264,12 @@ Display information only on those jobs and queues
 being associated with the users from the given user list.
 Queue status information is displayed if the \fB\-f\fP or \fB\-F\fP
 options are specified additionally and if the user runs
-jobs in those queues.
+jobs in those queues. 
+.sp
 The string
 \fB\ $user\fP
-is a placeholder for the current username.
+is a placeholder for the current username. An asterix "*" can be used 
+as username wildcard to request any users jobs be displayed.
 \"
 .IP "\fB\-urg\fP"
 Displays additional information for each job related to the job urgency policy scheme
@@ -309,7 +318,7 @@ the number of slots which are in one of these states or in any  combination
 of them: 'cdsuE'
 .IP "\(bu" 3n
 the \fB\-g c\fP option can be used in combination with \fB\-ext\fP. In this
-case additional collumns are added to the output. Each collumn contains
+case additional columns are added to the output. Each column contains
 the slot count for one of the available queue states.
 .SS "\fBReduced Format (without \-f, \-F, and \-qs)\fP"
 Following the header line a line is printed for each job
@@ -373,7 +382,7 @@ the number of job slots or the function of parallel job tasks
 if \fB\-g t\fP is specified.
 .sp 
 Without \fB\-g t\fP option the total number of slots occupied resp. requested by the job 
-is diplayed. For pending parallel jobs with a PE slot range request 
+is displayed. For pending parallel jobs with a PE slot range request 
 the assumed future slot allocation is displayed.
 With \fB\-g t\fP option the function of the running jobs (MASTER or SLAVE \- the 
 latter for parallel jobs only) is displayed.
@@ -470,19 +479,19 @@ If the c(onfiguration ambiguous) state is displayed for a queue
 instance this indicates that the configuration specified for this
 queue instance in
 .M sge_conf 5
-is ambigous. The state vanishes when
-the configuration becomes un-ambigous again. This state prevents from
+is ambiguous. The state vanishes when
+the configuration becomes un-ambiguous again. This state prevents from
 scheduling further jobs to that queue instance. Detailed reasons why
 a queue instance entered the c(onfiguration ambiguous) state can
 be found in the
 .M sge_qmaster 8
 messages file and are shown by the
 qstat -explain switch. For queue instances in this state the cluster
-queue's default settings are used for the ambigous attribute.
+queue's default settings are used for the ambiguous attribute.
 .PP
 If an o(rphaned) state is displayed for a queue instance this
 indicates that the current cluster queue's configuration and
-host group configuration does not any longer forsee this queue
+host group configuration does not any longer demand this queue
 instance. The queue instance is kept because not yet finished
 jobs are still associated and it will vanish from qstat output
 when these jobs are finished. To quicken vanishing of an orphaned
@@ -579,7 +588,7 @@ the number of job slots or the function of parallel job tasks
 if \fB\-g t\fP is specified.
 .sp 
 Without \fB\-g t\fP option the number of slots occupied per queue resp. requested by the job 
-is diplayed. For pending parallel jobs with a PE slot range request 
+is displayed. For pending parallel jobs with a PE slot range request 
 the assumed future slot allocation is displayed.
 With \fB\-g t\fP option the function of the running jobs (MASTER or SLAVE \- the 
 latter for parallel jobs only) is displayed.
@@ -726,6 +735,23 @@ The deadline initiation time of the job as specified with the
 .M qsub 1
 \fB\-dl\fP option.
 .\"
+.SS "\fBEnhanced Output (with \-pri)\fP"
+For each job the following additional job priority related items are 
+displayed (see also
+.M sge_priority 5 ):
+.\"
+.IP "\fBnurg\fP"
+The jobs total urgency value in normalized fashion.
+.\"
+.IP "\fBnpprior\fP"
+The jobs \fB\-p\fP priority in normalized fashion.
+.\"
+.IP "\fBntckts\fP"
+The jobs ticket amount in normalized fashion.
+.\"
+.IP "\fBppri\fP"
+The jobs \fB\-p\fP priority as specified by the user.
+.\"
 .\"
 .SH "ENVIRONMENTAL VARIABLES"
 .\" 
@@ -774,6 +800,11 @@ not know the best display length, one can set SGE_LONG_QNAMES to
 .ta \w'<xxqs_name_sxx_root>/     'u
 \fI<xxqs_name_sxx_root>/<cell>/common/act_qmaster\fP
 	xxQS_NAMExx master host file
+.ta \w'<xxqs_name_sxx_root>/     'u
+\fI<xxqs_name_sxx_root>/<cell>/common/xxqs_name_sxx_qstat\fP
+	cluster qstat default options
+\fI$HOME/.xxqs_name_sxx_qstat\fR	
+   user qstat default options
 .fi
 .\"
 .\"

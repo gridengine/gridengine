@@ -50,7 +50,6 @@
 #include "japiP.h"
 #include "rmon_monitoring_level.h"
 #include "sgermon.h"
-#include "sge_profiling.h"
 
 #define JOB_CHUNK 8
 #define NTHREADS 3
@@ -579,8 +578,6 @@ int main(int argc, char *argv[])
    char diag[DRMAA_ERROR_STRING_BUFFER];
 
    DENTER_MAIN(TOP_LAYER, "qsub");
-
-   sge_prof_setup();
 
    if (argc == 1) 
       usage();

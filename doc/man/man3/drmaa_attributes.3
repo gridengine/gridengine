@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/08/11 13:38:21 $     Revision: $Revision: 1.11 $
+.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/11/12 15:40:04 $     Revision: $Revision: 1.12 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_attributes 3 "$Date: 2004/08/11 13:38:21 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_attributes 3 "$Date: 2004/11/12 15:40:04 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -244,7 +244,7 @@ submit option '-h'.
 .\" 
 .SS "drmaa_wd - ""<directory_name>"""
 Specifies the directory name where the job will be executed. A '$drmaa_hd_ph$' placeholder 
-at the begining of the
+at the beginning of the
 \fIdirectory_name\fP 
 denotes the remaining string portion as a relative directory name that is
 resolved relative to the job user's home directory at the execution 
@@ -377,7 +377,7 @@ before submission to allow site-specific resolving of resources and/or policies.
 The cluster qtask file, the local qtask file, and the user qtask file are
 searched. Job settings resulting from job template category are overridden by
 settings resulting from the job template drmaa_native_specification attribute
-as well as by explict DRMAA job template settings.
+as well as by explicit DRMAA job template settings.
 .PP
 In order to avoid collisions with command names in the qtask files, it is
 recommended that DRMAA job category names take the form: <category_name>.cat.
@@ -411,7 +411,7 @@ is a collision.
 .\" 
 .\" 
 .SS "drmaa_v_email - ""<email1> <email2> ..."
-Specifies e-mail adresses that are used to report the job completion and status. 
+Specifies e-mail addresses that are used to report the job completion and status. 
 .PP
 .\"
 .\"
@@ -451,7 +451,7 @@ Example: The time: Sep 3 4:47:27 PM PDT 2002, could be represented as: 2002/09/0
 .\"
 .SS "drmaa_transfer_files - ""[i][o][e]"""
 Specifies, which of the standard I/O files (stdin, stdout and stderr) are to be 
-transfered to/from the execution host. If not set, defaults to "". Any combination
+transferred to/from the execution host. If not set, defaults to "". Any combination
 of 'e', 'i' and 'o' may be specified.
 See drmaa_input_path, drmaa_output_path and drmaa_error_path for information about 
 how to specify the standard input file, standard output file and standard error file.

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/08/11 13:38:22 $     Revision: $Revision: 1.52 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/11/12 15:40:03 $     Revision: $Revision: 1.53 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/08/11 13:38:22 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/11/12 15:40:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -404,18 +404,18 @@ Gives the user the possibility to indicate explicitly whether
 \fBcommand\fP should be treated as binary or script. If the value
 of \fB\-b\fP is 'y', then \fBcommand\fP  may be a binary or script.
 The \fBcommand\fP might not be accessible from the submission host.
-Nothing except the path of the \fBcommand\fP will be transfered
+Nothing except the path of the \fBcommand\fP will be transferred
 from the submission host to the execution host. Path aliasing will
 be applied to the path of \fBcommand\fP before \fBcommand\fP will
 be executed.
 .sp 1
 If the value of \fB\-b\fP is 'n' then \fBcommand\fP needs to be a
 script and it will be handled as script. The script file has to be
-accessible by the submission host. It will be transfered to the
+accessible by the submission host. It will be transferred to the
 execution host. \fIqsub\fP/\fIqrsh\fP will search directive prefixes
 within script.
 .sp 1
-\fIqsub\fP will implicitely use \fB-b n\fP whereas \fIqrsh\fP will apply
+\fIqsub\fP will implicitly use \fB-b n\fP whereas \fIqrsh\fP will apply
 the \fB-b y\fP option if nothing else is specified.
 .IP "\fB\-c occasion_specifier\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
@@ -525,7 +525,7 @@ in order to contact the X server.
 The \fBdisplay_specifier\fP has to contain the hostname part of the display name (e.g. myhost:1). 
 Local display names (e.g. :0) cannot be used in grid environments.
 Values set with the \fB\-display\fP option overwrite settings from the submission environment 
-and from \fB\-v\fP commandline options.
+and from \fB\-v\fP command line options.
 .\"
 .IP "\fB\-dl date_time\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
@@ -679,14 +679,14 @@ Available for \fIqsub\fP, \fIqrsh\fP, and \fIqalter\fP only.
 .sp 1
 Defines or redefines the job dependency list of the submitted job. A 
 reference by job name or regular expression is only accepted if the 
-referenced job is owend by the same user as the refering job. The 
+referenced job is owned by the same user as the referring job. The 
 submitted job is not eligible for execution unless all jobs 
 referenced in the comma-separated job id and/or job name list have 
 completed successfully.
 With the help of job names or regular expressions one can specify
 a job dependency on multiple jobs satisfying the regular expression
 or on all jobs with the requested name. The name dependencies are
-resolved at submittion time and can only be changed via qalter. New
+resolved at submit time and can only be changed via qalter. New
 jobs or name changes of other jobs will not be taken into account.
 
 .sp 1
@@ -699,7 +699,7 @@ however.
 Available for \fIqsub\fP, and \fIqalter\fP only.
 .sp 1
 Defines or redefines the file used for the standard input stream of
-the job. If the \fIfile\fP constitues an absolute filename, the input-path
+the job. If the \fIfile\fP constitutes an absolute filename, the input-path
 attribute of the job is set to \fBpath\fP, including
 the \fBhostname\fP. If the path name is relative, xxQS_NAMExx
 expands \fBpath\fP either with the current working directory
@@ -756,7 +756,7 @@ working directory) as the corresponding job, so specifying the option
 .sp 1
 \fINote:\fP If in your system the qmaster tcp port is not configured as a
 service, but rather via the environment
-variable xxQS_NAME_Sxx_QMASTER_PORT, make sure that this variable is set in the enviroment when
+variable xxQS_NAME_Sxx_QMASTER_PORT, make sure that this variable is set in the environment when
 calling
 .I qrsh
 or
@@ -965,19 +965,19 @@ assigned to the job.
 allows changing this option even while the job executes.
 .\"
 .IP "\fB\-noshell\fP"
-Available only for \fIqrsh\fP with a commandline.
+Available only for \fIqrsh\fP with a command line.
 .sp 1
-Do not start the commandline given to \fIqrsh\fP in a user's login shell, i.e.
+Do not start the command line given to \fIqrsh\fP in a user's login shell, i.e.
 execute it without the wrapping shell.
 .sp 1
 This option can be used to speed up execution as some overhead, like the  
 shell startup and sourcing the shell resource files, is avoided.
 .sp 1
-This option can only be used if no shell-specific commandline parsing is
-required. If the commandline contains shell syntax like environment
+This option can only be used if no shell-specific command line parsing is
+required. If the command line contains shell syntax like environment
 variable substitution or (back) quoting, a shell must be started.
 In this case, either do not use the \fB\-noshell\fP option or include
-the shell call in the commandline.
+the shell call in the command line.
 .sp 1
 Example:
 .br 
@@ -1124,7 +1124,7 @@ Interactive jobs submitted with
 .I qrsh
 or
 .I qlogin
-are not rerunable.
+are not rerunnable.
 .sp 1
 .I Qalter
 allows changing this option even while the job executes.
@@ -1152,7 +1152,7 @@ allows changing this option even while the job executes.
 Available only for \fIqsub\fP.
 .sp 1
 \fB\-shell n\fP
-causes qsub to execute the commandline directly, as if by
+causes qsub to execute the command line directly, as if by
 .M exec 2 .
 No command shell will be executed for the job.  This option only applies when
 \fB\-b y\fP is also used.  Without \fB\-b y\fP, \fB\-shell n\fP has no effect.
@@ -1160,11 +1160,11 @@ No command shell will be executed for the job.  This option only applies when
 This option can be used to speed up execution as some overhead, like the  
 shell startup and sourcing the shell resource files is avoided.
 .sp 1
-This option can only be used if no shell-specific commandline parsing is
-required. If the commandline contains shell syntax, like environment
+This option can only be used if no shell-specific command line parsing is
+required. If the command line contains shell syntax, like environment
 variable substitution or (back) quoting, a shell must be started.
 In this case either do not use the \fB\-shell n\fP option or execute the shell
-as the commandline and pass the path to the executable as a parameter.
+as the command line and pass the path to the executable as a parameter.
 .sp 1
 If a job executed with the \fB\-shell n\fP option fails due to a user error, such as an invalid
 path to the executable, the job will enter the error state.
@@ -1350,7 +1350,7 @@ and
 .M rlogin 1
 system calls.
 If the option \fB-verbose\fP is set, \fIqrsh\fP behaves like
-the \fIqsh\fP and \fIqlogin\fP commands, outputing information about 
+the \fIqsh\fP and \fIqlogin\fP commands, printing information about 
 the process of establishing the
 .M rsh 1
 or
@@ -1692,7 +1692,7 @@ limit. Additional information may be found in
 .M sge_conf 5
 .
 .IP ">0" 0.5i
-Error occured.
+Error occurred.
 .\"
 .\"
 .SH EXAMPLES

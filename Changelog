@@ -1,3 +1,8 @@
+AH-2002-03-04-2: Enhancem.: Added PVM 3.4.4 Virtual Machine ID setting
+                            to startpvm.sh from Andrew Shewmaker
+
+AH-2002-03-04-1: Bugfix:    A set of fixes on initiative from Patrik Koch
+
 EB-2002-03-04-1: Bugfix:    'qalter -h xxx' caused core if task of array
                             did not exist.
                  Issue:     171 

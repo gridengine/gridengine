@@ -119,6 +119,10 @@ fi
 
 cut -f1 -d" " $pe_hostfile >> $pvm_hostfile
 
+# PVM 3.4.4 knows a Virtual Machine IDs for supporting 
+# overlapping PVM instances of the same user
+# PVM_VMID=$JOB_ID; export PVM_VMID
+
 # startup and wait for daemons
 $SGE_ROOT/pvm/bin/$ARC/start_pvm -h $NHOSTS $PVM_ROOT/lib/pvmd $pvm_hostfile
 

@@ -117,7 +117,7 @@ global queue
 proc init_level {} {
   global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state queue
 
-  set queue "$CHECK_HOST.q_del"
+  set queue "qdel.q"
 
   
 
@@ -164,12 +164,10 @@ proc init_level {} {
 proc qdel_setup {} {
    global queue CHECK_HOST 
 
-   set q_param(qname)                 "$queue"
-   set q_param(hostname)              "$CHECK_HOST"
    set q_param(load_thresholds)       "np_load_avg=7.00"
    set q_param(slots)                 "50"
 
-   add_queue q_param
+   add_queue $queue $CHECK_HOST q_param
    set_error 0 "ok"
 }
 
@@ -207,21 +205,14 @@ proc qdel_cleanup {} {
    global CHECK_HOST CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER 
    global CHECK_SECOND_FOREIGN_SYSTEM_USER
 
-   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_USER" "qdel" "-uall" 1 ]
-   puts $CHECK_OUTPUT "qdel_output = \n$result" 
-   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "-uall" 1 ]
-   puts $CHECK_OUTPUT "qdel_output = \n$result" 
-   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_SECOND_FOREIGN_SYSTEM_USER" "qdel" "-uall" 1 ]
-   puts $CHECK_OUTPUT "qdel_output = \n$result" 
-
+   delete_all_jobs
    wait_for_end_of_all_jobs 120
 
-   del_queue $queue
-
+   del_queue $queue $CHECK_HOST 0 1
 
    puts $CHECK_OUTPUT "do qmod -c for all queues"
    foreach hostname $CHECK_CORE_EXECD {
-      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c ${hostname}.q" } output ]
+      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c [get_queue_instance all.q $hostname]" } output ]
       puts $CHECK_OUTPUT $output
    }
 
@@ -263,7 +254,7 @@ proc qdel_submit_delete_when_transfered { } {
       set runs 25
       while { $runs > 0 } { 
          foreach elem $CHECK_CORE_EXECD {
-            set arguments "-o /dev/null -e /dev/null -q $elem.q"
+            set arguments "-o /dev/null -e /dev/null -q [get_queue_instance all.q $elem]"
       #      start_remote_prog $CHECK_HOST $CHECK_USER "qdel" "`qsub $arguments $job_script | cut -d\" \" -f3`"
             set catch_return [ catch { eval exec "$qsub_program $arguments $job_script" } result ]
             puts $CHECK_OUTPUT $result
@@ -302,7 +293,7 @@ proc qdel_submit_delete_when_transfered { } {
 
    puts $CHECK_OUTPUT "do qmod -c for all queues"
    foreach hostname $CHECK_CORE_EXECD {
-      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c ${hostname}.q" } output ]
+      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c [get_queue_instance all.q ${hostname}]" } output ]
       puts $CHECK_OUTPUT $output
    }
 
@@ -422,7 +413,7 @@ proc submit_testjobs { { user "" } { additional_job_args "" }} {
      }
   }
  
-  set jobargs "$additional_job_args $jobargs -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 3000"
+  set jobargs "$additional_job_args $jobargs -q [get_queue_instance $queue $CHECK_HOST] $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 3000"
 
   if { [string compare "" $user] == 0 } {
      # no user specified (using local user name (starter of testsuite))
@@ -958,7 +949,7 @@ proc qdel_delete_negative_jobid {} {
 #     ???/???
 #*******************************
 proc qdel_all {} {
-
+   global ts_config
    global CHECK_OUTPUT CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_HOST
 
@@ -966,6 +957,12 @@ proc qdel_all {} {
       set_error -3 "root access required"
       return
    } 
+
+   if {$ts_config(gridengine_version) == 53} {
+      set all_args "all"
+   } else {
+      set all_args "'*'"
+   }
 
    # submit jobs to delete
    set job_list_user1 [submit_testjobs] 
@@ -977,7 +974,7 @@ proc qdel_all {} {
  
    
    # now delete jobs of user 1
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel all" } qdel_output ] 
+   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $all_args" } qdel_output ] 
    puts $CHECK_OUTPUT "qdel_result = $result"
    puts $CHECK_OUTPUT "qdel_output = $qdel_output" 
    if { $result != 0 } {
@@ -1022,7 +1019,7 @@ proc qdel_all {} {
    puts $CHECK_OUTPUT "user 1 has jobs $job_list_user1"
 
    # now delete jobs of user 2
-   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "all" 1 ]
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" $all_args 1 ]
    puts $CHECK_OUTPUT "qdel_output = \n$result" 
 
    set time [timestamp] 
@@ -1058,7 +1055,7 @@ proc qdel_all {} {
    } 
 
    # now delete jobs of user1
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel all" } qdel_output ] 
+   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $all_args" } qdel_output ] 
    puts $CHECK_OUTPUT "qdel_result = $result"
    puts $CHECK_OUTPUT "qdel_output = $qdel_output" 
    if { $result != 0 } {
@@ -1123,7 +1120,7 @@ proc qdel_all {} {
 #     ???/???
 #*******************************
 proc qdel_uall {} {
-
+   global ts_config
    global CHECK_OUTPUT CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER 
    global CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_HOST
@@ -1132,6 +1129,12 @@ proc qdel_uall {} {
       set_error -3 "root access required"
       return
    } 
+
+   if {$ts_config(gridengine_version) == 53} {
+      set uall_args "-uall"
+   } else {
+      set uall_args "-u '*' '*'"
+   }
 
    # submit jobs to delete
    set job_list_user1 [submit_testjobs]  
@@ -1145,11 +1148,11 @@ proc qdel_uall {} {
 
 
    # now delete all jobs as user 2 ( only submit user )
-   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "-uall" 1 ]
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" $uall_args 1 ]
    puts $CHECK_OUTPUT "qdel_output = \n$result" 
 
    # now delete all jobs as user 3 ( only submit user )
-   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_SECOND_FOREIGN_SYSTEM_USER" "qdel" "-uall" 1 ]
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_SECOND_FOREIGN_SYSTEM_USER" "qdel" $uall_args 1 ]
    puts $CHECK_OUTPUT "qdel_output = \n$result" 
 
    # test if all jobs are still there:
@@ -1163,7 +1166,7 @@ proc qdel_uall {} {
    } 
 
    # now delete all jobs as user 1 ( manager )
-   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_USER" "qdel" "-uall" 1 ]
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_USER" "qdel" $uall_args 1 ]
    puts $CHECK_OUTPUT "qdel_output = \n$result" 
 
    # now check if all jobs are deleted

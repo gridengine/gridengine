@@ -41,5 +41,6 @@ proc vdep_set_sched_conf_defaults { change_array } {
       set chgar(queue_sort_method)          "share"
       set chgar(sgeee_schedule_interval)    "00:00:40"
       set chgar(weight_tickets_deadline)    "10000"
+      set chgar(weight_jobclass)            "0.2"
    }
 }

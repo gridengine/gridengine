@@ -1,3 +1,9 @@
+JG-2004-02-18-0: Testsuite: Fixed testsuite installation - it failed as schedd
+                            conf attribute weight_jobclass no longer exists.
+                            Did some fixes to tests 
+                            system_tests/clients/qconf/check.exp and
+                            system_tests/clients/qdel/check.exp
+
 MD-2004-02-18-0: Bugfix:    - cleanup during execd uninst
                             - if spooldir exists -> ask for deleting
                             - testsuite adaption

@@ -1,3 +1,7 @@
+CR-2003-05-07-0  Testsuite: fixed error for install_core_system check:
+                            don't add complex list "global" if it already
+                            exists.
+
 EB-2003-05-07-0  Cleanup:   wrapper functions to access QU_qtype attribute
                             (part 1: move pe/ckpt references intgo QU_Type 
                              object) 

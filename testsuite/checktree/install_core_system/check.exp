@@ -2603,14 +2603,19 @@ proc setup_deadlineuser {} {
 #*******************************
 proc setup_schedconf {} {
   global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno  CHECK_CORE_EXECD CHECK_USER CHECK_CORE_MASTER
-  global CHECK_PRODUCT_TYPE 
+  global CHECK_PRODUCT_TYPE CHECK_OUTPUT
 
-  # always create global complex list
-  set host_complex(complex1) "c1 DOUBLE 55.55 <= yes yes 0"
-  set_complex host_complex global 1
-  set host_complex(complex1) ""
-  set_complex host_complex global
-
+  # always create global complex list if not existing
+  catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-scl" } result
+  if { [string first "global" $result] >= 0 } {
+     puts $CHECK_OUTPUT "complex list global already exists"
+  } else {
+     puts $CHECK_OUTPUT "creating global complex list"
+     set host_complex(complex1) "c1 DOUBLE 55.55 <= yes yes 0"
+     set_complex host_complex global 1
+     set host_complex(complex1) ""
+     set_complex host_complex global
+  }
   # reset_schedd_config has global error reporting
   get_schedd_config old_config
   reset_schedd_config 

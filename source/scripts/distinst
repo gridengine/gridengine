@@ -1043,7 +1043,7 @@ for i in $ARCH; do
       done
 
       for lib in $DRMAA_SHARED_LIBRARIES; do
-         libname="../${ARCHBIN}_MT/$lib.$shlibext"
+         libname="../${ARCHBIN}/$lib.$shlibext"
          echo checking $libname
          if [ -f $libname ]; then
             InstallProg $libname

@@ -5913,7 +5913,7 @@ lList *arglp
       lFreeList(lp);
 
       for_each(aep, alp) 
-         fprintf(stderr, "%s: %s", answer_get_quality_text(aep), lGetString(aep, AN_text));
+         fprintf(stderr, "%s", lGetString(aep, AN_text));
    }
 
    DEXIT;

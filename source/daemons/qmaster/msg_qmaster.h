@@ -869,14 +869,16 @@
 #define MSG_UMAP_HOSTNAMEXNOTRESOLVEDY_SS          _MESSAGE(33672, _("hostname "SFQ" not resolved: "SFN"\n"))
 
 /*
-** misc
-*/
-#define MSG_SEC_CRED_SSSI         _MESSAGE(33673, _("denied: request for user "SFQ" does not match credentials for connection <"SFN","SFN",%d>\n") )  
-
-#define MSG_QMASTER_XNOVALIDSSM_S  _MESSAGE(33674, _(SFQ" is not a valid shell_start_mode\n"))
-#define MSG_QMASTER_XNOVALIDIS_S   _MESSAGE(33675, _(SFQ" is not a valid initial_state\n"))      
-
-#define MSG_JOB_STDINPATHLIST        _MESSAGE(33276, _("stdin path list"))
+ * misc
+ */
+#define MSG_SEC_CRED_SSSI                          _MESSAGE(33673, _("denied: request for user "SFQ" does not match credentials for connection <"SFN","SFN",%d>\n") )  
+#define MSG_QMASTER_XNOVALIDSSM_S                  _MESSAGE(33674, _(SFQ" is not a valid shell_start_mode\n"))
+#define MSG_QMASTER_XNOVALIDIS_S                   _MESSAGE(33675, _(SFQ" is not a valid initial_state\n"))      
+#define MSG_JOB_STDINPATHLIST                      _MESSAGE(33676, _("stdin path list"))
+#define MSG_QMASTER_AUTODEFDEPARTMENT              _MESSAGE(33677, _("all users are assigned to the \"defaultdepartment\" automatically\n"))
+#define MSG_QMASTER_DEPTFORDEFDEPARTMENT           _MESSAGE(33678, _("the \"defaultdepartment\" has to be of type \"DEPT\"\n"))
+#define MSG_QMASTER_ACLNOSHARE                     _MESSAGE(33679, _("not allowed to set \"fshare\" for ACL lists\n"))
+#define MSG_QMASTER_ACLNOTICKET                    _MESSAGE(33680, _("not allowed to set \"oticket\" for ACL lists\n"))
 
 #endif /* __MSG_QMASTER_H */
 

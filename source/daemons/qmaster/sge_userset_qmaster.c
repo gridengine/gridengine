@@ -59,6 +59,8 @@
 static void sge_change_queue_version_acl(const char *acl_name);
 static lList* do_depts_conflict(lListElem *new, lListElem *old);
 static int verify_userset_deletion(lList **alpp, const char *userset_name);
+static int dept_is_valid_defaultdepartment(lListElem *dept, lList **answer_list);
+static int acl_is_valid_acl(lListElem *acl, lList **answer_list);
 
 /*********************************************************************
    sge_add_userset() - Master code
@@ -316,6 +318,13 @@ char *rhost
    }
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
+      /* make sure acl is valid */
+      ret = acl_is_valid_acl(ep, alpp);
+      if (ret != STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
+
       /*
       ** check for users defined in more than one userset if they
       ** are used as departments
@@ -462,6 +471,16 @@ lList **alpp
 
    DENTER(TOP_LAYER, "sge_verify_department_entries");
 
+   /*
+    * make tests for the defaultdepartment
+    */
+   if (!strcmp(lGetString(new_userset, US_name), DEFAULT_DEPARTMENT)) {
+      if (!dept_is_valid_defaultdepartment(new_userset, alpp)) {
+         DEXIT;
+         return STATUS_ESEMANTIC;
+      }
+   }
+
    if (!(lGetUlong(new_userset, US_type) & US_DEPT)) {
       DEXIT;
       return STATUS_OK;
@@ -506,6 +525,88 @@ lList **alpp
    return STATUS_OK;
 }
 
+/****** qmaster/dept/dept_is_valid_defaultdepartment() ************************
+*  NAME
+*     dept_is_valid_defaultdepartment() -- is defaultdepartment correct 
+*
+*  SYNOPSIS
+*     static int dept_is_valid_defaultdepartment(lListElem *dept, 
+*                                                lList **answer_list) 
+*
+*  FUNCTION
+*     Check if the given defaultdepartment "dept" is valid. 
+*
+*  INPUTS
+*     lListElem *dept     - US_Type defaultdepartment 
+*     lList **answer_list - AN_Type answer list 
+*
+*  RESULT
+*     static int - 0 or 1
+*******************************************************************************/
+static int dept_is_valid_defaultdepartment(lListElem *dept,
+                                           lList **answer_list)
+{
+   int ret = 1;
+   DENTER(TOP_LAYER, "dept_is_valid_defaultdepartment");
+
+   if (dept != NULL) {
+      /* test 'type' */
+      if (!(lGetUlong(dept, US_type) & US_DEPT)) {
+         ERROR((SGE_EVENT, MSG_QMASTER_DEPTFORDEFDEPARTMENT));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, 0);
+         ret = 0;
+      }
+      /* test user list */
+      if (lGetNumberOfElem(lGetList(dept, US_entries)) > 0 ) {
+         ERROR((SGE_EVENT, MSG_QMASTER_AUTODEFDEPARTMENT));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, 0);
+         ret = 0;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** qmaster/acl/acl_is_valid_acl() ****************************************
+*  NAME
+*     acl_is_valid_acl() -- is the acl correct 
+*
+*  SYNOPSIS
+*     static int acl_is_valid_acl(lListElem *acl, lList **answer_list) 
+*
+*  FUNCTION
+*     Check if the given "acl" is correct 
+*
+*  INPUTS
+*     lListElem *acl      - US_Type acl 
+*     lList **answer_list - AN_Type list 
+*
+*  RESULT
+*     static int - 0 or 1
+*******************************************************************************/
+static int acl_is_valid_acl(lListElem *acl,
+                            lList **answer_list)
+{
+   int ret = 1;
+   DENTER(TOP_LAYER, "acl_is_valid_acl");
+
+   if (acl != NULL) {
+      if (!(lGetUlong(acl, US_type) & US_DEPT)) {
+         if (lGetUlong(acl, US_fshare) > 0) {
+            ERROR((SGE_EVENT, MSG_QMASTER_ACLNOSHARE));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, 0);
+            ret = 0;
+         }
+         if (lGetUlong(acl, US_oticket) > 0) {
+            ERROR((SGE_EVENT, MSG_QMASTER_ACLNOTICKET));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, 0);
+            ret = 0;
+         }
+      }
+   }
+   DEXIT;
+   return ret;
+}
 
 static lList* do_depts_conflict(
 lListElem *new,

@@ -91,9 +91,11 @@ proc tight_integration_init_level {} {
    global CHECK_ACT_LEVEL
    global submit_command TIGHT_INTEGRATION_FUNCTIONAL_SLOTS
 
+   # for the functional test we want to schedule one task to each host
+   # we set the allocation rule to round_robin and request as many slots
+   # as we have exec hosts
    set num_hosts [llength $ts_config(execd_hosts)]
-   set num_slots [ expr ( $num_hosts * 10 ) ]
-   set TIGHT_INTEGRATION_FUNCTIONAL_SLOTS $num_slots
+   set TIGHT_INTEGRATION_FUNCTIONAL_SLOTS $num_hosts
 
    switch -- $CHECK_ACT_LEVEL {
       "0" { 
@@ -647,46 +649,53 @@ proc tight_integration_massive {} {
    global submit_command
    puts $CHECK_OUTPUT "tight_integration: massive parallel test"
 
-   # check if test can run at all in this cluster
+   # count the number of slots in the cluster to check if tests can be run
    set total_slots 0
    foreach host $CHECK_CORE_EXECD {
       get_queue [get_queue_instance "tight.q" $host] queue_conf
       incr total_slots $queue_conf(slots)
       unset queue_conf
    }
-   if {$total_slots < [expr $TIGHT_INTEGRATION_MASSIVE_SLOTS + 1]} {
-      add_proc_error tight_integration_massive -3 "test cannot run massive parallel job with $TIGHT_INTEGRATION_MASSIVE_SLOTS tasks + the master task - cluster only has $total_slots slots"
-      set_error 0 "ok"
-      return
-   }
 
+   # we use a masterq on the check-host as we tail the output file here
    set masterq [get_queue_instance "tight.q" $CHECK_HOST]
 
-   set id [submit_with_method $submit_command "-pe tight $TIGHT_INTEGRATION_MASSIVE_SLOTS -masterq $masterq -cwd -N tightm" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 $TIGHT_INTEGRATION_MASSIVE_DURATION"]
+   # increase the number of slots util maximum is reached
+   for {set massive_slots 19} {$massive_slots <= $TIGHT_INTEGRATION_MASSIVE_SLOTS} {incr massive_slots 10} {
+      puts $CHECK_OUTPUT "running parallel job with $massive_slots slots"
+      # check if test can run at all in this cluster
+      if {$total_slots < [expr $massive_slots + 1]} {
+         add_proc_error tight_integration_massive -3 "test cannot run massive parallel job with $massive_slots tasks + the master task - cluster only has $total_slots slots"
+         set_error 0 "ok"
+         return
+      }
 
-   set started 0
-   set finished 0
-   set jobid 0
-   set job_finished 0
-   
-   while {$job_finished == 0} {
-      set job_state [tight_integration_monitor $id started finished jobid info]
-      set job_finished [tight_integration_job_finished $job_state]
+      set id [submit_with_method $submit_command "-pe tight $massive_slots -masterq $masterq -cwd -N tightm" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 $TIGHT_INTEGRATION_MASSIVE_DURATION"]
+
+      set started 0
+      set finished 0
+      set jobid 0
+      set job_finished 0
+      
+      while {$job_finished == 0} {
+         set job_state [tight_integration_monitor $id started finished jobid info]
+         set job_finished [tight_integration_job_finished $job_state]
+      }
+
+      if {$started != $massive_slots} {
+         add_proc_error tight_integration_massive -1 "only $started tasks out of $massive_slots were started successfully"
+      }
+
+      if {$finished != $massive_slots} {
+         add_proc_error tight_integration_massive -1 "only $finished tasks out of $massive_slots ran through successfully"
+      }
+      set sp_id [lindex $id 1]
+      send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
+
+      close_spawn_process $id
+
+      wait_for_jobend $jobid tightm 300 0 1
    }
-
-   if {$started != $TIGHT_INTEGRATION_MASSIVE_SLOTS} {
-      add_proc_error tight_integration_massive -1 "only $started tasks out of $TIGHT_INTEGRATION_MASSIVE_SLOTS were started successfully"
-   }
-
-   if {$finished != $TIGHT_INTEGRATION_MASSIVE_SLOTS} {
-      add_proc_error tight_integration_massive -1 "only $finished tasks out of $TIGHT_INTEGRATION_MASSIVE_SLOTS ran through successfully"
-   }
-   set sp_id [lindex $id 1]
-   send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
-
-   close_spawn_process $id
-
-   wait_for_jobend $jobid tightm 300 0 1
 
    set_error 0 "ok"
 }

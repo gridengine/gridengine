@@ -1,3 +1,7 @@
+JG-2004-09-07-0: Testsuite: Improved test functional/tight_integration 
+                            (different sizes of massive parallel jobs are 
+                            tested)
+
 SG-2004-09-06-0: Cleanup:   Cleanup in the order processing, event master, and
                             event client
                  Changed:   qmaster, scheduler

@@ -69,9 +69,22 @@
 #include "msg_clients_common.h"
 #include "sge_parse_num_par.h"
 
-static void show_the_way(FILE *fp);
-static void showjob(sge_rusage_type *dusage);
+typedef struct {
+   int host;
+   int queue;
+   int group;
+   int owner;
+   int project;
+   int department;
+   int granted_pe;
+   int slots;
+} sge_qacct_columns;
 
+static void show_the_way(FILE *fp);
+static void print_full(int length, const char* string);
+static void print_full_ulong(int length, u_long32 value); 
+static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data );
+static void showjob(sge_rusage_type *dusage);
 static void get_qacct_lists(lList **ppcomplex, lList **ppqeues, lList **ppexechosts);
 
 /*
@@ -130,8 +143,9 @@ char **argv
    int jobfound=0;
 
    time_t begin_time = -1, end_time = -1;
+   
    u_long32 days;
-
+   sge_qacct_columns column_sizes;
    int groupflag=0;
    int queueflag=0;
    int ownerflag=0;
@@ -190,6 +204,16 @@ char **argv
    memset(complexes, 0, sizeof(complexes));
    memset(job_name, 0, sizeof(job_name));
    memset(&totals, 0, sizeof(totals));
+
+   column_sizes.host       = strlen(MSG_HISTORY_HOST)+1;
+   column_sizes.queue      = strlen(MSG_HISTORY_QUEUE)+1;
+   column_sizes.group      = strlen(MSG_HISTORY_GROUP)+1;
+   column_sizes.owner      = strlen(MSG_HISTORY_OWNER)+1;
+   column_sizes.project    = strlen(MSG_HISTORY_PROJECT)+1;
+   column_sizes.department = strlen(MSG_HISTORY_DEPARTMENT)+1;  
+   column_sizes.granted_pe = strlen(MSG_HISTORY_PE)+1;
+   column_sizes.slots      = 7;
+
 
    /*
    ** Read in the command line arguments.
@@ -1118,6 +1142,29 @@ char **argv
    /*
    ** assorted output of statistics
    */
+   if ( host[0] ) {
+      column_sizes.host = strlen(host) + 1;
+   } 
+   if ( queue[0] ) {
+      column_sizes.queue = strlen(queue) + 1;
+   } 
+   if ( group[0] ) {
+      column_sizes.group = strlen(group) + 1;
+   } 
+   if ( owner[0] ) {
+      column_sizes.owner = strlen(owner) + 1;
+   } 
+   if ( project[0] ) {
+      column_sizes.project = strlen(project) + 1;
+   } 
+   if ( department[0] ) {
+      column_sizes.department = strlen(department) + 1;
+   } 
+   if ( granted_pe[0] ) {
+      column_sizes.granted_pe = strlen(granted_pe) + 1;
+   } 
+   
+   calc_column_sizes(lFirst(sorted_list), &column_sizes);
    {
       lListElem *ep = NULL;
       int dashcnt = 0;
@@ -1130,36 +1177,36 @@ char **argv
 #endif
 
       if (host[0] || hostflag) {
-         printf("%-30s",MSG_HISTORY_HOST);
-         dashcnt+=30;
+         print_full(column_sizes.host , MSG_HISTORY_HOST);
+         dashcnt += column_sizes.host ;
       }
       if (queue[0] || queueflag) {
-         printf("%-15s",MSG_HISTORY_QUEUE);
-         dashcnt+=15;
+         print_full(column_sizes.queue ,MSG_HISTORY_QUEUE );
+         dashcnt += column_sizes.queue ;
       }
       if (group[0] || groupflag) {
-         printf("%-10s",MSG_HISTORY_GROUP);
-         dashcnt+=10;
+         print_full(column_sizes.group , MSG_HISTORY_GROUP);
+         dashcnt += column_sizes.group ;
       }
       if (owner[0] || ownerflag) {
-         printf("%-10s",MSG_HISTORY_OWNER);
-         dashcnt+=10;
+         print_full(column_sizes.owner ,MSG_HISTORY_OWNER );
+         dashcnt += column_sizes.owner ;
       }
       if (project[0] || projectflag) {
-         printf("%-17s",MSG_HISTORY_PROJECT);
-         dashcnt+=17;
+         print_full(column_sizes.project, MSG_HISTORY_PROJECT);
+         dashcnt += column_sizes.project ;
       }
       if (department[0] || departmentflag) {
-         printf("%-20s",MSG_HISTORY_DEPARTMENT);
-         dashcnt+=20;
+         print_full(column_sizes.department, MSG_HISTORY_DEPARTMENT);
+         dashcnt += column_sizes.department;
       }
       if (granted_pe[0] || granted_peflag) {
-         printf("%-15s",MSG_HISTORY_PE);
-         dashcnt+=15;
+         print_full(column_sizes.granted_pe, MSG_HISTORY_PE);
+         dashcnt += column_sizes.granted_pe;
       }   
       if (slots > 0 || slotsflag) {
-         printf("%6s",MSG_HISTORY_SLOTS );
-         dashcnt+=6;
+         print_full(column_sizes.slots,MSG_HISTORY_SLOTS );
+         dashcnt += column_sizes.slots;
       }
          
       if (!dashcnt)
@@ -1189,7 +1236,7 @@ char **argv
          const char *cp;
 
          if (host[0]) {
-            printf("%-30.29s", host);
+            print_full(column_sizes.host,  host);
          }
          else if (hostflag) {
             if (!ep)
@@ -1200,63 +1247,63 @@ char **argv
             ** we can't ignore it because it was a line in the
             ** accounting file
             */
-            printf("%-30.29s", ((cp = lGetHost(ep, QAJ_host)) ? cp : ""));
+            print_full(column_sizes.host, ((cp = lGetHost(ep, QAJ_host)) ? cp : ""));
          }
          if (queue[0]) {
-            printf("%-15.14s", queue);
+            print_full(column_sizes.queue,  queue);
          }
          else if (queueflag) {
             if (!ep)
                break;
-            printf("%-15.14s", ((cp = lGetString(ep, QAJ_queue)) ? cp : ""));
+            print_full(column_sizes.queue, ((cp = lGetString(ep, QAJ_queue)) ? cp : ""));
          }
          if (group[0]) {
-            printf("%-10.9s", group);
+            print_full(column_sizes.group, group);
          }
          else if (groupflag) {
             if (!ep)
                break;
-            printf("%-10.9s", ((cp = lGetString(ep, QAJ_group)) ? cp : ""));
+            print_full(column_sizes.group, ((cp = lGetString(ep, QAJ_group)) ? cp : ""));
          }
          if (owner[0]) {
-            printf("%-10.9s", owner);
+            print_full(column_sizes.owner, owner);
          }
          else if (ownerflag) {
             if (!ep)
                break;
-            printf("%-10.9s", ((cp = lGetString(ep, QAJ_owner)) ? cp : ""));
+            print_full(column_sizes.owner, ((cp = lGetString(ep, QAJ_owner)) ? cp : "") );
          }
          if (project[0]) {
-            printf("%-17.16s", project);
+              print_full(column_sizes.project, project);
          }
          else if (projectflag) {
             if (!ep)
                break;
-            printf("%-17.16s", ((cp = lGetString(ep, QAJ_project)) ? cp : ""));
+            print_full(column_sizes.project ,((cp = lGetString(ep, QAJ_project)) ? cp : ""));
          }
          if (department[0]) {
-            printf("%-20.19s", department);
+            print_full(column_sizes.department, department);
          }
          else if (departmentflag) {
             if (!ep)
                break;
-            printf("%-20.19s", ((cp = lGetString(ep, QAJ_department)) ? cp : ""));
+            print_full(column_sizes.department, ((cp = lGetString(ep, QAJ_department)) ? cp : ""));
          }
          if (granted_pe[0]) {
-            printf("%-15.14s", granted_pe);
+            print_full(column_sizes.granted_pe, granted_pe);
          }   
          else if (granted_peflag) {
             if (!ep)
                break;
-            printf("%-15.14s", ((cp = lGetString(ep, QAJ_granted_pe)) ? cp : ""));
+            print_full(column_sizes.granted_pe, ((cp = lGetString(ep, QAJ_granted_pe)) ? cp : ""));
          }         
          if (slots > 0) {
-            printf("%6"fu32, slots);
+            print_full_ulong(column_sizes.slots, slots);
          }   
          else if (slotsflag) {
             if (!ep)
                break;
-            printf("%6"fu32, lGetUlong(ep, QAJ_slots));
+            print_full_ulong(column_sizes.slots, lGetUlong(ep, QAJ_slots));
          }         
             
          if (hostflag || queueflag || groupflag || ownerflag || projectflag || 
@@ -1295,6 +1342,153 @@ char **argv
    return 0;
 }
 
+static void print_full_ulong(int full_length, u_long32 value) {
+   char tmp_buf[100];
+   DENTER(TOP_LAYER, "print_full_ulong");
+      sprintf(tmp_buf, "%6"fu32, value);
+      print_full(full_length, tmp_buf); 
+   DEXIT;
+}
+
+static void print_full(int full_length, const char* string) {
+
+   int string_length=0;
+   int i = 0;
+   int spaces = 0;
+
+   DENTER(TOP_LAYER, "print_full");
+  
+   if ( string != NULL) {
+      printf("%s",string); 
+      string_length = strlen(string);
+   }
+   if (full_length > string_length) {
+      spaces = full_length - string_length;
+   }
+   for (i = 0 ; i < spaces ; i++) {
+      printf(" ");
+   }  
+   DEXIT;
+}
+
+static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data) {
+   lListElem* lep = NULL;
+   DENTER(TOP_LAYER, "calc_column_sizes");
+   
+
+   if ( column_size_data == NULL ) {
+      DEXIT;
+      return;
+   }
+/*   column_size_data->host = 30;
+   column_size_data->queue = 15;
+   column_size_data->group = 10;
+   column_size_data->owner = 10;
+   column_size_data->project = 17;
+   column_size_data->department = 20;  
+   column_size_data->granted_pe = 15;
+   column_size_data->slots = 6; */
+
+   if ( column_size_data->host < strlen(MSG_HISTORY_HOST)+1  ) {
+      column_size_data->host = strlen(MSG_HISTORY_HOST)+1;
+   } 
+   if ( column_size_data->queue < strlen(MSG_HISTORY_QUEUE)+1  ) {
+      column_size_data->queue = strlen(MSG_HISTORY_QUEUE)+1;
+   } 
+   if ( column_size_data->group < strlen(MSG_HISTORY_GROUP)+1  ) {
+      column_size_data->group = strlen(MSG_HISTORY_GROUP)+1;
+   } 
+   if ( column_size_data->owner < strlen(MSG_HISTORY_OWNER)+1  ) {
+      column_size_data->owner = strlen(MSG_HISTORY_OWNER)+1;
+   } 
+   if ( column_size_data->project < strlen(MSG_HISTORY_PROJECT)+1  ) {
+      column_size_data->project = strlen(MSG_HISTORY_PROJECT)+1;
+   } 
+   if ( column_size_data->department < strlen(MSG_HISTORY_DEPARTMENT)+1  ) {
+      column_size_data->department = strlen(MSG_HISTORY_DEPARTMENT)+1;
+   } 
+   if ( column_size_data->granted_pe < strlen(MSG_HISTORY_PE)+1  ) {
+      column_size_data->granted_pe = strlen(MSG_HISTORY_PE)+1;
+   } 
+   if ( column_size_data->slots <7  ) {
+      column_size_data->slots = 7;
+   } 
+
+   if ( ep != NULL) {
+      char tmp_buf[100];
+      int tmp_length = 0;
+      const char* tmp_string = NULL;
+      lep = ep;
+      while (lep) {
+         /* host  */
+         tmp_string = lGetHost(ep, QAJ_host);
+         if ( tmp_string != NULL ) {
+            tmp_length = strlen(tmp_string);
+            if (column_size_data->host < tmp_length) {
+               column_size_data->host  = tmp_length + 1;
+            }
+         } 
+         /* queue */
+         tmp_string = lGetString(ep, QAJ_queue);
+         if ( tmp_string != NULL ) {
+            tmp_length = strlen(tmp_string);
+            if (column_size_data->queue < tmp_length) {
+               column_size_data->queue  = tmp_length + 1;
+            }
+         } 
+         /* group */
+         tmp_string = lGetString(ep, QAJ_group) ;
+         if ( tmp_string != NULL ) {
+            tmp_length = strlen(tmp_string);
+            if (column_size_data->group < tmp_length) {
+               column_size_data->group  = tmp_length + 1;
+            }
+         } 
+         /* owner */
+         tmp_string = lGetString(ep, QAJ_owner);
+         if ( tmp_string != NULL ) {
+            tmp_length = strlen(tmp_string);
+            if (column_size_data->owner < tmp_length) {
+               column_size_data->owner  = tmp_length + 1;
+            }
+         } 
+         /* project */
+         tmp_string = lGetString(lep, QAJ_project);
+         if ( tmp_string != NULL ) {
+            tmp_length = strlen(tmp_string);
+            if (column_size_data->project < tmp_length) {
+               column_size_data->project  = tmp_length + 1;
+            }
+         } 
+
+         /* department  */
+         tmp_string = lGetString(ep, QAJ_department);
+         if ( tmp_string != NULL ) {
+            tmp_length = strlen(tmp_string);
+            if (column_size_data->department < tmp_length) {
+               column_size_data->department  = tmp_length + 1;
+            }
+         } 
+         /* granted_pe */
+         tmp_string = lGetString(ep, QAJ_granted_pe) ;
+         if ( tmp_string != NULL ) {
+            tmp_length = strlen(tmp_string);
+            if (column_size_data->granted_pe < tmp_length) {
+               column_size_data->granted_pe  = tmp_length + 1;
+            }
+         } 
+
+         /* slots */
+         sprintf(tmp_buf,"%6"fu32, lGetUlong(ep, QAJ_slots));
+         tmp_length = strlen(tmp_buf);
+         if (column_size_data->slots < tmp_length) {
+            column_size_data->slots  = tmp_length + 1;
+         }
+         lep = lNext(lep);
+      }
+   }
+   DEXIT;
+}
 
 
 /*

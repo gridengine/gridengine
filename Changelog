@@ -1,3 +1,7 @@
+CR-2002-03-04-0: Bugfix:    qacct truncates project/department/... names 
+                            (merge from maintrunc)
+                 Issue:     #150
+
 AH-2002-03-04-2: Enhancem.: Added PVM 3.4.4 Virtual Machine ID setting
                             to startpvm.sh from Andrew Shewmaker
 

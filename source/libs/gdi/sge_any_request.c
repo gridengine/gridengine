@@ -149,7 +149,7 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    /* TODO: activate mutlithreaded communication for SCHEDD and EXECD !!!
             This can only by done when the daemonize functions of SCHEDD and EXECD
             are thread save and reresolve qualified hostname for each thread */
-   if ( /* uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD */ 0 ) {
+   if ( uti_state_get_mewho() == QMASTER /* || uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD */ ) {
       INFO((SGE_EVENT,"starting up multi thread communication\n"));
       ret_val = cl_com_setup_commlib(CL_ONE_THREAD,CL_LOG_OFF,gdi_log_flush_func);
    } else {

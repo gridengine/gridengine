@@ -1,3 +1,10 @@
+CR-2004-02-11-2: Bugfix:    - qmaster communication is now multithreaded again
+                            - qmaster can now bind port < 1024 as root 
+                              (setup of communication is done earlier in startup
+                               phase of qmaster)
+                 Changed:   qmaster
+                 Review:    AD
+
 SG-2004-02-11-0: Bugfix:    scheduler died, when the qmaster removed automicaly
                             created users.
                  Changed:   qmaster

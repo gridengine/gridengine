@@ -445,17 +445,6 @@ static void qmaster_init(char **anArgv)
    int ret_val;
    DENTER(TOP_LAYER, "qmaster_init");
 
-   /* communication lib must be initialized befor setup_qmaster()
-      because host name resolving is used - CR */
-   INFO   ((SGE_EVENT,"starting up multi thread communication lib\n"));
-   ret_val = cl_com_setup_commlib(CL_ONE_THREAD, CL_LOG_OFF, qmaster_log_flush_func );
-   if (ret_val != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, "cl_com_setup_commlib: %s\n",cl_get_error_text(ret_val)));
-   }
- 
-   /* set alias file path */
-   cl_com_set_alias_file(sge_get_alias_path());
-
    if (setup_qmaster()) {
       CRITICAL((SGE_EVENT, MSG_STARTUP_SETUPFAILED));
       SGE_EXIT(1);
@@ -509,11 +498,10 @@ static void communication_setup(char **anArgv)
 
    DEBUG((SGE_EVENT,"my resolved hostname name is: \"%s\"\n", uti_state_get_qualified_hostname()));
 
-   prepare_enroll(prognames[QMASTER], 1, NULL);
    com_handle = cl_com_get_handle((char*)prognames[QMASTER], 1);
 
    if (com_handle == NULL) {
-      ERROR((SGE_EVENT, "could not create qmaster communication handle\n"));
+      ERROR((SGE_EVENT, "could not find qmaster communication handle\n"));
       ERROR((SGE_EVENT, "check if port %d is used by another process\n", sge_get_qmaster_port()));
       SGE_EXIT(1);
    }
@@ -588,106 +576,6 @@ static void communication_setup(char **anArgv)
 
 #endif /* ENABLE_NGC */
 
-/****** qmaster/setup_qmaster/qmaster_log_flush_func() *************************
-*  NAME
-*     qmaster_log_flush_func() -- ??? 
-*
-*  SYNOPSIS
-*     static int qmaster_log_flush_func(cl_raw_list_t* list_p) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     cl_raw_list_t* list_p - ??? 
-*
-*  RESULT
-*     static int - 
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     MT-NOTE: qmaster_log_flush_func() is not MT safe 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-static int qmaster_log_flush_func(cl_raw_list_t* list_p)
-{
-   int ret_val;
-   cl_log_list_elem_t* elem = NULL;
-
-   DENTER(COMMD_LAYER, "qmaster_log_flush_func");
-
-   if (list_p == NULL) {
-      DEXIT;
-      return CL_RETVAL_LOG_NO_LOGLIST;
-   }
-
-   if (  ( ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
-      DEXIT;
-      return ret_val;
-   }
-
-   while ( (elem = cl_log_list_get_first_elem(list_p) ) != NULL)
-   {
-      char* param;
-      char* module;
-      if (elem->log_parameter == NULL) {
-         param = "";
-      } else {
-         param = elem->log_parameter;
-      }
-      if (elem->log_module_name == NULL) {
-         module = "";
-      } else {
-         module = elem->log_module_name;
-      }
-      switch(elem->log_type) {
-         case CL_LOG_ERROR: 
-            if ( log_state_get_log_level() >= LOG_ERR) {
-               ERROR((SGE_EVENT,  "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
-            } else {
-               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
-            }
-            break;
-         case CL_LOG_WARNING:
-            if ( log_state_get_log_level() >= LOG_WARNING) {
-               WARNING((SGE_EVENT,"%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
-            } else {
-               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
-            }
-            break;
-         case CL_LOG_INFO:
-            if ( log_state_get_log_level() >= LOG_INFO) {
-               INFO((SGE_EVENT,   "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
-            } else {
-               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
-            }
-            break;
-         case CL_LOG_DEBUG:
-            if ( log_state_get_log_level() >= LOG_DEBUG) { 
-               DEBUG((SGE_EVENT,  "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
-            } else {
-               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
-            }
-            break;
-      }
-      cl_log_list_del_log(list_p);
-   }
-   
-   if ((ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
-      DEXIT;
-      return ret_val;
-   } 
-
-   DEXIT;
-   return CL_RETVAL_OK;
-} /* qmaster_log_flush_func() */
 
 #if !defined(ENABLE_NGC)
 /****** qmaster/setup_qmaster/set_message_priorities() *************************

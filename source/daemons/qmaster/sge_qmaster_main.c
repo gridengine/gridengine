@@ -71,6 +71,7 @@
 #include "msg_qmaster.h"
 #include "msg_daemons_common.h"
 #include "msg_utilib.h"  /* remove once 'daemonize_qmaster' did become 'sge_daemonize' */
+#include "sge_any_request.h"
 
 
 /*
@@ -119,6 +120,98 @@ static void qmaster_shutdown(void);
 static void exit_func(int);
 
 
+/****** sge_qmaster_main/qmaster_log_flush_func() ******************************
+*  NAME
+*     qmaster_log_flush_func() -- log communication events into standard log
+*
+*  SYNOPSIS
+*     static int qmaster_log_flush_func(cl_raw_list_t* list_p) 
+*
+*  FUNCTION
+*     Used from cl_com_setup_commlib() in qmaster as log flush function
+*     callback.
+*
+*  INPUTS
+*     cl_raw_list_t* list_p - log list
+*
+*  RESULT
+*     static int - commlib error
+*
+*  NOTES
+*     MT-NOTE: qmaster_log_flush_func() is MT safe 
+*******************************************************************************/
+static int qmaster_log_flush_func(cl_raw_list_t* list_p) {
+   int ret_val;
+   cl_log_list_elem_t* elem = NULL;
+
+   DENTER(COMMD_LAYER, "qmaster_log_flush_func");
+
+   if (list_p == NULL) {
+      DEXIT;
+      return CL_RETVAL_LOG_NO_LOGLIST;
+   }
+
+   if (  ( ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
+      DEXIT;
+      return ret_val;
+   }
+
+   while ( (elem = cl_log_list_get_first_elem(list_p) ) != NULL)
+   {
+      char* param;
+      char* module;
+      if (elem->log_parameter == NULL) {
+         param = "";
+      } else {
+         param = elem->log_parameter;
+      }
+      if (elem->log_module_name == NULL) {
+         module = "";
+      } else {
+         module = elem->log_module_name;
+      }
+      switch(elem->log_type) {
+         case CL_LOG_ERROR: 
+            if ( log_state_get_log_level() >= LOG_ERR) {
+               ERROR((SGE_EVENT,  "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            } else {
+               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+            }
+            break;
+         case CL_LOG_WARNING:
+            if ( log_state_get_log_level() >= LOG_WARNING) {
+               WARNING((SGE_EVENT,"%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            } else {
+               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+            }
+            break;
+         case CL_LOG_INFO:
+            if ( log_state_get_log_level() >= LOG_INFO) {
+               INFO((SGE_EVENT,   "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            } else {
+               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+            }
+            break;
+         case CL_LOG_DEBUG:
+            if ( log_state_get_log_level() >= LOG_DEBUG) { 
+               DEBUG((SGE_EVENT,  "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            } else {
+               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+            }
+            break;
+      }
+      cl_log_list_del_log(list_p);
+   }
+   
+   if ((ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
+      DEXIT;
+      return ret_val;
+   } 
+
+   DEXIT;
+   return CL_RETVAL_OK;
+}
+
 /****** qmaster/sge_qmaster_main/main() ****************************************
 *  NAME
 *     main() -- qmaster entry point 
@@ -163,6 +256,9 @@ int main(int argc, char* argv[])
 
    sge_qmaster_thread_init();
 
+   /* enroll before getting root */
+   prepare_enroll(prognames[QMASTER], 1, NULL);
+
    become_admin_user();
 
    sge_chdir_exit(bootstrap_get_qmaster_spool_dir(), 1);
@@ -173,7 +269,7 @@ int main(int argc, char* argv[])
 
    start_heartbeat();
 
-   sge_setup_qmaster(argv);  /* setup communication etc. */
+   sge_setup_qmaster(argv);
 
    setup_lock_service();
 

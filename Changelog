@@ -1,3 +1,9 @@
+MD-2004-12-22-0: Bugfix:    uninstall of exec host doesn't work
+                 Issue:     1392
+                 Bugtraq:   6211725
+                 Changed:   inst_sge
+                 Review:    HP
+
 JG-2004-12-22-0: Testsuite: Accept new hosts as known hosts when ssh is used as 
                             login mechanism.
                             Fixed a timeout problem when closing connections.

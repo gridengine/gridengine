@@ -1149,6 +1149,11 @@ case LINUXIA64:
       if ($status == 0) then
          set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
       endif
+   else if ( -f /usr/include/netinet/in.h ) then
+      grep typedef /usr/include/netinet/in.h | grep in_port_t >& /dev/null
+      if ($status == 0) then
+         set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
+      endif
    endif
 
    set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
@@ -1167,7 +1172,7 @@ case LINUXIA64:
 
    set XMTDEF   = ""
 
-   if ($TARGET_BITS == TARGET_32BIT || $BUILDARCH == ALINUX) then
+   if ($TARGET_BITS == TARGET_32BIT || $BUILDARCH == ALINUX || $BUILDARCH == LINUXIA64) then
       set XLIBD    = "-L/usr/X11R6/lib"
    else
       set XLIBD    = "-L/usr/X11R6/lib64"

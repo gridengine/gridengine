@@ -1,3 +1,6 @@
+JG-2003-01-23-0  Bugfix:    Set commlib timeouts in qsh analogous to qsub.
+                 Bugtraq:   #4654993
+
 SD-2003-01-22-2  Enhancem.  Added code to source/libs/cull/cull_list.c to
                             randomize the elements before calling qsort. This
                             code is currently turned off until tests can

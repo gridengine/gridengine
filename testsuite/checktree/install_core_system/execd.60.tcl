@@ -308,7 +308,7 @@ proc install_execd {} {
 
             -i $sp_id $USE_CONFIGURATION_PARAMS { 
      
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11)"
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.5)"
                if {$do_log_output == 1} {
                     puts "press RETURN"
                     set anykey [wait_for_enter 1]
@@ -318,14 +318,25 @@ proc install_execd {} {
             }
 
             -i $sp_id $ENTER_LOCAL_EXECD_SPOOL_DIR_ASK { 
-     
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11)"
-               if {$do_log_output == 1} {
-                    puts "press RETURN"
-                    set anykey [wait_for_enter 1]
+               set spooldir [get_spool_dir $exec_host execd]
+               if { $spooldir == "" } {
+                  puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(11.7)"
+                  if {$do_log_output == 1} {
+                       puts "press RETURN"
+                       set anykey [wait_for_enter 1]
+                  }
+                  send -i $sp_id "$ANSWER_NO\n"
+                  continue;
+               } else {
+
+                  puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.6)"
+                  if {$do_log_output == 1} {
+                       puts "press RETURN"
+                       set anykey [wait_for_enter 1]
+                  }
+                  send -i $sp_id "$ANSWER_YES\n"
+                  continue;
                }
-               send -i $sp_id "$ANSWER_YES\n"
-               continue;
             }
 
 
@@ -349,23 +360,23 @@ proc install_execd {} {
                continue;
             }
 
-            -i $sp_id $LOCAL_CONFIG_FOR_HOST {
-               puts $CHECK_OUTPUT "\n -->testsuite: reconfigure configuration for spool dir\n"
-               set spooldir [get_spool_dir $exec_host execd]
-               puts $CHECK_OUTPUT "spooldir on host $exec_host is $spooldir"
-
+#            -i $sp_id $LOCAL_CONFIG_FOR_HOST {
+#               puts $CHECK_OUTPUT "\n -->testsuite: reconfigure configuration for spool dir\n"
+#               set spooldir [get_spool_dir $exec_host execd]
+#               puts $CHECK_OUTPUT "spooldir on host $exec_host is $spooldir"
+#
 #               if { $spooldir != "" } {
 #                  set params(execd_spool_dir) $spooldir
 #                  set_config params $exec_host
 #                  set local_execd_spool_set 1 
 #               }
-               log_user 1
-               continue; 
-            }
+#               log_user 1
+#               continue; 
+#            }
 
             -i $sp_id $ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER {
                puts $CHECK_OUTPUT "\n -->testsuite: reconfigure configuration for spool dir\n"
-               set spooldir [get_spool_dir $exec_host execd]
+               set spooldir [get_spool_dir $exec_host execd 0]
                puts $CHECK_OUTPUT "spooldir on host $exec_host is $spooldir"
 
                   if {$do_log_output == 1} {

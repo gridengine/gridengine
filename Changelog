@@ -1,3 +1,6 @@
+CR-2004-02-09-0: Testsuite: Fixed install_core_system test on hosts where
+                            no local spool directory is defined.
+
 AA-2004-02-09-0: Bugfix:    wrong define in basis_types.h leads to execd
                             crash
                  Changed:   all

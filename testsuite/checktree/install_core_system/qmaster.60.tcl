@@ -770,6 +770,11 @@ proc install_qmaster {} {
 
       -i $sp_id $ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING {
          set spooldir [get_spool_dir $CHECK_CORE_MASTER spooldb 1]
+  
+         if { $spooldir == "" } {
+            set spooldir "/tmp/db_spool/$CHECK_COMMD_PORT"
+         }
+
          puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
          if {$do_log_output == 1} {
             puts "press RETURN"

@@ -913,14 +913,6 @@ if ( $DEBUGGED && $USE_QMAKE ) then
    set MAKEOPT = "-verbose $MAKEOPT"
 endif
 
-if ( $JAVA > 0 || $BUILDJAVADOC == 1 || $JNI == 1 ) then
-   # Make sure we can find JAVA_HOME
-   if ( ${?JAVA_HOME} == 0 ) then
-      echo "Please set JAVA_HOME"
-      exit
-   endif
-endif
-
 set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD $SECFLAGS"
 
 #---------------------------------------------------------------------------
@@ -954,6 +946,15 @@ endif
 if ( "$COMPILE_DIR" != "" ) then
    if (! -d $COMPILE_DIR) then
       mkdir $COMPILE_DIR
+   endif
+endif
+
+#---------------------------------------------------------------------------
+if ( $JAVA > 0 || $BUILDJAVADOC == 1 || $JNI == 1 ) then
+   # Make sure we can find JAVA_HOME
+   if ( ${?JAVA_HOME} == 0 ) then
+      echo "Please set JAVA_HOME"
+      exit
    endif
 endif
 

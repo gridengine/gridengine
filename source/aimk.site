@@ -122,7 +122,6 @@ if ( ! $?JAVA_HOME ) then
 
    if ( -e "$JAVA_BIN" ) then
       set JAVA_HOME = `expr //$JAVA_BIN : '//\(.*\)/bin/.*'`
-      echo Using $JAVA_HOME for JAVA_HOME
    endif
 endif
 

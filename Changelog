@@ -1,3 +1,5 @@
+JG-2005-01-03-0: Bugfix:    Fixed aimk -no-mk.
+
 DT-2005-01-03-0: Docs       o Updated DRMAA-J howto and README
                             o Removed javadoc.clean from clean target
                  Bugfix:    o Fixed missing qtask args in qtcsh

@@ -10617,7 +10617,7 @@ proc run_tests { path runcompleted } {
     global CHECK_DIRECTORIES CHECK_OUTPUT CHECK_HOST check_errstr CHECK_RESULT_DIR
     global CHECK_MAILS_SENT CHECK_ENABLE_MAIL CHECK_MAX_ERROR_MAILS CHECK_CORE_RESULT_DIR
     global CHECK_CHECKTREE_ROOT CHECK_ACT_PATH check_use_installed_system
-    global check_reinit_on_tcl_error CHECK_CORE_MASTER
+    global check_reinit_on_tcl_error CHECK_CORE_MASTER CHECK_PRODUCT_ROOT CHECK_ARCH
 
     set CHECK_DIRECTORIES ""
     get_check_dirs $path 
@@ -10740,6 +10740,11 @@ proc run_tests { path runcompleted } {
      
                             if { $check_reinit_on_tcl_error == 1 } {
                                # reinit system
+                               puts $CHECK_OUTPUT "deleting all jobs"
+                               catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
+                               puts $CHECK_OUTPUT $catch_result
+                               wait_for_end_of_all_jobs 60
+
                                set save_installed_value $check_use_installed_system
                                set save_CHECK_ACT_PATH $CHECK_ACT_PATH
                                set check_use_installed_system 1
@@ -10770,6 +10775,12 @@ proc run_tests { path runcompleted } {
                             }
                             if { $check_reinit_on_tcl_error == 1 } {
                                # reinit system
+                               # reinit system
+                               puts $CHECK_OUTPUT "deleting all jobs"
+                               catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
+                               puts $CHECK_OUTPUT $catch_result
+                               wait_for_end_of_all_jobs 60
+
                                set save_installed_value $check_use_installed_system
                                set save_CHECK_ACT_PATH $CHECK_ACT_PATH
                                set check_use_installed_system 1

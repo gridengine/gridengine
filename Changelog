@@ -1,3 +1,8 @@
+CR-2003-06-03-0: Testsuite: - delete all jobs before reinitialize system after
+                              test failure
+                            - bugs/issuezilla/440: fixed parsing problem on
+                              hosts with login messages
+
 AH-2003-06-03-0: Testsuite: Added DRMAA API tests.
                  Review:    JG           
                             

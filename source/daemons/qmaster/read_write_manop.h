@@ -35,7 +35,7 @@
 
 
 int read_manop(int target);
-int write_manop(int target);
+int write_manop(int spool, int target);
 
 #endif /* _READ_WRITE_MANOP_H */
 

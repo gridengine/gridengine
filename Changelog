@@ -1,3 +1,7 @@
+EB-2001-07-25-0: (Issue# 5) qmaster - qconf:
+                 - qconf -so|sm does not show comments anymore. 
+                 - Comments will only be inserted into spoolfiles. 
+
 CR-2001-07-25-0: Testsuite:
                     - reading CHECK_GROUP and CHECK_USER global variables from
                       check.exp file attributes if environment variables GROUP 

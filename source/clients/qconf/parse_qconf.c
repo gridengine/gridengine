@@ -102,6 +102,7 @@
 #include "msg_gdilib.h"
 #include "sge_stat.h" 
 #include "msg_common.h"
+#include "sge_spoolmsg.h"
 
 static int sge_edit(char *fname);
 static int sge_next_is_an_opt(char **ptr);
@@ -4302,11 +4303,17 @@ char *name
    }
 
    if (lp) {
-      for_each (ep, lp)
-         printf("%s\n", lGetString(ep, keynm));
-   }
-   else
+      for_each (ep, lp) {
+         char *line;
+
+         line = lGetString(ep, keynm);
+         if (line && line[0] != COMMENT_CHAR) { 
+            printf("%s\n", lGetString(ep, keynm));
+         }
+      }
+   } else {
       fprintf(stderr, MSG_QCONF_NOXDEFINED_S, name);
+   }
    
    lFreeList(alp);
    lFreeList(lp);

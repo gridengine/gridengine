@@ -868,5 +868,6 @@
 #define MSG_PEREFINJOB_SU                            _MESSAGE(33700, _("Pe "SFQ" is still referenced in job "U32CFormat".\n"))
 #define MSG_QMASTER_TIGHTLYINTEGRATEDARRAYJOB        _MESSAGE(33701, _("Cannot submit tightly integrated parallel array job. Please use loose integration or non array jobs.\n"))
 #define MSG_QMASTER_PRJINCORRECT_S                   _MESSAGE(33702, _("Spoolfile for project "SFQ" containes invalid name\n"))
+#define MSG_JOB_DEADLINETIME                         _MESSAGE(33703, _("deadline time"))
 
 #endif /* __MSG_QMASTER_H */

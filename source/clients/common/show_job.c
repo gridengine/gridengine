@@ -141,6 +141,10 @@ DTRACE;
       if ((ultime = lGetUlong(job, JB_execution_time)))
          printf("execution_time:             %s", ctime((time_t *) &ultime));
 
+   if (lGetPosViaElem(job, JB_deadline)>=0)
+      if ((ultime = lGetUlong(job, JB_deadline))) 
+         printf("deadline:                   %s", ctime((time_t *) &ultime));
+
    if (lGetPosViaElem(job, JB_account)>=0)
       if (lGetString(job, JB_account))
          printf("account:                    %s\n", lGetString(job, JB_account));

@@ -1,3 +1,9 @@
+MD-2004-03-22-0: Bugfix:    qalter lacks -dl option
+                            qstat crashes with qstat -u ""
+                 Changed:   qstat, qalter, parse.c
+                 Issue:     #599, #600
+                 Review:    AA
+
 JG-2004-03-17-0: Bugfix:    fixed race condition in sge_shepherd (qlogin_starter
                             for qlogin/qrsh jobs).
                  Changed:   sge_shepherd

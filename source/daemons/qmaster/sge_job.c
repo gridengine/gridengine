@@ -2336,6 +2336,22 @@ int *trigger
 
    }
 
+   /* ---- JB_deadline */
+   /* If it is a deadline job the user has to be a deadline user */
+   if ((pos=lGetPosViaElem(jep, JB_deadline))>=0) {
+      if (!is_deadline_user(ruser, Master_Userset_List)) {
+         ERROR((SGE_EVENT, MSG_JOB_NODEADLINEUSER_S, ruser));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_ENOOPR, 0);
+         DEXIT;
+         return STATUS_ENOOPR;
+      } else {
+         lSetUlong(new_job, JB_deadline, lGetUlong(jep, JB_deadline));
+         *trigger |= MOD_EVENT;
+         sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_DEADLINETIME, u32c(jobid)); 
+         sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+      }
+   }
+
    /* ---- JB_execution_time */
    if ((pos=lGetPosViaElem(jep, JB_execution_time))>=0) {
       DPRINTF(("got new JB_execution_time\n")); 

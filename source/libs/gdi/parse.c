@@ -326,7 +326,7 @@ lListElem *ep; /* SPA_Type */
            && !strncmp(shortopt, *sp, strlen(shortopt)-1)) 
         || (longopt && (longopt[strlen(longopt)-1] == '*')
            && !strncmp(longopt, *sp, strlen(longopt)-1)) ) {
-      if(!*(++rp) || (**rp == '-')) {
+      if(!*(++rp) || (**rp == '-') || (!**rp)) {
          sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, *sp);
          sge_add_answer(alpp, str, STATUS_ESEMANTIC, 0);
          DEXIT;

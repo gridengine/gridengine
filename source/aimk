@@ -1867,5 +1867,5 @@ if ( "$ADOC" == 1) then
    echo "texi2pdf libs.texi"
 endif
 
-ech o done.
+echo done.
 exit 0

@@ -1018,8 +1018,8 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 
    if (check && *job_list &&
        lGetElemUlong(*job_list, JB_job_number, lGetUlong(job, JB_job_number))) {
-      ERROR((SGE_EVENT, MSG_JOB_JOBALREADYEXISTS_U, 
-             u32c(lGetUlong(job, JB_job_number))));
+      ERROR((SGE_EVENT, MSG_JOB_JOBALREADYEXISTS_S, 
+             job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL)));
       DEXIT;
       return -1;
    }
@@ -1755,19 +1755,16 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
 *     Returns an id string for a certain job, ja task or pe task.
 *     The function should be used in any code that outputs ids, e.g. in error
 *     strings to ensure we have the same output format everywhere.
+*     If the ja_task_id is 0, only the job id is output.
 *
 *  INPUTS
 *     u_long32 job_id        - the job id
-*     u_long32 ja_task_id    - the ja task id
+*     u_long32 ja_task_id    - the ja task id or 0 to output only job_id
 *     const char *pe_task_id - optionally the pe task id
 *
 *  RESULT
 *     const char* - pointer to a static buffer. It is valid until the next
 *                   call of the function.
-*
-*  NOTES
-*     It should be possible to suppress output of the ja task id (only output
-*     the job id), e.g. by passing 0 as ja task id.
 *
 *******************************************************************************/
 const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id)
@@ -1775,13 +1772,17 @@ const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, const char *
    static dstring id = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "job_get_id_string");
-   
-   if(pe_task_id == NULL) {
-      sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_ID_UU,
-                          job_id, ja_task_id);
+
+   if(ja_task_id == 0) {
+      sge_dstring_sprintf(&id, MSG_JOB_JOB_ID_U, job_id);
    } else {
-      sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_PETASK_ID_UUS,
-                         job_id, ja_task_id, pe_task_id);
+      if(pe_task_id == NULL) {
+         sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_ID_UU,
+                             job_id, ja_task_id);
+      } else {
+         sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_PETASK_ID_UUS,
+                            job_id, ja_task_id, pe_task_id);
+      }
    }
    
    DEXIT;

@@ -68,7 +68,7 @@
 #include "setup_path.h" 
 #include "sge_afsutil.h"
 #include "sge_conf.h"
-#include "sge_jobL.h"
+#include "sge_job_jatask.h"
 #include "sge_qexec.h"
 #include "qm_name.h"
 #include "sge_pgrp.h"
@@ -77,13 +77,13 @@
 #include "jb_now.h"
 #include "sge_security.h"
 #include "sge_answer.h"
+#include "sge_var.h"
 
 #include "msg_clients_common.h"
 #include "msg_qsh.h"
 #include "msg_common.h"
 
 void write_client_name_cache(const char *cache_path, const char *client_name);
-static void add2env(lList **envlpp, const char *name, const char *value);
 static int open_qrsh_socket(int *port);
 static int wait_for_qrsh_socket(int sock, int timeout);
 static char *read_from_qrsh_socket(int msgsock);
@@ -233,47 +233,6 @@ static void forward_signal(int sig)
       kill(child_pid, sig);
    }
    DEXIT;
-}
-
-/****** Interactive/qsh/add2env() ***************************************
-*
-*  NAME
-*     add2env -- add entry to environment list
-*
-*  SYNOPSIS
-*     static void add2env(lList **envlpp, const char *name, const char *value);
-*
-*  FUNCTION
-*     Adds an entry to an environment list.
-*     If the environment list does not yet exist (envlpp == NULL),
-*     a new list is created and passed back to caller.
-*
-*  INPUTS
-*     envlpp - reference to pointer to environment list, the list will be
-*              modified by add2env
-*     name   - name of the environment variable
-*     value  - value of the environment variable
-*
-*  RESULT
-*     no return value, function changes contents of list envlpp
-*
-*  NOTES
-*     Function should be moved to some library - the same code is contained
-*     in other modules.
-*
-****************************************************************************
-*
-*/
-static void
-add2env(lList **envlpp, const char *name, const char *value)
-{
-   lListElem      *vep;
-
-   vep = lAddElemStr(envlpp, VA_variable, name, VA_Type);
-   if (value)
-      lSetString(vep, VA_value, value);
-
-   return;
 }
 
 /****** Interactive/qsh/open_qrsh_socket() ***************************************
@@ -1329,7 +1288,7 @@ void set_command_to_env(lList *envlp, lList *opts_qrsh)
    fflush(stdout); fflush(stderr);
 #endif
 
-   add2env(&envlp, "QRSH_COMMAND", buffer);
+   var_list_set_string(&envlp, "QRSH_COMMAND", buffer);
 }
 
 int main(
@@ -1573,7 +1532,7 @@ char **argv
          lSetList(job, JB_env_list, envlp);
       }   
 
-      add2env(&envlp, "QRSH_PORT", buffer);
+      var_list_set_string(&envlp, "QRSH_PORT", buffer);
       set_command_to_env(envlp, opts_qrsh);
    }
 
@@ -1585,7 +1544,7 @@ char **argv
       lList *envlp = lGetList(job, JB_env_list);
 
       if((wrapper = getenv("QRSH_WRAPPER")) != NULL) {
-         add2env(&envlp, "QRSH_WRAPPER", wrapper);
+         var_list_set_string(&envlp, "QRSH_WRAPPER", wrapper);
       }
    }
 
@@ -1721,7 +1680,8 @@ char **argv
                   break;
                }
    
-               VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D, u32c(job_id)));
+               VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S, 
+                            job_get_id_string(job_id, 0, NULL)));
                VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, client_name, host));
 
                exit_status = start_client_program(client_name, opts_qrsh, host, port, job_dir, utilbin_dir,
@@ -1791,7 +1751,8 @@ char **argv
    
             case JRUNNING:
             case JTRANSFERING:
-               VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D, u32c(job_id)));
+               VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S, 
+                            job_get_id_string(job_id, 0, NULL)));
    
                /* in case of qlogin: has been scheduled / is transitting just after */
                /* timeout -> loop */

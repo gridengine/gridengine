@@ -41,7 +41,7 @@
 #define MSG_QSH_WAITINGFORINTERACTIVEJOBTOBESCHEDULED    _("waiting for interactive job to be scheduled ...")
 #define MSG_QSH_REQUESTFORINTERACTIVEJOBHASBEENCANCELED    _("\nRequest for interactive job has been canceled.\n")
 #define MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S    _("Your \"%s\" request could not be scheduled, try again later.\n")
-#define MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D    _("\nYour interactive job " U32CFormat" has been successfully scheduled.\n")
+#define MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S    _("\nYour interactive job "SFN" has been successfully scheduled.\n")
 #define MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS    _("Establishing %s session to host %s ...\n")
 #define MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER    _("\nCannot get configuration from qmaster.\n")
 #define MSG_JOB_CANTGETHOSTOFJOB    _("Cannot get host of job.\n")

@@ -147,7 +147,7 @@ void var_list_set_string(lList **varl, const char *name,
 {
    lListElem *elem;
 
-   DENTER(TOP_LAYER, "var_list_add_or_repalce_string");
+   DENTER(TOP_LAYER, "var_list_set_string");
    if (varl == NULL || name == NULL || value == NULL) {
       DEXIT;
       return;

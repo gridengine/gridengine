@@ -1,3 +1,9 @@
+AA-2002-01-24-0: Feature: Security:
+                          - sge_ca script changes: rand file generation
+                                                   check of dn
+                          - rand file search paths
+                          - GCC_NO_STRICT_PROTO for alinux
+
 JG-2002-01-24-1: Testsuite: New test "large_cluster" testing performance and
                             scalability of a Grid Engine cluster.
                             Simulating a large cluster using the simulation

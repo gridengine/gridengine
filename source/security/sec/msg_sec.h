@@ -41,6 +41,7 @@
 #define MSG_SEC_CAKEYFILENOTFOUND_S      _("CA private key "SFQ" doesn't exist\n")
 #define MSG_SEC_CACERTFILENOTFOUND_S     _("CA certificate "SFQ" doesn't exist\n")
 #define MSG_SEC_KEYFILENOTFOUND_S        _("key "SFQ" doesn't exist\n")
+#define MSG_SEC_RANDFILENOTFOUND_S        _("random data file "SFQ" doesn't exist\n")
 #define MSG_SEC_CERTFILENOTFOUND_S       _("certificate "SFQ" doesn't exist\n")
 #define MSG_SEC_USERNOTFOUND_S           _("user "SFQ" not found in password database\n")
 #define MSG_SEC_RANDFILENOTSET           _("RANDFILE environment variable not set")

@@ -72,6 +72,7 @@
 #define CA_LOCAL_DIR    "/var/sgeCA"
 #define UserKey         "key.pem"
 #define UserCert        "cert.pem"
+#define RandFile        "rand.seed"
 #define ReconnectFile   "private/reconnect.dat"
 
 
@@ -245,6 +246,7 @@ static char *ca_cert_file;
 static char *key_file;
 static char *cert_file;
 static char *reconnect_file;
+static char *rand_file;
 
 
 
@@ -271,6 +273,7 @@ int sec_init(const char *progname)
 {
    static int sec_initialized = 0;
    char *randfile = NULL;
+   SGE_STRUCT_STAT file_info;
 
    DENTER(GDI_LAYER,"sec_init");
 
@@ -283,21 +286,6 @@ int sec_init(const char *progname)
    ** set everything to zero
    */
    memset(&gsd, 0, sizeof(gsd));
-
-   /* 
-   ** FIXME: rand seed needs to be improved
-   */
-/*    RAND_egd("/tmp/egd"); */
-   if (!RAND_status()) {
-      randfile = getenv("RANDFILE");
-      if (randfile) {
-         RAND_load_file(randfile, 2048);
-      } else {   
-         ERROR((SGE_EVENT, MSG_SEC_RANDFILENOTSET));
-         DEXIT;
-         return -1;
-      }
-   }
 
    /*
    ** initialize error strings
@@ -317,6 +305,29 @@ int sec_init(const char *progname)
       gsd.is_daemon = 1;
    else
       gsd.is_daemon = 0;
+
+   /* 
+   ** setup the filenames of certificates, keys, etc.
+   */
+   sec_setup_path(gsd.is_daemon);
+
+   /* 
+   ** seed PRNG, /dev/random is used if possible
+   ** if RANDFILE is set it is used
+   ** otherwise rand_file is used
+   */
+   if (!RAND_status()) {
+      randfile = getenv("RANDFILE");
+      if (!SGE_STAT(randfile, &file_info)) {
+         RAND_load_file(randfile, 2048);
+      } else if (rand_file) {   
+         RAND_load_file(rand_file, 2048); 
+      } else {
+         ERROR((SGE_EVENT, MSG_SEC_RANDFILENOTSET));
+         DEXIT;
+         return -1;
+      }
+   }
 
    /* 
    ** FIXME: init all the other stuff
@@ -343,11 +354,6 @@ int sec_init(const char *progname)
    }   
 
    gsd.connid = gsd.seq_send = gsd.connect = gsd.seq_receive = 0;
-
-   /* 
-   ** setup the filenames of certificates, keys, etc.
-   */
-   sec_setup_path(gsd.is_daemon);
 
    /* 
    ** read security related files
@@ -2540,12 +2546,33 @@ int is_daemon
                                  strlen(me.user_name) + strlen(UserKey) + 4);
          sprintf(key_file, "%s/%s/%s/%s", ca_local_root, "userkeys", me.user_name, UserKey);
       }   
+
+      if (!RAND_status()) {
+         rand_file = sge_malloc(strlen(user_local_dir) + strlen("private") + strlen(RandFile) + 3);
+         sprintf(rand_file, "%s/private/%s", user_local_dir, RandFile);
+
+         if (SGE_STAT(rand_file, &sbuf)) { 
+            free(rand_file);
+            rand_file = sge_malloc(strlen(ca_local_root) + strlen("userkeys") + 
+                                    strlen(me.user_name) + strlen(RandFile) + 4);
+            sprintf(rand_file, "%s/%s/%s/%s", ca_local_root, "userkeys", me.user_name, RandFile);
+         }   
+      }   
    }
    if (SGE_STAT(key_file, &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SEC_KEYFILENOTFOUND_S, key_file));
       SGE_EXIT(1);
    }
    DPRINTF(("key_file: %s\n", key_file));
+
+   if (!RAND_status()) {
+      if (SGE_STAT(rand_file, &sbuf)) { 
+         WARNING((SGE_EVENT, MSG_SEC_RANDFILENOTFOUND_S, rand_file));
+      }
+      else {
+         DPRINTF(("rand_file: %s\n", rand_file));
+      }   
+   }    
 
    cert_file = sge_malloc(strlen(userdir) + strlen("certs") + strlen(UserCert) + 3);
    sprintf(cert_file, "%s/certs/%s", userdir, UserCert);

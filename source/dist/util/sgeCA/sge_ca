@@ -275,17 +275,8 @@ MakeCAcert()
          Execute cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
 
          umask 077
-         if [ "$RANDFILE" = "" ]; then
-            if [ -f /kernel/genunix ]; then
-               rfile=/kernel/genunix
-            elif [ -f /bin/vi ]; then
-               rfile=/bin/vi
-            fi
-            RANDFILE=$CALOCALTOP/private/rand.seed; export RANDFILE
-            Translate 0 "Creating RANDFILE from >%s< in >%s<" $rfile $RANDFILE
-            $ECHO
-            ExecuteAsAdmin $OPENSSL rand -rand $rfile -out $RANDFILE 1024
-         fi
+	 
+         MakeRandFile $CALOCALTOP/private/rand.seed
 
          Translate 0 "Creating CA certificate and private key"
          $ECHO
@@ -308,6 +299,26 @@ MakeCAcert()
       fi
    done
    WaitClear clear
+}
+
+#--------------------------------------------------------------------------
+# MakeRandFile create a random data file
+#  
+# $1 = <randfilename>
+#
+MakeRandFile()
+{
+         if [ "$RANDFILE" = "" ]; then
+            if [ -f /kernel/genunix ]; then
+               rfile=/kernel/genunix
+            elif [ -f /bin/vi ]; then
+               rfile=/bin/vi
+            fi
+            RANDFILE=$1; export RANDFILE
+            Translate 0 "Creating RANDFILE from >%s< in >%s<" $rfile $RANDFILE
+            $ECHO
+            ExecuteAsAdmin $OPENSSL rand -rand $rfile -out $RANDFILE 2048
+         fi
 }
 
 #--------------------------------------------------------------------------
@@ -336,11 +347,13 @@ MakeCert()
       KEYFILE=$CALOCALTOP/private/key.pem
       REQFILE=$CALOCALTOP/private/req.pem
       CERTFILE=$CATOP/certs/cert.pem
+      RSFILE=$CALOCALTOP/private/rand.seed
    else
       KEYDIR=$CALOCALTOP/userkeys/$2
       KEYFILE=$KEYDIR/key.pem
       REQFILE=$KEYDIR/req.pem
       CERTFILE=$KEYDIR/cert.pem
+      RSFILE=$KEYDIR/rand.seed
       Execute $RM -rf $KEYDIR
       ExecuteAsAdmin $MKDIR $KEYDIR
    fi
@@ -348,6 +361,9 @@ MakeCert()
    if [ $rootinstalls = true ]; then
       umask 077
    fi
+
+   # create rand.seed file
+   MakeRandFile $RSFILE
 
    # create a certificate request
    ExecuteAsAdmin $REQ -config $TMPFILE1 -new -keyout $KEYFILE -out $REQFILE $DAYS

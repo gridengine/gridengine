@@ -1,3 +1,5 @@
+JG-2003-05-09-0  Bugfix:    Broken build
+
 AH-2003-05-08-0  Enhancem.: Use commd commproc timeout as maximum for event delivery time. 
                             Introduced EV_THROTTLE_FLUSH "busy handling" to facilitate
                             large number of JAPI event clients. 

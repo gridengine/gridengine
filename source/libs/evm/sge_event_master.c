@@ -1620,8 +1620,8 @@ sge_total_update_event(lListElem *event_client, ev_event type)
    dstring buffer_wrapper;
    const char *session;
    bool do_select = false;
-   lCondition *selection;
-   lEnumeration *fields;
+   lCondition *selection = NULL;
+   lEnumeration *fields = NULL;
 
    DENTER(TOP_LAYER, "sge_total_update_event");
 

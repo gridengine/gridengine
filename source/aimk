@@ -294,6 +294,7 @@ usage:
    echo "-gcc              -> use gcc instead of system compiler (where supported)"
    echo "-gettext          -> build the gettext libraries"
    echo "-gprof            -> enable gprof profiling"
+   echo "-gcov             -> enable gcov code coverage testing"
    echo "-gss              -> enable gss security"
    echo "-help             -> show this help"
    echo "-htmlman          -> generate man and html pages"
@@ -368,6 +369,7 @@ set WITH_USERMAPPING = 0 # Compile without usermapping feature
 # Default Flags and Libraries 
 set OPTIMIZATION     = 1
 set GPROFFED         = 0
+set GCOVED           = 0
 set DEBUGGED         = 0
 set COMPILE_DC       = 0
 set CC               = cc
@@ -590,6 +592,10 @@ while ($#argv >= 1 && $?found)
    case "-gprof":
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
       set GPROFFED   = 1
+      set STRIP      = "echo"
+      breaksw
+   case "-gcov":
+      set GCOVED     = 1
       set STRIP      = "echo"
       breaksw
    case "-gss":
@@ -940,8 +946,13 @@ case DARWIN:
       set DEBUG_FLAG = "-g"
       set OFLAG = ""
    endif
+
    if ( $GPROFFED == 1) then
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
+   endif
+
+   if ($GCOVED == 1) then
+      set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage"
    endif
 
    set REL = `/usr/bin/uname -r`
@@ -1149,8 +1160,13 @@ case LINUXIA64:
       set DEBUG_FLAG = "-g $INSURE_FLAG"
       set OFLAG = ""
    endif
+
    if ($GPROFFED == 1) then
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
+   endif
+
+   if ($GCOVED == 1) then
+      set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage"
    endif
 
    if ( -f /lib/libc.so.6 ) then

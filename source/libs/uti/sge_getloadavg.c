@@ -289,7 +289,9 @@ long *address
 static int sge_get_kernel_fd(
 kernel_fd_type *fd 
 ) {
+#if !(defined(IRIX) || defined(HP10) || defined(ALPHA4) || defined(ALPHA5) || defined(AIX51))
    char prefix[256] = "my_error:";
+#endif   
 
    DENTER(TOP_LAYER, "sge_get_kernel_fd");
 

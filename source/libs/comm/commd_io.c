@@ -402,7 +402,7 @@ int writenbytes_nb(int sfd, const char *ptr, int n, int timeout)
       }
       else if (j == -1 && errorcode == EPIPE) {
          DEXIT;
-         return -4;
+         return -4; /* this causes COMMD_NACK_ENROLL */
       }
 #ifndef WIN32NATIVE
       else if (j == -1 && !(errorcode == EWOULDBLOCK || errorcode == EAGAIN)) 

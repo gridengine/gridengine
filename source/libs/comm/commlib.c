@@ -530,7 +530,7 @@ u_short compressed
    u_long flags = 0;
    u_long newmid;
    int retry;
-   const int max_retrys = 3;
+   const int max_retrys = 1;
 
    DENTER(COMMD_LAYER, "send_message_");
 
@@ -679,16 +679,23 @@ u_short compressed
       commlib_state_set_timeout(old_param_timeout);
 
       DPRINTF(("send_message: acknowledge recvfromcommd returned %d\n", i));
-      if ((unsigned int) ackchar == COMMD_NACK_ENROLL) {
+      if (i == CL_READ || (i == CL_OK && (unsigned int) ackchar == COMMD_NACK_ENROLL)) {
          /* This happens, when commd goes down and is now up again. He lost
-            the enroll()-information. We have to renew this. */
-         closeconnection(1);
-         i = force_reenroll();
-         if (i) {
-            DEXIT;
-            return ackchar;
-         }
-         continue;              /* send again */
+            the enroll()-information. We have to renew this. 
+            It happens also when the commproc timed out at commd. */
+         if (retry <= max_retrys) {
+            closeconnection(1);
+            force_reenroll();
+            retry++;
+            DPRINTF(("send_message: receiving message buffer "
+               "- %d retry\n", retry));
+            continue; 
+         } else {
+            DPRINTF(("send_message: receiving message buffer "
+               "- no retry\n"));
+         }               
+         DEXIT;
+         return ackchar;
       }
       closeconnection(0);
       if (i) {
@@ -1917,7 +1924,7 @@ int recvfromcommd(unsigned char **buffer, unsigned char *header, int n,
    *buffer = (unsigned char *) bptr;
 
    DEXIT;
-   return 0;
+   return CL_OK;
 }
 
 /***********************************/

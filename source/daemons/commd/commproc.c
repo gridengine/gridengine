@@ -51,7 +51,7 @@ commproc *commprocs = NULL;
 
 /* Timeout value of commproc structures. If a commproc is not active for
    a longer time he is considered dead. */
-static u_long commproc_timeout = COMMPROC_TIMEOUT;
+static const u_long commproc_timeout = COMMPROC_TIMEOUT;
 
 /* search for a commproc in list of all known commprocs who matches the 
    address */
@@ -430,8 +430,15 @@ u_long now
       }
 
       if (now - commp->lastaction > commproc_timeout) {
-         ERROR((SGE_EVENT, MSG_COMMPROC_INACTIVEFOR_SIU ,
-                commp->name, (int) commp->id, u32c((now - commp->lastaction)) ));
+         const char *host;
+         if (commp->host)
+            host = sge_host_get_mainname(commp->host);
+         else
+            host = "(null)";
+
+         ERROR((SGE_EVENT, MSG_COMMPROC_INACTIVEFOR_SISU ,
+                commp->name, (int) commp->id, host, 
+                u32c((now - commp->lastaction))));
          next = commp->next;
          delete_commproc(commp);
          commp = next;

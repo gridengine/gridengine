@@ -153,7 +153,7 @@
 #define MSG_COMMPROC_ANY                          _MESSAGE(39094, _("any"))
 #define MSG_COMMPROC_NONE                         _MESSAGE(39095, _("none"))
 #define MSG_COMMPROC_ON_HOST_S                    _MESSAGE(39096, _("on host "SFN"\n"))
-#define MSG_COMMPROC_INACTIVEFOR_SIU              _MESSAGE(39097, _("commproc "SFN":%d was inactive for "U32CFormat" seconds" ))
+#define MSG_COMMPROC_INACTIVEFOR_SISU             _MESSAGE(39097, _("commproc "SFN":%d at host "SFN" was inactive for "U32CFormat" seconds" ))
 
 /* 
 ** commd/process_received_message.c

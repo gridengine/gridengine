@@ -1,3 +1,11 @@
+AH-2003-05-08-0  Bugfix:    Fix reopend bug "qconf gets commd timeout".
+                            Improved commd commproc timeout logging.
+                            Do only one retry in commlib to transparently reenroll 
+                            to commd. 
+                 Issue:     308
+                 Bugtraq:   4753669
+                 Review:    AS
+
 EB-2003-05-08-0  Bugfix:    settings.[c]sh did not set LD_LIBRARY_PATH
                             correctly if multiple GE installations are present
                  Review:    AS

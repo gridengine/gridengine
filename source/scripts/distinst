@@ -735,7 +735,7 @@ if [ $instcommon = true ]; then
             chmod 644 $DEST_SGE_ROOT/security/$fb
          fi
       done
-      Execute ln -s $DEST_SGE_ROOT/security/gss_customer.html $DEST_SGE_ROOT/security/README.html
+      Execute ln -s gss_customer.html $DEST_SGE_ROOT/security/README.html
    fi      
 
    # Set file and directory permissions to 755/644 and owner to 0.0

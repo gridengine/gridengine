@@ -1,3 +1,7 @@
+SD-2001-12-07-1: Bugfix:    Fixed ln command in distinst when creating security
+                            distribution.
+                 Issue:     None (Fix of Cleanup: SD-2001-12-06-4)
+
 EB-2001-12-07-0: Bugfix:    Reanimated code for 'qconf -sep'
                  Issue:     None (Bug only appeared in beta1)
 

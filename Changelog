@@ -1,3 +1,8 @@
+EB-2003-12-15-1: Bugfix:    fixed bugs
+                 * "qconf -aq test" without modification caused error message
+                 * no output concerning complex entries during master startup
+                 * added new cqueue related funtions for qmon
+
 JG-2003-12-15-0: Bugfix:    Fixed build for solaris86.
 
 EB-2003-12-15-0: Bugfix:    removed unused messages   

@@ -211,7 +211,8 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
 }
 
 bool 
-cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list)
+cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
+                              bool ignore_unchanged_message)
 {
    bool ret = false;
    int status = 0;
@@ -227,7 +228,8 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list)
          cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
          if (cqueue != NULL) {
             if (object_has_differences(*this_elem, answer_list, 
-                                       cqueue, false)) {
+                                       cqueue, false) ||
+                ignore_unchanged_message) {
                *this_elem = lFreeElem(*this_elem);
                *this_elem = cqueue; 
                ret = true;
@@ -265,7 +267,7 @@ cqueue_add(lList **answer_list, const char *name)
          ret &= cqueue_set_template_attributes(cqueue, answer_list);
       }
       if (ret) {
-         ret &= cqueue_provide_modify_context(&cqueue, answer_list);
+         ret &= cqueue_provide_modify_context(&cqueue, answer_list, true);
       }
       if (ret) {
          ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
@@ -316,7 +318,7 @@ cqueue_modify(lList **answer_list, const char *name)
          ret = false;
       }
       if (ret) {
-         ret &= cqueue_provide_modify_context(&cqueue, answer_list);
+         ret &= cqueue_provide_modify_context(&cqueue, answer_list, false);
       }
       if (ret) {
          ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 

@@ -45,7 +45,8 @@ cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
                            u_long32 gdi_command);
 
 bool 
-cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list);
+cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
+                              bool ignore_unchanged_message);
 
 bool
 cqueue_show(lList **answer_list, const lList *qref_pattern);

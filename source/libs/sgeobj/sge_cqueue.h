@@ -177,4 +177,12 @@ cqueue_list_set_tag(lList *this_list, u_long32 tag_value, bool tag_qinstances);
 lListElem *
 cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name);
 
+bool
+cqueue_find_used_href(lListElem *this_elem, lList **answer_list, 
+                      lList **href_list);
+
+bool  
+cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list,
+                               const char *hgroup_or_hostname);
+
 #endif /* __SGE_CQUEUE_H */

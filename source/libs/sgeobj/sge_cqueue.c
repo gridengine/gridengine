@@ -1323,3 +1323,73 @@ cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name)
    return ret;
 }
 
+bool
+cqueue_find_used_href(lListElem *this_elem, lList **answer_list, 
+                      lList **href_list) 
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_find_used_href");
+   if (this_elem != NULL) {
+      int index;
+
+      while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
+         int pos = lGetPosViaElem(this_elem,
+                            cqueue_attribute_array[index].cqueue_attr);
+
+         if (pos >= 0) {
+            lList *list = lGetPosList(this_elem, pos);
+            lListElem *elem = NULL;
+
+            for_each(elem, list) {
+               const char *attr_hostname = lGetHost(elem, 
+                                 cqueue_attribute_array[index].href_attr);
+
+               ret = href_list_add(href_list, answer_list, attr_hostname);
+            }
+         }
+         index++;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list, 
+                               const char *hgroup_or_hostname) 
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_trash_used_href_setting");
+   if (this_elem != NULL) {
+      int index;
+
+      while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
+         int pos = lGetPosViaElem(this_elem,
+                            cqueue_attribute_array[index].cqueue_attr);
+
+         if (pos >= 0) {
+            lList *list = lGetPosList(this_elem, pos);
+            lListElem *elem = NULL;
+            lListElem *next_elem = NULL;
+
+            next_elem = lFirst(list);
+            while ((elem = next_elem) != NULL) {
+               const char *attr_hostname = lGetHost(elem, 
+                                 cqueue_attribute_array[index].href_attr);
+
+               next_elem = lNext(elem);
+
+               if (!sge_hostcmp(hgroup_or_hostname, attr_hostname)) {
+                  lRemoveElem(list, elem);
+printf("tashing %s\n", hgroup_or_hostname);
+               }
+            }
+         }
+         index++;
+      }
+   }
+   DEXIT;
+   return ret;
+}

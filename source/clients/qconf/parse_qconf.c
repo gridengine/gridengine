@@ -107,6 +107,7 @@
 #include "sge_qref.h"
 #include "sge_centry.h"
 #include "sge_attr.h"
+#include "sge_qinstance_state.h"
 
 #include "msg_common.h"
 #include "msg_qconf.h"
@@ -4060,6 +4061,22 @@ DPRINTF(("ep: %s %s\n",
          spp++;
          continue;
       }
+
+      /* "-cq destin_id[,destin_id,...]" */
+      if (!strcmp("-cq", *spp)) {
+         spp = sge_parser_get_next(spp);
+         lString2List(*spp, &lp, ID_Type, ID_str, ", ");
+         for_each(ep, lp) {
+            lSetUlong(ep, ID_action, QI_DO_CLEAN);
+         }
+         alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &lp, NULL, NULL);
+         answer_list_on_error_print_or_exit(&alp, stderr);
+         alp = lFreeList(alp);
+         lp = lFreeList(lp);
+         spp++;
+         continue;
+      }
+
 
 /*----------------------------------------------------------------------------*/
 

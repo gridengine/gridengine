@@ -244,6 +244,6 @@
 #define MSG_CQUEUE_NODEFVALUE_S        _MESSAGE(64228, _(SFQ" has no default value\n"))
 #define MSG_CQUEUE_MULVALNOTALLOWED_S  _MESSAGE(64229, _("Multiple values for one queue domain/host ("SFN") are not allowed\n"))
 #define MSG_CQUEUE_NOTINHOSTLIST_S     _MESSAGE(64230, _(SFQ" is not in hostlist but used in cluster queue definition\n"))
-#define MSG_CQUEUE_WRONGCHARINPRIO     _MESSAGE(64230, _("Invalid character\n"))
+#define MSG_CQUEUE_WRONGCHARINPRIO     _MESSAGE(64231, _("Invalid character\n"))
 
 #endif /* __MSG_SGEOBJLIB_H */

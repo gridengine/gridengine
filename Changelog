@@ -1,3 +1,6 @@
+HP-2005-02-14-0: Bugfix:    Set arch_variables for Windows
+                 Changed:   dist/util/arch_variables
+
 AA-2005-02-11-0: Bugfix:    amd64 bit qmon, what a stupid problem
                             a wrong define in aimk (MOTIF12_HEADERS)
                             was the reason for the problems under amd64

@@ -35,6 +35,9 @@ global check_functions
 lappend check_functions "qdel_verify"                ;# just print what would be done
 lappend check_functions "qdel_cleanup"
 
+global qdel_help_lines
+set qdel_help_lines 14
+
 #                                                             max. column:     |
 #****** qdel/qdel_verify() ******
 # 

@@ -551,6 +551,7 @@ proc qdel_delete_job_0 {} {
 #*******************************
 proc qdel_help {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_PRODUCT_VERSION_NUMBER CHECK_HOST
+   global qdel_help_lines
 
    set state [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-help" } output ]
 
@@ -570,8 +571,8 @@ proc qdel_help {} {
 
    puts $CHECK_OUTPUT "Output has $nr_of_lines lines"
 
-   if { $nr_of_lines != 14 } {
-      set_error -1 "help output has more than 14 lines"
+   if { $nr_of_lines != $qdel_help_lines } {
+      set_error -1 "help output hasn't $qdel_help_lines lines"
    }
 
    set_error 0 "ok"
@@ -706,7 +707,7 @@ proc qdel_delete_unknown_jobid {} {
    if {$ts_config(gridengine_version) == 53} {
       set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU] $last_jobid "5" "10" "2"]
    } else {
-      set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUUS] $last_jobid "5" "10" "2" $CHECK_USER]
+      set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUUS] $last_jobid "5" "9" "2" $CHECK_USER]
    }
    qdel_delete_unknown_jobid_proc $job_list "$default_output"
    delete_job $last_jobid 1

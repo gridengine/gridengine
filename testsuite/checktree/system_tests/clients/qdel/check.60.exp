@@ -33,3 +33,6 @@
 
 global check_functions 
 lappend check_functions "qdel_cleanup"
+
+global qdel_help_lines
+set qdel_help_lines 11

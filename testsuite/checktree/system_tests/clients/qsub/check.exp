@@ -2882,14 +2882,14 @@ proc check_option_S {} {
 #     ???/???
 #*******************************
 proc check_option_t {} {
-
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST 
+   global job_output_dir actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-t 1-2:-1"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 
 
    set result [submit_job $jobargs 0]
    if { $result != -20 } {
@@ -2897,7 +2897,7 @@ proc check_option_t {} {
    } 
  
    set option "-t 1-2:xx"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
 
    set result [submit_job $jobargs 0]
 
@@ -2967,8 +2967,8 @@ proc check_option_t {} {
 #     ???/???
 #*******************************
 proc check_option_v {} {
-
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST 
+   global job_output_dir actual_host
 
    # first clean up output directory:  
    setup_output_directory

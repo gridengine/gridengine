@@ -285,7 +285,7 @@ proc set_cqueue_specific_values { current_array change_array hostlist } {
          # dump host specific values to new_value
          set new_value $default_value
          foreach host [array names host_values] {
-            if {[string compare $default_value $host_values($host)] != 0} {
+            if {[string compare -nocase $default_value $host_values($host)] != 0} {
                append new_value ",\[$host=$host_values($host)\]"
             }
          }

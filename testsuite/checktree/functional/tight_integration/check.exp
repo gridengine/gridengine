@@ -122,6 +122,7 @@ proc tight_integration_setup  {} {
    add_pe pe
    set queue_conf(pe_list) tight
    set queue_conf(load_thresholds) "np_load_avg=11"
+   set queue_conf(slots) 10 
    add_queue tight.q @allhosts queue_conf
 
    set_error 0 "ok"

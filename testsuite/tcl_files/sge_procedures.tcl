@@ -862,12 +862,19 @@ proc get_loadsensor_path { host } {
    global CHECK_OUTPUT
    global ts_host_config
 
-   if { [ info exists ts_host_config($host,loadsensor) ] != 1 } {
-      add_proc_error "get_loadsensor_path" -1 "no host configuration found for host \"$host\""
-      return ""
+   set loadsensor ""
+
+   set arch [resolve_arch $host]
+   if {$arch == "aix43" || $arch == "aix51"} {
+      set loadsensor "$ts_config(product_root)/util/resources/loadsensors/ibm-loadsensor"
+   } else {
+      if {[info exists ts_host_config($host,loadsensor)]} {
+         set loadsensor $ts_host_config($host,loadsensor)
+      } else {
+         add_proc_error "get_loadsensor_path" -1 "no host configuration found for host \"$host\""
+      }
    }
 
-   set loadsensor $ts_host_config($host,loadsensor)
    return $loadsensor
 }
 

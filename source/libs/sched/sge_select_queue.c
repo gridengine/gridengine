@@ -425,7 +425,8 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
             }
          }
       }
-   } else {
+   } 
+   else {
       /* now assignments */ 
       for_each(pe, pe_list) {
 
@@ -4744,7 +4745,7 @@ DPRINTF(("\t\t%s: time_by_slots: %s total = %f util = %f from "u32" plus "u32" s
             ret == DISPATCH_OK ? "at time" : ((ret == DISPATCH_NOT_AT_TIME)? "later":"never")));
 
    DEXIT;
-   return ret;
+   return ret;                                                       
 }
 
 static dispatch_t
@@ -4832,8 +4833,14 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
    }
 
    request_val = lGetDouble(request, CE_doubleval);
-   *slots      = (int)((total - used) / request_val);
-   *slots_qend = (int)(total / request_val);
+   if (request_val != 0) {
+      *slots      = (int)((total - used) / request_val);
+      *slots_qend = (int)(total / request_val);
+   }
+   else {
+      *slots = INT_MAX;
+      *slots_qend = INT_MAX;
+   }   
 
    DPRINTF(("\t\t%s: ri_slots_by_time: %s=%f has %d (%d) slots at time "U32CFormat"%s (avail: %f total: %f)\n", 
          object_name, lGetString(uep, RUE_name), request_val, *slots, *slots_qend, start,

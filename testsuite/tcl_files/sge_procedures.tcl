@@ -2238,6 +2238,11 @@ proc add_queue { change_array {fast_add 0} } {
 
   upvar $change_array chgar
 
+  if { [resolve_version] >= 3 && $fast_add != 0 } {
+     puts $CHECK_OUTPUT "WARNING: add_queue : ignoring fast_add option !!!!!!!!!!"
+     set fast_add 0
+  }
+
   if { [get_pe_ckpt_version] > 0 && [info exists chgar(qtype)]} {
      if { [ string match "*CHECKPOINTING*" $chgar(qtype) ] ||
           [ string match "*PARALLEL*" $chgar(qtype) ]   } { 

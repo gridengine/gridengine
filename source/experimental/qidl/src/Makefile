@@ -254,13 +254,13 @@ CosEventComm.o: CosEventComm.cpp CosEventComm.h
 CosEventComm_skel.o: CosEventComm_skel.cpp CosEventComm_skel.h
 		$(CXX) $(CXXFLAGS) -c CosEventComm_skel.cpp
 
-CosEventChannelAdmin.h: CosEventChannelAdmin.idl
-		$(IDL) $(IDLFLAGS) CosEventChannelAdmin.idl
+CosEventChannelAdmin.h: ../../../3rdparty/qidl/CosEventChannelAdmin.idl
+		$(IDL) $(IDLFLAGS) ../../../3rdparty/qidl/CosEventChannelAdmin.idl
 
 CosEventChannelAdmin.cpp CosEventChannelAdmin_skel.cpp CosEventChannelAdmin_skel.h: CosEventChannelAdmin.h
 
-CosEventComm.h: CosEventComm.idl
-		$(IDL) $(IDLFLAGS) CosEventComm.idl
+CosEventComm.h: ../../../3rdparty/qidl/CosEventComm.idl
+		$(IDL) $(IDLFLAGS) ../../../3rdparty/qidl/CosEventComm.idl
 
 CosEventComm.cpp CosEventComm_skel.cpp CosEventComm_skel.h: CosEventComm.h
 
@@ -347,11 +347,11 @@ include $(QIDLSDIR)/qidldependencies
 basic_types.idl: $(QIDLSDIR)/basic_types.idl
 		cp -p $? $@
 
-CosEventChannelAdmin.idl: $(QIDLSDIR)/CosEventChannelAdmin.idl CosEventComm.idl
-		cp -p $(QIDLSDIR)/CosEventChannelAdmin.idl $@
+CosEventChannelAdmin.idl: ../../../3rdparty/qidl/CosEventChannelAdmin.idl ../../../3rdparty/qidl/CosEventComm.idl
+		cp -p ../../../3rdparty/qidl/CosEventChannelAdmin.idl $@
 
-CosEventComm.idl: $(QIDLSDIR)/CosEventComm.idl
-		cp -p $? $@
+CosEventComm.idl: ../../../3rdparty/qidl/CosEventComm.idl
+		cp -p ../../../3rdparty/qidl/CosEventComm.idl $@
 
 elem_codes.idl: $(CULLSRC) culltrans 
 		$(CULLTRANS) -elemcodes $(CULLSRC)

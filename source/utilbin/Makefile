@@ -38,12 +38,12 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog work \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
-                 testsuidroot sge_printf
+                 testsuidroot infotext
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
                checkuser.c adminrun.c range.c  \
-               languagetest.c sge_printf.c
+               languagetest.c infotext.c
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 
@@ -171,11 +171,11 @@ languagetest:   languagetest.o  $(UTILIB) $(RMONLIB)
 languagetest.o: $(UTILBIN_DIR)/languagetest.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/languagetest.c
 #---------------------------------------------------------------------
-sge_printf:   sge_printf.o  $(UTILIB) $(RMONLIB)
-		$(CC) -o $@ sge_printf.o $(LFLAGS)  -luti -lrmon $(LIBS)
+infotext:   infotext.o  $(UTILIB) $(RMONLIB)
+		$(CC) -o $@ infotext.o $(LFLAGS)  -luti -lrmon $(LIBS)
 
-sge_printf.o: $(UTILBIN_DIR)/sge_printf.c
-		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/sge_printf.c
+infotext.o: $(UTILBIN_DIR)/infotext.c
+		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/infotext.c
 
 #---------------------------------------------------------------------
 testsuidroot:   testsuidroot.o 

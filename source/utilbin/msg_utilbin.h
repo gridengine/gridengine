@@ -116,12 +116,13 @@
 
 
 /*
-**  utilbin/sge_printf.c
+**  utilbin/infotext.c
 */
-#define SGE_PRINTF_TESTSTRING_S "Welcome, %s\nhave a nice day!\n"
-#define SGE_PRINTF_UNDERLINE  "-"
-#define SGE_PRINTF_TESTSTRING_S_L10N _(SGE_PRINTF_TESTSTRING_S)
-#define SGE_PRINTF_UNDERLINE_L10N    _(SGE_PRINTF_UNDERLINE)
+#define SGE_INFOTEXT_TESTSTRING_S "Welcome, %s\nhave a nice day!\n"
+#define SGE_INFOTEXT_UNDERLINE  "-"
+#define SGE_INFOTEXT_TESTSTRING_S_L10N _(SGE_INFOTEXT_TESTSTRING_S)
+#define SGE_INFOTEXT_UNDERLINE_L10N    _(SGE_INFOTEXT_UNDERLINE)
+#define SGE_INFOTEXT_ONLY_ALLOWED_SS _("\nThere are only two answers allowed: "SFQ" or "SFQ"!\n\n")
 
 /* 
 ** utilbin/range.c

@@ -29,6 +29,12 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+
+/* Interactive formatted localized text*/
+/* __          _          _        ____*/
+/* -> infotext binary */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,30 +46,33 @@
 #include "sge_dstring.h"
 
 
-typedef struct sge_printf_opt {
-      int e;   /* print to stderr */
-      int n;   /* no new line */
-      int u;   /* underline output */
-      char* D; /* dash string */
-      int S;    /* nr of spaces */
-   } sge_printf_options;
+typedef struct sge_infotext_opt {
+      int e;     /* print to stderr */
+      int n;     /* no new line */
+      int u;     /* underline output */
+      char* D;   /* dash string */
+      int S;     /* nr of spaces */
+      char* yes; /* yes parameter for -ask */
+      char* no;  /* no parameter for -ask */
+      char* def; /* default parameter for -ask */
+   } sge_infotext_options;
 
 
 
 
-static void  sge_printf_welcome(void);
-static void  sge_printf_usage(void);
-static int   sge_printf_get_nr_of_substrings(char* buffer, char* substring);
-static char* sge_printf_string_replace(dstring* buf, char* arg, char* what, char* with, int only_first );
-static char* sge_printf_string_input_parsing(dstring* buf,char* string);
-static char* sge_printf_string_output_parsing(dstring* buf,char* string);
-static void  sge_printf_print_line(dstring* dash_buf, sge_printf_options* options, dstring* line);
-static void  sge_printf_format_output(dstring* dash_buf, sge_printf_options* options, char* text);
-static char* sge_printf_get_next_word(dstring* buf,char* text);
-static const char* sge_printf_build_dash(dstring* dash_buf, sge_printf_options* options);
+static void  sge_infotext_welcome(void);
+static void  sge_infotext_usage(void);
+static int   sge_infotext_get_nr_of_substrings(char* buffer, char* substring);
+static char* sge_infotext_string_replace(dstring* buf, char* arg, char* what, char* with, int only_first );
+static char* sge_infotext_string_input_parsing(dstring* buf,char* string);
+static char* sge_infotext_string_output_parsing(dstring* buf,char* string);
+static void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, dstring* line);
+static void  sge_infotext_format_output(dstring* dash_buf, sge_infotext_options* options, char* text);
+static char* sge_infotext_get_next_word(dstring* buf,char* text);
+static const char* sge_infotext_build_dash(dstring* dash_buf, sge_infotext_options* options);
 int main(int argc, char *argv[]);
 
-const char* sge_printf_build_dash(dstring* dash_buf, sge_printf_options* options) {
+const char* sge_infotext_build_dash(dstring* dash_buf, sge_infotext_options* options) {
    int i;
  
    sge_dstring_copy_string(dash_buf,"");
@@ -77,10 +86,10 @@ const char* sge_printf_build_dash(dstring* dash_buf, sge_printf_options* options
    return sge_dstring_get_string(dash_buf);
 }
 
-char* sge_printf_get_next_word(dstring* buf, char* text) {
+char* sge_infotext_get_next_word(dstring* buf, char* text) {
    char* p1;
    char* buffer;
-   int i;
+   int i,b,not_last;
    int start;
 
    sge_dstring_copy_string(buf,text);
@@ -97,7 +106,16 @@ char* sge_printf_get_next_word(dstring* buf, char* text) {
 
    for (i=0;i<strlen(p1);i++) {
       if( p1[i] == ' ') {
-         p1[i] = 0;
+         not_last = 0;
+         for(b=i;b<strlen(p1);b++) {
+            if (p1[b] != ' ') {
+               not_last = 1;
+               break;
+            }
+         }
+         if (not_last == 1) {
+            p1[i] = 0;
+         }
          break;
       }
       if( p1[i] == '\n') {
@@ -108,7 +126,7 @@ char* sge_printf_get_next_word(dstring* buf, char* text) {
    return p1;
 }
 
-void  sge_printf_format_output(dstring* dash_buf,sge_printf_options* options, char* text) {
+void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options, char* text) {
    char* column_var = NULL;
    int max_column = 79;
    char* tp = NULL;
@@ -123,13 +141,13 @@ void  sge_printf_format_output(dstring* dash_buf,sge_printf_options* options, ch
    
    int new_line_opt = options->n;
 
-   DENTER(TOP_LAYER,"sge_printf_format_output" );
+   DENTER(TOP_LAYER,"sge_infotext_format_output" );
 
 
    DPRINTF(("format 1\n"));
    options->n = 0;
 
-   column_var = getenv("SGE_PRINTF_MAX_COLUMN");
+   column_var = getenv("SGE_INFOTEXT_MAX_COLUMN");
    if (column_var != NULL) {
       max_column = atoi(column_var);
    } 
@@ -152,11 +170,11 @@ void  sge_printf_format_output(dstring* dash_buf,sge_printf_options* options, ch
    while(1) {
       char* next_word = NULL;
 
-      next_word = sge_printf_get_next_word(&tmp_buf, tp);
+      next_word = sge_infotext_get_next_word(&tmp_buf, tp);
       if (strlen(next_word) == 0 ) {
          if (nr_word != 0) {
             options->n = new_line_opt;
-            sge_printf_print_line(dash_buf,options,&line);
+            sge_infotext_print_line(dash_buf,options,&line);
          }
          nr_word = 0;
          break;
@@ -175,6 +193,11 @@ void  sge_printf_format_output(dstring* dash_buf,sge_printf_options* options, ch
       
 
       if(sge_dstring_strlen(&line) > max_column || strstr(sge_dstring_get_string(&line),"\n") != NULL ) {
+#if 0
+/*      
+         uncomment this code if a word break should be done
+         ==================================================
+*/
          int z;
          int l;
          sge_dstring_copy_dstring(&line2,&line);
@@ -185,29 +208,36 @@ void  sge_printf_format_output(dstring* dash_buf,sge_printf_options* options, ch
             line2_buf[l++] = line_buf[z];
             if (l >= max_column ) {
                line2_buf[l]=0;
-               sge_printf_print_line(dash_buf,options,&line2);
+               sge_infotext_print_line(dash_buf,options,&line2);
                sge_dstring_copy_dstring(&line2, &dash);
                l=sge_dstring_strlen(&dash);
-            }
+            } 
          }
          if (l>0) {
             line2_buf[l]=0;
-            sge_printf_print_line(dash_buf,options,&line2);
+            sge_infotext_print_line(dash_buf,options,&line2);
          }
+#endif
+
+#if 1
+         /*  this will do no word break */ 
+         /*  ========================== */
+         sge_infotext_print_line(dash_buf,options,&line);
+#endif
 
          nr_word = 0;
          sge_dstring_copy_dstring(&line,&dash);
       } else {
-         next_word = sge_printf_get_next_word(&tmp_buf,tp);
+         next_word = sge_infotext_get_next_word(&tmp_buf,tp);
          if (strlen(next_word) == 0) {
             options->n = new_line_opt;
-            sge_printf_print_line(dash_buf,options,&line);
+            sge_infotext_print_line(dash_buf,options,&line);
             nr_word = 0;
          break;
          }
          if( sge_dstring_strlen(&line) + strlen(next_word) + 1 > max_column &&
             nr_word != 0 ) {
-            sge_printf_print_line(dash_buf,options,&line);
+            sge_infotext_print_line(dash_buf,options,&line);
             nr_word = 0;
             sge_dstring_copy_dstring(&line,&dash);
          }      
@@ -223,7 +253,7 @@ void  sge_printf_format_output(dstring* dash_buf,sge_printf_options* options, ch
 }
 
 
-void  sge_printf_print_line(dstring* dash_buf, sge_printf_options* options, dstring* line_arg) {
+void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, dstring* line_arg) {
    int i;
    FILE* output;
    int line_length;
@@ -239,7 +269,7 @@ void  sge_printf_print_line(dstring* dash_buf, sge_printf_options* options, dstr
       sge_dstring_append(&dash," ");
    }
 
-   line_buf = sge_printf_string_replace(&line_buf_buffer,(char*)sge_dstring_get_string(line_arg),"\n",(char*)sge_dstring_get_string(&dash),0);
+   line_buf = sge_infotext_string_replace(&line_buf_buffer,(char*)sge_dstring_get_string(line_arg),"\n",(char*)sge_dstring_get_string(&dash),0);
    sge_dstring_copy_string(&line, line_buf);
 
    line_length = 0;
@@ -272,7 +302,7 @@ void  sge_printf_print_line(dstring* dash_buf, sge_printf_options* options, dstr
          fprintf(output,"\n");
       }
       for(i=0;i<line_length;i++) {
-         fprintf(output,SGE_PRINTF_UNDERLINE);
+         fprintf(output,SGE_INFOTEXT_UNDERLINE);
       }
       if (options->n != 1) {
          fprintf(output,"\n");
@@ -285,24 +315,24 @@ void  sge_printf_print_line(dstring* dash_buf, sge_printf_options* options, dstr
 }
 
 
-char* sge_printf_string_input_parsing(dstring* string_buffer,char* string) {
+char* sge_infotext_string_input_parsing(dstring* string_buffer,char* string) {
     
     dstring tmp_buf = DSTRING_INIT;
 
-    sge_dstring_copy_string(string_buffer, sge_printf_string_replace(&tmp_buf, string       , "\\n", "\n",0));
-    sge_dstring_copy_string(string_buffer, sge_printf_string_replace(&tmp_buf, (char*)sge_dstring_get_string(string_buffer), "\\r", " ",0));
-    sge_dstring_copy_string(string_buffer, sge_printf_string_replace(&tmp_buf, (char*)sge_dstring_get_string(string_buffer), "\\t", " ",0));
+    sge_dstring_copy_string(string_buffer, sge_infotext_string_replace(&tmp_buf, string       , "\\n", "\n",0));
+    sge_dstring_copy_string(string_buffer, sge_infotext_string_replace(&tmp_buf, (char*)sge_dstring_get_string(string_buffer), "\\r", " ",0));
+    sge_dstring_copy_string(string_buffer, sge_infotext_string_replace(&tmp_buf, (char*)sge_dstring_get_string(string_buffer), "\\t", " ",0));
 
     sge_dstring_free(&tmp_buf);
     return (char*)sge_dstring_get_string(string_buffer);
 }
 
-char* sge_printf_string_output_parsing(dstring* string_buffer,char* string) {
+char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
 
     dstring tmp_buf = DSTRING_INIT;
 
 
-    sge_dstring_copy_string(string_buffer, sge_printf_string_replace(&tmp_buf, string       , "\n", "\\n",0));
+    sge_dstring_copy_string(string_buffer, sge_infotext_string_replace(&tmp_buf, string       , "\n", "\\n",0));
 
     sge_dstring_free(&tmp_buf);
 
@@ -311,7 +341,7 @@ char* sge_printf_string_output_parsing(dstring* string_buffer,char* string) {
 
 
 
-char* sge_printf_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
+char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
    int i;
    char* p1;
    char* p2;
@@ -349,7 +379,7 @@ char* sge_printf_string_replace(dstring* tmp_buf, char* arg, char* what, char* w
    return (char*) sge_dstring_get_string(tmp_buf);
 }
 
-int  sge_printf_get_nr_of_substrings(char* buffer, char* substring) {
+int  sge_infotext_get_nr_of_substrings(char* buffer, char* substring) {
    char* p1 = NULL;
    char* buf = NULL;
    int nr = 0;
@@ -366,7 +396,7 @@ int  sge_printf_get_nr_of_substrings(char* buffer, char* substring) {
  
 
 
-void sge_printf_welcome(void) {
+void sge_infotext_welcome(void) {
 
    char* user = NULL;
    user = getenv("USER");
@@ -375,18 +405,18 @@ void sge_printf_welcome(void) {
    }
    
    printf("\nno l10n:\n");
-   printf(SGE_PRINTF_TESTSTRING_S, user);
+   printf(SGE_INFOTEXT_TESTSTRING_S, user);
    printf("\nl10n:\n");
-   printf(_(SGE_PRINTF_TESTSTRING_S), user);
+   printf(_(SGE_INFOTEXT_TESTSTRING_S), user);
 }
 
-void sge_printf_usage(void) {
+void sge_infotext_usage(void) {
    printf("usage:\n");
-   printf("sge_printf -help    : show help\n");
-   printf("sge_printf -test    : test localization\n");
-   printf("sge_printf -message : print empty po file string\n");
-   printf("sge_printf -message-space : print po file string for test purposes\n");
-   printf("sge_printf [-enu] [-D STRING] [-S COUNT] FORMAT_STRING ARGUMENTS\n\n");
+   printf("infotext -help    : show help\n");
+   printf("infotext -test    : test localization\n");
+   printf("infotext -message : print empty po file string\n");
+   printf("infotext -message-space : print po file string for test purposes\n");
+   printf("infotext [-enu] [-D STRING] [-S COUNT] FORMAT_STRING ARGUMENTS\n\n");
    printf("FORMAT_STRING - printf format string\n");
    printf("ARGUMENTS     - printf arguments\n\n");
    printf("options:\n");   
@@ -395,8 +425,18 @@ void sge_printf_usage(void) {
    printf("  u - underline output\n");
    printf("  D - dash sign, e.g. -D \"->\"\n"); 
    printf("  S - nr of spaces, e.g. -S \"5\"\n\n");
+   printf("infotext [-auto 0|1|true|false] [-wait] [-ask YES NO] [-def YES|NO]\n");
+   printf("         FORMAT_STRING ARGUMENTS\n\n");
+   printf("YES - user answer for exit status 0, e.g. -ask \"y\"\n");
+   printf("NO  - user answer for exit status 1, e.g. -ask \"n\"\n\n");
+   printf("options:\n");  
+   printf("  auto - switch auto off/on [0|false/1|true], this will don't ask or wait,\n");
+   printf("         just use default\n");
+   printf("  wait - wait for return key\n");
+   printf("  ask  - wait for user input\n");
+   printf("  def  - default answer when user is just pressing RETURN\n\n");
    printf("used environment variables:\n");
-   printf("SGE_PRINTF_MAX_COLUMN - column for word break (default 79)\n");
+   printf("SGE_INFOTEXT_MAX_COLUMN - column for word break (default 79)\n");
 }
 
 
@@ -407,10 +447,16 @@ int main(
 int argc,
 char **argv 
 ) {
+   int ret_val = 0;
    int show_help = 0;
    int do_test = 0;
    int do_message = 0;
    int do_message_space = 0;
+   int do_ask = 0;
+   int do_wait = 0;
+   int do_auto = 0;
+   int auto_option_used = 0;
+   int do_def = 0;
    int args_ok = 1;
    int i = 0;
    int last_option = 0;
@@ -420,13 +466,13 @@ char **argv
    int first_arg = 0;
    int real_args = 0;
    char* help_str = NULL;
-   sge_printf_options options;
+   sge_infotext_options options;
    dstring buffer = DSTRING_INIT;
    dstring buffer2 = DSTRING_INIT;
-   dstring sge_printf_dash_buffer = DSTRING_INIT;
+   dstring sge_infotext_dash_buffer = DSTRING_INIT;
    dstring tmp_buf = DSTRING_INIT;
 
-   DENTER_MAIN(TOP_LAYER, "sge_printf");
+   DENTER_MAIN(TOP_LAYER, "sge_infotext");
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    sge_init_language_func((gettext_func_type)        gettext,
@@ -444,6 +490,9 @@ char **argv
    options.u = 0;
    options.D = "";
    options.S = 0;
+   options.no = "";
+   options.yes = "";
+   options.def = "";
 
    for(i=1; i< argc; i++) {
       char* arg = argv[i];
@@ -460,6 +509,7 @@ char **argv
          last_option = o_start;
          if ( strcmp(option,"help") == 0) {
             show_help = 1;
+            break;
          }
          if ( strcmp(option,"test") == 0) {
             do_test = 1;
@@ -474,6 +524,59 @@ char **argv
             do_message = 1;
             continue;
          }
+         if (strcmp(option,"wait") == 0) {
+            do_wait = 1;
+            continue;
+         }
+         if (strcmp(option,"auto") == 0) {
+            do_auto = 1;
+            auto_option_used=1;
+            if ( (i+1) < argc) {
+               i++;
+               if (strcmp(argv[i], "false") == 0) {
+                  do_auto = 0;
+                  continue;
+               } 
+               if (strcmp(argv[i], "true") == 0) {
+                  continue;
+               } 
+
+               if (atoi(argv[i]) == 0) {
+                  do_auto = 0;
+                  continue; 
+               }
+            } else {
+               printf("no complete -auto option argument\n");
+               args_ok = 0;
+            }
+            continue;
+         }
+
+         if ( strcmp(option,"ask") == 0) {
+            do_ask = 1;
+            if ( (i+2) < argc) {
+               i++;
+               options.yes = argv[i];
+               i++;
+               options.no  = argv[i];
+            } else {
+               printf("no complete -ask option arguments\n");
+               args_ok = 0;
+            }
+            continue;
+         }
+         if ( strcmp(option,"def") == 0) {
+            do_def = 1;
+            if ( (i+1) < argc) {
+               i++;
+               options.def = argv[i];
+            } else {
+               printf("no complete -def option argument\n");
+               args_ok = 0;
+            }
+            continue;
+         }
+
 
 
          opt_length = strlen(option);
@@ -522,12 +625,12 @@ char **argv
       }
    }
    if (show_help == 1) {
-      sge_printf_usage();
-      exit(1); 
+      sge_infotext_usage();
+      exit(10); 
    }
 
    if (do_test == 1) {
-      sge_printf_welcome();
+      sge_infotext_welcome();
       exit(0);
    }
 
@@ -535,6 +638,10 @@ char **argv
       printf("no format string\n");
       args_ok = 0;
    }
+   if (auto_option_used == 1 && do_def == 0 && do_ask == 1) {
+      printf("used -auto -ask options without -def option\n");
+      args_ok = 0;
+   }   
    DPRINTF(("pass 1\n"));
    /* first pass - get number of %s arguments */
    sge_dstring_copy_string(&buffer,"");
@@ -542,13 +649,13 @@ char **argv
    for(i=arg_start; i < (arg_start + max_args) ; i++) {
       char* arg = argv[i];
       sge_dstring_append(&buffer, arg);
-      string_arguments = sge_printf_get_nr_of_substrings((char*)sge_dstring_get_string(&buffer),"%s");
+      string_arguments = sge_infotext_get_nr_of_substrings((char*)sge_dstring_get_string(&buffer),"%s");
    }
 
    if (args_ok != 1) {
-      printf("syntax error! Type sge_printf -help for usage!\n");
-      /* sge_printf_usage(); */
-      exit(1);
+      printf("syntax error! Type sge_infotext -help for usage!\n");
+      /* sge_infotext_usage(); */
+      exit(10);
    }
 
    DPRINTF(("pass 2\n"));
@@ -556,12 +663,12 @@ char **argv
    /* second pass - get format string */
    sge_dstring_copy_string(&buffer,"");
 
-   for(i=arg_start; sge_printf_get_nr_of_substrings((char*)sge_dstring_get_string(&buffer),"%s") < string_arguments ; i++) {
+   for(i=arg_start; sge_infotext_get_nr_of_substrings((char*)sge_dstring_get_string(&buffer),"%s") < string_arguments ; i++) {
       char* arg = argv[i];
       if (i > arg_start) {
          sge_dstring_append(&buffer," ");
       }
-      sge_dstring_append(&buffer, sge_printf_string_input_parsing(&tmp_buf,arg));
+      sge_dstring_append(&buffer, sge_infotext_string_input_parsing(&tmp_buf,arg));
    }
    first_arg = i;
    real_args = 0;
@@ -572,7 +679,7 @@ char **argv
 
    if (real_args < string_arguments) {
       printf("to less arguments\n");
-      exit(1);
+      exit(10);
    }
 
    /* if we have to much args add the rest to the string buffer */
@@ -581,16 +688,15 @@ char **argv
       if (strcmp((char*)sge_dstring_get_string(&buffer),"") != 0) {
          sge_dstring_append(&buffer," ");
       }
-      sge_dstring_append(&buffer,sge_printf_string_input_parsing(&tmp_buf, arg));
+      sge_dstring_append(&buffer,sge_infotext_string_input_parsing(&tmp_buf, arg));
       first_arg++;
       real_args--;
    }
 
    DPRINTF(("pass 3\n"));
-
    /* 3rd pass - localize format string */
    if (do_message == 1) {
-      printf("\nmsgid  \"%s\"\n",sge_printf_string_output_parsing(&tmp_buf,(char*)sge_dstring_get_string(&buffer)));
+      printf("\nmsgid  \"%s\"\n",sge_infotext_string_output_parsing(&tmp_buf,(char*)sge_dstring_get_string(&buffer)));
       if(do_message_space == 0) { 
          printf("msgstr \"\"\n");
       } else {
@@ -600,7 +706,7 @@ char **argv
          
          printf("msgstr \"");
          
-         sge_dstring_copy_string(&help_buf, sge_printf_string_output_parsing(&tmp_buf,(char*)sge_dstring_get_string(&buffer)));
+         sge_dstring_copy_string(&help_buf, sge_infotext_string_output_parsing(&tmp_buf,(char*)sge_dstring_get_string(&buffer)));
          help_b = (char*) sge_dstring_get_string(&help_buf);
          for( h=0 ; h < sge_dstring_strlen(&help_buf) ;h++) {
             printf("%c", help_b[h]);
@@ -611,7 +717,7 @@ char **argv
             }
          }
          printf("\"\n");
-         sge_dstring_free(&sge_printf_dash_buffer);
+         sge_dstring_free(&sge_infotext_dash_buffer);
          sge_dstring_free(&tmp_buf);
          sge_dstring_free(&help_buf);
       }
@@ -624,8 +730,8 @@ char **argv
    printf("l10n string is: \"%s\"\n", buffer2);*/
 
    /* format output */
-/*   printf("options: %d %d %d \"%s\" %d\n", options.e, options.n, options.u, options.D, options.S);*/
-
+/*   printf("options: %d %d %d \"%s\" %d \"%s\" \"%s\" \"%s\"\n", options.e, options.n, options.u, options.D, options.S, options.yes , options.no ,options.def);
+*/
   
    /* 4th pass - insert parameters */ 
    DPRINTF(("pass 4\n"));
@@ -633,7 +739,7 @@ char **argv
    if (real_args > 0) {
       for(i=0;i<real_args;i++) {
 /*      printf("argument[%d]: \"%s\"\n",i,argv[first_arg +i]); */
-         sge_dstring_copy_string(&buffer, sge_printf_string_replace(&tmp_buf, (char*)sge_dstring_get_string(&buffer2),"%s",argv[first_arg +i],1));
+         sge_dstring_copy_string(&buffer, sge_infotext_string_replace(&tmp_buf, (char*)sge_dstring_get_string(&buffer2),"%s",argv[first_arg +i],1));
          sge_dstring_copy_dstring(&buffer2,&buffer); 
       }  
    } else {
@@ -642,18 +748,65 @@ char **argv
       
    /* output */
    DPRINTF(("build_dash\n"));
-   sge_dstring_append(&sge_printf_dash_buffer,"");
-   sge_printf_build_dash(&sge_printf_dash_buffer,&options);
-   if (sge_dstring_get_string(&sge_printf_dash_buffer) == NULL) {
-      DPRINTF(("sge_printf_dash_buffer is NULL"));
+   sge_dstring_append(&sge_infotext_dash_buffer,"");
+   sge_infotext_build_dash(&sge_infotext_dash_buffer,&options);
+   if (sge_dstring_get_string(&sge_infotext_dash_buffer) == NULL) {
+      DPRINTF(("sge_infotext_dash_buffer is NULL"));
    }
    DPRINTF(("output\n"));
-   sge_printf_format_output(&sge_printf_dash_buffer,&options,(char*)sge_dstring_get_string(&buffer));
+   if (do_ask != 1) {
+      sge_infotext_format_output(&sge_infotext_dash_buffer,&options,(char*)sge_dstring_get_string(&buffer));
+   }
+
+   ret_val = 0;
+   if (do_ask == 1 || do_wait == 1 ) {
+      char input_buffer[2048];
+      char* help = NULL;
+      int done = 0;
+      while (done == 0) {
+         if (do_wait != 1) {
+            sge_infotext_format_output(&sge_infotext_dash_buffer,&options,(char*)sge_dstring_get_string(&buffer));
+         }
+         if (do_auto == 0) {
+            fgets(input_buffer, 2047, stdin);
+            help = strstr(input_buffer, "\n");
+            if (help != NULL) {
+               *help = 0;
+            }
+         } else {
+            strcpy(input_buffer,_(options.def));
+         }
+         if (strcmp(input_buffer,"") == 0) {
+            if (do_wait == 1) {
+               break;
+            }
+           
+            strcpy(input_buffer,_(options.def));
+         }
+
+         if (strcmp(_(options.yes),input_buffer) == 0) {
+            ret_val = 0;
+            done = 1;
+         }
+         if (strcmp(_(options.no),input_buffer) == 0) {
+            ret_val = 1;
+            done = 1;
+         }
+         if (done != 1) {
+            printf( SGE_INFOTEXT_ONLY_ALLOWED_SS , _(options.yes), _(options.no));
+            if (do_auto != 0) {
+               do_auto = 0;
+            }
+         }
+      }
+      printf("\n");
+   }
+
    DPRINTF(("free strings\n"));
-   sge_dstring_free(&sge_printf_dash_buffer);
+   sge_dstring_free(&sge_infotext_dash_buffer);
    sge_dstring_free(&tmp_buf);
    sge_dstring_free(&buffer);
    sge_dstring_free(&buffer2);
    DEXIT;
-   return 0;
+   return ret_val;
 }

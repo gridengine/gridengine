@@ -1,3 +1,9 @@
+CR-2002-05-16-0: Enhancem.: - i18n changes for inst_sge (part 1)
+                            - renamed sge_printf into infotext
+                              (INteractive Formatted lOcalized TEXT)
+                            - added infotext features
+                              (-wait -auto -ask options)
+
 EB-2002-05-06-0: Bugfix:    qhost -j is broken
                  Issue:     #259
                  Bugtraq:   #4686157

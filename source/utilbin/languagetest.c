@@ -75,14 +75,6 @@ char **argv
    printf (TESTSTRING2 , "not localized");
    printf (_(TESTSTRING2) , "localized");
   
-#if 0  
-   printf ("\nOutput now is sge_printf():");
-
-   sge_printf ("\ntest of gettext:\n\n");
-   sge_printf ("sample text (not localized)        : %s\n", TESTSTRING);
-   sge_printf ("sample text (localized)            : %s\n", _(TESTSTRING));
-
-#endif
 
 #ifdef _SGE_WCHAR_TEST_
    printf ("\n\nConverting String to wchar:\n"); 

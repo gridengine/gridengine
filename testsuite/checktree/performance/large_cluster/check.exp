@@ -169,9 +169,38 @@ proc large_cluster_parse_cpu {s_cpu} {
    return $cpu
 }
 
+proc large_cluster_submit_a_job {host job_list_var id_list_var sids_var hosts_var} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT
+
+   upvar $job_list_var job_list
+   upvar $id_list_var  id_list
+   upvar $sids_var     sids
+   upvar $hosts_var    hosts
+
+   if {[llength $job_list] > 0} {
+      set job [lindex $job_list 0]
+      set job_list [lrange $job_list 1 end]
+      set args [lindex $job 0]
+      set user [lindex $job 1]
+      
+      set sid [open_remote_spawn_process $host $user "$CHECK_PRODUCT_ROOT/bin/[resolve_arch $host]/qsub" $args]
+
+      set id [lindex $sid 1]
+      lappend id_list $id
+      set sids($id) $sid
+      set hosts($id) $host
+
+      puts $CHECK_OUTPUT "user $user submitted job \"$args\" on host $host"
+
+      return 1
+   } else {
+      return 0
+   }
+}
+
 proc large_cluster_submit_jobs {size {users ""} {projects ""}} {
    global CHECK_OUTPUT LARGE_CLUSTER_JOB_DURATION CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER CHECK_HOST
-   global CHECK_PRODUCT_TYPE
+   global CHECK_PRODUCT_TYPE CHECK_CORE_EXECD
    
    # parse array job info
    set l_size [split $size "*"]
@@ -199,9 +228,12 @@ proc large_cluster_submit_jobs {size {users ""} {projects ""}} {
 
    append args "-o /dev/null -j y $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh"
 
-   # submit jobs
    puts $CHECK_OUTPUT "submitting $size jobs with a duration of $LARGE_CLUSTER_JOB_DURATION s each"
+
+   # build a list with jobs to submit
    set jobs_submitted 0
+   set job_list {}
+   set finished 0
    while {$jobs_submitted < $num_jobs} {
       foreach project $projects {
          if {[string compare $CHECK_PRODUCT_TYPE sgeee] == 0} {
@@ -211,19 +243,77 @@ proc large_cluster_submit_jobs {size {users ""} {projects ""}} {
          }
          foreach user $users {
             set runtime [expr $LARGE_CLUSTER_JOB_DURATION -5 + $jobs_submitted % 11]
-            submit_job "$prj_args $args $runtime" 1 300 $CHECK_HOST $user
-            # do not use submit_job, but implement own logic:
-            # use open_remote_spawn process, n times parallel 
-            # expect on list of spawn id's
-            # if a qsub has finished, start new one
-            # other controll flow needed: first build a list of jobs, then submit and remove from list until list empty
+            # store job in list
+            lappend job_list [list "$prj_args $args $runtime" "$user"]
+            #submit_job "$prj_args $args $runtime" 1 300 $CHECK_HOST $user
             incr jobs_submitted
             if {$jobs_submitted >= $num_jobs} {
-               return
+               set finished 1
+               break
             }
          }
+         if {$finished == 1} {
+            break
+         }
       }
-   }   
+   }
+
+   set submit_host_list [lrange $CHECK_CORE_EXECD 0 9]
+
+   # submit first bunch of jobs
+   # keep a list of expect spawn id's for expect calls
+   # keep arrays: 
+   #    - sids(id): the spawn ids for close_spawn_process
+   #    - hosts(id): the host for an id - can be reused when qsub finishes
+   set id_list {}
+   foreach host $submit_host_list {
+      if {[large_cluster_submit_a_job $host job_list id_list sids hosts] == 0} {
+         break
+      }
+   }
+
+   # process all jobs
+   set finished 0
+   while {$finished == 0} {
+      set timeout 60
+      expect {
+         full_buffer {
+            add_proc_error large_cluster_submit_jobs -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+         }
+         timeout {
+            add_proc_error large_cluster_submit_jobs -2 "timeout waiting for submit to finish"
+            set finished 1
+         }
+         -i $id_list -- "has been submitted" {
+            # close old connection
+            set id $expect_out(spawn_id)
+            close_spawn_process $sids($id)
+            unset sids($id)
+            set index [lsearch -exact $id_list $id]
+            set id_list [lreplace $id_list $index $index]
+
+            # submit next
+            # if no jobs left to submit and id_list empty, we are finished
+            set host $hosts($id)
+            unset hosts($id)
+            if {[large_cluster_submit_a_job $host job_list id_list sids hosts] == 0} {
+               if {[llength $id_list] == 0} {
+                  set finished 1
+               }
+            }
+         }
+         -i $id_list -- default {
+            add_proc_error large_cluster_submit_jobs -2 "submit failed"
+            # close old connection
+            set id $expect_out(spawn_id)
+            close_spawn_process $sids($id)
+            unset sids($id)
+            unset hosts($id)
+            set index [lsearch -exact $id_list $id]
+            set id_list [lreplace $id_list $index $index]
+         }
+      }
+   }
 }
 
 proc large_cluster_init_monitoring {} {
@@ -398,7 +488,7 @@ proc large_cluster_write_statistics {type index start_time end_time start_cpu en
    upvar $first_sched fs
    upvar $total_sched ts
    upvar $job_runtime jr
-  
+
    set slots [expr ($CHECK_ACT_LEVEL - 300 + 1) * $LARGE_CLUSTER_HOSTS_PER_HOST * $LARGE_CLUSTER_QUEUES_PER_HOST * $LARGE_CLUSTER_SLOTS_PER_QUEUE]
 
    set line_prefix "[expr ($CHECK_ACT_LEVEL - 300 + 1) * $LARGE_CLUSTER_HOSTS_PER_HOST]"

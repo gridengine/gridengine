@@ -1,3 +1,11 @@
+SG-2004-02-18-2: Bugfix:    - the qmaster did not terminate, when no event
+                              client was registered.
+                            - the qmaster shutdown event is delivered to 
+                              all clients
+                 Changed:   master
+                 Review:    CR, AD
+                 Issue:     669
+
 CR-2004-02-18-0: Enhancem.: - added error function callback for communication 
                             errors
                             - connect response message reports now if connection

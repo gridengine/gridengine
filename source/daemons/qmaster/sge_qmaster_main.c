@@ -1093,6 +1093,12 @@ static void wait_for_thread_termination(void)
 
    Qmaster_Control.shutdown = true;
 
+   /**
+    * The event thread needs a working gdi thread to deliver events. Therefore
+    * the qmaster_goes_down event has to be delivered as soon as posible.
+    */
+   sge_add_event( 0, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL, NULL, NULL);
+
    while (Qmaster_Control.thrd_count > 1) {
       pthread_cond_wait(&Qmaster_Control.cond_var, &Qmaster_Control.mutex);
    }
@@ -1135,15 +1141,11 @@ static void qmaster_shutdown(void)
 {
    DENTER(TOP_LAYER, "qmaster_shutdown");
 
-   sge_add_event( 0, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL, NULL, NULL);
-
    sge_shutdown_persistence(NULL);
 
    reporting_shutdown(NULL);
 
    te_shutdown();
-
-/*   sge_add_event( 0, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL, NULL, NULL);*/
 
    sge_event_shutdown();
 

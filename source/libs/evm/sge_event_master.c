@@ -1583,7 +1583,7 @@ static void send_events(void)
       ts.tv_sec = sge_get_gmt() + EVENT_DELIVERY_INTERVAL_S;
       ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
       pthread_cond_timedwait(&Master_Control.cond_var, &Master_Control.cond_mutex, &ts);
-   } while(Master_Control.clients_deliver_count == 0); 
+   } while(Master_Control.clients_deliver_count == 0 && (!should_exit)); 
 
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
 

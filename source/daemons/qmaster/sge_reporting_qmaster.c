@@ -223,7 +223,7 @@ sge_flush_report_file(lList **answer_list, dstring contents,
             spool_ret = sge_spoolmsg_write(fp, COMMENT_CHAR, version_string);
             if (spool_ret != 0) {
                if (answer_list == NULL) {
-                  ERROR((SGE_EVENT, MSG_ERROR_WRITINGFILE_SS, filename));
+                  ERROR((SGE_EVENT, MSG_ERROR_WRITINGFILE_SS, filename, strerror(errno)));
                } else {
                   answer_list_add_sprintf(answer_list, STATUS_EDISK, 
                                           ANSWER_QUALITY_ERROR, 

@@ -1,3 +1,15 @@
+JG-2004-04-22-3: Bugfix:    qmake output warning "cannot determine architecture"
+                            even if the commandline contained an explicit 
+                            resource request.
+                            Now read from environment variable SGE_ARCH instead
+                            of ARCH.
+                 Review:    patch submitted by uddeborg
+                 Issue:     983
+                 Bugfix:    fixed aimk.site for HP11
+
+JG-2004-04-22-2: Bugfix:    Fixed automatic installation.
+                 Review:    MD
+
 MD-2004-04-22-0: Bugfix:    LD_LIBRARY_PATH was wrong. -> wrong ARCH string
                  Review:    JG
                  Changed:   rc_templates

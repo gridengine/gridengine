@@ -101,5 +101,5 @@ set SUN_COPYRIGHT_DIR  = /off_home/codine/n1ge6-copyright
 # for HP11.00 we don't have dynamic loading of shared libraries
 # build with berkeleydb
 if ( $BUILDARCH == HP11 ) then
-   set argv = ( $argv -spool-berkeleydb )
+   set argv = ( -spool-berkeleydb $argv )
 endif

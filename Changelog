@@ -1,3 +1,12 @@
+AS-2002-09-05-1  Bugfix:    "stop" procedure for execd had hardwired execd 
+                            spool dir
+                 Issue:     #219
+                 Bugtraq:   #4742133
+
+AS-2002-09-05-0  Enhancem:  better error message if hostname can't be
+                            resolved at commd
+                 Changed:   qconf
+
 EB-2002-09-02-1  Bugfix:    qmod help output is incomplete
                  Issue:     #354
                  Bugtraq:   #4741230

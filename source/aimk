@@ -2073,7 +2073,7 @@ if ( "$REMOTE" == 1) then
 
    $MAKE $MAKEOPT -f ../Makefile "MAKE=$MAKE" "CC=$CC" \
       "CFLAGS=$CFLAGS" "LIBS=$LIBS" "SOURCE=$SOURCE" \
-      "KRBLIBS=$KRBLIBS" \
+      "KRBLIBS=$KRBLIBS" "DLLIB=$DLLIB" \
       "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
       "AR=$AR" "ARFLAGS=$ARFLAGS" "LIBEXT=$LIBEXT" \
       "MEMCFLAG=$MEMCFLAG" "COMPILE_ARCH=$COMPILE_ARCH" $argv
@@ -2091,7 +2091,7 @@ if ( "$QMAKE" == 1) then
 
    cd $SOURCE/3rdparty/qmake/$COMPILE_ARCH
 
-   $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" $argv
+   $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" "DLLIB=$DLLIB" $argv
 
    if ( $status != 0 ) then
       echo not done
@@ -2139,7 +2139,7 @@ if ( "$QTCSH" == 1) then
 
    $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" \
          "SGE_LIBS=$SGE_LIBS $KRBLIB $LINK_ZLIB $LFLAGS $KLFLAGS $KLIBS" \
-         "SGE_COPTS=$SGE_COPTS" "SGE_LOPTS=$SGE_LOPTS" $argv
+         "SGE_COPTS=$SGE_COPTS" "SGE_LOPTS=$SGE_LOPTS" "DLLIB=$DLLIB" $argv
 
    if ( $status != 0 ) then
       echo not done

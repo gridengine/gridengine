@@ -79,6 +79,8 @@
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_complex.h"
+#include "sge_queue.h"
+#include "sge_queue_qmaster.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -533,11 +535,7 @@ void sge_mark_unheard(
 lListElem *hep,
 const char *target    /* prognames[QSTD|EXECD] */
 ) {
-   lListElem *qep;
    const char *host;
-   u_long32 state;
-   const void *iterator = NULL;
-
 
    DENTER(TOP_LAYER, "sge_mark_unheard");
 
@@ -601,8 +599,6 @@ lList *lp
    lListElem *lep;
    lListElem *global_ep = NULL, *host_ep = NULL;
    int added_non_static = 0, statics_changed = 0;
-   const void *iterator = NULL;
-
 
    DENTER(TOP_LAYER, "sge_update_load_values");
    now = sge_get_gmt();
@@ -743,10 +739,7 @@ lList *lp
    ** on this host 
    */
    if (added_non_static) {
-      lListElem *qep;
-      u_long32 state;
       const char* tmp_hostname;
-
 
       tmp_hostname = lGetHost(host_ep, EH_name);
       queue_list_set_state_to_unknown(Master_Queue_List, tmp_hostname, 1);
@@ -1013,91 +1006,6 @@ const char *exechost_name
    return;
 }
 
-
-
-/*
-** sge_count_uniq_hosts  --  count all uniq hosts in adm. and subm host list
-**
-** PARAMETERS:
-**    ahl  --  administration host list  --> sorted ascending on return
-**    shl  --  submit host list          --> sorted ascending on return
-** RETURN VALUE:
-**    -1   --  error in lSortList
-**    >=0  --  the counted uniq hosts
-*/
-int sge_count_uniq_hosts(
-lList *ahl,
-lList *shl 
-) {
-  int ret;
-  
-  DENTER(TOP_LAYER, "sge_count_uniq_hosts");
-  
-   ret = lGetNumberOfElem(shl);
-   DPRINTF(("Counted %d submit hosts\n", ret));
-   DEXIT;
-   return ret;
-   
-   
-#if 0
-   lListElem *shel, *ahel;
-   int counter=0;
-   int ret=0;
-
-   DENTER(TOP_LAYER, "sge_count_uniq_hosts");
-
-   /* sort the host names in ascending order */
-   if (lPSortList(ahl, "%I+", AH_name)) {
-      DEXIT;
-      return -1;
-   }
-   if (lPSortList(shl, "%I+", SH_name)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* in each interation chop-off one host (the lexically smallest)
-    * if uniq or 2 if double. count each interation.
-    */
-   ahel = lFirst(ahl);
-   shel = lFirst(shl);
-   while(ahel || shel) {
-      if (shel && ahel) {
-         ret = sge_hostcmp(lGetHost(ahel,AH_name),
-                          lGetHost(shel,SH_name));
-         if (ret < 0) ret = -1;
-         if (ret > 0) ret = 1;
-      } else {
-         if (!shel) ret = -1;
-         if (!ahel) ret =  1;
-      }
-
-      switch ( ret ) {
-      case -1 :
-         /* adm hostlist elem is smaller and thus is uniq */
-         ahel = lNext(ahel);
-         break;
-      case  0 :
-         /* both are equal - remove them both */
-         shel = lNext(shel);
-         ahel = lNext(ahel);
-         break;
-      case  1 :
-         /* subm hostlist elem is smaller and thus is uniq */
-         shel = lNext(shel);
-         break;
-      }
-
-      /* counter needs to be added every time */
-      counter++;
-   }
-
-   DEXIT;
-   return counter;
-   
-#endif   
-}
-
 /****
  **** sge_gdi_kill_exechost
  ****
@@ -1105,7 +1013,9 @@ lList *shl
  **** Actutally only the permission is checked here
  **** and master_kill_execds is called to do the work.
  ****/
-void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request *answer)
+void sge_gdi_kill_exechost(char *host, 
+                           sge_gdi_request *request, 
+                           sge_gdi_request *answer)
 {
    uid_t uid;
    gid_t gid;
@@ -1116,14 +1026,16 @@ void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 
+                      ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
 
    if (sge_manager(user)) {
       ERROR((SGE_EVENT, MSG_OBJ_SHUTDOWNPERMS)); 
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 
+                      ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -1204,15 +1116,18 @@ sge_gdi_request *answer
    DEXIT;
 }
 
-void master_notify_execds()
+void master_notify_execds(void)
 {
    lListElem *host;
-   const char *hostname;
 
    for_each(host , Master_Exechost_List) {  
-      hostname = lGetHost(host, EH_name);
-      if (strcmp(hostname, "template") && strcmp(hostname, "global")) {
-         notify_new_features(host, feature_get_active_featureset_id(), prognames[EXECD]);
+      const char *hostname = lGetHost(host, EH_name);
+
+      if (strcmp(hostname, SGE_TEMPLATE_NAME) && 
+          strcmp(hostname, SGE_GLOBAL_NAME)) {
+         featureset_id_t id = feature_get_active_featureset_id();
+
+         notify_new_features(host, id, prognames[EXECD]);
       }
    }   
 }
@@ -1349,18 +1264,17 @@ const char *target
    return ret;
 }
 
-int notify_new_features(
-lListElem *host,
-featureset_id_t featureset,
-const char *target 
-) {
-   const char *hostname;
+int notify_new_features(lListElem *host, 
+                        featureset_id_t featureset, 
+                        const char *target) 
+{
    sge_pack_buffer pb;
-   int ret;
-   u_long32 dummy;
+   int ret = -1;
 
-   hostname = lGetHost(host, EH_name);
    if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
+      const char *hostname = lGetHost(host, EH_name);
+      u_long32 dummy;
+
       packint(&pb, featureset);
       if (gdi_send_message_pb(0, target, 0, hostname, TAG_NEW_FEATURES, 
           &pb, &dummy)) {

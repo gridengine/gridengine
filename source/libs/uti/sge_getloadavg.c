@@ -1104,31 +1104,6 @@ int nelem
    return 0;
 }
 
-#if 0
-/* #elif defined(DARWIN) */
-
- static int get_load_avg(
- double loadavg[],
- int nelem
- ) {
-     kern_return_t error;
-     struct host_load_info load_data;
-     int host_count = sizeof(load_data)/sizeof(integer_t);
-     mach_port_t host_priv_port = mach_host_self();
-     error = host_statistics(host_priv_port, HOST_LOAD_INFO,
-                       (host_info_t)&load_data, &host_count);
-     if (error != KERN_SUCCESS) {
-         return -1;
-     } else {
-         loadavg[0] = (double)load_data.avenrun[0] / LOAD_SCALE;
-         loadavg[1] = (double)load_data.avenrun[1] / LOAD_SCALE;
-         loadavg[2] = (double)load_data.avenrun[2] / LOAD_SCALE;
-         return 0;
-     }
-}
-
-#endif 
-
 #endif 
 
 

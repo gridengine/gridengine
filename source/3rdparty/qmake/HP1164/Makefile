@@ -138,7 +138,7 @@ vpath.o version.o ar.o arscan.o remote-$(REMOTE).o signame.o getopt.o \
 getopt1.o
 make_DEPENDENCIES =   getloadavg.o 
 make_LDFLAGS = 
-CFLAGS = -g
+CFLAGS = -g +DD64
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@

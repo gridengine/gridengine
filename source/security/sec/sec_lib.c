@@ -172,7 +172,9 @@ int sec_files()
         }
    i = PEM_read_X509(fp,gsd.x509, NULL, NULL); 
 */
+
    gsd.x509 = PEM_read_X509(fp, NULL, NULL, NULL);
+
 /*         if (i <= 0){ */
    if (gsd.x509 == NULL) {
       sec_error();
@@ -180,7 +182,7 @@ int sec_files()
       goto error;
    }
    fclose(fp);
-   gsd.x509_len = i2D_X509(gsd.x509, NULL);
+/*    gsd.x509_len = i2D_X509(gsd.x509, NULL); */
 
    /* 
    ** verify own certificate
@@ -204,6 +206,7 @@ int sec_files()
       i = -1;
       goto error;
    }
+/*   
    gsd.rsa = (RSA *) RSA_new();
    if (gsd.rsa == NULL) {
       sec_error();
@@ -216,6 +219,8 @@ int sec_files()
       i = -1;
       goto error;
    }
+*/
+   gsd.rsa = PEM_read_RSAPrivateKey(fp, NULL, NULL, NULL);
    fclose(fp);
 
    if (!gsd.issgesys)

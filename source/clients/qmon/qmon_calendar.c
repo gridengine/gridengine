@@ -264,6 +264,8 @@ Widget parent
 
    XtAddEventHandler(XtParent(cal_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
+   XtAddEventHandler(XtParent(cal_layout), StructureNotifyMask, False, 
+                        SetMaxShellSize, NULL);
 
    DEXIT;
    return cal_layout;
@@ -295,6 +297,8 @@ Widget parent
 
    XtAddEventHandler(XtParent(cal_ask_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
+   XtAddEventHandler(XtParent(cal_ask_layout), StructureNotifyMask, False, 
+                        SetMaxShellSize, NULL);
 
    DEXIT;
    return cal_ask_layout;

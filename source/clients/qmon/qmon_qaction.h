@@ -66,10 +66,7 @@ typedef struct _tQCEntry {
    const char *resume_method;
    const char *terminate_method;
 /*---- checkpointing -----*/
-   char max_migr_time[20];
-   char max_no_migr[20];
    char min_cpu_interval[20];
-   lList* migr_load_thresholds;
 /*---- load thresholds ----*/
    lList* load_thresholds;
 /*---- suspend thresholds ----*/

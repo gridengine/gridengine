@@ -86,7 +86,6 @@ typedef struct _tSCEntry {
    char *algorithm;
    char *schedule_interval;
    int  maxujobs;
-   int  maxgjobs;
    int  queue_sort_method;
    int  user_sort;
    char *load_adjustment_decay_time;
@@ -108,10 +107,6 @@ static XtResource sc_resources[] = {
       sizeof(int), XtOffsetOf(tSCEntry, maxujobs),
       XtRImmediate, NULL },
    
-   { "maxgjobs", "maxgjobs", XtRInt,
-      sizeof(int), XtOffsetOf(tSCEntry, maxgjobs),
-      XtRImmediate, NULL },
-
    { "queue_sort_method", "queue_sort_method", XtRInt, 
       sizeof(int), XtOffsetOf(tSCEntry, queue_sort_method), 
       XtRImmediate, NULL },
@@ -138,14 +133,13 @@ static XtResource sc_resources[] = {
 };
 
 
-static tSCEntry data = {NULL, NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL};
+static tSCEntry data = {NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL};
 
 
 static Widget qmon_sconf = 0;
 static Widget sconf_algorithm = 0;
 static Widget sconf_schedule_interval = 0;
 static Widget sconf_maxujobs = 0;
-static Widget sconf_maxgjobs = 0;
 static Widget sconf_lad_time = 0;
 static Widget sconf_load_formula = 0;
 static Widget sconf_load_adjustments = 0;
@@ -215,7 +209,6 @@ Widget parent
                            "sconf_algorithm", &sconf_algorithm,
                            "sconf_schedule_interval", &sconf_schedule_interval,
                            "sconf_maxujobs", &sconf_maxujobs,
-                           "sconf_maxgjobs", &sconf_maxgjobs,
                            "sconf_lad_time", &sconf_lad_time,
                            "sconf_load_formula", &sconf_load_formula,
                            "sconf_load_adjustments", &sconf_load_adjustments,
@@ -400,8 +393,6 @@ lListElem *sep
 
    data.maxujobs = lGetUlong(sep, SC_maxujobs);
 
-   data.maxgjobs = lGetUlong(sep, SC_maxgjobs);
-
    /* this depends on the kind queue_sort_method is represented */
    data.queue_sort_method = lGetUlong(sep, SC_queue_sort_method);
 
@@ -430,7 +421,6 @@ lListElem *sep
 printf("->data.algorithm: '%s'\n", data.algorithm ? data.algorithm : "-NA-");
 printf("->data.schedule_interval: '%s'\n", data.schedule_interval ? data.schedule_interval : "-NA-");
 printf("->data.maxujobs: '%d'\n", data.maxujobs );
-printf("->data.maxgjobs: '%d'\n", data.maxgjobs );
 printf("->data.queue_sort_method: '%d'\n", data.queue_sort_method );
 printf("->data.user_sort: '%d'\n", data.user_sort );
 printf("->data.load_adjustment_decay_time: '%s'\n", data.load_adjustment_decay_time ? data.load_adjustment_decay_time : "-NA-");
@@ -503,7 +493,6 @@ lListElem *sep
 printf("<-data.algorithm: '%s'\n", data.algorithm ? data.algorithm : "-NA-");
 printf("<-data.schedule_interval: '%s'\n", data.schedule_interval ? data.schedule_interval : "-NA-");
 printf("<-data.maxujobs: '%d'\n", data.maxujobs );
-printf("<-data.maxgjobs: '%d'\n", data.maxgjobs );
 printf("<-data.queue_sort_method: '%d'\n", data.queue_sort_method );
 printf("<-data.user_sort: '%d'\n", data.user_sort );
 printf("<-data.load_adjustment_decay_time: '%s'\n", data.load_adjustment_decay_time ? data.load_adjustment_decay_time : "-NA-");
@@ -527,7 +516,6 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
    lSetString(sep, SC_schedule_interval, data.schedule_interval);
   
    lSetUlong(sep, SC_maxujobs, (u_long32) data.maxujobs);
-   lSetUlong(sep, SC_maxgjobs, (u_long32) data.maxgjobs);
   
    lSetUlong(sep, SC_queue_sort_method, (u_long32) data.queue_sort_method);
 

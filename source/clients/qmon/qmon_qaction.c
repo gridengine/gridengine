@@ -173,26 +173,11 @@ XtResource qc_resources[] = {
       XtRImmediate, NULL },
 
 /*---- checkpointing -----*/
-   { "max_migr_time", "max_migr_time", XmtRBuffer,
-      XmtSizeOf(tQCEntry, max_migr_time),
-      XtOffsetOf(tQCEntry, max_migr_time[0]),
-      XtRImmediate, NULL },
-
-   { "max_no_migr", "max_no_migr", XmtRBuffer,
-      XmtSizeOf(tQCEntry, max_no_migr),
-      XtOffsetOf(tQCEntry, max_no_migr[0]),
-      XtRImmediate, NULL },
-
    { "min_cpu_interval", "min_cpu_interval", XmtRBuffer,
       XmtSizeOf(tQCEntry, min_cpu_interval),
       XtOffsetOf(tQCEntry, min_cpu_interval[0]),
       XtRImmediate, NULL },
    
-   { "migr_load_thresholds", "migr_load_thresholds", QmonRCE2_Type,
-      sizeof(lList *),
-      XtOffsetOf(tQCEntry, migr_load_thresholds),
-      XtRImmediate, NULL },
-
 /*---- load thresholds ----*/
    { "load_thresholds", "load_thresholds", QmonRCE2_Type,
       sizeof(lList *),
@@ -506,9 +491,7 @@ Widget parent
    Widget dialog;
    Widget qc_cancel, qc_clone, qc_update, qc_main_link;
    Widget qtype, notify, notifyPB, calendar, calendarPB;
-   Widget max_migr_timePB, max_no_migrPB, min_cpu_intervalPB,
-          max_migr_time, max_no_migr, min_cpu_interval, migr_load_thresholds,
-          migr_delete;
+   Widget min_cpu_intervalPB, min_cpu_interval;
    Widget load_thresholds, load_delete;
    Widget suspend_thresholds, suspend_delete,
           suspend_interval, suspend_intervalPB;
@@ -546,14 +529,8 @@ Widget parent
                               "calendar", &calendar,
                               "calendarPB", &calendarPB,
                               /* checkpoint_config */
-                              "max_migr_timePB", &max_migr_timePB,
-                              "max_no_migrPB", &max_no_migrPB,
                               "min_cpu_intervalPB", &min_cpu_intervalPB,
-                              "max_migr_time", &max_migr_time,
-                              "max_no_migr", &max_no_migr,
                               "min_cpu_interval", &min_cpu_interval,
-                              "migr_load_thresholds", &migr_load_thresholds,
-                              "migr_delete", &migr_delete,
                               /* load_threshold_config */
                               "load_thresholds", &load_thresholds,
                               "load_delete", &load_delete,
@@ -671,22 +648,8 @@ Widget parent
    /*
    ** Checkpointing
    */
-   XtAddCallback(max_migr_timePB, XmNactivateCallback,
-                  qmonQCTime, (XtPointer) max_migr_time); 
-   XtAddCallback(max_no_migrPB, XmNactivateCallback,
-                  qmonQCTime, (XtPointer) max_no_migr); 
    XtAddCallback(min_cpu_intervalPB, XmNactivateCallback,
                   qmonQCTime, (XtPointer) min_cpu_interval); 
-#if 0
-   XtAddCallback(migr_delete, XmNactivateCallback,
-                  qmonLoadDelLines, (XtPointer) migr_load_thresholds); 
-   XtAddCallback(migr_load_thresholds, XmNenterCellCallback,
-                  qmonLoadNoEdit, NULL);
-   XtAddCallback(migr_load_thresholds, XmNselectCellCallback,
-                  qmonLoadSelectEntry, NULL);
-#endif
-   XtAddCallback(migr_load_thresholds, XmNlabelActivateCallback,
-                  qmonLoadNamesQueue, NULL);
 
    /*
    ** Complexes & Consumables
@@ -1190,7 +1153,6 @@ tQCEntry *data,
 int how 
 ) {
    StringConst qhostname;
-   lList *migr_load_thresholds = NULL;
    lListElem *ep = NULL;
    int i;
    const char *str;
@@ -1300,25 +1262,9 @@ DTRACE;
    /*********************/
    
    if (how == QC_ALL || how == QC_CHECKPOINT || how == QC_ALMOST) {
-      strncpy(data->max_migr_time, lGetString(qep, QU_max_migr_time),  
-               XmtSizeOf(tQCEntry, max_migr_time));
-               
-      strncpy(data->max_no_migr, lGetString(qep, QU_max_no_migr),  
-               XmtSizeOf(tQCEntry, max_no_migr));
-               
       strncpy(data->min_cpu_interval, lGetString(qep, QU_min_cpu_interval),  
                XmtSizeOf(tQCEntry, min_cpu_interval));
-
-      migr_load_thresholds = lGetList(qep, QU_migr_load_thresholds);
-
-      if (migr_load_thresholds) {
-         data->migr_load_thresholds = lCopyList("migr_load_thresholds", 
-                                                   migr_load_thresholds);
-      }
-      else
-         data->migr_load_thresholds = NULL;
    }
-
 DTRACE;
    /*********************/
    /* limit config      */
@@ -1458,11 +1404,6 @@ lListElem *qep
    if (!qep || !data || !data->qname || !data->qhostname)
       goto error;
 
-   /**************************/
-   /* unused fields          */
-   /**************************/
-   lSetString(qep, QU_reauth_time, "1:40:");
-   lSetString(qep, QU_klog, "/usr/local/bin/klog");
    lSetUlong(qep, QU_state, QUNKNOWN);
    
    /**************************/
@@ -1512,14 +1453,7 @@ lListElem *qep
    /**************************/
    /* checkpoint config      */
    /**************************/
-   lSetString(qep, QU_max_migr_time, data->max_migr_time);
-   lSetString(qep, QU_max_no_migr, data->max_no_migr);
    lSetString(qep, QU_min_cpu_interval, data->min_cpu_interval);
-   /*
-    * check the new list against the old list here
-    */
-   lSetList(qep, QU_migr_load_thresholds, data->migr_load_thresholds);
-   data->migr_load_thresholds = NULL;
 
    /**************************/
    /* limit config           */
@@ -2431,8 +2365,6 @@ XtPointer cld, cad;
    ** with lFreeList
    */
    memcpy(&temp_entry, &current_entry, sizeof(tQCEntry));
-   temp_entry.migr_load_thresholds = lCopyList("mlt",
-                                       current_entry.migr_load_thresholds);
    temp_entry.load_thresholds = lCopyList("lt", current_entry.load_thresholds);
    temp_entry.suspend_thresholds = lCopyList("st", 
                                        current_entry.suspend_thresholds);

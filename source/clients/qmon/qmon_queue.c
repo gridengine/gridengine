@@ -992,17 +992,6 @@ lListElem *qep
 
    str = lGetString(qep, QU_min_cpu_interval);
    sprintf(info, WIDTH"%s\n", info, "Min Cpu Interval:", str ? str : "");
-   str = lGetString(qep, QU_max_migr_time);
-   sprintf(info, WIDTH"%s\n", info, "Max Migration Time:", str ? str : "");
-   str = lGetString(qep, QU_max_no_migr);
-   sprintf(info, WIDTH"%s\n", info, "Max No Migration Time:", str ? str : "");
-
-   sprintf(info, WIDTH"", info, "Migration Load Thresholds:");
-   for_each(ep, lGetList(qep, QU_migr_load_thresholds)) {
-      sprintf(info, "%s%s = %s ", info, lGetString(ep, CE_name),
-                     lGetString(ep, CE_stringval));
-   }
-   sprintf(info, "%s\n", info); 
 
    sprintf(info, WIDTH"", info, "Access List:");
    for_each(ep, lGetList(qep, QU_acl)) {

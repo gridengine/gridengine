@@ -113,10 +113,10 @@ QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o
 QMON_ADD_OBJS = $(QMON_ADD_SRC:.c=.o)
 
 QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon -lXltree -lXtab \
-                -L. -lsched -lgdi $(KRBLIBS) -lcull -lrmon -lcom -luti
+                -L. -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti
                 
 QMON_LIB_DEPENDS = $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
-                   $(XLTREELIB) $(XTABLIB) $(SCHEDLIB) $(GDILIB) \
+                   $(XLTREELIB) $(XTABLIB) $(SCHEDLIB) $(GDILIB) $(SECLIBS) \
                    $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) $(ZLIB)
 
 ###############################################################################
@@ -137,7 +137,7 @@ qmon_help: ../dist/qmon/qmon_help.ad
 # rules to build binaries
 ###############################################################################
 qmon:  $(QMON_OBJS) $(QMON_ADD_OBJS) $(QMON_LIB_DEPENDS)
-	$(CC) $(LFLAGS) $(XLFLAGS) -o $@ $(QMON_OBJS) $(QMON_ADD_OBJS) $(QMON_ADD_LIBS) $(XLIBS) $(LIBS) 
+	$(CC) $(LFLAGS) $(XLFLAGS) -o $@ $(QMON_OBJS) $(QMON_ADD_OBJS) $(QMON_ADD_LIBS) $(XLIBS) $(SLIBS) $(LIBS) 
 
 ############################################################################
 # ListTree Demo prog

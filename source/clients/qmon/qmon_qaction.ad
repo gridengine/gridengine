@@ -275,35 +275,18 @@ Qmon*method_config*terminate_method.columns: 80
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*checkpoint_config.tabLabel: @{@fBCheckpointing}
 Qmon*checkpoint_config.xmtChildren: \
-   Matrix_2xN     migr_load_thresholds = migr_load_thresholds;\
-   InputField     max_migr_time = max_migr_time, \
-                  max_no_migr = max_no_migr, \
-                  min_cpu_interval = min_cpu_interval; \
-   XmPushButton   max_migr_timePB, max_no_migrPB, min_cpu_intervalPB;
-
+   InputField     min_cpu_interval = min_cpu_interval; \
+   XmPushButton   min_cpu_intervalPB;
 
 Qmon*checkpoint_config.layout: \
-   Row { \
-      Etched Through Caption tc "@{Migration Load Thresholds}" Col { \
-         Margin 10 Centered migr_load_thresholds \
-      } \
-      ## \
       Col { \
-         Caption tl "@{MaxMigrTime}" Row { \
-            Centered max_migr_time \
-            Fixed Centered max_migr_timePB \
-         } \
-         Caption tl "@{MaxNoMigr}" Row { \
-            Centered max_no_migr \
-            Fixed Centered max_no_migrPB \
-         } \
          Caption tl "@{MinCpuTime}" Row { \
             Centered min_cpu_interval \
             Fixed Centered min_cpu_intervalPB \
+            <>\
          } \
          <>\
       } \
-   }
 
 Qmon*qc_dialog.qc_folder*XbaeMatrix*buttonLabels: True
 Qmon*qc_dialog.qc_folder*XbaeMatrix*rows: 7
@@ -332,23 +315,6 @@ Qmon*qc_dialog.qc_folder*XbaeMatrix.textTranslations: #override\n\
          <Key>osfActivate: CommitEdit(True)\n\
          ~Shift ~Meta ~Alt <Key>Return: CommitEdit(True)\n\
          <Key>osfCancel: CommitEdit(True)
-
-Qmon*qc_dialog*migr_load_thresholds.xmtChildren: unmanaged XmtPopupMenu qc_menu;
-Qmon*qc_dialog*migr_load_thresholds*menuPost: <Btn3Down>
-
-Qmon*qc_dialog*migr_load_thresholds*qc_menu.items: \
-   Title "@{@fBOperations}"; \
-   ------;\
-   "@{_Delete}" [Ctrl-D] DeleteLines(*migr_load_thresholds);
-
-Qmon*qc_dialog*migr_load_thresholds.enterCellCallback: \
-      ColumnZeroNoEdit();
-
-Qmon*checkpoint_config.max_migr_timePB.labelType:    PIXMAP
-Qmon*checkpoint_config.max_migr_timePB.labelPixmap:  time
-
-Qmon*checkpoint_config.max_no_migrPB.labelType:    PIXMAP
-Qmon*checkpoint_config.max_no_migrPB.labelPixmap:  time
 
 Qmon*checkpoint_config.min_cpu_intervalPB.labelType:    PIXMAP
 Qmon*checkpoint_config.min_cpu_intervalPB.labelPixmap:  time

@@ -294,7 +294,9 @@ char **argv
          extern u_long32 logginglevel;
          u_long32 old_ll = logginglevel;
          logginglevel = LOG_INFO;
-         INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_S, feature_get_product_name(FS_VERSION)));
+         INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SS, 
+               feature_get_product_name(FS_VERSION),
+               feature_get_featureset_name(feature_get_active_featureset_id())));
          logginglevel = old_ll;
          SGE_EXIT(0);
       }   

@@ -49,7 +49,9 @@ void starting_up()
 
    logginglevel = LOG_INFO;
 
-   INFO((SGE_EVENT, MSG_STARTUP_STARTINGUP_S, feature_get_product_name(FS_VERSION)));
+   INFO((SGE_EVENT, MSG_STARTUP_STARTINGUP_SS, 
+         feature_get_product_name(FS_VERSION),
+         feature_get_featureset_name(feature_get_active_featureset_id())));
 
    logginglevel = old_ll;
 
@@ -66,7 +68,9 @@ void sge_shutdown()
    DENTER(TOP_LAYER, "sge_shutdown");
 
    logginglevel = LOG_INFO;
-   INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_S, feature_get_product_name(FS_VERSION)));
+   INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SS, 
+         feature_get_product_name(FS_VERSION),
+         feature_get_featureset_name(feature_get_active_featureset_id())));
    logginglevel = old_ll;
 
 #ifdef WIN32NATIVE 

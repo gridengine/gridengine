@@ -1,3 +1,7 @@
+EB-2002-01-29-0: Enhancem.: Improved logging
+                            - product mode string will be printed during
+                              startup and shutdown
+
 CR-2002-01-29-0: Testsuite: - new settings file version "6" (new parameter
                               product_feature)
                  Enhancem.: - added support for secure SGE/EE system

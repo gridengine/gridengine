@@ -131,7 +131,7 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
                       host_lcf * 100 + 
                       lGetUlong(hep, EH_load_correction_factor));
 
-#if 0
+#if 1
             DPRINTF(("JOB "u32"."u32" ["u32" slots] in queue %s increased lc of host "
                      "%s by "u32" to "u32"\n", job_id, ja_task_id, slots, qnm, hnm, 
                      (u_long32)(100*host_lcf), lGetUlong(hep, EH_load_correction_factor)));

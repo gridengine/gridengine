@@ -711,7 +711,6 @@ PrintConf()
    $ECHO "enforce_project        false"
    $ECHO "enforce_user           auto"
    $ECHO "load_report_time       00:00:40"
-   $ECHO "stat_log_time          48:00:00"
    $ECHO "max_unheard            00:05:00"
    $ECHO "reschedule_unknown     00:00:00"
    $ECHO "loglevel               log_warning"

@@ -8195,20 +8195,25 @@ proc resolve_host { name { long 0 } } {
 #*******************************
 #
 proc add_operator { anOperator } {
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
 
-   catch {eval exec "qconf" "-ao $anOperator" } result
-   puts $CHECK_OUTPUT $result
-
+   catch {eval exec $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf "-ao $anOperator" } result
    set result [string trim $result]
-   if {[string match "*added*$anOperator*" $result]} {
+
+   set ADDEDTOLIST   [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] "*" "*" $anOperator "*" ]
+   set ALREADYEXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $anOperator ]
+
+   if {[string match $ADDEDTOLIST $result]} {
+      puts $CHECK_OUTPUT "added $anOperator to operator list"
       return 0
-   } elseif {[string match "*$anOperator*already exists" $result]} {
+   } elseif {[string match $ALREADYEXISTS $result]} {
+      puts $CHECK_OUTPUT "operator $anOperator already exists"
       return 0
    } else {
       return -1
    }
 }
+
 
 #                                                             max. column:     |
 #****** sge_procedures/delete_operator() ******
@@ -8235,21 +8240,24 @@ proc add_operator { anOperator } {
 #*******************************
 #
 proc delete_operator {anOperator} {
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
 
-   catch {eval exec "qconf" "-do $anOperator" } result
-   puts $CHECK_OUTPUT $result
-
+   catch {eval exec $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf "-do $anOperator" } result
    set result [string trim $result]
-   if {[string match "*removed*$anOperator*" $result]} {
+
+   set REMOVEDFROMLIST [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] "*" "*" $anOperator "*" ]
+   set DOESNOTEXIST [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXIST_SS] "*" $anOperator ]
+
+   if {[string match $REMOVEDFROMLIST $result]} {
+      puts $CHECK_OUTPUT "removed $anOperator from operator list"
       return 0
-   } elseif {[string match "*$anOperator*does not exist" $result]} {
+   } elseif {[string match $DOESNOTEXIST $result]} {
+      puts $CHECK_OUTPUT "operator $anOperator does not exists"
       return 0
    } else {
-      return -2
+      return -1
    }
 }
-
 
 # main
 if { [info exists argc ] != 0 } {

@@ -1,3 +1,9 @@
+MD-2005-03-17-2: Bugfix:   install script should create execd spooldir
+                 Changed:  inst_execd.sh
+                 Issue:    1492
+                 Bugtraq:  6235845
+                 Review:   HP
+
 MD-2005-03-17-1: Bugfix:   adminuser is not considered in autoinstall!
                  Changed:  auto_inst template, inst_common.sh
                  Issue:    1243

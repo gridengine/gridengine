@@ -1463,7 +1463,9 @@ bool sge_add_list_event(u_long32 timestamp, ev_event type,
 
    if (list != NULL) {
       lp = lCreateListHash("Events", lGetElemDescr(element), false); 
-
+      if (lp == NULL) {
+         return false;
+      }
       for_each(element, list) {
       
          /* ignore the sublist in case of the following events. We have
@@ -3052,9 +3054,11 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
             if (clp != NULL) {
                clp = lFreeList(clp);
             }
-
+            
+            /* we are not making a copy, so we have to restore the old element */
+            lXchgList (event, ET_new_version, &lp);
+               
             if (!copy_event) {
-               lp = lFreeList(lp);
                event = lFreeElem(event);
             }
 
@@ -3078,6 +3082,8 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
        * the original list. */
       else {
          clp = lp;
+         /* Make sure lp is clear for the next part. */
+         lp = NULL;
       }
    } /* if */
 
@@ -3087,9 +3093,8 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
       DPRINTF (("Copying event\n"));
       ep = lCopyElemHash(event, false);
       
-      if (lp != NULL) {
-         lXchgList (event, ET_new_version, &lp);
-      }
+      lXchgList (event, ET_new_version, &lp);
+      
    }
    /* If we're not making a copy, reuse the original event. */
    else {
@@ -3097,13 +3102,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
    }
 
    /* Swap the new list into the working event. */
-   if (clp != NULL) {
-      lXchgList (ep, ET_new_version, &clp);
-   }
-
-   
-   /* Make sure lp is clear for the next part. */
-   lp = NULL;
+   lXchgList (ep, ET_new_version, &clp);
    
    /* fill in event number and increment 
       EV_next_number of event recipient */

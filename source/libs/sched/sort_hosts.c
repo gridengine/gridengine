@@ -306,7 +306,6 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
    /* search complex */
 
    if(!(cep = get_attribute_by_name(global, host, NULL, attrname, centry_list))){
-/*   if (!(cep = lGetElemStr(tcl, CE_name, name))) {*/
       /* 
        * admin has forgotten to configure complex for 
        * load value in load formula 
@@ -330,12 +329,7 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
    /*
     * No value available.
     */
-/*
-   if (dominant & DOMINANT_TYPE_VALUE) {
-      DEXIT;
-      return 1;
-   }
-*/
+
    DEXIT;
    return 0;
 }

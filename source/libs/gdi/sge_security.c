@@ -74,6 +74,10 @@
 #define ENCODE_TO_STRING   1
 #define DECODE_FROM_STRING 0
 
+#ifdef SECURE
+const char* sge_dummy_sec_string = "AIMK_SECURE_OPTION_ENABLED";
+#endif 
+
 static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
 static bool sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
 static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
@@ -102,10 +106,11 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
 
 int sge_security_initialize(const char *name)
 {
-
+   static const char* dummy_string = NULL;
    DENTER(TOP_LAYER, "sge_security_initialize");
 
 #ifdef SECURE
+   dummy_string = sge_dummy_sec_string;
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
       if (sec_init(name)) {
          DEXIT;

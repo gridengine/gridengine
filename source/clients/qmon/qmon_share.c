@@ -123,7 +123,6 @@ static Widget st_copy = 0;
 static Widget st_cut = 0;
 static Widget st_paste = 0;
 static Widget st_halflife_unit = 0;
-static Widget st_halflife_decay_list = 0;
 static Widget st_message = 0;
 
 /* static int sharetree_mode = STT_USER;  User Sharetree */

@@ -151,6 +151,7 @@ char **argv
    bool first_time = true;
    u_long32 isXML = false;
    lList *XML_out = NULL;
+   int longest_queue_length=10;
 
    DENTER_MAIN(TOP_LAYER, "qstat");
 
@@ -489,6 +490,25 @@ char **argv
     *         print these jobs if necessary
     *
     */
+   {
+      u_long32 name;
+      if ((group_opt & GROUP_CQ_SUMMARY) == 0) { 
+         name = QU_full_name;
+      }
+      else {
+         name = CQ_name;
+      }
+      if(getenv("SGE_LONG_QNAMES")){ 
+         for_each(qep, queue_list) {
+            int length;
+            const char *queue_name =lGetString(qep, name);
+            if( (length = strlen(queue_name)) > longest_queue_length){
+               longest_queue_length = length;
+            }
+         }
+      }
+   }
+    
 /*    TODO                                            */    
 /*    is correct_capacities needed here ???           */    
    correct_capacities(exechost_list, centry_list);
@@ -529,8 +549,10 @@ char **argv
             
             if (!isXML) {
                if (first_time) {
-                  printf("%-36.36s %7s "
-                         "%6s %6s %6s %6s %6s ",
+                  char queue_def[50];
+                  char fields[] = "%7s %6s %6s %6s %6s %6s ";
+                  sprintf(queue_def, "%%-%d.%ds %s ", longest_queue_length, longest_queue_length, fields);                         
+                  printf( queue_def,
                          "CLUSTER QUEUE", "LOAD", 
                          "USED", "AVAIL", "TOTAL", "aoACDS", "cdsuE");
                   if (show_states) {
@@ -549,10 +571,20 @@ char **argv
                      printf("--------------------");
                      printf("------");
                   }
+                  {
+                     int i;
+                     for(i=0; i< longest_queue_length - 36; i++)
+                        printf("-");
+                  }
                   printf("\n");
                   first_time = false;
                }
-               printf("%-36.36s ", lGetString(cqueue, CQ_name));
+               {
+                  char queue_def[50];
+                  sprintf(queue_def, "%%-%d.%ds ", longest_queue_length, longest_queue_length);
+
+                  printf(queue_def, lGetString(cqueue, CQ_name));
+               }
                if (is_load_available) {
                   printf("%7.2f ", load);
                } else {
@@ -642,7 +674,7 @@ char **argv
                }
                else{
                   sge_print_queue(qep, exechost_list, centry_list,
-                                  full_listing, qresource_list, explain_bits);
+                                  full_listing, qresource_list, explain_bits, longest_queue_length);
                }
             }
 
@@ -663,7 +695,7 @@ char **argv
          else {
             sge_print_jobs_queue(qep, job_list, pe_list, user_list,
                               exechost_list, centry_list,
-                              1, full_listing, "", group_opt);
+                              1, full_listing, "", group_opt, longest_queue_length);
          }
       }
       if (XML_out != NULL) {
@@ -738,7 +770,7 @@ char **argv
           *
           */
          sge_print_jobs_pending(job_list, pe_list, user_list, exechost_list,
-                                centry_list, so, full_listing, group_opt);
+                                centry_list, so, full_listing, group_opt, longest_queue_length);
 
          /* 
           *
@@ -747,7 +779,7 @@ char **argv
           *
           */
          sge_print_jobs_finished(job_list, pe_list, user_list, exechost_list,
-                                 centry_list, full_listing, group_opt);
+                                 centry_list, full_listing, group_opt, longest_queue_length);
 
          /*
           *
@@ -758,7 +790,7 @@ char **argv
           *
           */
          sge_print_jobs_error(job_list, pe_list, user_list, exechost_list,
-                              centry_list, full_listing, group_opt);
+                              centry_list, full_listing, group_opt, longest_queue_length);
 
          /*
           *
@@ -766,7 +798,7 @@ char **argv
           *
           */
          sge_print_jobs_zombie(zombie_list, pe_list, user_list, exechost_list,
-                               centry_list,  full_listing, group_opt);
+                               centry_list,  full_listing, group_opt, longest_queue_length);
       }
    }
 

@@ -41,7 +41,10 @@ extern "C" {
    
 #define MSG_JAPI_NO_EVENT_CLIENT   _MESSAGE(45501, _("The event client has not been started.\n"))
 #define MSG_JAPI_EVENT_CLIENT_ALREADY_STARTED   _MESSAGE(45502, _("The event client has already been started.\n"))
-#define MSG_ECGETPROBLEM   _MESSAGE(45503, _("Problem receiving events from qmaster.\n"))
+#define MSG_JAPI_EC_GET_PROBLEM _MESSAGE(45503, _("Problem receiving events from qmaster.\n"))
+#define MSG_JAPI_DISCONNECTED   _MESSAGE(45504, _("The qmaster has become unreachable.  Attempting to reconnect.\n"))
+#define MSG_JAPI_RECONNECTED    _MESSAGE(45505, _("Reconnected to qmaster.\n"))
+#define MSG_JAPI_QMASTER_DOWN   _MESSAGE(45506, _("The qmaster has gone down.  Waiting to reconnect.\n"))
 
 #ifdef	__cplusplus
 }

@@ -1962,63 +1962,46 @@ lListElem *jr
 
       DPRINTF(("MAIL VALID at ABORT\n"));
       sprintf(exitstr, "%d", exit_status);
-      if (job_is_array(jep)) {
-         if (pe_task_id_str) {
-            sprintf(sge_mail_subj,
-                    MSG_MAIL_SUBJECT_S_JA_TASK_STATE_SUUSS,
-                    pe_task_id_str,
-                    u32c(jobid),
-                    u32c(taskid),
-                    lGetString(jep, JB_job_name),
-                    action);
-         } else {
+      if (pe_task_id_str == NULL) {
+         if (job_is_array(jep)) {
             sprintf(sge_mail_subj,
                     MSG_MAIL_SUBJECT_JA_TASK_STATE_UUSS,
                     u32c(jobid),
                     u32c(taskid),
                     lGetString(jep, JB_job_name),
                     action);
-         }
-         sprintf(sge_mail_body,
-                 MSG_MAIL_BODY_STATE_SSSSSSSSSSSSS,
-                 sge_mail_subj, 
-                 exitstr, 
-                 sge_sig2str(signo),
-                 u, q, h, sge_mail_start, sge_mail_end,
-                 (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
-                 (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
-                 get_sstate_description(failed), 
-                 err_str, 
-                 comment);
-      } else {
-         if (pe_task_id_str) {
-            sprintf(sge_mail_subj,
-                    MSG_MAIL_SUBJECT_S_JOB_STATE_SUSS,
-                    pe_task_id_str,
-                    u32c(jobid),
-                    lGetString(jep, JB_job_name),
-                    action);
+            sprintf(sge_mail_body,
+                    MSG_MAIL_BODY_STATE_SSSSSSSSSSSSS,
+                    sge_mail_subj, 
+                    exitstr, 
+                    sge_sig2str(signo),
+                    u, q, h, sge_mail_start, sge_mail_end,
+                    (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
+                    (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
+                    get_sstate_description(failed), 
+                    err_str, 
+                    comment);
          } else {
             sprintf(sge_mail_subj,
                     MSG_MAIL_SUBJECT_JOB_STATE_USS,
                     u32c(jobid),
                     lGetString(jep, JB_job_name),
                     action);
+            sprintf(sge_mail_body, 
+                    MSG_MAIL_BODY_STATE_SSSSSSSSSSSSS,
+                    sge_mail_subj,
+                    exitstr, 
+                    sge_sig2str(signo),
+                    u, q, h, sge_mail_start, sge_mail_end,
+                    (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
+                    (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
+                    get_sstate_description(failed), 
+                    err_str, 
+                    comment);
          }
-         sprintf(sge_mail_body, 
-                 MSG_MAIL_BODY_STATE_SSSSSSSSSSSSS,
-                 sge_mail_subj,
-                 exitstr, 
-                 sge_sig2str(signo),
-                 u, q, h, sge_mail_start, sge_mail_end,
-                 (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
-                 (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
-                 get_sstate_description(failed), 
-                 err_str, 
-                 comment);
+         cull_mail(mail_users, sge_mail_subj, 
+                   sge_mail_body, MSG_MAIL_TYPE_STATE);
       }
-
-      cull_mail(mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_STATE);
    }
 
    sge_dstring_free(&cpu_string);

@@ -116,6 +116,7 @@ extern bool set_sge_environment;
 extern bool set_grd_environment;
 extern bool set_cod_environment;
 extern int scheduler_timeout;
+extern int max_dynamic_event_clients;
 
 /* reporting params */
 extern bool do_accounting;

@@ -78,15 +78,23 @@ extern "C" {
  */
 #define JAPI_SESSION_SUBDIR ".sge/session"
 
-#define JAPI_JOB_FINISH 1
-#define JAPI_JOB_START 2
+/* Bitfield for japi_wait() event flag */
+enum japi_events {
+   JAPI_JOB_FINISH = 0x01,
+   JAPI_JOB_START = 0x02
+/* JAPI_NEW_EVENT = 0x04 */
+};
 
+/* values for japi_exit() job exit flag */
 enum japi_flags {
    JAPI_EXIT_NO_FLAG,
    JAPI_EXIT_KILL_ALL,
    JAPI_EXIT_KILL_PENDING
 };
-   
+
+/* Type for japi_int()/japi_enable_job_wait() error handler callback.  The
+ * callback function should not free the const char* parameter. */
+typedef void (*error_handler_t)(const char *);
    
 /* ------------------- init/exit routines ------------------- */
 /*
@@ -98,7 +106,7 @@ enum japi_flags {
  */ 
 int japi_init(const char *contact, const char *session_key_in, 
               dstring *session_key_out, int prog_number, bool enable_wait,
-              dstring *diag);
+              error_handler_t handler, dstring *diag);
 
 /*
  * Starts the event client.  If japi_init() is called with the start_ec
@@ -107,8 +115,8 @@ int japi_init(const char *contact, const char *session_key_in,
  * know whether japi_wait() will be needed or not at the time that japi_init()
  * is called.
  */ 
-int japi_enable_job_wait (const char *session_key_in, 
-                          dstring *session_key_out, dstring *diag);
+int japi_enable_job_wait (const char *session_key_in, dstring *session_key_out,
+                          error_handler_t handler, dstring *diag);
 
 
 /*

@@ -523,6 +523,8 @@ int sub_command
          /* fill in authentication infos from request */
          lSetUlong(ep, EV_uid, uid);
 
+         sge_set_max_dynamic_event_clients(max_dynamic_event_clients);
+         
          sge_add_event_client(ep,&(answer->alp), 
                               (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL,
                               user,host);

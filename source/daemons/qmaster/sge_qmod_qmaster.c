@@ -150,6 +150,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
       
       if ((id_action & JOB_DO_ACTION) == 0) {
          qref_list_add(&qref_list, NULL, lGetString(dep, ID_str));
+         qref_list_resolve_hostname(qref_list);
          qref_list_resolve(qref_list, NULL, &tmp_list, 
                            &found_something, cqueue_list,
                            *(object_type_get_master_list(SGE_TYPE_HGROUP)), 

@@ -71,7 +71,6 @@ lappend check_functions "qalter_P"
 lappend check_functions "qalter_p"
 lappend check_functions "qalter_pe"
 lappend check_functions "qalter_q"
-lappend check_functions "qalter_qs_args"
 lappend check_functions "qalter_ry"
 lappend check_functions "qalter_rn"
 lappend check_functions "qalter_sc"
@@ -1193,49 +1192,6 @@ proc qalter_q {} {
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-q [get_queue_instance all.q $CHECK_HOST]"
-  set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
-  if {$qalterresult == 1} {
-    set_error -1 "qalter $option - $qalteroutput"
-    return
-  }
-  set_error 0 "qalter $option - no errors"
-  return
-}
-
-#                                                             max. column:     |
-#****** qalter/qalter_qs_args() ******
-# 
-#  NAME
-#     qalter_qs_args -- ??? 
-#
-#  SYNOPSIS
-#     qalter_qs_args { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc qalter_qs_args {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
-   global check_errno 
-   global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
-  set option "-qs_args arg1 arg2 arg3 -qs_end"
   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
   if {$qalterresult == 1} {
     set_error -1 "qalter $option - $qalteroutput"

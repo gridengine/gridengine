@@ -54,41 +54,15 @@
 #include "sge_hgroup.h"
 #include "sge_href.h"
 #include "sge_object.h"
+#include "sge_utility.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
+
 #define HGROUP_LAYER TOP_LAYER
 
 lList *Master_HGroup_List = NULL;
-
-/****** sgeobj/hgroup/correct_hgroup_name() ***********************************
-*  NAME
-*     correct_hgroup_name() -- convert string to valid hostgroupname 
-*
-*  SYNOPSIS
-*     void correct_hgroup_name(dstring *string, const char *name) 
-*
-*  FUNCTION
-*     Convert string to valid hostgroupname. 
-*
-*  INPUTS
-*     dstring *string  - will be filled with valid hostgroupname 
-*     const char *name - valid object name or hostgroupname 
-*
-*  RESULT
-*     void - none 
-*******************************************************************************/
-void 
-correct_hgroup_name(dstring *string, const char *name) 
-{
-   if (string != NULL && name != NULL) {
-      if (name[0] != HOSTGROUP_INITIAL_CHAR) {
-         sge_dstring_sprintf_append(string, "%c", HOSTGROUP_INITIAL_CHAR);
-      } 
-      sge_dstring_sprintf_append(string, "%s", name);
-   } 
-}
 
 /****** sgeobj/hgroup/is_hgroup_name() ****************************************
 *  NAME
@@ -115,6 +89,45 @@ is_hgroup_name(const char *name)
       ret = (name[0] == HOSTGROUP_INITIAL_CHAR);
    }
    return ret;
+}
+
+
+/****** sge_hgroup/hgroup_check_name() *****************************************
+*  NAME
+*    hgroup_check_name() -- determine if the given name is a valid hostgroup name
+*
+*  SYNOPSIS
+*     void check_hgroup_name(lList **answer_list, const char* name) 
+*
+*  FUNCTION
+*     Determine if the given name is a valid hostgroup name. If not
+*     add an approbiate error to the answer_list
+*
+*  INPUTS
+*     lList **answer_list - answer list where errors are stored 
+*     const char* name    - name of the hostgroup 
+*
+*  RESULT
+*     bool -  TRUE => name contains a valid name for a hostgroup
+*             FALSE => name is not a valid name for a hostrgroup
+*
+*  NOTES
+*     MT-NOTE: check_hgroup_name() is not MT safe 
+*
+*  SEE ALSO
+*     is_hgroup_name
+*     
+*******************************************************************************/
+bool hgroup_check_name(lList **answer_list, const char* name)
+{
+   if( !is_hgroup_name( name ) ) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, MSG_HGRP_INVALIDHOSTGROUPNAME_S, name);
+      return false;
+   }
+   if( verify_str_key( answer_list,&name[1], "hostgroup") != 0 ) {
+      return false;
+   }
+   return true;
 }
 
 /****** sgeobj/hgroup/hgroup_list_get_master_list() ***************************
@@ -168,44 +181,6 @@ hgroup_list_locate(const lList *this_list, const char *group)
    return ret;
 }
 
-/****** sgeobj/hgroup/hgroup_correct_name() ***********************************
-*  NAME
-*     hgroup_correct_name() -- Correct groupname if necessary 
-*
-*  SYNOPSIS
-*     bool hgroup_correct_name(lListElem *this_elem) 
-*
-*  FUNCTION
-*     Correct groupname if necessary 
-*
-*  INPUTS
-*     lListElem *this_elem - HGRP_Type element 
-*
-*  RESULT
-*     bool - status
-*        true  - success
-*        false - error 
-*******************************************************************************/
-bool 
-hgroup_correct_name(lListElem *this_elem) 
-{
-   bool ret = true;
-
-   DENTER(HGROUP_LAYER, "hgroup_correct_name");
-   if (this_elem != NULL) {
-      const char *name = lGetHost(this_elem, HGRP_name);
-
-      if (name != NULL && name[0] != HOSTGROUP_INITIAL_CHAR) {
-         dstring string = DSTRING_INIT;
-
-         correct_hgroup_name(&string, name);   
-         lSetHost(this_elem, HGRP_name, sge_dstring_get_string(&string));
-         sge_dstring_free(&string);
-      }
-   }
-   DEXIT;
-   return ret;
-}
 
 /****** sgeobj/hgroup/hgroup_create() *****************************************
 *  NAME
@@ -234,17 +209,18 @@ hgroup_create(lList **answer_list, const char *name, lList *href_or_groupref)
 
    DENTER(HGROUP_LAYER, "hgroup_create");
    if (name != NULL) {
-      ret = lCreateElem(HGRP_Type);
-      if (ret != NULL) {
-         lSetHost(ret, HGRP_name, name);
-         lSetList(ret, HGRP_host_list, href_or_groupref);
-         hgroup_correct_name(ret);         
-      } else {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC));
-         answer_list_add(answer_list, SGE_EVENT, 
-                         STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-      }
+      if( hgroup_check_name( answer_list, name ) == TRUE ) {
+         ret = lCreateElem(HGRP_Type);
+         if (ret != NULL) {
+            lSetHost(ret, HGRP_name, name);
+            lSetList(ret, HGRP_host_list, href_or_groupref);
+         } else {
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
+                                   MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC));
+            answer_list_add(answer_list, SGE_EVENT, 
+                            STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         }
+     }
    } else {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
       answer_list_add(answer_list, SGE_EVENT,

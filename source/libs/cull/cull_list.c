@@ -61,7 +61,6 @@
 static void lWriteList_(const lList *lp, int nesting_level, FILE *fp);
 static void lWriteElem_(const lListElem *lp, int nesting_level, FILE *fp);
 
-
 /****** cull/list/-Field_Attributes *************************************************
 *  NAME
 *     Field_Attributes -- Attributes of cull type fields
@@ -127,7 +126,8 @@ static void lWriteElem_(const lListElem *lp, int nesting_level, FILE *fp);
 lListElem *lCopyElem(const lListElem *ep) 
 {
    lListElem *new;
-   lDescr *p;
+   int index;
+   int max;
 
    DENTER(CULL_LAYER, "lCopyElem");
 
@@ -137,28 +137,30 @@ lListElem *lCopyElem(const lListElem *ep)
       return NULL;
    }
 
+   max = lCountDescr(ep->descr); 
+
    if (!(new = lCreateElem(ep->descr))) {
       LERROR(LECREATEELEM);
       DEXIT;
       return NULL;
    }
 
-   /* for (i = 0; ep->descr[i].nm != NoName; i++)  */
-   /*    if (lCopySwitch(ep, new, i, i) != 0)  */
-      
-   for (p = &(ep->descr[0]); p->nm != NoName; p++) {
-      int index =  p - &(ep->descr[0]); 
+   for (index = 0; index<max ; index++) { 
 
       if (lCopySwitch(ep, new, index, index) != 0) {
          lFreeElem(new);
+
          LERROR(LECOPYSWITCH);
          DEXIT;
          return NULL;
       }
-      /* copy changed field information */
-      if(sge_bitfield_get(ep->changed, index)) {
-         sge_bitfield_set(new->changed, index);
-      }
+   }
+   if (!sge_bitfield_copy(ep->changed, new->changed)) {
+      lFreeElem(new);
+
+      LERROR(LECOPYSWITCH);
+      DEXIT;
+      return NULL;
    }
 
    new->status = FREE_ELEM;

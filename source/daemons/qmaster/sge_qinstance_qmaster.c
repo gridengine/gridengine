@@ -52,6 +52,8 @@
 #include "sge_qinstance_qmaster.h"
 #include "sge_subordinate_qmaster.h"
 #include "sge_qmod_qmaster.h"
+#include "sge_job.h"
+#include "sge_ja_task.h"
 
 #include "sge_attr.h"
 #include "sge_calendar.h"
@@ -60,7 +62,7 @@
 #include "sge_cqueue.h"
 #include "sge_object.h"
 #include "sge_subordinate.h"
-
+#include "sge_parse_num_par.h"
 #include "sge_reporting_qmaster.h"
 
 #include "msg_qmaster.h"
@@ -241,6 +243,20 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                            old_value ? old_value : "<null>",
                            new_value ? new_value : "<null>"));
 #endif
+                  if (attribute_name == QU_suspend_interval &&
+                      new_value != NULL) {
+                     u_long32 interval;
+
+                     parse_ulong_val(NULL, &interval, TYPE_TIM,
+                                     new_value, NULL, 0);
+                     if (interval == 0) {
+                        /*
+                         * Suspend Threshold state will be reset later 
+                         */
+                        lSetUlong(this_elem, QU_gdi_do_later, GDI_DO_LATER); 
+                     }
+                  }
+                       
                   lSetString(this_elem, attribute_name, new_value);
                   *has_changed_conf_attr = true;
                }
@@ -321,7 +337,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                new_list = lCopyList("", new_value);
                new_value = NULL;
                centry_list_fill_request(new_list, Master_CEntry_List, 
-                                        false, true, false);
+                                        true, true, false);
                lSetList(tmp_elem, attribute_name, new_list);
                qinstance_reinit_consumable_actual_list(tmp_elem, answer_list);
                lXchgList(tmp_elem, attribute_name, &new_value);
@@ -354,6 +370,13 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
 #ifdef QINSTANCE_MODIFY_DEBUG
                   DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
+                  /*
+                   * Suspend Threshold state will be reset later 
+                   */
+                  if (attribute_name == QU_suspend_thresholds) {
+                     lSetUlong(this_elem, QU_gdi_do_later, GDI_DO_LATER);
+                  }
+   
                   lSetList(this_elem, attribute_name, lCopyList("", new_value));
                   *has_changed_conf_attr = true;
                }
@@ -479,6 +502,13 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                      if (attribute_name == QU_job_slots) {
                         qinstance_reinit_consumable_actual_list(this_elem,
                                                                 answer_list);
+                     } else if (attribute_name == QU_nsuspend &&
+                                new_value == 0) {
+                        /*
+                         * Suspend Threshold state will be reset later 
+                         */
+
+                        lSetUlong(this_elem, QU_gdi_do_later, GDI_DO_LATER);
                      }
                   }
                }

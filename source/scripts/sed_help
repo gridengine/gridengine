@@ -40,35 +40,35 @@ if [ ! -f '../dist/qmon/qmon_help.ad' ]; then
 fi
 
 horig='../dist/qmon/qmon_help.ad'
-hgrd='../dist/qmon/qmon_help.ad.ge'
-hcod='../dist/qmon/qmon_help.ad.geee'
+hn1ge='../dist/qmon/qmon_help.ad.geee'
+hsge='../dist/qmon/qmon_help.ad.ge'
 
-# ------------------------------
+#------------------------------
         
-echo Processing $horig to $hgrd
+echo Processing $horig to $hn1ge
 
-QS_NAME=SGEEE
-qs_name=sgeee
-QS_NAME_S=SGEEE
-qs_name_s=sgeee
+QS_NAME=N1GE
+qs_name=sge
+QS_NAME_S=N1GE
+qs_name_s=sge
 
-rm -f $hgrd
+rm -f $hn1ge
 sed -e "s/xxQS_NAMExx/$QS_NAME/g" \
     -e "s/xxqs_namexx/$qs_name/g" \
     -e "s/xxQS_NAME_Sxx/$QS_NAME_S/g" \
-    -e "s/xxqs_name_sxx/$qs_name_s/g" $horig > $hgrd 
+    -e "s/xxqs_name_sxx/$qs_name_s/g" $horig > $hn1ge 
 
 # ------------------------------
 
-echo Processing $horig to $hcod
+echo Processing $horig to $hsge
 
 QS_NAME=SGE
 qs_name=sge
 QS_NAME_S=SGE
 qs_name_s=sge
 
-rm -f $hcod
+rm -f $hsge
 sed -e "s/xxQS_NAMExx/$QS_NAME/g" \
     -e "s/xxqs_namexx/$qs_name/g" \
     -e "s/xxQS_NAME_Sxx/$QS_NAME_S/g" \
-    -e "s/xxqs_name_sxx/$qs_name_s/g" $horig > $hcod
+    -e "s/xxqs_name_sxx/$qs_name_s/g" $horig > $hsge

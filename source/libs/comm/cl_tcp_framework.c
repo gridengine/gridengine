@@ -2165,6 +2165,13 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
          /* return immediate for only write select ( only called by write thread) */
          return CL_RETVAL_NO_SELECT_DESCRIPTORS;
       }
+
+      if ( select_mode == CL_R_SELECT ) {
+         /* return immediate for only read select ( only called by read thread) */
+         return CL_RETVAL_NO_SELECT_DESCRIPTORS;
+      }
+
+      
       /* we have no file descriptors, but we do a select with standard timeout
          because we don't want to overload the cpu by endless trigger() calls 
          from application when there is no connection client 

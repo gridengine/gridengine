@@ -1,7 +1,7 @@
-#! /bin/sh
+#!/bin/sh
 #
 # SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: inst_sgeee_common.sh
+# Scriptname: inst_common.sh
 # Module: common functions
 #
 #___INFO__MARK_BEGIN__
@@ -36,15 +36,11 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-#set -x
-
-
 #-------------------------------------------------------------------------
 #Setting up common variables and paths (eg. ARCH, utilbin, util)
 #
 BasicSettings()
 {
-
   unset SGE_ND
   unset SGE_DEBUG_LEVEL
 
@@ -69,15 +65,13 @@ BasicSettings()
   DIRPERM=755
   FILEPERM=644
 
-  #SGE_ROOT=SGE_ROOT
-  #SGE_CELL=SGE_CELL
   SGE_MASTER_NAME=sge_qmaster
   SGE_EXECD_NAME=sge_execd
   SGE_SCHEDD_NAME=sge_schedd
   SGE_SHEPHERD_NAME=sge_shepherd
   SGE_SHADOWD_NAME=sge_shadowd
   SGE_SERVICE=sge_qmaster
-  SGE_MASTER_SRV=sge_qmaster
+  SGE_QMASTER_SRV=sge_qmaster
   SGE_EXECD_SRV=sge_execd
 
   unset SGE_NOMSG
@@ -102,7 +96,6 @@ BasicSettings()
      $INFOTEXT -e "can't get hostname of this machine. Installation failed."
      exit 1
   fi
-
 }
 
 
@@ -344,17 +337,17 @@ ErrUsage()
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
-             "   inst_sgeee -m -x\n" \
-             "                       Installs qmaster and exechost on localhost\n" \
-             "   inst_sgeee -m -x -auto /path/to/config-file\n" \
-             "                       Installs qmaster and exechost using the given\n" \
-             "                       configuration file\n" \
-             "                       (A templete can be found in:\n" \
-             "                       util/install_modules/inst_sgeee_template.conf)\n" \
-             "   inst_sgeee -ux -host hostname\n" \
-             "                       Uninstalls execd on given executionhost\n" \
-             "   inst_sgeee -db      Install a Berkeley DB Server on local host\n" \
-             "   inst_sgeee -sm      Install a Shadow Master Host on local host" $myname 
+             "   inst_sge -m -x\n" \
+             "                     Installs qmaster and exechost on localhost\n" \
+             "   inst_sge -m -x -auto /path/to/config-file\n" \
+             "                     Installs qmaster and exechost using the given\n" \
+             "                     configuration file\n" \
+             "                     (A templete can be found in:\n" \
+             "                     util/install_modules/inst_sgeee_template.conf)\n" \
+             "   inst_sge -ux -host hostname\n" \
+             "                     Uninstalls execd on given executionhost\n" \
+             "   inst_sge -db      Install a Berkeley DB Server on local host\n" \
+             "   inst_sge -sm      Install a Shadow Master Host on local host" $myname 
 
    exit 1
 }
@@ -417,6 +410,7 @@ CheckWhoInstallsSGE()
                   "This will allow you to run Grid Engine only under your user id for testing\n" \
                   "a limited functionality of Grid Engine.\n"
 
+      ADMINUSER=`whoami`
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> if this is ok or stop the installation with Ctrl-C >> "
       $CLEAR
       return 0
@@ -479,23 +473,25 @@ CheckWhoInstallsSGE()
       while [ $done = false ]; do
          $CLEAR
          $INFOTEXT -u "\nChoosing a Grid Engine admin user name"
-         $INFOTEXT -n "\nPlease enter the user name (or >root<) >> "
+         $INFOTEXT -n "\nPlease enter a valid user name >> "
          INP=`Enter ""`
-         $SGE_UTILBIN/checkuser -check "$INP"
-         if [ $? != 0 ]; then
-            $INFOTEXT "User >%s< does not exist - please correct the username" $INP
-            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-            $CLEAR
-         else
-            $INFOTEXT "\nInstalling Grid Engine as user >%s<\n" $INP
-            $INFOTEXT -log "Installing Grid Engine as user >%s<" $INP
-            ADMINUSER=$INP
-            if [ $ADMINUSER = root ]; then
-               ADMINUSER=default
+         if [ "$INP" != "" ]; then
+            $SGE_UTILBIN/checkuser -check "$INP"
+            if [ $? != 0 ]; then
+               $INFOTEXT "User >%s< does not exist - please correct the username" $INP
+               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               $CLEAR
+            else
+               $INFOTEXT "\nInstalling Grid Engine as admin user >%s<\n" $INP
+               $INFOTEXT -log "Installing Grid Engine as user >%s<" $INP
+               ADMINUSER=$INP
+               if [ $ADMINUSER = root ]; then
+                  ADMINUSER=default
+               fi
+               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               $CLEAR
+               done=true
             fi
-            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-            $CLEAR
-            done=true
          fi
       done
    else
@@ -507,7 +503,41 @@ CheckWhoInstallsSGE()
    fi
 }
 
+#-------------------------------------------------------------------------
+# CheckForLocalHostResolving
+#   "localhost", localhost.localdomain and 127.0.x.x are not supported
+#   
+#
+CheckForLocalHostResolving()
+{
+   output=`$SGE_UTILBIN/gethostname| cut -f2 -d:`
 
+   notok=false
+   for cmp in $output; do
+      case "$cmp" in
+      localhost*|127.0*)
+         notok=true
+         ;;
+      esac
+   done
+
+   if [ $notok = true ]; then
+      $INFOTEXT -u "\nUnsupported local hostname"
+      $INFOTEXT "\nThe current hostname is resolved as follows:\n\n"
+      $SGE_UTILBIN/gethostname
+      $INFOTEXT -wait -auto $AUTO -n \
+                "\nIt is not supported for a Grid Engine installation that the local hostname\n" \
+                "contains the hostname \"localhost\" and/or the IP address \"127.0.x.x\" of the\n" \
+                "loopback interface.\n" \
+                "The \"localhost\" hostname should be reserved for the loopback interface\n" \
+                "(\"127.0.0.1\") and the real hostname should be assigned to one of the\n" \
+                "physical or logical network interfaces of this machine.\n\n" \
+                "Installation failed.\n\n" \
+                "Press <RETURN> to exit the installation procedure >> "
+      exit
+   fi
+}
+               
 #-------------------------------------------------------------------------
 # ProcessSGERoot: read SGE/SGEEE root directory and set $SGE_ROOT
 #                    check if $SGE_ROOT matches current directory
@@ -616,7 +646,7 @@ GiveHints()
                 "   - \$SGE_CELL         (if you are using a cell other than >default<)\n" \
                 "   - \$SGE_QMASTER_PORT (if you haven't added the service >sge_qmaster<)\n" \
                 "   - \$SGE_EXECD_PORT   (if you haven't added the service >sge_execd<)\n" \
-                "   - \$PATH/\$path      (to find the Grid Engine binaries)\n" \
+                "   - \$PATH/\$path       (to find the Grid Engine binaries)\n" \
                 "   - \$MANPATH          (to access the manual pages)\n" \
                 $SGE_ROOT_VAL/$SGE_CELL_VAL/common/settings.csh \
                 $SGE_ROOT_VAL/$SGE_CELL_VAL/common/settings.sh
@@ -624,13 +654,21 @@ GiveHints()
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to see where Grid Engine logs messages >> "
       $CLEAR
 
+      tmp_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
+      master_spool=`dirname $tmp_spool`
+
       $INFOTEXT -u "\nGrid Engine messages"
       $INFOTEXT "\nGrid Engine messages can be found at:\n\n" \
                 "   /tmp/qmaster_messages (during qmaster startup)\n" \
                 "   /tmp/execd_messages   (during execution daemon startup)\n\n" \
                 "After startup the daemons log their messages in their spool directories.\n\n" \
                 "   Qmaster:     %s\n" \
-                "   Exec daemon: <execd_spool_dir>/<hostname>/messages\n" $QMDIR/messages
+                "   Exec daemon: <execd_spool_dir>/<hostname>/messages\n" $master_spool/messages
+
+      $INFOTEXT -u "\nGrid Engine startup scripts"
+      $INFOTEXT "\nGrid Engine startup scripts can be found at:\n\n" \
+                "   %s (qmaster and scheduler)\n" \
+                "   %s (execd)\n" $SGE_ROOT/$SGE_CELL/common/sgemaster $SGE_ROOT/$SGE_CELL/common/sgeexecd
 
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
                 "Do you want to see previous screen about using Grid Engine again (y/n) [n] >> "
@@ -655,7 +693,7 @@ GiveHints()
                   "   # qconf -sh\n\n" \
                   "and you may add new administrative hosts with the command\n\n" \
                   "   # qconf -ah <hostname>\n\n"
-       $INFOTEXT -wait "Please, hit <RETURN>"
+       $INFOTEXT -wait -n "Please hit <RETURN> >> "
        $CLEAR
        QMASTER="undef"
       return 0
@@ -690,17 +728,14 @@ PrintLocalConf()
 
 
 #-------------------------------------------------------------------------
-# AddSGEStartUpScript: Add startup script to rc files if root installs
+# CreateSGEStartUpScripts: create startup scripts 
 #
-AddSGEStartUpScript()
+CreateSGEStartUpScripts()
 {
    euid=$1
    create=$2
    hosttype=$3
 
-   $CLEAR
-   $INFOTEXT -u "\nGrid Engine startup script"
-   $ECHO
    if [ $hosttype = "master" ]; then
       TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
       STARTUP_FILE_NAME=sgemaster
@@ -783,29 +818,54 @@ AddSGEStartUpScript()
          AddDefaultOperator $USER
       fi
 
-      $INFOTEXT "Your Grid Engine cluster wide startup script is installed as:\n\n" \
-                "   %s<\n\n" $SGE_STARTUP_FILE
-      $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+      $INFOTEXT "Creating >%s< script" $STARTUP_FILE_NAME 
    fi
 
+}
+
+
+
+#-------------------------------------------------------------------------
+# AddSGEStartUpScript: Add startup script to rc files if root installs
+#
+AddSGEStartUpScript()
+{
+   euid=$1
+   hosttype=$2
+
    $CLEAR
+   if [ $hosttype = "master" ]; then
+      TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
+      STARTUP_FILE_NAME=sgemaster
+      S95NAME=S95sgemaster
+      DAEMON_NAME="qmaster/scheduler"
+   else
+      TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
+      STARTUP_FILE_NAME=sgeexecd
+      S95NAME=S95sgeexecd
+      DAEMON_NAME="execd"
+   fi
+
+   SGE_STARTUP_FILE=$SGE_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
+
 
    if [ $euid != 0 ]; then
       return 0
    fi
 
-   $INFOTEXT -u "\nGrid Engine startup script"
+   $INFOTEXT -u "\n%s startup script" $DAEMON_NAME
 
    # --- from here only if root installs ---
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
-             "\nWe can install the startup script that\n" \
-             "Grid Engine is started at machine boot (y/n) [n] >> "
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+             "\nWe can install the startup script that will\n" \
+             "start %s at machine boot (y/n) [y] >> " $DAEMON_NAME
 
+   ret=$?
    if [ $AUTO = "true" -a $ADD_TO_RC = "false" ]; then
       $CLEAR
       return
    else
-      if [ $? = 1 ]; then
+      if [ $ret = 1 ]; then
          $CLEAR
          return
       fi
@@ -826,14 +886,18 @@ AddSGEStartUpScript()
       # RedHat uses runlevel 3 for full networked mode
       # Suse uses runlevel 2 for full networked mode
       # we already installed the script in level 3
-      if [ $ARCH = linux -o $ARCH = glinux -o $ARCH = alinux -o $ARCH = slinux ]; then
+      ARCH=`$SGE_UTIL/arch`
+      case $ARCH in
+      lx2?-*)
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
             $INFOTEXT "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
             Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
             Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$S95NAME
          fi
-      fi
+         ;;
+       esac
+
    elif [ "$RC_FILE" = "insserv-linux" ]; then
       echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       echo /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
@@ -890,6 +954,7 @@ AddSGEStartUpScript()
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
 }
+
 
 #-------------------------------------------------------------------------
 # AddDefaultManager

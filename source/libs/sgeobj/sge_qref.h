@@ -51,6 +51,12 @@ qref_list_trash_some_elemts(lList **this_list, const char *full_name);
 bool
 qref_list_is_valid(const lList *this_list, lList **answer_list);
 
+void
+qref_resolve_hostname(lListElem *this_elem);
+
+void
+qref_list_resolve_hostname(lList *this_list); 
+
 #endif /* __SGE_QREF_H__ */
 
 

@@ -77,6 +77,7 @@
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "load_correction.h"
+#include "sge_parse_num_par.h"
 #include "sge_complex_schedd.h"
 #include "qstat_printing.h"
 #include "sge_centry.h"
@@ -1465,6 +1466,7 @@ lList *centry_list, lList *exechost_list, u_long32 explain_bits)
    bool is_load_value;
    bool has_value_from_object; 
    double load_avg;
+   u_long32 interval;
 
    DENTER(GUI_LAYER, "qmonQinstanceShowBrowserExplain");
 
@@ -1487,7 +1489,11 @@ lList *centry_list, lList *exechost_list, u_long32 explain_bits)
                             centry_list, load_alarm_reason, 
                             MAX_STRING_SIZE - 1, "load");
    }
-   if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
+   parse_ulong_val(NULL, &interval, TYPE_TIM,
+                   lGetString(q, QU_suspend_interval), NULL, 0);
+   if (lGetUlong(q, QU_nsuspend) != 0 &&
+       interval != 0 &&
+       sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
       qinstance_state_set_suspend_alarm(q, true);
       sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), 
                             exechost_list, centry_list, suspend_alarm_reason, 
@@ -1972,7 +1978,6 @@ static void qmonCQUpdateQIMatrix(void)
    lListElem *cq = NULL;
    int row;
    int num_rows;
-   int num_fql;
    char buf[BUFSIZ];
    u_long32 qstate = U_LONG32_MAX; 
 
@@ -2034,6 +2039,7 @@ static void qmonCQUpdateQIMatrix(void)
       char suspend_alarm_reason[MAX_STRING_SIZE];
       bool is_load_value;
       bool has_value_from_object; 
+      u_long32 interval;
 
       if (!(load_avg_str=getenv("SGE_LOAD_AVG")) || !strlen(load_avg_str))
          load_avg_str = LOAD_ATTR_LOAD_AVG;
@@ -2054,7 +2060,11 @@ static void qmonCQUpdateQIMatrix(void)
                sge_load_alarm_reason(qp, lGetList(qp, QU_load_thresholds), ehl, 
                                cl, load_alarm_reason, MAX_STRING_SIZE - 1, "load");
             }
-            if (sge_load_alarm(NULL, qp, lGetList(qp, QU_suspend_thresholds), ehl, cl, NULL)) {
+            parse_ulong_val(NULL, &interval, TYPE_TIM,
+                            lGetString(qp, QU_suspend_interval), NULL, 0);
+            if (lGetUlong(qp, QU_nsuspend) != 0 &&
+                interval != 0 &&
+                sge_load_alarm(NULL, qp, lGetList(qp, QU_suspend_thresholds), ehl, cl, NULL)) {
                qinstance_state_set_suspend_alarm(qp, true);
                sge_load_alarm_reason(qp, lGetList(qp, QU_suspend_thresholds), 
                                ehl, cl, suspend_alarm_reason, 

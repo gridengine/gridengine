@@ -39,7 +39,7 @@
 
 #Reset PATH to a safe value
 #
-PATH=/bin:/usr/bin:/usr/sbin:/usr/bsd
+PATH=/bin:/usr/bin:/usr/sbin:/usr/bsd:/usr/ucb
 
 # Easy way to prevent clearing of screen
 #
@@ -150,7 +150,6 @@ while [ $ARGC != 0 ]; do
      else
         HOST=$2
      fi
-     #echo Un/install exechost $2
      shift
      ARGC=`expr $ARGC - 1`
      ;;
@@ -198,17 +197,15 @@ if [ $QMASTER = "install" ]; then
  fi
 
  WelcomeTheUser
+ CheckForLocalHostResolving
  CheckWhoInstallsSGE
  ProcessSGERoot 
- #CheckCommPorts qmaster
  GetQmasterPort
  GetExecdPort
- #GetCellRoot
  GetCell
  GetQmasterSpoolDir $euid
  SetCellDependentVariables
  SetPermissions
- #SetSpoolingOptions
  SelectHostNameResolving
  SetProductMode
  MakeDirsMaster
@@ -222,9 +219,11 @@ if [ $QMASTER = "install" ]; then
  AddPEFiles
  AddDefaultDepartement
  AddCommonFiles
+ CreateSGEStartUpScripts $euid true master
+ CreateSGEStartUpScripts $euid true execd 
  CreateSettingsFile
  InitCA
- AddSGEStartUpScript $euid true master
+ AddSGEStartUpScript $euid master
  StartQmaster
  AddHosts
  SetScheddConfig
@@ -247,17 +246,16 @@ if [ $EXECD = "install" ]; then
       if [ $h = `hostname` ]; then
   
          WelcomeTheUserExecHost
+         CheckForLocalHostResolving
          CheckWhoInstallsSGE 
          ProcessSGERoot
          CheckQmasterInstallation
-         #CheckCommPorts execd
-         #GetExecdPort
          CheckCellDirectory
          CheckCSP
          CheckHostNameResolving
          GetLocalExecdSpoolDir
          AddLocalConfiguration_With_Qconf
-         AddSGEStartUpScript $euid true execd
+         AddSGEStartUpScript $euid execd 
          StartExecd
          AddQueue
          GiveHints
@@ -278,18 +276,17 @@ if [ $EXECD = "install" ]; then
  
  else
       WelcomeTheUserExecHost
+      CheckForLocalHostResolving
       CheckWhoInstallsSGE 
       ProcessSGERoot
       CheckQmasterInstallation
-      #CheckCommPorts execd
-      #GetExecdPort
       CheckCellDirectory
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
       CheckCSP
       CheckHostNameResolving
       GetLocalExecdSpoolDir
       AddLocalConfiguration_With_Qconf
-      AddSGEStartUpScript $euid true execd 
+      AddSGEStartUpScript $euid execd
       StartExecd
       AddQueue
       GiveHints
@@ -309,12 +306,12 @@ if [ $EXECD = "install" ]; then
                   CONFIG_FILE=`Enter`
                   export CONFIG_FILE
                else               
-                  $INFOTEXT "Please enter the path to your autoinstall configuration file or hit <RETURN> to use >> [%s] >> " $CONFIG_FILE
-                            CONFIG_FILE=`Enter $CONFIG_FILE`
+                  $INFOTEXT -n "Please enter the path to your autoinstall configuration file or\n hit <RETURN> to use [%s] >> " $CONFIG_FILE
+                 CONFIG_FILE=`Enter $CONFIG_FILE`
                fi
 
                $INFOTEXT -n "Please enter which shell you want to use for remote login (rsh/ssh) or\n hit <RETURN> to use [%s] >> " $SHELL_NAME
-                         SHELL_NAME=`Enter $SHELL_NAME` 
+               SHELL_NAME=`Enter $SHELL_NAME` 
                $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
                echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $CONFIG_FILE -noremote" | $SHELL_NAME $h /bin/sh &
            fi
@@ -331,11 +328,11 @@ if [ $EXECD = "install" ]; then
                      CONFIG_FILE=`Enter`
                      export CONFIG_FILE
                   else               
-                     $INFOTEXT "Please enter the path to your autoinstall configuration file or hit <RETURN> to use >> [%s] >> " $CONFIG_FILE
-                               CONFIG_FILE=`Enter $CONFIG_FILE`
+                     $INFOTEXT -n "Please enter the path to your autoinstall configuration file or\n hit <RETURN> to use [%s] >> " $CONFIG_FILE
+                     CONFIG_FILE=`Enter $CONFIG_FILE`
                   fi
-                     $INFOTEXT "Please enter which shell you want to use for remote login (rsh/ssh) or hit <RETURN> to use >> [%s] >> " $SHELL_NAME
-                            SHELL_NAME=`Enter $SHELL_NAME`
+                  $INFOTEXT -n "Please enter which shell you want to use for remote login (rsh/ssh) or\n hit <RETURN> to use [%s] >> " $SHELL_NAME
+                  SHELL_NAME=`Enter $SHELL_NAME`
                   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
                   echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $CONFIG -noremote" | $SHELL_NAME $h /bin/sh &
               fi

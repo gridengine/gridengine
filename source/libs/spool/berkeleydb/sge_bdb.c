@@ -847,7 +847,7 @@ spool_berkeleydb_read_list(lList **answer_list, struct bdb_info *info,
                ret = false;
                break;
             }
-            DPRINTF(("init_packbuffer succeeded\n"));
+
             cull_ret = cull_unpack_elem_partial(&pb, &object, descr, pack_part);
             if (cull_ret != PACK_SUCCESS) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 

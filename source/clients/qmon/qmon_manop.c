@@ -615,10 +615,12 @@ XtPointer cld, cad;
    }
 
    ep = lGetElemStr(qmonMirrorList(SGE_USERSET_LIST), US_name, usetname);
-   if (usetname && !strcmp(usetname, DEFAULT_DEPARTMENT)) 
-      XtSetSensitive(manop_modify, False);
-   else
-      XtSetSensitive(manop_modify, True);
+   if (dialog_mode==SGE_USERSET_LIST) {
+      if (usetname && !strcmp(usetname, DEFAULT_DEPARTMENT)) 
+         XtSetSensitive(manop_modify, False);
+      else
+         XtSetSensitive(manop_modify, True);
+   }   
 
    XtFree((char*) usetname);
    

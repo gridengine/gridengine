@@ -190,17 +190,8 @@
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
  */
-/* #define MSG_MAIL_SUBJECT_S_JA_TASK_STATE_SUUSS  _MESSAGE(27083, _("Subtask "SFQ" of Job-array task "U32CFormat"."U32CFormat" ("SFN") "SFN)) */
-#define MSG_MAIL_SUBJECT_S_JA_TASK_STATE_SUUSS  "Subtask "SFQ" of Job-array task "U32CFormat"."U32CFormat" ("SFN") "SFN
-/* #define MSG_MAIL_SUBJECT_S_JOB_STATE_SUSS       _MESSAGE(27084, _("Subtask "SFQ" of job "U32CFormat" ("SFN") "SFN)) */
-#define MSG_MAIL_SUBJECT_S_JOB_STATE_SUSS       "Subtask "SFQ" of job "U32CFormat" ("SFN") "SFN
-/* #define MSG_MAIL_SUBJECT_JA_TASK_STATE_UUSS     _MESSAGE(27085, _("Job-array task "U32CFormat"."U32CFormat" ("SFN") "SFN)) */
 #define MSG_MAIL_SUBJECT_JA_TASK_STATE_UUSS     "Job-array task "U32CFormat"."U32CFormat" ("SFN") "SFN
-/* #define MSG_MAIL_SUBJECT_JOB_STATE_USS          _MESSAGE(27086, _("Job "U32CFormat" ("SFN") "SFN)) */
 #define MSG_MAIL_SUBJECT_JOB_STATE_USS          "Job "U32CFormat" ("SFN") "SFN
-
-
-
 
 #define MSG_MAIL_BODY_STATE_SSSSSSSSSSSSS       _MESSAGE(27087, _(SFN"\n Exit Status      = "SFN"\n Signal           = "SFN"\n User             = "SFN"\n Queue            = "SFN"\n Host             = "SFN"\n Start Time       = "SFN"\n End Time         = "SFN"\n CPU              = "SFN"\n Max vmem         = "SFN"\nfailed "SFN" because:\n"SFN SFN))
 #define MSG_MAIL_TYPE_STATE                     _MESSAGE(27088, _("job abortion/end"))

@@ -118,6 +118,11 @@ int main(int argc, char *argv[])
       printf("load_medium     %.2f\n", avg[1]);
    if (loads>2 && ((pos && !strcmp("load_long", argv[pos])) || !pos))
       printf("load_long       %.2f\n", avg[2]);
+      
+   if (pos)
+      name = argv[pos];
+   else
+      name = NULL;
 
 #ifdef SGE_LOADMEM
    /* memory load report */
@@ -127,11 +132,6 @@ int main(int argc, char *argv[])
       return 1;
    }
 
-   if (pos)
-      name = argv[pos];
-   else
-      name = NULL;
-         
    print_mem_load(LOAD_ATTR_MEM_FREE, name, precision, mem_info.mem_free, m); 
    print_mem_load(LOAD_ATTR_SWAP_FREE, name, precision, mem_info.swap_free, m); 
    print_mem_load(LOAD_ATTR_VIRTUAL_FREE, name, precision, mem_info.mem_free  + mem_info.swap_free, m); 

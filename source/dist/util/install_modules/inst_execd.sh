@@ -1,7 +1,7 @@
 #! /bin/sh
 #
 # SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: inst_sgeee_execd.sh
+# Scriptname: inst_execd.sh
 # Module: execd installation functions
 #
 #___INFO__MARK_BEGIN__
@@ -180,7 +180,6 @@ CheckCellDirectory()
 #
 CheckCSP()
 {
-
    if [ $CSP = false ]; then
       return
    fi
@@ -200,143 +199,141 @@ CheckCSP()
 
 
 #-------------------------------------------------------------------------
-# Check the hostnames and put out warning message on probably wrong
-# hostname resolving
+# CheckHostNameResolving
+#
+# Check the hostnames and put out warning message on probably wrong hostname
+# resolving
+#
+# If this host is not an admin host give user a chance to correct the
+# resolving, host_aliases file and bootstrap settings
+#
+# Try at most $loop_max times 
 #
 CheckHostNameResolving()
 {
+   myrealname=`$SGE_UTILBIN/gethostname -name`
 
-   resolve_get_configuration=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "^ignore_fqdn" | awk '{print $2}'`
-   resolve_qmaster_params=`echo $resolve_get_configuration | egrep -i "true|1"`
-   if [ "x$resolve_qmaster_params" = "x" ]; then
-      $ECHO ""
-      set IGNORE_FQDN_DEFAULT=false
-   else
-#     don't need this check when IGNORE_FQDN=true in qmaster_params
-      set IGNORE_FQDN_DEFAULT=true
-      CheckIfAdminHost
-      return
-   fi
-
-   done=false
    loop_counter=0
-   while [ $done = false ]; do
-       done=false
-       $CLEAR
-       $INFOTEXT -u "\nChecking hostname resolving"
-
-       resolve_admin_hosts=`ExecuteAsAdmin $SGE_BIN/qconf -sh`
-       resolve_this_hostname=`ExecuteAsAdmin $SGE_UTILBIN/gethostname -aname`
-       resolve_default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "^default_domain" | awk '{print $2}'`
-
-       if [ "$resolve_default_domain" = "" ]; then
-           resolve_default_domain="none"
-       fi
-       $INFOTEXT "\nThis host has the local hostname >%s<.\n" $resolve_this_hostname
-
-       resolve_default_domain_upper=`echo $resolve_default_domain | tr "[a-z]" "[A-Z]"`
-       if [ "$resolve_default_domain_upper" != "NONE" ]; then
-            resolve_tmp_name=`echo $resolve_this_hostname | cut -f 1 -d "."`
-            if [ "$resolve_tmp_name" = "$resolve_this_hostname" ]; then
-                resolve_this_hostname="$resolve_this_hostname.$resolve_default_domain"
-
-                $INFOTEXT "The default_domain parameter is set in the global configuration\n" \
-                          "and added to the unqualified hostname. As a result the\n" \
-                          "execd on this host would return the following hostname: >%s<\n" \
-                          $resolve_this_hostname
-            fi
-       fi
-
-       resolve_upper_this_hostname=`echo $resolve_this_hostname | tr "[a-z]" "[A-Z]"`
-       for i in $resolve_admin_hosts; do
-           resolve_upper_admin_hostname=`echo $i | tr "[a-z]" "[A-Z]"`
-           if [ "$resolve_upper_admin_hostname" = "$resolve_upper_this_hostname" ]; then
-              $INFOTEXT "This host can be resolved correctly.\n"
-              done=true
-              break
-           fi
-       done
-
-       if [ $done = false ]; then
-           $INFOTEXT "This host is unknown on the qmaster host.\n\n" \
-                     "Please make sure that you added this host as administrative host!\n" \
-                     "If you did not, please add this host now with the command\n\n" \
-                     "   # qconf -ah HOSTNAME\n\n" \
-                     "on your qmaster host.\n"
-           if [ $loop_counter != 0 ]; then
-               $INFOTEXT "If this host is already added as administrative host on your qmaster host\n" \
-                         "there may be a hostname resolving problem on this machine.\n\n" \
-                         "Please check your >/etc/hosts< file and >/etc/nsswitch.conf< file.\n\n" \
-                         "Hostname resolving problems will cause the problem that the\n" \
-                         "execution host will not be accepted by qmaster. Qmaster will\n" \
-                         "receive no load report values and show a load value\n" \
-                         "(>load_avg<) of 99.99 for this host.\n"
-               if [ $AUTO = true ]; then
-                   exit 1
-               fi
-           fi
-
-           $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Check again (y/n) [y] >> "
-           if [ $? = 0 ]; then
-              done=false
-           else
-              done=true
-           fi
-       else
-           $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-           $CLEAR
-           return
-       fi
-       loop_counter=`expr $loop_counter + 1`
-   done
-}
-
-
-CheckIfAdminHost()
-{
+   loop_max=10
    done=false
    while [ $done = false ]; do
-       done=false
-       $CLEAR
+      $CLEAR
+      $INFOTEXT -u "\nChecking hostname resolving"
 
-       resolve_admin_hosts=`ExecuteAsAdmin $SGE_BIN/qconf -sh`
-       resolve_this_hostname=`ExecuteAsAdmin $SGE_UTILBIN/gethostname -aname`
-       resolve_default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "^default_domain" | awk '{print $2}'`
+      errmsg=""
+      $SGE_BIN/qconf -sh > /dev/null 2>&1
+      if [ $? = 1 ]; then
+         errmsg=`$SGE_BIN/qconf 2>&1`
+      else
+         errmsg=`$SGE_BIN/qconf -sh 2>&1 |  grep denied:`
+      fi
+      
+      if [ "$errmsg" != "" ]; then
+         $INFOTEXT "\nCannot contact qmaster. The command failed:\n\n" \
+                     "   %s\n\n" \
+                     "The error message was:\n\n" \
+                     "   %s\n\n" \
+                     "$SGE_BIN/qconf -sh" "$errmsg"
+         $INFOTEXT "You can fix the problem now or abort the installation procedure.\n"
+         $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Contact qmaster again (y/n) ('n' will abort) [y] >> " 
+         if [ $? != 0 ]; then
+            $INFOTEXT "Installation failed"
+            exit 1
+         fi
+      else
+         ignore_fqdn=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "^ignore_fqdn" | awk '{print $2}'| egrep -i "true|1"`
 
+         if [ "$ignore_fqdn" != "" ]; then
+            ignore_fqdn=true
+         else
+            ignore_fqdn=false
+         fi
 
-       resolve_upper_this_hostname=`echo $resolve_this_hostname | tr "[a-z]" "[A-Z]"`
-       for i in $resolve_admin_hosts; do
-           resolve_upper_admin_hostname=`echo $i | tr "[a-z]" "[A-Z]"`
-           if [ "$resolve_upper_admin_hostname" = "$resolve_upper_this_hostname" ]; then
-              done=true
-              break
-           fi
-       done
+         default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "^default_domain" | awk '{print $2}' | tr "[A-Z]" "[a-z]"`
+         if [ "$default_domain" = NONE ]; then
+            default_domain=none
+         fi
 
-       if [ $done = false ]; then
-           $INFOTEXT -u "\nChecking for Adminhost"
-           $INFOTEXT "This host is unknown on the qmaster host.\n\n" \
-                     "Please make sure that you added this host as administrative host!\n" \
-                     "If you did not, please add this host now with the command\n\n" \
-                     "   # qconf -ah HOSTNAME\n\n" \
-                     "on your qmaster host.\n"
+         myaname=`ExecuteAsAdmin $SGE_UTILBIN/gethostname -aname`
+         myname=`echo $myaname | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
+         
+         if [ $ignore_fqdn = true ]; then
+            admin_host_list=`ExecuteAsAdmin $SGE_BIN/qconf -sh | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
+         else
+            admin_host_list=`ExecuteAsAdmin $SGE_BIN/qconf -sh | tr "[A-Z]" "[a-z]"`
+            if [ "$default_domain" != none ]; then
+               hasdot=`echo $myname|grep '\.'`
+               if [ "$hasdot" = "" ]; then
+                  myname=$myname.$default_domain
+               fi
+               new_admin_host_list=""
+               for h in $admin_host_list; do
+                  hasdot=`echo $h|grep '\.'`
+                  if [ hasdot = "" ]; then
+                     h=$h.$default_domain 
+                  fi
+                  new_admin_host_list="$new_admin_host_list $h"
+               done
+               admin_host_list="$new_admin_host_list"
+            fi 
+         fi
 
-           $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Check again (y/n) [y] >> "
-           if [ $? = 0 ]; then
-              done=false
-           else
-              done=true
-           fi
-       fi
+         found=false
+         for h in $admin_host_list; do
+            if [ $myname = $h ]; then
+               found=true
+               break
+            fi
+         done
+
+         if [ $found = false ]; then
+            $INFOTEXT "\nThis hostname is not known at qmaster as an administrative host.\n\n" \
+                        "Real hostname of this machine:                     %s\n" \
+                        "Aliased hostname (if \"host_aliases\" file is used): %s\n" \
+                        "Default domain (\"none\" means ignore):              %s\n" \
+                        "Ignore domain names:                               %s\n\n" \
+                        "The resulting hostname is:              =========> %s\n\n" \
+                        "If you think that this host has already been added as an administrative\n" \
+                        "host, the hostname resolving  on this host will most likely differ from\n" \
+                        "the hostname resolving method on the qmaster machine\n" \
+                        $myrealname $myaname $default_domain $ignore_fqdn $myname
+
+            if [ $AUTO = true ]; then
+               $INFOTEXT "Installation failed"
+               exit 1
+            fi
+           
+            $INFOTEXT "Please check and correct your >/etc/hosts< file and >/etc/nsswitch.conf<\n" \
+                      "file on this host and on the qmaster machine.\n\n" \
+                      "You can now add this host as an administrative host in a seperate\n" \
+                      "terminal window and then continue with the installation procedure.\n" 
+                         
+            $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Check again (y/n) ('n' will abort) [y] >> "
+            if [ $? != 0 ]; then
+               $INFOTEXT "Installation failed"
+               exit 1
+            fi
+         else
+            $INFOTEXT -wait -auto $AUTO -n "\nThis hostname is known at qmaster as an administrative host.\n\n" \
+                            "Hit <RETURN> to continue >>"
+            $CLEAR
+            done=true
+         fi
+      fi
+
+      loop_counter=`expr $loop_counter + 1`
+      if [ $loop_counter -ge $loop_max ]; then
+         $INFOTEXT -e "Installation failed after %s retries" $loop_max
+         exit
+      fi
    done
-
 }
+
 #-------------------------------------------------------------------------
 # AddLocalConfiguration_With_Qconf
 #
 AddLocalConfiguration_With_Qconf()
 {
-
    $CLEAR
    $INFOTEXT -u "\nCreating local configuration"
 
@@ -347,7 +344,7 @@ AddLocalConfiguration_With_Qconf()
    else
       $INFOTEXT "\nCreating local configuration for host >%s<" $HOST
       PrintLocalConf 0 > /tmp/$HOST
-      Execute $SGE_BIN/qconf -Aconf /tmp/$HOST
+      ExecuteAsAdmin $SGE_BIN/qconf -Aconf /tmp/$HOST
       rm -f /tmp/$HOST
       $INFOTEXT "Local configuration for host >%s< created." $HOST
    fi
@@ -403,7 +400,7 @@ AddQueue()
 GetLocalExecdSpoolDir()
 {
    $INFOTEXT -u "\nLocal execd spool directory configuration"
-   $INFOTEXT "During the qmaster installation you've already entered " \
+   $INFOTEXT "\nDuring the qmaster installation you've already entered " \
              "a global\nexecd spool directory. This is used, if no local " \
              "spool directory is configured.\n\n Now you can enter a local spool " \
              "directory for this host.\n"
@@ -413,7 +410,7 @@ GetLocalExecdSpoolDir()
       $INFOTEXT -n "Please enter the local spool directory now! >> " 
       LOCAL_EXECD_SPOOL=`Enter`
       $INFOTEXT "Using local execd spool directory [%s]" $LOCAL_EXECD_SPOOL
-      $INFOTEXT -wait -auto $AUTO "Hit <RETURN> to continue >> "
+      $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    else
       $CLEAR
    fi
@@ -423,5 +420,4 @@ GetLocalExecdSpoolDir()
          LOCAL_EXECD_SPOOL=$EXECD_SPOOL_DIR_LOCAL
       fi
    fi
-
 }

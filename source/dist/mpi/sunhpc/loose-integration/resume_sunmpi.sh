@@ -37,11 +37,16 @@
 #
 #----------------
 cre_jid=`cat $TMPDIR/resume_cre_jid`
+job_pid=$1
 
 #
 # Resume the CRE job
 #
 /opt/SUNWhpc/bin/mpkill -CONT $cre_jid
+#
+# Resume the job script
+#
+kill -CONT -$job_pid 
 
 #
 # Delete the CRE job id file

@@ -358,6 +358,7 @@ u_long32 show
 ) {
    lList *load_thresholds, *suspend_thresholds;
    lListElem *qep, *cqueue;
+   u_long32 interval;
 
    DENTER(TOP_LAYER, "sge_print_queues");
 
@@ -404,7 +405,11 @@ u_long32 show
                if (sge_load_alarm(NULL, qep, load_thresholds, ehl, cl, NULL)) {
                   qinstance_state_set_alarm(qep, true);
                }
-               if (sge_load_alarm(NULL, qep, suspend_thresholds, ehl, cl, NULL)) {
+               parse_ulong_val(NULL, &interval, TYPE_TIM,
+                               lGetString(qep, QU_suspend_interval), NULL, 0);
+               if (lGetUlong(qep, QU_nsuspend) != 0 &&
+                   interval != 0 &&
+                   sge_load_alarm(NULL, qep, suspend_thresholds, ehl, cl, NULL)) {
                   qinstance_state_set_suspend_alarm(qep, true);
                }
                {
@@ -430,7 +435,7 @@ u_long32 show
                                     QSTAT_DISPLAY_ALL | 
                                     ( (show & QHOST_DISPLAY_QUEUES) ?
                                      QSTAT_DISPLAY_FULL : 0), "   ", 
-                                     GROUP_NO_PETASK_GROUPS);
+                                     GROUP_NO_PETASK_GROUPS, 10);
             }
          }
       }
@@ -515,6 +520,7 @@ u_long32 show
                double_print_time_to_dstring(val, &resource_string);
                s = sge_dstring_get_string(&resource_string);
             }
+            break;
          case TYPE_MEM:
             if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
                double val = lGetDouble(rep, CE_pj_doubleval);
@@ -529,6 +535,7 @@ u_long32 show
                double_print_memory_to_dstring(val, &resource_string);
                s = sge_dstring_get_string(&resource_string);
             }
+            break;
          default:   
             if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
                double val = lGetDouble(rep, CE_pj_doubleval);

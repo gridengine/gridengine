@@ -146,13 +146,13 @@ EOF
 #
 #     Clean up temporary files
 #
-#     /bin/rm /tmp/template.$myeh
+      /bin/rm /tmp/template.$myeh
    }
    done
 #
 #  Clean up temporary files
 #
-#  /bin/rm $eh_template.$$.sh /tmp/template.$$
+   /bin/rm $eh_template.$$.sh /tmp/template.$$
 }
 
 #-------------------------------------------------------------------------
@@ -459,11 +459,11 @@ echo "cat > \$1 << EOF_QUEUE" >> $q_template.$$.sh
                  else if  ( temp[1] == "slots" ) {
                     sub(/1/, "$nslots", line[i]); print line[i] }
                  else if  ( temp[1] == "suspend_method" ) {
-                    sub(/NONE/, "$QSYST_ROOT_VAL/mpi/sunhpc/loose-integration/suspend_sunmpi.sh", line[i]); print line[i] }
+                    sub(/NONE/, "$QSYST_ROOT_VAL/mpi/sunhpc/loose-integration/suspend_sunmpi.sh $JOB_PID", line[i]); print line[i] }
                  else if  ( temp[1] == "resume_method" ) {
-                    sub(/NONE/, "$QSYST_ROOT_VAL/mpi/sunhpc/loose-integration/resume_sunmpi.sh", line[i]); print line[i] }
+                    sub(/NONE/, "$QSYST_ROOT_VAL/mpi/sunhpc/loose-integration/resume_sunmpi.sh $JOB_PID", line[i]); print line[i] }
                  else if  ( temp[1] == "terminate_method" ) {
-                    sub(/NONE/, "$QSYST_ROOT_VAL/mpi/sunhpc/loose-integration/terminate_sunmpi.sh", line[i]); print line[i] }
+                    sub(/NONE/, "$QSYST_ROOT_VAL/mpi/sunhpc/loose-integration/terminate_sunmpi.sh $JOB_PID", line[i]); print line[i] }
                  else if  ( temp[1] == "complex_list" ) {
                     sub(/NONE/, "$DEFAULT_COMPLEX", line[i]); print line[i] }
                  else if  ( temp[1] == "complex_values" ) {
@@ -476,7 +476,6 @@ echo EOF_QUEUE >> $q_template.$$.sh
 #
 #     Executable shell script to create exclusive queue for HPC ClusterTools
 #
-      /bin/rm $q_template
       chmod u+x $q_template.$$.sh
 #
 #     Export variables to be transfered
@@ -487,6 +486,7 @@ echo EOF_QUEUE >> $q_template.$$.sh
       export QSYST_ROOT_VAL
       export DEFAULT_COMPLEX
       export DEFAULT_SHORTCUT
+      JOB_PID='$job_pid'; export JOB_PID
 #
 #     Translate variables in the queue template 
 #     Recreate $q_template to customize the queue

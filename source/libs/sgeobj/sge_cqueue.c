@@ -917,7 +917,8 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
 
             /*
              * Reject multiple settings for one domain/host
-             * and resolve all hostnames
+             * Resolve all hostnames
+             * Verify host group names
              */
             if (ret) {
                lListElem *elem = NULL;
@@ -941,7 +942,21 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                      ret = false;
                      break;
                   }
-                  if (!sge_is_hgroup_ref(hostname)) {
+                  if (sge_is_hgroup_ref(hostname)) {
+                     const lList *master_list = 
+                              *(object_type_get_master_list(SGE_TYPE_HGROUP));
+                     const lListElem *hgroup = 
+                                    hgroup_list_locate(master_list, hostname);
+                    
+                     if (hgroup == NULL && strcmp(hostname, HOSTREF_DEFAULT)) {
+                        ERROR((SGE_EVENT, MSG_CQUEUE_INVALIDDOMSETTING_S, 
+                               hostname));
+                        answer_list_add(answer_list, SGE_EVENT,
+                                      STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                        ret = false;
+                        break;
+                     } 
+                  } else {
                      char resolved_name[MAXHOSTLEN+1];
                      int back = getuniquehostname(hostname, resolved_name, 0);
 

@@ -1,3 +1,7 @@
+CR-2002-06-13-2: Testsuite: merged qstat -l / -q /-pe / -U option tests
+                            from V53_beta2_BRANCH
+                 Issue:     #286
+
 CR-2002-06-13-1: Testsuite: add. bugfix for html output in compile_source()
 
 CR-2002-06-13-0: Testsuite: error in html output in compile_source()

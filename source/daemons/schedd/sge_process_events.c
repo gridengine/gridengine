@@ -407,7 +407,7 @@ DTRACE;
       #define NM3  "%I%I%I"
       #define NM1  "%I"
 /*    what_queue = lWhat("%T(ALL)", QU_Type); */
-      what_queue = lWhat("%T(" NM10 NM10 NM10 NM10 NM5 NM3")", QU_Type,
+      what_queue = lWhat("%T(" NM10 NM10 NM10 NM10 NM10 ")", QU_Type,
             QU_qname,
             QU_qhostname,
          /*   QU_tmpdir,
@@ -469,24 +469,23 @@ DTRACE;
             QU_suitable,
             QU_tagged,
             QU_tagged4schedule,
-         /*   QU_pending_signal,
-            QU_pending_signal_delivery_time, */
             QU_version,
             QU_suspended_on_subordinate,
             QU_last_suspend_threshold_ckeck,
             QU_job_cnt,
             QU_pending_job_cnt,
             QU_soft_violation,
-            QU_host_seq_no/*,
-
+            QU_host_seq_no,
+#if 0
             QU_starter_method,
             QU_suspend_method,
             QU_resume_method,
             QU_terminate_method,
-
+            QU_pending_signal,
+            QU_pending_signal_delivery_time,
+#endif
             QU_pe_list,
-            QU_ckpt_list*/
-            );
+            QU_ckpt_list);
 
          {
             lDescr *queue_des = NULL;

@@ -1,3 +1,7 @@
+AH-2003-11-27-1: Bugfix:    Fix schedd crash in case PE/CKTP are used.
+                            Disabled shepherd signal handler logging 
+                            to fix shepherd deadlock.
+
 AH-2003-11-27-0: Doc:       Document qstat -ext cpu/mem units.
 
 JG-2003-11-26-0: Bugfix:    Fixed reading of lists in berkeleydb spooling.

@@ -483,7 +483,13 @@ static int do_pe_stop(int timeout, int ckpt_type, pid_t *pe_pid)
 
 static void signal_handler(int signal) 
 {
+   /* may not log in signal handler 
+      as long as Async-Signal-Safe functions such as fopen() are used in 
+      shepherd logging code */
+#if 0
    shepherd_trace_sprintf("received signal %s", sge_sys_sig2str(signal));
+#endif
+
    received_signal = signal;
 }
 
@@ -2445,5 +2451,10 @@ static void set_sig_handler(int sig_num)
 /*-------------------------------------------------------------------*/
 static void shepherd_signal_handler(int dummy) 
 {
+   /* may not log in signal handler 
+      as long as Async-Signal-Safe functions such as fopen() are used in 
+      shepherd logging code */
+#if 0
    shepherd_trace("SIGPIPE received");
+#endif
 }

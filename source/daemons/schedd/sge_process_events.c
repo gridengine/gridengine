@@ -608,6 +608,16 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
 
             case sgeE_JOB_MOD_SCHED_PRIORITY:
                if (!sgeee_mode) {
+                  if (get_user_sort()) {
+                     lListElem *ja_task;
+                     /* changing priority requires running jobs be accounted in a different
+                        priority subtree of the access tree. So the counter in the former priority
+                        subtree must be decreased before it can be increased again later on */
+                     for_each(ja_task, (lGetList(job, JB_ja_tasks))) {
+                        if (running_status(lGetUlong(ja_task, JAT_status)))
+                           at_dec_job_counter(lGetUlong(job, JB_priority), lGetString(job, JB_owner), 1);
+                     }
+                  }
                   at_unregister_job_array(job);
                }
                break;
@@ -623,7 +633,7 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
 
    DEXIT;
    return true;
-}   
+}
 
 bool sge_process_job_event_after(sge_object_type type, sge_event_action action, 
                                 lListElem *event, void *clientdata)
@@ -721,6 +731,14 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
             case sgeE_JOB_MOD_SCHED_PRIORITY:
                if (!sgeee_mode) {
                   at_register_job_array(job);
+                  if (get_user_sort()) {
+                     lListElem *ja_task;
+                     /* increase running counter again in new priority subtree */
+                     for_each(ja_task, (lGetList(job, JB_ja_tasks))) {
+                        if (running_status(lGetUlong(ja_task, JAT_status)))
+                           at_inc_job_counter(lGetUlong(job, JB_priority), lGetString(job, JB_owner), 1);
+                     }
+                  }
                }
                break;
 

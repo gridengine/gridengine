@@ -24,7 +24,6 @@ AH-2004-03-15-0: Doc:       Made some fixes to calendar_conf(5) to make
 
 CR-2004-03-15-0: Testsuite: Adjustments for new GE install script output
 
->>>>>>> 1.1732
 AD-2004-03-12-1: Bugfix:    Did fix quote error.
                  Changed:   inst_execd.sh
                  Review:    AS

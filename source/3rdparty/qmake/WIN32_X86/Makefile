@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = .
 
-ACLOCAL = /net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing aclocal
-AUTOCONF = /net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing autoconf
-AUTOMAKE = /net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing automake
-AUTOHEADER = /net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing autoheader
+ACLOCAL = ../missing aclocal
+AUTOCONF = ../missing autoconf
+AUTOMAKE = ../missing automake
+AUTOHEADER = ../missing autoheader
 
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,11 +68,11 @@ CPP = gcc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS =  getloadavg.o
-MAKEINFO = /net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing makeinfo
+MAKEINFO = ../missing makeinfo
 PACKAGE = make
 PERL = perl
 RANLIB = ranlib
-REMOTE = stub
+REMOTE = sge
 VERSION = 3.78.1
 
 AUTOMAKE_OPTIONS = 1.4

@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = ..
 
-ACLOCAL = /net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing aclocal
-AUTOCONF = /net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing autoconf
-AUTOMAKE = /net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing automake
-AUTOHEADER = /net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing autoheader
+ACLOCAL = ../missing aclocal
+AUTOCONF = ../missing autoconf
+AUTOMAKE = ../missing automake
+AUTOHEADER = ../missing autoheader
 
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,7 +68,7 @@ CPP = gcc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS =  getloadavg.o
-MAKEINFO = /net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing makeinfo
+MAKEINFO = ../missing makeinfo
 MAKE_HOST = 
 PACKAGE = make
 PERL = perl
@@ -91,12 +91,12 @@ LIBRARIES =  $(noinst_LIBRARIES)
 
 
 DEFS = -DHAVE_CONFIG_H -I. -I$(srcdir) -I..
-CPPFLAGS = -D_ALL_SOURCE -I/usr/local/include  -I/usr/local/ssl/include -I../glob -I../glob
-LDFLAGS = -L/usr/local/ssl/lib
+CPPFLAGS =  -D_ALL_SOURCE -I../glob
+LDFLAGS = 
 LIBS = 
 libglob_a_LIBADD = 
 libglob_a_OBJECTS =  glob.o fnmatch.o
-CFLAGS = -D_ALL_SOURCE
+CFLAGS = -g -O2 -D_ALL_SOURCE
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@

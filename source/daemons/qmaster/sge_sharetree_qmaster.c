@@ -153,10 +153,22 @@ char *rhost
    lAppendElem(*lpp, lCopyElem(ep));
   
    /* write sharetree to file */
-   if ((ret=write_sharetree(alpp, ep, SHARETREE_FILE, NULL, 1, 1, 1))) {
+   {
+      char filename[SGE_PATH_MAX];
+      
+      sprintf(filename, ".%s", SHARETREE_FILE);
+      if ((ret=write_sharetree(alpp, ep, filename, NULL, 1, 1, 1))) {
       /* answer list gets filled in write_sharetree() */
-      DEXIT;
-      return ret;
+         DEXIT;
+         return ret;
+      }
+      if (rename(filename, SHARETREE_FILE) == -1) {
+         ERROR((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, SHARETREE_FILE, 
+                strerror(errno)));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
    }
 
    if (adding)

@@ -229,17 +229,12 @@ lList **alpp,
 lListElem *upe,
 gdi_object_t *object 
 ) {
-   char fname[1000];
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
 
    DENTER(TOP_LAYER, "userprj_spool");
 
    /* write user or project to file */
-   sprintf(fname , "%s/%s", 
-      user_flag?USER_DIR : PROJECT_DIR, 
-      lGetString(upe, object->key_nm));
-
-   if (write_userprj(alpp, upe, fname, NULL, 1, user_flag)) {
+   if (spool_userprj(alpp, upe, lGetString(upe, object->key_nm), user_flag)) {
       /* answer list gets filled in write_userprj() */
       DEXIT;
       return 1;

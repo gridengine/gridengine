@@ -862,7 +862,6 @@ lList **topp  /* ticket orders ptr ptr */
          int pos;
          const char *up_name;
          lList *tlp;
-         char fname[SGE_PATH_MAX];
 
          DPRINTF(("%sORDER #%d: update %d users/prjs\n", 
             force?"FORCE ":"", 
@@ -974,10 +973,7 @@ lList **topp  /* ticket orders ptr ptr */
             }
 
             /* spool */
-            sprintf(fname , "%s/%s", or_type==ORT_update_project_usage 
-               ? PROJECT_DIR:USER_DIR, up_name);
-            write_userprj(alpp, up, fname, NULL, 1, 
-               or_type==ORT_update_user_usage);
+            spool_userprj(alpp, up, up_name, or_type==ORT_update_user_usage);
             sge_add_event(NULL,
                or_type==ORT_update_user_usage?sgeE_USER_MOD:sgeE_PROJECT_MOD,
                0, 0, up_name, up);

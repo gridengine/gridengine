@@ -32,6 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+int spool_userprj(lList **alpp, lListElem *ep, const char *key, int user);
 int write_userprj(lList **alpp, lListElem *ep, char *fname, FILE *fpout, int spool, int user);
 lListElem *cull_read_in_userprj(const char *dname, const char *fname, int spool, int project, int *tag);
 lListElem *getUserPrjTemplate(void);

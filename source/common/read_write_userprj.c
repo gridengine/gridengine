@@ -43,6 +43,7 @@
 #include <errno.h>
 #include <limits.h>
 
+#include "sge.h"
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
 #include "sge_answerL.h"
@@ -65,6 +66,32 @@ static intprt_type intprt_as_usage[] = { UA_name, UA_value, 0 };
 static intprt_type intprt_as_acl[] = { US_name, 0 };
 
 static int read_userprj_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int user, int *tag, int parsing_type);
+
+int spool_userprj(lList **alpp, lListElem *ep, const char *key, int user)
+{
+   int ret = 0;
+   char tmp_filename[SGE_PATH_MAX];
+   char real_filename[SGE_PATH_MAX];
+
+   DENTER(TOP_LAYER, "spool_userprj");
+
+   sprintf(tmp_filename, "%s/.%s", user ? USER_DIR : PROJECT_DIR, key);
+   sprintf(real_filename, "%s/%s", user ? USER_DIR : PROJECT_DIR, key);
+
+   ret = write_userprj(NULL, ep, tmp_filename, NULL, 1, user);
+
+   if (ret == 0) {
+      if (rename(tmp_filename, real_filename) == -1) {
+         ERROR((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, real_filename, 
+                strerror(errno)));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+         ret = -1;
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
 
 /************************************************************************
   write_userprj

@@ -778,7 +778,6 @@ int user
 ) {
    lListElem *up, *upu, *next;
    u_long32 jobid;
-   char fname[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "remove_invalid_job_references");
 
@@ -799,8 +798,7 @@ int user
       }
 
       if (spool_me) {
-         sprintf(fname , "%s/%s", user?USER_DIR:PROJECT_DIR, lGetString(up, UP_name));
-         write_userprj(NULL, up, fname, NULL, 1, user);
+         spool_userprj(NULL, up, lGetString(up, UP_name), user);
       }
    }
 

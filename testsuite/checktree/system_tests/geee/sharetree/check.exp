@@ -591,11 +591,11 @@ proc share_tree_cleanup  {} {
 
    puts $CHECK_OUTPUT "ensure that no jobs are referenced in qmaster any longer ..."
    foreach job [concat $prj1_id_list $prj2_id_list $prj3_id_list] {
-      puts -nonewline $CHECK_OUTPUT "$job "
+      puts -nonewline $CHECK_OUTPUT "$job " ; flush $CHECK_OUTPUT
       set my_timeout [timestamp]
       incr my_timeout 120
       while { [get_qstat_j_info $job] != 0 } {
-          puts -nonewline $CHECK_OUTPUT "."
+          puts -nonewline $CHECK_OUTPUT "." ; flush $CHECK_OUTPUT
           if { [timestamp] > $my_timeout } {
              delete_job $job 1
              break

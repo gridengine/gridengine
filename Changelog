@@ -1,3 +1,9 @@
+EB-2004-09-21-0: Bugfix:    qmaster might fail if jobs are deleted which have 
+                            multiple hold states applied
+                 Issue:     1280
+                 Bugtraq:
+                 Review:    SG
+
 SG-2004-09-15-0: Bugfix:    fixed memory leak in the scheduler
                  Changed:   scheduler
                  Review:    DT

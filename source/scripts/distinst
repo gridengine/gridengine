@@ -35,7 +35,7 @@
 
 umask 022
 
-HASDIR="ckpt doc examples/jobs locale mpi mpi/myrinet pvm qmon/PIXMAPS/big"
+HASDIR="ckpt doc examples/jobs locale mpi mpi pvm qmon/PIXMAPS/big"
 HASARCHDIR="bin lib examples/jobsbin utilbin"
 
 DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_schedd \
@@ -52,10 +52,14 @@ REMOTEBINARIES="rsh rshd rlogin"
 
 JOBBINARIES="work"
 
-SHARED_LIBRARIES="libcom libcull libgdi librmon libsched libsge libuti libspool libspoold libspoolc libspoolf libsgeobj libsgeobjd libevc libevm libmir"
+SHARED_LIBRARIES="libcom libcull libgdi librmon libsched libsge libuti \
+                  libspool libspoold libspoolc libspoolf libsgeobj libsgeobjd \
+                  libevc libevm libmir"
+
 QMON_SHARED_LIBRARIES="libXbae libXicon libXmt libXspin libXtab"
 QMON_NEED_SHARED_LIBRARIES="libXltree"
 OPENSSL_SHARED_LIBRARIES="libcrypto libssl"
+
 BERKELEYDB_SHARED_LIBRARIES="libdb-4.2"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
@@ -65,16 +69,19 @@ PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
 PVMSCRIPTS="startpvm.sh stoppvm.sh pvm.sh pvm_nogs.sh README pvm.template"
 
-MPIFILES="README README.atm hostname mpi.template mpich.template mpi.sh \
-          mpi_cpi.sh rsh startmpi.sh stopmpi.sh \
-	  myrinet/README myrinet/gmps myrinet/mpi.template \
-	  myrinet/mpich.template myrinet/mpich_multi.template \
-	  myrinet/sge_mpirun myrinet/startmpi.sh myrinet/stopmpi.sh"
+MPI_FILES="README README.atm mpi.template mpich.template"
+MPI_SCRIPTS="hostname  mpi.sh mpi_cpi.sh rsh startmpi.sh stopmpi.sh"
+
+MYRINET_FILES="README README.x mpi.template mpich.template \
+               mpich_multi.template"
+MYRINET_SCRIPTS="gmps sge_mpirun sge_mpirun.x startmpi.sh startmpi.sh.x \
+                 stopmpi.sh"
 
 SUNHPC_FILES="README batch.sunmpi.template sunmpi.pe.template"
 SUNHPC_SCRIPTS="HPC_GE_Integration.sh MPRUN PRISM resume_sunmpi.sh \
                 startsunmpi.sh stopsunmpi.sh suspend_sunmpi.sh \
                 terminate_sunmpi.sh"
+
 SUNHPCACCT_FILES="README"
 SUNHPCACCT_SCRIPTS="MPRUN PRISM ctacct1.pl ctacct2.pl stopsunmpi.sh"
 
@@ -785,11 +792,28 @@ if [ $instcommon = true ]; then
    if [ $instmpi = true ]; then
       echo Installing \"mpi/\"
       rm -rf $DEST_SGE_ROOT/mpi/*
-      Execute mkdir -p $DEST_SGE_ROOT/mpi/myrinet
-      for f in $MPIFILES; do
+
+      for f in $MPI_FILES; do
          Execute cp dist/mpi/$f $DEST_SGE_ROOT/mpi
+         Execute chmod 644 $DEST_SGE_ROOT/mpi/$f
       done
-      chmod 755 $DEST_SGE_ROOT/mpi/*.sh $DEST_SGE_ROOT/mpi/hostname $DEST_SGE_ROOT/mpi/rsh $DEST_SGE_ROOT/mpi/myrinet/*.sh $DEST_SGE_ROOT/mpi/myrinet/gmps $DEST_SGE_ROOT/mpi/myrinet/sge_mpirun
+
+      for f in $MPI_SCRIPTS; do
+         Execute cp dist/mpi/$f $DEST_SGE_ROOT/mpi
+         Execute chmod 755 $DEST_SGE_ROOT/mpi/$f
+      done
+
+      MYRINETBASE=mpi/myrinet
+      Execute mkdir -p $DEST_SGE_ROOT/$MYRINETBASE
+      for f in $MYRINET_FILES; do
+         Execute cp dist/$MYRINETBASE/$f $DEST_SGE_ROOT/$MYRINETBASE
+         Execute chmod 644 $DEST_SGE_ROOT/$MYRINETBASE/$f
+      done
+
+      for f in $MYRINET_SCRIPTS; do
+         Execute cp dist/$MYRINETBASE/$f $DEST_SGE_ROOT/$MYRINETBASE
+         Execute chmod 755 $DEST_SGE_ROOT/$MYRINETBASE/$f
+      done
 
       HPCBASE=mpi/sunhpc
       HPCBASE_LOOSE=$HPCBASE/loose-integration
@@ -814,7 +838,7 @@ if [ $instcommon = true ]; then
    
       for f in $SUNHPCACCT_SCRIPTS; do
          Execute cp dist/$HPCBASE_LOOSE/accounting/$f $DEST_SGE_ROOT/$HPCBASE_LOOSE/accounting
-          Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE_LOOSE/accounting/$f
+         Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE_LOOSE/accounting/$f
       done
 
       for f in $SUNHPCTIGHT_FILES; do
@@ -834,6 +858,7 @@ if [ $instcommon = true ]; then
       Execute cp -r MANSBUILD_$MANSRCDIR/SEDMAN/man $DEST_SGE_ROOT
       Execute rm -rf $DEST_SGE_ROOT/man/man3
       Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/man $DEST_SGE_ROOT
+      Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/catman $DEST_SGE_ROOT
    fi
 
    if [ $instdoc = true ]; then
@@ -1038,6 +1063,7 @@ for i in $ARCH; do
                InstallProg $libname
             elif [ $exit_on_error = true ]; then
                echo "\"$libname\" not found. Installation failed."
+               exit 1
             fi
          done
 
@@ -1054,6 +1080,7 @@ for i in $ARCH; do
                fi
             elif [ $exit_on_error = true ]; then
                echo "\"$libname\" not found. Installation failed."
+               exit 1
             fi
          done
 
@@ -1063,6 +1090,7 @@ for i in $ARCH; do
                InstallProg $libname
             elif [ $exit_on_error = true ]; then
                echo "\"$libname\" not found. Installation failed."
+                exit 1
             fi
          done
 

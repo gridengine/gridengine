@@ -565,9 +565,21 @@ char *err_str
   
    /* JG: TODO (ENV): shouldn't we better use SGE_JATASK_ID and have an additional SGE_PETASK_ID? */
    if (job_is_array(jep)) {
+      u_long32 start, end, step;
+
+      job_get_submit_task_ids(jep, &start, &end, &step);
+
       var_list_set_u32(&environmentList, VAR_PREFIX "TASK_ID", ja_task_id);
+      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_FIRST", start);
+      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_LAST", end);
+      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_STEPSIZE", step);
    } else {
-      var_list_set_string(&environmentList, VAR_PREFIX "TASK_ID", "undefined");
+      const char *udef = "undefined";
+
+      var_list_set_string(&environmentList, VAR_PREFIX "TASK_ID", udef);
+      var_list_set_string(&environmentList, VAR_PREFIX "TASK_FIRST", udef);
+      var_list_set_string(&environmentList, VAR_PREFIX "TASK_LAST", udef);
+      var_list_set_string(&environmentList, VAR_PREFIX "TASK_STEPSIZE", udef);
    }
 
    var_list_set_string(&environmentList, "ENVIRONMENT", "BATCH");

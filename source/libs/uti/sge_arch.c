@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "sge_stdlib.h"
 #include "sgermon.h"
 #include "rmon.h"
 #include "sge_log.h"

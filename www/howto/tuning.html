@@ -38,6 +38,16 @@ stated, it is available in higher versions as well.<br>
       </p>
       <ul>
         <li>
+          <p><b>overall cluster tuning (V5.3 + V6.0)</b></p>
+          <p>Experience has shown utilization of NFS or similar shared file systems for 
+distributing files required by Grid Engine can have a critical share
+in both overall network load and file server load. Thus keeping such 
+files locally is always beneficially for overall cluster throughput. The HOWTO
+<A HREF="../nfsreduce.html">Reducing and Eliminating NFS usage by Grid Engine</A>.
+shows different common choices for accomplishing this.<br>
+        </p>
+        </li>
+        <li>
           <p><b>scheduler monitoring (V5.3 + V6.0)<br>
           </b></p>
           <p>Scheduler monitoring can be helpful to find out the reason

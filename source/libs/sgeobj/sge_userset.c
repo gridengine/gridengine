@@ -331,7 +331,7 @@ userset_list_append_to_dstring(const lList *this_list, dstring *string)
    const char *ret = NULL;
 
    DENTER(BASIS_LAYER, "userset_list_append_to_dstring");
-   if (this_list != NULL && string != NULL) {
+   if (string != NULL) {
       lListElem *elem = NULL;
       bool printed = false;
 

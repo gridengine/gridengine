@@ -132,7 +132,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
                                    reduced_elem, sub_command);
    }
    if (ret) {
-      ret &= cqueue_verify_attibutes(cqueue, answer_list, reduced_elem);
+      ret &= cqueue_verify_attributes(cqueue, answer_list, reduced_elem);
    }
 
    /*

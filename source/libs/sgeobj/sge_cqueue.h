@@ -118,7 +118,7 @@ cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list,
                        lList *del_hosts);
 
 bool
-cqueue_verify_attibutes(lListElem *cqueue, lList **answer_list,
-                        lListElem *reduced_elem);
+cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
+                         lListElem *reduced_elem);
 
 #endif /* __SGE_CQUEUE_H */

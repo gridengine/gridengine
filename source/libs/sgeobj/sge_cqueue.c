@@ -255,7 +255,7 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
          const u_long32 value[] = {
             7, 1, 1, 0, 0, 0 
          }; 
-         const u_long32 attr[] = {
+         const int attr[] = {
             CQ_seq_no, CQ_nsuspend, CQ_job_slots, CQ_fshare, CQ_oticket, NoName
          };
          int index = 0;
@@ -279,8 +279,8 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
          lListElem *attr = lAddElemHost(&attr_list, ABOOL_href, 
                                         HOSTREF_DEFAULT, ABOOL_Type);
 
-         lSetBool(attr, AULNG_value, 7);
-         lSetList(this_elem, CQ_seq_no, attr_list);
+         lSetBool(attr, ABOOL_value, 7);
+         lSetList(this_elem, CQ_rerun, attr_list);
       }
 
       /*
@@ -293,7 +293,7 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
             "INFINITY", "INFINITY", "INFINITY", "INFINITY",
             NULL
          }; 
-         const u_long32 attr[] = {
+         const int attr[] = {
             CQ_s_fsize, CQ_h_fsize, CQ_s_data, CQ_h_data,
             CQ_s_stack, CQ_h_stack, CQ_s_core, CQ_h_core,
             CQ_s_rss, CQ_h_rss, CQ_s_vmem, CQ_h_vmem,
@@ -320,7 +320,7 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
             "INFINITY", "INFINITY", "INFINITY", "INFINITY",
             NULL
          }; 
-         const u_long32 attr[] = {
+         const int attr[] = {
             CQ_s_rt, CQ_h_rt, CQ_s_cpu, CQ_h_cpu,
             NoName
          };
@@ -345,7 +345,7 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
             "00:05:00", "00:05:00", "00:00:60",
             NULL
          }; 
-         const u_long32 attr[] = {
+         const int attr[] = {
             CQ_suspend_interval, CQ_min_cpu_interval, CQ_notify,
             NoName
          };
@@ -374,7 +374,7 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
             "default", 
             NULL
          }; 
-         const u_long32 attr[] = {
+         const int attr[] = {
             CQ_tmpdir, CQ_shell, CQ_calendar,
             CQ_priority, CQ_processors, CQ_prolog,
             CQ_epilog, CQ_shell_start_mode, CQ_starter_method,
@@ -399,7 +399,7 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
        * initialize string-list values
        */
       if (ret) {
-         const u_long32 attr[] = {
+         const int attr[] = {
             CQ_pe_list, CQ_ckpt_list,
             NoName
          };
@@ -885,12 +885,12 @@ cqueue_mod_attributes(lListElem *cqueue, lList **answer_list,
 }
 
 bool 
-cqueue_verify_attibutes(lListElem *cqueue, lList **answer_list,
+cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                         lListElem *reduced_elem)
 {
    bool ret = true;
 
-   DENTER(CQUEUE_LAYER, "cqueue_mod_attributes");
+   DENTER(CQUEUE_LAYER, "cqueue_verify_attributes");
    if (cqueue != NULL && reduced_elem != NULL) {
       int index = 0;
 

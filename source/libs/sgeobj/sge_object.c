@@ -1897,9 +1897,12 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
    ** If the list does not contain any elements, we will delete
    ** the list itself
    */
-   if (lGetList(this_elem, this_elem_name)
-       && !lGetNumberOfElem(lGetList(this_elem, this_elem_name))) {
-      lSetList(this_elem, this_elem_name, NULL);
+   {
+      const lList *tmp_list = lGetList(this_elem, this_elem_name);
+
+      if (tmp_list != NULL && lGetNumberOfElem(tmp_list) == 0) {
+         lSetList(this_elem, this_elem_name, NULL);
+      }
    }
    DEXIT;
 }

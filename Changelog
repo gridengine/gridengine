@@ -1,3 +1,5 @@
+EB-2002-03-18-0  Enhancem.: Modifications for redhat 7.2 (gcc 2.96)
+
 AH-2002-03-15-5  Bugfix:    Ensure after execd installation the host needs to be 
                             only exec host but not admin host or submit host
 

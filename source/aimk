@@ -1069,6 +1069,11 @@ case LINUX6:
       set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"
       set LIBS = "$LIBS"
    endif
+
+   if ( $CC == "gcc" && `gcc --version` == "2.96") then
+      set CFLAGS = "-DUSING_GCC_2_96 $CFLAGS"
+   endif
+
    set CFLAGS = "-DLINUX -D$BUILDARCH $CFLAGS"
    set CXXFLAGS = "-DLINUX -D$BUILDARCH $CXXFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"

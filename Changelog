@@ -9,6 +9,13 @@ CR-2002-09-09-1  I18N:      invalid escape sequence in one of msgid
 CR-2002-09-09-0  Testsuite: make output check of qdel test independent of
                             l10n message id
 
+EB-2002-09-08-0  Bugfix:    schedd_job_info = true causes immense daemons
+                            memory growth
+                 IZ:        #374
+                 Bugtraq:   #4742189
+                 Review:    AH
+                 Changed:   sge_schedd
+
 AA-2002-09-05-0  I18N:      - Calculation failure in Functional policy
                             - Wrong mnemonic on qmon main window
                             - qmon dies with changes in Edit Tickets 

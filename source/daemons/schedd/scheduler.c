@@ -263,6 +263,7 @@ int scheduler(sge_Sdescr_t *lists) {
       }
    }
 
+
    if (orderlist) {
 #ifdef TEST_DEMO
       fprintf(fpdjp, "An orderlist exists\n");
@@ -788,7 +789,7 @@ SKIP_THIS_JOB:
                                            &user_list, scheddconf.maxujobs);
          trash_splitted_jobs(splitted_job_lists);
       } else {
-         schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]));
+         schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0);
 
          /* before deleting the element mark the category as rejected */
          cat = lGetRef(job, JB_category);

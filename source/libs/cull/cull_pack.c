@@ -519,6 +519,38 @@ const lDescr *dp                  /* has to be NULL in case of free elements
    return PACK_SUCCESS;
 }
 
+size_t cull_get_list_packsize(const lList *list) 
+{
+   size_t ret = 0;
+
+   if (list != NULL) {
+      sge_pack_buffer pb;
+
+      init_packbuffer(&pb, 0, 1);
+      if (!cull_pack_list(&pb, list)) {
+         ret = pb_used(&pb);
+      }
+      clear_packbuffer(&pb);
+   }
+   return ret;
+}
+
+size_t cull_get_elem_packsize(const lListElem *elem) 
+{
+   size_t ret = 0;
+
+   if (elem != NULL) {
+      sge_pack_buffer pb;
+
+      init_packbuffer(&pb, 0, 1);
+      if (!cull_pack_elem(&pb, elem)) {
+         ret = pb_used(&pb);
+      }
+      clear_packbuffer(&pb);
+   }
+   return ret;
+}
+
 /* ================================================================ */
 
 /* ------------------------------------------------------------

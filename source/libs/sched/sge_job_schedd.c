@@ -710,7 +710,7 @@ void trash_splitted_jobs(lList **splitted_job_lists[])
          }
          if (is_first_of_category) {
             is_first_of_category = 0;
-            schedd_mes_commit(*job_list);
+            schedd_mes_commit(*job_list, 1);
          }
       }
       *job_list = lFreeList(*job_list);

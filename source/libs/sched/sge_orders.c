@@ -155,17 +155,15 @@ lList *granted
          tlist = lCreateList("", lGetElemDescr(ja_task));
          lAppendElem(tlist, lCopyElem(ja_task));
          { 
-            lEnumeration *what = lWhat("%T(%I %I %I %I %I %I %I %I %I)",
+            lEnumeration *what = lWhat("%T(%I %I %I %I %I %I %I)",
                   lGetElemDescr(ja_task), 
                   JAT_task_number, 
-                  JAT_status, 
                   JAT_ticket,
                   JAT_oticket, 
                   JAT_dticket, 
                   JAT_fticket, 
                   JAT_sticket, 
-                  JAT_share,
-                  JAT_granted_destin_identifier_list);
+                  JAT_share);
             lList *tmp_list;
             if ((tmp_list = lSelect("", tlist, NULL, what))) {
                lFreeList(tlist);
@@ -212,7 +210,6 @@ lList *granted
    }
 
    lAppendElem(or_list, ep);
-
 
    DEXIT;
    return or_list; 

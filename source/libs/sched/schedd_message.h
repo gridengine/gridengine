@@ -52,7 +52,7 @@ void schedd_add_global_message(u_long32 message_number, ...);
 
 void schedd_log_schedd_info(int bval);
 
-void schedd_mes_commit(lList *job_list);
+void schedd_mes_commit(lList *job_list, int ignore_category);
 
 void schedd_mes_rollback(void);
 

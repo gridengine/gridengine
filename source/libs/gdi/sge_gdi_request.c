@@ -692,7 +692,7 @@ sge_gdi_request *ar
    sge_pack_buffer pb;
    int ret, size;
 
-   DENTER(GDI_LAYER, "sge_send_gdi_request");
+   DENTER(TOP_LAYER, "sge_send_gdi_request");
 
    /* 
    ** retrieve packbuffer size to avoid large realloc's while packing 
@@ -733,6 +733,8 @@ sge_gdi_request *ar
       DEXIT;
       return -1;
    }
+
+DPRINTF(("GDI(%s/%s/%d) = %d bytes\n", rhost, commproc, id, size));
 
    ret = sge_send_any_request(sync, NULL, rhost, commproc, id, &pb, TAG_GDI_REQUEST);
    clear_packbuffer(&pb);

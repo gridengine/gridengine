@@ -45,10 +45,12 @@
 #include "sge_schedd_text.h"
 #include "msg_schedd.h"
 
-static void schedd_message_find_others(lList *job_list);
+static void schedd_message_find_others(lList *job_list,
+                                       int ignore_category);
 
 static lList *schedd_mes_get_same_category_jids(lRef category,
-                                                lList *job_list);
+                                                lList *job_list,
+                                                int ignore_category);
 
 static lRef schedd_mes_get_category(u_long32 job_id, lList *job_list);
 
@@ -63,8 +65,10 @@ static lListElem *tmp_sme = NULL;
 */
 static int log_schedd_info = 1;
 
-static void schedd_message_find_others(lList *job_list)
+static void schedd_message_find_others(lList *job_list, int ignore_category)
 {
+   DENTER(TOP_LAYER, "schedd_message_find_others");
+
    if (tmp_sme && job_list) {
       lListElem *message_elem = NULL;  /* MES_Type */
       lRef category = NULL;            /* Category pointer (void*) */
@@ -76,20 +80,26 @@ static void schedd_message_find_others(lList *job_list)
        * Here we have a list of message elements where each 
        * MES_job_number_list containes only one id.
        * We have to find the other jobs (jids) which have the same category.
+       * If 'ignore_category' is 1 then we will add all jids
        */
       for_each(message_elem, message_list) {
          lList *jid_list = lGetList(message_elem, MES_job_number_list);
          u_long32 jid = lGetUlong(lFirst(jid_list), ULNG);
-         lRef jid_category = schedd_mes_get_category(jid, job_list);
+         lRef jid_category = NULL; 
+
+         if (!ignore_category) {
+            jid_category = schedd_mes_get_category(jid, job_list);
+         }
 
          /*
           * Initilize jid_cat_list if not initialized
           * or if category differs from the last run
           */
-         if (category == NULL || category != jid_category) {
+         if (category != jid_category || ignore_category) {
             jid_cat_list = schedd_mes_get_same_category_jids(jid_category, 
-                                                             job_list);
-            category = jid_cat_list;
+                                                             job_list,
+                                                             ignore_category);
+            category = jid_category;
             create_new_jid_cat_list = 0;
          }
 
@@ -106,6 +116,8 @@ static void schedd_message_find_others(lList *job_list)
          }
       }
    } 
+
+   DEXIT;
 }
 
 static lRef schedd_mes_get_category(u_long32 job_id, lList *job_list)
@@ -121,15 +133,16 @@ static lRef schedd_mes_get_category(u_long32 job_id, lList *job_list)
 }
 
 static lList *schedd_mes_get_same_category_jids(lRef category,
-                                                lList *job_list)
+                                                lList *job_list,
+                                                int ignore_category)
 {  
    lList *ret = NULL;      /* ULNG */
    lListElem *job = NULL;  /* JB_Type */
 
-   if (job_list != NULL && category != NULL) {
+   if (job_list != NULL && (category != NULL || ignore_category)) {
       ret = lCreateList("", ULNG_Type);
       for_each(job, job_list) {
-         if (lGetRef(job, JB_category) == category) {
+         if (ignore_category || lGetRef(job, JB_category) == category) {
             lListElem *new_jid_elem = NULL;
 
             new_jid_elem = lCreateElem(ULNG_Type);
@@ -168,7 +181,7 @@ void schedd_mes_initialize()
    DEXIT;
 }
 
-void schedd_mes_commit(lList *job_list)
+void schedd_mes_commit(lList *job_list, int ignore_category)
 {
    if (sme && tmp_sme) {
       lList *sme_mes_list = NULL;
@@ -177,7 +190,7 @@ void schedd_mes_commit(lList *job_list)
       /*
        * Try to find other jobs which apply also for created message
        */
-      schedd_message_find_others(job_list);
+      schedd_message_find_others(job_list, ignore_category);
 
       /*
        * Tranfer all messages from tmp_sme to sme
@@ -232,6 +245,12 @@ lListElem *schedd_mes_get()
    lWriteElemTo(sme, stderr);
    lWriteElemTo(tmp_sme, stderr);
 #endif
+#if 1
+   {
+      DPRINTF(("SME: %d messages\n", lGetNumberOfElem(lGetList(sme, SME_message_list))));
+      DPRINTF(("SME: %d global messages\n", lGetNumberOfElem(lGetList(sme, SME_global_message_list))));
+   }
+#endif      
 
    DEXIT;
    return sme;

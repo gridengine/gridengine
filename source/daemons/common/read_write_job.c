@@ -392,8 +392,6 @@ int cull_remove_jobtask_from_disk(u_long32 jobid, u_long32 ja_taskid,
    spool_single_task_files = (!within_execd && 
       job_get_number_of_ja_tasks(job) > sge_get_ja_tasks_per_file());
 
-   DPRINTF(("### %d\n", spool_single_task_files));
-
    if (ja_taskid != 0 && spool_single_task_files) {
       stringT task_spool_dir;
       stringT task_spool_file;
@@ -460,8 +458,9 @@ spool_dir));
     * This is only an indicator that another job is running which has been
     * spooled in the same directory.
     */
-   rmdir(spool_dir_third);
-   rmdir(spool_dir_second); 
+   if (!rmdir(spool_dir_third)) {
+      rmdir(spool_dir_second); 
+   }
 
    DEXIT;
    return 0;

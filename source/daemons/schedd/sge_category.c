@@ -436,7 +436,7 @@ lList *sge_category_job_copy(lList *job_list, lList *queue_list) {
          }
       }
       else {
-         schedd_mes_add_join( lGetUlong(job, JB_job_number), SCHEDD_INFO_JOB_CATEGORY_FILTER);
+         schedd_mes_add_join( lGetUlong(job, JB_job_number), SCHEDD_INFO_JOB_CATEGORY_FILTER_);
       }
    }
    schedd_mes_commit(NULL, false, NULL); 

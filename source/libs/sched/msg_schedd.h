@@ -166,8 +166,11 @@
 
 #define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S      _MESSAGE(47134, _("cannot run because total slots of pe "SFQ" not in range of job"))
 #define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE        _MESSAGE(47135, _("Jobs can not run because total slots of pe are not in range of job") )
-#define MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER           _MESSAGE(47136, _("Job Filter: this job got ignored in the last scheduling run, because to many other jobs with the same resource request are in the pending list before this one."))
-#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU       _MESSAGE(47137, _("cannot run in queue instance "SFQ" because the job runtime of "U32CFormat" sec. is too long") ) 
+#define MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER_          _MESSAGE(47136, _("Job Filter: this job got ignored in the last scheduling run, because to many other jobs with the same resource request are in the pending list before this one."))
+#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU        _MESSAGE(47137, _("cannot run in queue instance "SFQ" because the job runtime of "U32CFormat" sec. is too long") ) 
+#define MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER           _MESSAGE(47138, _("Job Filter: Jobs can not run because the resource requirements cannot be satisfied."))
+#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL           _MESSAGE(47139, _("Jobs cannot run because a calendar will disable a queue soon")) 
+
 
 /* 
 ** schedd/sge_pe_schedd.c

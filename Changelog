@@ -1,3 +1,7 @@
+SG-2004-11-22-0: Bugfix:    fixed the scheduler messages for qstat -j.
+                 Changed:   scheduler
+                 Review:    EB
+
 CR-2004-11-19-1: Testsuite  - new test: commlib deadlock test
                             - fixed bug in issue test 1270
 

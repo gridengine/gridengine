@@ -248,6 +248,8 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
       }
       
       bdb_set_env(info, env);
+
+/*       dbret = env->set_flags(env, DB_DIRECT_DB | DB_DIRECT_LOG, 1); */
    }
 
    DEXIT;

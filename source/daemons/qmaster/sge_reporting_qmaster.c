@@ -96,7 +96,7 @@ reporting_flush_reporting(lList **answer_list);
 
 static bool 
 reporting_flush_report_file(lList **answer_list, dstring *contents, 
-                      const char *filename);
+                      const char *filename, sge_locktype_t lock);
 
 static bool 
 reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush);
@@ -412,6 +412,7 @@ reporting_create_job_log(lList **answer_list,
                           state_time, REPORTING_DELIMITER,
                           message);
       /* write record to reporting buffer */
+      DPRINTF((sge_dstring_get_string(&job_dstring)));
       ret = reporting_create_record(answer_list, "job_log", 
                                     sge_dstring_get_string(&job_dstring));
       sge_dstring_free(&job_dstring);
@@ -464,7 +465,7 @@ reporting_create_acct_record(lList **answer_list,
    /* anything to do at all? */
    if (do_reporting || do_accounting) {
       sge_dstring_init(&category_dstring, category_buffer, 
-                       sizeof(category_dstring));
+                       sizeof(category_buffer));
       category_string = sge_build_job_category(&category_dstring, job, 
                                           *(userset_list_get_master_list()));
    }
@@ -839,18 +840,10 @@ reporting_flush_accounting(lList **answer_list)
 
    DENTER(TOP_LAYER, "sge_flush_accounting");
 
-   if (do_accounting) {
-      SGE_LOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
-      /* write accounting data */
-      ret = reporting_flush_report_file(answer_list, &accounting_data, 
-                                  path_state_get_acct_file());
-      /* clear accounting buffer. We do this regardless of the result of
-       * the writing command. Otherwise, if writing the report file failed
-       * over a longer time period, the reporting buffer could grow endlessly.
-       */
-      sge_dstring_clear(&accounting_data);
-      SGE_UNLOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
-   }
+   /* write accounting data */
+   ret = reporting_flush_report_file(answer_list, &accounting_data, 
+                               path_state_get_acct_file(),
+                               LOCK_MASTER_ACCOUNTING_BUFFER);
    DEXIT;
    return ret;
 }
@@ -866,19 +859,10 @@ reporting_flush_reporting(lList **answer_list)
 
    DENTER(TOP_LAYER, "sge_flush_reporting");
 
-   if (do_reporting) {
-      SGE_LOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
-      /* write reporting data */
-      ret = reporting_flush_report_file(answer_list, &reporting_data, 
-                                        path_state_get_reporting_file());
-      /* clear accounting buffer. We do this regardless of the result of
-       * the writing command. Otherwise, if writing the report file failed
-       * over a longer time period, the reporting buffer could grow endlessly.
-       */
-      sge_dstring_clear(&reporting_data);
-      SGE_UNLOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
-   }
-
+   /* write reporting data */
+   ret = reporting_flush_report_file(answer_list, &reporting_data, 
+                                     path_state_get_reporting_file(),
+                                     LOCK_MASTER_REPORTING_BUFFER);
    DEXIT;
    return ret;
 }
@@ -889,7 +873,7 @@ reporting_flush_reporting(lList **answer_list)
 */
 static bool 
 reporting_flush_report_file(lList **answer_list, dstring *contents, 
-                      const char *filename)
+                      const char *filename, sge_locktype_t lock)
 {
    bool ret = true;
    
@@ -913,6 +897,8 @@ reporting_flush_report_file(lList **answer_list, dstring *contents,
       if (SGE_STAT(filename, &statbuf)) {
          write_comment = true;
       }     
+
+      SGE_LOCK(lock, LOCK_WRITE);
 
       /* open file for append */
       fp = fopen(filename, "a");
@@ -989,6 +975,14 @@ reporting_flush_report_file(lList **answer_list, dstring *contents,
          }
          ret = false;
       }
+
+      /* clear the buffer. We do this regardless of the result of
+       * the writing command. Otherwise, if writing the report file failed
+       * over a longer time period, the reporting buffer could grow endlessly.
+       */
+      sge_dstring_clear(contents);
+
+      SGE_UNLOCK(lock, LOCK_WRITE);
    }
 
    DEXIT;

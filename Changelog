@@ -1,3 +1,9 @@
+JG-2004-01-21-0: Bugfix:   Categories (job requests) were truncated in the 
+                           accounting and the reporting file.
+                           Fixed build for solaris86.
+                 Changed:  sge_qmaster
+                 Review:   pending
+
 EB-2004-01-21-1: Bugfix:   Handled TODO-Sections concernings CQs
                  Changed:  sge_schedd
 

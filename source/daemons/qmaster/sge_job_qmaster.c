@@ -976,6 +976,7 @@ int sub_command
                lListElem_clear_changed_info(job);
                sge_dstring_free(&buffer);
             } else {
+               /* JG: TODO: this joblog seems to have an invalid job object! */
                reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, NULL, NULL, MSG_LOG_DELETED);
                sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, 
                              NULL, NULL, dupped_session, NULL);
@@ -1018,6 +1019,8 @@ int sub_command
                      continue;
                   }
 
+                  reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, tmp_task, NULL, MSG_LOG_DELETED);
+
                   if (lGetString(tmp_task, JAT_master_queue)) {
                      job_ja_task_send_abort_mail(job, tmp_task, ruser,
                                                  rhost, NULL);
@@ -1031,7 +1034,6 @@ int sub_command
                         range_list_insert_id(&range_list, NULL, task_number);
                      }
                   }
-                  reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, tmp_task, NULL, MSG_LOG_DELETED);
                } else {
                   ; /* Task did never exist! - Ignore silently */
                }

@@ -588,7 +588,7 @@ static int japi_open_session(const char *key_in, dstring *key_out, dstring *diag
 
       /* a unique session key must be found if we got no session key */
       do {
-         id = rand_r(&id);
+         id = rand_r((unsigned int *)&id);
 
          /* a session key is built from <unqualified hostname>.<pid>.<number> */
          sge_dstring_sprintf(&tmp_session_key, "%s."pid_t_fmt".%.6d", 

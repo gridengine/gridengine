@@ -1,3 +1,7 @@
+AA-2004-11-08-0: Bugfix:    - openssl-0.9.7e upgrade
+                 Changed:   all 
+                 Review:    CR
+                 
 CR-2004-11-08-0: Bugfix:    - fixed qevent -trigger
                             - when qmaster went down once the scheduler always
                               called qmaster alive method in each schedule run

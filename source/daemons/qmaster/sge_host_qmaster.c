@@ -831,9 +831,9 @@ void sge_load_value_cleanup_handler(te_event_t anEvent)
 
    DENTER(TOP_LAYER, "sge_load_value_cleanup_handler");
 
-   comproc = prognames[EXECD];
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
 
-   SGE_LOCK(LOCK_MASTER_EXEC_HOST_LST, LOCK_WRITE);
+   comproc = prognames[EXECD];
 
    /* get "global" element pointer */
    global_host_elem   = host_list_locate(Master_Exechost_List, SGE_GLOBAL_NAME);    
@@ -932,9 +932,9 @@ void sge_load_value_cleanup_handler(te_event_t anEvent)
       } 
    }
 
-   SGE_UNLOCK(LOCK_MASTER_EXEC_HOST_LST, LOCK_WRITE);
-
    new_config = 0;
+
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    DEXIT;
    return;

@@ -94,9 +94,9 @@ int sge_num_locktypes(void);
 #define SGE_LOCK(type, mode) \
 { \
    const char *name = sge_type_name(type); \
-   DPRINTF(("%s() line %d: about to lock \"%s\"\n", __FILE__, __LINE__, name)); \
+   DLOCKPRINTF(("%s() line %d: about to lock \"%s\"\n", __FILE__, __LINE__, name)); \
    sge_lock(type, mode, sge_locker_id()); \
-   DPRINTF(("%s() line %d: locked \"%s\"\n", __FILE__, __LINE__, name)); \
+   DLOCKPRINTF(("%s() line %d: locked \"%s\"\n", __FILE__, __LINE__, name)); \
 }
 
 #if defined(SGE_UNLOCK)
@@ -106,9 +106,9 @@ int sge_num_locktypes(void);
 #define SGE_UNLOCK(type, mode) \
 { \
    const char *name = sge_type_name(type); \
-   DPRINTF(("%s() line %d: about to unlock \"%s\"\n", __FILE__, __LINE__, name)); \
+   DLOCKPRINTF(("%s() line %d: about to unlock \"%s\"\n", __FILE__, __LINE__, name)); \
    sge_unlock(type, mode, sge_locker_id()); \
-   DPRINTF(("%s() line %d: unlocked \"%s\"\n", __FILE__, __LINE__, name)); \
+   DLOCKPRINTF(("%s() line %d: unlocked \"%s\"\n", __FILE__, __LINE__, name)); \
 }
 
 /*

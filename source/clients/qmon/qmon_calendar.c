@@ -570,16 +570,20 @@ lListElem *calp
    lSetString(calp, CAL_name, cal_name);
   
    year_calendar = XmtInputFieldGetString(cal_year_w);
-   if (year_calendar && year_calendar[0] != '\0')
+   if (year_calendar && year_calendar[0] != '\0') {
+      year_calendar = qmon_trim(year_calendar);
       lSetString(calp, CAL_year_calendar, year_calendar);
-   else   
+   } else {
       lSetString(calp, CAL_year_calendar, "NONE");
+   }   
 
    week_calendar = XmtInputFieldGetString(cal_week_w);
-   if (week_calendar && week_calendar[0] != '\0')
+   if (week_calendar && week_calendar[0] != '\0') {
+      week_calendar = qmon_trim(week_calendar);
       lSetString(calp, CAL_week_calendar, week_calendar);
-   else   
+   } else {  
       lSetString(calp, CAL_week_calendar, "NONE");
+   }
 
    DEXIT;
    return True;

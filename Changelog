@@ -1,3 +1,6 @@
+AA-2003-05-13-0: Bugfix:    allow arguments for qlogin etc. in qmon
+                 Changed:   qmon
+
 AD-2003-05-12-0: Bugfix:    aimk (platform LINUX6): HAS_IN_PORT_T is defined depending on
                             the libc version. The corresponding test know is able to deal
                             with 2.2.x and 2.3.x libs.

@@ -1,3 +1,5 @@
+JG-2004-02-20-0: Enhancem.: Tune locking parameters of Berkeley DB.
+
 MD-2004-02-19-0: Bugfix:    - wrong perms and owner for bootstrap file
                             - typos
                  Changed:   inst_sgeee, testsuite

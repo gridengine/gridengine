@@ -241,8 +241,8 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
          /* worst case scenario: n lockers, all changing m objects in 
           * parallel 
           */
-         int lockers = 10;
-         int objects = 10000;
+         int lockers = 5;
+         int objects = 5000;
          int locks = lockers * 2 * objects;
 
          /* set locking params: max lockers */

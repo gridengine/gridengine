@@ -460,7 +460,7 @@ TruncCreateAndMakeWriteable()
 #
 SetAdminUser()
 {
-   cfgname=$SGE_ROOT/$SGE_CELL/common/configuration
+   cfgname=$SGE_ROOT/$SGE_CELL/common/bootstrap
  
    if [ -f $cfgname ]; then
       user=`env LC_ALL=C grep admin_user $cfgname | env LC_ALL=C awk '{ print $2 }'`

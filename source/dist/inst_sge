@@ -455,7 +455,9 @@ AddBootstrap()
 {
    $INFOTEXT -u "\nDumping bootstrapping information"
 
+   TruncCreateAndMakeWriteable $COMMONDIR/bootstrap
    PrintBootstrap > $COMMONDIR/bootstrap
+   SetPerm $COMMONDIR/bootstrap
 }
 
 #-------------------------------------------------------------------------

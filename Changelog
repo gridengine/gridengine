@@ -1,3 +1,6 @@
+JG-2003-10-29-0: Bugfix:    bootstrap file was owned by root - it has to be 
+                            owned by the admin_user in admin_user systems.
+
 AD-2003-10-28-3: Bugfix.:   MT initialization for GDI was incomplete.
                  Changed:   gdi
 

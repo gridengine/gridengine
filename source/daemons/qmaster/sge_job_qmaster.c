@@ -959,8 +959,9 @@ int sub_command
                }
             }
             if (existing_tasks > deleted_tasks) {
+               /* write only the common part - pass only the jobid, no jatask or petask id */
                spool_write_object(spool_get_default_context(), job, 
-                                  job_get_key(job_number, 0, NULL), 
+                                  job_get_job_key(job_number), 
                                   SGE_TYPE_JOB);
             } else {
                sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, NULL, NULL);

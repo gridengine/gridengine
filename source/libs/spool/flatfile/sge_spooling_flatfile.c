@@ -736,8 +736,9 @@ spool_flatfile_default_delete_func(const lListElem *type, const lListElem *rule,
             u_long32 job_id, ja_task_id;
             char *pe_task_id;
             char *dup = strdup(key);
+            bool only_job;
             
-            job_parse_key(dup, &job_id, &ja_task_id, &pe_task_id);
+            job_parse_key(dup, &job_id, &ja_task_id, &pe_task_id, &only_job);
    
             DPRINTF(("spooling job %d.%d %s\n", job_id, ja_task_id, 
                      pe_task_id != NULL ? pe_task_id : "<null>"));

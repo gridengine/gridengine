@@ -211,10 +211,12 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list);
 const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, 
                               const char *pe_task_id);
 
+const char *job_get_job_key(u_long32 job_id);
+
 const char *job_get_key(u_long32 job_id, u_long32 ja_task_id, 
                         const char *pe_task_id);
 bool job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
-                  char **pe_task_id);
+                   char **pe_task_id, bool *only_job);
 
 bool job_is_pe_referenced(const lListElem *job, const lListElem *pe);
 

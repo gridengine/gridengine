@@ -1,3 +1,9 @@
+JG-2003-02-26-0  Bugfix:    Classic spooling framework unnecessarily spooled 
+                            array tasks in a certain situation where only 
+                            spooling of the common part was required.
+                 Enhancem.: distinst installs new libraries if built as shared libs.
+                 Review:    EB
+
 JG-2003-02-25-0  Enhancem.: Moved type handling commodity functions from mirror 
                             library to sgeobj library.
                             Eliminated libspool's dependency on libmir.

@@ -3457,7 +3457,7 @@ static void *japi_implementation_thread(void *p)
 {
    lCondition *where = lWhere("%T(%I==%s)", JB_Type, JB_session, japi_session_key );
    lEnumeration *what = lWhat("%T(%I)", JB_Type, JB_job_number);
-   /* TODO: SG: need what / where */
+
    lListElem *where_el = lWhereToElem(where);
    lListElem *what_el = lWhatToElem(what);
    

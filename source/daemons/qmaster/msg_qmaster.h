@@ -332,6 +332,7 @@
 #define MSG_JOB_NOJOBNAME_U           _MESSAGE(33226, _("job "U32CFormat" was rejected cause there is no job_name in the request\n"))
 #define MSG_JOB_NOWRITE_US            _MESSAGE(33227, _("job "U32CFormat" was rejected cause it can't be written: "SFN"\n"))
 #define MSG_JOB_NOWRITE_U             _MESSAGE(33228, _("job "U32CFormat" was rejected cause it couldn't be written\n"))
+#define MSG_JOB_DEPENDENCY_CYCLE_UU   _MESSAGE(33229, _("job "u32" dependency change would generate a dependency cycle with job "u32"\n"))
 /* EB: remove
 #define MSG_SEC_NOAUTH_U              _MESSAGE(33229, _("job "U32CFormat" rejected because authentication failed\n"))
 #define MSG_SEC_NOSTARTCMD4GETCRED_SU _MESSAGE(33230, _("can't start command "SFQ" for job " U32CFormat " to get credentials\n"))

@@ -1,4 +1,23 @@
+SG-2003-12-10-3: Enhancem.: Added a cycle check for job dependencies, when an
+                            existing job-net is modified.
+                 Changed:   qmaster
+
+
+SG-2003-12-10-2: Bugfix:    qmaster crashed, when -hold_jid specified a none
+                            existing job id (SG-2003-12-09-1).
+                 Changed:   qmaster                            
+
+SG-2003-12-10-1: Bugfix:    qsh and qlogin allowed -hold_jid even so it was
+                            not part of the -help output. Disabled -hold_jid
+                            and -h option for qsh and qlogin. Updated the
+                            man pages to reflect the changes.
+                 Changed:   submit.1, qsh, qlogin                            
+
+SG-2003-12-10-0: Enhancem.: changed the man pages to reflect SG-2003-12-09-1
+                 Changed:   submit.1
+
 JG-2003-12-10-1: Testsuite: Fixed some problems with JG-2003-12-10-0.
+
 
 JG-2003-12-10-0: Testsuite: Removed SGE version dependencies in the testsuite 
                             installation process, prepared cluster queue 

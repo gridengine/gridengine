@@ -1,3 +1,5 @@
+JG-2004-03-15-0: Testsuite: Fixed function changing queue attributes.
+
 DT-2004-03-15-0: Bugfix:    o Fixed qconf line continuation in cases of long,
                               unbreakable lines.
                             o Fixed qconf parsing of trailing whitespace.

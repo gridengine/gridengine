@@ -3307,7 +3307,7 @@ proc mqattr { attribute entry queue_list } {
 
   set help "$attribute \"$entry\""   ;# create e.g. slots "5" as string
   set catch_return [ catch {  
-    eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -mattr queue $help $queue_list" 
+    eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -rattr queue $help $queue_list" 
   } result ]
   if { $catch_return != 0 } {
      add_proc_error "mqattr" "-1" "qconf error or binary not found"

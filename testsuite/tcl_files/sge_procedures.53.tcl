@@ -30,8 +30,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-
-
 proc unassign_queues_with_pe_object { pe_obj } {
    # nothing to be done for SGE 5.3
 }

@@ -1175,21 +1175,23 @@ const char *value
       cull_hash_remove(ep, pos);
    }
    
-   /* free old string value */
-   if (ep->cont[pos].str) {
-      free(ep->cont[pos].str);
-   }   
-
    /* strdup new string value */
+   /* do so before freeing the old one - they could point to the same object! */
    if (value) {
       if (!(str = strdup(value))) {
          LERROR(LESTRDUP);
          DEXIT;
          return -1;
       }
-   }                            /* these brackets are required */
-   else
+   } else {
       str = NULL;               /* value is NULL */
+   }
+
+   /* free old string value */
+   if (ep->cont[pos].str) {
+      free(ep->cont[pos].str);
+   }   
+
 
    ep->cont[pos].str = str;
 

@@ -1,3 +1,5 @@
+CR-2001-12-19-0: Bugfix:    added missing ":" for qstat -j output for "job-array tasks"
+
 AA-2001-12-19-0: Bugfix:    scrollbar anomalie in cluster config, made scrollbars static
 
 JG-2001-12-19-1: Bugfix:    Limits were not correctly set on hp10 platform -

@@ -481,7 +481,7 @@ DTRACE;
 
       job_get_ja_task_ids(job, &start, &end, &step);
       if (is_array(job))
-         printf("job-array tasks             "u32"-"u32":"u32"\n", start, end, step);
+         printf("job-array tasks:            "u32"-"u32":"u32"\n", start, end, step);
    }
 
 #if 0

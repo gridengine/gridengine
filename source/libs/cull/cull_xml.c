@@ -158,9 +158,10 @@ static void lWriteListXML_(const lList *lp, int nesting_level, FILE *fp)
    char indent[128];
    int i;
    bool is_XML_elem = false;
-   DENTER(CULL_LAYER, "lWriteListXML_");
    dstring attr = DSTRING_INIT;
    bool is_attr = false;
+
+   DENTER(CULL_LAYER, "lWriteListXML_");
    
    if (!lp) {
       LERROR(LELISTNULL);
@@ -180,7 +181,7 @@ static void lWriteListXML_(const lList *lp, int nesting_level, FILE *fp)
    for_each(ep, lp) {
       is_XML_elem = false;
 
-      if (lGetPosViaElem(ep, XMLE_Attribute) != -1) {  
+      if (lGetPosViaElem(ep, XMLE_Attribute) != -1) {
          is_attr = true;
          sge_dstring_clear(&attr);
          lAttributesToString_(lGetList(ep, XMLE_Attribute), &attr);  

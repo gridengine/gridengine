@@ -1,3 +1,8 @@
+SG-2004-03-07-0: Bugfix:    - fixed the build for glinux
+                            - fixed the scheduler high profile
+                            - fixed the help output from inst_sge
+                 Changed:   qstat, inst_sge                            
+
 MD-2004-03-05-0: Bugfix:    - shadowhost installation was broken
                             - sgebdb stop didn't stop the db
                             - typo

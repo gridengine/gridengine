@@ -419,9 +419,9 @@ char **argv
             const lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
             for_each(qep, qinstance_list) {
-               u_long32 now_time = DISPATCH_TIME_NOW;
+/*               u_long32 now_time = DISPATCH_TIME_NOW;
                int dummy = 0;
-
+*/
                if (!(lGetUlong(qep, QU_tag) & TAG_SHOW_IT))
                   continue;
 

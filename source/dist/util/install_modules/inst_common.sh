@@ -341,7 +341,6 @@ ErrUsage()
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
              "   -afs       install system with AFS functionality\n" \
-             "   -resport   install system with reserved port security\n" \
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \

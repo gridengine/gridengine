@@ -236,13 +236,14 @@ void qmonInitSge( char *progname)
       log_state_set_log_gui(False);
       if ( sge_get_master(0) != NULL) {
          error=check_isalive(sge_get_master(0));
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUUSS,
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUS,
                              prognames[QMASTER], 
-                             u32c(1), 
                              u32c(sge_get_qmaster_port()), 
-                             sge_get_master(0),
-                             cl_get_error_text(error)));
-         fprintf(stderr,SGE_EVENT);
+                             sge_get_master(0)));
+         fprintf(stderr, SGE_EVENT);
+         DPRINTF (("Can't send message to %s at %s:%d -- %s\n",
+                   prognames[QMASTER], sge_get_master(0),
+                   sge_get_qmaster_port(), cl_get_error_text(error)));
       }
       SGE_EXIT(1);
    }

@@ -453,12 +453,15 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
             case -4:
                /* gdi error */
                
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUUSS,
-                                 prognames[QMASTER], 
-                                 u32c(1), 
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUS,
+                                 prognames[QMASTER],
                                  u32c(sge_get_qmaster_port()), 
-                                 sge_get_master(gdi_state_get_reread_qmaster_file()),
-                                 cl_get_error_text(commlib_error)));
+                                 sge_get_master(gdi_state_get_reread_qmaster_file())));
+               DPRINTF (("Can't send message to %s at %s:%d -- %s\n",
+                         prognames[QMASTER],
+                         sge_get_master(gdi_state_get_reread_qmaster_file()),
+                         sge_get_qmaster_port(),
+                         cl_get_error_text(commlib_error)));
                break;
             case -5:
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SIGNALED ));

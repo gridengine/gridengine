@@ -121,11 +121,11 @@
 */
 #define MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT   _MESSAGE(43117, _("NULL pointer passed to sge_gdi_multi()"))
 #define MSG_GDI_CANTCREATEGDIREQUEST                     _MESSAGE(43118, _("can't create gdi request"))
+#define MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUS    _MESSAGE(43122, _("Unable to contact "SFN" using port "U32CFormat" on host "SFQ"\n"))
 #define MSG_GDI_GETPWUIDXFAILEDERRORX_IS                 _MESSAGE(43123, _("failed to getpwuid(%d): "SFN"\n"))
 #define MSG_GDI_GETGRGIDXFAILEDERRORX_IS                 _MESSAGE(43124, _("failed to getgrgid(%d): "SFN"\n"))
 #define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43125, _("failed sending gdi request\n"))
 #define MSG_GDI_RECEIVEGDIREQUESTFAILED                  _MESSAGE(43126, _("failed receiving gdi request\n"))
-#define MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUUSS  _MESSAGE(43300, _("can't send message to ("SFN","U32CFormat") at port "U32CFormat" on host "SFQ": %s\n"))
 #define MSG_GDI_SIGNALED                                 _MESSAGE(43127, _("signaled\n"))
 #define MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I     _MESSAGE(43128, _("general error (%d) sending and receiving gdi request\n"))
 #define MSG_GDI_POINTER_NULLLISTPASSEDTOSGESENDRECEIVGDIREQUEST  _MESSAGE(43129, _("NULL list passed to sge_send_receive_gdi_request()"))

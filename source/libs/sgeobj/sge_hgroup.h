@@ -36,13 +36,12 @@
 
 extern lList *Master_HGroup_List;
 
-void correct_hgroup_name(dstring *string, const char *name);
 
 bool is_hgroup_name(const char *name);
 
-/* --- */
+bool hgroup_check_name(lList **answer_list, const char* name);
 
-bool hgroup_correct_name(lListElem *this_elem);
+/* --- */
 
 lListElem *
 hgroup_create(lList **answer_list, const char *name, 

@@ -527,7 +527,6 @@
 #define MSG_UP_NOADDDEFAULT_S          _MESSAGE(33491, _("denied: not allowed add a "SFN" with name \"default\"\n") ) 
 #define MSG_UP_ALREADYEXISTS_SS        _MESSAGE(33492, _("denied: shared namespace between project and user: there is already a "SFN" which is named "SFQ"\n"))
 #define MSG_UM_CLUSTERUSERXNOTGUILTY_S _MESSAGE(33493, _("cluster user name "SFQ" is not valid\n"))
-#define MSG_HGRP_GROUPXNOTGUILTY_S     _MESSAGE(33494, _("host group name "SFQ" is not valid\n"))
 #define MSG_OBJ_PRJ                    _MESSAGE(33509, _("project"))
 #define MSG_OBJ_PRJS                  _MESSAGE(33510, _("projects"))
 #define MSG_OBJ_XPRJS                 _MESSAGE(33511, _("xprojects"))

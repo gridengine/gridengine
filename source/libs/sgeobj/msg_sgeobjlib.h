@@ -285,5 +285,7 @@
 #define MSG_CONF_NEITHERSGECODGRDSETTINGSGE _MESSAGE(64302, _("neither SGE nor COD nor GRD environment for jobs configured, setting SGE environment\n"))
 #define MSG_CENTRY_QINOTALLOWED        _MESSAGE(64303, _("Queue instance names are not allowed in -l resource requests\n"))
 #define MSG_OBJECT_VALUENOTULONG_S     _MESSAGE(64304, _(SFQ" is not an u_long32 value\n"))
+#define MSG_HGRP_INVALIDHOSTGROUPNAME_S     _MESSAGE(64305, _("host group name "SFQ" is not valid\n"))
+
 
 #endif /* __MSG_SGEOBJLIB_H */

@@ -158,7 +158,7 @@
 #define MSG_GDI_CANT_GET_EXECD_HANDLE_SUU  _MESSAGE(43297, _("can't create execd handle for "SFQ" with id "U32CFormat", using port "U32CFormat"\n"))
 #define MSG_GDI_CANT_CREATE_COM_HANDLE     _MESSAGE(43298, _("can't create handle for communication\n"))
 #define MSG_GDI_HANDLE_CREATED_FOR_S       _MESSAGE(43299, _("created communication handel for component name "SFQ"\n"))
-#define MSG_GDI_COULD_NOT_GET_COM_HANDLE_S _MESSAGE(43300, _("could not get communication handle for "SFQ"\n"))
+#define MSG_GDI_COULD_NOT_GET_COM_HANDLE_S _MESSAGE(43300, _("alive check of qmaster failed for component "SFQ"\n"))
 #define MSG_GDI_QMASTER_STILL_RUNNING      _MESSAGE(43301, _("qmaster is still running\n"))
 #define MSG_GDI_ENDPOINT_UPTIME_UU         _MESSAGE(43302, _("endpoint is up since "U32CFormat" seconds and has status "U32CFormat"\n"))
 #endif /* __MSG_GDILIB_H */

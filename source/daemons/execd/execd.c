@@ -193,7 +193,7 @@ char **argv
    parse_cmdline_execd(argv);   
 
    /* daemonizes if qmaster is unreachable */   
-   sge_setup_sge_execd();
+   sge_setup_sge_execd(tmp_err_file_name);
 
    if (!getenv("SGE_ND"))
       daemonize_execd();
@@ -350,8 +350,10 @@ static void execd_register()
       alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
       aep = lFirst(alp);
       if (!alp || (lGetUlong(aep, AN_status)!=STATUS_OK)) {
-         WARNING((SGE_EVENT, MSG_COM_CANTREGISTER_S, aep?lGetString(aep, AN_text):MSG_COM_ERROR));
-         had_problems = 1;
+         if ( had_problems == 0) {
+            WARNING((SGE_EVENT, MSG_COM_CANTREGISTER_S, aep?lGetString(aep, AN_text):MSG_COM_ERROR));
+            had_problems = 1;
+         }
          alp = lFreeList(alp);
          continue;
       }

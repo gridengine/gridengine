@@ -47,8 +47,11 @@
 #include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_bootstrap.h"
+#include "sge_mtutil.h"
 #include "msg_gdilib.h"
 #include "sgeobj/sge_answer.h"
+
+static pthread_mutex_t check_alive_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static int gdi_log_flush_func(cl_raw_list_t* list_p);
 
@@ -575,6 +578,7 @@ int check_isalive(const char *masterhost)
    cl_com_handle_t* handle = NULL;
    cl_com_SIRM_t* status = NULL;
    int ret;
+   static int error_locked = 0;
 
  
    DENTER(TOP_LAYER, "check_isalive");
@@ -584,11 +588,29 @@ int check_isalive(const char *masterhost)
       DEXIT;
       return CL_RETVAL_UNKNOWN_ENDPOINT;
    }
+
+
+   
    handle=cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    if (handle == NULL) {
-      CRITICAL((SGE_EVENT,MSG_GDI_COULD_NOT_GET_COM_HANDLE_S, (char*) uti_state_get_sge_formal_prog_name() ));
+
+      sge_mutex_lock("check_alive_mutex", SGE_FUNC, __LINE__, &check_alive_mutex);  
+
+      if ( error_locked == 0 ) {
+         WARNING((SGE_EVENT,MSG_GDI_COULD_NOT_GET_COM_HANDLE_S, (char*) uti_state_get_sge_formal_prog_name() ));
+      }
+      error_locked = 1;
+
+      sge_mutex_unlock("check_alive_mutex", SGE_FUNC, __LINE__, &check_alive_mutex);  
       return CL_RETVAL_UNKNOWN;
    }
+
+   sge_mutex_lock("check_alive_mutex", SGE_FUNC, __LINE__, &check_alive_mutex);  
+   error_locked = 0;
+   sge_mutex_unlock("check_alive_mutex", SGE_FUNC, __LINE__, &check_alive_mutex);  
+
+
+
    ret = cl_commlib_get_endpoint_status(handle,(char*)masterhost,(char*)prognames[QMASTER] , 1, &status);
    if (ret != CL_RETVAL_OK) {
       DPRINTF(("cl_commlib_get_endpoint_status() returned "SFQ"\n", cl_get_error_text(ret)));

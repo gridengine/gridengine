@@ -60,6 +60,10 @@
    if (rmon_condition(xaybzc, TRACE))         \
       rmon_mtrace(SGE_FUNC, __FILE__, __LINE__)
 
+#define DLOCKPRINTF(msg)             \
+   if (rmon_condition(xaybzc, LOCK)) \
+      rmon_mprintf msg
+
 #define DPRINTF(msg)                        \
    if (rmon_condition(xaybzc, INFOPRINT))   \
       rmon_mprintf msg
@@ -86,6 +90,7 @@
 #define DENTER( layer, function)
 #define DEXIT
 #define DTRACE
+#define DTRACEPRINTF(x)
 #define DPRINTF(x)
 #define DTIMEPRINTF(x)
 #define DSPECIALPRINTF(x)

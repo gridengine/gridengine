@@ -54,13 +54,13 @@
 #define SPECIAL	       8 /* s */
 #define TIMING          16 /* m */
 
-#define FREE_CLASS_X	   32 /* X */
+#define LOCK	         32 /* X */
 #define FREE_CLASS_Y	   64 /* Y */
 #define FREE_CLASS_Z   128 /* Z */
 
 #define NO_LEVEL  256  
 
-#define ALL_CLASSES (TRACE|INFOPRINT|JOBTRACE|SPECIAL|TIMING|FREE_CLASS_X|FREE_CLASS_Y|FREE_CLASS_Z)
+#define ALL_CLASSES (TRACE|INFOPRINT|JOBTRACE|SPECIAL|TIMING|LOCK|FREE_CLASS_Y|FREE_CLASS_Z)
 
 typedef struct _monitoring_level {
    u_long ml[N_LAYER];

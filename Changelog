@@ -1,3 +1,7 @@
+AD-2003-12-19-0: Enhancem.: Added new monitoring class 'LOCK'
+                 Changed:   util, lck, rmon
+                 Review:    AH
+
 SG-2003-12-19-1: Bugfix:    The fix ensures, that a job task is not used
                             with the -hold_jid flag together and that in
                             qalter only job_tasks are acepted, when they

@@ -377,7 +377,7 @@ while [ $# -ge 1 ]; do
       fi
       ;;
    -bin)
-      PROG="$DEFAULTPROG"
+      PROG="$DEFAULTPROG $PROG"
       ;;
    -noinst)
       PROG="$DEFAULTPROG"

@@ -312,15 +312,15 @@ int sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
       old_logging = schedd_mes_get_logging();
       schedd_mes_set_logging(0);
    } 
-
    DPRINTF(("handling parallel job "u32"."u32"\n", best->job_id, best->ja_task_id)); 
 
    if (!now_assignment) {
       /* reservation scheduling */
       for_each(pe, pe_list) {
 
-         if (!pe_is_matching(pe, pe_request))
+         if (!pe_is_matching(pe, pe_request)) {
             continue;
+         }   
 
          matched_pe_count++;
 
@@ -360,13 +360,14 @@ int sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
       /* now assignments */ 
       for_each(pe, pe_list) {
 
-         if (!pe_is_matching(pe, pe_request))
+         if (!pe_is_matching(pe, pe_request)) {
             continue;
+         }   
 
          pe_name = lGetString(pe, PE_name);
          matched_pe_count++;
 
-         if (!best->gdil) {
+         if (best->gdil != NULL) {
             best->pe = pe;
             result = sge_maximize_slots(best);
             if (result != 0) {
@@ -388,8 +389,9 @@ int sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
                continue;
             }
 
-            if (tmp.slots > best->slots || 
-                  (tmp.start == best->start && tmp.soft_violations < best->soft_violations)) {
+            if ((tmp.slots > best->slots) || 
+                (tmp.start == best->start && 
+                 tmp.soft_violations < best->soft_violations)) {
                assignment_copy(best, &tmp, true);
                DPRINTF(("### better ### assignment in PE \"%s\" with %d soft violations\n",
                      lGetString(best->pe, PE_name), best->soft_violations));
@@ -652,12 +654,14 @@ static int sge_maximize_slots(sge_assignment_t *best) {
    for (slots = min_slots; slots <= max_slots; slots++) {
 
       /* sort out slot numbers that would conflict with allocation rule */
-      if (sge_pe_slots_per_host(pe, slots)==0)
-         continue; 
+      if (sge_pe_slots_per_host(pe, slots)==0) {
+         continue;  /* SG: why is this not a break? */
+      }   
 
       /* only slot numbers from jobs PE range request */
-      if (!range_list_is_id_within(pe_range, slots))
+      if (!range_list_is_id_within(pe_range, slots)) {
          continue;
+      }   
 
       /* this is an additional run, we have already at least one posible match,
          all additional scheduling information is not important, since we can
@@ -673,8 +677,9 @@ static int sge_maximize_slots(sge_assignment_t *best) {
       /* we try that slot amount */
       tmp.slots = slots;
       result = sge_parallel_assignment(&tmp, &use_category);
-      if (result != 0)
+      if (result != 0) {
          break;
+      }   
 
       assignment_copy(best, &tmp, true);
    }
@@ -958,8 +963,9 @@ static int rc_time_by_slots(lList *requested, lList *load_attr, lList *config_at
       }/* end for*/
    }
  
-   if (slots == -1)
+   if (slots == -1) {
       slots = 1;
+   }   
 
    /* explicit requests */
    for_each (attr, requested) {
@@ -1421,11 +1427,12 @@ static int sge_soft_violations(lListElem *queue, int violation, lListElem *job,l
    sge_dstring_init(&reason, reason_buf, sizeof(reason_buf));
 
    soft_requests = lGetList(job, JB_soft_resource_list);
-   clear_resource_tags(soft_requests, QUEUE_TAG);
+   clear_resource_tags(soft_requests, tag);
 
    job_id = lGetUlong(job, JB_job_number);
-   if (queue)
+   if (queue) {
       queue_name = lGetString(queue, QU_full_name);
+   }   
 
    /* count number of soft violations for _one_ slot of this job */
 
@@ -2692,7 +2699,7 @@ static int sge_tag_queues_suitable4job_comprehensively(sge_assignment_t *a, cate
          int hslots = 0, hslots_qend = 0;
          const char *eh_name = lGetHost(hep, EH_name);
 
-         if (!strcasecmp(eh_name, "global") || !strcasecmp(eh_name, "template")) {
+         if (!strcasecmp(eh_name, SGE_GLOBAL_NAME) || !strcasecmp(eh_name, SGE_TEMPLATE_NAME)) {
             continue;
          }   
 
@@ -2752,7 +2759,6 @@ static int sge_tag_queues_suitable4job_comprehensively(sge_assignment_t *a, cate
          schedd_mes_add(lGetUlong(job, JB_job_number), SCHEDD_INFO_NORESOURCESPE_);
          best_result = -1;
       }
-
 
       if (rmon_condition(xaybzc, INFOPRINT)) {
          switch (best_result) {
@@ -3892,6 +3898,8 @@ int host_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, int *ho
 
    eh_name = lGetHost(hep, EH_name);
 
+   clear_resource_tags(hard_requests, HOST_TAG);
+
    if (host_match_static(a->job, a->ja_task, hep, a->centry_list, a->acl_list)==0) {
 
       /* cause load be raised artificially to reflect load correction when
@@ -4005,6 +4013,8 @@ lList *acl_list)
 
    sge_dstring_init(&reason, reason_buf, sizeof(reason_buf));
 
+   clear_resource_tags(hard_requests, HOST_TAG);
+
    if ((result=host_match_static(job, ja_task, hep, centry_list, acl_list))) {
       DEXIT;
       return result;
@@ -4016,8 +4026,6 @@ lList *acl_list)
       if ((ulc_factor=lGetUlong(hep, EH_load_correction_factor)))
          lc_factor = ((double)ulc_factor)/100;
    }
-
-   clear_resource_tags(hard_requests, HOST_TAG);
 
    result = rc_time_by_slots(hard_requests, load_attr, 
          config_attr, actual_attr, centry_list, NULL, 0, 
@@ -4083,10 +4091,13 @@ lList *acl_list)
 
    sge_dstring_init(&reason, reason_buf, sizeof(reason_buf));
 
-   if (!slots) {
+
+   if (slots == 0) {
       DEXIT;
       return -1;
    }
+
+   clear_resource_tags(hard_request, GLOBAL_TAG);
 
    /* check if job has access to any hosts globally */
    if ((result=host_match_static(job, NULL, gep, centry_list, 
@@ -4101,8 +4112,6 @@ lList *acl_list)
       if ((ulc_factor=lGetUlong(gep, EH_load_correction_factor)))
          lc_factor = ((double)ulc_factor)/100;
    }
-
-   clear_resource_tags(hard_request, GLOBAL_TAG);
 
    result = rc_time_by_slots(hard_request, load_attr, config_attr, actual_attr, centry_list, NULL, 0, &reason, 
        slots, DOMINANT_LAYER_GLOBAL, lc_factor, GLOBAL_TAG, &tmp_time, duration, SGE_GLOBAL_NAME);
@@ -4164,6 +4173,8 @@ lList *acl_list)
    int gslots = 0, gslots_qend = 0;
 
    DENTER(TOP_LAYER, "global_slots_by_time");
+
+   clear_resource_tags(hard_request, GLOBAL_TAG);
 
    /* check if job has access to any hosts globally */
    if (host_match_static(job, NULL, gep, centry_list, 
@@ -4769,6 +4780,8 @@ static int rc_slots_by_time(lList *requests, u_long32 start, u_long32 duration,
    int result;
 
    DENTER(TOP_LAYER, "rc_slots_by_time");
+
+   clear_resource_tags(requests, QUEUE_TAG); 
 
    if (!implicit_slots_request) {
       implicit_slots_request = lCreateElem(CE_Type);

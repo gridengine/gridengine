@@ -1,3 +1,9 @@
+SG-2004-08-26-0: Bugfix:    hard resource requests ignored in parallel jobs
+                 Review:    AH
+                 Issue:     1253
+                 Bugtraq:   5092487
+                 Changed:   scheduler
+
 CR-2004-08-25-0: Bugfix:     - added man pages for qping, gethostname, 
                                gethostbyname, gethostbyaddr, getservbyname
                              - the binaries now support -help option and show

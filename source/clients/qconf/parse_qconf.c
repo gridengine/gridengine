@@ -6376,8 +6376,8 @@ struct object_info_entry *info_entry
 
       if (from_file) {
          if (sge_next_is_an_opt(*spp))  {
-            sprintf(SGE_EVENT, MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S, 
-               "qconf");
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S, 
+               "qconf"));
             answer_list_add(alpp, SGE_EVENT, 
                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             return 1;
@@ -6402,8 +6402,8 @@ struct object_info_entry *info_entry
             return 1;
          }                           
          if (lGetNumberOfElem(cflp) > 0) {
-            sprintf(SGE_EVENT, MSG_QCONF_XISNOTAOBJECTATTRIB_SSS, "qconf", 
-                    lGetString(lFirst(cflp), CF_name), info_entry->object_name);
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_XISNOTAOBJECTATTRIB_SSS, "qconf", 
+                    lGetString(lFirst(cflp), CF_name), info_entry->object_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             return 1;
          }
@@ -6411,14 +6411,14 @@ struct object_info_entry *info_entry
       /* add object name to int vector and transform
          it into an lEnumeration */
       if (add_nm_to_set(fields, info_entry->nm_name) < 0) {
-         sprintf(SGE_EVENT, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, "qconf", 
-            info_entry->attribute_name);
+         SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, "qconf", 
+            info_entry->attribute_name));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return 1;
       }
 
       if (!(what = lIntVector2What(info_entry->cull_descriptor, fields))) {
-         sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf");
+         SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf"));
          return 1;
       }              
       while (!sge_next_is_an_opt(*spp)) { 
@@ -6452,15 +6452,15 @@ struct object_info_entry *info_entry
                lSetHost(add_qp, info_entry->nm_name, **spp);
                break;
             default:
-               sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf");
+               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf"));
                answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                return 1;
          }
          lAppendElem(qlp, add_qp);
       }
       if (!qlp) {
-         sprintf(SGE_EVENT, MSG_QCONF_MQATTR_MISSINGOBJECTLIST_S, 
-            "qconf");
+         SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_MQATTR_MISSINGOBJECTLIST_S, 
+            "qconf"));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return 1;
       }

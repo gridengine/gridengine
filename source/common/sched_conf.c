@@ -378,7 +378,7 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
    if (str) {
       ul = str2qsm(str);
       if (ul == (u_long32) -1) {
-         sprintf(SGE_EVENT, MSG_SCHEDCONF_INVALIDVALUEXFORQUEUESORTMETHOD_S, str);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SCHEDCONF_INVALIDVALUEXFORQUEUESORTMETHOD_S, str));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1; 
@@ -391,7 +391,7 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
       str = get_conf_value(&alp, *clpp, CF_name, CF_value, "sort_seq_no");
       alp = lFreeList(alp);
       if (!str) {
-         sprintf(SGE_EVENT, MSG_SCHEDCONF_INVALIDVALUEXFORQUEUESORTMETHOD_S, str);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SCHEDCONF_INVALIDVALUEXFORQUEUESORTMETHOD_S, str));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1; 

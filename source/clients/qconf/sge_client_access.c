@@ -135,7 +135,7 @@ lList *acl_args
 
          if (already) {
             status = STATUS_EEXIST;
-            sprintf(SGE_EVENT, MSG_GDI_USERINACL_SS, user_name, acl_name);
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_GDI_USERINACL_SS, user_name, acl_name));
          }
          else {
             if ((status = lGetUlong(lFirst(answers), AN_status))!=STATUS_OK) {
@@ -146,11 +146,11 @@ lList *acl_args
                   sprintf(SGE_EVENT, "%s", cp);
                }
                else {
-                  sprintf(SGE_EVENT, MSG_GDI_CANTADDTOACL_SS, user_name, acl_name);
+                  SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_GDI_CANTADDTOACL_SS, user_name, acl_name));
                }
-            }
-            else 
+            } else {
                sprintf(SGE_EVENT, MSG_GDI_ADDTOACL_SS, user_name, acl_name);
+            }
             answers = lFreeList(answers);
          }
          answer_list_add(alpp, SGE_EVENT, status, 
@@ -223,22 +223,23 @@ lList *acl_args
 
          if (status != STATUS_OK) {
             if (status == STATUS_EEXIST) {
-               sprintf(SGE_EVENT, MSG_GDI_ACLDOESNOTEXIST_S, acl_name);
+               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_GDI_ACLDOESNOTEXIST_S, acl_name));
                breakit = 1;        
             }
 	    else if (status == STATUS_EEXIST + 1) {
-               sprintf(SGE_EVENT, MSG_GDI_USERNOTINACL_SS, user_name, acl_name);
+               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_GDI_USERNOTINACL_SS, user_name, acl_name));
             }
             else if (cp) {
                sprintf(SGE_EVENT, "%s", cp);
             }
 	    else {
-               sprintf(SGE_EVENT, MSG_GDI_CANTDELFROMACL_SS,  user_name, acl_name);
+               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_GDI_CANTDELFROMACL_SS,  user_name, acl_name));
             }
 
          }
-         else 
+         else {
             sprintf(SGE_EVENT, MSG_GDI_DELFROMACL_SS, user_name, acl_name);
+         }
          answer_list_add(alpp, SGE_EVENT, status, 
                         ((status == STATUS_OK) ? ANSWER_QUALITY_INFO : ANSWER_QUALITY_ERROR));
          acl = lFreeList(acl);

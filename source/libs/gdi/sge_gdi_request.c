@@ -320,12 +320,12 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    if (!lp && !(operation == SGE_GDI_PERMCHECK || operation == SGE_GDI_GET 
        || operation == SGE_GDI_TRIGGER || 
        (operation == SGE_GDI_DEL && target == SGE_SHARETREE_LIST))) {
-      sprintf(SGE_EVENT, MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT );
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT ));
       goto error;
    }
 
    if (!(request = new_gdi_request())) {
-      sprintf(SGE_EVENT, MSG_GDI_CANTCREATEGDIREQUEST );
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANTCREATEGDIREQUEST ));
       goto error;
    }
    
@@ -362,15 +362,15 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    */
    uid = getuid();
    if (sge_uid2user(uid, username, sizeof(username), MAX_NIS_RETRIES)) {
-      sprintf(SGE_EVENT, MSG_GDI_GETPWUIDXFAILEDERRORX_IS , 
-              (int)uid, strerror(errno));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETPWUIDXFAILEDERRORX_IS , 
+              (int)uid, strerror(errno)));
       goto error;
    }
    gid = getgid();
    if (sge_gid2group(gid, groupname, sizeof(groupname), 
          MAX_NIS_RETRIES)) {
-      sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_IS , 
-              (int)gid, strerror(errno));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_IS , 
+              (int)gid, strerror(errno)));
       goto error; 
    }
 
@@ -435,20 +435,20 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
          /* So we build an answer structure */
          switch (status) {
             case -2:
-               sprintf(SGE_EVENT, MSG_GDI_SENDINGGDIREQUESTFAILED);
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SENDINGGDIREQUESTFAILED));
                break;
             case -3:
-               sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED );
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED));
                break;
             case -4:
                /* fills SGE_EVENT with diagnosis information */
-               generate_commd_port_and_service_status_message(commlib_error, SGE_EVENT);
+               SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(commlib_error, SGE_EVENT));
                break;
             case -5:
-               sprintf(SGE_EVENT, MSG_GDI_SIGNALED );
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SIGNALED ));
                break;
             default:
-               sprintf(SGE_EVENT, MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I , status);
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I , status));
                break;
          }
          goto error;
@@ -544,7 +544,7 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
    sub_command = SGE_GDI_GET_SUBCOMMAND(cmd);
 
    if (!mal || id < 0) {
-      sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(&alp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
@@ -559,7 +559,7 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
    if ((operation == SGE_GDI_GET) || (operation == SGE_GDI_PERMCHECK) ||
        (operation == SGE_GDI_ADD && sub_command == SGE_GDI_RETURN_NEW_VERSION )) {
       if (!olpp) {
-         sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
          answer_list_add(&alp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return alp;

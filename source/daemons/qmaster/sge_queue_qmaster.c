@@ -524,10 +524,11 @@ int sub_command
 
       nc = lGetString(qep, QU_calendar);
       if (nc && !(new_cal = sge_locate_calendar(nc))) {
-         sprintf(SGE_EVENT, 
+         
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                  MSG_CALENDAR_CALENDARXREFERENCEDINQUEUEYNOTEXISTS_SS,
                  nc, 
-                 qname);
+                 qname));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          goto ERROR;            
       }
@@ -575,7 +576,9 @@ int sub_command
                strcasecmp("unix_behavior", s) && 
                strcasecmp("posix_compliant", s) && 
                strcasecmp("script_from_stdin", s)) {
-         sprintf(SGE_EVENT, SFQ" is not a valid shell_start_mode\n", s);
+        
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_QMASTER_XNOVALIDSSM_S , s));
+
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          goto ERROR;
       }
@@ -592,7 +595,7 @@ int sub_command
       if (s && strcasecmp("default", s) && 
                strcasecmp("enabled", s) && 
                strcasecmp("disabled", s)) {
-         sprintf(SGE_EVENT, SFQ" is not a valid initial_state\n", s);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_QMASTER_XNOVALIDIS_S , s));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          goto ERROR;
       }

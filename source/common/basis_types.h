@@ -38,10 +38,15 @@
 #  include <libintl.h>
 #  include <locale.h>
 #  include "sge_language.h"
-#  define _(x)   sge_gettext(x)
+#  define _MESSAGE(x,y)   sge_gettext_(x,y)
+#  define _(x)            sge_gettext(x)
+#  define SGE_ADD_MSG_ID(x) (sge_set_message_id_output(1),x,sge_set_message_id_output(0),1) ? 1 : 0
 #else
-#  define _(x)     (x)
+#  define _MESSAGE(x,y)     (y)
+#  define _(x)              (x)
+#  define SGE_ADD_MSG_ID(x) (x)
 #endif
+
 
 
 

@@ -234,7 +234,7 @@ void qmonInitSge( char *progname)
          error = -1;  /* this error code is ambiguous, make 
                          no suggestions in error message */ 
       }
-      generate_commd_port_and_service_status_message(error,SGE_EVENT);
+      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(error,SGE_EVENT));
       fprintf(stderr, SGE_EVENT);
       SGE_EXIT(1);
    }

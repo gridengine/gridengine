@@ -42,6 +42,7 @@
 #include "sge_manopL.h"
 #include "sge_stdio.h"
 #include "msg_common.h" 
+#include "msg_qmaster.h"
 #include "sge_feature.h"
 #include "sge_spool.h"
 

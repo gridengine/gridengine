@@ -215,7 +215,7 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
        */
       lSetHost(pal, PA_submit_host, submit_host);
       if (strcmp(submit_host, "*") && sge_resolve_host(pal, PA_submit_host)) {
-         sprintf(SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, submit_host);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, submit_host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = -1;
          break;

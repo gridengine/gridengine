@@ -87,22 +87,21 @@ int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
             int type = lGetUlong(cmplx_attr, CE_valtype);
 
             if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
-               sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, attr);
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, attr));
                answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
                                ANSWER_QUALITY_ERROR);
                ret = 0;
             }
          } else {
-            sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_S, attr);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_S, attr));
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
                             ANSWER_QUALITY_ERROR);
             ret = 0;
          }
       }
    }
-
-   return ret;
    DEXIT;
+   return ret;
 }
 
 lListElem* sge_locate_complex_attr(const char *name, const lList *complex_list)

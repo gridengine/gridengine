@@ -556,9 +556,8 @@ DTRACE;
          }
 
 DTRACE;
-
-         sprintf(SGE_EVENT, MSG_RU_MSGFILEINFO, mail_action, mail_type,
-            mail_ids, hostname);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_RU_MSGFILEINFO, mail_action, mail_type,
+            mail_ids, hostname));
 
 DTRACE;
 

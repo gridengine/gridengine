@@ -1,3 +1,7 @@
+CR-2002-06-24-0: Enhancem.  I18N : added message ids, switched off per default
+                            later: use qmaster/execd parameter to enable
+                                   error id output change "on the fly".
+
 EB-2002-06-24-0: Bugfix:    host group CLI contains "DO NOT MODIFY .." comment
                  Issue:     #293
 

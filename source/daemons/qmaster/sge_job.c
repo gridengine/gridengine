@@ -439,7 +439,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
          }
       }
       if (!has_permissions) {
-         sprintf(SGE_EVENT, MSG_JOB_NOTINANYQ_S, ruser);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_NOTINANYQ_S, ruser));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       }
    }
@@ -713,9 +713,9 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       }
    }
    if (!job_is_array(jep)) {
-      sprintf(SGE_EVENT, MSG_JOB_SUBMITJOB_USS,  
+      (sprintf(SGE_EVENT, MSG_JOB_SUBMITJOB_USS,  
             u32c(lGetUlong(jep, JB_job_number)), 
-            lGetString(jep, JB_job_name), str);
+            lGetString(jep, JB_job_name), str));
    } else {
       sprintf(SGE_EVENT, MSG_JOB_SUBMITJOBARRAY_UUUUSS,
             u32c(lGetUlong(jep, JB_job_number)), u32c(start), 
@@ -3239,9 +3239,9 @@ int *trigger
                lFreeList(talp);
             }
 
-            sprintf(SGE_EVENT, MSG_JOB_NOSUITABLEQ_S,
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_NOSUITABLEQ_S,
                (verify_mode==JUST_VERIFY ? MSG_JOB_VERIFYVERIFY: 
-                  (verify_mode==ERROR_VERIFY)?MSG_JOB_VERIFYERROR:MSG_JOB_VERIFYWARN));
+                  (verify_mode==ERROR_VERIFY)?MSG_JOB_VERIFYERROR:MSG_JOB_VERIFYWARN)));
             answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
             if (verify_mode != WARINING_VERIFY) {

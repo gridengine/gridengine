@@ -101,8 +101,8 @@ lList **alpp
    /* gdi lib call */
    if (!(me.who == QMASTER || me.who == SHADOWD) && !sge_get_master(1)) {
       if (alpp) {
-         sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
-                     path.act_qmaster_file);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
+                     path.act_qmaster_file));
    /* gdi lib call */
          answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -119,7 +119,7 @@ lList **alpp
       if(cl) {
          compression_level = (int)strtol(cl, NULL, 10);
          if(compression_level == LONG_MIN || compression_level == LONG_MAX) {
-            sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S , cl);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S , cl));
             compression_level = Z_DEFAULT_COMPRESSION;
          }
       }
@@ -129,7 +129,7 @@ lList **alpp
       if(cl) {
          compression_threshold = (int)strtol(cl, NULL, 10);
          if(compression_threshold == LONG_MIN || compression_threshold == LONG_MAX || compression_threshold < 0) {
-            sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S , cl);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S , cl));
             compression_threshold = 10 * 1024;
          }
       }

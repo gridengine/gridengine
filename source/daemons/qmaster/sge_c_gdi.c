@@ -367,7 +367,7 @@ sge_gdi_request *answer
       break;
 
    default:
-      sprintf(SGE_EVENT, MSG_SGETEXT_UNKNOWNOP);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_UNKNOWNOP));
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       break;
    }
@@ -435,7 +435,7 @@ int *after
    case SGE_PROJECT_LIST:
    case SGE_SHARETREE_LIST:
       if (!feature_is_enabled(FEATURE_SGEEE)) {
-         sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT)));
          answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          DEXIT;
          return;
@@ -476,7 +476,7 @@ int *after
 
    default:
       if (!ao) {
-         sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
          answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          DEXIT;
          return;
@@ -552,7 +552,7 @@ int sub_command
       case SGE_PROJECT_LIST:
       case SGE_SHARETREE_LIST:
          if (!feature_is_enabled(FEATURE_SGEEE)) {
-            sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT) );
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT) ));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             DEXIT;
             return;
@@ -657,7 +657,7 @@ int sub_command
 
       default:
          if (!ao) {
-            sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             break;
          } 
@@ -728,7 +728,7 @@ int sub_command
          sge_del_sharetree(&Master_Sharetree_List, &(answer->alp), user,host);
          break;
       default:
-         sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
+         SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
          answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          break;
       }
@@ -749,7 +749,7 @@ int sub_command
          case SGE_PROJECT_LIST:
          case SGE_SHARETREE_LIST:
             if (!feature_is_enabled(FEATURE_SGEEE)) {
-               sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT));
+               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT)));
                answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
                DEXIT;
                return;
@@ -821,7 +821,7 @@ int sub_command
             break;
 #endif /* __SGE_NO_USERMAPPING__ */                           
          default:
-            sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             break;
          }
@@ -881,7 +881,7 @@ int sub_command
          break;
 
       default:
-         sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
+         SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
          answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          break;
       }
@@ -1102,7 +1102,7 @@ int sub_command
       case SGE_PROJECT_LIST:
       case SGE_SHARETREE_LIST:
          if (!feature_is_enabled(FEATURE_SGEEE)) {
-            sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT) );
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT) ));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             DEXIT;
             return;
@@ -1162,7 +1162,7 @@ int sub_command
 
       default:
          if (!ao) {
-            sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             break;
          } 
@@ -1249,7 +1249,7 @@ char *user
       */  
       break;
    default:
-      sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
+      SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
       return 1;
@@ -1356,7 +1356,7 @@ lListElem *ep
       }
       break;
    default:
-      sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
+      SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
       return 1;
@@ -1422,7 +1422,7 @@ sge_gdi_request *request
                                               in an api multi request */
             ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
          } else {    
-            sprintf(SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host);
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          last_id = request->id;       /* this indicates that the error
@@ -1441,7 +1441,7 @@ sge_gdi_request *request
                                               in an api multi request */
             ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
          } else {
-            sprintf(SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          last_id = request->id;       /* this indicates that the error
@@ -1452,7 +1452,7 @@ sge_gdi_request *request
       break;
 
    default:
-      sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
       return 1;

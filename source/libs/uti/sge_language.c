@@ -57,7 +57,20 @@ typedef struct {
     textdomain_func_type       textdomain_func     ;
 } language_functions_struct;
 
+typedef struct {
+   int id;                    /* message identification number */
+   int category;              /* message category:             0 = common */
+   const char* message;       /* message string */
+   const char* local_message;  /* local translated message */
+} sge_error_message_t;
+
+
+
 static language_functions_struct sge_language_functions;
+static int sge_message_id_view_flag = 0;
+static char sge_message_buffer[MAX_STRING_SIZE+500];
+static int sge_enable_msg_id = 0;
+
 
 /* this is to find out if the sge_init_language_func() was called */
 static int sge_are_language_functions_installed = FALSE;
@@ -96,6 +109,11 @@ static int sge_are_language_functions_installed = FALSE;
 *  SEE ALSO
 *     uti/language/sge_init_language()
 *     uti/language/sge_init_language_func()
+*     uti/language/sge_gettext()
+*     uti/language/sge_gettext_()
+*     uti/language/sge_gettext__()
+*     uti/language/sge_get_message_id_output()
+*     uti/language/sge_set_message_id_output()
 ******************************************************************************/
 int sge_init_languagefunc(char *package, char *localeDir) 
 {
@@ -247,7 +265,13 @@ int sge_init_languagefunc(char *package, char *localeDir)
 *
 *  SEE ALSO
 *     uti/language/sge_init_language()
+*     uti/language/sge_init_language_func()
 *     uti/language/sge_gettext()
+*     uti/language/sge_gettext_()
+*     uti/language/sge_gettext__()
+*     uti/language/sge_get_message_id_output()
+*     uti/language/sge_set_message_id_output()
+*
 ******************************************************************************/
 void sge_init_language_func(gettext_func_type new_gettext, 
                             setlocale_func_type new_setlocale,
@@ -281,12 +305,156 @@ void sge_init_language_func(gettext_func_type new_gettext,
    } 
 }
 
-/****** uti/language/sge_gettext() ********************************************
+/****** uti/language/sge_set_message_id_output() *******************************
 *  NAME
-*     sge_gettext() -- get translated message from message file
+*     sge_set_message_id_output() -- enable message id number adding
 *
 *  SYNOPSIS
-*     char *sge_gettext(char *x)
+*     void sge_set_message_id_output(int flag) 
+*
+*  FUNCTION
+*     This procedure is used to enable the adding of message id's when showing
+*     error messages. This function is used in the macro SGE_ADD_MSG_ID(x)
+*     to enable the message id for errors.
+*
+*  INPUTS
+*     int flag - 0 = off ; 1 = on
+*
+*  SEE ALSO
+*     uti/language/sge_init_language()
+*     uti/language/sge_init_language_func()
+*     uti/language/sge_gettext()
+*     uti/language/sge_gettext_()
+*     uti/language/sge_gettext__()
+*     uti/language/sge_get_message_id_output()
+*     uti/language/sge_set_message_id_output()
+*
+*******************************************************************************/
+void sge_set_message_id_output(int flag) {
+   if (flag == 0) {
+      sge_message_id_view_flag = 0;
+   } else {
+      sge_message_id_view_flag = 1;
+   }
+}
+/****** uti/language/sge_get_message_id_output() *******************************
+*  NAME
+*     sge_get_message_id_output() -- check if message id should be added
+*
+*  SYNOPSIS
+*     int sge_get_message_id_output(void) 
+*
+*  FUNCTION
+*     This function returns the value stored in the static global varialbe
+*     sge_message_id_view_flag.
+*
+*  RESULT
+*     int - value of sge_message_id_view_flag
+*
+*  SEE ALSO
+*     uti/language/sge_init_language()
+*     uti/language/sge_init_language_func()
+*     uti/language/sge_gettext()
+*     uti/language/sge_gettext_()
+*     uti/language/sge_gettext__()
+*     uti/language/sge_get_message_id_output()
+*     uti/language/sge_set_message_id_output()
+*
+*******************************************************************************/
+int sge_get_message_id_output(void) {
+   if (sge_enable_msg_id == 0) {
+      return 0;
+   } 
+   return sge_message_id_view_flag;
+}
+
+/****** uti/language/sge_gettext() *********************************************
+*  NAME
+*     sge_gettext() -- dummy gettext() function 
+*
+*  SYNOPSIS
+*     const char* sge_gettext(char *x) 
+*
+*  FUNCTION
+*     This function returns the given argument
+*
+*  INPUTS
+*     char *x - string
+*
+*  RESULT
+*     const char* - input string
+*
+*  SEE ALSO
+*     uti/language/sge_init_language()
+*     uti/language/sge_init_language_func()
+*     uti/language/sge_gettext()
+*     uti/language/sge_gettext_()
+*     uti/language/sge_gettext__()
+*     uti/language/sge_get_message_id_output()
+*     uti/language/sge_set_message_id_output()
+*
+*******************************************************************************/
+const char *sge_gettext(char *x) {
+   return x;
+}
+
+/****** uti/language/sge_gettext_() ********************************************
+*  NAME
+*     sge_gettext_() -- add error id to message
+*
+*  SYNOPSIS
+*     const char* sge_gettext_(int msg_id, const char *msg_str) 
+*
+*  FUNCTION
+*     This function is used for adding the message id to the translated 
+*     gettext message string. The message id is only added when the function
+*     sge_get_message_id_output() returns not "0" and the message string
+*     contains at least one SPACE character.
+*
+*  INPUTS
+*     int msg_id          - message id
+*     const char *msg_str - message to translate
+*
+*  RESULT
+*     const char* - translated (L10N) message with message id 
+*
+*  SEE ALSO
+*     uti/language/sge_init_language()
+*     uti/language/sge_init_language_func()
+*     uti/language/sge_gettext()
+*     uti/language/sge_gettext_()
+*     uti/language/sge_gettext__()
+*     uti/language/sge_get_message_id_output()
+*     uti/language/sge_set_message_id_output()
+*
+*******************************************************************************/
+const char *sge_gettext_(int msg_id, const char *msg_str) 
+{
+#ifndef __SGE_COMPILE_WITH_GETTEXT__
+   return msg_str;
+#else
+   sge_error_message_t message;
+
+   message.id = msg_id;
+   message.message = msg_str;
+   message.local_message = sge_gettext__((char*)msg_str);
+   /* check if message is not just one word (strstr) */
+   if ( (sge_get_message_id_output() != 0)  && 
+        (strstr(message.local_message, " ") != NULL)   ) {  
+      sprintf( (char*)sge_message_buffer , "(%d) %-.2000s", message.id , message.local_message );
+      return sge_message_buffer;  
+   }
+   return msg_str;
+#endif
+}
+
+
+/****** uti/language/sge_gettext__() ********************************************
+*  NAME
+*     sge_gettext__() -- get translated message from message file
+*
+*  SYNOPSIS
+*     char *sge_gettext__(char *x)
 *
 *  FUNCTION
 *     makes a call to sge_language_functions.gettext_func(x) if 
@@ -302,11 +470,17 @@ void sge_init_language_func(gettext_func_type new_gettext,
 *  SEE ALSO
 *     uti/language/sge_init_language()
 *     uti/language/sge_init_language_func()
+*     uti/language/sge_gettext()
+*     uti/language/sge_gettext_()
+*     uti/language/sge_gettext__()
+*     uti/language/sge_get_message_id_output()
+*     uti/language/sge_set_message_id_output()
+*
 *******************************************************************************/
-const char *sge_gettext(char *x) 
+const char *sge_gettext__(char *x) 
 {
    char *z;
-   DENTER(GDI_LAYER, "sge_gettext");
+   DENTER(GDI_LAYER, "sge_gettext__");
 
    if ( (sge_language_functions.gettext_func != NULL) && 
         (sge_are_language_functions_installed == TRUE)   ) {

@@ -325,7 +325,7 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
 
         -i $myspawn_id timeout { 
            set do_stop 1 
-           add_proc_error "start_remote_prog" "-1" "timeout error:\n$expect_out(0,string)"
+           add_proc_error "start_remote_prog" "-1" "timeout error(1):\n$expect_out(0,string)"
         }
 
         -i $myspawn_id eof { 

@@ -338,7 +338,7 @@ char *attr_name
       DPRINTF(("got new %s\n", attr_name));
 
       if(!parse_ulong_val(NULL, NULL, TYPE_MEM, str, NULL, 0)) {
-         sprintf(SGE_EVENT, MSG_GDI_TYPE_MEM_SS, attr_name, str?str:"(null)");
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_TYPE_MEM_SS, attr_name, str?str:"(null)"));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_ESYNTAX;
@@ -371,7 +371,7 @@ int enable_infinity
          /* don't allow infinity for these parameters */
          if ((strcasecmp(str, "infinity") == 0) && (enable_infinity == 0)) { 
               DPRINTF(("ERROR! Infinity value for \"%s\"\n",attr_name));
-              sprintf(SGE_EVENT, MSG_GDI_SIG_DIGIT_SS, attr_name, str);
+              SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SIG_DIGIT_SS, attr_name, str));
               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
               DEXIT;
               return STATUS_ESYNTAX;
@@ -379,7 +379,7 @@ int enable_infinity
       }
 
       if(!parse_ulong_val(NULL, NULL, TYPE_TIM, str, NULL, 0)) {
-         sprintf(SGE_EVENT, MSG_GDI_TYPE_TIME_SS, attr_name, str?str:"(null)");
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_TYPE_TIME_SS, attr_name, str?str:"(null)"));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_ESYNTAX;
@@ -441,10 +441,10 @@ int verify_str_key(lList **alpp, const char *str, const char *name) {
    while ((forbidden_char = begin_chars[++i])) {
       if (str[0] == forbidden_char) {
          if (isprint((int) forbidden_char)) {
-            sprintf(SGE_EVENT, MSG_GDI_KEYSTR_FIRSTCHAR_SC, 
-               begin_strings[i], begin_chars[i]);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_FIRSTCHAR_SC, 
+               begin_strings[i], begin_chars[i]));
          } else {
-            sprintf(SGE_EVENT, MSG_GDI_KEYSTR_FIRSTCHAR_S, begin_strings[i]);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_FIRSTCHAR_S, begin_strings[i]));
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);   
          return STATUS_EUNKNOWN;  
@@ -456,10 +456,10 @@ int verify_str_key(lList **alpp, const char *str, const char *name) {
    while ((forbidden_char = mid_characters[++i])) {
       if (strchr(str, forbidden_char)) {
          if (isprint((int) forbidden_char)) {
-            sprintf(SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_SC, 
-               mid_strings[i], mid_characters[i]);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_SC, 
+               mid_strings[i], mid_characters[i]));
          } else {
-            sprintf(SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_S, mid_strings[i]);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_S, mid_strings[i]));
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);   
          return STATUS_EUNKNOWN;
@@ -470,8 +470,8 @@ int verify_str_key(lList **alpp, const char *str, const char *name) {
    i = -1;
    while ((forbidden_string = keyword[++i])) {
       if (!strcasecmp(str, forbidden_string)) {
-         sprintf(SGE_EVENT, MSG_GDI_KEYSTR_KEYWORD_SS, keyword_strings[i], 
-            forbidden_string);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_KEYWORD_SS, keyword_strings[i], 
+            forbidden_string));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
          return STATUS_EUNKNOWN;                         
       }
@@ -502,8 +502,8 @@ const char *obj_name
    for_each (ep1, lp1) {
       s = lGetString(ep1, nm);
       if (lGetElemStr(lp2, nm, s)) {
-         sprintf(SGE_EVENT, MSG_GDI_MULTIPLE_OCCUR_SSSS, 
-                  (nm==US_name)?MSG_OBJ_USERSET:MSG_JOB_PROJECT, s, obj_name, name);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_MULTIPLE_OCCUR_SSSS, 
+                  (nm==US_name)?MSG_OBJ_USERSET:MSG_JOB_PROJECT, s, obj_name, name));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;

@@ -83,7 +83,7 @@ print_func_t ostream
    sprintf(fname, "%s/common/qtask", path.cell_root);
 
    if (!(fp = fopen(fname, "r")) && errno != ENOENT) {
-      sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
@@ -109,13 +109,13 @@ print_func_t ostream
 
    /* user settings */
    if (!(pwd = sge_getpwnam(me.user_name))) {
-      sprintf(SGE_EVENT, "invalid user name \"%s\"\n", me.user_name);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_INVALIDNAMEX_S , me.user_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
    }
    if (!pwd->pw_dir) {
-      sprintf(SGE_EVENT, "missing home directory for user \"%s\"\n", me.user_name);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_NOHOMEDIRFORUSERX_S , me.user_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
@@ -123,7 +123,7 @@ print_func_t ostream
    sprintf(fname, "%s/.qtask", pwd->pw_dir);
    
    if (!(fp = fopen(fname, "r")) && errno != ENOENT) {
-      sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;

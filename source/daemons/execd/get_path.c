@@ -363,7 +363,7 @@ const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *j
 
             if(sge_rmdir(path, SGE_EVENT)) {
                if(err_str != NULL) {
-                  sge_dstring_sprintf(err_str, MSG_FILE_RMDIR_SS, path, SGE_EVENT);
+                  SGE_ADD_MSG_ID(sge_dstring_sprintf(err_str, MSG_FILE_RMDIR_SS, path, SGE_EVENT));
                } else {
                   ERROR((SGE_EVENT, MSG_FILE_RMDIR_SS, path, SGE_EVENT));
                   DEXIT;

@@ -1,0 +1,301 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Win32)">
+	<META NAME="AUTHOR" CONTENT="Charu Chaubal">
+	<META NAME="CREATED" CONTENT="20020801;8583283">
+	<META NAME="CHANGEDBY" CONTENT="Charu Chaubal">
+	<META NAME="CHANGED" CONTENT="20020807;12012678">
+</HEAD>
+<BODY LANG="en-US">
+<H1>Reducing and Eliminating NFS usage by Grid Engine</H1>
+<P>The default installation of Grid Engine assumes that the <CODE>$SGE_ROOT</CODE>
+directory is on a shared filesystem accessible by all hosts in the
+cluster. For a large cluster, this could entail significant NFS
+traffic. There are various ways to reduce this traffic, including a
+way to eliminate entirely the requirement that Grid Engine operate
+using shared files. However, for each alternative, there is a
+subsequent loss of convenience, and in some cases, functionality.
+This HOWTO explains how to implement the different alternatives.</P>
+<H2>Levels of Grid Engine NFS dependencies</H2>
+<P>Note: color indicates at each level which part of the file
+structure below is moved out of NFS sharing</P>
+<PRE STYLE="margin-bottom: 0.5cm"><SPAN STYLE="background: #ffff00">SGE_ROOT</SPAN></PRE>
+<UL>
+	<LI><PRE STYLE="margin-bottom: 0.5cm"><SPAN STYLE="background: #00ff00">executables, including bin, util, utilbin</SPAN></PRE>
+</UL>
+<UL>
+	<LI><PRE STYLE="margin-bottom: 0.5cm"><SPAN STYLE="background: #ffff00">SGE_CELL</SPAN></PRE>
+	<UL>
+		<LI><PRE STYLE="margin-bottom: 0.5cm"><SPAN STYLE="background: #ffff00">common</SPAN></PRE>
+		<LI><PRE STYLE="margin-bottom: 0.5cm"><SPAN STYLE="background: #00ffff">spool</SPAN></PRE>
+	</UL>
+</UL>
+<P><BR><BR>
+</P>
+<TABLE WIDTH=100% BORDER=1 CELLPADDING=4 CELLSPACING=3 STYLE="page-break-inside: avoid">
+	<COL WIDTH=68*>
+	<COL WIDTH=74*>
+	<COL WIDTH=56*>
+	<COL WIDTH=58*>
+	<THEAD>
+		<TR VALIGN=TOP>
+			<TH WIDTH=27%>
+				<P>Configuration</P>
+			</TH>
+			<TH WIDTH=29%>
+				<P>Description</P>
+			</TH>
+			<TH WIDTH=22%>
+				<P>Advantage</P>
+			</TH>
+			<TH WIDTH=23%>
+				<P>Disadvantage</P>
+			</TH>
+		</TR>
+	</THEAD>
+	<TBODY>
+		<TR VALIGN=TOP>
+			<TD WIDTH=27%>
+				<P>default</P>
+			</TD>
+			<TD WIDTH=29%>
+				<P>executables, configuration files, spool directories: <I>all
+				shared</I></P>
+			</TD>
+			<TD WIDTH=22%>
+				<P>simple to install<BR>easy to upgrade<BR>easy to debug</P>
+			</TD>
+			<TD WIDTH=23%>
+				<P>potentially significant NFS traffic</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=27% BGCOLOR="#00ffff">
+				<P>local spool directories</P>
+			</TD>
+			<TD WIDTH=29%>
+				<P>executables, configuration files: <I>shared</I>.</P>
+				<P>spool directories: <I>local to each compute host</I></P>
+			</TD>
+			<TD WIDTH=22%>
+				<P>simple to install</P>
+				<P>easy to upgrade</P>
+				<P>significant reduction in NFS traffic</P>
+			</TD>
+			<TD WIDTH=23%>
+				<P>less convenient to debug (must go to individual host to see
+				execd messages file)</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=27% BGCOLOR="#00ff00">
+				<P>local executable files</P>
+			</TD>
+			<TD WIDTH=29%>
+				<P>configuration files: <I>shared</I></P>
+				<P>executables, spool directories: <I>local to each compute host</I></P>
+			</TD>
+			<TD WIDTH=22%>
+				<P>near-elimination of NFS traffic (NOTE: consequences especially
+				seen when running massively parallel jobs across many nodes)</P>
+			</TD>
+			<TD WIDTH=23%>
+				<P>less convenient to install and upgrade (must modify files on
+				every host)</P>
+				<P>less convenient to debug</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=27% BGCOLOR="#ffff00">
+				<P>local configuration files</P>
+			</TD>
+			<TD WIDTH=29%>
+				<P>executables, configuration files, spool directories: <I>all
+				local to each compute host</I></P>
+			</TD>
+			<TD WIDTH=22%>
+				<P>elimination of NFS requirement</P>
+			</TD>
+			<TD WIDTH=23%>
+				<P>less convenient to install and upgrade</P>
+				<P>less convenient to debug</P>
+				<P>less convenient to change some configuration parameters (must
+				modify files on every host)</P>
+				<P>loss of shadow master functionality; partial loss of qacct
+				functionality</P>
+			</TD>
+		</TR>
+	</TBODY>
+</TABLE>
+<P><BR><BR>
+</P>
+<HR>
+<H2>Local Spool Directories</H2>
+<P><SPAN STYLE="background: transparent">The spool directory for each
+execd is the greatest source of NFS traffic for Grid Engine. When
+jobs are dispatched to an exec host, the job script gets transferred
+via the <B>commd</B> and then written to the spool directory. Each
+job gets its own subdirectory, into which additional information is
+written by both the <B>execd</B> and the job <B>shepherd</B> process.
+Logfiles are also written into the spool directory, for both the
+<SPAN STYLE="font-weight: medium">execd</SPAN> as well as the
+individual jobs.</SPAN></P>
+<P><SPAN STYLE="background: transparent">By configuring local spool
+directories, all that traffic can be redirected to the local disk on
+each compute host, thus isolating it from the rest of the network as
+well as reducing the I/O latency. One disadvantage is that, in order
+to view the logfiles for a particular job, you need to log onto the
+system where the job ran, instead of simply looking in the shared
+directory. But, this would only be necessary for detailed debugging
+of a job problem. </SPAN>
+</P>
+<P><SPAN STYLE="background: transparent">The path to the spool
+directory controlled by the parameter <I>execd_spool_dir</I>; it
+should be set to a directory on the local compute host which is owned
+by the admin user and which ideally can handle intensive
+reading/writing <SPAN LANG="en-US">(e.g.,</SPAN> <CODE>/var/spool/sge</CODE>).
+The <I>execd_spool_dir</I> parameter can be specified when running
+the install_execd script. However, this directory must already
+existed and be owned by the admin user, or else the script will
+complain and the execd will not function properly. Alternatively, the
+<I>execd_spool_dir</I> parameter can be changed in the cluster
+configuration (man <I>sge_conf</I>); the execds need to be halted
+before this change can be made.</SPAN></P>
+<H2>Local Executables</H2>
+<P><SPAN STYLE="background: transparent">In the default setup, all
+hosts in a cluster read the binary files for daemons and commands off
+the shared directory. For daemons, this only occurs once, when they
+start up. When jobs run, other processes are invoked, such as the
+shepherd and the <B>rshd</B> (for interactive jobs). In a
+high-throughput cluster, or when invoking a massively-parallel job
+across many nodes, there is a possibility that many simultaneous NFS
+read accesses to these other executables could occur. To counter
+this, you could make all executables be local to the compute hosts.</SPAN></P>
+<P><SPAN STYLE="background: transparent">In this configuration,
+rather than sharing <CODE>$SGE_ROOT</CODE> over NFS to the compute
+hosts, you would only share <CODE>$SGE_ROOT/$SGE_CELL/common</CODE>
+(you would also implement local spool directories as described
+above). On each compute host, you would need to install both the
+&quot;common&quot; and the architecture-specific binary packages.
+Then, you would mount the shared <CODE>$SGE_ROOT/$SGE_CELL/common</CODE>
+directory before invoking the <I>install_execd </I>script</SPAN>. In
+order to prevent confusion, make sure that the path to <CODE>$SGE_ROOT</CODE>
+is identical on the master host and compute hosts, <SPAN LANG="en-US">e.g.</SPAN>,
+<CODE>SGE_ROOT=/opt/sge</CODE> on all hosts.</P>
+<P>For submit and admin hosts, you could choose to either install the
+executables locally, or else mount them from some shared version of
+<CODE>$SGE_ROOT</CODE>, since it is unlikely that NFS traffic on
+these types of hosts would be a cause for concern in terms of
+performance.</P>
+<H2>Local Configuration Files</H2>
+<P>Although the above two setups describe ways to reduce NFS traffic
+to almost nil, there might be other reasons why NFS is not desired. 
+For example, the only available version of NFS for your operating
+environment might not be considered reliable enough for production
+use.  In this case, you can choose not to share the configuration
+directory <CODE>$SGE_ROOT/$SGE_CELL/common</CODE>, but instead have
+it be local to each compute host.  This would result in no files
+being shared via NFS.  However, because you are no longer using a
+common set of files shared by all systems, there is some
+functionality which requires some extra effort to use, and other
+functionality which no longer works.</P>
+<P>1) When you modify certain configuration files, the modification
+would need to be made manually across all hosts in the cluster. 
+These files are located in the <CODE>$SGE_ROOT/$SGE_CELL/common</CODE>
+directory:</P>
+<UL>
+	<LI><P><CODE>sge_request: </CODE>default submit request flags; <CODE>man
+	sge_request(5)</CODE></P>
+	<LI><P><CODE>host_aliases: </CODE>hostname aliasing; <CODE>man
+	sge_h_aliases(5)</CODE></P>
+	<LI><P><CODE>sge_aliases: </CODE>file path aliasing; <CODE>man
+	sge_aliases(5)</CODE></P>
+	<LI><P><CODE>configuration</CODE>: most of the information in this
+	file does not need to be used by the exec hosts.  However, there are
+	two parameters, <I>ignore_fqdn</I> and <I>default_domain</I>, which
+	are used by the <B>commd</B> on all hosts.  If the value of these
+	parameters is changed on the master hosts, then it also needs to be
+	reflected on all exec hosts in the cluster.  Normally, these two
+	parameters would be set once, when the master host is installed, and
+	then not changed again.  However, in case you experience network
+	problems, you may need to change these and see if it fixes the
+	problem.</P>
+</UL>
+<P>2) Another consequence is that the <B>qacct</B> command will only
+work if executed on the master host.  This is because the<SPAN LANG="en-US">
+accounting </SPAN>file, where all historical information is stored,
+is only updated on the master host.  Because qacct will by default
+read information from the file <CODE>$SGE_ROOT/$SGE_CELL/common/accounting</CODE>,
+it will only be accurate on the master host.  qacct can be directed
+to read information from any file, using the -f flag, so one
+alternative is to manually copy the accounting file periodically to
+another system, where the analysis can take place.</P>
+<P>3) Finally, if you do not share the <CODE>$SGE_ROOT/$SGE_CELL/common</CODE>
+directory, you <B>cannot </B><SPAN STYLE="font-weight: medium">use
+the Shadow Master facility.  The Shadow Master feature relies upon a
+shared filesystem to keep track of the active master, so </SPAN><B>without
+NFS, Shadow Mastering does not work.</B></P>
+<P>To install with this type of setup, proceed as follows:</P>
+<OL>
+	<LI><P>install the master host completely</P>
+	<LI><P>modify all the configuration files mentioned above to suit
+	the requirements of your site</P>
+	<LI><P>on the master hosts make an archive of the directory
+	<CODE>$SGE_ROOT/$SGE_CELL/common</CODE></P>
+	<LI><P>on each exec host, unpack the archive created above</P>
+	<LI><P>on each exec host, run the <CODE>install_execd</CODE> script.
+	 It should automatically read in the configurations from the
+	directory which was unpacked.</P>
+</OL>
+<H2>Other Considerations</H2>
+<P>Even though Sun Grid Engine can function perfectly well without
+NFS (except the noted functionality), there are other considerations
+which might lead to unexpected behavior.</P>
+<H3>Home directories</H3>
+<P>Unless otherwise specified, Grid Engine runs jobs in the user's
+home directory. If this is not shared, then whatever files are
+created will be placed in the home directory <I>on the host where the
+job is executed</I>. Also, any configuration given in dot-files, such
+as <CODE>.cshrc</CODE> and <CODE>.sge_requests</CODE>, will be read
+out of the home directory <I>on the host where the job is executed </I>.
+Finally, if the home directory of the user actually does not exist on
+the compute host, the job will go into an error state. You need to
+make sure that for every user, and on every compute host, a home
+directory is present and contains all the desired dot-file
+configurations. Also, for jobs run with the <CODE>-cwd</CODE> flag,
+the current path will be recorded, and when the job executes on the
+compute host, unless the exact same path is accessible to the user
+running the job, the job will go into an error state.</P>
+<H3>Application and data files</H3>
+<P>Obviously, without NFS there needs to be a way to stage data files
+in and out, and the application files (binaries, libraries, config
+files, databases, <SPAN LANG="en-US">etc.</SPAN>) would also need to
+be either already present on each compute host or also staged in. The
+prolog and epilog script feature of Grid Engine provides a generic
+mechanism for implementing a site-specific stage-in/stage-out
+facility. Alternatively, these steps could be embedded into jobs
+scripts directly.</P>
+<H3>User <SPAN LANG="en-US">virtualization</SPAN></H3>
+<P>If application availability and data file staging were accounted
+for, one could in principle run Grid Engine without NFS over a WAN.
+However, part of the Grid Engine built-in authentication is that the
+username of the user submitting a job must be recognized on the
+compute host where the job runs. If running across administrative
+domains, the username might not exist on the target exec host. In
+this case, some of the solutions include: 
+</P>
+<UL>
+	<LI><P>allow users to log in as a common &quot;grid user&quot; (the
+	<CODE>-A</CODE> submit flag could be used to distinguish the actual
+	identity of the user).</P>
+	<LI><P>using a SUID wrapper to submit and administrative commands to
+	do the same thing transparently 
+	</P>
+</UL>
+<P><BR><BR>
+</P>
+</BODY>
+</HTML>

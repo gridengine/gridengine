@@ -1435,7 +1435,10 @@ case WIN32_X86:
       set TOUCH_DIR = $COMPILE_ARCH
 
       touch $TOUCH_DIR/qmon
-      mkdir ./3rdparty/qmon/$COMPILE_ARCH/
+      if ( ! -d "./3rdparty/qmon/${COMPILE_ARCH}" ) then
+         mkdir ./3rdparty/qmon/$COMPILE_ARCH
+      endif
+
       touch ./3rdparty/qmon/$COMPILE_ARCH/libXltree.so
       touch $TOUCH_DIR/sge_qmaster
       touch $TOUCH_DIR/sge_shadowd

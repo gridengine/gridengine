@@ -38,7 +38,60 @@
 
 RemoveQmaster()
 {
-  qconf -ks
-  qconf -km
+   $INFOTEXT -u "Uninstalling qmaster host"
+   $INFOTEXT -n "You're going to uninstall the qmaster host now. If you are not sure,\n" \
+                "what you are doing, please stop with <CTRL-C>. This procedure will, remove\n" \
+                "the complete cluster configuration and all spool directories!\n" \
+                "Please make a backup from your cluster configuration!\n\n"
+   $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to uninstall the master host? [n] >> "
 
+   if [ $? = 0 ]; then
+      $INFOTEXT -n "We're going to uninstall the master host now!\n"
+      CheckRunningExecd
+
+   else
+      exit 0 
+   fi
+}
+
+CheckRunningExecd()
+{
+   $INFOTEXT -n "Checking Running Execution Hosts\n"
+   
+   for h in `qconf -sel`; do
+
+     running=`qconf -se $h | grep load_values | grep load_avg`
+
+     if [ -z $running ]; then
+        :
+     else
+        $INFOTEXT "Found running execution hosts, exiting uninstallation!\n"
+        exit 0
+     fi
+
+   done
+   $INFOTEXT "There are no running execution host registered!\n"
+   ShutdownMaster
+   
+
+}
+
+ShutdownMaster()
+{
+   $INFOTEXT "Shutting down scheduler and qmaster!"
+   `qconf -ks`
+   `qconf -km`
+
+   master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
+   
+   $INFOTEXT "Removing qmaster spool directory!"
+   rm -fR $master_spool
+
+   berkeley_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep spooling_params | awk '{ print $2 }'`
+
+   $INFOTEXT "Removing berkeley spool directory!"
+   rm -fR $berkeley_spool
+
+   $INFOTEXT "Removing %s directory!" $SGE_CELL
+   rm -fR $SGE_CELL
 }

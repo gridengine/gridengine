@@ -140,6 +140,7 @@ proc install_qmaster {} {
  set SHOW_CONFIGURATION           [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_SHOW_CONFIGURATION] "*" "*"]
  set ACCEPT_CONFIGURATION         [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ACCEPT_CONFIGURATION] ]
  set INSTALL_STARTUP_SCRIPT       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_INSTALL_STARTUP_SCRIPT] ]
+ set ENTER_SCHEDLUER_SETUP        [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_SCHEDLUER_SETUP] ]
 
 
  # berkeley db
@@ -749,6 +750,18 @@ proc install_qmaster {} {
          send -i $sp_id "none\n"
          continue;
       }
+
+      -i $sp_id $ENTER_SCHEDLUER_SETUP {
+         puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+         if {$do_log_output == 1} {
+            puts "press RETURN"
+            set anykey [wait_for_enter 1]
+         }
+
+         send -i $sp_id "\n"
+         continue;
+      }
+
 
       -i $sp_id $ENTER_DATABASE_DIRECTORY {
          # if we set a specific bdb_dir, send this one, else accept

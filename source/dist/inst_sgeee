@@ -84,6 +84,8 @@ HOST="undef"
 HOSTRANGE="undef"
 LOCAL_EXECD_SPOOL="undef"
 SHELL_NAME="ssh"
+EXEC_HOST_LIST="undef"
+CONFIG_FILE="undef"
 
 SGE_NOMSG="undef"
 
@@ -226,6 +228,7 @@ if [ $QMASTER = "install" ]; then
  AddSGEStartUpScript $euid true master
  StartQmaster
  AddHosts
+ SetScheddConfig
  GiveHints
 
  if [ $AUTO = true ]; then 
@@ -253,14 +256,14 @@ if [ $EXECD = "install" ]; then
          CheckCellDirectory
          CheckCSP
          CheckHostNameResolving
-         #GetLocalExecdSpoolDir
+         GetLocalExecdSpoolDir
          AddLocalConfiguration_With_Qconf
          AddSGEStartUpScript $euid true execd
          StartExecd
          AddQueue
          GiveHints
 
-         if [ $AUTO = true ]; then
+         if [ $AUTO = "true" ]; then
             MoveLog
          fi
 
@@ -291,7 +294,7 @@ if [ $EXECD = "install" ]; then
       AddQueue
       GiveHints
       
-      if [ $AUTO = true ]; then
+      if [ $AUTO = "true" ]; then
          MoveLog
       fi
 
@@ -301,29 +304,43 @@ if [ $EXECD = "install" ]; then
                $INFOTEXT "Starting remote installation on host %s" $h
                $INFOTEXT "This part runs in automatic mode," \
                          "be sure to have a valid configuration file"
-               $INFOTEXT "Please enter the path to your autoinstall configuration file or hit <RETURN> to use >> [%s] >> " $CONFIG
-                         CONFIG=`Enter $CONFIG`
-               $INFOTEXT "Please enter which shell you want to use for remote login (rsh/ssh) or hit <RETURN> to use >> [%s] >> " $SHELL_NAME
+               if [ $CONFIG_FILE = "undef" ]; then
+                  $INFOTEXT -n "Please enter the path to your autoinstall configuration file >> " 
+                  CONFIG_FILE=`Enter`
+                  export CONFIG_FILE
+               else               
+                  $INFOTEXT "Please enter the path to your autoinstall configuration file or hit <RETURN> to use >> [%s] >> " $CONFIG_FILE
+                            CONFIG_FILE=`Enter $CONFIG_FILE`
+               fi
+
+               $INFOTEXT -n "Please enter which shell you want to use for remote login (rsh/ssh) or\n hit <RETURN> to use [%s] >> " $SHELL_NAME
                          SHELL_NAME=`Enter $SHELL_NAME` 
                $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-               echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto $CONFIG -noremote" | $SHELL_NAME $h /bin/sh &
+               echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto $CONFIG_FILE -noremote" | $SHELL_NAME $h /bin/sh &
            fi
          done
       else
-         for h in $EXEC_HOST_LIST; do
-           if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
-               $INFOTEXT "Starting remote installation on host %s" $h
-               $INFOTEXT "This part runs in automatic mode," \
-                         "be sure to have a valid configuration file"
-               $INFOTEXT "Please enter the path to your autoinstall configuration file or hit <RETURN> to use >> [%s] >> " $CONFIG
-                         CONFIG=`Enter $CONFIG`
-               $INFOTEXT "Please enter which shell you want to use for remote login (rsh/ssh) or hit <RETURN> to use >> [%s] >> " $SHELL_NAME
-                         SHELL_NAME=`Enter $SHELL_NAME`
-               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-               echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto $CONFIG -noremote" | $SHELL_NAME $h /bin/sh &
-           fi
+         if [ $EXEC_HOST_LIST != "undef" ]; then 
+            for h in $EXEC_HOST_LIST; do
+              if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
+                  $INFOTEXT "Starting remote installation on host %s" $h
+                  $INFOTEXT "This part runs in automatic mode," \
+                            "be sure to have a valid configuration file"
+                  if [ $CONFIG_FILE = "undef" ]; then
+                     $INFOTEXT -n "Please enter the path to your autoinstall configuration file >> " 
+                     CONFIG_FILE=`Enter`
+                     export CONFIG_FILE
+                  else               
+                     $INFOTEXT "Please enter the path to your autoinstall configuration file or hit <RETURN> to use >> [%s] >> " $CONFIG_FILE
+                               CONFIG_FILE=`Enter $CONFIG_FILE`
+                  fi
+                     $INFOTEXT "Please enter which shell you want to use for remote login (rsh/ssh) or hit <RETURN> to use >> [%s] >> " $SHELL_NAME
+                            SHELL_NAME=`Enter $SHELL_NAME`
+                  $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+                  echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto $CONFIG -noremote" | $SHELL_NAME $h /bin/sh &
+              fi
          done
-
+         fi
       fi
 
   fi

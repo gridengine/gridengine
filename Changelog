@@ -1,3 +1,9 @@
+MD-2004-02-16-0: Bugfix:    Fixed some Messages, spooldir default
+                 Testsuite: Adapted to new messages
+                 Enhancem:  Added 3 default scheduler setups
+                 Changed:   inst_sgeee, testsuite
+                 Review:    SG
+
 EB-2004-02-16-1: Bugfix:    wrong queue selection in qmon and qstat
                  Changed:   qstat, qmon
                  Review:    AA

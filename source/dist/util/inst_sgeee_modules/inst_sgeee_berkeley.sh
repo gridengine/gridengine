@@ -51,16 +51,16 @@ SpoolingQueryChange()
                 SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
 
       $INFOTEXT "\nEnter the database directory\n" \
-                "or hit <RETURN> to use default [%s] >> " "/tmp/$SGE_QMASTER_PORT$SPOOLING_DIR"
-                SPOOLING_DIR=`Enter /tmp/$SGE_QMASTER_PORT/$SPOOLING_DIR`
+                "or hit <RETURN> to use default [%s] >> " "$SGE_ROOT/$SGE_CELL/$SPOOLING_DIR"
+                SPOOLING_DIR=`Enter $SGE_ROOT/$SGE_CELL/$SPOOLING_DIR`
    else
      $INFOTEXT -u "\nBerkeley Database spooling parameters"
-     #$INFOTEXT "Please enter the name of your Berkeley DB Spooling Server!\n" \
-     #          "For local spooling without Server, hit <RETURN> else enter the Servername! >> "
-               SPOOLING_SERVER="none"
+     $INFOTEXT -n "Please enter the name of your Berkeley DB Spooling Server!\n" \
+               "For local spooling without Server, hit <RETURN> else enter the Servername! >> "
+               SPOOLING_SERVER=`Enter none`
      $INFOTEXT -n "Please enter the Database Directory now, even if you want to spool local\n" \
-               "it is necessary to enter this Database Directory. \nDefault: [%s] >> " "/tmp/$SGE_QMASTER_PORT/spooldb"
-               SPOOLING_DIR="/tmp/"$SGE_QMASTER_PORT"/spooldb" 
+               "it is necessary to enter this Database Directory. \nDefault: [%s] >> " "$SGE_ROOT/$SGE_CELL/spooldb"
+               SPOOLING_DIR="$SGE_ROOT/$SGE_CELL/spooldb" 
                SPOOLING_DIR=`Enter $SPOOLING_DIR`
    fi
  
@@ -124,8 +124,17 @@ CreateRPCServerScript()
 
 
 CheckLocalFilesystem()
-{  
-   FS=`dirname $1`
+{
+   is_done="false"
+   FS=$1
+
+   while [ $is_done = "false" ]; do  
+      FS=`dirname $FS`
+      if [ -d $FS ]; then
+         is_done="true"
+      fi
+   done
+
    case $ARCH in
       sol*)
          df -l $FS >/dev/null 2>&1

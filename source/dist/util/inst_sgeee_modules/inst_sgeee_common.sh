@@ -657,7 +657,7 @@ GiveHints()
        QMASTER="undef"
       return 0
    else
-      $INFOTEXT -wait "Your execution daemon installation is now completed."
+      $INFOTEXT "Your execution daemon installation is now completed."
    fi
 }
 

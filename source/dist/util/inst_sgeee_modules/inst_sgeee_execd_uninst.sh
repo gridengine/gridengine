@@ -184,14 +184,16 @@ RemoveSpoolDir()
 
    $INFOTEXT "Checking local spooldir configuration!\n"
 
-   SPOOL_DIR=`qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
+   SPOOL_DIR=`qconf -sconf $exechost | grep execd_spool_dir | awk '{ print $2 }'`
    
-   if [ $SPOOL_DIR = "" ]; then
+   if [ -z "$SPOOL_DIR" ]; then
       $INFOTEXT "Checking global spooldir configuration!\n"
       SPOOL_DIR=`qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
    fi
-
-   $INFOTEXT "Removing spool directory [%s]" $SPOOL_DIR
-   `rm -R $SPOOL_DIR`
+  
+   HOST_DIR=`echo $exechost | tr "[A-Z]" "[a-z]"` 
+   
+   $INFOTEXT "Removing spool directory [%s]" $SPOOL_DIR/$HOST_DIR
+   `rm -R $SPOOL_DIR/$HOST_DIR`
 
 }

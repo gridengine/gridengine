@@ -174,7 +174,7 @@ proc sge_macro { macro_name } {
       "DISTINST_ADD_DEFAULT_QUEUE_INSTANCE" { set value "Do you want to add a default queue instance for this host (y/n) \[y\] >> " }
 
       "DISTINST_ENTER_DATABASE_SERVER" { set value "Enter database server (none for local spooling)\nor hit <RETURN> to use default \[%s\] >> " }
-      "DISTINST_ENTER_DATABASE_SERVER_LOCAL_SPOOLING" { set value "Please enter the name of your Berkeley DB Spooling Server!\nFor local spooling without Server, type >none< else enter the Servername! >> " }
+      "DISTINST_ENTER_DATABASE_SERVER_LOCAL_SPOOLING" { set value "Please enter the name of your Berkeley DB Spooling Server!\nFor local spooling without Server, hit <RETURN> else enter the Servername! >> " }
       "DISTINST_ENTER_DATABASE_DIRECTORY" { set value "Enter the database directory\nor hit <RETURN> to use default \[%s\] >> " }
       "DISTINST_ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING" { set value "Please enter the Database Directory now, even if you want to spool local\nit is necessary to enter this Database Directory. \nDefault: \[%s\] >> " }
       "DISTINST_DATABASE_DIR_NOT_ON_LOCAL_FS" { set value "The database directory >%s<\nis not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" }
@@ -194,6 +194,7 @@ proc sge_macro { macro_name } {
       "DISTINST_ENTER_LOCAL_EXECD_SPOOL_DIR" { set value "During the qmaster installation you've already entered a global\nexecd spool directory. This is used, if no local spool directory is configured.\n\n Now you can enter a local spool directory for this host.\n" }
       "DISTINST_ENTER_LOCAL_EXECD_SPOOL_DIR_ASK" { set value "Do you want to configure a local spool directory\n for this host (y/n) \[n\] >> " }
       "DISTINST_ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER" { set value "Please enter the local spool directory now! >> " }
+      "DISTINST_ENTER_SCHEDLUER_SETUP" { set value "Enter the number of your prefered configuration and hit <RETURN>! \nDefault configuration is \[1\] >> " }
 
 
    }

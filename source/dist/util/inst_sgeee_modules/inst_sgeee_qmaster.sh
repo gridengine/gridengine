@@ -280,8 +280,18 @@ SetSpoolingOptions()
             else
                $INFOTEXT -auto $AUTO -wait "\nHit <RETURN> to continue >> "
             fi
-            SpoolingQueryChange
-            CheckLocalFilesystem $SPOOLING_DIR
+            done="false"
+            while [ $done = "false" ]; do
+               SpoolingQueryChange
+               CheckLocalFilesystem $SPOOLING_DIR
+               ret=$?
+               if [ $ret -eq 0 ]; then
+                  $INFOTEXT -e "\nThe database directory >%s<\n" \
+                               "is not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" $SPOOLING_DIR
+               else
+                  done="true" 
+               fi
+            done
          else
             ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
             if [ $ret -gt 1 ]; then
@@ -1309,3 +1319,57 @@ GetDefaultDomain()
    done
 }
 
+SetScheddConfig()
+{
+
+   $INFOTEXT -u "Scheduler Tuning"
+   $INFOTEXT -n "The details on the different options are described in the manual. \n"
+   done="false"
+ 
+   while [ $done = "false" ]; do
+      $INFOTEXT -u "Configurations"
+      $INFOTEXT -n "1) Normal\n          Fixed interval scheduling, report scheduling information,\n" \
+                   "          actual + assumed load\n"
+      $INFOTEXT -n "2) High\n          Fixed interval scheduling, report limited scheduling information,\n" \
+                   "          actual load\n"
+      $INFOTEXT -n "3) Max\n          Scheduling on demand, report no scheduling information,\n" \
+                   "          actual load\n"
+
+      $INFOTEXT -auto $AUTO -n "Enter the number of your prefered configuration and hit <RETURN>! \n" \
+                   "Default configuration is [1] >> "
+      SCHEDD_CONF=`Enter 1`
+
+      if [ $SCHEDD_CONF = "1" ]; then
+         is_selected="Normal"
+      elif [ $SCHEDD_CONF = "2" ]; then
+         is_selected="High"
+      elif [ $SCHEDD_CONF = "3" ]; then
+         is_selected="Max"
+      fi
+
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nWe're configuring the scheduler with >%s< settings!\n Do you agree? (y/n) [y] >> " $is_selected
+      if [ $? = 0 ]; then
+         done="true"
+      fi
+   done
+
+   if [ $AUTO = "true" ]; then
+      $INFOTEXT -log "Setting scheduler configuration to >%s< setting! " $is_selected
+   fi
+
+   case $SCHEDD_CONF in
+
+   1)
+    $SGE_BIN/qconf -Msconf ./util/inst_sgeee_modules/inst_sgeee_schedd_normal.conf
+    ;;
+
+   2)
+    $SGE_BIN/qconf -Msconf ./util/inst_sgeee_modules/inst_sgeee_schedd_high.conf
+    ;;
+
+   3)
+    $SGE_BIN/qconf -Msconf ./util/inst_sgeee_modules/inst_sgeee_schedd_max.conf
+    ;;
+   esac
+   $CLEAR
+}

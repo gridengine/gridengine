@@ -97,8 +97,12 @@ const char *job_get_shell_start_mode(const lListElem *job,
                                      const lListElem *queue,
                                      const char *conf_shell_start_mode);
 
-u_long32 job_get_smallest_task_id(lListElem *job);
- 
-u_long32 job_get_biggest_task_id(lListElem *job);     
+u_long32 job_get_smallest_unenrolled_task_id(const lListElem *job);
+
+u_long32 job_get_smallest_enrolled_task_id(const lListElem *job);
+
+u_long32 job_get_biggest_unenrolled_task_id(const lListElem *job);
+
+u_long32 job_get_biggest_enrolled_task_id(const lListElem *job);    
 
 #endif /* __SGE_JOB_JATASK_H */    

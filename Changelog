@@ -1,3 +1,7 @@
+EB-2002-03-04-2: Bugfix:    'qdel <array-jid>' might cause qmaster core
+                            depending on the tasks history.
+                 Issue:     #173  
+
 CR-2002-03-04-0: Bugfix:    qacct truncates project/department/... names 
                             (merge from maintrunc)
                  Issue:     #150
@@ -9,11 +13,11 @@ AH-2002-03-04-1: Bugfix:    A set of fixes on initiative from Patrik Koch
 
 EB-2002-03-04-1: Bugfix:    'qalter -h xxx' caused core if task of array
                             did not exist.
-                 Issue:     171 
+                 Issue:     #171 
 
 EB-2002-03-04-0: Bugfix:    schedd_runlog file was not written by a
                             'qconf -tsm' command  
-                 Issue:     170
+                 Issue:     #170
 
 EB-2002-03-01-1: Bugfix:    inconsistences between qstat and qmon output
                  Issue:     #148

@@ -759,8 +759,12 @@ char *rhost,
 int sub_command 
 ) {
    lListElem *nxt, *job = NULL, *rn;
-   u_long32 start = 0;
-   u_long32 end = 0;
+   u_long32 enrolled_start = 0;
+   u_long32 enrolled_end = 0;
+   u_long32 unenrolled_start = 0;
+   u_long32 unenrolled_end = 0;
+   u_long32 r_start = 0;
+   u_long32 r_end = 0;   
    u_long32 step = 0;
    u_long32 job_number = 0;
    int alltasks = 1;
@@ -822,6 +826,7 @@ int sub_command
          if (sge_manager(ruser)) {
             ERROR((SGE_EVENT, MSG_JOB_FORCEDDELETEPERMS_S, ruser));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            lFreeWhere(where);
             DEXIT;
             return STATUS_EUNKNOWN;  
          }
@@ -848,21 +853,17 @@ int sub_command
        * if ID_ja_structure not empty delete specified tasks
        * otherwise delete whole job
        */
-      start = job_get_smallest_task_id(job);
-      end = job_get_biggest_task_id(job);
+      unenrolled_start = job_get_smallest_unenrolled_task_id(job);
+      unenrolled_end = job_get_biggest_unenrolled_task_id(job);
+      enrolled_start = job_get_smallest_enrolled_task_id(job);
+      enrolled_end = job_get_biggest_enrolled_task_id(job);  
       rn = lFirst(lGetList(idep, ID_ja_structure));
       if (rn) {
-         u_long32 tmp_start, tmp_end;
-
-         tmp_start = MAX(lGetUlong(rn, RN_min), start);
-         tmp_end = MIN(lGetUlong(rn, RN_max), end);
-         if (tmp_start <= tmp_end) {
-            start = tmp_start;
-            end = tmp_end;
-         } else {
-            start = lGetUlong(rn, RN_min);
-            end = lGetUlong(rn, RN_max);
-         }     
+         r_start = lGetUlong(rn, RN_min);
+         r_end = lGetUlong(rn, RN_max);
+         unenrolled_start = MAX(r_start, unenrolled_start);                              unenrolled_end = MIN(r_end, unenrolled_end);
+         enrolled_start = MAX(r_start, enrolled_start);
+         enrolled_end = MIN(r_end, enrolled_end);  
          step = lGetUlong(rn, RN_step);
          if (!step)
             step = 1;
@@ -871,9 +872,13 @@ int sub_command
          step = 1;
          alltasks = 1;
       }       
+      DPRINTF(("Request: alltasks = %d, start = %d, end = %d, step = %d\n",
+               alltasks, r_start, r_end, step));
+      DPRINTF(("unenrolled ----> start = %d, end = %d, step = %d\n",
+               unenrolled_start, unenrolled_end, step));
+      DPRINTF(("enrolled   ----> start = %d, end = %d, step = %d\n",
+               enrolled_start, enrolled_end, step));  
 
-      DPRINTF(("----> alltasks = %d, start = %d, end = %d, step = %d\n", 
-               alltasks, start, end, step));
 
       /* Does user have privileges to delete the job/task? */
       if (sge_job_owner(ruser, lGetUlong(job, JB_job_number)) && 
@@ -893,7 +898,9 @@ int sub_command
       deleted_unenrolled_tasks = 0;
       deleted_tasks = 0;
       existing_tasks = job_get_ja_tasks(job);
-      for (task_number = start; task_number <= end; task_number += step) {
+      for (task_number = unenrolled_start; 
+           task_number <= unenrolled_end; 
+           task_number += step) {
          int is_defined = job_is_ja_task_defined(job, task_number); 
 
          if (is_defined) {
@@ -946,7 +953,9 @@ int sub_command
        * Delete enrolled ja tasks
        */
       if (existing_tasks > deleted_tasks) { 
-         for (task_number = start; task_number <= end; task_number += step) {
+         for (task_number = enrolled_start; 
+              task_number <= enrolled_end; 
+              task_number += step) {
             int spool_job = 1;
             int is_defined = job_is_ja_task_defined(job, task_number);
            
@@ -1004,7 +1013,7 @@ int sub_command
             lGetList(idep, ID_user_list), jid_flag,
             jid_flag?atol(lGetString(idep, ID_str)):0,
             all_users_flag, all_jobs_flag, ruser,
-            alltasks == 0 ? 1 : 0, start, end, step);
+            alltasks == 0 ? 1 : 0, r_start, r_end, step);
       DEXIT;
       return STATUS_EEXIST;
    }    

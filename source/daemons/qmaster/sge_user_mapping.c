@@ -1716,6 +1716,7 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
         }
         /* check entires for ambiguous mappings to the other cluster users (incoming mapping request) */
         /* master mapping list pointer requested !! */
+#ifndef NO_USER_MAPPING_AMBIGUOUS_IN_CHECK
         if (userMappingEntryList != NULL) {
            lListElem *ep = NULL;
 
@@ -1765,7 +1766,8 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
                  }
               }
            }
-        } 
+        }
+#endif 
         DEXIT;
         return TRUE; 
      }

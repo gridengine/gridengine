@@ -1,3 +1,8 @@
+AS-2002-08-19-0  Bugfix:    gethostbyaddr binary not working on solaris64
+                 Bugtraq:   #4732545
+                 Issue:     #359
+                 Changed:   gethostbyaddr
+
 SD-2002-08-14-0  Enhancem.  Updated Kerberos integration to handle cross-domain
                             authentication correctly when storing the forwarded
                             credentials in the credentials cache.

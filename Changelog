@@ -1,9 +1,44 @@
+JM-2004-01-20-0:            Adding entries JM-2004-01-19-[0-5] to Changelog
+
 SG-2004-01-20-0: Bugfix:    fixed qmod and removed lWriteListTo from the code
                  Changed:   qmaster, qmod
 
 EB-2004-01-20-0: Enhancem.: core implementation for qconf -sick
                             - cleanup
                             - TODO items
+
+JM-2004-01-19-5: Bugfix:    The trailing ',' is removed from the listed
+                            files. Compilers generally warn about it,
+                            but the IBM compiler flags it as an error.
+                 Changed:   libs/sgeobj/sge_schedd_confL.h,
+                            daemons/qmaster/sge_reporting_qmaster.h
+                 Reviewed:  RC (for libs/sgeobj/sge_schedd_confL.h)
+
+JM-2004-01-19-4: Bugfix:    The 'name' variable is moved outside of the
+                            '#ifdef SGE_LOADMEM' block since it is
+                            used for SGE_LOADMEM and SGE_LOADCPU. Also,
+                            it is explicitly initialized to NULL.
+                 Changed:   gridengine/source/libs/utilbin/loadcheck.c
+
+JM-2004-01-19-3: Enhancem:  Support added for getting load average info
+                            for AIX51 (missed the .h file).
+                 Changed:   gridengine/source/libs/uti/sge_getloadavg.h
+
+JM-2004-01-19-2: Enhancem:  Support added for getting load average info
+                            for AIX51.
+                 Changed:   gridengine/source/libs/uti/sge_getloadavg.c
+
+JM-2004-01-19-1: Bug Fix:   For SUPER-UX, the total CPUs calculation
+                            is no longer based on RSGs (resource group)
+                            but on 1) syssx(), or 2) RBs (resource block).
+                            The RB method is added in case syssx() is not
+                            available (e.g., older SUPER-UX version).
+                 Changed:   libs/uti/sge_nprocs.c
+
+JM-2004-01-19-0: Bug Fix:   For SUPER-UX, the total memory calculation
+                            is now based on RBs (resource block) instead
+                            of RSGs (resource group).
+                 Changed:   libs/uti/sge_loadmem.c
 
 DT-2004-01-19-0: Bugfix:    Fixed scheduler crash when an array job with -now y
                             could not be completely scheduled.  Now if an array

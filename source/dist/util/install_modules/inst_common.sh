@@ -336,22 +336,23 @@ THIRD_PARTY_FILES=openssl
 ErrUsage()
 {
    myname=`basename $0`
-   $ECHO >&2
    $INFOTEXT -e \
-             "Usage: %s -m|-um|-x|-ux [all] |-sm|-usm|-db|-upd <SGE_ROOT> <SGE_CELL>\n" \
-             "              |-bup|-rst [-auto filename ] [-csp] [-resport] \n" \
-             "              [-afs] [-host] [-rsh] [-noremote]\n" \
+             "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-db| \\\n" \
+             "       -upd <sge-root> <sge-cell>|-bup|-rst [-auto <filename>] [-csp] \\\n" \
+             "       [-resport] [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
              "   -ux        uninstall execution host\n" \
              "   -sm        install shadow host\n" \
              "   -usm       uninstall shadow host\n" \
-             "   -db        install Berkeley DB on seperated Spooling Server\n" \
+             "   -db        install Berkeley DB on seperated spooling server\n" \
              "   -bup       backup of your configuration (Berkeley DB spooling)\n" \
-             "   -rst       restore backuped configuration (Berkeley DB spooling)\n" \
-             "   -upd       upgrade your cluster from 5.x to 6.0\n" \
-             "   -host      hostname for unistallation (eg. exec host)\n" \
+             "   -rst       restore configuration from backup (Berkeley DB spooling)\n" \
+             "   -upd       upgrade cluster from 5.x to 6.0\n" \
+             "   -rccreate  create startup scripts from templates\n" \
+             "   -host      hostname for shadow master installation or uninstallation \n" \
+             "              (eg. exec host)\n" \
              "   -rsh       use rsh instead of ssh (default is ssh)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
              "   -csp       install system with security framework protocol\n" \
@@ -368,13 +369,13 @@ ErrUsage()
              "                     (A template can be found in:\n" \
              "                     util/install_modules/inst_template.conf)\n" \
              "   inst_sge -ux -host hostname\n" \
-             "                     Uninstalls execd on given executionhost\n" \
-             "   inst_sge -ux all  Uninstalls all registered executionhosts\n" \
+             "                     Uninstalls execd on given execution host\n" \
+             "   inst_sge -ux all  Uninstalls all registered execution hosts\n" \
              "   inst_sge -db      Install a Berkeley DB Server on local host\n" \
              "   inst_sge -sm      Install a Shadow Master Host on local host\n" \
              "   inst_sge -upd <SGE_ROOT> <SGE_CELL>                         \n" \
-             "   <SGE_ROOT> = SGE_ROOT directory of old 5.x installation.\n" \
-             "   <SGE_CELL> = SGE_CELL name of old 5.x installation.\n\n" $myname
+             "   <sge-root> = SGE_ROOT directory of old 5.x installation.\n" \
+             "   <sge-cell> = SGE_CELL name of old 5.x installation.\n" $myname
 
    if [ "$option" != "" ]; then 
       $INFOTEXT -e "   The option %s is not valid!" $option 

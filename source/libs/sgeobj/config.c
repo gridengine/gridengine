@@ -815,7 +815,7 @@ _Insight_set_option("suppress", "PARM_NULL");
       return fields?true:false;
    }
    ret = str_attr_list_parse_from_string(&tmplp, &lanswer_list, str,
-            HOSTATTR_ALLOW_AMBIGUITY | HOSTATTR_OWRITE_DEF_HOST);
+                                         HOSTATTR_ALLOW_AMBIGUITY);
    if (!ret) {
       const char *text = lGetString(lFirst(lanswer_list), AN_text);
 
@@ -859,7 +859,7 @@ _Insight_set_option("suppress", "PARM_NULL");
       return fields?true:false;
    }
    ret = ulng_attr_list_parse_from_string(&tmplp, &lanswer_list, str,
-            HOSTATTR_ALLOW_AMBIGUITY | HOSTATTR_OWRITE_DEF_HOST);
+                                          HOSTATTR_ALLOW_AMBIGUITY);
    if (!ret) {
       const char *text = lGetString(lFirst(lanswer_list), AN_text);
 
@@ -903,7 +903,7 @@ _Insight_set_option("suppress", "PARM_NULL");
       return fields?true:false;
    }
    ret = bool_attr_list_parse_from_string(&tmplp, &lanswer_list, str,
-            HOSTATTR_ALLOW_AMBIGUITY | HOSTATTR_OWRITE_DEF_HOST);
+                                          HOSTATTR_ALLOW_AMBIGUITY);
    if (!ret) {
       const char *text = lGetString(lFirst(lanswer_list), AN_text);
 

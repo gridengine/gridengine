@@ -86,8 +86,8 @@ PREFIX##_list_find_value(const lList *this_list, lList **answer_list,         \
 bool                                                                          \
 PREFIX##_list_append_to_dstring(const lList *this_list, dstring *string)      \
 {                                                                             \
-   return attr_list_appen_to_dstring(this_list, string,                       \
-                                     DESCRIPTOR, HREF_NM, VALUE_NM);          \
+   return attr_list_append_to_dstring(this_list, string,                      \
+                                      DESCRIPTOR, HREF_NM, VALUE_NM);         \
 }                                                                             \
                                                                               \
 bool                                                                          \
@@ -126,8 +126,9 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
                      const lDescr *descriptor, int href_nm, int value_nm);
 
 static bool
-attr_list_appen_to_dstring(const lList *this_list, dstring *string,
-                           const lDescr *descriptor, int href_nm, int value_nm);
+attr_list_append_to_dstring(const lList *this_list, dstring *string,
+                            const lDescr *descriptor, int href_nm, 
+                            int value_nm);
 
 static bool
 attr_list_parse_from_string(lList **this_list, lList **answer_list,
@@ -216,7 +217,7 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
 
          object_get_any_type(*attr, value_nm, &value);
          if (attr_elem != NULL) {
-            if (flags & HOSTATTR_OWRITE_DEF_HOST) {
+            if (flags & HOSTATTR_OVERWRITE) {
                object_set_any_type(attr_elem, value_nm, &value);
                lFreeElem(*attr);
                *attr = attr_elem;
@@ -269,13 +270,13 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
                lList *master_list = *(hgroup_list_get_master_list());
                lList *tmp_href_list = NULL; 
 
-               lret &= href_list_find_all_used(href_list, NULL,
-                                                  master_list, &host_list, 
-                                                  NULL); 
+               lret &= href_list_find_all_references(href_list, NULL, 
+                                                     master_list, &host_list, 
+                                                     NULL); 
                lret &= href_list_add(&tmp_href_list, NULL, href);
-               lret &= href_list_find_all_used(tmp_href_list, NULL,
-                                                  master_list, &new_host_list, 
-                                                  NULL);
+               lret &= href_list_find_all_references(tmp_href_list, NULL,
+                                                     master_list, 
+                                                     &new_host_list, NULL);
                lFreeList(tmp_href_list);
             }
 
@@ -359,9 +360,9 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
                lList *host_list = NULL;
 
                href_list_add(&tmp_href_list, NULL, href_name);
-               lret &= href_list_find_all_used(tmp_href_list, NULL,
-                                                  master_list, &host_list,
-                                                  NULL); 
+               lret &= href_list_find_all_references(tmp_href_list, NULL,
+                                                     master_list, &host_list,
+                                                     NULL); 
                tmp_href = href_list_locate(host_list, hostname);
                if (tmp_href != NULL) {
                   if (already_found == false) {
@@ -413,8 +414,8 @@ href_nm           ASTR_href
 value_nm          ASTR_value
 */
 static bool
-attr_list_appen_to_dstring(const lList *this_list, dstring *string,
-                           const lDescr *descriptor, int href_nm, int value_nm)
+attr_list_append_to_dstring(const lList *this_list, dstring *string,
+                            const lDescr *descriptor, int href_nm, int value_nm)
 {
    bool ret = true;
    bool found_default = false;
@@ -432,14 +433,14 @@ attr_list_appen_to_dstring(const lList *this_list, dstring *string,
       const char *href = lGetHost(attr, href_nm);
 
       if (href != NULL && !strcmp(href, HOSTREF_DEFAULT)) {
-         object_print_to_dstring(attr, value_nm, &default_string);
+         object_append_field_to_dstring(attr, NULL, &default_string, value_nm);
          found_default = true;
       } else if (sge_is_hgroup_ref(href)) {
          if (found_group) {
             sge_dstring_sprintf_append(&group_string, "%s", comma);
          }
          sge_dstring_sprintf_append(&group_string, "[%s=", href);
-         object_print_to_dstring(attr, value_nm, &group_string);
+         object_append_field_to_dstring(attr, NULL, &group_string, value_nm);
          sge_dstring_sprintf_append(&group_string, "]");
          found_group = true;
       } else {
@@ -447,7 +448,7 @@ attr_list_appen_to_dstring(const lList *this_list, dstring *string,
             sge_dstring_sprintf_append(&host_string, "%s", comma);
          }
          sge_dstring_sprintf_append(&host_string, "[%s=", href);
-         object_print_to_dstring(attr, value_nm, &host_string);
+         object_append_field_to_dstring(attr, NULL, &host_string, value_nm);
          sge_dstring_sprintf_append(&host_string, "]");
          found_host = true;
       }
@@ -645,8 +646,9 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
                   attr_elem = attr_create(answer_list, href_name, NULL,
                                           descriptor, href_nm, value_nm);
                   if (attr_elem != NULL) {
-                     ret &= object_parse_from_string(attr_elem, answer_list,
-                                                     value_nm, value);
+                     ret &= object_parse_field_from_string(attr_elem, 
+                                                           answer_list,
+                                                           value_nm, value);
                      if (ret) {
                         ret &= attr_list_add(this_list, answer_list,
                                              &attr_elem, flags, NULL,

@@ -1,7 +1,12 @@
-AH-2003-03-20-0  Enhancem.: - Integrated DRMAA/JAPI build into regular aimk build 
-                              procedure 
+EB-2002-03-20-0  Enhancem.: Review of EB-2002-03-11-0 and EB-2002-03-14-0
+                            - minor modifications
+                 Review:    AH (JG partially)
+
+AH-2003-03-20-0  Enhancem.: - Integrated DRMAA/JAPI build into regular aimk 
+                              build procedure 
                             - Cleanly separated DRMAA and JAPI implementation
-                            - DRMAA library now covers all Grid Engine objects files
+                            - DRMAA library now covers all Grid Engine objects 
+                              files
                             - Renamed test_japi to test_drmaa
                             - Integrated rmon into JAPI to allow it being used 
                               in DRMAA clients without interfacing rmon

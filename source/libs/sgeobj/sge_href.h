@@ -58,22 +58,23 @@ href_list_find_diff(const lList *this_list, lList **answer_list,
 
 
 bool 
-href_list_find_used(const lList *this_list, lList **answer_list,
-                    const lList *master_list, lList **used_hosts,
-                    lList **used_groups);
+href_list_find_references(const lList *this_list, lList **answer_list,
+                          const lList *master_list, lList **used_hosts,
+                          lList **used_groups);
 
 bool 
-href_list_find_all_used(const lList *this_list, lList **answer_list,
-                        const lList *master_list, lList **used_hosts,
-                        lList **used_groups);
+href_list_find_all_references(const lList *this_list, lList **answer_list,
+                              const lList *master_list, lList **used_hosts,
+                              lList **used_groups);
 
 bool 
-href_list_find_occupants(const lList *this_list, lList **answer_list,
-                         const lList *master_list, lList **used_groups);
+href_list_find_referencees(const lList *this_list, lList **answer_list,
+                           const lList *master_list, lList **used_groups);
 
 bool 
-href_list_find_all_occupants(const lList *this_list, lList **answer_list,
-                             const lList *master_list, lList **occupant_groups);
+href_list_find_all_referencees(const lList *this_list, lList **answer_list,
+                               const lList *master_list, 
+                               lList **occupant_groups);
 
 lListElem *
 href_list_locate(const lList *this_list, const char *name);

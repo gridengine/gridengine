@@ -74,14 +74,16 @@ int main(int argc, char *argv[])
 
       nm = descr[i].nm;
       name = lNm2Str(nm);
-      value = object_get_field_contents(queue, &answer_list, &queue_str, nm);
+      value = object_append_field_to_dstring(queue, &answer_list, 
+                                             &queue_str, nm);
       reread_value = NULL;
 
       if(value != NULL) {
-         if(!object_set_field_contents(copy, &answer_list, nm, value)) {
+         if(!object_parse_field_from_string(copy, &answer_list, nm, value)) {
             fprintf(stderr, "setting value for field %s failed\n", name);
          } else {
-            reread_value = object_get_field_contents(copy, &answer_list, &copy_str, nm);
+            reread_value = object_append_field_to_dstring(copy, &answer_list, 
+                                                          &copy_str, nm);
          }
       }
 

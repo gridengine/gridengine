@@ -393,15 +393,15 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
    return NULL;
 }
 
-/****** sgeobj/object/object_get_field_contents() *****************************
+/****** sgeobj/object/object_append_field_to_dstring() ************************
 *  NAME
-*     object_get_field_contents() -- get object field contents as string
+*     object_append_field_to_dstring() -- object field to string
 *
 *  SYNOPSIS
 *     const char *
-*     object_get_field_contents(const lListElem *object, 
-*                               lList **answer_list, 
-*                               dstring *buffer, const int nm) 
+*     object_append_field_to_dstring(const lListElem *object, 
+*                                    lList **answer_list, 
+*                                    dstring *buffer, const int nm) 
 *
 *  FUNCTION
 *     Returns a string representation of a given object attribute.
@@ -424,18 +424,18 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
 *
 *  SEE ALSO
 *     sgeobj/object/--GDI-object-Handling
-*     sgeobj/object/object_set_field_contents()
+*     sgeobj/object/object_parse_field_from_string()
 *******************************************************************************/
 const char * 
-object_get_field_contents(const lListElem *object, lList **answer_list, 
-                          dstring *buffer, const int nm)
+object_append_field_to_dstring(const lListElem *object, lList **answer_list, 
+                               dstring *buffer, const int nm)
 {
    const char *str;
    const char *result = NULL;
    const lDescr *descr;
    int pos, type;
 
-   DENTER(OBJECT_LAYER, "object_get_field_contents");
+   DENTER(OBJECT_LAYER, "object_append_field_to_dstring");
 
    SGE_CHECK_POINTER_NULL(object);
 
@@ -470,33 +470,34 @@ object_get_field_contents(const lListElem *object, lList **answer_list,
    /* read data */
    switch (type) {
       case lFloatT:
-         sge_dstring_sprintf(buffer, "%f", lGetPosFloat(object, pos));
+         sge_dstring_sprintf_append(buffer, "%f", lGetPosFloat(object, pos));
          break;
       case lDoubleT:
-         sge_dstring_sprintf(buffer, "%lf", lGetPosDouble(object, pos));
+         sge_dstring_sprintf_append(buffer, "%lf", lGetPosDouble(object, pos));
          break;
       case lUlongT:
-         sge_dstring_sprintf(buffer, U32CFormat, lGetPosUlong(object, pos));
+         sge_dstring_sprintf_append(buffer, U32CFormat, lGetPosUlong(object, pos));
          break;
       case lLongT:
-         sge_dstring_sprintf(buffer, "%ld", lGetPosLong(object, pos));
+         sge_dstring_sprintf_append(buffer, "%ld", lGetPosLong(object, pos));
          break;
       case lCharT:
-         sge_dstring_sprintf(buffer, "%c", lGetPosChar(object, pos));
+         sge_dstring_sprintf_append(buffer, "%c", lGetPosChar(object, pos));
          break;
       case lBoolT:
-         result = lGetPosBool(object, pos) ? TRUE_STR : FALSE_STR;
+         sge_dstring_sprintf_append(buffer, "%s", 
+                             lGetPosBool(object, pos) ? TRUE_STR : FALSE_STR);
          break;
       case lIntT:
-         sge_dstring_sprintf(buffer, "%d", lGetPosInt(object, pos));
+         sge_dstring_sprintf_append(buffer, "%d", lGetPosInt(object, pos));
          break;
       case lStringT:
          str = lGetPosString(object, pos);
-         sge_dstring_sprintf(buffer, "%s", str != NULL ? str : NONE_STR);
+         sge_dstring_sprintf_append(buffer, "%s", str != NULL ? str : NONE_STR);
          break;
       case lHostT:
          str = lGetPosHost(object, pos);
-         sge_dstring_sprintf(buffer, "%s", str != NULL ? str : NONE_STR);
+         sge_dstring_sprintf_append(buffer, "%s", str != NULL ? str : NONE_STR);
          break;
       case lListT:
       case lObjectT:
@@ -519,6 +520,7 @@ object_get_field_contents(const lListElem *object, lList **answer_list,
       case lIntT:
       case lStringT:
       case lHostT:
+      case lBoolT:
          result = sge_dstring_get_string(buffer);
          break;
    }
@@ -527,14 +529,15 @@ object_get_field_contents(const lListElem *object, lList **answer_list,
    return result;
 }
 
-/****** sgeobj/object/object_set_field_contents() *****************************
+/****** sgeobj/object/object_parse_field_from_string() ************************
 *  NAME
-*     object_set_field_contents() -- set object attr. contents from str
+*     object_parse_field_from_string() -- set object attr. from str
 *
 *  SYNOPSIS
 *     bool 
-*     object_set_field_contents(lListElem *object, lList **answer_list, 
-*                               const int nm, const char *value) 
+*     object_parse_field_from_string(lListElem *object, 
+*                                    lList **answer_list, 
+*                                    const int nm, const char *value) 
 *
 *  FUNCTION
 *     Sets a new value for a certain object attribute.
@@ -556,17 +559,17 @@ object_get_field_contents(const lListElem *object, lList **answer_list,
 *
 *  SEE ALSO
 *     sgeobj/object/--GDI-object-Handling
-*     sgeobj/object/object_get_field_contents()
+*     sgeobj/object/object_append_field_to_dstring()
 ******************************************************************************/
 bool 
-object_set_field_contents(lListElem *object, lList **answer_list, const int nm, 
-                          const char *value)
+object_parse_field_from_string(lListElem *object, lList **answer_list, 
+                               const int nm, const char *value)
 {
    bool ret = true;
    const lDescr *descr;
    int pos, type;
 
-   DENTER(OBJECT_LAYER, "object_set_field_contents");
+   DENTER(OBJECT_LAYER, "object_parse_field_from_string");
 
    SGE_CHECK_POINTER_FALSE(object);
 
@@ -592,108 +595,25 @@ object_set_field_contents(lListElem *object, lList **answer_list, const int nm,
    /* read data */
    switch (type) {
       case lFloatT:
-         {
-            float f;
-            if (sscanf(value, "%f", &f) == 1) {
-               lSetPosFloat(object, pos, f);
-            } else {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_ERRORPARSINGVALUEFORNM_SS,
-                                       value, lNm2Str(nm));
-               ret = false;
-            }
-         }
+         ret = object_parse_float_from_string(object, answer_list, nm, value);
          break;
       case lDoubleT:
-         {
-            double d;
-            if (sscanf(value, "%lf", &d) == 1) {
-               lSetPosDouble(object, pos, d);
-            } else {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_ERRORPARSINGVALUEFORNM_SS,
-                                       value, lNm2Str(nm));
-               ret = false;
-            }
-         }
+         ret = object_parse_double_from_string(object, answer_list, nm, value);
          break;
       case lUlongT:
-         {
-            u_long32 l;
-            if (sscanf(value, u32, &l) == 1) {
-               lSetPosUlong(object, pos, l);
-            } else {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_ERRORPARSINGVALUEFORNM_SS,
-                                       value, lNm2Str(nm));
-               ret = false;
-            }
-         }
+         ret = object_parse_ulong32_from_string(object, answer_list, nm, value);
          break;
       case lLongT:
-         {
-            long l;
-            if (sscanf(value, "%ld", &l) == 1) {
-               lSetPosLong(object, pos, l);
-            } else {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_ERRORPARSINGVALUEFORNM_SS,
-                                       value, lNm2Str(nm));
-               ret = false;
-            }
-         }
+         ret = object_parse_long_from_string(object, answer_list, nm, value);
          break;
       case lCharT:
-         {
-            char c;
-            if (sscanf(value, "%c", &c) == 1) {
-               lSetPosChar(object, pos, c);
-            } else {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_ERRORPARSINGVALUEFORNM_SS,
-                                       value, lNm2Str(nm));
-               ret = false;
-            }
-         }
+         ret = object_parse_char_from_string(object, answer_list, nm, value);
          break;
       case lBoolT:
-         if(value == NULL) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_ERRORPARSINGVALUEFORNM_SS,
-                                    "<null>", lNm2Str(nm));
-            ret = false;
-         }
-         if (strncmp(value, TRUE_STR, TRUE_LEN) == 0) {
-            lSetPosBool(object, pos, true);
-         } else if (strncmp(value, FALSE_STR, FALSE_LEN) == 0) {
-            lSetPosBool(object, pos, false);
-         } else {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_ERRORPARSINGVALUEFORNM_SS,
-                                    value, lNm2Str(nm));
-            ret = false;
-         }
+         ret = object_parse_bool_from_string(object, answer_list, nm, value);
          break;
       case lIntT:
-         {
-            int i;
-            if (sscanf(value, "%d", &i) == 1) {
-               lSetPosInt(object, pos, i);
-            } else {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_ERRORPARSINGVALUEFORNM_SS,
-                                       value, lNm2Str(nm));
-               ret = false;
-            }
-         }
+         ret = object_parse_int_from_string(object, answer_list, nm, value);
          break;
       case lStringT:
          lSetPosString(object, pos, value);
@@ -915,7 +835,7 @@ bool object_type_free_master_list(const sge_object_type type)
 *     sgeobj/object/object_type_get_descr()
 *     sgeobj/object/object_type_get_key_nm()
 *******************************************************************************/
-const char    *object_type_get_name(const sge_object_type type)
+const char *object_type_get_name(const sge_object_type type)
 {
    const char *ret = "unknown";
 
@@ -1034,14 +954,18 @@ object_parse_bool_from_string(lListElem *this_elem, lList **answer_list,
          lSetPosBool(this_elem, pos, false);
       } else {
          /* EB: TODO: error handling */
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFQ" is not a boolean value\n", 
-                        string));
-         answer_list_add(answer_list, SGE_EVENT,
-                         STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ERRORPARSINGVALUEFORNM_SS,
+                                 string, lNm2Str(name));
          ret = false;
       }
    } else {
       /* EB: TODO: error handling */
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
       ret = false;
    }
    DEXIT;
@@ -1062,10 +986,11 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
       if (sscanf(string, u32, &value) == 1) {
          lSetPosUlong(this_elem, pos, value);
       } else {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFQ" is not an integer value\n", 
-                        string));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
-                         ANSWER_QUALITY_ERROR);
+         /* EB: TODO: error handling */
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ERRORPARSINGVALUEFORNM_SS,
+                                 string, lNm2Str(name));
          ret = false;
       }
    } else {
@@ -1077,65 +1002,140 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
 }
 
 bool
-object_print_to_dstring(lListElem *this_elem, int name, dstring *string)
+object_parse_int_from_string(lListElem *this_elem, lList **answer_list,
+                             int name, const char *string)
 {
    bool ret = true;
-   int pos = lGetPosViaElem(this_elem, name);
-   int type = lGetPosType(lGetElemDescr(this_elem), pos);
 
-   DENTER(OBJECT_LAYER, "object_print_to_dstring");
-   if (type == lStringT) {
-      sge_dstring_sprintf_append(string, SFN, lGetPosString(this_elem, pos));
-   } else if (type == lHostT) {
-      sge_dstring_sprintf_append(string, SFN, lGetPosHost(this_elem, pos));
-   } else if (type == lUlongT) {
-      sge_dstring_sprintf_append(string, u32, lGetPosUlong(this_elem, pos));
-   } else if (type == lDoubleT) {
-      sge_dstring_sprintf_append(string, "%f", lGetPosDouble(this_elem, pos));
-   } else if (type == lFloatT) {
-      sge_dstring_sprintf_append(string, "%f", lGetPosFloat(this_elem, pos));
-   } else if (type == lLongT) {
-      sge_dstring_sprintf_append(string, "%ld", lGetPosLong(this_elem, pos));
-   } else if (type == lCharT) {
-      sge_dstring_sprintf_append(string, "%c", lGetPosChar(this_elem, pos));
-   } else if (type == lBoolT) {
-      if (lGetPosBool(this_elem, pos)) {
-         sge_dstring_sprintf_append(string, "%s", "TRUE");
+   DENTER(OBJECT_LAYER, "object_parse_int_from_string");
+   if (this_elem != NULL && string != NULL) {
+      int pos = lGetPosViaElem(this_elem, name);
+      int value;
+
+      if (sscanf(string, "%d", &value) == 1) {
+         lSetPosInt(this_elem, pos, value);
       } else {
-         sge_dstring_sprintf_append(string, "%s", "FALSE");
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ERRORPARSINGVALUEFORNM_SS,
+                                 string, lNm2Str(name));
+         ret = false;
       }
-   } else if (type == lIntT) {
-      sge_dstring_sprintf_append(string, "%d", lGetPosInt(this_elem, pos));
-   } else if (type == lObjectT) {
-      sge_dstring_sprintf_append(string, "%p", lGetPosObject(this_elem, pos));
-   } else if (type == lRefT) {
-      sge_dstring_sprintf_append(string, "%p", lGetPosRef(this_elem, pos));
    } else {
-      /* not possible */
+      /* EB: TODO: error handling */
+      ret = false;
    }
    DEXIT;
    return ret;
 }
 
 bool
-object_parse_from_string(lListElem *this_elem, lList **answer_list, int name,
-                         const char *string)
+object_parse_char_from_string(lListElem *this_elem, lList **answer_list,
+                             int name, const char *string)
 {
    bool ret = true;
-   int pos = lGetPosViaElem(this_elem, name);
-   int type = lGetPosType(lGetElemDescr(this_elem), pos);
 
-   DENTER(OBJECT_LAYER, "object_parse_from_string");
-   if (type == lStringT) {
-      lSetPosString(this_elem, pos, string);
-   } else if (type == lHostT) {
-      lSetPosHost(this_elem, pos, string);
-   } else if (type == lBoolT) {
-      object_parse_bool_from_string(this_elem, answer_list, name, string);
-   } else if (type == lUlongT) {
-      object_parse_ulong32_from_string(this_elem, answer_list, name, string);
+   DENTER(OBJECT_LAYER, "object_parse_char_from_string");
+   if (this_elem != NULL && string != NULL) {
+      int pos = lGetPosViaElem(this_elem, name);
+      char value;
+
+      if (sscanf(string, "%c", &value) == 1) {
+         lSetPosChar(this_elem, pos, value);
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_ERRORPARSINGVALUEFORNM_SS,
+                                 string, lNm2Str(name));
+         ret = false;
+      }
    } else {
-      /* EB: TODO: other types have to be implemented */
+      /* EB: TODO: error handling */
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+object_parse_long_from_string(lListElem *this_elem, lList **answer_list,
+                             int name, const char *string)
+{
+   bool ret = true;
+
+   DENTER(OBJECT_LAYER, "object_parse_long_from_string");
+   if (this_elem != NULL && string != NULL) {
+      int pos = lGetPosViaElem(this_elem, name);
+      long value;
+
+      if (sscanf(string, "%ld", &value) == 1) {
+         lSetPosLong(this_elem, pos, value);
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_ERRORPARSINGVALUEFORNM_SS,
+                                 string, lNm2Str(name));
+         ret = false;
+      }
+   } else {
+      /* EB: TODO: error handling */
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+object_parse_double_from_string(lListElem *this_elem, lList **answer_list,
+                                int name, const char *string)
+{
+   bool ret = true;
+
+   DENTER(OBJECT_LAYER, "object_parse_double_from_string");
+   if (this_elem != NULL && string != NULL) {
+      int pos = lGetPosViaElem(this_elem, name);
+      double value;
+
+      if (sscanf(string, "%lf", &value) == 1) {
+         lSetPosDouble(this_elem, pos, value);
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ERRORPARSINGVALUEFORNM_SS,
+                                 string, lNm2Str(name));
+         ret = false;
+      }
+   } else {
+      /* EB: TODO: error handling */
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+object_parse_float_from_string(lListElem *this_elem, lList **answer_list,
+                               int name, const char *string)
+{
+   bool ret = true;
+
+   DENTER(OBJECT_LAYER, "object_parse_float_from_string");
+   if (this_elem != NULL && string != NULL) {
+      int pos = lGetPosViaElem(this_elem, name);
+      float value;
+
+      if (sscanf(string, "%f", &value) == 1) {
+         lSetPosFloat(this_elem, pos, value);
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ERRORPARSINGVALUEFORNM_SS,
+                                 string, lNm2Str(name));
+         ret = false;
+      }
+   } else {
+      /* EB: TODO: error handling */
+      ret = false;
    }
    DEXIT;
    return ret;

@@ -219,14 +219,14 @@ hgroup_create(lList **answer_list, const char *name, lList *href_or_groupref)
    return ret; 
 }
 
-/****** sgeobj/hgroup/hgroup_add_used() ***************************************
+/****** sgeobj/hgroup/hgroup_add_references() *********************************
 *  NAME
-*     hgroup_add_used() -- Add a host or group reference 
+*     hgroup_add_references() -- Add a host or group reference 
 *
 *  SYNOPSIS
-*     bool hgroup_add_used(lListElem *this_elem, 
-*                             lList **answer_list, 
-*                             const lList *href_or_groupref) 
+*     bool hgroup_add_references(lListElem *this_elem, 
+*                                lList **answer_list, 
+*                                const lList *href_or_groupref) 
 *
 *  FUNCTION
 *     Add a host or group reference. 
@@ -242,12 +242,12 @@ hgroup_create(lList **answer_list, const char *name, lList *href_or_groupref)
 *        false - Error 
 ******************************************************************************/
 bool 
-hgroup_add_used(lListElem *this_elem, lList **answer_list, 
-                const lList *href_or_groupref) 
+hgroup_add_references(lListElem *this_elem, lList **answer_list, 
+                      const lList *href_or_groupref) 
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "hgroup_add_used");
+   DENTER(HOSTREF_LAYER, "hgroup_add_references");
    if (this_elem != NULL && href_or_groupref != NULL) {
       lList *href_list = NULL;   /* HR_Type */
       lListElem *href;           /* HR_Type */
@@ -272,15 +272,15 @@ hgroup_add_used(lListElem *this_elem, lList **answer_list,
    return ret;
 }
 
-/****** sgeobj/hgroup/hgroup_find_all_used() **********************************
+/****** sgeobj/hgroup/hgroup_find_all_references() ****************************
 *  NAME
-*     hgroup_find_all_used() -- Find referenced host and groups 
+*     hgroup_find_all_references() -- Find referenced host and groups 
 *
 *  SYNOPSIS
 *     bool 
-*     hgroup_find_all_used(const lListElem *this_elem, 
-*                          lList **answer_list, lList *master_list, 
-*                          lList **used_hosts, lList **used_groups) 
+*     hgroup_find_all_references(const lListElem *this_elem, 
+*                                lList **answer_list, lList *master_list, 
+*                                lList **used_hosts, lList **used_groups) 
 *
 *  FUNCTION
 *     Find directly or indirectly referenced hgroup names. 
@@ -301,13 +301,13 @@ hgroup_add_used(lListElem *this_elem, lList **answer_list,
 *        false - Error
 ******************************************************************************/
 bool 
-hgroup_find_all_used(const lListElem *this_elem, lList **answer_list,
-                     lList *master_list, lList **used_hosts,
-                     lList **used_groups)
+hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,
+                           lList *master_list, lList **used_hosts,
+                           lList **used_groups)
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "hgroup_find_all_used");
+   DENTER(HOSTREF_LAYER, "hgroup_find_all_references");
    if (this_elem != NULL && master_list != NULL) {
       lList *href_list = NULL;   /* HR_Type */
       const char *name;
@@ -316,8 +316,9 @@ hgroup_find_all_used(const lListElem *this_elem, lList **answer_list,
       ret &= href_list_add(&href_list, answer_list, name);
 
       if (ret) {
-         ret &= href_list_find_all_used(href_list, answer_list, master_list, 
-                                        used_hosts, used_groups);
+         ret &= href_list_find_all_references(href_list, answer_list, 
+                                              master_list, used_hosts, 
+                                              used_groups);
       }
       href_list = lFreeList(href_list);
    }
@@ -325,15 +326,17 @@ hgroup_find_all_used(const lListElem *this_elem, lList **answer_list,
    return ret;
 }
 
-/****** sgeobj/hgroup/hgroup_find_used() **************************************
+/****** sgeobj/hgroup/hgroup_find_references() ********************************
 *  NAME
-*     hgroup_find_used() -- find directly referenced hosts and groups 
+*     hgroup_find_references() -- find directly referenced hosts and groups 
 *
 *  SYNOPSIS
 *     bool 
-*     hgroup_find_used(const lListElem *this_elem, lList **answer_list, 
-*                      lList *master_list, lList **used_hosts, 
-*                      lList **used_groups) 
+*     hgroup_find_references(const lListElem *this_elem, 
+*                            lList **answer_list, 
+*                            lList *master_list, 
+*                            lList **used_hosts, 
+*                            lList **used_groups) 
 *
 *  FUNCTION
 *     Find all hgroups which are directly referenced by 'this_elem'
@@ -354,13 +357,13 @@ hgroup_find_all_used(const lListElem *this_elem, lList **answer_list,
 *        false - Error
 *******************************************************************************/
 bool 
-hgroup_find_used(const lListElem *this_elem, lList **answer_list,
-                 lList *master_list, lList **used_hosts,
-                 lList **used_groups)
+hgroup_find_references(const lListElem *this_elem, lList **answer_list,
+                       lList *master_list, lList **used_hosts,
+                       lList **used_groups)
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "hgroup_find_all_used");
+   DENTER(HOSTREF_LAYER, "hgroup_find_all_references");
    if (this_elem != NULL && master_list != NULL) {
       const char *name = lGetHost(this_elem, HGRP_name);
       lList *href_list = NULL;   /* HR_Type */
@@ -368,8 +371,8 @@ hgroup_find_used(const lListElem *this_elem, lList **answer_list,
       ret &= href_list_add(&href_list, answer_list, name);
 
       if (ret) {
-         ret &= href_list_find_used(href_list, answer_list, master_list, 
-                                    used_hosts, used_groups);
+         ret &= href_list_find_references(href_list, answer_list, master_list, 
+                                          used_hosts, used_groups);
       }
       href_list = lFreeList(href_list);
    }
@@ -377,16 +380,16 @@ hgroup_find_used(const lListElem *this_elem, lList **answer_list,
    return ret;
 }
 
-/****** sgeobj/hgroup/hgroup_find_all_occupants() *****************************
+/****** sgeobj/hgroup/hgroup_find_all_referencees() ***************************
 *  NAME
-*     hgroup_find_all_occupants() -- find groups refering to this group 
+*     hgroup_find_all_referencees() -- find groups refering to this group 
 *
 *  SYNOPSIS
 *     bool 
-*     hgroup_find_all_occupants(const lListElem *this_elem, 
-*                               lList **answer_list, 
-*                               lList *master_list, 
-*                               lList **occupants_groups) 
+*     hgroup_find_all_referencees(const lListElem *this_elem, 
+*                                 lList **answer_list, 
+*                                 lList *master_list, 
+*                                 lList **occupants_groups) 
 *
 *  FUNCTION
 *     Find all hostgroups from 'master_list' which reference the
@@ -407,13 +410,13 @@ hgroup_find_used(const lListElem *this_elem, lList **answer_list,
 *        true  - Success
 *        false - Error 
 *******************************************************************************/
-bool hgroup_find_all_occupants(const lListElem *this_elem, 
+bool hgroup_find_all_referencees(const lListElem *this_elem, 
                                lList **answer_list, lList *master_list, 
                                lList **occupants_groups)
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "hgroup_find_all_occupants");
+   DENTER(HOSTREF_LAYER, "hgroup_find_all_referencees");
    if (this_elem != NULL && occupants_groups != NULL) {
       lList *href_list = NULL;
       const char *name;
@@ -422,7 +425,7 @@ bool hgroup_find_all_occupants(const lListElem *this_elem,
       ret &= href_list_add(&href_list, answer_list, name);
 
       if (ret) {
-         ret &= href_list_find_all_occupants(href_list, answer_list,
+         ret &= href_list_find_all_referencees(href_list, answer_list,
                                              master_list, occupants_groups);
       }
       href_list = lFreeList(href_list);
@@ -431,16 +434,16 @@ bool hgroup_find_all_occupants(const lListElem *this_elem,
    return ret;
 }
 
-/****** sgeobj/hgroup/hgroup_find_occupants() *********************************
+/****** sgeobj/hgroup/hgroup_find_referencees() *********************************
 *  NAME
-*     hgroup_find_occupants() -- Find groups refering to this group 
+*     hgroup_find_referencees() -- Find groups refering to this group 
 *
 *  SYNOPSIS
 *     bool 
-*     hgroup_find_occupants(const lListElem *this_elem, 
-*                           lList **answer_list, 
-*                           lList *master_list, 
-*                           lList **occupants_groups) 
+*     hgroup_find_referencees(const lListElem *this_elem, 
+*                             lList **answer_list, 
+*                             lList *master_list, 
+*                             lList **occupants_groups) 
 *
 *  FUNCTION
 *     Find all hostgroups from 'master_list' which reference the
@@ -461,12 +464,12 @@ bool hgroup_find_all_occupants(const lListElem *this_elem,
 *        false - Error
 *******************************************************************************/
 bool 
-hgroup_find_occupants(const lListElem *this_elem, lList **answer_list,
-                      lList *master_list, lList **occupants_groups)
+hgroup_find_referencees(const lListElem *this_elem, lList **answer_list,
+                        lList *master_list, lList **occupants_groups)
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "hgroup_find_all_occupants");
+   DENTER(HOSTREF_LAYER, "hgroup_find_all_referencees");
    if (this_elem != NULL && occupants_groups != NULL) {
       lList *href_list = NULL;
       const char *name;
@@ -475,7 +478,7 @@ hgroup_find_occupants(const lListElem *this_elem, lList **answer_list,
       ret &= href_list_add(&href_list, answer_list, name);
 
       if (ret) {
-         ret &= href_list_find_occupants(href_list, answer_list,
+         ret &= href_list_find_referencees(href_list, answer_list,
                                          master_list, occupants_groups);
       }
       href_list = lFreeList(href_list);

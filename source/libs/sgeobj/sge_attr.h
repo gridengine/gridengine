@@ -36,7 +36,7 @@
 
 #define HOSTATTR_DEFAULT            0x0000
 #define HOSTATTR_ALLOW_AMBIGUITY    0x0001
-#define HOSTATTR_OWRITE_DEF_HOST    0x0002
+#define HOSTATTR_OVERWRITE          0x0002
 
 /*
  * Internally this name should be handled as hostgroup name. Therefore it 

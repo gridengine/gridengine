@@ -40,12 +40,6 @@ lListElem *
 cuser_create(lList **answer_list, const char *cluster_user, lList *remote_user);
 
 bool
-cluster_user_get_remote_user(const lListElem *this_elem, 
-                             lList **answer_list,
-                             const char *hostname,
-                             const char **remote_user);
-
-bool
 cuser_is_hgroup_referenced(const lListElem *this_elem,
                            const lListElem *hgroup); 
 

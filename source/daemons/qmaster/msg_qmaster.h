@@ -607,12 +607,6 @@
 #define MSG_UP_ALREADYEXISTS_SS        _MESSAGE(33492, _("denied: shared namespace between project and user: there is already a "SFN" which is named "SFQ"\n"))
 #define MSG_UM_CLUSTERUSERXNOTGUILTY_S _MESSAGE(33493, _("cluster user name "SFQ" is not guilty\n"))
 #define MSG_HGRP_GROUPXNOTGUILTY_S     _MESSAGE(33494, _("host group name "SFQ" is not guilty\n"))
-#define MSG_HGRP_CANTADDMEMBERXTOGROUPY_SS      _MESSAGE(33495, _("can't add member "SFQ" to host group "SFQ"\n"))
-#define MSG_UM_MAPLISTFORXEXISTS_S     _MESSAGE(33498, _("mapping list for "SFQ" allready exist\n"))
-#define MSG_HGRP_MEMBERLISTFORXEXISTS_S _MESSAGE(33499, _("member list for "SFQ" allready exist\n"))
-#define MSG_UM_NOMAPLISTFORXFOUND_S    _MESSAGE(33500, _("no mapping list for "SFQ" found\n"))
-#define MSG_UM_EXIMINEMAPFORX_S        _MESSAGE(33503, _("examine mapping for cluster user "SFQ"\n"))
-#define MSG_UM_ERRORADDMAPENTRYXFORY_SS _MESSAGE(33506, _("error adding mapping entry "SFQ" for cluster user "SFQ""))
 #define MSG_UM_ERRORWRITESPOOLFORUSER_S _MESSAGE(33507, _("error writing spoolfile for cluster user "SFQ))
 #define MSG_HGRP_ERRORWRITESPOOLFORGROUP_S  _MESSAGE(33508, _("error writing spoolfile for host group "SFQ))
 #define MSG_OBJ_PRJ                    _MESSAGE(33509, _("project"))
@@ -775,17 +769,6 @@
 */
 #define MSG_SYSTEM_SYSTEMHASBEENMODIFIEDXSECONDS_I       _MESSAGE(33663, _("system time has been modified (%d seconds)\n"))
 #define MSG_SYSTEM_RECEIVEDUNKNOWNEVENT       _MESSAGE(33664, _("received unkown event\n"))
-
-
-/* sge_user_mapping.c */
-#define MSG_UMAP_ADDEDENTRY_S                      _MESSAGE(33665, _("added mapping entry "SFQ"\n"))
-#define MSG_UMAP_EXAMINEMAPENTRY_S                 _MESSAGE(33666, _("examine mapping entry "SFQ"\n"))
-#define MSG_UMAP_EXAMINEHOSTLISTFORMAPNAME_S       _MESSAGE(33667, _("examine hostlist for user mapping name "SFQ"\n"))
-#define MSG_UMAP_CANTADDHOSTX_S                    _MESSAGE(33668, _("can't add host or group "SFQ"\n"))
-#define MSG_UMAP_XADDED_S                          _MESSAGE(33669, _("host or group "SFQ" added\n"))
-#define MSG_UMAP_REMOVEDMAPENTRYXFORCLUSERUSERY_SS      _MESSAGE(33670, _("removed mapping entry "SFQ" for cluster user "SFQ"\n"))
-#define MSG_UMAP_REMOVEDXFROMMAPENTRYYFORCLUSERUSERZ_SSS      _MESSAGE(33671, _("removed "SFQ" from mapping entry "SFQ" for cluster user "SFQ"\n"))
-#define MSG_UMAP_HOSTNAMEXNOTRESOLVEDY_SS          _MESSAGE(33672, _("hostname "SFQ" not resolved: "SFN"\n"))
 
 /*
  * misc

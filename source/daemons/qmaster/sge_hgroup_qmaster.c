@@ -107,12 +107,12 @@ bool hgroup_verify_hostlist_modification(lListElem *hgroup, lList **answer_list,
                lList *occupant_groups = NULL;
                lList *used_groups = NULL;
 
-               ret &= hgroup_find_all_occupants(hgroup, answer_list,
-                                                   master_list, 
-                                                   &occupant_groups);
-               ret &= hgroup_find_all_used(hgroup, answer_list,
-                                              master_list, NULL, 
-                                              &used_groups);
+               ret &= hgroup_find_all_referencees(hgroup, answer_list,
+                                                  master_list, 
+                                                  &occupant_groups);
+               ret &= hgroup_find_all_references(hgroup, answer_list,
+                                                 master_list, NULL, 
+                                                 &used_groups);
                ret &= href_list_add(&occupant_groups, answer_list,
                                     lGetHost(hgroup, HGRP_name));
                if (ret) {
@@ -320,9 +320,9 @@ sge_del_hgroup(lListElem *this_elem, lList **answer_list,
             /*
              * Is it still referenced in another hostgroup?
              */
-            ret &= hgroup_find_occupants(hgroup, answer_list, 
-                                         master_hgroup_list, 
-                                         &href_list);
+            ret &= hgroup_find_referencees(hgroup, answer_list, 
+                                           master_hgroup_list, 
+                                           &href_list);
             if (ret) {
                if (href_list != NULL) {
                   dstring string = DSTRING_INIT;

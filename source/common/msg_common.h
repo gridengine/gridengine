@@ -73,23 +73,12 @@
 #define MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S       _MESSAGE(23026, _("only a single value is allowed for configuration attribute "SFQ"\n"))
 #define MSG_CONFIG_CONF_ERRORSTORINGCONFIGVALUE_S       _MESSAGE(23027, _("error storing configuration attribute "SFQ"\n"))
 
-
-
-#define MSG_ANSWER_SUBGROUPXINGROUPYNOTACCEPTED_SS _MESSAGE(23028, _("subgroup "SFQ" in group "SFQ" not accepted\n"))
-#define MSG_ANSWER_HOSTXINGROUPYNOTACCEPTED_SS     _MESSAGE(23029, _("host "SFQ" in group "SFQ" not accepted\n"))
-#define MSG_ANSWER_NOGUILTYSUBGROUPNAME_S    _MESSAGE(23030, _(SFQ" is no guilty sub group name\n"))
-#define MSG_ANSWER_NOGROUPNAMESPECIFIED      _MESSAGE(23031, _("no group name specified\n"))
-#define MSG_ANSWER_XCANTBESUBGROUPOFITSELF_S _MESSAGE(23032, _(SFQ" can't be it's own sub group\n"))
-#define MSG_ANSWER_CANTGETSUBGROUPELEMX_S    _MESSAGE(23033, _("can't get sub group element "SFQ"\n"))
-
-
 /*
 ** parse_job_cull.c
 */
 #define MSG_PARSE_NULLPOINTERRECEIVED       _MESSAGE(23034, _("NULL pointer received\n"))
 #define MSG_MEM_MEMORYALLOCFAILED_S         _MESSAGE(23035, _("memory allocation failed "SFN"\n"))
 #define MSG_ANSWER_GETCWDFAILED             _MESSAGE(23036, _("getcwd() failed\n"))
-#define MSG_ANSER_CANTDELETEHGRPXREFERENCEDINUSERMAPPINGFORCLUSTERUSERY_SS _MESSAGE(23037, _("can't delete host group "SFQ" - referenced in user mapping for cluster user "SFQ"\n"))
 #define MSG_ANSWER_HELPNOTALLOWEDINCONTEXT  _MESSAGE(23038, _("-help not allowed in this context\n"))
 #define MSG_ANSWER_UNKOWNOPTIONX_S          _MESSAGE(23039, _("Unknown option "SFN))
 #define MSG_ANSWER_CANTPROCESSNULLLIST      _MESSAGE(23040, _("can't process NULL list"))
@@ -248,24 +237,7 @@
 #define MSG_QCONF_XISNOVALIDCOMPLEXNAME_S         _MESSAGE(23170, _(SFN" is no valid complex name\n"))
 #define MSG_ANSWER_MALFORMEDREQUEST               _MESSAGE(23171, _("malformed request\n"))
 #define MSG_ANSWER_COMPLEXXALREADYEXISTS_S        _MESSAGE(23172, _("complex "SFN" already exists\n"))
-#define MSG_ANSWER_USERMAPENTRYALREADYEXISTS_S    _MESSAGE(23173, _("user mapping for "SFN" already exists\n"))
-#define MSG_ANSWER_HOSTGROUPENTRYALLREADYEXISTS_S _MESSAGE(23174, _("host group "SFQ" already exists\n"))
-#define MSG_ANSWER_CLUSTERUNAMEXDIFFFROMY_SS      _MESSAGE(23175, _("\"cluster_user\" name entry "SFQ" does not match filename "SFQ"\n"))
-#define MSG_UM_NOCLUSTERUSERENTRYINFILEX_S        _MESSAGE(23176, _("no \"cluster_user\" name entry in file "SFQ"\n"))
-#define MSG_ANSWER_HOSTGROUPNAMEXDIFFFROMY_SS     _MESSAGE(23177, _("\"group_name\" entry "SFQ" does not match filename "SFQ"\n"))
-#define MSG_HGRP_NOHOSTGROUPENTRYINFILEX_S        _MESSAGE(23178, _("no \"group_name\" name entry in file "SFQ"\n"))
-#define MSG_ANSWER_UNKNOWNHOSTORGROUPNAME_S       _MESSAGE(23179, _("unknown host or group name "SFQ"\n"))
-#define MSG_ANSWER_UNKNOWNHOSTNAME_S              _MESSAGE(23180, _("unknown host name "SFQ"\n"))
-#define MSG_ANSWER_UNKNOWNGROUPNAME_S             _MESSAGE(23181, _("unknown group name "SFQ"\n"))
-#define MSG_ANSWER_SUBGROUPHASNOSUPERGROUP_SS      _MESSAGE(23182, _("subgroup "SFQ" has no supergroup "SFQ"\n"))
-#define MSG_ANSWER_SUBGROUPXHASLINKTOGROUPY_SS       _MESSAGE(23183, _("sub group "SFQ" has sub group link to group "SFQ" (deadlock)\n"))
-#define MSG_ANSWER_SUPERGROUPHASNOSUBGROUP_SS      _MESSAGE(23184, _("supergroup "SFQ" has no subgroup "SFQ"\n"))
-#define MSG_ANSWER_CLUSTERUNAMEXNOTAMBIGUOUSMAPFORYATZ_SSS _MESSAGE(23185, _("cluster_user name entry "SFQ" has not ambiguous mappings for "SFQ" at "SFQ"\n"))
-#define MSG_ANSWER_DUPLICATEDMAPPINGENTRY_SSS     _MESSAGE(23186, _("mapping entry as user "SFQ" from "SFQ" already exists for cluster user "SFQ"\n"))
 #define MSG_ANSWER_IGNORINGMAPPINGFOR_S           _MESSAGE(23187, _("usermapping for "SFQ" not accepted\n"))
-#define MSG_ANSWER_IGNORINGHOSTGROUP_S            _MESSAGE(23188, _("host group list "SFQ" not accepted\n"))
-#define MSG_ANSWER_USERMAPENTRYXNOTFOUND_S        _MESSAGE(23189, _("user mapping entry for user "SFQ" not found\n"))
-#define MSG_ANSWER_HOSTGROUPENTRYXNOTFOUND_S      _MESSAGE(23190, _("host group entry for group "SFQ" not found\n"))
 #define MSG_ANSWER_COMPLEXXDOESNOTEXIST_S         _MESSAGE(23191, _("complex "SFN" does not exist.\n"))
 #define MSG_MULTIPLY_MODIFIEDIN                   _MESSAGE(23192, _("modified in"))
 #define MSG_MULTIPLY_ADDEDTO                      _MESSAGE(23193, _("added to"))
@@ -274,8 +246,6 @@
 #define MSG_FILE_ERRORWRITINGUSERSETTOFILE        _MESSAGE(23196, _("error writing userset to file\n"))
 #define MSG_FILE_ERRORREADINGUSERSETFROMFILE_S    _MESSAGE(23197, _("error reading userset from file "SFN"\n"))
 #define MSG_COMPLEX_COMPLEXXNOTDEFINED_S          _MESSAGE(23198, _("complex "SFN" not defined\n"))
-#define MSG_ERROR_USERXNOTDEFINED_S               _MESSAGE(23199, _("user "SFN" not defined\n"))
-#define MSG_ERROR_GROUPXNOTDEFINED_S              _MESSAGE(23200, _("host group "SFQ" is not defined\n"))
 #define MSG_ANSWER_CONFIGXNOTDEFINED_S            _MESSAGE(23201, _("configuration "SFN" not defined\n"))
 #define MSG_ANSWER_CONFIGXALREADYEXISTS_S         _MESSAGE(23202, _("configuration "SFN" already exists\n"))
 #define MSG_ANSWER_CONFIGXDOESNOTEXIST_S          _MESSAGE(23203, _("configuration "SFN" does not exist\n"))
@@ -321,24 +291,6 @@
 #define MSG_JOB_TASK_SPOOL_FILE        _MESSAGE(23231, _("task spool file"))
 #define MSG_JOB_JOB_SPOOL_FILE         _MESSAGE(23232, _("job spool file"))
 #define MSG_JOB_JOB_SPOOL_DIRECTORY    _MESSAGE(23233, _("job spool directory"))
-
-
-/* read_write_ume.c */
-#define MSG_UM_CONFIGTEXT1 _MESSAGE(23234, _("configuration file for user mapping\n"))
-#define MSG_UM_CONFIGTEXT2 _MESSAGE(23235, _("\n"))
-#define MSG_UM_CONFIGTEXT3 _MESSAGE(23236, _("cluster_user      NAME -> unique cluster user name\n"))
-#define MSG_UM_CONFIGTEXT4 _MESSAGE(23237, _("MAPPING_USER           -> User mapping for specified hosts/host groups\n"))
-#define MSG_UM_CONFIGTEXT5 _MESSAGE(23238, _("MAPPINGHOST-/GROUPLIST -> [,] separated host or host group names\n"))
-#define MSG_UM_CONFIGTEXT6 _MESSAGE(23239, _("MAPPING_USER      MAPPINGHOST-/GROUPLIST\n"))
-/* read_write_host_group.c */
-#define MSG_HOSTGROUP_CONFIGTEXT1 _MESSAGE(23240, _("configuration file for host groups\n"))
-#define MSG_HOSTGROUP_CONFIGTEXT2 _MESSAGE(23241, _("\n"))
-#define MSG_HOSTGROUP_CONFIGTEXT3 _MESSAGE(23242, _("group_name      NAME -> unique host group name\n"))
-#define MSG_HOSTGROUP_CONFIGTEXT4 _MESSAGE(23243, _("each line contains a hostname\n"))
-#define MSG_HOSTGROUP_CONFIGTEXT5 _MESSAGE(23244, _("if the first character is a '@' the following name\n"))
-#define MSG_HOSTGROUP_CONFIGTEXT6 _MESSAGE(23245, _("is resolved as subgroup name\n"))
-
-
 
 /*
 ** complex.c

@@ -56,8 +56,8 @@
 *     sgeobj/Object/object_get_subtype()
 *     sgeobj/Object/object_get_primary_key()
 *     sgeobj/Object/object_get_name_prefix()
-*     sgeobj/Object/object_get_field_contents()
-*     sgeobj/Object/object_set_field_contents()
+*     sgeobj/Object/object_append_field_to_dstring()
+*     sgeobj/Object/object_parse_field_from_string()
 *     sgeobj/Object/object_type_get_master_list()
 *     sgeobj/Object/object_type_free_master_list()
 *     sgeobj/Object/object_type_get_name()
@@ -181,12 +181,12 @@ const char *
 object_get_name_prefix(const lDescr *descr, dstring *buffer);
 
 const char *
-object_get_field_contents(const lListElem *object, lList **answer_list, 
-                          dstring *buffer, const int nm);
+object_append_field_to_dstring(const lListElem *object, lList **answer_list, 
+                               dstring *buffer, const int nm);
 
 bool 
-object_set_field_contents(lListElem *object, lList **answer_list, const int nm,
-                          const char *value);
+object_parse_field_from_string(lListElem *object, lList **answer_list, 
+                               const int nm, const char *value);
 
 void
 object_delete_range_id(lListElem *object, lList **answer_list, 
@@ -205,11 +205,24 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
                                  int name, const char *string);
 
 bool
-object_print_to_dstring(lListElem *this_elem, int name, dstring *string);
+object_parse_int_from_string(lListElem *this_elem, lList **answer_list,
+                             int name, const char *string);
 
 bool
-object_parse_from_string(lListElem *this_elem, lList **answer_list, int name,
-                         const char *string);
+object_parse_char_from_string(lListElem *this_elem, lList **answer_list,
+                             int name, const char *string);
+
+bool
+object_parse_long_from_string(lListElem *this_elem, lList **answer_list,
+                             int name, const char *string);
+
+bool
+object_parse_double_from_string(lListElem *this_elem, lList **answer_list,
+                                int name, const char *string);
+
+bool
+object_parse_float_from_string(lListElem *this_elem, lList **answer_list,
+                               int name, const char *string);
 
 bool
 object_set_any_type(lListElem *this_elem, int name, void *value);

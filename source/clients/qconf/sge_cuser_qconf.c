@@ -63,9 +63,6 @@ cuser_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
                                 &cuser_list, NULL, NULL);
       answer_list_replace(answer_list, &gdi_answer_list);
    }
-#if 1 /* EB: TODO: remove */
-lWriteElemTo(this_elem, stderr);
-#endif
    DEXIT;
    return ret;
 }
@@ -184,7 +181,7 @@ bool cuser_modify(lList **answer_list, const char *name)
 
       if (cuser == NULL) {
          /* EB: TODO move to msg file */
-         sprintf(SGE_EVENT, "Host group "SFQ" does not exist\n", name);
+         sprintf(SGE_EVENT, "User mapping entry "SFQ" does not exist\n", name);
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          ret = false;
@@ -215,7 +212,7 @@ bool cuser_modify_from_file(lList **answer_list, const char *filename)
       cuser = cull_read_in_ume(NULL, filename, 1, 0, 0, NULL); 
       if (cuser == NULL) {
          /* EB: TODO move to msg file */
-         sprintf(SGE_EVENT, "Host group file "SFQ" is not correct\n", filename);
+         sprintf(SGE_EVENT, "User mapping file "SFQ" is not correct\n", filename);
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          ret = false;

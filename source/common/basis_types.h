@@ -69,9 +69,6 @@ typedef enum {
 #define FALSE_STR "FALSE"
 #define TRUE_STR  "TRUE"
 
-#define FALSE_LEN 5
-#define TRUE_LEN  4
-
 #define NONE_STR  "NONE"
 #define NONE_LEN  4
 

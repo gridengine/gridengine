@@ -963,8 +963,10 @@ spool_flatfile_align_list(lList **answer_list, const lList *list,
 
    for_each (object, list) {
       for (i = 0; fields[i].nm != NoName; i++) {
-         const char *value = object_get_field_contents(object, answer_list, 
-                             &buffer, fields[i].nm);
+         const char *value;
+
+         value = object_append_field_to_dstring(object, answer_list, 
+                                                &buffer, fields[i].nm);
          fields[i].width = MAX(fields[i].width, sge_strlen(value));
       }
    }
@@ -1581,8 +1583,8 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
             }
          }
       } else {
-         value = object_get_field_contents(object, answer_list, &field_buffer,
-                                          fields[i].nm);
+         value = object_append_field_to_dstring(object, answer_list, 
+                                                &field_buffer, fields[i].nm);
          if (instr->align_data) {
             sge_dstring_sprintf_append(buffer, "%-*s", fields[i].width, value);
          } else {
@@ -1988,8 +1990,8 @@ _spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
             *token = spool_lex();
          }
          spool_return_whitespace = false;
-         object_set_field_contents(object, answer_list, nm, 
-                                   sge_dstring_get_string(&buffer));
+         object_parse_field_from_string(object, answer_list, nm, 
+                                        sge_dstring_get_string(&buffer));
       }
 
       /* skip field end token */

@@ -47,28 +47,28 @@ hgroup_create(lList **answer_list, const char *name,
               lList *hostref_or_groupref);
 
 bool 
-hgroup_add_used(lListElem *this_elem, lList **answer_list,
-                const lList *hostref_or_groupref);
+hgroup_add_references(lListElem *this_elem, lList **answer_list,
+                      const lList *hostref_or_groupref);
 
 bool 
-hgroup_find_used(const lListElem *this_elem, lList **answer_list,
-                 lList *master_list, lList **used_hosts,
-                 lList **used_groups);
+hgroup_find_references(const lListElem *this_elem, lList **answer_list,
+                       lList *master_list, lList **used_hosts,
+                       lList **used_groups);
 
 bool 
-hgroup_find_all_used(const lListElem *this_elem, lList **answer_list,
-                     lList *master_list, lList **used_hosts,
-                     lList **used_groups);
+hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,
+                           lList *master_list, lList **used_hosts,
+                           lList **used_groups);
 
 bool 
-hgroup_find_occupants(const lListElem *this_elem,
-                      lList **answer_list,
-                      lList *master_list, lList **occupants_groups);
+hgroup_find_referencees(const lListElem *this_elem,
+                        lList **answer_list,
+                        lList *master_list, lList **occupants_groups);
 
 bool 
-hgroup_find_all_occupants(const lListElem *this_elem, 
-                          lList **answer_list,
-                          lList *master_list, lList **used_groups);
+hgroup_find_all_referencees(const lListElem *this_elem, 
+                            lList **answer_list,
+                            lList *master_list, lList **used_groups);
 
 /* --- */
 

@@ -1,8 +1,12 @@
+DT-2004-06-03-5: Bugfix:    o Fixed API error in DRMAA Java binding
+                 Enhancem.: o Expanded TestDRMAA program
+                 Changed:   DRMAA
+
 MD-2004-06-03-0: Bugfix:    typos, some messages, cleanup
                  Changed:   inst_sge, setfileperm.sh
                  Review:    AS
            
-AS-2004-06-03-1  Cleanup:   changed message when "qmod -X" mod is not done
+AS-2004-06-03-1:  Cleanup:   changed message when "qmod -X" mod is not done
                             because queue already has the specified state.
 
 AS-2004-06-03-0: Bugfix:    formatting, typos of various text files

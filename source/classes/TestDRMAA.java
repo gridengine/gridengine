@@ -20,7 +20,35 @@ public class TestDRMAA {
    
    /** Creates a new instance of TestDRMAA */
    public TestDRMAA () throws Exception {
+   }
+   
+   /**
+    * @param args the command line arguments
+    */
+   public static void main (String[] args) throws Exception {
+      String arg = null;
+      int duration = 300;
+      
+      if ((args.length < 1) || (args.length > 2)) {
+         printUsage ();
+         System.exit (1);
+      }
+
+      arg = args[0];
+      
+      if (args.length >= 1) {
+         try {
+            duration = Integer.parseInt (args[1]);
+         }
+         catch (NumberFormatException e) {
+            printUsage ();
+            System.exit (1);
+         }
+      }
+      
       jobIds = new LinkedList ();
+
+      Runtime.getRuntime ().addShutdownHook (new ShutdownHook ());
       
       DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
       
@@ -38,16 +66,8 @@ public class TestDRMAA {
       System.out.println ("");
       
       log ("0: Starting test threads...");
-      
-      new Thread (new SubmitWaitTester (1)).start ();
-      new Thread (new BulkSubmitSyncTester (2)).start ();
-      new Thread (new SubmitDeleteTester (3)).start ();
-      new Thread (new SubmitHoldReleaseTester (4)).start ();
-      new Thread (new SubmitSuspendResumeTester (5)).start ();
-//      new Thread (new SubmitTester (6, 5)).start ();
-//      new Thread (new BulkSubmitTester (7, 5)).start ();
-//      new Thread (new WaitTester (8)).start ();
-//      new Thread (new SyncTester (9)).start ();      
+
+      startThreads (arg);
       
       sleep (5);
       
@@ -56,26 +76,119 @@ public class TestDRMAA {
       }
       
       log ("0: Sleeping");
-      sleep (300);
-      
-      log ("0: Exiting");
-      session.exit ();
-   }
-   
-   /**
-    * @param args the command line arguments
-    */
-   public static void main (String[] args) throws Exception {
-      new TestDRMAA ();
+      sleep (duration);
       
       System.exit (0);
+   }
+
+   private static void printUsage () {
+      System.out.println ("java TestDRMAA codes [duration]");
+      System.out.println ("\tcodes: <number><code>[:codes]");
+      System.out.println ("\tnumber: 0-9 -- number of instances");
+      System.out.println ("\tcode: W|Y|D|H|P|s|b|w|y|d|h|p");
+      System.out.println ("\t\tW -- Submit and wait");
+      System.out.println ("\t\tY -- Submit bulk and synchronize");
+      System.out.println ("\t\tD -- Submit and delete");
+      System.out.println ("\t\tH -- Submit, hold, release");
+      System.out.println ("\t\tP -- Submit, suspend, resume");
+      System.out.println ("\t\ts -- Submit");
+      System.out.println ("\t\tb -- Submit bulk");
+      System.out.println ("\t\tw -- Wait any");
+      System.out.println ("\t\ty -- Synchronize all");
+      System.out.println ("\t\td -- Delete all");
+      System.out.println ("\t\th -- Hold all, release all");
+      System.out.println ("\t\tp -- Suspend all, resume all");
+      System.out.println ("Example:");
+      System.out.println ("\tjava TestDRMAA 1S:4H:3s:2w:1d");
+   }
+   
+   private static void startThreads (String arg) throws DRMAAException {
+      StringTokenizer tok = new StringTokenizer (arg, ":");
+      int id = 1;
+      
+      while (tok.hasMoreTokens ()) {
+         String code = tok.nextToken ();
+         int number = 0;
+         char type = code.charAt (1);
+         
+         try {
+            number = Integer.parseInt (code.substring (0, 1));
+         }
+         catch (NumberFormatException e) {
+            throw new InvalidArgumentException ("Invalid argument: " + arg);
+         }
+         
+         if (type == 'W') {
+            for (int count = 0; count < number; count++) {
+               new Thread (new SubmitWaitTester (id++)).start ();
+            }
+         }
+         else if (type == 'Y') {
+            for (int count = 0; count < number; count++) {
+               new Thread (new BulkSubmitSyncTester (id++)).start ();
+            }
+         }
+         else if (type == 'D') {
+            for (int count = 0; count < number; count++) {
+               new Thread (new SubmitDeleteTester (id++)).start ();
+            }
+         }
+         else if (type == 'H') {
+            for (int count = 0; count < number; count++) {
+               new Thread (new SubmitHoldReleaseTester (id++)).start ();
+            }
+         }
+         else if (type == 'P') {
+            for (int count = 0; count < number; count++) {
+               new Thread (new SubmitSuspendResumeTester (id++)).start ();
+            }
+         }
+         else if (type == 's') {
+            for (int count = 0; count < number; count++) {
+               new Thread (new SubmitTester (id++, 5)).start ();
+            }
+         }
+         else if (type == 'b') {
+            for (int count = 0; count < number; count++) {
+               new Thread (new BulkSubmitTester (id++, 5)).start ();
+            }
+         }
+         else if (type == 'w') {
+            for (int count = 0; count < number; count++) {
+               new Thread (new WaitTester (id++)).start ();
+            }
+         }
+         else if (type == 'y') {
+            for (int count = 0; count < number; count++) {
+               new Thread (new SyncTester (id++)).start ();
+            }
+         }
+         else if (type == 'd') {
+            for (int count = 0; count < number; count++) {
+               new Thread (new DeleteAllTester (id++)).start ();
+            }
+         }
+         else if (type == 'h') {
+            for (int count = 0; count < number; count++) {
+               new Thread (new HoldReleaseAllTester (id++)).start ();
+            }
+         }
+         else if (type == 'p') {
+            for (int count = 0; count < number; count++) {
+               new Thread (new SuspendResumeAllTester (id++)).start ();
+            }
+         }
+         else {
+            throw new InvalidArgumentException ("Invalid code: " + code);
+         }
+      }
    }
    
    static synchronized void log (String message) {
       System.out.println (message);
    }
    
-   private abstract class Tester implements Runnable {
+   private static abstract class Tester implements Runnable {
       private int id = 0;
       protected JobTemplate jt = null;
       
@@ -134,7 +247,7 @@ public class TestDRMAA {
       }
    }
    
-   private class SubmitWaitTester extends Tester {
+   private static class SubmitWaitTester extends Tester {
       SubmitWaitTester (int id) throws DRMAAException {
          super (id);
          
@@ -180,7 +293,7 @@ public class TestDRMAA {
       }
    }
    
-   private class BulkSubmitSyncTester extends Tester {
+   private static class BulkSubmitSyncTester extends Tester {
       BulkSubmitSyncTester (int id) throws DRMAAException {
          super (id);
 
@@ -200,7 +313,7 @@ public class TestDRMAA {
       }
    }
    
-   private class BulkSubmitTester extends Tester {
+   private static class BulkSubmitTester extends Tester {
       private int sleep = 0;
       
       BulkSubmitTester (int id, int sleep) throws DRMAAException {
@@ -224,7 +337,7 @@ public class TestDRMAA {
       }
    }
    
-   private class SubmitTester extends Tester {
+   private static class SubmitTester extends Tester {
       private int sleep = 0;
       
       SubmitTester (int id, int sleep) throws DRMAAException {
@@ -248,7 +361,7 @@ public class TestDRMAA {
       }
    }
    
-   private class WaitTester extends Tester {
+   private static class WaitTester extends Tester {
       WaitTester (int id) throws DRMAAException {
          super (id);
          
@@ -281,7 +394,9 @@ public class TestDRMAA {
       }
    }
    
-   private class SyncTester extends Tester {
+   private static class SyncTester extends Tester {
+      private List all = Collections.singletonList (DRMAASession.JOB_IDS_SESSION_ALL);
+      
       SyncTester (int id) throws DRMAAException {
          super (id);
          
@@ -289,14 +404,13 @@ public class TestDRMAA {
       }
       
       public void test () throws DRMAAException {
-         session.synchronize (DRMAASession.JOB_IDS_SESSION_ALL,
-         DRMAASession.TIMEOUT_WAIT_FOREVER, false);
+         session.synchronize (all, DRMAASession.TIMEOUT_WAIT_FOREVER, false);
          
          log ("All jobs have finished");
       }
    }
    
-   private class SubmitDeleteTester extends Tester {
+   private static class SubmitDeleteTester extends Tester {
       SubmitDeleteTester (int id) throws DRMAAException {
          super (id);
          
@@ -318,7 +432,7 @@ public class TestDRMAA {
       }
    }
    
-   private class SubmitHoldReleaseTester extends Tester {
+   private static class SubmitHoldReleaseTester extends Tester {
       SubmitHoldReleaseTester (int id) throws DRMAAException {
          super (id);
 
@@ -352,7 +466,7 @@ public class TestDRMAA {
       }
    }
    
-   private class SubmitSuspendResumeTester extends Tester {
+   private static class SubmitSuspendResumeTester extends Tester {
       SubmitSuspendResumeTester (int id) throws DRMAAException {
          super (id);
 
@@ -396,7 +510,60 @@ public class TestDRMAA {
       }
    }
    
-   private JobTemplate createJobTemplate (String jobPath, int seconds, boolean isBulkJob) throws DRMAAException {
+   private static class SuspendResumeAllTester extends Tester {
+      SuspendResumeAllTester (int id) throws DRMAAException {
+         super (id);
+
+         log ("SuspendResumeAllTester");
+      }
+      
+      public void test () throws DRMAAException {
+         sleep (30);
+         
+         session.control (DRMAASession.JOB_IDS_SESSION_ALL,
+                          DRMAASession.SUSPEND);
+         
+         sleep (20);
+         
+         session.control (DRMAASession.JOB_IDS_SESSION_ALL,
+                          DRMAASession.RESUME);
+      }
+   }
+   
+   private static class HoldReleaseAllTester extends Tester {
+      HoldReleaseAllTester (int id) throws DRMAAException {
+         super (id);
+
+         log ("HoldReleaseAllTester");
+      }
+      
+      public void test () throws DRMAAException {
+         session.control (DRMAASession.JOB_IDS_SESSION_ALL,
+                          DRMAASession.HOLD);
+         
+         sleep (20);
+         
+         session.control (DRMAASession.JOB_IDS_SESSION_ALL,
+                          DRMAASession.RELEASE);
+      }
+   }
+   
+   private static class DeleteAllTester extends Tester {
+      DeleteAllTester (int id) throws DRMAAException {
+         super (id);
+
+         log ("DeleteAllTester");
+      }
+      
+      public void test () throws DRMAAException {
+         sleep (50);
+         
+         session.control (DRMAASession.JOB_IDS_SESSION_ALL,
+                          DRMAASession.TERMINATE);
+      }
+   }
+   
+   private static JobTemplate createJobTemplate (String jobPath, int seconds, boolean isBulkJob) throws DRMAAException {
       JobTemplate jt = session.createJobTemplate ();
       
       jt.setWorkingDirectory ("$drmaa_hd_ph$");
@@ -452,6 +619,7 @@ public class TestDRMAA {
       public void run () {
          try {
             session.exit ();
+            System.out.println ("0: Exiting");
          }
          catch (DRMAAException e) {
             e.printStackTrace ();

@@ -45,7 +45,7 @@ import java.util.*;
 public abstract class DRMAASession {
    /* String to return from getDRMAAImplementation() */
    /** The name of this DRMAA implementation. */   
-   private static final String IMPLEMENTATION_STRING = "DRMAA 1.0 Java Binding 0.4.1";
+   private static final String IMPLEMENTATION_STRING = "DRMAA 1.0 Java Binding 0.4.2";
    
 	/** stop the job */
 	public static final int SUSPEND = 0;
@@ -58,7 +58,7 @@ public abstract class DRMAASession {
 	/** kill the job */
 	public static final int TERMINATE = 4;
 	/** all jobs <b>submitted</b> during this DRMAA session */
-	public static final List JOB_IDS_SESSION_ALL = Arrays.asList (new String[] {"DRMAA_JOB_IDS_SESSION_ALL"});
+	public static final String JOB_IDS_SESSION_ALL = "DRMAA_JOB_IDS_SESSION_ALL";
 	/** any job from the session */
 	public static final String JOB_IDS_SESSION_ANY = "DRMAA_JOB_IDS_SESSION_ANY";
 	/** wait indefinitely for a result */

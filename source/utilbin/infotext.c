@@ -44,6 +44,7 @@
 #include "sge_language.h"
 #include "msg_utilbin.h"
 #include "sge_dstring.h"
+#include "version.h"
 
 
 typedef struct sge_infotext_opt {
@@ -605,6 +606,7 @@ void sge_infotext_welcome(void) {
 }
 
 void sge_infotext_usage(void) {
+   printf("Version: %s\n", GDI_VERSION);
    printf("usage:\n");
    printf("infotext -help    : show help\n");
    printf("infotext -test    : test localization\n");
@@ -910,7 +912,7 @@ char **argv
          DPRINTF(("strlen(options.D) > 0\n"));
          printf("#\n# This is a (dash) sign, used for enumerations\n");
          printf("msgid \"\"\n%s\n", sge_infotext_make_line_break(&help_buf2,options.D));
-         if(do_message_space == 0) {
+         if (do_message_space == 0) {
             DPRINTF(("do_message_space == 0\n"));
             printf("msgstr \"\"\n\n");
          } else {

@@ -171,8 +171,8 @@ languagetest:   languagetest.o  $(UTILIB) $(RMONLIB)
 languagetest.o: $(UTILBIN_DIR)/languagetest.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/languagetest.c
 #---------------------------------------------------------------------
-infotext:   infotext.o  $(UTILIB) $(RMONLIB)
-		$(CC) -o $@ infotext.o $(LFLAGS)  -luti -lrmon $(LIBS)
+infotext:   infotext.o  version.o $(UTILIB) $(RMONLIB)
+		$(CC) -o $@ infotext.o version.o $(LFLAGS) -luti -lrmon $(LIBS)
 
 infotext.o: $(UTILBIN_DIR)/infotext.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/infotext.c

@@ -288,7 +288,8 @@ int sub_command
          goto ERROR;            
       }
       if (sge_resolve_host(qep, QU_qhostname)!=0) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(qep, QU_qhostname)));
+         const char *hname = lGetHost(qep, QU_qhostname);
+         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hname ? hname : ""));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          goto ERROR;            
       }

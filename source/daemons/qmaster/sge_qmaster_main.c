@@ -1102,8 +1102,6 @@ static void qmaster_shutdown(void)
 
    te_shutdown();
 
-   cl_com_cleanup_commlib();
-
    sge_shutdown();
 
    DEXIT;

@@ -1,3 +1,8 @@
+AD-2004-01-26-6: Bugfix:    Make sure, 'cl_com_cleanup_commlib()' is invoked
+                            only once during sge_qmaster shutdown.
+                 Changed:   qmaster, gdi
+                 Review:    CR
+
 AD-2004-01-26-5: Bugfix:    Did remove redundant 'sge_switch2admin_user()' and
                             'sge_switch2start_user()' calls.
                  Changed:   spool/classic

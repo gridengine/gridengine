@@ -93,7 +93,7 @@ _Insight_set_option("suppress", "USER_ERROR");
    int maxfd;
 
 #ifndef WIN32NATIVE
-   maxfd = sysconf(_SC_OPEN_MAX);
+   maxfd = MIN(sysconf(_SC_OPEN_MAX), FD_SETSIZE);
 #else /* WIN32NATIVE */
    maxfd = FD_SETSIZE;
    /* detect maximal number of fds under NT/W2000 (env: Files)*/

@@ -1,3 +1,9 @@
+AH-2002-08-30-0  Bugfix:    solaris 32 bit: rlim_fd_max > 1024 can cause 32 bit 
+                            daemons to crash at startup phase
+                 Issue:     #371
+                 Bugtraq:   #4739596
+                 Changed:   sge_qmaster sge_execd sge_commd sge_schedd sge_shadowd
+
 EB-2002-08-29-0  Bugfix:    msg size used in tight PE integr. job start sync. 
                             protocol should be smaller
                  Issue:     #213

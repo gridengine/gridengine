@@ -650,7 +650,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case  "-pot"
       if ( $buildarch != glinux ) then
-         echo "Must be done on fangorn"
+         echo "Must be done on glinux architecture"
          exit 1
       endif   
       rm -f dist/locale/gridenginenotuniq.pot

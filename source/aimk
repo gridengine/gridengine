@@ -1394,7 +1394,7 @@ case HP1164:
       set LFLAGS = "-Wl,-a,archive_shared $LFLAGS"
    endif
    set SHAREDEXT = ".sl"
-   set LFLAGS = "-L."
+   set LFLAGS = "-L. $LFLAGS"
 
    set MTCFLAGS = "${MTCFLAGS}"
    set MTLFLAGS = "-lpthread"

@@ -308,7 +308,7 @@ u_short *compressed
    }
 
    if (message != NULL) {
-      *buffer = message->message;
+      *buffer = (char *)message->message;
       message->message = NULL;
       *buflen = message->message_length;
       if (tag) {

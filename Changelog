@@ -1,3 +1,7 @@
+JG-2004-01-27-0: Bugfix:    Fixed aimk LFLAGS for HP1164.
+                            Fixed a number of build problems for tru64.
+                 Review:    EB
+
 SG-2004-01-26-0: Enhancem.: Introcuded a "-t" option in qdel, qmod, qalter to
                             work on array taskes.
                  Changed.   qalter, qdel, qmod

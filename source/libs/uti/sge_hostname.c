@@ -182,7 +182,7 @@ const char *name
 *     in gethostbyname() and logs when very much time has passed.
 *
 *     return value must be released by function caller (don't forget the 
-*     char*‹‹ array lists inside of struct hostent)
+*     char* array lists inside of struct hostent)
 *
 *
 *  NOTES

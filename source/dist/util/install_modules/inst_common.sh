@@ -652,6 +652,7 @@ GiveHints()
                   "and you may add new administrative hosts with the command\n\n" \
                   "   # qconf -ah <hostname>\n\n"
        $INFOTEXT -wait -n "Please hit <RETURN> >> "
+       $CLEAR
        QMASTER="undef"
       return 0
    else

@@ -1,0 +1,199 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2004 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\"
+.\" $RCSfile: qping.1,v $     Last Update: $Date: 2004/08/25 12:14:55 $     Revision: $Revision: 1.1.2.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH QPING 1 "$Date: 2004/08/25 12:14:55 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.SH NAME
+qping \- check application status of xxQS_NAMExx daemons.
+.PP
+.SH SYNTAX
+.B qping [-help] [-i <interval>] [-info] [-f] [-noalias] 
+.B <host> <port> <name> <id>
+.\"
+.\"
+.PP
+.SH DESCRIPTION
+.I Qping
+is used to validate the runtime status of a xxQS_NAMExx service daemon. The current
+xxQS_NAMExx implementation allows one to query the xxQS_NAME_Sxx_QMASTER daemon and any
+running xxQS_NAME_Sxx_EXECD daemon. The qping command is used to send a SIM (Status
+Information Message) to the destination daemon. The communication layer of the 
+specified daemon will respond with a SIRM (Status Information Response Message) which
+contains status information about the consulted daemon.
+.PP
+.\"
+.\"
+.SH OPTIONS
+.\"
+.SS "\fB\-f\fP"
+Show full status information on each ping interval.
+
+\fIFirst output Line:\fP
+The first output line shows the date and time of the request.
+
+\fISIRM version:\fP
+Internal version number of the SIRM (Status Information Response Message)
+
+\fISIRM message id:\fP
+Current message id for this connection
+
+\fIstart time:\fP
+Start time of daemon. The format is as follows:
+
+MM/DD/YYYY HH:MM:SS (seconds since 01.01.1970)
+
+\fIrun time [s]:\fP
+Run time in seconds since start time
+
+\fImessages in read buffer:\fP
+Nr. of buffered messages in communication buffer. The messages are buffered
+for the application (daemon). When this number grows too large the daemon is not able
+to handle all messages sent to it. 
+
+\fImessages in write buffer:\fP
+Nr. of buffered messages in the communication write buffer. The messages are sent
+from the application (daemon) to the connected clients, but the communication 
+layer wasn't able to send the messages yet. If this number grows too large, the
+communication layer isn't able to send them as fast as the application (daemon) wants
+the messages to be sent.
+
+\fInr. of connected clients:\fP
+This is the number of actual connected clients to this daemon. This also implies the
+current qping connection.
+
+\fIstatus:\fP
+The status value of the daemon.
+Currently the status is always 0.
+
+\fIinfo:\fP
+Status message of the daemon.
+Currently the status messages is always "ok".
+
+.SS "\fB\-help\fP"
+Prints a list of all options.
+
+.SS "\fB\-i interval\fP"
+Set qping interval time.
+
+The default interval time is one second. Qping will send a SIM (Status Information Message)
+on each interval time.
+
+.SS "\fB\-info\fP"
+Show full status information (see \fB\-f\fP for more information) and exit. The exit
+value 0 indicates no error. On errors qping returns with 1.
+
+.SS "\fB\-noalias\fP"
+Ignore host_aliases file, which is located at 
+\fI<xxqs_name_sxx_root>/<cell>/common/host_aliases.\fP
+If this option is used it is not necessary to set any xxQS_NAMExx environment
+variable. 
+
+.SS "\fBhost\fP"
+Host where daemon is running.
+
+.SS "\fBport\fP"
+Port which daemon has bound (used xxqs_name_sxx_qmaster/xxqs_name_sxx_execd port number).
+
+.SS "\fBname\fP"
+Name of communication endpoint ("qmaster" or "execd"). A communication endpoint is a 
+triplet of hostname/endpoint name/endpoint id (e.g. hostA/qmaster/1 or subhost/qstat/4).
+
+.SS "\fBid\fP"
+Id of communication endpoint ("1" for daemons)
+
+.\"
+.\"
+
+.SH "EXAMPLES"
+.RS
+.nf
+>qping master_host 31116 qmaster
+08/24/2004 16:41:15 endpoint master_host/qmaster/1 at port 31116 is up since 365761 seconds
+08/24/2004 16:41:16 endpoint master_host/qmaster/1 at port 31116 is up since 365762 seconds
+08/24/2004 16:41:17 endpoint master_host/qmaster/1 at port 31116 is up since 365763 seconds
+.fi
+.RE
+
+.RS
+.nf
+> qping -info master_host 31116 qmaster 1
+08/24/2004 16:42:47:
+SIRM version:             0.1
+SIRM message id:          1
+start time:               08/20/2004 11:05:14 (1092992714)
+run time [s]:             365853
+messages in read buffer:  0
+messages in write buffer: 0
+nr. of connected clients: 4
+status:                   0
+info:                     ok
+.fi
+.RE
+
+.RS
+.nf
+> qping -info execd_host 31117 execd 1
+08/24/2004 16:43:45:
+SIRM version:             0.1
+SIRM message id:          1
+start time:               08/20/2004 11:06:13 (1092992773)
+run time [s]:             365852
+messages in read buffer:  0
+messages in write buffer: 0
+nr. of connected clients: 2
+status:                   0
+info:                     ok
+.fi
+.RE
+
+.\"
+.\"
+
+.SH "ENVIRONMENTAL VARIABLES"
+.\" 
+.IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
+Specifies the location of the xxQS_NAMExx standard configuration
+files.
+.\"
+.IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
+If set, specifies the default xxQS_NAMExx cell.
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M xxQS_NAME_Sxx_H_ALIASES 5 ,
+.M xxqs_name_sxx_qmaster 8 ,
+.M xxqs_name_sxx_execd 8 .
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

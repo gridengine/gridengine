@@ -43,10 +43,12 @@
 #include "sge_hostname.h"
 #include "sge_arch.h"
 #include "cl_commlib.h"
+#include "version.h"
 
 void usage(void)
 {
-  fprintf(stderr, "%s gethostbyaddr [-name|-aname|-all]x.x.x.x\n", MSG_UTILBIN_USAGE );
+  fprintf(stderr, "Version: %s\n", GDI_VERSION);
+  fprintf(stderr, "%s gethostbyaddr [-help|-name|-aname|-all]x.x.x.x\n", MSG_UTILBIN_USAGE );
   exit(1);
 }
 
@@ -74,7 +76,9 @@ int main(int argc, char *argv[])
   }
 
   ip_string = argv[1];
-
+  if (!strcmp(argv[1], "-help")) {
+     usage();
+  }
   if (!strcmp(argv[1], "-name")) {
      if (argc != 3) {
         usage(); 

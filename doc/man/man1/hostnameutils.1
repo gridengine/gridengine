@@ -1,0 +1,167 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2004 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\"
+.\" $RCSfile: hostnameutils.1,v $     Last Update: $Date: 2004/08/25 12:14:55 $     Revision: $Revision: 1.1.2.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH HOSTNAMEUTILS 1 "$Date: 2004/08/25 12:14:55 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.SH NAME
+.IP "gethostname   \-" 1i
+get local hostname.
+.IP "gethostbyname \-" 1i
+get local host information for specified hostname.
+.IP "gethostbyaddr \-" 1i
+get hostname via IP address.
+.IP "getservbyname \-" 1i
+get configured port number of service
+.\"
+.\"
+.SH SYNTAX
+.B gethostname [-help|-name|-aname|-all]
+.PP
+.B gethostbyname [-help|-name|-aname|-all]
+.B <name>
+.PP
+.B gethostbyaddr [-help|-name|-aname|-all]
+.B <ip>
+.PP
+.B getservbyname [-help|-number]
+.B <service>
+.\"
+.\"
+.PP
+.SH DESCRIPTION
+.I gethostname
+and
+.I gethostbyname
+are used to get the local resolved host name.
+.I gethostbyaddr
+is used to get the hostname of a specified IP address (4 dotted number).
+.I getservbyname
+can be used to get the configured port number of a service (e.g. from /etc/services).
+.PP
+The hostname utils are primarily used from the xxQS_NAMExx installation scripts.
+.I gethostname
+,
+.I gethostbyname
+and
+.I gethostbyaddr
+called without any option will print out the hostname, all specified aliases, and the
+IP address of the local resolved hostname.
+A call of
+.I getservbyname
+without any option will print out the full service entry.
+.PP
+.\"
+.\"
+.SH OPTIONS
+.\"
+.SS "\fB\-help\fP"
+.PP
+Prints a list of all options.
+.\"
+.SS "\fB\-name\fP"
+.PP
+This option only reports the main name of the host.
+.SS "\fB\-aname\fP"
+.PP
+If this option is set, the xxQS_NAMExx host alias file is used for host name
+resolving. It is necessary to set the environment variable xxQS_NAME_Sxx_ROOT and
+if more than one cell is defined also xxQS_NAME_Sxx_CELL.
+.PP
+The option will print out the xxQS_NAMExx host name.
+.SS "\fB\-all\fP"
+.PP
+By using the \fB\-all\fP option all available host information will be printed.
+This contains the host name, the xxQS_NAMExx host name, all host aliases, 
+and the IP address of the host.
+.SS "\fB\-number\fP"
+.PP
+This option will print out the port number of the specified service name.
+.SS "\fB<name>\fP"
+.PP
+This is the host name for which the information is requested.
+.SS "\fB<ip>\fP"
+This is the IP address (4 dotted number) for which the information is requested.
+.SS "\fB<service>\fP"
+This is the service name for which the information is requested (e.g. ftp, sge_qmaster or sge_execd).
+.\"
+.\"
+.SH "EXAMPLES"
+.PP
+The following example shows how to get the port number of the FTP service:
+.PP
+.RS
+.nf
+>getservbyname -number ftp
+21
+.fi
+.RE
+.PP
+The next example shows the output of gethostname -all when the host alias file
+contains this line:
+.PP
+gridmaster extern_name extern_name.mydomain
+.PP
+The local host resolving must also provide the alias name "gridmaster". Each xxQS_NAMExx
+host that wants to use the cluster must be able to resolve the host name "gridmaster". 
+.PP
+To setup an alias name, edit your /etc/hosts file or modify your NIS setup to provide the alias for the NIS clients.
+.PP
+The host alias file must be readable from each host (use e.g. NFS shared file location).
+.PP
+.RS
+.nf
+>gethostname -all
+Hostname: extern_name.mydomain
+SGE name: gridmaster
+Aliases:  loghost gridmaster
+Host Address(es): 192.168.143.99
+.fi
+.RE
+.\"
+.\"
+.SH "ENVIRONMENTAL VARIABLES"
+.\" 
+.IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
+Specifies the location of the xxQS_NAMExx standard configuration
+files.
+.\"
+.IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
+If set, specifies the default xxQS_NAMExx cell.
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M xxQS_NAME_Sxx_H_ALIASES 5 ,
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

@@ -1,5 +1,10 @@
+EB-2003-04-03-1  Enhancem:  Added new testsuite test for issue 511
+                 Bugtraq:   518
+                 Review:    CR
+
 RC-2003-04-03-0  Enhancem:  Start checking at argv[1] instead of
                             argv[0] for sge parameters.
+                 Bugtraq:   507
                  Changed:   qmake
 
 EB-2003-04-03-0  Bugfix:    Unable to delete task array job with negative

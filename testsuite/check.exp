@@ -1097,13 +1097,18 @@ proc show_proc_error { result new_error } {
 #*******************************
 proc create_error_message { error_array} {
 
+  set catch_return [catch {
   set err_string [lindex $error_array 0]
+  } ]
+  if { $catch_return != 0 } {
+     set err_string "catch error: error reading error_array"
+  }
+  
   set err_complete [ split $err_string "|" ]
   set err_procedure [ lindex $err_complete 0 ]
   set err_text      [ lindex $err_complete 1 ]
   set err_checkname [ lindex $err_complete 2 ]
   set err_calledby  [ lindex $err_complete 3 ]
-
   set output ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
   append output ">>> check \"$err_checkname\", procedure \"$err_procedure\"\n"
   if { [ string compare $err_calledby $err_procedure ] != 0 } {

@@ -176,7 +176,7 @@
 #define MSG_DBSTAT_LOAD            _MESSAGE(57304,         _("load key file       load an object from file and store it using key\n"))
 #define MSG_DBSTAT_DELETE          _MESSAGE(57305,         _("delete key          delete the object matching key\n"))
 #define MSG_DBSTAT_ERRORUNDUMPING_S _MESSAGE(57306,         _("error reading object from file "SFN"\n"))
-#define MSG_DBSTAT_INVALIDKEY_S     _MESSAGE(57306,         _("invalid key "SFQ"\n"))
+#define MSG_DBSTAT_INVALIDKEY_S     _MESSAGE(57307,         _("invalid key "SFQ"\n"))
 
 
 #endif /* __MSG_UTILBIN_H */

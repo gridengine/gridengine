@@ -1,3 +1,9 @@
+MD-2004-07-19-0: Bugfix:    sched_conf(5) reprioritize_interval should default to 0
+                 Issue:     1139
+                 Bugtraq:   5075451
+                 Changed:   schedd default config, schedd
+                 Review:    SG
+
 SG-2004-07-19-0: Bugfix:    - The usage in the sharetree got lost.
                             - fixed a mirror interface time out, which disabled
                               sheduling intervals greater than 1 min.

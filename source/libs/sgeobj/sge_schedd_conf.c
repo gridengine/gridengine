@@ -108,8 +108,8 @@
 #define DEFAULT_LOAD_FORMULA                "np_load_avg"
 #define SCHEDULE_TIME                       "0:0:15"
 #define _SCHEDULE_TIME                      15
-#define SGEEE_SCHEDULE_TIME                 "0:2:0"
-#define _SGEEE_SCHEDULE_TIME                 2*60
+#define REPRIORITIZE_INTERVAL               "0:0:0"
+#define REPRIORITIZE_INTERVAL_I             0
 #define MAXUJOBS                            0
 #define MAXGJOBS                            0
 #define SCHEDD_JOB_INFO                     "true"
@@ -677,7 +677,7 @@ lListElem *sconf_create_default()
    lSetUlong(ep, SC_flush_finish_sec, 0);
    lSetString(ep, SC_params, "none");
    
-   lSetString(ep, SC_reprioritize_interval, SGEEE_SCHEDULE_TIME);
+   lSetString(ep, SC_reprioritize_interval, REPRIORITIZE_INTERVAL);
    lSetUlong(ep, SC_halftime, 168);
 
    added = lAddSubStr(ep, UA_name, USAGE_ATTR_CPU, SC_usage_weight_list, UA_Type);
@@ -982,7 +982,7 @@ const char *sconf_reprioritize_interval_str(void){
    if (pos.reprioritize_interval!= -1) 
       return lGetPosString(sc_ep, pos.reprioritize_interval);
    else
-      return SGEEE_SCHEDULE_TIME;
+      return REPRIORITIZE_INTERVAL;
 }
 
 /****** sge_schedd_conf/sconf_get_reprioritize_interval() ********************
@@ -1008,7 +1008,7 @@ u_long32 sconf_get_reprioritize_interval(void) {
    time = sconf_reprioritize_interval_str();
 
    if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM,time, NULL, 0 ,0)) {
-      return _SGEEE_SCHEDULE_TIME;
+      return REPRIORITIZE_INTERVAL_I;
    }
 
    return uval;

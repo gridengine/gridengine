@@ -1627,6 +1627,12 @@ if ( "$CORE" == 1 ) then
 
    cd $COMPILE_ARCH
 
+   # Really bad workaround to compile SGE 
+   # until we can build libdrmaa.so in AIX 4.3
+   if ($COMPILE_ARCH == AIX43) then
+      touch 12121212 libdrmaa.so example test_drmaa
+   endif
+
    echo _________C_O_R_E__S_Y_S_T_E_M_____________
    $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
          "LD_WRAPPER=$LD_WRAPPER" \

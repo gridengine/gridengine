@@ -786,7 +786,7 @@ XEvent *event
 ) {
    tQueueButton *qb = (tQueueButton*) cld;
    Widget parent = w;
-   static Widget lmon;
+   static Widget lmon=0;
    static Widget matrix;
    
    DENTER(GUI_LAYER, "qmonQueueShowLoadEvent");
@@ -813,7 +813,9 @@ XEvent *event
    qmonQueueSetLoad(matrix, qb->qI->qp);
 #endif
 
-   XtAddEventHandler(lmon, StructureNotifyMask, False, 
+   XtAddEventHandler(XtParent(lmon), StructureNotifyMask, False, 
+                        SetMinShellSize, (XtPointer) SHELL_WIDTH);
+   XtAddEventHandler(XtParent(lmon), StructureNotifyMask, False, 
                         SetMaxShellSize, (XtPointer) SHELL_WIDTH);
 
    DEXIT;

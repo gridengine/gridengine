@@ -1,3 +1,8 @@
+AA-2003-09-11-0: Bugfix:    fixed resizing of load dialog queue control
+
+                 Review:    SG
+                 Changed    qmon
+
 SG-2003-09-08-0: Enhancem.: - calculation running job tickets allways
                             - fixed functional ptix calculation
                             - calculating final usage in every run (not only
@@ -18,8 +23,8 @@ SG-2003-09-08-0: Enhancem.: - calculation running job tickets allways
                                  - the values for attributes with ">", ">=", "<=", "<"
                                    can be overridden on a lower level, when the new
                                    value is more restrictive than the old one.
-                 Review:   pending
-                 Changed.  sge_schedd, qmaster, qmon, qstat, qhost,....
+                 Review:    pending
+                 Changed.   sge_schedd, qmaster, qmon, qstat, qhost,....
                                    
 
 EB-2003-09-09-0: Enhancem.: partially implemented qmasters gdi part for

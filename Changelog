@@ -1,3 +1,7 @@
+AD-2004-02-10-0: Enhancem:  Did add wrapper functions for POSIX read-write
+                            locks.
+                 Changed:   lck
+
 JG-2004-02-10-0: Testsuite: Fixed install re_init.
                             Allow tests that are only valid for a certain 
                             Grid Engine version.
@@ -25,7 +29,7 @@ SG-2004-02-09-2: Enhancem.: added the schema for qstat
 SG-2004-02-09-1: Bugfix:    -qstat -r -xml died.
                  Changed:   qstat
 
-AD-2004-02-08-0: Bugfix:    - Did move 'sge_gdi_tsm()' out of evm.
+AD-2004-02-09-0: Bugfix:    - Did move 'sge_gdi_tsm()' out of evm.
                             - evm no longer does link libgdi
                             - evm no longer does link libngc and libngclists
                  Issue:     656

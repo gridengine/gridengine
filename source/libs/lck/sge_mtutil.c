@@ -140,6 +140,150 @@ void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthrea
    return;
 } /* sge_mutex_unlock() */
 
+/****** lck/sge_mtutil/sge_rwlock_rdlock() *************************************
+*  NAME
+*     sge_rwlock_rdlock() -- lock read-write lock for reading. 
+*
+*  SYNOPSIS
+*     void sge_rwlock_rdlock(const char *rwlock_name, const char *func, int 
+*     line, pthread_rwlock_t *rwlock) 
+*
+*  FUNCTION
+*     Lock read-write lock for reading. 
+*
+*  INPUTS
+*     const char *rwlock_name  - read-write lock name 
+*     const char *func         - caller 
+*     int line                 - line number this function has been callled from 
+*     pthread_rwlock_t *rwlock - read-write lock itself 
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: sge_rwlock_rdlock() is MT safe 
+*     MT-NOTE: 
+*     MT-NOTE: This function is considered being MT-safe, even though is does
+*     MT-NOTE: use 'strerror()'. The error message returned from 'strerror()'
+*     MT-NOTE: is not stored and used imediately.
+*
+*******************************************************************************/
+void sge_rwlock_rdlock(const char *rwlock_name, const char *func, int line, pthread_rwlock_t *rwlock)
+{
+   int res = -1;
+
+   DENTER(BASIS_LAYER, "sge_rwlock_rdlock");
+
+   DLOCKPRINTF(("%s() line %d: about to lock rwlock \"%s\" for reading\n", func, line, rwlock_name));
+
+   if (( res = pthread_rwlock_rdlock(rwlock)) != 0)
+   {
+      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKFORREADINGFAILED_SSS, func, rwlock_name, strerror(res)));
+      abort();
+   }
+
+   DLOCKPRINTF(("%s() line %d: locked rwlock \"%s\" for reading\n", func, line, rwlock_name));
+
+   DEXIT;
+   return;
+} /* sge_rwlock_rdlock() */
+
+/****** lck/sge_mtutil/sge_rwlock_wrlock() *************************************
+*  NAME
+*     sge_rwlock_wrlock() -- lock read-write lock for writing. 
+*
+*  SYNOPSIS
+*     void sge_rwlock_wrlock(const char *rwlock_name, const char *func, int 
+*     line, pthread_rwlock_t *rwlock) 
+*
+*  FUNCTION
+*     Lock read-write lock for writing. 
+*
+*  INPUTS
+*     const char *rwlock_name  - read-write lock name 
+*     const char *func         - caller 
+*     int line                 - line number this function has been called from 
+*     pthread_rwlock_t *rwlock - read-write lock itself 
+*
+*  RESULT
+*     void - none
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: sge_rwlock_wrlock() is MT safe 
+*     MT-NOTE: 
+*     MT-NOTE: This function is considered being MT-safe, even though is does
+*     MT-NOTE: use 'strerror()'. The error message returned from 'strerror()'
+*     MT-NOTE: is not stored and used imediately.
+*
+*******************************************************************************/
+void sge_rwlock_wrlock(const char *rwlock_name, const char *func, int line, pthread_rwlock_t *rwlock)
+{
+   int res = -1;
+
+   DENTER(BASIS_LAYER, "sge_rwlock_wrlock");
+
+   DLOCKPRINTF(("%s() line %d: about to lock rwlock \"%s\" for writing\n", func, line, rwlock_name));
+
+   if (( res = pthread_rwlock_wrlock(rwlock)) != 0)
+   {
+      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKFORWRITINGFAILED_SSS, func, rwlock_name, strerror(res)));
+      abort();
+   }
+
+   DLOCKPRINTF(("%s() line %d: locked rwlock \"%s\" for writing\n", func, line, rwlock_name));
+
+   DEXIT;
+   return;
+} /* sge_rwlock_wrlock() */
+
+/****** sge_mtutil/sge_rwlock_unlock() *****************************************
+*  NAME
+*     sge_rwlock_unlock() -- unlock read-write lock 
+*
+*  SYNOPSIS
+*     void sge_rwlock_unlock(const char *rwlock_name, const char *func, int 
+*     line, pthread_rwlock_t *rwlock) 
+*
+*  FUNCTION
+*     Unlock read-write lock 
+*
+*  INPUTS
+*     const char *rwlock_name  - read-write lock name 
+*     const char *func         - caller 
+*     int line                 - line number this function has been called from 
+*     pthread_rwlock_t *rwlock - read-write lock itself 
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: sge_rwlock_unlock() is MT safe 
+*     MT-NOTE: 
+*     MT-NOTE: This function is considered being MT-safe, even though is does
+*     MT-NOTE: use 'strerror()'. The error message returned from 'strerror()'
+*     MT-NOTE: is not stored and used imediately.
+*
+*******************************************************************************/
+void sge_rwlock_unlock(const char *rwlock_name, const char *func, int line, pthread_rwlock_t *rwlock)
+{
+   int res = -1;
+
+   DENTER(BASIS_LAYER, "sge_rwlock_unlock");
+
+   if (( res = pthread_rwlock_unlock(rwlock)) != 0)
+   {
+      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKUNLOCKFAILED_SSS, func, rwlock_name, strerror(res)));
+      abort();
+   }
+
+   DLOCKPRINTF(("%s() line %d: unlocked rwlock \"%s\"\n", func, line, rwlock_name));
+
+   DEXIT;
+   return;
+} /* sge_rwlock_unlock() */
 
 /****** sge_mtutil/sge_relative_timespec() **************************************
 *  NAME

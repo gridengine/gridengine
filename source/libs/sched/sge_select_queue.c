@@ -70,6 +70,7 @@
 #include "msg_schedd.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
+#include "sge_schedd_conf.h"
 
 int scheduled_fast_jobs;
 int scheduled_complex_jobs;

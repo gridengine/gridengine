@@ -55,11 +55,6 @@ int get_global_load_correction(void);
 
 void monitor_dominance(char *str, u_long32 mask);
 
-lListElem* sge_locate_complex_attr(const char *name, lList *complex_list);
-
-lListElem *find_attribute_in_complex_list(const char *attrname, 
-                                          lListElem *first);
-
 int global_complexes2scheduler(lList **new_complex_list, 
                                lListElem *global_host, lList *complex_list, 
                                int recompute_debitation_dependent);

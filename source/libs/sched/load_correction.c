@@ -41,6 +41,7 @@
 #include "schedd_conf.h"
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
+#include "sge_schedd_conf.h"
 
 int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
                   u_long32 decay_time) 

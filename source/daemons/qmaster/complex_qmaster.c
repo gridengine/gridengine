@@ -69,6 +69,7 @@
 #include "sge_unistd.h"
 #include "sge_spool.h"
 #include "sge_answer.h"
+#include "sge_schedd_conf.h"
 
 extern lList *Master_Job_List;
 extern lList *Master_Queue_List;

@@ -101,6 +101,7 @@
 #include "sge_varL.h"
 #include "sge_var.h"
 #include "sge_answer.h"
+#include "sge_schedd_conf.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Exechost_List;
@@ -1932,7 +1933,8 @@ int is_task_enrolled
 *******************************************************************************/
 static int changes_consumables(lList **alpp, lList* new, lList* old)
 {
-   lListElem *old_reqep, *dcep, *new_reqep, *old_entry, *new_entry;
+   lListElem *old_reqep, *dcep, *new_reqep, *new_entry;
+   lListElem *old_entry = NULL;
    const char *name;
    int found_it;
 

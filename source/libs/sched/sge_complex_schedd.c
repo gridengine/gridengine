@@ -50,6 +50,7 @@
 #include "sge_language.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
+#include "sge_schedd_conf.h"
 
 static int resource_cmp(u_long32 relop, double req_all_slots, double src_dl);
 
@@ -1099,61 +1100,6 @@ int main(int argc, char *argv[], char *envp[])
    return 0;
 }
 #endif
-
-lListElem* sge_locate_complex_attr(const char *name, lList *complex_list) 
-{
-   lListElem *cep, *ep;
-
-   DENTER(CULL_LAYER, "sge_locate_complex_attr");
-
-   for_each (cep, complex_list) {
-      if ((ep=find_attribute_in_complex_list(name, lFirst(lGetList(cep, CX_entries))))) {
-         DEXIT;
-         return ep;
-      }
-   }
-
-   DEXIT;
-   return NULL;
-}
-
-/***************************************************************
- Find an attribute in a complex list. 
- Iterate over all Complexes and look into their attribute lists.
- ***************************************************************/
-lListElem *find_attribute_in_complex_list(const char *attrname, 
-                                          lListElem *cmplxl) 
-{
-   lListElem *attr;
-   const char *str;
-   int pos_CE_name, pos_CE_shortcut;
-
-   DENTER(CULL_LAYER, "find_attribute_in_complex_list");
-
-   if (!attrname || !cmplxl) {
-      DEXIT;
-      return NULL;
-   }
-
-   pos_CE_name      = lGetPosViaElem(cmplxl, CE_name);
-   pos_CE_shortcut  = lGetPosViaElem(cmplxl, CE_shortcut);
-    
-   for (attr=cmplxl; attr; attr = lNext(attr)) {
-      /* attrname may be the name or a shortcut */
-      if ((str = lGetPosString(attr, pos_CE_name)) && !strcmp(attrname, str)) {
-         DEXIT;
-         return attr;
-      }
-      if ((str = lGetPosString(attr, pos_CE_shortcut)) && !strcmp(attrname, str)) {
-         DEXIT;
-         return attr;
-      }
-   }
-
-   DEXIT;
-   return NULL;
-}
-
 
 /* Updates all consumable actual values of queue/host
    for 'slots' slots of the given job. Since it is also 

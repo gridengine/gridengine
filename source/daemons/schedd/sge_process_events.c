@@ -546,7 +546,7 @@ int sge_process_all_events(lList *event_list)
                lists.config_list = lCreateList("config_list",
                  lGetElemDescr(lFirst(lGetList(event, ET_new_version))));
                ep = lDechainElem(src, lFirst(src));
-               sc_set(NULL, &scheddconf, ep, NULL);
+               sc_set(NULL, &scheddconf, ep, NULL, NULL);
 
                /* check event client settings */
                if(ec_get_edtime() != scheddconf.schedule_interval) {

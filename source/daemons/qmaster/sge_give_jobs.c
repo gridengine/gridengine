@@ -96,6 +96,7 @@
 #include "sge_suser.h"
 #include "sge_io.h"
 #include "sge_hostname.h"
+#include "sge_schedd_conf.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"

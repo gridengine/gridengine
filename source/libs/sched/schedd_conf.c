@@ -56,6 +56,7 @@
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_range.h"
+#include "sge_schedd_conf.h"
 #include "msg_schedd.h"
 
 sge_schedd_conf_type scheddconf = { 
@@ -79,7 +80,8 @@ int sc_set(
 lList **alpp,             /* AN_Type */ 
 sge_schedd_conf_type *sc, /* if NULL we just check sc_ep */
 lListElem *sc_ep,         /* SC_Type */  
-u_long32 *si              /* here scheduling interval gets written */
+u_long32 *si,             /* here scheduling interval gets written */
+lList *cmplx_list
 ) {
    char tmp_buffer[1024], tmp_error[1024];
    u_long32 uval;
@@ -185,6 +187,11 @@ u_long32 *si              /* here scheduling interval gets written */
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "load_adjustment_decay_time"));
 
    /* --- SC_load_formula */
+   if (cmplx_list != NULL &&
+       !schedd_conf_is_valid_load_formula(sc_ep, alpp, cmplx_list)) {
+      DEXIT;
+      return -1;
+   }
    if (sc) {
       sc->load_formula = sge_strdup(sc->load_formula, 
          lGetString(sc_ep, SC_load_formula));

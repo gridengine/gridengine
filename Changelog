@@ -1,3 +1,8 @@
+EB-2002-06-07-0: Bugfix:    disallow "none" in load_formula and addition
+                            tests for the correctness
+                 Issue:     #215
+                 Bugtraq:   #4673738
+
 EB-2002-06-07-0: Cleanup:   ADOC comments
 
 AH-2002-06-07-1: Bugfix:    Prevent qalter -l res=val on running jobs for 

@@ -73,6 +73,7 @@ GDILIB_SRC = sge_all_listsL.c \
          sge_pe_task.c \
          sge_suser.c \
          sge_answer.c \
+         sge_schedd_conf.c \
          version.c
 
 GDILIB_OBJS = $(GDILIB_SRC:.c=.o)
@@ -219,6 +220,9 @@ sge_suser.o: $(GDILIB_DIR)/sge_suser.c
 
 sge_answer.o: $(GDILIB_DIR)/sge_answer.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_answer.c
+
+sge_schedd_conf.o: $(GDILIB_DIR)/sge_schedd_conf.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_schedd_conf.c
 
 sge_event.o: $(GDILIB_DIR)/sge_event.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_event.c

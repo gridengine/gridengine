@@ -959,5 +959,13 @@
 #define MSG_EVENT_NOTREGISTERED                       _("event client not registered\n")
 #define MSG_EVENT_HAVETOHANDLEEVENTS                  _("you have to handle the events sgeE_QMASTER_GOES_DOWN and sgeE_SHUTDOWN\n")
 
+/*
+ * sge_schedd_conf.c
+ */
+#define MSG_NONE_NOT_ALLOWED                    _("The keyword \"none\" is not allowed in \"load_formula\"\n")
+#define MSG_NOTEXISTING_ATTRIBUTE_S             _("\"load_formula\" references not existing complex attribute "SFQ"\n")
+#define MSG_WRONGTYPE_ATTRIBUTE_S               _("String, CString or Host attributes are not allowed in \"load_formula\": " SFQ "\n")
+
+
 #endif /* __MSG_GDILIB_H */
 

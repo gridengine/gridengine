@@ -51,6 +51,7 @@
 #include "sge_feature.h"
 #include "sge_spool.h"
 #include "sge_answer.h"
+#include "sge_schedd_conf.h"
 
 static int parse_flag(lList **alpp, const char *cp, lListElem *ep, int nm, const char *name, const char *fname, int line);
 

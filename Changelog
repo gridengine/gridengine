@@ -1,3 +1,5 @@
+AA-2002-03-20-0  Bugfix:   qhost formatting
+
 EB-2002-03-20-1  Bugfix:   can't receive request: READ ERROR
                            - replaced closeconnection(0) calls within 
                              recvfromcommd() through closeconnection(1) calls 

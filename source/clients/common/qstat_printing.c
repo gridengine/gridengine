@@ -1084,7 +1084,7 @@ int queue_name_length
    char state_string[8];
    static int first_time = 1;
    u_long32 jstate;
-   int sge_urg, sge_pri, sge_ext;
+   int sge_urg, sge_pri, sge_ext, sge_time;
    lList *ql = NULL;
    lListElem *qrep, *gdil_ep=NULL;
    int running;
@@ -1112,6 +1112,8 @@ int queue_name_length
    tsk_ext = (full_listing & QSTAT_DISPLAY_TASKS);
    sge_urg = (full_listing & QSTAT_DISPLAY_URGENCY);
    sge_pri = (full_listing & QSTAT_DISPLAY_PRIORITY);
+   sge_time = (!sge_ext | tsk_ext | sge_urg | sge_pri);
+
 
    if (first_time) {
       first_time = 0;
@@ -1144,7 +1146,7 @@ int queue_name_length
                   "user",
                sge_ext?"project          department ":"",
                   "state",
-               !sge_ext?"submit/start at     ":"",
+               sge_time?"submit/start at     ":"",
                sge_urg ? " deadline           " : "",
                sge_ext ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      " : "",
                sge_ext?"tckts ":"",
@@ -1287,11 +1289,12 @@ int queue_name_length
       printf("      "); 
    }
 
-   if (!sge_ext) {
+   if (sge_time) {
       if (print_jobid) {
          /* start/submit time */
-         if (!lGetUlong(jatep, JAT_start_time) )
+         if (!lGetUlong(jatep, JAT_start_time) ) {
             printf("%s ", sge_ctime(lGetUlong(job, JB_submission_time), &ds));
+         }   
          else {
 #if 0
             /* AH: intermediate change to monitor JAT_stop_initiate_time 

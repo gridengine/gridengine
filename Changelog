@@ -1,3 +1,10 @@
+SG-2004-08-04-1: Bugfix:    qstat -ext -urg did not display the submit/start
+                            time
+                 Review:    RH
+                 Issue:     1192
+                 Bugtraq:   5082490
+                 Changed:   qstat
+
 SG-2004-08-03-2: Bugfix:    fixed qsat -g c output and qmon to show cqload
                             instead of load. The man page for qstat was
                             changed as well.

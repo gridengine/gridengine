@@ -121,7 +121,6 @@ QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) \
 # global rules: all, clean, depend, messages
 ###############################################################################
 qmaster: $(QMASTER_TARGETS)
-	echo $(QMASTER_LIB_DEPENDS)
 	
 qmaster_clean:
 	$(RM) $(QMASTER_TARGETS) $(QMASTER_OBJS)

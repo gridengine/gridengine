@@ -4,7 +4,7 @@
 #      some setup stuff to be done before you can use it and this makes
 #      things easier between now and when Eric is convinced to fix it :-)
 #
-# CA -newca ... will setup the right stuff
+# CA newca ... will setup the right stuff
 # CA -newreq ... will generate a certificate request 
 # CA -sign ... will sign the generated request and output 
 #
@@ -30,9 +30,11 @@
 # default openssl.cnf file has setup as per the following
 # demoCA ... where everything is stored
 
+CONFIG_DIR=`dirname $0`
+
 DAYS="-days 365"
-REQ="openssl req -config sge_ssl.cnf"
-CA="openssl ca -config sge_ssl.cnf"
+REQ="openssl req -nodes -config $CONFIG_DIR/sge_ssl.cnf"
+CA="openssl ca -config $CONFIG_DIR/sge_ssl.cnf"
 VERIFY="openssl verify"
 X509="openssl x509"
 
@@ -46,7 +48,7 @@ X509="openssl x509"
 #fi
 
 #CATOP=$SGE_ROOT/$SGE_CELL/SGE_CA
-CATOP=./demoCA
+CATOP=./sgeCA
 CAKEY=cakey.pem
 CACERT=cacert.pem
 
@@ -66,7 +68,7 @@ case $i in
     # create a certificate
     $REQ -new -x509 -keyout newreq.pem -out newreq.pem $DAYS
     RET=$?
-    echo "Certificate (and private key) is in newreq.pem"
+    echo "Certificate request is in newreq.pem"
     ;;
 -newreq) 
     # create a certificate request
@@ -87,6 +89,7 @@ case $i in
         mkdir ${CATOP}/private
         echo "01" > ${CATOP}/serial
         touch ${CATOP}/index.txt
+        # set file perms
     fi
     if [ ! -f ${CATOP}/private/$CAKEY ]; then
         echo "CA certificate filename (or enter to create)"

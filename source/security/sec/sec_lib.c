@@ -38,6 +38,7 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <string.h>
+#include <pwd.h>
 
 
 #include "commlib.h"
@@ -50,10 +51,63 @@
 #include "basis_types.h"
 #include "sge_gdi_intern.h"
 #include "sge_stat.h"
+#include "sge_secL.h"
+#include "utility.h"
+#include "sge_getpwnam.h"
+#include "sge_arch.h"
+#include "sge_exit.h"
+#include "sge_mkdir.h"
+#include "msg_sec.h"
 
 #include "sec_crypto.h"          /* lib protos      */
 #include "sec_lib.h"             /* lib protos      */
-#include "sec_local.h"           /* specific definitions */
+
+#define CHALL_LEN       16
+#define ValidMinutes    1          /* expiry of connection        */
+#define SGESecPath      ".SGE_SECURE"
+#define CaKey           "private/cakey.pem"
+#define CaCert          "cacert.pem"
+#define CA_DIR          "demoCA"
+#define UserKey         "private/key.pem"
+#define UserCert        "certs/cert.pem"
+#define ReconnectFile   "private/reconnect.dat"
+
+
+#define INC32(a)        (((a) == 0xffffffffL)? 0:(a)+1)
+
+typedef struct gsd_str {
+   EVP_CIPHER *cipher;
+   EVP_MD *digest;
+   int crypt_space;
+   int block_len;
+   u_char *key_mat;
+   u_long32 key_mat_len;
+   EVP_PKEY *private_key;
+   X509 *x509;
+   u_long32 connid;
+   int is_daemon;
+   int connect;
+   u_long32 seq_send;
+   u_long32 seq_receive;
+   ASN1_UTCTIME *refresh_time;
+} GlobalSecureData;
+
+
+#define c4TOl(c,l)      (l =((unsigned long)(*((c)++)))<<24, \
+                         l|=((unsigned long)(*((c)++)))<<16, \
+                         l|=((unsigned long)(*((c)++)))<< 8, \
+                         l|=((unsigned long)(*((c)++))))
+
+#define lTO4c(l,c)      (*((c)++)=(unsigned char)(((l)>>24)&0xff), \
+                         *((c)++)=(unsigned char)(((l)>>16)&0xff), \
+                         *((c)++)=(unsigned char)(((l)>> 8)&0xff), \
+                         *((c)++)=(unsigned char)(((l)    )&0xff))
+
+
+#define GSD_BLOCK_LEN      8
+#define GSD_KEY_MAT_32     32
+#define GSD_KEY_MAT_16     16
+
 
 /*
 ** prototypes
@@ -64,7 +118,7 @@ static int sec_files(void);
 static int sec_announce_connection(GlobalSecureData *gsd, const char *tocomproc, const char *tohost);
 static int sec_respond_announce(char *commproc, u_short id, char *host, char *buffer, u_long32 buflen);
 static int sec_handle_announce(char *comproc, u_short id, char *host, char *buffer, u_long32 buflen);
-static int sec_encrypt(char **buf, int *buflen);
+static int sec_encrypt(sge_pack_buffer *pb, const char *buf, int buflen);
 static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commproc, int id);
 static int sec_verify_certificate(X509 *cert);
 
@@ -102,12 +156,11 @@ static void sec_list2keymat(lListElem *element);
 /* static void sec_print_bytes(FILE *f, int n, char *b); */
 /* static int sec_set_verify_locations(char *file_env); */
 /* static int sec_verify_callback(int ok, X509 *xs, X509 *xi, int depth, int error); */
-static char *sec_make_certdir(char *rootdir);
-static char *sec_make_keydir(char *rootdir);
-static char *sec_make_cadir(char *cell);
-static char *sec_make_userdir(char *cell);
-static FILES *sec_set_path(char *ca_keydir, char *ca_certdir, char *user_keydir, char *user_certdir);
-static FILES *sec_setup_path(char *cell, int is_daemon);
+/* static char *sec_make_certdir(char *rootdir); */
+/* static char *sec_make_keydir(char *rootdir); */
+/* static char *sec_make_cadir(char *cell); */
+/* static char *sec_make_userdir(char *cell); */
+static int sec_setup_path(int is_daemon);
 
 static sec_exit_func_type install_sec_exit_func(sec_exit_func_type);
 
@@ -176,6 +229,8 @@ static void debug_print_ASN1_UTCTIME(ASN1_UTCTIME *time)
 */
 #define PREDEFINED_PW         "troet"
 
+/* #define SECRET_KEY_ERROR    */
+
 
 sec_exit_func_type sec_exit_func = NULL;
 
@@ -186,6 +241,13 @@ static GlobalSecureData gsd;
 
 static u_long32 connid_counter = 0;
 static lList *conn_list = NULL;
+
+static char *ca_key_file;
+static char *ca_cert_file;
+static char *key_file;
+static char *cert_file;
+static char *reconnect_file;
+
 
 
 /*
@@ -209,8 +271,14 @@ static lList *conn_list = NULL;
 */
 int sec_init(const char *progname) 
 {
+   static int sec_initialized = 0;
 
    DENTER(GDI_LAYER,"sec_init");
+
+   if (sec_initialized) {
+      DEXIT;
+      return 0;
+   }   
 
    /*
    ** set everything to zero
@@ -220,7 +288,7 @@ int sec_init(const char *progname)
    /* 
    ** FIXME: rand seed needs to be improved
    */
-   RAND_egd("/tmp/egd");
+/*    RAND_egd("/tmp/egd"); */
 
    /*
    ** initialize error strings
@@ -270,10 +338,19 @@ int sec_init(const char *progname)
    gsd.connid = gsd.seq_send = gsd.connect = gsd.seq_receive = 0;
 
    /* 
+   ** setup the filenames of certificates, keys, etc.
+   */
+   if (!sec_setup_path(gsd.is_daemon)) {;
+      ERROR((SGE_EVENT,"failed sec_setup_path\n"));
+      DEXIT;
+      return -1;
+   }
+
+   /* 
    ** read security related files
    */
    if(sec_files()){
-      ERROR((SGE_EVENT,"failed read security files\n"));
+      ERROR((SGE_EVENT, "failed read security files\n"));
       DEXIT;
       return -1;
    }
@@ -300,7 +377,10 @@ int sec_init(const char *progname)
    install_sec_exit_func(NULL);
 #endif      
 
+   
    DPRINTF(("====================[  CSP SECURITY  ]===========================\n"));
+
+   sec_initialized = 1;
 
    DEXIT;
    return 0;
@@ -345,6 +425,7 @@ u_long32 *mid,
 int compressed 
 ) {
    int i = 0;
+   sge_pack_buffer pb;
 
    DENTER(GDI_LAYER, "sec_send_message");
 
@@ -360,7 +441,7 @@ int compressed
    }   
       
    if (sec_set_encrypt(tag)) {
-      if (me.who == QMASTER) {
+      if (me.who == QMASTER && conn_list) {
          /*
          ** set the corresponding key and connection information
          ** in the connection list for commd triple 
@@ -368,11 +449,18 @@ int compressed
          */
          if (sec_set_secdata(tohost,tocomproc,toid)) {
             ERROR((SGE_EVENT, "failed set security data\n"));
+#if 0            
+/*********/
+/* FIXME */            
+/*********/
+            send_message(synchron, tocomproc, toid, tohost, TAG_SEC_ANNOUNCE, NULL, 0,
+                           mid, compressed);
+#endif                           
             DEXIT;
             return SEC_SEND_FAILED;
          }
       }
-      if (sec_encrypt(&buffer,&buflen)) {
+      if (sec_encrypt(&pb, buffer, buflen)) {
          ERROR((SGE_EVENT,"failed encrypt message\n"));
          DEXIT;
          return SEC_SEND_FAILED;
@@ -386,8 +474,11 @@ int compressed
       }
    }
 
-   i = send_message(synchron, tocomproc, toid, tohost, tag, buffer, buflen,
-                     mid, compressed);
+   i = send_message(synchron, tocomproc, toid, tohost, tag, 
+                    pb.head_ptr, pb.bytes_used, mid, compressed);
+   
+   clear_packbuffer(&pb);
+   
    DEXIT;
    return i;
 }
@@ -526,20 +617,11 @@ static int sec_files()
 
    DENTER(GDI_LAYER,"sec_files");
 
-   /* 
-   ** setup the filenames of certificates, keys, etc.
-   */
-   gsd.files = sec_setup_path(NULL, gsd.is_daemon);
-   if (gsd.files == NULL){
-      ERROR((SGE_EVENT,"failed sec_setup_path\n"));
-      goto error;
-   }
-
 #if 0
    /* 
    ** set location of CA
    */
-   i = sec_set_verify_locations(gsd.files->ca_cert_file);
+   i = sec_set_verify_locations(ca_cert_file);
    if (i<0) {
       ERROR((SGE_EVENT,"sec_set_verify_locations failed!\n"));
       if (i == -1)
@@ -550,10 +632,10 @@ static int sec_files()
    /* 
    ** read Certificate from file
    */
-   fp = fopen(gsd.files->cert_file,"r");
+   fp = fopen(cert_file, "r");
    if (fp == NULL) {
        ERROR((SGE_EVENT, "Can't open Cert_file '%s': %s!!\n",
-                        gsd.files->cert_file, strerror(errno)));
+                        cert_file, strerror(errno)));
        i = -1;
        goto error;
    }
@@ -576,10 +658,10 @@ static int sec_files()
    /* 
    ** read private key from file
    */
-   fp = fopen(gsd.files->key_file, "r");
+   fp = fopen(key_file, "r");
    if (fp == NULL){
       ERROR((SGE_EVENT,"Can't open Key _file '%s': %s!\n",
-                        gsd.files->key_file,strerror(errno)));
+                        key_file,strerror(errno)));
       i = -1;
       goto error;
    }
@@ -616,10 +698,11 @@ static int sec_verify_certificate(X509 *cert)
    DPRINTF(("subject: %s\n", X509_NAME_oneline(X509_get_subject_name(cert), 0, 0)));
    ctx = X509_STORE_new();
    X509_STORE_set_default_paths(ctx);
-   X509_STORE_load_locations(ctx, CA_CERT_FILE, NULL);
+   X509_STORE_load_locations(ctx, ca_cert_file, NULL);
    X509_STORE_CTX_init(&csc, ctx, cert, NULL);
    ret = X509_verify_cert(&csc);
    X509_STORE_CTX_cleanup(&csc);
+   X509_STORE_free(ctx);
 
    DEXIT;
    return ret;
@@ -750,12 +833,12 @@ const char *tohost
                  *tmp = NULL,
                  *x509_buf = NULL;
    sge_pack_buffer pb;
-   char fromhost[MAXHOSTLEN], *buffer;
+   char fromhost[MAXHOSTLEN];
    char fromcommproc[MAXCOMPONENTLEN];
    int fromtag;
    u_short fromid;
    u_short compressed = 0;
-   u_long32 dummymid, buflen;
+   u_long32 dummymid;
    EVP_MD_CTX ctx;
    EVP_CIPHER_CTX ectx;
    
@@ -782,8 +865,10 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    /* 
    ** write x509 to buffer
    */
-   tmp = x509_buf = (unsigned char *) malloc(4096);
+   x509_len = i2d_X509(gsd->x509, NULL);
+   tmp = x509_buf = (unsigned char *) malloc(x509_len);
    x509_len = i2d_X509(gsd->x509, &tmp);
+   
    if (!x509_len) {
       ERROR((SGE_EVENT,"i2d_x509 failed\n"));
       i=-1;
@@ -798,7 +883,7 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    /* 
    ** prepare packing buffer
    */
-   if ((i=init_packbuffer(&pb, 8192,0))) {
+   if ((i=init_packbuffer(&pb, 8192, 0))) {
       ERROR((SGE_EVENT,"failed init_packbuffer\n"));
       goto error;
    }
@@ -806,8 +891,7 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    /* 
    ** write data to packing buffer
    */
-   i = sec_pack_announce(x509_len, x509_buf, challenge, &pb);
-   if (i) {
+   if ((i=sec_pack_announce(x509_len, x509_buf, challenge, &pb))) {
       ERROR((SGE_EVENT,"failed pack announce buffer\n"));
       goto error;
    }
@@ -816,12 +900,18 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    ** send buffer
    */
    DPRINTF(("send announce to=(%s:%s)\n",tohost,tocomproc));
-   if (send_message(COMMD_SYNCHRON, tocomproc, 0, tohost, TAG_SEC_ANNOUNCE, 
-                     pb.head_ptr, pb.bytes_used, &dummymid, 0)) {
+   if (send_message(COMMD_SYNCHRON, tocomproc, 0, tohost, 
+                    TAG_SEC_ANNOUNCE, pb.head_ptr, pb.bytes_used, 
+                    &dummymid, 0)) {
       i = -1;
       goto error;
    }
 
+   /*
+   ** free x509_buf and clear pack buffer
+   */
+   free(x509_buf);
+   x509_buf = NULL;
    clear_packbuffer(&pb);
    
    /* 
@@ -832,15 +922,14 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    fromid = 0;
    fromtag = 0;
    if (receive_message(fromcommproc, &fromid, fromhost, &fromtag,
-                        &buffer, &buflen, COMMD_SYNCHRON, &compressed)) {
+                        &pb.head_ptr, (u_long32 *) &pb.mem_size, COMMD_SYNCHRON, 
+                        &compressed)) {
       ERROR((SGE_EVENT,"failed get sec_response from (%s:%d:%s:%d)\n",
                 fromcommproc,fromid,fromhost,fromtag));
       i = -1;
       goto error;
    }
 
-   pb.head_ptr = buffer;
-   pb.mem_size = buflen;
    pb.cur_ptr = pb.head_ptr;
    pb.bytes_used = 0;
 
@@ -879,20 +968,25 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    DEBUG_PRINT_BUFFER("enc_key", enc_key, enc_key_len);
    DEBUG_PRINT_BUFFER("enc_key_mat", enc_key_mat, enc_key_mat_len);
 
-
    DPRINTF(("received assigned connid = %d\n", (int) connid));
    
    /* 
    ** read x509 certificate from buffer
    */
-   x509_master = X509_new();
-   x509_master = d2i_X509(&x509_master, &x509_master_buf, x509_master_len);
+   tmp = x509_master_buf;
+   x509_master = d2i_X509(&x509_master, &tmp, x509_master_len);
    if (!x509_master) {
       ERROR((SGE_EVENT,"failed read master certificate\n"));
       sec_error();
       i = -1;
       goto error;
    }
+   /*
+   ** free x509_master_buf
+   */
+   free(x509_master_buf);
+   x509_master_buf = NULL;
+
 
    if (!sec_verify_certificate(x509_master)) {
       sec_error();
@@ -929,19 +1023,22 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
    */
    if (!EVP_OpenInit(&ectx, gsd->cipher, enc_key, enc_key_len, iv, gsd->private_key)) {
       ERROR((SGE_EVENT,"EVP_OpenInit failed decrypt keys\n"));
+      EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
       i=-1;
       goto error;
    }
    if (!EVP_OpenUpdate(&ectx, gsd->key_mat, (int*) &(gsd->key_mat_len), enc_key_mat, (int) enc_key_mat_len)) {
       ERROR((SGE_EVENT,"EVP_OpenUpdate failed decrypt keys\n"));
+      EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
       i = -1;
       goto error;
    }
    EVP_OpenFinal(&ectx, gsd->key_mat, (int*) &(gsd->key_mat_len));
+   EVP_CIPHER_CTX_cleanup(&ectx);
    /* FIXME: problem in EVP_* lib for stream ciphers */
-   gsd->key_mat_len = 32;   
+   gsd->key_mat_len = enc_key_mat_len;   
 
    DEBUG_PRINT_BUFFER("Received key material", gsd->key_mat, gsd->key_mat_len);
    
@@ -960,6 +1057,10 @@ debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
 
    error:
    clear_packbuffer(&pb);
+   if (x509_buf)
+      free(x509_buf);
+   if (x509_master_buf)
+      free(x509_master_buf);
    if (x509_master)
       X509_free(x509_master);
    if (enc_challenge) 
@@ -1045,9 +1146,9 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** read x509 certificate
    */
-   x509 = d2i_X509(&x509, &x509_buf, x509_len);
-/*    if (x509_buf)  */
-/*       free(x509_buf); */
+   tmp = x509_buf;
+   x509 = d2i_X509(NULL, &tmp, x509_len);
+   free(x509_buf);
    x509_buf = NULL;
 
    if (!x509){
@@ -1084,12 +1185,11 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** malloc several buffers
    */
-   x509_buf = (u_char *) malloc(4096);
    ekey[0] = (u_char *) malloc(public_key_size);
    enc_key_mat = (u_char *) malloc(public_key_size);
    enc_challenge = (u_char *) malloc(public_key_size);
 
-   if (!x509_buf || !enc_key_mat ||  !enc_challenge) {
+   if (!enc_key_mat ||  !enc_challenge) {
       ERROR((SGE_EVENT,"out of memory\n"));
       sec_send_err(commproc,id,host,&pb_respond,"failed malloc memory\n");
       i=-1;
@@ -1104,7 +1204,8 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** write x509 certificate to buffer
    */
-   tmp = x509_buf;
+   x509_len = i2d_X509(gsd.x509, NULL);
+   tmp = x509_buf = (u_char *) malloc(x509_len);
    x509_len = i2d_X509(gsd.x509, &tmp);
 
    /*
@@ -1132,6 +1233,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    memset(iv, '\0', sizeof(iv));
    if (!EVP_SealInit(&ectx, gsd.cipher, ekey, &ekeylen, iv, public_key, 1)) {
       ERROR((SGE_EVENT,"EVP_SealInit failed\n"));;
+      EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
       sec_send_err(commproc,id,host,&pb_respond,"failed encrypt keys\n");
       i = -1;
@@ -1139,6 +1241,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    }
    if (!EVP_EncryptUpdate(&ectx, enc_key_mat, &enc_key_mat_len, gsd.key_mat, gsd.key_mat_len)) {
       ERROR((SGE_EVENT,"failed encrypt keys\n"));
+      EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
       sec_send_err(commproc,id,host,&pb_respond,"failed encrypt keys\n");
       i = -1;
@@ -1147,7 +1250,6 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    EVP_SealFinal(&ectx, enc_key_mat, &enc_key_mat_len);
 
    enc_key_mat_len = gsd.key_mat_len;
-
 
    DEBUG_PRINT_BUFFER("Sent ekey[0]", ekey[0], ekeylen);
    DEBUG_PRINT_BUFFER("Sent enc_key_mat", enc_key_mat, enc_key_mat_len);
@@ -1161,6 +1263,9 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
                        EVP_CIPHER_CTX_iv_length(&ectx), iv,
                        enc_key_mat_len, enc_key_mat,
                        &pb_respond);
+
+   EVP_CIPHER_CTX_cleanup(&ectx);
+
    if (i) {
       ERROR((SGE_EVENT,"failed write response to buffer\n"));
       sec_send_err(commproc,id,host,&pb_respond,"failed write response to buffer\n");
@@ -1191,56 +1296,21 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    i = 0;
 
    error:
-/*       if (x509_buf)  */
-/*          free(x509_buf); */
-/*       if (challenge)  */
-/*          free(challenge); */
-/*       if (enc_challenge)  */
-/*          free(enc_challenge); */
-/*       if (enc_key_mat)  */
-/*          free(enc_key_mat); */
       clear_packbuffer(&pb_respond);
+      if (x509_buf) 
+         free(x509_buf);
+      if (challenge) 
+         free(challenge);
+      if (enc_challenge) 
+         free(enc_challenge);
+      if (enc_key_mat) 
+         free(enc_key_mat);
+      if (ekey[0])
+         free(ekey[0]);
       if (x509) 
          X509_free(x509);
       DEXIT;   
       return i;
-#if 0
-   /* 
-   ** make MAC from challenge
-   */
-   MD5_Init(&c);
-   MD5_Update(&c, challenge, (u_long) CHALL_LEN);
-   MD5_Final(challenge_mac, &c);
-
-   /* 
-   ** encrypt challenge with master rsa_privat_key
-   */
-   chall_enc_len = RSA_private_encrypt(CHALL_LEN, challenge_mac, enc_challenge,
-                                       gsd.rsa, RSA_PKCS1_PADDING);
-   if (chall_enc_len <= 0) {
-      ERROR((SGE_EVENT,"failed encrypt challenge MAC\n"));
-      sec_error();
-      sec_send_err(commproc,id,host,&pb_respond,"failed encrypt challenge MAC\n");
-      i = -1;
-      goto error;
-   }
-
-   /* 
-   ** encrypt key_mat with client rsa_public_key
-   */
-   enc_key_len = RSA_public_encrypt(gsd.key_mat_len, gsd.key_mat, enc_key_mat, 
-                                    public_key->pkey.rsa, RSA_PKCS1_PADDING);
-
-printf("enc_key_len: %d\n", enc_key_len);
-
-   if (enc_key_len <= 0) {
-      ERROR((SGE_EVENT,"failed encrypt keys\n"));
-      sec_error();
-      sec_send_err(commproc,id,host,&pb_respond,"failed encrypt keys\n");
-      i = -1;
-      goto error;
-   }
-#endif
 }
 
 /*
@@ -1261,23 +1331,21 @@ printf("enc_key_len: %d\n", enc_key_len);
 **      -1      on failure
 */
 static int sec_encrypt(
-char **buffer,
-int *buflen 
+sge_pack_buffer *pb,
+const char *inbuf,
+int inbuflen 
 ) {
-   int i;
+   int i = 0;
    u_char seq_str[INTSIZE];
    u_long32 seq_no;
-   lListElem *element=NULL;
-   lCondition *where=NULL;
-   sge_pack_buffer pb;
    EVP_CIPHER_CTX ctx;
    unsigned char iv[EVP_MAX_IV_LENGTH];
    EVP_MD_CTX mdctx;
    unsigned char md_value[EVP_MAX_MD_SIZE];
    unsigned int md_len;
    unsigned int enc_md_len;
-   unsigned char *outbuf;
    unsigned int outlen = 0;
+   char *outbuf = NULL;
    
    DENTER(GDI_LAYER,"sec_encrypt");   
 
@@ -1290,22 +1358,32 @@ int *buflen
    EVP_DigestInit(&mdctx, gsd.digest);
    EVP_DigestUpdate(&mdctx, gsd.key_mat, gsd.key_mat_len);
    EVP_DigestUpdate(&mdctx, seq_str, INTSIZE);
-   EVP_DigestUpdate(&mdctx, *buffer, *buflen);
+   EVP_DigestUpdate(&mdctx, inbuf, inbuflen);
    EVP_DigestFinal(&mdctx, md_value, &md_len);
    
    /*
-   ** realloc *buffer 
+   ** malloc outbuf 
    */
-   outbuf = (unsigned char *) malloc(*buflen + EVP_CIPHER_block_size(gsd.cipher));
+   outbuf = malloc(inbuflen + EVP_CIPHER_block_size(gsd.cipher));
    if (!outbuf) {
-      i = -1;
       ERROR((SGE_EVENT,"failed malloc memory\n"));
+      i=-1;
       goto error;
    }
 
    /*
    ** encrypt digest and message
    */
+#ifdef SECRET_KEY_ERROR   
+   {
+      static int count = 0;
+      if (++count == 10) {
+         RAND_pseudo_bytes(gsd.key_mat, gsd.key_mat_len);
+         count = 0;
+      }   
+   }   
+#endif   
+   
    memset(iv, '\0', sizeof(iv));
    EVP_EncryptInit(&ctx, gsd.cipher, gsd.key_mat, iv);
    if (!EVP_EncryptUpdate(&ctx, md_value, (int*) &enc_md_len, md_value, md_len)) {
@@ -1325,26 +1403,27 @@ int *buflen
 
    memset(iv, '\0', sizeof(iv));
    EVP_EncryptInit(&ctx, gsd.cipher, gsd.key_mat, iv);
-   if (!EVP_EncryptUpdate(&ctx, outbuf, (int*) &outlen, (unsigned char*)*buffer, *buflen)) {
+   if (!EVP_EncryptUpdate(&ctx, (unsigned char *) outbuf, (int*)&outlen,
+                           (unsigned char*)inbuf, inbuflen)) {
       ERROR((SGE_EVENT,"failed encrypt message\n"));
       sec_error();
       i=-1;
       goto error;
    }
-   if (!EVP_EncryptFinal(&ctx, outbuf, (int*) &outlen)) {
+   if (!EVP_EncryptFinal(&ctx, (unsigned char*)outbuf, (int*) &outlen)) {
       ERROR((SGE_EVENT,"failed encrypt message\n"));
       sec_error();
       i=-1;
       goto error;
    }
    EVP_CIPHER_CTX_cleanup(&ctx);
-
-outlen = *buflen;
+   if (!outlen)
+      outlen = inbuflen;
 
    /*
    ** initialize packbuffer
    */
-   if ((i=init_packbuffer(&pb, md_len + outlen, 0))) {
+   if ((i=init_packbuffer(pb, md_len + outlen, 0))) {
       ERROR((SGE_EVENT,"failed init_packbuffer\n"));
       goto error;
    }
@@ -1353,33 +1432,34 @@ outlen = *buflen;
    /*
    ** pack the information into one buffer
    */
-   i = sec_pack_message(&pb, gsd.connid, md_len, md_value, outbuf, outlen);
+   i = sec_pack_message(pb, gsd.connid, md_len, md_value, 
+                           (unsigned char *)outbuf, outlen);
+   
    if (i) {
       ERROR((SGE_EVENT,"failed pack message to buffer\n"));
       goto error;
    }
 
-   *buffer = pb.head_ptr;
-   *buflen = pb.bytes_used;
-   
    gsd.seq_send = INC32(gsd.seq_send);
 
    if (conn_list) {
+      lListElem *element=NULL;
+      
       element = lGetElemUlong(conn_list, SEC_ConnectionID, gsd.connid);
       if (!element) {
          ERROR((SGE_EVENT,"no list entry for connection\n"));
-         i=-1;
+         i = -1;
          goto error;
       }
       lSetUlong(element, SEC_SeqNoSend, gsd.seq_send);
    }   
 
-   DEXIT;
-   return 0;
+   i=0;
 
    error:
-      if(where)
-         lFreeWhere(where);
+      EVP_CIPHER_CTX_cleanup(&ctx);
+      if (outbuf)
+         free(outbuf);
       DEXIT;
       return i;
 }
@@ -1444,13 +1524,13 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
    else {
       printf("You should reconnect - please try command again!\n");
       gsd.connect = 0;
-      if (stat(gsd.files->reconnect_file,&file_info) < 0) {
+      if (stat(reconnect_file,&file_info) < 0) {
          i = 0;
          goto error;
       }
-      if (remove(gsd.files->reconnect_file)) {
+      if (remove(reconnect_file)) {
          ERROR((SGE_EVENT,"failed remove reconnect file '%s'\n",
-                  gsd.files->reconnect_file));
+                  reconnect_file));
          i = -1;
          goto error;
       }
@@ -1497,17 +1577,16 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    unsigned char iv[EVP_MAX_IV_LENGTH];
    unsigned char md_value[EVP_MAX_MD_SIZE];
    unsigned int md_len = 0;
-   unsigned char *outbuf = NULL;
    unsigned int outlen = 0;
 
    DENTER(GDI_LAYER, "sec_decrypt");
+
    /*
    ** initialize packbuffer
    */
    if ((i=init_packbuffer_from_buffer(&pb, *buffer, *buflen, 0))) {
       ERROR((SGE_EVENT,"failed init_packbuffer_from_buffer\n"));
-      DEXIT;
-      return i;
+      goto error;
    }
 
    /* 
@@ -1518,8 +1597,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    if (i) {
       ERROR((SGE_EVENT,"failed unpack message from buffer\n"));
       packstr(&pb,"Can't unpack your message from buffer\n");
-      DEXIT;
-      return i;
+      goto error;
    }
 
    if (conn_list) {
@@ -1531,8 +1609,8 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
       if (!element) {
          ERROR((SGE_EVENT,"no list entry for connection %d\n", (int) connid));
          packstr(&pb,"Can't find you in connection list\n");
-         DEXIT;
-         return -1;
+         i = -1;
+         goto error;
       }
    
       /* 
@@ -1545,23 +1623,22 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    else {
       if (gsd.connid != connid) {
          ERROR((SGE_EVENT,"received wrong connection ID\n"));
-         ERROR((SGE_EVENT,"it is %ld, but it should be %ld!\n",
-                  connid, gsd.connid));
+         ERROR((SGE_EVENT,"it is %d, but it should be %d!\n",
+                  (int) connid, (int) gsd.connid));
          packstr(&pb,"Probably you send the wrong connection ID\n");
-         DEXIT;
-         return -1;
+         i = -1;
+         goto error;
       }
    }
 
    /*
-   ** realloc *buffer 
+   ** malloc *buffer 
    */
-   outbuf = (unsigned char *) malloc(*buflen + EVP_CIPHER_block_size(gsd.cipher));
-   if (!outbuf) {
-      i = -1;
+   *buffer = malloc(*buflen + EVP_CIPHER_block_size(gsd.cipher));
+   if (!*buffer) {
       ERROR((SGE_EVENT,"failed malloc memory\n"));
-      DEXIT;
-      return -1;
+      i = -1;
+      goto error;
    }
 
    /*
@@ -1570,41 +1647,58 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    memset(iv, '\0', sizeof(iv));
    if (!EVP_DecryptInit(&ctx, gsd.cipher, gsd.key_mat, iv)) {
       ERROR((SGE_EVENT,"failed decrypt MAC\n"));
+      EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
-      DEXIT;
-      return -1;
+      i = -1;
+      goto error;
    }
 
-   if (!EVP_DecryptUpdate(&ctx, md_value, (int*) &md_len, enc_mac, enc_mac_len)) {
+   if (!EVP_DecryptUpdate(&ctx, md_value, (int*) &md_len, 
+                           enc_mac, enc_mac_len)) {
       ERROR((SGE_EVENT,"failed decrypt MAC\n"));
+      EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
-      DEXIT;
-      return -1;
+      i = -1;
+      goto error;
    }
    if (!EVP_DecryptFinal(&ctx, md_value, (int*) &md_len)) {
       ERROR((SGE_EVENT,"failed decrypt MAC\n"));
+      EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
-      DEXIT;
-      return -1;
+      i = -1;
+      goto error;
    }
    EVP_CIPHER_CTX_cleanup(&ctx);
-md_len = enc_mac_len;   
+   if (!md_len)
+      md_len = enc_mac_len;   
+
 
    memset(iv, '\0', sizeof(iv));
    if (!EVP_DecryptInit(&ctx, gsd.cipher, gsd.key_mat, iv)) {
       ERROR((SGE_EVENT,"failed decrypt MAC\n"));
+      EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
-      DEXIT;
-      return -1;
+      i = -1;
+      goto error;
    }
-   if (!EVP_DecryptUpdate(&ctx, outbuf, (int*) &outlen, (unsigned char*)enc_msg, enc_msg_len)) {
+   if (!EVP_DecryptUpdate(&ctx, (unsigned char*) *buffer, (int*) &outlen,
+                           (unsigned char*)enc_msg, enc_msg_len)) {
       ERROR((SGE_EVENT,"failed decrypt message\n"));
+      EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
-      DEXIT;
-      return -1;
+      i = -1;
+      goto error;
+   }
+   if (!EVP_DecryptFinal(&ctx, (unsigned char*) *buffer, (int*)&outlen)) {
+      ERROR((SGE_EVENT,"failed decrypt message\n"));
+      EVP_CIPHER_CTX_cleanup(&ctx);
+      sec_error();
+      i = -1;
+      goto error;
    }
    EVP_CIPHER_CTX_cleanup(&ctx);
-outlen = enc_msg_len;
+   if (!outlen)
+      outlen = enc_msg_len;
 
    /*
    ** FIXME: check of mac ????
@@ -1622,13 +1716,20 @@ outlen = enc_msg_len;
    }
 
    /* 
-   ** shorten buflen                  
+   ** set *buflen                  
    */
    *buflen = outlen;
-   *buffer = (char*) outbuf;
 
-   DEXIT;
-   return 0;
+   i = 0;
+
+   error:
+      clear_packbuffer(&pb);
+      if (enc_mac)
+         free(enc_mac);
+      if (enc_msg)
+         free(enc_msg);
+      DEXIT;
+      return i;
 }
 
 #ifdef SEC_RECONNECT
@@ -1659,7 +1760,7 @@ static int sec_reconnect()
 
    DENTER(GDI_LAYER,"sec_reconnect");
 
-   if (SGE_STAT(gsd.files->reconnect_file, &file_info) < 0) {
+   if (SGE_STAT(reconnect_file, &file_info) < 0) {
       i = -1;
       goto error;
    }
@@ -1667,11 +1768,11 @@ static int sec_reconnect()
    /* 
    ** open reconnect file
    */
-   fp = fopen(gsd.files->reconnect_file, "r");
+   fp = fopen(reconnect_file, "r");
    if (!fp) {
       i = -1;
       ERROR((SGE_EVENT,"can't open file '%s': %s\n",
-            gsd.files->reconnect_file, strerror(errno)));
+            reconnect_file, strerror(errno)));
       goto error;
    }
 
@@ -1731,7 +1832,7 @@ static int sec_reconnect()
    error:
       if (fp) 
          fclose(fp);
-      remove(gsd.files->reconnect_file);
+      remove(reconnect_file);
       clear_packbuffer(&pb);
       DEXIT;
       return i;
@@ -1797,9 +1898,9 @@ static int sec_write_data2hd()
    /* 
    ** open reconnect file
    */
-   if (!(fp = fopen(gsd.files->reconnect_file,"w"))) {
+   if (!(fp = fopen(reconnect_file,"w"))) {
       ERROR((SGE_EVENT,"can't open file '%s': %s\n",
-               gsd.files->reconnect_file, strerror(errno)));
+               reconnect_file, strerror(errno)));
       i = -1;
       goto error;
    }
@@ -2144,7 +2245,7 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
          const char *dtime = lGetString(element, SEC_ExpiryDate);
          utctime = d2i_ASN1_UTCTIME(NULL, (unsigned char**) &dtime, 
                                           strlen(dtime));
-debug_print_ASN1_UTCTIME("utctime: ", utctime);
+/* debug_print_ASN1_UTCTIME("utctime: ", utctime); */
          del_el = element;
          element = lNext(element);
          if ((X509_cmp_current_time(utctime) < 0)) { 
@@ -2293,413 +2394,94 @@ static void sec_list2keymat(lListElem *element)
 
 }
 
-#if 0
-/*
-** NAME
-**   sec_print_bytes
-**
-** SYNOPSIS
-**
-**   static void sec_print_bytes(f, n, b)
-**   FILE *f - output device
-**   int n   - number of bytes to print
-**   char *b - pointer to bytes to print
-**
-** DESCRIPTION
-**      This function prints bytes in hex code.
-*/
-
-static void sec_print_bytes(FILE *f, int n, char *b)
-{
-   int i;
-   static char *h="0123456789abcdef";
-
-   fflush(f);
-   for (i=0; i<n; i++) {
-      fputc(h[(b[i]>>4)&0x0f],f);
-      fputc(h[(b[i]   )&0x0f],f);
-      fputc(' ',f);
-   }
-}
-
-
-/*
-** NAME
-**   sec_set_verify_locations
-**
-** SYNOPSIS
-**
-**   static int sec_set_verify_locations(file_env)
-**   char *filenv - filename of the CA
-**
-** DESCRIPTION
-**   This function sets the location of the CA.
-**
-** RETURN VALUES
-**   0   on success
-**   -1  on failure
-*/
-   
-static int sec_set_verify_locations(
-char *file_env 
-) {
-   int i;
-   struct stat st;
-   char *str;
-
-   str=file_env;
-   if ((str != NULL) && (stat(str,&st) == 0)) {
-      i=X509_add_cert_file(str,X509_FILETYPE_PEM);
-      if (!i) 
-         return(-1);
-   }
-   return(0);
-}
-
-/*
-** NAME
-**   sec_verify_callback
-**
-** SYNOPSIS
-**
-**   static int sec_verify_callback(ok, xs, xi, depth, error)
-**
-** DESCRIPTION
-**   This function is the callbackfunction to verify a certificate.
-**
-** RETURN VALUES
-**   <>0     on success
-**   0       on failure
-*/
-
-static int sec_verify_callback(int ok, X509 *xs, X509 *xi, int depth, int error)
-{
-   char *s;
-
-   if (error == VERIFY_ERR_UNABLE_TO_GET_ISSUER) {
-      s = (char *)X509_NAME_oneline(X509_get_issuer_name(xs), NULL, 0);
-      if (s == NULL) {
-         fprintf(stderr,"verify error\n");
-         ERR_print_errors_fp(stderr);
-         return 0;
-      }
-      fprintf(stderr,"issuer= %s\n",s);
-      free(s);
-   }
-   if (!ok) 
-      fprintf(stderr,"verify error:num=%d:%s\n",error,
-                        X509_verify_cert_error_string(error));
-   return ok;
-}
-#endif
-
-
 /*==========================================================================*/
 /*
 ** DESCRIPTION
 **	These functions generate the pathnames for key and certificate files.
+** and stores them in module static vars
 */
-static FILES *sec_setup_path(
-char *cell,
+static int sec_setup_path(
 int is_daemon 
 ) {
-	FILES	*files;
-	char	*userdir,*cadir,*user_certdir,*user_keydir,*ca_certdir,*ca_keydir;
+   SGE_STRUCT_STAT sbuf;
+	char *userdir = NULL;
+	char *ca_root = NULL;
+   int len;
 
-    
-	cadir = sec_make_cadir(cell);
-	if (cadir == NULL){
-		fprintf(stderr,"failed sec_make_cadir\n");
-		return(NULL);
-	}
-
-	ca_certdir = sec_make_certdir(cadir);
-   if (ca_certdir == NULL){
-      fprintf(stderr,"failed sec_make_certdir\n");
-      return(NULL);
+   DENTER(GDI_LAYER, "sec_setup_path");
+   
+   /*
+   ** malloc ca_root string and check if directory has been created during
+   ** install otherwise exit
+   */
+   len = strlen(sge_get_root_dir(1)) + strlen(sge_get_default_cell()) +
+         strlen(CA_DIR) + 3;
+   ca_root = sge_malloc(len);
+   sprintf(ca_root, "%s/%s/%s", sge_get_root_dir(1), 
+                     sge_get_default_cell(), CA_DIR);
+   if (SGE_STAT(ca_root, &sbuf)) { 
+      CRITICAL((SGE_EVENT, MSG_SGETEXT_CAROOTNOTFOUND_S, ca_root));
+      SGE_EXIT(1);
    }
 
-	ca_keydir = sec_make_keydir(cadir);
-   if (ca_keydir == NULL){
-      fprintf(stderr,"failed sec_make_keydir\n");
-      return(NULL);
+	ca_key_file = sge_malloc(strlen(ca_root) + strlen(CaKey) + 2);
+	sprintf(ca_key_file, "%s/%s", ca_root, CaKey);
+
+   if (SGE_STAT(ca_key_file, &sbuf)) { 
+      CRITICAL((SGE_EVENT, MSG_SGETEXT_CAKEYFILENOTFOUND_S, ca_key_file));
+      SGE_EXIT(1);
    }
 
+	ca_cert_file = sge_malloc(strlen(ca_root) + strlen(CaCert) + 2);
+	sprintf(ca_cert_file, "%s/%s", ca_root, CaCert);
+
+   if (SGE_STAT(ca_cert_file, &sbuf)) { 
+      CRITICAL((SGE_EVENT, MSG_SGETEXT_CACERTFILENOTFOUND_S, ca_cert_file));
+      SGE_EXIT(1);
+   }
+
+   /*
+   ** determine userdir: either ca_root or $HOME/.SGE_SECURE/$SGE_CELL
+   */
 	if (is_daemon){
-		userdir = cadir;
-		user_certdir = ca_certdir;
-		user_keydir = ca_keydir;
-	}
-	else{
-		userdir = sec_make_userdir(cell);
-		if (userdir == NULL){
-			fprintf(stderr,"failed sec_make_userr\n");
-			return(NULL);
-		}
-
-		user_certdir = sec_make_certdir(userdir);
-		if (user_certdir == NULL){
-			fprintf(stderr,"failed sec_make_certdir\n");
-			return(NULL);
-		}
-
-		user_keydir = sec_make_keydir(userdir);
-		if (user_keydir == NULL){
-			fprintf(stderr,"failed sec_make_keydir\n");
-			return(NULL);
-		}
-	}
-
-	files = sec_set_path(ca_keydir,ca_certdir,user_keydir,user_certdir);
-   if (files == NULL){
-      fprintf(stderr,"failed sec_set_path\n");
-      return(NULL);
-   }
-
-	return(files);
-}
-
-FILES *sec_set_path(
-char *ca_keydir,
-char *ca_certdir,
-char *user_keydir,
-char *user_certdir 
-) {
-	FILES	*files;
-
-   files = (FILES *) malloc(sizeof(FILES));
-   if (files == NULL) 
-      goto error;
-
-	files->ca_key_file = (char *) malloc(strlen(ca_keydir) + strlen(CaKey) + 10);
-	if (files->ca_key_file == NULL) 
-      goto error;
-	sprintf(files->ca_key_file,"%s/%s",ca_keydir,CaKey);
-
-	files->ca_cert_file = (char *) malloc(strlen(ca_certdir) + strlen(CaCert) + 10);
-	if (files->ca_cert_file == NULL) 
-      goto error;
-	sprintf(files->ca_cert_file,"%s/%s",ca_certdir,CaCert);
-
-   files->key_file = (char *) malloc(strlen(user_keydir) + strlen(RsaKey) + 10);
-   if (files->key_file == NULL) 
-      goto error;
-   sprintf(files->key_file,"%s/%s",user_keydir,RsaKey);
-
-   files->cert_file = (char *) malloc(strlen(user_certdir) + strlen(Cert) + 10);
-   if (files->cert_file == NULL) 
-      goto error;
-   sprintf(files->cert_file,"%s/%s",user_certdir,Cert);
-
-	files->reconnect_file = (char *) malloc(strlen(user_keydir) + 
-					strlen(ReconnectFile) + 10);
-	if (files->reconnect_file == NULL) 
-      goto error;
-   sprintf(files->reconnect_file,"%s/%s",user_keydir,ReconnectFile);
-
-	return(files);
-
-error:
-	fprintf(stderr,"failed malloc memory\n");
-	return(NULL);	
-}
-
-static char *sec_make_certdir(
-char *rootdir 
-) {
-   char *certdir,*cert_dir_root;
-   struct stat     sbuf;
-
-   certdir = (char *) malloc(strlen(CertPath) + 10);
-	strcpy(certdir,CertPath);
-
-   /* get rid of surrounding slashs                                */
-   if (certdir[0] == '/')
-      strcpy(certdir,certdir+1);
-   if (certdir[strlen(certdir)-1] == '/')
-      certdir[strlen(certdir)-1] = '\0';
-
-   cert_dir_root = (char *) malloc(strlen(certdir) + strlen(rootdir) + 10);
-   if (cert_dir_root == NULL){
-      fprintf(stderr,"failed malloc memory\n");
-      return(NULL);
-   }
-   sprintf(cert_dir_root,"%s/%s",rootdir,certdir);
-
-   /* is cert_dir_root already there?                              */
-   if (stat(cert_dir_root,&sbuf)){
-      fprintf(stderr, "cert directory %s doesn't exist - making\n",
-                        cert_dir_root);
-      if (mkdir(cert_dir_root,(mode_t) 0755)) {
-         fprintf(stderr,"could not mkdir %s\n",cert_dir_root);
-         return(NULL);
+		userdir = strdup(ca_root);
+	} else {
+      struct passwd *pw;
+      pw = sge_getpwnam(me.user_name);
+      if (!pw) {   
+         CRITICAL((SGE_EVENT, MSG_SGETEXT_USERNOTFOUND_S, me.user_name));
+         SGE_EXIT(1);
       }
+		userdir = sge_malloc(strlen(pw->pw_dir) + strlen(SGESecPath) +
+                           strlen(sge_get_default_cell()) + 3);
+      sprintf(userdir, "%s/%s/%s", pw->pw_dir, SGESecPath, 
+               sge_get_default_cell());
+      sge_mkdir(userdir, 0700, 1);
    }
 
-	free(certdir);
-   return(cert_dir_root);
-}
+   key_file = sge_malloc(strlen(userdir) + strlen(UserKey) + 2);
+   sprintf(key_file, "%s/%s", userdir, UserKey);
 
-
-static char *sec_make_keydir(
-char *rootdir 
-) {
-	char		*keydir,*key_dir_root;
-	struct stat     sbuf;
-
-	keydir = (char *) malloc(strlen(KeyPath) + 10);
-	if (keydir== NULL){
-      fprintf(stderr,"failed malloc memory\n");
-      return(NULL);
+   if (SGE_STAT(key_file, &sbuf)) { 
+      CRITICAL((SGE_EVENT, MSG_SGETEXT_KEYFILENOTFOUND_S, key_file));
+      SGE_EXIT(1);
    }
 
-	strcpy(keydir,KeyPath);
+   cert_file = sge_malloc(strlen(userdir) + strlen(UserCert) + 2);
+   sprintf(cert_file, "%s/%s", userdir, UserCert);
 
-        /* get rid of surrounding slashs                                */
-        if(keydir[0] == '/')
-                strcpy(keydir,keydir+1);
-        if (keydir[strlen(keydir)-1] == '/')
-                keydir[strlen(keydir)-1] = '\0';
+   if (SGE_STAT(cert_file, &sbuf)) { 
+      CRITICAL((SGE_EVENT, MSG_SGETEXT_CERTFILENOTFOUND_S, cert_file));
+      SGE_EXIT(1);
+   }
 
-        key_dir_root = (char *) malloc(strlen(keydir) + strlen(rootdir) + 10); 
-        if(key_dir_root == NULL){
-                fprintf(stderr,"failed malloc memory\n");
-                return(NULL);
-        }
-	sprintf(key_dir_root,"%s/%s",rootdir,keydir);
+	reconnect_file = sge_malloc(strlen(userdir) + strlen(ReconnectFile) + 2); 
+   sprintf(reconnect_file, "%s/%s", userdir, ReconnectFile);
+    
+   free(userdir);
+   free(ca_root);
 
-        /* is key_dir_root already there?				*/
-        if (stat(key_dir_root,&sbuf)){
-                fprintf(stderr, "key directory %s doesn't exist - making\n",
-                        key_dir_root);
-                if(mkdir(key_dir_root,(mode_t) 0700)){
-                        fprintf(stderr,"could not mkdir %s\n",key_dir_root);
-                        return(NULL);
-                }
-        }
-	free(keydir);
-	return(key_dir_root);
-}
-	
-	
-static char *sec_make_cadir(
-char *cell 
-) {
-	const char *ca_root;
-   char *ca_cell, *cell_root;
-	struct stat 	sbuf;
-
-	ca_root = sge_get_root_dir(0);
-
-	/* is ca_root already there?					*/
-	if (stat(ca_root,&sbuf)) { 
-		fprintf(stderr,"could not stat %s\n",ca_root);
-		return(NULL);	
-	}
-
-	if(cell) 
-		ca_cell = cell;
-	else{
-		ca_cell = getenv("SGE_CELL");
-        	if (!ca_cell || strlen(ca_cell) == 0)
-                ca_cell = DEFAULT_CELL;
-	}
-	
-	/* get rid of surrounding slashs				*/
-	if(ca_cell[0] == '/')
-		strcpy(ca_cell,ca_cell+1);
-        if (ca_cell[strlen(ca_cell)-1] == '/')
-                ca_cell[strlen(ca_cell)-1] = '\0';
-
-	cell_root = (char *) malloc(strlen(ca_cell) + strlen(ca_root) + 10);
-	if(cell_root == NULL){
-		fprintf(stderr,"failed malloc memory\n");
-		return(NULL);
-	}
-	sprintf(cell_root,"%s/%s",ca_root,ca_cell);
-
-	/* is cell_root already there?                                	*/
-        if (stat(cell_root,&sbuf)){
-                fprintf(stderr, "cell_root directory %s doesn't exist - making\n",
-                        cell_root);
-                if(mkdir(cell_root,(mode_t) 0755)){
-                        fprintf(stderr,"could not mkdir %s\n",cell_root);
-                        return(NULL);
-                }
-        }
-
-	return(cell_root);
-}
-
-static char *sec_make_userdir(
-char *cell 
-) {
-        char            *user_root,*user_cell,*cell_root,*home;
-        struct stat     sbuf;
-
-        home = getenv("HOME");
-        if(!home){
-        	fprintf(stderr,"failed get HOME variable\n");
-        	return(NULL);
-        }
-
-        /* get rid of trailing slash                            */
-        if (home[strlen(home)-1] == '/')
-        	home[strlen(home)-1] = '\0';
-	user_root = (char *) malloc(strlen(home) + strlen(SGESecPath) + 10);
-        if(user_root == NULL){
-        	fprintf(stderr,"failed malloc memory\n");
-        	return(NULL);
-        }
-
-        sprintf(user_root, "%s/%s",home,SGESecPath);
-
-        /* get rid of trailing slash                                    */
-        if (user_root[strlen(user_root)-1] == '/')
-                user_root[strlen(user_root)-1] = '\0';
-
-        /* is user_root already there?                                */
-        if (stat(user_root,&sbuf)){
-                fprintf(stderr, "root directory %s doesn't exist - making\n",
-                                user_root);
-                if(mkdir(user_root,(mode_t) 0755)){
-                        fprintf(stderr,"could not mkdir %s\n",user_root);
-                        return(NULL);
-                }
-        }
-
-        if(cell) 
-		user_cell = cell;
-        else{
-                user_cell = getenv("SGE_CELL");
-                if (!user_cell || strlen(user_cell) == 0)
-                user_cell = DEFAULT_CELL;
-        }
-
-        /* get rid of surrounding slashs                                */
-        if(user_cell[0] == '/')
-                strcpy(user_cell,user_cell+1);
-        if (user_cell[strlen(user_cell)-1] == '/')
-                user_cell[strlen(user_cell)-1] = '\0';
-
-        cell_root = (char *) malloc(strlen(user_cell) + strlen(user_root) + 10);
-        if(cell_root == NULL){
-                fprintf(stderr,"failed malloc memory\n");
-                return(NULL);
-        }
-        sprintf(cell_root,"%s/%s",user_root,user_cell);
-
-        /* is cell_root already there?                                  */
-        if (stat(cell_root,&sbuf)){
-                fprintf(stderr, "cell_root directory %s doesn't exist - making\n",
-                        cell_root);
-                if(mkdir(cell_root,(mode_t) 0755)){
-                        fprintf(stderr,"could not mkdir %s\n",cell_root);
-                        return(NULL);
-                }
-        }
-
-        return(cell_root);
+	return 1;
 }
 
 static sec_exit_func_type install_sec_exit_func(

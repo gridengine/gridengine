@@ -35,12 +35,10 @@
 #include 	<stdio.h>
 
 #include        "openssl/err.h"
-/* #include        "openssl/der.h" */
 #include        "openssl/bn.h"
 #include        "openssl/des.h"
 #include        "openssl/md5.h"
 #include        "openssl/x509.h"
-/* #include        "x509_obj.h" */
 #include        "openssl/pem.h"
 #include        "openssl/rand.h"
 

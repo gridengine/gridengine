@@ -5,17 +5,17 @@
 
 # This definition stops the following lines choking if HOME isn't
 # defined.
-HOME			= $ENV::SGE_ROOT/default
-RANDFILE		= $ENV::HOME/.rnd
+#HOME                    = $ENV::SGE_ROOT/default
+#RANDFILE                = $ENV::HOME/.rnd
 
 # Extra OBJECT IDENTIFIER info:
-#oid_file		= $ENV::HOME/.oid
-oid_section		= new_oids
+#oid_file                = $ENV::HOME/.oid
+oid_section              = new_oids
 
 # To use this configuration file with the "-extfile" option of the
 # "openssl x509" utility, name here the section containing the
 # X.509v3 extensions to use:
-# extensions		= 
+# extensions                = 
 # (Alternatively, use a configuration file that has only
 # X.509v3 extensions in its main [= default] section.)
 
@@ -29,67 +29,67 @@ oid_section		= new_oids
 
 ####################################################################
 [ ca ]
-default_ca	= CA_default		# The default ca section
+default_ca        = CA_default                # The default ca section
 
 ####################################################################
 [ CA_default ]
 
-dir		= ./demoCA		# Where everything is kept
-certs		= $dir/certs		# Where the issued certs are kept
-crl_dir		= $dir/crl		# Where the issued crl are kept
-database	= $dir/index.txt	# database index file.
-new_certs_dir	= $dir/newcerts		# default place for new certs.
+dir                  = ./sgeCA                  # Where everything is kept
+certs                = $dir/certs               # Where the issued certs are kept
+crl_dir              = $dir/crl                 # Where the issued crl are kept
+database             = $dir/index.txt           # database index file.
+new_certs_dir        = $dir/newcerts            # default place for new certs.
 
-certificate	= $dir/cacert.pem 	# The CA certificate
-serial		= $dir/serial 		# The current serial number
-crl		= $dir/crl.pem 		# The current CRL
-private_key	= $dir/private/cakey.pem# The private key
-RANDFILE	= $dir/private/.rand	# private random number file
+certificate          = $dir/cacert.pem          # The CA certificate
+serial               = $dir/serial              # The current serial number
+crl                  = $dir/crl.pem             # The current CRL
+private_key          = $dir/private/cakey.pem   # The private key
+RANDFILE             = $dir/private/.rand       # private random number file
 
-x509_extensions	= usr_cert		# The extentions to add to the cert
+x509_extensions      = usr_cert                 # The extentions to add to the cert
 
 # Extensions to add to a CRL. Note: Netscape communicator chokes on V2 CRLs
 # so this is commented out by default to leave a V1 CRL.
-# crl_extensions	= crl_ext
+# crl_extensions     = crl_ext
 
-default_days	= 365			# how long to certify for
-default_crl_days= 30			# how long before next CRL
-default_md	= md5			# which md to use.
-preserve	= no			# keep passed DN ordering
+default_days         = 365                      # how long to certify for
+default_crl_days     = 30                       # how long before next CRL
+default_md           = md5                      # which md to use.
+preserve             = no                       # keep passed DN ordering
 
 # A few difference way of specifying how similar the request should look
 # For type CA, the listed attributes must be the same, and the optional
 # and supplied fields are just that :-)
-policy		= policy_match
+policy               = policy_match
 
 # For the CA policy
 [ policy_match ]
-countryName		= match
-stateOrProvinceName	= match
-organizationName	= match
-organizationalUnitName	= optional
-commonName		= supplied
-emailAddress		= optional
+countryName             = match
+stateOrProvinceName     = match
+organizationName        = match
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
 
 # For the 'anything' policy
 # At this point in time, you must list all acceptable 'object'
 # types.
 [ policy_anything ]
-countryName		= optional
-stateOrProvinceName	= optional
-localityName		= optional
-organizationName	= optional
-organizationalUnitName	= optional
-commonName		= supplied
-emailAddress		= optional
+countryName             = optional
+stateOrProvinceName     = optional
+localityName            = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
 
 ####################################################################
 [ req ]
-default_bits		= 1024
-default_keyfile 	= privkey.pem
-distinguished_name	= req_distinguished_name
-attributes		= req_attributes
-x509_extensions	= v3_ca	# The extentions to add to the self signed cert
+default_bits            = 1024
+default_keyfile         = privkey.pem
+distinguished_name      = req_distinguished_name
+attributes              = req_attributes
+x509_extensions         = v3_ca        # The extentions to add to the self signed cert
 
 # Passwords for private keys if not present they will be prompted for
 # input_password = secret
@@ -97,7 +97,7 @@ x509_extensions	= v3_ca	# The extentions to add to the self signed cert
 
 # This sets a mask for permitted string types. There are several options. 
 # default: PrintableString, T61String, BMPString.
-# pkix	 : PrintableString, BMPString.
+# pkix         : PrintableString, BMPString.
 # utf8only: only UTF8Strings.
 # nombstr : PrintableString, T61String (no BMPStrings or UTF8Strings).
 # MASK:XXXX a literal mask value.
@@ -108,41 +108,41 @@ string_mask = nombstr
 # req_extensions = v3_req # The extensions to add to a certificate request
 
 [ req_distinguished_name ]
-countryName			= Country Name (2 letter code)
-countryName_default		= DE
-countryName_min			= 2
-countryName_max			= 2
+countryName                         = Country Name (2 letter code)
+countryName_default                 = DE
+countryName_min                     = 2
+countryName_max                     = 2
 
-stateOrProvinceName		= State or Province Name (full name)
-stateOrProvinceName_default	= Bavaria
+stateOrProvinceName                 = State or Province Name (full name)
+stateOrProvinceName_default         = Bavaria
 
-localityName			= Locality Name (eg, city)
-localityName_default = Regensburg
+localityName                        = Locality Name (eg, city)
+localityName_default                = Regensburg
 
-0.organizationName		= Organization Name (eg, company)
-0.organizationName_default	= Sun Microsystems
+0.organizationName                  = Organization Name (eg, company)
+0.organizationName_default          = Sun Microsystems
 
 # we can do this but it is not needed normally :-)
-#1.organizationName		= Second Organization Name (eg, company)
-#1.organizationName_default	= World Wide Web Pty Ltd
+#1.organizationName                 = Second Organization Name (eg, company)
+#1.organizationName_default         = World Wide Web Pty Ltd
 
-organizationalUnitName		= Organizational Unit Name (eg, section)
-organizationalUnitName_default	= Gridware
+organizationalUnitName              = Organizational Unit Name (eg, section)
+organizationalUnitName_default      = Gridware
 
-commonName			= Common Name (eg, YOUR name)
-commonName_max			= 64
+commonName                          = Common Name (eg, YOUR name)
+commonName_max                      = 64
 
-emailAddress			= Email Address
-emailAddress_max		= 40
+emailAddress                        = Email Address
+emailAddress_max                    = 40
 
-# SET-ex3			= SET extension number 3
+# SET-ex3                        = SET extension number 3
 
 [ req_attributes ]
-challengePassword		= A challenge password
-challengePassword_min		= 4
-challengePassword_max		= 20
+challengePassword                   = A challenge password
+challengePassword_min               = 4
+challengePassword_max               = 20
 
-unstructuredName		= An optional company name
+unstructuredName                    = An optional company name
 
 [ usr_cert ]
 
@@ -157,7 +157,7 @@ basicConstraints=CA:FALSE
 # the certificate can be used for anything *except* object signing.
 
 # This is OK for an SSL server.
-# nsCertType			= server
+# nsCertType                        = server
 
 # For an object signing certificate this would be used.
 # nsCertType = objsign
@@ -172,7 +172,7 @@ basicConstraints=CA:FALSE
 # keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 
 # This will be displayed in Netscape's comment listbox.
-nsComment			= "OpenSSL Generated Certificate"
+nsComment                        = "OpenSSL Generated Certificate"
 
 # PKIX recommendations harmless if included in all certificates.
 subjectKeyIdentifier=hash
@@ -185,7 +185,7 @@ authorityKeyIdentifier=keyid,issuer:always
 # Copy subject details
 # issuerAltName=issuer:copy
 
-#nsCaRevocationUrl		= http://www.domain.dom/ca-crl.pem
+#nsCaRevocationUrl                = http://www.domain.dom/ca-crl.pem
 #nsBaseUrl
 #nsRevocationUrl
 #nsRenewalUrl

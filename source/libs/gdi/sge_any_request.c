@@ -60,11 +60,13 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    DENTER(BASIS_LAYER, "prepare_enroll");
 
    /*
-   ** initialize security context
+   ** initialize security context (skip if COMMDCNTL)
    */
-   if (sge_security_initialize(name)) {
-      CRITICAL((SGE_EVENT, MSG_GDI_INITSECURITYDATAFAILED));
-      SGE_EXIT(1);
+   if (me.who != COMMDCNTL) { 
+      if (sge_security_initialize(name)) {
+         CRITICAL((SGE_EVENT, MSG_GDI_INITSECURITYDATAFAILED));
+         SGE_EXIT(1);
+      }
    }
    
    set_commlib_param(CL_P_COMMDSERVICE, 0, SGE_COMMD_SERVICE, NULL);
@@ -235,7 +237,7 @@ int *tag,
 int synchron 
 ) {
    int dummytag=0;
-   char *buffer;
+   char *buffer = NULL;
    u_long32 buflen;
    int i;
    ushort usid=0;

@@ -506,6 +506,8 @@ const lDescr *dp                  /* has to be NULL in case of free elements
       call lFreeElem() in case of errors 
     */
    if ((ret = cull_unpack_cont(pb, &(ep->cont), ep->descr))) {
+      if (ep->status == FREE_ELEM)
+         free(ep->descr);
       free(ep);
       DEXIT;
       return ret;

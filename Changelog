@@ -1,3 +1,8 @@
+AA-2001-12-20-1: Feature:   Security: 
+                            - commdcntl skips sge_security_init()
+                            - unpack free of elem fix
+                            - removal of obsolete setup routines in seclib
+
 EB-2001-12-20-0: Bugfix:    Hold tid list of job submission dialog honours
                             tid range specification.
                  Issue:     None (Fix of Enhancem.: EB-2001-12-12-0) 

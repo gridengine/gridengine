@@ -12,6 +12,49 @@ Certificate creation cmds
 =========================
 CA creation:
 
+-nodes option is used to suppress the encryption of priv keys otherwise
+one has to deal with the PEM passphrase at least 4 letters password during
+runtime of csp'ed SGE.
+
+CA cert and key:
+
+openssl genrsa [-des3] -out <cakey.pem> -rand <rand.dat> 1024
+
+without -des3 unencrypted <cakey.pem> no passphrase 
+
+Selfsign CA cert:
+
+openssl req -new -x509 -days 730 -key <cakey.pem> -out <cacert.pem>
+
+Display cert:
+
+openssl x509 -in <cacert.pem> -text
+
+
+User key and cert:
+
+openssl genrsa -out <key.pem> -rand <rand.dat> 1024
+
+openssl req -new -key <key.pem> -out <req.pem>
+
+
+Signing:
+
+openssl ca -name ca_name -keyfile <cakey.pem> -in <req.pem> -out <cert.pem> -outdir <where it has to go>
+
+ca_name is the section in the config file e.g. Client_CA, Server_CA ...
+
+
+Hash generation:
+
+serial number: 
+<s> = `openssl x509 -in <cert.pem> -noout -serial`
+
+ln -s <s>.pem `openssl x509 -in <s>.pem -hash -noout`.0
+
+
+
+
 
 Certificate check cmds
 ======================

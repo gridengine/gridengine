@@ -72,7 +72,7 @@ libmir.a:	$(MIRLIB_OBJS)
 	$(AR) $(ARFLAGS) libmir.a $(MIRLIB_OBJS)
 	$(RANLIB) libmir.a
 
-libmir$(SHAREDEXT): $(MIRLIB_OBJS) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(ALLLISTSLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+libmir$(SHAREDEXT): $(MIRLIB_OBJS) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libmir$(SHAREDEXT) $(MIRLIB_OBJS) -levc -lgdi -lsgeobj -lsgeobjd -lcom -lcull -luti -lrmon $(LIBS) -lc
 
 ###############################################################################

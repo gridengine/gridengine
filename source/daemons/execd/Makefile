@@ -78,7 +78,7 @@ EXECD_ADD_OBJS = $(EXECD_ADD_SRC:.c=.o)
 
 EXECD_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-EXECD_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(ALLLISTSLIB) \
+EXECD_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                     $(SECLIBS) $(KRBLIBS) \
                     $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) \
                     $(ZLIB) $(TPLIB)

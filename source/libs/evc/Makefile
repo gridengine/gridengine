@@ -65,7 +65,7 @@ libevc.a:	$(EVCLIB_OBJS)
 	$(AR) $(ARFLAGS) libevc.a $(EVCLIB_OBJS)
 	$(RANLIB) libevc.a
 
-libevc$(SHAREDEXT): $(EVCLIB_OBJS) $(GDILIB) $(SGEOBJLIB) $(ALLLISTSLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+libevc$(SHAREDEXT): $(EVCLIB_OBJS) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libevc$(SHAREDEXT) $(EVCLIB_OBJS) -lgdi -lsgeobj -lsgeobjd -lcom -lcull -luti -lrmon $(LIBS) -lc
 
 ###############################################################################

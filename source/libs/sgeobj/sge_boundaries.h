@@ -380,8 +380,16 @@ enum NameSpaceBoundaries {
    GRP_LOWERBOUND = PREF_UPPERBOUND + 1,
    GRP_UPPERBOUND = GRP_LOWERBOUND + 1*BASIC_UNIT - 1,
 
+   /* hostgroup */
+   HGRP_LOWERBOUND = GRP_UPPERBOUND + 1,
+   HGRP_UPPERBOUND = HGRP_LOWERBOUND + 1*BASIC_UNIT - 1,
+
+   /* host/hostgroup reference list */
+   HR_LOWERBOUND = HGRP_UPPERBOUND + 1,
+   HR_UPPERBOUND = HR_LOWERBOUND + 1*BASIC_UNIT - 1,
+
    /* permissions list */
-   PERM_LOWERBOUND = GRP_UPPERBOUND + 1,
+   PERM_LOWERBOUND = HR_UPPERBOUND + 1,
    PERM_UPPERBOUND = PERM_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* user mapping entry list */

@@ -36,6 +36,18 @@
 
 extern lList *Master_Host_Group_List;
 
+bool sge_is_hostgrp_reference(const char *string);
+
+lListElem *hostgroup_list_locate(const lList *this_list, const char *group);
+
+lListElem *hostgroup_create(lList **answer_list, const char *name,
+                            lList *hostref_or_groupref);
+
+bool hostgroup_add_used(lListElem *this_elem, lList **answer_list,
+                        const lList *hostref_or_groupref);
+
+/* old implementation */
+
 lListElem* sge_get_group_elem(lList *groupList, const char *groupName);
 
 bool 

@@ -1,6 +1,8 @@
 #ifndef __SGE_RANGE_H
 #define __SGE_RANGE_H
+
 /*___INFO__MARK_BEGIN__*/
+
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -30,89 +32,93 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+
 /*___INFO__MARK_END__*/
 
 #include "sge_dstring.h"
 #include "sge_rangeL.h"
 
-#define JUST_PARSE         1
-#define INF_ALLOWED        1
-#define INF_NOT_ALLOWED    0
+#define JUST_PARSE        1
+#define INF_ALLOWED       1
+#define INF_NOT_ALLOWED   0
 
 #define MAX_IDS_PER_LINE  8
 #define MAX_LINE_LEN      70
 
-void range_list_calculate_union_set(lList **range_list, 
-                                    lList **answer_list,
-                                    const lList *range_list1, 
-                                    const lList *range_list2);
+typedef void (*range_remove_insert_t) (lList **, lList **, u_long32);
 
-void range_list_calculate_difference_set(lList **range_list, 
-                                         lList **answer_list,
-                                         const lList *range_list1,
-                                         const lList *range_list2);  
+/*
+ * range element
+ */
 
-void range_list_calculate_intersection_set(lList **range_list, 
-                                           lList **answer_list,
-                                           const lList *range_list1,
-                                           const lList *range_list2); 
+void
+range_get_all_ids(const lListElem *this_elem, u_long32 *min,
+                  u_long32 *max, u_long32 *step);
 
-void range_get_all_ids(const lListElem *range_elem, u_long32 *min, 
-                       u_long32 *max, u_long32 *step);
+void
+range_set_all_ids(lListElem *this_elem, u_long32 min,
+                  u_long32 max, u_long32 step);
 
-void range_set_all_ids(lListElem *range_elem, u_long32 min, u_long32 max,
-                       u_long32 step);
+bool range_containes_id_less_than(const lListElem *this_elem, u_long32 id);
 
-void range_list_print_to_string(const lList *range_list, 
-                                dstring *string,
-                                int ignore_step);
+bool range_is_id_within(const lListElem *this_range, u_long32 id);
 
-void range_sort_uniq_compress(lList *range_list, lList **answer_list);  
+u_long32 range_get_number_of_ids(const lListElem *this_elem);
 
-void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id);
- 
-void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id);
+void range_correct_end(lListElem *this_elem);
 
-void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
-                                 lList **range_list2, u_long32 n);
+void
+range_parse_from_string(lListElem **this_elem, lList **answer_list,
+                        const char *string, int step_allowed, int inf_allowed);
 
-typedef void (*range_remove_insert_t)(lList**, lList**, u_long32);
- 
-bool range_is_id_within(const lListElem *range, u_long32 id);   
+/*
+ * range list
+ */
 
-bool range_list_is_id_within(const lList *range_list, u_long32 id);   
+void range_list_print_to_string(const lList *this_list, dstring *string,
+                                bool ignore_step);
 
-bool range_list_is_empty(const lList *range_list);
+void range_list_insert_id(lList **this_list, lList **answer_list, u_long32 id);
 
-void range_list_compress(lList *range_list);    
+void range_list_remove_id(lList **this_list, lList **answer_list, u_long32 id);
 
-u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list);
+void
+range_list_move_first_n_ids(lList **this_list, lList **answer_list,
+                            lList **list, u_long32 n);
 
-u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list);
+bool range_list_is_id_within(const lList *this_list, u_long32 id);
 
-void range_list_initialize(lList **range_list, lList **answer_list);
+bool range_list_is_empty(const lList *this_list);
 
-u_long32 range_list_get_number_of_ids(const lList *range_list);
- 
-u_long32 range_get_number_of_ids(const lListElem *range);
+void range_list_compress(lList *this_list);
 
-void range_correct_end(lListElem *range);   
+void range_list_sort_uniq_compress(lList *this_list, lList **answer_list);
 
-void range_parse_from_string(lListElem **range,
-                             lList **alpp,
-                             const char *rstr,
-                             int step_allowed,
-                             int inf_allowed);
+u_long32 range_list_get_first_id(const lList *this_list, lList **answer_list);
 
-void range_list_parse_from_string(lList **rl,
-                                  lList **alpp,
-                                  const char *str,
-                                  int just_parse,
-                                  int step_allowed,
-                                  int inf_allowed);
+u_long32 range_list_get_last_id(const lList *this_list, lList **answer_list);
+
+void range_list_initialize(lList **this_list, lList **answer_list);
+
+u_long32 range_list_get_number_of_ids(const lList *this_list);
+
+void
+range_list_parse_from_string(lList **this_list, lList **answer_list,
+                             const char *string, bool just_parse,
+                             bool step_allowed, bool inf_allowed);
 
 bool range_list_containes_id_less_than(const lList *range_list, u_long32 id);
 
-bool range_containes_id_less_than(const lListElem *range, u_long32 id);
+void
+range_list_calculate_union_set(lList **this_list, lList **answer_list,
+                               const lList *list1, const lList *list2);
+
+void
+range_list_calculate_difference_set(lList **this_list, lList **answer_list,
+                                    const lList *list1, const lList *list2);
+
+void
+range_list_calculate_intersection_set(lList **this_list, lList **answer_list,
+                                      const lList *list1, const lList *list2);
 
 #endif /* __SGE_RANGE_H */

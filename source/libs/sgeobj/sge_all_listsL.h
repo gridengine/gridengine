@@ -85,6 +85,7 @@
 #include "sge_spoolingL.h"
 #include "sge_mailrecL.h"
 #include "sge_japiL.h"
+#include "sge_hostrefL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -194,6 +195,8 @@ extern "C" {
       {JO_LOWERBOUND, JOS, JON},        /* ptf O.S. job list */
 
       {GRP_LOWERBOUND, GRPS, GRPN},     /* group list */
+      {HGRP_LOWERBOUND, HGRPS, HGRPN},  /* hostgroup list */
+      {HR_LOWERBOUND, HRS, HRN},        /* host/group reference list */
       {PERM_LOWERBOUND, PERMS, PERMN},  /* permission list */
       {UM_LOWERBOUND, UMS, UMN},        /* usermap list for administrator
                                          * mapping */

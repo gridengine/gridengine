@@ -48,10 +48,91 @@
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_hostgroup.h"
+#include "sge_hostref.h"
 
 #include "msg_common.h"
 
+#define HOSTREF_LAYER TOP_LAYER
+
 lList *Master_Host_Group_List = NULL;
+
+bool sge_is_hostgrp_reference(const char *string) 
+{
+   bool ret = false;
+
+   if (string != NULL) {
+      ret = (string[0] == '@');
+   }
+   return ret;
+}
+
+lListElem *hostgroup_list_locate(const lList *this_list, const char *group) 
+{
+   return lGetElemHost(this_list, HGRP_name, group);
+}
+
+lListElem *hostgroup_create(lList **answer_list, const char *name, 
+                            lList *hostref_or_groupref)
+{
+   lListElem *ret = NULL;
+
+   DENTER(HOSTREF_LAYER, "hostgroup_create");
+   if (name != NULL) {
+      ret = lCreateElem(HGRP_Type);
+      if (ret != NULL) {
+         lSetHost(ret, HGRP_name, name);
+         lSetList(ret, HGRP_host_list, hostref_or_groupref);
+      } else {
+         answer_list_add(answer_list, "no memopy",
+                         STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+      }
+   } else {
+      /* EB: move to msg file */
+      answer_list_add(answer_list, "invalid parameter",
+                      STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+   }
+   DEXIT;
+   return ret; 
+}
+
+bool hostgroup_add_used(lListElem *this_elem, lList **answer_list,
+                        const lList *hostref_or_groupref) 
+{
+   bool ret = true;
+
+   DENTER(HOSTREF_LAYER, "hostgroup_add_used");
+   if (this_elem != NULL && hostref_or_groupref != NULL) {
+      lList *hostref_list = NULL;
+      lListElem *hostref;
+
+      lXchgList(this_elem, HGRP_host_list, &hostref_list);
+      for_each(hostref, hostref_or_groupref) {
+         const char *name = lGetHost(hostref, HR_name);
+   
+         ret &= hostref_list_add(&hostref_list, answer_list, name);
+         if (!ret) {
+            break;
+         }
+      } 
+      lXchgList(this_elem, HGRP_host_list, &hostref_list);
+   } else {
+      /* EB: move to msg file */
+      answer_list_add(answer_list, "invalid parameter",
+                      STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+                        
+
+
+
+/*****************************************************/
+/*****************************************************/
+/*****************************************************/
+/*****************************************************/
+/*****************************************************/
 
 static bool 
 sge_verify_group_entry(lList** alpp, lList* hostGroupList, 

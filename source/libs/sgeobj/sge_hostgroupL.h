@@ -135,9 +135,27 @@ NAMEDEF(GRPN)
    NAME("GRP_supergroup")
 NAMEEND
 
+#define GRPS sizeof(GRPN)/sizeof(char*)
+
+enum {
+   HGRP_name = HGRP_LOWERBOUND,
+   HGRP_host_list
+};
+
+LISTDEF(HGRP_Type)
+   SGE_HOST(HGRP_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
+   SGE_LIST(HGRP_host_list, HR_TYPE, CULL_SPOOL) 
+LISTEND
+
+NAMEDEF(HGRPN)
+   NAME("HGRP_name")
+   NAME("HGRP_host_list")
+NAMEEND
+
+#define HGRPS sizeof(HGRPN)/sizeof(char*)
+
 /* *INDENT-ON* */
 
-#define GRPS sizeof(GRPN)/sizeof(char*)
 #ifdef  __cplusplus
 }
 #endif

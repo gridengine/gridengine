@@ -80,7 +80,7 @@ libgdi.a:	$(GDILIB_OBJS)
 	$(AR) $(ARFLAGS) libgdi.a $(GDILIB_OBJS)
 	$(RANLIB) libgdi.a
 
-libgdi$(SHAREDEXT): $(GDILIB_OBJS) $(ALLLISTSLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+libgdi$(SHAREDEXT): $(GDILIB_OBJS) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libgdi$(SHAREDEXT) $(GDILIB_OBJS) -lsgeobjd -lcom -lcull -luti -lrmon $(LIBS) -lc
 
 ###############################################################################

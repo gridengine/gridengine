@@ -87,7 +87,7 @@ libsched.a: $(SCHEDLIB_OBJS)
 	$(AR) $(ARFLAGS) libsched.a $(SCHEDLIB_OBJS)
 	$(RANLIB) libsched.a
 
-libsched$(SHAREDEXT): $(SCHEDLIB_OBJS) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(ALLLISTSLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+libsched$(SHAREDEXT): $(SCHEDLIB_OBJS) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libsched$(SHAREDEXT) $(SCHEDLIB_OBJS) -levc -lgdi -lsgeobj -lsgeobjd -lcom -lcull -luti -lrmon $(LIBS) -lc
 
 ###############################################################################

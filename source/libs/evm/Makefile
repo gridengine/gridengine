@@ -66,7 +66,7 @@ libevm.a:	$(EVMLIB_OBJS)
 	$(AR) $(ARFLAGS) libevm.a $(EVMLIB_OBJS)
 	$(RANLIB) libevm.a
 
-libevm$(SHAREDEXT): $(EVMLIB_OBJS) $(GDILIB) $(SGEOBJLIB) $(ALLLISTSLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+libevm$(SHAREDEXT): $(EVMLIB_OBJS) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libevm$(SHAREDEXT) $(EVMLIB_OBJS) -lgdi -lsgeobj -lsgeobjd -lcom -lcull -luti -lrmon $(LIBS) -lc
 
 ###############################################################################

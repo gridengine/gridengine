@@ -85,7 +85,7 @@ libspoolc.a:	$(SPOOLCLIB_OBJS)
 	$(AR) $(ARFLAGS) libspoolc.a $(SPOOLCLIB_OBJS)
 	$(RANLIB) libspoolc.a
 
-libspoolc$(SHAREDEXT): $(SPOOLCLIB_OBJS) $(SPOOLLIB) $(SCHEDLIB) $(SGEOBJLIB) $(ALLLISTSLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+libspoolc$(SHAREDEXT): $(SPOOLCLIB_OBJS) $(SPOOLLIB) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libspoolc$(SHAREDEXT) $(SPOOLCLIB_OBJS) -lspool -lsched -lsgeobj -lsgeobjd -lcom -lcull -luti -lrmon $(LIBS) -lc
 
 ###############################################################################

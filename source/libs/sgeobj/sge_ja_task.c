@@ -105,7 +105,7 @@ void ja_task_list_print_to_string(const lList *ja_task_list,
 
       range_list_insert_id(&range_list, NULL, tid);      
    } 
-   range_sort_uniq_compress(range_list, NULL); 
+   range_list_sort_uniq_compress(range_list, NULL); 
    range_list_print_to_string(range_list, range_string, 0); 
    range_list = lFreeList(range_list);
    DEXIT;

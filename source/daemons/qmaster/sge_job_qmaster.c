@@ -1027,7 +1027,7 @@ int sub_command
             if (range_list_get_number_of_ids(range_list) > 1) {
                dstring tid_string = DSTRING_INIT;
 
-               range_sort_uniq_compress(range_list, NULL);
+               range_list_sort_uniq_compress(range_list, NULL);
                range_list_print_to_string(range_list, &tid_string, 0);
                INFO((SGE_EVENT, MSG_JOB_DELETETASKS_SSU,
                      ruser, sge_dstring_get_string(&tid_string), 

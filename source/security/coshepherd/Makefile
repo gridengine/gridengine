@@ -43,7 +43,7 @@ COSHEPHERD_OBJS = $(COSHEPHERD_SRC:.c=.o)
 COSHEPHERD_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lsgeobj -lsgeobjd -lcull -lcom -luti -lrmon
 
 COSHEPHERD_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) \
-	                      $(SGEOBJLIB) $(ALLLISTSLIB) $(CULLLIB) $(COMMLIB) \
+	                      $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) \
                          $(UTILIB) $(RMONLIB) $(ZLIB)
 
 ###############################################################################

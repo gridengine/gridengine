@@ -66,7 +66,7 @@ libspoolf.a:	$(SPOOLFLIB_OBJS)
 	$(AR) $(ARFLAGS) libspoolf.a $(SPOOLFLIB_OBJS)
 	$(RANLIB) libspoolf.a
 
-libspoolf$(SHAREDEXT): $(SPOOLFLIB_OBJS) $(SPOOLLIB) $(SGEOBJLIB) $(ALLLISTSLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+libspoolf$(SHAREDEXT): $(SPOOLFLIB_OBJS) $(SPOOLLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libspoolf$(SHAREDEXT) $(SPOOLFLIB_OBJS) -lspool -lsgeobj -lsgeobjd -lcom -lcull -luti -lrmon $(LIBS) -lc
 
 ###############################################################################

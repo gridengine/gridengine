@@ -727,7 +727,7 @@ sge_commit_flags_t commit_flags
                /* debit in all layers */
                if (debit_host_consumable(jep, global_host_ep, Master_CEntry_List, slots) > 0 ) {
                   /* this info is not spooled */
-                  sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
+                  sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                                 "global", NULL, NULL, global_host_ep );
                   reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
                   answer_list_output(&answer_list);
@@ -737,7 +737,7 @@ sge_commit_flags_t commit_flags
                hep = host_list_locate(Master_Exechost_List, qep_QU_qhostname);
                if ( debit_host_consumable(jep, hep, Master_CEntry_List, slots) > 0 ) {
                   /* this info is not spooled */
-                  sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
+                  sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
                                 qep_QU_qhostname, NULL, NULL, hep);
                   reporting_create_host_consumable_record(&answer_list, hep, now);
                   answer_list_output(&answer_list);
@@ -876,13 +876,13 @@ sge_commit_flags_t commit_flags
             container = pe_task_sum_past_usage_all(pe_task_list);
             if(existing_container == NULL) {
                /* the usage container is not spooled */
-               sge_add_event(NULL, 0, sgeE_PETASK_ADD, jobid, jataskid, 
+               sge_add_event( 0, sgeE_PETASK_ADD, jobid, jataskid, 
                              PE_TASK_PAST_USAGE_CONTAINER, NULL,
                              session, container);
                lListElem_clear_changed_info(container);
             } else {
                /* the usage container is not spooled */
-               sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, jobid, jataskid, 
+               sge_add_list_event( 0, sgeE_JOB_USAGE, jobid, jataskid, 
                                   PE_TASK_PAST_USAGE_CONTAINER, NULL,
                                   lGetString(jep, JB_session), 
                                   lGetList(container, PET_scaled_usage));
@@ -946,14 +946,14 @@ sge_commit_flags_t commit_flags
          sge_dstring_free(&buffer);
       }
       for_each(petask, lGetList(jatep, JAT_task_list)) {
-         sge_add_list_event(NULL, 0, sgeE_JOB_FINAL_USAGE, jobid,
+         sge_add_list_event( 0, sgeE_JOB_FINAL_USAGE, jobid,
                             lGetUlong(jatep, JAT_task_number),
                             lGetString(petask, PET_id), 
                             NULL, lGetString(jep, JB_session),
                             lGetList(petask, PET_scaled_usage));
       }
       /* job usage is not spooled */
-      sge_add_list_event(NULL, 0, sgeE_JOB_FINAL_USAGE, jobid,
+      sge_add_list_event( 0, sgeE_JOB_FINAL_USAGE, jobid,
                          lGetUlong(jatep, JAT_task_number),
                          NULL, NULL, lGetString(jep, JB_session), 
                          lGetList(jatep, JAT_scaled_usage_list));
@@ -1065,7 +1065,7 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
       }
    }
 
-   sge_add_event(NULL, 0, sgeE_JOB_FINISH, lGetUlong(jep, JB_job_number), 
+   sge_add_event( 0, sgeE_JOB_FINISH, lGetUlong(jep, JB_job_number), 
                  lGetUlong(jatep, JAT_task_number), NULL, NULL,
                  lGetString(jep, JB_session), jr);
 
@@ -1164,7 +1164,7 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
             host = host_list_locate(Master_Exechost_List, "global");
             if (debit_host_consumable(job, host, Master_CEntry_List, -tmp_slot) > 0) {
                /* this info is not spooled */
-               sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
+               sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
                              "global", NULL, NULL, host);
                reporting_create_host_consumable_record(&answer_list, host, now);
                answer_list_output(&answer_list);
@@ -1173,7 +1173,7 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
             host = host_list_locate(Master_Exechost_List, queue_hostname);
             if (debit_host_consumable(job, host, Master_CEntry_List, -tmp_slot) > 0) {
                /* this info is not spooled */
-               sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
+               sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
                              queue_hostname, NULL, NULL, host);
                reporting_create_host_consumable_record(&answer_list, host, now);
                answer_list_output(&answer_list);
@@ -1203,7 +1203,7 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
          } else {
             pe_debit_slots(pe, -pe_slots, job_id);
             /* this info is not spooled */
-            sge_add_event(NULL, 0, sgeE_PE_MOD, 0, 0, 
+            sge_add_event(0, sgeE_PE_MOD, 0, 0, 
                           lGetString(ja_task, JAT_granted_pe), NULL, NULL, pe);
             lListElem_clear_changed_info(pe);
          }
@@ -1324,7 +1324,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
        */
       suser_unregister_job(job);
       if (!no_events) {
-         sge_add_event(NULL, 0, sgeE_JOB_DEL, job_id, ja_task_id, 
+         sge_add_event( 0, sgeE_JOB_DEL, job_id, ja_task_id, 
                        NULL, NULL, lGetString(job, JB_session), NULL);
       }
       lRemoveElem(Master_Job_List, job);
@@ -1334,7 +1334,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
 /*       job_log(job_id, ja_task_id, MSG_LOG_JATASKEXIT); */
 
       if (!no_events) {
-         sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_id, ja_task_id, 
+         sge_add_event( 0, sgeE_JATASK_DEL, job_id, ja_task_id, 
                        NULL, NULL, lGetString(job, JB_session), NULL);
       }
 

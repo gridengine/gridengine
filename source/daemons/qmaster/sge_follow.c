@@ -177,7 +177,7 @@ lList **topp  /* ticket orders ptr ptr */
          WARNING((SGE_EVENT, MSG_JOB_FINDJOB_U, u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          /* try to repair schedd data - session is unknown here */
-         sge_add_event(NULL, 0, sgeE_JOB_DEL, job_number, 0, 
+         sge_add_event(0, sgeE_JOB_DEL, job_number, 0, 
                        NULL, NULL, NULL, NULL);
          DEXIT;
          return -1;
@@ -201,14 +201,14 @@ lList **topp  /* ticket orders ptr ptr */
       if(jatp == NULL) {
          jatp = job_create_task(jep, NULL, task_number);
          /* JG: TODO: where is spooling done? */
-         sge_add_event(NULL, 0, sgeE_JATASK_ADD, job_number, task_number, 
+         sge_add_event( 0, sgeE_JATASK_ADD, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), jatp);
       }
       if (!jatp) {
          WARNING((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), 
                   u32c(job_number)));
          /* try to repair schedd data */
-         sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_number, task_number, 
+         sge_add_event( 0, sgeE_JATASK_DEL, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), NULL);
          DEXIT;
          return -1;
@@ -465,7 +465,7 @@ lList **topp  /* ticket orders ptr ptr */
       if (pe) {
          pe_debit_slots(pe, pe_slots, job_number);
          /* this info is not spooled */
-         sge_add_event(NULL, 0, sgeE_PE_MOD, 0, 0, 
+         sge_add_event( 0, sgeE_PE_MOD, 0, 0, 
                        lGetString(jatp, JAT_granted_pe), NULL, NULL, pe);
          lListElem_clear_changed_info(pe);
       }
@@ -534,7 +534,7 @@ lList **topp  /* ticket orders ptr ptr */
          if (!jatp) {
             ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
                   u32c(task_number), u32c(job_number)));
-            sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_number, task_number, 
+            sge_add_event( 0, sgeE_JATASK_DEL, job_number, task_number, 
                           NULL, NULL, lGetString(jep, JB_session), NULL);
             DEXIT;
             return -2;
@@ -655,7 +655,7 @@ lList **topp  /* ticket orders ptr ptr */
          if (!jatp) {
             ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
                   u32c(task_number), u32c(job_number)));
-            sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_number, task_number, 
+            sge_add_event( 0, sgeE_JATASK_DEL, job_number, task_number, 
                           NULL, NULL, lGetString(jep, JB_session), NULL);
             DEXIT;
             return -2;
@@ -827,7 +827,7 @@ lList **topp  /* ticket orders ptr ptr */
          ERROR((SGE_EVENT, MSG_JOB_FINDJOB_U, u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          /* try to repair schedd data - session is unknown here */
-         sge_add_event(NULL, 0, sgeE_JOB_DEL, job_number, task_number, 
+         sge_add_event( 0, sgeE_JOB_DEL, job_number, task_number, 
                        NULL, NULL, NULL, NULL);
          DEXIT;
          return -1;
@@ -836,12 +836,12 @@ lList **topp  /* ticket orders ptr ptr */
       if(jatp == NULL) {
          jatp = job_create_task(jep, NULL, task_number);
          /* JG: TODO: where is jatask spooled? */
-         sge_add_event(NULL, 0, sgeE_JATASK_ADD, job_number, task_number, 
+         sge_add_event( 0, sgeE_JATASK_ADD, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), jatp);
       }
       if (!jatp) {
          ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), u32c(job_number)));
-         sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_number, task_number, 
+         sge_add_event( 0, sgeE_JATASK_DEL, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), NULL);
          /* try to repair schedd data */
          DEXIT;
@@ -1194,7 +1194,7 @@ lList **topp  /* ticket orders ptr ptr */
             lAppendElem(Master_Job_Schedd_Info_List, lCopyElem(sme));
          }
          /* this information is not spooled (but might be usefull in a db) */
-         sge_add_event(NULL, 0, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, 
+         sge_add_event( 0, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, 
                        NULL, NULL, NULL, sme);
       }
       break;

@@ -670,7 +670,7 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
    /*
     * CQ modify or add event
     */
-   sge_add_event(NULL, 0, old_cqueue?sgeE_CQUEUE_MOD:sgeE_CQUEUE_ADD, 0, 0, 
+   sge_add_event( 0, old_cqueue?sgeE_CQUEUE_MOD:sgeE_CQUEUE_ADD, 0, 0, 
                  lGetString(cqueue, CQ_name), NULL, NULL, cqueue);
 
    /*
@@ -707,11 +707,11 @@ void cqueue_commit(lListElem *cqueue)
       lSetUlong(qinstance, QU_tag, SGE_QI_TAG_DEFAULT);
 
       if (tag == SGE_QI_TAG_ADD) {
-         sge_add_event(NULL, 0, sgeE_QINSTANCE_ADD, 0, 0,
+         sge_add_event( 0, sgeE_QINSTANCE_ADD, 0, 0,
                        name, hostname, NULL, qinstance);
       } else if (tag == SGE_QI_TAG_MOD ||
                  tag == SGE_QI_TAG_MOD_ONLY_CONFIG) {
-         sge_add_event(NULL, 0, sgeE_QINSTANCE_MOD, 0, 0,
+         sge_add_event( 0, sgeE_QINSTANCE_MOD, 0, 0,
                        name, hostname, NULL, qinstance);
       } else if (tag == SGE_QI_TAG_DEL) {
          sge_event_spool(NULL, 0, sgeE_QINSTANCE_DEL,

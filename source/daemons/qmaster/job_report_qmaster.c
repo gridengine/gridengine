@@ -248,7 +248,7 @@ sge_pack_buffer *pb
                       * the timestamp should better come from report object
                       */
                      /* jatask usage is not spooled (?) */
-                     sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
+                     sge_add_list_event( 0, sgeE_JOB_USAGE, 
                                         jobid, jataskid, NULL, NULL,
                                         lGetString(jep, JB_session),
                                         lGetList(jatep, JAT_scaled_usage_list));
@@ -320,7 +320,7 @@ sge_pack_buffer *pb
                                           jep, jatep, petask, true, true);
                        } else {
                           /* do not spool usage of pe task (?) */
-                          sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
+                          sge_add_list_event( 0, sgeE_JOB_USAGE, 
                                              jobid, jataskid, pe_task_id_str, 
                                              NULL, lGetString(jep, JB_session),
                                              lGetList(petask, PET_scaled_usage));
@@ -557,7 +557,7 @@ sge_pack_buffer *pb
                            } else {
                               pe_task_sum_past_usage(container, petask);
                               /* usage container will not be spooled (?) */
-                              sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
+                              sge_add_list_event( 0, sgeE_JOB_USAGE, 
                                                  jobid, jataskid, 
                                                  PE_TASK_PAST_USAGE_CONTAINER, 
                                                  NULL,

@@ -226,7 +226,7 @@ int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
    pe_name = lGetString(ep, PE_name);
 
 
-   sge_add_event(NULL, 0, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, 
+   sge_add_event( 0, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, 
                  pe_name, NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
 

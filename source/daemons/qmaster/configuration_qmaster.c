@@ -301,7 +301,7 @@ char *rhost
                    ep, NULL, NULL, true, true);
 
    if (!strcmp(SGE_GLOBAL_NAME, config_name)) {
-      sge_add_event(NULL, 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL, NULL, NULL);
+      sge_add_event( 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL, NULL, NULL);
    }
 
    /*

@@ -506,7 +506,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
    /* send event only, if spooling succeeded */
    if (ret) {
       if (send_event) {
-         sge_add_event(NULL, timestamp, event, 
+         sge_add_event( timestamp, event, 
                        intkey1, intkey2, strkey, strkey2,
                        session, element);
       }

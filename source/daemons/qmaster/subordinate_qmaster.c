@@ -194,7 +194,7 @@ qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
    
       qinstance_state_set_susp_on_sub(this_elem, suspend);
 
-      sge_add_event(NULL, 0, event, 0, 0, cqueue_name, hostname, NULL, NULL);
+      sge_add_event( 0, event, 0, 0, cqueue_name, hostname, NULL, NULL);
       reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
       lListElem_clear_changed_info(this_elem);
    }

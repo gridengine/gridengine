@@ -569,20 +569,20 @@ int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
          }
 
          sge_change_queue_version_exechost(host);
-         sge_add_event(NULL, 0, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 
+         sge_add_event( 0, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 
                        0, 0, host, NULL, NULL, ep);
          lListElem_clear_changed_info(ep);
       }
       break;
 
       case AH_name:
-         sge_add_event(NULL, 0, old_ep?sgeE_ADMINHOST_MOD:sgeE_ADMINHOST_ADD, 
+         sge_add_event( 0, old_ep?sgeE_ADMINHOST_MOD:sgeE_ADMINHOST_ADD, 
                        0, 0, lGetHost(ep, AH_name), NULL, NULL, ep);
          lListElem_clear_changed_info(ep);
       break;
 
       case SH_name:
-         sge_add_event(NULL, 0, old_ep?sgeE_SUBMITHOST_MOD:sgeE_SUBMITHOST_ADD, 
+         sge_add_event( 0, old_ep?sgeE_SUBMITHOST_MOD:sgeE_SUBMITHOST_ADD, 
                        0, 0, lGetHost(ep, SH_name), NULL, NULL, ep);
          lListElem_clear_changed_info(ep);
       break;
@@ -706,7 +706,7 @@ lList *lp
                   tmp_hostname, true, false);
          }
 
-         sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), NULL, *hepp);
+         sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), NULL, *hepp);
 
          added_non_static = false;
          statics_changed = false;
@@ -1370,7 +1370,7 @@ u_long32 target) {
    ** loop over pseudo hosts and set EH_startup flag
    */
    lSetUlong(hep, EH_startup, 1);
-   sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, rhost, NULL, NULL, hep);
+   sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, rhost, NULL, NULL, hep);
    lListElem_clear_changed_info(hep);
 
    INFO((SGE_EVENT, MSG_LOG_REGISTER_SS, "execd", rhost));

@@ -230,7 +230,7 @@ int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
    
    DENTER(TOP_LAYER, "userprj_success");
-   sge_add_event(NULL, 0, old_ep?
+   sge_add_event( 0, old_ep?
                  (user_flag?sgeE_USER_MOD:sgeE_PROJECT_MOD) :
                  (user_flag?sgeE_USER_ADD:sgeE_PROJECT_ADD), 
                  0, 0, lGetString(ep, UP_name), NULL, NULL, ep);

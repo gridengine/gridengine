@@ -218,7 +218,7 @@ int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_
 
    DENTER(TOP_LAYER, "calendar_update_queue_states");
 
-   sge_add_event(NULL, 0, old_cep ? sgeE_CALENDAR_MOD : sgeE_CALENDAR_ADD, 
+   sge_add_event( 0, old_cep ? sgeE_CALENDAR_MOD : sgeE_CALENDAR_ADD, 
                  0, 0, cal_name, NULL, NULL, cep);
    lListElem_clear_changed_info(cep);
 

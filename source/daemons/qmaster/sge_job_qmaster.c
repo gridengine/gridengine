@@ -986,7 +986,7 @@ int sub_command
                   if (lGetString(job, JB_session))
                      dupped_session = strdup(lGetString(job, JB_session));
                   reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, tmp_task, NULL, MSG_LOG_DELETED);
-                  sge_add_event(NULL, start_time, sgeE_JATASK_DEL, 
+                  sge_add_event( start_time, sgeE_JATASK_DEL, 
                                 job_number, task_number,
                                 NULL, NULL, dupped_session, NULL);
                   sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
@@ -1025,7 +1025,7 @@ int sub_command
             } else {
                /* JG: TODO: this joblog seems to have an invalid job object! */
 /*                reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, NULL, NULL, MSG_LOG_DELETED); */
-               sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, 
+               sge_add_event( start_time, sgeE_JOB_DEL, job_number, 0, 
                              NULL, NULL, dupped_session, NULL);
             }
          }
@@ -1846,7 +1846,7 @@ int sub_command
 void sge_add_job_event(ev_event type, lListElem *jep, lListElem *jatask) 
 {
    DENTER(TOP_LAYER, "sge_add_job_event");
-   sge_add_event(NULL, 0, type, lGetUlong(jep, JB_job_number), 
+   sge_add_event( 0, type, lGetUlong(jep, JB_job_number), 
                  jatask ? lGetUlong(jatask, JAT_task_number) : 0, 
                  NULL, NULL, lGetString(jep, JB_session), jep);
    DEXIT;
@@ -1856,7 +1856,7 @@ void sge_add_job_event(ev_event type, lListElem *jep, lListElem *jatask)
 void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask) 
 {           
    DENTER(TOP_LAYER, "sge_add_jatask_event");
-   sge_add_event(NULL, 0, type, lGetUlong(jep, JB_job_number), 
+   sge_add_event( 0, type, lGetUlong(jep, JB_job_number), 
                  lGetUlong(jatask, JAT_task_number),
                  NULL, NULL, lGetString(jep, JB_session), jatask);
    DEXIT;

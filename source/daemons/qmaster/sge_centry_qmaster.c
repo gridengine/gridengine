@@ -263,7 +263,7 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
 
    centry_list_sort(Master_CEntry_List);
 
-   sge_add_event(NULL, 0, old_ep?sgeE_CENTRY_MOD:sgeE_CENTRY_ADD, 0, 0, 
+   sge_add_event( 0, old_ep?sgeE_CENTRY_MOD:sgeE_CENTRY_ADD, 0, 0, 
                  lGetString(ep, CE_name), NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
 

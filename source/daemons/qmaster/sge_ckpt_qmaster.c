@@ -282,7 +282,7 @@ int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
 
    ckpt_name = lGetString(ep, CK_name);
 
-   sge_add_event(NULL, 0, old_ep ? sgeE_CKPT_MOD : sgeE_CKPT_ADD, 0, 0, 
+   sge_add_event( 0, old_ep ? sgeE_CKPT_MOD : sgeE_CKPT_ADD, 0, 0, 
                  ckpt_name, NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
 

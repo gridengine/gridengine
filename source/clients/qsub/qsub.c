@@ -57,6 +57,7 @@
 
 #include "msg_clients_common.h"
 #include "msg_qsub.h"
+#include "msg_qmaster.h"
 
 extern char **environ;
 static int ec_up = 0;
@@ -258,7 +259,10 @@ char **argv
    }
   
    /* only success message is printed to stdout */
-   printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString (job, JB_job_name));
+   if (!just_verify)
+      printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString(job, JB_job_name));
+   else
+      printf(MSG_JOB_VERIFYFOUNDQ);
 
    if (wait_for_job || is_immediate) {
       int event;

@@ -3206,7 +3206,7 @@ sge_assignment_t *a
 
       if (!qep) {
          ERROR((SGE_EVENT, MSG_SCHEDD_NOMASTERQUEUE_SU, master_eh_name, 
-               lGetUlong(a->job, JB_job_number)));
+               u32c(lGetUlong(a->job, JB_job_number))));
          DEXIT;
          return MATCH_LATER;
       }

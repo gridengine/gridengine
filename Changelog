@@ -1,3 +1,8 @@
+CR-2004-02-27-2: Bugfix:    changed DEBUG_FLAG from -g3 to -g2 for ALPHA5 (tru64)
+                            sytems (-g3 produced segmentation faults in gethostname
+                            binary)
+                 Changed:   aimk
+
 SD-2004-02-27-0: Bugfix:    Fixed checking of read return code
                  Changed:   execd
                  Issue:     713

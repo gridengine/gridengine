@@ -890,8 +890,8 @@ case ALPHA5:
    # gprof option is superset of debug option
    # -g3 produces better debugging information than -g1
    if ( $DEBUGGED == 1) then
-      set DEBUG_FLAG = "-g3"
-      set OFLAG      = ""
+      set DEBUG_FLAG = "-g2"
+      set OFLAG      = "-O"
    endif
 
    if ( $GPROFFED == 1) then

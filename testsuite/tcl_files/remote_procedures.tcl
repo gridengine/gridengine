@@ -688,7 +688,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
         log_user 1
       }
       set timeout 1
-      send -i $open_remote_spawn__id "ls -la $open_remote_spawn__script_name ; echo \">>\"\$?\"<<\"\n"
+      send -i $open_remote_spawn__id "/bin/sh -c 'ls -la $open_remote_spawn__script_name ; echo \">>\"\$?\"<<\"'\n"
       set open_remote_spawn__tries 70
       while { $open_remote_spawn__tries > 0 } {
          expect {
@@ -1443,7 +1443,7 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
        debug_puts "-->sending $nr_of_shells exit(s) to shell on id $sp_id"
        for {set i 0} {$i < $nr_of_shells } {incr i 1} {
           send -s -i $sp_id "exit\n"
-          set timeout 15
+          set timeout 30
           expect { 
               -i $sp_id full_buffer {
                  add_proc_error "close_spawn_process" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
@@ -1456,7 +1456,7 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
               }
           }
        }
-       set timeout 10
+       set timeout 30
        set my_tries 6
        while { $do_stop != 1 } {
           expect {

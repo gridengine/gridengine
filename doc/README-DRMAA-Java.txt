@@ -97,6 +97,8 @@ Content
 3. Getting Support
 ------------------
 
+   For commercial deployments N1GE6 DRMAA is recommended.
+
    If you're having trouble with the DRMAA library included with the Grid
    Engine 6 release, please visit:
 

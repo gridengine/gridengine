@@ -1,3 +1,9 @@
+SG-2004-01-30-0: Bugfix:    The reported vmem for a job from the exec host got
+                            never smaller.
+                 Changed:   execd
+                 Issue:     635
+                 Review:    AH
+
 JG-2004-01-29-0: Bugfix:    If a loadsensor did output to stderr, the loadsensor
                             blocked when the pipe buffer between loadsensor and
                             execd was full.

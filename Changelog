@@ -1,3 +1,5 @@
+RC-2004-07-17-0: Bugfix:    fixed a typo in the source that causes build break
+
 AH-2004-07-13-2: Bugfix:    Deleted pending job appears in qstat
                             Problem was that finished jobs generally were
                             displayed by qstat. Removed broken code that was

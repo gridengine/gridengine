@@ -257,7 +257,7 @@ xsign)
     ;;
 
 sign) 
-    $CA -policy policy_anything $BATCHMODE -out $outdir/$newcert -infiles $indir/$newreq
+    $CA -policy policy_anything $DAYS $BATCHMODE -out $outdir/$newcert -infiles $indir/$newreq
     RET=$?
     if [ $RET = 0 ]; then
       echo "Signed certificate is in $outdir/$newcert"

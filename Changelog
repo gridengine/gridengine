@@ -1,3 +1,7 @@
+CR-2004-08-20-0: Testsuite:  enhancement: tight integration test checks 
+                             execd messages files for errors
+                 Issue:      1199
+
 CR-2004-08-19-1: Enhancem.:  added debug information about GDI messages:
                              don't show debug info when no message was
                              received.

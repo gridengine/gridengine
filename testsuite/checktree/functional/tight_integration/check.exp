@@ -77,6 +77,9 @@ global TIGHT_INTEGRATION_FUNCTIONAL_SLOTS
 global TIGHT_INTEGRATION_FUNCTIONAL_DURATION
 global TIGHT_INTEGRATION_MASSIVE_SLOTS
 global TIGHT_INTEGRATION_MASSIVE_DURATION
+global TIGHT_INTEGRATION_ERROR_MESSAGES
+global TIGHT_INTEGRATION_WARNING_MESSAGES
+
 
 set TIGHT_INTEGRATION_FUNCTIONAL_SLOTS 5
 set TIGHT_INTEGRATION_FUNCTIONAL_DURATION 10
@@ -89,9 +92,8 @@ proc tight_integration_init_level {} {
    global submit_command TIGHT_INTEGRATION_FUNCTIONAL_SLOTS
 
    set num_hosts [llength $ts_config(execd_hosts)]
-   if { $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS < $num_hosts } {
-      set TIGHT_INTEGRATION_FUNCTIONAL_SLOTS $num_hosts
-   }
+   set num_slots [ expr ( $num_hosts * 10 ) ]
+   set TIGHT_INTEGRATION_FUNCTIONAL_SLOTS $num_slots
 
    switch -- $CHECK_ACT_LEVEL {
       "0" { 
@@ -111,8 +113,82 @@ proc tight_integration_init_level {} {
 
 global submit_command
 
+proc tight_integration_parse_execd_messages { mode } {
+   global CHECK_PRODUCT_ROOT CHECK_CORE_EXECD TIGHT_INTEGRATION_MASSIVE_SLOTS
+   global ts_config CHECK_OUTPUT CHECK_USER
+   global TIGHT_INTEGRATION_ERROR_MESSAGES TIGHT_INTEGRATION_WARNING_MESSAGES
+
+   foreach execd $ts_config(execd_hosts) {
+      puts $CHECK_OUTPUT "check messages file from execd $execd ..."
+      set TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode) 0
+      set TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode) 0
+      set messages [ get_execd_messages_file $execd ]
+      get_file_content $execd $CHECK_USER $messages 
+      if { $file_array(0) < 1 } {
+         add_proc_error "tight_integration_setup" -1 "no execd(host=$execd) messages file:\n$messages"
+      }
+      for {set i 1 } { $i <= $file_array(0) } { incr i 1 } {
+         if { [string match "*|E|*" $file_array($i)] } {
+            incr TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode) 1
+            set TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode,$TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode)) $file_array($i)
+            puts $CHECK_OUTPUT $file_array($i)
+         }
+         if { [string match "*|W|*" $file_array($i)] } {
+            incr TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode) 1
+            set TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode,$TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode)) $file_array($i)
+            puts $CHECK_OUTPUT $file_array($i)
+         }
+      }
+   }
+
+   foreach execd $ts_config(execd_hosts) {
+      puts $CHECK_OUTPUT "error   messages for execd $execd: $TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode)"
+      puts $CHECK_OUTPUT "warning messages for execd $execd: $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode)"
+   }
+
+}
+
+
+proc tight_integration_check_messages { mode1 mode2 } {
+   global CHECK_PRODUCT_ROOT CHECK_CORE_EXECD TIGHT_INTEGRATION_MASSIVE_SLOTS
+   global ts_config CHECK_OUTPUT CHECK_USER
+   global TIGHT_INTEGRATION_ERROR_MESSAGES TIGHT_INTEGRATION_WARNING_MESSAGES
+
+   set error_text ""
+ 
+   foreach execd $ts_config(execd_hosts) {
+      if { $TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode1) != $TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode2) } {
+         puts $CHECK_OUTPUT "tight integration check produced execd error messages at $execd:"
+         append error_text "tight integration check produced execd error messages at $execd:\n"
+         for { set i [expr ( $TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode1) + 1 ) ] } { $i <= $TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode2) } { incr i 1 } { 
+            puts $CHECK_OUTPUT $TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode2,$i)
+            append error_text "$TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode2,$i)\n"
+         }
+      }
+      if { $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode1) != $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2) } {
+         puts $CHECK_OUTPUT "tight integration check produced execd waring messages at $execd:"
+         append error_text "tight integration check produced execd waring messages at $execd:\n"
+
+         for { set i [expr ( $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode1) + 1 ) ] } { $i <= $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2) } { incr i 1 } {
+             puts $CHECK_OUTPUT $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)
+             append error_text "$TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)\n"
+         }
+      }
+   }
+
+   if { $error_text != "" } {
+      add_proc_error "tight_integration_check_messages" -1 "$error_text"
+   } else {
+      puts $CHECK_OUTPUT "tight integration check produced no execd errors or warnings"
+   }
+
+}
+
+
 proc tight_integration_setup  {} {
    global CHECK_PRODUCT_ROOT CHECK_CORE_EXECD TIGHT_INTEGRATION_MASSIVE_SLOTS
+   global ts_config CHECK_OUTPUT CHECK_USER
+   global TIGHT_INTEGRATION_ERROR_MESSAGES TIGHT_INTEGRATION_WARNING_MESSAGES
 
    # create parallel environment
    set pe(pe_name)            tight
@@ -131,11 +207,31 @@ proc tight_integration_setup  {} {
    set queue_conf(slots) 10 
    add_queue tight.q @allhosts queue_conf
 
+   tight_integration_parse_execd_messages startup
+
    set_error 0 "ok"
 }
 
 proc tight_integration_cleanup  {} {
-   global CHECK_PRODUCT_TYPE
+   global CHECK_PRODUCT_TYPE CHECK_OUTPUT
+   global TIGHT_INTEGRATION_ERROR_MESSAGES TIGHT_INTEGRATION_WARNING_MESSAGES
+
+   get_config global_config
+   puts $CHECK_OUTPUT "load_report_time is set to $global_config(load_report_time)"
+   set report_time [transform_date_time $global_config(load_report_time)]
+   set zero_time [transform_date_time "00:00:00"]
+   set sleep_time [expr ( $report_time - $zero_time )]
+
+   puts $CHECK_OUTPUT "sleeping for $sleep_time seconds to let each execd report its final state ..."
+   sleep $sleep_time
+
+   puts $CHECK_OUTPUT "additional sleep of 5 seconds ..."
+   sleep 5
+
+   tight_integration_parse_execd_messages cleanup
+
+   tight_integration_check_messages startup cleanup
+   
 
    del_queue tight.q "" 0 1
    del_pe tight

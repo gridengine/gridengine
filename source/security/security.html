@@ -106,7 +106,15 @@ be exported setuid root</font></li>
 -m -resport' for qmaster and './inst_sge -x -resport' for execd</font></li>
 
 <br><font color="#000000">The client binaries are installed setuid root
-to be able to connect to Grid Engine from reserved ports.</font></ul>
+to be able to connect to Grid Engine from reserved ports.</font>
+<br>&nbsp;
+<li>
+<font color="#000000">if you are setting up a system with shared libraries,
+the libraries must be copied to a 'safe' place. The dynamic loader requires
+in general that</font></li>
+
+<br><font color="#000000">the libraries are installed under /usr/lib or
+some other trusted system path.</font></ul>
 <font color="#000000">What can you expect ?</font>
 <p><font color="#000000">The communication over reserved ports assures
 that only messages that are send from a port in the range 0-1023 are accepted.
@@ -126,8 +134,8 @@ its</font></li>
 <br><font color="#000000">own version of Grid Engine binaries and setuid
 root them.</font>
 <li>
-<font color="#000000">the Grid Engine executables should not be replaceable
-by someone else than root (this must be checked during installation)</font></li>
+<font color="#000000">the Grid Engine executables/libraries should not
+be replaceable by someone else than root (this must be checked during installation)</font></li>
 
 <li>
 <font color="#000000">all hosts where root access can be gained are trusted</font></li>
@@ -172,7 +180,7 @@ answers</font></li>
 Security Using Kerberos/DCE Authentication</font>
 <p><font color="#000000">Grid Engine can be run in a Kerberos/DCE environment
 using the corresponding authentication mechanisms. A detailed description
-how to integrate Grid Engine in such an enviroment can be found <a href="gss/doc/README.html">here</a>.</font>
+how to integrate Grid Engine in such an enviroment can be found <a href="gss/doc/gss.html">here</a>.</font>
 <p><a NAME="Enhanced Security Using Kerberos"></a><font color="#990000">Enhanced
 Security Using Kerberos</font>
 <p>The Grid Engine has been prepared for usage in a Kerberos V environment.
@@ -180,16 +188,13 @@ A former version of Grid Engine (aka Codine/GRD) is in use in a production
 environment with Kerberos support. Although several source code changes
 have been applied to the current version, it should be easy to integrate
 Grid Engine into a Kerberos V environment. A description of the integration
-tasks and setup instructions can be found in the following documents:
+and a setup example can be found in the following documents:
 <ul>
 <li>
-<a href="krb/doc/ReleaseNotes.html">Release&nbsp;Notes</a></li>
+<a href="krb/doc/ReleaseNotes.html">Release Notes</a></li>
 
 <li>
 <a href="krb/doc/Implementation.html">Implementation</a></li>
-
-<li>
-<a href="krb/doc/DesignNotes.html">Original Design Notes</a></li>
 </ul>
 
 <p><br><a NAME="Enhanced Security Using OpenSSL"></a><font color="#990000">Enhanced
@@ -202,5 +207,6 @@ german) outlining the architecture of this security approach can be found
 <a href="sec/doc/diplomarbeit.ps">here.</a></font>
 <center>
 <p>Copyright 2001 Sun Microsystems, Inc. All rights reserved.</center>
+
 </body>
 </html>

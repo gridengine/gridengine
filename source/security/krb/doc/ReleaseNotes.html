@@ -11,7 +11,7 @@
 <body>
 
 <h2>
-<font color="#990000">Kerberized Grid Engine Overview</font></h2>
+<font color="#990000">Kerberized Grid Engine Release Notes</font></h2>
 Kerberized Grid Engine provides for the authentication of Grid Engine users
 and Grid Engine daemons to ensure a secure queueing environment. Kerberized
 Grid Engine also supports automatic forwarding and renewal of Kerberos
@@ -36,7 +36,9 @@ is fritz.hpc-tx.com and the execution host is constitution.hpc-tx.com.
 Add a principal for the Grid Engine service for each qmaster and shadow
 host. Specify the qmaster or shadow host as the host portion of the principal.</li>
 
-<p><br>$ kinit admin/admin
+<br>&nbsp;
+<p>&nbsp;
+<p>$ kinit admin/admin
 <br>Password for admin/admin@HPC-TX.COM:
 <br>$ /usr/krb5/sbin/kadmin
 <br>Enter password:
@@ -50,7 +52,9 @@ Add a principal for the sge_qmaster and sge_schedd daemons for the qmaster
 host and any shadow hosts. Specify the qmaster or shadow host as the host
 portion of the principal.</li>
 
-<p><br>$ /usr/krb5/sbin/kadmin
+<br>&nbsp;
+<p>&nbsp;
+<p>$ /usr/krb5/sbin/kadmin
 <br>Enter password:
 <br>kadmin: addprinc -randkey sge_qmaster/fritz.hpc-tx.com@HPC-TX.COM
 <br>Principal "sge_qmaster/fritz.hpc-tx.com@HPC-TX.COM" created.
@@ -64,7 +68,9 @@ For each execution host, add a cod_execd principal for the cod_execd daemon
 which will be executing on the host. Specify the execution host as the
 host portion of the principal.</li>
 
-<p><br>$ /usr/krb5/sbin/kadmin
+<br>&nbsp;
+<p>&nbsp;
+<p>$ /usr/krb5/sbin/kadmin
 <br>Enter password:
 <br>kadmin: addprinc -randkey sge_execd/constitution.hpc-tx.com@HPC-TX.COM
 <br>Principal "sge_execd/constitution.hpc-tx.com@HPC-TX.COM" created.
@@ -76,7 +82,9 @@ Add the GRD, cod_qmaster, and cod_schedd principals to the default keytab
 on the qmaster host and any shadow hosts. (You need to be root to write
 to the default keytab.)</li>
 
-<p><br>On each qmaster or shadow host:
+<br>&nbsp;
+<p>&nbsp;
+<p>On each qmaster or shadow host:
 <p>$ su
 <br>Password:
 <br># /usr/krb5/bin/kinit admin/admin
@@ -97,7 +105,9 @@ type DES-CBC-CRC added to keytab WRFILE:/etc/krb5.keytab.
 For each execution host, add the cod_execd principal to the default keytab
 on the execution host. (You need to be root to write to the default keytab.)</li>
 
-<p><br>On each execution host:
+<br>&nbsp;
+<p>&nbsp;
+<p>On each execution host:
 <p>$ su
 <br>Password:
 <br># /usr/krb5/bin/kinit admin/admin
@@ -132,7 +142,7 @@ the kinit command is issued. To request a forwardable TGT which can be
 renewed for 14 days, the user should issue the command:
 <p>$ kinit -f -r 14d</ul>
 
-<center>
-<p>Copyright 2001 Sun Microsystems, Inc. All rights reserved.</center>
+<center>Copyright 2001 Sun Microsystems, Inc. All rights reserved.</center>
+
 </body>
 </html>

@@ -43,7 +43,7 @@ bool
 sge_shutdown_persistence(lList **answer_list);
 
 void
-deliver_spooling_trigger(te_event_t anEvent);
+spooling_trigger_handler(te_event_t anEvent);
 
 bool
 sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event type, 

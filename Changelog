@@ -1,3 +1,6 @@
+AD-2004-01-19-1: Bugfix:    Spooling trigger handler was not registered.
+                 Changed:   qmaster
+
 EB-2004-01-19-2: Bugfix:    several bugfixes
                             - fixed "test_drmaa ST_DRMAA_JOB_PS <jid>"
                             - communication between master and execd was broken

@@ -79,6 +79,7 @@ sge_initialize_persistence(lList **answer_list)
          spool_set_default_context(spooling_context);
 
          /* initialize timer for spooling trigger function */
+         te_register_event_handler(spooling_trigger_handler, TYPE_SPOOLING_TRIGGER);
          ev = te_new_event(now, TYPE_SPOOLING_TRIGGER, ONE_TIME_EVENT, 0, 0, NULL);
          te_add_event(ev);
          te_free_event(ev);
@@ -124,7 +125,7 @@ sge_shutdown_persistence(lList **answer_list)
 }
 
 void
-deliver_spooling_trigger(te_event_t anEvent)
+spooling_trigger_handler(te_event_t anEvent)
 {
    time_t next_trigger = 0;
    time_t now;

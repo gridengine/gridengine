@@ -1,3 +1,11 @@
+MD-2003-07-15-1  Bugfix:    Fixed some script errors (IA64 Linux port)
+                            Added 3rdparty/qtcsh/IA64LINUX directory
+                            + Makefile
+                            + config.h
+                            Added 3rdparty/qmake/IA64LINUX directory
+                            + Makefile
+                            + config.h
+
 MD-2003-07-15-0: Enhancem.  IA64 Linux port
                  Review:    EB
 

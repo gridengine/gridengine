@@ -145,8 +145,8 @@ case "solaris86":
 case "tru64":
    set BUILDARCH = ALPHA5
    breaksw
-case "ia64linux":					      <
-   set BUILDARCH = IA64LINUX				      <
+case "ia64linux":					      
+   set BUILDARCH = IA64LINUX				     
    breaksw
 default:
    echo oops - no mapping for architecure \"$buildarch\" defined yet
@@ -1631,72 +1631,70 @@ case UNICOS*:
    breaksw
 
 case IA64LINUX:						      
-							      
-   strings /lib/libc.so.6 | grep "GNU C Library" | grep 2.2 > 
-   if ( $status == 0 ) then				      
-      set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"		      
-   endif						      
-							      
-   set COMPILE_DC = 1					      
-   if ( $USE_QMAKE == 0 ) then				      
-      set MAKE = make					      
-   endif						      
-   set OFLAG = "-O2"					      
-      if ( $OPTIMIZATION == 1 ) then			      
-         set OFLAG = "-O3"				      
-      endif						      
-   if ( "$CC" != insure ) then				      
-      set CC       = gcc				      
-      set CXX      = g++				      
-   else							      
-      set CFLAGS = "-Wno-error $CFLAGS"			      
-      set CXXFLAGS = "-Wno-error $CXXFLAGS"		      
-      set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"      
-      set LIBS = "$LIBS"				      
-   endif						      
-							      
-   if ( $CC == "gcc" && `gcc --version` == "2.96") then	      
-      set CFLAGS = "-DUSING_GCC_2_96 $CFLAGS"		      
-   endif						      
-							      
-   set CFLAGS = "-DLINUX -D$BUILDARCH $CFLAGS"		      
-   set CXXFLAGS = "-DLINUX -D$BUILDARCH $CXXFLAGS"	      
-   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"		      
-							      
-   set SHAREDLD = $CC					      
-   set SHARED_CFLAGS = "-fPIC"				      
-   set SHARED_LFLAGS = "-L. -shared"			      
-							      
-   set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"	      
-							      
-   if ( $DEBUGGED == 1) then				      
-      set DEBUG_FLAG = "-g $INSURE_FLAG"		      
-      set OFLAG = ""					      
-   endif						      
-   if ( $GPROFFED == 1) then				      
-      set DEBUG_FLAG = "$DEBUG_FLAG -pg"		      
-   endif						      
-   if ( $COMPILE_ARCH == "LINUX60" ) then			      
-      set GLIBC20DEF=-DLINUX60			
-   else							      
-     set GLIBC20DEF = ""				      
-   endif						      
-   set CFLAGS   = "$OFLAG -Wall -Werror $GLIBC20DEF $DEBUG_FL 
-   set CXXFLAGS   = "$OFLAG -Werror -Wstrict-prototypes $GLIB 
-   set NOERR_CFLAG = "-Wno-error"			      
-   set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"		      
-   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"	      
-   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"			      
-   set LIBS     = "$LIBS"				      
-   set XMTDEF   = ""					      
-   set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"      
-   set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF  
-   set XLIBD    = "-L/usr/X11R6/lib"			      
-							      
-   set XLFLAGS  = "$XLIBD"				      
-   set XLIBS    = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -l 
-							      
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"	
+   strings /lib/libc.so.6 | grep "GNU C Library" | grep 2.2 >& /dev/null
+   if ( $status == 0 ) then
+      set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
+   endif
+
+   set COMPILE_DC = 1
+   if ( $USE_QMAKE == 0 ) then
+      set MAKE = make
+   endif
+   set OFLAG = "-O2"
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "-O3"
+      endif
+   if ( "$CC" != insure ) then
+      set CC       = gcc
+      set CXX      = g++
+   else
+      set CFLAGS = "-Wno-error $CFLAGS"
+      set CXXFLAGS = "-Wno-error $CXXFLAGS"
+      set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"
+      set LIBS = "$LIBS"
+   endif
+
+   if ( $CC == "gcc" && `gcc --version` == "2.96") then
+      set CFLAGS = "-DUSING_GCC_2_96 $CFLAGS"
+   endif
+
+   set CFLAGS = "-DLINUX -D$BUILDARCH $CFLAGS"
+   set CXXFLAGS = "-DLINUX -D$BUILDARCH $CXXFLAGS"
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+
+   set SHAREDLD = $CC
+   set SHARED_CFLAGS = "-fPIC"
+   set SHARED_LFLAGS = "-L. -shared"
+
+   set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
+
+   if ( $DEBUGGED == 1) then
+      set DEBUG_FLAG = "-g $INSURE_FLAG"
+      set OFLAG = ""
+   endif
+   if ( $GPROFFED == 1) then
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
+   endif
+   if ( $COMPILE_ARCH == "LINUX60" ) then
+      set GLIBC20DEF=-DLINUX60
+   else
+     set GLIBC20DEF = ""
+   endif
+   set CFLAGS   = "$OFLAG -Wall -Werror $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
+   set CXXFLAGS   = "$OFLAG -Werror -Wstrict-prototypes $GLIBC20DEF $DEBUG_FLAG $CXXFLAGS"
+   set NOERR_CFLAG = "-Wno-error"
+   set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+   set LIBS     = "$LIBS"
+   set XMTDEF   = ""
+   set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
+   set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
+   set XLIBD    = "-L/usr/X11R6/lib"
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
    breaksw
 

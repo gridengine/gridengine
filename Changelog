@@ -1,3 +1,13 @@
+HP-2005-03-18-0  Bugfix:   Replaced direct compare of UID to 0 with function call to
+                           sge_is_start_user_superuser(), removed
+                           sge_is_start_user_root() from library because it did the
+                           same /
+                           Put error message in Debug output in error handling
+                           branch.
+                 Changed:  libs/uti/sge_uidgid.c, libs/uti/sge_io.c
+                 Review:   RD
+
+
 HP-2005-03-17-1  Bugfix:    UID was still compared to 0, not to SuperUser
                  Changed:   libs/uti/sge_uidgid.c
 

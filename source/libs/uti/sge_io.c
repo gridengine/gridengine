@@ -143,9 +143,9 @@ int sge_writenbytes(int sfd, const char *ptr,
       DTRACE;
       i = write(sfd, ptr, nleft);
       if (i == -1) {
-         DPRINTF(("wrote %d bytes on fd %d\n", i, sfd));
-      } else {
          DPRINTF(("write failed with error %d: %s\n", i, strerror(errno)));
+      } else {
+         DPRINTF(("wrote %d bytes on fd %d\n", i, sfd));
       }
 
       if (i <= 0) {

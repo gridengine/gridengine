@@ -55,7 +55,7 @@ UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
 REMOTEBINARIES="rsh rshd rlogin"
 
 SUPPORTEDARCHS="aix42 aix43 alinux cray crayts craytsieee glinux hp10 \
-hp11 irix6 necsx4 necsx5 solaris solaris64 solaris86 osf4 tru64"
+hp11 irix6 necsx4 necsx5 slinux solaris solaris64 solaris86 osf4 tru64"
 
 #SGEEE_UTILITYBINARIES="sge_share_mon sge_host_mon"
 SGEEE_UTILITYBINARIES="sge_share_mon"
@@ -144,6 +144,8 @@ SetArchBin()
       ARCHBIN=LINUX6
    elif  [ $i = alinux ]; then
       ARCHBIN=ALINUX
+   elif  [ $i = slinux ]; then
+      ARCHBIN=SLINUX
    elif [ $i = osf4 ]; then
       ARCHBIN=ALPHA4
    elif [ $i = tru64 ]; then

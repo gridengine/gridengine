@@ -1,3 +1,8 @@
+JG-2001-10-17-0: (Issue #57)
+                 Sparc Linux port (32 bit). Grid Engine platform slinux.
+                 The port is restricted to SGE as the pdc module had to be 
+                 disabled for slinux (aimk variable COMPILE_DC).
+
 JG-2001-10-16-0: Implemented the use of hash tables for cull lists.
                  The list definition (libs/gdi/sge_*L.h) contains information, 
                  for which data fields hash tables shall be generated.

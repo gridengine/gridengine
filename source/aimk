@@ -102,6 +102,9 @@ case "necsx5":
 case "osf4":
    set BUILDARCH = ALPHA4
    breaksw
+case "slinux":
+   set BUILDARCH = SLINUX
+   breaksw
 case "solaris":
    set BUILDARCH = SOLARIS
    breaksw
@@ -1035,6 +1038,7 @@ case LINUX6:
 
    if ( $DEBUGGED == 1) then
       set DEBUG_FLAG = "-ggdb $INSURE_FLAG"
+      set OFLAG = ""
    endif
    if ( $GPROFFED == 1) then
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
@@ -1111,6 +1115,53 @@ case NECSX5:
    endif
    breaksw
 
+case SLINUX:
+   set COMPILE_DC = 0
+   if ( $USE_QMAKE == 0 ) then
+      set MAKE = make
+   endif
+   set OFLAG = "-O"
+   if ( $OPTIMIZATION == 1 ) then
+      set OFLAG = "-O3"
+   endif   
+
+   set CC = "gcc"
+   set CXX = "g++"
+
+   if ( $DEBUGGED == 1) then
+      set DEBUG_FLAG = "-ggdb"
+      set OFLAG = ""
+   endif
+   if ( $GPROFFED == 1) then
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
+   endif
+
+   set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
+
+   set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX $DEBUG_FLAG $CFLAGS"
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set CXXFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX $DEBUG_FLAG $CFLAGS"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+
+   if ( $SHAREDLIBS == 1 ) then
+      set SHAREDLD = $CC
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "-L. -shared"
+   endif
+
+   set XMTDEF   = ""
+   set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
+   set XCFLAGS  = "-DNeedFunctionPrototypes -Wno-error $XMTDEF $XINCD"
+   set XLIBD    = "-L/usr/X11R6/lib"
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+
+   set NOERR_CFLAG = "-Wno-error"
+   set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
+   breaksw
 
 case SOLARIS:
 case SOLARIS64:

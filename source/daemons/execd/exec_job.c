@@ -113,10 +113,12 @@ extern char execd_spool_dir[SGE_PATH_MAX];
 /* import Master Job List */
 extern lList *Master_Job_List;
 
+#if COMPILE_DC
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
 /* local functions */
 static int addgrpid_already_in_use(long);
 static long get_next_addgrpid(lList *, long);
+#endif
 #endif
 
 /* 
@@ -157,6 +159,7 @@ lListElem *slave_jatep
    return master_q;
 }
 
+#if COMPILE_DC
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
 static long get_next_addgrpid(
 lList *rlp,
@@ -214,6 +217,7 @@ long add_grp_id
    }
    return (0);
 }
+#endif
 #endif
 
 /****** execd/add_or_replace_env() ***************************************
@@ -548,10 +552,12 @@ char *err_str
    char *cwd;
    lList *cplx;
    char dce_wrapper_cmd[128];
-   
+
+#if COMPILE_DC
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
    static gid_t last_addgrpid;
 #endif
+#endif   
 
    char dir[SGE_PATH_MAX], 
         shepherd_path[SGE_PATH_MAX], 

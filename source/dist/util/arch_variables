@@ -59,7 +59,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/sbin/in.telnetd
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
    ;;
- alinux|glinux)
+ alinux|glinux|slinux)
    AWK=/usr/bin/gawk
    ECHO="/bin/echo -e"
    if [ -x /sbin/insserv ]; then

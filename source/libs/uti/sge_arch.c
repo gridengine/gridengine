@@ -69,6 +69,8 @@ char *sge_arch()
 #   define ARCHBIN "linux"
 #elif defined(LINUX6)
 #   define ARCHBIN "glinux"
+#elif defined(SLINUX)
+#   define ARCHBIN "slinux"
 #elif defined(CRAY)
 # if defined(CRAYTSIEEE)
 #   define ARCHBIN "craytsieee"

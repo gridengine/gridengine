@@ -77,7 +77,9 @@
 #  endif
 #endif
 
+#if COMPILE_DC
 static int repriorisation_enabled = 0;
+#endif
 
 extern volatile int dead_children;
 extern volatile int waiting4osjid;

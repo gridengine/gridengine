@@ -1579,6 +1579,8 @@ char *arch
       index = 7;
    else if (!strncmp(arch, "glinux", 6))
       index = 7;
+   else if (!strncmp(arch, "slinux", 6))
+      index = 7;
    else if (!strncmp(arch, "rs6000", 6))
       index = 8;
    else if (!strncmp(arch, "aix4", 4))

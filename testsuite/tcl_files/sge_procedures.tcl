@@ -6117,7 +6117,6 @@ proc get_version_info {} {
 
    if { [info exists CHECK_PRODUCT_ROOT] != 1 } {
       set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
-      delete_tests $CHECK_CHECKTREE_ROOT/install_core_system
       return $CHECK_PRODUCT_VERSION_NUMBER
    }
    
@@ -6133,7 +6132,6 @@ proc get_version_info {} {
            ([ string first "product_mode" [ lindex $help 0] ] >= 0) ||   
            ($qmaster_running != 0) } {
           set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
-          delete_tests $CHECK_CHECKTREE_ROOT/install_core_system
           return $CHECK_PRODUCT_VERSION_NUMBER
       }
       set CHECK_PRODUCT_VERSION_NUMBER [ lindex $help 0]
@@ -6178,7 +6176,6 @@ proc get_version_info {} {
       return $CHECK_PRODUCT_VERSION_NUMBER
    }
    set CHECK_PRODUCT_VERSION_NUMBER "system not installed - run compile option first"
-   delete_tests $CHECK_CHECKTREE_ROOT/install_core_system
    return $CHECK_PRODUCT_VERSION_NUMBER
 }
 

@@ -54,7 +54,8 @@ global do_close_rlogin
 set do_close_rlogin 0
 
 global do_compile
-
+global CHECK_TESTSUITE_LOCKFILE
+set CHECK_TESTSUITE_LOCKFILE "testsuite_lockfile"
 
 # path/file variables
 global CHECK_TESTSUITE_ROOT        ;# path to TESTSUITE directory
@@ -389,6 +390,7 @@ set CHECK_DEFAULTS_FILE    "$CHECK_CURRENT_WORKING_DIR/defaults.sav"
 set CHECK_TESTSUITE_ROOT "$CHECK_CURRENT_WORKING_DIR"
 set CHECK_CHECKTREE_ROOT "$CHECK_CURRENT_WORKING_DIR/checktree"
 set CHECK_MAIN_RESULTS_DIR "$CHECK_CURRENT_WORKING_DIR/results"
+set CHECK_TESTSUITE_LOCKFILE "$CHECK_CURRENT_WORKING_DIR/testsuite_lockfile"
 
 #set CHECK_OUTPUT [open /dev/null "w"]
 set CHECK_OUTPUT stdout 
@@ -3375,6 +3377,7 @@ proc get_configuration_element_count { config_array } {
 proc config_testsuite_root_dir { only_check name config_array } {
    global CHECK_OUTPUT 
    global CHECK_TESTSUITE_ROOT
+   global CHECK_TESTSUITE_LOCKFILE
    global CHECK_USER
    global CHECK_GROUP
    global env
@@ -3422,6 +3425,7 @@ proc config_testsuite_root_dir { only_check name config_array } {
 
    # set global variables to value
    set CHECK_TESTSUITE_ROOT $value
+   set CHECK_TESTSUITE_LOCKFILE "$value/testsuite_lockfile"
 
    if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
       set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
@@ -3462,6 +3466,7 @@ proc config_testsuite_root_dir { only_check name config_array } {
 proc config_checktree_root_dir { only_check name config_array } {
    global CHECK_OUTPUT 
    global CHECK_TESTSUITE_ROOT
+   global CHECK_TESTSUITE_LOCKFILE
    global CHECK_CHECKTREE_ROOT
    global CHECK_USER CHECK_HOST
    global CHECK_GROUP
@@ -8631,6 +8636,9 @@ proc modify_setup2 {} {
 
    global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_PRODUCT_ROOT CHECK_CHECKTREE_ROOT
 
+
+   lock_testsuite
+
    set old_exed $CHECK_CORE_EXECD
    set old_master $CHECK_CORE_MASTER
    set old_root $CHECK_PRODUCT_ROOT
@@ -8754,7 +8762,7 @@ proc modify_setup2 {} {
          compile_source
       }
    }
-
+   unlock_testsuite
    return $change_level
 }
 
@@ -8826,6 +8834,7 @@ proc setup2 { } {
    global CHECK_MAX_ERROR_MAILS
    global CHECK_USE_SSH 
  
+
    source_procedures
   
    # unset old system environment
@@ -8969,6 +8978,7 @@ proc setup2 { } {
       if { $CHECK_DO_SETUP == 1 } {
          modify_setup2
       }
+      unlock_testsuite
       return 0 
    } else {
       puts $CHECK_OUTPUT "could not open defaults file."
@@ -10861,7 +10871,7 @@ proc run_tests { path runcompleted } {
 #*******************************
 proc lock_testsuite {} {
     global CHECK_TESTSUITE_ROOT CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_MAIN_RESULTS_DIR
-    global CHECK_SCRIPT_FILE_DIR
+    global CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_LOCKFILE
 
     set pid [getpid]
     
@@ -10872,11 +10882,11 @@ proc lock_testsuite {} {
     while { $result  != 10 } {
        puts $CHECK_OUTPUT "waiting for lock ..."
        set result [ catch {  
-           eval exec "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/lock.sh $CHECK_MAIN_RESULTS_DIR/testsuite_lockfile $pid $CHECK_HOST $CHECK_USER"
+           eval exec "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/lock.sh $CHECK_TESTSUITE_LOCKFILE $pid $CHECK_HOST $CHECK_USER"
        } ]
        puts $CHECK_OUTPUT "lock.sh returned $result"
        set file_size 0
-       catch { set file_size [file size "$CHECK_MAIN_RESULTS_DIR/testsuite_lockfile"]}
+       catch { set file_size [file size $CHECK_TESTSUITE_LOCKFILE]}
        if { $file_size == 0 } {
            puts $CHECK_OUTPUT "file size is 0, deleteing lockfile..."
            sleep 60  ;# wait for NFS to update file
@@ -10888,7 +10898,7 @@ proc lock_testsuite {} {
           puts $CHECK_OUTPUT "checking lockfile owner process ..."
           set data ""
           catch {
-              set input [ open "$CHECK_MAIN_RESULTS_DIR/testsuite_lockfile" "r" ]
+              set input [ open "$CHECK_TESTSUITE_LOCKFILE" "r" ]
               gets $input data 
               close $input
           }
@@ -10922,7 +10932,7 @@ proc lock_testsuite {} {
     set file_size 0
     while {$ok != 1} {
        sleep 1
-       catch { set input [ open "$CHECK_MAIN_RESULTS_DIR/testsuite_lockfile" "r" ]
+       catch { set input [ open $CHECK_TESTSUITE_LOCKFILE "r" ]
                gets $input data 
                close $input } 
  
@@ -10938,7 +10948,7 @@ proc lock_testsuite {} {
        }
        debug_puts "waiting to get lock"
 
-       catch { set file_size [file size "$CHECK_MAIN_RESULTS_DIR/testsuite_lockfile"]}
+       catch { set file_size [file size $CHECK_TESTSUITE_LOCKFILE]}
        debug_puts "file size is: $file_size"
 
        if { [timestamp] > $time } {
@@ -10990,17 +11000,17 @@ proc lock_testsuite {} {
 #     ???/???
 #*******************************
 proc unlock_testsuite {} {
-    global CHECK_TESTSUITE_ROOT CHECK_OUTPUT CHECK_MAIN_RESULTS_DIR
+    global CHECK_TESTSUITE_ROOT CHECK_OUTPUT CHECK_MAIN_RESULTS_DIR CHECK_TESTSUITE_LOCKFILE
 
-    if {[file isfile "$CHECK_MAIN_RESULTS_DIR/testsuite_lockfile"] == 1 } {
-        puts $CHECK_OUTPUT "removing lockfile \"$CHECK_MAIN_RESULTS_DIR/testsuite_lockfile\"" 
+    if {[file isfile $CHECK_TESTSUITE_LOCKFILE] == 1 } {
+        puts $CHECK_OUTPUT "removing lockfile \"$CHECK_TESTSUITE_LOCKFILE\"" 
 
-       set catch_return [ catch {exec rm "$CHECK_MAIN_RESULTS_DIR/testsuite_lockfile"} ]
+       set catch_return [ catch {exec rm "$CHECK_TESTSUITE_LOCKFILE"} ]
        if { $catch_return != 0 } {
           puts $CHECK_OUTPUT "unlock_testsuite - could not unlock testsuite"
           return
        } 
-       while { [ file isfile $CHECK_MAIN_RESULTS_DIR/testsuite_lockfile ] == 1 } {
+       while { [ file isfile $CHECK_TESTSUITE_LOCKFILE ] == 1 } {
           puts $CHECK_OUTPUT "file still existing" 
           sleep 1
        }

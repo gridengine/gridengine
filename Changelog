@@ -1,3 +1,8 @@
+CR-2002-11-29-0  Testsuite: a) using testsuite root directory for lockfile, not
+                 Bugfix:       testsuite results directory.
+                            b) get_version_info() may not reset install_core_system
+                               test if version is not ascertainable.
+
 CR-2002-11-28-2  Cleanup:   un-commented message macros not used in source code
                  L10N:
 

@@ -1,3 +1,8 @@
+SG-2004-02-25-1: Bugfix:    fixed the time bases for YY specification. It referes to
+                            to the range of 1970 till 2069.
+                 Chaged:    qacct, qsub, qalter,...
+                 Issue:     709
+
 BD-2004-02-24-2: Bugfix:    If we're going to hardcode a path to tcsh
                             in qtcsh, we should use the system tcsh in
                             /bin/tcsh.

@@ -1,3 +1,9 @@
+HP-2005-04-04-0: Bugfix:    scripts/distinst now copies ASCMAN/man/manX to
+                            man/catX for Interix man.
+                 Bugtraq:   6239465           
+                 Changed:   scripts/distinst
+                 Review:    EB
+
 JG-2005-04-04-0: Testsuite: Fixed check bugs/issuezilla/1489
 
 MD-2005-04-01-0: Testsuite: BDB RPC Server installation support

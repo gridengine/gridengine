@@ -1028,6 +1028,21 @@ if [ $instcommon = true ]; then
       if [ -d MANSBUILD_$MANSRCDIR/ASCMAN/catman ]; then
          Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/catman $DEST_SGE_ROOT
       fi
+
+      if [ -d MANSBUILD_$MANSRCDIR/ASCMAN/man ]; then
+         SOURCEDIR=MANSBUILD_$MANSRCDIR/ASCMAN/man
+         DESTDIR=$DEST_SGE_ROOT/man
+         for dir in `ls $SOURCEDIR`; do
+            dir_num=`basename $dir | cut -d"n" -f2`
+            for file in `ls $SOURCEDIR/$dir`; do
+               if [ ! -d "$DESTDIR/cat$dir_num" ]; then
+                  mkdir -p $DESTDIR/cat$dir_num
+               fi
+               Execute cp $SOURCEDIR/$dir/$file $DESTDIR/cat$dir_num/$file.$dir_num
+            done
+         done
+      fi
+
       Cleanup man catman
    fi
 

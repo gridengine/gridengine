@@ -35,7 +35,8 @@
 
 set TAG = HEAD
 set CODIR = "/tmp/CODIR"
-set OUTFILE = "/tmp/gridengine_src.tar.gz"
+set OUTFILE = "/tmp/sge-5.3-src.tar.gz"
+set EXCLUDEFILES = "SGE5_3alpha.pdf"
 
 #
 # commandline parsing
@@ -101,12 +102,17 @@ cd $CODIR
 rm -rf $CODIR/gridengine
 cvs -z9 -q co -r $TAG gridengine/source gridengine/testsuite gridengine/INSTALL gridengine/Changelog gridengine/doc
 find gridengine -name Root -exec rm {} \;
-find gridengine -name SGE5_3alpha.pdf -exec rm {} \;
+foreach i ( $EXCLUDEFILES ) 
+   find gridengine -name $i -exec rm {} \;
+end   
 tar cvzf $OUTFILE gridengine
 rm -rf $CODIR/gridengine
 exit 0
 
 
+#
+# 
+#
 usage:
    echo "usage: <OPTIONS>"
 

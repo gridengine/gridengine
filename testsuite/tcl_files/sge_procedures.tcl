@@ -1333,44 +1333,19 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
   global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
   global CHECK_CORE_MASTER CHECK_USER
 
-  upvar $change_array chgar
-  set values [array names chgar]
+   upvar $change_array chgar
+   set values [array names chgar]
 
    # get old config - we want to compare it to new one
-  if { $do_add == 0 } {
-     get_config old_values $host
-  }
+   if { $do_add == 0 } {
+      set qconf_cmd "-mconf"
+      get_config old_values $host
+   } else {
+      set qconf_cmd "-aconf"
+      set old_values(xyz) "abc"
+   }
 
    set vi_commands [build_vi_command chgar old_values]
-if {0} {
-  set vi_commands ""
-
-  # compare the new values to old ones
-  foreach elem $values {
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal $chgar($elem)
-   
-     if {[info exists old_values($elem)]} {
-        # if old and new config have the same value, create no vi command,
-        # if they differ, add vi command to ...
-        if { [string compare $old_values($elem) $newVal] != 0 } {
-           if { $newVal == "" } {
-              # ... delete config entry (replace by comment)
-              lappend vi_commands ":%s/^$elem .*$/#/\n"
-           } else {
-              # ... change config entry
-              set newVal1 [split $newVal {/}]
-              set newVal [join $newVal1 {\/}]
-              lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-           }
-        }
-     } else {
-        # if the config entry didn't exist in old config: append a new line
-        lappend vi_commands "A\n$elem  $newVal"
-        lappend vi_commands [format "%c" 27]
-     }
-  }
-}
   
   set GIDRANGE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I] "*"]
 
@@ -1385,7 +1360,7 @@ if {0} {
 
   set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
 
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mconf $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "$qconf_cmd $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
   
   if { ($ignore_error == 1) && ($result == -4) } {
      # ignore error -4 

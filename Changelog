@@ -1,3 +1,6 @@
+DT-2004-09-13-1: Bugfix:    o Fixed DRMAA-J on Irix 6.5
+                 Changed:   create_settings.sh
+
 DT-2004-09-13-0: Bugfix:    o Fixed "delete all" bug in JAPI
                             o Fixed locking bugs in JAPI
                             o Tested DRMAA-J on all platforms

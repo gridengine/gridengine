@@ -2013,7 +2013,10 @@ int spool_get_unprocessed_field(spooling_field in[], int out[], lList **alpp)
       
       if (out[counter] == NoName) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                        MSG_FLATFILE_ATTRIBISMISSING_S, lNm2Str(in[count].nm)));
+                        MSG_FLATFILE_ATTRIBISMISSING_S,
+                        (in[count].name == NULL) ?
+                           lNm2Str(in[count].nm) :
+                           in[count].name));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 
                          ANSWER_QUALITY_ERROR);
          return in[count].nm;

@@ -36,36 +36,10 @@
 extern "C" {
 #endif
 
-#if 0
-extern spooling_field *AMEM_sub_fields;
-extern spooling_field *ATIME_sub_fields;
-extern spooling_field *UP_sub_fields;
-extern spooling_field *APRJLIST_sub_fields;
-extern spooling_field *SO_sub_fields;
-extern spooling_field *ASOLIST_sub_fields;
-extern spooling_field *US_sub_fields;
-extern spooling_field *AUSRLIST_sub_fields;
-extern spooling_field *ABOOL_sub_fields;
-extern spooling_field *ST_sub_fields;
-extern spooling_field *ASTRLIST_sub_fields;
-extern spooling_field *AQTLIST_sub_fields;
-extern spooling_field *ASTR_sub_fields;
-extern spooling_field *AINTER_sub_fields;
-extern spooling_field *CE_sub_fields;
-extern spooling_field *ACELIST_sub_fields;
-extern spooling_field *AULNG_sub_fields;
-extern spooling_field *CF_sub_fields;
-extern spooling_field *STN_sub_fields;
-extern spooling_field *HS_sub_fields;
-extern spooling_field *RU_sub_fields;
-extern spooling_field *HL_sub_fields;
-extern spooling_field *STU_sub_fields;
-extern spooling_field *UE_sub_fields;
-extern spooling_field *UA_sub_fields;
-extern spooling_field *UPP_sub_fields;
-extern spooling_field *UPU_sub_fields;
-extern spooling_field *HR_sub_fields;
-#endif
+/* A number guaranteed to be larger than the largest number of fields in a
+ * static of dynamic field list. */
+#define MAX_NUM_FIELDS 60
+   
 extern spooling_field CAL_fields[];
 extern spooling_field CK_fields[];
 extern spooling_field CE_fields[];

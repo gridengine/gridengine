@@ -1,3 +1,13 @@
+DT-2004-02-27-0: Bugfix:    o Rearranged japi_exit() to prevent the reopening
+                              of the close comm lib connection.
+                            o qconf -sq @... now returns a friendly error
+                              message.
+                            o qconf now requires all fields to be present for
+                              all options.
+                            o Fixed various qconf bugs
+                 Changed:   Flatfile Spooling, JAPI, qconf
+                 Issue:     692, 720
+
 SG-2004-02-27-0: Bugfix:    increased the timeout in qdel, since it might take
                             a bit longer to delete the jobs (with array tasks).
                  Changed:   qdel

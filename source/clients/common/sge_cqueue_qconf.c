@@ -221,7 +221,8 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
          const char *name = lGetString(qref, QR_name);
          bool has_hostname, has_domain;
          lCondition *add_cqueue_where = NULL;
-
+         const char* cqueue_name_str = NULL;
+         
          cqueue_name_split(name, &cqueue_name, &host_domain,
                            &has_hostname, &has_domain);
 
@@ -229,6 +230,18 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
          fetch_all_qi = fetch_all_qi || (has_domain || has_hostname);
          fetch_all_nqi = fetch_all_nqi || (!has_domain && !has_hostname);
 
+         cqueue_name_str = sge_dstring_get_string(&cqueue_name);
+         
+         if (cqueue_name_str == NULL) {
+            char buffer[MAX_STRING_SIZE];
+            
+            sprintf (buffer, MSG_CQUEUE_NAMENOTCORRECT_SS, name, name);
+            answer_list_add (answer_list, buffer, STATUS_ESYNTAX,
+                             ANSWER_QUALITY_ERROR);
+            ret = false;
+            break;
+         }
+         
          add_cqueue_where = lWhere("%T(%I p= %s)", CQ_Type, CQ_name, 
                                    sge_dstring_get_string(&cqueue_name));
          if (cqueue_where == NULL) {
@@ -362,6 +375,10 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
 {
    bool ret = false;
    int status = 0;
+#ifdef QCONF_FLATFILE
+   int fields_out[MAX_NUM_FIELDS];
+   int missing_field = NoName;
+#endif
    
    DENTER(TOP_LAYER, "cqueue_provide_modify_context");
    if (this_elem != NULL && *this_elem) {
@@ -372,7 +389,11 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
                                                      &cqqconf_sfi, SP_DEST_TMP,
                                                      SP_FORM_ASCII, filename,
                                                      false);
-      answer_list_output(answer_list);
+      
+      if (answer_list_output(answer_list)) {
+         DEXIT;
+         SGE_EXIT(1);
+      }
 #else
 
       filename = write_cqueue(2, 1, *this_elem);
@@ -383,13 +404,27 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
          lListElem *cqueue;
 
 #ifdef QCONF_FLATFILE
+         fields_out[0] = NoName;
          cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
-                                             CQ_fields, NULL, false, &cqqconf_sfi,
+                                             CQ_fields, fields_out, false, &cqqconf_sfi,
                                              SP_FORM_ASCII, NULL, filename);
-         answer_list_output(answer_list);
+      
+         if (answer_list_output(answer_list)) {
+            cqueue = lFreeElem (cqueue);
+         }
+
+         if (cqueue != NULL) {
+            missing_field = spool_get_unprocessed_field (CQ_fields, fields_out, answer_list);
+         }
+
+         if (missing_field != NoName) {
+            cqueue = lFreeElem (cqueue);
+            answer_list_output (answer_list);
+         }
 #else
          cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
 #endif
+
          if (cqueue != NULL) {
             if (object_has_differences(*this_elem, answer_list, 
                                        cqueue, false) ||
@@ -448,16 +483,33 @@ bool
 cqueue_add_from_file(lList **answer_list, const char *filename) 
 {
    bool ret = true;
+#ifdef QCONF_FLATFILE
+   int fields_out[MAX_NUM_FIELDS];
+   int missing_field = NoName;
+#endif
 
    DENTER(TOP_LAYER, "cqueue_add_from_file");
    if (filename != NULL) {
       lListElem *cqueue;
 
 #ifdef QCONF_FLATFILE
+      fields_out[0] = NoName;
       cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
-                                          CQ_fields, NULL, false, &cqqconf_sfi,
+                                          CQ_fields, fields_out, false, &cqqconf_sfi,
                                           SP_FORM_ASCII, NULL, filename);
-      answer_list_output(answer_list);
+            
+      if (answer_list_output(answer_list)) {
+         cqueue = lFreeElem (cqueue);
+      }
+
+      if (cqueue != NULL) {
+         missing_field = spool_get_unprocessed_field (CQ_fields, fields_out, answer_list);
+      }
+
+      if (missing_field != NoName) {
+         cqueue = lFreeElem(cqueue);
+         answer_list_output(answer_list);
+      }
 #else
       cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
 #endif
@@ -510,16 +562,33 @@ bool
 cqueue_modify_from_file(lList **answer_list, const char *filename)
 {
    bool ret = true;
+#ifdef QCONF_FLATFILE
+   int fields_out[MAX_NUM_FIELDS];
+   int missing_field = NoName;
+#endif
 
    DENTER(TOP_LAYER, "cqueue_modify_from_file");
    if (filename != NULL) {
       lListElem *cqueue;
 
 #ifdef QCONF_FLATFILE
+      fields_out[0] = NoName;
       cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
-                                          CQ_fields, NULL, false, &cqqconf_sfi,
+                                          CQ_fields, fields_out, false, &cqqconf_sfi,
                                           SP_FORM_ASCII, NULL, filename);
-      answer_list_output(answer_list);
+            
+      if (answer_list_output(answer_list)) {
+         cqueue = lFreeElem (cqueue);
+      }
+
+      if (cqueue != NULL) {
+         missing_field = spool_get_unprocessed_field (CQ_fields, fields_out, answer_list);
+      }
+
+      if (missing_field != NoName) {
+         cqueue = lFreeElem(cqueue);
+         answer_list_output(answer_list);
+      }      
 #else
       cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
 #endif
@@ -633,8 +702,12 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                                                        SP_DEST_STDOUT,
                                                        SP_FORM_ASCII, NULL,
                                                        false);
-                           answer_list_output(answer_list);
                            FREE (fields);
+                           
+                           if (answer_list_output(answer_list)) {
+                              DEXIT;
+                              SGE_EXIT(1);
+                           }
 #else
                            write_qinstance(0, 0, qinstance);
 #endif
@@ -683,8 +756,12 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                                                        SP_DEST_STDOUT,
                                                        SP_FORM_ASCII, NULL,
                                                        false);
-                           answer_list_output(answer_list);
                            FREE (fields);
+                           
+                           if (answer_list_output(answer_list)) {
+                              DEXIT;
+                              SGE_EXIT(1);
+                           }
 #else
                            write_qinstance(0, 0, qinstance);
 #endif
@@ -712,7 +789,11 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                                                  CQ_fields, &cqqconf_sfi,
                                                  SP_DEST_STDOUT, SP_FORM_ASCII, 
                                                  NULL, false);
-                     answer_list_output(answer_list);
+                           
+                     if (answer_list_output(answer_list)) {
+                        DEXIT;
+                        SGE_EXIT(1);
+                     }
 #else
                      write_cqueue(0, 0, cqueue);
 #endif
@@ -739,7 +820,11 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
       spool_flatfile_write_object(answer_list, cqueue, false, CQ_fields,
                                   &cqqconf_sfi, SP_DEST_STDOUT, SP_FORM_ASCII,
                                   NULL, false);
-      answer_list_output(answer_list);
+                           
+      if (answer_list_output(answer_list)) {
+         DEXIT;
+         SGE_EXIT(1);
+      }
 #else
       write_cqueue(0, 0, cqueue);
 #endif

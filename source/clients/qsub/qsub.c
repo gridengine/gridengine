@@ -202,6 +202,7 @@ char **argv
       pthread_t sigt;
       
       qsub_setup_sig_handlers(); 
+
       if (pthread_create (&sigt, NULL, sig_thread, (void *)NULL) != 0) {
          printf (MSG_QSUB_COULDNOTINITIALIZEENV_U, " error preparing signal handling thread");
          
@@ -352,7 +353,9 @@ Error:
          sge_mutex_unlock("qsub_exit_mutex", SGE_FUNC, __LINE__, &exit_mutex);
       }
    }
-   
+
+   /* This is an exit() instead of an SGE_EXIT() because when the qmaster is
+    * supended, SGE_EXIT() hangs. */
    exit (exit_status);
    DEXIT;
    return 0;

@@ -964,6 +964,9 @@ int japi_exit(bool close_session, int flag, dstring *diag)
     * o Close the session
     */
 
+   /* First we clean up the pending job(s). */
+   ret = japi_clean_up_jobs (flag, diag);
+
    JAPI_LOCK_EC_STATE();
    /* 
     * notify event client about shutdown
@@ -979,11 +982,12 @@ int japi_exit(bool close_session, int flag, dstring *diag)
       if (japi_ec_state == JAPI_EC_UP) {
          japi_ec_state = JAPI_EC_FINISHING;
          JAPI_UNLOCK_EC_STATE();
-         
+
+         /* This call will cause the event client thread to return immediately
+          * from ec_get(), which is the only place it could be blocked. */
          cl_com_ignore_timeouts(CL_TRUE);
          DPRINTF (("Waiting for event client to terminate.\n"));
          pthread_join (japi_event_client_thread, (void *)&value);
-         cl_com_ignore_timeouts(CL_FALSE);
       }
       /* If the event client thread is still starting up, we can shotcut its
        * start-up by setting the state to JAPI_EC_FINISHING without having to
@@ -995,9 +999,6 @@ int japi_exit(bool close_session, int flag, dstring *diag)
    }
    /* If it's down, we're fine.  It can't be finishing because only one
     * thread can be in japi_exit() at a time. */
-
-   /* First we clean up the pending job(s). */
-   ret = japi_clean_up_jobs (flag, diag);
 
    /* do not destroy session state until last japi call 
       depending on it is finished */
@@ -4106,8 +4107,7 @@ static void *japi_implementation_thread(void *p)
          ec_mark4registration();
          sleep(1);
       } else {
-         /* We have to check here to be sure that we're not getting a finish
-          * event from a job that japi_exit() just killed. */
+         /* We need to check that we japi_exit() didn't wake us up to die. */
          JAPI_LOCK_EC_STATE();
          if (japi_ec_state == JAPI_EC_FINISHING) {
             JAPI_UNLOCK_EC_STATE();

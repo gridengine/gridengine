@@ -304,6 +304,7 @@ char *object_name
       if (ret) {
          /* error message gets written by sge_fill_requests into SGE_EVENT */
          sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+         lFreeElem(tmp_elem);
          DEXIT;
          return STATUS_EUNKNOWN;
       }

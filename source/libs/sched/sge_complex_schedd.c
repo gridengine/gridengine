@@ -402,8 +402,8 @@ int recompute_debitation_dependent
    DENTER(TOP_LAYER, "global_complexes2scheduler");
 
    /* build global complex and add it to result */
-   if ((complex = lGetElemStr(complex_list, CX_name, "global")))
-      fillComplexFromHost(new_complex_list, complex_list, global_host, complex, DOMINANT_LAYER_GLOBAL, recompute_debitation_dependent);
+   complex = lGetElemStr(complex_list, CX_name, "global");
+   fillComplexFromHost(new_complex_list, complex_list, global_host, complex, DOMINANT_LAYER_GLOBAL, recompute_debitation_dependent);
 
    DEXIT;
    return 0;
@@ -436,10 +436,9 @@ int recompute_debitation_dependent
    }
 
    /* build host complex and add it to result */
-   if ((complex = lGetElemStr(complex_list, CX_name, "host"))) {
-      fillComplexFromHost(new_complex_list, complex_list, host, complex, 
-            DOMINANT_LAYER_HOST, recompute_debitation_dependent);
-   }
+   complex = lGetElemStr(complex_list, CX_name, "host");
+   fillComplexFromHost(new_complex_list, complex_list, host, complex, 
+         DOMINANT_LAYER_HOST, recompute_debitation_dependent);
 
    DEXIT;
    return 0;
@@ -477,8 +476,8 @@ int recompute_debitation_dependent
    }
 
    /* build queue complex and add it to result */
-   if ((complex = lGetElemStr(complex_list, CX_name, "queue")))
-      fillComplexFromQueue(new_complex_list, complex_list, complex, queue, recompute_debitation_dependent);
+   complex = lGetElemStr(complex_list, CX_name, "queue");
+   fillComplexFromQueue(new_complex_list, complex_list, complex, queue, recompute_debitation_dependent);
 
    DEXIT;
    return 0;
@@ -517,7 +516,8 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
    DENTER(TOP_LAYER, "fillComplexFromHost");
 
    /* append main complex "host"/"global" ... */
-   append_complexes(new_complex, complex, layer, recompute_debitation_dependent);
+   if (complex) 
+      append_complexes(new_complex, complex, layer, recompute_debitation_dependent);
 
    if (!host) { /* there may be a queue which has no host object yet */
       DEXIT;
@@ -750,8 +750,8 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
    DENTER(TOP_LAYER, "fillComplexFromQueue");
 
    /* append main "queue" complex ... */
-   append_complexes(new_complex, complex, DOMINANT_LAYER_QUEUE, recompute_debitation_dependent);
-
+   if (complex)
+      append_complexes(new_complex, complex, DOMINANT_LAYER_QUEUE, recompute_debitation_dependent);
 
    if (!queue) {
       DEXIT;

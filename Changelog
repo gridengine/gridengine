@@ -1,3 +1,9 @@
+AH-2002-11-18-0  Bugfix:    Complex values for user defined complexes  
+                            are rejected with global host.
+                 IZ         418
+                 Bugtraq    4776754
+                 Review     AS
+
 EB-2002-11-18-0  Testsuite: Test for issue #423 and #402
                  IZ:        425, 426
 

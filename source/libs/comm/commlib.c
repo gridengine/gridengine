@@ -55,7 +55,6 @@
 #	include "win32nativetypes.h"
 #endif 
 
-
 #if defined(AIX32) || defined(AIX41)
 #   include <sys/select.h>
 #endif
@@ -2124,7 +2123,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
 }
 
 
-/****** commlib/generate_commd_port_and_service_status_message() ***************
+/****** commd/commlib/generate_commd_port_and_service_status_message() ***************
 *  NAME
 *     generate_commd_port_and_service_status_message() -- check connection error 
 *
@@ -2150,7 +2149,7 @@ void generate_commd_port_and_service_status_message(int commlib_error, char* buf
 
    DPRINTF(("commlib_error =  %d\n",commlib_error));
 
-   port           = get_commlib_state_commdport();
+   port           = ntohs(get_commlib_state_commdport());
    service        = get_commlib_state_commdservice();
    commdhost      = get_commlib_state_commdhost();
    commd_port_env = getenv("COMMD_PORT");   
@@ -2225,9 +2224,9 @@ static int get_environments()
    }
 
    he = gethostbyname(commdhost);
-   if (!he)
+   if (!he) {
       return CL_RESOLVE;
-
+   }
    /* store ip address of commd */
 
    set_commlib_state_commdaddr_length(he->h_length);
@@ -2242,7 +2241,6 @@ static int get_environments()
 #else /* WIN32NATIVE */
          set_commlib_state_commdport(htons((u_short)atoi(cp)));
 #endif /* WIN32NATIVE */
-
          return 0;
       }
 
@@ -2261,12 +2259,12 @@ static int get_environments()
         
       nisretry = MAXNISRETRY;   /* NIS sometimes neede several attempts */
       while (nisretry-- && !((se = getservbyname(cp, "tcp"))));
-      if (!se)
+      if (!se) {
          return CL_SERVICE;
+      }
 
       set_commlib_state_commdport(se->s_port);
    }
-
    return 0;
 }
 
@@ -2458,6 +2456,34 @@ u_short* get_commlib_state_addr_componentid() {
    return &(commlib_state->componentid);
 }
 
+/****** commd/commlib/get_commlib_state_commdport() **********************************
+*  NAME
+*     get_commlib_state_commdport() -- ??? 
+*
+*  SYNOPSIS
+*     int get_commlib_state_commdport() 
+*
+*  FUNCTION
+*     returns used commd port in network byte order. Use ntohs() to re-convert 
+*     byteorder.
+*
+*  INPUTS
+*
+*  RESULT
+*     int - commd port in network byte order. 
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     ??? 
+*
+*  BUGS
+*     ??? 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
 int get_commlib_state_commdport() {
 #ifdef QIDL
    struct commlib_state_t* commlib_state;

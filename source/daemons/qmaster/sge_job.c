@@ -155,7 +155,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    u_long32 ckpt_attr, ckpt_inter;
    u_long32 job_number;
    lListElem *ckpt_ep;
-   char str[10*1024 + 1]="";
+   char str[1024 + 1]="";
    u_long32 start, end, step;
    uid_t uid;
    gid_t gid;
@@ -716,40 +716,55 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    if (lGetList(jep, JB_job_args)) {
       lList *sp = lGetList(jep, JB_job_args);
       lListElem *se;
+      int str_size = sizeof(str)-1;
 
       for_each(se,sp) {
          int do_quote = 0;
          int i = 0;
+         int n;
          const char *s = lGetString(se,STR);
 
          /* handle NULL as empty string */
          if (s == NULL) {
             s = "";
          }
+         n = strlen(s);
  
          /* quote for empty strings */
-         if (strlen(s) == 0)
+         if (n == 0)
             do_quote++;
 
          /* quote when white space is in argument */         
-         for( i=0 ; i < strlen(s) ; i++ ) {
+         for( i=0 ; i < n; i++ ) {
             if (s[i] == ' ') {
                 do_quote++;
                 break;
             }
          }
 
-         strcat(str, " ");
+         strncat(str, " ", str_size);
+         if (--str_size <= 0)
+            break;
+
          if (do_quote != 0) {
-            strcat(str, "\"");
-         }
-         strcat(str, s);
-         if (do_quote != 0) {
-            strcat(str, "\"");
+            strncat(str, "\"", str_size);
+            if (--str_size <= 0)
+               break;
          }
 
+         strncat(str, s, str_size);
+         str_size -= n;
+         if (str_size <= 0)
+            break;
+
+         if (do_quote != 0) {
+            strncat(str, "\"", str_size);
+            if (--str_size <= 0)
+               break;
+         }
       }
    }
+
    if (!is_array(jep)) {
       sprintf(SGE_EVENT, MSG_JOB_SUBMITJOB_USS,  
             u32c(lGetUlong(jep, JB_job_number)), 

@@ -1,3 +1,8 @@
+AH-2002-12-11-0  Bugfix     job arguments larger than 10k crash qmaster
+                 IZ:        #440
+                 Bugtraq:   #4792036
+                 Review:    AS
+            
 JG-2002-12-11-0  Enhancem.  Improved performance / scalability for job submit.
 
 EB-2002-12-10-0  Bugfix:    job logging file exists but is empty in certain 

@@ -363,6 +363,10 @@ char **argv
    /***** MAIN LOOP *****/
    while (shut_me_down != 1) {
 
+      /* use auto acknowlege feature of dispatcher for the following
+         inbound messages */
+      static int tagarray[] = { TAG_SIGJOB, TAG_SIGQUEUE, TAG_NONE };
+
      if (thread_prof_active_by_id(pthread_self())) {
          prof_start(SGE_PROF_CUSTOM1, NULL);
          prof_set_level_name(SGE_PROF_CUSTOM1, "Execd Thread", NULL); 
@@ -377,10 +381,6 @@ char **argv
 
       PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
 
-      /* use auto acknowlege feature of dispatcher for the following
-         inbound messages */
-      static int tagarray[] = { TAG_SIGJOB, TAG_SIGQUEUE, TAG_NONE };
- 
       i = dispatch(execd_dispatcher_table, 
                    sizeof(execd_dispatcher_table)/sizeof(dispatch_entry),
                    tagarray, dispatch_timeout, err_str, dispatcher_errfunc, 1);

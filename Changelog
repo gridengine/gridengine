@@ -1,3 +1,7 @@
+DT-2004-03-05-2: Bugfix:    o Removed help output on qstat with no args
+                 Changed:   qstat
+                 Issue:     782
+
 CR-2004-03-05-1: Bugfix:    sge_shadowd fails to create communication handle 
                             on takeover and exits.
                  Issue:     776

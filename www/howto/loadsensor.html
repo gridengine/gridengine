@@ -133,7 +133,7 @@ while [ $ende = false ]; do
    # echo the string 'global' instead of '$myhost'.
    echo &quot;begin&quot;
 
-   dfoutput=&quot;`df -k $FS | tail -1&quot;
+   dfoutput=&quot;`df -k $FS | tail -1`&quot;
    tmpfree=`echo $dfoutput | awk '{ print $4}'`
    tmptot=`echo $dfoutput | awk '{ print $2}'` 
    tmpused=`echo $dfoutput | awk '{ print $3}'`

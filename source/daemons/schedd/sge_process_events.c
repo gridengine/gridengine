@@ -801,11 +801,6 @@ int sge_process_all_events(lList *event_list) {
                JAT_pending_signal_delivery_time,
                JAT_pid,
                JAT_fshare,
-               JAT_ticket,
-               JAT_oticket,
-               JAT_dticket,
-               JAT_fticket,
-               JAT_sticket,
                JAT_suitable,
 
                JAT_job_restarted, /* BOOL <-> ULONG */
@@ -825,6 +820,11 @@ int sge_process_all_events(lList *event_list) {
             static int double_nm[] =
             {
                JAT_share,
+               JAT_ticket,
+               JAT_oticket,
+               JAT_dticket,
+               JAT_fticket,
+               JAT_sticket,
                NoName
             };
 

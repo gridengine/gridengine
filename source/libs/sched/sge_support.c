@@ -58,7 +58,6 @@
 #include "scheduler.h"
 #include "sgeee.h"
 #include "sge_support.h"
-#include "sgeee.h"
 #include "sge_schedconfL.h"
 #include "sge_jobL.h"
 #include "sge_userprjL.h"
@@ -72,40 +71,53 @@
 const long sge_usage_interval = SGE_USAGE_INTERVAL;
 static double sge_decay_rate;
 static double sge_decay_constant;
+static lListElem *search_ancestors(lListElem *ep, char *name,
+                                   ancestors_t *ancestors, int depth);
 
 /*--------------------------------------------------------------------
  * decay_usage - decay usage for the passed usage list
  *--------------------------------------------------------------------*/
 
-static void decay_usage(lList *usage_list, u_long curr_time, u_long usage_time_stamp);
-
 static void
-decay_usage(
-lList *usage_list,
-u_long curr_time,
-u_long usage_time_stamp 
-) {
+decay_usage( lList *usage_list,
+             lList *decay_list,
+             u_long curr_time,
+             u_long usage_time_stamp )
+{
    lListElem *usage;
    static int ua_value_pos = -1;
+   static int ua_name_pos = -1;
 
    if (ua_value_pos == -1) {
       lListElem *ua_elem = lCreateElem(UA_Type);
       ua_value_pos = lGetPosViaElem(ua_elem, UA_value);
+      ua_name_pos = lGetPosViaElem(ua_elem, UA_name);
       lFreeElem(ua_elem);
    }
 
    if (usage_list) {
 
-      double decay;
+      double decay, default_decay;
       if (curr_time > usage_time_stamp) {
-         decay = pow(sge_decay_constant,
+
+         default_decay = pow(sge_decay_constant,
                      (double)(curr_time - usage_time_stamp) /
                      (double)sge_usage_interval);
-         for_each(usage, usage_list)
+
+         for_each(usage, usage_list) {
+            lListElem *decay_elem;
+            if (decay_list &&
+                ((decay_elem = lGetElemStr(decay_list, UA_name,
+                      lGetPosString(usage, ua_name_pos)))))
+               decay = pow(lGetPosDouble(decay_elem, ua_value_pos),
+                     (double)(curr_time - usage_time_stamp) /
+                     (double)sge_usage_interval);
+            else
+               decay = default_decay;
             lSetPosDouble(usage, ua_value_pos,
                           lGetPosDouble(usage, ua_value_pos) * decay);
+         }
       }
-
    }
    return;
 }
@@ -115,11 +127,11 @@ u_long usage_time_stamp
  *--------------------------------------------------------------------*/
 
 void
-decay_userprj_usage(
-lListElem *userprj,
-u_long seqno,
-u_long curr_time 
-) {
+decay_userprj_usage( lListElem *userprj,
+                     lList *decay_list,
+                     u_long seqno,
+                     u_long curr_time )
+{
    u_long usage_time_stamp;
    static int up_usage_seqno_pos = -1;
    static int up_usage_time_stamp_pos = -1;
@@ -155,12 +167,12 @@ u_long curr_time
       if (usage_time_stamp > 0) {
          lListElem *upp;
 
-         decay_usage(lGetPosList(userprj, up_usage_pos), curr_time,
-                     usage_time_stamp);
+         decay_usage(lGetPosList(userprj, up_usage_pos), decay_list,
+                     curr_time, usage_time_stamp);
 
          for_each(upp, lGetPosList(userprj, up_project_pos))
-            decay_usage(lGetPosList(upp, upp_usage_pos), curr_time,
-                        usage_time_stamp);
+            decay_usage(lGetPosList(upp, upp_usage_pos), decay_list,
+                        curr_time, usage_time_stamp);
 
       }
 
@@ -176,23 +188,39 @@ u_long curr_time
 
 /*--------------------------------------------------------------------
  * calculate_decay_constant - calculates decay rate and constant based
- * on the decay half life and usage interval
+ * on the decay half life and usage interval. The halftime argument
+ * is in minutes.
  *--------------------------------------------------------------------*/
 
-
 void
-calculate_decay_constant(
-int halftime 
-) {
-   if (halftime == 0) {
-      sge_decay_rate = 0;
-      sge_decay_constant = 1.0;
+calculate_decay_constant( double halftime,
+                          double *decay_rate,
+                          double *decay_constant )
+{
+   if (halftime < 0) {
+      *decay_rate = 1.0;
+      *decay_constant = 0;
+   } else if (halftime == 0) {
+      *decay_rate = 0;
+      *decay_constant = 1.0;
    } else {
-      halftime = halftime * 60 * 60; /* convert to seconds */
-      sge_decay_rate = - log(0.5) / halftime;
-      sge_decay_constant = 1 - (sge_decay_rate * sge_usage_interval);
+      *decay_rate = - log(0.5) / (halftime * 60);
+      *decay_constant = 1 - (*decay_rate * sge_usage_interval);
    }
    return;
+}
+
+
+/*--------------------------------------------------------------------
+ * calculate_default_decay_constant - calculates the default decay
+ * rate and constant based on the decay half life and usage interval.
+ * The halftime argument is in hours.
+ *--------------------------------------------------------------------*/
+
+void
+calculate_default_decay_constant( int halftime )
+{
+   calculate_decay_constant(halftime*60.0, &sge_decay_rate, &sge_decay_constant);
 }
 
 
@@ -202,11 +230,10 @@ int halftime
  *--------------------------------------------------------------------*/
 
 int
-sge_for_each_share_tree_node(
-lListElem *node,
-sge_node_func_t func,
-void *ptr 
-) {
+sge_for_each_share_tree_node( lListElem *node,
+                              sge_node_func_t func,
+                              void *ptr )
+{
    int retcode=0;
    lList *children;
    lListElem *child_node;
@@ -238,10 +265,9 @@ void *ptr
  *--------------------------------------------------------------------*/
 
 int
-sge_zero_node_fields(
-lListElem *node,
-void *ptr 
-) {
+sge_zero_node_fields( lListElem *node,
+                      void *ptr )
+{
    static int sn_m_share_pos = -1;
    static int sn_adjusted_current_proportion_pos = -1;
    static int sn_job_ref_count_pos = -1;
@@ -261,14 +287,13 @@ void *ptr
 
 
 /*--------------------------------------------------------------------
- * sge_zero_node_fields - zero out the share tree node fields that are 
+ * sge_init_node_fields - zero out the share tree node fields that are 
  * passed to the qmaster from schedd and are displayed at qmon
  *--------------------------------------------------------------------*/
 
 int
-sge_init_node_fields(
-lListElem *root 
-) {
+sge_init_node_fields( lListElem *root )
+{
    return sge_for_each_share_tree_node(root, sge_zero_node_fields, NULL);
 }
 
@@ -279,16 +304,17 @@ lListElem *root
  *--------------------------------------------------------------------*/
 
 double
-sge_calc_node_usage(
-lListElem *node,
-lList *user_list,
-lList *project_list,
-lList *config_list,
-u_long curr_time,
-char *projname 
-) {
+sge_calc_node_usage( lListElem *node,
+                     lList *user_list,
+                     lList *project_list,
+                     lList *config_list,
+                     lList *decay_list,
+                     u_long curr_time,
+                     char *projname,
+                     u_long seqno )
+{
    double usage_value = 0;
-   int include_child_usage = 1;
+   int project_node = 0;
    lListElem *child_node;
    lList *children;
    lListElem *userprj = NULL;
@@ -299,6 +325,7 @@ char *projname
    static int sn_children_pos = -1;
    static int sn_combined_usage_pos = -1;
    static int sn_name_pos = -1;
+   static int sn_usage_list_pos = -1;
    static int ua_name_pos = -1;
    static int ua_value_pos = -1;
    static int sc_usage_weight_list_pos = -1;
@@ -312,6 +339,7 @@ char *projname
       lListElem *up_elem = lCreateElem(UP_Type);
       sn_children_pos = lGetPosViaElem(node, STN_children);
       sn_combined_usage_pos = lGetPosViaElem(node, STN_combined_usage);
+      sn_usage_list_pos = lGetPosViaElem(node, STN_usage_list);
       sn_name_pos = lGetPosViaElem(node, STN_name);
       ua_name_pos = lGetPosViaElem(ua_elem, UA_name);
       ua_value_pos = lGetPosViaElem(ua_elem, UA_value);
@@ -373,7 +401,7 @@ char *projname
       if (!projname) {
          if ((userprj = lGetElemStr(project_list, UP_name,
                                 lGetPosString(node, sn_name_pos)))) {
-            include_child_usage = 0;
+            project_node = 1;
             usage_list = lGetList(userprj, UP_usage);
             projname = lGetString(userprj, UP_name);
          }
@@ -388,7 +416,7 @@ char *projname
        *-------------------------------------------------------------*/
 
       if (curr_time)
-         decay_userprj_usage(userprj, -1, curr_time);
+         decay_userprj_usage(userprj, decay_list, seqno, curr_time);
 
       /*-------------------------------------------------------------
        * Sum usage weighting factors
@@ -419,6 +447,25 @@ char *projname
             }
          }
       }
+
+      /*-------------------------------------------------------------
+       * Store other usage values in node usage list
+       *-------------------------------------------------------------*/
+
+      for_each(usage_elem, usage_list) {
+         char *nm = lGetPosString(usage_elem, ua_name_pos);
+         lListElem *u;
+         if (strcmp(nm, USAGE_ATTR_CPU) != 0 &&
+             strcmp(nm, USAGE_ATTR_MEM) != 0 &&
+             strcmp(nm, USAGE_ATTR_IO) != 0) {
+            if (((u=lGetElemStr(lGetPosList(node, sn_usage_list_pos),
+                                UA_name, nm))) ||
+                ((u = lAddSubStr(node, UA_name, nm, STN_usage_list, UA_Type))))
+               lSetPosDouble(u, ua_value_pos,
+                             lGetPosDouble(u, ua_value_pos) +
+                             lGetPosDouble(usage_elem, ua_value_pos));
+         }
+      }
    }
 
    if (children) {
@@ -429,13 +476,59 @@ char *projname
        *-------------------------------------------------------------*/
 
       for_each(child_node, children) {
+         lListElem *nu;
          child_usage += sge_calc_node_usage(child_node, user_list,
                                             project_list, config_list,
-                                            curr_time, projname);
+                                            decay_list, curr_time,
+                                            projname, seqno);
+
+         /*-------------------------------------------------------------
+          * Sum other usage values
+          *-------------------------------------------------------------*/
+
+         if (!project_node)
+            for_each(nu, lGetPosList(child_node, sn_usage_list_pos)) {
+               char *nm = lGetPosString(nu, ua_name_pos);
+               lListElem *u;
+               if (((u=lGetElemStr(lGetPosList(node, sn_usage_list_pos),
+                                   UA_name, nm))) ||
+                   ((u=lAddSubStr(node, UA_name, nm,
+                                  STN_usage_list, UA_Type))))
+                  lSetPosDouble(u, ua_value_pos,
+                                lGetPosDouble(u, ua_value_pos) +
+                                lGetPosDouble(nu, ua_value_pos));
+            }
       }
 
-      if (include_child_usage)
+      if (!project_node)
+
+         /* if this is not a project node, we include the child usage */
+
          usage_value += child_usage;
+
+      else {
+
+         /* If this is a project node, then we calculate the usage
+            being used by all users which map to the "default" user node
+            by subtracting the sum of all the child usage from the
+            project usage. Then, we add this usage to all of the nodes
+            leading to the "default" user node. */
+
+         lListElem *default_node;
+         ancestors_t ancestors;
+         int i;
+         if ((default_node=search_ancestors(node, "default", &ancestors, 1))) {
+            double default_usage = usage_value - child_usage;
+            if (default_usage > 1.0) {
+               for(i=1; i<ancestors.depth; i++) {
+                  double u = lGetPosDouble(ancestors.nodes[i], sn_combined_usage_pos);
+                  lSetPosDouble(ancestors.nodes[i], sn_combined_usage_pos, u + default_usage);
+               }
+            }
+            free_ancestors(&ancestors);
+         }
+      }
+
 #ifdef notdef
       else {
          lListElem *default_node;
@@ -444,6 +537,7 @@ char *projname
                MAX(usage_value - child_usage, 0));
       }
 #endif
+
    }
 
    /*-------------------------------------------------------------
@@ -462,12 +556,10 @@ char *projname
  * for this node and all descendant nodes.
  *--------------------------------------------------------------------*/
 
-
 void
-sge_calc_node_proportion(
-lListElem *node,
-double total_usage 
-) {
+sge_calc_node_proportion( lListElem *node,
+                          double total_usage )
+{
    lList *children;
    lListElem *child_node;
    static int sn_children_pos = -1;
@@ -516,8 +608,12 @@ double total_usage
  *--------------------------------------------------------------------*/
 
 void
-_sge_calc_share_tree_proportions(lList *share_tree, lList *user_list,
-            lList *project_list, lList *config_list, u_long curr_time)
+_sge_calc_share_tree_proportions( lList *share_tree,
+                                  lList *user_list,
+                                  lList *project_list,
+                                  lList *config_list,
+                                  lList *decay_list,
+                                  u_long curr_time )
 {
    lListElem *root;
    double total_usage;
@@ -529,14 +625,17 @@ _sge_calc_share_tree_proportions(lList *share_tree, lList *user_list,
       return;
    }
 
-   calculate_decay_constant(lGetUlong(lFirst(config_list), SC_halftime));
+   calculate_default_decay_constant(lGetUlong(lFirst(config_list),
+         SC_halftime));
 
    total_usage = sge_calc_node_usage(root,
                                      user_list,
                                      project_list,
                                      config_list,
+                                     decay_list,
                                      curr_time,
-				     NULL);
+				     NULL,
+                                     -1);
 
    sge_calc_node_proportion(root, total_usage);
 
@@ -546,11 +645,14 @@ _sge_calc_share_tree_proportions(lList *share_tree, lList *user_list,
 
 
 void
-sge_calc_share_tree_proportions(lList *share_tree, lList *user_list,
-            lList *project_list, lList *config_list)
+sge_calc_share_tree_proportions( lList *share_tree,
+                                 lList *user_list,
+                                 lList *project_list,
+                                 lList *config_list,
+                                 lList *decay_list )
 {
    _sge_calc_share_tree_proportions(share_tree, user_list, project_list,
-                                    config_list, sge_get_gmt());
+                                    config_list, decay_list, sge_get_gmt());
    return;
 }
 
@@ -559,12 +661,12 @@ sge_calc_share_tree_proportions(lList *share_tree, lList *user_list,
  Search the share tree for the node corresponding to the
  user / project combination
  ********************************************************/
-lListElem *search_userprj_node(
-lListElem *ep,  /* root of the tree */
-char *username,
-char *projname,
-lListElem **pep  /* parent of found node */
-) {
+lListElem *
+search_userprj_node( lListElem *ep,      /* root of the tree */
+                     char *username,
+                     char *projname,
+                     lListElem **pep )   /* parent of found node */
+{
    lListElem *cep, *fep;
    static int sn_children_pos = -1;
    static int sn_name_pos = -1;
@@ -703,10 +805,9 @@ lListElem **pep  /* parent of found node */
  Search for a share tree node with a given name in a
  share tree
  ********************************************************/
-lListElem *search_named_node(
-lListElem *ep,  /* root of the tree */
-char *name 
-) {
+lListElem *search_named_node( lListElem *ep,  /* root of the tree */
+                              char *name )
+{
    lListElem *cep, *fep;
    static int sn_children_pos = -1;
    static int sn_name_pos = -1;
@@ -743,9 +844,8 @@ char *name
 /********************************************************
  Free internals of ancestors structure
  ********************************************************/
-void free_ancestors(
-ancestors_t *ancestors 
-) {
+void free_ancestors( ancestors_t *ancestors )
+{
    if (ancestors && ancestors->nodes) {
       free(ancestors->nodes);
       ancestors->nodes = NULL;
@@ -757,16 +857,15 @@ ancestors_t *ancestors
  Search for a share tree node with a given path in a
  share tree
  ********************************************************/
-static lListElem *search_by_path(lListElem *ep, char *name, char *path, int delim, ancestors_t *ancestors, int depth);
 
-static lListElem *search_by_path(
-lListElem *ep,  /* root of the [sub]tree */
-char *name,
-char *path,
-int delim,
-ancestors_t *ancestors,
-int depth 
-) {
+static lListElem *
+search_by_path( lListElem *ep,  /* root of the [sub]tree */
+                char *name,
+                char *path,
+                int delim,
+                ancestors_t *ancestors,
+                int depth )
+{
    lList *children;
    lListElem *ret = NULL, *child;
    char *buf=NULL, *bufp;
@@ -816,16 +915,14 @@ int depth
  Search for a share tree node with a given path in a
  share tree
  ********************************************************/
-lListElem *search_named_node_path(
-lListElem *ep,  /* root of the tree */
-char *path,
-ancestors_t *ancestors 
-) {
+lListElem *
+search_named_node_path( lListElem *ep,  /* root of the tree */
+                        char *path,
+                        ancestors_t *ancestors )
+{
    return search_by_path(ep, NULL, path, 0, ancestors, 0);
 }
 
-
-#ifdef notdef
 
 /********************************************************
  Search for a share tree node with a given name in a
@@ -837,27 +934,27 @@ ancestors_t *ancestors
  caller is reponsible for freeing the nodes array.
  ********************************************************/
 
-static
-lListElem *search_ancestors(lListElem *ep, char *name, ancestors_t *ancestors, int depth);
+#ifdef notdef
 
-lListElem *search_ancestor_list(
-lListElem *ep,  /* root of the tree */
-char *name,
-ancestors_t *ancestors 
-) {
+lListElem *search_ancestor_list( lListElem *ep,  /* root of the tree */
+                                 char *name,
+                                 ancestors_t *ancestors )
+{
    if (ancestors)
       return search_ancestors(ep, name, ancestors, 1);
    else
       return search_named_node(ep, name);
 }
 
+#endif
+
 static
-lListElem *search_ancestors(
-lListElem *ep,
-char *name,
-ancestors_t *ancestors,
-int depth 
-) {
+lListElem *
+search_ancestors( lListElem *ep,
+                  char *name,
+                  ancestors_t *ancestors,
+                  int depth )
+{
    lListElem *cep, *fep;
    static int sn_children_pos = -1;
    static int sn_name_pos = -1;
@@ -893,6 +990,73 @@ int depth
    return NULL;
 }
 
-#endif /* notdef */
+
+/*--------------------------------------------------------------------
+ * sgeee_sort_jobs - sort jobs according the task-tickets and job number 
+ *--------------------------------------------------------------------*/
+
+void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
+{
+   lListElem *job = NULL, *nxt_job = NULL;     
+   lList *tmp_list = NULL;    /* SGEJ_Type */
+
+   DENTER(TOP_LAYER, "sgeee_sort_jobs");
+
+   if (!job_list || !*job_list) {
+      DEXIT;
+      return;
+   }
+
+#if 0
+   DPRINTF(("+ + + + + + + + + + + + + + + + \n"));
+   DPRINTF(("     SORTING SGEEE JOB LIST     \n"));
+   DPRINTF(("+ + + + + + + + + + + + + + + + \n"));
+#endif
+
+   /*-----------------------------------------------------------------
+    * Create tmp list 
+    *-----------------------------------------------------------------*/
+   tmp_list = lCreateList("tmp list", SGEJ_Type);
+
+   nxt_job = lFirst(*job_list); 
+   while((job=nxt_job)) {
+      lListElem *tmp_sge_job = NULL;   /* SGEJ_Type */
+      
+      nxt_job = lNext(nxt_job);
+      tmp_sge_job = lCreateElem(SGEJ_Type);
+      lSetDouble(tmp_sge_job, SGEJ_ticket, 
+         lGetDouble(lFirst(lGetList(job, JB_ja_tasks)), JAT_ticket));
+      lSetUlong(tmp_sge_job, SGEJ_job_number, lGetUlong(job, JB_job_number));
+      lSetRef(tmp_sge_job, SGEJ_job_reference, job);
+#if 0
+      DPRINTF(("JOB: "u32" TICKETS: "u32"\n", 
+         lGetUlong(tmp_sge_job, SGEJ_job_number), 
+         lGetDouble(tmp_sge_job, SGEJ_ticket)));
+#endif
+      lAppendElem(tmp_list, tmp_sge_job);
+      
+      lDechainElem(*job_list, job);
+   }
+
+   /*-----------------------------------------------------------------
+    * Sort tmp list
+    *-----------------------------------------------------------------*/
+   lPSortList(tmp_list, "%I- %I+", SGEJ_ticket, SGEJ_job_number);
+
+   /*-----------------------------------------------------------------
+    * rebuild job_list according sort order
+    *-----------------------------------------------------------------*/
+   for_each(job, tmp_list) {
+      lAppendElem(*job_list, lGetRef(job, SGEJ_job_reference)); 
+   } 
+
+   /*-----------------------------------------------------------------
+    * Release tmp list
+    *-----------------------------------------------------------------*/
+   lFreeList(tmp_list);
+
+   DEXIT;
+   return;
+}
 
 

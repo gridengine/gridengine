@@ -61,6 +61,7 @@ enum {
    US_fshare,                /* 960703 svd - SGEEE functional share */
    US_oticket,               /* SGEEE override tickets */
    US_job_cnt,               /* SGEEE job count (internal to schedd) */
+   US_pending_job_cnt,       /* SGEEE job count (internal to schedd) */
    US_entries
 };
 
@@ -70,6 +71,7 @@ ILISTDEF(US_Type, UserSet, SGE_USERSET_LIST)
    SGE_ULONG(US_fshare)       /* configured share spooled */
    SGE_ULONG(US_oticket)      /* configured override tickets spooled */
    SGE_XULONG(US_job_cnt)     /* local to schedd */
+   SGE_XULONG(US_pending_job_cnt) /* local to schedd */
    SGE_TLIST(US_entries, UE_Type)     /* UE_Type */
 LISTEND 
 
@@ -79,6 +81,7 @@ NAMEDEF(USEN)
    NAME("US_fshare")
    NAME("US_oticket")
    NAME("US_job_cnt")
+   NAME("US_pending_job_cnt")
    NAME("US_entries")
 NAMEEND
 

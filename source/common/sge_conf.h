@@ -104,6 +104,14 @@ extern int disable_reschedule;
 extern int set_sge_environment;
 extern int set_grd_environment;
 extern int set_cod_environment;
+extern int classic_sgeee_scheduling;
+extern int share_override_tickets;                                         
+extern int share_functional_shares;                                        
+extern int share_deadline_tickets;                                         
+extern int max_functional_jobs_to_schedule;                                
+extern int max_pending_tasks_per_job;                                      
+extern lList* halflife_decay_list;                                         
+
 
 /* simulation of large clusters: 
  *  - load values will not be trashed

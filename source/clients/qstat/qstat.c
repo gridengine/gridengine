@@ -76,6 +76,8 @@
 #include "msg_clients_common.h"
 #include "msg_qstat.h"
 #include "sge_conf.h" 
+#include "sgeee.h" 
+#include "sge_support.h"
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_10 "%I %I %I %I %I %I %I %I %I %I "
@@ -509,11 +511,14 @@ char **argv
          lRemoveElem(job_list, jep);
       jep = tmp;
    }
-   
 
    if (lGetNumberOfElem(job_list)>0 ) {
-      so = sge_job_sort_order(lGetListDescr(job_list));
-      lSortList(job_list, so);
+      if (feature_is_enabled(FEATURE_SGEEE))
+         sgeee_sort_jobs(&job_list);
+      else {
+         so = sge_job_sort_order(lGetListDescr(job_list));
+         lSortList(job_list, so);
+      }
    }
 
    /* 

@@ -55,6 +55,7 @@
 #include "sge_string_append.h"
 #include "scheduler.h"                                                                
 #include "sgeee.h"                                                                
+#include "sge_support.h"                                                                
 #include "msg_common.h"
 #include "sge_spoolmsg.h"
 #include "sge_feature.h"

@@ -710,13 +710,13 @@ SLISTDEF( JG_Type, GrantedQueue )
                                  * of pe's with sge controlled slaves 
                                  * the valid range is from JG_task_id to 
                                  * JG_task_id + TASK_ID_RANGE_SIZE -1 */
-   SGE_RULONG(JG_ticket)    /* SGEEE tickets assigned to slots              */
-   SGE_RULONG(JG_oticket)   /* SGEEE override tickets assigned to slots     */
-   SGE_RULONG(JG_fticket)   /* SGEEE functional tickets assigned to slots   */
-   SGE_RULONG(JG_dticket)   /* SGEEE deadline tickets assigned to slots     */
-   SGE_RULONG(JG_sticket)   /* SGEEE sharetree tickets assigned to slots    */
-   SGE_XULONG(JG_jcoticket) /* SGEEE job class override tickets             */
-   SGE_XULONG(JG_jcfticket) /* SGEEE job class functional tickets           */
+   SGE_RDOUBLE(JG_ticket)    /* SGEEE tickets assigned to slots              */
+   SGE_RDOUBLE(JG_oticket)   /* SGEEE override tickets assigned to slots     */
+   SGE_RDOUBLE(JG_fticket)   /* SGEEE functional tickets assigned to slots   */
+   SGE_RDOUBLE(JG_dticket)   /* SGEEE deadline tickets assigned to slots     */
+   SGE_RDOUBLE(JG_sticket)   /* SGEEE sharetree tickets assigned to slots    */
+   SGE_XDOUBLE(JG_jcoticket) /* SGEEE job class override tickets             */
+   SGE_XDOUBLE(JG_jcfticket) /* SGEEE job class functional tickets           */
 LISTEND
 
 NAMEDEF( JGN )

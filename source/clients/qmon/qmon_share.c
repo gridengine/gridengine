@@ -992,7 +992,7 @@ XtPointer cld, cad;
    /*
    ** fill the share tree with the actual values
    */
-   sge_calc_share_tree_proportions(share_tree, ul, pl, scl);
+   sge_calc_share_tree_proportions(share_tree, ul, pl, scl, NULL);
 
    ListTreeRefreshOff(tree);
    /*

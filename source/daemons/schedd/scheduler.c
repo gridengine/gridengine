@@ -60,6 +60,7 @@
 #include "sge_sched.h"
 #include "sge_feature.h"
 #include "sgeee.h"
+#include "sge_support.h"
 #include "interactive_sched.h"
 #include "shutdown.h"
 #include "schedd_message.h"
@@ -82,7 +83,7 @@ sge_Sdescr_t lists =
 
 static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist, lList **running_jobs, lList **finished_jobs);
 
-static int select_assign_debit(lList **queue_list, lList **job_list, lListElem *job, lListElem *ja_task, lListElem *pe, lListElem *ckpt, lList *complex_list, lList *host_list, lList *acl_list, lList **user_list, lList **group_list, lList **orders_list, u_long *total_running_job_tickets, int ndispatched, int *dispatch_type, int host_order_changed, int *sort_hostlist);
+static int select_assign_debit(lList **queue_list, lList **job_list, lListElem *job, lListElem *ja_task, lListElem *pe, lListElem *ckpt, lList *complex_list, lList *host_list, lList *acl_list, lList **user_list, lList **group_list, lList **orders_list, double *total_running_job_tickets, int ndispatched, int *dispatch_type, int host_order_changed, int *sort_hostlist);
 
 
 /****** scheduler/scheduler() **************************************************
@@ -279,7 +280,7 @@ lList **finished_jobs
    lListElem *orig_job, *job, *queue, *cat;
    lList *susp_queues = NULL;
    lListElem *rjob, *rja_task;  
-   u_long total_running_job_tickets=0; 
+   double total_running_job_tickets=0; 
    int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    int ndispatched = 0;
    int dipatch_type = DISPATCH_TYPE_NONE;
@@ -524,11 +525,16 @@ lList **finished_jobs
       }
 
       /* temporary job placement workaround - calc tickets for running and queued jobs */
-      sge_calc_tickets(lists, lists->job_list, *running_jobs, NULL, 0);
+      if (classic_sgeee_scheduling) {
+         int seqno;
+         seqno = sge_calc_tickets(lists, lists->job_list, *running_jobs, NULL, 0);
+         *orderlist = sge_build_sge_orders(lists, NULL, lists->job_list, NULL,
+                                           *orderlist, 0, seqno);
+      }
 
       /* Order Jobs in descending order according to tickets and then job number */
 
-      sge_sort_jobs(&(lists->job_list));
+      sgeee_sort_jobs(&(lists->job_list));
 
    }  /* if sgeee_mode */
 
@@ -563,7 +569,7 @@ lList **finished_jobs
          for_each(host, lists->host_list) {
             fprintf(fpdjp, "after sort by share load - for running jobs only\n");
             fprintf(fpdjp, "For host %s :\n", lGetString(host, EH_name));
-            fprintf(fpdjp, "EH_sge_tickets is %u\n", lGetUlong(host, EH_sge_tickets));
+            fprintf(fpdjp, "EH_sge_tickets is %u\n", (u_long32)lGetDouble(host, EH_sge_tickets));
             fprintf(fpdjp, "EH_sge_ticket_pct is %f\n", lGetDouble(host, EH_sge_ticket_pct));
             fprintf(fpdjp, "EH_resource_capability_factor is %f\n", lGetDouble(host, EH_resource_capability_factor));
             fprintf(fpdjp, "EH_resource_capability_factor_pct is %f\n", lGetDouble(host, EH_resource_capability_factor_pct));
@@ -591,7 +597,7 @@ lList **finished_jobs
                  lGetString(host, EH_name), lGetDouble(host, EH_sort_value));
 
          if (sgeee_mode)  {
-            fprintf(fpdjp, "EH_sge_tickets is %u\n", lGetUlong(host, EH_sge_tickets));
+            fprintf(fpdjp, "EH_sge_tickets is %u\n", (u_long32)lGetDouble(host, EH_sge_tickets));
          }
        }
 
@@ -609,7 +615,7 @@ lList **finished_jobs
       total_running_job_tickets = 0;
       for_each(rjob, *running_jobs) {
          for_each(rja_task, lGetList(rjob, JB_ja_tasks)) {
-            total_running_job_tickets += lGetUlong(rja_task, JAT_ticket);
+            total_running_job_tickets += lGetDouble(rja_task, JAT_ticket);
          }
       }
    }
@@ -827,7 +833,7 @@ SKIP_THIS_JOB:
             for_each(host, lists->host_list) {
                fprintf(fpdjp, "after sort by share load - for running and already placed new jobs \n");
                fprintf(fpdjp, "For host %s :\n", lGetString(host, EH_name));
-               fprintf(fpdjp, "EH_sge_tickets is %u\n", lGetUlong(host, EH_sge_tickets));
+               fprintf(fpdjp, "EH_sge_tickets is %f\n", lGetDouble(host, EH_sge_tickets));
                fprintf(fpdjp, "EH_sge_ticket_pct is %f\n", lGetDouble(host, EH_sge_ticket_pct));
                fprintf(fpdjp, "EH_resource_capability_factor is %f\n", 
                               lGetDouble(host, EH_resource_capability_factor));
@@ -881,7 +887,7 @@ lList *acl_list,
 lList **user_list,
 lList **group_list,
 lList **orders_list,
-u_long *total_running_job_tickets,
+double *total_running_job_tickets,
 int ndispatched,
 int *dispatch_type, 
 int host_order_changed,
@@ -889,7 +895,7 @@ int *sort_hostlist
 ) {
    int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    lListElem *hep;  
-   u_long old_host_tickets;    
+   double old_host_tickets;    
    lListElem *granted_el;     
    lList *granted = NULL;
 
@@ -919,16 +925,16 @@ int *sort_hostlist
       double job_tickets_per_slot, nslots;
       nslots = nslots_granted(granted, NULL);
 
-      job_tickets_per_slot =(double)lGetUlong(ja_task, JAT_ticket)/nslots;
+      job_tickets_per_slot =(double)lGetDouble(ja_task, JAT_ticket)/nslots;
 
       for_each(granted_el, granted) {
          hep = lGetElemHost(host_list, EH_name, lGetString(granted_el, JG_qhostname));
-         old_host_tickets = lGetUlong(hep, EH_sge_tickets);
-         lSetUlong(hep, EH_sge_tickets, (old_host_tickets + 
+         old_host_tickets = lGetDouble(hep, EH_sge_tickets);
+         lSetDouble(hep, EH_sge_tickets, (old_host_tickets + 
                job_tickets_per_slot*lGetUlong(granted_el, JG_slots)));
-         lSetUlong(granted_el, JG_ticket, job_tickets_per_slot*lGetUlong(granted_el, JG_slots));
+         lSetDouble(granted_el, JG_ticket, job_tickets_per_slot*lGetUlong(granted_el, JG_slots));
       }
-      *total_running_job_tickets += lGetUlong(ja_task, JAT_ticket);
+      *total_running_job_tickets += lGetDouble(ja_task, JAT_ticket);
    }
 
    /*------------------------------------------------------------------

@@ -580,7 +580,7 @@ main(int argc, char **argv)
       _sge_calc_share_tree_proportions(sharetree,
 		users, 
 		projects,
-		config, curr_time);
+		config, NULL, curr_time);
 
       print_nodes(outfile, root, NULL, NULL, users, projects, group_nodes,
                   names, &format);

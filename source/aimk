@@ -831,9 +831,10 @@ case ALPHA5:
 case IRIX6*:
    set COMPILE_DC = 1
    set ARCH = $IRIX_ARCHDEF
-   if (`hostname` != DWAIN) then
-      set MAKE     = make
-   endif
+   #if (`hostname` != DWAIN) then
+   #   set MAKE     = make
+   #endif
+   set MAKE = gmake
 
    # IRIX >= 6.4 has no DEADLINE in sys/schedctl.h, so turn off these
    # code passages

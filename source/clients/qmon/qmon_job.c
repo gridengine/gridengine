@@ -76,6 +76,8 @@
 #include "qstat_util.h"
 #include "parse.h"
 #include "job.h"
+#include "sgeee.h"
+#include "sge_support.h"
 
 enum {
    JOB_DISPLAY_MODE_RUNNING,
@@ -621,7 +623,9 @@ void updateJobList(void)
    ** sort the jobs according to priority
    */
    if (lGetNumberOfElem(jl)>0 ) {
-      if ((job_so = sge_job_sort_order(lGetListDescr(jl)))) {
+      if (feature_is_enabled(FEATURE_SGEEE))
+         sgeee_sort_jobs(&jl);
+      else if ((job_so = sge_job_sort_order(lGetListDescr(jl)))) {
          lSortList(jl, job_so);
          lFreeSortOrder(job_so);
       }

@@ -157,7 +157,7 @@ ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
 
    SGE_RSTRING(EH_real_name)
 
-   SGE_XULONG(EH_sge_tickets)
+   SGE_XDOUBLE(EH_sge_tickets)
    SGE_DOUBLE(EH_resource_capability_factor)
    SGE_XULONG(EH_sge_load)
    SGE_XDOUBLE(EH_sge_ticket_pct)

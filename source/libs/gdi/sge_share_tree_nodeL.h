@@ -64,7 +64,9 @@ enum {
    STN_children,             /* Configured childrens of this node.
                               * STN_Type list spooled */
 
-   STN_job_ref_count,        /* number of active jobs used in schedd, not
+   STN_job_ref_count,        /* number of active and pending jobs used in
+                              * schedd, not stored to qmaster */
+   STN_active_job_ref_count, /* number of active jobs used in schedd, not
                               * stored to qmaster */
    STN_project,              /* set to 1 if this node is a project used in 
                               * schedd, not stored to qmaster */
@@ -103,6 +105,45 @@ enum {
                               * schedd and will not be sent to qmaster,
                               * set in schedd, not stored to qmaster, not
                               * spooled */
+   STN_stt,                  /* short term targeted proportion of node 
+                              * compared to sibling nodes,
+                              * calculated during scheduling of pending
+                              * jobs, set in schedd, not stored to qmaster,
+                              * not spooled */
+   STN_ostt,                 /* overall short term targeted proportion of
+                              * node compared to all nodes,
+                              * calculated during scheduling of pending
+                              * jobs, set in schedd, not stored to qmaster,
+                              * not spooled */
+   STN_ltt,                  /* long term targeted proportion of node 
+                              * compared to all nodes,
+                              * calculated during scheduling of pending
+                              * jobs, set in schedd, not stored to qmaster,
+                              * not spooled */
+   STN_oltt,                 /* overall long term targeted proportion of
+                              * node compared to all nodes,
+                              * calculated during scheduling of pending
+                              * jobs, set in schedd, not stored to qmaster,
+                              * not spooled */
+   STN_shr,                  /* hierarchical calculated "share" node,
+                              * calculated during scheduling of pending
+                              * jobs, set in schedd, not stored to qmaster,
+                              * not spooled */
+   STN_ref,                  /* Temporary index reference back into the
+                              * array of pending jobs, used during
+                              * scheduling of pending jobs, set in schedd,
+                              * not stored to qmaster, not spooled */
+   STN_jobid,                /* Job number of a temporary job node,
+                              * used during scheduling of pending jobs,
+                              * set in schedd, not stored to qmaster,
+                              * not spooled */
+   STN_taskid,               /* Task number of a temporary job node,
+                              * used during scheduling of pending jobs,
+                              * set in schedd, not stored to qmaster,
+                              * not spooled */
+   STN_usage_list,           /* Node usage list used during scheduling
+                              * of pending jobs, set in schedd,
+                              * not stored to qmaster, not spooled */
    STN_version               /* version of share tree set in qmaster when
                               * sharetree changes spooled */
 };
@@ -115,6 +156,7 @@ ILISTDEF(STN_Type, ShareTreeNode, SGE_SHARETREE_LIST)
    SGE_ULONG(STN_shares)
    SGE_RLIST(STN_children, STN_Type)
    SGE_XULONG(STN_job_ref_count)
+   SGE_XULONG(STN_active_job_ref_count)
    SGE_XULONG(STN_project)
    SGE_XDOUBLE(STN_proportion)
    SGE_XDOUBLE(STN_adjusted_proportion)
@@ -131,6 +173,15 @@ ILISTDEF(STN_Type, ShareTreeNode, SGE_SHARETREE_LIST)
    SGE_DOUBLE(STN_last_actual_proportion)
    SGE_DOUBLE(STN_adjusted_current_proportion)
    SGE_XULONG(STN_temp)
+   SGE_DOUBLE(STN_stt)
+   SGE_DOUBLE(STN_ostt)                                                   
+   SGE_DOUBLE(STN_ltt)                                                    
+   SGE_DOUBLE(STN_oltt)                                                   
+   SGE_DOUBLE(STN_shr)                                                    
+   SGE_XULONG(STN_ref)                                                    
+   SGE_XULONG(STN_jobid)                                                  
+   SGE_XULONG(STN_taskid)                                                 
+   SGE_RLIST(STN_usage_list,UA_Type)                                     
    SGE_XULONG(STN_version)
    /* IDL 
      ShareTreeNode newNode(in string name, in unsigned long shares)
@@ -147,6 +198,7 @@ NAMEDEF(STNN)
    NAME("STN_shares")
    NAME("STN_children")
    NAME("STN_job_ref_count")
+   NAME("STN_active_job_ref_count")
    NAME("STN_project")
    NAME("STN_proportion")
    NAME("STN_adjusted_proportion")
@@ -163,6 +215,15 @@ NAMEDEF(STNN)
    NAME("STN_last_actual_proportion")
    NAME("STN_adjusted_current_proportion")
    NAME("STN_temp")
+   NAME("STN_stt")
+   NAME("STN_ostt")
+   NAME("STN_ltt")
+   NAME("STN_oltt")
+   NAME("STN_shr")
+   NAME("STN_ref")
+   NAME("STN_jobid")
+   NAME("STN_taskid")
+   NAME("STN_usage_list")
    NAME("STN_version")
 NAMEEND
 

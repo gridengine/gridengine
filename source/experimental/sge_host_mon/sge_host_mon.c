@@ -1036,7 +1036,7 @@ int main(int argc, char **argv)
       _sge_calc_share_tree_proportions(sharetree,
         	lGetUlong(root, STN_type)==STT_PROJECT?NULL:users, 
         	lGetUlong(root, STN_type)==STT_PROJECT?users:NULL, 
-        	config, curr_time);
+        	config, NULL, curr_time);
 #endif
       print_hosts(outfile, hosts, names, &format);
 

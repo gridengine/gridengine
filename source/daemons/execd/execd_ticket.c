@@ -62,7 +62,8 @@ int *synchron;
 char *err_str; 
 int answer_error;
 {
-   u_long32 jobid, jataskid, ticket;
+   u_long32 jobid, jataskid;
+   double ticket;
    lListElem *job_ticket, *task_ticket;
    lList *ticket_modifier = NULL;
 
@@ -71,7 +72,7 @@ int answer_error;
    while (pb_unused(pb)>0) {
       lList *jatasks = NULL;
 
-      if (unpackint(pb, &jobid) || unpackint(pb, &jataskid) || unpackint(pb, &ticket)) {
+      if (unpackint(pb, &jobid) || unpackint(pb, &jataskid) || unpackdouble(pb, &ticket)) {
          ERROR((SGE_EVENT, MSG_JOB_TICKETFORMAT));
          DEXIT;
          return 0;
@@ -81,7 +82,7 @@ int answer_error;
       if (job_ticket) {
          task_ticket = lAddElemUlong(&jatasks, JAT_task_number, jataskid, JAT_Type);
          if (task_ticket)
-            lSetUlong(task_ticket, JAT_ticket, ticket);
+            lSetDouble(task_ticket, JAT_ticket, ticket);
          lSetList(job_ticket, JB_ja_tasks, jatasks);
       }
    }

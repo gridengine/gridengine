@@ -56,6 +56,7 @@
 #include "setup_path.h"
 #include "sge_confL.h"
 #include "sge_hostL.h"
+#include "sge_usageL.h"
 #include "sge_gdi.h"
 #include "sge_time.h"
 #include "resolve_host.h"
@@ -87,6 +88,35 @@ int profile_schedd = 0;
 long ptf_max_priority = -999;
 long ptf_min_priority = -999;
 int keep_active = 0;
+
+/*
+ * SGEEE pending job scheduling algorithm parameters:
+ *
+ *      classic_sgeee_scheduling - Use the original SGEEE pending job scheduling
+ *              algorithm.
+ *      share_override_tickets - Override tickets of any object instance
+ *              are shared equally among all jobs associated with the object.
+ *      share_functional_shares - Functional shares of any object instance
+ *              are shared among all the jobs associated with the object.
+ *      share_deadline_tickets - Deadline tickets are shared among all the
+ *              deadline jobs.
+ *              are shared among all the jobs associated with the object.
+ *      max_functional_jobs_to_schedule - The maximum number of functional
+ *              pending jobs to scheduling using the brute-force method.
+ *      max_pending_tasks_per_job - The number of subtasks per pending job to
+ *              schedule. This parameter exists in order to reduce overhead.
+ *      halflife_decay_list - A list of halflife decay values (UA_Type)
+ *
+ *
+ */
+
+int classic_sgeee_scheduling = 0;
+int share_override_tickets = 1;
+int share_functional_shares = 0;
+int share_deadline_tickets = 1;
+int max_functional_jobs_to_schedule = 200;
+int max_pending_tasks_per_job = 50;
+lList *halflife_decay_list = NULL;
 
 /* 
  * Reserved usage flags
@@ -653,6 +683,13 @@ lList **lpp
 
       flush_submit_sec = -1;
       flush_finish_sec = -1;
+      classic_sgeee_scheduling = 0;
+      share_override_tickets = 1;
+      share_functional_shares = 0;
+      share_deadline_tickets = 1;
+      max_functional_jobs_to_schedule = 200;
+      max_pending_tasks_per_job = 50;
+      halflife_decay_list = NULL;
       
       for (s=sge_strtok(pconf->schedd_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
          if (!strncasecmp(s, "FLUSH_SUBMIT_SEC", sizeof("FLUSH_SUBMIT_SEC")-1)) {
@@ -663,10 +700,68 @@ lList **lpp
             flush_finish_sec = atoi(&s[sizeof("FLUSH_FINISH_SEC=")-1]);
             if (flush_finish_sec < 0)
                flush_finish_sec=-1;  
+         } else if (!strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=true") ||
+                    !strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=1")) {
+            classic_sgeee_scheduling = 1;
+         } else if (!strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=false") ||
+                    !strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=0")) {
+            classic_sgeee_scheduling = 0;
+         } else if (!strcasecmp(s, "SHARE_OVERRIDE_TICKETS=true") ||
+                    !strcasecmp(s, "SHARE_OVERRIDE_TICKETS=1")) {
+            share_override_tickets = 1;
+         } else if (!strcasecmp(s, "SHARE_OVERRIDE_TICKETS=false") ||
+                    !strcasecmp(s, "SHARE_OVERRIDE_TICKETS=0")) {
+            share_override_tickets = 0;
+         } else if (!strcasecmp(s, "SHARE_FUNCTIONAL_SHARES=true") ||
+                    !strcasecmp(s, "SHARE_FUNCTIONAL_SHARES=1")) {
+            share_functional_shares = 1;
+         } else if (!strcasecmp(s, "SHARE_DEADLINE_TICKETS=true") ||
+                    !strcasecmp(s, "SHARE_DEADLINE_TICKETS=1")) {
+            share_deadline_tickets = 1;
+         } else if (!strcasecmp(s, "SHARE_DEADLINE_TICKETS=false") ||
+                    !strcasecmp(s, "SHARE_DEADLINE_TICKETS=0")) {
+            share_deadline_tickets = 0;
+         } else if (!strcasecmp(s, "SHARE_FUNCTIONAL_SHARES=false") ||
+                    !strcasecmp(s, "SHARE_FUNCTIONAL_SHARES=0")) {
+            share_functional_shares = 0;
+         } else if (!strncasecmp(s, "MAX_FUNCTIONAL_JOBS_TO_SCHEDULE",
+                    sizeof("MAX_FUNCTIONAL_JOBS_TO_SCHEDULE")-1)) {
+            max_functional_jobs_to_schedule=atoi(&s[sizeof("MAX_FUNCTIONAL_JOBS_TO_SCHEDULE=")-1]);
+         } else if (!strncasecmp(s, "MAX_PENDING_TASKS_PER_JOB",
+                    sizeof("MAX_PENDING_TASKS_PER_JOB")-1)) {
+            max_pending_tasks_per_job=atoi(&s[sizeof("MAX_PENDING_TASKS_PER_JOB=")-1]);
+         } else if (!strcasecmp(s, "HALFLIFE_DECAY_LIST=none")) {
+            if (halflife_decay_list)
+               lFreeList(halflife_decay_list);
+            halflife_decay_list = NULL;
+         } else if (!strncasecmp(s, "HALFLIFE_DECAY_LIST=",
+                    sizeof("HALFLIFE_DECAY_LIST=")-1)) {
+            lListElem *ep;
+            char *s0,*s1,*s2,*s3;
+            double value;
+            struct saved_vars_s *sv1=NULL, *sv2=NULL;
+            if (halflife_decay_list) {
+               lFreeList(halflife_decay_list);
+               halflife_decay_list = NULL;
+            }
+            s0 = &s[sizeof("HALFLIFE_DECAY_LIST=")-1];
+            for(s1=sge_strtok_r(s0, ":", &sv1); s1;
+                s1=sge_strtok_r(NULL, ":", &sv1)) {
+               if ((s2=sge_strtok_r(s1, "=", &sv2)) &&
+                   (s3=sge_strtok_r(NULL, "=", &sv2)) &&
+                   (sscanf(s3, "%lf", &value)==1)) {
+                  ep = lAddElemStr(&halflife_decay_list, UA_name, s2, UA_Type);
+                  lSetDouble(ep, UA_value, value);
+               }
+               if (sv2)
+                  free(sv2);
+            }
+            if (sv1)
+               free(sv1);
          } else if (!strncasecmp(s, "PROFILE", sizeof("PROFILE")-1)) {
             profile_schedd = 1;
          }
-      }   
+      }
    }
 
    if (mlist) {

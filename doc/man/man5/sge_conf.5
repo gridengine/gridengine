@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2001/07/20 08:19:16 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2001/10/01 16:59:03 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2001/07/20 08:19:16 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2001/10/01 16:59:03 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -790,6 +790,47 @@ Ignore fully qualified domain names. It is switched on if set to either "true"
 or "1". Can be used if all hosts belonging to a xxQS_NAMExx cluster are
 part of a single DNS domain. Switching it on my solve problems with load
 reports due to different hostname resolutions across the cluster.
+.\"
+.IP "\fICLASSIC_SGEEE_SCHEDULING\fP"                                         
+If set to "true" or "1", use the original SGEEE pending job scheduling       
+algorithm. The original SGEEE pending job scheduling algorithm calculates    
+the tickets for pending jobs by dividing up the tickets in each            
+scheduling policy among all the active and pending jobs. The pending       
+job list is then ordered based on the tickets assigned to the pending      
+jobs. The default value is "false".                                        
+This parameter is only valid in a SGEEE system.                              
+.\"                                                                        
+.IP "\fISHARE_OVERRIDE_TICKETS\fP"                                         
+If set to "true" or "1", override tickets of any override object instance  
+are shared equally among all jobs associated with the object. If set to    
+"false" or "0", each job gets the full value of the override tickets       
+associated with the object. The default value is "true".                   
+This parameter is only valid in a SGEEE system.                              
+.\"                                                                        
+.IP "\fISHARE_FUNCTIONAL_SHARES\fP"                                        
+If set to "true" or "1", functional shares of any functional object instance
+are shared among all the jobs associated with the object. If set to "false"
+or "0", each job associated with a functional object, gets the full        
+functional shares of that object. The default value is "false".            
+This parameter is only valid in a SGEEE system.                              
+.\"                                                                        
+.IP "\fISHARE_DEADLINE_TICKETS\fP"                                         
+If set to "true" or "1", the total deadline tickets are shared among all   
+deadline jobs. If set to "false" or "0", each deadline job will receive    
+the total deadline tickets once the job deadline has been reached. The     
+default value is "true".                                                   
+This parameter is only valid in a SGEEE system.                              
+.\"                                                                        
+.IP "\fIMAX_FUNCTIONAL_JOBS_TO_SCHEDULE\fP"                                
+The maximum number of pending jobs to schedule in the functional policy.   
+The default value is 200.                                                  
+This parameter is only valid in a SGEEE system.                              
+.\"                                                                        
+.IP "\fIMAX_PENDING_TASKS_PER_JOB\fP"                                      
+The maximum number of subtasks per pending array job to schedule. This     
+parameter exists in order to reduce scheduling overhead. The default value 
+is 100.                                                                    
+This parameter is only valid in a SGEEE system.                              
 .\"
 .\"
 .SH "\fBexecd_params\fP"

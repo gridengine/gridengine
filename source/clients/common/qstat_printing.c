@@ -800,7 +800,7 @@ char *indent
                sge_ext?"project          department ":"",
                   "state",
                   "submit/start at",
-               sge_ext ? " deadline         "
+               sge_ext ? " deadline           "
                        : "",
                sge_ext ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      "
                        : "",
@@ -916,7 +916,7 @@ char *indent
 
       /* start/submit time */
       if (!lGetUlong(job, JB_deadline) )
-         printf("                  ");
+         printf("                    ");
       else
          printf("%s ", sge_ctime(lGetUlong(job, JB_deadline)));
 
@@ -961,19 +961,19 @@ char *indent
          && slots && (gdil_ep=lGetSubStr(jatep, JG_qname, queue_name,
                JAT_granted_destin_identifier_list))) {
          if (slot == 0) {
-            tickets = lGetUlong(gdil_ep, JG_ticket);
-            otickets = lGetUlong(gdil_ep, JG_oticket);
-            ftickets = lGetUlong(gdil_ep, JG_fticket);
-            stickets = lGetUlong(gdil_ep, JG_sticket);
-            dtickets = lGetUlong(gdil_ep, JG_dticket);
+            tickets = lGetDouble(gdil_ep, JG_ticket);
+            otickets = lGetDouble(gdil_ep, JG_oticket);
+            ftickets = lGetDouble(gdil_ep, JG_fticket);
+            stickets = lGetDouble(gdil_ep, JG_sticket);
+            dtickets = lGetDouble(gdil_ep, JG_dticket);
          }
          else {
             if (slots) {
-               tickets = lGetUlong(gdil_ep, JG_ticket) / slots;
-               otickets = lGetUlong(gdil_ep, JG_oticket) / slots;
-               ftickets = lGetUlong(gdil_ep, JG_fticket) / slots;
-               dtickets = lGetUlong(gdil_ep, JG_dticket) / slots;
-               stickets = lGetUlong(gdil_ep, JG_sticket) / slots;
+               tickets = lGetDouble(gdil_ep, JG_ticket) / slots;
+               otickets = lGetDouble(gdil_ep, JG_oticket) / slots;
+               ftickets = lGetDouble(gdil_ep, JG_fticket) / slots;
+               dtickets = lGetDouble(gdil_ep, JG_dticket) / slots;
+               stickets = lGetDouble(gdil_ep, JG_sticket) / slots;
             } 
             else {
                tickets = otickets = ftickets = stickets = dtickets = 0;
@@ -981,11 +981,11 @@ char *indent
          }
       }
       else {
-         tickets = lGetUlong(jatep, JAT_ticket);
-         otickets = lGetUlong(jatep, JAT_oticket);
-         ftickets = lGetUlong(jatep, JAT_fticket);
-         stickets = lGetUlong(jatep, JAT_sticket);
-         dtickets = lGetUlong(jatep, JAT_dticket);
+         tickets = lGetDouble(jatep, JAT_ticket);
+         otickets = lGetDouble(jatep, JAT_oticket);
+         ftickets = lGetDouble(jatep, JAT_fticket);
+         stickets = lGetDouble(jatep, JAT_sticket);
+         dtickets = lGetDouble(jatep, JAT_dticket);
       }
 
 

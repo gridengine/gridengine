@@ -104,27 +104,27 @@ SLISTDEF(JAT_Type, Task)
    /* used by SGE sge_schedd; stored */
    /* to qmaster for displaying; */
    /* not spooled */
-   SGE_RULONG(JAT_ticket)
+   SGE_RDOUBLE(JAT_ticket)
 
    /* SGE - total SGE tickets; set by */
    /* schedd, saved to qmaster, sent */
    /* to ptf; not spooled */
-   SGE_RULONG(JAT_oticket)
+   SGE_RDOUBLE(JAT_oticket)
 
    /* SGE - override tickets; set by */
    /* schedd, saved to qmaster, sent */
    /* to ptf; not spooled */
-   SGE_RULONG(JAT_dticket)
+   SGE_RDOUBLE(JAT_dticket)
 
    /* SGE - deadline tickets; set by */
    /* schedd, saved to qmaster, sent */
    /* to ptf; not spooled */
-   SGE_RULONG(JAT_fticket)
+   SGE_RDOUBLE(JAT_fticket)
 
    /* SGE - functional tickets; set by */
    /* schedd, saved to qmaster, sent to */
    /* ptf; not spooled */
-   SGE_RULONG(JAT_sticket)
+   SGE_RDOUBLE(JAT_sticket)
 
    /* SGE - share-tree tickets; set by */
    /* schedd, saved to qmaster, */

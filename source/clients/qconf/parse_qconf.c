@@ -98,7 +98,7 @@
 #include "utility.h"
 #include "sge_set_def_sig_mask.h"
 #include "scheduler.h"
-#include "sgeee.h"
+#include "sge_support.h"
 #include "msg_gdilib.h"
 #include "sge_stat.h" 
 #include "msg_common.h"

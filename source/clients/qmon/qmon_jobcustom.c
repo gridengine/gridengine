@@ -84,6 +84,7 @@ static void addToSelected(Widget w, XtPointer cld, XtPointer cad);
 static void rmFromSelected(Widget w, XtPointer cld, XtPointer cad);
 
 static String PrintUlong(lListElem *ep, lListElem *jat, lList *jal, int nm);
+static String PrintDoubleAsUlong(lListElem *ep, lListElem *jat, lList *jal, int nm);
 static String PrintDouble(lListElem *ep, lListElem *jat, lList *jal, int nm);
 static String PrintPriority(lListElem *ep, lListElem *jat, lList *jal, int nm);
 static String PrintString(lListElem *ep, lListElem *jat, lList *jal, int nm);
@@ -156,11 +157,11 @@ static tJobField job_items[] = {
    { 0, JB_pe_range, "@{PERange}", 15, 30, PrintPERange },
    { 0, JB_jid_predecessor_list, "@{Predecessors}", 12, 30, PrintPredecessors },
 /**** SGE specific fields *****/
-   { 0, JAT_ticket, "@{Ticket}", 10, 30, PrintUlong},
-   { 0, JAT_oticket, "@{OTicket}", 10, 30, PrintUlong},
-   { 0, JAT_dticket, "@{DTicket}", 10, 30, PrintUlong },
-   { 0, JAT_fticket, "@{FTicket}", 10, 30, PrintUlong },
-   { 0, JAT_sticket, "@{STicket}", 10, 30, PrintUlong },
+   { 0, JAT_ticket, "@{Ticket}", 10, 30, PrintDoubleAsUlong},
+   { 0, JAT_oticket, "@{OTicket}", 10, 30, PrintDoubleAsUlong},
+   { 0, JAT_dticket, "@{DTicket}", 10, 30, PrintDoubleAsUlong },
+   { 0, JAT_fticket, "@{FTicket}", 10, 30, PrintDoubleAsUlong },
+   { 0, JAT_sticket, "@{STicket}", 10, 30, PrintDoubleAsUlong },
    { 0, JAT_share, "@{Share}", 10, 30, PrintDouble },
    { 0, JB_override_tickets, "@{OverrideTickets}", 15, 30, PrintUlong },
    { 0, JB_project, "@{Project}", 10, 30, PrintString },
@@ -207,6 +208,31 @@ int nm
    }
    else
       sprintf(buf, "%d", (int)lGetUlong(ep, nm));
+
+   str = XtNewString(buf);
+
+   DEXIT;
+   return str;
+}
+
+/*-------------------------------------------------------------------------*/
+static String PrintDoubleAsUlong(
+lListElem *ep,
+lListElem *jat,
+lList *jal,
+int nm
+) {
+   char buf[BUFSIZ];
+   String str;
+
+   DENTER(GUI_LAYER, "PrintDoubleAsUlong");
+
+   if (nm >= JAT_LOWERBOUND && nm <= JAT_UPPERBOUND) {
+      jat = lFirst(lGetList(ep, JB_ja_tasks));
+      sprintf(buf, "%d", (int)lGetDouble(jat, nm));
+   }
+   else
+      sprintf(buf, "%d", (int)lGetDouble(ep, nm));
 
    str = XtNewString(buf);
 

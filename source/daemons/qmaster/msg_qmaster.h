@@ -84,6 +84,7 @@
 #define MSG_JOB_JOBDELIVER_UU         _("failed delivering job "U32CFormat"."U32CFormat)
 #define MSG_JOB_UNABLE2FINDJOBORD_U   _("unable to find job \""U32CFormat"\" in ticket order\n")     
 #define MSG_JOB_CHANGETICKETS_UU      _("scheduler tries to change tickets of a non running job "U32CFormat" task "U32CFormat"\n")
+#define MSG_JOB_CHANGEPTICKETS_UU      _("scheduler tries to change pending tickets of a non pending job "U32CFormat" task "U32CFormat"\n")
 #define MSG_JOB_REMOVENOTFINISHED_U   _("scheduler tried to remove job "U32CFormat" which is not in state JFINISHED\n")
 #define MSG_JOB_REMOVENONINTERACT_U   _("scheduler tried to remove non interactive job "U32CFormat" by use of a ORT_remove_immediate_job order\n")
 #define MSG_JOB_REMOVENONIMMEDIATE_U  _("scheduler tried to remove non immediate job "U32CFormat" by use of a ORT_remove_immediate_job order\n")

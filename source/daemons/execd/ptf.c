@@ -942,8 +942,8 @@ static lListElem *ptf_process_job(osjobid_t os_job_id, char *task_id_str,
    lListElem *job, *osjob;
    lList *job_list = ptf_jobs;
    u_long job_id = lGetUlong(new_job, JB_job_number);
-   u_long job_tickets =
-      lGetUlong(lFirst(lGetList(new_job, JB_ja_tasks)), JAT_ticket);
+   double job_tickets =
+      lGetDouble(lFirst(lGetList(new_job, JB_ja_tasks)), JAT_ticket);
    u_long interactive = (lGetString(new_job, JB_script_file) == NULL);
 
    DENTER(TOP_LAYER, "ptf_process_job");
@@ -999,7 +999,7 @@ static lListElem *ptf_process_job(osjobid_t os_job_id, char *task_id_str,
    /*
     * set number of tickets in job entry
     */
-   lSetUlong(job, JL_tickets, MAX(job_tickets, 1));
+   lSetUlong(job, JL_tickets, (u_long32)MAX(job_tickets, 1));
 
    /*
     * set interactive job flag

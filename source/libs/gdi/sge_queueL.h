@@ -187,6 +187,7 @@ enum {
    QU_suspended_on_subordinate,
    QU_last_suspend_threshold_ckeck,
    QU_job_cnt,
+   QU_pending_job_cnt,
    QU_soft_violation,
    QU_host_seq_no,
 
@@ -287,6 +288,8 @@ ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
                                                 * in schedd */
    SGE_XULONG(QU_job_cnt)          /* SGEEE - job reference count 
                                     * only used in schedd */
+   SGE_XULONG(QU_pending_job_cnt)  /* SGEEE - pending job reference count 
+                                    * only used in schedd */
    SGE_XULONG(QU_soft_violation)   /* number of soft request (-l/-q) violations
                                     * only used in schedd */
    SGE_XULONG(QU_host_seq_no)      /* sequence number of host 
@@ -378,6 +381,7 @@ NAMEDEF(QUN)
    NAME("QU_suspended_on_subordinate")
    NAME("QU_last_suspend_threshold_ckeck")
    NAME("QU_job_cnt")
+   NAME("QU_pending_job_cnt")
    NAME("QU_soft_violation")
    NAME("QU_host_seq_no")
 

@@ -129,8 +129,11 @@ Using per job attributes:
    Requestable	   : for all attribute
    default value 	: only for consumables
 
-   Work package:
-      => changing the qmon interface to offer the user only the valid choices
+   The qmon interface should only provied valid options. The choice of the
+   type limites the choice of operators and if it can be a consumable or not.
+   Haveing a consumable also limites the relational operators to one. This
+   makes it easier and more convieniend for the user to add new attributes.
+   Default values can only be added, when it makes sense (for consumables).
 
 Build in values:
 ----------------
@@ -227,7 +230,7 @@ Build in values:
    - CE_default         - default value, only consumables
    (saving 8 elements)
 
-   CE_type:   
+   CM_type:   
    - CE_name            - requested name (name or shortcut)
    - CE_valtype         - type
    - CE_doubleval       - fixed value 
@@ -242,8 +245,9 @@ Build in values:
    (saving 3 elements)
 
    Work package:
-      => Phase 1: changing the job request structure
-      => Phase 2: changing the attribute configuration structure
+      => Phase 1: changing the request matching structure (CM_type)
+      => Phase 2: changing the job request structure (CL_type)
+      => Phase 3: changing the attribute configuration structure (RL_type)
 
 
 5. Scheduler attribute matching:
@@ -256,14 +260,16 @@ Build in values:
    requests. 
    To speed up this process, one can store the information, which queue cannot 
    run which job category. When this is known, the jobs are only tested against 
-   the queues, which were capable of running this job in the previous test. List 
-   of queues to test will get shorter and shorter, while jobs are dispatched.
+   the queues, which were capable of running the jobs from the previous dispatch 
+   cycle. List of queues to test will get shorter and shorter, while jobs are 
+   dispatched.
 
    The same is true for soft requests. Once all queues are validated and the 
-   number of mismatches is computed, it is true for all other jobs from the 
+   number of mismatches are computed, they are the same for all other jobs in the 
    same job category.  This saves a lot of matching time with the soft requests.
 
-   Work package:
-      => implement the storage of not usable queues in the job categories for 
-         jobs with only hard requests.
-      => implement the storage of mismatches per queue for soft requests.
+
+Nice to have:
+   In addition can a lot of matching time be saved, when the static requierments
+   are only matched once per job category (such as authentification of a specific
+   queue, ...).

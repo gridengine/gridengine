@@ -1,3 +1,7 @@
+SG-2003-10-13-1: Enhancem.: Updated thre resource_attributes.txt document.
+
+SG-2003-10-13-0: Bugfix:    Fixed the build
+
 EB-2003-10-11-0: Enhancem.: Started with STAT_SUM CQ-WP
                             - Moved code which changes QI states into new module
                             - Added dynamic QI attributes

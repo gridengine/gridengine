@@ -78,6 +78,7 @@
 #include "sge_object.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
+#include "sge_qinstance_state.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */

@@ -146,7 +146,7 @@ qinstance_has_state(const lListElem *this_elem, u_long32 bit)
 const char *
 qinstance_state_as_string(u_long32 bit) 
 {
-   static const u_long32 states[] = {
+     static const int states[] = { 
       QALARM,
       QSUSPEND_ALARM,
       QDISABLED,

@@ -1,3 +1,8 @@
+SG-2004-01-26-0: Bugfix:    fixed SG-2003-12-17-0. It was not possible to set
+                            a hold on a job in the common way. One had to
+                            specify the job task with the job id.
+                 Changed:   qalter   
+
 AH-2004-01-26-0: Bugfix:    schedd_job_info=true causes large delays scheduling 
                             parallel jobs
                  Changed:   sge_schedd

@@ -133,6 +133,8 @@ char **argv
   
    alp = qalter_parse_job_parameter(cmdline, &request_list, &all_jobs, &all_users);
 
+/*lWriteListTo(request_list, stdout);*/
+
    DPRINTF(("all_jobs = %d, all_user = %d\n", all_jobs, all_users));
 
    if (request_list && verify) {
@@ -245,6 +247,7 @@ int *all_users
    int is_mail_requested = 0;
    enum {NOTINIT, JOB, ALL} all_or_jidlist = NOTINIT;
    int users_flag = 0;
+   int is_hold_option = 0;
 
    int job_field[100];
 
@@ -447,6 +450,8 @@ int *all_users
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
       lListElem *jid;
+
+      is_hold_option = 1;
 
       for_each (jid, lGetList(job, JB_job_identifier_list)) {
          lSetUlong(jid, ID_force, (u_long32) lGetInt(ep, SPA_argval_lIntT));
@@ -759,13 +764,11 @@ int *all_users
       }
      
       /* build task list from ID_Type from JB_job_identifier */
-      /*
-      if (!lGetList(ep, ID_ja_structure)) {
+      
+      if (is_hold_option && !lGetList(ep, ID_ja_structure)) {
          task = lAddElemUlong(&task_list, JAT_task_number, 0, task_descr);      
          lSetUlong(task, JAT_hold, lGetUlong(ep, ID_force));
-      } else {
-      */
-      if (lGetList(ep, ID_ja_structure)) {
+      } else  if (lGetList(ep, ID_ja_structure)) {
          lListElem *range;
          for_each(range, lGetList(ep, ID_ja_structure)) {
             u_long32 start = lGetUlong(range, RN_min);
@@ -778,6 +781,7 @@ int *all_users
             } 
          }
       }
+      
 
       if ((lGetPosViaElem(rep, JB_ja_tasks) == -1) && (lGetNumberOfElem(task_list))){
          sge_add_answer(&answer, MSG_OPTIONWORKSONLYONJOB, STATUS_EUNKNOWN, 0);

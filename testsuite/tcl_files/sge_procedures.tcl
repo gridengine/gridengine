@@ -3088,13 +3088,17 @@ proc wait_for_unknown_load { seconds queue_array { do_error_check 1 } } {
          }
       } else {
         puts $CHECK_OUTPUT "qstat error or binary not found"
-        add_proc_error "wait_for_unknown_load" -1 "qstat error"
+        if { $do_error_check == 1 } {
+           add_proc_error "wait_for_unknown_load" -1 "qstat error"
+        }
         return -1
       }
 
       set runtime [expr ( [timestamp] - $time) ]
-      if { $runtime >= $seconds && $do_error_check == 1 } {
-          add_proc_error "wait_for_unknown_load" -1 "timeout waiting for load values >= 99"
+      if { $runtime >= $seconds } {
+          if { $do_error_check == 1 } {
+             add_proc_error "wait_for_unknown_load" -1 "timeout waiting for load values >= 99"
+          }
           return -1
       }
    }

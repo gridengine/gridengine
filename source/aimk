@@ -1076,7 +1076,6 @@ case SOLARIS86:
       exit 1
    endif
 
-   set WITH_GETTEXT = 1
    set LOADAVGLIBS = "-lkvm"
 #   set PARALLEL = "-j 1"
 #   set MAKE=gmake
@@ -1113,7 +1112,8 @@ case SOLARIS86:
    endif
 
    if ( $BUILDARCH == SOLARIS86 ) then
-      set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE -errtags=yes" 
+#      set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE -errtags=yes" 
+      set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE,no%E_STATEMENT_NOT_REACHED,no%E_IMPLICIT_DECL_FUNC_RETURN_INT,no%E_OLD_STYLE_DECL_HIDES_PROTO -errtags=yes" 
       set CFLAGS = "$CFLAGS -D$BUILDARCH"
    endif
 

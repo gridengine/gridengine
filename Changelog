@@ -1,5 +1,8 @@
-CR-2004-04-19-1: Enhancem.: qping will now be installed via distinst and copied
-                            into $SGE_ROOT/bin/$arch/qping
+AS-2004-04-19-0: Bugfix:    remove references to Enterprise Edition mode
+                 Changed:   scripts/mk_ascman, man pages
+               
+CR-2004-04-19-1: Enhancem.: qping will now be installed via distinst and
+                            copied into $SGE_ROOT/bin/$arch/qping
                  Changed:   install scripts
                  Review:    MD
 
@@ -7,7 +10,8 @@ SG-2004-04-19-0: Bugfix:    qsub is working again.
                  Review:    DT
                  Changed:   qsub
 
-AA-2004-04-16-1: Bugfix:    typecast for time values fix for broken build on darwin
+AA-2004-04-16-1: Bugfix:    typecast for time values fix for broken build on
+                            darwin
 
 JG-2004-04-19-0: Bugfix:    Added files missing in checkin JG-2004-04-15-0.
 
@@ -16,11 +20,12 @@ CR-2004-04-19-0: Cleanup:   Changed name of module gridping to qping
 
 AA-2004-04-16-1: Bugfix:    typecast for time values fix for broken build on 
                             darwin
+
 CR-2004-04-16-1: Bugfix:    Some performance fixes when max. file descriptor
                             limit is reached.
 
-HP-2004-04-16-0: Enhancem.: Added flag to enable or diasble drmaa_transfer_files
-                            via the configuration.
+HP-2004-04-16-0: Enhancem.: Added flag to enable or disable
+                            drmaa_transfer_files via the configuration.
                  Issue:     638
                  Changed:   drmaa, japi, configuration
                  Review:    AH
@@ -31,32 +36,34 @@ AH-2004-04-16-0: Bugfix:    -soft submit option broken
 
 JG-2004-04-16-0: Bugfix:    Fixed build process for shared libs on AIX43 and 
                             AIX51.
-                            Changed README for berkeleydb: Berkeley DB has to be
-                            built with --with-mutex=POSIX/pthreads on AIX43.
+                            Changed README for berkeleydb: Berkeley DB has
+                            to be built with --with-mutex=POSIX/pthreads on
+                            AIX43.
                  Review:    AA, AS
 
-CR-2004-04-16-0: Bugfix:    - flush unsent messages when a connection is going
-                              down. ( Event clients will now correct unreqister
-                              at qmaster )
+CR-2004-04-16-0: Bugfix:    - flush unsent messages when a connection is
+                              going down. ( Event clients will now correct
+                              unreqister at qmaster )
                  Changed:   commlib
 
-CR-2004-04-15-1: Bugfix:    - always increment auto client id pointer to ensure
-                              that event clients won't reconnect with a client
-                              id from a former connection
+CR-2004-04-15-1: Bugfix:    - always increment auto client id pointer to
+                              ensure that event clients won't reconnect with
+                              a client id from a former connection
                  Changed:   commlib 
                  Review:    DT  
 
 AH-2004-04-15-0: Bugfix:    Fix sequential resource reservation broken by 
                             AH-2004-04-14-1.
 
-AH-2004-04-15-0: Bugfix:    Fix problem with counter used to track number of JAPI 
-                            threads that rely upon JAPI background thread service.
+AH-2004-04-15-0: Bugfix:    Fix problem with counter used to track number of
+                            JAPI threads that rely upon JAPI background
+                            thread service.
                  Review:    HP
 
-JG-2004-04-15-0: Enhancem.: Allow the admin to choose the spooling method 
-                            (berkeleydb or classic) at installation time, if SGE
-                            was build with dynamic spooling 
-                            (aimk -spool-dynamic).
+JG-2004-04-15-0: Enhancem.: Allow the admin to choose the spooling method
+                            (berkeleydb or classic) at installation time, if
+                            SGE was build with dynamic spooling (aimk
+                            -spool-dynamic).
                  Changed:   install scripts, testsuite
                  Review:    MD
 
@@ -115,10 +122,10 @@ CR-2004-04-13-2: Enhancem.: updated man pages (communication lib changes)
 
 CR-2004-04-13-1: Enhancem.: Added new utilbin binary: gridping
 
-JG-2004-04-13-0: Enhancem.: When an execd reports a job as running, but the job
-                            is in state deleted, send a kill signal for the job
-                            immediately, instead of waiting for the next 
-                            repeated signal delivery to occur.
+JG-2004-04-13-0: Enhancem.: When an execd reports a job as running, but the
+                            job is in state deleted, send a kill signal for
+                            the job immediately, instead of waiting for the
+                            next repeated signal delivery to occur.
                  Issue:     866
                  Changed:   sge_qmaster
                  Review:    AH
@@ -184,8 +191,8 @@ JG-2004-04-07-0: Enhancem.: Berkeley DB spooling: Write two databases:
                  Changed:   sge_qmaster, spoolinit, spooldefaults, dbstat
                  Review:    EB
 
-SG-2004-04-07-0: Bugfix:    - The or operator for complex entries with the type
-                              RESTRING was broken.
+SG-2004-04-07-0: Bugfix:    - The or operator for complex entries with the
+                              type RESTRING was broken.
                             - a minor issue in event master. It might deliver
                               the event envelop without events. 
                  Changed:   scheduler
@@ -194,7 +201,8 @@ SG-2004-04-07-0: Bugfix:    - The or operator for complex entries with the type
 
 JG-2004-04-06-1: Cleanup:   Some cleanup in berkeley db spooling.
 
-EB-2004-04-06-0: Bugfix:    Usage retrieval/logging problems with tight PE jobs
+EB-2004-04-06-0: Bugfix:    Usage retrieval/logging problems with tight PE
+                            jobs
                  Issue:     929
                  Changed:   sge_execd
                  Review:    JG

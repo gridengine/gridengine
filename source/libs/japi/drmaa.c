@@ -36,6 +36,7 @@
 #include <pthread.h>
 
 #include <pthread.h>
+#include <pwd.h>
 
 #include "sge_mtutil.h"
 
@@ -50,6 +51,7 @@
 #include "read_defaults.h"
 
 /* COMMON */
+#include "msg_common.h"
 #include "parse_job_cull.h"
 #include "parse_qsub.h"
 #include "sge_options.h"
@@ -59,9 +61,11 @@
 #include "sge_qtcsh.h"
 
 /* UTI */
+#include "setup_path.h"
 #include "sge_dstring.h"
 #include "sge_prog.h"
 #include "sge_string.h"
+#include "sge_uidgid.h"
 
 /* RMON */
 #include "sgermon.h"
@@ -138,6 +142,8 @@ static void merge_drmaa_options (lList **opts_all, lList **opts_default,
 static int opt_list_append_opts_from_drmaa_attr (lList **args, const lList *attrs,
    const lList *vattrs, int is_bulk, dstring *diag);
 char *drmaa_time2sge_time (const char *drmaa_time, dstring *diag);
+static char *drmaa_get_home_directory (lList *alp);
+static char *drmaa_expand_wd_path(const char *path, lList *alp);
 
 /****** DRMAA/-DRMAA_Session_state *******************************************
 *  NAME
@@ -2132,7 +2138,7 @@ static int japi_drmaa_path2sge_path(const lList *attrs, int is_bulk,
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTE: drmaa_job2sge_job() is MT safe
+*     MT-NOTE: drmaa_job2sge_job() is MT safe except on AIX4.2 and FreeBSD
 *
 *******************************************************************************/
 static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_jt, 
@@ -2153,6 +2159,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
 
    DENTER (TOP_LAYER, "drmaa_job2sge_job");
 
+DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
    /* make JB_Type job description out of DRMAA job template */
    if (!(jt = lCreateElem (JB_Type))) {
       japi_standard_error (DRMAA_ERRNO_NO_MEMORY, diag);
@@ -2234,7 +2241,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       DEXIT;
       return drmaa_errno;
    }
- 
+
    /*
     * Set up default options
     */
@@ -2242,9 +2249,15 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
 
    /*
     * We will only read commandline options from scripfile if the script
-    * itself should not be handled as binary
+    * itself should not be handled as binary.
+    * There's a big danger in trying to parse the scriptfile that needs to be
+    * documented.  The problem is that the path to the working directory and
+    * hence to the script is relative to the execution host.  This code runs on
+    * the submit host, so the working directory path may not point to the right
+    * thing.  If it doesn't the only way we'll find out is the path to the
+    * script doesn't exist.  If it just points to the wrong script, we have no
+    * way of knowing it.
     */   
-   
    if (opt_list_is_X_true (opts_native, "-b") ||
        (!opt_list_has_X (opts_native, "-b") &&
         (opt_list_is_X_true (opts_defaults, "-b") ||
@@ -2252,7 +2265,46 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          opt_list_is_X_true (opts_default, "-b"))))) {
       DPRINTF(("Skipping options from script due to -b option\n"));
    } else {
-      opt_list_append_opts_from_script (&opts_scriptfile, &alp, opts_all, environ);
+      const char *path = NULL;
+         
+      /* If the scriptfile is to be parsed for options, we have to set the
+       * cwd.  In DRMAA, the script path is assumed to be relative to the
+       * working directory.  Therefore, if a DRMAA_WD is given, we must
+       * chdir() to that directory before trying to parse (and hence find) the
+       * script.  If the working directory is not given, the job will be run in
+       * the user's home directory, presumably.  The exception is if -cwd is
+       * set from the DRMAA_NATIVE_SPECIFICATION or in a default file, in which
+       * case we don't need to chdir() at all. */
+      if (opt_list_has_X (opts_drmaa, "-wd")) {
+         ep = lGetElemStr(opts_drmaa, SPA_switch, "-wd");
+         path = lGetString(ep, SPA_argval_lStringT);
+         path = drmaa_expand_wd_path (path, alp);
+         
+         if (path == NULL) {
+            answer_list_to_dstring (alp, diag);
+            lFreeList (alp);
+            jt = lFreeElem (jt);   
+            DEXIT;
+            return DRMAA_ERRNO_DENIED_BY_DRM;
+         }
+      }
+      /* -cwd could also theoretically appear in opts_default, but since I
+       * control what goes into opts_default, I know it isn't. */
+      else if ((!(opt_list_has_X(opts_native, "-cwd"))) &&
+               (!(opt_list_has_X(opts_defaults, "-cwd")))){
+         path = drmaa_get_home_directory (alp);
+      }
+
+      if (path != NULL) {
+         DPRINTF (("Using \"%s\" for the working directory.\n", path));
+         chdir (path);
+         FREE (path);
+      }
+      else {
+         DPRINTF (("Using current directory for the working directory.\n"));
+      }
+      
+      opt_list_append_opts_from_script (&opts_scriptfile, &alp, opts_drmaa, environ);
       
       if (answer_list_has_error (&alp)) {
          answer_list_to_dstring (alp, diag);
@@ -2448,6 +2500,7 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
    int drmaa_errno;
    lListElem *ep = NULL;
    lListElem *ep_opt = NULL;
+   const char *scriptname = NULL;
    /* Turn each DRMAA attribute into a list entry. */
 
    DENTER (TOP_LAYER, "opt_list_append_opts_from_drmaa_attr");
@@ -2681,10 +2734,10 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
       return DRMAA_ERRNO_DENIED_BY_DRM;
    }
    
-   if (lGetString (ep, VA_value) != NULL) {
-      DPRINTF (("remote command is \"%s\"\n", lGetString (ep, VA_value)));
+   if ((scriptname = lGetString (ep, VA_value)) != NULL) {
+      DPRINTF (("remote command is \"%s\"\n", scriptname));
       ep_opt = sge_add_arg (args, 0, lStringT, STR_PSEUDO_SCRIPT, NULL);
-      lSetString (ep_opt, SPA_argval_lStringT, lGetString (ep, VA_value));
+      lSetString (ep_opt, SPA_argval_lStringT, scriptname);
 
       /* job arguments -- last thing on the command line */
       if ((ep=lGetElemStr (vattrs, NSV_name, DRMAA_V_ARGV))) {
@@ -2825,13 +2878,10 @@ static void merge_drmaa_options(lList **opts_all, lList **opts_default,
       prune_arg_list (*opts_scriptfile);
       
       if (*opts_all == NULL) {
-         DPRINTF (("Setting all options to scriptfile options\n"));
          *opts_all = *opts_scriptfile;
       } else {
-         DPRINTF (("Copying scriptfile options\n"));
          lAddList (*opts_all, *opts_scriptfile);
       }
-      DPRINTF (("Deleting scriptfile options\n"));
       *opts_scriptfile = NULL;
    }
    
@@ -2977,7 +3027,7 @@ o   -V                                     export all environment variables
 *     lList *drmaa_time              - the DRMAA time string
 *
 *  OUTPUTS
-*     lList *diag                    - errors
+*     dstring *diag                  - errors
 *
 *  NOTES
 *     MT-NOTE: drmaa_time2sge_time() is MT safe
@@ -3274,4 +3324,130 @@ char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
 
    DEXIT;
    return strdup (sge_time);
+}
+
+/****** DRMAA/drmaa_expand_wd_path()********************************************
+*  NAME
+*     drmaa_expand_wd_path() -- convert DRMAA_WD to a usable path
+*
+*  SYNOPSIS
+*     void drmaa_expand_wd_path(const char *path, lList *alp)
+*
+*  FUNCTION
+*     The DRMAA_WD is translated into a usable path by converting $drmaa_hd_ph$
+*     into the user's home directory path.  Note that $drmaa_inc_ph$ is not
+*     translated.  This function is used only when parsing the script file.
+*     because $drmaa_inc_ph$ only has a value after the job has been submitted,
+*     it is not useful for finding the script, and hence is not allowed in
+*     conjunction with "-b n".
+*
+*  INPUTS
+*     lList *path              - the DRMAA_WD string
+*
+*  OUTPUTS
+*     lList *alp               - errors
+*
+*  NOTES
+*     MT-NOTE: drmaa_expand_wd_path() is MT safe except on AIX4.2 and FreeBSD
+*
+*******************************************************************************/
+static char *drmaa_expand_wd_path(const char *path, lList *alp)
+{
+   char *file = NULL;
+   char str[256 + 1];
+   
+   DENTER (TOP_LAYER, "drmaa_expand_wd_path");
+   DPRINTF (("Expanding \"%s\"\n", path));
+
+   /* First look for the job index placeholder.  It is illegal. */
+   if (strstr(path, "$TASK_ID") != NULL) {
+         sprintf (str, MSG_DRMAA_INC_NOT_ALLOWED);
+         answer_list_add(&alp, str, STATUS_ENOSUCHUSER, 
+                         ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return NULL;
+   }
+   
+   /* If the home directory placeholder is found at the beginning of the
+    * path, replace it with the user's home directory on the current
+    * machine in hopes that it's the same home directory as on the exec
+    * host. */
+   if (!strncmp(path, "$HOME", 5)) {
+      int length = 0;
+      char *homedir = drmaa_get_home_directory (alp);
+
+      if (homedir == NULL) {
+         DEXIT;
+         return NULL;
+      }
+      
+      length = strlen (path) - 5 + strlen (homedir) + 1;
+      
+      file = (char *)malloc (sizeof (char) * length);
+      strcpy (file, homedir);
+      file = strcat (file, path + 5);
+      
+      FREE (homedir);
+   }
+   else {
+      file = (char *)malloc (sizeof (char) * (strlen (path) + 1));
+      file = strcpy (file, path);
+   }
+
+   DPRINTF (("Expanded to \"%s\"\n", file));
+   DEXIT;
+   return file;
+}
+
+/****** DRMAA/drmaa_get_home_directory()****************************************
+*  NAME
+*     drmaa_get_home_directory() -- get the user's home directory
+*
+*  SYNOPSIS
+*     void drmaa_get_home_directory(lList *alp)
+*
+*  FUNCTION
+*     Returns the user's home directory as determined from nsswitch.conf.
+*
+*  OUTPUTS
+*     lList *alp               - errors
+*
+*  NOTES
+*     MT-NOTE: drmaa_get_home_directory() is MT safe except on AIX4.2 and
+*     MT-NOTE: FreeBSD
+*
+*******************************************************************************/
+static char *drmaa_get_home_directory (lList *alp)
+{
+   struct passwd *pwd = NULL;
+   char str[256 + 1];
+#ifdef HAS_GETPWNAM_R
+   struct passwd pw_struct;
+   char buffer[2048];
+#endif
+
+   DENTER (TOP_LAYER, "drmaa_get_home_directory");
+   
+#ifdef HAS_GETPWNAM_R
+   pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
+#else
+   pwd = sge_getpwnam(uti_state_get_user_name());
+#endif
+
+   if (!pwd) {
+      sprintf(str, MSG_USER_INVALIDNAMEX_S, uti_state_get_user_name());
+      answer_list_add(&alp, str, STATUS_ENOSUCHUSER, 
+                      ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return NULL;
+   }
+
+   if (!pwd->pw_dir) {
+      sprintf(str, MSG_USER_NOHOMEDIRFORUSERX_S, uti_state_get_user_name());
+      answer_list_add(&alp, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return NULL;
+   }
+   
+   return strdup (pwd->pw_dir);
 }

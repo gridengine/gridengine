@@ -368,7 +368,7 @@ static struct hostent *sge_copy_hostent(struct hostent *orig)
    /* Copy the entries */
    count = 0;
    for (p = orig->h_addr_list; *p != 0; p++) {
-      int tmp_size = (strlen (*p) + 1) * sizeof (char);
+      int tmp_size = sizeof (in_addr_t);
       
       copy->h_addr_list[count] = (char *)malloc (tmp_size);
       memcpy (copy->h_addr_list[count++], *p, tmp_size);

@@ -142,19 +142,14 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
 *
 *******************************************************************************/
 static char *get_root_defaults_file_path () {
-   const char *cell = NULL;
    char *file = NULL;
    
    DENTER (TOP_LAYER, "get_root_defaults_file_path");
    
-   if ((cell = sge_getenv ("SGE_SHELL")) == 0) {
-      cell = "default";
-   }
-   
-   file = (char *)malloc(strlen(path_state_get_sge_root()) + strlen (cell) +
+   file = (char *)malloc(strlen(path_state_get_cell_root()) +
                        strlen(SGE_COMMON_DEF_REQ_FILE) + 3);
    
-   sprintf (file, "%s/%s/%s", path_state_get_sge_root(), cell,
+   sprintf (file, "%s/%s", path_state_get_cell_root(),
             SGE_COMMON_DEF_REQ_FILE);
    
    DEXIT;

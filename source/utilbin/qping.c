@@ -640,7 +640,7 @@ static void qping_print_line(char* buffer, int nonewline) {
                   lListElem* list_elem = NULL;
                   if (unpackint(&buf, &feature_set) == PACK_SUCCESS) {
                      printf("      unpacked tag job execution (binary buffer length %lu):\n", buffer_length );
-                     printf("feature_set: "U32CFormat"\n", feature_set);
+                     printf("feature_set: "U32CFormat"\n", u32c(feature_set));
                   }
                   if (cull_unpack_elem(&buf, &list_elem, NULL) == PACK_SUCCESS) {
                      lWriteElemTo(list_elem,stdout);

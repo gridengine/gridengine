@@ -45,7 +45,7 @@ const char *bootstrap_get_spooling_lib(void);
 const char *bootstrap_get_spooling_params(void);
 const char *bootstrap_get_binary_path(void);
 const char *bootstrap_get_qmaster_spool_dir(void);
-const char *bootstrap_get_product_mode(void);
+const char *bootstrap_get_security_mode(void);
 
 void bootstrap_set_admin_user(const char *value);
 void bootstrap_set_default_domain(const char *value);
@@ -55,7 +55,7 @@ void bootstrap_set_spooling_lib(const char *value);
 void bootstrap_set_spooling_params(const char *value);
 void bootstrap_set_binary_path(const char *value);
 void bootstrap_set_qmaster_spool_dir(const char *value);
-void bootstrap_set_product_mode(const char *value);
+void bootstrap_set_security_mode(const char *value);
 
 bool sge_bootstrap(dstring *error_dstring);
 

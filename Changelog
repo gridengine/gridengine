@@ -1,3 +1,10 @@
+MD-2004-03-02-0  Bugfix:    - added -dl option in qalter help output
+                            - changed product_mode to security_mode in bootstrap
+                            - fixed qmaster crash after getting wrong schedd config
+                            - changed weight values in preconfigured schedd setups
+                 Review:    SG
+                 Changed:   inst_sge, qalter, schedd
+
 CR-2004-03-02-1  Bugfix:    - client will close it's own connection after closing 
                               connection timeout. Before this fix only the server
                               closed the connection.

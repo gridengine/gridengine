@@ -43,7 +43,9 @@ RemoveQmaster()
                 "what you are doing, please stop with <CTRL-C>. This procedure will, remove\n" \
                 "the complete cluster configuration and all spool directories!\n" \
                 "Please make a backup from your cluster configuration!\n\n"
-   $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to uninstall the master host? [n] >> "
+   if [ $AUTO = "false" ]; then
+      $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to uninstall the master host? [n] >> "
+   fi
 
    if [ $? = 0 ]; then
       $INFOTEXT -n "We're going to uninstall the master host now!\n"
@@ -57,6 +59,7 @@ RemoveQmaster()
 CheckRunningExecd()
 {
    $INFOTEXT -n "Checking Running Execution Hosts\n"
+   $INFOTEXT -log -n "Checking Running Execution Hosts\n"
    
    for h in `qconf -sel`; do
 
@@ -66,11 +69,13 @@ CheckRunningExecd()
         :
      else
         $INFOTEXT "Found running execution hosts, exiting uninstallation!\n"
+        $INFOTEXT -log "Found running execution hosts, exiting uninstallation!\n"
         exit 0
      fi
 
    done
    $INFOTEXT "There are no running execution host registered!\n"
+   $INFOTEXT -log "There are no running execution host registered!\n"
    ShutdownMaster
    
 
@@ -79,19 +84,23 @@ CheckRunningExecd()
 ShutdownMaster()
 {
    $INFOTEXT "Shutting down scheduler and qmaster!"
+   $INFOTEXT -log "Shutting down scheduler and qmaster!"
    `qconf -ks`
    `qconf -km`
 
    master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
    
    $INFOTEXT "Removing qmaster spool directory!"
+   $INFOTEXT -log "Removing qmaster spool directory!"
    ExecuteAsAdmin rm -fR $master_spool
 
    berkeley_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep spooling_params | awk '{ print $2 }'`
 
    $INFOTEXT "Removing berkeley spool directory!"
+   $INFOTEXT -log "Removing berkeley spool directory!"
    ExecuteAsAdmin rm -fR $berkeley_spool
 
    $INFOTEXT "Removing %s directory!" $SGE_CELL
+   $INFOTEXT -log "Removing %s directory!" $SGE_CELL
    ExecuteAsAdmin rm -fR $SGE_CELL
 }

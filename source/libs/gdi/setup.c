@@ -134,7 +134,7 @@ lList **alpp
       SGE_EXIT(1);
    }
 
-   if (feature_initialize_from_string(bootstrap_get_product_mode())) {
+   if (feature_initialize_from_string(bootstrap_get_security_mode())) {
       if (alpp == NULL) {
          CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
       } else {

@@ -3014,7 +3014,7 @@ lList *acl_list)
 {
    char reason[1024];
    int result;
-   u_long32 tmp_time = *start; 
+   u_long32 tmp_time = *start;
    lList *hard_requests = lGetList(job, JB_hard_resource_list);
    lList *config_attr = lGetList(qep, QU_consumable_config_list);
    lList *actual_attr = lGetList(qep, QU_resource_utilization);

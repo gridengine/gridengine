@@ -428,11 +428,11 @@ SelectHostNameResolving()
 #
 SetProductMode()
 {
-   if [ $SGEEE = true ]; then
-      PRODUCT_PREFIX=sgeee
-   else
-      PRODUCT_PREFIX=sge
-   fi
+   #if [ $SGEEE = true ]; then
+   #   PRODUCT_PREFIX=sgeee
+   #else
+   #   PRODUCT_PREFIX=sge
+   #fi
 
    if [ $RESPORT = true ]; then
       RESPORT_PREFIX=-reserved_port
@@ -447,7 +447,7 @@ SetProductMode()
    fi
 
    if [ $CSP = true ]; then
-      SEC_COUNT=`strings $V5BIN/sge_qmaster | grep "CRYPTO_" | wc -l`
+      SEC_COUNT=`strings $SGE_BIN/sge_qmaster | grep "CRYPTO_" | wc -l`
       if [ $SEC_COUNT -gt 2 ]; then
          $INFOTEXT "\n>sge_qmaster< binary is not compiled with >-secure< option!\n"
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to cancel the installation >> "
@@ -459,7 +459,16 @@ SetProductMode()
       CSP_PREFIX=""
    fi
 
-   PRODUCT_MODE="${PRODUCT_PREFIX}${RESPORT_PREFIX}${AFS_PREFIX}${CSP_PREFIX}"
+   if [ $RESPORT = "false" ]; then
+      if [ $AFS = "false" ]; then
+         if [ $CSP = "false" ]; then
+            PRODUCT_MODE="none"
+         fi
+      fi
+   else
+      PRODUCT_MODE="${RESPORT_PREFIX}${AFS_PREFIX}${CSP_PREFIX}"
+   fi
+
 }
 
 
@@ -507,14 +516,14 @@ PrintBootstrap()
    else
       $ECHO "admin_user             none"
    fi
-   $ECHO "default_domain         $CFG_DEFAULT_DOMAIN"
-   $ECHO "ignore_fqdn            $IGNORE_FQDN_DEFAULT"
-   $ECHO "spooling_method        $SPOOLING_METHOD"
-   $ECHO "spooling_lib           $SPOOLING_LIB"
-   $ECHO "spooling_params        $SPOOLING_ARGS"
-   $ECHO "binary_path            $SGE_ROOT_VAL/bin"
-   $ECHO "qmaster_spool_dir      $QMDIR"
-   $ECHO "product_mode           $PRODUCT_MODE"
+   $ECHO "default_domain          $CFG_DEFAULT_DOMAIN"
+   $ECHO "ignore_fqdn             $IGNORE_FQDN_DEFAULT"
+   $ECHO "spooling_method         $SPOOLING_METHOD"
+   $ECHO "spooling_lib            $SPOOLING_LIB"
+   $ECHO "spooling_params         $SPOOLING_ARGS"
+   $ECHO "binary_path             $SGE_ROOT_VAL/bin"
+   $ECHO "qmaster_spool_dir       $QMDIR"
+   $ECHO "security_mode           $PRODUCT_MODE"
 }
 
 

@@ -232,7 +232,7 @@ CheckHostNameResolving()
 
        resolve_admin_hosts=`ExecuteAsAdmin $SGE_BIN/qconf -sh`
        resolve_this_hostname=`ExecuteAsAdmin $SGE_UTILBIN/gethostname -aname`
-       resolve_default_domain=`ExecuteAsAdmin $SGE_BIN/qconf -sconf global | grep "^default_domain" | awk '{print $2}'`
+       resolve_default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "^default_domain" | awk '{print $2}'`
 
        if [ "$resolve_default_domain" = "" ]; then
            resolve_default_domain="none"

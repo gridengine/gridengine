@@ -323,7 +323,7 @@ int main(int argc, char *argv[])
       ret = EXIT_FAILURE;
    } else if (!sge_bootstrap(NULL)) {
       ret = EXIT_FAILURE;
-   } else if (feature_initialize_from_string(bootstrap_get_product_mode())) {
+   } else if (feature_initialize_from_string(bootstrap_get_security_mode())) {
       ret = EXIT_FAILURE;
    } else {
       /* parse commandline */

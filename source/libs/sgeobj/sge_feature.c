@@ -102,7 +102,7 @@ static const feature_names_t feature_list[] = {
 };  
 
 static const featureset_names_t featureset_list[] = {
-   {FEATURESET_SGEEE,               "sgeee"},
+   {FEATURESET_SGEEE,               "none"},
    {FEATURESET_SGEEE_AFS,           "sgeee-afs"},
    {FEATURESET_SGEEE_DCE,           "sgeee-dce"},
    {FEATURESET_SGEEE_KERBEROS,      "sgeee-kerberos"},

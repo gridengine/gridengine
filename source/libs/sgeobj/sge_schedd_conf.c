@@ -1827,6 +1827,7 @@ void sconf_print_config(void){
       sconf_validate_config_(NULL);
    }
 
+
    /* --- SC_algorithm */
    s = sconf_get_algorithm();
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXASY_SS , s, "algorithm"));
@@ -2056,38 +2057,46 @@ bool sconf_validate_config_(lList **answer_list){
       char* key;
       int ikey = 0;
       lList *rlp=NULL, *alp=NULL;
+      const char *schedd_info = lGetString(lFirst(Master_Sched_Config_List), SC_schedd_job_info);
 
-      strcpy(buf, lGetString(lFirst(Master_Sched_Config_List), SC_schedd_job_info));
-      /* on/off or watch a set of jobs */
-      key = strtok(buf, " \t");
-      if (!strcmp("true", key)) 
-         ikey = SCHEDD_JOB_INFO_TRUE;
-      else if (!strcmp("false", key)) 
-         ikey = SCHEDD_JOB_INFO_FALSE;
-      else if (!strcmp("job_list", key)) 
-         ikey = SCHEDD_JOB_INFO_JOB_LIST;
-      else {
+      if (schedd_info == NULL){
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM ));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         ret = false; 
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);  
+         ret = false;
       }
-      /* check list of groups */
-      if (ikey == SCHEDD_JOB_INFO_JOB_LIST) {
-         key = strtok(NULL, "\n");
-         range_list_parse_from_string(&rlp, &alp, key, 0, 0, INF_NOT_ALLOWED);
-         if (rlp == NULL) {
-            lFreeList(alp);
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST));
+      else {
+         strcpy(buf, schedd_info);
+         /* on/off or watch a set of jobs */
+         key = strtok(buf, " \t");
+         if (!strcmp("true", key)) 
+            ikey = SCHEDD_JOB_INFO_TRUE;
+         else if (!strcmp("false", key)) 
+            ikey = SCHEDD_JOB_INFO_FALSE;
+         else if (!strcmp("job_list", key)) 
+            ikey = SCHEDD_JOB_INFO_JOB_LIST;
+         else {
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM ));
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             ret = false; 
-         }   
+         }
+         /* check list of groups */
+         if (ikey == SCHEDD_JOB_INFO_JOB_LIST) {
+            key = strtok(NULL, "\n");
+            range_list_parse_from_string(&rlp, &alp, key, 0, 0, INF_NOT_ALLOWED);
+            if (rlp == NULL) {
+               lFreeList(alp);
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false; 
+            }   
+            else{
+               pos.c_is_schedd_job_info = ikey;
+               pos.c_schedd_job_info_range = rlp;
+            }
+         }
          else{
             pos.c_is_schedd_job_info = ikey;
-            pos.c_schedd_job_info_range = rlp;
          }
-      }
-      else{
-         pos.c_is_schedd_job_info = ikey;
       }
    }
 

@@ -1631,17 +1631,7 @@ proc set_schedd_config { change_array } {
   global CHECK_OUTPUT CHECK_CORE_MASTER
   upvar $change_array chgar
 
-  set values [array names chgar]
-
-  set vi_commands ""
-  foreach elem $values {
-
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal [set chgar($elem)]
-     set newVal1 [split $newVal {/}]
-     set newVal [join $newVal1 {\/}]
-     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-  }
+  set vi_commands [build_vi_command chgar]
   set CHANGED_SCHEDD_CONFIG [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION]]
   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-msconf" $vi_commands $CHANGED_SCHEDD_CONFIG ]  
 
@@ -1991,6 +1981,8 @@ proc set_queue_defaults { change_array } {
       set chgar(fshare)             "0"
       set chgar(oticket)            "0"
    }
+
+   vdep_set_queue_defaults chgar
 }
 
 #                                                             max. column:     |
@@ -2098,15 +2090,7 @@ proc add_exechost { change_array {fast_add 0} } {
      return
   }
 
-
-  set vi_commands "" 
-  foreach elem $values {
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal [set chgar($elem)]
-     set newVal1 [split $newVal {/}]
-     set newVal [join $newVal1 {\/}]
-     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-  } 
+  set vi_commands [build_vi_command chgar]
 
   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
   set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S] "*"
@@ -2879,50 +2863,37 @@ proc get_queue_state { queue } {
 #*******************************
 proc add_checkpointobj { change_array } {
    global ts_config
-  global env CHECK_ARCH open_spawn_buffer
-  global CHECK_USER CHECK_CORE_MASTER CHECK_HOST CHECK_OUTPUT
+   global CHECK_ARCH open_spawn_buffer
+   global CHECK_USER CHECK_HOST CHECK_OUTPUT
 
-  upvar $change_array chgar
+   upvar $change_array chgar
 
-  if { $ts_config(gridengine_version) == 60 } {
-     if { [ info exists chgar(queue_list) ] } { 
-        puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for ckpt objects"
-        add_proc_error "add_checkpointobj" -3 "this qconf version doesn't support queue_list for ckpt objects,\nuse assign_queues_with_ckpt_object() after adding checkpoint\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test ckpt version"
-        unset chgar(queue_list)
-     }
-  }
+   validate_checkpointobj chgar
 
-  set values [array names chgar]
+   set vi_commands [build_vi_command chgar]
 
-  set vi_commands ""
-  foreach elem $values {
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal [set chgar($elem)]
-     set newVal1 [split $newVal {/}]
-     set newVal [join $newVal1 {\/}]
-     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-  }
-
-  set my_ckpt_name [set chgar(ckpt_name)]
-  set my_args "-ackpt $my_ckpt_name"
+   set ckpt_name [set chgar(ckpt_name)]
+   set args "-ackpt $ckpt_name"
  
-  set ALREADY_EXISTS [ translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $chgar(ckpt_name)]
-  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $chgar(ckpt_name) "checkpoint interface" ]
+   set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $ckpt_name]
+   set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $ckpt_name "checkpoint interface" ]
 
-  if { $ts_config(gridengine_version) == 53 } {
-     set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
+   if { $ts_config(gridengine_version) == 53 } {
+      set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
 
-     set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $ADDED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
-  } else {
-     set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $ADDED $ALREADY_EXISTS ] 
+      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $ADDED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
+   } else {
+      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $ADDED $ALREADY_EXISTS ] 
 
-  }
-  if { $result == -1 } { add_proc_error "add_checkpointobj" -1 "timeout error" }
-  if { $result == -2 } { add_proc_error "add_checkpointobj" -1 "already exists" }
-  if { $result == -3 } { add_proc_error "add_checkpointobj" -1 "queue reference does not exist" }
-  if { $result != 0  } { add_proc_error "add_checkpointobj" -1 "could nod add checkpoint object" }
+   }
 
-  return $result
+   # check result
+   if { $result == -1 } { add_proc_error "add_checkpointobj" -1 "timeout error" }
+   if { $result == -2 } { add_proc_error "add_checkpointobj" -1 "already exists" }
+   if { $result == -3 } { add_proc_error "add_checkpointobj" -1 "queue reference does not exist" }
+   if { $result != 0  } { add_proc_error "add_checkpointobj" -1 "could nod add checkpoint object" }
+
+   return $result
 }
 
 
@@ -2951,49 +2922,34 @@ proc add_checkpointobj { change_array } {
 #*******************************************************************************
 proc set_checkpointobj { ckpt_obj change_array } {
    global ts_config
-  global env CHECK_ARCH open_spawn_buffer
-  global CHECK_USER CHECK_CORE_MASTER CHECK_HOST CHECK_OUTPUT
+   global CHECK_ARCH open_spawn_buffer
+   global CHECK_USER CHECK_HOST CHECK_OUTPUT
 
-  upvar $change_array chgar
+   upvar $change_array chgar
 
-  if { $ts_config(gridengine_version) == 60 && [info exists chgar(queue_list)]} {
-     if { [ info exists chgar(queue_list) ] } { 
-        puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for ckpt objects"
-        add_proc_error "set_checkpointobj" -3 "this qconf version doesn't support queue_list for ckpt objects,\nuse assign_queues_with_ckpt_object() after adding checkpoint\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test ckpt version"
-        unset chgar(queue_list)
-     }
-  }
+   validate_checkpointobj chgar
 
-  set values [array names chgar]
+   set vi_commands [build_vi_command chgar]
 
-  set vi_commands ""
-  foreach elem $values {
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal [set chgar($elem)]
-     set newVal1 [split $newVal {/}]
-     set newVal [join $newVal1 {\/}]
-     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-  }
-
-  set my_args "-mckpt $ckpt_obj"
+   set args "-mckpt $ckpt_obj"
  
-  set ALREADY_EXISTS [ translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $ckpt_obj]
-  set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $ckpt_obj "checkpoint interface" ]
+   set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $ckpt_obj]
+   set MODIFIED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $ckpt_obj "checkpoint interface" ]
 
    if { $ts_config(gridengine_version) == 53 } {
-      set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
+      set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
 
-      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $MODIFIED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
+      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $MODIFIED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
   } else {
-      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $MODIFIED $ALREADY_EXISTS ] 
+      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $MODIFIED $ALREADY_EXISTS ] 
   }
 
-  if { $result == -1 } { add_proc_error "add_checkpointobj" -1 "timeout error" }
-  if { $result == -2 } { add_proc_error "add_checkpointobj" -1 "already exists" }
-  if { $result == -3 } { add_proc_error "add_checkpointobj" -1 "queue reference does not exist" }
-  if { $result != 0  } { add_proc_error "add_checkpointobj" -1 "could nod modify checkpoint object" }
+   if { $result == -1 } { add_proc_error "add_checkpointobj" -1 "timeout error" }
+   if { $result == -2 } { add_proc_error "add_checkpointobj" -1 "already exists" }
+   if { $result == -3 } { add_proc_error "add_checkpointobj" -1 "queue reference does not exist" }
+   if { $result != 0  } { add_proc_error "add_checkpointobj" -1 "could nod modify checkpoint object" }
 
-  return $result
+   return $result
 }
 
 
@@ -3147,17 +3103,7 @@ proc add_pe { change_array { version_check 1 } } {
      }
   }
 
-
-  set values [array names chgar]
-
-  set vi_commands ""
-  foreach elem $values {
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal [set chgar($elem)]
-     set newVal1 [split $newVal {/}]
-     set newVal [join $newVal1 {\/}]
-     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-  } 
+  set vi_commands [build_vi_command chgar]
 
   set ADDED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
@@ -3224,16 +3170,7 @@ proc set_pe { pe_obj change_array } {
      }
   }
 
-  set values [array names chgar]
-
-  set vi_commands ""
-  foreach elem $values {
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal [set chgar($elem)]
-     set newVal1 [split $newVal {/}]
-     set newVal [join $newVal1 {\/}]
-     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-  } 
+  set vi_commands [build_vi_command chgar]
 
   set MODIFIED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
@@ -3330,14 +3267,7 @@ proc add_user { change_array { from_file 0 } } {
      return -100
   }
 
-  set vi_commands ""
-  foreach elem $values {
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal [set chgar($elem)]
-     set newVal1 [split $newVal {/}]
-     set newVal [join $newVal1 {\/}]
-     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-  } 
+  set vi_commands [build_vi_command chgar]
 
   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-auser" $vi_commands $ADDED $ALREADY_EXISTS ]
   
@@ -3445,14 +3375,7 @@ proc mod_user { change_array { from_file 0 } } {
      return -100
   }
 
-  set vi_commands ""
-  foreach elem $values {
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal [set chgar($elem)]
-     set newVal1 [split $newVal {/}]
-     set newVal [join $newVal1 {\/}]
-     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-  } 
+  set vi_commands [build_vi_command chgar]
 
   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-muser $chgar(name)" $vi_commands $MODIFIED $ALREADY_EXISTS ]
   
@@ -3513,22 +3436,14 @@ proc add_prj { change_array } {
   global CHECK_CORE_MASTER CHECK_USER
 
   upvar $change_array chgar
-  set values [array names chgar]
 
   if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
      add_proc_error "add_prj" -1 "not possible for sge systems"
      return
   }
 
+  set vi_commands [build_vi_command chgar]
 
-  set vi_commands ""
-  foreach elem $values {
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal [set chgar($elem)]
-     set newVal1 [split $newVal {/}]
-     set newVal [join $newVal1 {\/}]
-     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-  } 
 #  set PROJECT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PROJECT]]
   set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
@@ -3882,16 +3797,9 @@ proc add_calendar { change_array } {
   upvar $change_array chgar
 
   puts $CHECK_OUTPUT "adding calendar $chgar(calendar_name)"
-  set values [array names chgar]
 
-  set vi_commands ""
-  foreach elem $values {
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal [set chgar($elem)]
-     set newVal1 [split $newVal {/}]
-     set newVal [join $newVal1 {\/}]
-     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-  } 
+  set vi_commands [build_vi_command chgar]
+
   # xyz is neccessary, as there is no template for calendards existing!!!
   set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]

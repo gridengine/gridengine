@@ -75,7 +75,6 @@ lappend check_functions "setup_check_user_permissions"
 lappend check_functions "setup_check_messages_files"
 lappend check_functions "setup_inhouse_cluster"
 
-
 # ---------------------------------------------------------------------------------
 # here the tests begin ....
 
@@ -85,14 +84,11 @@ global CORE_INSTALLED_TIME
 global local_master_spool_set
 global local_execd_spool_set
 
-
 set local_master_spool_set 0
 set local_execd_spool_set 0
 
 set CORE_INSTALLED ""
 set CORE_INSTALLED_TIME ""
-
-
 
 # this is to setup the cluster
 #                                                             max. column:     |
@@ -125,12 +121,13 @@ set CORE_INSTALLED_TIME ""
 #     ???/???
 #*******************************
 proc write_install_list {} {
-  global CORE_INSTALLED CORE_INSTALLED_TIME CHECK_CORE_MASTER
-  global CHECK_MAIN_RESULTS_DIR
+   global ts_config
+   global CORE_INSTALLED CORE_INSTALLED_TIME
+   global CHECK_MAIN_RESULTS_DIR
  
-  set myfile [open "$CHECK_MAIN_RESULTS_DIR/cluster.$CHECK_CORE_MASTER.inst" "w"]
-  puts $myfile $CORE_INSTALLED
-  close $myfile
+   set myfile [open "$CHECK_MAIN_RESULTS_DIR/cluster.$ts_config(master_host).inst" "w"]
+   puts $myfile $CORE_INSTALLED
+   close $myfile
 }
 
 #                                                             max. column:     |
@@ -163,13 +160,15 @@ proc write_install_list {} {
 #     ???/???
 #*******************************
 proc read_install_list {} {
-  global CORE_INSTALLED CORE_INSTALLED_TIME CHECK_CORE_MASTER
-  global CHECK_MAIN_RESULTS_DIR 
-  if { [file isfile "$CHECK_MAIN_RESULTS_DIR/cluster.$CHECK_CORE_MASTER.inst"] == 1 } {
-     set myfile [open "$CHECK_MAIN_RESULTS_DIR/cluster.$CHECK_CORE_MASTER.inst" "r"]
-     gets $myfile CORE_INSTALLED
-     close $myfile
-  }
+   global ts_config
+   global CORE_INSTALLED CORE_INSTALLED_TIME
+   global CHECK_MAIN_RESULTS_DIR 
+
+   if { [file isfile "$CHECK_MAIN_RESULTS_DIR/cluster.$ts_config(master_host).inst"] == 1 } {
+      set myfile [open "$CHECK_MAIN_RESULTS_DIR/cluster.$ts_config(master_host).inst" "r"]
+      gets $myfile CORE_INSTALLED
+      close $myfile
+   }
 }
 
 #                                                             max. column:     |
@@ -204,7 +203,7 @@ proc read_install_list {} {
 proc kill_running_system {} {
    global ts_config
    global CHECK_ARCH 
-   global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_CORE_MASTER CORE_INSTALLED
+   global CHECK_OUTPUT CORE_INSTALLED
    global check_use_installed_system
  
    
@@ -257,13 +256,13 @@ proc reread_bootstrap {} {
 # generating all testsuite cluster user keys and certificates
 proc make_user_cert {} {
    global ts_config 
-  global CHECK_OUTPUT CHECK_CORE_MASTER CHECK_MAIN_RESULTS_DIR
+  global CHECK_OUTPUT CHECK_MAIN_RESULTS_DIR
   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_REPORT_EMAIL_TO
   global CHECK_USER CHECK_DEBUG_LEVEL
 
   if { $ts_config(product_feature) == "csp" } {
      puts $CHECK_OUTPUT "removing evtl. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
-     set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
+     set result [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
      puts $CHECK_OUTPUT $result
  
      puts $CHECK_OUTPUT "creating file \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
@@ -273,11 +272,11 @@ proc make_user_cert {} {
      flush $script
      close $script
      
-     set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "cd" "$ts_config(product_root) ; util/sgeCA/sge_ca -usercert $CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
+     set result [ start_remote_prog "$ts_config(master_host)" "root" "cd" "$ts_config(product_root) ; util/sgeCA/sge_ca -usercert $CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
      puts $CHECK_OUTPUT $result
  
      puts $CHECK_OUTPUT "removing evtl. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
-     set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
+     set result [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
      puts $CHECK_OUTPUT $result
   } else {
      puts $CHECK_OUTPUT "no csp feature enabled"
@@ -338,9 +337,10 @@ proc get_spool_dir {host subdir {do_cleanup 1} } {
 proc cleanup_system { } {
    global ts_config
    global CHECK_ARCH env check_errno CHECK_HOST
-   global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_CORE_PROCESSORS
+   global CHECK_CORE_PROCESSORS
    global check_use_installed_system CHECK_OUTPUT CHECK_USER
 
+   # check if the system is running and qmaster accessable
    set catch_return [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" } result ]
    if { $catch_return != 0 } {
       add_proc_error "cleanup_system" -2 "error connecting qmaster: $result"
@@ -349,8 +349,11 @@ proc cleanup_system { } {
    }
     
    puts $CHECK_OUTPUT "\ncleaning up system"
+
+   # delete all jobs
    catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qdel" "-uall" } result
 
+   # wait until cluster is empty
    set my_time [ expr ( [timestamp] + 100 ) ]
    while { [timestamp]< $my_time } {
       set my_jobs [ get_standard_job_info 1 0 1 ]
@@ -364,11 +367,12 @@ proc cleanup_system { } {
    } 
 
 
+   # SGEEE: remove sharetree
    if { [ string compare $ts_config(product_type) "sgeee" ] == 0 } {
       puts $CHECK_OUTPUT "\nremoving share tree ..."
-      set SHARETREE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_SHARETREE] ]
-      set DOES_NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXIST_S] $SHARETREE]
-      set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDLIST_SSS] $CHECK_USER "*" $SHARETREE]
+      set SHARETREE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_SHARETREE] ]
+      set DOES_NOT_EXISTS [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXIST_S] $SHARETREE]
+      set REMOVED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDLIST_SSS] $CHECK_USER "*" $SHARETREE]
       catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dstree" } result
       if { [string match "*$DOES_NOT_EXISTS" $result] } {
          puts $CHECK_OUTPUT "sharetree does not exist"
@@ -381,8 +385,9 @@ proc cleanup_system { } {
       }
    }
 
+   # remove all checkpoint environments
   puts $CHECK_OUTPUT "\nremoving ckpt objects ..."
-  set NO_CKPT_INTERFACE_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "ckpt interface definition"]
+  set NO_CKPT_INTERFACE_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "ckpt interface definition"]
    
   catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sckptl" } result
   if { [string first $NO_CKPT_INTERFACE_DEFINED $result] >= 0 } {
@@ -394,8 +399,9 @@ proc cleanup_system { } {
      }
   }
 
+   # remove all parallel environments
   puts $CHECK_OUTPUT "\nremoving PE objects ..."
-  set NO_PARALLEL_ENVIRONMENT_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "parallel environment"]
+  set NO_PARALLEL_ENVIRONMENT_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "parallel environment"]
   catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-spl" } result
   if { [string first $NO_PARALLEL_ENVIRONMENT_DEFINED $result] >= 0 } {
      puts $CHECK_OUTPUT "no parallel environment defined"
@@ -405,10 +411,11 @@ proc cleanup_system { } {
         del_pe $elem 
      }
   }
-  
+ 
+   # remove all calendars
   puts $CHECK_OUTPUT "\nremoving calendars ..."
   # JG: TODO: calendars can be referenced in queues - first remove all references!
-  set NO_CALENDAR_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "calendar"]
+  set NO_CALENDAR_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "calendar"]
   catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-scall" } result
   if { [string first $NO_CALENDAR_DEFINED $result] >= 0 } {
      puts $CHECK_OUTPUT "no calendar defined"
@@ -419,12 +426,10 @@ proc cleanup_system { } {
      }
   }
 
-
-  
-
+   # remove all projects 
   if { [ string compare $ts_config(product_type) "sgeee" ] == 0 } {
      puts $CHECK_OUTPUT "\nremoving project objects ..."
-     set NO_PROJECT_LIST_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "project list"]
+     set NO_PROJECT_LIST_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "project list"]
      catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sprjl" } result
      if { [string first $NO_PROJECT_LIST_DEFINED $result] >= 0 } {
         puts $CHECK_OUTPUT "no project list defined"
@@ -436,10 +441,13 @@ proc cleanup_system { } {
      }
   }
 
+   # JG: TODO: what about SGEEE users?
+  
+   # remove all access lists
    # JG: TODO: accesslists are referenced in a variety of objects - first delete them
    #           there!
   puts $CHECK_OUTPUT "\nremoving access lists ..."
-  set NO_ACCESS_LIST_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "userset list"]
+  set NO_ACCESS_LIST_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "userset list"]
   catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sul" } result
   if { [string first $NO_ACCESS_LIST_DEFINED $result] >= 0 } {
      puts $CHECK_OUTPUT "no userset list defined"
@@ -454,9 +462,9 @@ proc cleanup_system { } {
      }
   }
 
-
+   # remove all queues
   puts $CHECK_OUTPUT "\nremoving queues ..."
-  set NO_QUEUE_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "queue"]
+  set NO_QUEUE_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "queue"]
 
   catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sql" } result
   if { [string first $NO_QUEUE_DEFINED $result] >= 0 } {
@@ -468,6 +476,7 @@ proc cleanup_system { } {
      }
   }
 
+   # add new testsuite queues
   puts $CHECK_OUTPUT "\nadding testsuite queues ..."
   add_queue "all" "@all" q_param 1
   set_error 0 "ok"
@@ -507,9 +516,10 @@ proc cleanup_system { } {
 proc setup_queues {} {
    global ts_config
    global CHECK_ARCH env check_errno CHECK_HOST
-   global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_CORE_PROCESSORS
+   global CHECK_CORE_PROCESSORS
    global check_use_installed_system CHECK_OUTPUT CHECK_USER
 
+   # check if qmaster can be accessed
    set catch_return [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" } result ]
    if { $catch_return != 0 } {
       add_proc_error "setup_queues" -2 "error connecting qmaster: $result"
@@ -517,7 +527,6 @@ proc setup_queues {} {
       return
    }
 
-   
    # for all queues: set load_thresholds and queue type
    set new_values(load_thresholds)       "np_load_avg=11.00"
    set new_values(qtype)                 "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
@@ -537,9 +546,9 @@ proc setup_queues {} {
 
    if { $check_errno == 0 } {
       # for each individual queue set the slots attribute
-      foreach hostname $CHECK_CORE_EXECD {
+      foreach hostname $ts_config(execd_hosts) {
          unset new_values
-         set index [lsearch $CHECK_CORE_EXECD $hostname] 
+         set index [lsearch $ts_config(execd_hosts) $hostname] 
          set slots_tmp [lindex $CHECK_CORE_PROCESSORS $index]
 
          if { $slots_tmp <= 0 } {
@@ -548,7 +557,7 @@ proc setup_queues {} {
          }
 
          set slots [ expr ( $slots_tmp * 10) ]
-         set new_values(slots)                 "$slots"
+         set new_values(slots) "$slots"
 
          set result [set_queue all $hostname new_values]
          switch -- $result { 
@@ -643,7 +652,7 @@ proc setup_testcheckpointobject {} {
 #*******************************
 proc setup_conf {} {
    global ts_config
-  global CHECK_ARCH CHECK_CORE_EXECD CHECK_CORE_MASTER
+  global CHECK_ARCH
   global CHECK_DEFAULT_DOMAIN 
 
   get_config old_config
@@ -702,7 +711,7 @@ proc setup_conf {} {
   # PTF_MIN_PRIORITY=40,PTF_MAX_PRIORITY=20
   if { $ts_config(product_type) == "sgeee" } {
   set ptf_param(execd_params) "PTF_MIN_PRIORITY=40,PTF_MAX_PRIORITY=20"
-    foreach i $CHECK_CORE_EXECD {
+    foreach i $ts_config(execd_hosts) {
       switch -exact [resolve_arch $i] {
         irix6 {
           set_config ptf_param $i
@@ -789,11 +798,11 @@ proc setup_conf {} {
 #*******************************************************************************
 proc setup_execd_conf {} {
    global ts_config
-  global CHECK_ARCH CHECK_CORE_EXECD CHECK_CORE_MASTER
-  global CHECK_DEFAULT_DOMAIN CHECK_CORE_EXECD
+  global CHECK_ARCH
+  global CHECK_DEFAULT_DOMAIN
   global CHECK_OUTPUT
 
-  foreach host $CHECK_CORE_EXECD {
+  foreach host $ts_config(execd_hosts) {
      puts $CHECK_OUTPUT "get configuration for host $host ..."
      if [info exists tmp_config] {
         unset tmp_config
@@ -896,8 +905,8 @@ proc setup_execd_conf {} {
 #*******************************
 proc setup_mytestproject {} {
    global ts_config
-  global CHECK_ARCH env check_errno  CHECK_CORE_EXECD 
-  global open_spawn_buffer CHECK_CORE_MASTER 
+  global CHECK_ARCH env check_errno
+  global open_spawn_buffer
  
 
   if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
@@ -987,7 +996,7 @@ proc setup_mytestpe {} {
 #*******************************
 proc setup_deadlineuser {} {
    global ts_config
-  global CHECK_ARCH CHECK_CORE_EXECD CHECK_USER CHECK_CORE_MASTER
+  global CHECK_ARCH CHECK_USER
 
   add_access_list $CHECK_USER deadlineusers
 
@@ -1026,7 +1035,7 @@ proc setup_deadlineuser {} {
 #*******************************
 proc setup_schedconf {} {
    global ts_config
-  global CHECK_ARCH env check_errno  CHECK_CORE_EXECD CHECK_USER CHECK_CORE_MASTER
+  global CHECK_ARCH env check_errno CHECK_USER
   global CHECK_OUTPUT
 
   # always create global complex list if not existing
@@ -1115,7 +1124,7 @@ proc setup_schedconf {} {
 #*******************************
 proc setup_default_calendars {} {
    global ts_config
-  global CHECK_ARCH env check_errno  CHECK_CORE_EXECD CHECK_USER CHECK_CORE_MASTER
+  global CHECK_ARCH env check_errno CHECK_USER
 
 
   set calendar_param(calendar_name)          "always_suspend"              ;# always in calendar suspend
@@ -1171,9 +1180,10 @@ proc setup_default_calendars {} {
 #     ???/???
 #*******************************
 proc setup_check_user_permissions {} {
+   global ts_config
   global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
-  global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_CORE_MASTER 
-  global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_ADMIN_USER_SYSTEM
+  global CHECK_OUTPUT
+  global CHECK_SCRIPT_FILE_DIR CHECK_ADMIN_USER_SYSTEM
 
 
   set time [timestamp]
@@ -1185,24 +1195,24 @@ proc setup_check_user_permissions {} {
   foreach user $user_list {
      puts $CHECK_OUTPUT "\n----mask-check----\nuser: $user"
      set my_command ""
-     foreach host $CHECK_CORE_EXECD {
+     foreach host $ts_config(execd_hosts) {
         set execd_spooldir [get_execd_spool_dir $host]
         puts $CHECK_OUTPUT "checking execd spool directory on $host: \"$execd_spooldir\""
-        set output [ start_remote_prog "$host" "$user" "cd" "$execd_spooldir ; cd $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR" ]
+        set output [ start_remote_prog "$host" "$user" "cd" "$execd_spooldir ; cd $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR" ]
         if { $prg_exit_state != 0 } {
-           set_error -1 "user $user has no read//exec permission to \"$execd_spooldir\" and \"$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR\" on host $host"
+           set_error -1 "user $user has no read//exec permission to \"$execd_spooldir\" and \"$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR\" on host $host"
         }
      }
   }
 
   set master_spooldir [get_qmaster_spool_dir]
-  puts $CHECK_OUTPUT "master spool directory on host $CHECK_CORE_MASTER: \"$master_spooldir\""
+  puts $CHECK_OUTPUT "master spool directory on host $ts_config(master_host): \"$master_spooldir\""
   foreach user $user_list {
       puts $CHECK_OUTPUT "checking master spool directory for user: \"$user\""
-      set output [ start_remote_prog "$CHECK_CORE_MASTER" "$user" "cd" "$master_spooldir"  ]
+      set output [ start_remote_prog "$ts_config(master_host)" "$user" "cd" "$master_spooldir"  ]
       if { $prg_exit_state != 0 } {
-         puts $CHECK_OUTPUT "--> E R R O R - user $user has no read//exec permission to $master_spooldir on host $CHECK_CORE_MASTER"
-         set_error -1 "user $user has no read//exec permission to $master_spooldir on host $CHECK_CORE_MASTER"
+         puts $CHECK_OUTPUT "--> E R R O R - user $user has no read//exec permission to $master_spooldir on host $ts_config(master_host)"
+         set_error -1 "user $user has no read//exec permission to $master_spooldir on host $ts_config(master_host)"
       }
   }
   puts "runtime: [ expr ( [timestamp] - $time ) ]"
@@ -1212,12 +1222,13 @@ proc setup_check_user_permissions {} {
 
 
 proc setup_check_messages_files {} {
-   global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_OUTPUT
+   global ts_config
+   global CHECK_OUTPUT
    global CHECK_USER
 
    puts $CHECK_OUTPUT "scheduler ..."
    set messages [get_schedd_messages_file]
-   get_file_content $CHECK_CORE_MASTER $CHECK_USER $messages 
+   get_file_content $ts_config(master_host) $CHECK_USER $messages 
    if { $file_array(0) < 1 } {
       add_proc_error "setup_check_messages_files" -1 "no scheduler messages file:\n$messages"
    }
@@ -1227,7 +1238,7 @@ proc setup_check_messages_files {} {
 
    puts $CHECK_OUTPUT "qmaster ..."
    set messages [get_qmaster_messages_file]
-   get_file_content $CHECK_CORE_MASTER $CHECK_USER $messages 
+   get_file_content $ts_config(master_host) $CHECK_USER $messages 
    if { $file_array(0) < 1 } {
       add_proc_error "setup_check_messages_files" -1 "no qmaster messages file:\n$messages"
    }
@@ -1235,7 +1246,7 @@ proc setup_check_messages_files {} {
       puts $CHECK_OUTPUT $file_array($i)
    }
 
-   foreach execd $CHECK_CORE_EXECD {
+   foreach execd $ts_config(execd_hosts) {
       puts $CHECK_OUTPUT "execd $execd ..."
       set messages [ get_execd_messages_file $execd ]
       get_file_content $execd $CHECK_USER $messages 
@@ -1280,7 +1291,7 @@ proc setup_check_messages_files {} {
 #*******************************
 proc setup_inhouse_cluster {} {
    global ts_config
-  global CHECK_ARCH env check_errno  CHECK_CORE_EXECD CHECK_USER CHECK_CORE_MASTER
+  global CHECK_ARCH env check_errno CHECK_USER
   global CHECK_OUTPUT
 
   # reset_schedd_config has global error reporting

@@ -30,6 +30,22 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+#****** sge_procedures.60/queue/vdep_set_queue_defaults() ****************************
+#  NAME
+#     vdep_set_queue_defaults() -- create version dependent queue settings
+#
+#  SYNOPSIS
+#     vdep_set_queue_defaults { change_array } 
+#
+#  FUNCTION
+#     Fills the array change_array with queue attributes specific for SGE 6.0
+#
+#  INPUTS
+#     change_array - the resulting array
+#
+#  SEE ALSO
+#     sge_procedures/queue/set_queue_defaults()
+#*******************************************************************************
 proc vdep_set_queue_defaults { change_array } {
    upvar $change_array chgar
 
@@ -38,6 +54,23 @@ proc vdep_set_queue_defaults { change_array } {
    set chgar(ckpt_list)             "NONE"
 }
 
+#****** sge_procedures.60/queue/validate_queue_type() ********************************
+#  NAME
+#     validate_queue_type() -- validate the settings for queue_type
+#
+#  SYNOPSIS
+#     validate_queue_type { change_array } 
+#
+#  FUNCTION
+#     Removes the queue types PARALLEL and CHECKPOINTING from the queue_types
+#     attribute in change_array.
+#     These attributes are implicitly set in SGE 6.0 by setting the attributes
+#     ckpt_list and pe_list.
+#
+#  INPUTS
+#     change_array - array containing queue definitions
+#
+#*******************************************************************************
 proc validate_queue_type { change_array } {
    global CHECK_OUTPUT
 
@@ -65,6 +98,26 @@ proc validate_queue_type { change_array } {
    }
 }
 
+#****** sge_procedures.60/queue/add_queue() ******************************************
+#  NAME
+#     add_queue() -- add a SGE 6.0 cluster queue
+#
+#  SYNOPSIS
+#     add_queue { qname hostlist change_array {fast_add 0} } 
+#
+#  FUNCTION
+#     Adds a cluster queues to a SGE 6.0 system.
+#
+#  INPUTS
+#     qname        - name for the (cluster) queue
+#     hostlist     - list of hostnames or names of host groups
+#     change_array - array containing attributes that differ from defaults
+#     {fast_add 0} - 0: add the queue using qconf -aq,
+#                    1: add the queue using qconf -Aq, much faster!
+#
+#  RESULT
+#
+#*******************************************************************************
 proc add_queue { qname hostlist change_array {fast_add 0} } {
    global ts_config
    global CHECK_ARCH CHECK_OUTPUT CHECK_USER
@@ -80,17 +133,22 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
       set hostlist $ts_config(execd_hosts)
    }
 
+   # localize messages
+   set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
+
    foreach host $hostlist {
       puts $CHECK_OUTPUT "creating queue \"$qname\" for host \"$host\""
 
       set chgar(qname)     "${qname}_${host}"
       set chgar(hostname)  "$host"
 
+      # localize messages containing the queue name
+      set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] $QUEUE $chgar(qname)]
+      set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $chgar(qname) $QUEUE ]
+
       # add queue from file?
       if { $fast_add } {
          set_queue_defaults default_array
-         vdep_set_queue_defaults default_array
-
          update_change_array default_array chgar
 
          set tmpfile [dump_array_to_tmpfile default_array]
@@ -98,8 +156,6 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
          set result ""
          set catch_return [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -Aq ${tmpfile}" } result ]
          puts $CHECK_OUTPUT $result
-         set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
-         set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $default_array(qname) $QUEUE ]
 
          if { [string match "*$ADDED" $result ] == 0 } {
             add_proc_error "add_queue" "-1" "qconf error or binary not found"
@@ -108,10 +164,6 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
       } else {
          # add by handling vi
          set vi_commands [build_vi_command chgar]
-
-         set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
-         set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] $QUEUE $chgar(qname)]
-         set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $chgar(qname) $QUEUE ]
 
          set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aq" $vi_commands $ADDED $ALREADY_EXISTS ]  
          if { $result != 0 } {
@@ -124,6 +176,7 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
    return $result
 }
 
+# set_queue_work - no public interface
 proc set_queue_work { qname change_array } {
    global ts_config
    global CHECK_OUTPUT CHECK_ARCH CHECK_USER
@@ -148,6 +201,27 @@ proc set_queue_work { qname change_array } {
    return $result
 }
 
+#****** sge_procedures.60/queue/set_queue() ******************************************
+#  NAME
+#     set_queue() -- set queue attributes
+#
+#  SYNOPSIS
+#     set_queue { qname hostlist change_array } 
+#
+#  FUNCTION
+#     Sets the attributes given in change_array in the cluster queue qname.
+#     If hostlist is an empty list, the cluster queue global values are set.
+#     If a list of hosts or host groups is specified, the attributes for these
+#     hosts or host groups are set.
+#
+#  INPUTS
+#     qname        - name of the (cluster) queue
+#     hostlist     - list of hosts / host groups. 
+#     change_array - array containing the changed attributes.
+#
+#  RESULT
+#
+#*******************************************************************************
 proc set_queue { qname hostlist change_array } {
    global ts_config
    global CHECK_ARCH CHECK_OUTPUT CHECK_USER
@@ -313,4 +387,16 @@ proc assign_queues_with_pe_object { qname hostlist pe_obj } {
 
       set_queue $qname $host new_val
    }
+}
+
+proc validate_checkpointobj { change_array } {
+   global CHECK_OUTPUT
+
+   upvar $change_array chgar
+
+  if { [info exists chgar(queue_list)] } { 
+     puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for ckpt objects"
+     add_proc_error "validate_checkpointobj" -3 "this Grid Engine version doesn't support a queue_list for ckpt objects,\nuse assign_queues_with_ckpt_object() after adding checkpoint\nobjects and don't use queue_list parameter."
+     unset chgar(queue_list)
+  }
 }

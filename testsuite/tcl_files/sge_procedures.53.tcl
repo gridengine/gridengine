@@ -30,11 +30,41 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+#****** sge_procedures.53/queue/validate_queue_type() ********************************
+#  NAME
+#     validate_queue_type() -- validate the settings for queue_type
+#
+#  SYNOPSIS
+#     validate_queue_type { change_array } 
+#
+#  FUNCTION
+#     No action for SGE 5.3.
+#
+#  INPUTS
+#     change_array - array containing queue definitions
+#
+#*******************************************************************************
 proc validate_queue_type { change_array } {
    # nothing to be done for SGE 5.3
 }
 
 
+#****** sge_procedures.53/queue/vdep_set_queue_defaults() ****************************
+#  NAME
+#     vdep_set_queue_defaults() -- create version dependent queue settings
+#
+#  SYNOPSIS
+#     vdep_set_queue_defaults { change_array } 
+#
+#  FUNCTION
+#     Fills the array change_array with queue attributes specific for SGE 5.3
+#
+#  INPUTS
+#     change_array - the resulting array
+#
+#  SEE ALSO
+#     sge_procedures/queue/set_queue_defaults()
+#*******************************************************************************
 proc vdep_set_queue_defaults { change_array } {
    upvar $change_array chgar
 
@@ -43,6 +73,27 @@ proc vdep_set_queue_defaults { change_array } {
    set chgar(complex_list)         "NONE"
 }
 
+#****** sge_procedures.53/queue/add_queue() ******************************************
+#  NAME
+#     add_queue() -- add a SGE 5.3 queue
+#
+#  SYNOPSIS
+#     add_queue { qname hostlist change_array {fast_add 0} } 
+#
+#  FUNCTION
+#     Adds one or multiple queues to a SGE 5.3 system.
+#     Queue names are created as $qname_$hostname.
+#
+#  INPUTS
+#     qname        - name for the (cluster) queue
+#     hostlist     - list of hostnames, or "@all" to create a queue on each host.
+#     change_array - array containing attributes that differ from defaults
+#     {fast_add 0} - 0: add the queue using qconf -aq,
+#                    1: add the queue using qconf -Aq, much faster!
+#
+#  RESULT
+#
+#*******************************************************************************
 proc add_queue { qname hostlist change_array {fast_add 0} } {
    global ts_config
    global CHECK_ARCH CHECK_OUTPUT CHECK_USER
@@ -58,17 +109,22 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
       set hostlist $ts_config(execd_hosts)
    }
 
+   # localize messages
+   set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
+
    foreach host $hostlist {
       puts $CHECK_OUTPUT "creating queue \"$qname\" for host \"$host\""
 
       set chgar(qname)     "${qname}_${host}"
       set chgar(hostname)  "$host"
 
+      # localize messages containing the queue name
+      set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] $QUEUE $chgar(qname)]
+      set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $chgar(qname) $QUEUE ]
+
       # add queue from file?
       if { $fast_add } {
          set_queue_defaults default_array
-         vdep_set_queue_defaults default_array
-
          update_change_array default_array chgar
 
          set tmpfile [dump_array_to_tmpfile default_array]
@@ -76,8 +132,6 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
          set result ""
          set catch_return [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -Aq ${tmpfile}" } result ]
          puts $CHECK_OUTPUT $result
-         set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
-         set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $default_array(qname) $QUEUE ]
 
          if { [string match "*$ADDED" $result ] == 0 } {
             add_proc_error "add_queue" "-1" "qconf error or binary not found"
@@ -87,13 +141,9 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
          # add by handling vi
          set vi_commands [build_vi_command chgar]
 
-         set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
-         set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] $QUEUE $chgar(qname)]
-         set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $chgar(qname) $QUEUE ]
-
          set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aq" $vi_commands $ADDED $ALREADY_EXISTS ]  
          if { $result != 0 } {
-            add_proc_error "add_queue" -1 "could not add queue [set chgar(qname)] (error: $result)"
+            add_proc_error "add_queue" -1 "could not add queue $chgar(qname) (error: $result)"
             break
          }
       }
@@ -102,7 +152,7 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
    return $result
 }
 
-
+# set_queue_work - no public interface
 proc set_queue_work { qname change_array } {
    global ts_config
    global CHECK_OUTPUT CHECK_ARCH CHECK_USER
@@ -127,6 +177,28 @@ proc set_queue_work { qname change_array } {
    return $result
 }
 
+#****** sge_procedures.53/queue/set_queue() ******************************************
+#  NAME
+#     set_queue() -- set queue attributes
+#
+#  SYNOPSIS
+#     set_queue { qname hostlist change_array } 
+#
+#  FUNCTION
+#     Sets the attributes given in change_array in the queues specified by
+#     qname and hostlist.
+#     Queuenames are built as $qname_$hostname.
+#
+#  INPUTS
+#     qname        - name of the (cluster) queue
+#     hostlist     - list of hosts. If "@all" is given, the attributes are changed
+#                    for all hosts. If an empty list is given, the queuename is only
+#                    built from the qname parameter.
+#     change_array - array containing the changed attributes.
+#
+#  RESULT
+#
+#*******************************************************************************
 proc set_queue { qname hostlist change_array } {
    global ts_config
    global CHECK_ARCH CHECK_OUTPUT CHECK_USER
@@ -208,3 +280,6 @@ proc assign_queues_with_pe_object { qname hostlist pe_obj } {
    set_pe $pe_obj my_change
 }
 
+proc validate_checkpointobj { change_array } {
+# nothing to be done for SGE 5.3
+}

@@ -37,7 +37,7 @@
 umask 022
 
 BASEDIR=/dist/SGEDIST
-MANUALPDF=/scratch1/as114086/gridengine-download/www/SGE5_3alpha.pdf
+MANUALPDF=undefined
 VERSIONDIR=SGE53
 SGE_PRODUCT_MODE=ge
 
@@ -750,7 +750,7 @@ if [ $instcommon = true ]; then
       echo "   --> PS and PDF files"
       Execute rm -rf $DEST_SGE_ROOT/doc
       Execute mkdir $DEST_SGE_ROOT/doc
-      Execute cp $MANUALPDF $DEST_SGE_ROOT/doc/SGE53beta2_doc.pdf
+      Execute cp $MANUALPDF $DEST_SGE_ROOT/doc
    fi
 
    # this rule must come *after* the "instdoc" rule

@@ -34,7 +34,7 @@ AH-2003-05-08-0  Enhancem.: Use commd commproc timeout as maximum for event deli
                             Added four drmaa_synchronize() test cases.
                             Added a test case to verify DRMAA reenrolls transparently
                             at commd after a commproc timeout in commd.
-                 Review:    TBD
+                 Review:    EB
 
 CR-2003-05-08-0  Testsuite: - optimized start_remote_tcl_prog() and execute_func 
                               parameter

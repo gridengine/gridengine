@@ -1,3 +1,14 @@
+JG-2001-08-22-0: (Issue# 43), host_aliases file was not implicitly used from 
+                 standard location, option -a <path_to_host_aliases> worked.
+
+AA-2001-08-22-0: - bugfix IZ 42, processing of projects/xprojects in SGEEE mode 
+
+AA-2001-08-09-0: - IZ 33, fixed duplicate free for scheduler conf dialogue code
+
+AA-2001-08-07-0: - IZ 32, feature_is_enabled() used incorrectly
+
+AA-2001-07-27-0: - core dump fix for qmon_pe start/stop_proc_args
+
 AH-2001-07-26-1: - improved handling of waitpid() result in execd to trace into
                    the problem of shepherds considered to be finished by failure
                    (Origin 2000, Irix 6.5.10f)
@@ -35,10 +46,3 @@ AH-2001-07-20-0: - increased GRM_GDI_VERSION for GE 5.3
                  - fix qmaster core dump caused by old execd's sending load 
                    reports w/o REP_seqno
 
-AA-2001-07-27-0: - core dump fix for qmon_pe start/stop_proc_args
-
-AA-2001-08-07-0: - IZ 32, feature_is_enabled() used incorrectly
-
-AA-2001-08-09-0: - IZ 33, fixed duplicate free for scheduler conf dialogue code
-
-AA-2001-08-22-0: - bugfix IZ 42, processing of projects/xprojects in SGEEE mode 

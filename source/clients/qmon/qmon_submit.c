@@ -2102,9 +2102,19 @@ int save
          }
       } else {
          lList *task_ids = NULL;
+         lList *n_h_ids = NULL;
+         lList *u_h_ids = NULL;
 
          lXchgList(jep, JB_ja_n_h_ids, &task_ids);
-         lXchgList(jep, JB_ja_u_h_ids, &task_ids);
+         if (data->task_range) {
+            range_calculate_intersection_set(&u_h_ids, NULL, task_ids,
+                                             data->task_range);
+            range_calculate_difference_set(&n_h_ids, NULL, task_ids, u_h_ids);
+         } else {
+            u_h_ids = task_ids;
+         }
+         lXchgList(jep, JB_ja_n_h_ids, &n_h_ids);
+         lXchgList(jep, JB_ja_u_h_ids, &u_h_ids);
       }
    } else {
       lListElem *jap;

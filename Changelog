@@ -1,3 +1,8 @@
+AS-2004-02-06-1  Bugfix:    pass -Wno-strict-prototypes to gcc on Linux
+                            to compile sec_lib.c without error
+                            (introduced -Wstrict-prototypes for all Linuxes
+                            with AS-2004-02-06-1)
+
 CR-2004-02-09-0: Testsuite: Fixed install_core_system test on hosts where
                             no local spool directory is defined.
 

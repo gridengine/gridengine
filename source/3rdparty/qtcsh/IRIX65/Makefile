@@ -1,5 +1,5 @@
 # Generated automatically from Makefile.in by configure.
-# $Id: Makefile,v 1.2 2001/11/30 10:33:39 andre Exp $
+# $Id: Makefile,v 1.1 2004/02/09 13:17:13 andy Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -30,7 +30,7 @@ LFLAGS=$(SGE_LOPTS)
 #LFLAGS= -Zn10000		# hpux lint
 
 
-CFLAGS = $(SGE_COPTS) -g  -DIRIX6 -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
+CFLAGS = $(SGE_COPTS) -g  -DIRIX -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
 #CFLAGS= -g			# debug
 #CFLAGS= -O			# production
 #CFLAGS= 			# Broken optimizers....
@@ -226,7 +226,7 @@ LIBES= -ltermlib 	 			 ## This is set by autoconf.
 
 
 EXTRAFLAGS =  $(AFSDEF) -I../../../libs/gdi
-EXTRALIBS =  $(AFSLIB) -L../../../IRIX6 $(SGE_LIBS) -lm
+EXTRALIBS =  $(AFSLIB) -L../../../IRIX65 $(SGE_LIBS) -lm
 
 
 # The difficult choice of a c-compiler...

@@ -43,12 +43,12 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = ..
 
-ACLOCAL = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing aclocal
+ACLOCAL = aclocal
 AUTOCONF = autoconf
-AUTOMAKE = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing automake
+AUTOMAKE = automake
 AUTOHEADER = autoheader
 
-INSTALL = ../../install-sh -c
+INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_SCRIPT = ${INSTALL_PROGRAM}
@@ -60,19 +60,19 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-host_alias = mips-sgi-irix6.2
-host_triplet = mips-sgi-irix6.2
+host_alias = i586-pc-linux-gnu
+host_triplet = i586-pc-linux-gnu
 AR = ar
-CC = cc
-CPP = cc -E
+CC = gcc
+CPP = gcc -E
 GETCONF = getconf
-GLOBLIB = glob/libglob.a
+GLOBLIB = 
 LIBOBJS =  getloadavg.o
-MAKEINFO = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing makeinfo
-MAKE_HOST = mips-sgi-irix6.2
+MAKEINFO = makeinfo
+MAKE_HOST = i586-pc-linux-gnu
 PACKAGE = make
 PERL = perl
-RANLIB = :
+RANLIB = ranlib
 REMOTE = stub
 VERSION = 3.78.1
 
@@ -91,12 +91,12 @@ LIBRARIES =  $(noinst_LIBRARIES)
 
 
 DEFS = -DHAVE_CONFIG_H -I. -I$(srcdir) -I..
-CPPFLAGS =  -I../glob
+CPPFLAGS = 
 LDFLAGS = 
-LIBS = -lsun -lelf -lsun -lelf 
+LIBS = -lelf 
 libglob_a_LIBADD = 
 libglob_a_OBJECTS =  glob.o fnmatch.o
-CFLAGS = -g -n32
+CFLAGS = -g -O2
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@

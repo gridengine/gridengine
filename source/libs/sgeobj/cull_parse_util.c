@@ -1124,12 +1124,13 @@ u_long32 flags
 
    DENTER(TOP_LAYER, "parse_list_simple");
 
-DPRINTF(("OPTION: %s\n", option));
    destlist = lCopyList("job sublist", lGetList(job, field));
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, option))) {
+      DPRINTF(("OPTION: %s\n", option));
       lp = NULL;
       lXchgList(ep, SPA_argval_lListT, &lp);
+
       if (flags & FLG_LIST_APPEND || flags & FLG_LIST_MERGE_DOUBLE_KEY) {
          if (lp) {  
             if (!destlist) {
@@ -1161,6 +1162,7 @@ DPRINTF(("OPTION: %s\n", option));
       } 
       lRemoveElem(cmdline, ep);
    } 
+
    lSetList(job, field, destlist);
 
    DEXIT;

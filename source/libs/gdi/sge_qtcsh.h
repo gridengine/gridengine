@@ -49,6 +49,9 @@ enum {
    void sge_init __P((print_func_t ostream));
    void set_sgemode __P((int addr, int value)); 
    int get_sgemode __P((int addr)); 
+   int sge_quick_count_num_args __P((const char* args));
+   void sge_parse_args __P((const char* args, char** pargs));
+   char** sge_get_qtask_args __P((char *taskname, lList *alp));
 #else
    /* prototypes: sge source code like */
 
@@ -57,6 +60,9 @@ enum {
    void sge_init(print_func_t ostream);
    void set_sgemode(int addr, int value);
    int get_sgemode(int addr);
+   int sge_quick_count_num_args (const char* args);
+   void sge_parse_args (const char* args, char** pargs);
+   char** sge_get_qtask_args (char *taskname, lList *alp);
 #endif
 
 #endif /* _EXEC_WRAPPER_H_ */

@@ -1,7 +1,10 @@
+JG-2004-04-19-0: Bugfix:    Added files missing in checkin JG-2004-04-15-0.
+
 CR-2004-04-19-0: Cleanup:   Changed name of module gridping to qping
                  Changed:   gridping
 
-AA-2004-04-16-1: Bugfix:    typecast for time values fix for broken build on darwin
+AA-2004-04-16-1: Bugfix:    typecast for time values fix for broken build on 
+                            darwin
 
 CR-2004-04-16-1: Bugfix:    Some performance fixes when max. file descriptor
                             limit is reached.

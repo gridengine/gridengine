@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/07/22 15:49:40 $     Revision: $Revision: 1.17.2.1 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/07/26 10:13:29 $     Revision: $Revision: 1.17.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2004/07/22 15:49:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2004/07/26 10:13:29 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -318,15 +318,15 @@ separated list of job ids.
 The user can obtain the collected information with the command qstat -j.
 .\"
 .SS "\fBparams\fP"
-This is foreseen for passing additional parameters
-to the xxQS_NAMExx scheduler. The following values are recognized currently:
+This is foreseen for passing additional paramters to the N1 Grid Engine
+scheduler. The following values are recognized:
 .\"
 .IP "\fIPROFILE\fP"
-If set, the scheduler logs profiling information summarizing each scheduling 
-run.
+If set equal to 1, the scheduler logs profiling information summarizing
+each scheduling run.
 .\"
 .IP "\fIMONITOR\fP"
-If set, the scheduler records information for each scheduling run allowing 
+If set equal to 1, the scheduler records information for each scheduling run allowing 
 to reproduce job resources utilization in the file \fI<xxqs_name_sxx_root>/<cell>/common/schedule\fP.\"
 .\"
 .PP

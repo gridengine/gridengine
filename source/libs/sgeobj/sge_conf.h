@@ -136,5 +136,4 @@ lList *sge_set_defined_defaults(lList *lpCfg);
 int merge_configuration(lListElem *global, lListElem *local, sge_conf_type *pconf, lList **lpp);
 void sge_show_conf(void);
 
-bool sge_is_reprioritize(void);
 #endif /* __SGE_CONF_H */

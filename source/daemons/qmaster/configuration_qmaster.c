@@ -372,7 +372,6 @@ DPRINTF(("found config with name "SFQ"\n", lGetHost(ep, CONF_hname)));
    return STATUS_OK;
 }
    
-   
 static int check_config(
 lList **alpp,
 lListElem *conf 
@@ -698,5 +697,112 @@ lListElem *get_local_conf_val(const char *host, const char *name)
 
    DEXIT;
    return NULL;
-}
+} /* get_local_conf_val */
 
+
+lListElem* sge_get_configuration(const char* aName)
+{
+   lListElem *conf = NULL;
+
+   DENTER(TOP_LAYER, "sge_get_configuration");
+
+   SGE_ASSERT((NULL != aName));
+
+   conf = lCopyElem(lGetElemHost(Master_Config_List, CONF_hname, aName));
+
+   DEXIT;
+   return conf;
+} /* sge_get_configuration */
+
+
+int sge_mod_global_configuration(lList **alpp, char *ruser, char *rhost)
+{
+   lListElem *global = NULL;
+   int res = STATUS_EUNKNOWN;
+
+   DENTER(TOP_LAYER, "sge_mod_global_configuration");
+
+   global = lGetElemHost(Master_Config_List, CONF_hname, "global");
+
+   res = sge_mod_configuration(global, alpp, ruser, rhost);
+
+   DEXIT;
+   return res;
+} /* sge_mod_global_configuration */
+
+
+void sge_set_conf_reprioritize(lListElem *aConf, bool aFlag)
+{
+   lList *entries = NULL;
+   lListElem *ep = NULL;
+
+   DENTER(TOP_LAYER, "sge_set_conf_reprioritize");
+
+   SGE_ASSERT((NULL != aConf));
+
+   entries = lGetList(aConf, CONF_entries);
+
+   ep = lGetElemStr(entries, CF_name, REPRIORITIZE);
+
+   if (NULL == ep)
+   {
+      ep = lCreateElem(CF_Type);
+      lSetString(ep, CF_name, REPRIORITIZE);
+      lAppendElem(entries, ep);
+   }
+
+   lSetString(ep, CF_value, ((true == aFlag) ? "1" : "0"));
+   lSetUlong(ep, CF_local, 0);
+
+   DEXIT;
+   return;
+} /* sge_set_conf_reprioritize */
+
+
+bool sge_get_conf_reprioritize(lListElem *aConf)
+{
+   lList *entries = NULL;
+   lListElem *ep = NULL;
+   bool res = false;
+
+   DENTER(TOP_LAYER, "sge_get_conf_reprioritize");
+
+   SGE_ASSERT((NULL != aConf));
+
+   entries = lGetList(aConf, CONF_entries);
+
+   ep = lGetElemStr(entries, CF_name, REPRIORITIZE);
+
+   if (NULL == ep)
+   {
+      res = false; /* no conf value */
+   }
+   else
+   {
+      const char *val;
+
+      val = lGetString(ep, CF_value);
+      res = ((strncasecmp(val, "0", sizeof("0")) == 0) ? false :true);
+   }
+
+   DEXIT;
+   return res;
+} /* sge_get_conf_reprioritize */
+
+
+bool sge_conf_is_reprioritize(void)
+{
+   bool res = false;
+   lListElem *conf = NULL;
+
+   DENTER(TOP_LAYER, "sge_conf_is_reprioritize");
+
+   conf = sge_get_configuration("global");
+
+   res = sge_get_conf_reprioritize(conf);
+
+   conf = lFreeElem(conf);
+
+   DEXIT;
+   return res;
+} /* sge_conf_is_reprioritize */

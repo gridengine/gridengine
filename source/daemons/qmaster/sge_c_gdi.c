@@ -643,7 +643,7 @@ int sub_command
    }
 
    if (ticket_orders) {
-      if (sge_is_reprioritize()) {
+      if (sge_conf_is_reprioritize()) {
          /* send all ticket orders to the exec hosts */
          distribute_ticket_orders(ticket_orders);
       } else {

@@ -32,10 +32,21 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "basis_types.h"
+
+
 int sge_del_configuration(lListElem *cxp, lList **alpp, char *ruser, char *rhost);
 int sge_mod_configuration(lListElem *cxp, lList **alpp, char *ruser, char *rhost);
 int is_configuration_up_to_date(lListElem *hep, lList *conf_list, lList *to_check_list);
 int select_configuration(const char *config_name, lList *lp, lListElem **cepp);
 lListElem *get_local_conf_val(const char *host, const char *name);  
+
+lListElem* sge_get_configuration(const char* aName);
+int  sge_mod_global_configuration(lList **alpp, char *ruser, char *rhost);
+
+void sge_set_conf_reprioritize(lListElem *aConf, bool aFlag);
+bool sge_get_conf_reprioritize(lListElem *aConf);
+
+bool sge_conf_is_reprioritize(void);
 
 #endif /* __CONFIGURATION_QMASTER_H */

@@ -1022,6 +1022,7 @@ static void* signal_thread(void* anArg)
             wait_for_thread_termination();
             set_signal_thread(INVALID_THREAD);
             is_continue = false;
+            break;
          default:
             ERROR((SGE_EVENT, MSG_QMASTER_UNEXPECTED_SIGNAL_I, sig_num));
       }

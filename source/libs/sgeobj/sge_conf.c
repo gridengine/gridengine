@@ -798,29 +798,3 @@ sge_conf_type *conf
    return;
 }
 
-bool sge_is_reprioritize(void){
-   lListElem *confl = NULL; 
-   lList *ep_list = NULL;
-   lListElem *ep = NULL; 
-   bool ret = true;
-   DENTER(TOP_LAYER, "sge_is_reprioritize");
-   confl = lCopyElem(lGetElemHost(Master_Config_List, CONF_hname, "global"));
-   if (confl)
-    ep_list = lGetList(confl, CONF_entries);
-    
-   if (ep_list)
-      ep = lGetElemStr(ep_list, CF_name, REPRIORITIZE);
-
-   if (ep){
-      const char* value;
-      value = lGetString(ep, CF_value);
-      ret = strncasecmp(value, "0", sizeof("0"));
-   }
-   else{
-      ret = conf.reprioritize;
-   }
-
-   DEXIT;
-   return ret;
-}
-

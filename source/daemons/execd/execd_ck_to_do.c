@@ -98,6 +98,8 @@ sge_kill_petasks(const lListElem *job, const lListElem *ja_task);
 static int sge_start_jobs(void);
 static int exec_job_or_task(lListElem *jep, lListElem *jatep, lListElem *petep);
 
+static bool should_reprioritize(void);
+
 extern int shut_me_down;
 extern volatile int jobs_to_start;
 
@@ -382,7 +384,7 @@ int answer_error
       ptf_update_job_usage();
       sge_switch2admin_user();
 
-      if (sge_is_reprioritize()) {
+      if (should_reprioritize()) {
          sge_switch2start_user();
          DPRINTF(("ADJUST PRIORITIES\n"));
          ptf_adjust_job_priorities();
@@ -995,4 +997,42 @@ lListElem *pe_task
    return 0;
 }
 #endif
+
+static bool should_reprioritize(void)
+{
+   lListElem *confl = NULL; 
+   lList *ep_list = NULL;
+   lListElem *ep = NULL; 
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "should_reprioritize");
+
+   confl = lCopyElem(lGetElemHost(Master_Config_List, CONF_hname, "global"));
+
+   if (confl) {
+      ep_list = lGetList(confl, CONF_entries);
+   }
+    
+   if (ep_list) {
+      ep = lGetElemStr(ep_list, CF_name, REPRIORITIZE);
+   }
+
+   if (ep)
+   {
+      const char* value;
+      value = lGetString(ep, CF_value);
+      ret = strncasecmp(value, "0", sizeof("0"));
+   }
+   else
+   {
+      ret = conf.reprioritize;
+   }
+
+   if (NULL != confl) {
+      confl = lFreeElem(confl);
+   }
+
+   DEXIT;
+   return ret;
+} /* should_reprioritize */
 

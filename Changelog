@@ -1,3 +1,9 @@
+AD-2004-05-10-0: Cleanup:   - First part of 'Master_Config_List' encapsulation.
+                            - 'lWriteElem_' and 'lWriteList_' now use 'stderr'
+                              is no 'FILE*' argument is given.
+                 Changed:   qmaster, cull, sgeobj, exced
+                 Review:    SG
+
 EB-2004-05-10-0: Bugfix:    jobs submitted with option -r n can be rescheduled
                  Changed:   qalter, qsub
                  Issue:     999

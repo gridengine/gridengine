@@ -54,6 +54,10 @@
 #include "msg_qmaster.h"
 #include "msg_common.h"
 
+
+static void check_reprioritize_interval(lList **alpp, char *ruser, char *rhost);
+
+
 /************************************************************
   sge_mod_sched_configuration - Master code
 
@@ -82,9 +86,8 @@ char *rhost
 
    if (config) {
       lSetUlong(confp, SC_weight_tickets_override, 
-         lGetUlong(config, SC_weight_tickets_override));
+      lGetUlong(config, SC_weight_tickets_override));
    }
-
 
    confp = lCopyElem(confp);
    lAppendElem(temp_conf_list, confp);
@@ -104,35 +107,34 @@ char *rhost
       return -1;
    }
 
-   {
-      lListElem *conf = NULL; 
-      lList *ep_list = NULL;
-      lListElem *ep = NULL; 
-      int reprioritize = (sconf_get_reprioritize_interval() != 0); 
-      char value[20];
-      conf = lCopyElem(lGetElemHost(Master_Config_List, CONF_hname, "global"));
-      ep_list = lGetList(conf, CONF_entries);
+   check_reprioritize_interval(alpp, ruser, rhost);
 
-      ep = lGetElemStr(ep_list, CF_name, REPRIORITIZE);
-      if (!ep){
-         ep = lCreateElem(CF_Type);
-         lSetString(ep, CF_name, REPRIORITIZE);
-         lAppendElem(ep_list, ep);           
-      }
-      
-      sprintf(value, "%d", reprioritize);
-      lSetString(ep, CF_value, value);
-      lSetUlong(ep, CF_local, 0);    
-      
-      sge_mod_configuration(conf, alpp, ruser, rhost);
-      conf = lFreeElem(conf);
-   }
-
-   INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, "scheduler", 
-        "scheduler configuration"));
+   INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, "scheduler", "scheduler configuration"));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    DEXIT;
    return STATUS_OK;
-}
+} /* sge_mod_sched_configuration */
+
+
+static void check_reprioritize_interval(lList **alpp, char *ruser, char *rhost)
+{
+   bool flag;
+   lListElem *conf;
+
+   DENTER(TOP_LAYER, "check_reprioritize_interval");
+
+   flag = (sconf_get_reprioritize_interval() != 0) ? true : false;
+
+   conf = sge_get_configuration("global");
+
+   sge_set_conf_reprioritize(conf, flag);
+
+   sge_mod_configuration(conf, alpp, ruser, rhost);
+
+   conf = lFreeElem(conf);
+
+   DEXIT;
+   return;
+} /* check_reprioritize_interval */
 

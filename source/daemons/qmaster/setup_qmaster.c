@@ -1348,7 +1348,7 @@ static int debit_all_jobs_from_qs()
          }
 
          /* check for resend jobs */
-         if (lGetUlong(jatep, JAT_status) == JTRANSITING) {
+         if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
             trigger_job_resend(lGetUlong(jatep, JAT_start_time), master_hep, 
                   jid, tid);
          }

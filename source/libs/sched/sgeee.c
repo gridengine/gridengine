@@ -418,11 +418,11 @@ job_is_active( lListElem *job,
    u_long job_status = lGetUlong(ja_task, JAT_status);
 #ifdef SGE_INCLUDE_QUEUED_JOBS
    return (job_status == JIDLE ||
-       job_status & (JRUNNING | JMIGRATING | JQUEUED | JTRANSITING)) &&
+       job_status & (JRUNNING | JMIGRATING | JQUEUED | JTRANSFERING)) &&
        !(lGetUlong(ja_task, JAT_state) 
          & (JSUSPENDED|JSUSPENDED_ON_THRESHOLD));
 #else
-   return (job_status & (JRUNNING | JMIGRATING | JTRANSITING)) &&
+   return (job_status & (JRUNNING | JMIGRATING | JTRANSFERING)) &&
        !(lGetUlong(ja_task, JAT_state) & 
          (JSUSPENDED|JSUSPENDED_ON_THRESHOLD));
 #endif

@@ -436,7 +436,7 @@ char **argv
          }   
          
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-            if (!show_job && !(lGetUlong(jatep, JAT_status) == JRUNNING || (lGetUlong(jatep, JAT_status) == JTRANSITING))) {
+            if (!show_job && !(lGetUlong(jatep, JAT_status) == JRUNNING || (lGetUlong(jatep, JAT_status) == JTRANSFERING))) {
                DPRINTF(("show task "u32"."u32"\n",
                        lGetUlong(jep, JB_job_number),
                        lGetUlong(jatep, JAT_task_number)));
@@ -641,7 +641,7 @@ u_long32 show
 
          nw = lWhere("%T(%I->%T(!(%I m= %u || %I m= %u))",
                      JB_Type, JB_ja_tasks, JAT_Type,
-                     JAT_status, JRUNNING, JAT_status, JTRANSITING); 
+                     JAT_status, JRUNNING, JAT_status, JTRANSFERING); 
 
          if (!jw)
             jw = nw;

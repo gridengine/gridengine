@@ -427,7 +427,7 @@ XtIntervalId *id
       lListElem *jatep;
       for_each (jatep, lGetList(ep, JB_ja_tasks)) {
          if ((lGetUlong(jatep, JAT_status) & JRUNNING) || 
-            (lGetUlong(jatep, JAT_status) & JTRANSITING))
+            (lGetUlong(jatep, JAT_status) & JTRANSFERING))
             cont = False;
          else
             cont = True;

@@ -101,8 +101,8 @@ u_long32 status
    char *s;
 
    switch (status) {
-   case JTRANSITING:
-      s = "JTRANSITING";
+   case JTRANSFERING:
+      s = "JTRANSFERING";
       break;
    case JRUNNING:
       s = "JRUNNING";
@@ -225,7 +225,7 @@ sge_pack_buffer *pb
       case JWAITING4OSJID:
          if (jep && jatep) {
             switch (status) {
-            case JTRANSITING:
+            case JTRANSFERING:
             case JRUNNING:   
                if (!pe_task_id_str) {
                   /* store unscaled usage directly in job */
@@ -238,8 +238,8 @@ sge_pack_buffer *pb
                   scale_usage(jep, jatep, lGetList(hep, EH_usage_scaling_list), 
                         lGetList(jatep, JAT_previous_usage_list));
                  
-                  if (status==JTRANSITING) { /* got async ack for this job */ 
-                     DPRINTF(("--- transisting job "u32" is running\n", jobid));
+                  if (status==JTRANSFERING) { /* got async ack for this job */ 
+                     DPRINTF(("--- transfering job "u32" is running\n", jobid));
                      sge_commit_job(jep, jatep, 1, COMMIT_DEFAULT); /* implicitly sending usage to schedd in sge_mode */
                      cancel_job_resend(jobid, jataskid);
                   } else if (feature_is_enabled(FEATURE_SGEEE)) /* need to generate a job event for new usage */
@@ -428,10 +428,10 @@ sge_pack_buffer *pb
 
                switch (status) {
                case JRUNNING:
-               case JTRANSITING:
+               case JTRANSFERING:
                   if (!skip_job_exit) {
                      DPRINTF(("--- running job "u32"."u32" is exiting\n", 
-                        jobid, jataskid, (status==JTRANSITING)?"transisting":"running"));
+                        jobid, jataskid, (status==JTRANSFERING)?"transfering":"running"));
 
                      sge_job_exit(jr, jep, jatep);
                   }
@@ -479,7 +479,7 @@ sge_pack_buffer *pb
 
 
                   if (lGetUlong(lFirst(lGetList(task, JB_ja_tasks)), JAT_status)==JRUNNING ||
-                     lGetUlong(lFirst(lGetList(task, JB_ja_tasks)), JAT_status)==JTRANSITING) {
+                     lGetUlong(lFirst(lGetList(task, JB_ja_tasks)), JAT_status)==JTRANSFERING) {
                      u_long32 failed;
                      const char *err_str;
                      char failed_msg[256];

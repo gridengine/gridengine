@@ -433,7 +433,7 @@ int sub_command
    }
 
    if (lGetPosViaElem(qep, QU_xacl)>=0 || lGetPosViaElem(qep, QU_acl)>=0) {
-      if (multiple_occurrencies(
+      if (multiple_occurances(
             alpp, 
             lGetList(new_queue, QU_acl), 
             lGetList(new_queue, QU_xacl), 
@@ -507,7 +507,7 @@ int sub_command
 
       if (lGetPosViaElem(qep, QU_xprojects)>=0 || 
           lGetPosViaElem(qep, QU_projects)>=0) {
-         if (multiple_occurrencies(
+         if (multiple_occurances(
                alpp,
                lGetList(new_queue, QU_projects),
                lGetList(new_queue, QU_xprojects),

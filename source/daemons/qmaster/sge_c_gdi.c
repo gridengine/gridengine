@@ -905,7 +905,7 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
 
       lUlong value;
       /* create PERM_Type list for answer structure*/
-      lp = lCreateList("permissons", PERM_Type);
+      lp = lCreateList("permissions", PERM_Type);
       ep = lCreateElem(PERM_Type);
       lAppendElem(lp,ep);
 

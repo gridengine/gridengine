@@ -82,7 +82,7 @@ int sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
       return FALSE;
    }
    
-   permList = lCreateList("permissons", PERM_Type);
+   permList = lCreateList("permissions", PERM_Type);
    ep = lCreateElem(PERM_Type);
    lAppendElem(permList,ep);
    lSetHost(ep, PERM_req_host, requestedHost); 

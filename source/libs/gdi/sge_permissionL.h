@@ -66,7 +66,7 @@ extern "C" {
 *     request. 
 * 
 *  EXAMPLE
-*        permList = lCreateList("permissons", PERM_Type);
+*        permList = lCreateList("permissions", PERM_Type);
 *        ep = lCreateElem(PERM_Type);
 *        lAppendElem(permList,ep);
 *        lSetString(ep, PERM_req_host, requestedHost); 

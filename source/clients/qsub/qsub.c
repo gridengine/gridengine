@@ -361,7 +361,7 @@ DTRACE;
          printf(".");
          fflush(stdout);
       }
-      else if ((job_status == JRUNNING) || (job_status == JTRANSITING)) {
+      else if ((job_status == JRUNNING) || (job_status == JTRANSFERING)) {
          printf(MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U, u32c(job_id));
          scheduled = 1;
          break;

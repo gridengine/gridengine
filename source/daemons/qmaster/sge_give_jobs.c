@@ -507,7 +507,7 @@ const char *queue
    jatasks = lGetList(jep, JB_ja_tasks);
 
    /* check whether a slave execd allowance has to be retransmitted */
-   if (lGetUlong(jatep, JAT_status) == JTRANSITING) {
+   if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
       ep = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list));
       if (!ep || 
          !(qnm=lGetString(ep, JG_qname)) || 
@@ -690,7 +690,7 @@ sge_commit_flags_t commit_flags
    switch (mode) {
    case 0:
       lSetUlong(jatep, JAT_state, JRUNNING);
-      lSetUlong(jatep, JAT_status, JTRANSITING);
+      lSetUlong(jatep, JAT_status, JTRANSFERING);
 
 
       job_log(jid, ja_task_id, MSG_LOG_SENT2EXECD);

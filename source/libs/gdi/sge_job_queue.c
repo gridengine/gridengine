@@ -101,7 +101,7 @@ static void sge_get_states(int nm, char *str, u_long32 op)
       str[count++] = SUSPENDED_SYM;
    }
  
-   if (VALID(JTRANSITING, op)) {
+   if (VALID(JTRANSFERING, op)) {
       str[count++] = TRANSISTING_SYM;
    }
  

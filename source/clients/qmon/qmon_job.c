@@ -575,7 +575,7 @@ void updateJobList(void)
    what_queue = lWhat("%T(ALL)", QU_Type);
    where_notexiting = lWhere("%T(!(%I m= %u))", JAT_Type, JAT_status, JFINISHED);
    where_run = lWhere("%T((%I m= %u || %I m= %u) && (!(%I m= %u)))", 
-                        JAT_Type, JAT_status, JRUNNING, JAT_status, JTRANSITING,
+                        JAT_Type, JAT_status, JRUNNING, JAT_status, JTRANSFERING,
                         JAT_state, JEXITING);
  
    jl = lSelect("jl", qmonMirrorList(SGE_JOB_LIST), where_unfinished, what);
@@ -1442,7 +1442,7 @@ lListElem *jep
             sprintf(info, WIDTH"%s\n", info, "Status:", 
                      "Idle");
             break;
-         case JTRANSITING:
+         case JTRANSFERING:
             sprintf(info, WIDTH"%s\n", info, "Status:", 
                      "Transiting");
             break;

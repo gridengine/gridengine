@@ -331,9 +331,9 @@ int recompute_debitation_dependent
       name = lGetPosString(ep, pos_CE_name);
       already_here = lGetElemStr(*new_complex, CE_name, name);
 
-      /* Just skip multiple occurrencies of attributes.
+      /* Just skip multiple occurances of attributes.
          It's expensive but the qmaster had to prevent 
-         multiple occurrencies of complexes in queue and 
+         multiple occurances of complexes in queue and 
          host and global */
       if (!recompute_debitation_dependent) {
          if (already_here)

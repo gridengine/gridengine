@@ -57,7 +57,7 @@ int attr_mod_time_str(lList **alpp, lListElem *qep, lListElem *new_queue, int nm
 
 int verify_str_key(lList **alpp, const char *str, const char *name);
 
-int multiple_occurrencies(lList **alpp, lList *lp1, lList *lp2, int nm, const char *name, const char *obj_name);
+int multiple_occurances(lList **alpp, lList *lp1, lList *lp2, int nm, const char *name, const char *obj_name);
 
 int ensure_attrib_available(lList **alpp, lListElem *ep, int nm);
 

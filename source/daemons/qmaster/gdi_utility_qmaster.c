@@ -482,7 +482,7 @@ int verify_str_key(lList **alpp, const char *str, const char *name) {
 }
 
 
-int multiple_occurrencies(
+int multiple_occurances(
 lList **alpp,
 lList *lp1,
 lList *lp2,
@@ -493,7 +493,7 @@ const char *obj_name
    lListElem *ep1;
    const char *s;
 
-   DENTER(TOP_LAYER, "multiple_occurrencies");
+   DENTER(TOP_LAYER, "multiple_occurances");
 
    if (!lp1 || !lp2) {
       DEXIT;

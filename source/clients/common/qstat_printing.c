@@ -280,7 +280,7 @@ int indent
    /* is sub-task logically running */
    task_task = lFirst(lGetList(task, JB_ja_tasks));
    tstatus = lGetUlong(task_task, JAT_status);
-   task_running = (tstatus==JRUNNING || tstatus==JTRANSITING);
+   task_running = (tstatus==JRUNNING || tstatus==JTRANSFERING);
 
    if (print_hdr) {
       printf(QSTAT_INDENT "Sub-tasks:           %-12.12s %5.5s %s %-4.4s %-6.6s\n", 
@@ -299,13 +299,13 @@ int indent
    tstate = lGetUlong(ja_task, JAT_state);
    if (tstatus==JRUNNING) {
       tstate |= JRUNNING;
-      tstate &= ~JTRANSITING;
-   } else if (tstatus==JTRANSITING) {
-      tstate |= JTRANSITING;
+      tstate &= ~JTRANSFERING;
+   } else if (tstatus==JTRANSFERING) {
+      tstate |= JTRANSFERING;
       tstate &= ~JRUNNING;
    } else if (tstatus==JFINISHED) {
       tstate |= JEXITING;
-      tstate &= ~(JRUNNING|JTRANSITING);
+      tstate &= ~(JRUNNING|JTRANSFERING);
    }
 
    if (lGetList(job, JB_jid_predecessor_list) || lGetUlong(ja_task, JAT_hold)) {
@@ -981,8 +981,8 @@ char *indent
 
    /* move status info into state info */
    jstate = lGetUlong(jatep, JAT_state);
-   if (lGetUlong(jatep, JAT_status)==JTRANSITING) {
-      jstate |= JTRANSITING;
+   if (lGetUlong(jatep, JAT_status)==JTRANSFERING) {
+      jstate |= JTRANSFERING;
       jstate &= ~JRUNNING;
    }
 
@@ -1007,7 +1007,7 @@ char *indent
 
    /* is job logically running */
    running = lGetUlong(jatep, JAT_status)==JRUNNING || 
-      lGetUlong(jatep, JAT_status)==JTRANSITING;
+      lGetUlong(jatep, JAT_status)==JTRANSFERING;
 
    if (sge_ext) {
       lListElem *up, *pe, *task;

@@ -556,7 +556,7 @@ lList **topp  /* ticket orders ptr ptr */
          }
 
          if (lGetUlong(jatp, JAT_status) == JRUNNING ||
-             lGetUlong(jatp, JAT_status) == JTRANSITING ||
+             lGetUlong(jatp, JAT_status) == JTRANSFERING ||
              lGetUlong(jatp, JAT_status) == JFINISHED) {
 
             WARNING((SGE_EVENT, MSG_JOB_CHANGEPTICKETS_UU, 
@@ -598,7 +598,7 @@ lList **topp  /* ticket orders ptr ptr */
 
 
    /* ----------------------------------------------------------------------- 
-    * CHANGE TICKETS OF RUNNING/TRANSITING JOBS
+    * CHANGE TICKETS OF RUNNING/TRANSFERING JOBS
     *
     * Our aim is to collect all ticket orders of an gdi request
     * and to send ONE packet to each exec host. Here we just
@@ -660,7 +660,7 @@ lList **topp  /* ticket orders ptr ptr */
          }
 
          if (lGetUlong(jatp, JAT_status) != JRUNNING && 
-             lGetUlong(jatp, JAT_status) != JTRANSITING) {
+             lGetUlong(jatp, JAT_status) != JTRANSFERING) {
 
             if (lGetUlong(jatp, JAT_status) != JFINISHED) {
                WARNING((SGE_EVENT, MSG_JOB_CHANGETICKETS_UU, 

@@ -138,7 +138,7 @@ int sub_command
    }
 
    if (lGetPosViaElem(pe, PE_xuser_list)>=0 || lGetPosViaElem(pe, PE_user_list)>=0) {
-      if (multiple_occurrencies(
+      if (multiple_occurances(
             alpp,
             lGetList(new_pe, PE_user_list),
             lGetList(new_pe, PE_xuser_list),
@@ -324,7 +324,7 @@ lList *pe_list
          slots = 0;
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
             if ((ISSET(lGetUlong(jatep, JAT_status), JRUNNING) ||      /* is job running  */
-                   ISSET(lGetUlong(jatep, JAT_status), JTRANSITING))     /* or transisting  */
+                   ISSET(lGetUlong(jatep, JAT_status), JTRANSFERING))     /* or transfering  */
                 && lGetString(jatep, JAT_granted_pe)                     /* is job parallel */
                 && !strcmp(pe_name, lGetString(jatep, JAT_granted_pe))) {/* this pe         */
                slots += sge_granted_slots(lGetList(jatep, JAT_granted_destin_identifier_list));

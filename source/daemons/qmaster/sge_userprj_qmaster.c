@@ -187,7 +187,7 @@ int sub_command
 
       if (lGetPosViaElem(modp, UP_xacl)>=0 || 
           lGetPosViaElem(modp, UP_acl)>=0) {
-         if (multiple_occurrencies( alpp,
+         if (multiple_occurances( alpp,
                lGetList(modp, UP_acl),
                lGetList(modp, UP_xacl),
                US_name, userprj, 

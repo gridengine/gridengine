@@ -527,7 +527,7 @@ int nm
       }
 
       running = lGetUlong(jat, JAT_status)==JRUNNING ||
-                  lGetUlong(jat, JAT_status)==JTRANSITING;
+                  lGetUlong(jat, JAT_status)==JTRANSFERING;
 
       /* scaled cpu usage */
       if (!(up = lGetSubStr(jat, UA_name, USAGE_ATTR_CPU, JAT_scaled_usage_list)))
@@ -618,7 +618,7 @@ const char *field
       }     
 
       running = lGetUlong(jat, JAT_status)==JRUNNING ||
-                  lGetUlong(jat, JAT_status)==JTRANSITING;
+                  lGetUlong(jat, JAT_status)==JTRANSFERING;
 
       /* scaled mem usage */
       if (!(up = lGetSubStr(jat, UA_name, field,
@@ -668,7 +668,7 @@ int nm
       }     
 
       running = lGetUlong(jat, JAT_status)==JRUNNING ||
-                  lGetUlong(jat, JAT_status)==JTRANSITING;
+                  lGetUlong(jat, JAT_status)==JTRANSFERING;
 
       /* scaled io usage */
       if (!(up = lGetSubStr(jat, UA_name, USAGE_ATTR_IO,
@@ -993,13 +993,13 @@ int nm
 
       if (tstatus==JRUNNING) {
          tstate |= JRUNNING;
-         tstate &= ~JTRANSITING;
-      } else if (tstatus==JTRANSITING) {
-         tstate |= JTRANSITING;
+         tstate &= ~JTRANSFERING;
+      } else if (tstatus==JTRANSFERING) {
+         tstate |= JTRANSFERING;
          tstate &= ~JRUNNING;
       } else if (tstatus==JFINISHED) {
          tstate |= JEXITING;
-         tstate &= ~(JRUNNING|JTRANSITING);
+         tstate &= ~(JRUNNING|JTRANSFERING);
       }
 
       /* check suspension of queue */

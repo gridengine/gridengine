@@ -1,3 +1,5 @@
+CR-2002-04-12-0: Bugfix:    corrected spelling mistakes
+
 CR-2002-04-11-4: Testsuite: - only produce warning when re_init core
                               system resets cluster/schedd configuration
                             - removed DEMO category

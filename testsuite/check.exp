@@ -2149,7 +2149,7 @@ proc check_executable_files {  } {
 
    if { $file_error != 0 } {
       while { 1 } {
-         puts $CHECK_OUTPUT "should I set the file permissons to 00755? (yes/no)"
+         puts $CHECK_OUTPUT "should I set the file permissions to 00755? (yes/no)"
          gets stdin answer
          if { [ string compare $answer "yes" ] == 0 } {
             foreach elem $change_files {

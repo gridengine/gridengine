@@ -1790,7 +1790,7 @@ char **argv
                break;
    
             case JRUNNING:
-            case JTRANSITING:
+            case JTRANSFERING:
                VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D, u32c(job_id)));
    
                /* in case of qlogin: has been scheduled / is transitting just after */

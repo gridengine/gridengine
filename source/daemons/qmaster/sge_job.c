@@ -2333,7 +2333,7 @@ int *trigger
       DPRINTF(("got new JB_notify\n")); 
       lSetUlong(new_job, JB_notify, lGetUlong(jep, JB_notify));
       *trigger |= MOD_EVENT;
-      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_NOTIFYBEHAVIOR, u32c(jobid));
+      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_NOTIFYBEHAVIOUR, u32c(jobid));
       sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
    }
 
@@ -2521,7 +2521,7 @@ int *trigger
       lListElem *ja_task;
    
       for_each(ja_task, lGetList(new_job, JB_ja_tasks)) {
-         if (lGetUlong(ja_task, JAT_status) & JTRANSITING || 
+         if (lGetUlong(ja_task, JAT_status) & JTRANSFERING || 
              lGetUlong(ja_task, JAT_status) & JRUNNING) {
             ERROR((SGE_EVENT, MSG_SGETEXT_CANT_MOD_RUNNING_JOBS_U, u32c(jobid)));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);

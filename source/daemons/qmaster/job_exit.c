@@ -148,9 +148,9 @@ lListElem *jatep
 
    /*-------------------------------------------------*/
 
-   /* test if this job is in state JRUNNING or JTRANSITING */
+   /* test if this job is in state JRUNNING or JTRANSFERING */
    if (lGetUlong(jatep, JAT_status) != JRUNNING && 
-       lGetUlong(jatep, JAT_status) != JTRANSITING) {
+       lGetUlong(jatep, JAT_status) != JTRANSFERING) {
       ERROR((SGE_EVENT, MSG_JOB_JEXITNOTRUN_UU, u32c(lGetUlong(jep, JB_job_number)), u32c(jataskid)));
       return;
    }

@@ -67,6 +67,10 @@ int sig
    do_shutdown = 1;
 }
 
+const char* my_application_tag_name(unsigned long tag) {
+   return "DEFAULT_APPLICATION_TAG";
+}
+
 unsigned long my_application_status(char** info_message) {
    if ( info_message != NULL ) {
       (*info_message) = strdup("not specified (state 1)");
@@ -158,9 +162,11 @@ extern int main(int argc, char** argv)
   cl_com_set_alias_file("./alias_file");
 
   cl_com_set_status_func(my_application_status); 
+ 
+  cl_com_set_tag_name_func(my_application_tag_name);
 
 
-  handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, 0, "server", 1, 2, 0 );
+  handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, 0, "server", 1, 1, 0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(-1);

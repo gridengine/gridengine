@@ -102,7 +102,7 @@ static void dump_rcv_info(cl_com_message_t** message, cl_com_endpoint_t** sender
       DEBUG((SGE_EVENT,"<<<<<<<<<<<<<<<<<<<<\n"));
       DEBUG((SGE_EVENT,"gdi_rcv: reseived message from %s/%s/"U32CFormat": \n",(*sender)->comp_host, (*sender)->comp_name, u32c((*sender)->comp_id)));
       DEBUG((SGE_EVENT,"gdi_rcv: cl_xml_ack_type_t: %s\n",            cl_com_get_mih_mat_string((*message)->message_mat)));
-      DEBUG((SGE_EVENT,"gdi_rcv: message tag:       %s\n",            sge_dump_message_tag( (int) (*message)->message_tag) ));
+      DEBUG((SGE_EVENT,"gdi_rcv: message tag:       %s\n",            sge_dump_message_tag( (*message)->message_tag) ));
       DEBUG((SGE_EVENT,"gdi_rcv: message id:        "U32CFormat"\n",  u32c((*message)->message_id) ));
       DEBUG((SGE_EVENT,"gdi_rcv: receive time:      %s\n",            sge_ctime((*message)->message_receive_time.tv_sec, &ds)));
       DEBUG((SGE_EVENT,"<<<<<<<<<<<<<<<<<<<<\n"));
@@ -126,7 +126,7 @@ static void dump_snd_info(char* un_resolved_hostname, char* component_name, unsi
       DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
       DEBUG((SGE_EVENT,"gdi_snd: sending message to %s/%s/"U32CFormat": \n", (char*)un_resolved_hostname,(char*)component_name ,u32c(component_id)));
       DEBUG((SGE_EVENT,"gdi_snd: cl_xml_ack_type_t: %s\n",            cl_com_get_mih_mat_string(ack_type)));
-      DEBUG((SGE_EVENT,"gdi_snd: message tag:       %s\n",            sge_dump_message_tag( (int) tag) ));
+      DEBUG((SGE_EVENT,"gdi_snd: message tag:       %s\n",            sge_dump_message_tag( tag) ));
       if (mid) {
          DEBUG((SGE_EVENT,"gdi_snd: message id:        "U32CFormat"\n",  u32c(*mid) ));
       } else {

@@ -710,7 +710,7 @@ int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
    int ret_val;
    cl_log_list_elem_t* elem = NULL;
    struct timeval now;
-   
+
    
    if (list_p == NULL) {
       return CL_RETVAL_LOG_NO_LOGLIST;
@@ -727,20 +727,36 @@ int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
 
       printf("%-76s|", elem->log_module_name);
       if (elem->log_parameter == NULL) {
-         printf("%ld.%ld : %15s|%4d|%10s|%8s| %s\n",
+#define CL_COM_PRINT_THREAD_ID 0
+
+#if CL_COM_PRINT_THREAD_ID
+         printf("%ld.%ld|%20s|%4d|%10s|%8s| %s\n",
+#else
+         printf("%ld.%ld|%20s|%10s|%8s| %s\n",
+#endif
+
          (long)now.tv_sec,
          (long)now.tv_usec,
          elem->log_thread_name,
+#if CL_COM_PRINT_THREAD_ID
          elem->log_thread_id, 
+#endif
          cl_thread_convert_state_id(elem->log_thread_state),
          cl_log_list_convert_type_id(elem->log_type),
          elem->log_message);
       } else {
-         printf("%ld.%ld : %15s|%4d|%10s|%8s| %s %s\n",
+#if CL_COM_PRINT_THREAD_ID
+         printf("%ld.%ld|%20s|%4d|%10s|%8s| %s %s\n",
+#else
+         printf("%ld.%ld|%20s|%10s|%8s| %s %s\n",
+#endif
+
          (long)now.tv_sec,
          (long)now.tv_usec,
          elem->log_thread_name,
+#if CL_COM_PRINT_THREAD_ID
          elem->log_thread_id, 
+#endif
          cl_thread_convert_state_id(elem->log_thread_state),
          cl_log_list_convert_type_id(elem->log_type),
          elem->log_message,

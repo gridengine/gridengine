@@ -130,6 +130,153 @@ int cl_com_free_message(cl_com_message_t** message) {   /* CR check */
    return CL_RETVAL_OK;
 }
 
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_add_debug_message()"
+int cl_com_add_debug_message(cl_com_connection_t* connection, const char* message, cl_com_message_t* ms) {
+   cl_com_handle_t* handle = NULL;
+   struct timeval now;
+   char tmp_buffer[1024];
+   char sender[256];
+   char receiver[256];
+   char message_time[256];
+   char xml_buffer[512];
+
+   const char*     message_tag = NULL;
+   char*           xml_data = "<xml data not available>";
+   char*           snd_host = "?";
+   char*           snd_comp = "?";
+   unsigned long   snd_id   = 0;
+   char*           rcv_host = "?";
+   char*           rcv_comp = "?";
+   unsigned long   rcv_id   = 0;
+   cl_bool_t       outgoing = CL_FALSE;
+   char*           direction = "<-";
+
+   double time_now = 0.0;
+   double msg_time = 0.0;
+   
+
+   if (connection == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   handle = connection->handler;
+   if (handle == NULL) {
+      return CL_RETVAL_HANDLE_NOT_FOUND;
+   }
+   if (handle->debug_list == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   gettimeofday(&now,NULL);
+   time_now = now.tv_sec + (now.tv_usec / 1000000.0);
+   if (ms->message_send_time.tv_sec != 0) {
+      outgoing = CL_TRUE;
+      msg_time = ms->message_send_time.tv_sec + (ms->message_send_time.tv_usec / 1000000.0);
+      snprintf(message_time,256,"snd: %.6f", msg_time);
+   } else {
+      msg_time = ms->message_receive_time.tv_sec + (ms->message_receive_time.tv_usec / 1000000.0);
+      snprintf(message_time,256,"rcv: %.6f", msg_time);
+   }
+   if (outgoing == CL_TRUE) {
+      direction = "->";
+   }
+   if (connection->local != NULL) {
+      if (connection->local->comp_host != NULL) {
+         snd_host = connection->local->comp_host;
+      }
+      if (connection->local->comp_name != NULL) {
+         snd_comp = connection->local->comp_name;
+      }
+      snd_id = connection->local->comp_id;
+   }
+   if (connection->remote != NULL) {
+      if (connection->remote->comp_host != NULL) {
+         rcv_host = connection->remote->comp_host;
+      }
+      if (connection->remote->comp_name != NULL) {
+         rcv_comp = connection->remote->comp_name;
+      }
+      rcv_id = connection->remote->comp_id;
+   }
+
+
+   snprintf(sender,256,"%s/%s/%lu", snd_host, snd_comp, snd_id);
+   snprintf(receiver,256,"%s/%s/%lu", rcv_host, rcv_comp, rcv_id);
+
+
+   if (ms != NULL) {
+      char* info=(char*)message;
+      if (info == NULL) {
+         info = "no info";
+      }
+
+      if (connection->tag_name_func != NULL && ms->message_tag != 0) {
+         message_tag = connection->tag_name_func(ms->message_tag);
+      } else {
+         CL_LOG(CL_LOG_INFO,"no message tag function set");
+      }
+
+
+      switch(ms->message_df) {
+         case CL_MIH_DF_UNDEFINED:
+         case CL_MIH_DF_BIN:
+            break;
+         default: {
+            if (ms->message_length < 511) { 
+               memcpy(xml_buffer, ms->message, ms->message_length);
+               xml_buffer[ms->message_length] = 0;
+               xml_data = xml_buffer;
+            }
+         }
+      }
+
+      if (message_tag == NULL) {
+         /* INFO: this output format has to change when CL_DEFINE_MAX_MESSAGE_ID is changed */
+         snprintf(tmp_buffer,1024,"%.6f %30s %s %30s: %4s %4s tag:%25lu id:%6lu rid:%6lu len:%6lu %s %s (%s)\n", 
+                                           time_now,
+                                           sender,
+                                           direction,
+                                           receiver,
+                                           cl_com_get_mih_df_string(ms->message_df), 
+                                           cl_com_get_mih_mat_string(ms->message_mat),
+                                           ms->message_tag,
+                                           ms->message_id,
+                                           ms->message_response_id,
+                                           ms->message_length,
+                                           message_time,
+                                           xml_data,
+                                           info ); 
+       } else {
+          /* INFO: this output format has to change when CL_DEFINE_MAX_MESSAGE_ID is changed */
+         snprintf(tmp_buffer,1024,"%.6f %30s %s %30s: %4s %4s tag:%25s id:%6lu rid:%6lu len:%6lu %s %s (%s)\n", 
+                                           time_now,
+                                           sender,
+                                           direction,
+                                           receiver,
+                                           cl_com_get_mih_df_string(ms->message_df), 
+                                           cl_com_get_mih_mat_string(ms->message_mat),
+                                           message_tag,
+                                           ms->message_id,
+                                           ms->message_response_id,
+                                           ms->message_length,
+                                           message_time,
+                                           xml_data,
+                                           info ); 
+
+       }
+   } else {
+      if ( message != NULL) {
+         snprintf(tmp_buffer,1024,"%d.%d: %s", (int)now.tv_sec, (int)now.tv_usec, message);
+      }
+   }
+
+   return cl_string_list_append_string(handle->debug_list, tmp_buffer, 1);
+}
+
+
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
@@ -226,6 +373,7 @@ int cl_com_create_connection(cl_com_connection_t** connection) {
    /* init connection struct */
    (*connection)->crm_state_error = NULL;
    (*connection)->error_func      = NULL;
+   (*connection)->tag_name_func   = NULL;
    (*connection)->com_private     = NULL;
    (*connection)->ccm_received = 0;
    (*connection)->ccm_sent = 0;
@@ -295,6 +443,9 @@ int cl_com_create_connection(cl_com_connection_t** connection) {
       cl_com_close_connection(connection);
       return ret_val;
    }
+
+   /* set application callback function pionters */
+   cl_com_setup_callback_functions(*connection);
 
    return CL_RETVAL_OK;   
 }

@@ -85,7 +85,7 @@ static int gdi_general_communication_error = CL_RETVAL_OK;
 *  NOTES
 *     MT-NOTE: sge_dump_message_tag() is MT safe 
 *******************************************************************************/
-const char* sge_dump_message_tag(int tag) {
+const char* sge_dump_message_tag(unsigned long tag) {
    switch (tag) {
       case TAG_NONE:
          return "TAG_NONE";
@@ -394,10 +394,18 @@ void prepare_enroll(const char *name)
    /* reresolve qualified hostname with use of host aliases */
    reresolve_me_qualified_hostname();
 
+   /* set error function */
    ret_val = cl_com_set_error_func(general_communication_error);
    if (ret_val != CL_RETVAL_OK) {
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
+
+   /* set tag name function */
+   ret_val = cl_com_set_tag_name_func(sge_dump_message_tag);
+   if (ret_val != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+   }
+
 
    me_who = uti_state_get_mewho();
 

@@ -105,11 +105,13 @@ int cl_com_get_auto_close_mode(cl_com_handle_t* handle, cl_xml_connection_autocl
 int cl_com_set_max_connection_close_mode(cl_com_handle_t* handle, cl_max_count_t mode);
 int cl_com_get_max_connection_close_mode(cl_com_handle_t* handle, cl_max_count_t* mode);
 
-  /* application can set application status for SIRM messages */
+/* application can set application status for SIRM messages */
 int cl_com_set_status_func(cl_app_status_func_t status_func);
-
-
+/* application can set an error function */
 int cl_com_set_error_func(cl_error_func_t error_func);
+int cl_com_set_tag_name_func(cl_tag_name_func_t tag_name_func);
+int cl_com_setup_callback_functions(cl_com_connection_t* connection);
+
 
 
 

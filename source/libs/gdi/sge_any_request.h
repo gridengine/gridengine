@@ -69,7 +69,7 @@ enum {
 
 };
 
-const char* sge_dump_message_tag(int tag);
+const char* sge_dump_message_tag(unsigned long tag);
 int check_isalive(const char *masterhost);
 void prepare_enroll(const char *name);
 int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, const char *commproc, int id, sge_pack_buffer *pb, int tag, u_long32 response_id, lList **alpp);

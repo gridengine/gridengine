@@ -56,7 +56,8 @@
 
 static int cl_commlib_check_callback_functions(void);
 static int cl_commlib_check_connection_count(cl_com_handle_t* handle);
-static int cl_commlib_calculate_statistic(cl_com_handle_t* handle, int lock_list);
+static int cl_commlib_calculate_statistic(cl_com_handle_t* handle,  cl_bool_t force_update ,int lock_list);
+static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lock_list);
 
 static int cl_commlib_handle_connection_read(cl_com_connection_t* connection);
 static int cl_commlib_handle_connection_write(cl_com_connection_t* connection);
@@ -156,6 +157,9 @@ static cl_app_status_func_t   cl_com_application_status_func = NULL;
 static pthread_mutex_t cl_com_error_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cl_error_func_t   cl_com_error_status_func = NULL;
 
+/* global application function pointer for getting tag id names */
+static pthread_mutex_t cl_com_tag_name_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cl_tag_name_func_t   cl_com_tag_name_func = NULL;
 
 
 #ifdef __CL_FUNCTION__
@@ -225,6 +229,40 @@ int cl_com_set_error_func(cl_error_func_t error_func) {
    return CL_RETVAL_OK;
 }
 
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_set_tag_name_func()"
+int cl_com_set_tag_name_func(cl_tag_name_func_t tag_name_func) {
+   pthread_mutex_lock(&cl_com_tag_name_mutex);
+   cl_com_tag_name_func = *tag_name_func;
+   pthread_mutex_unlock(&cl_com_tag_name_mutex);
+   return CL_RETVAL_OK;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_setup_callback_functions()"
+int cl_com_setup_callback_functions(cl_com_connection_t* connection) {
+   if (connection == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   /* set global error function from application */
+   pthread_mutex_lock(&cl_com_error_mutex);
+   connection->error_func = cl_com_error_status_func;
+   pthread_mutex_unlock(&cl_com_error_mutex);
+
+   /* set global tag name function from application */
+   pthread_mutex_lock(&cl_com_tag_name_mutex);
+   connection->tag_name_func = cl_com_tag_name_func;
+   pthread_mutex_unlock(&cl_com_tag_name_mutex);
+
+   return CL_RETVAL_OK;
+}
 
 
 #ifdef __CL_FUNCTION__
@@ -647,6 +685,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
 
    new_handle->local = NULL;
+   new_handle->debug_list = NULL;
    new_handle->messages_ready_for_read = 0;
    new_handle->messages_ready_mutex = NULL;
    new_handle->connection_list_mutex = NULL;
@@ -869,6 +908,15 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    if (new_handle->service_provider == CL_TRUE) {
       /* create service */
+
+#define ENABLE_DEBUG_CLIENTS 0 /* TODO: set this to 1 if we want support debug clients */
+#if ENABLE_DEBUG_CLIENTS      
+      /* This list is only for debug clients (comp_name = "debug_client" )*/
+      if ((return_value=cl_string_list_setup(&(new_handle->debug_list), "debug list")) != CL_RETVAL_OK) {
+         CL_LOG(CL_LOG_ERROR,"could not setup debug information list");
+      }
+#endif
+
       cl_com_connection_t* new_con = NULL;
 
       CL_LOG(CL_LOG_INFO,"creating service ...");
@@ -1126,6 +1174,9 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
                ignore_timeout = CL_FALSE;
             }
          }
+         if ( elem->connection->data_flow_type == CL_CM_CT_STREAM) {
+            elem->connection->connection_state = CL_CLOSING;
+         }
          elem = cl_connection_list_get_next_elem(elem);
       }
       cl_raw_list_unlock(handle->connection_list);
@@ -1321,6 +1372,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
       if (handle->service_provider == CL_TRUE) {
          cl_com_connection_request_handler_cleanup(handle->service_handler);
          cl_com_close_connection(&(handle->service_handler));
+         cl_string_list_cleanup(&(handle->debug_list));
       }
    
       cl_connection_list_cleanup(&(handle->connection_list));
@@ -1378,12 +1430,6 @@ int cl_com_setup_connection(cl_com_handle_t* handle, cl_com_connection_t** conne
             break;
          }
       }
-      if (ret_val == CL_RETVAL_OK) {
-         pthread_mutex_lock(&cl_com_error_mutex);
-         (*connection)->error_func = cl_com_error_status_func;
-         pthread_mutex_unlock(&cl_com_error_mutex);
-      }
-
    }
    return ret_val;
 }
@@ -2047,7 +2093,8 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
    /* calculate statistics each second */
    gettimeofday(&now,NULL);
    if (handle->statistic->last_update.tv_sec != now.tv_sec) {
-      cl_commlib_calculate_statistic(handle, 1);
+      cl_commlib_calculate_statistic(handle, CL_FALSE, 1); /* do not force update */
+      cl_commlib_handle_debug_clients(handle, CL_TRUE);
    }
 
 
@@ -2477,6 +2524,8 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             }
          }
 
+         cl_com_add_debug_message(connection, NULL, message);
+
          switch(message->message_df) {
             case CL_MIH_DF_BIN:
                CL_LOG(CL_LOG_INFO,"received binary message");
@@ -2538,7 +2587,8 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                   cl_com_handle_t* handle = connection->handler;
                   char* application_info = "not available";
                   
-                  cl_commlib_calculate_statistic(handle,0);
+                  /* we force an statistic update */
+                  cl_commlib_calculate_statistic(handle,CL_TRUE,0);
                   if ( handle->statistic->application_info != NULL ) {
                      application_info = handle->statistic->application_info;
                   }
@@ -2899,12 +2949,98 @@ static int cl_commlib_check_connection_count(cl_com_handle_t* handle) {
    }
    return CL_RETVAL_OK;
 } 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_commlib_handle_debug_clients()"
+static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lock_list) {
+
+   cl_connection_list_elem_t* elem = NULL;
+   cl_string_list_elem_t* string_elem = NULL;
+   char* log_string = NULL;
+   cl_bool_t list_empty = CL_FALSE;
+   
+
+   if (handle == NULL) {
+      CL_LOG(CL_LOG_ERROR,"no handle specified");
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (handle->debug_list == NULL) {
+      CL_LOG(CL_LOG_INFO,"debug clients not supported");
+      return CL_RETVAL_OK;
+   }
+
+   if (lock_list == CL_TRUE) {
+      cl_raw_list_lock(handle->connection_list);
+   }
+
+   cl_raw_list_lock(handle->debug_list);
+   CL_LOG_INT(CL_LOG_INFO, "elements to flush:", (int)cl_raw_list_get_elem_count(handle->debug_list));
+   cl_raw_list_unlock(handle->debug_list);
+
+   while(list_empty == CL_FALSE) {
+      log_string = NULL;
+      cl_raw_list_lock(handle->debug_list);
+      string_elem = cl_string_list_get_first_elem(handle->debug_list);
+      if (string_elem != NULL) {
+         cl_raw_list_remove_elem(handle->debug_list, string_elem->raw_elem);
+         log_string = string_elem->string;
+         free(string_elem);
+      } else {
+         list_empty = CL_TRUE;
+      }
+      cl_raw_list_unlock(handle->debug_list);
+      
+      if (log_string != NULL) {
+         elem = cl_connection_list_get_first_elem(handle->connection_list);
+         while(elem) {
+            cl_com_connection_t* connection = elem->connection;
+            if (connection->data_flow_type == CL_CM_CT_STREAM) {
+               if (strcmp(connection->remote->comp_name, "debug_client") == 0) {
+                  cl_com_message_t* message = NULL;
+                  char* message_text = strdup(log_string);
+
+                  if (message_text != NULL) {
+                     
+                     CL_LOG_STR_STR_INT(CL_LOG_INFO, "flushing debug client:",
+                                        connection->remote->comp_host,
+                                        connection->remote->comp_name,
+                                        (int)connection->remote->comp_id);
+                  
+                     cl_raw_list_lock(connection->send_message_list);
+                     
+                     cl_com_setup_message(&message,
+                                          connection,
+                                          message_text,
+                                          strlen(message_text),
+                                          CL_MIH_MAT_NAK,
+                                          0,
+                                          0);
+                     cl_message_list_append_message(connection->send_message_list,message,0);
+                     cl_raw_list_unlock(connection->send_message_list);
+                  }
+               }
+            }
+            elem = cl_connection_list_get_next_elem(elem);
+         }
+         free(log_string);
+         log_string = NULL;
+      }
+   }
+   
+
+   if (lock_list == CL_TRUE) {
+      cl_raw_list_unlock(handle->connection_list);
+   }
+   return CL_RETVAL_OK;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_commlib_calculate_statistic()"
-static int cl_commlib_calculate_statistic(cl_com_handle_t* handle, int lock_list) {
+static int cl_commlib_calculate_statistic(cl_com_handle_t* handle, cl_bool_t force_update ,int lock_list) {
    cl_connection_list_elem_t* elem = NULL;
    struct timeval now;
    double handle_time_last = 0.0;
@@ -2929,6 +3065,24 @@ static int cl_commlib_calculate_statistic(cl_com_handle_t* handle, int lock_list
       cl_raw_list_lock(handle->connection_list);
    }
    gettimeofday(&now,NULL);
+
+   handle_time_now = now.tv_sec + (now.tv_usec / 1000000.0);
+   handle_time_last = handle->statistic->last_update.tv_sec + (handle->statistic->last_update.tv_usec / 1000000.0 );
+   handle_time_range = handle_time_now - handle_time_last;
+
+   if ( force_update == CL_FALSE && handle_time_range < 60.0 ) {
+      /* only update once per minute */
+      CL_LOG_INT(CL_LOG_DEBUG, "skipping statistic update, time till next update:", (int) (60 - (int)handle_time_range));
+      if (lock_list != 0) {
+         cl_raw_list_unlock(handle->connection_list);
+      }
+      return CL_RETVAL_OK; 
+   }
+
+   CL_LOG(CL_LOG_INFO, "performing statistic update");
+   gettimeofday(&(handle->statistic->last_update),NULL);
+
+
    /* get application status */
    pthread_mutex_lock(&cl_com_application_mutex);
    handle->statistic->application_status = 99999;
@@ -2940,11 +3094,6 @@ static int cl_commlib_calculate_statistic(cl_com_handle_t* handle, int lock_list
       handle->statistic->application_status = cl_com_application_status_func(&(handle->statistic->application_info));
    } 
    pthread_mutex_unlock(&cl_com_application_mutex);
-
-   handle_time_now = now.tv_sec + (now.tv_usec / 1000000.0);
-   handle_time_last = handle->statistic->last_update.tv_sec + (handle->statistic->last_update.tv_usec / 1000000.0 );
-   handle_time_range = handle_time_now - handle_time_last;
-   gettimeofday(&(handle->statistic->last_update),NULL);
 
    con_per_second = handle->statistic->new_connections / handle_time_range;
    
@@ -3147,6 +3296,8 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
 
           if (cl_message_list_get_first_elem(connection->send_message_list) == NULL) {
              connection->data_write_flag = CL_COM_DATA_NOT_READY;
+          } else {
+             connection->data_write_flag = CL_COM_DATA_READY;
           }
 
           cl_raw_list_unlock(connection->send_message_list);
@@ -3363,6 +3514,8 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
           }
           connection->write_buffer_timeout_time = 0;
           gettimeofday(&message->message_send_time,NULL);
+          cl_com_add_debug_message(connection, NULL, message);
+
           /* set last transfer time of connection */
           memcpy(&connection->last_transfer_time,&message->message_send_time,sizeof(struct timeval) );
           switch(message->message_df) {
@@ -5314,7 +5467,10 @@ static void *cl_com_handle_service_thread(void *t_conf) {
          }
          cl_raw_list_unlock(cl_com_handle_list);
       } else {
-         cl_commlib_calculate_statistic(handle,1);
+         /* we don't want to force statistics update every one second */
+         cl_commlib_calculate_statistic(handle, CL_FALSE, 1);
+         /* ceck for debug clients */
+         cl_commlib_handle_debug_clients(handle, CL_TRUE);
       }
       if (wait_for_events != 0) {
          CL_LOG(CL_LOG_INFO,"wait for event ...");

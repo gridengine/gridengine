@@ -443,8 +443,10 @@ static u_long32   assign_new_dynamic_id (void);
 static void       process_acks(void);
 static void       process_sends(void);
 static void       set_flush (void);
+#if 0
 static bool       should_flush_event_client (u_long32 id, ev_event type,
                                              bool has_lock);
+#endif
 
 static void blockEvents(lListElem *event_client, ev_event ev_type, bool isBlock);
 
@@ -4151,6 +4153,7 @@ static void set_flush (void)
 *     MT-NOTE: should_flush_event_client is NOT thread safe.  It expects the
 *              caller to hold Master_Control.mutex.
 *******************************************************************************/
+#if 0
 static bool should_flush_event_client(u_long32 id, ev_event type, bool has_lock)
 {
    bool flush = false;
@@ -4185,6 +4188,7 @@ static bool should_flush_event_client(u_long32 id, ev_event type, bool has_lock)
    
    return flush;
 }
+#endif
 
 /****** sge_event_master/sge_set_commit_required() *****************************
 *  NAME

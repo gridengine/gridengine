@@ -1,3 +1,17 @@
+CR-2004-11-02-0: Enhancm.:  - added new commlib test binary: test_debug_client
+                            - added new parameter to statistic calculate function
+                              to force calculation for qping requests. Otherwise
+                              update statistics only once per minute
+                            - added debug client support into commlib
+                            - fixed bug when shutdown commlib with connected
+                              stream clients
+                            - fixed possible deadlock in commlib string list when
+                              the malloc() of an entry failed.
+                            - outcommented unused function: 
+                              should_flush_event_client()
+                 Changed:   commlib, gdilib, qmaster
+                 Review:    pending
+
 SG-2004-11-02-0: Bugfix:    - fixed a memory leak in the scheduler configuration
                             - fixed a memory leak in the scheduler. It ocoured,
                               when consumables were used as load thresholds.

@@ -181,6 +181,7 @@ typedef struct cl_com_handle_statistic_type {
 typedef struct cl_com_connection_type cl_com_connection_t;
 
 typedef struct cl_com_handle {
+   cl_raw_list_t*            debug_list;
    cl_framework_t            framework;        /* framework type CL_CT_TCP, CL_CT_SSL */
    cl_xml_connection_type_t  data_flow_type;   /* data_flow type CL_CM_CT_STREAM, CL_CM_CT_MESSAGE  */
    cl_bool_t                 service_provider; /* if true this component will provide a service for clients (server port) */
@@ -310,6 +311,7 @@ typedef struct cl_com_con_statistic_type {
 struct cl_com_connection_type {
 
    cl_error_func_t       error_func;   /* if not NULL this function is called on errors */
+   cl_tag_name_func_t    tag_name_func; /* if not NULL this function is called for debug clients to get tag id name */
 
    cl_com_endpoint_t*    remote;   /* dst on local host in CM */
    cl_com_endpoint_t*    local;    /* src on local host in CM */

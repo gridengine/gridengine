@@ -108,6 +108,9 @@ int cl_string_list_append_string(cl_raw_list_t* list_p,char* string, int lock_li
    new_elem->string = strdup(string);
    if (new_elem->string == NULL) {
       free(new_elem);
+      if (lock_list == 1) {
+         cl_raw_list_unlock(list_p);
+      }
       return CL_RETVAL_MALLOC;
    }
    new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
@@ -120,7 +123,7 @@ int cl_string_list_append_string(cl_raw_list_t* list_p,char* string, int lock_li
       return CL_RETVAL_MALLOC;
    }
    
-   /* unlock the thread list */
+   /* unlock the list */
    if (lock_list == 1) {
       if (  ( ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
          return ret_val;

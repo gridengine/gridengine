@@ -144,6 +144,23 @@ NAMEEND
 
 #define AINTERS sizeof(AINTERN)/sizeof(char*)
 
+enum {
+   ASTRING_href = AINTER_LOWERBOUND,
+   ASTRING_value                    
+};
+
+LISTDEF(ASTRING_Type)
+   SGE_HOST(ASTRING_href, CULL_HASH | CULL_UNIQUE)
+   SGE_STRING(ASTRING_value, CULL_DEFAULT)
+LISTEND 
+
+NAMEDEF(ASTRINGN)
+   NAME("ASTRING_href")
+   NAME("ASTRING_value")
+NAMEEND
+
+#define ASTRINGS sizeof(ASTRINGN)/sizeof(char*)
+
 /* *INDENT-ON* */  
 
 #ifdef  __cplusplus

@@ -207,14 +207,15 @@ extern "C" {
 
       {JJ_LOWERBOUND, JJS, JJN},        /* JAPI job */
       {JJAT_LOWERBOUND, JJATS, JJATN},  /* JAPI array task */
-      {ASTR_LOWERBOUND, ASTRS, ASTRN},       /* CQ string sublist */
-      {AULNG_LOWERBOUND, AULNGS, AULNGN},    /* CQ u_long32 sublist */
-      {ABOOL_LOWERBOUND, ABOOLS, ABOOLN},    /* CQ bool sublist */
-      {ATIME_LOWERBOUND, ATIMES, ATIMEN},    /* CQ time limit sublist */
-      {AMEM_LOWERBOUND, AMEMS, AMEMN},       /* CQ memory limit sublist */
-      {AINTER_LOWERBOUND, AINTERS, AINTERN}, /* CQ interval sublist */
-      {CQ_LOWERBOUND, CQS, CQN},             /* Cluster Queue list */
-      {FCAT_LOWERBOUND, FCATS, FCATN},       /* Functional category */
+      {ASTR_LOWERBOUND, ASTRS, ASTRN},          /* CQ string sublist */
+      {AULNG_LOWERBOUND, AULNGS, AULNGN},       /* CQ u_long32 sublist */
+      {ABOOL_LOWERBOUND, ABOOLS, ABOOLN},       /* CQ bool sublist */
+      {ATIME_LOWERBOUND, ATIMES, ATIMEN},       /* CQ time limit sublist */
+      {AMEM_LOWERBOUND, AMEMS, AMEMN},          /* CQ memory limit sublist */
+      {AINTER_LOWERBOUND, AINTERS, AINTERN},    /* CQ interval sublist */
+      {ASTRING_LOWERBOUND, ASTRINGS, ASTRINGN}, /* CQ string sublist */
+      {CQ_LOWERBOUND, CQS, CQN},                /* Cluster Queue list */
+      {FCAT_LOWERBOUND, FCATS, FCATN},          /* Functional category */
 
       {0, 0, NULL}
    };

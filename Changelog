@@ -1,3 +1,5 @@
+EB-2003-08-19-0: Enhancem.: Added CQ parameter
+
 SG-2003-08-19-1: Bugfix:   - "Qstat -F complex_name" did not filter for the complex_name and 
                              displayed all complexes
                            - working on large job lists was very slow due to the hashing. This

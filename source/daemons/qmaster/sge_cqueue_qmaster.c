@@ -68,6 +68,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    DENTER(TOP_LAYER, "cqueue_mod");
 
    if (ret) {
+      DTRACE;
       pos = lGetPosViaElem(reduced_elem, CQ_name);
 
       if (pos >= 0) {
@@ -75,6 +76,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
 
          if (add) {
             if (!verify_str_key(answer_list, name, "cqueue")) {
+               DTRACE;
                lSetString(cqueue, CQ_name, name);
             } else {
                ERROR((SGE_EVENT, MSG_CQUEUE_NAMENOTGUILTY_S, name));
@@ -101,6 +103,292 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
       }
    } 
 
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_seq_no);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_seq_no, lCopyList("", list));
+      }
+   }
+
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_nsuspend);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_nsuspend, lCopyList("", list));
+      }
+   }
+
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_job_slots);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_job_slots, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_fshare);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_fshare, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_oticket);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_oticket, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_rerun);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_rerun, lCopyList("", list));
+      }
+   }
+
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_s_fsize);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_s_fsize, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_h_fsize);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_h_fsize, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_s_data);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_s_data, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_h_data);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_h_data, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_s_stack);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_s_stack, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_h_stack);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_h_stack, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_s_core);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_s_core, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_h_core);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_h_core, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_s_rss);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_s_rss, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_h_rss);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_h_rss, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_s_vmem);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_s_vmem, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_h_vmem);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_h_vmem, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_s_rt);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_s_rt, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_h_rt);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_h_rt, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_s_cpu);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_s_cpu, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_h_cpu);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_h_cpu, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_suspend_interval);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_suspend_interval, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_min_cpu_interval);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_min_cpu_interval, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_notify);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_notify, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_tmpdir);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_tmpdir, lCopyList("", list));
+      }
+   }
+   
    DEXIT;
    if (ret) {
       return 0;

@@ -76,13 +76,13 @@ const char *fname
 *     value[][1025]) 
 *
 *  FUNCTION
-*     ??? 
+*     Reads in an array of configuration file entries
 *
 *  RESULT
-*     int - 
+*     int - 0 on success
 *
 *  BUGS
-*     
+*     Function can not differ multiple similar named entries.
 *******************************************************************************/
 int get_confval_array(
 const char *fname,

@@ -1,3 +1,9 @@
+EB-2001-11-13-0: Bugfix (Issue #92; Bugtraq #4525963):
+                  - Qmaster did not change the reschedule unknown
+                    value immediately after using the qconf command.
+                 Modified binaries:
+                  - qmaster  
+
 CR-2001-11-08-0: Testsuite:
                     - adapted default haftime scheduler parameter from 24 to 168
                     - new debug parameters chanched behaviour of performance 

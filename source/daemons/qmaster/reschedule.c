@@ -876,7 +876,87 @@ void update_reschedule_unknown_list_for_job(lListElem *host,
       }
    }
    DEXIT;
-}       
+}      
+
+/****** reschedule/update_reschedule_unknown_timout_values() ******************
+*  NAME
+*     update_reschedule_unknown_timout_values() -- change cached timeout value 
+*
+*  SYNOPSIS
+*     void update_reschedule_unknown_timout_values(const char *config_name) 
+*
+*  FUNCTION
+*     This functions changes all reschedule unknown values cached within
+*     the exec host objects. 'config_name' may either be 'global' or
+*     the name of a local configuration. 
+*
+*  INPUTS
+*     const char *config_name - configuration name 
+*
+*  RESULT
+*     void - none
+******************************************************************************/
+void update_reschedule_unknown_timout_values(const char *config_name) 
+{
+   if (strcmp(SGE_GLOBAL_NAME, config_name) == 0) {
+      lListElem *host;
+ 
+      for_each(host, Master_Exechost_List) {
+         if (strcmp(SGE_GLOBAL_NAME, lGetString(host, EH_name)) != 0 &&
+             strcmp(SGE_TEMPLATE_NAME, lGetString(host, EH_name)) != 0) {
+ 
+            update_reschedule_unknown_timeout(host);
+         }
+      }
+   } else if (strcmp(SGE_GLOBAL_NAME, config_name) != 0 &&
+              strcmp(SGE_TEMPLATE_NAME, config_name) != 0){
+      lListElem *host = lGetElemHost(Master_Exechost_List, EH_name, config_name); 
+      update_reschedule_unknown_timeout(host);
+   }       
+}
+
+/****** reschedule/update_reschedule_unknown_timeout() ************************
+*  NAME
+*     update_reschedule_unknown_timeout() -- Cache the timeout value in host 
+*
+*  SYNOPSIS
+*     void update_reschedule_unknown_timeout(lListElem *host) 
+*
+*  FUNCTION
+*     The Function copies the timout value of the global/local configuration 
+*     for a certain host within the exec host object.  
+*
+*  INPUTS
+*     lListElem *host - exec host (EH_Type)
+*
+*  RESULT
+*     void - none
+******************************************************************************/
+void update_reschedule_unknown_timeout(lListElem *host) 
+{
+   lListElem *config_elem = NULL; /* CF_Type */
+   const char *hostname = NULL;
+   u_long32 timeout = 0;
+   
+   DENTER(TOP_LAYER, "update_reschedule_unknown_timeout");
+   hostname = lGetString(host, EH_name);
+   timeout = lGetUlong(host, EH_reschedule_unknown);
+   config_elem = get_local_conf_val(hostname, "reschedule_unknown");
+   if (config_elem != NULL) {
+      const char *value = lGetString(config_elem, CF_value);
+
+      if (!parse_ulong_val(NULL, &timeout, TYPE_TIM, value, NULL, 0)) {
+         ERROR((SGE_EVENT, MSG_OBJ_RESCHEDULEUNKN_SS, hostname, value));
+         timeout = 0;
+      } 
+   } else {
+      timeout = 0;
+   }
+   DPRINTF(("reschedule_unknown timeout for host "SFN" is "u32"\n",
+            hostname, timeout));
+   lSetUlong(host, EH_reschedule_unknown, timeout); 
+   DEXIT; 
+} 
 
 /****** reschedule/reschedule_unknown_timeout() ********************************
 *  NAME
@@ -909,10 +989,13 @@ u_long32 reschedule_unknown_timeout(lListElem *hep)
    timeout = lGetUlong(hep, EH_reschedule_unknown);
    /* cache reschedule_unknown parameter in execd host to
       prevent host name resolving */
+   DTRACE;
    if (new_config || not_init) {
+      DTRACE;
       if (!(cfep = get_local_conf_val(host, "reschedule_unknown"))
           || (cfep && !parse_ulong_val(NULL, &timeout, TYPE_TIM,
               lGetString(cfep, CF_value), NULL, 0))) {
+         DTRACE;
          if (cfep) {
             ERROR((SGE_EVENT, MSG_OBJ_RESCHEDULEUNKN_SS,
                host, lGetString(cfep, CF_value)));

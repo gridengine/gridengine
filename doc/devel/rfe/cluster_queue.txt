@@ -1,220 +1,276 @@
-HOMOGENEOUS HOST CHARACTERISTIC CATEGORIES
-==========================================
-- reduce the overall amount of queues in homogenious environments
+                            Specification of Cluster Queues
 
-Cluster Queue (CQ)
-==================
- 
-- CQs replace the GE/GEEE-queues
-- CQs are assigned to at least one host
-- Each CQ has one or more Queue Incarnations (QI)
-- A CQ has a maximum of one QI per host
-- A CQ assigned to one host corresponds one QI
-- All QIs of a CQ have the same configurable attributes (slots, seq_no, ...)
- 
-Possible Syntax
-===============
- 
-QueueList := QueueName [{[","] QueueName}].
- 
-ClusterQueueList := CQN [{[","] CQN }].
- 
-QueueName := CQN | QIN.
- 
-CQN := CQName.
- 
-QIN := (CQName "@" Hostname) |
-       (CQName "@"  Hostname [{":" Hostname}] ).
- 
-CQName := <<<Syntax_for_queues_as_before>>>
- 
-Hostname := <<<Short_or_long_hostname>>>
- 
-Examples for QueueList:
- 
-   big
-   big@lis
-   big@lis:balrog,small@aragorn
-   big@lis:balrog:fangorn small
- 
-Changes in the current behaviour
-================================
- 
-Subordinate list of a CQ:
-- Only CQNs are allowed for the "subordinale_list"-Attribute of a CQ
-- A relationship between two CQs does not cause limitations in respect of
-  host sets of both CQs (overlapping)
-- Add/Modify requests which do not fulfil the conditions above will
-  result in a corresponding error message.
- 
-Queue references used in PEs and CKPTs:
-- CQNs and QINs are both allowed in the "queue_list" field
- 
-Properties of CQs:
-- For qstat, qmon and other client commands it is necessary to
-  hold a table in qmaster which is used to identify how many
-  QIs are in a certain state.
- 
-GDI:
-- One CULL-Queue-Object represents a CQ
-- The hostname-field will be converted into a list of hostnames
-  (hostname groups?). 
-- The keyword "all" should be allowed.
-- A sublist will be added to the Queue-Object which holds QIs
-  information.
-- Each QI object containes the hostname and a set of attributes necessary to
-  administer QIs
-- For client applications it is only possible to address CQs (not CIs)
-- The GDI subcommand can be used to modify object entries of a sublist    
+                                    Ernst Bablick
+                                    Andreas Haas
 
-Client modification
-===================
-- qconf commands using queuenames will await CQNs
-- Output commands for queues show CQ information and not QI data
-- All client commands (except qconf) which expect queuenames as parameter
-  have to handle "QueueList"s
-- Qutput of client commands (except qconf) will be as before.
-  QI information will be displayed.
-- Even if a CQ has only one QI the whole QIN including the hostname will
-  be printed.
- 
-qconf
------
- 
-aq- mq- dq- option
-mattr- dattr- rattr- aattr-Optionen fuer die queue:
-- Modifications apply to all QIs of a QC
-- "hostname" may be a list of hostnames
- 
-sq-option;
-- shows a CQ with all attributs
- 
-sql-Option:
-- shows a list of all existing CQs
- 
-cq-option:
-- CQNs or CINs
- 
-NEW-option (-scql [ClusterQueueList]):
-- show a list of all existing QIs
-- if user specified "ClusterQueueList" then only those QIs will be
-  displayed
 
-qstat
------
+This specifies the design of two different work packages. The optional WP 2 
+requires WP 1 to be finished.
 
-without Options
-- Shows QIN in the "queue" column
+1. WP1: HOMOGENEOUS HOST CHARACTERISTIC CATEGORIES
 
-f-Option
-- list of all QIs
-- "queuename" shows QIN
+   - reduce the overall amount of queues in homogenious environments
 
-q-Option
-- Shows QINS in the output even if CQNs are used as Parameter
+   Cluster Queue (CQ)
+   ==================
+    
+   - CQs replace the GE/GEEE-queues
+   - CQs are assigned to at least one host
+   - Each CQ has one or more Queue Incarnations (QI)
+   - A CQ has a maximum of one QI per host
+   - A CQ assigned to one host corresponds one QI
+   - All QIs of a CQ have the same configurable attributes (slots, seq_no, ...)
+    
+   Possible Syntax
+   ===============
+    
+   QueueList := QueueName [{[","] QueueName}].
+    
+   ClusterQueueList := CQN [{[","] CQN }].
+    
+   QueueName := CQN | QIN.
+    
+   CQN := CQName.
+    
+   QIN := (CQName "@" Hostname) |
+          (CQName "@"  Hostname [{":" Hostname}] ).
+    
+   CQName := <<<Syntax_for_queues_as_before>>>
+    
+   Hostname := <<<Short_or_long_hostname>>>
+    
+   Examples for QueueList:
+    
+      big
+      big@lis
+      big@lis:balrog,small@aragorn
+      big@lis:balrog:fangorn small
+    
+   Changes in the current behaviour
+   ================================
+    
+   Subordinate list of a CQ:
+   - Only CQNs are allowed for the "subordinale_list"-Attribute of a CQ
+   - A relationship between two CQs does not cause limitations in respect of
+     host sets of both CQs (overlapping)
+   - Add/Modify requests which do not fulfil the conditions above will
+     result in a corresponding error message.
+    
+   Queue references used in PEs and CKPTs:
+   - CQNs and QINs are both allowed in the "queue_list" field
+    
+   Properties of CQs:
+   - For qstat, qmon and other client commands it is necessary to
+     hold a table in qmaster which is used to identify how many
+     QIs are in a certain state.
+    
+   GDI:
+   - One CULL-Queue-Object represents a CQ
+   - The hostname-field will be converted into a list of hostnames
+     (hostname groups?). 
+   - The keyword "all" should be allowed.
+   - A sublist will be added to the Queue-Object which holds QIs
+     information.
+   - Each QI object containes the hostname and a set of attributes necessary to
+     administer QIs
+   - For client applications it is only possible to address CQs (not CIs)
+   - The GDI subcommand can be used to modify object entries of a sublist    
 
-NEW-Option (-g c)
-- Summary for all CQs
-- If -q Option containes QIs then a summary of concerned
-  CQ will be shown
-- Output format simmilar to the f-Option but
-   * "queuename":   CQN
-   * "used/tot.":   Sum of all slots for the CQ
-   * "arch":        -
-   * "load_avg":    -
-   * "states":      -
-- Information about individual jobs won't we shown in the output
-  
- 
-qsub, qalter, qsh, qrsh, qacct, qlogin
---------------------------------------
- 
-q-Option bzw. -masterq:
-- list of "QueueNamen"
- 
-l-Option:
-- List of CQNs
- 
-qmod
-- List of "QueueNamen"
- 
-qhost
------
- 
-q-Option:
-- analog zu qstat -f
- 
-j-Option:
-- see qstat without Parameter 
+   Client modification
+   ===================
+   - qconf commands using queuenames will await CQNs
+   - Output commands for queues show CQ information and not QI data
+   - All client commands (except qconf) which expect queuenames as parameter
+     have to handle "QueueList"s
+   - Qutput of client commands (except qconf) will be as before.
+     QI information will be displayed.
+   - Even if a CQ has only one QI the whole QIN including the hostname will
+     be printed.
+    
+   qconf
+   -----
+    
+   aq- mq- dq- option
+   mattr- dattr- rattr- aattr-Optionen fuer die queue:
+   - Modifications apply to all QIs of a QC
+   - "hostname" may be a list of hostnames
+    
+   sq-option;
+   - shows a CQ with all attributs
+    
+   sql-Option:
+   - shows a list of all existing CQs
+    
+   cq-option:
+   - CQNs or CINs
+    
+   NEW-option (-scql [ClusterQueueList]):
+   - show a list of all existing QIs
+   - if user specified "ClusterQueueList" then only those QIs will be
+     displayed
 
-qselect
--------
- 
-q-Option:
-- List of "QueueNamen"
-- List of QINs
- 
-QMon
-====
+   qstat
+   -----
 
-- Make CQs configurable 
+   without Options
+   - Shows QIN in the "queue" column
 
-  Ensure add/modify/copy/delete configuration operations
-  on CQs can be performed using Qmon.
+   f-Option
+   - list of all QIs
+   - "queuename" shows QIN
 
-- Display summarized CQ state in Qmon
+   q-Option
+   - Shows QINS in the output even if CQNs are used as Parameter
 
-  Display summarized CQ state in Queue control dialogue.
-  The information shown here should be the same
-  as with "qstat -g c"
+   NEW-Option (-g c)
+   - Summary for all CQs
+   - If -q Option containes QIs then a summary of concerned
+     CQ will be shown
+   - Output format simmilar to the f-Option but
+      * "queuename":   CQN
+      * "used/tot.":   Sum of all slots for the CQ
+      * "arch":        -
+      * "load_avg":    -
+      * "states":      -
+   - Information about individual jobs won't we shown in the output
+     
+    
+   qsub, qalter, qsh, qrsh, qacct, qlogin
+   --------------------------------------
+    
+   q-Option bzw. -masterq:
+   - list of "QueueNamen"
+    
+   l-Option:
+   - List of CQNs
+    
+   qmod
+   - List of "QueueNamen"
+    
+   qhost
+   -----
+    
+   q-Option:
+   - analogous to qstat -f
+    
+   j-Option:
+   - see qstat without Parameter 
 
-- Display detailed QI state in Qmon
+   qselect
+   -------
+    
+   q-Option:
+   - List of "QueueNamen"
+   - List of QINs
+    
+   QMon
+   ====
 
-  Display per host detailed CQ state. The information
-  shown here should be the same as in the old
-  Queue control dialogue.
+   - Make CQs configurable 
 
-- Make qmod functionality in Qmon working with QIs and CQs
- 
-Future enhancements
-===================
- 
-- Hostgroups on all places where hostnames are allowed
-- Pattern matching for queuenames
-- Different attributes for singe QIs
- 
-Additional Questions
-====================
- 
-Which documentation changes are necessary?
-Which changes are necessary for the installation procedures?
+     Ensure add/modify/copy/delete configuration operations
+     on CQs can be performed using Qmon.
+
+   - Display summarized CQ state in Qmon
+
+     Display summarized CQ state in Queue control dialogue.
+     The information shown here should be the same
+     as with "qstat -g c"
+
+   - Display detailed QI state in Qmon
+
+     Display per host detailed CQ state. The information
+     shown here should be the same as in the old
+     Queue control dialogue.
+
+   - Make qmod functionality in Qmon working with QIs and CQs
+    
+   Future enhancements
+   ===================
+    
+   - Hostgroups on all places where hostnames are allowed
+   - Pattern matching for queuenames
+   - Different attributes for singe QIs (see WP2)
+    
+   Additional Questions
+   ====================
+    
+   Which documentation changes are necessary?
+
+   Which changes are necessary for the installation procedures?
+     
+      With execd installation it should be possible to create 
+      either a new CQ specifically for that host or to have the
+      host join an already existing CQ.
 
 --------------------------------------------------------------------------------------------------------------------------
 
-HETEROGENEOUS HOST CHARACTERISTIC CATEGORIES
-============================================
-- reduce the overall amount of queues in heterogenious environments
 
-Changes in the current behaviour
-================================
-GDI:
-- For client applications it has to be possible to address CIs:
-  It should be possible to address at least following attributes
-  in an CI: 
-      seq_no
-      priority
-      owner_list
-      user_lists
-      xuser_lists
+2. WP2: HETEROGENEOUS HOST CHARACTERISTIC CATEGORIES
 
-Client modifications
-====================
+   - reduce the overall amount of queues in heterogenious environments
+     by allowing to differentiating on particlar attributes at a per host 
+     basis
+   - to keep number of different objects to be surveyed by an admin small
+     do not introduce a QI object (as far as user interface is concerned) 
 
-qconf
------
-NEW-Option (-mqi QIN)
-- Modify a QI
-      
-Additional Questions
-====================
-Which other attributes should be modifiable within QIs?
+   Changes in the current behaviour
+   ================================
+   GDI:
+   - For client applications it will be possible to override 
+     the CQ settings separately for each QI. This will be allowed
+     for the following attributes.
+         seq_no
+         priority
+         owner_list
+         user_lists
+         xuser_lists
+     It is anticipated that this can be achieved by making a list out
+     of each of these attributes. It might be that this is problematic due 
+     to the fact that owner_list, user_lists and xuser_lists are already
+     lists. In this case overriding CQ attributes can be achieved by making 
+     QI configurable objects at GDI level.
+
+   queue_conf(5)
+   ------------
+
+   - the file format changes for the attributes enlisted above
+   - the syntax of these attributes changes from 
+
+       <attr_name>   <current_attribute_syntax>
+
+     to 
+
+       <attr_name>   "["[hostname=]<current_attribute_syntax>"]" [,"["[hostname=]<current_attribute_syntax>"]" ]
+
+     with not more than one [hostname=]<current_attribute_syntax> tuple without a hostname specification
+     and all hostname specifications also contained in the CQs hostname list. 
+
+     Example #1 
+       
+      seq_no       [fangorn=0],[dwain=1]                 (in case all QI's should have differnt seq_no)
+
+      seq_no       [0],[dwain=1],[fangorn=1]             (in case all QI's except for the specified ones should
+                                                          have same seq_no)
+     Example #2 
+
+      user_lists   [NONE][balin=sales eng][durin=sales]  (in case QI access should only be restriced due to 'user_lists'  
+                                                          for the specified hosts)
+
+      user_lists   [sales][balin=NONE][durin=eng]        (in case QI access should be restriced due to 'user_lists' to 
+                                                          'sales' for all hosts except for host balin where no restriction 
+                                                          should apply and durin where only 'eng' should have access)
+
+   Client modifications
+   ====================
+
+   qmon
+   ====
+
+   - enhance the "queue control" dialoge to allow for specifiying these attribute 
+     on a per host basis for the hosts enlisted in the CQs hostname list
+         
+   Additional Questions
+   ====================
+   Which other attributes should be modifiable within QIs?
+

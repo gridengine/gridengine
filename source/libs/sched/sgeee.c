@@ -3122,6 +3122,15 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          
          if(!sort_list || !fcategories){
             /* error message to come */
+
+            if (job_ref) {
+               free(job_ref);
+            }
+
+            if (decay_list) {
+               lFreeList(decay_list);
+            }   
+            
             DEXIT;
             return sge_scheduling_run;
          }
@@ -3227,7 +3236,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
             destribute_ftickets(fcategories, depend);
          }
          /* free the allocated memory */
-         free(sort_list);
+         FREE(sort_list);
          free_fcategories(&fcategories);
       }
 
@@ -3350,7 +3359,11 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          tref = task_ref_get_next_job_entry();
       }
    }
-   
+
+   if (job_ref) {
+      free(job_ref);
+   }
+
    if (decay_list)
       lFreeList(decay_list);
 

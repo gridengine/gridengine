@@ -76,7 +76,7 @@ if [ $# -lt 2 -o "$1" = "-h" -o "$1" = "-help" ]; then
    echo 
    echo "Remotely execute commands via \"rsh\" or \"ssh\"."
    echo
-   echo "usage: $0 [-noexec] [-ssh] [-all] [-noqmaster] host1 host2 host3 -- command"
+   echo "usage: $0 [-noexec] [-ssh] [-all] [-noqmaster] [host1]... -- command"
    echo "   -noexec    do nothing, just print what would be done"
    echo "   -ssh       uses \"ssh\" instad of \"rsh\""
    echo "   -sshpath   path where ssh is installed of not in $PATH"

@@ -1,3 +1,10 @@
+AA-2003-10-16-0: Bugfix:    In case that a deletion of a resource attribute 
+                            failed, was the resource deleted anyway. This is
+                            fixed now. 
+                            Qconf -mc reported incomplete messages.
+                 Changed:   qmon, qconf, qmaster
+                 Review:    SG
+
 JG-2003-10-15-2: Enhancem.: Spooling framework:
                             - added trigger and transaction interface
                             - added validate_list interface and default function

@@ -458,47 +458,28 @@ centry_list_add_del_mod_via_gdi(lList *this_list, lList **answer_list,
          /*
           * Verify that the parts of the multi request are successfull
           */
-         if (ret && do_del) {
+         if (do_del) {
             gdi_answer_list = sge_gdi_extract_answer(SGE_GDI_DEL, 
                                                      SGE_CENTRY_LIST, del_id,
                                                      mal_answer_list, NULL);
-            if (answer_list_has_error(&gdi_answer_list)) {
-               DTRACE;
-               ret = false;
-            } else {
-               answer_list_append_list(answer_list, &gdi_answer_list);
-            }
+            answer_list_append_list(answer_list, &gdi_answer_list);
          }
-         if (ret && do_mod) {
+         if (do_mod) {
             gdi_answer_list = sge_gdi_extract_answer(SGE_GDI_MOD, 
                                                      SGE_CENTRY_LIST, mod_id,
                                                      mal_answer_list, NULL);
-            if (answer_list_has_error(&gdi_answer_list)) {
-               DTRACE;
-               ret = false;
-            } else {
-               answer_list_append_list(answer_list, &gdi_answer_list);
-            }
+            answer_list_append_list(answer_list, &gdi_answer_list);
          }
-         if (ret && do_add) {
+         if (do_add) {
             gdi_answer_list = sge_gdi_extract_answer(SGE_GDI_ADD, 
                                                      SGE_CENTRY_LIST, add_id,
                                                      mal_answer_list, NULL);
-            if (answer_list_has_error(&gdi_answer_list)) {
-               DTRACE;
-               ret = false;
-            } else {
-               answer_list_append_list(answer_list, &gdi_answer_list);
-            }
+            answer_list_append_list(answer_list, &gdi_answer_list);
          }
 
          /*
           * Provide an overall summary for the callee
           */
-         if (!ret) {
-            DTRACE;
-            answer_list_replace(answer_list, &gdi_answer_list);
-         }
          if (lGetNumberOfElem(*answer_list) == 0) {
             answer_list_add_sprintf(answer_list, STATUS_OK, 
                                     ANSWER_QUALITY_INFO, 

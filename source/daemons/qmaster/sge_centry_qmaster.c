@@ -327,47 +327,47 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
                }
             }
          }      
+         if (ret) {
+            if (tmp_centry != NULL) {
 
-         if (tmp_centry != NULL) {
+               if (!centry_is_referenced(tmp_centry, &local_answer_list, 
+                                       Master_Queue_List, Master_Exechost_List, 
+                                       Master_Sched_Config_List)) {
+                  if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
+                                    0, 0, name, NULL, NULL,
+                                    NULL, NULL, NULL, true, true)) {
 
-            if (!centry_is_referenced(tmp_centry, &local_answer_list, 
-                                     Master_Queue_List, Master_Exechost_List, 
-                                     Master_Sched_Config_List)) {
-               if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
-                                   0, 0, name, NULL, NULL,
-                                   NULL, NULL, NULL, true, true)) {
-
-                  sge_change_queue_version_centry(name);
-
-                  lRemoveElem(master_centry_list, tmp_centry);
-
-                  INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
-                        remote_user, remote_host, name, MSG_OBJ_CPLX));
-                  answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 
-                                  ANSWER_QUALITY_INFO);
+                     sge_change_queue_version_centry(name);
+   
+                     lRemoveElem(master_centry_list, tmp_centry);
+   
+                     INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
+                           remote_user, remote_host, name, MSG_OBJ_CPLX));
+                     answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 
+                                    ANSWER_QUALITY_INFO);
+                  } else {
+                     ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS,
+                           "complex entry", name ));
+                     answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
+                                    ANSWER_QUALITY_ERROR);
+                     ret = false;
+                  }
                } else {
-                  ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS,
-                         "complex entry", name ));
-                  answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
-                                  ANSWER_QUALITY_ERROR);
+                  lListElem *answer = lFirst(local_answer_list);
+
+                  ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR);
+                  local_answer_list = lFreeList(local_answer_list);
                   ret = false;
                }
             } else {
-               lListElem *answer = lFirst(local_answer_list);
-
-               ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
-               answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
-                               ANSWER_QUALITY_ERROR);
-               local_answer_list = lFreeList(local_answer_list);
+               ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, 
+                     MSG_OBJ_CPLX, name));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 0);
                ret = false;
             }
-         } else {
-            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, 
-                   MSG_OBJ_CPLX, name));
-            answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 0);
-            ret = false;
          }
-
       } else {
          CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
                    lNm2Str(CE_name), SGE_FUNC));

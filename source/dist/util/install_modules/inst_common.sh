@@ -1183,7 +1183,10 @@ BackupConfig()
                    fi
    done
 
-   $INFOTEXT  -auto $AUTO -ask "y" "n" -def "y" -n "\nShall the backup function create a tar.Z package with your files? (y/n) [y] >>"
+   $INFOTEXT  -auto $AUTO -ask "y" "n" -def "y" -n "\nIf you are using different tar versions (gnu tar/ solaris tar), this option\n" \
+                                                     "can make some trouble. In some cases the tar packages may be corrupt.\n" \
+                                                     "Using the same tar binary for packing and unpacking works without problems!\n\n" \
+                                                     "Shall the backup function create a compressed tarpackage with your files? (y/n) [y] >>"
 
    if [ $? = 0 -a $AUTO != "true" ]; then
       TAR=true
@@ -1220,20 +1223,31 @@ BackupConfig()
          bup_file=$BACKUP_FILE
       fi
       cd $backup_dir
-      TAR="tar -cvf"
 
-         ZIP="compress"
-         ret=$?
+      TAR=`which tar`
+      if [ $? -eq 0 ]; then
+         TAR=$TAR" -cvf"
          ExecuteAsAdmin $TAR $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
-         if [ $ret -eq 0 ]; then
+
+         ZIP=`which gzip`
+         if [ $? -eq 0 ]; then
             ExecuteAsAdmin $ZIP $bup_file 
          else
-            $INFOTEXT -n "compress could not be found! The tar archive won't be compressed!\n"
-         fi   
+            ZIP=`which compress`
+            if [ $? -ep 0 ]; then
+               ExecuteAsAdmin $ZIP $bup_file
+            else
+               $INFOTEXT -n "Neither gzip, nor compress could be found!\n Can't compress your tar file!"
+            fi 
+         fi
+       else
+         $INFOTEXT -n "tar could not be found! No tar archive can be created!\n You will find your backup files" \
+                      "in: \n$backup_dir\n" 
+       fi   
 
       cd $SGE_ROOT
       $INFOTEXT -n "\n... backup completed"
-      $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir/$bup_file".Z"
+      $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir/$bup_file".gz[Z]"
 
       cd $backup_dir     
       RMF="rm -f" 
@@ -1287,15 +1301,15 @@ RestoreConfig()
                 SGE_CELL=`Enter default`
 
 
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nIs your backupfile in tar.Z format? (y/n) [y] "
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nIs your backupfile in tar.gz[Z] format? (y/n) [y] "
 
 
    if [ $? = 0 ]; then
       loop_stop=false
       while [ $loop_stop = "false" ]; do
          $INFOTEXT -n "\nPlease enter the full path and name of your backup file." \
-                      "\nDefault: [%s]" $SGE_ROOT/$SGE_CELL/backup/backup.tar.Z
-         bup_file=`Enter $SGE_ROOT/$SGE_CELL/backup/backup.tar.Z`
+                      "\nDefault: [%s]" $SGE_ROOT/$SGE_CELL/backup/backup.tar.gz
+         bup_file=`Enter $SGE_ROOT/$SGE_CELL/backup/backup.tar.gz`
          
          if [ -f $bup_file ]; then
             loop_stop="true"
@@ -1308,14 +1322,36 @@ RestoreConfig()
       $INFOTEXT -n "\nCopying backupfile to /tmp/bup_tmp_%s\n" $DATE
       cp $bup_file /tmp/bup_tmp_$DATE
       cd /tmp/bup_tmp_$DATE/
-      
-      ZIP="uncompress"
-      TAR="tar -xvf"
+     
+      echo $bup_file | grep "tar.gz"
       if [ $? -eq 0 ]; then
-         ExecuteAsAdmin $ZIP -d /tmp/bup_tmp_$DATE/*.Z 
-         ExecuteAsAdmin $TAR /tmp/bup_tmp_$DATE/*.tar
+         ZIP_TYPE="gz"
       else
-         $INFOTEXT -n "uncompress could not be found! Can't extract the backup file\n"
+         echo $bup_file | grep "tar.Z"
+         if [ $? -eq 0 ]; then
+            ZIP_TYPE="Z"
+         fi
+      fi
+
+      if [ $ZIP_TYPE = "gz" ]; then
+         ZIP="gzip"
+      elif [ $ZIP_TYPE = "Z" ]; then
+         ZIP="uncompress"
+      fi
+      
+      TAR="tar"
+      ZIP=`which $ZIP`
+      if [ $? -eq 0 ]; then
+         TAR=`which $TAR`
+         if [ $? -eq 0 ]; then
+            TAR=$TAR" -xvf"
+            ExecuteAsAdmin $ZIP -d /tmp/bup_tmp_$DATE/*.$ZIP_TYPE 
+            ExecuteAsAdmin $TAR /tmp/bup_tmp_$DATE/*.tar
+         else
+            $INFOTEXT -n "tar could not be found! Can't extract the backup file\n"
+         fi
+      else
+         $INFOTEXT -n "gzip/uncompress could not be found! Can't extract the backup file\n"
          exit 1
       fi
       cd $SGE_ROOT 
@@ -1562,7 +1598,24 @@ RemoveRcScript()
 
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
+}
 
+CheckMasterHost()
+{
+   if [ -f $SGE_ROOT/$SGE_CELL/common/act_qmaster ]; then
+      MASTER=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
+   else
+      $INFOTEXT -n "Can't find the act_qmaster file! Check your installation!"
+   fi
+
+   THIS_HOST=`hostname`
+
+   if [ ${THIS_HOST%%.*} = ${MASTER%%.*} ]; then
+      :
+   else
+      $INFOTEXT -n "This is not a master host. Please execute backup/restore on master host.\n"
+      exit 1
+   fi
 
 
 }

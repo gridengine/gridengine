@@ -1,3 +1,7 @@
+AH-2002-03-05-0: Doc.:      Fixed description of seq_no queue parameter 
+                            in queue_conf(5). 
+                 Bugtraq:   #4490117
+                        
 CR-2002-03-05-0: Testsuite: - sge/ee installation path (product root) should
                               not be longer than 60 chars ( workaround, because
                               output of ps -ef command is truncated on some

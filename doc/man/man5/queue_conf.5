@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2002/01/25 15:32:59 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2002/03/05 16:08:56 $     Revision: $Revision: 1.9.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2002/01/25 15:32:59 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2002/03/05 16:08:56 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -70,14 +70,14 @@ The name of the queue on the node (type string; template default: template).
 The fully-qualified host name of the node (type string;
 template default: host.dom.dom.dom).
 .SS "\fBseq_no\fP"
-With \fBsort_seq_no\fP (see
-.M sched_conf 5 )
-set to TRUE, this parameter specifies this
-queue's position in the scheduling order within the suitable queues for a
-job to be dispatched. It thus replaces the order by load policy that
-would rule otherwise.
+In conjunction with the hosts load situation at a time this 
+parameter specifies this queue's position in the scheduling order 
+within the suitable queues for a job to be dispatched under consideration 
+of the \fBqueue_sort_method\fP (see 
+.M sched_conf 5
+). 
 .PP
-Regardless of the \fBsort_seq_no\fP setting,
+Regardless of the \fBqueue_sort_method\fP setting,
 .M qstat 1
 reports queue information in the order defined by the
 value of the \fBseq_no\fP. Set this parameter to a monotonically

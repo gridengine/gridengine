@@ -1,3 +1,6 @@
+JG-2002-07-03-0: Bugfix:    Deleting ckpt objects and pe objects could
+                            make qmaster dump core.
+
 AH-2002-07-02-3: Bugfix:    Fix problem with flittering load adjustment
                  Issue:     #309
                  Bugtraq:   #4710514

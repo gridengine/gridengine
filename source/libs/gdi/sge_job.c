@@ -1886,8 +1886,10 @@ int job_is_pe_referenced(const lListElem *job, const lListElem *pe)
    const char *ref_pe_name = lGetString(job, JB_pe);
    int ret = 0;
 
-   if (pe_is_matching(pe, ref_pe_name)) {
-      ret = 1;
+   if(ref_pe_name != NULL) {
+      if (pe_is_matching(pe, ref_pe_name)) {
+         ret = 1;
+      }
    }
    return ret;
 }
@@ -1917,8 +1919,10 @@ int job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt)
    const char *ref_ckpt_name = lGetString(job, JB_checkpoint_object);
    int ret = 0;
 
-   if (!strcmp(ref_ckpt_name, ckpt_name)) {
-      ret = 1;
+   if(ckpt_name != NULL && ref_ckpt_name != NULL) {
+      if (!strcmp(ref_ckpt_name, ckpt_name)) {
+         ret = 1;
+      }
    }
    return ret;
 }

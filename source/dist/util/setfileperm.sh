@@ -69,7 +69,7 @@ SetFilePerm()
    user="$2"
    group="$3"
 
-   $ECHO "Verifying and setting file permissions and owner in >$f<"
+   $INFOTEXT "Verifying and setting file permissions and owner in >%s<" $f
 
    chmod -R go+r $f
    find $f -type d -exec chmod 755 {} \;
@@ -78,9 +78,9 @@ SetFilePerm()
    chgrp -R $group $f
 }
 
-#---------------------------------------------------------------------
-# MAIN MAIN
-#
+#--------------------------------------------------------------------------
+# THE MAIN PROCEDURE
+#--------------------------------------------------------------------------
 
 instauto=false
 instresport=false
@@ -88,7 +88,7 @@ instresport=false
 if [ -z "$SGE_ROOT" -o ! -d "$SGE_ROOT" ]; then
    echo 
    echo ERROR: Please set your \$SGE_ROOT environment variable
-   echo and start this script again. Exit.
+   echo and restart this script. Exit.
    echo 
    exit 1
 fi
@@ -111,14 +111,29 @@ fi
 
 . $SGE_ROOT/util/arch_variables
 
+#---------------------------------------
+# setup INFOTEXT begin
+#---------------------------------------
+
+V5BIN=$SGE_ROOT/bin/$ARCH
+V5UTILBIN=$SGE_ROOT/utilbin/$ARCH       
+INFOTEXT=$V5UTILBIN/infotext
+if [ ! -x $INFOTEXT ]; then
+   echo "can't find binary \"$INFOTXT\""
+   echo "Installation failed."
+   exit 1
+fi
+SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
+
+#---------------------------------------
+# setup INFOTEXT end
+#---------------------------------------
+
 if [ $# -lt 3 ]; then
-   echo
-   echo Set file permissions and owner of Grid Engine distribution in \$SGE_ROOT
-   echo 
-   echo "usage: $0 [-auto] [-resport] \"adminuser\" \"group\" <codine_root>"
-   echo 
-   echo example: $0 codadmin adm \$SGE_ROOT
-   echo
+   $INFOTEXT -e "\nSet file permissions and owner of Grid Engine distribution in \$SGE_ROOT\n\n" \
+                "Usage: %s [-auto] [-resport] \"adminuser\" \"group\" <sge_root>\n\n" \
+                "Example:\n\n" \
+                "   # %s sgeadmin adm \$SGE_ROOT\n" `basename $0` `basename $0`
    exit 1
 fi
 
@@ -136,16 +151,12 @@ elif [ $1 = -noresport ]; then
 fi
 
 if [ $3 = / -o $3 = /etc ]; then
-   echo
-   echo ERROR: cannot set permissions in \"$3\" directory of your system.
-   echo
+   $INFOTEXT -e "\nERROR: cannot set permissions in \"%s\" directory of your system\n" $3
    exit 1
 fi
 
 if [ `echo $3 | env LC_ALL=C cut -c1` != / ]; then
-   echo
-   echo ERROR: Please give an absolute path for the distribution.
-   echo
+   $INFOTEXT -e "\nERROR: please provide an absolute path for the distribution\n"
    exit 1
 fi
 
@@ -154,56 +165,31 @@ if [ $instauto = true ]; then
    :
 else
    clear
-   $ECHO "                    WARNING WARNING WARNING"
-   $ECHO "                    -----------------------"
-   $ECHO "We will set the the file ownership and permission to"
-   $ECHO
-   $ECHO "   User:         $1"
-   $ECHO "   Group:        $2"
-   $ECHO "   In directory: $3"
-   $ECHO
-   $ECHO "We will also install the following binaries as SUID-root:"
-   $ECHO
-   $ECHO "   \$SGE_ROOT/utilbin/<arch>/rlogin"
-   $ECHO "   \$SGE_ROOT/utilbin/<arch>/rsh"
-   $ECHO "   \$SGE_ROOT/utilbin/<arch>/testsuidroot"
-   $ECHO
+   $INFOTEXT "\n                    WARNING WARNING WARNING\n" \
+             "                    -----------------------\n\n" \
+             "We will set the the file ownership and permission to\n\n" \
+             "   User:         %s\n" \
+             "   Group:        %s\n" \
+             "   In directory: %s\n\n" \
+             "We will also install the following binaries as SUID-root:\n\n" \
+             "   \$SGE_ROOT/utilbin/<arch>/rlogin\n" \
+             "   \$SGE_ROOT/utilbin/<arch>/rsh\n" \
+             "   \$SGE_ROOT/utilbin/<arch>/testsuidroot\n" $1 $2 $3
 
-   TEXT="Do you want to set the file permissions (yes/no) [NO] >> \c"
+   $INFOTEXT -n -ask "yes" "no" \
+            "Do you want to set the file permissions (yes/no) [no] >> "
 
-   YesNo_done=false
-   while [ $YesNo_done = false ]; do
-      $ECHO "$TEXT" 
-      read YesNo_INP
-      if [ "$YesNo_INP" = "yes" -o "$YesNo_INP" = YES ]; then
-         YesNo_done=true
-      elif [ "$YesNo_INP" = "NO" -o "$YesNo_INP" = no ]; then
-         $ECHO
-         $ECHO "We will NOT set the file permissions. Exiting."
-         exit 1
-      fi
-   done
+   if [ $? = 1 ]; then
+      $INFOTEXT "We will not set the file permissions. Exit."
+      exit 1
+   fi
 fi
 
 cd $3
 if [ $? != 0 ]; then
-   $ECHO "ERROR: can't change to directory \"$3\". Exiting."
+   $INFOTEXT -e "ERROR: can't change to directory \"%s\". Exit." $3
    exit 1
 fi
-
-for f in $FILELIST; do
-   if [ ! -f $f -a ! -d $f ]; then
-      $ECHO
-      $ECHO "Obviously this is not a complete SGE distribution or this"
-      $ECHO "is not your \$SGE_ROOT directory."
-      $ECHO
-      $ECHO "Missing file or directory: $f"
-      $ECHO
-      $ECHO "Your file permissions will not be set. Exit."
-      $ECHO
-      exit 1
-   fi
-done
 
 for f in $FILELIST $OPTFILES; do
    if [ -d $f -o -f $f ]; then
@@ -234,6 +220,4 @@ if [ $instresport = true ]; then
    done
 fi
 
-$ECHO
-$ECHO "Your file permissions were set"
-$ECHO
+$INFOTEXT "\nYour file permissions were set\n"

@@ -1606,7 +1606,7 @@ proc set_queue { q_name change_array } {
 #     ....
 #     (every value that is set will be changed)
 #
-#     here is a list of all guilty array names (template queue):
+#     here is a list of all valid array names (template queue):
 #
 #     change_array(qname)                "template"
 #     change_array(hostname)             "unknown"
@@ -1776,6 +1776,125 @@ proc add_queue { change_array {fast_add 0} } {
   set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-aq" $vi_commands "added" "already exists" ]  
   if { $result != 0 } {
      add_proc_error "add_queue" -1 "could not add queue [set chgar(qname)] (error: $result)"
+  }
+  return $result
+}
+
+
+#                                                             max. column:     |
+#****** sge_procedures/add_exechost() ******
+# 
+#  NAME
+#     add_exechost -- Add a new exechost configuration object
+#
+#  SYNOPSIS
+#     add_exechost { change_array {fast_add 0} } 
+#
+#  FUNCTION
+#     Add a new execution host configuration object corresponding to the content of 
+#     the change_array.
+#
+#  INPUTS
+#     change_array - name of an array variable can contain special settings
+#     {fast_add 0} - if not 0 the add_exechost procedure will use a file for
+#                    queue configuration. (faster) (qconf -Ae, not qconf -ae)
+#
+#  RESULT
+#     -1   timeout error
+#     -2   host allready exists
+#      0   ok 
+#
+#  EXAMPLE
+#     set new_host(hostname) "test"
+#     add_exechost new_host
+#
+#  NOTES
+#     the array should look like this:
+#
+#     set change_array(hostname) MYHOST.domain
+#     ....
+#     (every value that is set will be changed)
+#
+#     here is a list of all valid array names (template host):
+#
+#     change_array(hostname)                    "template"
+#     change_array(load_scaling)                "NONE"
+#     change_array(complex_list)                "NONE"
+#     change_array(complex_values)              "NONE"
+#     change_array(user_lists)                  "NONE"
+#     change_array(xuser_lists)                 "NONE"
+#
+#     additional names for an enterprise edition system:
+#     change_array(projects)                    "NONE"
+#     change_array(xprojects)                   "NONE"
+#     change_array(usage_scaling)               "NONE"
+#     change_array(resource_capability_factor)  "0.000000"
+#*******************************
+proc add_exechost { change_array {fast_add 0} } {
+  global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_PRODUCT_TYPE
+
+  upvar $change_array chgar
+  set values [array names chgar]
+
+    if { $fast_add != 0 } {
+     # add queue from file!
+     set default_array(hostname)          "template"
+     set default_array(load_scaling)      "NONE"
+     set default_array(complex_list)      "NONE"
+     set default_array(complex_values)    "NONE"
+     set default_array(user_lists)        "NONE"
+     set default_array(xuser_lists)       "NONE"
+  
+     if { $CHECK_PRODUCT_TYPE == "sgeee" } {
+       set default_array(projects)                    "NONE"
+       set default_array(xprojects)                   "NONE"
+       set default_array(usage_scaling)               "NONE"
+       set default_array(resource_capability_factor)  "0.000000"
+     }
+  
+     foreach elem $values {
+        set value [set chgar($elem)]
+        puts $CHECK_OUTPUT "--> setting \"$elem\" to \"$value\""
+        set default_array($elem) $value
+     }
+
+     if {[file isdirectory "$CHECK_TESTSUITE_ROOT/testsuite_trash"] != 1} {
+        file mkdir "$CHECK_TESTSUITE_ROOT/testsuite_trash"
+     }
+
+     set tmpfile "$CHECK_TESTSUITE_ROOT/testsuite_trash/tmpfile"
+     set file [open $tmpfile "w"]
+     set values [array names default_array]
+     foreach elem $values {
+        set value [set default_array($elem)]
+        puts $file "$elem                   $value"
+     }
+     close $file
+
+     set result ""
+     set catch_return [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Ae ${tmpfile}" } result ]
+     puts $CHECK_OUTPUT $result
+     if { [string first "added" $result ] < 0 } {
+        add_proc_error "add_exechost" "-1" "qconf error or binary not found"
+        return
+     }
+     return
+  }
+
+
+  set vi_commands "" 
+  foreach elem $values {
+     # this will quote any / to \/  (for vi - search and replace)
+     set newVal [set chgar($elem)]
+     set newVal1 [split $newVal {/}]
+     set newVal [join $newVal1 {\/}]
+     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+  } 
+
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ae" $vi_commands "added" "already exists" ]  
+  if { $result != 0 } {
+     add_proc_error "add_exechost" -1 "could not add queue [set chgar(qname)] (error: $result)"
   }
   return $result
 }
@@ -2650,6 +2769,77 @@ proc add_pe { change_array } {
 }
 
 #                                                             max. column:     |
+#****** sge_procedures/add_user() ******
+# 
+#  NAME
+#     add_user -- ??? 
+#
+#  SYNOPSIS
+#     add_user { change_array } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     change_array - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc add_user { change_array } {
+
+# returns 
+# -100 on unknown error
+# -1   on timeout
+# -2   if queue allready exists
+# 0    if ok
+
+# name            template
+# oticket         0
+# fshare          0
+# default_project NONE  
+# 
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
+
+  upvar $change_array chgar
+  set values [array names chgar]
+
+  if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
+     add_proc_error "add_user" -1 "not possible for sge systems"
+     return
+  }
+
+  set vi_commands ""
+  foreach elem $values {
+     # this will quote any / to \/  (for vi - search and replace)
+     set newVal [set chgar($elem)]
+     set newVal1 [split $newVal {/}]
+     set newVal [join $newVal1 {\/}]
+     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+  } 
+
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-auser" $vi_commands "added" "already exists" ]
+  
+  if {$result == -1 } { add_proc_error "add_user" -1 "timeout error" }
+  if {$result == -2 } { add_proc_error "add_user" -1 "\"[set chgar(name)]\" already exists" }
+  if {$result != 0  } { add_proc_error "add_user" -1 "could not add user \"[set chgar(name)]\"" }
+
+  return $result
+}
+
+#                                                             max. column:     |
 #****** sge_procedures/add_prj() ******
 # 
 #  NAME
@@ -2841,6 +3031,71 @@ proc del_prj { myprj_name } {
   log_user 1
   if { $result != 0 } {
      add_proc_error "del_prj" -1 "could not delete project \"$myprj_name\""
+  }
+  return $result
+}
+
+#                                                             max. column:     |
+#****** sge_procedures/del_user() ******
+# 
+#  NAME
+#     del_user -- ??? 
+#
+#  SYNOPSIS
+#     del_user { myuser_name } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     myuser_name - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc del_user { myuser_name } {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_PRODUCT_TYPE
+
+  if { [ string compare $CHECK_PRODUCT_TYPE "cod" ] == 0 } {
+     set_error -1 "del_user - not possible for codine systems"
+     return
+  }
+
+  log_user 0
+  set id [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-duser" "$myuser_name"]
+  set sp_id [ lindex $id 1 ]
+  set result -1
+  set timeout 30 	
+  log_user 0 
+
+  expect {
+    -i $sp_id full_buffer {
+      set result -1
+      add_proc_error "del_user" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+    }
+    -i $sp_id "removed" {
+      set result 0
+    }
+    -i $sp_id default {
+      set result -1
+    }
+  }
+  close_spawn_process $id
+  log_user 1
+  if { $result != 0 } {
+     add_proc_error "del_user" -1 "could not delete user \"$myuser_name\""
   }
   return $result
 }

@@ -1,3 +1,8 @@
+CR-2002-07-29-3: Bugfix:    CLI: invalid option "-jid jid" for qconf in 
+                            qconf -help
+                 Bugtraq:   #4722060
+                            (merged CR-2002-07-29-0 and CR-2002-07-29-1)
+                           
 EB-2002-07-26-1: Cleanup:   - moved code
                             - added ADOC comments
                             - reimplemented sge_setenv()

@@ -815,7 +815,6 @@
 #define MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_INFO          _MESSAGE(23403, _("print information on given queue"))
 
 
-#define MSG_GDI_USAGE_qmon_OPT                           "[-qmon]"
                         
 
 #define MSG_GDI_USAGE_qs_args_OPT_ARGS_QS_END            "[-qs_args [arg [...]] -qs_end]"

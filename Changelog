@@ -1,3 +1,9 @@
+SG-2004-07-29-0: Bugfix:    Resending queue signals broken
+                 Changed:   exed, qmaster
+                 Issue:     1178
+                 Bugtraq:   5079572
+                 Review:    EB
+
 CR-2004-07-28-1  Bugfix:    - Startup of qmaster changes act_qmaster to 
                               `hostname`,
                             - Two network cards in exec host: creates wrong 

@@ -226,7 +226,6 @@ int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer)
    lListElem *qep = NULL;        /* QU_Type */
    lListElem *jep;               /* JB_Type */
    const char *hostname = NULL;
-   int ret = 0;
  
    DENTER(TOP_LAYER, "reschedule_jobs");
  
@@ -235,19 +234,8 @@ int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer)
     * running on that host. if it is of type QU_Type than we will
     * only reschedule the jobs for that queue
     */
-   if (object_has_type(ep, EH_Type)) {
-      hep = ep;
-      qep = NULL;
-      hostname = lGetHost(ep, EH_name);
-   } else if (object_has_type(ep, QU_Type)) {
-      qep = ep;
-      hostname = lGetHost(qep, QU_qhostname);
-      hep = host_list_locate(Master_Exechost_List, hostname);
-   } else {
-      ret = 1;
-   }
- 
-   if (!ret) {
+   if (object_has_type(ep, EH_Type) ||
+       object_has_type(ep, QU_Type)) {
       /*
        * Find all jobs currently running on the host/queue
        * append the jobids/taskids into a sublist of the exechost object

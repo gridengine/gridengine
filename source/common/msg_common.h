@@ -212,7 +212,7 @@
 #define MSG_TABLE_EV_NAME                         "NAME"
 #define MSG_QCONF_NOEXECUTIONHOSTSDEFINED         _MESSAGE(23168, _("no execution hosts defined\n"))
 #define MSG_QCONF_NOEVENTCLIENTSREGISTERED        _MESSAGE(23169, _("no event clients registered\n"))
-#define MSG_ANSWER_COMPLEXXALREADYEXISTS_S        _MESSAGE(23172, _("complex "SFN" already exists\n"))
+#define MSG_ANSWER_COMPLEXXALREADYEXISTS_SS       _MESSAGE(23172, _("complex with name "SFN" or shortcut "SFN" already exists\n"))
 #define MSG_ANSWER_IGNORINGMAPPINGFOR_S           _MESSAGE(23187, _("usermapping for "SFQ" not accepted\n"))
 #define MSG_FILE_ERRORWRITINGUSERSETTOFILE        _MESSAGE(23196, _("error writing userset to file\n"))
 #define MSG_FILE_ERRORREADINGUSERSETFROMFILE_S    _MESSAGE(23197, _("error reading userset from file "SFN"\n"))

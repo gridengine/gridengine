@@ -539,8 +539,8 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
                      (strcmp(shortcut1, shortcut2) == 0)) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_ERROR,
-                                       MSG_ANSWER_COMPLEXXALREADYEXISTS_S,
-                                       name1);
+                                       MSG_ANSWER_COMPLEXXALREADYEXISTS_SS,
+                                       name1, shortcut1);
                cont = false;
             } 
             

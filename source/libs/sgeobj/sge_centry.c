@@ -914,7 +914,8 @@ centry_list_remove_duplicates(lList *this_list)
 *
 *******************************************************************************/
 bool centry_elem_validate(lListElem *centry, lList *centry_list, 
-                          lList **answer_list) {
+                          lList **answer_list) 
+{
    u_long32 relop = lGetUlong(centry, CE_relop);
    u_long32 type = lGetUlong(centry, CE_valtype);
    const char *attrname = lGetString(centry, CE_name);
@@ -1112,21 +1113,20 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
    /* check for duplicates */
    if (centry_list) {
       const char *shortcut = lGetString(centry, CE_shortcut); 
-      lListElem *current = lFirst(centry_list);
-      while (current){
+      const lListElem *ce1 = centry_list_locate(centry_list, attrname);
+      const lListElem *ce2 = centry_list_locate(centry_list, shortcut);
 
-         if( strcmp(attrname, (temp = lGetString(current, CE_name))) == 0 ||
-             strcmp(shortcut, temp) == 0 ||
-             strcmp(attrname, (temp = lGetString(current, CE_shortcut))) == 0 ||
-             strcmp(shortcut, temp) == 0) {
-               if(current != centry){
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
-                                          MSG_ANSWER_COMPLEXXALREADYEXISTS_S, attrname);
-                  ret = false;
-                  break;
-               }
-         }        
-         current = lNext(current); 
+      /* 
+       * if we already have a centry with this name or shortcut,
+       * that is not the current centry -> cannot add/mod this one
+       */
+      if ((ce1 != NULL && ce1 != centry) ||
+          (ce2 != NULL && ce2 != centry)) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_ANSWER_COMPLEXXALREADYEXISTS_SS, 
+                                 attrname, shortcut);
+         ret = false;
       }
    }
    DEXIT;

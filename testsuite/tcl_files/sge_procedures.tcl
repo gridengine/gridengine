@@ -4742,6 +4742,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
   set TO_MUCH_TASKS [translate $CHECK_HOST 1 0 0     [sge_macro MSG_JOB_MORETASKSTHAN_U] "*" ]
   set WARNING_OPTION_ALREADY_SET [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S] "*"]
+  set ONLY_ONE_RANGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_ONLYONERANGE]]
 
   if { [resolve_version] >= 3 } {
      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED] ]
@@ -5055,6 +5056,9 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           }
           -i $sp_id -- $COLON_NOT_ALLOWED {
              set return_value -17
+          }
+          -i $sp_id -- $ONLY_ONE_RANGE {
+             set return_value -18
           }
         }
      }

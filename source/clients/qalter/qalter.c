@@ -740,16 +740,6 @@ int *all_users
          }
       }
   
-      /* multiple request for job */
-      if (job_list_locate(*prequestlist, jobid)) {
-         char str[1024];
-
-         sprintf(str, MSG_JOB_XMULTIPLEJOBID_U, u32c(jobid));
-         answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return answer;
-      }
-
       rep = lAddElemUlong(prequestlist, JB_job_number, jobid, rdp);
       if (!rep) { 
          sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);

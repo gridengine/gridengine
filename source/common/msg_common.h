@@ -406,7 +406,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_SIMPLE_CONTEXT_LIST  "simple_context_list     variable[,variable,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_SLOT_RANGE           "slot_range              [n[-m]|[-]m] - n,m > 0"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_STATES               "states                  `e' `q' `r' `t' `h' `w' `m' `s'"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASK_LIST        "job_task_list           job_tasks [,job_tasks, ...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASK_LIST        "job_task_list           job_tasks[,job_tasks,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS            "job_tasks               job_id['.'task_id_range]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_TASK_ID_RANGE        "task_id_range           task_id['-'task_id[':'step]]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_USER_LIST            "user_list               user[,user,...]"

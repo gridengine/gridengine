@@ -607,11 +607,15 @@ u_long32 group_opt
          ja_task_list = lFreeList(ja_task_list);
       }
 #if 1 /* EB: Andre could explain the code above ?!? */
-      if (jep != nxt) {
+      if (jep != nxt && full_listing & QSTAT_DISPLAY_PENDING) {
          sge_print_jobs_not_enrolled(jep, NULL, 1, NULL, 
+#if 1
+      full_listing,
+#else
                                      (full_listing & QSTAT_DISPLAY_FULL) | 
                                      (full_listing & QSTAT_DISPLAY_PENDING) |
                                      (full_listing & QSTAT_DISPLAY_EXTENDED), 
+#endif
                                      0, 0, ehl, cl, NULL, "", sge_ext);
       }
 #endif
@@ -659,37 +663,23 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
    DENTER(TOP_LAYER, "sge_print_jobs_not_enrolled");
  
    job_create_hold_id_lists(job, range_list, hold_state); 
-#if 0
-   hold_state[0] = 0;
-   hold_state[1] = MINUS_H_TGT_USER;
-   hold_state[2] = MINUS_H_TGT_OPERATOR;
-   hold_state[3] = MINUS_H_TGT_SYSTEM;
-   hold_state[4] = MINUS_H_TGT_USER | MINUS_H_TGT_OPERATOR;
-   hold_state[5] = MINUS_H_TGT_OPERATOR | MINUS_H_TGT_SYSTEM;
-   hold_state[6] = MINUS_H_TGT_USER | MINUS_H_TGT_SYSTEM;
-   hold_state[7] = MINUS_H_TGT_USER | MINUS_H_TGT_OPERATOR |
-                   MINUS_H_TGT_SYSTEM;
- 
-   range_list[0] = lGetList(job, JB_ja_n_h_ids);
-   range_list[1] = lGetList(job, JB_ja_u_h_ids);
-   range_list[2] = lGetList(job, JB_ja_o_h_ids);
-   range_list[3] = lGetList(job, JB_ja_s_h_ids);
-   range_list[4] = range_list[5] = range_list[6] = range_list[7] = NULL;
-   range_calculate_intersection_set(&range_list[4], NULL,
-                                    range_list[1], range_list[2]);
-   range_calculate_intersection_set(&range_list[5], NULL,
-                                    range_list[2], range_list[3]);
-   range_calculate_intersection_set(&range_list[6], NULL,
-                                    range_list[1], range_list[3]);
-   range_calculate_intersection_set(&range_list[7], NULL,
-                                    range_list[4], range_list[5]);
-#endif 
    for (i = 0; i <= 7; i++) {
       StringBufferT ja_task_id_string = {NULL, 0};
       lList *answer_list = NULL;
       u_long32 first_id;
+      int show = 0;
 
-      if (range_list[i] != NULL) { 
+      if (((hold_state[i] & MINUS_H_TGT_USER) && (full_listing & QSTAT_DISPLAY_USERHOLD)) || 
+          ((hold_state[i] & MINUS_H_TGT_OPERATOR) && (full_listing & QSTAT_DISPLAY_OPERATORHOLD) > 0) ||
+          ((hold_state[i] & MINUS_H_TGT_SYSTEM) && (full_listing & QSTAT_DISPLAY_SYSTEMHOLD) > 0) ||
+          ((hold_state[i] == 0) && (full_listing & QSTAT_DISPLAY_PENDING) > 0 && (full_listing & QSTAT_DISPLAY_HOLD) == 0) ||
+          (lGetUlong(job, JB_execution_time) > 0 && (full_listing & QSTAT_DISPLAY_STARTTIMEHOLD) > 0) ||
+          (lGetList(job, JB_jid_predecessor_list) != NULL && (full_listing & QSTAT_DISPLAY_JOBHOLD) > 0)
+         ) {
+         show = 1;
+      }
+
+      if (range_list[i] != NULL && show) { 
          range_print_to_string(range_list[i], &ja_task_id_string);
          first_id = range_list_get_first_id(range_list[i], &answer_list);
          if (answer_list_is_error_in_list(&answer_list) != 1) {

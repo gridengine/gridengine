@@ -124,8 +124,8 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
    hold_state[2] = MINUS_H_TGT_OPERATOR;
    hold_state[3] = MINUS_H_TGT_SYSTEM;
    hold_state[4] = MINUS_H_TGT_USER | MINUS_H_TGT_OPERATOR;
-   hold_state[5] = MINUS_H_TGT_OPERATOR | MINUS_H_TGT_SYSTEM;
-   hold_state[6] = MINUS_H_TGT_USER | MINUS_H_TGT_SYSTEM;
+   hold_state[5] = MINUS_H_TGT_USER | MINUS_H_TGT_SYSTEM;
+   hold_state[6] = MINUS_H_TGT_OPERATOR | MINUS_H_TGT_SYSTEM;
    hold_state[7] = MINUS_H_TGT_USER | MINUS_H_TGT_OPERATOR |
                    MINUS_H_TGT_SYSTEM;
 

@@ -1,3 +1,6 @@
+EB-2001-12-06-3: Bugfix:    qstat -s r didn't show running jobs
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-04-0)
+
 JG-2001-12-06-2: Testsuite: Adapt qmaster size test to use newer spawn function
                             open_remote_spawn_process.
 

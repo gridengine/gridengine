@@ -632,18 +632,6 @@ u_long32 show
       if (show & QSTAT_DISPLAY_FINISHED) {
          show |= ~QSTAT_DISPLAY_PENDING;
       }  
-#if 1 /* EB: TODO: implement (%I != NULL) for lists within cull */
-      if (!(show & QSTAT_DISPLAY_PENDING)) {
-         DPRINTF(("==> No pending jobs\n")); 
-
-         nw = lWhere("%T(%I->%T(!(%I >= %u)))", JB_Type, JB_ja_n_h_ids, 
-               RN_Type, RN_min, 0);
-         if (!jw)
-            jw = nw;
-         else
-            jw = lAndWhere(jw, nw);
-      }
-#endif
       if (!(show & QSTAT_DISPLAY_RUNNING)) {
 
          DPRINTF(("==> No running/transiting jobs\n"));

@@ -156,7 +156,7 @@ char **argv
 
    sge_mt_init();
 
-   log_state_set_log_gui(0);
+   log_state_set_log_gui(1);
 
    sge_gdi_param(SET_MEWHO, QSTAT, NULL);
    if (sge_gdi_setup(prognames[QSTAT], &alp)!=AE_OK) {

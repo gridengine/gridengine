@@ -175,7 +175,7 @@ char **argv
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
-   log_state_set_log_gui(0);
+   log_state_set_log_gui(1);
 
    sge_gdi_param(SET_MEWHO, QACCT, NULL);
    if (sge_gdi_setup(prognames[QACCT], &alp)!=AE_OK) {

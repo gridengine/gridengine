@@ -85,13 +85,8 @@ lList **alpp
 ) {
    dstring error_dstring = DSTRING_INIT;
    bool is_exit_on_error = uti_state_get_exit_on_error();
-   int is_log_state_set_log_gui = log_state_get_log_gui();
 
    DENTER(TOP_LAYER, "sge_setup");
-
-   if (is_exit_on_error) {
-      log_state_set_log_gui(true);
-   }
 
    /*
     * for setuid clients we must seteuid to the users uid
@@ -103,9 +98,7 @@ lList **alpp
       if (sge_run_as_user()) {   
          if (alpp == NULL || is_exit_on_error) {
             CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
-         }
-
-         if (!is_exit_on_error) {
+         } else {
             answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
@@ -207,7 +200,6 @@ lList **alpp
 #endif
 
    
-   log_state_set_log_gui(is_log_state_set_log_gui);
 
    DEXIT;
    return 0;

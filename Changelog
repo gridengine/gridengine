@@ -1,3 +1,11 @@
+CR-2004-03-04-0  Bugfix:    Rolled back change from CR-2004-03-02-2:
+                            all clients will now log error and critical 
+                            messages to stderr again. 
+
+                            Submitted cleanup issue: #744
+                 Changed:   all qXXXX clients
+                 
+
 MD-2004-03-04-1: Bugfix:    - Pattern matching for -l q= doesn't work 
                               per default 
                  Issue:     759

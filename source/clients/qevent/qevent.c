@@ -477,8 +477,7 @@ int main(int argc, char *argv[])
    /* dump pid to file */
    qevent_dump_pid_file();
 
-   log_state_set_log_gui(0);
-
+   log_state_set_log_gui(1);
 
    sge_gdi_param(SET_MEWHO, QEVENT, NULL);
 

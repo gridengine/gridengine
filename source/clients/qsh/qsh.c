@@ -1218,7 +1218,7 @@ int main(int argc, char **argv)
       my_who = QSH;
    }
 
-   log_state_set_log_gui(0);
+   log_state_set_log_gui(1);
 
    sge_gdi_param(SET_MEWHO, my_who, NULL);
    if (sge_gdi_setup(prognames[my_who], &alp)!=AE_OK) {

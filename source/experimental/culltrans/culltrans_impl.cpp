@@ -35,8 +35,8 @@
 #include <map>
 #include <set>
 #include <string>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include "culltrans_repository.h"
 #include "culltrans.h"
 
@@ -70,7 +70,7 @@ static bool writeHeader(ofstream& impl, map<string, List>::iterator& elem) {
    }
    impl << "#include \"Master_impl.h\"" << endl;
    impl << "extern \"C\" {" << endl;
-   impl << "#include \"cod_api.h\"" << endl;
+   impl << "#include \"sge_api.h\"" << endl;
    impl << "#include \"" << elem->second.file << "\"" << endl;
    impl << "}" << endl;
    impl << endl;
@@ -99,10 +99,10 @@ bool getType(map<string, List>::iterator& elem) {
 
 // write c'tor and d'tor
 void writeCtorDtor(ofstream& impl, map<string, List>::iterator& elem) {
-   impl << "Codine_" << elem->second.name << "_implementation::Codine_";
+   impl << "GE_" << elem->second.name << "_implementation::GE_";
    impl << elem->second.name << "_implementation(const ";
    if(key_type == lUlongT)
-      impl << "Codine_cod_ulong ";
+      impl << "GE_sge_ulong ";
    else
       impl << "char* ";
    impl << "_key, CORBA_ORB_var o)" << endl;
@@ -111,11 +111,11 @@ void writeCtorDtor(ofstream& impl, map<string, List>::iterator& elem) {
    //else
       //impl << indent << ": key(CORBA_string_dup(_key)), ";
    impl << "self(0), newSelf(0),  orb(o), creation(0), lastEvent(0), ";
-   impl << "apiListType(" << elem->second.cod_list_type << ") {}" << endl << endl;
-   impl << "Codine_" << elem->second.name << "_implementation::Codine_";
+   impl << "apiListType(" << elem->second.sge_list_type << ") {}" << endl << endl;
+   impl << "GE_" << elem->second.name << "_implementation::GE_";
    impl << elem->second.name << "_implementation(const ";
    if(key_type == lUlongT)
-      impl << "Codine_cod_ulong ";
+      impl << "GE_sge_ulong ";
    else
       impl << "char* ";
    impl << "_key, const time_t& tm, CORBA_ORB_var o)" << endl;
@@ -124,7 +124,7 @@ void writeCtorDtor(ofstream& impl, map<string, List>::iterator& elem) {
    //else
       //impl << indent << ": key(CORBA_string_dup(_key)), ";
    impl << "self(0), newSelf(0),  orb(o), creation(tm), lastEvent(0) {}" << endl << endl;
-   impl << "Codine_" << elem->second.name << "_implementation::~Codine_";
+   impl << "GE_" << elem->second.name << "_implementation::~GE_";
    impl << elem->second.name << "_implementation() {}" << endl << endl;
 }
 
@@ -141,18 +141,18 @@ bool writeGetFuncs(ofstream& impl, map<string, List>::iterator& elem) {
          list = lists.find(it->listType);
          if(list != lists.end())
             if(it->object)
-               impl << "Codine_" << list->second.name << "* ";
+               impl << "GE_" << list->second.name << "* ";
             else
-               impl << "Codine_" << list->second.name << "Seq* ";
+               impl << "GE_" << list->second.name << "Seq* ";
          else {
             cerr << "Could not find " << it->listType << "." << endl;
             return false;
          }
       }
       else
-         impl << multiType2codType[it->type] << ' ';
+         impl << multiType2sgeType[it->type] << ' ';
 
-      impl << "Codine_" << elem->second.name << "_implementation::get_" << it->name;
+      impl << "GE_" << elem->second.name << "_implementation::get_" << it->name;
       impl << "(CORBA_Context* ctx) {" << endl;
       impl << indent << "QENTER(\"" << elem->second.name;
       impl << "::get_" << it->name << "\");" << endl;
@@ -164,7 +164,7 @@ bool writeGetFuncs(ofstream& impl, map<string, List>::iterator& elem) {
          if(!list->second.interf) {
             impl << indent << "lList* lp = lGetList(self, ";
             impl << prefix << it->name << ");" << endl;
-            impl << indent << "Codine_" << list->second.name << "Seq* foo = ";
+            impl << indent << "GE_" << list->second.name << "Seq* foo = ";
             impl << "cull2" << list->second.name << "Seq(lp);" << endl;
          }
          else {
@@ -182,16 +182,16 @@ bool writeGetFuncs(ofstream& impl, map<string, List>::iterator& elem) {
             impl << indent << "lList* lp = lGetList(self, ";
             impl << prefix << it->name << ");" << endl;
             impl << indent << "lListElem* lep;" << endl;
-            impl << indent << "Codine_" << list->second.name << "_implementation* x;" << endl << endl;
-            impl << indent << "Codine_" << list->second.name << "Seq* foo =";
-            impl << " new Codine_" << list->second.name << "Seq();" << endl;
+            impl << indent << "GE_" << list->second.name << "_implementation* x;" << endl << endl;
+            impl << indent << "GE_" << list->second.name << "Seq* foo =";
+            impl << " new GE_" << list->second.name << "Seq();" << endl;
             impl << indent << "for_each_cpp(lep, lp) {" << endl;
-            impl << indent << indent << "x = Codine_Master_impl::instance()";
+            impl << indent << indent << "x = GE_Master_impl::instance()";
             impl << "->get" << list->second.name << "Impl(lGet";
             impl << multiType2getType[other->type] << "(lep, ";
             impl << other_prefix << other->name << "));" << endl;
             impl << endl << indent << indent << "if(x)" << endl;
-            impl << indent << indent << indent << "foo->append(Codine_";
+            impl << indent << indent << indent << "foo->append(GE_";
             impl << list->second.name << "_implementation::_duplicate(x));" << endl;
             impl << indent << "}" << endl << endl;
 
@@ -200,10 +200,10 @@ bool writeGetFuncs(ofstream& impl, map<string, List>::iterator& elem) {
       else if(it->type == lStringT) {
          impl << indent << "char* temp = lGetString(self, ";
          impl << prefix << it->name << ");" << endl;
-         impl << indent << "Codine_cod_string foo = CORBA_string_dup(temp?temp:\"\");" << endl;
+         impl << indent << "GE_sge_string foo = CORBA_string_dup(temp?temp:\"\");" << endl;
       }
       else {
-         impl << indent << multiType2codType[it->type] << " foo = lGet";
+         impl << indent << multiType2sgeType[it->type] << " foo = lGet";
          impl << multiType2getType[it->type] << "(self, ";
          impl << prefix << it->name << ");" << endl;   
       }
@@ -223,11 +223,11 @@ bool writeSetFuncs(ofstream& impl, map<string, List>::iterator& elem) {
       if(it->idlonly || it->readonly || it->key || ((it->type == lListT) && ((list = lists.find(it->listType)) != lists.end()) && list->second.interf))
          continue;
 
-      impl << "Codine_cod_ulong Codine_" << elem->second.name << "_implementation::set_" << it->name << "(";
+      impl << "GE_sge_ulong GE_" << elem->second.name << "_implementation::set_" << it->name << "(";
       if(it->type == lListT) {
          list = lists.find(it->listType);
          if(list != lists.end()) {
-            impl << "const Codine_" << list->second.name << "Seq& ";
+            impl << "const GE_" << list->second.name << "Seq& ";
          }
          else {
             cerr << "Could not find " << it->listType << "." << endl;
@@ -237,7 +237,7 @@ bool writeSetFuncs(ofstream& impl, map<string, List>::iterator& elem) {
       else if(it->type == lStringT)
          impl << "const char* ";
       else
-         impl << multiType2codType[it->type] << ' ';
+         impl << multiType2sgeType[it->type] << ' ';
       impl << "val, CORBA_Context* ctx) {" << endl;
       impl << indent << "QENTER(\"" << elem->second.name;
       impl << "::set_" << it->name << "\");" << endl;
@@ -248,7 +248,7 @@ bool writeSetFuncs(ofstream& impl, map<string, List>::iterator& elem) {
       impl << indent << indent << "lSet" << multiType2getType[it->type];
       impl << "(self, " << prefix << it->name << ", ";
       if(it->type == lListT) {
-         impl << list->second.name << "Seq2cull((Codine_" << list->second.name;
+         impl << list->second.name << "Seq2cull((GE_" << list->second.name;
          impl << "Seq&)val));" << endl;
       }
       else if(it->type == lStringT)
@@ -267,7 +267,7 @@ bool writeSetFuncs(ofstream& impl, map<string, List>::iterator& elem) {
       impl << indent << "lSet" << multiType2getType[it->type] << "(lep, ";
       impl << prefix << it->name << ", ";
       if(it->type == lListT) {
-         impl << list->second.name << "Seq2cull((Codine_" << list->second.name;
+         impl << list->second.name << "Seq2cull((GE_" << list->second.name;
          impl << "Seq&)val));" << endl;
       }
       else if(it->type == lStringT)
@@ -276,8 +276,8 @@ bool writeSetFuncs(ofstream& impl, map<string, List>::iterator& elem) {
          impl << "val);" << endl;
       impl << indent << "what = lWhat(\"%T(%I %I)\", " << prefix << "Type, ";
       impl << prefix << key << ", " << prefix << it->name << ");" << endl;
-      impl << indent << "alp = cod_api(apiListType";
-      impl << ", COD_API_MOD, &lp, NULL, what);" << endl;
+      impl << indent << "alp = sge_api(apiListType";
+      impl << ", SGE_API_MOD, &lp, NULL, what);" << endl;
       impl << indent << "lFreeWhat(what);" << endl;
       impl << indent << "throwErrors(alp);" << endl;
       impl << indent << "return lastEvent;" << endl;
@@ -292,7 +292,7 @@ bool writeGetContent(ofstream& impl, map<string, List>::iterator& elem) {
    vector<Elem>::iterator it;
    map<string, List>::iterator list = lists.end();
 
-   impl << "Codine_contentSeq* Codine_" << elem->second.name << "_implementation::get_content(CORBA_Context* ctx) {" << endl;
+   impl << "GE_contentSeq* GE_" << elem->second.name << "_implementation::get_content(CORBA_Context* ctx) {" << endl;
    impl << indent << "QENTER(\"" << elem->second.name;
    impl << "::get_content\");" << endl;
    impl << indent << "AUTO_LOCK_MASTER;" << endl;
@@ -300,32 +300,32 @@ bool writeGetContent(ofstream& impl, map<string, List>::iterator& elem) {
    impl << indent << "getSelf();" << endl << endl;
    
    impl << indent << "// build content sequence" << endl;
-   impl << indent << "Codine_contentSeq* cs = new Codine_contentSeq;" << endl;
+   impl << indent << "GE_contentSeq* cs = new GE_contentSeq;" << endl;
    impl << indent << "char* dummy;" << endl << endl;
    impl << indent << "cs->length(" << elem->second.elems.size() << ");" << endl << endl;
 
    unsigned long i=0;
    for(it=elem->second.elems.begin(), i=0; it != elem->second.elems.end(); ++it, i++) {
       impl << indent << "// " << it->name << endl;
-      impl << indent << "cs->operator[](" << i << ").elem = Codine_" << prefix << it->name << ";" << endl;
+      impl << indent << "cs->operator[](" << i << ").elem = GE_" << prefix << it->name << ";" << endl;
    	impl << indent << "cs->operator[](" << i << ").value <<= ";
       if(it->type == lListT) {
          list = lists.find(it->listType);
          if(list != lists.end())
-            impl << "get_" << it->name << "(Codine_Master_impl::instance()->getMasterContext());" << endl;
+            impl << "get_" << it->name << "(GE_Master_impl::instance()->getMasterContext());" << endl;
          else {
             cerr << "Could not find " << it->listType << "." << endl;
             return false;
          }
       }
       else if(it->idlonly)
-         impl << "get_" << it->name << "(Codine_Master_impl::instance()->getMasterContext());" << endl;
+         impl << "get_" << it->name << "(GE_Master_impl::instance()->getMasterContext());" << endl;
       else if(it->type == lBoolT)
-         impl << "CORBA_Any::from_boolean(" << "(" << multiType2codType[it->type] << ")lGet" << multiType2getType[it->type] << "(self, " << prefix << it->name << "));" << endl;
+         impl << "CORBA_Any::from_boolean(" << "(" << multiType2sgeType[it->type] << ")lGet" << multiType2getType[it->type] << "(self, " << prefix << it->name << "));" << endl;
       else if(it->type == lStringT)
          impl << "(dummy = lGetString(self, " << prefix << it->name << "))?dummy:\"\";" << endl;
       else
-         impl << "(" << multiType2codType[it->type] << ")lGet" << multiType2getType[it->type] << "(self, " << prefix << it->name << ");" << endl;
+         impl << "(" << multiType2sgeType[it->type] << ")lGet" << multiType2getType[it->type] << "(self, " << prefix << it->name << ");" << endl;
    }
    impl << indent << "return cs;" << endl;
    impl << "}" << endl << endl;
@@ -338,7 +338,7 @@ bool writeSetContent(ofstream& impl, map<string, List>::iterator& elem) {
    vector<Elem>::iterator it;
    map<string, List>::iterator list = lists.end();
 
-   impl << "Codine_cod_ulong Codine_" << elem->second.name << "_implementation::set_content(const Codine_contentSeq& cs, CORBA_Context* ctx) {" << endl;
+   impl << "GE_sge_ulong GE_" << elem->second.name << "_implementation::set_content(const GE_contentSeq& cs, CORBA_Context* ctx) {" << endl;
    impl << indent << "QENTER(\"" << elem->second.name;
    impl << "::set_content\");" << endl;
    impl << indent << "AUTO_LOCK_MASTER;" << endl;
@@ -348,14 +348,14 @@ bool writeSetContent(ofstream& impl, map<string, List>::iterator& elem) {
    for(list=lists.begin(); list != lists.end(); ++list)
       for(it=elem->second.elems.begin(); it != elem->second.elems.end(); ++it)
          if(it->type == lListT && it->listType == list->second.type) {
-            impl << indent << "Codine_" << list->second.name;
+            impl << indent << "GE_" << list->second.name;
             if(!it->object)
                impl << "Seq";
             impl << "* " << list->second.name << "_val;" << endl;
             break;
          }
    for(int x=1; x<lListT; x++)
-      impl << indent << multiType2codType[x] << " " << multiType2getType[x] << "_val;" << endl;
+      impl << indent << multiType2sgeType[x] << " " << multiType2getType[x] << "_val;" << endl;
    impl << indent << "lList* " << multiType2getType[lListT] << "_val;" << endl;
    impl << indent << "int* nameVector = new int[cs.length()+1];" << endl;
    impl << indent << "lListPtr lp = lCreateList(\"set content\", " << elem->second.type << ");" << endl;
@@ -386,7 +386,7 @@ bool writeSetContent(ofstream& impl, map<string, List>::iterator& elem) {
             impl << indent << indent << indent << "set_" << it->name << "(";
             if(!it->object)
                impl << "*";
-            impl << list->second.name << "_val, Codine_Master_impl::instance()->getMasterContext());" << endl;
+            impl << list->second.name << "_val, GE_Master_impl::instance()->getMasterContext());" << endl;
          }
       }
       else
@@ -394,7 +394,7 @@ bool writeSetContent(ofstream& impl, map<string, List>::iterator& elem) {
       if(it->type != lListT || (it->type == lListT && !list->second.interf))
          impl << indent << indent << indent << "lSet" << multiType2getType[it->type] << "(lep, " << prefix << it->name << ", " << multiType2getType[it->type] << "_val);" << endl;
       else if(it->type != lListT && it->idlonly)
-         impl << indent << indent << indent << "set_" << it->name << "(" << multiType2getType[it->type] << "_val , Codine_Master_impl::instance()->getMasterContext());" << endl;
+         impl << indent << indent << indent << "set_" << it->name << "(" << multiType2getType[it->type] << "_val , GE_Master_impl::instance()->getMasterContext());" << endl;
       impl << indent << indent << indent << "break;" << endl;
    }
    impl << indent << indent << "default:" << endl;
@@ -414,7 +414,7 @@ bool writeSetContent(ofstream& impl, map<string, List>::iterator& elem) {
    impl << indent << "else {" << endl;
    impl << indent << indent << "lListPtr alp;" << endl;
    impl << indent << indent << "lEnumeration* what = lIntVector2What(" << elem->second.type << ", nameVector);" << endl;
-   impl << indent << indent << "alp = cod_api(apiListType, COD_API_MOD, &lp, NULL, what);" << endl;
+   impl << indent << indent << "alp = sge_api(apiListType, SGE_API_MOD, &lp, NULL, what);" << endl;
    impl << indent << indent << "lFreeWhat(what);" << endl;
    impl << indent << indent << "throwErrors(alp);" << endl;
    impl << indent << "}" << endl << endl;

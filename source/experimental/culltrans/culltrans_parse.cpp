@@ -35,29 +35,26 @@
 #include <map>
 #include <set>
 #include <string>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 
 #include "culltrans_repository.h"
 #include "culltrans.h"
 
-extern "C"
-{
 #include "cull.h"
-#include "cod_all_listsL.h"
-}
+#include "sge_all_listsL.h"
 
 // newList
 // begin a new list definition
 // type: the list's type (eg QU_Type)
 // name: the list's name (eg Queue)
 // interface: flag if interface or struct
-void newList(const char* type, const char* name, const char* cod_list_type, const bool interface) {
+void newList(const char* type, const char* name, const char* sge_list_type, const bool interface) {
    if(disthdr)
       fprintf(disthdr, "LISTDEF( %s )", type);
 
    pair<map<string, List>::iterator, bool> status;
-   List  l(type, name, yyin_name, cod_list_type, interface);
+   List  l(type, name, yyin_name, sge_list_type, interface);
    status = lists.insert(map<string, List>::value_type(type, l));
    if(status.second)
       active = status.first;
@@ -85,28 +82,28 @@ void newElem(const int type, const char* name, const bool readonly, const bool i
    if(disthdr && !idlonly) {
       switch(type) {
          case lBoolT:
-            fprintf(disthdr, "   COD_ULONG");
+            fprintf(disthdr, "   SGE_ULONG");
             break;
          case lFloatT:
-            fprintf(disthdr, "   COD_FLOAT");
+            fprintf(disthdr, "   SGE_FLOAT");
             break;
          case lDoubleT:
-            fprintf(disthdr, "   COD_DOUBLE");
+            fprintf(disthdr, "   SGE_DOUBLE");
             break;
          case lUlongT:
-            fprintf(disthdr, "   COD_ULONG");
+            fprintf(disthdr, "   SGE_ULONG");
             break;
          case lLongT:
-            fprintf(disthdr, "   COD_LONG");
+            fprintf(disthdr, "   SGE_LONG");
             break;
          case lCharT:
-            fprintf(disthdr, "   COD_CHAR");
+            fprintf(disthdr, "   SGE_CHAR");
             break;
          case lIntT:
-            fprintf(disthdr, "   COD_INT");
+            fprintf(disthdr, "   SGE_INT");
             break;
          case lStringT:
-            fprintf(disthdr, "   COD_STRING");
+            fprintf(disthdr, "   SGE_STRING");
             break;
          default:
             break;
@@ -127,11 +124,11 @@ void newElem(const int type, const char* name, const bool readonly, const bool i
 }
 
 // newXElem
-// a list element that will not appear in the idl code
+// a list element that will not appear in the idl sgee
 // but in the dist headers (if necessary)
 void newXElem(const char* type, const char* name) {
    if(disthdr)
-      fprintf(disthdr, "   COD_%s( %s )", strchr(type, 'X')+1, name);
+      fprintf(disthdr, "   SGE_%s( %s )", strchr(type, 'X')+1, name);
 }
 
 // newListElem
@@ -141,7 +138,7 @@ void newXElem(const char* type, const char* name) {
 // readonly: flag if readonly or not
 void newListElem(const char* name, const char* type, const bool readonly, const bool idlonly) {
    if(disthdr && !idlonly)
-      fprintf(disthdr, "   COD_LIST( %s )", name);
+      fprintf(disthdr, "   SGE_LIST( %s )", name);
 
    if(!idlonly)
       constants[lStr2Nm((char*)name)] = name;
@@ -161,7 +158,7 @@ void newListElem(const char* name, const char* type, const bool readonly, const 
 // readonly: flag if readonly or not
 void newObjElem(const char* name, const char* type, const bool readonly, const bool idlonly) {
    if(disthdr && !idlonly)
-      fprintf(disthdr, "   COD_LIST( %s )", name);
+      fprintf(disthdr, "   SGE_LIST( %s )", name);
 
    if(!idlonly)
       constants[lStr2Nm((char*)name)] = name;
@@ -175,11 +172,11 @@ void newObjElem(const char* name, const char* type, const bool readonly, const b
 }
 
 // newXList
-// a list element that will not appear in the idl code
+// a list element that will not appear in the idl sgee
 // but in the dist headers (if necessary)
 void newXList(const char* name, const char* type, const bool object) {
    if(disthdr)
-      fprintf(disthdr, "   COD_LIST( %s )", name);
+      fprintf(disthdr, "   SGE_LIST( %s )", name);
 
 }
 

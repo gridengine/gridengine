@@ -60,9 +60,6 @@ NAMEDEF(STN)
 NAMEEND
 
 #define STS sizeof(STN)/sizeof(char*)
-#ifdef  __cplusplus
-}
-#endif
 
 /*
  * String list with unique strings

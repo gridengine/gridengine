@@ -1051,7 +1051,7 @@ case DARWIN:
    set XMTINCD  = "$XMTINCD -I$MOTIFHOME/include"
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
    set XCFLAGS  = "-DNeedFunctionPrototypes -DNeedVarargsPrototypes -Wno-error $XMTDEF $XINCD"
-   set XLIBD    = "-L/usr/X11R6/lib -L$MOTIFHOME/lib"
+   set XLIBD    = "-L$MOTIFHOME/lib -L/usr/X11R6/lib"
    set XLIBS    = "-lXm -lXpm -lXt -lXext -lX11 -lSM -lICE"
 
    switch ($REL)
@@ -1457,11 +1457,13 @@ case SOLARIS86:
             set compversion = `cc -V |& head -1 | cut -f4 -d" "`
             set patchcnt = `/bin/sh -c 'ls -d /var/sadm/patch/112756-* 2> /dev/null' | wc -l`
             set haspatch = `expr $patchcnt ">=" 1`
+     #       set haspatch = 0
             if ( $compversion == 5.5 && $haspatch == 1 ) then
                set OFLAG = "-fast -xchip=pentium -xcache=generic"
             else
                echo using \"-xO3\" optimization due to compiler bug
                set OFLAG = "-xO3"
+     #          set OFLAG = "-xO3 -fns -fsimple=2 -fsingle -ftrap=%none -nofstore -xbuiltin=%all -xdepend -xlibmil"
             endif
          else
             set OFLAG = "-fast -xchip=generic -xcache=generic"
@@ -1508,7 +1510,9 @@ case SOLARIS86:
       endif
    endif
 
-   set CFLAGS = "-Xc -v $OFLAG $MEMFLAG -ftrap=division $CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7 $DEBUG_FLAG"
+   if ( $CC == cc ) then
+      set CFLAGS = "-Xc -v $OFLAG $MEMFLAG -ftrap=division $CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7 $DEBUG_FLAG"
+   endif
 
    set SHAREDLD = $CC
    if ( $CC == gcc ) then

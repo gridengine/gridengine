@@ -3214,15 +3214,33 @@ sge_calc_tickets( sge_Sdescr_t *lists,
     * most tickets. These ticket numbers will be stored in the template
     * element within the job. 
     */
+
+#if 1 /* EB: debug */
+   {
+      lListElem *job;
+
+      for_each(job, queued_jobs) {
+         DPRINTF(("job_id: "u32"\n", lGetUlong(job, JB_job_number)));
+      }
+   }
+#endif
    if (queued_jobs != NULL) {
       sge_task_ref_t *tref = task_ref_get_first_job_entry();
 
       while(tref != NULL) {
          lListElem *job = lGetElemUlong(queued_jobs, JB_job_number, 
                                         tref->job_number); 
-         lListElem *ja_task_template = lFirst(lGetList(job, JB_ja_template));
 
-         task_ref_copy_to_ja_task(tref, ja_task_template);
+         if (job) {
+            lListElem *ja_task_template;
+#if 1 /* EB: debug */
+   DPRINTF(("tref->job_number: "u32"\n", tref->job_number));         
+#endif
+
+            ja_task_template = lFirst(lGetList(job, JB_ja_template));
+
+            task_ref_copy_to_ja_task(tref, ja_task_template);
+         } 
          tref = task_ref_get_next_job_entry();
       }
    }

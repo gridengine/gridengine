@@ -1,3 +1,6 @@
+EB-2001-12-10-0: Bugfix:    Fix in sgeee scheduler where pending tickets 
+                            are moved into the template for pending tasks 
+
 AH-2001-12-07-0: Cleanup:   Improved diagnosis possibilities when commd is 
                             blocked NIS/DNS resolver library calls.
 

@@ -1,3 +1,7 @@
+CR-2002-01-29-2: Testsuite: create foreign user keys for secure system
+                 Bugfix:    
+           
+
 CR-2002-01-29-1: Bugfix:    broken aimk -umap build
                  IssuZilla: #127
 

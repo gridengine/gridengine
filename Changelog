@@ -1,3 +1,10 @@
+MD-2004-04-21-1: Bugfix:    - if SGE_ROOT was already set, the scripts
+                              throws thsi away and asked again
+                            - addapted testsuite to inst_sge
+                 Changed:   testsuite, inst_sge
+                 Issue:     973
+                 Review:    AS (pending)
+
 MD-2004-04-21-0: Bugfix:    - library path was wrong
                             - cleanups removed SGEEE's
                             - removed unused entries in config template

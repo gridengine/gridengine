@@ -222,12 +222,9 @@ SetCellDependentVariables()
 #
 CheckPath()
 {
-   if [ "$SGE_ROOT" = "" ]; then
-      SGE_ROOT=`pwd`
-   fi
       MYTEMP=`echo $SGE_ROOT | sed 's/\/$//'`
       SGE_ROOT=$MYTEMP
-#   export SGE_ROOT
+      export SGE_ROOT
 }
 
 #--------------------------------------------------------------------------
@@ -571,22 +568,23 @@ ProcessSGERoot()
             $CLEAR
             $INFOTEXT -u "\nChecking \$SGE_ROOT directory"
             $ECHO
+            eval SGE_ROOT=`pwd | sed 's/\/tmp_mnt//'`
             $INFOTEXT -n "The Grid Engine root directory is not set!\n" \
-                         "Please enter a correct path for SGE_ROOT or quit the installation\n" \
-                         "with <CTRL-C> >> " 
+                         "Please enter a correct path for SGE_ROOT.\n" 
+            $INFOTEXT -n "If this directory is not correct (e.g. it may contain an automounter\n" \
+                         "prefix) enter the correct path to this directory or hit <RETURN>\n" \
+                         "to use default [%s] >> " $SGE_ROOT
          
-            eval SGE_ROOT=`Enter`
+            eval SGE_ROOT=`Enter $SGE_ROOT`
          done
          export SGE_ROOT
       else
          $CLEAR
          $INFOTEXT -u "\nChecking \$SGE_ROOT directory"
          $ECHO
-         eval SGE_ROOT=`pwd | sed 's/\/tmp_mnt//'`
-         export SGE_ROOT
          SGE_ROOT_VAL=`eval echo $SGE_ROOT`
 
-         $INFOTEXT -n "The Grid Engine root directory (your current directory) is:\n\n" \
+         $INFOTEXT -n "The Grid Engine root directory is:\n\n" \
                       "   \$SGE_ROOT = %s\n\n" \
                       "If this directory is not correct (e.g. it may contain an automounter\n" \
                       "prefix) enter the correct path to this directory or hit <RETURN>\n" \
@@ -632,6 +630,7 @@ ProcessSGERoot()
       fi
    done
 
+   CheckPath
    $INFOTEXT "Your \$SGE_ROOT directory: %s\n" $SGE_ROOT_VAL
    $INFOTEXT -log "Your \$SGE_ROOT directory: %s" $SGE_ROOT_VAL
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "

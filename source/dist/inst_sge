@@ -91,7 +91,6 @@ SGE_NOMSG="undef"
 
 BasicSettings
 SetUpInfoText
-CheckPath
 CheckBinaries
 
 

@@ -408,11 +408,20 @@ SetSpoolingOptionsClassic()
 SetSpoolingOptionsDynamic()
 {
    if [ $AUTO = "true" ]; then
-      INP=$SPOOLING_METHOD
+      if [ "$SPOOLING_METHOD" != "berkeleydb" -o "$SPOOLING_METHOD" != "classic" ]; then
+         INP="berkeleydb"
+      else
+         INP=$SPOOLING_METHOD
+      fi
    else
-      $INFOTEXT "\nPlease choose spooling method (berkeleydb|classic) [berkeleydb] >> "
+      $INFOTEXT -n "Your SGE binaries are compiled to link the spooling libraries\n" \
+                   "during runtime (dynamically). So you can choose between Berkeley DB \n" \
+                   "spooling and Classic spooling method."
+      $INFOTEXT -n "\nPlease choose a spooling method (berkeleydb|classic) [berkeleydb] >> "
       INP=`Enter berkeleydb`
    fi
+
+   $CLEAR
 
    case $INP in 
       classic)
@@ -1307,12 +1316,10 @@ GetExecdPort()
                 "   sge_execd <port_number>/tcp\n\n" \
                 "to your services database and make sure to use an unused port number.\n"
 
-      if [ "$EXECD" = "install" ]; then
-
          $INFOTEXT "Make sure to use a different port number for the Executionhost\n" \
                    "as on the qmaster machine\n"
          $INFOTEXT "The qmaster port SGE_QMASTER_PORT = %s\n" $SGE_QMASTER_PORT
-      fi
+
       $INFOTEXT -wait -auto $AUTO -n "Please add the service now or press <RETURN> to go to entering a port number >> "
 
       # Check if $SGE_SERVICE service is available now

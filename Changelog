@@ -1,3 +1,6 @@
+CR-2004-08-10-1: Testsuite: startup_shadowd did not use sgemaster -shadowd
+                            command line argument
+
 CR-2004-08-10-0: Testsuite: shutdown_core_system will now wait for qmaster
                             shutdown when qconf -km is used
 

@@ -857,7 +857,7 @@ u_long32 flags
 
          DPRINTF(("\"-l %s\"\n", *sp));
 
-         resource_list = centry_list_parse_from_string(NULL, *sp, true);
+         resource_list = centry_list_parse_from_string(NULL, *sp, false);
          if (!resource_list) {
              sprintf(str,MSG_PARSE_WRONGRESOURCELISTFORMATXSPECTOLOPTION_S ,
              *sp);

@@ -273,7 +273,7 @@ Widget w;
 XtPointer cld, cad;
 {
    lList *alp = NULL;
-   qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T, &alp);
+   qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T | CENTRY_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -310,7 +310,7 @@ XtPointer cld, cad;
     * of host that the queue is attached to
     */
    qmonTimerAddUpdateProc(QUEUE_T, "updateQueueList", updateQueueList);
-   qmonStartTimer(QUEUE_T | EXECHOST_T);
+   qmonStartTimer(QUEUE_T | EXECHOST_T | CENTRY_T);
    
    DEXIT;
 }
@@ -328,7 +328,7 @@ XtPointer cld, cad;
     * stop queue timer for queue info and exechost timer for infos
     * of host that the queue is attached to
     */
-   qmonStopTimer(QUEUE_T | EXECHOST_T);
+   qmonStopTimer(QUEUE_T | EXECHOST_T | CENTRY_T);
    qmonTimerRmUpdateProc(QUEUE_T, "updateQueueList");
    
    DEXIT;

@@ -246,6 +246,14 @@ XtPointer cld, cad;
    qmonMessageBox(w, alp, 0);
    alp = lFreeList(alp);
 
+   qmonMirrorMultiAnswer(CENTRY_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+   
    XtUnmanageChild(qmon_cplx);
    XtPopdown(XtParent(qmon_cplx));
 

@@ -85,6 +85,7 @@ GDILIB_SRC = sge_all_listsL.c \
          sge_manop.c \
          sge_calendar.c \
          sge_sharetree.c \
+         sge_usage.c \
          sge_usermap.c \
          version.c
 
@@ -277,6 +278,9 @@ sge_mirror.o: $(GDILIB_DIR)/sge_mirror.c
 
 sge_c_event.o: $(GDILIB_DIR)/sge_c_event.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_c_event.c
+
+sge_usage.o: $(GDILIB_DIR)/sge_usage.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_usage.c
 
 #---------------------------------------------------------------------
 # test programs

@@ -1,3 +1,9 @@
+JG-2002-10-15-0  Bugfix:    compilation failed using gcc-3.x
+                 IZ:        #395
+                 Enhancem.  Introduced new module libs/gdi/sge_usage that
+                            contains usage and usage list related functions.
+                 IZ:        #397
+
 AA-2002-10-15-0  I18N:      dist/locale/en/qmon_messages.ad and qmon_help.ad
                             added
 

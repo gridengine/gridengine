@@ -52,7 +52,7 @@
 #include "sge_queue.h"
 #include "sge_os.h"
 #include "sge_log.h"
-#include "sge_usageL.h"
+#include "sge_usage.h"
 #include "sge_time.h"
 #include "slots_used.h"
 #include "admin_mail.h"
@@ -1618,7 +1618,7 @@ int failed
 static void build_derived_final_usage(
 lListElem *jr 
 ) {
-   lListElem *uep;
+   lList *usage_list;
    double ru_cpu, pdc_cpu;
    double cpu, r_cpu,
           mem, r_mem,
@@ -1634,18 +1634,21 @@ lListElem *jr
    parse_ulong_val(&h_vmem, NULL, TYPE_MEM, get_conf_val("h_vmem"), NULL, 0);
    parse_ulong_val(&s_vmem, NULL, TYPE_MEM, get_conf_val("s_vmem"), NULL, 0);
    h_vmem = MIN(s_vmem, h_vmem);
+
+   usage_list = lGetList(jr, JR_usage);
+   
    /* cpu    = MAX(sum of "ru_utime" and "ru_stime" , PDC "cpu" usage) */
-   ru_cpu = ((uep=lGetSubStr(jr, UA_name, "ru_utime", JR_usage))?lGetDouble(uep, UA_value):0) +
-            ((uep=lGetSubStr(jr, UA_name, "ru_stime", JR_usage))?lGetDouble(uep, UA_value):0);
-   pdc_cpu = (uep=lGetSubStr(jr, UA_name, USAGE_ATTR_CPU, JR_usage))?lGetDouble(uep, UA_value):0;
+   ru_cpu = usage_list_get_double_usage(usage_list, "ru_utime", 0) +
+            usage_list_get_double_usage(usage_list, "ru_stime", 0);
+   pdc_cpu = usage_list_get_double_usage(usage_list, USAGE_ATTR_CPU, 0);
    cpu = MAX(ru_cpu, pdc_cpu);
 
    /* r_cpu  = h_rt * slots */
-   r_cpu = (((uep=lGetSubStr(jr, UA_name, "end_time", JR_usage))?lGetDouble(uep, UA_value):0) -
-           ((uep=lGetSubStr(jr, UA_name, "start_time", JR_usage))?lGetDouble(uep, UA_value):0))*slots;
+   r_cpu = (usage_list_get_double_usage(usage_list, "end_time", 0) -
+           usage_list_get_double_usage(usage_list, "start_time", 0))*slots;
 
    /* mem    = PDC "mem" usage or zero */
-   mem = ((uep=lGetSubStr(jr, UA_name, USAGE_ATTR_MEM, JR_usage))?lGetDouble(uep, UA_value):0);
+   mem = usage_list_get_double_usage(usage_list, USAGE_ATTR_MEM, 0);
 
    /* r_mem  = r_cpu * h_vmem */
    if (h_vmem != DBL_MAX)
@@ -1654,19 +1657,19 @@ lListElem *jr
       r_mem = mem;
 
    /* io     = PDC "io" usage or zero */
-   io = ((uep=lGetSubStr(jr, UA_name, USAGE_ATTR_IO, JR_usage))?lGetDouble(uep, UA_value):0);
+   io = usage_list_get_double_usage(usage_list, USAGE_ATTR_IO, 0);
 
    /* r_io   = 0 */
    r_io = io;
 
    /* iow     = PDC "io wait time" or zero */
-   iow = ((uep=lGetSubStr(jr, UA_name, USAGE_ATTR_IOW, JR_usage))?lGetDouble(uep, UA_value):0);
+   iow = usage_list_get_double_usage(usage_list, USAGE_ATTR_IOW, 0);
 
    /* r_iow  = 0 */
    r_iow = iow;
 
    /* maxvmem */
-   r_maxvmem = maxvmem = ((uep=lGetSubStr(jr, UA_name, USAGE_ATTR_MAXVMEM, JR_usage))?lGetDouble(uep, UA_value):0);
+   r_maxvmem = maxvmem = usage_list_get_double_usage(usage_list, USAGE_ATTR_MAXVMEM, 0);
 
    DPRINTF(("CPU/MEM/IO: M(%f/%f/%f) R(%f/%f/%f) acct: %s stree: %s\n",
          cpu, mem, io, r_cpu, r_mem, r_io,
@@ -1759,6 +1762,10 @@ lListElem *jr
 
    if (!(u=lGetString(jep, JB_owner)))
       u = MSG_MAIL_UNKNOWN_NAME;
+
+   /* JG: TODO (397): Extend usage module: usage_list_get_ctime_usage() 
+    *                 and use the other usage_list_get functions.
+    */
 
    if ((ep=lGetSubStr(jr, UA_name, "start_time", JR_usage)))
       strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value)));

@@ -32,6 +32,8 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+global file_procedure_logfile_wait_sp_id
+
 #                                                             max. column:     |
 #****** file_procedures/test_file() ******
 # 
@@ -272,10 +274,14 @@ proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} {
     
    set_users_environment users_env
 
-   set script [ open "$scriptfile" "w" ]
-
-
-   
+   set script "no_script"
+   set catch_return [ catch {
+       set script [ open "$scriptfile" "w" ]
+   } ]
+   if { $catch_return != 0 } {
+      add_proc_error "create_shell_script" "-2" "could not open file $scriptfile for writing"
+      return
+   }
 
    # script header
    puts $script "#!${script_path}"
@@ -875,6 +881,55 @@ proc wait_for_file { path_to_file seconds { to_go_away 0 } { do_error_check 1 } 
 }
 
 
+#****** file_procedures/wait_for_remote_file() *********************************
+#  NAME
+#     wait_for_remote_file() -- waiting for a file to apear (NFS-Check)
+#
+#  SYNOPSIS
+#     wait_for_remote_file { hostname user path { mytimeout 60 } } 
+#
+#  FUNCTION
+#     The function is using the ls command on the remote host. If the command
+#     returns no error the procedure returns. Otherwise an error is reported
+#     when reaching timeout value.
+#
+#  INPUTS
+#     hostname         - host where the file should be checked
+#     user             - user id who performs check
+#     path             - full path to file
+#     { mytimeout 60 } - timeout in seconds
+#
+#  SEE ALSO
+#     file_procedures/wait_for_file()
+#*******************************************************************************
+proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
+   global CHECK_OUTPUT
+
+   set is_ok 0
+   set my_mytimeout [ expr ( [timestamp] + $mytimeout ) ] 
+
+   while { $is_ok == 0 } {
+      set output [ start_remote_prog $hostname $user "ls" "$path" prg_exit_state 60 0 "" 0]
+      if { $prg_exit_state == 0 } {
+         set is_ok 1
+         break
+      } 
+      puts -nonewline $CHECK_OUTPUT "."
+      if { [timestamp] > $my_mytimeout } {
+         break
+      }
+      sleep 1
+   }
+   if { $is_ok == 1 } {
+      puts $CHECK_OUTPUT "ok"
+      puts $CHECK_OUTPUT "found prog: $output"
+   } else {
+      puts $CHECK_OUTPUT "timeout"
+      add_proc_error "wait_for_remote_file" -1 "timeout while waiting for file $path on host $hostname"
+   }
+}
+
+
 
 #                                                             max. column:     |
 #****** file_procedures/delete_directory() ******
@@ -964,7 +1019,244 @@ proc delete_directory { path } {
   return $return_value
 }
 
+#****** file_procedures/init_logfile_wait() ************************************
+#  NAME
+#     init_logfile_wait() -- observe logfiles by using tail functionality (1)
+#
+#  SYNOPSIS
+#     init_logfile_wait { hostname logfile } 
+#
+#  FUNCTION
+#     This procedure is using the reserved open remote spawn connection
+#     "ts_def_con" in order to start a tail process that observes the given
+#     file. The open spawn id is stored in a global variable to make it
+#     possible for the logfile_wait() procedure to expect data from
+#     the tail process.
+#     Each call of this procedure must follow a call of logfile_wait() in
+#     order to close the open spawn process.
+#
+#  INPUTS
+#     hostname - host where tail should be started
+#     logfile  - full path name of (log)file
+#
+#  SEE ALSO
+#     file_procedures/logfile_wait()
+#     file_procedures/close_logfile_wait()
+#*******************************************************************************
+proc init_logfile_wait { hostname logfile  } {
 
+   global CHECK_OUTPUT
+   global file_procedure_logfile_wait_sp_id
+
+   set sid [ open_remote_spawn_process $hostname "ts_def_con" "tail" "-f $logfile"]
+   set sp_id [lindex $sid 1]
+   set timeout 5
+   puts $CHECK_OUTPUT "spawn id: $sp_id"
+
+   log_user 0
+   while { 1 } {
+      expect {
+         -i $sp_id -- full_buffer {
+            add_proc_error "init_logfile_wait" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            break
+         }
+
+         -i $sp_id eof {
+            break
+         }
+         -i $sp_id -- "_exit_status_" {
+            break
+         }
+         -i $sp_id timeout {
+            break
+         }
+         -i $sp_id -- "\n" {
+            puts -nonewline $CHECK_OUTPUT $expect_out(buffer)
+         }
+         -i $sp_id default {
+            break
+         }
+      }
+   }
+   log_user 1 
+   puts $CHECK_OUTPUT "init_logfile_wait done"
+   set file_procedure_logfile_wait_sp_id $sid
+}
+
+#****** file_procedures/logfile_wait() *****************************************
+#  NAME
+#     logfile_wait() -- observe logfiles by using tail functionality (2)
+#
+#  SYNOPSIS
+#     logfile_wait {
+#                    { wait_string ""     } 
+#                    { mytimeout 60       }
+#                    { close_connection 1 } 
+#                    { add_errors 1       } 
+#                    { return_err_code "logfile_wait_error" }
+#                  } 
+#
+#  FUNCTION
+#     This procedure is called after an init_logfile_wait() call. It will
+#     use the open spawn process started from that procedure. When the
+#     output of the tail command contains the string given in "wait_string"
+#     the procedure returns immediately. If the caller hasn't provided an
+#     "wait_string" the procedure returns after the given timeout without
+#     error.
+#
+#  INPUTS
+#     { wait_string "" }     - if the tail process generates output 
+#                              containing this string the procedure 
+#                              returns
+#     { mytimeout 60 }       - timeout in seconds
+#
+#     { close_connection 1 } - if 0, don't close tail process
+#
+#     { add_errors 1       } - if 0, don't call add_proc_error()
+#
+#     { return_err_code "logfile_wait_error" } 
+#                            - variable where the return
+#                              value is stored:
+#                              0  : no error
+#                              -1 : timeout error
+#                              -2 : full expect buffer 
+#                              -3 : unexpected end of file
+#                              -4 : unexpected end of tail command
+#
+#  RESULT
+#     This procedure returns the output of the tail command since the 
+#     init_logfile_wait() call.
+# 
+#  SEE ALSO
+#     file_procedures/init_logfile_wait()
+#     file_procedures/close_logfile_wait()
+#*******************************************************************************
+proc logfile_wait { { wait_string "" } { mytimeout 60 } { close_connection 1 } { add_errors 1 } { return_err_code "logfile_wait_error" } } {
+   global file_procedure_logfile_wait_sp_id
+   global CHECK_OUTPUT
+
+   upvar $return_err_code back_value
+
+
+   set back_value 0
+
+   set sp_id [ lindex $file_procedure_logfile_wait_sp_id 1 ]
+   puts $CHECK_OUTPUT "spawn id: $sp_id"
+   set real_timeout [ expr ( [timestamp] + $mytimeout  )  ]
+   set timeout 1
+   set my_tail_buffer ""
+   log_user 0
+   while { 1 } {
+      if { [timestamp] > $real_timeout } {
+          if { $wait_string != "" } {
+             if { $add_errors == 1 } {
+                add_proc_error "logfile_wait" -1 "timeout waiting for logfile content"
+             }
+             set back_value -1
+          }
+          break
+      }
+      expect {
+         -i $sp_id -- full_buffer {
+            if { $add_errors == 1 } {
+               add_proc_error "init_logfile_wait" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            }
+            set back_value -2
+            break
+         }
+
+         -i $sp_id eof {
+            if { $add_errors == 1 } {
+               add_proc_error "init_logfile_wait" "-1" "unexpected end of file"
+            }
+            set back_value -3
+            break
+         }
+         -i $sp_id -- "_exit_status_" { 
+            if { $add_errors == 1 } {
+               add_proc_error "init_logfile_wait" "-1" "unexpected end of tail command"
+            }
+            set back_value -4
+            break
+         }
+         -i $sp_id timeout {
+            puts -nonewline $CHECK_OUTPUT [washing_machine [ expr ( $real_timeout - [ timestamp ] + 1  ) ]]
+            flush $CHECK_OUTPUT
+         }
+         -i $sp_id -- "\n" {
+            puts -nonewline $CHECK_OUTPUT "\r$expect_out(buffer)"
+            append my_tail_buffer $expect_out(buffer)
+            if { $wait_string != "" } {
+               if { [ string first $wait_string $expect_out(buffer)] >= 0  } {
+                  break;
+               }
+            }
+         }
+
+         -i $sp_id default {
+            break
+         }
+
+      }
+   }
+   puts $CHECK_OUTPUT ""
+   if { $close_connection == 1 } {
+      uplevel 1 { close_spawn_process $file_procedure_logfile_wait_sp_id }
+   }
+   log_user 1
+   return $my_tail_buffer
+}
+
+#****** file_procedures/close_logfile_wait() ***********************************
+#  NAME
+#     close_logfile_wait() -- close open_spawn_connection id for tail process
+#
+#  SYNOPSIS
+#     close_logfile_wait { } 
+#
+#  FUNCTION
+#     This procedure is used for closing an open tail process, started with
+#     init_logfile_wait(), when logfile_wait() is called with 
+#     "close_connection != 1" parameter.
+#
+#  SEE ALSO
+#     file_procedures/init_logfile_wait()
+#     file_procedures/logfile_wait()
+#*******************************************************************************
+proc close_logfile_wait { } {
+   global file_procedure_logfile_wait_sp_id
+   global CHECK_OUTPUT
+
+   uplevel 1 { close_spawn_process $file_procedure_logfile_wait_sp_id }
+}
+
+#****** file_procedures/washing_machine() **************************************
+#  NAME
+#     washing_machine() -- showing a washing machine ;-)
+#
+#  SYNOPSIS
+#     washing_machine { time } 
+#
+#  FUNCTION
+#     This procedure returns "\r[/|\-] $time [/|\-]", depending on the 
+#     given time value.
+#
+#  INPUTS
+#     time - timout counter 
+#
+#  RESULT
+#     string, e.g. "/ 40 /"
+#*******************************************************************************
+proc washing_machine { time  } {
+   set ani [ expr ( $time % 4 ) ]
+   switch $ani {
+      0 { set output "-" }
+      1 { set output "/" }
+      2 { set output "|" }
+      3 { set output "\\" }
+   }
+   return "\r              \r$output $time $output"
+}
 
 #****** file_procedures/create_path_aliasing_file() ****************************
 #  NAME

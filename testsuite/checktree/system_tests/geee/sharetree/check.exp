@@ -324,6 +324,12 @@ proc share_tree_setup  {} {
    } 
    lappend vi_commands [format "%c" 27]
    lappend  vi_commands "dddddddddddd"
+
+   set catch_return [ catch {  
+      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
+   } result ] 
+
+
    set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-astree" $vi_commands "changed sharetree" "error" ]  
    if { $result != 0 } {
       add_proc_error "share_tree_setup" -1 "could not add sharetree (error: $result)"

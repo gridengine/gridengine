@@ -291,6 +291,13 @@ proc check_messages_files { } {
       append full_info $status
    }
 
+   set status [ check_schedd_messages 1] 
+   append full_info "\n=========================================\n"
+   append full_info "schedd: $CHECK_CORE_MASTER\n"
+   append full_info "file   : [check_schedd_messages 2]\n"
+   append full_info "=========================================\n"
+   append full_info $status
+
    set status [ check_qmaster_messages 1] 
    append full_info "\n=========================================\n"
    append full_info "qmaster: $CHECK_CORE_MASTER\n"
@@ -301,6 +308,27 @@ proc check_messages_files { } {
 }
 
 
+#****** sge_procedures/get_qmaster_messages_file() *****************************
+#  NAME
+#     get_qmaster_messages_file() -- get path to qmaster's messages file
+#
+#  SYNOPSIS
+#     get_qmaster_messages_file { } 
+#
+#  FUNCTION
+#     This procedure returns the path to the running qmaster's messages file
+#
+#  RESULT
+#     path to qmaster's messages file
+#
+#  SEE ALSO
+#     sge_procedures/get_execd_messages_file()
+#     sge_procedures/get_schedd_messages_file()
+#
+#*******************************************************************************
+proc get_qmaster_messages_file { } {
+   return [ check_qmaster_messages 2 ]
+}
 
 #****** sge_procedures/check_qmaster_messages() ********************************
 #  NAME
@@ -322,6 +350,7 @@ proc check_messages_files { } {
 #
 #  SEE ALSO
 #     sge_procedures/check_execd_messages()
+#     sge_procedures/check_schedd_messages()
 #*******************************************************************************
 proc check_qmaster_messages { { show_mode 0 } } {
    global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_HOST CHECK_USER
@@ -360,6 +389,111 @@ proc check_qmaster_messages { { show_mode 0 } } {
    return $return_value
 }
 
+#****** sge_procedures/get_schedd_messages_file() ******************************
+#  NAME
+#     get_schedd_messages_file() -- get path to scheduler's messages file
+#
+#  SYNOPSIS
+#     get_schedd_messages_file { } 
+#
+#  FUNCTION
+#     This procedure returns the path to the running scheduler's messages file
+#
+#  RESULT
+#     path to scheduler's messages file
+#
+#  SEE ALSO
+#     sge_procedures/get_execd_messages_file()
+#     sge_procedures/get_qmaster_messages_file()
+#*******************************************************************************
+proc get_schedd_messages_file { } {
+   return [ check_schedd_messages 2 ]
+}
+
+#****** sge_procedures/check_schedd_messages() *********************************
+#  NAME
+#     check_schedd_messages() -- get schedulers messages file content
+#
+#  SYNOPSIS
+#     check_schedd_messages { { show_mode 0 } } 
+#
+#  FUNCTION
+#     This procedure locates the schedd messages file (using qconf -sconf) 
+#     and returns the output of cat.
+#
+#  INPUTS
+#     { show_mode 0 } - if not 0: return only warning and error lines
+#                       if     2: return only path to schedd messages file
+#
+#  RESULT
+#     output string
+#
+#  SEE ALSO
+#     sge_procedures/check_execd_messages()
+#     sge_procedures/check_qmaster_messages()
+#*******************************************************************************
+proc check_schedd_messages { { show_mode 0 } } {
+   global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_HOST CHECK_USER
+   global CHECK_OUTPUT CHECK_CORE_MASTER
+
+   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"
+   set program_arg "-sconf global" 
+   set output [ start_remote_prog $CHECK_HOST $CHECK_USER $program $program_arg]
+
+   set output [ split $output "\n" ]
+   set spool_dir "unkown"
+   foreach line $output {
+      if { [ string first "qmaster_spool_dir" $line ] >= 0 } {
+         set spool_dir [ lindex $line 1 ]
+      }
+   }
+
+   set messages_file "$spool_dir/schedd/messages"
+
+   if { $show_mode == 2 } {
+      return $messages_file
+   }   
+
+   set return_value ""
+
+   get_file_content $CHECK_CORE_MASTER $CHECK_USER $messages_file
+   for { set i 1 } { $i <= $file_array(0) } { incr i 1 } {
+       set line $file_array($i)
+       if { ( [ string first "|E|" $line ] >= 0 )   || 
+            ( [ string first "|W|" $line ] >= 0 )   ||
+            ( $show_mode == 0               )  }   {
+            append return_value "line $i: $line\n"
+       }
+   }
+   return $return_value
+}
+
+
+#****** sge_procedures/get_execd_messages_file() *******************************
+#  NAME
+#     get_execd_messages_file() -- get messages file path of execd
+#
+#  SYNOPSIS
+#     get_execd_messages_file { hostname } 
+#
+#  FUNCTION
+#     This procedure returns the full path to the given execd's messages file
+#
+#  INPUTS
+#     hostname - hostname where the execd is running
+#
+#  RESULT
+#     path to messages file of the given execd host
+#
+#  SEE ALSO
+#     sge_procedures/get_qmaster_messages_file()
+#     sge_procedures/get_schedd_messages_file()
+#
+#*******************************************************************************
+proc get_execd_messages_file { hostname } {
+   return [ check_execd_messages $hostname 2 ]
+}
+
 #****** sge_procedures/check_execd_messages() **********************************
 #  NAME
 #     check_execd_messages() -- get execd messages file content
@@ -381,6 +515,7 @@ proc check_qmaster_messages { { show_mode 0 } } {
 #
 #  SEE ALSO
 #     sge_procedures/check_qmaster_messages()
+#     sge_procedures/check_schedd_messages()
 #*******************************************************************************
 proc check_execd_messages { hostname { show_mode 0 } } {
    global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_HOST CHECK_USER
@@ -5743,11 +5878,11 @@ proc startup_shadowd { hostname } {
    puts $CHECK_OUTPUT "starting up shadowd on host \"$hostname\" as user \"$startup_user\""
 
    set output [start_remote_prog "$hostname" "$startup_user" "$CHECK_PRODUCT_ROOT/default/common/$CHECK_START_SCRIPT_NAME" "-shadowd"]
-
+   puts $CHECK_OUTPUT $output
    if { [string first "starting sge_shadowd" $output] >= 0 } {
        return 0
    }
-   add_proc_error "startup_shadowd" -1 "could not start shadowd on host $hostname"
+   add_proc_error "startup_shadowd" -1 "could not start shadowd on host $hostname:\noutput:\"$output\""
    return -1
 }
 
@@ -5865,7 +6000,7 @@ proc are_master_and_scheduler_running { hostname qmaster_spool_dir } {
 #     sge_procedures/startup_execd()
 #     sge_procedures/startup_shadowd()
 #*******************************
-proc shutdown_master_and_scheduler { hostname qmaster_spool_dir} {
+proc shutdown_master_and_scheduler {hostname qmaster_spool_dir} {
    shutdown_scheduler $hostname $qmaster_spool_dir
    shutdown_qmaster $hostname $qmaster_spool_dir
 }

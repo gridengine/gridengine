@@ -227,6 +227,7 @@ proc large_cluster_submit_jobs {size {users ""} {projects ""}} {
 
    append args "-o /dev/null -j y $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh"
 
+   # submit jobs
    puts $CHECK_OUTPUT "submitting $size jobs with a duration of $LARGE_CLUSTER_JOB_DURATION s each"
 
    # build a list with jobs to submit

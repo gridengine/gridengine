@@ -152,24 +152,29 @@ proc start_remote_tcl_prog { host user tcl_file tcl_procedure tcl_procargs} {
 #
 #****** remote_procedures/start_remote_prog() ******
 #  NAME
-#     start_remote_prog() -- ??? 
+#     start_remote_prog() -- start remote application
 #
 #  SYNOPSIS
 #     start_remote_prog { hostname user exec_command exec_arguments 
 #     {exit_var prg_exit_state} {mytimeout 60} {background 0} {envlist ""}} 
 #
 #  FUNCTION
-#     ??? 
+#     This procedure will start the given command on the given remote
+#     host.
 #
 #  INPUTS
-#     hostname                  - ??? 
-#     user                      - ??? 
-#     exec_command              - ??? 
-#     exec_arguments            - ??? 
-#     {exit_var prg_exit_state} - ??? 
-#     {mytimeout 60}            - ??? 
+#     hostname                  - hostname
+#     user                      - user name
+#     exec_command              - application to start
+#     exec_arguments            - application arguments
+#     {exit_var prg_exit_state} - return value of the (last) remote command
+#     {mytimeout 60}            - problem timeout (for connection building)
 #     {background 0}            - if not 0 -> start remote prog in background
+#                                 this will always take 15 seconds 
 #     {envlist}                 - array with environment settings to export
+#                                 before starting program
+#     { do_file_check 1 }       - internal parameter for file existence check
+#                                 if 0: don't do a file existence check
 #
 #  RESULT
 #     program output
@@ -179,18 +184,15 @@ proc start_remote_tcl_prog { host user tcl_file tcl_procedure tcl_procargs} {
 #     start_remote_prog "ahost" "auser" "ls" "-la" "prg_exit_state" "60" "0" "envlist"
 #
 #  NOTES
-#     ??? 
+#     The exec_arguments parameter can be used to start more commands:
 #
-#  BUGS
-#     ??? 
+#     start_remote_prog "ahost" "auser" "cd" "/tmp ; ls -la"
 #
-#  SEE ALSO
-#     ???/???
 #*******************************
 #
-proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg_exit_state} {mytimeout 60} {background 0} {envlist ""} } {
+proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg_exit_state} {mytimeout 60} {background 0} {envlist ""} { do_file_check 1 } } {
    global CHECK_OUTPUT CHECK_MAIN_RESULTS_DIR CHECK_DEBUG_LEVEL 
-   global open_spawn_buffer 
+   global open_spawn_buffer CHECK_HOST
    upvar $exit_var back_exit_state
    upvar $envlist users_env
    
@@ -205,6 +207,40 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
      if { $CHECK_DEBUG_LEVEL == 2 } {
          wait_for_enter 
      }
+   }
+
+   if { $hostname != $CHECK_HOST && $do_file_check == 1 } {
+      set is_ok 0
+      set my_timeout [ expr ( [timestamp] + 60 ) ] 
+      debug_puts "----> REMOTE connection, checking file availability ..."
+
+      while { $is_ok == 0 } {
+         if { $exec_command == "cd" } {
+            set output "shell build-in command"
+            set is_ok 1
+            break;
+         }
+         set output [ start_remote_prog $hostname $user "which" "$exec_command" prg_exit_state 60 0 "" 0]
+         if { $prg_exit_state == 0 } {
+            set is_ok 1
+            break
+         } else {
+            set output [ start_remote_prog $hostname $user "ls" "$exec_command" prg_exit_state 60 0 "" 0]
+            if { $prg_exit_state == 0 } {
+               set is_ok 1
+               break
+            }
+         }
+         if { [timestamp] > $my_timeout } {
+            break
+         }
+         sleep 1
+      }
+      if { $is_ok == 1 } {
+         debug_puts "found prog: $output"
+      } else {
+         add_proc_error "start_remote_prog" -1 "timeout while waiting for file $exec_command on host $hostname"
+      }
    }
 
 #   puts [array names users_env]
@@ -344,8 +380,8 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
       set exit_status -1
    }
    debug_puts "E X I T   S T A T E   of remote prog: $exit_status"
-   if { $exit_status != 0 } {
-      puts $CHECK_OUTPUT "--> exit_state is \"$exit_status\""
+   if { $exit_status != 0 && $do_file_check == 1} {
+      debug_puts "--> exit_state is \"$exit_status\""
    }
     
    if { $CHECK_DEBUG_LEVEL == 2 } {
@@ -436,7 +472,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
   debug_puts "exec_command:   $exec_command"
   debug_puts "exec_arguments: $exec_arguments"
 
-  if { [string compare $user $CHECK_USER] != 0 } {
+  if { [string compare $user $CHECK_USER] != 0 && [string compare $user "ts_def_con"] != 0 } {
       if {[have_root_passwd] == -1} {
          add_proc_error "open_remote_spawn_process" -2 "root access required"
          return "" 
@@ -479,6 +515,13 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
 
   uplevel 1 { set timeout 120 }
   get_open_spawn_rlogin_session $hostname $user con_data
+  set using_ts_def_con 0
+  if { $user == "ts_def_con" } {
+     set user $CHECK_USER
+     set open_spawn_buffer $user
+     uplevel 1 { set open_remote_spawn__user $open_spawn_buffer }
+     set using_ts_def_con 1
+  }
   if { $con_data(pid) != 0 } {
      debug_puts "Using open rlogin connection to host \"$hostname\",user \"$user\"" 
      set nr_of_shells $con_data(nr_shells)
@@ -489,7 +532,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
         set open_remote_spawn__id "$open_spawn_buffer" 
      }
   } else { 
-     uplevel 1 { puts $CHECK_OUTPUT "opening connection to host $open_remote_spawn__hostname" }
+     uplevel 1 { debug_puts "opening connection to host $open_remote_spawn__hostname" }
      if { [have_ssh_access] == 0 } {
         set pid [ uplevel 1 { spawn "rlogin" "$open_remote_spawn__hostname" } ] 
         uplevel 1 { incr remote_spawn_nr_of_shells 1 }
@@ -682,7 +725,11 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
          }
       }
       set nr_of_shells [ uplevel 1 { set remote_spawn_nr_of_shells  } ]
-      add_open_spawn_rlogin_session $hostname $user $sp_id $pid $nr_of_shells
+      if { $using_ts_def_con == 1 } {
+         add_open_spawn_rlogin_session $hostname "ts_def_con" $sp_id $pid $nr_of_shells
+      } else {
+         add_open_spawn_rlogin_session $hostname $user $sp_id $pid $nr_of_shells
+      }
 
    }
    uplevel 1 { 
@@ -719,7 +766,9 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
       log_user 1
    }
 
-   puts $CHECK_OUTPUT "starting command \"$exec_command\" as user \"$user\" on host \"$hostname\" now ..."
+   debug_puts "starting command:"
+   debug_puts "$exec_command $exec_arguments"
+   debug_puts "as user \"$user\" on host \"$hostname\" now ..."
 
    if { $background != 0 } {
       uplevel 1 { append open_remote_spawn__script_name " &" }
@@ -1326,7 +1375,8 @@ proc close_open_rlogin_sessions {} {
 #     remote_procedures/check_rlogin_session
 #*******************************************************************************
 proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
-   global CHECK_OUTPUT rlogin_spawn_session_buffer
+   global CHECK_OUTPUT rlogin_spawn_session_buffer CHECK_USER
+
 
 
    if { [info exists rlogin_spawn_session_buffer($spawn_id) ] != 0 } {
@@ -1334,7 +1384,10 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
       set ok 0
       set mytries  5
       debug_puts "check_rlogin_session -> waiting for shell response ..."
-      
+      if { $user == "ts_def_con" } {
+         set user $CHECK_USER
+      }      
+
       send -i $spawn_id -- "\necho \"__ my id is ->\`id\`<-\"\n\n"
       while { $ok == 0 } {
          expect {
@@ -1448,6 +1501,8 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
        set send_slow "1 .05"
        debug_puts "nr of open shells: $nr_of_shells"
        debug_puts "-->sending $nr_of_shells exit(s) to shell on id $sp_id"
+       send -s -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
+
        for {set i 0} {$i < $nr_of_shells } {incr i 1} {
           send -s -i $sp_id "exit\n"
           set timeout 15
@@ -1458,8 +1513,11 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
               -i $sp_id "*" {
                  debug_puts "shell exit"
               }
+              -i $sp_id eof {
+                 debug_puts "timeout or eof while waiting for shell exit"
+              }
               -i $sp_id default {
-                 puts $CHECK_OUTPUT "timeout or eof while waiting for shell exit"
+                 debug_puts "timeout or eof while waiting for shell exit"
               }
           }
        }

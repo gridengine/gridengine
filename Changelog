@@ -1,3 +1,5 @@
+CR-2002-04-05-0  Testsuite: Merges from maintrunc
+
 JG-2002-04-05-0  Testsuite: large_cluster_test: Do not use the qmaster host
                             as exec host for simulation of hosts.
 

@@ -1087,8 +1087,6 @@ proc check_flood {} {
 
       foreach host $CHECK_CORE_EXECD {
          puts $CHECK_OUTPUT "start flooding qsubs on host $host"
-#         spawn "rsh" "$host" "$CHECK_ACTUAL_TEST_PATH/flood_sleeper.sh" "$CHECK_PRODUCT_ROOT" "$jobs_per_host" "'$types'" "$num"
-#         lappend spawn_list $spawn_id
          set flood_id [open_remote_spawn_process $host $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/flood_sleeper.sh" "$CHECK_PRODUCT_ROOT $jobs_per_host '$types' $num"]
          set spawn_id [lindex $flood_id 1]
          set flood_ids($spawn_id) $flood_id

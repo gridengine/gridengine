@@ -962,7 +962,7 @@ proc mail_report { subject body } {
 proc send_mail { address cc subject body } {
 
   global CHECK_TESTSUITE_ROOT CHECK_MAILX_HOST CHECK_OUTPUT
-  global CHECK_MAILS_SENT CHECK_ENABLE_MAIL
+  global CHECK_MAILS_SENT CHECK_ENABLE_MAIL CHECK_USER
   global write_mail_to_file CHECK_MAIL_OUTPUT_FILE
 
 
@@ -1013,17 +1013,14 @@ proc send_mail { address cc subject body } {
   catch { exec "chmod" "0755" "$CHECK_TESTSUITE_ROOT/mailbody_testsuite_tmp" } result
 
   if { [string compare $cc "none"] != 0 } {
-     set mail_command "mailx -s \"$new_subject\" -c \"$cc\" \"$address\" < \"$CHECK_TESTSUITE_ROOT/mailbody_testsuite_tmp\""
+     set mail_args "-s \"$new_subject\" -c \"$cc\" \"$address\" < \"$CHECK_TESTSUITE_ROOT/mailbody_testsuite_tmp\""
   } else {
-     set mail_command "mailx -s \"$new_subject\" \"$address\" < \"$CHECK_TESTSUITE_ROOT/mailbody_testsuite_tmp\""
+     set mail_args "-s \"$new_subject\" \"$address\" < \"$CHECK_TESTSUITE_ROOT/mailbody_testsuite_tmp\""
   }
-  set catch_result [ catch { 
-    exec rsh $CHECK_MAILX_HOST "$mail_command" 
-  } mail_output ]
-
+  set mail_output [ start_remote_prog $CHECK_MAILX_HOST $CHECK_USER "mailx" "$mail_args" ]
   file delete "$CHECK_TESTSUITE_ROOT/mailbody_testsuite_tmp" 
 
-  if { $catch_result != 0 } {
+  if { $prg_exit_state != 0 } {
      puts $CHECK_OUTPUT "--> send_mail - could not send mail:\n$mail_output"
   } else {
      puts $CHECK_OUTPUT "--> send_mail - mail sent to $address"
@@ -2205,9 +2202,9 @@ proc set_users_environment {{variable_name env}} {
          }
       }
       if { [string compare $variable_name "env"] == 0 } {
-         puts $CHECK_OUTPUT "setting local user environment variable $env_name to \"$env_value\""
+         debug_puts "setting local user environment variable $env_name to \"$env_value\""
       } else {
-         puts $CHECK_OUTPUT "setting remote user environment variable $env_name to \"$env_value\""
+         debug_puts "setting remote user environment variable $env_name to \"$env_value\""
       }
       set environment($env_name) $env_value 
    } 
@@ -2382,7 +2379,6 @@ proc setup { {do_only_hostname_resolving 0} } {
              puts $CHECK_OUTPUT "directory \"$CHECK_CURRENT_WORKING_DIR\" is not available on host \"$host\""
              set setup_ok -1
          } 
-            
          puts $CHECK_OUTPUT "\n--> try rsh $host echo \"hello $host\" ..."
          set exit_state [ catch { exec rsh $host "echo \"hello $host\"" } result ]
          puts $CHECK_OUTPUT "--> rsh exit state: $exit_state"
@@ -4995,9 +4991,8 @@ proc compile_source {} {
    global CHECK_PRODUCT_FEATURE
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
-   global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR CHECK_PRODUCT_FEATURE
+   global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR CHECK_PRODUCT_FEATURE CHECK_USER
 
-   
 
    set check_name "compile_source"
    set CHECK_CUR_PROC_NAME "compile_source"
@@ -5039,8 +5034,14 @@ proc compile_source {} {
 
    # update source 
    if { $do_not_update == 0 } {
+      puts $CHECK_OUTPUT "------------------------------------------"
       puts $CHECK_OUTPUT "updating source in directory $CHECK_SOURCE_DIR on host $CHECK_SOURCE_HOSTNAME ..."
-      set return_state [ catch { eval exec rsh $CHECK_SOURCE_HOSTNAME "\"cd $CHECK_SOURCE_DIR ; cvs update -dP \"" } output ]
+      set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; cvs update -dP" ]
+      if { $prg_exit_state != 0 } {
+         add_proc_error "compile_source" -2 "cvs update -dP error:\n$output" 
+         return -1
+      }
+      puts $CHECK_OUTPUT "------------------------------------------"
       set cvs_output [ open "$CHECK_SOURCE_DIR/cvs_update.log.[timestamp]" "w" ]
       puts $cvs_output $output
       close $cvs_output
@@ -5051,29 +5052,37 @@ proc compile_source {} {
             set cvs_change_log "$cvs_change_log $elem\n"
          } 
       }
+      puts $CHECK_OUTPUT "------------------------------------------"
    } 
 
+   puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "-> starting scripts/zerodepend on host $CHECK_SOURCE_HOSTNAME ..."
-   set return_state [ catch { eval exec rsh $CHECK_SOURCE_HOSTNAME "\"cd $CHECK_SOURCE_DIR ; scripts/zerodepend\"" } output ]
-   puts $CHECK_OUTPUT "return state: $return_state"
-   #puts $CHECK_OUTPUT "$output\n"
+   set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; scripts/zerodepend" ]
+   puts $CHECK_OUTPUT "------------------------------------------"
+   puts $CHECK_OUTPUT "return state: $prg_exit_state"
+   puts $CHECK_OUTPUT "------------------------------------------"
+   puts $CHECK_OUTPUT "output:\n$output"
+   puts $CHECK_OUTPUT "------------------------------------------"
 
-
+   puts $CHECK_OUTPUT "------------------------------------------"
    set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
    if { [ string compare "csp" $CHECK_PRODUCT_FEATURE ] == 0 } {
       append my_compile_options " -secure"
       puts $CHECK_OUTPUT "-> adding compile option -csp"
    }
    puts $CHECK_OUTPUT "-> starting aimk $my_compile_options depend on host $CHECK_SOURCE_HOSTNAME ..."
-   set return_state [ catch { eval exec rsh $CHECK_SOURCE_HOSTNAME "\"cd $CHECK_SOURCE_DIR ; aimk $my_compile_options depend\"" } output ]
-   puts $CHECK_OUTPUT "return state: $return_state"
-   #puts $CHECK_OUTPUT "$output\n"
+   set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options depend" ]
+   puts $CHECK_OUTPUT "------------------------------------------"
+   puts $CHECK_OUTPUT "return state: $prg_exit_state"
+   puts $CHECK_OUTPUT "------------------------------------------"
+   puts $CHECK_OUTPUT "output:\n$output"
+   puts $CHECK_OUTPUT "------------------------------------------"
 
-   
    set host_list $CHECK_SOURCE_COMPILE_HOSTS
    
    set num 0
    set spawn_list {} 
+   set remote_spawn_list {}
    set file_list {}
    set file_name_list {}
  
@@ -5090,16 +5099,17 @@ proc compile_source {} {
       set par1 "$CHECK_SOURCE_DIR"
       set par2 "$my_compile_options"
       
-      eval spawn rsh $elem "\"$prog $par1 '$par2'\""
-      lappend spawn_list $spawn_id
+      puts $CHECK_OUTPUT "$prog $par1 '$par2'"
+      set open_spawn [ open_remote_spawn_process $elem $CHECK_USER $prog "$par1 '$par2'" ] 
+      lappend spawn_list [ lindex $open_spawn 1 ]
+      lappend remote_spawn_list $open_spawn
+      
       set myfilename "$CHECK_PROTOCOL_DIR/${elem}_compile_${cvs_tag}.out"
       lappend file_name_list $myfilename
       catch { file delete $myfilename }
       lappend file_list [open $myfilename w]
      
       incr num 
-      puts $CHECK_OUTPUT " spawn id is $spawn_id"
-
    }
   
    append mail_body "\n\ncompile output saved in the files:"
@@ -5120,7 +5130,6 @@ proc compile_source {} {
       if {[info exists spawn_id]} {
             unset spawn_id
       }
-#      puts $CHECK_OUTPUT "open spawn ids: $spawn_list"
       if { $show_info == 1 } {
          puts $CHECK_OUTPUT "============================================"
          puts $CHECK_OUTPUT "open compile connections: "
@@ -5154,8 +5163,12 @@ proc compile_source {} {
               }
               lappend compile_bad [lindex $host_list $host_index]
               puts $CHECK_OUTPUT "got timeout for host \"[lindex $host_list $host_index]\""
-              catch {wait -i $spawn_id} output
-              catch {close -i $spawn_id} output
+              foreach spawn_object $remote_spawn_list {
+                 if { [ lindex $spawn_object 1 ] == $spawn_id } {
+                    puts $CHECK_OUTPUT "found spawn object: $spawn_object"
+                    close_spawn_process $spawn_object
+                 }
+              }
               set index [lsearch -exact $spawn_list $spawn_id]
               set spawn_list [lreplace $spawn_list $index $index]
               set show_info 1
@@ -5172,8 +5185,13 @@ proc compile_source {} {
               }
               lappend compile_bad [lindex $host_list $host_index]
               puts $CHECK_OUTPUT $expect_out(0,string)
-              catch {wait -i $spawn_id} output
-              catch {close -i $spawn_id} output
+              foreach spawn_object $remote_spawn_list {
+                 if { [ lindex $spawn_object 1 ] == $spawn_id } {
+                    puts $CHECK_OUTPUT "found spawn object: $spawn_object"
+                    close_spawn_process $spawn_object
+                 }
+              }
+
               set index [lsearch -exact $spawn_list $spawn_id]
               set spawn_list [lreplace $spawn_list $index $index]
               set show_info 1
@@ -5191,8 +5209,13 @@ proc compile_source {} {
               }
               lappend compile_bad [lindex $host_list $host_index]
               puts $CHECK_OUTPUT $expect_out(0,string)
-              catch {wait -i $spawn_id} output
-              catch {close -i $spawn_id} output
+              foreach spawn_object $remote_spawn_list {
+                 if { [ lindex $spawn_object 1 ] == $spawn_id } {
+                    puts $CHECK_OUTPUT "found spawn object: $spawn_object"
+                    close_spawn_process $spawn_object
+                 }
+              }
+
               set index [lsearch -exact $spawn_list $spawn_id]
               set spawn_list [lreplace $spawn_list $index $index]
               set show_info 1
@@ -5201,8 +5224,13 @@ proc compile_source {} {
          -i $spawn_list "remotecompile * aimk no errors" {
               set spawn_id $expect_out(spawn_id)
               puts $CHECK_OUTPUT $expect_out(0,string)
-              catch {wait -i $spawn_id} output
-              catch {close -i $spawn_id} output
+              foreach spawn_object $remote_spawn_list {
+                 if { [ lindex $spawn_object 1 ] == $spawn_id } {
+                    puts $CHECK_OUTPUT "found spawn object: $spawn_object"
+                    close_spawn_process $spawn_object
+                 }
+              }
+
               set index [lsearch -exact $spawn_list $spawn_id]
               set spawn_list [lreplace $spawn_list $index $index]
               set show_info 1
@@ -5217,7 +5245,6 @@ proc compile_source {} {
                  }
                  incr nr 1
               }
-#              puts [lindex $file_list $index] "$spawn_id report from host [lindex $host_list $index]"
               puts [lindex $file_list $index] "$expect_out(0,string)"
               flush [lindex $file_list $index]
          }
@@ -5272,7 +5299,7 @@ proc compile_source {} {
    # now delete install directory
    puts $CHECK_OUTPUT "moving directory \"$CHECK_PRODUCT_ROOT\" to testsuite_trash"
    if { [delete_directory "$CHECK_PRODUCT_ROOT"] != 0 } {
-      add_proc_error "compile option running - could not delete $CHECK_PRODUCT_ROOT directory" -2 "critical error - stop"
+      add_proc_error "compile_source" -2 "could not delete $CHECK_PRODUCT_ROOT directory, critical error - stop"
       return -1
    }
   
@@ -5291,7 +5318,7 @@ proc compile_source {} {
    set compiled_mail_architectures ""
    puts -nonewline $CHECK_OUTPUT "\narchitectures: "
    foreach elem $host_list {
-      set return_state [ catch { exec rsh $elem "$CHECK_SOURCE_DIR/dist/util/arch" } output ]
+      set output [resolve_arch $elem]
       lappend arch_list $output 
       puts -nonewline $CHECK_OUTPUT "$output "
       append compiled_mail_architectures "\n$elem ($output)"
@@ -5301,27 +5328,32 @@ proc compile_source {} {
 
  
    puts $CHECK_OUTPUT "\ninstalling product binaries"
-   eval spawn rsh [lindex $host_list 0] "\"cd $CHECK_SOURCE_DIR ; setenv $var_name $CHECK_PRODUCT_ROOT ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list\""  
+   set open_spawn [ open_remote_spawn_process [lindex $host_list 0] $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
+   set sp_id [ lindex $open_spawn 1 ]
    set timeout -1
    set done 0
    while { $done != 1 } {
       expect {
-         full_buffer {
+         -i $sp_id full_buffer {
             puts $CHECK_OUTPUT "testsuite - compile_source buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
          }
-         "Base directory:" {
-             send "y\n"
+         -i $sp_id "Base directory:" {
+             send -i $sp_id "y\n"
          }
-         "overriding mode" {
-             send "y\n"
+         -i $sp_id "overriding mode" {
+             send -i $sp_id "y\n"
          }
-         eof {
-            catch {wait -i $spawn_id} output
-            catch {close -i $spawn_id} output
+         -i $sp_id "_exit_status_" {
+            set done 1
+         }
+         -i $sp_id eof {
             set done 1
          }
       }
    }
+   close_spawn_process $open_spawn
+   puts $CHECK_OUTPUT ""
+
    foreach elem $CHECK_CORE_EXECD {
       set host_arch [ resolve_arch $elem ]
       if { ([string compare $host_arch ""] != 0) && ([string compare $host_arch "unknown" ] != 0) } {

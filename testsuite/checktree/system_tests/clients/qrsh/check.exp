@@ -425,7 +425,8 @@ proc qrsh_trap {} {
          # send signal and parse result
          foreach i "1 2 3" {
             # send SIGINT
-            set result [catch {exec rsh $source /bin/kill -2 $qrsh_pid} output]
+            set output [ start_remote_prog $source $CHECK_USER "/bin/kill" "-2 $qrsh_pid" ] 
+            set result $prg_exit_state
             if { $result != 0 } {
                set_error -1 "signaling qrsh on host $source failed: $output"
                break

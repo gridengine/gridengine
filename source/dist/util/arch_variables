@@ -66,6 +66,7 @@ case $ARCH in
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
    GETTEXT=/usr/bin/gettext
    RSH_DAEMON=undef
+   LOADSENSOR_COMMAND=undef
    ;;
  lx*)
    AWK=/usr/bin/gawk
@@ -87,6 +88,7 @@ case $ARCH in
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
    GETTEXT=/usr/bin/gettext
    RSH_DAEMON=undef
+   LOADSENSOR_COMMAND=undef
    ;;
  tru64)
    AWK=/usr/bin/nawk
@@ -100,6 +102,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/sbin/telnetd
    RLOGIN_DAEMON=/usr/sbin/rlogind
    RSH_DAEMON=undef
+   LOADSENSOR_COMMAND=undef
    ;;
  irix*)
    AWK=/usr/bin/nawk
@@ -113,6 +116,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/etc/telnetd
    RLOGIN_DAEMON=/usr/etc/rlogind
    RSH_DAEMON=undef
+   LOADSENSOR_COMMAND=undef
    ;;
  hp*)
    AWK=/usr/bin/awk
@@ -126,6 +130,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/lbin/telnetd
    RLOGIN_DAEMON=/usr/lbin/rlogind
    RSH_DAEMON=undef
+   LOADSENSOR_COMMAND=undef
    ;;
  aix*)
    AWK=/usr/bin/nawk
@@ -137,6 +142,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/sbin/telnetd
    RLOGIN_DAEMON=/usr/sbin/rlogind
    RSH_DAEMON=undef
+   LOADSENSOR_COMMAND=undef
    ;;
  cray*)
    AWK=/usr/bin/nawk
@@ -148,6 +154,7 @@ case $ARCH in
    QLOGIN_DAEMON=/etc/telnetd
    RLOGIN_DAEMON=/etc/rlogind
    RSH_DAEMON=undef
+   LOADSENSOR_COMMAND=undef
    ;;
  nec*|sx*)
    AWK=/usr/bin/nawk
@@ -159,6 +166,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/sbin/in.telnetd
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
    RSH_DAEMON=undef
+   LOADSENSOR_COMMAND=undef
    ;;
  fbsd-*)
    AWK=/usr/bin/awk
@@ -174,6 +182,7 @@ case $ARCH in
    GETTEXT=/usr/local/bin/gettext
    ROOTGROUP=wheel
    RSH_DAEMON=undef
+   LOADSENSOR_COMMAND=undef
    ;;
  darwin)
    AWK=/usr/bin/awk
@@ -192,6 +201,7 @@ case $ARCH in
    RLOGIN_DAEMON=/usr/libexec/rlogind
    ROOTGROUP=wheel
    RSH_DAEMON=undef
+   LOADSENSOR_COMMAND=undef
    ;;
  win32-x86)
    AWK=/bin/awk
@@ -207,6 +217,7 @@ case $ARCH in
    GETTEXT=
    ROOTGROUP=wheel
    RSH_DAEMON=/usr/sbin/in.rshd
+   LOADSENSOR_COMMAND="${SGE_ROOT}/util/resources/loadsensors/interix-loadsensor.sh"
    ;;
  *)
    echo "Architecture $ARCH not supported by this procedure!"

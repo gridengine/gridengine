@@ -43,7 +43,7 @@ HASARCHDIR="bin lib examples/jobsbin utilbin"
 DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_schedd \
              sge_shepherd sge_coshepherd qstat qsub qalter qconf qdel \
              qacct qmod qsh utilbin jobs qmon qhost qmake qtcsh qping \
-             qloadsensor"
+             qloadsensor.exe"
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
@@ -1120,9 +1120,9 @@ for i in $ARCH; do
                   fi
                fi
                ;;
-            qloadsensor)
+            qloadsensor.exe)
                if [ "$DSTARCH" = "win32-x86" ]; then
-                  # In the moment qloadsensor is only needed for win32-x86 architecture
+                  # In the moment qloadsensor.exe is only needed for win32-x86 architecture
                   InstallProg $prog
                fi
                ;;

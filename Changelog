@@ -1,3 +1,6 @@
+EB-2005-04-05-0: Enhancem.: added loadsensor script for windows systems
+                 Review:    HP
+
 HP-2005-04-04-1: Cleanup:   removed double WIN32 block, added TMPDIR for faster
                             compiling with gcc compilers
                  Changed:   aimk.site

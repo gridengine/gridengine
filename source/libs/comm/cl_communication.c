@@ -167,7 +167,7 @@ int cl_com_setup_tcp_connection(cl_com_connection_t** connection, int server_por
    (*connection)->shutdown_timeout = 0;
 
    gettimeofday(&((*connection)->last_transfer_time),NULL);
-
+   memset( &((*connection)->connection_close_time), 0, sizeof(struct timeval));
    
 
 
@@ -2589,6 +2589,90 @@ const char* cl_com_get_connection_state(cl_com_connection_t* connection) {   /* 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
+#define __CL_FUNCTION__ "cl_com_get_connection_sub_state()"
+const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
+   if (connection == NULL) {
+      CL_LOG(CL_LOG_ERROR,"connection pointer is NULL");
+      return "NULL";
+   }
+
+   switch(connection->connection_state ) {
+      case CL_COM_DISCONNECTED: {
+         return "UNEXPECTED CONNECTION SUB STATE";
+      }
+      case CL_COM_CLOSING: {
+         return "UNEXPECTED CONNECTION SUB STATE";
+      }
+      case CL_COM_OPENING: {
+         switch( connection->connection_sub_state ) {
+            case CL_COM_OPEN_INIT:
+               return "CL_COM_OPEN_INIT";
+            case CL_COM_OPEN_CONNECT:
+               return "CL_COM_OPEN_CONNECT";
+            case CL_COM_OPEN_CONNECTED:
+               return "CL_COM_OPEN_CONNECTED";
+            default:
+               return "UNEXPECTED CONNECTION SUB STATE";
+         }
+      }
+      case CL_COM_CONNECTED: {
+         switch( connection->connection_sub_state ) {
+            case CL_COM_WORK:
+               return "CL_COM_WORK";
+            case CL_COM_RECEIVED_CCM:
+               return "CL_COM_RECEIVED_CCM";
+            case CL_COM_SENDING_CCM:
+               return "CL_COM_SENDING_CCM";
+            case CL_COM_WAIT_FOR_CCRM:
+               return "CL_COM_WAIT_FOR_CCRM";
+            case CL_COM_SENDING_CCRM:
+               return "CL_COM_SENDING_CCRM";
+            case CL_COM_CCRM_SENT:
+               return "CL_COM_CCRM_SENT";
+            case CL_COM_DONE:
+               return "CL_COM_DONE";
+            case CL_COM_DONE_FLUSHED:
+               return "CL_COM_DONE_FLUSHED";
+            default:
+               return "UNEXPECTED CONNECTION SUB STATE";
+         }
+
+      }
+      case CL_COM_CONNECTING: {
+         switch( connection->connection_sub_state ) {
+            case CL_COM_READ_INIT:
+               return "CL_COM_READ_INIT";
+            case CL_COM_READ_GMSH:
+               return "CL_COM_READ_GMSH";
+            case CL_COM_READ_CM:
+               return "CL_COM_READ_CM";
+            case CL_COM_READ_INIT_CRM:
+               return "CL_COM_READ_INIT_CRM";
+            case CL_COM_READ_SEND_CRM:
+               return "CL_COM_READ_SEND_CRM";
+            case CL_COM_SEND_INIT:
+               return "CL_COM_SEND_INIT";
+            case CL_COM_SEND_CM:
+               return "CL_COM_SEND_CM";
+            case CL_COM_SEND_READ_GMSH:
+               return "CL_COM_SEND_READ_GMSH";
+            case CL_COM_SEND_READ_CRM:
+               return "CL_COM_SEND_READ_CRM";
+            default:
+               return "UNEXPECTED CONNECTION SUB STATE";
+         }
+      }
+      default: {
+         CL_LOG(CL_LOG_ERROR,"undefined marked to close flag type");
+         return "UNEXPECTED CONNECTION SUB STATE";
+      }
+   }
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
 #define __CL_FUNCTION__ "cl_com_get_data_flow_type()"
 const char* cl_com_get_data_flow_type(cl_com_connection_t* connection) {  /* CR check */
    if (connection == NULL) {
@@ -4710,9 +4794,6 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection,cl_com_con
                   cl_com_tcp_close_connection(new_connection);
                   retval = CL_RETVAL_MALLOC;
                }
-               /* This is a new connection from a client, assuming that 
-                  there is data to read ( read a CM - Message ) */
-               (*new_connection)->data_read_flag = CL_COM_DATA_READY;
             }
             return retval;
          default:

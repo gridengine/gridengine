@@ -33,7 +33,7 @@
 /*___INFO__MARK_END__*/
 
 
-int read_config(char *fname);
+int read_config(const char *fname);
 
 char *get_conf_val(char *name);
 char *search_conf_val(char *name);

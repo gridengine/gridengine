@@ -715,9 +715,9 @@ lListElem *pe_task
 
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) 
    gid_t addgrpid;
-   char addgrpid_path[SGE_PATH_MAX];
+   dstring addgrpid_path = DSTRING_INIT;
 #else   
-   char osjobid_path[SGE_PATH_MAX];
+   dstring osjobid_path = DSTRING_INIT;
    osjobid_t osjobid;   
 #endif   
    DENTER(TOP_LAYER, "register_at_ptf");
@@ -734,25 +734,29 @@ lListElem *pe_task
     **/
    
    /* open addgrpid file */
-   sge_get_active_job_file_path(addgrpid_path, SGE_PATH_MAX,
+   sge_get_active_job_file_path(&addgrpid_path,
                                 job_id, ja_task_id, pe_task_id, ADDGRPID);
    DPRINTF(("Registering job %s with PTF\n", 
             job_get_id_string(job_id, ja_task_id, pe_task_id)));
 
-   if (SGE_STAT(addgrpid_path, &sb) && errno == ENOENT) {
+   if (SGE_STAT(sge_dstring_get_string(&addgrpid_path), &sb) && errno == ENOENT) {
       DPRINTF(("still waiting for addgrpid of job %s\n", 
          job_get_id_string(job_id, ja_task_id, pe_task_id)));
+      sge_dstring_free(&addgrpid_path);       
       DEXIT;
       return(1);
    }  
 
-   if (!(fp = fopen(addgrpid_path, "r"))) {
-      ERROR((SGE_EVENT, MSG_EXECD_NOADDGIDOPEN_SSS, addgrpid_path, 
+   if (!(fp = fopen(sge_dstring_get_string(&addgrpid_path), "r"))) {
+      ERROR((SGE_EVENT, MSG_EXECD_NOADDGIDOPEN_SSS, sge_dstring_get_string(&addgrpid_path), 
              job_get_id_string(job_id, ja_task_id, pe_task_id), strerror(errno)));
+      sge_dstring_free(&addgrpid_path);       
       DEXIT;
       return(-1);
    }
-   
+  
+   sge_dstring_free(&addgrpid_path);       
+
    /* read addgrpid */
    success = (fscanf(fp, gid_t_fmt, &addgrpid)==1);
    newerrno = errno;
@@ -788,26 +792,30 @@ lListElem *pe_task
    }
 #else
    /* read osjobid if possible */
-   sge_get_active_job_file_path(osjobid_path, SGE_PATH_MAX,
+   sge_get_active_job_file_path(&osjobid_path,
                                 job_id, ja_task_id, pe_task_id, OSJOBID);
    
    DPRINTF(("Registering job %s with PTF\n", 
             job_get_id_string(job_id, ja_task_id, pe_task_id)));
 
-   if (SGE_STAT(osjobid_path, &sb) && errno == ENOENT) {
+   if (SGE_STAT(sge_dstring_get_string(&osjobid_path), &sb) && errno == ENOENT) {
       DPRINTF(("still waiting for osjobid of job %s\n", 
             job_get_id_string(job_id, ja_task_id, pe_task_id)));
+      sge_dstring_free(&osjobid_path);      
       DEXIT;
       return 1;
    } 
 
-   if (!(fp=fopen(osjobid_path, "r"))) {
-      ERROR((SGE_EVENT, MSG_EXECD_NOOSJOBIDOPEN_SSS, osjobid_path, 
+   if (!(fp=fopen(sge_dstring_get_string(&osjobid_path), "r"))) {
+      ERROR((SGE_EVENT, MSG_EXECD_NOOSJOBIDOPEN_SSS, sge_dstring_get_string(&osjobid_path), 
              job_get_id_string(job_id, ja_task_id, pe_task_id), 
              strerror(errno)));
+      sge_dstring_free(&osjobid_path);      
       DEXIT;
       return -1;
    }
+
+   sge_dstring_free(&osjobid_path);      
 
    success = (fscanf(fp, OSJOBID_FMT, &osjobid)==1);
    newerrno = errno;

@@ -102,8 +102,8 @@ static void unregister_from_ptf(u_long32 jobid, u_long32 jataskid, const char *p
 static int clean_up_job(lListElem *jr, int failed, int signal, int is_array);
 static void convert_attribute(lList **cflpp, lListElem *jr, char *name, u_long32 udefau);
 
-static lListElem *execd_job_failure(lListElem *jep, lListElem *jatep, lListElem *petep, char *error_string, int general, int failed);
-static int read_dusage(lListElem *jr, char *jobdir, u_long32 jobid, u_long32 jataskid, int failed);
+static lListElem *execd_job_failure(lListElem *jep, lListElem *jatep, lListElem *petep, const char *error_string, int general, int failed);
+static int read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, u_long32 jataskid, int failed);
 static void build_derived_final_usage(lListElem *jr);
 
 static void examine_job_task_from_file(int startup, char *dir, lListElem *jep, lListElem *jatep, lListElem *petep, pid_t *pids, int npids);
@@ -346,7 +346,8 @@ int failed,
 int shepherd_exit_status,
 int is_array 
 ) {
-   char jobdir[SGE_PATH_MAX], fname[SGE_PATH_MAX];
+   dstring jobdir = DSTRING_INIT;
+   dstring fname  = DSTRING_INIT;
    SGE_STRUCT_STAT statbuf;
    char error[10000];
    FILE *fp;
@@ -386,22 +387,23 @@ int is_array
 #endif
 
    /* set directory for job */
-   sge_get_active_job_file_path(jobdir, SGE_PATH_MAX,
+   sge_get_active_job_file_path(&jobdir,
                                 job_id, ja_task_id, pe_task_id, NULL);
 
 
-   if (SGE_STAT(jobdir, &statbuf)) {
+   if (SGE_STAT(sge_dstring_get_string(&jobdir), &statbuf)) {
       /* This never should happen, cause if we cant create this directory on
          startup we report the job finish immediately */
-      ERROR((SGE_EVENT, MSG_JOB_CANTFINDDIRXFORREAPINGJOBYZ_SS, jobdir, 
+      ERROR((SGE_EVENT, MSG_JOB_CANTFINDDIRXFORREAPINGJOBYZ_SS, sge_dstring_get_string(&jobdir), 
              job_get_id_string(job_id, ja_task_id, pe_task_id)));
+      sge_dstring_free(&jobdir);       
       return -1;        /* nothing can be done without information */
    }
 
    /* read config written by exec_job */
-   sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+   sge_get_active_job_file_path(&fname,
                                 job_id, ja_task_id, pe_task_id, "config");
-   if (read_config(fname)) {
+   if (read_config(sge_dstring_get_string(&fname))) {
       /* This should happen very rarely. exec_job() should avoid this 
          condition as far as possible. One possibility for this case is, 
          that the execd dies just after making the jobs active directory. 
@@ -413,6 +415,8 @@ int is_array
       lSetString(jr, JR_err_str, (char *) MSG_SHEPHERD_EXECDWENTDOWNDURINGJOBSTART);
 
       job_log(job_id, ja_task_id, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER);
+      sge_dstring_free(&fname);
+      sge_dstring_free(&jobdir);
       DEXIT;
       return 0;
    }
@@ -426,9 +430,9 @@ int is_array
     * look for exit status of shepherd This is the last file the shepherd
     * creates. So if we can find this shepherd terminated normal.
     */
-   sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+   sge_get_active_job_file_path(&fname,
                                 job_id, ja_task_id, pe_task_id, "exit_status");
-   if (!(fp = fopen(fname, "r"))) {
+   if (!(fp = fopen(sge_dstring_get_string(&fname), "r"))) {
       /* 
        * we trust the exit status of the shepherd if it exited regularly
        * otherwise we assume it died before starting the job (if died through signal or
@@ -493,9 +497,9 @@ int is_array
    }
 
    /* look for error file this overrules errors found yet */
-   sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+   sge_get_active_job_file_path(&fname,
                                 job_id, ja_task_id, pe_task_id, "error");
-   if ((fp = fopen(fname, "r"))) {
+   if ((fp = fopen(sge_dstring_get_string(&fname), "r"))) {
       int n;
       char *new_line;
       if ((n = fread(error, 1, sizeof(error), fp))) {
@@ -516,7 +520,7 @@ int is_array
       fclose(fp);
    }
    else {
-      ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
+      ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, sge_dstring_get_string(&fname), strerror(errno)));
       /* There is no error file. */
    }
 
@@ -530,7 +534,7 @@ int is_array
    ** read_dusage gets the failed parameter to decide what should be there
    */
    
-   if (read_dusage(jr, jobdir, job_id, ja_task_id, failed)) {
+   if (read_dusage(jr, sge_dstring_get_string(&jobdir), job_id, ja_task_id, failed)) {
       if (!*error) {
          sprintf(error, MSG_JOB_CANTREADUSAGEFILEFORJOBXY_S, 
             job_get_id_string(job_id, ja_task_id, pe_task_id));
@@ -577,15 +581,15 @@ int is_array
     * If the job finishes, the shepherd must remove the "checkpointed" file
     */  
 
-   sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+   sge_get_active_job_file_path(&fname,
                                 job_id, ja_task_id, pe_task_id, "checkpointed");
    ckpt_arena = 1;   /* 1 job will be restarted in case of failure *
                       * 2 job will be restarted from ckpt arena    */
-   if (!SGE_STAT(fname, &statbuf)) {
+   if (!SGE_STAT(sge_dstring_get_string(&fname), &statbuf)) {
       int dummy;
 
       failed = SSTATE_MIGRATE;
-      if ((fp = fopen(fname, "r"))) {
+      if ((fp = fopen(sge_dstring_get_string(&fname), "r"))) {
          DPRINTF(("found checkpointed file\n"));
          if (fscanf(fp, "%d", &dummy)==1) {
             DPRINTF(("need restart from ckpt arena\n"));
@@ -594,10 +598,10 @@ int is_array
          fclose(fp);
       }   
 
-   sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+   sge_get_active_job_file_path(&fname,
                                 job_id, ja_task_id, pe_task_id, "job_pid");
-      if (!SGE_STAT(fname, &statbuf)) {
-         if ((fp = fopen(fname, "r"))) {
+      if (!SGE_STAT(sge_dstring_get_string(&fname), &statbuf)) {
+         if ((fp = fopen(sge_dstring_get_string(&fname), "r"))) {
             if (!fscanf(fp, u32 , &job_pid))
                job_pid = 0;
             fclose(fp);
@@ -619,9 +623,9 @@ int is_array
    
 
    /* Currently the shepherd doesn't create this file */
-   sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+   sge_get_active_job_file_path(&fname,
                                 job_id, ja_task_id, pe_task_id, "noresources");
-   if (!SGE_STAT(fname, &statbuf))
+   if (!SGE_STAT(sge_dstring_get_string(&fname), &statbuf))
       failed = SSTATE_AGAIN;
    
    /* failed */
@@ -793,6 +797,9 @@ int is_array
       }
    }
 
+   sge_dstring_free(&fname);
+   sge_dstring_free(&jobdir);
+
    DEXIT;
    return 0;
 }
@@ -805,7 +812,7 @@ const char *pe_task_id,
 lListElem *jr 
 ) {
    char *exec_file, *script_file, *tmpdir, *job_owner, *qname; 
-   char jobdir[SGE_PATH_MAX];
+   dstring jobdir = DSTRING_INIT;
    char fname[SGE_PATH_MAX];
    char err_str[1024];
    SGE_STRUCT_STAT statbuf;
@@ -887,13 +894,13 @@ lListElem *jr
 
       /* remove job/task active dir */
       if (!keep_active && !getenv("SGE_KEEP_ACTIVE")) {
-         sge_get_active_job_file_path(jobdir, SGE_PATH_MAX,
+         sge_get_active_job_file_path(&jobdir,
                                       job_id, ja_task_id, pe_task_id,
                                       NULL);
-         DPRINTF(("removing active dir: %s\n", jobdir));
-         if (sge_rmdir(jobdir, err_str)) {
+         DPRINTF(("removing active dir: %s\n", sge_dstring_get_string(&jobdir)));
+         if (sge_rmdir(sge_dstring_get_string(&jobdir), err_str)) {
             ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
-                   jobdir, err_str));
+                   sge_dstring_get_string(&jobdir), err_str));
          }
       }
 
@@ -959,14 +966,15 @@ lListElem *jr
 #ifdef KERBEROS
          krb_destroy_forwarded_tgt(job_id);
 #endif
-
-         sprintf(jobdir, "%s/"u32"."u32"", ACTIVE_DIR, job_id, ja_task_id);
-         if (SGE_STAT(jobdir, &statbuf)) {
+         sge_get_active_job_file_path(&jobdir,
+                                      job_id, ja_task_id, pe_task_id,
+                                      NULL);
+         if (SGE_STAT(sge_dstring_get_string(&jobdir), &statbuf)) {
             ERROR((SGE_EVENT, MSG_SHEPHERD_CANTFINDACTIVEJOBSDIRXFORREAPINGJOBY_SU, 
-                  jobdir, u32c(job_id)));
+                  sge_dstring_get_string(&jobdir), u32c(job_id)));
          } else {
             /*** read config file written by exec_job ***/ 
-            sprintf(fname, "%s/config", jobdir);
+            sprintf(fname, "%s/config", sge_dstring_get_string(&jobdir));
             if (read_config(fname)) {
                /* This should happen very rarely. exec_job() should avoid this 
                   condition as far as possible. One possibility for this case is, 
@@ -974,9 +982,9 @@ lListElem *jr
                   The pain with this case is, that we have not much information
                   to report this job to qmaster. */
 
-               if (sge_rmdir(jobdir, err_str)) {
+               if (sge_rmdir(sge_dstring_get_string(&jobdir), err_str)) {
                   ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
-                         jobdir, err_str));
+                         sge_dstring_get_string(&jobdir), err_str));
                }
             }
 
@@ -1007,16 +1015,18 @@ lListElem *jr
 
          /* active dir */
          if (!keep_active && !getenv("SGE_KEEP_ACTIVE")) {
-            DPRINTF(("removing active dir: %s\n", jobdir));
-            if (sge_rmdir(jobdir, err_str)) {
+            DPRINTF(("removing active dir: %s\n", sge_dstring_get_string(&jobdir)));
+            if (sge_rmdir(sge_dstring_get_string(&jobdir), err_str)) {
                ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
-                      jobdir, err_str));
+                      sge_dstring_get_string(&jobdir), err_str));
             }
          }
       }
       del_job_report(jr);
       cleanup_job_report(job_id, ja_task_id);
    }
+
+   sge_dstring_free(&jobdir);
 
    DEXIT;
    return;
@@ -1036,7 +1046,7 @@ lListElem *execd_job_start_failure(
 lListElem *jep,
 lListElem *jatep,
 lListElem *petep,
-char *error_string,
+const char *error_string,
 int general 
 ) {
    return execd_job_failure(jep, jatep, petep, error_string, general, SSTATE_FAILURE_BEFORE_JOB);
@@ -1046,7 +1056,7 @@ lListElem *execd_job_run_failure(
 lListElem *jep,
 lListElem *jatep,
 lListElem *petep,
-char *error_string,
+const char *error_string,
 int general 
 ) {
    return execd_job_failure(jep, jatep, petep, error_string, general, SSTATE_FAILURE_AFTER_JOB);
@@ -1056,7 +1066,7 @@ static lListElem *execd_job_failure(
 lListElem *jep,
 lListElem *jatep,
 lListElem *petep,
-char *error_string,
+const char *error_string,
 int general,
 int failed 
 ) {
@@ -1452,7 +1462,7 @@ int npids
 /************************************************************/
 static int read_dusage(
 lListElem *jr,
-char *jobdir,
+const char *jobdir,
 u_long32 jobid,
 u_long32 jataskid,
 int failed 

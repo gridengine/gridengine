@@ -120,7 +120,7 @@ void (*config_errfunc)(char *) = NULL;
  - 2 malloc error
  *****************************************************/
 int read_config(
-char *fname 
+const char *fname 
 ) {
    FILE *fp;
    char buf[100000], *name, *value;

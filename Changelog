@@ -1,3 +1,10 @@
+JG-2002-05-28-0: Cleanup:   common function calls to create the active job 
+                            directories in execd. 
+                            Replace static buffers for building paths by 
+                            dynamic strings (dstring).
+                            Handle KEEP_ACTIVE with restarted jobs.
+                 Issues:    #254, #261           
+
 AH-2002-05-28-1: Bugfix:    Fix messages printed when GDI client fails contacting 
                             qmaster
 

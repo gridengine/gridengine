@@ -517,18 +517,20 @@ const char *pe_task_id
 
    DPRINTF(("signalling pid "pid_t_fmt" with %d\n", pid, sig));
    if (!direct_signal) {
-      char fname[SGE_PATH_MAX];
+      dstring fname = DSTRING_INIT;
       FILE *fp;
 
-      sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+      sge_get_active_job_file_path(&fname,
                                    job_id, ja_task_id, pe_task_id, "signal");
-      if (!(fp = fopen(fname, "w"))) {
-         ERROR((SGE_EVENT, MSG_EXECD_WRITESIGNALFILE_S, fname));
+      if (!(fp = fopen(sge_dstring_get_string(&fname), "w"))) {
+         ERROR((SGE_EVENT, MSG_EXECD_WRITESIGNALFILE_S, sge_dstring_get_string(&fname)));
+         sge_dstring_free(&fname);
          goto CheckShepherdStillRunning;
       } 
 
       fprintf(fp, "%d\n", sig);
       fclose(fp);
+      sge_dstring_free(&fname);
    }
 
    /*
@@ -558,20 +560,22 @@ const char *pe_task_id
 
 CheckShepherdStillRunning:
    {
-      char path[SGE_PATH_MAX];
+      dstring path = DSTRING_INIT;
       SGE_STRUCT_STAT statbuf;
 
-      sge_get_active_job_file_path(path, SGE_PATH_MAX,
+      sge_get_active_job_file_path(&path,
                                    job_id, ja_task_id, pe_task_id, NULL);
 
-      if (!SGE_STAT(path, &statbuf) && S_ISDIR(statbuf.st_mode)) {
+      if (!SGE_STAT(sge_dstring_get_string(&path), &statbuf) && S_ISDIR(statbuf.st_mode)) {
          dead_children = 1; /* may be we've lost a SIGCHLD */
+         sge_dstring_free(&path);
          DEXIT;
          return 0;
       } else {
          WARNING((SGE_EVENT, MSG_JOB_DELIVERSIGNAL_ISSIS, sig, 
          job_get_id_string(job_id, ja_task_id, pe_task_id), 
          sge_sig2str(sge_signal), pid, strerror(errno)));
+         sge_dstring_free(&path);
          DEXIT;
          return -2;
       }

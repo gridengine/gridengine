@@ -95,6 +95,28 @@ char* sge_dstring_append(dstring *sb, const char *a)
    return sb->s;
 }
 
+/****** uti/dstring/sge_dstring_append_dstring() **************************************
+*  NAME
+*     sge_dstring_append() -- strcat() for dstring's 
+*
+*  SYNOPSIS
+*     char* sge_dstring_append(dstring *sb, const dstring *a) 
+*
+*  FUNCTION
+*     Append 'a' after 'sb' 
+*
+*  INPUTS
+*     dstring *sb      - dynamic string 
+*     const dstring *a - string 
+*
+*  RESULT
+*     char* - result string
+******************************************************************************/
+char* sge_dstring_append_dstring(dstring *sb, const dstring *a) 
+{
+   return sge_dstring_append(sb, sge_dstring_get_string(a));
+}
+
 /****** uti/dstring/sge_dstring_sprintf() *************************************
 *  NAME
 *     sge_dstring_sprintf() -- sprintf() for dstring's 

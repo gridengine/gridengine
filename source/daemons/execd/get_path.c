@@ -36,6 +36,8 @@
 
 #include "sge_conf.h"
 #include "sge_jobL.h"
+#include "sge_jataskL.h"
+#include "sge_pe_task.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "get_path.h"
@@ -43,6 +45,7 @@
 #include "sge_prog.h"
 #include "sge_dstring.h"
 #include "msg_execd.h"
+#include "sge_unistd.h"
 
 static const char* expand_path(const char *path_in, u_long32 job_id, 
                                u_long32 ja_task_id, const char *job_name, 
@@ -218,19 +221,17 @@ const char *user
 *     sge_get_active_job_file_path() -- Create paths in active_jobs dir
 *
 *  SYNOPSIS
-*     const char* sge_get_active_job_file_path(char *buffer, int size, 
+*     const char* sge_get_active_job_file_path(dstring *buffer, 
 *        u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, 
 *        const char *filename) 
 *
 *  FUNCTION
 *     Creates paths in the execd's active_jobs directory.
 *     Both directory and file paths can be created.
-*     The result is placed in a buffer provided by the caller,
-*     if this buffer is too small, an error is generated.
+*     The result is placed in a buffer provided by the caller.
 *
 *  INPUTS
-*     char *buffer           - buffer to hold the generated path
-*     int size               - size of the buffer 
+*     dstring *buffer        - buffer to hold the generated path
 *     u_long32 job_id        - job id 
 *     u_long32 ja_task_id    - array task id
 *     const char *pe_task_id - optional pe task id
@@ -254,41 +255,207 @@ const char *user
 *     general path creating function (utilib).
 *
 *  SEE ALSO
-*     
+*     execd/fileio/sge_make_ja_task_active_dir()
+*     execd/fileio/sge_make_pe_task_active_dir()
 *******************************************************************************/
-const char *sge_get_active_job_file_path(char *buffer, int size, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, const char *filename) 
+const char *sge_get_active_job_file_path(dstring *buffer, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, const char *filename) 
 {
-   static dstring path = DSTRING_INIT;
-   char id_buffer[30];
-
    DENTER(TOP_LAYER, "sge_get_active_job_file_path");
 
-   sge_dstring_clear(&path);
-   sge_dstring_append(&path, ACTIVE_DIR);
+   if(buffer == NULL) {
+      return NULL;
+   }
 
-   sprintf(id_buffer, "/"u32"."u32, job_id, ja_task_id);
-   sge_dstring_append(&path, id_buffer);
+   sge_dstring_sprintf(buffer, "%s/"u32"."u32, ACTIVE_DIR, job_id, ja_task_id);
 
    if(pe_task_id != NULL) {
-      sge_dstring_append(&path, "/");
-      sge_dstring_append(&path, pe_task_id);
+      sge_dstring_append(buffer, "/");
+      sge_dstring_append(buffer, pe_task_id);
    }
 
    if(filename != NULL) {
-      sge_dstring_append(&path, "/");
-      sge_dstring_append(&path, filename);
+      sge_dstring_append(buffer, "/");
+      sge_dstring_append(buffer, filename);
    }
 
-   if(sge_dstring_strlen(&path) + 1 > size) {
-      *buffer = 0;
-      ERROR((SGE_EVENT, MSG_BUFFEROFSIZETOOSMALLFOR_DS, size, sge_dstring_get_string(&path)));
+   DEXIT;
+   return sge_dstring_get_string(buffer);
+}
+
+
+/****** execd/fileio/sge_make_ja_task_active_dir() *********************************
+*  NAME
+*     sge_make_ja_task_active_dir() -- create a jatask's active job directory
+*
+*  SYNOPSIS
+*     const char* sge_make_ja_task_active_dir(const lListElem *job, 
+*                                             const lListElem *ja_task, 
+*                                             dstring *err_str) 
+*
+*  FUNCTION
+*     Creates the active jobs sub directory for a job array task.
+*     If it already exists (because the task has been restarted)
+*     and the execd is configured to keep the active job directories
+*     (execd_param KEEP_ACTIVE), it is renamed to <old_name>.n, where
+*     n is a number from 0 to 9. If a job is restarted more than 10 times,
+*     the old active job dir will be removed and only the first 10 be kept.
+*
+*  INPUTS
+*     const lListElem *job     - job object
+*     const lListElem *ja_task - ja task object
+*     dstring *err_str         - optional buffer to hold error strings. If it is
+*                                NULL, errors are output.
+*
+*  RESULT
+*     const char* - the path of the jobs/jatasks active job directory, or NULL if
+*                   the function call failed.
+*
+*  SEE ALSO
+*     execd/fileio/sge_get_active_job_file_path()
+*     execd/fileio/sge_make_pe_task_active_dir()
+*******************************************************************************/
+const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *ja_task, dstring *err_str)
+{
+   static dstring path_buffer = DSTRING_INIT;
+   const char *path;
+   int result;
+
+   DENTER(TOP_LAYER, "sge_make_ja_task_active_dir");
+   
+   if(err_str != NULL) {
+      sge_dstring_clear(err_str);
+   }
+   
+   if(job == NULL || ja_task == NULL) {
       DEXIT;
       return NULL;
    }
 
-   strcpy(buffer, sge_dstring_get_string(&path));
-   DPRINTF(("sge_get_active_job_file_path: %s\n", buffer));
+   /* build path to active dir */
+   path = sge_get_active_job_file_path(&path_buffer,
+                                       lGetUlong(job, JB_job_number), 
+                                       lGetUlong(ja_task, JAT_task_number), 
+                                       NULL, NULL);   
+
+   /* try to create it */
+   result = mkdir(path, 0755);
+   if(result == -1) {
+      /* if it already exists and keep_active: try to rename it */
+      if(errno == EEXIST && keep_active && lGetUlong(ja_task, JAT_job_restarted) > 0) {
+         dstring new_path = DSTRING_INIT;
+         int i, success = 0;
+
+         for(i = 0; i < 10; i++) {
+            sge_dstring_sprintf(&new_path, "%s.%d", path, i);
+            if(rename(path, sge_dstring_get_string(&new_path)) == 0) {
+               success = 1;
+               break;
+            } else {
+               if(errno == EEXIST) {
+                  continue;
+               }
+            }
+         }
+         
+         /* if it couldn't be renamed: try to remove it */
+         if(success == 0) {
+            DPRINTF(("could not rename old active job dir "SFN" - removing it\n", path));
+
+            if(sge_rmdir(path, SGE_EVENT)) {
+               if(err_str != NULL) {
+                  sge_dstring_sprintf(err_str, MSG_FILE_RMDIR_SS, path, SGE_EVENT);
+               } else {
+                  ERROR((SGE_EVENT, MSG_FILE_RMDIR_SS, path, SGE_EVENT));
+                  DEXIT;
+                  return NULL;
+               }
+            }
+         }
+
+         sge_dstring_free(&new_path);
+
+         result = mkdir(path, 0755);
+      }
+   }   
+
+   if(result == -1) {
+      /* error creating directory */
+      if(err_str != NULL) {
+         sge_dstring_sprintf(err_str, MSG_FILE_CREATEDIR_SS, path, strerror(errno));
+      } else {
+         ERROR((SGE_EVENT, MSG_FILE_CREATEDIR_SS, path, strerror(errno)));
+      }
+      DEXIT;
+      return NULL;
+   }
 
    DEXIT;
-   return buffer;
+   return path;
+}
+
+/****** execd/fileio/sge_make_pe_task_active_dir() *********************************
+*  NAME
+*     sge_make_pe_task_active_dir() -- create a petask's active job directory
+*
+*  SYNOPSIS
+*     const char* sge_make_pe_task_active_dir(const lListElem *job, 
+*                                             const lListElem *ja_task, 
+*                                             const lListElem *pe_task, 
+*                                             dstring *err_str) 
+*
+*  FUNCTION
+*     Creates the active job sub directory for a pe task.
+*
+*  INPUTS
+*     const lListElem *job     - the job object
+*     const lListElem *ja_task - the ja task object
+*     const lListElem *pe_task - the pe task object
+*     dstring *err_str         - optional buffer to hold error strings. If it is
+*                                NULL, errors are output.
+*
+*  RESULT
+*     const char* - the path of the jobs/jatasks active job directory, or NULL if
+*                   the function call failed.
+*
+*  SEE ALSO
+*     execd/fileio/sge_get_active_job_file_path()
+*     execd/fileio/sge_make_ja_task_active_dir()
+*******************************************************************************/
+const char *sge_make_pe_task_active_dir(const lListElem *job, const lListElem *ja_task, const lListElem *pe_task, dstring *err_str)
+{
+   static dstring path_buffer = DSTRING_INIT;
+   const char *path;
+
+   DENTER(TOP_LAYER, "sge_make_pe_task_active_dir");
+  
+   if(err_str != NULL) {
+      sge_dstring_clear(err_str);
+   }
+  
+   if(job == NULL || ja_task == NULL || pe_task == NULL) {
+      DEXIT;
+      return NULL;
+   }
+
+   /* build path to active dir */
+   path = sge_get_active_job_file_path(&path_buffer,
+                                       lGetUlong(job, JB_job_number), 
+                                       lGetUlong(ja_task, JAT_task_number), 
+                                       lGetString(pe_task, PET_id), 
+                                       NULL);   
+
+   /* try to create it */
+   if (mkdir(path, 0755) == -1) {
+      /* error creating directory */
+      if(err_str != NULL) {
+         sge_dstring_sprintf(err_str, MSG_FILE_CREATEDIR_SS, path, strerror(errno));
+      } else {
+         ERROR((SGE_EVENT, MSG_FILE_CREATEDIR_SS, path, strerror(errno)));
+      }
+      DEXIT;
+      return NULL;
+   }
+
+   DEXIT;
+   return path;
 }

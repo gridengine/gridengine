@@ -1743,6 +1743,33 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
    DEXIT; 
 }
 
+/****** gdi/job_jatask/job_get_id_string() *************************************
+*  NAME
+*     job_get_id_string() -- get an id string for a job/jatask/petask
+*
+*  SYNOPSIS
+*     const char* job_get_id_string(u_long32 job_id, u_long32 ja_task_id, 
+*                                   const char *pe_task_id) 
+*
+*  FUNCTION
+*     Returns an id string for a certain job, ja task or pe task.
+*     The function should be used in any code that outputs ids, e.g. in error
+*     strings to ensure we have the same output format everywhere.
+*
+*  INPUTS
+*     u_long32 job_id        - the job id
+*     u_long32 ja_task_id    - the ja task id
+*     const char *pe_task_id - optionally the pe task id
+*
+*  RESULT
+*     const char* - pointer to a static buffer. It is valid until the next
+*                   call of the function.
+*
+*  NOTES
+*     It should be possible to suppress output of the ja task id (only output
+*     the job id), e.g. by passing 0 as ja task id.
+*
+*******************************************************************************/
 const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id)
 {
    static dstring id = DSTRING_INIT;

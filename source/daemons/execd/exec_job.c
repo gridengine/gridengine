@@ -252,8 +252,11 @@ char *err_str
 #endif
 #endif   
 
-   char dir[SGE_PATH_MAX], 
-        shepherd_path[SGE_PATH_MAX], 
+   dstring active_dir_buffer = DSTRING_INIT;
+
+   const char *active_dir;
+
+   char shepherd_path[SGE_PATH_MAX], 
         coshepherd_path[SGE_PATH_MAX],
         hostfilename[SGE_PATH_MAX], 
         script_file[SGE_PATH_MAX], 
@@ -312,58 +315,9 @@ char *err_str
       return -3;        /* error only relevant for this user */
    }
 
-   /* JG: TODO: create function make_active_job_dir() */
-   if (petep != NULL) {
-      SGE_STRUCT_STAT statbuf;
-
-      /*
-      ** Does the job directory for sub tasks exist?
-      ** We need this test because it is possible that the
-      ** execd with master task and the execd with subtask do not have
-      ** shared filesystems
-      */
-      /* build base directory for job */
-      sge_get_active_job_file_path(dir, SGE_PATH_MAX,
-                                   job_id, ja_task_id, NULL, NULL);
-      /* Does this directory exist? */
-      if (SGE_STAT(dir, &statbuf)) {
-         if (mkdir(dir, 0755) == -1) {
-            sprintf(err_str, MSG_FILE_CREATEDIR_SS, dir, strerror(errno));
-            DEXIT;
-            return -2;
-         }
-      }
-      /*
-      ** Now we can create the directory for the pe-task
-      */  
-      sge_get_active_job_file_path(dir, SGE_PATH_MAX,
-                                   job_id, ja_task_id, pe_task_id, NULL);
-   } else {
-      /* JG: TODO: Where is the directory for non pe jobs created? Why not here? */
-      sge_get_active_job_file_path(dir, SGE_PATH_MAX,
-                                   job_id, ja_task_id, NULL, NULL);
-   }
-
-   /* Create job or (pe) task directory */ 
-   if (mkdir(dir, 0755) == -1) {
-      if (errno == EEXIST) {
-         DPRINTF(("cleaning active job dir\n"));
-         if (sge_rmdir(dir, SGE_EVENT)) {
-            sprintf(err_str, MSG_FILE_RMDIR_SS, dir, SGE_EVENT);
-            DEXIT;
-            return -2;
-         }
-         if (mkdir(dir, 0755) == -1) {
-            ERROR((SGE_EVENT, MSG_FILE_CREATEDIRDEL_SS, dir, strerror(errno)));
-            DEXIT;
-            return -2;
-         }
-      } else {
-         sprintf(err_str, MSG_FILE_CREATEDIR_SS, dir, strerror(errno));
-         DEXIT;
-         return -2;        /* general error */
-      }
-   }
+   active_dir = sge_get_active_job_file_path(&active_dir_buffer, 
+                                         job_id, ja_task_id, pe_task_id,
+                                         NULL);
 
    umask(022);
 
@@ -374,12 +328,14 @@ char *err_str
       if (!(sge_make_tmpdir(master_q, job_id, ja_task_id, 
           pw->pw_uid, pw->pw_gid, tmpdir))) {
          sprintf(err_str, MSG_SYSTEM_CANTMAKETMPDIR);
+         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
    } else {
       if(!(sge_get_tmpdir(master_q, job_id, ja_task_id, tmpdir))) {
          sprintf(err_str, MSG_SYSTEM_CANTGETTMPDIR);
+         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }                    
@@ -393,14 +349,16 @@ char *err_str
    
    /***************** write out sge host file ******************************/
    /* JG: TODO: create function write_pe_hostfile() */
+   /* JG: TODO (254) use function sge_get_active_job.... */
    if (petep == NULL) {
       if (processor_set)
          processor_set = lFreeList(processor_set);
 
-      sprintf(hostfilename, "%s/%s/%s", execd_spool_dir, dir, PE_HOSTFILE);
+      sprintf(hostfilename, "%s/%s/%s", execd_spool_dir, active_dir, PE_HOSTFILE);
       fp = fopen(hostfilename, "w");
       if (!fp) {
          sprintf(err_str, MSG_FILE_NOOPEN_SS,  hostfilename, strerror(errno));
+         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
@@ -451,10 +409,12 @@ char *err_str
    /*************************** finished writing sge hostfile  ********/
 
    /********************** setup environment file ***************************/
-   sprintf(fname, "%s/%s/environment", execd_spool_dir, dir);
+   /* JG: TODO (254) use function sge_get_active_job.... */
+   sprintf(fname, "%s/%s/environment", execd_spool_dir, active_dir);
    fp = fopen(fname, "w");
    if (!fp) {
       sprintf(err_str, MSG_FILE_NOOPEN_SS, fname, strerror(errno));
+      sge_dstring_free(&active_dir_buffer);
       DEXIT;
       return -2;        /* general */
    }
@@ -659,7 +619,7 @@ char *err_str
    if (lGetString(jatep, JAT_granted_pe) != NULL) {
       char buffer[SGE_PATH_MAX];
       var_list_set_string(&environmentList, "PE", lGetString(jatep, JAT_granted_pe));
-      sprintf(buffer, "%s/%s/%s", execd_spool_dir, dir, PE_HOSTFILE);
+      sprintf(buffer, "%s/%s/%s", execd_spool_dir, active_dir, PE_HOSTFILE);
       var_list_set_string(&environmentList, "PE_HOSTFILE", buffer);
    }   
 
@@ -673,7 +633,7 @@ char *err_str
    {
       char buffer[SGE_PATH_MAX]; 
 
-      sprintf(buffer, "%s/%s", execd_spool_dir, dir);  
+      sprintf(buffer, "%s/%s", execd_spool_dir, active_dir);  
       var_list_set_string(&environmentList, VAR_PREFIX "JOB_SPOOL_DIR", buffer);
    }
 
@@ -702,11 +662,13 @@ char *err_str
    /*************************** finished writing environment *****************/
 
    /**************** write out config file ******************************/
-   sprintf(fname, "%s/config", dir);
+   /* JG: TODO (254) use function sge_get_active_job.... */
+   sprintf(fname, "%s/config", active_dir);
    fp = fopen(fname, "w");
    if (!fp) {
       lFreeList(environmentList);
       sprintf(err_str, MSG_FILE_NOOPEN_SS, fname, strerror(errno));
+      sge_dstring_free(&active_dir_buffer);
       DEXIT;
       return -2;
    }
@@ -727,6 +689,7 @@ char *err_str
          lFreeList(environmentList);
          sprintf(err_str, MSG_EXECD_NOSGID); 
          fclose(fp);
+         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return(-2);
       }
@@ -742,6 +705,7 @@ char *err_str
           sprintf(err_str, MSG_EXECD_NOPARSEGIDRANGE);
           lFreeList(environmentList);
           fclose(fp);
+          sge_dstring_free(&active_dir_buffer);
           DEXIT;
           return (-2);
       } 
@@ -755,6 +719,7 @@ char *err_str
             sprintf(err_str, MSG_EXECD_NOADDGID);
             lFreeList(environmentList);
             fclose(fp);
+            sge_dstring_free(&active_dir_buffer);
             DEXIT;
             return (-1);
          }
@@ -888,7 +853,7 @@ char *err_str
       if(petep == NULL) {
          pep = lFirst(lGetList(jatep, JAT_pe_object));
       }
-      fprintf(fp, "pe_hostfile=%s/%s/%s\n", execd_spool_dir, dir, PE_HOSTFILE);
+      fprintf(fp, "pe_hostfile=%s/%s/%s\n", execd_spool_dir, active_dir, PE_HOSTFILE);
       fprintf(fp, "pe_start=%s\n",  pep != NULL && lGetString(pep, PE_start_proc_args)?
                                        lGetString(pep, PE_start_proc_args):"none");
       fprintf(fp, "pe_stop=%s\n",   pep != NULL && lGetString(pep, PE_stop_proc_args)?
@@ -990,6 +955,7 @@ char *err_str
             sprintf(err_str, MSG_EXECD_NOXTERM); 
             fclose(fp);
             lFreeList(environmentList);
+            sge_dstring_free(&active_dir_buffer);
             DEXIT;
             return -2;
             /*
@@ -1051,6 +1017,7 @@ char *err_str
             sprintf(err_str, MSG_EXECD_NODISPLAY);
             lFreeList(environmentList);
             fclose(fp);
+            sge_dstring_free(&active_dir_buffer);
             DEXIT;
             return -1;
          }
@@ -1060,6 +1027,7 @@ char *err_str
                sprintf(err_str, MSG_EXECD_EMPTYDISPLAY);
                lFreeList(environmentList);
                fclose(fp);
+               sge_dstring_free(&active_dir_buffer);
                DEXIT;
                return -1;
             }
@@ -1073,6 +1041,7 @@ char *err_str
    if (arch_dep_config(fp, cplx, err_str)) {
       lFreeList(environmentList);
       fclose(fp);
+      sge_dstring_free(&active_dir_buffer);
       DEXIT;
       return -2;
    } 
@@ -1192,6 +1161,7 @@ char *err_str
       if (SGE_STAT(script_file, &buf)) {
          sprintf(err_str, MSG_EXECD_UNABLETOFINDSCRIPTFILE_SS,
                  script_file, strerror(errno));
+         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
@@ -1205,6 +1175,7 @@ char *err_str
       sprintf(shepherd_path, "%s/%s", conf.binary_path, shepherd_name);
       if (SGE_STAT(shepherd_path, &buf)) {
          sprintf(err_str, MSG_EXECD_NOSHEPHERD_SSS, arch, shepherd_path, strerror(errno));
+         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
@@ -1214,6 +1185,7 @@ char *err_str
        strcasecmp(conf.shepherd_cmd, "none")) {
       if (SGE_STAT(conf.shepherd_cmd, &buf)) {
          sprintf(err_str, MSG_EXECD_NOSHEPHERDWRAP_SS, conf.shepherd_cmd, strerror(errno));
+         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
@@ -1223,6 +1195,7 @@ char *err_str
               path.sge_root, arch);
       if (SGE_STAT(dce_wrapper_cmd, &buf)) {
          sprintf(err_str, MSG_DCE_NOSHEPHERDWRAP_SS, dce_wrapper_cmd, strerror(errno));
+         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
@@ -1237,6 +1210,7 @@ char *err_str
          sprintf(coshepherd_path, "%s/%s", conf.binary_path, shepherd_name);
          if (SGE_STAT(coshepherd_path, &buf)) {
             sprintf(err_str, MSG_EXECD_NOCOSHEPHERD_SSS, arch, coshepherd_path, strerror(errno));
+            sge_dstring_free(&active_dir_buffer);
             DEXIT;
             return -2;
          }
@@ -1244,13 +1218,16 @@ char *err_str
       if (!conf.set_token_cmd ||
           !strlen(conf.set_token_cmd) || !conf.token_extend_time) {
          sprintf(err_str, MSG_EXECD_AFSCONFINCOMPLETE);
+         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
 
-      sprintf(fname, "%s/%s", dir, TOKEN_FILE);
+   /* JG: TODO (254) use function sge_get_active_job.... */
+      sprintf(fname, "%s/%s", active_dir, TOKEN_FILE);
       if ((fd = open(fname, O_RDWR | O_CREAT | O_TRUNC, 0600)) == -1) {
          sprintf(err_str, MSG_EXECD_NOCREATETOKENFILE_S, strerror(errno));
+         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }   
@@ -1258,11 +1235,13 @@ char *err_str
       cp = lGetString(jep, JB_tgt);
       if (!cp || !(len = strlen(cp))) {
          sprintf(err_str, MSG_EXECD_TOKENZERO);
+         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -3; /* problem of this user */
       }
       if (write(fd, cp, len) != len) {
          sprintf(err_str, MSG_EXECD_NOWRITETOKEN_S, strerror(errno));
+         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
@@ -1302,8 +1281,9 @@ char *err_str
 
    /* Change to jobs directory. Father changes back to cwd. We do this to
       ensure chdir() works before forking. */
-   if (chdir(dir)) {
-      sprintf(err_str, MSG_FILE_CHDIR_SS, dir, strerror(errno));
+   if (chdir(active_dir)) {
+      sprintf(err_str, MSG_FILE_CHDIR_SS, active_dir, strerror(errno));
+      sge_dstring_free(&active_dir_buffer);
       DEXIT;
       return -2;
    }
@@ -1333,6 +1313,7 @@ char *err_str
             sprintf(err_str, MSG_EXECD_NOFORK_S, strerror(errno));
       }
 
+      sge_dstring_free(&active_dir_buffer);
       DEXIT;
       return i;
    }

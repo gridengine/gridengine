@@ -218,8 +218,7 @@ sge_pack_buffer *pb,
 int slave 
 ) {
    lListElem *jep, *pelem = NULL, *jep_jatep = NULL;
-   char dir[SGE_PATH_MAX];
-   char err_str[256+SGE_PATH_MAX];
+   dstring err_str = DSTRING_INIT;
    u_long32 jobid, jataskid;
    int mail_on_error = 0, general = GFSTATE_QUEUE;
    lListElem *qep, *gdil_ep;
@@ -260,16 +259,9 @@ int slave
       jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
    }
 
-   if (slave) {
-      /* make job directory for sub tasks
-         in case of master jobs this is done when starting the jobs */
-      sge_get_active_job_file_path(dir, SGE_PATH_MAX,
-                                   jobid, jataskid, NULL, NULL);   
-      if (mkdir(dir, 0755) == -1) {
-         sprintf(err_str, MSG_FILE_CREATEDIR_SS, dir, strerror(errno));
-         DEXIT;
-         goto Error;
-      }
+   if(sge_make_ja_task_active_dir(jelem, jatep, &err_str) == NULL) {
+      DEXIT;
+      goto Error;
    }
 
    /* initialize state - prevent slaves from getting started */
@@ -285,7 +277,7 @@ int slave
    job_log(jobid, jataskid, MSG_COM_RECEIVED);
 
    if (cull_unpack_list(pb, &qlp)) {
-      sprintf(err_str, MSG_COM_UNPACKINGQ);
+      sge_dstring_sprintf(&err_str, MSG_COM_UNPACKINGQ);
       DEXIT;
       goto Error;
    }
@@ -295,7 +287,7 @@ int slave
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       qnm=lGetString(gdil_ep, JG_qname);
       if (!(qep=lGetElemStr(qlp, QU_qname, qnm))) {
-         sprintf(err_str, MSG_JOB_MISSINGQINGDIL_SU, qnm, u32c(lGetUlong(jelem, JB_job_number)));
+         sge_dstring_sprintf(&err_str, MSG_JOB_MISSINGQINGDIL_SU, qnm, u32c(lGetUlong(jelem, JB_job_number)));
          DEXIT;
          goto Error;
       }
@@ -353,7 +345,7 @@ int slave
             DPRINTF(("### CWD: %s", buffer));
          }
 
-         sprintf(err_str, MSG_FILE_ERRORWRITING_SS, lGetString(jelem, JB_exec_file), strerror(errno));
+         sge_dstring_sprintf(&err_str, MSG_FILE_ERRORWRITING_SS, lGetString(jelem, JB_exec_file), strerror(errno));
          DEXIT;
          goto Error;
       }
@@ -362,7 +354,7 @@ int slave
          lGetUlong(jelem, JB_script_size))) !=
          lGetUlong(jelem, JB_script_size)) {
          DPRINTF(("errno: %d\n", errno));
-         sprintf(err_str, MSG_EXECD_NOWRITESCRIPT_SIUS, lGetString(jelem, JB_exec_file), 
+         sge_dstring_sprintf(&err_str, MSG_EXECD_NOWRITESCRIPT_SIUS, lGetString(jelem, JB_exec_file), 
                nwritten, u32c(lGetUlong(jelem, JB_script_size)), strerror(errno));
          close(fd);
          DEXIT;
@@ -379,8 +371,10 @@ int slave
    ** This also creates a forwardable credential for the user.
    */
    if (do_credentials) {
-      if (store_sec_cred2(jelem, do_authentication, &general, err_str) != 0)
+      if (store_sec_cred2(jelem, do_authentication, &general, SGE_EVENT) != 0) {
+         sge_dstring_copy_string(&err_str, SGE_EVENT);
          goto Error;
+      }   
    }
 
 #ifdef KERBEROS
@@ -392,7 +386,7 @@ int slave
    lSetUlong(jelem, JB_script_size, 0);
    if (job_write_spool_file(jelem, jataskid, SPOOL_WITHIN_EXECD)) {
       /* SGE_EVENT is written by job_write_spool_file() */
-      strcpy(err_str, SGE_EVENT);
+      sge_dstring_copy_string(&err_str, SGE_EVENT);
       DEXIT;
       goto Error;
    }
@@ -410,9 +404,12 @@ int slave
 Error:
    {
       lListElem *jr;
-      jr = execd_job_start_failure(jelem, jatep, NULL, err_str, general);
-      if (mail_on_error)
+      jr = execd_job_start_failure(jelem, jatep, NULL, sge_dstring_get_string(&err_str), general);
+      if (mail_on_error) {
          reaper_sendmail(jelem, jr);
+      }
+
+      sge_dstring_free(&err_str);
    }
 
 Ignore:   
@@ -503,7 +500,7 @@ static lList *job_get_queue_with_task_about_to_exit(lListElem *jep,
          if(queuename != NULL && strcmp(queuename, lGetString(pe_task_queue, JG_qname)) != 0) {
             continue;
          } else {
-            char shepherd_about_to_exit[SGE_PATH_MAX];
+            dstring shepherd_about_to_exit = DSTRING_INIT;
             SGE_STRUCT_STAT stat_buffer;
             u_long32 jobid;
             u_long32 jataskid;
@@ -513,17 +510,19 @@ static lList *job_get_queue_with_task_about_to_exit(lListElem *jep,
             jataskid = lGetUlong(jatep, JAT_task_number);
             petaskid = lGetString(petask, PET_id);
             
-            sge_get_active_job_file_path(shepherd_about_to_exit, SGE_PATH_MAX, 
+            sge_get_active_job_file_path(&shepherd_about_to_exit,
                                          jobid, jataskid, petaskid,
                                          "shepherd_about_to_exit");
-            DPRINTF(("checking for file %s\n", shepherd_about_to_exit));
+            DPRINTF(("checking for file %s\n", sge_dstring_get_string(&shepherd_about_to_exit)));
 
-            if(SGE_STAT(shepherd_about_to_exit, &stat_buffer) == 0) {
+            if(SGE_STAT(sge_dstring_get_string(&shepherd_about_to_exit), &stat_buffer) == 0) {
                DPRINTF(("task %s of job %d.%d already exited, using its slot for new task\n", 
                         petaskid, jobid, jataskid));
+               sge_dstring_free(&shepherd_about_to_exit);         
                DEXIT;         
                return job_set_queue_info_in_task(lGetString(pe_task_queue, JG_qname), petep); 
             }
+            sge_dstring_free(&shepherd_about_to_exit);         
          }
       }   
    }
@@ -599,7 +598,7 @@ int *synchron
    lList *gdil = NULL;
    int tid = 0;
    const void *iterator;
-   char err_str[256+SGE_PATH_MAX];
+   dstring err_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "handle_task");
 
@@ -703,8 +702,8 @@ DTRACE;
 DTRACE;
 
    if (job_write_spool_file(jep, jataskid, SPOOL_WITHIN_EXECD)) { 
-      strcpy(err_str, SGE_EVENT);
-      execd_job_start_failure(jep, jatep, petep, err_str, 1);
+      sge_dstring_copy_string(&err_str, SGE_EVENT);
+      execd_job_start_failure(jep, jatep, petep, sge_dstring_get_string(&err_str), 1);
       goto Error;
    }
    
@@ -723,6 +722,11 @@ DTRACE;
    if (getenv("FAILURE_BEFORE_START"))
       execd_job_start_failure(jep, jatep, petep, "FAILURE_BEFORE_START", 0);
 
+   if(sge_make_pe_task_active_dir(jep, jatep, petep, NULL) == NULL) {
+     DEXIT;
+     goto Error;
+   }
+
 DTRACE;
    /* put task into task_list of slave/master job */ 
    /* send ack to sender of task */
@@ -737,9 +741,11 @@ DTRACE;
 
 Error:
    /* send nack to sender of task */
-      DPRINTF(("sending nack\n")); 
-      packstr(apb, "none");    
-      *synchron = 0;
+   DPRINTF(("sending nack\n")); 
+   packstr(apb, "none");    
+   *synchron = 0;
+
+   sge_dstring_free(&err_str);
    DEXIT;
    return -1;
 }

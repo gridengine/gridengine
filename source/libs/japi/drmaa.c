@@ -2373,14 +2373,19 @@ static int drmaa_path2sge_path(const lList *attrs, int is_bulk,
       const char *p = NULL;
       const char *value = lGetString(ep, VA_value);
       
-      /* substitute DRMAA placeholder with grid engine counterparts */
-      p = strchr (value, ':');
-      
-      /* If there is a colon, skip past it */
-      if (p != NULL) {
-         sge_dstring_append_char (&ds, ':');
-         value = p + 1;
+      /* Only look for a hostname if the WD placeholder is being processed, i.e.
+       * if we're processing a working directory path. */
+      if (do_wd) {
+         /* substitute DRMAA placeholder with grid engine counterparts */
+         p = strchr (value, ':');
+
+         /* If there is a colon, skip past it */
+         if (p != NULL) {
+            sge_dstring_append_char (&ds, ':');
+            value = p + 1;
+         }
       }
+      
       /* If there is no colon, we assume that the calling function will deal
        * with the problem since we can't know who's doing the calling and
        * whether there has to be a colon or not. */

@@ -1,3 +1,13 @@
+DT-2005-01-03-0: Docs       o Updated DRMAA-J howto and README
+                            o Removed javadoc.clean from clean target
+                 Bugfix:    o Fixed missing qtask args in qtcsh
+                            - Contributed by Ron Chen
+                            o Fixed colon parsing in working directory in DRMAA
+                            - Contributed by Ron Chen
+                 Changed:   DRMAA, www, qtcsh
+                 Review:    DT
+                 Issue:     1407, 1397
+
 DT-2004-12-31-1: Bugfix:    o Really backed out conflicting changes
                             o Resolved conflict between ARCo and DRMAA
                  Changed:   aimk.site, DRMAA Makefiles

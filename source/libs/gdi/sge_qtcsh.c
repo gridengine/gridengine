@@ -268,11 +268,10 @@ int close_stdin /* use of qrsh's -nostdin option */
       taskname = expath;
    }
 
-#if 1
-   if (mode_verbose)
+   if (mode_verbose) {
       fprintf(stderr, "sge_execv(path = %s, taskname = %s, expath = %s, close_stdin = %d)\n", 
          path, taskname?taskname:"<no remote execution>", expath, close_stdin);
-#endif
+   }
 
    if (!mode_remote || 
          !taskname ||
@@ -283,12 +282,13 @@ int close_stdin /* use of qrsh's -nostdin option */
    }
   
    if ((value = lGetString(task, CF_value))) {
-      narg_argv += sge_quick_count_num_args (value);
+      narg_resreq = sge_quick_count_num_args (value);
    }
 
-   for (argv_iter=argv; argv_iter[0]; argv_iter++) {
+   for (argv_iter=argv; argv_iter[0] != null; argv_iter++) {
       narg_argv++; 
    }
+   
    newargv = (char **)malloc(sizeof(char *) * (
       1 +                                /* qrsh */
       (close_stdin?1:0) +                /* -nostdin */
@@ -320,26 +320,15 @@ int close_stdin /* use of qrsh's -nostdin option */
    /* add optional qrsh arguments from qtask file */
    if (value) {
       sge_parse_args (value, &newargv[i]);
+      i += narg_resreq;
    }
 	 
    /* add command's arguments */
-   {
-/*       int n; */
-
-      for (argv_iter=argv; argv_iter[0]; argv_iter++) {
-         newargv[i++] = argv_iter[0];
-      }
-      newargv[i] = NULL;
+   for (argv_iter=argv; argv_iter[0] != null; argv_iter++) {
+      newargv[i++] = argv_iter[0];
    }
-#if 0
-   if (mode_verbose) {
-      /* trace exec'd command and arguments */
-      for (argv_iter=newargv; argv_iter[0]; argv_iter++)
-         fprintf(stderr, "%s ", argv_iter[0]);
-      fprintf(stderr, "\n");
-      fflush(stderr);
-   }
-#endif
+      
+   newargv[i] = NULL;
 
    sprintf(qrsh_path, "%s/bin/%s/qrsh", sge_get_root_dir(1, NULL, 0, 1), sge_get_arch());
 

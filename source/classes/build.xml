@@ -79,7 +79,7 @@
       </delete>
    </target>
    
-   <target depends="init,javadoc.clean" description="Clean all build products." name="clean">
+   <target depends="init" description="Clean all build products." name="clean">
       <delete dir="${classes.dir}"/>
       <delete file="${jar}"/>
       <delete file="${test.jar}"/>

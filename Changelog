@@ -1,3 +1,5 @@
+CR-2005-03-25-0: Bugfix:    Fixed broken sge_ca (CSP mode) script
+
 AA-2005-03-23-0: Bugfix:    Certificate renewal in CSP mode broken
                  Bugtraq:   6232120, 6245486
                  Issue:     1515, 1395

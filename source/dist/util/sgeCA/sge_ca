@@ -454,6 +454,7 @@ DumpUsers()
    MakeRandFile $RSFILE $2
 
    RANDFILE=$RSFILE; export RANDFILE
+}
 
 #--------------------------------------------------------------------------
 # MakeCert create certificate and private key for daemon

@@ -1,3 +1,6 @@
+CR-2004-02-11-3: Cleanup:   - removed unused static function 
+                              qmaster_log_flush_func()
+
 CR-2004-02-11-2: Bugfix:    - qmaster communication is now multithreaded again
                             - qmaster can now bind port < 1024 as root 
                               (setup of communication is done earlier in startup

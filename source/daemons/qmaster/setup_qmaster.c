@@ -111,7 +111,6 @@ static lList* parse_cmdline_qmaster(char**, lList**);
 static lList* parse_qmaster(lList**, u_long32*);
 static void   qmaster_init(char**);
 static void   communication_setup(char**);
-static int    qmaster_log_flush_func(cl_raw_list_t* list_p);
 static void   qmaster_lock_and_shutdown(int);
 static int    setup_qmaster(void);
 static int    remove_invalid_job_references(int user);

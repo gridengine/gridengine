@@ -1,3 +1,6 @@
+CR-2002-01-11-0: Testsuite: wrong parsing for submit_job() produced error
+                 Bugfix:    in qsub test. 
+
 EB-2002-01-11-0: Bugfix:    not existing shell in jobscript in combination
                             with shell_start_mode=unix_behaviour set queue
                             and not job into error state.

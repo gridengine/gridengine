@@ -3675,7 +3675,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
           }       
 
        }
-       -i $sp_id -- "usage" {
+       -i $sp_id -- "usage: qsub" {
           puts $CHECK_OUTPUT "got usage ..."
           if {([string first "help" $args] >= 0 ) || ([string first "commandfile" $args] >= 0)} {
              set return_value -2 

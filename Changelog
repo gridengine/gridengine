@@ -1,3 +1,5 @@
+MD-2003-07-21-0: Bugfix	    fixed datatype IA64 Port
+
 SG-2003-07-17-1: Bugfix     fixed the build (removed printf statements)
 
 SG-2003-07-17-0: optim.     - Optimized function ticket computation. Decreased

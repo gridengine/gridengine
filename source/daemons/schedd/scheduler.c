@@ -42,6 +42,7 @@
 #include <fnmatch.h>
 
 #include "sge_conf.h"
+#include "sge_string.h"
 #include "sge.h"
 #include "sge_log.h"
 #include "cull.h"
@@ -71,13 +72,17 @@
 #include "job_log.h"
 
 
+/* profiling info */
+extern int scheduled_fast_jobs;
+extern int scheduled_complex_jobs;
+
 /* the global list descriptor for all lists needed by the default scheduler */
 sge_Sdescr_t lists =
 {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
 static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist, lList **running_jobs, lList **finished_jobs);
 
-static int select_assign_debit(lList **queue_list, lList **job_list, lListElem *job, lListElem *ja_task, lListElem *pe, lListElem *ckpt, lList *complex_list, lList *host_list, lList *acl_list, lList **user_list, lList **group_list, lList **orders_list, u_long *total_running_job_tickets, int ndispatched, int *dispatch_type);
+static int select_assign_debit(lList **queue_list, lList **job_list, lListElem *job, lListElem *ja_task, lListElem *pe, lListElem *ckpt, lList *complex_list, lList *host_list, lList *acl_list, lList **user_list, lList **group_list, lList **orders_list, u_long *total_running_job_tickets, int ndispatched, int *dispatch_type, int host_order_changed, int *sort_hostlist);
 
 
 /****** scheduler/scheduler() **************************************************
@@ -108,6 +113,7 @@ int scheduler( sge_Sdescr_t *lists ) {
    lList *orderlist=NULL;
    lList *running_jobs=NULL;
    lList *finished_jobs = NULL;
+   time_t start;
    int ret;
 #ifdef TEST_DEMO
    FILE *fpdjp;
@@ -118,8 +124,13 @@ int scheduler( sge_Sdescr_t *lists ) {
    fpdjp = fopen("/tmp/sge_debug_job_place.out", "a");
 #endif
 
+   start = time(0);
+
+   scheduled_fast_jobs    = 0;
+   scheduled_complex_jobs = 0;
+
    schedd_initialize_messages();
-   schedd_log_schedd_info(1);
+   schedd_log_schedd_info(1); 
 
    if (feature_is_enabled(FEATURE_SGEEE)) {  
       /* finished jobs are handled in sge_calc_tickets */
@@ -184,6 +195,34 @@ int scheduler( sge_Sdescr_t *lists ) {
       return 0;
    }
 #endif
+   if(profile_schedd) {
+      time_t now = time(0);
+      extern u_long32 logginglevel;
+      u_long32 saved_logginglevel = logginglevel;
+
+      logginglevel = LOG_INFO;
+      INFO((SGE_EVENT, "scheduled in %ld s: %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J, %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
+         now - start, 
+         scheduled_fast_jobs,
+         scheduled_complex_jobs,
+         lGetNumberOfElem(orderlist), 
+         lGetNumberOfElem(lists->host_list), 
+         lGetNumberOfElem(lists->queue_list),
+         lGetNumberOfElem(lists->all_queue_list),
+         lGetNumberOfElem(lists->job_list),
+         lGetNumberOfElem(lists->complex_list),
+         lGetNumberOfElem(lists->acl_list),
+         lGetNumberOfElem(lists->pe_list),
+         lGetNumberOfElem(lists->config_list),
+         lGetNumberOfElem(lists->user_list),
+         lGetNumberOfElem(lists->dept_list),
+         lGetNumberOfElem(lists->project_list),
+         lGetNumberOfElem(lists->share_tree),
+         lGetNumberOfElem(lists->ckpt_list),
+         lGetNumberOfElem(lists->running_per_user)
+      ));
+      logginglevel = saved_logginglevel;
+   }
 
    remove_immediate_jobs(lists->job_list, &orderlist);
    orderlist = sge_add_schedd_info(orderlist);
@@ -201,7 +240,7 @@ int scheduler( sge_Sdescr_t *lists ) {
    }
 
    schedd_release_messages();
-   schedd_log_schedd_info(0);
+    schedd_log_schedd_info(0); 
 
    DEXIT;
    return 0;
@@ -241,12 +280,15 @@ lList **finished_jobs
    lList *susp_queues = NULL;
    lListElem *rjob, *rja_task;  
    u_long total_running_job_tickets=0; 
-   int sge_mode = feature_is_enabled(FEATURE_SGEEE);
+   int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    int ndispatched = 0;
    int dipatch_type = DISPATCH_TYPE_NONE;
    lListElem *ja_task;
    int matched_pe_count = 0;
    int global_lc = 0;
+   int host_order_changed = 0;  /* is passed to assign_select_debit, queue list needs new sorting */
+   int sort_hostlist = 1;       /* hostlist has to be sorted. Info returned by select_assign_debit */
+                                /* e.g. if load correction was computed */
 
    DENTER(TOP_LAYER, "dispatch_jobs");
 
@@ -373,7 +415,7 @@ lList **finished_jobs
    if(!queue) {
       /* no queues to schedule on */
 
-      if (sge_mode) {
+      if (sgeee_mode) {
          sge_scheduler(lists, *running_jobs, *finished_jobs, orderlist);
       }
 
@@ -456,7 +498,7 @@ lList **finished_jobs
     * CALCULATE TICKETS FOR EACH JOB  - IN SUPPORT OF SGE
     *------------------------------------------------------------------*/
 
-   if (sge_mode) {
+   if (sgeee_mode) {
       sge_scheduler(lists, *running_jobs, *finished_jobs, orderlist);
    }
 
@@ -471,7 +513,7 @@ lList **finished_jobs
       return 0;
    }
 
-   if (sge_mode) {
+   if (sgeee_mode) {
       /* calculate the number of tickets for all jobs already running on the host */
       if (calculate_host_tickets(running_jobs, &(lists->host_list)))  {
          DPRINTF(("no host for which to calculate host tickets\n"));
@@ -488,7 +530,7 @@ lList **finished_jobs
 
       sge_sort_jobs(&(lists->job_list));
 
-   }  /* if sge_mode */
+   }  /* if sgeee_mode */
 
 
    /*---------------------------------------------------------------------
@@ -512,7 +554,7 @@ lList **finished_jobs
    switch (scheddconf.queue_sort_method) {
    case QSM_SHARE:   
 
-      if (sge_mode) {
+      if (sgeee_mode) {
          sort_host_list(lists->host_list, lists->complex_list);
          sort_host_list_by_share_load(lists->host_list, lists->complex_list);
 
@@ -548,7 +590,7 @@ lList **finished_jobs
          fprintf(fpdjp, "load value for host %s is %f\n",
                  lGetString(host, EH_name), lGetDouble(host, EH_sort_value));
 
-         if (sge_mode)  {
+         if (sgeee_mode)  {
             fprintf(fpdjp, "EH_sge_tickets is %u\n", lGetUlong(host, EH_sge_tickets));
          }
        }
@@ -563,7 +605,7 @@ lList **finished_jobs
     *---------------------------------------------------------------------*/
    /* Calculate the total number of tickets for running jobs - to be used
       later for SGE job placement */
-   if (sge_mode && scheddconf.queue_sort_method == QSM_SHARE)  {
+   if (sgeee_mode && scheddconf.queue_sort_method == QSM_SHARE)  {
       total_running_job_tickets = 0;
       for_each(rjob, *running_jobs) {
          for_each(rja_task, lGetList(rjob, JB_ja_tasks)) {
@@ -578,7 +620,7 @@ lList **finished_jobs
    */
    sge_reset_job_category(); 
 
-   if (!sge_mode) {
+   if (!sgeee_mode) {
       /* 
       ** establish hash table for all job arrays containing runnable tasks 
       ** whether a job is runnable 
@@ -591,7 +633,7 @@ lList **finished_jobs
    ** loop over the jobs that are left in priority order
    */
    while ( (job = lCopyElem(
-   orig_job=(sge_mode? lFirst(lists->job_list) :at_get_actual_job_array())
+   orig_job=(sgeee_mode? lFirst(lists->job_list) :at_get_actual_job_array())
    ))) {
       u_long32 job_id; 
       u_long32 ja_task_id; 
@@ -600,6 +642,15 @@ lList **finished_jobs
       lListElem *ckpt;
       char *ckpt_name;
       int dispatched_a_job;
+
+      /* sort the hostlist */
+      if(sort_hostlist) {
+         lPSortList(lists->host_list, "%I+", EH_sort_value);
+         sort_hostlist      = 0;
+         host_order_changed = 1;
+      } else {
+         host_order_changed = 0;
+      }   
 
       schedd_initialize_messages_joblist(lists->job_list);
 
@@ -614,7 +665,7 @@ lList **finished_jobs
        *          job is rejected mark the categories rejected field
        *          for the following jobs
        *------------------------------------------------------------------*/
-      if (sge_mode && sge_is_job_category_rejected(job)) {
+      if (sgeee_mode && sge_is_job_category_rejected(job)) {
          goto SKIP_THIS_JOB;
       }
 
@@ -669,7 +720,9 @@ lList **finished_jobs
                   orderlist,
                   &total_running_job_tickets, 
                   ndispatched,
-                  &dipatch_type))
+                  &dipatch_type,
+                  host_order_changed,
+                  &sort_hostlist))
                continue;
 
             ndispatched++;       
@@ -696,7 +749,9 @@ lList **finished_jobs
                orderlist,
                &total_running_job_tickets, 
                ndispatched,
-               &dipatch_type)) {
+               &dipatch_type,
+               host_order_changed,
+               &sort_hostlist)) {
             ndispatched++;                  
             dispatched_a_job = 1;
          }
@@ -718,7 +773,7 @@ SKIP_THIS_JOB:
 
 
          /* notify access tree */
-         if (!sge_mode) 
+         if (!sgeee_mode) 
             at_dispatched_a_task(orig_job, 1);
       } else {
          /* before deleting the element mark the category as rejected */
@@ -732,14 +787,14 @@ SKIP_THIS_JOB:
 
       /* prevent that we get the same job next time again */
       if (!dispatched_a_job || lGetNumberOfElem(lGetList(orig_job, JB_ja_tasks)) <= 1) {
-         if (!sge_mode) 
+         if (!sgeee_mode) 
             at_finished_array_dispatching(orig_job);
          lDelElemUlong(&lists->job_list, JB_job_number, lGetUlong(orig_job, JB_job_number)); 
       }
 
       /* drop idle jobs that exceed maxujobs limit */
       /* should be done after resort_job() 'cause job is referenced */
-      if (sge_mode /* || !set_user_sort(-1) */) {
+      if (sgeee_mode /* || !set_user_sort(-1) */) {
          DPRINTF(("FILTER_MAX_RUNNING\n"));
          lists->job_list = filter_max_running(lists->job_list, user_list, 
                scheddconf.maxujobs, JB_owner);
@@ -773,7 +828,7 @@ SKIP_THIS_JOB:
 #endif
 
       if (dispatched_a_job && !(lGetNumberOfElem(lists->job_list)==0))  {
-         if (sge_mode && scheddconf.queue_sort_method == QSM_SHARE)  {
+         if (sgeee_mode && scheddconf.queue_sort_method == QSM_SHARE)  {
             sort_host_list_by_share_load(lists->host_list, lists->complex_list);
 
 #ifdef TEST_DEMO
@@ -793,7 +848,7 @@ SKIP_THIS_JOB:
             }
 #endif
 
-         } /* sge_mode && scheddconf.queue_sort_method == QSM_SHARE */
+         } /* sgeee_mode && scheddconf.queue_sort_method == QSM_SHARE */
       } /* !lGetNumberOfElem(lists->job_list)==0 */
 
    } /* end of while */
@@ -836,9 +891,11 @@ lList **group_list,
 lList **orders_list,
 u_long *total_running_job_tickets,
 int ndispatched,
-int *dispatch_type 
+int *dispatch_type, 
+int host_order_changed,
+int *sort_hostlist
 ) {
-   int sge_mode = feature_is_enabled(FEATURE_SGEEE);
+   int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    lListElem *hep;  
    u_long old_host_tickets;    
    lListElem *granted_el;     
@@ -861,12 +918,12 @@ int *dispatch_type
       acl_list,             /* use these access lists                  */
       scheddconf.job_load_adjustments,
       ndispatched,
-      dispatch_type);
-            
+      dispatch_type,
+      host_order_changed);
 
    /* the following was added to support SGE - 
       account for job tickets on hosts due to parallel jobs */
-   if (granted && sge_mode) {
+   if (granted && sgeee_mode) {
       double job_tickets_per_slot, nslots;
       nslots = nslots_granted(granted, NULL);
 
@@ -917,7 +974,7 @@ int *dispatch_type
    sge_inc_jc(user_list, lGetString(job, JB_owner), 1);
 
    debit_scheduled_job(job, granted, *queue_list, pe, host_list, 
-         complex_list);
+         complex_list, sort_hostlist);
 
    /*------------------------------------------------------------------
     * REMOVE QUEUES THAT ARE NO LONGER USEFUL FOR FURTHER SCHEDULING
@@ -945,7 +1002,6 @@ int *dispatch_type
       and debited the job everywhere */
    lFreeList(granted);
   
-
    DEXIT;
    return 0;
 }

@@ -1,3 +1,10 @@
+JG-2001-09-12-0: (Issue #58)
+                 - scheduler optimization: sorting of hosts is only done
+                   when really necessary.
+                 - schedd can output profiling information - set schedd_params
+                   to profile
+                 - some smaller bugfixes  
+
 AA-2001-09-06-0: Fixed y out of range of allowed Xserver values in QControl
                  This limits the number of displayable qs to 2758
 

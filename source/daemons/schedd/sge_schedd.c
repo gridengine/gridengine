@@ -526,7 +526,7 @@ static int sge_setup_sge_schedd()
 {
    int ret;
    extern u_long32 logginglevel;
-   u_long32 saved_logginglevel = logginglevel;
+   u_long32 saved_logginglevel;
    char err_str[1024];
 
    DENTER(TOP_LAYER, "sge_setup_sge_schedd");
@@ -564,8 +564,8 @@ static int sge_setup_sge_schedd()
    switch2admin_user();
    error_file = ERR_FILE;
    sge_log_as_admin_user();
-
    /* suppress the INFO messages during setup phase */
+   saved_logginglevel = logginglevel;
    logginglevel = LOG_WARNING;
    if ((ret = sge_ck_qmaster()) < 0) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTSTARTUP ));

@@ -69,6 +69,9 @@
 #include "msg_schedd.h"
 #include "sge_string.h"
 
+int scheduled_fast_jobs;
+int scheduled_complex_jobs;
+
 static int is_requested(lList *req, char *attr);
 
 static lListElem *get_util_max(lListElem *cplx_el, lList *ccl[3]);
@@ -1517,8 +1520,8 @@ lList *host_list,    /* EH_Type */
 lList *acl_list,     /* US_Type */
 lList *load_adjustments, /* CE_Type */
 int ndispatched,
-int *last_dispatch_type 
-) {
+int *last_dispatch_type, 
+int host_order_changed) {
    int allocation_rule = 0, total_slots;
    int minslots = 0;
    int need_master_host;
@@ -1568,11 +1571,17 @@ int *last_dispatch_type
           *  It is much faster not to review slots in a comprehensive fashion 
           *  for jobs of this type.
           * ------------------------------------------------------------------*/
-         int host_order_changed = 0;
+         if(host_order_changed) {
+            lListElem *hep, *qep;
+            double previous_load = 0;
+            int previous_load_inited = 0;
+            int host_seqno = 0;
+            char *eh_name;
 
-         if (get_qs_state()!=QS_STATE_EMPTY) {
+            host_order_changed = 0;
+
             for_each (hep, host_list) { /* in share/load order */
-
+      
                /* figure out host_seqno
                   in case the load of two hosts is equal this
                   must be also reflected by the sequence number */
@@ -1586,7 +1595,7 @@ int *last_dispatch_type
                      previous_load = lGetDouble(hep, EH_sort_value);
                   }
                }
-
+      
                /* set host_seqno for all queues of this host */
                eh_name = lGetString(hep, EH_name);
                for_each (qep, queues) {
@@ -1594,7 +1603,7 @@ int *last_dispatch_type
                      continue;
                   lSetUlong(qep, QU_host_seq_no, host_seqno);
                }
-
+      
                /* detect whether host_seqno has changed since last dispatch operation */
                if (host_seqno != lGetUlong(hep, EH_seq_no)) {
                   DPRINTF(("HOST SORT ORDER CHANGED FOR HOST %s FROM %d to %d\n", eh_name, lGetUlong(hep, EH_seq_no), host_seqno));
@@ -1602,7 +1611,8 @@ int *last_dispatch_type
                   lSetUlong(hep, EH_seq_no, host_seqno);
                }
             }
-
+         }   
+         if (get_qs_state()!=QS_STATE_EMPTY) {
             /*------------------------------------------------------------------
              *  There is no need to sort the queues after each dispatch in 
              *  case:
@@ -1652,6 +1662,7 @@ int *last_dispatch_type
                   lSetUlong(gdil_ep, JG_qversion, lGetUlong(qep, QU_version));
                   lSetString(gdil_ep, JG_qhostname, eh_name);
                   lSetUlong(gdil_ep, JG_slots, 1);
+                  scheduled_fast_jobs++;
                   DEXIT;
                   return gdil;
                }
@@ -2150,6 +2161,7 @@ int *last_dispatch_type
          }
       } while (allocation_rule==ALLOC_RULE_ROUNDROBIN && accu_host_slots < total_slots);
 
+      scheduled_complex_jobs++;
       DEXIT;
       return gdil;
    }

@@ -91,6 +91,7 @@ extern int acct_reserved_usage;
 extern int sharetree_reserved_usage;
 extern int flush_submit_sec; 
 extern int flush_finish_sec;
+extern int profile_schedd;
 extern int keep_active;
 extern long ptf_max_priority;
 extern long ptf_min_priority;
@@ -103,6 +104,12 @@ extern int disable_reschedule;
 extern int set_sge_environment;
 extern int set_grd_environment;
 extern int set_cod_environment;
+
+/* simulation of large clusters: 
+ *  - load values will not be trashed
+ *  - no jobs will be delivered to unheared hosts
+*/
+extern int skip_unheared_host; 
 
 lList *sge_set_defined_defaults(lList *lpCfg);
 int merge_configuration(lListElem *global, lListElem *local, sge_conf_type *pconf, lList **lpp);

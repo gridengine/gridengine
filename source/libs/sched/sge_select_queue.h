@@ -89,7 +89,7 @@ int sge_split_suspended(lList **queue_list, lList **suspended);
 
 enum { DISPATCH_TYPE_NONE = 0, DISPATCH_TYPE_FAST, DISPATCH_TYPE_COMPREHENSIVE };
 
-lList *sge_replicate_queues_suitable4job(lList *queues, lListElem *job, lListElem *ja_task, lListElem *pe_list, lListElem *ckpt, int sort_seq_no, lList *complex_list, lList *host_list, lList *acl_list, lList *load_adjustments, int ndispatched, int *last_dispatch_type);
+lList *sge_replicate_queues_suitable4job(lList *queues, lListElem *job, lListElem *ja_task, lListElem *pe_list, lListElem *ckpt, int sort_seq_no, lList *complex_list, lList *host_list, lList *acl_list, lList *load_adjustments, int ndispatched, int *last_dispatch_type, int host_order_changed);
 
 
 /* 

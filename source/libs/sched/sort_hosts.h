@@ -37,7 +37,7 @@
 int sort_host_list(lList *host_list, lList *complex_list);
 
 
-int debit_job_from_hosts(lListElem *job, lList *granted, lList *host_list, lList *complex_list);
+int debit_job_from_hosts(lListElem *job, lList *granted, lList *host_list, lList *complex_list, int *sort_hostlist);
 
 int debit_host_consumable(lListElem *jep, lListElem *hep, lList *complex_list, int slots);
 

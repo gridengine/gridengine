@@ -78,9 +78,11 @@ int do_credentials = 1;
 int do_authentication = 1;
 int use_qidle = 0;
 int disable_reschedule = 0;
+int skip_unheared_host = 0;
 
 int flush_submit_sec = -1;
 int flush_finish_sec = -1;
+int profile_schedd = 0;
  
 long ptf_max_priority = -999;
 long ptf_min_priority = -999;
@@ -495,6 +497,7 @@ lList **lpp
       compression_threshold = 10 * 1024;
       use_qidle = 0;
       disable_reschedule = 0;   
+      skip_unheared_host = 0;
       
       for (s=sge_strtok(pconf->qmaster_params, ",; "); s; s=sge_strtok(NULL, ",; "))
          if (!strcasecmp(s, "FORBID_RESCHEDULE")) {
@@ -535,6 +538,9 @@ lList **lpp
                   compression_threshold = 0;
             }  
             DPRINTF(("COMPRESSION_THRESHOLD=%d\n", compression_threshold));
+         }
+         else if (!strncasecmp(s, "SKIP_UNHEARED_HOST", sizeof("SKIP_UNHEARED_HOST"))) {
+            skip_unheared_host = 1;
          }
        
       /* always initialize to defaults before we check execd_params */
@@ -657,6 +663,8 @@ lList **lpp
             flush_finish_sec = atoi(&s[sizeof("FLUSH_FINISH_SEC=")-1]);
             if (flush_finish_sec < 0)
                flush_finish_sec=-1;  
+         } else if (!strncasecmp(s, "PROFILE", sizeof("PROFILE")-1)) {
+            profile_schedd = 1;
          }
       }   
    }

@@ -332,59 +332,63 @@ int debit_job_from_hosts(
 lListElem *job,     /* JB_Type */
 lList *granted,     /* JG_Type */
 lList *host_list,   /* EH_Type */
-lList *complex_list /* CX_Type */
+lList *complex_list, /* CX_Type */
+int *sort_hostlist
 ) {
+   lSortOrder *so = NULL;
    lListElem *gel, *hep;
-   lSortOrder *so;
    char *hnm;
    double old_sort_value, new_sort_value;
 
    DENTER(TOP_LAYER, "debit_job_from_hosts");
 
-   if (!scheddconf.load_adjustment_decay_time) {
-      DEXIT;
-      return 0;
+   if (feature_is_enabled(FEATURE_SGEEE) 
+       || scheddconf.queue_sort_method!=QSM_SHARE) {
+      so = lParseSortOrderVarArg(lGetListDescr(host_list), "%I+", EH_sort_value);
    }
-
-   so = lParseSortOrderVarArg(lGetListDescr(host_list), "%I+", EH_sort_value);
 
    /* debit from hosts */
    for_each(gel, granted) {
-      double lc_factor;
       u_long32 ulc_factor;
       lList *tcl;
       int slots = lGetUlong(gel, JG_slots);
 
       hep = lGetElemHost(host_list, EH_name, hnm = lGetString(gel, JG_qhostname)); 
 
-      /* increase host load for each scheduled job slot */
-      ulc_factor = lGetUlong(hep, EH_load_correction_factor);
-      ulc_factor += 100*slots;
-      lSetUlong(hep, EH_load_correction_factor, ulc_factor);
-      lc_factor = ((double)ulc_factor)/100; 
-      
-       debit_host_consumable(job, lGetElemStr(host_list, EH_name, "global"), complex_list, slots);
-       debit_host_consumable(job, hep, complex_list, slots);
+      if (scheddconf.load_adjustment_decay_time && lGetNumberOfElem(scheddconf.job_load_adjustments)) {
+         /* increase host load for each scheduled job slot */
+         ulc_factor = lGetUlong(hep, EH_load_correction_factor);
+         ulc_factor += 100*slots;
+         lSetUlong(hep, EH_load_correction_factor, ulc_factor);
+      }   
+
+      debit_host_consumable(job, lGetElemStr(host_list, EH_name, "global"), complex_list, slots);
+      debit_host_consumable(job, hep, complex_list, slots);
 
       /* compute new combined load for this host and put it into the host */
       old_sort_value = lGetDouble(hep, EH_sort_value); 
-
       tcl = NULL;
       host_complexes2scheduler(&tcl, hep, host_list, complex_list, 0);
-      lSetDouble(hep, EH_sort_value, new_sort_value = scaled_mixed_load(tcl));
+      new_sort_value = scaled_mixed_load(tcl);
+      if(new_sort_value != old_sort_value) {
+         lSetDouble(hep, EH_sort_value, new_sort_value);
+         *sort_hostlist = 1;
+         DPRINTF(("Increasing sort value of Host %s from %f to %f\n", 
+            hnm, old_sort_value, new_sort_value));
+      }
       tcl = lFreeList(tcl);  
-
-      DPRINTF(("Increasing sort value of Host %s from %f to %f\n", 
-         hnm, old_sort_value, new_sort_value));
 
       if (feature_is_enabled(FEATURE_SGEEE) 
           || scheddconf.queue_sort_method!=QSM_SHARE) {
          /* change position of this host in the host_list */
+         /* !!! JG: sorting always necessary, or only if sort_hostlist? */
          lResortElem(so, hep, host_list);
       }
    }
 
-   lFreeSortOrder(so);
+   if(so) {
+      lFreeSortOrder(so);
+   }   
 
    DEXIT; 
    return 0;

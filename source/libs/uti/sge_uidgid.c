@@ -133,7 +133,9 @@ void uidgid_mt_init(void)
 *     Check the real user id to determine if it is the superuser. If so, return
 *     1, else return 0. This function relies on getuid == 0 for UNIX.  On
 *     INTERIX, this function determines if the user is the built-in local admin 
-*     user or if the user is in the +Administrators group.
+*     user or the domain administrator.
+*     Other members of the Administrators group do not have the permission
+*     to "su" without password!
 *
 *  INPUTS
 *     NONE
@@ -159,6 +161,7 @@ int sge_is_start_user_superuser(void)
    DENTER(UIDGID_LAYER, "sge_is_start_user_superuser");
 
 #if defined(INTERIX) || defined(WIN32)
+/*
    {
       char  user_name[128];
       uid_t uid = getuid();
@@ -167,6 +170,8 @@ int sge_is_start_user_superuser(void)
          ret = wl_is_user_superuser(user_name); 
       }
    }
+*/
+   ret = wl_is_user_id_superuser(getuid());
 #else
    if (getuid() == 0) {
      ret = 1;
@@ -360,7 +365,7 @@ int sge_switch2start_user(void)
    start_uid = getuid();
    start_gid = getgid();
 
-   if (start_uid) {
+   if(!sge_is_start_user_superuser()) {
       DPRINTF((MSG_SWITCH_USER_NOT_ROOT));
       ret = 0;
       goto exit;
@@ -654,12 +659,11 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
          sleep(1);
       }
       
-      sge_free(buf);
-
       /* Bugfix: Issuezilla 1256
        * We need to handle the case when the OS is unable to resolve the GID to
        * a name. [DT] */
       if (gr == NULL) {
+         sge_free(buf);
          DEXIT;
          return 1;
       }
@@ -667,6 +671,8 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
       /* cache group name */
       uidgid_state_set_last_groupname(gr->gr_name);
       uidgid_state_set_last_gid(gid);
+
+      sge_free(buf);
    }
    
    if (dst != NULL) {
@@ -1326,14 +1332,23 @@ static void uidgid_state_init(struct uidgid_state_t* theState)
 ******************************************************************************/
 bool sge_is_start_user_root(void)
 {
+   bool  is_root = false;
    uid_t start_uid;
 
    DENTER(UIDGID_LAYER, "sge_is_start_user_root");
- 
+
    start_uid = getuid();
+#if defined(INTERIX)
+   is_root = wl_is_user_id_superuser(start_uid); 
+#else
+   if(start_uid==0) {
+      is_root = true;
+   }
+#endif
 
    DEXIT;
-   return start_uid ? true : false;
+
+   return is_root;
    
 } /* sge_is_start_user_root() */ 
 

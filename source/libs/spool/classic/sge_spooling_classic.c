@@ -577,9 +577,11 @@ spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
       case SGE_TYPE_USERSET:
          ep = cull_read_in_userset(USERSET_DIR, key, 1, 0, NULL); 
          break;
+#ifndef __SGE_NO_USERMAPPING__
       case SGE_TYPE_CUSER:
          ep = cull_read_in_ume(UME_DIR, key , 1, 0, NULL, NULL); 
          break;
+#endif
       case SGE_TYPE_HGROUP:
          ep = cull_read_in_host_group(HGROUP_DIR, key, 1, 0, NULL, NULL); 
          break;
@@ -731,9 +733,11 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
                    sge_dstring_get_string(&real_name));
          }
          break;
+#ifndef __SGE_NO_USERMAPPING__
       case SGE_TYPE_CUSER:
          write_ume(1, 2, object);
          break;
+#endif
       case SGE_TYPE_HGROUP:
          write_host_group(1, 2, object);
          break;
@@ -859,9 +863,11 @@ spool_classic_default_delete_func(const lListElem *type, const lListElem *rule,
       case SGE_TYPE_USERSET:
          sge_unlink(USERSET_DIR, key);
          break;
+#ifndef __SGE_NO_USERMAPPING__
       case SGE_TYPE_CUSER:
          sge_unlink(UME_DIR, key);
          break;
+#endif
       case SGE_TYPE_HGROUP:
          sge_unlink(HGROUP_DIR, key);
          break;

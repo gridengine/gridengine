@@ -613,7 +613,9 @@ spool_flatfile_default_write_func(const lListElem *type, const lListElem *rule,
       case SGE_TYPE_USER:
       case SGE_TYPE_USERSET:
       case SGE_TYPE_HGROUP:
+#ifndef __SGE_NO_USERMAPPING__
       case SGE_TYPE_CUSER:
+#endif
       default:
          WARNING((SGE_EVENT, "writing of "SFQ" not yet implemented\n", 
                   object_type_get_name(event_type)));

@@ -1,3 +1,5 @@
+JG-2002-04-08-3: Bugfix:    qrsh -h made debug output (a job object).
+
 JG-2002-04-08-2: Enhancem.  Performance optimization for the processing
                             of job reports.
 

@@ -246,7 +246,7 @@ proc access_lists_global_host {} {
    global CHECK_GROUP 
    global access_lists_queue
 
-   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
 
 
    # testing user and group
@@ -366,7 +366,7 @@ proc access_lists_exec_host {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP access_lists_queue
 
-   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
 
 
    # testing user and group
@@ -488,7 +488,7 @@ proc access_lists_queue {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP
 
-   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
 
    # testing user and group
    set access_lists "{userA_name userB_name 0} {userA_group userB_group 1}"
@@ -607,7 +607,7 @@ proc access_lists_cluster_config {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP access_lists_queue
   
-   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"  
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"  
    
    # testing user and group
    set access_lists "{userA_name userB_name 0} {userA_group userB_group 1}"
@@ -728,7 +728,7 @@ proc access_lists_pe {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP
 
-   set jobargs "-o /dev/null -e /dev/null -pe access_test_pe 2 $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+   set jobargs "-o /dev/null -e /dev/null -pe access_test_pe 2 $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
    
    set my_pe(pe_name)     "access_test_pe"
    set my_pe(queue_list)  $access_lists_queue

@@ -1,3 +1,12 @@
+CR-2002-04-25-1: Testsuite: - access_list test:
+                              -> submit jobs with 30 sec instead of 15 secs
+                                 due to evtl. timeout problems
+                            - path_alias test:
+                              -> using tcl command dirname to resolve the
+                                 directory path due evtl. double existing
+                                 path slashes
+
+
 CR-2002-04-25-0: Testsuite: - checking compile hosts on setup
                             - project_access_lists test: 
                               -> do not wait for jobs with negative job id!

@@ -2399,7 +2399,6 @@ proc setup { {do_only_hostname_resolving 0} } {
          } 
       }
 
-
       if {$setup_ok == 0} {
          set CHECK_PROTOCOL_DIR $CHECK_MAIN_RESULTS_DIR/protocols
          if {[file isdirectory "$CHECK_PROTOCOL_DIR"] != 1} {

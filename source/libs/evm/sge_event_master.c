@@ -2112,7 +2112,7 @@ add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type,
             }   
             
             /* no elements in the event list, no need for an event */
-            if (!SEND_EVENTS[ET_type] && lGetNumberOfElem(cp_list) == 0){
+            if (!SEND_EVENTS[type] && lGetNumberOfElem(cp_list) == 0){
                if (cp_list != NULL)
                   lFreeList(cp_list);
                return 0;

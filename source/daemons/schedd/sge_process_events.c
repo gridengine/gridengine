@@ -119,7 +119,6 @@ const lEnumeration
 
 static void ensure_valid_what_and_where(void);
 
-
 /****** schedd/sge/event_handler_default_scheduler() **************************
 *  NAME
 *     event_handler_default_scheduler()
@@ -903,7 +902,19 @@ sge_process_ja_task_event_before(sge_object_type type,
 
    DEXIT;
    return true;
-}            
+}  
+
+bool sge_process_global_config_event(sge_object_type type, 
+                                    sge_event_action action, 
+                                    lListElem *event, void *clientdata)
+{
+   DENTER(TOP_LAYER, "sge_process_global_config_event");
+   DPRINTF(("notification about new global configuration\n"));
+   new_global_config = 1;
+   DEXIT;
+   return true;
+}   
+
 /* If the last ja task of a job is deleted, 
  * remove the job category.
  * Do we really need it?
@@ -984,7 +995,10 @@ int subscribe_default_scheduler(void)
                                                 
    sge_mirror_subscribe(SGE_TYPE_SCHEDD_MONITOR, NULL, 
                         sge_process_schedd_monitor_event,   NULL, NULL, NULL);
-              
+   
+   sge_mirror_subscribe(SGE_TYPE_GLOBAL_CONFIG,  NULL, 
+                        sge_process_global_config_event,    NULL, NULL, NULL);
+   
    sge_mirror_subscribe(SGE_TYPE_JOB,            sge_process_job_event_before, 
                         sge_process_job_event_after,        NULL, where_job, what_job);
                         
@@ -1026,6 +1040,7 @@ int subscribe_default_scheduler(void)
    /* configuration changes and trigger should have immediate effect */
    ec_set_flush(sgeE_SCHED_CONF, true,     0);
    ec_set_flush(sgeE_SCHEDDMONITOR, true,  0);
+   ec_set_flush(sgeE_GLOBAL_CONFIG,true,   0);
 
    return true;
 }

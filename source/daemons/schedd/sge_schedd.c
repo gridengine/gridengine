@@ -579,7 +579,7 @@ int sge_before_dispatch(void)
    /* hostname resolving scheme in global config could have changed
       get it and use it if we got a notification about a new global config */
    if (new_global_config) {
-/*   
+   
       lListElem *global = NULL, *local = NULL;
 
       if (get_configuration(SGE_GLOBAL_NAME, &global, &local) == 0)
@@ -587,7 +587,7 @@ int sge_before_dispatch(void)
       lFreeElem(global);
       lFreeElem(local);
       new_global_config = 0;
-*/
+
       /* flushing information might have changed */
       /* SG: TODO: is this still needed? */
       {

@@ -1,3 +1,9 @@
+SG-2004-02-19-1: Bugfix:    - scheduler did not get the global configuration
+                            - event master worked outside an array.  
+                 Changed:   scheduler, qmaster
+                 Review:    CR
+                 Issue:     678
+
 EB-2004-02-19-0: Bugfix:    qsub -l q=<QI> was not rejected
                  Issue:     #671
                  Changed:   sge_qmaster

@@ -1620,7 +1620,8 @@ int sub_command
    int all_jobs_flag;
    int all_users_flag;
    bool job_name_flag = false;
-   const char *job_mod_name = NULL;
+   char *job_mod_name = NULL;
+   const char *job_name = NULL;
  
    DENTER(TOP_LAYER, "sge_gdi_mod_job");
 
@@ -1644,15 +1645,15 @@ int sub_command
       
    job_name_pos = lGetPosViaElem(jep, JB_job_name); 
    if (job_name_pos >= 0){
-      job_mod_name = lGetPosString(jep, job_name_pos);
+      job_name = lGetPosString(jep, job_name_pos);
    }
    /* Did we get a job - with a jobid? */
 
    if (
        (((job_id_pos = lGetPosViaElem(jep, JB_job_number)) >= 0) && 
        lGetPosUlong(jep, job_id_pos) > 0) ||
-       ((job_mod_name != NULL) && 
-        (job_name_flag = (job_mod_name[0] == JOB_NAME_DEL)))
+       ((job_name != NULL) && 
+        (job_name_flag = (job_name[0] == JOB_NAME_DEL)))
        ) { 
       jid_flag = 1; 
    } else

@@ -102,11 +102,11 @@ proc tight_integration_init_level {} {
 global submit_command
 
 proc tight_integration_setup  {} {
-   global CHECK_PRODUCT_ROOT
+   global CHECK_PRODUCT_ROOT CHECK_CORE_EXECD TIGHT_INTEGRATION_MASSIVE_SLOTS
 
    # create parallel environment
    set pe(pe_name)            tight
-   set pe(queue_list)         all
+#   set pe(queue_list)         all
    set pe(slots)              1000
    set pe(user_lists)         none
    set pe(xuser_lists)        none
@@ -118,6 +118,11 @@ proc tight_integration_setup  {} {
 
    add_pe pe
 
+   set queue_list ""
+   foreach host $CHECK_CORE_EXECD {
+      append queue_list "$host.q "
+   }
+   assign_queues_with_pe_object $queue_list tight
    set_error 0 "ok"
 }
 

@@ -187,8 +187,10 @@ proc run_user_denied_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
    global access_lists_queue
 
+   puts $CHECK_OUTPUT "======================="
    puts $CHECK_OUTPUT "id_string is $id_string"
    puts $CHECK_OUTPUT "jobargs are: $jobargs"
+   puts $CHECK_OUTPUT "======================="
 
 
    sleep 2
@@ -803,8 +805,10 @@ proc access_lists_pe {} {
    set jobargs "-o /dev/null -e /dev/null -pe access_test_pe 2 $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
    
    set my_pe(pe_name)     "access_test_pe"
-   set my_pe(queue_list)  $access_lists_queue
+#   set my_pe(queue_list)  $access_lists_queue
    set my_pe(slots)       "8"
+   add_pe my_pe
+   assign_queues_with_pe_object "$access_lists_queue" "access_test_pe"
 
    # testing user and group
    set access_lists "{userA_name userB_name 0} {userA_group userB_group 1}"
@@ -818,45 +822,43 @@ proc access_lists_pe {} {
       # case 1
       set my_pe(xuser_lists) "$A_USER"
       set my_pe(user_lists)  "NONE"
-      add_pe my_pe
+
+      puts $CHECK_OUTPUT "setting up pe ..."
+      set_pe "access_test_pe" my_pe
+      puts $CHECK_OUTPUT "submitting jobs ..."
       run_user_jobs "case 1,$A_USER,$B_USER" $jobargs 0 1       ;# A = 0 (not running) B = 1 (should run)
-      del_pe "access_test_pe"  
  
       # case 2
       set my_pe(xuser_lists) "NONE"
       set my_pe(user_lists)  "$A_USER"
-      add_pe my_pe
+      set_pe "access_test_pe" my_pe
       run_user_jobs "case 2,$A_USER,$B_USER" $jobargs 1 0
-      del_pe "access_test_pe"
 
       # case 3
       set my_pe(xuser_lists) "$B_USER"
       set my_pe(user_lists)  "$A_USER"
-      add_pe my_pe
+      set_pe "access_test_pe" my_pe
       run_user_jobs "case 3,$A_USER,$B_USER" $jobargs 1 0 
-      del_pe "access_test_pe"
 
    
       #case 4
       set my_pe(xuser_lists) "$A_USER"
       set my_pe(user_lists)  "$B_USER"
-      add_pe my_pe
+      set_pe "access_test_pe" my_pe
       run_user_jobs "case 4,$A_USER,$B_USER" $jobargs 0 1
-      del_pe "access_test_pe"
 
    
       #case 5
       set my_pe(xuser_lists) "NONE"
       set my_pe(user_lists)  "NONE"
-      add_pe my_pe
+      set_pe "access_test_pe" my_pe
       run_user_jobs "case 5,$A_USER,$B_USER" $jobargs 1 1
-      del_pe "access_test_pe"
 
    
       #case 6
       set my_pe(xuser_lists) "$A_USER,$B_USER"
       set my_pe(user_lists)  "NONE"
-      add_pe my_pe
+      set_pe "access_test_pe" my_pe
       if { $group_test == 1 } {
          set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
          if { [string first $CHECK_GROUP $group1] >= 0 ||
@@ -869,13 +871,12 @@ proc access_lists_pe {} {
          set C_run 1
       }
       run_user_jobs "case 6,$A_USER,$B_USER" $jobargs 0 0 $C_run
-      del_pe "access_test_pe"
 
    
       #case 7
       set my_pe(xuser_lists) "NONE"
       set my_pe(user_lists)  "$A_USER,$B_USER"
-      add_pe my_pe
+      set_pe "access_test_pe" my_pe
       if { $group_test == 1 } {
          set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
          if { [string first $CHECK_GROUP $group1] >= 0 ||
@@ -888,35 +889,32 @@ proc access_lists_pe {} {
          set C_run 0
       }
       run_user_jobs "case 7,$A_USER,$B_USER" $jobargs 1 1 $C_run
-      del_pe "access_test_pe"
    }
    
-
 
    # test group/user combinations
    # userA_name userB_name userA_group userB_group
    set my_pe(xuser_lists) "userA_group"
    set my_pe(user_lists)  "userA_name"
-   add_pe my_pe
+   set_pe "access_test_pe" my_pe
    run_user_jobs "group/user case 1" "$jobargs" 0 0 
-   del_pe "access_test_pe"
 
    set my_pe(xuser_lists) "NONE"
    set my_pe(user_lists)  "userA_name,userA_group"
-   add_pe my_pe
+   set_pe "access_test_pe" my_pe
    run_user_jobs "group/user case 2" "$jobargs" 1 0
-   del_pe "access_test_pe"
 
    set my_pe(xuser_lists) "userA_name,userA_group"
    set my_pe(user_lists)  "NONE"
-   add_pe my_pe
+   set_pe "access_test_pe" my_pe
    run_user_jobs "group/user case 3" "$jobargs" 0 1
-   del_pe "access_test_pe"
 
    set my_pe(xuser_lists) "userA_name"
    set my_pe(user_lists)  "userA_group"
-   add_pe my_pe
+   set_pe "access_test_pe" my_pe
    run_user_jobs "group/user case 4" "$jobargs" 0 0
+
+
    del_pe "access_test_pe"
 
    set_error 0 "ok"

@@ -143,18 +143,36 @@ proc job_state_handling_hold_pending_running_finished {} {
         [ string first  $correct_info $scheduling_info_result ] <  0 } {
        add_proc_error "job_state_handling_hold_pending_running_finished" -1 "scheduling info not \"job dropped because of hold\"" 
    }
+   
+   set queue_list ""
+   foreach host $CHECK_CORE_EXECD {
+      append queue_list "$host.q "
+   }  
+   set queue_list [string trim $queue_list]
+   puts $CHECK_OUTPUT "disable queues: \"$queue_list\""
+   disable_queue $queue_list
+
    release_job $result   
 
    set job_state [ get_job_state $result ]
+   puts $CHECK_OUTPUT "job state = \"$job_state\""
+
    if { [ string compare $job_state "qw" ] != 0 } {
       add_proc_error "job_state_handling_hold_pending_running_finished" -1 "job state not \"qw\": $job_state"  
    }
+
+   hold_job $result
+
+   enable_queue $queue_list
+   
+   release_job $result
 
    set my_timeout [timestamp]
    incr my_timeout 300
    set t_state_ok 0
    while { $my_timeout > [timestamp] } {
       set job_state [ get_job_state $result ]
+      puts $CHECK_OUTPUT "job state = \"$job_state\""
       if { [ string compare $job_state "t" ] == 0 } {
          set t_state_ok 1
          break

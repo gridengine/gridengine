@@ -101,8 +101,6 @@ proc assign_queues_with_pe_object { queue_list pe_obj } {
             puts $CHECK_OUTPUT "adding new pe object to pe_list in queue $queue"
             set new_val(pe_list) "$org_val(pe_list),$pe_obj"
          }
-
-         set new_val(pe_list) $pe_obj
          set_queue $queue new_val
       }
    } else {
@@ -150,7 +148,6 @@ proc assign_queues_with_ckpt_object { queue_list ckpt_obj } {
             set new_val(ckpt_list) "$org_val(ckpt_list),$ckpt_obj"
          }
 
-         set new_val(ckpt_list) $ckpt_obj
          set_queue $queue new_val
       }
    } else {
@@ -2154,6 +2151,29 @@ proc add_queue { change_array {fast_add 0} } {
   global CHECK_USER CHECK_CORE_MASTER CHECK_HOST
 
   upvar $change_array chgar
+
+  if { [get_pe_ckpt_version] > 0 && [info exists chgar(qtype)]} {
+     if { [ string match "*CHECKPOINTING*" $chgar(qtype) ] ||
+          [ string match "*PARALLEL*" $chgar(qtype) ]   } { 
+
+        set new_chgar_qtype ""
+        foreach elem $chgar(qtype) {
+           if { [ string match "*CHECKPOINTING*" $elem ] } {
+              puts $CHECK_OUTPUT "this qconf version doesn't support CHECKPOINTING value for qtype"
+              continue
+           } 
+           if { [ string match "*PARALLEL*" $elem ] } {
+              puts $CHECK_OUTPUT "this qconf version doesn't support PARALLEL value for qtype"
+              continue
+           } 
+           append new_chgar_qtype "$elem "
+        } 
+        set chgar(qtype) [string trim $new_chgar_qtype]
+        puts $CHECK_OUTPUT "using qtype=$chgar(qtype)" 
+     }
+  }
+
+
   set values [array names chgar]
 
     if { $fast_add != 0 } {
@@ -2755,9 +2775,8 @@ proc get_queue { q_name change_array } {
 #*******************************
 proc suspend_queue { qname } {
  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
-
+ global CHECK_OUTPUT
   log_user 0 
-  set timeout 30
   set WAS_SUSPENDED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_SUSPENDQ_SSS] "*" "*" "*" ]
 
   
@@ -2767,7 +2786,8 @@ proc suspend_queue { qname } {
   set sp_id [ lindex $sid 1 ]
   set result -1	
 
-  log_user 0 
+  log_user 0
+  set timeout 30
   expect {
      -i $sp_id full_buffer {
          set result -1
@@ -2781,6 +2801,7 @@ proc suspend_queue { qname } {
      }
 
 	  -i $sp_id default {
+         puts $CHECK_OUTPUT $expect_out(buffer)
 	      set result -1
 	  }
   }
@@ -2826,6 +2847,7 @@ proc suspend_queue { qname } {
 #*******************************
 proc unsuspend_queue { queue } {
    global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
+   global CHECK_OUTPUT
 
   set timeout 30
   log_user 0 
@@ -2839,6 +2861,7 @@ proc unsuspend_queue { queue } {
   set result -1	
   log_user 0 
 
+  set timeout 30
   expect {
       -i $sp_id full_buffer {
          set result -1
@@ -2851,6 +2874,7 @@ proc unsuspend_queue { queue } {
          set result 0 
       }
       -i $sp_id default {
+         puts $CHECK_OUTPUT $expect_out(buffer) 
          set result -1 
       }
   }
@@ -3151,7 +3175,7 @@ proc add_checkpointobj { change_array } {
   if { [get_pe_ckpt_version] > 0 } {
      if { [ info exists chgar(queue_list) ] } { 
         puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for ckpt objects"
-        add_proc_error "add_checkpointobj" -3 "this qconf version doesn't support queue_list for ckpt objects,\nuse assign_queues_with_ckpt_objects() after adding checkpoint\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test ckpt version"
+        add_proc_error "add_checkpointobj" -3 "this qconf version doesn't support queue_list for ckpt objects,\nuse assign_queues_with_ckpt_object() after adding checkpoint\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test ckpt version"
         unset chgar(queue_list)
      }
   }
@@ -3218,7 +3242,7 @@ proc set_checkpointobj { ckpt_obj change_array } {
   if { [get_pe_ckpt_version] > 0 && [info exists chgar(queue_list)]} {
      if { [ info exists chgar(queue_list) ] } { 
         puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for ckpt objects"
-        add_proc_error "set_checkpointobj" -3 "this qconf version doesn't support queue_list for ckpt objects,\nuse assign_queues_with_ckpt_objects() after adding checkpoint\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test ckpt version"
+        add_proc_error "set_checkpointobj" -3 "this qconf version doesn't support queue_list for ckpt objects,\nuse assign_queues_with_ckpt_object() after adding checkpoint\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test ckpt version"
         unset chgar(queue_list)
      }
   }
@@ -3291,11 +3315,15 @@ proc del_checkpointobj { checkpoint_name } {
               unset params
            }
            get_queue $elem params
-           if { [string match $checkpoint_name $params(ckpt_list)] } {
+           if { [string first $checkpoint_name $params(ckpt_list)] >= 0 } {
               puts $CHECK_OUTPUT "ckpt obj $checkpoint_name is referenced in queue $elem, removing entry."
               set new_params ""
               set help_list [split $params(ckpt_list) ","]
-              set help_list [string trim $help_list] 
+              set help_list2 ""
+              foreach element $help_list {
+                 append help_list2 "$element "
+              }
+              set help_list [string trim $help_list2] 
               foreach help_ckpt $help_list {
                  if { [string match $checkpoint_name $help_ckpt] != 1 } {
                     append new_params "$help_ckpt "
@@ -3426,7 +3454,7 @@ proc add_pe { change_array { version_check 1 } } {
      if { [get_pe_ckpt_version] > 0 && [info exists chgar(queue_list)]} {
         if { [ info exists chgar(queue_list) ] } { 
            puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for pe objects"
-           add_proc_error "add_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_objects() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
+           add_proc_error "add_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_object() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
            unset chgar(queue_list)
         }
      }
@@ -3504,7 +3532,7 @@ proc set_pe { pe_obj change_array } {
   if { [get_pe_ckpt_version] > 0 && [info exists chgar(queue_list)]} {
      if { [ info exists chgar(queue_list) ] } { 
         puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for pe objects"
-        add_proc_error "set_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_objects() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
+        add_proc_error "set_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_object() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
         unset chgar(queue_list)
      }
   }
@@ -3865,11 +3893,15 @@ proc del_pe { mype_name } {
               unset params
            }
            get_queue $elem params
-           if { [string match $mype_name $params(pe_list)] } {
+           if { [string first $mype_name $params(pe_list)] >= 0 } {
               puts $CHECK_OUTPUT "pe obj $mype_name is referenced in queue $elem, removing entry."
               set new_params ""
               set help_list [split $params(pe_list) ","]
-              set help_list [string trim $help_list] 
+              set help_list2 ""
+              foreach element $help_list {
+                 append help_list2 "$element "
+              }
+              set help_list [string trim $help_list2] 
               foreach help_pe $help_list {
                  if { [string match $mype_name $help_pe] != 1 } {
                     append new_params "$help_pe "

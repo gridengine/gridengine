@@ -357,10 +357,11 @@ proc qstat_option_pe {} {
   puts $CHECK_OUTPUT "checking qstat -pe option ..."
 
   set mype1(pe_name) "mype1"
-  set mype1(queue_list) "[lindex $CHECK_CORE_EXECD 0].q"
+#  set mype1(queue_list) "[lindex $CHECK_CORE_EXECD 0].q"
   set mype1(slots) 2
   set mype1(allocation_rule) "\$pe_slots"
   add_pe mype1
+  assign_queues_with_pe_object "[lindex $CHECK_CORE_EXECD 0].q" mype1
 
   set testq(qname) "test.q"
   set testq(hostname) "[lindex $CHECK_CORE_EXECD 0]"
@@ -368,11 +369,11 @@ proc qstat_option_pe {} {
   add_queue testq
 
   set mype2(pe_name) "mype2"
-  set mype2(queue_list) "test.q"
+#  set mype2(queue_list) "test.q"
   set mype2(slots) 2
   set mype2(allocation_rule) "\$pe_slots"
   add_pe mype2
-
+  assign_queues_with_pe_object test.q mype2
 
   puts $CHECK_OUTPUT "submitting job requesting pe mype1 ..."   
   

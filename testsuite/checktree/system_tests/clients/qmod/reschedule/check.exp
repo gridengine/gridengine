@@ -280,25 +280,28 @@ proc reschedule_setup {} {
    puts $CHECK_OUTPUT "creating checkpointobjects ..."
    set new_checkpointobj(ckpt_name)  "qmod_with_r"
    set new_checkpointobj(interface)  "userdefined"
-   set new_checkpointobj(queue_list) $rerun_queue
+#   set new_checkpointobj(queue_list) $rerun_queue
    set new_checkpointobj(when) "r"
    add_checkpointobj "new_checkpointobj"
+   assign_queues_with_ckpt_object $rerun_queue qmod_with_r
 
    set new_checkpointobj(ckpt_name)  "qmod_without_r"
    set new_checkpointobj(when) "s"
    add_checkpointobj "new_checkpointobj"
+   assign_queues_with_ckpt_object $rerun_queue qmod_without_r
 
 
    # add pe_object for test
    puts $CHECK_OUTPUT "creating pe object ..."
-   set new_peobj(queue_list)       "$rerun_queue2 $rerun_queue" 
+#   set new_peobj(queue_list)       "$rerun_queue2 $rerun_queue" 
    set new_peobj(slots)            "5"
    set index 0
    foreach elem $pe_names { 
       set new_peobj(pe_name) $elem
       set new_peobj(allocation_rule) [lindex $pe_alloc_rule $index]
       incr index 1
-      add_pe "new_peobj" 
+      add_pe new_peobj
+      assign_queues_with_pe_object "$rerun_queue2 $rerun_queue" $new_peobj(pe_name)
    } 
 
 

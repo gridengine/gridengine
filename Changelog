@@ -1,3 +1,8 @@
+CR-2003-05-22-0: Testsuite: - enhancments to make testsuite compatible with
+                              cvs commit from EB-2003-05-15-0 (PE/CKPT 
+                              references moved into queue configuration)
+
+
 EB-2003-05-22-0: Bugfix:    Changed qtype output in qstat according to man page
                  IZ:        #14
                  Changed:   qstat

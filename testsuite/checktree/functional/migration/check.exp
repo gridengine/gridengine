@@ -603,7 +603,7 @@ proc setup_checkpointing {} {
   set ckpt_param(restart_command)   "none"
   set ckpt_param(clean_command)     "none"
   set ckpt_param(ckpt_dir)          "/tmp"
-  set ckpt_param(queue_list)        "$q1 $q2"
+#  set ckpt_param(queue_list)        "$q1 $q2"
   set ckpt_param(signal)            "none"
   set ckpt_param(when)              "sx"
 
@@ -612,6 +612,8 @@ proc setup_checkpointing {} {
      set_error -1 "setup_checkpointing - could not add checkpoint ENV $migration_ckpt_name (result of add_checkpointobj: $result)"
      return
   }
+  
+  assign_queues_with_ckpt_object "$q1 $q2" $migration_ckpt_name
   set_error 0 "setup_checkpointing - no errors" 
 }
 
@@ -729,7 +731,7 @@ proc setup_pe {} {
   
 
   set pe_param(pe_name)           "$migration_pe_name"
-  set pe_param(queue_list)        "$q1 $q2"
+#  set pe_param(queue_list)        "$q1 $q2"
   set pe_param(slots)             "2"
   set pe_param(user_lists)        "NONE"
   set pe_param(xuser_lists)       "NONE"
@@ -744,6 +746,7 @@ proc setup_pe {} {
      set_error -1 "setup_pe - could not add PE $migration_pe_name (result of add_pe: $result)"
      return
   }
+  assign_queues_with_pe_object "$q1 $q2" $migration_pe_name
   set_error 0 "setup_pe - no errors" 
 }
 

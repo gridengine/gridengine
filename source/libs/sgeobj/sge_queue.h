@@ -36,7 +36,6 @@
 #include "sge_dstring.h"
 
 #include "sge_queueL.h"
-#include "sge_mirror.h"
 
 typedef enum {
    QUEUE_TAG_DEFAULT         = 0x0000,

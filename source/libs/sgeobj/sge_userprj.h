@@ -33,15 +33,11 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_userprjL.h"
-#include "sge_mirror.h"
 
 extern lList *Master_Project_List;
 extern lList *Master_User_List;
 
 lListElem *userprj_list_locate(lList *userprj_list,
                                const char *uerprj_name);
-
-int userprj_update_master_list(sge_event_type type, sge_event_action action,
-                               lListElem *event, void *clientdata);
 
 #endif /* __SGE_USERPRJ_H */

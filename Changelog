@@ -1,4 +1,7 @@
-EB-2003-02-13-0: Enhancem.: Merged code form Branch
+JG-2003-02-13-1  Bugfix:    Fixed broken build for aimk -shared-libs for all
+                            architectures except aix
+
+EB-2003-02-13-0  Enhancem.: Merged code form Branch
                             Resolved conflict libgdi <-> ligsgeobj
 
 CR-2003-02-13-1  Testsuite: Bugfix in read_array_from_file_data() 

@@ -33,7 +33,6 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_calendarL.h"
-#include "sge_mirror.h"
 
 extern lList *Master_Calendar_List;
 

@@ -34,6 +34,7 @@
 
 #include "sge_answer.h"
 #include "sge_feature.h"
+#include "sge_mirror.h"
 
 void queue_list_set_unknown_state_to(lList *queue_list,
                                      const char *hostname,
@@ -54,6 +55,10 @@ int job_update_master_list(sge_event_type type,
                            lListElem *event,
                            void *clientdata);
 
+int
+job_schedd_info_update_master_list(sge_event_type type,
+                                   sge_event_action action,
+                                   lListElem *event, void *clientdata);
 int manop_update_master_list(sge_event_type type, sge_event_action action,
                              lListElem *event, void *clientdata);
 
@@ -92,6 +97,14 @@ int calendar_update_master_list(sge_event_type type, sge_event_action action,
 int report_list_send(const lList *rlp, const char *rhost,
                      const char *commproc, int id,
                      int synchron, u_long32 *mid);
+
+int pe_task_update_master_list(sge_event_type type, sge_event_action action,
+                               lListElem *event, void *clientdata);
+
+int pe_task_update_master_list_usage(lListElem *event);
+
+int userset_update_master_list(sge_event_type type, sge_event_action action,
+                               lListElem *event, void *clientdata);
 
 
 #endif /* __SGE_TODO_H */

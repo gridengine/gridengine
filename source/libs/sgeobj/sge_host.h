@@ -33,7 +33,6 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_hostL.h"
-#include "sge_mirror.h"
 
 extern lList *Master_Exechost_List;
 extern lList *Master_Adminhost_List;

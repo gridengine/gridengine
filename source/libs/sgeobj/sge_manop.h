@@ -33,7 +33,6 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_manopL.h"
-#include "sge_mirror.h"
 
 extern lList *Master_Manager_List;
 extern lList *Master_Operator_List;

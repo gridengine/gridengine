@@ -99,16 +99,16 @@ QMASTER_ADD_SRC = usage.c sge_options.c job_log.c \
               sched_conf.c \
               read_write_sharetree.c \
               sig_handlers.c \
-              unparse_job_cull.c \
-              sge_all_listsL.c
+              unparse_job_cull.c
 
 QMASTER_OBJS  = $(QMASTER_SRC:.c=.o)
 
 QMASTER_ADD_OBJS = $(QMASTER_ADD_SRC:.c=.o) 
 
-QMASTER_ADD_LIBS = -lsched -lgdi -lsgeobj $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+QMASTER_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SECLIBS) $(KRBLIBS) \
+QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(ALLLISTSLIB) \
+                      $(SECLIBS) $(KRBLIBS) \
                       $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) \
                       $(ZLIB) $(TPLIB)
 

@@ -33,7 +33,6 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_peL.h"
-#include "sge_mirror.h"
 
 extern lList *Master_Pe_List;
 

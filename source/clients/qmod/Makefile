@@ -44,9 +44,9 @@ QMOD_OBJS = $(QMOD_SRC:.c=.o)
 
 QMOD_ADD_OBJS = $(QMOD_ADD_SRC:.c=.o)
 
-QMOD_ADD_LIBS = -lgdi -lsgeobj sge_all_listsL.o $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+QMOD_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QMOD_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) sge_all_listsL.o $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
+QMOD_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(ALLLISTSLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

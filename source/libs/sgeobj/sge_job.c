@@ -2039,43 +2039,6 @@ void job_add_parent_id_to_context(lListElem *job)
    }
 }
 
-int 
-job_schedd_info_update_master_list(sge_event_type type, 
-                                   sge_event_action action, 
-                                   lListElem *event, void *clientdata)
-{
-   lList **list;
-   lDescr *list_descr;
-
-   lList *data_list;
-   lListElem *ep = NULL;
-   
-   DENTER(TOP_LAYER, "job_schedd_info_update_master_list");
-
-   list = &Master_Job_Schedd_Info_List;
-   list_descr = SME_Type;
-
-   /* We always update the whole list (consisting of one list element) */
-   if(*list != NULL) {
-      *list = lFreeList(*list);
-   }
-
-   if((data_list = lGetList(event, ET_new_version)) != NULL) {
-      if((ep = lFirst(data_list)) != NULL) {
-         ep = lDechainElem(data_list, ep);
-      }
-   }
-
-   /* if neccessary, create list and copy schedd info */
-   if(ep != NULL) {
-      *list = lCreateList("job schedd info", list_descr);
-      lAppendElem(*list, ep);
-   }
-
-   DEXIT;
-   return TRUE;
-}
-
 /****** gdi/job/job_check_qsh_display() ****************************************
 *  NAME
 *     job_check_qsh_display() -- check DISPLAY variable for qsh jobs 

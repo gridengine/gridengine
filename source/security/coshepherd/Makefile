@@ -40,10 +40,11 @@ COSHEPHERD_SRC = coshepherd.c
 
 COSHEPHERD_OBJS = $(COSHEPHERD_SRC:.c=.o)
 
-COSHEPHERD_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+COSHEPHERD_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lsgeobj -lsgeobjd -lcull -lcom -luti -lrmon
 
 COSHEPHERD_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) \
-	                      $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+	                      $(SGEOBJLIB) $(ALLLISTSLIB) $(CULLLIB) $(COMMLIB) \
+                         $(UTILIB) $(RMONLIB) $(ZLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

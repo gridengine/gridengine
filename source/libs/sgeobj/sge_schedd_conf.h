@@ -33,7 +33,6 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_schedd_confL.h"
-#include "sge_mirror.h"
 
 extern lList *Master_Sched_Config_List;
 

@@ -940,7 +940,7 @@ ProcessQsystRoot()
       fi
    done
 
-   $INFOTEXT "Your \$SGE_ROOT udirectory: %s\n" $QSYST_ROOT_VAL
+   $INFOTEXT "Your \$SGE_ROOT directory: %s\n" $QSYST_ROOT_VAL
    $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
    $CLEAR
 }

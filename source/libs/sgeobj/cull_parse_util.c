@@ -1192,31 +1192,38 @@ int soft_field
    DENTER(TOP_LAYER, "parse_list_hardsoft");
 
    hard_list = lCopyList("job_hard_sublist", lGetList(job, hard_field));
-   if (soft_field)
+   if (soft_field) {
       soft_list = lCopyList("job_soft_sublist", lGetList(job, soft_field));
+   }   
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, option))) {
       lp = NULL;
       lXchgList(ep, SPA_argval_lListT, &lp);
       if (lp) {
          if (!soft_field || lGetInt(ep, SPA_argval_lIntT) < 2) {
-            if (!hard_list)
+            if (!hard_list) {
                hard_list = lp;
-            else
+            }   
+            else {
                lAddList(hard_list, lp);
+            }   
          }
          else {
-            if (!soft_list)
+            if (!soft_list) {
                   soft_list = lp;
-            else         
+            }      
+            else {
                lAddList(soft_list, lp);
+            }   
          }
       }
       lRemoveElem(cmdline, ep);
     }
+
     lSetList(job, hard_field, hard_list);
-    if (soft_field)
+    if (soft_field) {
       lSetList(job, soft_field, soft_list);
+    }  
 
     DEXIT;
     return 0;

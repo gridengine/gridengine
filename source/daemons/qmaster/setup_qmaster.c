@@ -551,8 +551,6 @@ static void qmaster_init(char **anArgv)
   
    communication_setup();
 
-   host_list_notify_about_featureset(Master_Exechost_List, feature_get_active_featureset_id());
-
    starting_up(); /* write startup info message to message file */
 
    DEXIT;

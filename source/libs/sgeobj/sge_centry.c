@@ -805,7 +805,7 @@ centry_list_parse_from_string(lList *complex_attributes,
 
    /* allocate space for attribute list if no list is passed */
    if (complex_attributes == NULL) {
-      if ((complex_attributes = lCreateList("", CE_Type)) == NULL) {
+      if ((complex_attributes = lCreateList("qstat_l_requests", CE_Type)) == NULL) {
          ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRLIST));
          DEXIT;
          return NULL;
@@ -814,21 +814,14 @@ centry_list_parse_from_string(lList *complex_attributes,
 
    /* str now points to the attr=value pairs */
    while ((cp = sge_strtok(str, ", "))) {
-      lListElem *complex_attribute;
-      const char *attr;
-      char *value;
+      lListElem *complex_attribute = NULL;
+      const char *attr = NULL;
+      char *value = NULL;
 
       str = NULL;       /* for the next strtoks */
 
-      if ((complex_attribute = lCreateElem(CE_Type)) == NULL) {
-         ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRELEM));
-         lFreeList(complex_attributes);
-         DEXIT;
-         return NULL;
-      }
-
       /*
-      ** recursive strtoks didnt work
+      ** recursive strtoks did not work
       */
       attr = cp;
       if ((value = strchr(cp, '='))) {
@@ -849,10 +842,21 @@ centry_list_parse_from_string(lList *complex_attributes,
          return NULL;
       }
 
-      lSetString(complex_attribute, CE_name, attr);
+   /* create new element, fill in the values and append it */
+      if ( (complex_attribute= lGetElemStr(complex_attributes, CE_name, attr)) == NULL) {
+         if ((complex_attribute = lCreateElem(CE_Type)) == NULL) {
+            ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRELEM));
+            lFreeList(complex_attributes);
+            DEXIT;
+            return NULL;
+         }
+         else {
+            lSetString(complex_attribute, CE_name, attr);
+            lAppendElem(complex_attributes, complex_attribute);
+         }
+      }
+      
       lSetString(complex_attribute, CE_stringval, value);
-
-      lAppendElem(complex_attributes, complex_attribute);
    }
 
    DEXIT;

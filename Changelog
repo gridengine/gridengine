@@ -1,3 +1,16 @@
+SG-2005-03-16-2: Bugfix:    error message "no execd known on host"
+                 Issue:     1431
+                 Bugtraq:   6241430
+                 Review:    JG
+                 Changed:   qmaster
+
+SG-2005-03-16-1: Bugfix:    Conflicting requirements should have the same 
+                            meaning with qstat and qsub
+                 Issue:     1462
+                 Bugtraq:   6241401
+                 Review:    EB
+                 Changed:   qstat, qhost, qacct, qmon
+
 SG-2005-03-16-0: Bugfix:    qselect uses sge_qstat file
                  Issue:     1505
                  Bugtraq:   6229277

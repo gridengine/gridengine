@@ -52,7 +52,7 @@ enum {
    TAG_SIGJOB,
    TAG_SIGQUEUE,
    TAG_KILL_EXECD,
-   TAG_NEW_FEATURES,
+   TAG_NEW_FEATURES,     /*12*/
    TAG_GET_NEW_CONF,
    TAG_JOB_REPORT,              /* cull based job reports */
    TAG_QSTD_QSTAT,

@@ -89,9 +89,14 @@ typedef enum {
 } feature_id_t;
  
 typedef struct {
-   int id;
-   char *name;
+   feature_id_t id;
+   const char *name;
 } feature_names_t;            
+
+typedef struct {
+   featureset_id_t id;
+   char *name;
+} featureset_names_t;            
 
 #if defined(SGE_MT)
 void feature_init_mt(void);

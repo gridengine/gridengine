@@ -190,7 +190,7 @@ static const feature_names_t feature_list[] = {
    {0, NULL}
 };  
 
-static const feature_names_t featureset_list[] = {
+static const featureset_names_t featureset_list[] = {
    {FEATURESET_SGE,                 "sge"},
    {FEATURESET_SGEEE,               "sgeee"},
    {FEATURESET_SGE_AFS,             "sge-afs"},
@@ -620,7 +620,7 @@ bool feature_is_enabled(feature_id_t id)
 const char *feature_get_name(feature_id_t id) 
 {
    int i = 0;
-   char *ret = "<<unknown>>";
+   const char *ret = "<<unknown>>";
 
    DENTER(TOP_LAYER, "feature_get_name");
    while (feature_list[i].name && feature_list[i].id != id) {

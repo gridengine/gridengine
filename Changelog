@@ -1,3 +1,6 @@
+DT-2004-11-25-0: Bugfix:    o Backed out DRMAA-J changes to create_settings.sh
+                 Changed:   create_settings.sh
+
 MD-2004-11-24-0: Bugfix:    arch script does not know about /lib64
                  Review:    JG
                  Changed:   arch, arch.dist

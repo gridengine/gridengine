@@ -106,27 +106,9 @@ echo "   setenv \$shlib_path_name \"\$SGE_ROOT/lib/\$ARCH\":\"\$old_value\""   >
 echo "else"                                                      >> $SP_CSH
 echo "   setenv \$shlib_path_name \$SGE_ROOT/lib/\$ARCH"         >> $SP_CSH
 echo "endif"                                                     >> $SP_CSH
-
-if [ -f "$SGE_ROOT/lib/drmaa.jar" ]; then
-   echo ""                                                       >> $SP_CSH
-   echo 'if ( $?CLASSPATH == 1 ) then'                           >> $SP_CSH
-   echo "   setenv CLASSPATH \$SGE_ROOT/lib/drmaa.jar:\$CLASSPATH" >> $SP_CSH
-   echo "else"                                                   >> $SP_CSH
-   echo "   setenv CLASSPATH \$SGE_ROOT/lib/drmaa.jar"           >> $SP_CSH
-   echo "endif"                                                  >> $SP_CSH
-fi
-
-if [ -f "$SGE_ROOT/lib/irix65/libjdrmaa.so" ]; then
-   echo ""                                                       >> $SP_CSH
-   echo 'if ( "$ARCH" == "irix65" && $?LD_LIBRARYN32_PATH == 1 ) then'            >> $SP_CSH
-   echo "   setenv LD_LIBRARYN32_PATH \$SGE_ROOT/lib/irix65:\$LD_LIBRARYN32_PATH" >> $SP_CSH
-   echo 'else if ( "$ARCH" == "irix65" ) then'                   >> $SP_CSH
-   echo "   setenv LD_LIBRARYN32_PATH \$SGE_ROOT/lib/irix65"     >> $SP_CSH
-   echo "endif"                                                  >> $SP_CSH
-fi
-
-echo ""                                                       >> $SP_CSH
 echo "unset ARCH DEFAULTMANPATH MANTYPE shlib_path_name"         >> $SP_CSH
+
+
 
 echo "SGE_ROOT=$SGE_ROOT; export SGE_ROOT"                        > $SP_SH
 echo ""                                                          >> $SP_SH
@@ -145,7 +127,7 @@ fi
 if [ "$SGE_EXECD_PORT" != "" ]; then
    echo "SGE_EXECD_PORT=$SGE_EXECD_PORT; export SGE_EXECD_PORT"        >> $SP_SH
 else
-   echo "unset SGE_EXECD_PORT"                                   >> $SP_SH    
+   echo "unset SGE_EXECD_PORT"                                       >> $SP_SH    
 fi
 
 
@@ -169,26 +151,4 @@ echo "else"                                                      >> $SP_SH
 echo "   eval \$shlib_path_name=\$SGE_ROOT/lib/\$ARCH:\$old_value" >> $SP_SH
 echo "fi"                                                        >> $SP_SH
 echo "export \$shlib_path_name"                                  >> $SP_SH
-
-if [ -f "$SGE_ROOT/lib/drmaa.jar" ]; then
-   echo ""                                                       >> $SP_SH
-   echo "if [ \"\$CLASSPATH\" = \"\" ]; then"                    >> $SP_SH
-   echo "   CLASSPATH=\$SGE_ROOT/lib/drmaa.jar"                  >> $SP_SH
-   echo "else"                                                   >> $SP_SH
-   echo "   CLASSPATH=\$SGE_ROOT/lib/drmaa.jar:\$CLASSPATH"      >> $SP_SH
-   echo "fi"                                                     >> $SP_SH
-   echo "export CLASSPATH"                                       >> $SP_SH
-fi
-
-if [ -f "$SGE_ROOT/lib/irix65/libjdrmaa.so" ]; then
-   echo ""                                                       >> $SP_SH
-   echo "if [ \"\$ARCH\" = \"irix65\" -a \"\$LD_LIBRARYN32_PATH\" = \"\" ]; then" >> $SP_SH
-   echo "   LD_LIBRARYN32_PATH=\$SGE_ROOT/lib/irix65"            >> $SP_SH
-   echo "elif [ \"\$ARCH\" = \"irix65\" ]; then"                 >> $SP_SH
-   echo "   LD_LIBRARYN32_PATH=\$SGE_ROOT/lib/irix65:\$LD_LIBRARYN32_PATH"        >> $SP_SH
-   echo "fi"                                                     >> $SP_SH
-   echo "export LD_LIBRARYN32_PATH"                              >> $SP_SH
-fi
-
-echo ""                                                          >> $SP_SH
 echo "unset ARCH DEFAULTMANPATH MANTYPE shlib_path_name"         >> $SP_SH

@@ -135,6 +135,7 @@ u_long32 flags
    lListElem *ep_opt;
    int i_ret;
    u_long32 is_qalter = flags & FLG_QALTER;
+   bool is_hold_option = false;
 
    DENTER(TOP_LAYER, "cull_parse_cmdline");
 
@@ -663,7 +664,7 @@ u_long32 flags
             int hold;
             char *cmd_switch;
             char *cmd_arg = "";
-
+         is_hold_option = true;
          cmd_switch = *sp;
 
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
@@ -1905,6 +1906,17 @@ DTRACE;
       sp++;
    }
 
+   if (!is_hold_option) {
+      if (uti_state_get_mewho() == QHOLD) { 
+         ep_opt = sge_add_arg(pcmdline, h_OPT, lIntT, "-h", "u");
+         lSetInt(ep_opt, SPA_argval_lIntT, MINUS_H_TGT_USER);
+
+      }
+      else if (uti_state_get_mewho() == QRLS) {
+         ep_opt = sge_add_arg(pcmdline, h_OPT, lIntT, "-h", "n");
+         lSetInt(ep_opt, SPA_argval_lIntT, MINUS_H_TGT_NONE);
+      }
+   }
    DEXIT;
    return answer;
 
@@ -1927,7 +1939,9 @@ char *hold_str
    for (j = 0; j < i; j++) {
       switch (hold_str[j]) {
       case 'n':
-         if (op_code && op_code != MINUS_H_CMD_SUB) {
+         if ((uti_state_get_mewho() == QHOLD)  || 
+             (uti_state_get_mewho() == QRLS) || 
+             (op_code && op_code != MINUS_H_CMD_SUB)) {
             target = -1;
             break;
          }
@@ -1935,32 +1949,64 @@ char *hold_str
          target = MINUS_H_TGT_USER|MINUS_H_TGT_OPERATOR|MINUS_H_TGT_SYSTEM;
          break;
       case 's':
-         if (op_code && op_code != MINUS_H_CMD_ADD) {
-            target = -1;
-            break;
+         if (uti_state_get_mewho() == QRLS) {
+            if (op_code && op_code != MINUS_H_CMD_SUB) {
+               target = -1;
+               break;
+            }
+            op_code = MINUS_H_CMD_SUB;
+            target = target|MINUS_H_TGT_SYSTEM;         
          }
-         op_code = MINUS_H_CMD_ADD;
-         target = target|MINUS_H_TGT_SYSTEM;
+         else {
+            if (op_code && op_code != MINUS_H_CMD_ADD) {
+               target = -1;
+               break;
+            }
+            op_code = MINUS_H_CMD_ADD;
+            target = target|MINUS_H_TGT_SYSTEM;
+         }   
          break;
       case 'o':
-         if (op_code && op_code != MINUS_H_CMD_ADD) {
-            target = -1;
-            break;
+         if (uti_state_get_mewho() == QRLS) {
+            if (op_code && op_code != MINUS_H_CMD_SUB) {
+               target = -1;
+               break;
+            }
+            op_code = MINUS_H_CMD_SUB;
+            target = target|MINUS_H_TGT_OPERATOR;         
          }
-         op_code = MINUS_H_CMD_ADD;
-         target = target|MINUS_H_TGT_OPERATOR;
+         else {
+            if (op_code && op_code != MINUS_H_CMD_ADD) {
+               target = -1;
+               break;
+            }
+            op_code = MINUS_H_CMD_ADD;
+            target = target|MINUS_H_TGT_OPERATOR;
+         }
          break;
+         
       case 'u':
-         if (op_code && op_code != MINUS_H_CMD_ADD) {
-            target = -1;
-            break;
+         if (uti_state_get_mewho() == QRLS) {
+            if (op_code && op_code != MINUS_H_CMD_SUB) {
+               target = -1;
+               break;
+            }
+            op_code = MINUS_H_CMD_SUB;
+            target = target|MINUS_H_TGT_USER;
          }
-         op_code = MINUS_H_CMD_ADD;
-         target = target|MINUS_H_TGT_USER;
+         else {
+            if (op_code && op_code != MINUS_H_CMD_ADD) {
+               target = -1;
+               break;
+            }
+            op_code = MINUS_H_CMD_ADD;
+            target = target|MINUS_H_TGT_USER;
+         }
          break;
-
       case 'S':
-         if (op_code && op_code != MINUS_H_CMD_SUB) {
+         if ((uti_state_get_mewho() == QHOLD)  || 
+             (uti_state_get_mewho() == QRLS) || 
+             (op_code && op_code != MINUS_H_CMD_SUB)) {
             target = -1;
             break;
          }
@@ -1968,7 +2014,9 @@ char *hold_str
          target = target|MINUS_H_TGT_SYSTEM;
          break;
       case 'U':
-         if (op_code && op_code != MINUS_H_CMD_SUB) {
+         if ((uti_state_get_mewho() == QHOLD)  || 
+             (uti_state_get_mewho() == QRLS) || 
+             (op_code && op_code != MINUS_H_CMD_SUB)) {
             target = -1;
             break;
          }
@@ -1976,7 +2024,9 @@ char *hold_str
          target = target|MINUS_H_TGT_USER;
          break;
       case 'O':
-         if (op_code && op_code != MINUS_H_CMD_SUB) {
+         if ((uti_state_get_mewho() == QHOLD)  || 
+             (uti_state_get_mewho() == QRLS) || 
+             (op_code && op_code != MINUS_H_CMD_SUB)) {
             target = -1;
             break;
          }

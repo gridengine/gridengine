@@ -101,7 +101,8 @@ enum {
    MINUS_H_TGT_USER     = 1, /* remove needs at least job owner */
    MINUS_H_TGT_OPERATOR = 2, /* remove needs at least operator  */
    MINUS_H_TGT_SYSTEM   = 4, /* remove needs at least manager   */
-   MINUS_H_TGT_ALL      = 7 
+   MINUS_H_TGT_ALL      = 7,
+   MINUS_H_TGT_NONE     = 15
 };
 
 /* values for JB_verify_suitable_queues */

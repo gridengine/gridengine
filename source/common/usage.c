@@ -79,7 +79,14 @@ static char* get_argument_syntax(int nr)
      case OA_DESTIN_ID_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST; 
      case OA_HOLD_LIST:
-         return MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST; 
+         if ((uti_state_get_mewho() == QHOLD) ||
+             (uti_state_get_mewho() == QRLS)
+         ){
+            return MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST_QHOLD;
+         }
+         else {
+            return MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST; 
+         }
      case OA_HOST_ID_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST;
      case OA_JOB_ID_LIST:
@@ -125,7 +132,12 @@ static char* get_argument_syntax(int nr)
      case OA_JOB_TASK_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASK_LIST; 
      case OA_JOB_TASKS:
-         return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS; 
+         if (uti_state_get_mewho() == QRESUB) {
+            return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS_RESUB;
+         }
+         else {
+            return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS; 
+         }
      case OA_TASK_ID_RANGE:
          return MSG_GDI_ARGUMENTSYNTAX_OA_TASK_ID_RANGE; 
      case OA_USER_LIST:
@@ -1141,7 +1153,11 @@ FILE *fp
 
    if (VALID_OPT(JOB_ID_OPR, uti_state_get_mewho())) {
       PRINTIT(MSG_GDI_USAGE_JOB_ID_OPR );
-      MARK(OA_JOB_ID_LIST);
+      if ((uti_state_get_mewho() != QHOLD) &&
+          (uti_state_get_mewho() != QRESUB) &&
+          (uti_state_get_mewho() != QRLS)) {
+         MARK(OA_JOB_ID_LIST);
+      }
    }
 
    if (VALID_OPT(SCRIPT_OPR, uti_state_get_mewho())) {

@@ -54,8 +54,7 @@ HASARCHDIR="bin lib examples/jobsbin utilbin"
 
 DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_schedd \
              sge_shepherd sge_coshepherd qstat qsub qalter qconf qdel \
-             qacct qmod qsh utilbin jobs qmon qhold qrls qhost \
-             qmake qtcsh"
+             qacct qmod qsh utilbin jobs qmon qhost qmake qtcsh"
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
@@ -904,13 +903,6 @@ for i in $ARCH; do
              echo Installing qtcsh
              Install 0.0 755 ../3rdparty/qtcsh/$ARCHBIN/tcsh $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH/qtcsh
             ;; 
-         qhold|qrls)
-            ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
-              cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
-              echo ln -s ../../util/qhold.sh $prog ; \
-              ln -s ../../util/qhold.sh $prog ; \
-            )
-            ;;
          *)
             InstallProg $prog
             if [ $prog = qstat ]; then
@@ -923,7 +915,11 @@ for i in $ARCH; do
                ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
                  cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
                  echo ln -s qalter qresub ; \
-                 ln -s qalter qresub \
+                 ln -s qalter qresub ; \
+                 echo ln -s qalter qhold ; \
+                 ln -s qalter qhold ; \
+                 echo ln -s qalter qrls ; \
+                 ln -s qalter qrls \
                )
             elif [ $prog = qsh ]; then
                ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
@@ -931,7 +927,7 @@ for i in $ARCH; do
                  echo ln -s qsh qlogin ; \
                  ln -s qsh qlogin ; \
                  echo ln -s qsh qrsh ; \
-                 ln -s qsh qrsh ; \
+                 ln -s qsh qrsh  ; \
                )
             fi
             ;;

@@ -1,3 +1,10 @@
+SG-2004-02-19-2: Bugfix:    - impemented qhold and qrls in qalter and removed
+                              the qhold.sh script.
+                            - corrected the qresub help output
+                 Changed:   qhold, qrls, qresub, qalter, distinst
+                 Review:    MD
+                 Issue:     675
+
 AD-2004-02-19-0: Cleanup:   Did remove '-nostart-commd' command line argument.
                  Changed:   qmaster, common, man
 

@@ -84,7 +84,7 @@ char **argv
    lListElem *aep;
    int all_jobs = 0;
    int all_users = 0;
-   u_long32 gdi_cmd; 
+   u_long32 gdi_cmd = SGE_GDI_MOD; 
    int cl_err = 0;
    int tmp_ret;
    int me_who;
@@ -97,7 +97,16 @@ char **argv
    if (!strcmp(sge_basename(argv[0], '/'), "qresub")) {
       DPRINTF(("QRESUB\n"));
       me_who = QRESUB;
-   } else {
+   }   
+   else if (!strcmp(sge_basename(argv[0], '/'), "qhold")) {
+      DPRINTF(("QHOLD\n"));
+      me_who = QHOLD;
+   }   
+   else if (!strcmp(sge_basename(argv[0], '/'), "qrls")) {
+      DPRINTF(("QRLS\n"));
+      me_who = QRLS;
+   } 
+   else {
       DPRINTF(("QALTER\n"));
       me_who = QALTER;
    } 
@@ -147,12 +156,18 @@ char **argv
       SGE_EXIT(tmp_ret);
    }
 
-   if (me_who == QALTER) {
+   if ((me_who == QALTER) ||
+       (me_who == QHOLD) ||
+       (me_who == QRLS) 
+      ) {
       DPRINTF(("QALTER\n"));
       gdi_cmd = SGE_GDI_MOD;
-   } else {
+   } else if (me_who == QRESUB){
       DPRINTF(("QRESUB\n"));
       gdi_cmd = SGE_GDI_COPY;
+   } else {
+      printf("unknown binary name.\n");
+      SGE_EXIT(1);
    }
 
 #ifdef ENABLE_NGC
@@ -385,13 +400,7 @@ int *all_users
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-u"))) {
          lList *lp = NULL;
          lList *jid_list = NULL;
-/*
-         if (lGetElemStr(cmdline, SPA_switch, "-uall")) {
-            answer_list_add(&answer, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
-         }
-*/
+
          lAddElemStr(&jid_list, ID_str, "*", ID_Type); 
          lSetList(job, JB_job_identifier_list, jid_list);
     
@@ -401,29 +410,13 @@ int *all_users
          nm_set(job_field, JB_user_list);
          users_flag = 1;
       }
-/*
-      while ((ep = lGetElemStr(cmdline, SPA_switch, "-uall"))) {
-         lList *jid_list = NULL;
-
-         if (lGetElemStr(cmdline, SPA_switch, "-u")) {
-            answer_list_add(&answer, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
-         }
-
-         lAddElemStr(&jid_list, ID_str, "dummy", ID_Type);
-         lSetList(job, JB_job_identifier_list, jid_list);
-
-         (*all_users) = 1;
-         lRemoveElem(cmdline, ep);
-         users_flag = 1;
-      }   
-*/      
+ 
    }                    
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
       lListElem *jid;
       is_hold_option = true;
+
       for_each (jid, lGetList(job, JB_job_identifier_list)) {
          lSetUlong(jid, ID_force, (u_long32) lGetInt(ep, SPA_argval_lIntT));
       }

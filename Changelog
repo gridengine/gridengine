@@ -1,3 +1,5 @@
+AH-2002-05-06-1: Bugfix:    Fix typo in simple.sh job example
+
 EB-2002-05-04-0: Cleanup:   Job object:
                             - moved some attributes into the environment
                             - created new module to access VA_Type lists

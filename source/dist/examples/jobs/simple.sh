@@ -42,6 +42,6 @@
 # print date and time
 date
 # Sleep for 20 seconds
-sleep
+sleep 20
 # print date and time again
 date

@@ -664,7 +664,7 @@
 #define MSG_GDI_USAGE_Mp_OPT_FNAME                       "[-Mp fname]"
 #define MSG_GDI_UTEXT_Mp_OPT_FNAME                       _MESSAGE(23379, _("modify a parallel environment from file"))
 
-#define MSG_GDI_USAGE_mq_OPT_QUEUE                       "[-mq [queue]]"
+#define MSG_GDI_USAGE_mq_OPT_QUEUE                       "[-mq queue]"
 #define MSG_GDI_UTEXT_mq_OPT_QUEUE                       _MESSAGE(23380, _("modify a queue"))
 
 #define MSG_GDI_USAGE_Mq_OPT_FNAME                       "[-Mq fname]"

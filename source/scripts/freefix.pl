@@ -31,32 +31,44 @@
 #########################################################################
 #
 # This scripts processes all .c files in the selected directory and makes
-# sure that all calls to lFreeElem, lFreeList, lFreeWhat, and lFreeWhere
-# assign the call result to the freed variable.  When the script finds a
-# file that does not assign the result to the freed variable, it creates
-# a new version of the file, called fix.file_name (where file_name is the
-# name of the file being processed), in which these errors are corrected.
+# sure that all calls to lFreeElem, lFreeList, lFreeWhat, lFreeWhere, and
+# lFreeSortOrder assign the call result to the freed variable.  When the
+# script finds a file that does not assign the result to the freed variable,
+# it creates a new version of the file, called fix.file_name (where file_name
+# is the name of the file being processed), in which these errors are corrected.
+# if -commit is passed as an argument, instead of creating a new file to
+# contain the changes, the script will overwrite the original.
 #
 # Syntax:
-#    freefix.pl directory
+#    freefix.pl directory [-commit]
+#
 # Example:
-#    freefix.pl gridengine/source
+#    freefix.pl gridengine/source -commit
 #
 #########################################################################
 
-if (($#ARGV != 0) || ($ARGV[0] eq "")) {
-   print "Usage: freefix.pl directory_name\n";
+# Process args
+if ((@ARGV < 1) || (@ARGV > 2) || ($ARGV[0] eq "") ||
+    ((@ARGV == 2) && ($ARGV[1] ne "-commit"))) {
+   print "Usage: freefix.pl directory_name [-commit]\n";
    exit 1;
 }
-
-$changed = 0;
-
-processDir ($ARGV[0]);
-
-if (!$changed) {
-   print "All files are OK.\n";
+elsif (@ARGV == 2) {
+   $commit = 1;
 }
 
+# Global to tell if any changes were made
+$changed = 0;
+
+# Kick off the process
+processDir ($ARGV[0]);
+
+# If no changes were made, say so
+if (!$changed) {
+   print "No changes.\n";
+}
+
+# This routine recursively processes directories looking for .c files
 sub processDir {
    my $dir = $_[0];
    my @files;
@@ -77,8 +89,10 @@ sub processDir {
    }
 }
 
+# This routine processes .c files to replace bad calls to lFree*
 sub processFile {
    my $file = $_[0];
+   # Flag to tell if we need to change the file or not
    my $printed = 0;
 
    open (FILE, "<$file");
@@ -86,8 +100,10 @@ sub processFile {
 
    # First make sure there's something that needs to be fixed.
    while (<FILE>) {
-      if (/^(\s*)(([a-zA-Z0-9]+\s*=\s*)?)(lFree(Elem|List)(\s*\(\s*(\**[a-zA-Z0-9\->\[\].]+)\s*\))\s*;)(.*)$/) {
-         print "Fixing $file => $file.fix\n";
+      if (/^(\s*)(([a-zA-Z0-9]+\s*=\s*)?)(lFree(Elem|List|What|Where|SortOrder)(\s*\(\s*(\**[a-zA-Z0-9\->\[\].]+)\s*\))\s*;)(.*)$/) {
+         print "Fixing $file";
+         print " => $file.fix" if ($commit == 0);
+         print "\n";
          $printed = 1;
          last;
       }
@@ -101,9 +117,9 @@ sub processFile {
       open (TMP, ">$file.fix");
 
       while (<FILE>) {
-         if ((/^(\s*)(([a-zA-Z0-9]+\s*=\s*)?)(lFree(Elem|List|What|Where)(\s*\(\s*(\**[a-zA-Z0-9\->\[\].]+)\s*\))\s*;)(.*)$/) &&
+         if ((/^(\s*)(([a-zA-Z0-9]+\s*=\s*)?)(lFree(Elem|List|What|Where|SortOrder)(\s*\(\s*(\**[a-zA-Z0-9\->\[\].]+)\s*\))\s*;.*)$/) &&
              ($2 eq "")) {
-            print TMP "$1$7 = lFree$5$6;$8\n";
+            print TMP "$1$7 = $4\n";
          }
          else {
             print TMP;
@@ -113,6 +129,13 @@ sub processFile {
       close (FILE);
       close (TMP);
 
+      # if -commit was passed, replace the original with the tmp copy
+      if ($commit) {
+         unlink ("$file");
+         rename ("$file.fix", "$file");
+      }
+
+      # Note that we made a change
       $changed = 1;
    }
 }

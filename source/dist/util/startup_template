@@ -68,6 +68,26 @@
 #    cat cut tr ls grep awk sed sleep
 #    clear basename
 
+#
+# The following lines provide the necessary info for adding a startup script
+# according to the Linux Standard Base Specification (LSB) 1.0.0 which can
+# be found at:
+#
+#    http://www.linuxbase.org/spec/gLSB/gLSB/sysinit.html
+#
+# See also
+#
+#    http://www.suse.de/~grimmer/Package-Conventions/index.html
+#
+### BEGIN INIT INFO
+# Provides:       rcsge
+# Required-Start: $network afs
+# Required-Stop:
+# Default-Start:  3 5
+# Default-Stop: 0 1 2 6
+# Description:  start Grid Engine
+### END INIT INFO
+
 PATH=/bin:/usr/bin:/sbin:/usr/sbin 
 
 unset LANG LC_CTYPE LC_COLLATE LC_ALL LC_MESSAGES 

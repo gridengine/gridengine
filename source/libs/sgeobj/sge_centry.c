@@ -1197,3 +1197,28 @@ centry_urgency_contribution(int slots, const char *name, double value, const lLi
    return contribution;
 }
 
+bool
+centry_list_do_all_exists(const lList *this_list, lList **answer_list,
+                          const lList *centry_list) 
+{
+   bool ret = true;
+   lListElem *centry = NULL;
+   
+   DENTER(TOP_LAYER, "centry_list_do_all_exists");
+   for_each(centry, centry_list) {
+      const char *name = lGetString(centry, CE_name);
+
+      if (centry_list_locate(this_list, name) == NULL) {
+         answer_list_add_sprintf(answer_list, STATUS_EEXIST,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_CQUEUE_UNKNOWNCENTRY_S, name);
+         DTRACE;
+         ret = false;
+         break;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+

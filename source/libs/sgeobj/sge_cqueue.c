@@ -130,7 +130,7 @@ list_attribute_struct cqueue_attribute_array[] = {
    { CQ_projects,                QU_projects,               APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_PROJECTS,          true,   false, cqueue_verify_project_list},
    { CQ_xprojects,               QU_xprojects,              APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_XPROJECTS,         true,   false, cqueue_verify_project_list},
 
-   { CQ_consumable_config_list,  QU_consumable_config_list, ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_COMPLEX_VALUES,    false,  false, NULL},
+   { CQ_consumable_config_list,  QU_consumable_config_list, ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_COMPLEX_VALUES,    false,  false, cqueue_verify_consumable_config_list},
    { CQ_load_thresholds,         QU_load_thresholds,        ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_LOAD_THRESHOLD,    false,  false, NULL},
    { CQ_suspend_thresholds,      QU_suspend_thresholds,     ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_SUSPEND_THRESHOLD, false,  false, NULL},
 
@@ -1102,6 +1102,28 @@ cqueue_verify_project_list(lListElem *cqueue, lList **answer_list,
          const lList *master_list = *(prj_list_get_master_list());
 
          if (!prj_list_do_all_exist(master_list, answer_list, project_list)) {
+            ret = false;
+         }
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+cqueue_verify_consumable_config_list(lListElem *cqueue, lList **answer_list,
+                                     lListElem *attr_elem)
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_verify_project_list");
+   if (cqueue != NULL && attr_elem != NULL) {
+      lList *centry_list = lGetList(attr_elem, ACELIST_value);
+
+      if (centry_list != NULL) {
+         const lList *master_list = *(centry_list_get_master_list());
+
+         if (!centry_list_do_all_exists(master_list, answer_list, centry_list)) {
             ret = false;
          }
       }

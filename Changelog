@@ -1,3 +1,7 @@
+EB-2004-01-19-1: Bugfix:    non-existing complex attributes were not
+                            rejected during cqueue modification
+                 Changes:   sge_qmaster, qconf
+
 CR-2004-01-19-0: Bugfix:    - changed debug level of communication system from
                               TOP_LAYER to COMMD_LAYER
                             - removed not necessary calls to not thread save

@@ -171,6 +171,10 @@ bool
 cqueue_verify_subordinate_list(lListElem *cqueue, lList **answer_list,
                                lListElem *attr_elem);
 
+bool
+cqueue_verify_consumable_config_list(lListElem *cqueue, lList **answer_list,
+                                     lListElem *attr_elem);
+
 void
 cqueue_list_set_tag(lList *this_list, u_long32 tag_value, bool tag_qinstances);
 

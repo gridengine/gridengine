@@ -274,6 +274,7 @@
 #define MSG_QTYPE_INCORRECTSTRING      _MESSAGE(64274, _("error parsing queue type from string "SFQ"\n"))
 #define MSG_QSTATE_UNKNOWNCHAR         _MESSAGE(64275, _("unknwon queue state\n"))
 #define MSG_QSTAT_WRONGGCHAR_C         _MESSAGE(64276, _("wrong character \'%c\' for -g option\n"))
+#define MSG_CQUEUE_UNKNOWNCENTRY_S     _MESSAGE(64277, _("Complex attribute "SFQ" does not exist\n"))
 
 /*
 ** sge_conf.c

@@ -6,7 +6,7 @@ JG-2002-09-10-0  Bugfix:    qsh jobs without or with local DISPLAY variable
                             set have to be rejected.
                  IZ:        #342
                  Bugtraq:   4744523
-                 Changed:   sge_qmaster, qsh
+                 Changed:   sge_qmaster, qsh, submit.1
 
 CR-2002-09-09-3  I18N:      fixed script errors which caused loose of some
                             messages in gridengine.pot file 

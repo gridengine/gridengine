@@ -657,6 +657,7 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
    switch -- $host_arch {
       "solaris64" - 
       "sol-sparc64" - 
+      "sol-amd64" -
       "solaris86" -
       "sol-x86" -
       "solaris" -

@@ -74,6 +74,7 @@ proc get_ps_cmd {pid} {
       "sol-sparc64" -
       "solaris86" -
       "sol-x86" -
+      "sol-amd64" -
       "tru64" {
          set cmd "/usr/bin/ps -p $pid -o vsz,time | tail -1"
       }

@@ -1,3 +1,5 @@
+JG-2005-02-28-0: Testsuite: Added support for architecture sol-amd64.
+
 RD-2005-02-25-0: Bugfix:    Problems with BDB RPC server are hard to diagnose
                  Changed:   bdb_rc_template
                  Issue:     1418

@@ -226,10 +226,11 @@ char **argv
    {
       lList *schedd_config = NULL;
       lList *answer_list = NULL;
-   
+
       get_all_lists(
          &queue_list, 
-         qselect_mode?NULL:&job_list, 
+         (qselect_mode || ((group_opt & GROUP_CQ_SUMMARY) != 0 )) ? NULL : 
+                                                                 &job_list,
          &centry_list, 
          &exechost_list,
          &schedd_config,

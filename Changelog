@@ -254,7 +254,6 @@ DT-2004-03-02-2: Bugfix:    o Fixed broken build
                  Changed:   Flatfile spooling, libsched
                  Issue:    760
 
->>>>>>> 1.1649
 AH-2004-03-02-0: Enhancem.: Completed qstat -j schedd messages
                             Fixed broken qsub -w e|w option
                  Bugfix:    Fixed schedd problem with jobs exceeding their

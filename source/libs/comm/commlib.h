@@ -297,6 +297,11 @@ void clear_commlib_state_stored_tag_priority_list(void);
 void set_commlib_state_logging_function(sge_log_ftype);
 void set_commlib_state_changed_flag(int flag);
 
+#if 1 /* EB: debug */
+#define COMMLIB_ENABLE_DEBUG
+extern int stored_errno;
+#endif
+
 #ifdef  __cplusplus
 }
 #endif

@@ -1,7 +1,15 @@
+JG-2003-07-03-0: Bugfix:    failure of master task of a tightly integrated 
+                            parallel job did not delete the job.
+                 Bugtraq:   4885930
+                 Issue:     579
+                 Review:    AS
+                 Changed:   sge_qmaster
+
 SG-2003-07-02-1: Bugfix:    max jobs allowed per user
-                            The sge_add_job had multiple exits after the max_u_job
-                            counter was increased. This was fixed and a modifcation
-                            of the decrease function. It checks for overflows now.                           
+                            The sge_add_job had multiple exits after the 
+                            max_u_job counter was increased. This was fixed and
+                            a modification of the decrease function. It checks 
+                            for overflows now.                           
                  Bugtrag:   4886026
                  Issue:     576
                  Review:    AS

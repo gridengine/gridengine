@@ -316,7 +316,6 @@ sge_pack_buffer *pb
                         && lGetUlong(pe, PE_control_slaves)
                         && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
 
-#ifdef ENABLE_214_FIX /* EB #214 */
                      /* 
                       * if we receive a report from execd about
                       * a 'running' pe_task but the ja_task of the cocerned
@@ -334,7 +333,6 @@ sge_pack_buffer *pb
                            pack_job_kill(pb, jobid, jataskid);
                         }
                      }
-#endif
 
                     if (!task) {
                         lList* task_tasks;
@@ -515,6 +513,18 @@ sge_pack_buffer *pb
                         jobid, jataskid, (status==JTRANSITING)?"transisting":"running"));
 
                      sge_job_exit(jr, jep, jatep);
+                  } else {
+                     u_long32 failed = lGetUlong(jr, JR_failed);
+
+                     if (failed == SSTATE_FAILURE_AFTER_JOB && 
+                           !lGetString(jep, JB_checkpoint_object)) {
+                        u_long32 state  = lGetUlong(jatep, JAT_state);
+                        if (!(state & JDELETED)) {
+                           job_mark_job_as_deleted(jep, jatep);
+                           ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_SU, 
+                                  "\"master\"", u32c(jobid)));
+                        }
+                     }
                   }
                   break;
                case JFINISHED:
@@ -537,11 +547,8 @@ sge_pack_buffer *pb
                      this is needed to prevent multiple debitation of one task 
                      -- need a state in qmaster for each task */
 
-#ifdef ENABLE_438_FIX
                /* handle task exit only once for each pe_task */
                if (ftref_add(jobid, jataskid, pe_task_id_str)) {
-#endif /* ENABLE_438_FIX */
-
                   if (!task) {
    
                      task = lAddSubStr(jatep, JB_pe_task_id_str, pe_task_id_str, JAT_task_list, JB_Type);
@@ -641,21 +648,18 @@ sge_pack_buffer *pb
                      }
                      if (failed == SSTATE_FAILURE_AFTER_JOB && 
                            !lGetString(jep, JB_checkpoint_object)) {
-#ifdef  ENABLE_214_FIX /* EB #214 */
+                        u_long32 state  = lGetUlong(jatep, JAT_state);
+#if 0 /* do not send abort mail for each task */
                         job_ja_task_send_abort_mail(jep, jatep, 
                                                     me.user_name, 
                                                     me.qualified_hostname,
-                                                    lGetString(jr, JR_err_str)); 
-                        get_rid_of_job_due_to_report(jep, jatep, NULL,
-                                                     pb, rhost, commproc);
-                                                     
-#else
-                        get_rid_of_job(NULL, jep, jatep, 0, pb, rhost, 
-                                       me.user_name, me.qualified_hostname, 
-                                       lGetString(jr, JR_err_str), commproc);
-#endif
-                        pack_job_kill(pb, jobid, jataskid);
-                        ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_SU, pe_task_id_str, u32c(jobid)));
+                                                    lGetString(jr, JR_err_str));
+#endif                                                    
+                        if (!(state & JDELETED)) {
+                           job_mark_job_as_deleted(jep, jatep);
+                           ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_SU, 
+                                  pe_task_id_str, u32c(jobid)));
+                        }
                      }
                   }
 
@@ -663,9 +667,7 @@ sge_pack_buffer *pb
                   if (feature_is_enabled(FEATURE_SGEEE))
                      sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
 
-#ifdef ENABLE_438_FIX
                   }
-#endif /* ENABLE_438_FIX */
                } else {
                   lListElem *jg;
                   const char *shouldbe_queue_name;

@@ -93,10 +93,6 @@
 #include "sge_ulongL.h"
 #include "sge_switch_user.h"
 #include "setup_path.h"
-#include "msg_schedd.h"
-#include "msg_common.h"
-#include "msg_utilib.h"
-#include "msg_qmaster.h"
 #include "sge_string.h"
 #include "jb_now.h"
 #include "sge_security.h"
@@ -105,6 +101,12 @@
 #include "sge_job_jatask.h"
 #include "qmaster.h"
 #include "sge_suser.h"
+
+#include "msg_schedd.h"
+#include "msg_common.h"
+#include "msg_utilib.h"
+#include "msg_qmaster.h"
+#include "msg_daemons_common.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Exechost_List;
@@ -1334,7 +1336,7 @@ char *commproc
          strcat(sge_mail_body, MSG_MAIL_BECAUSE);
          strcat(sge_mail_body, err_str);
       }
-      cull_mail( mail_users, sge_mail_subj, sge_mail_body, "job abortion");
+      cull_mail( mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_ABORT);
    }
 
    if (commproc) {

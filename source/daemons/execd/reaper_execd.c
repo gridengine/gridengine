@@ -1726,7 +1726,6 @@ lListElem *jr
    char wallclock[128];
    char utime[128];
    char stime[128];
-   char pdc_usage[1024];
    char buf0[100], buf1[100];
    u_long32 jobid, taskid, failed, ru_utime, ru_stime, ru_wallclock;
    double ru_cpu = 0.0, ru_maxvmem = 0.0;
@@ -1742,23 +1741,23 @@ lListElem *jr
    pe_task_id_str = lGetString(jr, JR_pe_task_id_str);
 
    if (!(q=lGetString(jr, JR_queue_name)))
-      q = "<unknown>";
+      q = MSG_MAIL_UNKNOWN_NAME;
 
    if (!(h=lGetHost(jr, JR_host_name)))
       h = me.qualified_hostname;
 
    if (!(u=lGetString(jep, JB_owner)))
-      u = "<unknown>";
+      u = MSG_MAIL_UNKNOWN_NAME;
 
    if ((ep=lGetSubStr(jr, UA_name, "start_time", JR_usage)))
       strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value)));
    else   
-      strcpy(sge_mail_start, "unknown");
+      strcpy(sge_mail_start, MSG_MAIL_UNKNOWN_NAME);
 
    if ((ep=lGetSubStr(jr, UA_name, "end_time", JR_usage)))
       strcpy(sge_mail_end, sge_ctime((u_long32)lGetDouble(ep, UA_value)));
    else   
-      strcpy(sge_mail_end, "unknown");
+      strcpy(sge_mail_end, MSG_MAIL_UNKNOWN_NAME);
 
    if ((ep=lGetSubStr(jr, UA_name, "ru_utime", JR_usage)))
       ru_utime = (u_long32)lGetDouble(ep, UA_value); 
@@ -1780,14 +1779,6 @@ lListElem *jr
    if ((ep=lGetSubStr(jr, UA_name, USAGE_ATTR_MAXVMEM_ACCT, JR_usage)))
       ru_maxvmem = lGetDouble(ep, UA_value);
 
-   {
-      sprintf(pdc_usage,
-         " CPU              = %s\n"
-         " Max vmem         = %s\n",
-            (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
-            (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1));
-   }
-
    jobid = lGetUlong(jr, JR_job_number);
    taskid = lGetUlong(jr, JR_ja_task_number);
 
@@ -1803,21 +1794,11 @@ lListElem *jr
       resource_descr(ru_stime, TYPE_TIM, stime);
       resource_descr(ru_wallclock, TYPE_TIM, wallclock);
       if (is_array(jep)) {
-         sprintf(sge_mail_subj, "Job-array task "u32"."u32" ("SFN") Complete", 
-            jobid, taskid, lGetString(jep, JB_job_name));
+         sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_JA_TASK_COMP_UUS, 
+                 u32c(jobid), u32c(taskid), lGetString(jep, JB_job_name));
          sprintf(sge_mail_body, 
-                 "%s\n"                          /* subject again */
-                 " User             = %s\n"
-                 " Queue            = %s\n"
-                 " Host             = %s\n"
-                 " Start Time       = %s\n"
-                 " End Time         = %s\n"
-                 " User Time        = %s\n"
-                 " System Time      = %s\n"
-                 " Wallclock Time   = %s\n"
-                 "%s"
-                 " Exit Status      = %d",
-                 sge_mail_subj,                 /* subject again */
+                 MSG_MAIL_BODY_COMP_SSSSSSSSSSSI,
+                 sge_mail_subj,              
                  u,
                  q, 
                  h,
@@ -1826,24 +1807,15 @@ lListElem *jr
                  utime,
                  stime,
                  wallclock,
-                 pdc_usage,
+                 (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
+                 (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1),
                  exit_status);
       } else {
-         sprintf(sge_mail_subj, "Job " u32 " ("SFN") Complete", jobid, lGetString(jep, JB_job_name));
+         sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_JOB_COMP_US, u32c(jobid), 
+                 lGetString(jep, JB_job_name));
          sprintf(sge_mail_body, 
-                 "Job " u32 " ("SFN") Complete\n"
-                 " User             = %s\n"
-                 " Queue            = %s\n"
-                 " Host             = %s\n"
-                 " Start Time       = %s\n"
-                 " End Time         = %s\n"
-                 " User Time        = %s\n"
-                 " System Time      = %s\n"
-                 " Wallclock Time   = %s\n"
-                 "%s"
-                 " Exit Status      = %d",
-                 jobid, 
-                 lGetString(jep, JB_job_name), 
+                 MSG_MAIL_BODY_COMP_SSSSSSSSSSSI,
+                 sge_mail_subj, 
                  u,
                  q, 
                  h,
@@ -1852,28 +1824,31 @@ lListElem *jr
                  utime,
                  stime,
                  wallclock,
-                 pdc_usage,
+                 (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
+                 (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1),
+
                  exit_status);
       }
 
-      cull_mail(mail_users, sge_mail_subj, sge_mail_body, "job completion");
+      cull_mail(mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_COMP);
    }
 
-   if (((VALID(MAIL_AT_ABORT, mail_options)) || (VALID(MAIL_AT_EXIT, mail_options))) && 
+   if (((VALID(MAIL_AT_ABORT, mail_options)) 
+         || (VALID(MAIL_AT_EXIT, mail_options))) && 
        (failed || lGetUlong(jr, JR_general_failure)==GFSTATE_JOB)) {
-      char exitstr[256], task_text[256];
+      char exitstr[256];
       const char *err_str;
-      char *action, *comment = "";
+      const char *action, *comment = "";
 
       if (failed==SSTATE_MIGRATE) {
-         action = "Migrates";
+         action = MSG_MAIL_ACTION_MIGR;
       } else if (failed==SSTATE_AGAIN) {
-         action = "Rescheduled";
+         action = MSG_MAIL_ACTION_RESCH;
       } else if (lGetUlong(jr, JR_general_failure)==GFSTATE_JOB) {
-         action = "Set in error state";
-         comment = "\nUse \"qmod -c <jobid>\" to clear job error state\nonce the problem is fixed.";
+         action = MSG_MAIL_ACTION_ERR;
+         comment = MSG_MAIL_ACTION_ERR_COMMENT;
       } else {
-         action = "Aborted";
+         action = MSG_MAIL_ACTION_ABORT;
       }
 
       if ((ep=lGetSubStr(jr, UA_name, "signal", JR_usage)))
@@ -1883,59 +1858,65 @@ lListElem *jr
          err_str = MSG_OBJ_UNKNOWNREASON;
 
       DPRINTF(("MAIL VALID at ABORT\n"));
-      if (pe_task_id_str)
-         sprintf(task_text, "Subtask \"%.79s\" of ", pe_task_id_str);
-      else 
-         task_text[0] = '\0';
+
       sprintf(exitstr, "%d", exit_status);
       if (is_array(jep)) {
-         sprintf(sge_mail_subj, "%sJob-array task "u32"."u32" ("SFN") %s", 
-            task_text, jobid, taskid, lGetString(jep, JB_job_name), action);
-         sprintf(sge_mail_body, 
-                 "%sJob-array task "u32"."u32" ("SFN") %s Exit Status=%s  Signal=%s\n"
-                 " User             = %s\n"
-                 " Queue            = %s\n"
-                 " Host             = %s\n"
-                 " Start Time       = %s\n"
-                 " End Time         = %s\n"
-                 "%s"
-                 "failed %s because:\n%s%s",
-                 task_text,
-                 jobid, taskid, lGetString(jep, JB_job_name),
-                 action,
+         if (pe_task_id_str) {
+            sprintf(sge_mail_subj, 
+                    MSG_MAIL_SUBJECT_S_JA_TASK_STATE_SUUSS,
+                    pe_task_id_str,
+                    u32c(jobid),
+                    u32c(taskid),
+                    lGetString(jep, JB_job_name),
+                    action);
+         } else {
+            sprintf(sge_mail_subj, 
+                    MSG_MAIL_SUBJECT_JA_TASK_STATE_UUSS,
+                    u32c(jobid),
+                    u32c(taskid),
+                    lGetString(jep, JB_job_name),
+                    action);
+         }
+         sprintf(sge_mail_body,
+                 MSG_MAIL_BOPY_STATE_SSSSSSSSSSSSS, 
+                 sge_mail_subj,
                  exitstr, 
                  sge_sig2str(signo),
                  u, q, h, sge_mail_start, sge_mail_end,
-                 pdc_usage,
+                 (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
+                 (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1),
                  get_sstate_description(failed), 
                  err_str, 
                  comment);
       } else {
-         sprintf(sge_mail_subj, "%sJob " u32 " ("SFN") %s", 
-            task_text, jobid, lGetString(jep, JB_job_name), action);
+         if (pe_task_id_str) {
+            sprintf(sge_mail_subj, 
+                    MSG_MAIL_SUBJECT_S_JOB_STATE_SUSS,
+                    pe_task_id_str,
+                    u32c(jobid),
+                    lGetString(jep, JB_job_name),
+                    action);
+         } else {
+            sprintf(sge_mail_subj, 
+                    MSG_MAIL_SUBJECT_JOB_STATE_USS,
+                    u32c(jobid),
+                    lGetString(jep, JB_job_name),
+                    action);
+         }
          sprintf(sge_mail_body, 
-                 "%sJob " u32 " ("SFN") %s Exit Status=%s  Signal=%s\n"
-                 " User             = %s\n"
-                 " Queue            = %s\n"
-                 " Host             = %s\n"
-                 " Start Time       = %s\n"
-                 " End Time         = %s\n"
-                 "%s"
-                 "failed %s because:\n%s%s",
-                 task_text,
-                 jobid, 
-                 lGetString(jep, JB_job_name),
-                 action,
+                 MSG_MAIL_BOPY_STATE_SSSSSSSSSSSSS,
+                 sge_mail_subj,
                  exitstr, 
                  sge_sig2str(signo),
                  u, q, h, sge_mail_start, sge_mail_end,
-                 pdc_usage,
+                 (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
+                 (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1),
                  get_sstate_description(failed), 
                  err_str, 
                  comment);
       }
 
-      cull_mail(mail_users, sge_mail_subj, sge_mail_body, "job abortion/end");
+      cull_mail(mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_STATE);
    }
 
    DEXIT;

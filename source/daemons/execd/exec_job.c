@@ -89,13 +89,15 @@
 #include "setup_path.h"
 #include "qm_name.h"
 #include "sge_stat.h" 
-#include "msg_common.h"
-#include "msg_execd.h"
 #include "sge_string.h" 
 #include "utility.h"
 #include "jb_now.h"
 #include "sge_feature.h"
 #include "sge_job_jatask.h"
+
+#include "msg_common.h"
+#include "msg_execd.h"
+#include "msg_daemons_common.h"
 
 #define ENVIRONMENT_FILE "environment"
 #define CONFIG_FILE "config"
@@ -1634,7 +1636,7 @@ char *err_str
              lGetString(master_q, QU_qname),
              lGetHost(master_q, QU_qhostname), sge_mail_start);
       }
-      cull_mail(mail_users, sge_mail_subj, sge_mail_body, "job start");
+      cull_mail(mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_START);
    }
 
    /* Change to jobs directory. Father changes back to cwd. We do this to

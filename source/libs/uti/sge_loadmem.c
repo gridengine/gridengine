@@ -43,7 +43,7 @@
 #include "msg_utilib.h"
 #include "sge_getloadavg.h"
 
-#if !defined(LINUX) && !defined(SUN4) && !defined(HPUX) && !defined(CRAY)
+#if !defined(LINUX) && !defined(SUN4) && !defined(HPUX) && !defined(CRAY) && !defined(DARWIN) && !defined(FREEBSD)
 
 #include <unistd.h>
 
@@ -701,3 +701,114 @@ sge_mem_info_t *mem_info
    return 0;
 }
 #endif /* CRAY */
+
+#if defined(DARWIN)
+#include <mach/mach_init.h>
+#include <mach/mach_host.h>
+#include <mach/host_info.h>
+#include <sys/stat.h>
+
+int loadmem(
+sge_mem_info_t *mem_info
+)
+{
+
+    vm_statistics_data_t vm_info;
+    mach_msg_type_number_t info_count;
+    struct host_basic_info cpu_load_data;
+    int host_count = sizeof(cpu_load_data)/sizeof(integer_t);
+    mach_port_t host_priv_port = mach_host_self();
+
+    host_info(host_priv_port, HOST_BASIC_INFO , (host_info_t)&cpu_load_data, &host_count);
+
+    mem_info->mem_total = cpu_load_data.memory_size / (1024*1024);
+
+
+    info_count = HOST_VM_INFO_COUNT;
+    host_statistics(mach_host_self (), HOST_VM_INFO, (host_info_t)&vm_info, &info_count);
+    mem_info->mem_free = vm_info.free_count*vm_page_size / (1024*1024);
+
+    return 0;
+}
+
+#endif /* DARWIN */
+
+#if defined(FREEBSD)
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#include <fcntl.h>
+#include <kvm.h>
+
+int loadmem(
+sge_mem_info_t *mem_info
+) 
+{
+   int			i, n;
+   int			swap_count, usedswap_count;
+   size_t		tmpsize;
+   unsigned int		page_size;
+   unsigned int		page_count;
+   unsigned int		free_count, cache_count, inactive_count;
+   kvm_t		*kd;
+   struct kvm_swap	kswap[16];
+
+   tmpsize = sizeof(page_size);
+   if (sysctlbyname("vm.stats.vm.v_page_size", &page_size, &tmpsize,
+      NULL, 0) == -1)
+      return -1;
+   tmpsize = sizeof(page_count);
+   if (sysctlbyname("vm.stats.vm.v_page_count", &page_count, &tmpsize,
+      NULL, 0) == -1)
+      return -1;
+   mem_info->mem_total = (page_count * page_size) / (1024.0*1024.0);
+
+   /*
+    * The concept of free memory doesn't make much sense when you're
+    * talking about the FreeBSD vm, but we'll fake it as the number of
+    * pages marked free, inactive, or cache.
+    */
+   tmpsize = sizeof(free_count);
+   if (sysctlbyname("vm.stats.vm.v_free_count", &free_count, &tmpsize,
+      NULL, 0) == -1)
+      return -1;
+   tmpsize = sizeof(cache_count);
+   if (sysctlbyname("vm.stats.vm.v_cache_count", &cache_count, &tmpsize,
+      NULL, 0) == -1)
+      return -1;
+   tmpsize = sizeof(inactive_count);
+   if (sysctlbyname("vm.stats.vm.v_inactive_count", &inactive_count, &tmpsize,
+      NULL, 0) == -1)
+      return -1;
+   mem_info->mem_free =
+      ((free_count + cache_count + inactive_count) * page_size) /
+      (1024.0*1024.0);
+
+   /*
+    * Grovel around in kernel memory to find out how much swap we have.
+    * This only works if we're in group kmem so to let other programs
+    * maintain limited functionality, we'll just report zero if we can't
+    * open /dev/mem.
+    *
+    * XXX: On 5.0+ we should really use the new sysctl interface to
+    * swap stats.
+    */
+   swap_count = 0;
+   usedswap_count = 0;
+   if ((kd = kvm_open(NULL, NULL, NULL, O_RDONLY, "sge_loadmem")) != NULL) {
+      n = kvm_getswapinfo(kd, kswap, sizeof(kswap)/sizeof(kswap[0]), 0);
+      kvm_close(kd);
+      if (n == -1)
+         return -1;
+
+      for (i = 0; i < n; i++) {
+         swap_count += kswap[i].ksw_total;
+         usedswap_count += kswap[i].ksw_used;
+      }
+   }
+   mem_info->swap_total = (swap_count * page_size) / (1024.0*1024.0);
+   mem_info->swap_free = ((swap_count - usedswap_count) * page_size) /
+      (1024.0*1024.0);
+
+   return 0;
+}
+#endif /* FREEBSD */

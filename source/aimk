@@ -43,11 +43,13 @@
 
 unsetenv buildarch BUILDARCH COMPILE_ARCH
 
+set AIMKDIR = `dirname $0`
+
 set buildarch = UNKNOWN
-if ( -f dist/util/arch ) then
-   set buildarch = `dist/util/arch`
+if ( -f $AIMKDIR/dist/util/arch ) then
+   set buildarch = `$AIMKDIR/dist/util/arch`
 else
-   echo script dist/util/arch not available
+   echo script $AIMKDIR/dist/util/arch not available
    exit 1
 endif
 
@@ -83,6 +85,24 @@ case "crayts":
    breaksw
 case "craytsieee":
    set BUILDARCH = UNICOS_TS_IEEE
+   breaksw
+case "darwin":
+   set BUILDARCH = DARWIN
+   breaksw
+case "freebsd-alpha"
+   set BUILDARCH = FREEBSD_ALPHA
+   breaksw
+case "freebsd-i386"
+   set BUILDARCH = FREEBSD_I386
+   breaksw
+case "freebsd-ia64"
+   set BUILDARCH = FREEBSD_IA64
+   breaksw
+case "freebsd-ppc"
+   set BUILDARCH = FREEBSD_PPC
+   breaksw
+case "freebsd-sparc64"
+   set BUILDARCH = FREEBSD_SPARC64
    breaksw
 case "glinux":
    set BUILDARCH = LINUX6
@@ -134,14 +154,14 @@ endsw
 
 # Source variables for definition of site dependent paths of software here
 #
-if ( -f aimk.site ) then
-   source aimk.site
+if ( -f $AIMKDIR/aimk.site ) then
+   source $AIMKDIR/aimk.site
 endif
 
 # your private command line args go here
 #
-if ( -f aimk.private ) then
-   source aimk.private
+if ( -f $AIMKDIR/aimk.private ) then
+   source $AIMKDIR/aimk.private
 endif
 
 
@@ -173,6 +193,7 @@ usage:
    echo "-htmlmankv        -> generate man and html pages checked out with '-kv' flag"
    echo "-insure           -> compile in debug mode and detect memory leaks (en ensure ; glinux, ..)"
    echo "-intl             -> compile with internationalization library (libintl)"
+   echo "-jam              -> compile jam"
    echo "-kerberos         -> enable kerberos authentication"
    echo "-man              -> generate man pages"
    echo "-mankv		      -> generate man pages checked out with '-kv' flag"
@@ -323,6 +344,10 @@ set   KLFLAGS      = ""
 set PERLGUI = ""
 set PERLGUI_CLEAN = ""
 # end PERLGUI
+# JAM
+set JAMDIR = ""
+# end JAM
+
 
 # Compile with gettext and libintl
 # we have platform dependent defaults
@@ -510,6 +535,17 @@ while ($#argv >= 1 && $?found)
    case "-irix65":
       set IRIX_ARCHDEF = IRIX65
       set IRIX_ABI = -n32
+      breaksw
+   case "-jam":
+      set JAMDIR = "../experimental/jam"
+      set MAKEFILE = "$JAMDIR/native/gridengine/Makefile.aimk"
+      set SHAREDLIBS = 1
+      set MAKEZLIB = 0
+      set QMAKE  = 0
+      set QMON   = 0
+      set QTCSH  = 0
+      set REMOTE = 0
+      set ADOC = 0
       breaksw
    case "-kerberos":
       set KRB    = 1
@@ -944,6 +980,92 @@ case ALPHA5:
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
    breaksw
+
+case DARWIN:
+   set COMPILE_DC = 1
+   if ( $USE_QMAKE == 0 ) then
+      set MAKE = make
+   endif
+   set OFLAG = "-O"
+   if ( $OPTIMIZATION == 1 ) then
+      set OFLAG = "-O3"
+   endif   
+
+   set CC = "gcc"
+   set CXX = "g++"
+
+   if ( $DEBUGGED == 1) then
+      set DEBUG_FLAG = "-g"
+   endif
+   if ( $GPROFFED == 1) then
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
+   endif
+
+   set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
+
+   set CFLAGS   = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DDARWIN $DEBUG_FLAG $CFLAGS"
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set CXXFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DDARWIN $DEBUG_FLAG $CFLAGS"
+   # set LFLAGS   = "-bind_at_load $DEBUG_FLAG $LFLAGS"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+
+   set SHAREDLD = "$CC -dynamiclib"
+   set SHARED_CFLAGS = "-fPIC"
+   set SHARED_LFLAGS = "-dynamic -L."
+   set SHAREDEXT = ".dylib"
+
+   set XMTDEF   = ""
+   set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
+   set XCFLAGS  = "-DNeedFunctionPrototypes -DNeedVarargsPrototypes -Wno-error $XMTDEF $XINCD"
+   set XLIBD    = "-L/usr/X11R6/lib"
+   set XLFLAGS  = "-bind_at_load $XLIBD"
+   set XLIBS    = "-lXm -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+
+   set NOERR_CFLAG = "-Wno-error"
+   set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
+   set GCC_NOSP = "-Wno-strict-prototypes"
+   breaksw
+
+case FREEBSD_*:
+   set COMPILE_DC = 1
+   set MAKE = gmake
+   set OFLAG = "-O"
+   set ARFLAGS     = rcv
+   set CC       = gcc
+   set CXX      = g++
+   set DLLIB	= ""
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
+   set CFLAGS   = "$OFLAG -Wall -DFREEBSD -D$BUILDARCH $DEBUG_FLAG $CFLAGS -I/usr/X11R6/include"
+   set CXXFLAGS   = "$OFLAG -Wstrict-prototypes -DFREEBSD -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+   set NOERR_CFLAG = "-Wno-error"
+   set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+   set LIBS     = "$LIBS -lkvm"
+   set SHAREDLD = $CC
+   set SHARED_CFLAGS = "-fPIC"
+   set SHARED_LFLAGS = "-L. -shared" 
+   
+   if ( $STATIC == 1 ) then
+      echo "STATITCS"
+      set CFLAGS = "-static $CFLAGS"
+      set CXXFLAGS = "-static $CXXFLAGS"
+   endif
+
+   set XMTDEF   = ""
+   set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
+   set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
+   set XLIBD    = "-L/usr/X11R6/lib"
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = " -Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+   set RM	= "rm -f"
+   breaksw 
 
 case IRIX6*:
    set COMPILE_DC = 1
@@ -1642,7 +1764,7 @@ if ( "$SGE_DEPEND" == 1 ) then
    endif
 
    cd $COMPILE_ARCH
-   $MAKE $MAKEOPT -f ../Makefile "CC=$CC" "CFLAGS=$CFLAGS" "LFLAGS=$LFLAGS" "COMPILE_ARCH=$COMPILE_ARCH" $*
+   $MAKE $MAKEOPT -f ../Makefile "CC=$CC" "CFLAGS=$CFLAGS $XCFLAGS" "LFLAGS=$LFLAGS" "COMPILE_ARCH=$COMPILE_ARCH" $*
 
    if ( $status != 0 ) then
       echo not done
@@ -1754,6 +1876,7 @@ if ( "$CORE" == 1 ) then
    echo ________C_O_R_E__S_Y_S_T_E_M_________
    $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" "CFLAGS=$CFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
        "SDIR=$SDIR" "SOURCE=$SOURCE" \
+       "CXX=$CXX" "CXXFLAGS=$CXXFLAGS" \
        "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
        "SECLIB_OBJS=$SECLIB_OBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
        "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
@@ -1769,7 +1892,11 @@ if ( "$CORE" == 1 ) then
        "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
        "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
        "MEMCFLAG=$MEMCFLAG" \
-       "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" "CORE_INCLUDE=$CORE_INCLUDE" $argv $TARGET 
+       "PERLGUI=$PERLGUI" "PERL=$PERL" \
+       "SWIG=$SWIG" "CORE_INCLUDE=$CORE_INCLUDE" \
+       "JAMDIR=$JAMDIR" \
+       "JNI_INCLUDES=$JNI_INCLUDES" \
+       $argv $TARGET 
    if ( $status != 0 ) then
       echo not done
       exit 1

@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: MsgLine.c,v 1.1.1.1.6.2 2003/02/11 15:09:51 andre Exp $
+ * $Id: MsgLine.c,v 1.1.1.1.6.3 2003/03/19 16:38:57 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,6 +9,10 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: MsgLine.c,v $
+ * Revision 1.1.1.1.6.3  2003/03/19 16:38:57  andre
+ * AA-2003-03-19-1  Bugfix:    Darwin and Freebsd merge from maintrunc
+ *                  Changed:   all
+ *
  * Revision 1.1.1.1.6.2  2003/02/11 15:09:51  andre
  * AA-2003-02-11-0  Bugfix:    qmon crash fixed for pressing Why ? when several
  *                             jobs are selected.
@@ -43,7 +47,12 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#ifdef DARWIN
+#include <stddef.h>
+size_t wcslen(const wchar_t *s);
+#else
 #include <wchar.h>
+#endif
 #include <Xmt/XmtP.h>
 #include <Xmt/MsgLineP.h>
     
@@ -770,7 +779,12 @@ StringConst s;
     XmtAssertWidgetClass(w, xmtMsgLineWidgetClass, "XmtMsgLineAppend");
     handle_delayed_action(mw);
     mbstowcs(wcs, s, 8*BUFSIZ-1);
+#ifndef DARWIN    
     mblen = wcslen(wcs);
+#else
+    mblen = strlen(s);
+#endif
+
 /*     XmTextInsert(w, mw->msgline.inputpos, (String)s); */
     XmTextInsertWcs(w, mw->msgline.inputpos, wcs);
     mw->msgline.inputpos += mblen;

@@ -39,8 +39,7 @@
 #endif /* WIN32NATIVE */
 
 #include "sgermon.h"
-#include "sge_gdi_intern.h"
-#include "sge_security.h"
+#include "basis_types.h"
 #include "sge_exit.h"
 
 static exit_func_type exit_func = NULL;

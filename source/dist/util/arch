@@ -47,6 +47,20 @@ PATH=/bin:/usr/bin:/usr/sbin
 
 ARCH=UNKNOWN
 
+if [ -x /usr/bin/uname ]; then
+   os="`/usr/bin/uname -s`"
+   ht="`/usr/bin/uname -m`"
+   osht="$os,$ht"
+   case $osht in
+   Darwin,*)
+      ARCH=darwin
+      ;;
+   FreeBSD,*)
+      ARCH=freebsd-$ht
+      ;;
+   esac
+fi
+
 if [ -x /bin/uname ]; then
    os="`/bin/uname -s`"
    ht="`/bin/uname -m`"
@@ -215,7 +229,7 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
    MANTYPE=man
    SHARED_LIBRARY_PATH="LD_LIBRARY_PATH"
    case $ARCH in
-      solaris|solaris64)
+   solaris|solaris64)
       DEFAULTMANPATH=/usr/share/man
       ;;
    alinux|glinux)
@@ -239,6 +253,15 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
    aix42|aix43|aix51)
       DEFAULTMANPATH=/usr/man
       SHARED_LIBRARY_PATH="LIBPATH"
+      ;;
+   freebsd-*)
+      PATH=$OLD_PATH
+      DEFAULTMANPATH=`/usr/bin/manpath -q`
+      PATH=$SAFE_PATH
+      ;;
+   darwin)
+      DEFAULTMANPATH=`/usr/bin/manpath -q`
+      SHARED_LIBRARY_PATH="DYLD_LIBRARY_PATH"
       ;;
    esac
 

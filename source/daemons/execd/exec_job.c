@@ -471,8 +471,10 @@ static const char *get_sharedlib_path_name(void) {
    return "LIBPATH";
 #elif defined(HP10) || defined(HP11)
    return "SHLIB_PATH";
-#elif defined(ALPHA) || defined(IRIX6) || defined(IRIX65) || defined(LINUX) || defined(SOLARIS)
+#elif defined(ALPHA) || defined(IRIX6) || defined(IRIX65) || defined(LINUX) || defined(SOLARIS) || defined(FREEBSD)
    return "LD_LIBRARY_PATH";
+#elif defined(DARWIN)
+   return "DYLD_LIBRARY_PATH";
 #else
 #error "don't know how to set shared lib path on this architecture"
    return NULL; /* never reached */

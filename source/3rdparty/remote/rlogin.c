@@ -64,7 +64,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#if !defined(FREEBSD) && !defined(DARWIN)
 #include <values.h>
+#endif
 
 #ifdef CRAY
 /* SA_RESTART is not supported on the Cray */
@@ -346,7 +348,11 @@ main(argc, argv)
 		if (len + len2 < sizeof(term)) {
 /*			(void)snprintf(term + len, len2 + 1, "/%d", ospeed); */
          char Buffer[32];
+#ifndef DARWIN         
          sprintf(Buffer, "/%d", ospeed);
+#else
+         sprintf(Buffer, "/%ld", ospeed);
+#endif         
          strncpy(term + len, Buffer, len2 + 1);
 	   }
    }

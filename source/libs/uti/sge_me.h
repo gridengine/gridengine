@@ -48,6 +48,10 @@ struct meel {
 
 typedef struct meel sge_me_type;
 
+#ifdef DARWIN
+sge_me_type me;
+#else
 extern sge_me_type me;
+#endif
 
 #endif /* __SGE_ME_H */

@@ -56,8 +56,12 @@
    } \
    unlink(filename);
 
-
+#ifdef DARWIN
+int __fprintf_ret;
+int __fclose_done;
+#else
 extern int __fprintf_ret;
 extern int __fclose_done;
+#endif
 
 #endif /* __SGE_STDIO_H */

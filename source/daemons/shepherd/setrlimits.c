@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#if defined(SUN4)
+#if defined(SUN4) || defined(DARWIN) || defined(FREEBSD)
 #   include <sys/time.h>
 #endif
 
@@ -406,7 +406,7 @@ int trace_rlimit
 
 #if defined(LINUX) || ( defined(SOLARIS) && !defined(SOLARIS64) ) || defined(NECSX4) || defined(NECSX5)
 #  define limit_fmt "%ld"
-#elif defined(IRIX6) || defined(HP11) || defined(HP10)
+#elif defined(IRIX6) || defined(HP11) || defined(HP10) || defined(DARWIN) || defined(FREEBSD)
 #  define limit_fmt "%lld"
 #elif defined(ALPHA) || defined(SOLARIS64)
 #  define limit_fmt "%lu"

@@ -46,7 +46,7 @@
 #	include <sys/errno.h>
 #	include <netinet/in.h>
 #	include <arpa/inet.h>
-#include <netinet/tcp.h>
+#  include <netinet/tcp.h>
 #	include <netdb.h>
 #	include <sys/time.h>
 #	include <errno.h>
@@ -61,6 +61,10 @@
 
 #if defined(SOLARIS)
 int gethostname(char *name, int namelen);
+#endif
+
+#ifdef DARWIN
+#   define SIGCLD SIGCHLD
 #endif
 
 #ifdef WIN32

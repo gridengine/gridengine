@@ -34,17 +34,14 @@
 #include <string.h>
 #include <errno.h>
 
-#ifndef WIN32NATIVE
-#	include <grp.h>
-#endif 
-
-#include <sys/types.h>
 
 #ifndef WIN32NATIVE
+#  include <sys/types.h>
 #	include <sys/time.h>
 #	include <sys/resource.h>
 #	include <sys/wait.h>
 #	include <unistd.h>
+#	include <grp.h>
 #endif 
 
 #include "def.h"

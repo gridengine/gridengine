@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: HelpBox.c,v 1.1.1.1.6.1 2002/08/09 12:25:57 andre Exp $
+ * $Id: HelpBox.c,v 1.1.1.1.6.2 2003/03/19 16:38:57 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,6 +9,10 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: HelpBox.c,v $
+ * Revision 1.1.1.1.6.2  2003/03/19 16:38:57  andre
+ * AA-2003-03-19-1  Bugfix:    Darwin and Freebsd merge from maintrunc
+ *                  Changed:   all
+ *
  * Revision 1.1.1.1.6.1  2002/08/09 12:25:57  andre
  * AA-2002-08-09-0  I18N:      - aimk: -lXmu for LINUX6 broke build under special
  *                                     RHLinux 7.3
@@ -233,6 +237,7 @@ XmtHelpBoxWidget hb;
 
     /* get the label string and size and query # of lines */
 
+#if 0
 #if defined(SOLARIS64)
     /*
     ** I18N bug for label size under Solaris
@@ -248,6 +253,7 @@ XmtHelpBoxWidget hb;
                   XmNalignment, XmALIGNMENT_BEGINNING,
                   XmNheight, (int)(1.1 * height), 
                   NULL);
+#endif
 #endif
 
     XtVaGetValues(hb->help_box.label_widget,

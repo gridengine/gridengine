@@ -36,6 +36,10 @@
 
 #define LERROR(x) lerrno = (x);
 
+#ifdef DARWIN
+int lerrno;
+#else
 extern int lerrno;
+#endif
 
 #endif /* __CULL_LERRNOP_H */

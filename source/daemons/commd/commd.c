@@ -29,23 +29,29 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <sys/types.h>
 #include <signal.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h> 
 #include <netdb.h>
+
+#ifdef DARWIN
+#include <sys/time.h>
+#endif
+
 #include <sys/resource.h>
 
 #if defined(AIX32) || defined(AIX41)
 #   include <sys/select.h>
 #endif
+
 
 #include "commlib.h"
 #include "commd_error.h"

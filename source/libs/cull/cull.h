@@ -40,7 +40,7 @@
 #include "cull_db.h"
 #include "cull_multitype.h"
 #include "cull_dump_scan.h"
-#include "cull_lerrno.h"
+#include "cull_lerrnoP.h"
 #include "cull_pack.h"
 #include "cull_sort.h"
 #include "cull_tree.h"

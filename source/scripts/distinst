@@ -64,7 +64,8 @@ UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
 REMOTEBINARIES="rsh rshd rlogin"
 
 SUPPORTEDARCHS="aix42 aix43 aix51 alinux cray crayts craytsieee glinux hp10 \
-hp11 hp11-64 irix6 necsx4 sx slinux solaris solaris64 solaris86 osf4 tru64"
+hp11 hp11-64 irix6 necsx4 sx slinux solaris solaris64 solaris86 osf4 tru64 \
+darwin freebsd-alpha freebsd-i386 freebsd-ia64 freebsd-ppc freebsd-sparc64"
 
 #SGEEE_UTILITYBINARIES="sge_share_mon sge_host_mon"
 SGEEE_UTILITYBINARIES="sge_share_mon"
@@ -194,6 +195,18 @@ SetArchBin()
       ARCHBIN=NECSX5
    elif [ $i = sx ]; then
       ARCHBIN=NECSX5
+   elif [ $i = darwin ]; then
+      ARCHBIN=DARWIN
+   elif [ $i = freebsd-alpha ]; then
+      ARCHBIN=FREEBSD_ALPHA
+   elif [ $i = freebsd-i386 ]; then
+      ARCHBIN=FREEBSD_I386
+   elif [ $i = freebsd-ia64 ]; then
+      ARCHBIN=FREEBSD_IA64
+   elif [ $i = freebsd-ppc ]; then
+      ARCHBIN=FREEBSD_PPC
+   elif [ $i = freebsd-sparc64 ]; then
+      ARCHBIN=FREEBSD_SPARC64
    else
       echo No ARCHBIN name for \"$i\"
       exit 1
@@ -934,6 +947,9 @@ for i in $ARCH; do
       case $i in 
       hp10|hp11|hp11-64)
          shlibext="sl"
+         ;;
+      darwin)
+         shlibext="dylib"
          ;;
       *)
          shlibext="so"

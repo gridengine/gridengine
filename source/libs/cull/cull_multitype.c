@@ -33,7 +33,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef DARWIN
 #include <wchar.h>
+#endif
 
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG

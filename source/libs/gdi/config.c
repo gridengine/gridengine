@@ -239,7 +239,7 @@ char *get_conf_value(lList **alpp, lList *lp, int name_nm, int value_nm,
    char *value;
    lListElem *ep;
 
-   DENTER(TOP_LAYER, "get_conf_value");
+   DENTER(CULL_LAYER, "get_conf_value");
    
    if (!(ep=lGetElemStr(lp, name_nm, key))) {
       if (alpp) {

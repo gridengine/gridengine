@@ -131,7 +131,7 @@ static void ResizeTable(register HashTable ht, int grow)
    register int i;
    clock_t start = 0;
 
-   DENTER(TOP_LAYER, "ResizeTable");
+   DENTER(BASIS_LAYER, "ResizeTable");
 
    if(logginglevel >= LOG_DEBUG) {
       struct tms t_buf;

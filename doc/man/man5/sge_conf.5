@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2001/11/06 14:37:20 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2001/11/21 13:48:06 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2001/11/06 14:37:20 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2001/11/21 13:48:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -754,6 +754,14 @@ are not enough resources on the current one.
 .IP "\fIDISABLE_AUTO_RESCHEDULING\fP"
 If set to "true" or "1", the \fBexecd_param\fP \fIRESCHEDULE_UNKNOWN\fP
 (see below) is not taken into account.
+.PP
+.IP "\fINO_REPRIORIZATION\fP"
+If set to "true" or "1", jobs are not repriorized dynamically. Without 
+setting this attribute the \fBpriority\fP parameter in 
+.M sched_conf 5 
+has no durable effect in a SGEEE system because of dynamic repriorization
+performed by the PTF module inside 
+.M sge_execd 8 .
 .PP
 Changing \fBqmaster_params\fP will take immediate effect.
 The default for \fBqmaster_params\fP is none.

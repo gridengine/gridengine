@@ -1,3 +1,8 @@
+AH-2001-11-21-1: Added NO_REPRIORIZATION setting in qmaster_params to allow 
+                 for diabling the PTF module. Without this setting the 
+                 'priority' parameter in queue_conf(5) has no effect in a 
+                 SGEEE system.
+
 JG-2001-11-20-0: Generalized event client interface.
                  The former event client interface was very scheduler specific.
                  Only one event client - the scheduler - could register.

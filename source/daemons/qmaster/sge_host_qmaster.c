@@ -583,11 +583,12 @@ lList *lp
 
    for_each(ep, lp) {
 
-      DTRACE;
-
       /* get name and value */
       name = lGetString(ep, LR_name);
       value = lGetString(ep, LR_value);
+
+      if (!name || !value)
+         continue;
 
       if (lGetUlong(ep, LR_global)) 
          hepp = &global_ep; 
@@ -598,9 +599,10 @@ lList *lp
       if ( !*hepp) {
          *hepp = sge_locate_host(lGetString(ep, LR_host), SGE_EXECHOST_LIST);
          if (!*hepp) {
-            if (!lGetUlong(ep, LR_global))
+            if (!lGetUlong(ep, LR_global)) {
                report_host = lGetString(ep, LR_host); /* this is our error 
 						         indicator */
+            }
             DPRINTF(("got load value for UNKNOWN host "SFQ"\n", 
                      lGetString(ep, LR_host)));
             continue;

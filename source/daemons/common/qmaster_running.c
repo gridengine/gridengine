@@ -86,7 +86,6 @@ int *enrolled
 
    /* get qmaster spool dir, try to read pidfile and check if qmaster is running */
    if (!hostcmp(master, me.qualified_hostname)) {
-      DTRACE;
       if ((cp = get_confval("qmaster_spool_dir", path.conf_file))) {
          sprintf(pidfile, "%s/%s", cp, QMASTER_PID_FILE);
 	      DPRINTF(("pidfilename: %s\n", pidfile));
@@ -122,9 +121,10 @@ int *enrolled
       if (hostcmp(me.qualified_hostname, master)) {
          alive = ask_commproc(master, prognames[QMASTER], 0);
          DPRINTF(("alive: %s %s %d\n", master, prognames[QMASTER], alive));
-         if (alive == 0)
+         if (alive == 0) {
+            DPRINTF(("hostcmp(%s, %s) not equal\n", master, me.qualified_hostname));
             ret = 1;
-         else
+         } else
             ret = 0;
          leave_commd();
       }

@@ -315,6 +315,7 @@ int answer_error
    u_long32 now, clock_val;
    static u_long then = 0;
    lListElem *jep, *jatep;
+   extern int deactivate_ptf;
 
    DENTER(TOP_LAYER, "execd_ck_to_do");
 
@@ -332,8 +333,9 @@ int answer_error
       ptf_update_job_usage();
       switch2admin_user();
    }
-   if (feature_is_enabled(FEATURE_REPRIORISATION)) {
+   if (feature_is_enabled(FEATURE_REPRIORISATION) && !deactivate_ptf) {
       switch2start_user();
+      DPRINTF(("ADJUST PRIORITIES\n"));
       ptf_adjust_job_priorities();
       switch2admin_user();
       repriorisation_enabled = 1;
@@ -352,7 +354,7 @@ int answer_error
                master_queue = 
                         responsible_queue(job, jatask, NULL, NULL);
 
-               DPRINTF(("EB Set priority of job "u32"."u32" running in"
+               DPRINTF(("Set priority of job "u32"."u32" running in"
                   " queue  %s to "u32"\n", 
                   lGetUlong(job, JB_job_number), 
                   lGetUlong(jatask, JAT_task_number),
@@ -369,7 +371,7 @@ int answer_error
                   master_queue = 
                         responsible_queue(slave_job, slave_jatask, job, jatask);
                   DPRINTF(("EB Set priority of task "u32"."u32"-%s running "
-                     "in queue %s to "u32" \n", 
+                     "in queue %s to "u32"\n", 
                      lGetUlong(slave_job, JB_job_number), 
                      lGetUlong(slave_jatask, JAT_task_number),
                      lGetString(slave_job, JB_pe_task_id_str),
@@ -383,7 +385,9 @@ int answer_error
                }
             }
          }
-      }          
+      } else {
+         DPRINTF(("LEAVE PRIORITIES UNTOUCHED\n"));
+      }
       repriorisation_enabled = 0;
    }
 #endif

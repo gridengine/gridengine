@@ -79,7 +79,6 @@ int do_credentials = 1;
 int do_authentication = 1;
 int use_qidle = 0;
 int disable_reschedule = 0;
-int skip_unheared_host = 0;
 
 int flush_submit_sec = -1;
 int flush_finish_sec = -1;
@@ -148,6 +147,12 @@ int use_qsub_gid = 0;
 int set_sge_environment = 1;
 int set_cod_environment = 0;
 int set_grd_environment = 0;
+
+/* 
+ *  Set if admin explicitly deactivated SGEEE PTF component 
+ *  initual job priorities remain in effect also in SGEEE
+ */
+int deactivate_ptf = 0;
 
 /*
  * notify_kill_default and notify_susp_default
@@ -527,8 +532,7 @@ lList **lpp
       compression_threshold = 10 * 1024;
       use_qidle = 0;
       disable_reschedule = 0;   
-      skip_unheared_host = 0;
-      
+
       for (s=sge_strtok(pconf->qmaster_params, ",; "); s; s=sge_strtok(NULL, ",; "))
          if (!strcasecmp(s, "FORBID_RESCHEDULE")) {
             DPRINTF(("FORBID_RESCHEDULE\n"));
@@ -569,9 +573,6 @@ lList **lpp
             }  
             DPRINTF(("COMPRESSION_THRESHOLD=%d\n", compression_threshold));
          }
-         else if (!strncasecmp(s, "SKIP_UNHEARED_HOST", sizeof("SKIP_UNHEARED_HOST"))) {
-            skip_unheared_host = 1;
-         }
        
       /* always initialize to defaults before we check execd_params */
 #ifdef COMPILE_DC
@@ -590,6 +591,7 @@ lList **lpp
       set_sge_environment = 1;
       set_cod_environment = 0;
       set_grd_environment = 0; 
+      deactivate_ptf = 0; 
 
       for (s=sge_strtok(pconf->execd_params, ",; "); s; s=sge_strtok(NULL, ",; "))
          if (!strcasecmp(s, "USE_QIDLE")) {
@@ -675,6 +677,12 @@ lList **lpp
                set_grd_environment = 1;                        
             } else {
                set_grd_environment = 0;                        
+            }
+         } else if (!strncasecmp(s, "NO_REPRIORIZATION", sizeof("NO_REPRIORIZATION")-1)) {
+            if (!strcasecmp(s, "NO_REPRIORIZATION=true") || !strcasecmp(s, "NO_REPRIORIZATION=1")) {
+               deactivate_ptf = 1;                        
+            } else {
+               deactivate_ptf = 0;                        
             }
          } else if (!strncasecmp(s, "PTF_MAX_PRIORITY", sizeof("PTF_MAX_PRIORITY")-1))
             ptf_max_priority=atoi(&s[sizeof("PTF_MAX_PRIORITY=")-1]);

@@ -517,6 +517,7 @@ int sub_command
    gid_t gid;
    char user[128];
    char group[128];
+   extern int deactivate_ptf;
 
    DENTER(TOP_LAYER, "sge_c_gdi_add");
 
@@ -673,8 +674,14 @@ int sub_command
    }
 
    if (ticket_orders) {
-      /* send all ticket orders to the exec hosts */
-      distribute_ticket_orders(ticket_orders);
+
+      if (!deactivate_ptf) {
+         /* send all ticket orders to the exec hosts */
+         distribute_ticket_orders(ticket_orders);
+      } else {
+         /* tickets not needed at execd's if no repriorization is done */
+         DPRINTF(("NO TICKET DELIVERY\n"));
+      }
       ticket_orders = lFreeList(ticket_orders);
    }
 

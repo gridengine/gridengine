@@ -360,6 +360,7 @@ lList **lpp
    sge_add_str2load_report(lpp, LOAD_ATTR_ARCH, sge_arch(), 0);
    sge_add_int2load_report(lpp, LOAD_ATTR_NUM_PROC, nprocs, 0);
 
+lWriteListTo(*lpp, stderr);
 #if defined(NECSX4) || defined(NECSX5)
    /* Write load values for each resource sharing group */
    for (rsg_id=0; rsg_id<32; rsg_id++) {

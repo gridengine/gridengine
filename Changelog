@@ -1,3 +1,6 @@
+RC-2004-01-22-1: Enhancem:  recognize HP-UX on IA64 as hp11-64
+                 Changed:   dist/util/arch
+
 SG-2004-01-22-0: Bugfix:    a user cannot be renamed anymore. This did not work
                             before, but qconf will print out an error message
                             instead of deleting the user.

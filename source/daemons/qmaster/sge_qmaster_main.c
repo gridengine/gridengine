@@ -1003,7 +1003,6 @@ static void* signal_thread(void* anArg)
 
    sigset_t sig_set;
    int sig_num;
-   int do_while = 1;
 
    DENTER(TOP_LAYER, "signal_thread");
 
@@ -1014,7 +1013,7 @@ static void* signal_thread(void* anArg)
    sigaddset(&sig_set, SIGINT);
    sigaddset(&sig_set, SIGTERM);
    
-   while (do_while)
+   while (true)
    {
       sigwait(&sig_set, &sig_num);
 
@@ -1025,8 +1024,8 @@ static void* signal_thread(void* anArg)
          case SIGTERM:
             wait_for_thread_termination();
             set_signal_thread(INVALID_THREAD);
-            do_while = 0;
-            break;
+            DEXIT;
+            return NULL;
          default:
             ERROR((SGE_EVENT, MSG_QMASTER_UNEXPECTED_SIGNAL_I, sig_num));
       }

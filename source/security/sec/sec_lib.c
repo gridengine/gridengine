@@ -2589,7 +2589,7 @@ char *cell
    char *ca_cell, *cell_root;
 	struct stat 	sbuf;
 
-	ca_root = sge_sge_root();
+	ca_root = sge_get_root_dir();
 
 	/* is ca_root already there?					*/
 	if (stat(ca_root,&sbuf)) { 

@@ -51,6 +51,7 @@
 #include "sge_prognames.h"
 #include "sge_stat.h" 
 #include "sge.h"
+#include "sge_arch.h"
 
 #include "msg_utilib.h"
 #include "msg_common.h"
@@ -152,28 +153,21 @@ const char* get_short_product_name(void) {
  * get_act_master_path
  *-----------------------------------------------------------------------*/
 char *get_act_master_path( char *sge_cell ) {
-   char *sge_root, *cp;
+   const char *sge_root;
+   char *cp;
    int len;
    SGE_STRUCT_STAT sbuf;
       
    DENTER(TOP_LAYER, "get_act_master_path");
    
-   sge_root = getenv("SGE_ROOT");
-
-   if (!sge_root || strlen(sge_root) == 0) { 
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTSET));
-      SGE_EXIT(1); 
-   }
-
-   if (sge_root[strlen(sge_root)-1] == '/')  /*get rid of trailing slash*/
-      sge_root[strlen(sge_root)-1] = '\0';
-
+   sge_root = sge_get_root_dir(1);
    if (SGE_STAT(sge_root, &sbuf)) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S , sge_root));
       SGE_EXIT(1);
    }
 
-   len = strlen(sge_root) + strlen(sge_cell) + strlen(COMMON_DIR) + strlen(ACT_QMASTER_FILE) + 5;
+   len = strlen(sge_root) + strlen(sge_cell) 
+         + strlen(COMMON_DIR) + strlen(ACT_QMASTER_FILE) + 5;
 
    if (!(cp = malloc(len))) {
       CRITICAL((SGE_EVENT, MSG_MEMORY_MALLOCFAILEDFORPATHTOACTQMASTERFILE ));
@@ -191,22 +185,14 @@ char *get_act_master_path( char *sge_cell ) {
  * get_product_mode_file_path
  *-----------------------------------------------------------------------*/
 char *get_product_mode_file_path( char *sge_cell ) {
-   char *sge_root, *cp;
+   const char *sge_root;
+   char *cp;
    int len;
    SGE_STRUCT_STAT sbuf;
       
    DENTER(TOP_LAYER, "get_product_mode_file_path");
    
-   sge_root = getenv("SGE_ROOT");
-
-   if (!sge_root || strlen(sge_root) == 0) { 
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTSET));
-      SGE_EXIT(1); 
-   }
-
-   if (sge_root[strlen(sge_root)-1] == '/')  /*get rid of trailing slash*/
-      sge_root[strlen(sge_root)-1] = '\0';
-
+   sge_root = sge_get_root_dir(1); 
    if (SGE_STAT(sge_root, &sbuf)) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S , sge_root));
       SGE_EXIT(1);

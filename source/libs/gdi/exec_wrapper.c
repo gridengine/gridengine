@@ -345,7 +345,7 @@ char *expath  /* this is how user typed in the command */
    }
 #endif
 
-   sprintf(qrsh_path, "%s/bin/%s/qrsh", sge_sge_root(), sge_arch());
+   sprintf(qrsh_path, "%s/bin/%s/qrsh", sge_get_root_dir(1), sge_get_arch());
 
    return execvp(qrsh_path, newargv);
 }

@@ -48,38 +48,47 @@
 #include "sge_stat.h" 
 #include "msg_common.h"
 #include "msg_clients_common.h"
+#include "sge_dir.h"
+#include "sge_feature.h"
 
 static char *def_files[3 + 1];
 
-
-/*
-** NAME
-**   get_all_defaults_files
-** PARAMETER
-**   pcmdline           - pointer to SPA_Type list, if list is NULL, it is
-**                        created if the files contain any options
-**   envp               - environment pointer
-** RETURN
-**   answer list, AN_Type or NULL if everything ok, the following stati can occur:
-**   STATUS_ENOSUCHUSER - could not retrieve passwd info on me.user_name
-**   STATUS_EDISK       - home directory for user is missing or cwd cannot be read
-**                        or file could not be opened (is just a warning)
-**   STATUS_EEXIST      - (von parse_script_file), (is just a warning)
-**   STATUS_EUNKNOWN    - (von parse_script_file), error opening or reading 
-**                        from existing file, (is just a warning)
-**   plus all other error stati returned by parse_script_file, see there
-** EXTERNAL
-**   path.sge_root
-**   me.user_name
-** DESCRIPTION
-**   problem: make user a parameter?
-**   This function reads the 3 defaults files if they exist and parses them
-**   into an options list.
-*/
-lList *get_all_defaults_files(
-lList **pcmdline,
-char **envp 
-) {
+/****** read_defaults/get_all_defaults_files() *********************************
+*  NAME
+*     get_all_defaults_files() -- reads default files and parses them 
+*
+*  SYNOPSIS
+*     lList* get_all_defaults_files(lList **pcmdline, char **envp) 
+*
+*  FUNCTION
+*     This function reads the 3 defaults files if they exist and parses them
+*     into an options list. 
+*
+*  INPUTS
+*     lList **pcmdline - pointer to SPA_Type list, if list is NULL, it is
+*                        created if the files contain any options 
+*     char **envp      - environment pointer 
+*
+*  RESULT
+*     lList* - answer list, AN_Type or NULL if everything ok
+*        possible errors:
+*           STATUS_ENOSUCHUSER - could not retrieve passwd info on me.user_name
+*           STATUS_EDISK       - home directory for user is missing or cwd 
+*                                cannot be read or file could not be opened 
+*                                (is just a warning)
+*           STATUS_EEXIST      - (von parse_script_file), (is just a warning)
+*           STATUS_EUNKNOWN    - (von parse_script_file), error opening or 
+*                                reading from existing file, (is just a warning)
+*                                plus all other error stati returned by 
+*                                parse_script_file, see there
+*
+*  NOTES
+*     path.sge_root and me.user_name will be used by this function
+*
+*     problem: make user a parameter?
+*******************************************************************************/
+lList *get_all_defaults_files(lList **pcmdline, char **envp) 
+{
    lList *answer = NULL;
    lList *alp;
    lListElem *aep;
@@ -95,12 +104,13 @@ char **envp
 
    /* the sge root defaults file */
    
-   def_files[0] = malloc(strlen(path.cell_root) + strlen(SGE_COMMON_DEF_REQ_FILE) + 2);
+   def_files[0] = malloc(strlen(path.cell_root) + 
+                         strlen(SGE_COMMON_DEF_REQ_FILE) + 2);
    sprintf(def_files[0], "%s/%s", path.cell_root, SGE_COMMON_DEF_REQ_FILE);
 
    /*
-   ** the defaults file in the user's home directory
-   */
+    * the defaults file in the user's home directory
+    */
    pwd = sge_getpwnam(me.user_name);
    if (!pwd) {
       sprintf(str, MSG_USER_INVALIDNAMEX_S, me.user_name);
@@ -113,16 +123,29 @@ char **envp
       return answer;
    }
 
-   def_files[1] = malloc(strlen(pwd->pw_dir) + strlen(SGE_HOME_DEF_REQ_FILE) + 2);
+   def_files[1] = malloc(strlen(pwd->pw_dir) + 
+                         strlen(SGE_HOME_DEF_REQ_FILE) + 2);
    strcpy(def_files[1], pwd->pw_dir);
    if (*def_files[1] && (def_files[1][strlen(def_files[1]) - 1] != '/')) {
       strcat(def_files[1], "/");
    }
    strcat(def_files[1], SGE_HOME_DEF_REQ_FILE);
 
+   if (!sge_is_file(def_files[1])) {
+      strcpy(def_files[1], pwd->pw_dir);
+      if (*def_files[1] && (def_files[1][strlen(def_files[1]) - 1] != '/')) {
+         strcat(def_files[1], "/");
+      }
+      if (feature_is_enabled(FEATURE_SGEEE)) {
+         strcat(def_files[1], GRD_HOME_DEF_REQ_FILE);
+      } else {
+         strcat(def_files[1], COD_HOME_DEF_REQ_FILE);
+      }
+   }
+
    /*
-   ** the defaults file in the current working directory
-   */
+    * the defaults file in the current working directory
+    */
    if (!getcwd(cwd, sizeof(cwd))) {
       sprintf(str, MSG_FILE_CANTREADCURRENTWORKINGDIR);
       sge_add_answer(&answer, str, STATUS_EDISK, 0);
@@ -135,11 +158,24 @@ char **envp
       strcat(def_files[2], "/");
    }
    strcat(def_files[2], SGE_HOME_DEF_REQ_FILE);
+   if (!sge_is_file(def_files[2])) {
+      strcpy(def_files[2], cwd);
+      if (*def_files[2] && (def_files[2][strlen(def_files[2]) - 1] != '/')) {
+         strcat(def_files[2], "/");
+      }
+      if (feature_is_enabled(FEATURE_SGEEE)) {
+         strcat(def_files[2], GRD_HOME_DEF_REQ_FILE); 
+      } else {
+         strcat(def_files[2], COD_HOME_DEF_REQ_FILE);
+      }
+   }
+
+
    def_files[3] = NULL;
 
    /*
-   ** now read all the defaults files, unaware of where they came from
-   */
+    * now read all the defaults files, unaware of where they came from
+    */
    for (pstr = def_files; *pstr; pstr++) {
       int already_read;
 

@@ -139,8 +139,13 @@ char *write_sched_configuration(int spool, int how, lListElem *ep)
             return NULL;
          }
       } else {
-         sprintf(fname, "%s/%s/%s/.%s", sge_sge_root(), sge_default_cell(), COMMON_DIR, SCHED_CONF_FILE);
-         sprintf(real_fname, "%s/%s/%s/%s", sge_sge_root(), sge_default_cell(), COMMON_DIR, SCHED_CONF_FILE);
+         const char *sge_root_dir = sge_get_root_dir(1);
+         const char *sge_cell = sge_get_default_cell();
+
+         sprintf(fname, "%s/%s/%s/.%s", sge_root_dir, sge_cell, 
+                 COMMON_DIR, SCHED_CONF_FILE);
+         sprintf(real_fname, "%s/%s/%s/%s", sge_root_dir, sge_cell, 
+                 COMMON_DIR, SCHED_CONF_FILE);
       }
  
       fp = fopen(fname, "w");

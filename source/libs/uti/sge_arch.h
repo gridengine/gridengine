@@ -32,11 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-const char *sge_arch(void);
+const char *sge_get_arch(void);
 
-const char *sge_sge_root(void);
+const char *sge_get_root_dir(int exit);
 
-const char *sge_default_cell(void); 
+const char *sge_get_default_cell(void); 
 
 char *get_alias_path(void);
 

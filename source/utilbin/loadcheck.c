@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
    }   
 
    if ((pos && !strcmp("arch", argv[pos])) || !pos)
-      printf("arch            %s\n", sge_arch());
+      printf("arch            %s\n", sge_get_arch());
       
    if ((pos && !strcmp("num_proc", argv[pos])) || !pos)    
       printf("num_proc        %d\n", sge_nprocs());

@@ -794,7 +794,7 @@ int sge_ls_start(char *scriptfiles)
    if (has_to_use_qidle) {
       char scriptfiles_buffer[1024];
 
-      sprintf(scriptfiles_buffer, "%s/%s/%s", conf.binary_path, sge_arch(),
+      sprintf(scriptfiles_buffer, "%s/%s/%s", conf.binary_path, sge_get_arch(),
               IDLE_LOADSENSOR_NAME);
       ls_elem = lGetElemStr(ls_list, LS_command, scriptfiles_buffer);
       if (!ls_elem) {
@@ -809,7 +809,7 @@ int sge_ls_start(char *scriptfiles)
       char scriptfiles_buffer[1024];
 
       sprintf(scriptfiles_buffer, "%s/%s/%s", conf.binary_path,
-              sge_arch(), GNU_LOADSENSOR_NAME);
+              sge_get_arch(), GNU_LOADSENSOR_NAME);
       ls_elem = lGetElemStr(ls_list, LS_command, scriptfiles_buffer);
       if (!ls_elem) {
          ls_elem = sge_ls_create_ls(GNU_LOADSENSOR_NAME, scriptfiles_buffer);

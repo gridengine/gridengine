@@ -491,8 +491,8 @@ static void set_sharedlib_path(lList *environmentList) {
    DENTER(TOP_LAYER, "set_sharedlib_path");
    
    /* this is the SGE sharedlib path */
-   sge_sharedlib_path = sge_malloc(strlen(path.sge_root) + strlen("/lib/") + strlen(sge_arch()) + 1);
-   sprintf(sge_sharedlib_path, "%s/lib/%s", path.sge_root, sge_arch());
+   sge_sharedlib_path = sge_malloc(strlen(path.sge_root) + strlen("/lib/") + strlen(sge_get_arch()) + 1);
+   sprintf(sge_sharedlib_path, "%s/lib/%s", path.sge_root, sge_get_arch());
 
    /* if allready in environment: extend by SGE sharedlib path, else set */
    if((sharedlib_elem = lGetElemStr(environmentList, VA_variable, sharedlib_path_name)) != NULL) {
@@ -578,6 +578,7 @@ char *err_str
    lListElem *ep, *job_jep, *job_jatep;
    lListElem *env;
    lList *environmentList;
+   const char *arch = sge_get_arch();
 
    int write_osjob_id = 1;
 
@@ -972,14 +973,14 @@ char *err_str
    }
 
    add_or_replace_env(environmentList, "ENVIRONMENT", "BATCH");
-   add_or_replace_env(environmentList, "ARC", sge_arch());
+   add_or_replace_env(environmentList, "ARC", arch);
 
    if (set_sge_environment) 
-      add_or_replace_env(environmentList, "SGE_ARCH", sge_arch());
+      add_or_replace_env(environmentList, "SGE_ARCH", arch);
    if (set_cod_environment) 
-      add_or_replace_env(environmentList, "COD_ARCH", sge_arch());
+      add_or_replace_env(environmentList, "COD_ARCH", arch);
    if (set_grd_environment) 
-      add_or_replace_env(environmentList, "GRD_ARCH", sge_arch());
+      add_or_replace_env(environmentList, "GRD_ARCH", arch);
   
    if ((cp=getenv("TZ")) && strlen(cp))
       add_or_replace_env(environmentList, "TZ", cp);
@@ -1424,7 +1425,7 @@ char *err_str
       fprintf(fp, "use_afs=1\n");
       
       shepherd_name = SGE_COSHEPHERD;
-      sprintf(coshepherd_path, "%s/%s/%s", conf.binary_path, sge_arch(), shepherd_name);
+      sprintf(coshepherd_path, "%s/%s/%s", conf.binary_path, sge_get_arch(), shepherd_name);
       fprintf(fp, "coshepherd=%s\n", coshepherd_path);
       fprintf(fp, "set_token_cmd=%s\n", conf.set_token_cmd ? conf.set_token_cmd : "none");
       fprintf(fp, "token_extend_time=%d\n", (int) conf.token_extend_time);
@@ -1476,7 +1477,7 @@ char *err_str
             fprintf(fp, "qrsh_control_port=%s\n", lGetString(elem, VA_value));
          }
         
-         sprintf(daemon, "%s/utilbin/%s/", path.sge_root, sge_arch());
+         sprintf(daemon, "%s/utilbin/%s/", path.sge_root, arch);
         
          if(JB_NOW_IS_QLOGIN(jb_now)) {
             fprintf(fp, "qlogin_daemon=%s\n", conf.qlogin_daemon);
@@ -1541,13 +1542,13 @@ char *err_str
    }
 
    shepherd_name = SGE_SHEPHERD;
-   sprintf(shepherd_path, "%s/%s/%s", conf.binary_path, sge_arch(), shepherd_name);
+   sprintf(shepherd_path, "%s/%s/%s", conf.binary_path, arch, shepherd_name);
 
    if (SGE_STAT(shepherd_path, &buf)) {
       /* second chance: without architecture */
       sprintf(shepherd_path, "%s/%s", conf.binary_path, shepherd_name);
       if (SGE_STAT(shepherd_path, &buf)) {
-         sprintf(err_str, MSG_EXECD_NOSHEPHERD_SSS, sge_arch(), shepherd_path, strerror(errno));
+         sprintf(err_str, MSG_EXECD_NOSHEPHERD_SSS, arch, shepherd_path, strerror(errno));
          DEXIT;
          return -2;
       }
@@ -1563,7 +1564,7 @@ char *err_str
    }
    else if (do_credentials && feature_is_enabled(FEATURE_DCE_SECURITY)) {
       sprintf(dce_wrapper_cmd, "/%s/utilbin/%s/starter_cred",
-              path.sge_root, sge_arch());
+              path.sge_root, arch);
       if (SGE_STAT(dce_wrapper_cmd, &buf)) {
          sprintf(err_str, MSG_DCE_NOSHEPHERDWRAP_SS, dce_wrapper_cmd, strerror(errno));
          DEXIT;
@@ -1579,7 +1580,7 @@ char *err_str
          shepherd_name = SGE_COSHEPHERD;
          sprintf(coshepherd_path, "%s/%s", conf.binary_path, shepherd_name);
          if (SGE_STAT(coshepherd_path, &buf)) {
-            sprintf(err_str, MSG_EXECD_NOCOSHEPHERD_SSS, sge_arch(), coshepherd_path, strerror(errno));
+            sprintf(err_str, MSG_EXECD_NOCOSHEPHERD_SSS, arch, coshepherd_path, strerror(errno));
             DEXIT;
             return -2;
          }
@@ -1897,7 +1898,7 @@ char *err_str
          fprintf(fp, "%s=%s\n", cplx2config[i], s);
       } else {
          sprintf(err_str, MSG_EXECD_NEEDATTRXINUSERDEFCOMPLOFYQUEUES_SS,
-               cplx2config[i], sge_arch());
+               cplx2config[i], sge_get_arch());
          ERROR((SGE_EVENT, err_str));
          failed = 1;
       }

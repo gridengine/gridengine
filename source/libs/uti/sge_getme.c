@@ -152,7 +152,7 @@ u_long32 program_number         /* internal program number */
    me.user_name = sge_strdup(me.user_name, paswd->pw_name);
 #endif
 
-   cp = sge_default_cell();
+   cp = sge_get_default_cell();
    me.default_cell = sge_strdup(me.default_cell, cp);
 
    sge_show_me();

@@ -56,6 +56,7 @@
 #include "config_file.h"
 #include "err_trace.h"
 #include "qlogin_starter.h"
+#include "sge_arch.h"
 
 
 static char err_str[1024];
@@ -388,7 +389,7 @@ int qlogin_starter(const char *cwd, char *daemon)
    char buffer[2048];
    char *args[20]; /* !!!! should be dynamically allocated */
    int argc = 0;
-   char *sge_root = NULL;
+   const char *sge_root = NULL;
    char *arch = NULL;
 
    SHEPHERD_TRACE((err_str, "uid = " uid_t_fmt ", euid = " uid_t_fmt ", gid = " gid_t_fmt ", egid = " gid_t_fmt "", 
@@ -456,7 +457,7 @@ int qlogin_starter(const char *cwd, char *daemon)
    SHEPHERD_TRACE((err_str, "bound to port %d\n", port));
  
    /* send necessary info to qrsh: port + utilbin directory + active job directory */
-   sge_root = getenv("SGE_ROOT");
+   sge_root = sge_get_root_dir(0);
    arch = getenv("ARC");
    
    if(sge_root == NULL || arch == NULL) {

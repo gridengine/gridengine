@@ -151,10 +151,11 @@ char *localeDir
 
   /* no directory given, using default one */
   if (locDir == NULL) {
+     const char *sge_root = sge_get_root_dir();
      char* root = NULL;
      
-     if ( (getenv("SGE_ROOT") != NULL)) {
-         root = strdup(getenv("SGE_ROOT"));
+     if (sge_root != NULL)) {
+         root = strdup(sge_root);
      } 
      
      if ( root == NULL ) {

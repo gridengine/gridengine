@@ -107,7 +107,7 @@ int startprog(char *argv0, char *path, char *name, ...)
        DEXIT;
        return -2;
     }   
-    sprintf(prog_path, "%s/%s/%s", path, sge_arch(), name);
+    sprintf(prog_path, "%s/%s/%s", path, sge_get_arch(), name);
     if (SGE_STAT(prog_path, &sb)) {
        sprintf(prog_path, "%s/%s", path, name);
        if (SGE_STAT(prog_path, &sb)) {

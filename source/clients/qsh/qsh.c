@@ -996,7 +996,8 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
       if(is_rsh || is_rlogin) {
          /* use path $ROOT/utilbin/$ARCH/sessionType */
          static char cmdpath[1024];
-         sprintf(cmdpath, "%s/utilbin/%s/%s", path.sge_root, sge_arch(), session_type);
+
+         sprintf(cmdpath, "%s/utilbin/%s/%s", path.sge_root, sge_get_arch(), session_type);
          client_name = cmdpath;
       } else {
          /* try to find telnet in PATH */

@@ -58,6 +58,10 @@
 ** utilib/sge_arch.c
 */       
 #define MSG_SGEROOTNOTSET           _("Please set the environment variable SGE_ROOT.\n")
+#define MSG_SGEGRDROOTNOTEQUIV      _("SGE_ROOT and GRD_ROOT are not equivalent\n")
+#define MSG_SGECODINEROOTNOTEQUIV   _("SGE_ROOT and CODINE_ROOT are not equivalent\n")
+#define MSG_GRDCODINEROOTNOTEQUIV   _("GRD_ROOT and CODINE_ROOT are not equivalent\n")
+#define MSG_UNKNOWNERRORINSGEROOT   _("Unknown error in function sge_sge_root()\n")
 
 
 /* 

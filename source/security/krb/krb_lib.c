@@ -56,6 +56,7 @@
 #include "sge_time.h"
 #include "sge_me.h"
 #include "sge_max_nis_retries.h"
+#include "sge_arch.h"
 
 /* #include "sgermon.h" */
 /* #include "basis_types.h" */
@@ -299,7 +300,7 @@ int krb_init(char *progname)
 
       /* use $SGE_ROOT/keytab */
 
-      sprintf(keytab, "FILE:%s/%s", getenv("SGE_ROOT"), KRB_KEYTAB);
+      sprintf(keytab, "FILE:%s/%s", sge_get_root_dir(0), KRB_KEYTAB);
       if ((rc = krb5_kt_resolve(gsd.context, keytab, &gsd.keytab))) {
 
 	 ERROR((SGE_EVENT, MSG_KRB_COULDNOTRESOLVEKEYTABX_S, error_message(rc)));

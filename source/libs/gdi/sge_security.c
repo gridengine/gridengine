@@ -345,7 +345,7 @@ int set_sec_cred(lListElem *job)
 
    if (feature_is_enabled(FEATURE_DCE_SECURITY) ||
        feature_is_enabled(FEATURE_KERBEROS_SECURITY)) {
-      sprintf(binary, "%s/utilbin/%s/get_cred", path.sge_root, sge_arch());
+      sprintf(binary, "%s/utilbin/%s/get_cred", path.sge_root, sge_get_arch());
 
       if (get_token_cmd(binary, NULL) != 0) {
          fprintf(stderr, MSG_QSH_QSUBFAILED);
@@ -428,7 +428,7 @@ int set_sec_cred(lListElem *job)
          int ret;
          char line[1024];
 
-         sprintf(binary, "%s/utilbin/%s/get_cred", path.sge_root, sge_arch());
+         sprintf(binary, "%s/utilbin/%s/get_cred", path.sge_root, sge_get_arch());
 
          if (get_token_cmd(binary, buf) != 0)
             goto error;
@@ -493,7 +493,7 @@ void cache_sec_cred(lListElem *jep, const char *rhost)
       env[0] = ccname;
       env[1] = NULL;
 
-      sprintf(binary, "%s/utilbin/%s/get_cred", path.sge_root, sge_arch());
+      sprintf(binary, "%s/utilbin/%s/get_cred", path.sge_root, sge_get_arch());
 
       if (get_token_cmd(binary, NULL) == 0) {
          char line[1024];
@@ -559,7 +559,7 @@ void delete_credentials(lListElem *jep)
       env[0] = ccname;
       env[1] = NULL;
 
-      sprintf(binary, "%s/utilbin/%s/delete_cred", path.sge_root, sge_arch());
+      sprintf(binary, "%s/utilbin/%s/delete_cred", path.sge_root, sge_get_arch());
 
       if (get_token_cmd(binary, NULL) == 0) {
          char line[1024];
@@ -639,7 +639,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
       env[0] = ccname;
       env[1] = NULL;
 
-      sprintf(binary, "%s/utilbin/%s/put_cred", path.sge_root, sge_arch());
+      sprintf(binary, "%s/utilbin/%s/put_cred", path.sge_root, sge_get_arch());
 
       if (get_token_cmd(binary, NULL) == 0) {
          sprintf(cmd, "%s -s %s -u %s", binary, "sge", lGetString(jep, JB_owner));
@@ -756,7 +756,7 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
       lSetString(vep, VA_value, ccenv);
 
       sprintf(binary, "%s/utilbin/%s/put_cred", path.sge_root,
-              sge_arch());
+              sge_get_arch());
 
       if (get_token_cmd(binary, NULL) == 0) {
          char line[1024];

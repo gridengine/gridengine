@@ -29,6 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -45,7 +46,21 @@
 #include "msg_commd.h"
 #include "sge_exit.h"
 
-const char *sge_arch()
+/****** libs/uti/sge_get_arch() ************************************************
+*  NAME
+*     sge_get_arch() -- Return the architecture of the appl. using this func.
+*
+*  SYNOPSIS
+*     const char* sge_get_arch() 
+*
+*  FUNCTION
+*     This function returns the architecture of the application which called 
+*     this function.
+*
+*  RESULT
+*     const char* - architecture string
+*******************************************************************************/
+const char *sge_get_arch()
 {
 
 #if defined(AIX42)
@@ -97,33 +112,227 @@ const char *sge_arch()
    return ARCHBIN;
 }
 
-const char *sge_sge_root(void)
+/****** lib/uti/sge_get_root_dir() *********************************************
+*  NAME
+*     sge_get_root_dir() -- Returns the installation directory of SGE/SGEEE 
+*
+*  SYNOPSIS
+*     const char* sge_get_root_dir(int do_exit) 
+*
+*  FUNCTION
+*     This function returns the installation directory of SGE/SGEEE.
+*     This directory is defined by the SGE_ROOT environment variable 
+*     of the calling process. 
+*     If the environment variable does not exist or is not set then
+*     this function will handle this as error and return NULL (do_exit = 0).
+*     If do_exit is 1 an an error occures, the function will log
+*     an appropriate message and terminat the calling application.
+*
+*  INPUTS
+*     int do_exit - Terminate the application in case of an error
+*
+*  RESULT
+*     const char* - Root directory of the SGE/SGEEE installation
+*
+*  NOTES
+*     For compatibility reason this function accepts following
+*     env variables:
+*
+*        SGE_ROOT
+*        CODINE_ROOT
+*        GRD_ROOT 
+*
+*     Multiple environment variables will only be accepted when they are
+*     identical. Other cases will be handled as error.
+*******************************************************************************/
+const char *sge_get_root_dir(int do_exit)
 {
+   char *sge_root, *codine_root, *grd_root;
    char *s;
+   int error_number = 0;
 
-   DENTER(TOP_LAYER, "sge_sge_root");
-   s = getenv("SGE_ROOT");
+   DENTER(TOP_LAYER, "sge_get_root_dir");
+
+   /*
+    * Read some env variables
+    */
+   codine_root = getenv("CODINE_ROOT");
+   grd_root = getenv("GRD_ROOT");
+   sge_root = getenv("SGE_ROOT");
+
+   /*
+    * Check the env variables
+    */
+   if (sge_root && grd_root && codine_root) {
+      if (strcmp(sge_root, grd_root)) {
+         error_number = 1;
+         goto error;
+      } else if (strcmp(sge_root, codine_root)) {
+         error_number = 2;
+         goto error;
+      }
+      s = sge_root;
+   } else if (sge_root && grd_root) {
+      if (strcmp(sge_root, grd_root)) {
+         error_number = 1;
+         goto error;
+      }
+      s = sge_root;
+   } else if (sge_root && codine_root) {
+      if (strcmp(sge_root, codine_root)) {
+         error_number = 2;
+         goto error;
+      }
+      s = sge_root;
+   } else if (grd_root && codine_root) {
+      if (strcmp(grd_root, codine_root)) {
+         error_number = 3;
+         goto error;
+      }
+      s = grd_root;
+   } else if (sge_root) {
+      s = sge_root;
+   } else if (grd_root) {
+      s = grd_root;
+   } else if (codine_root) {
+      s = codine_root;
+   } else {
+      error_number = 4;
+      goto error;
+   } 
    if (!s || strlen(s)==0) { 
-      CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
-      exit(1);                                             
+      error_number = 4;
+      goto error;
+   } else {
+      /*
+       * Get rid of trailing slash
+       */ 
+      if (s[strlen(s)-1] == '/') { 
+         s[strlen(s)-1] = '\0';
+      }
    }
-   if (s[strlen(s)-1] == '/')  /* get rid of trailing slash*/
-      s[strlen(s)-1] = '\0';
    DEXIT;
    return s;
+
+error:
+   if (do_exit) {
+      switch(error_number) {
+         case 1:
+            CRITICAL((SGE_EVENT, MSG_SGEGRDROOTNOTEQUIV));
+            break;
+         case 2:
+            CRITICAL((SGE_EVENT, MSG_SGECODINEROOTNOTEQUIV));
+            break;
+         case 3:
+            CRITICAL((SGE_EVENT, MSG_GRDCODINEROOTNOTEQUIV));
+            break;
+         case 4:
+            CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
+            break;
+         default:
+            CRITICAL((SGE_EVENT, MSG_UNKNOWNERRORINSGEROOT));
+            break;
+      }
+   }
+   DEXIT;
+   if (do_exit) {
+      SGE_EXIT(1);   
+   }
+   return NULL;
 }
 
-/* get cell name - remove trailing slash */
-const char *sge_default_cell(void)
+/****** lib/uti/sge_get_default_cell() *****************************************
+*  NAME
+*     sge_get_default_cell() -- get cell name and remove trailing slash 
+*
+*  SYNOPSIS
+*     const char* sge_get_default_cell(void) 
+*
+*  FUNCTION
+*     This function returns the defined cell name of SGE/SGEEE.
+*     This directory is defined by the SGE_CELL environment variable
+*     of the calling process.
+*     If the environment variable does not exist or is not set then
+*     this function will return the 'DEFAULT_CELL'.
+*
+*  RESULT
+*     const char* - Cell name of this SGE/SGEEE installation
+*
+*  NOTES
+*     For compatibility reason this function accepts following
+*     env variables:
+*
+*        SGE_CELL
+*        COD_CELL
+*        GRD_CELL
+*
+*     Multiple environment variables will only be accepted when they are
+*     identical. Other cases will be handled as error. In case of an error
+*     the 'DEFAULT_CELL' will be returned.
+******************************************************************************/
+const char *sge_get_default_cell(void)
 {
-   char *cp;
+   char *cod_cell, *grd_cell, *sge_cell;
+   char *s;
 
-   cp = getenv("SGE_CELL");
-   if (!cp || strlen(cp) == 0)
-      cp = DEFAULT_CELL;
-   if (cp[strlen(cp)-1] == '/')
-      cp[strlen(cp)-1] = '\0';
-   return cp;
+   DENTER(TOP_LAYER, "sge_get_default_cell");
+   /*
+    * Read some env variables
+    */
+   cod_cell = getenv("COD_CELL");
+   grd_cell = getenv("GRD_CELL");
+   sge_cell = getenv("SGE_CELL");
+
+   /*
+    * Check the env variables
+    */
+   if (sge_cell && grd_cell && cod_cell) {
+      if (strcmp(sge_cell, grd_cell)) {
+         s = NULL;
+      } else if (strcmp(sge_cell, cod_cell)) {
+         s = NULL;
+      }
+      s = sge_cell;
+   } else if (sge_cell && grd_cell) {
+      if (strcmp(sge_cell, grd_cell)) {
+         s = NULL;
+      }
+      s = sge_cell;
+   } else if (sge_cell && cod_cell) {
+      if (strcmp(sge_cell, cod_cell)) {
+         s = NULL;
+      }
+      s = sge_cell;
+   } else if (grd_cell && cod_cell) {
+      if (strcmp(grd_cell, cod_cell)) {
+         s = NULL;
+      }
+      s = grd_cell;
+   } else if (sge_cell) {
+      s = sge_cell;
+   } else if (grd_cell) {
+      s = grd_cell;
+   } else if (cod_cell) {
+      s = cod_cell;
+   } else {
+      s = NULL;
+   } 
+
+   /*
+    * Use default? 
+    */     
+   if (!s || strlen(s) == 0) {
+      s = DEFAULT_CELL;
+   } else {
+      /*
+       * Get rid of trailing slash
+       */    
+      if (s[strlen(s)-1] == '/') {
+         s[strlen(s)-1] = '\0';
+      }
+   }
+   DEXIT;
+   return s;
 }
 
 /*-----------------------------------------------------------------------
@@ -137,8 +346,8 @@ char *get_alias_path(void) {
 
    DENTER(TOP_LAYER, "get_alias_path");
 
-   sge_root = sge_sge_root();
-   sge_cell = sge_default_cell();
+   sge_root = sge_get_root_dir(1);
+   sge_cell = sge_get_default_cell();
 
    if (SGE_STAT(sge_root, &sbuf)) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S , sge_root));
@@ -155,4 +364,3 @@ char *get_alias_path(void) {
    DEXIT;
    return cp;
 }
-

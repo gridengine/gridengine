@@ -73,7 +73,7 @@ lList **alpp
    
    DENTER(TOP_LAYER, "sge_setup_paths");
    
-   sge_root = sge_sge_root();
+   sge_root = sge_get_root_dir(1);
 
    if (SGE_STAT(sge_root, &sbuf)) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S, sge_root));

@@ -62,6 +62,7 @@
 #include "qmon_preferences.h"
 #include "sge_feature.h"
 #include "sge_me.h"
+#include "sge_arch.h"
 
 #ifdef REPLAY_XT
 #include "ReplayXt.h"
@@ -162,7 +163,7 @@ static Widget  MainControl;
 /*-------------------------------------------------------------------------*/
 /* global variables                                                        */
 /*-------------------------------------------------------------------------*/
-char           *SGE_ROOT;
+const char           *SGE_ROOT;
 XtAppContext   AppContext;
 Widget         AppShell; 
 GC             fg_gc, bg_gc, qb_gc, alarm_gc, suspend_gc,
@@ -201,7 +202,7 @@ char **argv
    /* GENERAL SGE SETUP */
    qmonInitSge(progname);
 
-   SGE_ROOT = getenv("SGE_ROOT");
+   SGE_ROOT = sge_get_root_dir(0);
    /*
    ** Attention !!! Change the XtMalloc() above if you add additional args
    */

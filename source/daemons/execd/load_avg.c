@@ -164,7 +164,7 @@ lList *report_list
       ** no error handling here cause we can just send 1 as #processors
       */
       lSetUlong(ep_lic, LIC_processors,  sge_nprocs());
-      lSetString(ep_lic, LIC_arch,  sge_arch());
+      lSetString(ep_lic, LIC_arch, sge_get_arch());
       lAppendElem(lp_lic, ep_lic);
       lSetList(report, REP_list, lp_lic);
    }
@@ -357,7 +357,7 @@ lList **lpp
    }
 
    /* these are some static load values */
-   sge_add_str2load_report(lpp, LOAD_ATTR_ARCH, sge_arch(), 0);
+   sge_add_str2load_report(lpp, LOAD_ATTR_ARCH, sge_get_arch(), 0);
    sge_add_int2load_report(lpp, LOAD_ATTR_NUM_PROC, nprocs, 0);
 
 #if defined(NECSX4) || defined(NECSX5)

@@ -6008,6 +6008,105 @@ proc shutdown_all_shadowd { hostname } {
    return $num_proc
 }
 
+
+#                                                             max. column:     |
+#****** sge_procedures/shutdown_bdb_rpc() ******
+# 
+#  NAME
+#     shutdown_bdb_rpc -- ??? 
+#
+#  SYNOPSIS
+#     shutdown_bdb_rpc { hostname } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     sge_procedures/shutdown_core_system()
+#     sge_procedures/shutdown_master_and_scheduler()
+#     sge_procedures/shutdown_all_shadowd()
+#     sge_procedures/shutdown_bdb_rpc()
+#     sge_procedures/shutdown_system_daemon()
+#     sge_procedures/startup_qmaster()
+#     sge_procedures/startup_execd()
+#     sge_procedures/startup_shadowd()
+#*******************************
+proc shutdown_bdb_rpc { hostname } {
+   global ts_config
+   global CHECK_OUTPUT CHECK_ADMIN_USER_SYSTEM
+   global CHECK_USER 
+
+   set num_proc 0
+
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "shutdown bdb_rpc daemon for system installed at $ts_config(product_root) ..."
+
+   set index_list [ ps_grep "$ts_config(product_root)" "$hostname" ]
+   set new_index ""
+   foreach elem $index_list {
+      if { [ string first "berkeley_db_svc" $ps_info(string,$elem) ] >= 0 } {
+         lappend new_index $elem
+      }
+   } 
+   set num_proc [llength $new_index]
+   puts $CHECK_OUTPUT "Number of matching processes: $num_proc"
+   foreach elem $new_index {
+      puts $CHECK_OUTPUT $ps_info(string,$elem)
+      if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "berkeley_db_svc" ] == 0 } {
+         puts $CHECK_OUTPUT "Killing process [ set ps_info(pid,$elem) ] ..."
+         if { [ have_root_passwd ] == -1 } {
+            set_root_passwd 
+         }
+         if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+             start_remote_prog "$hostname" "root" "kill" "$ps_info(pid,$elem)"
+         } else {
+             start_remote_prog "$hostname" "$CHECK_USER" "kill" "$ps_info(pid,$elem)"
+         }
+      } 
+   }
+
+   foreach elem $new_index {
+      puts $CHECK_OUTPUT $ps_info(string,$elem)
+      if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "berkeley_db_svc" ] == 0 } {
+         add_proc_error "shutdown_bdb_rpc" "-3" "could not shutdown berkeley_db_svc at host $elem with term signal"
+         puts $CHECK_OUTPUT "Killing process with kill signal [ set ps_info(pid,$elem) ] ..."
+         if { [ have_root_passwd ] == -1 } {
+            set_root_passwd 
+         }
+         if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+             start_remote_prog "$hostname" "root" "kill" "-9 $ps_info(pid,$elem)"
+         } else {
+             start_remote_prog "$hostname" "$CHECK_USER" "kill" "-9 $ps_info(pid,$elem)"
+         }
+      } 
+   }
+
+   foreach elem $new_index {
+      puts $CHECK_OUTPUT $ps_info(string,$elem)
+      if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "berkeley_db_svc" ] == 0 } {
+         add_proc_error "shutdown_bdb_rpc" "-1" "could not shutdown berkeley_db_svc at host $elem with kill signal"
+      }
+   }
+
+   return $num_proc
+}
+
+
 #
 #                                                             max. column:     |
 #
@@ -6310,6 +6409,13 @@ proc shutdown_core_system {} {
             shutdown_system_daemon $host $proccess_names
       }
    }
+
+   if {$ts_config(bdb_server) != "none"} {
+      foreach rpc_host $ts_config(bdb_server) {
+         shutdown_bdb_rpc $rpc_host
+      }
+   }
+
 }
 
 #****** sge_procedures/startup_core_system() ***********************************
@@ -6342,6 +6448,9 @@ proc startup_core_system {} {
    if { [ have_root_passwd ] == -1 } {
       set_root_passwd 
    }
+
+   # startup of BDB RPC service
+   startup_bdb_rpc $ts_config(bdb_server)
 
    # startup of schedd and qmaster 
    startup_qmaster

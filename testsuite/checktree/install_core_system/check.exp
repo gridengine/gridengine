@@ -41,6 +41,7 @@
 
 # source version dependent parts of the installation
 global CHECK_ACTUAL_TEST_PATH
+ts_source $CHECK_ACTUAL_TEST_PATH/bdb_rpc
 ts_source $CHECK_ACTUAL_TEST_PATH/qmaster
 ts_source $CHECK_ACTUAL_TEST_PATH/execd
 ts_source $CHECK_ACTUAL_TEST_PATH/shadowd
@@ -53,10 +54,11 @@ global check_use_installed_system
 set check_root_access_needs  "yes"
 set check_name          "init_core_system"
 set check_category      "COMPATIBILITY SYSTEM L10N VERIFIED"
-set check_description(0)   "install a default system (master/execution/shadow daemon on local host and start them up)"
+set check_description(0)   "install a default system (bdb_rpc/master/execution/shadow daemon on local host and start them up)"
 set check_needs         ""                        ;# dependencies of this check (name of other check)
 set check_functions     ""                        ;# functions to call (in order)
 lappend check_functions "kill_running_system"
+lappend check_functions "install_bdb_rpc"
 lappend check_functions "install_qmaster"
 lappend check_functions "reread_bootstrap"
 lappend check_functions "make_user_cert"

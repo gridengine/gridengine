@@ -1,3 +1,7 @@
+MD-2005-04-01-0: Testsuite: BDB RPC Server installation support
+                 Changed:   testsuite
+                 Review:    CR
+
 MD-2005-03-31-0: Bugfix:    - upgrade failed at sharetree
                             - inst_sge -x fails with fqdn
                             - autoinst does not fully consider ignore_fqdn

@@ -264,3 +264,71 @@ proc startup_execd { hostname } {
    return 0
 }
 
+#                                                             max. column:     |
+#****** sge_procedures/startup_bdb_rpc() ******
+# 
+#  NAME
+#     startup_bdb_rpc -- ??? 
+#
+#  SYNOPSIS
+#     startup_bdb_rpc { hostname } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     sge_procedures/shutdown_core_system()
+#     sge_procedures/shutdown_master_and_scheduler()
+#     sge_procedures/shutdown_all_shadowd()
+#     sge_procedures/shutdown_system_daemon()
+#     sge_procedures/startup_qmaster()
+#     sge_procedures/startup_execd()
+#     sge_procedures/startup_shadowd()
+#     sge_procedures/startup_bdb_rpc()
+#*******************************
+proc startup_bdb_rpc { hostname } {
+  global ts_config
+   global CHECK_OUTPUT
+   global CHECK_ADMIN_USER_SYSTEM CHECK_USER
+
+   if { $hostname == "none" } {
+      return -1
+   }
+
+   if { $CHECK_ADMIN_USER_SYSTEM == 0 } {  
+      if { [have_root_passwd] != 0  } {
+         add_proc_error "startup_bdb_rpc" "-2" "no root password set or ssh not available"
+         return -1
+      }
+      set startup_user "root"
+   } else {
+      set startup_user $CHECK_USER
+   }
+ 
+
+   puts $CHECK_OUTPUT "starting up BDB RPC Server on host \"$hostname\" as user \"$startup_user\""
+
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/sgebdb" "start"]
+   puts $CHECK_OUTPUT $output
+   if { [string length $output] < 15  && $prg_exit_state == 0 } {
+       return 0
+   }
+   add_proc_error "startup_bdb_rpc" -1 "could not start berkeley_db_svc on host $hostname:\noutput:\"$output\""
+   return -1
+}
+

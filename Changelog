@@ -1,3 +1,5 @@
+EB-2002-03-21-1  Enhancem.: sort output of qconf -sep
+
 EB-2002-03-21-0  Bugfix:   local config not written as admin user at startup
                  Issue:    #198
 

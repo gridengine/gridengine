@@ -278,7 +278,7 @@ int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object)
 *  RESULT
 *     0 - success
 ******************************************************************************/ 
-int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 
+int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
 {
    const char *ckpt_name;
 

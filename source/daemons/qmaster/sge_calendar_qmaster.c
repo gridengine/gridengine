@@ -216,6 +216,7 @@ void sge_calendar_event_handler(te_event_t anEvent)
 {
    lListElem *cep;
    const char* cal_name = te_get_alphanumeric_key(anEvent);
+   lList *ppList = NULL;
 
    DENTER(TOP_LAYER, "sge_calendar_event_handler");
 
@@ -229,7 +230,8 @@ void sge_calendar_event_handler(te_event_t anEvent)
       return;
    }
       
-   calendar_update_queue_states(cep, 0, NULL);
+   calendar_update_queue_states(cep, 0, NULL, &ppList);
+   ppList = lFreeList(ppList);
 
    sge_free((char *)cal_name);
 
@@ -239,7 +241,7 @@ void sge_calendar_event_handler(te_event_t anEvent)
    return;
 } /* sge_calendar_event_handler() */
 
-int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_t *object)
+int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_t *object, lList **ppList)
 {
    const char *cal_name = lGetString(cep, CAL_name);
    lList *state_changes_list = NULL;

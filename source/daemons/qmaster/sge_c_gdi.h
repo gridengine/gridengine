@@ -62,10 +62,11 @@ typedef int (*writer_func_t)(
 /* allows to retrieve a master list */
 typedef lList ** (*getMasterList)(void);
 
-typedef int (*on_succuss_func_t)(
+typedef int (*on_success_func_t)(
    lListElem *ep,       /* new modified and already spooled element */
    lListElem *old_ep,   /* old element is NULL in add case */
-   gdi_object_t *this   /* some kind of "this" */
+   gdi_object_t *this,  /* some kind of "this" */
+   lList **ppList       /* a list to pass back information for post processing */
 );
 
 struct _gdi_object_t {
@@ -77,12 +78,12 @@ struct _gdi_object_t {
    getMasterList      getMasterList;   /* master list retrieve method    */
    modifier_func_t    modifier;        /* responsible for validating each our attribute modifier */
    writer_func_t      writer;          /* function that spools our object */
-   on_succuss_func_t  on_success;      /* do everything what has to be done on successful writing */
+   on_success_func_t  on_success;      /* do everything what has to be done on successful writing */
 };
 
 gdi_object_t *get_gdi_object(u_long32);
 
-int sge_gdi_add_mod_generic(lList **alpp, lListElem *instructions, int add, gdi_object_t *object, const char *ruser, const char *rhost, int sub_command);
+int sge_gdi_add_mod_generic(lList **alpp, lListElem *instructions, int add, gdi_object_t *object, const char *ruser, const char *rhost, int sub_command, lList **ppList);
 
 void sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 

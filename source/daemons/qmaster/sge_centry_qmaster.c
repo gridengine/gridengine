@@ -65,6 +65,7 @@
 #include "sge_time.h"
 
 #include "uti/sge_string.h"
+#include "sgeobj/sge_str.h"
 
 #include "spool/sge_spooling.h"
 #include "sge_persistence_qmaster.h"
@@ -74,7 +75,7 @@
 #include "msg_qmaster.h"
 
 static void 
-sge_change_queue_version_centry(const char *centry_name);
+sge_change_queue_version_centry(void);
 
 
 /* ------------------------------------------------------------ */
@@ -313,11 +314,8 @@ centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object)
 *
 *******************************************************************************/
 int 
-centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 
+centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
 {
-   lListElem *jep, *gdil, *qep, *hep;
-   lListElem *cqueue;
-   int slots, qslots;
    bool rebuild_consumables = false;
 
    DENTER(TOP_LAYER, "centry_success");
@@ -348,75 +346,7 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
    }
 
    if (rebuild_consumables) {
-      /* throw away all old actual values lists and rebuild them from scratch */
-      for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         lListElem *qinstance = NULL;
-
-         for_each(qinstance, qinstance_list) {
-            lSetList(qinstance, QU_resource_utilization, NULL);
-            qinstance_debit_consumable(qinstance, NULL, Master_CEntry_List, 0);
-         }
-      }
-      for_each (hep, Master_Exechost_List) {
-         lSetList(hep, EH_resource_utilization, NULL);
-         debit_host_consumable(NULL, hep, Master_CEntry_List, 0);
-      }
-
-      /* 
-       * completely rebuild resource utilization of 
-       * all queues and execution hosts
-       * change versions of corresponding queues 
-       */ 
-      for_each (jep, Master_Job_List) {
-         lListElem* jatep;
-
-         for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-            qep = NULL;
-            slots = 0;
-            for_each (gdil, lGetList(jatep, JAT_granted_destin_identifier_list)) {
-
-               if (!(qep = cqueue_list_locate_qinstance(
-                                  *(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
-                                  lGetString(gdil, JG_qname)))) 
-                  continue;
-
-               qslots = lGetUlong(gdil, JG_slots);
-               debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
-                     lGetHost(qep, QU_qhostname)), Master_CEntry_List, qslots);
-               qinstance_debit_consumable(qep, jep, Master_CEntry_List, qslots);
-               slots += qslots;
-            }
-            debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
-                                  "global"), Master_CEntry_List, slots);
-         }
-      }
-
-      sge_change_queue_version_centry(lGetString(ep, CE_name));
-    
-      /* changing complex attributes can change consumables.
-       * dump queue and host consumables to reporting file.
-       */
-      {
-         lList *answer_list = NULL;
-         u_long32 now = sge_get_gmt();
-         
-         /* dump all queue consumables */
-         for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-            lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-            lListElem *qinstance = NULL;
-
-            for_each(qinstance, qinstance_list) {
-               reporting_create_queue_consumable_record(&answer_list, qinstance, now);
-            }
-         }
-         answer_list_output(&answer_list);
-         /* dump all host consumables */
-         for_each (hep, Master_Exechost_List) {
-            reporting_create_host_consumable_record(&answer_list, hep, now);
-         }
-         answer_list_output(&answer_list);
-      }
+      lAddElemStr(ppList, STU_name, lGetString(ep, CE_name), STU_Type);
    }
 
    DEXIT;
@@ -438,7 +368,7 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
          lList *master_centry_list = *(centry_list_get_master_list());
          lListElem *tmp_centry = centry_list_locate(master_centry_list, name);
 
-         /* check if its a build in value*/
+         /* check if its a build in value */
          {
             int i;
             for ( i=0; i< max_queue_resources; i++){
@@ -468,8 +398,6 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
                   if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
                                       0, 0, name, NULL, NULL,
                                       NULL, NULL, NULL, true, true)) {
-
-                     sge_change_queue_version_centry(name);
 
                      lRemoveElem(master_centry_list, tmp_centry);
                      INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
@@ -520,7 +448,7 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
 }
 
 static void 
-sge_change_queue_version_centry(const char *centry_name) 
+sge_change_queue_version_centry(void) 
 {
    lListElem *ep;
    lListElem *cqueue;
@@ -552,3 +480,107 @@ sge_change_queue_version_centry(const char *centry_name)
    return;
 }
 
+/****** sge_centry_qmaster/centry_redebit_consumables() ************************
+*  NAME
+*     centry_redebit_consumables() -- recompute consumable debitation
+*
+*  SYNOPSIS
+*     void 
+*     centry_redebit_consumables(const lList *centries) 
+*
+*  FUNCTION
+*     Recomputes the complete consumable debitation for all queues, hosts and
+*     jobs.
+*
+*  INPUTS
+*     const lList *centries - list of centries that acually require 
+*                             recomputation.
+*
+*  NOTES
+*     MT-NOTE: centry_redebit_consumables() maybe not MT safe (the functions
+*     qinstance_debit_consumable and host_debit_consumable have no MT-NOTE).
+*
+*     This function could be highly optimized by taking into account the
+*     centry list passed as parameter.
+*     This would not only increase performance by only recomputing the 
+*     debitation for only the changed centries (and spooling only the actually 
+*     affected queues instead of all), but also reduce the number of scheduling 
+*     decisions trashed due to a changed queue version number.
+*******************************************************************************/
+void centry_redebit_consumables(const lList *centries)
+{
+   lListElem *cqueue, *hep, *jep;
+
+   /* throw away all old actual values lists and rebuild them from scratch */
+   for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance = NULL;
+
+      for_each(qinstance, qinstance_list) {
+         lSetList(qinstance, QU_resource_utilization, NULL);
+         qinstance_debit_consumable(qinstance, NULL, Master_CEntry_List, 0);
+      }
+   }
+   for_each (hep, Master_Exechost_List) {
+      lSetList(hep, EH_resource_utilization, NULL);
+      debit_host_consumable(NULL, hep, Master_CEntry_List, 0);
+   }
+
+   /* 
+    * completely rebuild resource utilization of 
+    * all queues and execution hosts
+    * change versions of corresponding queues 
+    */ 
+   for_each (jep, Master_Job_List) {
+      lListElem* jatep;
+
+      for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+         lListElem *gdil;
+         lListElem *qep = NULL;
+         int slots = 0;
+         for_each (gdil, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+            int qslots;
+
+            if (!(qep = cqueue_list_locate_qinstance(
+                               *(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
+                               lGetString(gdil, JG_qname)))) {
+               continue;
+            }   
+
+            qslots = lGetUlong(gdil, JG_slots);
+            debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
+                  lGetHost(qep, QU_qhostname)), Master_CEntry_List, qslots);
+            qinstance_debit_consumable(qep, jep, Master_CEntry_List, qslots);
+            slots += qslots;
+         }
+         debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
+                               "global"), Master_CEntry_List, slots);
+      }
+   }
+
+   sge_change_queue_version_centry();
+ 
+   /* changing complex attributes can change consumables.
+    * dump queue and host consumables to reporting file.
+    */
+   {
+      lList *answer_list = NULL;
+      u_long32 now = sge_get_gmt();
+      
+      /* dump all queue consumables */
+      for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lListElem *qinstance = NULL;
+
+         for_each(qinstance, qinstance_list) {
+            reporting_create_queue_consumable_record(&answer_list, qinstance, now);
+         }
+      }
+      answer_list_output(&answer_list);
+      /* dump all host consumables */
+      for_each (hep, Master_Exechost_List) {
+         reporting_create_host_consumable_record(&answer_list, hep, now);
+      }
+      answer_list_output(&answer_list);
+   }
+}

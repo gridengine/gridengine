@@ -563,8 +563,7 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
             
             sge_add_event_client(ep,&(answer->alp), (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL, user, host);
          }
-      }
-      else if (request->target == SGE_JOB_LIST) {
+      } else if (request->target == SGE_JOB_LIST) {
          
          for_each(ep, request->lp) { /* is thread save. the global lock is used, when needed */
                                                    /* fill address infos from request into event client that must be added */
@@ -598,10 +597,10 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
                                user, host, uid, gid, group, request);
             }
          }
-      }
-      else {
+      } else {
          bool is_scheduler_resync = false;
          bool is_follow = false;
+         lList *ppList = NULL;
 
          SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE); 
 
@@ -660,19 +659,22 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
                      sge_execd_startedup(ep, &(answer->alp), user, host, request->target);
                   } 
                   else {
-                     sge_gdi_add_mod_generic(&(answer->alp), ep, 1, ao, user, host, sub_command);
+                     sge_gdi_add_mod_generic(&(answer->alp), ep, 1, ao, user, host, sub_command, &ppList);
                   }
                   break;
             }
             if (is_follow) {
                answer_list_add(&(answer->alp), "OK\n", STATUS_OK, ANSWER_QUALITY_INFO);
             }
-         }
+         } /* for_each request */
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
          if (is_scheduler_resync) {
              sge_resync_schedd(); /* ask for a total update */
          }
+
+         /* we could do postprocessing based on ppList here */
+         ppList = lFreeList(ppList);
       }
    }
    
@@ -1285,6 +1287,7 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
    char group[128];
    dstring ds;
    char buffer[256];
+   lList *ppList = NULL; /* for postprocessing, after the lists of requests has been processed */
 
    DENTER(TOP_LAYER, "sge_c_gdi_mod");
 
@@ -1356,14 +1359,25 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
                   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
                   break;
                }
-                
-               sge_gdi_add_mod_generic(&(answer->alp), ep, 0, ao, user, host, sub_command);
+               sge_gdi_add_mod_generic(&(answer->alp), ep, 0, ao, user, host, sub_command, &ppList);
                break;
          }
          
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       }
    } /* for_each */
+
+   /* postprocessing for the list of requests */
+   if (lGetNumberOfElem(ppList) != 0) {
+      switch (request->target) {
+         case SGE_CENTRY_LIST:
+            DPRINTF(("rebuilding consumable debitation\n"));
+            centry_redebit_consumables(ppList);
+            break;
+      }
+   }
+
+   ppList = lFreeList(ppList);
 
    DEXIT;
    return;
@@ -1687,7 +1701,8 @@ int add,                 /* true in case of add */
 gdi_object_t *object, 
 const char *ruser,
 const char *rhost,
-int sub_command 
+int sub_command,
+lList **ppList
 ) {
    int pos;
    int dataType;
@@ -1819,11 +1834,13 @@ int sub_command
    }
    tmp_alp = lFreeList(tmp_alp);
    {
-      lList ** master_list;
-      if (object->master_list)
+      lList ** master_list = NULL;
+
+      if (object->master_list) {
          master_list = object->master_list;
-      else
+      } else {
          master_list = object->getMasterList();
+      }
          
    /* chain out the old object */
       if (old_obj) {
@@ -1838,8 +1855,9 @@ int sub_command
       /* chain in new object */
       lAppendElem(*(master_list), new_obj);
    }
-   if (object->on_success)
-      object->on_success(new_obj, old_obj, object);
+   if (object->on_success) {
+      object->on_success(new_obj, old_obj, object, ppList);
+   }
 
    lFreeElem(old_obj);
 

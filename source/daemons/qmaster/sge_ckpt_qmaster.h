@@ -40,7 +40,7 @@ int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add, const 
 
 int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object);
 
-int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
+int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList);
 
 /* funtions called via gdi and inside the qmaster */
 int sge_del_ckpt(lListElem *, lList **, char *, char *);

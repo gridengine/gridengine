@@ -955,6 +955,7 @@ static int setup_qmaster(void)
    /* calendar */
    {
       lListElem *cep;
+      lList *ppList = NULL;
 
       for_each (cep, Master_Calendar_List) 
       {
@@ -962,8 +963,10 @@ static int setup_qmaster(void)
          calendar_parse_week(cep, &answer_list);
          answer_list_output(&answer_list);
 
-         calendar_update_queue_states(cep, NULL, NULL);
+         calendar_update_queue_states(cep, NULL, NULL, &ppList);
       }
+
+      ppList = lFreeList(ppList);
    }
 
    /* rebuild signal resend events */

@@ -34,7 +34,7 @@
 
 #include "sge_c_gdi.h"
 
-int hgroup_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
+int hgroup_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList);
 
 int hgroup_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
                const char *ruser, const char *rhost, gdi_object_t *object, 

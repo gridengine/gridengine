@@ -221,7 +221,7 @@ int pe_spool(lList **alpp, lListElem *pep, gdi_object_t *object)
    return dbret ? 0 : 1;
 }
 
-int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 
+int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
 {
    const char *pe_name;
 

@@ -40,7 +40,7 @@ int calendar_mod(lList **alpp, lListElem *new_cal, lListElem *cep, int add, cons
 
 int calendar_spool(lList **alpp, lListElem *cep, gdi_object_t *object);
 
-int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_t *object);
+int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_t *object, lList **ppList);
 
 int sge_del_calendar(lListElem *ep, lList **alpp, char *ruser, char *rhost);
 

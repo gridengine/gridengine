@@ -175,7 +175,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
 }
 
 int cuser_success(lListElem *cuser, lListElem *old_cuser, 
-                    gdi_object_t *object) 
+                    gdi_object_t *object, lList **ppList) 
 {
    DENTER(TOP_LAYER, "usermap_success");
    sge_add_event( 0, old_cuser?sgeE_CUSER_MOD:sgeE_CUSER_ADD, 0, 0, 

@@ -45,7 +45,7 @@ int host_spool(lList **alpp, lListElem *ep, gdi_object_t *object);
 
 int host_mod(lList **alpp, lListElem *new_host, lListElem *ep, int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command);
 
-int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
+int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList);
 
 void sge_mark_unheard(lListElem *hep, const char *target);
 

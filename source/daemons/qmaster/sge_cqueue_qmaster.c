@@ -659,7 +659,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
 }
 
 int cqueue_success(lListElem *cqueue, lListElem *old_cqueue, 
-                   gdi_object_t *object) 
+                   gdi_object_t *object, lList **ppList) 
 {
    lList *qinstances;
    lListElem *qinstance; 

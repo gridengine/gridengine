@@ -1,0 +1,220 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# define global variable in this namespace
+global check_name 
+global check_category
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+# set check_root_access_needs "yes"
+
+
+# define a level initialization procedure:
+set check_init_level_procedure "issue_1473_init_level"
+
+# define test's name and run level descriptions
+set check_name            "issue_1473"
+set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_highest_level   0
+set check_description(0)  "check performance problem when adding/modifying/deleting centries"
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+
+# setup and cleanup functions
+set check_setup_function "issue_1473_setup"
+set check_cleanup_function "issue_1473_cleanup"
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "issue_1473_add"
+lappend check_functions "issue_1473_mod"
+lappend check_functions "issue_1473_del"
+
+proc issue_1473_init_level {} {
+   global CHECK_ACT_LEVEL
+   global CHECK_PRODUCT_TYPE
+   global test_array_jobs 
+
+  switch -- $CHECK_ACT_LEVEL {
+     "0" { 
+           return 0    
+     } 
+  } 
+
+  return -1  ;# no other level else
+}
+
+# -------- local test procedures -----------------------------------------------
+
+proc issue_1473_setup  {} {
+   global CHECK_OUTPUT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH
+   global num_queues complex_backup
+
+   # create a high number of queues - this will make the bug showing up more likely
+   set num_queues 20
+   puts $CHECK_OUTPUT "creating $num_queues queues"
+   set queue_conf(slots) 1
+   for {set i 0} {$i < $num_queues} {incr i} {
+      add_queue "iz_1473_$i" "@allhosts" queue_conf 1
+   }
+
+   # backup old complex
+   set complex_backup "$CHECK_PROTOCOL_DIR/complex.txt"
+   puts $CHECK_OUTPUT "backup current complex to $complex_backup"
+   set ret [catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sc > $complex_backup" } output]
+   if {$ret != 0} {
+      add_proc_error issue_1473_setup -1 "backing up complex failed: $output"
+   }
+
+   set_error 0 "ok"
+}
+
+proc issue_1473_cleanup  {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
+   global num_queues complex_backup
+
+   # delete queues
+   puts $CHECK_OUTPUT "deleting test queues"
+   for {set i 0} {$i < $num_queues} {incr i} {
+      del_queue "iz_1473_$i" "" 0 1
+   }
+
+   # restore old complex
+   puts $CHECK_OUTPUT "restoring complex from $complex_backup"
+   modify_complex_from_file $complex_backup
+
+   set_error 0 "ok"
+}
+
+proc modify_complex_from_file {filename {time_var dummy}} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER CHECK_HOST
+   global CHECK_CORE_MASTER
+
+   upvar $time_var time
+
+   if {![file exists $filename]} {
+      add_proc_error modify_complex_from_file -1 "file $filename doesn't exist"
+      set time -1
+   } else {
+      puts $CHECK_OUTPUT "modify complex from file $filename"
+      set time_start [clock clicks -milliseconds]
+      set ret [catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Mc $filename" } output]
+      set time_end [clock clicks -milliseconds]
+      set time [expr ($time_end - $time_start) / 1000.0]
+      if {$ret != 0} {
+         set MSG_CENTRY_NOTCHANGED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CENTRY_NOTCHANGED]]
+         set MSG_SGETEXT_ADDEDTOLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER $CHECK_HOST "*" "*"]
+         set MSG_SGETEXT_REMOVEDFROMLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER $CHECK_HOST "*" "*"]
+         set MSG_SGETEXT_MODIFIEDINLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER $CHECK_HOST "*" "*"]
+         set output_list [split $output "\n"]
+         set changed 0
+         #puts "-----"
+         #puts "$MSG_CENTRY_NOTCHANGED"
+         #puts "$MSG_SGETEXT_ADDEDTOLIST_SSSS"
+         #puts "$MSG_SGETEXT_REMOVEDFROMLIST_SSSS"
+         #puts "$MSG_SGETEXT_MODIFIEDINLIST_SSSS"
+         #puts "$"
+         #puts "-----"
+         foreach line $output_list {
+            set line [string trim $line]
+            if {[string length $line] > 0} {
+               #puts "$line"
+               if {[string match $MSG_CENTRY_NOTCHANGED $line]} {
+                  set changed 0
+               } else {
+                  if {[string match $MSG_SGETEXT_ADDEDTOLIST_SSSS $line] || \
+                      [string match $MSG_SGETEXT_REMOVEDFROMLIST_SSSS $line] || \
+                      [string match $MSG_SGETEXT_MODIFIEDINLIST_SSSS $line] } {
+                      incr changed
+                  } else {
+                     add_proc_error modify_complex_from_file -1 "modifying complex failed: $line"
+                  }
+               }   
+            }
+         }   
+         puts $CHECK_OUTPUT "modified $changed complex entries"
+      }
+   }
+
+   set_error 0 "ok"
+}
+
+proc issue_1473_do_qconf {message filename} {
+   global CHECK_OUTPUT
+
+   puts $CHECK_OUTPUT "$message, using file $filename"
+   modify_complex_from_file $filename time
+   puts "time required: $time s"
+
+   if {$time > 2.0} {
+      add_proc_error "issue_1473_do_qconf" -1 "$message may not take that long ($time s)"
+   }
+}
+
+proc issue_1473_add {} {
+   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
+
+   set add_file "$CHECK_ACTUAL_TEST_PATH/add_complex.txt"
+   issue_1473_do_qconf "adding complex entries" $add_file
+
+   set_error 0 "ok"
+}
+
+proc issue_1473_mod {} {
+   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
+
+   set mod_file "$CHECK_ACTUAL_TEST_PATH/mod_complex.txt"
+   issue_1473_do_qconf "modifying complex entries" $mod_file
+
+   set_error 0 "ok"
+}
+
+proc issue_1473_del {} {
+   global CHECK_OUTPUT
+   global complex_backup
+
+   issue_1473_do_qconf "deleting complex entries" $complex_backup
+
+   set_error 0 "ok"
+}
+

@@ -60,7 +60,7 @@
 #define MSG_QSTAT_PRT_ERRORJOBS                 _MESSAGE(1022, _("  -  ERROR JOBS  -  ERROR JOBS  -  ERROR JOBS  -  ERROR JOBS  -  ERROR JOBS  -\n"))
 #define MSG_QSTAT_PRT_FINISHEDJOBS              _MESSAGE(1023, _(" --  FINISHED JOBS  -  FINISHED JOBS  -  FINISHED JOBS  -  FINISHED JOBS  --  \n"))
 
-#define MSG_CENTRY_NOTCHANGED         _MESSAGE(1024, _("Complex attribute configuartion has not been changed\n"))
+#define MSG_CENTRY_NOTCHANGED         _MESSAGE(1024, _("Complex attribute configuration has not been changed\n"))
 #define MSG_CENTRY_DOESNOTEXIST_S     _MESSAGE(1025, _("Complex attribute "SFQ" does not exist\n"))
 #define MSG_CENTRY_FILENOTCORRECT_S   _MESSAGE(1026, _("Complex attribute file "SFQ" is not correct\n"))
 #define MSG_QINSTANCE_NOQUEUES        _MESSAGE(1027, _("No queues remaining after -q queue selection\n"))

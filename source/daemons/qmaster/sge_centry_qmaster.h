@@ -38,7 +38,7 @@ int
 sge_del_centry(lListElem *cxp, lList **alpp, char *ruser, char *rhost);
 
 int 
-centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
+centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList);
 
 int 
 centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object);
@@ -47,6 +47,9 @@ int
 centry_mod(lList **alpp, lListElem *new_complex, lListElem *ep, int add, 
            const char *ruser, const char *rhost, gdi_object_t *object, 
            int sub_command);
+
+void
+centry_redebit_consumables(const lList *centries);
 
 #endif /* __SGE_CENTRY_QMASTER_H */
 

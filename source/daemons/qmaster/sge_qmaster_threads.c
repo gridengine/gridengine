@@ -961,7 +961,7 @@ static void* signal_thread(void* anArg)
    {
       sigwait(&sig_set, &sig_num);
 
-      sge_qmaster_thread_init(true);
+      thread_start_stop_profiling();
 
       /* 
        * This thread will only wake up on signals, so the

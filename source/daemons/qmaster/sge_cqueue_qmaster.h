@@ -50,7 +50,7 @@ void
 cqueue_rollback(lListElem *cqueue);
 
 int 
-cqueue_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
+cqueue_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList);
 
 int 
 cqueue_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 

@@ -41,7 +41,7 @@ int pe_mod(lList **alpp, lListElem *new_pe, lListElem *pe, int add, const char *
 
 int pe_spool(lList **alpp, lListElem *pep, gdi_object_t *object);
 
-int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
+int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList);
 
 /* funtions called via gdi and inside the qmaster */
 int sge_del_pe(lListElem *, lList **, char *, char *);

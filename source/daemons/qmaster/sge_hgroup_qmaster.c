@@ -594,7 +594,7 @@ hgroup_del(lListElem *this_elem, lList **answer_list,
 }
 
 int 
-hgroup_success(lListElem *hgroup, lListElem *old_hgroup, gdi_object_t *object) 
+hgroup_success(lListElem *hgroup, lListElem *old_hgroup, gdi_object_t *object, lList **ppList) 
 {
    const char *name = lGetHost(hgroup, HGRP_name);
 

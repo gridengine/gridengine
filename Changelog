@@ -1,10 +1,16 @@
-RD-2005-03-14-0: Bugfix:   amendmand for RD-2005-03-11-0
-                 Review:   AA
+JG-2005-03-15-0: Bugfix:    Huge cpu and memory overhead when adding, modifying 
+                            and deleting complex attributes.
+                 Issue:     1473
+                 Bugtraq:   6222237
+                 Review:    SG
+
+RD-2005-03-14-0: Bugfix:    amendmand for RD-2005-03-11-0
+                 Review:    AA
 
 RC-2005-03-13-2: Enhancem.: NetBSD port (forward porting from SGE 5.3)
 
-RC-2005-03-13-1: Bugfix:   fixed build (uninitialized variable)
-                 Review:   Reuti
+RC-2005-03-13-1: Bugfix:    fixed build (uninitialized variable)
+                 Review:    Reuti
 
 RC-2005-03-13-0: Enhancem.: created target depend for qmake
                  Review:    Reuti
@@ -19,28 +25,28 @@ RC-2005-03-12-0: Enhancem.: ignore warnings when calling configure
                             (only affects non-standard platforms 
                             with no makefile in cvs)
 
-RD-2005-03-11-1: Bugfix:   fixed build for lx24-amd64 & lx24-x86
-                 Review:   CR,RH
+RD-2005-03-11-1: Bugfix:    fixed build for lx24-amd64 & lx24-x86
+                 Review:    CR,RH
 
-RD-2005-03-11-0: Bugfix:   Spooledit fails during database upgradeA
-                 Issue:    1425
-                 Bugtraq:  6239394
-                 Review:   JG
+RD-2005-03-11-0: Bugfix:    Spooledit fails during database upgradeA
+                 Issue:     1425
+                 Bugtraq:   6239394
+                 Review:    JG
 
 RH-2005-03-11-1: Enhancem.: checkprog accepts now the options -ppid. The parent
                             process will be printed to stdout
                  Changed:   checkprog
                  Review:    AS
 
-RD-2005-03-10-1: Bugfix    Problems with shadowd install
-                 Issue:    1347
-                 Bugtraq:  6197730
-                 Review:   MD
+RD-2005-03-10-1: Bugfix     Problems with shadowd install
+                 Issue:     1347
+                 Bugtraq:   6197730
+                 Review:    MD
 
-RD-2005-03-10-0: Bugfix    qstat -f -q all.q@HOSTNAME does not resolve hostname
-                 Issue:    1220
-                 Bugtraq:  5085004
-                 Review:   CR
+RD-2005-03-10-0: Bugfix     qstat -f -q all.q@HOSTNAME does not resolve hostname
+                 Issue:     1220
+                 Bugtraq:   5085004
+                 Review:    CR
 
 CR-2005-03-10-0: Bugfix:    - fixed thread signal behaviour for application threads
                               calling cl_commlib_receive_message() at the same time.

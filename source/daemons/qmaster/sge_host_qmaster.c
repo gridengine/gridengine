@@ -157,6 +157,7 @@ u_long32 target
    int pos;
    lListElem *ep;
    gdi_object_t *object;
+   lList *ppList = NULL;
 
    DENTER(TOP_LAYER, "sge_add_host_of_type");
 
@@ -182,8 +183,9 @@ u_long32 target
          DPRINTF(("sge_add_host_of_type: unexpected datatype\n"));
    }
    ret = sge_gdi_add_mod_generic(NULL, ep, 1, object, uti_state_get_user_name(), 
-      uti_state_get_qualified_hostname(), 0);
-   lFreeElem(ep);       
+      uti_state_get_qualified_hostname(), 0, &ppList);
+   lFreeElem(ep);
+   ppList = lFreeList(ppList);
 
    DEXIT;
    return (ret == STATUS_OK) ? 0 : -1;
@@ -556,7 +558,7 @@ gdi_object_t *object
    return dbret ? 0 : 1;
 }
 
-int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 
+int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
 {
    lListElem* jatep;
    DENTER(TOP_LAYER, "host_success");

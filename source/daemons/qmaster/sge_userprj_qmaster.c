@@ -237,7 +237,7 @@ Error:
    return STATUS_EUNKNOWN;
 }
 
-int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 
+int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
 {
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
    
@@ -585,6 +585,7 @@ static int do_add_auto_user(lListElem* anUser, lList** anAnswer)
    int res = STATUS_EUNKNOWN;
    gdi_object_t *userList = NULL;
    lList *tmpAnswer = NULL;
+   lList *ppList = NULL;
 
    DENTER(TOP_LAYER, "do_add_auto_user");
 
@@ -596,8 +597,9 @@ static int do_add_auto_user(lListElem* anUser, lList** anAnswer)
     */
    res = sge_gdi_add_mod_generic(&tmpAnswer, anUser, 1, userList, 
                                  bootstrap_get_admin_user(), 
-                                 uti_state_get_qualified_hostname(), 0);
+                                 uti_state_get_qualified_hostname(), 0, &ppList);
 
+   ppList = lFreeList(ppList);
    if ((STATUS_OK != res) && (NULL != tmpAnswer))
    {
       lListElem *err   = lFirst(tmpAnswer);

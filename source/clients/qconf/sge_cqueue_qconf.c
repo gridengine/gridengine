@@ -405,9 +405,8 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                const char *d_pattern = sge_dstring_get_string(&host_domain);
                lList *href_list = NULL;
 
-               hgroup_list_find_all_matching_references(hgroup_list, NULL,
-                                                        d_pattern,
-                                                        &href_list);
+               hgroup_list_find_matching_and_resolve(hgroup_list, NULL,
+                                                     d_pattern, &href_list);
                for_each(qref, qref_list) {
                   const char *cqueue_name = lGetString(qref, QR_name);
                   const lListElem *cqueue = NULL;

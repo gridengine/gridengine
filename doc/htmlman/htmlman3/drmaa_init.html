@@ -36,6 +36,35 @@ DESCRIPTION
      perform DRMAA library internal clean up.  Running  jobs  are
      not effected.
 
+ENVIRONMENTAL VARIABLES
+     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+                    standard configuration files.
+
+     SGE_CELL       If set, specifies  the  default  Grid  Engine
+                    cell  to  be  used.  To address a Grid Engine
+                    cell Grid Engine uses (in the order  of  pre-
+                    cedence):
+
+                         The name of the cell  specified  in  the
+                         environment  variable SGE_CELL, if it is
+                         set.
+
+                         The  name  of  the  default  cell,  i.e.
+                         default.
+
+
+     SGE_DEBUG_LEVEL
+                    If  set,  specifies  that  debug  information
+                    should  be written to stderr. In addition the
+                    level of detail in which debug information is
+                    generated is defined.
+
+     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+                    munication requests.  Most installations will
+                    use  a  services  map entry instead to define
+                    that port.
+
 RETURN VALUES
      Upon successful completion,  drmaa_init()  and  drmaa_exit()
      return DRMAA_ERRNO_SUCCESS.  Other values indicate an error.
@@ -46,8 +75,8 @@ ERRORS
      The drmaa_init() and drmaa_exit() functions will fail if:
 
   DRMAA_ERRNO_INTERNAL_ERROR
-     Unexpected or internal DRMAA error like  memory  allocation,
-     system call failure, etc.
+     Unexpected or internal DRMAA error like system call failure,
+     etc.
 
   DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE
      Could not contact DRM system for this request.
@@ -87,6 +116,29 @@ ERRORS
 
 SEE ALSO
      <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

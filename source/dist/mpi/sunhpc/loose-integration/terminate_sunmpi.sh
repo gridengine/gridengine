@@ -172,6 +172,12 @@ GetCreJid()
 }
 
 #
+# Start main 
+#
+# Save job script pid
+#
+job_pid=$1
+#
 # Get CRE Job ID
 #
 GetCreJid
@@ -193,6 +199,10 @@ GetPList $mympps > $myptree
 # Use mpkill to kill the MPI job
 #
 /opt/SUNWhpc/bin/mpkill -KILL $cre_jid
+#
+# Use kill to kill the job script
+#
+kill -KILL -$job_pid 
 
 # signal success to caller
 exit 0

@@ -173,7 +173,8 @@
 29:       else {
 30:          const char *args[2] = {"5", NULL};
 31:          
-32:          errnum = drmaa_set_vector_attribute (jt, DRMAA_V_ARGV, args, error,33:                                               DRMAA_ERROR_STRING_BUFFER);
+32:          errnum = drmaa_set_vector_attribute (jt, DRMAA_V_ARGV, args, error,
+33:                                               DRMAA_ERROR_STRING_BUFFER);
 34:       }
 35:       
 36:       if (errnum != DRMAA_ERRNO_SUCCESS) {
@@ -791,7 +792,8 @@
 020:       fprintf (stderr, "Could not create job template: %s\n", error);
 021:    }
 022:    else {
-023:       errnum = drmaa_set_attribute (jt, DRMAA_REMOTE_COMMAND, "sleeper.sh",024:                                     error, DRMAA_ERROR_STRING_BUFFER);
+023:       errnum = drmaa_set_attribute (jt, DRMAA_REMOTE_COMMAND, "sleeper.sh",
+024:                                     error, DRMAA_ERROR_STRING_BUFFER);
 025: 
 026:       if (errnum != DRMAA_ERRNO_SUCCESS) {
 027:          fprintf (stderr, "Could not set attribute \"%s\": %s\n",

@@ -100,8 +100,7 @@ static int has_to_use_qidle = 0;
 static int has_to_use_gnu_load_sensor = 0;
 
 
-/****** src/sge_ls_get_pid() **************************************************
-*
+/****** execd/loadsensor/sge_ls_get_pid() *************************************
 *  NAME
 *     sge_ls_get_pid -- get pid of a loadsensor 
 *
@@ -118,7 +117,6 @@ static int has_to_use_gnu_load_sensor = 0;
 *
 *  RESULT
 *     returns pid
-*
 ******************************************************************************/
 static pid_t sge_ls_get_pid(lListElem *this_ls)
 {
@@ -132,8 +130,7 @@ static pid_t sge_ls_get_pid(lListElem *this_ls)
    return pid;
 }
 
-/****** src/sge_ls_set_pid() **************************************************
-*
+/****** execd/loadsensor/sge_ls_set_pid() *************************************
 *  NAME
 *     sge_ls_set_pid -- set pid in loadsensor element
 *
@@ -149,7 +146,6 @@ static pid_t sge_ls_get_pid(lListElem *this_ls)
 *
 *  RESULT
 *     [this_ls] - LS_pid entry of the CULL element will be modified 
-*
 ******************************************************************************/
 static void sge_ls_set_pid(lListElem *this_ls, pid_t pid)
 {
@@ -159,8 +155,7 @@ static void sge_ls_set_pid(lListElem *this_ls, pid_t pid)
    lSetString(this_ls, LS_pid, pid_buffer);
 }
 
-/****** src/sge_ls_status() ***************************************************
-*
+/****** execd/loadsensor/sge_ls_status() **************************************
 *  NAME
 *     sge_ls_status -- returns the status of a loadsensor 
 *
@@ -181,7 +176,6 @@ static void sge_ls_set_pid(lListElem *this_ls, pid_t pid)
 *
 *  RESULT
 *     returns the status of the loadsensor     
-* 
 ******************************************************************************/
 static int sge_ls_status(lListElem *this_ls)
 {
@@ -214,8 +208,7 @@ static int sge_ls_status(lListElem *this_ls)
    return LS_OK;
 }
 
-/****** src/sge_ls_start_ls() *************************************************
-*
+/****** execd/loadsensor/sge_ls_start_ls() ************************************
 *  NAME
 *     sge_ls_start_ls -- starts a loadsensor  
 *
@@ -243,7 +236,6 @@ static int sge_ls_status(lListElem *this_ls)
 *        LS_pid containes the pid of the ls process 
 *        LS_in, LS_out, LS_err are the FILE-streams for the
 *        communication with the ls-process     
-*
 ******************************************************************************/
 static void sge_ls_start_ls(lListElem *this_ls)
 {
@@ -295,8 +287,7 @@ static void sge_ls_start_ls(lListElem *this_ls)
    ls_send_command(this_ls, "\n");
 }
 
-/******* src/sge_ls_create_ls() ***********************************************
-*
+/******* execd/loadsensor/sge_ls_create_ls() **********************************
 *  NAME
 *     sge_ls_create_ls -- creates a new CULL loadsensor element 
 *
@@ -317,7 +308,6 @@ static void sge_ls_start_ls(lListElem *this_ls)
 *  RESULT
 *     new CULL element of type LS_Type will be returned
 *     and a new loadsensor process will be created by this function
-*
 ******************************************************************************/
 static lListElem *sge_ls_create_ls(char *name, const char *scriptfile)
 {
@@ -359,8 +349,7 @@ static lListElem *sge_ls_create_ls(char *name, const char *scriptfile)
    return new_ls;
 }
 
-/****** src/sge_ls_stop_ls() **************************************************
-*
+/****** execd/loadsensor/sge_ls_stop_ls() *************************************
 *  NAME
 *     sge_ls_stop_ls -- stop a loadsensor process
 *
@@ -381,7 +370,6 @@ static lListElem *sge_ls_create_ls(char *name, const char *scriptfile)
 *  RESULT
 *     the loadsensor process will be terminated
 *     [this_ls] the entries will be reinitialized
-*
 ******************************************************************************/
 static void sge_ls_stop_ls(lListElem *this_ls, int send_no_quit_command)
 {
@@ -423,8 +411,7 @@ static void sge_ls_stop_ls(lListElem *this_ls, int send_no_quit_command)
    return;
 }
 
-/****** src/sge_ls_destroy_ls() ***********************************************
-*
+/****** execd/loadsensor/sge_ls_destroy_ls() **********************************
 *  NAME
 *     sge_ls_destroy_ls -- stop a loadsensor an destroy the 
 *        CULL element 
@@ -447,7 +434,6 @@ static void sge_ls_stop_ls(lListElem *this_ls, int send_no_quit_command)
 *  RESULT
 *     the loadsensor process will be terminated
 *     [this_ls] the pointer will be invalid 
-*
 ******************************************************************************/
 static void sge_ls_destroy_ls(lListElem *this_ls, int send_no_quit_command)
 {
@@ -463,8 +449,7 @@ static void sge_ls_destroy_ls(lListElem *this_ls, int send_no_quit_command)
    return;
 }
 
-/****** src/sge_set_ls_fds() **************************************************
-*
+/****** execd/loadsensor/sge_set_ls_fds() *************************************
 *  NAME
 *     sge_set_ls_fds -- set flags of communication FILE streams
 *
@@ -480,7 +465,6 @@ static void sge_ls_destroy_ls(lListElem *this_ls, int send_no_quit_command)
 *
 *  RESULT
 *     [this_ls] flags of FILE streams (LS_out, LS_in, LS_err) will be modified 
-*
 ******************************************************************************/
 static void sge_set_ls_fds(lListElem *this_ls, fd_set *fds)
 {
@@ -496,8 +480,7 @@ static void sge_set_ls_fds(lListElem *this_ls, fd_set *fds)
    }
 }
 
-/****** src/read_ls() *********************************************************
-*
+/****** execd/loadsensor/read_ls() ********************************************
 *  NAME
 *     read_ls -- read sensor output and add it to load report
 *
@@ -522,7 +505,6 @@ static void sge_set_ls_fds(lListElem *this_ls, fd_set *fds)
 *
 *  RESULT
 *     [this_ls] LS_incomplete and LS_complete will be modified.
-*
 ******************************************************************************/
 static int read_ls(void)
 {
@@ -585,8 +567,7 @@ static int read_ls(void)
    return 0;
 }
 
-/****** src/ls_send_command() *************************************************
-*
+/****** execd/loadsensor/ls_send_command() ************************************
 *  NAME
 *     ls_send_command -- send a command to a loadsensor 
 *
@@ -604,7 +585,6 @@ static int read_ls(void)
 *  RESULT
 *      0 - success
 *     -1 - error
-*
 ******************************************************************************/
 static int ls_send_command(lListElem *this_ls, const char *command)
 {
@@ -658,8 +638,7 @@ static int ls_send_command(lListElem *this_ls, const char *command)
    return 0;
 }
 
-/****** src/sge_ls_initialize() ***********************************************
-*
+/****** execd/loadsensor/sge_ls_initialize() **********************************
 *  NAME
 *     sge_ls_initialize -- initialize the module which containes this
 *                          function
@@ -669,7 +648,6 @@ static int ls_send_command(lListElem *this_ls, const char *command)
 *
 *  FUNCTION
 *     Initialize the module which containes this function
-*
 ******************************************************************************/
 static void sge_ls_initialize()
 {
@@ -680,8 +658,7 @@ static void sge_ls_initialize()
    DEXIT;
 }
 
-/****** src/sge_ls_qidle() ****************************************************
-*
+/****** execd/loadsensor/sge_ls_qidle() ***************************************
 *  NAME
 *     sge_ls_qidle -- enable/diable qidle loadsensor 
 *
@@ -694,7 +671,6 @@ static void sge_ls_initialize()
 *  INPUTS
 *     qidle: 1 - enable qidle
 *            0 - diable qidle 
-*
 ******************************************************************************/
 
 void sge_ls_qidle(int qidle)
@@ -702,8 +678,7 @@ void sge_ls_qidle(int qidle)
    has_to_use_qidle = qidle;
 }
 
-/****** src/sge_ls_gnu_ls() **************************************************
-*
+/****** execd/loadsensor/sge_ls_gnu_ls() **************************************
 *  NAME
 *     sge_ls_gnu_ls -- enable/diable qloadsensor
 *
@@ -716,15 +691,13 @@ void sge_ls_qidle(int qidle)
 *  INPUTS
 *     qidle: 1 - enable qidle
 *            0 - diable qidle
-*
 ******************************************************************************/
 void sge_ls_gnu_ls(int gnu_ls)
 {
    has_to_use_gnu_load_sensor = gnu_ls;
 }
 
-/****** src/sge_ls_start() ****************************************************
-*
+/****** execd/loadsensor/sge_ls_start() ***************************************
 *  NAME
 *     sge_ls_start -- start/stop/restart loadsensors 
 *
@@ -751,7 +724,6 @@ void sge_ls_gnu_ls(int gnu_ls)
 *
 *  RESULT
 *     LS_OK
-*
 ******************************************************************************/
 int sge_ls_start(char *scriptfiles)
 {
@@ -833,8 +805,7 @@ int sge_ls_start(char *scriptfiles)
    return LS_OK;
 }
 
-/****** src/trigger_ls_restart() **********************************************
-*
+/****** execd/loadsensor/trigger_ls_restart() *********************************
 *  NAME
 *     trigger_ls_restart -- restart loadsensors
 *
@@ -843,7 +814,6 @@ int sge_ls_start(char *scriptfiles)
 *
 *  FUNCTION
 *     Trigger the restart of all loadsensors
-*
 ******************************************************************************/
 void trigger_ls_restart(void)
 {
@@ -860,8 +830,7 @@ void trigger_ls_restart(void)
    return;
 }
 
-/****** src/sge_ls_stop_if_pid() **********************************************
-*
+/****** execd/loadsensor/sge_ls_stop_if_pid() *********************************
 *  NAME
 *     sge_ls_stop_if_pid -- restart loadsensor with given pid 
 *
@@ -881,15 +850,6 @@ void trigger_ls_restart(void)
 *  RESULT
 *     0 - pid was not a loadsensor
 *     1 - we triggerd the restart because pid was a loadsensor
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*
 ******************************************************************************/
 int sge_ls_stop_if_pid(pid_t pid, int send_no_quit_command)
 {
@@ -910,8 +870,7 @@ int sge_ls_stop_if_pid(pid_t pid, int send_no_quit_command)
    return 0;
 }
 
-/****** src/sge_ls_get() ******************************************************
-*
+/****** execd/loadsensor/sge_ls_get() *****************************************
 *  NAME
 *     sge_ls_get -- reqeust a load report 
 *
@@ -936,7 +895,6 @@ int sge_ls_stop_if_pid(pid_t pid, int send_no_quit_command)
 *
 *  RESULT
 *     0 - OK
-*
 ******************************************************************************/
 int sge_ls_get(lList **lpp)
 {
@@ -1000,8 +958,7 @@ int sge_ls_get(lList **lpp)
    return 0;
 }
 
-/****** src/sge_ls_stop() *****************************************************
-*
+/****** execd/loadsensor/sge_ls_stop() ****************************************
 *  NAME
 *     sge_ls_stop -- stop all loadsensor
 *
@@ -1016,7 +973,6 @@ int sge_ls_get(lList **lpp)
 *     exited - notify the loadsensors before exit
 *        0 - notify them
 *        1 - do not notify them (avoid communication with ls)
-*
 ******************************************************************************/
 void sge_ls_stop(int exited)
 {
@@ -1037,8 +993,7 @@ void sge_ls_stop(int exited)
    return;
 }
 
-/****** src/set_ls_fds() ******************************************************
-*
+/****** execd/loadsensor/set_ls_fds() *****************************************
 *  NAME
 *     set_ls_fds -- set flags of all loadsensor streams 
 *
@@ -1050,7 +1005,6 @@ void sge_ls_stop(int exited)
 *
 *  FUNCTION
 *     set flags of all loadsensor streams
-*
 ******************************************************************************/
 void set_ls_fds(fd_set *fds)
 {

@@ -63,7 +63,7 @@ extern lList *Master_Exechost_List;
 
 u_long32 add_time = 0;
 
-/****** reschedule/reschedule_unknown_event() **********************************
+/****** qmaster/reschedule/reschedule_unknown_event() *************************
 *  NAME
 *     reschedule_unknown_event() -- event handler to reschedule jobs 
 *
@@ -183,7 +183,7 @@ Error:
    return;
 }
  
-/****** reschedule/reschedule_jobs() *******************************************
+/****** qmaster/reschedule/reschedule_jobs() **********************************
 *  NAME
 *     reschedule_jobs() -- reschedule jobs junning in host/queue 
 *
@@ -245,7 +245,7 @@ int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer)
    return ret;
 }
  
-/****** reschedule/reschedule_job() ********************************************
+/****** qmaster/reschedule/reschedule_job() ***********************************
 *  NAME
 *     reschedule_job() -- reschedule array tasks or jobs 
 *
@@ -567,7 +567,7 @@ DTRACE;
    return ret;
 }   
 
-/****** reschedule/add_to_reschedule_unknown_list() ****************************
+/****** qmaster/reschedule/add_to_reschedule_unknown_list() *******************
 *  NAME
 *     add_to_reschedule_unknown_list() -- add a job/task 
 *
@@ -620,7 +620,7 @@ lListElem* add_to_reschedule_unknown_list(lListElem *host, u_long32 job_number,
    return ruep;
 }
  
-/****** reschedule/get_from_reschedule_unknown_list() **************************
+/****** qmaster/reschedule/get_from_reschedule_unknown_list() *****************
 *  NAME
 *     get_from_reschedule_unknown_list() --  find an entry in a sublist 
 *
@@ -663,7 +663,7 @@ lListElem* get_from_reschedule_unknown_list(lListElem *host,
    return ruep;
 }               
 
-/****** reschedule/delete_from_reschedule_unknown_list() ***********************
+/****** qmaster/reschedule/delete_from_reschedule_unknown_list() **************
 *  NAME
 *     delete_from_reschedule_unknown_list() -- delete a sublist entry 
 *
@@ -705,7 +705,7 @@ void delete_from_reschedule_unknown_list(lListElem *host)
    DEXIT;
 }
  
-/****** reschedule/update_reschedule_unknown_list() ****************************
+/****** qmaster/reschedule/update_reschedule_unknown_list() *******************
 *  NAME
 *     update_reschedule_unknown_list() -- check entries in sublist 
 *
@@ -751,7 +751,7 @@ void update_reschedule_unknown_list(lListElem *host)
    DEXIT;
 }          
 
-/****** reschedule/skip_restarted_job() ****************************************
+/****** qmaster/reschedule/skip_restarted_job() *******************************
 *  NAME
 *     skip_restarted_job() -- What should we do with a job report?
 *
@@ -832,7 +832,7 @@ u_long32 skip_restarted_job(lListElem *host, lListElem *job_report,
    return ret;
 }           
 
-/****** reschedule/update_reschedule_unknown_list_for_job() ********************
+/****** qmaster/reschedule/update_reschedule_unknown_list_for_job() ***********
 *  NAME
 *     update_reschedule_unknown_list_for_job() -- check and change state 
 *
@@ -877,7 +877,7 @@ void update_reschedule_unknown_list_for_job(lListElem *host,
    DEXIT;
 }      
 
-/****** reschedule/update_reschedule_unknown_timout_values() ******************
+/****** qmaster/reschedule/update_reschedule_unknown_timout_values() **********
 *  NAME
 *     update_reschedule_unknown_timout_values() -- change cached timeout value 
 *
@@ -922,7 +922,7 @@ void update_reschedule_unknown_timout_values(const char *config_name)
    }
 }
 
-/****** reschedule/update_reschedule_unknown_timeout() ************************
+/****** qmaster/reschedule/update_reschedule_unknown_timeout() ****************
 *  NAME
 *     update_reschedule_unknown_timeout() -- Cache the timeout value in host 
 *
@@ -967,7 +967,7 @@ void update_reschedule_unknown_timeout(lListElem *host)
    DEXIT; 
 } 
 
-/****** reschedule/reschedule_unknown_timeout() ********************************
+/****** qmaster/reschedule/reschedule_unknown_timeout() ***********************
 *  NAME
 *     reschedule_unknown_timeout() -- return the time to wait before resch. 
 *
@@ -1020,7 +1020,7 @@ u_long32 reschedule_unknown_timeout(lListElem *hep)
    return timeout;
 }
 
-/****** reschedule/reschedule_unknown_trigger() ********************************
+/****** qmaster/reschedule/reschedule_unknown_trigger() ***********************
 *  NAME
 *     reschedule_unknown_trigger() -- wind up timer for auto rescheduling 
 *
@@ -1035,7 +1035,7 @@ u_long32 reschedule_unknown_timeout(lListElem *hep)
 *
 *  INPUTS
 *     lListElem *hep - host EH_Type 
-*******************************************************************************/
+******************************************************************************/
 void reschedule_unknown_trigger(lListElem *hep) 
 {
    u_long32 now;
@@ -1055,7 +1055,7 @@ void reschedule_unknown_trigger(lListElem *hep)
    DEXIT;
 }       
 
-/****** reschedule/reschedule_add_additional_time() ****************************
+/****** qmaster/reschedule/reschedule_add_additional_time() *******************
 *  NAME
 *     reschedule_add_additional_time() -- set additional time to wait before r. 
 *
@@ -1069,7 +1069,7 @@ void reschedule_unknown_trigger(lListElem *hep)
 *
 *  INPUTS
 *     u_long32 time - time in seconds
-*******************************************************************************/
+******************************************************************************/
 void reschedule_add_additional_time(u_long32 time) 
 {
    DENTER(TOP_LAYER, "reschedule_add_additional_time");

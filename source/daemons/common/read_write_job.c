@@ -223,7 +223,7 @@ static lListElem *ja_task_create_from_file(u_long32 job_id,
    return ja_task;
 }
 
-/****** read_write_job/job_write_spool_file() *********************************
+/****** sge/job_jatask/job_write_spool_file() *********************************
 *  NAME
 *     job_write_spool_file() -- makes a job/task persistent 
 *

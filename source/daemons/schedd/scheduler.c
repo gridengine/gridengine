@@ -92,7 +92,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 static int select_assign_debit(lList **queue_list, lList **job_list, lListElem *job, lListElem *ja_task, lListElem *pe, lListElem *ckpt, lList *complex_list, lList *host_list, lList *acl_list, lList **user_list, lList **group_list, lList **orders_list, double *total_running_job_tickets, int ndispatched, int *dispatch_type, int host_order_changed, int *sort_hostlist);
 
 
-/****** scheduler/scheduler() **************************************************
+/****** schedd/scheduler/scheduler() ******************************************
 *  NAME
 *     scheduler() -- Default scheduler
 *
@@ -281,7 +281,7 @@ int scheduler(sge_Sdescr_t *lists) {
    return 0;
 }
 
-/****** scheduler/dispatch_jobs() **********************************************
+/****** schedd/scheduler/dispatch_jobs() **************************************
 *  NAME
 *     dispatch_jobs() -- dispatches jobs to queues
 *
@@ -302,13 +302,10 @@ int scheduler(sge_Sdescr_t *lists) {
 *  RESULT
 *     0   ok
 *     -1  got inconsistent data
-*
-*******************************************************************************/
-static int dispatch_jobs(
-sge_Sdescr_t *lists,
-lList **orderlist,
-lList **splitted_job_lists[]
-) {
+******************************************************************************/
+static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist, 
+                         lList **splitted_job_lists[]) 
+{
    lList *user_list=NULL, *group_list=NULL;
    lListElem *orig_job, *job, *cat;
    lList *susp_queues = NULL;
@@ -880,7 +877,7 @@ SKIP_THIS_JOB:
 
 
 
-/****** scheduler/select_assign_debit() ****************************************
+/****** schedd/scheduler/select_assign_debit() ********************************
 *  NAME
 *     select_assign_debit()
 *
@@ -888,8 +885,7 @@ SKIP_THIS_JOB:
 *     Selects resources for 'job', add appropriate order to the 'orders_list',
 *     debits resources of this job for the next dispatch and sort out no longer
 *     available queues from the 'queue_list'.
-*
-*******************************************************************************/
+******************************************************************************/
 static int select_assign_debit(
 lList **queue_list,
 lList **job_list,

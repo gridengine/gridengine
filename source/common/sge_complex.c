@@ -102,7 +102,7 @@ static int parse_requestable(lList **alpp, const char *cp, lListElem *ep, const 
 
 */
 
-/****** complex/read_cmplx() ***************************************************
+/****** qmaster/complex/read_cmplx() ******************************************
 *  NAME
 *     read_cmplx() -- Read complex template from file. 
 *
@@ -600,7 +600,7 @@ FPRINTF_ERROR:
    return -1;
 }
 
-/****** complex/sge_fill_requests() ********************************************
+/****** qmaster/complex/sge_fill_requests() ***********************************
 *  NAME
 *     sge_fill_requests() -- fills and checks list of complex entries 
 *
@@ -686,7 +686,7 @@ int allow_neg_consumable
    return 0;
 }
 
-/****** complex/fill_and_check_attribute() *************************************
+/****** qmaster/complex/fill_and_check_attribute() ****************************
 *  NAME
 *     fill_and_check_attribute() -- fill and check the attribute 
 *

@@ -1232,7 +1232,7 @@ lList **conf_list
    return 0;
 }
 
-/****** sge_conf/policy_hierarchy_enum2char() *********************************
+/****** qmaster/conf/policy_hierarchy_enum2char() *****************************
 *  NAME
 *     policy_hierarchy_enum2char() -- Return policy char for an enum value 
 *
@@ -1254,7 +1254,7 @@ char policy_hierarchy_enum2char(policy_type_t value)
    return policy_hierarchy_chars[value - 1];
 }
  
-/****** sge_conf/policy_hierarchy_char2enum() *********************************
+/****** qmaster/conf/policy_hierarchy_char2enum() *****************************
 *  NAME
 *     policy_hierarchy_char2enum() -- Return enum value for a policy char
 *
@@ -1285,7 +1285,7 @@ policy_type_t policy_hierarchy_char2enum(char character)
    return ret;
 }
 
-/****** sge_conf/policy_hierarchy_verify_value() ******************************
+/****** qmaster/conf/policy_hierarchy_verify_value() **************************
 *  NAME
 *     policy_hierarchy_verify_value() -- verify a policy string 
 *
@@ -1346,7 +1346,7 @@ int policy_hierarchy_verify_value(const char* value)
    return ret;
 }
 
-/****** sge_conf/policy_hierarchy_fill_array() ********************************
+/****** qmaster/conf/policy_hierarchy_fill_array() ****************************
 *  NAME
 *     policy_hierarchy_fill_array() -- fill the policy array 
 *
@@ -1431,7 +1431,7 @@ void policy_hierarchy_fill_array(policy_hierarchy_t array[], const char *value)
    DEXIT;
 }
 
-/****** sge_conf/policy_hierarchy_print_array() *******************************
+/****** qmaster/conf/policy_hierarchy_print_array() ***************************
 *  NAME
 *     policy_hierarchy_print_array() -- print hierarchy array 
 *

@@ -114,7 +114,7 @@ lEnumeration
 static void ensure_valid_what_and_where(void);
 
 
-/****** sge_process_events/event_handler_default_scheduler() ****************************
+/****** schedd/sge/event_handler_default_scheduler() **************************
 *  NAME
 *     event_handler_default_scheduler()
 *
@@ -132,8 +132,7 @@ static void ensure_valid_what_and_where(void);
 *   -1 inconsistencies with events: register again at qmaster
 *    1 configuration changed heavily: register again at qmaster
 *    2 got shutdown order from qmaster 
-*
-*******************************************************************************/
+******************************************************************************/
 #ifdef SCHEDULER_SAMPLES
 int event_handler_my_scheduler(lList *event_list) 
 {
@@ -430,7 +429,7 @@ DTRACE;
    return;
 }
 
-/****** sge_process_events/cleanup_default_scheduler() **********************************
+/****** schedd/sge/cleanup_default_scheduler() ********************************
 *  NAME
 *     cleanup_default_scheduler() -- free resources of default event scheduler
 *
@@ -440,8 +439,7 @@ DTRACE;
 *  FUNCTION
 *     Free all resources allocated by the default event scheduler.
 *     This function is called in case the event scheduler changes.
-*
-*******************************************************************************/
+******************************************************************************/
 void cleanup_default_scheduler(void)
 {
 #define FREE_AND_NULL_IT(list) list = lFreeList(list)
@@ -469,7 +467,7 @@ void cleanup_default_scheduler(void)
    sge_free_job_category();
 }
 
-/****** sge_process_events/sge_process_all_events() ******
+/****** schedd/sge/sge_process_all_events() ***********************************
 *  NAME
 *     sge_process_all_events() -- Process all events 
 *
@@ -487,10 +485,9 @@ void cleanup_default_scheduler(void)
 *   -1 inconsistencies with events: register again at qmaster
 *    1 configuration changed heavily: register again at qmaster 
 *    2 got a shutdown event: do not schedule, finish immediately instead
-*
-********************************
-*/
-int sge_process_all_events(lList *event_list) {
+******************************************************************************/
+int sge_process_all_events(lList *event_list) 
+{
    static u_long32 user_sort = 0;
    lList *data_list, **lpp;
    lListElem *event, *ep, *ja_task = NULL;

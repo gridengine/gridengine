@@ -2503,7 +2503,7 @@ int *trigger
    return 0;
 }
 
-/****** sge_job/verify_jobname() ***********************************************
+/****** qmaster/job_jatask/verify_jobname() ***********************************
 *  NAME
 *     job_verify_name() - verifies job name
 *
@@ -2525,7 +2525,7 @@ int *trigger
 *
 *  RESULT
 *     int - returns != 0 if there is a problem with the job name
-*******************************************************************************/
+******************************************************************************/
 static int job_verify_name(const lListElem *job, lList **alpp, 
                            const char *job_descr)
 {
@@ -2565,9 +2565,9 @@ static int job_verify_name(const lListElem *job, lList **alpp,
 }
 
 
-/****** sge_job/is_referenced_by_jobname() *************************************
+/****** qmaster/job_jatask/is_referenced_by_jobname() *************************
 *  NAME
-*     is_referenced_by_jobname()
+*     is_referenced_by_jobname() -- is job referenced by another one
 *
 *  SYNOPSIS
 *     static u_long32 is_referenced_by_jobname(lListElem *jep) 
@@ -2581,14 +2581,15 @@ static int job_verify_name(const lListElem *job, lList **alpp,
 *
 *  RESULT
 *     static u_long32 - job ID of the job referencing 'jep' or 0 if no such
-*******************************************************************************/
+******************************************************************************/
 static u_long32 is_referenced_by_jobname(lListElem *jep)
 {
    lList *succ_lp;
 
    DENTER(TOP_LAYER, "is_referenced_by_jobname");
 
-   if ((succ_lp=lGetList(jep, JB_jid_sucessor_list))) {
+   succ_lp = lGetList(jep, JB_jid_sucessor_list);
+   if (succ_lp) {
       lListElem *succ_ep, *succ_jep;
       const char *job_name = lGetString(jep, JB_job_name);
 
@@ -2607,8 +2608,7 @@ static u_long32 is_referenced_by_jobname(lListElem *jep)
    return 0;
 }
 
-
-/****** sge_job/job_verify_predecessors() *************************************
+/****** qmaster/job_jatask/job_verify_predecessors() **************************
 *  NAME
 *     job_verify_predecessors() -- verify -hold_jid list of a job
 *

@@ -256,7 +256,7 @@ static int got_release = 0;
 
 #endif
 
-/****** ptf/ptf_get_osjobid() *************************************************
+/****** execd/ptf/ptf_get_osjobid() *******************************************
 *  NAME
 *     ptf_get_osjobid() -- return the job id 
 *
@@ -290,7 +290,7 @@ static osjobid_t ptf_get_osjobid(lListElem *osjob)
    return osjobid;
 }
 
-/****** ptf/ptf_set_osjobid() *************************************************
+/****** execd/ptf/ptf_set_osjobid() *******************************************
 *  NAME
 *     ptf_set_osjobid() -- set os job id 
 *
@@ -318,7 +318,7 @@ static void ptf_set_osjobid(lListElem *osjob, osjobid_t osjobid)
 #endif
 }
 
-/****** ptf/ptf_build_usage_list() ********************************************
+/****** execd/ptf/ptf_build_usage_list() **************************************
 *  NAME
 *     ptf_build_usage_list() -- create a new usage list from an existing list 
 *
@@ -387,7 +387,7 @@ static lList *ptf_build_usage_list(char *name, lList *old_usage_list)
    return usage_list;
 }
 
-/****** ptf/ptf_reinit_queue_priority() ***************************************
+/****** execd/ptf/ptf_reinit_queue_priority() *********************************
 *  NAME
 *     ptf_reinit_queue_priority() -- set static priority 
 *
@@ -446,7 +446,7 @@ void ptf_reinit_queue_priority(u_long32 job_id, u_long32 ja_task_id,
    DEXIT;
 }
 
-/****** ptf/ptf_set_job_priority() ********************************************
+/****** execd/ptf/ptf_set_job_priority() **************************************
 *  NAME
 *     ptf_set_job_priority() -- Update job priority 
 *
@@ -473,7 +473,7 @@ static void ptf_set_job_priority(lListElem *job)
    DEXIT;
 }
 
-/****** ptf/ptf_set_native_job_priority() *************************************
+/****** execd/ptf/ptf_set_native_job_priority() *******************************
 *  NAME
 *     ptf_set_native_job_priority() -- Change job priority  
 *
@@ -504,7 +504,7 @@ static void ptf_set_native_job_priority(lListElem *job, lListElem *osjob,
 
 #if defined(__sgi) && !defined(IRIX5)
 
-/****** ptf/ptf_setpriority_ash() *********************************************
+/****** execd/ptf/ptf_setpriority_ash() ***************************************
 *  NAME
 *     ptf_setpriority_ash() -- Change priority of processes 
 *
@@ -718,7 +718,7 @@ static void ptf_setpriority_ash(lListElem *job, lListElem *osjob, long pri)
 
 #elif defined(CRAY) || defined(NECSX4) || defined(NECSX5)
 
-/****** ptf/ptf_setpriority_jobid() ******************************************
+/****** execd/ptf/ptf_setpriority_jobid() *************************************
 *  NAME
 *     ptf_setpriority_ash() -- Change priority of processes 
 *
@@ -790,7 +790,7 @@ static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri)
 
 #elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
 
-/****** ptf/ptf_setpriority_jobid() ******************************************
+/****** execd/ptf/ptf_setpriority_jobid() *************************************
 *  NAME
 *     ptf_setpriority_addgrpid() -- Change priority of processes
 *
@@ -848,7 +848,7 @@ static void ptf_setpriority_addgrpid(lListElem *job, lListElem *osjob,
 
 #endif
 
-/****** ptf/ptf_get_job() *****************************************************
+/****** execd/ptf/ptf_get_job() ***********************************************
 *  NAME
 *     ptf_get_job() -- look up the job for the supplied job_id and return it 
 *
@@ -875,7 +875,7 @@ static lListElem *ptf_get_job(u_long job_id)
    return job;
 }
 
-/****** ptf/ptf_get_job_os() ***************************************************
+/****** execd/ptf/ptf_get_job_os() ********************************************
 *  NAME
 *     ptf_get_job_os() -- look up the job for the supplied OS job_id 
 *
@@ -1028,7 +1028,7 @@ static lListElem *ptf_process_job(osjobid_t os_job_id, const char *task_id_str,
    return job;
 }
 
-/****** ptf/ptf_get_usage_from_data_collector() *******************************
+/****** execd/ptf/ptf_get_usage_from_data_collector() *************************
 *  NAME
 *     ptf_get_usage_from_data_collector() -- get usage from PDC 
 *

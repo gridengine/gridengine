@@ -61,13 +61,11 @@
 
 static char err_str[1024];
 
-/****** shepherd/write_to_qrsh() ***************************************
-*
+/****** shepherd/qrsh/write_to_qrsh() *****************************************
 *  NAME
 *     write_to_qrsh -- short description
 *
 *  SYNOPSIS
-*     #include "qlogin_starter.h"
 *     void write_to_qrsh(char *data);
 *
 *  FUNCTION
@@ -89,17 +87,7 @@ static char err_str[1024];
 *     4, if the hostname cannot be resolved
 *     5, if connecting to the socket fails
 *     6, if writing the data fails
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*
-****************************************************************************
-*/
+******************************************************************************/
 int write_to_qrsh(const char *data)
 {
    char *address = NULL;
@@ -178,13 +166,11 @@ int write_to_qrsh(const char *data)
    return 0;
 }
 
-/****** shepherd/write_exit_code_to_qrsh() ***************************************
-*
+/****** shepherd/qrsh/write_exit_code_to_qrsh() *******************************
 *  NAME
 *     write_exit_code_to_qrsh -- write an exit code to qrsh
 *
 *  SYNOPSIS
-*     #include "qlogin_starter.h"
 *     void write_exit_code_to_qrsh(int exit_code)
 *
 *  FUNCTION
@@ -200,19 +186,9 @@ int write_to_qrsh(const char *data)
 *  INPUTS
 *     exit_code - status of the calling process
 *
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     shepherd/write_to_qrsh()
-*
-****************************************************************************
-*/
+*     shepherd/qrsh/write_to_qrsh()
+******************************************************************************/
 void write_exit_code_to_qrsh(int exit_code)
 {
    char buffer[1024];
@@ -261,8 +237,7 @@ void write_exit_code_to_qrsh(int exit_code)
    }
 }
 
-/****** shepherd/get_exit_code_of_qrsh_starter() ***************************************
-*
+/****** shepherd/qrsh/get_exit_code_of_qrsh_starter() *************************
 *  NAME
 *     get_exit_code_of_qrsh_starter -- short description
 *
@@ -277,9 +252,7 @@ void write_exit_code_to_qrsh(int exit_code)
 *  RESULT
 *     the exit code of the process
 *     1, if an error occured while reading the file
-*
-****************************************************************************
-*/
+******************************************************************************/
 int get_exit_code_of_qrsh_starter(void)
 {
    char buffer[1024];
@@ -323,7 +296,7 @@ int get_exit_code_of_qrsh_starter(void)
    return exit_code;        
 }
 
-/****** shepherd/qlogin_starter() ***************************************
+/****** shepherd/qrsh/qlogin_starter() ****************************************
 *
 *  NAME
 *     qlogin_starter -- short description
@@ -361,17 +334,7 @@ int get_exit_code_of_qrsh_starter(void)
 *     10, if nobody connects to the socket within a one minute
 *     11, if the acception of a connecting client fails
 *     12, if the execution of the daemon fails
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*
-****************************************************************************
-*/
+******************************************************************************/
 int qlogin_starter(const char *cwd, char *daemon)
 {
    int ret;

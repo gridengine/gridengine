@@ -220,8 +220,7 @@ long add_grp_id
 #endif
 #endif
 
-/****** execd/add_or_replace_env() ***************************************
-*
+/****** execd/sge/add_or_replace_env() ***************************************
 *  NAME
 *     add_or_replace_env -- add or change an environment variable
 *
@@ -246,13 +245,9 @@ long add_grp_id
 *     Function should be moved to some library - same or similar code
 *     might be used in other modules.
 *
-*  BUGS
-*
 *  SEE ALSO
 *     execd/add_or_replace_env()
-*
-****************************************************************************
-*/
+******************************************************************************/
 static void add_or_replace_env(lList *envl, const char *name, const char *value) 
 {
    lListElem *elem;
@@ -268,7 +263,7 @@ static void add_or_replace_env(lList *envl, const char *name, const char *value)
    lSetString(elem, VA_value, value);
 }
 
-/****** execd/add_or_replace_env_int() ***************************************
+/****** execd/sge/add_or_replace_env_int() ************************************
 *
 *  NAME
 *     add_or_replace_env_int -- add or change an environment variable
@@ -294,13 +289,9 @@ static void add_or_replace_env(lList *envl, const char *name, const char *value)
 *     Function should be moved to some library - same or similar code
 *     might be used in other modules.
 *
-*  BUGS
-*
 *  SEE ALSO
 *     execd/add_or_replace_env()
-*
-****************************************************************************
-*/
+******************************************************************************/
 static void add_or_replace_env_int(lList *envl, const char *name, int value)
 {
    char buffer[2048];
@@ -309,7 +300,7 @@ static void add_or_replace_env_int(lList *envl, const char *name, int value)
    add_or_replace_env(envl, name, buffer);
 }
 
-/****** execd/add_or_replace_env_u32() ***************************************
+/****** execd/sge/add_or_replace_env_u32() ************************************
 *
 *  NAME
 *     add_or_replace_env_u32 -- add or change an environment variable
@@ -328,10 +319,6 @@ static void add_or_replace_env_int(lList *envl, const char *name, int value)
 *     name  - the name of the variable
 *     value - the (new) value of the variable
 *
-*  RESULT
-*
-*  EXAMPLE
-*
 *  NOTES
 *     Function should be moved to some library - same or similar code
 *     might be used in other modules.
@@ -340,10 +327,9 @@ static void add_or_replace_env_int(lList *envl, const char *name, int value)
 *
 *  SEE ALSO
 *     execd/add_or_replace_env()
-*
-****************************************************************************
-*/
-static void add_or_replace_env_u32(lList *envl, const char *name, u_long32 value)
+******************************************************************************/
+static void add_or_replace_env_u32(lList *envl, const char *name, 
+                                   u_long32 value)
 {
    char buffer[2048];
 
@@ -351,8 +337,7 @@ static void add_or_replace_env_u32(lList *envl, const char *name, u_long32 value
    add_or_replace_env(envl, name, buffer);
 }
 
-/****** execd/dump_env() ***************************************
-*
+/****** execd/sge/dump_env() **************************************************
 *  NAME
 *     dump_env -- dump environment from list to file
 *
@@ -377,13 +362,7 @@ static void add_or_replace_env_u32(lList *envl, const char *name, u_long32 value
 *  NOTES
 *     Function should be moved to some library - same or similar code
 *     might be used in other modules.
-*
-*  BUGS
-*
-*  SEE ALSO
-*
-****************************************************************************
-*/
+******************************************************************************/
 static void dump_env(lList *envl, FILE *file) 
 {
    lListElem *elem;
@@ -396,8 +375,7 @@ static void dump_env(lList *envl, FILE *file)
       fprintf(file, "%s=%s\n", lGetString(elem, VA_variable), lGetString(elem, VA_value));
    }
 }
-/****** execd/get_sharedlib_path_name() ***************************************
-*
+/****** execd/sge/get_sharedlib_path_name() ***********************************
 *  NAME
 *     get_sharedlib_path_name -- return name of sharedlib path
 *
@@ -429,14 +407,9 @@ static void dump_env(lList *envl, FILE *file)
 *     Example: If a shared linked rshd (called for qrsh execution) is
 *     executed with a faked shared lib path, operations defined in
 *     a non sge library libgdi.so might be executed as user root.
-*
-*  BUGS
-*
-*  SEE ALSO
-*
-****************************************************************************
-*/
-static const char *get_sharedlib_path_name(void) {
+******************************************************************************/
+static const char *get_sharedlib_path_name(void) 
+{
 #if defined(AIX4)
    return "LIBPATH";
 #elif defined(HP10) || defined(HP11)
@@ -449,8 +422,7 @@ static const char *get_sharedlib_path_name(void) {
 #endif
 }
 
-/****** execd/set_sharedlib_path() ***************************************
-*
+/****** execd/sge/set_sharedlib_path() ****************************************
 *  NAME
 *     set_sharedlib_path -- set the shared library search path
 *
@@ -478,11 +450,9 @@ static const char *get_sharedlib_path_name(void) {
 *
 *  SEE ALSO
 *     execd/get_sharedlib_path_name()
-*
-****************************************************************************
-*/
-
-static void set_sharedlib_path(lList *environmentList) {
+******************************************************************************/
+static void set_sharedlib_path(lList *environmentList) 
+{
    char *sharedlib_path;
    char *sge_sharedlib_path;
    const char *sharedlib_path_name = get_sharedlib_path_name();

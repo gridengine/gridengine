@@ -578,11 +578,7 @@ int sge_before_dispatch(void)
    return 0;
 }
 
-/* handling administrative events is independent of the scheduler algorithm */
-/*
-*                                                             max. column:     |
-*/
-/****** sge_schedd/handle_administrative_events() ******
+/****** schedd/sge/handle_administrative_events() *****************************
 *  NAME
 *     handle_administrative_events() -- ??? 
 *
@@ -590,7 +586,8 @@ int sge_before_dispatch(void)
 *     int handle_administrative_events(u_long32 type, lListElem *event) 
 *
 *  FUNCTION
-*     ??? 
+*     (handling administrative events is independent of the scheduler
+*     algorithm) 
 *
 *  INPUTS
 *     u_long32 type    - ??? 
@@ -601,9 +598,7 @@ int sge_before_dispatch(void)
 *   -1 reregister at qmaster
 *    1 handled administrative event
 *    2 got a shutdown event: do not schedule, finish immediately instead
-*
-********************************
-*/
+*******************************************************************************/
 int handle_administrative_events(u_long32 type, lListElem *event)
 {
    int ret = 1;

@@ -90,7 +90,7 @@ static lListElem *create_default_sched_conf(void);
 #define MAXGJOBS                            0
 #define SCHEDD_JOB_INFO                     "true"
 
-/****** sched_conf/write_sched_configuration() **********************************
+/****** sge/sched_conf/write_sched_configuration() ****************************
 *  NAME
 *     write_sched_configuration() -- print scheduler configuration 
 *

@@ -610,7 +610,7 @@ lListElem **pjob
    return answer;
 }
 
-/****** parse_job_cull/parse_script_file() *************************************
+/****** client/parse_job_cull/parse_script_file() *****************************
 *  NAME
 *     parse_script_file() -- parse a job script or a job defaults file
 *

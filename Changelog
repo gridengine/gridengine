@@ -1,3 +1,8 @@
+AH-2003-01-22-1  Bugfix:    STRING complex attribute handling with RELOP "!=" is
+                            broken
+                 IZ:        #450
+                 Bugtraq:   #4805423
+
 EB-2003-01-22-1  Bugfix:    ":" in account string breaks accounting file
                  IZ:        #314
                  Bugtraq:   #4713013

@@ -234,5 +234,8 @@
 #define MSG_TSTSND_ENROLLED               _MESSAGE(39137, _("enrolled\n"))
 #define MSG_TSTSND_NOTENROLLED            _MESSAGE(39138, _("not enrolled\n"))
 #define MSG_NET_UNIQUEHOSTNAMEIS_S        _MESSAGE(39139, _("unique hostname = \"%s\"\n"))
+#define MSG_ENROLLEDBUTLEAVECOMMDERR_S    _MESSAGE(39140, _("enrolled, but leave_commd() call failed with status: %s"))
+#define MSG_ENROLLFAILEDWITHSTATUS_S      _MESSAGE(39141, _("enroll failed with status: %s"))
+
 
 #endif /* __MSG_COMMD_H */

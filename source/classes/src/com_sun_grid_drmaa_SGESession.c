@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <strings.h>
+#include <string.h>
 
 #include "japi/drmaa.h"
 #include "japi/msg_drmaa.h"
@@ -452,7 +453,6 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SGESession_nativeGetAttri
 {
    char error[DRMAA_ERROR_STRING_BUFFER];
    int errnum = DRMAA_ERRNO_SUCCESS;
-   drmaa_job_template_t *jt = get_from_list (id);
    char buffer[BUFFER_LENGTH];
    jobjectArray retval = NULL;
    drmaa_attr_names_t *names = NULL;
@@ -735,7 +735,7 @@ static void throw_exception (JNIEnv *env, int errnum, char *message)
       
       /* If it's still not found, give up. */
       if (newExcCls == 0) {
-         CRITICAL ((SGE_EVENT, "Unable to find exception for DRMAA error: %d\n",
+         CRITICAL ((SGE_EVENT, "Unable to find exception for DRMAA error: %s\n",
                     drmaa_strerror (errnum)));
          DEXIT;
          return;

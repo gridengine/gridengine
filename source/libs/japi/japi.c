@@ -1026,6 +1026,13 @@ int japi_exit(bool close_session, int flag, dstring *diag)
    JAPI_UNLOCK_SESSION();
    JAPI_LOCK_CR();
 
+   /* per thread initialization */
+   if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
+      japi_session = JAPI_SESSION_INACTIVE;
+      DEXIT;
+      return DRMAA_ERRNO_INTERNAL_ERROR;
+   }
+
    /* Here's how this stop process works:
     * o Kill any pending jobs
     * o Wait for the event client thread to die

@@ -278,7 +278,12 @@ public class TestDRMAA {
             JobInfo status = null;
             jobId = (String)i.next ();
 
-            status = session.wait (jobId, DRMAASession.TIMEOUT_WAIT_FOREVER);
+            try {
+               status = session.wait (jobId, DRMAASession.TIMEOUT_WAIT_FOREVER);
+            }
+            catch (ExitTimeoutException e) {
+               throw new NoActiveSessionException ();
+            }
             
             /* report how job finished */
             if (status.wasAborted ()) {
@@ -311,7 +316,13 @@ public class TestDRMAA {
          
          log ("Submitted " + jobIds.size () + " jobs");
          
-         session.synchronize (jobIds, DRMAASession.TIMEOUT_WAIT_FOREVER, true);
+         try {
+            session.synchronize (jobIds, DRMAASession.TIMEOUT_WAIT_FOREVER,
+                                 true);
+         }
+         catch (ExitTimeoutException e) {
+            throw new NoActiveSessionException ();
+         }
          
          log ("All jobs have finished");
       }
@@ -352,16 +363,16 @@ public class TestDRMAA {
          this.sleep = sleep;
          
          jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", sleep, false);
-         
-         if (sleep > 0) {
-            sleep (sleep);
-         }
       }
       
       public void test () throws DRMAAException {
          String jobId = session.runJob (jt);
          
          log ("Submitted job " + jobId);
+         
+         if (sleep > 0) {
+            sleep (sleep);
+         }
       }
    }
    
@@ -392,6 +403,9 @@ public class TestDRMAA {
                log ("job \"" + info.getJobId () + "\" finished with unclear conditions");
             }
          }
+         catch (ExitTimeoutException e) {
+            throw new NoActiveSessionException ();
+         }
          catch (NoResourceUsageDataException e) {
             log ("job \"" + info.getJobId () + "\" has already been reaped");
          }
@@ -408,7 +422,12 @@ public class TestDRMAA {
       }
       
       public void test () throws DRMAAException {
-         session.synchronize (all, DRMAASession.TIMEOUT_WAIT_FOREVER, false);
+         try {
+            session.synchronize (all, DRMAASession.TIMEOUT_WAIT_FOREVER, false);
+         }
+         catch (ExitTimeoutException e) {
+            throw new NoActiveSessionException ();
+         }
          
          log ("All jobs have finished");
       }

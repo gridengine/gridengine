@@ -257,8 +257,7 @@ lList *orders
    aep = lFirst(alp);
    if (!aep) {
       ERROR((SGE_EVENT, MSG_LIST_NOELEMENTINANSWERLISTSENDORDERFAILED ));
-   }
-   else {
+   } else {
       success = (lGetUlong(aep, AN_status)==STATUS_OK);
       if (!success) {
          const char *s;

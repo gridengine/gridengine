@@ -40,7 +40,6 @@
 #include "sge_jataskL.h"
 #include "sge_hostL.h"
 #include "sge_usageL.h"
-#include "sge_eventL.h"
 #include "sge_reportL.h"
 #include "sge_job_reportL.h"
 #include "sge_sched.h"

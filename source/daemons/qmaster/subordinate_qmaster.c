@@ -37,7 +37,6 @@
 #include "sge_conf.h"
 #include "sge_jobL.h"
 #include "sge_queueL.h"
-#include "sge_eventL.h"
 #include "sge_answerL.h"
 #include "slots_used.h"
 #include "sge_sched.h"

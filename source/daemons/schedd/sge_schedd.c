@@ -265,6 +265,8 @@ char *argv[]
          }
 #endif
       }
+
+      ec_set_busy(0);
    }
 }
 

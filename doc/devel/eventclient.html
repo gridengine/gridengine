@@ -1,6 +1,6 @@
 <HTML>
 <HEAD>
-<!-- Created by texi2html 1.56k from ../../source/eventclient.texi on 5 April 2002 -->
+<!-- Created by texi2html 1.56k from eventclient.texi on 9 April 2002 -->
 
 <TITLE>Autodocs for Grid Engine Event Client Interface</TITLE>
 </HEAD>
@@ -17,7 +17,7 @@
 <LI><A NAME="TOC1" HREF="eventclient.html#SEC1">Eventclient</A>
 <UL>
 <LI><A NAME="TOC2" HREF="eventclient.html#SEC2">--EV_Type</A>
-<LI><A NAME="TOC3" HREF="eventclient.html#SEC3">--Introduction</A>
+<LI><A NAME="TOC3" HREF="eventclient.html#SEC3">--Event_Client_Interface</A>
 <LI><A NAME="TOC4" HREF="eventclient.html#SEC4">-Busy-state</A>
 <LI><A NAME="TOC5" HREF="eventclient.html#SEC5">-Events</A>
 <LI><A NAME="TOC6" HREF="eventclient.html#SEC6">-Flushing</A>
@@ -25,61 +25,63 @@
 <LI><A NAME="TOC8" HREF="eventclient.html#SEC8">-Subscription</A>
 <LI><A NAME="TOC9" HREF="eventclient.html#SEC9">Client</A>
 <UL>
-<LI><A NAME="TOC10" HREF="eventclient.html#SEC10">--Introduction</A>
-<LI><A NAME="TOC11" HREF="eventclient.html#SEC11">-Global_Variables</A>
+<LI><A NAME="TOC10" HREF="eventclient.html#SEC10">--Event_Client</A>
+<LI><A NAME="TOC11" HREF="eventclient.html#SEC11">-Event_Client_Global_Variables</A>
 <LI><A NAME="TOC12" HREF="eventclient.html#SEC12">ck_event_number</A>
 <LI><A NAME="TOC13" HREF="eventclient.html#SEC13">ec_commit</A>
 <LI><A NAME="TOC14" HREF="eventclient.html#SEC14">ec_config_changed</A>
 <LI><A NAME="TOC15" HREF="eventclient.html#SEC15">ec_deregister</A>
 <LI><A NAME="TOC16" HREF="eventclient.html#SEC16">ec_get</A>
-<LI><A NAME="TOC17" HREF="eventclient.html#SEC17">ec_get_busy_handling</A>
-<LI><A NAME="TOC18" HREF="eventclient.html#SEC18">ec_get_clientdata</A>
-<LI><A NAME="TOC19" HREF="eventclient.html#SEC19">ec_get_edtime</A>
-<LI><A NAME="TOC20" HREF="eventclient.html#SEC20">ec_get_flush</A>
-<LI><A NAME="TOC21" HREF="eventclient.html#SEC21">ec_mark4registration</A>
-<LI><A NAME="TOC22" HREF="eventclient.html#SEC22">ec_need_new_registration</A>
-<LI><A NAME="TOC23" HREF="eventclient.html#SEC23">ec_prepare_registration</A>
-<LI><A NAME="TOC24" HREF="eventclient.html#SEC24">ec_register</A>
-<LI><A NAME="TOC25" HREF="eventclient.html#SEC25">ec_set_busy_handling</A>
-<LI><A NAME="TOC26" HREF="eventclient.html#SEC26">ec_set_clientdata</A>
-<LI><A NAME="TOC27" HREF="eventclient.html#SEC27">ec_set_edtime</A>
-<LI><A NAME="TOC28" HREF="eventclient.html#SEC28">ec_set_flush</A>
-<LI><A NAME="TOC29" HREF="eventclient.html#SEC29">ec_subscribe</A>
-<LI><A NAME="TOC30" HREF="eventclient.html#SEC30">ec_subscribe_all</A>
-<LI><A NAME="TOC31" HREF="eventclient.html#SEC31">ec_subscribe_flush</A>
-<LI><A NAME="TOC32" HREF="eventclient.html#SEC32">ec_unset_flush</A>
-<LI><A NAME="TOC33" HREF="eventclient.html#SEC33">ec_unsubscribe</A>
-<LI><A NAME="TOC34" HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>
-<LI><A NAME="TOC35" HREF="eventclient.html#SEC35">get_event_list</A>
+<LI><A NAME="TOC17" HREF="eventclient.html#SEC17">ec_get_busy</A>
+<LI><A NAME="TOC18" HREF="eventclient.html#SEC18">ec_get_busy_handling</A>
+<LI><A NAME="TOC19" HREF="eventclient.html#SEC19">ec_get_clientdata</A>
+<LI><A NAME="TOC20" HREF="eventclient.html#SEC20">ec_get_edtime</A>
+<LI><A NAME="TOC21" HREF="eventclient.html#SEC21">ec_get_flush</A>
+<LI><A NAME="TOC22" HREF="eventclient.html#SEC22">ec_mark4registration</A>
+<LI><A NAME="TOC23" HREF="eventclient.html#SEC23">ec_need_new_registration</A>
+<LI><A NAME="TOC24" HREF="eventclient.html#SEC24">ec_prepare_registration</A>
+<LI><A NAME="TOC25" HREF="eventclient.html#SEC25">ec_register</A>
+<LI><A NAME="TOC26" HREF="eventclient.html#SEC26">ec_set_busy</A>
+<LI><A NAME="TOC27" HREF="eventclient.html#SEC27">ec_set_busy_handling</A>
+<LI><A NAME="TOC28" HREF="eventclient.html#SEC28">ec_set_clientdata</A>
+<LI><A NAME="TOC29" HREF="eventclient.html#SEC29">ec_set_edtime</A>
+<LI><A NAME="TOC30" HREF="eventclient.html#SEC30">ec_set_flush</A>
+<LI><A NAME="TOC31" HREF="eventclient.html#SEC31">ec_subscribe</A>
+<LI><A NAME="TOC32" HREF="eventclient.html#SEC32">ec_subscribe_all</A>
+<LI><A NAME="TOC33" HREF="eventclient.html#SEC33">ec_subscribe_flush</A>
+<LI><A NAME="TOC34" HREF="eventclient.html#SEC34">ec_unset_flush</A>
+<LI><A NAME="TOC35" HREF="eventclient.html#SEC35">ec_unsubscribe</A>
+<LI><A NAME="TOC36" HREF="eventclient.html#SEC36">ec_unsubscribe_all</A>
+<LI><A NAME="TOC37" HREF="eventclient.html#SEC37">get_event_list</A>
 </UL>
-<LI><A NAME="TOC36" HREF="eventclient.html#SEC36">Server</A>
+<LI><A NAME="TOC38" HREF="eventclient.html#SEC38">Server</A>
 <UL>
-<LI><A NAME="TOC37" HREF="eventclient.html#SEC37">--Introduction</A>
-<LI><A NAME="TOC38" HREF="eventclient.html#SEC38">-Defines</A>
-<LI><A NAME="TOC39" HREF="eventclient.html#SEC39">-Global_Variables</A>
-<LI><A NAME="TOC40" HREF="eventclient.html#SEC40">check_send_new_subscribed_list</A>
-<LI><A NAME="TOC41" HREF="eventclient.html#SEC41">ck_4_deliver_events</A>
-<LI><A NAME="TOC42" HREF="eventclient.html#SEC42">reinit_schedd</A>
-<LI><A NAME="TOC43" HREF="eventclient.html#SEC43">set_event_client_busy</A>
-<LI><A NAME="TOC44" HREF="eventclient.html#SEC44">sge_ack_event</A>
-<LI><A NAME="TOC45" HREF="eventclient.html#SEC45">sge_add_event</A>
-<LI><A NAME="TOC46" HREF="eventclient.html#SEC46">sge_add_event_client</A>
-<LI><A NAME="TOC47" HREF="eventclient.html#SEC47">sge_add_list_event</A>
-<LI><A NAME="TOC48" HREF="eventclient.html#SEC48">sge_event_client_exit</A>
-<LI><A NAME="TOC49" HREF="eventclient.html#SEC49">sge_eventclient_subscribed</A>
-<LI><A NAME="TOC50" HREF="eventclient.html#SEC50">sge_flush_events</A>
-<LI><A NAME="TOC51" HREF="eventclient.html#SEC51">sge_gdi_kill_eventclient</A>
-<LI><A NAME="TOC52" HREF="eventclient.html#SEC52">sge_gdi_tsm</A>
-<LI><A NAME="TOC53" HREF="eventclient.html#SEC53">sge_get_next_event_number</A>
-<LI><A NAME="TOC54" HREF="eventclient.html#SEC54">sge_locate_scheduler</A>
-<LI><A NAME="TOC55" HREF="eventclient.html#SEC55">sge_mod_event_client</A>
-<LI><A NAME="TOC56" HREF="eventclient.html#SEC56">sge_next_flush</A>
-<LI><A NAME="TOC57" HREF="eventclient.html#SEC57">sge_total_update_event</A>
-<LI><A NAME="TOC58" HREF="eventclient.html#SEC58">total_update</A>
+<LI><A NAME="TOC39" HREF="eventclient.html#SEC39">--Event_Client_Server</A>
+<LI><A NAME="TOC40" HREF="eventclient.html#SEC40">-Event_Client_Server_Defines</A>
+<LI><A NAME="TOC41" HREF="eventclient.html#SEC41">-Event_Client_Server_Global_Variables</A>
+<LI><A NAME="TOC42" HREF="eventclient.html#SEC42">check_send_new_subscribed_list</A>
+<LI><A NAME="TOC43" HREF="eventclient.html#SEC43">ck_4_deliver_events</A>
+<LI><A NAME="TOC44" HREF="eventclient.html#SEC44">reinit_event_client</A>
+<LI><A NAME="TOC45" HREF="eventclient.html#SEC45">set_event_client_busy</A>
+<LI><A NAME="TOC46" HREF="eventclient.html#SEC46">sge_ack_event</A>
+<LI><A NAME="TOC47" HREF="eventclient.html#SEC47">sge_add_event</A>
+<LI><A NAME="TOC48" HREF="eventclient.html#SEC48">sge_add_event_client</A>
+<LI><A NAME="TOC49" HREF="eventclient.html#SEC49">sge_add_list_event</A>
+<LI><A NAME="TOC50" HREF="eventclient.html#SEC50">sge_event_client_exit</A>
+<LI><A NAME="TOC51" HREF="eventclient.html#SEC51">sge_eventclient_subscribed</A>
+<LI><A NAME="TOC52" HREF="eventclient.html#SEC52">sge_flush_events</A>
+<LI><A NAME="TOC53" HREF="eventclient.html#SEC53">sge_gdi_kill_eventclient</A>
+<LI><A NAME="TOC54" HREF="eventclient.html#SEC54">sge_gdi_tsm</A>
+<LI><A NAME="TOC55" HREF="eventclient.html#SEC55">sge_get_next_event_number</A>
+<LI><A NAME="TOC56" HREF="eventclient.html#SEC56">sge_locate_event_client</A>
+<LI><A NAME="TOC57" HREF="eventclient.html#SEC57">sge_mod_event_client</A>
+<LI><A NAME="TOC58" HREF="eventclient.html#SEC58">sge_next_flush</A>
+<LI><A NAME="TOC59" HREF="eventclient.html#SEC59">sge_total_update_event</A>
+<LI><A NAME="TOC60" HREF="eventclient.html#SEC60">total_update</A>
 </UL>
-<LI><A NAME="TOC59" HREF="eventclient.html#SEC59">event_text</A>
+<LI><A NAME="TOC61" HREF="eventclient.html#SEC61">event_text</A>
 </UL>
-<LI><A NAME="TOC60" HREF="eventclient.html#SEC60">Function Index</A>
+<LI><A NAME="TOC62" HREF="eventclient.html#SEC62">Function Index</A>
 </UL>
 <P><HR><P>
 
@@ -191,7 +193,7 @@ delivery times, timeouts etc.
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC3">--Introduction</A>.
+section <A HREF="eventclient.html#SEC3">--Event_Client_Interface</A>.
 <LI>
 
 section <A HREF="eventclient.html#SEC7">-ID-numbers</A>.
@@ -210,7 +212,7 @@ section <A HREF="eventclient.html#SEC4">-Busy-state</A>.
 
 
 
-<H2><A NAME="SEC3" HREF="eventclient.html#TOC3">--Introduction</A></H2>
+<H2><A NAME="SEC3" HREF="eventclient.html#TOC3">--Event_Client_Interface</A></H2>
 
 <P>
 <A NAME="IDX2"></A>
@@ -249,7 +251,6 @@ the same data in regular intervals.
 <PRE>
 The current implementation is a generalized form of the event client
 interface that already existed in Codine/GRD.
-Further cleanup steps might be usefull.
 </PRE>
 
 
@@ -271,10 +272,10 @@ section <A HREF="eventclient.html#SEC6">-Flushing</A>.
 section <A HREF="eventclient.html#SEC4">-Busy-state</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC10">--Introduction</A>.
+section <A HREF="eventclient.html#SEC10">--Event_Client</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC37">--Introduction</A>.
+section <A HREF="eventclient.html#SEC39">--Event_Client_Server</A>.
 </UL>
 
 </DL>
@@ -323,19 +324,8 @@ The following policies are implemented at present:
    EV_BUSY_UNTIL_RELEASED - when delivering events qmaster will set
                             the eventclient to busy.
                             It will stay in the busy state until it
-                            is explicitly released either by special
-                            handling of the client in qmaster
-                            (scheduler), or by a message (not yet
-                            implemented)
-</PRE>
-
-
-<DT><B>NOTES</B>
-<DD>
-
-<PRE>
-A special GDI message (or piggypack to the ACK message) still has to be
-implemented to allow setting of the busy state from the client.
+                            is explicitly released by the client
+                            (calling ec_set_busy(0))
 </PRE>
 
 
@@ -345,7 +335,10 @@ implemented to allow setting of the busy state from the client.
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC25">ec_set_busy_handling</A>.
+section <A HREF="eventclient.html#SEC27">ec_set_busy_handling</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC26">ec_set_busy</A>.
 </UL>
 
 </DL>
@@ -565,16 +558,16 @@ ec_set_flush/ec_unset_flush functions.
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC27">ec_set_edtime</A>.
+section <A HREF="eventclient.html#SEC29">ec_set_edtime</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC28">ec_set_flush</A>.
+section <A HREF="eventclient.html#SEC30">ec_set_flush</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC32">ec_unset_flush</A>.
+section <A HREF="eventclient.html#SEC34">ec_unset_flush</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC31">ec_subscribe_flush</A>.
+section <A HREF="eventclient.html#SEC33">ec_subscribe_flush</A>.
 </UL>
 
 </DL>
@@ -641,10 +634,10 @@ implemented in qmaster (probably in sge_m_event.c).
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC23">ec_prepare_registration</A>.
+section <A HREF="eventclient.html#SEC24">ec_prepare_registration</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC46">sge_add_event_client</A>.
+section <A HREF="eventclient.html#SEC48">sge_add_event_client</A>.
 </UL>
 
 </DL>
@@ -697,19 +690,19 @@ ec_subscribe/ec_unsubscribe functions.
 section <A HREF="eventclient.html#SEC5">-Events</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
+section <A HREF="eventclient.html#SEC31">ec_subscribe</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC30">ec_subscribe_all</A>.
+section <A HREF="eventclient.html#SEC32">ec_subscribe_all</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC33">ec_unsubscribe</A>.
+section <A HREF="eventclient.html#SEC35">ec_unsubscribe</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>.
+section <A HREF="eventclient.html#SEC36">ec_unsubscribe_all</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC31">ec_subscribe_flush</A>.
+section <A HREF="eventclient.html#SEC33">ec_subscribe_flush</A>.
 </UL>
 
 </DL>
@@ -720,7 +713,7 @@ section <A HREF="eventclient.html#SEC31">ec_subscribe_flush</A>.
 
 
 
-<H3><A NAME="SEC10" HREF="eventclient.html#TOC10">--Introduction</A></H3>
+<H3><A NAME="SEC10" HREF="eventclient.html#TOC10">--Event_Client</A></H3>
 
 <P>
 <A NAME="IDX8"></A>
@@ -769,58 +762,58 @@ interface.
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC3">--Introduction</A>.
+section <A HREF="eventclient.html#SEC3">--Event_Client_Interface</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC23">ec_prepare_registration</A>.
+section <A HREF="eventclient.html#SEC24">ec_prepare_registration</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC24">ec_register</A>.
+section <A HREF="eventclient.html#SEC25">ec_register</A>.
 <LI>
 
 section <A HREF="eventclient.html#SEC15">ec_deregister</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
+section <A HREF="eventclient.html#SEC31">ec_subscribe</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC30">ec_subscribe_all</A>.
+section <A HREF="eventclient.html#SEC32">ec_subscribe_all</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC33">ec_unsubscribe</A>.
+section <A HREF="eventclient.html#SEC35">ec_unsubscribe</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>.
+section <A HREF="eventclient.html#SEC36">ec_unsubscribe_all</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC20">ec_get_flush</A>.
+section <A HREF="eventclient.html#SEC21">ec_get_flush</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC28">ec_set_flush</A>.
+section <A HREF="eventclient.html#SEC30">ec_set_flush</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC32">ec_unset_flush</A>.
+section <A HREF="eventclient.html#SEC34">ec_unset_flush</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC31">ec_subscribe_flush</A>.
+section <A HREF="eventclient.html#SEC33">ec_subscribe_flush</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC27">ec_set_edtime</A>.
+section <A HREF="eventclient.html#SEC29">ec_set_edtime</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC19">ec_get_edtime</A>.
+section <A HREF="eventclient.html#SEC20">ec_get_edtime</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC25">ec_set_busy_handling</A>.
+section <A HREF="eventclient.html#SEC27">ec_set_busy_handling</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC17">ec_get_busy_handling</A>.
+section <A HREF="eventclient.html#SEC18">ec_get_busy_handling</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC26">ec_set_clientdata</A>.
+section <A HREF="eventclient.html#SEC28">ec_set_clientdata</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC18">ec_get_clientdata</A>.
+section <A HREF="eventclient.html#SEC19">ec_get_clientdata</A>.
 <LI>
 
 section <A HREF="eventclient.html#SEC13">ec_commit</A>.
@@ -829,16 +822,16 @@ section <A HREF="eventclient.html#SEC13">ec_commit</A>.
 section <A HREF="eventclient.html#SEC16">ec_get</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC21">ec_mark4registration</A>.
+section <A HREF="eventclient.html#SEC22">ec_mark4registration</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC22">ec_need_new_registration</A>.
+section <A HREF="eventclient.html#SEC23">ec_need_new_registration</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC11" HREF="eventclient.html#TOC11">-Global_Variables</A></H3>
+<H3><A NAME="SEC11" HREF="eventclient.html#TOC11">-Event_Client_Global_Variables</A></H3>
 
 <P>
 <A NAME="IDX9"></A>
@@ -1062,19 +1055,19 @@ or change of the event delivery interval.
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
+section <A HREF="eventclient.html#SEC31">ec_subscribe</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC30">ec_subscribe_all</A>.
+section <A HREF="eventclient.html#SEC32">ec_subscribe_all</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC33">ec_unsubscribe</A>.
+section <A HREF="eventclient.html#SEC35">ec_unsubscribe</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>.
+section <A HREF="eventclient.html#SEC36">ec_unsubscribe_all</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC27">ec_set_edtime</A>.
+section <A HREF="eventclient.html#SEC29">ec_set_edtime</A>.
 </UL>
 
 </DL>
@@ -1133,7 +1126,7 @@ int - 1, if the deregistration succeeded, else 0
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC24">ec_register</A>.
+section <A HREF="eventclient.html#SEC25">ec_register</A>.
 </UL>
 
 </DL>
@@ -1214,7 +1207,7 @@ The event_list has to be freed by the calling function.
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC24">ec_register</A>.
+section <A HREF="eventclient.html#SEC25">ec_register</A>.
 <LI>
 
 section <A HREF="eventclient.html#SEC13">ec_commit</A>.
@@ -1223,10 +1216,78 @@ section <A HREF="eventclient.html#SEC13">ec_commit</A>.
 </DL>
 
 
-<H3><A NAME="SEC17" HREF="eventclient.html#TOC17">ec_get_busy_handling</A></H3>
+<H3><A NAME="SEC17" HREF="eventclient.html#TOC17">ec_get_busy</A></H3>
 
 <P>
 <A NAME="IDX15"></A>
+
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+ec_get_busy() -- get the busy state
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+int ec_get_busy(void)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Reads the busy state of the event client.
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1: the client is busy, 0: the client is idle
+</PRE>
+
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+The function only returns the local busy state in the event client itself.
+If this state changes, it will be reported to qmaster with the next
+communication, but not back from qmaster to the client.
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC4">-Busy-state</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC27">ec_set_busy_handling</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC26">ec_set_busy</A>.
+</UL>
+
+</DL>
+
+
+<H3><A NAME="SEC18" HREF="eventclient.html#TOC18">ec_get_busy_handling</A></H3>
+
+<P>
+<A NAME="IDX16"></A>
 
 
 <DL COMPACT>
@@ -1245,7 +1306,7 @@ ec_get_busy_handling() -- get configured busy handling policy
 <PRE>
 #include "sge_c_event.h"
 
-int ec_get_busy_handling(void)
+ev_busy_handling ec_get_busy_handling(void)
 </PRE>
 
 
@@ -1261,7 +1322,7 @@ Returns the policy currently configured.
 <DD>
 
 <PRE>
-int - the current policy
+ev_busy_handling - the current policy
 </PRE>
 
 
@@ -1271,7 +1332,7 @@ int - the current policy
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC27">ec_set_edtime</A>.
+section <A HREF="eventclient.html#SEC29">ec_set_edtime</A>.
 <LI>
 
 section <A HREF="eventclient.html#SEC4">-Busy-state</A>.
@@ -1280,10 +1341,10 @@ section <A HREF="eventclient.html#SEC4">-Busy-state</A>.
 </DL>
 
 
-<H3><A NAME="SEC18" HREF="eventclient.html#TOC18">ec_get_clientdata</A></H3>
+<H3><A NAME="SEC19" HREF="eventclient.html#TOC19">ec_get_clientdata</A></H3>
 
 <P>
-<A NAME="IDX16"></A>
+<A NAME="IDX17"></A>
 
 
 <DL COMPACT>
@@ -1328,7 +1389,7 @@ u_long32 - current value
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC18">ec_get_clientdata</A>.
+section <A HREF="eventclient.html#SEC19">ec_get_clientdata</A>.
 <LI>
 
 See <TT>`Eventclient/EV_Type'</TT>
@@ -1337,10 +1398,10 @@ See <TT>`Eventclient/EV_Type'</TT>
 </DL>
 
 
-<H3><A NAME="SEC19" HREF="eventclient.html#TOC19">ec_get_edtime</A></H3>
+<H3><A NAME="SEC20" HREF="eventclient.html#TOC20">ec_get_edtime</A></H3>
 
 <P>
-<A NAME="IDX17"></A>
+<A NAME="IDX18"></A>
 
 
 <DL COMPACT>
@@ -1385,16 +1446,16 @@ int - the interval in seconds
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC27">ec_set_edtime</A>.
+section <A HREF="eventclient.html#SEC29">ec_set_edtime</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC20" HREF="eventclient.html#TOC20">ec_get_flush</A></H3>
+<H3><A NAME="SEC21" HREF="eventclient.html#TOC21">ec_get_flush</A></H3>
 
 <P>
-<A NAME="IDX18"></A>
+<A NAME="IDX19"></A>
 
 
 <DL COMPACT>
@@ -1413,7 +1474,7 @@ ec_get_flush() -- get flushing information for an event
 <PRE>
 #include "sge_c_event.h"
 
-int ec_get_flush(int event)
+int ec_get_flush(ev_event event)
 </PRE>
 
 
@@ -1431,7 +1492,7 @@ This function returns the flushing information for an individual event.
 <DD>
 
 <PRE>
-int event - the event id to query
+ev_event event - the event id to query
 </PRE>
 
 
@@ -1452,16 +1513,16 @@ int - EV_NO_FLUSH(-1) or the number of seconds used for flushing
 section <A HREF="eventclient.html#SEC6">-Flushing</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC28">ec_set_flush</A>.
+section <A HREF="eventclient.html#SEC30">ec_set_flush</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC21" HREF="eventclient.html#TOC21">ec_mark4registration</A></H3>
+<H3><A NAME="SEC22" HREF="eventclient.html#TOC22">ec_mark4registration</A></H3>
 
 <P>
-<A NAME="IDX19"></A>
+<A NAME="IDX20"></A>
 
 
 <DL COMPACT>
@@ -1508,16 +1569,16 @@ detect such situations and react accordingly.
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC22">ec_need_new_registration</A>.
+section <A HREF="eventclient.html#SEC23">ec_need_new_registration</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC22" HREF="eventclient.html#TOC22">ec_need_new_registration</A></H3>
+<H3><A NAME="SEC23" HREF="eventclient.html#TOC23">ec_need_new_registration</A></H3>
 
 <P>
-<A NAME="IDX20"></A>
+<A NAME="IDX21"></A>
 
 
 <DL COMPACT>
@@ -1559,10 +1620,10 @@ int - 1, if the client has to (re)register, else 0
 </DL>
 
 
-<H3><A NAME="SEC23" HREF="eventclient.html#TOC23">ec_prepare_registration</A></H3>
+<H3><A NAME="SEC24" HREF="eventclient.html#TOC24">ec_prepare_registration</A></H3>
 
 <P>
-<A NAME="IDX21"></A>
+<A NAME="IDX22"></A>
 
 
 <DL COMPACT>
@@ -1581,7 +1642,7 @@ ec_prepare_registration() -- prepare registration at server
 <PRE>
 #include "sge_c_event.h"
 
-int ec_prepare_registration(u_long32 id, const char *name)
+int ec_prepare_registration(ev_registration_id id, const char *name)
 </PRE>
 
 
@@ -1605,8 +1666,8 @@ qconf -sec.
 <DD>
 
 <PRE>
-u_long32 id      - id used to register
-const char *name - name of the event client
+ev_registration_id id  - id used to register
+const char *name       - name of the event client
 </PRE>
 
 
@@ -1651,10 +1712,10 @@ See <TT>`events'</TT>
 </DL>
 
 
-<H3><A NAME="SEC24" HREF="eventclient.html#TOC24">ec_register</A></H3>
+<H3><A NAME="SEC25" HREF="eventclient.html#TOC25">ec_register</A></H3>
 
 <P>
-<A NAME="IDX22"></A>
+<A NAME="IDX23"></A>
 
 
 <DL COMPACT>
@@ -1713,10 +1774,82 @@ section <A HREF="eventclient.html#SEC16">ec_get</A>.
 </DL>
 
 
-<H3><A NAME="SEC25" HREF="eventclient.html#TOC25">ec_set_busy_handling</A></H3>
+<H3><A NAME="SEC26" HREF="eventclient.html#TOC26">ec_set_busy</A></H3>
 
 <P>
-<A NAME="IDX23"></A>
+<A NAME="IDX24"></A>
+
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+ec_set_busy() -- set the busy state
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+int ec_set_busy(int busy)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Sets the busy state of the client. This has to be done if the busy policy
+has been set to EV_BUSY_UNTIL_RELEASED.
+An event client can set or unset the busy state at any time.
+While it is marked busy at the qmaster, qmaster will not deliver events to
+this client.
+The changed busy state will be communicated to qmaster with the next
+call to ec_commit (implicitly called by the next ec_get).
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+int busy - 1 = event client busy, 0 = event client idle
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1 = success, 0 = failed
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC4">-Busy-state</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC27">ec_set_busy_handling</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC17">ec_get_busy</A>.
+</UL>
+
+</DL>
+
+
+<H3><A NAME="SEC27" HREF="eventclient.html#TOC27">ec_set_busy_handling</A></H3>
+
+<P>
+<A NAME="IDX25"></A>
 
 
 <DL COMPACT>
@@ -1735,7 +1868,7 @@ ec_set_edtime() -- set the event client busy handling
 <PRE>
 #include "sge_c_event.h"
 
-int ec_set_busy_handling(int handling)
+int ec_set_busy_handling(ev_busy_handling handling)
 </PRE>
 
 
@@ -1756,7 +1889,7 @@ after a call to ec_commit or ec_get.
 <DD>
 
 <PRE>
-int handling - the policy to use
+ev_busy_handling handling - the policy to use
 </PRE>
 
 
@@ -1774,7 +1907,7 @@ int - 1, if the value was changed, else 0
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC17">ec_get_busy_handling</A>.
+section <A HREF="eventclient.html#SEC18">ec_get_busy_handling</A>.
 <LI>
 
 section <A HREF="eventclient.html#SEC4">-Busy-state</A>.
@@ -1789,10 +1922,10 @@ section <A HREF="eventclient.html#SEC16">ec_get</A>.
 </DL>
 
 
-<H3><A NAME="SEC26" HREF="eventclient.html#TOC26">ec_set_clientdata</A></H3>
+<H3><A NAME="SEC28" HREF="eventclient.html#TOC28">ec_set_clientdata</A></H3>
 
 <P>
-<A NAME="IDX24"></A>
+<A NAME="IDX26"></A>
 
 
 <DL COMPACT>
@@ -1842,7 +1975,7 @@ u_long32 data - the clientdata to set
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC18">ec_get_clientdata</A>.
+section <A HREF="eventclient.html#SEC19">ec_get_clientdata</A>.
 <LI>
 
 section <A HREF="eventclient.html#SEC2">--EV_Type</A>.
@@ -1869,10 +2002,10 @@ See <TT>`mechanisms'</TT>
 </DL>
 
 
-<H3><A NAME="SEC27" HREF="eventclient.html#TOC27">ec_set_edtime</A></H3>
+<H3><A NAME="SEC29" HREF="eventclient.html#TOC29">ec_set_edtime</A></H3>
 
 <P>
-<A NAME="IDX25"></A>
+<A NAME="IDX27"></A>
 
 
 <DL COMPACT>
@@ -1935,16 +2068,16 @@ qmaster spool lots of events and consume a lot of memory.
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC19">ec_get_edtime</A>.
+section <A HREF="eventclient.html#SEC20">ec_get_edtime</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC28" HREF="eventclient.html#TOC28">ec_set_flush</A></H3>
+<H3><A NAME="SEC30" HREF="eventclient.html#TOC30">ec_set_flush</A></H3>
 
 <P>
-<A NAME="IDX26"></A>
+<A NAME="IDX28"></A>
 
 
 <DL COMPACT>
@@ -1963,7 +2096,7 @@ ec_set_flush() -- set flushing information for an event
 <PRE>
 #include "sge_c_event.h"
 
-int ec_set_flush(int event, int flush)
+int ec_set_flush(ev_event event, int flush)
 </PRE>
 
 
@@ -1981,9 +2114,9 @@ This function sets the flushing information for an individual event.
 <DD>
 
 <PRE>
-int event - id of the event to configure
-int flush - the number of seconds between creation of
-            the event and flushing of the messages.
+ev_event event - id of the event to configure
+int flush      - the number of seconds between creation of
+                 the event and flushing of the messages.
 </PRE>
 
 
@@ -2004,22 +2137,22 @@ int - 1 on success, else 0
 section <A HREF="eventclient.html#SEC6">-Flushing</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC20">ec_get_flush</A>.
+section <A HREF="eventclient.html#SEC21">ec_get_flush</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC32">ec_unset_flush</A>.
+section <A HREF="eventclient.html#SEC34">ec_unset_flush</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC31">ec_subscribe_flush</A>.
+section <A HREF="eventclient.html#SEC33">ec_subscribe_flush</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC29" HREF="eventclient.html#TOC29">ec_subscribe</A></H3>
+<H3><A NAME="SEC31" HREF="eventclient.html#TOC31">ec_subscribe</A></H3>
 
 <P>
-<A NAME="IDX27"></A>
+<A NAME="IDX29"></A>
 
 
 <DL COMPACT>
@@ -2038,7 +2171,7 @@ ec_subscribe() -- Subscribe an event
 <PRE>
 #include "sge_c_event.h"
 
-int ec_subscribe(int event)
+int ec_subscribe(ev_event event)
 </PRE>
 
 
@@ -2058,7 +2191,7 @@ ec_commit.
 <DD>
 
 <PRE>
-int event - the event number
+ev_event event - the event number
 </PRE>
 
 
@@ -2079,13 +2212,13 @@ int - 1 on success, else 0
 section <A HREF="eventclient.html#SEC5">-Events</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC30">ec_subscribe_all</A>.
+section <A HREF="eventclient.html#SEC32">ec_subscribe_all</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC33">ec_unsubscribe</A>.
+section <A HREF="eventclient.html#SEC35">ec_unsubscribe</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>.
+section <A HREF="eventclient.html#SEC36">ec_unsubscribe_all</A>.
 <LI>
 
 section <A HREF="eventclient.html#SEC13">ec_commit</A>.
@@ -2097,10 +2230,10 @@ section <A HREF="eventclient.html#SEC16">ec_get</A>.
 </DL>
 
 
-<H3><A NAME="SEC30" HREF="eventclient.html#TOC30">ec_subscribe_all</A></H3>
+<H3><A NAME="SEC32" HREF="eventclient.html#TOC32">ec_subscribe_all</A></H3>
 
 <P>
-<A NAME="IDX28"></A>
+<A NAME="IDX30"></A>
 
 
 <DL COMPACT>
@@ -2156,13 +2289,13 @@ Only subscribe all events, if you really need them.
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
+section <A HREF="eventclient.html#SEC31">ec_subscribe</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC33">ec_unsubscribe</A>.
+section <A HREF="eventclient.html#SEC35">ec_unsubscribe</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>.
+section <A HREF="eventclient.html#SEC36">ec_unsubscribe_all</A>.
 <LI>
 
 section <A HREF="eventclient.html#SEC13">ec_commit</A>.
@@ -2174,10 +2307,10 @@ section <A HREF="eventclient.html#SEC16">ec_get</A>.
 </DL>
 
 
-<H3><A NAME="SEC31" HREF="eventclient.html#TOC31">ec_subscribe_flush</A></H3>
+<H3><A NAME="SEC33" HREF="eventclient.html#TOC33">ec_subscribe_flush</A></H3>
 
 <P>
-<A NAME="IDX29"></A>
+<A NAME="IDX31"></A>
 
 
 <DL COMPACT>
@@ -2196,7 +2329,7 @@ ec_subscribe_flush() -- subscribe an event and set flushing
 <PRE>
 #include "sge_c_event.h"
 
-int ec_subscribe_flush(int event, int flush)
+int ec_subscribe_flush(ev_event event, int flush)
 </PRE>
 
 
@@ -2212,8 +2345,9 @@ Subscribes and event and configures flushing for this event.
 <DD>
 
 <PRE>
-int event - id of the event to subscribe and flush
-int flush - number of seconds between event creation and flushing of events
+ev_event event - id of the event to subscribe and flush
+int flush      - number of seconds between event creation
+                 and flushing of events
 </PRE>
 
 
@@ -2237,19 +2371,19 @@ section <A HREF="eventclient.html#SEC8">-Subscription</A>.
 section <A HREF="eventclient.html#SEC6">-Flushing</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
+section <A HREF="eventclient.html#SEC31">ec_subscribe</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC28">ec_set_flush</A>.
+section <A HREF="eventclient.html#SEC30">ec_set_flush</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC32" HREF="eventclient.html#TOC32">ec_unset_flush</A></H3>
+<H3><A NAME="SEC34" HREF="eventclient.html#TOC34">ec_unset_flush</A></H3>
 
 <P>
-<A NAME="IDX30"></A>
+<A NAME="IDX32"></A>
 
 
 <DL COMPACT>
@@ -2268,7 +2402,7 @@ ec_unset_flush() -- unset flushing information
 <PRE>
 #include "sge_c_event.h"
 
-int ec_unset_flush(int event)
+int ec_unset_flush(ev_event event)
 </PRE>
 
 
@@ -2284,7 +2418,7 @@ Switch of flushing of an individual event.
 <DD>
 
 <PRE>
-int event - if of the event to configure
+ev_event event - if of the event to configure
 </PRE>
 
 
@@ -2305,22 +2439,22 @@ int - 1 on success, else 0
 section <A HREF="eventclient.html#SEC6">-Flushing</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC28">ec_set_flush</A>.
+section <A HREF="eventclient.html#SEC30">ec_set_flush</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC20">ec_get_flush</A>.
+section <A HREF="eventclient.html#SEC21">ec_get_flush</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC31">ec_subscribe_flush</A>.
+section <A HREF="eventclient.html#SEC33">ec_subscribe_flush</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC33" HREF="eventclient.html#TOC33">ec_unsubscribe</A></H3>
+<H3><A NAME="SEC35" HREF="eventclient.html#TOC35">ec_unsubscribe</A></H3>
 
 <P>
-<A NAME="IDX31"></A>
+<A NAME="IDX33"></A>
 
 
 <DL COMPACT>
@@ -2339,7 +2473,7 @@ ec_unsubscribe() -- unsubscribe an event
 <PRE>
 #include "sge_c_event.h"
 
-int ec_unsubscribe(int event)
+int ec_unsubscribe(ev_event event)
 </PRE>
 
 
@@ -2359,7 +2493,7 @@ no longer needed and then call ec_commit.
 <DD>
 
 <PRE>
-int event - the event to unsubscribe
+ev_event event - the event to unsubscribe
 </PRE>
 
 
@@ -2391,13 +2525,13 @@ and return 0.
 section <A HREF="eventclient.html#SEC5">-Events</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
+section <A HREF="eventclient.html#SEC31">ec_subscribe</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC30">ec_subscribe_all</A>.
+section <A HREF="eventclient.html#SEC32">ec_subscribe_all</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>.
+section <A HREF="eventclient.html#SEC36">ec_unsubscribe_all</A>.
 <LI>
 
 section <A HREF="eventclient.html#SEC13">ec_commit</A>.
@@ -2409,10 +2543,10 @@ section <A HREF="eventclient.html#SEC16">ec_get</A>.
 </DL>
 
 
-<H3><A NAME="SEC34" HREF="eventclient.html#TOC34">ec_unsubscribe_all</A></H3>
+<H3><A NAME="SEC36" HREF="eventclient.html#TOC36">ec_unsubscribe_all</A></H3>
 
 <P>
-<A NAME="IDX32"></A>
+<A NAME="IDX34"></A>
 
 
 <DL COMPACT>
@@ -2467,13 +2601,13 @@ unsubscribed.
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
+section <A HREF="eventclient.html#SEC31">ec_subscribe</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC30">ec_subscribe_all</A>.
+section <A HREF="eventclient.html#SEC32">ec_subscribe_all</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC33">ec_unsubscribe</A>.
+section <A HREF="eventclient.html#SEC35">ec_unsubscribe</A>.
 <LI>
 
 section <A HREF="eventclient.html#SEC13">ec_commit</A>.
@@ -2485,10 +2619,10 @@ section <A HREF="eventclient.html#SEC16">ec_get</A>.
 </DL>
 
 
-<H3><A NAME="SEC35" HREF="eventclient.html#TOC35">get_event_list</A></H3>
+<H3><A NAME="SEC37" HREF="eventclient.html#TOC37">get_event_list</A></H3>
 
 <P>
-<A NAME="IDX33"></A>
+<A NAME="IDX35"></A>
 
 
 <DL COMPACT>
@@ -2549,14 +2683,14 @@ section <A HREF="eventclient.html#SEC16">ec_get</A>.
 
 
 
-<H2><A NAME="SEC36" HREF="eventclient.html#TOC36">Server</A></H2>
+<H2><A NAME="SEC38" HREF="eventclient.html#TOC38">Server</A></H2>
 
 
 
-<H3><A NAME="SEC37" HREF="eventclient.html#TOC37">--Introduction</A></H3>
+<H3><A NAME="SEC39" HREF="eventclient.html#TOC39">--Event_Client_Server</A></H3>
 
 <P>
-<A NAME="IDX34"></A>
+<A NAME="IDX36"></A>
 
 
 <DL COMPACT>
@@ -2581,80 +2715,70 @@ any event client server integration.
 </PRE>
 
 
-<DT><B>NOTES</B>
-<DD>
-
-<PRE>
-The module still contains code specific to one event client, the scheduler.
-A further cleanup step should be done as suggested in
-Eventclient/--Introduction
-</PRE>
-
-
 <DT><B>SEE ALSO</B>
 <DD>
 
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC3">--Introduction</A>.
+section <A HREF="eventclient.html#SEC3">--Event_Client_Interface</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC42">reinit_schedd</A>.
+section <A HREF="eventclient.html#SEC44">reinit_event_client</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC46">sge_add_event_client</A>.
+section <A HREF="eventclient.html#SEC48">sge_add_event_client</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC55">sge_mod_event_client</A>.
+section <A HREF="eventclient.html#SEC57">sge_mod_event_client</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC48">sge_event_client_exit</A>.
+section <A HREF="eventclient.html#SEC50">sge_event_client_exit</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC51">sge_gdi_kill_eventclient</A>.
+section <A HREF="eventclient.html#SEC53">sge_gdi_kill_eventclient</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC49">sge_eventclient_subscribed</A>.
+section <A HREF="eventclient.html#SEC51">sge_eventclient_subscribed</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC44">sge_ack_event</A>.
+section <A HREF="eventclient.html#SEC46">sge_ack_event</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC41">ck_4_deliver_events</A>.
+section <A HREF="eventclient.html#SEC43">ck_4_deliver_events</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC50">sge_flush_events</A>.
+section <A HREF="eventclient.html#SEC52">sge_flush_events</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC56">sge_next_flush</A>.
+section <A HREF="eventclient.html#SEC58">sge_next_flush</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC47">sge_add_list_event</A>.
+section <A HREF="eventclient.html#SEC49">sge_add_list_event</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC45">sge_add_event</A>.
+section <A HREF="eventclient.html#SEC47">sge_add_event</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC53">sge_get_next_event_number</A>.
+section <A HREF="eventclient.html#SEC55">sge_get_next_event_number</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC52">sge_gdi_tsm</A>.
+section <A HREF="eventclient.html#SEC54">sge_gdi_tsm</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC54">sge_locate_scheduler</A>.
+section <A HREF="eventclient.html#SEC56">sge_locate_event_client</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC43">set_event_client_busy</A>.
+section <A HREF="eventclient.html#SEC45">set_event_client_busy</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC38" HREF="eventclient.html#TOC38">-Defines</A></H3>
+<H3><A NAME="SEC40" HREF="eventclient.html#TOC40">-Event_Client_Server_Defines</A></H3>
 
 <P>
-<A NAME="IDX35"></A>
+<A NAME="IDX37"></A>
 
 
 <DL COMPACT>
@@ -2694,10 +2818,10 @@ event client (10 * event delivery interval).
 </DL>
 
 
-<H3><A NAME="SEC39" HREF="eventclient.html#TOC39">-Global_Variables</A></H3>
+<H3><A NAME="SEC41" HREF="eventclient.html#TOC41">-Event_Client_Server_Global_Variables</A></H3>
 
 <P>
-<A NAME="IDX36"></A>
+<A NAME="IDX38"></A>
 
 
 <DL COMPACT>
@@ -2751,10 +2875,10 @@ EV_Clients is a list of all event clients to the event server.
 </DL>
 
 
-<H3><A NAME="SEC40" HREF="eventclient.html#TOC40">check_send_new_subscribed_list</A></H3>
+<H3><A NAME="SEC42" HREF="eventclient.html#TOC42">check_send_new_subscribed_list</A></H3>
 
 <P>
-<A NAME="IDX37"></A>
+<A NAME="IDX39"></A>
 
 
 <DL COMPACT>
@@ -2774,7 +2898,7 @@ check_send_new_subscribed_list() -- check suscription for new list events
 static void check_send_new_subscribed_list(const char *old_subscription,
                                            const char *new_subscription,
                                            lListElem *event_client,
-                                           int event)
+                                           ev_event event)
 </PRE>
 
 
@@ -2794,7 +2918,7 @@ certain event client. If yes, send these lists to the event client.
 const char *old_subscription - former subscription
 const char *new_subscription - new subscription
 lListElem *event_client      - the event client object
-int event                    - the event to check
+ev_event event               - the event to check
 </PRE>
 
 
@@ -2804,16 +2928,16 @@ int event                    - the event to check
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC57">sge_total_update_event</A>.
+section <A HREF="eventclient.html#SEC59">sge_total_update_event</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC41" HREF="eventclient.html#TOC41">ck_4_deliver_events</A></H3>
+<H3><A NAME="SEC43" HREF="eventclient.html#TOC43">ck_4_deliver_events</A></H3>
 
 <P>
-<A NAME="IDX38"></A>
+<A NAME="IDX40"></A>
 
 
 <DL COMPACT>
@@ -2863,19 +2987,19 @@ u_long32 now - actual timestamp
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC39">-Global_Variables</A>.
+section <A HREF="eventclient.html#SEC41">-Event_Client_Server_Global_Variables</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC44">sge_ack_event</A>.
+section <A HREF="eventclient.html#SEC46">sge_ack_event</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC42" HREF="eventclient.html#TOC42">reinit_schedd</A></H3>
+<H3><A NAME="SEC44" HREF="eventclient.html#TOC44">reinit_event_client</A></H3>
 
 <P>
-<A NAME="IDX39"></A>
+<A NAME="IDX41"></A>
 
 
 <DL COMPACT>
@@ -2884,7 +3008,7 @@ section <A HREF="eventclient.html#SEC44">sge_ack_event</A>.
 <DD>
 
 <PRE>
-reinit_schedd() -- do a total update for the scheduler
+reinit_event_client() -- do a total update for the scheduler
 </PRE>
 
 
@@ -2894,7 +3018,7 @@ reinit_schedd() -- do a total update for the scheduler
 <PRE>
 #include "sge_m_event.h"
 
-void reinit_schedd()
+int reinit_event_client(ev_registration_id id)
 </PRE>
 
 
@@ -2902,17 +3026,25 @@ void reinit_schedd()
 <DD>
 
 <PRE>
-Does a total update (send all lists) to the scheduler and output
-an error message.
+Does a total update (send all lists) to the event client specified by id
+and outputs an error message.
 </PRE>
 
 
-<DT><B>NOTES</B>
+<DT><B>INPUTS</B>
 <DD>
 
 <PRE>
-This function should not be part of the core event client interface, it
-should perhaps be a commodity function or in qmaster itself.
+ev_registration_id id - the id of the event client to reinitialize.
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 0 if reinitialization failed, e.g. because the event client does
+      not exits, else 0
 </PRE>
 
 
@@ -2922,16 +3054,16 @@ should perhaps be a commodity function or in qmaster itself.
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC58">total_update</A>.
+section <A HREF="eventclient.html#SEC60">total_update</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC43" HREF="eventclient.html#TOC43">set_event_client_busy</A></H3>
+<H3><A NAME="SEC45" HREF="eventclient.html#TOC45">set_event_client_busy</A></H3>
 
 <P>
-<A NAME="IDX40"></A>
+<A NAME="IDX42"></A>
 
 
 <DL COMPACT>
@@ -2983,10 +3115,10 @@ in the cull library.
 </DL>
 
 
-<H3><A NAME="SEC44" HREF="eventclient.html#TOC44">sge_ack_event</A></H3>
+<H3><A NAME="SEC46" HREF="eventclient.html#TOC46">sge_ack_event</A></H3>
 
 <P>
-<A NAME="IDX41"></A>
+<A NAME="IDX43"></A>
 
 
 <DL COMPACT>
@@ -3005,7 +3137,7 @@ sge_ack_event() -- process acknowledge to event delivery
 <PRE>
 #include "sge_m_event.h"
 
-int sge_ack_event(lListElem *event_client, u_long32 event_number)
+int sge_ack_event(lListElem *event_client, ev_event event_number)
 </PRE>
 
 
@@ -3027,7 +3159,7 @@ EV_BUSY_UNTIL_ACK, the event client will be set to "not busy".
 
 <PRE>
 lListElem *event_client - event client sending acknowledge
-u_long32 event_number   - serial number of the last event to acknowledge
+ev_event event_number   - serial number of the last event to acknowledge
 </PRE>
 
 
@@ -3054,16 +3186,16 @@ make function return void.
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC53">sge_get_next_event_number</A>.
+section <A HREF="eventclient.html#SEC55">sge_get_next_event_number</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC45" HREF="eventclient.html#TOC45">sge_add_event</A></H3>
+<H3><A NAME="SEC47" HREF="eventclient.html#TOC47">sge_add_event</A></H3>
 
 <P>
-<A NAME="IDX42"></A>
+<A NAME="IDX44"></A>
 
 
 <DL COMPACT>
@@ -3082,7 +3214,7 @@ sge_add_event() -- add an object as event
 <PRE>
 #include "sge_m_event.h"
 
-void sge_add_event(lListElem *event_client, u_long32 type, u_long32
+void sge_add_event(lListElem *event_client, ev_event type, u_long32
 intkey, u_long32 intkey2, const char *strkey, lListElem *element)
 </PRE>
 
@@ -3105,7 +3237,7 @@ sge_add_list_event().
 <PRE>
 lListElem *event_client - the event client to receive the event, if NULL,
                           all event clients will receive the event
-u_long32 type           - the event id
+ev_event type           - the event id
 u_long32 intkey         - additional data
 u_long32 intkey2        - additional data
 const char *strkey      - additional data
@@ -3127,16 +3259,16 @@ Do we need the additional data fields?
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC47">sge_add_list_event</A>.
+section <A HREF="eventclient.html#SEC49">sge_add_list_event</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC46" HREF="eventclient.html#TOC46">sge_add_event_client</A></H3>
+<H3><A NAME="SEC48" HREF="eventclient.html#TOC48">sge_add_event_client</A></H3>
 
 <P>
-<A NAME="IDX43"></A>
+<A NAME="IDX45"></A>
 
 
 <DL COMPACT>
@@ -3166,6 +3298,9 @@ char *ruser, char *rhost)
 <PRE>
 Registeres a new event client.
 If it requested a dynamic id, a new id is created and assigned.
+If it is a special client (with fixed id) and an event client
+with this id already exists, the old instance is deleted and the
+new one registered.
 If the registration succees, the event client is sent all data
 (sgeE*_LIST events) according to its subscription.
 </PRE>
@@ -3191,36 +3326,28 @@ int - AN_status value. STATUS_OK on success, else error code
 </PRE>
 
 
-<DT><B>NOTES</B>
-<DD>
-
-<PRE>
-Special handling for scheduler should be generalized in some way.
-</PRE>
-
-
 <DT><B>SEE ALSO</B>
 <DD>
 
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC55">sge_mod_event_client</A>.
+section <A HREF="eventclient.html#SEC57">sge_mod_event_client</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC51">sge_gdi_kill_eventclient</A>.
+section <A HREF="eventclient.html#SEC53">sge_gdi_kill_eventclient</A>.
 <LI>
 
-section <A HREF="eventclient.html#SEC58">total_update</A>.
+section <A HREF="eventclient.html#SEC60">total_update</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC47" HREF="eventclient.html#TOC47">sge_add_list_event</A></H3>
+<H3><A NAME="SEC49" HREF="eventclient.html#TOC49">sge_add_list_event</A></H3>
 
 <P>
-<A NAME="IDX44"></A>
+<A NAME="IDX46"></A>
 
 
 <DL COMPACT>
@@ -3239,7 +3366,7 @@ sge_add_list_event() -- add a list as event
 <PRE>
 #include "sge_m_event.h"
 
-void sge_add_list_event(lListElem *event_client, u_long32 type, u_long32
+void sge_add_list_event(lListElem *event_client, ev_event type, u_long32
 intkey, u_long32 intkey2, const char *strkey, lList *list)
 </PRE>
 
@@ -3259,7 +3386,7 @@ events.
 <PRE>
 lListElem *event_client - the event client to receive the event, if NULL,
                           all event clients will receive the event
-u_long32 type           - the event id
+ev_event type           - the event id
 u_long32 intkey         - additional data
 u_long32 intkey2        - additional data
 const char *strkey      - additional data
@@ -3281,16 +3408,16 @@ Do we need the additional data fields?
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC45">sge_add_event</A>.
+section <A HREF="eventclient.html#SEC47">sge_add_event</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC48" HREF="eventclient.html#TOC48">sge_event_client_exit</A></H3>
+<H3><A NAME="SEC50" HREF="eventclient.html#TOC50">sge_event_client_exit</A></H3>
 
 <P>
-<A NAME="IDX45"></A>
+<A NAME="IDX47"></A>
 
 
 <DL COMPACT>
@@ -3338,10 +3465,10 @@ sge_pack_buffer *pb  - packbuffer containing information about event client
 </DL>
 
 
-<H3><A NAME="SEC49" HREF="eventclient.html#TOC49">sge_eventclient_subscribed</A></H3>
+<H3><A NAME="SEC51" HREF="eventclient.html#TOC51">sge_eventclient_subscribed</A></H3>
 
 <P>
-<A NAME="IDX46"></A>
+<A NAME="IDX48"></A>
 
 
 <DL COMPACT>
@@ -3360,7 +3487,7 @@ sge_eventclient_subscribed() -- has event client subscribed a certain event?
 <PRE>
 #include "sge_m_event.h"
 
-int sge_eventclient_subscribed(const lListElem *event_client, int event)
+int sge_eventclient_subscribed(const lListElem *event_client, ev_event event)
 </PRE>
 
 
@@ -3377,7 +3504,7 @@ Checks if the given event client has a certain event subscribed.
 
 <PRE>
 const lListElem *event_client - event client to check
-int event                     - event to check
+ev_event event                - event to check
 </PRE>
 
 
@@ -3392,10 +3519,10 @@ int - 0 = not subscribed, 1 = subscribed
 </DL>
 
 
-<H3><A NAME="SEC50" HREF="eventclient.html#TOC50">sge_flush_events</A></H3>
+<H3><A NAME="SEC52" HREF="eventclient.html#TOC52">sge_flush_events</A></H3>
 
 <P>
-<A NAME="IDX47"></A>
+<A NAME="IDX49"></A>
 
 
 <DL COMPACT>
@@ -3445,16 +3572,16 @@ int interval            - time in seconds until next flush
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC41">ck_4_deliver_events</A>.
+section <A HREF="eventclient.html#SEC43">ck_4_deliver_events</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC51" HREF="eventclient.html#TOC51">sge_gdi_kill_eventclient</A></H3>
+<H3><A NAME="SEC53" HREF="eventclient.html#TOC53">sge_gdi_kill_eventclient</A></H3>
 
 <P>
-<A NAME="IDX48"></A>
+<A NAME="IDX50"></A>
 
 
 <DL COMPACT>
@@ -3518,10 +3645,10 @@ See <TT>`-kec'</TT>
 </DL>
 
 
-<H3><A NAME="SEC52" HREF="eventclient.html#TOC52">sge_gdi_tsm</A></H3>
+<H3><A NAME="SEC54" HREF="eventclient.html#TOC54">sge_gdi_tsm</A></H3>
 
 <P>
-<A NAME="IDX49"></A>
+<A NAME="IDX51"></A>
 
 
 <DL COMPACT>
@@ -3587,10 +3714,10 @@ See <TT>`-tsm'</TT>
 </DL>
 
 
-<H3><A NAME="SEC53" HREF="eventclient.html#TOC53">sge_get_next_event_number</A></H3>
+<H3><A NAME="SEC55" HREF="eventclient.html#TOC55">sge_get_next_event_number</A></H3>
 
 <P>
-<A NAME="IDX50"></A>
+<A NAME="IDX52"></A>
 
 
 <DL COMPACT>
@@ -3640,10 +3767,10 @@ u_long32 - serial number for next event to deliver
 </DL>
 
 
-<H3><A NAME="SEC54" HREF="eventclient.html#TOC54">sge_locate_scheduler</A></H3>
+<H3><A NAME="SEC56" HREF="eventclient.html#TOC56">sge_locate_event_client</A></H3>
 
 <P>
-<A NAME="IDX51"></A>
+<A NAME="IDX53"></A>
 
 
 <DL COMPACT>
@@ -3652,7 +3779,7 @@ u_long32 - serial number for next event to deliver
 <DD>
 
 <PRE>
-sge_locate_scheduler() -- search for the scheduler
+sge_locate_event_client() -- search for the scheduler
 </PRE>
 
 
@@ -3662,7 +3789,7 @@ sge_locate_scheduler() -- search for the scheduler
 <PRE>
 #include "sge_m_event.h"
 
-lListElem* sge_locate_scheduler()
+lListElem* sge_locate_event_client(ev_registration_id id)
 </PRE>
 
 
@@ -3670,9 +3797,18 @@ lListElem* sge_locate_scheduler()
 <DD>
 
 <PRE>
-Searches an event client of type scheduler (EV_ID_SCHEDD).
-Returns a pointer to the scheduler event client object or
-NULL, if no scheduler is registered as event client.
+Searches the event client list for an event client with the
+specified id.
+Returns a pointer to the event client object or
+NULL, if no such event client is registered.
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+ev_registration_id id - id of the event client to search
 </PRE>
 
 
@@ -3680,27 +3816,17 @@ NULL, if no scheduler is registered as event client.
 <DD>
 
 <PRE>
-lListElem* - scheduler event client object or NULL.
-</PRE>
-
-
-<DT><B>NOTES</B>
-<DD>
-
-<PRE>
-Should not be part of the core event client interface.
-Might be provided in a more general form (for any special event client)
-as commodity function.
+lListElem* - event client object or NULL.
 </PRE>
 
 
 </DL>
 
 
-<H3><A NAME="SEC55" HREF="eventclient.html#TOC55">sge_mod_event_client</A></H3>
+<H3><A NAME="SEC57" HREF="eventclient.html#TOC57">sge_mod_event_client</A></H3>
 
 <P>
-<A NAME="IDX52"></A>
+<A NAME="IDX54"></A>
 
 
 <DL COMPACT>
@@ -3762,16 +3888,16 @@ int - AN_status code. STATUS_OK on success, else error code
 <UL>
 <LI>
 
-section <A HREF="eventclient.html#SEC40">check_send_new_subscribed_list</A>.
+section <A HREF="eventclient.html#SEC42">check_send_new_subscribed_list</A>.
 </UL>
 
 </DL>
 
 
-<H3><A NAME="SEC56" HREF="eventclient.html#TOC56">sge_next_flush</A></H3>
+<H3><A NAME="SEC58" HREF="eventclient.html#TOC58">sge_next_flush</A></H3>
 
 <P>
-<A NAME="IDX53"></A>
+<A NAME="IDX55"></A>
 
 
 <DL COMPACT>
@@ -3823,10 +3949,10 @@ int - the timestamp of the next flush or
 </DL>
 
 
-<H3><A NAME="SEC57" HREF="eventclient.html#TOC57">sge_total_update_event</A></H3>
+<H3><A NAME="SEC59" HREF="eventclient.html#TOC59">sge_total_update_event</A></H3>
 
 <P>
-<A NAME="IDX54"></A>
+<A NAME="IDX56"></A>
 
 
 <DL COMPACT>
@@ -3843,8 +3969,7 @@ sge_total_update_event() -- create a total update event
 <DD>
 
 <PRE>
-static void sge_total_update_event(lListElem *event_client, u_long32
-type)
+static void sge_total_update_event(lListElem *event_client, ev_event type)
 </PRE>
 
 
@@ -3861,17 +3986,17 @@ Creates an event delivering a certain list of objects for an event client.
 
 <PRE>
 lListElem *event_client - event client to receive the list
-u_long32 type           - event describing the list to update
+ev_event type           - event describing the list to update
 </PRE>
 
 
 </DL>
 
 
-<H3><A NAME="SEC58" HREF="eventclient.html#TOC58">total_update</A></H3>
+<H3><A NAME="SEC60" HREF="eventclient.html#TOC60">total_update</A></H3>
 
 <P>
-<A NAME="IDX55"></A>
+<A NAME="IDX57"></A>
 
 
 <DL COMPACT>
@@ -3914,10 +4039,10 @@ lListElem *event_client - the event client to update
 
 
 
-<H2><A NAME="SEC59" HREF="eventclient.html#TOC59">event_text</A></H2>
+<H2><A NAME="SEC61" HREF="eventclient.html#TOC61">event_text</A></H2>
 
 <P>
-<A NAME="IDX56"></A>
+<A NAME="IDX58"></A>
 
 
 <DL COMPACT>
@@ -3974,7 +4099,7 @@ will overwrite previous results.
 </DL>
 
 
-<H1><A NAME="SEC60" HREF="eventclient.html#TOC60">Function Index</A></H1>
+<H1><A NAME="SEC62" HREF="eventclient.html#TOC62">Function Index</A></H1>
 <P>
 Jump to:
 <A HREF="#findex_-">-</A>
@@ -3994,19 +4119,22 @@ Jump to:
 <H2><A NAME="findex_-">-</A></H2>
 <DIR>
 <LI><A HREF="eventclient.html#IDX1">--EV_Type</A>
-<LI><A HREF="eventclient.html#IDX2">--Introduction</A>, <A HREF="eventclient.html#IDX8">--Introduction</A>, <A HREF="eventclient.html#IDX34">--Introduction</A>
+<LI><A HREF="eventclient.html#IDX8">--Event_Client</A>
+<LI><A HREF="eventclient.html#IDX2">--Event_Client_Interface</A>
+<LI><A HREF="eventclient.html#IDX36">--Event_Client_Server</A>
 <LI><A HREF="eventclient.html#IDX3">-Busy-state</A>
-<LI><A HREF="eventclient.html#IDX35">-Defines</A>
+<LI><A HREF="eventclient.html#IDX9">-Event_Client_Global_Variables</A>
+<LI><A HREF="eventclient.html#IDX37">-Event_Client_Server_Defines</A>
+<LI><A HREF="eventclient.html#IDX38">-Event_Client_Server_Global_Variables</A>
 <LI><A HREF="eventclient.html#IDX4">-Events</A>
 <LI><A HREF="eventclient.html#IDX5">-Flushing</A>
-<LI><A HREF="eventclient.html#IDX9">-Global_Variables</A>, <A HREF="eventclient.html#IDX36">-Global_Variables</A>
 <LI><A HREF="eventclient.html#IDX6">-ID-numbers</A>
 <LI><A HREF="eventclient.html#IDX7">-Subscription</A>
 </DIR>
 <H2><A NAME="findex_c">c</A></H2>
 <DIR>
-<LI><A HREF="eventclient.html#IDX37">check_send_new_subscribed_list</A>
-<LI><A HREF="eventclient.html#IDX38">ck_4_deliver_events</A>
+<LI><A HREF="eventclient.html#IDX39">check_send_new_subscribed_list</A>
+<LI><A HREF="eventclient.html#IDX40">ck_4_deliver_events</A>
 <LI><A HREF="eventclient.html#IDX10">ck_event_number</A>
 </DIR>
 <H2><A NAME="findex_e">e</A></H2>
@@ -4015,60 +4143,62 @@ Jump to:
 <LI><A HREF="eventclient.html#IDX12">ec_config_changed</A>
 <LI><A HREF="eventclient.html#IDX13">ec_deregister</A>
 <LI><A HREF="eventclient.html#IDX14">ec_get</A>
-<LI><A HREF="eventclient.html#IDX15">ec_get_busy_handling</A>
-<LI><A HREF="eventclient.html#IDX16">ec_get_clientdata</A>
-<LI><A HREF="eventclient.html#IDX17">ec_get_edtime</A>
-<LI><A HREF="eventclient.html#IDX18">ec_get_flush</A>
-<LI><A HREF="eventclient.html#IDX19">ec_mark4registration</A>
-<LI><A HREF="eventclient.html#IDX20">ec_need_new_registration</A>
-<LI><A HREF="eventclient.html#IDX21">ec_prepare_registration</A>
-<LI><A HREF="eventclient.html#IDX22">ec_register</A>
-<LI><A HREF="eventclient.html#IDX23">ec_set_busy_handling</A>
-<LI><A HREF="eventclient.html#IDX24">ec_set_clientdata</A>
-<LI><A HREF="eventclient.html#IDX25">ec_set_edtime</A>
-<LI><A HREF="eventclient.html#IDX26">ec_set_flush</A>
-<LI><A HREF="eventclient.html#IDX27">ec_subscribe</A>
-<LI><A HREF="eventclient.html#IDX28">ec_subscribe_all</A>
-<LI><A HREF="eventclient.html#IDX29">ec_subscribe_flush</A>
-<LI><A HREF="eventclient.html#IDX30">ec_unset_flush</A>
-<LI><A HREF="eventclient.html#IDX31">ec_unsubscribe</A>
-<LI><A HREF="eventclient.html#IDX32">ec_unsubscribe_all</A>
-<LI><A HREF="eventclient.html#IDX56">event_text</A>
+<LI><A HREF="eventclient.html#IDX15">ec_get_busy</A>
+<LI><A HREF="eventclient.html#IDX16">ec_get_busy_handling</A>
+<LI><A HREF="eventclient.html#IDX17">ec_get_clientdata</A>
+<LI><A HREF="eventclient.html#IDX18">ec_get_edtime</A>
+<LI><A HREF="eventclient.html#IDX19">ec_get_flush</A>
+<LI><A HREF="eventclient.html#IDX20">ec_mark4registration</A>
+<LI><A HREF="eventclient.html#IDX21">ec_need_new_registration</A>
+<LI><A HREF="eventclient.html#IDX22">ec_prepare_registration</A>
+<LI><A HREF="eventclient.html#IDX23">ec_register</A>
+<LI><A HREF="eventclient.html#IDX24">ec_set_busy</A>
+<LI><A HREF="eventclient.html#IDX25">ec_set_busy_handling</A>
+<LI><A HREF="eventclient.html#IDX26">ec_set_clientdata</A>
+<LI><A HREF="eventclient.html#IDX27">ec_set_edtime</A>
+<LI><A HREF="eventclient.html#IDX28">ec_set_flush</A>
+<LI><A HREF="eventclient.html#IDX29">ec_subscribe</A>
+<LI><A HREF="eventclient.html#IDX30">ec_subscribe_all</A>
+<LI><A HREF="eventclient.html#IDX31">ec_subscribe_flush</A>
+<LI><A HREF="eventclient.html#IDX32">ec_unset_flush</A>
+<LI><A HREF="eventclient.html#IDX33">ec_unsubscribe</A>
+<LI><A HREF="eventclient.html#IDX34">ec_unsubscribe_all</A>
+<LI><A HREF="eventclient.html#IDX58">event_text</A>
 </DIR>
 <H2><A NAME="findex_g">g</A></H2>
 <DIR>
-<LI><A HREF="eventclient.html#IDX33">get_event_list</A>
+<LI><A HREF="eventclient.html#IDX35">get_event_list</A>
 </DIR>
 <H2><A NAME="findex_r">r</A></H2>
 <DIR>
-<LI><A HREF="eventclient.html#IDX39">reinit_schedd</A>
+<LI><A HREF="eventclient.html#IDX41">reinit_event_client</A>
 </DIR>
 <H2><A NAME="findex_s">s</A></H2>
 <DIR>
-<LI><A HREF="eventclient.html#IDX40">set_event_client_busy</A>
-<LI><A HREF="eventclient.html#IDX41">sge_ack_event</A>
-<LI><A HREF="eventclient.html#IDX42">sge_add_event</A>
-<LI><A HREF="eventclient.html#IDX43">sge_add_event_client</A>
-<LI><A HREF="eventclient.html#IDX44">sge_add_list_event</A>
-<LI><A HREF="eventclient.html#IDX45">sge_event_client_exit</A>
-<LI><A HREF="eventclient.html#IDX46">sge_eventclient_subscribed</A>
-<LI><A HREF="eventclient.html#IDX47">sge_flush_events</A>
-<LI><A HREF="eventclient.html#IDX48">sge_gdi_kill_eventclient</A>
-<LI><A HREF="eventclient.html#IDX49">sge_gdi_tsm</A>
-<LI><A HREF="eventclient.html#IDX50">sge_get_next_event_number</A>
-<LI><A HREF="eventclient.html#IDX51">sge_locate_scheduler</A>
-<LI><A HREF="eventclient.html#IDX52">sge_mod_event_client</A>
-<LI><A HREF="eventclient.html#IDX53">sge_next_flush</A>
-<LI><A HREF="eventclient.html#IDX54">sge_total_update_event</A>
+<LI><A HREF="eventclient.html#IDX42">set_event_client_busy</A>
+<LI><A HREF="eventclient.html#IDX43">sge_ack_event</A>
+<LI><A HREF="eventclient.html#IDX44">sge_add_event</A>
+<LI><A HREF="eventclient.html#IDX45">sge_add_event_client</A>
+<LI><A HREF="eventclient.html#IDX46">sge_add_list_event</A>
+<LI><A HREF="eventclient.html#IDX47">sge_event_client_exit</A>
+<LI><A HREF="eventclient.html#IDX48">sge_eventclient_subscribed</A>
+<LI><A HREF="eventclient.html#IDX49">sge_flush_events</A>
+<LI><A HREF="eventclient.html#IDX50">sge_gdi_kill_eventclient</A>
+<LI><A HREF="eventclient.html#IDX51">sge_gdi_tsm</A>
+<LI><A HREF="eventclient.html#IDX52">sge_get_next_event_number</A>
+<LI><A HREF="eventclient.html#IDX53">sge_locate_event_client</A>
+<LI><A HREF="eventclient.html#IDX54">sge_mod_event_client</A>
+<LI><A HREF="eventclient.html#IDX55">sge_next_flush</A>
+<LI><A HREF="eventclient.html#IDX56">sge_total_update_event</A>
 </DIR>
 <H2><A NAME="findex_t">t</A></H2>
 <DIR>
-<LI><A HREF="eventclient.html#IDX55">total_update</A>
+<LI><A HREF="eventclient.html#IDX57">total_update</A>
 </DIR>
 
 
 <P><HR><P>
-This document was generated on 5 April 2002 using
+This document was generated on 9 April 2002 using
 <A HREF="http://wwwinfo.cern.ch/dis/texi2html/">texi2html</A>&nbsp;1.56k.
 </BODY>
 </HTML>

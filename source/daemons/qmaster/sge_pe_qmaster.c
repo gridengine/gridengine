@@ -38,7 +38,6 @@
 #include "sge_peL.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
-#include "sge_eventL.h"
 #include "sge_answerL.h"
 #include "sge_usersetL.h"
 #include "sge_pe_qmaster.h"

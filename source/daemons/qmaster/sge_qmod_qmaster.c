@@ -43,7 +43,6 @@
 #include "sge_stringL.h"
 #include "sge_identL.h"
 #include "sge_answerL.h"
-#include "sge_eventL.h"
 #include "sge_hostL.h"
 #include "sge_peL.h"
 #include "sec.h"

@@ -36,7 +36,6 @@
 
 #include "sgermon.h"
 #include "sge_answerL.h"
-#include "sge_eventL.h"
 #include "sge_confL.h"
 #include "sge_schedconfL.h"
 #include "sge_usageL.h"
@@ -110,10 +109,6 @@ char *rhost
 
 
    sge_add_event(NULL, sgeE_SCHED_CONF, 0, 0, NULL, confp);
-
-/*    if ((schedd=sge_locate_scheduler())) { */
-      /* sge_flush_events(schedd, 0); !!!! not really necessary */
-/*    } */
 
    INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, "scheduler", 
         "scheduler configuration"));

@@ -36,7 +36,6 @@
 #include "sge_job.h"
 #include "sge_jataskL.h"
 #include "sge_queueL.h"
-#include "sge_eventL.h"
 #include "sge_give_jobs.h"
 #include "sge_m_event.h"
 #include "read_write_queue.h"

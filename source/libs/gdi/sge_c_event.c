@@ -47,9 +47,9 @@
 #include "qm_name.h"
 #include "sge_log.h"
 #include "sge_time.h"
-#include "msg_schedd.h"
+#include "msg_gdilib.h"
 
-/****** Eventclient/--Introduction **********************************
+/****** Eventclient/--Event_Client_Interface **********************************
 *  NAME
 *     Evenclient -- The Grid Engine Event Client Interface
 *
@@ -68,18 +68,17 @@
 *  NOTES
 *     The current implementation is a generalized form of the event client
 *     interface that already existed in Codine/GRD.
-*     Further cleanup steps might be usefull.
 *
 *  SEE ALSO
 *     Eventclient/--EV_Type
 *     Eventclient/-Subscription
 *     Eventclient/-Flushing
 *     Eventclient/-Busy-state
-*     Eventclient/Client/--Introduction
-*     Eventclient/Server/--Introduction
+*     Eventclient/Client/--Event_Client
+*     Eventclient/Server/--Event_Client_Server
 *******************************************************************************/
 
-/****** Eventclient/Client/--Introduction **********************************
+/****** Eventclient/Client/--Event_Client **********************************
 *  NAME
 *     Event Client Interface -- Client Functionality 
 *
@@ -101,7 +100,7 @@
 *     interface.
 *
 *  SEE ALSO
-*     Eventclient/--Introduction
+*     Eventclient/--Event_Client_Interface
 *     Eventclient/Client/ec_prepare_registration()
 *     Eventclient/Client/ec_register()
 *     Eventclient/Client/ec_deregister()
@@ -129,7 +128,7 @@ static u_long32 ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wron
 static int get_event_list(int sync, lList **lp);
 static void ec_config_changed(void);
 
-/****** Eventclient/Client/-Global_Variables **********************************
+/****** Eventclient/Client/-Event_Client_Global_Variables **********************************
 *  NAME
 *     Global_Variables -- global variables in the client 
 *
@@ -163,7 +162,7 @@ static u_long32 ec_reg_id = 0;
 *  SYNOPSIS
 *     #include "sge_c_event.h"
 *
-*     int ec_prepare_registration(u_long32 id, const char *name) 
+*     int ec_prepare_registration(ev_registration_id id, const char *name) 
 *
 *  FUNCTION
 *     Initializes necessary data structures and sets the data needed for
@@ -177,8 +176,8 @@ static u_long32 ec_reg_id = 0;
 *     qconf -sec.
 *
 *  INPUTS
-*     u_long32 id      - id used to register
-*     const char *name - name of the event client
+*     ev_registration_id id  - id used to register
+*     const char *name       - name of the event client
 *
 *  RESULT
 *     int - 1,if the function succeeded, else 0 
@@ -190,7 +189,7 @@ static u_long32 ec_reg_id = 0;
 *     qconf manpage
 *     list of events
 *******************************************************************************/
-int ec_prepare_registration(u_long32 id, const char *name)
+int ec_prepare_registration(ev_registration_id id, const char *name)
 {
    char subscription[sgeE_EVENTSIZE + 1];
    int i;
@@ -372,7 +371,7 @@ int ec_get_edtime(void) {
 *  SYNOPSIS
 *     #include "sge_c_event.h"
 *
-*     int ec_set_busy_handling(int handling) 
+*     int ec_set_busy_handling(ev_busy_handling handling) 
 *
 *  FUNCTION
 *     The event client interface has a mechanism to handle situations in which
@@ -383,7 +382,7 @@ int ec_get_edtime(void) {
 *     after a call to ec_commit or ec_get.
 *
 *  INPUTS
-*     int handling - the policy to use
+*     ev_busy_handling handling - the policy to use
 *
 *  RESULT
 *     int - 1, if the value was changed, else 0
@@ -396,7 +395,7 @@ int ec_get_edtime(void) {
 *     Eventclient/Client/ec_commit()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
-int ec_set_busy_handling(int handling) {
+int ec_set_busy_handling(ev_busy_handling handling) {
    int ret;
 
    DENTER(TOP_LAYER, "ec_set_busy_handling");
@@ -425,20 +424,20 @@ int ec_set_busy_handling(int handling) {
 *  SYNOPSIS
 *     #include "sge_c_event.h"
 *
-*     int ec_get_busy_handling(void) 
+*     ev_busy_handling ec_get_busy_handling(void) 
 *
 *  FUNCTION
 *     Returns the policy currently configured.
 *
 *  RESULT
-*     int - the current policy
+*     ev_busy_handling - the current policy
 *
 *  SEE ALSO
 *     Eventclient/Client/ec_set_edtime()
 *     Eventclient/-Busy-state
 *******************************************************************************/
-int ec_get_busy_handling(void) {
-   int handling;
+ev_busy_handling ec_get_busy_handling(void) {
+   ev_busy_handling handling;
 
    DENTER(TOP_LAYER, "ec_get_busy_handling");
 
@@ -711,7 +710,7 @@ int ec_deregister(void)
 *  SYNOPSIS
 *     #include "sge_c_event.h"
 *
-*     int ec_subscribe(int event) 
+*     int ec_subscribe(ev_event event) 
 *
 *  FUNCTION
 *     Subscribe a certain event.
@@ -721,7 +720,7 @@ int ec_deregister(void)
 *     ec_commit.
 *
 *  INPUTS
-*     int event - the event number
+*     ev_event event - the event number
 *
 *  RESULT
 *     int - 1 on success, else 0
@@ -734,7 +733,7 @@ int ec_deregister(void)
 *     Eventclient/Client/ec_commit()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
-int ec_subscribe(int event)
+int ec_subscribe(ev_event event)
 {
    char *subscription;
    
@@ -820,7 +819,7 @@ int ec_subscribe_all(void)
 *  SYNOPSIS
 *     #include "sge_c_event.h"
 *
-*     int ec_unsubscribe(int event) 
+*     int ec_unsubscribe(ev_event event) 
 *
 *  FUNCTION
 *     Unsubscribe a certain event.
@@ -830,7 +829,7 @@ int ec_subscribe_all(void)
 *     no longer needed and then call ec_commit.
 *
 *  INPUTS
-*     int event - the event to unsubscribe
+*     ev_event event - the event to unsubscribe
 *
 *  RESULT
 *     int - 1 on success, else 0
@@ -849,7 +848,7 @@ int ec_subscribe_all(void)
 *     Eventclient/Client/ec_commit()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
-int ec_unsubscribe(int event)
+int ec_unsubscribe(ev_event event)
 {
    char *subscription;
    
@@ -943,7 +942,7 @@ int ec_unsubscribe_all(void)
 *  SYNOPSIS
 *     #include "sge_c_event.h"
 *
-*     int ec_get_flush(int event) 
+*     int ec_get_flush(ev_event event) 
 *
 *  FUNCTION
 *     An event client can request flushing of events from qmaster for any
@@ -951,7 +950,7 @@ int ec_unsubscribe_all(void)
 *     This function returns the flushing information for an individual event.
 *
 *  INPUTS
-*     int event - the event id to query 
+*     ev_event event - the event id to query 
 *
 *  RESULT
 *     int - EV_NO_FLUSH(-1) or the number of seconds used for flushing
@@ -962,7 +961,7 @@ int ec_unsubscribe_all(void)
 *     Eventclient/-Flushing
 *     Eventclient/Client/ec_set_flush()
 *******************************************************************************/
-int ec_get_flush(int event)
+int ec_get_flush(ev_event event)
 {
    const char *subscription;
    
@@ -1004,7 +1003,7 @@ int ec_get_flush(int event)
 *  SYNOPSIS
 *     #include "sge_c_event.h"
 *
-*     int ec_set_flush(int event, int flush) 
+*     int ec_set_flush(ev_event event, int flush) 
 *
 *  FUNCTION
 *     An event client can request flushing of events from qmaster for any
@@ -1012,9 +1011,9 @@ int ec_get_flush(int event)
 *     This function sets the flushing information for an individual event.
 *
 *  INPUTS
-*     int event - id of the event to configure
-*     int flush - the number of seconds between creation of 
-*                 the event and flushing of the messages.
+*     ev_event event - id of the event to configure
+*     int flush      - the number of seconds between creation of 
+*                      the event and flushing of the messages.
 *
 *  RESULT
 *     int - 1 on success, else 0
@@ -1027,7 +1026,7 @@ int ec_get_flush(int event)
 *     Eventclient/Client/ec_unset_flush()
 *     Eventclient/Client/ec_subscribe_flush()
 *******************************************************************************/
-int ec_set_flush(int event, int flush)
+int ec_set_flush(ev_event event, int flush)
 {
    char *subscription;
    
@@ -1086,13 +1085,13 @@ int ec_set_flush(int event, int flush)
 *  SYNOPSIS
 *     #include "sge_c_event.h"
 *
-*     int ec_unset_flush(int event) 
+*     int ec_unset_flush(ev_event event) 
 *
 *  FUNCTION
 *     Switch of flushing of an individual event.
 *
 *  INPUTS
-*     int event - if of the event to configure
+*     ev_event event - if of the event to configure
 *
 *  RESULT
 *     int - 1 on success, else 0
@@ -1105,7 +1104,7 @@ int ec_set_flush(int event, int flush)
 *     Eventclient/Client/ec_get_flush()
 *     Eventclient/Client/ec_subscribe_flush()
 *******************************************************************************/
-int ec_unset_flush(int event)
+int ec_unset_flush(ev_event event)
 {
    char *subscription;
    
@@ -1155,14 +1154,15 @@ int ec_unset_flush(int event)
 *  SYNOPSIS
 *     #include "sge_c_event.h"
 *
-*     int ec_subscribe_flush(int event, int flush) 
+*     int ec_subscribe_flush(ev_event event, int flush) 
 *
 *  FUNCTION
 *     Subscribes and event and configures flushing for this event.
 *
 *  INPUTS
-*     int event - id of the event to subscribe and flush
-*     int flush - number of seconds between event creation and flushing of events
+*     ev_event event - id of the event to subscribe and flush
+*     int flush      - number of seconds between event creation 
+*                      and flushing of events
 *
 *  RESULT
 *     int - 1 on success, else 0
@@ -1175,7 +1175,7 @@ int ec_unset_flush(int event)
 *     Eventclient/Client/ec_subscribe()
 *     Eventclient/Client/ec_set_flush()
 *******************************************************************************/
-int ec_subscribe_flush(int event, int flush) 
+int ec_subscribe_flush(ev_event event, int flush) 
 {
    int ret;
    
@@ -1187,6 +1187,94 @@ int ec_subscribe_flush(int event, int flush)
    return ret;
 }
 
+/****** Eventclient/Client/ec_set_busy() **********************************************
+*  NAME
+*     ec_set_busy() -- set the busy state
+*
+*  SYNOPSIS
+*     int ec_set_busy(int busy) 
+*
+*  FUNCTION
+*     Sets the busy state of the client. This has to be done if the busy policy
+*     has been set to EV_BUSY_UNTIL_RELEASED.
+*     An event client can set or unset the busy state at any time.
+*     While it is marked busy at the qmaster, qmaster will not deliver events to
+*     this client.
+*     The changed busy state will be communicated to qmaster with the next 
+*     call to ec_commit (implicitly called by the next ec_get).
+*
+*  INPUTS
+*     int busy - 1 = event client busy, 0 = event client idle
+*
+*  RESULT
+*     int - 1 = success, 0 = failed
+*
+*  NOTES
+*
+*  SEE ALSO
+*     Eventclient/-Busy-state
+*     Eventclient/Client/ec_set_busy_handling()
+*     Eventclient/Client/ec_get_busy()
+*******************************************************************************/
+int ec_set_busy(int busy)
+{
+   DENTER(TOP_LAYER, "ec_set_busy");
+
+   if(ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      DEXIT;
+      return 0;
+   }
+
+   lSetUlong(ec, EV_busy, busy);
+
+   /* force communication to qmaster - we may be out of sync */
+   ec_config_changed();
+
+   DEXIT;
+   return 1;
+}
+
+/****** Eventclient/Client/ec_get_busy() **********************************************
+*  NAME
+*     ec_get_busy() -- get the busy state
+*
+*  SYNOPSIS
+*     int ec_get_busy(void) 
+*
+*  FUNCTION
+*     Reads the busy state of the event client.
+*
+*  RESULT
+*     int - 1: the client is busy, 0: the client is idle 
+*
+*  NOTES
+*     The function only returns the local busy state in the event client itself.
+*     If this state changes, it will be reported to qmaster with the next 
+*     communication, but not back from qmaster to the client.
+*
+*  SEE ALSO
+*     Eventclient/-Busy-state
+*     Eventclient/Client/ec_set_busy_handling()
+*     Eventclient/Client/ec_set_busy()
+*******************************************************************************/
+int ec_get_busy(void)
+{
+   int ret;
+
+   DENTER(TOP_LAYER, "ec_get_busy");
+
+   if(ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      DEXIT;
+      return 0;
+   }
+  
+   ret = lGetUlong(ec, EV_busy);
+
+   DEXIT;
+   return ret;
+}
 /****** Eventclient/Client/ec_config_changed() ****************************************
 *  NAME
 *     ec_config_changed() -- tell system the config has changed
@@ -1580,4 +1668,5 @@ lList **report_list
    DEXIT;
    return ret;
 }
+
 

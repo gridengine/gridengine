@@ -49,7 +49,6 @@
 #include "mail.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
-#include "sge_eventL.h"
 #include "sge_queueL.h"
 #include "sge_answerL.h"
 #include "sge_requestL.h"
@@ -675,7 +674,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    ** immediate jobs trigger scheduling immediately
    */
    {
-      lListElem *schedd = sge_locate_scheduler();
+      lListElem *schedd = sge_locate_event_client(EV_ID_SCHEDD);
       if(schedd != NULL) {
          if (JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now))) {
             sge_flush_events(schedd, 0);
@@ -1638,7 +1637,7 @@ int sub_command
 }
 
 void sge_add_job_event(
-u_long32 type,
+ev_event type,
 lListElem *jep,
 lListElem *jatask 
 ) {
@@ -1651,7 +1650,7 @@ lListElem *jatask
 }
 
 void sge_add_jatask_event(
-u_long32 type,
+ev_event type,
 lListElem *jep,
 lListElem *jatask 
 ) {           

@@ -39,7 +39,6 @@
 #include "sge_jataskL.h"
 #include "sge_hostL.h"
 #include "sge_queueL.h"
-#include "sge_eventL.h"
 #include "sge_job_reportL.h"
 #include "sge_job_refL.h"
 #include "sge_job.h"

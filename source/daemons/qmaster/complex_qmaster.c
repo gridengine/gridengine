@@ -44,7 +44,6 @@
 #include "sge_hostL.h"
 #include "sge_queueL.h"
 #include "sge_answerL.h"
-#include "sge_eventL.h"
 #include "sge_complexL.h"
 #include "sge_schedconfL.h"
 #include "commlib.h"

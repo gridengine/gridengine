@@ -56,21 +56,6 @@
 
 
 /* 
-** schedd/sge_c_event.c
-*/ 
-#define MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY        _("failed to send ACK_EVENT_DELIVERY\n")
-#define MSG_EVENT_HIGHESTEVENTISXWHILEWAITINGFORY_UU  _("highest event number is "U32CFormat" while waiting for "U32CFormat"\n")
-#define MSG_EVENT_SMALLESTEVENTXISGRTHYWAITFOR_UU     _("smallest event number "U32CFormat" is greater than number "U32CFormat" i'm waiting for\n")
-#define MSG_EVENT_EVENTSWITHNOINCREASINGNUMBERS       _("got events with not increasing numbers\n")
-#define MSG_LIST_FAILEDINCULLUNPACKREPORT             _("Failed in cull_unpack report\n")
-#define MSG_EVENT_ILLEGAL_ID_OR_NAME_US               _("Illegal id "U32CFormat" or name "SFQ" in event client registration\n")
-#define MSG_EVENT_UNINITIALIZED_EC                    _("event client not properly initialized (ec_prepare_registration)\n")
-#define MSG_EVENT_ILLEGALEVENTID_I                    _("illegal event id %d\n")
-#define MSG_EVENT_ILLEGALFLUSHTIME_I                  _("illegal flush time %d - must be in the range [0:63]\n")
-#define MSG_EVENT_NOTREGISTERED                       _("event client not registered\n")
-#define MSG_EVENT_HAVETOHANDLEEVENTS                  _("you have to handle the events sgeE_QMASTER_GOES_DOWN and sgeE_SHUTDOWN\n")
-
-/* 
 ** schedd/sge_category.c
 */ 
 #define MSG_CATEGORY_BUILDINGCATEGORYFORJOBXFAILED_U  _("failed building category string for job "U32CFormat"\n")

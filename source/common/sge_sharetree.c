@@ -42,7 +42,6 @@
 
 #include "sge_unistd.h"
 #include "sgermon.h"
-#include "sge_eventL.h"
 #include "sge_answerL.h"
 #include "sge_confL.h"
 #include "sge_usageL.h"

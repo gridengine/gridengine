@@ -41,7 +41,6 @@
 #include "sge_queueL.h"
 #include "sge_answerL.h"
 #include "sge_calendarL.h"
-#include "sge_eventL.h"
 #include "sge_m_event.h"
 #include "time_event.h"
 #include "read_write_cal.h"

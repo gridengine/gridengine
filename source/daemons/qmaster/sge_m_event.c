@@ -35,7 +35,6 @@
 
 #include "sge.h"
 #include "cull.h"
-#include "sge_eventL.h"
 #include "sge_feature.h"
 #include "sge_time.h"
 #include "sge_m_event.h"
@@ -61,7 +60,7 @@ extern lList *Master_Usermapping_Entry_List;
 
 
 
-/****** Eventclient/Server/--Introduction *****************************************
+/****** Eventclient/Server/--Event_Client_Server *****************************************
 *  NAME
 *     Event Client Interface -- Server Functionality
 *
@@ -75,13 +74,10 @@ extern lList *Master_Usermapping_Entry_List;
 *     any event client server integration.
 *
 *  NOTES
-*     The module still contains code specific to one event client, the scheduler.
-*     A further cleanup step should be done as suggested in 
-*     Eventclient/--Introduction
 *
 *  SEE ALSO
-*     Eventclient/--Introduction
-*     Eventclient/Server/reinit_schedd()
+*     Eventclient/--Event_Client_Interface
+*     Eventclient/Server/reinit_event_client()
 *     Eventclient/Server/sge_add_event_client()
 *     Eventclient/Server/sge_mod_event_client()
 *     Eventclient/Server/sge_event_client_exit()
@@ -95,19 +91,19 @@ extern lList *Master_Usermapping_Entry_List;
 *     Eventclient/Server/sge_add_event()
 *     Eventclient/Server/sge_get_next_event_number()
 *     Eventclient/Server/sge_gdi_tsm()
-*     Eventclient/Server/sge_locate_scheduler()
+*     Eventclient/Server/sge_locate_event_client()
 *     Eventclient/Server/set_event_client_busy()
 *******************************************************************************/
 static void total_update(lListElem *event_client);
 
-static void sge_total_update_event(lListElem *event_client, u_long32 type);
+static void sge_total_update_event(lListElem *event_client, ev_event type);
 
-static void sge_add_event_( lListElem *event_client, u_long32 type, 
+static void sge_add_event_( lListElem *event_client, ev_event type, 
                      u_long32 intkey, u_long32 intkey2, const char *strkey, 
                      lListElem *element );
 
 static int sge_add_list_event_(lListElem *event_client,
-                               u_long32 type, u_long32 intkey, 
+                               ev_event type, u_long32 intkey, 
                                u_long32 intkey2, const char *strkey, 
                                lList *list, int need_copy_elem);
 
@@ -115,11 +111,11 @@ static void sge_flush_events_(lListElem *event_client, int interval, int now);
 void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const char *user, uid_t uid, sge_gdi_request *answer);
 
 static void check_send_new_subscribed_list(const char *old_subscription, const char *new_subscription, 
-                                           lListElem *event_client, int event);
+                                           lListElem *event_client, ev_event event);
 
 /* static void dump_subscription(const char *subscription); */
 
-/****** Eventclient/Server/-Defines *****************************************
+/****** Eventclient/Server/-Event_Client_Server_Defines *****************************************
 *  NAME
 *     Defines -- Constants used in the module
 *
@@ -142,7 +138,7 @@ static void check_send_new_subscribed_list(const char *old_subscription, const c
 #define EVENT_ACK_MIN_TIMEOUT 600
 #define EVENT_ACK_MAX_TIMEOUT 1200
 
-/****** Eventclient/Server/-Global_Variables *****************************************
+/****** Eventclient/Server/-Event_Client_Server_Global_Variables *****************************************
 *  NAME
 *     -Global_Variables() -- global Variables
 *
@@ -295,40 +291,48 @@ int sge_next_flush(int now)
    return 0;
 }   
 
-/****** Eventclient/Server/reinit_schedd() ********************************************
+/****** Eventclient/Server/reinit_event_client() ********************************************
 *  NAME
-*     reinit_schedd() -- do a total update for the scheduler
+*     reinit_event_client() -- do a total update for the scheduler
 *
 *  SYNOPSIS
 *     #include "sge_m_event.h"
 *
-*     void reinit_schedd() 
+*     int reinit_event_client(ev_registration_id id) 
 *
 *  FUNCTION
-*     Does a total update (send all lists) to the scheduler and output
-*     an error message.
+*     Does a total update (send all lists) to the event client specified by id
+*     and outputs an error message.
+*
+*  INPUTS
+*     ev_registration_id id - the id of the event client to reinitialize.
+*
+*  RESULT
+*     int - 0 if reinitialization failed, e.g. because the event client does
+*           not exits, else 0
 *
 *  NOTES
-*     This function should not be part of the core event client interface, it
-*     should perhaps be a commodity function or in qmaster itself.
 *
 *  SEE ALSO
 *     Eventclient/Server/total_update()
 *
 *******************************************************************************/
-void reinit_schedd()
+int reinit_event_client(ev_registration_id id)
 {
-   static int reinits = 0;
-   lListElem *schedd;
+   lListElem *event_client;
 
-   DENTER(TOP_LAYER, "reinit_schedd");
+   DENTER(TOP_LAYER, "reinit_event_client");
 
-   if ((schedd=sge_locate_scheduler())) {
-      ERROR((SGE_EVENT, MSG_EVE_REINITSCHEDD_I, ++reinits));
-      total_update(schedd);
+   if ((event_client=sge_locate_event_client(id)) != NULL) {
+      ERROR((SGE_EVENT, MSG_EVE_REINITEVENTCLIENT_S, lGetString(event_client, EV_name)));
+      total_update(event_client);
+      DEXIT;
+      return 1;
+   } else {
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_U, u32c(id)));
+      DEXIT;
+      return 0;
    }
-
-   DEXIT;
 }
 
 /****** Eventclient/Server/total_update() *********************************************
@@ -398,6 +402,9 @@ lListElem *event_client
 *  FUNCTION
 *     Registeres a new event client. 
 *     If it requested a dynamic id, a new id is created and assigned.
+*     If it is a special client (with fixed id) and an event client
+*     with this id already exists, the old instance is deleted and the
+*     new one registered.
 *     If the registration succees, the event client is sent all data
 *     (sgeE*_LIST events) according to its subscription.
 *
@@ -412,7 +419,6 @@ lListElem *event_client
 *     int - AN_status value. STATUS_OK on success, else error code
 *
 *  NOTES
-*     Special handling for scheduler should be generalized in some way.
 *
 *  SEE ALSO
 *     Eventclient/Server/sge_mod_event_client()
@@ -465,10 +471,13 @@ char *rhost
       INFO((SGE_EVENT, MSG_EVE_REG_SU, name, u32c(id)));         
    }
 
-   if(id == EV_ID_SCHEDD) {
-      if ((ep=sge_locate_scheduler())) {
-         /* we already have a scheduler */
-         ERROR((SGE_EVENT, MSG_EVE_TOTALUPDATE));         
+   /* special event clients: we allow only one instance */
+   /* if it already exists, delete the old one and register */
+   /* the new one */
+   if(id > EV_ID_ANY && id < EV_ID_FIRST_DYNAMIC) {
+      if ((ep=sge_locate_event_client(id))) {
+         /* we already have this special client */
+         ERROR((SGE_EVENT, MSG_EVE_CLIENTREREGISTERED_S, name));         
 
          /* delete old event client entry */
          lRemoveElem(EV_Clients, ep);
@@ -552,6 +561,7 @@ char *rhost
 ) {
    lListElem *event_client=NULL;
    u_long32 id;
+   u_long32 busy;
    u_long32 ev_d_time;
    const char *subscription;
    const char *old_subscription;
@@ -570,6 +580,7 @@ char *rhost
    }
 
    /* these parameters can be changed */
+   busy         = lGetUlong(clio, EV_busy);
    ev_d_time    = lGetUlong(clio, EV_d_time);
    subscription = lGetString(clio, EV_subscription);
 
@@ -618,7 +629,11 @@ char *rhost
 #endif      
    }
 
-   INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS,
+   if(busy != lGetUlong(event_client, EV_busy)) {
+      lSetUlong(event_client, EV_busy, busy);
+   }
+
+   DEBUG((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS,
          ruser, rhost, lGetString(event_client, EV_name), MSG_EVE_EVENTCLIENT));
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
 
@@ -643,7 +658,7 @@ char *rhost
 *     static void check_send_new_subscribed_list(const char *old_subscription, 
 *                                                const char *new_subscription, 
 *                                                lListElem *event_client, 
-*                                                int event) 
+*                                                ev_event event) 
 *
 *  FUNCTION
 *     Checks, if sgeE*_LIST events have been added to the subscription of a
@@ -653,14 +668,14 @@ char *rhost
 *     const char *old_subscription - former subscription
 *     const char *new_subscription - new subscription
 *     lListElem *event_client      - the event client object
-*     int event                    - the event to check
+*     ev_event event               - the event to check
 *
 *  SEE ALSO
 *     Eventclient/Server/sge_total_update_event()
 *
 *******************************************************************************/
 static void check_send_new_subscribed_list(const char *old_subscription, const char *new_subscription, 
-                                    lListElem *event_client, int event)
+                                    lListElem *event_client, ev_event event)
 {
    if((new_subscription[event] & EV_SUBSCRIBED) && (old_subscription[event] == EV_NOT_SUBSCRIBED)) {
       sge_total_update_event(event_client, event);
@@ -725,20 +740,20 @@ void sge_event_client_exit(const char *host, const char *commproc, sge_pack_buff
 *  SYNOPSIS
 *     #include "sge_m_event.h"
 *
-*     int sge_eventclient_subscribed(const lListElem *event_client, int event) 
+*     int sge_eventclient_subscribed(const lListElem *event_client, ev_event event) 
 *
 *  FUNCTION
 *     Checks if the given event client has a certain event subscribed.
 *
 *  INPUTS
 *     const lListElem *event_client - event client to check
-*     int event                     - event to check
+*     ev_event event                - event to check
 *
 *  RESULT
 *     int - 0 = not subscribed, 1 = subscribed
 *
 *******************************************************************************/
-int sge_eventclient_subscribed(const lListElem *event_client, int event)
+int sge_eventclient_subscribed(const lListElem *event_client, ev_event event)
 {
    const char *subscription = NULL;
 
@@ -766,7 +781,7 @@ int sge_eventclient_subscribed(const lListElem *event_client, int event)
 *  SYNOPSIS
 *     #include "sge_m_event.h"
 *
-*     int sge_ack_event(lListElem *event_client, u_long32 event_number) 
+*     int sge_ack_event(lListElem *event_client, ev_event event_number) 
 *
 *  FUNCTION
 *     After the server sent events to an event client, it has to acknowledge
@@ -778,7 +793,7 @@ int sge_eventclient_subscribed(const lListElem *event_client, int event)
 *
 *  INPUTS
 *     lListElem *event_client - event client sending acknowledge
-*     u_long32 event_number   - serial number of the last event to acknowledge
+*     ev_event event_number   - serial number of the last event to acknowledge
 *
 *  RESULT
 *     int - always 0
@@ -793,7 +808,7 @@ int sge_eventclient_subscribed(const lListElem *event_client, int event)
 *******************************************************************************/
 int sge_ack_event(
 lListElem *event_client,
-u_long32 event_number 
+ev_event event_number 
 ) {
    int pos;
    lList *lp;
@@ -862,7 +877,7 @@ u_long32 event_number
 *     u_long32 now - actual timestamp
 *
 *  SEE ALSO
-*     Eventclient/Server/-Global_Variables
+*     Eventclient/Server/-Event_Client_Server_Global_Variables
 *     Eventclient/Server/sge_ack_event()
 *
 *******************************************************************************/
@@ -979,7 +994,7 @@ u_long32 now
 *  SYNOPSIS
 *     #include "sge_m_event.h"
 *
-*     void sge_add_list_event(lListElem *event_client, u_long32 type, u_long32 
+*     void sge_add_list_event(lListElem *event_client, ev_event type, u_long32 
 *     intkey, u_long32 intkey2, const char *strkey, lList *list) 
 *
 *  FUNCTION
@@ -989,7 +1004,7 @@ u_long32 now
 *  INPUTS
 *     lListElem *event_client - the event client to receive the event, if NULL,
 *                               all event clients will receive the event
-*     u_long32 type           - the event id
+*     ev_event type           - the event id
 *     u_long32 intkey         - additional data
 *     u_long32 intkey2        - additional data
 *     const char *strkey      - additional data
@@ -1004,7 +1019,7 @@ u_long32 now
 *******************************************************************************/
 void sge_add_list_event(
 lListElem *event_client,
-u_long32 type,
+ev_event type,
 u_long32 intkey,
 u_long32 intkey2,
 const char *strkey,
@@ -1025,7 +1040,7 @@ lList *list
 
 static int sge_add_list_event_(
 lListElem *event_client,
-u_long32 type,
+ev_event type,
 u_long32 intkey,
 u_long32 intkey2,
 const char *strkey,
@@ -1278,7 +1293,7 @@ int need_copy_list  /* to reduce overhead */
 *  SYNOPSIS
 *     #include "sge_m_event.h"
 *
-*     void sge_add_event(lListElem *event_client, u_long32 type, u_long32 
+*     void sge_add_event(lListElem *event_client, ev_event type, u_long32 
 *     intkey, u_long32 intkey2, const char *strkey, lListElem *element) 
 *
 *  FUNCTION
@@ -1291,7 +1306,7 @@ int need_copy_list  /* to reduce overhead */
 *  INPUTS
 *     lListElem *event_client - the event client to receive the event, if NULL,
 *                               all event clients will receive the event
-*     u_long32 type           - the event id
+*     ev_event type           - the event id
 *     u_long32 intkey         - additional data
 *     u_long32 intkey2        - additional data
 *     const char *strkey      - additional data
@@ -1306,7 +1321,7 @@ int need_copy_list  /* to reduce overhead */
 *******************************************************************************/
 void sge_add_event(
 lListElem *event_client,
-u_long32 type,
+ev_event type,
 u_long32 intkey,
 u_long32 intkey2,
 const char *strkey,
@@ -1339,7 +1354,7 @@ lListElem *element
 
 static void sge_add_event_(
 lListElem *event_client,
-u_long32 type,
+ev_event type,
 u_long32 intkey,
 u_long32 intkey2,
 const char *strkey,
@@ -1403,18 +1418,17 @@ u_long32 sge_get_next_event_number(u_long32 client_id)
 *     sge_total_update_event() -- create a total update event
 *
 *  SYNOPSIS
-*     static void sge_total_update_event(lListElem *event_client, u_long32 
-*     type) 
+*     static void sge_total_update_event(lListElem *event_client, ev_event type) 
 *
 *  FUNCTION
 *     Creates an event delivering a certain list of objects for an event client.
 *
 *  INPUTS
 *     lListElem *event_client - event client to receive the list
-*     u_long32 type           - event describing the list to update
+*     ev_event type           - event describing the list to update
 *
 *******************************************************************************/
-static void sge_total_update_event(lListElem *event_client, u_long32 type) 
+static void sge_total_update_event(lListElem *event_client, ev_event type) 
 {
    u_long32 i;
    lListElem *event;
@@ -1487,6 +1501,10 @@ static void sge_total_update_event(lListElem *event_client, u_long32 type)
             lp = Master_Usermapping_Entry_List;
             break;
 #endif
+         default:
+            WARNING((SGE_EVENT, MSG_EVE_TOTALUPDATENOTHANDLINGEVENT_I, type));
+            DEXIT;
+            return;
       }
 
       event = lCreateElem(ET_Type); 
@@ -1517,38 +1535,37 @@ static void sge_total_update_event(lListElem *event_client, u_long32 type)
 }
 
 
-/****** Eventclient/Server/sge_locate_scheduler() *************************************
+/****** Eventclient/Server/sge_locate_event_client() *************************************
 *  NAME
-*     sge_locate_scheduler() -- search for the scheduler
+*     sge_locate_event_client() -- search for the scheduler
 *
 *  SYNOPSIS
 *     #include "sge_m_event.h"
 *
-*     lListElem* sge_locate_scheduler() 
+*     lListElem* sge_locate_event_client(ev_registration_id id) 
 *
 *  FUNCTION
-*     Searches an event client of type scheduler (EV_ID_SCHEDD).
-*     Returns a pointer to the scheduler event client object or
-*     NULL, if no scheduler is registered as event client.
+*     Searches the event client list for an event client with the
+*     specified id.
+*     Returns a pointer to the event client object or
+*     NULL, if no such event client is registered.
 *
 *  INPUTS
+*     ev_registration_id id - id of the event client to search
 *
 *  RESULT
-*     lListElem* - scheduler event client object or NULL.
+*     lListElem* - event client object or NULL.
 *
 *  NOTES
-*     Should not be part of the core event client interface.
-*     Might be provided in a more general form (for any special event client)
-*     as commodity function.
 *
 *******************************************************************************/
-lListElem* sge_locate_scheduler()
+lListElem* sge_locate_event_client(ev_registration_id id)
 {
    lListElem *ep;
 
-   DENTER(TOP_LAYER, "sge_locate_scheduler");
+   DENTER(TOP_LAYER, "sge_locate_event_client");
 
-   ep = lGetElemUlong(EV_Clients, EV_id, EV_ID_SCHEDD);
+   ep = lGetElemUlong(EV_Clients, EV_id, id);
 
    DEXIT;
    return ep;
@@ -1710,7 +1727,7 @@ void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer)
       return;
    }
      
-   scheduler = sge_locate_scheduler();
+   scheduler = sge_locate_event_client(EV_ID_SCHEDD);
      
    if (scheduler == NULL) {
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
@@ -1721,7 +1738,6 @@ void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer)
 
    /* add a sgeE_SCHEDDMONITOR event */
    sge_add_event(scheduler, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL);
-   /* sge_flush_events(scheduler, 0); !!!! not really necessary */
 
    INFO((SGE_EVENT, MSG_COM_SCHEDMON_SS, user, host));
    sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);

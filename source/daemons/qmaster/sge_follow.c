@@ -39,7 +39,6 @@
 #include "sge_jataskL.h"
 #include "sge_queueL.h"
 #include "sge_hostL.h"
-#include "sge_eventL.h"
 #include "sge_time.h"
 #include "sge_log.h"
 #include "sge_answerL.h"
@@ -138,7 +137,7 @@ lList **topp  /* ticket orders ptr ptr */
    force=lGetUlong(ep, OR_force);
    or_pe=lGetString(ep, OR_pe);
 
-   scheduler = sge_locate_scheduler();
+   scheduler = sge_locate_event_client(EV_ID_SCHEDD);
    if(scheduler == NULL) {
       ERROR((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
       DEXIT;

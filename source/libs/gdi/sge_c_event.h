@@ -32,30 +32,34 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_eventL.h"
 
 #define DEFAULT_EVENT_DELIVERY_INTERVAL (4)
 
-int ec_prepare_registration(u_long32 id, const char *name);
+int ec_prepare_registration(ev_registration_id id, const char *name);
 int ec_register(void);
 int ec_deregister(void);
 
-int ec_subscribe(int event);
+int ec_subscribe(ev_event event);
 int ec_subscribe_all(void);
 
-int ec_unsubscribe(int event);
+int ec_unsubscribe(ev_event event);
 int ec_unsubscribe_all(void);
 
-int ec_get_flush(int event);
-int ec_set_flush(int event, int flush);
-int ec_unset_flush(int event);
+int ec_get_flush(ev_event event);
+int ec_set_flush(ev_event event, int flush);
+int ec_unset_flush(ev_event event);
 
-int ec_subscribe_flush(int event, int flush);
+int ec_subscribe_flush(ev_event event, int flush);
 
 int ec_set_edtime(int intval);
 int ec_get_edtime(void);
 
-int ec_set_busy_handling(int handling);
-int ec_get_busy_handling(void);
+int ec_set_busy_handling(ev_busy_handling handling);
+ev_busy_handling ec_get_busy_handling(void);
+
+int ec_set_busy(int busy);
+int ec_get_busy(void);
 
 void ec_set_clientdata(u_long32 data);
 u_long32 ec_get_clientdata(void);

@@ -40,7 +40,6 @@
 #include "read_write_manop.h"
 #include "sge_manopL.h"
 #include "sge_answerL.h"
-#include "sge_eventL.h"
 #include "sge_m_event.h"
 #include "sge_log.h"
 #include "sge_uidgid.h"

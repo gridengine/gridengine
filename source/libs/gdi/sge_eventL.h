@@ -75,11 +75,11 @@ extern "C" {
 *     Eventclient/Server/sge_add_event_client()
 ****************************************************************************
 */
-enum {
+typedef enum {
    EV_ID_ANY = 0,            /* qmaster will give the ev a unique id */
    EV_ID_SCHEDD = 1,         /* schedd registers at qmaster */
    EV_ID_FIRST_DYNAMIC = 11  /* first id given by qmaster for EV_ID_ANY registration */ 
-};
+}ev_registration_id;
 
 
 /****** Eventclient/-Subscription ***************************************
@@ -152,10 +152,11 @@ enum {
 *     Eventclient/Client/ec_subscribe_flush()
 ****************************************************************************
 */
+#define EV_NO_FLUSH -1
+
 #define EV_NOT_SUBSCRIBED 0x01
 #define EV_SUBSCRIBED 0x02
 #define EV_FLUSHED 0x03
-#define EV_NO_FLUSH -1
 #define EV_MAX_FLUSH 0x3f
 
 /****** Eventclient/-Busy-state ***************************************
@@ -186,25 +187,22 @@ enum {
 *        EV_BUSY_UNTIL_RELEASED - when delivering events qmaster will set
 *                                 the eventclient to busy.
 *                                 It will stay in the busy state until it
-*                                 is explicitly released either by special 
-*                                 handling of the client in qmaster 
-*                                 (scheduler), or by a message (not yet
-*                                 implemented)
+*                                 is explicitly released by the client 
+*                                 (calling ec_set_busy(0)) 
 *                                 
 *  NOTES
-*     A special GDI message (or piggypack to the ACK message) still has to be
-*     implemented to allow setting of the busy state from the client.
 *
 *  SEE ALSO
 *     Eventclient/Client/ec_set_busy_handling()
+*     Eventclient/Client/ec_set_busy()
 ****************************************************************************
 */
 
-enum {
+typedef enum {
    EV_BUSY_NO_HANDLING = 0,
    EV_BUSY_UNTIL_ACK,
    EV_BUSY_UNTIL_RELEASED
-};
+} ev_busy_handling;
 
 /****** Eventclient/--EV_Type ***************************************
 *
@@ -278,7 +276,7 @@ enum {
 *     delivery times, timeouts etc.
 *
 *  SEE ALSO
-*     Eventclient/--Introduction
+*     Eventclient/--Event_Client_Interface
 *     Eventclient/-ID-numbers
 *     Eventclient/-Subscription
 *     Eventclient/-Flushing
@@ -500,7 +498,7 @@ NAMEEND
 ****************************************************************************
 */
 
-enum {
+typedef enum {
    sgeE_ALL_EVENTS,                 /* + = impl. and tested, - = not available */
 
    sgeE_ADMINHOST_LIST,             /* + send admin host list at registration */
@@ -617,7 +615,7 @@ enum {
 #endif
 
    sgeE_EVENTSIZE 
-};
+}ev_event;
 
 enum {
    ET_number = ET_LOWERBOUND,        /* number of the event */

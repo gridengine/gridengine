@@ -43,7 +43,6 @@
 #include "sge_userprjL.h"
 #include "sge_gdi_intern.h"
 #include "sge_confL.h"
-#include "sge_eventL.h"
 #include "sge_log.h"
 #include "sge_parse_num_par.h"
 #include "sgermon.h"

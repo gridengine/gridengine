@@ -580,11 +580,7 @@ int sub_command
          {
             u_long32 event_number, now;
             static u_long32 last_order_arrived = 0;
-            lListElem *schedd = sge_locate_scheduler();
-            
-            if(schedd != NULL) {
-               set_event_client_busy(schedd, 0);
-            }
+            lListElem *schedd = sge_locate_event_client(EV_ID_SCHEDD);
             
             /* statistics */
             if (lFirst(request->lp) == ep) {
@@ -604,7 +600,7 @@ int sub_command
                ep = lLast(request->lp); /* this will exit the loop */
 
                if (ret==-2)
-                  reinit_schedd();
+                  reinit_event_client(EV_ID_SCHEDD);
             }
             /* trigger sending of generated events directly to schedd 
              * but only if events available

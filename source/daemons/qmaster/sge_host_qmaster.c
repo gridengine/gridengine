@@ -41,7 +41,6 @@
 #include "sge_hostL.h"
 #include "sge_answerL.h"
 #include "sge_load_reportL.h"
-#include "sge_eventL.h"
 #include "sge_usersetL.h"
 #include "sge_queueL.h"
 #include "sge_identL.h"

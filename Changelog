@@ -1,3 +1,16 @@
+JG-2002-04-09-0: Enhancem.  Further generalization of the event client 
+                            interface:
+                            - sge_locate_scheduler -> sge_locate_event_client
+                            - reinit_schedd -> reinit_event_client
+                            - special handling at registration not only for 
+                              scheduler but any special event client
+                            - make datatypes of enums and use these types 
+                              instead of int or u_long32 in access functions
+                            - extend event client modify request to allow 
+                              changing of the busy state, remove special 
+                              handling for scheduler busy state in qmaster
+                            - updated documentation
+
 JG-2002-04-08-3: Bugfix:    qrsh -h made debug output (a job object).
 
 JG-2002-04-08-2: Enhancem.  Performance optimization for the processing

@@ -51,7 +51,6 @@
 #include "sge_usageL.h"
 #include "sge_userprjL.h"
 #include "sge_usersetL.h"
-#include "sge_eventL.h"
 #include "sge_queueL.h"
 #include "sge_share_tree_nodeL.h"
 #include "read_write_userprj.h"

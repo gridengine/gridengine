@@ -50,7 +50,6 @@
 #include "sge_c_event.h"
 #include "sge_ckptL.h"
 #include "sge_complexL.h"
-#include "sge_eventL.h"
 #include "sge_hostL.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"

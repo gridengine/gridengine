@@ -39,7 +39,6 @@
 #include "sge_jobL.h"
 #include "sge_queueL.h"
 #include "sge_jataskL.h"
-#include "sge_eventL.h"
 #include "sge_answerL.h"
 #include "sge_usersetL.h"
 #include "sge_ckpt_qmaster.h"

@@ -36,6 +36,8 @@
 #   include "sge_gdi_intern.h"
 #endif
 
+#include "sge_eventL.h"
+
 int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, sge_gdi_request *request);
 int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, sge_gdi_request *request);
 
@@ -43,9 +45,9 @@ int sge_gdi_mod_job(lListElem *jep, lList **alpp, char *ruser, char *rhost, int 
 
 int sge_gdi_del_job(lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command);
 
-void sge_add_job_event(u_long32 type, lListElem *jep, lListElem *jatep);
+void sge_add_job_event(ev_event type, lListElem *jep, lListElem *jatep);
 
-void sge_add_jatask_event(u_long32 type, lListElem *jep, lListElem *jatask);
+void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask);
 
 void job_suc_pre(lListElem *jep);
 

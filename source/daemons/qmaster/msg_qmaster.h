@@ -447,9 +447,9 @@
 ** sge_m_event.c
 */
 #define MSG_EVE_UNKNOWNDUMMYREQUEST   _("unknown dummy request\n")
-#define MSG_EVE_REINITSCHEDD_I        _("%d. reinitialization of \"schedd\"")
+#define MSG_EVE_REINITEVENTCLIENT_S   _("reinitialization of "SFQ"\n")
 #define MSG_EVE_UNKNOWNEVCLIENT_U     _("no event client known with id "U32CFormat"\n")
-#define MSG_EVE_TOTALUPDATE           _("scheduler needs total update")
+#define MSG_EVE_CLIENTREREGISTERED_S  _("event client "SFQ" reregistered - it will need a total update\n")
 #define MSG_EVE_REG_SU                _(SFQ" registers as event client with id "U32CFormat"\n")
 #define MSG_EVE_UNREG_SU              _("event client "SFQ" with id "U32CFormat" deregistered")
 #define MSG_EVE_EVENTCLIENT           _("event client")
@@ -459,6 +459,8 @@
 
 #define MSG_EVE_INVALIDSUBSCRIPTION   _("invalid subscription information\n")
 #define MSG_EVE_INVALIDINTERVAL_U     _("invalid event interval "U32CFormat"\n")
+
+#define MSG_EVE_TOTALUPDATENOTHANDLINGEVENT_I _("event number %d is not handled by sge_total_update_event\n")
 
 #define MSG_COM_ACKTIMEOUT4EV_ISIS    _("acknowledge timeout after %d seconds for event client (%s:%d) on host \"%s\"")
 #define MSG_COM_NOSHUTDOWNPERMS       _("shutdown requires manager privileges\n")

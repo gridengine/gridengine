@@ -37,7 +37,6 @@
 #include <time.h>
 
 #include "sge_answerL.h"
-#include "sge_eventL.h"
 #include "sge_hostL.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"

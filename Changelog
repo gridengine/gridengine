@@ -1,3 +1,5 @@
+CR-2002-05-06-0: Testsuite: fixed check dependencies
+
 AH-2002-05-06-0: Bugfix:    Fix typo in simple.sh job example
 
 CR-2002-05-03-0: Testsuite: - removed rsh with rlogin calls

@@ -47,7 +47,7 @@ global check_category
 set check_name         "qalter"
 set check_category     "COMPATIBILITY SYSTEM"
 set check_description(0)  "check every option"
-set check_needs        ""       ;# dependencies of this check (name of other check)
+set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
 set check_functions ""
 lappend check_functions "run_dummy_jobs"   ;# functions to call (in order)
 lappend check_functions "start_testjob"      

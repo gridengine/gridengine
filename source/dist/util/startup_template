@@ -133,7 +133,7 @@ Shutdown()
 
 #---------------------------------------------------------------------------
 # QmasterSpoolDir
-#    Return qmasters spool directory
+#    Return qmaster spool directory
 #
 QmasterSpoolDir()
 {
@@ -141,6 +141,35 @@ QmasterSpoolDir()
                       $SGE_ROOT/$SGE_CELL/common/configuration | \
                       awk '{ print $2 }'`
    echo $qma_spool_dir
+}
+
+#---------------------------------------------------------------------------
+# ExecdSpoolDir
+#    Return execd spool directory. Check if local config overrides
+#    the global cluster config
+#
+ExecdSpoolDir()
+{
+   lconffile=$SGE_ROOT/$SGE_CELL/common/local_conf/$HOST
+   if [ -f $lconffile ]; then
+      grep execd_spool_dir $lconffile  2>&1 > /dev/null
+      if [ $? = 0 ]; then
+         execd_spool_dir=`grep execd_spool_dir $lconffile | \
+                          awk '{ print $2 }'`
+         echo $execd_spool_dir/$UQHOST
+         return
+      fi
+   fi
+
+   execd_spool_dir=`grep execd_spool_dir \
+                    $SGE_ROOT/$SGE_CELL/common/configuration | \
+                    awk '{ print $2 }'`
+
+   if [ "$execd_spool_dir" != "" ]; then
+      echo $execd_spool_dir/$UQHOST
+   else
+      echo ""
+   fi
 }
 
 #---------------------------------------------------------------------------
@@ -392,8 +421,19 @@ if [ "$utilbin_dir" = "none" ]; then
 fi
 
 HOST=`$utilbin_dir/gethostname -aname`
-UQHOST=`$utilbin_dir/gethostname -aname | cut -f1 -d.`
+
+if [ "$HOST" = "" ]; then
+   echo "can't resolve local hostname"
+   exit 1
+fi
+
+UQHOST=`echo $HOST | cut -f1 -d.`
 qmaster_spool_dir=`QmasterSpoolDir`
+
+if [ "$qmaster_spool_dir" = "" ]; then
+   echo "can't get qmaster spool directory"
+fi
+
 shadow_host=`CheckIfShadowMasterHost $HOST`
 
 if [ "$startup" = true ]; then
@@ -468,30 +508,42 @@ if [ "$startup" = true ]; then
    fi
 else
    if [ $shadowd = true ]; then
-      # Send SIGTERM to shadowd
-      echo "   Shutting down Grid Engine shadowd"
-      Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$UQHOST.pid
+      if [ -f $qmaster_spool_dir/shadowd_$UQHOST.pid ]; then
+         # Send SIGTERM to shadowd
+         echo "   Shutting down Grid Engine shadowd"
+         Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$UQHOST.pid
+      fi
    fi
 
    if [ $qmaster = true ]; then
       if [ `CheckIfQmasterHost $HOST` = true ]; then
-         # Send SIGTERM to scheduler
-         echo "   Shutting down Grid Engine scheduler"
-         Shutdown sge_schedd $qmaster_spool_dir/schedd/schedd.pid
+         if [ -f  $qmaster_spool_dir/schedd/schedd.pid ]; then
+            # Send SIGTERM to scheduler
+            echo "   Shutting down Grid Engine scheduler"
+            Shutdown sge_schedd $qmaster_spool_dir/schedd/schedd.pid
+         fi
 
-         # Send SIGTERM to qmaster
-         echo "   Shutting down Grid Engine qmaster"
-         Shutdown sge_qmaster $qmaster_spool_dir/qmaster.pid
+         if [ -f $qmaster_spool_dir/qmaster.pid ]; then
+            # Send SIGTERM to qmaster
+            echo "   Shutting down Grid Engine qmaster"
+            Shutdown sge_qmaster $qmaster_spool_dir/qmaster.pid
+         fi
       fi
    fi
 
    if [ $execd = true ]; then
       # Shutdown execution daemon
-      execd_spool_dir=$SGE_ROOT/$SGE_CELL/spool/$UQHOST
+      execd_spool_dir=`ExecdSpoolDir`
 
-      # Send SIGTERM to execd
-      echo "   Shutting down Grid Engine execution daemon"
-      Shutdown sge_execd $execd_spool_dir/execd.pid
+      if [ "$execd_spool_dir" = "" ]; then
+         echo "can't get execd spool directory"
+      fi
+
+      if [ -f $execd_spool_dir/execd.pid ]; then
+         # Send SIGTERM to execd
+         echo "   Shutting down Grid Engine execution daemon"
+         Shutdown sge_execd $execd_spool_dir/execd.pid
+      fi
 
       if [ $softstop = false ]; then
          # Send SIGTERM to all shepherds

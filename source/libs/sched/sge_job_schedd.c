@@ -238,7 +238,6 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
    if (max_jobs_per_user != 0 && 
        job_lists[SPLIT_PENDING] != NULL && *(job_lists[SPLIT_PENDING]) != NULL &&
        job_lists[SPLIT_PENDING_EXCLUDED] != NULL) {
-      lListElem *job = NULL;                           
       lListElem *user = NULL;
 
       /* create a hash table on JB_owner to speedup 

@@ -1195,6 +1195,7 @@ char *commproc
                         ruser, u32c(job_number)));
             }
             sge_commit_job(j, t, 3, 1);
+            cancel_job_resend(job_number, task_number);
             j = NULL;
             sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO); 
          }
@@ -1214,6 +1215,7 @@ char *commproc
                         ruser, u32c(job_number)));
             }
             sge_commit_job(j, t, 3, 1);
+            cancel_job_resend(job_number, task_number);
             j = NULL;
          }
          else {

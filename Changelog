@@ -1,11 +1,13 @@
+AH-2001-10-29-0: Qmaster:
+                 - cancel resend of jobs to execd on forced job deletion
+
 AA-2001-10-29-1: security files that are no longer needed removed
 
-AA-2001-10-29-0: Fix for weired characters in helper dialogs (PE,Project Configi, Calendar, Cluster Config, 
-                 Complex Config)
+AA-2001-10-29-0: Fix for weired characters in helper dialogs (PE,Project Configi, 
+                  Calendar, Cluster Config, Complex Config)
                  Queue Control Reschedule functionality added (corresponds qmod -r <qname>)
                  Cluster config Reschedule Unknown bug fixed 
                  Job Custom dialogue core dump fix
-                 
 
 EB-2001-10-29-0: Fix for sgeee scheduler
                   - empty sharetree && sharetreetickets > 0 caused

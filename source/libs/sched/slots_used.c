@@ -34,7 +34,7 @@
 #include "sge_log.h"
 #include "sgermon.h"
 #include "slots_used.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_centry.h"
 
 #include "msg_schedd.h"

@@ -54,7 +54,7 @@
 #include "reschedule.h"
 #include "msg_qmaster.h"
 #include "sge_security.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_centry.h"
 
 extern lList *Master_Job_List;

@@ -44,7 +44,6 @@
 #include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_job.h"

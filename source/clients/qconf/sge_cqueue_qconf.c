@@ -40,7 +40,6 @@
 #include "sge_hostname.h"
 
 #include "sge_answer.h"
-#include "sge_queue.h"
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
 #include "sge_hgroup.h"
@@ -424,7 +423,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                         const lListElem *qinstance;
 
                         qinstance = lGetElemHost(qinstance_list,
-                                                 QI_hostname, hostname);
+                                                 QU_qhostname, hostname);
 
                         if (qinstance != NULL) {
                            write_qinstance(0, 0, qinstance, NULL);
@@ -453,7 +452,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                      for_each(qinstance, qinstance_list) {
                         const char *hostname = NULL;
 
-                        hostname = lGetHost(qinstance, QI_hostname);
+                        hostname = lGetHost(qinstance, QU_qhostname);
                         if (!fnmatch(h_pattern, hostname, 0) ||
                             !sge_hostcmp(h_pattern, hostname)) {
                            write_qinstance(0, 0, qinstance, NULL);

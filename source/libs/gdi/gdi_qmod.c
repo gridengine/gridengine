@@ -36,6 +36,8 @@
 #include "parse.h"
 #include "sge_answer.h"
 
+#include "sge_qinstance_state.h"
+
 #include "msg_common.h"
 #include "msg_gdilib.h"
 
@@ -45,8 +47,8 @@
 ** PARAMETER
 **   ref_list     - queue reference list, ST_Type
 **   option_flags  - 0 or BIT_QMOD_FORCE
-**   action_flag   - QDISABLED, QENABLED, QSUSPENDED, 
-**                   QRUNNING, QERROR, QRESCHEDULED
+**   action_flag   - state transition
+**
 ** RETURN
 **   answer list 
 ** EXTERNAL
@@ -72,8 +74,9 @@ u_long32 action_flag
    DENTER(TOP_LAYER, "gdi_qmod");
 
    if (!action_flag 
-       || ((action_flag != QDISABLED) && (action_flag != QENABLED) && (action_flag != QSUSPENDED) 
-           && (action_flag != QRUNNING) && (action_flag != QERROR) && (action_flag != QRESCHEDULED))) {
+       || ((action_flag != QI_DO_DISABLE) && (action_flag != QI_DO_ENABLE) && 
+           (action_flag != QI_DO_SUSPEND) && (action_flag != QI_DO_UNSUSPEND) &&
+           (action_flag != QI_DO_ERROR) && (action_flag != QI_DO_RESCHEDULE))) {
      answer_list_add(&alp, MSG_GDI_INVALIDACTION , STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
      DEXIT;
      return alp;
@@ -124,7 +127,8 @@ u_long32 action_flag
       ** no type needed here it's a special call not addressed to a 
       ** certain object
       */
-      alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_TRIGGER, &id_list, NULL, what_all);
+      /* EB: TODO: qmod */
+      alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &id_list, NULL, what_all);
       lFreeWhat(what_all);
       id_list = lFreeList(id_list);
    }

@@ -64,7 +64,6 @@
 #include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_job.h"

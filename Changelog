@@ -1,3 +1,6 @@
+CR-2002-04-23-0: Testsuite: merged compile procedure enhancments from
+                            maintrunc
+
 JG-2002-04-19-0: Bugfix:    Interactive jobs of any user failed if root had 
                             already the maximum number of group id's.
                  Enhancem.: More detailed description in error output

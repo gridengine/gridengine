@@ -2149,7 +2149,7 @@ proc check_executable_files {  } {
 
    if { $file_error != 0 } {
       while { 1 } {
-         puts $CHECK_OUTPUT "should I set the file permissons to 00755? (yes/no)"
+         puts $CHECK_OUTPUT "should I set the file permissions to 00755? (yes/no)"
          gets stdin answer
          if { [ string compare $answer "yes" ] == 0 } {
             foreach elem $change_files {
@@ -2667,6 +2667,7 @@ proc get_check_dirs { path } {
      get_check_dirs "$path/$element"
   }
 }
+
 
 # check dependencies
 #                                                             max. column:     |
@@ -4985,7 +4986,6 @@ proc print_menu_header {} {
   global CHECK_GUILTY_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER
   global CHECK_PRODUCT_FEATURE CHECK_GUILTY_CATEGORIES
 
-  
   clear_screen
   get_version_info
   puts "===============================================================================" 
@@ -5263,8 +5263,8 @@ proc compile_source {} {
    # update source 
    if { $do_not_update == 0 } {
       puts $CHECK_OUTPUT "------------------------------------------"
-      puts $CHECK_OUTPUT "updating source in directory $CHECK_SOURCE_DIR on host $CHECK_SOURCE_HOSTNAME ..."
-      set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; cvs update -dP" ]
+      puts $CHECK_OUTPUT "updating gridengine directory $CHECK_SOURCE_DIR/.. on host $CHECK_SOURCE_HOSTNAME ..."
+      set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs update -dP" ]
       if { $prg_exit_state != 0 } {
          add_proc_error "compile_source" -2 "cvs update -dP error:\n$output" 
          return -1
@@ -5274,13 +5274,46 @@ proc compile_source {} {
       puts $cvs_output $output
       close $cvs_output
       set update_output [split $output "\n"] 
+      set frame_work_script_update 0
+      set testsuite_update 0
       foreach elem $update_output {
          if { ([string range $elem 0 2 ] != "cvs") && ([string range $elem 0 0] != "?") } {
             puts $CHECK_OUTPUT $elem
-            set cvs_change_log "$cvs_change_log $elem\n"
+            append cvs_change_log "$elem\n"
+            if { [ string first "testsuite/check.exp" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
+               set frame_work_script_update 1
+            }
+            if { [ string first "testsuite/tcl_files" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
+               set testsuite_update 1
+            }
          } 
       }
+      if { $frame_work_script_update == 1 } {
+         puts $CHECK_OUTPUT "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!"
+         flush $CHECK_OUTPUT
+         mail_report $mail_subject "$mail_body TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" 
+         exit 1 
+      }
+      if { $testsuite_update == 1 } {
+         puts $CHECK_OUTPUT "testsuite source procedures were updated!!! resourcing it !!!"
+         source_procedures
+      }
       puts $CHECK_OUTPUT "------------------------------------------"
+      set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
+      if { [ string compare "csp" $CHECK_PRODUCT_FEATURE ] == 0 } {
+         append my_compile_options " -secure"
+         puts $CHECK_OUTPUT "-> adding compile option -csp"
+      }
+      foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
+         puts $CHECK_OUTPUT "------------------------------------------"
+         puts $CHECK_OUTPUT "-> starting aimk $my_compile_options clean on host $chost ..."
+         set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options clean" ]
+         puts $CHECK_OUTPUT "------------------------------------------"
+         puts $CHECK_OUTPUT "return state: $prg_exit_state"
+         puts $CHECK_OUTPUT "------------------------------------------"
+         puts $CHECK_OUTPUT "output:\n$output"
+         puts $CHECK_OUTPUT "------------------------------------------"
+      }
    } 
 
    puts $CHECK_OUTPUT "------------------------------------------"
@@ -5298,6 +5331,19 @@ proc compile_source {} {
       append my_compile_options " -secure"
       puts $CHECK_OUTPUT "-> adding compile option -csp"
    }
+   puts $CHECK_OUTPUT "-> starting aimk $my_compile_options -only-depend on host $CHECK_SOURCE_HOSTNAME ..."
+   set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options -only-depend" ]
+   puts $CHECK_OUTPUT "------------------------------------------"
+   puts $CHECK_OUTPUT "return state: $prg_exit_state"
+   puts $CHECK_OUTPUT "------------------------------------------"
+   puts $CHECK_OUTPUT "output:\n$output"
+   puts $CHECK_OUTPUT "------------------------------------------"
+   if { $prg_exit_state != 0 } {
+      mail_report $mail_subject "$mail_body aimk $my_compile_options -only-depend on host $CHECK_SOURCE_HOSTNAME returned:\n$output"
+      return -1
+   }
+
+   puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "-> starting aimk $my_compile_options depend on host $CHECK_SOURCE_HOSTNAME ..."
    set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options depend" ]
    puts $CHECK_OUTPUT "------------------------------------------"
@@ -5305,6 +5351,11 @@ proc compile_source {} {
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "output:\n$output"
    puts $CHECK_OUTPUT "------------------------------------------"
+
+   if { $prg_exit_state != 0 } {
+      mail_report $mail_subject "$mail_body aimk $my_compile_options depend on host $CHECK_SOURCE_HOSTNAME returned:\n$output"
+      return -1
+   }
 
    set host_list $CHECK_SOURCE_COMPILE_HOSTS
    
@@ -6372,6 +6423,7 @@ set mail_body "$mail_body product version is [get_version_info]\n"
 set mail_body "$mail_body testsuite root directory is \"$CHECK_TESTSUITE_ROOT\"\n"
 set mail_body "$mail_body check is running on host \"$CHECK_HOST\" architecture is \"$CHECK_ARCH\"\n"
 set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n-------\n"
+
 
 if { $no_action == 1 } {
   puts "No action flag is set -> exit 1"

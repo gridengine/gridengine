@@ -1439,9 +1439,9 @@ int sub_command
             lListElem *prev = lPrev(jobep);
             u_long32 jid =  lGetUlong(jobep, JB_job_number);
             lRemoveElem(Master_Job_List, jobep);
-            HashTableDelete(Master_Job_Hash_Table, (void *)(long)jid);
+            HashTableDelete(Master_Job_Hash_Table, &jid);
             lInsertElem(Master_Job_List, prev, new_job);
-            HashTableStore(Master_Job_Hash_Table, (void *) (long)jid, 
+            HashTableStore(Master_Job_Hash_Table, &jid, 
                (void *) new_job);
          }   
          /* no need to spool these mods */
@@ -2663,7 +2663,7 @@ u_long32 jobid
    DENTER(BASIS_LAYER, "sge_locate_job");
    
    if (Master_Job_Hash_Table && HashTableLookup(Master_Job_Hash_Table, 
-                                  (const void *) (long) jobid, (const void **) &jep)) { 
+                                  &jobid, (const void **) &jep)) { 
    }
    else {
       jep = lGetElemUlong(Master_Job_List, JB_job_number, jobid);

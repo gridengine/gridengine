@@ -367,11 +367,12 @@ lList *job_list
       runnable_job_arrays = NULL;
    }
    /* ... and register all runnable jobs in the hash table */ 
-   runnable_job_arrays = HashTableCreate(14, HashFunc_u_long32, HashCompare_u_long32); /* 2^14 entries */
-   for_each (job, job_list)
+   runnable_job_arrays = HashTableCreate(14, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32); /* 2^14 entries */
+   for_each (job, job_list) {
+      u_long32 temp = lGetUlong(job, JB_job_number);
       HashTableStore(runnable_job_arrays, 
-            (void *)(u_long)lGetUlong(job, JB_job_number), (void *)(u_long)job);
-
+            &temp, (void *)job);
+   }
 
    /* reinitialize the iterator in our access tree */
    current_pgrp = NULL;
@@ -407,7 +408,7 @@ lListElem *job
 ) {
    u_long32 jobid = lGetUlong(job, JB_job_number);
    /* remove this job from our hash table */
-   HashTableDelete(runnable_job_arrays, (void *)(u_long)jobid);
+   HashTableDelete(runnable_job_arrays, &jobid);
    DPRINTF(("remove "u32" from hashtable\n", jobid));
 }
 
@@ -593,9 +594,10 @@ int nm_curr
             lGetString(lGetRef(current_jr, JRL_category), CT_str), 
                   lGetUlong(current_jr, JRL_jobid)));
       } else {
-         HashTableLookup(runnable_job_arrays,  (const void *)(u_long)lGetUlong(current_jr, JRL_jobid), 
+         u_long32 temp = lGetUlong(current_jr, JRL_jobid);
+         HashTableLookup(runnable_job_arrays,  &temp, 
                   (const void**)&job_array);
-         DPRINTF(("AT: job "u32" is %scontained in hash list: %p\n", lGetUlong(current_jr, JRL_jobid), job_array?"":"NOT ", job_array));
+         DPRINTF(("AT: job "u32" is %scontained in hash list: %p\n", temp, job_array?"":"NOT ", job_array));
       }
    } while (!job_array && (current_jr=lNext(current_jr)));
       

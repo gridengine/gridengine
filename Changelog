@@ -1,3 +1,8 @@
+JG-2001-10-23-0: Fixed a bug in the implementation of non unique hash tables:
+                 The key data has to be duplicated in the hash table.
+                 Therefore a duplication function has to be passed when
+                 creating a new hash table.
+
 JG-2001-10-22-0: Fixed a memory access error in the cull hash implementation
 
 EB-2001-10-20-0: Added 'const' in libraries

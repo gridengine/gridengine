@@ -1047,9 +1047,10 @@ XtPointer cld,cad;
    for (i=0; i<nr_fields; i++) {
       if (strlist[i]) {
          String text;
+         u_long32 temp = XrmStringToQuark(text);
          XmStringGetLtoR(strlist[i], XmFONTLIST_DEFAULT_TAG, &text);
          if (HashTableLookup(NameMappingHashTable, 
-                             (const void*)XrmStringToQuark(text),
+                             &temp,
                              (const void **) &job_item)) {
             job_item->show = 1;
          }
@@ -1401,23 +1402,25 @@ XtPointer cld
    /*
    ** create JobColumnPrintHashTable
    */
-   JobColumnPrintHashTable = HashTableCreate(5, HashFunc_u_long32, HashCompare_u_long32);
+   JobColumnPrintHashTable = HashTableCreate(5, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32);
    for (i=0; i<sizeof(job_items)/sizeof(tJobField); i++) {
+      u_long32 temp = XrmStringToQuark(job_items[i].name);
       HashTableStore(JobColumnPrintHashTable,
-                     (void *)XrmStringToQuark(job_items[i].name),
+                     &temp,
                      (void *)&job_items[i]);
    }
 
    /*
    ** create NameMappingHashTable
    */
-   NameMappingHashTable = HashTableCreate(5, HashFunc_u_long32, HashCompare_u_long32);
+   NameMappingHashTable = HashTableCreate(5, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32);
    for (i=0; i<sizeof(job_items)/sizeof(tJobField); i++) {
       String text;
+      u_long32 temp = XrmStringToQuark(text);
       XmString xstr = XmtCreateLocalizedXmString(jcu, job_items[i].name);
       XmStringGetLtoR(xstr, XmFONTLIST_DEFAULT_TAG, &text);
       HashTableStore(NameMappingHashTable,
-                     (void *) XrmStringToQuark(text),
+                     &temp,
                      (void *)&job_items[i]);
       XmStringFree(xstr);
       XtFree(text);
@@ -1463,9 +1466,10 @@ XtPointer cld
       ** set the fields which shall be shown
       */
       for_each(field, jobfilter_fields) {
+         u_long32 temp = XrmStringToQuark(lGetString(field, STR));
          if (HashTableLookup(JobColumnPrintHashTable, 
-             (const void*)XrmStringToQuark(lGetString(field, STR)),
-                             (const void **) &job_item)) {
+             &temp,
+             (const void **) &job_item)) {
             job_item->show = 1;
          }
       }

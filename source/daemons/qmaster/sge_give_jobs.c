@@ -1122,7 +1122,7 @@ int spool_job
       ** remove the job
       */
       lRemoveElem(Master_Job_List, jep);
-      HashTableDelete(Master_Job_Hash_Table, (void *)(long) jid); 
+      HashTableDelete(Master_Job_Hash_Table, &jid); 
    }
 
    DEXIT;

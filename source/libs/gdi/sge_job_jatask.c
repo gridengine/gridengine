@@ -196,12 +196,13 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
    lAppendElem(*job_list, job);
 
    if (hash && Job_Hash_Table) {
+      u_long32 temp = lGetUlong(job, JB_job_number);
       if (!*Job_Hash_Table)
-         *Job_Hash_Table = HashTableCreate(14, HashFunc_u_long32, 
+         *Job_Hash_Table = HashTableCreate(14, DupFunc_u_long32, HashFunc_u_long32, 
                                  HashCompare_u_long32); /* 2^14 entries */
 
       HashTableStore(*Job_Hash_Table,
-                     (void *) (long)lGetUlong(job, JB_job_number),
+                     &temp,
                      (void *) job);
    }
    DEXIT;

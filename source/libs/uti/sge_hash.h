@@ -45,7 +45,7 @@ typedef void (*HashTableForEachProc)(
     HashTable, const void*, const void**
 );
 
-extern HashTable HashTableCreate(int size, int (*hash_func)(const void *), int (*compare_func)(const void *, const void *));
+extern HashTable HashTableCreate(int size, const void *(*dup_func)(const void *), int (*hash_func)(const void *), int (*compare_func)(const void *, const void *));
 extern void HashTableDestroy(HashTable ht);
 extern void HashTableStore(HashTable ht, const void* key, const void* data);
 extern bool HashTableLookup(HashTable ht, const void* key, const void** data);
@@ -53,6 +53,9 @@ extern void HashTableDelete(HashTable ht, const void* key);
 extern void HashTableForEach(HashTable ht, HashTableForEachProc proc);
 
 extern const char *HashStatistics(HashTable ht);
+
+extern const void *DupFunc_u_long32(const void *key);
+extern const void *DupFunc_string(const void *key);
 
 extern int HashFunc_u_long32(const void *key);
 extern int HashFunc_string(const void *key);

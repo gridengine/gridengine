@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 #include <time.h>
 #include <sys/times.h>
@@ -80,6 +81,7 @@ typedef struct _HashTableRec {
     long size;                   /* log2 of the size */
     long mask;                   /* Current size of hash table minus 1. */
     long numentries;             /* Number of entries currently in table. */
+    const void *(*dup_func)(const void *);              /* pointer to function duplicating key */
     int (*hash_func)(const void *);              /* pointer to hash function */
     int (*compare_func)(const void *, const void *);   /* pointer to compare function */
 } HashTableRec;
@@ -109,6 +111,13 @@ typedef struct _HashTableRec {
 *     register HashTable ht - the hashtable  to resize 
 *     bool grow             - true  = double size of the table,
 *                             false = shrink table to half the size
+*
+*  NOTE
+*     If the system is running in log_level log_debug, statistics is output
+*     before and after resizing the hash table, along with timing information.
+*
+*  SEE ALSO
+*     uti/hash/HashStatistics()
 *
 *******************************************************************************/
 
@@ -187,7 +196,10 @@ static void ResizeTable(register HashTable ht, bool grow)
 *     HashTable MyHashTable = HashTableCreate(5, HashFunc_u_long32, HashCompare_u_long32);
 *
 *******************************************************************************/
-HashTable HashTableCreate(int size, int (*hash_func)(const void *), int (*compare_func)(const void *, const void *))
+HashTable HashTableCreate(int size, 
+                          const void *(*dup_func)(const void *), 
+                          int (*hash_func)(const void *), 
+                          int (*compare_func)(const void *, const void *))
 {
     HashTable ht = (HashTable) malloc(sizeof(HashTableRec));
 
@@ -195,6 +207,7 @@ HashTable HashTableCreate(int size, int (*hash_func)(const void *), int (*compar
     ht->mask = (1<<size)-1;
     ht->table = (Bucket **)calloc(ht->mask + 1, sizeof(Bucket *));
     ht->numentries = 0;
+    ht->dup_func = dup_func;
     ht->hash_func = hash_func;
     ht->compare_func = compare_func;
     return ht;
@@ -226,6 +239,9 @@ void HashTableDestroy(HashTable ht)
     for(i=0; i < ht->mask+1; i++) {
         for (bucket = ht->table[i]; bucket; bucket = next) {
             next = bucket->next;
+            if(bucket->key != NULL) {
+               free((char *)bucket->key);
+            }
             free((char *)bucket);
         }
     }
@@ -295,7 +311,7 @@ void HashTableStore(HashTable table, const void* key, const void* data)
         }
     }
     bucket = (Bucket *)malloc(sizeof(Bucket));
-    bucket->key = key;
+    bucket->key = table->dup_func(key);
     bucket->data = data;
     bucket->next = *head;
     *head = bucket;
@@ -368,6 +384,9 @@ void HashTableDelete(HashTable table, const void* key)
     for (prev = &(table->table[table->hash_func(key) & table->mask]); (bucket = *prev); prev = &bucket->next) {
         if (table->compare_func(bucket->key, key) == 0) {
             *prev = bucket->next;
+            if(bucket->key != NULL) {
+               free((char *)bucket->key);
+            }
             free((char *) bucket);
             table->numentries--;
             if (table->numentries < (table->mask>>1))
@@ -377,6 +396,34 @@ void HashTableDelete(HashTable table, const void* key)
     }
 }
 
+/****** sge_hash/HashStatistics() **********************************************
+*  NAME
+*     HashStatistics() -- deliver some statistics for a hash table
+*
+*  SYNOPSIS
+*     const char* HashStatistics(HashTable ht) 
+*
+*  FUNCTION
+*     Returns a constant string containing statistics for a hash table in the
+*     following format:
+*     "size: %ld, %ld entries, chains: %ld empty, %ld max, %.1f avg"
+*     size is the size of the hash table (number of hash chains)
+*     entries is the number of objects stored in the hash table
+*     Information about hash chains:
+*        empty is the number of empty hash chains
+*        max is the maximum number of objects in a hash chain
+*        avg is the average number of objects for all occupied hash chains
+*     
+*     The string returned is a static buffer, subsequent calls to the 
+*     function will overwrite this buffer.
+*
+*  INPUTS
+*     HashTable ht - Hash table for which statistics shall be generated
+*
+*  RESULT
+*     const char* - the string described above
+*
+*******************************************************************************/
 const char *HashStatistics(HashTable ht)
 {
    static char statistic_buffer[1024];
@@ -413,6 +460,52 @@ const char *HashStatistics(HashTable ht)
    return statistic_buffer;
 }
 
+/****** uti/hash/-Dup-Functions() *******************************************
+*  NAME
+*     DupFunc_<type>() -- function duplicate the key
+*
+*  SYNOPSIS
+*     const void *DupFunc_<type>(const void *key) 
+*
+*  FUNCTION
+*     The hash table cannot rely on the key data to remain valid over the
+*     programs execution time. Therefore copies of keys are stored in the bucket 
+*     object. To allow duplication of keys with types unknown to the hash
+*     table implementation, a duplication function must be specified when
+*     a hash table is created.
+*
+*  INPUTS
+*     const void *key - pointer to the key to duplicate
+*
+*  RESULT
+*     const void * - the duplicated key
+*
+*  NOTES
+*     The following data types are provided with this module:
+*        - strings (char *)
+*        - u_long32
+*
+*  SEE ALSO
+*     uti/hash/HashTableCreate()
+*******************************************************************************/
+const void *DupFunc_u_long32(const void *key) 
+{
+   u_long32 *dup = NULL;
+   u_long32 *cast = (u_long32 *)key;
+
+   if((dup = (u_long32 *)malloc(sizeof(u_long32))) != NULL) {
+      *dup = *cast;
+   }
+
+   return dup;
+}
+
+const void *DupFunc_string(const void *key)
+{
+   return strdup((const char *)key);
+}   
+
+
 /****** uti/hash/-Hash-Functions() *******************************************
 *  NAME
 *     HashFunc_<type>() -- Hash functions for selected data types
@@ -427,7 +520,7 @@ const char *HashStatistics(HashTable ht)
 *     hash table.
 *
 *  INPUTS
-*     const void *key - key for which to compute a hash value
+*     const void *key - pointer to key for which to compute a hash value
 *
 *  RESULT
 *     int - the hash value
@@ -442,7 +535,8 @@ const char *HashStatistics(HashTable ht)
 *******************************************************************************/
 int HashFunc_u_long32(const void *key) 
 {
-   return (long)key;
+   u_long32 *cast = (u_long32 *)key;
+   return (int)*cast;
 }
 
 int HashFunc_string(const void *key)
@@ -474,8 +568,8 @@ int HashFunc_string(const void *key)
 *     Syntax and return value are similar to strcmp.
 *
 *  INPUTS
-*     const void *a - first element
-*     const void *b - second element
+*     const void *a - pointer to first element
+*     const void *b - pointer to second element
 *
 *  RESULT
 *     int - 0, if the elements are equal
@@ -492,7 +586,9 @@ int HashFunc_string(const void *key)
 *******************************************************************************/
 int HashCompare_u_long32(const void *a, const void *b)
 {
-   return (long)a - (long)b;
+   u_long32 *cast_a = (u_long32 *)a;
+   u_long32 *cast_b = (u_long32 *)b;
+   return *cast_a - *cast_b;
 }
 
 int HashCompare_string(const void *a, const void *b)

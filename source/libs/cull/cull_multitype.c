@@ -1101,9 +1101,15 @@ const char *value
       return -1;
    }
 
+   /* remove old hash entry */
+   if(ep->descr[pos].hash != NULL) {
+      cull_hash_remove(ep, pos);
+   }
+   
    /* free old string value */
-   if (ep->cont[pos].str)
+   if (ep->cont[pos].str) {
       free(ep->cont[pos].str);
+   }   
 
    /* strdup new string value */
    if (value) {
@@ -1116,11 +1122,6 @@ const char *value
    else
       str = NULL;               /* value is NULL */
 
-   /* remove old hash entry */
-   if(ep->descr[pos].hash != NULL) {
-      cull_hash_remove(ep, pos);
-   }
-   
    ep->cont[pos].str = str;
 
    /* create entry in hash table */
@@ -1175,8 +1176,9 @@ const char *value
    }
    
    /* free old string value */
-   if (ep->cont[pos].str)
+   if (ep->cont[pos].str) {
       free(ep->cont[pos].str);
+   }   
 
    /* strdup new string value */
    if (value) {
@@ -2146,7 +2148,7 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str, const void
 
    if(lp->descr[str_pos].hash != NULL) {
       /* hash access */
-      ep = cull_hash_first(lp, str_pos, (void *)str, iterator);
+      ep = cull_hash_first(lp, str_pos, str, iterator);
       DEXIT;
       return ep;
    } else {
@@ -2200,7 +2202,7 @@ lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str, const void 
 
    if(lp->descr[str_pos].hash != NULL) {
       /* hash access */
-      ep = cull_hash_next(lp, str_pos, (void *)str, iterator);
+      ep = cull_hash_next(lp, str_pos, str, iterator);
       DEXIT;
       return ep;
    } else {
@@ -2635,7 +2637,7 @@ lListElem *lGetElemUlongFirst(const lList *lp, int nm, lUlong val, const void **
 
    if(lp->descr[val_pos].hash != NULL) {
       /* hash access */
-      ep = cull_hash_first(lp, val_pos, (void*)(long)val, iterator);
+      ep = cull_hash_first(lp, val_pos, &val, iterator);
       DEXIT;
       return ep;
    } else {
@@ -2677,7 +2679,7 @@ lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val, const void **i
 
    if(lp->descr[val_pos].hash != NULL) {
       /* hash access */
-      ep = cull_hash_next(lp, val_pos, (void*)(long)val, iterator);
+      ep = cull_hash_next(lp, val_pos, &val, iterator);
       DEXIT;
       return ep;
    } else {

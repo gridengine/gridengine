@@ -200,13 +200,13 @@ lHash *cull_hash_create(const lDescr *descr)
 
    switch(descr->mt) {
       case lStringT:
-         if((hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, HashFunc_string, HashCompare_string)) == NULL) {
+         if((hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_string, HashFunc_string, HashCompare_string)) == NULL) {
             free(hash);
             return NULL;
          }
          break;
       case lUlongT:
-         if((hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, HashFunc_u_long32, HashCompare_u_long32)) == NULL) {
+         if((hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32)) == NULL) {
             free(hash);
             return NULL;
          }
@@ -246,13 +246,13 @@ void cull_hash_create_hashtables(lList *lp)
       if(lp->descr[i].hash != NULL && lp->descr[i].hash->table == NULL) {
          switch(lp->descr[i].mt) {
             case lStringT:
-               if((lp->descr[i].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, HashFunc_string, HashCompare_string)) == NULL) {
+               if((lp->descr[i].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_string, HashFunc_string, HashCompare_string)) == NULL) {
                   free(lp->descr[i].hash);
                   lp->descr[i].hash = NULL;
                }
                break;
             case lUlongT:
-               if((lp->descr[i].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, HashFunc_u_long32, HashCompare_u_long32)) == NULL) {
+               if((lp->descr[i].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32)) == NULL) {
                   free(lp->descr[i].hash);
                   lp->descr[i].hash = NULL;
                }
@@ -297,7 +297,7 @@ void cull_hash_insert(const lListElem *ep, const int pos)
 
    switch(descr->mt) {
       case lUlongT:
-         key = (void *)(long)ep->cont[pos].ul;
+         key = (void *)&(ep->cont[pos].ul);
          break;
 
       case lStringT:
@@ -316,12 +316,13 @@ void cull_hash_insert(const lListElem *ep, const int pos)
          non_unique_hash *nuh = NULL;
          /* do we already have a list of elements with this key? */
          if(HashTableLookup(descr->hash->table, key, (const void **)&nuh) == True) {
+            non_unique_hash *head = nuh; /* remember head of list */
+
             while(nuh != NULL && nuh->data != ep) {
                nuh = nuh->next;
             }
             /* if element is already in list, do nothing, else create new list element */
             if(nuh == NULL) {
-               non_unique_hash *head = nuh;
                nuh = (non_unique_hash *)malloc(sizeof(non_unique_hash));
                nuh->next = head;
                nuh->data = ep;
@@ -363,7 +364,7 @@ void cull_hash_remove(const lListElem *ep, const int pos)
 
    switch(descr->mt) {
       case lUlongT:
-         key = (void *)(long)ep->cont[pos].ul;
+         key = (void *)&(ep->cont[pos].ul);
          break;
 
       case lStringT:

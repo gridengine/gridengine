@@ -663,8 +663,14 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         if ( sge_get_recoverable(aep) != STATUS_OK) {
+            fprintf(stderr, "%s", lGetString(aep, AN_text)); 
+            alp = lFreeList(alp);
+            lp = lFreeList(lp);
+            SGE_EXIT(1);
+         } else {
+            fprintf(stdout, "%s", lGetString(aep, AN_text));
+         }
          
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -737,6 +743,8 @@ DPRINTF(("ep: %s %s\n",
             alp = lFreeList(alp);
             lp = lFreeList(lp);
             SGE_EXIT(1);
+         } else {
+            fprintf(stdout, "%s", lGetString(aep, AN_text));
          }
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -2703,8 +2711,14 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         if (sge_get_recoverable(aep) != STATUS_OK) {
+            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            alp = lFreeList(alp);
+            lp = lFreeList(lp);
+            SGE_EXIT(1);
+         } else {
+            fprintf(stdout, "%s", lGetString(aep, AN_text));
+         }
          
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -2844,6 +2858,8 @@ DPRINTF(("ep: %s %s\n",
            alp = lFreeList(alp);
            lp = lFreeList(lp);
            SGE_EXIT(1);
+         } else {
+           fprintf(stdout, "%s", lGetString(aep, AN_text));
          }
           
          alp = lFreeList(alp);

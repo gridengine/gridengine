@@ -1,4 +1,5 @@
-AS-2004-03-09-1  Bugfix:    reformat of qstat/qhost header line for longer arch names"
+AS-2004-03-09-1  Bugfix:    reformat of qstat/qhost header lined for longer 
+                            arch names
                 
 AS-2004-03-09-0: Enhancem.: productization
 

@@ -2725,7 +2725,7 @@ int hash
       ** hash job entry
       */
       if (!Master_Job_Hash_Table)
-         Master_Job_Hash_Table = HashTableCreate(14); /* 2^14 entries */
+         Master_Job_Hash_Table = HashTableCreate(14, HashFunc_u_long32, HashCompare_u_long32); /* 2^14 entries */
 
       HashTableStore(Master_Job_Hash_Table, 
                      (void *) (long)lGetUlong(jep, JB_job_number),
@@ -2745,7 +2745,7 @@ u_long32 jobid
    DENTER(BASIS_LAYER, "sge_locate_job");
    
    if (Master_Job_Hash_Table && HashTableLookup(Master_Job_Hash_Table, 
-                                 (void *) (long) jobid, (void **) &jep)) {
+                                  (const void *) (long) jobid, (const void **) &jep)) { 
    }
    else {
       jep = lGetElemUlong(Master_Job_List, JB_job_number, jobid);

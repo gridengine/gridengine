@@ -1049,8 +1049,8 @@ XtPointer cld,cad;
          String text;
          XmStringGetLtoR(strlist[i], XmFONTLIST_DEFAULT_TAG, &text);
          if (HashTableLookup(NameMappingHashTable, 
-                             (void*)XrmStringToQuark(text),
-                             (void **) &job_item)) {
+                             (const void*)XrmStringToQuark(text),
+                             (const void **) &job_item)) {
             job_item->show = 1;
          }
          XtFree(text);
@@ -1401,7 +1401,7 @@ XtPointer cld
    /*
    ** create JobColumnPrintHashTable
    */
-   JobColumnPrintHashTable = HashTableCreate(5);
+   JobColumnPrintHashTable = HashTableCreate(5, HashFunc_u_long32, HashCompare_u_long32);
    for (i=0; i<sizeof(job_items)/sizeof(tJobField); i++) {
       HashTableStore(JobColumnPrintHashTable,
                      (void *)XrmStringToQuark(job_items[i].name),
@@ -1411,7 +1411,7 @@ XtPointer cld
    /*
    ** create NameMappingHashTable
    */
-   NameMappingHashTable = HashTableCreate(5);
+   NameMappingHashTable = HashTableCreate(5, HashFunc_u_long32, HashCompare_u_long32);
    for (i=0; i<sizeof(job_items)/sizeof(tJobField); i++) {
       String text;
       XmString xstr = XmtCreateLocalizedXmString(jcu, job_items[i].name);
@@ -1464,8 +1464,8 @@ XtPointer cld
       */
       for_each(field, jobfilter_fields) {
          if (HashTableLookup(JobColumnPrintHashTable, 
-             (void*)XrmStringToQuark(lGetString(field, STR)),
-                             (void **) &job_item)) {
+             (const void*)XrmStringToQuark(lGetString(field, STR)),
+                             (const void **) &job_item)) {
             job_item->show = 1;
          }
       }

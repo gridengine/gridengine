@@ -1,3 +1,10 @@
+JG-2001-10-04-0: Generalized our hash table implementation to support any
+                 data type for keys.
+                 Hash table uses hash and compare functions to be specified
+                 when a table is created.
+                 Hash and compare functions for strings and u_long32 are
+                 provided.
+
 EB-2001-10-04-0: (Issue #7)
                  - changed spool behaviour for (array) jobs
 

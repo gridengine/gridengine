@@ -463,7 +463,6 @@ PrintLocalConf()
    fi
    $ECHO "mailer                 $MAILER"
    $ECHO "xterm                  $XTERM"
-   $ECHO "qlogin_command         $QLOGIN_COMMAND"
    $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
 }
@@ -524,7 +523,7 @@ PrintConf()
    $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
    $ECHO "default_domain         $CFG_DEFAULT_DOMAIN"
-   $ECHO "ignore_fqdn            true"
+   $ECHO "ignore_fqdn            $IGNORE_FQDN_DEFAULT"
    $ECHO "max_aj_instances       2000"
    $ECHO "max_aj_tasks           75000"
    $ECHO "max_u_jobs             0"

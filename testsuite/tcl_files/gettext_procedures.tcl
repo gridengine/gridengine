@@ -610,7 +610,12 @@ proc sge_macro { macro_name } {
 #      puts $CHECK_OUTPUT "value for $macro_name is \n\"$value\""
    }
    if { $value == -1 } {
-      add_proc_error "sge_macro" -2 "cound not find macro \"$macro_name\" in source code!!!"
+      set macro_messages_file [get_macro_messages_file_name]
+      add_proc_error "sge_macro" -3 "could not find macro \"$macro_name\" in source code!!!\ndeleting macro messages file:\n$macro_messages_file"
+      if { [ file isfile $macro_messages_file] } {
+         file delete $macro_messages_file
+      }
+      update_macro_messages_list
    }
 
    return $value

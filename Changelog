@@ -1,3 +1,6 @@
+CR-2003-02-26-0  Testsuite: - automatic update of the message macro file when 
+                              testsuite can't find specified macro.
+
 JG-2003-02-26-0  Bugfix:    Classic spooling framework unnecessarily spooled 
                             array tasks in a certain situation where only 
                             spooling of the common part was required.

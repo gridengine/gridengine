@@ -1,3 +1,6 @@
+JG-2004-05-14-1: Testsuite: test functional/migration was broken due to changed
+                            qstat queue output.
+
 AH-2004-05-14-0: Bugfix:    Change of consumable values takes long time until 
                             used by scheduler.
                  Issue:     1033

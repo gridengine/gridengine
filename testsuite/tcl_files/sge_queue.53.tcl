@@ -294,3 +294,9 @@ proc get_queue_list {} {
 proc get_requestable_queue { queue host } {
    return [get_queue_instance $queue $host]
 }
+
+# in 5.3 we don't have cluster queues - use the queue instance for all 
+# operations
+proc get_cluster_queue {queue_instance} {
+   return $queue_instance
+}

@@ -85,8 +85,13 @@ proc issue_511_init_level {} {
 # -------- local test procedures -----------------------------------------------
 
 proc issue_511_setup  {} {
-   global CHECK_OUTPUT 
-   global CHECK_CORE_MASTER
+   global stored_schedd_conf
+
+   # set maxujobs limit in schedd config
+   get_schedd_config stored_schedd_conf
+
+   set my_schedd_conf(maxujobs) "4"
+   set_schedd_config my_schedd_conf 
 
    set_error 0 "ok"
 }
@@ -94,12 +99,6 @@ proc issue_511_setup  {} {
 
 proc issue_511_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_USER
-
-   # SETUP 
-   get_schedd_config stored_schedd_conf
-
-   set my_schedd_conf(maxujobs) "4"
-   set_schedd_config my_schedd_conf 
 
    # TEST
 
@@ -127,7 +126,7 @@ proc issue_511_check {} {
    set result [ catch { eval exec "$command \| grep \"$expected_output\" " } qstatoutput ]
    if { ( $result == 1 ) } {
       add_proc_error "issue_511_check" "-1" \
-                     "qstat -j output is not correct for last pending job"
+                     "qstat -j output is not correct for last pending job: expected \"$expected_output\" but received \"$qstatoutput\""
       return
    } 
 
@@ -174,24 +173,22 @@ proc issue_511_check {} {
    set result [ catch { eval exec "$command \| grep \"$expected_output\" " } qstatoutput ]
    if { ( $result == 1 ) } {
       add_proc_error "issue_511_check" "-1" \
-                     "qstat -j output is not correct after state modifiactions"
+                     "qstat -j output is not correct for last pending job: expected \"$expected_output\" but received \"$qstatoutput\""
       return
    }
-
-   # Terminate all jobs
-   puts $CHECK_OUTPUT "Terminate all jobs"
-   delete_all_jobs
-   wait_for_end_of_all_jobs 60
-
-   # CLEANUP
-   set_schedd_config stored_schedd_conf
 
    set_error 0 "ok"
 }
 
 proc issue_511_cleanup  {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
+   global stored_schedd_conf
 
+   # Terminate all jobs
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
+   # Restore schedd config
+   set_schedd_config stored_schedd_conf
    set_error 0 "ok"
 }
 

@@ -451,3 +451,14 @@ proc get_qinstance_list {{filter ""}} {
 proc get_requestable_queue { queue host } {
    return $queue
 }
+
+proc get_cluster_queue {queue_instance} {
+   if {$queue_instance != "" } {
+      set at [string first "@" $queue_instance]
+      if {$at > 0} {
+         set queue_instance [string range $queue_instance 0 [expr $at - 1]]
+      }
+   }
+
+   return $queue_instance
+}

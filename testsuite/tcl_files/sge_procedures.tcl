@@ -2855,9 +2855,13 @@ proc slave_queue_of { job_id } {
           puts $CHECK_OUTPUT "Slave is running on queue \"$slave_queue\""
        }
    }
-   if {[string compare $slave_queue ""] == 0 } {
+
+   set slave_queue [get_cluster_queue $slave_queue]
+   
+   if {$slave_queue == ""} {
      add_proc_error "slave_queue_of" -1 "no slave queue for job $job_id found"
    } 
+
    return $slave_queue
 }
 
@@ -2900,7 +2904,10 @@ proc master_queue_of { job_id } {
           break                  ;# break out of loop, if Master found
        }
    }
-   if {[string compare $master_queue ""] == 0 } {
+
+   set master_queue [get_cluster_queue $master_queue]
+
+   if {$master_queue == ""} {
      add_proc_error "master_queue_of" -1 "no master queue for job $job_id found"
    }  
    return $master_queue

@@ -1,8 +1,6 @@
 Bugs fixed in SGE 5.3p3 since release 5.3p2
 -------------------------------------------
 
-[NOTE Courtesy Binaries for SGE 5.3p3 will be uploaded during week 02/17-02/22]
-
 Issue   Sun BugId  Description
 ------- ---------- ---------------------------------------------------------------------------------
 126     4780316    race condition if signals are to be delivered in job's startup phase

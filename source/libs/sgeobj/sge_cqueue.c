@@ -1278,33 +1278,34 @@ lListElem *
 cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name) 
 {
    lListElem *ret = NULL;
-   lListElem *cqueue = NULL;
-   lList *qinstance_list = NULL;
-   dstring cqueue_name_buffer = DSTRING_INIT;
-   dstring host_domain_buffer = DSTRING_INIT;
-   const char *cqueue_name = NULL;
-   const char *hostname = NULL;
-   bool has_hostname = false;
-   bool has_domain = false;
 
    DENTER(TOP_LAYER, "cqueue_list_locate_qinstance");
-   cqueue_name_split(full_name, &cqueue_name_buffer, 
-                     &host_domain_buffer, &has_hostname, &has_domain);
-   cqueue_name = sge_dstring_get_string(&cqueue_name_buffer);
-   hostname = sge_dstring_get_string(&host_domain_buffer);
-   DPRINTF(("CQ: "SFN"\n", cqueue_name));
-   if (has_hostname) {
-      DPRINTF(("hostname: "SFN"\n", hostname));
-   } else if (has_domain) {
-      DPRINTF(("domain: "SFN"\n", hostname));
+   if (full_name != NULL)
+      lListElem *cqueue = NULL;
+      dstring cqueue_name_buffer = DSTRING_INIT;
+      dstring host_domain_buffer = DSTRING_INIT;
+      const char *cqueue_name = NULL;
+      const char *hostname = NULL;
+      bool has_hostname = false;
+      bool has_domain = false;
+
+      cqueue_name_split(full_name, &cqueue_name_buffer, 
+                        &host_domain_buffer, &has_hostname, &has_domain);
+      cqueue_name = sge_dstring_get_string(&cqueue_name_buffer);
+      hostname = sge_dstring_get_string(&host_domain_buffer);
+      cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
+      if (cqueue != NULL) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+
+         ret = lGetElemHost(qinstance_list, QU_qhostname, hostname);
+      } else {
+         ERROR((SGE_EVENT, "cqueue_list_locate_qinstance(): cqueue == NULL\n"));
+      }
+      sge_dstring_free(&cqueue_name_buffer);
+      sge_dstring_free(&host_domain_buffer);
    } else {
-      DPRINTF(("no host or domain\n"));
+      ERROR((SGE_EVENT, "cqueue_list_locate_qinstance(): cqueue == NULL\n"));
    }
-   cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
-   qinstance_list = lGetList(cqueue, CQ_qinstances);
-   ret = lGetElemHost(qinstance_list, QU_qhostname, hostname);
-   sge_dstring_free(&cqueue_name_buffer);
-   sge_dstring_free(&host_domain_buffer);
    DEXIT;
    return ret;
 }

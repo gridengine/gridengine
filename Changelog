@@ -1,3 +1,5 @@
+EB-2004-01-23-0: Bugfix:    qmaster core in cqueue_list_locate_qinstance()
+
 AD-2004-01-23-0: Enhancem.: Add error message in case a mutex lock/unlock
                             does fail.
                  Changed:   lck

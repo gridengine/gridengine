@@ -3,15 +3,15 @@ DT-2004-06-01-3: Bugfix:    o Fixing DT-2004-06-01-2
                  Issue:     Related to 1075
 
 JG-2004-06-01-1: Bugfix:    Fixed memory leaks in japi and drmaa libs.
-                 Review:    pending
+                 Review:    DT
 
 DT-2004-06-01-2: Bugfix:    o Fixing DT-2004-06-01-1
-                            - NOTE: checking *so* I can compile and test
+                            - NOTE: checking in *so* I can compile and test
                  Changed:   qsub
                  Issue:     Related to 1075
 
 DT-2004-06-01-1: Bugfix:    o Better handling of errors in qsub
-                            - NOTE: checking *so* I can compile and test
+                            - NOTE: checking in *so* I can compile and test
                  Changed:   qsub, JAPI
                  Issue:     Related to 1075
 
@@ -75,7 +75,7 @@ DT-2004-05-28-0: Bugfix:    o Fixed DRMAA C binding revision number
 
 JG-2004-05-28-0: Bugfix:    Fixed memory leaks in fileparsing and in japi.
                  Enhancem.: Reduced stack memory usage of static dstrings.
-                 Review:    SG
+                 Review:    SG, DT
 
 MD-2004-05-27-1: Bugfix:    - backup/restore directory check
                             - berkeley info text

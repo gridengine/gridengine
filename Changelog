@@ -1,3 +1,9 @@
+SG-2004-07-09-0: Bugfix:    scheduler ignores queue seqno for queue sorting
+                 Changed:   scheduler  
+                 Issue:     1133
+                 Bugtraq:   5071914
+                 Review:
+
 CR-2004-07-07-0: Bugfix:    qping doesn't support host_aliases file
                  Changed:   qping binary
                  Issue:     1124

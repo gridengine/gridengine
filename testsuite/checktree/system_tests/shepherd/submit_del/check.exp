@@ -117,7 +117,7 @@ proc submit_del_test { } {
    set arch [resolve_arch $CHECK_HOST]
    set qsub_program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
    set qdel_program "$CHECK_PRODUCT_ROOT/bin/$arch/qdel"
-   set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
+   set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
 
    set job_list ""
    foreach elem $CHECK_CORE_EXECD {
@@ -128,9 +128,8 @@ proc submit_del_test { } {
    foreach elem $job_list {
       wait_for_jobstart $elem "Sleeper" 60 1 1
    }
-   foreach elem $job_list {
-      wait_for_jobend $elem "Sleeper" 60 0
-   }
+
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
 
    wait_for_end_of_all_jobs 120
 

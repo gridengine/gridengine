@@ -1,3 +1,7 @@
+CR-2002-12-06-2  Testsuite: Fixed bug in submit_del test ( running on system
+                 Bugfix:    with large queue count will report errors on 
+                            starup )
+
 CR-2002-12-06-1  Testsuite: Fixed bug in access_lists test for sge systems
                  Bugfix:
 

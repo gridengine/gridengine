@@ -4835,15 +4835,9 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
 
    request_val = lGetDouble(request, CE_doubleval);
 
-   if (request_val != 0) {
-      if (total == DBL_MAX) {
-         *slots = INT_MAX;
-         *slots_qend = INT_MAX;
-      }
-      else {
-         *slots      = (int)((total - used) / request_val);
-         *slots_qend = (int)(total / request_val);
-      }
+   if ((request_val != 0) && (total < DBL_MAX)) {
+      *slots      = (int)((total - used) / request_val);
+      *slots_qend = (int)(total / request_val);
    }
    else {
       *slots = INT_MAX;

@@ -67,14 +67,14 @@ SG-2005-03-17-1: Bugfix:   jobs which request a PE and a consumable resources
                            are not scheduled
                  Issue:    1447
                  Bugtraq:  6242057
-                 Review:   pending
+                 Review:   DT
                  Changed:  scheduler
 
 SG-2005-03-17-0: Bugfix:   Consumable request may not be 0 if PE requested / 
                            New Min-Max entry in complex definition
                  Issue:    1379
                  Bugtraq:  6242055
-                 Review:   pending
+                 Review:   DT
                  Changed:  scheduler
 
 RH-2005-03-17-0: Bugfix:    releasing user hold state through qrls may not 

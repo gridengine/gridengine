@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2002/01/24 15:21:09 $     Revision: $Revision: 1.10 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2002/01/25 13:18:51 $     Revision: $Revision: 1.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2002/01/24 15:21:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2002/01/25 13:18:51 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -594,6 +594,55 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
+.SH "\fBmax_aj_instances\fP"
+This parameter defines the maximum amount of array task to be scheduled to
+run simultaneously per array job.  An instance of an array task will be
+created within the master daemeon when it gets a start order from the
+scheduler. The instance will be destroyed when the array task finishes.
+Thus the parameter provides control mainly over the memory consumption of
+array jobs in the master and scheduler daemon. It is most useful for very
+large clusters and very large array jobs.  The default for this parameter
+is 2000. The value 0 will deactivate this limit and will allow the
+scheduler to start as many array job tasks as suitable resources are
+available in the cluster.
+.PP
+Changing \fBmax_aj_instances\fP will take immediate effect.
+.PP
+This value is a global configuration parameter only. It cannot be
+overwritten by the execution host local configuration.
+.\"
+.\"
+.SH "\fBmax_aj_tasks\fP"
+This parameter defines the maximum number of array job tasks within an array
+job.
+.M xxqs_name_sxx_qmaster 8
+will reject all array job submissions which request
+more than
+.B max_aj_tasks
+array job tasks. The default for this parameter is 75000. The value 0
+will deactivate this limit.
+.PP
+Changing \fBmax_aj_tasks\fP will take immediate effect.
+.PP
+This value is a global configuration parameter only. It cannot be
+overwritten by the execution host local configuration.
+.\"
+.\"
+.SH "\fBmax_u_jobs\fP"
+The number of active (not finished) jobs which each xxQS_NAMExx user can
+have in the system simultaneously is controlled by this parameter. A value
+greater than 0 defines the limit. The default value 0 means "unlimited". If
+the
+.B max_u_jobs
+limit is exceeded by a job submission then the submission command exits
+with exit status 25 and an appropriate error message.
+.PP
+Changing \fBmax_u_jobs\fP will take immediate effect.
+.PP
+This value is a global configuration parameter only. It cannot be
+overwritten by the execution host local configuration.
+.\"
+.\"
 .SH "\fBenforce_project\fP"
 This parameter is only available for xxQS_NAME_EExx systems. It is not present in
 xxQS_NAME_Cxx.
@@ -812,6 +861,30 @@ scheduling policy among all the active and pending jobs. The pending
 job list is then ordered based on the tickets assigned to the pending      
 jobs. The default value is "false".                                        
 This parameter is only valid in a SGEEE system.                              
+.\"                                                                        
+.IP "\fIPOLICY_HIERARCHY\fP"                                         
+This parameter sets up a dependency chain of
+policies. Each policy in the dependency chain is influenced by the
+previous policies and influences the following policies. A typical
+scenario is to assign precedence for the override policy over the
+share-based policy. The override policy determines in such a case how
+share-based tickets are assigned among jobs of the same user or project.
+Note that all policies contribute to the ticket amount assigned to a
+particular job regardless of the policy hierarchy definition. Yet the
+tickets calculated in each of the policies can be differend depending on
+"\fIPOLICY_HIERARCHY\fP".
+.sp 1
+The "\fIPOLICY_HIERARCHY\fP" parameter can be a up to 4 letter
+combination of the first letters of the 4 policies S(hare-based),
+F(unctional), D(eadline) and O(verride). So a value "OFSD" means that the
+override policy takes precedence over the functional policy, which
+influences the share-based policy and which finaly preceeds the deadline
+policy. Less than 4 letters mean that some of the policies do not influence
+other policies and also are not influenced by other policies. So a value of
+"FS" means that the functional policy influences the share-based policy and
+that there is no interference with the other policies.
+.sp 1
+The special value "NONE" switches off policy hierarchies.
 .\"                                                                        
 .IP "\fISHARE_OVERRIDE_TICKETS\fP"                                         
 If set to "true" or "1", override tickets of any override object instance  

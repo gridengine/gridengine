@@ -105,7 +105,6 @@ static void gdi_init_mt(void) {
   
 void gdi_once_init(void) {
    /* uti */
-   log_mt_init();
    uidgid_mt_init();
 
    bootstrap_mt_init();

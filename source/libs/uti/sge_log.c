@@ -49,7 +49,7 @@
 #include "msg_utilib.h"
 
 
-struct log_state_t {
+typedef struct {
     u_long32         log_level;
     char             log_buffer[4*MAX_STRING_SIZE]; /* formerly known as SGE_EVENT */
     char*            log_file;
@@ -57,46 +57,17 @@ struct log_state_t {
     int              verbose;
     int              gui_log;
     trace_func_type  trace_func;
-};
+} log_state_t;
 
 static pthread_once_t log_once = PTHREAD_ONCE_INIT;
 static pthread_key_t log_state_key;
 
 static void log_once_init(void);
 static void log_state_destroy(void* theState);
-static void log_state_init(struct log_state_t* theState);
+static void log_state_init(log_state_t *theState);
 
 static void sge_do_log(int log_level, int levelchar, const char *err_str, const char *newline); 
 
-
-/****** uti/log/log_mt_init() ************************************************
-*  NAME
-*     log_mt_init() -- Initialize logging for multi threading use.
-*
-*  SYNOPSIS
-*     void log_mt_init(void) 
-*
-*  FUNCTION
-*     Set up logging. This function must be called at least once before any of
-*     the logging functions is used. This function is idempotent, i.e. it is
-*     safe to call it multiple times.
-*
-*     Thread local storage for the logging state information is reserved. 
-*
-*  INPUTS
-*     void - NONE 
-*
-*  RESULT
-*     void - NONE
-*
-*  NOTES
-*     MT-NOTE: log_mt_init() is MT safe 
-*
-*******************************************************************************/
-void log_mt_init(void)
-{
-   pthread_once(&log_once, log_once_init);
-}
 
 /****** uti/log/log_state_get_log_buffer() ******************************************
 *  NAME
@@ -115,8 +86,12 @@ void log_mt_init(void)
 ******************************************************************************/
 char *log_state_get_log_buffer(void)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
-   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_buffer");
+
+   log_state = pthread_getspecific(log_state_key);
+
    return log_state->log_buffer;
 }
 
@@ -136,8 +111,12 @@ char *log_state_get_log_buffer(void)
 ******************************************************************************/
 u_long32 log_state_get_log_level(void)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
-   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_level");
+
+   log_state = pthread_getspecific(log_state_key);
+
    return log_state->log_level;
 }
 
@@ -157,8 +136,12 @@ u_long32 log_state_get_log_level(void)
 ******************************************************************************/
 const char *log_state_get_log_file(void)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
-   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_file");
+
+   log_state = pthread_getspecific(log_state_key);
+
    return log_state->log_file;
 }
 
@@ -182,8 +165,12 @@ const char *log_state_get_log_file(void)
 ******************************************************************************/
 int log_state_get_log_verbose(void)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
-   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_verbose");
+
+   log_state = pthread_getspecific(log_state_key);
+
    return log_state->verbose;
 }
 
@@ -206,8 +193,12 @@ int log_state_get_log_verbose(void)
 ******************************************************************************/
 int log_state_get_log_gui(void)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
-   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_gui");
+
+   log_state = pthread_getspecific(log_state_key);
+
    return log_state->gui_log;
 }
 
@@ -231,8 +222,12 @@ int log_state_get_log_gui(void)
 ******************************************************************************/
 trace_func_type log_state_get_log_trace_func(void)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
-   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_trace_func");
+
+   log_state = pthread_getspecific(log_state_key);
+
    return log_state->trace_func;
 }
 
@@ -254,8 +249,12 @@ trace_func_type log_state_get_log_trace_func(void)
 ******************************************************************************/
 int log_state_get_log_as_admin_user(void)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
-   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_as_admin_user");
+
+   log_state = pthread_getspecific(log_state_key);
+
    return log_state->log_as_admin_user;
 }
 
@@ -277,9 +276,15 @@ int log_state_get_log_as_admin_user(void)
 ******************************************************************************/
 void log_state_set_log_level(u_long32 i)
 { 
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
-   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_level");
+
+   log_state = pthread_getspecific(log_state_key);
+
    log_state->log_level = i;
+
+   return;
 }
 
 /****** uti/log/log_state_set_log_file() *****************************************
@@ -300,9 +305,15 @@ void log_state_set_log_level(u_long32 i)
 ******************************************************************************/
 void log_state_set_log_file(char *file)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
-   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_file");
+
+   log_state = pthread_getspecific(log_state_key);
+
    log_state->log_file = file;
+
+   return;
 }
 
 
@@ -324,9 +335,15 @@ void log_state_set_log_file(char *file)
 ******************************************************************************/
 void log_state_set_log_verbose(int i)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
-   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_verbose");
+
+   log_state = pthread_getspecific(log_state_key);
+
    log_state->verbose = i;
+
+   return;
 }
 
 /****** uti/log/log_state_set_log_gui() ********************************************
@@ -345,9 +362,15 @@ void log_state_set_log_verbose(int i)
 ******************************************************************************/
 void log_state_set_log_gui(int i)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
-   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_gui");
+
+   log_state = pthread_getspecific(log_state_key);
+
    log_state->gui_log = i;
+
+   return;
 }   
 
 /****** uti/log/log_state_set_log_trace_func() ******************************************
@@ -370,9 +393,15 @@ void log_state_set_log_gui(int i)
 ******************************************************************************/
 void log_state_set_log_trace_func(trace_func_type func)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
-   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_trace_func");
+
+   log_state = pthread_getspecific(log_state_key);
+
    log_state->trace_func = func;
+
+   return;
 }
 
 
@@ -398,9 +427,15 @@ void log_state_set_log_trace_func(trace_func_type func)
 ******************************************************************************/
 void log_state_set_log_as_admin_user(int i)
 {
+   log_state_t *log_state = NULL;
+
    pthread_once(&log_once, log_once_init);
-   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_as_admin_user");
+
+   log_state = pthread_getspecific(log_state_key);
+
    log_state->log_as_admin_user = i;
+
+   return;
 }
 
 /****** uti/log/sge_log() *****************************************************
@@ -596,6 +631,7 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str, const 
 *
 *  FUNCTION
 *     Create access key for thread local storage. Register cleanup function.
+*     Allocate and set thread local storage.
 *
 *     This function must be called exactly once.
 *
@@ -611,8 +647,24 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str, const 
 *******************************************************************************/
 static void log_once_init(void)
 {
+   log_state_t *log_state = NULL;
+   int res = EINVAL;
+
    pthread_key_create(&log_state_key, &log_state_destroy);
-}
+
+   log_state = (log_state_t*)sge_malloc(sizeof(log_state_t));
+
+   log_state_init(log_state);
+
+   res = pthread_setspecific(log_state_key, (const void*)log_state);
+
+   if (0 != res) {
+      fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", "log_once_init", strerror(res));
+      abort();
+   }
+
+   return;
+} /* log_once_init */
 
 /****** uti/log/log_state_destroy() ****************************************
 *  NAME
@@ -636,7 +688,7 @@ static void log_once_init(void)
 *******************************************************************************/
 static void log_state_destroy(void* theState)
 {
-   free((struct log_state_t *)theState);
+   sge_free((char*)theState);
 }
 
 /****** uti/log/log_state_init() *******************************************
@@ -644,7 +696,7 @@ static void log_state_destroy(void* theState)
 *     log_state_init() -- Initialize logging state.
 *
 *  SYNOPSIS
-*     static void log_state_init(struct log_state_t* theState) 
+*     static void log_state_init(log_state_t *theState) 
 *
 *  FUNCTION
 *     Initialize logging state.
@@ -659,7 +711,7 @@ static void log_state_destroy(void* theState)
 *     MT-NOTE: log_state_init() in MT safe. 
 *
 *******************************************************************************/
-static void log_state_init(struct log_state_t* theState)
+static void log_state_init(log_state_t *theState)
 {
    strcpy(theState->log_buffer, "");
    theState->log_level         = LOG_WARNING;

@@ -32,7 +32,6 @@
 
 #include "sge_mt_init.h"
 
-#include "sge_log.h"
 #include "sge_uidgid.h"
 #include "setup_path.h"
 #include "sge_bootstrap.h"
@@ -72,7 +71,6 @@
 *******************************************************************************/
 void sge_mt_init(void)
 {
-   log_mt_init();
    uidgid_mt_init();
    path_mt_init();
 

@@ -41,8 +41,6 @@
 
 typedef void (*trace_func_type)(const char *);
 
-void log_mt_init(void);
-
 void log_state_set_log_level(u_long32);
 void log_state_set_log_file(char *file);
 void log_state_set_log_verbose(int i);

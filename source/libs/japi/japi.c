@@ -361,7 +361,6 @@ int japi_init_mt(dstring *diag)
    lList *alp = NULL;
   
    /* never print errors to console always return them only in diag */
-   log_mt_init();
    log_state_set_log_gui(0);
 
    bootstrap_mt_init();

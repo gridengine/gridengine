@@ -124,6 +124,11 @@ static void get_rid_of_schedd_job_messages(u_long32 job_number);
 static int changes_consumables(lList **alpp, lList* new, lList* old);
 static int deny_soft_consumables(lList **alpp, lList *srl);
 
+/* when this character is modified, it has also be modified
+   the JOB_NAME_DEL in clients/qalter/qalter.c
+   */
+static const char JOB_NAME_DEL = ':';
+
 /*-------------------------------------------------------------------------*/
 /* sge_gdi_add_job                                                       */
 /*    called in sge_c_gdi_add                                              */
@@ -1543,7 +1548,7 @@ int sub_command
        (((job_id_pos = lGetPosViaElem(jep, JB_job_number)) >= 0) && 
        lGetPosUlong(jep, job_id_pos) > 0) ||
        ((job_name_pos >= 0) &&  
-        (job_name_flag = (lGetPosString(jep, job_name_pos)[0] == '$')))
+        (job_name_flag = (lGetPosString(jep, job_name_pos)[0] == JOB_NAME_DEL)))
        ) { 
       jid_flag = 1; 
    } else
@@ -1565,7 +1570,7 @@ int sub_command
          char *del_pos = NULL;
          job_id_str = lGetPosString(jep, job_name_pos);
          job_id_str++;
-         del_pos = strchr(job_id_str, '$');
+         del_pos = strchr(job_id_str, JOB_NAME_DEL);
          *del_pos = '\0';
          del_pos++;
 
@@ -2923,7 +2928,6 @@ static bool contains_dependency_cycles(const lListElem * new_job, u_long32 job_n
 *  FUNCTION
 *     These checks are done for the attribute JB_job_name of 'job':
 *     #1 reject job name if it starts with a digit
-*     #2 reject job name if they contain a '|' or "$"
 *     A detailed problem description is added to the answer list.
 *
 *  INPUTS

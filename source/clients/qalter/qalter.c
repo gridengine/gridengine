@@ -57,6 +57,13 @@
 #include "msg_clients_common.h"
 #include "msg_qalter.h"
 
+/* when this character is modified, it has also be modified
+   the JOB_NAME_DEL in daemons/qmaster/sge_job_qmaster.c 
+   It is used, when a job name is modified via job name to
+   differ betwen the new job name and the old one.
+   */
+static const char *JOB_NAME_DEL = ":";
+
 static lList *qalter_parse_job_parameter(lList *cmdline, lList **pjob, int *all_jobs, int *all_users);
 
 int verify = 0;
@@ -727,7 +734,7 @@ int *all_users
          size += 3;
           
          name = malloc(size);
-         sprintf(name, "$%s$%s", lGetString(ep, ID_str), job_name?job_name:"");
+         sprintf(name, "%s%s%s%s", JOB_NAME_DEL, lGetString(ep, ID_str), JOB_NAME_DEL, job_name?job_name:"");
          rep = lAddElemStr(prequestlist, JB_job_name, name, rdp);
          FREE(name);
       }   

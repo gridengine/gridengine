@@ -1640,6 +1640,35 @@ proc write_edit_defaults_file { filename { unique_file def_edit_file } } {
   return $catch_return
 }
 
+proc get_local_hostname {} {
+   global env CHECK_OUTPUT 
+   set catch_return [ catch { exec "hostname" } result ]
+   if { $catch_return == 0 } {
+      set result [split $result "."]
+      set newname [lindex $result 0]
+      puts $CHECK_OUTPUT "got hostname: \"$newname\""
+      return $newname
+   } else {
+      puts $CHECK_OUTPUT "local hostname error or binary not found"
+      puts $CHECK_OUTPUT "error: $result"
+      puts $CHECK_OUTPUT "error: $catch_return"
+      puts $CHECK_OUTPUT "trying local HOST environment variable ..."
+      if { [ info exists env(HOST) ] } {
+         set result [split $env(HOST) "."]
+         set newname [lindex $result 0]
+         if { [ string length $newname ] > 0 } {
+             puts $CHECK_OUTPUT "got hostname_ \"$newname\""
+             return $newname
+         } 
+      }
+   }
+   puts $CHECK_OUTPUT "tcl procedure get_local_hostname() can't get local hostname"
+   puts $CHECK_OUTPUT "please set check if binary \"hostname\" is in path or"
+   puts $CHECK_OUTPUT "set the environment variable \"HOST\" to the hostname value"
+   exit 1
+   return "unknown"
+}
+
 #                                                             max. column:     |
 #****** check/load_defaults() ******
 # 
@@ -1691,23 +1720,17 @@ proc load_defaults {} {
   set CHECK_TESTSUITE_ROOT "$CHECK_CURRENT_WORKING_DIR"
   set CHECK_CHECKTREE_ROOT "$CHECK_CURRENT_WORKING_DIR/checktree"
   set CHECK_MAIN_RESULTS_DIR "$CHECK_CURRENT_WORKING_DIR/results"
-  if { [info exists env(HOST)] } {
-     set CHECK_CORE_MASTER     "[set env(HOST)]"
-  } else {
-     set CHECK_CORE_MASTER "unknown"
-  }
-  set CHECK_CORE_EXECD      "$CHECK_CORE_MASTER"  
   set CHECK_CORE_PROCESSORS "1"
   set CHECK_SUBMIT_ONLY_HOSTS ""
   set CHECK_COMMD_PORT "7776";
   set CHECK_USER "unknown";
   set CHECK_GROUP "unknown";
   set CHECK_ARCH "unknown";
-  if { [info exists env(HOST)] } {
-     set CHECK_HOST "[set env(HOST)]";
-  } else {
-     set CHECK_HOST "unknown"
-  }
+  set CHECK_HOST [get_local_hostname] 
+  set CHECK_CORE_MASTER $CHECK_HOST
+  set CHECK_SOURCE_HOSTNAME $CHECK_HOST  
+  set CHECK_MAILX_HOST $CHECK_HOST
+  set CHECK_CORE_EXECD $CHECK_HOST       
   set CHECK_PROTOCOL_DIR ""
   set CHECK_PRODUCT_TYPE "sge"
   set CHECK_PRODUCT_FEATURE "none"
@@ -1719,11 +1742,6 @@ proc load_defaults {} {
   set CHECK_SOURCE_DIR [ get_current_working_dir ]
   cd $old_dir
 
-  if { [info exists env(HOST)] } {
-     set CHECK_SOURCE_HOSTNAME "[set env(HOST)]"
-  } else {
-     set CHECK_SOURCE_HOSTNAME "unknown"
-  }
   set CHECK_SOURCE_COMPILE_HOSTS "unknown"
   set CHECK_AIMK_COMPILE_OPTIONS ""
   set CHECK_DIST_INSTALL_OPTIONS "-allall"
@@ -1733,11 +1751,6 @@ proc load_defaults {} {
   set CHECK_REMOTE_ENVIRONMENT ""
   set CHECK_SOURCE_CVS_RELEASE "maintrunc"  
   set CHECK_CONFIG_DIR ""
-  if { [info exists env(HOST)] } {
-     set CHECK_MAILX_HOST "[set env(HOST)]"
-  } else {
-     set CHECK_MAILX_HOST "unknown"
-  }
   if {[file isfile "$CHECK_DEFAULTS_FILE"] != 1} {
      source_procedures
      return -1
@@ -6289,6 +6302,9 @@ proc setup_shared_lib_path {} {
 }
 
 # Main programm:
+
+
+
 
 set do_kill           0
 set do_install        0

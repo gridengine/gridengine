@@ -1,3 +1,7 @@
+SG-2003-09-16-1: Enhancem.: New document describing the functionality of attributes.
+
+                 Changed:   doc/devel/rfe/resource_attributes.txt
+
 SG-2003-09-15-6: Bugfix:    The running ticket update did not work correctly when the
                             sgeee_scheduling interval was set to a very very long time,
                             a sge_scheduling run was done and the sgeee_scheduling 
@@ -6,6 +10,7 @@ SG-2003-09-15-6: Bugfix:    The running ticket update did not work correctly whe
                             stored. It got changed after its execution.
       
                  Review:    AS
+                 Issue:     605
                  Changed:   scheduler
 
 SG-2003-09-15-5: Enhancem.: The sending of running job tickets can be disabled with
@@ -33,6 +38,7 @@ SG-2003-09-15-2: Bugfix:    When a pending job moved to running, it lost its
                             are included now.
 
                  Review:    AS
+                 Issue:     606
                  Changed:   scheduler
 
 SG-2003-09-15-1: Bugfix:    Fixed a bug in the pending ticket calculation. When

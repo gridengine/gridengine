@@ -1594,6 +1594,10 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
             lListElem *qres;
             qres = lGetElemStr(qresource_list, CE_name, 
                                lGetString(rep, CE_name));
+            if (qres == NULL) {
+               qres = lGetElemStr(qresource_list, CE_name, 
+                                  lGetString(rep, CE_shortcut));
+            }
             /* if this complex variable wasn't requested with -F, skip it */
             if (qres == NULL)
                continue ;

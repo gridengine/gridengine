@@ -112,7 +112,7 @@ typedef struct _htable_rec {
 *     sge_htable_resize() -- Resize the hash table
 *
 *  SYNOPSIS
-*     static void sge_htable_resize(register htable ht, int grow) 
+*     static void sge_htable_resize(htable ht, int grow) 
 *
 *  FUNCTION
 *     Hash tables are dynamically resized if necessary.
@@ -126,7 +126,7 @@ typedef struct _htable_rec {
 *     Resizing implies rehashing all stored objects.
 *
 *  INPUTS
-*     register htable ht - the hashtable  to resize 
+*     htable ht             - the hashtable  to resize 
 *     int grow              - true or false
 *           true  = double size of the table,
 *           false = shrink table to half the size
@@ -140,12 +140,12 @@ typedef struct _htable_rec {
 *     uti/htable/sge_htable_statistics()
 ******************************************************************************/
 
-static void sge_htable_resize(register htable ht, int grow)    
+static void sge_htable_resize(htable ht, int grow)    
 {
    Bucket **otable;
    int otablesize;
-   register Bucket *bucket, *next, **head;
-   register int i;
+   Bucket *bucket, *next, **head;
+   int i;
    clock_t start = 0;
    char buffer[1024];
    dstring buffer_wrapper;
@@ -255,8 +255,8 @@ htable sge_htable_create(int size,
 ******************************************************************************/
 void sge_htable_destroy(htable ht)
 {
-    register int i;
-    register Bucket *bucket, *next;
+    int i;
+    Bucket *bucket, *next;
 
     for(i=0; i < ht->mask+1; i++) {
         for (bucket = ht->table[i]; bucket; bucket = next) {
@@ -288,8 +288,8 @@ void sge_htable_destroy(htable ht)
 ******************************************************************************/
 void sge_htable_for_each(htable table, sge_htable_for_each_proc proc)
 {
-    register int i;
-    register Bucket *bucket;
+    int i;
+    Bucket *bucket;
 
     for(i=0; i < table->mask+1; i++) {
         for (bucket = table->table[i]; bucket; bucket = bucket->next)
@@ -324,7 +324,7 @@ void sge_htable_for_each(htable table, sge_htable_for_each_proc proc)
 void sge_htable_store(htable table, const void* key, const void* data)
 {
     Bucket **head;
-    register Bucket *bucket;
+    Bucket *bucket;
 
     head = &(table->table[table->hash_func(key) & table->mask]);
     for (bucket = *head; bucket; bucket = bucket->next) {
@@ -366,7 +366,7 @@ void sge_htable_store(htable table, const void* key, const void* data)
 ******************************************************************************/
 int sge_htable_lookup(htable table, const void* key, const void** data)
 {
-    register Bucket *bucket;
+    Bucket *bucket;
 
     for (bucket = table->table[table->hash_func(key) & table->mask]; 
          bucket; 
@@ -405,7 +405,7 @@ int sge_htable_lookup(htable table, const void* key, const void** data)
 ******************************************************************************/
 void sge_htable_delete(htable table, const void* key)
 {
-    register Bucket *bucket, **prev;
+    Bucket *bucket, **prev;
 
     for (prev = &(table->table[table->hash_func(key) & table->mask]); 
          (bucket = *prev); 

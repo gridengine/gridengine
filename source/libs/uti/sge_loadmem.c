@@ -351,8 +351,8 @@ int sge_loadmem(sge_mem_info_t *mem_info)
 int sge_loadmem(sge_mem_info_t *mem_info) 
 {
    long total, fr;
-   register long cnt, i;
-   register long t, f, l;
+   long cnt, i;
+   long t, f, l;
    struct swaptable *swt;
    struct swapent *ste;
    static char path[256];

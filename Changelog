@@ -1,3 +1,9 @@
+EB-2004-04-27-0: Bugfix:    qstat -F short cut does not work 
+                 Cleanup:   register variables
+                 Issue:     204, 886
+                 Changed:   qstat, qhost
+                 Review:    RH, SG
+
 JG-2004-04-27-0: Bugfix:    Disable dynamic loading of spooling libs on IRIX65,
                             AIX43 and AIX51: The classic spooling references
                             global variables (Master_*_List) and reverse 
@@ -10,7 +16,7 @@ MD-2004-04-26-0: Bugfix:    qping fails if, SGE_QMASTER_PORT was not set.
                             (In case of using sge_qmaster service)
                  Changed:   sgemaster_template
                  Review:    AH
-                 Issue:     #989
+                 Issue:     989
 
 EB-2004-04-26-0: Enhancem.: ADOC-comments
                             Cleanup
@@ -25,14 +31,14 @@ AD-2004-04-22-1: Bugfix:    Changed thread startup order back to old one.
                  Changed:   qmaster
                  Review:    AH
 
-SG-2004-04-22-2: Bugfix:   - fixed memory leak in berkeleydb spooling for jobs
-                           - fixed memory leak in qsub 
-                 Changed:  qmaster, qsub
-                 Review:   AS, DT
+SG-2004-04-22-2: Bugfix:    - fixed memory leak in berkeleydb spooling for jobs
+                            - fixed memory leak in qsub 
+                 Changed:   qmaster, qsub
+                 Review:    AS, DT
 
-SG-2004-04-22-1: Bugfix:   fixed memory leak cluster queue modification
-                 Changed:  qmaster
-                 Review:   DT, EB
+SG-2004-04-22-1: Bugfix:    fixed memory leak cluster queue modification
+                 Changed:   qmaster
+                 Review:    DT, EB
 
 HP-2004-04-22-0: Enhancem.: Added Docu for delegated file staging
 

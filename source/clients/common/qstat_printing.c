@@ -86,9 +86,10 @@ static void sge_printf_header(u_long32 full_listing, u_long32 sge_ext);
 
 static char hashes[] = "##############################################################################################################";
 
-int sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
-                    u_long32 full_listing, lList *qresource_list, u_long32 explain_bits,
-                    int longest_queue_length ) {
+int 
+sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
+                u_long32 full_listing, lList *qresource_list, 
+                u_long32 explain_bits, int longest_queue_length) {
    char to_print[80];
    char arch_string[80];
    double load_avg;
@@ -267,16 +268,24 @@ fprintf(stderr, u32" "u32" "u32"\n", lGetUlong(q, QU_nsuspend), interval, interv
       rlp = NULL;
 
       queue_complexes2scheduler(&rlp, q, exechost_list, centry_list);
+
       for_each (rep , rlp) {
 
          /* we had a -F request */
          if (qresource_list) {
             lListElem *qres;
+
             qres = lGetElemStr(qresource_list, CE_name, 
                                lGetString(rep, CE_name));
+            if (qres == NULL) {
+               qres = lGetElemStr(qresource_list, CE_name,
+                               lGetString(rep, CE_shortcut));
+            }
+
             /* if this complex variable wasn't requested with -F, skip it */
-            if (qres == NULL)
+            if (qres == NULL) {
                continue ;
+            }
          }
          sge_dstring_clear(&resource_string);
 

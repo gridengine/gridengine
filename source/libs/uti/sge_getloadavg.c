@@ -1226,9 +1226,9 @@ int sge_getcpuload(double *cpu_load)
 static long percentages(int cnt, double *out, long *new, long *old, long *diffs)
 {
    int i;
-   register long change;
-   register long total_change;
-   register long *dp;
+   long change;
+   long total_change;
+   long *dp;
    long half_total;
 
    DENTER(CULL_LAYER, "percentages");

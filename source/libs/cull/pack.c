@@ -521,10 +521,8 @@ sge_pack_buffer *pb
    PACK_ENOMEM
    PACK_FORMAT
  */
-int packint(
-register sge_pack_buffer *pb,
-register u_long32 i 
-) {
+int packint(sge_pack_buffer *pb, u_long32 i) 
+{
    u_long32 J=0;
 
    DENTER(PACK_LAYER, "packint");
@@ -577,10 +575,7 @@ register u_long32 i
    PACK_ENOMEM
    PACK_FORMAT
  */
-int packdouble(
-register sge_pack_buffer *pb,
-double d 
-) {
+int packdouble(sge_pack_buffer *pb, double d) {
 /* CygWin does not know RPC u. XDR */
    char buf[32];
 #ifndef WIN32                   /* var not needed */
@@ -660,11 +655,8 @@ double d
    PACK_FORMAT
 
  */
-int packstr(
-register sge_pack_buffer *pb,
-register const char *str 
-) {
-
+int packstr(sge_pack_buffer *pb, const char *str) 
+{
    DENTER(PACK_LAYER, "packstr");
 
 #ifdef COMMCOMPRESS
@@ -874,10 +866,8 @@ u_long32 buf_size
    PACK_FORMAT
 
  */
-int unpackint(
-register sge_pack_buffer *pb,
-register u_long32 *ip 
-) {
+int unpackint(sge_pack_buffer *pb, u_long32 *ip) 
+{
    DENTER(PACK_LAYER, "unpackint");
 
 #ifdef COMMCOMPRESS
@@ -934,10 +924,8 @@ register u_long32 *ip
    PACK_FORMAT
 
  */
-int unpackdouble(
-register sge_pack_buffer *pb,
-register double *dp 
-) {
+int unpackdouble(sge_pack_buffer *pb, double *dp) 
+{
 
 #ifndef WIN32                   /* var not needed */
    XDR xdrs;
@@ -1020,10 +1008,8 @@ register double *dp
    PACK_ENOMEM
    PACK_FORMAT
  */
-int unpackstr(
-register sge_pack_buffer *pb,
-register char **str 
-) {
+int unpackstr(sge_pack_buffer *pb, char **str) 
+{
    u_long32 n;
 
    DENTER(PACK_LAYER, "unpackstr");

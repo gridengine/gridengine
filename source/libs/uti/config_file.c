@@ -46,12 +46,6 @@
 
 char err_msg[1000] = { '0' };
 
-/* ------------------------------
-
-   register passed error string in
-   err_msg for later use
-
-*/
 void set_error(const char *err_str) 
 {
    if (err_str) {

@@ -53,16 +53,16 @@
 *     sge_readnbytes() -- Read n bytes from file descriptor  
 *
 *  SYNOPSIS
-*     int sge_readnbytes(register int sfd, register char *ptr, 
-*                        register int n) 
+*     int sge_readnbytes(int sfd, char *ptr, 
+*                        int n) 
 *
 *  FUNCTION
 *     Read n bytes from file descriptor. 
 *
 *  INPUTS
-*     register int sfd   - file descriptor 
-*     register char *ptr - pointer to buffer 
-*     register int n     - number of bytes 
+*     int sfd   - file descriptor 
+*     char *ptr - pointer to buffer 
+*     int n     - number of bytes 
 *
 *  RESULT
 *     int - number of bytes read
@@ -73,7 +73,7 @@
 *  NOTES
 *     MT-NOTE: sge_readnbytes() is MT safe
 ******************************************************************************/
-int sge_readnbytes(register int sfd, register char *ptr, register int n) 
+int sge_readnbytes(int sfd, char *ptr, int n) 
 {
    int i;                       /* number of bytes read */
    int nleft = n;               /* number of bytes still to read */
@@ -109,16 +109,16 @@ int sge_readnbytes(register int sfd, register char *ptr, register int n)
 *     sge_writenbytes() -- Write n bytes to file descriptor 
 *
 *  SYNOPSIS
-*     int sge_writenbytes(register int sfd, register const char *ptr, 
-*                         register int n) 
+*     int sge_writenbytes(int sfd, const char *ptr, 
+*                         int n) 
 *
 *  FUNCTION
 *     Write n bytes to file descriptor 
 *
 *  INPUTS
-*     register int sfd         - file descriptor 
-*     register const char *ptr - pointer to buffer 
-*     register int n           - number of bytes 
+*     int sfd         - file descriptor 
+*     const char *ptr - pointer to buffer 
+*     int n           - number of bytes 
 *
 *  RESULT
 *     int - number of bytes written
@@ -129,8 +129,8 @@ int sge_readnbytes(register int sfd, register char *ptr, register int n)
 *  NOTES
 *     MT-NOTE: sge_writenbytes() is MT safe
 ******************************************************************************/
-int sge_writenbytes(register int sfd, register const char *ptr, 
-                    register int n) 
+int sge_writenbytes(int sfd, const char *ptr, 
+                    int n) 
 {
 
    int i;                       /* number of bytes written */

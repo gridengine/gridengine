@@ -93,6 +93,7 @@ int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user,
 int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
                         gid_t *gid, char *group);
 
+int sge_security_verify_user(const char *host, const char *commproc, u_short id, const char *user); 
 
 #endif /* __SGE_SECURITY_H */
 

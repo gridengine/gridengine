@@ -37,6 +37,8 @@ extern sec_exit_func_type sec_exit_func;
 
 int sec_init(const char *progname);
 
+int sec_verify_user(const char *user, const char *commproc);
+
 int sec_send_message(
    int synchron, 
    const char *tocomproc, 

@@ -58,6 +58,7 @@
 #define MSG_SEC_NOSTARTCMD4GETCRED_SU _("can't start command \"%s\" for job " U32CFormat " to get credentials\n")
 #define MSG_SEC_NOCREDNOBIN_US        _("could not get client credentials for job " U32CFormat" - %s binary does not exist\n")
 #define MSG_SEC_KRB_CRED_SSSI         _("denied: request for user \"%s\" does not match Kerberos credentials for connection <%s,%s,%d>\n")         
+#define MSG_SEC_CRED_SSSI         _("denied: request for user \"%s\" does not match credentials for connection <%s,%s,%d>\n")         
 #define MSG_SEC_KRBDECRYPTTGT_US      _("could not decrypt TGT for job " U32CFormat "- %s\n")
 #define MSG_SEC_KRBENCRYPTTGT_SSIS    _("could not encrypt TGT for client <%s,%s,%d> - %s\n")
 #define MSG_SEC_KRBENCRYPTTGTUSER_SUS _("could not encrypt TGT for user %s, job "U32CFormat" - %s")

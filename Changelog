@@ -1,3 +1,10 @@
+AA-2002-01-15-0: Feature:  Security:
+                           - sge_security_verify_user wraps sec method specific funcs                             sec_verify_user() and krb_verify_user() 
+                           - addition of uniqueIdentifier to keep the Unix user name
+                             to certificate generation scripts/templates
+                           - xcheck between Unix user and certificate 
+                             uniqueIdentifier field 
+
 JG-2002-01-15-0: Testsuite: Fixed a problem of the submit_host check:
                             Replaced "hostname" with "uname -n" as hostname
                             is not found on some architectures (e.g. on irix6

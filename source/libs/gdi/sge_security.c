@@ -957,7 +957,7 @@ int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user,
       DEXIT;
       return -1;
    }   
-   
+
    DEXIT;
    return 0;
 }
@@ -1155,4 +1155,28 @@ static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usi
       
    DEXIT;   
    return TRUE;
+}   
+
+int sge_security_verify_user(const char *host, const char *commproc, u_short id, const char *user) 
+{
+   DENTER(TOP_LAYER, "sge_security_verify_user");
+
+#ifdef SECURE
+   if (!sec_verify_user(user, commproc)) {
+      DEXIT;
+      return False;
+   }
+#endif
+
+#ifdef KERBEROS
+
+   if (krb_verify_user(host, commproc, id, user) < 0) {
+      DEXIT;
+      return False;
+   }
+
+#endif /* KERBEROS */
+
+   DEXIT;
+   return True;
 }   

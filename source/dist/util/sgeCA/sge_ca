@@ -122,7 +122,7 @@ while [ $ARGC != 0 ]; do
       ;;
    -batch)
       BATCHMODE=-batch
-      CONFIG_DIR=/tmp
+      CONFIG_DIR=/tmp/certificates
       ;;
    -req)
       WHICH="req"

@@ -85,6 +85,7 @@ typedef struct gsd_str {
    u_long32 key_mat_len;
    EVP_PKEY *private_key;
    X509 *x509;
+   char uniqueIdentifier[BUFSIZ];
    u_long32 connid;
    int is_daemon;
    int connect;
@@ -115,6 +116,7 @@ typedef struct gsd_str {
 */
 static int sec_set_encrypt(int tag);
 static int sec_files(void);
+static int sec_is_daemon(const char *progname);
 
 static int sec_announce_connection(GlobalSecureData *gsd, const char *tocomproc, const char *tohost);
 static int sec_respond_announce(char *commproc, u_short id, char *host, char *buffer, u_long32 buflen);
@@ -151,7 +153,7 @@ static int sec_set_connid(char **buffer, int *buflen);
 static int sec_get_connid(char **buffer, u_long32 *buflen);
 static int sec_update_connlist(const char *host, const char *commproc, int id);
 static int sec_set_secdata(const char *host, const char *commproc, int id);
-static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int id);
+static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int id, const char *uniqueIdentifier);
 static void sec_keymat2list(lListElem *element);
 static void sec_list2keymat(lListElem *element);
 /* static void sec_print_bytes(FILE *f, int n, char *b); */
@@ -316,9 +318,7 @@ int sec_init(const char *progname)
    /* 
    ** FIXME: am I a sge daemon? -> is_daemon() should be implemented
    */
-   if(!strcmp(prognames[QMASTER],progname) ||
-      !strcmp(prognames[EXECD],progname) ||
-      !strcmp(prognames[SCHEDD],progname))
+   if (sec_is_daemon(progname))
       gsd.is_daemon = 1;
    else
       gsd.is_daemon = 0;
@@ -696,11 +696,16 @@ static int sec_verify_certificate(X509 *cert)
 {
    X509_STORE *ctx = NULL;
    X509_STORE_CTX csc;
+   char buf[BUFSIZ];
    int ret;
 
    DENTER(GDI_LAYER, "sec_verify_certificate");
 
    DPRINTF(("subject: %s\n", X509_NAME_oneline(X509_get_subject_name(cert), 0, 0)));
+   if (X509_NAME_get_text_by_OBJ(X509_get_subject_name(cert), 
+      OBJ_nid2obj(NID_uniqueIdentifier), buf, sizeof(buf))) {
+      DPRINTF(("UID: %s\n", buf));
+   }   
    DPRINTF(("ca_cert_file: %s\n", ca_cert_file));
    ctx = X509_STORE_new();
    X509_STORE_set_default_paths(ctx);
@@ -1120,6 +1125,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    int ekeylen;
    EVP_CIPHER_CTX ectx;
    EVP_MD_CTX ctx;
+   char uniqueIdentifier[BUFSIZ];
 
    DENTER(GDI_LAYER, "sec_respond_announce");
 
@@ -1174,6 +1180,16 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    }
    DPRINTF(("Client certificate is ok\n"));
       
+   /*
+   ** reset uniqueIdentifier and get uniqueIdentifier from client cert
+   */
+   memset(uniqueIdentifier, '\0', BUFSIZ);
+   if (X509_NAME_get_text_by_OBJ(X509_get_subject_name(x509), 
+      OBJ_nid2obj(NID_uniqueIdentifier), uniqueIdentifier, 
+                  sizeof(uniqueIdentifier))) {
+      DPRINTF(("UID: %s\n", uniqueIdentifier));
+   }   
+   
    /*
    ** extract public key 
    */
@@ -1281,7 +1297,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** insert connection to Connection List
    */
-   if (sec_insert_conn2list(gsd.connid, host,commproc,id)) {
+   if (sec_insert_conn2list(gsd.connid, host, commproc, id, uniqueIdentifier)) {
       ERROR((SGE_EVENT,"failed insert Connection to List\n"));
       sec_send_err(commproc, id, host, &pb_respond, "failed insert you to list\n");
       goto error;
@@ -1623,6 +1639,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
       ** get data from connection list
       */
       sec_list2keymat(element);
+      strcpy(gsd.uniqueIdentifier, lGetString(element, SEC_UniqueIdentifier)); 
       gsd.seq_receive = lGetUlong(element, SEC_SeqNoReceive);
       gsd.connid = connid;
    }
@@ -2202,6 +2219,7 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
    ** set security data                  
    */
    sec_list2keymat(element);
+   strcpy(gsd.uniqueIdentifier, lGetString(element, SEC_UniqueIdentifier));
    gsd.connid = lGetUlong(element, SEC_ConnectionID);
    gsd.seq_send = lGetUlong(element, SEC_SeqNoSend);
    gsd.seq_receive = lGetUlong(element, SEC_SeqNoReceive);
@@ -2232,7 +2250,7 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
 **      0       on success
 **      -1      on failure
 */
-static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int id)
+static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int id, const char *uniqueIdentifier)
 {
    lListElem *element;
    lCondition *where;
@@ -2299,10 +2317,11 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
    */
    lSetUlong(element, SEC_ConnectionID, connid);
    lSetHost(element, SEC_Host, host);
-   lSetString(element,SEC_Commproc,commproc); 
-   lSetInt(element,SEC_Id,id); 
-   lSetUlong(element,SEC_SeqNoSend,0); 
-   lSetUlong(element,SEC_SeqNoReceive,0); 
+   lSetString(element, SEC_Commproc, commproc); 
+   lSetInt(element, SEC_Id, id); 
+   lSetString(element, SEC_UniqueIdentifier, uniqueIdentifier); 
+   lSetUlong(element, SEC_SeqNoSend, 0); 
+   lSetUlong(element, SEC_SeqNoReceive, 0); 
    sec_keymat2list(element);
 {
    int len;
@@ -2318,8 +2337,8 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
 
    lSetString(element, SEC_ExpiryDate, (char*) time_str);
 }   
-   DPRINTF(("++++ added %d (%s, %s, %d) to conn_list\n", 
-               (int)connid, host, commproc, id));
+   DPRINTF(("++++ added %d (%s, %s, %d) of %s to conn_list\n", 
+               (int)connid, host, commproc, id, uniqueIdentifier));
 
    /* 
    ** increment connid                   
@@ -2722,3 +2741,48 @@ static int sec_unpack_reconnect(sge_pack_buffer *pb, u_long32 *connid, u_long32 
       return(i);
 }
 #endif
+
+/*
+** NAME
+**   sec_verify_user
+**
+** SYNOPSIS
+**   #include "sec_lib.h"
+**
+**   int sec_verify_user(user)
+**   char *user - unix user name
+**
+** DESCRIPTION
+**   This function checks if the unix user name that has been send corresponds **   to the certificate
+**
+** RETURN VALUES
+**      1       on success
+**      0       on failure
+*/
+int sec_verify_user(const char *user, const char *commproc) 
+{
+   DENTER(GDI_LAYER,"sec_verify_user");
+
+   if (!sec_is_daemon(commproc)) {
+      DPRINTF(("commproc = '%s' user = '%s', gsd.uniqueIdentifier = '%s'\n", 
+               commproc, user, gsd.uniqueIdentifier));
+      if (strcmp(user, gsd.uniqueIdentifier)) {
+         DEXIT;
+         return 0;
+      }   
+   }
+      
+
+   DEXIT;
+   return 1;
+}
+
+static int sec_is_daemon(const char *progname)
+{
+   if (!strcmp(prognames[QMASTER],progname) ||
+      !strcmp(prognames[EXECD],progname) ||
+      !strcmp(prognames[SCHEDD],progname))
+      return True;
+   else
+      return False;
+}      

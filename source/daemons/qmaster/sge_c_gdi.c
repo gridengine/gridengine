@@ -246,17 +246,13 @@ sge_gdi_request *answer
       return;
    }
 
-#ifdef KERBEROS
-
-   if (krb_verify_user(request->host, request->commproc, request->id, user) < 0) {
-      CRITICAL((SGE_EVENT, MSG_SEC_KRB_CRED_SSSI, 
-		         user, request->host, request->commproc, request->id));
+   if (!sge_security_verify_user(request->host, request->commproc, request->id, user)) {
+      CRITICAL((SGE_EVENT, MSG_SEC_CRED_SSSI, user, request->host, 
+                  request->commproc, request->id));
       sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOSUCHUSER, 0);
       DEXIT;
       return;
    }
-
-#endif /* KERBEROS */
 
    if ((ao = get_gdi_object(request->target))) {
      target_name = ao->object_name;

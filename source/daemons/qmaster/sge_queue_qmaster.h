@@ -38,8 +38,6 @@ int sge_gdi_add_mod_queue(lListElem *qep, lList **alpp, char *ruser, char *rhost
 
 int sge_gdi_delete_queue(lListElem *qep, lList **alpp, char *ruser, char *rhost);
 
-int sge_change_queue_version(lListElem *qep, int add, int write_history);
-
 /* old functions underlaying the gdi functions */
 int sge_del_queue(const char *qname);
 

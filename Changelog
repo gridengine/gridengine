@@ -1,3 +1,6 @@
+EB-2002-01-18-0: Bugfix:    - reactivated qdel output for already deleted jobs
+                            - enabled signalling for already deleted jobs
+
 CR-2002-01-18-1: Testsuite: - general performance modified cluster configuration
                  Bugfix:      without restoring it.
 

@@ -942,25 +942,12 @@ int sub_command
 
                tmp_task = lGetElemUlong(lGetList(job, JB_ja_tasks), 
                                         JAT_task_number, task_number);
-               njobs++; 
                if (tmp_task == NULL) {
                   /* ja task does not exist anymore - ignore silently */
                   continue;
                }
 
-               if (lGetUlong(tmp_task, JAT_status) == JFINISHED) {
-                  DPRINTF(("job "U32CFormat", task "U32CFormat" already in"
-                           " state finished\n", job_number, task_number));
-                  continue;
-               }   
-
-
-               if(lGetUlong(idep, ID_force) == 0 && 
-                  lGetUlong(tmp_task, JAT_state) & JDELETED) {
-                  DPRINTF(("job "U32CFormat", task "U32CFormat" already in"
-                           " state deleted\n", job_number, task_number));
-                  continue;
-               }  
+               njobs++; 
 
                if (lGetString(tmp_task, JAT_master_queue)) {
                   get_rid_of_job(alpp, job, tmp_task, 

@@ -67,7 +67,9 @@ int nm
    switch (dataType) {
        case lStringT:
           hostname = lGetPosString(ep, pos);
-          DPRINTF(("!!!!!!!!!!!!!  sge_resolve_host: call with lStringT data type, should be lHostT !!!!!!!!!!! \n"));
+          DPRINTF(("!!!!!!! sge_resolve_host: WARNING call with old lStringT data type,\n"));
+          DPRINTF(("!!!!!!! this data type should be replaced with lHostT data type in\n"));
+          DPRINTF(("!!!!!!! the future! Nevertheless, just a warning! Function works fine!\n"));
           break;
 
        case lHostT:

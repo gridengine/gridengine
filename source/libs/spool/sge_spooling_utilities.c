@@ -438,6 +438,13 @@ bool spool_default_validate_func(lList **answer_list,
             }
 
             if (object_type == SGE_TYPE_EXECHOST) {
+               /* trash load values - they are not valid after unspooling
+                * a host object.
+                */
+               if (ret) {
+                  ret = host_trash_load_values(object);
+               }
+
                if (ret) {
                   /* necessary to setup actual list of exechost */
                   debit_host_consumable(NULL, object, Master_CEntry_List, 0);

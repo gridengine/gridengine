@@ -73,6 +73,14 @@ Content
 
        gridengine/source
 
+   Beginning with Grid Engine 6.0 sge_qmaster will use a Berkley DB database
+   for spooling of its configuration and state information.
+   The Berkeley DB include files and libraries have to be installed in order
+   to build Grid Engine.
+   See libs/spool/berkeleydb/README for details about installing and using
+   the Berkeley DB.
+
+
 
 2) Building the dependency tool 'sge_depend'
 --------------------------------------------

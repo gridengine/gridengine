@@ -1,3 +1,10 @@
+JG-2004-01-26-1: Enhancem.: Make Berkeley DB spooling the default.
+                 Bugfix:    Fixed spooling problem with the creation of queue
+                            instances.
+                 Bugfix:    Trash load values after reading exec hosts from the
+                            spooling database.
+                 Review:    AD
+
 EB-2004-01-26-0: Enhancem.: Changed some man-pages concerning CQs
 
 AD-2004-01-26-3: Bugfix:    'sge_do_log()' does no longer change the effective
@@ -17,7 +24,7 @@ AD-2004-01-26-1: Bugfix:    Do communication setup after qmaster setup.
 JG-2004-01-26-0: Bugfix:    Fixed a problem with berkeley db spooling of queue 
                             instances.
                             Use mutexes in qmaster reporting instead of locks.
-                 Review:    AH
+                 Review:    AD
 
 AD-2004-01-26-0: Bugfix:    Decrease delivery interval for remote events.
                  Changed:   qmaster

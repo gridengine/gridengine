@@ -742,6 +742,7 @@ int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object)
    int ret = 0;
    const char *name = lGetString(cqueue, CQ_name);
    lListElem *qinstance;
+   dstring key_dstring = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "cqueue_spool");
    if (!spool_write_object(NULL, spool_get_default_context(), cqueue, 
@@ -756,16 +757,21 @@ int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object)
       u_long32 tag = lGetUlong(qinstance, QU_tag);
       
       if (tag == SGE_QI_TAG_ADD || tag == SGE_QI_TAG_MOD) {
-         name = lGetString(qinstance, QU_full_name);
+         const char *key = sge_dstring_sprintf(&key_dstring, "%s/%s",
+                                         name,
+                                         lGetHost(qinstance, QU_qhostname));
          if (!spool_write_object(NULL, spool_get_default_context(), qinstance,
-                                 name, SGE_TYPE_QINSTANCE)) {
-            ERROR((SGE_EVENT, MSG_QINSTANCE_ERRORWRITESPOOLFILE_S, name));
+                                 key, SGE_TYPE_QINSTANCE)) {
+            ERROR((SGE_EVENT, MSG_QINSTANCE_ERRORWRITESPOOLFILE_S, key));
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
                             ANSWER_QUALITY_ERROR);
             ret = 1;
          }
       }
    }
+
+   sge_dstring_free(&key_dstring);
+   
    DEXIT;
    return ret;
 }

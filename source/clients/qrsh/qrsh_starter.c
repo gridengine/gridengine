@@ -902,6 +902,13 @@ int main(int argc, char *argv[])
    /* start job */
    exitCode = startJob(command, wrapper, noshell);
 
+   /* JG: TODO: At this time, we could already pass the exitCode to qrsh.
+    *           Currently, this is done by shepherd, but only after 
+    *           qrsh_starter and rshd exited.
+    *           If we pass exitCode to qrsh, we also have to implement the
+    *           shepherd_about_to_exit mechanism here.
+    */
+
    /* write exit code and exit */
    return writeExitCode(EXIT_SUCCESS, exitCode);
 }

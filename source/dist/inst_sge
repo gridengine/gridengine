@@ -2173,17 +2173,18 @@ CheckLocalFilesystem()
             return 0
          fi
          ;;
-      *linux)
-         df -l $FS | grep $FS >/dev/null 2>&1
-         if [ $? -eq 0 ]; then
-            return 1
-         else
-            return 0
-         fi
-         ;;
+#      *linux)
+#         df -l $FS | grep $FS >/dev/null 2>&1
+#         if [ $? -eq 0 ]; then
+#            return 1
+#         else
+#            return 0
+#         fi
+#         ;;
       *)
-         $INFOTEXT -e "\nDon't know how to test for local filesystem. Exit."
-         exit 1
+         $INFOTEXT "\nDon't know how to test for local filesystem on this architecture!"
+         $INFOTEXT -wait -n "\nPlease make sure that the directory $FS is on a local filesystem!\nHit <RETURN> to continue >> "
+         return 1
          ;;
    esac
 

@@ -40,6 +40,7 @@
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_centry.h"
+#include "sge_load.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -349,3 +350,39 @@ host_is_centry_a_complex_value(const lListElem *this_elem,
    return ret;
 }
 
+bool
+host_trash_load_values(lListElem *host)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "host_trash_load_values");
+
+   if (host != NULL) {
+      lListElem *ep, *next;
+      lList *load_list = lGetList(host, EH_load_list);
+      const char *host_name = lGetHost(host, EH_name);
+
+      /* loop over load list */
+      ep = lFirst(load_list);
+      while (ep != NULL) {
+         const char *load_name;
+
+         next = lNext(ep);
+         load_name = lGetString(ep, HL_name);
+
+         /* we don't trash static load values like "arch" etc. */
+         if (!sge_is_static_load_value(load_name)) {
+            DPRINTF(("host "SFN": trashing load value "SFQ"\n",
+                     host_name,
+                     load_name));
+            lRemoveElem(load_list, ep);
+         }
+
+         /* assign next element */
+         ep = next;
+      }
+   }   
+
+   DEXIT;
+   return ret;
+}

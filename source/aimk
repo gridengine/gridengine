@@ -355,9 +355,11 @@ set PERLGUI = ""
 set PERLGUI_CLEAN = ""
 # end PERLGUI
 # SPOOLING
-set SPOOLING_METHOD = "classic"
-set SPOOLING_LIBS   = "-lspoold -lspoolc -lspool"
-set SPOOLING_DEPS   = "libspoold libspoolc"
+set SPOOLING_METHOD = "berkeleydb"
+set SPOOLING_LIBS   = "-lspoold -lspoolb -lspool -ldb"
+set SPOOLING_DEPS   = "libspool libspoold libspoolb"
+set CFLAGS  = "-I$BERKELEYDB_HOME/include $CFLAGS"
+set LFLAGS  = "-L$BERKELEYDB_HOME/lib $LFLAGS"
 #end SPOOLING
 
 # Compile with gettext and libintl

@@ -130,6 +130,11 @@ if ( -f aimk.site ) then
    source aimk.site
 endif
 
+# your private command line args go here
+#
+if ( -f aimk.private ) then
+   source aimk.private
+endif
 
 goto start
 

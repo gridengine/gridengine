@@ -5821,15 +5821,18 @@ for { set i 0 } { $i < $argc } { incr i } {
  
    if { ( [string compare [lindex $argv $i] "--file"] == 0 ) || ([string compare [lindex $argv $i] "file"] == 0) } {
       incr i
-      set CHECK_DEFAULTS_FILE [lindex $argv $i]
+      set help_var [lindex $argv $i]
+      set CHECK_DEFAULTS_FILE [ string trim $help_var ]
+
       if { [llength $CHECK_DEFAULTS_FILE] != 1 } {
          puts $CHECK_OUTPUT "can't use \"file\" option without filename!"
          exit -1 
       }
-
-      if { ([ string first "/" $CHECK_DEFAULTS_FILE ] < 0) && ([ string first "\/" $CHECK_DEFAULTS_FILE ] < 0)} {
+      puts $CHECK_OUTPUT "\"$CHECK_DEFAULTS_FILE\""
+      if { ([ string first "/" $CHECK_DEFAULTS_FILE ] != 0) } {
           set CHECK_DEFAULTS_FILE "$CHECK_CURRENT_WORKING_DIR/$CHECK_DEFAULTS_FILE"
       }
+      
       puts $CHECK_OUTPUT " ---> using \"$CHECK_DEFAULTS_FILE\" for setup! <---"
       continue
    }

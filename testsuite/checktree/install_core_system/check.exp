@@ -977,7 +977,9 @@ proc install_execd {} {
              puts $CHECK_OUTPUT $result
 
              puts $CHECK_OUTPUT "taring Certificate Authority (CA) directory into \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\""
-             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "cd" "$CA_ROOT_DIR; tar -cvf port${CHECK_COMMD_PORT}.tar ./port${CHECK_COMMD_PORT}/*" ]
+             set tar_bin [get_binary_path $CHECK_CORE_MASTER "tar"]
+             set remote_command_param "$CA_ROOT_DIR; ${tar_bin} -cvf port${CHECK_COMMD_PORT}.tar ./port${CHECK_COMMD_PORT}/*"
+             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "cd" "$remote_command_param" ]
              puts $CHECK_OUTPUT $result
 
              if { $prg_exit_state != 0 } {
@@ -997,11 +999,14 @@ proc install_execd {} {
                     set result [ start_remote_prog "$exec_host" "root" "cp" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar $CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
                     puts $CHECK_OUTPUT $result
 
+
+                    set tar_bin [get_binary_path $exec_host "tar"]
+
                     puts $CHECK_OUTPUT "untaring Certificate Authority (CA) directory in \"$CA_ROOT_DIR\""
-                    set result [ start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR; tar -xvf port${CHECK_COMMD_PORT}.tar" ]
+                    set result [ start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} -xvf port${CHECK_COMMD_PORT}.tar" ]
                     puts $CHECK_OUTPUT $result
                     if { $prg_exit_state != 0 } {
-                       add_proc_error "install_execd" -2 "could not untar \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" on host $exec_host"
+                       add_proc_error "install_execd" -2 "could not untar \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" on host $exec_host;\ntar-bin:$tar_bin"
                     } 
 
                     puts $CHECK_OUTPUT "removing tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" on host $exec_host ..."

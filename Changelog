@@ -1,3 +1,12 @@
+CR-2002-02-05-0: Testsuite: - wait_for_end_of_transfer() is now waiting that
+                              all lines of the qstat output have the same job state
+                            - install core system test using get_binary_path() for 
+                              tar binary (used for secure product feature)
+                            - bugfix setting defaults file path (if not absolute)
+                            - rework of migration test (removed unnecessary error
+                              checks) 
+                            
+
 JG-2002-02-05-1: Testsuite: Enable testsuite to setup a cluster on a filesystem
                             where root has no write access.
                             This is only a first step. A comprehensive solution

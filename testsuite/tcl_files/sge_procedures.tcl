@@ -4973,19 +4973,39 @@ proc wait_for_end_of_transfer { jobid seconds } {
   
   set time [timestamp] 
   while {1} {
-    sleep 1
     set run_result [get_standard_job_info $jobid ]
-    set run_result [ lindex $run_result 0 ]
-    set state [lindex $run_result 4]
- 
-    if { [string first "t" $state ] < 0} {
+    set job_state ""
+    set had_error 0
+    foreach line $run_result {
+       set tmp_job_id [lindex $line 0]
+       set tmp_job_state [ lindex $line 4 ]
+       if { $tmp_job_id == $jobid } {
+          if { $job_state == "" } {
+             set job_state $tmp_job_state
+          } else {
+             if { $job_state != $tmp_job_state } {
+                puts $CHECK_OUTPUT "job has different states ..."
+                set had_error 1
+             }
+          }
+       }
+    }
+
+    if { $had_error != 0 } {
+       continue
+    }
+
+    if { [string first "t" $job_state ] < 0} {
+       puts $CHECK_OUTPUT "job $jobid is running ($job_state)"
        break;
     }
+    
     set runtime [expr ( [timestamp] - $time) ]
     if { $runtime >= $seconds } {
        add_proc_error "wait_for_end_of_transfer" -1 "timeout waiting for job \"$jobid\""
        return -1
     }
+    sleep 1
   }
   return 0
 }

@@ -433,9 +433,9 @@ DTRACE;
       #define NM5  "%I%I%I%I%I"
       #define NM3  "%I%I%I"
       #define NM1  "%I"
-/*      what_queue = lWhat("%T(ALL)", QU_Type); */
-
-      what_queue = lWhat("%T(" NM10 NM10 NM10 NM10 NM5")", QU_Type,
+    what_queue = lWhat("%T(ALL)", QU_Type); 
+#if 0
+      what_queue = lWhat("%T(" NM10 NM10 NM10 NM10 NM5 NM3")", QU_Type,
             QU_qname,
             QU_qhostname,
          /*   QU_tmpdir,
@@ -448,9 +448,9 @@ DTRACE;
             QU_nsuspend,
             QU_suspend_interval,
          /*   QU_priority,
-            QU_rerun,
+            QU_rerun, */
             QU_qtype,
-            QU_processors,*/
+/*            QU_processors,*/
             QU_job_slots,
 
             QU_calendar,
@@ -482,9 +482,9 @@ DTRACE;
             QU_state,
             QU_notify,
 
-         /*   QU_acl,
+            QU_acl,
             QU_xacl,
-            QU_owner_list, */
+         /*   QU_owner_list, */
             QU_subordinate_list,
             QU_consumable_config_list,
             QU_projects,
@@ -515,6 +515,7 @@ DTRACE;
             QU_pe_list,
             QU_ckpt_list*/
             );
+#endif            
    }
 
    /* ---------------------------------------- */

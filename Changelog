@@ -1,3 +1,11 @@
+SG-2003-11-07-2: Bugfix:    scheduler crashed, when bool resources were
+                            used
+                 Changed.   scheduler                            
+
+SG-2003-11-07-1: Bugfix:    removed to many elements from the queue CULL 
+                            structure
+                 Changed:   scheduler                            
+
 SG-2003-11-07-0: Bugfix:    three sub lists of the job category where freed
                             twice.
                  Changed:   scheduler                            

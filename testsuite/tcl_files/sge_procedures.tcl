@@ -1350,17 +1350,20 @@ proc reset_schedd_config {} {
      set default_array(weight_job)                 "0.2"
      set default_array(weight_tickets_functional)  "0"
      set default_array(weight_tickets_share)       "0"
-     set default_array(weight_tickets_deadline)    "10000"
      if { [resolve_version] >= 3 } {
          set default_array(share_override_tickets)        "true"
          set default_array(share_functional_shares)       "true"
-         set default_array(share_deadline_tickets)        "true"
         
          set default_array(max_functional_jobs_to_schedule) "200"
          set default_array(report_pjob_tickets)             "true"
          set default_array(max_pending_tasks_per_job)       "50"
          set default_array(halflife_decay_list)             "none"
          set default_array(policy_hierarchy)                "OFSD"
+
+         set default_array(weight_ticket)                   "1.0"
+         set default_array(weight_waiting_time)             "1"
+         set default_array(weight_deadline)                 "1000000"
+         set default_array(weight_urgency)                  "0.0"
       }
   }
 

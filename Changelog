@@ -1,3 +1,6 @@
+AH-2003-11-11-1: Testsuite: Apply changes AH-2003-11-11-0 to testuite 
+                            'init_core_system' 
+                            
 AH-2003-11-12-0: Testsuite: Increased execd delay after commd startup.
 
 CR-2003-11-12-0: Testsuite: testsuite adaptations for install_core_system 

@@ -1,3 +1,10 @@
+JG-2003-07-02-0: Bugfix:    NSLOTS and NHOSTS incorrectly set in environment of 
+                            tightly integrated tasks
+                 Bugtraq:   4885906
+                 Issue:     578
+                 Review:    EB
+                 Changed:   sge_execd
+
 JG-2003-07-01-0: Bugfix:    Slave tasks of tightly integrated parallel jobs 
                             exceeding wall clock time were not killed.
                  Bugtraq:   4881949

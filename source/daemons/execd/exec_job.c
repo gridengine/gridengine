@@ -619,6 +619,16 @@ char *err_str
    SGE_ASSERT((jep));
    SGE_ASSERT((jatep));
 
+   /* in case of parallel tasks, the job jep is passed in slave_jep */
+   if (slave_jep) {
+      job_jep = slave_jep;
+      job_jatep = slave_jatep;
+   }
+   else {
+      job_jep = jep;
+      job_jatep = jatep;
+   }
+
    environmentList = lCreateList("environment list", VA_Type);
 
    DPRINTF(("Job: %ld Task: %ld\n", lGetUlong(jep, JB_job_number), 
@@ -730,6 +740,15 @@ char *err_str
          used_slots, used_slots+1));
    set_qslots_used(master_q, used_slots+1);
 
+   /* compute nqueues, nhosts and nslots 
+    * for tightly integrated parallel tasks the values of the job are taken
+    */
+   nhosts = get_nhosts(lGetList(job_jatep, JAT_granted_destin_identifier_list));
+   pe_slots = 0;
+   for_each (gdil_ep, lGetList(job_jatep, JAT_granted_destin_identifier_list)) {
+      pe_slots += (int)lGetUlong(gdil_ep, JG_slots);
+   }
+
    /***************** write out sge host file ******************************/
    if (!slave_jep) {
       if (processor_set)
@@ -745,8 +764,6 @@ char *err_str
       }
 
       /* 
-         Get number of hosts 'nhosts' where the user got queues on 
-
          The granted_destination_identifier_list holds
          on entry for each queue, not host. But each
          entry also contais the hosts name where the
@@ -755,8 +772,6 @@ char *err_str
          We need to combine the processor sets of all queues on this host. 
          They need to get passed to shepherd
       */
-      nhosts = get_nhosts(lGetList(jatep, JAT_granted_destin_identifier_list));
-      pe_slots = 0;
       host_slots = 0;
       for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
          int slots;
@@ -773,7 +788,6 @@ char *err_str
          qep = lFirst(lGetList(gdil_ep, JG_queue));
          q_set = qep ? lGetString(qep, QU_processors) : NULL;
 #endif
-         pe_slots += slots;
          fprintf(fp, "%s %d %s %s\n", 
             lGetHost(gdil_ep, JG_qhostname),
             slots, 
@@ -803,16 +817,6 @@ char *err_str
       return -2;        /* general */
    }
    
-   /* take environment from job in case of tasks */
-   if (slave_jep) {
-      job_jep = slave_jep;
-      job_jatep = slave_jatep;
-   }
-   else {
-      job_jep = jep;
-      job_jatep = jatep;
-   }
-
    /* write inherited environment first, to be sure that some task specific variables
    ** will be overridden
    */

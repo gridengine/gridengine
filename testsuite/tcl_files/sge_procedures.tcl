@@ -4258,13 +4258,14 @@ proc unsuspend_job { job } {
 proc delete_job { jobid { wait_for_end 0 }} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
 
+   sleep 1
    # spawn process
    log_user 0
    set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $jobid"
    set id [ open_spawn_process $program  ]
    set sp_id [ lindex $id 1 ]
    set result -1
-   set timeout 30 	
+   set timeout 60 	
    log_user 0 
 
    expect {

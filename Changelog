@@ -1,3 +1,12 @@
+AH-2002-08-28-0  Doc:       man page typo for sge_aliases
+                 Issue:     #347
+                 Doc:       access_list(5) man page does not describe file format
+                            for SGEEE mode
+                 Issue:     #357
+                 Doc:       Output of prolog/epilog for interactive jobs not
+                            mentioned
+                 Issue:     #367
+
 EB-2002-08-23-0  Bugfix:    scheduler crashes if defaultuser has 0 shares in sharetree
                  Issues:    #363
                  Bigtraq:   #4735972
@@ -21,7 +30,7 @@ AS-2002-08-22-1  Bugfix:    qhold/qrls (via qhold.sh) can print i18ned
 
 EB-2002-08-22-0  Bugfix:    Userset "defaultdepartment" accepts users in CLI
                  Bugtraq:   #4733859, #4731347
-                 Issue:     #360
+                 Issue:     #360 ??? #356 ???
                  Review:    AS
                  Changed:   sge_qmaster, qconf
 

@@ -44,7 +44,7 @@ MKISOFS=mkisofs
 ISOFSOPTIONS="-l -J -L -N -r -v"
 
 # Store your favorite command line here
-# Could be e.g.: "set - -vdir SGE53 -version 5.3beta1 -tar gtar $*"
+# Could be e.g.: "set - -vdir SGE53 -version 5.3beta2 -tar gtar $*"
 if [ -f mk_dist.private ]; then
    . ./mk_dist.private
 fi
@@ -208,7 +208,7 @@ done
 #--- END-OF-COMMANDLINE-PARSING------------------------------------------
 
 PVMCONTENT="pvm/README pvm/*.sh pvm/*.template pvm/src"
-DOC_PACKAGE="doc/SGE53beta1_doc.pdf"
+DOC_PACKAGE="doc/SGE53beta2_doc.pdf"
 COMMON_DOCS="doc/INSTALL doc/*.asc"
 COMMON_PACKAGE="3rd_party catman ckpt $COMMON_DOCS examples/jobs $INSTALL_SCRIPT install_qmaster install_execd man $PVMCONTENT mpi qmon util"
 

@@ -225,7 +225,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       u_long32 submit_size = range_list_get_number_of_ids(range_list);
    
       if (submit_size > conf.max_aj_tasks) {
-         ERROR((SGE_EVENT, MSG_JOB_MORETASKSTHAN_U, conf.max_aj_tasks));
+         ERROR((SGE_EVENT, MSG_JOB_MORETASKSTHAN_U, u32c(conf.max_aj_tasks)));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          DEXIT;
          return STATUS_EUNKNOWN;

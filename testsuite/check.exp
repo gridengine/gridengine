@@ -6356,7 +6356,7 @@ proc compile_source { { do_only_install 0 } } {
      set found 0
      set hostarch ""
      foreach host $compile_arch_list {
-        if { [ string first $host $elem ] >= 0 }  {
+        if { [ string compare $host $elem ] == 0 }  {
            incr found 1
            set hostarch $host
         }

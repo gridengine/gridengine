@@ -1,3 +1,7 @@
+CR-2002-09-25-0  Testsuite  error when comparing host architectures and
+                            detecting duplicate compile hosts
+                 Bugfix:    
+
 CR-2002-09-24-1  Testsuite  Testsuite enhancement to test final packages
                  Enhancem.
                  IZ:        #369

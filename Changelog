@@ -6,9 +6,9 @@ MD-2004-11-16-0: Bugfix:    backup/restore does not work under Linux and others.
 
 SG-2004-11-16-0: Bugfix:    a cluster queue can be deleted, even though it is referenced
                  Changed:   qmaster
-                 Review:    pending
+                 Review:    EB
                  Issue:     1316
-                 Bugtraq:   pending
+                 Bugtraq:   6189289
 
 CR-2004-11-16-2: Enhancm.:  - updated qping man page for -dump option
                             - fixed usage output of qping
@@ -20,6 +20,7 @@ JG-2004-11-16-0: Bugfix:    Fixed spooling of subordinate queues.
                             Fixed a memory leak.
                  Review:    SG
                  Issue:     1336
+                 Bugtraq:   6194729
 
 CR-2004-11-16-0: Bugfix:    replaced u32 format string with U32CFormat in
                             scheduler message text

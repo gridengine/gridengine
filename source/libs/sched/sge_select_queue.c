@@ -2540,7 +2540,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
       qname = lGetString(qep, QU_full_name);
 
       if (skip_queue_list && lGetElemStr(skip_queue_list, CTI_name, qname)){
-         DPRINTF(("job category skip queue %s", qname));             
+         DPRINTF(("job category skip queue %s\n", qname));             
          continue;
       }
 
@@ -2550,7 +2550,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
       if (hep != NULL) {
 
          if (skip_host_list && lGetElemStr(skip_host_list, CTI_name, eh_name)){
-            DPRINTF(("job category skip host %s", eh_name));          
+            DPRINTF(("job category skip host %s\n", eh_name));          
             continue;
          }
          
@@ -2560,8 +2560,8 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
                                      hep);
 
          if (result != DISPATCH_OK) {
-            
-            if (skip_host_list) {
+
+            if (skip_host_list && result != DISPATCH_NEVER_JOB) { 
                lAddElemStr(&skip_host_list, CTI_name, eh_name, CTI_Type);
             }
 

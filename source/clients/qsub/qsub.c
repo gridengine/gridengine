@@ -190,6 +190,11 @@ char **argv
       SGE_EXIT(tmp_ret);
    }
 
+   if (set_sec_cred(job) != 0) {
+      fprintf(stderr, MSG_SEC_SETJOBCRED);
+      SGE_EXIT(1);
+   }
+
    /* Check is we're just verifying the job */
    just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY);
    DPRINTF (("Just verifying job\n"));

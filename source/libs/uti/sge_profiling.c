@@ -1499,7 +1499,7 @@ static void prof_info_init(prof_level level, pthread_t thread_id)
 void init_array(pthread_t num) {
 
    int i, c;
-   DENTER(TOP_LAYER,"init_array");
+   DENTER(CULL_LAYER,"init_array");
    if (sge_prof_array_initialized == 0) {
       ERROR((SGE_EVENT,"Profiling array is not initialized!\n"));
       DEXIT;

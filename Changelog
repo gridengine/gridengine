@@ -1,3 +1,8 @@
+AA-2004-07-13-0: Bugfix:    removed stat_log_time from qmon
+                 Issue:     1083
+                 Review:    CR
+                 Changed:   qmon
+                 
 AH-2004-07-13-0: Bugfix:    Revert change AH-2004-07-09-0. Bug #1113 is not fixed.A
                  Issue:     1113
                  Bugtraq:   5072481

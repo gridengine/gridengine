@@ -97,7 +97,6 @@ typedef struct _tCClEntry {
    int min_uid;
    int min_gid;
    String load_report_time;
-   String stat_log_time;
    String max_unheard;
    String reschedule_unknown;
    int loglevel;
@@ -200,10 +199,6 @@ XtResource ccl_resources[] = {
 
    { "load_report_time", "load_report_time", XtRString, 
       sizeof(String), XtOffsetOf(tCClEntry, load_report_time), 
-      XtRImmediate, NULL },
-
-   { "stat_log_time", "stat_log_time", XtRString, 
-      sizeof(String), XtOffsetOf(tCClEntry, stat_log_time), 
       XtRImmediate, NULL },
 
    { "max_unheard", "max_unheard", XtRString, 
@@ -358,8 +353,6 @@ static Widget cluster_max_jobs = 0;
 static Widget cluster_zombie_jobs = 0;
 static Widget cluster_load_report_time = 0;
 static Widget cluster_load_report_timePB = 0;
-static Widget cluster_stat_log_time = 0;
-static Widget cluster_stat_log_timePB = 0;
 static Widget cluster_max_unheard = 0;
 static Widget cluster_max_unheardPB = 0;
 static Widget cluster_reschedule_unknown = 0;
@@ -691,8 +684,6 @@ Widget parent
                            "cluster_load_report_time", &cluster_load_report_time,
                            "cluster_load_report_timePB", 
                                     &cluster_load_report_timePB,
-                           "cluster_stat_log_time", &cluster_stat_log_time,
-                           "cluster_stat_log_timePB", &cluster_stat_log_timePB,
                            "cluster_max_unheard", &cluster_max_unheard,
                            "cluster_max_unheardPB", &cluster_max_unheardPB,
                            "cluster_reschedule_unknown", &cluster_reschedule_unknown,
@@ -764,8 +755,6 @@ Widget parent
 
    XtAddCallback(cluster_load_report_timePB, XmNactivateCallback, 
                      qmonClusterTime, (XtPointer)cluster_load_report_time);
-   XtAddCallback(cluster_stat_log_timePB, XmNactivateCallback, 
-                     qmonClusterTime, (XtPointer)cluster_stat_log_time);
    XtAddCallback(cluster_max_unheardPB, XmNactivateCallback, 
                      qmonClusterTime, (XtPointer)cluster_max_unheard);
    XtAddCallback(cluster_reschedule_unknownPB, XmNactivateCallback, 
@@ -973,8 +962,6 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_max_u_jobs, mode);
    XtSetSensitive(cluster_max_jobs, mode);
    XtSetSensitive(cluster_zombie_jobs, mode);
-   XtSetSensitive(cluster_stat_log_time, mode);
-   XtSetSensitive(cluster_stat_log_timePB, mode);
    XtSetSensitive(cluster_max_unheard, mode);
    XtSetSensitive(cluster_max_unheardPB, mode);
    XtSetSensitive(cluster_shell_start_mode, mode);
@@ -1545,13 +1532,6 @@ int local
       }
       lSetString(ep, CF_value, clen->load_report_time);
 
-      ep = lGetElemStr(confl, CF_name, "stat_log_time");
-      if (check_white(clen->stat_log_time)) {
-         strcpy(errstr, "No whitespace allowed in value for stat_log_time");
-         goto error;
-      }
-      lSetString(ep, CF_value, clen->stat_log_time);
-
       ep = lGetElemStr(confl, CF_name, "max_unheard");
       if (check_white(clen->max_unheard)) {
          strcpy(errstr, "No whitespace allowed in value for max_unheard");
@@ -1989,9 +1969,6 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "load_report_time")))
       clen->load_report_time = XtNewString(lGetString(ep, CF_value));
 
-   if ((ep = lGetElemStr(confl, CF_name, "stat_log_time")))
-      clen->stat_log_time = XtNewString(lGetString(ep, CF_value));
-
    if ((ep = lGetElemStr(confl, CF_name, "max_unheard")))
       clen->max_unheard = XtNewString(lGetString(ep, CF_value));
 
@@ -2213,10 +2190,6 @@ tCClEntry *clen
    if (clen->load_report_time) {
       XtFree((char*)clen->load_report_time);
       clen->load_report_time = NULL;
-   }
-   if (clen->stat_log_time) {
-      XtFree((char*)clen->stat_log_time);
-      clen->stat_log_time = NULL;
    }
    if (clen->max_unheard) {
       XtFree((char*)clen->max_unheard);

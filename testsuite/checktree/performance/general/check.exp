@@ -44,9 +44,10 @@
 
 # Define the global veriables to give them back
 global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
-global check_init_level_procedure
+global check_init_level_procedure check_category
 
 set check_init_level_procedure "init_level"
+set check_category            "PERFORMANCE"
 set check_name                "general_performance"
 set check_description(0)       "<num_hosts> jobs, 1 sec sleeper"
 set check_description(1)       "<num_hosts> jobs, 2 sec sleeper"

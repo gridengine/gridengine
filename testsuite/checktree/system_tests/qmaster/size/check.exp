@@ -33,11 +33,13 @@
 
 # Define the global veriables to give them back
 global check_name check_description check_needs check_functions check_errno check_errstr 
+global check_category
 global check_root_access_needs
 global check_highest_level
 
 set check_root_access_needs  "yes"
 set check_name         "qmaster-size"
+set check_category     "COMPATIBILITY SYSTEM"
 set check_highest_level 400
 set check_description(0)    "check qmaster/schedd for memory leaks - functional test"
 set check_description(200)  "check qmaster/schedd for memory leaks - normal test"

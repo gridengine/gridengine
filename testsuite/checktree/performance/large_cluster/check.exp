@@ -33,6 +33,7 @@
 
 # define global variable in this namespace
 global check_name 
+global check_category
 global check_description 
 global check_needs
 global check_functions 
@@ -70,6 +71,7 @@ set check_init_level_procedure "large_cluster_init_level"
 
 # define test's name and run level descriptions
 set check_name            "large_cluster"
+set check_category        "PERFORMANCE"
 set check_highest_level   [expr ( [llength $CHECK_CORE_EXECD] - 2 + 300 ) ]
 for {set i 300} {$i <= $check_highest_level} {incr i} {
    set check_description($i) "check performance with [expr ( $i - 300 + 1 ) * $LARGE_CLUSTER_HOSTS_PER_HOST] queues"

@@ -34,7 +34,9 @@
 ##########################################################################
 #___INFO__MARK_END__
 global check_name check_description check_needs check_functions check_errno check_errstr 
+global check_category
 set check_name         "ckpt_migration_test"
+set check_category     "COMPATIBILITY SYSTEM"
 set check_description(0)  "MPI based parallel application with checkpointing and event based migration"
 set check_needs        "init_core_system"                   ;# dependencies of this check (name of other check)
 

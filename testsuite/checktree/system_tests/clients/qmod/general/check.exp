@@ -33,7 +33,9 @@
 
 # Define the global veriables to give them back
 global check_name check_description check_needs check_functions check_errno check_errstr row
+global check_category
 set check_name         "qmod_general"
+set check_category     "COMPATIBILITY SYSTEM"
 set check_root_access_needs "yes"
 
 set check_description(0)  "checking all options, except rescheduling (-r)"

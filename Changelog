@@ -1,10 +1,13 @@
+CR-2002-04-11-3: Testsuite: Merge of CR-2002-04-11-2, CR-2002-04-11-1 and
+                            CR-2002-04-11-0 from maintrunc
+
 EB-2002-04-11-0: Bugfix:    Solaris processor sets / Migration script
                             - fix: solaris psets won't be used
                             - fix: checkpointed job migration on bad exit state
                  Issue:     #229, #174
 
-JG-2002-04-11-0: Bugfix:  In simulation mode, job reports were not flushed 
-                          at (simulated) job end.
+JG-2002-04-11-0: Bugfix:    In simulation mode, job reports were not flushed 
+                            at (simulated) job end.
 
 JG-2002-04-08-0  Bugfix:    qrsh -h did debug output (a job object).
 

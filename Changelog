@@ -1,3 +1,6 @@
+RH-2004-08-16-0: Bugfix:     Typo in man qconf(1) fixed
+                 Changed:    qconf(1)
+
 CR-2004-08-13-0: Bugfix:     Fixed build on linuxamd
 
 AA-2004-08-12-0: Bugfix:     - qmon_help.ad help corrections

@@ -1041,7 +1041,7 @@ sge_init_share_tree_node_fields( lListElem *node,
    static int sn_adjusted_current_proportion_pos,
               sn_last_actual_proportion_pos, sn_sum_priority_pos,
               sn_job_ref_count_pos, sn_active_job_ref_count_pos,
-              sn_usage_list_pos, sn_temp_pos, sn_stt_pos, sn_ostt_pos,
+              sn_usage_list_pos, sn_stt_pos, sn_ostt_pos,
               sn_ltt_pos, sn_oltt_pos, sn_shr_pos, sn_ref_pos,
               sn_proportion_pos, sn_adjusted_proportion_pos, sn_target_proportion_pos,
               sn_current_proportion_pos, sn_adjusted_usage_pos, sn_combined_usage_pos,
@@ -1058,7 +1058,7 @@ sge_init_share_tree_node_fields( lListElem *node,
       sn_active_job_ref_count_pos = lGetPosViaElem(node, STN_active_job_ref_count);
       sn_usage_list_pos = lGetPosViaElem(node, STN_usage_list);
       sn_sum_priority_pos = lGetPosViaElem(node, STN_sum_priority);
-      sn_temp_pos = lGetPosViaElem(node, STN_temp);
+      /* sn_temp_pos = lGetPosViaElem(node, STN_temp); */
       sn_stt_pos = lGetPosViaElem(node, STN_stt);
       sn_ostt_pos = lGetPosViaElem(node, STN_ostt);
       sn_ltt_pos = lGetPosViaElem(node, STN_ltt);
@@ -1088,7 +1088,7 @@ sge_init_share_tree_node_fields( lListElem *node,
    lSetPosUlong(node, sn_active_job_ref_count_pos, 0);
    lSetPosList(node, sn_usage_list_pos, NULL);
    lSetPosUlong(node, sn_sum_priority_pos, 0);
-   lSetPosUlong(node, sn_temp_pos, 0);
+   /* lSetPosUlong(node, sn_temp_pos, 0); */
    lSetPosDouble(node, sn_stt_pos, 0);
    lSetPosDouble(node, sn_ostt_pos, 0);
    lSetPosDouble(node, sn_ltt_pos, 0);

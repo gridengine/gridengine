@@ -270,6 +270,11 @@ typedef struct {
  * sub-list per main list. If multiple sub-lists can be subsribed, the
  * construct has to be exetended.
  *
+ * ISSUES:
+ *  1416: the sgeE_PETASK_* list events are not handled correctly during
+ *        total update. It works fine with all other events. The problem
+ *        is, that an update of the jobs filters for job and ja_task, but
+ *        not for PE tasks.
  *
  * SEE ALSO:
  *     evm/sge_event_master/list_select()

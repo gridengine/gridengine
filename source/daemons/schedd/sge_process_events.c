@@ -1045,7 +1045,11 @@ int subscribe_default_scheduler(void)
    sge_mirror_subscribe(SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_all_queue, what_queue);
    sge_mirror_subscribe(SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(SGE_TYPE_HGROUP,         NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, what_pet);
+
+   /* SG: this is not suported in the event master right now, for a total update 
+      we have to fix it for goood some time. Issue: 1416*/
+/*   sge_mirror_subscribe(SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, what_pet); */
+   sge_mirror_subscribe(SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, NULL);
   
    /* event types with callbacks */
 

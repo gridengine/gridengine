@@ -1,4 +1,11 @@
-AS-2005-01-25-1  Bugfix:    set file permissions in destination directory"
+SG-2005-01-25-0: Bugfix:    the scheduler crashed in case of a restart and
+                            a running MPI job.
+                 Changed:   scheduler
+                 Review:    EB
+                 Issue:     1416
+                 Bugtraq:   6221167
+
+AS-2005-01-25-1: Bugfix:    set file permissions in destination directory"
                  Changed:   scripts/distinst
                  Review:    MD
 

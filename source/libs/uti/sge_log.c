@@ -436,6 +436,8 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    char levelstring[32*4];
    trace_func_type t;
 
+   DENTER(TOP_LAYER, "sge_log");
+
    /* Make sure to have at least a one byte logging string */
    if (!mesg || mesg[0] == '\0') {
       sprintf(buf, MSG_LOG_CALLEDLOGGINGSTRING_S, 
@@ -508,6 +510,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
       sge_do_log(log_level, levelchar, mesg, newline);
    }
 
+   DEXIT;
    return 0;
 } /* sge_log() */
 

@@ -934,6 +934,8 @@ const char *sge_host_resolve_name_local(const char *unresolved)
    char *apath;
    static int read_file = 0;
 
+   DENTER(TOP_LAYER, "sge_host_resolve_name_local");
+
    if (!read_file) {
       apath = sge_get_alias_path();
       sge_host_list_read_aliasfile(apath);
@@ -947,6 +949,8 @@ const char *sge_host_resolve_name_local(const char *unresolved)
    } else {
       DPRINTF(("no aliased name from %s\n", unresolved));
    }
+
+   DEXIT;
    return s;
 }
 

@@ -31,9 +31,11 @@
 *******************************************************************************/
 void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)
 {
+   DENTER(TOP_LAYER, "sge_mutex_lock");
    DPRINTF(("%s() line %d: about to lock mutex \"%s\"\n", func, line, mutex_name));
    pthread_mutex_lock(mutex);
    DPRINTF(("%s() line %d: locked mutex \"%s\"\n", func, line, mutex_name));
+   DEXIT;
 }
 
 /****** sge_mtutil/sge_mutex_unlock() ********************************************
@@ -65,9 +67,11 @@ void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_
 *******************************************************************************/
 void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)
 {
+   DENTER(TOP_LAYER, "sge_mutex_unlock");
 /* ?? is this relevant ??  DPRINTF(("%s() line %d: about to unlock mutex \"%s\"\n", func, line, mutex_name)); */
    pthread_mutex_unlock(mutex);
    DPRINTF(("%s() line %d: unlocked mutex \"%s\"\n", func, line, mutex_name));
+   DEXIT;
 }
 
 

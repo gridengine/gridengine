@@ -324,6 +324,8 @@ lList *order_list
 ) {
    lListElem *job, *ja_task;
 
+   DENTER(TOP_LAYER, "create_delete_job_orders");
+
    for_each(job, finished_jobs) {
       for_each(ja_task, lGetList(job, JB_ja_tasks)) {
          DPRINTF(("DELETE JOB "u32"."u32"\n", lGetUlong(job, JB_job_number),
@@ -333,6 +335,7 @@ lList *order_list
       }
    }
 
+   DEXIT;
    return order_list;
 }
 

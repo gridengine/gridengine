@@ -345,6 +345,8 @@ execd_get_acct_multiplication_factor(const lListElem *pe,
 {
    int factor = 1;
 
+   DENTER(TOP_LAYER, "execd_get_acct_multiplication_factor");
+
    /* task of tightly integrated job: default factor 1 is OK - skip it */
    if (!task) {
       /* only parallel jobs need factors != 0 */
@@ -363,5 +365,6 @@ execd_get_acct_multiplication_factor(const lListElem *pe,
 
    DPRINTF(("reserved usage will be multiplied by %d\n", factor));
 
+   DEXIT;
    return factor;
 }

@@ -1,3 +1,7 @@
+AD-2003-11-10-2: Cleanup:   RMON macros like 'DPRINTF' or 'DTRACE' must not
+                            be used without 'DENTER/DEXIT'.
+                 Changed:   rmon
+
 JG-2003-11-10-0: Bugfix:    Fixed the build
                  Enhancem.: Added information (host load and consumables) to
                             reporting file. Which variables are to report is 

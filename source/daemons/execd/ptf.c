@@ -343,6 +343,8 @@ static lList *ptf_build_usage_list(char *name, lList *old_usage_list)
    lList *usage_list;
    lListElem *usage;
 
+   DENTER(TOP_LAYER, "ptf_build_usage_list");
+
    if (old_usage_list) {
       usage_list = lCopyList(name, old_usage_list);
       for_each(usage, usage_list) {
@@ -386,6 +388,7 @@ static lList *ptf_build_usage_list(char *name, lList *old_usage_list)
 #endif
    }
 
+   DEXIT;
    return usage_list;
 }
 

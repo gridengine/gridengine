@@ -288,6 +288,8 @@ sge_next_flush(int now)
 
    lListElem *event_client;
    
+   DENTER(TOP_LAYER, "sge_next_flush");
+
    for_each (event_client, EV_Clients) {
       DPRINTF(("next flush for %s/"u32" at "u32"\n",
          lGetString(event_client, EV_name),
@@ -306,6 +308,7 @@ sge_next_flush(int now)
       return min_next_send;
    }
 
+   DEXIT;
    return 0;
 }   
 

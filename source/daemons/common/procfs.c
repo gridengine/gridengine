@@ -251,6 +251,8 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
    gid_t gids[4];
 #endif
 
+   DENTER(TOP_LAYER, "procfs_kill_addgrpid");
+
    /* quick return in case of invalid add. group id */
    if (add_grp_id == 0)
       return;
@@ -410,6 +412,7 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
    }
    pt_close();
    free(list);
+   DEXIT;
 }
 
 int pt_open(void)

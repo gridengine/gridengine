@@ -362,13 +362,18 @@ static void mwrite(char *message)
 {
    static u_long traceid = 0;
 
+#if !defined(DARWIN)
    flockfile(rmon_fp);
+#endif
 
    fprintf(rmon_fp, "%6ld %6d %ld ", traceid++, (int)getpid(), (long int)pthread_self());
    fprintf(rmon_fp, "%s", message);
    fflush(rmon_fp);
 
+#if !defined(DARWIN)
    funlockfile(rmon_fp);
+#endif
+
    return;
 } /* mwrite() */
 

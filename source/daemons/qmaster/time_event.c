@@ -247,6 +247,8 @@ const char *sval
    static int seqno = 0;
    lListElem *event;
 
+   DENTER(TOP_LAYER, "te_add");
+
    event = lCreateElem(TE_Type);
    lSetUlong(event, TE_type, type);
    lSetUlong(event, TE_when, when);
@@ -269,6 +271,8 @@ const char *sval
          lGetUlong(event, TE_uval1),
          sval?sval:MSG_SMALLNULL,
          lGetUlong(event, TE_seqno))); 
+
+   DEXIT;
    return;
 }
 

@@ -170,10 +170,15 @@ void trace_resources(lList *resources)
    lListElem *ep;
    char *ret;
    
+   DENTER(TOP_LAYER, "trace_resources");
+
    for_each (ep, resources) {
       ret = trace_resource(ep);
       DPRINTF((ret));
    }
+
+   DEXIT;
+   return;
 }
 
 /****** sge_select_queue/sge_select_queue() ************************************

@@ -1807,6 +1807,8 @@ static int japi_drmaa_path2sge_job(drmaa_job_template_t *drmaa_jt, lListElem *jt
 {
    lListElem *ep;
 
+   DENTER(TOP_LAYER, "japi_drmaa_path2sge_job");
+
    lSetList(jt, nm, NULL);
    if ((ep=lGetElemStr(drmaa_jt->strings, VA_variable, attribute_key ))) {
       dstring ds = DSTRING_INIT;
@@ -1849,6 +1851,7 @@ static int japi_drmaa_path2sge_job(drmaa_job_template_t *drmaa_jt, lListElem *jt
       sge_dstring_free(&ds);
    }
 
+   DEXIT;
    return DRMAA_ERRNO_SUCCESS;
 }
 

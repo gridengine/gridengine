@@ -917,6 +917,8 @@ void update_reschedule_unknown_timout_values(const char *config_name)
 {
    lListElem *host = NULL;
 
+   DENTER(TOP_LAYER, "update_reschedule_unknown_timout_values");
+
    if (strcmp(SGE_GLOBAL_NAME, config_name) == 0) {
       lListElem *global_exechost_elem   = NULL;
       lListElem *template_exechost_elem = NULL;
@@ -938,6 +940,9 @@ void update_reschedule_unknown_timout_values(const char *config_name)
          update_reschedule_unknown_timeout(host);
       }       
    }
+
+   DEXIT;
+   return;
 }
 
 /****** qmaster/reschedule/update_reschedule_unknown_timeout() ****************

@@ -902,6 +902,8 @@ void job_lists_print(lList **job_list[])
    lListElem *job;
    int i;
 
+   DENTER(TOP_LAYER, "job_lists_print");
+
    for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
       u_long32 ids = 0;
 
@@ -915,6 +917,9 @@ void job_lists_print(lList **job_list[])
             lGetNumberOfElem(*(job_list[i])), ids));
       }
    } 
+
+   DEXIT;
+   return;
 } 
 
 lSortOrder *sge_job_sort_order(

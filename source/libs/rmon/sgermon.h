@@ -42,47 +42,43 @@
    static const int xaybzc = layer;        \
                                            \
    rmon_mopen(&argc,argv,program);         \
-   if (rmon_condition(xaybzc, TRACE))       \
+   if (rmon_condition(xaybzc, TRACE))      \
       rmon_menter (SGE_FUNC)
  
 #define DENTER(layer, function)             \
    static const char SGE_FUNC[] = function; \
-   static const int xaybzc = layer;               \
+   static const int xaybzc = layer;         \
                                             \
-   if (rmon_condition(xaybzc, TRACE))        \
+   if (rmon_condition(xaybzc, TRACE))       \
       rmon_menter (SGE_FUNC)
 
 #define DEXIT                                   \
    if (rmon_condition(xaybzc, TRACE))           \
       rmon_mexit(SGE_FUNC, __FILE__, __LINE__)
 
-#define DTRACE                                   \
-   if (rmon_condition(TOP_LAYER, TRACE))         \
+#define DTRACE                                \
+   if (rmon_condition(xaybzc, TRACE))         \
       rmon_mtrace(SGE_FUNC, __FILE__, __LINE__)
 
-#define DPRINTF(msg)                           \
-   if (rmon_condition(TOP_LAYER, INFOPRINT))   \
+#define DPRINTF(msg)                        \
+   if (rmon_condition(xaybzc, INFOPRINT))   \
       rmon_mprintf msg
 
-#define DTIMEPRINTF(msg)                   \
-   if (rmon_condition(TOP_LAYER, TIMING))  \
+#define DTIMEPRINTF(msg)                \
+   if (rmon_condition(xaybzc, TIMING))  \
       rmon_mprintf msg
 
-#define DSPECIALPRINTF(msg)                 \
-   if (rmon_condition(TOP_LAYER, SPECIAL))  \
+#define DSPECIALPRINTF(msg)              \
+   if (rmon_condition(xaybzc, SPECIAL))  \
       rmon_mprintf msg
 
-#define ISTRACE (rmon_condition(TOP_LAYER, TRACE))
+#define ISTRACE (rmon_condition(xaybzc, TRACE))
 
 #define TRACEON  (rmon_is_enabled() && !rmon_mliszero(&DEBUG_ON))
 
 #define DCLOSE
 
-#ifndef __INSURE__
-#   define SGE_EXIT(x) DTRACE, sge_exit(x)
-#else
-#   define SGE_EXIT(x) sge_exit(x)
-#endif
+#define SGE_EXIT(x) sge_exit(x)
 
 #else /* NO_SGE_COMPILE_DEBUG */
 

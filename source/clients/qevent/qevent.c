@@ -130,6 +130,8 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
    dstring buffer_wrapper;
 
 
+   DENTER(TOP_LAYER, "print_jatask_event");
+
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
    
    timestamp = sge_get_gmt();
@@ -195,9 +197,11 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
    }
    /* create a callback error to test error handling */
    if(type == SGE_TYPE_GLOBAL_CONFIG) {
+      DEXIT;
       return false;
    }
    
+   DEXIT;
    return true;
 }
 

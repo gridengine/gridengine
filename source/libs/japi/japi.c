@@ -281,21 +281,25 @@ static void japi_once_init(void)
 }
 
 
-static void japi_inc_threads(const char *SGE_FUNC)
+static void japi_inc_threads(const char *func)
 {
+   DENTER(TOP_LAYER, "japi_inc_threads");
    JAPI_LOCK_REFCOUNTER();
    japi_threads_in_session++;
-   DPRINTF(("%s(): japi_threads_in_session++ %d\n", SGE_FUNC, japi_threads_in_session));
+   DPRINTF(("%s(): japi_threads_in_session++ %d\n", func, japi_threads_in_session));
    JAPI_UNLOCK_REFCOUNTER();
+   DEXIT;
 }
 
-static void japi_dec_threads(const char *SGE_FUNC)
+static void japi_dec_threads(const char *func)
 {
+   DENTER(TOP_LAYER, "japi_dec_threads");
    JAPI_LOCK_REFCOUNTER();
    if (--japi_threads_in_session == 0)
       pthread_cond_signal(&japi_threads_in_session_cv);
-   DPRINTF(("%s(): japi_threads_in_session-- %d\n", SGE_FUNC, japi_threads_in_session));
+   DPRINTF(("%s(): japi_threads_in_session-- %d\n", func, japi_threads_in_session));
    JAPI_UNLOCK_REFCOUNTER();
+   DEXIT;
 }
 
 

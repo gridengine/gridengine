@@ -206,7 +206,7 @@ done
 # These files and dirs are owned by root for security reasons
 for f in $SECFILELIST; do
    if [ -d $f -o -f $f ]; then
-      SetFilePerm $f root root
+      SetFilePerm $f root $ROOTGROUP
    fi
 done
 

@@ -1,3 +1,7 @@
+EB-2004-10-05-0: Enhancem.: added new module test which especially tests
+                            the modifications done with EB-2004-09-15-0
+                 Changed:   none
+
 CR-2004-10-05-0: Bugfix:    o removed unnecessary logging information in
                               commlib
                             o prepare_enroll() will now terminate application

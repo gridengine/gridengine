@@ -5738,7 +5738,7 @@ proc compile_source {} {
                set found 1
             }
          }
-         if ($found != 1) {
+         if {$found != 1} {
             append html_body [ create_html_text "ERROR installing binaries for host $elem !!!" ]
          }
          set was_error 1

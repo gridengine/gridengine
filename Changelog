@@ -1,3 +1,7 @@
+CR-2002-07-31-0  Bugfix:    addend missing #ifdef __SGE_NO_USERMAPPING__ 
+                            lines to preserve sge_options[] array
+                 Changed:   qconf          
+
 AH-2002-07-29-1  Doc:       Describe the 'all' keyword for queue_list in
                             sge_pe(5) and checkpoint(5).
                  Issue:     #319

@@ -1358,6 +1358,15 @@ void shepherd_deliver_signal(int sig, int pid, int *postponed_signal,
    }
 
    /*
+    * When notify is used for SIGSTOP the SIGCONT might be sent by execd before
+    * the actual SIGSTOP has been delivered. We must clean this state at this point
+    * otherwise the next SIGSTOP signal will be delivered without a notify because 
+    * it is then seen just as repeated initiation of notify mechanism 
+    */
+   if (sig == SIGCONT && notify && *postponed_signal == SIGSTOP)
+      *postponed_signal = 0;
+
+   /*
     * Job notification
     */
    if (sig == SIGSTOP || sig == SIGKILL) {
@@ -1389,7 +1398,7 @@ void shepherd_deliver_signal(int sig, int pid, int *postponed_signal,
                shepherd_trace_sprintf("termination in progress - ignoring %s "
                                       "notification", 
                                       sge_sys_sig2str(*postponed_signal)); 
-            } 
+            }
             
             alarm(remaining_alarm);
             return;
@@ -1613,7 +1622,7 @@ char *childname            /* "job", "pe_start", ...     */
    int ckpt_cmd_pid, migr_cmd_pid;
    int rest_ckpt_interval;
    int inArena, inCkpt, kill_job_after_checkpoint, job_pid;
-   int postponed_signal = 0;
+   int postponed_signal = 0; /* used for implementing SIGSTOP/SIGKILL notifiy mechanism */
    int remaining_alarm;
    pid_t ctrl_pid[3];
 

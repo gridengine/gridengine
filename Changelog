@@ -10,6 +10,7 @@ AH-2003-04-07-0  Enhancem:  - implemented drmaa_job_ps()
                               library session data
                             - ensure low level GDI errors/warnings are not
                               printed but reported in DRMAA diagnosis buffer
+                 Review:    JG
 
 EB-2003-04-06-0  Testsuite: Added new testsuite test for issue 509
                  Issue:     520

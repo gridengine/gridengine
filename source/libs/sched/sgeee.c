@@ -186,8 +186,8 @@ static int sge_calc_sharetree_targets(lListElem *root, sge_Sdescr_t *lists,
 static int sge_init_share_tree_node_fields( lListElem *node, void *ptr );
 static int sge_init_share_tree_nodes( lListElem *root );
 
-static void free_fcategories(lList **fcategories);
-static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList **root, int dependent); 
+static void free_fcategories(lList **fcategories, sge_ref_list_t ** ref_array);
+static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList **root, sge_ref_list_t ** ref_array, int dependent); 
 static void copy_ftickets(sge_ref_list_t *source, sge_ref_list_t *dest);
 static void destribute_ftickets(lList *root, int dependent);
 
@@ -1893,10 +1893,20 @@ static void destribute_ftickets(lList *root, int dependent){
 *     ??? 
 *
 *******************************************************************************/
-static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList **fcategories, int dependent) {
+static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList **fcategories, sge_ref_list_t ** ref_array, int dependent) {
    lListElem *current;
    u_long32 job_ndx; 
+   int ref_array_pos = 0;
+   
    DENTER(TOP_LAYER,"build_functional_categories");
+
+   *ref_array = malloc(sizeof(sge_ref_list_t) * num_jobs);
+   if (*ref_array == NULL) {
+      DEXIT;
+      return;
+   }
+   
+   memset(*ref_array, 0, sizeof(sge_ref_list_t) * num_jobs);
 
    for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
       sge_ref_t *jref = &job_ref[job_ndx];
@@ -1929,7 +1939,7 @@ static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList 
 
          if (current == NULL) {   /* create new category */
             if (!(current = lAddElemUlong(fcategories, FCAT_job_share, job_shares, FCAT_Type))) {
-               free_fcategories(fcategories);
+               free_fcategories(fcategories, ref_array);
                /* maybe an error code */
                DEXIT;
                return;
@@ -1944,27 +1954,21 @@ static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList 
 
          {  /* create new job entry */ 
             sge_ref_list_t  *cur_ref_entry = NULL;
-            sge_ref_list_t *new_elem = malloc(sizeof(sge_ref_list_t));
+            sge_ref_list_t *new_elem = &((*ref_array)[ref_array_pos++]);
 
-            if(new_elem == NULL){
-               free_fcategories(fcategories);
-               DEXIT;
-               return;
-            } 
 
-            memset(new_elem, 0, sizeof(sge_ref_list_t));
             new_elem->ref = jref;
 
             /* find the location for the new element */
             cur_ref_entry = lGetRef(current, FCAT_jobrelated_ticket_last);
 
-            if(dependent)
+            if (dependent) {
+               while (cur_ref_entry != NULL) {
+                  sge_ref_t *ref = cur_ref_entry->ref;
 
-            while (cur_ref_entry != NULL) {
-               sge_ref_t *ref = cur_ref_entry->ref;
-               if (dependent){
-                  if (ref->tickets > jref->tickets)
+                  if (ref->tickets > jref->tickets) {
                      break;
+                  }   
                   else if (ref->tickets == jref->tickets){
                      if (lGetUlong(ref->job, JB_job_number) < lGetUlong(jref->job, JB_job_number))
                         break;
@@ -1972,18 +1976,10 @@ static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList 
                            && (REF_GET_JA_TASK_NUMBER(ref) < REF_GET_JA_TASK_NUMBER(jref)))
                         break;
                   }
+
+                  cur_ref_entry = cur_ref_entry->prev;
                }
-/*               else{
-                  if (lGetUlong(ref->job, JB_job_number) < lGetUlong(jref->job, JB_job_number))
-                     break;
-                  else if ((lGetUlong(ref->job, JB_job_number) == lGetUlong(jref->job, JB_job_number)) 
-                        && (REF_GET_JA_TASK_NUMBER(ref) < REF_GET_JA_TASK_NUMBER(jref)))
-                     break;
-
-               }*/
-               cur_ref_entry = cur_ref_entry->prev;
             }
-
 
             /* insert element into the list */ 
             if (cur_ref_entry == NULL) {
@@ -2008,7 +2004,7 @@ static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList 
                if(cur_ref_entry->next != NULL){
                   cur_ref_entry->next->prev = new_elem;
                }
-               else{
+               else { 
                   /* element is the last in the list */
                   lSetRef(current, FCAT_jobrelated_ticket_last, new_elem);
                }
@@ -2039,20 +2035,11 @@ static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList 
 *       in the job lists. 
 *
 *******************************************************************************/
-static void free_fcategories(lList **fcategories) {
+static void free_fcategories(lList **fcategories, sge_ref_list_t ** ref_array) {
 
    lListElem *fcategory;
-   sge_ref_list_t *current=NULL;
-   sge_ref_list_t *tmp = NULL;
 
    for_each(fcategory, *fcategories) {
-      current = lGetRef(fcategory, FCAT_jobrelated_ticket_last);
-
-      while(current != NULL){
-         tmp = current;
-         current = current->prev;
-         free(tmp);
-      }
       lSetRef(fcategory, FCAT_jobrelated_ticket_last, NULL);
       lSetRef(fcategory, FCAT_jobrelated_ticket_first, NULL);      
       lSetRef(fcategory, FCAT_user, NULL);
@@ -2060,7 +2047,7 @@ static void free_fcategories(lList **fcategories) {
       lSetRef(fcategory, FCAT_project, NULL);
    }
    *fcategories= lFreeList(*fcategories);
-
+   FREE(*ref_array);
 
 }
 
@@ -3115,19 +3102,19 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          sge_ref_t **sort_list=NULL;
          lList *fcategories = NULL;
 
-         int i=0;
+         u_long32 i=0;
          
          double weight[k_last];
 
-
+         sge_ref_list_t *ref_array = NULL;
          double pending_user_fshares = sum_of_user_functional_shares;
          double pending_proj_fshares = sum_of_project_functional_shares;
          double pending_dept_fshares = sum_of_department_functional_shares;
          double pending_job_fshares = sum_of_job_functional_shares;
-         int max =  MIN(num_queued_jobs, sconf_get_max_functional_jobs_to_schedule());
+         u_long32 max =  MIN(num_queued_jobs, sconf_get_max_functional_jobs_to_schedule());
 
-         sort_list = malloc(max * sizeof(*sort_list)); 
-         build_functional_categories(job_ref, num_jobs, &fcategories, hierarchy[policy_ndx].dependent);
+         sort_list = malloc(max * sizeof(sge_ref_t *));
+         build_functional_categories(job_ref, num_jobs, &fcategories, &ref_array, hierarchy[policy_ndx].dependent);
          
          if((sort_list == NULL) || (fcategories == NULL)){
             /* error message to come */
@@ -3140,13 +3127,13 @@ sge_calc_tickets( sge_Sdescr_t *lists,
             }   
 
             if (fcategories != NULL) {
-               free_fcategories(&fcategories);
+               free_fcategories(&fcategories, &ref_array);
             }
             
             DEXIT;
             return sge_scheduling_run;
          }
-        
+
          get_functional_weighting_parameters(1, 1, 1, 1, weight);
 
          /* Loop through all the jobs calculating the functional tickets and
@@ -3156,7 +3143,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
          for(i=0; i<max; i++) {
             double ftickets, max_ftickets=-1;
-            u_long jid, save_jid=0, save_tid=0;
+            u_long32 jid, save_jid=0, save_tid=0;
             lListElem *current = NULL;
             lListElem *max_current = NULL;
 
@@ -3208,7 +3195,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                sge_ref_list_t *tmp =lGetRef(max_current, FCAT_jobrelated_ticket_first);  
                copy_ftickets (tmp, tmp->next);
                lSetRef(max_current, FCAT_jobrelated_ticket_first, tmp->next);  
-               free(tmp);
+               
                if(lGetRef(max_current, FCAT_jobrelated_ticket_first) == NULL){
                   lSetRef(max_current, FCAT_jobrelated_ticket_last,  NULL);
                   lSetRef(current, FCAT_user, NULL);
@@ -3249,7 +3236,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          }
          /* free the allocated memory */
          FREE(sort_list);
-         free_fcategories(&fcategories);
+         free_fcategories(&fcategories, &ref_array);
       }
 
             break;

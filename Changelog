@@ -1,3 +1,8 @@
+SG-2004-03-10-0: Bugfix:    scheduler crashed during functional ticket computation
+                            on AMD64 - linux
+                 Changed:   scheduler
+                 Review:    CR
+
 EB-2004-03-10-0: Bugfix:    qconf -mq rejects valid configuration
                  Issue:     815
                  Changed:   qconf

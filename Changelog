@@ -7,7 +7,10 @@ JG-2003-09-29-0: Bugfix:    statistics file hostload twice instead of load and
                             output file instead of overwriting it.
                             In continuous running mode, the file is closed 
                             between two output operations.
-                 Review:    AA
+                 Enhancem.: qrsh: if ssh -t was used as transport, the pseudo
+                            terminal created by ssh wasn't attached to the
+                            executed command.
+                 Review:    AA, AS
                  Changed:   sge_qmaster, sge_share_mon
 
 SG-2003-09-15-2: Bugfix:    The running ticket update did not work correctly

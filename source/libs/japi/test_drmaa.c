@@ -51,6 +51,8 @@
 #include "rmon_monitoring_level.h"
 #include "sgermon.h"
 
+#include "uti/sge_profiling.h"
+
 #define JOB_CHUNK 8
 #define NTHREADS 3
 #define NBULKS 3

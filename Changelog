@@ -1,3 +1,5 @@
+JG-2004-11-15-0: Bugfix:    Fixed broken build.
+
 DT-2004-11-12-0: Bugfix:    o qmaster now uses very little memory for
                               calculating subordinate queue suspension.
                             o qmaster now ignores NULL job ids.

@@ -60,6 +60,8 @@
 #include "sge_feature.h"
 #include "sge_bootstrap.h"
 
+#include "uti/sge_profiling.h"
+
 #include "gdi/msg_gdilib.h"
 
 static void default_exit_func(int i);

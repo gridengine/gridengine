@@ -4446,6 +4446,7 @@ proc compile_source {} {
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
    global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR
 
+   
 
    set check_name "compile_source"
    set CHECK_CUR_PROC_NAME "compile_source"
@@ -4471,6 +4472,15 @@ proc compile_source {} {
        mail_report $mail_subject "$mail_body host list to compile for unknown - check defaults file"
        return -1
    }
+
+   if {[file isdirectory "$CHECK_PROTOCOL_DIR"] != 1} {
+      set catch_return [ catch {  file mkdir "$CHECK_PROTOCOL_DIR" } ]
+      if { $catch_return != 0 } {
+           puts $CHECK_OUTPUT "could not create directory \"$CHECK_PROTOCOL_DIR\""
+           return -1
+      } 
+   }
+
 
    # shutdown eventually running system
    shutdown_core_system

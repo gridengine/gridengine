@@ -163,7 +163,14 @@ grep '^admin_user'              $2 >> $3
 grep '^qlogin_command'          $2 >> $3
 grep '^qlogin_daemon'           $2 >> $3
 grep '^rlogin_daemon'           $2 >> $3
-grep '^default_domain'          $2 >> $3
+
+grep '^default_domain' $2 2>&1 >/dev/null
+if [ $? != 0 ]; then
+   echo "default_domain            none" >> $3
+else
+   grep '^default_domain'          $2 >> $3
+fi
+
 
 # Try to set "ignore_fqdn" from SGE 5.2.x "qmaster_params" section
 #
@@ -202,3 +209,11 @@ if [ $? != 0 ]; then
 else
    grep '^max_u_jobs'           $2 >> $3
 fi
+
+grep '^max_jobs' $2 2>&1 >/dev/null
+if [ $? != 0 ]; then
+   echo "max_jobs                  0" >> $3
+else
+   grep '^max_jobs'           $2 >> $3
+fi
+

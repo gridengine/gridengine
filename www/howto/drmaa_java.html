@@ -13,10 +13,9 @@
 
    <P STYLE="margin-bottom: 0cm">
       This guide is a tutorial for getting started programming with the DRMAA
-      Java language binding.  It assumes that you already know what DRMAA is and
-      know how to find and install the DRMAA Java language binding for the Grid
-      Engine 6.0 release.  If you do not already know these things, try these
-      web sites:
+      Java<sup>TM</SUP>sup> language binding.  It assumes that you already know
+      what DRMAA is and know how to find and install the Grid Engine 6.0u2
+      release.  If you do not already know these things, try these web sites:
    </P>
 
    <UL>
@@ -76,14 +75,14 @@
 04:
 05: public class Howto1 {
 06:    public static void main (String[] args) {
-07:       DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
-08:       DRMAASession session = factory.getSession ();
+07:       SessionFactory factory = SessionFactory.getFactory ();
+08:       Session session = factory.getSession ();
 09:
 10:       try {
 11:          session.init (null);
 12:          session.exit ();
 13:       }
-14:       catch (DRMAAException e) {
+14:       catch (DrmaaException e) {
 15:          System.out.println ("Error: " + e.getMessage ());
 16:       }
 17:    }
@@ -92,16 +91,16 @@
 
    <P STYLE="margin-bottom: 0cm">
       Everything that you as a programmer will do with DRMAA, you will do
-      through a DRMAASession object.  You will get the DRMAASession object from
-      a DRMAASessionFactory.  You will get the DRMAASessionFactory from the
-      static DRMAASessionFactory.getFactory() method.  The reason for this
+      through a Session object.  You will get the Session object from
+      a SessionFactory.  You will get the SessionFactory from the
+      static SessionFactory.getFactory() method.  The reason for this
       chain is that the org.ggf.drmaa.* classes should be considered an
       immutable package to be used by every DRMAA Java language binding
       implementation.  Because the package is immutable, to load a specific
-      implementation, the DRMAASessionFactory uses a system property to find
+      implementation, the SessionFactory uses a system property to find
       the implementation's session factory, which it then loads.  That session
       factory is then responsible for creating the session in whatever why it
-      sees fit.  Without the session factory, the DRMAASession would have to
+      sees fit.  Without the session factory, the Session would have to
       do that work, and the implementation-defined session object would have to
       be instantiated with some predefined constructor signature.  With the
       session factory, the implementation is free to define for itself how the
@@ -111,9 +110,9 @@
 
    <P STYLE="margin-bottom: 0cm">
       Now let's look at the code.  First, on line 7, we get a session factory
-      instance with DRMAASessionFactory.getFactory(), and on line 8 we get the
-      session instance with DRMAASessionFactory.getSession().  Once we have the
-      session, we can initialize it on line 11 by calling DRMAASession.init().
+      instance with SessionFactory.getFactory(), and on line 8 we get the
+      session instance with SessionFactory.getSession().  Once we have the
+      session, we can initialize it on line 11 by calling Session.init().
       We pass in <CODE>null</CODE> as the contact string because the C binding
       upon which the Java language binding is built ignores the contact string
       altogether.  The plan is that at some point in the future the contact
@@ -121,28 +120,28 @@
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      DRMAASession.init() creates a session and starts an event client listener
+      Session.init() creates a session and starts an event client listener
       thread.  The session is used for organizing jobs submitted through DRMAA,
       and the thread is used to receive updates from the queue master about the
-      state of jobs and the system in general.  Once DRMAASession.init() has
+      state of jobs and the system in general.  Once Session.init() has
       been called successfully, it is the responsibility of the calling
-      application to also call DRMAASession.exit() before terminating.  If an
-      application does not call DRMAASession.exit() before terminating, session
+      application to also call Session.exit() before terminating.  If an
+      application does not call Session.exit() before terminating, session
       state may be left behind in the user's home directory (under .sge/drmaa),
       and the queue master may be left with a dead event client handle, which
       can decrease queue master performance.  I recommend using the
-      Runtime.addShutdownHook () method to make sure DRMAASession.exit() gets
+      Runtime.addShutdownHook () method to make sure Session.exit() gets
       called.
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      At the end of our program, on line 12, we call DRMAASession.exit().
-      DRMAASession.exit() cleans up the session and stops the event client
+      At the end of our program, on line 12, we call Session.exit().
+      Session.exit() cleans up the session and stops the event client
       listener thread.  Most other DRMAA methods must be called before
-      DRMAASession.exit().  Some functions, like DRMAASession.getContact(), can
+      Session.exit().  Some functions, like Session.getContact(), can
       be called after exit(), but these functions only provide general
-      information.  Any function that does work, such as DRMAASession.runJob()
-      or DRMAASession.wait() must be called before DRMAASession.exit() is
+      information.  Any function that does work, such as Session.runJob()
+      or Session.wait() must be called before Session.exit() is
       called.  If such a function is called after exit() is called, it will
       throw a NoActiveSessionException.
    </P>
@@ -166,23 +165,23 @@
 04: 
 05: public class Howto2 {
 06:    public static void main (String[] args) {
-07:       DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
-08:       DRMAASession session = factory.getSession ();
+07:       SessionFactory factory = SessionFactory.getFactory ();
+08:       Session session = factory.getSession ();
 09:       
 10:       try {
 11:          session.init (null);
 12:          JobTemplate jt = session.createJobTemplate ();
 13:          jt.setRemoteCommand ("sleeper.sh");
-14:          jt.setInputParameters (new String[] {"5"});
+14:          jt.setArgs (new String[] {"5"});
 15:          
 16:          String id = session.runJob (jt);
 17:          
 18:          System.out.println ("Your job has been submitted with id " + id);
 19:          
-20:          jt.delete ();
+20:          session.deleteJobTemplate (jt);
 21:          session.exit ();
 22:       }
-23:       catch (DRMAAException e) {
+23:       catch (DrmaaException e) {
 24:          System.out.println ("Error: " + e.getMessage ());
 25:       }
 26:    }
@@ -194,7 +193,7 @@
       What's different is in lines 12-20.  On line 12 we ask DRMAA to allocate a
       JobTemplate for us.  A JobTemplate is an Object used to store
       information about a job to be submitted.  The same template can be reused
-      for multiple calls to DRMAASession.runJob() or DRMAASession.runBulkJobs().
+      for multiple calls to Session.runJob() or Session.runBulkJobs().
    </P>
 
    <P STYLE="margin-bottom: 0cm">
@@ -211,7 +210,7 @@
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      On line 14 we set the inputParameters attribute.  This
+      On line 14 we set the args attribute.  This
       attribute tells DRMAA what arguments to pass to the executable.  For
       more information on DRMAA attributes, please see the
       <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman3/drmaa_attributes.html">drmaa_attributes</A>
@@ -219,10 +218,10 @@
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      On line 16 we submit the job with DRMAASession.runJob().  This method will
+      On line 16 we submit the job with Session.runJob().  This method will
       return the id assigned to the job by the queue master.  The job is now
       running as though submitted by qsub.  At this point calling
-      DRMAASession.exit() and/or terminating the program will have no effect on
+      Session.exit() and/or terminating the program will have no effect on
       the job.
    </P>
 
@@ -248,7 +247,7 @@
    
    <P STYLE="margin-bottom: 0cm">
       This code segment submits an array job with 15 tasks numbered 1, 3, 5, 7,
-      etc.  An important difference to note is that DRMAASession.runBulkJobs()
+      etc.  An important difference to note is that Session.runBulkJobs()
       returns the job ids in a java.util.List.  On line 17 we get an Iterator
       for the list and loop through, printing each submitted job's id, on lines
       19-21.
@@ -275,22 +274,22 @@
 06: 
 07: public class Howto3 {
 08:    public static void main (String[] args) {
-09:       DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
-10:       DRMAASession session = factory.getSession ();
+09:       SessionFactory factory = SessionFactory.getFactory ();
+10:       Session session = factory.getSession ();
 11:       
 12:       try {
 13:          session.init (null);
 14:          JobTemplate jt = session.createJobTemplate ();
 15:          jt.setRemoteCommand ("sleeper.sh");
-16:          jt.setInputParameters (new String[] {"5"});
+16:          jt.setArgs (new String[] {"5"});
 17:          
 18:          String id = session.runJob (jt);
 19:          
 20:          System.out.println ("Your job has been submitted with id " + id);
 21:          
-22:          jt.delete ();
+22:          session.deleteJobTemplate (jt);
 23:          
-24:          JobInfo info = session.wait (id, DRMAASession.TIMEOUT_WAIT_FOREVER);
+24:          JobInfo info = session.wait (id, Session.TIMEOUT_WAIT_FOREVER);
 25: 
 26:          if (info.wasAborted ()) {
 27:             System.out.println("Job " + info.getJobId () + " never ran");
@@ -324,7 +323,7 @@
 55:          
 56:          session.exit ();
 57:       }
-58:       catch (DRMAAException e) {
+58:       catch (DrmaaException e) {
 59:          System.out.println ("Error: " + e.getMessage ());
 60:       }
 61:    }
@@ -333,24 +332,24 @@
    <P STYLE="margin-bottom: 0cm">
       This example is very similar to Example 2 except for lines 24-54.  (The
       line numbers are shifted from Example 2 because of the additional import
-      statement for java.util.*.)  On line 24 we call DRMAASession.wait() to
-      wait for the job to end.  We have to give DRMAASession.wait() both the id
+      statement for java.util.*.)  On line 24 we call Session.wait() to
+      wait for the job to end.  We have to give Session.wait() both the id
       of the job for which we want to wait and how long we are willing to wait
       for the job to finish.  The later could be a number of seconds, or it
-      could be either <CODE>DRMAASession.DRMAA_TIMEOUT_WAIT_FOREVER</CODE> or
-      <CODE>DRMAASession.DRMAA_TIMEOUT_NO_WAIT</CODE>.  DRMAASession.wait()
+      could be either <CODE>Session.DRMAA_TIMEOUT_WAIT_FOREVER</CODE> or
+      <CODE>Session.DRMAA_TIMEOUT_NO_WAIT</CODE>.  Session.wait()
       returns a JobInfo object, which contains useful information how the job
       exited and how much resources it used.  The JobInfo object also contains
       the id of the job for which we actually waited because the job id we pass
-      in could be <CODE>DRMAASession.DRMAA_JOB_IDS_SESSION_ANY</CODE>, in which
-      case DRMAASession.wait() must have a way of tell us which job is the one
+      in could be <CODE>Session.DRMAA_JOB_IDS_SESSION_ANY</CODE>, in which
+      case Session.wait() must have a way of tell us which job is the one
       that made it return.
    </P>
 
    <P STYLE="margin-bottom: 0cm">
       Assuming the wait worked, we query the job's exit status on lines 26-42
       using the JobInfo accessor methods.  This if structure is a common usage
-      pattern for DRMAASession.wait() and should be encapsulated in a method for
+      pattern for Session.wait() and should be encapsulated in a method for
       ease of use.
    </P>
 
@@ -361,11 +360,11 @@
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      An alternative to DRMAASession.wait() when working with multiple jobs,
-      such as jobs submitted by DRMAASession.runBulkJobs() or multiple calls to
-      DRMAASession.runJob() is DRMAASession.synchronize().
-      DRMAASession.synchronize() waits for a List of jobs to finish.  To use
-      DRMAASession.synchronize(), we could replace lines 18-54 with the
+      An alternative to Session.wait() when working with multiple jobs,
+      such as jobs submitted by Session.runBulkJobs() or multiple calls to
+      Session.runJob() is Session.synchronize().
+      Session.synchronize() waits for a List of jobs to finish.  To use
+      Session.synchronize(), we could replace lines 18-54 with the
       following:
    </P>
 
@@ -378,36 +377,36 @@
 22:    System.out.println ("Your job has been submitted with id " + i.next ());
 23: }
 24:
-25: jt.delete ();
-26: session.synchronize (Collections.singletonList (DRMAASession.JOB_IDS_SESSION_ALL),
-27:                      DRMAASession.TIMEOUT_WAIT_FOREVER, true);
+25: session.deleteJobTemplate (jt);
+26: session.synchronize (Collections.singletonList (Session.JOB_IDS_SESSION_ALL),
+27:                      Session.TIMEOUT_WAIT_FOREVER, true);
 28:
 29: System.out.println ("All jobs have finished.");</PRE>
 
    <H3>Example 3.1</H3>
 
    <P STYLE="margin-bottom: 0cm">
-      Lines 18-23 now call DRMAASession.runBulkJobs() so that we have several
+      Lines 18-23 now call Session.runBulkJobs() so that we have several
       jobs for which to wait.  On line 26, instead of calling
-      DRMAASession.wait(), we call DRMAASession.synchronize().
-      DRMAASession.synchronize() takes only three parameters.  The first is the
+      Session.wait(), we call Session.synchronize().
+      Session.synchronize() takes only three parameters.  The first is the
       List of ids for which to wait.  If the special id,
-      <CODE>DRMAASession.DRMAA_JOB_IDS_SESSION_ALL</CODE>, appears in the List,
-      DRMAASession.synchronize() will wait for all jobs submitted via DRMAA
-      during this session, i.e. since DRMAASession.init() was called.  The
+      <CODE>Session.DRMAA_JOB_IDS_SESSION_ALL</CODE>, appears in the List,
+      Session.synchronize() will wait for all jobs submitted via DRMAA
+      during this session, i.e. since Session.init() was called.  The
       second parameter is how long to wait for all the jobs in the list to
       finish.  This is the same as the timeout parameter for
-      DRMAASession.wait().  The third parameter is whether this call to
-      DRMAASession.synchronize() should clean up after the job.  After a job
+      Session.wait().  The third parameter is whether this call to
+      Session.synchronize() should clean up after the job.  After a job
       completes, it leaves behind accounting information, such as exist status
-      and usage, until either DRMAASession.wait() or DRMAASession.synchronize()
+      and usage, until either Session.wait() or Session.synchronize()
       with dispose set to <CODE>true</CODE> is called.  It is the responsibility
       of the application to make sure one of these two functions is called for
       every job.  Not doing so creates a memory leak.  Note that calling
-      DRMAASession.synchronize() with dispose set to <CODE>true</CODE> flushes
+      Session.synchronize() with dispose set to <CODE>true</CODE> flushes
       all accounting information for all jobs in the list.  If you want to use
-      DRMAASession.synchronize() and still recover the accounting information,
-      set dispose to <CODE>false</CODE> and call DRMAASession.wait() for each
+      Session.synchronize() and still recover the accounting information,
+      set dispose to <CODE>false</CODE> and call Session.wait() for each
       job.  To do this in Example 3, we would replace lines 18-54 with the
       following:
    </P>
@@ -425,13 +424,13 @@
 26:    System.out.println ("Your job has been submitted with id " + i.next ());
 27: }
 28: 
-29: jt.delete ();
-30: session.synchronize (Collections.singletonList (DRMAASession.JOB_IDS_SESSION_ALL),
-31:                      DRMAASession.TIMEOUT_WAIT_FOREVER, false);
+29: session.deleteJobTemplate (jt);
+30: session.synchronize (Collections.singletonList (Session.JOB_IDS_SESSION_ALL),
+31:                      Session.TIMEOUT_WAIT_FOREVER, false);
 32: 
 33: for (int count = start; count < end; count += step) {
-34:    JobInfo info = session.wait (DRMAASession.JOB_IDS_SESSION_ANY,
-35:                                 DRMAASession.TIMEOUT_WAIT_FOREVER);
+34:    JobInfo info = session.wait (Session.JOB_IDS_SESSION_ANY,
+35:                                 Session.TIMEOUT_WAIT_FOREVER);
 36: 
 37:    if (info.wasAborted ()) {
 38:       System.out.println("Job " + info.getJobId () + " never ran");
@@ -468,14 +467,14 @@
       What's different is that on line 30, we set dispose to false, and then on
       lines 33-66 we wait once for each job, printing the exit status and
       usage information as we did in Example 3.  We pass
-      <CODE>DRMAASession.DRMAA_JOB_IDS_SESSION_ANY</CODE> to DRMAASession.wait()
+      <CODE>Session.DRMAA_JOB_IDS_SESSION_ANY</CODE> to Session.wait()
       as the job id because we already know that all the jobs have finished, so
       we don't really care in what order we process them.  In an interactive
       system where we couldn't guarantee that more jobs wouldn't be submitted
       between the synchronize and the wait, we would have to store the job ids
-      from the DRMAASession.runBulkJobs() in an array and then wait for each job
-      specifically.  Otherwise, the DRMAASession.wait() could end up waiting for
-      a job submitted after the call to DRMAASession.synchronize().
+      from the Session.runBulkJobs() in an array and then wait for each job
+      specifically.  Otherwise, the Session.wait() could end up waiting for
+      a job submitted after the call to Session.synchronize().
    </P>
 
    <H2>
@@ -496,27 +495,27 @@
 04: 
 05: public class Howto4 {
 06:    public static void main (String[] args) {
-07:       DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
-08:       DRMAASession session = factory.getSession ();
+07:       SessionFactory factory = SessionFactory.getFactory ();
+08:       Session session = factory.getSession ();
 09:       
 10:       try {
 11:          session.init (null);
 12:          JobTemplate jt = session.createJobTemplate ();
 13:          jt.setRemoteCommand ("sleeper.sh");
-14:          jt.setInputParameters (new String[] {"5"});
+14:          jt.setArgs (new String[] {"5"});
 15:          
 16:          String id = session.runJob (jt);
 17:          
 18:          System.out.println ("Your job has been submitted with id " + id);
 19:          
-20:          session.control (id, DRMAASession.TERMINATE);
+20:          session.control (id, Session.TERMINATE);
 21:          
 22:          System.out.println("Your job has been deleted");
 23:          
-24:          jt.delete ();
+24:          session.deleteJobTemplate (jt);
 25:          session.exit ();
 26:       }
-27:       catch (DRMAAException e) {
+27:       catch (DrmaaException e) {
 28:          System.out.println ("Error: " + e.getMessage ());
 29:       }
 30:    }
@@ -524,18 +523,18 @@
 
    <P STYLE="margin-bottom: 0cm">
       This example is very similar to Example 2 except for lines 20-22.  On line
-      20 we use DRMAASession.control() to delete the job we just submitted.
+      20 we use Session.control() to delete the job we just submitted.
       Aside from deleting the job, we could have also used
-      DRMAASession.control() to suspend, resume, hold, or release it.  For more
+      Session.control() to suspend, resume, hold, or release it.  For more
       information, see the
       <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman3/drmaa_control.html">drmaa_control</A>
       man page.
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      Note that DRMAASession.control() can be used to control jobs not submitted
+      Note that Session.control() can be used to control jobs not submitted
       through DRMAA.  Any valid SGE job id could be passed to
-      DRMAASession.control() as the id of the job to delete.
+      Session.control() as the id of the job to delete.
    </P>
 
    <H2>
@@ -556,14 +555,14 @@
 04: 
 05: public class Howto5 {
 06:    public static void main (String[] args) {
-07:       DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
-08:       DRMAASession session = factory.getSession ();
+07:       SessionFactory factory = SessionFactory.getFactory ();
+08:       Session session = factory.getSession ();
 09:       
 10:       try {
 11:          session.init (null);
 12:          JobTemplate jt = session.createJobTemplate ();
 13:          jt.setRemoteCommand ("sleeper.sh");
-14:          jt.setInputParameters (new String[] {"5"});
+14:          jt.setArgs (new String[] {"5"});
 15:          
 16:          String id = session.runJob (jt);
 17:          
@@ -579,45 +578,45 @@
 27:          int status = session.getJobProgramStatus (id);
 28:          
 29:          switch (status) {
-30:             case DRMAASession.UNDETERMINED:
+30:             case Session.UNDETERMINED:
 31:                System.out.println ("Job status cannot be determined\n");
 32:                break;
-33:             case DRMAASession.QUEUED_ACTIVE:
+33:             case Session.QUEUED_ACTIVE:
 34:                System.out.println ("Job is queued and active\n");
 35:                break;
-36:             case DRMAASession.SYSTEM_ON_HOLD:
+36:             case Session.SYSTEM_ON_HOLD:
 37:                System.out.println ("Job is queued and in system hold\n");
 38:                break;
-39:             case DRMAASession.USER_ON_HOLD:
+39:             case Session.USER_ON_HOLD:
 40:                System.out.println ("Job is queued and in user hold\n");
 41:                break;
-42:             case DRMAASession.USER_SYSTEM_ON_HOLD:
+42:             case Session.USER_SYSTEM_ON_HOLD:
 43:                System.out.println ("Job is queued and in user and system hold\n");
 44:                break;
-45:             case DRMAASession.RUNNING:
+45:             case Session.RUNNING:
 46:                System.out.println ("Job is running\n");
 47:                break;
-48:             case DRMAASession.SYSTEM_SUSPENDED:
+48:             case Session.SYSTEM_SUSPENDED:
 49:                System.out.println ("Job is system suspended\n");
 50:                break;
-51:             case DRMAASession.USER_SUSPENDED:
+51:             case Session.USER_SUSPENDED:
 52:                System.out.println ("Job is user suspended\n");
 53:                break;
-54:             case DRMAASession.USER_SYSTEM_SUSPENDED:
+54:             case Session.USER_SYSTEM_SUSPENDED:
 55:                System.out.println ("Job is user and system suspended\n");
 56:                break;
-57:             case DRMAASession.DONE:
+57:             case Session.DONE:
 58:                System.out.println ("Job finished normally\n");
 59:                break;
-60:             case DRMAASession.FAILED:
+60:             case Session.FAILED:
 61:                System.out.println ("Job finished, but failed\n");
 62:                break;
 63:          } /* switch */
 64:          
-65:          jt.delete ();
+65:          session.deleteJobTemplate (jt);
 66:          session.exit ();
 67:       }
-68:       catch (DRMAAException e) {
+68:       catch (DrmaaException e) {
 69:          System.out.println ("Error: " + e.getMessage ());
 70:       }
 71:    }
@@ -627,9 +626,9 @@
       Again, this example is very similar to Example 2, this time with the
       exception of lines 20-63.  First, after submitting the job, we sleep for
       20 seconds to give SGE time to schedule the job.  Then, on line 27, we
-      use DRMAASession.getJobProgramStatus() to get the status of the job.
+      use Session.getJobProgramStatus() to get the status of the job.
       Lines 29-63 determine what the job status is and report it.  This switch
-      is a common usage pattern for DRMAASession.getJobProgramStatus() and
+      is a common usage pattern for Session.getJobProgramStatus() and
       should be encapsulated in a method for ease of use.
    </P>
 
@@ -652,33 +651,33 @@
 04: 
 05: public class Howto6 {
 06:    public static void main (String[] args) {
-07:       DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
-08:       DRMAASession session = factory.getSession ();
+07:       SessionFactory factory = SessionFactory.getFactory ();
+08:       Session session = factory.getSession ();
 09:       
 10:       try {
 11:          System.out.println ("Supported contact strings: \"" +
 12:                              session.getContact () + "\"");
 13:          System.out.println ("Supported DRM systems: \"" +
-14:                              session.getDRMSystem () + "\"");
+14:                              session.getDrmSystem () + "\"");
 15:          System.out.println ("Supported DRMAA implementations: \"" +
-16:                              session.getDRMAAImplementation () + "\"");
+16:                              session.getDrmaaImplementation () + "\"");
 17:          
 18:          session.init (null);
 19:          
 20:          System.out.println ("Using contact strings: \"" +
 21:                              session.getContact () + "\"");
 22:          System.out.println ("Using DRM systems: \"" +
-23:                              session.getDRMSystem () + "\"");
+23:                              session.getDrmSystem () + "\"");
 24:          System.out.println ("Using DRMAA implementations: \"" +
-25:                              session.getDRMAAImplementation () + "\"");
+25:                              session.getDrmaaImplementation () + "\"");
 26:          
-27:          DRMAASession.Version version = session.getVersion ();
+27:          Session.Version version = session.getVersion ();
 28:          
 29:          System.out.println("Using DRMAA version " + version.toString ());
 30:          
 31:          session.exit ();
 32:       }
-33:       catch (DRMAAException e) {
+33:       catch (DrmaaException e) {
 34:          System.out.println ("Error: " + e.getMessage ());
 35:       }
 36:    }
@@ -688,49 +687,49 @@
       On line 11, we print the contact string list.  This is the list of contact
       strings that will be understood by this DRMAA instance.  Normally one of
       these strings is used to select to which DRM this DRMAA instance should
-      be bound.  In the Grid Engine 6.0 implementation, the contact string list
+      be bound.  In the Grid Engine 6.0u2 implementation, the contact string list
       is empty because there is only ever one possible DRM to which to bind.
    </P>
 
    <P STYLE="margin-bottom: 0cm">
       On line 13, we print the list of supported DRM systems.  For the Grid
-      Engine 6.0 implementation, this will always be Grid Engine 6.0.
+      Engine 6.0u2 implementation, this will always be Grid Engine 6.0u2.
    </P>
 
    <P STYLE="margin-bottom: 0cm">
       On line 15, we print the list of supported DRMAA implementations.  For the
-      Grid Engine 6.0 implementation, this will always be Grid Engine 6.0.
+      Grid Engine 6.0u2 implementation, this will always be Grid Engine 6.0u2.
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      On line 18, we call DRMAASession.init().  After DRMAASession.init() has
-      been called, the DRMAASession.getContact(), DRMAASession.getDRMSystem(),
-      and DRMAASession.getDRMAAImplementation() calls change.
+      On line 18, we call Session.init().  After Session.init() has
+      been called, the Session.getContact(), Session.getDrmSystem(),
+      and Session.getDrmaaImplementation() calls change.
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      On line 20, we call DRMAASession.getContact() again, this time to get the
-      contact string that was used to bind to a DRMS in DRMAASession.init(). For
-      the Grid Engine 6.0 implementation, this will always be an empty string.
+      On line 20, we call Session.getContact() again, this time to get the
+      contact string that was used to bind to a DRMS in Session.init(). For
+      the Grid Engine 6.0u2 implementation, this will always be an empty string.
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      On line 22, we call DRMAASession.getDRMSystem() again, this time to get
-      the name of the DRMS to which DRMAA is bound.  For the Grid Engine 6.0
-      implementation, this will always be Grid Engine 6.0.
+      On line 22, we call Session.getDrmSystem() again, this time to get
+      the name of the DRMS to which DRMAA is bound.  For the Grid Engine 6.0u2
+      implementation, this will always be Grid Engine 6.0u2.
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      On line 24, we call DRMAASession.getDRMAAImplementation() again, this time
+      On line 24, we call Session.getDrmaaImplementation() again, this time
       to get the name of the DRMAA implementation to which the application is
-      bound.  For the Grid Engine 6.0 implementation, this will always be Grid
-      Engine 6.0.
+      bound.  For the Grid Engine 6.0u2 implementation, this will always be Grid
+      Engine 6.0u2.
    </P>
 
    <P STYLE="margin-bottom: 0cm">
       On line 29, we get the version number of the DRMAA Java language binding
       specification supported by this DRMAA implementation.  For the Grid Engine
-      6.0 implementation this is currently version 0.4.2.
+      6.0u2 implementation this is currently version 0.5.
    </P>
 
    <P STYLE="margin-bottom: 0cm">

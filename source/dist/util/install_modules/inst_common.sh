@@ -612,7 +612,7 @@ GiveHints()
                 "   - \$SGE_CELL         (if you are using a cell other than >default<)\n" \
                 "   - \$SGE_QMASTER_PORT (if you haven't added the service >sge_qmaster<)\n" \
                 "   - \$SGE_EXECD_PORT   (if you haven't added the service >sge_execd<)\n" \
-                "   - \$PATH/\$path      (to find the Grid Engine binaries)\n" \
+                "   - \$PATH/\$path       (to find the Grid Engine binaries)\n" \
                 "   - \$MANPATH          (to access the manual pages)\n" \
                 $SGE_ROOT_VAL/$SGE_CELL_VAL/common/settings.csh \
                 $SGE_ROOT_VAL/$SGE_CELL_VAL/common/settings.sh
@@ -652,6 +652,7 @@ GiveHints()
                   "and you may add new administrative hosts with the command\n\n" \
                   "   # qconf -ah <hostname>\n\n"
        $INFOTEXT -wait -n "Please hit <RETURN> >> "
+       $CLEAR
        QMASTER="undef"
       return 0
    else

@@ -153,7 +153,7 @@ CheckLocalFilesystem()
             return 0
          fi
          ;;
-      lx24-amd64)
+lx24-amd64)
          df -T $FS | grep "nfs" >/dev/null 2>&1
          if [ $? -eq 0 ]; then
             return 0
@@ -161,12 +161,20 @@ CheckLocalFilesystem()
             return 1
          fi
          ;;
-      lx*)
+       lx*)
          df -l $FS >/dev/null 2>&1
          if [ $? -eq 0 ]; then
             return 1
          else
             return 0
+         fi
+         ;;
+    irix65)
+         df -t $FS | grep "nfs" >/dev/null 2>&1
+                  if [ $? -eq 0 ]; then
+            return 0
+         else
+            return 1
          fi
          ;;
       *)

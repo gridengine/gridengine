@@ -1,3 +1,15 @@
+CR-2004-12-02-1: Cleanup:   - re-adjust qping man page for 2nd qmaster message
+                              thread
+                            - a reserved port service will only allow reserved
+                              port clients
+                            - hostname resolve timeouts can now be set via 
+                              environment variables
+                            - general commlib error callback function will now
+                              log error strings with a size till 200 chars
+                              (was 100 chars before)
+                 Changed:   qping man page, basis_types.h, commlib, messages
+                 Review:    MD
+
 CR-2004-12-02-0: Bugfix:    Fixed broken build for alinux22
 
 HP-2004-12-01-0: Enhancem.: Changes for Windows Port

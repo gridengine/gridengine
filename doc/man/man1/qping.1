@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qping.1,v $     Last Update: $Date: 2004/12/01 16:12:51 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: qping.1,v $     Last Update: $Date: 2004/12/02 11:21:32 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QPING 1 "$Date: 2004/12/01 16:12:51 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QPING 1 "$Date: 2004/12/02 11:21:32 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qping \- check application status of xxQS_NAMExx daemons.
 .PP
@@ -165,8 +165,11 @@ Here are the possible status information values for the xxQS_NAMExx daemons:
 qmaster:
 
 .in+3
-The info message contains information for each qmaster thread followed by a thread
-state and time information:
+The info message contains information about the qmaster threads followed by a thread
+state and time information. Each time when one of the known threads pass through their
+main loop the time information is updated. Since the qmaster has two message threads
+every message thread updates the time. This means the timeout for the message
+thread (MT) can only occur when no message thread is active anymore:
 
 .in+3
 THREAD_NAME: THREAD_STATE (THREAD_TIME)
@@ -178,7 +181,7 @@ THREAD_NAME:
 .nf
 EDT:  Event Delivery Thread
 TET:  Timed Event Thread
-MT:   Message Thread
+MT:   Message Thread(s)
 SIGT: SIGnal Thread
 .fi
 .in-3

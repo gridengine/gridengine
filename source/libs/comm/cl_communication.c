@@ -3757,7 +3757,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                   if ( (ret=cl_com_connection_get_client_socket_in_port(connection, &in_port)) != CL_RETVAL_OK) {
                      CL_LOG_STR(CL_LOG_ERROR,"could not get client in socket connect port:", cl_get_error_text(ret));
                   }
-                  CL_LOG_INT(CL_LOG_ERROR,"new debug client connection from port", in_port );
+                  CL_LOG_INT(CL_LOG_INFO,"new debug client connection from port", in_port );
                   
                   /* check debug client reserved port */
                   if (in_port <= 0 || in_port >= IPPORT_RESERVED) {
@@ -3843,7 +3843,50 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             }
          }
    
-         if ( connection->crm_state == CL_CRM_CS_CONNECTED ) {
+         if (connection->crm_state == CL_CRM_CS_CONNECTED) {
+            cl_com_handle_t* handle = connection->handler;
+            /*
+             *  check for reserved port security when service is using it
+             *
+             */
+            if (handle != NULL) {
+               if (handle->tcp_connect_mode == CL_TCP_RESERVED_PORT) {
+                  int in_port = 0;
+                  int ret = 0;
+                  if ( (ret=cl_com_connection_get_client_socket_in_port(connection, &in_port)) != CL_RETVAL_OK) {
+                     CL_LOG_STR(CL_LOG_ERROR,"could not get client in socket connect port:", cl_get_error_text(ret));
+                  }
+                  if (in_port <= 0 || in_port >= IPPORT_RESERVED) {
+                     CL_LOG(CL_LOG_ERROR,"new debug client connection is not from a reserved port");
+                     CL_LOG_INT(CL_LOG_ERROR,"client port =", in_port);
+
+                     snprintf(tmp_buffer,
+                              256, 
+                              MSG_CL_TCP_FW_STANDARD_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU,
+                              connection->receiver->comp_host,
+                              connection->receiver->comp_name,
+                              u32c(connection->receiver->comp_id));
+                     cl_com_push_application_error(CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
+                     connection->crm_state = CL_CRM_CS_DENIED;
+                     connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
+                     /* overwrite and free last error */            
+                     if ( connection->crm_state_error != NULL) {
+                        free(connection->crm_state_error);
+                        connection->crm_state_error = NULL;     
+                     }
+                     connection->crm_state_error = strdup(tmp_buffer);
+                     if (connection->crm_state_error == NULL) {
+                        connection_status_text = MSG_CL_TCP_FW_RESERVED_PORT_CONNECT_ERROR;
+                     } else {
+                        connection_status_text = connection->crm_state_error;
+                     }
+                     CL_LOG(CL_LOG_ERROR, connection_status_text );
+                  }
+               }
+            }   
+         }
+
+         if (connection->crm_state == CL_CRM_CS_CONNECTED) {
             if ( connection->handler != NULL && connection->was_accepted == CL_TRUE ) {
                /* TODO */
                /* set check_allowed_host_list to 1 if the commlib should check the

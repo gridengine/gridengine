@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <stdlib.h>
+#include "cl_util.h"
 
 
 /*___INFO__MARK_BEGIN__*/
@@ -76,18 +77,42 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
 
 
    if ( ldata->entry_life_time == 0) {
-      CL_LOG(CL_LOG_INFO,"using default value for entry_life_time");
-      ldata->entry_life_time = CL_HOST_LIST_DEFAULT_LIFE_TIME;
+      unsigned long help_value = 0;
+
+      help_value = cl_util_get_ulong_value(getenv("SGE_COMMLIB_HOST_LIST_LIFE_TIME"));
+      if (help_value > 0) {
+         CL_LOG(CL_LOG_INFO,"environment variable SGE_COMMLIB_HOST_LIST_LIFE_TIME is set");
+         ldata->entry_life_time = help_value;
+      } else {
+         CL_LOG(CL_LOG_INFO,"using default value for entry_life_time");
+         ldata->entry_life_time = CL_HOST_LIST_DEFAULT_LIFE_TIME;
+      }
    }
 
    if ( ldata->entry_update_time == 0) {
-      CL_LOG(CL_LOG_INFO,"using default value for entry_update_time");
-      ldata->entry_update_time = CL_HOST_LIST_DEFAULT_UPDATE_TIME;
+      unsigned long help_value = 0;
+
+      help_value = cl_util_get_ulong_value(getenv("SGE_COMMLIB_HOST_LIST_UPDATE_TIME"));
+      if (help_value > 0) {
+         CL_LOG(CL_LOG_INFO,"environment variable SGE_COMMLIB_HOST_LIST_UPDATE_TIME is set");
+         ldata->entry_update_time = help_value;
+      } else {
+         CL_LOG(CL_LOG_INFO,"using default value for entry_update_time");
+         ldata->entry_update_time = CL_HOST_LIST_DEFAULT_UPDATE_TIME;
+      }
    }
 
    if ( ldata->entry_reresolve_time == 0) {
-      CL_LOG(CL_LOG_INFO,"using default value for entry_reresolve_time");
-      ldata->entry_reresolve_time = CL_HOST_LIST_DEFAULT_RERESOLVE_TIME;
+      unsigned long help_value = 0;
+
+      help_value = cl_util_get_ulong_value(getenv("SGE_COMMLIB_HOST_LIST_RERESOLVE_TIME"));
+      if (help_value > 0) {
+         CL_LOG(CL_LOG_INFO,"environment variable SGE_COMMLIB_HOST_LIST_RERESOLVE_TIME is set");
+         ldata->entry_reresolve_time = help_value;
+      } else {
+         CL_LOG(CL_LOG_INFO,"using default value for entry_reresolve_time");
+         ldata->entry_reresolve_time = CL_HOST_LIST_DEFAULT_RERESOLVE_TIME;
+      }
    }
 
    if ( ldata->entry_life_time > CL_HOST_LIST_MAX_LIFE_TIME) {
@@ -111,11 +136,13 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
    if (ldata->entry_life_time <= ldata->entry_update_time || ldata->entry_life_time <= ldata->entry_reresolve_time) {
       free(ldata); 
       CL_LOG(CL_LOG_ERROR,"entry_life_time must be >= entry_update_time and >= entry_reresolve_time");
+      cl_commlib_push_application_error(CL_RETVAL_PARAMS, "SGE_COMMLIB_HOST_LIST_LIFE_TIME must be >= SGE_COMMLIB_HOST_LIST_UPDATE_TIME and >= SGE_COMMLIB_HOST_LIST_RERESOLVE_TIME");
       return CL_RETVAL_PARAMS;
    }
    if (ldata->entry_update_time <= ldata->entry_reresolve_time) {
       free(ldata); 
       CL_LOG(CL_LOG_ERROR,"entry_update_time must be >= entry_reresolve_time");
+      cl_commlib_push_application_error(CL_RETVAL_PARAMS, "SGE_COMMLIB_HOST_LIST_UPDATE_TIME must be >= SGE_COMMLIB_HOST_LIST_RERESOLVE_TIME");
       return CL_RETVAL_PARAMS;
    }
 

@@ -40,9 +40,9 @@
 #define CL_HOST_LIST_DEFAULT_UPDATE_TIME     2  * 60       /*  2 min */
 #define CL_HOST_LIST_DEFAULT_LIFE_TIME      10  * 60       /* 10 min */ 
 
-#define CL_HOST_LIST_MAX_RERESOLVE_TIME  2 * 60       /*  2 min */
-#define CL_HOST_LIST_MAX_UPDATE_TIME    10 * 60       /* 10 min */
-#define CL_HOST_LIST_MAX_LIFE_TIME      24 * 60 * 60  /*  1 day */
+#define CL_HOST_LIST_MAX_RERESOLVE_TIME  10 * 60       /* 10 min */
+#define CL_HOST_LIST_MAX_UPDATE_TIME     30 * 60       /* 30 min */
+#define CL_HOST_LIST_MAX_LIFE_TIME       24 * 60 * 60  /*  1 day */
 
 typedef struct cl_host_list_elem_t {
    cl_com_host_spec_t*   host_spec;     /* data */

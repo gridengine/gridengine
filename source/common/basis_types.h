@@ -200,6 +200,7 @@ typedef char stringT[MAX_STRING_SIZE];
 #define SFQ  "\"%-.100s\""
 /* save string format non-quoted */
 #define SFN  "%-.100s"
+#define SFN2 "%-.200s"
 /* non-quoted string not limited intentionally */
 #define SN_UNLIMITED  "%s"
 

@@ -74,9 +74,10 @@
 #define MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_CLIENT_NOT_IN_ALLOWED_HOST_LIST  _MESSAGE(85034, _("client is not in allowed host list"))
 #define MSG_CL_TCP_FW_RESERVED_SOCKET_ERROR                                   _MESSAGE(85035, _("call to rresvport() returned value < 0"))
 #define MSG_CL_TCP_FW_RESERVED_PORT_CONNECT_ERROR                             _MESSAGE(85036, _("debug client did not use a reserved port < 1024"))
-#define MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU                   _MESSAGE(85037, _("debug client \""SFN"/"SFN"/"U32CFormat"\" did not use a reserved port < 1024"))
+#define MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU                   _MESSAGE(85037, _("debug client \""SFN"/"SFN"/"U32CFormat"\" did not use a reserved port below 1024"))
 #define MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_LOCAL_HOST_SSUS                     _MESSAGE(85038, _("debug client \""SFN"/"SFN"/"U32CFormat"\" is not running on host "SFQ""))
 #define MSG_CL_TCP_FW_LOCAL_HOST_CONNECT_ERROR                                _MESSAGE(85039, _("debug client is not running on local host"))
+#define MSG_CL_TCP_FW_STANDARD_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU          _MESSAGE(85040, _("client \""SFN"/"SFN"/"U32CFormat"\" did not use a reserved port below 1024"))
 
 
 

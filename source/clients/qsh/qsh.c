@@ -1814,6 +1814,7 @@ static void remove_unknown_opts(lList *lp)
       }
       if (strcmp(cp, "-clear") && strcmp(cp, "-A") && strcmp(cp, "-cell") &&
           strcmp(cp, "-cwd") && strcmp(cp, "-hard") && strcmp(cp, "-help") &&
+          strcmp(cp, "-hold_jid") && strcmp(cp, "-h") &&
           strcmp(cp, "-l") && strcmp(cp, "-m") && strcmp(cp, "-masterq") &&
           strcmp(cp, "-N") && strcmp(cp, "-noshell") && strcmp(cp, "-now") &&
           strcmp(cp, "-P") &&

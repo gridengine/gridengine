@@ -447,54 +447,49 @@ int *after
       return;
    }
 
-   switch (request->target)
-   {
+   switch (request->target) {
 #ifdef QHOST_TEST
       case SGE_QHOST:
-         sprintf(SGE_EVENT, "SGE_QHOST\n");
-         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-         DEXIT;
-         return;
+            sprintf(SGE_EVENT, "SGE_QHOST\n");
+            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         break;   
 #endif
       case SGE_EVENT_LIST:
-         answer->lp = sge_select_event_clients("qmaster_response", request->cp, request->enp);
-         sprintf(SGE_EVENT, MSG_GDI_OKNL);
-         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-         DEXIT;
-         return;
-         
+            answer->lp = sge_select_event_clients("qmaster_response", request->cp, request->enp);
+            sprintf(SGE_EVENT, MSG_GDI_OKNL);
+            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         break;
       case SGE_CONFIG_LIST:
-         do_gdi_get_config_list(request, answer, before, after);
-         DEXIT;
-         return;
-         
+            do_gdi_get_config_list(request, answer, before, after);
+            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);        
+         break;
       default:
+         SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+
          if (ao == NULL || (ao->master_list == NULL && ao->getMasterList == NULL))
          {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return;
          }
+         else {
+            if (ao->master_list) {
+               lp = *(ao->master_list);
+            }   
+            else {
+               lp = *(ao->getMasterList());
+            }   
+            
+            *before = lGetNumberOfElem(lp);
+            answer->lp = lSelectHash("qmaster_response", lp, request->cp, request->enp, false);
+
+            *after = lGetNumberOfElem(answer->lp);
+
+            sprintf(SGE_EVENT, MSG_GDI_OKNL);
+            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         }
+
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
    }
-
-   if (ao->master_list) {
-      lp = *(ao->master_list);
-   }   
-   else {
-      lp = *(ao->getMasterList());
-   }   
-   
-   SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
-   *before = lGetNumberOfElem(lp);
-   answer->lp = lSelectHash("qmaster_response", lp, request->cp, request->enp, false);
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-
-   *after = lGetNumberOfElem(answer->lp);
-
-   sprintf(SGE_EVENT, MSG_GDI_OKNL);
-   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
- 
    DEXIT;
    return;
 }
@@ -1044,23 +1039,13 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
    }
-   else if (SGE_SC_LIST == target)
-   {
-      SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
+   else if (SGE_SC_LIST == target) {
       trigger_scheduler_monitoring(host, request, answer);
-
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
    }
-   else if (SGE_EVENT_LIST == target)
-   {
-      SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
+   else if (SGE_EVENT_LIST == target) {
       /* JG: TODO: why does sge_gdi_shutdown_event_client use two different answer lists? */
       sge_gdi_shutdown_event_client(host, request, answer, &alp);
       answer_list_output(&alp);
-
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
    }
    else if (SGE_MASTER_EVENT == target)
    {
@@ -1237,7 +1222,7 @@ static int get_client_id(lListElem *anElem, int *anID)
 *     void - none
 *
 *  NOTES
-*     MT-NOTE: trigger_scheduler_monitoring() is not MT safe 
+*     MT-NOTE: trigger_scheduler_monitoring() is MT safe, using global lock 
 *
 *  SEE ALSO
 *     qconf -tsm
@@ -1252,24 +1237,24 @@ void trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, sge_gd
 
    DENTER(GDI_LAYER, "trigger_scheduler_monitoring");
 
-   if (sge_get_auth_info(aRequest, &uid, user, &gid, group) == -1)
-   {
+   if (sge_get_auth_info(aRequest, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
       answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
       DEXIT;
       return;
    }
 
-   if (!manop_is_manager(user))
-   {
+   SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+   if (!manop_is_manager(user)) {
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDMONPERMS));
       answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_WARNING);
       DEXIT;
       return;
    }
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
      
-   if (!sge_add_event_for_client(EV_ID_SCHEDD, 0, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL, NULL, NULL))
-   {
+   if (!sge_add_event_for_client(EV_ID_SCHEDD, 0, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL, NULL, NULL)) {
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
       answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
       DEXIT;

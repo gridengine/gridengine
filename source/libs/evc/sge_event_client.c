@@ -2217,7 +2217,7 @@ ec_commit_multi(lList **malpp, state_gdi_multi *state)
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
    DEXIT;
-   return false;
+   return ret;
 }
 
 /****** Eventclient/Client/ec_get() ******************************************

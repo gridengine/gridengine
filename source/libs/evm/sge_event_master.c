@@ -494,7 +494,8 @@ static void blockEvents(lListElem *event_client, ev_event ev_type, bool isBlock)
 *     int - AN_status value. STATUS_OK on success, else error code
 *
 *  NOTES
-*     MT-NOTE: sge_add_event_client() is NOT MT safe.
+*     MT-NOTE: sge_add_event_client() is MT safe, it uses the global lock and
+*              internal ones.
 *
 *******************************************************************************/
 int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser, char *rhost)
@@ -597,16 +598,20 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    /* special event clients: we allow only one instance */
    /* if it already exists, delete the old one and register the new one */
    if (id > EV_ID_ANY && id < EV_ID_FIRST_DYNAMIC) {
+     
+      SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
       if (!manop_is_manager(ruser)) {
-         unlock_all_clients ();
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+         unlock_all_clients();
          ERROR((SGE_EVENT, MSG_WRONG_USER_FORFIXEDID ));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
          DEXIT;
          return STATUS_ESEMANTIC;
       }
-
-      if ((ep = get_event_client (id)) != NULL) {
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+      
+      if ((ep = get_event_client(id)) != NULL) {
          /* we already have this special client */
          ERROR((SGE_EVENT, MSG_EVE_CLIENTREREGISTERED_SSSU, name, host, 
                 commproc, u32c(commproc_id)));         
@@ -624,13 +629,13 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    lSetBool(clio, EV_changed, false);
 
    lAppendElem(Master_Control.clients, ep);
-   set_event_client (id, ep);
+   set_event_client(id, ep);
    
    /* Release the locks on all clients except the one on which we're working. */
    /* This works because lock_all uses a special bit to indicate a global lock,
     * rather than setting the lock for every client. */
-   lock_client_protected (id);
-   unlock_all_clients ();
+   lock_client_protected(id);
+   unlock_all_clients();
    
    lSetUlong(ep, EV_next_number, 1);
 
@@ -661,7 +666,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    /* flush initial list events */
    flush_events(ep, 0);
 
-   unlock_client (id);
+   unlock_client(id);
    
    INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
          ruser, rhost, name, MSG_EVE_EVENTCLIENT));
@@ -699,7 +704,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 *     int - AN_status code. STATUS_OK on success, else error code
 *
 *  NOTES
-*     MT-NOTE: sge_mod_event_client() is NOT MT safe.
+*     MT-NOTE: sge_mod_event_client() is MT safe, uses internal locks
 *
 *******************************************************************************/
 int
@@ -914,7 +919,7 @@ process_mod_event_client(void)
 *     void - none
 *
 *  NOTES
-*     MT-NOTE: sge_remove_event_client() is NOT MT safe. 
+*     MT-NOTE: sge_remove_event_client() is MT safe, uses internal locks 
 *
 *******************************************************************************/
 void sge_remove_event_client(u_long32 aClientID) {
@@ -924,7 +929,7 @@ void sge_remove_event_client(u_long32 aClientID) {
 
    pthread_once(&Event_Master_Once, event_master_once_init);
 
-   lock_client (aClientID, true);
+   lock_client(aClientID, true);
    client = get_event_client (aClientID);
    
    /* If we didn't find the client in the array, try the list as a backup.  The
@@ -938,7 +943,7 @@ void sge_remove_event_client(u_long32 aClientID) {
       sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
                      &Master_Control.mutex);
       
-      client = lGetElemUlong (Master_Control.clients, EV_id, aClientID);
+      client = lGetElemUlong(Master_Control.clients, EV_id, aClientID);
       
       /* Correct the problem. */
       Master_Control.clients_array[aClientID] = client;
@@ -960,7 +965,7 @@ void sge_remove_event_client(u_long32 aClientID) {
    /* We have to remove the entry from the list before we release the client
     * lock.  Otherwise there will be a gap where the array will have a NULL
     * entry and the list will not. */
-   unlock_client (aClientID);
+   unlock_client(aClientID);
 
    DEXIT;
    return;
@@ -1149,13 +1154,13 @@ lList* sge_select_event_clients(const char *aNewList, const lCondition *aCond, c
 
    /* We have to lock everything because we need to access every client. */
    /* This also aquires the mutex. */
-   lock_all_clients ();
+   lock_all_clients();
 
    if (Master_Control.clients != NULL) {
       lst = lSelect(aNewList, (const lList*)Master_Control.clients, aCond, anEnum);
    }
 
-   unlock_all_clients ();
+   unlock_all_clients();
 
    DEXIT;
    return lst;
@@ -1188,7 +1193,8 @@ lList* sge_select_event_clients(const char *aNewList, const lCondition *aCond, c
 *     0     - otherwise
 *
 *  NOTES
-*     MT-NOTE: sge_shutdown_event_client() is not MT safe. 
+*     MT-NOTE: sge_shutdown_event_client() is MT safe, it uses the global lock
+*              and internal ones.
 *
 *******************************************************************************/
 int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
@@ -1208,17 +1214,22 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
       return EINVAL;
    }
    
-   lock_client (aClientID, true);
-   client = get_event_client (aClientID);
+   lock_client(aClientID, true);
+   client = get_event_client(aClientID);
 
    if (client != NULL) {
+
+      SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
       if (!manop_is_manager(anUser) && (anUID != lGetUlong(client, EV_uid))) {
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
          answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED,
                          ANSWER_QUALITY_ERROR);
+         unlock_client(aClientID);
          DEXIT;
          return EPERM;
       }
-
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+      
       add_list_event_for_client(aClientID, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL,
                                 NULL, NULL, true);
 
@@ -1243,7 +1254,7 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
       ret = EINVAL;
    }
 
-   unlock_client (aClientID);
+   unlock_client(aClientID);
 
    DEXIT;
    return ret;
@@ -1275,7 +1286,8 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
 *     0     - otherwise
 *
 *  NOTES
-*     MT-NOTES: sge_shutdown_dynamic_event_clients() is NOT MT safe. 
+*     MT-NOTES: sge_shutdown_dynamic_event_clients() is MT safe, it uses the
+*               global_lock and internal ones.
 *
 *******************************************************************************/
 int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp)
@@ -1288,12 +1300,16 @@ int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp)
 
    pthread_once(&Event_Master_Once, event_master_once_init);
 
+   SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
    if (!manop_is_manager(anUser)) {
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED,
                       ANSWER_QUALITY_ERROR);
+
       DEXIT;
       return EPERM;
    }
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
 
    while (Master_Control.clients_indices[count] != 0) {
       id = (u_long32)Master_Control.clients_indices[count++];
@@ -1308,7 +1324,7 @@ int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp)
       /* This check causes us to lock and unlock every live client and possibly
        * some dead ones, but it's still much cheaper than any of the previous
        * incarnations of the event master locking schemes. */
-      lock_client ((u_long32)id, true);
+      lock_client((u_long32)id, true);
       if ((client = get_event_client ((u_long32)id)) == NULL) {
          unlock_client (id);
          continue;
@@ -2126,9 +2142,9 @@ static void event_master_once_init(void)
    Master_Control.clients = lCreateListHash("EV_Clients", EV_Type, true);
    Master_Control.change_evc = lCreateListHash("EV_Clients", EV_Type, true);
 
-   Master_Control.ack_events = lCreateListHash("Events_To_ACK", EV_Type, false);
-   Master_Control.send_events = lCreateListHash("Events_To_Send", EV_Type, false);
-   Master_Control.lockfield = sge_bitfield_new (Master_Control.len_event_clients);
+   Master_Control.ack_events =    lCreateListHash("Events_To_ACK", EV_Type, false);
+   Master_Control.send_events =   lCreateListHash("Events_To_Send", EV_Type, false);
+   Master_Control.lockfield =     sge_bitfield_new(Master_Control.len_event_clients);
    Master_Control.clients_array = (lListElem **)malloc (sizeof (lListElem *) *
                                               Master_Control.len_event_clients);
    memset (Master_Control.clients_array, 0,
@@ -3688,22 +3704,13 @@ static const lDescr* getDescriptorL(subscription_t *subscription,
 static void lock_client_protected(u_long32 id)
 {
    DENTER(TOP_LAYER, "lock_client_protected");
-/* DEBUG */
-DPRINTF (("lock_client_protected(%ld)\n", id));
-
-/* DEBUG */
-#if 1
-if (id < 1) {
-   abort();
-}
-#endif
    
    if ((id < 1) ||
        (id > Master_Control.max_event_clients + EV_ID_FIRST_DYNAMIC - 1)) {
       return;
    }
    
-   sge_bitfield_set (Master_Control.lockfield, (int)id -1);
+   sge_bitfield_set(Master_Control.lockfield, (int)id -1);
    DEXIT;
 }
 
@@ -3731,20 +3738,13 @@ if (id < 1) {
 *******************************************************************************/
 static bool lock_client(u_long32 id, bool wait)
 {
-   DENTER(TOP_LAYER, "lock_client");
+   bool ret = true;
    
-/* DEBUG */
-#if 0 
-DPRINTF (("lock_client(%ld, %d)\n", id, wait));
-
-if (id < 1) {
-   DPRINTF(("Client ids less than 1 are not allowed!\n"));
-   abort();
-}
-#endif
+   DENTER(TOP_LAYER, "lock_client");
    
    if ((id < 1) ||
        (id > Master_Control.max_event_clients + EV_ID_FIRST_DYNAMIC - 1)) {
+      DEXIT;
       return false;
    }
    
@@ -3759,37 +3759,36 @@ if (id < 1) {
    /* We block on a lock_all even if wait if false because otherwise my loops
     * turns into spinlocks when lock_all is set. */
    while (Master_Control.lock_all ||
-          (wait &&
-           sge_bitfield_get (Master_Control.lockfield, (int)id - 1) )) {
+          (wait && sge_bitfield_get(Master_Control.lockfield, (int)id - 1) )) {
+   
       if (Master_Control.lock_all) {
          /* This uses the lockfield cond var because it will be much less trafficy
           * than the waitfield cond var in this case. */
-         pthread_cond_wait (&Master_Control.lockfield_cond_var,
-                            &Master_Control.mutex);
+         pthread_cond_wait(&Master_Control.lockfield_cond_var,
+                           &Master_Control.mutex);
       }
       else {
          /* We will be awakened when a lock is freed.  Since there will only be
           * a couple of threads, the odds are good that it will be the lock we
           * want. */
-         pthread_cond_wait (&Master_Control.waitfield_cond_var,
+         pthread_cond_wait(&Master_Control.waitfield_cond_var,
                             &Master_Control.mutex);
       }
    }
 
    /* If wait is true, this client is guaranteed to be unlocked at thi
     * point. */
-   if (sge_bitfield_get (Master_Control.lockfield, (int)id - 1)) {
-
-      sge_mutex_unlock("event_master_mutex", "lock_client", __LINE__, &Master_Control.mutex);
-      DEXIT;
-      return false;
+   if (sge_bitfield_get(Master_Control.lockfield, (int)id - 1)) {
+      ret = false;
    }
+   else { 
+      sge_bitfield_set(Master_Control.lockfield, (int)id - 1);   
+   }   
    
-   sge_bitfield_set (Master_Control.lockfield, (int)id - 1);   
    sge_mutex_unlock("event_master_mutex", "lock_client", __LINE__, &Master_Control.mutex);
    
    DEXIT;
-   return true;
+   return ret;
 }
 
 /****** sge_event_master/unlock_client() ***************************************
@@ -3814,14 +3813,15 @@ static void unlock_client(u_long32 id)
 
    if ((id < 1) ||
        (id > Master_Control.max_event_clients + EV_ID_FIRST_DYNAMIC - 1)) {
+      DEXIT;
       return;
    }
    
    sge_mutex_lock("event_master_mutex", "unlock_client", __LINE__,
                   &Master_Control.mutex);
    
-   sge_bitfield_clear (Master_Control.lockfield, (int)id - 1);
-   
+   sge_bitfield_clear(Master_Control.lockfield, (int)id - 1);
+  
    if (Master_Control.lock_all &&
        (!sge_bitfield_changed (Master_Control.lockfield))) {
       /* This will wake up everyone who wants a lock.  Only the lock all will
@@ -3853,6 +3853,11 @@ static void unlock_client(u_long32 id)
 *     calls to lock_client() will block until this method has returned, even if
 *     this method is still waiting to acquire the global lock.
 *
+*     The lock_all variable is used to try out old event client manipulations and
+*     ensure, that no new event_clients are manipulated. Keeping the Master_Control.
+*     mutex is needed, because other manipulations, which are done, when the lock_al
+*     is held, needs it.
+*
 *  NOTE
 *     MT-NOTE: thread safe.
 *******************************************************************************/
@@ -3864,7 +3869,7 @@ static void lock_all_clients(void)
 
    /* Block for other lock_alls. */
    while (Master_Control.lock_all) {
-      pthread_cond_wait (&Master_Control.lockfield_cond_var,
+      pthread_cond_wait(&Master_Control.lockfield_cond_var,
                          &Master_Control.mutex);
    }
    
@@ -3902,7 +3907,7 @@ static void unlock_all_clients(void)
 
    /* Always signal when releasing this lock so that anyone else who wants a
     * lock knows that they are available again. */
-   pthread_cond_broadcast (&Master_Control.lockfield_cond_var);
+   pthread_cond_broadcast(&Master_Control.lockfield_cond_var);
    
    sge_mutex_unlock("event_master_mutex", "unlock_all_clients", __LINE__, &Master_Control.mutex);
    
@@ -3960,29 +3965,13 @@ static lListElem *get_event_client(u_long32 id)
 *******************************************************************************/
 static void set_event_client(u_long32 id, lListElem *client)
 {
-/* DEBUG */
-#if 0
-DENTER(TOP_LAYER, "set_event_client");
-DPRINTF (("set_event_client(%ld, %x)\n", id, client));
-#endif
-
-/* DEBUG */
-#if 0
-if (id < 1) {
-   abort();
-}
-#endif
    
    if ((id < 1) ||
        (id > Master_Control.max_event_clients + EV_ID_FIRST_DYNAMIC - 1)) {
       return;
    }
    
-   
    Master_Control.clients_array[(int)id - 1] = client;
-#if 0
-DEXIT;
-#endif
 }
 
 /****** sge_event_master/assign_new_dynamic_id() *******************************

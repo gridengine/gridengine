@@ -1,3 +1,12 @@
+SG-2005-02-21-0: Bugfix:    - deadlock in the qmaster with qconf -ks
+                            - reworked potential deadlocks between the
+                              two GDI threads, and/or a GDI and the
+                              Event Master thread.
+                 Changed:   qmaster
+                 Bugtraq:   6231366
+                 Issue:     1458
+                 Review:    DT
+
 SG-2005-02-18-0: Bugfix:    execd logs error mesage, when a tight pe job in "t" state is deleted
                  Changed:   qmaster
                  Bugtraq:   6230846

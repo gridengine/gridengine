@@ -1,3 +1,10 @@
+EB-2004-03-25-0: Bugfix:    qconf  -mq rejects pe_list config that is 
+                            accepted with -aq
+                            (Fix of EB-2004-03-16-0)
+                 Changed:   qconf, sge_qmaster
+                 Issue:     906, 856
+                 Review:    SG
+
 AS-2004-03-25-0: Enhancem.: add SGE_BINARY_PATH variable to job environment
                  Changed:   sge_execd, submit.1
                  Issue:     919

@@ -227,7 +227,9 @@
 #define MSG_SYSTEM_SETEGIDFAILED_U              _("setegid("gid_t_fmt") failed")
 #define MSG_SYSTEM_SETEUIDFAILED_U              _("seteuid("uid_t_fmt") failed")
 #define MSG_SYSTEM_INITGROUPSFAILED_I           _("initgroups() failed with errno %d\n")
-#define MSG_SYSTEM_ADDGROUPIDFORSGEFAILED       _("can't set additional group id for job\n")
+#define MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS   _("can't set additional group id (uid="uid_t_fmt", euid="uid_t_fmt"): "SFN"\n")
+#define MSG_SYSTEM_INVALID_NGROUPS_MAX          _("invalid value for NGROUPS_MAX")
+#define MSG_SYSTEM_USER_HAS_TOO_MANY_GIDS       _("the user already has too many group ids")
 
 /* 
 ** utilib/sge_stdlib.c

@@ -285,7 +285,7 @@ int truncate_stderr_out
                                                                       
    if(qlogin_starter) { 
       ret = sge_set_uid_gid_addgrp(target_user, intermediate_user, 0, 0, 
-                                   add_grp_id, err_str, use_qsub_gid, gid);
+                                   0, err_str, use_qsub_gid, gid);
    } else {   
       ret = sge_set_uid_gid_addgrp(target_user, intermediate_user, min_gid, 
                                    min_uid, add_grp_id, err_str, use_qsub_gid, 
@@ -536,7 +536,7 @@ int truncate_stderr_out
 
    if (intermediate_user) {
       if(qlogin_starter) {
-         ret = sge_set_uid_gid_addgrp(target_user, NULL, 0, 0, add_grp_id, 
+         ret = sge_set_uid_gid_addgrp(target_user, NULL, 0, 0, 0, 
                                       err_str, use_qsub_gid, gid);
       } else {
          ret = sge_set_uid_gid_addgrp(target_user, NULL, min_gid, min_uid, 

@@ -886,7 +886,7 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
       DEXIT;
       return 0;
    } else {                        /* qlogin_starter reports error */
-      char *message = strtok(NULL, ":");
+      char *message = strtok(NULL, "\n");
       ERROR((SGE_EVENT, "%s: %s\n", s_code, message == NULL ? "" : message));
    }
 

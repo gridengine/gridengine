@@ -1,3 +1,8 @@
+JG-2002-04-19-0: Bugfix:    Interactive jobs of any user failed if root had 
+                            already the maximum number of group id's.
+                 Enhancem.: More detailed description in error output
+                 Issue:     #237
+
 SD-2002-04-18-3: Feature:   Updated distinst to install mpi/myrinet PE
                             integration
 

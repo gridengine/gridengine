@@ -632,8 +632,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
    /* add Additional group id to current list of groups */
    if (add_grp) {
-      if (sge_add_group(add_grp) == -1) {
-         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED );
+      if (sge_add_group(add_grp, err_str) == -1) {
          return 1;
       }
    }
@@ -679,32 +678,42 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
 *     sge_add_group() -- Add a gid to the list of additional group ids
 *
 *  SYNOPSIS
-*     int sge_add_group(gid_t add_grp_id)
+*     int sge_add_group(gid_t add_grp_id, char *err_str)
 *
 *  FUNCTION
 *     Add a gid to the list of additional group ids. If 'add_grp_id' 
 *     is 0 don't add value to group id list (but return sucessfully).
+*     If an error occurs, a descriptive string will be written to err_str.
 *
 *  INPUTS
 *     gid_t add_grp_id - new gid
+*     char *err_str    - if points to a valid string buffer,  error descriptions 
+*                        will be written here
 *
 *  RESULT
 *     int - error state
 *         0 - Success
 *        -1 - Error
 ******************************************************************************/
-int sge_add_group(gid_t add_grp_id)
+int sge_add_group(gid_t add_grp_id, char *err_str)
 {
    u_long32 max_groups;
    gid_t *list;
    int groups;
- 
+
+   if(err_str != NULL) {
+      err_str[0] = 0;
+   }
+
    if (add_grp_id == 0) {
       return 0;
    }
- 
+
    max_groups = sge_sysconf(SGE_SYSCONF_NGROUPS_MAX);
    if (max_groups <= 0) {
+      if(err_str != NULL) {
+         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), geteuid(), MSG_SYSTEM_INVALID_NGROUPS_MAX);
+      }
       return -1;
    }
  
@@ -718,20 +727,39 @@ int sge_add_group(gid_t add_grp_id)
    list = (gid_t*) malloc(max_groups*sizeof(gid_t));
 #endif
    if (list == NULL) {
+      if(err_str != NULL) {
+         int error = errno;
+         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), geteuid(), strerror(error));
+      }
       return -1;
    }
  
    groups = getgroups(max_groups, list);
- 
+   if (groups == -1) {
+      if(err_str != NULL) {
+         int error = errno;
+         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), geteuid(), strerror(error));
+      }
+      free(list);
+      return -1;
+   }   
+
    if (groups < max_groups) {
       list[groups] = add_grp_id;
       groups++;
       groups = setgroups(groups, list);
       if (groups == -1) {
+         if(err_str != NULL) {
+            int error = errno;
+            sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), geteuid(), strerror(error));
+         }
          free(list);
          return -1;
       }
    } else {
+      if(err_str != NULL) {
+         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), geteuid(), MSG_SYSTEM_USER_HAS_TOO_MANY_GIDS);
+      }
       free(list);
       return -1;
    }                      

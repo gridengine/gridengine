@@ -4692,6 +4692,8 @@ static int show_processors()
    }
 
    if (lp) {
+      lPSortList(lp,"%I+", EH_name);
+
       printf("%-25.24s%10.9s%12.11s\n",MSG_TABLE_HOST,MSG_TABLE_PROCESSORS,
             MSG_TABLE_ARCH);
       printf("===============================================\n");

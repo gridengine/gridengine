@@ -1,18 +1,20 @@
-CR-2002-03-21-2  Bugfix:   changed error messages when master commd is not
-                           reachable.
+EB-2002-03-21-1  Enhancem.: sort output of qconf -sep
 
-CR-2002-03-21-1  Bugfix:   removed forgotten #if0 - #endif statement which
-                           chauses scheduler to abort() on testsuite's 
-                           path_alias check.
+CR-2002-03-21-2  Bugfix:    changed error messages when master commd is not
+                            reachable.
 
-JG-2002-03-21-0  Bugfix:   prioritization of messages to qmaster could block
-                           reports from execd's to qmaster and make the system
-                           unusable.
-                           Set "no prioritization" as default, behaviour can
-                           be changed via env variable SGE_PRIORITY_TAGS.
+CR-2002-03-21-1  Bugfix:    removed forgotten #if0 - #endif statement which
+                            chauses scheduler to abort() on testsuite's 
+                            path_alias check.
 
-EB-2002-03-21-0  Bugfix:   local config not written as admin user at startup
-                 Issue:    #198
+JG-2002-03-21-0  Bugfix:    prioritization of messages to qmaster could block
+                            reports from execd's to qmaster and make the system
+                            unusable.
+                            Set "no prioritization" as default, behaviour can
+                            be changed via env variable SGE_PRIORITY_TAGS.
+
+EB-2002-03-21-0  Bugfix:    local config not written as admin user at startup
+                 Issue:     #198
 
 CR-2002-03-21-0  Testsuite: merge from maintrunc
                             sending "vt100" when client host is using tset

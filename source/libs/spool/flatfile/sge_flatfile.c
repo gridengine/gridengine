@@ -210,7 +210,8 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
 
 static lListElem *
 _spool_flatfile_read_object(lList **answer_list, const lDescr *descr, lListElem *root,
-                            const spool_flatfile_instr *instr, spooling_field *fields, int fields_out[], int *token,
+                            const spool_flatfile_instr *instr,
+                            const spooling_field *fields, int fields_out[], int *token,
                             const char *end_token, bool parse_values);
 
 static void
@@ -223,7 +224,8 @@ _spool_flatfile_read_live_object(lList **answer_list, lListElem **object,
 
 static lList *
 _spool_flatfile_read_list(lList **answer_list, const lDescr *descr, 
-                          const spool_flatfile_instr *instr, spooling_field *fields, int fields_out[], int *token,
+                          const spool_flatfile_instr *instr,
+                          const spooling_field *fields, int fields_out[], int *token,
                           const char *end_token, bool parse_values);
 
 static spooling_field *get_recursion_field_list (const spool_flatfile_instr *instr);
@@ -1176,7 +1178,7 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
    bool file_opened = false;
    int token;
    lListElem *object = NULL;
-   spooling_field *fields = NULL;
+   const spooling_field *fields = NULL;
    spooling_field *my_fields = NULL;
 
    DENTER(TOP_LAYER, "spool_flatfile_read_object");
@@ -1206,7 +1208,7 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
 
    /* if no fields are passed, retrieve them from instructions */
    if (fields_in != NULL) {
-      fields = (spooling_field*)fields_in;
+      fields = fields_in;
    } else {
       my_fields = spool_get_fields_to_spool(answer_list, descr, 
                                          instr->spool_instr);
@@ -1246,7 +1248,7 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
 static lListElem *
 _spool_flatfile_read_object(lList **answer_list, const lDescr *descr, 
                             lListElem *root, const spool_flatfile_instr *instr, 
-                            spooling_field *fields, int fields_out[],
+                            const spooling_field *fields, int fields_out[],
                             int *token, const char *end_token,
                             bool parse_values)
 {
@@ -1754,7 +1756,7 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
    bool file_opened = false;
    int token;
    lList *list = NULL;
-   spooling_field *fields = NULL;
+   const spooling_field *fields = NULL;
    spooling_field *my_fields = NULL;
 
    DENTER(TOP_LAYER, "spool_flatfile_read_list");
@@ -1784,7 +1786,7 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
 
    /* if no fields are passed, retrieve them from instructions */
    if (fields_in != NULL) {
-      fields = (spooling_field*)fields_in;
+      fields = fields_in;
    } else {
       my_fields = spool_get_fields_to_spool(answer_list, descr, 
                                             instr->spool_instr);
@@ -1818,7 +1820,7 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
 static lList *
 _spool_flatfile_read_list(lList **answer_list, const lDescr *descr, 
                           const spool_flatfile_instr *instr, 
-                          spooling_field *fields, int fields_out[], 
+                          const spooling_field *fields, int fields_out[], 
                           int *token, const char *end_token, bool parse_values)
 {
    bool stop = false;
@@ -2056,7 +2058,7 @@ int spool_get_unprocessed_field(spooling_field in[], int out[], lList **alpp)
    return NoName;
 }
 
-int spool_get_number_of_fields(spooling_field fields[])
+int spool_get_number_of_fields(const spooling_field fields[])
 {
    int count = 0;
    

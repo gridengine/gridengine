@@ -177,6 +177,6 @@ void create_spooling_field (
 );
 
 int spool_get_unprocessed_field(spooling_field in[], int out[], lList **alpp);
-int spool_get_number_of_fields(spooling_field fields[]);
+int spool_get_number_of_fields(const spooling_field fields[]);
 
 #endif /* __SGE_FLATFILE_H */

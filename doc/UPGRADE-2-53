@@ -1,0 +1,647 @@
+                        Upgrading to Grid Engine 5.3
+                        ----------------------------
+
+    All users who plan to make an upgrade from a previous version of
+    CODINE/GRD/SGE should carefully read this document. This document
+    contains all information how to carry out successfully an upgrade from a
+    previous version of the product to Grid Engine 5.3 (including Enterprise
+    Edition). The update procedure does not support any upgrades from CODINE
+    4.x or GRD 1.x.
+
+
+Content
+-------
+
+1) Introduction
+   1.1) Estimated time for the upgrade procedure
+2) Installation changes
+   2.1) Name of daemons and commands
+   2.2) Daemon startup scripts
+   2.3) Environment variables
+   2.4) Service name for communication daemon
+   2.5) Other file name changes
+   2.6) QSI
+3) Upgrading to SGE(EE) 5.3
+4) Cluster shutdown: No running daemons, no running or pending jobs
+5) Backup of the old CODINE/GRD/SGE system
+6) Deleting directories of the old CODINE/GRD/SGE system
+   6.1 Do not delete old cluster configuration
+   6.2 Check any references in configuration to old files
+   6.3 Delete old distribution installed with 'pkgadd' on Solaris
+   6.4 Delete old distribution installed from 'tar.gz' files
+7) Unpacking the SGE distribution
+   7.1) Prerequisites
+   7.2) Installing SGE with 'pkgadd' on Solaris
+8) Rename the service codine_commd/grd_commd
+9) Running the update script
+   9.1 Set SGE_ROOT and environment variables
+   9.2 Run the update script
+10) Installing the new startup script on the local machine
+11) Restart SGE
+12) Copyright
+
+1) Introduction
+---------------
+
+   Upgrading to Grid Engine and Grid Engine, Enterprise Edition is supported
+   through the script '$SGE_ROOT/util/sge_update.sh' of the Grid Engine 5.3
+   distribution. You can upgrade from any version of
+
+      CODINE 5.0.x
+      CODINE 5.1.x
+      GRD 5.0.x
+      GRD 5.1.x
+      Sun Grid Engine 5.2.x
+      Grid Engine 5.3beta1
+
+   to this version of Grid Engine 5.3 (SGE 5.3) or Grid Engine Enterprise
+   Edition 5.3 (SGEEE 5.3). You cannot "downgrade" from GRD to SGE 5.3.
+
+
+   1.1 Estimated time for the upgrade procedure
+   --------------------------------------------
+
+   We estimate the following time for the verious steps of the upgrade:
+
+   Reading this document and preparing the upgrade:  0:30-2 hours
+   Shutting down all SGE daemons and verify this:    1-3 minutes per host
+   Deleting old spool files:                         
+      - spool directoriess on shared file system     5 minutes
+      - spool directories installed locally          1-3 minutes per host
+   Making a backup of the old configuration          5-10 minutes
+   Deleting the old version:			     5-10 minutes
+   Installating the new version:		     5-15 minutes
+   Running the upgrade procedure:		     5-10 minutes
+   Updating the local startup scripts and starting
+   the daemons:					     1-3 minutes per host
+
+   Depending on the complexity of your installation it may be necessary to
+   carry out additional functional tests for the various SGE objects, like
+
+        - tests of parallel environments
+        - tests of checkpointing environments
+        - load sensor scripts
+        - cluster and queue configuration settings like
+           prolog, epilog, terminate-, supendmethods
+        - command tests (qsub, qrsh, qlogin, qsh)
+
+   If you modified original sample scripts and configuration examples and
+   you are referencing these files located in the original distribution or
+   if you decide not using the compatibility mode for environment variables
+   (which is suggested), these additional tests may take several hours to
+   ensure the full functionality of Grid Engine 5.3.
+
+   The upgrade procedure will be easier to caryy out if you have access for
+   user root (rsh or ssh) without providing a password to all your execution
+   hosts (this not necessarily need to be your qmaster machine).
+
+
+2) Installation changes compared to previous versions
+-----------------------------------------------------
+
+   Probably the biggest (installation wise) changes since versions 5.0-5.2. 
+   is the name of the daemons, environment variables and the name of the
+   service for the communication deamon. There are no more differences
+   between the names if the product is running as Grid Engine (SGE) or as
+   Grid Engine Enterprsie Edition (SGEEE). This change will make it much
+   easier to upgrade an SGE cluster to SGEEE.
+
+   2.1) Name of daemons and commands
+   ---------------------------------
+
+   The name of all Grid Engine daemons now begins with the "sge_" prefix:
+
+      sge_commd
+      sge_coshepherd
+      sge_execd
+      sge_qmaster
+      sge_schedd
+      sge_shadowd
+      sge_shepherd
+   
+   The command "{cod|grd}commdcntl" has been renamed to 'sgecommdcntl'
+
+   It is not supported to rename any of the binaries of the distribution!
+
+   If you use any scripts which monitor the daemons, you need to make sure
+   to check for the new names.
+
+
+   2.2) Daemon startup scripts
+   ---------------------------
+
+   The name of the startup script has changed. The system wide startup
+   script in
+
+      <codine_root>/<cell>/codine5
+      <grd_root>/<cell>/grd5
+
+   now has the name
+
+       rcsge
+
+
+   The per machine startup script, which is often installed in
+
+       /etc/init.d/{codine5|grd5}
+
+    and the symbolic link which is often installed in
+
+       /etc/rc2.d/S95{codine5|grd5}
+
+    is now called
+
+       rcsge
+
+    and
+
+       S95rcsge
+
+    It is be necessary to delete the old local startup scripts and the
+    symbolic links and replace them with the new startup script.
+
+
+   2.3) Environment variables
+   --------------------------
+
+   The name of environment variables which begin in version 5.0-5.2 with the
+   CODINE_/COD_/GRD_ prefix now begin with the "SGE_" prefix. Here are a few
+   examples:
+
+       CODINE_ROOT/GRD_ROOT --> SGE_ROOT
+       COD_CELL/GRD_CELL    --> SGE_CELL
+       COD_O_HOME           --> SGE_O_HOME
+       GRD_STDOUT_PATH      --> SGE_STDOUT_PATH
+
+   SGE(EE) 5.3 supports a compatibility mode where the old names of
+   variables still can be used3. The upgrade script will ask if you want to
+   set this mode.
+
+   Only SGE(EE) 5.3 will support this mode. SGE(EE) will not support anymore
+   this compatibility mode. It is recommended not using this compatibility
+   mode.
+
+
+   2.4) Service name for communication daemon
+   ------------------------------------------
+
+   The communication daemon (commd) service names has changed from
+
+       codine_commd/grd_commmd --> sge_commd
+
+
+   The old name of the service is not anymore supported.
+
+
+   2.5) Other file name changes
+   ----------------------------
+
+   All files and manual pages which had the prefix codine_/cod_/grd_ are
+   renamed and use the prefix "sge_".
+
+   In <root_dir>/<cell>
+
+      codine_aliases/grd_aliases    --> sge_aliases
+      cod_request/grd_request       --> sge_request      
+
+   In the user's home directory and the submit directory:
+
+       .cod_request/.grd_request    --> .sge_request
+
+   
+   2.6) QSI
+   --------
+
+   The QSI (Queuing System Interface) is not anymore part of the product.
+
+
+3) Upgrading to SGE(EE) 5.3
+---------------------------
+
+   The upgrade procedure comprises the following steps:
+   
+         - shutting down the cluster                 (see (4))
+         - backing up your old CODINE/GRD/SGE system (see (5))
+         - deleting old files and directories        (see (6))
+         - unpacking the distribution                (see (7))
+         - running the update script                 (see (8))
+         - editing configuration files              (see (7a)) *
+         - copying new startup script (5.0 only)    (see (7b)) 
+         - additional steps for GRD              (see (8)) *
+
+
+   It is recommended that after making a backup of your old CODINE/GRD/SGE
+   cluster, to delete all files of the old distribution. See (5) and (6) for
+   more information.
+
+
+   Depending in the size of your cluster and your experience with CODINE/GRD
+   this update procedure will take between 30 minutes and 2-3 hours.
+
+
+4) Cluster shutdown: No running daemons, no running or pending jobs
+-------------------------------------------------------------------
+
+   Make sure to shutdown your cluster before upgrading. There may be no
+   running or pending jobs at qmaster or at the execution hosts. You should
+   also make sure that there are no more running communication daemons
+   (cod_commd, grd_commd, sge_commd) or a running scheduler daemon
+   (cod_schedd grd_schedd, sge_schedd) on the qmaster host.
+
+   To be absolutely safe, you can login to every host of your CODINE/GRD/SGE
+   cluster and execute an appropriate 'ps' command. You might want to 'grep'
+   for the string 'cod_', 'grd_' or 'sge_' in your 'ps' output to identify
+   remaining CODINE/GRD/SGE processes (if you execute the commands described
+   in the next paragraph, all CODINE/GRD components should be gone).
+
+   You can shutdown your CODINE/GRD/SGE cluster with the following commands:
+
+      # qconf -kej                 (kills all execution daemons and jobs)
+      # qconf -ks                  (kills the scheduler daemon)
+      # qconf -km                  (kills the master daemon)   
+      # {cod|grd|sge}commdcntl -k  (kills the communication daemon)
+      --> Execute the last command from every execution host and from
+          the master host.
+
+   To be absolutely sure that there a no old jobs in your configuration
+   you should delete the execution daemon spool directories and the spooled
+   jobs in the qmaster spool directories:
+
+      # rm -rf <execd_spool_dir>/<hostname>
+      # rm -rf <qmaster_spool_dir>/jobs
+      # rm -rf <qmaster_spool_dir>/job_scripts
+      # rm -rf <qmaster_spool_dir>/zombies
+
+
+5) Backup of the old CODINE/GRD system
+--------------------------------------
+
+   Before beginning the upgrade procedure it is highly recommended to make
+   a backup of your old CODINE/GRD/SGE system.
+
+   To minimize the size of the backup you may safely delete:
+
+      - the execd spool directories (no configuration is stored here):
+                   
+         <execd_spool>/<hostname>
+
+      - old "messages" files of qmaster and scheduler:
+
+         <qmaster_spool_dir>/messages
+         <qmaster_spool_dir>/schedd/messages
+
+
+   You may make the backup with the command:
+
+      % tar cvf OLDSGE-BACKUP.tar <your_sge_root_dir>
+
+   You should also create a separate backup of your CODINE/GRD/SGE
+   configuration (assuming everything is installed in standard locations):
+
+      % tar cvf CONFIG.tar $CODINE_ROOT/default/common \
+                           $CODINE_ROOT/default/spool/qmaster
+
+
+
+6) Deleting directories of the old CODINE/GRD/SGE system
+--------------------------------------------------------
+
+   6.1 Do not delete old cluster configuration
+   -------------------------------------------
+
+   You may not delete your old cluster configuration. Thus you may not
+   delete your 'common' directory which is located in:
+
+      <your_sge_root>/<cell>/common
+
+   This directory is usually located in: 
+
+       <your_sge_root>/default/common
+   
+   You may also not delete your qmaster spool directory (the path to your
+   qmaster spool directory is defined in the global cluster configuration).
+   Often the qmaster spool directory is located in:
+
+       <your_sge_root>/default/spool/qmaster
+
+
+   6.2 Check any references in configuration to old files
+   ------------------------------------------------------
+
+   If you made any local changes to file of the distribution, please make
+   sure to make a separate backup of these files. Typically these might be
+   files which where modified and are now referenced in your cluster
+   configuration or are used by jobs from your users:
+
+       - files in the 'mpi/', 'pvm/', 'ckpt/' directory and are used by a
+         parallel environment (PE) or checkpointing environment (CKPT)
+
+       - wrapper commands in 'mpi/' used by batch job scripts
+
+       - load sensor scripts in 'util/resources/loadsensors'
+
+   
+   6.3 Delete old distribution installed with 'pkgadd' on Solaris
+   --------------------------------------------------------------
+
+   If you installed SGE(EE) 5.2.x or SGE(EE) 5.3beta1 on Solaris with
+   "pkgadd" it is typically safe to remove the following packages (not all
+   are usually available on your system):
+
+      SDRMdoc
+      SDRMcomm
+      SDRMsp32
+      SDRMsp64
+      SDRMsia
+      SDRMEdoc
+      SDRMEcomm
+      SDRMEsp32
+      SDRMEsp64
+
+   with the "pkgrm" command. To see what SGE packages are installed you can
+   run the command:
+
+      # pkginfo | grep SDRM
+
+
+   6.4 Delete old distribution installed from 'tar.gz' files
+   ---------------------------------------------------------
+
+   If you installed a previous version by unpacking the "tar" distribution
+   it is typically safe to delete the following files and directories (not
+   all files necessarily may exist in your CODINE/GRD/SGE root directory):
+
+      # cd <your_sge_root>
+      # rm -rf 3rd_party
+      # rm -f README*
+      # rm -f LICENSE*
+      # rm -f UPGRADE*
+      # rm -rf api
+      # rm -rf bin
+      # rm -rf catman
+      # rm -rf ckpt
+      # rm -rf doc
+      # rm -rf examples
+      # rm -f inst_codine
+      # rm -f inst_grd
+      # rm -f install_execd
+      # rm -f install_qmaster
+      # rm -rf locale
+      # rm -rf man
+      # rm -rf mpi
+      # rm -rf pvm
+      # rm -rf qmon
+      # rm -rf qsi
+      # rm -rf security
+      # rm -rf util
+      # rm -rf utilbin
+
+
+7) Unpacking the SGE distribution
+---------------------------------
+
+   7.1 Prerequisites
+   -----------------
+
+   For unpacking the SGE distribution you need to login to the machine where
+   user root has read/write permissions in the $SGE_ROOT directory. This is
+   either your fileserver or a machine where the NFs mount point is
+   configured appropriately. 
+
+   Installing the distribution need to be done by user 'root'. The NFS
+   clients must not mount the $SGE_ROOT directory with the '-nosuid'  NFS
+   mount option - otherwise the 'qrsh' command (and related commands like
+   'qmake' and 'qtcsh') will not work. If you cannot mount the $SGE_ROOT
+
+   It is not necessary to allow read/write permissions for user root to
+   install and run SGE sucessfully.
+
+
+   7.2) Installing SGE with 'pkgadd' on Solaris
+   --------------------------------------------
+
+   If you paln to install SGE for Solaris with 'pkgadd' please make sure to
+   remove all previous 'SDRM*' packages or all directories of the
+   distribution which are mentioned in the previous paragraph.
+
+   The default base directory ($SGE_ROOT) and default 'adminuser' has
+   changed to
+
+      Base directory: /gridware/sge (or /gridware/sgeee)   
+      Adminuser:      sgeadmin
+
+   You should select your previous base directory and your previous
+   'adminuser' name for the new installation.
+
+   If you downloaded the SGE distribution as tar files please login to the
+   machine where user root has appropriate file permissions, login as user
+   root and execute the following commands:
+
+      # cd <your_sge_root>
+      # umask 022
+      # gzip -dc sge-<version>-common.tar.gz | tar xvpf -
+      # gzip -dc sge-<version>-doc.tar.gz | tar xvpf -
+      # gzip -dc sge-<version>-bin-<arch>.tar.gz | tar xvpf -
+
+   Now you should set the file permissions:
+
+      # cd <your_sge_root>
+      # util/setfileperm.sh <adminuser> <unixgroup> <your_sge_root>
+
+    where
+
+       <adminuser> is the unix user account under which the spool files by
+       SGE should be created
+
+       <unixgroup> is the groupname 
+
+       <your_sge_root> is the absolute path where your $SGE_ROOT directory
+       is located
+
+     Example:
+
+        # cd <your_sge_root>
+        # util/setfileperm.sh sgeadmin adm `/bin/pwd`
+
+
+8) Rename the service codine_commd/grd_commd
+--------------------------------------------
+
+   If you are using the TCP service 'codine_commd' or 'grd_commd' for
+   defining the communication port in /etc/services or your NIS server you
+   need to rename the service to 'sge_commd'.
+
+
+9) Running the update script
+---------------------------- 
+
+   9.1 Set SGE_ROOT and environment variables
+   ------------------------------------------
+
+   Please now set your SGE_ROOT variable (and SGE_CELL variable if
+   applicable (if you used the default cell name 'default' this is not
+   necessary) and start the upgrade script. Make sure that the setting of
+   $SGE_ROOT does not contain any automounter prefixes like '/tmp_mnt' and
+   that $SGE_ROOT is set to a value that thisdirectory can be accessed from
+   all your execution and submit hosts. The variable COMMD_PORT should be
+   set if you are not using the service 'sge_commd'. If you are using the
+   COMMD_PORT variable, please make sure to use an unsued reserved port
+   number.
+
+      # SGE_ROOT=<your_sge_root>, export SGE_ROOT (mandatory)
+      # SGE_CELL=<yourcell>; export SGE_CELL      (depends on installation)
+      # COMMD_PORT=<portnumber>                   (depends on installation)
+
+
+   9.2 Run the update script
+   -------------------------
+
+      # cd $SGE_ROOT
+      # util/sge_update.sh
+
+   The script will ask you about your current version of CODINE/GRD/SGE
+   and if you want to upgrade to Grid Engine (SGE) or Grid Engine
+   Enterprise Edition (SGEEE).
+
+   The script will modify and delete the following files:
+
+   In $SGE_ROOT/<cell>/common
+   --------------------------
+
+      Delete: 
+         codine5|grd5
+         history/
+         license
+         qsi/
+         statistics
+
+      Rename:
+         codine_aliases|grd_aliases --> sge_aliases
+         cod_request                --> sge_request (if exists)
+         
+      Update:
+         configuration
+         product_mode
+         settings.csh
+         settings.sh
+  
+      Create:
+         rcsge   (the new startup script which replaces codine5|grd5)
+
+
+   In <qmaster_spool_directory>
+   ----------------------------
+      Delete:
+         messages
+         jobs/
+         job_scripts/
+         zombies/
+         schedd/messages
+         
+      Update:
+         complexes/queue
+         exec_hosts/
+         schedd/
+
+   A copy of your changed files and directories will be saved as
+
+       *-<version>
+
+
+10) Installing the new startup script on the local machines
+-----------------------------------------------------------
+
+   You should now remove the old per machine startup script and install the
+   new script. Depending on your operating system the startup script is
+   installed in /etc/init.d/ or /sbin/init.d/ with a symbolic link in the
+   corresponding 'rc2.d' or 'rc3.d' directory.
+
+ 
+   Please call the script
+
+      # cd $SGE_ROOT
+      # util/sge_startscript.sh  
+
+   to
+
+        - remove you old startup script
+        - add the new startup script
+
+   On IBM AIX and on Cray Unicos this procedure is not supported.
+   The procedure will fail to delete the old startup scripts of you copyied
+   or renamed them to a different place.
+
+   On Linux systems with the "/sbin/insserv" binary (e.g. SuSe 7.1 or
+   higher) the script will install the new startup script with that
+   mechanism (and try to remove the old startup script with 
+   "/sbin/insserv -r"
+
+   
+   You need to replace the startup script on all exec hosts. If you have
+   access for user root without providing a password from one of your
+   machines you may use the script
+
+      # cd $SGE_ROOT
+      # util/remoterun -all util/sge_startscript.sh 
+
+   to login to all hosts for which an execution host in your
+   qmaster spool directory is configured and run the script in the command
+   line.
+
+   'remoterun' by default uses 'rsh', with the parameter '-ssh' remoterun
+   will use 'ssh' to login to the remote host.
+
+
+
+11) Restart SGE
+---------------
+
+   You should now restart your qmaster daemon:
+
+      # $SGE_ROOT/$COD_CELL/common/rcsge -qmaster
+
+   If your qmaster hosts is also an execution host you can also start the
+   execution daemon:
+
+      # $SGE_ROOT/$COD_CELL/common/rcsge -execd
+
+   To start SGE execution daemons on all your hosts you may use the command
+   'sgeremoterun':
+
+      # cd $SGE_ROOT
+      # util/sgeremoterun -all $SGE_ROOT/$COD_CELL/common/rcsge -execd
+
+
+12) Copyright
+-------------
+
+   This following copyright statement applies to this file only. It does not
+   imply that this statement covers other files of a Grid Engine
+   distribution. See the directory '<sge_root>/3rdparty' for a summary of
+   other copyrights of this Grid Engine distribution.
+
+   The Contents of this file are made available subject to the terms of   
+   the Sun Industry Standards Source License Version 1.2
+ 
+   Sun Microsystems Inc., March, 2001
+
+ 
+   Sun Industry Standards Source License Version 1.2
+   =================================================
+   The contents of this file are subject to the Sun Industry Standards
+   Source License Version 1.2 (the "License"); You may not use this file
+   except in compliance with the License. You may obtain a copy of the
+   License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ 
+   Software provided under this License is provided on an "AS IS" basis,
+   WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+   WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+   MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+   See the License for the specific provisions governing your rights and
+   obligations concerning the Software.
+
+   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ 
+   Copyright: 2001 by Sun Microsystems, Inc.
+
+   All Rights Reserved.

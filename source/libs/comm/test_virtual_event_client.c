@@ -84,12 +84,21 @@ extern int main(int argc, char** argv)
   struct timeval now;
   time_t last_time = 0;
   int i,first_message_sent = 0;
+  int no_output = 0;
 
 
-  if (argc != 4) {
-      printf("please enter  debug level, port and hostname of virtual qmaster\n");
+  if (argc < 4) {
+      printf("syntax: debug_level vmaster_port vmaster_host [no_output]\n");
       exit(1);
   }
+
+  if (argc >= 5) {
+     if (strcmp(argv[4],"no_output") == 0) {
+        printf("virtual event client: no_output option set\n");
+        no_output = 1;
+     }
+  }
+
 
   /* setup signalhandling */
   memset(&sa, 0, sizeof(sa));
@@ -128,7 +137,7 @@ extern int main(int argc, char** argv)
      cl_com_endpoint_t* sender  = NULL;
 
      gettimeofday(&now,NULL);
-     if (now.tv_sec != last_time) {
+     if (now.tv_sec != last_time && !no_output) {
         printf("virtual event client["pid_t_fmt"] message count[sent |%d|] events[received |%d|]...\n",
            getpid(), snd_messages, events_received);
         last_time = now.tv_sec;
@@ -139,9 +148,16 @@ extern int main(int argc, char** argv)
                                          &message, &sender );
      if ( retval != CL_RETVAL_OK) {
         if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {
+
 #if 0
             printf("opening connection to %s/%s/%d\n", argv[3], "virtual_master", 1);
 #endif
+
+
+            /* shutdown when virtual qmaster is not running anymore */
+            if (events_received > 0) {
+               do_shutdown = 1;
+            }
             retval = cl_commlib_open_connection(handle, argv[3], "virtual_master", 1);
             if (retval == CL_RETVAL_OK) {
                first_message_sent = 0; 

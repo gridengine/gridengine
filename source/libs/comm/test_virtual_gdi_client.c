@@ -86,10 +86,18 @@ extern int main(int argc, char** argv)
   
   struct timeval now;
   time_t last_time = 0;
+  int no_output = 0;
 
-  if (argc != 4) {
-      printf("please enter  debug level, port and hostname of virtual qmaster\n");
+  if (argc < 4) {
+      printf("syntax: debug_level vmaster_port vmaster_host [no_output]\n");
       exit(1);
+  }
+
+  if (argc >= 5) {
+     if (strcmp(argv[4],"no_output") == 0) {
+        no_output = 1;
+        printf("virtual gdi client: no_output option set\n");
+     }
   }
 
   /* setup signalhandling */
@@ -101,10 +109,11 @@ extern int main(int argc, char** argv)
   sigaction(SIGHUP, &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
 
+  printf("virtual gdi client is connecting to the virtual qmaster for each request.\n"); 
 
   while(do_shutdown == 0) {
      gettimeofday(&now,NULL);
-     if (now.tv_sec != last_time) {
+     if (now.tv_sec != last_time && !no_output) {
         printf("virtual gdi client message count[received |%d| / sent |%d|]...\n",rcv_messages,snd_messages);
         last_time = now.tv_sec;
      }
@@ -145,23 +154,26 @@ extern int main(int argc, char** argv)
                                          NULL, 0, 0 , 1, 0 );
         if ( retval == CL_RETVAL_OK ) {
            snd_messages++;
-           retval = cl_commlib_receive_message(handle, NULL, NULL, 0,      /* handle, comp_host, comp_name , comp_id, */
-                                               1, 0,                          /* syncron, response_mid */
+           retval = cl_commlib_receive_message(handle, NULL, NULL, 0,  /* handle, comp_host, comp_name , comp_id, */
+                                               1, 0,                   /* syncron, response_mid */
                                                &message, &sender );
            if ( retval == CL_RETVAL_OK) {
-#if 0
-                 printf("received message from %s/%s/%ld: \"%s\" (%ld bytes)\n", 
-                           sender->comp_host,sender->comp_name,sender->comp_id, message->message,message->message_length);
-#endif
                  rcv_messages++;
                  cl_com_free_message(&message);
                  cl_com_free_endpoint(&sender);
                  break;
+           } else {
+              /* shutdown when virtual qmaster is not running anymore */
+              if (rcv_messages > 0) {
+                 do_shutdown = 1;
+              }
+           }
+        } else {
+           /* shutdown when virtual qmaster is not running anymore */
+           if (rcv_messages > 0) {
+              do_shutdown = 1;
            }
         } 
-#if 0        
-        printf("status: %s\n",cl_get_error_text(retval));
-#endif
      }
      cl_com_cleanup_commlib();
   }

@@ -1,3 +1,7 @@
+CR-2004-10-19-0: Testsuite: - new testsuite test for commlib:
+                              checktree/performance/throughput/commlib/check.exp
+                 Changed:   commlib test binaries testsuite
+
 AH-2004-10-19-0: Doc:       Enhanced qstat(1) man page about qstat -j option
                  Changed:   man pages
                  Bugtraq:   6181171

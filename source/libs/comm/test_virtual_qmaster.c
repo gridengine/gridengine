@@ -57,7 +57,8 @@ static int events_sent = 0;
 static cl_com_handle_t* handle = NULL; 
 cl_raw_list_t* thread_list = NULL;
 
-cl_com_endpoint_t* event_client_array[10];
+#define MAX_EVENT_CLIENTS 1000
+cl_com_endpoint_t* event_client_array[MAX_EVENT_CLIENTS];
 
 void *my_message_thread(void *t_conf);
 void *my_event_thread(void *t_conf);
@@ -176,13 +177,16 @@ extern int main(int argc, char** argv)
      nr_evc_sec = evc_count    / interval;
      snd_ev_sec = events_sent  / interval;
 
-     printf("|%.5f|[s]   received|%d|%.3f|[nr.|1/s]   sent|%d|%.3f|[nr.|1/s]   event clients|%d|%.3f|[nr.|1/s]   events sent|%d|%.3f|[nr.|1/s]\n", 
+     printf("|%.5f|[s] received|%d|%.3f|[nr.|1/s] sent|%d|%.3f|[nr.|1/s] event clients|%d|%.3f|[nr.|1/s] events sent|%d|%.3f|[nr.|1/s] rcv_buf|%d|snd_buf|%d|\n", 
             interval,
             rcv_messages, rcv_m_sec, 
             snd_messages, snd_m_sec,
             evc_count,    nr_evc_sec,
-            events_sent,  snd_ev_sec );
-
+            events_sent,  snd_ev_sec,
+            /* we do this without locking, because the strucure will always
+               exist when handle is active (but data is only updated every second) */
+            (int)handle->statistic->unread_message_count,
+            (int)handle->statistic->unsend_message_count );
 
      if ( interval >= time_interval ) {
         break;
@@ -262,7 +266,7 @@ void *my_message_thread(void *t_conf) {
 
             cl_com_free_message(&message);
             help = 0;
-            for (i=0;i<10;i++) {
+            for (i=0;i<MAX_EVENT_CLIENTS;i++) {
                if ( event_client_array[i] == NULL ) {
                   event_client_array[i] = sender;
                   evc_count++;
@@ -335,10 +339,10 @@ void *my_event_thread(void *t_conf) {
 
       cl_thread_func_testcancel(thread_config);
 
-      /* this should be 60 events/second */
+      /* this should be 60 events/second per event client*/
       for(nr=0;nr<60;nr++) {
          first = 0;
-         for (i=0;i<10;i++) {
+         for (i=0;i<MAX_EVENT_CLIENTS;i++) {
             cl_com_endpoint_t* client = event_client_array[i];
             if ( client != NULL) {
                char help[3000];

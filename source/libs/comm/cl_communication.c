@@ -48,9 +48,7 @@
 #include "cl_util.h"
 #include "cl_data_types.h"
 #include "cl_tcp_framework.h"
-#if 0
 #include "cl_ssl_framework.h"
-#endif
 #include "cl_message_list.h"
 #include "cl_host_list.h"
 #include "cl_host_alias_list.h"

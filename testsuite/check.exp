@@ -3751,7 +3751,8 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    set complete_errstr ""
    set complete_errno ""
 
-   if { [ string compare $check_name "init_core_system" ] != 0 } {
+   if { [ string compare $check_name "init_core_system" ] != 0 && 
+        [ string compare $check_needs "" ] != 0 } {
       if { [is_scheduler_alive $CHECK_CORE_MASTER [get_qmaster_spool_dir]] != 1 } {
          add_proc_error "run_test_level" -1 "scheduler is not alive"
       }

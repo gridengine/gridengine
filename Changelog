@@ -12,18 +12,17 @@ AS-2001-11-28-0: Bugfix:    remove unused and obsolete command line
 
 AH-2001-11-28-0: Feature:   added enforce_project switch to cluster configuration
                             removed dead code on QSI/qstd
-
                             This requires manual addition of a 'enforce_project' field 
                             into the global configuration.
 
 CR-2001-11-28-1: Testsuite: Conformation of the testsuite because of changes from
                             CR-2001-11-28-0, 
-                 Issuzilla: #79, 
+                 Issue:     #79, 
 		 Bugtrag:   #4531719
 
 CR-2001-11-28-0: Bugfix:    Reject changing of qmaster_spool_dir, execd_spool_dir
                             admin_user, default_domain and ignore_fqdn in running cluster.
- 		 Issuzilla: #79
+ 		 Issue:     #79
                  Bugtraq    #4531719          
 
 AS-2001-11-26-0: Bugfix:    execd now exits on SIGTERM also when commd is down
@@ -46,124 +45,135 @@ AH-2001-11-26-0: Bugfix:    Fix qmaster problem with not existing task spool
                             directory when task file is written.
                  Bugtraq:   #4532157
 
-JG-2001-11-26-2: Made qconf -secl use the new lHost datatype and access
-                 functions (see CR-2001-11-23-1).
+JG-2001-11-26-2: Feature:   Made qconf -secl use the new lHost datatype and access
+                            functions (see CR-2001-11-23-1).
 
-AA-2001-11-26-1: Completion for qmon (-> AH-2001-11-23-1) 
+AA-2001-11-26-1: Bugfix:    Completion for qmon (-> AH-2001-11-23-1) 
 
-JG-2001-11-26-1: Fixed a (non critical) read to uninitialized memory in 
-                 the code retrieving memory load values on solaris.
+JG-2001-11-26-1: Bugfix:    Fixed a (non critical) read to uninitialized memory in 
+                            the code retrieving memory load values on solaris.
 
-JG-2001-11-26-0: Added qconf options -secl (show event client list) and
-                 -kec (kill event client).
+JG-2001-11-26-0: Feature:   Added qconf options -secl (show event client list) and
+                            -kec (kill event client).
 
-AH-2001-11-23-1: Removed unused configuration parameters in queue 
-                 configuration (IssueZilla #71) and scheduler configuration 
-                 (Bugtraq #4431000). 
+AH-2001-11-23-1: Bugfix:    Removed unused configuration parameters in queue 
+                            configuration and scheduler configuration 
+                 Issue:     #71
+                 Bugtraq:   #4431000 
                  
-                 This requires manual removal of certain parameters before 
-                 restarting daemons
-                     - max_migr_time
-                     - migr_load_thresholds
-                     - max_no_migr
-                     - klog
-                     - reauth_time
-                 from all queue configurations stored in 
-                     $SGE_ROOT/default/spool/qmaster/queues/*
-                 and 
-                     - maxgjobs
-                 from the scheduler configuration in
-                     $SGE_ROOT/default/common/sched_configuration
+                            This requires manual removal of certain parameters before 
+                            restarting daemons
+                                - max_migr_time
+                                - migr_load_thresholds
+                                - max_no_migr
+                                - klog
+                                - reauth_time
+                            from all queue configurations stored in 
+                                $SGE_ROOT/default/spool/qmaster/queues/*
+                            and 
+                                - maxgjobs
+                            from the scheduler configuration in
+                                $SGE_ROOT/default/common/sched_configuration
 
-                 This change is not yet done in qmon but only in the core 
-                 system. Please don't try to compile qmon until qmon has been 
-                 updated accordingly (aimk -no-qmon).
+                            This change is not yet done in qmon but only in
+                            the core system. Please don't try to compile
+                            qmon until qmon has been updated accordingly
+                            (aimk -no-qmon).
 
-AH-2001-11-23-0: Enhanced queue priority range to -20 to +20
-                 changed data type of queue priority from ulong to string
-                 removed priority attribute from queue complex
+AH-2001-11-23-0: Feature:   Enhanced queue priority range to -20 to +20
+                            changed data type of queue priority from ulong
+                            to string removed priority attribute from queue
+                            complex
 
-CR-2001-11-23-1: Implementation of the lHostT cull data type. Modified
-                 each cull list where a hostname is stored. The lHostT
-                 data type is implemented like the lStringT type, but
-                 only used for hostnames.
+CR-2001-11-23-1: Feature:   Implementation of the lHostT cull data type.
+                            Modified each cull list where a hostname is
+                            stored. The lHostT data type is implemented like
+                            the lStringT type, but only used for hostnames.
 
-                 Bugfix of issuzilla bug id 63 / bugtraq id 4531708
+                 IssuZilla: #63 
+                 Bugtraq:   #4531708
 
+CR-2001-11-23-0: Testsuite: changed timeout behaviour in procedure 
+                            open_remote_spawn_process
 
-CR-2001-11-23-0: Testsuite:
-                    - changed timeout behaviour in procedure 
-                      open_remote_spawn_process
+CR-2001-11-22-0: Testsuite: rework on auto_reschedule test
+                            faster handle_vi_edit procedure
 
-CR-2001-11-22-0: Testsuite:
-                    - rework on auto_reschedule test
-                    - faster handle_vi_edit procedure
+AH-2001-11-21-1: Feature:   Added NO_REPRIORIZATION setting in
+                            qmaster_params to allow for diabling the PTF
+                            module. Without this setting the 'priority'
+                            parameter in queue_conf(5) has no effect in a
+                            SGEEE system.
 
-AH-2001-11-21-1: Added NO_REPRIORIZATION setting in qmaster_params to allow 
-                 for diabling the PTF module. Without this setting the 
-                 'priority' parameter in queue_conf(5) has no effect in a 
-                 SGEEE system.
+JG-2001-11-20-0: Feature:   Generalized event client interface.
+                            The former event client interface was very
+                            scheduler specific.  Only one event client - the
+                            scheduler - could register.  Now any number of
+                            event client can register at qmaster and receive
+                            events.
+                            A sample event client can be found in
+                            clients/qevent.  Further cleanup steps and
+                            documentation still has to be done.  A
+                            subscribe/unsubscribe mechanism does not yet
+                            exist.
 
-JG-2001-11-20-0: Generalized event client interface.
-                 The former event client interface was very scheduler specific.
-                 Only one event client - the scheduler - could register.
-                 Now any number of event client can register at qmaster and
-                 receive events.
-                 A sample event client can be found in clients/qevent.
-                 Further cleanup steps and documentation still has to be done.
-                 A subscribe/unsubscribe mechanism does not yet exist.
+AH-2001-11-20-0: Bugfix:    Use kstat interface instead of kvm interface for
+                            retrieval of cpu percentage load value to fix
+                            problems with Solaris 7,8 running 32-bit kernels
+                 IssuZilla: #78
+                 Bugtraq:   #4528905
 
-AH-2001-11-20-0: Bugfix: Bugtraq #4528905, IssueZilla #78
-                 Use kstat interface instead of kvm interface for retrieval
-                 of cpu percentage load value to fix problems with
-                 Solaris 7,8 running 32-bit kernels
+SD-2001-11-19-0: Feature:   Added support for queue starter_method
 
-SD-2001-11-19-0: Added support for queue starter_method
+AA-2001-11-19-0: Bugfix:    Qmon core dump in sharetree for empty sharetree
+                            when using Find
 
-AA-2001-11-19-0: Qmon core dump in sharetree for empty sharetree when
-                 using Find
+JG-2001-11-15-0: Feature:   Performance/Scalability optimization: 
+                            Defined hash tables on a number of objects to
+                            speed up search operations.
+                            Changed the order in which non unique hashed
+                            objects are stored - some code relies on getting
+                            them in the same order they were stored.
 
-JG-2001-11-15-0: Performance/Scalability optimization: 
-                 Defined hash tables on a number of objects to speed up 
-                 search operations.
-                 Changed the order in which non unique hashed objects
-                 are stored - some code relies on getting them in the
-                 same order they were stored.
+EB-2001-11-13-0: Bugfix:    Qmaster did not change the reschedule unknown
+                            value immediately after using the qconf command.
+                 Issue:     #92
+                 Bugtraq:    #4525963
 
-EB-2001-11-13-0: Bugfix (Issue #92; Bugtraq #4525963):
-                  - Qmaster did not change the reschedule unknown
-                    value immediately after using the qconf command.
-                 Modified binaries:
-                  - qmaster  
+AA-2001-11-09-0: Build:     rename of commd constants to resolve namespace
+                            conflicts for perlgui
+                            added aimk -perlgui switch to build perlgui
+                            security changes work in progress
 
-AA-2001-11-09-0: rename of commd constants to resolve namespace conflicts for 
-                 perlgui
-                 aimk -perlgui switch to build perlgui
-                 security changes work in progress
-
-CR-2001-11-08-0: Testsuite:
-                    - adapted default haftime scheduler parameter from 24 to 168
-                    - new debug parameters chanched behaviour of performance 
-                      test when calling open_remote_spawn_process - fixed
-                    - changed deviation value for share tree check from 1% to 2%
+CR-2001-11-08-0: Testsuite: - adapted default haftime scheduler parameter from 24 to 168
+                            - new debug parameters chanched behaviour of
+                              performance test when calling
+                              open_remote_spawn_process - fixed
+                            - changed deviation value for share tree check
+                            - from 1% to 2%
                       
-CR-2001-11-08-0: Testsuite:
-                    - new debuging options:
-                      menu -> new points 20 and 21 
+CR-2001-11-08-0: Testsuite: - new debuging options:
+                              menu -> new points 20 and 21 
                               (shutdown/restart scheduler and master)
-                      command line -> master_debug, schedd_debug and display 
-                                      master and scheduler can now be
-                                      started in debug mode
-                    - new procedure: wait_for_unknown_load (sge_procedures.tcl)
+                              command line -> master_debug, schedd_debug and
+                                      display master and scheduler can now
+                                      be started in debug mode
+                              - new procedure: wait_for_unknown_load
+                              - (sge_procedures.tcl)
 
 
-JG-2001-11-08-1: (Issue #89): New qconf options:
-                    -Auser: add user from file
-                    -Muser: modify user from file
-                 Corrected sorting of options in help output.   
+JG-2001-11-08-1: Feature:   New qconf options:
+                               -Auser: add user from file
+                               -Muser: modify user from file
+                            Corrected sorting of options in help output.
+                 Issue:     #89 
 
-JG-2001-11-08-0: Updated recent GDI versions for version check and error 
-                 handling in qmaster.
+JG-2001-11-08-0: Bugfix:    Updated recent GDI versions for version check
+                            and error handling in qmaster.
+
+-----------------------------------------------------------
+AS-2001-11-07-0: Created V53_beta1_TAG and V53_beta1_BRANCH
+                 Released SGE 5.3beta1
 
 JG-2001-11-07-2: aimk: recognize the necessity to set -DHAS_IN_PORT_T for 
                  the LINUX6 platform dependent on the libc version.
@@ -178,6 +188,8 @@ JG-2001-11-07-0: Adjust MAKEOPT for aimk option -qmake to reflect latest
                  changes to qmake.
 
 EB-2001-11-06-1: Fix: qdel of pending job task array took a long time
+
+
 
 CR-2001-11-06-0: Testsuite:
                     - comparing reset_scheduler setup values on startup 
@@ -363,8 +375,6 @@ CR-2001-10-09-0: (parse_job_cull.c)
                  - using vnsprintf() system call as default (instead of vsprintf)
                    This should prevent a buffer overflow error
                      
-                 
-
 JG-2001-10-09-0: Added statistics for our hashtable implementation that gives
                  following info:
                   - size of hashtable and number of elements stored
@@ -599,4 +609,3 @@ CR-2001-07-20-0: Testsuite:
 AH-2001-07-20-0: - increased GRM_GDI_VERSION for GE 5.3
                  - fix qmaster core dump caused by old execd's sending load 
                    reports w/o REP_seqno
-

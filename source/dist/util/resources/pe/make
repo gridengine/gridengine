@@ -1,4 +1,4 @@
-# Version: 5.3beta2
+# Version: 6.0
 # 
 # DO NOT MODIFY THIS FILE MANUALLY!
 #
@@ -11,3 +11,4 @@ stop_proc_args    none
 allocation_rule   $round_robin
 control_slaves    TRUE
 job_is_first_task FALSE
+urgency_slots     min

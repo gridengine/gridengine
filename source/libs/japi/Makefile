@@ -70,7 +70,7 @@ drmaa_all: drmaalib japilib drmaa_extras
 	@set DRMAA_OBJS = $(DRMAALIB_OBJS_J)
 
 drmaa_clean: japi_clean drmaa_extras_clean
-	$(RM) $(DRMAALIB_OBJS) libdrmaa.a libdrmaa$(SHAREDEXT) $(DRMAALIB_OBJS_ALL)
+	$(RM) $(DRMAALIB_SRC_ALL:.c=.o) libdrmaa.a libdrmaa$(SHAREDEXT)
 
 drmaa_extras_clean: drmaa_howto_clean
 	$(RM) test_drmaa.o test_drmaa example.o example test_drmaa_sync \

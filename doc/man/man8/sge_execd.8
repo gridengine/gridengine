@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_execd.8,v $     Last Update: $Date: 2004/04/19 10:52:13 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: sge_execd.8,v $     Last Update: $Date: 2004/06/03 15:23:51 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_EXECD 8 "$Date: 2004/04/19 10:52:13 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_EXECD 8 "$Date: 2004/06/03 15:23:51 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_execd \- xxQS_NAMExx job execution agent
 .\"
@@ -38,8 +38,6 @@ xxqs_name_sxx_execd \- xxQS_NAMExx job execution agent
 .B xxqs_name_sxx_execd
 [
 .B \-help
-] [
-.B \-lj log_file
 ]
 .\"
 .\"
@@ -58,16 +56,6 @@ to be run on these queues.
 .\"
 .SS "\fB\-help\fP"
 Prints  a listing of all options.
-.\"
-.SS "\fB\-lj log_file\fP"
-Enables job logging. All actions taken by 
-.I xxqs_name_sxx_execd
-from receiving the job until returning it to
-.M xxqs_name_sxx_qmaster 8
-are logged to the log_file. This feature is also available with
-the
-.M xxqs_name_sxx_qmaster 8
-daemon.
 .\"
 .\"
 .SH "LOAD SENSORS"

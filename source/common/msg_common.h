@@ -40,7 +40,6 @@
 */
 
 #define MSG_SGETEXT_SGEROOTNOTFOUND_S         _MESSAGE(23000, _("SGE_ROOT directory "SFQ" doesn't exist\n"))
-#define MSG_SGETEXT_SGEROOTNOTSET             _MESSAGE(23001, _("SGE_ROOT is not set\n"))
 
 #define MSG_PARSE_TOOMANYOPTIONS              _MESSAGE(23002, _("ERROR! too many options\n"))
 #define MSG_UNKNOWN_OBJECT                    _MESSAGE(23003, _("??? unknown object ???"))
@@ -62,7 +61,6 @@
 #define MSG_NULLPOINTER            _MESSAGE(23017, _("NULL pointer received") )    
 #define MSG_FILE_NOWRITE_SS           _MESSAGE(23018, _("unable to open %s for writing: %s"))
 #define MSG_FILE_NOOPEN_SS            _MESSAGE(23019, _("cant open file %s: %s\n"))
-#define MSG_FILE_NOWRITE_S            _MESSAGE(23020, _("cant not write to file %s\n"))
 #define MSG_ERROR_COULDNOTOPENSTDOUTASFILE                 _MESSAGE(23021, _("Could not open stdout as file\n"))
 #define MSG_ERROR_UNABLETODUMPJOBLIST                      _MESSAGE(23022, _("Unable to dump job list\n"))
 
@@ -128,9 +126,6 @@
 ** parse_qlist.c
 */
 #define MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S        _MESSAGE(23068, _("\"%s\" option has already been set, overriding previous setting\n"))
-#define MSG_PARSE_WORNGOBJLISTFORMATXSPECIFIEDTOYOPTION_SS    _MESSAGE(23069, _("ERROR! Wrong object list format \"%s\" specified to %s option\n"))
-#define MSG_PARSE_DOPTIONMUSTHAVEFILEARGUMENT                 _MESSAGE(23070, _("ERROR! -d option must have file argument\n"))
-#define MSG_PARSE_WRONGFIELDLISTFORMATXSPECIFIEDFORFOPTION_S  _MESSAGE(23071, _("ERROR! Wrong field list format \"%s\" specified to -f option\n"))
 #define MSG_PARSE_INVALIDOPTIONARGUMENTX_S                    _MESSAGE(23072, _("ERROR! invalid option argument \"%s\"\n"))
 
 
@@ -184,7 +179,6 @@
 ** parse_qconf.c
 */
 #define MSG_QCONF_CANTCHANGEQUEUENAME_S           _MESSAGE(23115, _("%s: cannot change queuename\n"))
-#define MSG_QCONF_CANTCHANGEHOSTNAME_S           _MESSAGE(23116, _("%s: cannot change hostname\n") )  
 #define MSG_FILE_NOFILEARGUMENTGIVEN           _MESSAGE(23117, _("no file argument given\n"))
 #define MSG_PARSE_EDITFAILED                   _MESSAGE(23118, _("edit failed\n"))
 #define MSG_FILE_FILEUNCHANGED                 _MESSAGE(23119, _("file unchanged\n"))
@@ -217,12 +211,10 @@
 #define MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S   _MESSAGE(23147, _("%s: missing filename as option argument\n"))
 #define MSG_QCONF_XISNOTAOBJECTATTRIB_SSS         _MESSAGE(23148, _("%s: \"%s\" is not a %s attribute\n"))
 #define MSG_QCONF_XISNOTAQUEUEATTRIB_SS           _MESSAGE(23149, _("%s: \"%s\" is not a queue attribute\n"))
-#define MSG_QCONF_XISNOTAEXECHOSTATTRIB_SS           _MESSAGE(23150, _("%s: \"%s\" is not a exec host attribute\n"))
 #define MSG_QCONF_CANTCHANGEOBJECTNAME_SS         _MESSAGE(23151, _("%s: cannot change %s\n"))
 #define MSG_QCONF_INTERNALFAILURE_S               _MESSAGE(23152, _("%s: internal failure\n"))
 #define MSG_QCONF_MQATTR_MISSINGOBJECTLIST_S       _MESSAGE(23153, _("%s: missing object list\n"))
 #define MSG_QCONF_MQATTR_MISSINGQUEUELIST_S       _MESSAGE(23154, _("%s: missing queue list\n"))
-#define MSG_QCONF_MQATTR_MISSINGHOSTLIST_S       _MESSAGE(23155, _("%s: missing host list\n") )        
 #define MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION  _MESSAGE(23156, _("changed scheduler configuration\n"))
 #define MSG_USER_XISNOKNOWNUSER_S                 _MESSAGE(23157, _("%s is not known as user\n"))
 #define MSG_PROJECT_XISNOKNWOWNPROJECT_S          _MESSAGE(23158, _("%s is not known as project\n"))
@@ -311,9 +303,6 @@
 /*
 ** sched_conf.c
 */
-#define MSG_SCHEDCONF_ALPPISNULLNOSCHEDULERCONFIGURATION    _MESSAGE(23229, _("alpp == NULL - no scheduler configuration"))
-#define MSG_ANSWER_NOSCHEDULERCONFIGURATION    _MESSAGE(23230, _("no scheduler configuration"))
-#define MSG_SCHEDCONF_CANTOPENSCHEDULERCONFIGURATIONFILE_SS    _MESSAGE(23231, _("cant open scheduler configuration file \"%s\": %s\n"))
 #define MSG_SCHEDCONF_INVALIDVALUEXFORQUEUESORTMETHOD_S    _MESSAGE(23232, _("invalid value \"%s\" for queue_sort_method"))
 #define MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION    _MESSAGE(23233, _("can't create scheduler configuration\n"))
 
@@ -373,7 +362,6 @@
 ** read_write_cal.c
 */
 #define MSG_TMPNAM_GENERATINGTMPNAM    _MESSAGE(23269, _("generating tmpnam()"))
-#define MSG_FILE_ERRORWRITING_S        _MESSAGE(23270, _("error writing %s\n"))
 
 /*
 ** read_write_host.c

@@ -585,6 +585,7 @@ lList **alpp
          lGetString(ep, CE_default)));
    }
 
+   
    FPRINTF((fp, MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE));
    
    if (fname) {

@@ -110,7 +110,6 @@
 ** gdilib/sge_any_request.c
 */ 
 #define MSG_GDI_INITSECURITYDATAFAILED                _MESSAGE(43046, _("failed initialize security data\n"))
-#define MSG_GDI_INITKERBEROSSECURITYDATAFAILED        _MESSAGE(43047, _("failed initialize Kerberos security data\n"))
 #define MSG_GDI_COMMDUP                               _MESSAGE(43049, _("commd is up"))
 #define MSG_GDI_COMMDDOWN_S                           _MESSAGE(43050, _("commd is down: %s"))
 #define MSG_GDI_RHOSTISNULLFORSENDREQUEST             _MESSAGE(43051, _("parameter rhost = NULL for sge_send_any_request()"))
@@ -150,10 +149,8 @@
 #define MSG_GDI_STRINGINJOBIDISINVALID_S                 _MESSAGE(43070, _("string \"%s\" in env var JOB_ID is not a valid jobid"))
 #define MSG_GDI_PROPOSEDTASKIDINVALID_SS                 _MESSAGE(43071, _("proposed task id %s \"%s\" is invalid"))
 #define MSG_GDI_TASKEXISTS_S                             _MESSAGE(43072, _("task %s already exists"))
-#define MSG_GDI_SETUPGDILIBFAILED                        _MESSAGE(43073, _("failed setting up gdi library"))
 #define MSG_GDI_SENDTASKTOEXECDFAILED_SS                 _MESSAGE(43074, _("failed sending task to execd@%s: %s"                  ))
 #define MSG_GDI_TASKNOTEXIST_I                           _MESSAGE(43075, _("task %d does not exist"))
-#define MSG_GDI_RCVFROMEXECLOCALCOMMDFAILED_S            _MESSAGE(43076, _("rcv_from_exec(): failed enrolling to local sge commd: %s"))
 #define MSG_GDI_MESSAGERECEIVEFAILED_SI                  _MESSAGE(43077, _("failed receiving message from execd: %s %d"))
 #define MSG_GDI_TASKNOTFOUND_S                           _MESSAGE(43078, _("cannot find task with taskid \"%s\"\n"))
 #define MSG_GDI_TASKNOTFOUNDNOIDGIVEN_S                  _MESSAGE(43079, _("cannot find task without taskid - should become task \"%s\""))
@@ -817,18 +814,6 @@
 #define MSG_GDI_USAGE_nohist_OPT                         "[-nohist]"
 #define MSG_GDI_UTEXT_nohist_OPT                         _MESSAGE(43290, _("do not write history" ))
 
-#define MSG_GDI_USAGE_noread_argfile_OPT                 "[-noread-argfile]"
-#define MSG_GDI_UTEXT_noread_argfile_OPT                 _MESSAGE(43291, _("do not read \"qmaster_args\" file"))
-
-#define MSG_GDI_USAGE_nowrite_argfile_OPT                "[-nowrite-argfile]"
-#define MSG_GDI_UTEXT_nowrite_argfile_OPT                _MESSAGE(43292, _("do not write \"qmaster_args\" file"))
-
-#define MSG_GDI_USAGE_truncate_argfile_OPT               "[-truncate-argfile]"
-#define MSG_GDI_UTEXT_truncate_argfile_OPT               _MESSAGE(43293, _("truncate  \"qmaster_args\" file"))
-
-#define MSG_GDI_USAGE_nostart_schedd_OPT                 "[-nostart-schedd]"
-#define MSG_GDI_UTEXT_nostart_schedd_OPT                 _MESSAGE(43294, _("do not start schedd"))
-
 #define MSG_GDI_USAGE_nostart_commd_OPT                  "[-nostart-commd]"
 #define MSG_GDI_UTEXT_nostart_commd_OPT                  _MESSAGE(43295, _("do not start commd"))
 
@@ -874,9 +859,6 @@
 #define MSG_GDI_USAGE_Aattr_OPT                          "[-Aattr obj_nm fname obj_id_lst]"
 #define MSG_GDI_UTEXT_Aattr_OPT                          _MESSAGE(43309, _("add to a list attribute of an object") ) 
 
-#define MSG_GDI_USAGE_show_license_OPT                   "[-show-license]"
-#define MSG_GDI_UTEXT_show_license_OPT                   _MESSAGE(43310, _("show license information"))
-
 #define MSG_GDI_USAGE_JQ_DEST_OPR                        "job_queue_list"
 #define MSG_GDI_USAGE_SRVR_NM_OPR                        "server_name"
 #define MSG_GDI_USAGE_MESSAGE_OPR                        "message"
@@ -901,10 +883,6 @@
 */
 #define MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT   _MESSAGE(43319, _("NULL pointer passed to sge_gdi_multi()"))
 #define MSG_GDI_CANTCREATEGDIREQUEST                     _MESSAGE(43320, _("can't create gdi request"))
-#define MSG_GDI_NEEDUIDINEVIRONMENT                      _MESSAGE(43321, _("need UID in environment\n"))
-#define MSG_GDI_NEEDUSERNAMEINENVIRONMENT                _MESSAGE(43322, _("need USERNAME in environment\n"))
-#define MSG_GDI_NEEDGIDINENVIRONMENT                     _MESSAGE(43323, _("need GID in environment\n"))
-#define MSG_GDI_NEEDGROUPNAMEINENVIRONMENT               _MESSAGE(43324, _("need GROUPNAME in environment\n"))
 #define MSG_GDI_GETPWUIDXFAILEDERRORX_IS                 _MESSAGE(43325, _("failed to getpwuid(%d): %s\n"))
 #define MSG_GDI_GETGRGIDXFAILEDERRORX_IS                 _MESSAGE(43326, _("failed to getgrgid(%d): %s\n"))
 #define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43327, _("failed sending gdi request\n"))
@@ -925,7 +903,6 @@
 
 /* sge_job_jatask.c */
 
-#define MSG_JOB_REJECTED_NO_TASK_LIST  _MESSAGE(43341, _("job "u32" was rejected because it was not possible to create task list\n"))
 #define MSG_JOB_JLPPNULL              _MESSAGE(43342, _("jlpp == NULL in job_add_job()\n"))
 #define MSG_JOB_JEPNULL               _MESSAGE(43343, _("jep == NULL in job_add_job()\n"))
 #define MSG_JOB_JOBALREADYEXISTS_U    _MESSAGE(43344, _("can't add job \"" U32CFormat "\" - job already exists\n") ) 

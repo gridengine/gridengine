@@ -547,7 +547,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    /* check if job owner has access rights to the queue */
    if (!sge_has_access(lGetString(job, JB_owner), lGetString(job, JB_group), queue, acl_list)) {
       DPRINTF(("Job %d has no permission for queue %s\n", (int)job_id, queue_name));
-      schedd_add_message(job_id, SCHEDD_INFO_HASNOPERMISSION_S, "queue", queue_name);
+      schedd_add_message(job_id, SCHEDD_INFO_HASNOPERMISSION_SS, "queue", queue_name);
       DEXIT;
       return 1;
    }
@@ -572,7 +572,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    if ((projects = lGetList(queue, QU_xprojects))) {
       if (((project = lGetString(job, JB_project)) &&
            lGetElemStr(projects, UP_name, project))) {
-         schedd_add_message(job_id, SCHEDD_INFO_EXCLPRJ_SS,
+         schedd_add_message(job_id, SCHEDD_INFO_EXCLPRJ_SSS,
             project, "queue", queue_name);
          DEXIT;
          return 9;
@@ -859,7 +859,7 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
          lGetList(host, EH_xacl), acl_list)) {
       DPRINTF(("Job %d has no permission for host %s\n",
                (int)job_id, eh_name));
-      schedd_add_message(job_id, SCHEDD_INFO_HASNOPERMISSION_S,
+      schedd_add_message(job_id, SCHEDD_INFO_HASNOPERMISSION_SS,
          "host", eh_name);
       DEXIT;
       return 1;
@@ -887,7 +887,7 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
    if ((projects = lGetList(host, EH_xprj))) {
       if (((project = lGetString(job, JB_project)) &&
            lGetElemStr(projects, UP_name, project))) {
-         schedd_add_message(job_id, SCHEDD_INFO_EXCLPRJ_SS,
+         schedd_add_message(job_id, SCHEDD_INFO_EXCLPRJ_SSS,
             project, "host", eh_name);
          DEXIT;
          return 4;

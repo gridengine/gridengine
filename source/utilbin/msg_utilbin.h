@@ -42,13 +42,6 @@
 #define MSG_COMMAND_EXECUTEFAILED_S          _MESSAGE(57002, _("can't execute command \"%s\"\n"))
 #define MSG_SYSTEM_RESOLVEUSERFAILED_S       _MESSAGE(57003, _("can't resolve username \"%s\"\n"))
 
-/* 
-** utilbin/gdi_request.c
-*/ 
-#define MSG_SYSTEM_QMASTERNOTALIVE           _MESSAGE(57004, _("qmaster not alive\n"))
-#define MSG_SYSTEM_GDISETUPERROR             _MESSAGE(57005, _("sge_gdi_setup error\n"))
-#define MSG_SYSTEM_MULTIREQUEST_I            _MESSAGE(57006, _("%d. ----- Multirequest"))
-#define MSG_SYSTEM_6SINGLEREQUEST_I          _MESSAGE(57007, _("%d. ----- 6 single requests"))
 
 
 /* 
@@ -126,10 +119,5 @@
 #define SGE_INFOTEXT_TESTSTRING_S_L10N _MESSAGE(57035, _(SGE_INFOTEXT_TESTSTRING_S))
 #define SGE_INFOTEXT_UNDERLINE_L10N    _MESSAGE(57036, _(SGE_INFOTEXT_UNDERLINE))
 #define SGE_INFOTEXT_ONLY_ALLOWED_SS _MESSAGE(57037, _("\nThere are only two answers allowed: "SFQ" or "SFQ"!\n\n"))
-
-/* 
-** utilbin/range.c
-*/ 
-/* #define MSG_COMMAND_USAGE_RANGE              _MESSAGE(57038, _("usage: range lower upper\n") ) */
 
 #endif /* __MSG_UTILBIN_H */

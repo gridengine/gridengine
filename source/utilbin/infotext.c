@@ -61,6 +61,7 @@ typedef struct sge_infotext_opt {
 
 
 static void  sge_infotext_welcome(void);
+static void  sge_infotext_raw(char* format_string);
 static void  sge_infotext_usage(void);
 static int   sge_infotext_get_nr_of_substrings(char* buffer, char* substring);
 #if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164)
@@ -471,11 +472,11 @@ char* sge_infotext_string_input_parsing(dstring* string_buffer,char* string) {
            special_sign = 1;
         } 
         if (*h1 == '\\' && *h2 == 'r') {
-           sge_dstring_append(string_buffer, " ");
+           sge_dstring_append(string_buffer, "\r");
            special_sign = 1;
         } 
         if (*h1 == '\\' && *h2 == 't') {
-           sge_dstring_append(string_buffer, " ");
+           sge_dstring_append(string_buffer, "\t");
            special_sign = 1;
         } 
         if (special_sign == 1) {
@@ -607,11 +608,23 @@ void sge_infotext_welcome(void) {
 
 }
 
+void sge_infotext_raw(char* format_string) {
+   const char* buffer = NULL;
+   dstring tmp_buf = DSTRING_INIT;
+
+   buffer = _SGE_GETTEXT__((char*)_(sge_infotext_string_input_parsing(&tmp_buf,format_string)));
+   printf("%s",buffer);
+   sge_dstring_free(&tmp_buf);
+}
+
+
 void sge_infotext_usage(void) {
    printf("Version: %s\n", GDI_VERSION);
    printf("usage:\n");
    printf("infotext -help    : show help\n");
    printf("infotext -test    : test localization\n");
+   printf("infotext -raw     : return localized format string\n");
+   printf("infotext -__eoc__ : stop option parsing");
    printf("infotext -message : print empty po file string\n");
    printf("infotext -message-space : print po file string for test purposes\n");
    printf("infotext [-enu] [-D STRING] [-S COUNT] FORMAT_STRING ARGUMENTS\n\n");
@@ -645,9 +658,11 @@ int main(
 int argc,
 char **argv 
 ) {
+   int no_options = 0;
    int ret_val = 0;
    int show_help = 0;
    int do_test = 0;
+   int do_raw = 0;
    int do_message = 0;
    int do_message_space = 0;
    int do_ask = 0;
@@ -693,12 +708,12 @@ char **argv
    for(i=1; i< argc; i++) {
       char* arg = argv[i];
 
-      if (arg[0] == '-' && arg_start == 0) {
+      if (arg[0] == '-' && arg_start == 0 && no_options == 0) {
          int o_start = 0;
          char* option = NULL;
          int h;
          int opt_length; 
-         
+
          /* option */
          while( arg[o_start++] == '-' );
          option = &arg[--o_start];
@@ -711,6 +726,16 @@ char **argv
             do_test = 1;
             break;
          }
+         if ( strcmp(option,"__eoc__") == 0) {
+            no_options = 1;
+            continue;
+         }
+
+         if ( strcmp(option,"raw") == 0) {
+            do_raw = 1;
+            continue;
+         }
+
          if ( strcmp(option,"message") == 0) {
             do_message = 1;
             continue;
@@ -827,6 +852,10 @@ char **argv
 
    if (do_test == 1) {
       sge_infotext_welcome();
+      exit(0);
+   }
+   if (do_raw == 1) {
+      sge_infotext_raw(argv[arg_start]);
       exit(0);
    }
 

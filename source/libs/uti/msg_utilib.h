@@ -99,15 +99,6 @@
 #define MSG_FILE_RMDIRFAILED_SS              _MESSAGE(49029, _("rmdir(%s) failed: %s\n"))
 
 
-/* 
-** utilib/sge_getloadavg.c
-*/ 
-#define MSG_PROCESSOR_SETNOTFOUND_I          _MESSAGE(49030, _("processor set %d not found.\n"))
-#define MSG_PROCESSOR_TOTALLOADAVG_F         _MESSAGE(49031, _("total load_avg %2.2f\n") )  
-#define MSG_PROCESSOR_KNLISTFAILED           _MESSAGE(49032, _("Can't knlist()\n"))
-#define MSG_PROCESSOR_KMEMFAILED             _MESSAGE(49033, _("Can't read kmem\n"))
-#define MSG_PROCESSOR_NLISTFAILED            _MESSAGE(49034, _("Can't nlist()\n"))
-
 
 /* 
 ** utilib/sge_loadmem.c
@@ -154,11 +145,6 @@
 #define MSG_PROC_KILLISSUED_II                  _MESSAGE(49054, _("kill(%d, %d) issued"))
 
 
-/* 
-** utilib/sge_put_get_file.c
-*/ 
-#define MSG_FILE_WRITEOPENFAILED_SS             _MESSAGE(49055, _("couldn't open %s for writing: %s\n"))
-#define MSG_FILE_READOPENFAILED_SS              _MESSAGE(49056, _("couldn't open %s for reading: %s"))
 
 /* 
 ** utilib/sge_set_def_sig_mask.c
@@ -212,28 +198,6 @@
 ** utilib/sge_sysconf.c
 */
 #define MSG_SYSCONF_UNABLETORETRIEVE_I                _MESSAGE(49078, _("unable to retrieve value for system limit (%d)\n") )   
-
-/*
-**  former SGE_TEXT:
-*/
-#define MSG_SGETEXT_SHOULD_BE_ROOT_S            _MESSAGE(49079, _("should be root to start "SFN"\n"))
-/* 
-#define MSG_SGETEXT_INVALIDHOSTINQUEUE_S        _MESSAGE(49080, _("invalid hostname "SFQ" associated with queue\n"))
-#define MSG_SGETEXT_CANTRESOLVEUSER_S           _MESSAGE(49082, _("unknown user name "SFQ"\n") )   
-#define MSG_SGETEXT_CANTRESOLVEGROUP_S          _MESSAGE(49083, _("unknown group name "SFQ"\n") )  
-#define MSG_SGETEXT_NOCOMMD_SS                  _MESSAGE(49084, _("unable to contact commd at host "SFN" using service "SFN"\n"))
-#define MSG_SGETEXT_NOPERM                      _MESSAGE(49085, _("no permissions for this operation\n"))
-#define MSG_SGETEXT_CANTFINDACL_S               _MESSAGE(49086, _("unable to find referenced access list "SFQ"\n"))
-#define MSG_SGETEXT_SHOULD_BE_ROOT_S            _MESSAGE(49087, _("should be root to start "SFN"\n"))
-#define MSG_SGETEXT_STILL_REFERENCED_SS         _MESSAGE(49088, _("remove reference to "SFQ" in subordinates of queue "SFQ" before deletion\n") ) 
-#define MSG_SGETEXT_NO_SECURITY_LEVEL_FOR_S           _MESSAGE(49089, _("denied: missing security level for "SFN"\n"))
-#define MSG_SGETEXT_MAY_NOT_CHG_QHOST_S               _MESSAGE(49090, _("may not change host of queue "SFQ"\n"))
-#define MSG_SGETEXT_UP_REFERENCED_TWICE_SS            _MESSAGE(49091, _("denied: share tree contains reference to unknown "SFN" "SFQ"\n") )   
-#define MSG_SGETEXT_UNABLETORETRIEVE_I                _MESSAGE(49093, _("unable to retrieve value for system limit (%d)\n") )     
-
-#define MSG_SYSTEM_INVALIDERRORNUMBER                 _MESSAGE(49094, _("invalid error number"))
-#define MSG_SYSTEM_GOTNULLASERRORTEXT                 _MESSAGE(49095, _("no error text available"))
-*/
 
 
 /* 

@@ -95,32 +95,18 @@
 #define MSG_LOG_JOBSDROPPEDERRORSTATEREACHED          _MESSAGE(47034, _("jobs dropped because of error state: "))
 #define MSG_LOG_JOBSDROPPEDBECAUSEOFXHOLD             _MESSAGE(47035, _("jobs dropped because of hold: "))
 #define MSG_LOG_JOBSDROPPEDBECAUSEDEPENDENCIES        _MESSAGE(47036, _("jobs dropped because of job dependencies: "))
-#define MSG_LOG_JOBSDROPPEDBECAUSEUSRGRPLIMIT         _MESSAGE(47037, _("jobs dropped because of user limitations: "))
-#define MSG_EVENT_CKPTOBJXFORJOBYNOTFOUND_SI          _MESSAGE(47038, _("can't find requested CKPT object \"%s\" for job %d\n"))
 #define MSG_ATTRIB_PARSINGATTRIBUTEXFAILED_SS         _MESSAGE(47039, _("failed parsing attribute \"%s\": %s\n"))
 
 /* 
 ** schedd/sge_schedd_text.c
 */ 
-#define MSG_SGETEXT_INVALIDHOSTINQUEUE_S        _MESSAGE(47040, _("invalid hostname "SFQ" associated with queue\n"))
-#define MSG_SGETEXT_CANTRESOLVEUSER_S           _MESSAGE(47042, _("unknown user name "SFQ"\n") )   
-#define MSG_SGETEXT_CANTRESOLVEGROUP_S          _MESSAGE(47043, _("unknown group name "SFQ"\n") )  
-#define MSG_SGETEXT_NOCOMMD_SS                  _MESSAGE(47044, _("unable to contact commd at host "SFN" using service "SFN"\n"))
-#define MSG_SGETEXT_NOPERM                      _MESSAGE(47045, _("no permissions for this operation\n"))
-#define MSG_SGETEXT_CANTFINDACL_S               _MESSAGE(47046, _("unable to find referenced access list "SFQ"\n"))
-/* #define MSG_SGETEXT_SHOULD_BE_ROOT_S            _MESSAGE(47047, _("should be root to start "SFN"\n") ) */
-#define MSG_SGETEXT_STILL_REFERENCED_SS         _MESSAGE(47048, _("remove reference to "SFQ" in subordinates of queue "SFQ" before deletion\n") ) 
-#define MSG_SGETEXT_NO_SECURITY_LEVEL_FOR_S           _MESSAGE(47049, _("denied: missing security level for "SFN"\n"))
-#define MSG_SGETEXT_MAY_NOT_CHG_QHOST_S               _MESSAGE(47050, _("may not change host of queue "SFQ"\n"))
 #define MSG_SGETEXT_UP_REFERENCED_TWICE_SS            _MESSAGE(47051, _("denied: share tree contains reference to unknown "SFN" "SFQ"\n") )   
-/* #define MSG_SGETEXT_UNABLETORETRIEVE_I                _MESSAGE(47053, _("unable to retrieve value for system limit (%d)\n") )   */  
-
 
 #define MSG_SCHEDD_INFO_CANNOTRUNATHOST_SSS           _MESSAGE(47054, _("(-l"SFN") cannot run at host "SFQ" because "SFN"" ) ) 
-#define MSG_SCHEDD_INFO_HASNOPERMISSION_S             _MESSAGE(47055, _("has no permission for "SFN" "SFQ""))
+#define MSG_SCHEDD_INFO_HASNOPERMISSION_SS            _MESSAGE(47055, _("has no permission for "SFN" "SFQ""))
 #define MSG_SCHEDD_INFO_HASINCORRECTPRJ_SSS           _MESSAGE(47056, _("(project "SFN") does not have the correct project to run in "SFN" "SFQ""))
 #define MSG_SCHEDD_INFO_HASNOPRJ_S                    _MESSAGE(47057, _("(no project) does not have the correct project to run in "SFN" "SFQ""))
-#define MSG_SCHEDD_INFO_EXCLPRJ_SS                    _MESSAGE(47058, _("(project "SFN") is not allowed to run in "SFN" "SFQ" based on the excluded project list") )   
+#define MSG_SCHEDD_INFO_EXCLPRJ_SSS                   _MESSAGE(47058, _("(project "SFN") is not allowed to run in "SFN" "SFQ" based on the excluded project list") )   
 #define MSG_SCHEDD_INFO_QUEUENOTREQUESTABLE_S         _MESSAGE(47059, _("cannot run in queue "SFQ" because queues are configured to be non requestable"))
 #define MSG_SCHEDD_INFO_NOTINHARDQUEUELST_S           _MESSAGE(47060, _("cannot run in queue "SFQ" because it is not contained in its hard queue list (-q)"))
 #define MSG_SCHEDD_INFO_NOTPARALLELQUEUE_S            _MESSAGE(47061, _("cannot run in queue "SFQ" because it is not a parallel queue") ) 
@@ -229,7 +215,6 @@
 ** schedd/sge_process_events.c
 */ 
 #define MSG_EVENT_GOTSHUTDOWNFROMQMASTER              _MESSAGE(47150, _("got \"shutdown\" command from qmaster"))
-#define MSG_EVENT_GOTFORCESCHEDRUNFROMQMASTER         _MESSAGE(47151, _("got \"force scheduler run\" command from qmaster"))
 #define MSG_EVENT_GOTMASTERGOESDOWNMESSAGEFROMQMASTER _MESSAGE(47152, _("got \"qmaster goes down\" message from qmaster"))
 #define MSG_JOB_CANTFINDJOBXTODELETE_U                _MESSAGE(47153, _("can't find job \"" U32CFormat "\" to delete"))
 #define MSG_JOB_CANTFINDJOBXTODELETEJOBARRAYTASK_U    _MESSAGE(47154, _("can't find job \"" U32CFormat "\" to delete a job-array task"))
@@ -297,8 +282,6 @@
 #define MSG_SCHEDD_REREGISTER_PARAM                         _MESSAGE(47211, _("schedd parameter changed: reregistering at qmaster\n"))
 #define MSG_SCHEDD_REREGISTER_ERROR                         _MESSAGE(47212, _("problems in schedd event layer: reregistering at qmaster\n"))
 
-#define MSG_SCHEDD_CHANGEALGORITHMNOEVENT_S                 _MESSAGE(47213, _("Switching to scheduler \"%s\". No change with event handler\n"))
-#define MSG_SCHEDD_CHANGEALGORITHMEVENT_S                   _MESSAGE(47214, _("Switching to event handler scheduler \"%s\"\n"))
 
 /* 
 ** schedd/sge_select_queue.c
@@ -364,10 +347,6 @@
 #define MSG_EVENT_ADDJOB_SCHEDD_INFO_III                       _MESSAGE(47254, _("%d. EVENT ADD JOB_SCHEDD_INFO %d.%d\n"))
 #define MSG_EVENT_MODJOB_SCHEDD_INFO_III                       _MESSAGE(47255, _("%d. EVENT MOD JOB_SCHEDD_INFO %d.%d\n"))
 #define MSG_EVENT_JOB_SCHEDD_INFOLISTXELEMENTS_II              _MESSAGE(47256, _("%d. EVENT JOB_SCHEDD_INFO LIST %d Elements\n"))
-#define MSG_EVENT_DELZOMBIE_III                       _MESSAGE(47257, _("%d. EVENT DEL ZOMBIE %d.%d\n"))
-#define MSG_EVENT_ADDZOMBIE_III                       _MESSAGE(47258, _("%d. EVENT ADD ZOMBIE %d.%d\n"))
-#define MSG_EVENT_MODZOMBIE_III                       _MESSAGE(47259, _("%d. EVENT MOD ZOMBIE %d.%d\n"))
-#define MSG_EVENT_ZOMBIELISTXELEMENTS_II              _MESSAGE(47260, _("%d. EVENT ZOMBIE LIST %d Elements\n"))
 #define MSG_EVENT_MODSCHEDDPRIOOFJOBXTOY_IDI       _MESSAGE(47261, _("%d. EVENT MODIFY SCHEDULING PRIORITY OF JOB "U32CFormat" TO %d\n"))
 #define MSG_EVENT_JOBXUSAGE_II                     _MESSAGE(47262, _("%d. EVENT JOB %d USAGE\n"))
 #define MSG_EVENT_JOBXFINALUSAGE_II                _MESSAGE(47263, _("%d. EVENT JOB %d FINAL USAGE\n"))
@@ -397,10 +376,6 @@
 #define MSG_EVENT_ADDEXECHOSTX_IS                  _MESSAGE(47287, _("%d. EVENT ADD EXECHOST %s\n"))
 #define MSG_EVENT_MODEXECHOSTX_IS                  _MESSAGE(47288, _("%d. EVENT MOD EXECHOST %s\n"))
 #define MSG_EVENT_EXECHOSTLISTXELEMENTS_II         _MESSAGE(47289, _("%d. EVENT EXECHOST LIST %d Elements\n"))
-#define MSG_EVENT_DELFEATURE_SETX_IS                  _MESSAGE(47290, _("%d. EVENT DEL FEATURE_SET %s\n"))
-#define MSG_EVENT_ADDFEATURE_SETX_IS                  _MESSAGE(47291, _("%d. EVENT ADD FEATURE_SET %s\n"))
-#define MSG_EVENT_MODFEATURE_SETX_IS                  _MESSAGE(47292, _("%d. EVENT MOD FEATURE_SET %s\n"))
-#define MSG_EVENT_FEATURE_SETLISTXELEMENTS_II         _MESSAGE(47293, _("%d. EVENT FEATURE_SET LIST %d Elements\n"))
 #define MSG_EVENT_DELMANAGERX_IS                  _MESSAGE(47294, _("%d. EVENT DEL MANAGER %s\n"))
 #define MSG_EVENT_ADDMANAGERX_IS                  _MESSAGE(47295, _("%d. EVENT ADD MANAGER %s\n"))
 #define MSG_EVENT_MODMANAGERX_IS                  _MESSAGE(47296, _("%d. EVENT MOD MANAGER %s\n"))

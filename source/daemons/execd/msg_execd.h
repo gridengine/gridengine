@@ -89,9 +89,6 @@
 #define MSG_JOB_CANTOPENJOBPIDFILEFORJOBXY_UU    _MESSAGE(29031, _("can't open \"job_pid\" file for job "U32CFormat"."U32CFormat"\n"))
 #define MSG_SHEPHERD_REMOVEACKEDJOBEXITCALLEDWITHX_U    _MESSAGE(29032, _("remove_acked_job_exit called with "U32CFormat".0"))
 #define MSG_JOB_XYHASNOTASKZ_UUS    _MESSAGE(29033, _("job "U32CFormat"."U32CFormat" has no task \"%s\""))
-#define MSG_SHEPHERD_CANTSTARTXFORJOBY_SU    _MESSAGE(29034, _("can't start command \"%s\" for job " U32CFormat " to delete credentials"))
-#define MSG_SHEPHERD_CANTDELCREDENTIALSFORJOBXCOMMANDYFAILEDWITHCODEZ_USI    _MESSAGE(29035, _("could not delete credentials for job " U32CFormat" - command \"%s\" failed with return code %d"))
-#define MSG_SHEPHERD_CANTDELCREDENTIALSFORJOBXYBINARYNOTEXIST_US    _MESSAGE(29036, _("could not delete credentials for job " U32CFormat" - %s binary does not exist"))
 #define MSG_FILE_CANTREMOVEDIRECTORY_SS    _MESSAGE(29037, _("can't remove directory \"%s\": %s"))
 #define MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBXYZ_UUS    _MESSAGE(29038, _("acknowledge for unknown job "U32CFormat"."U32CFormat"/%s"))
 #define MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBEXIT    _MESSAGE(29039, _("acknowledge for unknown job's exit"))
@@ -136,7 +133,6 @@
 #define MSG_SCHEDD_JOBXPIDYSCHEDSETSCHEDULERFAILURE_UUS    _MESSAGE(29073, _("job "U32CFormat" pid "U32CFormat" sched_setscheduler failure: %s\n"))
 #define MSG_PRIO_JOBXNICEMFAILURE_S                        _MESSAGE(29074, _("job "U32CFormat" nicem failure: %s\n"))
 #define MSG_PRIO_JOBXNICEJFAILURE_S                        _MESSAGE(29075, _("job "U32CFormat" nicej failure: %s\n"))
-#define MSG_PRIO_JOBXSETPRIORITYFAILURE_US                 _MESSAGE(29076, _("job "U32CFormat" setpriority failure: %s\n"))
 #define MSG_WHERE_FAILEDTOBUILDWHERECONDITION              _MESSAGE(29077, _("failed to build where-condition"))
 #define MSG_PRIO_PTFMINMAX_II                              _MESSAGE(29078, _("PTF_MAX_PRIORITY=%d, PTF_MIN_PRIORITY=%d\n"))
 #define MSG_PRIO_NICEMFAILED_S                             _MESSAGE(29079, _("nicem failed: %s\n"))
@@ -145,7 +141,6 @@
 #define MSG_ERROR_NOERROROCCURED                           _MESSAGE(29082, _("No error occurred"))
 #define MSG_ERROR_INVALIDARGUMENT                          _MESSAGE(29083, _("Invalid argument"))
 #define MSG_ERROR_JOBDOESNOTEXIST                          _MESSAGE(29084, _("Job does not exist"))
-#define MSG_JOB_THEASHFORJOBXISY_UX                        _MESSAGE(29085, _("The ASH for job "U32CFormat" is "u64"\n"))
 #define MSG_JOB_MYASHIS_X                                  _MESSAGE(29086, _("My ash is "u64"\n"))
 #define MSG_ERROR_UNABLETODUMPJOBUSAGELIST                 _MESSAGE(29087, _("Unable to dump job usage list\n"))
 
@@ -235,7 +230,6 @@
 #define MSG_EXECD_NOADDGIDOPEN_SUUS   _MESSAGE(29130, _("failed opening addgrpid file %s of job "U32CFormat"."U32CFormat": %s"))
 #define MSG_JOB_NOREGISTERPTF_UUS     _MESSAGE(29131, _("failed registering job "U32CFormat"."U32CFormat" at ptf: %s"))
 #define MSG_EXECD_NOOSJOBIDOPEN_SUUS  _MESSAGE(29132, _("failed opening os jobid file %s of job "U32CFormat"."U32CFormat": %s"))
-#define MSG_EXECD_NOOSJOBIDREAD_SUUS  _MESSAGE(29133, _("failed reading os jobid file %s of job "U32CFormat"."U32CFormat": %s"))
 /*
 ** execd_job_exec.c
 */
@@ -248,7 +242,6 @@
 #define MSG_JOB_TASKWITHOUTJOB_U      _MESSAGE(29140, _("received task belongs to job "U32CFormat" but this job is not here\n"))
 #define MSG_JOB_TASKNOTASKINJOB_UU    _MESSAGE(29141, _("received task belongs to job "U32CFormat" but this job is here but the JobArray task "U32CFormat" is not here\n"))
 #define MSG_JOB_TASKNOSUITABLEJOB_U   _MESSAGE(29142, _("received task belongs to job "U32CFormat" but this job is not suited for starting tasks\n"))
-#define MSG_JOB_TASKALREADYEXISTS_US  _MESSAGE(29143, _("received task "U32CFormat"/%s which is already here\n"))
 #define MSG_JOB_NOTASKPASSINGIF_SU    _MESSAGE(29144, _("%s does not fulfill task passing interface for job "U32CFormat"\n"))
 #define MSG_JOB_NOFREEQ_USSS          _MESSAGE(29145, _("no free queue for job "U32CFormat" of user %s@%s (localhost = %s)\n"))
 #define MSG_JOB_NOSUCHQ_SUSS          _MESSAGE(29146, _("no such queue \"%s\" as requested by job "U32CFormat" from user %s@%s\n"))
@@ -287,7 +280,6 @@
 #define MSG_LS_STOPLS_S               _MESSAGE(29161, _("stopping load sensor %s\n"))
 #define MSG_LS_STARTLS_S              _MESSAGE(29162, _("starting load sensor %s\n"))
 #define MSG_LS_RESTARTLS_S            _MESSAGE(29163, _("restarting load sensor %s\n"))
-#define MSG_LS_NORESTARTLS            _MESSAGE(29164, _("load sensor not restarted because load sensor file was not modified\n"))
 #define MSG_LS_NOMODTIME_SS           _MESSAGE(29165, _("can't get mod_time from load sensor file %s: %s\n"))
 #define MSG_LS_FORMAT_ERROR_SS        _MESSAGE(29166, _("Format error of loadsensor "SFQ". Received: \"%100s\""))
 

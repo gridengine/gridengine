@@ -64,7 +64,6 @@
 #define MSG_PROC_INVALIDPRIORITYMUSTBEGREATERTHANMINUS1024       _MESSAGE(27012, _("ERROR! invalid priority, priority must be greater than -1024\n"))
 #define MSG_LIST_ERRORFORMATINGHARDQUEUELISTASQ       _MESSAGE(27013, _("Error formatting hard_queue_list as -q\n"))
 #define MSG_LIST_ERRORFORMATINGSOFTQUEUELISTASQ       _MESSAGE(27014, _("Error formatting soft_queue_list as -q\n"))
-#define MSG_LIST_ERRORFORMATINGQSARGSLIST       _MESSAGE(27015, _("Error formatting qs_args list\n"))
 #define MSG_LIST_ERRORFORMATINGSHELLLIST       _MESSAGE(27016, _("Error formatting shell_list\n"))
 #define MSG_LIST_ERRORFORMATINGENVIRONMENTLISTASV       _MESSAGE(27017, _("Error formatting environment list as -v\n"))
 #define MSG_LIST_ERRORFORMATINGJOBARGUMENTS       _MESSAGE(27018, _("Error formatting job argumentents\n"))

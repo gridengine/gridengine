@@ -1824,7 +1824,7 @@ char **argv
                exit_status = 1;
                break;
             default:
-               ERROR((SGE_EVENT, MSG_QSH_UNKNOWNJOBSTATUS_X, job_status));
+               ERROR((SGE_EVENT, MSG_QSH_UNKNOWNJOBSTATUS_X, x32c(job_status)));
                do_exit = 1;
                exit_status = 1;
                break;

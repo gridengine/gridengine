@@ -286,7 +286,10 @@ int user        /* =1 user, =0 project */
 
    /* ensure this u/p object is not referenced in actual share tree */
    if (getNode(Master_Sharetree_List, name, user ? STT_USER : STT_PROJECT, 0)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANT_DELETE_UP_IN_SHARE_TREE_SS, user?MSG_OBJ_USER:MSG_OBJ_PRJ, name));
+      if (user)
+         ERROR((SGE_EVENT, MSG_SGETEXT_CANT_DELETE_USER_IN_SHARE_TREE_S, name));
+      else
+         ERROR((SGE_EVENT, MSG_SGETEXT_CANT_DELETE_PRJ_IN_SHARE_TREE_S, name));   
       sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
       DEXIT;
       return STATUS_EEXIST;

@@ -46,7 +46,9 @@
 #define MSG_GDI_USERNOTINACL_SS       _MESSAGE(5004, _("user \"%s\" is not in access list \"%s\"\n"))
 #define MSG_GDI_CANTDELFROMACL_SS     _MESSAGE(5005, _("can't delete user \"%s\" from access list \"%s\"\n"))
 #define MSG_GDI_DELFROMACL_SS         _MESSAGE(5006, _("deleted user \"%s\" from access list \"%s\"\n"))
-#define MSG_HOST_NEEDAHOSTNAMEORALL            _MESSAGE(5007, _("Need a hostname or the keyword \"all\"\n"))
+#define MSG_HOST_NEEDAHOSTNAMEORALL   _MESSAGE(5007, _("Need a hostname or the keyword \"all\"\n"))
+
+#define MSG_QCONF_ADDEDTO_SUBMITHOST_LIST_S _MESSAGE(5008, _("%s added to submit host list\n"))
+#define MSG_QCONF_ADDEDTO_ADMINHOST_LIST_S  _MESSAGE(5009, _("%s added to administrative host list\n"))
 
 #endif /* __MSG_QCONF_H */
-

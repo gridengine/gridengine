@@ -1276,8 +1276,6 @@ int force
 
    DENTER(TOP_LAYER, "notify");
 
-   action_str = kill_jobs ? MSG_NOTIFY_SHUTDOWNANDKILL:MSG_NOTIFY_SHUTDOWN;
-
    hostname = lGetHost(lel, EH_name);
 
    execd_alive = last_heard_from(prognames[EXECD], &number_one, hostname);
@@ -1289,11 +1287,27 @@ int force
    }
    if (execd_alive || force) {
       if (notify_kill_job(lel, kill_jobs, prognames[EXECD])) {
-         INFO((SGE_EVENT, MSG_COM_NONOTIFICATION_SSS, action_str, 
-               (execd_alive ? "" : MSG_OBJ_UNKNOWN), hostname));
+         if (execd_alive)
+            if (!kill_jobs)
+               INFO((SGE_EVENT, MSG_COM_NONOTIFICATION_SNE_S, hostname));
+            else
+               INFO((SGE_EVENT, MSG_COM_NONOTIFICATION_SKE_S, hostname));   
+         else
+            if (!kill_jobs)
+               INFO((SGE_EVENT, MSG_COM_NONOTIFICATION_SNU_S, hostname));
+            else
+               INFO((SGE_EVENT, MSG_COM_NONOTIFICATION_SKU_S, hostname));
       } else {
-         INFO((SGE_EVENT, MSG_COM_NOTIFICATION_SSS, action_str, 
-               (execd_alive ? "" : MSG_OBJ_UNKNOWN), hostname));
+         if (execd_alive)
+            if (!kill_jobs)        
+               INFO((SGE_EVENT, MSG_COM_NOTIFICATION_SNE_S, hostname));
+            else
+               INFO((SGE_EVENT, MSG_COM_NOTIFICATION_SKE_S, hostname));
+         else
+            if (!kill_jobs)
+               INFO((SGE_EVENT, MSG_COM_NOTIFICATION_SNU_S, hostname));
+            else
+               INFO((SGE_EVENT, MSG_COM_NOTIFICATION_SKU_S, hostname));
       }
       DPRINTF((SGE_EVENT));
       sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);

@@ -272,13 +272,9 @@
 #define MSG_OBJ_RESCHEDULEUNKN_SS     _MESSAGE(33178, _("host "SFQ": "SFQ" is not a valid time value for \"reschedule_unknown\" - assuming 0 => no auto rescheduling\n"))
 #define MSG_OBJ_SHUTDOWNPERMS         _MESSAGE(33179, _("shutting down execd requires manager privileges\n"))
 #define MSG_OBJ_NOEXECDONHOST_S       _MESSAGE(33180, _("no execd known on host %s\n"))
-#define MSG_COM_NONOTIFICATION_SSS    _MESSAGE(33181, _("failed sending %s notification to %s execd host %s\n"))
 #define MSG_COM_NONOTIFICATIONQ_SSSS   _MESSAGE(33182, _("failed sending %s notification to %s %s host %s\n"))
-#define MSG_COM_NOTIFICATION_SSS      _MESSAGE(33183, _("sent %s notification to %s execd host %s\n"))
 #define MSG_COM_NOTIFICATIONQ_SSSS     _MESSAGE(33184, _("sent %s notification to %s %s host %s\n"))
 #define MSG_OBJ_UNKNOWN               _MESSAGE(33185, _("unknown"))
-#define MSG_NOTIFY_SHUTDOWNANDKILL    _MESSAGE(33186, _("shutdown and kill"))
-#define MSG_NOTIFY_SHUTDOWN           _MESSAGE(33187, _("shutdown"))
 #define MSG_MAIL_JOBKILLEDSUBJ_US     "Job " U32CFormat " ("SFN") Killed"
 #define MSG_MAIL_JOBKILLEDBODY_USS    _MESSAGE(33188, _("Job " U32CFormat " ("SFN") was killed due to a kill execd on host %s"))
 #define MSG_OBJ_INVALIDHOST_S         _MESSAGE(33189, _("invalid hostname "SFQ"\n"))
@@ -644,7 +640,6 @@
 #define MSG_FILE_RM_S                 _MESSAGE(33512, _("cant remove %s from disk"))
 #define MSG_JOB_CREDMOD_SSF           _MESSAGE(33513, _("%s@%s modified credit to %.2f\n"))
 #define MSG_JOB_CREDMODLOW_SSF        _MESSAGE(33514, _("%s@%s modified low_credit to %.2f\n"))
-#define MSG_SGETEXT_CANT_DELETE_UP_IN_SHARE_TREE_SS   _MESSAGE(33515, _("denied: may not remove "SFN" "SFQ" still referenced in share tree\n") ) 
 #define MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS       _MESSAGE(33516, _("denied: project "SFQ" is still referenced in "SFN" of "SFN" "SFQ"\n") )   
 #define MSG_SGETEXT_UNKNOWNPROJECT_SSSS               _MESSAGE(33517, _("denied: project "SFQ" referenced in "SFN" of "SFN" "SFQ" does not exist\n") )  
 
@@ -676,12 +671,6 @@
 #define MSG_ATTRSTILLREFINSCHED_S     _MESSAGE(33534, _("attribute "SFQ" still referenced in scheduler configuration - complex not modified"))
 #define MSG_SGETEXT_CANTDELCMPLX_S              _MESSAGE(33535, _("can't delete complex "SFQ" from list\n"))
 #define MSG_SGETEXT_CANTDELCMPLXDISK_S          _MESSAGE(33536, _("can't delete complex "SFQ" from disk\n"))
-#define MSG_SGETEXT_COMPLEXSTILLREFERENCED_SSS        _MESSAGE(33537, _("denied: complex "SFQ" is still referenced in complex_list of "SFN" "SFQ"\n"))
-
-
-
-
-
 
 
 /*
@@ -865,5 +854,31 @@
 #define MSG_QMASTER_ACLNOSHARE                     _MESSAGE(33674, _("not allowed to set \"fshare\" for ACL lists\n"))
 #define MSG_QMASTER_ACLNOTICKET                    _MESSAGE(33675, _("not allowed to set \"oticket\" for ACL lists\n"))
 
-#endif /* __MSG_QMASTER_H */
+/*--*/
+#define MSG_COM_NONOTIFICATION_SNE_S _MESSAGE(33680, _("failed sending shutdown notification to exec host %s\n"))
+#define MSG_COM_NONOTIFICATION_SKE_S _MESSAGE(33681, _("failed sending shutdown and kill notification to exec host %s\n"))
+#define MSG_COM_NONOTIFICATION_SNU_S _MESSAGE(33682, _("failed sending shutdown notification to unknown exec host %s\n"))
+#define MSG_COM_NONOTIFICATION_SKU_S _MESSAGE(33683, _("failed sending shutdown and kill notification to unknown exec host %s\n"))
 
+#define MSG_COM_NOTIFICATION_SNE_S   _MESSAGE(33684, _("sent shutdown notification to exec host %s\n"))
+#define MSG_COM_NOTIFICATION_SKE_S   _MESSAGE(33685, _("sent shutdown and kill notification to exec host %s\n"))
+#define MSG_COM_NOTIFICATION_SNU_S   _MESSAGE(33686, _("sent shutdown notification to unknown exec host %s\n"))
+#define MSG_COM_NOTIFICATION_SKU_S   _MESSAGE(33687, _("sent shutdown and kill notification to unknown exec host %s\n"))
+
+#define MSG_SGETEXT_CANT_DELETE_USER_IN_SHARE_TREE_S _MESSAGE(33688, _("denied: may not remove user "SFQ" still referenced in sharetree\n"))
+#define MSG_SGETEXT_CANT_DELETE_PRJ_IN_SHARE_TREE_S  _MESSAGE(33689, _("denied: may not remove project "SFQ" still referenced in sharetree\n")) 
+
+#define MSG_SGETEXT_COMPLEXSTILLREFERENCED_INQ_SS    _MESSAGE(33590, _("denied: complex "SFQ" is still referenced in complex_list of queue "SFQ"\n"))
+#define MSG_SGETEXT_COMPLEXSTILLREFERENCED_INH_SS    _MESSAGE(33591, _("denied: complex "SFQ" is still referenced in complex_list of exechost "SFQ"\n"))
+
+#define MSG_SGETEXT_MANAGER_ALREADYEXISTS_S          _MESSAGE(33592, _("manager "SFQ" already exists\n"))
+#define MSG_SGETEXT_OPERATOR_ALREADYEXISTS_S         _MESSAGE(33593, _("operator "SFQ" already exists\n"))
+
+#define MSG_SGETEXT_MANAGER_ADDEDTOLIST_SSS          _MESSAGE(33594, _(""SFN"@"SFN" added "SFQ" to manager list\n"))
+#define MSG_SGETEXT_OPERATOR_ADDEDTOLIST_SSS         _MESSAGE(33595, _(""SFN"@"SFN" added "SFQ" to operator list\n"))
+#define MSG_SGETEXT_CONFIG_ADDEDTOLIST_SSS           _MESSAGE(33596, _(""SFN"@"SFN" added "SFQ" to configuration list\n"))
+
+#define MSG_SGETEXT_CONFIG_MODIFIEDINLIST_SSS         _MESSAGE(33598, _(""SFN"@"SFN" modified "SFQ" in configuration list\n"))
+#define MSG_SGETEXT_SCHEDULER_MODIFIEDINLIST_SS       _MESSAGE(33600, _(""SFN"@"SFN" modified scheduler configuration\n"))
+
+#endif /* __MSG_QMASTER_H */

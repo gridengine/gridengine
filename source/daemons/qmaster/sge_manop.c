@@ -97,7 +97,9 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
       DEXIT;
       return STATUS_EUNKNOWN;
    }
-DTRACE;
+   
+   DTRACE;
+
    /* ep is no acl element, if ep has no MO_name */
    if ((pos = lGetPosViaElem(ep, MO_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
@@ -116,13 +118,17 @@ DTRACE;
    }
 
    if (lGetElemStr(*lpp, MO_name, manop_name)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_ALREADYEXISTS_SS, object_name, manop_name));
+      if (target == SGE_MANAGER_LIST)
+         ERROR((SGE_EVENT, MSG_SGETEXT_MANAGER_ALREADYEXISTS_S, manop_name));
+      else
+         ERROR((SGE_EVENT, MSG_SGETEXT_OPERATOR_ALREADYEXISTS_S, manop_name));
+         
       sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
       DEXIT;
       return STATUS_EEXIST;
    }
 
-   /* update in interal lists */
+   /* update in internal lists */
    added = lAddElemStr(lpp, MO_name, manop_name, MO_Type);
 
    /* update on file */
@@ -137,8 +143,11 @@ DTRACE;
       return STATUS_EDISK;
    }
 
-   INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
-            ruser, rhost, manop_name, object_name));
+   if (target == SGE_MANAGER_LIST)
+      INFO((SGE_EVENT, MSG_SGETEXT_MANAGER_ADDEDTOLIST_SSS, ruser, rhost, manop_name));
+   else
+      INFO((SGE_EVENT, MSG_SGETEXT_OPERATOR_ADDEDTOLIST_SSS, ruser, rhost, manop_name));   
+
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
    sge_add_event(NULL, target == SGE_MANAGER_LIST ? sgeE_MANAGER_ADD : sgeE_OPERATOR_ADD,
                  0, 0, manop_name, added);

@@ -234,7 +234,6 @@
 #define MSG_QCONF_EDITFILEXNOLONGEREXISTS_S       _MESSAGE(23164, _("edit file %s no longer exists"))
 #define MSG_QCONF_EDITORWASTERMINATEDBYSIGX_I     _MESSAGE(23165, _("editor was terminated by a signal %d\n"))
 #define MSG_QCONF_CANTSTARTEDITORX_S              _MESSAGE(23166, _("can't start editor %s"))
-#define MSG_QCONF_XADDEDTOYLIST_SS                _MESSAGE(23167, _("%s added to %s list\n"))
 #define MSG_FILE_CANTCREATETEMPFILE               _MESSAGE(23168, _("could not generate temporary filename\n"))
 #define MSG_QCONF_CANTREADCONFIG_S                _MESSAGE(23169, _("can't read configuration: %s\n"))
 #define MSG_QCONF_CANTREADX_S                     _MESSAGE(23170, _("cant read %s\n"))
@@ -424,7 +423,6 @@
 #define MSG_GDI_NOCONFIGFROMMASTER    _MESSAGE(23291, _("could not get configuration from qmaster - using defaults\n"))
 #define MSG_GDI_NEITHERSGECODGRDSETTINGSGE _MESSAGE(23292, _("neither SGE nor COD nor GRD environment for jobs configured, setting SGE environment\n"))
 #define MSG_GDI_INVALIDPOLICYSTRING   _MESSAGE(23293, _("Invalid policy hierachy string. Disabling policy hierachy.\n"))
-
 
 #endif /* __MSG_COMMON_H */
 

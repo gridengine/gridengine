@@ -522,14 +522,14 @@ char *rhost
    }
  
    if (added)
-      cp = MSG_SGETEXT_ADDEDTOLIST_SSSS;
+      cp = MSG_SGETEXT_CONFIG_ADDEDTOLIST_SSS;
    else
-      cp = MSG_SGETEXT_MODIFIEDINLIST_SSSS;
+      cp = MSG_SGETEXT_CONFIG_MODIFIEDINLIST_SSS;
 
    /* make chached values from configuration invalid */
    new_config = 1;
 
-   INFO((SGE_EVENT, cp, ruser, rhost, config_name, MSG_OBJ_CONF ));
+   INFO((SGE_EVENT, cp, ruser, rhost, config_name));
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
    sge_add_event(NULL, added ? sgeE_CONFIG_ADD : sgeE_CONFIG_MOD, 0, 0, config_name, ep);
    

@@ -4271,7 +4271,10 @@ u_long32 target
       /* report results */
       ep = lFirst(alp);
       if (sge_get_recoverable(ep) == STATUS_OK)
-         fprintf(stderr, MSG_QCONF_XADDEDTOYLIST_SS, host, name);
+         if (target == SGE_SUBMITHOST_LIST)
+            fprintf(stdout, MSG_QCONF_ADDEDTO_SUBMITHOST_LIST_S, host);
+         else
+            fprintf(stdout, MSG_QCONF_ADDEDTO_ADMINHOST_LIST_S, host);    
       else 
          fprintf(stderr, "%s", lGetString(ep, AN_text));
 

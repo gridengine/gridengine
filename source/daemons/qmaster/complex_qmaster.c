@@ -614,8 +614,8 @@ const char *complex_name
 
    for_each (ep, Master_Queue_List) {
       if (lGetElemStr(lGetList(ep, QU_complex_list), CX_name, complex_name)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_COMPLEXSTILLREFERENCED_SSS, 
-               complex_name, MSG_OBJ_QUEUE, lGetString(ep, QU_qname)));
+         ERROR((SGE_EVENT, MSG_SGETEXT_COMPLEXSTILLREFERENCED_INQ_SS,
+               complex_name, lGetString(ep, QU_qname)));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          ret = STATUS_EUNKNOWN;
       }
@@ -623,8 +623,8 @@ const char *complex_name
 
    for_each (ep, Master_Exechost_List) {
       if (lGetElemStr(lGetList(ep, EH_complex_list), CX_name, complex_name)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_COMPLEXSTILLREFERENCED_SSS, 
-               complex_name, MSG_OBJ_EH, lGetHost(ep, EH_name)));
+         ERROR((SGE_EVENT, MSG_SGETEXT_COMPLEXSTILLREFERENCED_INH_SS,
+               complex_name, lGetHost(ep, EH_name)));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          ret = STATUS_EUNKNOWN;
       }

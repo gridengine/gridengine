@@ -118,8 +118,7 @@ char *rhost
       sge_flush_events(schedd, FLUSH_EVENTS_SET);
    }
 
-   INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, "scheduler", 
-        "scheduler configuration"));
+   INFO((SGE_EVENT, MSG_SGETEXT_SCHEDULER_MODIFIEDINLIST_SS, ruser, rhost));
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
 
    DEXIT;

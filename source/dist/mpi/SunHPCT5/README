@@ -1,0 +1,75 @@
+========================================
+README
+========================================
+
+This package is provided to enhance the suspend and resume methods for Sun
+MPI jobs running under close integration between Sun HPC ClusterTools 5 and
+Grid Engine 6 software.
+
+It should be noted that the package is provided on "as is" basis and may not
+work with all of Grid Engine functions.
+
+The package includes the following files:
+
+   README (this file)
+   suspend_sunmpi_ci.sh
+   resume_sunmpi_ci.sh
+   pe_sunmpi_ci.template
+
+The procedure to configure Grid Engine for close integration is explained in
+detail in "Sun HPC ClusterTools 5 Software Administrator's Guide" (Part No.
+817-0083-10). The Sun HPC ClusterTools manual describes the setup for Sun
+Grid Engine 5.3. The only difference in Grid Engine 6 is that the Parallel
+Environment (PE) does not anymore contain a queue list. All queues which may
+run parallel jobs now define the list of PE's in their queue configuration.
+
+The provided PE template file (pe_sunmpi_ci.template) in this package can be
+used as a reference to configure a PE object.
+
+One additional step is needed to configure all Grid Engine queues which
+should execute Sun HPC ClusterTools jobs to reference the PE object and the
+suspend and resume methods to use the scripts provided in this package.
+
+For each queue assigned to the PE objects for close integration, the
+following customization should be made for 'pe_list', 'suspend_method' and
+'resume_method' parameters:
+
+  % qconf -mq <queue_name>
+  ...
+  pe_list              <name_ofpe_sunmpi_ci.template>
+  ...
+  suspend_method       /path/to/suspend_sunmpi_ci.sh $job_pid $job_id
+  resume_method        /path/to/resume_sunmpi_ci.sh $job_pid $job_id
+  pe_list              <name_ofpe_sunmpi_ci.template>
+  ...
+
+========================================
+Problem Description & Resolution
+========================================
+
+When a suspend command (qmod -s) is issued on a Sun MPI job submitted
+through Grid Engine close integration, Grid Engine sends a SIGSTOP signal to
+its master process which in turn sends the SIGSTOP signal to the mprun
+process. However, the mprun process expects a SIGTSTP signal in order to
+send the SIGSTOP signal to all MPI processes which belong to the Sun MPI
+job. Thus, although the Grid Engine qstat command shows that all MPI
+processes are suspended, the actual MPI processes are still running.
+
+In order to resolve this problem, suspend and resume methods are used, which
+is defined for each queue. These enhanced suspend and resume scripts use the
+Sun CRE (Cluster Runtime Environment) mpkill command to send SIGSTOP signals
+to all the MPI processes.
+
+
+=====================
+Tracing and Debugging 
+=====================
+
+There are two log files that are temporarily created during the job
+execution and DESTROYED after the job terminates. If there is a need for
+tracing/debugging, make sure to use the queue epilog feature to write a
+simple script that copies the following log files to a directory of your
+choice:
+
+   $TMPDIR/suspend_sunmpi_ci.*/suspend_sunmpi_ci.log
+   $TMPDIR/resume_sunmpi_ci.*/resume_sunmpi_ci.log

@@ -1,0 +1,11 @@
+pe_name           cre
+queue_list        <sge-queue1> <sge_queue2> ...
+slots             <sum of CPU's available in all queues of queue_list>
+user_lists        NONE
+xuser_lists       NONE
+start_proc_args   /bin/true
+stop_proc_args    /bin/true
+allocation_rule   $fill_up
+control_slaves    TRUE
+job_is_first_task FALSE
+

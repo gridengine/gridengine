@@ -42,11 +42,11 @@ int main(int argc, char *argv[])
 
       while ((drmaa_errno=drmaa_run_bulk_jobs(&jobids, jt, 1, JOB_CHUNK, 1, diagnosis,
                  sizeof(diagnosis)-1))==DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
-         fprintf(stderr, "drmaa_run_bulk_jobs() failed - retry: %s\n", diagnosis);
+         fprintf(stderr, "drmaa_run_bulk_jobs() failed - retry: %s %s\n", diagnosis, drmaa_strerror(drmaa_errno));
          sleep(1);
       } 
       if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
-         fprintf(stderr, "drmaa_run_bulk_jobs() failed: %s\n", diagnosis);
+         fprintf(stderr, "drmaa_run_bulk_jobs() failed: %s %s\n", diagnosis, drmaa_strerror(drmaa_errno));
          return 1;
       }
 
@@ -172,9 +172,9 @@ static drmaa_job_template_t *create_job_template(const char *job_path, int secon
 
    /* path for output */
    if (!as_bulk_job)
-      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, DRMAA_PLACEHOLDER_HD"/DRMAA_JOB", NULL, 0);
+      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB", NULL, 0);
    else
-      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, DRMAA_PLACEHOLDER_HD"/DRMAA_JOB."DRMAA_PLACEHOLDER_INCR, NULL, 0);
+      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB."DRMAA_PLACEHOLDER_INCR, NULL, 0);
 
    return jt;
 }

@@ -1986,6 +1986,7 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
    DENTER (TOP_LAYER, "japi_drmaa_path2path_opt");
 
    if (path_list == NULL) {
+      DEXIT;
       return 1;
    }
    else if ((ret_val = japi_drmaa_path2sge_path (attrs, is_bulk,
@@ -2013,6 +2014,7 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
             path += 1;
          } else { /* path */
             /* DRMAA-Spec says: The path MUST begin with a colon! */
+            DEXIT;
             return DRMAA_ERRNO_INVALID_ARGUMENT;
          }
    

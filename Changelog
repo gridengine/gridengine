@@ -1,3 +1,6 @@
+AH-2004-02-23-1: Bugfix:    Added ":" to DRMAA example.c output path.
+                            Improved example.c diagnosis capabilities.
+
 AD-2004-02-23-0: Bugfix:    Did add missing calendar event handler.
                  Changed:   qmaster
 

@@ -2516,11 +2516,27 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
          if ((sorted_job_node_list = sge_sort_pending_job_nodes(root, root))) {
             lListElem *job_node;
-            /* set share tree tickets of each pending job based on the returned sorted node list */
+            double sum = 0.0;
+
+            /* 
+             * set share tree tickets of each pending job 
+             * based on the returned sorted node list 
+             */
+#if 1 /* EB: normalize the number of pending tickets */
+            for_each(job_node, sorted_job_node_list) {
+               sum += lGetDouble(job_node, STN_shr); 
+            }
+#endif
             for_each(job_node, sorted_job_node_list) {
                sge_ref_t *jref = &job_ref[lGetUlong(job_node, STN_ref)-1];
+#if 1 /* EB: normalize the number of pending tickets */
+               lSetDouble(jref->ja_task, JAT_sticket,
+                   lGetDouble(job_node, STN_shr) * total_share_tree_tickets /
+                   sum);
+#else
                lSetDouble(jref->ja_task, JAT_sticket,
                          lGetDouble(job_node, STN_shr) * total_share_tree_tickets);
+#endif
             }
             lFreeList(sorted_job_node_list);
          }

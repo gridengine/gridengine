@@ -2483,15 +2483,6 @@ int *trigger
       if (uval!=old_priority) 
         *trigger |= PRIO_EVENT;
 
-      /* for SGE, allow adjustment of priority while jobs are running 
-         In the share tree policy, the priority can be used by a user 
-         to "prioritize" among his own jobs. The share tree tickets are 
-         then divided up among the user's jobs based on the priority that 
-         the user has supplied. The priority is treated as a "share" to 
-         divide the tickets among the user's active jobs */
-      if (feature_is_enabled(FEATURE_SGEEE))
-         may_not_be_running = 1;
-
       lSetUlong(new_job, JB_priority, uval);
 
       sprintf(SGE_EVENT, MSG_JOB_PRIOSET_SSUI,

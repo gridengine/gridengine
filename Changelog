@@ -1,3 +1,8 @@
+AH-2003-03-25-0  Bugfix:    GEEE: allow qalter -p for running jobs
+                 Isssue:    #502
+                 Bugtraq:   #4824104
+                 Changed:   sge_qmaster
+
 JG-2003-03-24-0  Enhancem.: Added aimk switch -purify to instrument code for
                             memory debugging with purify.
 

@@ -694,7 +694,7 @@ proc issue193_deleted_job {} {
 
    if { [have_root_passwd] == -1 } {
       set_error -3 "root access required"
-      return
+      return -3
    }
  
    puts $CHECK_OUTPUT "submitting job to queue $no_rerun_queue ..."
@@ -742,10 +742,12 @@ proc issue193_cleanup {} {
 
    if { [ llength $CHECK_CORE_EXECD ] < 2 } {
       set_error -3 "need 2 execd hosts"
+      return -3 
    }
 
    if { [is_version_ok] != 0 } {
       set_error -3 "This feature is not supportet for version [get_version_info]"
+      return -3
    }
 
    reset_schedd_config

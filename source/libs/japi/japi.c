@@ -4478,9 +4478,9 @@ static int japi_clean_up_jobs(int flag, dstring *diag)
    char buffer[1024];
    dstring job_task_specifier;
 
-   sge_dstring_init(&job_task_specifier, buffer, sizeof(buffer));
-   
    DENTER (TOP_LAYER, "japi_clean_up_jobs");   
+   
+   sge_dstring_init(&job_task_specifier, buffer, sizeof(buffer));
    
    /* If there are any pending jobs, and a flag is set, kill them. */
    if ((flag == JAPI_EXIT_KILL_PENDING) || (flag == JAPI_EXIT_KILL_ALL)) {

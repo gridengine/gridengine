@@ -80,6 +80,7 @@
 #define MSG_CQUEUE_NAMENOTCORRECT_SS  _MESSAGE(1038, _("The queue name "SFQ" is not correct.  Queue names may not begin with @.  Perhaps you mean \"*"SFN"\"?\n"))
 
 #define MSG_PE_NOSUCHPARALLELENVIRONMENT                 _MESSAGE(1039, _("error: no such parallel environment\n"))
+#define MSG_USER_ABORT                                   _MESSAGE(1040, _("error: aborted by user\n"))
 
 #endif /* __MSG_CLIENTS_COMMON_H */
 

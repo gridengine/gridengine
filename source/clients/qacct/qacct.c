@@ -676,7 +676,7 @@ char **argv
 
    memset(&dusage, 0, sizeof(dusage));
 
-   while (1) {
+   while (!shut_me_down) {
       line++;
 
       i_ret = sge_read_rusage(fp, &dusage);
@@ -990,6 +990,10 @@ char **argv
    fclose(fp);
    fp = NULL;
 
+   if ( shut_me_down ) {
+      printf(MSG_USER_ABORT);
+      SGE_EXIT(1);
+   }
    if (job_number || job_name[0]) {
       if (!jobfound) {
          if (job_number) {

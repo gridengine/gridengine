@@ -141,6 +141,7 @@ proc start_remote_tcl_prog { host user tcl_file tcl_procedure tcl_procargs} {
    if { [string first "Error in procedure" $result] >= 0 } {
       add_proc_error "start_remote_tcl_prog" -2 "error in $tcl_file, proc $tcl_procedure $tcl_procargs"
    }
+   log_user 1
    return $result
 }
 

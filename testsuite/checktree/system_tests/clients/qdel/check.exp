@@ -65,6 +65,7 @@ set check_needs           "init_core_system"
 set check_functions ""
 lappend check_functions "qdel_setup"
 lappend check_functions "qdel_help"                   ;# print this help
+lappend check_functions "qdel_submit_delete_when_transferd"
 lappend check_functions "qdel_job_task_list"          ;# delete all jobs given in list
 lappend check_functions "qdel_delete_job_0"           ;# try to delete job id 0
 lappend check_functions "qdel_verify"                ;# just print what would be done
@@ -205,6 +206,42 @@ proc qdel_cleanup {} {
    del_queue $queue
    set_error 0 "ok"
 }
+
+proc qdel_submit_delete_when_transferd { } {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
+   global submit_del_qconfig submit_del_check_queue CHECK_USER
+   global CHECK_CORE_EXECD CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL
+   global CHECK_ACT_LEVEL
+ 
+   if { $CHECK_ACT_LEVEL == 0 } {
+
+   set arch [resolve_arch $CHECK_HOST]
+   set qsub_program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
+   set qdel_program "$CHECK_PRODUCT_ROOT/bin/$arch/qdel"
+   set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh"
+   wait_for_end_of_all_jobs 100
+   set runs 100
+   while { $runs > 0 } { 
+   foreach elem $CHECK_CORE_EXECD {
+      set arguments "-o /dev/null -e /dev/null -q $elem.q"
+#      start_remote_prog $CHECK_HOST $CHECK_USER "qdel" "`qsub $arguments $job_script | cut -d\" \" -f3`"
+      set catch_return [ catch { eval exec "$qsub_program $arguments $job_script" } result ]
+      puts $CHECK_OUTPUT $result
+      set job_id [lindex $result 2]    
+      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$arch/qconf" "-tsm" } result
+      wait_for_jobstart $job_id "leeper" 60
+      set catch_return [ catch { eval exec "$qdel_program $job_id" } result ]
+      puts $CHECK_OUTPUT $result
+   }
+      incr runs -1
+   }
+   
+   wait_for_end_of_all_jobs 100
+   }
+
+   set_error 0 "ok"
+}
+
 
 #                                                             max. column:     |
 #****** qdel/are_jobs_deleted() ******

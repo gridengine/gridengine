@@ -1,3 +1,5 @@
+AA-2002-02-25-0: Testsuite: changes from maintrunc merged
+
 AA-2002-02-22-0: BUGFIX:    memleak fix in sec_lib.c 
 
 EB-2002-02-12-0: BUGFIX:    - STEP SIZE WILL BE IGNORED FROM QDEL COMMAND

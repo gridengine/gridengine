@@ -43,7 +43,7 @@ global HUGE_SCRIPT_STEPS HUGE_SCRIPT_MAX_SIZE
 set HUGE_SCRIPT_MIN_SIZE 0
 set HUGE_SCRIPT_MAX_SIZE [expr 16 * 1024 * 1024]
 set HUGE_SCRIPT_STEPS    100
-set HUGE_SCRIPT_TIMEOUT  600
+set HUGE_SCRIPT_TIMEOUT  1000
 set HUGE_SCRIPT_PATTERN  "generated huge script file for testsuite, 100 characters per line .............................. end"
 
 # setup check's highest level
@@ -3377,10 +3377,10 @@ proc check_huge_script {} {
          set sched_start [clock seconds]
          set submit_time [expr $sched_start - $submit_start]
          puts $CHECK_OUTPUT "submitting lasted $submit_time s"
-         wait_for_jobstart $result "Sleeper" 300
+         wait_for_jobstart $result "Sleeper" $HUGE_SCRIPT_TIMEOUT
          set run_start [clock seconds]
          set sched_time [expr $run_start - $sched_start]
-         wait_for_jobend $result "Sleeper" 300
+         wait_for_jobend $result "Sleeper" $HUGE_SCRIPT_TIMEOUT
          set run_end [clock seconds]
          set run_time [expr $run_end - $run_start]
          puts $protocol "$submit_size\t$submit_time\t$sched_time\t$run_time"

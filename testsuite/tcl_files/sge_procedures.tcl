@@ -158,6 +158,8 @@ proc resolve_version { { internal_number -100 } } {
    set versions(SGEEE_5.3beta1)      2
    set versions(SGEEE_5.3beta2)      2
    set versions(SGE_5.3beta2)        2
+   set versions(SGEEE_5.3beta2_1)    2
+   set versions(SGE_5.3beta2_1)      2
 
    
     
@@ -4433,11 +4435,12 @@ proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
    set back ""
    set help [split $result "\n"]
    foreach line $help { 
+#      puts $CHECK_OUTPUT $line
       if { [lindex $line 0] == $jobid } {
          lappend back $line
       }
       if { $add_empty != 0 } {
-         if { [llength $line] == 9 } {
+         if { [llength $line] == 8 } {
             lappend back "-1 $line"
             puts $CHECK_OUTPUT "adding empty job lines" 
          }
@@ -4718,14 +4721,15 @@ proc get_qacct {jobid {variable qacct_info}} {
 proc is_job_running { jobid jobname } {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT check_timestamp
 
-   set mytime [timestamp]
+   set catch_state [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f" } result ]
 
+   set mytime [timestamp]
    if { $mytime == $check_timestamp } {
       sleep 1
    }
    set check_timestamp $mytime
 
-   set catch_state [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f" } result ]
+
 
    if { $catch_state != 0 } {
       puts $CHECK_OUTPUT "debug: $result"
@@ -4973,19 +4977,39 @@ proc wait_for_end_of_transfer { jobid seconds } {
   
   set time [timestamp] 
   while {1} {
-    sleep 1
     set run_result [get_standard_job_info $jobid ]
-    set run_result [ lindex $run_result 0 ]
-    set state [lindex $run_result 4]
- 
-    if { [string first "t" $state ] < 0} {
+    set job_state ""
+    set had_error 0
+    foreach line $run_result {
+       set tmp_job_id [lindex $line 0]
+       set tmp_job_state [ lindex $line 4 ]
+       if { $tmp_job_id == $jobid } {
+          if { $job_state == "" } {
+             set job_state $tmp_job_state
+          } else {
+             if { $job_state != $tmp_job_state } {
+                puts $CHECK_OUTPUT "job has different states ..."
+                set had_error 1
+             }
+          }
+       }
+    }
+
+    if { $had_error != 0 } {
+       continue
+    }
+
+    if { [string first "t" $job_state ] < 0} {
+       puts $CHECK_OUTPUT "job $jobid is running ($job_state)"
        break;
     }
+    
     set runtime [expr ( [timestamp] - $time) ]
     if { $runtime >= $seconds } {
        add_proc_error "wait_for_end_of_transfer" -1 "timeout waiting for job \"$jobid\""
        return -1
     }
+    sleep 1
   }
   return 0
 }

@@ -36,14 +36,35 @@
 # It assumes that CRE JID is saved by suspend method.
 #
 #----------------
+# Create a log file for tracing/debugging purposes.
+#
+
+tmpdir=$TMPDIR/resume_sunmpi_ci.$1
+mkdir -p $tmpdir
+cd $tmpdir
+
+# create log file
+#
+F=$tmpdir/resume_sunmpi_ci.log
+touch $F
+
 me=`basename $0`
-if [ $# -ne 1 ]; then
-   echo "$me: got wrong number of arguments" >&2
+if [ $# -ne 2 ]; then
+   echo "$me: got wrong number of arguments" >> $F 2>&1
    exit 1
 fi
+
 #
 # Pass SGE $job_pid.
 job_pid=$1
+# Pass SGE $job_id.
+job_id=$2
+
+echo -------------------------------------------------------------  >> $F 2>&1
+echo `basename $0` called at `date`      >> $F 2>&1
+echo called by: `id`                    >> $F 2>&1
+echo with args: $*                      >> $F 2>&1
+
 #
 # Resume SGE job, $job_pid.
 #
@@ -57,7 +78,8 @@ if [ X"$PE" != X ]; then
    #
    if [ -s $TMPDIR/mpijob ]; then
       jobname=`cat $TMPDIR/resume_cre_jobname`
-      /opt/SUNWhpc/bin/mpkill -CONT $jobname
+      echo "Sending CONT signal to MPI job:$jobname"  >> $F 2>&1
+      /opt/SUNWhpc/bin/mpkill -CONT $jobname >> $F 2>&1
       #
       # Delete the CRE job id file
       #

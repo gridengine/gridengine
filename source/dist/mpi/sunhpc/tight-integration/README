@@ -28,23 +28,23 @@ the SGE PE objects for suspend and resume methods to use the scripts
 provided in this package. 
 
 For each queue assigned to the PE objects for close integration, 
-the following customization should made for suspend_method and 
+the following customization should be made for suspend_method and 
 resume_method parameters:
 
 qconf -mq <queue_name>
 ...
 suspend_method       /path/to/suspend_sunmpi_ci.sh $job_pid $job_id
-resume_method        /path/to/resume_sunmpi_ci.sh $job_pid
+resume_method        /path/to/resume_sunmpi_ci.sh $job_pid $job_id
 ...
 
 ========================================
 Problem Description & Resolution
 ========================================
 
-When a suspend command (qdel -s) is issued on a Sun MPI job submitted
+When a suspend command (qmod -s) is issued on a Sun MPI job submitted
 through SGE close integration, SGE sends a SIGSTOP signal to its master 
 process which in turn sends the SIGSTOP signal to the mprun process.
-However, the mprun process expects a SIGTSTP signal in order send the 
+However, the mprun process expects a SIGTSTP signal in order to send the 
 SIGSTOP signal to all MPI processes which belong to the Sun MPI job.
 Thus, although the SGE qstat command shows that all MPI processes are
 suspended, the actual MPI processes are still running.
@@ -52,6 +52,17 @@ suspended, the actual MPI processes are still running.
 In order to resolve this problem, suspend and resume methods are used,
 which is defined for each queue. These enhanced suspend and resume scripts 
 use the Sun CRE (Cluster Runtime Environment) mpkill command to send 
-SIGSTOP and SIGSTOP signals to all the MPI processes.
+SIGSTOP signals to all the MPI processes.
 
 
+=====================
+Tracing and Debugging 
+=====================
+
+There are two log files that are temporarily created during the job 
+execution and DESTROYED after the job terminates. If there is a need
+for tracing/debugging, make sure to use the queue epilog feature to 
+write a simple script that copies the following log files to a 
+directory of your choice:
+$TMPDIR/suspend_sunmpi_ci.*/suspend_sunmpi_ci.log
+$TMPDIR/resume_sunmpi_ci.*/resume_sunmpi_ci.log

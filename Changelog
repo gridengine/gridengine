@@ -1,3 +1,17 @@
+CR-2004-01-28-0: Bugfix:    - correct commlib shutdown for qmon
+                            - removed unnecessary cl_commlib_shutdown_handle() 
+                              call in sge_terminate()
+                            - japi: when event client thread deregisters from
+                              event client interface all open communication
+                              handle are closed.
+                            - commlib: made some mutexes static
+                            - fixed problem when cl_com_setup_commlib() and 
+                              cl_com_cleanup_commlib() are called more than 
+                              once.
+                            - reworked memory free problem(s) when 
+                              cl_com_create_handle() fails.
+                 Changed:   all binaries
+
 JG-2004-01-28-0: Bugfix:    Fixed the build (some files were dos files).
 
 MD-2004-01-27-0: Bugfix:    - setting productmode sgeee to default

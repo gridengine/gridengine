@@ -3893,8 +3893,9 @@ static void *japi_implementation_thread(void *p)
     * disconnect from commd
     */
 #ifdef ENABLE_NGC
-   if ((cl_errno=cl_commlib_shutdown_handle(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0),0)) != CL_RETVAL_OK) {
-      DPRINTF(("cl_commlib_shutdown_handle() failed: %s", cl_get_error_text(cl_errno)));
+   cl_errno=cl_com_cleanup_commlib();
+   if (cl_errno != CL_RETVAL_OK) {
+      DPRINTF(("cl_com_cleanup_commlib() failed: %s\n", cl_get_error_text(cl_errno)));
       DEXIT;
       return p;
    }

@@ -267,7 +267,7 @@ int i
 ) {
    DENTER(GUI_LAYER, "qmonExitFunc");
 #ifdef ENABLE_NGC
-   cl_commlib_shutdown_handle(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0),0);
+   cl_com_cleanup_commlib();
 #else
    leave_commd();  /* tell commd we're going */
 #endif

@@ -90,8 +90,8 @@ static void cl_com_handle_read_thread_cleanup(void* none);
  * ==================
  *
  * Each entry in this list is a service handler connection */
-pthread_mutex_t cl_com_handle_list_mutex = PTHREAD_MUTEX_INITIALIZER;
-cl_raw_list_t* cl_com_handle_list = NULL;
+static pthread_mutex_t cl_com_handle_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cl_raw_list_t* cl_com_handle_list = NULL;
 
 
 /* cl_com_log_list
@@ -107,8 +107,8 @@ static cl_raw_list_t* cl_com_log_list = NULL;
  *
  * Each entry in this list is a cached cl_get_hostbyname() 
    or cl_gethostbyaddr() call */
-pthread_mutex_t cl_com_host_list_mutex = PTHREAD_MUTEX_INITIALIZER;
-cl_raw_list_t* cl_com_host_list = NULL;
+static pthread_mutex_t cl_com_host_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cl_raw_list_t* cl_com_host_list = NULL;
 
 
 /* cl_com_thread_list
@@ -116,8 +116,8 @@ cl_raw_list_t* cl_com_host_list = NULL;
  *
  * Each entry in this list is a cached cl_get_hostbyname() 
    or cl_gethostbyaddr() call */
-pthread_mutex_t cl_com_thread_list_mutex = PTHREAD_MUTEX_INITIALIZER;
-cl_raw_list_t* cl_com_thread_list = NULL;
+static pthread_mutex_t cl_com_thread_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cl_raw_list_t* cl_com_thread_list = NULL;
 
 
 
@@ -128,13 +128,13 @@ cl_raw_list_t* cl_com_thread_list = NULL;
  * =====================
  *
  * If set to 0, no threads are used */
-cl_thread_mode_t       cl_com_create_threads = CL_NO_THREAD;
+static cl_thread_mode_t       cl_com_create_threads = CL_NO_THREAD;
 
 
 /* global application function pointer for statistic calculation */
 /* see cl_commlib_calculate_statistic() */
-pthread_mutex_t cl_com_application_mutex = PTHREAD_MUTEX_INITIALIZER;
-cl_app_status_func_t   cl_com_application_status_func = NULL;
+static pthread_mutex_t cl_com_application_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cl_app_status_func_t   cl_com_application_status_func = NULL;
 
 
 
@@ -227,29 +227,30 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, int debug_level , cl_log_func
          CL_LOG(CL_LOG_INFO,"no threads enabled");
          break;
       case CL_ONE_THREAD:
-         ret_val = cl_thread_list_setup(&cl_com_thread_list,"global_thread_list");
          if (cl_com_thread_list == NULL) {
-            pthread_mutex_unlock(&cl_com_thread_list_mutex);
-            CL_LOG(CL_LOG_ERROR,"could not setup thread list");
-            cl_com_cleanup_commlib();
-            return ret_val;
-         }
-         CL_LOG(CL_LOG_INFO,"starting trigger thread ...");
-         ret_val = cl_thread_list_create_thread(cl_com_thread_list,
-                                                &thread_p,
-                                                cl_com_log_list,
-                                                "trigger_thread", 1, cl_com_trigger_thread );
-         if (ret_val != CL_RETVAL_OK) {
-            pthread_mutex_unlock(&cl_com_thread_list_mutex);
-            CL_LOG(CL_LOG_ERROR,"could not start trigger_thread");
-            cl_com_cleanup_commlib();
-            return ret_val;
+            ret_val = cl_thread_list_setup(&cl_com_thread_list,"global_thread_list");
+            if (cl_com_thread_list == NULL) {
+               pthread_mutex_unlock(&cl_com_thread_list_mutex);
+               CL_LOG(CL_LOG_ERROR,"could not setup thread list");
+               cl_com_cleanup_commlib();
+               return ret_val;
+            }
+            CL_LOG(CL_LOG_INFO,"starting trigger thread ...");
+            ret_val = cl_thread_list_create_thread(cl_com_thread_list,
+                                                   &thread_p,
+                                                   cl_com_log_list,
+                                                   "trigger_thread", 1, cl_com_trigger_thread );
+            if (ret_val != CL_RETVAL_OK) {
+               pthread_mutex_unlock(&cl_com_thread_list_mutex);
+               CL_LOG(CL_LOG_ERROR,"could not start trigger_thread");
+               cl_com_cleanup_commlib();
+               return ret_val;
+            }
          }
          break;
    }
    pthread_mutex_unlock(&cl_com_thread_list_mutex);
  
-
    CL_LOG(CL_LOG_INFO,"ngc library setup done");
    return CL_RETVAL_OK;
 }
@@ -264,15 +265,18 @@ int cl_com_cleanup_commlib(void) {
    cl_thread_settings_t* thread_p = NULL;
    cl_handle_list_elem_t* elem = NULL;
 
-   CL_LOG(CL_LOG_INFO,"clenup commlib ...");
+   CL_LOG(CL_LOG_INFO,"cleanup commlib ...");
 
+   /* lock handle list mutex */   
+   pthread_mutex_lock(&cl_com_handle_list_mutex);
 
    if (cl_com_handle_list  == NULL) {
-      CL_LOG(CL_LOG_ERROR,"cl_com_setup_commlib() not called");
+      pthread_mutex_unlock(&cl_com_handle_list_mutex);
+      /* cleanup allready called or cl_com_setup_commlib() was not called */
       return CL_RETVAL_PARAMS;
    }
  
-   /* shutdown all connection handle objects */  
+   /* shutdown all connection handle objects (and threads) */  
    while ( (elem = cl_handle_list_get_first_elem(cl_com_handle_list)) != NULL) {
       cl_commlib_shutdown_handle(elem->handle,0);
    }
@@ -307,8 +311,8 @@ int cl_com_cleanup_commlib(void) {
 
 
    CL_LOG(CL_LOG_INFO,"cleanup handle list ...");
+
    /* cleanup global cl_com_handle_list */
-   pthread_mutex_lock(&cl_com_handle_list_mutex);
    cl_handle_list_cleanup(&cl_com_handle_list);
    pthread_mutex_unlock(&cl_com_handle_list_mutex);
 
@@ -356,14 +360,13 @@ int cl_commlib_get_connection_param(cl_com_handle_t* handle, int parameter, int*
    return CL_RETVAL_OK;
 }
 
-
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_create_handle()"
 cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int service_provider , int service_port ,int connect_port, char* component_name, unsigned long component_id, int select_sec_timeout, int select_usec_timeout) {
 
-
+   int thread_start_error = 0;
    cl_com_handle_t* new_handle = NULL;
    int return_value = CL_RETVAL_OK;
    int usec_rest = 0;
@@ -458,7 +461,6 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
 
    new_handle->statistic = (cl_com_handle_statistic_t*)malloc(sizeof(cl_com_handle_statistic_t));
    if (new_handle->statistic == NULL) {
-      cl_commlib_shutdown_handle(new_handle,0);
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -472,7 +474,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
 
    new_handle->messages_ready_mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
    if (new_handle->messages_ready_mutex == NULL) {
-      cl_commlib_shutdown_handle(new_handle,0);
+      free(new_handle->statistic);
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -481,7 +483,8 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
 
    new_handle->connection_list_mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
    if (new_handle->connection_list_mutex == NULL) {
-      cl_commlib_shutdown_handle(new_handle,0);
+      free(new_handle->messages_ready_mutex);
+      free(new_handle->statistic);
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -490,7 +493,12 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
 
 
    if (pthread_mutex_init(new_handle->messages_ready_mutex, NULL) != 0) {
-      cl_commlib_shutdown_handle(new_handle,0);
+      int mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->messages_ready_mutex); 
+      }
+      free(new_handle->connection_list_mutex);
+      free(new_handle->statistic);
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -498,7 +506,16 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
    } 
 
    if (pthread_mutex_init(new_handle->connection_list_mutex, NULL) != 0) {
-      cl_commlib_shutdown_handle(new_handle,0);
+      int mutex_ret_val;
+      mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->connection_list_mutex); 
+      }
+      mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->messages_ready_mutex); 
+      }
+      free(new_handle->statistic);
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -508,7 +525,16 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
 
    new_handle->local = cl_com_create_endpoint(local_hostname, component_name, component_id );
    if (new_handle->local == NULL) {
-      cl_commlib_shutdown_handle(new_handle,0);
+      int mutex_ret_val;
+      mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->connection_list_mutex); 
+      }
+      mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->messages_ready_mutex); 
+      }
+      free(new_handle->statistic);
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -517,9 +543,18 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
 
 
    if (cl_connection_list_setup(&(new_handle->connection_list), "connection list") != CL_RETVAL_OK) {
+      int mutex_ret_val;
       cl_connection_list_cleanup(&(new_handle->connection_list));
       cl_com_free_endpoint(&(new_handle->local));
-      cl_commlib_shutdown_handle(new_handle,0);
+      mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->connection_list_mutex); 
+      }
+      mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->messages_ready_mutex); 
+      }
+      free(new_handle->statistic);
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -527,9 +562,20 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
    } 
 
    if (cl_string_list_setup(&(new_handle->allowed_host_list), "allowed host list") != CL_RETVAL_OK) {
+      int mutex_ret_val;
+
       cl_string_list_cleanup(&(new_handle->allowed_host_list));
+      cl_connection_list_cleanup(&(new_handle->connection_list));
       cl_com_free_endpoint(&(new_handle->local));
-      cl_commlib_shutdown_handle(new_handle,0);
+      mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->connection_list_mutex); 
+      }
+      mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->messages_ready_mutex); 
+      }
+      free(new_handle->statistic);
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -552,24 +598,42 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       switch(new_handle->framework) {
          case CL_CT_TCP: {
             if (cl_com_setup_tcp_connection(&new_con, new_handle->service_port, new_handle->connect_port,CL_CM_CT_STREAM ) != CL_RETVAL_OK) {
+               int mutex_ret_val;
+
                cl_com_close_connection(&new_con);
-               cl_connection_list_cleanup(&(new_handle->connection_list));
                cl_string_list_cleanup(&(new_handle->allowed_host_list));
+               cl_connection_list_cleanup(&(new_handle->connection_list));
                cl_com_free_endpoint(&(new_handle->local));
-               cl_commlib_shutdown_handle(new_handle,0);
+               mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
+               if (mutex_ret_val != EBUSY) {
+                  free(new_handle->connection_list_mutex); 
+               }
+               mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
+               if (mutex_ret_val != EBUSY) {
+                  free(new_handle->messages_ready_mutex); 
+               }
+               free(new_handle->statistic);
                free(new_handle);
                cl_raw_list_unlock(cl_com_handle_list);
                return NULL;
             }
             new_con->handler = new_handle;
             if (cl_com_connection_request_handler_setup(new_con, new_handle->local) != CL_RETVAL_OK) {
+               int mutex_ret_val;
                cl_com_connection_request_handler_cleanup(new_con);
                cl_com_close_connection(&new_con);
-               cl_connection_list_cleanup(&(new_handle->connection_list));
                cl_string_list_cleanup(&(new_handle->allowed_host_list));
+               cl_connection_list_cleanup(&(new_handle->connection_list));
                cl_com_free_endpoint(&(new_handle->local));
-               new_handle->local = NULL;
-               cl_commlib_shutdown_handle(new_handle,0);
+               mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
+               if (mutex_ret_val != EBUSY) {
+                  free(new_handle->connection_list_mutex); 
+               }
+               mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
+               if (mutex_ret_val != EBUSY) {
+                  free(new_handle->messages_ready_mutex); 
+               }
+               free(new_handle->statistic);
                free(new_handle);
                cl_raw_list_unlock(cl_com_handle_list);
                return NULL;
@@ -579,10 +643,19 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
             break;
          }
          default: {
+            int mutex_ret_val;
             cl_connection_list_cleanup(&(new_handle->connection_list));
             cl_string_list_cleanup(&(new_handle->allowed_host_list));
             cl_com_free_endpoint(&(new_handle->local));
-            cl_commlib_shutdown_handle(new_handle,0);
+            mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
+            if (mutex_ret_val != EBUSY) {
+               free(new_handle->connection_list_mutex); 
+            }
+            mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
+            if (mutex_ret_val != EBUSY) {
+               free(new_handle->messages_ready_mutex); 
+            }
+            free(new_handle->statistic);
             free(new_handle);
             cl_raw_list_unlock(cl_com_handle_list);
             return NULL;
@@ -596,21 +669,20 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
          CL_LOG(CL_LOG_INFO,"no threads enabled");
          break;
       case CL_ONE_THREAD:
-
          CL_LOG(CL_LOG_INFO,"creating read condition ...");
          return_value = cl_thread_create_thread_condition(&(new_handle->read_condition));
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not setup read condition");
-            cl_raw_list_unlock(cl_com_handle_list);
-            return NULL;
+            thread_start_error = 1;
+            break;
          }
 
          CL_LOG(CL_LOG_INFO,"creating write condition ...");
          return_value = cl_thread_create_thread_condition(&(new_handle->write_condition));
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not setup write condition");
-            cl_raw_list_unlock(cl_com_handle_list);
-            return NULL;
+            thread_start_error = 1;
+            break;
          }
 
 
@@ -622,8 +694,8 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
                                                      help_buffer, 2, cl_com_handle_service_thread );
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle service thread");
-            cl_raw_list_unlock(cl_com_handle_list);
-            return NULL;
+            thread_start_error = 1;
+            break;
          }
 
          CL_LOG(CL_LOG_INFO,"starting handle read thread ...");
@@ -634,8 +706,8 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
                                                      help_buffer, 3, cl_com_handle_read_thread );
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle read thread");
-            cl_raw_list_unlock(cl_com_handle_list);
-            return NULL;
+            thread_start_error = 1;
+            break;
          }
 
          CL_LOG(CL_LOG_INFO,"starting handle write thread ...");
@@ -646,10 +718,32 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
                                                      help_buffer, 2, cl_com_handle_write_thread );
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle write thread");
-            cl_raw_list_unlock(cl_com_handle_list);
-            return NULL;
+            thread_start_error = 1;
+            break;
          }
          break;
+   }
+   if (thread_start_error != 0) {
+      int mutex_ret_val;
+      if (new_handle->service_handler != NULL) {
+         cl_com_connection_request_handler_cleanup(new_handle->service_handler);
+         cl_com_close_connection(&(new_handle->service_handler));
+      }
+      cl_connection_list_cleanup(&(new_handle->connection_list));
+      cl_string_list_cleanup(&(new_handle->allowed_host_list));
+      cl_com_free_endpoint(&(new_handle->local));
+      mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->connection_list_mutex); 
+      }
+      mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->messages_ready_mutex); 
+      }
+      free(new_handle->statistic);
+      free(new_handle);
+      cl_raw_list_unlock(cl_com_handle_list);
+      return NULL;
    }
    cl_handle_list_append_handle(cl_com_handle_list, new_handle,0);
    cl_raw_list_unlock(cl_com_handle_list);

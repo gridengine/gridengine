@@ -316,7 +316,9 @@ int sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host, l
 *     - explicit hard resource requests
 *     - consumablel default requests
 *     - jobs implicit slot request 
-* 
+*
+*  NT-NOTES: is not thread save. uses a static buffer
+*
 *  Important:
 *     we have some special behavior, when slots is set to -1.
 *
@@ -344,12 +346,22 @@ static int sge_check_resource(lList *requested, lList *load_attr, lList *config_
    }
 
    /* match number of free slots */
-   if (slots != -1 && queue && ful_filled(implicit_slots_request, load_attr, config_attr, actual_attr, centry_list, queue,  
-       reason, reason_size, allow_non_requestable, slots, layer, lc_factor)) {
-      DEXIT;
-      return 0;
+/*   if (queue){
+      if (slots != -1 && (ful_filled(implicit_slots_request, load_attr, config_attr, actual_attr, centry_list, queue,  
+          reason, reason_size, allow_non_requestable, slots, layer, lc_factor) )) {
+         DEXIT;
+         return 0;
+      }
    }
-
+   else {*/
+      if (slots != -1 && (ful_filled(implicit_slots_request, load_attr, config_attr, actual_attr, centry_list, queue,  
+          reason, reason_size, allow_non_requestable, slots, layer, lc_factor) == -1 )) {
+         DEXIT;
+         return 0;
+      }
+  /* 
+   }
+*/
 
    /* ensure all default requests are fulfilled */
    if (slots != -1 && !allow_non_requestable) {
@@ -1851,7 +1863,6 @@ int host_order_changed) {
          if (use_category){
             schedd_mes_set_tmp_list(category, CT_job_messages, lGetUlong(job,JB_job_number ));
          }
-
          if (available_slots_global( job, ja_task, pe, global_hep, centry_list, 1, acl_list, NULL)){
             for_each(hep, host_list){
 
@@ -2006,7 +2017,6 @@ int host_order_changed) {
          if (use_category){
             schedd_mes_set_tmp_list(category, CT_job_messages, lGetUlong(job,JB_job_number ) );
          }
-
          /* iterate through all global amounts of slots */
          for (total_slots = (pe ?  
                (get_qs_state()==QS_STATE_EMPTY ?  lGetUlong(pe, PE_slots): 
@@ -2634,7 +2644,6 @@ static int available_slots_at_host(lListElem *job, lListElem *ja_task, lListElem
          if ((ulc_factor=lGetUlong(host, EH_load_correction_factor)))
             lc_factor = ((double)ulc_factor)/100;
       }
-
       for (; hslots>=minslots; hslots--) {
          /* check if host fulfills hard request of the job */
          if(!sge_check_resource(hard_requests, load_attr, config_attr, actual_attr, centry_list,NULL,  0, reason, sizeof(reason)-1, 
@@ -2729,7 +2738,7 @@ int *violations)
       lList *actual_attr = lGetList(global_host, EH_consumable_actual_list);
       double lc_factor=0.0;
       u_long32 ulc_factor;
-   
+
       clear_resource_tags(hard_request, GLOBAL_TAG);
       
       /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
@@ -2737,7 +2746,6 @@ int *violations)
          if ((ulc_factor=lGetUlong(global_host, EH_load_correction_factor)))
             lc_factor = ((double)ulc_factor)/100;
       }
-
       for (; global_slots; 
             global_slots = num_in_range(global_slots-1, lGetList(job, JB_pe_range))) {
          not_select_resource = 0;
@@ -2753,9 +2761,8 @@ int *violations)
 
             break;
          }
-   }
+      }
    } 
-
    if (not_select_resource && global_slots == 0) {
       char buff[1024 + 1];
 

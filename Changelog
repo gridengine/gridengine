@@ -1,3 +1,8 @@
+SG-2004-01-16-0: Bugfix:    the slots attribute could not be overwritten on host
+                            or global level. This has been changed.
+                 Changed:   scheduler
+                 Review:    AH
+
 CR-2004-01-16-0: Testsuite: prefer solaris64 architecture for building
                             dependencies in compile_source procedure
 

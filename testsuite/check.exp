@@ -2953,12 +2953,30 @@ proc get_check_name {path} {
    return $check_name
 }
 
-proc get_check_level { path } {
+proc get_check_levels { path } {
    global CHECK_INFORMATION_FILE check_highest_level
-   set check_highest_level 0
-   source $path/$CHECK_INFORMATION_FILE
+   global CHECK_ACT_LEVEL check_highest_level
 
-   return $check_highest_level 
+   set saved_level $CHECK_ACT_LEVEL
+   set check_highest_level 0
+   set check_init_level_procedure "blub"
+   unset check_init_level_procedure
+
+   set levels ""
+   source $path/$CHECK_INFORMATION_FILE
+   if { $check_highest_level > 0 && [info exists check_init_level_procedure] == 1} {
+      for {set i 0} {$i <= $check_highest_level} {incr i 1} {
+         set CHECK_ACT_LEVEL $i
+         if { [$check_init_level_procedure ]  != 0 } { 
+            continue 
+         }
+         lappend levels $CHECK_ACT_LEVEL
+      }
+   } else {
+      lappend levels 0
+   }
+   set CHECK_ACT_LEVEL $saved_level
+   return $levels
 }
 
 # get test result
@@ -3412,15 +3430,17 @@ proc run_tests { path runcompleted } {
         foreach elem $CHECK_DIRECTORIES {
            if { [is_category_enabled $elem ] == 0 } {
                set test_name [get_check_name $elem] 
-               set tests_runlevel [get_check_level $elem]
-               if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
-                  continue
+               set tests_runlevels [get_check_levels $elem]
+               foreach tests_runlevel $tests_runlevels {
+                  if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
+                     continue
+                  }
+                  if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
+                     continue
+                  }
+                  lappend checks_to_do $elem
+                  break
                }
-               if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
-                  continue
-               }
-
-               lappend checks_to_do $elem
            }
         }
         if {[llength $checks_to_do] == 0} {
@@ -4533,7 +4553,7 @@ proc select_runlevel {} {
 
      while { $data != 0 } {
        
-        clear_screen    
+        clear_screen
         print_menu_header
         set selected_levels ""
         foreach elem $CHECK_GUILTY_RUNLEVELS {
@@ -4543,14 +4563,6 @@ proc select_runlevel {} {
               set selected_levels "$selected_levels $a_level"
            } 
         }
-#        puts "===============================================================" 
-#        puts "selected runlevels: $selected_levels"
-#        puts -nonewline "selected categories:  "
-#        foreach cat_elem $CHECK_GUILTY_CATEGORIES {
-#           puts -nonewline "$cat_elem "
-#        }
-#        puts ""
-#        puts "===============================================================" 
 
         puts "\nplease select/unselect new runlevels/categories: \n"
         puts "(0) return to previous menu\n"
@@ -4993,18 +5005,24 @@ proc print_menu_header {} {
      set count 0
      foreach test $CHECK_DIRECTORIES {
         if { [is_category_enabled $test] == 0 } {
-           set level_ok 0
-           set tests_runlevel [get_check_level $test]
-           if { [ is_level_enabled $tests_runlevel ] == 0 } {
-              set test_name [get_check_name $test]
-              if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
-                 continue
+           set run_test_ok 0
+           set tests_runlevels [get_check_levels $test]
+            
+           foreach tests_runlevel $tests_runlevels {
+              if { [ is_level_enabled $tests_runlevel ] == 0 } {
+                 set test_name [get_check_name $test]
+                 if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
+                    continue
+                 }
+                 if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
+                    continue
+                 }
+                 set run_test_ok 1
+                 incr time_count [get_run_level_time $tests_runlevel] 
               }
-              if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
-                 continue
-              }
-              incr count 1
-              incr time_count [get_run_level_time $tests_runlevel] 
+           }
+           if { $run_test_ok == 1 } {
+              incr count 1  
            }
         }
      }

@@ -1,3 +1,5 @@
+CR-2002-04-11-1: Testsuite: Some further modifications for CR-2002-04-11-0
+
 EB-2002-04-11-0: Bugfix:    Solaris processor sets / Migration script
                             - fix: solaris psets won't be used
                             - fix: checkpointed job migration on bad exit state 

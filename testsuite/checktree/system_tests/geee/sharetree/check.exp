@@ -76,7 +76,7 @@ proc share_tree_init_level {} {
    global share_tree_percentage_variation
 
    if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
-      return 0
+      return -1
    }
 
 

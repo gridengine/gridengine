@@ -44,6 +44,7 @@
 
 #define MSG_POSTGRES_HISTORYDISABLED      _MESSAGE(69007, _("spooling without historical data\n"))
 #define MSG_POSTGRES_HISTORYENABLED       _MESSAGE(69008, _("spooling with historical data\n"))
-#define MSG_POSTGRES_COMMANDFAILED_SS     _MESSAGE(69009, _("failed executing sql command "SFQ": "SFN"\n"))
+#define MSG_POSTGRES_COMMANDFAILED_S      _MESSAGE(69009, _("failed executing sql command: "SFN"\n"))
+#define MSG_POSTGRES_COMMANDFAILED_SS     _MESSAGE(69010, _("failed executing sql command "SFQ": "SFN"\n"))
 
 #endif /* __MSG_SPOOLLIB_TEMPLATE_H */

@@ -633,8 +633,6 @@ void qmonSubmitSetResources(
 lList **hr,
 lList **sr 
 ) {
-   lList *rel = NULL;
-
    DENTER(GUI_LAYER, "qmonSubmitSetResources");
 
    /*
@@ -647,25 +645,11 @@ lList **sr
    ** attach the new lists
    */
    if (sr && *sr) {
-      if (! (rel = lCreateElemList("SoftResources", RE_Type, 1))) {
-         DPRINTF(("lCreateElemList failed\n"));
-         DEXIT;
-         return;
-      }
-
-      lSetList(lFirst(rel), RE_entries, lCopyList("sr", *sr));
-      SMData.soft_resource_list = rel;
+      SMData.soft_resource_list = lCopyList("sr", *sr);
    }
   
    if (hr && *hr) {
-      if (! (rel = lCreateElemList("HardResources", RE_Type, 1))) {
-         DPRINTF(("lCreateElemList failed\n"));
-         DEXIT;
-         return;
-      }
-
-      lSetList(lFirst(rel), RE_entries, lCopyList("hr", *hr));
-      SMData.hard_resource_list = rel;
+      SMData.hard_resource_list = lCopyList("hr", *hr);
    }
 
    /*

@@ -50,7 +50,6 @@
 #include "slots_used.h"
 
 #include "sge_orderL.h"
-#include "sge_requestL.h"
 #include "sge_pe.h"
 #include "sge_complex.h"
 #include "sge_schedd_conf.h"
@@ -197,7 +196,7 @@ void trace_resources(lList *resources)
    reason_size: max. size of reason char array
 
 complex_attributes: CX_Type
-resources: RE_Type
+resources: CE_Type
  
 ************************************************************************/
 
@@ -223,14 +222,13 @@ int sge_select_queue(lList *complex_attributes, lList *resources,
  * - jobs implicit slot request 
  *
  * complex_attributes: CX_Type
- * resources: RE_Type
+ * resources: CE_Type
  */ 
 static int sge_select_resource(lList *complex_attributes, lList *resources,
                                int allow_non_requestable, char *reason,
                                int reason_size, int slots, lList *ccl[3],
                                int force_attr_existence) 
 {
-   lListElem *res;
    static lListElem *implicit_slots_request = NULL;
 
    DENTER(TOP_LAYER, "sge_select_resource");
@@ -301,13 +299,12 @@ static int sge_select_resource(lList *complex_attributes, lList *resources,
       slots = 1;
 
    /* explicit requests */
-   for_each (res, resources) 
-      if (sge_match_complex_attributes(complex_attributes, 
-            lGetList(res, RE_entries), 1, allow_non_requestable, reason, reason_size, 1,
-           slots, ccl, force_attr_existence)) {
-         DEXIT;
-         return 0;
-      }
+   if (sge_match_complex_attributes(complex_attributes, 
+         resources, 1, allow_non_requestable, reason, reason_size, 1,
+        slots, ccl, force_attr_existence)) {
+      DEXIT;
+      return 0;
+   }
 
    DEXIT;
    return 1;
@@ -787,7 +784,6 @@ static int sge_soft_violations(lList *complex_attributes, lListElem *queue,
    char reason[1024 + 1];
    char buff[1024 + 1];
    unsigned int soft_violation = 0; 
-   lListElem *res;
 
    DENTER(TOP_LAYER, "sge_soft_violations");
 
@@ -797,14 +793,11 @@ static int sge_soft_violations(lList *complex_attributes, lListElem *queue,
    queue_name = lGetString(queue, QU_qname);
 
    /* count number of soft violations for _one_ slot of this job */
-   for_each (res, lGetList(job, JB_soft_resource_list)) {
-      int i;
-      soft_violation += (i=sge_match_complex_attributes(complex_attributes, 
-            lGetList(res, RE_entries), 0, 0, reason, sizeof(reason)-1, 1, 1, ccl, 1));
+   soft_violation = sge_match_complex_attributes(complex_attributes, 
+         lGetList(job, JB_soft_resource_list), 0, 0, reason, sizeof(reason)-1, 1, 1, ccl, 1);
 
-         DPRINTF(("queue %s does not fulfill soft %d requests (first: %s)\n", 
-               queue_name, i, reason));
-   }
+   DPRINTF(("queue %s does not fulfill soft %d requests (first: %s)\n", 
+         queue_name, soft_violation, reason));
 
    if (lGetList(job, JB_soft_queue_list)) {
       /* check whether queue fulfills soft queue request of the job (-q) */
@@ -922,14 +915,11 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
 
 static int is_requested(lList *req, const char *attr) 
 {
-   lListElem *res;
-
-   for_each (res, req) {  
-      if (lGetSubStr(res, CE_name, attr, RE_entries) ||
-          lGetSubStr(res, CE_shortcut , attr, RE_entries)) {
-         return 1;
-      }
+   if (lGetElemStr(req, CE_name, attr) ||
+       lGetElemStr(req, CE_shortcut , attr)) {
+      return 1;
    }
+
    return 0;
 }
 

@@ -316,7 +316,6 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    sge_compress_resources(lGetList(*pjob, JB_hard_resource_list));
    sge_compress_resources(lGetList(*pjob, JB_soft_resource_list));
 
-
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-m"))) {
       u_long32 ul;
       u_long32 old_mail_opts;

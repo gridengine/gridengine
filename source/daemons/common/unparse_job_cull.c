@@ -40,7 +40,6 @@
 #include "sge_string.h"
 #include "parse_qsubL.h"
 #include "sge_job_refL.h"
-#include "sge_requestL.h"
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
 #include "unparse_job_cull.h"
@@ -685,8 +684,6 @@ lList **alpp
    DENTER(TOP_LAYER, "sge_unparse_resource_list");
 
    if ((lp = lGetList(job, nm))) {
-      lList *lp_one;
-      lListElem *ep;
       lListElem *ep_opt;
       int hard = (nm == JB_hard_resource_list);
       
@@ -694,38 +691,28 @@ lList **alpp
          ep_opt = sge_add_noarg(pcmdline, hard_OPT, "-hard", NULL);
       else
          ep_opt = sge_add_noarg(pcmdline, soft_OPT, "-soft", NULL);
-      for_each (ep, lp) {
-         /*
-         ** if there is more than one element this means there are -l's with
-         ** ranges as well as with no ranges, so the list must be unparsed
-         ** into several -l statements
-         */
-         lp_one = lCreateList("-l 1 elem", RE_Type);
-         lAppendElem(lp_one, lCopyElem(ep));
-         ret = unparse_resources(NULL, str, sizeof(str) - 1, lp_one);
-         if (ret) {
-            lFreeList(lp_one);
-            DPRINTF(("Error %d formatting hard_resource_list as -l\n", ret));
-            sprintf(str, MSG_LIST_ERRORFORMATINGHARDRESOURCELISTASL);
-            answer_list_add(alpp, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            return ret;
-         }
-         lFreeList(lp_one);
-         if (*str && (str[strlen(str) - 1] == '\n')) {
-            str[strlen(str) - 1] = 0;
-         }
-         ep_opt = sge_add_arg(pcmdline, l_OPT, lListT, "-l", str);
 
-         if (hard)
-            lSetList(ep_opt, SPA_argval_lListT, lCopyList("hard res", lp));
-         else
-            lSetList(ep_opt, SPA_argval_lListT, lCopyList("soft res", lp));
-
-         if (hard) 
-            lSetInt(ep_opt, SPA_argval_lIntT, 1); /* means hard */
-         else
-            lSetInt(ep_opt, SPA_argval_lIntT, 2); /* means soft */
+      ret = unparse_resources(NULL, str, sizeof(str) - 1, lp);
+      if (ret) {
+         DPRINTF(("Error %d formatting hard_resource_list as -l\n", ret));
+         sprintf(str, MSG_LIST_ERRORFORMATINGHARDRESOURCELISTASL);
+         answer_list_add(alpp, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         return ret;
       }
+      if (*str && (str[strlen(str) - 1] == '\n')) {
+         str[strlen(str) - 1] = 0;
+      }
+      ep_opt = sge_add_arg(pcmdline, l_OPT, lListT, "-l", str);
+
+      if (hard)
+         lSetList(ep_opt, SPA_argval_lListT, lCopyList("hard res", lp));
+      else
+         lSetList(ep_opt, SPA_argval_lListT, lCopyList("soft res", lp));
+
+      if (hard) 
+         lSetInt(ep_opt, SPA_argval_lIntT, 1); /* means hard */
+      else
+         lSetInt(ep_opt, SPA_argval_lIntT, 2); /* means soft */
    }
    DEXIT;
    return ret;

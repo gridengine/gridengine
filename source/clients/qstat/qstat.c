@@ -293,16 +293,13 @@ char **argv
 
    /* unseclect all queues not selected by a -l (if exist) */
    if (lGetNumberOfElem(resource_list)) {
-      lListElem *ep; 
-      for_each (ep, resource_list) {
-         if (sge_fill_requests(lGetList(ep,RE_entries), complex_list, 1, 1, 0)) {
-            /* error message gets written by sge_fill_requests into SGE_EVENT */
-            SGE_EXIT(1);
-            lFreeList(job_list);
-            lFreeList(queue_list);
-            return -1;
+      if (sge_fill_requests(resource_list, complex_list, 1, 1, 0)) {
+         /* error message gets written by sge_fill_requests into SGE_EVENT */
+         SGE_EXIT(1);
+         lFreeList(job_list);
+         lFreeList(queue_list);
+         return -1;
 
-         }
       }
       /* prepare request */
       for_each(qep, queue_list) {
@@ -1512,7 +1509,7 @@ lList **ppljid
       if(parse_string(ppcmdline, "-F", &alp, &argstr)) {
          (*pfull) |= QSTAT_DISPLAY_QRESOURCES|QSTAT_DISPLAY_FULL;
          if (argstr) {
-            *pplqresource = sge_parse_resources(*pplqresource, NULL, argstr, "hard");
+            *pplqresource = sge_parse_resources(*pplqresource, argstr, "hard");
             FREE(argstr);
          }
          continue;
@@ -1545,7 +1542,7 @@ lList **ppljid
       }
 
       if(parse_string(ppcmdline, "-l", &alp, &argstr)) {
-         *pplresource = sge_parse_resources(*pplresource, NULL, argstr, "hard");
+         *pplresource = sge_parse_resources(*pplresource, argstr, "hard");
          FREE(argstr);
          continue;
       }

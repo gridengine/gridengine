@@ -453,9 +453,6 @@ char **argv
       /*
       ** complex attributes
       ** option syntax is described as
-      ** -l[<range-expr>] attr[=value],...
-      ** with range not being applicable here,
-      ** so syntax is
       ** -l attr[=value],...
       */
       else if (!strcmp("-l",argv[ii])) {
@@ -464,8 +461,7 @@ char **argv
             ** add blank cause no range can be specified
             ** as described in sge_resource.c
             */
-            strcpy(complexes, " ");
-            strcat(complexes, argv[++ii]);
+            strcpy(complexes, argv[++ii]);
             complexflag = 1;
          }
          else {
@@ -571,7 +567,7 @@ char **argv
    ** parsing complex flags and initialising complex list
    */
    if (complexflag) {
-      complex_options = sge_parse_resources(NULL, complexes, complexes  + 1, "hard");
+      complex_options = sge_parse_resources(NULL, complexes, "hard");
       if (!complex_options) {
          /*
          ** problem: still to tell some more to the user

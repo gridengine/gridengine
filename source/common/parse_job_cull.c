@@ -401,9 +401,9 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
    parse_list_hardsoft(cmdline, "-l", *pjob, 
                         JB_hard_resource_list, JB_soft_resource_list);
+
    sge_compress_resources(lGetList(*pjob, JB_hard_resource_list));
    sge_compress_resources(lGetList(*pjob, JB_soft_resource_list));
-
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-m"))) {
       u_long32 ul;

@@ -249,6 +249,8 @@ object_get_subtype(int nm)
 #endif
       case CX_entries:
       case EH_consumable_config_list:
+      case JB_hard_resource_list:
+      case JB_soft_resource_list:
       case QU_consumable_config_list:
       case QU_load_thresholds:
       case QU_suspend_thresholds:

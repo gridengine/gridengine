@@ -200,14 +200,14 @@ void cull_show_job(lListElem *job, int flags)
    if (lGetPosViaElem(job, JB_hard_resource_list)>=0)
       if (lGetList(job, JB_hard_resource_list)) {
          printf("hard resource_list:         ");
-         sge_show_re_type_list(lGetList(job, JB_hard_resource_list));
+         sge_show_ce_type_list(lGetList(job, JB_hard_resource_list));
          printf("\n");
       }
 
    if (lGetPosViaElem(job, JB_soft_resource_list)>=0)
       if (lGetList(job, JB_soft_resource_list)) {
          printf("soft resource_list:         ");
-         sge_show_re_type_list(lGetList(job, JB_soft_resource_list));
+         sge_show_ce_type_list(lGetList(job, JB_soft_resource_list));
          printf("\n");
       }
 

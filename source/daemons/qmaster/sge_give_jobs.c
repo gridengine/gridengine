@@ -40,7 +40,6 @@
 #include "sge_pe_task.h"
 #include "sge_usageL.h"
 #include "sge_job_refL.h"
-#include "sge_requestL.h"
 #include "sge_report.h"
 #include "sge_time_eventL.h"
 
@@ -147,7 +146,7 @@ lListElem *hep
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
       lList *resources;
       lList *gdil_ep_JG_complex;
-      lListElem *ep1, *ep2, *cep;
+      lListElem *ep1, *cep;
        
 
       if ((q = queue_list_locate(Master_Queue_List, lGetString(gdil_ep, JG_qname)))) {
@@ -160,14 +159,12 @@ lListElem *hep
       /* job requests overrides complex list */
       gdil_ep_JG_complex = lGetList(gdil_ep, JG_complex); 
       for_each (ep1, lGetList(jep, JB_hard_resource_list)) {
-         for_each (ep2, lGetList(ep1, RE_entries)) {
-            if ((cep=lGetElemStr(gdil_ep_JG_complex, CE_name, lGetString(ep2, CE_name))))  {  
-               lSetString(cep, CE_stringval, lGetString(ep2, CE_stringval));
-               DPRINTF(("complex: %s = %s\n", lGetString(ep2, CE_name), lGetString(ep2, CE_stringval)));
-            }
-            if (!cep) {
-               DPRINTF(("complex %s not found\n", lGetString(ep2, CE_name)));
-            }
+         if ((cep=lGetElemStr(gdil_ep_JG_complex, CE_name, lGetString(ep1, CE_name))))  {  
+            lSetString(cep, CE_stringval, lGetString(ep1, CE_stringval));
+            DPRINTF(("complex: %s = %s\n", lGetString(ep1, CE_name), lGetString(ep1, CE_stringval)));
+         }
+         if (!cep) {
+            DPRINTF(("complex %s not found\n", lGetString(ep1, CE_name)));
          }
       }
    }
@@ -1161,26 +1158,21 @@ int nm,
 char *rlimit_name 
 ) {
    const char *s;
-   lListElem *res, *rep;
+   lListElem *res;
    int found = 0;
 
    DENTER(TOP_LAYER, "reduce_queue_limit");
 
    for_each (res, lGetList(jep, JB_hard_resource_list)) {
-      for_each (rep, lGetList(res, RE_entries)) {
-         if (!strcmp(lGetString(rep, CE_name), rlimit_name)) {
-            if ((s = lGetString(rep, CE_stringval))) {
-               DPRINTF(("job reduces queue limit: %s = %s (was %s)\n", 
-                        rlimit_name, s, lGetString(qep, nm)));
-               lSetString(qep, nm, s);
-               found = 1;
-            }  
-         }
-         if (found)
+      if (!strcmp(lGetString(res, CE_name), rlimit_name)) {
+         if ((s = lGetString(res, CE_stringval))) {
+            DPRINTF(("job reduces queue limit: %s = %s (was %s)\n", 
+                     rlimit_name, s, lGetString(qep, nm)));
+            lSetString(qep, nm, s);
+            found = 1;
             break;
+         }  
       }
-      if (found)
-         break;
    } 
 
    /* enforce default request if set, but only if the consumable is

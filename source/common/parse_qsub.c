@@ -128,7 +128,6 @@ char **envp,
 lList **pcmdline,
 u_long32 flags 
 ) {
-   char *range;
    char **sp;
    lList *answer = NULL;
    char str[1024 + 1];
@@ -826,14 +825,10 @@ u_long32 flags
       }
 
 /*---------------------------------------------------------------------------*/
-      /* "-l[range] resource_list" */
+      /* "-l resource_list" */
 
-      if (!strncmp("-l", *sp, 2)) {
+      if (!strcmp("-l", *sp)) {
          lList *resource_list = NULL;
-         char option[128];
-
-         strcpy(option, "-l");
-         range = *sp + 2;
 
          /* next field is resource_list */
          sp++;
@@ -846,14 +841,14 @@ u_long32 flags
              return answer;
          }
 
-         DPRINTF(("\"-l%s %s\"\n", range, *sp));
+         DPRINTF(("\"-l %s\"\n", *sp));
 
          if (is_hard_soft() < 2)
             resource_list =
-               sge_parse_resources(NULL, range, *sp, "hard");
+               sge_parse_resources(NULL, *sp, "hard");
          else
             resource_list =
-               sge_parse_resources(NULL, range, *sp, "soft");
+               sge_parse_resources(NULL, *sp, "soft");
          if (!resource_list) {
              sprintf(str,MSG_PARSE_WRONGRESOURCELISTFORMATXSPECTOLOPTION_S ,
              *sp);
@@ -862,11 +857,8 @@ u_long32 flags
              DEXIT;
              return answer;
          }
-         strcpy(arg, range);
-         if (*arg)
-            strcat(arg, " ");
-         strcat(arg, *sp);
-         ep_opt = sge_add_arg(pcmdline, l_OPT, lListT, option, arg);
+
+         ep_opt = sge_add_arg(pcmdline, l_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, resource_list);
          lSetInt(ep_opt, SPA_argval_lIntT, is_hard_soft());
 

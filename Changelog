@@ -1,3 +1,15 @@
+JG-2003-06-04-0: Enhancem.: PostgreSQL spooling:
+                            - compile time option to switch between synchronous 
+                              and asynchronous communication
+                            - compile time option to suppress transaction 
+                              handling
+                            - table names will be derived from list field names,
+                              special handling for some too long field names
+                            Cleanup:
+                            - removed incomplete implementation of resource 
+                              requests with ranges
+                 Review:    EB, AA
+
 CR-2003-06-03-0: Testsuite: - delete all jobs before reinitialize system after
                               test failure
                             - bugs/issuezilla/440: fixed parsing problem on
@@ -30,7 +42,6 @@ AH-2003-06-02-0: Enhacem.:  Use session filtering with all non-total-update
                             if wrong input/output/error file was specified.
                  Review:    EB           
                         
-
 CR-2003-05-28-0: Testsuite: fixed errors when deleting SGE_ROOT directory
                             in compile_source() procedure.
 

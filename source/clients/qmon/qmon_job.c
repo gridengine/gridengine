@@ -608,19 +608,7 @@ void updateJobList(void)
    ** match queues to request_list
    */
    if (rl) {
-      lList *rel;
-      lListElem *re;
-
-      /* 
-      ** put rl in a RE_Type list 
-      */
-      rel = lCreateList("RE_list", RE_Type);
-      re = lCreateElem(RE_Type);
-      lSetList(re, RE_entries, lCopyList("copied job filter request", rl));
-      lAppendElem(rel, re);
-
-      match_queue(&ql, rel, cl, ehl);
-      rel = lFreeList(rel);
+      match_queue(&ql, rl, cl, ehl);
    }   
 #if 0      
    {

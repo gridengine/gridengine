@@ -2014,13 +2014,11 @@ lList *exec_host_list
    /*
    ** fill in requests
    */
-   for_each(dep, request_list) {
-      if (sge_fill_requests(lGetList(dep, RE_entries), complex_list, 0, 1, 0)) {
-         DPRINTF(("failure in sge_fill_requests()\n"));
-         DEXIT;
-         return False;
-      }
-   } 
+   if (sge_fill_requests(request_list, complex_list, 0, 1, 0)) {
+      DPRINTF(("failure in sge_fill_requests()\n"));
+      DEXIT;
+      return False;
+   }
 
 /* lWriteListTo(request_list, stderr); */
 

@@ -188,11 +188,9 @@ char **argv
       lList *ce = NULL;
       int selected;
 
-      for_each (ep, resource_match_list) {
-         if (sge_fill_requests(lGetList(ep,RE_entries), cl, 1, 1, 0)) {
-            /* error message gets written by sge_fill_requests into SGE_EVENT */
-            SGE_EXIT(1);
-         }
+      if (sge_fill_requests(resource_match_list, cl, 1, 1, 0)) {
+         /* error message gets written by sge_fill_requests into SGE_EVENT */
+         SGE_EXIT(1);
       }
       /* prepare request */
       for_each(ep, ehl) {
@@ -730,7 +728,7 @@ lListElem *ep;
       }
 
       if(parse_string(ppcmdline, "-l", &alp, &argstr)) {
-         *pplres = sge_parse_resources(*pplres, NULL, argstr, "hard");
+         *pplres = sge_parse_resources(*pplres, argstr, "hard");
          FREE(argstr);
          continue;
       }

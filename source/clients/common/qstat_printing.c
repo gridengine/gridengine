@@ -198,14 +198,13 @@ lList *qresource_list
       queue_complexes2scheduler(&rlp, q, exechost_list, complex_list, 0);
       for_each (rep , rlp) {
 
+         /* we had a -F request */
          if (qresource_list) {
-            lListElem *r1, *r2 = NULL;
-            for_each (r1, qresource_list) {
-               if ((r2=lGetSubStr(r1, CE_name, lGetString(rep, CE_name), RE_entries)) ||
-                  (r2=lGetSubStr(r1, CE_name, lGetString(rep, CE_shortcut), RE_entries)))
-                  break;
-            }
-            if (!r2)
+            lListElem *qres;
+            qres = lGetElemStr(qresource_list, CE_name, 
+                               lGetString(rep, CE_name));
+            /* if this complex variable wasn't requested with -F, skip it */
+            if (qres == NULL)
                continue;
          }
 
@@ -1259,7 +1258,7 @@ char *indent
             printf(QSTAT_INDENT "Checkpoint Env.:  %s\n", 
                lGetString(job, JB_checkpoint_name)); 
 
-         sge_show_re_type_list_line_by_line(QSTAT_INDENT "Hard Resources:   ",
+         sge_show_ce_type_list_line_by_line(QSTAT_INDENT "Hard Resources:   ",
                QSTAT_INDENT2, lGetList(job, JB_hard_resource_list)); 
 
          /* display default requests if necessary */
@@ -1295,7 +1294,7 @@ char *indent
             lFreeList(attributes);
          }
 
-         sge_show_re_type_list_line_by_line(QSTAT_INDENT "Soft Resources:   ",
+         sge_show_ce_type_list_line_by_line(QSTAT_INDENT "Soft Resources:   ",
                QSTAT_INDENT2, lGetList(job, JB_soft_resource_list)); 
 
          ql = lGetList(job, JB_hard_queue_list);

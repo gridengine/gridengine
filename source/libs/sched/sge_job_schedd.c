@@ -35,7 +35,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_pe.h"
-#include "sge_requestL.h"
 #include "sge_job_schedd.h"
 #include "sge_range_schedd.h"
 #include "valid_queue_user.h"
@@ -1108,15 +1107,13 @@ lListElem *explicit_job_request(
 lListElem *jep,
 const char *name 
 ) {
-   lListElem *ep = NULL, *res;
+   lListElem *ep = NULL;
 
-   for_each (res, lGetList(jep, JB_hard_resource_list)) 
-      if ((ep=lGetSubStr(res, CE_name, name, RE_entries))) 
-         return ep;
+   if ((ep=lGetElemStr(lGetList(jep, JB_hard_resource_list), CE_name, name))) 
+      return ep;
 
-   for_each (res, lGetList(jep, JB_soft_resource_list)) 
-      if ((ep=lGetSubStr(res, CE_name, name, RE_entries))) 
-         return ep;
+   if ((ep=lGetElemStr(lGetList(jep, JB_soft_resource_list), CE_name, name))) 
+      return ep;
 
    return NULL;
 }

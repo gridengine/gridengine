@@ -56,6 +56,8 @@
 
 #include "spool/postgres/sge_spooling_postgres.h"
 
+#define POSTGRES_SYNCHRON
+
 /****** spool/postgres/--Postgres-Spooling *************************************
 *
 *  NAME
@@ -172,7 +174,10 @@ spool_postgres_map_datatype(int type);
 
 static bool 
 spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
-                        const char *sql);
+                        const char *sql, bool wait);
+static PGresult *
+spool_postgres_exec_query(lList **answer_list, PGconn *connection,
+                          const char *sql);
 
 /****** spool/postgres/spool_postgres_create_context() ********************
 *  NAME
@@ -298,6 +303,9 @@ spool_postgres_default_startup_func(lList **answer_list,
                               url, PQerrorMessage(connection));
       ret = false;
    } else {
+#ifndef POSTGRES_SYNCHRON
+      PQsetnonblocking(connection, 1);
+#endif
       spool_database_set_handle(rule, connection);
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_INFO, 
@@ -308,13 +316,9 @@ spool_postgres_default_startup_func(lList **answer_list,
          PGresult *res;
 
          /* check version and retrieve info */
-         res = PQexec(connection, 
-                      "SELECT * FROM sge_info ORDER BY last_change DESC LIMIT 1");
-         if (res == NULL || PQresultStatus(res) != PGRES_TUPLES_OK) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_POSTGRES_CANNOTREADDBINFO_S, 
-                                    PQerrorMessage(connection));
+         res = spool_postgres_exec_query(answer_list, connection, 
+                  "SELECT * FROM sge_info ORDER BY last_change DESC LIMIT 1");
+         if (res == NULL) {
             ret = false;
          } else {
             const char *version;
@@ -522,7 +526,8 @@ spool_postgres_init_database(lList **answer_list, const lListElem *rule,
                           ", version VARCHAR NOT NULL"
                           ", with_history BOOLEAN NOT NULL)");
       ret = spool_postgres_exec_sql(answer_list, connection,
-                                    sge_dstring_get_string(&sql_dstring));
+                                    sge_dstring_get_string(&sql_dstring),
+                                    true);
   
       if (ret) {
          dstring version_dstring;
@@ -537,7 +542,8 @@ spool_postgres_init_database(lList **answer_list, const lListElem *rule,
                              "INSERT INTO sge_info VALUES (%s, '%s', %s)",
                              "'now'", version, with_history ? "TRUE" : "FALSE");
          ret = spool_postgres_exec_sql(answer_list, connection,
-                                       sge_dstring_get_string(&sql_dstring));
+                                       sge_dstring_get_string(&sql_dstring),
+                                       true);
       }
    }
 
@@ -569,7 +575,8 @@ spool_postgres_create_table(lList **answer_list, PGconn *connection,
 
    /* create sequence */
    sge_dstring_sprintf(&sql_dstring, "CREATE SEQUENCE %s_seq", table_name);
-   ret = spool_postgres_exec_sql(answer_list, connection, sge_dstring_get_string(&sql_dstring));
+   ret = spool_postgres_exec_sql(answer_list, connection, 
+                                 sge_dstring_get_string(&sql_dstring), false);
 
    if (ret) {
       int i;
@@ -621,7 +628,9 @@ spool_postgres_create_table(lList **answer_list, PGconn *connection,
       }
 
       sge_dstring_sprintf_append(&sql_dstring, ")");
-      ret = spool_postgres_exec_sql(answer_list, connection, sge_dstring_get_string(&sql_dstring));
+      ret = spool_postgres_exec_sql(answer_list, connection, 
+                                    sge_dstring_get_string(&sql_dstring),
+                                    false);
    }
 
    /* create indices */
@@ -639,7 +648,9 @@ spool_postgres_create_table(lList **answer_list, PGconn *connection,
       }
       
       sge_dstring_sprintf_append(&sql_dstring, ")");
-      ret = spool_postgres_exec_sql(answer_list, connection, sge_dstring_get_string(&sql_dstring));
+      ret = spool_postgres_exec_sql(answer_list, connection, 
+                                    sge_dstring_get_string(&sql_dstring),
+                                    false);
    }
 
    if (ret) {
@@ -655,7 +666,9 @@ spool_postgres_create_table(lList **answer_list, PGconn *connection,
                                        valid_field);
          }
          sge_dstring_sprintf_append(&sql_dstring, ")");
-         ret = spool_postgres_exec_sql(answer_list, connection, sge_dstring_get_string(&sql_dstring));
+         ret = spool_postgres_exec_sql(answer_list, connection, 
+                                       sge_dstring_get_string(&sql_dstring),
+                                       false);
       } else {
          if (with_history) {
             sge_dstring_sprintf(&sql_dstring, 
@@ -663,7 +676,9 @@ spool_postgres_create_table(lList **answer_list, PGconn *connection,
                                 table_name,
                                 table_name,
                                 valid_field);
-            ret = spool_postgres_exec_sql(answer_list, connection, sge_dstring_get_string(&sql_dstring));
+            ret = spool_postgres_exec_sql(answer_list, connection, 
+                                          sge_dstring_get_string(&sql_dstring),
+                                          false);
          }
       }
    }   
@@ -704,14 +719,79 @@ spool_postgres_create_table(lList **answer_list, PGconn *connection,
    return ret;
 }
 
-static bool 
-spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
-                        const char *sql)
+static PGresult *
+spool_postgres_wait_for_result(lList **answer_list, PGconn *connection)
+{
+   PGresult *ret = NULL;
+   PGresult *next = NULL;
+
+   next = PQgetResult(connection);
+   while (next != NULL) {
+      if (ret != NULL) {
+         PQclear(ret);
+      }
+      ret = next;
+
+      if (PQresultStatus(ret) != PGRES_COMMAND_OK &&
+          PQresultStatus(ret) != PGRES_TUPLES_OK) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_POSTGRES_COMMANDFAILED_S, 
+                                 PQerrorMessage(connection));
+         PQclear(ret);
+         ret = NULL;
+      }
+      next = PQgetResult(connection);
+   }
+
+   return ret;
+}
+
+static bool
+spool_postgres_consume_results(lList **answer_list, PGconn *connection)
 {
    bool ret = true;
+   PGresult *res = spool_postgres_wait_for_result(answer_list, connection);
+
+   return ret;
+}
+
+static dstring query_dstring = DSTRING_INIT;
+
+void
+spool_postgres_clear_query() 
+{
+   sge_dstring_clear(&query_dstring);
+}
+
+static const char *
+spool_postgres_get_query(const char *new_query)
+{
+   const char *ret;
+
+   if (sge_dstring_strlen(&query_dstring) == 0) {
+      ret = sge_dstring_append(&query_dstring, new_query);
+   } else {
+      ret = sge_dstring_sprintf_append(&query_dstring, ";\n%s", new_query);
+   }
+
+   return ret;
+}
+
+static bool 
+spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
+                        const char *sql, bool wait)
+{
+   bool ret = true;
+#ifdef POSTGRES_SYNCHRON
    PGresult *res;
+#else
+   bool busy = true;
+#endif
 
    DPRINTF(("SQL: %s\n", sql));
+
+#ifdef POSTGRES_SYNCHRON
    res = PQexec(connection, sql);
    if (res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -722,7 +802,100 @@ spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
       ret = false;
    }
 
+   PQclear(res);
+#else 
+   sql = spool_postgres_get_query(sql);
+   /* if we wait for a result: wait for previous queries then submit new */
+   if (wait) {
+      ret = spool_postgres_consume_results(answer_list, connection);
+      if (ret) {
+         busy = false;
+      }
+   }
+
+   /* we must either submit a new query or store the query */
+   if (ret) {
+      /* check if we can submit a new query */
+      if (busy) {
+         if (PQconsumeInput(connection) == 0) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_POSTGRES_COMMANDFAILED_S, 
+                                    PQerrorMessage(connection));
+            ret = false;
+         } else {
+            if (PQisBusy(connection) == 0) {
+               ret = spool_postgres_consume_results(answer_list, connection);
+               busy = false;
+            }
+         }
+      }
+   }
+
+   if (ret) {
+      if (!busy) {
+         DPRINTF(("submitting query\n"));
+         /* submit previously stored and the new query */
+         if (PQsendQuery(connection, sql) == 0) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_POSTGRES_COMMANDFAILED_SS, 
+                                    sql,
+                                    PQerrorMessage(connection));
+            ret = false;
+         }
+         spool_postgres_clear_query();
+      }
+   }
+
+   /* if waiting for results was requested: consume results */
+   if (ret) {
+      if (wait) {
+         ret = spool_postgres_consume_results(answer_list, connection);
+      }
+   }
+#endif
+
    return ret;
+}
+
+static PGresult *
+spool_postgres_exec_query(lList **answer_list, PGconn *connection,
+                          const char *sql)
+{
+   PGresult *res = NULL;
+
+   DPRINTF(("SQL: %s\n", sql));
+
+#ifdef POSTGRES_SYNCHRON
+   res = PQexec(connection, sql);
+   if (res == NULL || PQresultStatus(res) != PGRES_TUPLES_OK) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_POSTGRES_COMMANDFAILED_SS, 
+                              sql,
+                              PQerrorMessage(connection));
+      PQclear(res);
+      res = NULL;
+   }
+#else
+   sql = spool_postgres_get_query(sql);
+   /* before submitting query: consume previous results */
+   if (spool_postgres_consume_results(answer_list, connection)) {
+      if (PQsendQuery(connection, sql) == 0) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_POSTGRES_COMMANDFAILED_SS, 
+                                 sql,
+                                 PQerrorMessage(connection));
+      } else {
+         res = spool_postgres_wait_for_result(answer_list, connection);
+      }
+      spool_postgres_clear_query();
+   }
+#endif
+
+   return res;
 }
 
 static const char *
@@ -829,15 +1002,9 @@ spool_postgres_read_list(lList **answer_list, PGconn *connection,
       }
    }
 
-   DPRINTF(("SQL: %s\n", sge_dstring_get_string(&sql_dstring)));
-
-   res = PQexec(connection, sge_dstring_get_string(&sql_dstring));
-   if (res == NULL || PQresultStatus(res) != PGRES_TUPLES_OK) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_POSTGRES_COMMANDFAILED_SS, 
-                              sge_dstring_get_string(&sql_dstring),
-                              PQerrorMessage(connection));
+   res = spool_postgres_exec_query(answer_list, connection, 
+                                   sge_dstring_get_string(&sql_dstring));
+   if (res == NULL) {
       ret = false;
    } else {
       int num_records = PQntuples(res);
@@ -1184,30 +1351,20 @@ spool_postgres_start_transaction(lList **answer_list, PGconn *connection,
    bool ret = true;
 
    DENTER(TOP_LAYER, "spool_postgres_start_transaction");
-
    if (*transaction_started) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_CANTOPENTRANSACTIONALREADYOPEN); 
       ret = false;
    } else {
-      const char *command = "BEGIN";
-      PGresult *res;
-
-      DPRINTF(("SQL: %s\n", command));
-      res = PQexec(connection, command);
-      if (res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_POSTGRES_COMMANDFAILED_SS, 
-                                 command,
-                                 PQerrorMessage(connection));
-         ret = false;
-      } else {
+#ifdef POSTGRES_NO_TRANSACTIONS
+      *transaction_started = true;
+#else 
+      ret = spool_postgres_exec_sql(answer_list, connection, "BEGIN", true);
+      if (ret) {
          *transaction_started = true;
       }
-
-      PQclear(res);
+#endif
    }
 
    DEXIT;
@@ -1255,8 +1412,10 @@ spool_postgres_stop_transaction(lList **answer_list, PGconn *connection,
                               MSG_CANTCLOSETRANSACTIONNONEOPEN); 
       ret = false;
    } else {
+#ifdef POSTGRES_NO_TRANSACTIONS
+      ret = spool_postgres_consume_results(answer_list, connection);
+#else
       const char *command;
-      PGresult *res;
       
       if (commit) {
          command = "COMMIT";
@@ -1264,20 +1423,11 @@ spool_postgres_stop_transaction(lList **answer_list, PGconn *connection,
          command = "ROLLBACK";
       }
 
-      DPRINTF(("SQL: %s\n", command));
-      res = PQexec(connection, command);
-      if (res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_POSTGRES_COMMANDFAILED_SS, 
-                                 command,
-                                 PQerrorMessage(connection));
-         ret = false;
-      } else {
+      ret = spool_postgres_exec_sql(answer_list, connection, command, true);
+      if (ret) {
          *transaction_started = false;
       }
-
-      PQclear(res);
+#endif
    }
 
    DEXIT;
@@ -1347,15 +1497,9 @@ spool_postgres_create_new_id(lList **answer_list, PGconn *connection,
                           "SELECT nextval('%s_seq')", 
                           spool_database_get_table_name(fields));
 
-      DPRINTF(("SQL: %s\n", sge_dstring_get_string(&sql_dstring)));
-      res = PQexec(connection, sge_dstring_get_string(&sql_dstring));
-      if (res == NULL || PQresultStatus(res) != PGRES_TUPLES_OK) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_POSTGRES_COMMANDFAILED_SS, 
-                                 sge_dstring_get_string(&sql_dstring),
-                                 PQerrorMessage(connection));
-      } else {
+      res = spool_postgres_exec_query(answer_list, connection, 
+                                      sge_dstring_get_string(&sql_dstring));
+      if (res != NULL) {
          id = PQgetvalue(res, 0, PQfnumber(res, "nextval"));
          id = strdup(id);
       }
@@ -1417,7 +1561,6 @@ spool_postgres_invalidate(lList **answer_list, PGconn *connection,
       char sql_buf[MAX_STRING_SIZE];
       dstring sql_dstring;
       const char *valid_field;
-      PGresult *res;
 
       valid_field = spool_database_get_valid_field(fields);
 
@@ -1432,18 +1575,9 @@ spool_postgres_invalidate(lList **answer_list, PGconn *connection,
                           id,
                           valid_field);
 
-      DPRINTF(("SQL: %s\n", sge_dstring_get_string(&sql_dstring)));
-      res = PQexec(connection, sge_dstring_get_string(&sql_dstring));
-      if (res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_POSTGRES_COMMANDFAILED_SS, 
-                                 sge_dstring_get_string(&sql_dstring),
-                                 PQerrorMessage(connection));
-         ret = false;
-      }
-
-      PQclear(res);
+      ret = spool_postgres_exec_sql(answer_list, connection, 
+                                    sge_dstring_get_string(&sql_dstring), 
+                                    false);
    }
 
    DEXIT;
@@ -1502,7 +1636,6 @@ spool_postgres_write_object(lList **answer_list, PGconn *connection,
 
    const char *id;
    const char *new_id = NULL;
-   PGresult *res;
 
    DENTER(TOP_LAYER, "spool_postgres_write_object");
 
@@ -1612,19 +1745,9 @@ spool_postgres_write_object(lList **answer_list, PGconn *connection,
       }
 
       if (ret) {
-         DPRINTF(("SQL: %s\n", sge_dstring_get_string(&sql_dstring)));
-         res = PQexec(connection, 
-                      sge_dstring_get_string(&sql_dstring));
-         if (res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_POSTGRES_COMMANDFAILED_SS, 
-                                    sge_dstring_get_string(&sql_dstring),
-                                    PQerrorMessage(connection));
-            ret = false;
-         }
-
-         PQclear(res);
+         ret = spool_postgres_exec_sql(answer_list, connection, 
+                                       sge_dstring_get_string(&sql_dstring),
+                                       false);
       }
    }
 
@@ -1707,17 +1830,18 @@ spool_postgres_write_sublist(lList **answer_list, PGconn *connection,
    const lListElem *object;
    dstring key_dstring;
    char key_buffer[MAX_STRING_SIZE];
+   int key_nm;
 
    DENTER(TOP_LAYER, "spool_postgres_write_sublist");
 
    sge_dstring_init(&key_dstring, key_buffer, sizeof(key_buffer));
 
+   key_nm = spool_database_get_key_nm(fields);
+
    /* write all objects */
    for_each(object, list) {
-      int key_nm;
       const char *key;
-/* JG: TODO: get key_nm outside for_each */
-      key_nm = spool_database_get_key_nm(fields);
+
       sge_dstring_sprintf(&key_dstring, "%s|", parent_key);
       key = object_append_raw_field_to_dstring(object, answer_list, 
                                                &key_dstring, key_nm, '\0');
@@ -2133,20 +2257,9 @@ spool_postgres_delete_object(lList **answer_list, PGconn *connection,
          }
 
          if (ret) {
-            PGresult *res;
-
-            DPRINTF(("SQL: %s\n", sge_dstring_get_string(&sql_dstring)));
-            res = PQexec(connection, sge_dstring_get_string(&sql_dstring));
-            if (res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_POSTGRES_COMMANDFAILED_SS, 
-                                       sge_dstring_get_string(&sql_dstring),
-                                       PQerrorMessage(connection));
-               ret = false;
-            }
-
-            PQclear(res);
+            ret = spool_postgres_exec_sql(answer_list, connection, 
+                                          sge_dstring_get_string(&sql_dstring),
+                                          false);
          }
       }
 

@@ -36,7 +36,6 @@
 #include "sge.h"
 #include "commlib.h"
 #include "sge_ja_task.h"
-#include "sge_requestL.h"
 #include "sge_pe.h"
 #include "sgermon.h"
 #include "sge_prog.h"

@@ -101,7 +101,6 @@ XtPointer cld, cad;
    lList *hrl = NULL;
    lList *srl = NULL;
    lList *rll = NULL;
-   lListElem *rep = NULL;
    lListElem *ep = NULL;
    lListElem *rp = NULL;
    
@@ -152,19 +151,13 @@ XtPointer cld, cad;
    */
    XtVaSetValues(request_rtype, XmtNlabel, qmonSubmitRequestType(), NULL);
 
-   /*
-   ** at the moment the hard_resource list from the submit dialog 
-   ** is an RE_Type List, we need only the RE_entries list
-   ** there should be only one RE_Type element at the moment
-   */
    rll = qmonGetResources(qmonMirrorList(SGE_COMPLEX_LIST), 
                                        REQUESTABLE_RESOURCES);
 
    hrl = qmonSubmitHR();
    hard_requests = lFreeList(hard_requests);
    if (hrl) {
-      rep = lFirst(hrl);
-      hard_requests = lCopyList("hr", lGetList(rep, RE_entries));
+      hard_requests = lCopyList("hr", hrl);
       for_each(ep, hard_requests) {
          rp = lGetElemStr(rll, CE_name, lGetString(ep, CE_name));
          if (!rp)
@@ -179,8 +172,7 @@ XtPointer cld, cad;
    srl = qmonSubmitSR();
    soft_requests = lFreeList(soft_requests);
    if (srl) {
-      rep = lFirst(srl);
-      soft_requests = lCopyList("sr", lGetList(rep, RE_entries));
+      soft_requests = lCopyList("sr", srl);
       for_each(ep, soft_requests) {
          rp = lGetElemStr(rll, CE_name, lGetString(ep, CE_name));
          if (!rp)

@@ -49,7 +49,6 @@
 #include "sge_manop.h"
 #include "mail.h"
 #include "sge_ja_task.h"
-#include "sge_requestL.h"
 #include "sge_pe.h"
 #include "sge_job_refL.h"
 #include "sge_host.h"
@@ -129,7 +128,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
                     char *rhost, sge_gdi_request *request) 
 {
    int ckpt_err;
-   lListElem *reqep, *qep;
+   lListElem *qep;
    const char *pe_name, *project, *ckpt_name;
    u_long32 ckpt_attr, ckpt_inter;
    u_long32 job_number;
@@ -249,27 +248,22 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    /* fill name and shortcut for all requests
     * fill numeric values for all bool, time, memory and int type requests
     * use the Master_Complex_List for all fills
-    * JB_hard/soft_resource_list points to a RE_Type list
-    * RE_entries points to a CE_Type list
+    * JB_hard/soft_resource_list points to a CE_Type list
     */
-   for_each(reqep, lGetList(jep, JB_hard_resource_list) ) {
-      if (sge_fill_requests(lGetList(reqep,RE_entries), Master_Complex_List, 0, 1, 0)) {
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
+   if (sge_fill_requests(lGetList(jep, JB_hard_resource_list), Master_Complex_List, 0, 1, 0)) {
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EUNKNOWN;
    }
    if (compress_ressources(alpp, lGetList(jep, JB_hard_resource_list))) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }
    
-   for_each(reqep, lGetList(jep, JB_soft_resource_list) ) {
-      if (sge_fill_requests(lGetList(reqep,RE_entries), Master_Complex_List, 0, 1, 0)) {
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
+   if (sge_fill_requests(lGetList(jep, JB_soft_resource_list), Master_Complex_List, 0, 1, 0)) {
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EUNKNOWN;
    }
    if (compress_ressources(alpp, lGetList(jep, JB_soft_resource_list))) {
       DEXIT;
@@ -1983,7 +1977,7 @@ int is_task_enrolled
 *******************************************************************************/
 static int changes_consumables(lList **alpp, lList* new, lList* old)
 {
-   lListElem *old_reqep, *dcep, *new_reqep, *new_entry;
+   lListElem *dcep, *new_entry;
    lListElem *old_entry = NULL;
    const char *name;
    int found_it;
@@ -1992,87 +1986,79 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
 
    /* ensure all old resource requests implying consumables 
       debitation are still contained in new resource request list */
-   for_each(old_reqep, old) {
-      for_each(old_entry, lGetList(old_reqep, RE_entries)) { 
-         name = lGetString(old_entry, CE_name);
+   for_each(old_entry, old) { 
+      name = lGetString(old_entry, CE_name);
 
-         if (!(dcep = complex_list_locate_attr(Master_Complex_List, name))) {
-            /* complex attribute definition has been removed though
-               job still requests resource */ 
-            ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-            DEXIT;
-            return -1; 
-         }
+      if (!(dcep = complex_list_locate_attr(Master_Complex_List, name))) {
+         /* complex attribute definition has been removed though
+            job still requests resource */ 
+         ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return -1; 
+      }
 
-         /* ignore non-consumables */
-         if (!lGetBool(dcep, CE_consumable))
-            continue;
- 
-         /* search it in new hard resource list */
-         found_it = 0;
-         for_each (new_reqep, new) {
-            if (lGetSubStr(new_reqep, CE_name, name, RE_entries)) {
-               found_it = 1;
-               break;
-            }
-         }
+      /* ignore non-consumables */
+      if (!lGetBool(dcep, CE_consumable))
+         continue;
 
-         if (!found_it) {
-            ERROR((SGE_EVENT, MSG_JOB_MOD_MISSINGRUNNINGJOBCONSUMABLE_S, name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-            DEXIT;
-            return -1;
-         }
+      /* search it in new hard resource list */
+      found_it = 0;
+      if (lGetElemStr(new, CE_name, name)) {
+         found_it = 1;
+         break;
+      }
+
+      if (!found_it) {
+         ERROR((SGE_EVENT, MSG_JOB_MOD_MISSINGRUNNINGJOBCONSUMABLE_S, name));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return -1;
       }
    }
    
    /* ensure all new resource requests implying consumable 
       debitation were also contained in old resource request list
       AND have not changed the requested amount */ 
-   for_each(new_reqep, new) {
-      for_each(new_entry, lGetList(new_reqep, RE_entries)) { 
-         name = lGetString(new_entry, CE_name);
+   for_each(new_entry, new) { 
+      name = lGetString(new_entry, CE_name);
 
-         if (!(dcep = complex_list_locate_attr(Master_Complex_List, name))) {
-            /* refers to a not existing complex attribute definition */ 
-            ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-            DEXIT;
-            return -1; 
-         }
+      if (!(dcep = complex_list_locate_attr(Master_Complex_List, name))) {
+         /* refers to a not existing complex attribute definition */ 
+         ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return -1; 
+      }
 
-         /* ignore non-consumables */
-         if (!lGetBool(dcep, CE_consumable))
-            continue;
+      /* ignore non-consumables */
+      if (!lGetBool(dcep, CE_consumable))
+         continue;
 
-         /* search it in old hard resource list */
-         found_it = 0;
-         for_each (old_reqep, old) {
-            if ((old_entry=lGetSubStr(old_reqep, CE_name, name, RE_entries))) {
-               found_it = 1;
-               break;
-            }
-         }
+      /* search it in old hard resource list */
+      found_it = 0;
+      if ((old_entry=lGetElemStr(old, CE_name, name))) {
+         found_it = 1;
+         break;
+      }
 
-         if (!found_it) {
-            ERROR((SGE_EVENT, MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S, name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-            DEXIT;
-            return -1;
-         }
+      if (!found_it) {
+         ERROR((SGE_EVENT, MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S, name));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return -1;
+      }
 
-         /* compare request in old_entry with new_entry */
-         DPRINTF(("request: \"%s\" old: %f new: %f\n", name, 
-            lGetDouble(old_entry, CE_doubleval), 
-            lGetDouble(new_entry, CE_doubleval)));
-         if (lGetDouble(old_entry, CE_doubleval) != 
-            lGetDouble(new_entry, CE_doubleval)) {
-            ERROR((SGE_EVENT, MSG_JOB_MOD_CHANGEDRUNNINGJOBCONSUMABLE_S, name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-            DEXIT;
-            return -1;
-         }
+      /* compare request in old_entry with new_entry */
+      DPRINTF(("request: \"%s\" old: %f new: %f\n", name, 
+         lGetDouble(old_entry, CE_doubleval), 
+         lGetDouble(new_entry, CE_doubleval)));
+      if (lGetDouble(old_entry, CE_doubleval) != 
+         lGetDouble(new_entry, CE_doubleval)) {
+         ERROR((SGE_EVENT, MSG_JOB_MOD_CHANGEDRUNNINGJOBCONSUMABLE_S, name));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return -1;
       }
    }
 
@@ -2102,30 +2088,28 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
 *******************************************************************************/
 static int deny_soft_consumables(lList **alpp, lList *srl)
 {
-   lListElem *reqep, *entry, *dcep;
+   lListElem *entry, *dcep;
    const char *name;
 
    DENTER(TOP_LAYER, "deny_soft_consumables");
 
    /* ensure no consumables are requested in JB_soft_resource_list */
-   for_each(reqep, srl) {
-      for_each(entry, lGetList(reqep, RE_entries)) {
-         name = lGetString(entry, CE_name);
+   for_each(entry, srl) {
+      name = lGetString(entry, CE_name);
 
-         if (!(dcep = complex_list_locate_attr(Master_Complex_List, name))) {
-            ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-            DEXIT;
-            return -1;
-         }
+      if (!(dcep = complex_list_locate_attr(Master_Complex_List, name))) {
+         ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return -1;
+      }
 
-         /* ignore non-consumables */
-         if (lGetBool(dcep, CE_consumable)) {
-            ERROR((SGE_EVENT, MSG_JOB_MOD_SOFTREQCONSUMABLE_S, name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-            DEXIT;
-            return -1;
-         }
+      /* ignore non-consumables */
+      if (lGetBool(dcep, CE_consumable)) {
+         ERROR((SGE_EVENT, MSG_JOB_MOD_SOFTREQCONSUMABLE_S, name));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return -1;
       }
    }
 
@@ -2398,14 +2382,11 @@ int *trigger
 
    /* ---- JB_hard_resource_list */
    if ((pos=lGetPosViaElem(jep, JB_hard_resource_list))>=0) {
-      lListElem *reqep;
       DPRINTF(("got new JB_hard_resource_list\n")); 
-      for_each(reqep, lGetList(jep, JB_hard_resource_list) ) {
-         if (sge_fill_requests(lGetList(reqep, RE_entries), Master_Complex_List, 0, 1, 0)) {
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
+      if (sge_fill_requests(lGetList(jep, JB_hard_resource_list), Master_Complex_List, 0, 1, 0)) {
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
       }
       if (compress_ressources(alpp, lGetList(jep,JB_hard_resource_list))) {
          DEXIT;
@@ -2430,14 +2411,11 @@ int *trigger
 
    /* ---- JB_soft_resource_list */
    if ((pos=lGetPosViaElem(jep, JB_soft_resource_list))>=0) {
-      lListElem *reqep;
       DPRINTF(("got new JB_soft_resource_list\n")); 
-      for_each(reqep, lGetList(jep, JB_soft_resource_list) ) {
-         if (sge_fill_requests(lGetList(reqep, RE_entries), Master_Complex_List, 0, 1, 0)) {
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
+      if (sge_fill_requests(lGetList(jep, JB_soft_resource_list), Master_Complex_List, 0, 1, 0)) {
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
       }
       if (compress_ressources(alpp, lGetList(jep, JB_soft_resource_list))) {
          DEXIT;
@@ -3017,36 +2995,31 @@ static int compress_ressources(
 lList **alpp, /* AN_Type */
 lList *rl     /* RE_Type */
 ) {
-   lListElem *ep, *prev, *rm_ep, *meta_ep;
-   lList *lp;
+   lListElem *ep, *prev, *rm_ep;
    const char *attr_name;
 
    DENTER(TOP_LAYER, "compress_ressources");
 
-   for_each (meta_ep, rl) {
-      if ((lp = lGetList(meta_ep, RE_entries))) {
-         for_each_rev (ep, lp) { 
-            attr_name = lGetString(ep, CE_name);
+   for_each_rev (ep, rl) { 
+      attr_name = lGetString(ep, CE_name);
 
-            /* ensure 'slots' is not requested explicitly */
-            if (!strcmp(attr_name, "slots")) {
-               ERROR((SGE_EVENT, MSG_JOB_NODIRECTSLOTS)); 
-               answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-               DEXIT;
-               return -1;
-            }
+      /* ensure 'slots' is not requested explicitly */
+      if (!strcmp(attr_name, "slots")) {
+         ERROR((SGE_EVENT, MSG_JOB_NODIRECTSLOTS)); 
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return -1;
+      }
 
-            /* remove all previous requests with the same name */
-            prev =  lPrev(ep);
-            while ((rm_ep=prev)) {
-               prev = lPrev(rm_ep);
-               if (!strcmp(lGetString(rm_ep, CE_name), attr_name)) {
-                  DPRINTF(("resource request -l "SFN"="SFN" overrides previous -l "SFN"="SFN"\n",
-                     attr_name, lGetString(ep, CE_stringval), 
-                     attr_name, lGetString(rm_ep, CE_stringval)));
-                  lRemoveElem(lp, rm_ep);
-               }
-            }
+      /* remove all previous requests with the same name */
+      prev =  lPrev(ep);
+      while ((rm_ep=prev)) {
+         prev = lPrev(rm_ep);
+         if (!strcmp(lGetString(rm_ep, CE_name), attr_name)) {
+            DPRINTF(("resource request -l "SFN"="SFN" overrides previous -l "SFN"="SFN"\n",
+               attr_name, lGetString(ep, CE_stringval), 
+               attr_name, lGetString(rm_ep, CE_stringval)));
+            lRemoveElem(rl, rm_ep);
          }
       }
    }

@@ -597,8 +597,8 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_LIST(JB_stdin_path_list, PN_Type, CULL_DEFAULT | CULL_SPOOL) 
    SGE_BOOL(JB_merge_stderr, CULL_DEFAULT | CULL_SPOOL)     
 
-   SGE_LIST(JB_hard_resource_list, RE_Type, CULL_DEFAULT) /* JG: TODO: how to spool? */
-   SGE_LIST(JB_soft_resource_list, RE_Type, CULL_DEFAULT) /* JG: TODO: how to spool? */
+   SGE_LIST(JB_hard_resource_list, CE_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(JB_soft_resource_list, CE_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(JB_hard_queue_list, QR_Type, CULL_DEFAULT | CULL_SPOOL) 
    SGE_LIST(JB_soft_queue_list, QR_Type, CULL_DEFAULT | CULL_SPOOL) 
    

@@ -47,7 +47,6 @@
 #include "sge_peL.h"
 #include "sge_ptfL.h"
 #include "sge_reportL.h"
-#include "sge_requestL.h"
 #include "sge_schedd_conf.h"
 #include "sge_sharetreeL.h"
 #include "sge_stringL.h"
@@ -123,8 +122,6 @@ extern "C" {
       {LR_LOWERBOUND, LRS, LRN},        /* load report */
       {OR_LOWERBOUND, ORS, ORN},        /* ?? */
       {OQ_LOWERBOUND, OQS, OQN},        /* ?? */
-      {RQ_LOWERBOUND, RQS, RQN},        /* ?? */
-      {RE_LOWERBOUND, RES, REN},        /* ?? */
       {US_LOWERBOUND, USES, USEN},      /* user set */
       {UE_LOWERBOUND, UES, UEN},        /* user set entry */
       {RN_LOWERBOUND, RNS, RNN},        /* range list */

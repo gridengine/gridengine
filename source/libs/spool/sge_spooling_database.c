@@ -423,7 +423,7 @@ spool_database_check_version(lList **answer_list, const char *version)
    if (strcmp(version, my_version) != 0) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
-                              MSG_POSTGRES_WRONGVERSION_SS, 
+                              MSG_SPOOL_WRONGVERSION_SS, 
                               version, my_version);
       ret = false;
    }
@@ -1422,224 +1422,37 @@ static const char *
 spool_database_get_sub_table_name(const char *prefix, int nm)
 {
    const char *ret = NULL;
-
    dstring table_dstring;
    char table_buffer[MAX_STRING_SIZE];
 
    sge_dstring_init(&table_dstring, table_buffer, sizeof(table_buffer));
 
+   /* special handling for some very long field names */
    switch (nm) {
-      case CONF_entries:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "entries");
-         break;
-      case CX_entries:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "entries");
-         break;
-#ifndef __SGE_NO_USERMAPPING__
-      case CU_ruser_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "rusers");
-         break;
-#endif
-      case EH_acl:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "acl");
-         break;
-      case EH_xacl:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "xacl");
-         break;
-      case EH_consumable_config_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "complex_values");
-         break;
-      case EH_complex_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "complexes");
-         break;
-      case EH_load_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "load");
-         break;
-      case EH_prj:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "prj");
-         break;
-      case EH_xprj:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "xprj");
-         break;
-      case EH_scaling_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "load_scaling");
-         break;
-      case EH_usage_scaling_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage_scaling");
-         break;
-      case HGRP_host_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "hosts");
-         break;
-      case JAT_finished_task_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "finished_tasks");
+      case PET_granted_destin_identifier_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "granted_queues");
          break;
       case JAT_granted_destin_identifier_list:
          ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "granted_queues");
          break;
-      case JAT_scaled_usage_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "scaled_usage");
-         break;
-      case JAT_task_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "tasks");
-         break;
-      case JAT_usage_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage");
-         break;
-      case JB_context:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "context");
-         break;
-      case JB_env_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "environment");
-         break;
-      case JB_hard_queue_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "hard_queue_list");
-         break;
-      case JB_ja_structure:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_structure");
-         break;
-      case JB_ja_n_h_ids:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_n_h_ids");
-         break;
-      case JB_ja_u_h_ids:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_u_h_ids");
-         break;
-      case JB_ja_s_h_ids:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_s_h_ids");
-         break;
-      case JB_ja_o_h_ids:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_o_h_ids");
-         break;
-      case JB_ja_template:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_template");
-         break;
-      case JB_ja_tasks:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_tasks");
-         break;
-      case JB_ja_z_ids:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_z_ids");
-         break;
-      case JB_jid_predecessor_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "predecessor");
-         break;
-      case JB_jid_sucessor_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "successor");
-         break;
-      case JB_job_args:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "args");
-         break;
-      case JB_mail_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "mail_list");
-         break;
-      case JB_master_hard_queue_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "master_hard_queue_list");
-         break;
-      case JB_path_aliases:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "path_aliases");
-         break;
-      case JB_pe_range:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "pe_range");
-         break;
-      case JB_shell_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "shell");
-         break;
-      case JB_soft_queue_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "soft_queue_list");
-         break;
-      case JB_stdout_path_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "stdout");
-         break;
-      case JB_stderr_path_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "stderr");
-         break;
-      case JB_stdin_path_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "stdin");
-         break;
-      case PE_user_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "acl");
-         break;
-      case PE_xuser_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "xacl");
-         break;
-      case PET_granted_destin_identifier_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "granted_queues");
-         break;
-      case PET_scaled_usage:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "scaled_usage");
-         break;
-      case PET_usage:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage");
-         break;
-      case QU_load_thresholds:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "load_thresholds");
-         break;
-      case QU_suspend_thresholds:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "suspend_thresholds");
-         break;
-      case QU_acl:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "acl");
-         break;
-      case QU_xacl:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "xacl");
-         break;
-      case QU_owner_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "owner");
-         break;
-      case QU_subordinate_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "subordinate");
-         break;
-      case QU_complex_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "complexes");
-         break;
-      case QU_consumable_config_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "complex_values");
-         break;
-      case QU_projects:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "prj");
-         break;
-      case QU_xprojects:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "xprj");
-         break;
-      case QU_pe_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "pe");
-         break;
-      case QU_ckpt_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ckpt");
-         break;
-      case SC_job_load_adjustments:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "job_load_adjustments");
-         break;
-      case SC_usage_weight_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage_weight");
-         break;
-      case UP_acl:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "acl");
-         break;
-      case UP_xacl:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "xacl");
-         break;
-      case UP_debited_job_usage:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "debited_job_usage");
-         break;
-      case UP_long_term_usage:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "long_term_usage");
-         break;
-      case UP_project:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "project");
-         break;
-      case UP_usage:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage");
-         break;
-      case UPP_usage:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage");
-         break;
-      case UPP_long_term_usage:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "long_term_usage");
-         break;
-      case UPU_old_usage_list:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage");
-         break;
-      case US_entries:
-         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "entries");
+      default:
+         {
+            const char *name;
+            name = lNm2Str(nm);
+            if (name != NULL) {
+               const char *postfix;
+               
+               postfix = strchr(name, '_');
+               if (postfix == NULL) {
+                  postfix = name;
+               } else {
+                  postfix++;
+               }
+
+               ret = sge_dstring_sprintf(&table_dstring, "%s_%s", 
+                                         prefix, postfix);
+            }
+         }   
          break;
    }
 

@@ -117,16 +117,8 @@ enum NameSpaceBoundaries {
    OQ_LOWERBOUND = OR_UPPERBOUND + 1,
    OQ_UPPERBOUND = OQ_LOWERBOUND + 1*BASIC_UNIT - 1,
 
-  /* the request-list */ 
-   RQ_LOWERBOUND = OQ_UPPERBOUND + 1,
-   RQ_UPPERBOUND = RQ_LOWERBOUND + 1*BASIC_UNIT - 1,
-
-   /* an entry */
-   RE_LOWERBOUND = RQ_UPPERBOUND + 1,
-   RE_UPPERBOUND = RE_LOWERBOUND + 1*BASIC_UNIT - 1,
-
    /* a list for the to handle the range */
-   RR_LOWERBOUND = RE_UPPERBOUND + 1,
+   RR_LOWERBOUND = OQ_UPPERBOUND + 1,
    RR_UPPERBOUND = RR_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* structure of a load report */

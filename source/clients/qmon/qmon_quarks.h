@@ -41,7 +41,6 @@
 #define QmonRCE2_Type    "CE2_Type"
 #define QmonRCX_Type     "CX_Type"
 #define QmonRRE_Type     "RE_Type"
-#define QmonRRQ_Type     "RQ_Type"
 #define QmonRMR_Type     "MR_Type"
 #define QmonRPN_Type     "PN_Type"
 #define QmonRAT_Type     "AT_Type"
@@ -66,7 +65,6 @@ externalref XrmQuark QmonQCE_Type;
 externalref XrmQuark QmonQCE2_Type;
 externalref XrmQuark QmonQCX_Type;
 externalref XrmQuark QmonQRE_Type;
-externalref XrmQuark QmonQRQ_Type;
 externalref XrmQuark QmonQMR_Type;
 externalref XrmQuark QmonQPN_Type;
 externalref XrmQuark QmonQAT_Type;

@@ -234,23 +234,11 @@ void updateQueueList(void)
    */
    rl = qmonQFilterRequest();
    if (rl) {
-      lList *rel;
-      lListElem *re;
-
       if (!filter_on) {
          setButtonLabel(queue_customize, "@{Customize +}");
          filter_on = True;
       }
-      /* 
-      ** put rl in a RE_Type list 
-      */
-      rel = lCreateList("RE_list", RE_Type);
-      re = lCreateElem(RE_Type);
-      lSetList(re, RE_entries, lCopyList("copied job filter request", rl));
-      lAppendElem(rel, re);
-
-      match_queue(&qlp, rel, cl, hl);
-      lFreeList(rel);
+      match_queue(&qlp, rl, cl, hl);
    }  
    else {
       if (filter_on) {

@@ -1,3 +1,6 @@
+JG-2002-04-17-0: Cleanup:   multiple defines for same error message
+                 Issue:     #203
+
 EB-2002-04-17-0: Cleanup:   multiply defined function 
                  Issue:     #202
 

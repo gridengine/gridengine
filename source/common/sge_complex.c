@@ -593,7 +593,7 @@ lList **alpp
    return 0;
 
 FPRINTF_ERROR:
-   ERROR((SGE_EVENT, MSG_FILE_NOWRITE_S, fname));
+   ERROR((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, fname, strerror(errno)));
    if (alpp) 
       sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0); 
    DEXIT;

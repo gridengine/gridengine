@@ -153,7 +153,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
  
       fp = fopen(fname, "w");
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_S, fname));
+         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, fname, strerror(errno)));
          DEXIT;
          return NULL;
       }

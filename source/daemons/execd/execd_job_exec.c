@@ -306,7 +306,7 @@ int slave
             DPRINTF(("### CWD: %s", buffer));
          }
 
-         sprintf(err_str, MSG_FILE_NOWRITE_SS, lGetString(jelem, JB_exec_file), strerror(errno));
+         sprintf(err_str, MSG_FILE_ERRORWRITING_SS, lGetString(jelem, JB_exec_file), strerror(errno));
          DEXIT;
          goto Error;
       }

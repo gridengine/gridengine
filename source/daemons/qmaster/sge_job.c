@@ -1334,6 +1334,7 @@ char *commproc
       lListElem *granted_queue;
       sge_pack_buffer tmp_pb;
 
+      /* !!!! use lGetElemHostFirst/Next here */
       for_each (granted_queue, lGetList(t, JAT_granted_destin_identifier_list)) { 
          if (sge_hostcmp(pb_host, lGetHost(granted_queue, JG_qhostname))) {
             if(init_packbuffer(&tmp_pb, 1024, 0) == PACK_SUCCESS) {
@@ -2572,6 +2573,8 @@ static int job_verify_name(const lListElem *job, lList **alpp,
       sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
       ret = STATUS_EUNKNOWN;
    } else {
+      /* !!!! maybe we should define a hash table on JB_job_name or JB_owner */
+      /* and use lGetElemStrFirst/Next here */
       for_each (jep, Master_Job_List) {
          const char *jep_name = lGetString(jep, JB_job_name);
          const char *jep_owner = lGetString(jep, JB_owner);

@@ -306,7 +306,7 @@ lListElem *jatep
 
    fp = fopen(path.acct_file, "a");
    if (!fp) {
-      ERROR((SGE_EVENT, MSG_FILE_NOWRITE_SS, path.acct_file, strerror(errno)));
+      ERROR((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, path.acct_file, strerror(errno)));
       DEXIT;
       return;
    }

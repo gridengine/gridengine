@@ -61,9 +61,7 @@
 #define MSG_SGETEXT_CANTRESOLVEHOST_S           _("can't resolve hostname "SFQ"\n")
 #define MSG_SGETEXT_CANTRESOLVEHOST_SS          _("can't resolve hostname "SFQ": %s\n")
 #define MSG_NULLPOINTER            _("NULL pointer received")    
-#define MSG_FILE_NOWRITE_SS           _("unable to open %s for writing: %s")
 #define MSG_FILE_NOOPEN_SS            _("cant open file %s: %s\n")
-#define MSG_FILE_NOWRITE_S            _("cant not write to file %s\n")
 #define MSG_ERROR_COULDNOTOPENSTDOUTASFILE                 _("Could not open stdout as file\n")
 #define MSG_ERROR_UNABLETODUMPJOBLIST                      _("Unable to dump job list\n")
 
@@ -374,7 +372,6 @@
 ** read_write_cal.c
 */
 #define MSG_TMPNAM_GENERATINGTMPNAM    _("generating tmpnam()")
-#define MSG_FILE_ERRORWRITING_S        _("error writing %s\n")
 
 /*
 ** read_write_host.c

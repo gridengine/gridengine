@@ -339,7 +339,7 @@ lListElem *ep
 
       fp = fopen(filename, "w");
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_S, filename));
+         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
          DEXIT;
          return NULL;
       }

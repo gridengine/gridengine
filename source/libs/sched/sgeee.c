@@ -4410,7 +4410,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
          past = now;
 
       *orderlist = sge_build_sge_orders(lists, running_jobs, pending_jobs, finished_jobs,
-                                        *orderlist, 0, seqno, sconf_get_report_pjob_tickets(), update_execd);
+                                        *orderlist, true, seqno, sconf_get_report_pjob_tickets(), update_execd);
    }
    if(!has_pending_jobs || !has_queues)
       return 0;

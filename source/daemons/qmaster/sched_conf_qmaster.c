@@ -97,7 +97,7 @@ char *rhost
 
    if (!sge_event_spool(alpp, 0, sgeE_SCHED_CONF, 
                         0, 0, "schedd_conf", NULL, NULL,
-                        confp, NULL, NULL, true, true)) {
+                        /*confp*/sconf_get_config(), NULL, NULL, true, true)) {
       answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;

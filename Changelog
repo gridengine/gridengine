@@ -1,3 +1,10 @@
+SG-2003-11-04-0: Bugfix:    scheduler configuration:
+                            - param setting of NULL kills qmaster
+                            - usage reporting was switched off
+                            - illegal params had been stored
+                 Review:    AA
+                 Changed:   all
+                            
 SG-2003-10-31-1: Enhancem.: - Moved the reprioritized flag from the execd_param
                               to the scheduler configuration.
                             - Removed the sgeee_scheduling_interval

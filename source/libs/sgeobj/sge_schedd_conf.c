@@ -1987,23 +1987,28 @@ bool sconf_validate_config_(lList **answer_list){
 
    /* --- SC_params */
    {
-      char *s = NULL;
-      for (s=sge_strtok(lGetString(lFirst(Master_Sched_Config_List), SC_params), ",; "); s; s=sge_strtok(NULL, ",; ")) {
-         int i = 0;
-         bool added = false;
-         for(i=0; params[i].name ;i++ ){
-            if (!strncasecmp(s, params[i].name, sizeof(params[i].name)-1)){
-               if (params[i].setParam) {
-                  params[i].setParam(pos.c_params, answer_list, s);
-               }
-               added = true;
-            }               
+      char *s = lGetString(lFirst(Master_Sched_Config_List), SC_params); 
+      if (s) {
+         for (s=sge_strtok(s, ",; "); s; s=sge_strtok(NULL, ",; ")) {
+            int i = 0;
+            bool added = false;
+            for(i=0; params[i].name ;i++ ){
+               if (!strncasecmp(s, params[i].name, sizeof(params[i].name)-1)){
+                  if (params[i].setParam) {
+                     ret &= params[i].setParam(pos.c_params, answer_list, s);
+                  }
+                  added = true;
+               }               
+            }
+            if (!added){
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_UNKNOWN_PARAM_S, s));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+            }
          }
-         if (!added){
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_UNKNOWN_PARAM_S, s));
-            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         }
-      }
+      } else {
+         lSetString(lFirst(Master_Sched_Config_List), SC_params, "none");
+      }     
    }
 
    /**

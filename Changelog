@@ -1,11 +1,15 @@
+AS-2004-08-17-0: CVS        Created V60u1_TAG
+---------------------------------------------
+
+MD-2004-08-18-1  Bugfix:    changed messages for MD-2004-08-18-0
+                 Review:    AS
+                 Changed:   inst_sge, inst_common.sh
+
 MD-2004-08-18-0: Bugfix:    fixed rc script problem, shadowd did not start
                  Enhancem:  new install script option to create rc scripts from
                             settings file.
                  Review:    AS
                  Changed:   inst_sge, rctemplates
-
-AS-2004-08-17-0: CVS        Created V60u1_TAG
----------------------------------------------
 
 AS-2004-08-16-1: Bugfix:    README-Autoinstall.txt was missing in distribution
                  Changed:   doc/README-Autoinstall.txt

@@ -577,7 +577,9 @@ static int drmaa_is_attribute_supported(const char *name, bool vector, dstring *
 {
    int ret;
    drmaa_attr_names_t *p_attr;
-      
+
+   DENTER (TOP_LAYER, "drmaa_is_attribute_supported");
+   
    if( vector ) {
       p_attr = drmaa_fill_supported_vector_attributes (diag);
    } else {
@@ -585,12 +587,15 @@ static int drmaa_is_attribute_supported(const char *name, bool vector, dstring *
    }
 
    if (lGetElemStr( p_attr->it.si.strings, ST_name, name ) != NULL) {
+      DPRINTF (("Attribute %s is supported\n", name));
       ret = DRMAA_ERRNO_SUCCESS;
    } else {
+      DPRINTF (("Attribute %s is not supported\n", name));
       ret = DRMAA_ERRNO_INVALID_ARGUMENT;
    }
 
    drmaa_release_attr_names(p_attr);
+   DEXIT;
    return ret;
 }
 
@@ -671,13 +676,34 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
          if (strcmp(value, DRMAA_SUBMISSION_STATE_ACTIVE)
             && strcmp(value, DRMAA_SUBMISSION_STATE_HOLD)) {
             if (diagp) 
-               sge_dstring_sprintf(diagp, "attribute "SFQ" must be either "SFQ" or "SFQ"\n", 
-                     DRMAA_JS_STATE, DRMAA_SUBMISSION_STATE_ACTIVE, DRMAA_SUBMISSION_STATE_HOLD);
+               sge_dstring_sprintf(diagp,
+                                   "attribute "SFQ" must be either "SFQ" or "SFQ"\n", 
+                                   DRMAA_JS_STATE,
+                                   DRMAA_SUBMISSION_STATE_ACTIVE,
+                                   DRMAA_SUBMISSION_STATE_HOLD);
             DEXIT;
             return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
          }
       }
   
+      /* transfer files must contain only 'e', 'i', and 'o'. */
+      if (strcmp (name, DRMAA_TRANSFER_FILES) == 0) {
+         int count = 0;
+         
+         for (count = 0; value[count] != '\0'; count++) {
+            if ((value[count] != 'e') && (value[count] != 'i') &&
+                (value[count] != 'o')) {
+               if (diagp != NULL) {
+                  sge_dstring_sprintf (diagp,
+                                      "attribute "SFQ" must contain only 'e', 'i', and/or 'o'\n",
+                                      DRMAA_TRANSFER_FILES);
+                  DEXIT;
+                  return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
+               }
+            }
+         }
+      }
+      
       /* add or replace attribute */ 
       if ((ep = lGetElemStr(jt->strings, VA_variable, name))) {
          lSetString(ep, VA_value, value);
@@ -3889,15 +3915,20 @@ static drmaa_attr_names_t *drmaa_fill_supported_nonvector_attributes (dstring *d
 {
    drmaa_attr_names_t *p = NULL;
    
+   DENTER (TOP_LAYER, "drmaa_fill_supported_nonvector_attribute");
+   
    p = drmaa_fill_string_vector (drmaa_supported_nonvector);
    
    if (japi_is_delegated_file_staging_enabled(diag)) {
+      DPRINTF(("adding \"%s\"\n", DRMAA_TRANSFER_FILES));
       if (!lAddElemStr(&(p->it.si.strings),
                        ST_name, DRMAA_TRANSFER_FILES, ST_Type)) {
          japi_delete_string_vector ((drmaa_attr_values_t *)p);
+         DEXIT;
          return NULL;
       } 
    }
    
+   DEXIT;
    return p;
 }

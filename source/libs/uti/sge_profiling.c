@@ -174,7 +174,7 @@ pthread_mutex_t thrdInfo_mutex = PTHREAD_MUTEX_INITIALIZER;
  *       this value must be increased:
  *
  */ 
-int MAX_THREAD_NUM = 20;
+int MAX_THREAD_NUM = 256;
 
 /****** uti/profiling/sge_prof_setup() ************************************
 *  NAME
@@ -282,7 +282,12 @@ bool prof_is_active(prof_level level)
    init_array(thread_id);
    thread_num = get_prof_info_thread_id(thread_id);
 
-
+   if (thread_num >= MAX_THREAD_NUM) {
+      DENTER(TOP_LAYER, "prof_is_active");
+      CRITICAL((SGE_EVENT, "Exceeded max thread count in profiler!"));
+      abort ();
+   }
+   
    return theInfo[thread_num][level].prof_is_started;
 }
 

@@ -95,6 +95,8 @@ const char *sge_get_arch()
 #   define ARCHBIN "glinux"
 #elif defined(SLINUX)
 #   define ARCHBIN "slinux"
+#elif defined(LINUXAMD64)
+#   define ARCHBIN "linuxamd64"
 #elif defined(CRAY)
 # if defined(CRAYTSIEEE)
 #   define ARCHBIN "craytsieee"

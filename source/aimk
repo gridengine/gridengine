@@ -148,6 +148,9 @@ case "tru64":
 case "ia64linux":					      
    set BUILDARCH = IA64LINUX				     
    breaksw
+case "linuxamd64"
+   set BUILDARCH = LINUXAMD64
+   breaksw
 default:
    echo oops - no mapping for architecure \"$buildarch\" defined yet
    exit 1
@@ -1307,6 +1310,7 @@ case HP1164:
 
 case LINUX5:
 case LINUX6:
+case LINUXAMD64:
    strings /lib/libc.so.6 | grep "GNU C Library" | grep 2.[23] >& /dev/null
    if ( $status == 0 ) then
       set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"

@@ -1,3 +1,6 @@
+SG-2004-05-18-3: Bugfix:    changed the qdel man page
+                 Changed:   qdel.1
+
 MD-2004-05-18-3: Bugfix:    - backup/restore works (only Berkeley DB spooling)
                             - help output 
                  Changed:   inst_common.sh

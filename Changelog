@@ -1,3 +1,6 @@
+MD-2004-06-02-1: Bugfix:    - added comment to autoinst template
+                 Changed:   inst_template.conf
+
 DT-2004-06-02-2: Bugfix:    o Fixed DRMAASession.wait() in DRMAA Java binding
                             o Switched Java binding to use libjdrmaa.so
                  Changed:   classes

@@ -1,0 +1,6 @@
+Issue 999:  jobs submitted with option -r n can be rescheduled
+
+Test:       bugs/issuezilla/193
+Function:   issue193_submit_jobs (and others, they do a qmod -r on all jobs,
+            some have been submitted with -r n, it is verified that they do
+            not become pending but stay running)

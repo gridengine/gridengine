@@ -93,6 +93,7 @@ proc issue_423_setup  {} {
 
 
 proc issue_423_check {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
  
    #
@@ -107,8 +108,19 @@ proc issue_423_check {} {
    set job_sleep_time "10"
    set qsub_arguments "-t 1-2:0 $job_script $job_sleep_time"
    set job_id [submit_job $qsub_arguments 0]
-   wait_for_jobstart $job_id $job_name 300
-   wait_for_jobend $job_id $job_name 20
+
+   if { $ts_config(gridengine_version) == 53 } {
+      # SGE 5.3 systems accept this job
+      wait_for_jobstart $job_id $job_name 300
+      wait_for_jobend $job_id $job_name 20
+   } else {
+      # SGE 6.x rejects it with the error message
+      # Negative or zero step in range is not allowed
+      # submit_job returns -20 in this case
+      if { $job_id != -20 } {
+          add_proc_error "issue_423_check" -1 "job with zero step should have been rejected (submit_job = -20)"
+      }
+   }
  
    set_error 0 "ok"
 }

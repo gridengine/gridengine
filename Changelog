@@ -1,3 +1,6 @@
+JG-2004-04-28-2: Testsuite: Fixed tests bugs/issuezilla/423 and 
+                            system_tests/clients/qconf (add_user/mod_user).
+
 CR-2004-04-28-0: Bugfix:    - fixed problems when file descriptor limit
                               is reached. (mark execd unheart)
                             - raised nr. of file descriptors reserved for

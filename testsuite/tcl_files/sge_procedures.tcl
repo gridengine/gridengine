@@ -2182,6 +2182,9 @@ proc add_user { change_array { from_file 0 } } {
      set org_struct(name) "template"
      set org_struct(oticket) "0"
      set org_struct(fshare) "0"
+     if {$ts_config(gridengine_version) != 53} {
+        set org_struct(delete_time) "0"
+     }
      set org_struct(default_project) "NONE"
      foreach elem $values {
         set org_struct($elem) $chgar($elem)
@@ -2277,6 +2280,9 @@ proc mod_user { change_array { from_file 0 } } {
      set orginal_settings [split $orginal_settings "\n"]
 
      set config_elements "name oticket fshare default_project"
+     if {$ts_config(gridengine_version) != 53} {
+        lappend config_elements "delete_time"
+     }
      foreach elem $config_elements {
         foreach line $orginal_settings {
            set line [string trim $line]

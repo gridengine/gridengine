@@ -54,14 +54,24 @@ extern char **environ;
 
 int new_global_config = 0;
 
+u_long Global_jobs_running = 0;
+
+
 int main(int argc, char *argv[]);
 
 
 static void dump_eventlist(lList *event_list)
 {
-   lListElem *event;
+   lListElem *event =NULL;
+   lList *jat = NULL;
+   u_long job_id;
+   u_long task_id;
+   lListElem *ep = NULL;
+   u_long job_status;
+   int task_running;
+
    for_each(event, event_list) {
-      fprintf(stdout, event_text(event));
+/*      fprintf(stdout, event_text(event)); */
 #if 0 /* EB: debug */
       lWriteElemTo(event, stdout); 
 #endif
@@ -73,13 +83,32 @@ static void dump_eventlist(lList *event_list)
             sleep(8);
             ec_mark4registration();
             break;
+         case sgeE_JATASK_MOD:
+            job_id     = lGetUlong(event, ET_intkey);
+            task_id    = lGetUlong(event, ET_intkey2);
+            jat        = lGetList(event,ET_new_version);
+            ep         = lFirst(jat);
+            job_status = lGetUlong(ep, JAT_status);
+            task_running = (job_status==JRUNNING || job_status==JTRANSITING);
+            if (task_running) {
+               fprintf(stdout,"START (%ld.%ld)\n", job_id ,task_id);
+               fflush(stdout);  
+               Global_jobs_running++;
+            }           
+            break;
+         case sgeE_JOB_FINAL_USAGE:
+            job_id = lGetUlong(event, ET_intkey);
+            task_id = lGetUlong(event, ET_intkey2);
+            fprintf(stdout,"FINISH (%ld.%ld)\n", job_id, task_id);
+            Global_jobs_running--;
+            fflush(stdout);  
+            break;
          default:
             break;
       }
    }
 }
 
-#define TEST
 
 /************************************************************************/
 int main(int argc, char **argv)
@@ -104,10 +133,12 @@ int main(int argc, char **argv)
    }   
 
    ec_prepare_registration(EV_ID_ANY, "qevent");
+   ec_subscribe(sgeE_JATASK_MOD);
+   ec_subscribe(sgeE_JOB_FINAL_USAGE);
+
+   /* ec_set_edtime(DEFAULT_EVENT_DELIVERY_INTERVAL); */
+   ec_set_edtime(1);
    
-#ifndef TEST   
-   ec_subscribe_all();
-#endif
 
    while(!shut_me_down) {
       time_t now = time(0);
@@ -129,8 +160,7 @@ int main(int argc, char **argv)
          lFreeList(event_list);
       }
 
-#ifdef TEST
-      {
+      /* {
          static int event = sgeE_ALL_EVENTS + 1;
          static int subscribe = 1;
          if(subscribe) {
@@ -148,17 +178,17 @@ int main(int argc, char **argv)
                event++;
             }   
          }
-      }
+      } */
 
-      {
+      /*{
          if(ec_get_edtime() == DEFAULT_EVENT_DELIVERY_INTERVAL) {
             ec_set_edtime(DEFAULT_EVENT_DELIVERY_INTERVAL * 2);
          } else {
             ec_set_edtime(DEFAULT_EVENT_DELIVERY_INTERVAL);
          }
-      }
-#endif
-      
+      }*/
+      fprintf(stdout,"Running: %ld\n",Global_jobs_running);
+      fflush(stdout);  
    }
 
    ec_deregister();

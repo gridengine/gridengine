@@ -1,3 +1,7 @@
+RH-2004-07-26-1: Bugfix:    man page indicated that qsub accepts "-r yes|no"
+                 Issue:     1103
+                 Bugtraq:   ????
+
 RH-2004-07-26-0: Bugfix:    Wrong parameter for -Mc option argument qconf(1)
                             man page fixed.
                             Enhancements in man page for sched_conf(5).

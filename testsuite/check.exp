@@ -5746,8 +5746,7 @@ proc compile_source { { do_only_install 0 } } {
    global CHECK_ADDITIONAL_COMPILE_HOSTS CHECK_HTML_DIRECTORY
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
-   global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
-   global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR CHECK_USER
+   global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR CHECK_USER CHECK_HOST
 
    # settings for mail
    set check_name "compile_source"
@@ -5765,11 +5764,13 @@ proc compile_source { { do_only_install 0 } } {
    set cvs_change_log ""
 
    # if we configured to install precompiled packages - stop
-   if { $CHECK_PACKAGE_DIRECTORY != "none" } {
-      puts $CHECK_OUTPUT "can not compile -> using product packages"
-      puts $CHECK_OUTPUT "edit settings file and set package_directory to \"none\" if comilation should be possible"
-      mail_report $mail_subject "$mail_body can not compile -> using product packages\nedit settings file and set package_directory to \"none\"" 
-      append html_body [ create_html_text "can not compile -> using product packages\nedit settings file and set package_directory to \"none\"" ]
+   if { $ts_config(package_directory) != "none" && 
+        ($ts_config(package_type) == "tar" || $ts_config(package_type) == "zip") } {
+      puts $CHECK_OUTPUT "will not compile but use precompiled packages"
+      puts $CHECK_OUTPUT "set package_directory to \"none\" or set package_type to \"create_tar\""
+      puts $CHECK_OUTPUT "if compilation (and package creation) should be done"
+      mail_report $mail_subject "$mail_body using precompiled packages" 
+      append html_body [ create_html_text "using precompiled packages" ]
       update_compile_html_output $html_body
       return -1
    }
@@ -5905,6 +5906,8 @@ proc compile_source { { do_only_install 0 } } {
                }
             } 
          }
+
+         # if the testsuite itself has been update, require restart
          if { $frame_work_script_update == 1 } {
             puts $CHECK_OUTPUT "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!"
             flush $CHECK_OUTPUT
@@ -5917,6 +5920,7 @@ proc compile_source { { do_only_install 0 } } {
          }
          puts $CHECK_OUTPUT "------------------------------------------"
 
+         # after an update, do an aimk clean
          foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
             puts $CHECK_OUTPUT "------------------------------------------"
             puts $CHECK_OUTPUT "-> starting aimk clean on host $chost ..."
@@ -5927,6 +5931,8 @@ proc compile_source { { do_only_install 0 } } {
             puts $CHECK_OUTPUT "output:\n$output"
             puts $CHECK_OUTPUT "------------------------------------------"
          }
+
+         # after an update, delete macro messages file to have it updated
          set macro_messages_file [get_macro_messages_file_name]
          puts $CHECK_OUTPUT "deleting macro messages file after update!"
          puts $CHECK_OUTPUT "file: $macro_messages_file"
@@ -5936,8 +5942,8 @@ proc compile_source { { do_only_install 0 } } {
          update_macro_messages_list
       }
    }
-   
 
+   # choose a host for aimk depend, we prefer to do it on solaris 64bit
    if { $do_only_install != 1 } {
    set depend_host_name [lindex $CHECK_SOURCE_COMPILE_HOSTS 0] 
 
@@ -5949,6 +5955,7 @@ proc compile_source { { do_only_install 0 } } {
       }
    }
 
+   # clean dependency files (zerodepend)
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "-> starting scripts/zerodepend on host $depend_host_name ..."
    set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; scripts/zerodepend" prg_exit_state 60 0 "" 1 0 ]
@@ -5960,7 +5967,7 @@ proc compile_source { { do_only_install 0 } } {
 
    puts $CHECK_OUTPUT "------------------------------------------"
 
-
+   # build the depencency building program
    set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
    puts $CHECK_OUTPUT "-> starting aimk -only-depend on host $depend_host_name ..."
    set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -only-depend" prg_exit_state 60 0 "" 1 0 ]
@@ -5977,7 +5984,7 @@ proc compile_source { { do_only_install 0 } } {
       return -1
    }
 
-
+   # build the dependencies
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "-> starting aimk $my_compile_options depend on host $depend_host_name ..."
    set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $my_compile_options depend" prg_exit_state 60 0 "" 1 0 ]
@@ -5997,6 +6004,7 @@ proc compile_source { { do_only_install 0 } } {
 
    }
 
+   # now start build on all compile hosts
    set host_list $CHECK_SOURCE_COMPILE_HOSTS
    if { $do_only_install != 1 } {
    
@@ -6255,7 +6263,7 @@ proc compile_source { { do_only_install 0 } } {
       return -1
    } 
 
-   } 
+   }
 
    # install to $CHECK_PRODUCT_ROOT
    set var_name "SGE_ROOT"
@@ -6308,13 +6316,9 @@ proc compile_source { { do_only_install 0 } } {
       puts -nonewline $CHECK_OUTPUT "$output "
       append compiled_mail_architectures "\n$elem ($output)"
    }
-
-     
-
  
    puts $CHECK_OUTPUT "\ninstalling product binaries"
    if { $ts_config(gridengine_version) == 53 } {
-
       set open_spawn [ open_remote_spawn_process [lindex $host_list 0] $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
    } else {
       set open_spawn [ open_remote_spawn_process [lindex $host_list 0] $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./scripts/distinst -local -noexit $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
@@ -6412,6 +6416,55 @@ proc compile_source { { do_only_install 0 } } {
         puts "could not copy defaults file"
         return -1
    }
+
+   # if required, build distribution
+   if { $ts_config(package_type) == "create_tar" &&
+        $ts_config(package_directory) != "none" } {
+      puts $CHECK_OUTPUT "creating tar packages"  
+      # distribution will be created using mk_dist
+      # figure out which commandline options to use
+      set args ""
+      append args "-vdir $ts_config(product_root)"             ;# find the distrib here
+      append args " -version $ts_config(source_cvs_release)"   ;# for package names
+      append args " -basedir $ts_config(package_directory)"    ;# destination dir
+      append args " -bin -common"                              ;# which packages
+
+      if { $ts_config(gridengine_version) == 53 } {
+         if { $ts_config(product_type) == "sgeee" } {
+            append_args " -sgeee"
+         }
+      }
+
+      if { ! [file isdirectory $ts_config(package_directory)] } {
+         file mkdir $ts_config(package_directory)
+      }
+
+      puts $CHECK_OUTPUT "starting mk_dist $args $arch_list"
+      # start mk_dist
+      set open_spawn [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./scripts/mk_dist $args $arch_list" ]
+      set sp_id [ lindex $open_spawn 1 ]
+      set timeout -1
+      set done 0
+      while { $done != 1 } {
+         expect {
+            -i $sp_id full_buffer {
+               puts $CHECK_OUTPUT "testsuite - compile_source buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            }
+            -i $sp_id "_exit_status_" {
+               set done 1
+            }
+            -i $sp_id eof {
+               set done 1
+            }
+            -i $sp_id "*\n" {
+               puts $CHECK_OUTPUT $expect_out(0,string)
+            }
+         }
+      }
+      close_spawn_process $open_spawn
+      puts $CHECK_OUTPUT ""
+   }
+   
    return 0
 }
 
@@ -6754,12 +6807,14 @@ proc menu {} {
            wait_for_enter
          }
     "23" { 
-            if { $CHECK_PACKAGE_DIRECTORY == "none"  } {
+            if { [have_root_passwd] == -1 } {
+                  puts $CHECK_OUTPUT "need root access ..."
+                  set_root_passwd
+            }
+
+            if { $ts_config(package_directory) == "none" ||
+                 $ts_config(package_type) == "create_tar" } {
                # we compile the source and do a scripts/distinst
-               if { [have_root_passwd] == -1 } {
-                     puts $CHECK_OUTPUT "need root access ..."
-                     set_root_passwd
-                }
                 set back [compile_source]
                 if { $back != 0 } {
                    puts "--> error compiling and pre installing source code"
@@ -6769,10 +6824,6 @@ proc menu {} {
                 wait_for_enter
             } else {
                # we have product packages
-               if { [have_root_passwd] == -1 } {
-                     puts $CHECK_OUTPUT "need root access ..."
-                     set_root_passwd
-                }
                 set back [prepare_packages]
                 if { $back != 0 } {
                    puts "--> error installing product packages"

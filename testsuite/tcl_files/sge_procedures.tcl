@@ -1370,7 +1370,7 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
      # ignore error -4 
   } else {
     if { ($result != 0) && ($result != -3) } {
-      add_proc_error "set_config" -1 "could not add or modify configruation for host $host ($result)"
+      add_proc_error "set_config" -1 "could not add or modify configuration for host $host ($result)"
     }
   }
   return $result

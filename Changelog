@@ -1,3 +1,7 @@
+JG-2004-10-14-0: Testsuite: Testsuite now can create tar packages after 
+                            compiling by setting the package_type parameter to 
+                            "create_tar".
+
 CR-2004-10-13-0: Enhancem.: - implemented application status callback 
                               function for execd.
                             - qping man page update

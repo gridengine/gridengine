@@ -238,6 +238,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                set stop_line_wait 1
             }
             -i $sp_id "100%" {
+               after 100
                send -i $sp_id "1G"      ;# go to first line
                set stop_line_wait 1
             }
@@ -276,12 +277,13 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
             send -i $sp_id -- "$elem"
          }
          expect -i $sp_id
+         after 50
       }
 
       # wait 1 second for new file date!!! 
-      sleep 1
+      after 1000
       while { [ timestamp ] <= $start_time } { 
-         sleep 1
+         after 1000
       }
       send -i $sp_id ":wq\n"
       set timeout 100
@@ -1384,7 +1386,7 @@ proc get_pid_from_file { pid_file } {
             }
          }
       }   
-      sleep 2
+      after 2000
    }
 
    return $pid

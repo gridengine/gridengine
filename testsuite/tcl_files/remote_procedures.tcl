@@ -1392,7 +1392,7 @@ proc get_open_spawn_rlogin_session { hostname user back_var } {
    }
 
 
-   debug_puts "Cecking whether $hostname has an open rlogin session"
+   debug_puts "Checking whether $hostname has an open rlogin session"
    set entries [array names rlogin_spawn_session_buffer]
    debug_puts "open rlogin connections: [llength $entries]"
    

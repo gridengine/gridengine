@@ -2449,28 +2449,28 @@ proc config_package_directory { only_check name config_array } {
       }
    } 
 
+   # package dir configured?
    if { [string compare "none" $value ] != 0 } {
-      if { [ file isdirectory $value ] != 1  } {
-         puts $CHECK_OUTPUT "Directory \"$value\" not found"
-         return -1
-      }
-      if { [info exists CHECK_PACKAGE_TYPE] } {
-         if { [string compare $CHECK_PACKAGE_TYPE "tar"] == 0 }    {
-            if { [check_packages_directory $value check_tar] != 0 } {
-               puts $CHECK_OUTPUT "error checking package_directory! are all package file installed?"
-               return -1
-            }
+      # directory doesn't exist? If we shall generate packages, create dir
+      if { ![file isdirectory $value] } {
+         if { $config(package_type) == "create_tar" } {
+            file mkdir $value
          } else {
+            puts $CHECK_OUTPUT "Directory \"$value\" not found"
+            return -1
+         }
+      }
+      if { [string compare $config(package_type) "tar"] == 0 }    {
+         if { [check_packages_directory $value check_tar] != 0 } {
+            puts $CHECK_OUTPUT "error checking package_directory! are all package file installed?"
+            return -1
+         }
+      } else {
+         if { [string compare $config(package_type) "tar"] == 0 }    {
             if { [check_packages_directory $value check_zip] != 0 } {
                puts $CHECK_OUTPUT "error checking package_directory! are all package file installed?"
                return -1
             }
-         }
-
-      } else {
-         if { [check_packages_directory $value] != 0 } {
-            puts $CHECK_OUTPUT "error checking package_directory! are all package file installed?"
-            return -1
          }
       }
    }
@@ -2517,7 +2517,10 @@ proc config_package_type { only_check name config_array } {
    if { $only_check == 0 } {
       # do setup  
       puts $CHECK_OUTPUT "" 
-      puts $CHECK_OUTPUT "Please enter package type to test (\"tar\" or \"zip\"),"
+      puts $CHECK_OUTPUT "Please enter package type to test:"
+      puts $CHECK_OUTPUT "  \"tar\" to use precompiled tar packages" 
+      puts $CHECK_OUTPUT "  \"zip\" to use precompiled sunpkg packages"
+      puts $CHECK_OUTPUT "  \"create_tar\" to generate tar packages"
       puts $CHECK_OUTPUT "or press >RETURN< to use the default value."
       puts $CHECK_OUTPUT "(default: $value)"
       puts -nonewline $CHECK_OUTPUT "> "
@@ -2530,8 +2533,9 @@ proc config_package_type { only_check name config_array } {
    } 
 
    if { [string compare "tar" $value ] != 0 && 
-        [string compare "zip" $value ] != 0  } {
-      puts $CHECK_OUTPUT "unexpected package type: \"$value\" use \"zip\" or \"tar\"!"
+        [string compare "zip" $value ] != 0 &&
+        [string compare "create_tar" $value ] != 0 } {
+      puts $CHECK_OUTPUT "unexpected package type: \"$value\"!"
       return -1
    }
 

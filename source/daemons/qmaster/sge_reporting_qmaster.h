@@ -63,7 +63,7 @@ bool
 reporting_shutdown(lList **answer_list);
 
 void
-reporting_deliver_trigger(te_event_t anEvent);
+reporting_trigger_handler(te_event_t anEvent);
 
 bool
 reporting_create_new_job_record(lList **answer_list, const lListElem *job);

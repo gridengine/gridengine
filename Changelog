@@ -1,3 +1,7 @@
+AD-2004-01-18-0: Bugfix:    Accounting file has not been written, because
+                            reporting trigger event handler was not registered.
+                 Changed:   qmaster
+
 RC-2004-01-17-1: Cleanup:   Removed dead code on MacOSX (already #if 0 out)
                  Changed:   sge_getloadavg.c
 

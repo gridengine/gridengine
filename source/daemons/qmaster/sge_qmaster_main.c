@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
    pthread_create(&(thrds[0]), NULL, signal_thread, NULL);
    inc_thread_count();
 
-   pthread_create(&(thrds[2]), NULL, message_thread, NULL);
+   pthread_create(&(thrds[1]), NULL, message_thread, NULL);
    inc_thread_count();
 
    start_periodic_tasks();
@@ -815,6 +815,8 @@ static void* signal_thread(void* anArg)
    {
       sigwait(&sig_set, &sig_num);
 
+      DPRINTF(("%s: got signal %d\n", SGE_FUNC, sig_num));
+
       switch (sig_num) {
          case SIGINT:
             wait_for_thread_termination();
@@ -822,6 +824,7 @@ static void* signal_thread(void* anArg)
             return NULL;
          default:
             /* TODO-AD: add error message */
+            DPRINTF(("%s: did not handle signal %d\n", SGE_FUNC, sig_num));
             ;
       }
    }

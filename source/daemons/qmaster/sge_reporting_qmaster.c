@@ -135,7 +135,7 @@ lGetStringNotNull(const lListElem *ep, int nm);
 *  SEE ALSO
 *     qmaster/reporting/reporting_initialize()
 *     qmaster/reporting/reporting_shutdown()
-*     qmaster/reporting/reporting_deliver_trigger()
+*     qmaster/reporting/reporting_trigger_handler()
 *     qmaster/reporting/reporting_create_acct_record()
 *     qmaster/reporting/reporting_create_host_record()
 *     qmaster/reporting/reporting_create_host_consumable_record()
@@ -151,7 +151,8 @@ lGetStringNotNull(const lListElem *ep, int nm);
 *     bool reporting_initialize(lList **answer_list) 
 *
 *  FUNCTION
-*     ??? 
+*     Register reporting and sharelog trigger as well as the respective event
+*     handler.
 *
 *  INPUTS
 *     lList **answer_list - used to return error messages
@@ -174,11 +175,13 @@ reporting_initialize(lList **answer_list)
 
    DENTER(TOP_LAYER, "reporting_initialize");
 
+   te_register_event_handler(reporting_trigger_handler, TYPE_REPORTING_TRIGGER);
    ev = te_new_event(time(NULL), TYPE_REPORTING_TRIGGER, ONE_TIME_EVENT, 1, 0, NULL);
    te_add_event(ev);
    te_free_event(ev);
 
    if (sharelog_time > 0) {
+      te_register_event_handler(reporting_trigger_handler, TYPE_SHARELOG_TRIGGER);
       ev = te_new_event(time(NULL), TYPE_SHARELOG_TRIGGER , ONE_TIME_EVENT, 1, 0, NULL);
       te_add_event(ev);
       te_free_event(ev);
@@ -186,7 +189,7 @@ reporting_initialize(lList **answer_list)
 
    DEXIT;
    return ret;
-}
+} /* reporting_initialize() */
 
 /****** qmaster/reporting/reporting_shutdown() *****************************
 *  NAME
@@ -237,13 +240,13 @@ reporting_shutdown(lList **answer_list)
    return ret;
 }
 
-/****** qmaster/reporting/reporting_deliver_trigger() **********************
+/****** qmaster/reporting/reporting_trigger_handler() **********************
 *  NAME
-*     reporting_deliver_trigger() -- process timer event
+*     reporting_trigger_handler() -- process timed event
 *
 *  SYNOPSIS
 *     void 
-*     reporting_deliver_trigger(te_event_t anEvent)
+*     reporting_trigger_handler(te_event_t anEvent)
 *
 *  FUNCTION
 *     ??? 
@@ -252,21 +255,21 @@ reporting_shutdown(lList **answer_list)
 *     te_event_t - timed event
 *
 *  NOTES
-*     MT-NOTE: reporting_deliver_trigger() is MT safe.
+*     MT-NOTE: reporting_trigger_handler() is MT safe.
 *
 *  SEE ALSO
 *     Timeeventmanager/te_deliver()
 *     Timeeventmanager/te_add()
 *******************************************************************************/
 void
-reporting_deliver_trigger(te_event_t anEvent)
+reporting_trigger_handler(te_event_t anEvent)
 {
    u_long32 flush_interval = 0;
    u_long32 next_flush = 0;
    lList *answer_list = NULL;
    
 
-   DENTER(TOP_LAYER, "reporting_deliver_trigger");
+   DENTER(TOP_LAYER, "reporting_trigger_handler");
 
    switch (te_get_type(anEvent)) {
       case TYPE_SHARELOG_TRIGGER:
@@ -304,7 +307,7 @@ reporting_deliver_trigger(te_event_t anEvent)
 
    DEXIT;
    return;
-}
+} /* reporting_trigger_handler() */
 
 bool
 reporting_create_new_job_record(lList **answer_list, const lListElem *job)

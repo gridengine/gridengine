@@ -58,12 +58,13 @@ const char *fname
 ) {
    static char valuev[1][1025];
    const char *namev[1];
-   
+
    namev[0] = conf_val;
-   if (get_confval_array(fname, 1, namev, valuev))
+   if (get_confval_array(fname, 1, namev, valuev)) {
       return NULL;
-   else
+   } else {
       return valuev[0];
+   }
 }
 
 
@@ -96,8 +97,14 @@ char value[][1025]
    
    DENTER(TOP_LAYER, "get_confval");
 
+#if 0
+   /*  this may cause problems if a previous call has set a char* pointer
+       to this buffer and uses the pointer after a second call, this
+       would cause a "" string for that array where the pointer is set to!
+   */
    for (i=0; i<n; i++)
       value[i][0] = '\0';
+#endif
 
    if (!(fp = fopen(fname, "r"))) {
       ERROR((SGE_EVENT, MSG_FILE_FOPENFAILED_SS, fname, strerror(errno))); 

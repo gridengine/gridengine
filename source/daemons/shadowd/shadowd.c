@@ -361,15 +361,17 @@ char **argv
                      switch2start_user();
                      ret = startprog(out, err, NULL, binpath, qmaster_name, NULL);
                      switch2admin_user();
-                     if (ret)
+                     if (ret) {
                         ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));
+                     }
                      else {
                         sleep(5);
                         switch2start_user();
                         ret = startprog(out, err, NULL, binpath, schedd_name, NULL);
                         switch2admin_user();
-                        if (ret)
+                        if (ret) {
                            ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));   
+                        }
                      }
                      close(out);
                   } else {
@@ -480,19 +482,17 @@ char *shadow_master_file
       WARNING((SGE_EVENT, MSG_SHADOWD_CANTREADBINARYPATHFROMX_S, path.conf_file));
       DEXIT;
       return -1;
-   }
-   else {
+   } else {
+      sprintf(binpath, cp); /* copy global configuration path */
       sprintf(localconffile, "%s/%s", path.local_conf_dir, me.qualified_hostname);
       cp2 = get_confval("binary_path", localconffile);
       if (cp2) {
-         DPRINTF(("found local conf binary path: "));
-         strcpy(binpath, cp2);
-      }   
-      else {
-         DPRINTF(("global conf binary path: "));   
-         strcpy(binpath, cp);
+         strcpy(binpath, cp2); /* overwrite global configuration path */
+         DPRINTF(("found local conf binary path:\n"));
+      } else {
+         DPRINTF(("global conf binary path:\n"));   
       }
-      DPRINTF(("%s\n", binpath));   
+      DPRINTF((""SFQ"\n", binpath));   
    }
    
    DPRINTF(("we are a candidate for shadow master\n"));

@@ -284,7 +284,7 @@ lListElem *jatep
       ** to be sure this queue is halted even if the host 
       ** is not found in the next statement
       */
-      if (general_failure && general_failure!=GFSTATE_JOB) {  
+      if (general_failure && general_failure != GFSTATE_JOB) {  
          dstring error = DSTRING_INIT; 
 
          sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOB_SU, lGetString(queueep, QU_qname), u32c(jobid));

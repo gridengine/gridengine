@@ -691,12 +691,20 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
                   job_caused_failure = 1;
                }
             }
-         } else if (failed == SSTATE_BEFORE_JOB) {
+         }
+/* bugfix 476: But is this enough? Do we have to handle some states some
+   where else? Now a queue is allways setin error state. When a job start
+   failed. 
+ */
+#if 0            
+         else if (failed == SSTATE_BEFORE_JOB) {
+            
             if (job && JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&
                 !sge_is_file(lGetString(job, JB_script_file))) {
                job_caused_failure = 1;
             }
          }
+#endif         
          general_failure = job_caused_failure ? GFSTATE_JOB : GFSTATE_QUEUE;
          lSetUlong(jr, JR_general_failure, general_failure);
          job_related_adminmail(jr, is_array);

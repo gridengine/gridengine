@@ -1,3 +1,11 @@
+SG-2004-02-01-9: Bugfix:    in case a job start failed, the queue is set
+                            into error state when it is a job script but not
+                            for binary jobs. This has be fixed. The queue is
+                            set into error state, when ever a job start fails.
+                 Review:    pending
+                 Issue:     476
+                 Changed:   execd
+
 JG-2004-02-01-1: Bugfix:    qconf -aprj was broken.
                  Changed:   qconf, sge_qmaster with classic spooling
                  Review:    pending

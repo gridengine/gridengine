@@ -202,11 +202,12 @@ lList **topp  /* ticket orders ptr ptr */
          lList *answer_list = NULL;
 
          jatp = job_create_task(jep, NULL, task_number);
-         /* JG: TODO: where is spooling done? */
+         /* spooling of the JATASK will be done in sge_commit_job */
          sge_add_event(0, sgeE_JATASK_ADD, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), jatp);
          sge_event_spool(&answer_list, 0, sgeE_JOB_MOD,
-                         job_number, 0, NULL, NULL, lGetString(jep, JB_session),
+                         job_number, 0, NULL, NULL, 
+                         lGetString(jep, JB_session),
                          jep, NULL, NULL, true, true);
       }
       if (!jatp) {

@@ -763,7 +763,7 @@ sge_commit_flags_t commit_flags
          lList *answer_list = NULL;
          spool_write_object(&answer_list, spool_get_default_context(), jep, 
                             job_get_key(jobid, jataskid, NULL, &buffer), 
-                            SGE_TYPE_JOB);
+                            SGE_TYPE_JATASK);
          answer_list_output(&answer_list);
          lListElem_clear_changed_info(jatep);
          sge_dstring_free(&buffer);
@@ -919,15 +919,6 @@ sge_commit_flags_t commit_flags
       }
       sge_clear_granted_resources(jep, jatep, 1);
       job_enroll(jep, NULL, jataskid);
-      {
-         lList *answer_list = NULL;
-         dstring buffer = DSTRING_INIT;
-         spool_write_object(&answer_list, spool_get_default_context(), jep, 
-                            job_get_key(jobid, jataskid, NULL, &buffer), 
-                            SGE_TYPE_JOB);
-         answer_list_output(&answer_list);
-         sge_dstring_free(&buffer);
-      }
       for_each(petask, lGetList(jatep, JAT_task_list)) {
          sge_add_list_event( 0, sgeE_JOB_FINAL_USAGE, jobid,
                             lGetUlong(jatep, JAT_task_number),

@@ -1,3 +1,10 @@
+JG-2004-03-30-0: Bugfix:    At startup of an array task, all running array tasks
+                            were spooled.
+                            The usage container for finished pe tasks was not 
+                            spooled.
+                 Changed:   sge_qmaster
+                 Review:    EB
+
 AS-2004-03-29-0  Enhancem.: qmon_help.ad does not need to be sed'ed anymore
                             before it is installed
                  Changed:   dist/qmon/qmon_help.ad

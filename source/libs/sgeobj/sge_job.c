@@ -2249,7 +2249,9 @@ const char *job_get_key(u_long32 job_id, u_long32 ja_task_id,
    const char *ret = NULL;
 
    if (buffer != NULL) {
-      if (pe_task_id != NULL) {
+      if (ja_task_id == 0) {
+         ret = sge_dstring_sprintf(buffer, "%d", job_id);
+      } else if (pe_task_id != NULL) {
          ret = sge_dstring_sprintf(buffer, "%d.%d %s", 
                                    job_id, ja_task_id, pe_task_id);
       } else {

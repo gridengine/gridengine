@@ -373,7 +373,9 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                   /*
                    * Suspend Threshold state will be reset later 
                    */
-                  lSetUlong(this_elem, QU_gdi_do_later, GDI_DO_LATER);
+                  if (attribute_name == QU_suspend_thresholds) {
+                     lSetUlong(this_elem, QU_gdi_do_later, GDI_DO_LATER);
+                  }
 
                   lSetList(this_elem, attribute_name, lCopyList("", new_value));
                   *has_changed_conf_attr = true;

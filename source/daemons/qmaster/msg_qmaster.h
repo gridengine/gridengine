@@ -275,7 +275,6 @@
 #define MSG_SGETEXT_ISNOEXECHOST_S              _MESSAGE(33194, _(SFQ" is not an execution host\n"))
 #define MSG_SGETEXT_NOEXECHOSTS                 _MESSAGE(33195, _("there are no execution hosts to kill\n"))
 #define MSG_SGETEXT_CANTDELADMINQMASTER_S       _MESSAGE(33197, _("denied: can't delete master host "SFQ" from admin host list\n") )   
-#define MSG_SGETEXT_CANTDELEXECACTIVQ_S         _MESSAGE(33198, _("denied: "SFQ" has an active queue - not deleted\n"))
 #define MSG_CANT_ASSOCIATE_LOAD_SS    _MESSAGE(33200, _("got load report from host "SFQ" - reports load value for host "SFQ"\n"))
 
 /*
@@ -623,7 +622,6 @@
 ** setup_qmaster.c
 */
 #define MSG_SETUP_SETUPMAYBECALLEDONLYATSTARTUP       _MESSAGE(33615, _("setup may be called only at startup"))
-#define MSG_CONFIG_ERRORXSELECTINGCONFIGY_S           _MESSAGE(33617, _("Error selecting configuration "SFQ"\n"))
 #define MSG_CONFIG_ERRORXMERGINGCONFIGURATIONY_IS     _MESSAGE(33618, _("Error %d merging configuration "SFQ"\n"))
 #define MSG_CONFIG_ADDINGHOSTTEMPLATETOEXECHOSTLIST   _MESSAGE(33619, _("adding host template to exechost_list\n"))
 #define MSG_CONFIG_ADDINGHOSTGLOBALTOEXECHOSTLIST     _MESSAGE(33620, _("adding host global to exechost_list\n"))

@@ -63,7 +63,6 @@
 #define MSG_JOB_NODISPLAY_S               _MESSAGE(64036, _("no DISPLAY variable found with interactive job "SFN"\n"))
 #define MSG_JOB_EMPTYDISPLAY_S            _MESSAGE(64037, _("empty DISPLAY variable delivered with interactive job "SFN"\n"))
 #define MSG_JOB_LOCALDISPLAY_SS           _MESSAGE(64038, _("local DISPLAY variable "SFQ" delivered with interactive job "SFN"\n"))
-#define MSG_COLONNOTALLOWED               _MESSAGE(64039, _("Colon (\':\') not allowed in account string\n") )
 #define MSG_ERRORPARSINGVALUEFORNM_S  _MESSAGE(64040, _("error parsing value "SFQ"\n"))
 #define MSG_PARSE_STARTTIMETOOLONG    _MESSAGE(64041, _("Starttime specifier field length exceeds maximum"))
 #define MSG_PARSE_INVALIDSECONDS      _MESSAGE(64042, _("Invalid format of seconds field."))

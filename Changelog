@@ -1,3 +1,5 @@
+CR-2004-08-17-3: Cleanup:    - removed unused message macros
+
 CR-2004-08-17-2: Enhancem.:  - added new function to transmute the gdi tag
                                id into a string: sge_dump_message_tag()
 

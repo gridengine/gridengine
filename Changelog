@@ -1,3 +1,6 @@
+SD-2002-02-22-2: Feature:   Added support to control restart timeout
+                            delays using environment variables.
+
 AA-2002-02-22-1: Bugfix:    sec_lib.c memleak fix, reconnect functionality
 
 AA-2002-02-22-0: Cleanup:   insure compile for tcsh

@@ -175,6 +175,47 @@ int sge_setup_qmaster(char* anArgv[])
    return 0;
 } /* sge_setup_qmaster() */
 
+/****** qmaster/setup_qmaster/sge_qmaster_thread_init() ************************
+*  NAME
+*     sge_qmaster_thread_init() -- Initialize a qmaster thread.
+*
+*  SYNOPSIS
+*     int sge_qmaster_thread_init(void) 
+*
+*  FUNCTION
+*     Subsume functions which need to be called immediately after thread
+*     startup. This function does make sure that the thread local data
+*     structures do contain reasonable values.
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     0 - success 
+*
+*  NOTES
+*     MT-NOTE: sge_qmaster_thread_init() is MT safe 
+*     MT-NOTE:
+*     MT-NOTE: sge_qmaster_thread_init() should be invoked at the beginning
+*     MT-NOTE: of a thread function.
+*
+*******************************************************************************/
+int sge_qmaster_thread_init(void)
+{
+   DENTER(TOP_LAYER, "sge_qmaster_thread_init");
+
+   lInit(nmv);
+
+   sge_setup(QMASTER, NULL);
+
+   reresolve_me_qualified_hostname();
+
+   DEBUG((SGE_EVENT,"%s: qualified hostname \"%s\"\n", SGE_FUNC, uti_state_get_qualified_hostname()));
+
+   DEXIT;
+   return 0;
+} /* sge_qmaster_thread_init() */
+
 /****** qmaster/setup_qmaster/process_cmdline() ********************************
 *  NAME
 *     process_cmdline() -- Handle command line arguments 

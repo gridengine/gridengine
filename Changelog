@@ -1,3 +1,6 @@
+AD-2004-02-02-0: Cleanup:   Did add function to initialize a qmaster thread.
+                 Changed:   qmaster
+
 CR-2004-02-02-0: Bugfix:    - fixed csp install: check for CRYPTO_ strings
                               in qmaster binary, not for sec_init to test if
                               binary was compiled with -secure option

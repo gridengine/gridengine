@@ -1,5 +1,10 @@
+EB-2002-03-04-1: Bugfix:    'qalter -h xxx' caused core if task of array
+                            did not exist.
+                 Issue:     171
+
 EB-2002-03-04-0: Bugfix:    schedd_runlog file was not written by a 
                             'qconf -tsm' command
+                 Issue:     170
 
 CR-2002-03-01-2: Bugfix:    error in CR-2002-03-01-1 when showing only one 
                             long project/dep/...  by using 

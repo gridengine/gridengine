@@ -805,11 +805,15 @@ void job_set_hold_state(lListElem *job, lList **answer_list,
    } else {
       lListElem *ja_task = job_search_task(job, NULL, ja_task_id, 0);
 
-      lSetUlong(ja_task, JAT_hold, new_hold_state); 
-      if (new_hold_state) {
-         lSetUlong(ja_task, JAT_state, lGetUlong(ja_task, JAT_state) | JHELD);
-      } else {
-         lSetUlong(ja_task, JAT_state, lGetUlong(ja_task, JAT_state) & ~JHELD);
+      if (ja_task != NULL) {
+         lSetUlong(ja_task, JAT_hold, new_hold_state); 
+         if (new_hold_state) {
+            lSetUlong(ja_task, JAT_state, 
+                      lGetUlong(ja_task, JAT_state) | JHELD);
+         } else {
+            lSetUlong(ja_task, JAT_state, 
+                      lGetUlong(ja_task, JAT_state) & ~JHELD);
+         }
       }
    }
    DEXIT;
@@ -839,8 +843,12 @@ u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id)
    DENTER(TOP_LAYER, "job_get_hold_state");
    if (job_is_enrolled(job, ja_task_id)) {
       lListElem *ja_task = job_search_task(job, NULL, ja_task_id, 0);
-   
-      ret = lGetUlong(ja_task, JAT_hold) & MINUS_H_TGT_ALL;
+  
+      if (ja_task != NULL) { 
+         ret = lGetUlong(ja_task, JAT_hold) & MINUS_H_TGT_ALL;
+      } else {
+         ret = 0;
+      }
    } else {
       int attribute[3] = {JB_ja_u_h_ids, JB_ja_o_h_ids, JB_ja_s_h_ids};
       u_long32 hold_flag[3] = {MINUS_H_TGT_USER, MINUS_H_TGT_OPERATOR,

@@ -71,7 +71,8 @@ static int test_case;
 
 int main(int argc, char *argv[])
 {
-   int failed, i; 
+   int failed = 0;
+   int i; 
 
    if (argc == 1) {
       fprintf(stderr, "usage: test_japi <test_case>\n"

@@ -263,13 +263,22 @@ void job_move_first_pending_to_running(lListElem **pending_job,
 *  RESULT
 *     void - None
 *******************************************************************************/
-void user_list_init_jc(lList **user_list, const lList *running_list)
+void user_list_init_jc(lList **user_list, lList **splitted_job_lists[])
 {
    lListElem *job;   /* JB_Type */
 
-   for_each(job, running_list) {
-      sge_inc_jc(user_list, lGetString(job, JB_owner), job_get_ja_tasks(job));
-   } 
+   if (splitted_job_lists[SPLIT_RUNNING] != NULL) {
+      for_each(job, *(splitted_job_lists[SPLIT_RUNNING])) {
+         sge_inc_jc(user_list, lGetString(job, JB_owner), 
+                    job_get_ja_tasks(job));
+      }
+   }
+   if (splitted_job_lists[SPLIT_SUSPENDED] != NULL) {
+      for_each(job, *(splitted_job_lists[SPLIT_SUSPENDED])) {
+         sge_inc_jc(user_list, lGetString(job, JB_owner), 
+                    job_get_ja_tasks(job));
+      }
+   }
 }
 
 /****** sched/sge_job_schedd/job_lists_split_with_reference_to_max_running() **
@@ -335,7 +344,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
       }
       while ((user = next_user) != NULL) {
          u_long32 jobs_for_user = lGetUlong(user, JC_jobs);
-         const char *user_name = lGetString(user, JC_name);
+         const char *jc_user_name = lGetString(user, JC_name);
 
          if (user_name == NULL) {
             next_user = lNext(user);
@@ -347,14 +356,14 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
             lListElem *user_job = NULL;         /* JB_Type */
             lListElem *next_user_job = NULL;    /* JB_Type */
 
-            DPRINTF(("USER %s reached limit of %d jobs\n", user_name, 
+            DPRINTF(("USER %s reached limit of %d jobs\n", jc_user_name, 
                      max_jobs_per_user));
             next_user_job = lGetElemStrFirst(*(job_lists[SPLIT_PENDING]), 
-                                             JB_owner, user_name, 
+                                             JB_owner, jc_user_name, 
                                              &user_iterator);
             while ((user_job = next_user_job)) {
                next_user_job = lGetElemStrNext(*(job_lists[SPLIT_PENDING]), 
-                                               JB_owner, user_name, 
+                                               JB_owner, jc_user_name, 
                                                &user_iterator);
                if (monitor_next_run) {
                   schedd_mes_add(lGetUlong(user_job, JB_job_number),
@@ -522,13 +531,16 @@ void split_jobs(lList **job_list, lList **answer_list,
 #endif
             target = &(target_tasks[SPLIT_FINISHED]);
          } 
-         if (target == NULL && result_list[SPLIT_HOLD] &&
-             (ja_task_hold & MINUS_H_TGT_ALL)) {
-#ifdef JOB_SPLIT_DEBUG
-            DPRINTF(("Task "u32" is in hold state\n", ja_task_id));
+#if 0
+      /*
+       * EB: "hold" section has been moved downwards!!!!
+       *
+       *      Running or suspended jobs which have a hold applied
+       *      have to be handled as running or suspended jobs within schedd
+       *      We cannot trash them because of the hold state!
+       */
 #endif
-            target = &(target_tasks[SPLIT_HOLD]);
-         } 
+
          if (target == NULL && result_list[SPLIT_ERROR] && 
              (ja_task_state & JERROR)) {
 #ifdef JOB_SPLIT_DEBUG
@@ -537,21 +549,24 @@ void split_jobs(lList **job_list, lList **answer_list,
             target = &(target_tasks[SPLIT_ERROR]);
          } 
          if (target == NULL && result_list[SPLIT_WAITING_DUE_TO_TIME] &&
-             (lGetUlong(job, JB_execution_time) > sge_get_gmt())) {
+             (lGetUlong(job, JB_execution_time) > sge_get_gmt()) &&
+             (ja_task_status == JIDLE)) {
 #ifdef JOB_SPLIT_DEBUG
             DPRINTF(("Task "u32" is waiting due to time.\n", ja_task_id));
 #endif
             target = &(target_tasks[SPLIT_WAITING_DUE_TO_TIME]);
          }
          if (target == NULL && result_list[SPLIT_WAITING_DUE_TO_PREDECESSOR] &&
-             (lGetList(job, JB_jid_predecessor_list) != NULL)) {
+             (lGetList(job, JB_jid_predecessor_list) != NULL) &&
+             (ja_task_status == JIDLE)) {
 #ifdef JOB_SPLIT_DEBUG
             DPRINTF(("Task "u32" is waiting due to pred.\n", ja_task_id));
 #endif
             target = &(target_tasks[SPLIT_WAITING_DUE_TO_PREDECESSOR]);
          }
          if (target == NULL && result_list[SPLIT_PENDING] && 
-             (ja_task_status == JIDLE)) {
+             (ja_task_status == JIDLE) &&
+             !(ja_task_hold & MINUS_H_TGT_ALL)) {
 #ifdef JOB_SPLIT_DEBUG
             DPRINTF(("Task "u32" is in pending state\n", ja_task_id));
 #endif
@@ -599,6 +614,13 @@ void split_jobs(lList **job_list, lList **answer_list,
             DPRINTF(("Task "u32" is in running state\n", ja_task_id));
 #endif
             target = &(target_tasks[SPLIT_RUNNING]);
+         } 
+         if (target == NULL && result_list[SPLIT_HOLD] &&
+             (ja_task_hold & MINUS_H_TGT_ALL)) {
+#ifdef JOB_SPLIT_DEBUG
+            DPRINTF(("Task "u32" is in hold state\n", ja_task_id));
+#endif
+            target = &(target_tasks[SPLIT_HOLD]);
          } 
 #ifdef JOB_SPLIT_DEBUG
          if (target == NULL) {

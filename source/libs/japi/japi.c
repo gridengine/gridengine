@@ -656,7 +656,7 @@ int japi_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, char
 {
    lListElem *job, *ep, *aep;
    lList *job_lp, *alp;
-   u_long32 jobid;
+   u_long32 jobid = 0;
 
    DENTER(TOP_LAYER, "japi_run_job");
 
@@ -961,7 +961,8 @@ enum {
 static int japi_wait_retry(lList *japi_job_list, int wait4any, int jobid, int taskid, 
       lListElem **japi_jobp, lListElem **japi_taskp)
 {
-   lListElem *job, *task; 
+   lListElem *job; 
+   lListElem *task = NULL; 
    
    DENTER(TOP_LAYER, "japi_wait_retry");
 
@@ -1131,7 +1132,8 @@ int japi_synchronize(char *job_ids[], signed long timeout, int dispose, char *er
 int japi_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int *stat, signed long timeout, 
    /* rusage: vector of job ids (string vector), */ char *error_diagnosis, size_t error_diag_len)
 {
-   u_long32 jobid, taskid;
+   u_long32 jobid;
+   u_long32 taskid = 0;
    int wait4any = 0;
    int wait_result;
    lListElem *japi_job, *japi_task;

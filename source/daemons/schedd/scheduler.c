@@ -457,7 +457,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
       return 0;
    }
 
-   user_list_init_jc(&user_list, *(splitted_job_lists[SPLIT_RUNNING]));
+   user_list_init_jc(&user_list, splitted_job_lists);
    job_lists_split_with_reference_to_max_running(splitted_job_lists,
                                                  &user_list,
                                                  NULL,

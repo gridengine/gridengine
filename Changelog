@@ -1,3 +1,8 @@
+JG-2004-11-22-0: Bugfix:    fixed a memory leak in mirror interface.
+                 Review:    SG
+                 Testsuite: Fixed test system_tests/config/path_alias.
+                 Review:    CR
+
 SG-2004-11-22-0: Bugfix:    fixed the scheduler messages for qstat -j.
                  Changed:   scheduler
                  Review:    EB

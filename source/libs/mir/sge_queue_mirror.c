@@ -131,6 +131,7 @@ qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
                       SGE_FUNC));
                ret = false;
             }
+            sge_dstring_free(&key_buffer);
             DEXIT;
             return true;
          }

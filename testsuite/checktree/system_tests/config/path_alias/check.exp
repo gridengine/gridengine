@@ -53,7 +53,7 @@ set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "path_alias"
-set check_category        "COMPATIBILITY SYSTEM L10N"
+set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_highest_level   1
 set check_description(0)  "checking global path alias file"
 set check_description(1)  "checking user path alias file"
@@ -226,14 +226,14 @@ proc path_alias_main {} {
 
       puts $CHECK_OUTPUT "qsub ..."
       set script_name "$PATH_ALIAS_OUTPUT1/global_qsub_alias_$elem.sh"
-      set command     "qsub -cwd -q ${elem}.q"
+      set command     "qsub -cwd -l h=${elem}"
       create_shell_script $script_name $elem "cd" "$PATH_ALIAS_OUTPUT1 ; $command $job_script"
       start_remote_prog $elem $CHECK_USER $script_name "" 
 
       puts $CHECK_OUTPUT "qrsh ..."
 
       set script_name "$PATH_ALIAS_OUTPUT1/global_rqsh_alias_$elem.sh"
-      set command     "qrsh -now no -cwd -q ${elem}.q \"pwd\""
+      set command     "qrsh -cwd -l h=${elem} \"pwd\""
       create_shell_script $script_name $elem "cd" "$PATH_ALIAS_OUTPUT1 ; $command "
       set output [start_remote_prog $elem $CHECK_USER $script_name "" ]
       set output [ split $output "\n" ]
@@ -246,12 +246,12 @@ proc path_alias_main {} {
 
       puts $CHECK_OUTPUT "qsh ..."
       set script_name "$PATH_ALIAS_OUTPUT1/global_pwdscript_$elem.sh"
-      set command     "> qsh_pwd_output_$elem.txt ; sleep 5"
+      set command     "> qsh_pwd_output_$elem.txt ; sleep 20"
       create_shell_script $script_name $elem "pwd" "$command "
       set pwd_script $script_name
       
       set script_name "$PATH_ALIAS_OUTPUT1/global_qsh_alias_$elem.sh"
-      set command     "qsh -now no -cwd -q ${elem}.q -S $pwd_script"
+      set command     "qsh -cwd -l h=${elem} -S $pwd_script"
       create_shell_script $script_name $elem "cd" "$PATH_ALIAS_OUTPUT1 ; $command "
       set output [start_remote_prog $elem $CHECK_USER $script_name "" ]
       puts $CHECK_OUTPUT $output
@@ -260,7 +260,7 @@ proc path_alias_main {} {
  
    wait_for_end_of_all_jobs 100 
 
-   sleep 10
+   after 10000
 
    set files1 [get_file_names $PATH_ALIAS_OUTPUT1]
    set files2 [get_file_names $PATH_ALIAS_OUTPUT2]

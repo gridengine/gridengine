@@ -1,3 +1,6 @@
+AD-2004-02-05-1: Bugfix:    All extern functions now lock 'LOCK_GLOBAL'.
+                 Changed:   evm
+
 EB-2004-02-05-0: Bugfix:    Changed man page
                  Changed:   sge_types.1
 

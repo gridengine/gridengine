@@ -1,3 +1,7 @@
+AD-2003-05-15-0: Bugfix:    aimk (Arch LINUX5/6): added '-lXmu' to XLIBS. Otherwise
+                            the '_XEditRes*' functions could not be resolved or linked.
+		 Changed:   aimk
+
 JG-2003-05-15-0: Bugfix:    - Installation of SGE(EE) as non root user failed,
                               as an admin user called "none" was created instead
                               of the install user's name.

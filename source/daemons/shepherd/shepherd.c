@@ -139,6 +139,7 @@ static void set_ckpt_restart_command(char *, int, char *, int);
 static void handle_job_pid(int, int, int *);
 static int start_async_command(char *descr, char *cmd);
 static void start_clean_command(char *);
+static int checkpointed_file_exists(void);
 static void create_checkpointed_file(int ckpt_is_in_arena);
 static pid_t start_token_cmd(int, char *, char *, char *, char *);
 static int do_wait(pid_t);
@@ -870,7 +871,8 @@ int ckpt_type
 
    if (!strcmp("job", childname) && ckpt_type) {
       if (signalled_ckpt_job) {
-         create_checkpointed_file(0);
+         if (!checkpointed_file_exists())
+            create_checkpointed_file(0);
       } else {
          if (ckpt_type & CKPT_KERNEL) { 
             start_clean_command(clean_command); 
@@ -2009,6 +2011,12 @@ static int start_async_command(char *descr, char *cmd)
    }
 
    return pid;
+}
+
+static int checkpointed_file_exists(void)
+{
+   struct stat buf;
+   return ! SGE_STAT("checkpointed", &buf);
 }
 
 static void create_checkpointed_file(int ckpt_is_in_arena)

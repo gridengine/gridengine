@@ -1,3 +1,7 @@
+SD-2002-09-19-0  Bugfix:    Fixed restart_command for checkpoint jobs
+                 IZ:        #383
+                 Changed:   sge_shepherd
+
 JG-2002-09-17-1  Bugfix:    qsh jobs without or with local DISPLAY variable
                             set have to be rejected.
                  IZ:        #342

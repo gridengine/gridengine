@@ -1,3 +1,5 @@
+AA-2001-11-07-0: assure that cull_hash_free_descr get a valid descr
+
 JG-2001-11-07-1: Bugfix: Retrieving a string value from a cull object field 
                  and setting this value again for the same field produced a 
                  memory access error.

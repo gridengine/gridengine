@@ -898,8 +898,9 @@ lList *lp
       return NULL;
    }
 
-   /* remove all hash tables */
-   cull_hash_free_descr(lp->descr);
+   /* remove all hash tables, it is more efficient than removing it at the end */
+   if (lp->descr)
+      cull_hash_free_descr(lp->descr);
 
    while (lp->first)
       lRemoveElem(lp, lp->first);

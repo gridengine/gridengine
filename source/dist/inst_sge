@@ -725,18 +725,22 @@ AddConfiguration()
 #
 AddLocalConfiguration_With_Qconf()
 {
+
+   $CLEAR
+   $INFOTEXT -u "\nCreating local configuration"
+
    TMPL=/tmp/${HOST}
    rm -f $TMPL
    if [ -f $TMPL ]; then
-      $INFOTEXT "Can't create local configuration. Can't delete file >%s<" "$TMPL"
+      $INFOTEXT "\nCan't create local configuration. Can't delete file >%s<" "$TMPL"
    else
-      $INFOTEXT "Creating local configuration for host >%s<" $HOST
+      $INFOTEXT "\nCreating local configuration for host >%s<" $HOST
       PrintLocalConf 0 > /tmp/$HOST
       Execute $V5BIN/qconf -Aconf /tmp/$HOST
       rm -f /tmp/$HOST
       $INFOTEXT "Local configuration for host >%s< created." $HOST
    fi
-   $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
 }
 
 #-------------------------------------------------------------------------
@@ -993,9 +997,8 @@ GiveHints()
       fi
    done
 
-   $CLEAR
-
    if [ $WHICH = qmaster ]; then
+      $CLEAR
       $INFOTEXT -u "\nYour Grid Engine qmaster installation is now completed"
       $INFOTEXT "\nPlease now login to all hosts where you want to run an execution daemon\n" \
                   "and start the execution host installation procedure.\n\n" \
@@ -1010,7 +1013,7 @@ GiveHints()
                   "   # qconf -ah <hostname>\n"
       exit 0
    else
-      $INFOTEXT -u "\nYour execution daemon installation is now completed."
+      $INFOTEXT "Your execution daemon installation is now completed."
    fi
 }
 
@@ -1425,7 +1428,7 @@ AddQsystStartUpScript()
       return 0
    fi
 
-   $INFOTEXT -u "Grid Engine startup script"
+   $INFOTEXT -u "\nGrid Engine startup script"
 
    # --- from here only if root installs ---
    $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
@@ -1761,7 +1764,7 @@ StartExecd()
    $INFOTEXT -u "\nGrid Engine execution daemon startup"
    $INFOTEXT "\nStarting execution daemon daemon. Please wait ..."
    $V5_STARTUP_FILE -execd
-   $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
    $CLEAR
 }
 
@@ -2190,7 +2193,7 @@ qmaster)
    AddDefaultDepartement
    AddCommonFiles
    CreateSettingsFile
-   $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
    $CLEAR
    InitCA
    AddQsystStartUpScript $euid true

@@ -701,7 +701,6 @@ const char *userset_name
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = STATUS_EUNKNOWN;
       }
-
    }
 
    for_each (ep, Master_Pe_List) {
@@ -740,14 +739,14 @@ const char *userset_name
    for_each (ep, Master_Exechost_List) {
       if (lGetElemStr(lGetList(ep, EH_acl), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name,
-               MSG_OBJ_PRJS, MSG_OBJ_EH, lGetHost(ep, EH_name)));
+               MSG_OBJ_USERLIST, MSG_OBJ_EH, lGetHost(ep, EH_name)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
       if (lGetElemStr(lGetList(ep, EH_xacl), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name,
-               MSG_OBJ_XPRJS, MSG_OBJ_EH, lGetHost(ep, EH_name)));
+               MSG_OBJ_XUSERLIST, MSG_OBJ_EH, lGetHost(ep, EH_name)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;

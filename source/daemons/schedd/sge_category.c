@@ -66,15 +66,6 @@
 /* Categories of the job are managed here */
 lList *CATEGORY_LIST = NULL;
 
-/*-------------------------------------------------------------------*
- * sge_process_all_events
- * 
- *  returns 
- *    1 no events
- *    0 ok trigger scheduling
- *   -1 event protocol error or no qmaster 
- *-------------------------------------------------------------------*/
-
 /*-------------------------------------------------------------------------*/
 /*    add job´s category to the ´global´ category list, if it doesn´t      */
 /*    already exist, and reference the category in the job element         */
@@ -99,10 +90,11 @@ int sge_add_job_category( lListElem *job, lList *acl_list) {
       CATEGORY_LIST = lCreateList("new category list", CT_Type);
    else {
       cat = lGetElemStr(CATEGORY_LIST, CT_str, cstr);
-      DPRINTF(("Job "u32": Found %s in category list\n", jobid, cstr));
    }
 
-   if (!cat) {
+   if (cat) {
+      DPRINTF(("Job "u32": Found %s in category list\n", jobid, cstr));
+   } else {
       DPRINTF(("Job "u32": Added %s to category list\n", jobid, cstr));
       cat = lAddElemStr(&CATEGORY_LIST, CT_str, cstr, CT_Type);
    }   

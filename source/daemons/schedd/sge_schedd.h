@@ -47,7 +47,7 @@ typedef struct {
 
 extern sched_func_struct sched_funcs[];
 extern int current_scheduler;
-extern int sge_mode;
+extern int sgeee_mode;
 
 int use_alg(const char *alg_name);
 int sge_before_dispatch(void);

@@ -1,3 +1,8 @@
+JG-2002-12-19-0  Bugfix:    - Accesstree was corrupted in the sge scheduler due
+                              to a bug in the event handling.
+                            - Wrong error output if a userlist shall be deleted
+                              that is still referenced in an execution host.
+
 JG-2002-12-18-0  Bugfix:    Fixed problem with ACK mechanism between qmaster 
                             and execd.
                  IZ:        #352

@@ -78,7 +78,7 @@
 int current_scheduler = 0; /* default scheduler */
 int new_global_config = 0;
 int start_on_master_host = 0;
-int sge_mode = 0;
+int sgeee_mode = 0;
 
 static int sge_ck_qmaster(const char *former_master_host);
 static int parse_cmdline_schedd(int argc, char **argv);
@@ -148,7 +148,7 @@ char *argv[]
    lInit(nmv);
 
    feature_initialize_from_file(path.product_mode_file);
-   sge_mode = feature_is_enabled(FEATURE_SGEEE);
+   sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    parse_cmdline_schedd(argc, argv);
 
    /* daemonizes if qmaster is unreachable */

@@ -270,7 +270,7 @@ int indent
    int task_running;
    const char *str;
    lListElem *ep;
-   int sge_mode = feature_is_enabled(FEATURE_SGEEE);
+   int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    lList *usage_list;
    lList *scaled_usage_list;
 
@@ -293,7 +293,7 @@ int indent
       printf(QSTAT_INDENT "Sub-tasks:           %-12.12s %5.5s %s %-4.4s %-6.6s\n", 
              "task-ID",
              "state",
-             sge_mode ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "     "
+             sgeee_mode ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "     "
                  : "",
              "stat",
              "failed");
@@ -332,7 +332,7 @@ int indent
    job_get_state_string(task_state_string, tstate);
    printf("%-5.5s ", task_state_string); 
 
-   if (sge_mode) {
+   if (sgeee_mode) {
       lListElem *up;
 
       /* scaled cpu usage */
@@ -886,7 +886,7 @@ char *indent
    char state_string[8];
    static int first_time = 1;
    u_long32 jstate;
-   int sge_ext, sge_mode;
+   int sge_ext, sgeee_mode;
    lList *ql = NULL;
    lListElem *qrep, *gdil_ep=NULL;
    int running;
@@ -900,8 +900,8 @@ char *indent
 
    queue_name = qep ? lGetString(qep, QU_qname) : NULL;
 
-   sge_mode = feature_is_enabled(FEATURE_SGEEE);
-   sge_ext = sge_mode && (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
+   sge_ext = sgeee_mode && (full_listing & QSTAT_DISPLAY_EXTENDED);
    tsk_ext = (full_listing & QSTAT_DISPLAY_TASKS);
 
    if (first_time) {
@@ -932,7 +932,7 @@ char *indent
                   "ja-task-ID ", 
                tsk_ext?"task-ID ":"",
                tsk_ext?"state ":"",
-               tsk_ext?(sge_mode ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      " : "") : "",
+               tsk_ext?(sgeee_mode ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      " : "") : "",
                tsk_ext?"stat ":"",
                tsk_ext?"failed ":"" );
 

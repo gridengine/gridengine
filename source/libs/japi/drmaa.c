@@ -947,7 +947,7 @@ int drmaa_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt,
    /* convert DRMAA job template into Grid Engine job template */
    if ((drmaa_errno=drmaa_job2sge_job(&sge_job_template, jt, 
             0, 1, 1, 1, diagp))!=DRMAA_ERRNO_SUCCESS) {
-      /* diag written by japi_drmaa_job2sge_job() */
+      /* diag written by drmaa_job2sge_job() */
       return drmaa_errno;
    }
 
@@ -2065,7 +2065,7 @@ static int japi_drmaa_path2sge_path(lList *attrs, int is_bulk,
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTE: japi_drmaa_job2sge_job() is MT safe
+*     MT-NOTE: drmaa_job2sge_job() is MT safe
 *
 *******************************************************************************/
 static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt, 
@@ -2084,7 +2084,7 @@ static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt,
    lList *opts_all = NULL;
    int read_scriptfile = 0;
 
-   DENTER (TOP_LAYER, "japi_drmaa_job2sge_job");
+   DENTER (TOP_LAYER, "drmaa_job2sge_job");
 
    /* make JB_Type job description out of DRMAA job template */
    if (!(jt = lCreateElem (JB_Type))) {
@@ -2926,7 +2926,7 @@ char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
    struct tm gmnow;
    struct tm herenow;
    
-   DENTER (TOP_LAYER, "drmaa_test2sge_time");
+   DENTER (TOP_LAYER, "drmaa_time2sge_time");
 
    /* Get default times */
    time (&now);

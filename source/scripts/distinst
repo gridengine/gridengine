@@ -715,12 +715,12 @@ for prog in $PROG; do
          instmpi=true
          instpvm=true
          instqmon=true
-         insttxtdoc=true
          instutiltree=true
          case $prog in
          distcommon)
             instman=true
             instdoc=true
+            insttxtdoc=true
             ;;
          esac    
          ;;

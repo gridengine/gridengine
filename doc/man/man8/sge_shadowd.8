@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2004/04/19 10:52:14 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2004/08/11 13:38:23 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2004/04/19 10:52:14 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2004/08/11 13:38:23 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_shadowd \- xxQS_NAMExx shadow master daemon
 .\"
@@ -40,10 +40,10 @@ xxqs_name_sxx_shadowd \- xxQS_NAMExx shadow master daemon
 .\"
 .SH DESCRIPTION
 .I xxqs_name_sxx_shadowd
-is a "light weight" process which can be run on the so called shadow
+is a "light weight" process which can be run on so-called shadow
 master hosts in a xxQS_NAMExx cluster to detect failure of the current
-xxQS_NAMExx master daemon
-.M xxqs_name_sxx_qmaster 8
+xxQS_NAMExx master daemon,
+.M xxqs_name_sxx_qmaster 8 ,
 and to start-up a new
 .M xxqs_name_sxx_qmaster 8
 on the host on which the
@@ -53,16 +53,16 @@ run a protocol which ensures that only one of them will start-up
 a new master daemon.
 .PP
 The  hosts suitable for being used as shadow master hosts must have
-shared root read write access to the directory <xxqs_name_sxx_root>/<cell>/common
+shared root read/write access to the directory <xxqs_name_sxx_root>/<cell>/common
 as well as to the master daemon spool directory
-(Default <xxqs_name_sxx_root>/<cell>/spool/qmaster).
-The shadow master hosts need to be contained in the file 
+(by default <xxqs_name_sxx_root>/<cell>/spool/qmaster).
+The names of the shadow master hosts need to be contained in the file 
 <xxqs_name_sxx_root>/<cell>/common/shadow_masters.
 .\"
 .\"
 .SH RESTRICTIONS
 .I xxqs_name_sxx_shadowd
-may only be started from root.
+may only be started by root.
 .\"
 .\"
 .SH "ENVIRONMENT VARIABLES"

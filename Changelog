@@ -1,3 +1,7 @@
+DT-2004-08-11-0: Doc.:      o Cleaned up man3, man8, and submit.1 man pages
+                 Issue:     1170
+                 Review:    DT
+
 CR-2004-08-11-0: Testsuite: - fixed bug which caused error in issue test 314
 
 CR-2004-08-11-0: Testsuite: - fixed bug in issue test 193

@@ -228,6 +228,7 @@ global CHECK_GUILTY_CATEGORIES     ;# enabled categories
 global CHECK_MAX_LEVEL             ;# highest level number of all subtests
 global CHECK_ACT_PATH              ;# actual checkpath (while switching in menu mode)
 global arch_cache                  ;# cache for architecture names (lower case) e.g. solaris64
+global pe_for_version_check_result ;# cache for pe/checkpnt version
 global upper_arch_cache            ;# cache for architecture names (upper case) e.g. SOLARIS64
 global l10n_raw_cache              ;# chche for l10n translation strings
 global l10n_install_cache          ;# cache for l10n installation script strings
@@ -245,7 +246,7 @@ global CHECK_ADMIN_USER_SYSTEM     ;# if no root account is possible
 set CHECK_ADMIN_USER_SYSTEM 0
 set check_timestamp [timestamp]
 set have_ssh_access_state -1
-
+set pe_for_version_check_result "undefined"
 set CHECK_ROOT_PASSWORD    "none"
 set CHECK_GUILTY_RUNLEVELS "0"
 set CHECK_GUILTY_CATEGORIES {}
@@ -3232,6 +3233,7 @@ proc save_configuration {} {
    global ts_config
    global CHECK_OUTPUT
    global CHECK_DEFAULTS_FILE
+   global pe_for_version_check_result
 
    set conf_name "testsuite configuration"
 
@@ -3247,6 +3249,9 @@ proc save_configuration {} {
    spool_array_to_file $CHECK_DEFAULTS_FILE "$conf_name.old" old_config
    spool_array_to_file $CHECK_DEFAULTS_FILE $conf_name ts_config  
    puts $CHECK_OUTPUT "new testsuite configuration saved"
+
+   set pe_for_version_check_result "undefined"
+
    wait_for_enter
 
    return 0

@@ -1,3 +1,7 @@
+CR-2003-05-19-0: Testsuite: - enhancments to make testsuite compatible with
+                              cvs commit from EB-2003-05-15-0 (PE/CKPT 
+                              references moved into queue configuration)
+
 CR-2003-05-15-0: Testsuite: - new method to cleanup remote spooldirs in 
                               install_core_system check
                             - new function startup_execd_raw() to start an execd

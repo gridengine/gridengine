@@ -57,6 +57,7 @@ lappend check_functions "kill_running_system"
 lappend check_functions "install_qmaster"
 lappend check_functions "make_user_cert"
 lappend check_functions "install_execd"
+lappend check_functions "cleanup_system"
 lappend check_functions "setup_queues"
 lappend check_functions "setup_testcheckpointobject"
 lappend check_functions "setup_conf" 
@@ -1941,36 +1942,7 @@ proc get_spool_dir {host subdir {do_cleanup 1} } {
 }
 
 
-#                                                             max. column:     |
-#****** install_core_system/setup_queues() ******
-# 
-#  NAME
-#     setup_queues -- ??? 
-#
-#  SYNOPSIS
-#     setup_queues { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc setup_queues {} {
+proc cleanup_system { } {
   global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno CHECK_HOST
   global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_CORE_PROCESSORS
   global check_use_installed_system CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_USER
@@ -1981,7 +1953,6 @@ proc setup_queues {} {
      set_error -2 "error connecting qmaster"
      return
   }
-
     
   puts $CHECK_OUTPUT "\ncleaning up system"
   catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } result
@@ -2016,7 +1987,7 @@ proc setup_queues {} {
 
   puts $CHECK_OUTPUT "\nremoving ckpt objects ..."
   set NO_CKPT_INTERFACE_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "ckpt interface definition"]
-
+   
   catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sckptl" } result
   if { [string first $NO_CKPT_INTERFACE_DEFINED $result] >= 0 } {
      puts $CHECK_OUTPUT "no ckpt interface definition defined"
@@ -2106,6 +2077,51 @@ proc setup_queues {} {
         add_queue "q_param" 1
      }
   }
+  set_error 0 "ok"
+
+}
+
+
+#                                                             max. column:     |
+#****** install_core_system/setup_queues() ******
+# 
+#  NAME
+#     setup_queues -- ??? 
+#
+#  SYNOPSIS
+#     setup_queues { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc setup_queues {} {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno CHECK_HOST
+  global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_CORE_PROCESSORS
+  global check_use_installed_system CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_USER
+
+  set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" } result ]
+  if { $catch_return != 0 } {
+     add_proc_error "setup_queues" -2 "error connecting qmaster: $result"
+     set_error -2 "error connecting qmaster"
+     return
+  }
 
   # for each execd - standard - queue do:
   # set load_avg to 5.0
@@ -2148,6 +2164,7 @@ proc setup_queues {} {
      }
   }
   wait_for_load_from_all_queues 300 
+  set_error 0 "ok"
 }
 
 #                                                             max. column:     |
@@ -2184,16 +2201,12 @@ proc setup_testcheckpointobject {} {
 
   set q_list ""
   foreach elem $CHECK_CORE_EXECD {
-    if [ string compare $q_list "" ] {
-      set q_list "$q_list,${elem}.q"
-    } else {
-      set q_list "${elem}.q"
-    }
+    append q_list "${elem}.q " 
   }
-  set change(queue_list) "$q_list"
   set change(ckpt_name)  "testcheckpointobject"
-   
   add_checkpointobj change
+  assign_queues_with_ckpt_object $q_list "testcheckpointobject"
+
   set_error 0 "ok"
 }
 
@@ -2521,15 +2534,16 @@ proc setup_mytestpe {} {
 
   set q_list ""
   foreach elem $CHECK_CORE_EXECD {
-    set q_list "$q_list,${elem}.q"
+    append q_list "${elem}.q " 
   }
- 
 
   set change(pe_name) "mytestpe"
-  set change(queue_list) $q_list
+#  set change(queue_list) $q_list
   set change(slots) "5"
-
   add_pe change
+
+  assign_queues_with_pe_object $q_list "mytestpe"
+
   set_error 0 "ok"
 }
 

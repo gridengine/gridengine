@@ -35,7 +35,6 @@
 global module_name
 set module_name "sge_procedures.tcl"
 
-
 # procedures
 #                                                             max. column:     |
 #****** sge_procedures/test() ******
@@ -72,6 +71,146 @@ proc test {m p} {
    puts "test $m $p"
 }
 
+#****** sge_procedures/assign_queues_with_pe_object() **************************
+#  NAME
+#     assign_queues_with_pe_object() -- setup queue <-> pe connection
+#
+#  SYNOPSIS
+#     assign_queues_with_pe_object { queue_list pe_obj } 
+#
+#  FUNCTION
+#     This procedure will setup the queue - pe connections.
+#
+#  INPUTS
+#     queue_list - queue list for the pe object
+#     pe_obj     - name of pe object
+#
+#  SEE ALSO
+#     sge_procedures/assign_queues_with_ckpt_object()
+#*******************************************************************************
+proc assign_queues_with_pe_object { queue_list pe_obj } {
+   global CHECK_OUTPUT
+   if { [get_pe_ckpt_version] > 0 } {
+      foreach queue $queue_list {
+         get_queue $queue org_val
+         if { [string match "NONE" $org_val(pe_list)] ||
+              [string match "none" $org_val(pe_list)] } {
+            puts $CHECK_OUTPUT "overwriting NONE value for pe_list in queue $queue"
+            set new_val(pe_list) $pe_obj
+         } else {
+            puts $CHECK_OUTPUT "adding new pe object to pe_list in queue $queue"
+            set new_val(pe_list) "$org_val(pe_list),$pe_obj"
+         }
+
+         set new_val(pe_list) $pe_obj
+         set_queue $queue new_val
+      }
+   } else {
+      set q_list ""
+      foreach elem $queue_list {
+         if [ string compare $q_list "" ] {
+            set q_list "$q_list,$elem"
+         } else {
+            set q_list "$elem"
+         }
+      }
+      set my_change(queue_list) $q_list
+      set_pe $pe_obj my_change
+   }
+}
+
+#****** sge_procedures/assign_queues_with_ckpt_object() ************************
+#  NAME
+#     assign_queues_with_ckpt_object() -- setup queue <-> ckpt connection
+#
+#  SYNOPSIS
+#     assign_queues_with_ckpt_object { queue_list ckpt_obj } 
+#
+#  FUNCTION
+#     This procedure will setup the queue - ckpt connections.
+#
+#  INPUTS
+#     queue_list - queue list for the ckpt object
+#     ckpt_obj   - name of ckpt object
+#
+#  SEE ALSO
+#     sge_procedures/assign_queues_with_pe_object()
+#*******************************************************************************
+proc assign_queues_with_ckpt_object { queue_list ckpt_obj } {
+   global CHECK_OUTPUT
+   if { [get_pe_ckpt_version] > 0 } {
+      foreach queue $queue_list {
+         get_queue $queue org_val
+         if { [string match "NONE" $org_val(ckpt_list)] ||
+              [string match "none" $org_val(ckpt_list)] } {
+            puts $CHECK_OUTPUT "overwriting NONE value for ckpt_list in queue $queue"
+            set new_val(ckpt_list) $ckpt_obj
+         } else {
+            puts $CHECK_OUTPUT "adding new ckpt object to ckpt_list in queue $queue"
+            set new_val(ckpt_list) "$org_val(ckpt_list),$ckpt_obj"
+         }
+
+         set new_val(ckpt_list) $ckpt_obj
+         set_queue $queue new_val
+      }
+   } else {
+      set q_list ""
+      foreach elem $queue_list {
+         if [ string compare $q_list "" ] {
+            set q_list "$q_list,$elem"
+         } else {
+            set q_list "$elem"
+         }
+      }
+      set my_change(queue_list) $q_list
+      set_checkpointobj $ckpt_obj my_change
+   }
+}
+
+#****** sge_procedures/get_pe_ckpt_version() ***********************************
+#  NAME
+#     get_pe_ckpt_version() -- get information about used qconf version
+#
+#  SYNOPSIS
+#     get_pe_ckpt_version { } 
+#
+#  FUNCTION
+#     This procedure returns 0 for qconf supporting queue_list in pe and ckpt
+#     objects, otherwise 1.
+#
+#  INPUTS
+#
+#  RESULT
+#     0 - qconf supporting queue_list in pe and ckpt
+#     1 - queue has pe_list and ckpt_list reference pointer 
+#
+#*******************************************************************************
+proc get_pe_ckpt_version {} {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT pe_for_version_check_result
+
+   if { [string compare "undefined" $pe_for_version_check_result] != 0} {
+      return $pe_for_version_check_result
+   }
+
+   set version 0
+
+   set change(pe_name) "pe_for_version_check"
+
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sp pe_for_version_check" } result
+   if { [string match "*xuser_lists*" $result] != 1 } {
+      add_pe change 0  ;# no version check (infinitive loop!)
+   }
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sp pe_for_version_check" } result
+   if { [string match "*queue_list*" $result] } {
+      set version 0
+   } else {
+      set version 1
+   }
+   set pe_for_version_check_result $version
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dp pe_for_version_check" } result
+   puts $CHECK_OUTPUT $result
+   return $version
+}
 
 #                                                             max. column:     |
 #
@@ -1289,6 +1428,46 @@ proc get_config { change_array {host global}} {
   }
 }
 
+#****** sge_procedures/get_checkpointobj() *************************************
+#  NAME
+#     get_checkpointobj() -- get checkpoint configuration information
+#
+#  SYNOPSIS
+#     get_checkpointobj { ckpt_obj change_array } 
+#
+#  FUNCTION
+#     Get the actual configuration settings for the named checkpoint object
+#
+#  INPUTS
+#     ckpt_obj     - name of the checkpoint object
+#     change_array - name of an array variable that will get set by 
+#                    get_checkpointobj
+#
+#  SEE ALSO
+#     sge_procedures/set_checkpointobj()
+#     sge_procedures/get_queue() 
+#     sge_procedures/set_queue()
+#*******************************************************************************
+proc get_checkpointobj { ckpt_obj change_array } {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+  upvar $change_array chgar
+
+  set catch_result [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sckpt" "$ckpt_obj"} result ]
+  if { $catch_result != 0 } {
+     add_proc_error "get_checkpointobj" "-1" "qconf error or binary not found ($CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf)\n$result"
+     return
+  } 
+
+  # split each line as listelement
+  set help [split $result "\n"]
+  foreach elem $help {
+     set id [lindex $elem 0]
+     set value [lrange $elem 1 end]
+     if { [string compare $value ""] != 0 } {
+       set chgar($id) $value
+     }
+  }
+}
 
 #****** sge_procedures/get_complex() *******************************************
 #  NAME
@@ -1816,10 +1995,30 @@ proc get_schedd_config { change_array } {
 #*******************************
 proc set_queue { q_name change_array } {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_OUTPUT
-  global CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+  global CHECK_CORE_MASTER CHECK_USER CHECK_HOST CHECK_OUTPUT
 
   upvar $change_array chgar
 
+  if { [get_pe_ckpt_version] > 0 && [info exists chgar(qtype)]} {
+     if { [ string match "*CHECKPOINTING*" $chgar(qtype) ] ||
+          [ string match "*PARALLEL*" $chgar(qtype) ]   } { 
+
+        set new_chgar_qtype ""
+        foreach elem $chgar(qtype) {
+           if { [ string match "*CHECKPOINTING*" $elem ] } {
+              puts $CHECK_OUTPUT "this qconf version doesn't support CHECKPOINTING value for qtype"
+              continue
+           } 
+           if { [ string match "*PARALLEL*" $elem ] } {
+              puts $CHECK_OUTPUT "this qconf version doesn't support PARALLEL value for qtype"
+              continue
+           } 
+           append new_chgar_qtype "$elem "
+        } 
+        set chgar(qtype) [string trim $new_chgar_qtype]
+        puts $CHECK_OUTPUT "using qtype=$chgar(qtype)" 
+     }
+  }
 
   puts $CHECK_OUTPUT "setting queue parameters for queue \"$q_name\""
   set values [array names chgar]
@@ -1969,7 +2168,13 @@ proc add_queue { change_array {fast_add 0} } {
      set default_array(priority)             "0"
      set default_array(min_cpu_interval)     "00:05:00"
      set default_array(processors)           "UNDEFINED"
-     set default_array(qtype)                "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
+     if { [get_pe_ckpt_version] > 0 } {
+        set default_array(qtype)                "BATCH INTERACTIVE"
+        set default_array(pe_list)              "NONE"
+        set default_array(ckpt_list)            "NONE"
+     } else {
+        set default_array(qtype)                "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
+     }
      set default_array(rerun)                "FALSE"
      set default_array(slots)                "10"
      set default_array(tmpdir)               "/tmp"
@@ -2939,9 +3144,18 @@ proc get_queue_state { queue } {
 proc add_checkpointobj { change_array } {
 
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
-  global CHECK_USER CHECK_CORE_MASTER CHECK_HOST
+  global CHECK_USER CHECK_CORE_MASTER CHECK_HOST CHECK_OUTPUT
 
   upvar $change_array chgar
+
+  if { [get_pe_ckpt_version] > 0 } {
+     if { [ info exists chgar(queue_list) ] } { 
+        puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for ckpt objects"
+        add_proc_error "add_checkpointobj" -3 "this qconf version doesn't support queue_list for ckpt objects,\nuse assign_queues_with_ckpt_objects() after adding checkpoint\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test ckpt version"
+        unset chgar(queue_list)
+     }
+  }
+
   set values [array names chgar]
 
   set vi_commands ""
@@ -2970,6 +3184,74 @@ proc add_checkpointobj { change_array } {
   return $result
 }
 
+
+#****** sge_procedures/set_checkpointobj() *************************************
+#  NAME
+#     set_checkpointobj() -- set or change checkpoint object configuration
+#
+#  SYNOPSIS
+#     set_checkpointobj { ckpt_obj change_array } 
+#
+#  FUNCTION
+#     Set a checkpoint configuration corresponding to the content of the 
+#     change_array.
+#
+#  INPUTS
+#     ckpt_obj     - name of the checkpoint object to configure
+#     change_array - name of array variable that will be set by 
+#                    set_checkpointobj()
+#
+#  RESULT
+#     0  : ok
+#     -1 : timeout
+#
+#  SEE ALSO
+#     sge_procedures/get_checkpointobj()
+#*******************************************************************************
+proc set_checkpointobj { ckpt_obj change_array } {
+
+  global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global CHECK_USER CHECK_CORE_MASTER CHECK_HOST CHECK_OUTPUT
+
+  upvar $change_array chgar
+
+  if { [get_pe_ckpt_version] > 0 && [info exists chgar(queue_list)]} {
+     if { [ info exists chgar(queue_list) ] } { 
+        puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for ckpt objects"
+        add_proc_error "set_checkpointobj" -3 "this qconf version doesn't support queue_list for ckpt objects,\nuse assign_queues_with_ckpt_objects() after adding checkpoint\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test ckpt version"
+        unset chgar(queue_list)
+     }
+  }
+
+  set values [array names chgar]
+
+  set vi_commands ""
+  foreach elem $values {
+     # this will quote any / to \/  (for vi - search and replace)
+     set newVal [set chgar($elem)]
+     set newVal1 [split $newVal {/}]
+     set newVal [join $newVal1 {\/}]
+     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+  }
+
+  set my_args "-mckpt $ckpt_obj"
+ 
+  set ALREADY_EXISTS [ translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $ckpt_obj]
+  set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $ckpt_obj "checkpoint interface" ]
+
+  set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
+
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $MODIFIED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
+  
+  if { $result == -1 } { add_proc_error "add_checkpointobj" -1 "timeout error" }
+  if { $result == -2 } { add_proc_error "add_checkpointobj" -1 "already exists" }
+  if { $result == -3 } { add_proc_error "add_checkpointobj" -1 "queue reference does not exist" }
+  if { $result != 0  } { add_proc_error "add_checkpointobj" -1 "could nod modify checkpoint object" }
+
+  return $result
+}
+
+
 #                                                             max. column:     |
 #****** sge_procedures/del_checkpointobj() ******
 # 
@@ -2994,6 +3276,40 @@ proc add_checkpointobj { change_array } {
 #*******************************
 proc del_checkpointobj { checkpoint_name } {
   global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+  global CHECK_OUTPUT
+
+  if { [get_pe_ckpt_version] > 0 } {
+     puts $CHECK_OUTPUT "searching for references in all defined queues ..."
+     set NO_QUEUE_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "queue"]
+     catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sql" } result
+     if { [string first $NO_QUEUE_DEFINED $result] >= 0 } {
+        puts $CHECK_OUTPUT "no queue defined"
+     } else {
+        foreach elem $result {
+           puts $CHECK_OUTPUT "queue: $elem"
+           if {[info exists params]} {
+              unset params
+           }
+           get_queue $elem params
+           if { [string match $checkpoint_name $params(ckpt_list)] } {
+              puts $CHECK_OUTPUT "ckpt obj $checkpoint_name is referenced in queue $elem, removing entry."
+              set new_params ""
+              set help_list [split $params(ckpt_list) ","]
+              set help_list [string trim $help_list] 
+              foreach help_ckpt $help_list {
+                 if { [string match $checkpoint_name $help_ckpt] != 1 } {
+                    append new_params "$help_ckpt "
+                 }
+              }
+              if { [llength $new_params ] == 0 } {
+                 set new_params "NONE"
+              }
+              set mod_params(ckpt_list) [string trim $new_params]
+              set_queue $elem mod_params 
+           }
+        }
+     }
+  }
   
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $checkpoint_name "*" ]
 
@@ -3041,7 +3357,7 @@ proc del_checkpointobj { checkpoint_name } {
 #     add_pe -- add new parallel environment definition object
 #
 #  SYNOPSIS
-#     add_pe { change_array } 
+#     add_pe { change_array { version_check 1 } } 
 #
 #  FUNCTION
 #     This procedure will create a new pe (parallel environemnt) definition 
@@ -3049,6 +3365,8 @@ proc del_checkpointobj { checkpoint_name } {
 #
 #  INPUTS
 #     change_array - name of an array variable that will be set by add_pe
+#     { version_check 1 } - (default 1): check pe/ckpt version
+#                           (0): don't check pe/ckpt version
 #
 #  RESULT
 #      0 - ok
@@ -3086,7 +3404,7 @@ proc del_checkpointobj { checkpoint_name } {
 #  SEE ALSO
 #     sge_procedures/del_pe()
 #*******************************
-proc add_pe { change_array } {
+proc add_pe { change_array { version_check 1 } } {
 # pe_name           testpe
 # queue_list        NONE
 # slots             0
@@ -3100,9 +3418,21 @@ proc add_pe { change_array } {
 
 
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
-  global CHECK_CORE_MASTER CHECK_USER
+  global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
   upvar $change_array chgar
+
+  if { $version_check == 1 } {
+     if { [get_pe_ckpt_version] > 0 && [info exists chgar(queue_list)]} {
+        if { [ info exists chgar(queue_list) ] } { 
+           puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for pe objects"
+           add_proc_error "add_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_objects() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
+           unset chgar(queue_list)
+        }
+     }
+  }
+
+
   set values [array names chgar]
 
   set vi_commands ""
@@ -3128,6 +3458,83 @@ proc add_pe { change_array } {
 
   return $result
 }
+
+
+#****** sge_procedures/set_pe() ************************************************
+#  NAME
+#     set_pe() -- set or change pe configuration
+#
+#  SYNOPSIS
+#     set_pe { pe_obj change_array } 
+#
+#  FUNCTION
+#     Set a pe configuration corresponding to the content of the change_array.
+#
+#  INPUTS
+#     pe_obj       - name of pe object to configure
+#     change_array - name of an array variable that will be set by set_pe()
+#
+#  RESULT
+#     0  : ok
+#     -1 : timeout
+#
+#  SEE ALSO
+#     sge_procedures/add_pe()
+#*******************************************************************************
+proc set_pe { pe_obj change_array } {
+# pe_name           testpe
+# queue_list        NONE
+# slots             0
+# user_lists        NONE
+# xuser_lists       NONE
+# start_proc_args   /bin/true
+# stop_proc_args    /bin/true
+# allocation_rule   $pe_slots
+# control_slaves    FALSE
+# job_is_first_task TRUE
+
+
+  global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
+
+  upvar $change_array chgar
+
+
+
+  if { [get_pe_ckpt_version] > 0 && [info exists chgar(queue_list)]} {
+     if { [ info exists chgar(queue_list) ] } { 
+        puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for pe objects"
+        add_proc_error "set_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_objects() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
+        unset chgar(queue_list)
+     }
+  }
+
+  set values [array names chgar]
+
+  set vi_commands ""
+  foreach elem $values {
+     # this will quote any / to \/  (for vi - search and replace)
+     set newVal [set chgar($elem)]
+     set newVal1 [split $newVal {/}]
+     set newVal [join $newVal1 {\/}]
+     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+  } 
+
+  set MODIFIED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
+  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
+  set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
+
+
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mp $pe_obj" $vi_commands $MODIFIED $ALREADY_EXISTS $NOT_EXISTS ]
+  
+  if {$result == -1 } { add_proc_error "set_pe" -1 "timeout error" }
+  if {$result == -2 } { add_proc_error "set_pe" -1 "parallel environment \"$pe_obj\" already exists" }
+  if {$result == -3 } { add_proc_error "set_pe" -1 "something (perhaps a queue) does not exist" }
+  if {$result != 0  } { add_proc_error "set_pe" -1 "could not add parallel environment \"$pe_obj\"" }
+
+  return $result
+}
+
 
 #                                                             max. column:     |
 #****** sge_procedures/add_user() ******
@@ -3443,6 +3850,40 @@ proc add_prj { change_array } {
 proc del_pe { mype_name } {
    
   global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+  global CHECK_OUTPUT
+
+  if { [get_pe_ckpt_version] > 0 } {
+     puts $CHECK_OUTPUT "searching for references in all defined queues ..."
+     set NO_QUEUE_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "queue"]
+     catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sql" } result
+     if { [string first $NO_QUEUE_DEFINED $result] >= 0 } {
+        puts $CHECK_OUTPUT "no queue defined"
+     } else {
+        foreach elem $result {
+           puts $CHECK_OUTPUT "queue: $elem"
+           if {[info exists params]} {
+              unset params
+           }
+           get_queue $elem params
+           if { [string match $mype_name $params(pe_list)] } {
+              puts $CHECK_OUTPUT "pe obj $mype_name is referenced in queue $elem, removing entry."
+              set new_params ""
+              set help_list [split $params(pe_list) ","]
+              set help_list [string trim $help_list] 
+              foreach help_pe $help_list {
+                 if { [string match $mype_name $help_pe] != 1 } {
+                    append new_params "$help_pe "
+                 }
+              }
+              if { [llength $new_params ] == 0 } {
+                 set new_params "NONE"
+              }
+              set mod_params(pe_list) [string trim $new_params]
+              set_queue $elem mod_params 
+           }
+        }
+     }
+  }
 
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $mype_name "*" ]
 

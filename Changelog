@@ -5,6 +5,7 @@ EB-2002-09-25-1  Bugfix:    Exiting sgeee jobs will be shown in qmons dialog
 
 EB-2002-09-25-0  Bugfix:    qconf gets commd timeout
                  IZ:        #308
+                 Bugtraq:   #4753669
                  Review:    AH
                  Changed:   qconf
 
@@ -475,7 +476,8 @@ JG-2002-06-27-0: Bugfix:    qrsh -inherit failed with error
 EB-2002-06-27-1: Bugfix:    prevent deletion of still referenced objects
                             - PE objects
                             - CKPT objects
-                 Issue:     #302 (partially)
+                 Issue:     #302 
+                 Bugtraq:   #4753668
 
 AH-2002-06-27-0: Enhancem.: Improved load alarm/suspend alarm diagnosis 
                             messages

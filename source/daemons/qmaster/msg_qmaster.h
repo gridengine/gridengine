@@ -229,14 +229,6 @@
 #define MSG_SEC_DELCREDRETCODE_USI    _MESSAGE(33151, _("could not delete credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n"))
 #define MSG_SEC_DELCREDNOBIN_US       _MESSAGE(33152, _("could not delete credentials for job "U32CFormat" - "SFN" binary does not exist\n"))
 */
-#define MSG_LOG_DELETED               _MESSAGE(33151, _("job deleted"))
-#define MSG_LOG_SENT2EXECD            _MESSAGE(33152, _("sent to execd"))
-#define MSG_LOG_DELIVERED             _MESSAGE(33153, _("job received by execd"))
-#define MSG_LOG_EXITED                _MESSAGE(33154, _("job exited"))
-#define MSG_LOG_WAIT4SGEDEL           _MESSAGE(33155, _("job waits for schedds deletion"))
-#define MSG_LOG_DELSGE                _MESSAGE(33156, _("job deleted by schedd"))
-#define MSG_LOG_DELIMMEDIATE          _MESSAGE(33157, _("immediate job deleted by schedd"))
-#define MSG_LOG_JATASKEXIT            _MESSAGE(33158, _("ja task exited") )  
 #define MSG_JOB_RESCHEDULE_UU         _MESSAGE(33159, _("rescheduling job "U32CFormat"."U32CFormat) ) 
 #define MSG_RU_CANCELED_S             _MESSAGE(33160, _("Due to a modification of the reschedule_unknown timeout rescheduling for host "SFN" was canceled."))
 #define MSG_RU_TRIGGER_SU             _MESSAGE(33161, _("Due to a modification of the reschedule_unknown timeout rescheduling for host "SFN" will be triggerd in "U32CFormat" seconds."))
@@ -724,5 +716,16 @@
 #define MSG_QINSTANCE_NQIFOUND_SS      _MESSAGE(33726, _("queue instance "SFQ" not found in "SFQ"\n"))
 #define MSG_JOB_WILD_RANGE_AMBIGUOUS   _MESSAGE(33727, _("job rejected: PEs matching wildcard and jobs slot range would cause ambiguous urgency slot amount\n"))
 
+/*
+ * job logging
+ */
+#define MSG_LOG_DELETED               _MESSAGE(33800, _("job deleted"))
+#define MSG_LOG_SENT2EXECD            _MESSAGE(33801, _("sent to execd"))
+#define MSG_LOG_DELIVERED             _MESSAGE(33802, _("job received by execd"))
+#define MSG_LOG_EXITED                _MESSAGE(33803, _("job exited"))
+#define MSG_LOG_WAIT4SGEDEL           _MESSAGE(33804, _("job waits for schedds deletion"))
+#define MSG_LOG_DELSGE                _MESSAGE(33805, _("job deleted by schedd"))
+#define MSG_LOG_DELIMMEDIATE          _MESSAGE(33806, _("immediate job deleted by schedd"))
+#define MSG_LOG_JATASKEXIT            _MESSAGE(33807, _("ja task exited") )  
 #endif
 

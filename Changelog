@@ -1,10 +1,12 @@
-JG-2003-02-13-0: Enhancem.: Improved ineffective implementation of removing
+CR-2003-02-13-0  Testsuite: shartree test now uses SHARETREE_RESERVED_USAGE=true
+
+JG-2003-02-13-0  Enhancem.: Improved ineffective implementation of removing
                             entries in nonunique hashtables.
                             Added a test program for cull_hash.
                  Bugfix:    Fixed improper use of hashtable in scheduler.
                  Review:    EB
 
-EB-2003-02-12-0: Enhancem.: created new library which contains CULL object
+EB-2003-02-12-0  Enhancem.: created new library which contains CULL object
                             related code. Several files were moved from
                             libs/gdi into libs/sgeobj directory.
 

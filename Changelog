@@ -1,3 +1,10 @@
+EB-2003-03-17-0  Bugfix:    qsh/qrsh/qlogin might core with segementation
+                            violation
+                 Issue:     #508
+                 Bugtraq:   #4833346
+                 Review:    JG
+                 Changed:   qsh
+
 EB-2002-03-14-0  Enhancem.: Added code for CQ attribute lists
                             - added new objects (ABOOL_Type, AULNG_Type) which
                               will hold host and hostgroup concerned attribute

@@ -1,3 +1,8 @@
+CR-2001-07-25-0: Testsuite:
+                    - reading CHECK_GROUP and CHECK_USER global variables from
+                      check.exp file attributes if environment variables GROUP 
+                      and USER aren't set.
+
 CR-2001-07-24-1: uninitialzed variables error/warnings on linux in sge_job.c
 
 CR-2001-07-24-0: Testsuite: 

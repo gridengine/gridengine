@@ -1873,13 +1873,9 @@ proc setup { {do_only_hostname_resolving 0} } {
   if { $have_defaults == 0 && $do_only_hostname_resolving == 0 } {
 
       if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
+        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
         puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_USER $in
-           }
-        }   
+        set env(USER) $CHECK_USER
       } 
 
       set CHECK_ARCH [ resolve_arch ]
@@ -1892,23 +1888,15 @@ proc setup { {do_only_hostname_resolving 0} } {
          set setup_ok -1
       }
       if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
+        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
         puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_USER $in
-           }
-        }   
+        set env(USER) $CHECK_USER
       } 
 
       if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
+        set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
         puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_GROUP $in
-           }   
-        }
+        set env(GROUP) $CHECK_GROUP
       } 
 
 
@@ -1955,24 +1943,15 @@ proc setup { {do_only_hostname_resolving 0} } {
      set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
    
      if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
-        
+        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
         puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_USER $in
-           }   
-        }
+        set env(USER) $CHECK_USER
      }
      if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
-        
+        set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
+
         puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_GROUP $in
-           }   
-        }
+        set env(GROUP) $CHECK_GROUP
       } 
  
      
@@ -2010,23 +1989,14 @@ proc setup { {do_only_hostname_resolving 0} } {
      set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
    
      if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
+        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
         puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_USER $in
-           }   
-        }
+        set env(USER) $CHECK_USER
      } 
      if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
-        
+        set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
         puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_GROUP $in
-           }
-        }   
+        set env(GROUP) $CHECK_GROUP
      } 
      set CHECK_ARCH [ resolve_arch ]
      set CHECK_HOST [ gethostname ]

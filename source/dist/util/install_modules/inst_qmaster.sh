@@ -331,10 +331,10 @@ SetSpoolingOptionsBerkeleyDB()
    fi
    if [ $QMASTER = "install" -a $AUTO = "false" ]; then
       $INFOTEXT -n "\nThe Berkeley DB spooling method provides two configurations!\n\n" \
-                   " 1) Local spooling:\n" \
+                   " Local spooling:\n" \
                    " The Berkeley DB spools into a local directory on this host (qmaster host)\n" \
                    " This setup is faster, but you can't setup a shadow master host\n\n"
-      $INFOTEXT -n " 2) Berkeley DB Spooling Server:\n" \
+      $INFOTEXT -n " Berkeley DB Spooling Server:\n" \
                    " If you want to setup a shadow master host, you need to use\nBerkeley DB Spooling Server!\n" \
                    " In this case you have to choose a host with a configured RPC service.\nThe qmaster host" \
                    " connects via RPC to the Berkeley DB. This setup is more\nfailsafe," \
@@ -1393,8 +1393,8 @@ GetQmasterPort()
       if [ $service_available = false ]; then
          SGE_QMASTER_PORT=$INP
          export SGE_QMASTER_PORT
-         $INFOTEXT "\nUsing port >%s<. No service >sge_qmaster< available.\n" $SGE_QMASTER_PORT
-         $INFOTEXT -log "Using port >%s<. No service >sge_qmaster< available." $SGE_QMASTER_PORT
+         $INFOTEXT "\nUsing port >%s< for sge_qmaster daemon.\n" $SGE_QMASTER_PORT
+         $INFOTEXT -log "Using port >%s< for sge_qmaster daemon." $SGE_QMASTER_PORT
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          $CLEAR
       else
@@ -1554,8 +1554,8 @@ GetExecdPort()
       if [ $service_available = false ]; then
          SGE_EXECD_PORT=$INP
          export SGE_EXECD_PORT
-         $INFOTEXT "\nUsing port >%s<. No service >sge_execd< available.\n" $SGE_EXECD_PORT
-         $INFOTEXT -log "Using port >%s<. No service >sge_execd< available." $SGE_EXECD_PORT
+         $INFOTEXT "\nUsing port >%s< for sge_execd daemon.\n" $SGE_EXECD_PORT
+         $INFOTEXT -log "Using port >%s< for sge_execd daemon." $SGE_EXECD_PORT
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          $CLEAR
       else

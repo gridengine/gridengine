@@ -1,3 +1,15 @@
+MD-2004-11-15-1: Bugfix:    Confusing text
+                 Review:    HP 
+                 Changed:   inst_qmaster.sh
+                 Issue:     791
+                 Bugtraq:   5063317
+
+MD-2004-11-15-0: Bugfix:    Confusing text
+                 Review:    HP 
+                 Changed:   inst_qmaster.sh
+                 Issue:     790
+                 Bugtraq:   5063315
+
 HP-2004-11-15-0: Bugfix:    Jobs fail on NFS drives mounted without root write
                             privileges - fchown() doesn't work as expected on
                             Irix and True64
@@ -36,7 +48,6 @@ AH-2004-11-12-0: Doc:       Various fixes with man pages.
                             to DRMAA setup code
                  Review:    DT
 
->>>>>>> 1.2362
 JG-2004-11-15-0: Bugfix:    Fixed broken build.
 
 DT-2004-11-12-0: Bugfix:    o qmaster now uses very little memory for
@@ -142,7 +153,6 @@ SG-2004-11-08-0: Bugfix:    fixed SG-2004-11-03-0
                  Changed:   master
                  Review:    EB
 
->>>>>>> 1.2354
 CR-2004-11-05-1: Bugfix:    fixed broken build
 
 CR-2004-11-05-0: Enhancm.:  qping -dump (communication traffic) option

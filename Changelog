@@ -1,3 +1,6 @@
+AD-2004-02-06-0: Bugfix:    Use lock 'LOCK_GLOBAL'.
+                 Changed:   spool
+
 AD-2004-02-05-5: Cleanup:   Did remove all locks except 'LOCK_GLOBAL'.
                  Changed:   lck
 

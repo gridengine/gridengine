@@ -165,14 +165,14 @@ static void *work(void *args)
   
    for (i = 0; i < loops; i++) {
 #if SGE_LOCKING
-/*       SGE_LOCK(LOCK_MASTER_JOB_LST, LOCK_WRITE); */
+/*       SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE); */
       pthread_mutex_lock(&mtx);
 #endif
       if (!add_job(work_num * loops + i)) {
          failed++;
       }
 #if SGE_LOCKING
-/*       SGE_UNLOCK(LOCK_MASTER_JOB_LST, LOCK_WRITE); */
+/*       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE); */
       pthread_mutex_unlock(&mtx);
 #endif
    }
@@ -183,14 +183,14 @@ static void *work(void *args)
    failed = 0;
    for (i = 0; i < loops; i++) {
 #if SGE_LOCKING
-/*       SGE_LOCK(LOCK_MASTER_JOB_LST, LOCK_WRITE); */
+/*       SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE); */
       pthread_mutex_lock(&mtx);
 #endif
       if(!del_job(work_num * loops + i)) {
          failed++;
       }
 #if SGE_LOCKING
-/*       SGE_UNLOCK(LOCK_MASTER_JOB_LST, LOCK_WRITE); */
+/*       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE); */
       pthread_mutex_unlock(&mtx);
 #endif
    }

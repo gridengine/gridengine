@@ -113,7 +113,7 @@ proc issue_140_check {} {
    puts $CHECK_OUTPUT "Delete job array $job_id.1-4"
    delete_job "${job_id}.1-4"
 
-   wait_for_jobend $job_id "Sleeper" 60
+   wait_for_jobend $job_id "Sleeper" 60 0
 
    # test pending job array
    puts $CHECK_OUTPUT "test with pending jobs ..."

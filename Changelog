@@ -1,3 +1,8 @@
+CR-2003-02-11-0  Testsuite: bugtest for issue #140:
+                 Bugfix:    using wait_for_jobend() call with job that is
+                            not mandatory running (using no_run_check option
+                            for this scenario)
+
 AA-2003-02-11-0  Bugfix:    qmon crash fixed for pressing Why ? when several
                             jobs are selected.
                  Changed:   qmon

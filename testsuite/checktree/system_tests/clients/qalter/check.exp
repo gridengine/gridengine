@@ -1695,9 +1695,9 @@ proc qalter_a {} {
    }     
 
    puts $CHECK_OUTPUT "$option $submitresult"
-   eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat -j $submitresult"
+#   set result [eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat -j $submitresult"]
 
-   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
+   set qalterresult [eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult"]
    if {$qalterresult == 1} {
      set_error -1 "qalter $option - couldn't change starttime"
      return

@@ -422,7 +422,6 @@ set   KRBCLEAN   = ""
 set   KRBLIBS     = ""
 set   KRBLIB      = ""
 set   KLIBS       = ""
-set   KLFLAGS      = ""
 # end kerberos
 # PERLGUI
 set PERLGUI = ""

@@ -733,7 +733,7 @@ int sge_loadmem(sge_mem_info_t *mem_info)
 
     info_count = HOST_VM_INFO_COUNT;
     host_statistics(mach_host_self (), HOST_VM_INFO, (host_info_t)&vm_info, &info_count);
-    mem_info->mem_free = vm_info.free_count*vm_page_size/1024/1024;
+    mem_info->mem_free = vm_info.free_count*vm_page_size / (1024*1024);
 
     return 0;
 }

@@ -1,3 +1,8 @@
+EB-2004-03-31-0: Bugfix:    qconf -Mprj bad error message
+                            qconf -sprj gives bogus error message
+                 Issue:     923, 926
+                 Changed:   qconf
+
 HP-2004-04-05-0: Bugfix:    shepherd created world writeable file,
                             prolog execution as non-job user is broken
                  Issue:     931,912

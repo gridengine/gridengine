@@ -3687,6 +3687,9 @@ DPRINTF(("ep: %s %s\n",
          if (!sge_next_is_an_opt(spp)) {
             spp = sge_parser_get_next(spp);
             file = *spp;
+            if (!sge_is_file(*spp)) {
+               sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
+            }
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
@@ -5201,6 +5204,7 @@ DPRINTF(("ep: %s %s\n",
 
          if (!lp) {
             fprintf(stderr, MSG_PROJECT_XISNOKNWOWNPROJECT_S, *spp);
+            spp++;
             continue;
          }
          alp = lFreeList(alp);

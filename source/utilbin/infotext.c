@@ -129,11 +129,13 @@ char* sge_infotext_get_next_word(dstring* buf, char* text) {
          break;
       }
    }
+
    if (nr_spaces > 1) {
-      for (i=0;i<strlen(p1);i++) {
-          if( p1[i] != ' ') {
-             p1[i-1] = 0;
-          }
+      int stop = strlen(p1);
+      for (i=0;i<stop;i++) {
+         if( p1[i] != ' ') {
+            p1[i-1] = 0;
+         }
       } 
       return p1;
    } 
@@ -143,7 +145,6 @@ char* sge_infotext_get_next_word(dstring* buf, char* text) {
    }
 
    
-
    for (i=0;i<strlen(p1);i++) {
       if( p1[i] == ' ') {
          not_last = 0;
@@ -213,7 +214,7 @@ void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options
       if (strlen(next_word) == 0 ) {
          if (nr_word != 0) {
             options->n = new_line_opt;
-            sge_infotext_print_line(dash_buf,options,&line);
+/*            sge_infotext_print_line(dash_buf,options,&line);  */
          }
          nr_word = 0;
          break;
@@ -268,12 +269,13 @@ void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options
 #endif
 
          nr_word = 0;
-         sge_dstring_copy_dstring(&line,&dash);
+/*         sge_dstring_copy_dstring(&line,&dash);   */
+         sge_dstring_copy_string(&line,"");
       } else {
          next_word = sge_infotext_get_next_word(&tmp_buf,tp);
          if (strlen(next_word) == 0) {
             options->n = new_line_opt;
-            sge_infotext_print_line(dash_buf,options,&line);
+            sge_infotext_print_line(dash_buf,options,&line); 
             nr_word = 0;
          break;
          }
@@ -281,7 +283,9 @@ void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options
             nr_word != 0 ) {
             sge_infotext_print_line(dash_buf,options,&line);
             nr_word = 0;
-            sge_dstring_copy_dstring(&line,&dash);
+/*            sge_dstring_copy_dstring(&line,&dash); */
+            sge_dstring_copy_string(&line,"");
+
          }      
       }
    }
@@ -313,6 +317,7 @@ void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, 
 
    line_buf = sge_infotext_string_replace(&line_buf_buffer,(char*)sge_dstring_get_string(line_arg),"\n",(char*)sge_dstring_get_string(&dash),0);
    sge_dstring_copy_string(&line, line_buf);
+
 
    line_length = 0;
    lc = 0;
@@ -727,8 +732,13 @@ char **argv
    /* if we have to much args add the rest to the string buffer */
    while(real_args > string_arguments) {
       char* arg = argv[first_arg];
-      if (strcmp((char*)sge_dstring_get_string(&buffer),"") != 0) {
-         sge_dstring_append(&buffer," ");
+      char* hcp = NULL;
+
+      hcp = (char*)sge_dstring_get_string(&buffer);
+      if (strcmp(hcp,"") != 0 ) {
+         if (arg[0] != ' ') {
+            sge_dstring_append(&buffer," ");
+         }
       }
       sge_dstring_append(&buffer,sge_infotext_string_input_parsing(&tmp_buf, arg));
       first_arg++;

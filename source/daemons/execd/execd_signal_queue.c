@@ -63,6 +63,7 @@
 #include "sge_usageL.h"
 #include "mail.h"
 #include "admin_mail.h"
+#include "get_path.h"
 
 #if defined(CRAY) && !defined(SIGXCPU)
 #   define SIGXCPU SIGCPULIM
@@ -460,16 +461,13 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
 int sge_kill(
 int pid,
 u_long32 sge_signal,
-u_long32 jobid,
-u_long32 jataskid,
-const char *petask 
+u_long32 job_id,
+u_long32 ja_task_id,
+const char *pe_task_id 
 ) {
    int sig;
    int status=0;
    int direct_signal;   /* deliver per signal or per file */
-   char fname[SGE_PATH_MAX];
-   char task_job[200];
-   FILE *fp;
 
    DENTER(TOP_LAYER, "sge_kill");
 
@@ -518,13 +516,12 @@ const char *petask
    }
 
    DPRINTF(("signalling pid "pid_t_fmt" with %d\n", pid, sig));
-   if (petask)
-      sprintf(task_job, u32"."u32"/%s", jobid, jataskid, petask);
-   else 
-      sprintf(task_job, u32"."u32, jobid, jataskid);
-
    if (!direct_signal) {
-      sprintf(fname, "%s/%s/signal", ACTIVE_DIR, task_job);
+      char fname[SGE_PATH_MAX];
+      FILE *fp;
+
+      sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+                                   job_id, ja_task_id, pe_task_id, "signal");
       if (!(fp = fopen(fname, "w"))) {
          ERROR((SGE_EVENT, MSG_EXECD_WRITESIGNALFILE_S, fname));
          goto CheckShepherdStillRunning;
@@ -564,14 +561,17 @@ CheckShepherdStillRunning:
       char path[SGE_PATH_MAX];
       SGE_STRUCT_STAT statbuf;
 
-      sprintf(path, "%s/%s", ACTIVE_DIR, task_job);
+      sge_get_active_job_file_path(path, SGE_PATH_MAX,
+                                   job_id, ja_task_id, pe_task_id, NULL);
+
       if (!SGE_STAT(path, &statbuf) && S_ISDIR(statbuf.st_mode)) {
          dead_children = 1; /* may be we've lost a SIGCHLD */
          DEXIT;
          return 0;
       } else {
-         WARNING((SGE_EVENT, MSG_JOB_DELIVERSIGNAL_ISSIS,
-                sig, task_job, sge_sig2str(sge_signal), pid, strerror(errno)));
+         WARNING((SGE_EVENT, MSG_JOB_DELIVERSIGNAL_ISSIS, sig, 
+         job_get_id_string(job_id, ja_task_id, pe_task_id), 
+         sge_sig2str(sge_signal), pid, strerror(errno)));
          DEXIT;
          return -2;
       }

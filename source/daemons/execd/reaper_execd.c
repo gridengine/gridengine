@@ -350,8 +350,8 @@ int is_array
    SGE_STRUCT_STAT statbuf;
    char error[10000];
    FILE *fp;
-   u_long32 jobid, job_pid, ckpt_arena, general_failure = 0, jataskid;
-   const char *pe_task_id_str = NULL;
+   u_long32 job_id, job_pid, ckpt_arena, general_failure = 0, ja_task_id;
+   const char *pe_task_id = NULL;
    lListElem *du;
 
    DENTER(TOP_LAYER, "clean_up_job");
@@ -362,15 +362,15 @@ int is_array
       return -1;
    }
 
-   jobid = lGetUlong(jr, JR_job_number);
-   jataskid = lGetUlong(jr, JR_ja_task_number);
+   job_id = lGetUlong(jr, JR_job_number);
+   ja_task_id = lGetUlong(jr, JR_ja_task_number);
+   pe_task_id = lGetString(jr, JR_pe_task_id_str);
 
-   pe_task_id_str = lGetString(jr, JR_pe_task_id_str);
-   DPRINTF(("cleanup for pe-task "u32"/"u32"/%s\n", jobid, jataskid,
-      pe_task_id_str?pe_task_id_str:"master"));
+   DPRINTF(("cleanup for job %s\n", 
+            job_get_id_string(job_id, ja_task_id, pe_task_id)));
 
 #ifdef COMPILE_DC
-   unregister_from_ptf(jobid, jataskid, pe_task_id_str, jr);
+   unregister_from_ptf(job_id, ja_task_id, pe_task_id, jr);
 #else
    lDelSubStr(jr, UA_name, USAGE_ATTR_CPU, JR_usage);
    lDelSubStr(jr, UA_name, USAGE_ATTR_MEM, JR_usage);
@@ -382,38 +382,37 @@ int is_array
 
 #if 0  
    /* moved to remove_acked_job_exit() */
-   krb_destroy_forwarded_tgt(jobid);
+   krb_destroy_forwarded_tgt(job_id);
 #endif
 
    /* set directory for job */
-   if (pe_task_id_str) 
-      sprintf(jobdir, "%s/" u32 "." u32 "/%s", ACTIVE_DIR, jobid, 
-         jataskid, pe_task_id_str);
-   else
-      sprintf(jobdir, "%s/" u32 "." u32 "", ACTIVE_DIR, jobid, jataskid);
+   sge_get_active_job_file_path(jobdir, SGE_PATH_MAX,
+                                job_id, ja_task_id, pe_task_id, NULL);
+
 
    if (SGE_STAT(jobdir, &statbuf)) {
       /* This never should happen, cause if we cant create this directory on
          startup we report the job finish immediately */
-      ERROR((SGE_EVENT, MSG_JOB_CANTFINDDIRXFORREAPINGJOBYZ_SUU, 
-             jobdir, u32c(jobid), u32c(jataskid)));
+      ERROR((SGE_EVENT, MSG_JOB_CANTFINDDIRXFORREAPINGJOBYZ_SS, jobdir, 
+             job_get_id_string(job_id, ja_task_id, pe_task_id)));
       return -1;        /* nothing can be done without information */
    }
 
    /* read config written by exec_job */
-   sprintf(fname, "%s/config", jobdir);
+   sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+                                job_id, ja_task_id, pe_task_id, "config");
    if (read_config(fname)) {
       /* This should happen very rarely. exec_job() should avoid this 
          condition as far as possible. One possibility for this case is, 
          that the execd dies just after making the jobs active directory. 
          The pain with this case is, that we have not much information
          to report this job to qmaster. */
-      ERROR((SGE_EVENT, MSG_JOB_CANTREADCONFIGFILEFORJOBXY_UU, 
-         u32c(jobid), u32c(jataskid)));
+      ERROR((SGE_EVENT, MSG_JOB_CANTREADCONFIGFILEFORJOBXY_S, 
+         job_get_id_string(job_id, ja_task_id, pe_task_id)));
       lSetUlong(jr, JR_failed, ESSTATE_NO_CONFIG);
       lSetString(jr, JR_err_str, (char *) MSG_SHEPHERD_EXECDWENTDOWNDURINGJOBSTART);
 
-      job_log(jobid, jataskid, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER);
+      job_log(job_id, ja_task_id, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER);
       DEXIT;
       return 0;
    }
@@ -427,8 +426,8 @@ int is_array
     * look for exit status of shepherd This is the last file the shepherd
     * creates. So if we can find this shepherd terminated normal.
     */
-   sprintf(fname, "%s/exit_status", jobdir);
-   
+   sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+                                job_id, ja_task_id, pe_task_id, "exit_status");
    if (!(fp = fopen(fname, "r"))) {
       /* 
        * we trust the exit status of the shepherd if it exited regularly
@@ -440,8 +439,8 @@ int is_array
       else 
          failed = SSTATE_BEFORE_PROLOG;
      
-      sprintf(error, MSG_STATUS_ABNORMALTERMINATIONOFSHEPHERDFORJOBXY_UU,
-                      u32c(jobid), u32c(jataskid));                
+      sprintf(error, MSG_STATUS_ABNORMALTERMINATIONOFSHEPHERDFORJOBXY_S,
+              job_get_id_string(job_id, ja_task_id, pe_task_id));
       ERROR((SGE_EVENT, SFQ , error));    
  
       /* 
@@ -455,8 +454,8 @@ int is_array
       fscanf_count = fscanf(fp, "%d", &shepherd_exit_status_file);
       fclose(fp);
       if (fscanf_count != 1) {
-         sprintf(error, MSG_STATUS_ABNORMALTERMINATIONFOSHEPHERDFORJOBXYEXITSTATEFILEISEMPTY_UU,
-                 u32c(jobid), u32c(jataskid));
+         sprintf(error, MSG_STATUS_ABNORMALTERMINATIONFOSHEPHERDFORJOBXYEXITSTATEFILEISEMPTY_S,
+                 job_get_id_string(job_id, ja_task_id, pe_task_id));
          ERROR((SGE_EVENT, error));
          /* 
           * If shepherd died through signal assume job was started, else
@@ -494,7 +493,8 @@ int is_array
    }
 
    /* look for error file this overrules errors found yet */
-   sprintf(fname, "%s/error", jobdir);
+   sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+                                job_id, ja_task_id, pe_task_id, "error");
    if ((fp = fopen(fname, "r"))) {
       int n;
       char *new_line;
@@ -511,8 +511,8 @@ int is_array
       else if (feof(fp)) 
          DPRINTF(("empty error file\n"));
       else
-         ERROR((SGE_EVENT, MSG_JOB_CANTREADERRORFILEFORJOBXY_UU, 
-            u32c(jobid), u32c(jataskid)));
+         ERROR((SGE_EVENT, MSG_JOB_CANTREADERRORFILEFORJOBXY_S, 
+            job_get_id_string(job_id, ja_task_id, pe_task_id)));
       fclose(fp);
    }
    else {
@@ -530,10 +530,10 @@ int is_array
    ** read_dusage gets the failed parameter to decide what should be there
    */
    
-   if (read_dusage(jr, jobdir, jobid, jataskid, failed)) {
+   if (read_dusage(jr, jobdir, job_id, ja_task_id, failed)) {
       if (!*error) {
-         sprintf(error, MSG_JOB_CANTREADUSAGEFILEFORJOBXY_UU, 
-            u32c(jobid), u32c(jataskid));
+         sprintf(error, MSG_JOB_CANTREADUSAGEFILEFORJOBXY_S, 
+            job_get_id_string(job_id, ja_task_id, pe_task_id));
       }
       ERROR((SGE_EVENT, SFQ, error));
       if (!failed)
@@ -550,13 +550,9 @@ int is_array
          u_long32 sge_signo;
 
          /* Job died through a signal */
-         if (!pe_task_id_str)
-            sprintf(error, MSG_JOB_WXDIEDTHROUGHSIGNALYZ_UUSI, 
-                    u32c(jobid), u32c(jataskid), sge_sys_sig2str(signo), signo);
-         else
-            sprintf(error, MSG_JOB_TASKVOFJOBWXDIEDTHROUGHSIGNALYZ_SUUSI, 
-                     pe_task_id_str, u32c(jobid), u32c(jataskid), 
-                     sge_sys_sig2str(signo), signo);
+         sprintf(error, MSG_JOB_WXDIEDTHROUGHSIGNALYZ_SSI, 
+                 job_get_id_string(job_id, ja_task_id, pe_task_id), 
+                 sge_sys_sig2str(signo), signo);
 
          DPRINTF(("%s\n", error));
          failed = SSTATE_FAILURE_AFTER_JOB;
@@ -581,7 +577,8 @@ int is_array
     * If the job finishes, the shepherd must remove the "checkpointed" file
     */  
 
-   sprintf(fname, "%s/checkpointed", jobdir);
+   sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+                                job_id, ja_task_id, pe_task_id, "checkpointed");
    ckpt_arena = 1;   /* 1 job will be restarted in case of failure *
                       * 2 job will be restarted from ckpt arena    */
    if (!SGE_STAT(fname, &statbuf)) {
@@ -597,7 +594,8 @@ int is_array
          fclose(fp);
       }   
 
-      sprintf(fname, "%s/job_pid", jobdir);
+   sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+                                job_id, ja_task_id, pe_task_id, "job_pid");
       if (!SGE_STAT(fname, &statbuf)) {
          if ((fp = fopen(fname, "r"))) {
             if (!fscanf(fp, u32 , &job_pid))
@@ -606,8 +604,8 @@ int is_array
          }
          else {
             job_pid = 0;
-            ERROR((SGE_EVENT, MSG_JOB_CANTOPENJOBPIDFILEFORJOBXY_UU, 
-               u32c(jobid), u32c(jataskid)));
+            ERROR((SGE_EVENT, MSG_JOB_CANTOPENJOBPIDFILEFORJOBXY_S, 
+               job_get_id_string(job_id, ja_task_id, pe_task_id)));
          }
       }
    }
@@ -621,20 +619,22 @@ int is_array
    
 
    /* Currently the shepherd doesn't create this file */
-   sprintf(fname, "%s/noresources", jobdir);
+   sge_get_active_job_file_path(fname, SGE_PATH_MAX,
+                                job_id, ja_task_id, pe_task_id, "noresources");
    if (!SGE_STAT(fname, &statbuf))
       failed = SSTATE_AGAIN;
    
    /* failed */
    lSetUlong(jr, JR_failed, failed);
-   DPRINTF(("job report for job "u32"."u32": failed = %ld\n", jobid, 
-      jataskid, failed));
+   DPRINTF(("job report for job "SFN": failed = %ld\n", 
+            job_get_id_string(job_id, ja_task_id, pe_task_id), 
+            failed));
    /* err_str */
    if (*error) {
       lSetString(jr, JR_err_str, error);
-      /* "%1024.1024s" to prevent rmon-buffer from overflow */
-      DPRINTF(("job report for job "u32"."u32": err_str = %s\n", jobid, 
-         jataskid, error));
+      DPRINTF(("job report for job "SFN": err_str = %s\n", 
+               job_get_id_string(job_id, ja_task_id, pe_task_id),
+               error));
    }
 
    /* general_failure */
@@ -656,8 +656,8 @@ int is_array
 
          if (failed==SSTATE_NO_SHELL) {
             lListElem *job = lGetElemUlong(Master_Job_List, JB_job_number, 
-                                           jobid); 
-            lListElem *ja_task = job_search_task(job, NULL, jataskid, 0);
+                                           job_id); 
+            lListElem *ja_task = job_search_task(job, NULL, ja_task_id, 0);
             lListElem *master_queue = NULL;
 
             if (job && ja_task) {
@@ -734,10 +734,11 @@ int is_array
       break;
    }
    lSetUlong(jr, JR_general_failure, general_failure);
-   DPRINTF(("job report for job "u32"."u32": general_failure = %ld\n", 
-      jobid, jataskid, general_failure));
+   DPRINTF(("job report for job "SFN": general_failure = %ld\n", 
+            job_get_id_string(job_id, ja_task_id, pe_task_id),
+            general_failure));
 
-   job_log(jobid, jataskid, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER);
+   job_log(job_id, ja_task_id, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER);
 
    /* Check whether a message about tasks exit has to be sent.
       We need job data to know whether an ack about exit status was requested */
@@ -746,20 +747,20 @@ int is_array
     *           and send data there, or, perhaps better, always use comlib for 
     *           communication of qrsh with other components instead of qrsh socket.
     */
-   if (pe_task_id_str != NULL) {
+   if (pe_task_id != NULL) {
       lListElem *jep = NULL, *jatep = NULL, *petep = NULL, *uep = NULL;
       const void *iterator;
 
-      jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+      jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, job_id, &iterator);
       while(jep != NULL) {
-         jatep = job_search_task(jep, NULL, jataskid, 0);
+         jatep = job_search_task(jep, NULL, ja_task_id, 0);
          if(jatep != NULL) {
             break;
          }
-         jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
+         jep = lGetElemUlongNext(Master_Job_List, JB_job_number, job_id, &iterator);
       }
 
-      if (jatep && (petep = lGetSubStr(jatep, PET_id, pe_task_id_str, 
+      if (jatep && (petep = lGetSubStr(jatep, PET_id, pe_task_id, 
             JAT_task_list))) {
          const char *host, *commproc;
          u_short id;
@@ -779,13 +780,13 @@ int is_array
         
          /* fill in pack buffer */
          if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
-            packstr(&pb, pe_task_id_str);
+            packstr(&pb, pe_task_id);
             packint(&pb, exit_status);
 
             /* send a task exit message to the submitter of this task */
             ret=gdi_send_message_pb(0, commproc, id, host, TAG_TASK_EXIT, &pb, &dummymid);
             DPRINTF(("%s sending task exit message for pe-task \"%s\" to %s: %s\n",
-                  ret?"failed":"success", pe_task_id_str, 
+                  ret?"failed":"success", pe_task_id, 
                   lGetString(petep, PET_source), ret?cl_errstr(ret):""));
             clear_packbuffer(&pb);
          }

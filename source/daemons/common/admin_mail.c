@@ -237,6 +237,7 @@ int is_array
          shepherd_files[i].exists = 0;
       }
       for (i=0; i<num_files; i++) {
+         /* JG: TODO (254): use function creating path */
          sprintf(shepherd_files[i].filepath, "%s/" u32"."u32"/%s", ACTIVE_DIR, 
                      jobid, jataskid, shepherd_filenames[i]);
          if (!SGE_STAT(shepherd_files[i].filepath, &shepherd_files[i].statbuf) 

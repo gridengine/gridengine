@@ -263,7 +263,8 @@ int slave
    if (slave) {
       /* make job directory for sub tasks
          in case of master jobs this is done when starting the jobs */
-      sprintf(dir, "%s/"u32"."u32 , ACTIVE_DIR, jobid, jataskid);
+      sge_get_active_job_file_path(dir, SGE_PATH_MAX,
+                                   jobid, jataskid, NULL, NULL);   
       if (mkdir(dir, 0755) == -1) {
          sprintf(err_str, MSG_FILE_CREATEDIR_SS, dir, strerror(errno));
          DEXIT;

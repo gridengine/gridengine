@@ -1743,3 +1743,20 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
    DEXIT; 
 }
 
+const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id)
+{
+   static dstring id = DSTRING_INIT;
+
+   DENTER(TOP_LAYER, "job_get_id_string");
+   
+   if(pe_task_id == NULL) {
+      sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_ID_UU,
+                          job_id, ja_task_id);
+   } else {
+      sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_PETASK_ID_UUS,
+                         job_id, ja_task_id, pe_task_id);
+   }
+   
+   DEXIT;
+   return sge_dstring_get_string(&id);
+}

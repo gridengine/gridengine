@@ -273,16 +273,27 @@ char *err_str
 
    int write_osjob_id = 1;
 
+   /* retrieve the job, jatask and petask id once */
+   u_long32 job_id;
+   u_long32 ja_task_id;
+   const char *pe_task_id = NULL;
+
    DENTER(TOP_LAYER, "sge_exec_job");
 
    SGE_ASSERT((jep));
    SGE_ASSERT((jatep));
 
+   job_id = lGetUlong(jep, JB_job_number);
+   ja_task_id = lGetUlong(jatep, JAT_task_number);
+   if(petep != NULL) {
+      pe_task_id = lGetString(petep, PET_id);
+   }
+
    environmentList = lCreateList("environment list", VA_Type);
 
-   DPRINTF(("job: %ld jatask: %ld petask: %s\n", lGetUlong(jep, JB_job_number), 
-      lGetUlong(jatep, JAT_task_number),
-      petep != NULL ? lGetString(petep, PET_id) : "none"));
+   DPRINTF(("job: %ld jatask: %ld petask: %s\n", 
+      job_id, ja_task_id,
+      pe_task_id != NULL ? pe_task_id : "none"));
 
    master_q = responsible_queue(jep, jatep, petep);
    SGE_ASSERT((master_q));
@@ -312,8 +323,8 @@ char *err_str
       ** shared filesystems
       */
       /* build base directory for job */
-      sprintf(dir, "%s/"u32"."u32 , ACTIVE_DIR, lGetUlong(jep, JB_job_number),
-         lGetUlong(jatep, JAT_task_number));
+      sge_get_active_job_file_path(dir, SGE_PATH_MAX,
+                                   job_id, ja_task_id, NULL, NULL);
       /* Does this directory exist? */
       if (SGE_STAT(dir, &statbuf)) {
          if (mkdir(dir, 0755) == -1) {
@@ -325,11 +336,12 @@ char *err_str
       /*
       ** Now we can create the directory for the pe-task
       */  
-      sprintf(dir, "%s/"u32"."u32"/%s", ACTIVE_DIR, lGetUlong(jep, JB_job_number), 
-         lGetUlong(jatep, JAT_task_number), lGetString(petep, PET_id));
+      sge_get_active_job_file_path(dir, SGE_PATH_MAX,
+                                   job_id, ja_task_id, pe_task_id, NULL);
    } else {
-      sprintf(dir, "%s/"u32"."u32"", ACTIVE_DIR, lGetUlong(jep, JB_job_number), 
-         lGetUlong(jatep, JAT_task_number));
+      /* JG: TODO: Where is the directory for non pe jobs created? Why not here? */
+      sge_get_active_job_file_path(dir, SGE_PATH_MAX,
+                                   job_id, ja_task_id, NULL, NULL);
    }
 
    /* Create job or (pe) task directory */ 
@@ -359,18 +371,14 @@ char *err_str
       in this queue. QU_job_slots_used holds actual number of used 
       slots for this job in the queue */
    if (!(used_slots=qslots_used(master_q))) {
-      if (!(sge_make_tmpdir(master_q, lGetUlong(jep, JB_job_number), 
-            lGetUlong(jatep, JAT_task_number), 
+      if (!(sge_make_tmpdir(master_q, job_id, ja_task_id, 
           pw->pw_uid, pw->pw_gid, tmpdir))) {
          sprintf(err_str, MSG_SYSTEM_CANTMAKETMPDIR);
          DEXIT;
          return -2;
       }
    } else {
-      if(!(sge_get_tmpdir(master_q, 
-                          lGetUlong(jep, JB_job_number), 
-                          lGetUlong(jatep, JAT_task_number), 
-                          tmpdir))) {
+      if(!(sge_get_tmpdir(master_q, job_id, ja_task_id, tmpdir))) {
          sprintf(err_str, MSG_SYSTEM_CANTGETTMPDIR);
          DEXIT;
          return -2;
@@ -580,11 +588,11 @@ char *err_str
    var_list_set_string(&environmentList, "HOSTNAME", lGetHost(master_q, QU_qhostname));
    var_list_set_string(&environmentList, "QUEUE", lGetString(master_q, QU_qname));
    /* JB: TODO (ENV): shouldn't we better have a SGE_JOB_ID? */
-   var_list_set_u32(&environmentList, "JOB_ID", lGetUlong(jep, JB_job_number));
+   var_list_set_u32(&environmentList, "JOB_ID", job_id);
   
    /* JG: TODO (ENV): shouldn't we better use SGE_JATASK_ID and have an additional SGE_PETASK_ID? */
    if (job_is_array(jep)) {
-      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_ID", lGetUlong(jatep, JAT_task_number));
+      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_ID", ja_task_id);
    } else {
       var_list_set_string(&environmentList, VAR_PREFIX "TASK_ID", "undefined");
    }
@@ -620,7 +628,7 @@ char *err_str
    } else {
       if (lGetString(jep, JB_script_file) != NULL) {
          sprintf(script_file, "%s/%s/" u32, execd_spool_dir, EXEC_DIR, 
-                 lGetUlong(jep, JB_job_number));
+                 job_id);
       } else { 
          strcpy(script_file, lGetString(lGetElemStr(environmentList, VA_variable, "JOB_NAME"), VA_value));
       }
@@ -637,8 +645,8 @@ char *err_str
    sge_get_path(lGetList(jep, JB_shell_list), cwd, 
                 lGetString(jep, JB_owner),
                 petep == NULL ? lGetString(jep, JB_job_name) : lGetString(petep, PET_name), 
-                lGetUlong(jep, JB_job_number), 
-                job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
+                job_id,
+                job_is_array(jep) ? ja_task_id : 0,
                 SGE_SHELL, shell_path);
 
    if (shell_path[0] == 0)
@@ -772,14 +780,14 @@ char *err_str
    sge_get_path(lGetList(jep, JB_stdout_path_list), cwd, 
                 lGetString(jep, JB_owner), 
                 lGetString(jep, JB_job_name),
-                lGetUlong(jep, JB_job_number),
-                job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
+                job_id,
+                job_is_array(jep) ? ja_task_id : 0,
                 SGE_STDOUT, stdout_path);
    sge_get_path(lGetList(jep, JB_stderr_path_list), cwd,
                 lGetString(jep, JB_owner), 
                 lGetString(jep, JB_job_name),
-                lGetUlong(jep, JB_job_number), 
-                job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
+                job_id,
+                job_is_array(jep) ? ja_task_id : 0,
                 SGE_STDERR, stderr_path);
 
    fprintf(fp, "stdout_path=%s\n", stdout_path);
@@ -888,8 +896,8 @@ char *err_str
       sge_get_path(lGetList(jep, JB_stdout_path_list), cwd, 
                    lGetString(jep, JB_owner), 
                    lGetString(jep, JB_job_name), 
-                   lGetUlong(jep, JB_job_number), 
-                   job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
+                   job_id,
+                   job_is_array(jep) ? ja_task_id : 0,
                    SGE_PAR_STDOUT, pe_stdout_path);
       fprintf(fp, "pe_stdout_path=%s\n", pe_stdout_path);
 
@@ -897,8 +905,8 @@ char *err_str
       sge_get_path(lGetList(jep, JB_stderr_path_list), cwd,
                    lGetString(jep, JB_owner), 
                    lGetString(jep, JB_job_name), 
-                   lGetUlong(jep, JB_job_number), 
-                   job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
+                   job_id,
+                   job_is_array(jep) ? ja_task_id : 0,
                    SGE_PAR_STDERR, pe_stderr_path);
       fprintf(fp, "pe_stderr_path=%s\n", pe_stderr_path);
    }
@@ -918,7 +926,7 @@ char *err_str
    /* the following values are needed by the reaper */
    if (sge_unparse_ma_list(lGetList(jep, JB_mail_list), 
             mail_str, sizeof(mail_str))) {
-      ERROR((SGE_EVENT, MSG_MAIL_MAILLISTTOOLONG_U, u32c(lGetUlong(jep, JB_job_number))));
+      ERROR((SGE_EVENT, MSG_MAIL_MAILLISTTOOLONG_U, u32c(job_id)));
    }
    fprintf(fp, "mail_list=%s\n", mail_str);
    fprintf(fp, "mail_options=" u32 "\n", lGetUlong(jep, JB_mail_options));
@@ -938,10 +946,10 @@ char *err_str
    } else {
       fprintf(fp, "job_name=%s\n", lGetString(jep, JB_job_name));
    }
-   fprintf(fp, "job_id="u32"\n", lGetUlong(jep, JB_job_number));
-   fprintf(fp, "ja_task_id="u32"\n", job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0);
+   fprintf(fp, "job_id="u32"\n", job_id);
+   fprintf(fp, "ja_task_id="u32"\n", job_is_array(jep) ? ja_task_id : 0);
    if(petep != NULL) {
-      fprintf(fp, "pe_task_id=%s\n", lGetString(petep, PET_id));
+      fprintf(fp, "pe_task_id=%s\n", pe_task_id);
    }
    fprintf(fp, "account=%s\n", (lGetString(jep, JB_account) ? lGetString(jep, JB_account) : DEFAULT_ACCOUNT));
    if(petep != NULL) {
@@ -1107,7 +1115,7 @@ char *err_str
       }
      
       if(petep != NULL) {
-         fprintf(fp, "pe_task_id=%s\n", lGetString(petep, PET_id));
+         fprintf(fp, "pe_task_id=%s\n", pe_task_id);
       }   
 
       if(JB_NOW_IS_QLOGIN(jb_now) || JB_NOW_IS_QRSH(jb_now) 
@@ -1143,7 +1151,7 @@ char *err_str
                fprintf(fp, "qrsh_tmpdir=%s\n", tmpdir);
 
                if(petep != NULL) {
-                  fprintf(fp, "qrsh_pid_file=%s/pid.%s\n", tmpdir, lGetString(petep, PET_id));
+                  fprintf(fp, "qrsh_pid_file=%s/pid.%s\n", tmpdir, pe_task_id);
                } else {
                   fprintf(fp, "qrsh_pid_file=%s/pid\n", tmpdir);
                }
@@ -1266,21 +1274,21 @@ char *err_str
       strcpy(sge_mail_start, sge_ctime(lGetUlong(jatep, JAT_start_time)));
       if (VALID(MAIL_AT_BEGINNING, mail_options)) {
          if (job_is_array(jep)) {
-            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_UUS, u32c(lGetUlong(jep, JB_job_number)),
-                    u32c(lGetUlong(jatep, JAT_task_number)), lGetString(jep, JB_job_name));
+            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_UUS, u32c(job_id),
+                    u32c(ja_task_id), lGetString(jep, JB_job_name));
             sprintf(sge_mail_body, MSG_MAIL_STARTBODY_UUSSSSS,
-                u32c(lGetUlong(jep, JB_job_number)),
-                u32c(lGetUlong(jatep, JAT_task_number)),
+                u32c(job_id),
+                u32c(ja_task_id),
                 lGetString(jep, JB_job_name),
                 lGetString(jep, JB_owner), 
                 lGetString(master_q, QU_qname),
                 lGetHost(master_q, QU_qhostname), sge_mail_start);
          } 
          else {
-            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_US, u32c(lGetUlong(jep, JB_job_number)),
+            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_US, u32c(job_id),
                lGetString(jep, JB_job_name));
             sprintf(sge_mail_body, MSG_MAIL_STARTBODY_USSSSS,
-                u32c(lGetUlong(jep, JB_job_number)),
+                u32c(job_id),
                 lGetString(jep, JB_job_name),
                 lGetString(jep, JB_owner),
                 lGetString(master_q, QU_qname),
@@ -1353,13 +1361,13 @@ char *err_str
 
       char ccname[1024];
       sprintf(ccname, "KRB5CCNAME=FILE:/tmp/krb5cc_%s_" u32, "sge",
-	      lGetUlong(jep, JB_job_number));
+	      job_id);
       putenv(ccname);
    }
 
    DPRINTF(("**********************CHILD*********************\n"));
    shepherd_name = SGE_SHEPHERD;
-   sprintf(ps_name, "%s-"u32, shepherd_name, lGetUlong(jep, JB_job_number));
+   sprintf(ps_name, "%s-"u32, shepherd_name, job_id);
 
    if (conf.shepherd_cmd && strlen(conf.shepherd_cmd) && 
       strcasecmp(conf.shepherd_cmd, "none")) {
@@ -1404,7 +1412,7 @@ char *err_str
 
    fp = fopen("error", "w");
    if (fp) {
-      fprintf(fp, "failed to exec shepherd for job" u32"\n", lGetUlong(jep, JB_job_number));
+      fprintf(fp, "failed to exec shepherd for job" u32"\n", job_id);
       fclose(fp);
    }
 

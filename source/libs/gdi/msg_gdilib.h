@@ -935,12 +935,14 @@
 
 /* sge_job_jatask.c */
 
-#define MSG_JOB_REJECTED_NO_TASK_LIST  _("job "u32" was rejected because it was not possible to create task list\n")
-#define MSG_JOB_JLPPNULL              _("jlpp == NULL in job_add_job()\n")
-#define MSG_JOB_JEPNULL               _("jep == NULL in job_add_job()\n")
-#define MSG_JOB_JOBALREADYEXISTS_U    _("can't add job \"" U32CFormat "\" - job already exists\n") 
-#define MSG_JOB_NULLNOTALLOWEDT       _("job rejected: 0 is an invalid task id\n")
-#define MSG_JOB_NOIDNOTALLOWED        _("job rejected: Job comprises no tasks in its id lists") 
+#define MSG_JOB_REJECTED_NO_TASK_LIST     _("job "u32" was rejected because it was not possible to create task list\n")
+#define MSG_JOB_JLPPNULL                  _("jlpp == NULL in job_add_job()\n")
+#define MSG_JOB_JEPNULL                   _("jep == NULL in job_add_job()\n")
+#define MSG_JOB_JOBALREADYEXISTS_U        _("can't add job \"" U32CFormat "\" - job already exists\n") 
+#define MSG_JOB_NULLNOTALLOWEDT           _("job rejected: 0 is an invalid task id\n")
+#define MSG_JOB_NOIDNOTALLOWED            _("job rejected: Job comprises no tasks in its id lists") 
+#define MSG_JOB_JOB_JATASK_ID_UU          _(U32CFormat"."U32CFormat)
+#define MSG_JOB_JOB_JATASK_PETASK_ID_UUS  _(U32CFormat"."U32CFormat" task "SFN)
 
 /* 
 ** sge_c_event.c

@@ -42,6 +42,7 @@
 #include "sge_conf.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
+#include "sge_job_jatask.h"
 #include "sge_pe_taskL.h"
 #include "sge_peL.h"
 #include "sge_log.h"
@@ -70,6 +71,7 @@
 #include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sge_prog.h"
+#include "get_path.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -699,13 +701,14 @@ lListElem *petep
 
 #ifdef COMPILE_DC
 int register_at_ptf(
-lListElem *jep,
-lListElem *jatep,
-lListElem *petep 
+lListElem *job,
+lListElem *ja_task,
+lListElem *pe_task 
 ) {
-   const char *task_id_str=NULL;
-   u_long32 jobid;   
-   u_long32 jataskid;   
+   u_long32 job_id;   
+   u_long32 ja_task_id;   
+   const char *pe_task_id = NULL;
+
    int success, newerrno;
    FILE *fp;
    SGE_STRUCT_STAT sb;
@@ -719,8 +722,11 @@ lListElem *petep
 #endif   
    DENTER(TOP_LAYER, "register_at_ptf");
 
-   jobid = lGetUlong(jep, JB_job_number);
-   jataskid = lGetUlong(jatep, JAT_task_number);
+   job_id = lGetUlong(job, JB_job_number);
+   ja_task_id = lGetUlong(ja_task, JAT_task_number);
+   if (pe_task != NULL) { 
+      pe_task_id = lGetString(pe_task, PET_id);
+   }
 
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
    /**
@@ -728,26 +734,21 @@ lListElem *petep
     **/
    
    /* open addgrpid file */
-   /* JG: TODO (254): better use function to retrieve paths, see utilib */
-   if (petep != NULL) { 
-      task_id_str = lGetString(petep, PET_id);
-      sprintf(addgrpid_path, ACTIVE_DIR"/"u32"."u32"/%s/"ADDGRPID, jobid, jataskid, 
-               task_id_str);
-   } else {
-      sprintf(addgrpid_path, ACTIVE_DIR"/"u32"."u32"/"ADDGRPID, jobid, jataskid);
-   }
-   DPRINTF(("Registering job "u32"."u32" task \"%s\" with PTF\n", jobid, jataskid, 
-            task_id_str?task_id_str:""));
+   sge_get_active_job_file_path(addgrpid_path, SGE_PATH_MAX,
+                                job_id, ja_task_id, pe_task_id, ADDGRPID);
+   DPRINTF(("Registering job %s with PTF\n", 
+            job_get_id_string(job_id, ja_task_id, pe_task_id)));
 
    if (SGE_STAT(addgrpid_path, &sb) && errno == ENOENT) {
-      DPRINTF(("still waiting for addgrpid of job "u32"."u32"\n", 
-         jobid, jataskid));
+      DPRINTF(("still waiting for addgrpid of job %s\n", 
+         job_get_id_string(job_id, ja_task_id, pe_task_id)));
       DEXIT;
       return(1);
    }  
 
    if (!(fp = fopen(addgrpid_path, "r"))) {
-      ERROR((SGE_EVENT, MSG_EXECD_NOADDGIDOPEN_SUUS, addgrpid_path, u32c(jobid), u32c(jataskid), strerror(errno)));
+      ERROR((SGE_EVENT, MSG_EXECD_NOADDGIDOPEN_SSS, addgrpid_path, 
+             job_get_id_string(job_id, ja_task_id, pe_task_id), strerror(errno)));
       DEXIT;
       return(-1);
    }
@@ -765,8 +766,10 @@ lListElem *petep
       int ptf_error;
 
       DPRINTF(("Register job with AddGrpId at "pid_t_fmt" PTF\n", addgrpid));
-      if ((ptf_error = ptf_job_started(addgrpid, task_id_str, jep, jataskid))) {
-         ERROR((SGE_EVENT, MSG_JOB_NOREGISTERPTF_UUS, u32c(jobid), u32c(jataskid), ptf_errstr(ptf_error)));
+      if ((ptf_error = ptf_job_started(addgrpid, pe_task_id, job, ja_task_id))) {
+         ERROR((SGE_EVENT, MSG_JOB_NOREGISTERPTF_SS, 
+                job_get_id_string(job_id, ja_task_id, pe_task_id), 
+                ptf_errstr(ptf_error)));
          DEXIT;
          return (1);
       }
@@ -778,28 +781,30 @@ lListElem *petep
       lListElem *jr;
 
       sprintf(addgrpid_str, pid_t_fmt, addgrpid);
-      if ((jr=get_job_report(jobid, jataskid, task_id_str)))
+      if ((jr=get_job_report(job_id, ja_task_id, pe_task_id)))
          lSetString(jr, JR_osjobid, addgrpid_str); 
-      DPRINTF(("job "u32"."u32" addgrpid = %s\n", jobid, jataskid, addgrpid_str));
+      DPRINTF(("job %s: addgrpid = %s\n", 
+               job_get_id_string(job_id, ja_task_id, pe_task_id), addgrpid_str));
    }
 #else
    /* read osjobid if possible */
-   if (petep != NULL) {
-      task_id_str = lGetString(petep, PET_id);
-      sprintf(osjobid_path, ACTIVE_DIR"/"u32"."u32"/%s/"OSJOBID, jobid, jataskid, task_id_str);
-   } else {
-      sprintf(osjobid_path, ACTIVE_DIR"/"u32"."u32"/"OSJOBID, jobid, jataskid);
-   }
-   DPRINTF(("Registering job "u32"."u32" task \"%s\" with PTF\n", jobid, jataskid, task_id_str?task_id_str:""));
+   sge_get_active_job_file_path(osjobid_path, SGE_PATH_MAX,
+                                job_id, ja_task_id, pe_task_id, OSJOBID);
+   
+   DPRINTF(("Registering job %s with PTF\n", 
+            job_get_id_string(job_id, ja_task_id, pe_task_id)));
 
    if (SGE_STAT(osjobid_path, &sb) && errno == ENOENT) {
-      DPRINTF(("still waiting for osjobid of job "u32"\n", jobid));
+      DPRINTF(("still waiting for osjobid of job %s\n", 
+            job_get_id_string(job_id, ja_task_id, pe_task_id)));
       DEXIT;
       return 1;
    } 
 
    if (!(fp=fopen(osjobid_path, "r"))) {
-      ERROR((SGE_EVENT, MSG_EXECD_NOOSJOBIDOPEN_SUUS, osjobid_path, u32c(jobid), u32c(jataskid), strerror(errno)));
+      ERROR((SGE_EVENT, MSG_EXECD_NOOSJOBIDOPEN_SSS, osjobid_path, 
+             job_get_id_string(job_id, ja_task_id, pe_task_id), 
+             strerror(errno)));
       DEXIT;
       return -1;
    }
@@ -815,8 +820,10 @@ lListElem *petep
 
    {
       int ptf_error;
-      if ((ptf_error = ptf_job_started(osjobid, task_id_str, jep, jataskid))) {
-         ERROR((SGE_EVENT, MSG_JOB_NOREGISTERPTF_UUS,  u32c(jobid), u32c(jataskid), ptf_errstr(ptf_error)));
+      if ((ptf_error = ptf_job_started(osjobid, pe_task_id, job, ja_task_id))) {
+         ERROR((SGE_EVENT, MSG_JOB_NOREGISTERPTF_SS,  
+                job_get_id_string(job_id, ja_task_id, pe_task_id), 
+                ptf_errstr(ptf_error)));
          DEXIT;
          return -1;
       }
@@ -828,9 +835,11 @@ lListElem *petep
       lListElem *jr;
 
       sprintf(osjobid_str, OSJOBID_FMT, osjobid);
-      if ((jr=get_job_report(jobid, jataskid, task_id_str)))
+      if ((jr=get_job_report(job_id, ja_task_id, pe_task_id)))
          lSetString(jr, JR_osjobid, osjobid_str); 
-      DPRINTF(("job "u32"."u32" osjobid = %s\n", jobid, jataskid, osjobid_str));
+      DPRINTF(("job %s: osjobid = %s\n", 
+               job_get_id_string(job_id, ja_task_id, pe_task_id),
+               osjobid_str));
    }
 #endif
 

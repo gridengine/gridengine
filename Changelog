@@ -1,3 +1,9 @@
+JG-2002-05-22-1: Cleanup:   Use a common function call to build paths in a jobs
+                            active_jobs directory.
+                            Use a common function call to output 
+                            job/jatask/petask ids.
+                 Issues:    #254, #258
+
 JG-2002-05-22-0: Doc:       Fixed description of the environment variable 
                             SGE_TASK_ID for non array jobs in submit man page.
 

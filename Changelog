@@ -1,3 +1,8 @@
+CR-2003-03-05-0  Testsuite: - only test job environment variable TZ if it is
+                              set on qmaster host environment
+                            - fixed bug in handle_vi_edit() when 4th parameter
+                              string is empty
+
 CR-2003-03-04-1  Bugfix:    Fixed compiler warnings for glinux systems in
                             qevent.c module
 

@@ -188,7 +188,7 @@ proc job_environment_qsh_job { array arguments } {
 
 
 proc job_environment_amount {} {
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT env
 
 
    set known_variables "SGE_ROOT"
@@ -201,7 +201,9 @@ proc job_environment_amount {} {
    lappend known_variables "SGE_O_MAIL"
    lappend known_variables "SGE_O_PATH"
    lappend known_variables "SGE_O_SHELL"
-   lappend known_variables "SGE_O_TZ"
+   if { [ info exists env(TZ)] } {
+      lappend known_variables "SGE_O_TZ"
+   }
    lappend known_variables "SGE_O_WORKDIR"
    lappend known_variables "ARC"
    lappend known_variables "SGE_CKPT_ENV"
@@ -228,7 +230,9 @@ proc job_environment_amount {} {
    lappend known_variables "SHELL"
    lappend known_variables "TMPDIR"
    lappend known_variables "TMP"
-   lappend known_variables "TZ"
+   if { [ info exists env(TZ)] } {
+      lappend known_variables "TZ"
+   }
    lappend known_variables "USER"
 
    puts $CHECK_OUTPUT "checking number of environment variables ..."

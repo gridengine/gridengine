@@ -91,8 +91,9 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
    global CHECK_OUTPUT env CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
 
 
+   debug_puts "handle_vi_edit(1)"
    # removing * at end of expected_result (expect has problems with it)
-   while { [set help2 [string length $expected_result]] >= 0 } {
+   while { [set help2 [string length $expected_result]] > 0 } {
       set help1 [string last "*" $expected_result]
       incr help2 -1
       if { $help1 == $help2 } {
@@ -102,8 +103,12 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          break
       }
    }
+
+   debug_puts "handle_vi_edit(2)"
+
+
    # removing * at end of expected_result (expect has problems with it)
-   while { [set help2 [string length $additional_expected_result]] >= 0 } {
+   while { [set help2 [string length $additional_expected_result]] > 0 } {
       set help1 [string last "*" $additional_expected_result]
       incr help2 -1
       if { $help1 == $help2 } {
@@ -113,8 +118,11 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          break
       }
    }
+
+   debug_puts "handle_vi_edit(3)"
+
    # removing * at end of expected_result (expect has problems with it)
-   while { [set help2 [string length $additional_expected_result2]] >= 0 } {
+   while { [set help2 [string length $additional_expected_result2]] > 0 } {
       set help1 [string last "*" $additional_expected_result2]
       incr help2 -1
       if { $help1 == $help2 } {
@@ -124,8 +132,11 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          break
       }
    }
+
+   debug_puts "handle_vi_edit(4)"
+
    # removing * at end of expected_result (expect has problems with it)
-   while { [set help2 [string length $additional_expected_result3]] >= 0 } {
+   while { [set help2 [string length $additional_expected_result3]] > 0 } {
       set help1 [string last "*" $additional_expected_result3]
       incr help2 -1
       if { $help1 == $help2 } {
@@ -138,7 +149,8 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
 
 
 
-   
+   debug_puts "handle_vi_edit(5)"
+
    set env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
    set result -100
 #  set id [ eval open_spawn_process "$prog_binary" "$prog_args" ]
@@ -217,6 +229,8 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       send -i $sp_id ":wq\n"
       set timeout 100
       set doStop 0
+      debug_puts "handle_vi_edit(6)"
+
       if { [string compare "" $expected_result ] == 0 } {
          set timeout 0
          set doStop 0

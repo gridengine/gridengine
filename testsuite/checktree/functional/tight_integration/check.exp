@@ -66,11 +66,6 @@ set check_functions ""
 lappend check_functions "tight_integration_setup"
 lappend check_functions "tight_integration_function"
 lappend check_functions "tight_integration_massive"
-#lappend check_functions "tight_integration_"
-#lappend check_functions "tight_integration_"
-#lappend check_functions "tight_integration_"
-#lappend check_functions "tight_integration_"
-#lappend check_functions "tight_integration_"
 lappend check_functions "tight_integration_cleanup"
 
 # constants to be used by the tight integration test
@@ -258,7 +253,6 @@ proc tight_integration_function {} {
    set finished 0
    set jobid 0
    set job_finished 0
-   
    while {$job_finished == 0} {
       set job_finished [tight_integration_monitor $id started finished jobid]
    }

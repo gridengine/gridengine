@@ -999,6 +999,7 @@ proc move_qmaster_spool_dir { new_spool_dir } {
 
   set old_spool_dir [ get_qmaster_spool_dir ]
  
+  
   if { [ string compare $old_spool_dir $new_spool_dir ] == 0 } {
      add_proc_error "move_qmaster_spool_dir" -1 "old and new spool dir are the same"
      return
@@ -1015,7 +1016,6 @@ proc move_qmaster_spool_dir { new_spool_dir } {
      return
   } 
 
-  
   # change qmaster spool dir and shutdown the qmaster and scheduler
 #  this was the old way before 5.3.beta2. Now we can't change qmaster_spool_dir in
 #  a running system. We have to do it manually.
@@ -1029,7 +1029,6 @@ proc move_qmaster_spool_dir { new_spool_dir } {
   set newVal [join $newVal1 {\/}]
 
   lappend vi_commands ":%s/^qmaster_spool_dir .*$/qmaster_spool_dir    $newVal/\n"
-
   set vi_binary [get_binary_path $CHECK_HOST "vim"]
   set result [ handle_vi_edit "$vi_binary" "$CHECK_PRODUCT_ROOT/default/common/configuration" "$vi_commands" "" ] 
   puts $CHECK_OUTPUT "result: \"$result\""
@@ -1037,12 +1036,14 @@ proc move_qmaster_spool_dir { new_spool_dir } {
      add_proc_error "shadowd_kill_master_and_scheduler" -1 "edit error when changing global configuration"
   } 
 
+  puts $CHECK_OUTPUT "make copy of spool directory ..."
   # now copy the entries  
   set result [ start_remote_tcl_prog $CHECK_CORE_MASTER $CHECK_USER "file_procedures.tcl" "copy_directory" "$old_spool_dir $new_spool_dir" ]
   if { [ string first "no errors" $result ] < 0 } {
       add_proc_error "shadowd_kill_master_and_scheduler" -1 "error moving qmaster spool dir"
   }
 
+  puts $CHECK_OUTPUT "starting up qmaster ..."
   startup_qmaster
   wait_for_load_from_all_queues 300
 
@@ -6469,9 +6470,12 @@ proc startup_qmaster {} {
    }
    if { $schedd_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
+      puts $CHECK_OUTPUT "starting schedd as $startup_user" 
       start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
    } else {
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd" ""
+      puts $CHECK_OUTPUT "starting schedd as $startup_user" 
+      set result [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd" ";sleep 5"]
+      puts $CHECK_OUTPUT $result
    }
    
 

@@ -1,3 +1,7 @@
+DT-2004-12-31-0: Bugfix:    o Backed out some changes from DT-2004-12-29-0
+                              which conflicted with aimk -j 2
+                 Changed:   DRMAA Makefiles
+
 DT-2004-12-30-2: Docs:      o Updated JavaDocs
                  Changed:   javadocs, DRMAA
 

@@ -1,3 +1,5 @@
+CR-2001-07-23-0: Bugfix: qstat -j (Issue#: 2) causes 
+                 "operation not implemented for target" error
 
 EB-2001-07-23-0: Changes some html files
                  - link to contributor agreement

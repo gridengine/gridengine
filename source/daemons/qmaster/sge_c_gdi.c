@@ -1354,6 +1354,7 @@ char *commproc
    case SGE_EXECHOST_LIST:
    case SGE_JOB_LIST:
    case SGE_ZOMBIE_LIST:
+   case SGE_JOB_SCHEDD_INFO:
       
       /* host must be SGE_ADMINHOST_LIST */
       if ( !sge_locate_host(host, SGE_ADMINHOST_LIST) &&

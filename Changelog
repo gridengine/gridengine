@@ -1,15 +1,15 @@
-CR-2002-06-25-1: Bugfix:    script syntax error in exe host installation
+CR-2002-06-25-1: Bugfix:    script syntax error in exec host installation
                  Issue:     #297
                  Bugtraq:   #4705893
 
-AA-2002-06-19-0: I18N:      gettext build script
+AA-2002-06-19-0: Change:    i18n gettext build script
 
 CR-2002-06-17-2: Bugfix:    removed old i18n setup code
 
 CR-2002-06-17-1: Bugfix:    Don't produce infotext error message "Binary not
                             compiled with gettext!"
 
-AA-2002-06-14-0: FIX:       Job dependency display in qmon
+AA-2002-06-14-0: Bugfix:    Job dependency display in qmon
                  Issue:     #275 affects only qmon
                  Bugtraq:   #4706929
 
@@ -28,10 +28,10 @@ CR-2002-06-13-4: Testsuite: merged qrsh test for hold_jid and h option from
 CR-2002-06-13-3: Testsuite: enhanced qstat test for -l/-q/-pe/-U option tests
                  Issue:     #286
 
-AH-2002-06-12-0: Bugfix:    Prevent use of soft requests for consumables. This
-                            addresses problems related to IZ #223 / BT #4700286. 
-                            However it does not introduce debitation for soft
-                            resource requests.
+AH-2002-06-12-0: Bugfix:    Prevent use of soft requests for consumables.
+                            This addresses problems related to IZ #223 / BT
+                            #4700286.  However it does not introduce
+                            debitation for soft resource requests.
 
 CR-2002-06-12-0: Testsuite: new testsuite checks (merge from MT)
                  Issue:     #140
@@ -43,8 +43,9 @@ EB-2002-06-11-0: Bugfix:    qstat shows waiting jobs of other PEs
                  Bugtraq:   #4699665
                  Changed:   qstat
 
-AH-2002-06-10-0: Bugfix:    Complex default value was not used for load thresholds
-                            in cases when no load value was available.
+AH-2002-06-10-0: Bugfix:    Complex default value was not used for load
+                            thresholds in cases when no load value was
+                            available.
                  Issue:     #223
                  Bugtraq:   #4700286
 
@@ -78,7 +79,6 @@ JG-2002-06-05-1: Bugfix:    Error handling when reading configuration at
                  Issue:     #226
                  Bugtraq:   #4665780
 
-
 AS-2002-06-05-2: Change:    print edit comment when cluster config is
                             created in inst_sge script
                  Issue:     #213
@@ -99,8 +99,8 @@ SD-2002-06-03-0: Bugfix:    Fixed GRD 5.1.9 to SGEEE 5.3 upgrade
 JG-2002-05-31-0: Enhancem.  rshd: new switch -i: ignore /etc/nologin
                  Issue:     #272
 
-AH-2002-05-29-0: Bugfix:    Fix bug allowing non-privileged users to submit jobs 
-                            with priority higher than 0
+AH-2002-05-29-0: Bugfix:    Fix bug allowing non-privileged users to submit
+                            jobs with priority higher than 0
                  Issue:     #271
                  Bugtraq:   #4692957
 
@@ -108,8 +108,8 @@ JG-2002-05-29-0: Enhancem.  Allow specification of arguments to
                             [rsh|rlogin|qlogin]_[daemon|command]
                  Issue:     #232
 
-AH-2002-05-28-0: Bugfix:    Fix messages printed when GDI client fails contacting 
-                            qmaster
+AH-2002-05-28-0: Bugfix:    Fix messages printed when GDI client fails
+                            contacting qmaster
 
 JG-2002-05-27-0: Bugfix:    qsh ignored -S <shell> in sge_request(5) files
                  Issue:     #250
@@ -162,11 +162,11 @@ AH-2002-05-13-0: Change:    Do no longer flush events immediately after
                             orders arrival to 'guarantee' scheduling is done
                             not more often than specified with
                             schedule_interval in sched_conf(5).
-                 Changes:   sge_qmaster
+                 Changed:   sge_qmaster
 
 EB-2002-04-13-0: Bugfix:    qconf -se shows "reschedule_unknown_list" param. 
                  Issues:    #248 
-                 Changes:   sge_qmaster, qacct, qconf
+                 Changed:   sge_qmaster, qacct, qconf
 
 CR-2002-05-06-0: Testsuite: fixed check dependencies
 
@@ -190,14 +190,14 @@ JG-2002-04-30-0: Bugfix:    Buffer for task_id of pe task was too small.
                             This could cause a buffer overflow and probably
                             crashes of execd.
                  Bugtraq:   #4677087    
-                 Changes:   sge_execd           
+                 Changed:   sge_execd           
 
 EB-2002-04-29-1: Bugfix:    schedd bugs reported by Patrik Koch
                             on dev mailing list (Mon, 15 Apr 2002) 
                             - Memory leak
                  Issues:    #243
                  Bugtraq:   #4676340 
-                 Changes:   sge_schedd
+                 Changed:   sge_schedd
 
 AH-2002-04-29-0: Change:    In the sched_conf(5) man page it was wrongly 
                             documented that the maxujobs setting is only in 
@@ -219,7 +219,7 @@ AH-2002-04-26-0: Bugfix:    - queue nsuspend > 1 was not used to suspend
                               logging and break user sort policy
                  Issue:     #240
                  Bugtraq:   #4675416
-                 Changes:   sge_schedd
+                 Changed:   sge_schedd
 
 CR-2002-04-25-1: Testsuite: - access_list test:
                               -> submit jobs with 30 sec instead of 15 secs
@@ -255,7 +255,7 @@ JG-2002-04-19-0: Bugfix:    Interactive jobs of any user failed if root had
                  Enhancem.: More detailed description in error output
                  Issue:     #237
                  Bugtraq:   #4670669
-                 Changes:   sge_shepherd qsh rshd
+                 Changed:   sge_shepherd qsh rshd
 
 JG-2002-04-18-1: Enhancem.  Improved verbose output in qmake.
                             Start tasks on localhost also per qrsh - slower, 
@@ -269,7 +269,7 @@ JG-2002-04-18-0: Bugfix:    If more then 1 task of a parallel job was started
                             an entry in the jobs config.
                  Issue:     #236
                  Bugtraq:   #4670664
-                 Changes:   sge_shepherd, sge_execd, qrsh_starter
+                 Changed:   sge_shepherd, sge_execd, qrsh_starter
 
 CR-2002-04-17-0: Testsuite: fixed tcl error on using help command line
                             parameter
@@ -301,13 +301,13 @@ EB-2002-04-11-0: Bugfix:    Solaris processor sets / Migration script
                             - fix: checkpointed job migration on bad exit state
                  Issue:     #229, #174
                  Bugtraq:   #4668148
-                 Changes:   sge_shepherd
+                 Changed:   sge_shepherd
 
 JG-2002-04-11-0: Bugfix:    In simulation mode, job reports were not flushed 
                             at (simulated) job end.
 
 JG-2002-04-08-0  Bugfix:    qrsh -h did debug output (a job object).
-                 Changes:   qrsh
+                 Changed:   qrsh
 
 CR-2002-04-08-0  Bugfix:    Fixed compiler warning in ptf.c
 
@@ -348,8 +348,8 @@ JG-2002-03-28-2: Testsuite: - sge_procedures: new functions shutdown_qmaster,
                               initializing new test to get time for first 
                               scheduling.
 
-AS-2002-03-28-0: CVS:       Created V53_TAG. --> SGE 5.3
---------------------------------------------------------
+AS-2002-03-28-0: CVS:       Created V53_TAG --> SGE 5.3
+-------------------------------------------------------
 
 JG-2002-03-28-1  Testsuite: Create HTML output after each run level.
 
@@ -2126,7 +2126,7 @@ JG-2001-07-24-0: Adoc: Function identifiers beginning with "-"
 CR-2001-07-23-0: Bugfix: qstat -j (Issue#: 2) causes 
                  "operation not implemented for target" error
 
-EB-2001-07-23-0: Changes some html files
+EB-2001-07-23-0: Changed some html files
                  - link to contributor agreement
                  - added $ARCH variable to path (gethostname)
                  - deleted empty line in client output

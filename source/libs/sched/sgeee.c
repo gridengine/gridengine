@@ -684,6 +684,8 @@ locate_department( lList *dept_list,
 }
 
 
+#if 0  /* SVD040130 - commented out until we support job classes */
+
 /*--------------------------------------------------------------------
  * locate_jobclass - locate the job class object by name
  *--------------------------------------------------------------------*/
@@ -698,9 +700,10 @@ locate_jobclass( lList *job_class_list,
    /*-------------------------------------------------------------
     * Look up the job class object by name
     *-------------------------------------------------------------*/
-
    return qinstance_list_locate2(job_class_list, name);
 }
+
+#endif
 
 #if 0
 /*--------------------------------------------------------------------
@@ -760,10 +763,7 @@ sge_set_job_refs( lListElem *job,
                   int queued)
 {
    lListElem *root;
-   lList *granted;
-   lListElem *pe, *granted_el;
    int is_enrolled_ja_task = (ja_task != NULL && tref == NULL) ? 1 : 0;
-   const char *pe_str;
 
    if (ref->task_jobclass) {
       free(ref->task_jobclass);
@@ -818,6 +818,9 @@ sge_set_job_refs( lListElem *job,
       lSetUlong(ref->project, UP_job_cnt, 0);
       lSetUlong(ref->project, UP_pending_job_cnt, 0);
    }
+
+
+#if 0 /* SVD040130 - commented out until we support job classes */
 
    /*-------------------------------------------------------------
     * locate job class object and save off reference
@@ -876,6 +879,8 @@ sge_set_job_refs( lListElem *job,
          }
       }
    }
+
+#endif
 
    /*-------------------------------------------------------------
     * locate share tree node and save off reference
@@ -2298,6 +2303,9 @@ static void calc_job_functional_tickets_pass1( sge_ref_t *ref,
     * Sum job class functional shares
     *-------------------------------------------------------------*/
 
+
+#if 0  /* SVD040130 - commented out until we support job classes */
+
    if (ref->task_jobclass) {
       int i;
       for(i=0; i<ref->num_task_jobclasses; i++)
@@ -2320,6 +2328,8 @@ static void calc_job_functional_tickets_pass1( sge_ref_t *ref,
       if(sum_shares || job_cnt<=1)
          *sum_of_jobclass_functional_shares += ref->jobclass_fshare;
    }
+
+#endif
 
    /*-------------------------------------------------------------
     * Sum job functional shares
@@ -2442,6 +2452,9 @@ calc_job_functional_tickets_pass2( sge_ref_t *ref,
                                  total_functional_tickets /
                                  sum_of_department_functional_shares);
 
+
+#if 0  /* SVD040130 - commented out until we support job classes */
+
    /*-------------------------------------------------------
     * calculate job class functional tickets for this job
     *-------------------------------------------------------*/
@@ -2469,6 +2482,8 @@ calc_job_functional_tickets_pass2( sge_ref_t *ref,
                                  total_functional_tickets /
                                  sum_of_jobclass_functional_shares);
 
+#endif
+
    /*-------------------------------------------------------
     * calculate job functional tickets for this job
     *-------------------------------------------------------*/
@@ -2477,6 +2492,9 @@ calc_job_functional_tickets_pass2( sge_ref_t *ref,
       job_functional_tickets = ((double)lGetUlong(ref->job, JB_priority) *
                                  (double)total_functional_tickets /
                                   sum_of_job_functional_shares);
+
+
+#if 0  /* SVD040130 - commented out until we support job classes */
 
    /*-------------------------------------------------------
     * calculate functional tickets for PE tasks
@@ -2507,6 +2525,8 @@ calc_job_functional_tickets_pass2( sge_ref_t *ref,
          i++;
       }
    }
+
+#endif
 
    /*-------------------------------------------------------
     * calculate functional tickets for this job
@@ -2570,6 +2590,9 @@ calc_job_override_tickets( sge_ref_t *ref,
 
    job_override_tickets += lGetUlong(ref->job, JB_override_tickets);
 
+
+#if 0  /* SVD040130 - commented out until we support job classes */
+
    if (ref->ja_task && ref->task_jobclass) {
       lListElem *granted_pe;
       double jobclass_otickets;
@@ -2596,6 +2619,8 @@ calc_job_override_tickets( sge_ref_t *ref,
           ((job_cnt = shared ? job_cnt : 1))))
          job_override_tickets += (otickets / job_cnt);
    }
+
+#endif
 
    REF_SET_OTICKET(ref, job_override_tickets);
 
@@ -4499,6 +4524,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    if(!has_pending_jobs || !has_queues)
       return 0;
 
+#if 0
    /* 
     * calculate the number of tickets for all jobs already 
     * running on the host 
@@ -4513,6 +4539,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
+#endif
 
    if (prof_is_active()) {
        u_long32 saved_logginglevel = log_state_get_log_level();
@@ -4669,6 +4696,7 @@ static void get_max_ptix(double *min, double *max, lList *job_list)
 }
 
 
+#if 0
 /* ----------------------------------------
 
    calculate_host_tickets()
@@ -4730,177 +4758,7 @@ calculate_host_tickets( lList **running,   /* JB_Type */
    DEXIT;
    return 0;
 }
-
-
-
-/*************************************************************************
-
-   sort_host_list_by_share_load
-
-   purpose:
-      sort host list according to a share load evaluation formula.
-
-   return values:
-      0 on success; -1 otherwise
-
-   input parameters:
-      hl             :  the host list to be sorted
-      centry_list    :  the complex entry list
-      formula        :  the share load evaluation formula (containing no blanks)
-
-   output parameters:
-      hl             :  the sorted host list
-
-*************************************************************************/
-int
-sort_host_list_by_share_load( lList *hl,
-                              lList *centry_list )
-{
-   lListElem *hlp                = NULL;
-   lListElem *global_host_elem   = NULL; 
-   lListElem *template_host_elem = NULL;
-
-   double total_SGE_tickets = 0;
-   double total_resource_capability_factor = 0.0;
-   double resource_allocation_factor = 0.0;
-   double s_load = 0.0;
-   u_long total_load = 0;
-#ifdef notdef
-   lListElem *host_complex;
-   lList *host_complex_attributes = centry_list;
 #endif
-
-   DENTER(TOP_LAYER, "sort_host_list_by_share_load");
-
-   /* collect  share load parameter totals  for each host*/
-   global_host_elem   = host_list_locate(hl, SGE_GLOBAL_NAME);    /* get "global" element pointer */
-   template_host_elem = host_list_locate(hl, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
-   for_each (hlp, hl) {
-      lDouble hlp_EH_sort_value;
-      /* EH_sort_value (i.e., load) should not be less than 1 */
-      
-      if (hlp == template_host_elem)
-         continue;                      /* don't treat template at all */
-
-      hlp_EH_sort_value = lGetDouble(hlp, EH_sort_value); 
- 
-      if ( ( hlp != global_host_elem ) && ( hlp_EH_sort_value < 1 ) ) {  /* don't treat global */
-         lSetDouble(hlp, EH_sort_value, 1);
-         hlp_EH_sort_value = (lDouble) 1;
-      } 
-
-      total_SGE_tickets += lGetDouble(hlp, EH_sge_tickets);
-
-      /* don't treat global and ERROR_LOAD_VAL */
-      if ( (hlp != global_host_elem) && (hlp_EH_sort_value != ERROR_LOAD_VAL) ) { 
-         total_resource_capability_factor +=  lGetDouble(hlp, EH_resource_capability_factor);
-      } 
-
-      if ( hlp_EH_sort_value != ERROR_LOAD_VAL ) {
-         total_load += hlp_EH_sort_value;
-      } 
-   }
-
-   if ( total_resource_capability_factor == 0.0)  {
-      global_host_elem   = host_list_locate(hl, SGE_GLOBAL_NAME);    /* get "global" element pointer */
-      template_host_elem = host_list_locate(hl, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
-      for_each(hlp, hl)  { 
-         if ( (hlp != global_host_elem) && (hlp != template_host_elem) &&  /* don't treat global and template */
-               !(lGetDouble(hlp, EH_sort_value) == ERROR_LOAD_VAL)) { 
-            lSetDouble(hlp, EH_resource_capability_factor, 1.0);
-            total_resource_capability_factor += 1.0;
-         } /* for_each(hlp, hl) */
-      }  /* don't treat global */
-   }  /* total_resource_capability_factor == 0.0 */ 
- 
-
-   /* Calculate share load parameter percentages for each host*/
-   global_host_elem   = host_list_locate(hl, SGE_GLOBAL_NAME);    /* get "global" element pointer */
-   template_host_elem = host_list_locate(hl, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
-   for_each (hlp, hl) {  
-
-      if (hlp == template_host_elem)
-         continue;
-
-      if ( (hlp != global_host_elem) ) { /* don't treat global */
-         lDouble hlp_EH_sort_value;
-
-         hlp_EH_sort_value = lGetDouble(hlp, EH_sort_value);
-
-         if (!(total_SGE_tickets == 0)){
-             lSetDouble(hlp, EH_sge_ticket_pct, (((double) lGetDouble(hlp, EH_sge_tickets))/((double) total_SGE_tickets))*100.0);
-         }
-         else {
-            lSetDouble(hlp, EH_sge_ticket_pct, 0.0);
-         }
-         lSetDouble(hlp, EH_resource_capability_factor_pct, (lGetDouble(hlp,EH_resource_capability_factor)/total_resource_capability_factor)*100);
-
-         if ( hlp_EH_sort_value != ERROR_LOAD_VAL ){
-            if (!total_load == 0) {
-               lSetDouble(hlp, EH_sge_load_pct, (hlp_EH_sort_value/((double) total_load))*100.0);
-            }
-            else {
-            lSetDouble(hlp, EH_sge_load_pct, 1.0);
-            }
-         } else {
-            lSetDouble(hlp, EH_sge_load_pct, (double) ERROR_LOAD_VAL);
-         }
-      } /* don't treat global */
-   } /* for_each(hlp, hl) */
-
-   /* Calculate share load quantities for each job */
-   global_host_elem   = host_list_locate(hl, SGE_GLOBAL_NAME);    /* get "global" element pointer */
-   template_host_elem = host_list_locate(hl, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
-
-   for_each (hlp, hl) {  
-      if (hlp == template_host_elem)
-         continue;
-
-      if ( hlp != global_host_elem ) { /* don't treat global */
-         if (!(lGetDouble(hlp, EH_sort_value)==ERROR_LOAD_VAL)){
-
-            resource_allocation_factor = (( lGetDouble(hlp, EH_resource_capability_factor_pct)) - ( lGetDouble(hlp,EH_sge_ticket_pct)));
-
-#ifdef notdef
-/*  REMOVE AFTER TESTING */
-            lSetUlong(hlp, EH_sge_load, (u_long) (((( lGetDouble(hlp, EH_resource_capability_factor_pct)) - ( lGetDouble(hlp,EH_sge_ticket_pct)))/( lGetDouble(hlp,EH_sge_load_pct)))*100.0 + 1000.0));
-#endif /* notdef */
-
-            if (resource_allocation_factor < 0) {
-               s_load = (((resource_allocation_factor)/(101.0 -  lGetDouble(hlp,EH_sge_load_pct)))*100.0);
-               if (s_load < -100000.0) {
-                  lSetUlong(hlp, EH_sge_load, 1);
-               } else {
-                  lSetUlong(hlp, EH_sge_load, (u_long) (((resource_allocation_factor)/(101.0 - lGetDouble(hlp,EH_sge_load_pct)))*100.0 + 100000.0));
-               }
-            } else {
-               lSetUlong(hlp, EH_sge_load, (u_long) (((resource_allocation_factor)/( lGetDouble(hlp,EH_sge_load_pct)))*100.0 + 100000.0));
-            } /* if resource_allocation_factor */
-         } else {
-            lSetUlong(hlp, EH_sge_load, 0);
-         } /* ERROR_LOAD ? */
-#ifdef notdef
-         lSetDouble(hlp, EH_sort_value,
-         load = scaled_mixed_load(lGetList(hlp, EH_load_list),
-         lGetList(hlp, EH_scaling_list),
-         host_complex_attributes,
-         (double)lGetUlong(hlp, EH_load_correction_factor)/100));
-#endif /* notdef */
-      } else {
-         lSetUlong(hlp, EH_sge_load, 0);
-      } /* don't treat global */
-   }
-
-  /* sort host list in descending order according to sge_load */
-
-   if (lPSortList(hl,"%I- %I+", EH_sge_load, EH_sort_value)) {
-      DEXIT;
-      return -1;
-   } else {
-      DEXIT;
-      return 0;
-   }
-}
 
 
 #ifdef MODULE_TEST

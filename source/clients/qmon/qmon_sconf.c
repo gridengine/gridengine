@@ -90,7 +90,6 @@ typedef struct _tSCEntry {
    int  flush_submit_secs;
    int  flush_finish_secs;
    int  queue_sort_method;
-   int  user_sort;
    char *load_adjustment_decay_time;
    char *load_formula;
    lList *job_load_adjustments;
@@ -126,10 +125,6 @@ static XtResource sc_resources[] = {
       sizeof(int), XtOffsetOf(tSCEntry, queue_sort_method), 
       XtRImmediate, NULL },
 
-   { "user_sort", "user_sort", XtRInt, 
-      sizeof(int), XtOffsetOf(tSCEntry, user_sort), 
-      XtRImmediate, NULL },
-
    { "job_load_adjustments", "job_load_adjustments", QmonRCE2_Type, 
       sizeof(lList *), XtOffsetOf(tSCEntry, job_load_adjustments), 
       XtRImmediate, NULL },
@@ -163,7 +158,6 @@ static Widget sconf_load_formula = 0;
 static Widget sconf_load_adjustments = 0;
 static Widget sconf_reprioritize_interval = 0;
 static Widget sconf_queue_sort_method = 0;
-static Widget sconf_user_sort = 0;
 static Widget sconf_job_info = 0;
 static Widget sconf_job_range = 0;
 
@@ -251,7 +245,6 @@ Widget parent
                            "sconf_reprioritize_interval", 
                                  &sconf_reprioritize_interval,
                            "sconf_queue_sort_method", &sconf_queue_sort_method,
-                           "sconf_user_sort", &sconf_user_sort,
                            "sconf_lad_timePB", &sconf_lad_timePB,
                            "sconf_schedule_intervalPB", 
                                  &sconf_schedule_intervalPB,
@@ -270,9 +263,6 @@ Widget parent
                      NULL);
       if (items && items[2])
          XtUnmanageChild(items[2]);
-   }
-   else {
-      XtUnmanageChild(sconf_user_sort);
    }
 
    XtAddCallback(sconf_main_link, XmNactivateCallback, 
@@ -442,10 +432,6 @@ lListElem *sep
    /* this depends on the kind queue_sort_method is represented */
    data.queue_sort_method = lGetUlong(sep, SC_queue_sort_method);
 
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
-      data.user_sort = lGetBool(sep, SC_user_sort);
-   }
-
    /*
    ** load adjustments need special treatment
    */
@@ -471,7 +457,6 @@ printf("->data.maxujobs: '%d'\n", data.maxujobs );
 printf("->data.flush_submit_secs: '%d'\n", data.flush_submit_secs );
 printf("->data.flush_finish_secs: '%d'\n", data.flush_finish_secs );
 printf("->data.queue_sort_method: '%d'\n", data.queue_sort_method );
-printf("->data.user_sort: '%d'\n", data.user_sort );
 printf("->data.load_adjustment_decay_time: '%s'\n", data.load_adjustment_decay_time ? data.load_adjustment_decay_time : "-NA-");
 printf("->data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-NA-");
 **/
@@ -546,7 +531,6 @@ printf("<-data.maxujobs: '%d'\n", data.maxujobs );
 printf("<-data.flush_submit_secs: '%d'\n", data.flush_submit_secs );
 printf("<-data.flush_finish_secs: '%d'\n", data.flush_finish_secs );
 printf("<-data.queue_sort_method: '%d'\n", data.queue_sort_method );
-printf("<-data.user_sort: '%d'\n", data.user_sort );
 printf("<-data.load_adjustment_decay_time: '%s'\n", data.load_adjustment_decay_time ? data.load_adjustment_decay_time : "-NA-");
 printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-NA-");
 **/
@@ -575,10 +559,6 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
    lSetUlong(sep, SC_flush_finish_sec, (u_long32) data.flush_finish_secs);
   
    lSetUlong(sep, SC_queue_sort_method, (u_long32) data.queue_sort_method);
-
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
-      lSetBool(sep, SC_user_sort, (u_long32) data.user_sort);
-   }
 
    /*
    ** load adjustments need special treatment

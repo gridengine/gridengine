@@ -346,6 +346,7 @@ _Insight_set_option("suppress", "PARM_NULL");
          return -1;
       }
 
+#if 0
       /* --------- QU_fshare */
       if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, QU_fshare)) {
          DEXIT;
@@ -356,6 +357,8 @@ _Insight_set_option("suppress", "PARM_NULL");
          DEXIT;
          return -1;
       }
+#endif
+
    }
 
    /* --------- QU_calendar */
@@ -777,12 +780,14 @@ const lListElem *qep
    FPRINTF((fp, "initial_state        %s\n", 
       lGetString(qep, QU_initial_state)));
 
+#if 0
    if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
       FPRINTF((fp, "fshare               %d\n", 
          (int)lGetUlong(qep, QU_fshare)));
       FPRINTF((fp, "oticket              %d\n", 
          (int)lGetUlong(qep, QU_oticket)));
    }
+#endif
 
    FPRINTF((fp, "s_rt                 %s\n", lGetString(qep, QU_s_rt)));
    FPRINTF((fp, "h_rt                 %s\n", lGetString(qep, QU_h_rt)));

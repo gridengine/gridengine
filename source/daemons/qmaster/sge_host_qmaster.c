@@ -481,10 +481,6 @@ int sub_command
             attr_mod_sub_list(alpp, new_host, EH_usage_scaling_list, HS_name, ep,
             sub_command, SGE_ATTR_USAGE_SCALING, SGE_OBJ_EXECHOST, 0); 
          }
-
-         /* ---- EH_resource_capability_factor */
-         attr_mod_double(ep, new_host, EH_resource_capability_factor, 
-            "resource_capability_factor");
       }
 
       if (lGetPosViaElem(ep, EH_report_variables)>=0) {

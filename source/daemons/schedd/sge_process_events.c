@@ -183,7 +183,7 @@ int event_handler_default_scheduler()
 
    if (rebuild_accesstree && !sgeee_mode) {
       DPRINTF(("### ### ### ###   REBUILDING ACCESS TREE  ### ### ### ###\n"));
-      sge_rebuild_access_tree(Master_Job_List, sconf_get_user_sort());
+      sge_rebuild_access_tree(Master_Job_List, 0);
       rebuild_accesstree = 0;
    }
 
@@ -467,8 +467,10 @@ DTRACE;
          QU_consumable_config_list,
          QU_projects,
          QU_xprojects,
+#if 0
          QU_fshare,
          QU_oticket,
+#endif
          QU_consumable_actual_list,
          QU_tagged4schedule,
          QU_tag,
@@ -700,9 +702,15 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
    }
 
    /* check user_sort: if it changes, rebuild accesstree */
+#if 0
    if (!old || (lGetBool(new, SC_user_sort) != lGetBool(old, SC_user_sort))) {
       rebuild_accesstree = 1;
    }
+#else
+   if (!old) {
+      rebuild_accesstree = 1;
+   }
+#endif
    
    /* check for valid load formula */ 
    {
@@ -789,11 +797,11 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
    switch (action) {
       case SGE_EMA_DEL:
          {
-            lListElem *ja_task;
-
             /* delete job category if necessary */
             sge_delete_job_category(job);
             if(!sgeee_mode){
+
+#if 0
                for_each (ja_task, (lGetList(job, JB_ja_tasks))) {
                   u_long32 was_running = running_status(lGetUlong(ja_task, 
                                                      JAT_status));
@@ -803,6 +811,7 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
                                         lGetString(job, JB_owner), 1);
                   }
                }   
+#endif
 
                 at_unregister_job_array(job);
             }
@@ -825,6 +834,7 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
 
             case sgeE_JOB_MOD_SCHED_PRIORITY:
                if (!sgeee_mode) {
+#if 0
                   if (sconf_get_user_sort()) {
                      lListElem *ja_task;
                      /* changing priority requires running jobs be accounted in a different
@@ -835,6 +845,7 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
                            at_dec_job_counter(lGetUlong(job, JB_priority), lGetString(job, JB_owner), 1);
                      }
                   }
+#endif
                   at_unregister_job_array(job);
                }
                break;
@@ -933,6 +944,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
                         return false;
                      }
 
+#if 0
                      /* decrease # of running jobs for this user */
                      if (running_status(lGetUlong(ja_task, JAT_status))) {
                         if (!sgeee_mode && sconf_get_user_sort()) {
@@ -940,6 +952,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
                                               lGetString(job, JB_owner), 1);
                         }   
                      }
+#endif
                      lSetUlong(ja_task, JAT_status, JFINISHED);
                   }   
                }
@@ -948,6 +961,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
             case sgeE_JOB_MOD_SCHED_PRIORITY:
                if (!sgeee_mode) {
                   at_register_job_array(job);
+#if 0
                   if (sconf_get_user_sort()) {
                      lListElem *ja_task;
                      /* increase running counter again in new priority subtree */
@@ -956,6 +970,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
                            at_inc_job_counter(lGetUlong(job, JB_priority), lGetString(job, JB_owner), 1);
                      }
                   }
+#endif
                }
                break;
 
@@ -981,6 +996,8 @@ sge_process_ja_task_event_before(sge_object_type type,
    DENTER(TOP_LAYER, "sge_process_ja_task_event_before");
    
    DPRINTF(("callback processing ja_task event before default rule\n"));
+
+#if 0
 
    if (action == SGE_EMA_MOD || action == SGE_EMA_DEL) {
       u_long32 job_id, ja_task_id;
@@ -1049,6 +1066,8 @@ sge_process_ja_task_event_before(sge_object_type type,
          }
       }
    }
+
+#endif
 
    DEXIT;
    return true;

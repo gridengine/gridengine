@@ -351,15 +351,21 @@ int *sort_hostlist
    lListElem *gel, *hep;
    lListElem *global;
    const char *hnm;
+#if 0
    u_long32 queue_sort_method = sconf_get_queue_sort_method();
+#endif
    double old_sort_value, new_sort_value;
 
    DENTER(TOP_LAYER, "debit_job_from_hosts");
 
+#if 0
    if (feature_is_enabled(FEATURE_SGEEE) 
        || queue_sort_method!=QSM_SHARE) {
       so = lParseSortOrderVarArg(lGetListDescr(host_list), "%I+", EH_sort_value);
    }
+#else
+   so = lParseSortOrderVarArg(lGetListDescr(host_list), "%I+", EH_sort_value);
+#endif
 
    global = host_list_locate(host_list, "global");
 
@@ -393,12 +399,16 @@ int *sort_hostlist
             hnm, old_sort_value, new_sort_value));
       }
 
+#if 0
       if (feature_is_enabled(FEATURE_SGEEE) 
           || queue_sort_method!=QSM_SHARE) {
          /* change position of this host in the host_list */
          /* !!! JG: sorting always necessary, or only if sort_hostlist? */
          lResortElem(so, hep, host_list);
       }
+#else
+      lResortElem(so, hep, host_list);
+#endif
    }
 
    if(so) {

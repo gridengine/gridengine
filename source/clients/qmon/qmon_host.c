@@ -90,7 +90,6 @@ typedef struct _tHostEntry {
    lList *scaling_list;
    lList *usage_scaling_list;
    char *name;
-   double resource_capability_factor;
    lList *acl;
    lList *xacl;
    lList *prj;
@@ -102,11 +101,6 @@ XtResource host_resources[] = {
 
    { "name", "name", XtRString,
       sizeof(char*), XtOffsetOf(tHostEntry, name),
-      XtRImmediate, NULL },
-   
-   { "resource_capability_factor", "resource_capability_factor", 
-      XmtRDouble, sizeof(double), 
-      XtOffsetOf(tHostEntry, resource_capability_factor),
       XtRImmediate, NULL },
    
    { "scaling_list", "scaling_list", QmonRHS_Type,
@@ -214,7 +208,6 @@ static Widget exechost_reporting_variables = 0;
 static Widget exechost_load_scaling = 0;
 static Widget exechost_consumables = 0;
 static Widget exechost_usage_scaling = 0;
-static Widget exechost_rcf = 0;
 static Widget eh_ask_layout = 0;
 static Widget hg_ask_layout = 0;
 static Widget hg_name_w = 0;
@@ -506,7 +499,6 @@ XtPointer cld
                            "exechost_list", &exechost_list,
                            "exechost_load_scaling", &exechost_load_scaling,
                            "exechost_usage_scaling", &exechost_usage_scaling,
-                           "exechost_rcf", &exechost_rcf,
                            "exechost_add", &exechost_add,
                            "exechost_modify", &exechost_modify,
                            "exechost_delete", &exechost_delete,
@@ -523,7 +515,6 @@ XtPointer cld
       ** we have to unmanage the ScrolledWindow parent, not the text widget
       */
       XtUnmanageChild(XtParent(exechost_usage_scaling));
-      XtUnmanageChild(exechost_rcf);
    }
    XtAddCallback(exechost_list, XmNbrowseSelectionCallback,
                      qmonExecHostSelect, NULL);
@@ -705,12 +696,6 @@ XtPointer cld, cad;
          }
          XmTextEnableRedisplay(exechost_usage_scaling);
 
-         /*
-         ** set resource_capability_factor
-         */
-         sprintf(buf, "%.3f", lGetDouble(ehp, 
-                                 EH_resource_capability_factor));
-         XmTextFieldSetString(exechost_rcf, buf);
       }
    }
    DEXIT;
@@ -957,7 +942,7 @@ static lList* qmonExecHostGetAsk(void)
       host_data.reporting_variables = NULL;
 
       /*
-      ** usage scaling & resource_capability_factor
+      ** usage scaling
       */
       if (feature_is_enabled(FEATURE_SGEEE)) {
          host_data.usage_scaling_list = 
@@ -967,13 +952,6 @@ static lList* qmonExecHostGetAsk(void)
          lSetList(lFirst(lp), EH_usage_scaling_list, 
                            host_data.usage_scaling_list);
          host_data.usage_scaling_list = NULL;
-
-         /* 
-         ** resource capability factor 
-         */
-         lSetDouble(lFirst(lp), EH_resource_capability_factor, 
-                     host_data.resource_capability_factor);
-         host_data.resource_capability_factor = 0.0;
 
          /*
          ** (x)project 
@@ -1135,15 +1113,6 @@ StringConst name
       */
       host_data.usage_scaling_list = lFreeList(host_data.usage_scaling_list);
       host_data.usage_scaling_list = usl;
-
-      /*
-      ** set the resource capability factor
-      */
-      if (ehp)
-         host_data.resource_capability_factor = 
-            lGetDouble(ehp, EH_resource_capability_factor);
-      else
-         host_data.resource_capability_factor = 1.0;
 
       /*
       ** set (x)project

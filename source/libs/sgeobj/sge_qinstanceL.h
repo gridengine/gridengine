@@ -84,8 +84,6 @@ enum {
    QU_nsuspend,
    QU_qtype,
    QU_job_slots,
-   QU_fshare,
-   QU_oticket,
 
    QU_tmpdir,
    QU_shell,
@@ -169,8 +167,6 @@ SLISTDEF(QU_Type, QInstance)
    SGE_ULONG(QU_nsuspend, CULL_CONFIGURE)
    SGE_ULONG(QU_qtype, CULL_CONFIGURE)
    SGE_ULONG(QU_job_slots, CULL_CONFIGURE)
-   SGE_ULONG(QU_fshare, CULL_CONFIGURE)
-   SGE_ULONG(QU_oticket, CULL_CONFIGURE)
 
    SGE_STRING(QU_tmpdir, CULL_CONFIGURE)
    SGE_STRING(QU_shell, CULL_CONFIGURE)
@@ -254,8 +250,6 @@ NAMEDEF(QUN)
    NAME("QU_nsuspend")
    NAME("QU_qtype")
    NAME("QU_job_slots")
-   NAME("QU_fshare")
-   NAME("QU_oticket")
 
    NAME("QU_tmpdir")
    NAME("QU_shell")

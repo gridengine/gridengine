@@ -763,12 +763,14 @@ XtPointer cad
          fticket_info.dp = JB_Type;
          break;
 
+#if 0
       case FOT_JOBCLASS:
          fticket_info.field0 = QU_qname;
          fticket_info.field1 = QU_fshare;
          fticket_info.list_type = SGE_CQUEUE_LIST;
          fticket_info.dp = QU_Type;
          break;
+#endif
    }
 
    /*
@@ -1082,12 +1084,15 @@ XtPointer cad
          oticket_info.dp = JB_Type;
          break;
 
+#if 0
       case FOT_JOBCLASS:
          oticket_info.field0 = QU_qname;
          oticket_info.field1 = QU_oticket;
          oticket_info.list_type = SGE_CQUEUE_LIST;
          oticket_info.dp = QU_Type;
          break;
+#endif
+
    }
 
    /*

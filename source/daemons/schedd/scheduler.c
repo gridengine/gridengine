@@ -340,7 +340,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    lList *user_list=NULL, *group_list=NULL;
    lListElem *orig_job, *job, *cat;
    lList *susp_queues = NULL;
-   lListElem *rjob, *rja_task;
    lListElem *queue;  
    u_long32 queue_sort_method; 
    u_long32 maxujobs;
@@ -580,29 +579,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
    */
    switch (queue_sort_method) {
-   case QSM_SHARE:   
-
-      if (sgeee_mode) {
-         sort_host_list(lists->host_list, lists->centry_list);
-         sort_host_list_by_share_load(lists->host_list, lists->centry_list);
-
-#ifdef TEST_DEMO
-         for_each(host, lists->host_list) {
-            fprintf(fpdjp, "after sort by share load - for running jobs only\n");
-            fprintf(fpdjp, "For host %s :\n", lGetHost(host, EH_name));
-            fprintf(fpdjp, "EH_sge_tickets is "u32"\n", (u_long32)lGetDouble(host, EH_sge_tickets));
-            fprintf(fpdjp, "EH_sge_ticket_pct is %f\n", lGetDouble(host, EH_sge_ticket_pct));
-            fprintf(fpdjp, "EH_resource_capability_factor is %f\n", lGetDouble(host, EH_resource_capability_factor));
-            fprintf(fpdjp, "EH_resource_capability_factor_pct is %f\n", lGetDouble(host, EH_resource_capability_factor_pct));
-            fprintf(fpdjp, "EH_sort_value  is %f\n", lGetDouble(host, EH_sort_value));
-            fprintf(fpdjp, "EH_sge_load_pct  is %f\n", lGetDouble(host, EH_sge_load_pct));
-            fprintf(fpdjp, "share load value for host %s is "u32"\n", lGetHost(host, EH_name), lGetUlong(host, EH_sge_load));
-       }
-#endif
-      }
-
-      break;
-      
    case QSM_LOAD:
    case QSM_SEQNUM:   
    default:
@@ -616,11 +592,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
       for_each(host, lists->host_list) {
          fprintf(fpdjp, "load value for host %s is %f\n",
                  lGetHost(host, EH_name), lGetDouble(host, EH_sort_value));
-
-         if (sgeee_mode)  {
-            fprintf(fpdjp, "EH_sge_tickets is "u32"\n", (u_long32)lGetDouble(host, EH_sge_tickets));
-         }
-       }
+      }
 
 #endif
 
@@ -630,20 +602,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    /*---------------------------------------------------------------------
     * DISPATCH JOBS TO QUEUES
     *---------------------------------------------------------------------*/
-
-   /* 
-    * Calculate the total number of tickets for running jobs - to be used
-    * later for SGEEE job placement 
-    */
-   if (sgeee_mode && queue_sort_method == QSM_SHARE)  {
-      total_running_job_tickets = 0;
-      for_each(rjob, *splitted_job_lists[SPLIT_RUNNING]) {
-         for_each(rja_task, lGetList(rjob, JB_ja_tasks)) {
-            total_running_job_tickets += lGetDouble(rja_task, JAT_tix);
-         }
-      }
-   }
-
 
    if (!sgeee_mode) {
       /* 
@@ -873,29 +831,6 @@ SKIP_THIS_JOB:
         }
 #endif
 
-      if (dispatched_a_job && !(lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]))==0) )  {
-         if (sgeee_mode && queue_sort_method == QSM_SHARE)  {
-            sort_host_list_by_share_load(lists->host_list, lists->centry_list);
-
-#ifdef TEST_DEMO
-            for_each(host, lists->host_list) {
-               fprintf(fpdjp, "after sort by share load - for running and already placed new jobs \n");
-               fprintf(fpdjp, "For host %s :\n", lGetHost(host, EH_name));
-               fprintf(fpdjp, "EH_sge_tickets is %f\n", lGetDouble(host, EH_sge_tickets));
-               fprintf(fpdjp, "EH_sge_ticket_pct is %f\n", lGetDouble(host, EH_sge_ticket_pct));
-               fprintf(fpdjp, "EH_resource_capability_factor is %f\n", 
-                              lGetDouble(host, EH_resource_capability_factor));
-               fprintf(fpdjp, "EH_resource_capability_factor_pct is %f\n", 
-                              lGetDouble(host, EH_resource_capability_factor_pct));
-               fprintf(fpdjp, "EH_sort_value  is %f\n", lGetDouble(host, EH_sort_value));
-               fprintf(fpdjp, "EH_sge_load_pct  is %f\n", lGetDouble(host, EH_sge_load_pct));
-               fprintf(fpdjp, "share load value for host %s is "u32"\n", 
-                              lGetHost(host, EH_name), lGetUlong(host, EH_sge_load));
-            }
-#endif
-
-         } /* sgeee_mode && queue_sort_method == QSM_SHARE */
-      }
    } /* end of while */
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM4);
@@ -951,8 +886,6 @@ int host_order_changed,
 int *sort_hostlist
 ) {
    int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
-   lListElem *hep;  
-   double old_host_tickets; 
    const lList *job_load_adjustments = sconf_get_job_load_adjustments();   
    lListElem *granted_el;     
    lList *granted = NULL;
@@ -994,12 +927,6 @@ int *sort_hostlist
 
       for_each(granted_el, granted) {
          u_long32 granted_slots = lGetUlong(granted_el, JG_slots);
-         hep = host_list_locate(host_list, lGetHost(granted_el, JG_qhostname));
-         old_host_tickets = lGetDouble(hep, EH_sge_tickets);
-
-         lSetDouble(hep, EH_sge_tickets, (old_host_tickets + 
-               job_tickets_per_slot * granted_slots));
-
          lSetDouble(granted_el, JG_ticket, job_tickets_per_slot * granted_slots);
          lSetDouble(granted_el, JG_oticket ,job_otickets_per_slot  * granted_slots);
          lSetDouble(granted_el, JG_fticket ,job_ftickets_per_slot  * granted_slots);

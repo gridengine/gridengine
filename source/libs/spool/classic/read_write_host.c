@@ -193,13 +193,6 @@ _Insight_set_option("suppress", "PARM_NULL");
             }            
          }
 
-         /* --------- EH_resource_capability_factor */
-         if (!set_conf_double(alpp, clpp, fields, "resource_capability_factor",
-                  ep, EH_resource_capability_factor, 0)) {
-            DEXIT;
-            return -1;
-         }
-
          /* --------- EH_report_variables */
          if (!set_conf_list(alpp, clpp, fields, "report_variables", ep, 
                   EH_report_variables, STU_Type, STU_name)) {
@@ -485,10 +478,6 @@ char *file
             goto FPRINTF_ERROR;
          }
          FPRINTF((fp, "\n"));
-
-         /* print resource capability factor */
-         FPRINTF((fp, "resource_capability_factor %f\n", 
-                  lGetDouble(ep, EH_resource_capability_factor)));
 
          /* print reporting variable list */
          ret = fprint_cull_list(fp,  "report_variables           ", 

@@ -109,10 +109,9 @@ void at_finish(void)
 void at_register_job_array(
 lListElem *job_array 
 ) {
-   lListElem *pgr, *user = NULL, *last, *jr;
+   lListElem *pgr, *last, *jr;
    lList *jrl;
    u_long32 priority;
-   int user_sort = sconf_get_user_sort();
 
    DENTER(TOP_LAYER, "at_register_job_array");
 
@@ -131,23 +130,10 @@ lListElem *job_array
    lSetUlong(jr, JRL_submission_time, lGetUlong(job_array, JB_submission_time));
    lSetRef(jr, JRL_category, lGetRef(job_array, JB_category));
 
-   if (user_sort) {
-      const char *owner = lGetString(job_array, JB_owner);
-      if (!(user=lGetSubStr(pgr, USR_name, owner, PGR_subordinated_list))) {
-         user = lAddSubStr(pgr, USR_name, owner, PGR_subordinated_list, USR_Type);
-         DPRINTF(("AT + %d %s\n", priority, owner));
-         lSortList(priority_group_list, so_pgr);
-      }
-      if (!(jrl = lGetList(user, USR_job_references))) {
-         jrl = lCreateList("", JRL_Type);
-         lSetList(user, USR_job_references, jrl);
-      }
-   } else {
-      if (!(jrl = lGetList(pgr, PGR_subordinated_list))) {
-         jrl = lCreateList("", JRL_Type);
-         lSetList(pgr, PGR_subordinated_list, jrl);
-      }
-   } 
+   if (!(jrl = lGetList(pgr, PGR_subordinated_list))) {
+      jrl = lCreateList("", JRL_Type);
+      lSetList(pgr, PGR_subordinated_list, jrl);
+   }
 
    /* in most cases the job array must to be added 
       at the last position of the job reference list */
@@ -163,12 +149,9 @@ lListElem *job_array
          sorted later on completely 
             */
       lAppendElem(jrl, jr);
-      if ((user_sort?lGetUlong(user, USR_sort_me):lGetUlong(pgr, PGR_sort_me))==0)
+      if (lGetUlong(pgr, PGR_sort_me)==0)
          DPRINTF(("### ### ### ### ### TRIGGER RESORTING OF JOB REFERENCE LIST ### ### ### ### ###\n"));
-      if (user_sort)
-         lSetUlong(user, USR_sort_me, 1);
-      else
-         lSetUlong(pgr, PGR_sort_me, 1);
+      lSetUlong(pgr, PGR_sort_me, 1);
    }
 
    DEXIT;   
@@ -179,32 +162,17 @@ static void at_trace()
 {
 #if 0
    lListElem *u, *p, *j;
-   int user_sort = sconf_get_user_sort();
    char *s;
    lListElem *current;
 
    for_each (p, priority_group_list) {
       DPRINTF(("%d%s\n", lGetUlong(p, PGR_priority), 
             lGetUlong(p, PGR_sort_me)?" sortme!":""));
-      if (user_sort) {
-         for_each (u, lGetList(p, PGR_subordinated_list)) {
-            current = lGetRef(u, USR_current);
-            DPRINTF(("   %s "u32"("u32")%s\n", lGetString(u, USR_name), 
-               lGetUlong(u, USR_nrunning_dl), lGetUlong(u, USR_nrunning_el),
-               lGetUlong(u, USR_sort_me)?" sortme!":""));
-            for_each (j, lGetList(u, USR_job_references)) {
-               s = lGetString(lGetRef(j, JRL_category), CT_str);
-               DPRINTF(("   %s   "u32" %s\n", 
-                     (current == j)?"-->":"   ", lGetUlong(j, JRL_jobid), s));
-            }
-         }
-      } else {
-         current = lGetRef(p, PGR_current);
-         for_each (j, lGetList(p, PGR_subordinated_list)) {
-            s = lGetString(lGetRef(j, JRL_category), CT_str);
-            DPRINTF(("   %s "u32" %s\n", 
-                  (current == j)?"-->":"   ", lGetUlong(j, JRL_jobid), s));
-         }
+      current = lGetRef(p, PGR_current);
+      for_each (j, lGetList(p, PGR_subordinated_list)) {
+         s = lGetString(lGetRef(j, JRL_category), CT_str);
+         DPRINTF(("   %s "u32" %s\n", 
+               (current == j)?"-->":"   ", lGetUlong(j, JRL_jobid), s));
       }
    }
 #endif
@@ -232,19 +200,7 @@ lListElem *job
       return;
    }
 
-   if (sconf_get_user_sort()) {
-      lListElem *user;
-      const char *owner = lGetString(job, JB_owner);
-      user = lGetSubStr(pgrp, USR_name, owner, PGR_subordinated_list);
-
-      lDelSubUlong(user, JRL_jobid, jobid, USR_job_references);
-      if (!lGetNumberOfElem(lGetList(user, USR_job_references)) && !lGetUlong(user, USR_nrunning_el)) {
-         DPRINTF(("AT - "u32" %s\n", priority, owner));
-         lRemoveElem(lGetList(pgrp, PGR_subordinated_list), user);
-      }
-   } else {
-      lDelSubUlong(pgrp, JRL_jobid, jobid, PGR_subordinated_list);
-   }
+   lDelSubUlong(pgrp, JRL_jobid, jobid, PGR_subordinated_list);
 
    DPRINTF(("at_unregister_job_array "u32"\n", jobid));
 
@@ -353,22 +309,11 @@ void at_notice_runnable_job_arrays(
 lList *job_list 
 ) {
    lListElem *pgrp;
-   bool user_sort = sconf_get_user_sort();
    DENTER(TOP_LAYER, "at_notice_runnable_job_arrays");
 
    /* reinitialize the iterator in our access tree */
    current_pgrp = NULL;
    for_each (pgrp, priority_group_list) {
-      if (user_sort) {
-         lListElem *user;
-         /* use the number of running jobs from event layer as basis
-            for keeping the same information in dispatch layer */
-         for_each (user, lGetList(pgrp, PGR_subordinated_list)) {
-            lSetUlong(user, USR_nrunning_dl, lGetUlong(user, USR_nrunning_el)); 
-            lSetRef(user, USR_current, NULL);
-         }
-         lSetUlong(pgrp, PGR_sort_me, 1);
-      }
       lSetRef(pgrp, PGR_current, NULL);
    }
 
@@ -389,21 +334,9 @@ void at_dispatched_a_task(
 lListElem *job,
 int slots 
 ) {
-   lListElem *pgrp, *user;
-
    DENTER(TOP_LAYER, "at_dispatched_a_task");
 
-   if (sconf_get_user_sort()) {
-      DPRINTF(("USERSORT: got dispatch notification for %d jobs of user %s\n", 
-            slots, lGetString(job, JB_owner)));
-      /* debit this job */
-      pgrp = lGetElemUlong(priority_group_list, PGR_priority, lGetUlong(job, JB_priority));
-      user = lGetSubStr(pgrp, USR_name, lGetString(job, JB_owner), PGR_subordinated_list);
-      lSetUlong(user, USR_nrunning_dl, lGetUlong(user, USR_nrunning_dl) + slots);
-
-      /* user list of this priority group needs sorting */
-      lSetUlong(pgrp, PGR_sort_me, 1);
-   }
+   /* SVD040129 - user_sort stuff removed */
 
    DEXIT;
    return;
@@ -421,9 +354,6 @@ int slots
 lListElem *at_get_actual_job_array(lList *job_list)
 {
    lListElem *job_array = NULL;
-   lList *usl;
-   bool user_sort = sconf_get_user_sort();
-   u_long32 maxujobs = sconf_get_maxujobs();
    /* this is our cursor */
    static int current_min_jobs_per_user = -1;
 
@@ -441,89 +371,18 @@ lListElem *at_get_actual_job_array(lList *job_list)
    }
 
    do { /* iterate through all priority groups */
-      if (!user_sort) {
-         /* FCFS - simply return the current job array 
-                   if it is dispatchable and still in
-                   our directory of runnable jobs 
-                   else take the next job array */
-         job_array = at_first_in_jrl(current_pgrp, PGR_subordinated_list, 
-            PGR_sort_me, PGR_current, job_list);
-         if (job_array) {
-            DPRINTF(("FCFS: "u32"\n", lGetUlong(job_array, JB_job_number)));
-         } else {
-            DPRINTF(("FCFS: no more jobs in priority group "u32"\n", 
-                  lGetUlong(current_pgrp, PGR_priority)));
-         }         
+      /* FCFS - simply return the current job array 
+                if it is dispatchable and still in
+                our directory of runnable jobs 
+                else take the next job array */
+      job_array = at_first_in_jrl(current_pgrp, PGR_subordinated_list, 
+         PGR_sort_me, PGR_current, job_list);
+      if (job_array) {
+         DPRINTF(("FCFS: "u32"\n", lGetUlong(job_array, JB_job_number)));
       } else {
-         lListElem *user;
-         usl = lGetList(current_pgrp, PGR_subordinated_list);
-         /* sort user list if neccessary */
-         if (lGetUlong(current_pgrp, PGR_sort_me)) {
-            DPRINTF(("AT: sorting users in priority group "u32" (curr_jpu = %d)\n", 
-               lGetUlong(current_pgrp, PGR_priority), current_min_jobs_per_user));
-            lSortList(usl, so_usr);
-            lSetUlong(current_pgrp, PGR_sort_me, 0);
-            DPRINTF(("AT searching job\n"));
-            at_trace();
-         }
-
-         /* Do we have a 'curser' which counts the number of jobs per user
-            in this priority group? */
-
-         if (current_min_jobs_per_user == -1) {
-            current_min_jobs_per_user = lGetUlong(lFirst(usl), USR_nrunning_dl);
-            DPRINTF(("curr_jpu = %d\n", current_min_jobs_per_user));
-         }
-
-         /* USERSORT - take into respect all users with the same number of running jobs 
-                       and return the earliest one */
-
-         /* find pointer of first user having 
-            'current_min_jobs_per_user' jobs running */
-         user=lFirst(usl); 
-         while (lGetUlong(user, USR_nrunning_dl) < current_min_jobs_per_user)
-            user = lNext(user);
-
-         do { 
-            lListElem *t_job_array;
-
-            while (user && lGetUlong(user, USR_nrunning_dl) == current_min_jobs_per_user) {
-               t_job_array = at_first_in_jrl(user, USR_job_references, USR_sort_me, USR_current, job_list);
-
-               if (t_job_array) {
-                  DPRINTF(("USERSORT: %s "u32"\n", lGetString(user, USR_name),
-                        lGetUlong(t_job_array, JB_job_number)));
-               } else {
-                  DPRINTF(("USERSORT: no more jobs of user %s\n", lGetString(user, USR_name)));
-               }   
-
-               if (!job_array || (t_job_array &&
-                     (lGetUlong(t_job_array, JB_submission_time) < lGetUlong(job_array, JB_submission_time)
-                     ||(lGetUlong(t_job_array, JB_submission_time) == lGetUlong(job_array, JB_submission_time) &&
-                     lGetUlong(t_job_array, JB_job_number) < lGetUlong(job_array, JB_job_number))))) {
-                  job_array = t_job_array;
-               }
-               user = lNext(user);
-            }
- 
-            if (!job_array ) {
-               if (user) {
-                  DPRINTF(("USERSORT: found no job of %d jobs users - continue with %d jobs users\n", 
-                           current_min_jobs_per_user, current_min_jobs_per_user+1));
-                  current_min_jobs_per_user = current_min_jobs_per_user+1;
-
-                  if (maxujobs && current_min_jobs_per_user >= maxujobs) {
-                     DPRINTF(("USERSORT: reached maxujobs limit of %d\n", maxujobs));
-                     current_min_jobs_per_user = -1;
-                  }
-               } else {
-                  DPRINTF(("USERSORT: no more jobs in priority group "u32"\n",
-                                    lGetUlong(current_pgrp, PGR_priority)));
-                  current_min_jobs_per_user = -1;
-               }
-            }
-         } while (!job_array && current_min_jobs_per_user != -1);
-      }
+         DPRINTF(("FCFS: no more jobs in priority group "u32"\n", 
+               lGetUlong(current_pgrp, PGR_priority)));
+      }         
    } while (!job_array && (current_pgrp = lNext(current_pgrp)));
  
    DEXIT;

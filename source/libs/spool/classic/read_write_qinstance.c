@@ -402,12 +402,14 @@ write_qinstance(int spool, int how, const lListElem *ep)
          FPRINTF((fp, "initial_state      %s\n",
                   lGetString(ep, QU_initial_state)));
       }
+#if 0
       if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
          FPRINTF((fp, "fshare             "u32"\n",
                   lGetUlong(ep, QU_fshare)));
          FPRINTF((fp, "oticket            "u32"\n",
                   lGetUlong(ep, QU_oticket)));
       }
+#endif
       {
          FPRINTF((fp, "s_rt               %s\n", lGetString(ep, QU_s_rt)));
          FPRINTF((fp, "h_rt               %s\n", lGetString(ep, QU_h_rt)));

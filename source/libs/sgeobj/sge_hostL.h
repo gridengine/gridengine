@@ -86,17 +86,10 @@ enum {
    EH_seq_no,                /* suitability of this host for a job only
                               * scheduler local not spooled */
    EH_real_name,             /* in case of pseudo host: real name spooled */
-   EH_sge_tickets,           /* SGEEE - total tickets associated with active 
-                              * jobs executing on this host scheduler
-                              * local */
-   EH_resource_capability_factor,
-   /* SGEEE - resource capability of host scheduler local */
    EH_sge_load,              /* SGEEE load calculated from load values
                               * scheduler local */
    EH_sge_ticket_pct,        /* percentage of total SGEEE tickets scheduler
                               * local */
-   EH_resource_capability_factor_pct,
-   /* percentage of total resource capability scheduler local */
    EH_sge_load_pct,          /* percentage of total SGEEE load scheduler
                               * local */
 
@@ -156,11 +149,8 @@ ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
 
    SGE_STRING(EH_real_name, CULL_DEFAULT)
 
-   SGE_DOUBLE(EH_sge_tickets, CULL_DEFAULT)
-   SGE_DOUBLE(EH_resource_capability_factor, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(EH_sge_load, CULL_DEFAULT)
    SGE_DOUBLE(EH_sge_ticket_pct, CULL_DEFAULT)
-   SGE_DOUBLE(EH_resource_capability_factor_pct, CULL_DEFAULT)
    SGE_DOUBLE(EH_sge_load_pct, CULL_DEFAULT)
 
    SGE_ULONG(EH_featureset_id, CULL_DEFAULT)
@@ -203,11 +193,8 @@ NAMEDEF(EHN)
 
    NAME("EH_real_name")
 
-   NAME("EH_sge_tickets")
-   NAME("EH_resource_capability_factor")
    NAME("EH_sge_load")
    NAME("EH_sge_ticket_pct")
-   NAME("EH_resource_capability_factor_pct")
    NAME("EH_sge_load_pct")
 
    NAME("EH_featureset_id")

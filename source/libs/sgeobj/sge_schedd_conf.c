@@ -113,7 +113,6 @@
 #define MAXUJOBS                            0
 #define MAXGJOBS                            0
 #define SCHEDD_JOB_INFO                     "true"
-#define USER_SORT                           false
 
 
 /* 
@@ -151,7 +150,6 @@ typedef struct{
    int schedule_interval;
    int maxujobs;
    int queue_sort_method;
-   int user_sort;
    int job_load_adjustments;
    int load_adjustment_decay_time;
    int load_formula;
@@ -208,9 +206,9 @@ static int policy_hierarchy_verify_value(const char* value);
  * when the config_pos_type is edited
  */
 static config_pos_type pos = {true, 
-                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                       -1, -1, -1, -1, -1, -1, -1, -1, -1,  
-                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                       -1, -1, -1, -1, -1, -1, -1, -1,
                        SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL, 
                        -1, -1, -1, -1};
 
@@ -257,7 +255,6 @@ static void sconf_clear_pos(void){
          pos.schedule_interval = -1; 
          pos.maxujobs =  -1;
          pos.queue_sort_method = -1; 
-         pos.user_sort =  -1;
          pos.job_load_adjustments = -1; 
          pos.load_formula =  -1;
          pos.schedd_job_info = -1; 
@@ -316,7 +313,6 @@ static bool sconf_calc_pos(void){
          ret &= (pos.schedule_interval = lGetPosViaElem(config, SC_schedule_interval)) != -1; 
          ret &= (pos.maxujobs = lGetPosViaElem(config, SC_maxujobs)) != -1;
          ret &= (pos.queue_sort_method = lGetPosViaElem(config, SC_queue_sort_method)) != -1;
-         ret &= (pos.user_sort = lGetPosViaElem(config, SC_user_sort)) != -1;
 
          ret &= (pos.job_load_adjustments = lGetPosViaElem(config,SC_job_load_adjustments )) != -1;
          ret &= (pos.load_adjustment_decay_time = lGetPosViaElem(config, SC_load_adjustment_decay_time)) != -1;
@@ -581,10 +577,7 @@ lListElem *sconf_create_default()
    lSetString(ep, SC_schedule_interval, SCHEDULE_TIME);
    lSetUlong(ep, SC_maxujobs, MAXUJOBS);
 
-   if (feature_is_enabled(FEATURE_SGEEE))
-      lSetUlong(ep, SC_queue_sort_method, QSM_SHARE);
-   else
-      lSetUlong(ep, SC_queue_sort_method, QSM_LOAD);
+   lSetUlong(ep, SC_queue_sort_method, QSM_LOAD);
 
    added = lAddSubStr(ep, CE_name, "np_load_avg", SC_job_load_adjustments, CE_Type);
    lSetString(added, CE_stringval, "0.50");
@@ -593,7 +586,6 @@ lListElem *sconf_create_default()
                      DEFAULT_LOAD_ADJUSTMENTS_DECAY_TIME);
    lSetString(ep, SC_load_formula, DEFAULT_LOAD_FORMULA);
    lSetString(ep, SC_schedd_job_info, SCHEDD_JOB_INFO);
-   lSetBool(ep, SC_user_sort, USER_SORT);
    lSetUlong(ep, SC_flush_submit_sec, 0);
    lSetUlong(ep, SC_flush_finish_sec, 0);
    lSetString(ep, SC_params, "none");
@@ -674,32 +666,6 @@ bool sconf_is_centry_referenced(const lListElem *this_elem, const lListElem *cen
    }
    DEXIT;
    return ret;
-}
-
-/****** sge_schedd_conf/sconf_get_user_sort() **********************************
-*  NAME
-*     sconf_get_user_sort() -- ??? 
-*
-*  SYNOPSIS
-*     bool sconf_get_user_sort() 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*
-*  RESULT
-*     bool - 
-*
-*******************************************************************************/
-bool sconf_get_user_sort() {
-   const lListElem *sc_ep =  sconf_get_config();
-   if (pos.user_sort != -1) { 
-      return lGetPosBool(sc_ep, pos.user_sort);
-   }
-   else {
-      return USER_SORT;
-   }
 }
 
 /****** sge_schedd_conf/sconf_get_load_adjustment_decay_time_str() *************
@@ -1824,10 +1790,6 @@ void sconf_print_config(void){
    /* --- SC_flush_finish_sec */
    uval = sconf_get_flush_finish_sec();
    INFO((SGE_EVENT,MSG_ATTRIB_USINGXFORY_US,  u32c (uval) , "flush_finish_sec"));
-
-   /* --- SC_user_sort */
-   uval = sconf_get_user_sort();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS , uval?MSG_TRUE:MSG_FALSE, "user_sort"));
 
    /* --- SC_job_load_adjustments */
    lval = sconf_get_job_load_adjustments();

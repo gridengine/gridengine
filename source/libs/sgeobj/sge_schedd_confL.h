@@ -47,8 +47,7 @@ extern "C" {
  */
 enum {
    QSM_LOAD = 0,
-   QSM_SEQNUM = 1,
-   QSM_SHARE = 2
+   QSM_SEQNUM = 1
 };
 
 /* 
@@ -59,7 +58,6 @@ enum {
    SC_schedule_interval,
    SC_maxujobs,
    SC_queue_sort_method,
-   SC_user_sort,
    SC_job_load_adjustments,
    SC_load_adjustment_decay_time,
    SC_load_formula,
@@ -102,7 +100,6 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    SGE_STRING(SC_schedule_interval, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(SC_maxujobs, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(SC_queue_sort_method, CULL_DEFAULT | CULL_SPOOL)    /* see at top of file for valid values */
-   SGE_BOOL(SC_user_sort, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(SC_job_load_adjustments, CE_Type, CULL_DEFAULT | CULL_SPOOL)        /* CE_Type */
    SGE_STRING(SC_load_adjustment_decay_time, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(SC_load_formula, CULL_DEFAULT | CULL_SPOOL)
@@ -165,7 +162,6 @@ NAMEDEF(SCN)
    NAME("SC_schedule_interval")
    NAME("SC_maxujobs")
    NAME("SC_queue_sort_method")
-   NAME("SC_user_sort")
    NAME("SC_job_load_adjustments")
    NAME("SC_load_adjustment_decay_time")
    NAME("SC_load_formula")

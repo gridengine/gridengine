@@ -90,8 +90,6 @@ lList **sconf_get_config_list(void);
 
 bool sconf_is(void);
 
-bool sconf_get_user_sort(void);
-
 u_long32 sconf_get_load_adjustment_decay_time(void);
 
 const lList *sconf_get_job_load_adjustments(void);

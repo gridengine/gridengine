@@ -2213,7 +2213,6 @@ int host_order_changed) {
           *   The valency of these fields depends on the queue sort order 
           * 
           *   QSM_LOAD
-          *   QSM_SHARE
           *      1. QU_soft_violation
           *      2. QU_host_seq_no 
           *      3. QU_seq_no 

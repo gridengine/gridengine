@@ -48,8 +48,6 @@ enum {
    CQ_seq_no,
    CQ_nsuspend,
    CQ_job_slots,
-   CQ_fshare,
-   CQ_oticket,
 
    CQ_rerun,
 
@@ -117,8 +115,6 @@ ILISTDEF(CQ_Type, CQueue, SGE_QUEUE_LIST)
    SGE_LIST(CQ_seq_no, AULNG_Type, CULL_SPOOL | CULL_CONFIGURE) 
    SGE_LIST(CQ_nsuspend, AULNG_Type, CULL_SPOOL | CULL_CONFIGURE)
    SGE_LIST(CQ_job_slots, AULNG_Type, CULL_SPOOL | CULL_CONFIGURE)
-   SGE_LIST(CQ_fshare, AULNG_Type, CULL_SPOOL | CULL_CONFIGURE)    
-   SGE_LIST(CQ_oticket, AULNG_Type, CULL_SPOOL | CULL_CONFIGURE)  
 
    SGE_LIST(CQ_rerun, ABOOL_Type, CULL_SPOOL | CULL_CONFIGURE)  
 
@@ -186,8 +182,6 @@ NAMEDEF(CQN)
    NAME("CQ_seq_no")
    NAME("CQ_nsuspend")
    NAME("CQ_job_slots")
-   NAME("CQ_fshare")
-   NAME("CQ_oticket")
 
    NAME("CQ_rerun")
 

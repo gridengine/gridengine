@@ -605,10 +605,6 @@ lList *cql
 
       cq_add_aulng(tree, cq_attributes_gen, ep, CQ_job_slots, "Job Slots"); 
 
-      cq_add_aulng(tree, cq_attributes_gen, ep, CQ_fshare, "CQ_fshare"); 
-
-      cq_add_aulng(tree, cq_attributes_gen, ep, CQ_oticket, "CQ_oticket"); 
-
       cq_add_abool(tree, cq_attributes_gen, ep, CQ_rerun, "Rerun Jobs"); 
 
       cq_add_astr(tree, cq_attributes_gen, ep, CQ_shell_start_mode, "CQ_shell_start_mode"); 

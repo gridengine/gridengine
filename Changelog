@@ -1,3 +1,6 @@
+AH-2004-04-22-0: Bugfix:    Minor fix with usermapping(5)
+                 Review:    RC
+
 DT-2004-04-22-0: Enhancem.: o Further update to DRMAA Java binding
                  Changed:   DRMAA Java binding (maintrunk)
 

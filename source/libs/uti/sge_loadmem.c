@@ -134,6 +134,7 @@ char *argv[]
 #include <sys/rsg.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <sys/syssx.h>
 
 int loadmem_rsg(int rsg_id, sge_mem_info_t *mem_info_l, 
                 sge_mem_info_t *mem_info_s) 
@@ -239,6 +240,12 @@ int loadmem_small_large(sge_mem_info_t *mem_info_l, sge_mem_info_t *mem_info_s)
 ******************************************************************************/
 int sge_loadmem(sge_mem_info_t *mem_info) 
 {
+/* 
+ * Do NOT calculate memory from RSG values. Instead,
+ * use the RB values. RSGs can be configured to share
+ * RBs, in which case, a memory total will be inflated.
+ */
+#if 0
    sge_mem_info_t mem_info_s, mem_info_l;
    int ret;
 
@@ -248,6 +255,84 @@ int sge_loadmem(sge_mem_info_t *mem_info)
    mem_info->swap_total = mem_info_l.swap_total + mem_info_s.swap_total;
    mem_info->swap_free = mem_info_l.swap_free + mem_info_s.swap_free;
    return ret;
+#else
+   {
+      char       fsg_dev_string[256];
+      int        fd, fsg_id;
+      int        spagesize, lpagesize;
+      float      spagefactor, lpagefactor;
+      rsg_id_t   id;
+      rsg_info_t info;
+      memrb_t    sprbs[MAXRBNUM], lprbs[MAXRBNUM];
+      int        i;
+
+      /* initialize */
+      for (i = 0; i < MAXRBNUM; i++) {
+         memset(&sprbs[i], 0, sizeof(memrb_t));
+         memset(&lprbs[i], 0, sizeof(memrb_t));
+      }
+
+      /* read in RB info (don't be fooled by RSG names) */
+      for (fsg_id = 0; fsg_id < MAXRSGNUM; fsg_id++) {
+         sprintf(fsg_dev_string, "/dev/rsg/%d", fsg_id);
+         fd = open(fsg_dev_string, O_RDONLY);
+         if (fd >= 0) {
+            if ((ioctl(fd, RSG_ID, &id) == -1) ||
+                  (ioctl(fd, RSG_INFO, &info) == -1)) {
+               close(fd);
+               continue;
+            }
+            close(fd);
+
+            /* copy for later use */
+            memcpy(&sprbs[id.sprbid], &info.sprb, sizeof(memrb_t));
+            memcpy(&lprbs[id.lprbid], &info.lprb, sizeof(memrb_t));
+         }
+      }
+
+      /* large pages = 1MB, 4MB, or 16MB
+       * small pages = 32K (always)
+       *
+       * _SC_PAGESIZE (for sysconf()) is application page size;
+       * PAGESIZE (for syssx()) is system page size;
+       * we want PAGESIZE
+       */
+      spagesize = 32 << 10;                    /* KB */
+      lpagesize = syssx(PAGESIZE);             /* MB */
+      spagefactor = spagesize/(1024.0*1024.0); /* MB */
+      lpagefactor = lpagesize;                 /* MB */
+
+      /* tally up RB values (in MB, floats) */
+      mem_info->mem_total = 0;
+      mem_info->mem_free = 0;
+      mem_info->swap_total = 0;
+      mem_info->swap_free = 0;
+      for (i = 0; i < MAXRBNUM; i++) {
+         int     spfree, lpfree;
+         memrb_t *sprb_p, *lprb_p;
+         int     x;
+   
+         /* helpers */
+         sprb_p = &sprbs[i];
+         lprb_p = &lprbs[i];
+         spfree = sprb_p->init_mem-sprb_p->using_pgs;
+         lpfree = lprb_p->init_mem-lprb_p->using_pgs;
+   
+         /* calculate */
+         mem_info->mem_total += (sprb_p->init_mem*spagefactor)+
+            lprb_p->init_mem*lpagefactor;
+         mem_info->mem_free += (spfree*spagefactor)+
+            lpfree*lpagefactor;
+   
+         mem_info->swap_total += (sprb_p->init_swap*spagefactor)+
+            lprb_p->init_swap*lpagefactor;
+         mem_info->swap_free += ((sprb_p->availsmem-spfree)*spagefactor)+
+            (lprb_p->availsmem-lpfree)*lpagefactor;
+      }
+
+      return 0;
+   }
+#endif
 }
 
 #endif /* NECSX4 || NECSX5 */

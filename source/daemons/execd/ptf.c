@@ -1567,14 +1567,15 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
 
 #endif
 
-      if (pri_min > 50 && pri_max > 50)
-         if (max_ticket_share > 0)
-	    lSetDouble(job, JL_timeslice, 
-                       MAX(pri_max, lGetDouble(job, JL_ticket_share) *
-                                    pri_min / max_ticket_share));
-         else
+      if (pri_min > 50 && pri_max > 50) {
+         if (max_ticket_share > 0) {
+	         lSetDouble(job, 
+                       JL_timeslice, 
+                       MAX(pri_max, lGetDouble(job, JL_ticket_share) * pri_min / max_ticket_share));
+         } else {
             lSetDouble(job, JL_timeslice, pri_min);
-
+         }
+      }
       lSetLong(job, JL_pri, pri);
       ptf_set_job_priority(job);
    }

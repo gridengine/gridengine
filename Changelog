@@ -1,3 +1,5 @@
+CR-2002-04-05-2: Bugfix:    Fixed compiler warning in ptf.c 
+
 JG-2002-04-05-3: Doc:       Linked both versions of the event client interface
                             documentation (5.3 and maintrunc) from the modules
                             overview document.

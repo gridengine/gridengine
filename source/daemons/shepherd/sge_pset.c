@@ -36,7 +36,7 @@
 #include <string.h>
 #include <errno.h>
 
-#if defined(SOLARIS64)
+#if defined(SOLARIS64) || defined(SOLARISAMD64)
 #   include <sys/pset.h>
 #elif defined(ALPHA)
 #   include <sys/processor.h>
@@ -88,14 +88,14 @@ void print_pset_error(int ret);
 static int range2proc_vec(char *, sbv_t *, char *);
 #endif
 
-#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64)
+#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64) || defined(SOLARISAMD64)
 static int free_processor_set(char *err_str);
 static int set_processor_range(char *crange, int proc_set_num, char *err_str);
 #endif
 
 void sge_pset_create_processor_set(void) 
 {
-#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64)
+#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64) || defined(SOLARISAMD64)
    char err_str[2*SGE_PATH_MAX+128];
 
    /* SGI IRIX processor set stuff */
@@ -123,7 +123,7 @@ void sge_pset_create_processor_set(void)
 
 void sge_pset_free_processor_set(void)
 {
-#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64)
+#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64) || defined(SOLARISAMD64)
    /* SGI IRIX processor set stuff */
    if (strcasecmp("UNDEFINED",get_conf_val("processors"))) {
       char err_str[2*SGE_PATH_MAX+128];
@@ -161,7 +161,7 @@ void sge_pset_free_processor_set(void)
 #endif
 }
 
-#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64)
+#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64) || defined(SOLARISAMD64)
 /****** shepherd/pset/set_processor_range() ***********************************
 *  NAME
 *     set_processor_range() -- sets processor range according to string 
@@ -243,7 +243,7 @@ static int set_processor_range(char *crange, int proc_set_num, char *err_str)
       /* use default pset (id #0) */
       proc_set_num = 0;
    }
-#elif defined(SOLARIS64)
+#elif defined(SOLARIS64) || defined(SOLARISAMD64)
    /*
     * We do not create a processor set here
     * The system administrator is responsible to do this
@@ -283,7 +283,7 @@ static int set_processor_range(char *crange, int proc_set_num, char *err_str)
          return PROC_SET_ERROR;
       }
    }
-#elif defined(SOLARIS64)
+#elif defined(SOLARIS64) || defined(SOLARISAMD64)
    if (proc_set_num) {
       int local_ret;
 
@@ -380,7 +380,7 @@ static int free_processor_set(char *err_str)
          return PROC_SET_ERROR;
       }
    }
-#elif defined(SOLARIS64)
+#elif defined(SOLARIS64) || defined(SOLARISAMD64)
    /*
     * We do not release a processor set here
     * The system administrator is responsible to do this

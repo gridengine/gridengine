@@ -57,7 +57,7 @@
 #	define RLIM_INFINITY 0
 #endif
 
-#if !defined(CRAY) && !defined(SOLARIS64)
+#if !defined(CRAY) && !defined(SOLARIS64) && !defined(SOLARISAMD64)
 #  define RLIM_MAX RLIM_INFINITY
 #else
 #  define RLIM_MAX 0x7fffffffffffffff

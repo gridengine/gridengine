@@ -1,3 +1,7 @@
+SG-2004-12-17-0: Enhancem.: - fixed limits for sol10-amd64
+                 Changed:   sheperd
+                 Review:    AA
+
 JG-2004-12-17-0: QA:        Improved review template and help text.
                  Review:    AS
 

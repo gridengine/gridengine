@@ -356,6 +356,11 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       return STATUS_EUNKNOWN;
    }
 
+   if (!qref_list_is_valid(lGetList(jep, JB_soft_queue_list), alpp)) {
+      DEXIT; 
+      return STATUS_EUNKNOWN;
+   }
+
    if (!qref_list_is_valid(lGetList(jep, JB_master_hard_queue_list), alpp)) {
       DEXIT; 
       return STATUS_EUNKNOWN;
@@ -2870,11 +2875,7 @@ int *trigger
    if ((pos=lGetPosViaElem(jep, JB_hard_queue_list))>=0) {
       DPRINTF(("got new JB_hard_queue_list\n")); 
       
-      /* attribute "qname" in queue complex must be requestable for -q */
-      if (lGetList(jep, JB_hard_queue_list) && 
-          !centry_list_are_queues_requestable(Master_CEntry_List)) {
-         ERROR((SGE_EVENT, MSG_JOB_QNOTREQUESTABLE2));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      if (!qref_list_is_valid(lGetList(jep, JB_hard_queue_list), alpp)) {
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -2882,37 +2883,42 @@ int *trigger
       lSetList(new_job, JB_hard_queue_list, 
                lCopyList("", lGetList(jep, JB_hard_queue_list)));
       *trigger |= MOD_EVENT;
-      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_HARDQLIST, u32c(jobid));
+      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_HARDQLIST, 
+              u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 
    /* ---- JB_soft_queue_list */
    if ((pos=lGetPosViaElem(jep, JB_soft_queue_list))>=0) {
       DPRINTF(("got new JB_soft_queue_list\n")); 
+
+      if (!qref_list_is_valid(lGetList(jep, JB_soft_queue_list), alpp)) {
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+
       lSetList(new_job, JB_soft_queue_list, 
                lCopyList("", lGetList(jep, JB_soft_queue_list)));
       *trigger |= MOD_EVENT;
-      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_SOFTQLIST, u32c(jobid));
+      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_SOFTQLIST, 
+              u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 
    /* ---- JB_master_hard_queue_list */
    if ((pos=lGetPosViaElem(jep, JB_master_hard_queue_list))>=0) {
       DPRINTF(("got new JB_master_hard_queue_list\n")); 
-      
-      /* attribute "qname" in queue complex must be requestable for -q */
-      if (lGetList(jep, JB_master_hard_queue_list) && 
-          !centry_list_are_queues_requestable(Master_CEntry_List)) {
-         ERROR((SGE_EVENT, MSG_JOB_QNOTREQUESTABLE2));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+
+      if (!qref_list_is_valid(lGetList(jep, JB_master_hard_queue_list), alpp)) {
          DEXIT;
          return STATUS_EUNKNOWN;
       }
-
+      
       lSetList(new_job, JB_master_hard_queue_list, 
                lCopyList("", lGetList(jep, JB_master_hard_queue_list)));
       *trigger |= MOD_EVENT;
-      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_MASTERHARDQLIST, u32c(jobid));
+      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_MASTERHARDQLIST, 
+              u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 

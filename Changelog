@@ -1,3 +1,11 @@
+EB-2004-02-20-0: Bugfix:    Soft queue requests are not rejected if queues 
+                            are not requestable.
+                            qalter -q <queue_pattern_which_will_never_match> 
+                            is not rejected.
+                 Changed:   sge_qmaster
+                 Issue:     688, 689
+                 Review:    pending
+
 MD-2004-02-20-0: Bugfix:    - new dialog messages
                  Changed    inst_sgeee, testsuite
                  Issue:     676

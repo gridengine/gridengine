@@ -1,3 +1,8 @@
+AA-2003-09-11-0: Bugfix:    fixed sge_ca scripts, conf files, added some
+                            additional cl switches for extending, printing and
+                            verifying certs
+                 Changed:   sge_ca script
+
 SG-2003-09-15-0: Bugfix.:   Fixed the build
 
 EB-2003-09-11-0: Enhancem.: Event handling for CQ and QI 

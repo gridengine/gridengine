@@ -329,7 +329,7 @@ proc setup_queues {} {
          set change_array(qname) "${host}_m${i}"
          set change_array(hostname) "$host"
          set change_array(slots) $nr_slots
-         set change_array(load_thresholds) "np_load_avg=3.75"
+         set change_array(load_thresholds) "np_load_avg=11.75"
          add_queue change_array 1
          lappend queue_list "${host}_m${i}"
       }
@@ -1522,7 +1522,7 @@ proc compare_dump_data_file { file1 file2 } {
 
 
    
-   generate_html_file $output_dir/index.html "$test_config1(gridengine_version) (A) from $test_config1(test_date)<br>vs<br>$test_config2(gridengine_version) (B) from $test_config2(test_date)" $content
+   generate_html_file $output_dir/index.html "$test_config1(gridengine_version) (A) from $test_config1(test_date)<br>file: $file1<br>vs<br>$test_config2(gridengine_version) (B) from $test_config2(test_date)<br>file: $file2" $content
 
    # generate chart files ------------------------------------------------
    set content ""

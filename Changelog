@@ -1,3 +1,8 @@
+CR-2003-04-08-2  Testsuite: throughput test: 
+                            - increased load_thresholds
+                            - show filename of test results data in html
+                              report
+
 CR-2003-04-08-1  Enhancem:  new options for test binaries.
                  Changed:   testsuite_snd, testsuite_rcv
 

@@ -39,7 +39,7 @@
 
 
 /* funtions called via gdi and inside the qmaster */
-int sge_del_host(lListElem *, lList **, char *, char *, u_long32);
+int sge_del_host(lListElem *, lList **, char *, char *, u_long32, const lList* master_hGroup_List);
 
 int host_spool(lList **alpp, lListElem *ep, gdi_object_t *object);
 

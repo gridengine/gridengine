@@ -218,7 +218,8 @@ lListElem *hep,
 lList **alpp,
 char *ruser,
 char *rhost,
-u_long32 target 
+u_long32 target,
+const lList* master_hGroup_List
 ) {
    int pos;
    lListElem *ep;
@@ -320,10 +321,10 @@ u_long32 target
    }
 
    if (target == SGE_EXECHOST_LIST && 
-       host_is_referenced(hep, NULL, 
-                          *(object_type_get_master_list(SGE_TYPE_CQUEUE)))) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTDELEXECACTIVQ_S, unique));
-      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+       host_is_referenced(hep, alpp, 
+                          *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+                          master_hGroup_List)) {
+      answer_list_log(alpp, false);                    
       DEXIT;
       return STATUS_ESEMANTIC;
    }

@@ -773,7 +773,7 @@ static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request 
             case SGE_ADMINHOST_LIST:
             case SGE_SUBMITHOST_LIST:
             case SGE_EXECHOST_LIST:
-               sge_del_host(ep, &(answer->alp), user, host, request->target);
+               sge_del_host(ep, &(answer->alp), user, host, request->target, Master_HGroup_List);
                break;
 
             case SGE_CQUEUE_LIST:

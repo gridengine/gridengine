@@ -4,7 +4,7 @@ SG-2005-08-05-0: Change:    removed the reference to the JC_FILTER as a
 
 EB-2004-08-05-0: Bugfix:    hostgroup changes do not always take effect.
                  Issues:    1185
-                 Bugtraq:
+                 Bugtraq:   5083102
                  Changed:   qmaster
                  Review:    SG
 

@@ -1,0 +1,41 @@
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=EUC-KR">
+   <meta name="Author" content=" Chansup Byun">
+   <meta name="GENERATOR" content="Mozilla/4.76C-Netscape [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+</head>
+<body>
+
+<pre>
+<b><font color="#0000ff">- Globus GRAM (Globus Resource Allocation Manager) scripts</font></b>
+
+In order to use the "jobmanager-sge" service, you need to create the 
+following GRAM scripts (Globus version 1.x).
+
+-rwxr-xr-x   1 hes-hpc     8352  1 15 15:06 globus-script-sge-poll*
+-rwxr-xr-x   1 hes-hpc    12130  1 15 15:06 globus-script-sge-queue*
+-rwxr-xr-x   1 hes-hpc     6871  1 15 15:06 globus-script-sge-rm*
+-rwxr-xr-x   1 hes-hpc    20767  1 15 15:06 globus-script-sge-submit*
+
+Copy these files to <b><font color="#0000ff">$GLOBUS_DEPLOY_DIR/libexec</font></b> directory.
+
+The current scripts assume that SGE is installed on the default location 
+with the default configuration.
+
+The <b><font color="#0000ff">globus-script-sge-submit</font></b> is further modified to include the loose 
+integration between SGE and Sun HPC ClusterTools. So Sun MPI jobs can now 
+be submitted to SGE via Globus command. The scripts can be downloaded <a href="globus-sge-scripts.tar.gz">here</a>.
+
+
+</pre>
+
+    <hr>
+    <address><a href="mailto:chansup.byun@sun.com">Chansup Byun</a></address>
+<!-- Created: Wed Jan 16 16:17:43 EST 2002 -->
+<!-- hhmts start -->
+Last modified: Mon Feb  4 10:28:08 EST 2002
+<!-- hhmts end -->
+
+</body>
+<!--#include virtual="../../FOOTER" -->
+</html>

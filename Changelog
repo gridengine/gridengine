@@ -1,3 +1,8 @@
+CR-2002-04-11-2: Testsuite: Remove temp script files at startup of next 
+                            check function instead of next check. This
+                            should reduce the number of files to delete
+                            at one pass.
+
 CR-2002-04-11-1: Testsuite: Some further modifications for CR-2002-04-11-0
 
 EB-2002-04-11-0: Bugfix:    Solaris processor sets / Migration script

@@ -3933,6 +3933,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    if { [info exists check_functions] == 1 } {
       foreach elem $check_functions {
          
+         delete_temp_script_files
          puts $CHECK_OUTPUT "\n>>>>>>>>>>>>>>>>>>>>>>"
          puts $CHECK_OUTPUT "$elem"    
          puts $CHECK_OUTPUT "runlevel: [get_run_level_name $level]($level)"
@@ -4161,7 +4162,23 @@ proc check_root_access {path} {
   return -1
 }
 
+proc delete_temp_script_files { } {
+  global CHECK_TESTSUITE_ROOT
 
+  set del_file_name "$CHECK_TESTSUITE_ROOT/.testsuite_delete"
+  if { [ file isfile $del_file_name ] == 1 } {
+     set files_deleted 0
+     set del_file [ open $del_file_name "r" ]
+     while { [gets $del_file line] >= 0 } {
+        file delete $line
+        incr files_deleted 1 
+     }
+     close $del_file
+     if { $files_deleted > 0 } {
+        file delete $del_file_name     
+     } 
+  } 
+}
 # run test
 #                                                             max. column:     |
 #****** check/run_test() ******
@@ -4204,20 +4221,6 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
   global CHECK_CURRENT_WORKING_DIR check_highest_level check_init_level_procedure CHECK_ACT_LEVEL
   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_ROOT CHECK_TESTSUITE_ROOT
   global CHECK_PRODUCT_FEATURE check_category
-
-  set del_file_name "$CHECK_TESTSUITE_ROOT/.testsuite_delete"
-  if { [ file isfile $del_file_name ] == 1 } {
-     set del_file [ open $del_file_name "r" ]
-     puts $CHECK_OUTPUT "deleting old temp script files ..."
-     while { [gets $del_file line] >= 0 } {
-        debug_puts $CHECK_OUTPUT $line
-        file delete $line
-     }
-     close $del_file
-     file delete $del_file_name     
-     sleep 1
-  }
-
 
   cd $CHECK_CURRENT_WORKING_DIR
 

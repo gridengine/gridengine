@@ -692,10 +692,14 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
    DENTER(QINSTANCE_LAYER, "qinstance_list_find_matching");
    if (this_list != NULL && hostname_pattern != NULL) {
       lListElem *qinstance;
+      char host[CL_MAXHOSTLEN];
+
+      if ((getuniquehostname(hostname_pattern, host, 0)) == CL_RETVAL_OK) {
+         hostname_pattern = host;
+      }
 
       for_each(qinstance, this_list) {
          const char *hostname = lGetHost(qinstance, QU_qhostname);
-
          if (!fnmatch(hostname_pattern, hostname, 0)) {
             if (qref_list != NULL) {
                dstring buffer = DSTRING_INIT;

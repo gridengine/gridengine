@@ -1,3 +1,8 @@
+RD-2005-03-10-0: Bugfix    qstat -f -q all.q@HOSTNAME does not resolve hostname
+                 Issue:    1220
+                 Bugtraq:  5085004
+                 Review:   CR
+
 CR-2005-03-10-0: Bugfix:    - fixed thread signal behaviour for application threads
                               calling cl_commlib_receive_message() at the same time.
                             - fixed qping failure when no sge environment is sourced

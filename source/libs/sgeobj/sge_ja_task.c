@@ -319,6 +319,11 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
    ** dup the input string for tokenizing
    */
    if (isdigit(job_str[0])) {
+      const double epsilon = 1.0E-12;
+      char *end_ptr = NULL;
+      double dbl_value;
+      u_long32 ulng_value;
+
       if ((token = strchr(job_str, '.')) != NULL){
          token[0] = '\0';
          token++;
@@ -329,21 +334,12 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
          }
       }
 
-      {
-         const double epsilon = 1.0E-12;
-         char *end_ptr = NULL;
-         double dbl_value;
-         u_long32 ulng_value;
+      dbl_value = strtod(job_str, &end_ptr);
+      ulng_value = dbl_value;
 
-         dbl_value = strtod(job_str, &end_ptr);
-         ulng_value = dbl_value;
-         if (dbl_value < 1 || dbl_value - ulng_value > epsilon) {
-            ret = -1;
-         } else if (end_ptr != NULL && *end_ptr == '\0') {
-            
-         } else {
-            ret = -1;
-         }
+      if ((dbl_value < 1) || (dbl_value - ulng_value > epsilon) ||
+          (end_ptr == NULL) || (end_ptr[0] != '\0')) {
+         ret = -1;
       }
    }
 
@@ -352,7 +348,7 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
          task_id_range_list = lCopyList(lGetListName(arrayDefList), arrayDefList);
       }
       else {
-         lAddList(task_id_range_list, lCopyList("",arrayDefList));
+         lAddList(task_id_range_list, lCopyList("", arrayDefList));
       }
    }
 
@@ -362,6 +358,7 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
       }
       else {   
          *idp = lAddElemStr(ipp, ID_str, job_str, ID_Type);
+         
          if (*idp) {
             range_list_sort_uniq_compress(task_id_range_list, alpp);
             lSetList(*idp, ID_ja_structure, task_id_range_list);

@@ -58,6 +58,10 @@ public class TestDRMAA {
          printUsage ();
          System.exit (1);
       }
+      else if (args[0].equals ("-h") || args[0].equals ("-help")) {
+         printUsage ();
+         System.exit (0);
+      }
 
       arg = args[0];
       

@@ -128,13 +128,14 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[]);
 
 static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_jt, 
    int is_bulk, int start, int end, int step, dstring *diag);
-static int japi_drmaa_path2path_opt(const lList *attrs, lList **args,
+static int drmaa_path2path_opt(const lList *attrs, lList **args,
    int is_bulk, const char *attribute_key, const char *sw, int opt, dstring *diag,
    bool bFileStaging);
-static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk, 
-   dstring *diag);
-static int japi_drmaa_path2sge_path(const lList *attrs, int is_bulk,
-   const char *attribute_key, int do_wd, const char **new_path, dstring *diag);
+static int drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk, 
+                             dstring *diag);
+static int drmaa_path2sge_path(const lList *attrs, int is_bulk,
+                               const char *attribute_key, int do_wd,
+                               const char **new_path, dstring *diag);
 static void prune_arg_list (lList *args);
 static void opt_list_append_default_drmaa_opts (lList **opts);
 static void merge_drmaa_options (lList **opts_all, lList **opts_default,
@@ -167,7 +168,6 @@ static drmaa_attr_names_t *drmaa_fill_supported_vector_attributes (dstring *diag
 *******************************************************************************/
 
 static pthread_mutex_t environ_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 #define DRMAA_LOCK_ENVIRON()      sge_mutex_lock("drmaa_environ_mutex", SGE_FUNC, __LINE__, &environ_mutex)
 #define DRMAA_UNLOCK_ENVIRON()    sge_mutex_unlock("drmaa_environ_mutex", SGE_FUNC, __LINE__, &environ_mutex)
 
@@ -217,6 +217,21 @@ static const char *drmaa_supported_vector[] = {
    DRMAA_V_EMAIL, /* mandatory */
    NULL
 };
+
+/****** DRMAA/Env **************************************************************
+*  NAME
+*     Env - Env vars used by DRMAA
+*
+*  SYNOPSIS
+*     #define ENABLE_CWD_ENV "SGE_DRMAA_ALLOW_CWD"
+*     
+*  FUNCTION
+*     ENABLE_CWD_ENV - enables the parsing of the -cwd switch in the sge_request,
+*                      job category, and/or native specification.  Unless this
+*                      env is set, -cwd will be ignored because it not multi-
+*                      thread safe.
+*******************************************************************************/
+#define ENABLE_CWD_ENV "SGE_DRMAA_ALLOW_CWD"
 
 /****** DRMAA/drmaa_init() ****************************************************
 *  NAME
@@ -2104,7 +2119,7 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
 *                            qsub style -wd option
 *
 *  SYNOPSIS
-*     static int japi_drmaa_path2wd_opt (const lList *attrs, lList **args, int is_bulk,
+*     static int drmaa_path2wd_opt (const lList *attrs, lList **args, int is_bulk,
 *                                        dstring *diag)
 *
 *  FUNCTION
@@ -2128,19 +2143,19 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTE: japi_drmaa_path2wd_opt() is MT safe
+*     MT-NOTE: drmaa_path2wd_opt() is MT safe
 *******************************************************************************/
-static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
-                                  dstring *diag)
+static int drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
+                             dstring *diag)
 {
    const char *new_path = NULL;
    int drmaa_errno;
    
-   DENTER (TOP_LAYER, "japi_drmaa_path2wd_opt");
+   DENTER (TOP_LAYER, "drmaa_path2wd_opt");
    
-   if ((drmaa_errno = japi_drmaa_path2sge_path (attrs, is_bulk,
-                                            DRMAA_WD, 0, &new_path,
-                                            diag)) == DRMAA_ERRNO_SUCCESS) {
+   if ((drmaa_errno = drmaa_path2sge_path (attrs, is_bulk,
+                                           DRMAA_WD, 0, &new_path,
+                                           diag)) == DRMAA_ERRNO_SUCCESS) {
       if (new_path != NULL) {
          lListElem *ep = lGetElemStr (attrs, VA_variable, DRMAA_WD);
          const char *value = lGetString (ep, VA_value);
@@ -2166,9 +2181,9 @@ static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
 *                             path option
 *
 *  SYNOPSIS
-*     static int japi_drmaa_path2path_opt (const lList *attrs, lList **args,
-*                                          int is_bulk, const char *attribute_key,
-*                                          const char *sw, int opt, dstring *diag)
+*     static int drmaa_path2path_opt (const lList *attrs, lList **args,
+*                                     int is_bulk, const char *attribute_key,
+*                                     const char *sw, int opt, dstring *diag)
 *
 *  FUNCTION
 *     Transform a DRMAA job path into SGE qsub style path option. The following 
@@ -2195,17 +2210,17 @@ static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTE: japi_drmaa_path2path_opt() is MT safe
+*     MT-NOTE: drmaa_path2path_opt() is MT safe
 *******************************************************************************/
-static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bulk,
-                                    const char *attribute_key, const char *sw,
-                                    int opt, dstring *diag, bool bFileStaging )
+static int drmaa_path2path_opt(const lList *attrs, lList **args, int is_bulk,
+                               const char *attribute_key, const char *sw,
+                               int opt, dstring *diag, bool bFileStaging )
 {
    const char *new_path = NULL;
    int drmaa_errno;
    lList *path_list = lCreateList ("path_list", PN_Type);
    
-   DENTER (TOP_LAYER, "japi_drmaa_path2path_opt");
+   DENTER (TOP_LAYER, "drmaa_path2path_opt");
 
    if (path_list == NULL) {
       japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diag);
@@ -2213,9 +2228,9 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
    
-   if ((drmaa_errno = japi_drmaa_path2sge_path (attrs, is_bulk,
-                                                 attribute_key, 1, &new_path,
-                                                 diag)) == DRMAA_ERRNO_SUCCESS) {
+   if ((drmaa_errno = drmaa_path2sge_path (attrs, is_bulk,
+                                           attribute_key, 1, &new_path,
+                                           diag)) == DRMAA_ERRNO_SUCCESS) {
       if (new_path) {
          lListElem *ep = lGetElemStr (attrs, VA_variable, attribute_key);
          const char *value = lGetString(ep, VA_value);
@@ -2293,7 +2308,7 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
 *                             counterpart
 *
 *  SYNOPSIS
-*     static int japi_drmaa_path2sge_path (const lList *attrs, int is_bulk,
+*     static int drmaa_path2sge_path (const lList *attrs, int is_bulk,
 *                                          const char *attribute_key, int do_wd,
 *                                          const char **new_path, dstring *diag)
 *
@@ -2321,15 +2336,15 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTE: japi_drmaa_path2sge_path() is MT safe
+*     MT-NOTE: drmaa_path2sge_path() is MT safe
 *******************************************************************************/
-static int japi_drmaa_path2sge_path(const lList *attrs, int is_bulk,
-                                    const char *attribute_key, int do_wd,
-                                    const char **new_path, dstring *diag)
+static int drmaa_path2sge_path(const lList *attrs, int is_bulk,
+                               const char *attribute_key, int do_wd,
+                               const char **new_path, dstring *diag)
 {
    lListElem *ep;
 
-   DENTER (TOP_LAYER, "japi_drmaa_path2sge_path");
+   DENTER (TOP_LAYER, "drmaa_path2sge_path");
 
    if ((ep=lGetElemStr(attrs, VA_variable, attribute_key ))) {
       dstring ds = DSTRING_INIT;
@@ -2447,7 +2462,6 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    u_long32 jb_now = 0;
 
    DENTER (TOP_LAYER, "drmaa_job2sge_job");
-   DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
    
    /* make JB_Type job description out of DRMAA job template */
    if (!(jt = lCreateElem (JB_Type))) {
@@ -2601,14 +2615,15 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
 
       if (path != NULL) {
          DPRINTF (("Using \"%s\" for the working directory.\n", path));
-         chdir (path);
+         opt_list_append_opts_from_script_path (&opts_scriptfile, (char *)path, &alp,
+                                                opts_drmaa, environ);
          FREE (path);
       }
       else {
          DPRINTF (("Using current directory for the working directory.\n"));
+         opt_list_append_opts_from_script (&opts_scriptfile, &alp, opts_drmaa,
+                                           environ);
       }
-      
-      opt_list_append_opts_from_script (&opts_scriptfile, &alp, opts_drmaa, environ);
       
       if (answer_list_has_error (&alp)) {
          answer_list_to_dstring (alp, diag);
@@ -2764,7 +2779,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    }
 
    alp = cull_parse_job_parameter (opts_all, &jt);
-   
+
    if (answer_list_has_error (&alp)) {
       answer_list_to_dstring (alp, diag);
       jt = lFreeElem (jt);   
@@ -2860,7 +2875,7 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
    }
 
    /* working directory -- -wd (not exposed in qsub) */
-   if ((drmaa_errno = japi_drmaa_path2wd_opt (attrs, args, is_bulk, diag))
+   if ((drmaa_errno = drmaa_path2wd_opt (attrs, args, is_bulk, diag))
         != DRMAA_ERRNO_SUCCESS) {
       DEXIT;
       return drmaa_errno;
@@ -2873,20 +2888,20 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
          strvalue = lGetString( ep, VA_value );   
       }
       
-      if((drmaa_errno = japi_drmaa_path2path_opt(attrs, args, is_bulk,
+      if((drmaa_errno = drmaa_path2path_opt(attrs, args, is_bulk,
                DRMAA_OUTPUT_PATH, "-o", o_OPT, diag, strchr( strvalue, 'o')?true:false))
          != DRMAA_ERRNO_SUCCESS) {
          DEXIT;
          return drmaa_errno;
       }
 
-      if((drmaa_errno = japi_drmaa_path2path_opt(attrs, args, is_bulk,
+      if((drmaa_errno = drmaa_path2path_opt(attrs, args, is_bulk,
                DRMAA_ERROR_PATH, "-e", e_OPT, diag, strchr( strvalue, 'e')?true:false))
          != DRMAA_ERRNO_SUCCESS) {
          DEXIT;
          return drmaa_errno;
       }
-      if((drmaa_errno = japi_drmaa_path2path_opt(attrs, args, is_bulk,
+      if((drmaa_errno = drmaa_path2path_opt(attrs, args, is_bulk,
                DRMAA_INPUT_PATH, "-i", i_OPT, diag, strchr( strvalue, 'i')?true:false))
          != DRMAA_ERRNO_SUCCESS) {
          DEXIT;
@@ -3273,7 +3288,7 @@ o   -a date_time                           request a job start time
 +   -c ckpt_selector                       define type of checkpointing for job
 +   -ckpt ckpt-name                        request checkpoint method
 +   -clear                                 skip previous definitions for job
-o   -cwd                                   use current working directory
+-?  -cwd                                   use current working directory
 +   -C directive_prefix                    define command prefix for job script
 +   -dc simple_context_list                remove context variable(s)
 +   -dl date_time                          request a deadline initiation time
@@ -3304,10 +3319,12 @@ o   -o path_list                           specify standard output stream path(s
 o   -v variable_list                       export these environment variables
 -   -verify                                do not submit just verify
 o   -V                                     export all environment variables
--   -w e|w|n|v                             verify mode (error|warning|none|just verify) for jobs
++   -w e|n                                 verify mode (error|none) for jobs
+-   -w w|v                                 verify mode (warning|just verify) for jobs
 +   -@ file                                read commandline input from file
    */
    lListElem *element = NULL;
+   const void *i = NULL;
    
    DENTER(TOP_LAYER, "prune_arg_list");
    
@@ -3326,8 +3343,18 @@ o   -V                                     export all environment variables
       lRemoveElem (args, element);
    }
    
-   while ((element = lGetElemStr (args, SPA_switch, "-w"))) {
-      lRemoveElem (args, element);
+   while ((element = lGetElemStrNext (args, SPA_switch, "-w", &i))) {
+      int argval = lGetInt(element, SPA_argval_lIntT);
+      
+      if ((argval == JUST_VERIFY) || (argval == WARNING_VERIFY)) {      
+         lRemoveElem (args, element);
+      }
+   }
+  
+   if (sge_getenv (ENABLE_CWD_ENV) == NULL) {
+      while ((element = lGetElemStr (args, SPA_switch, "-cwd"))) {
+         lRemoveElem (args, element);
+      }
    }
    
    DEXIT;

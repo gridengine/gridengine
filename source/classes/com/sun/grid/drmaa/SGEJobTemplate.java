@@ -232,7 +232,7 @@ public class SGEJobTemplate extends JobTemplate {
    }
    
    public void setErrorPath (String errorPath) throws DRMAAException {
-      this.setAttribute (ERROR_PATH, inputPath);
+      this.setAttribute (ERROR_PATH, errorPath);
    }
    
    public String getErrorPath () {

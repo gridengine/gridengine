@@ -992,9 +992,13 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
          } else {
             lList *sub_list = lGetList(object, fields[i].nm);      
 
-            if (sub_list == NULL || lGetNumberOfElem(sub_list) == 0) {
+            /* Bugfix: Issuezilla #1137
+             * If a list field has no name and no value, it should be ignored
+             * altogether. */
+            if (((sub_list == NULL) || (lGetNumberOfElem(sub_list) == 0)) &&
+                (fields[i].name != NULL)) {
                sge_dstring_append(&field_buffer, NONE_STR);
-            } else {
+            } else if (fields[i].name != NULL) {
                sge_dstring_clear(&tmp_buffer);
       
                if (spool_flatfile_write_list_fields(answer_list, sub_list, 
@@ -2070,11 +2074,18 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
 {
    int index = 0;
    int word = 0;
-   char *strp = (char *)sge_dstring_get_string (buffer);
+   char *strp = NULL;
    char str_buf[MAX_STRING_SIZE];
    char *indent_str = NULL;
    bool changed = false;
    bool first_line = true;
+   
+   strp = (char *)sge_dstring_get_string (buffer);
+   
+   /* This happens when qconf -aconf is used. */
+   if (strp == NULL) {
+      return;
+   }
    
    str_buf[0] = '\0';
    

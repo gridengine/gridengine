@@ -40,11 +40,15 @@ extern "C" {
 
 int lSplit(lList **slp, lList **ulp, const char *ulp_name, const lCondition *cp);
 
-lListElem *lSelectElemD(const lListElem *slp, const lCondition *cp, const lDescr *dp, const lEnumeration *enp); 
-lListElem *lSelectElem(const lListElem *slp, const lCondition *cp, const lEnumeration *enp); 
+lListElem *lSelectElemD(const lListElem *slp, const lCondition *cp, const lDescr *dp, const lEnumeration *enp, bool isHash); 
+lListElem *lSelectElem(const lListElem *slp, const lCondition *cp, const lEnumeration *enp, bool isHash); 
 
 lList *lSelect(const char *name, const lList *slp, const lCondition *cp, const lEnumeration *ep);
-lList *lSelectD(const char *name, const lList *slp, const lCondition *cp, const lDescr *dp, const lEnumeration *enp);
+lList *lSelectHash(const char *name, const lList *slp, const lCondition *cp, 
+                   const lEnumeration *ep, bool isHash);
+
+lList *lSelectD(const char *name, const lList *slp, const lCondition *cp, const lDescr *dp, 
+                const lEnumeration *enp, bool isHash);
 
 lDescr *lGetReducedDescr(const lDescr *type, const lEnumeration *what);
 

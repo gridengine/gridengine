@@ -469,8 +469,8 @@ int *after
    }
 
    *before = lGetNumberOfElem(lp);
-   answer->lp = lSelect("qmaster_response", 
-            lp, request->cp, request->enp);
+   answer->lp = lSelectHash("qmaster_response", 
+            lp, request->cp, request->enp, false);
 
    *after = lGetNumberOfElem(answer->lp);
 

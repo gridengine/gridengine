@@ -503,7 +503,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    if (eclpp != NULL) {
       lListElem *ret_el = lCopyElem(ep);
       if (*eclpp == NULL) {
-         *eclpp = lCreateList("new event client", EV_Type);
+         *eclpp = lCreateListHash("new event client", EV_Type, true);
       }
       lSetBool(ret_el, EV_changed, false);
       lAppendElem(*eclpp, ret_el);
@@ -690,7 +690,7 @@ int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    /* return modified event client object to event client */
    if (eclpp != NULL) {
       if (*eclpp == NULL) {
-         *eclpp = lCreateList("modified event client", EV_Type);
+         *eclpp = lCreateListHash("modified event client", EV_Type, true);
       }
 
       lAppendElem(*eclpp, lCopyElem(event_client));
@@ -1352,8 +1352,8 @@ bool sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
    pthread_once(&Event_Master_Once, event_master_once_init);
 
    if (element != NULL) {
-      lp = lCreateList ("Events", lGetElemDescr(element));   
-      lAppendElem (lp, lCopyElem (element));
+      lp = lCreateListHash("Events", lGetElemDescr(element), false);   
+      lAppendElem (lp, lCopyElemHash(element, false));
    }
    
    return add_list_event_for_client (EV_ID_ANY, timestamp, type, intkey, intkey2,
@@ -1410,8 +1410,8 @@ bool sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event 
    }
    
    if (anObject != NULL) {
-      lp = lCreateList ("Events", lGetElemDescr(anObject));
-      lAppendElem (lp, lCopyElem (anObject));
+      lp = lCreateListHash("Events", lGetElemDescr(anObject), false);
+      lAppendElem (lp, lCopyElemHash(anObject, false));
    }
    
    DEXIT;
@@ -1459,7 +1459,7 @@ bool sge_add_list_event(u_long32 timestamp, ev_event type,
    pthread_once(&Event_Master_Once, event_master_once_init);
 
    if (list != NULL) {
-      lp = lCopyList (lGetListName (list), list);
+      lp = lCopyListHash(lGetListName (list), list, false);
    }
    
    return add_list_event_for_client (EV_ID_ANY, timestamp, type, intkey, intkey2,
@@ -1510,7 +1510,7 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
                                       lList *list, bool has_lock)
 {
    lListElem *evp = lCreateElem (EV_Type);
-   lList *etlp = lCreateList ("Event_List", ET_Type);
+   lList *etlp = lCreateListHash("Event_List", ET_Type, false);
    lListElem *etp = lCreateElem (ET_Type);
    lListElem *client = NULL;
    bool res = true;
@@ -1541,7 +1541,7 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
       lList *qlp = (lList *)pthread_getspecific (Event_Queue_Key);
       
       if (qlp == NULL) {
-         qlp = lCreateList ("Event_Queue", EV_Type);
+         qlp = lCreateListHash ("Event_Queue", EV_Type, false);
          res = (pthread_setspecific (Event_Queue_Key, (void *)qlp) == 0);
       }
 
@@ -1674,9 +1674,9 @@ static void process_sends ()
                   DPRINTF (("Client %d is locked.  Putting event back on queue.\n", ec_id));
 
                   /* Make a copy of the event for this client */
-                  ecopy = lCopyElem (event);                  
-                  copy = lCreateElem (EV_Type);
-                  lcopy = lCreateList ("Event_List", ET_Type);
+                  ecopy = lCopyElemHash (event, false);                  
+                  copy = lCreateElem(EV_Type);
+                  lcopy = lCreateListHash ("Event_List", ET_Type, false);
                   /* Set the EV_id to this client's id. */
                   lSetUlong (copy, EV_id, ec_id);
                   lSetString (copy, EV_session, session);
@@ -1929,7 +1929,7 @@ static void process_sends ()
 void sge_handle_event_ack(u_long32 aClientID, ev_event anEvent)
 {
    lListElem *evp = lCreateElem (EV_Type);
-   lList *etlp = lCreateList ("Event_List", ET_Type);
+   lList *etlp = lCreateListHash ("Event_List", ET_Type, false);
    lListElem *etp = lCreateElem (ET_Type);
    
    DENTER(TOP_LAYER, "sge_handle_event_ack");
@@ -2296,9 +2296,9 @@ static void event_master_once_init(void)
 
    Master_Control.len_event_clients = Master_Control.max_event_clients +
                                       EV_ID_FIRST_DYNAMIC - 1;
-   Master_Control.clients = lCreateList("EV_Clients", EV_Type);
-   Master_Control.ack_events = lCreateList("Events_To_ACK", EV_Type);
-   Master_Control.send_events = lCreateList("Events_To_Send", EV_Type);
+   Master_Control.clients = lCreateListHash("EV_Clients", EV_Type, true);
+   Master_Control.ack_events = lCreateListHash("Events_To_ACK", EV_Type, false);
+   Master_Control.send_events = lCreateListHash("Events_To_Send", EV_Type, false);
    Master_Control.lockfield = sge_bitfield_new (Master_Control.len_event_clients);
    Master_Control.clients_array = (lListElem **)malloc (sizeof (lListElem *) *
                                               Master_Control.len_event_clients);
@@ -2403,7 +2403,7 @@ static void* send_thread(void *anArg)
 
    sge_qmaster_thread_init();
 
-   report_list = lCreateList("report list", REP_Type);
+   report_list = lCreateListHash("report list", REP_Type, false);
    report = lCreateElem(REP_Type);
    lSetUlong(report, REP_type, NUM_REP_REPORT_EVENTS);
    lSetHost(report, REP_host, uti_state_get_qualified_hostname());
@@ -3211,7 +3211,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
          
          if (!list_select(subscription, type, &clp, lp, selection, fields,
                           descr)){
-            clp = lSelectD("updating list", lp, selection, descr, fields);
+            clp = lSelectD("updating list", lp, selection, descr, fields, false);
          }
 
          /* no elements in the event list, no need for an event */
@@ -3234,7 +3234,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
       /* If there's no what clause, and we want a copy, we copy the list */
       else if (copy_event) {
          DPRINTF (("Copying event data\n"));
-         clp = lCopyList (lGetListName (lp), lp);
+         clp = lCopyListHash(lGetListName (lp), lp, false);
       }
       /* If there's no what clause, and we don't want to copy, we just reuse
        * the original list. */
@@ -3247,7 +3247,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
     * back into the original event */
    if (copy_event) {
       DPRINTF (("Copying event\n"));
-      ep = lCopyElem (event);
+      ep = lCopyElemHash(event, false);
       
       if (lp != NULL) {
          lXchgList (event, ET_new_version, &lp);
@@ -3277,7 +3277,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
    lp = lGetList(event_client, EV_events);
    
    if (lp == NULL) {
-      lp=lCreateList("Events", ET_Type);
+      lp=lCreateListHash("Events", ET_Type, false);
       lSetList(event_client, EV_events, lp);
    }
 
@@ -3416,8 +3416,9 @@ static void total_update_event(lListElem *event_client, ev_event type)
       } /* switch */
 
       add_list_event_for_client (lGetUlong (event_client, EV_id), 0, type, 0, 0,
-                                 NULL, NULL, NULL, lCopyList (lGetListName (lp),
-                                                              lp), true);
+                                 NULL, NULL, NULL, 
+                                 lCopyListHash (lGetListName (lp), lp, false), 
+                                 true);
    } /* if */
 
    DEXIT;
@@ -3484,7 +3485,7 @@ static bool list_select(subscription_t *subscription, int type,
                lListElem *reduced_el = NULL;
                
                ret = true;
-               *reduced_lp = lCreateList("update", descr);        
+               *reduced_lp = lCreateListHash("update", descr, false);        
                
                for_each(element, lp) {
                   reduced_el = elem_select(subscription, element, 
@@ -3597,14 +3598,14 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
       /* copy the main list */
       if (!fields) {
          /* there might be no filter for the main element, but for the sub-lists */
-         el = lCopyElem(element);
+         el = lCopyElemHash(element, false);
       }
       else if (!dp) {
          /* for some reason, we did not get a descriptor for the target element */
-         el = lSelectElem(element, selection, fields);
+         el = lSelectElem(element, selection, fields, false);
       }
       else {
-         el = lSelectElemD(element, selection, dp, fields);
+         el = lSelectElemD(element, selection, dp, fields, false);
       }
 
       /* if we have a new reduced main element */
@@ -3614,7 +3615,7 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
             if (sub_list[counter] && (lGetPosViaElem(el, ids[counter]) != -1)) {
                lSetList(el, ids[counter],
                         lSelectD("", sub_list[counter], sub_selection,
-                                 sub_descr, sub_fields));
+                                 sub_descr, sub_fields, false));
             }            
          } 
       }
@@ -3629,7 +3630,7 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
    /* .... do a simple select */
    else {
       DPRINTF(("no sub filter specified\n"));
-      el = lSelectElemD(element, selection, dp, fields);
+      el = lSelectElemD(element, selection, dp, fields, false);
    }   
 
    DEXIT;

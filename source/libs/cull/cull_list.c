@@ -123,7 +123,28 @@ static void lWriteElem_(const lListElem *lp, int nesting_level, FILE *fp);
 *  RESULT
 *     lListElem* - copy of 'ep'
 ******************************************************************************/
-lListElem *lCopyElem(const lListElem *ep) 
+lListElem *lCopyElem(const lListElem *ep) {
+   return lCopyElemHash(ep, true);
+}
+
+/****** cull/list/lCopyElemHash() *************************************************
+*  NAME
+*     lCopyElemHash() -- Copies a whole list element 
+*
+*  SYNOPSIS
+*     lListElem* lCopyElemHash(const lListElem *ep, bool isHash) 
+*
+*  FUNCTION
+*     Copies a whole list element 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     bool                - generate hash or not
+*
+*  RESULT
+*     lListElem* - copy of 'ep'
+******************************************************************************/
+lListElem *lCopyElemHash(const lListElem *ep, bool isHash) 
 {
    lListElem *new;
    int index;
@@ -147,7 +168,7 @@ lListElem *lCopyElem(const lListElem *ep)
 
    for (index = 0; index<max ; index++) { 
 
-      if (lCopySwitch(ep, new, index, index) != 0) {
+      if (lCopySwitch(ep, new, index, index, isHash) != 0) {
          lFreeElem(new);
 
          LERROR(LECOPYSWITCH);
@@ -197,7 +218,7 @@ int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp)
 
    DENTER(CULL_LAYER, "lModifyWhat");
 
-   ret = lCopyElemPartial(dst, &i, src, enp);
+   ret = lCopyElemPartial(dst, &i, src, enp, true);
 
    DEXIT;
    return ret;
@@ -210,7 +231,7 @@ int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp)
 *  SYNOPSIS
 *     int lCopyElemPartial(lListElem *dst, int *jp, 
 *                          const lListElem *src, 
-*                          const lEnumeration *enp) 
+*                          const lEnumeration *enp, bool isHash) 
 *
 *  FUNCTION
 *     Copies elements from list element 'src' to 'dst' using the
@@ -222,6 +243,7 @@ int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp)
 *     int *jp                 - Where should the copy operation start 
 *     const lListElem *src    - src element 
 *     const lEnumeration *enp - enumeration 
+*     bool                    - generate hash or not
 *
 *  RESULT
 *     int - error state
@@ -229,7 +251,7 @@ int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp)
 *        -1 - Error
 *******************************************************************************/
 int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src, 
-                     const lEnumeration *enp) 
+                     const lEnumeration *enp, bool isHash) 
 {
    int i;
 
@@ -244,7 +266,7 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
    switch (enp[0].pos) {
    case WHAT_ALL:               /* all fields of element src is copied */
       for (i = 0; src->descr[i].nm != NoName; i++, (*jp)++) {
-         if (lCopySwitch(src, dst, i, *jp) != 0) {
+         if (lCopySwitch(src, dst, i, *jp, isHash) != 0) {
             LERROR(LECOPYSWITCH);
             DEXIT;
             return -1;
@@ -261,7 +283,7 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
 
    default:                     /* copy only the in enp enumerated elems */
       for (i = 0; enp[i].nm != NoName; i++, (*jp)++) {
-         if (lCopySwitch(src, dst, enp[i].pos, *jp) != 0) {
+         if (lCopySwitch(src, dst, enp[i].pos, *jp, isHash) != 0) {
             LERROR(LECOPYSWITCH);
             DEXIT;
             return -1;
@@ -282,7 +304,7 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
 *
 *  SYNOPSIS
 *     int lCopySwitch(const lListElem *sep, lListElem *dep, 
-*                     int src_idx, int dst_idx) 
+*                     int src_idx, int dst_idx, isHash) 
 *
 *  FUNCTION
 *     Copies from the element 'sep' (using index 'src_idx') to
@@ -294,6 +316,7 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
 *     lListElem *dep       - destination element 
 *     int src_idx          - source index 
 *     int dst_idx          - destination index 
+*     bool                 - create Hash or not
 *
 *  RESULT
 *     int - error state
@@ -301,7 +324,7 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
 *        -1 - Error
 *******************************************************************************/
 int lCopySwitch(const lListElem *sep, lListElem *dep, 
-                int src_idx, int dst_idx) 
+                int src_idx, int dst_idx, bool isHash) 
 {
    lList *tlp;
    lListElem *tep;
@@ -337,13 +360,13 @@ int lCopySwitch(const lListElem *sep, lListElem *dep,
       if ((tlp = sep->cont[src_idx].glp) == NULL) 
          dep->cont[dst_idx].glp = NULL;
       else  
-         dep->cont[dst_idx].glp = lCopyList(NULL, tlp);
+         dep->cont[dst_idx].glp = lCopyListHash(NULL, tlp, isHash);
       break;
    case lObjectT:
       if ((tep = sep->cont[src_idx].obj) == NULL) {
          dep->cont[dst_idx].obj = NULL;
       } else {
-         lListElem *new = lCopyElem(tep);
+         lListElem *new = lCopyElemHash(tep, isHash);
          new->status = OBJECT_ELEM;
          dep->cont[dst_idx].obj = new;
       }   
@@ -1483,7 +1506,30 @@ int lCompListDescr(const lDescr *dp0, const lDescr *dp1)
 *  RESULT
 *     lList* - Copy of 'src' or NULL 
 ******************************************************************************/
-lList *lCopyList(const char *name, const lList *src) 
+lList *lCopyList(const char *name, const lList *src) {
+   return lCopyListHash(name, src, true);
+}
+
+/****** cull/list/lCopyListHash() *************************************************
+*  NAME
+*     lCopyListHash() -- Copy a list including strings and sublists 
+*
+*  SYNOPSIS
+*     lList* lCopyListHash(const char *name, const lList *src, bool isHash) 
+*
+*  FUNCTION
+*     Copy a list including strings and sublists. The new list will
+*     get 'name' as user defined name 
+*
+*  INPUTS
+*     const char *name - list name 
+*     const lList *src - source list 
+*     bool hash - if set to true, a hash table is generated
+*
+*  RESULT
+*     lList* - Copy of 'src' or NULL 
+******************************************************************************/
+lList *lCopyListHash(const char *name, const lList *src, bool hash) 
 {
    lList *dst = NULL;
    lListElem *sep;
@@ -1518,10 +1564,11 @@ lList *lCopyList(const char *name, const lList *src)
          return NULL;
       }
    }
-
-   /* now create the hash tables */
-   cull_hash_create_hashtables(dst);
-
+   if(hash) {
+      /* now create the hash tables */
+      cull_hash_create_hashtables(dst);
+   }
+   
    DEXIT;
    return dst;
 }

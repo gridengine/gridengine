@@ -1,4 +1,5 @@
 #ifndef __CULL_LIST_H
+
 #define __CULL_LIST_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
@@ -221,11 +222,14 @@ int lAppendList(lList *lp0, lList *lp1);
 lList *lAddSubList(lListElem *ep, int nm, lList *to_add);
 int lCompListDescr(const lDescr *dp0, const lDescr *dp1);
 lList *lCopyList(const char *name, const lList *src);
+lList *lCopyListHash(const char *name, const lList *src, bool hash);
 lListElem *lCopyElem(const lListElem *src);
+lListElem *lCopyElemHash(const lListElem *src, bool isHash);
+
 int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp);
 
-int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src, const lEnumeration *ep);
-int lCopySwitch(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx);
+int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src, const lEnumeration *ep, bool isHash);
+int lCopySwitch(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx, bool isHash);
 
 int lAppendElem(lList *lp, lListElem *ep);
 lListElem *lDechainElem(lList *lp, lListElem *ep);

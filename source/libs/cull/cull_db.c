@@ -104,13 +104,13 @@ static lListElem *lJoinCopyElem(const lDescr *dp,
    }
 
    i = 0;
-   if (lCopyElemPartial(dst, &i, src0, enp0) == -1) {
+   if (lCopyElemPartial(dst, &i, src0, enp0, true) == -1) {
       free(dst);
       LERROR(LECOPYELEMPART);
       DEXIT;
       return NULL;
    }
-   if (lCopyElemPartial(dst, &i, src1, enp1) == -1) {
+   if (lCopyElemPartial(dst, &i, src1, enp1, true) == -1) {
       free(dst);
       LERROR(LECOPYELEMPART);
       DEXIT;
@@ -554,7 +554,7 @@ lList *lSelectDestroy(lList *slp, const lCondition *cp)
 *
 *  SYNOPSIS
 *     lListElem* lSelect(const lListElem *slp, 
-*                    const lCondition *cp, const lEnumeration *enp) 
+*                    const lCondition *cp, const lEnumeration *enp, bool isHash) 
 *
 *  FUNCTION
 *     Creates a new list from the list 'slp' extracting the elements
@@ -564,12 +564,13 @@ lList *lSelectDestroy(lList *slp, const lCondition *cp)
 *     const lListElem *slp        - source list pointer 
 *     const lCondition *cp    - selects rows 
 *     const lEnumeration *enp - selects columns 
+*     bool isHash             - create hash or not
 *
 *  RESULT
 *     lListElem* - list containing the extracted elements
 ******************************************************************************/
 lListElem *lSelectElem(const lListElem *slp, const lCondition *cp,
-               const lEnumeration *enp) 
+               const lEnumeration *enp, bool isHash) 
 {
    lListElem *new = NULL;
    lDescr *dp;
@@ -598,7 +599,7 @@ lListElem *lSelectElem(const lListElem *slp, const lCondition *cp,
       return NULL;
    }
    /* create reduced element */
-   new = lSelectElemD(slp, cp, dp, enp);
+   new = lSelectElemD(slp, cp, dp, enp, isHash);
    /* free the descriptor, it has been copied by lCreateList */
    cull_hash_free_descr(dp);
    free(dp);
@@ -622,12 +623,13 @@ lListElem *lSelectElem(const lListElem *slp, const lCondition *cp,
 *     const lListElem *slp     - source list pointer 
 *     const lCondition *cp     - selects rows 
 *     const lDescr *dp         - target descriptor for the element
+*     bool  isHash             - creates hash or not
 *
 *  RESULT
 *     lListElem* - list containing the extracted elements
 ******************************************************************************/
 lListElem *lSelectElemD(const lListElem *slp, const lCondition *cp,
-               const lDescr *dp, const lEnumeration *enp) 
+               const lDescr *dp, const lEnumeration *enp, bool isHash) 
 {
    lListElem *new = NULL;
    int index = 0;
@@ -648,7 +650,7 @@ lListElem *lSelectElemD(const lListElem *slp, const lCondition *cp,
          return NULL;
       }
       
-      if (lCopyElemPartial(new, &index, slp, enp)) {
+      if (lCopyElemPartial(new, &index, slp, enp, isHash)) {
          lFreeElem(new);
          DEXIT;
          return NULL;
@@ -680,14 +682,41 @@ lListElem *lSelectElemD(const lListElem *slp, const lCondition *cp,
 *     lList* - list containing the extracted elements
 ******************************************************************************/
 lList *lSelect(const char *name, const lList *slp, const lCondition *cp,
-               const lEnumeration *enp) 
+               const lEnumeration *enp) {
+   return lSelectHash(name, slp, cp, enp, true);               
+}               
+
+/****** cull/db/lSelectHash() *****************************************************
+*  NAME
+*     lSelectHash() -- Extracts some elements fulfilling a condition 
+*
+*  SYNOPSIS
+*     lList* lSelectHash(const char *name, const lList *slp, 
+*                    const lCondition *cp, const lEnumeration *enp, bool isHash) 
+*
+*  FUNCTION
+*     Creates a new list from the list 'slp' extracting the elements
+*     fulfilling the condition 'cp'. 
+*
+*  INPUTS
+*     const char *name        - name for the new list 
+*     const lList *slp        - source list pointer 
+*     const lCondition *cp    - selects rows 
+*     const lEnumeration *enp - selects columns 
+*     bool  isHash            - enables/disables the hash generation
+*
+*  RESULT
+*     lList* - list containing the extracted elements
+******************************************************************************/
+lList *lSelectHash(const char *name, const lList *slp, const lCondition *cp,
+               const lEnumeration *enp, bool isHash) 
 {
 
    lList *dlp = (lList *) NULL;
    lDescr *dp;
    int n, index;
 
-   DENTER(CULL_LAYER, "lSelect");
+   DENTER(CULL_LAYER, "lSelectHash");
 
    if (!slp || !enp) {
       DEXIT;
@@ -716,7 +745,7 @@ lList *lSelect(const char *name, const lList *slp, const lCondition *cp,
       return NULL;
    }
 
-   dlp = lSelectD(name, slp, cp, dp, enp);
+   dlp = lSelectD(name, slp, cp, dp, enp, isHash);
    
    /* free the descriptor, it has been copied by lCreateList */
    cull_hash_free_descr(dp);
@@ -732,7 +761,7 @@ lList *lSelect(const char *name, const lList *slp, const lCondition *cp,
 *
 *  SYNOPSIS
 *     lList* lSelectD(const char *name, const lList *slp, const lCondition *cp, 
-*     const lDescr *dp) 
+*     const lDescr *dp, bool isHash) 
 *
 *
 *  FUNCTION
@@ -744,19 +773,20 @@ lList *lSelect(const char *name, const lList *slp, const lCondition *cp,
 *     const lList *slp        - source list pointer 
 *     const lCondition *cp    - selects rows 
 *     const lDescr *dp        - descriptor for the new list
-*     const lEnumeration *enp - selects columns 
+*     const lEnumeration *enp - selects columns
+*     bool  isHash            - enables/disables the hash table creation 
 *
 *  RESULT
 *     lList* - list containing the extracted elements
 *******************************************************************************/
 lList *lSelectD(const char *name, const lList *slp, const lCondition *cp,
-               const lDescr *dp, const lEnumeration *enp) 
+               const lDescr *dp, const lEnumeration *enp, bool isHash) 
 {
 
    lListElem *ep, *new;
    lList *dlp = (lList *) NULL;
 
-   DENTER(CULL_LAYER, "lSelectP");
+   DENTER(CULL_LAYER, "lSelectD");
 
    if (!slp || !dp) {
       DEXIT;
@@ -774,7 +804,7 @@ lList *lSelectD(const char *name, const lList *slp, const lCondition *cp,
       depending on result of lCompare
     */
    for (ep = slp->first; ep; ep = ep->next) {
-      if ((new = lSelectElemD(ep, cp, dlp->descr, enp))){
+      if ((new = lSelectElemD(ep, cp, dlp->descr, enp, isHash))){
          if (lAppendElem(dlp, new) == -1) {
             LERROR(LEAPPENDELEM);
             lFreeElem(new);
@@ -784,10 +814,10 @@ lList *lSelectD(const char *name, const lList *slp, const lCondition *cp,
          }
       }
    }
-
-   /* now create the hash tables */
-   cull_hash_create_hashtables(dlp);
-
+   if (isHash) {
+      /* now create the hash tables */
+      cull_hash_create_hashtables(dlp);
+   }
    /* 
       This is a question of philosophy.
       To return an empty list or not to return.

@@ -1,3 +1,8 @@
+SG-2004-05-05-0: Enhancem.: disabled hashing for cull list which are prepared
+                            for sending em to a client.
+                 Changed:   sge_qmaster
+                 Review:    JG
+
 JG-2004-05-05-0: Testsuite: Verified tests bugs/issuezilla/171, 
                             bugs/issuezilla/403, functional/migration, 
                             system_tests/clients/qalter.

@@ -830,7 +830,7 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
       for (i = 0; i < n; i++) {
          if (found[i] == -1)
             continue;
-         else if (lCopySwitch(fep, ep, found[i], i) == -1) {
+         else if (lCopySwitch(fep, ep, found[i], i, true) == -1) {
             lFreeList(lp);
             lFreeElem(ep);
             free(found);

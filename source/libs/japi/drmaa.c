@@ -663,9 +663,8 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
       /* join files must be either 'y' or 'n' */
       if (!strcmp(name, DRMAA_JOIN_FILES)) {
          if (strlen(value)!=1 || (value[0] != 'y' && value[0] != 'n' )) {
-            if (diagp) 
-               sge_dstring_sprintf(diagp, "attribute "SFQ" must be either "SFQ" or "SFQ"\n", 
-                                   DRMAA_JOIN_FILES, "y", "n");
+            sge_dstring_sprintf(diagp, "attribute "SFQ" must be either "SFQ" or "SFQ"\n", 
+                                DRMAA_JOIN_FILES, "y", "n");
             DEXIT;
             return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
          }
@@ -673,14 +672,13 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
 
       /* submission state must be either active or hold */
       if (!strcmp(name, DRMAA_JS_STATE)) {
-         if (strcmp(value, DRMAA_SUBMISSION_STATE_ACTIVE)
-            && strcmp(value, DRMAA_SUBMISSION_STATE_HOLD)) {
-            if (diagp) 
-               sge_dstring_sprintf(diagp,
-                                   "attribute "SFQ" must be either "SFQ" or "SFQ"\n", 
-                                   DRMAA_JS_STATE,
-                                   DRMAA_SUBMISSION_STATE_ACTIVE,
-                                   DRMAA_SUBMISSION_STATE_HOLD);
+         if (strcmp(value, DRMAA_SUBMISSION_STATE_ACTIVE) &&
+             strcmp(value, DRMAA_SUBMISSION_STATE_HOLD)) {
+            sge_dstring_sprintf(diagp,
+                                "attribute "SFQ" must be either "SFQ" or "SFQ"\n", 
+                                DRMAA_JS_STATE,
+                                DRMAA_SUBMISSION_STATE_ACTIVE,
+                                DRMAA_SUBMISSION_STATE_HOLD);
             DEXIT;
             return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
          }
@@ -693,13 +691,11 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
          for (count = 0; value[count] != '\0'; count++) {
             if ((value[count] != 'e') && (value[count] != 'i') &&
                 (value[count] != 'o')) {
-               if (diagp != NULL) {
-                  sge_dstring_sprintf (diagp,
-                                      "attribute "SFQ" must contain only 'e', 'i', and/or 'o'\n",
-                                      DRMAA_TRANSFER_FILES);
-                  DEXIT;
-                  return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
-               }
+               sge_dstring_sprintf (diagp,
+                                   "attribute "SFQ" must contain only 'e', 'i', and/or 'o'\n",
+                                   DRMAA_TRANSFER_FILES);
+               DEXIT;
+               return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
             }
          }
       }

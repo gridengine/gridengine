@@ -1,3 +1,14 @@
+DT-2004-11-17-0: Bugfix:    o Check drmaa_wait() and drmaa_synchronize() for
+                              negative timeouts.
+                            o drmaa_synchronize() now waits for all tasks ids of
+                              all jobs with DRMAA_JOB_IDS_SESSION_ALL parameter.
+                            o drmaa_set_attribute() checks validity of
+                              DRMAA_TRANFER_FILES value.
+                            o drmaa_control() now recognizes held states.
+                 Review:    AH
+                 Changed:   japi, drmaa
+                 Issue:     1339, 1340, 1341, 1343
+
 JG-2004-11-17-0: Testsuite: Fix and optimization of vi controlling and changing
                             global config.
                  Review:    CR

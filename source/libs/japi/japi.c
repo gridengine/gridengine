@@ -2262,8 +2262,16 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
    int wait_result;
    struct timespec ts;
    const char **sync_job_ids = NULL;
+   lList *sync_list = NULL;
 
    DENTER(TOP_LAYER, "japi_synchronize");
+   
+   if (timeout < DRMAA_TIMEOUT_WAIT_FOREVER) {
+      sge_dstring_sprintf (diag, MSG_JAPI_NEGATIVE_TIMEOUT);
+      
+      DEXIT;
+      return DRMAA_ERRNO_INVALID_ARGUMENT;
+   }
 
    /* ensure japi_init() was called */
    JAPI_LOCK_SESSION();
@@ -2316,8 +2324,9 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
       }
    }
 
-   if (timeout != DRMAA_TIMEOUT_WAIT_FOREVER) 
+   if (timeout != DRMAA_TIMEOUT_WAIT_FOREVER) {
       sge_relative_timespec(timeout, &ts);
+   }
 
    JAPI_LOCK_JOB_LIST();
 
@@ -2325,51 +2334,58 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
     * running jobs in the master job list. */
    if (sync_all == true) {
       lListElem *ep = NULL;
-      lList *lp = NULL;
       u_long32 id = 0;
       char *char_id = NULL;
       int count = 0;
-      bool add_job = false;
+      sync_list = lCreateList ("Synchronize Job List", ST_Type);
       
-      /* The only thing we know is that we are making a list <= the size of the
-       * master job list.  I'm going to make the assumption that there will not
-       * be many completed jobs in the master job list.  If there actually are,
-       * the size of this array would end up being much too large.  However,
-       * since it's only an array of pointers, that's not such a big deal. */
-      /* We have to add one to the size of the array for the NULL terminator. */
-      sync_job_ids = (const char**)malloc (sizeof (char *) *
-                                 (lGetNumberOfElem (Master_japi_job_list) + 1));
-      
-      ep = lFirst (Master_japi_job_list);
-      
-      while (ep != NULL) {
+      for_each (ep, Master_japi_job_list) {
+         lList *not_yet_finished = NULL;
+         lListElem *range;
+         u_long32 task_id = 0;
+         u_long32 min = 0;
+         u_long32 max = 0;
+         u_long32 step = 0;
+         
+         not_yet_finished = lGetList(ep, JJ_not_yet_finished_ids);
+         
          /* If we're supposed to dispose of the job info, we need to include
           * all jobs currently in the session.  If we're not disposing, though,
           * we can save time by not including completed jobs. */
          if (!dispose) {
-            lp = lGetList (ep, JJ_not_yet_finished_ids);
-         
-            /* If there are taks ids not yet finished, this job is running or
-             * waiting to be run, and we want to wait for it. */
-            add_job = (lGetNumberOfElem (lp) > 0);
-         }
-         else {
-            add_job = true;
+            /* If there are task ids not yet finished, this job is running or
+             * waiting to be run, and we want to wait for it.  Otherwise, we
+             * don't. */
+            if (lGetNumberOfElem (not_yet_finished) == 0) {
+               continue;
+            }
          }
          
-         if (add_job) {
-            id = lGetUlong (ep, JJ_jobid);
-            /* The largest number representable by 64 unsigned bits is 19
-             * characters long. */
-            char_id = (char *)malloc (sizeof (char) * 20);
-            sprintf (char_id, u32, id);
+         id = lGetUlong (ep, JJ_jobid);
+         
+         /* handle all unfinished tasks */
+         for_each (range, not_yet_finished) {
+            range_get_all_ids(range, &min, &max, &step);
             
-            DPRINTF (("Synchronize All: adding %s to id list\n", char_id));
-            
-            sync_job_ids[count++] = (const char *)char_id;
+            for (task_id = min; task_id <= max; task_id += step) {
+               /* The largest number representable by 64 unsigned bits is 19
+                * characters long. */
+               char_id = (char *)malloc (sizeof (char) * 40);
+               snprintf (char_id, 40, u32 "." u32, id, task_id);
+
+               DPRINTF (("Synchronize All: adding %s to id list\n", char_id));
+               lAddElemStr (&sync_list, ST_name, char_id, ST_Type);
+            }
          }
-         
-         ep = lNext (ep);
+      }
+      
+      /* We have to add one to the size of the array for the NULL terminator. */
+      sync_job_ids = (const char**)malloc (sizeof (char *) *
+                                           (lGetNumberOfElem (sync_list) + 1));
+      
+      for_each (ep, sync_list) {
+         sync_job_ids[count] = lGetString (ep, ST_name);
+         count++;
       }
       
       sync_job_ids[count] = NULL;
@@ -2400,6 +2416,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
             }
 
             FREE (sync_job_ids);
+            sync_list = lFreeList (sync_list);
          }
          
          DEXIT;
@@ -2436,6 +2453,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
       }
       
       FREE (sync_job_ids);
+      sync_list = lFreeList (sync_list);
    }
    
    DEXIT;
@@ -2623,6 +2641,13 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
 
    DENTER(TOP_LAYER, "japi_wait");
 
+   if (timeout < DRMAA_TIMEOUT_WAIT_FOREVER) {
+      sge_dstring_sprintf (diag, MSG_JAPI_NEGATIVE_TIMEOUT);
+
+      DEXIT;
+      return DRMAA_ERRNO_INVALID_ARGUMENT;
+   }
+   
    /* ensure japi_init() was called */
    JAPI_LOCK_SESSION();
    if (japi_session != JAPI_SESSION_ACTIVE) {
@@ -2674,8 +2699,10 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
       struct timespec ts;
       lList *rusagep = NULL;
 
-      if (timeout != DRMAA_TIMEOUT_WAIT_FOREVER) 
+
+      if (timeout != DRMAA_TIMEOUT_WAIT_FOREVER) {
          sge_relative_timespec(timeout, &ts);
+      }
 
       JAPI_LOCK_JOB_LIST();
 
@@ -3128,6 +3155,8 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
       lListElem *japi_job = NULL;
       lListElem *japi_task = NULL;
 
+      DPRINTF (("Job " u32 "." u32 " is finished.\n", jobid, taskid));
+   
       JAPI_LOCK_JOB_LIST();
       
       japi_job = lGetElemUlong(Master_japi_job_list, JJ_jobid, jobid);
@@ -3146,6 +3175,7 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
           */
          if (range_list_is_id_within(lGetList(japi_job, JJ_not_yet_finished_ids), taskid)) {
             JAPI_UNLOCK_JOB_LIST();
+            DPRINTF (("Job " u32 "." u32 " is actually in unknown state.\n", jobid, taskid));
             *remote_ps = DRMAA_PS_UNDETERMINED;
             DEXIT;
             return DRMAA_ERRNO_SUCCESS;
@@ -3200,15 +3230,16 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
          return DRMAA_ERRNO_INVALID_JOB;
       }
    }
-   
-   ja_task = job_search_task(job, NULL, taskid);
-   
+
    if (ja_task != NULL) { 
       /* the state of enrolled tasks can be direclty determined */
       u_long32 ja_task_status = lGetUlong(ja_task, JAT_status);
       u_long32 ja_task_state = lGetUlong(ja_task, JAT_state);
       u_long32 ja_task_hold = lGetUlong(ja_task, JAT_hold);
 
+      DPRINTF (("Job " u32 "." u32 " status=%x state=%x hold=%x\n", jobid,
+                taskid, ja_task_status, ja_task_state, ja_task_hold));
+      
       /* ERROR */
       if (ja_task_state & JERROR) { 
          *remote_ps = DRMAA_PS_FAILED;
@@ -3216,10 +3247,10 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
          return DRMAA_ERRNO_SUCCESS;
       }
 
-      /* PENDING */
-      if (ja_task_status == JIDLE) {
+      /* PENDING & HOLD */
+      if ((ja_task_status == JIDLE) || ((ja_task_state & JHELD) != 0)) {
          *remote_ps = DRMAA_PS_SUBSTATE_PENDING;
-
+         
          /*
           * Only one hold state (-h u) is considered USER HOLD.
           * Others are also user's hold but only this hold state 
@@ -3250,8 +3281,9 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
        * Only the qmod -s <jobid> suspension is a USER SUSPEND 
        * other suspension can be controlled only by the admins.
        */
-      if ((ja_task_state & JSUSPENDED))
+      if ((ja_task_state & JSUSPENDED)) {
          *remote_ps |= DRMAA_PS_SUBSTATE_USER_SUSP;
+      }
 
       /* 
        * A SYSTEM SUSPEND can be 

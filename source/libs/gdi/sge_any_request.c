@@ -668,7 +668,7 @@ int check_isalive(const char *masterhost)
    }
 
    if (status != NULL) {
-      INFO((SGE_EVENT,"endpoint is up since %ld seconds and has status %ld\n", status->runtime, status->application_status));
+      DEBUG((SGE_EVENT,"endpoint is up since %ld seconds and has status %ld\n", status->runtime, status->application_status));
       cl_com_free_sirm_message(&status);
    }
  

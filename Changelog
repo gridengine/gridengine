@@ -1,3 +1,7 @@
+CR-2004-04-13-0: Bugfix:    execd logging every 3 minutes
+                 Changed:   gdi
+                 Issue:     915
+
 SG-2004-04-11-0: Bugfix:    The xml-output in qstat and the qstat xml schema
                             files were not up to date 
                  Changed:   qstat, qstat schema

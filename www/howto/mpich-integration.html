@@ -1,0 +1,235 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.79C-CCK-MCD  [en] (X11; U; SunOS 5.9 sun4u) [Netscape]">
+   <title>Tight MPICH Integration in Grid Engine</title>
+<!--This file created 18.08.2004 11:22 Uhr by Claris Home Page version 3.0-->
+<X-CLARIS-WINDOW TOP=49 BOTTOM=751 LEFT=11 RIGHT=930>
+<X-CLARIS-TAGVIEW MODE=minimal>
+</head>
+<body bgcolor="#FFFFFF">
+<b><font size=+1>Topic:</font></b>
+<p>Setup MPICH to get all child-processes killed on the slave nodes.
+<p><b><font size=+1>Author:</font></b>
+<p>Reuti, <a href="reuti__AT_staff.uni-marburg.de">reuti__AT__staff.uni-marburg.de</a>;
+Philipps-University of Marburg, Germany
+<p><b><font size=+1>Version:</font></b>
+<p>1.0 -- 2004-08-18 Initial release, comments and corrections are welcome
+<p><b><font size=+1>Contents:</font></b>
+<ul>
+<li>
+Symptom of this behavior</li>
+
+<li>
+Explanation</li>
+
+<li>
+Solutions</li>
+
+<li>
+Number of tasks spread to the nodes</li>
+
+<li>
+Hint for ADF</li>
+
+<li>
+Hint for Turbomole</li>
+
+<li>
+Uneven distribution of processes to the slave nodes with two network cards</li>
+</ul>
+<b><font size=+1>Note:</font></b>
+<p>This HOWTO complements the information contained in the $SGE_ROOT/mpi
+directory of the Grid Engine distribution.
+<p>
+<hr>
+<p><b><font size=+1>Symptom</font></b>
+<blockquote>You have parallel jobs using MPICH under SGE on LINUX. Some
+of these jobs are killed nicely when you use qdel and don't leave any running
+processes on the nodes behind. Other MPICH jobs are killed, but the calculating
+tasks are still present after the job is killed and consuming CPU time,
+while these jobs don't appear any longer in SGE.</blockquote>
+
+<hr>
+<p><b><font size=+1>Explanation</font></b>
+<blockquote>Every MPICH task on a slave, created by an rsh-command, tries
+to become the process leader. If the MPICH task is just the child of qrsh_starter,
+this is okay as it is already the process leader and you can kill these
+jobs in the usual way. This is achieved, by killing the child of qrsh_starter
+with "kill (-pid)" and hence the whole process group will be killed. You
+can check this with the command:
+<pre>> ps f -eo pid,uid,gid,user,pgrp,command --cols=120</pre>
+If the startup script for the process on the slave nodes consists of at
+least two commands (like the startup with Myrinet on the nodes), a helping
+shell will be created,and the MPICH task will be a child of this shell
+with a new PID, but still in the same process group. The odd thing is now,
+that MPICH will discover this and enforce a new process group with this
+PID, to become the process leader. So the MPICH tasks jumps out of the
+creating process group and the intended kill of the started process group
+will fail, leaving the calculation tasks running.</blockquote>
+
+<hr>
+<p><b><font size=+1>Solutions</font></b>
+<blockquote>To solve this, there a various possibilities available, which
+you may chose so that it fits best to your setup of SGE.
+<br>&nbsp;
+<br>&nbsp;
+<p><b>1. Replace the helping shell with the MPICH task</b>
+<p>In case of e.g. Myrinet, the helping shell is created by one line in
+mpirun.ch_gm.pl:
+<pre>$cmdline = "cd $wdir ; env $varenv $apps_cmd[$i] $apps_flags[$i]";</pre>
+You can prefix the final call to your program with an "exec", so that the
+line looks like:
+<pre>$cmdline = "cd $wdir ; exec env $varenv $apps_cmd[$i] $apps_flags[$i]";</pre>
+With the "exec", the started program will replace the existing shell, and
+so will stay to be the process leader.
+<br>&nbsp;
+<br>&nbsp;
+<p><b>2. Define MPICH_PROCESS_GROUP=no</b>
+<p>When this environment variable is defined, the startup of the MPICH
+task won't create a new process group. Be aware, that this variable has
+to be set on the slave nodes. So you may define it in any file, which will
+be sourced during a noninteractive login to the nodes. If you define it
+in the submit script and want to propagte this to the slave nodes, you
+will have to edit the rsh-wrapper in the mpi directory of SGE, so that
+the qrsh command used there will include -V, so that the variables are
+available on the slaves:
+<pre><tt>echo $SGE_ROOT/bin/$ARC/qrsh -inherit -nostdin $rhost $cmd
+exec $SGE_ROOT/bin/$ARC/qrsh -inherit -nostdin $rhost $cmd
+else
+echo $SGE_ROOT/bin/$ARC/qrsh -inherit $rhost $cmd
+exec $SGE_ROOT/bin/$ARC/qrsh -inherit $rhost $cmd</tt></pre>
+should read:
+<pre>echo $SGE_ROOT/bin/$ARC/qrsh -V -inherit -nostdin $rhost $cmd
+exec $SGE_ROOT/bin/$ARC/qrsh -V -inherit -nostdin $rhost $cmd
+else
+echo $SGE_ROOT/bin/$ARC/qrsh -V -inherit $rhost $cmd
+exec $SGE_ROOT/bin/$ARC/qrsh -V -inherit $rhost $cmd</pre>
+<b>3. Recompile MPICH</b>
+<p>When you have the source of the used programs, it is also possible to
+edit the file, which will create the new process group in MPICH and remove
+this behavior completely. The file where it must be done is session.c in
+mpich-1.2.6/mpid/util (you should use a clean untar, because this file
+will be copied during the make to mpich-1.2.6/mpid/ch_p4). Change the line:
+<pre>#if defined(HAVE_SETSID) &amp;&amp; defined(HAVE_ISATTY) &amp;&amp; defined(SET_NEW_PGRP)</pre>
+to
+<pre>#if defined(HAVE_SETSID) &amp;&amp; defined(HAVE_ISATTY) &amp;&amp; defined(SET_NEW_PGRP) &amp;&amp; 0</pre>
+This way you can easily go back at a later point in time. Because the routine
+will be linked into your final program, you have to recompile all your
+programs. It's not sufficient, just to install this new version in /usr/lib
+(or your path to mpich), unless you have used the shared libraries of MPICH.
+Whether any delivered binary from a vendor uses the shared version of MPICH,
+or has them statically linked in, you can check with the LINUX command
+ldd.
+<p>Before you run ./configure for MPICH, you should export the variable
+RSHCOMMAND=rsh, to get the desired rsh command compiled into the libraries.
+To create shared libraries and use them during compilation of a MPICH program,
+please refer to the MPICH documentation.</blockquote>
+
+<hr>
+<p><b><font size=+1>Number of tasks spread to the nodes</font></b>
+<blockquote>There is a difference, how many calls to qrsh will be made
+depending on the used version of MPICH. If you use MPICH with the ch_p4
+device over ethernet, there will always be the first task started locally
+without usage of any qrsh call. Instead (n-1) times will qrsh only be called.
+Hence you can set "job_is_first_task" to true in the definition of your
+PE and allow only (n-1) calls to qrsh by your job.
+<p>If you are using Myrinet, it's different. In this case exactly n times
+the qrsh will be used. So set the "job_is_first_task" to false.</blockquote>
+
+<hr>
+<p><b><font size=+1>Hint for ADF</font></b>
+<blockquote>Some programs (like ADF parallel with MPICH) have a hard coded
+/usr/bin/rsh inside for their rsh command. To access any wrapper and let
+SGE take control over the slaves, you *must* set:
+<pre>export P4_RSHCOMMAND=rsh</pre>
+Otherwise, always the built in /usr/bin/rsh will be used. For the usage
+of ssh please refer to the the appropriate HowTo for ssh, and leave the
+settings for MPICH to rsh to access the rsh-wrapper of SGE, which will
+then use ssh in the end.</blockquote>
+
+<hr>
+<p><b><font size=+1>Hint for Turbomole</font></b>
+<blockquote>Turbomole is using the ch_p4 device of MPICH. But due to the
+fact, that this program will always startup one slave process more (as
+server task without CPU load) than parallel slots requested, you have to
+set "job_is_first_task" to false, to allow this qrsh call to be made. As
+mentioned above, MPICH will make only (n-1) calls to qrsh, but Turbomole
+will request (n+1) tasks, so that you end up with n again.
+<p>Because one call more to qrsh is made by TURBOMOLE than SGE is aware
+of (because of the behavior of MPICH to start one task locally without
+qrsh, but still removing one line during the first scan of the machines
+file), the created machines file on the master node will have one line
+less than necessary. This yields to a second scan of the machines file,
+starting at the beginning. If the first line in the machines file is also
+the master node where the server task for Turbomole is running, all is
+in best order, because there is already the server process running which
+doesn't use any CPU time, and another working slave task is welcome. But
+in all other cases, you will have the slave processes uneven distributed
+to the slave nodes. Therefore just add one line to the startmpi.sh in the
+$SGE_ROOT/mpi directory in the already existing, to create one entry more
+with the name of the master node:
+<pre>if [ $unique = 1 ]; then
+&nbsp;&nbsp;&nbsp; PeHostfile2MachineFile $pe_hostfile | uniq >> $machines
+else
+&nbsp;&nbsp;&nbsp; PeHostfile2MachineFile $pe_hostfile >> $machines
+&nbsp;&nbsp;&nbsp;
+#
+# Append own hostname to the machines file.
+#
+&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; echo `hostname` >> $machines
+fi</pre>
+This has the positive side effect, to deliver one entry in the machines
+file which can be at least removed at all during the first scan by MPICH.
+It will remove the line with `hostname`. If there is none, nothing is removed.
+This may be the case, when you have two network cards in the slaves, and
+`hostname` gives the name of the external interface, but the created hostlist
+by SGE contains only the internal names.</blockquote>
+
+<hr>
+<p><b><font size=+1>Uneven distribution of processes to the slave nodes
+with two network cards</font></b>
+<blockquote>As Andreas pointed out in <a href="http://gridengine.sunsource.net/servlets/ReadMsg?msgId=15741&listName=users">http://gridengine.sunsource.net/servlets/ReadMsg?msgId=15741&amp;listName=users</a>,
+you have to check whether the first scan of the machines file by MPICH
+can remove an entry at all, because `hostname` may give a different name
+than included in the machines file (because you are using a host_aliases
+file). Depending on your setup of the cluster, it may be necessary to change
+just one entry back to the one delivered by `hostname`. If you change all
+entries back to the external interface again, you program may use the wrong
+network for the communication by MPICH. This may, or may not, be the desired
+result. Code to change just one entry back to the `hostname` is a small
+addition to the PeHostfile2MachineFile subroutine in startmpi.sh:
+<pre>PeHostfile2MachineFile()
+{
+&nbsp;&nbsp;&nbsp; myhostname=`hostname`
+&nbsp;&nbsp;&nbsp; myalias=`grep $myhostname $SGE_ROOT/default/common/host_aliases | cut -f 1 -d " "`
+&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; cat $1 | while read line; do
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # echo $line
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; host=`echo $line|cut -f1 -d" "|cut -f1 -d"."`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nslots=`echo $line|cut -f2 -d" "`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; i=1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; while [ $i -le $nslots ]; do
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # add here code to map regular hostnames into ATM hostnames
+&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if [ $host = "$myalias" ] ; then&nbsp; # be sure to include " for the second argument
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; echo $myhostname
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; unset myalias
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; echo $host
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fi
+&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; i=`expr $i + 1`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; done
+&nbsp;&nbsp;&nbsp; done
+}</pre>
+Don't include this, if you already changed the startmpi.sh for the handling
+of Turbomole, you would get two times the external name. In general, I
+prefer having one PE for each application. Thus copy the mpi folder in
+$SGE_ROOT and name it e.g. turbo, adf, linda etc. and create corresponding
+PEs.</blockquote>
+
+</body>
+</html>

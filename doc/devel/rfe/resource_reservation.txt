@@ -222,7 +222,11 @@
      <resource_name>: The name of the consumable resource.
      <utilization>    The resource utilization debited for the job.
 
-   A line "::::::::" marks the begin of a new schedule interval.
+   A line "::::::::" marks the begin of a new schedule interval. 
+
+   Please note this file is not truncated. Make sure the monitoring
+   is switched off in case you have no automated procedure setup that
+   truncates the 'schedule' file.
    
 3. Changes with command line interface and configuration file formats
 

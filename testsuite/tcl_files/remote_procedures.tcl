@@ -1015,7 +1015,9 @@ proc open_remote_spawn_process { hostname
 
              
              set timeout 1
-             send -i $spawn_id "echo \"hello\"\n"
+#            On some architectures it makes problems when trying to send
+#            to a just openend shell, so this line is not active
+#             send -i $spawn_id "echo \"hello\"\n"
              set open_remote_spawn__tries 70
              
              while { $open_remote_spawn__tries > 0 } {
@@ -1062,7 +1064,9 @@ proc open_remote_spawn_process { hostname
              set timeout 1
              set next_timeout 1
              set ok 0
-             send -i $spawn_id -- "\necho \"__ my id is ->\`id\`<-\"\n\n"
+#            On some architectures it makes problems when trying to send
+#            to a just openend shell, so this line is not active
+#             send -i $spawn_id -- "\necho \"__ my id is ->\`id\`<-\"\n\n"
              while { $ok != 1 } {
                 expect {
                    -i $spawn_id full_buffer {

@@ -1,3 +1,5 @@
+CR-2005-04-06-1: Testsuite: rlogin timeout problem in open_remote_spawn_process()
+
 CR-2005-04-06-0: Testsuite: install_core_system test:
                                - splited mask check into two start_remote_prog
                                  calls

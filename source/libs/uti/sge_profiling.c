@@ -194,7 +194,7 @@ static prof_info prof_base[SGE_PROF_ALL] = {
    { "eventmaster",     0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
    { "mirror",          0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
    { "spooling",        0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { "spooling-io",        0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { "spooling-io",     0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
    { "gdi",             0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
 /* SGE_PROF_CUSTOM levels */
    { NULL,              0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },

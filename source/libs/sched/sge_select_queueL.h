@@ -88,7 +88,7 @@ enum {
    LDR_limit,
    LDR_global,
    LDR_host,
-   LDR_queue,
+   LDR_queue
 };
 
 LISTDEF(LDR_Type)
@@ -129,7 +129,7 @@ enum {
 };
 
 enum {
-   QRL_queue = QRL_LOWERBOUND,
+   QRL_queue = QRL_LOWERBOUND
 };
 
 LISTDEF(QRL_Type)

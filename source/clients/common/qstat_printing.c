@@ -72,8 +72,6 @@ static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int p
 
 static int sge_print_subtask(lListElem *job, lListElem *ja_task, lListElem *task, int print_hdr, int indent);
 
-static void qtype(char *type_string, u_long32 type);
-
 static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
                            int print_jobid, char *master, u_long32 full_listing,
                            int slots, int slot, lList *exechost_list,
@@ -81,14 +79,6 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
                            u_long32 sge_ext, u_long32 group_opt);
 
 static void sge_printf_header(u_long32 full_listing, u_long32 sge_ext);
-
-static char *queue_types[] = {
-   "BATCH",        
-   "INTERACTIVE",  
-   "CHECKPOINTING",
-   "PARALLEL",
-   ""
-};
 
 static char hashes[] = "##############################################################################################################";
 
@@ -99,7 +89,6 @@ lList *complex_list,
 u_long32 full_listing,
 lList *qresource_list 
 ) {
-   char type_string[8];
    char state_string[8];
    char to_print[80];
    char arch_string[80];
@@ -143,8 +132,13 @@ lList *qresource_list
       sge_ext?"------------------------------------------------------------------------------------------------------------":"");
    printf("%-20.20s ", lGetString(q, QU_qname));
 
-   qtype(type_string, lGetUlong(q, QU_qtype));
-   printf("%-5.5s ", type_string); 
+   {
+      dstring type_string = DSTRING_INIT;
+
+      queue_print_qtype_to_dstring(q, &type_string, true);
+      printf("%-5.5s ", sge_dstring_get_string(&type_string)); 
+      sge_dstring_free(&type_string);
+   }
 
    /* number of used/free slots */
    sprintf(to_print, "%d/%d ", 
@@ -1378,35 +1372,4 @@ char *indent
 
    DEXIT;
    return 1;
-}
-
-static void qtype(
-char *type_string,
-u_long32 type 
-) {
-   int i; 
-   char *s = type_string;
-
-   DENTER(TOP_LAYER, "qtype");
-   
-
-   /* collect first characters of the queue_types array */
-   /* if the corresponding bit in type is set           */
-
-   for (i=0; type && i<=4; i++) {
-
-      DPRINTF(("i = %d qtype: %d (u_long)\n", i, (int)type));
-      if (type & 1) {  
-         *s++ = queue_types[i][0];
-         *s = '\0';
-         DPRINTF(("qtype: %s (string)\n", type_string));
-      }
-      type >>= 1;
-   } 
-
-   *s = '\0';
-
-
-   DEXIT;
-   return;
 }

@@ -46,7 +46,10 @@
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_queue.h"
+#include "sge_pe.h"
+#include "sge_ckpt.h"
 #include "sge_todo.h"
+#include "sge_stringL.h"
 #include "sge_utility.h"
 #include "parse.h"
 
@@ -57,7 +60,7 @@
 #include "msg_sgeobjlib.h"
 
 /* EB: TODO: queue_types definition exists multiple times */
-static const char *queue_types[] = {
+const char *queue_types[] = {
    "BATCH",        
    "INTERACTIVE",  
    "CHECKPOINTING",
@@ -680,51 +683,85 @@ lListElem *queue_create_template(void)
    return queue;
 }
 
-static bool queue_has_type(const lListElem *this, u_long32 type) 
+static bool queue_has_type(const lListElem *this_elem, u_long32 type) 
 {
    bool ret = false;
 
-   if (lGetUlong(this, QU_qtype) & type) {
+   if (lGetUlong(this_elem, QU_qtype) & type) {
       ret = true;
    }
    return ret;
 }
 
-bool queue_is_batch_queue(const lListElem *this) 
+bool queue_is_batch_queue(const lListElem *this_elem) 
 {
-   return queue_has_type(this, BQ);
+   return queue_has_type(this_elem, BQ);
 }
 
-bool queue_is_interactive_queue(const lListElem *this) 
+bool queue_is_interactive_queue(const lListElem *this_elem) 
 {
-   return queue_has_type(this, IQ);
+   return queue_has_type(this_elem, IQ);
 }
 
-bool queue_is_checkointing_queue(const lListElem *this) 
+bool queue_is_checkointing_queue(const lListElem *this_elem) 
 {
-   return queue_has_type(this, CQ);
+   return queue_has_type(this_elem, CQ);
 }
 
-bool queue_is_parallel_queue(const lListElem *this) 
+bool queue_is_parallel_queue(const lListElem *this_elem) 
 {
-   return queue_has_type(this, PQ);
+   return queue_has_type(this_elem, PQ);
 }
 
-bool queue_print_qtype_to_dstring(const lListElem *this, dstring *string)
+bool queue_print_qtype_to_dstring(const lListElem *this_elem, 
+                                  dstring *string, bool only_first_char)
 {
    bool ret = true;
 
-   if (this != NULL && string != NULL) {
+   DENTER(TOP_LAYER, "queue_print_qtype_to_dstring");
+   if (this_elem != NULL && string != NULL) {
       const char **ptr = NULL;
       u_long32 bitmask = 1;
 
       for (ptr = queue_types; **ptr != '\0'; ptr++) {
-         if (bitmask & lGetUlong(this, QU_qtype)) {
-            sge_dstring_sprintf_append(string, "%s ", *ptr);
+         if (bitmask & lGetUlong(this_elem, QU_qtype)) {
+            if (only_first_char) {
+               sge_dstring_sprintf_append(string, "%c", (*ptr)[0]);
+            } else {
+               sge_dstring_sprintf_append(string, "%s ", *ptr);
+            }
          }
          bitmask <<= 1;
       };
    } 
+   DEXIT;
    return ret;
 }
 
+bool queue_is_pe_referenced(const lListElem *this_elem, const lListElem *pe)
+{
+   bool ret = false;
+   lListElem *re_ref_elem;
+
+   for_each(re_ref_elem, lGetList(this_elem, QU_pe_list)) {
+      if (pe_is_matching(pe, lGetString(re_ref_elem, STR))) {
+         ret = true;
+         break;
+      }
+   }
+   return ret;
+}
+
+bool queue_is_ckpt_referenced(const lListElem *this_elem, const lListElem *ckpt)
+{
+   bool ret = false;
+   lListElem *re_ref_elem;
+
+   for_each(re_ref_elem, lGetList(this_elem, QU_ckpt_list)) {
+      if (!strcmp(lGetString(ckpt, CK_name), lGetString(re_ref_elem, STR))) {
+         ret = true;
+         break;
+      }
+   }
+   return ret;
+}

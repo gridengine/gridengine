@@ -38,14 +38,23 @@ extern lList *Master_Ckpt_List;
 
 bool 
 ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
-                   const lList *master_job_list);
+                   const lList *master_job_list,
+                   const lList *master_queue_list);
 
 lListElem *
-ckpt_list_locate(lList *ckpt_list, const char *ckpt_name);
+ckpt_list_locate(const lList *ckpt_list, const char *ckpt_name);
 
 int 
 sge_parse_checkpoint_attr(const char *attr_str);
 
 int ckpt_validate(lListElem *this_elem, lList **alpp);
+
+lList **
+ckpt_list_get_master_list(void);
+
+bool
+ckpt_list_do_all_exist(const lList *ckpt_list, lList **answer_list,
+                       const lList *ckpt_ref_list);
+
 
 #endif /* __SGE_CKPT_H */

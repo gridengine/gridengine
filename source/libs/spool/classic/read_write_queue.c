@@ -56,16 +56,9 @@
 #include "sge_complex.h"
 #include "sge_conf.h"
 #include "sge_queue.h"
+#include "sge_stringL.h"
 
 #include "msg_common.h"
-
-static const char *queue_types[] = {
-   "BATCH",
-   "INTERACTIVE",
-   "CHECKPOINTING",
-   "PARALLEL",
-   ""
-};
 
 static char *true_false[] =
 {
@@ -229,6 +222,20 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    /* --------- QU_qtype */
    if (!set_conf_enum(alpp, clpp, fields, "qtype", ep, QU_qtype, queue_types)) {
+      DEXIT;
+      return -1;
+   }
+
+   /* --------- QU_pe_list */
+   if (!set_conf_list(alpp, clpp, fields, "pe_list", ep, 
+            QU_pe_list, ST_Type, STR)) {
+      DEXIT;
+      return -1;
+   }
+   
+   /* --------- QU_pe_list */
+   if (!set_conf_list(alpp, clpp, fields, "ckpt_list", ep, 
+            QU_ckpt_list, ST_Type, STR)) {
       DEXIT;
       return -1;
    }
@@ -598,11 +605,9 @@ const char *file_name,
 char *rfile,            /* has to be allocated by caller; can be NULL */
 const lListElem *qep 
 ) {
-   const char **ptr;
    FILE *fp;
    const char *s, *cp = NULL;
    char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX]; 
-   u_long32 bitmask;
    int ret;
    dstring ds;
    char buffer[256];
@@ -668,14 +673,24 @@ const lListElem *qep
    FPRINTF((fp, "min_cpu_interval     %s\n", 
       lGetString(qep, QU_min_cpu_interval)));
    FPRINTF((fp, "processors           %s\n", lGetString(qep, QU_processors)));
-   FPRINTF((fp, "qtype                "));
-   bitmask = 1;
-   for (ptr = queue_types; **ptr != '\0'; ptr++) {
-     if (bitmask & lGetUlong(qep, QU_qtype))
-       FPRINTF((fp,"%s ",*ptr));
-     bitmask <<= 1;
-   };
-   FPRINTF((fp,"\n"));
+   {
+      dstring qtype_buffer = DSTRING_INIT;
+
+      queue_print_qtype_to_dstring(qep, &qtype_buffer, false);
+      FPRINTF((fp, "qtype                "));
+      FPRINTF((fp,"%s\n", sge_dstring_get_string(&qtype_buffer)));
+      sge_dstring_free(&qtype_buffer);
+   }
+   ret = fprint_cull_list(fp,  "ckpt_list            ", 
+      lGetList(qep, QU_ckpt_list), STR);
+   if (ret == -1) {
+      goto FPRINTF_ERROR;
+   } 
+   ret = fprint_cull_list(fp,  "pe_list              ", 
+      lGetList(qep, QU_pe_list), STR);
+   if (ret == -1) {
+      goto FPRINTF_ERROR;
+   } 
    FPRINTF((fp, "rerun                %s\n", 
       true_false[(int)lGetBool(qep, QU_rerun)]));
    FPRINTF((fp, "slots                %d\n", 

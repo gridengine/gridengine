@@ -44,11 +44,17 @@
 #include "sge_userset.h"
 #include "sge_utility.h"
 #include "sge_pe.h"
+#include "sge_stringL.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
 lList *Master_Pe_List = NULL;
+
+static bool pe_name_is_matching(const char *pe_name, const char *wildcard)
+{
+   return !fnmatch(wildcard, pe_name, 0);
+}
 
 /****** sgeobj/pe/pe_is_matching() ********************************************
 *  NAME
@@ -70,7 +76,7 @@ lList *Master_Pe_List = NULL;
 ******************************************************************************/
 bool pe_is_matching(const lListElem *pe, const char *wildcard) 
 {
-   return !fnmatch(wildcard, lGetString(pe, PE_name), 0);
+   return pe_name_is_matching(lGetString(pe, PE_name), wildcard);
 }
 
 /****** sgeobj/pe/pe_list_find_matching() *************************************
@@ -120,7 +126,7 @@ lListElem *pe_list_find_matching(lList *pe_list, const char *wildcard)
 *  RESULT
 *     lListElem* - PE_Type object or NULL
 ******************************************************************************/
-lListElem *pe_list_locate(lList *pe_list, const char *pe_name) 
+lListElem *pe_list_locate(const lList *pe_list, const char *pe_name) 
 {
    return lGetElemStr(pe_list, PE_name, pe_name);
 }
@@ -131,38 +137,62 @@ lListElem *pe_list_locate(lList *pe_list, const char *pe_name)
 *
 *  SYNOPSIS
 *     bool pe_is_referenced(const lListElem *pe, lList **answer_list, 
-*                           const lList *master_job_list) 
+*                           const lList *master_job_list,
+*                           const lList *master_queue_list) 
 *
 *  FUNCTION
 *     This function returns true (1) if the given "pe" is referenced
-*     in a job contained in "master_job_list". If this is the case than
-*     a corresponding message will be added to the "answer_list". 
+*     in at least one of the objects contained in "master_job_list"
+*     or "master_queue_list". If this is the case than
+*     a corresponding message will be added to the "answer_list".
 *
 *  INPUTS
-*     const lListElem *pe          - PE_Type object 
-*     lList **answer_list          - AN_Type list 
-*     const lList *master_job_list - JB_Type list 
+*     const lListElem *pe            - PE_Type object 
+*     lList **answer_list            - AN_Type list 
+*     const lList *master_job_list   - JB_Type list 
+*     const lList *master_queue_list - QU_Type list
 *
 *  RESULT
 *     bool - true or false  
 ******************************************************************************/
 bool pe_is_referenced(const lListElem *pe, lList **answer_list,
-                      const lList *master_job_list)
+                      const lList *master_job_list,
+                      const lList *master_queue_list)
 {
-   lListElem *job = NULL;
    bool ret = false;
 
-   for_each(job, master_job_list) {
-      if (job_is_pe_referenced(job, pe)) {
-         const char *pe_name = lGetString(pe, PE_name);
-         u_long32 job_id = lGetUlong(job, JB_job_number);
+   {
+      lListElem *job = NULL;
 
-         sprintf(SGE_EVENT, MSG_PEREFINJOB_SU, pe_name, u32c(job_id));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
-                         ANSWER_QUALITY_INFO);
-         ret = true;
+      for_each(job, master_job_list) {
+         if (job_is_pe_referenced(job, pe)) {
+            const char *pe_name = lGetString(pe, PE_name);
+            u_long32 job_id = lGetUlong(job, JB_job_number);
+
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                    ANSWER_QUALITY_INFO, MSG_PEREFINJOB_SU,
+                                    pe_name, u32c(job_id));
+            ret = true;
+            break;
+         }
+      } 
+   }
+   if (!ret) {
+      lListElem *queue = NULL;
+
+      for_each(queue, master_queue_list) {
+         if (queue_is_pe_referenced(queue, pe)) {
+            const char *pe_name = lGetString(pe, PE_name);
+            const char *queue_name = lGetString(queue, QU_qname);
+
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                    ANSWER_QUALITY_INFO, MSG_PEREFINQUEUE_SS, 
+                                    pe_name, queue_name);
+            ret = true;
+            break;
+         }
       }
-   } 
+   }
    return ret;
 }
 
@@ -273,4 +303,32 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
    DEXIT;
    return STATUS_OK;
 }
+
+bool pe_list_do_all_exist(const lList *pe_list, lList **answer_list,
+                          const lList *pe_ref_list)
+{
+   bool ret = true;
+   lListElem *pe_ref_elem = NULL;
+
+   DENTER(TOP_LAYER, "pe_list_do_all_exist");
+   for_each(pe_ref_elem, pe_ref_list) {
+      const char *pe_ref_string = lGetString(pe_ref_elem, STR);
+
+      if (pe_list_locate(pe_list, pe_ref_string) == NULL) {
+         answer_list_add_sprintf(answer_list, STATUS_EEXIST, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_PEREFDOESNOTEXIST_S, pe_ref_string);
+         ret = false; 
+         break;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+lList **pe_list_get_master_list(void)
+{
+   return &Master_Pe_List;
+}
+
 

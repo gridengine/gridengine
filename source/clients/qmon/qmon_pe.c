@@ -457,12 +457,7 @@ XtPointer cld, cad;
    ** the template q is removed here
    */
    if (!where) {
-#if 1   
       where = lWhere("%T(%I!=%s)", QU_Type, QU_qname, "template");
-#else
-      where = lWhere("%T(%I != %s && %I m= %u)", QU_Type, QU_qname, "template",
-                                 QU_qtype, 0x08);
-#endif
       what = lWhat("%T(ALL)", QU_Type);
    }
 

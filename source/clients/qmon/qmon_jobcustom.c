@@ -601,7 +601,6 @@ const char *field
    lListElem *up = NULL;
    char buf[1024];
    u_long32 running;
-   static char mem_usage[100];
 
    DENTER(GUI_LAYER, "PrintMEMValue");
 

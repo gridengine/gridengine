@@ -49,6 +49,7 @@
 
 #include "sge_all_listsL.h"
 #include "parse_qsub.h"
+#include "sge_ulong.h"
 #include "sge_time.h"
 #include "sge_mailrec.h"
 #include "sge_range.h"

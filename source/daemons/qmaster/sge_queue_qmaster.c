@@ -77,6 +77,7 @@
 #include "sge_todo.h"
 #include "sge_utility_qmaster.h"
 #include "sge_static_load.h"
+#include "sge_stringL.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -393,6 +394,32 @@ int sub_command
          return STATUS_EEXIST;  
       }
       lSetUlong(new_queue, QU_qtype, qtype);
+   }
+
+   /* ---- QU_pe_list */
+   if (lGetPosViaElem(qep, QU_pe_list)>=0) {
+      DPRINTF(("got new QU_pe_list\n"));
+
+      normalize_sublist(qep, QU_pe_list);
+      if (!pe_list_do_all_exist(*(pe_list_get_master_list()), alpp, 
+                                lGetList(qep, QU_pe_list))) {
+         goto ERROR;
+      }
+      attr_mod_sub_list(alpp, new_queue, QU_pe_list, STR, qep, 
+                        sub_command, SGE_ATTR_COMPLEX_LIST, SGE_OBJ_QUEUE, 0);
+   }
+
+   /* ---- QU_ckpt_list */
+   if (lGetPosViaElem(qep, QU_ckpt_list)>=0) {
+      DPRINTF(("got new QU_ckpt_list\n"));
+
+      normalize_sublist(qep, QU_ckpt_list);
+      if (!ckpt_list_do_all_exist(*(ckpt_list_get_master_list()), alpp, 
+                                  lGetList(qep, QU_ckpt_list))) {
+         goto ERROR;
+      }
+      attr_mod_sub_list(alpp, new_queue, QU_ckpt_list, STR, qep, 
+                        sub_command, SGE_ATTR_COMPLEX_LIST, SGE_OBJ_QUEUE, 0);
    }
 
    /* ---- QU_rerun */

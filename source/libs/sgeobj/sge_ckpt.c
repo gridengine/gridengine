@@ -46,6 +46,7 @@
 #include "sge_utility.h"
 #include "sge_ckpt.h"
 #include "symbols.h"
+#include "sge_stringL.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -58,38 +59,62 @@ lList *Master_Ckpt_List = NULL;
 *
 *  SYNOPSIS
 *     bool ckpt_is_referenced(const lListElem *ckpt, lList **answer_list, 
-*                             const lList *job_list) 
+*                             const lList *master_job_list,
+*                             const lList *master_queue_list) 
 *
 *  FUNCTION
 *     This function returns true if the given "ckpt" is referenced
-*     in a job contained in "job_list". If this is the case than
+*     in at least one of the objects contained in "master_job_list" or
+*     "master_queue_list". If this is the case than
 *     a corresponding message will be added to the "answer_list". 
 *
 *  INPUTS
-*     const lListElem *ckpt - CK_Type object 
-*     lList **answer_list   - AN_Type list 
-*     const lList *job_list - JB_Type list 
+*     const lListElem *ckpt          - CK_Type object 
+*     lList **answer_list            - AN_Type list 
+*     const lList *master_job_list   - JB_Type list 
+*     const lList *master_queue_list - QU_Type list
 *
 *  RESULT
 *     bool - true or false  
 ******************************************************************************/
 bool ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
-                        const lList *job_list)
+                        const lList *master_job_list, 
+                        const lList *master_queue_list)
 {
-   lListElem *job = NULL;
    bool ret = false;
 
-   for_each(job, job_list) {
-      if (job_is_ckpt_referenced(job, ckpt)) {
-         const char *ckpt_name = lGetString(ckpt, CK_name);
-         u_long32 job_id = lGetUlong(job, JB_job_number);
+   {
+      lListElem *job = NULL;
 
-         sprintf(SGE_EVENT, MSG_CKPTREFINJOB_SU, ckpt_name, u32c(job_id));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
-                         ANSWER_QUALITY_INFO);
-         ret = true;
+      for_each(job, master_job_list) {
+         if (job_is_ckpt_referenced(job, ckpt)) {
+            const char *ckpt_name = lGetString(ckpt, CK_name);
+            u_long32 job_id = lGetUlong(job, JB_job_number);
+
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                    ANSWER_QUALITY_INFO, MSG_CKPTREFINJOB_SU,
+                                    ckpt_name, u32c(job_id));
+            ret = true;
+            break;
+         }
+      } 
+   }
+   if (!ret) {
+      lListElem *queue = NULL;
+
+      for_each(queue, master_queue_list) {
+         if (queue_is_ckpt_referenced(queue, ckpt)) {
+            const char *ckpt_name = lGetString(ckpt, CK_name);
+            const char *queue_name = lGetString(queue, QU_qname);
+
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                    ANSWER_QUALITY_INFO, MSG_CKPTREFINQUEUE_SS,
+                                    ckpt_name, queue_name);
+            ret = true;
+            break;
+         }
       }
-   } 
+   }
    return ret;
 }
 
@@ -112,7 +137,7 @@ bool ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
 *     NULL - ckpt object with name "ckpt_name" does not exist
 *     !NULL - pointer to the cull element (CK_Type) 
 ******************************************************************************/
-lListElem *ckpt_list_locate(lList *ckpt_list, const char *ckpt_name)
+lListElem *ckpt_list_locate(const lList *ckpt_list, const char *ckpt_name)
 {
    return lGetElemStr(ckpt_list, CK_name, ckpt_name);
 }
@@ -298,6 +323,35 @@ int ckpt_validate(lListElem *this_elem, lList **alpp)
 
    DEXIT;
    return STATUS_OK;
+}
+
+lList **
+ckpt_list_get_master_list(void)
+{
+   return &Master_Ckpt_List;
+}
+
+bool
+ckpt_list_do_all_exist(const lList *ckpt_list, lList **answer_list,
+                       const lList *ckpt_ref_list)
+{
+   bool ret = true;
+   lListElem *ckpt_ref_elem = NULL;
+
+   DENTER(TOP_LAYER, "ckpt_list_do_all_exist");
+   for_each(ckpt_ref_elem, ckpt_ref_list) {
+      const char *ckpt_ref_string = lGetString(ckpt_ref_elem, STR);
+
+      if (ckpt_list_locate(ckpt_list, ckpt_ref_string) == NULL) {
+         answer_list_add_sprintf(answer_list, STATUS_EEXIST,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_CKPTREFDOESNOTEXIST_S, ckpt_ref_string);
+         ret = false;
+         break;
+      }
+   }
+   DEXIT;
+   return ret;
 }
 
 

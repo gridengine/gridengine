@@ -402,7 +402,10 @@ enum {
    QU_starter_method,
    QU_suspend_method,
    QU_resume_method,
-   QU_terminate_method
+   QU_terminate_method,
+
+   QU_pe_list,
+   QU_ckpt_list
 };
 
 ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
@@ -482,6 +485,9 @@ ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
    SGE_STRING(QU_suspend_method, CULL_SPOOL | CULL_CONFIGURE) 
    SGE_STRING(QU_resume_method, CULL_SPOOL | CULL_CONFIGURE) 
    SGE_STRING(QU_terminate_method, CULL_SPOOL | CULL_CONFIGURE)
+
+   SGE_LIST(QU_pe_list, ST_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QU_ckpt_list, ST_Type, CULL_SPOOL | CULL_CONFIGURE)
 LISTEND 
 
 NAMEDEF(QUN)
@@ -567,6 +573,9 @@ NAMEDEF(QUN)
    NAME("QU_suspend_method")
    NAME("QU_resume_method")
    NAME("QU_terminate_method")
+
+   NAME("QU_pe_list")
+   NAME("QU_ckpt_list")
 NAMEEND
 
 /* *INDENT-ON* */ 

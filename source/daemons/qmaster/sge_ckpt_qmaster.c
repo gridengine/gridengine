@@ -365,7 +365,8 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    {
       lList *local_answer_list = NULL;
 
-      if (ckpt_is_referenced(found, &local_answer_list, Master_Job_List)) {
+      if (ckpt_is_referenced(found, &local_answer_list, Master_Job_List,
+                             Master_Queue_List)) {
          lListElem *answer = lFirst(local_answer_list);
 
          ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));

@@ -264,7 +264,8 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    {
       lList *local_answer_list = NULL;
 
-      if (pe_is_referenced(ep, &local_answer_list, Master_Job_List)) {
+      if (pe_is_referenced(ep, &local_answer_list, Master_Job_List,
+                           Master_Queue_List)) {
          lListElem *answer = lFirst(local_answer_list);
 
          ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));

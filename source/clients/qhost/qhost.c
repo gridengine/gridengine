@@ -69,6 +69,7 @@
 #include "sge_queue.h"
 #include "sge_complex.h"
 #include "sge_ulong.h"
+#include "sge_queue.h"
 
 #define QHOST_DISPLAY_QUEUES     (1<<0)
 #define QHOST_DISPLAY_JOBS       (1<<1)
@@ -79,7 +80,6 @@ static lList *sge_parse_cmdline_qhost(char **argv, char **envp, lList **ppcmdlin
 static lList *sge_parse_qhost(lList **ppcmdline, lList **pplres, lList **ppFres, lList **pphost, lList **ppuser, u_long32 *show);
 static void qhost_usage(FILE *fp);
 static void sge_print_queues(lList *ql, lListElem *hrl, lList *jl, lList *ul, lList *ehl, lList *cl, lList *pel, u_long32 show);
-static void qtype(char *type_string, u_long32 type);
 static void sge_print_resources(lList *ehl, lList *cl, lList *resl, lListElem *host, u_long32 show);
 static void sge_print_host(lListElem *hep);
 static int reformatDoubleValue(char *result, char *format, const char *oldmem);
@@ -383,8 +383,13 @@ u_long32 show
             /*
             ** qtype
             */
-            qtype(buf, lGetUlong(qep, QU_qtype));
-            printf("%-5.5s ", buf);
+            {
+               dstring type_string = DSTRING_INIT;
+
+               queue_print_qtype_to_dstring(qep, &type_string, true);
+               printf("%-5.5s ", sge_dstring_get_string(&type_string));
+               sge_dstring_free(&type_string);
+            }
 
             /* 
             ** number of used/free slots 
@@ -550,46 +555,6 @@ u_long32 show
    lFreeList(rlp);
    sge_dstring_free(&resource_string);
    DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-static void qtype(
-char *type_string,
-u_long32 type 
-) {
-   int i;
-   char *s = type_string;
-   static char *queue_types[] = {
-      "BATCH",
-      "INTERACTIVE",
-      "CHECKPOINTING",
-      "PARALLEL",
-      ""
-   };
-
-
-   DENTER(TOP_LAYER, "qtype");
-
-
-   /* collect first characters of the queue_types array */
-   /* if the corresponding bit in type is set           */
-
-   for (i=0; type && i<=4; i++) {
-
-      DPRINTF(("i = %d qtype: %d (u_long)\n", i, (int)type));
-      if (type & 1) {
-         *s++ = queue_types[i][0];
-         *s = '\0';
-         DPRINTF(("qtype: %s (string)\n", type_string));
-      }
-      type >>= 1;
-   }
-
-   *s = '\0';
-
-
-   DEXIT;
-   return;
 }
 
 /*

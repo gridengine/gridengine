@@ -36,15 +36,28 @@
 
 extern lList *Master_Pe_List;
 
-lListElem *pe_list_find_matching(lList *pe_list, const char *wildcard);
+bool 
+pe_is_matching(const lListElem *pe, const char *wildcard);
 
-lListElem *pe_list_locate(lList *pe_list, const char *pe_name);
+lList **
+pe_list_get_master_list(void);
 
-bool pe_is_referenced(const lListElem *pe, lList **answer_list,
-                      const lList *master_job_list);
+lListElem *
+pe_list_find_matching(lList *pe_list, const char *wildcard);
 
-bool pe_is_matching(const lListElem *pe, const char *wildcard);
+lListElem *
+pe_list_locate(const lList *pe_list, const char *pe_name);
 
-int pe_validate(lListElem *pep, lList **alpp, int startup);
+bool 
+pe_is_referenced(const lListElem *pe, lList **answer_list,
+                 const lList *master_job_list,
+                 const lList *master_queue_list);
+
+int 
+pe_validate(lListElem *pep, lList **alpp, int startup);
+
+bool 
+pe_list_do_all_exist(const lList *pe_list, lList **answer_list, 
+                     const lList *pe_ref_list);
 
 #endif /* __SGE_PE_H */

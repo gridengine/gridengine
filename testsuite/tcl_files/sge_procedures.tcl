@@ -1337,8 +1337,7 @@ proc reset_schedd_config {} {
      set default_array(queue_sort_method)          "share"
      if { [resolve_version] >= 3 } {
         set default_array(reprioritize_interval)    "00:00:40"
-     }
-     else {
+     } else {
         set default_array(sgeee_schedule_interval)    "00:00:40"
      }
      set default_array(halftime)                   "168"

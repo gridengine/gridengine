@@ -667,8 +667,6 @@ spooling_field *sge_build_SC_field_list(void)
                           "weight_user", NULL, NULL, NULL, NULL);
    create_spooling_field (&fields[count++], SC_weight_project, 33,
                           "weight_project", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_weight_jobclass, 33,
-                          "weight_jobclass", NULL, NULL, NULL, NULL);
    create_spooling_field (&fields[count++], SC_weight_department, 33,
                           "weight_department", NULL, NULL, NULL, NULL);
    create_spooling_field (&fields[count++], SC_weight_job, 33,

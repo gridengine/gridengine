@@ -293,9 +293,8 @@ static void qmonManopFillList(void)
       if (ep && !lGetString(ep, UP_default_project)) 
          lSetString(ep, UP_default_project, "NONE");
    }
-   qmonSet2xN(user_matrix, cl, UP_name, UP_default_project);
+   qmonSetNxN(user_matrix, cl, 3, UP_name, UP_default_project, UP_delete_time);
    lFreeList(cl);
-
 
    DEXIT;
 }

@@ -72,7 +72,6 @@ enum {
    SC_compensation_factor,
    SC_weight_user,
    SC_weight_project,
-   SC_weight_jobclass,
    SC_weight_department,
    SC_weight_job,
    SC_weight_tickets_functional,
@@ -126,7 +125,6 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    SGE_DOUBLE(SC_weight_user, CULL_DEFAULT | CULL_SPOOL)                  /* gives weights between different *
                                                                            * functional scheduling targets   */
    SGE_DOUBLE(SC_weight_project, CULL_DEFAULT | CULL_SPOOL)
-   SGE_DOUBLE(SC_weight_jobclass, CULL_DEFAULT | CULL_SPOOL)
    SGE_DOUBLE(SC_weight_department, CULL_DEFAULT | CULL_SPOOL)
    SGE_DOUBLE(SC_weight_job, CULL_DEFAULT | CULL_SPOOL)
 
@@ -184,7 +182,6 @@ NAMEDEF(SCN)
 
    NAME("SC_weight_user")
    NAME("SC_weight_project")
-   NAME("SC_weight_jobclass")
    NAME("SC_weight_department")
    NAME("SC_weight_job")
 

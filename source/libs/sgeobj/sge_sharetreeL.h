@@ -102,9 +102,9 @@ enum {
                                       * set in schedd, stored to qmaster,
                                       * not spooled */
    STN_temp,                 /* this node is a temporary node created in
-                              * schedd and will not be sent to qmaster,
-                              * set in schedd, not stored to qmaster, not
-                              * spooled */
+                              * schedd/qmon and will not be sent to qmaster,
+                              * set in schedd/qmon, not stored to qmaster,
+                              * not spooled */
    STN_stt,                  /* short term targeted proportion of node 
                               * compared to sibling nodes,
                               * calculated during scheduling of pending

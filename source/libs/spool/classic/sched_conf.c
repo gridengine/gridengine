@@ -184,7 +184,6 @@ _Insight_set_option("suppress", "READ_DANGLING");
    FPRINTF((fp, "compensation_factor              %.10g\n", lGetDouble(ep, SC_compensation_factor)));
    FPRINTF((fp, "weight_user                      %.10g\n", lGetDouble(ep, SC_weight_user)));
    FPRINTF((fp, "weight_project                   %.10g\n", lGetDouble(ep, SC_weight_project)));
-   FPRINTF((fp, "weight_jobclass                  %.10g\n", lGetDouble(ep, SC_weight_jobclass)));
    FPRINTF((fp, "weight_department                %.10g\n", lGetDouble(ep, SC_weight_department)));
    FPRINTF((fp, "weight_job                       %.10g\n", lGetDouble(ep, SC_weight_job)));
    FPRINTF((fp, "weight_tickets_functional        " u32 "\n", lGetUlong(ep, SC_weight_tickets_functional)));
@@ -338,13 +337,6 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
    /* --------- SC_halflife_decay_list */
    if (!set_conf_string(alpp, clpp, fields, "halflife_decay_list", ep, 
             SC_halflife_decay_list)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- SC_weight_jobclass */
-   if (!set_conf_double(alpp, clpp, fields, "weight_jobclass", ep, 
-            SC_weight_jobclass, 0)) {
       DEXIT;
       return -1;
    }

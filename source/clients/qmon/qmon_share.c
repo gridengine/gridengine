@@ -89,6 +89,7 @@ typedef struct _tSTNUserData {
    double actual_proportion;
    double targetted_share;
    double usage;
+   int temp;
 } tSTNUserData;
 
 typedef struct _tSTNEntry {
@@ -1100,6 +1101,12 @@ XtPointer cld, cad;
       scl = lCopyList("", qmonMirrorList(SGE_SC_LIST));
       sconf_set_config(&scl, NULL);
    }
+
+   /*
+    * add default user nodes for display purposes
+    */
+   sge_add_default_user_nodes(lFirst(share_tree), ul, pl);
+
    /*
    ** fill the share tree with the actual values
    */
@@ -1486,12 +1493,14 @@ lListElem *ep
       user_data->actual_proportion = lGetDouble(ep, STN_actual_proportion); 
       user_data->targetted_share = lGetDouble(ep, STN_m_share);
       user_data->usage = lGetDouble(ep, STN_combined_usage);
+      user_data->temp = lGetUlong(ep, STN_temp);
    }
    else {
       user_data->share = share;
       user_data->actual_proportion = 0;
       user_data->targetted_share = 0;
       user_data->usage = 0;
+      user_data->temp = 0;
    }
    
    DEXIT;
@@ -1570,13 +1579,15 @@ ListTreeItem *item
       node = ListTreeFirstChild(item);
 
    while (node) {
-      ep = lAddElemStr(&lp, STN_name, node->text, STN_Type);
       data = (tSTNUserData*)node->user_data;
-      lSetUlong(ep, STN_shares, data->share);
+      if (!data->temp) {
+         ep = lAddElemStr(&lp, STN_name, node->text, STN_Type);
+         lSetUlong(ep, STN_shares, data->share);
 /*       lSetUlong(ep, STN_type, sharetree_mode); */
 
-      if (ListTreeFirstChild(node))
-         lSetList(ep, STN_children, TreeToCull(tree, node));
+         if (ListTreeFirstChild(node))
+            lSetList(ep, STN_children, TreeToCull(tree, node));
+      }
       
       node = ListTreeNextSibling(node);
    }

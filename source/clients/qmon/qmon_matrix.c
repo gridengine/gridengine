@@ -500,6 +500,219 @@ Cardinal size
 
 
 /*-------------------------------------------------------------------------*/
+void qmonSetNxN(
+Widget w,
+lList *lp,
+int num_fields,
+...
+) {
+   lListElem *ep;
+   int i, row;
+   int max_rows;
+   int val;
+   double dval;
+   char buf[128];
+   int *field;
+   const char **col;
+   va_list ap;
+   
+   DENTER(GUI_LAYER, "qmonSetNxN");
+   
+   /* clear the area */
+   XtVaSetValues(w, XmNcells, NULL, NULL);
+   
+   if (!lp) {
+      DEXIT;
+      return;
+   }
+
+   field = (int *)malloc(num_fields*sizeof(int));
+   col = (const char **)malloc(num_fields*sizeof(char *));
+   if (field == NULL || col == NULL) {
+      abort();
+   }
+
+#ifdef __INSIGHT__
+      _Insight_set_option("suppress", "READ_OVERFLOW");
+#endif
+
+   va_start(ap, num_fields);
+   for(i=0; i<num_fields; i++)
+      field[i] = va_arg(ap, int);
+
+#ifdef __INSIGHT__
+      _Insight_set_option("unsuppress", "READ_OVERFLOW");
+#endif
+      
+   XtVaGetValues(w, XmNrows, &max_rows, NULL);
+
+   for (ep = lFirst(lp), row = 0; ep; ep = lNext(ep), row++) {
+      if (row == max_rows) {
+         XbaeMatrixAddRows(w, 
+                           max_rows, 
+                           NULL,       /* empty rows  */
+                           NULL,       /* no lables   */
+                           NULL,       /* no different colors */
+                           1);         /* we add 1 rows      */
+         max_rows++;
+      }
+
+      memset(col, 0, num_fields*sizeof(char *));
+
+      /*
+       * get column values
+       */
+
+      for(i=0; i<num_fields; i++) {
+
+         switch (lGetType(lGetListDescr(lp), field[i])) {
+            case lStringT:
+               col[i] = (StringConst)lGetString(ep, field[i]);
+               break;
+            case lHostT:
+               col[i] = (StringConst)lGetHost(ep,field[i]);
+               break;
+            case lUlongT:
+               val = (int)lGetUlong(ep, field[i]);
+#if 0
+               if (val) {
+                  sprintf(buf, "%d", val);
+                  col[i] = buf;
+               }
+               else
+                  col[i] = NULL;
+#else
+               sprintf(buf, "%d", val);
+               col[i] = buf;
+#endif
+               break;
+            case lDoubleT:
+               dval = lGetDouble(ep, field[i]);
+               sprintf(buf, "%.2f", dval);
+               col[i] = buf;
+               break;
+         }
+      }
+
+      if (col[0]) {
+         /* FIX_CONST_GUI */
+         for(i=0; i<num_fields; i++)
+            XbaeMatrixSetCell(w, row, i, col[i] ? (String)col[i] : "");
+      }
+   }
+
+   free(field);
+   free(col);
+       
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+lList* qmonGetNxN(
+Widget w,
+lDescr *dp,
+int num_fields,
+...
+) {
+   lList *lp = NULL;
+   lListElem *ep;
+   int i, row;
+   int max_rows;
+   va_list ap;
+   char **col;
+   int *field;
+
+   DENTER(GUI_LAYER, "qmonGetNxN");
+
+   field = (int *)malloc(num_fields*sizeof(int));
+   col = (const char **)malloc(num_fields*sizeof(char *));
+   if (field == NULL || col == NULL) {
+      abort();
+   }
+
+#ifdef __INSIGHT__
+   _Insight_set_option("suppress", "READ_OVERFLOW");
+#endif
+
+   va_start(ap, num_fields);
+   for(i=0; i<num_fields; i++)
+      field[i] = va_arg(ap, int);
+
+#ifdef __INSIGHT__
+   _Insight_set_option("unsuppress", "READ_OVERFLOW");
+#endif
+      
+   XtVaGetValues(w, XmNrows, &max_rows, NULL);
+   
+   for (row=0; row<max_rows; row++) {
+      memset(col, 0, num_fields*sizeof(char *));
+      for(i=0; i<num_fields; i++)
+         col[i] = XbaeMatrixGetCell(w, row, i);
+      if (col[0] && col[0][0] != '\0') {
+         if (!lp)
+            lp = lCreateList(XtName(w), dp);
+         ep = lCreateElem(dp);
+         lAppendElem(lp, ep);
+
+         /*
+          * retrieve values from columns
+          */
+
+         for(i=0; i<num_fields; i++) {
+            switch(lGetType(lGetListDescr(lp), field[i])) {
+               case lStringT: 
+                  lSetString(ep, field[i], col[i] ? col[i] : "" );
+                  break;
+               case lHostT:
+                  lSetHost(ep, field[i], col[i] ? col[i] : "");
+                  break;
+               case lUlongT:
+                  lSetUlong(ep, field[i], col[i] ? atoi(col[i]) : 0);
+                  break;
+               case lDoubleT:
+                  lSetDouble(ep, field[i], col[i] ? atof(col[i]) : 0.0);
+                  break;
+            }
+         }
+      }
+      else
+         continue;
+   }
+
+   free(field);
+   free(col);
+
+   DEXIT;
+   return lp;
+}
+
+   
+#if 1
+
+/*-------------------------------------------------------------------------*/
+void qmonSet2xN(
+Widget w,
+lList *lp,
+int field1,
+int field2 
+) {
+   qmonSetNxN(w, lp, 2, field1, field2);
+}
+
+
+/*-------------------------------------------------------------------------*/
+lList* qmonGet2xN(
+Widget w,
+lDescr *dp,
+int field1,
+int field2 
+) {
+   return qmonGetNxN(w, dp, 2, field1, field2);
+}
+
+#else
+
+/*-------------------------------------------------------------------------*/
 void qmonSet2xN(
 Widget w,
 lList *lp,
@@ -649,6 +862,8 @@ int field2
    DEXIT;
    return lp;
 }
+
+#endif
 
    
 /*-------------------------------------------------------------------------*/

@@ -132,8 +132,6 @@ double sconf_get_weight_department(void);
 
 double sconf_get_weight_project(void);
 
-double sconf_get_weight_jobclass(void);
-
 double sconf_get_weight_job(void);
 
 u_long32 sconf_get_weight_tickets_share(void);

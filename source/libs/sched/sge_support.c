@@ -638,15 +638,102 @@ sge_calc_share_tree_proportions( lList *share_tree,
 }
 
 
+/*--------------------------------------------------------------------
+ * set_share_tree_project_flags - set the share tree project flag for
+ *       node and descendants
+ *--------------------------------------------------------------------*/
+
+void
+set_share_tree_project_flags( const lList *project_list,
+                              lListElem *node )
+{
+   lList *children;
+   lListElem *child;
+
+   if (!project_list || !node)
+      return;
+
+   if (userprj_list_locate(project_list, lGetString(node, STN_name)))
+      lSetUlong(node, STN_project, 1);
+   else
+      lSetUlong(node, STN_project, 0);
+
+   children = lGetList(node, STN_children);
+   if (children) {
+      for_each(child, children) {
+         set_share_tree_project_flags(project_list, child);
+      }
+   }
+   return;
+}
+
+
+void
+sge_add_default_user_nodes( lListElem *root_node,
+                            const lList *user_list,
+                            const lList *project_list )
+{
+   lListElem *user, *project, *pnode, *dnode;
+   const char *proj_name, *user_name;
+
+   /*
+    * do for each project and for no project
+    *    if default node exists
+    *       do for each user
+    *          if user maps to default node
+    *             add temp node as sibling to default node
+    *          endif
+    *       end do
+    *    endif
+    * end do
+    */
+
+   set_share_tree_project_flags(project_list, root_node);
+
+   for_each(project, project_list) {
+      proj_name = lGetString(project, UP_name);
+      if (search_userprj_node(root_node, "default", proj_name, NULL)) {
+         for_each(user, user_list) {
+            user_name = lGetString(user, UP_name);
+            if (((dnode=search_userprj_node(root_node, user_name, proj_name, &pnode))) &&
+                strcmp("default", lGetString(dnode, STN_name)) == 0) {
+               lListElem *node = lCopyElem(dnode);
+               lSetString(node, STN_name, user_name);
+               lSetUlong(node, STN_temp, 1);
+               lAppendElem(lGetList(pnode, STN_children), node);
+            }
+         }
+      }
+   }
+
+      proj_name = NULL;
+      if (search_userprj_node(root_node, "default", proj_name, NULL)) {
+         for_each(user, user_list) {
+            user_name = lGetString(user, UP_name);
+            if (((dnode=search_userprj_node(root_node, user_name, proj_name, &pnode))) &&
+                strcmp("default", lGetString(dnode, STN_name)) == 0) {
+               lListElem *node = lCopyElem(dnode);
+               lSetString(node, STN_name, user_name);
+               lSetUlong(node, STN_temp, 1);
+               lAppendElem(lGetList(pnode, STN_children), node);
+            }
+         }
+      }
+
+}
+
+
 /********************************************************
  Search the share tree for the node corresponding to the
  user / project combination
  ********************************************************/
-lListElem *
-search_userprj_node( lListElem *ep,      /* root of the tree */
-                     const char *username,
-                     const char *projname,
-                     lListElem **pep )   /* parent of found node */
+static lListElem *
+search_userprj_node_work( lListElem *ep,      /* branch to search */
+                          const char *username,
+                          const char *projname,
+                          lListElem **pep,    /* parent of found node */
+                          lListElem *root )
+
 {
    lListElem *cep, *fep;
    static int sn_children_pos = -1;
@@ -675,6 +762,7 @@ search_userprj_node( lListElem *ep,      /* root of the tree */
     */
 
    if (lGetPosUlong(ep, sn_project_pos) &&
+        ep != root &&
        (!projname || strcmp(nodename, projname))) {
       DEXIT;
       return NULL;
@@ -701,8 +789,12 @@ search_userprj_node( lListElem *ep,      /* root of the tree */
             return ep;
          }
 
+         return search_userprj_node_work(ep, username, NULL, pep, ep);
+
+#if 0
+
          for_each(cep, children) {
-            if ((fep = search_userprj_node(cep, username, NULL, pep))) {
+            if ((fep = search_userprj_node_work(cep, username, NULL, pep, ep))) {
                if (pep && (cep == fep))
                   *pep = ep;
                DEXIT;
@@ -717,13 +809,14 @@ search_userprj_node( lListElem *ep,      /* root of the tree */
           */
 
          for_each(cep, children) {
-            if ((fep = search_userprj_node(cep, "default", NULL, pep))) {
+            if ((fep = search_userprj_node_work(cep, "default", NULL, pep, root))) {
                if (pep && (cep == fep))
                   *pep = ep;
                DEXIT;
                return fep;
             }
          }
+#endif
 
          /*
           * user was not found, fall thru and return NULL
@@ -736,7 +829,7 @@ search_userprj_node( lListElem *ep,      /* root of the tree */
           */
 
          for_each(cep, children) {
-            if ((fep = search_userprj_node(cep, username, projname, pep))) {
+            if ((fep = search_userprj_node_work(cep, username, projname, pep, root))) {
                if (pep && (cep == fep))
                   *pep = ep;
                DEXIT;
@@ -762,13 +855,20 @@ search_userprj_node( lListElem *ep,      /* root of the tree */
        */
 
       for_each(cep, children) {
-         if ((fep = search_userprj_node(cep, username, projname, pep))) {
+         if ((fep = search_userprj_node_work(cep, username, projname, pep, root))) {
             if (pep && (cep == fep))
                *pep = ep;
             DEXIT;
             return fep;
          }
       }
+
+      /*
+       * if we've searched the entire tree, search for default user
+       */
+
+      if (ep == root && strcmp(username, "default"))
+         return search_userprj_node(ep, "default", NULL, pep);
 
       /*
        * user was not found, fall thru and return NULL
@@ -780,6 +880,20 @@ search_userprj_node( lListElem *ep,      /* root of the tree */
    return NULL;
 }
 
+
+/********************************************************
+ Search the share tree for the node corresponding to the
+ user / project combination
+ ********************************************************/
+lListElem *
+search_userprj_node( lListElem *ep,      /* root of the tree */
+                     const char *username,
+                     const char *projname,
+                     lListElem **pep )   /* parent of found node */
+
+{
+   return search_userprj_node_work(ep, username, projname, pep, ep);
+}
 
 
 /********************************************************

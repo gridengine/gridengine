@@ -402,10 +402,6 @@ enum {
 *     Data used only in scheduler
 *     ===========================
 *
-*     SGE_XSTRING(JB_jobclass)
-*        Job class name. Local to schedd. Identical to master_queue.
-*        Not spooled. NOT USED
-*
 *     SGE_HOST(JB_host)                    
 *        SGEEE - host job is executing on. Local to schedd. 
 *        Not spooled.
@@ -590,7 +586,6 @@ enum {
    JB_ja_template,
    JB_ja_tasks,
 
-/*   JB_jobclass,*/
    JB_host,
    JB_category,
 
@@ -691,7 +686,6 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_LIST(JB_ja_template, JAT_Type, CULL_DEFAULT | CULL_SPOOL)  
    SGE_LIST(JB_ja_tasks, JAT_Type, CULL_DEFAULT | CULL_SPOOL)  
 
-/*   SGE_STRING(JB_jobclass, CULL_DEFAULT)*/
    SGE_HOST(JB_host, CULL_DEFAULT)       
    SGE_REF(JB_category, CT_Type, CULL_DEFAULT)    
 
@@ -837,7 +831,6 @@ NAMEDEF(JBN)
    NAME("JB_ja_template")
    NAME("JB_ja_tasks")
 
-/*   NAME("JB_jobclass")*/
    NAME("JB_host")
    NAME("JB_category")
    

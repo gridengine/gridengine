@@ -165,7 +165,6 @@ typedef struct{
    int compensation_factor;
    int weight_user;
    int weight_project;
-   int weight_jobclass;
    int weight_department;
    int weight_job;
    int weight_tickets_functional;
@@ -211,7 +210,7 @@ static int policy_hierarchy_verify_value(const char* value);
  */
 static config_pos_type pos = {true, 
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
                        -1, -1, -1, -1, -1, -1, -1, -1,
                        SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL, 
                        -1, -1, -1, -1, -1};
@@ -280,7 +279,6 @@ static void sconf_clear_pos(void){
          pos.compensation_factor = -1; 
          pos.weight_user = -1; 
          pos.weight_project = -1; 
-         pos.weight_jobclass = -1; 
          pos.weight_department = -1; 
          pos.weight_job = -1; 
          pos.weight_tickets_functional = -1; 
@@ -344,7 +342,6 @@ static bool sconf_calc_pos(void){
          ret &= (pos.compensation_factor = lGetPosViaElem(config, SC_compensation_factor)) != -1;
          ret &= (pos.weight_user = lGetPosViaElem(config, SC_weight_user)) != -1;
          ret &= (pos.weight_project = lGetPosViaElem(config, SC_weight_project)) != -1;
-         ret &= (pos.weight_jobclass = lGetPosViaElem(config, SC_weight_jobclass)) != -1;
          ret &= (pos.weight_department = lGetPosViaElem(config, SC_weight_department)) != -1;
          ret &= (pos.weight_job = lGetPosViaElem(config, SC_weight_job)) != -1;
 
@@ -612,11 +609,10 @@ lListElem *sconf_create_default()
    lSetDouble(added, UA_value, 0.0);
 
    lSetDouble(ep, SC_compensation_factor, 5);
-   lSetDouble(ep, SC_weight_user, 0.2);
-   lSetDouble(ep, SC_weight_project, 0.2);
-   lSetDouble(ep, SC_weight_jobclass, 0.2);
-   lSetDouble(ep, SC_weight_department, 0.2);
-   lSetDouble(ep, SC_weight_job, 0.2);
+   lSetDouble(ep, SC_weight_user, 0.25);
+   lSetDouble(ep, SC_weight_project, 0.25);
+   lSetDouble(ep, SC_weight_department, 0.25);
+   lSetDouble(ep, SC_weight_job, 0.25);
    lSetUlong(ep, SC_weight_tickets_functional, 0);
    lSetUlong(ep, SC_weight_tickets_share, 0);
 
@@ -1157,32 +1153,6 @@ double sconf_get_weight_project(void) {
 
    if (pos.weight_project != -1)
       return lGetPosDouble(sc_ep, pos.weight_project);
-   else
-      return 0;
-}
-
-/****** sge_schedd_conf/sconf_get_weight_jobclass() ****************************
-*  NAME
-*     sconf_get_weight_jobclass() -- ??? 
-*
-*  SYNOPSIS
-*     double sconf_get_weight_jobclass(void) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     void - ??? 
-*
-*  RESULT
-*     double - 
-*
-*******************************************************************************/
-double sconf_get_weight_jobclass(void) {
-   const lListElem *sc_ep = sconf_get_config();
-
-   if (pos.weight_jobclass != -1)
-      return lGetPosDouble(sc_ep, pos.weight_jobclass );
    else
       return 0;
 }
@@ -1896,10 +1866,6 @@ void sconf_print_config(void){
    /* --- SC_weight_project */
    dval = sconf_get_weight_project();
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_project"));
-
-   /* --- SC_weight_jobclass */
-   dval = sconf_get_weight_jobclass();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_jobclass"));
 
    /* --- SC_weight_department */
    dval = sconf_get_weight_department();

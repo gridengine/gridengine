@@ -69,6 +69,10 @@ lListElem *search_named_node_path ( lListElem *ep, const char *path, ancestors_t
 
 void free_ancestors( ancestors_t *ancestors);
 
+void set_share_tree_project_flags( const lList *project_list, lListElem *node );
+
+void sge_add_default_user_nodes( lListElem *root, const lList *user_list, const lList *project_list );
+
 #ifdef notdef
 lListElem *search_ancestor_list ( lListElem *ep, char *name, ancestors_t *ancestors );
 #endif

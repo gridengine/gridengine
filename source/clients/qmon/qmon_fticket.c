@@ -79,10 +79,9 @@ typedef struct _tFREntry {
    int fticket_userset;
    int fticket_project;
    int fticket_job;
-   int fticket_jobclass;
 } tFREntry;
 
-static tScaleWeight WeightData[5];
+static tScaleWeight WeightData[4];
 
 static tFREntry ratio_data;
 
@@ -117,11 +116,6 @@ static XtResource ratio_resources[] = {
       sizeof(int),
       XtOffsetOf(tFREntry, fticket_job),
       XtRImmediate, NULL },
-
-   { "fticket_jobclass", "fticket_jobclass", XtRInt,
-      sizeof(int),
-      XtOffsetOf(tFREntry, fticket_jobclass),
-      XtRImmediate, NULL }
 
 };
 
@@ -397,15 +391,15 @@ static Widget qmonFTicketCreate(
 Widget parent 
 ) {
    Widget fticket_layout, fticket_cancel, fticket_update, 
-            fticket_more, fticket_ok, fticket_new, fticket_jcsc,
+            fticket_more, fticket_ok, fticket_new, /* fticket_jcsc, */
             fticket_usc, fticket_ussc, fticket_psc, fticket_jsc,
             fticket_usc_t, fticket_ussc_t, fticket_psc_t, fticket_jsc_t,
-            fticket_jcsc_t, fticket_main_link;
+            /* fticket_jcsc_t, */ fticket_main_link;
    static int usc_index = 0;
    static int ussc_index = 1;
    static int psc_index = 2;
    static int jsc_index = 3;
-   static int jcsc_index = 4;
+   /* static int jcsc_index = 4; */
 
    DENTER(GUI_LAYER, "qmonFTicketCreate");
    
@@ -431,12 +425,12 @@ Widget parent
                           "fticket_ussc", &fticket_ussc,
                           "fticket_psc", &fticket_psc,
                           "fticket_jsc", &fticket_jsc,
-                          "fticket_jcsc", &fticket_jcsc,
+                          /* "fticket_jcsc", &fticket_jcsc, */
                           "fticket_usc_t", &fticket_usc_t,
                           "fticket_ussc_t", &fticket_ussc_t,
                           "fticket_psc_t", &fticket_psc_t,
                           "fticket_jsc_t", &fticket_jsc_t,
-                          "fticket_jcsc_t", &fticket_jcsc_t,
+                          /* "fticket_jcsc_t", &fticket_jcsc_t, */
                           NULL);
 
    /*
@@ -473,11 +467,13 @@ Widget parent
    XtVaSetValues(fticket_jsc, XmNuserData, (XtPointer) &jsc_index, NULL); 
    XtVaSetValues(fticket_jsc_t, XmNuserData, (XtPointer) &jsc_index, NULL); 
 
+#if 0
    WeightData[4].lock = 0;
    WeightData[4].scale = fticket_jcsc;
    WeightData[4].toggle = fticket_jcsc_t;
    XtVaSetValues(fticket_jcsc, XmNuserData, (XtPointer) &jcsc_index, NULL); 
    XtVaSetValues(fticket_jcsc_t, XmNuserData, (XtPointer) &jcsc_index, NULL); 
+#endif
 
 
    /*
@@ -491,8 +487,10 @@ Widget parent
                      qmonScaleWeight, (XtPointer)WeightData);
    XtAddCallback(fticket_jsc, XmNvalueChangedCallback,
                      qmonScaleWeight, (XtPointer)WeightData);
+#if 0
    XtAddCallback(fticket_jcsc, XmNvalueChangedCallback,
                      qmonScaleWeight, (XtPointer)WeightData);
+#endif
 
    XtAddCallback(fticket_usc_t, XmNvalueChangedCallback,
                      qmonScaleWeightToggle, (XtPointer)WeightData);
@@ -502,8 +500,10 @@ Widget parent
                      qmonScaleWeightToggle, (XtPointer)WeightData);
    XtAddCallback(fticket_jsc_t, XmNvalueChangedCallback,
                      qmonScaleWeightToggle, (XtPointer)WeightData);
+#if 0
    XtAddCallback(fticket_jcsc_t, XmNvalueChangedCallback,
                      qmonScaleWeightToggle, (XtPointer)WeightData);
+#endif
                      
 
    XtAddCallback(fticket_main_link, XmNactivateCallback, 
@@ -751,14 +751,6 @@ XtPointer cad
          fticket_info.dp = JB_Type;
          break;
 
-#if 0
-      case FOT_JOBCLASS:
-         fticket_info.field0 = CQ_name;
-         fticket_info.field1 = CQ_fshare;
-         fticket_info.list_type = SGE_CQUEUE_LIST;
-         fticket_info.dp = CQ_Type;
-         break;
-#endif
    }
 
    /*
@@ -1045,15 +1037,6 @@ XtPointer cad
          oticket_info.dp = JB_Type;
          break;
 
-#if 0
-      case FOT_JOBCLASS:
-         oticket_info.field0 = CQ_name;
-         oticket_info.field1 = CQ_oticket;
-         oticket_info.list_type = SGE_CQUEUE_LIST;
-         oticket_info.dp = CQ_Type;
-         break;
-#endif
-
    }
 
    /*
@@ -1179,9 +1162,6 @@ tFREntry *data
    /* JOB */
    lSetDouble(sep, SC_weight_job, ((double)data->fticket_job)/1000);
 
-   /* JOBCLASS */
-   lSetDouble(sep, SC_weight_jobclass, ((double)data->fticket_jobclass)/1000);
-
    DEXIT;
 }
 
@@ -1204,19 +1184,13 @@ lListElem *sep
    
    /* JOB */
    data->fticket_job = (int)(lGetDouble(sep, SC_weight_job)*1000);
-   
-   /* JOBCLASS */
-   data->fticket_jobclass = (int)(lGetDouble(sep, SC_weight_jobclass)*1000);
-   
    if (data->fticket_user+data->fticket_userset+data->fticket_project+
-         data->fticket_job + data->fticket_jobclass != 1000) {
-      data->fticket_user = 200;
-      data->fticket_userset = 200;
-      data->fticket_project = 200;
-      data->fticket_job = 200;
-      data->fticket_jobclass = 200;
+         data->fticket_job != 1000) {
+      data->fticket_user = 250;
+      data->fticket_userset = 250;
+      data->fticket_project = 250;
+      data->fticket_job = 250;
    }
-
    /*
    ** set the UsageWeightData
    */
@@ -1224,8 +1198,6 @@ lListElem *sep
    WeightData[1].weight = data->fticket_userset;
    WeightData[2].weight = data->fticket_project;
    WeightData[3].weight = data->fticket_job;
-   WeightData[4].weight = data->fticket_jobclass;
-   
    DEXIT;
 }
 

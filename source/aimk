@@ -137,6 +137,7 @@ usage:
    echo ""
    echo "-32               -> irix: create 32 bit binaries"
    echo "-64               -> irix: create 64 bit binaries"
+   echo "-add-copyright    -> insert a copyright string in each binary"
    echo "-adoc             -> create source code documentation in adoc format"
    echo "-D*               -> include a macro definition in CFLAGS"
    echo "-catman           -> generate man pages in catman format"
@@ -208,6 +209,7 @@ set   CFLAGS       = "$INP_CFLAGS"
 set   CXXFLAGS     = "$CFLAGS"
 set   CORE_INCLUDE = "-I../common -I../libs/uti -I../libs/gdi -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 
+set   ADD_COPYRIGHT = 0
 set   ADOC        = 0
 set   BUILDMAN    = 0
 set   BUILDCATMAN = 0
@@ -344,6 +346,9 @@ while ($#argv >= 1 && $?found)
       set IRIX_ABI = -64
       set FORCE64  = true
       set FORCE32  = false
+      breaksw
+   case "-add-copyright"
+      set ADD_COPYRIGHT = 1
       breaksw
    case "-adoc":
       set CORE   = 0
@@ -1393,6 +1398,9 @@ if ( "$ZLIBBASE" != "" || "$MAKEZLIB" == 1 ) then
    cd $SOURCE
 endif
 
+if ( "$ADD_COPYRIGHT" == 1 ) then
+   set CFLAGS = "-DADD_COPYRIGHT -I$COPYRIGHT_DIR $CFLAGS"
+endif
 
 if ( "$CORE" == 1 ) then
    cd $COMPILE_ARCH

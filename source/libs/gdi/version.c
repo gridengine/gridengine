@@ -29,6 +29,11 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#ifdef ADD_COPYRIGHT
+#  include "copyright.h"
+#endif
+
 char GDI_VERSION[] = "5.3 alpha1";
 
 char DQS_ACK[] = "\n\

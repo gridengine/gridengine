@@ -198,7 +198,7 @@ static void       init_send_events(void);
 static void*      send_thread(void*);
 static bool       should_exit(void);
 static void       send_events(void);
-static void       flush_events(lListElem*, int, int );
+static void       flush_events(lListElem*, int);
 static void       total_update(lListElem*);
 static void       build_subscription(lListElem*);
 static void       check_send_new_subscribed_list(const subscription_t*, const subscription_t*, lListElem*, ev_event);
@@ -360,7 +360,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    total_update(ep);
 
    /* flush initial list events */
-   flush_events(ep, 0, 0);
+   flush_events(ep, 0);
 
    Master_Control.send = true;
 
@@ -720,7 +720,7 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser, uid_t anUI
 
    add_event(client, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL, NULL);
 
-   flush_events(client, 0, 0);
+   flush_events(client, 0);
 
    Master_Control.send = true;
 
@@ -787,7 +787,7 @@ int sge_shutdown_dynamic_event_clients(const char *anUser)
 
       add_event(client, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL, NULL);
 
-      flush_events(client, 0, 0);
+      flush_events(client, 0);
    }
 
    Master_Control.send = true;
@@ -960,7 +960,7 @@ void sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type, u
 
          if (type == sgeE_QMASTER_GOES_DOWN) {
             lSetUlong(event_client, EV_busy, 0); /* can't be to busy for shutdown */
-            flush_events(event_client, 0, 0);
+            flush_events(event_client, 0);
          }
 
          DPRINTF(("%s: added event for %s with id " u32 "\n", SGE_FUNC, lGetString(event_client, EV_name), lGetUlong(event_client, EV_id)));
@@ -1235,7 +1235,7 @@ void sge_deliver_events_immediately(u_long32 aClientID)
       return;
    }
 
-   flush_events(client, 0, 0);
+   flush_events(client, 0);
 
    Master_Control.send = true;
 
@@ -1741,17 +1741,13 @@ static void send_events(void)
    return;
 } /* send_events() */
  
-static void flush_events(lListElem *event_client, int interval, int now)
+static void flush_events(lListElem *event_client, int interval)
 {
    u_long32 next_send, flush_delay;
-
+   int now = time(NULL);
    DENTER(TOP_LAYER, "flush_events");
 
    SGE_ASSERT(NULL != event_client);
-
-   if (0 == now) {
-      now = time(NULL);
-   }
 
    next_send = lGetUlong(event_client, EV_next_send_time);
    next_send = MIN(next_send, now + interval);
@@ -1778,8 +1774,10 @@ static void flush_events(lListElem *event_client, int interval, int now)
    next_send = MAX(next_send, lGetUlong(event_client, EV_last_send_time) + flush_delay);
 
    lSetUlong(event_client, EV_next_send_time, next_send);
-   DPRINTF(("%s: %s %d\tNOW: %d NEXT FLUSH: %d (%s,%s,%d)\n", 
+   
+   DPRINTF(("%s: %s %d (ID:"u32")\tNOW: %d NEXT FLUSH: %d (%s,%s,%d)\n", 
          SGE_FUNC, lGetString(event_client, EV_name), lGetUlong(event_client, EV_id), 
+         lGetUlong(lFirst(lGetList(event_client, EV_events)), ET_number),
          now, next_send, 
          lGetHost(event_client, EV_host), 
          lGetString(event_client, EV_commproc),
@@ -2197,7 +2195,7 @@ add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type,
 
       if (subscription[type].flush) {
          DPRINTF(("flushing event client\n"));
-         flush_events(event_client, 0, subscription[type].flush_time);
+         flush_events(event_client, subscription[type].flush_time);
       }
    }
    DEXIT;

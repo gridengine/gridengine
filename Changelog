@@ -1,4 +1,9 @@
-JG_2004-02-14-1: Bugfix:    Make spoolinit (creation of the spooling database) 
+SG-2004-02-14-1: Bugfix:    the event master ignored the flush settings. Every
+                            flush was handled as flush = 0 seconds.
+                 Changed:   qmaster   
+                 Review:    pending
+
+JG-2004-02-14-1: Bugfix:    Make spoolinit (creation of the spooling database) 
                             fail, if the database already exists.
                  Review:    pending
 

@@ -31,7 +31,7 @@
 #___INFO__MARK_END__
 
 # Base directory where a distribution is installed with "distinst"
-BASEDIR=/dist/OS-SGEINST
+BASEDIR=/dist/OS-SGEDIST
 
 # Base directory where the openssl binary resides
 OPENSSLBASE=/vol2/tools/SW/openssl-0.9.6c

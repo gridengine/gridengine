@@ -1360,8 +1360,6 @@ proc setup_conf {} {
   set params(min_gid) "0"
   set params(user_lists) "none"
   set params(xuser_lists) "none"
-  set params(projects) "none"
-  set params(xprojects) "none"
   set params(max_unheard) "00:05:00"
   set params(administrator_mail) "none"
   set params(set_token_cmd) "none"
@@ -1379,6 +1377,8 @@ proc setup_conf {} {
   if { $CHECK_PRODUCT_TYPE == "sgeee" } {
     set params(execd_params)    "PTF_MIN_PRIORITY=20,PTF_MAX_PRIORITY=0"
     set params(enforce_project) "false"
+    set params(projects) "none"
+    set params(xprojects) "none"
   }
 
   set result [ set_config params ] 
@@ -1427,6 +1427,17 @@ proc setup_conf {} {
        }
     }
   } else {
+      foreach elem $arrays_old {
+         if { [string first $elem $arrays_new] < 0 } {
+            add_proc_error "setup_conf" -1 "paramter $elem not in new configuration"
+         }
+      }
+      foreach elem $arrays_new { 
+         if { [string first $elem $arrays_old] < 0 } {
+           add_proc_error "setup_conf" -1 "paramter $elem not in old configuration"
+         }
+      }
+
      add_proc_error "setup_conf" -1 "config parameter count new/old configuration error"
   }
 

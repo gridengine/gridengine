@@ -156,6 +156,9 @@ proc resolve_version { { internal_number -100 } } {
    set versions(SGEEE_5.3_maintrunc) 2
    set versions(SGE_5.3beta1)        2
    set versions(SGEEE_5.3beta1)      2
+   set versions(SGEEE_5.3beta2)      2
+   set versions(SGE_5.3beta2)        2
+
 
    if { $internal_number == -100 } {
       if { $CHECK_PRODUCT_VERSION_NUMBER == "" } {

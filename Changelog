@@ -1,3 +1,6 @@
+CR-2002-01-23-0: Testsuite: - updated resolve_version for SGE(EE) 5.3beta2
+                            - bugfix for SGE installation (install_core_system)
+
 AA-2002-01-23-0: Feature:  Security:
                            - change of cert/key paths
                            - sge_security_ck_to_do() added

@@ -1,3 +1,9 @@
+AD-2004-07-20-0: Bugfix:    Calendars not working in v6
+                 Issue:     1111
+                 Bugtraq:   5071502
+                 Changed:   qmaster
+                 Review:    SG
+
 MD-2004-07-20-0: Bugfix:    variable syntax :  equal sign support
                  Issue:     1118
                  Bugtraq:   5075398

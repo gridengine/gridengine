@@ -190,18 +190,20 @@ static void log_consumables(FILE *fp, lList *actual, lList *total)
 
    for_each (cep, actual) {
       lListElem *tep = lGetElemStr(total, CE_name, lGetString(cep, CE_name));
-      dstring act_string = DSTRING_INIT;
-      dstring tot_dstring = DSTRING_INIT;
+      if (tep != NULL) {
+         dstring act_string = DSTRING_INIT;
+         dstring tot_dstring = DSTRING_INIT;
 
-      centry_print_resource_to_dstring(cep, &act_string);
-      centry_print_resource_to_dstring(tep, &tot_dstring);
-      fprintf(fp, "%s=%s=%s", lGetString(cep, CE_name), 
-              sge_dstring_get_string(&tot_dstring),
-              sge_dstring_get_string(&act_string)); 
-      sge_dstring_free(&act_string);
-      sge_dstring_free(&tot_dstring);
-      if (lNext(cep)) {
-         fprintf(fp, ","); 
+         centry_print_resource_to_dstring(cep, &act_string);
+         centry_print_resource_to_dstring(tep, &tot_dstring);
+         fprintf(fp, "%s=%s=%s", lGetString(cep, CE_name), 
+                 sge_dstring_get_string(&tot_dstring),
+                 sge_dstring_get_string(&act_string)); 
+         sge_dstring_free(&act_string);
+         sge_dstring_free(&tot_dstring);
+         if (lNext(cep)) {
+            fprintf(fp, ","); 
+         }
       }
    }
 }

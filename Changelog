@@ -1,3 +1,6 @@
+JG-2003-10-15-1: Bugfix:    Spooling framework: Updated verify function to 
+                            changed complex entry definition.
+
 JG-2003-10-15-0: Enhancem.: Berkeleydb Spooling:
                             - added transaction handling
                             - qmaster: shutdown and restart spooling framework

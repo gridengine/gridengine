@@ -414,20 +414,10 @@ spool_default_verify_func(lList **answer_list,
             if (ret) {
                /* necessary to setup actual list of exechost */
                debit_host_consumable(NULL, object, Master_CEntry_List, 0);
-#if 0 /* JG: TODO: complex change */
                /* necessary to init double values of consumable configuration */
-               sge_fill_requests(lGetList(object, EH_consumable_config_list), 
-                     Master_CEntry_List, 1, 0, 1);
+               centry_list_fill_request(lGetList(object, EH_consumable_config_list), 
+                     Master_CEntry_List, true, false, true);
 
-               if (complex_list_verify(lGetList(object, EH_complex_list), NULL, 
-                                       "host", lGetHost(object, EH_name))
-                                    !=STATUS_OK) {
-                  ret = false;
-               }
-#endif
-            }
-
-            if (ret) {
                if (ensure_attrib_available(NULL, object, 
                                            EH_consumable_config_list)) {
                   ret = false;
@@ -444,17 +434,9 @@ spool_default_verify_func(lList **answer_list,
             debit_queue_consumable(NULL, object, Master_CEntry_List, 0);
 
             /* init double values of consumable configuration */
-#if 0 /* JG: TODO: complex change */
-            sge_fill_requests(lGetList(object, QU_consumable_config_list), 
-                              Master_CEntry_List, 1, 0, 1);
+            centry_list_fill_request(lGetList(object, QU_consumable_config_list), 
+                              Master_CEntry_List, true, false, true);
 
-            if (complex_list_verify(lGetList(object, QU_complex_list), NULL, 
-                                    "queue", lGetString(object, QU_qname))
-                 !=STATUS_OK) {
-                 ret = false;
-            }
-#endif
-            if (ret) {
                if (ensure_attrib_available(NULL, object, 
                                            QU_load_thresholds) ||
                    ensure_attrib_available(NULL, object, 
@@ -463,7 +445,6 @@ spool_default_verify_func(lList **answer_list,
                                            QU_consumable_config_list)) {
                   ret = false;
                }
-            }
 
             if (ret) {
                qinstance_state_set_unknown(object, true);
@@ -537,12 +518,15 @@ spool_default_verify_func(lList **answer_list,
             ret = false;
          }
          break;
-#if 0 /* JG: TODO: complex change */
-      case SGE_TYPE_COMPLEX:
-         /* JG: TODO: complex attributes of type host should be resolved 
-          * we need a function verify_complex
+      case SGE_TYPE_CENTRY:
+         if (!centry_elem_validate(object, Master_CEntry_List, answer_list)) {
+            ret = false;
+         }
+         /* JG: TODO: we need a verify_list function, the following action
+          *           has to move there.
           */
-#endif
+         centry_list_sort(Master_CEntry_List);
+         break;
       case SGE_TYPE_MANAGER:
       case SGE_TYPE_OPERATOR:
       case SGE_TYPE_HGROUP:

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/05/06 17:48:27 $     Revision: $Revision: 1.46 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/07/25 13:41:09 $     Revision: $Revision: 1.46.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/05/06 17:48:27 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/07/25 13:41:09 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -945,7 +945,7 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
 The name of the job. The name can be any printable set
-of characters except '|', '.', '$' and it has to start with an alphabetic character.
+of characters except "\\n", "\\t", "\\r", "/", ":", "@" and it has to start with an alphabetic character.
 .br
 If the \fB\-N\fP option is not present xxQS_NAMExx assigns
 the name of the job script to the job after 

@@ -76,27 +76,26 @@ Content
       -gcc
 
    override this default. Note, that this option usually does not work and
-   will require modification to aimk.
+   will require further modifications to aimk.
 
 
-   The dependency tool 'sge_depend' is created with
+   The tool for creating Makefile dependencies 'sge_depend' is created with
 
       % aimk -only-depend
 
-   Dependencies are created with
+   Makefile dependencies are created with
 
       % aimk depend
 
    Technically it means that the target 'depend' is passed to all makefiles.
 
-   For creating qmaster you only would enter
+   For creating the SGE qmaster daemon you only would enter
 
       % aimk sge_qmaster
 
-   or to avoid error messages from other makefiles
+   or to avoid error or warning messages from other makefiles
 
       % aimk -only-core sge_qmaster
-
 
    To create man pages you enter
 

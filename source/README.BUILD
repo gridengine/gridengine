@@ -10,12 +10,13 @@ Content
 2) Building the dependency tool 'sge_depend'
 3) Creating dependencies
 4) Compiling Grid Engine
-5) Installing Grid Engine
-   5.1) Creating a local distribution
-   5.2) Creating a distribution repository
-6) Creating a distribution from a distribution repository
-7) Installing Grid Engine
-8) Copyright
+5) Creating man pages and qmon help file
+6) Installing Grid Engine
+   6.1) Creating a local distribution
+   6.2) Creating a distribution repository
+7) Creating a distribution from a distribution repository
+8) Installing Grid Engine
+9) Copyright
 
 
 0) Overview and files referenced in this document
@@ -38,9 +39,18 @@ Content
 1) Prerequisites
 ----------------
 
-   You first need to checkout the Grid Engine sources. Refer to
-   <<here_reference_to_check_out_page>> for more information. If you are
-   unpacking a snapshot look at <<here_reference_to_snapshot_page>>
+   You first need to checkout the Grid Engine sources. Please refer to
+
+      http://gridengine.sunsource.net/servlets/ProjectSource
+
+   for more information about downloading the source with CVS. If you are
+   unpacking a tar.gz tarball of the sources, please look at
+
+      http://gridengine.sunsource.net/servlets/ProjectDownloadList
+
+   Snapshots of the source code usually have a name in the form
+  
+       gridengine_<CVSTAG>.tar.gz
 
    To compile and install Grid Engine, the following steps need to be
    carried out:
@@ -158,7 +168,29 @@ Content
    See 'README.aimk' for more information on all compilation issues.
 
 
-5) Staging for Installation
+5) Creating man pages and qmon help file
+----------------------------------------
+
+   Man pages in nroff format are created with
+
+      % aimk -man
+
+   or
+
+      % aimk -mankv    (the man pages are checked out with the CVS "-kv"
+                        flag" - needs access to the CVS repository)
+
+   To create man pages in the "catman" format (e.g. used on SGI systems)
+   after creating the nroff man pages enter
+
+      % aimk -catman
+
+   The qmon help file is created with the command
+
+      % aimk -only-qmon qmon_help
+
+
+6) Staging for Installation
 ---------------------------
 
    Once Grid Engine is compiled it can be prepared for installation by
@@ -177,8 +209,7 @@ Content
    for more details about options of the 'distinst' script.
 
 
-
-5.1) Creating a local distribution
+6.1) Creating a local distribution
 ----------------------------------
 
    You can copy Grid Engine binaries and other parts of the distribution
@@ -186,15 +217,15 @@ Content
    quickly install and run Grid Engine after compilation or other changes of
    the distribution.
 
-   If 'scripts/distinst' is invoked as 'myinst' (create a symlink via
+   If 'scripts/distinst' is invoked as 'myinst' (create a symlink:
    "ln -s scripts/distinst myinst") it will check for the variable SGE_ROOT
-   and take this directory as the target for the staging.
+   and take this directory as staging target.
 
    By default 'myinst' in this mode will issue only warnings if one or more 
    targets cannot be installed successfully.
 
 
-5.2) Creating a distribution repository
+6.2) Creating a distribution repository
 ---------------------------------------
 
    If you are planning to create a distribution which later should be used
@@ -210,7 +241,7 @@ Content
    contain a valid set of files.
 
 
-6) Creating a distribution from a distribution repository
+7) Creating a distribution from a distribution repository
 ---------------------------------------------------------
 
    If you need to create a Grid Engine distribution for further
@@ -228,7 +259,7 @@ Content
    how to create a Grid Engine distribution
 
 
-7) Installing Grid Engine
+8) Installing Grid Engine
 -------------------------
 
    After installing the distribution (either after you installed it with
@@ -245,7 +276,7 @@ Content
    for an overview on what "inst_sge" does.
 
 
-8) Copyright
+9) Copyright
 ------------
 
    The Contents of this file are made available subject to the terms of

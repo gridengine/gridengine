@@ -29,9 +29,13 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/resource.h>
+#include <sys/wait.h>
+
 
 #include "sge_string.h"
 #include "setup.h"
@@ -201,37 +205,28 @@ bool analyze_jatask_event(sge_object_type type, sge_event_action action,
 
       if (type == sgeE_JATASK_MOD) { 
          lList *jat = lGetList(event,ET_new_version);
-         u_long job_id  = lGetUlong(event, ET_intkey);
-         u_long task_id = lGetUlong(event, ET_intkey2);
          lListElem *ep = lFirst(jat);
          u_long job_status = lGetUlong(ep, JAT_status);
          int task_running = (job_status==JRUNNING || job_status==JTRANSFERING);
-
          if (task_running) {
          }
       }
 
       if (type == sgeE_JOB_FINAL_USAGE) { 
-         u_long job_id = lGetUlong(event, ET_intkey);
-         u_long task_id = lGetUlong(event, ET_intkey2);
       }
 
       if (type == sgeE_JOB_ADD) { 
-         lList *jat = lGetList(event,ET_new_version);
+         /* lList *jat = lGetList(event,ET_new_version);
          u_long job_id  = lGetUlong(event, ET_intkey);
          u_long task_id = lGetUlong(event, ET_intkey2);
-         lListElem *ep = lFirst(jat);
+         lListElem *ep = lFirst(jat); */
       }
 
       if (type == sgeE_JOB_DEL) { 
-         u_long job_id  = lGetUlong(event, ET_intkey);
-         u_long task_id = lGetUlong(event, ET_intkey2);
          qevent_trigger_scripts(QEVENT_JB_END, qevent_get_option_struct(), event);
       }
 
       if (type == sgeE_JATASK_DEL) { 
-         u_long job_id  = lGetUlong(event, ET_intkey);
-         u_long task_id = lGetUlong(event, ET_intkey2);
          qevent_trigger_scripts(QEVENT_JB_TASK_END,qevent_get_option_struct() , event);
       }
 
@@ -462,7 +457,6 @@ int main(int argc, char *argv[])
    qevent_options enabled_options;
    dstring errors = DSTRING_INIT;
    lList *alp = NULL;
-   u_long32 timestamp;
    int ret,i,gdi_setup;
 
 
@@ -581,8 +575,6 @@ static char* qevent_get_event_name(int event) {
 
 
 void qevent_testsuite_mode(void) {
-   int ret;
-   time_t last_heared = 0;
    u_long32 timestamp;
    DENTER(TOP_LAYER, "qevent_testsuite_mode");
 

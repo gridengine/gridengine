@@ -1,3 +1,6 @@
+CR-2003-03-04-1  Bugfix:    Fixed compiler warnings for glinux systems in
+                            qevent.c module
+
 CR-2003-03-04-0  Bugfix:    Removed not unique message id 49094
 
 CR-2003-03-03-2  Bugfix:    - qevent -help worked only for running GE system

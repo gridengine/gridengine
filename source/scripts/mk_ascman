@@ -163,7 +163,8 @@ if ( "$MANASC" == 1 ) then
          exit 1
       endif
            
-      foreach f ( $MANBUILDDIR/SEDMAN/man/man${n}/*.${n} )
+      cd $MANBUILDDIR/SEDMAN/man     
+      foreach f ( man${n}/*.${n} )
          echo Processing $f
          groff -man -t -Tascii $f >! $MANBUILDDIR/ASCMAN/man/man${n}/`basename $f .${n}`
       end

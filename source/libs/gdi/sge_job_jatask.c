@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
-#include <strings.h>
+#include <string.h>
 
 #include "sgermon.h"
 #include "sge_log.h"
@@ -42,10 +42,12 @@
 #include "sge_answerL.h"
 #include "sge_job_jatask.h"
 #include "sge_range.h"
-#include "msg_gdilib.h"
 #include "sge_hash.h"
 #include "job.h"
 #include "read_write_job.h"
+
+#include "msg_gdilib.h"
+#include "msg_qmaster.h"
 
 /****** gdi/job_jatask/job_get_ja_task_template_pending() **********************
 *  NAME
@@ -1158,3 +1160,14 @@ u_long32 job_get_biggest_enrolled_task_id(const lListElem *job)
    return ret;
 }  
 
+int job_has_valid_account_string(const lListElem *job, lList **answer_list)
+{
+   int ret = 1;
+
+   if (strchr(lGetString(job, JB_account), ':')) {
+      sprintf(SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_SC, MSG_GDI_KEYSTR_COLON, ':');
+      sge_add_answer(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      ret = 0;
+   }
+   return ret;
+}

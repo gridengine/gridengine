@@ -105,4 +105,6 @@ u_long32 job_get_biggest_unenrolled_task_id(const lListElem *job);
 
 u_long32 job_get_biggest_enrolled_task_id(const lListElem *job);    
 
+int job_has_valid_account_string(const lListElem *job, lList **answer_list);
+
 #endif /* __SGE_JOB_JATASK_H */    

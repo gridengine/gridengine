@@ -1,0 +1,208 @@
+Qmon*foreground:  cyan4
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!  The Contents of this file are made available subject to the terms of
+!!  the Sun Industry Standards Source License Version 1.2
+!!
+!!  Sun Microsystems Inc., March, 2001
+!!
+!!
+!!  Sun Industry Standards Source License Version 1.2
+!!  =================================================
+!!  The contents of this file are subject to the Sun Industry Standards
+!!  Source License Version 1.2 (the \"License\"); You may not use this file
+!!  except in compliance with the License. You may obtain a copy of the
+!!  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+!!
+!!  Software provided under this License is provided on an \"AS IS\" basis,
+!!  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+!!  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+!!  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+!!  See the License for the specific provisions governing your rights and
+!!  obligations concerning the Software.
+!!
+!!  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+!!
+!!  Copyright: 2001 by Sun Microsystems, Inc.
+!!
+!!  All Rights Reserved.
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*FontList: $interface
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! default fonts
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+_FontLists_*small*interface: \
+-adobe-helvetica-medium-r-*-*-12-*-*-*-p-*-*-*=R,\
+-adobe-helvetica-bold-r-*-*-12-*-*-*-p-*-*-*=B,\
+-adobe-helvetica-medium-r-*-*-18-*-*-*-p-*-*-*=BIG,\
+-adobe-helvetica-medium-r-*-*-10-*-*-*-p-*-*-*=SMALL,\
+-adobe-helvetica-medium-r-*-*-20-*-*-*-p-*-*-*=HUGE,\
+-adobe-courier-medium-r-*-*-12-*-*-*-m-*-*-*=LIST,\
+-adobe-courier-bold-r-*-*-12-*-*-*-m-*-*-*=LISTBOLD,\
+-adobe-courier-medium-r-*-*-10-*-*-*-m-*-*-*=LISTSMALL,\
+-adobe-helvetica-medium-r-*-*-9-*-*-*-p-*-*-*=QUEUEICON
+
+_FontLists_*small*dialog_font:  -adobe-courier-medium-r-*-*-12-*-*-*-m-*-*-*
+_FontLists_*small*matrix_font:  -adobe-helvetica-medium-r-*-*-12-*-*-*-p-*-*-*
+_FontLists_*small*browser_font: -adobe-courier-medium-r-*-*-10-*-*-*-m-*-*-*
+_FontLists_*small*fixed_font:  -adobe-courier-medium-r-*-*-12-*-*-*-m-*-*-*
+
+_FontLists_*big*interface: \
+-adobe-helvetica-medium-r-*-*-18-*-*-*-p-*-*-*=R,\
+-adobe-helvetica-bold-r-*-*-18-*-*-*-p-*-*-*=B,\
+-adobe-helvetica-medium-r-*-*-24-*-*-*-p-*-*-*=BIG,\
+-adobe-helvetica-medium-r-*-*-14-*-*-*-p-*-*-*=SMALL,\
+-adobe-helvetica-medium-r-*-*-34-*-*-*-p-*-*-*=HUGE,\
+-adobe-courier-medium-r-*-*-18-*-*-*-m-*-*-*=LIST,\
+-adobe-courier-bold-r-*-*-18-*-*-*-m-*-*-*=LISTBOLD,\
+-adobe-courier-medium-r-*-*-14-*-*-*-m-*-*-*=LISTSMALL,\
+-adobe-helvetica-medium-r-*-*-10-*-*-*-p-*-*-*=QUEUEICON
+
+_FontLists_*big*dialog_font:  -adobe-courier-medium-r-*-*-17-*-*-*-m-*-*-*
+_FontLists_*big*matrix_font:  -adobe-helvetica-medium-r-*-*-17-*-*-*-p-*-*-*
+_FontLists_*big*browser_font: -adobe-courier-medium-r-*-*-14-*-*-*-m-*-*-*
+_FontLists_*fixed_font:  -adobe-courier-medium-r-*-*-17-*-*-*-m-*-*-*
+
+_FontLists_*interface: \
+-adobe-helvetica-medium-r-*-*-14-*-*-*-p-*-*-*=R,\
+-adobe-helvetica-bold-r-*-*-14-*-*-*-p-*-*-*=B,\
+-adobe-helvetica-medium-r-*-*-20-*-*-*-p-*-*-*=BIG,\
+-adobe-helvetica-medium-r-*-*-12-*-*-*-p-*-*-*=SMALL,\
+-adobe-helvetica-medium-r-*-*-24-*-*-*-p-*-*-*=HUGE,\
+-adobe-courier-medium-r-*-*-14-*-*-*-m-*-*-*=LIST,\
+-adobe-courier-bold-r-*-*-14-*-*-*-m-*-*-*=LISTBOLD,\
+-adobe-courier-medium-r-*-*-12-*-*-*-m-*-*-*=LISTSMALL,\
+-adobe-helvetica-medium-r-*-*-10-*-*-*-p-*-*-*=QUEUEICON
+
+_FontLists_*dialog_font:  -adobe-courier-medium-r-*-*-14-*-*-*-m-*-*-*
+_FontLists_*matrix_font:  -adobe-helvetica-medium-r-*-*-14-*-*-*-p-*-*-*
+_FontLists_*browser_font: -adobe-courier-medium-r-*-*-12-*-*-*-m-*-*-*
+_FontLists_*fixed_font:  -adobe-courier-medium-r-*-*-14-*-*-*-m-*-*-*
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! japanese fonts
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+_FontLists_*.ja.*.interface: \
+    -*-medium-r-*--14*:R,\
+    -*-bold-r-*--14*:B,\
+    -*-medium-i-*--14*:I,\
+    -*-bold-i-*--14*:BI,\
+    -*-bold-r-*--16*:BIG,\
+    -*-bold-r-*--18*:HUGE,\
+    -*-medium-r-*--10*:SMALL,\
+    -*-medium-r-*--12*:LIST,\
+    -*-bold-r-*--14*:LISTBOLD,\
+    -*-medium-r-*-*14*:LISTSMALL
+
+_FontLists_*.ja.*.dialog_font: \
+    -*-medium-r-*--14*:R,\
+    -*-bold-r-*--14*:B,\
+    -*-medium-i-*--14*:I,\
+    -*-bold-i-*--14*:BI,\
+    -*-bold-r-*--16*:BIG,\
+    -*-bold-r-*--18*:HUGE,\
+    -*-medium-r-*--10*:SMALL,\
+    -*-medium-r-*--12*:LIST,\
+    -*-bold-r-*--14*:LISTBOLD,\
+    -*-medium-r-*-*14*:LISTSMALL
+
+_FontLists_*.ja.*.matrix_font: \
+    -*-medium-r-*--14*:R,\
+    -*-bold-r-*--14*:B,\
+    -*-medium-i-*--14*:I,\
+    -*-bold-i-*--14*:BI,\
+    -*-bold-r-*--16*:BIG,\
+    -*-bold-r-*--18*:HUGE,\
+    -*-medium-r-*--10*:SMALL,\
+    -*-medium-r-*--12*:LIST,\
+    -*-bold-r-*--14*:LISTBOLD,\
+    -*-medium-r-*-*14*:LISTSMALL
+
+_FontLists_*.ja.*.browser_font: \
+    -*-medium-r-*--14*:R,\
+    -*-bold-r-*--14*:B,\
+    -*-medium-i-*--14*:I,\
+    -*-bold-i-*--14*:BI,\
+    -*-bold-r-*--16*:BIG,\
+    -*-bold-r-*--18*:HUGE,\
+    -*-medium-r-*--10*:SMALL,\
+    -*-medium-r-*--12*:LIST,\
+    -*-bold-r-*--14*:LISTBOLD,\
+    -*-medium-r-*-*14*:LISTSMALL
+
+_FontLists_*.ja.*.fixed_font:\
+    -*-medium-r-*--14*:R,\
+    -*-bold-r-*--14*:B,\
+    -*-medium-i-*--14*:I,\
+    -*-bold-i-*--14*:BI,\
+    -*-bold-r-*--16*:BIG,\
+    -*-bold-r-*--18*:HUGE,\
+    -*-medium-r-*--10*:SMALL,\
+    -*-medium-r-*--12*:LIST,\
+    -*-bold-r-*--14*:LISTBOLD,\
+    -*-medium-r-*-*14*:LISTSMALL
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! chinese fonts
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+_FontLists_*.zh.*.interface: \
+    -*-medium-r-*--14*:R,\
+    -*-bold-r-*--14*:B,\
+    -*-medium-i-*--14*:I,\
+    -*-bold-i-*--14*:BI,\
+    -*-bold-r-*--16*:BIG,\
+    -*-bold-r-*--18*:HUGE,\
+    -*-medium-r-*--10*:SMALL,\
+    -*-medium-r-*--12*:LIST,\
+    -*-bold-r-*--14*:LISTBOLD,\
+    -*-medium-r-*-*14*:LISTSMALL
+
+_FontLists_*.zh.*.dialog_font: \
+    -*-medium-r-*--14*:R,\
+    -*-bold-r-*--14*:B,\
+    -*-medium-i-*--14*:I,\
+    -*-bold-i-*--14*:BI,\
+    -*-bold-r-*--16*:BIG,\
+    -*-bold-r-*--18*:HUGE,\
+    -*-medium-r-*--10*:SMALL,\
+    -*-medium-r-*--12*:LIST,\
+    -*-bold-r-*--14*:LISTBOLD,\
+    -*-medium-r-*-*14*:LISTSMALL
+
+_FontLists_*.zh.*.matrix_font: \
+    -*-medium-r-*--14*:R,\
+    -*-bold-r-*--14*:B,\
+    -*-medium-i-*--14*:I,\
+    -*-bold-i-*--14*:BI,\
+    -*-bold-r-*--16*:BIG,\
+    -*-bold-r-*--18*:HUGE,\
+    -*-medium-r-*--10*:SMALL,\
+    -*-medium-r-*--12*:LIST,\
+    -*-bold-r-*--14*:LISTBOLD,\
+    -*-medium-r-*-*14*:LISTSMALL
+
+_FontLists_*.zh.*.browser_font: \
+    -*-medium-r-*--14*:R,\
+    -*-bold-r-*--14*:B,\
+    -*-medium-i-*--14*:I,\
+    -*-bold-i-*--14*:BI,\
+    -*-bold-r-*--16*:BIG,\
+    -*-bold-r-*--18*:HUGE,\
+    -*-medium-r-*--10*:SMALL,\
+    -*-medium-r-*--12*:LIST,\
+    -*-bold-r-*--14*:LISTBOLD,\
+    -*-medium-r-*-*14*:LISTSMALL
+
+_FontLists_*.zh.*.fixed_font:\
+    -*-medium-r-*--14*:R,\
+    -*-bold-r-*--14*:B,\
+    -*-medium-i-*--14*:I,\
+    -*-bold-i-*--14*:BI,\
+    -*-bold-r-*--16*:BIG,\
+    -*-bold-r-*--18*:HUGE,\
+    -*-medium-r-*--10*:SMALL,\
+    -*-medium-r-*--12*:LIST,\
+    -*-bold-r-*--14*:LISTBOLD,\
+    -*-medium-r-*-*14*:LISTSMALL

@@ -1,3 +1,6 @@
+AA-2002-07-08-0  Enhancem.: I18N : fontlist converter for mb locales
+                                   not complete, Qmon.i18n added
+
 CR-2002-07-04-1  Enhancem.: I18N : removed redefined message macro
                                    definitions (part 2)
 

@@ -515,6 +515,7 @@ u_long32 show
                double_print_time_to_dstring(val, &resource_string);
                s = sge_dstring_get_string(&resource_string);
             }
+            break;
          case TYPE_MEM:
             if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
                double val = lGetDouble(rep, CE_pj_doubleval);
@@ -529,6 +530,7 @@ u_long32 show
                double_print_memory_to_dstring(val, &resource_string);
                s = sge_dstring_get_string(&resource_string);
             }
+            break;
          default:   
             if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
                double val = lGetDouble(rep, CE_pj_doubleval);

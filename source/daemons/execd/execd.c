@@ -211,7 +211,7 @@ char **argv
             CRITICAL((SGE_EVENT, MSG_COM_CANTSTARTCOMMD));
             SGE_EXIT(1);
          }
-         sleep(3);
+         sleep(10);
          ret = enroll();
          switch (ret) {
          case 0:

@@ -4,6 +4,7 @@
 # look at the user/admin provided qtask files to find
 # submission defaults for the job type
 # 
+
 QtaskOpts()
 {
    cmd_name=$1

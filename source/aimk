@@ -432,7 +432,7 @@ setenv RMONLIB     "librmon.a"
 set COMPILE_DC = 0
 unset nomk
 
-set COMMD_FIFO_BUGFIX_FLAG = 1
+set commd_fifo_flag = 1
 
 set found
 while ($#argv >= 1 && $?found)
@@ -623,7 +623,7 @@ while ($#argv >= 1 && $?found)
       setenv RMONLIB  ""
       breaksw
    case "-no-commd-fifo":
-      set COMMD_FIFO_BUGFIX_FLAG = 0
+      set commd_fifo_flag = 0
       breaksw
    case "-only-core":
       set CORE   = 1
@@ -1759,7 +1759,7 @@ if ( $WITH_USERMAPPING == 0 ) then
    set CFLAGS = "$CFLAGS -D__SGE_NO_USERMAPPING__"
 endif
 
-if ( $COMMD_FIFO_BUGFIX_FLAG == 1 ) then
+if ( $commd_fifo_flag == 1 ) then
    set CFLAGS = "$CFLAGS -DENABLE_COMMD_FIFO_BUGFIX"
 endif
 

@@ -8,7 +8,7 @@ AH-2002-05-13-0: Change:    Do no longer flush events immediately after orders
 
 EB-2002-04-13-0: Bugfix:    qconf -se shows "reschedule_unknown_list" param. 
                  Issues:    #248 
-                 Changed:   sge_qmaster, qacct 
+                 Changed:   sge_qmaster, qacct, qconf
 
 CR-2002-05-06-0: Testsuite: fixed check dependencies
 

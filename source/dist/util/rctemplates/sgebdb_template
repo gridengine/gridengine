@@ -236,7 +236,7 @@ CheckSpoolDir()
 CheckIfLocal()
 {
    FS=`dirname $1`
-   case $ARCH in
+   case $SGE_ARCH in
       solaris*)
          df -l $FS >/dev/null 2>&1
          if [ $? -eq 0 ]; then

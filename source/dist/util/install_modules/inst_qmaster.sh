@@ -198,13 +198,17 @@ SetPermissions()
       $CLEAR
       return 0
    else
-      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
-                "Did you install this version with >pkgadd< or did you already\n" \
-                "verify and set the file permissions of your distribution (y/n) [y] >> "
-      if [ $? = 0 ]; then
-         $INFOTEXT -wait -auto $AUTO -n "We do not verify file permissions. Hit <RETURN> to continue >> "
-         $CLEAR
-         return 0
+      if [ $AUTO = "true" -a $SET_FILE_PERMS = "true" ]; then
+         :
+      else
+         $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+                   "Did you install this version with >pkgadd< or did you already\n" \
+                   "verify and set the file permissions of your distribution (y/n) [y] >> "
+         if [ $? = 0 ]; then
+            $INFOTEXT -wait -auto $AUTO -n "We do not verify file permissions. Hit <RETURN> to continue >> "
+            $CLEAR
+            return 0
+         fi
       fi
    fi
 

@@ -37,7 +37,7 @@
 #___INFO__MARK_END__
 
 #-------------------------------------------------------------------------
-#Setting up common variables and paths (eg. ARCH, utilbin, util)
+#Setting up common variables and paths (eg. SGE_ARCH, utilbin, util)
 #
 BasicSettings()
 {
@@ -45,9 +45,9 @@ BasicSettings()
   unset SGE_DEBUG_LEVEL
 
   SGE_UTIL="./util"
-  ARCH=`$SGE_UTIL/arch`
-  SGE_UTILBIN="./utilbin/$ARCH"
-  SGE_BIN="./bin/$ARCH"
+  SGE_ARCH=`$SGE_UTIL/arch`
+  SGE_UTILBIN="./utilbin/$SGE_ARCH"
+  SGE_BIN="./bin/$SGE_ARCH"
 
 
   shlib_path_name=`util/arch -lib`
@@ -886,8 +886,8 @@ AddSGEStartUpScript()
       # RedHat uses runlevel 3 for full networked mode
       # Suse uses runlevel 2 for full networked mode
       # we already installed the script in level 3
-      ARCH=`$SGE_UTIL/arch`
-      case $ARCH in
+      SGE_ARCH=`$SGE_UTIL/arch`
+      case $SGE_ARCH in
       lx2?-*)
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then

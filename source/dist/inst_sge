@@ -72,6 +72,7 @@ AFS=false
 NOREMOTE=false
 START_RPC_SERVICE=false
 ADD_TO_RC=false
+SET_FILE_PERMS=false
 
 QMASTER="undef"
 EXECD="undef"
@@ -247,7 +248,6 @@ if [ $EXECD = "install" ]; then
   
          WelcomeTheUserExecHost
          CheckForLocalHostResolving
-         CheckWhoInstallsSGE 
          ProcessSGERoot
          CheckQmasterInstallation
          CheckCellDirectory
@@ -277,7 +277,6 @@ if [ $EXECD = "install" ]; then
  else
       WelcomeTheUserExecHost
       CheckForLocalHostResolving
-      CheckWhoInstallsSGE 
       ProcessSGERoot
       CheckQmasterInstallation
       CheckCellDirectory
@@ -410,16 +409,16 @@ if [ $SHADOW = "install" ]; then
  
       if [ $SHADOW_HOST = `hostname` ]; then
          . $SGE_ROOT/$SGE_CELL/common/settings.sh
-         ARCH=`$SGE_ROOT/util/arch`
-         $SGE_ROOT/bin/$ARCH/sge_shadowd &
+         SGE_ARCH=`$SGE_ROOT/util/arch`
+         $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
       else
-        echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$ARCH/sge_shadowd &" | rsh $SHADOW_HOST /bin/sh &
+        echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | rsh $SHADOW_HOST /bin/sh &
       fi
    else
       $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW_HOST    
       mod_file="echo $SHADOW_HOST"
       ExecuteAsAdmin $mod_file > $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$ARCH/sge_shadowd &" | rsh $SHADOW_HOST /bin/sh &
+      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | rsh $SHADOW_HOST /bin/sh &
    fi
 fi
 

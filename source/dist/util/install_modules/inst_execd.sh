@@ -66,6 +66,14 @@ WelcomeTheUserExecHost()
 
 
 #-------------------------------------------------------------------------
+# GetAdminUser
+#
+GetAdminUser()
+{
+   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+   euid=`$SGE_UTILBIN/uidgid -euid`
+}
+#-------------------------------------------------------------------------
 # CheckQmasterInstallation
 #
 CheckQmasterInstallation()
@@ -98,6 +106,8 @@ CheckQmasterInstallation()
 
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
+
+   GetAdminUser
 
    user=`grep admin_user $COMMONDIR/bootstrap | awk '{ print $2 }'`
 

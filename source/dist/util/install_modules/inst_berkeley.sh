@@ -200,7 +200,7 @@ InstallServerScript()
       # RedHat uses runlevel 3 for full networked mode
       # Suse uses runlevel 2 for full networked mode
       # we already installed the script in level 3
-      if [ $ARCH = linux -o $ARCH = glinux -o $ARCH = alinux -o $ARCH = slinux ]; then
+      if [ $SGE_ARCH = linux -o $SGE_ARCH = glinux -o $SGE_ARCH = alinux -o $SGE_ARCH = slinux ]; then
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
             $INFOTEXT "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"

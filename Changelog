@@ -1,3 +1,9 @@
+MD-2004-03-26-0: Enhancem.: Renamed ARCH variable to SGE_ARCH
+                            Fetch ADMINUSER from bootstrap during execd
+                            install
+                            setting file perms during automode
+                 Changed:   inst_sge, inst_template, rc_templates
+                            
 AD-2004-03-26-0: Cleanup:   Did fix build for Mac OS X 10.3
                  Changed:   common, qconf
                  Review:    AH

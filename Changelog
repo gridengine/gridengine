@@ -1,3 +1,11 @@
+SG-2004-08-03-2: Bugfix:    fixed qsat -g c output and qmon to show cqload
+                            instead of load. The man page for qstat was
+                            changed as well.
+                 Review:    AA
+                 Changed:   qstat, qmon, qstat.1
+                 Issue:     1181, 1190
+                 Bugtraq:   -NA-
+
 EB-2004-08-02-0: Bugfix:    Deleting a queue instance slots value actually
                             adds it
                  Issue:     1175

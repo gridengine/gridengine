@@ -926,6 +926,8 @@ spooling_field *sge_build_QU_field_list(bool to_stdout, bool to_file)
                              NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_job_slots, 21, "slots", NULL,
                              NULL, NULL, NULL);
+      create_spooling_field (&fields[count++], QU_tmpdir, 21, "tmpdir", NULL,
+                             NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_shell, 21, "shell", NULL,
                              NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_prolog, 21, "prolog", NULL,

@@ -73,10 +73,10 @@
 #include "sge_range.h"
 #include "qmon_preferences.h"
 #include "qmon_message.h"
-#include "utility.h"
 #include "sge_range.h"
 #include "sge_job_jatask.h"
 #include "sge_parse_num_par.h"
+#include "sge_job_queue.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */
@@ -1023,7 +1023,7 @@ int nm
       }
 
       /* write states into string */
-      sge_get_states(JB_job_number, buf, tstate);
+      job_get_state_string(buf, tstate);
 
       str = XtNewString(buf);
    }

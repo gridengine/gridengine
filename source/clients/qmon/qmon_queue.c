@@ -77,9 +77,9 @@
 #include "sge_feature.h"
 #include "sge_complex_schedd.h"
 #include "slots_used.h"
-#include "utility.h"
 #include "Matrix.h"
 #include "load_correction.h"
+#include "sge_job_queue.h"
 
 /*-------------------------------------------------------------------------*/
 static void qmonBuildQBG(Widget parent, XtPointer cld, XtPointer cad);
@@ -1170,7 +1170,7 @@ XtPointer cld, cad;
          job_slots = lGetUlong(q, QU_job_slots);
          job_slots_used = qslots_used(q);
          qstate = lGetUlong(q, QU_state); 
-         sge_get_states(QU_qname, qstates, qstate);
+         queue_get_state_string(qstates, qstate);
          if ( sge_load_alarm(q, lGetList(q, QU_load_thresholds), ehl, cl, NULL))
             alarm_set = 1;
          if (sge_load_alarm(q, lGetList(q, QU_suspend_thresholds), ehl, cl, NULL))

@@ -47,7 +47,6 @@
 #include "sge_eventL.h"
 #include "sge_reportL.h"
 #include "sge_c_event.h"
-#include "utility.h"
 #include "qm_name.h"
 #include "sge_log.h"
 #include "sge_time.h"

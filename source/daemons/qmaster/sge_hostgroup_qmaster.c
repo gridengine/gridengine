@@ -45,7 +45,6 @@
 #include "sgermon.h"
 #include "sge_answerL.h"
 #include "sge_conf.h"
-#include "utility.h"
 #include "read_write_host_group.h"
 #include "sge_log.h"
 #include "sge_c_gdi.h"

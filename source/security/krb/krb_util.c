@@ -44,7 +44,6 @@
 #include "basis_types.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
-#include "utility.h"
 #include "sge_copy_append.h"
 #include "read_write_job.h"
 #include "commlib.h"

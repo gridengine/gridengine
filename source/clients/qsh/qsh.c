@@ -68,7 +68,6 @@
 #include "sge_log.h"
 #include "sge_string.h"
 #include "sge_me.h"
-#include "utility.h"
 #include "sge_copy_append.h"
 #include "setup_path.h" 
 #include "sge_arch.h"

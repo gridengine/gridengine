@@ -85,7 +85,6 @@
 #include "qmon_job.h"
 #include "qmon_init.h"
 #include "sge_feature.h"
-#include "utility.h"
 #include "sge_afsutil.h"
 #include "sge_peopen.h"
 #include "sge_copy_append.h"
@@ -98,6 +97,7 @@
 #include "sge_stat.h" 
 #include "sge_security.h" 
 #include "sge_job_jatask.h"
+#include "sge_stdlib.h"
 
 extern char **environ;
 
@@ -2113,9 +2113,10 @@ int save
 
          lXchgList(jep, JB_ja_n_h_ids, &task_ids);
          if (data->task_range) {
-            range_calculate_intersection_set(&u_h_ids, NULL, task_ids,
-                                             data->task_range);
-            range_calculate_difference_set(&n_h_ids, NULL, task_ids, u_h_ids);
+            range_list_calculate_intersection_set(&u_h_ids, NULL, task_ids,
+                                                  data->task_range);
+            range_list_calculate_difference_set(&n_h_ids, NULL, 
+                                                task_ids, u_h_ids);
          } else {
             u_h_ids = task_ids;
          }

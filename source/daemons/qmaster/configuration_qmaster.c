@@ -57,7 +57,6 @@
 #include "resolve_host.h"
 #include "config_file.h"
 #include "rw_configuration.h"
-#include "utility.h"
 #include "sge_hostL.h"
 #include "sge_userset_qmaster.h"
 #include "gdi_utility_qmaster.h"
@@ -71,6 +70,7 @@
 #include "sge_string.h"
 #include "sge_dirent.h"
 #include "reschedule.h"
+#include "sge_unistd.h"
 
 static int check_config(lList **alpp, lListElem *conf);
    

@@ -64,7 +64,6 @@
 #include "sge_sched.h"
 #include "schedd_monitor.h"
 #include "sig_handlers.h"
-#include "utility.h"
 #include "sge_conf.h"
 #include "sge_process_events.h"
 #include "sge_switch_user.h"

@@ -40,6 +40,23 @@
 #include "sge_log.h" 
 #include "msg_utilib.h"
 
+/****** uti/stdlib/sge_malloc() ***********************************************
+*  NAME
+*     sge_malloc() -- replacement for malloc() 
+*
+*  SYNOPSIS
+*     char* sge_malloc(int size) 
+*
+*  FUNCTION
+*     Allocates a memory block. Initilizes the block (0). Aborts in case
+*     of error. 
+*
+*  INPUTS
+*     int size - size in bytes 
+*
+*  RESULT
+*     char* - pointer to memory block
+******************************************************************************/
 char *sge_malloc(int size) 
 {
    char *cp = NULL;
@@ -64,6 +81,23 @@ char *sge_malloc(int size)
    return (cp);
 }   
 
+/****** uti/stdlib/sge_realloc() **********************************************
+*  NAME
+*     sge_realloc() -- replacement for realloc 
+*
+*  SYNOPSIS
+*     char* sge_realloc(char *ptr, int size) 
+*
+*  FUNCTION
+*     Reallocates a memory block. Aborts in case of an error. 
+*
+*  INPUTS
+*     char *ptr - pointer to a memory block 
+*     int size  - new size 
+*
+*  RESULT
+*     char* - pointer to the (new) memory block
+******************************************************************************/
 char *sge_realloc(char *ptr, int size) 
 {
 
@@ -91,8 +125,67 @@ char *sge_realloc(char *ptr, int size)
    return (cp);
 }             
 
+/****** uti/stdlib/sge_free() *************************************************
+*  NAME
+*     sge_free() -- replacement for free 
+*
+*  SYNOPSIS
+*     char* sge_free(char *cp) 
+*
+*  FUNCTION
+*     Replacement for free(). Accepts NULL pointers.
+*
+*  INPUTS
+*     char *cp - pointer to a memory block 
+*
+*  RESULT
+*     char* - NULL
+******************************************************************************/
 char *sge_free(char *cp) 
 {
    FREE(cp);
    return NULL;
-}   
+}  
+
+/****** sge_stdlib/sge_getenv() ***********************************************
+*  NAME
+*     sge_getenv() -- get an environment variable 
+*
+*  SYNOPSIS
+*     const char* sge_getenv(const char *env_str) 
+*
+*  FUNCTION
+*     The function searches the environment list for a
+*     string that matches the string pointed to by 'env_str'.
+*     If the resultstring is longer than MAX_STRING_SIZE
+*     the application will be terminated.
+*
+*  INPUTS
+*     const char *env_str - name of env. varibale 
+*
+*  RESULT
+*     const char* - value
+******************************************************************************/
+const char *sge_getenv(const char *env_str) 
+{
+   const char *cp=NULL;
+ 
+   DENTER(BASIS_LAYER, "sge_getenv");
+ 
+   cp = (char *) getenv(env_str);
+   if (!cp) {
+
+      DEXIT;
+      return (cp);
+   }
+ 
+   if (strlen(cp) >= MAX_STRING_SIZE) {
+      CRITICAL((SGE_EVENT, MSG_GDI_STRING_LENGTHEXCEEDED_SI, env_str, 
+                (int) MAX_STRING_SIZE));
+      DCLOSE;
+      abort();
+   }
+ 
+   DEXIT;
+   return (cp);
+}    

@@ -58,7 +58,6 @@
 #include "sge_parse_num_par.h"
 #include "sge_select_queue.h"
 #include "sge_complex.h"
-#include "utility.h"
 #include "qstat_printing.h"
 #include "sge_range.h"
 #include "load_correction.h"
@@ -68,6 +67,7 @@
 #include "msg_qhost.h"
 #include "sge_string.h"
 #include "sge_log.h"
+#include "sge_job_queue.h"
 
 #define QHOST_DISPLAY_QUEUES     (1<<0)
 #define QHOST_DISPLAY_JOBS       (1<<1)
@@ -409,7 +409,7 @@ u_long32 show
                state |= QALARM; 
             if (sge_load_alarm(qep, suspend_thresholds, ehl, cl, NULL))
                state |= QSUSPEND_ALARM; 
-            sge_get_states(QU_qname, state_string, state);
+            queue_get_state_string(state_string, state);
             printf("%s", state_string);
             
             /*

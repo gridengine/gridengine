@@ -155,6 +155,8 @@ u_long32 sge_get_recoverable(lListElem *aep);
 
 const char *quality_text(lListElem *aep);
 
+int check_isalive(const char *masterhost);
+
 #ifdef  __cplusplus
 }
 #endif

@@ -44,7 +44,6 @@
 #include "sge_log.h"
 #include "sge_exit.h"
 #include "sge_string.h"
-#include "utility.h"
 #include "msg_utilib.h"
 #include "msg_gdilib.h"
 #include "msg_common.h"

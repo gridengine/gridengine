@@ -70,4 +70,6 @@ char *sge_get_file_path(char *buffer, sge_file_path_id_t,
                         sge_spool_flags_t spool_flags,
                         u_long32 ulong_val1, u_long32 ulong_val2);
 
+int verify_filename(const char *fname); 
+
 #endif /* _SGE_FILE_PATH_H_ */

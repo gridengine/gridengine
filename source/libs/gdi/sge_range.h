@@ -38,17 +38,20 @@
 #define MAX_IDS_PER_LINE  8
 #define MAX_LINE_LEN      70
 
-void range_list_calculate_union_set(lList **range_list, lList **answer_list,
+void range_list_calculate_union_set(lList **range_list, 
+                                    lList **answer_list,
                                     const lList *range_list1, 
                                     const lList *range_list2);
 
-void range_calculate_difference_set(lList **range_list, lList **answer_list,
-                                    const lList *range_list1,
-                                    const lList *range_list2);  
+void range_list_calculate_difference_set(lList **range_list, 
+                                         lList **answer_list,
+                                         const lList *range_list1,
+                                         const lList *range_list2);  
 
-void range_calculate_intersection_set(lList **range_list, lList **answer_list,
-                                      const lList *range_list1,
-                                      const lList *range_list2); 
+void range_list_calculate_intersection_set(lList **range_list, 
+                                           lList **answer_list,
+                                           const lList *range_list1,
+                                           const lList *range_list2); 
 
 void range_get_all_ids(const lListElem *range_elem, u_long32 *min, 
                        u_long32 *max, u_long32 *step);

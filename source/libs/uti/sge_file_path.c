@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "sge.h"
 #include "sgermon.h"
@@ -185,3 +186,33 @@ char *sge_get_file_path(char *buffer, sge_file_path_id_t id,
    return buffer;
 }
 
+/***************************************************
+ Verify the applicability of a file name.
+ We dont like:
+ - names longer than 256 chars including '\0'
+ - blanks or other ugly chars
+ 
+ We like digits, chars and '_'.
+ 
+ returning 0 means OK.
+ ***************************************************/
+int verify_filename(const char *fname) 
+{
+   int i=0;
+ 
+   /* dont allow "." ".." and "../tralla" */
+   if (*fname == '.') {
+      fname++;
+      if (!*fname || (*fname == '.' && ((!*(fname+1)) || (!*fname+1 == '/'))))
+         return 1;
+   }
+   while (*fname && i++<256) {
+      if (!isalnum((int) *fname) && !(*fname=='_') && !(*fname=='.'))
+         return 1;
+      fname++;
+   }
+   if (i>=256)
+      return 1;
+ 
+   return 0;
+}              

@@ -43,7 +43,6 @@
 #include "qmon_globals.h"
 #include "qmon_init.h"
 #include "qmon_message.h"
-#include "utility.h"
 #include "qm_name.h"
 
 static tTimer timer_struct;

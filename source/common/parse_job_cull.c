@@ -58,7 +58,6 @@
 #include "parse.h"
 #include "sgermon.h"
 #include "cull_parse_util.h"
-#include "utility.h"
 #include "unparse_job_cull.h"
 #include "sge_language.h"
 #include "sge_feature.h"
@@ -66,6 +65,7 @@
 #include "jb_now.h"
 #include "sge_range.h"
 #include "sge_job_jatask.h"
+#include "sge_stdlib.h"
 
 #define USE_CLIENT_QSUB 1
 

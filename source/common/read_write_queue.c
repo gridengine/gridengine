@@ -53,7 +53,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
-#include "utility.h"
 #include "sge_stdio.h"
 #include "msg_common.h"
 #include "sched_conf.h"

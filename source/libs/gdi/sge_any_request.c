@@ -39,7 +39,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_exit.h"
-#include "utility.h"
 #include "qm_name.h"
 #include "pack.h"
 #include "sge_feature.h"
@@ -358,3 +357,45 @@ u_long32 *mid
    DEXIT;
    return ret;
 }
+
+/*-------------------------------------------------------------------------*
+ * check_isalive
+ *    check if master is registered and alive
+ *    calls is_commd_alive() and ask_commproc()
+ * returns
+ *    0                    if qmaster is enrolled at sge_commd
+ *    > 0                  commlib error number (always positve)
+ *    CL_FIRST_FREE_EC+1   can't get masterhost
+ *    CL_FIRST_FREE_EC+2   can't connect to commd
+ *-------------------------------------------------------------------------*/
+int check_isalive(const char *masterhost) 
+{
+   int alive = 0;
+ 
+   DENTER(TOP_LAYER, "check_isalive");
+ 
+   if (!masterhost) {
+      DPRINTF(("can't get masterhost\n"));
+      DEXIT;
+      return CL_FIRST_FREE_EC+1;
+   }
+ 
+   /* check if prog is alive */
+   if (me.who == QMON) {
+      if (!is_commd_alive()) {
+         DPRINTF(("can't connect to commd\n"));
+         DEXIT;
+         return CL_FIRST_FREE_EC+2;
+      }
+   }
+ 
+   alive = ask_commproc(masterhost, prognames[QMASTER], 1);
+ 
+   if (alive) {
+      DPRINTF(("no qmaster: ask_commproc(\"%s\", \"%s\", %d): %s\n",
+               masterhost, prognames[QMASTER], 1, cl_errstr(alive)));
+   }
+ 
+   DEXIT;
+   return alive;
+} 

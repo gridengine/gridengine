@@ -33,7 +33,6 @@
 #include <string.h>
 
 #include "sge.h"
-#include "utility.h"
 #include "def.h"
 #include "sge_peL.h"
 #include "sge_ckptL.h"
@@ -60,6 +59,7 @@
 #include "sge_job_schedd.h"
 #include "gdi_utility_qmaster.h"
 #include "sge_stdlib.h"
+#include "sge_unistd.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"

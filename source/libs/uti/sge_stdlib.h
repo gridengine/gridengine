@@ -38,4 +38,6 @@ char *sge_realloc(char *ptr, int size);
 
 char *sge_free(char *cp);        
 
+const char *sge_getenv(const char *env_str); 
+
 #endif /* __SGE_STDLIB_H */

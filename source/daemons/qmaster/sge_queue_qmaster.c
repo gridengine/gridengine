@@ -80,7 +80,7 @@
 #include "sge_userprj_qmaster.h"
 #include "read_write_job.h"
 #include "sge_job.h"
-#include "utility.h"
+#include "sge_unistd.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"

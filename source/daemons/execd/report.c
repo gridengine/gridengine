@@ -51,7 +51,6 @@
 #include "sge_prognames.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "utility.h"
 #include "qm_name.h"
 #include "sge_gdi_intern.h"
 

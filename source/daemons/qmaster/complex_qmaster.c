@@ -58,7 +58,6 @@
 #include "path_history.h"
 #include "sge_log.h"
 #include "gdi_utility_qmaster.h"
-#include "utility.h"
 #include "opt_silent.h"
 #include "sge_complex_schedd.h"
 #include "sort_hosts.h"
@@ -70,6 +69,7 @@
 #include "sge_stdio.h"
 #include "read_write_queue.h"
 #include "sge_dirent.h"
+#include "sge_unistd.h"
 
 extern lList *Master_Job_List;
 extern lList *Master_Queue_List;

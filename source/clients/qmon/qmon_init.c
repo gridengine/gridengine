@@ -69,7 +69,6 @@
 #include "sge_log.h"
 #include "msg_clients_common.h"
 #include "msg_gdilib.h"
-#include "utility.h"
 #include "qm_name.h"
 
 static String icon_names[] = {

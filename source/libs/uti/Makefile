@@ -79,6 +79,7 @@ UTILIB_SRC = sge_afsutil.c \
          sge_stdio.c \
          sge_file_path.c \
          sge_stdlib.c \
+         sge_unistd.c \
          sge_uidgid$(QIDLEXT).c 
 
 UTILIB_OBJS = $(UTILIB_SRC:.c=.o)
@@ -209,6 +210,9 @@ sge_file_path.o:   $(UTILIB_DIR)/sge_file_path.c
 
 sge_stdlib.o:   $(UTILIB_DIR)/sge_stdlib.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_stdlib.c
+
+sge_unistd.o:   $(UTILIB_DIR)/sge_unistd.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_unistd.c
 
 sge_washing_machine.o:   $(UTILIB_DIR)/sge_washing_machine.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_washing_machine.c

@@ -32,7 +32,6 @@
 #include <string.h>
 
 #include "sge.h"
-#include "utility.h"
 #include "def.h"
 #include "sge_answerL.h"
 #include "job_log.h"

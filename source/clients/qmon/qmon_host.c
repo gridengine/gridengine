@@ -72,7 +72,6 @@
 #include "Matrix.h"
 #include "gdi_tsm.h"
 #include "sge_feature.h"
-#include "utility.h"
 #include "resolve_host.h"
 #include "sge_me.h"
 #include "load_correction.h"

@@ -43,7 +43,6 @@
 
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
-#include "utility.h"
 #include "sge_copy_append.h"
 #include "commlib.h"
 #include "sge_string.h"

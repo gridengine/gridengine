@@ -287,39 +287,39 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
    }
 
    /* uo */
-   range_calculate_intersection_set(&list[0], NULL, 
+   range_list_calculate_intersection_set(&list[0], NULL, 
                   lGetList(job, JB_ja_u_h_ids), lGetList(job, JB_ja_o_h_ids));
    /* us */
-   range_calculate_intersection_set(&list[1], NULL, 
+   range_list_calculate_intersection_set(&list[1], NULL, 
                   lGetList(job, JB_ja_u_h_ids), lGetList(job, JB_ja_s_h_ids));
    /* os */
-   range_calculate_intersection_set(&list[2], NULL, 
+   range_list_calculate_intersection_set(&list[2], NULL, 
                   lGetList(job, JB_ja_o_h_ids), lGetList(job, JB_ja_s_h_ids));
 
    /* uos -> 7 */
-   range_calculate_intersection_set(&id_list[7], NULL, list[2], list[1]);
+   range_list_calculate_intersection_set(&id_list[7], NULL, list[2], list[1]);
 
    /* osU -> 6 */
-   range_calculate_difference_set(&id_list[6], NULL, list[2], id_list[7]);
+   range_list_calculate_difference_set(&id_list[6], NULL, list[2], id_list[7]);
    /* usO -> 5 */
-   range_calculate_difference_set(&id_list[5], NULL, list[1], id_list[7]);
+   range_list_calculate_difference_set(&id_list[5], NULL, list[1], id_list[7]);
    /* uoS -> 4 */
-   range_calculate_difference_set(&id_list[4], NULL, list[0], id_list[7]);
+   range_list_calculate_difference_set(&id_list[4], NULL, list[0], id_list[7]);
 
    /* sOU -> 3 */
-   range_calculate_difference_set(&list[6], NULL, 
+   range_list_calculate_difference_set(&list[6], NULL, 
                   lGetList(job, JB_ja_s_h_ids), list[1]);
-   range_calculate_difference_set(&id_list[3], NULL, list[6], id_list[6]);       
+   range_list_calculate_difference_set(&id_list[3], NULL, list[6], id_list[6]);       
 
    /* oUS -> 2 */
-   range_calculate_difference_set(&list[5], NULL, 
+   range_list_calculate_difference_set(&list[5], NULL, 
                   lGetList(job, JB_ja_o_h_ids), list[0]);
-   range_calculate_difference_set(&id_list[2], NULL, list[5], id_list[6]);
+   range_list_calculate_difference_set(&id_list[2], NULL, list[5], id_list[6]);
    
    /* uOS -> 1 */ 
-   range_calculate_difference_set(&list[4], NULL, 
+   range_list_calculate_difference_set(&list[4], NULL, 
                   lGetList(job, JB_ja_u_h_ids), list[1]);
-   range_calculate_difference_set(&id_list[1], NULL, list[4], id_list[4]);
+   range_list_calculate_difference_set(&id_list[1], NULL, list[4], id_list[4]);
    
    /* UOS -> 0 */
    id_list[0] = lCopyList("", lGetList(job, JB_ja_n_h_ids));

@@ -95,7 +95,6 @@
 #include "sge_log.h"
 #include "sge_stringL.h"
 #include "resolve_host.h"
-#include "utility.h"
 #include "sge_set_def_sig_mask.h"
 #include "scheduler.h"
 #include "sge_support.h"
@@ -103,6 +102,8 @@
 #include "sge_stat.h" 
 #include "msg_common.h"
 #include "sge_spoolmsg.h"
+#include "sge_stdlib.h"
+#include "sge_file_path.h"
 #include "msg_qconf.h"
 
 static int sge_edit(char *fname);

@@ -40,18 +40,20 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_parse_util.h"
-#include "utility.h"
 #include "parse_range.h"
 #include "get_path.h"
 #include "sge_parse_num_par.h"
 #include "sge_feature.h"
 #include "msg_clients_common.h"
 #include "sge_job_jatask.h"
+#include "symbols.h"
 
-void cull_show_job(
-lListElem *job,
-int flags 
-) {
+static void sge_show_checkpoint(int how, int op);
+static void sge_show_y_n(int op, int how);
+static void sge_show_mail_options(int op, int how);
+
+void cull_show_job(lListElem *job, int flags) 
+{
    const char *delis[] = {NULL, ",", "\n"};
    time_t ultime;   /* used to be u_long32, but problem w/ 64 bit times */
 
@@ -484,69 +486,6 @@ DTRACE;
          printf("job-array tasks:            "u32"-"u32":"u32"\n", start, end, step);
    }
 
-#if 0
-
-   if (lGetPosViaElem(job, JB_share)>=0)
-      if (lGetDouble(job, JB_share))
-         printf("share:                      %f\n", lGetDouble(job, JB_share));
-
-   if (lGetPosViaElem(job, JB_pid)>=0)
-      if (lGetUlong(job, JB_pid))
-         printf("pid:                        %d\n", (int) lGetUlong(job, JB_pid));
-
-   if (lGetPosViaElem(job, JB_status)>=0)
-      if (lGetUlong(job, JB_status))
-         printf("status:                     %d\n", (int) lGetUlong(job, JB_status));
-
-   if (lGetPosViaElem(job, JB_start_time)>=0)
-      if ((ultime = lGetUlong(job, JB_start_time))) {
-         printf("start_time:                 %s", ctime((time_t *) &ultime));
-      }
-
-   if (lGetPosViaElem(job, JB_granted_destin_identifier_list)>=0)
-      if (lGetList(job, JB_granted_destin_identifier_list)) {
-         intprt_type fields[] = { JG_qname, JG_qhostname, JG_slots, 0 };
-
-         delis[0] = ":";
-         printf("granted_destin_identifier_list:");
-         uni_print_list(stdout, NULL, 0,
-            lGetList(job, JB_granted_destin_identifier_list), fields, delis, 0);
-      }
-
-   if (lGetPosViaElem(job, JB_master_queue)>=0)
-      if (lGetString(job, JB_master_queue))
-         printf("master_queue:               %s\n", lGetString(job, JB_master_queue));
-
-   if (lGetPosViaElem(job, JB_state)>=0)
-      if (lGetUlong(job, JB_state)) {
-         printf("state:                      ");
-         sge_show_states(JB_job_number, SGE_STDOUT, lGetUlong(job, JB_state));
-         printf("\n");
-      }
-
-   if (lGetPosViaElem(job, JB_pending_signal)>=0)
-      if (lGetUlong(job, JB_pending_signal))
-         printf("pending_signal:             %d\n", (int) lGetUlong(job, JB_pending_signal));
-
-   if (lGetPosViaElem(job, JB_pending_signal_delivery_time)>=0)
-      if ((ultime = lGetUlong(job, JB_pending_signal_delivery_time))) {
-         printf("pending_signal_delivery_time: %s", ctime((time_t *) &ultime));
-      }
-
-   if (lGetPosViaElem(job, JB_osjobid)>=0)
-      if (lGetString(job, JB_osjobid))
-         printf("osjobid:                    %s\n", lGetString(job, JB_osjobid));
-
-   if (lGetPosViaElem(job, JB_usage_list)>=0)
-      if (lGetList(job, JB_usage_list))
-         printf("usage list:                 %s\n", "FORMAT NOT YET IMPLEMENTED!!!");
-
-   if (lGetPosViaElem(job, JB_suitable)>=0)
-      if (lGetUlong(job, JB_suitable))
-         printf("suitable:                   %d\n", (int) lGetUlong(job, JB_suitable));
-
-#endif
-
    if (lGetPosViaElem(job, JB_context)>=0)
       if (lGetList(job, JB_context)) {
          intprt_type fields[] = {VA_variable, VA_value, 0 };
@@ -605,3 +544,123 @@ DTRACE;
    return;
 }
 
+static void sge_show_checkpoint(int how, int op) 
+{
+   int i = 0;
+   int count = 0;
+   stringT tmp_str;
+ 
+   DENTER(TOP_LAYER, "sge_show_checkpoint");
+ 
+   memset(tmp_str, 0, sizeof(tmp_str));
+ 
+   if (VALID(CHECKPOINT_AT_MINIMUM_INTERVAL, op)) {
+      tmp_str[count] = CHECKPOINT_AT_MINIMUM_INTERVAL_SYM;
+      count++;
+   }
+ 
+   if (VALID(CHECKPOINT_AT_SHUTDOWN, op)) {
+      tmp_str[count] = CHECKPOINT_AT_SHUTDOWN_SYM;
+      count++;
+   }
+ 
+   if (VALID(CHECKPOINT_SUSPEND, op)) {
+      tmp_str[count] = CHECKPOINT_SUSPEND_SYM;
+      count++;
+   }
+ 
+   if (VALID(NO_CHECKPOINT, op)) {
+      tmp_str[count] = NO_CHECKPOINT_SYM;
+      count++;
+   }
+ 
+   if (VALID(SGE_STDOUT, how)) {
+      printf("%s", tmp_str);
+      for (i = count; i < 4; i++)
+         printf(" ");
+   }              
+
+   if (VALID(SGE_STDERR, how)) {
+      fprintf(stderr, "%s", tmp_str);
+      for (i = count; i < 4; i++)
+         fprintf(stderr, " ");
+   }
+ 
+   DEXIT;
+ 
+   return;
+}   
+
+static void sge_show_y_n(int op, int how) 
+{
+   stringT tmp_str;
+ 
+   DENTER(TOP_LAYER, "sge_show_y_n");
+ 
+   if (op)
+      sprintf(tmp_str, "y");
+   else
+      sprintf(tmp_str, "n");
+ 
+   if (VALID(how, SGE_STDOUT))
+      printf("%s", tmp_str);
+ 
+   if (VALID(how, SGE_STDERR))
+      fprintf(stderr, "%s", tmp_str);
+ 
+   DEXIT;
+   return;
+}         
+
+static void sge_show_mail_options(int op, int how) 
+{
+   int i = 0;
+   int count = 0;
+   stringT tmp_str;
+ 
+   DENTER(TOP_LAYER, "sge_show_mail_list");
+ 
+   if (VALID(MAIL_AT_ABORT, op)) {
+      tmp_str[count] = MAIL_AT_ABORT_SYM;
+      count++;
+   }
+ 
+   if (VALID(MAIL_AT_BEGINNING, op)) {
+      tmp_str[count] = MAIL_AT_BEGINNING_SYM;
+      count++;
+   }
+ 
+   if (VALID(MAIL_AT_EXIT, op)) {
+      tmp_str[count] = MAIL_AT_EXIT_SYM;
+      count++;
+   }
+ 
+   if (VALID(NO_MAIL, op)) {
+      tmp_str[count] = NO_MAIL_SYM;
+      count++;
+   }
+ 
+   if (VALID(MAIL_AT_SUSPENSION, op)) {
+      tmp_str[count] = MAIL_AT_SUSPENSION_SYM;
+      count++;
+   }
+ 
+   tmp_str[count] = '\0';       /* ensure string terminator */
+ 
+   if (VALID(SGE_STDOUT, how)) {
+      printf("%s", tmp_str);
+      for (i = count; i < 4; i++)
+         printf(" ");
+ 
+   }
+ 
+   if (VALID(SGE_STDERR, how)) {
+      fprintf(stderr, "%s", tmp_str);
+      for (i = count; i < 4; i++)
+         fprintf(stderr, " ");
+ 
+   }
+ 
+   DEXIT;
+   return;
+} 

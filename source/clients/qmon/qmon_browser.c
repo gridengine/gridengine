@@ -56,7 +56,6 @@
 #include "qmon_init.h"
 #include "qmon_file.h"
 #include "qmon_message.h"
-#include "utility.h"
 #include "sge_me.h"
 
 

@@ -247,6 +247,12 @@
 */ 
 #define MSG_MEMORY_MALLOCFAILED                    _("malloc() failure\n")
 #define MSG_MEMORY_REALLOCFAILED                   _("realloc() failure\n") 
+#define MSG_GDI_STRING_LENGTHEXCEEDED_SI           _("strlen($%s) exceeds MAX_STRING_SIZE %d\n") 
+
+/* 
+** utilib/sge_unistd.c
+*/ 
+#define MSG_POINTER_SUFFIXISNULLINSGEUNLINK        _("suffix == NULL in sge_unlink()\n") 
 
 #endif /* __MSG_UTILIB_H */
 

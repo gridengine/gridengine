@@ -59,7 +59,6 @@
 #include "parse_range.h"
 #include "sge_me.h"
 #include "sge_prognames.h"
-#include "utility.h"
 #include "sge_parse_num_par.h"
 #include "sge_string.h"
 #include "show_job.h"
@@ -69,6 +68,8 @@
 #include "sig_handlers.h"
 #include "msg_clients_common.h"
 #include "sge_job_jatask.h"
+#include "get_path.h"
+#include "sge_job_queue.h"
 
 static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, char *master, StringBufferT *task_str, u_long32 full_listing, int slots, int slot, lList *ehl, lList *cl, lList *pe_list, char *intend);
 
@@ -149,7 +150,6 @@ lList *qresource_list
       sge_ext?"------------------------------------------------------------------------------------------------------------":"");
    printf("%-20.20s ", lGetString(q, QU_qname));
 
-   /* queue types in a sge_show_states-like format */
    qtype(type_string, lGetUlong(q, QU_qtype));
    printf("%-5.5s ", type_string); 
 
@@ -185,7 +185,7 @@ lList *qresource_list
      sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), exechost_list, complex_list, reason, REASON_BUF_SIZE, "suspend");
    }
 
-   sge_get_states(QU_qname, state_string, state);
+   queue_get_state_string(state_string, state);
    printf("%s", state_string); 
    printf("\n");
 
@@ -320,7 +320,7 @@ int indent
    }
 
    /* write states into string */ 
-   sge_get_states(JB_job_number, task_state_string, tstate);
+   job_get_state_string(task_state_string, tstate);
    printf("%-5.5s ", task_state_string); 
 
    if (sge_mode) {
@@ -998,7 +998,7 @@ char *indent
    }
 
    /* write states into string */ 
-   sge_get_states(JB_job_number, state_string, jstate);
+   job_get_state_string(state_string, jstate);
    printf("%-5.5s ", state_string); 
 
    /* start/submit time */
@@ -1375,4 +1375,3 @@ u_long32 type
    DEXIT;
    return;
 }
-

@@ -59,7 +59,6 @@
 #include "sge_prognames.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "utility.h"
 #include "qm_name.h"
 #include "basis_types.h"
 #include "sge_time.h"

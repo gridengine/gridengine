@@ -39,7 +39,6 @@
 #  include <sys/socket.h>
 #  include <netdb.h>
 #else /* WIN32NATIVE */
-#  include "utility.h"
 #  include <winsock2.h>
 #endif /* WIN32NATIVE */
 

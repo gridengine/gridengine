@@ -40,7 +40,6 @@
 #include "qmon_appres.h"
 #include "sgermon.h"
 #include "sge_feature.h"
-#include "utility.h"
 #include "sge_string_append.h"
 #include "sge_me.h"
 #include "version.h"

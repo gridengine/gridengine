@@ -88,7 +88,6 @@
 #include "sge_me.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "utility.h"
 #include "resolve_host.h"
 #include "sge_switch_user.h"
 #include "config_file.h"
@@ -106,6 +105,7 @@
 #include "sge_washing_machine.h"
 #include "sge_job_jatask.h"
 #include "sge_file_path.h"
+#include "sge_unistd.h"
 
 extern lList *Master_Project_List;
 extern lList *Master_Sharetree_List;

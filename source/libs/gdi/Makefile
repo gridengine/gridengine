@@ -52,7 +52,7 @@ GDILIB_SRC = sge_all_listsL.c \
          setup_path.c \
          resolve_host.c \
          qm_name.c \
-         utility.c \
+         sge_job_queue.c \
          config.c \
          cull_parse_util.c \
          sge_parse_num_par.c \
@@ -141,8 +141,8 @@ setup.o: 	$(GDILIB_DIR)/setup.c
 setup_path.o: 	$(GDILIB_DIR)/setup_path.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/setup_path.c
 
-utility.o: 	$(GDILIB_DIR)/utility.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/utility.c
+sge_job_queue.o: 	$(GDILIB_DIR)/sge_job_queue.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_job_queue.c
 
 pack_job_delivery.o:	$(GDILIB_DIR)/pack_job_delivery.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/pack_job_delivery.c

@@ -52,12 +52,13 @@
 #include "sge_gdi_intern.h"
 #include "sge_stat.h"
 #include "sge_secL.h"
-#include "utility.h"
 #include "sge_getpwnam.h"
 #include "sge_arch.h"
 #include "sge_exit.h"
+#include "sge_stdlib.h"
 #include "msg_sec.h"
 #include "msg_gdilib.h"
+#include "msg_utilib.h"
 
 #include "sec_crypto.h"          /* lib protos      */
 #include "sec_lib.h"             /* lib protos      */
@@ -344,7 +345,7 @@ int sec_init(const char *progname)
    gsd.key_mat_len = GSD_KEY_MAT_32;
    gsd.key_mat = (u_char *) malloc(gsd.key_mat_len);
    if (!gsd.key_mat){
-      ERROR((SGE_EVENT, MSG_GDI_MEMORY_MALLOCFAILED));
+      ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
       DEXIT;
       return -1;
    }
@@ -1220,8 +1221,8 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    enc_challenge = (u_char *) malloc(public_key_size);
 
    if (!enc_key_mat ||  !enc_challenge) {
-      ERROR((SGE_EVENT, MSG_GDI_MEMORY_MALLOCFAILED));
-      sec_send_err(commproc,id,host,&pb_respond, MSG_GDI_MEMORY_MALLOCFAILED);
+      ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
+      sec_send_err(commproc,id,host,&pb_respond, MSG_MEMORY_MALLOCFAILED);
       i=-1;
       goto error;
    }
@@ -1398,7 +1399,7 @@ int inbuflen
    */
    outbuf = malloc(inbuflen + EVP_CIPHER_block_size(gsd.cipher));
    if (!outbuf) {
-      ERROR((SGE_EVENT, MSG_GDI_MEMORY_MALLOCFAILED));
+      ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
       i=-1;
       goto error;
    }

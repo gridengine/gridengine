@@ -42,11 +42,65 @@ extern "C" {
 
 #define RANGE_INFINITY (9999999)
 
-/* *INDENT-OFF* */ 
+/****** gdi/range/RN_Type *****************************************************
+*  NAME
+*     RN_Type - CULL range element
+*
+*  SYNOPSIS
+*     RN_Type
+*     +--- RN_min: minimum or start value of an id range (e.g. 1)
+*     +--- RN_max: maximum or en value of an id range (e.g. 10)
+*     +--- RN_step: stepsize (e.g. 2)
+*
+*  FUNCTION
+*     CULL element holding values which define a id range
+*     (e.g. 1-10:2 => 1, 3, 5, 7, 9). 
+*     Lists of this CULL element are hold within a CULL job element
+*     to hold job array task ids.
+*     Several functions may be used to access/modify/delete range elements
+*     and range lists. You may find them in the 'see also' section.
+*     It is highly advised to use these access functions
+*     because they assure and require a defined structure of 
+*     elements and lists.
+*     
+*     Range elements and lists stored in other CULL elements fullfill
+*     following conditions:
+*
+*        - min <= max
+*        - step >= 1
+*        - real range elements (e.g. 1-9:2 instead of 1-10:2)
+*        - min-ids within range elements part of the same
+*          list are in ascending order: min_id(n) < min_id(n+1)
+*          (e.g. NOT 11-20:1; 1-9:2)
+*        - ids within range elements part of the same 
+*          list are non-overlapping: max_id(n) < min_id(n+1)
+*          (e.g. 1-9:2; 11-20:1; 25-28:3)
+*        
+*  SEE ALSO 
+*     gdi/range/RN_Type
+*     gdi/range/range_list_calculate_union_set()
+*     gdi/range/range_list_calculate_difference_set()
+*     gdi/range/range_list_calculate_intersection_set() 
+*     gdi/range/range_list_compress()
+*     gdi/range/range_list_get_first_id()
+*     gdi/range/range_list_get_last_id()
+*     gdi/range/range_list_get_number_of_ids()
+*     gdi/range/range_list_initialize()
+*     gdi/range/range_list_insert_id()
+*     gdi/range/range_list_is_id_within()
+*     gdi/range/range_list_move_first_n_ids()
+*     gdi/range/range_list_print_to_string()
+*     gdi/range/range_list_remove_id()
+*     gdi/range/range_correct_end()
+*     gdi/range/range_get_all_ids()
+*     gdi/range/range_get_number_of_ids()
+*     gdi/range/range_is_overlapping()
+*     gdi/range/range_is_id_within()
+*     gdi/range/range_set_all_ids()
+*     gdi/range/range_sort_uniq_compress()
+******************************************************************************/
 
-/* 
- * This is the list type we use to hold a range list 
- */
+/* *INDENT-OFF* */ 
 enum {
    RN_min = RN_LOWERBOUND,
    RN_max,

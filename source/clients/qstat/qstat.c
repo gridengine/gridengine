@@ -61,7 +61,6 @@
 #include "parse_range.h"
 #include "sge_me.h"
 #include "sge_prognames.h"
-#include "utility.h"
 #include "sge_parse_num_par.h"
 #include "sge_string.h"
 #include "show_job.h"

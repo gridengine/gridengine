@@ -62,7 +62,6 @@
 #include "qmon_submit.h"
 #include "qmon_message.h"
 #include "qmon_init.h"
-#include "utility.h"
 
 #if 0
 #include "Outline.h"

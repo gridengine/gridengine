@@ -54,7 +54,7 @@
 #include "sge_log.h"
 #include "cull_parse_util.h"
 #include "sge_string.h"
-#include "utility.h"
+#include "sge_stdlib.h"
 #include "msg_common.h"
 
 static int sge_parse_priority(lList **alpp, int *valp, char *priority_str);

@@ -45,7 +45,6 @@
 #include "read_write_job.h"
 #include "sge_mkdir.h"
 #include "sge_file_path.h"
-#include "utility.h"
 #include "utility_daemon.h"
 #include "sge_dir.h"
 #include "sge_stringL.h"
@@ -59,6 +58,7 @@
 #include "msg_common.h"
 #include "sge_suser.h"
 #include "sge_conf.h"
+#include "sge_unistd.h"
 
 extern lList *Master_Job_List;
 

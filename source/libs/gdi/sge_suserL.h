@@ -40,6 +40,37 @@
 extern "C" {
 #endif
 
+/****** gdi/suser/SU_Type *****************************************************
+*  NAME
+*     SU_Type - CULL submit users element
+*
+*  SYNOPSIS
+*     SU_Type
+*     +--- SU_name: username of a user submittet a job
+*     +--- SU_jobs: currently active jobs for this user
+*                   (Jobs in SGEEE system which are in the 'finished'
+*                    state are also accounted here)
+*
+*  FUNCTION
+*     CULL element which holds information for a user which is able to
+*     submit jobs into a SGE or SGEEE system. 
+*     The variable 'Master_SUser_List' is used to hold multiple
+*     'SU_Type' elements within the master deamon. Use the functions
+*     mentioned in the 'see also' section to access, modify, delete
+*     'SU_Type' elements and the 'Master_SUser_List'. 
+*
+*  SEE ALSO
+*     gdi/suser/SU_Type
+*     gdi/suser/Master_SUser_List
+*     gdi/suser/suser_list_add()
+*     gdi/suser/suser_list_find()
+*     gdi/suser/suser_increase_job_counter()
+*     gdi/suser/suser_decrease_job_counter()
+*     gdi/suser/suser_get_job_counter()
+*     gdi/suser/suser_register_new_job()
+*     gdi/suser/suser_unregister_job()
+******************************************************************************/
+
 /* *INDENT-OFF* */
 
 enum {

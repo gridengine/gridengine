@@ -1,4 +1,8 @@
-EB-2002-02-19-0: Cleanup:   Moved/deleted some functiones (part 1)
+EB-2002-02-19-1: Cleanup:   Moved/deleted some functiones (part 2/2)
+                            Added ADOC comments
+                 Issue:     #152
+
+EB-2002-02-19-0: Cleanup:   Moved/deleted some functiones (part 1/2)
                  Issue:     #152 
 
 EB-2002-02-18-1: Cleanup:   Integarte common/job.c functions into 

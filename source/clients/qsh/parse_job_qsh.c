@@ -53,7 +53,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_parse_util.h"
-#include "utility.h"
 #include "resolve_host.h"
 #include "path_aliases.h"
 #include "msg_common.h"
@@ -61,6 +60,7 @@
 #include "sge_job_refL.h"
 #include "sge_job_jatask.h"
 #include "jb_now.h"
+#include "sge_stdlib.h"
 
 /*
 ** NAME

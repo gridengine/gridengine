@@ -49,7 +49,6 @@
 #include "qmon_timer.h"
 #include "qmon_appres.h"
 #include "qmon_globals.h"
-#include "utility.h"
 #include "qm_name.h"
 #include "sge_time.h"
 #include "sge_feature.h"

@@ -45,7 +45,6 @@
 #include "sig_handlers.h"
 #include "sgermon.h"
 #include "sge_exit.h"
-#include "utility.h"
 #include "qm_name.h"
 #include "sge_security.h"
 

@@ -47,7 +47,6 @@
 #include "sge_time.h"
 #include "slots_used.h"
 #include "sge_log.h"
-#include "utility.h"
 #include "time_event.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_parse_num_par.h"
@@ -56,6 +55,7 @@
 #include "reschedule.h"
 #include "msg_qmaster.h"
 #include "sge_security.h"
+#include "sge_job_queue.h"
 
 
 extern lList *Master_Queue_List;
@@ -152,7 +152,7 @@ u_long32 now
                      (int) qslots_used(qep) */
 
             /* states */
-            sge_get_states(QU_qname, str, lGetUlong(qep, QU_state));
+            queue_get_state_string(str, lGetUlong(qep, QU_state));
             fprintf(fp, "%s:", str);
 
             /* queue consumables */

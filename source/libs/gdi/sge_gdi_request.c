@@ -53,7 +53,6 @@
 #include "sge_exit.h"
 #include "sge_max_nis_retries.h"
 #include "sge_uidgid.h"
-#include "utility.h"
 #include "qm_name.h"
 #ifdef KERBEROS
 #  include "krb_lib.h"

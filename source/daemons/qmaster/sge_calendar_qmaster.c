@@ -50,7 +50,7 @@
 #include "sge_qmod_qmaster.h"
 #include "gdi_utility_qmaster.h"
 #include "sge_time.h"
-#include "utility.h"
+#include "sge_unistd.h"
 
 #include "msg_common.h"
 #include "msg_utilib.h"

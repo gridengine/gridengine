@@ -76,27 +76,40 @@ proc init_level {} {
 
 
 proc cl_throughput_setup {} {
-   global ts_config CHECK_HOST
+   global ts_config CHECK_HOST cl_throughput_ge_version
 
+   set cl_throughput_ge_version [get_version_info] 
    shutdown_core_system
 
    set_error 0 "ok"
 }
 
 proc cl_throughput_start_clients { host count user binary args} {
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT ts_config CHECK_SCRIPT_FILE_DIR
    upvar $args arguments
 
-
-   for {set i 0} { $i < $count} { incr i 1} {
-      puts $CHECK_OUTPUT "staring \"$binary $arguments\" in background ..."
-      set retval [start_remote_prog $host $user $binary $arguments prg_exit_state 120 1]
-      puts $CHECK_OUTPUT $retval
-
-      if { [string match "*not found*" $retval ] } {
-         add_proc_error "cl_throughput_start_clients" -1 "$retval"
-      }
+   # arguments of binary_starter: 1=count 2=binary 3=binary arguments
+   set script_arguments "$count $binary \"$arguments\""
+   set start_script "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/binary_starter.sh"
+  
+   
+   puts $CHECK_OUTPUT "starting \"$start_script $script_arguments\""
+   set retval [start_remote_prog $host $user $start_script $script_arguments prg_exit_state 120 0]
+   puts $CHECK_OUTPUT $retval
+   if { [string match "*not found*" $retval ] } {
+      add_proc_error "cl_throughput_start_clients" -1 "$retval"
    }
+
+
+#   for {set i 0} { $i < $count} { incr i 1} {
+#      puts $CHECK_OUTPUT "staring \"$binary $arguments\" in background ..."
+#      set retval [start_remote_prog $host $user $binary $arguments prg_exit_state 120 1]
+#      puts $CHECK_OUTPUT $retval
+#
+#      if { [string match "*not found*" $retval ] } {
+#         add_proc_error "cl_throughput_start_clients" -1 "$retval"
+#      }
+#   }
 }
 
 proc cl_throughput_parse_next { dline } {
@@ -116,7 +129,7 @@ proc cl_throughput_parse_next { dline } {
 }
 
 proc cl_throughput_parse_result { ff evc gdi dresult darray} {
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT cl_throughput_ge_version
    upvar $dresult result
    upvar $darray data
 
@@ -192,7 +205,7 @@ proc cl_throughput_parse_result { ff evc gdi dresult darray} {
 
    set data(lines) $ai
    set data(date) [exec date]
-   set data(gridengine_version) [get_version_info]
+   set data(gridengine_version) $cl_throughput_ge_version
 
 
    set i $ai

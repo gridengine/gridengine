@@ -979,7 +979,7 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                         } 
                      }
                   } else {
-                     char resolved_name[MAXHOSTLEN+1];
+                     char resolved_name[CL_MAXHOSTLEN+1];
                      int back = getuniquehostname(hostname, resolved_name, 0);
 
                      if (back == CL_RETVAL_OK) {
@@ -1064,7 +1064,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
        */
       for_each(mod_elem, mod_list) {
          const char *name = lGetHost(mod_elem, sublist_host_name);
-         char resolved_name[MAXHOSTLEN+1];
+         char resolved_name[CL_MAXHOSTLEN+1];
          lListElem *org_elem = NULL;
          
          /* Don't try to resolve hostgroups */

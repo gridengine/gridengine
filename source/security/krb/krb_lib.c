@@ -976,7 +976,7 @@ u_short *compressed      /* this one is for the original message */
    struct in_addr hostaddr;
    u_long32 tmplen=0;
    char tmpcommproc[MAXCOMPONENTLEN];
-   char tmphost[MAXHOSTLEN];
+   char tmphost[CL_MAXHOSTLEN];
    u_short tmpid=0;
    int tmptag=0;
    u_long32 tgt_id=0;

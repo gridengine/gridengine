@@ -669,8 +669,8 @@ static int sge_send_receive_gdi_request(int *commlib_error,
                                         lList **alpp)
 {
    int ret;
-   char rcv_rhost[MAXHOSTLEN+1];
-   char rcv_commproc[MAXHOSTLEN+1];
+   char rcv_rhost[CL_MAXHOSTLEN+1];
+   char rcv_commproc[CL_MAXHOSTLEN+1];
    u_long32 gdi_request_mid;
    
    DENTER(GDI_LAYER, "sge_send_receive_gdi_request");

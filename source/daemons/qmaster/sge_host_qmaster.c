@@ -228,7 +228,7 @@ const lList* master_hGroup_List
    int pos;
    lListElem *ep;
    const char *host;
-   char unique[MAXHOSTLEN];
+   char unique[CL_MAXHOSTLEN];
    lList **host_list = NULL;
    int nm = 0;
    char *name = NULL;
@@ -1118,7 +1118,7 @@ sge_gdi_request *answer
 ) {
    int kill_jobs;
    lListElem *lel, *rep;
-   char host[MAXHOSTLEN];
+   char host[CL_MAXHOSTLEN];
    const char *hostname;
 
    DENTER(TOP_LAYER, "master_kill_execds");

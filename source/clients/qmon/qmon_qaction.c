@@ -1470,7 +1470,7 @@ Widget w;
 XtPointer cld, cad; 
 {
    XmtInputFieldCallbackStruct *cbs = (XmtInputFieldCallbackStruct*)cad;
-   static char unique[MAXHOSTLEN];
+   static char unique[CL_MAXHOSTLEN];
    int ret;
    String name = NULL;
    

@@ -84,7 +84,7 @@ int parsing_type
    const char *str;
    const char *qname;
    int ret, generic_queue = 0;
-   char unique[MAXHOSTLEN];
+   char unique[CL_MAXHOSTLEN];
    
    DENTER(TOP_LAYER, "read_queue_work");
 

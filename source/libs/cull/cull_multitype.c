@@ -1964,7 +1964,7 @@ int lSetPosHost(lListElem *ep, int pos, const char *value)
 
       /* create entry in hash table */
       if(ep->descr[pos].ht != NULL) {
-         char host_key[MAXHOSTLEN + 1];
+         char host_key[CL_MAXHOSTLEN + 1];
          cull_hash_insert(ep, cull_hash_key(ep, pos, host_key), 
                           ep->descr[pos].ht, mt_is_unique(ep->descr[pos].mt));
       }
@@ -2173,7 +2173,7 @@ int lSetHost(lListElem *ep, int name, const char *value)
 
       /* create entry in hash table */
       if(ep->descr[pos].ht != NULL) {
-         char host_key[MAXHOSTLEN + 1];
+         char host_key[CL_MAXHOSTLEN + 1];
          cull_hash_insert(ep, cull_hash_key(ep, pos, host_key), 
                           ep->descr[pos].ht, mt_is_unique(ep->descr[pos].mt));
       }
@@ -4804,8 +4804,8 @@ lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str,
    int dataType;
    lListElem *ep = NULL;
    const lDescr *listDescriptor = NULL;
-   char uhost[MAXHOSTLEN+1];
-   char cmphost[MAXHOSTLEN+1];
+   char uhost[CL_MAXHOSTLEN+1];
+   char cmphost[CL_MAXHOSTLEN+1];
    const char *s = NULL;
 
    DENTER(TOP_LAYER, "lGetElemHostFirst");
@@ -4833,9 +4833,9 @@ lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str,
    *iterator = NULL;
    if (lp->descr[pos].ht != NULL) {
       /* we have a hash table */
-      char host_key[MAXHOSTLEN+1];
+      char host_key[CL_MAXHOSTLEN+1];
       sge_hostcpy(host_key,str);
-      sge_strtoupper(host_key,MAXHOSTLEN);
+      sge_strtoupper(host_key,CL_MAXHOSTLEN);
       ep = cull_hash_first(lp->descr[pos].ht, host_key,
                            mt_is_unique(lp->descr[pos].mt), iterator);
       DEXIT;
@@ -4894,8 +4894,8 @@ lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str,
    int dataType;
    lListElem *ep = NULL;
    const lDescr *listDescriptor = NULL;
-   char uhost[MAXHOSTLEN+1];
-   char cmphost[MAXHOSTLEN+1];
+   char uhost[CL_MAXHOSTLEN+1];
+   char cmphost[CL_MAXHOSTLEN+1];
    const char *s = NULL;
 
    DENTER(TOP_LAYER, "lGetElemHostNext");

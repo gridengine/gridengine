@@ -230,7 +230,7 @@ lList **alpp
 int reresolve_me_qualified_hostname(void)
 {
    int ret;
-   char unique_hostname[MAXHOSTLEN];
+   char unique_hostname[CL_MAXHOSTLEN];
 
    DENTER(TOP_LAYER, "reresolve_me_qualified_hostname");
 

@@ -101,7 +101,7 @@ const char *master_file,
 char *err_str 
 ) {
    FILE *fp;
-   char buf[MAXHOSTLEN*3+1], *cp, *first;
+   char buf[CL_MAXHOSTLEN*3+1], *cp, *first;
    int len;
 
    DENTER(TOP_LAYER, "get_qm_name");
@@ -123,7 +123,7 @@ char *err_str
    }    
 
    /* read file in one sweep and append O Byte to the end */
-   if (!(len = fread(buf, 1, MAXHOSTLEN*3, fp))) {
+   if (!(len = fread(buf, 1, CL_MAXHOSTLEN*3, fp))) {
       if (err_str)
          sprintf(err_str, MSG_GDI_READMASTERHOSTNAMEFAILED_S , master_file);
    }
@@ -151,10 +151,10 @@ char *err_str
       return -1;
    }   
        
-   if (len > MAXHOSTLEN - 1) {
+   if (len > CL_MAXHOSTLEN - 1) {
       if (err_str)
          sprintf(err_str, MSG_GDI_MASTERHOSTNAMEEXCEEDSCHARS_SI , 
-                 master_file, (int) MAXHOSTLEN);
+                 master_file, (int) CL_MAXHOSTLEN);
       fclose(fp);
       DEXIT;
       return -1;

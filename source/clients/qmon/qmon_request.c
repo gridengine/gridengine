@@ -491,7 +491,7 @@ XtPointer cld, cad;
    long how = (long)cld;
    lList *rll;
    int type;
-   char stringval[MAXHOSTLEN];
+   char stringval[CL_MAXHOSTLEN];
    int status = 0;
    StringConst strval;
    lListElem *ep = NULL;
@@ -523,7 +523,7 @@ XtPointer cld, cad;
    type = lGetUlong(fill_in_request, CE_valtype);
    strval = lGetString(fill_in_request, CE_stringval);
    if (strval)
-      strncpy(stringval, strval, MAXHOSTLEN-1);
+      strncpy(stringval, strval, CL_MAXHOSTLEN-1);
    else
       strcpy(stringval, "");
 
@@ -581,7 +581,7 @@ String stringval,
 int maxlen 
 ) {
    int ret = 0;
-   char unique[MAXHOSTLEN];
+   char unique[CL_MAXHOSTLEN];
    int intval=0;
    Boolean status = False;
    double dval = 0.0;

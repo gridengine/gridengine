@@ -272,7 +272,7 @@ lListElem *hep,
 lList *centry_list
 ) {
    lListElem *lep;
-   char *s,host_print[MAXHOSTLEN+1];
+   char *s,host_print[CL_MAXHOSTLEN+1];
    const char *host;
    char load_avg[20], mem_total[20], mem_used[20], swap_total[20], 
         swap_used[20], num_proc[20], arch_string[80];
@@ -287,7 +287,7 @@ lList *centry_list
    host = lGetHost(hep, EH_name);
 
    /* cut away domain in case of ignore_fqdn */
-   strncpy(host_print, host, MAXHOSTLEN);
+   strncpy(host_print, host, CL_MAXHOSTLEN);
    if (bootstrap_get_ignore_fqdn() && (s = strchr(host_print, '.')))
       *s = '\0';
 

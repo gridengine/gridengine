@@ -592,8 +592,8 @@ int *tagarray
 static int alloc_de(de)       /* malloc fields in de */
 dispatch_entry *de;
 {
-   de->commproc = malloc(MAXHOSTLEN+1);
-   de->host = malloc(MAXHOSTLEN+1);
+   de->commproc = malloc(CL_MAXHOSTLEN+1);
+   de->host = malloc(CL_MAXHOSTLEN+1);
 
    return 0;
 }
@@ -612,14 +612,14 @@ dispatch_entry *dedst, *desrc;
    dedst->tag = desrc->tag;
 
    if (desrc->commproc && desrc->commproc[0]) {
-      desrc->commproc[MAXHOSTLEN] = '\0';
+      desrc->commproc[CL_MAXHOSTLEN] = '\0';
       strcpy(dedst->commproc, desrc->commproc);
    } else {
       dedst->commproc[0] = '\0';
    }
 
    if (desrc->host && desrc->host[0]) {
-      desrc->host[MAXHOSTLEN] = '\0';
+      desrc->host[CL_MAXHOSTLEN] = '\0';
       strcpy(dedst->host, desrc->host);
    } else {
       dedst->host[0] = '\0';

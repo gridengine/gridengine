@@ -2441,7 +2441,7 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
    char alias_file_buffer[LINE_MAX*4];
    int max_line = LINE_MAX*4;
    char* alias_delemiters="\n\t ,;";
-   char printbuf[ (2*MAXHOSTLEN) + 100 ];
+   char printbuf[ (2*CL_MAXHOSTLEN) + 100 ];
 
    if (hostlist == NULL) {
       return CL_RETVAL_PARAMS;    

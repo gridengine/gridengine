@@ -1139,7 +1139,7 @@ void sge_hostcpy(char *dst, const char *raw)
  
       /* standard: simply ignore FQDN */
  
-      strncpy(dst, raw, MAXHOSTLEN);
+      strncpy(dst, raw, CL_MAXHOSTLEN);
       if ((s = strchr(dst, '.'))) {
          *s = '\0';
       }
@@ -1149,17 +1149,17 @@ void sge_hostcpy(char *dst, const char *raw)
       /* exotic: honor FQDN but use default_domain */
  
       if (!strchr(raw, '.')) {
-         strncpy(dst, raw, MAXHOSTLEN);
-         strncat(dst, ".", MAXHOSTLEN);
-         strncat(dst, bootstrap_get_default_domain(), MAXHOSTLEN);
+         strncpy(dst, raw, CL_MAXHOSTLEN);
+         strncat(dst, ".", CL_MAXHOSTLEN);
+         strncat(dst, bootstrap_get_default_domain(), CL_MAXHOSTLEN);
       } else {
-         strncpy(dst, raw, MAXHOSTLEN);
+         strncpy(dst, raw, CL_MAXHOSTLEN);
       }
    } else {
  
       /* hardcore: honor FQDN, don't use default_domain */
  
-      strncpy(dst, raw, MAXHOSTLEN);
+      strncpy(dst, raw, CL_MAXHOSTLEN);
    }
    return;
 }  
@@ -1193,7 +1193,7 @@ void sge_hostcpy(char *dst, const char *raw)
 int sge_hostcmp(const char *h1, const char*h2)
 {
    int cmp = -1;
-   char h1_cpy[MAXHOSTLEN+1], h2_cpy[MAXHOSTLEN+1];
+   char h1_cpy[CL_MAXHOSTLEN+1], h2_cpy[CL_MAXHOSTLEN+1];
  
  
    DENTER(BASIS_LAYER, "sge_hostcmp");

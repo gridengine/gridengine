@@ -1,3 +1,8 @@
+SG-2005-03-02-1: Cleanup:   Changed MAXHOSTLEN to CL_MAXHOSTLEN due to a
+                            collision between different defines under linux.
+                 Review:    AA
+                 Changed:   all
+
 JG-2005-03-02-0: Testsuite: Provide means to configure explicit setup and 
                             cleanup functions both for whole checks and per 
                             check level.

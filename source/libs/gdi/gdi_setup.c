@@ -83,7 +83,7 @@ struct gdi_state_t {
    int      isalive;
    int      reread_qmaster_file;
 
-   char     cached_master_name[MAXHOSTLEN];
+   char     cached_master_name[CL_MAXHOSTLEN];
 };
 
 static pthread_key_t   gdi_state_key;

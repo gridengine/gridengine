@@ -429,7 +429,7 @@ static void qmonResFilterEditResource(Widget w, XtPointer cld, XtPointer cad)
    long how = (long)cld;
    lList *arl = NULL;
    int type;
-   char stringval[MAXHOSTLEN];
+   char stringval[CL_MAXHOSTLEN];
    Boolean status = False;
    StringConst name, value, strval;
    Boolean found = False;
@@ -467,7 +467,7 @@ static void qmonResFilterEditResource(Widget w, XtPointer cld, XtPointer cad)
    type = lGetUlong(fill_in_request, CE_valtype);
    strval = lGetString(fill_in_request, CE_stringval);
    if (strval)
-      strncpy(stringval, strval, MAXHOSTLEN-1);
+      strncpy(stringval, strval, CL_MAXHOSTLEN-1);
    else
       strcpy(stringval, "");
 

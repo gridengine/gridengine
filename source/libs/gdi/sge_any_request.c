@@ -671,7 +671,7 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffe
 {
    int i;
    ushort usid=0;
-   char host[MAXHOSTLEN+1];
+   char host[CL_MAXHOSTLEN+1];
    cl_com_message_t* message = NULL;
    cl_com_endpoint_t* sender = NULL;
    cl_com_handle_t* handle = NULL;

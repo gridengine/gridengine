@@ -1254,7 +1254,7 @@ XtPointer cld, cad;
    lList *alp = NULL;
    lEnumeration *what = NULL;
    String host = NULL;
-   char unique[MAXHOSTLEN];
+   char unique[CL_MAXHOSTLEN];
    lDescr *dp;
    int field, ret;
    Widget list;
@@ -1401,7 +1401,7 @@ Widget w;
 XtPointer cld, cad;
 {
    XmtInputFieldCallbackStruct *cbs = (XmtInputFieldCallbackStruct*) cad;
-   static char unique[MAXHOSTLEN];
+   static char unique[CL_MAXHOSTLEN];
    int ret;
 
    DENTER(GUI_LAYER, "qmonExecHostCheckName");
@@ -1892,7 +1892,7 @@ Widget w;
 XtPointer cld, cad;
 {
    XmtInputFieldCallbackStruct *cbs = (XmtInputFieldCallbackStruct*) cad;
-   static char unique[MAXHOSTLEN];
+   static char unique[CL_MAXHOSTLEN];
    int ret;
 
    DENTER(GUI_LAYER, "qmonHostgroupCheckName");

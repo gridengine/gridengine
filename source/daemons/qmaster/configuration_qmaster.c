@@ -167,7 +167,7 @@ int sge_read_configuration(lListElem *aSpoolContext, lList *anAnswer)
 int sge_del_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char *aHost)
 {
    const char *tmp_name = NULL;
-   char unique_name[MAXHOSTLEN];
+   char unique_name[CL_MAXHOSTLEN];
    int ret = -1;
 
    DENTER(TOP_LAYER, "sge_del_configuration");
@@ -231,7 +231,7 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
 {
    lListElem *old_conf;
    const char *tmp_name = NULL;
-   char unique_name[MAXHOSTLEN];
+   char unique_name[CL_MAXHOSTLEN];
    int ret = -1;
 
    DENTER(TOP_LAYER, "sge_mod_configuration");
@@ -620,7 +620,7 @@ lList* sge_get_configuration(void)
 lListElem* sge_get_configuration_for_host(const char* aName)
 {
    lListElem *conf = NULL;
-   char unique_name[MAXHOSTLEN];
+   char unique_name[CL_MAXHOSTLEN];
    int ret = -1;
 
    DENTER(TOP_LAYER, "sge_get_configuration_for_host");

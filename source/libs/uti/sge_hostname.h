@@ -48,8 +48,8 @@
 #include "sge_unistd.h"
 
 /* compare hosts with FQDN or not */
-#ifndef MAXHOSTLEN
-#define MAXHOSTLEN 256
+#ifndef CL_MAXHOSTLEN
+#define CL_MAXHOSTLEN 256
 #endif
 
 /* char introducing a hostgroup name */
@@ -58,7 +58,7 @@
 /* host information based on the hostent structure */
 typedef struct host {
     struct hostent he;		/* copy of what we got from gethostbyname */
-    char mainname[MAXHOSTLEN];  /* This is what the administrator think it is
+    char mainname[CL_MAXHOSTLEN];  /* This is what the administrator think it is
                                    the mainname */
     int deleted;                /* if we can no longer resolve this host */
     struct host *alias;		/* chain aliases */

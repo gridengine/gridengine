@@ -6759,11 +6759,11 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) {
    }
    ret_val = cl_com_cached_gethostbyname((char*)hostin, &resolved_host, NULL, NULL, NULL );
    if (resolved_host != NULL) {
-      if (strlen(resolved_host) > MAXHOSTLEN ) {
+      if (strlen(resolved_host) > CL_MAXHOSTLEN ) {
          free(resolved_host);
          return CL_RETVAL_UNKNOWN;
       }
-      snprintf(hostout, MAXHOSTLEN, "%s", resolved_host );
+      snprintf(hostout, CL_MAXHOSTLEN, "%s", resolved_host );
       free(resolved_host);
    }
    return ret_val;

@@ -744,7 +744,7 @@ href_list_resolve_hostnames(lList *this_list, lList **answer_list)
          const char *name = lGetHost(href, HR_name);
 
          if (!sge_is_hgroup_ref(name)) {
-            char resolved_name[MAXHOSTLEN+1];
+            char resolved_name[CL_MAXHOSTLEN+1];
             int back = getuniquehostname(name, resolved_name, 0);
 
             if (back == CL_RETVAL_OK) {

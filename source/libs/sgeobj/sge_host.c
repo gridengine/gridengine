@@ -220,7 +220,7 @@ int sge_resolve_host(lListElem *ep, int nm)
 {
    int pos, ret;
    int dataType;
-   char unique[MAXHOSTLEN];
+   char unique[CL_MAXHOSTLEN];
    const char *hostname;
 
    DENTER(TOP_LAYER, "sge_resolve_host");

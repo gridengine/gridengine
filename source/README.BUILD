@@ -83,8 +83,11 @@ Content
 
        #include "header.h"
 
-   See <<here_link_to_andre's_doc>> for more information about
-   'sge_depend'.
+   See 
+
+      3rdparty/sge_depend/sge_depend.html
+
+    for more information about 'sge_depend'.
 
    To build 'sge_depend' enter:
 

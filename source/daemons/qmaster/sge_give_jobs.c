@@ -342,16 +342,21 @@ int master
    
    qlp = lCreateList("qlist", QU_Type);
    /* add all queues referenced in gdil to qlp 
-      (necessary for availability of ALL resource limits and tempdir in queue) */
+    * (necessary for availability of ALL resource limits and tempdir in queue) 
+    */
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+      const char *src_qname = lGetString(gdil_ep, JG_qname);
+      lListElem *src_qep = queue_list_locate(Master_Queue_List,
+                                             lGetString(gdil_ep, JG_qname));
+
+      lSetString(gdil_ep, JG_processors, lGetString(src_qep, QU_processors));
       /*
        * send only master queue and slave queues which reside on the
        * same hosts as 'rhost'
        */
       if (!sge_hostcmp(rhost, lGetHost(gdil_ep, JG_qhostname)) ||
           lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)) == gdil_ep) {
-         qep = lCopyElem(queue_list_locate(Master_Queue_List, 
-                                           lGetString(gdil_ep, JG_qname)));
+         qep = lCopyElem(src_qep);
 
          /* build minimum of job request and queue resource limit */
          reduce_queue_limit(qep, tmpjep, QU_s_cpu,   "s_cpu");

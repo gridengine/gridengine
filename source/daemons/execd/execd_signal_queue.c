@@ -122,48 +122,50 @@ int answer_error;
                forwarded to the job in case the master queue keeps still active */
             for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
                master_q = lGetObject(gdil_ep, JG_queue);
-               qnm =  lGetString(master_q, QU_qname);
-               if (!strcmp(qname, qnm)) {
-                  char tmpstr[SGE_PATH_MAX];
+               if (master_q != NULL) {
+                  qnm =  lGetString(master_q, QU_qname);
+                  if (!strcmp(qname, qnm)) {
+                     char tmpstr[SGE_PATH_MAX];
 
-                  /* job signaling triggerd by a queue signal */
-                  sprintf(tmpstr, "%s (%s)", sge_sig2str(signal), qnm);
-                  job_log(lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), tmpstr);
-                  /* if the queue gets suspended and the job is already suspended
-                     we do not deliver a signal */
-                  if (signal == SGE_SIGSTOP) {
-                     lSetUlong(master_q, QU_state, lGetUlong(master_q, QU_state) | 
-                           QSUSPENDED);
-                     if (!VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
-                        if (lGetUlong(jep, JB_checkpoint_attr)& CHECKPOINT_SUSPEND) {
-                           INFO((SGE_EVENT, MSG_JOB_INITMIGRSUSPQ_U, u32c(lGetUlong(jep, JB_job_number))));
-                           signal = SGE_MIGRATE;
-                        }   
-                        if( sge_execd_deliver_signal(signal, jep, jatep) == 0) {
-                           sge_send_suspend_mail(signal,master_q ,jep, jatep); 
-                        }
-                     }   
-                  } 
-                  else {
-                     /* if the signal is a unsuspend and the job is suspended
+                     /* job signaling triggerd by a queue signal */
+                     sprintf(tmpstr, "%s (%s)", sge_sig2str(signal), qnm);
+                     job_log(lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), tmpstr);
+                     /* if the queue gets suspended and the job is already suspended
                         we do not deliver a signal */
-                     if (signal == SGE_SIGCONT) {
-                        lSetUlong(master_q, QU_state, lGetUlong(master_q, QU_state) & ~QSUSPENDED);
+                     if (signal == SGE_SIGSTOP) {
+                        lSetUlong(master_q, QU_state, lGetUlong(master_q, QU_state) | 
+                              QSUSPENDED);
                         if (!VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
-                           if ( sge_execd_deliver_signal(signal, jep, jatep) == 0) {
+                           if (lGetUlong(jep, JB_checkpoint_attr)& CHECKPOINT_SUSPEND) {
+                              INFO((SGE_EVENT, MSG_JOB_INITMIGRSUSPQ_U, u32c(lGetUlong(jep, JB_job_number))));
+                              signal = SGE_MIGRATE;
+                           }   
+                           if( sge_execd_deliver_signal(signal, jep, jatep) == 0) {
                               sge_send_suspend_mail(signal,master_q ,jep, jatep); 
                            }
+                        }   
+                     } 
+                     else {
+                        /* if the signal is a unsuspend and the job is suspended
+                           we do not deliver a signal */
+                        if (signal == SGE_SIGCONT) {
+                           lSetUlong(master_q, QU_state, lGetUlong(master_q, QU_state) & ~QSUSPENDED);
+                           if (!VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
+                              if ( sge_execd_deliver_signal(signal, jep, jatep) == 0) {
+                                 sge_send_suspend_mail(signal,master_q ,jep, jatep); 
+                              }
+                           }
                         }
+                        else
+                           sge_execd_deliver_signal(signal, jep, jatep);
                      }
-                     else
-                        sge_execd_deliver_signal(signal, jep, jatep);
+                     found = lGetUlong(jep, JB_job_number);
+
+                     job_write_spool_file(jep, 
+                        lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), 
+                        JAT_task_number), NULL, SPOOL_WITHIN_EXECD);
+
                   }
-                  found = lGetUlong(jep, JB_job_number);
-
-                  job_write_spool_file(jep, 
-                     lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), 
-                     JAT_task_number), NULL, SPOOL_WITHIN_EXECD);
-
                }
             }
          }

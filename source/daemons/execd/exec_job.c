@@ -373,24 +373,21 @@ char *err_str
       host_slots = 0;
       for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
          int slots;
-         lListElem *qep;
          lList *alp = NULL;
          const char *q_set;
 
          slots = (int)lGetUlong(gdil_ep, JG_slots);
-         qep = lGetObject(gdil_ep, JG_queue); 
-         q_set = lGetString(qep, QU_processors);
+         q_set = lGetString(gdil_ep, JG_processors);
          pe_slots += slots;
          fprintf(fp, "%s %d %s %s\n", 
             lGetHost(gdil_ep, JG_qhostname),
             slots, 
             lGetString(gdil_ep, JG_qname), 
-            q_set);
+            q_set ? q_set : "<NULL>");
          if (!sge_hostcmp(lGetHost(master_q, QU_qhostname), lGetHost(gdil_ep, JG_qhostname))) {
             host_slots += slots;
             if (q_set && strcasecmp(q_set, "UNDEFINED")) {
-               range_list_parse_from_string(&processor_set, &alp,
-                                            lGetString(qep, QU_processors),
+               range_list_parse_from_string(&processor_set, &alp, q_set,
                                             0, 0, INF_ALLOWED);
                if (lGetNumberOfElem(alp))
                   alp = lFreeList(alp);

@@ -839,7 +839,8 @@ enum {
    JG_dticket,
    JG_sticket,
    JG_jcoticket,
-   JG_jcfticket
+   JG_jcfticket,
+   JG_processors
 };
 
 SLISTDEF( JG_Type, GrantedQueue )
@@ -860,6 +861,7 @@ SLISTDEF( JG_Type, GrantedQueue )
    SGE_DOUBLE(JG_sticket, CULL_DEFAULT)   /* SGEEE sharetree tickets assigned to slots    */
    SGE_DOUBLE(JG_jcoticket, CULL_DEFAULT) /* SGEEE job class override tickets             */
    SGE_DOUBLE(JG_jcfticket, CULL_DEFAULT) /* SGEEE job class functional tickets           */
+   SGE_STRING(JG_processors, CULL_DEFAULT) /* processor sets */
 LISTEND
 
 NAMEDEF( JGN )
@@ -878,6 +880,7 @@ NAMEDEF( JGN )
    NAME( "JG_sticket" )
    NAME( "JG_jcoticket" )
    NAME( "JG_jcfticket" )
+   NAME( "JG_processors" )
 NAMEEND
 
 #define JGS sizeof(JGN)/sizeof(char*)

@@ -1,24 +1,29 @@
+AS-2002-03-27-0  Install:   cleanup install details in for "distinst"
+
 JG-2002-03-27-0  Testsuite: large_cluster test:
                             - fixed problems due to change of runlevel
                             - output cluster utilization in test report
 
-CR-2002-03-27-0  Bugfix:    Fixed broken shadow daemon qmaster startup functionality 
+CR-2002-03-27-0  Bugfix:    Fixed broken shadow daemon qmaster startup
+                            functionality
 
-SD-2002-03-26-1  Bugfix:    Fixed "missing node XXXXX in dst trees" problem where
-                            a temporary share tree node was being sent to qmaster
+SD-2002-03-26-1  Bugfix:    Fixed "missing node XXXXX in dst trees" problem
+                            where a temporary share tree node was being sent
+                            to qmaster
 
-AH-2002-03-26-0  Bugfix:    Found and fixed infinite loop in commd in case host 
-                            formerly resolved by gethostbyname(3) is no longer 
-                            resolvable. Also fix commd option -dhr which was -drh 
-                            before.
+AH-2002-03-26-0  Bugfix:    Found and fixed infinite loop in commd in case
+                            host formerly resolved by gethostbyname(3) is no
+                            longer resolvable. Also fix commd option -dhr
+                            which was -drh before.
                  Bugtraq:   #4658193
                  Issue:     #212
 
 JG-2002-03-26-1  Bugfix:    At startup qmaster removed pending messages too
-                            late (after daemonizing instead of after enrolling). 
-                            In rare cases (starting schedd immediately after
-                            qmaster daemonized on a fast machine) this could
-                            produce an error.
+                            late (after daemonizing instead of after
+                            enrolling).  In rare cases (starting schedd
+                            immediately after qmaster daemonized on a fast
+                            machine) this could produce an error and cause a
+                            delayed registration of the scheduler.
 
 CR-2002-03-26-2  Bugfix:    - wrong error handling if qmaster is down and
                               user tries qdel -f 
@@ -28,18 +33,19 @@ JG-2002-03-26-0  Testsuite: Installation with many hosts did not work due to
                             some buffer (commandline?) being too small.
                             Pass hostnames to install_qmaster in a file.
 
-CR-2002-03-26-1  Bugfix:    qstat -f -> 
-                            8 x times logging: "... neither submit nor admin host"
+CR-2002-03-26-1  Bugfix:    qstat -f -> 8 x times logging: "... neither
+                            submit nor admin host"
 
-CR-2002-03-26-0  Bugfix:    can't resolve hostname "%-.100s" from act_qmaster file
-                            message
+CR-2002-03-26-0  Bugfix:    can't resolve hostname "%-.100s" from
+                            act_qmaster file message
 
 AH-2002-03-25-0  Bugfix:    gethostbyname -aname was broken
                  Optimiz.:  Ensure global conf is read only one time by
                             AH-2002-03-22-0 code
 
 JG-2002-03-25-0  Testsuite: Bugfix: In a cluster with very similar hostnames
-                            testsuite wrongly reused open remote connections.
+                            testsuite wrongly reused open remote
+                            connections.
 
 AS-2002-03-22-0  Change:    reresolve_me_qualified_hostname() does not log
                             anymore. Calling functions now do appropriate
@@ -55,17 +61,19 @@ CR-2002-03-22-1  Bugfix:    Enhancements for CR-2002-03-22-0
 AA-2002-03-22-2  Bugfix:    Tru64 spinbox incrementLarge fix for cluster
                             config dialogue
 
-CR-2002-03-22-0  Bugfix:    Reopend issue: Wrong error message when service sge_commd 
-                            is not available 
+CR-2002-03-22-0  Bugfix:    Reopend issue: Wrong error message when service
+                            sge_commd is not available
                  Issue:     #158
 
-AH-2002-03-22-0  Bugfix:    Ensure shepherd mapping signals do not hit shepherd itself
-                            because of signal handler not installed when signals
-                            are released by sigprocmask(2) 
+AH-2002-03-22-0  Bugfix:    Ensure shepherd mapping signals do not hit
+                            shepherd itself because of signal handler not
+                            installed when signals are released by
+                            sigprocmask(2)
 
-AH-2002-03-22-0  Bugfix:    Retrieve ignore_fqdn and default_domain at client/daemon 
-                            startup from global cluster config to overcome problems
-                            with hashing of hostnames in certain cases.
+AH-2002-03-22-0  Bugfix:    Retrieve ignore_fqdn and default_domain at
+                            client/daemon startup from global cluster config
+                            to overcome problems with hashing of hostnames
+                            in certain cases.
 
 AA-2002-03-21-1  Bugfix:    sorting in functional/override policy,
                             fix for not emptying matrix
@@ -73,8 +81,8 @@ AA-2002-03-21-1  Bugfix:    sorting in functional/override policy,
 AA-2002-03-21-0  Bugfix:    SGE_KEYFILE, SGE_CERTFILE 
                             sec install scripts
 
-CR-2002-03-21-4  Bugfix:    scheduler generates high CPU load for 1-2 minutes
-                            when sge_commd is killed.
+CR-2002-03-21-4  Bugfix:    scheduler generates high CPU load for 1-2
+                            minutes when sge_commd is killed.
                  Issue:     #197
 
 EB-2002-03-21-2  Bugfix:    remove old configuration (EB-2002-03-21-0)
@@ -92,13 +100,15 @@ CR-2002-03-21-1  Bugfix:    removed forgotten #if0 - #endif statement which
                             chauses scheduler to abort() on testsuite's 
                             path_alias check.
 
-JG-2002-03-21-0  Bugfix:    prioritization of messages to qmaster could block
-                            reports from execd's to qmaster and make the system
-                            unusable.
-                            Set "no prioritization" as default, behaviour can
-                            be changed via env variable SGE_PRIORITY_TAGS.
+JG-2002-03-21-0  Bugfix:    prioritization of messages to qmaster could
+                            block reports from execd's to qmaster and make
+                            the system unusable.
+                            Set "no prioritization" as default, behaviour
+                            can be changed via env variable
+                            SGE_PRIORITY_TAGS.
 
-EB-2002-03-21-0  Bugfix:    local config not written as admin user at startup
+EB-2002-03-21-0  Bugfix:    local config not written as admin user at
+                            startup
                  Issue:     #198
 
 CR-2002-03-21-0  Testsuite: merge from maintrunc
@@ -180,7 +190,6 @@ AA-2002-03-18-1  Bugfix:    - STN_type field is set to display sharetree nodes
                             - interactive mode fix
                             - global host first
                             - project itemlist sorting
-
 
 AA-2002-03-18-0  Bugfix:    sge_ca script, check /dev/random 1st
 

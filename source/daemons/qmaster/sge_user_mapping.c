@@ -56,6 +56,8 @@
 #include "sge_hostgroup.h"
 #include "sge_usermap.h"
 
+#ifndef __SGE_NO_USERMAPPING__
+
 static int   sge_isGuiltyMappingEntry(lList *hostGroupList, lList *mapList, char *foreignName, char *hostName);
 static char* sge_malloc_map_in_going_username(lList *hostGroupList, lList *userMappingEntryList, char *foreignName, char *hostName);
 
@@ -1192,4 +1194,4 @@ lListElem *origListElem     /* ListElement to compare with */
   DEXIT;
   return dirty;  
 }
-
+#endif

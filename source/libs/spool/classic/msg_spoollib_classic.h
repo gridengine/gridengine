@@ -106,7 +106,7 @@
 #define MSG_CONFIG_READINGUSERMAPPINGENTRY _MESSAGE(33641, _("Reading in user mapping entries:\n"))
 #define MSG_SETUP_MAPPINGETRIES_S                  _MESSAGE(33609, _("\tMapping entries for "SFQ".\n"))
 #define MSG_SPOOL_SCHEDDCONFIGNOTDELETED _MESSAGE(61046, _("the scheduler configuration must not be deleted\n"))
-#define MSG_QMASTER_PRJINCORRECT_S       _MESSAGE(61047, _("Spoolfile for project "SFQ" containes invalid name\n"))
+#define MSG_QMASTER_PRJINCORRECT_S       _MESSAGE(61048, _("Spoolfile for project "SFQ" containes invalid name\n"))
 
 
 

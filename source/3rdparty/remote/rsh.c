@@ -85,7 +85,7 @@ extern int optind;
 int rcmd(char **, u_short, char *, char *, char *, int *);
 #endif
 
-#if !defined(FREEBSD) && !defined(DARWIN)
+#if !defined(FREEBSD) && !defined(DARWIN) && !defined(NETBSD)
 #include <values.h>
 #endif
 

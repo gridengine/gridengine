@@ -64,7 +64,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#if !defined(FREEBSD) && !defined(DARWIN)
+#if !defined(FREEBSD) && !defined(DARWIN) && !defined(NETBSD)
 #include <values.h>
 #endif
 

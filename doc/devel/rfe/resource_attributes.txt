@@ -13,6 +13,11 @@
    packages are still pending. Therefor this document is under construction
    itself and will be changed while the work packages are implemented.
 
+   Acknowledgements
+
+   I gratefully acknowledge useful conversations and input in other 
+   forms with Andre Alefeld, Ernst Bablick, Andreas Dorr, Fritz Ferstl, 
+   Andreas Haas, Christian Reissmann, and Andy Schwierskott.
 
 1. Attributes:
 --------------
@@ -52,54 +57,56 @@
    - Requestable
    - default value 
 
-Using per slot attributes:
---------------------------
+   Using per slot attributes:
+   --------------------------
 
-   All fixed values in the system are per slot attributes. This means, that a 
-   parallel job existing of 4 parallel tasks (needing 4 slots to run) 
-   requires the attribute for each task. 
+      All fixed values in the system are per slot attributes. This means, that
+      a parallel job existing of 4 parallel tasks (needing 4 slots to run) 
+      requires the attribute for each task. 
 
-   Example E1:
-      one job j1 requests t01 = 10 with 4 slots
-      queue q1 has 5 slots and t01 is set to <=20
-      j1 does fit on q1 since it has enough slots and t01 allows to run jobs 
-      with t01 requests between 0 and 20.
-      The configuration of q1 after j1 has started is slots = 1 and t01 <= 20.
+      Example E1:
+         one job j1 requests t01 = 10 with 4 slots
+         queue q1 has 5 slots and t01 is set to <=20
+         j1 does fit on q1 since it has enough slots and t01 allows to run 
+         jobs with t01 requests between 0 and 20.
+         The configuration of q1 after j1 has started is slots = 1 and 
+         t01 <= 20.
 
-Using per job attributes:
--------------------------
+   Using per job attributes:
+   -------------------------
 
-   All changeable values in the system are per job attributes like the "slots" 
-   attribute in E1. This means, that a parallel job requests a resource n times 
-   (n is the number of slots it will use).
+      All changeable values in the system are per job attributes like the 
+      "slots" attribute in E1. This means, that a parallel job requests a 
+      resource n times (n is the number of slots it will use).
 
-   Example E2:
-      one job j2 requests t02 = 20 with 4 slots
-      queue q2 offers 5 slots with t02 <= 40
-      queue q3 offers 1 slot with t02 <= 40
-      queue q4 offers 3 slots with t02 <= 40
-   The system will start two instances of the job on q2, one on q3 and one on q4
-   The configuration of the queues afterwards looks like:
-      q2 offers 3 slots with t02 <= 0 (q2.t02 - 2*j2.t02)
-      q1 offers 0 slots with t02 <= 20 (q2.t02 - 1*j2.t02)
-      q3 offers 2 slots with t02 <= 20(q2.t02 - 1*j2.t02)
+      Example E2:
+         one job j2 requests t02 = 20 with 4 slots
+         queue q2 offers 5 slots with t02 <= 40
+         queue q3 offers 1 slot with t02 <= 40
+         queue q4 offers 3 slots with t02 <= 40
+      The system will start two instances of the job on q2, one on q3 and 
+      one on q4
+      The configuration of the queues afterwards looks like:
+         q2 offers 3 slots with t02 <= 0 (q2.t02 - 2*j2.t02)
+         q1 offers 0 slots with t02 <= 20 (q2.t02 - 1*j2.t02)
+         q3 offers 2 slots with t02 <= 20(q2.t02 - 1*j2.t02)
 
-   This example shows how consumables are handled. With load values is will take 
-   some time, before they are updated, depending on the load_value_report 
-   interval. 
+      This example shows how consumables are handled. With load values is 
+      will take some time, before they are updated, depending on the 
+      load_value_report interval. 
 
-   It is possible to override attributes on a lower level or on the same level. 
-   More about it later.
+      It is possible to override attributes on a lower level or on the same 
+      level.  More about it later.
 
-   The fact, that all consumables are per job attributes posses a problem, when
-   one wants to do licence managing with parallel jobs. Therefor it would be nice
-   to have it configurable if a consumable is a per job attribute or per slot 
-   attribute.
+      The fact, that all consumables are per job attributes posses a problem, 
+      when one wants to do licence managing with parallel jobs. Therefor it 
+      would be nice to have it configurable if a consumable is a per job 
+      attribute or per slot attribute.
 
-   Wor kpackage:
-      => Decide, what is the right way of doing it
-      => Adding a flag which can be set by a user, if an attribute is a per 
-         slot or perjob attribute.
+      Wor kpackage:
+         => Decide, what is the right way of doing it
+         => Adding a flag which can be set by a user, if an attribute is a per 
+            slot or perjob attribute.
 
 
 
@@ -114,9 +121,10 @@ Using per job attributes:
    name 	     : has to be unique
    Short cu	  : has to be unique
    Type	     : every type from the list (string, host, cstring, int, double,
-                                          boolean, memory, time)
+                                          boolean, memory, time, restring)
    Consumable : can only be defined for: int, double, memory, time
-                If a consumable is not requestable, it has to have a default value.
+                If a consumable is not requestable, it has to have a default 
+                value.
                 If a consumable is forced, it must not have a default value.
 
    Relational operator:
@@ -138,10 +146,13 @@ Using per job attributes:
 Build in values:
 ----------------
 
-   Besides the overall attribute restrictions, we have one additional ones for
+   Besides the overall attribute restrictions, we have one additional one for
    the system build-in attributes. One can not change the type of a build in
    attribute. The system relies on the type and will not function anymore, if
    one changes the type. A build-in value can also not be deleted.
+
+   The only exception are the strings. A string can be changed into a cstring
+   or restring and back.
 
 3. Overriding attributes:
 -------------------------
@@ -260,16 +271,72 @@ Build in values:
    requests. 
    To speed up this process, one can store the information, which queue cannot 
    run which job category. When this is known, the jobs are only tested against 
-   the queues, which were capable of running the jobs from the previous dispatch 
-   cycle. List of queues to test will get shorter and shorter, while jobs are 
-   dispatched.
+   the queues, which were capable of running the jobs from the previous 
+   dispatch cycle. List of queues to test will get shorter and shorter, while 
+   jobs are dispatched.
 
    The same is true for soft requests. Once all queues are validated and the 
-   number of mismatches are computed, they are the same for all other jobs in the 
-   same job category.  This saves a lot of matching time with the soft requests.
+   number of mismatches are computed, they are the same for all other jobs in 
+   the same job category.  This saves a lot of matching time with the soft 
+   requests.
 
 
-Nice to have:
-   In addition can a lot of matching time be saved, when the static requierments
-   are only matched once per job category (such as authentification of a specific
-   queue, ...).
+   String matching:
+   ----------------
+   
+      The string matching has some specialties. A string can have one of three 
+      different types:
+         - plain string
+         - caseless string
+         - regular expression string
+
+      1. Plain strings (STRING):
+         Matches only, when the requested and the provided string are exactly 
+         the same.
+
+      2. Caseless strings (CSTRING):
+         The upper- and lowercase of the characters in a string is ignored.
+
+      3. Regular expression string (RESTRING):      
+         The user can use a regular expression to ask for a resource. The 
+         syntax follows the following rules:
+         - "*"   : matches any character and any number of chars (between 0 
+                   and inv).
+         - "?"   : matches any character. It cannot be no character
+         - "."   : is the character ".". It has no other meaning
+         - "\"   : escape character. "\\" = "\", "\*" = "*", "\?" = "?"
+         - "[xx]": specifies an array or a range of allowed characters
+         - "|"   : logical "or". Can only be used on the highest level and 
+                   cannot be escaped.
+     
+         Not supported:
+         - "x+"      : to specify, that the character "x" has to appear at least 
+                       once
+         - "[xx|yy]" : to specify xx or yy
+     
+         Examples:
+            -l arch="linux|solaris"    : results in "arch=linux" OR 
+                                         "arch=solaris"
+            -l arch="[linux|solaris]"  : results in "arch=[linux" OR 
+                                         "arch=solaris]"
+
+   Result caching:
+   ---------------
+
+   When ever resource matching is done with jobs, which have pre-calculated
+   job categories, the matching results will be stored in the job categories. 
+   This can be done because all jobs in the same category have the same requests,
+   the same user, the same department,...
+
+   What is cached depends on the job kind (if it is a job with only hard requests,
+   or if its one with hard, soft, pe and other requests)
+
+   Jobs with only hard requests:
+      All queues and hosts on which the job cannot run are stored in the job
+      category. This information is used to limit the possible target queues.
+
+   other jobs:
+      All unfitting queues and the soft violation results are stored in the job 
+      category. This means, that the soft violations are only computed once and
+      reused for all other jobs in the same category. The queue information
+      limits the possible target queues.

@@ -1,3 +1,5 @@
+SG-2003-11-05-0: Enhancem.: Updated the resource_attributes document
+
 JG-2003-11-05-0: Enhancem.: Made functions job_get_job_key, job_get_key and 
                             job_parse_key MT safe.
                             Reporting: Made reporting functions (accounting and 
@@ -7,7 +9,7 @@ JG-2003-11-05-0: Enhancem.: Made functions job_get_job_key, job_get_key and
 AD-2003-11-04-0: Bugfix.:   'sge_qmaster -help' did crash.
                  Changed:   sge_qmaster
 
-SG-2002-11-04-1: Enhancem.: updated the testsuite to reflect the latest schedd
+SG-2003-11-04-1: Enhancem.: updated the testsuite to reflect the latest schedd
                             conf changes.
                  Changed:   testsuite
                  Review:    CR

@@ -1,7 +1,13 @@
+JG-2003-05-08-0  Bugfix:    qmake dumped core when starting recursive make calls
+                 IZ:        #547
+                 Bugtraq:   #4860391
+                 Review:    AS
+                 Changed:   qmake
+
 AH-2003-05-08-0  Bugfix:    Fix reopend bug "qconf gets commd timeout".
                             Improved commd commproc timeout logging.
-                            Do only one retry in commlib to transparently reenroll 
-                            to commd. 
+                            Do only one retry in commlib to transparently 
+                            reenroll to commd. 
                  Issue:     308
                  Bugtraq:   4753669
                  Review:    AS
@@ -18,6 +24,8 @@ CR-2003-05-07-0  Testsuite: fixed error for install_core_system check:
 EB-2003-05-07-0  Cleanup:   wrapper functions to access QU_qtype attribute
                             (part 1: move pe/ckpt references intgo QU_Type 
                              object) 
+
+JG-2003-05-06-1  Bugfix:    broken build
 
 JG-2003-05-06-0  Bugfix:    array tasks were not deleted (bug introduced in 
                             change JG-2003-04-29-0), some cleanup.

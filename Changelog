@@ -1,3 +1,7 @@
+MD-2004-02-24-0: Bugfix:    changed messages
+                 Issue:     #676
+                 Changed:   inst_sgeee
+
 AD-2004-02-24-0: Bugfix:    Did fix CULL run time type error.
                  Changed:   qmaster
                  Issue:     699

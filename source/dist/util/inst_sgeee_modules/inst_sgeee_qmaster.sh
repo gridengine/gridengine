@@ -126,7 +126,7 @@ GetQmasterSpoolDir()
                    "the qmaster daemon on other hosts (see the corresponding sectionin the\n" \
                    "Grid Engine Installation and Administration Manual for details) the account\n" \
                    "on the shadow master hosts also needs read/write access to this directory.\n\n" \
-                   "The following directory [%s]\n will be used as qmaster spool directory by default!\n" \
+                   "The following directory\n\n [%s]\n\n will be used as qmaster spool directory by default!\n" \
                    $SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster
                    QMDIR=$SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster
 
@@ -282,7 +282,13 @@ SetSpoolingOptions()
             $INFOTEXT -n " 2) Berkeley DB Spooling Server:\n" \
                          " If you want to setup a shadow master host, you need to use\nBerkeley DB Spooling Server!\n" \
                          " In this case you have to choose a host with a configured rpc service.\nThe qmaster host" \
-                         " connects via rpc to the Berkeley DB. This setup is more secure!\n\n" 
+                         " connects via rpc to the Berkeley DB. This setup is more\nfailsafe," \
+                         " but results in a clear potential security hole. Rpc communication\n" \
+                         " (as used by Berkeley DB) can be easily compromised. Please only use this\n" \
+                         " alternative if your site is secure or if you are not concerned about\n" \
+                         " security. Check the installation guide for further advice on how to achieve\n" \
+                         " failsafety without compromising security.\n\n"
+ 
             $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to use a Berkely DB Spooling Server? (y/n) [n] >> "
             if [ $? = 0 ]; then
                $INFOTEXT -u "Berkely DB Setup"

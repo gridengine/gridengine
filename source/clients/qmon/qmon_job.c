@@ -575,8 +575,8 @@ void updateJobList(void)
                                     "template");
    what_queue = lWhat("%T(ALL)", QU_Type);
    where_notexiting = lWhere("%T(!(%I m= %u))", JAT_Type, JAT_status, JFINISHED);
-   where_run = lWhere("%T((%I m= %u || %I m= %u) && (!(%I m= %u)))", 
-                        JAT_Type, JAT_status, JRUNNING, JAT_status, JTRANSITING,
+   where_run = lWhere("%T((%I m= %u || %I m= %u || %I m= %u) && (!(%I m= %u)))", 
+                        JAT_Type, JAT_status, JRUNNING, JAT_status, JTRANSITING, JAT_status, JFINISHED,
                         JAT_state, JEXITING);
  
    jl = lSelect("jl", qmonMirrorList(SGE_JOB_LIST), where_unfinished, what);
@@ -1025,6 +1025,7 @@ XtPointer cad
 static lList* qmonJobBuildSelectedList(matrix, dp, nm)
 Widget matrix;
 lDescr *dp;
+int nm;
 {
    int i;
    int rows;

@@ -1,3 +1,8 @@
+AD-2004-01-07-1: Enhancem:  Did add '-D_GNU_SOURCE' for Linux. Did replace
+                            'CLK_TCK' with 'sysconf(_SC_CLK_TCK)'.
+                 Changed:   aimk, util
+                 Review:    AH
+
 SG-2003-01-07-1: Enhancem:  added qstat -qs and qselect -qs feature.
                  Changed:   qstat, man-pages
                  Review:    pending

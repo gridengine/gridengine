@@ -8877,6 +8877,7 @@ proc modify_setup2 {} {
 #     check/__setup()
 #*******************************************************************************
 proc setup2 { } {
+   global bootstrap
    global ts_config ts_host_config ts_user_config actual_ts_config_version
    global CHECK_OUTPUT CHECK_DO_SETUP
    global CHECK_DEFAULTS_FILE do_nomain
@@ -9072,8 +9073,11 @@ proc setup2 { } {
       if { $CHECK_DO_SETUP == 1 } {
          modify_setup2
       }
+      
+      # fill bootstrap array
+      init_bootstrap
+      
       unlock_testsuite
-      return 0 
    } else {
       puts $CHECK_OUTPUT "could not open defaults file."
       if { [ file isfile $CHECK_DEFAULTS_FILE ] } {
@@ -9087,6 +9091,44 @@ proc setup2 { } {
          exit -1
       }
       setup2
+   }
+
+}
+
+proc init_bootstrap {} {
+   global bootstrap
+   global CHECK_USER CHECK_DEFAULT_DOMAIN
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT
+
+   # start from scratch
+   if [info exists bootstrap] {
+      unset bootstrap
+   }
+
+   # we don't have bootstrapping in versions prior 6.x
+   if {[resolve_version] >= 3} {
+      # read bootstrapping info from file
+      # if it does not yet exist, initialize if from configuration
+      set bootstrap_file "$CHECK_PRODUCT_ROOT/default/common/bootstrap"
+      if {[file exists $bootstrap_file]} {
+         puts $CHECK_OUTPUT "reading bootstrap file $bootstrap_file"
+         set f [open $bootstrap_file r]
+         while {[gets $f line] > 0} {
+            set name [lindex $line 0]
+            set value [lrange $line 1 end]
+            set bootstrap($name) "$value"
+         }
+      } else {
+         puts $CHECK_OUTPUT "initializing bootstrap from scratch"
+         set bootstrap(admin_user) "$CHECK_USER"
+         set bootstrap(default_domain) "$CHECK_DEFAULT_DOMAIN"
+         set bootstrap(ignore_fqdn) "true"
+         set bootstrap(spooling_method) "unknown"
+         set bootstrap(spooling_lib) "unknown"
+         set bootstrap(spooling_params) "unknown"
+         set bootstrap(binary_path) "$CHECK_PRODUCT_ROOT/bin"
+         set bootstrap(qmaster_spool_dir) "$CHECK_PRODUCT_ROOT/default/spool/qmaster"
+      }
    }
 }
 

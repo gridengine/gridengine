@@ -284,6 +284,7 @@ proc get_complex_version {} {
 #      0  - version number not set (testsuite error)
 #      1  - SGE 5.0.x
 #      2  - SGEEE 5.0.x
+#      3  - SGE(EE) 6.x
 #      ...
 #
 #     when internal_number != -100 :
@@ -416,12 +417,56 @@ proc resolve_version { { internal_number -100 } } {
 #     sge_procedures/get_execd_spool_dir()
 #*******************************
 proc get_qmaster_spool_dir {} {
-  get_config global_config
-  if { [info exist global_config(qmaster_spool_dir) ] != 0 } {
-     return $global_config(qmaster_spool_dir)
-  } else {
-     return "unknown"
-  }
+   global bootstrap
+
+   set version [resolve_version]
+   if {$version < 1} {
+      # error
+      return "unknown"
+   } else {
+      if {$version < 3} {
+         # SGE 5.3 system
+         get_config global_config
+         if {[info exists global_config(qmaster_spool_dir)]} {
+            return $global_config(qmaster_spool_dir)
+         } else {
+            return "unknown"
+         }
+      } else {
+         # SGE 6.x system
+         if {[info exists bootstrap(qmaster_spool_dir)]} {
+            return $bootstrap(qmaster_spool_dir)
+         } else {
+            return "unknown"
+         }
+      }
+   }
+}
+
+#                                                             max. column:     |
+#****** sge_procedures/set_qmaster_spool_dir() ******
+# 
+#  NAME
+#     set_qmaster_spool_dir() -- return path to qmaster spool directory
+#
+#  SYNOPSIS
+#     set_qmaster_spool_dir { } 
+#
+#  FUNCTION
+#     This procedure returns the actual qmaster spool directory 
+#     (or "" in case of an error)
+#
+#  RESULT
+#     string with actual spool directory of qmaster
+#
+#
+#  SEE ALSO
+#     sge_procedures/get_qmaster_spool_dir()
+#*******************************
+proc set_qmaster_spool_dir {spool_dir} {
+  global bootstrap
+
+  set bootstrap(qmaster_spool_dir) $spool_dir
 }
 
 #                                                             max. column:     |
@@ -557,17 +602,7 @@ proc check_qmaster_messages { { show_mode 0 } } {
    global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_HOST CHECK_USER
    global CHECK_OUTPUT CHECK_CORE_MASTER
 
-   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"
-   set program_arg "-sconf global" 
-   set output [ start_remote_prog $CHECK_HOST $CHECK_USER $program $program_arg]
-
-   set output [ split $output "\n" ]
-   set spool_dir "unkown"
-   foreach line $output {
-      if { [ string first "qmaster_spool_dir" $line ] >= 0 } {
-         set spool_dir [ lindex $line 1 ]
-      }
-   }
+   set spool_dir [get_qmaster_spool_dir]
    puts $CHECK_OUTPUT "\"$spool_dir\""
 
    set messages_file "$spool_dir/messages"
@@ -637,18 +672,7 @@ proc check_schedd_messages { { show_mode 0 } } {
    global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_HOST CHECK_USER
    global CHECK_OUTPUT CHECK_CORE_MASTER
 
-   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"
-   set program_arg "-sconf global" 
-   set output [ start_remote_prog $CHECK_HOST $CHECK_USER $program $program_arg]
-
-   set output [ split $output "\n" ]
-   set spool_dir "unkown"
-   foreach line $output {
-      if { [ string first "qmaster_spool_dir" $line ] >= 0 } {
-         set spool_dir [ lindex $line 1 ]
-      }
-   }
-
+   set spool_dir [get_qmaster_spool_dir]
    set messages_file "$spool_dir/schedd/messages"
 
    if { $show_mode == 2 } {
@@ -1211,11 +1235,13 @@ proc move_qmaster_spool_dir { new_spool_dir } {
 
   lappend vi_commands ":%s/^qmaster_spool_dir .*$/qmaster_spool_dir    $newVal/\n"
   set vi_binary [get_binary_path $CHECK_HOST "vim"]
-  set result [ handle_vi_edit "$vi_binary" "$CHECK_PRODUCT_ROOT/default/common/configuration" "$vi_commands" "" ] 
+  set result [ handle_vi_edit "$vi_binary" "$CHECK_PRODUCT_ROOT/default/common/bootstrap" "$vi_commands" "" ] 
   puts $CHECK_OUTPUT "result: \"$result\""
   if { $result != 0 } {
      add_proc_error "shadowd_kill_master_and_scheduler" -1 "edit error when changing global configuration"
   } 
+
+  set_qmaster_spool_dir $new_spool_dir
 
   puts $CHECK_OUTPUT "make copy of spool directory ..."
   # now copy the entries  
@@ -1409,10 +1435,8 @@ proc get_hosts { } {
 #     
 #     Here the possible change_array values with some typical settings:
 #     
-#     qmaster_spool_dir    /../default/spool/qmaster
 #     execd_spool_dir      /../default/spool
 #     qsi_common_dir       /../default/common/qsi
-#     binary_path          /../bin
 #     mailer               /usr/sbin/Mail
 #     xterm                /usr/bin/X11/xterm
 #     load_sensor          none
@@ -1594,15 +1618,13 @@ proc get_complex { change_array complex_list } {
 #
 #  EXAMPLE
 #     get_config gcluster1 lobal
-#     set cluster1(qmaster_spool_dir) "/bla/bla/tmp"
+#     set cluster1(execd_spool_dir) "/bla/bla/tmp"
 #     set_config cluster1
 #     
 #     Here the possible change_array values with some typical settings:
 #     
-#     qmaster_spool_dir    /../default/spool/qmaster
 #     execd_spool_dir      /../default/spool
 #     qsi_common_dir       /../default/common/qsi
-#     binary_path          /../bin
 #     mailer               /usr/sbin/Mail
 #     xterm                /usr/bin/X11/xterm
 #     load_sensor          none

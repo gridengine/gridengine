@@ -517,7 +517,7 @@ static int sge_setup_sge_schedd()
    /* get aliased hostname from commd */
    reresolve_me_qualified_hostname();
 
-   sge_chdir_exit(conf.qmaster_spool_dir, 1);
+   sge_chdir_exit(bootstrap_get_qmaster_spool_dir(), 1);
    sge_mkdir(SCHED_SPOOL_DIR, 0755, 1, 0);
    sge_chdir_exit(SCHED_SPOOL_DIR, 1);
 

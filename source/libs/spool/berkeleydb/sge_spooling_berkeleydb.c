@@ -677,10 +677,10 @@ spool_berkeleydb_write_object(lList **answer_list, DB *dbp,
    dbret = dbp->put(dbp, NULL, &key_dbt, &data_dbt, 0);
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    if (dbret != 0) {
-     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                             ANSWER_QUALITY_ERROR, 
-                             MSG_BERKELEY_PUTERROR_SS,
-                             key, db_strerror(dbret));
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_PUTERROR_SS,
+                              key, db_strerror(dbret));
       ret = false;
    } else {
       DPRINTF(("stored object with key "SFQ", size = %d\n", key, 
@@ -836,52 +836,79 @@ spool_berkeleydb_default_write_func(lList **answer_list,
    DENTER(TOP_LAYER, "spool_berkeleydb_default_write_func");
 
    dbp = spool_database_get_handle(rule);
+   if (dbp == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_WARNING, 
+                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                              lGetString(rule, SPR_url));
+      ret = false;
+   } else if (key == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_WARNING, 
+                              MSG_BERKELEY_NULLVALUEASKEY,
+                              lGetString(rule, SPR_url));
+      ret = false;
+   } else {
+      switch (event_type) {
+         case SGE_TYPE_JOB:
+         case SGE_TYPE_JATASK:
+         case SGE_TYPE_PETASK:
+            {
+               u_long32 job_id, ja_task_id;
+               char *pe_task_id;
+               char *dup = strdup(key);
+               bool only_job; 
 
-   switch (event_type) {
-      case SGE_TYPE_JOB:
-      case SGE_TYPE_JATASK:
-      case SGE_TYPE_PETASK:
-         {
-            u_long32 job_id, ja_task_id;
-            char *pe_task_id;
-            char *dup = strdup(key);
-            bool only_job; 
+               job_parse_key(dup, &job_id, &ja_task_id, &pe_task_id, &only_job);
 
-            job_parse_key(dup, &job_id, &ja_task_id, &pe_task_id, &only_job);
-
-            if (pe_task_id != NULL) {
-               ret = spool_berkeleydb_write_pe_task(answer_list, dbp,
-                                                    object,
-                                                    job_id, ja_task_id,
-                                                    pe_task_id);
-            } else if (ja_task_id != 0) {
-               ret = spool_berkeleydb_write_ja_task(answer_list, dbp,
-                                                    object,
-                                                    job_id, ja_task_id);
-            } else {
-               ret = spool_berkeleydb_write_job(answer_list, dbp,
-                                                object,
-                                                job_id, only_job);
+               if (pe_task_id != NULL) {
+                  ret = spool_berkeleydb_write_pe_task(answer_list, dbp,
+                                                       object,
+                                                       job_id, ja_task_id,
+                                                       pe_task_id);
+               } else if (ja_task_id != 0) {
+                  ret = spool_berkeleydb_write_ja_task(answer_list, dbp,
+                                                       object,
+                                                       job_id, ja_task_id);
+               } else {
+                  ret = spool_berkeleydb_write_job(answer_list, dbp,
+                                                   object,
+                                                   job_id, only_job);
+               }
             }
+            break;
+         default:
+            {
+               dstring dbkey_dstring;
+               char dbkey_buffer[MAX_STRING_SIZE];
+               const char *dbkey;
+
+               sge_dstring_init(&dbkey_dstring, 
+                                dbkey_buffer, sizeof(dbkey_buffer));
+
+               dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", 
+                                           object_type_get_name(event_type),
+                                           key);
+
+               ret = spool_berkeleydb_write_object(answer_list, dbp, 
+                                                   object, dbkey);
+            }
+            break;
+      }
+#if 0
+      if (ret) {
+         int dbret;
+         /* JG: TODO: remove sync once we use transactions */
+         dbret = dbp->sync(dbp, 0);
+         if (dbret != 0) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                   ANSWER_QUALITY_ERROR, 
+                                   MSG_BERKELEY_SYNCERROR_DS,
+                                   dbret, db_strerror(dbret));
+            ret = false;
          }
-         break;
-      default:
-         {
-            dstring dbkey_dstring;
-            char dbkey_buffer[MAX_STRING_SIZE];
-            const char *dbkey;
-
-            sge_dstring_init(&dbkey_dstring, 
-                             dbkey_buffer, sizeof(dbkey_buffer));
-
-            dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", 
-                                        object_type_get_name(event_type),
-                                        key);
-
-            ret = spool_berkeleydb_write_object(answer_list, dbp, 
-                                                object, dbkey);
-         }
-         break;
+      }
+#endif
    }
 
    DEXIT;
@@ -985,6 +1012,7 @@ spool_berkeleydb_delete_object(lList **answer_list, DB *dbp,
          DPRINTF(("deleted record with key "SFQ"\n", key));
       }
    }
+   
    return ret;
 }
 
@@ -1148,6 +1176,21 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
                                               dbkey, false);
          break;
    }
+#if 0
+   if (ret) {
+      int dbret;
+
+      /* JG: TODO: remove sync once we use transactions */
+      dbret = dbp->sync(dbp, 0);
+      if (dbret != 0) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                ANSWER_QUALITY_ERROR, 
+                                MSG_BERKELEY_SYNCERROR_DS,
+                                dbret, db_strerror(dbret));
+         ret = false;
+      }
+   }
+#endif
 
    DEXIT;
    return ret;

@@ -1118,7 +1118,7 @@ lWriteListTo(environmentList, stderr);
       fprintf(fp, "use_afs=1\n");
       
       shepherd_name = SGE_COSHEPHERD;
-      sprintf(coshepherd_path, "%s/%s/%s", conf.binary_path, sge_get_arch(), shepherd_name);
+      sprintf(coshepherd_path, "%s/%s/%s", bootstrap_get_binary_path(), sge_get_arch(), shepherd_name);
       fprintf(fp, "coshepherd=%s\n", coshepherd_path);
       fprintf(fp, "set_token_cmd=%s\n", conf.set_token_cmd ? conf.set_token_cmd : "none");
       fprintf(fp, "token_extend_time=%d\n", (int) conf.token_extend_time);
@@ -1236,11 +1236,11 @@ lWriteListTo(environmentList, stderr);
    }
 
    shepherd_name = SGE_SHEPHERD;
-   sprintf(shepherd_path, "%s/%s/%s", conf.binary_path, arch, shepherd_name);
+   sprintf(shepherd_path, "%s/%s/%s", bootstrap_get_binary_path(), arch, shepherd_name);
 
    if (SGE_STAT(shepherd_path, &buf)) {
       /* second chance: without architecture */
-      sprintf(shepherd_path, "%s/%s", conf.binary_path, shepherd_name);
+      sprintf(shepherd_path, "%s/%s", bootstrap_get_binary_path(), shepherd_name);
       if (SGE_STAT(shepherd_path, &buf)) {
          sprintf(err_str, MSG_EXECD_NOSHEPHERD_SSS, arch, shepherd_path, strerror(errno));
          DEXIT;
@@ -1272,7 +1272,7 @@ lWriteListTo(environmentList, stderr);
 
       if (SGE_STAT(coshepherd_path, &buf)) {
          shepherd_name = SGE_COSHEPHERD;
-         sprintf(coshepherd_path, "%s/%s", conf.binary_path, shepherd_name);
+         sprintf(coshepherd_path, "%s/%s", bootstrap_get_binary_path(), shepherd_name);
          if (SGE_STAT(coshepherd_path, &buf)) {
             sprintf(err_str, MSG_EXECD_NOCOSHEPHERD_SSS, arch, coshepherd_path, strerror(errno));
             DEXIT;

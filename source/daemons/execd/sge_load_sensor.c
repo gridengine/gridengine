@@ -39,6 +39,7 @@
 #   include <sys/select.h>
 #endif
 
+#include "sge_bootstrap.h"
 #include "sge_unistd.h"
 #include "sge_loadsensorL.h"
 #include "sge_load_sensor.h"
@@ -763,7 +764,7 @@ int sge_ls_start(char *scriptfiles)
    if (has_to_use_qidle) {
       char scriptfiles_buffer[1024];
 
-      sprintf(scriptfiles_buffer, "%s/%s/%s", conf.binary_path, sge_get_arch(),
+      sprintf(scriptfiles_buffer, "%s/%s/%s", bootstrap_get_binary_path(), sge_get_arch(),
               IDLE_LOADSENSOR_NAME);
       ls_elem = lGetElemStr(ls_list, LS_command, scriptfiles_buffer);
       if (!ls_elem) {
@@ -777,7 +778,7 @@ int sge_ls_start(char *scriptfiles)
    if (has_to_use_gnu_load_sensor) {
       char scriptfiles_buffer[1024];
 
-      sprintf(scriptfiles_buffer, "%s/%s/%s", conf.binary_path,
+      sprintf(scriptfiles_buffer, "%s/%s/%s", bootstrap_get_binary_path(),
               sge_get_arch(), GNU_LOADSENSOR_NAME);
       ls_elem = lGetElemStr(ls_list, LS_command, scriptfiles_buffer);
       if (!ls_elem) {

@@ -56,6 +56,8 @@ struct bootstrap_t {
     const char       *spooling_method;
     const char       *spooling_lib;
     const char       *spooling_params;
+    const char       *binary_path;
+    const char       *qmaster_spool_dir;
 };
 
 #if defined(SGE_MT)
@@ -77,6 +79,8 @@ static void bootstrap_destroy(void* bootstrap) {
    FREE(((struct bootstrap_t*)bootstrap)->spooling_method);
    FREE(((struct bootstrap_t*)bootstrap)->spooling_lib);
    FREE(((struct bootstrap_t*)bootstrap)->spooling_params);
+   FREE(((struct bootstrap_t*)bootstrap)->binary_path);
+   FREE(((struct bootstrap_t*)bootstrap)->qmaster_spool_dir);
    free(bootstrap);
 }
  
@@ -127,6 +131,20 @@ const char *bootstrap_get_spooling_params(void)
    return bootstrap->spooling_params;
 }
 
+const char *bootstrap_get_binary_path(void)
+{
+   GET_SPECIFIC(struct bootstrap_t, bootstrap, bootstrap_init, bootstrap_key, 
+                "bootstrap_get_binary_path");
+   return bootstrap->binary_path;
+}
+
+const char *bootstrap_get_qmaster_spool_dir(void)
+{
+   GET_SPECIFIC(struct bootstrap_t, bootstrap, bootstrap_init, bootstrap_key, 
+                "bootstrap_get_qmaster_spool_dir");
+   return bootstrap->qmaster_spool_dir;
+}
+
 void bootstrap_set_admin_user(const char *value)
 {
    GET_SPECIFIC(struct bootstrap_t, bootstrap, bootstrap_init, bootstrap_key, 
@@ -172,6 +190,22 @@ void bootstrap_set_spooling_params(const char *value)
                                            value);
 }
 
+void bootstrap_set_binary_path(const char *value)
+{
+   GET_SPECIFIC(struct bootstrap_t, bootstrap, bootstrap_init, bootstrap_key, 
+                "bootstrap_set_binary_path");
+   bootstrap->binary_path = sge_strdup((char *)bootstrap->binary_path, 
+                                           value);
+}
+
+void bootstrap_set_qmaster_spool_dir(const char *value)
+{
+   GET_SPECIFIC(struct bootstrap_t, bootstrap, bootstrap_init, bootstrap_key, 
+                "bootstrap_set_qmaster_spool_dir");
+   bootstrap->qmaster_spool_dir = sge_strdup((char *)bootstrap->qmaster_spool_dir, 
+                                           value);
+}
+
 /****** sge_bootstrap/sge_bootstrap() ******************************************
 *  NAME
 *     sge_bootstrap() -- read and process bootstrap file 
@@ -197,19 +231,22 @@ void bootstrap_set_spooling_params(const char *value)
 *  NOTES
 *     MT-NOTE: sge_bootstrap() is MT safe
 *******************************************************************************/
+#define NUM_BOOTSTRAP 8
 bool sge_bootstrap(dstring *error_dstring) 
 {
    bool ret = true;
 
    const char *bootstrap_file;
-   const char *name[6] = { "admin_user",
-                           "default_domain",
-                           "ignore_fqdn",
-                           "spooling_method",
-                           "spooling_lib", 
-                           "spooling_params"
-                         };
-   char value[6][1025];
+   const char *name[NUM_BOOTSTRAP] = { "admin_user",
+                                       "default_domain",
+                                       "ignore_fqdn",
+                                       "spooling_method",
+                                       "spooling_lib", 
+                                       "spooling_params",
+                                       "binary_path", 
+                                       "qmaster_spool_dir"
+                                     };
+   char value[NUM_BOOTSTRAP][1025];
 
    DENTER(TOP_LAYER, "sge_bootstrap");
 
@@ -223,7 +260,8 @@ bool sge_bootstrap(dstring *error_dstring)
       }
       ret = false;
    /* read bootstrapping information */   
-   } else if (sge_get_confval_array(bootstrap_file, 6, name, value)) {
+   } else if (sge_get_confval_array(bootstrap_file, NUM_BOOTSTRAP, name, 
+                                    value)) {
       if (error_dstring == NULL) {
       CRITICAL((SGE_EVENT, MSG_UTI_CANNOTBOOTSTRAP_S, bootstrap_file));
       } else {
@@ -238,6 +276,8 @@ bool sge_bootstrap(dstring *error_dstring)
       bootstrap_set_spooling_method(value[3]);
       bootstrap_set_spooling_lib(value[4]);
       bootstrap_set_spooling_params(value[5]);
+      bootstrap_set_binary_path(value[6]);
+      bootstrap_set_qmaster_spool_dir(value[7]);
       {
          u_long32 uval;
          parse_ulong_val(NULL, &uval, TYPE_BOO, value[2], 
@@ -252,6 +292,8 @@ bool sge_bootstrap(dstring *error_dstring)
       DPRINTF(("spooling_method     >%s<\n", bootstrap_get_spooling_method()));
       DPRINTF(("spooling_lib        >%s<\n", bootstrap_get_spooling_lib()));
       DPRINTF(("spooling_params     >%s<\n", bootstrap_get_spooling_params()));
+      DPRINTF(("binary_path         >%s<\n", bootstrap_get_binary_path()));
+      DPRINTF(("qmaster_spool_dir   >%s<\n", bootstrap_get_qmaster_spool_dir()));
    } 
    
    DEXIT;
@@ -269,5 +311,7 @@ void sge_delete_bootstrap()
 	FREE(bootstrap->spooling_method);
 	FREE(bootstrap->spooling_lib);
 	FREE(bootstrap->spooling_params);
+	FREE(bootstrap->binary_path);
+	FREE(bootstrap->qmaster_spool_dir);
 }
 #endif /* WIN32NATIVE */

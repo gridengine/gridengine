@@ -141,7 +141,6 @@ u_long32 now
                 if (( ep = lGetSubStr(hep, HL_name, LOAD_ATTR_LOAD_AVG, EH_load_list)))
                    load_avg = strtod(lGetString(ep, HL_value), NULL);
                 /* use vmem */
-                /* JG: TODO: outputs load instead of vmem. Which value to use? */
                 if (( ep = lGetSubStr(hep, HL_name, LOAD_ATTR_VIRTUAL_USED, EH_load_list)))
                    vmem = strtod(lGetString(ep, HL_value), NULL);
             }

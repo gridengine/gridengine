@@ -77,6 +77,7 @@ SHARED_LIBRARIES="libcom libcull libgdi librmon libsched libsge libuti libspool 
 QMON_SHARED_LIBRARIES="libXbae libXicon libXltree libXmt libXspin libXtab"
 ZLIB_SHARED_LIBRARIES="libz"
 OPENSSL_SHARED_LIBRARIES="libcrypto libssl"
+BERKELEYDB_SHARED_LIBRARIES="libdb-4.1"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
@@ -1030,6 +1031,15 @@ for i in $ARCH; do
          fi
          echo linking $libname
          (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.$shlibext.0.9.7 $lib.$shlibext)
+      done
+
+      for lib in $BERKELEYDB_SHARED_LIBRARIES; do
+         libname="$BERKELEYDBBASE/$DSTARCH/lib/$lib.$shlibext"
+         echo checking $libname
+         if [ -f $libname ]; then
+            InstallProg $libname
+         fi
+         echo linking $libname
       done
 
       for lib in $DRMAA_SHARED_LIBRARIES; do

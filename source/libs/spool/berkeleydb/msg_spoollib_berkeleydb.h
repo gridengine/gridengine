@@ -46,5 +46,7 @@
 #define MSG_BERKELEY_QUERYERROR_S _MESSAGE(70007, _("error retrieving data from berkeley database: "SFN"\n"))
 #define MSG_BERKELEY_DELETEERROR_SS _MESSAGE(70008, _("error deleting record with key "SFQ" from berkeley database: "SFN"\n"))
 #define MSG_BERKELEY_COULDNTSETCACHE_SS _MESSAGE(70009, _("couldn't set cache size in berkeley database "SFN": "SFN"\n"))
+#define MSG_BERKELEY_NULLVALUEASKEY _MESSAGE(70010, _("null value given as object primary key\n"))
+#define MSG_BERKELEY_SYNCERROR_DS _MESSAGE(70011, _("error %d syncing database: "SFN"\n"))
 
 #endif /* __MSG_SPOOLLIB_BERKELEYDB_H */

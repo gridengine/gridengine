@@ -36,9 +36,7 @@
 /* #include "sge_mirror.h" */
 
 struct confel {                       /* cluster configuration parameters */
-    char        *qmaster_spool_dir;   /* qmaster spool directory path */
     char        *execd_spool_dir;     /* sge_spool directory base path */
-    char        *binary_path;         /* path to the Sge binaries */
     char        *mailer;              /* path to e-mail delivery agent */
     char        *xterm;               /* xterm path for interactive jobs */
     char        *load_sensor;         /* path to a load sensor executable */    

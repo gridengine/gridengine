@@ -68,6 +68,7 @@ static void usage(const char *argv0)
    fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO6);
    fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO7);
    fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO8);
+   fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO9);
 }
 
 static int init_framework(const char *shlib, const char *libargs, 
@@ -114,14 +115,16 @@ int main(int argc, char *argv[])
 
    sge_getme(SPOOLDEFAULTS);
 
-   if (!sge_setup_paths(sge_get_default_cell(), NULL)) {
+   if (argc == 2 && strcmp(argv[1], "method") == 0) {
+      printf("%s\n", get_spooling_method());
+   } else if (!sge_setup_paths(sge_get_default_cell(), NULL)) {
       /* will never be reached, as sge_setup_paths exits on failure */
       ret = EXIT_FAILURE;
    } else {
       spooling_maintenance_command cmd = SPM_info;
       feature_initialize_from_file(path_state_get_product_mode_file(), NULL);
       /* parse commandline */
-      if (argc < 4) {
+     if (argc < 4) {
          usage(argv[0]);
          ret = EXIT_FAILURE;
       } else {

@@ -225,7 +225,6 @@ char *rhost
       int paramPos = 0;
       char  *deniedParams[] = { 
           "execd_spool_dir", 
-          "qmaster_spool_dir", 
           NULL 
       };
 

@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <netdb.h>
 
+#include "sge_bootstrap.h"
 #include "sge_log.h"
 #include "sge.h"
 #include "sge_os.h"
@@ -71,7 +72,8 @@ bool *enrolled
 ) {
    char master[MAXHOSTLEN];
    pid_t pid;
-   char pidfile[SGE_PATH_MAX], *cp;
+   char pidfile[SGE_PATH_MAX];
+   const char *cp;
    int ret, alive;
    const char *s;
 
@@ -91,7 +93,7 @@ bool *enrolled
 
    /* get qmaster spool dir, try to read pidfile and check if qmaster is running */
    if (!sge_hostcmp(master, uti_state_get_qualified_hostname())) {
-      if ((cp = sge_get_confval("qmaster_spool_dir", path_state_get_conf_file()))) {
+      if ((cp = bootstrap_get_qmaster_spool_dir())) {
          sprintf(pidfile, "%s/%s", cp, QMASTER_PID_FILE);
 	      DPRINTF(("pidfilename: %s\n", pidfile));
          if ((pid = sge_readpid(pidfile))) {

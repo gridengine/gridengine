@@ -183,7 +183,7 @@ char **argv
    int heartbeat, last_heartbeat, latest_heartbeat, ret, delay;
    int priority_tags[10];
    time_t now, last;
-   char *cp;
+   const char *cp;
    fd_set fds;
    int fd;
    char err_str[1024];
@@ -228,10 +228,10 @@ char **argv
 
    /* is there a running shadowd on this host */
    {
-      char *conf_string;
+      const char *conf_string;
       pid_t shadowd_pid;
 
-      if ((conf_string = sge_get_confval("qmaster_spool_dir", path_state_get_conf_file()))) {
+      if ((conf_string = bootstrap_get_qmaster_spool_dir())) {
          sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE,
             conf_string, uti_state_get_unqualified_hostname());
          DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
@@ -261,9 +261,9 @@ char **argv
 
    parse_cmdline_shadowd(argc, argv);
 
-   if (!(cp = sge_get_confval("qmaster_spool_dir", path_state_get_conf_file()))) {
+   if (!(cp = bootstrap_get_qmaster_spool_dir())) {
       CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTREADQMASTERSPOOLDIRFROMX_S, 
-         path_state_get_conf_file()));
+         path_state_get_bootstrap_file()));
       DEXIT;
       SGE_EXIT(1);
    }
@@ -452,7 +452,7 @@ static int check_if_valid_shadow(
 const char *shadow_master_file 
 ) {
    struct hostent *hp;
-   char *cp, *cp2;
+   const char *cp, *cp2;
    char localconffile[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "check_if_valid_shadow");
@@ -494,14 +494,14 @@ const char *shadow_master_file
    }
 
    /* we can't get binary path */
-   if (!(cp = sge_get_confval("binary_path", path_state_get_conf_file()))) {
-      WARNING((SGE_EVENT, MSG_SHADOWD_CANTREADBINARYPATHFROMX_S, path_state_get_conf_file()));
+   if (!(cp = bootstrap_get_binary_path())) {
+      WARNING((SGE_EVENT, MSG_SHADOWD_CANTREADBINARYPATHFROMX_S, path_state_get_bootstrap_file()));
       DEXIT;
       return -1;
    } else {
       sprintf(binpath, cp); /* copy global configuration path */
       sprintf(localconffile, "%s/%s", path_state_get_local_conf_dir(), uti_state_get_qualified_hostname());
-      cp2 = sge_get_confval("binary_path", localconffile);
+      cp2 = bootstrap_get_binary_path();
       if (cp2) {
          strcpy(binpath, cp2); /* overwrite global configuration path */
          DPRINTF(("found local conf binary path:\n"));

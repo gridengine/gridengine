@@ -161,4 +161,5 @@
 #define MSG_SPOOLINIT_COMMANDINTRO6   _MESSAGE(57066, _("purge days        remove historical data older than days\n"))
 #define MSG_SPOOLINIT_COMMANDINTRO7   _MESSAGE(57067, _("vacuum            compress database, update statistics\n"))
 #define MSG_SPOOLINIT_COMMANDINTRO8   _MESSAGE(57068, _("info              output information about the database\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO9   _MESSAGE(57069, _("method            output the compiled in spooling method\n"))
 #endif /* __MSG_UTILBIN_H */

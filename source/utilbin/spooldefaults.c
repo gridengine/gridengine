@@ -355,6 +355,14 @@ int main(int argc, char *argv[])
       }
    }
 
+   if (spool_get_default_context() != NULL) {
+      if (!spool_shutdown_context(&answer_list, spool_get_default_context())) {
+         ret = EXIT_FAILURE;
+      }
+   }
+
+   answer_list_output(&answer_list);
+
    SGE_EXIT(ret);
    return ret;
 }

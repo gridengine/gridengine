@@ -138,7 +138,7 @@ Shutdown()
 QmasterSpoolDir()
 {
    qma_spool_dir=`grep qmaster_spool_dir \
-                      $SGE_ROOT/$SGE_CELL/common/configuration | \
+                      $SGE_ROOT/$SGE_CELL/common/bootstrap | \
                       awk '{ print $2 }'`
    echo $qma_spool_dir
 }
@@ -243,7 +243,7 @@ CheckIfShadowMasterHost()
 #    echo "none" if we can't determine the binary path
 GetPathToBinaries()
 {
-   cfgname=$SGE_ROOT/$SGE_CELL/common/configuration
+   cfgname=$SGE_ROOT/$SGE_CELL/common/bootstrap
 
    base=none
 
@@ -269,7 +269,7 @@ GetPathToBinaries()
 #    echo "root" if admin user retrieval fails
 GetAdminUser()
 {
-   cfgname=$SGE_ROOT/$SGE_CELL/common/configuration
+   cfgname=$SGE_ROOT/$SGE_CELL/common/bootstrap
    user=none
 
    if [ -f $cfgname ]; then

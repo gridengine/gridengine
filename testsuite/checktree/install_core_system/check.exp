@@ -55,6 +55,7 @@ set check_needs         ""                        ;# dependencies of this check 
 set check_functions     ""                        ;# functions to call (in order)
 lappend check_functions "kill_running_system"
 lappend check_functions "install_qmaster"
+lappend check_functions "reread_bootstrap"
 lappend check_functions "make_user_cert"
 lappend check_functions "install_execd"
 lappend check_functions "cleanup_system"
@@ -1301,7 +1302,13 @@ proc install_qmaster {} {
           return;
        }
     }
- }
+  }
+}
+
+proc reread_bootstrap {} {
+  # install_qmaster has written the bootstrap file - read it.
+  init_bootstrap
+  set_error "0" "install_qmaster - no errors"
 }
 
 # generating all testsuite cluster user keys and certificates
@@ -1474,7 +1481,7 @@ proc install_execd {} {
          set_error "-1" "install_execd - host $exec_host is not in execd list"
          return 
       }
-      wait_for_remote_file $exec_host $CHECK_USER "$CHECK_PRODUCT_ROOT/default/common/configuration"
+#      wait_for_remote_file $exec_host $CHECK_USER "$CHECK_PRODUCT_ROOT/default/common/configuration"
       if { $check_use_installed_system != 0 } {
          set_error "0" "install_execd - no need to install execd on hosts \"$CHECK_CORE_EXECD\" - noinst parameter is set"
          puts "no need to install execd on hosts \"$CHECK_CORE_EXECD\", noinst parameter is set"

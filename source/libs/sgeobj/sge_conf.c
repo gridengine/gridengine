@@ -220,9 +220,7 @@ static void clean_conf(sge_conf_type *conf);
 #define MAX_JOBS                  "0"
 
 static tConfEntry conf_entries[] = {
- { "qmaster_spool_dir", 0, NULL,                1, NULL },
  { "execd_spool_dir",   1, NULL,                1, NULL },
- { "binary_path",       1, NULL,                1, NULL },
  { "mailer",            1, MAILER,              1, NULL },
  { "xterm",             1, "/usr/bin/X11/xterm",1, NULL },
  { "load_sensor",       1, "none",              1, NULL },
@@ -284,18 +282,9 @@ lList *sge_set_defined_defaults(lList *lpCfg)
 
       first = false;
 
-      pConf = getConfEntry("qmaster_spool_dir", conf_entries);
-      pConf->value = malloc(strlen(path_state_get_cell_root()) + strlen(SPOOL_DIR) + 
-                              strlen(QMASTER_DIR) + 3);
-      sprintf(pConf->value, "%s/%s/%s", path_state_get_cell_root(), SPOOL_DIR, QMASTER_DIR);
-
       pConf = getConfEntry("execd_spool_dir", conf_entries);
       pConf->value = malloc(strlen(path_state_get_cell_root()) + strlen(SPOOL_DIR) + 2);
       sprintf(pConf->value, "%s/%s", path_state_get_cell_root(), SPOOL_DIR);
-
-      pConf = getConfEntry("binary_path", conf_entries);
-      pConf->value = malloc(strlen(path_state_get_cell_root()) + strlen(SGE_BIN) + 2);
-      sprintf(pConf->value, "%s/%s", path_state_get_cell_root(), SGE_BIN);
    }
    else if (lpCfg)
       lFreeList(lpCfg);
@@ -370,9 +359,7 @@ lList *lpCfg
    chg_conf_val(lpCfg, "loglevel", NULL, &mconf->loglevel, TYPE_LOG);
    log_state_set_log_level(mconf->loglevel);
    
-   chg_conf_val(lpCfg, "qmaster_spool_dir", &mconf->qmaster_spool_dir, NULL, 0);
    chg_conf_val(lpCfg, "execd_spool_dir", &mconf->execd_spool_dir, NULL, 0);
-   chg_conf_val(lpCfg, "binary_path", &mconf->binary_path, NULL, 0);
    chg_conf_val(lpCfg, "mailer", &mconf->mailer, NULL, 0);
    chg_conf_val(lpCfg, "xterm", &mconf->xterm, NULL, 0);
    chg_conf_val(lpCfg, "load_sensor", &mconf->load_sensor, NULL, 0);
@@ -847,9 +834,7 @@ void sge_show_conf()
 
    DENTER(TOP_LAYER, "sge_show_conf");
 
-   DPRINTF(("conf.qmaster_spool_dir      >%s<\n", conf.qmaster_spool_dir));
    DPRINTF(("conf.execd_spool_dir        >%s<\n", conf.execd_spool_dir));
-   DPRINTF(("conf.binary_path            >%s<\n", conf.binary_path));
    DPRINTF(("conf.mailer                 >%s<\n", conf.mailer));
    DPRINTF(("conf.prolog                 >%s<\n", conf.prolog));
    DPRINTF(("conf.epilog                 >%s<\n", conf.epilog));
@@ -918,9 +903,7 @@ void sge_show_conf()
 static void clean_conf(
 sge_conf_type *conf 
 ) {
-   FREE(conf->qmaster_spool_dir);
    FREE(conf->execd_spool_dir);
-   FREE(conf->binary_path);
    FREE(conf->mailer);
    FREE(conf->xterm);
    FREE(conf->load_sensor);

@@ -202,10 +202,7 @@ proc drmaa_check {} {
          } 
          "2" { 
             # shutdown qmaster
-            get_config config_tmp
-            if { [info exists config_tmp(qmaster_spool_dir) ] == 1 } { 
-               shutdown_master_and_scheduler $CHECK_CORE_MASTER $config_tmp(qmaster_spool_dir) 
-            }
+            shutdown_master_and_scheduler $CHECK_CORE_MASTER [get_qmaster_spool_dir] 
 
             # this test must fail when qmaster is down
             set test_output [start_remote_prog $host $CHECK_USER $binary_path/test_drmaa ST_SUBMIT_WAIT ]

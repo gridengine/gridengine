@@ -281,5 +281,5 @@ spool_compare_objects(lList **answer_list, const lListElem *context,
                       const sge_object_type event_type, 
                       const lListElem *ep1, const lListElem *ep2);
 
-
+const char *get_spooling_method(void);
 #endif /* __SGE_SPOOLING_H */    

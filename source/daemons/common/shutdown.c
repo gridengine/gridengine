@@ -37,6 +37,7 @@
 #include "sge_feature.h"
 #include "shutdown.h"
 #include "setup_path.h"
+
 #include "msg_daemons_common.h"
 
 void starting_up()

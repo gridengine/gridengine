@@ -71,6 +71,7 @@
 #include "qmaster_heartbeat.h"
 #include "sge_cuser.h"
 
+#include "spool/sge_spooling.h"
 
 static void qmaster_init(char **anArgv);
 static void communication_setup(char **anArgv);
@@ -143,6 +144,17 @@ int main(int argc, char **argv)
          /* send event, even if event clients are busy */
          set_event_client_busy(NULL, 0); 
          ck_4_deliver_events(now);
+         /* shutdown spooling framework */
+         {
+            lListElem *context;
+            lList *answer_list = NULL;
+
+            context = spool_get_default_context();
+            if (context != NULL) {
+               spool_shutdown_context(&answer_list, context);
+               answer_list_output(&answer_list);
+            }
+         }
          sge_shutdown();
       }
 
@@ -214,17 +226,9 @@ static void communication_setup(char **anArgv)
       uti_state_set_qualified_hostname(host);
    }
 
-   /* JG: TODO: problem: we need a running commd to be able to read qmaster's
-    *           database (as some hostname resolving is done when checking the
-    *           read objects), but check_for_running_qmaster already needs 
-    *           the global configuration (qmaster_spool_dir).
-    *           Disable check_for_running_qmaster. This part will change
-    *           anyhow with the new communication model without commd
-    *
    if ((enrolled = check_for_running_qmaster())> 0) {
       remove_pending_messages(NULL, 0, 0, 0);
    }
-    */
 
    set_commlib_param(CL_P_COMMDHOST, 0, uti_state_get_qualified_hostname(), NULL);
    commlib_state_set_logging_function(sge_log);     

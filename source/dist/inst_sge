@@ -186,12 +186,12 @@ CheckCellDirectory()
       check_cell_error=1
    fi
 
-   if [ ! -f $COMMONDIR/configuration ]; then
-      if [ $check_cell_error = 0 ]; then
-         error_text=2
-      fi
-      check_cell_error=1
-   fi
+#   if [ ! -f $COMMONDIR/configuration ]; then
+#      if [ $check_cell_error = 0 ]; then
+#         error_text=2
+#      fi
+#      check_cell_error=1
+#   fi
 
    if [ ! -f $COMMONDIR/act_qmaster ]; then
       if [ $check_cell_error = 0 ]; then
@@ -413,6 +413,7 @@ MakeDirsMaster()
    Makedir $QSYST_CELL_VAL
    Makedir $COMMONDIR
    Makedir $QMDIR
+   Makedir $QMDIR/job_scripts
 
    $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
    $CLEAR
@@ -470,6 +471,8 @@ PrintBootstrap()
    $ECHO "spooling_method        $SPOOLING_METHOD"
    $ECHO "spooling_lib           $SPOOLING_LIB"
    $ECHO "spooling_params        $SPOOLING_ARGS"
+   $ECHO "binary_path            $QSYST_ROOT_VAL/bin"
+   $ECHO "qmaster_spool_dir      $QMDIR"
 }
 
 #-------------------------------------------------------------------------
@@ -482,9 +485,7 @@ PrintConf()
    $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
    $ECHO "#"
    $ECHO "conf_version           0"
-   $ECHO "qmaster_spool_dir      $QMDIR"
    $ECHO "execd_spool_dir        $CFG_EXE_SPOOL"
-   $ECHO "binary_path            $QSYST_ROOT_VAL/bin"
    $ECHO "mailer                 $MAILER"
    $ECHO "xterm                  $XTERM"
    $ECHO "load_sensor            none"
@@ -2057,9 +2058,23 @@ CheckCSP()
 #
 SetSpoolingOptions()
 {
-   SPOOLING_LIB=none
-   SPOOLING_METHOD=classic
-   SPOOLING_ARGS="$QSYST_ROOT_VAL/$COMMONDIR;$QMDIR"
+   $INFOTEXT -u "\nSelect spooling method"
+   SPOOLING_METHOD=`ExecuteAsAdmin $SPOOLINIT method`
+   $ECHO $SPOOLING_METHOD
+   case $SPOOLING_METHOD in 
+      classic)
+         SPOOLING_LIB=none
+         SPOOLING_ARGS="$QSYST_ROOT_VAL/$COMMONDIR;$QMDIR"
+         ;;
+      berkeleydb)
+         SPOOLING_LIB=none
+         SPOOLING_ARGS="$QMDIR/spooldb"
+         ;;
+      *)
+         $INFOTEXT -e "\nUnknown spooling method. Exit."
+         exit 1
+         ;;
+   esac
 }
 
 #--------------------------------------------------------------------------

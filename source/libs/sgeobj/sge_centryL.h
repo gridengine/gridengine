@@ -110,7 +110,7 @@ enum {
 };
 
 SLISTDEF(CE_Type, ComplexEntry)
-   SGE_STRING(CE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)          /* full name of attribute */
+   SGE_STRING(CE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_PRIMARY_KEY)          /* full name of attribute */
    SGE_STRING(CE_shortcut, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)      /* shortcut name of attribute */
    SGE_ULONG(CE_valtype, CULL_DEFAULT | CULL_SPOOL)        /* type */
    SGE_STRING(CE_stringval, CULL_DEFAULT | CULL_SPOOL | CULL_SUBLIST)     /* non overwritten value */

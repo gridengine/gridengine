@@ -214,10 +214,11 @@ int sge_setup_qmaster()
    sge_chdir_exit("/", 1);
 
    DPRINTF(("Making directories----------------------------\n"));
-   sge_mkdir(conf.qmaster_spool_dir, 0755, 1, 0);
+   sge_mkdir(bootstrap_get_qmaster_spool_dir(), 0755, 1, 0);
 
-   DPRINTF(("chdir("SFQ")----------------------------\n", conf.qmaster_spool_dir));
-   sge_chdir_exit(conf.qmaster_spool_dir, 1);
+   DPRINTF(("chdir("SFQ")----------------------------\n", 
+            bootstrap_get_qmaster_spool_dir()));
+   sge_chdir_exit(bootstrap_get_qmaster_spool_dir(), 1);
 
    /* 
    ** we are in the master spool dir now 
@@ -423,7 +424,7 @@ int sge_setup_qmaster()
       }
       
       lAppendElem(Master_Sched_Config_List, ep);
-      spool_write_object(&answer_list, spool_get_default_context(), ep, NULL, SGE_TYPE_SCHEDD_CONF);
+      spool_write_object(&answer_list, spool_get_default_context(), ep, "schedd_conf", SGE_TYPE_SCHEDD_CONF);
       answer_list_output(&answer_list);
    }
 

@@ -1,9 +1,15 @@
-SG-2003-10-09-1: Review:   Some comments on EBs' first CQ work package
+JG-2003-10-09-0: Enhancem.: Bootstrapping: Added qmaster_spool_dir and 
+                            binary_path to bootstrap file to make scripts and 
+                            shadowd work for spooling methods other than 
+                            classic. Updated testsuite to read bootstrap file 
+                            in case of 6.x systems.
 
-SG-2003-10-09-0: Bugfix.:  The share tree computed pending job tickets wrong, when
-                           the sharetree is not "balanced" (for example: only one 
-                           branch under the root has pending jobs). 
-                 Changed:  scheduler
+SG-2003-10-09-1: Review:    Some comments on EBs' first CQ work package
+
+SG-2003-10-09-0: Bugfix.:   The share tree computed pending job tickets wrong, 
+                            when the sharetree is not "balanced" (for example: 
+                            only one branch under the root has pending jobs). 
+                 Changed:   scheduler
 
 AD-2003-10-08-1: Bugfix:    Provided an initializer for several global variables.
                             Removed duplicate definitions of global variables.

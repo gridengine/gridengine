@@ -116,7 +116,8 @@ static void set_job_info(lListElem *job, const char *name, int is_qlogin, int is
 static lList *parse_qrsh_command(lList *opts_cmdline, char *name, const char **hostname, int existing_job);
 static lList *merge_and_order_options(lList **opts_defaults, lList **opts_scriptfile, lList **opts_cmdline);
 
-static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, int error); 
+static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, int error,
+                                int is_qlogin, int is_rsh, int is_qsh); 
 static void delete_job(u_long32 job_id, lList *lp);
 
 int main(int argc, char **argv);
@@ -1527,9 +1528,9 @@ char **argv
       set_job_info(job, name, is_qlogin, is_rsh, is_rlogin); 
    }
 
-   remove_unknown_opts(opts_cmdline, lGetUlong(job, JB_now), existing_job, TRUE);
-   remove_unknown_opts(opts_defaults, lGetUlong(job, JB_now), existing_job, FALSE);
-   remove_unknown_opts(opts_scriptfile, lGetUlong(job, JB_now), existing_job, FALSE);
+   remove_unknown_opts(opts_cmdline, lGetUlong(job, JB_now), existing_job, TRUE, is_qlogin, is_rsh, is_rlogin);
+   remove_unknown_opts(opts_defaults, lGetUlong(job, JB_now), existing_job, FALSE, is_qlogin, is_rsh, is_rlogin);
+   remove_unknown_opts(opts_scriptfile, lGetUlong(job, JB_now), existing_job, FALSE, is_qlogin, is_rsh, is_rlogin);
 
    opts_all = merge_and_order_options(&opts_defaults, &opts_scriptfile, &opts_cmdline);
 
@@ -1872,7 +1873,8 @@ static void delete_job(u_long32 job_id, lList *jlp)
    */
 }
 
-static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, int error)
+static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, int error,
+                                int is_qlogin, int is_rsh, int is_qsh)
 {
    lListElem *ep, *next;
 
@@ -1893,6 +1895,18 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
       cp = lGetString(ep, SPA_switch);
 
       if(cp != NULL) {
+
+         /* -hold_jid and -h are only allowed in qrsh mode */
+         if (!is_rsh && (!strcmp(cp, "-hold_jid") || !strcmp(cp, "-h"))){
+            if(error) {
+               ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
+               SGE_EXIT(EXIT_FAILURE);
+            } else {
+               lRemoveElem(lp, ep);
+               continue;
+            }
+         }
+      
          /* these are the options allowed for all flavors of interactive jobs
           * all other will be deleted
           */

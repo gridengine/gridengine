@@ -1,3 +1,9 @@
+SG-2003-12-10-0: Bugfix:    qsh and qlogin allowed -hold_jid even so it was
+                            not part of the -help output. Disabled -hold_jid
+                            and -h option for qsh and qlogin. Updated the
+                            man pages to reflect the changes.
+                 Changed:   submit.1, qsh, qlogin   
+
 SG-2003-12-08-0: Bugfix:    Storing a job template in qmon set -hold_jid to
                             the wrong value (always 0)
                  Review:    AA

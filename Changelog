@@ -33,6 +33,7 @@ AD-2003-06-25-0: Bugfix:    New implementaion of 'sge_tmpnam()'
 CR-2003-06-25-0: Bugfix:    disabled infotext error output if SGE_ROOT is
                             not set.
                  Review:    AS
+                 Bugtraq:   4885719
                  Changed:   utilib (all binaries)
 
 CR-2003-06-18-1: Testsuite: modified drmaa test

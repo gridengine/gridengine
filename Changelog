@@ -1,3 +1,5 @@
+JG-2003-12-15-0: Bugfix:    Fixed build for solaris86.
+
 EB-2003-12-15-0: Bugfix:    removed unused messages   
 
 EB-2003-12-13-0: Enhancem.: Cluster Queue (merged from CQ_BRANCH)

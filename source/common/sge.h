@@ -171,9 +171,6 @@
 #define MAN_FILE                  "managers"
 #define OP_FILE                   "operators"
 #define SEQ_NUM_FILE              "jobseqnum"
-#ifdef PW
-#define LICENSE_FILE              "license"
-#endif
 #define ALIAS_FILE                "host_aliases"
 #define ACT_QMASTER_FILE          "act_qmaster"
 #define PRODUCT_MODE_FILE         "product_mode"

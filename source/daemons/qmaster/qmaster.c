@@ -69,9 +69,6 @@
 #include "sge_ckpt_qmaster.h"
 #include "qm_name.h"
 #include "qmaster_to_execd.h"
-#ifdef PW
-#include "qmaster_license.h"
-#endif
 #include "startprog.h"
 #include "qmaster_running.h"
 #include "qmaster_heartbeat.h"
@@ -106,13 +103,6 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-#ifdef PW
-/* The license key - to be replaced when serialized */
-static char key[KEYSIZE]= { (char) 0x11, (char) 0x19, (char) 0xf8,
-                            (char) 0x3a, (char) 0x2c, (char) 0x08,
-                            (char) 0x19, (char) 0x0b
-                          };
-#endif
 #ifdef QIDL
 static pthread_t        corba_thread;
 #endif
@@ -226,19 +216,9 @@ char **argv
 #endif
    int enrolled, rcv_timeout;
    time_t now, next_flush;
-#ifdef PW   
-   char pw[PWSIZE];
-   int pw_print;
-   char *pw_file;
-   int license_invalid;
-   int ckpt_mode, pw_ckpt;
-#endif   
    lList *ref_list = NULL, *alp = NULL, *pcmdline = NULL;
    lListElem *aep;
    u_long32 help = 0;
-#ifdef PW   
-   int mode_guess;
-#endif
    const char *s;
 
    DENTER_MAIN(TOP_LAYER, "qmaster");
@@ -251,13 +231,6 @@ char **argv
                          (textdomain_func_type)     textdomain);
    sge_init_language(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
-#ifdef PW 
-   if ((mode_guess = product_mode_guess(argv[0])) == M_INVALID) {
-      fprintf(stderr, MSG_STARTUP_PROGRAMCALLEDWITHINVALIDNAME_S, argv[0] ? argv[0] : MSG_SMALLNULL);
-      exit(1);
-   } 
-
-#endif   
    /* This needs a better solution */
    umask(022);
    
@@ -332,35 +305,6 @@ New behaviour:
    sge_setup_sig_handlers(QMASTER);
    
    lInit(nmv);
-
-#ifdef PW
-   /*
-   ** show key
-   */
-   if ((argc == 2) && !strcmp(argv[1],"-sk")) {
-      print_area(NULL, "", key, KEYSIZE);
-      SGE_EXIT(0);
-   }
-
-   /*
-   ** show-license
-   */
-   if ((argc == 2 || argc == 3) && !strcmp(argv[1],"-show-license")) {
-      pw_print = 1;
-      pw_file = argv[2];
-   }
-   else {
-      pw_print = 0;
-      pw_file = NULL;
-   }
-
-   /* Exits if license is only printed or invalid */
-   check_license_info(sge_get_gmt(), pw, key, pw_print, pw_file);
-   if (get_product_mode() != mode_guess) {
-      CRITICAL((SGE_EVENT, MSG_STARTUP_PROGRAMDOESNOTMATCHPRODUCTMODE_S, argv[0]));
-      SGE_EXIT(1);
-   }      
-#endif
 
    alp = sge_parse_cmdline_qmaster(&argv[1], &pcmdline);
    if(alp) {
@@ -459,16 +403,6 @@ New behaviour:
    /* Make essential non spool directories: $CELL/common/... */
    makedirs();
 
-#ifdef PW
-   /* check here ckpt sge_setup_qmaster reads in the lists first */
-   ckpt_mode = set_licensed_feature("ckpt");
-   pw_ckpt = check_ckpt_lic(ckpt_mode, 1);
-   
-   if (pw_ckpt) {
-      SGE_EXIT(1);
-   }
-#endif
-
    /* Now we are in the spool directory, we may create the lock file in case of exit */
    in_spool_dir = 1;
    
@@ -524,12 +458,6 @@ New behaviour:
       now = (time_t) sge_get_gmt();
 
       increment_heartbeat(now);
-
-#ifdef PW
-      license_invalid = check_license_info(now, pw, key, 0, NULL);
-        
-      shut_me_down = shut_me_down || license_invalid;
-#endif
 
       if (dead_children) {
          /* do a wait to our children so that os can clean up */

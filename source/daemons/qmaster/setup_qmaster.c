@@ -119,9 +119,6 @@ int sge_setup_qmaster()
    lListElem *lep = NULL;
    char err_str[1024];
    u_long32 state;
-#ifdef PW   
-   extern u_long32 pw_num_submit;
-#endif   
    extern int new_config;
    lListElem *spooling_context = NULL;
    lList *answer_list = NULL;
@@ -285,23 +282,6 @@ int sge_setup_qmaster()
          return -1;
       }
    }
-
-#ifdef PW
-   /* check for licensed # of submit hosts */
-   if ((ret=sge_count_uniq_hosts(Master_Adminhost_List, 
-         Master_Submithost_List)) < 0) {
-      /* s.th.'s wrong, but we can't blame it on the user so we
-       * keep truckin'
-       */
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTCOUNT_HOSTS_S, SGE_FUNC));
-   } else {
-      if (pw_num_submit < ret) {
-         /* we've a license violation */
-         ERROR((SGE_EVENT, MSG_SGETEXT_TOOFEWSUBMHLIC_II, (int) pw_num_submit, ret));
-         return -1;
-      }
-   }
-#endif
 
    DPRINTF(("manager_list----------------------------\n"));
    spool_read_list(&answer_list, spooling_context, &Master_Manager_List, SGE_TYPE_MANAGER);

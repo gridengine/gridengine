@@ -1,3 +1,12 @@
+AD-2003-08-13-0: Cleanup:   Removed '#ifdef PW' code. 
+                 Changed:   ./common/sge.h
+                            ./sgeobj/sge_ckpt.c
+                            ./qmaster/qmaster.c
+                            ./qmaster/setup_qmaster.c
+                            ./qmaster/sge_host_qmaster.
+                            ./execd/execd.c
+                 Review:    AA
+
 AD-2003-08-08-0: Bugfix:    Darwin: use 'pid_t' for typedef of 'JobID_t'
                  Changed:   sgedefs.h
                  Review:    

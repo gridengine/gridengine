@@ -274,22 +274,6 @@ int ckpt_validate(lListElem *this_elem, lList **alpp)
          DEXIT;
          return STATUS_EEXIST;
       }
-
-#ifdef PW
-      /* license check */
-      if (!set_licensed_feature("ckpt")) {
-         if (!strcasecmp(interface, "HIBERNATOR") ||
-             !strcasecmp(interface, "CPR") ||
-             !strcasecmp(interface, "APPLICATION-LEVEL") ||
-             !strcasecmp(interface, "CRAY-CKPT")) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_NO_CKPT_LIC));
-            answer_list_add(alpp, SGE_EVENT, 
-                            STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EEXIST;
-         }
-      }
-#endif
    }
 
    for (i=0; ckpt_commands[i].nm!=NoName; i++) {

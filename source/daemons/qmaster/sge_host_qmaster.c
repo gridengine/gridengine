@@ -373,30 +373,6 @@ int sub_command
 
    nm = object->key_nm;
 
-#ifdef PW
-   /* license checking when adding submit hosts */
-   if (add && nm == SH_name) {
-      int ret;
-      extern u_long32 pw_num_submit;
-
-      if ((ret=sge_count_uniq_hosts(Master_Adminhost_List,
-            Master_Submithost_List)) < 0) {
-         /* s.th.'s wrong, but we can't blame it on the user so we
-          * keep truckin'
-          */
-         ERROR((SGE_EVENT, MSG_SGETEXT_CANTCOUNT_HOSTS_S, SGE_FUNC));
-      } else {
-         if (pw_num_submit < ret+1) {
-            /* we've a license violation */
-            ERROR((SGE_EVENT, MSG_SGETEXT_TOOFEWSUBMHLIC_II, (int) pw_num_submit, ret+1));
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESUBHLIC, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_ESUBHLIC;
-         }
-      }
-   }
-#endif   
-
    /* ---- [EAS]H_name */
    if (add) {
       if (attr_mod_str(alpp, ep, new_host, nm, object->object_name)) {

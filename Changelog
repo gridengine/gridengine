@@ -1,3 +1,10 @@
+SG-2004-03-02-0: Bugfix:    - fixed build for glinux
+                            - the clients print an error message in case of a
+                              bad bootstrap file (Part 1). A better error
+                              message is coming.
+                 Changed:   all, scheduler
+                 Review:    AH, EB 
+
 DT-2004-03-02-2: Bugfix:    o Fixed broken build
                             o Added tmpdir to queue instance flatfile spooling
                  Changed:   Flatfile spooling, libsched

@@ -84,8 +84,14 @@ u_long32 sge_formal_prog_name,
 lList **alpp 
 ) {
    dstring error_dstring = DSTRING_INIT;
+   bool is_exit_on_error = uti_state_get_exit_on_error();
+   int is_log_state_set_log_gui = log_state_get_log_gui();
 
    DENTER(TOP_LAYER, "sge_setup");
+
+   if (is_exit_on_error) {
+      log_state_set_log_gui(true);
+   }
 
    /*
     * for setuid clients we must seteuid to the users uid
@@ -95,12 +101,16 @@ lList **alpp
     */
    if (QMASTER != sge_formal_prog_name) {
       if (sge_run_as_user()) {   
-         CRITICAL((SGE_EVENT, MSG_SYSTEM_CANTRUNASCALLINGUSER));
-         if (!uti_state_get_exit_on_error()) {
+         if (alpp == NULL || is_exit_on_error) {
+            CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
+         }
+
+         if (!is_exit_on_error) {
             answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
+         
          SGE_EXIT(1);
       }   
    }
@@ -120,14 +130,14 @@ lList **alpp
    }
 
    if (!sge_bootstrap(&error_dstring)) {
-      if (alpp == NULL) {
+      if (alpp == NULL || is_exit_on_error) {
          CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
       } else {
          answer_list_add(alpp, sge_dstring_get_string(&error_dstring), 
                          STATUS_NOCONFIG, ANSWER_QUALITY_ERROR);
       }
       sge_dstring_free(&error_dstring);
-      if (!uti_state_get_exit_on_error()) {
+      if (!is_exit_on_error) {
          DEXIT;
          return -1;
       }
@@ -135,14 +145,15 @@ lList **alpp
    }
 
    if (feature_initialize_from_string(bootstrap_get_security_mode())) {
-      if (alpp == NULL) {
+      if (alpp == NULL || is_exit_on_error) {
          CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
-      } else {
+      } 
+      else {
          answer_list_add(alpp, sge_dstring_get_string(&error_dstring), 
                          STATUS_NOCONFIG, ANSWER_QUALITY_ERROR);
       }
       sge_dstring_free(&error_dstring);
-      if (!uti_state_get_exit_on_error()) {
+      if (!is_exit_on_error) {
          DEXIT;
          return -1;
       }
@@ -151,7 +162,7 @@ lList **alpp
 
    /* qmaster and shadowd should not fail on nonexistant act_qmaster file */
    if (!(uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == SHADOWD) && !sge_get_master(1)) {
-      if (!uti_state_get_exit_on_error()) {
+      if (!is_exit_on_error) {
          if (alpp) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
                         path_state_get_act_qmaster_file()));
@@ -159,6 +170,9 @@ lList **alpp
          }
          DEXIT;
          return -1;
+      }
+      else {
+         CRITICAL((SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S, path_state_get_act_qmaster_file()));   
       }
       SGE_EXIT(1);
    }
@@ -189,6 +203,9 @@ lList **alpp
       DPRINTF((MSG_GDI_SETCOMPRESSIONTHRESHOLD_D , u32c(compression_threshold)));
    }
 #endif
+
+   
+   log_state_set_log_gui(is_log_state_set_log_gui);
 
    DEXIT;
    return 0;

@@ -1076,7 +1076,7 @@ bool dont_reserve /* don't try to find a reservation assignment */
 static bool job_get_duration(u_long32 *duration, const lListElem *jep)
 {
    lListElem *ep;
-   double d_ret, d_tmp;
+   double d_ret = 0, d_tmp;
    bool got_duration = false;
    char error_str[1024];
    const char *s;
@@ -1110,10 +1110,10 @@ static bool job_get_duration(u_long32 *duration, const lListElem *jep)
    }
 
    if (got_duration) {
-      if (d_tmp > (double)U_LONG32_MAX)
+      if (d_ret > (double)U_LONG32_MAX)
          *duration = U_LONG32_MAX;
       else
-         *duration = d_tmp;
+         *duration = d_ret;
       DEXIT;
       return true;
    } 

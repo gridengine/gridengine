@@ -240,7 +240,7 @@ u_short *compressed
    ** available are krb_receive_message and sec_receive_message
    **
    ** !!! this function returns if the corresponding feature is enabled
-   ** !!! otherwise send_message() is called
+   ** !!! otherwise receive_message() is called
    */
 #ifdef SECURE   
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {

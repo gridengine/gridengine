@@ -252,7 +252,7 @@ char *name
 
 /**********************************************************************
   delete entry from the commproc list with cop->fd == fd
-  returns TRUE if there was a commproc, FALSE otherwise
+  returns true if there was a commproc, false otherwise
  **********************************************************************/
 int delete_commproc_using_fd(
 int fd 

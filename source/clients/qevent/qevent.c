@@ -54,7 +54,7 @@
 u_long Global_jobs_running = 0;
 u_long Global_jobs_registered = 0;
 
-int print_event(sge_event_type type, sge_event_action action, 
+bool print_event(sge_event_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
 {
    char buffer[1024];
@@ -65,10 +65,10 @@ int print_event(sge_event_type type, sge_event_action action,
    DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
    /* create a callback error to test error handling */
    if(type == SGE_EMT_GLOBAL_CONFIG) {
-      return FALSE;
+      return false;
    }
    
-   return TRUE;
+   return true;
 }
 
 bool print_jatask_event(sge_event_type type, sge_event_action action, 
@@ -139,10 +139,10 @@ bool print_jatask_event(sge_event_type type, sge_event_action action,
    }
    /* create a callback error to test error handling */
    if(type == SGE_EMT_GLOBAL_CONFIG) {
-      return FALSE;
+      return false;
    }
    
-   return TRUE;
+   return true;
 }
 
 

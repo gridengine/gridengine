@@ -833,7 +833,9 @@ static Boolean setCE_TypeValues(
 lListElem *ep,
 String *ce_entry 
 ) {
-   int i, type, requestable = 0, forced = 0, relop;
+   int i, type, relop; 
+   bool forced = false;
+   bool requestable = false;
    double tmp_double;
 
    DENTER(GUI_LAYER, "setCE_TypeValues");
@@ -896,14 +898,14 @@ String *ce_entry
 
    if (!strcasecmp(ce_entry[CE_REQUEST], "y") 
             || !strcasecmp(ce_entry[CE_REQUEST], "yes"))
-      requestable = TRUE;
+      requestable = true;
    else if (!strcasecmp(ce_entry[CE_REQUEST], "n") 
             || !strcasecmp(ce_entry[CE_REQUEST], "no"))
-      requestable = FALSE;
+      requestable = false;
    else if (!strcasecmp(ce_entry[CE_REQUEST], "f") 
             || !strcasecmp(ce_entry[CE_REQUEST], "forced")) {
-      forced = TRUE;
-      requestable = TRUE;
+      forced = true;
+      requestable = true;
    }
    else {
       DPRINTF(("invalid requestable entry: %s\n", ce_entry[CE_REQUEST]));
@@ -913,10 +915,10 @@ String *ce_entry
 
    if (!strcasecmp(ce_entry[CE_CONSUMABLE], "y") 
             || !strcasecmp(ce_entry[CE_CONSUMABLE], "yes"))
-      lSetBool(ep, CE_consumable, TRUE);
+      lSetBool(ep, CE_consumable, true);
    else if (!strcasecmp(ce_entry[CE_CONSUMABLE], "n") 
             || !strcasecmp(ce_entry[CE_CONSUMABLE], "no"))
-      lSetBool(ep, CE_consumable, FALSE);
+      lSetBool(ep, CE_consumable, false);
 
    lSetString(ep, CE_default, ce_entry[CE_DEFAULT] ? ce_entry[CE_DEFAULT]: "");
    

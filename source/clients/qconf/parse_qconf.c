@@ -244,7 +244,7 @@ static int show_user_map_entry(char *user);
 #endif
 
 static void show_gdi_request_answer(lList *alp);
-static int show_host_group_entry(char *group);
+static bool show_host_group_entry(char *group);
 /* ------------------------------------------------------------- */
 static void parse_name_list_to_cull(char *name, lList **lpp, lDescr *dp, int nm, char *s);
 static int add_host_of_type(lList *arglp, u_long32 target);
@@ -967,7 +967,7 @@ DPRINTF(("ep: %s %s\n",
                                                    NULL)) == NULL) { 
             answer_list_print_err_warn(&answer_list, NULL, NULL);
 #else
-         if (cull_write_qconf(0, FALSE, NULL, NULL, fname, ep)) {
+         if (cull_write_qconf(0, false, NULL, NULL, fname, ep)) {
 #endif
             if (sge_error_and_exit(MSG_QUEUE_UNABLETOWRITETEMPLATEQUEUE))
                continue;
@@ -2347,7 +2347,7 @@ DPRINTF(("ep: %s %s\n",
                                                    NULL)) == NULL) { 
             answer_list_print_err_warn(&answer_list, NULL, NULL);
 #else
-         if (cull_write_qconf(0, FALSE, NULL, NULL, fname, ep)) {
+         if (cull_write_qconf(0, false, NULL, NULL, fname, ep)) {
 #endif
             if (sge_error_and_exit(MSG_QUEUE_UNABLETOWRITEOLDQUEUE))
                continue;
@@ -6319,7 +6319,7 @@ u_long32 flags
    what = lFreeWhat(what);
    where = lFreeWhere(where);
 
-   failed = FALSE;
+   failed = false;
    ep = lFirst(alp);
    answer_exit_if_not_recoverable(ep);
    if (answer_get_status(ep) != STATUS_OK) {
@@ -6370,7 +6370,7 @@ u_long32 flags
       
       if (status != 0) {
          unlink(tmpname);
-         failed = TRUE;
+         failed = true;
       }
       if (status < 0) {
          fprintf(stderr, MSG_PARSE_EDITFAILED);
@@ -6385,7 +6385,7 @@ u_long32 flags
       if (!(ep = read_configuration(tmpname, cfn, 0L))) {
          fprintf(stderr, MSG_ANSWER_ERRORREADINGTEMPFILE);
          unlink(tmpname);
-         failed = TRUE;
+         failed = true;
          DEXIT;
          return failed;
       }
@@ -6395,7 +6395,7 @@ u_long32 flags
       ep = read_configuration(filename, cfn, 0L);
       if (!ep) {
          fprintf(stderr, MSG_ANSWER_ERRORREADINGCONFIGFROMFILEX_S, filename);
-         failed = TRUE;
+         failed = true;
          DEXIT;
          return failed;
       }      
@@ -6451,7 +6451,7 @@ const char *user
       return -1;
    }
    perm_return = sge_gdi_check_permission(&alp, MANAGER_CHECK);
-   if (perm_return == TRUE) {
+   if (perm_return == true) {
      /* user is manager */
      if (alp != NULL) {
         lFreeList(alp);
@@ -6850,7 +6850,7 @@ const char *group
 *     show_user_map_entry() -- print user map entries of cluster user 
 *
 *  SYNOPSIS
-*     static int show_user_map_entry(char *user);
+*     static bool show_user_map_entry(char *user);
 *
 *  FUNCTION
 *     print current user mapping entries to stdout. The parameter
@@ -6860,10 +6860,10 @@ const char *group
 *     char* user - name of the cluster user to show the mapping
 *
 *  RESULT
-*     int TRUE on success, FALSE on error
+*     bool true on success, false on error
 ******************************************************************************/
 #ifndef __SGE_NO_USERMAPPING__
-static int show_user_map_entry(char *user)
+static bool show_user_map_entry(char *user)
 { 
     lList *umlp = NULL;
     lListElem *ep = NULL;
@@ -6872,7 +6872,7 @@ static int show_user_map_entry(char *user)
   
     if (user == NULL) {
        DEXIT;
-       return FALSE;
+       return false;
     }
       
     umlp = get_user_mapping_list_from_master(user);   
@@ -6881,7 +6881,7 @@ static int show_user_map_entry(char *user)
       fprintf(stderr, MSG_ERROR_USERXNOTDEFINED_S , user);
       lFreeList(umlp);
       DEXIT;
-      return FALSE; 
+      return false; 
     }
 
     for_each(ep, umlp) {
@@ -6891,7 +6891,7 @@ static int show_user_map_entry(char *user)
     lFreeList(umlp);
 
     DEXIT;
-    return TRUE; 
+    return true; 
 }
 #endif
 
@@ -6900,7 +6900,7 @@ static int show_user_map_entry(char *user)
 *     show_host_group_entry() -- print houst group to stdout 
 *
 *  SYNOPSIS
-*     static int show_host_group_entry(char* group);
+*     static bool show_host_group_entry(char* group);
 *
 *  FUNCTION
 *     This function uses gdi request to get group from qmaster and
@@ -6909,7 +6909,7 @@ static int show_user_map_entry(char *user)
 *  INPUTS
 *     char* group - name of group
 ******************************************************************************/
-static int show_host_group_entry(char *group) 
+static bool show_host_group_entry(char *group) 
 { 
     lList *grp_lp = NULL;
     lListElem *ep = NULL;
@@ -6918,7 +6918,7 @@ static int show_host_group_entry(char *group)
   
     if (group == NULL) {
        DEXIT;
-       return FALSE;
+       return false;
     }
       
     grp_lp = get_host_group_list_from_master(group);   
@@ -6927,7 +6927,7 @@ static int show_host_group_entry(char *group)
       fprintf(stderr, MSG_ERROR_GROUPXNOTDEFINED_S , group );
       lFreeList(grp_lp);
       DEXIT;
-      return FALSE; 
+      return false; 
     }
 
     for_each(ep, grp_lp) {
@@ -6937,5 +6937,5 @@ static int show_host_group_entry(char *group)
     lFreeList(grp_lp);
 
     DEXIT;
-    return TRUE; 
+    return true; 
 }

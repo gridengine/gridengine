@@ -32,9 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
-int check_for_running_qmaster(void);
+bool check_for_running_qmaster(void);
 
 #endif /* __QMASTER_RUNNING_H */
 

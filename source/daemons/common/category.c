@@ -140,7 +140,7 @@ lList *acl_list
          DEXIT;
          goto ERROR;
       }
-      lSetInt(ep, SPA_argval_lIntT, TRUE);
+      lSetInt(ep, SPA_argval_lIntT, true);
    }
       
    /*

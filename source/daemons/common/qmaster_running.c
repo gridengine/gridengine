@@ -52,7 +52,7 @@
 #include "sge_hostname.h"
 
 #define ENROLL_ERROR_DO_RETRY -50
-static int qmaster_running(char *, int *);
+static int qmaster_running(char *, bool *);
 
 /*-----------------------------------------------------------------------
  * qmaster_running
@@ -67,7 +67,7 @@ static int qmaster_running(char *, int *);
  *-----------------------------------------------------------------------*/
 static int qmaster_running(
 char *err_str,
-int *enrolled 
+bool *enrolled 
 ) {
    char master[MAXHOSTLEN];
    pid_t pid;
@@ -77,7 +77,7 @@ int *enrolled
 
    DENTER(TOP_LAYER, "qmaster_running");
 
-   *enrolled = FALSE;
+   *enrolled = false;
 
    if (get_qm_name(master, path.act_qmaster_file, err_str)) {
       DEXIT;
@@ -194,10 +194,11 @@ int *enrolled
  *         1 if we are enrolled (since we found a commd on local host)
  *         0 we didn't check yet for a commd on local host
  *-----------------------------------------------------------------------*/
-int check_for_running_qmaster()
+bool check_for_running_qmaster()
 {
    char err_str[512];
-   int ret, retry, enrolled;
+   int ret, retry;
+   bool enrolled;
 
    DENTER(TOP_LAYER, "check_for_running_qmaster");
 

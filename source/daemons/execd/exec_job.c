@@ -1073,7 +1073,7 @@ lWriteListTo(environmentList, stderr);
       if(JOB_TYPE_IS_QSH(jb_now)) {
          lList *answer_list = NULL;
 
-         if(job_check_qsh_display(jep, &answer_list, FALSE) == STATUS_OK) {
+         if(job_check_qsh_display(jep, &answer_list, false) == STATUS_OK) {
             env = lGetElemStr(lGetList(jep, JB_env_list), VA_variable, "DISPLAY");
             fprintf(fp, "display=%s\n", lGetString(env, VA_value));
          } else {

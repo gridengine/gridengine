@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
    int cmd;
    int wait;
    unsigned long status = 0;
-   int have_master_privileges;
+   bool have_master_privileges;
    int cl_err = 0;
 
    DENTER_MAIN(TOP_LAYER, "qdel");
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
    }
 
    /* Has the user the permission to use the the '-f' (forced) flag */
-   have_master_privileges = FALSE;
+   have_master_privileges = false;
    if (force == 1) {
       have_master_privileges = sge_gdi_check_permission(&alp, MANAGER_CHECK);
       if (have_master_privileges == -10) {
@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
        *         -> normal deletion
        */
       if (force == 1) {
-         if (have_master_privileges == TRUE) {
+         if (have_master_privileges == true) {
             delete_mode = 1;
          } else {
             delete_mode = 7;

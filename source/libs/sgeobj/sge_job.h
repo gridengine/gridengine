@@ -228,7 +228,7 @@ void job_add_parent_id_to_context(lListElem *job);
 
 int job_check_qsh_display(const lListElem *job, 
                           lList **answer_list, 
-                          int output_warning);
+                          bool output_warning);
 
 int job_check_owner(const char *user_name, u_long32 job_id);
 

@@ -201,7 +201,7 @@ int flags
    */
    if ((ul = lGetBool(job, JB_merge_stderr))) {
       ep_opt = sge_add_arg(pcmdline, j_OPT, lIntT, "-j", "y");
-      lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
+      lSetInt(ep_opt, SPA_argval_lIntT, true);
    }
    
    /*

@@ -451,7 +451,7 @@ New behaviour:
    rand_error = 1;
 #endif
 
-   while (TRUE) {
+   while (true) {
 
       now = (time_t) sge_get_gmt();
 
@@ -1016,7 +1016,7 @@ char *filename;
 
       /* -nostart-commd */
       if(parse_flag(ppcmdline, "-nostart-commd", &alp, &flag)) {
-         start_commd = FALSE;
+         start_commd = false;
          continue;
       }
 

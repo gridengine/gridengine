@@ -133,7 +133,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
    while (JOB_TYPE_IS_QRSH(job_now)
           && (ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
-      lSetBool(*pjob, JB_notify, TRUE);
+      lSetBool(*pjob, JB_notify, true);
       lRemoveElem(cmdline, ep);
    }  
 
@@ -461,7 +461,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-verify"))) {
-      lSetUlong(*pjob, JB_verify, TRUE);
+      lSetUlong(*pjob, JB_verify, true);
       lRemoveElem(cmdline, ep);
    }
 
@@ -516,7 +516,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
     * only needed for qsh 
     */
    if(uti_state_get_mewho() == QSH) {
-      job_check_qsh_display(*pjob, &answer, FALSE);
+      job_check_qsh_display(*pjob, &answer, false);
    }
 
    DEXIT;

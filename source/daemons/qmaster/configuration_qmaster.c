@@ -182,7 +182,7 @@ char *rhost
    lListElem *ep;
    const char *config_name;
    const char *cp;
-   int added;
+   bool added;
    char fname[SGE_PATH_MAX];
    char real_fname[SGE_PATH_MAX];
    u_long32 old_conf_version = 0;
@@ -216,13 +216,13 @@ char *rhost
 
    if (!(ep = lGetElemHost(Master_Config_List, CONF_hname, config_name))) {
       DTRACE;
-      added = TRUE; 
+      added = true; 
    }
    else {
-      added = FALSE;
+      added = false;
    }
 
-   if (added == FALSE) {
+   if (added == false) {
       /* check for unchangeable parameters */
       lList *oldEntryList  = NULL;
       lList *newEntryList  = NULL;
@@ -274,7 +274,7 @@ char *rhost
       }  /* while */
    }
 
-   if (added == FALSE) {
+   if (added == false) {
       const char *const name = "reschedule_unknown";
       lListElem *old_reschedule_unknown = NULL;
       lListElem *new_reschedule_unknown = NULL;
@@ -296,7 +296,7 @@ char *rhost
 
    ep = lCopyElem(confp);
    lAppendElem(Master_Config_List, ep);
-   if (added == FALSE) {
+   if (added == false) {
       lSetUlong(ep, CONF_version, old_conf_version + 1);
       lSetUlong(confp, CONF_version, old_conf_version + 1);
    }

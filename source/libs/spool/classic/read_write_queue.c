@@ -591,7 +591,7 @@ _Insight_set_option("unsuppress", "PARM_NULL");
 
 int cull_write_qconf(
 int spool,
-int write_2_stdout,
+bool write_2_stdout,
 const char *file_prefix,
 const char *file_name,
 char *rfile,            /* has to be allocated by caller; can be NULL */

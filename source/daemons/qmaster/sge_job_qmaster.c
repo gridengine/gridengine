@@ -180,7 +180,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    /* check for qsh without DISPLAY set */
    if(JOB_TYPE_IS_QSH(lGetUlong(jep, JB_type))) {
-      int ret = job_check_qsh_display(jep, alpp, FALSE);
+      int ret = job_check_qsh_display(jep, alpp, false);
       if(ret != STATUS_OK) {
          DEXIT;
          return ret;
@@ -2725,7 +2725,7 @@ int *trigger
       
       /* check for qsh without DISPLAY set */
       if(JOB_TYPE_IS_QSH(lGetUlong(new_job, JB_type))) {
-         int ret = job_check_qsh_display(jep, alpp, FALSE);
+         int ret = job_check_qsh_display(jep, alpp, false);
          if(ret != STATUS_OK) {
             DEXIT;
             return ret;

@@ -2041,7 +2041,7 @@ void job_add_parent_id_to_context(lListElem *job)
 *
 *  SYNOPSIS
 *     int job_check_qsh_display(const lListElem *job, lList **answer_list, 
-*                               int output_warning) 
+*                               bool output_warning) 
 *
 *  FUNCTION
 *     Checks the DISPLAY variable for qsh jobs:
@@ -2057,7 +2057,7 @@ void job_add_parent_id_to_context(lListElem *job)
 *     const lListElem *job - the job to check
 *     lList **answer_list  - answer list to take error messages, if NULL, no 
 *                            answer is passed back.
-*     int output_warning   - output error messages to stderr?
+*     bool output_warning  - output error messages to stderr?
 *
 *  RESULT
 *     int - STATUS_OK, if function call succeeds,
@@ -2068,7 +2068,8 @@ void job_add_parent_id_to_context(lListElem *job)
 *     functions job_set_qsh_display and job_get_qsh_display would
 *     be usefull.
 ******************************************************************************/
-int job_check_qsh_display(const lListElem *job, lList **answer_list, int output_warning)
+int job_check_qsh_display(const lListElem *job, lList **answer_list, 
+                          bool output_warning)
 {
    const lListElem *display_ep;
    const char *display;

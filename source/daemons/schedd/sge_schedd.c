@@ -110,7 +110,7 @@ int main(
 int argc,
 char *argv[] 
 ) {
-   int check_qmaster;
+   bool check_qmaster;
    const char *master_host;
    int ret;
    char initial_qmaster_host[1024];
@@ -212,7 +212,7 @@ char *argv[]
       }
 
       if(sge_mirror_process_events() == SGE_EM_TIMEOUT) {
-         check_qmaster = TRUE;
+         check_qmaster = true;
          continue;
       }
 
@@ -222,7 +222,7 @@ char *argv[]
        * in this case do not start a scheduling run
        */
       if(ec_need_new_registration()) {
-         check_qmaster = TRUE;
+         check_qmaster = true;
          continue;
       }
 

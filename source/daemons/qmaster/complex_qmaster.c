@@ -221,9 +221,9 @@ int sub_command
             lSetUlong(cep, CE_valtype, TYPE_INT);
             lSetString(cep, CE_stringval, "0");
             lSetUlong(cep, CE_relop, CMPLXLE_OP);
-            lSetBool(cep, CE_request, TRUE);
-            lSetBool(cep, CE_forced, FALSE);
-            lSetBool(cep, CE_consumable, TRUE);
+            lSetBool(cep, CE_request, true);
+            lSetBool(cep, CE_forced, false);
+            lSetBool(cep, CE_consumable, true);
             lSetString(cep, CE_default, "1");
          }
 

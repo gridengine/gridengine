@@ -207,7 +207,7 @@ int sub_command
                        |
                        *----STR  (SGE_STRING)  String list (ST_Type)
    */
-   if (sge_verifyMappingEntry(alpp, Master_Host_Group_List ,ep, clusterUser,Master_Usermapping_Entry_List) != TRUE) {
+   if (sge_verifyMappingEntry(alpp, Master_Host_Group_List ,ep, clusterUser,Master_Usermapping_Entry_List) != true) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -227,7 +227,7 @@ int sub_command
         INFO((SGE_EVENT,MSG_UM_EXIMINEMAPFORX_S, clusterUser ));
         answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
 
-        if (sge_addMappingEntry(alpp, Master_Host_Group_List, mapList , actMapName , actHostList,FALSE) == FALSE) 
+        if (sge_addMappingEntry(alpp, Master_Host_Group_List, mapList , actMapName , actHostList, false) == false) 
         {
            if (actMapName == NULL) {
              actMapName = "unknown";
@@ -242,7 +242,7 @@ int sub_command
    }
 
    /* remove deleted entries in mapList */
-   if ( sge_removeOverstock(alpp,modp, ep) == TRUE) {
+   if ( sge_removeOverstock(alpp,modp, ep) == true) {
       DPRINTF(("removed some entr(y/ies)\n"));
    }
    DEXIT;

@@ -155,10 +155,9 @@ lListElem *job
 }
 
 /*-------------------------------------------------------------------------*/
-int sge_is_job_category_rejected_(
-lRef cat 
-) {
-   return lGetUlong(cat,  CT_rejected)?TRUE:FALSE;
+bool sge_is_job_category_rejected_(lRef cat) 
+{
+   return lGetUlong(cat,  CT_rejected) ? true : false;
 }
 
 /*-------------------------------------------------------------------------*/

@@ -300,7 +300,7 @@ char **argv
    in_main_loop = 1;
 
    /***** MAIN LOOP *****/
-   while (TRUE) {
+   while (true) {
       /* use auto acknowlege feature of dispatcher for the following
          inbound messages */
       static int tagarray[] = { TAG_SIGJOB, TAG_SIGQUEUE, TAG_NONE };
@@ -385,7 +385,7 @@ static void execd_register()
    lSetUlong(hep, EH_featureset_id, feature_get_active_featureset_id());
    lAppendElem(hlp, hep);
 
-   while (TRUE) {
+   while (true) {
       lListElem *aep;
       DPRINTF(("*****Checking In With qmaster*****\n"));
 
@@ -514,16 +514,14 @@ lList *alp = NULL;
  * sge_parse_execd
  *
  *-------------------------------------------------------------*/
-static lList *sge_parse_execd(
-lList **ppcmdline,
-lList **ppreflist,
-u_long32 *help 
-) {
-stringT str;
-lList *alp = NULL;
-int usageshowed = 0;
-u_long32 flag;
-char *filename;
+static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist, 
+                              u_long32 *help) 
+{
+   stringT str;
+   lList *alp = NULL;
+   int usageshowed = 0;
+   u_long32 flag;
+   char *filename;
 
    DENTER(TOP_LAYER, "sge_parse_execd");
 
@@ -542,7 +540,7 @@ char *filename;
 
       /* -nostart-commd */
       if(parse_flag(ppcmdline, "-nostart-commd", &alp, &flag)) {
-         start_commd = FALSE;
+         start_commd = false;
          continue;
       }
 

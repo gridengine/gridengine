@@ -1745,8 +1745,8 @@ dstring *sb
    lCondition *where = NULL, *newcp = NULL;
    lEnumeration* what = NULL;
    lList* alp = NULL;
-   int schedd_info = TRUE;
-   int jobs_exist = TRUE;
+   bool schedd_info = true;
+   bool jobs_exist = true;
    int line_separator=0;
    lListElem* mes;
  
@@ -1764,7 +1764,7 @@ dstring *sb
             answer_list_add(alpp, lGetString(aep, AN_text),
                   lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
          }
-         schedd_info = FALSE;
+         schedd_info = false;
       }
    }
    alp = lFreeList(alp);
@@ -1793,7 +1793,7 @@ dstring *sb
             answer_list_add(alpp, lGetString(aep, AN_text),
                   lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
          }
-         jobs_exist = FALSE;
+         jobs_exist = false;
       }
    }
    lFreeList(alp);
@@ -1862,7 +1862,7 @@ dstring *sb
    lListElem* aep = NULL;
    lEnumeration* what = NULL;
    lList* alp = NULL;
-   int schedd_info = TRUE;
+   bool schedd_info = true;
    lListElem* mes;
    int initialized = 0;
    u_long32 last_jid = 0;
@@ -1888,7 +1888,7 @@ dstring *sb
             answer_list_add(alpp, lGetString(aep, AN_text),
                   lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
          }
-         schedd_info = FALSE;
+         schedd_info = false;
       }
    }
    lFreeList(alp);

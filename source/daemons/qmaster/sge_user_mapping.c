@@ -58,32 +58,36 @@
 
 #ifndef __SGE_NO_USERMAPPING__
 
-static int   sge_isGuiltyMappingEntry(lList *hostGroupList, lList *mapList, char *foreignName, char *hostName);
-static char* sge_malloc_map_in_going_username(lList *hostGroupList, lList *userMappingEntryList, char *foreignName, char *hostName);
+static bool 
+sge_isGuiltyMappingEntry(lList *hostGroupList, lList *mapList, 
+                         char *foreignName, char *hostName);
 
-static int   sge_addHostToHostList(lList* hostGroupList, lList* stringList, const char* newHostName, int doResolving);
+static char * 
+sge_malloc_map_in_going_username(lList *hostGroupList, 
+                                 lList *userMappingEntryList, 
+                                 char *foreignName, char *hostName);
 
+static bool 
+sge_addHostToHostList(lList* hostGroupList, lList* stringList, 
+                      const char* newHostName, bool doResolving);
 
-static lList* sge_getMappingListForUser(lList *userMappingEntryList, const char *clusterName);
-static lList* sge_getHostListForUser(lList *userMappingEntryList, char *clusterName, char *mapName);
+static lList * 
+sge_getMappingListForUser(lList *userMappingEntryList, 
+                          const char *clusterName);
 
+static lList *
+sge_getHostListForUser(lList *userMappingEntryList, char *clusterName, 
+                       char *mapName);
 
-
-/****** src/sge_isGuiltyMappingEntry() **********************************
-*
+/****** src/sge_isGuiltyMappingEntry() ****************************************
 *  NAME
 *     sge_isGuiltyMappingEntry() -- search for mapping entry  
 *
 *  SYNOPSIS
-*
-*     #include "sge_user_mapping.h"
-*     #include <src/sge_user_mapping.h>
-* 
-*     static int sge_isGuiltyMappingEntry(lList* hostGroupList,
-*                                         lList* mapList, 
-*                                         char*  foreignName, 
-*                                         char*  hostName);
-*       
+*     static bool sge_isGuiltyMappingEntry(lList* hostGroupList,
+*                                          lList* mapList, 
+*                                          char*  foreignName, 
+*                                          char*  hostName);
 *
 *  FUNCTION
 *     This function is searching for an guilty user mapping entry in
@@ -96,31 +100,16 @@ static lList* sge_getHostListForUser(lList *userMappingEntryList, char *clusterN
 *     char* hostName       - host of the foreign user
 *
 *  RESULT
-*     TRUE  -  a guilty entry was found  
-*     FALSE -  there is no mapping entry in the mapList
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
+*     true  -  a guilty entry was found  
+*     false -  there is no mapping entry in the mapList
 *
 *  SEE ALSO
 *     src/sge_isHostInHostList()
 *     src/sge_getUserNameForHost()
-*     
-****************************************************************************
-*/
-static int sge_isGuiltyMappingEntry(
-lList *hostGroupList,
-lList *mapList,
-char *foreignName,
-char *hostName 
-) {
+******************************************************************************/
+static bool sge_isGuiltyMappingEntry(lList *hostGroupList, lList *mapList, 
+                                     char *foreignName, char *hostName) 
+{
   int matches = 0;
   lListElem *ep = NULL;
   DENTER(TOP_LAYER,"sge_isGuiltyMappingEntry" );
@@ -136,7 +125,7 @@ char *hostName
 
        if (tmpName != NULL) {
           if (strcmp(foreignName, tmpName) == 0) {
-            if (sge_isHostInHostList(hostGroupList, hostList,hostName) == TRUE) {
+            if (sge_isHostInHostList(hostGroupList, hostList,hostName) == true) {
                DPRINTF(("found host '%s' in mapping list '%s'\n",hostName, tmpName));
                matches++;
             }
@@ -147,7 +136,7 @@ char *hostName
 
   if (matches == 1) {
      DEXIT;
-     return TRUE;               
+     return true;               
   }
 
   if (matches > 1) {
@@ -155,26 +144,18 @@ char *hostName
   }
 
   DEXIT;
-  return FALSE;
+  return false;
 }
 
-
-
-/****** src/sge_malloc_map_in_going_username() **********************************
-*
+/****** src/sge_malloc_map_in_going_username() ********************************
 *  NAME
 *     sge_malloc_map_in_going_username() -- malloc string with mapped username  
 *
 *  SYNOPSIS
-*
-*     #include "sge_user_mapping.h"
-*     #include <src/sge_user_mapping.h>
-* 
 *     static char* sge_malloc_map_in_going_username(lList* hostGroupList,
 *                                                   lList* userMappingEntryList,
 *                                                   char* foreignName, 
 *                                                   char* hostName);
-*       
 *
 *  FUNCTION
 *     This function malloc's memory for the mapped username and returns the
@@ -182,7 +163,8 @@ char *hostName
 *     for the pointer.
 *
 *  INPUTS
-*     lList* hostGroupList        - GRP_Type list (pointer to global host group list)
+*     lList* hostGroupList        - GRP_Type list (pointer to global 
+*                                   host group list)
 *     lList* userMappingEntryList - UME_Type list
 *     char* foreignName           - username of foreign host
 *     char* hostName              - hostname of host, not known in cluster
@@ -191,28 +173,19 @@ char *hostName
 *     NULL  - No user mapping entry found
 *     char* - name of foreign user in the cluster 
 *
-*  EXAMPLE
-*
-*
 *  NOTES
 *     The returned pointer to the char* string must be cleared by the user.
-*
-*  BUGS
-*     no bugs known
-*
 *
 *  SEE ALSO
 *     src/sge_malloc_map_out_going_username()
 *     src/sge_map_gdi_request()
-*     
-****************************************************************************
-*/
-static char* sge_malloc_map_in_going_username(
-lList *hostGroupList,
-lList *userMappingEntryList,
-char *foreignName,
-char *hostName 
-) { 
+******************************************************************************/
+static char* 
+sge_malloc_map_in_going_username(lList *hostGroupList, 
+                                 lList *userMappingEntryList,
+                                 char *foreignName,
+                                 char *hostName) 
+{ 
   /* malloc of a new string (with new user name) 
      if no user is found the function returns NULL */
   char* clusterName = NULL;
@@ -235,7 +208,7 @@ char *hostName
                /*DPRINTF(("searching for map entry for cluster user '%s'\n", clusterUser));*/
                mapList = lGetList(ep, UME_mapping_list);
                DPRINTF(("examine list for cluster user '%s'\n",clusterUser));
-               if (sge_isGuiltyMappingEntry(hostGroupList , mapList, foreignName, hostName) == TRUE) {
+               if (sge_isGuiltyMappingEntry(hostGroupList , mapList, foreignName, hostName) == true) {
                    matches++;
                    DPRINTF(("found guilty mapping entry for '%s' on host '%s' as cluster user '%s'\n", 
                             foreignName, hostName, clusterUser));
@@ -259,16 +232,11 @@ char *hostName
 
 
 
-/****** src/sge_malloc_map_out_going_username() **********************************
-*
+/****** src/sge_malloc_map_out_going_username() *******************************
 *  NAME
 *     sge_malloc_map_out_going_username() --  
 *
 *  SYNOPSIS
-*
-*     #include "sge_user_mapping.h"
-*     #include <src/sge_user_mapping.h>
-* 
 *     char* sge_malloc_map_out_going_username(lList* hostGroupList,
 *                                             lList* userMappingEntryList, 
 *                                             char* clusterName, 
@@ -281,38 +249,31 @@ char *hostName
 *     for the pointer.
 *
 *  INPUTS
-*     lList* hostGroupList          - GRP_Type list (pointer to global host group list)
+*     lList* hostGroupList          - GRP_Type list (pointer to global 
+*                                     host group list)
 *     lList* userMappingEntryList   - UME_Type list
 *     char* clusterName             - name of user in the cluster
-*     char* hostName                - hostname where clusteruser should be mapped
+*     char* hostName                - hostname where clusteruser should 
+*                                     be mapped
 *
 *  RESULT
 *     NULL  - No user mapping entry found
 *     char* - name of cluster user on the foreign host
 *
-*  EXAMPLE
-*
-*
 *  NOTES
 *     The returned pointer to the char* string must be cleared by the user.
-*
-*  BUGS
-*     no bugs known
-*
 *
 *  SEE ALSO
 *     src/sge_malloc_map_in_going_username()
 *     src/sge_map_gdi_request()
 *     src/sge_getUserNameForHost()
-*     
-****************************************************************************
-*/
-char* sge_malloc_map_out_going_username(
-lList *hostGroupList,
-lList *userMappingEntryList,
-const char *clusterName,
-const char *hostName 
-) { 
+******************************************************************************/
+char* 
+sge_malloc_map_out_going_username(lList *hostGroupList, 
+                                  lList *userMappingEntryList,
+                                  const char *clusterName,
+                                  const char *hostName) 
+{ 
   /* malloc of a new string (with new user name) 
      if no user is found the function returns NULL */
   char* mapName = NULL;
@@ -340,19 +301,12 @@ const char *hostName
   return mapName;
 }
 
-
-
-/****** src/sge_map_gdi_request() **********************************
-*
+/****** src/sge_map_gdi_request() *********************************************
 *  NAME
 *     sge_map_gdi_request() -- user mapping on gdi request 
 *
 *  SYNOPSIS
-*
-*     #include "sge_user_mapping.h"
-*     #include <src/sge_user_mapping.h>
-* 
-*     int   sge_map_gdi_request(lList* hostGroupList,
+*     bool sge_map_gdi_request(lList* hostGroupList,
 *                               lList* userMappingEntryList, 
 *                               sge_gdi_request* pApiRequest);
 *       
@@ -364,36 +318,19 @@ const char *hostName
 *     is mapped.
 *
 *  INPUTS
-*     lList* hostGroupList         - GRP_Type list (pointer to global host group list)
+*     lList* hostGroupList         - GRP_Type list (pointer to global host 
+*                                    group list)
 *     lList* userMappingEntryList  - UME_Type list
 *     sge_gdi_request* pApiRequest - pointer to gdi request struct
 *
 *  RESULT
-*     TRUE  - user was mapped and pApiRequest is changed 
-*     FALSE - pApiRequest is unchanged, no guilty user mapping entry 
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     src/sge_malloc_map_in_going_username()
-*     src/sge_malloc_map_out_going_username()
-*     src/sge_getUserNameForHost()
-*     
-****************************************************************************
-*/
-int sge_map_gdi_request(
-lList *hostGroupList,
-lList *userMappingEntryList,
-sge_gdi_request *pApiRequest 
-) {  
+*     true  - user was mapped and pApiRequest is changed 
+*     false - pApiRequest is unchanged, no guilty user mapping entry 
+******************************************************************************/
+bool 
+sge_map_gdi_request(lList *hostGroupList, lList *userMappingEntryList, 
+                     sge_gdi_request *pApiRequest) 
+{  
    
    char* mappedUser = NULL;
    uid_t uid;
@@ -406,17 +343,17 @@ sge_gdi_request *pApiRequest
 
    if ((pApiRequest == NULL) || (userMappingEntryList == NULL)) { 
       DEXIT;
-      return FALSE;
+      return false;
    }
    
    if (sge_get_auth_info(pApiRequest, &uid, user, &gid, group) == -1) {
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    if ((user == NULL) || (pApiRequest->host == NULL)) {
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    mappedUser = sge_malloc_map_in_going_username(hostGroupList,
@@ -425,7 +362,7 @@ sge_gdi_request *pApiRequest
                                                  pApiRequest->host);
    if (mappedUser == NULL) {
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    DPRINTF(("master mapping: user %s from host %s mapped to %s\n", user, pApiRequest->host, mappedUser));
@@ -434,30 +371,22 @@ sge_gdi_request *pApiRequest
    if (sge_set_auth_info(pApiRequest, uid, mappedUser, gid, group) == -1) {
       FREE(mappedUser);
       DEXIT;
-      return FALSE;
+      return false;
    }   
 
    FREE(mappedUser);
    DEXIT;
-   return TRUE;
+   return true;
 }
 
-
-
-/****** src/sge_getUserNameForHost() **********************************
-*
+/****** src/sge_getUserNameForHost() ******************************************
 *  NAME
 *     sge_getUserNameForHost() -- search username on foreign host 
 *
 *  SYNOPSIS
-*
-*     #include "sge_user_mapping.h"
-*     #include <src/sge_user_mapping.h>
-* 
 *     char* sge_getUserNameForHost(lList* hostGroupList,
 *                                         lList* mapList, 
 *                                         char* hostName);
-*       
 *
 *  FUNCTION
 *
@@ -471,27 +400,13 @@ sge_gdi_request *pApiRequest
 *     NULL  - no user entry found
 *     char* - username on foreign host (only pointer referenced in mapList)
 *
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
 *  SEE ALSO
 *     src/sge_isHostInHostList()
 *     src/sge_isGuiltyMappingEntry()
-*     
-****************************************************************************
-*/
-const char* sge_getUserNameForHost(
-lList *hostGroupList,
-lList *mapList,
-const char *hostName 
-) {
+*******************************************************************************/
+const char* sge_getUserNameForHost(lList *hostGroupList, lList *mapList, 
+                                   const char *hostName) 
+{
   const char* returnUserName = NULL;
   int matches = 0;
   DENTER(TOP_LAYER,"sge_getUserNameForHost" );
@@ -507,7 +422,7 @@ const char *hostName
         userName = lGetString ( ep , UM_mapped_user );
         hostList = lGetList ( ep , UM_host_list );
         if ((userName != NULL) && (hostList != NULL)) {
-           if (sge_isHostInHostList(hostGroupList, hostList,hostName) == TRUE ) {
+           if (sge_isHostInHostList(hostGroupList, hostList,hostName) == true) {
               returnUserName = userName;
               matches++;
            }
@@ -524,25 +439,13 @@ const char *hostName
   return returnUserName;
 }
 
-
-
-
-
-
-
-/****** src/sge_getMappingListForUser() **********************************
-*
+/****** src/sge_getMappingListForUser() ***************************************
 *  NAME
 *     sge_getMappingListForUser() -- returns UM_Type list for cluster user x
 *
 *  SYNOPSIS
-*
-*     #include "sge_user_mapping.h"
-*     #include <src/sge_user_mapping.h>
-* 
 *     static lList* sge_getMappingListForUser(lList* userMappingEntryList, 
 *                                             char* clusterName); 
-*       
 *
 *  FUNCTION
 *     The function is looking in the userMappingEntryList for the 
@@ -557,26 +460,14 @@ const char *hostName
 *     lList* - Pointer to UM_Type list (User Mapping list) 
 *     NULL   - No entry found
 *
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
 *  SEE ALSO
 *     src/sge_getHostListForMappedUser()
 *     src/sge_getHostListForUser()
-*     
-****************************************************************************
-*/
-static lList* sge_getMappingListForUser(
-lList *userMappingEntryList,
-const char *clusterName 
-) {
+******************************************************************************/
+static lList* 
+sge_getMappingListForUser(lList *userMappingEntryList, 
+                          const char *clusterName) 
+{
   lListElem* ep = NULL;
   DENTER(TOP_LAYER,"sge_getMappingListForUser" );
   
@@ -588,23 +479,15 @@ const char *clusterName
   return NULL;
 }
 
-
-
-
-/****** src/sge_getElementFromMappingEntryList() **********************************
+/****** src/sge_getElementFromMappingEntryList() ******************************
 *
 *  NAME
-*     sge_getElementFromMappingEntryList() -- returns list element for cluster user 
+*     sge_getElementFromMappingEntryList() -- element for cluster user 
 *
 *  SYNOPSIS
-*
-*     #include "sge_user_mapping.h"
-*     #include <src/sge_user_mapping.h>
-* 
 *     lListElem* sge_getElementFromMappingEntryList(lList* userMappingEntryList,
 *                                                   char* clusterName); 
 *       
-*
 *  FUNCTION
 *     searches for the UME_cluster_user specified in clusterName in the given 
 *     UME_Type list userMappingEntryList and returns a pointer to the 
@@ -617,25 +500,13 @@ const char *clusterName
 *  RESULT
 *     lListElem*  - pointer to list element with UME_cluster_user = clusterName
 *
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
 *  BUGS
 *     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
-lListElem* sge_getElementFromMappingEntryList(
-lList *userMappingEntryList,
-const char *clusterName 
-) {
+******************************************************************************/
+lListElem* 
+sge_getElementFromMappingEntryList(lList *userMappingEntryList, 
+                                   const char *clusterName) 
+{
   DENTER(TOP_LAYER,"sge_getElementFromMappingEntryList" );
 
   if ((userMappingEntryList != NULL) && (clusterName != NULL)) {
@@ -657,23 +528,14 @@ const char *clusterName
   return NULL;
 }
 
-
-
-
-/****** src/sge_getHostListForUser() **********************************
-*
+/****** src/sge_getHostListForUser() ******************************************
 *  NAME
 *     sge_getHostListForUser() -- get user mapping host list for cluster user 
 *
 *  SYNOPSIS
-*
-*     #include "sge_user_mapping.h"
-*     #include <src/sge_user_mapping.h>
-* 
 *     static lList* sge_getHostListForUser(lList* userMappingEntryList, 
 *                                        char* clusterName , 
 *                                        char* mapName);
-*       
 *
 *  FUNCTION
 *     This function is looking in the userMappingEntryList for the 
@@ -681,7 +543,6 @@ const char *clusterName
 *     this user is searched. If a host list entry is found this
 *     function returns the pointer to the ST_Type string list with
 *     the hostnames, on which the user is mapped.
-*      
 *
 *  INPUTS
 *     lList* userMappingEntryList - pointer to a UME_Type list
@@ -692,27 +553,14 @@ const char *clusterName
 *     lList*  -  pointer to a ST_Type list (hostlist)
 *     NULL    -  entry not found
 *
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
 *  SEE ALSO
 *     src/sge_getMappingListForUser()
 *     src/sge_getHostListForMappedUser()
-*     
-****************************************************************************
-*/
-static lList* sge_getHostListForUser(
-lList *userMappingEntryList,
-char *clusterName,
-char *mapName 
-) {
+******************************************************************************/
+static lList* 
+sge_getHostListForUser(lList *userMappingEntryList, char *clusterName,
+                       char *mapName) 
+{
   DENTER(TOP_LAYER,"sge_getHostListForUser" );
 
   if ((userMappingEntryList != NULL) && (clusterName != NULL) && (mapName != NULL)) {
@@ -729,26 +577,16 @@ char *mapName
   return NULL;
 }
 
-
-
-
-/****** src/sge_addHostToMappingList() **********************************
-*
+/****** src/sge_addHostToMappingList() ****************************************
 *  NAME
 *     sge_addHostToMappingList() -- insert new host or groupname in hostlist 
 *
 *  SYNOPSIS
-*
-*     #include "sge_user_mapping.h"
-*     #include <src/sge_user_mapping.h>
-* 
-*     int   sge_addHostToMappingList(lList* hostGroupList,
+*     bool sge_addHostToMappingList(lList* hostGroupList,
 *                                         lList* userMappingEntryList, 
 *                                         char* clusterName, 
 *                                         char* mapName, 
 *                                         char* newHostName);
-*     
-*       
 *
 *  FUNCTION
 *     This function generates a new lListElem* and stores it in the 
@@ -764,31 +602,13 @@ char *mapName
 *     char*  newHostName          - hostname where user mapName exist
 *
 *  RESULT
-*     TRUE  - success
-*     FALSE - on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     commd/getuniquehostname()
-*     
-****************************************************************************
-*/
-int sge_addHostToMappingList(
-lList *hostGroupList,
-lList *userMappingEntryList,
-char *clusterName,
-char *mapName,
-char *newHostName 
-) {  
+*     true  - success
+*     false - on error
+*******************************************************************************/
+bool 
+sge_addHostToMappingList(lList *hostGroupList, lList *userMappingEntryList,
+                         char *clusterName, char *mapName, char *newHostName) 
+{  
    
    DENTER(TOP_LAYER,"sge_addHostToMappingList" );
     
@@ -799,29 +619,21 @@ char *newHostName
 
       /* adding hostname */   
       hostList = sge_getHostListForUser(userMappingEntryList, clusterName, mapName); 
-      back = sge_addHostToHostList(hostGroupList,hostList, newHostName,TRUE); 
+      back = sge_addHostToHostList(hostGroupList,hostList, newHostName, true); 
       DEXIT;
       return back;
    }
 
    DEXIT;
-   return FALSE;
+   return false;
 }
 
-
-
-
-/****** src/sge_addMappingEntry() **********************************
-*
+/****** src/sge_addMappingEntry() *********************************************
 *  NAME
 *     sge_addMappingEntry() -- add a mapping entry in UM_Type list 
 *
 *  SYNOPSIS
-*
-*     #include "sge_user_mapping.h"
-*     #include <src/sge_user_mapping.h>
-* 
-*     int   sge_addMappingEntry(lList** alpp,
+*     bool sge_addMappingEntry(lList** alpp,
 *                                    lList* hostGroupList, 
 *                                    lList* mapList, 
 *                                    char* actMapName , 
@@ -838,34 +650,17 @@ char *newHostName
 *     lList* mapList       - pointer to mapping list of UM_Type
 *     char* actMapName     - new mapping name
 *     lList* actHostList   - new hostlist for mapping name
-*     int doResolving      - TRUE if the function should perform hostname resolving
+*     bool doResolving     - true if the function should perform 
+*                            hostname resolving
 *
 *  RESULT
-*    int  - TRUE new entry added,  FALSE - on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
-int sge_addMappingEntry(
-lList **alpp,            /* Answer List pointer reference */
-lList *hostGroupList,
-lList *mapList,
-const char *actMapName,
-lList *actHostList,
-int doResolving 
-) {
+*    int  - true new entry added,  false - on error
+******************************************************************************/
+bool 
+sge_addMappingEntry(lList **alpp, lList *hostGroupList, lList *mapList,
+                    const char *actMapName, lList *actHostList, 
+                    bool doResolving) 
+{
   DENTER(TOP_LAYER,"sge_addMappingEntry" );
   /*
    UME_Type list element
@@ -883,7 +678,7 @@ int doResolving
   if ((mapList != NULL) && (actMapName != NULL) && (actHostList != NULL)) {
     const char* tmpName = NULL;
     lList* tmpHostList = NULL;
-    int back = TRUE;
+    bool back = true;
     lListElem* mapElem = NULL;
     lCondition* where = NULL;
     
@@ -925,11 +720,11 @@ int doResolving
 
           actHostName = lGetString(tep,STR);
           /* we don't want group resolving, so we use NULL as grouplist */
-          if (sge_isHostInHostList(NULL,newHostList, actHostName) == FALSE) {
-            if (sge_addHostToHostList(hostGroupList,newHostList, actHostName, doResolving) == FALSE) {
+          if (sge_isHostInHostList(NULL,newHostList, actHostName) == false) {
+            if (sge_addHostToHostList(hostGroupList,newHostList, actHostName, doResolving) == false) {
               WARNING((SGE_EVENT,MSG_UMAP_CANTADDHOSTX_S, actHostName ));
               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-              back = FALSE;
+              back = false;
             } else {
               INFO((SGE_EVENT,MSG_UMAP_XADDED_S , actHostName ));
               answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
@@ -947,11 +742,11 @@ int doResolving
          const char* actHostName = NULL;
          actHostName = lGetString(tep,STR);
          /* we don't want group resolving, so we use NULL as grouplist */
-         if (sge_isHostInHostList(NULL,tmpHostList, actHostName) == FALSE) {
-            if ( sge_addHostToHostList(hostGroupList,tmpHostList, actHostName, doResolving) == FALSE) {
+         if (sge_isHostInHostList(NULL,tmpHostList, actHostName) == false) {
+            if ( sge_addHostToHostList(hostGroupList,tmpHostList, actHostName, doResolving) == false) {
                WARNING((SGE_EVENT,MSG_UMAP_CANTADDHOSTX_S, actHostName ));
                answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               back = FALSE;
+               back = false;
             } else {
               INFO((SGE_EVENT,MSG_UMAP_XADDED_S, actHostName ));
               answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
@@ -966,25 +761,15 @@ int doResolving
   } /* NULL test */ 
 
   DEXIT;
-  return FALSE;
+  return false;
 }
 
-
-
-
-
-
 /****** src/sge_addHostToHostList() **********************************
-*
 *  NAME
 *     sge_addHostToHostList() -- add new host to host list 
 *
 *  SYNOPSIS
-*
-*     #include "sge_user_mapping.h"
-*     #include <src/sge_user_mapping.h>
-* 
-*     static int   sge_addHostToHostList(lList* hostGroupList, 
+*     static bool sge_addHostToHostList(lList* hostGroupList, 
 *                                        lList* stringList, 
 *                                        char* newHostName);
 *       
@@ -1001,44 +786,27 @@ int doResolving
 *     char* newHostName    - host or groupname to add
 *
 *  RESULT
-*     int TRUE on success, FALSE on error      
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
-static int sge_addHostToHostList(
-lList *hostGroupList,
-lList *stringList,
-const char *newHostName,
-int doResolving 
-) {  
+*     bool - true on success, false on error      
+******************************************************************************/
+static bool 
+sge_addHostToHostList(lList *hostGroupList, lList *stringList, 
+                      const char *newHostName, bool doResolving) 
+{  
    DENTER(TOP_LAYER,"sge_addHostToHostList" );
     
    if ( (stringList != NULL) && (newHostName != NULL) ) {
       int back=1;
       char resolveHost[500];
 
-      if (sge_is_group(hostGroupList , newHostName ) == TRUE) {
+      if (sge_is_group(hostGroupList , newHostName ) == true) {
          /* adding group */
          lAddElemStr(&stringList, STR , newHostName , ST_Type);
          DPRINTF(("name %s is guilty host group, adding it\n",newHostName));
          DEXIT;
-         return TRUE;
+         return true;
       }
 
-      if (doResolving == TRUE) {
+      if (doResolving == true) {
         back = getuniquehostname(newHostName, resolveHost, 0);
       }
       if (back == 0) {     
@@ -1046,42 +814,32 @@ int doResolving
          lAddElemStr(&stringList, STR , resolveHost , ST_Type);
          DPRINTF(("hostname %s resolved to %s and added\n",newHostName,resolveHost));
          DEXIT;
-         return TRUE;
+         return true;
       } else {
-         if (doResolving != TRUE) {
+         if (doResolving != true) {
            /* adding hostname when no resolving is expected */
            lAddElemStr(&stringList, STR , newHostName , ST_Type);
            DPRINTF(("hostname %s added\n",newHostName)); 
            DEXIT;
-           return TRUE;
+           return true;
          }
          /* not resolved hostname and no guilty group group */
          WARNING((SGE_EVENT,MSG_UMAP_HOSTNAMEXNOTRESOLVEDY_SS, newHostName, cl_errstr(back)));  
          DPRINTF(("name %s is no host and no host group, name rejected!\n",newHostName));
          DEXIT;
-         return FALSE;
+         return false;
       }
    }
    DEXIT;
-   return FALSE;
+   return false;
 }
 
-
-
-
-
-
-/****** src/sge_removeOverstock() **********************************
-*
+/****** src/sge_removeOverstock() *********************************************
 *  NAME
 *     sge_removeOverstock() -- remove overstock entries in UME_Type element 
 *
 *  SYNOPSIS
-*
-*     #include "sge_user_mapping.h"
-*     #include <src/sge_user_mapping.h>
-* 
-*     int sge_removeOverstock(lList** alpp, 
+*     bool sge_removeOverstock(lList** alpp, 
 *                                  lListElem* newListElem, 
 *                                  lListElem* origListElem);
 *       
@@ -1099,29 +857,13 @@ int doResolving
 *     lListElem* origListElem - UME_Type element to compare with newListElem
 *
 *  RESULT
-*     int FALSE if no changes were made, TRUE if entries was deleted
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
-int sge_removeOverstock(
-lList **alpp,            /* Answer List pointer reference */
-lListElem *newListElem,     /* ListElement with perhaps to much entries */
-lListElem *origListElem     /* ListElement to compare with */
-) { 
-  int dirty = FALSE;
+*     int false if no changes were made, bool if entries was deleted
+******************************************************************************/
+bool 
+sge_removeOverstock(lList **alpp, lListElem *newListElem, 
+                    lListElem *origListElem) 
+{ 
+  bool dirty = false;
   const char* clusterUser = NULL;
   DENTER(TOP_LAYER,"sge_removeOverstock" );
 
@@ -1144,11 +886,11 @@ lListElem *origListElem     /* ListElement to compare with */
       const char* mapName = NULL;
       
       mapName = lGetString(ep,UM_mapped_user);
-      if (sge_isNameInMappingList(orgMap, mapName) == FALSE) {
+      if (sge_isNameInMappingList(orgMap, mapName) == false) {
           /* this name must be removed */
         lListElem* next = NULL;
         
-        dirty = TRUE;
+        dirty = true;
         INFO((SGE_EVENT,MSG_UMAP_REMOVEDMAPENTRYXFORCLUSERUSERY_SS, mapName, clusterUser ));
         answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
         next = lNext(ep);
@@ -1169,10 +911,10 @@ lListElem *origListElem     /* ListElement to compare with */
            hostName = lGetString(ephost, STR);
          
            /* do not check inside groups , use NULL as grouplist*/ 
-           if (  sge_isHostInMappingListForUser(NULL,orgMap, mapName, hostName) == FALSE) {
+           if (  sge_isHostInMappingListForUser(NULL,orgMap, mapName, hostName) == false) {
               /* this host must be removed */
               lListElem* nexthost = NULL;
-              dirty = TRUE;
+              dirty = true;
               INFO((SGE_EVENT,MSG_UMAP_REMOVEDXFROMMAPENTRYYFORCLUSERUSERZ_SSS, 
                     hostName, mapName, clusterUser ));
               answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);

@@ -121,7 +121,7 @@ static int debit_all_jobs_from_qs(void);
 int sge_setup_qmaster()
 {
    lListElem *jep, *ep, *tmpqep;
-   static int first = TRUE;
+   static bool first = true;
    int ret;
    lListElem *lep = NULL;
    lList *alp=NULL;
@@ -135,7 +135,7 @@ int sge_setup_qmaster()
    DENTER(TOP_LAYER, "sge_setup_qmaster");
 
    if (first)
-      first = FALSE;
+      first = false;
    else {
       CRITICAL((SGE_EVENT, MSG_SETUP_SETUPMAYBECALLEDONLYATSTARTUP));
       DEXIT;

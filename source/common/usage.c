@@ -51,7 +51,7 @@ static void print_marked(FILE *fp);
 static char* get_argument_syntax(int nr);
 static void usage_silent(FILE *fp);
 
-int start_commd = 1; 
+bool start_commd = true; 
 
 static int marker[OA__END];
 

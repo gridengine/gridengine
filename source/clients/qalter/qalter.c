@@ -502,7 +502,7 @@ int *all_users
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
-         lSetBool(job, JB_notify, TRUE);
+         lSetBool(job, JB_notify, true);
          lRemoveElem(cmdline, ep);
          nm_set(job_field, JB_notify);
       }

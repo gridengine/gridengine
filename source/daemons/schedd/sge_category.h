@@ -46,7 +46,7 @@ void sge_free_job_category(void);
 */
 
 void sge_reject_category(lRef cat);
-int sge_is_job_category_rejected_(lRef cat);
+bool sge_is_job_category_rejected_(lRef cat);
 int sge_is_job_category_rejected(lListElem *job);
 int sge_reset_job_category(void);
 

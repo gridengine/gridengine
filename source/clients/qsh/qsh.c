@@ -106,7 +106,7 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job);
 /* static char *get_master_host(lListElem *jep); */
 static void set_job_info(lListElem *job, const char *name, int is_qlogin, int is_rsh, int is_rlogin);
 /* static lList *parse_script_options(lList *opts_cmdline); */
-static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, int error); 
+static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, bool error); 
 static void delete_job(u_long32 job_id, lList *lp);
 
 int main(int argc, char **argv);
@@ -1440,9 +1440,9 @@ int main(int argc, char **argv)
       set_job_info(job, name, is_qlogin, is_rsh, is_rlogin); 
    }
 
-   remove_unknown_opts(opts_cmdline, lGetUlong(job, JB_type), existing_job, TRUE);
-   remove_unknown_opts(opts_defaults, lGetUlong(job, JB_type), existing_job, FALSE);
-   remove_unknown_opts(opts_scriptfile, lGetUlong(job, JB_type), existing_job, FALSE);
+   remove_unknown_opts(opts_cmdline, lGetUlong(job, JB_type), existing_job, true);
+   remove_unknown_opts(opts_defaults, lGetUlong(job, JB_type), existing_job, false);
+   remove_unknown_opts(opts_scriptfile, lGetUlong(job, JB_type), existing_job, false);
 
    opt_list_merge_command_lines(&opts_all, &opts_defaults, &opts_scriptfile,
                                 &opts_cmdline);
@@ -1794,7 +1794,7 @@ static void delete_job(u_long32 job_id, lList *jlp)
    */
 }
 
-static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, int error)
+static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, bool error)
 {
    lListElem *ep, *next;
 

@@ -87,7 +87,7 @@ enum {
    OA__END
 };
 
-extern int start_commd;
+extern bool start_commd;
 
 void mark_argument_syntax(int argument_number);
 void sge_usage(FILE *fp);

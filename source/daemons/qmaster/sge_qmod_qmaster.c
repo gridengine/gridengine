@@ -114,7 +114,7 @@ sge_gdi_request *answer
    lListElem *dep;
    lListElem *qep2;
    lListElem *jatask = NULL, *rn, *job, *tmp_task;
-   int found;
+   bool found;
    u_long32 jobid;
    u_long32 start = 0, end = 0, step = 0;
    int alltasks;
@@ -145,7 +145,7 @@ sge_gdi_request *answer
    ** if necessary
    */
    for_each(dep, request->lp) {
-      found = FALSE;
+      found = false;
       for_each(qep2, Master_Queue_List) {
          if (!fnmatch(lGetString(dep, ID_str), lGetString(qep2, QU_qname), 0)) {
 
@@ -153,7 +153,7 @@ sge_gdi_request *answer
             sge_change_queue_state(user, host, qep2, 
                   lGetUlong(dep, ID_action), lGetUlong(dep, ID_force),
                   &alp);   
-            found = TRUE;
+            found = true;
          }
       }
       if (!found) {
@@ -207,7 +207,7 @@ sge_gdi_request *answer
                   /* change state of job: */
                   sge_change_job_state(user, host, job, tmp_task,
                       lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
-                  found = TRUE;
+                  found = true;
                }
             }
          }

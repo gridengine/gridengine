@@ -32,27 +32,38 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include "sge_c_gdi.h"
 
+const char* 
+sge_getUserNameForHost(lList *hostGroupList, lList *mapList, 
+                       const char *hostName);
 
+bool 
+sge_map_gdi_request(lList *hostGroupList, lList *userMappingEntryList, 
+                    sge_gdi_request *pApiRequest);
 
-const char* sge_getUserNameForHost(lList *hostGroupList, lList *mapList, const char *hostName);
+char * 
+sge_malloc_map_out_going_username(lList *hostGroupList, 
+                                  lList *userMappingEntryList, 
+                                  const char *clusterName, 
+                                  const char *hostName);
 
-int   sge_map_gdi_request(lList *hostGroupList, lList *userMappingEntryList, sge_gdi_request *pApiRequest);
+bool 
+sge_addMappingEntry(lList **alpp, lList *hostGroupList, lList *mapList, 
+                    const char *actMapName, lList *actHostList, 
+                    bool doResolving);
 
-char* sge_malloc_map_out_going_username(lList *hostGroupList, lList *userMappingEntryList, const char *clusterName, const char *hostName);
+bool 
+sge_removeOverstock(lList **alpp, lListElem *newListElem, 
+                    lListElem *origListElem);
 
+lListElem* 
+sge_getElementFromMappingEntryList(lList *userMappingEntryList, 
+                                   const char *clusterName);
 
-int   sge_addMappingEntry(lList **alpp, lList *hostGroupList, lList *mapList, const char *actMapName, lList *actHostList, int doResolving);
-
-int sge_removeOverstock(lList **alpp, lListElem *newListElem, lListElem *origListElem);
-
-lListElem* sge_getElementFromMappingEntryList(lList *userMappingEntryList, const char *clusterName);
-
-
-int   sge_addHostToMappingList(lList *hostGroupList, lList *userMappingEntryList, char *clusterName, char *mapName, char *newHostName);
+bool 
+sge_addHostToMappingList(lList *hostGroupList, lList *userMappingEntryList, 
+                         char *clusterName, char *mapName, char *newHostName);
 
 #endif /* _SGE_USER_MAPPING_H__ */
 

@@ -512,7 +512,7 @@ sge_process_schedd_conf_event(sge_event_type type, sge_event_action action,
    if (ep == NULL) {
       ERROR((SGE_EVENT, ">>>>> no scheduler configuration available <<<<<<<<\n"));
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    /* check user_sort: if it changes, rebuild accesstree */
@@ -535,11 +535,11 @@ sge_process_schedd_conf_event(sge_event_type type, sge_event_action action,
       sge_mirror_shutdown();
       sge_schedd_mirror_register();
       DEXIT;
-      return TRUE;
+      return true;
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 bool 
@@ -559,11 +559,11 @@ sge_process_job_event_before(sge_event_type type, sge_event_action action,
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
          DEXIT;
-         return FALSE;
+         return false;
       }   
    } else {
       DEXIT;
-      return TRUE;
+      return true;
    }
 
    switch (action) {
@@ -619,7 +619,7 @@ sge_process_job_event_before(sge_event_type type, sge_event_action action,
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }   
 
 bool sge_process_job_event_after(sge_event_type type, sge_event_action action, 
@@ -638,7 +638,7 @@ bool sge_process_job_event_after(sge_event_type type, sge_event_action action,
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
          DEXIT;
-         return FALSE;
+         return false;
       }   
    }
 
@@ -700,7 +700,7 @@ bool sge_process_job_event_after(sge_event_type type, sge_event_action action,
                         ERROR((SGE_EVENT, MSG_CANTFINDTASKINJOB_UU, 
                                u32c(ja_task_id), u32c(job_id)));
                         DEXIT;
-                        return FALSE;
+                        return false;
                      }
 
                      /* decrease # of running jobs for this user */
@@ -731,7 +731,7 @@ bool sge_process_job_event_after(sge_event_type type, sge_event_action action,
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 
@@ -753,7 +753,7 @@ sge_process_ja_task_event_before(sge_event_type type,
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
          DEXIT;
-         return FALSE;
+         return false;
       }   
 
       ja_task_id = lGetUlong(event, ET_intkey2);
@@ -767,14 +767,14 @@ sge_process_ja_task_event_before(sge_event_type type,
             ERROR((SGE_EVENT, MSG_CANTFINDTASKINJOB_UU, u32c(ja_task_id), 
                    u32c(job_id)));
             DEXIT;
-            return FALSE;
+            return false;
          }
 
          new_ja_task = lFirst(lGetList(event, ET_new_version));
          if (new_ja_task == NULL) {
             ERROR((SGE_EVENT, MSG_NODATAINEVENT));
             DEXIT;
-            return FALSE;
+            return false;
          }
           
          old_status = lGetUlong(ja_task, JAT_status); 
@@ -812,7 +812,7 @@ sge_process_ja_task_event_before(sge_event_type type,
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }            
 /* If the last ja task of a job is deleted, 
  * remove the job category.
@@ -836,7 +836,7 @@ bool sge_process_ja_task_event_after(sge_event_type type,
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
          DEXIT;
-         return FALSE;
+         return false;
       }   
 
       if (job_get_ja_tasks(job) == 0) {
@@ -845,7 +845,7 @@ bool sge_process_ja_task_event_after(sge_event_type type,
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 bool sge_process_userset_event_after(sge_event_type type, 
@@ -856,7 +856,7 @@ bool sge_process_userset_event_after(sge_event_type type,
    DPRINTF(("callback processing userset event after default rule\n"));
    rebuild_categories = 1;
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 bool sge_process_schedd_monitor_event(sge_event_type type, 
@@ -867,7 +867,7 @@ bool sge_process_schedd_monitor_event(sge_event_type type,
    DPRINTF(("monitoring next scheduler run\n"));
    monitor_next_run = 1;
    DEXIT;
-   return TRUE;
+   return true;
 }   
 
 bool sge_process_global_config_event(sge_event_type type, 
@@ -878,7 +878,7 @@ bool sge_process_global_config_event(sge_event_type type,
    DPRINTF(("notification about new global configuration\n"));
    new_global_config = 1;
    DEXIT;
-   return TRUE;
+   return true;
 }   
 
 static void sge_rebuild_access_tree(lList *job_list, int trace_running) 
@@ -947,6 +947,6 @@ int subscribe_default_scheduler(void)
    ec_set_flush(sgeE_SCHED_CONF,      0);
    ec_set_flush(sgeE_SCHEDDMONITOR,   0);
 
-   return TRUE;
+   return true;
 }
 

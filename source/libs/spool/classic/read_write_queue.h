@@ -34,7 +34,7 @@
 
 lListElem *cull_read_in_qconf(const char *dirname, const char *filename, int spool, int type, int *tag, int fields[]);
 
-int cull_write_qconf(int spool, int write_2_stdout, const char *file_prefix, 
+int cull_write_qconf(int spool, bool write_2_stdout, const char *file_prefix, 
                      const char *file_name, char *rfile, const lListElem *qep);
 
 int read_queue_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);

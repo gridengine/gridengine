@@ -1669,8 +1669,8 @@ lList *jid_list
    lCondition *where = NULL, *newcp = NULL;
    lEnumeration* what = NULL;
    lList* alp = NULL;
-   int schedd_info = TRUE;
-   int jobs_exist = TRUE;
+   bool schedd_info = true;
+   bool jobs_exist = true;
    int line_separator=0;
    lListElem* mes;
 
@@ -1683,7 +1683,7 @@ lList *jid_list
    for_each(aep, alp) {
       if (lGetUlong(aep, AN_status) != STATUS_OK) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
-         schedd_info = FALSE;
+         schedd_info = false;
       }
    }
    lFreeList(alp);
@@ -1707,7 +1707,7 @@ lList *jid_list
    for_each(aep, alp) {
       if (lGetUlong(aep, AN_status) != STATUS_OK) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
-         jobs_exist = FALSE;
+         jobs_exist = false;
       }
    }
    lFreeList(alp);
@@ -1801,7 +1801,7 @@ static int qstat_show_job_info()
    lListElem* aep = NULL;
    lEnumeration* what = NULL;
    lList* alp = NULL;
-   int schedd_info = TRUE;
+   bool schedd_info = true;
    lListElem* mes;
    int initialized = 0;
    u_long32 last_jid = 0;
@@ -1822,7 +1822,7 @@ static int qstat_show_job_info()
    for_each(aep, alp) {
       if (lGetUlong(aep, AN_status) != STATUS_OK) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
-         schedd_info = FALSE;
+         schedd_info = false;
       }
    }
    lFreeList(alp);

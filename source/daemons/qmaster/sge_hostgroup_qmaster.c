@@ -192,7 +192,7 @@ int sub_command
    /* a guilty GRP_group_list exists */         
 
   
-   if (sge_verify_host_group_entry(alpp, NULL ,ep, groupName) != TRUE) {
+   if (sge_verify_host_group_entry(alpp, NULL ,ep, groupName) != true) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -214,7 +214,7 @@ int sub_command
          const char* tmpMember = NULL;
          tmpMember = lGetString(tmp_ep, STR);
          if (tmpMember != NULL) {
-            if (sge_add_member2group(modp, tmpMember) != TRUE) {
+            if (sge_add_member2group(modp, tmpMember) != true) {
                ERROR((SGE_EVENT, MSG_HGRP_CANTADDMEMBERXTOGROUPY_SS, tmpMember ,groupName ));
                answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                DEXIT;
@@ -253,8 +253,8 @@ int sub_command
       const char* tmpGroup = NULL;
       tmpGroup = lGetString(tmp_ep, STR);
       if (tmpGroup != NULL) {
-         /* do not make changes in Master_Host_Group_List, so we set param. 4 to FALSE */
-         if (sge_add_subgroup2group(alpp, Master_Host_Group_List , modp, tmpGroup, FALSE) != TRUE) {
+         /* do not make changes in Master_Host_Group_List, so we set param. 4 to false */
+         if (sge_add_subgroup2group(alpp, Master_Host_Group_List , modp, tmpGroup, false) != true) {
             DEXIT;
             return STATUS_EUNKNOWN;
          }
@@ -268,8 +268,8 @@ int sub_command
       const char* tmpGroup = NULL;
       tmpGroup = lGetString(tmp_ep, STR);
       if (tmpGroup != NULL) {
-         /* yes, now make changes in Master_Host_Group_List, so we set param. 4 to TRUE */
-         sge_add_subgroup2group(alpp, Master_Host_Group_List , modp, tmpGroup, TRUE);
+         /* yes, now make changes in Master_Host_Group_List, so we set param. 4 to true */
+         sge_add_subgroup2group(alpp, Master_Host_Group_List , modp, tmpGroup, true);
       }
    }
    subgroupList = lGetList(modp, GRP_subgroup_list);
@@ -299,7 +299,7 @@ int sub_command
       }
    }
 
-   if (sge_verify_host_group_entry(alpp, Master_Host_Group_List ,modp, groupName) != TRUE) {
+   if (sge_verify_host_group_entry(alpp, Master_Host_Group_List ,modp, groupName) != true) {
       DPRINTF(("\n\n\n******** very very bad failure!!!\n\n\n"));
       DEXIT;
       return STATUS_EUNKNOWN;

@@ -44,8 +44,8 @@
 unsetenv buildarch BUILDARCH COMPILE_ARCH
 
 set COMPILE_ARCH = ""
-
 set buildarch = UNKNOWN
+
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
 else
@@ -191,6 +191,32 @@ default:
    breaksw
 endsw
 
+#------------------------------------------------------------------
+# Preparsing for all args which change BUILDARCH or which exit
+#
+#
+set i = 1
+while ($i <= $#argv)
+   switch ("$argv[$i]")
+   case "-32":
+      if ( $BUILDARCH == SOLARIS64 ) then
+         set BUILDARCH = SOLARIS  
+         set buildarch = sol-sparc
+      endif
+      set IRIX_ABI = -mips1
+      breaksw
+   case "-64":
+      set IRIX_ABI = -64
+      breaksw
+   case "-help":
+   case "--help":
+      echo help
+      goto usage
+      breaksw
+   endsw
+   set i = `expr $i + 1`
+end
+
 # Source variables for definition of site dependent paths of software here
 #
 if ( -f aimk.site ) then
@@ -210,18 +236,19 @@ usage:
 
    echo "OPTIONS are: "
    echo ""
-   echo "-32               -> irix: create 32 bit binaries"
-   echo "-64               -> irix: create 64 bit binaries"
+   echo "-32               -> create 32 bit binaries (where supported)"
+   echo "-64               -> create 64 bit binaries (where supported)"
+   echo "-D*               -> include a macro definition in CFLAGS"
    echo "-add-copyright    -> insert a special copyright string in each binary"
    echo "-add-sun-copyright-> insert a Sun copyright string in each binary" 
    echo "-adoc             -> create source code documentation in adoc format"
-   echo "-D*               -> include a macro definition in CFLAGS"
    echo "-catman           -> generate man pages in catman format"
    echo "-cc               -> use cc/CC to compile c/c++ code"
    echo "-dce              -> enable dce security"
    echo "-debug            -> compile with debug information"
+   echo "-efence           -> compile in debug mode and detect memory leaks"
    echo "-f                -> specify other Makefile instead of common/Makefile"
-   echo "-gcc              -> use gcc instead of system compiler"
+   echo "-gcc              -> use gcc instead of system compiler (where supported)""
    echo "-gettext          -> build the gettext libraries"
    echo "-gprof            -> enable gprof profiling"
    echo "-gss              -> enable gss security"
@@ -229,14 +256,10 @@ usage:
    echo "-htmlman          -> generate man and html pages"
    echo "-htmlmankv        -> generate man and html pages checked out with '-kv' flag"
    echo "-insure           -> compile in debug mode and detect memory leaks (en ensure ; glinux, ..)"
-   echo "-efence           -> compile in debug mode and detect memory leaks"
    echo "-intl             -> compile with internationalization library (libintl)"
    echo "-kerberos         -> enable kerberos authentication"
    echo "-man              -> generate man pages"
    echo "-mankv		      -> generate man pages checked out with '-kv' flag"
-   echo "-pr-geee          -> generate man pages for 'Grid Engine Enterprise Edition'"
-   echo "-pr-sge           -> generate man pages for 'Sun Grid Engine'"
-   echo "-pr-sgeee         -> generate man pages for 'Sun Grid Engine, Enterprise Edition'"
    echo "-mo               -> generate the message catalogues (Solaris only)"
    echo "-n32              -> irix: generate n32 objects"
    echo "-no-core          -> don't compile the core system"
@@ -259,6 +282,9 @@ usage:
    echo "-perlgui          -> build the experimental perlgui"
    echo "-po               -> merge gridengine .pot with translations (Linux)"
    echo "-pot              -> extract message template to gridengine .pot file (Linux)"
+   echo "-pr-geee          -> generate man pages for 'Grid Engine Enterprise Edition'"
+   echo "-pr-sge           -> generate man pages for 'Sun Grid Engine'"
+   echo "-pr-sgeee         -> generate man pages for 'Sun Grid Engine, Enterprise Edition'"
    echo "-purify           -> instrument code with purify (implies -debug)"
    echo "-qmake            -> use qmake instead of make"
    echo "-secure           -> enable ssl security (requires shared OpenSSL libraries)"
@@ -267,7 +293,6 @@ usage:
    echo "-shared-libs      -> create libraries as shared libs"
    echo "-spool-berkeleydb -> use spooling to berkeley-db database"
    echo "-spool-classic    -> use classic flatfile spooling (default)"
-#   echo "-spool-dynamic    -> allow loading of spooling method from shared lib"
    echo "-spool-flatfile   -> use new flatfile spooling"
    echo "-spool-postgres   -> use new spooling to PostgreSQL database"
    echo "-static           -> link static"
@@ -461,15 +486,10 @@ unset nomk
 set found
 while ($#argv >= 1 && $?found)
    switch ("$argv[1]")
-   case "-32":
-      set IRIX_ABI = -mips1
-      set FORCE32  = true
-      set FORCE64  = false
-      breaksw
-   case "-64":
-      set IRIX_ABI = -64
-      set FORCE64  = true
-      set FORCE32  = false
+   case -32:
+   case -64:
+   case -help:
+   case --help:
       breaksw
    case "-add-copyright"
       set ADD_COPYRIGHT = 1
@@ -556,12 +576,6 @@ while ($#argv >= 1 && $?found)
       set CFLAGS  = "-DKERBEROS -I../security/gss -I$KRB_HOME/include -I$KRB_HOME/include/gssapi $CFLAGS"
       set GSSLIBS = "-lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err"
       breaksw
-   case "-help"
-      goto usage
-      breaksw
-   case "--help"
-      goto usage
-      breaksw
    case "-htmlman":
       set BUILDMAN = "1"
       set BUILDHTMLMAN = "1"
@@ -614,10 +628,11 @@ while ($#argv >= 1 && $?found)
       breaksw
    case  "-mo"
       echo "BUILDARCH=$BUILDARCH"
-      if ( $BUILDARCH == solaris || $BUILDARCH == solaris64 ) then
+      if ( $BUILDARCH == sol-sparc || $BUILDARCH == sol-sparc64 ) then
          scripts/msgmerge.csh
       else
-         echo "Use a solaris machine"                                                 endif
+         echo "Use a Solaris machine"
+      endif
       exit 0
       breaksw
    case "-n32":
@@ -1572,6 +1587,7 @@ case SLINUX:
 case SOLARIS:
 case SOLARIS64:
 case SOLARIS86:
+
    if ( $BUILDARCH == SOLARIS64 && $CC == gcc ) then
       echo "Do not compile Grid Engine with gcc on the solaris64 platform"
       echo "The resulting sge_execd would not be able to retrieve correct load values"

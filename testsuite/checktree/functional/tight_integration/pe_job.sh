@@ -14,7 +14,8 @@ start_tasks()
    while read host nproc rest; do
       hosttask=0
       while [ $hosttask -lt $nproc ]; do
-         $SGE_ROOT/bin/$ARC/qrsh -inherit -noshell -nostdin -cwd -N "task $task" $host $script $task $duration &
+         #$SGE_ROOT/bin/$ARC/qrsh -inherit -noshell -nostdin -cwd -N "task $task" $host $script $task $duration &
+         $SGE_ROOT/bin/$ARC/qrsh -inherit -noshell -nostdin -cwd $host $script $task $duration &
          hosttask=`expr $hosttask + 1`
          task=`expr $task + 1`
       done

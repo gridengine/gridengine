@@ -33,10 +33,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "sgermon.h"
+#include "sge_log.h"
+#include "msg_cull.h"
+
 #include "cull_list.h"
 #include "cull_hash.h"
 #include "cull_listP.h"
 #include "cull_multitypeP.h"
+#include "cull_multitype.h"
 #include "sge_string.h"
 
 /****** uti/hash/--Introduction *************************************************
@@ -46,6 +51,7 @@
 *  SYNOPSIS
 *     lHash *cull_hash_copy_descr(const lDescr *descr);
 *     lHash *cull_hash_create(const lDescr *descr);
+*     void cull_hash_new(lList *lp, int name, int type);
 *     void cull_hash_insert(const lListElem *ep, const int pos);
 *     void cull_hash_remove(const lListElem *ep, const int pos);
 *     void cull_hash_elem(const lListElem *ep);
@@ -676,3 +682,81 @@ void cull_hash_free_descr(lDescr *descr)
 }
 
 
+int cull_hash_new(lList *lp, int nm, lHash *template)
+{
+   lDescr *descr;
+   lListElem *ep;
+   int pos;
+
+   DENTER(CULL_LAYER, "cull_hash_new");
+
+   if(lp == NULL) {
+      DEXIT;
+      return 0;
+   }
+ 
+   descr = lp->descr;
+ 
+   pos = lGetPosInDescr(descr, nm);
+
+   if(pos < 0) {
+      CRITICAL((SGE_EVENT, MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
+      DEXIT;
+      return 0;
+   }
+
+   if(descr[pos].hash != NULL) {
+      WARNING((SGE_EVENT, MSG_CULL_HASHTABLEALREADYEXISTS_S, lNm2Str(nm)));
+      DEXIT;
+      return 0;
+   }
+
+   /* copy hashing information */
+   descr[pos].hash = template;
+   descr[pos].hash = cull_hash_copy_descr(&descr[pos]);
+
+   /* create hash table */
+   if(descr[pos].hash == NULL) {
+      DEXIT;
+      return 0;
+   }
+   
+   switch(descr[pos].mt) {
+      case lStringT:
+         if((descr[pos].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_string, HashFunc_string, HashCompare_string)) == NULL) {
+            free(lp->descr[pos].hash);
+            descr[pos].hash = NULL;
+         }
+         break;
+      case lHostT:
+         if((descr[pos].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_string, HashFunc_string, HashCompare_string)) == NULL) {
+            free(descr[pos].hash);
+            descr[pos].hash = NULL;
+         }
+         break;
+      case lUlongT:
+         if((descr[pos].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32)) == NULL) {
+            free(descr[pos].hash);
+            descr[pos].hash = NULL;
+         }
+         break;
+      default:
+         unknownType("cull_create_hash");
+         free(descr[pos].hash);
+         descr[pos].hash = NULL;
+         break;
+   }
+
+   if(descr[pos].hash == NULL) {
+      DEXIT;
+      return 0;
+   }
+
+   /* insert all elements into the new hash table */
+   for_each(ep, lp) {
+      cull_hash_insert(ep, pos);
+   }
+
+   DEXIT;
+   return 1;
+}

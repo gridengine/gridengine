@@ -645,7 +645,7 @@ int handle_administrative_events(u_long32 type, lListElem *event)
    return ret;
 }
 
-void sge_subscribe_schedd(void)
+static void sge_subscribe_schedd(void)
 {
    ec_subscribe(sgeE_CKPT_LIST);
    ec_subscribe(sgeE_CKPT_ADD);

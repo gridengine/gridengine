@@ -42,6 +42,7 @@ extern "C" {
 
 lHash *cull_hash_copy_descr(const lDescr *descr);
 lHash *cull_hash_create(const lDescr *descr);
+int cull_hash_new(lList *lp, int name, lHash *template);
 void cull_hash_insert(const lListElem *ep, const int pos);
 void cull_hash_remove(const lListElem *ep, const int pos);
 void cull_hash_elem(const lListElem *ep);

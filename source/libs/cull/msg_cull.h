@@ -210,7 +210,10 @@
 #define MSG_CULL_CANTUNPACKBYTEARRAYFROMPACKINGBUFF   _("!!!!!!!! Cannot unpack a byte array from a packing buffer !!!!!!!!!!\n")
 
 
-
+/*
+** cull_hash.c
+*/
+#define MSG_CULL_HASHTABLEALREADYEXISTS_S    _("hash table already exists for field "SFQ"\n")
 
 
 

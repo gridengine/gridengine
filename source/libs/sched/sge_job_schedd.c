@@ -60,6 +60,8 @@
 #include "jb_now.h"
 #include "sge_time.h"
 
+#include "cull_hash.h"
+
 static int user_sort = 0;
 
 #define IDLE 0
@@ -182,7 +184,18 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
        job_lists[SPLIT_PENDING_EXCLUDED] != NULL) {
       lListElem *job = NULL;                           
       lListElem *user = NULL;
- 
+
+      /* create a hash table on JB_owner to speedup 
+       * searching for jobs of a specific owner
+       */
+      {
+         const lDescr *descr = lGetListDescr(*(job_lists[SPLIT_PENDING]));
+         int pos = lGetPosInDescr(descr, JB_owner);
+         if(descr[pos].hash == NULL)  {
+            cull_hash_new(*(job_lists[SPLIT_PENDING]), JB_owner, &template_hash);
+         }
+      }
+
       /* inc. the # of jobs a user is running */
       for_each(job, *(job_lists[SPLIT_RUNNING])) {
          sge_inc_jc(user_list, lGetString(job, JB_owner), 
@@ -194,23 +207,12 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
          const char *user_name = lGetString(user, JC_name);
 
          if (jobs_for_user >= max_jobs_per_user) {
-#if 0 
             const void *user_iterator = NULL;
-#endif
             lListElem *user_job = NULL;         /* JB_Type */
             lListElem *next_user_job = NULL;    /* JB_Type */
 
             DPRINTF(("USER %s reached limit of %d jobs\n", user_name, 
                      max_jobs_per_user));
-
-#if 0 /* 
-       * EB: 
-       *    This code seems to have a bug !!!! 
-       *    The loop will be only executed once even if 
-       *    '*(job_lists[SPLIT_PENDING])' containes more than one job
-       *    for user 'user_name'. 
-       *    Is the 'lDechainElem'-call reason for this error?
-       */
             next_user_job = lGetElemStrFirst(*(job_lists[SPLIT_PENDING]), 
                                              JB_owner, user_name, 
                                              &user_iterator);
@@ -218,25 +220,17 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
                next_user_job = lGetElemStrNext(*(job_lists[SPLIT_PENDING]), 
                                                JB_owner, user_name, 
                                                &user_iterator);
-#else
-            next_user_job = lFirst(*(job_lists[SPLIT_PENDING]));
-            while ((user_job = next_user_job)) {
-               next_user_job = lNext(user_job); 
-      
-               if (strcmp(lGetString(user_job, JB_owner), user_name) != 0) {
-                  continue;
-               }
-#endif
-
                if (monitor_next_run) {
                   schedd_add_message(lGetUlong(user_job, JB_job_number),
                                      SCHEDD_INFO_USRGRPLIMIT_);
                }
+
                lDechainElem(*(job_lists[SPLIT_PENDING]), user_job);
                if (*(job_lists[SPLIT_PENDING_EXCLUDED]) == NULL) {
                   *(job_lists[SPLIT_PENDING_EXCLUDED]) =
                                       lCreateList("", lGetElemDescr(user_job));
                }
+
                lAppendElem(*(job_lists[SPLIT_PENDING_EXCLUDED]), user_job);
             }
          }

@@ -365,7 +365,9 @@ proc init_ps {} {
       aix42 -
       aix43 -
       aix51 -
+      darwin -
       irix6 -
+      irix65 -
       osf4 -
       solaris -
       sol-sparc -

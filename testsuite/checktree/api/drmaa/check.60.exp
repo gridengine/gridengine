@@ -53,7 +53,7 @@ set check_init_level_procedure "drmaa_init_level"
 # define test's name and run level descriptions
 set check_name            "drmaa"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
-set check_highest_level   2
+set check_highest_level   202
 set check_description(0)  "tests to verify DRMAA library: single threaded"
 set check_description(1)  "tests to verify DRMAA library: multi threaded"
 set check_description(2)  "tests to verify DRMAA library: additional interfaces"
@@ -77,13 +77,13 @@ proc drmaa_init_level {} {
   # returning -1 causes disabling a certain runlevel
   # here per run level settings can be prepared
   switch -- $CHECK_ACT_LEVEL {
-     "0" { 
+     "200" { 
            return 0
      } 
-     "1" { 
+     "201" { 
            return 0
      } 
-     "2" { 
+     "202" { 
            return -1
      } 
   } 
@@ -154,7 +154,7 @@ proc drmaa_check {} {
       puts $CHECK_OUTPUT "host is $host has arch $compile_arch_mt mt bin path $binary_path"
 
       switch -- $CHECK_ACT_LEVEL {
-         "0" { 
+         "200" { 
             # -- do all ST_DRMAA_CONTROL tests
             drmaa_test_failing_control_operations $host $binary_path
 
@@ -217,7 +217,7 @@ proc drmaa_check {} {
             # need to remove entry "test.cat -N ExitTest -h" to users .qtask file
             # -- 
          } 
-         "1" { 
+         "201" { 
             # all MT tests need a sleeper job as argument
             # 
             # test broken for MT_SUBMIT_BEFORE_INIT_WAIT due to #988
@@ -227,7 +227,7 @@ proc drmaa_check {} {
                drmaa_test $host $binary_path $mt_test $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh
             }
          } 
-         "2" { 
+         "202" { 
             # shutdown qmaster
             shutdown_master_and_scheduler $CHECK_CORE_MASTER [get_qmaster_spool_dir] 
 

@@ -350,7 +350,7 @@ int close_stdin /* use of qrsh's -nostdin option */
    }
 #endif
 
-   sprintf(qrsh_path, "%s/bin/%s/qrsh", sge_get_root_dir(1), sge_get_arch());
+   sprintf(qrsh_path, "%s/bin/%s/qrsh", sge_get_root_dir(1, NULL, 0), sge_get_arch());
 
    return execvp(qrsh_path, newargv);
 }
@@ -386,6 +386,7 @@ print_func_t ostream
       }
       lFreeList(alp);
    } else {
+/*       (*ostream) ("no $SGE_ROOT, running as normal tcsh\n"); */
       mode_remote = 0;          
    }
 

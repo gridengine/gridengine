@@ -59,6 +59,8 @@ sge_path_type path = { NULL };
  * set SGE_ROOT and SGE_CELL dependent path components
  * spool directory may later be overridden by global configuration
  * This routine may be called as often as is is necessary.
+ * The alpp is used by caller to indicate if setup function should exit
+ * on errror.
  *-----------------------------------------------------------------------*/
 void sge_setup_paths(
 const char *sge_cell,
@@ -70,10 +72,16 @@ lList **alpp
    char *common_dir;
    SGE_STRUCT_STAT sbuf;
    int cell_root_len, common_len;
+   char buffer[1024];
    
    DENTER(TOP_LAYER, "sge_setup_paths");
    
-   sge_root = sge_get_root_dir(1);
+   if (!(sge_root = sge_get_root_dir(alpp?0:1, buffer, sizeof(buffer)-1))) {
+      /* in exit-on-error case program already exited */
+      sge_add_answer(alpp, buffer, STATUS_EDISK, 0);
+      DEXIT;
+      return;
+   }
 
    if (SGE_STAT(sge_root, &sbuf)) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S, sge_root));

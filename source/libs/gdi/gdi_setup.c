@@ -97,14 +97,13 @@ int sge_gdi_setup(const char *programname)
 
    sge_setup(program_id, exit_on_error?NULL:&alp);
    if (alp) {
-      alp = lFreeList(alp);
 /*       fprintf(stderr, "%s", lGetString(lFirst(alp), AN_text)); */
+      alp = lFreeList(alp);
       DEXIT;
       return AE_QMASTER_DOWN;
    }
    prepare_enroll(programname, 0, NULL);
    install_exit_func(gdi_exit_func);
-
 
    /* check if master is alive */
    if (isalive) {
@@ -119,7 +118,7 @@ int sge_gdi_setup(const char *programname)
    made_setup = 1;
 
    DEXIT;
-   return CL_OK;
+   return AE_OK;
 }
 
 

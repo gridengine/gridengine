@@ -127,7 +127,8 @@ int *enrolled
       /* Ask if qmaster is enrolled on that host    */
       if (hostcmp(me.qualified_hostname, master)) {
          alive = ask_commproc(master, prognames[QMASTER], 0);
-         DPRINTF(("alive: %s %s %d\n", master, prognames[QMASTER], alive));
+         DPRINTF(("alive: %s %s %d: %s\n", master, prognames[QMASTER], alive,
+         cl_errstr(alive)));
          if (alive == 0) {
             DPRINTF(("hostcmp(%s, %s) not equal\n", master, me.qualified_hostname));
             ret = 1;

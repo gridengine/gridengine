@@ -463,7 +463,7 @@ int qlogin_starter(const char *cwd, char *daemon)
    SHEPHERD_TRACE((err_str, "bound to port %d\n", port));
  
    /* send necessary info to qrsh: port + utilbin directory + active job directory */
-   sge_root = sge_get_root_dir(0);
+   sge_root = sge_get_root_dir(0, NULL, 0);
    arch = getenv("ARC");
    
    if(sge_root == NULL || arch == NULL) {

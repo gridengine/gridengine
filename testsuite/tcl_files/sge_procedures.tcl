@@ -5350,12 +5350,14 @@ proc wait_for_end_of_transfer { jobid seconds } {
              if { $job_state != $tmp_job_state } {
                 puts $CHECK_OUTPUT "job has different states ..."
                 set had_error 1
+                break
              }
           }
        }
     }
 
     if { $had_error != 0 } {
+       sleep 1
        continue
     }
 

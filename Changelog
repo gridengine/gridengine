@@ -1,7 +1,9 @@
 CR-2004-10-07-0: Cleanup:   qping -help now shows short Grid Engine Version
                             name 
+                 Changed:   qping
 
 CR-2004-10-05-2: Cleanup:   added some comments
+                 Changed:   commlib header file cl_xml_parsing.h
 
 CR-2004-10-05-1: Testsuite: added missing install expect handling for qmaster
                             installation

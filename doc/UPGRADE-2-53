@@ -1,20 +1,28 @@
-                        Upgrading to Grid Engine 5.3
-                        ----------------------------
+       Upgrading to Grid Engine 5.3/Installing a SGE(EE) 5.3 patch
+       -----------------------------------------------------------
 
-    All users who plan to make an upgrade from a previous version of
-    CODINE/GRD/SGE should carefully read this document. This document
-    contains all information how to carry out successfully an upgrade from a
-    previous version of the product to Grid Engine 5.3 (including Enterprise
-    Edition). The update procedure does not support any upgrades from CODINE
-    4.x or GRD 1.x.
+   All users who plan to make an upgrade from a previous version of
+   CODINE/GRD/SGE or who install a Grid Engine 5.3 patch should carefully
+   read this document.
+
+   This document contains all information how to carry out successfully an
+   upgrade from a previous version of the product to Grid Engine 5.3
+   (including Enterprise Edition). The update procedure does not support any
+   upgrades from CODINE 4.x or GRD 1.x.
+
+   If you are going to install a Grid Engine 5.3 patch please begin to read
+   this document with 1.5) "Installing a SGE(EE) 5.3 patch".
 
 
 Content
 -------
 
 1) Introduction
-   1.1) Estimated time for the upgrade procedure
-   1.2) Upgrading from SGE(EE) 5.3beta2
+   1.1) Terms used in this document
+   1.2) Supported upgrade paths
+   1.3) Estimated time for the upgrade procedure
+   1.4) Upgrading from SGE 5.3beta2
+   1.5) Installing a SGE(EE) 5.3 patch
 2) Installation changes
    2.1) Name of daemons and commands
    2.2) Daemon startup scripts
@@ -42,11 +50,37 @@ Content
    10.3) Run the update script
 11) Installing the new startup script locally an all execution hosts
 12) Restart SGE
-13) Upgrading from SGE(EE) 5.3beta2 
-14) Copyright
+13) Upgrading from SGE(EE) 5.3beta2
+14) Installing a SGE(EE) 5.3 patch 
+15) Copyright
+
 
 1) Introduction
 ---------------
+
+   1.1 Terms used in this document
+   -------------------------------
+
+   The term "Grid Engine" refers to the Sun product "Sun ONE Grid Engine"
+   and the software from the Grid Engine open source project.
+
+   The term "Grid Engine, Enterprise Edition" refers to the Sun product "Sun
+   ONE Grid Engine, Enterprise Edition" and the software from the Grid
+   Engine open source project.
+
+   SGE and SGEEE are used as abbreviations for "Grid Engine" and "Grid
+   Engine, Enterprise Edition".
+
+   This document usually refers to SGE(EE) 5.3. Version "5.3" always refers
+   to the most recent patch release of this software. E.g. SGE(EE) 5.3p1 and
+   SGE(EE) 5.3p2 are patch releases of SGE(EE) 5.3.
+
+   A CDROM or a download of SGE(EE) 5.3 may automatically provide you with
+   the most recent patch release of this software. See 1.3 for more
+   information about SGE(EE) patch releases.
+
+   1.2 Supported upgrade paths
+   ---------------------------
 
    Upgrading to Grid Engine and Grid Engine, Enterprise Edition is supported
    through the script '$SGE_ROOT/util/sge_update.sh' of the Grid Engine 5.3
@@ -58,13 +92,13 @@ Content
       GRD 5.1.x
       Sun Grid Engine 5.2.x
       Grid Engine 5.3beta1
-      *Grid Engine 5.3beta2  (see special notes in 1.2))
+      Grid Engine 5.3beta2  (see special notes in 1.2))
 
    to this version of Grid Engine 5.3 (SGE 5.3) or Grid Engine Enterprise
    Edition 5.3 (SGEEE 5.3). You cannot "downgrade" from GRD to SGE 5.3.
 
 
-   1.1 Estimated time for the upgrade procedure
+   1.3 Estimated time for the upgrade procedure
    --------------------------------------------
 
    We estimate the following time for the various steps of the upgrade:
@@ -101,7 +135,8 @@ Content
    user root (rsh or ssh) without providing a password to all your execution
    hosts (this does not necessarily need to be from your qmaster machine).
 
-   1.2 Upgrading from SGE 5.3beta2
+
+   1.4 Upgrading from SGE 5.3beta2
    -------------------------------
 
    If you are upgrading from SGE(EE) 5.3beta2 to SGE(EE) 5.3 and you are not
@@ -110,6 +145,25 @@ Content
 
    If you wish to upgrade from SGE 5.3beta2 to SGEEE 5.3 plaese follow the
    directions below.
+
+
+   1.5 Installing a SGE(EE) 5.3 patch
+   ----------------------------------
+
+   If you already installed SGE(EE) 5.3 or a SGE(EE) 5.3 patch release
+   (e.g. 5.3p1 etc.) and you want to upgrade to the newest patch level
+
+
+   If you are upgrading from a previous version please make sure to
+
+       - install the latest patch release if available
+
+       - install SGE(EE) 5.3 and all patches for SGE(EE) 5.3 if a patch
+          release is not available.
+
+   A patch release of SGE(EE) is a release which contains the original
+   version of SGE(EE) and all available patches. After installation of a
+   patch release it is not neccessary to install
 
 
 2) Installation changes compared to previous versions
@@ -769,6 +823,126 @@ Content
 
    6) Restart SGE(EE) 5.3 on your qmaster host and your execution hosts
       (see 12 above).
+
+
+14) Installing a SGE(EE) 5.3 patch
+----------------------------------
+
+   If you are installing a patch release you don't need to read the
+   following section.
+
+   14.1 Introduction
+   -----------------
+
+   There are two types of patches available:
+
+      - patch in "tar.gz" format
+
+      - patch in Sun Microsystems patch format to be installed with
+        "patchadd"
+
+   A patch in "tar.gz" will usually contain all binaries, even those which
+   where not changed by the patch. A patch in "patchadd" format will only
+   contain the files which where changed by the patch.
+
+   14.1 Patch installation
+   -----------------------
+
+   These installation instructions assume that you are running a homogenous
+   Sun Grid Engine cluster where all hosts share the same directory for the
+   binaries. If you are running Sun Grid Engine in a heterogenous
+   environment (mix of 32-bit and 64-bit binaries for Solaris and/or other
+   operating systems) it is only necessary to shutdown the daemons for the
+   architecture for which the patch is applied. If you installed the
+   binaries on a local partition, you only need to stop the SGE daemons for
+   that host on which you are installing the patch.
+
+   Before you unpack the patch in "tar.gz" or install the patch
+   with "patchadd" on Solaris you need to carry out the following steps.
+
+   By default there may by no running jobs when the patch is installed.
+   There may pending batch jobs, but no pending interactive jobs (qrsh,
+   qmake, qsh, qtcsh).
+
+   It is possible to install the patch with running batch jobs. To avoid a
+   failure of the active "sge_shepherd" binary it is necessary to move the
+   old shepherd binary (and copy it back prior the installation of the
+   patch).
+
+   In no case it is supported to install the patch with running interactive
+   jobs or with running qmake jobs or other jobs which use the tight
+   parallel integration support of SGE.
+
+   If the patch contains a new "sge_commd" binary (this is of course always
+   the case if you are installing the patch in "tar.gz" format) you also
+   need to move away the old "sge_commd" binary.
+
+   Stopping the Sun Grid Engine cluster to start jobs
+   --------------------------------------------------
+
+   Disable all queues that no new jobs are started:
+
+      # qmod -d '*'
+
+   Optional (only needed of there are running jobs which should continue to
+   run when the patch is installed:
+
+      # cd $SGE_ROOT/bin
+      # mv solaris64/sge_shepherd solaris64/sge_shepherd.sge53
+      # cp -p solaris64/sge_shepherd.sge53 solaris64/sge_shepherd
+
+   It is important that the binary is first moved and then copied back to
+   the original location using the "-p" switch of the cp command.
+
+
+   Shutting down the Grid Engine qmaster, scheduler and communication daemon
+   -------------------------------------------------------------------------
+
+   You need to shutdown (and restart) the qmaster and scheduler daemon and
+   all execution daemons on all SGE hosts. It is only necessary to shutdown
+   the communication daemons (sge_commd) of the patch contains a new
+   "sge_commd" binary
+
+   Shutdown your execution hosts and qmaster/scheduler:
+
+      # qconf -ke all
+      (wait 30 seconds)
+      # qconf -ks
+      # qconf -km
+      
+   If patch contains the "sge_commd" binary you need to shutdown all
+   communication daemons to avoid a crahs of the running "sge_commd" when
+   the new binary is installed. Login to your qmaster machine as user root
+   and enter:
+
+      # $SGE_ROOT/util/shutdown_commd.sh -all
+
+   Now please verify with the 'ps' command that the qmaster and scheduler
+   daemon (sge_qmaster, sge_schedd) and the execution daemon (sge_execd) and
+   communication deamons (sge_commd) on all your hosts are stopped.
+
+
+   Installing the patch and restarting Sun Grid Engine
+   ---------------------------------------------------
+
+   Now please install the patch with 'patchadd' or by unpacking the "tar.gz"
+   files in $SGE_ROOT.
+
+   After installing the patch you need to restart your SGE cluster. Please
+   login to your qmaster machine and enter:
+
+      # /etc/init.d/rcsge  (or the location of the startup script on your
+                            operating system)
+
+   Now you should repeat this step on all your execution hosts.
+
+   After restarting SGE you may again enable your queues:
+
+      # qmod -e '*'
+
+   If you renamed the shepherd binary you may safely delete the old binary
+   when all jobs finished which where running prior the patch installation.
+
 
 14) Copyright
 -------------

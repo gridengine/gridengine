@@ -1,3 +1,7 @@
+EB-2002-01-11-0: Bugfix:    not existing shell in jobscript in combination
+                            with shell_start_mode=unix_behaviour set queue
+                            and not job into error state.
+
 AA-2002-01-11-0: Feature:   Security:
                             - scripts for generation/installation of certs, 1st draft under dist/util/sgeCA
                             - changes to script/distinst, script/distinst.site

@@ -93,4 +93,8 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
 
 int job_is_zombie_job(const lListElem *job); 
 
+const char *job_get_shell_start_mode(const lListElem *job,
+                                     const lListElem *queue,
+                                     const char *conf_shell_start_mode);
+
 #endif /* __SGE_JOB_JATASK_H */    

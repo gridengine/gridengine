@@ -679,10 +679,28 @@ int is_array
          int job_caused_failure = 0;
 
          if (failed==SSTATE_NO_SHELL) {
-            lListElem *jep = lGetElemUlong(Master_Job_List, JB_job_number, jobid); 
-            if (jep && lGetList(jep, JB_shell_list))
-               job_caused_failure = 1;
+            lListElem *job = lGetElemUlong(Master_Job_List, JB_job_number, 
+                                           jobid); 
+            lListElem *ja_task = job_search_task(job, NULL, jataskid, 0);
+            lListElem *master_queue = NULL;
+
+            if (job && ja_task) {
+               master_queue = responsible_queue(job, ja_task, NULL, NULL);
+            }
+
+            if (job) {
+               if (lGetList(job, JB_shell_list)) {
+                  job_caused_failure = 1;
+               } else if (master_queue) {
+                  const char *shell_start_mode = job_get_shell_start_mode(job, 
+                                          master_queue, conf.shell_start_mode);
+                  if (!strcmp(shell_start_mode, "unix_behavior")) {
+                     job_caused_failure = 1;
+                  }
+               }
+            }
          }
+
 
          if (!job_caused_failure) {
             general_failure = GFSTATE_QUEUE;

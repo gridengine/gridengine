@@ -95,6 +95,7 @@
 #include "utility.h"
 #include "jb_now.h"
 #include "sge_feature.h"
+#include "sge_job_jatask.h"
 
 #define ENVIRONMENT_FILE "environment"
 #define CONFIG_FILE "config"
@@ -1293,9 +1294,7 @@ char *err_str
    }
 
    fprintf(fp, "shell_start_mode=%s\n", 
-      lGetString(jep, JB_job_source)?"raw_exec":
-       ((cp=lGetString(master_q, QU_shell_start_mode)) && strcasecmp(cp, "none"))?
-       cp: conf.shell_start_mode);
+           job_get_shell_start_mode(jep, master_q, conf.shell_start_mode));
 
    /* we need the basename for loginshell test */
    shell = strrchr(shell_path, '/');

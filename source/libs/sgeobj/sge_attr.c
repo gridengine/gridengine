@@ -51,7 +51,8 @@
 
 #define HOSTATTR_LAYER BASIS_LAYER
 
-#define TEMPLATE_ATTR_IMPL(PREFIX, TYPE, DESCRIPTOR, HREF_NM, VALUE_NM)       \
+#define TEMPLATE_ATTR_IMPL(PREFIX, TYPE, INTERNAL_TYPE,                       \
+                           DESCRIPTOR, HREF_NM, VALUE_NM)                     \
                                                                               \
 lListElem *                                                                   \
 PREFIX##_create(lList **answer_list, const char *href, TYPE value)            \
@@ -77,7 +78,7 @@ PREFIX##_list_add(lList **this_list, lList **answer_list, lListElem **attr,   \
                                                                               \
 bool                                                                          \
 PREFIX##_list_find_value(const lList *this_list, lList **answer_list,         \
-                         const char *hostname, TYPE *value)                   \
+                         const char *hostname, INTERNAL_TYPE *value)          \
 {                                                                             \
    return attr_list_find_value(this_list, answer_list, hostname,              \
                                value, DESCRIPTOR, HREF_NM, VALUE_NM);         \
@@ -326,7 +327,7 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
 {
    bool ret = false;
 
-   DENTER(TOP_LAYER, "attr_list_find_value");
+   DENTER(HOSTATTR_LAYER, "attr_list_find_value");
 
    if (this_list != NULL && hostname != NULL) {
       lListElem *href = NULL;
@@ -807,27 +808,29 @@ attr_list_verify(const lList *this_list, lList **answer_list,
    return ret;
 }
 
-TEMPLATE_ATTR_IMPL(str_attr, const char *, ASTR_Type, ASTR_href, ASTR_value) 
+TEMPLATE_ATTR_IMPL(str_attr, const char *, const char *, ASTR_Type, ASTR_href, ASTR_value) 
 
-TEMPLATE_ATTR_IMPL(ulng_attr, u_long32, AULNG_Type, AULNG_href, AULNG_value) 
+TEMPLATE_ATTR_IMPL(ulng_attr, u_long32, u_long32, AULNG_Type, AULNG_href, AULNG_value) 
 
-TEMPLATE_ATTR_IMPL(bool_attr, bool, ABOOL_Type, ABOOL_href, ABOOL_value) 
+TEMPLATE_ATTR_IMPL(bool_attr, bool, bool, ABOOL_Type, ABOOL_href, ABOOL_value) 
 
-TEMPLATE_ATTR_IMPL(time_attr, const char *, ATIME_Type, ATIME_href, ATIME_value) 
+TEMPLATE_ATTR_IMPL(time_attr, const char *, const char *, ATIME_Type, ATIME_href, ATIME_value) 
 
-TEMPLATE_ATTR_IMPL(mem_attr, const char *, AMEM_Type, AMEM_href, AMEM_value) 
+TEMPLATE_ATTR_IMPL(mem_attr, const char *, const char *, AMEM_Type, AMEM_href, AMEM_value) 
 
-TEMPLATE_ATTR_IMPL(inter_attr, const char *, AINTER_Type, AINTER_href, AINTER_value) 
+TEMPLATE_ATTR_IMPL(inter_attr, const char *, const char *, AINTER_Type, AINTER_href, AINTER_value) 
 
-TEMPLATE_ATTR_IMPL(strlist_attr, const char *, ASTRLIST_Type, ASTRLIST_href, ASTRLIST_value) 
+TEMPLATE_ATTR_IMPL(qtlist_attr, u_long32, u_long32, AQTLIST_Type, AQTLIST_href, AQTLIST_value) 
 
-TEMPLATE_ATTR_IMPL(usrlist_attr, const char *, AUSRLIST_Type, AUSRLIST_href, AUSRLIST_value) 
 
-TEMPLATE_ATTR_IMPL(prjlist_attr, const char *, APRJLIST_Type, APRJLIST_href, APRJLIST_value) 
+TEMPLATE_ATTR_IMPL(strlist_attr, const char *, lList *, ASTRLIST_Type, ASTRLIST_href, ASTRLIST_value) 
 
-TEMPLATE_ATTR_IMPL(celist_attr, const char *, ACELIST_Type, ACELIST_href, ACELIST_value) 
+TEMPLATE_ATTR_IMPL(usrlist_attr, const char *, lList *, AUSRLIST_Type, AUSRLIST_href, AUSRLIST_value) 
 
-TEMPLATE_ATTR_IMPL(solist_attr, const char *, ASOLIST_Type, ASOLIST_href, ASOLIST_value) 
+TEMPLATE_ATTR_IMPL(prjlist_attr, const char *, lList *, APRJLIST_Type, APRJLIST_href, APRJLIST_value) 
 
-TEMPLATE_ATTR_IMPL(qtlist_attr, u_long32, AQTLIST_Type, AQTLIST_href, AQTLIST_value) 
+TEMPLATE_ATTR_IMPL(celist_attr, const char *, lList *, ACELIST_Type, ACELIST_href, ACELIST_value) 
+
+TEMPLATE_ATTR_IMPL(solist_attr, const char *, lList *, ASOLIST_Type, ASOLIST_href, ASOLIST_value) 
+
 

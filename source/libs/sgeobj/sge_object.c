@@ -1282,15 +1282,13 @@ object_parse_bool_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_SS,
-                                 string, lNm2Str(name));
+                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1312,15 +1310,13 @@ object_parse_time_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_SS,
-                                 string, lNm2Str(name));
+                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                               ANSWER_QUALITY_ERROR,
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1342,15 +1338,13 @@ object_parse_inter_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_SS,
-                                 string, lNm2Str(name));
+                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                               ANSWER_QUALITY_ERROR,
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1382,15 +1376,13 @@ object_parse_list_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_SS,
-                                 string, lNm2Str(name));
+                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                               ANSWER_QUALITY_ERROR,
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1415,15 +1407,13 @@ object_parse_celist_from_string(lListElem *this_elem, lList **answer_list,
          tmp_list = lFreeList(tmp_list);
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_SS,
-                                 string, lNm2Str(name));
+                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                               ANSWER_QUALITY_ERROR,
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1462,8 +1452,7 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
                   } else {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_ERROR,
-                                       MSG_ERRORPARSINGVALUEFORNM_SS,
-                                       string, lNm2Str(name));
+                                       MSG_ERRORPARSINGVALUEFORNM_S, string);
                      ret = false;
                      break;
                   }
@@ -1481,8 +1470,7 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                               ANSWER_QUALITY_ERROR,
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1506,15 +1494,13 @@ object_parse_qtlist_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_SS,
-                                 string, lNm2Str(name));
+                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                               ANSWER_QUALITY_ERROR,
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1537,15 +1523,13 @@ object_parse_mem_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_SS,
-                                 string, lNm2Str(name));
+                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                               ANSWER_QUALITY_ERROR,
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1573,15 +1557,13 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_SS,
-                                 string, lNm2Str(name));
+                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1604,15 +1586,13 @@ object_parse_int_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_SS,
-                                 string, lNm2Str(name));
+                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1635,15 +1615,13 @@ object_parse_char_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
-                                 MSG_ERRORPARSINGVALUEFORNM_SS,
-                                 string, lNm2Str(name));
+                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1666,15 +1644,13 @@ object_parse_long_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
-                                 MSG_ERRORPARSINGVALUEFORNM_SS,
-                                 string, lNm2Str(name));
+                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1697,15 +1673,13 @@ object_parse_double_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_SS,
-                                 string, lNm2Str(name));
+                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1728,15 +1702,13 @@ object_parse_float_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_SS,
-                                 string, lNm2Str(name));
+                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
-                              MSG_ERRORPARSINGVALUEFORNM_SS,
-                              "<null>", lNm2Str(name));
+                              MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
    DEXIT;
@@ -1811,7 +1783,10 @@ object_get_any_type(lListElem *this_elem, int name, void *value)
          *((lListElem **)value) = lGetPosObject(this_elem, pos);
       } else if (type == lRefT) {
          *((lRef *)value) = lGetPosRef(this_elem, pos);
+      } else if (type == lListT) {
+         *((lList **)value) = lGetPosList(this_elem, pos);
       } else {
+         DTRACE;
          /* not possible */
       }
    }

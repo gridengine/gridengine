@@ -35,22 +35,18 @@
 
 #include "sge_cqueueL.h"
 
+typedef struct _list_attribute_struct {
+   int cqueue_attr;
+   int qinstance_attr;
+   int href_attr;
+   int value_attr;
+   int primary_key_attr;
+   const char *name;
+} list_attribute_struct;
+
 extern lList *Master_CQueue_List;
 
-int
-cqueue_attr_get_qinstance_attr(int cqueue_attr);
-
-int
-cqueue_attr_get_href_attr(int cqueue_attr);
-
-int 
-cqueue_attr_get_value_attr(int cqueue_attr);
-
-int
-cqueue_attr_get_primary_key_attr(int cqueue_attr);
-
-const char*
-cqueue_attr_get_name(int cqueue_attr);
+extern list_attribute_struct cqueue_attribute_array[];
 
 lListElem *
 cqueue_create(lList **answer_list, const char *name);

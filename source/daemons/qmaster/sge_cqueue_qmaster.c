@@ -117,10 +117,12 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    } 
 
    /*
-    * - find differences of hostlist configuration
-    * - resolve new hostnames
-    * - verify that new hostgroups exist
-    * - change the hostlist
+    * Find differences of hostlist configuration
+    * Resolve new hostnames
+    * Verify that given hostgroups exist
+    * Change the hostlist
+    *
+    * => add_hosts, rem_hosts, add_groups, rem_groups
     */
    if (ret) {
       DTRACE;
@@ -152,74 +154,50 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
       }
    }
 
+   /*
+    * Modify all cqueue attributes according to the given instructions
+    */
    if (ret) {
-      int index;
-      int array[] = {
-         CQ_consumable_config_list, CQ_load_thresholds,  CQ_suspend_thresholds,
-         CQ_projects,               CQ_xprojects,        CQ_acl, 
-         CQ_xacl,                   CQ_owner_list,       CQ_ckpt_list, 
-         CQ_pe_list,                CQ_subordinate_list, NoName
-      };
+      int index = 0;
 
-      index = 0;
-      while (array[index] != NoName && ret) {
-         pos = lGetPosViaElem(reduced_elem, array[index]);
+      while (cqueue_attribute_array[index].cqueue_attr == NoName && ret) {
+         pos = lGetPosViaElem(reduced_elem, 
+                              cqueue_attribute_array[index].cqueue_attr);
 
          if (pos >= 0) {
-            ret &= cqueue_mod_sublist(cqueue, answer_list, reduced_elem, 
-                                sub_command, array[index], 
-                                cqueue_attr_get_href_attr(array[index]),
-                                cqueue_attr_get_value_attr(array[index]), 
-                                cqueue_attr_get_primary_key_attr(array[index]),
-                                cqueue_attr_get_name(array[index]), 
+            /*
+             * Sublist type (CE_Type, US_Type, ...) 
+             * or simple type (bool, u_long32, const char *, ...)
+             */
+            if (cqueue_attribute_array[index].primary_key_attr != NoName) {
+               ret &= cqueue_mod_sublist(cqueue, answer_list, reduced_elem, 
+                                sub_command, 
+                                cqueue_attribute_array[index].cqueue_attr, 
+                                cqueue_attribute_array[index].href_attr, 
+                                cqueue_attribute_array[index].value_attr, 
+                                cqueue_attribute_array[index].primary_key_attr, 
+                                cqueue_attribute_array[index].name, 
                                 SGE_OBJ_CQUEUE);
+            } else {
+               lList *list = lGetPosList(reduced_elem, pos);
+
+               lSetList(cqueue, cqueue_attribute_array[index].cqueue_attr, 
+                        lCopyList("", list));
+            }
          }
-         index++;
       }
    }
-   
+
+   /*
+    *
+    */
    if (ret) {
-      int index;
-      int array[] = { 
-         CQ_seq_no,           CQ_nsuspend,         CQ_job_slots,        
-         CQ_fshare,           CQ_oticket,          CQ_rerun,    
-         CQ_suspend_interval, CQ_min_cpu_interval, CQ_notify,  
-         CQ_tmpdir,           CQ_shell,            CQ_s_fsize,
-         CQ_h_fsize,          CQ_s_data,           CQ_h_data,           
-         CQ_s_stack,          CQ_h_stack,          CQ_s_core,   
-         CQ_h_core,           CQ_s_rss,            CQ_h_rss,   
-         CQ_s_vmem,           CQ_h_vmem,           CQ_s_rt,
-         CQ_h_rt,             CQ_s_cpu,            CQ_h_cpu,            
-         CQ_priority,         CQ_prolog,           CQ_epilog,   
-         CQ_shell_start_mode, CQ_terminate_method, CQ_starter_method,       
-         CQ_suspend_method,   CQ_resume_method,    CQ_initial_state,
-         NoName
-      };
-
-      index = 0;
-      while (array[index] != NoName && ret) {
-         pos = lGetPosViaElem(reduced_elem, array[index]);
-
-         if (pos >= 0) {
-            lList *list = lGetPosList(reduced_elem, pos);
-
-            lSetList(cqueue, array[index], lCopyList("", list));
-         }
-         index++;
-      }
+      
    }
 
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_qtype);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-   
-         lSetList(cqueue, CQ_qtype, lCopyList("", list));
-      }
-   }
-
+   /*
+    * Create new qinstances
+    */
    if (ret) {
       lListElem *href = NULL;
 

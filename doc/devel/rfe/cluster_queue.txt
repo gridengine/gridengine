@@ -1,8 +1,4 @@
-                        Specification of Cluster Queues
-
-                              Andreas Haas
-                              25 July 2002
-
+Specification of Cluster Queues
 
 0. Introduction
 

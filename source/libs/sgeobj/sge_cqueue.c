@@ -55,127 +55,77 @@
 
 #define CQUEUE_LAYER TOP_LAYER
 
-typedef struct _list_attribute_struct {
-   int cqueue_attr;
-   int qinstance_attr;
-   int href_attr;
-   int value_attr;
-   int primary_key_attr;
-   const char *name;
-} list_attribute_struct;
-
 /* *INDENT-OFF* */
 
-static list_attribute_struct array[] = {
-   { CQ_consumable_config_list,  NoName,                ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_COMPLEX_VALUES    },
-   { CQ_load_thresholds,         NoName,                ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_LOAD_THRESHOLD    },
-   { CQ_suspend_thresholds,      NoName,                ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_SUSPEND_THRESHOLD },
-   { CQ_projects,                NoName,                APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_PROJECTS          },
-   { CQ_xprojects,               NoName,                APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_XPROJECTS         },
-   { CQ_acl,                     NoName,                AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_USER_LISTS        },
-   { CQ_xacl,                    NoName,                AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_XUSER_LISTS       },
-   { CQ_owner_list,              NoName,                AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_OWNER_LIST        },
-   { CQ_ckpt_list,               NoName,                ASTRLIST_href, ASTRLIST_value,   ST_name,    SGE_ATTR_CKPT_LIST         },
-   { CQ_pe_list,                 NoName,                ASTRLIST_href, ASTRLIST_value,   ST_name,    SGE_ATTR_PE_LIST           },
-   { CQ_subordinate_list,        NoName,                ASOLIST_href,  ASOLIST_value,    SO_qname,   SGE_ATTR_SUBORDINATE_LIST  },
+list_attribute_struct cqueue_attribute_array[] = {
+   { CQ_seq_no,                  QI_seq_no,                 AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_SEQ_NO            },
+   { CQ_nsuspend,                QI_nsuspend,               AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_NSUSPEND          },
+   { CQ_job_slots,               QI_job_slots,              AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_SLOTS             },
+   { CQ_fshare,                  QI_fshare,                 AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_FSHARE            },
+   { CQ_oticket,                 QI_oticket,                AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_OTICKET           },
 
-   { CQ_seq_no,                  QI_seq_no,             AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_SEQ_NO            },
-   { CQ_nsuspend,                QI_nsuspend,           AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_NSUSPEND          },
-   { CQ_job_slots,               QI_job_slots,          AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_SLOTS             },
-   { CQ_fshare,                  QI_fshare,             AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_FSHARE            },
-   { CQ_oticket,                 QI_oticket,            AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_OTICKET           },
-
-   { CQ_tmpdir,                  QI_tmpdir,             ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_TMPDIR            },
-   { CQ_shell,                   QI_shell,              ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_SHELL             },
-   { CQ_calendar,                QI_calendar,           ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_CALENDAR          },
-   { CQ_priority,                QI_priority,           ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_PRIORITY          },
-   { CQ_processors,              QI_processors,         ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_PROCESSORS        },
-   { CQ_prolog,                  QI_prolog,             ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_PROLOG            },
-   { CQ_epilog,                  QI_epilog,             ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_EPILOG            },
-   { CQ_shell_start_mode,        QI_shell_start_mode,   ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_SHELL_START_MODE  },
-   { CQ_starter_method,          QI_starter_method,     ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_STARTER_METHOD    },
-   { CQ_suspend_method,          QI_suspend_method,     ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_SUSPEND_METHOD    },
-   { CQ_resume_method,           QI_resume_method,      ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_RESUME_METHOD     },
-   { CQ_terminate_method,        QI_terminate_method,   ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_TERMINATE_METHOD  },
-   { CQ_initial_state,           QI_initial_state,      ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_INITIAL_STATE     },
-
-   { CQ_qtype,                   QI_qtype,              AQTLIST_href,  AQTLIST_value,    NoName,     SGE_ATTR_QTYPE             },
+   { CQ_tmpdir,                  QI_tmpdir,                 ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_TMPDIR            },
+   { CQ_shell,                   QI_shell,                  ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_SHELL             },
+   { CQ_calendar,                QI_calendar,               ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_CALENDAR          },
+   { CQ_priority,                QI_priority,               ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_PRIORITY          },
+   { CQ_processors,              QI_processors,             ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_PROCESSORS        },
+   { CQ_prolog,                  QI_prolog,                 ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_PROLOG            },
+   { CQ_epilog,                  QI_epilog,                 ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_EPILOG            },
+   { CQ_shell_start_mode,        QI_shell_start_mode,       ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_SHELL_START_MODE  },
+   { CQ_starter_method,          QI_starter_method,         ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_STARTER_METHOD    },
+   { CQ_suspend_method,          QI_suspend_method,         ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_SUSPEND_METHOD    },
+   { CQ_resume_method,           QI_resume_method,          ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_RESUME_METHOD     },
+   { CQ_terminate_method,        QI_terminate_method,       ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_TERMINATE_METHOD  },
+   { CQ_initial_state,           QI_initial_state,          ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_INITIAL_STATE     },
    
-   { CQ_rerun,                   QI_rerun,              ABOOL_href,    ABOOL_value,      NoName,     SGE_ATTR_RERUN             },
+   { CQ_rerun,                   QI_rerun,                  ABOOL_href,    ABOOL_value,      NoName,     SGE_ATTR_RERUN             },
 
-   { CQ_s_fsize,                 QI_s_fsize,            AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_FSIZE           },
-   { CQ_h_fsize,                 QI_h_fsize,            AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_FSIZE           },
-   { CQ_s_data,                  QI_s_data,             AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_DATA            },
-   { CQ_h_data,                  QI_h_data,             AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_DATA            },
-   { CQ_s_stack,                 QI_s_stack,            AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_STACK           },
-   { CQ_h_stack,                 QI_h_stack,            AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_STACK           },
-   { CQ_s_core,                  QI_s_core,             AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_CORE            },
-   { CQ_h_core,                  QI_h_core,             AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_CORE            },
-   { CQ_s_rss,                   QI_s_rss,              AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_RSS             },
-   { CQ_h_rss,                   QI_h_rss,              AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_RSS             },
-   { CQ_s_vmem,                  QI_s_vmem,             AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_VMEM            },
-   { CQ_h_vmem,                  QI_h_vmem,             AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_VMEM            },
+   { CQ_s_fsize,                 QI_s_fsize,                AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_FSIZE           },
+   { CQ_h_fsize,                 QI_h_fsize,                AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_FSIZE           },
+   { CQ_s_data,                  QI_s_data,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_DATA            },
+   { CQ_h_data,                  QI_h_data,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_DATA            },
+   { CQ_s_stack,                 QI_s_stack,                AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_STACK           },
+   { CQ_h_stack,                 QI_h_stack,                AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_STACK           },
+   { CQ_s_core,                  QI_s_core,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_CORE            },
+   { CQ_h_core,                  QI_h_core,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_CORE            },
+   { CQ_s_rss,                   QI_s_rss,                  AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_RSS             },
+   { CQ_h_rss,                   QI_h_rss,                  AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_RSS             },
+   { CQ_s_vmem,                  QI_s_vmem,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_VMEM            },
+   { CQ_h_vmem,                  QI_h_vmem,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_VMEM            },
 
-   { CQ_s_rt,                    QI_s_rt,               ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_S_RSS             },
-   { CQ_h_rt,                    QI_h_rt,               ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_H_RSS             },
-   { CQ_s_cpu,                   QI_s_cpu,              ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_S_CPU             },
-   { CQ_h_cpu,                   QI_h_cpu,              ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_H_CPU             },
+   { CQ_s_rt,                    QI_s_rt,                   ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_S_RT              },
+   { CQ_h_rt,                    QI_h_rt,                   ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_H_RT              },
+   { CQ_s_cpu,                   QI_s_cpu,                  ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_S_CPU             },
+   { CQ_h_cpu,                   QI_h_cpu,                  ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_H_CPU             },
 
-   { CQ_suspend_interval,        QI_suspend_interval,   AINTER_href,   AINTER_value,     NoName,     SGE_ATTR_SUSPEND_INTERVAL  },
-   { CQ_min_cpu_interval,        QI_min_cpu_interval,   AINTER_href,   AINTER_value,     NoName,     SGE_ATTR_MIN_CPU_INTERVAL  },
-   { CQ_notify,                  QI_notify,             AINTER_href,   AINTER_value,     NoName,     SGE_ATTR_NOTIFY            },
+   { CQ_suspend_interval,        QI_suspend_interval,       AINTER_href,   AINTER_value,     NoName,     SGE_ATTR_SUSPEND_INTERVAL  },
+   { CQ_min_cpu_interval,        QI_min_cpu_interval,       AINTER_href,   AINTER_value,     NoName,     SGE_ATTR_MIN_CPU_INTERVAL  },
+   { CQ_notify,                  QI_notify,                 AINTER_href,   AINTER_value,     NoName,     SGE_ATTR_NOTIFY            },
 
-   { NoName,                     NoName,                NoName,        NoName,           NoName,     NULL                       }
+   { CQ_qtype,                   QI_qtype,                  AQTLIST_href,  AQTLIST_value,    NoName,     SGE_ATTR_QTYPE             },
+
+   { CQ_ckpt_list,               QI_ckpt_list,              ASTRLIST_href, ASTRLIST_value,   ST_name,    SGE_ATTR_CKPT_LIST         },
+   { CQ_pe_list,                 QI_pe_list,                ASTRLIST_href, ASTRLIST_value,   ST_name,    SGE_ATTR_PE_LIST           },
+ 
+   { CQ_owner_list,              QI_owner_list,             AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_OWNER_LIST        },
+   { CQ_acl,                     QI_acl,                    AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_USER_LISTS        },
+   { CQ_xacl,                    QI_xacl,                   AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_XUSER_LISTS       },
+
+   { CQ_projects,                QI_projects,               APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_PROJECTS          },
+   { CQ_xprojects,               QI_xprojects,              APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_XPROJECTS         },
+
+   { CQ_consumable_config_list,  QI_consumable_config_list, ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_COMPLEX_VALUES    },
+   { CQ_load_thresholds,         QI_load_thresholds,        ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_LOAD_THRESHOLD    },
+   { CQ_suspend_thresholds,      QI_suspend_thresholds,     ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_SUSPEND_THRESHOLD },
+
+   { CQ_subordinate_list,        QI_subordinate_list,       ASOLIST_href,  ASOLIST_value,    SO_qname,   SGE_ATTR_SUBORDINATE_LIST  },
+
+   { NoName,                     NoName,                    NoName,        NoName,           NoName,     NULL                       }
 };
 
 /* *INDENT-ON* */
 
 lList *Master_CQueue_List = NULL;
-
-static int
-cqueue_attr_get_pos(int cqueue_attr);
-
-static int
-cqueue_attr_get_pos(int cqueue_attr) 
-{
-   int index = 0;
-
-   while (array[index].cqueue_attr != NoName && 
-          array[index].cqueue_attr != cqueue_attr) {
-      index++; 
-   } 
-   return index;
-}
-
-int 
-cqueue_attr_get_qinstance_attr(int cqueue_attr)
-{
-   return array[cqueue_attr_get_pos(cqueue_attr)].qinstance_attr;
-}
-
-int 
-cqueue_attr_get_href_attr(int cqueue_attr)
-{
-   return array[cqueue_attr_get_pos(cqueue_attr)].href_attr;
-}
-
-int 
-cqueue_attr_get_value_attr(int cqueue_attr)
-{
-   return array[cqueue_attr_get_pos(cqueue_attr)].value_attr;
-}
-
-int
-cqueue_attr_get_primary_key_attr(int cqueue_attr)
-{
-   return array[cqueue_attr_get_pos(cqueue_attr)].primary_key_attr;
-}
-
-const char*
-cqueue_attr_get_name(int cqueue_attr) 
-{
-   return array[cqueue_attr_get_pos(cqueue_attr)].name;
-}
 
 lList **cqueue_list_get_master_list(void)
 {
@@ -256,6 +206,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
 
       /* 
        * Delete all configuration lists except the default-configuration
+       * if sub_command is SGE_GDI_SET_ALL
        */
       if (sub_command == SGE_GDI_SET_ALL) {
          lListElem *elem, *next_elem;

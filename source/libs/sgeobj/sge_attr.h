@@ -44,9 +44,9 @@
  * user defined hostgroup names because in these names slashes are not
  * allowed.
  */ 
-#define HOSTREF_DEFAULT             "@/default_name"
+#define HOSTREF_DEFAULT             "@/"
 
-#define TEMPLATE_ATTR_PROTO(PREFIX, TYPE)                                     \
+#define TEMPLATE_ATTR_PROTO(PREFIX, TYPE, INTERNAL_TYPE)                      \
                                                                               \
 lListElem *                                                                   \
 PREFIX##_create(lList **answer_list, const char *href, TYPE value);           \
@@ -59,7 +59,7 @@ PREFIX##_list_find(const lList *this_list, const char *href);                 \
                                                                               \
 bool                                                                          \
 PREFIX##_list_find_value(const lList *this_list, lList **answer_list,         \
-                         const char *hostname, TYPE *value);                  \
+                         const char *hostname, INTERNAL_TYPE *value);         \
 bool                                                                          \
 PREFIX##_list_verify(const lList *this_list, lList **answer_list,             \
                      bool *is_ambiguous);                                     \
@@ -76,29 +76,31 @@ PREFIX##_has_hgroup_reference(const lList *this_list,                         \
 lListElem *                                                                   \
 PREFIX##_list_locate(const lList *this_list, const char *host_or_group);      
                                                                               
-TEMPLATE_ATTR_PROTO(str_attr, const char *)                    
+TEMPLATE_ATTR_PROTO(str_attr, const char *, const char *)
 
-TEMPLATE_ATTR_PROTO(ulng_attr, u_long32)                    
+TEMPLATE_ATTR_PROTO(ulng_attr, u_long32, u_long32)                    
 
-TEMPLATE_ATTR_PROTO(bool_attr, bool)                    
+TEMPLATE_ATTR_PROTO(bool_attr, bool, bool)                   
 
-TEMPLATE_ATTR_PROTO(time_attr, const char *)                    
+TEMPLATE_ATTR_PROTO(time_attr, const char *, const char *)
 
-TEMPLATE_ATTR_PROTO(mem_attr, const char *)                    
+TEMPLATE_ATTR_PROTO(mem_attr, const char *, const char *)
 
-TEMPLATE_ATTR_PROTO(inter_attr, const char *)                    
+TEMPLATE_ATTR_PROTO(inter_attr, const char *, const char *)
 
-TEMPLATE_ATTR_PROTO(strlist_attr, const char *)                    
+TEMPLATE_ATTR_PROTO(qtlist_attr, u_long32, u_long32)
 
-TEMPLATE_ATTR_PROTO(usrlist_attr, const char *)                    
 
-TEMPLATE_ATTR_PROTO(prjlist_attr, const char *)                    
+TEMPLATE_ATTR_PROTO(strlist_attr, const char *, lList *)
 
-TEMPLATE_ATTR_PROTO(celist_attr, const char *)                    
+TEMPLATE_ATTR_PROTO(usrlist_attr, const char *, lList *)
 
-TEMPLATE_ATTR_PROTO(solist_attr, const char *)                    
+TEMPLATE_ATTR_PROTO(prjlist_attr, const char *, lList *)                    
 
-TEMPLATE_ATTR_PROTO(qtlist_attr, u_long32)                    
+TEMPLATE_ATTR_PROTO(celist_attr, const char *, lList *)                    
+
+TEMPLATE_ATTR_PROTO(solist_attr, const char *, lList *)                    
+
 
 #undef ATTR_TYPE_PROTOTYPES 
 

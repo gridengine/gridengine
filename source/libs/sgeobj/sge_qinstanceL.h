@@ -88,7 +88,23 @@ enum {
 
    QI_suspend_interval,
    QI_min_cpu_interval,
-   QI_notify
+   QI_notify,
+   
+   QI_ckpt_list,
+   QI_pe_list,
+
+   QI_owner_list,
+   QI_acl,
+   QI_xacl,
+
+   QI_projects,
+   QI_xprojects,
+
+   QI_consumable_config_list,
+   QI_load_thresholds,
+   QI_suspend_thresholds,
+
+   QI_subordinate_list
 };
 
 SLISTDEF(QI_Type, QInstance)
@@ -139,6 +155,22 @@ SLISTDEF(QI_Type, QInstance)
    SGE_STRING(QI_min_cpu_interval, CULL_SPOOL | CULL_CONFIGURE)
    SGE_STRING(QI_notify, CULL_SPOOL | CULL_CONFIGURE)
 
+   SGE_LIST(QI_ckpt_list, ST_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QI_pe_list, ST_Type, CULL_SPOOL | CULL_CONFIGURE)
+
+   SGE_LIST(QI_owner_list, US_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QI_acl, US_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QI_xacl, US_Type, CULL_SPOOL | CULL_CONFIGURE)
+
+   SGE_LIST(QI_projects, UP_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QI_xprojects, UP_Type, CULL_SPOOL | CULL_CONFIGURE)
+
+   SGE_LIST(QI_consumable_config_list, CE_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QI_load_thresholds, CE_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QI_suspend_thresholds, CE_Type, CULL_SPOOL | CULL_CONFIGURE)
+
+   SGE_LIST(QI_subordinate_list, SO_Type, CULL_SPOOL | CULL_CONFIGURE)
+
 LISTEND 
 
 NAMEDEF(QIN)
@@ -188,6 +220,22 @@ NAMEDEF(QIN)
    NAME("QI_suspend_interval")
    NAME("QI_min_cpu_interval")
    NAME("QI_notify")
+
+   NAME("QI_ckpt_list")
+   NAME("QI_pe_list")
+
+   NAME("QI_owner_list")
+   NAME("QI_acl")
+   NAME("QI_xacl")
+
+   NAME("QI_projects")
+   NAME("QI_xprojects")
+
+   NAME("QI_consumable_config_list") 
+   NAME("QI_load_thresholds") 
+   NAME("QI_suspend_thresholds") 
+
+   NAME("QI_subordinate_list") 
 NAMEEND
 
 #define QIS sizeof(QIN)/sizeof(char*)

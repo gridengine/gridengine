@@ -52,22 +52,6 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
 {
    lListElem *ret = NULL;
    int index;
-   int array[] = {
-      CQ_seq_no,           CQ_nsuspend,         CQ_job_slots,
-      CQ_fshare,           CQ_oticket,          CQ_qtype,
-      CQ_tmpdir,           CQ_shell,            CQ_calendar,
-      CQ_priority,         CQ_processors,       CQ_prolog,
-      CQ_epilog,           CQ_shell_start_mode, CQ_starter_method,
-      CQ_suspend_method,   CQ_resume_method,    CQ_terminate_method, 
-      CQ_initial_state,    CQ_rerun,            CQ_s_rt,
-      CQ_h_rt,             CQ_s_cpu,            CQ_h_cpu,
-      CQ_s_fsize,          CQ_h_fsize,          CQ_s_data,
-      CQ_h_data,           CQ_s_stack,          CQ_h_stack,
-      CQ_s_core,           CQ_h_core,           CQ_s_rss,
-      CQ_h_rss,            CQ_s_vmem,           CQ_h_vmem,
-      CQ_suspend_interval, CQ_min_cpu_interval, CQ_notify
-      NoName
-   };
 
    DENTER(QINSTANCE_LAYER, "qinstance_create");
    
@@ -76,13 +60,13 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
    lSetString(ret, QI_name, lGetString(cqueue, CQ_name));
 
    index = 0;
-   while (array[index] != NoName) {
+   while (cqueue_attribute_array[index].cqueue_attr != NoName) {
       qinstance_modify(ret, answer_list, cqueue, 
-                       cqueue_attr_get_qinstance_attr(array[index]),
-                       array[index],
-                       cqueue_attr_get_href_attr(array[index]),
-                       cqueue_attr_get_value_attr(array[index]),
-                       cqueue_attr_get_primary_key_attr(array[index]));   
+                       cqueue_attribute_array[index].qinstance_attr,
+                       cqueue_attribute_array[index].cqueue_attr, 
+                       cqueue_attribute_array[index].href_attr,
+                       cqueue_attribute_array[index].value_attr,
+                       cqueue_attribute_array[index].primary_key_attr);
       index++;
    }
 
@@ -112,15 +96,13 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
       bool value_found = true;
       u_long32 ulong32_value;
       const char *str_value = NULL;
+      lList *list_value = NULL;
       bool bool_value;
-
-      DPRINTF(("handling %s\n", lNm2Str(cqueue_attibute_name)));
 
       switch (cqueue_attibute_name) {
          case CQ_qtype:
             qtlist_attr_list_find_value(attr_list, answer_list, 
                                         hostname, &ulong32_value);
-            DPRINTF(("new value: "u32"\n", ulong32_value));
             lSetUlong(this_elem, attribute_name, ulong32_value);
             break;
          case CQ_s_fsize:
@@ -137,7 +119,6 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
          case CQ_h_vmem:
             mem_attr_list_find_value(attr_list, answer_list, 
                                      hostname, &str_value);
-            DPRINTF(("new value: %s\n", str_value));
             lSetString(this_elem, attribute_name, str_value);
             break;
          case CQ_s_rt:
@@ -146,7 +127,6 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
          case CQ_h_cpu:
             time_attr_list_find_value(attr_list, answer_list, 
                                       hostname, &str_value);
-            DPRINTF(("new value: %s\n", str_value));
             lSetString(this_elem, attribute_name, str_value);
             break;
          case CQ_suspend_interval:
@@ -154,11 +134,45 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
          case CQ_notify:
             inter_attr_list_find_value(attr_list, answer_list, 
                                        hostname, &str_value);
-            DPRINTF(("new value: %s\n", str_value));
             lSetString(this_elem, attribute_name, str_value);
             break;
+         case CQ_ckpt_list:
+         case CQ_pe_list:
+            strlist_attr_list_find_value(attr_list, answer_list,
+                                         hostname, &list_value);
+
+            lSetList(this_elem, attribute_name, list_value);
+            break;
+         case CQ_owner_list:
+         case CQ_acl:
+         case CQ_xacl:
+            usrlist_attr_list_find_value(attr_list, answer_list,
+                                         hostname, &list_value);
+
+            lSetList(this_elem, attribute_name, list_value);
+            break;
+         case CQ_projects:
+         case CQ_xprojects:
+            prjlist_attr_list_find_value(attr_list, answer_list,
+                                         hostname, &list_value);
+
+            lSetList(this_elem, attribute_name, list_value);
+            break;
+         case CQ_consumable_config_list:
+         case CQ_load_thresholds:
+         case CQ_suspend_thresholds:
+            celist_attr_list_find_value(attr_list, answer_list,
+                                         hostname, &list_value);
+
+            lSetList(this_elem, attribute_name, list_value);
+            break;
+         case CQ_subordinate_list:
+            solist_attr_list_find_value(attr_list, answer_list,
+                                         hostname, &list_value);
+
+            lSetList(this_elem, attribute_name, list_value);
+            break;
          default:
-            DTRACE;
             value_found = false;
             break;
       }
@@ -168,20 +182,17 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
             case lStringT:
                str_attr_list_find_value(attr_list, answer_list,
                                         hostname, &str_value);
-               DPRINTF(("new value: %s\n", str_value));
                lSetString(this_elem, attribute_name, str_value);
                break;
             case lUlongT:
                ulng_attr_list_find_value(attr_list, answer_list, 
                                          hostname, &ulong32_value);
 
-               DPRINTF(("new value: "u32"\n", ulong32_value));
                lSetUlong(this_elem, attribute_name, ulong32_value);
                break;
             case lBoolT:
                bool_attr_list_find_value(attr_list, answer_list,
                                          hostname, &bool_value);
-               DPRINTF(("new value: %s\n", str_value));
                lSetBool(this_elem, attribute_name, bool_value);
                break;
             default:

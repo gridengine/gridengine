@@ -1,3 +1,10 @@
+EB-2003-01-23-0  Bugfix:    qalter shows wrong priority number when using 
+                            negative priorities with -p option
+                 IZ:        #403
+                 Bugtraq:   #4769608
+                 Review:    CR
+                 Changed:   sge_qmaster
+
 JG-2003-01-20-0  Bugfix:    Fixed a problem in the event client interface
                             when event clients did no regular fetching of 
                             events and had no busy handling configured.

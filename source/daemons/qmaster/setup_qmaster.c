@@ -191,13 +191,13 @@ int sge_setup_qmaster()
    ** build and change to master spool dir
    */
    DPRINTF(("chdir(\"/\")----------------------------\n"));
-   sge_chdir("/", 1);
+   sge_chdir_exit("/", 1);
 
    DPRINTF(("Making directories----------------------------\n"));
    sge_mkdir(conf.qmaster_spool_dir, 0755, 1);
 
    DPRINTF(("chdir("SFQ")----------------------------\n", conf.qmaster_spool_dir));
-   sge_chdir(conf.qmaster_spool_dir, 1);
+   sge_chdir_exit(conf.qmaster_spool_dir, 1);
 
    /* 
    ** we are in the master spool dir now 

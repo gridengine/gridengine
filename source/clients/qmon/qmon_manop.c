@@ -82,7 +82,9 @@ static Widget qmonCreateUsersetAsk(Widget parent);
 static void qmonUsersetOk(Widget w, XtPointer cld, XtPointer cad);
 static void qmonUsersetCancel(Widget w, XtPointer cld, XtPointer cad);
 static void qmonUsersetUserAdd(Widget w, XtPointer cld, XtPointer cad);
+#if 0 /* EB: not used */
 static void qmonUsersetName(Widget w, XtPointer cld, XtPointer cad);
+#endif
 
 static void qmonUserAskForProject(Widget w, XtPointer cld, XtPointer cad);
 static void qmonPopdownManopConfig(Widget w, XtPointer cld, XtPointer cad);
@@ -842,6 +844,8 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
+
+#if 0 /* EB: not used */
 static void qmonUsersetName(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
@@ -868,6 +872,7 @@ XtPointer cld, cad;
 
    DEXIT;
 }
+#endif
 
 /*-------------------------------------------------------------------------*/
 static void qmonUsersetUserAdd(w, cld, cad)

@@ -81,6 +81,7 @@
 #include "sge_range.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_object.h"
 
 enum {
    JOB_DISPLAY_MODE_RUNNING,

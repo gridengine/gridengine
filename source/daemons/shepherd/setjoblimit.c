@@ -35,12 +35,11 @@
 
 static osjobid_t os_job_id = 0;
 
-osjobid_t get_rlimits_os_job_id() {
+osjobid_t get_rlimits_os_job_id(void) 
+{
 	return os_job_id;
 }
 
-void set_rlimits_os_job_id(
-osjobid_t new_os_job_id 
-) {
+void set_rlimits_os_job_id(osjobid_t new_os_job_id) {
    os_job_id = new_os_job_id;
 }

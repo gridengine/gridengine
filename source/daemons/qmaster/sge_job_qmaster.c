@@ -2296,8 +2296,8 @@ int *trigger
 
       lSetUlong(new_job, JB_priority, uval);
 
-      sprintf(SGE_EVENT, MSG_JOB_PRIOSET_SSUU,
-               ruser, rhost, u32c(jobid), u32c(uval-BASE_PRIORITY));
+      sprintf(SGE_EVENT, MSG_JOB_PRIOSET_SSUI,
+               ruser, rhost, u32c(jobid), uval-BASE_PRIORITY);
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    }

@@ -921,8 +921,6 @@ Widget w;
 XtPointer cld, cad;
 {
    XmToggleButtonCallbackStruct *cbs = (XmToggleButtonCallbackStruct*) cad;
-   char buf[512];
-   String dsp;
 
    DENTER(GUI_LAYER, "qmonSubmitBinary");
 
@@ -1566,7 +1564,6 @@ int read_defaults
    lListElem *job = NULL;
    lList *alp = NULL;
    lList *cmdline = NULL;
-   char msg[BUFSIZ];
    char prefix[20];
    String dir_pre;
    SGE_STRUCT_STAT statb;

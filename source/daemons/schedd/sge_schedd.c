@@ -488,9 +488,9 @@ static int sge_setup_sge_schedd()
    /* get aliased hostname from commd */
    reresolve_me_qualified_hostname();
 
-   sge_chdir(conf.qmaster_spool_dir, 1);
+   sge_chdir_exit(conf.qmaster_spool_dir, 1);
    sge_mkdir(SCHED_SPOOL_DIR, 0755, 1);
-   sge_chdir(SCHED_SPOOL_DIR, 1);
+   sge_chdir_exit(SCHED_SPOOL_DIR, 1);
 
    /* having passed this statement we may log messages into the ERR_FILE */
    sge_copy_append(TMP_ERR_FILE_SCHEDD, ERR_FILE, SGE_MODE_APPEND);

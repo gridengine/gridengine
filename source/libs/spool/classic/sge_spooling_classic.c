@@ -238,7 +238,7 @@ int spool_classic_default_startup_func(const lListElem *rule)
    url = lGetString(rule, SPR_url);
    if(strcmp(cwd, url) != 0) {
       WARNING((SGE_EVENT, MSG_SPOOL_STARTEDINWRONGDIRECTORY_SS, url, cwd));
-      sge_chdir(url, TRUE);
+      sge_chdir_exit(url, TRUE);
    }
    free(cwd);
 

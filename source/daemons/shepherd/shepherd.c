@@ -80,7 +80,6 @@ struct rusage {
 #include "config_file.h"
 #include "err_trace.h"
 #include "setrlimits.h"
-#include "am_chdir.h"
 #include "signal_queue.h"
 #include "execution_states.h"
 #include "sge_signal.h"
@@ -127,8 +126,6 @@ pid_t wait3(int *, int, struct rusage *);
 
 int signalled_ckpt_job = 0;   /* marker if signalled a ckpt job */
 int ckpt_signal = 0;          /* signal to send to ckpt job */
-
-int sge_cwd_chdir(char *cp);
 
 static int notify_tasker(u_long32 exit_status);
 int main(int argc, char **argv);
@@ -885,7 +882,6 @@ int ckpt_type
    
    *truncate_flag = 0;  /* only first child truncates stderr/out */
 
-#if 1 /* EB: signals */
    if (received_signal > 0 && received_signal != SIGALRM) {
       int sig = map_signal(received_signal);
       int tmp_ret = add_signal(sig);
@@ -895,7 +891,6 @@ int ckpt_type
          shepherd_trace("failed to store received signal");
       }
    }
-#endif
  
    if (timeout) {
       shepherd_trace_sprintf("using signal delivery delay of %d seconds", timeout);
@@ -2007,7 +2002,7 @@ static int start_async_command(char *descr, char *cmd)
       foreground = 0;
 
       cwd = get_conf_val("cwd");
-      if (sge_cwd_chdir(cwd)) {
+      if (sge_chdir(cwd)) {
          shepherd_trace_sprintf("%s: can't chdir to %s", descr, cwd);
       }   
 

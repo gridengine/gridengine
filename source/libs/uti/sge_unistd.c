@@ -196,12 +196,12 @@ void sge_sleep(int sec, int usec)
 #endif
 }       
 
-/****** uti/unistd/sge_chdir() ***********************************************
+/****** uti/unistd/sge_chdir_exit() *******************************************
 *  NAME
-*     sge_chdir() -- Replacement for chdir() 
+*     sge_chdir_exit() -- Replacement for chdir() 
 *
 *  SYNOPSIS
-*     int sge_chdir(const char *path, int exit_on_error) 
+*     int sge_chdir_exit(const char *path, int exit_on_error) 
 *
 *  FUNCTION
 *     Change working directory 
@@ -214,8 +214,11 @@ void sge_sleep(int sec, int usec)
 *     int - error state
 *         0 - OK
 *        -1 - ERROR ('exit_on_error'==1 the function may not return)
+*
+*  SEE ALSO
+*     uti/unistd/sge_chdir()
 ******************************************************************************/
-int sge_chdir(const char *path, int exit_on_error) 
+int sge_chdir_exit(const char *path, int exit_on_error) 
 {
    DENTER(BASIS_LAYER, "sge_chdir");
  
@@ -232,6 +235,41 @@ int sge_chdir(const char *path, int exit_on_error)
    DEXIT;
    return 0;
 }           
+
+/****** sge/unistd/sge_chdir() ************************************************
+*  NAME
+*     sge_chdir() --  Replacement for chdir()
+*
+*  SYNOPSIS
+*     int sge_chdir(const char *dir) 
+*
+*  FUNCTION
+*     Change working directory 
+*
+*  INPUTS
+*     const char *dir - pathname 
+*
+*  RESULT
+*     int - error state
+*        0 - success
+*        != 0 - error 
+*
+*  NOTE
+*     Might be used in shepherd because it does not use CRITICAL/ERROR.
+*
+*  SEE ALSO
+*     uti/unistd/sge_chdir_exit()
+******************************************************************************/
+int sge_chdir(const char *dir)
+{
+   SGE_STRUCT_STAT statbuf;
+
+   /*
+    * force automount
+    */
+   SGE_STAT(dir, &statbuf);
+   return chdir(dir);
+}
 
 /****** uti/unistd/sge_exit() *************************************************
 *  NAME

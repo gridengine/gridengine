@@ -38,7 +38,6 @@ SHEPHERD_TARGETS = sge_shepherd
 
 SHEPHERD_SRC = shepherd.c \
            builtin_starter.c \
-           am_chdir.c \
            setrlimits.c \
            signal_queue.c \
            sge_shepconf.c \
@@ -103,9 +102,6 @@ sge_starter.o:	$(SHEPHERD_DIR)/sge_starter.c
 
 builtin_starter.o:	$(SHEPHERD_DIR)/builtin_starter.c
 		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/builtin_starter.c
-
-am_chdir.o:	$(SHEPHERD_DIR)/am_chdir.c
-		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/am_chdir.c
 
 signal_queue.o:	$(SHEPHERD_DIR)/signal_queue.c
 		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/signal_queue.c

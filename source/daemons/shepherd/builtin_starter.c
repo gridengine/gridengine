@@ -29,20 +29,19 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
 #include <pwd.h>
 #include <errno.h>
 
-#include <sge_string.h>
-#include <sge_stdlib.h>
-#include <sge_signal.h>
-#include <sge_unistd.h>
-#include <setosjobid.h>
+#include "sge_string.h"
+#include "sge_stdlib.h"
+#include "sge_signal.h"
+#include "sge_unistd.h"
+#include "setosjobid.h"
+#include "sge_unistd.h"
 
 #if defined(CRAY)
 #   if !defined(SIGXCPU)
@@ -74,7 +73,6 @@ struct rusage {
 #include "get_path.h"
 #include "basis_types.h"
 #include "execution_states.h"
-#include "am_chdir.h"
 #include "qlogin_starter.h"
 #include "sge_unistd.h"
 #include "config_file.h"
@@ -428,7 +426,7 @@ int truncate_stderr_out
 
    if(!qlogin_starter) {
       /* -cwd or from pw->pw_dir */
-      if (sge_cwd_chdir(cwd)) {
+      if (sge_chdir(cwd)) {
          shepherd_state = SSTATE_NO_CWD;
          sprintf(err_str, "error: can't chdir to %s: %s", cwd, strerror(errno));
          shepherd_error(err_str);

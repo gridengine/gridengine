@@ -95,7 +95,9 @@ sge_exit_func_t sge_install_exit_func(sge_exit_func_t);
 
 void sge_exit(int i);
 
-int sge_chdir(const char *path, int exit_on_error);  
+int sge_chdir_exit(const char *path, int exit_on_error);  
+
+int sge_chdir(const char *dir);
 
 int sge_mkdir(const char *path, int fmode, int exit_on_error);    
 

@@ -99,16 +99,16 @@ void sge_setup_sge_execd()
    reresolve_me_qualified_hostname();
 
    DPRINTF(("chdir(\"/\")----------------------------\n"));
-   sge_chdir("/",1);
+   sge_chdir_exit("/",1);
    DPRINTF(("Making directories----------------------------\n"));
    sge_mkdir(conf.execd_spool_dir, 0755, 1);
    DPRINTF(("chdir(\"%s\")----------------------------\n", conf.execd_spool_dir));
-   sge_chdir(conf.execd_spool_dir,1);
+   sge_chdir_exit(conf.execd_spool_dir,1);
    sge_mkdir(me.unqualified_hostname, 0755, 1);
    DPRINTF(("chdir(\"%s\",me.unqualified_hostname)--------------------------\n",
             me.unqualified_hostname));
 
-   sge_chdir(me.unqualified_hostname, 1); 
+   sge_chdir_exit(me.unqualified_hostname, 1); 
    /* having passed the  previous statement we may 
       log messages into the ERR_FILE  */
    sge_copy_append(TMP_ERR_FILE_EXECD, ERR_FILE, SGE_MODE_APPEND);

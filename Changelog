@@ -1,3 +1,9 @@
+SG-2004-09-15-1: Bugfix:    - fixed a locking issue in the loging.
+                 Changed:   qmaster
+                 Review:    CR
+                 Issue:     1268
+                 Bugtraq:   -NA-
+
 JG-2004-09-15-0: Bugfix:    Fixed a bug in event master.
                  Changed:   qmaster
                  Review:    SG

@@ -1,3 +1,9 @@
+MD-2004-03-17-0: Enhancem.: added a new util to utilbin fstype, to check
+                            for local or mounted filesystems -> needed for
+                            Issue 846
+                 Changed:   fstype, utilbin/Makefile
+                 Review:    CR
+
 RH-2004-03-17-0: Bugfix:    improvements for bug 799 
                  Changed:   all
                  Issue:     799

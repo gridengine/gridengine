@@ -39,14 +39,14 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
                  testsuidroot infotext spooldefaults spoolinit \
-                 tst_pthread_signals
+                 tst_pthread_signals fstype
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
                checkuser.c adminrun.c range.c  \
                languagetest.c infotext.c \
                spooldefaults.c spoolinit.c \
-               tst_pthread_signals.c
+               tst_pthread_signals.c fstype.c
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 
@@ -180,6 +180,12 @@ infotext:   infotext.o  version.o $(UTILIB) $(RMONLIB) $(LCKLIB)
 infotext.o: $(UTILBIN_DIR)/infotext.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/infotext.c
 
+#---------------------------------------------------------------------
+fstype:   fstype.o  version.o
+		$(CC) -o $@ fstype.o version.o $(LFLAGS) $(LIBS)
+
+fstype.o: $(UTILBIN_DIR)/fstype.c
+		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/fstype.c
 #---------------------------------------------------------------------
 spooldefaults:   spooldefaults.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(SECLIBS) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(LCKLIB) $(UTILIB) $(RMONLIB)
 		$(CC) -o $@ spooldefaults.o version.o sge_mt_init.o $(LFLAGS) -lspoolc $(SPOOLING_LIBS) -lgdi -lsgeobj -lsgeobjd -lsched $(SECLIB) $(KRBLIB) -lgdi -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)

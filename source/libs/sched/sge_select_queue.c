@@ -124,8 +124,8 @@ static int ensure_forced(lListElem *job, char *main_cplx_name, char *obj_name,
 static int sge_check_load_alarm(char *reason, const char *name, const char *load_value,
                                 const char *limit_value, u_long32 relop,
                                 u_long32 type, lListElem *hep,
-                                lListElem *hlep, u_long32 lc_host,
-                                u_long32 lc_global, lList *load_adjustments); 
+                                lListElem *hlep, double lc_host,
+                                double lc_global, lList *load_adjustments); 
 
 char* trace_resource(lListElem *ep) 
 {
@@ -946,8 +946,8 @@ static int is_requested(lList *req, const char *attr)
 static int sge_check_load_alarm(char *reason, const char *name, const char *load_value, 
                                 const char *limit_value, u_long32 relop, 
                                 u_long32 type, lListElem *hep, 
-                                lListElem *hlep, u_long32 lc_host, 
-                                u_long32 lc_global, lList *load_adjustments) 
+                                lListElem *hlep, double lc_host, 
+                                double lc_global, lList *load_adjustments) 
 {
    lListElem *job_load;
    double limit, load;
@@ -1004,17 +1004,17 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
                   if (nproc != 1) {
                      load_correction /= nproc;
                   }
-                  sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGHOSTNP_ISI, 
-                         (int)lc_host, load_correction_str, nproc);
+                  sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGHOSTNP_SFI, load_correction_str, 
+                        lc_host, nproc);
 
                } else {
-                  sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGHOST_IS, 
-                         (int)lc_host, load_correction_str);
+                  sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGHOST_SF, load_correction_str, 
+                        lc_host);
                }
             } else {
                load_correction *= lc_global;
-               sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGGLOBAL_IS, 
-                         (int)lc_global, load_correction_str);
+               sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGGLOBAL_SF, load_correction_str, 
+                       lc_global);
             }
 
             /* it depends on relop in complex config
@@ -1023,7 +1023,7 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
             case CMPLXGE_OP:
             case CMPLXGT_OP:
                load += load_correction;
-               sprintf(lc_diagnosis2, MSG_SCHEDD_LCDIAGPOSITIVE_S, lc_diagnosis1);
+               sprintf(lc_diagnosis2, MSG_SCHEDD_LCDIAGPOSITIVE_SS, load_value, lc_diagnosis1);
                break;
 
             case CMPLXNE_OP:
@@ -1032,7 +1032,7 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
             case CMPLXLE_OP:
             default:
                load -= load_correction;
-               sprintf(lc_diagnosis2, MSG_SCHEDD_LCDIAGNEGATIVE_S, lc_diagnosis1);
+               sprintf(lc_diagnosis2, MSG_SCHEDD_LCDIAGNEGATIVE_SS, load_value, lc_diagnosis1);
                break;
             }
          } else
@@ -1042,11 +1042,11 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
          if (resource_cmp(relop, load, limit)) {
             if (reason) {
                if (type == TYPE_BOO)
-                  sprintf(reason, MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSS, 
-                        name, load?MSG_TRUE:MSG_FALSE, lc_diagnosis2, limit_value);
+                  sprintf(reason, MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSSS, 
+                        name, load?MSG_TRUE:MSG_FALSE, lc_diagnosis2, map_op2str(relop), limit_value);
                else
-                  sprintf(reason, MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSS, 
-                        name, load, lc_diagnosis2, limit_value);
+                  sprintf(reason, MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSSS, 
+                        name, load, lc_diagnosis2, map_op2str(relop), limit_value);
             }
             DEXIT;
             return 1;
@@ -1067,7 +1067,7 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
 
          if (!match) {
             if (reason)
-               sprintf(reason, MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSS, name, load_value, limit_value);
+               sprintf(reason, MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSSS, name, load_value, map_op2str(relop), limit_value);
             DEXIT;
             return 1;
          }

@@ -171,6 +171,7 @@ int main(int argc, char *argv[]) {
    handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, comp_port, "qping", 0, 1,0 );
    if (handle == NULL) {
       printf("could not create communication handle\n");
+      cl_com_cleanup_commlib();
       exit(1);
    }
 
@@ -227,6 +228,7 @@ int main(int argc, char *argv[]) {
    retval = cl_commlib_shutdown_handle(handle,0);
    if (retval != CL_RETVAL_OK) {
       fprintf(stderr,"%s\n",cl_get_error_text(retval));
+      cl_com_cleanup_commlib();
       exit(1);
    }
 

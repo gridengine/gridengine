@@ -601,11 +601,16 @@ const char *target    /* prognames[QSTD|EXECD] */
    host = lGetHost(hep, EH_name);
 
    if (target) {
-
-      cl_commlib_set_connection_param(cl_com_get_handle((char*)target,1),HEARD_FROM_TIMEOUT, 0 ); 
+      if ( cl_com_remove_known_endpoint_from_name((char*)host,(char*)target,1) == CL_RETVAL_OK) {
+         DEBUG(( "set %s/%s/%d to unheard\n", host, target, 1 ));
+      }
    } else {
-      cl_commlib_set_connection_param(cl_com_get_handle((char*)prognames[EXECD],1),HEARD_FROM_TIMEOUT, 0 ); 
-      cl_commlib_set_connection_param(cl_com_get_handle((char*)prognames[QSTD],1),HEARD_FROM_TIMEOUT, 0 ); 
+      if ( cl_com_remove_known_endpoint_from_name((char*)host,(char*)prognames[EXECD],1) == CL_RETVAL_OK) {
+         DEBUG(( "set %s/%s/%d to unheard\n", host,(char*)prognames[EXECD], 1 ));
+      }
+      if ( cl_com_remove_known_endpoint_from_name((char*)host,(char*)prognames[QSTD],1) == CL_RETVAL_OK) {
+         DEBUG(( "set %s/%s/%d to unheard\n", host,(char*)prognames[QSTD], 1 ));
+      }
    }
 
    host_trash_nonstatic_load_values(hep);

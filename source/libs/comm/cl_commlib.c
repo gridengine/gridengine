@@ -538,7 +538,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
    
    new_handle->auto_close_mode = CL_CM_AC_DISABLED;
    new_handle->max_open_connections = sysconf(_SC_OPEN_MAX);
-   if ( new_handle->max_open_connections < 12 ) {
+   if ( new_handle->max_open_connections < 23 ) {
       CL_LOG_INT(CL_LOG_ERROR, "to less file descriptors:", new_handle->max_open_connections );
       free(new_handle);
       free(local_hostname);
@@ -547,7 +547,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
    }
    CL_LOG_INT(CL_LOG_INFO, "max file descriptors on this system    :", new_handle->max_open_connections);
 
-   new_handle->max_open_connections = new_handle->max_open_connections - 10;
+   new_handle->max_open_connections = new_handle->max_open_connections - 20;
 
    CL_LOG_INT(CL_LOG_INFO, "max. used descriptors for communication:", new_handle->max_open_connections);
    
@@ -3331,11 +3331,6 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
                               CL_LOG(CL_LOG_WARNING,"can't send ccrm, still messages in buffer");
                            }
                         }
-#if 0
-                        printf("received message from %s/%s/%ld\n", connection->remote->comp_host, 
-                                                                    connection->remote->comp_name, 
-                                                                    connection->remote->comp_id);
-#endif
   
                         handle->last_receive_message_connection = connection;                       
 
@@ -3851,6 +3846,8 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
          cl_raw_list_unlock(handle->connection_list);
          CL_LOG(CL_LOG_WARNING,"connection is allready open");
          free(unique_hostname);
+         unique_hostname = NULL;
+         receiver.comp_host = NULL;
 
          /* unlock connection list */
          pthread_mutex_unlock(handle->connection_list_mutex);
@@ -3900,6 +3897,9 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
                         we return that connection is already open */
                      cl_raw_list_unlock(handle->connection_list);
                      free(unique_hostname);
+                     unique_hostname = NULL;
+                     receiver.comp_host = NULL;
+
                      pthread_mutex_unlock(handle->connection_list_mutex);
                      CL_LOG(CL_LOG_INFO,"This is a new connected client, don't reopen, use new connection");
                      return CL_RETVAL_OK;
@@ -3913,6 +3913,9 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
                         we return that connection is already open */
                      cl_raw_list_unlock(handle->connection_list);
                      free(unique_hostname);
+                     unique_hostname = NULL;
+                     receiver.comp_host = NULL;
+
                      pthread_mutex_unlock(handle->connection_list_mutex);
                      CL_LOG(CL_LOG_INFO,"This is a new connected client, don't reopen, use new connection");
                      return CL_RETVAL_OK;
@@ -3938,6 +3941,9 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
                if ( cl_raw_list_get_elem_count(connection->received_message_list) != 0 ) {
                   cl_raw_list_unlock(handle->connection_list);
                   free(unique_hostname);
+                  unique_hostname = NULL;
+                  receiver.comp_host = NULL;
+
                   pthread_mutex_unlock(handle->connection_list_mutex);
                   return CL_RETVAL_OK;
                }
@@ -3948,6 +3954,9 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
                   connection->connection_state = CL_COM_CLOSING;
                   cl_raw_list_unlock(handle->connection_list);
                   free(unique_hostname);
+                  unique_hostname = NULL;
+                  receiver.comp_host = NULL;
+
                   /* unlock connection list */
                   pthread_mutex_unlock(handle->connection_list_mutex);
                   return CL_RETVAL_CONNECTION_GOING_DOWN;
@@ -3988,6 +3997,9 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       CL_LOG(CL_LOG_ERROR,"could not setup connection");
       cl_com_close_connection(&new_con);
       free(unique_hostname);
+      unique_hostname = NULL;
+      receiver.comp_host = NULL;
+
       /* unlock connection list */
       pthread_mutex_unlock(handle->connection_list_mutex);
       return ret_val;
@@ -4011,13 +4023,15 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       CL_LOG(CL_LOG_ERROR,"could not open connection");
       cl_com_close_connection(&new_con);
       free(unique_hostname);
+      unique_hostname = NULL;
+      receiver.comp_host = NULL;
+
       /* unlock connection list */
       pthread_mutex_unlock(handle->connection_list_mutex);
       return ret_val;
    }
    new_con->handler = handle;
 
-   free(unique_hostname); 
 
    /* lock connection list */
    cl_raw_list_lock(handle->connection_list);
@@ -4035,14 +4049,35 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       ret_val = cl_connection_list_append_connection(handle->connection_list, new_con,0);
       cl_raw_list_unlock(handle->connection_list);
    } else {
-      CL_LOG(CL_LOG_ERROR,"client not unique error, can't add opened connection into connection list");
-      cl_raw_list_unlock(handle->connection_list);
-      cl_com_close_connection(&new_con);
-      free(unique_hostname);
-      /* unlock connection list */
-      pthread_mutex_unlock(handle->connection_list_mutex);
-      return CL_RETVAL_ENDPOINT_NOT_UNIQUE;
+      if ( elem->connection->connection_state != CL_COM_CLOSING ) {
+         CL_LOG(CL_LOG_INFO,"try to open connection to already connected endpoint");
+
+         cl_raw_list_unlock(handle->connection_list);
+         cl_com_close_connection(&new_con);
+         free(unique_hostname); /* don't access receiver after this */
+         unique_hostname = NULL;
+         receiver.comp_host = NULL;
+
+         /* unlock connection list */
+         pthread_mutex_unlock(handle->connection_list_mutex);
+         return CL_RETVAL_OK;
+      } else {
+         CL_LOG(CL_LOG_ERROR,"client not unique error, can't add opened connection into connection list");
+         cl_raw_list_unlock(handle->connection_list);
+         cl_com_close_connection(&new_con);
+         free(unique_hostname); /* don't access receiver after this */
+         unique_hostname = NULL;
+         receiver.comp_host = NULL;
+
+         /* unlock connection list */
+         pthread_mutex_unlock(handle->connection_list_mutex);
+         return CL_RETVAL_ENDPOINT_NOT_UNIQUE;
+      }
    }
+
+   free(unique_hostname); /* don't access receiver after this */
+   unique_hostname = NULL;
+   receiver.comp_host = NULL;
 
    CL_LOG(CL_LOG_INFO,"new connection created");
    handle->statistic->new_connections =  handle->statistic->new_connections + 1;
@@ -4260,9 +4295,11 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
          return_value = cl_commlib_open_connection(handle, un_resolved_hostname, component_name, component_id );
          if (return_value != CL_RETVAL_OK) {
             free(unique_hostname);
+            CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_open_connection() returned: ",cl_get_error_text(return_value));
             return return_value;
          }
          if (retry_send >= 3) {
+            CL_LOG(CL_LOG_ERROR,"can't open connection, don't retry to send this message");
             retry_send = 0;
          }
       } else {
@@ -4270,15 +4307,6 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
       }
    }
 
-
-/*
-   TODO
-   MISSING: Behaviour for server which lost connection to client. Should the server try to
-            reconnect ?  No
-    
-   TODO  
-   Test:    What about two server ? Who is connecting to ?
-*/
 
    if (message_added == 1) {
       switch(cl_com_create_threads) {
@@ -4514,9 +4542,11 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
          return_value = cl_commlib_open_connection(handle, un_resolved_hostname, component_name, component_id );
          if (return_value != CL_RETVAL_OK) {
             free(unique_hostname);
+            CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_open_connection() returned: ",cl_get_error_text(return_value));
             return return_value;
          }
          if (retry_send >= 3) {
+            CL_LOG(CL_LOG_ERROR,"can't open connection, don't retry to send this message");
             retry_send = 0;
          }
       } else {

@@ -40,6 +40,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+static pthread_mutex_t global_cl_log_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cl_raw_list_t* global_cl_log_list = NULL;
 
 
 /* this functions must lock / unlock the raw list manually */
@@ -364,6 +366,10 @@ int cl_log_list_setup(cl_raw_list_t** list_p, const char* creator_name, int crea
          break;
    }
 
+   pthread_mutex_lock(&global_cl_log_list_mutex);
+   global_cl_log_list = *list_p;
+   pthread_mutex_unlock(&global_cl_log_list_mutex);
+
    return CL_RETVAL_OK;
 }
 
@@ -384,6 +390,10 @@ int cl_log_list_cleanup(cl_raw_list_t** list_p ) {          /* CR check */
    if (*list_p == NULL) {
       return CL_RETVAL_PARAMS;
    }
+
+   pthread_mutex_lock(&global_cl_log_list_mutex);
+   global_cl_log_list = NULL;
+   pthread_mutex_unlock(&global_cl_log_list_mutex);
 
    /* set ldata and creator_settings */
    ldata = (cl_log_list_data_t*)   (*list_p)->list_data;
@@ -460,40 +470,100 @@ int cl_log_list_log(int log_type,int line, const char* function_name,const char*
 #endif
 
 
-   if (thread_config == NULL || log_text == NULL || module_name == NULL || function_name == NULL ) {
+   if (log_text == NULL || module_name == NULL || function_name == NULL ) {
       return CL_RETVAL_PARAMS;
    }
 
-   if (thread_config->thread_log_list == NULL) {
+   if (thread_config != NULL) {
+      if (thread_config->thread_log_list == NULL) {
+         return CL_RETVAL_LOG_NO_LOGLIST;
+      }
+   
+   
+      /* check current log level */
+      ldata = thread_config->thread_log_list->list_data;
+      if (ldata != NULL) {
+         if (ldata->current_log_level < log_type || ldata->current_log_level == CL_LOG_OFF) {
+            return CL_RETVAL_OK;  /* message log doesn't match current log level or is switched off */
+         }
+      } else {
+         return CL_RETVAL_OK;  /* never try logging without list data ( this happens on setting up the log list ) */
+      }
+   
+      if (  ( ret_val = cl_raw_list_lock(thread_config->thread_log_list)) != CL_RETVAL_OK) {
+         return ret_val;
+      }
+   
+      ret_val2 = cl_log_list_add_log( thread_config->thread_log_list,
+                                      thread_config->thread_name,
+                                      line, 
+                                      function_name, 
+                                      module_name,
+                                      thread_config->thread_id,
+                                      thread_config->thread_state,
+                                      log_type, 
+                                      log_text, 
+                                      log_param ); 
+      
+      if (  ( ret_val = cl_raw_list_unlock(thread_config->thread_log_list)) != CL_RETVAL_OK) {
+         return ret_val;
+      }
+      if (ldata != NULL) {
+         if(ldata->flush_type == CL_LOG_IMMEDIATE) {
+            cl_log_list_flush();
+         }
+      }
+      return ret_val2;
+   } else {
+      /* TODO:
+       *  This happens to threads of application which have not started 
+       *  commlib setup function. A thread config should be provided for these
+       *  threads, or the application should use commlib threads ( lists/thread module ) 
+       */
+      pthread_mutex_lock(&global_cl_log_list_mutex);
+      /* This must be an application thread */
+      if ( global_cl_log_list != NULL) {
+         ldata = global_cl_log_list->list_data;
+         if (ldata != NULL) {
+            if (ldata->current_log_level < log_type || ldata->current_log_level == CL_LOG_OFF) {
+               pthread_mutex_unlock(&global_cl_log_list_mutex);
+               return CL_RETVAL_OK;  /* message log doesn't match current log level or is switched off */
+            }
+         } else {
+            pthread_mutex_unlock(&global_cl_log_list_mutex);
+            return CL_RETVAL_OK;  /* never try logging without list data ( this happens on setting up the log list ) */
+         }
+         if (  ( ret_val = cl_raw_list_lock(global_cl_log_list)) != CL_RETVAL_OK) {
+            pthread_mutex_unlock(&global_cl_log_list_mutex);
+            return ret_val;
+         }
+
+         ret_val2 = cl_log_list_add_log( global_cl_log_list,
+                                         "unkown application thread",
+                                         line, 
+                                         function_name, 
+                                         module_name,
+                                         -1,
+                                         -1,
+                                          log_type, 
+                                          log_text, 
+                                          log_param ); 
+ 
+         if (  ( ret_val = cl_raw_list_unlock(global_cl_log_list)) != CL_RETVAL_OK) {
+            pthread_mutex_unlock(&global_cl_log_list_mutex);
+            return ret_val;
+         }
+         if (ldata != NULL) {
+            if(ldata->flush_type == CL_LOG_IMMEDIATE) {
+               cl_log_list_flush();
+            }
+         }
+         pthread_mutex_unlock(&global_cl_log_list_mutex);
+         return ret_val2;
+      }
+      pthread_mutex_unlock(&global_cl_log_list_mutex);
       return CL_RETVAL_LOG_NO_LOGLIST;
    }
-
-
-   /* check current log level */
-   ldata = thread_config->thread_log_list->list_data;
-   if (ldata != NULL) {
-      if (ldata->current_log_level < log_type || ldata->current_log_level == CL_LOG_OFF) {
-         return CL_RETVAL_OK;  /* message log doesn't match current log level or is switched off */
-      }
-   } else {
-      return CL_RETVAL_OK;  /* never try logging without list data ( this happens on setting up the log list ) */
-   }
-
-   if (  ( ret_val = cl_raw_list_lock(thread_config->thread_log_list)) != CL_RETVAL_OK) {
-      return ret_val;
-   }
-
-   ret_val2 = cl_log_list_add_log(thread_config->thread_log_list,thread_config->thread_name,line, function_name, module_name,thread_config->thread_id,thread_config->thread_state,log_type, log_text, log_param ); 
-   
-   if (  ( ret_val = cl_raw_list_unlock(thread_config->thread_log_list)) != CL_RETVAL_OK) {
-      return ret_val;
-   }
-   if (ldata != NULL) {
-      if(ldata->flush_type == CL_LOG_IMMEDIATE) {
-         cl_log_list_flush();
-      }
-   }
-   return ret_val2;
 }
 
 #ifdef __CL_FUNCTION__
@@ -502,31 +572,7 @@ int cl_log_list_log(int log_type,int line, const char* function_name,const char*
 #define __CL_FUNCTION__ "cl_log_list_log_int()"
 int cl_log_list_log_int(int log_type,int line, const char* function_name,const char* module_name, const char* log_text, int param) {  /* CR check */
    int ret_val;
-   cl_thread_settings_t* thread_config = NULL;
-   cl_log_list_data_t* ldata = NULL;
    char* my_int_buffer = NULL;
-
-   /* get the thread configuration for the calling thread */
-   thread_config = cl_thread_get_thread_config();
-
-   /* all other parameters are checked in cl_log_list_log() call */
-   if (thread_config == NULL ) {
-      return CL_RETVAL_PARAMS;
-   }
-
-   if (thread_config->thread_log_list == NULL) {
-      return CL_RETVAL_LOG_NO_LOGLIST;
-   }
-
-   /* check current log level */
-   ldata = thread_config->thread_log_list->list_data;
-   if (ldata != NULL) {
-      if (ldata->current_log_level < log_type) {
-         return CL_RETVAL_OK;  /* message log doesn't match current log level */
-      }
-   } else {
-      return CL_RETVAL_OK;  /* never try logging without list data ( this happens on setting up the log list ) */
-   }
 
    my_int_buffer = (char*) malloc(  sizeof(char) * cl_util_get_int_number_length(param) + 1 );
    if (my_int_buffer == NULL) {

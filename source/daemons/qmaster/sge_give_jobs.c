@@ -399,11 +399,7 @@ int master
    */
    tgt2cc(jep, rhost, target);
 
-#ifdef ENABLE_NGC
    failed = gdi_send_message_pb(0, target, 1, rhost, master?TAG_JOB_EXECUTION:TAG_SLAVE_ALLOW, &pb, &dummymid);
-#else
-   failed = gdi_send_message_pb(0, target, 0, rhost, master?TAG_JOB_EXECUTION:TAG_SLAVE_ALLOW, &pb, &dummymid);
-#endif
 
    /*
    ** security hook
@@ -422,14 +418,11 @@ int master
       lSetUlong(jep, JB_script_size, 0);
    }
 
-#ifdef ENABLE_NGC
-   if (failed != CL_RETVAL_OK)
-#else
-   if (failed) 
-#endif
-   { /* we failed sending the job to the execd */
-      ERROR((SGE_EVENT, MSG_COM_SENDJOBTOHOST_US,   
-            u32c(lGetUlong(jep, JB_job_number)), rhost));
+
+   if (failed != CL_RETVAL_OK) { 
+      /* we failed sending the job to the execd */
+      ERROR((SGE_EVENT, MSG_COM_SENDJOBTOHOST_US, u32c(lGetUlong(jep, JB_job_number)), rhost));
+      ERROR((SGE_EVENT, "commlib error: %s\n", cl_get_error_text(failed)));
       sge_mark_unheard(hep, target);
       DEXIT;
       return -1;

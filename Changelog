@@ -1,3 +1,15 @@
+CR-2004-04-28-0: Bugfix:    - fixed problems when file descriptor limit
+                              is reached. (mark execd unheart)
+                            - raised nr. of file descriptors reserved for
+                              qmaster ( e.g. spooling)
+                            - fixed bug when a connection is opened from
+                              two service endpoints at the same time (e.g.: 
+                              qmaster and execd at)
+                            - threads which are unkown to communication lib
+                              (e.g. qmaster message thread) didn't log into
+                              communication log list
+                            - qping didn't shutdown commlib on error.
+
 JG-2004-04-28-1: Cleanup:   Removed no longer used directories QUEUE_DIR and
                             COMPLEX_DIR.
                  Review:    MD

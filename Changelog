@@ -1,4 +1,6 @@
-AH-2003-11-13-1: Testsuite: Further changes to reflect AH-2003-11-11-0
+AH-2003-11-14-1: Doc.:      Add supplement for AH-2003-11-13-1.
+
+AH-2003-11-14-0: Testsuite: Further changes to reflect AH-2003-11-11-0
                             Testsuite fixes.
 
 AD-2003-11-14-0: Bugfix:    Value of 'MAXID' was to large to be used in

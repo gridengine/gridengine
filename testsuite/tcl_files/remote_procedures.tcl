@@ -860,6 +860,11 @@ proc open_remote_spawn_process { hostname
       }
       if { $open_remote_spawn__tries <= 0 } {
           add_proc_error "open_remote_spawn_process" -1 "timeout waiting for ls command"
+          catch { send -i $open_remote_spawn__id "\003" } ;# send CTRL+C to stop evtl. running processes
+          puts $CHECK_OUTPUT "closing spawn process ..."
+          flush $CHECK_OUTPUT
+          catch { close -i $open_remote_spawn__id }
+          return ""
       }
       log_user 1
    }

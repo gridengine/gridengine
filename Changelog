@@ -1,3 +1,11 @@
+CR-2002-11-27-1  Testsuite: a) submit_del check: debug modifications
+                            b) new procedure: 
+                               check_c_source_code_files_for_macros()
+                               This procedure will return macros, that are
+                               unused in source code.
+                            c) open_remote_spawn_process() closing connection
+                               when execution script not exists on remote host.
+
 CR-2002-11-27-0  Testsuite: a) get_version_info() must test if product mode file
                  Bugfix:       exists, before opening the file. If file wasn't
                                available a TCL error occured.

@@ -13213,7 +13213,6 @@ proc compile_source { { do_only_install 0 } } {
          add_proc_error "compile_source" -2 "cvs update -dP error:\n$output" 
          append html_body [ create_html_text "cvs update -dP error:\n$output" ]
          update_compile_html_output $html_body
- 
          return -1
       }
       puts $CHECK_OUTPUT "------------------------------------------"
@@ -13380,9 +13379,10 @@ proc compile_source { { do_only_install 0 } } {
    append mail_body "\n\ncompile output saved in the files:"
    foreach elem $file_name_list {
       append mail_body "\n$elem"
+#      eval exec "/usr/openwin/bin/xterm -sl 5000 -sb -j -e tail -f $elem &"
    }
    append mail_body "\n"
-
+   
    
    }
 
@@ -13396,11 +13396,13 @@ proc compile_source { { do_only_install 0 } } {
 
    set original_spawn_list $spawn_list  
    set show_info 1
+   set output_buff ""
    while { [llength $spawn_list] > 0   } {
       if {[info exists spawn_id]} {
             unset spawn_id
       }
       if { $show_info == 1 } {
+         clear_screen
          puts $CHECK_OUTPUT "============================================"
          puts $CHECK_OUTPUT "open compile connections: "
          foreach id $spawn_list {
@@ -13415,7 +13417,8 @@ proc compile_source { { do_only_install 0 } } {
             puts -nonewline $CHECK_OUTPUT "[lindex $host_list $host_index] "
          }
          puts $CHECK_OUTPUT "\n============================================"
-         set show_info 0
+         puts $CHECK_OUTPUT $output_buff
+         set show_info 1
       }
 
       expect {
@@ -13517,6 +13520,9 @@ proc compile_source { { do_only_install 0 } } {
               }
               puts [lindex $file_list $index] "$expect_out(0,string)"
               flush [lindex $file_list $index]
+              set output_buff ""
+              append output_buff "\n[lindex $host_list $index]:\n"
+              append output_buff "$expect_out(0,string)"
          }
       }
    }

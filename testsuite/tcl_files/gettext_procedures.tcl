@@ -79,6 +79,133 @@ proc get_macro_messages_file_name { } {
   return $filename
 }
 
+proc search_for_macros_in_c_source_code_files { file_list search_macro_list} {
+   global CHECK_OUTPUT macro_messages_list
+
+   if { [info exists macro_messages_list] == 0 } {
+     update_macro_messages_list
+   }
+
+   set search_list $search_macro_list
+
+   puts $CHECK_OUTPUT "macro count: $macro_messages_list(0)"
+   foreach file $file_list {
+      puts $CHECK_OUTPUT "file: $file"
+      puts $CHECK_OUTPUT "macros in list: [llength $search_list]"
+      flush $CHECK_OUTPUT 
+      set file_p [ open $file r ]
+ 
+      set file_content ""
+      while { [gets $file_p line] >= 0 } {
+         append file_content $line
+      }
+      close $file_p
+      set found ""
+      foreach macro $search_list {
+         if { [string first $macro $file_content] >= 0 } {
+            lappend found $macro
+         }
+      }
+      foreach macro $found {
+         set index [lsearch -exact $search_list $macro]
+         if { $index >= 0 } {
+            set search_list [lreplace $search_list $index $index]
+         }
+      }
+   }
+   return $search_list 
+}
+
+#****** gettext_procedures/check_c_source_code_files_for_macros() **************
+#  NAME
+#     check_c_source_code_files_for_macros() -- check if macros are used in code
+#
+#  SYNOPSIS
+#     check_c_source_code_files_for_macros { } 
+#
+#  FUNCTION
+#     This procedure tries to find all sge macros in the source code *.c files.
+#     If not all macros are found, an error message is generated.
+#
+#  NOTES
+#     This procedure is called from update_macro_messages_list() after re-
+#     parsing the source code for macros.
+#
+#  SEE ALSO
+#     gettext_procedures/update_macro_messages_list()
+#*******************************************************************************
+proc check_c_source_code_files_for_macros {} {
+   global CHECK_OUTPUT CHECK_SOURCE_DIR macro_messages_list
+
+   if { [info exists macro_messages_list] == 0 } {
+     update_macro_messages_list
+   }
+
+
+   set c_files ""
+   set second_run_files ""
+
+   set dirs [get_all_subdirectories $CHECK_SOURCE_DIR ]
+   foreach dir $dirs {
+      set files [get_file_names $CHECK_SOURCE_DIR/$dir "*.c"]
+      foreach file $files { 
+         if { [string first "qmon" $file] >= 0 } {
+            lappend second_run_files $CHECK_SOURCE_DIR/$dir/$file
+            continue
+         }
+         if { [string first "3rdparty" $dir] >= 0 } {
+            lappend second_run_files $CHECK_SOURCE_DIR/$dir/$file
+            continue
+         }
+         lappend c_files $CHECK_SOURCE_DIR/$dir/$file
+      }
+   }
+
+   set search_list ""
+   for {set i 1} {$i <= $macro_messages_list(0) } {incr i 1} {
+      lappend search_list $macro_messages_list($i,macro)
+   }
+
+   set search_list [search_for_macros_in_c_source_code_files $c_files $search_list ]
+   set search_list [search_for_macros_in_c_source_code_files $second_run_files $search_list ]
+
+   set answer ""
+   foreach macro $search_list {
+      append answer "   $macro\n"
+   }
+ 
+   if { [llength $macro ] > 0 } {
+      set full_answer ""
+      append full_answer "following macros seems not to be used in source code:\n"
+      append full_answer "$CHECK_SOURCE_DIR\n\n"
+      append full_answer "---------------------------------------------------------------\n"
+      append full_answer $answer
+      append full_answer "---------------------------------------------------------------\n"
+
+      add_proc_error "check_c_source_code_files_for_macros" -3 $full_answer
+   }
+}
+
+#****** gettext_procedures/update_macro_messages_list() ************************
+#  NAME
+#     update_macro_messages_list() -- parse sge source code for sge macros
+#
+#  SYNOPSIS
+#     update_macro_messages_list { } 
+#
+#  FUNCTION
+#     This procedure reads all sge source code messages files (msg_*.h) in order
+#     to get all macro strings and store it to the global variable
+#     macro_messages_list.
+#
+#  NOTES
+#     This procedure is called when the source code is updated ( procedure
+#     compile_source() ) and when sge_macro() is called.
+#
+#  SEE ALSO
+#     gettext_procedures/sge_macro()
+#     check/compile_source()
+#*******************************************************************************
 proc update_macro_messages_list {} {
   global CHECK_OUTPUT CHECK_SOURCE_DIR macro_messages_list
   global CHECK_PROTOCOL_DIR CHECK_SOURCE_CVS_RELEASE
@@ -86,9 +213,6 @@ proc update_macro_messages_list {} {
      unset macro_messages_list
   }
   set filename [get_macro_messages_file_name]
-
-   
-
   if { [ file isfile $filename ] } {
      puts $CHECK_OUTPUT "reading macro messages spool file:\n\"$filename\" ..."
      puts $CHECK_OUTPUT "delete this file if you want to parse the macros again!"
@@ -108,8 +232,6 @@ proc update_macro_messages_list {} {
         return
      }
   }
-
-
   set error_text ""
   set msg_files ""
   set dirs [get_all_subdirectories $CHECK_SOURCE_DIR ]
@@ -228,7 +350,7 @@ proc update_macro_messages_list {} {
   set macro_messages_list(source_code_directory) $CHECK_SOURCE_DIR
   
   spool_array_to_file $filename "macro_messages_list" macro_messages_list
-
+  check_c_source_code_files_for_macros
 }
 
 #****** gettext_procedures/get_macro_string_from_name() ************************

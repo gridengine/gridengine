@@ -98,6 +98,7 @@ global access_lists_cluster_conf
 global access_lists_schedd_conf
 
 proc access_lists_setup  {} {
+   global CHECK_GROUP
    global access_lists_queue
    global access_lists_host
 
@@ -145,25 +146,36 @@ proc access_lists_setup  {} {
    set id [ submit_job $jobargs ]
    wait_for_jobstart $id "leeper" 60 1 1
    wait_for_jobend $id "leeper" 60
+
+   if { [string first "unknown" $CHECK_GROUP] >= 0 } {
+      add_proc_error "access_lists_setup" -1 "CHECK_GROUP set to unknown"
+   }
+
    set_error 0 "ok"
 }
 
 proc test_job_run { id_string job_id } {
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ARCH
 
-   wait_for_jobpending $job_id "leeper" 60 1
+   set had_error 0
+   if { [wait_for_jobpending $job_id "leeper" 30 1] != 0 } {
+      set had_error 1
+   }
 
    puts $CHECK_OUTPUT "Trigger scheduler monitoring"
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    puts $CHECK_OUTPUT $catch_result
 
-   if { [wait_for_jobstart $job_id "leeper" 100] != 0 } {
+
+   if { [wait_for_jobstart $job_id "leeper" 120 1 1] != 0 } {
+      set had_error 1
+   }
+   if {  $had_error == 1 } {
       catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f" } catch_result
       puts $CHECK_OUTPUT $catch_result
-      add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched:$catch_result"
+      add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched:\n$catch_result"
    } 
    delete_job $job_id 1
-#   wait_for_jobend $job_id "leeper" 60
 }
 
 proc run_user_denied_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
@@ -267,7 +279,7 @@ proc access_lists_global_host {} {
    global CHECK_GROUP 
    global access_lists_queue
 
-   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" 
 
 
    # testing user and group
@@ -316,6 +328,9 @@ proc access_lists_global_host {} {
       if { $group_test == 1 } {
          puts $CHECK_OUTPUT "group_test=1"
          set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
+         puts $CHECK_OUTPUT "check_group = $CHECK_GROUP"
+         puts $CHECK_OUTPUT "group1 = $group1"
+         puts $CHECK_OUTPUT "group2 = $CHECK_SECOND_FOREIGN_SYSTEM_GROUP"
          if { [string first $CHECK_GROUP $group1] >= 0 ||
               [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {
             set C_run 0
@@ -325,6 +340,7 @@ proc access_lists_global_host {} {
       } else {
          set C_run 1
       }
+      puts $CHECK_OUTPUT "run matrix: 0 0 $C_run"
       run_user_jobs "case 6,$A_USER,$B_USER" "$jobargs" 0 0 $C_run
    
       #case 7
@@ -343,7 +359,7 @@ proc access_lists_global_host {} {
          set C_run 0
       }
       run_user_jobs "case 7,$A_USER,$B_USER" "$jobargs" 1 1 $C_run
-  
+
       #restore
       set my_global_host(xuser_lists) "NONE"
       set my_global_host(user_lists)  "NONE"
@@ -388,7 +404,7 @@ proc access_lists_exec_host {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP access_lists_queue
 
-   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
 
 
    # testing user and group
@@ -510,7 +526,7 @@ proc access_lists_queue {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP
 
-   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
 
    # testing user and group
    set access_lists "{userA_name userB_name 0} {userA_group userB_group 1}"
@@ -629,7 +645,7 @@ proc access_lists_cluster_config {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP access_lists_queue
   
-   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"  
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"  
    
    # testing user and group
    set access_lists "{userA_name userB_name 0} {userA_group userB_group 1}"
@@ -750,7 +766,7 @@ proc access_lists_pe {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP
 
-   set jobargs "-o /dev/null -e /dev/null -pe access_test_pe 2 $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
+   set jobargs "-o /dev/null -e /dev/null -pe access_test_pe 2 $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
    
    set my_pe(pe_name)     "access_test_pe"
    set my_pe(queue_list)  $access_lists_queue

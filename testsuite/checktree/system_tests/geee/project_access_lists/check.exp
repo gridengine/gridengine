@@ -101,6 +101,7 @@ global project_access_lists_cluster_conf
 global project_access_lists_schedd_conf
 
 proc project_access_lists_setup  {} {
+   global CHECK_GROUP
    global project_access_lists_queue
    global project_access_lists_host
 
@@ -153,6 +154,10 @@ proc project_access_lists_setup  {} {
    set my_project(name) "userB_project_name"
    set my_project(acl)  "userB_name"
    add_prj my_project
+
+   if { [string first "unknown" $CHECK_GROUP] >= 0 } {
+      add_proc_error "project_access_lists_setup" -1 "CHECK_GROUP set to unknown"
+   }
 
 
    set_error 0 "ok"

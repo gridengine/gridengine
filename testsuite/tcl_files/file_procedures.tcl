@@ -730,6 +730,10 @@ proc get_binary_path { hostname binary } {
    } else {
      add_proc_error "get_binary_path" -1 "config file \"$config\" not found"
      set binary_path $binary
+     if { $CHECK_DEBUG_LEVEL == 2 } {
+        wait_for_enter
+     }
+     return $binary_path
    }
 
    if { [ string compare $binary_path "" ] == 0 } {

@@ -1183,7 +1183,7 @@ proc reset_schedd_config {} {
   global CHECK_PRODUCT_TYPE
  
   set default_array(algorithm)                  "default"
-  set default_array(schedule_interval)          "0:0:15"
+  set default_array(schedule_interval)          "0:0:10"
   set default_array(maxujobs)                   "0"
   set default_array(queue_sort_method)          "load"
   set default_array(user_sort)                  "false"
@@ -1195,7 +1195,7 @@ proc reset_schedd_config {} {
 # this is sgeee
   if { [string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
      set default_array(queue_sort_method)          "share"
-     set default_array(sgeee_schedule_interval)    "00:01:00"
+     set default_array(sgeee_schedule_interval)    "00:00:40"
      set default_array(halftime)                   "168"
      set default_array(usage_weight_list)          "cpu=1,mem=0,io=0"
      set default_array(compensation_factor)        "5"
@@ -4280,10 +4280,10 @@ proc delete_job { jobid { wait_for_end 0 }} {
    }
    if { $wait_for_end != 0 } {
       set my_timeout [timestamp]
-      incr my_timeout 60
+      incr my_timeout 90
       while { [get_qstat_j_info $jobid ] != 0 } {
           puts $CHECK_OUTPUT "waiting for jobend ..."
-          sleep 1
+          sleep 2
           if { [timestamp] > $my_timeout } {
              add_proc_error "delete_job" -1 "timeout while waiting for jobend"
              break;
@@ -5593,7 +5593,9 @@ proc release_job { jobid } {
 #     wait_for_jobend -- wait for end of job
 #
 #  SYNOPSIS
-#     wait_for_jobend { jobid jobname seconds } 
+#     wait_for_jobend { jobid jobname seconds 
+#                       { runcheck 1} 
+#                       { wait_for_end 0 } } 
 #
 #  FUNCTION
 #     This procedure is testing first if the given job is really running. After
@@ -5603,6 +5605,13 @@ proc release_job { jobid } {
 #     jobid   - job identification number
 #     jobname - name of job
 #     seconds - timeout in seconds
+#
+#     optional parameters:
+#     { runcheck }     - if 1 (default): check if job is running
+#     { wait_for_end } - if 0 (default): no for real job end waiting (job
+#                                        removed from qmaster internal list)
+#                        if NOT 0:       wait for qmaster to remove job from
+#                                        internal list
 #
 #  RESULT
 #      0 - job stops running
@@ -5627,7 +5636,7 @@ proc release_job { jobid } {
 #     sge_procedures/wait_for_jobpending()
 #     sge_procedures/wait_for_jobend()
 #*******************************
-proc wait_for_jobend { jobid jobname seconds {runcheck 1} } {
+proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
   
   global CHECK_OUTPUT
 
@@ -5653,6 +5662,20 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} } {
     }
     sleep 1
   }
+
+  if { $wait_for_end != 0 } {
+      set my_timeout [timestamp]
+      incr my_timeout 90
+      while { [get_qstat_j_info $jobid ] != 0 } {
+          puts $CHECK_OUTPUT "waiting for jobend ..."
+          sleep 2
+          if { [timestamp] > $my_timeout } {
+             add_proc_error "wait_for_jobend" -1 "timeout while waiting for jobend"
+             break;
+          }
+      }
+   }
+
   return 0
 }
 
@@ -5684,7 +5707,8 @@ proc get_version_info {} {
       catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-help" } result
       set help [ split $result "\n" ] 
       if { ([ string first "fopen" [ lindex $help 0] ] >= 0) || 
-           ([ string first "error" [ lindex $help 0] ] >= 0) } {
+           ([ string first "error" [ lindex $help 0] ] >= 0) || 
+           ([ string first "product_mode" [ lindex $help 0] ] >= 0) } {
           set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
           return $CHECK_PRODUCT_VERSION_NUMBER
       }

@@ -1,3 +1,8 @@
+CR-2002-08-01-0: Testsuite: - Several changes for maintrunc compatibility
+                            - better setup error behaviour
+                 Bugfix:    ckpt_migration_test fails due to reference checks
+                 Issue:     #340
+
 JG-2002-08-01-0: Bugfix:    Systems with security framework enabled did not 
                             work with cull version checking (JG-2002-07-17-0).
 

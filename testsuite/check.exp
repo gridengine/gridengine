@@ -1256,8 +1256,8 @@ proc source_procedures {} {
 #     ???/???
 #*******************************
 proc edit_defaults {} {
-  global CHECK_OUTPUT CHECK_DEFAULTS_FILE CHECK_HOST 
-
+  global CHECK_OUTPUT CHECK_DEFAULTS_FILE CHECK_HOST CHECK_CONFIG_DIR
+  global env
 
   load_defaults
   set return_value -1
@@ -1269,9 +1269,36 @@ proc edit_defaults {} {
   puts $def_edit_file
   set exit_edit_loop 0
   while { $exit_edit_loop == 0 } {
-     set env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
-     set id [ open_spawn_process [get_binary_path "$CHECK_HOST" "vim"] "$def_edit_file" ]
-     
+     if { $CHECK_CONFIG_DIR != "" } {
+        set vim_binary [get_binary_path "$CHECK_HOST" "vim"]
+     } else {
+        puts $CHECK_OUTPUT "config directory path not set ..."
+        set env_variable "EDITOR"
+        puts $CHECK_OUTPUT "checking for $env_variable environment setting..."
+        if { [info exists env($env_variable)] } {
+           puts $CHECK_OUTPUT "$env_variable=$env($env_variable)"
+           set vim_binary $env($env_variable)
+           puts $CHECK_OUTPUT "using environment $env_variable"
+        } else {
+           puts $CHECK_OUTPUT "environment $env_variable not set, using default"
+           set vim_binary "vim"
+        }
+        set catch_return [ catch { eval exec which $vim_binary } catch_value ]
+        puts $CHECK_OUTPUT "exec \"which $vim_binary\" returns: $catch_return"
+        if { $catch_return != 0 } {
+           puts $CHECK_OUTPUT "error executing \"which $vim_binary\"!!!"
+        } else {
+           set vim_binary $catch_value
+        }
+        if { [file exists $vim_binary] != 1 } {
+           puts $CHECK_OUTPUT "could not find binary"
+           puts $CHECK_OUTPUT "$vim_binary"
+           exit 1
+        }
+        puts $CHECK_OUTPUT "using \"$vim_binary\" as editor"
+     }
+     set env(EDITOR) $vim_binary
+     set id [ open_spawn_process $vim_binary "$def_edit_file" ]
      interact
      set exit_state [ close_spawn_process $id ]
      if { $exit_state == 0 } {
@@ -2328,7 +2355,6 @@ proc setup { {do_only_hostname_resolving 0} } {
   global CHECK_GUILTY_CATEGORIES
 
   puts "starting setup ..."
-
   if { [info exists env(GRD_ROOT) ] } {
      puts "unsetting GRD_ROOT"
      unset env(GRD_ROOT)
@@ -2353,14 +2379,19 @@ proc setup { {do_only_hostname_resolving 0} } {
      show_setup_information
   }
 
+  if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
+     set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
+     puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
+     set env(USER) $CHECK_USER
+  } 
+
+  if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
+     set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
+     puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
+     set env(GROUP) $CHECK_GROUP
+  }
+
   if { $have_defaults == 0 && $do_only_hostname_resolving == 0 } {
-
-      if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
-        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
-        puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        set env(USER) $CHECK_USER
-      } 
-
       set CHECK_ARCH [ resolve_arch ]
       puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
       set CHECK_HOST [ gethostname ]
@@ -2371,18 +2402,6 @@ proc setup { {do_only_hostname_resolving 0} } {
          puts $CHECK_OUTPUT "edit defaults: error ; stop"
          set setup_ok -1
       }
-      if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
-        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
-        puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        set env(USER) $CHECK_USER
-      } 
-
-      if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
-        set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
-        puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
-        set env(GROUP) $CHECK_GROUP
-      } 
-
 
       foreach host $CHECK_CORE_EXECD {
          puts $CHECK_OUTPUT "\n--> try rlogin $host and run command echo \"hello $host\" ..."
@@ -2439,19 +2458,6 @@ proc setup { {do_only_hostname_resolving 0} } {
      set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
      set_users_environment
    
-     if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
-        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
-        puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        set env(USER) $CHECK_USER
-     }
-     if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
-        set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
-
-        puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
-        set env(GROUP) $CHECK_GROUP
-      } 
- 
-     
    # resolve now: CHECK_HOST, CHECK_CORE_EXECD, CHECK_CORE_MASTER 
    
      set result [resolve_host $CHECK_CORE_MASTER]
@@ -2481,63 +2487,40 @@ proc setup { {do_only_hostname_resolving 0} } {
   }
 
   if { $do_only_hostname_resolving == 0 } {
-
      set env(COMMD_PORT) $CHECK_COMMD_PORT;
      set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
      set_users_environment
-   
-     if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
-        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
-        puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        set env(USER) $CHECK_USER
-     } 
-     if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
-        set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
-        puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
-        set env(GROUP) $CHECK_GROUP
-     } 
      set CHECK_ARCH [ resolve_arch ]
      set CHECK_HOST [ gethostname ]
-
-   
      if {[file isdirectory "$CHECK_MAIN_RESULTS_DIR"] != 1} {
            file mkdir "$CHECK_MAIN_RESULTS_DIR"
      }
-   
      set CHECK_RESULT_DIR "$CHECK_MAIN_RESULTS_DIR/$CHECK_HOST.completed"
      set CHECK_BAD_RESULT_DIR "$CHECK_MAIN_RESULTS_DIR/$CHECK_HOST.uncompleted"
      set CHECK_REPORT_FILE "$CHECK_MAIN_RESULTS_DIR/$CHECK_HOST.report"
-   
      set CHECK_CORE_RESULT_DIR "$CHECK_MAIN_RESULTS_DIR/core.completed"
      set CHECK_CORE_BAD_RESULT_DIR "$CHECK_MAIN_RESULTS_DIR/core.uncompleted"
-  
      set CHECK_JOB_OUTPUT_DIR "$CHECK_MAIN_RESULTS_DIR/testsuite_job_outputs"
  
-   
      if {[file isdirectory "$CHECK_CORE_RESULT_DIR"] != 1} {
         file mkdir "$CHECK_CORE_RESULT_DIR"
      }
      if {[file isdirectory "$CHECK_CORE_BAD_RESULT_DIR"] != 1} {
         file mkdir "$CHECK_CORE_BAD_RESULT_DIR"
      }
-   
      if {[file isdirectory "$CHECK_RESULT_DIR"] != 1} {
         file mkdir "$CHECK_RESULT_DIR"
      }
-   
      if {[file isdirectory "$CHECK_BAD_RESULT_DIR"] != 1} {
         file mkdir "$CHECK_BAD_RESULT_DIR"
      }
-   
      if {[file isdirectory "$CHECK_JOB_OUTPUT_DIR"] != 1} {
         file mkdir "$CHECK_JOB_OUTPUT_DIR"
      }
-
      if {[file isdirectory "$CHECK_PRODUCT_ROOT"] != 1} {
         file mkdir "$CHECK_PRODUCT_ROOT"
      }
-
-  } 
+  }
   get_version_info
 
   if {[file isdirectory "$CHECK_CONFIG_DIR"] != 1} {
@@ -2602,6 +2585,20 @@ proc setup { {do_only_hostname_resolving 0} } {
      if {$enter != "y" } { exit -1 }
      save_defaults
   }
+
+
+  if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
+     set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
+     puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
+     set env(USER) $CHECK_USER
+  } 
+
+  if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
+     set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
+     puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
+     set env(GROUP) $CHECK_GROUP
+  }
+
 
   if {$do_only_hostname_resolving == 1} {
       # resolve now: CHECK_HOST, CHECK_CORE_EXECD, CHECK_CORE_MASTER 
@@ -4259,7 +4256,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
   global CHECK_CUR_PROC_NAME CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_ERRORS check_root_access_needs
   global CHECK_CURRENT_WORKING_DIR check_highest_level check_init_level_procedure CHECK_ACT_LEVEL
   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_ROOT CHECK_TESTSUITE_ROOT
-  global CHECK_PRODUCT_FEATURE check_category
+  global CHECK_PRODUCT_FEATURE check_category CHECK_GROUP
 
   cd $CHECK_CURRENT_WORKING_DIR
 
@@ -4354,6 +4351,11 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
         debug_puts "level $level return value of test $run_single_test: $back"
         incr no_level_calls 1
      }
+
+     if { [string first "unknown" $CHECK_GROUP] >= 0 } {
+         add_proc_error "run_test" -1 "CHECK_GROUP set to unknown, test was $path in level $level"
+     }
+
      if {$back == -101  } { 
         incr nr_errors 1
         debug_puts $CHECK_OUTPUT "--> TCL ERROR in check $path in level $level <--"
@@ -5023,7 +5025,7 @@ proc print_menu_header {} {
   global CHECK_USER CHECK_REPORT_FILE CHECK_OUTPUT CHECK_HOST CHECK_BAD_RESULT_DIR 
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
   global CHECK_GUILTY_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER
-  global CHECK_PRODUCT_FEATURE CHECK_GUILTY_CATEGORIES
+  global CHECK_PRODUCT_FEATURE CHECK_GUILTY_CATEGORIES CHECK_USER CHECK_GROUP
 
   clear_screen
   get_version_info
@@ -5031,7 +5033,8 @@ proc print_menu_header {} {
 
   puts " system version     :  $CHECK_PRODUCT_VERSION_NUMBER ([resolve_version]) / feature: $CHECK_PRODUCT_FEATURE"
   puts " current dir        :  [ format_output "                       " 54 $CHECK_ACT_PATH ]"
-
+  puts " user group         :  $CHECK_GROUP"
+  puts " user name          :  $CHECK_USER"
   set dirs [ get_dir_names $CHECK_ACT_PATH ]
   set files [get_file_names $CHECK_ACT_PATH ]
   if { [ llength $dirs ] == 0 } {
@@ -6590,7 +6593,13 @@ set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n---
 
 
 if { $no_action == 1 } {
+  puts $CHECK_OUTPUT "CHECK_GROUP=$CHECK_GROUP"
   puts "No action flag is set -> exit 1"
+  
+  puts "group: $CHECK_GROUP"
+  wait_for_enter
+  setup 1
+  puts "group: $CHECK_GROUP"
   exit 1
 }
 

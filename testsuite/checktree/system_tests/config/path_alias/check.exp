@@ -255,6 +255,7 @@ proc path_alias_main {} {
       create_shell_script $script_name "cd" "$PATH_ALIAS_OUTPUT1 ; $command "
       set output [start_remote_prog $elem $CHECK_USER $script_name "" ]
       puts $CHECK_OUTPUT $output
+      puts $CHECK_OUTPUT "output generated from $script_name"
    }
  
    wait_for_end_of_all_jobs 100 

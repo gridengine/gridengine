@@ -968,7 +968,8 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
    return 0;
 }     
 
-/****** gdi/job_jatask/job_get_smallest_task_id() *******************************  NAME
+/****** gdi/job_jatask/job_get_smallest_task_id() ******************************
+*  NAME
 *     job_get_smallest_task_id() -- return the smallest un/enrolled task id
 *
 *  SYNOPSIS
@@ -983,7 +984,8 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 *
 *  RESULT
 *     u_long32 - task id
-*******************************************************************************/u_long32 job_get_smallest_task_id(lListElem *job)
+*******************************************************************************/
+u_long32 job_get_smallest_task_id(lListElem *job)
 {
    lListElem *first;
    u_long32 n_h_id, u_h_id, o_h_id, s_h_id;
@@ -1004,7 +1006,8 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
    return ret;
 }                                                                               
 
-/****** gdi/job_jatask/job_get_biggest_task_id() ********************************  NAME
+/****** gdi/job_jatask/job_get_biggest_task_id() *******************************
+*  NAME
 *     job_get_biggest_task_id() -- return the biggest un/enrolled task id
 *
 *  SYNOPSIS
@@ -1019,7 +1022,8 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 *
 *  RESULT
 *     u_long32 - task id
-*******************************************************************************/u_long32 job_get_biggest_task_id(lListElem *job)
+*******************************************************************************/
+u_long32 job_get_biggest_task_id(lListElem *job)
 {
    lListElem *last;
    u_long32 n_h_id, u_h_id, o_h_id, s_h_id;

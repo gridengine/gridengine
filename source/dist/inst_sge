@@ -428,6 +428,11 @@ PrintLocalConf()
    arg=$1
    if [ $arg = 1 ]; then
       $ECHO "conf_version           0"
+         $ECHO "# Version: 5.3"
+         $ECHO "#"
+         $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
+         $ECHO "#"
+         $ECHO "conf_version           0"
    fi
    $ECHO "mailer                 $MAILER"
    $ECHO "xterm                  $XTERM"
@@ -440,6 +445,10 @@ PrintLocalConf()
 #
 PrintConf()
 {
+   $ECHO "# Version: 5.3"
+   $ECHO "#"
+   $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
+   $ECHO "#"
    $ECHO "conf_version           0"
    $ECHO "qmaster_spool_dir      $QMDIR"
    $ECHO "execd_spool_dir        $CFG_EXE_SPOOL"

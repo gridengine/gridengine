@@ -1,3 +1,11 @@
+JG-2004-04-27-0: Bugfix:    Disable dynamic loading of spooling libs on IRIX65,
+                            AIX43 and AIX51: The classic spooling references
+                            global variables (Master_*_List) and reverse 
+                            resolution of symbols in DSO's seems to be broken 
+                            on these platforms.
+                 Changed:   qmaster, spoolinit, spooldefaults
+                 Review:    EB
+
 MD-2004-04-26-0: Bugfix:    qping fails if, SGE_QMASTER_PORT was not set.
                             (In case of using sge_qmaster service)
                  Changed:   sgemaster_template

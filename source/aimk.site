@@ -97,9 +97,19 @@ set COPYRIGHT_DIR = /off_home/codine/copyright
 #
 set SUN_COPYRIGHT_DIR  = /off_home/codine/n1ge6-copyright
 
-#
-# for HP11.00 we don't have dynamic loading of shared libraries
-# build with berkeleydb
-if ( $BUILDARCH == HP11 ) then
-   set argv = ( -spool-berkeleydb $argv )
-endif
+# for some platforms we cannot use dynamic loading of the spooling libraries.
+# fallback to berkeleydb spooling
+switch ($BUILDARCH)
+   case "HP11":
+      # for HP11.00 we don't have dynamic loading of shared libraries
+      # build with berkeleydb
+   case "AIX43":
+   case "AIX51":
+   case "IRIX65":
+      # for these platforms, reverse resolving of global symbols doesn't
+      # work as expected: Instead of reverse resolving global symbols
+      # (variables as well as functions), the code of dynamic libraries uses
+      # duplicates of the global symbols.
+      set argv = ( -spool-berkeleydb $argv )
+   breaksw
+endsw

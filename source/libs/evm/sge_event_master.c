@@ -605,6 +605,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
          /* delete old event client entry */
          set_event_client (id, NULL);
+         sge_free(lGetRef(ep, EV_sub_array));
          lRemoveElem(Master_Control.clients, ep);
       } else {
          INFO((SGE_EVENT, MSG_EVE_REG_SUU, name, u32c(id), u32c(ed_time)));

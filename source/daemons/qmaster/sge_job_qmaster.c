@@ -3892,7 +3892,7 @@ int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, cha
    u_long32 seek_jid;
    int ret;
    lListElem *old_jep, *new_jep;
-   int dummy_trigger;
+   int dummy_trigger = 0;
 
    DENTER(TOP_LAYER, "sge_gdi_copy_job");
 

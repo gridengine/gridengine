@@ -315,9 +315,12 @@ proc qmake_monitor {scenario id check_vars_name {parallel 0}} {
    # now check if make run was ok
    # check variables
    foreach var [array names check_vars] {
-      if { ! [info exists variables($var)] || 
-             [string compare $variables($var) $check_vars($var)] != 0} {
-         add_proc_error $scenario -1 "variable $var should have value \"$check_vars($var)\", but has \"$variables($var)\""
+      if { ! [info exists variables($var)] } {
+         add_proc_error $scenario -1 "variable $var hasn't been set in make task environment"
+      } else {
+         if { [string compare $variables($var) $check_vars($var)] != 0} {
+            add_proc_error $scenario -1 "variable $var should have value \"$check_vars($var)\", but has \"$variables($var)\""
+         }
       }
    }
 

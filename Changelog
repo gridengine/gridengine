@@ -1,3 +1,8 @@
+JG-2004-11-11-0: Bugfix:    Fixed memory access and uninitialized erros in
+                            qmaster.
+                 Review:    DT
+                 Testsuite: Minor fixes.
+
 CR-2004-11-10-1: Bugfix:    sgemaster -shadowd did not start shadowd if
                             no shadowd pid file exist.
                  Review:    AA

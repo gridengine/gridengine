@@ -165,7 +165,11 @@ char *argv[]
    uti_state_set_exit_func(schedd_exit_func);
    sge_setup_sig_handlers(SCHEDD);
 
-   sge_setup(SCHEDD, NULL);
+   if (sge_setup(SCHEDD, NULL) != 0) {
+      /* sge_setup has already printed the error message */
+      SGE_EXIT(1);
+   }
+   
    prepare_enroll(prognames[SCHEDD], 1, NULL);
 
    if ((ret = sge_occupy_first_three()) >= 0) {

@@ -315,6 +315,7 @@ int sge_gdi_setup(const char *programname, lList **alpp)
    lInit(nmv);
 
    if (sge_setup(uti_state_get_mewho(), alpp)) {
+      answer_list_output (alpp);
       DEXIT;
       return AE_QMASTER_DOWN;
    }

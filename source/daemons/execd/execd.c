@@ -160,7 +160,11 @@ char **argv
    priority_tags[0] = TAG_ACK_REQUEST;
    priority_tags[1] = TAG_JOB_EXECUTION;
 
-   sge_setup(EXECD, NULL);   
+   if (sge_setup(EXECD, NULL) != 0) {
+      /* sge_setup has already printed the error message */
+      SGE_EXIT(1);
+   }
+   
    prepare_enroll(prognames[EXECD], 1, priority_tags);
 
    if ((i=sge_occupy_first_three())>=0) {

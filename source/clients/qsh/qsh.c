@@ -1386,14 +1386,14 @@ int main(int argc, char **argv)
       if (opt_list_has_X(opts_cmdline, "-b")) {
          /* then commandline will determine over binary vs. script submiss. */
          binary = opt_list_is_X_true(opts_cmdline, "-b");
-      } else if (opt_list_has_X(opts_cmdline, "-b")) {
+      } else if (opt_list_has_X(opts_defaults, "-b")) {
          /* we have -b in defaults files, this one will decide */
          binary = opt_list_is_X_true(opts_defaults, "-b");
       }
 
       /* remove the binary option from commandline before proceeding */
       while ((ep = lGetElemStr(opts_defaults, SPA_switch, "-b"))) {
-         lRemoveElem(opts_cmdline, ep);
+         lRemoveElem(opts_defaults, ep);
       }
       while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-b"))) {
          lRemoveElem(opts_cmdline, ep);

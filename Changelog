@@ -1,3 +1,15 @@
+MD-2004-08-11-1: Bugfix:    - sge backup cannot override older backups
+                 Issue:       1222
+                 Bugtraq:     5085508
+                 Review:      HP
+                 Changed:     inst_sge
+
+MD-2004-08-11-0: Bugfix:    - sge_inst restore does not work
+                 Issue:       1219
+                 Bugtraq:     5085507
+                 Review:      HP
+                 Changed:     inst_sge
+
 CR-2004-08-11-3: Testsuite: - fixed bug in procedure wait_for_unknown_load:
                               endless loop if do_error_check is set to 0
 

@@ -115,7 +115,13 @@
 #define MSG_UTILBIN_PERMUSAGE5   _("with range s.th. like a-k\n")
 
 
-
+/*
+**  utilbin/sge_printf.c
+*/
+#define SGE_PRINTF_TESTSTRING_S "Welcome, %s\nhave a nice day!\n"
+#define SGE_PRINTF_UNDERLINE  "-"
+#define SGE_PRINTF_TESTSTRING_S_L10N _(SGE_PRINTF_TESTSTRING_S)
+#define SGE_PRINTF_UNDERLINE_L10N    _(SGE_PRINTF_UNDERLINE)
 
 /* 
 ** utilbin/range.c

@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.13 2004/01/30 17:35:50 andy Exp $	*/
+/*	$Id: rshd.c,v 1.14 2004/02/04 11:03:01 joga Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -99,11 +99,11 @@
 #define _PATH_DEFPATH "/usr/bin:/bin"
 #endif
 
-#if defined ALPHA4 || HP10 || IRIX6 || (SOLARIS && ! SOLARIS64 && !SOLARIS86) || NECSX5 || CRAY || DARWIN6
+#if defined ALPHA4 || HP10 || IRIX6 || (SOLARIS && !HAS_SOCKLEN_T) || NECSX5 || CRAY || DARWIN6
 typedef int socklen_t;
 #endif
 
-#if defined HP10 || IRIX6 || LINUX || (SOLARIS && !SOLARIS64 && !SOLARIS86) || NECSX5 || CRAY 
+#if defined HP10 || IRIX6 || LINUX || NECSX5 || CRAY 
 #ifndef HAS_IN_PORT_T
 typedef unsigned short in_port_t;
 #endif

@@ -1,3 +1,6 @@
+JG-2004-02-04-2: Bugfix:    Fixed build of rshd on Solaris 7 32 bit.
+                 Review:    pending
+
 DT-2004-02-04-0: Bugfix:    Fixed JAPI session initialization bug which caused
                             qsub to segfault if exiting due to failed job
                             submission.

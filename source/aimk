@@ -1578,6 +1578,11 @@ case SOLARIS86:
       exit 1
    endif
 
+   set rel = `uname -r | cut -f 2 -d .`
+   if ( $rel > 6 ) then
+      set CFLAGS = "-DHAS_SOCKLEN_T $CFLAGS"
+   endif
+
    set LOADAVGLIBS = "-lkvm -lkstat"
    if ( $CC == gcc ) then
       set OFLAG = "-O3"

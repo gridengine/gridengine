@@ -1,3 +1,6 @@
+CR-2002-02-25-0: Testsuite: new test: qsub -hold_jid JOBNAME test
+                 Issue:     #124
+
 AA-2002-02-25-0: Testsuite: security test changes
 
 EB-2002-02-25-0: Bugfix:    missing header file

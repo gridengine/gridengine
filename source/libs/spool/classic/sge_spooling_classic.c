@@ -990,32 +990,29 @@ spool_classic_default_write_func(lList **answer_list,
             char *pe_task_id;
             char *dup = strdup(key);
             bool only_job;
+            sge_spool_flags_t flags = SPOOL_DEFAULT;
+            lListElem *job;
             
             job_parse_key(dup, &job_id, &ja_task_id, &pe_task_id, &only_job);
    
             DPRINTF(("spooling job %d.%d %s\n", job_id, ja_task_id, 
                      pe_task_id != NULL ? pe_task_id : "<null>"));
             if (only_job) {
-               if (job_write_common_part((lListElem *)object, 0, SPOOL_DEFAULT)
-                   != 0) {
-                  ret = false;
-               }
+               flags |= SPOOL_IGNORE_TASK_INSTANCES;
+            }   
+
+            if (object_type == SGE_TYPE_JOB) {
+               job = (lListElem *)object;
             } else {
-               lListElem *job;
+               /* job_write_spool_file takes a job, even if we only want
+                * to spool a ja_task or pe_task
+                */
+               job = job_list_locate(Master_Job_List, job_id);
+            }
 
-               if (object_type == SGE_TYPE_JOB) {
-                  job = (lListElem *)object;
-               } else {
-                  /* job_write_spool_file takes a job, even if we only want
-                   * to spool a ja_task or pe_task
-                   */
-                  job = job_list_locate(Master_Job_List, job_id);
-               }
-
-               if (job_write_spool_file((lListElem *)job, ja_task_id, 
-                                        pe_task_id, SPOOL_DEFAULT) != 0) {
-                  ret = false;
-               }
+            if (job_write_spool_file((lListElem *)job, ja_task_id, 
+                                     pe_task_id, flags) != 0) {
+               ret = false;
             }
 
             free(dup);

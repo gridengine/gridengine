@@ -1,3 +1,8 @@
+JG-2004-04-29-0: Bugfix:    Fixed classic spooling of jobs.
+                 Changed:   qmaster
+                 Review:    EB
+                 Issue:     1006
+
 CR-2004-04-29-1: Bugfix:    fixed core dump of qmaster when setting a host
                             to unheard.
 

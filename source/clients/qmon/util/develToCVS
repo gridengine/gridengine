@@ -1,9 +1,7 @@
 #!/bin/sh
 #
-# develToCVS erzeugt aus Qmon_main dem Entwicklungs Resource File
-# das User Resource File Qmon und ein qmon_fallbacks.c file, das benutzt wird 
-# falls Qmon nicht existiert oder die Pfade (XAPPLRESDIR) nicht richtig 
-# gesetzt sind
+# develToCVS generates from clients/qmon/Q the Qmon application default file
+#
 
 AD2C=../clients/qmon/util/ad2c
 DIST_QMON=../dist/qmon/Qmon

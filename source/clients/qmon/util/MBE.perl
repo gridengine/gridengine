@@ -1,4 +1,8 @@
 #!/usr/bin/perl -w
+#
+# i18n helper to generate MBE messages 
+#
+
 
 open(FILE,"<$ARGV[0]") or die "unable to open file $ARGV[0].\n";
 

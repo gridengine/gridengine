@@ -361,13 +361,13 @@ elif [ $cmdname = myinst ]; then
 elif [ $cmdname = sgeinst ]; then 
    # This special rule creates a distribution which will be provided by Sun
    BASEDIR=/dist/SGEDIST
-   VERSIONDIR=SGE53p2
+   VERSIONDIR=SGE53p3
    SGE_PRODUCT_MODE=sge
    sundist=true
 elif [ $cmdname = sgeeeinst ]; then
    # This special rule creates a distribution which will be provided by Sun
    BASEDIR=/dist/SGEDIST
-   VERSIONDIR=SGEEE53p2
+   VERSIONDIR=SGEEE53p3
    SGE_PRODUCT_MODE=sgeee
    sgeee=true
    sundist=true
@@ -754,6 +754,7 @@ if [ $instcommon = true ]; then
       echo Installing \"man/\" and \"catman/\"
       Execute rm -rf $DEST_SGE_ROOT/man $DEST_SGE_ROOT/catman
       Execute cp -r MANSBUILD_$SGE_PRODUCT_MODE/SEDMAN/man $DEST_SGE_ROOT
+      Execute rm -rf $DEST_SGE_ROOT/man/man3
       Execute cp -r MANSBUILD_$SGE_PRODUCT_MODE/ASCMAN/catman $DEST_SGE_ROOT
    fi
 

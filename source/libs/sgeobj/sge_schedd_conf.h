@@ -198,5 +198,6 @@ void serf_set_active(bool);
 
 double sconf_get_weight_priority(void);
 
+bool sconf_get_profiling(void);
 
 #endif /* __SGE_SCHEDD_CONF_H */

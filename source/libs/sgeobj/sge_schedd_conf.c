@@ -44,7 +44,6 @@
 #include "sge_feature.h"
 #include "sge_usage.h"
 #include "sge_range.h"
-#include "sge_profiling.h"
 
 #include "sge_schedd_conf.h"
 #include "msg_schedd.h"
@@ -193,6 +192,7 @@ typedef struct{
    int default_duration;
 }config_pos_type;
 
+static bool schedd_profiling = false;
 
 static bool sconf_calc_pos(void);
 
@@ -229,8 +229,6 @@ const parameters_t params[] = {
 
 /* stores the overall configuraion */
 lList *Master_Sched_Config_List = NULL;
-
-extern int do_profiling; 
 
 const char *const policy_hierarchy_chars = "OFS";
 
@@ -303,13 +301,6 @@ static void sconf_clear_pos(void){
 
          if (pos.c_params)
             pos.c_params = lFreeList(pos.c_params);
-
-         /* exception for the profiling, the profiling will not be turned of, if
-            it was active and the params are set to none*/
-         do_profiling = false;
-         if(!do_profiling && prof_is_active()) {
-            prof_stop(NULL);
-         }
 
          pos.weight_ticket = -1;
          pos.weight_waiting_time = -1;
@@ -2111,6 +2102,7 @@ bool sconf_validate_config_(lList **answer_list){
    {
       const char *sparams = lGetString(lFirst(Master_Sched_Config_List), SC_params); 
       char *s = NULL; 
+      schedd_profiling = false;
       if (sparams) {
          for (s=sge_strtok(sparams, ",; "); s; s=sge_strtok(NULL, ",; ")) {
             int i = 0;
@@ -2131,7 +2123,7 @@ bool sconf_validate_config_(lList **answer_list){
          }
       } else {
          lSetString(lFirst(Master_Sched_Config_List), SC_params, "none");
-      }     
+      }
    }
 
    /* --- SC_reprioritize_interval */
@@ -2519,11 +2511,11 @@ static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, con
    lListElem *elem = NULL;
    DENTER(TOP_LAYER, "sconf_eval_set_profiling");
 
-   do_profiling = false;
+   schedd_profiling = false;
 
    if (!strncasecmp(param, "PROFILE=1", sizeof("PROFILE=1")-1) || 
        !strncasecmp(param, "PROFILE=TRUE", sizeof("PROFILE=FALSE")-1) ) {
-      do_profiling = true;
+      schedd_profiling = true;
       elem = lCreateElem(PARA_Type);
       lSetString(elem, PARA_name, "profile");
       lSetString(elem, PARA_value, "true");
@@ -2543,14 +2535,6 @@ static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, con
       lAppendElem(pos.c_params, elem);
    }
 
-   if(do_profiling && !prof_is_active()) {
-         prof_start(NULL);
-   }
-
-   if(!do_profiling && prof_is_active()) {
-      prof_stop(NULL);
-   }
-   
    DEXIT;
    return ret;
 }
@@ -2727,4 +2711,10 @@ void serf_set_active(bool on_off)
 bool serf_get_active(void)
 {
    return current_serf_do_monitoring;
+}
+
+bool
+sconf_get_profiling(void)
+{
+   return schedd_profiling;
 }

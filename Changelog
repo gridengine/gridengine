@@ -1,3 +1,9 @@
+JG-2004-04-08-0: Bugfix:    Fixed initialization of profiling in scheduler.
+                            Enabling profiling in scheduler did also enable
+                            profiling in qmaster.
+                 Changed:   sge_qmaster, sge_schedd
+                 Review:    SG
+
 AH-2004-04-07-0: Bugfix:    Use a default 'weight_waiting_time' to 0 (#959)
                  Review:    SG
 

@@ -70,6 +70,8 @@ void    feature_set_already_read_from_file(int i);
 int     feature_get_already_read_from_file(void);
 lList** feature_get_master_featureset_list(void);
 
+
+void            feature_initialize(void);
 int             feature_initialize_from_string(const char *mode);
 void            feature_activate(feature_id_t id);
 const char*     feature_get_featureset_name(feature_id_t id);

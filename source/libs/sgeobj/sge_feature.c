@@ -192,7 +192,9 @@ int feature_initialize_from_string(const char *mode)
    int ret;
 
    DENTER(TOP_LAYER, "featureset_initialize_from_string");
+
    id = feature_get_featureset_id(mode);
+
    if (id == FEATURE_UNINITIALIZED) {
       ERROR((SGE_EVENT, MSG_GDI_INVALIDPRODUCTMODESTRING_S, mode));
       ret = -3;
@@ -202,6 +204,52 @@ int feature_initialize_from_string(const char *mode)
    }
    DEXIT;
    return ret;
+}
+
+/****** sgeobj/feature/feature_initialize() ***********************************
+*  NAME
+*     feature_initialize() -- initialize this module
+*
+*  SYNOPSIS
+*     static void feature_initialize(void)
+*
+*  FUNCTION
+*     build up the CULL list "Master_FeatureSet_List" (FES_Type) with
+*     information found in the array "enabled_features_mask"
+*
+*  INPUTS
+*     static array enabled_features_mask[][]
+*
+*  RESULT
+*     initialized Master_FeatureSet_List
+*
+*  NOTES
+*     MT-NOTE: feature_initialize() is MT safe
+******************************************************************************/
+void feature_initialize(void)
+{
+   if (!*feature_get_master_featureset_list()) {
+      lListElem *featureset;
+      lListElem *feature;
+      int featureset_id;
+      int feature_id;
+
+      for(featureset_id = 0;
+          featureset_id < FEATURE_LAST_ENTRY;
+          featureset_id++) {
+         featureset = lAddElemUlong(feature_get_master_featureset_list(), FES_id,
+                                  featureset_id, FES_Type);
+         lSetUlong(featureset, FES_active, 0);
+         for(feature_id = 0;
+             feature_id < FEATURE_LAST_ENTRY;
+             feature_id++) {
+            feature = lAddSubUlong(featureset, FE_id,
+                                  feature_id, FES_features, FE_Type);
+/*            lSetUlong(feature, FE_enabled,
+                            enabled_features_mask[featureset_id][feature_id]); */
+         }
+      }
+   }
 }
 
 /****** sgeobj/feature/feature_activate() *************************************
@@ -233,8 +281,13 @@ void feature_activate(feature_id_t id)
 
    DENTER(TOP_LAYER, "featureset_activate");  
 
+   if (!*feature_get_master_featureset_list()) {
+      feature_initialize();
+   }
+   
    inactive_set = lGetElemUlong(*feature_get_master_featureset_list(), FES_id, id);
    active_set = lGetElemUlong(*feature_get_master_featureset_list(), FES_active, 1);
+
    if (inactive_set && active_set) {
       lSetUlong(active_set, FES_active, 0);
       lSetUlong(inactive_set, FES_active, 1);
@@ -271,6 +324,7 @@ feature_id_t feature_get_active_featureset_id(void)
    feature_id_t ret = FEATURE_UNINITIALIZED;
 
    DENTER(TOP_LAYER, "feature_get_active_featureset_id");
+
    for_each(feature, *feature_get_master_featureset_list()) {
       if (lGetUlong(feature, FES_active)) {
          ret = lGetUlong(feature, FES_id);

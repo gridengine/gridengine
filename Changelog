@@ -1,4 +1,9 @@
-AS-2004-03-03-1  Cleanup:   SGEEE reference removals. Set version string to
+SG-2004-03-03-2: Bugfix:    the product mode is displayed again with -help
+                            in the clientes
+                 Changed:   all
+                 Review:    pending
+
+AS-2004-03-03-1: Cleanup:   SGEEE reference removals. Set version string to
                             "6.0Beta" (code is not in Beta yet!)
 
 CR-2004-03-03-1: Cleanup:   removed most of #ifndef ENABLE_NGC code. Still

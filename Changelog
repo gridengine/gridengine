@@ -1,3 +1,8 @@
+CR-2004-08-06-0: Bugfix:    Wrong entry SGE_QMASTER_PORT in qconf man page
+                 Issue:     1112
+                 Changed:   qconf man page
+                 Review:    AA
+
 CR-2004-08-05-2: Bugfix:    Need more verbose diagnosis msg if execd port is 
                             already bound
                  Issue:     1101

@@ -39,6 +39,7 @@
 #include "sge_job.h"
 #include "sge_queue.h"
 #include "sge_event.h"
+#include "msg_gdilib.h"
 
 lList *Master_Queue_List = NULL;
 
@@ -260,6 +261,7 @@ int queue_update_master_list(sge_event_type type, sge_event_action action,
 {
    lList **list;
    lDescr *list_descr;
+   lListElem *queue;
    int     key_nm;
    
    const char *key;
@@ -273,7 +275,35 @@ int queue_update_master_list(sge_event_type type, sge_event_action action,
 
    key = lGetString(event, ET_strkey);
 
-   if(sge_mirror_update_master_list_str_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
+   queue = queue_list_locate(*list, key);
+
+   if(action == SGE_EMA_MOD) {
+      u_long32 type = lGetUlong(event, ET_type);
+
+      if(type == sgeE_QUEUE_SUSPEND_ON_SUB || type == sgeE_QUEUE_UNSUSPEND_ON_SUB) {
+         u_long32 state;
+
+         if(queue == NULL) {
+            ERROR((SGE_EVENT, MSG_QUEUE_CANTFINDQUEUEFORUPDATEIN_SS, key, "queue_update_master_list"));
+            DEXIT;
+            return FALSE;
+         }
+
+         state = lGetUlong(queue, QU_state);
+         
+         if (type == sgeE_QUEUE_SUSPEND_ON_SUB) {
+            state |= QSUSPENDED_ON_SUBORDINATE;      /* set this bit */
+         } else {
+            state &= ~QSUSPENDED_ON_SUBORDINATE;     /* reset this bit */
+         }
+         lSetUlong(queue, QU_state, state);
+
+         DEXIT;
+         return TRUE;
+      }
+   }
+   
+   if(sge_mirror_update_master_list(list, list_descr, queue, key, action, event) != SGE_EM_OK) {
       DEXIT;
       return FALSE;
    }

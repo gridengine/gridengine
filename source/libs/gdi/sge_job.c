@@ -603,6 +603,9 @@ void job_enroll(lListElem *job, lList **answer_list, u_long32 ja_task_number)
    lXchgList(job, JB_ja_n_h_ids, &range_list);
    range_list_compress(lGetList(job, JB_ja_n_h_ids));
 
+   /* JG: TODO: Do we need to process the hold lists?
+    *           can a task be enrolled from the hold state?
+    */
    lXchgList(job, JB_ja_u_h_ids, &range_list);
    range_list_remove_id(&range_list, answer_list, ja_task_number);
    lXchgList(job, JB_ja_u_h_ids, &range_list);
@@ -2307,6 +2310,7 @@ int job_update_master_list(sge_event_type type, sge_event_action action,
       }
 
       lXchgList(job, JB_ja_tasks, &ja_tasks);
+      ja_tasks = lFreeList(ja_tasks);
    }
 
    DEXIT;

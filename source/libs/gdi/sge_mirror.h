@@ -103,45 +103,45 @@
 *     libgdi, e.g. job, host, queue ...
 *
 *     The following event_types are defined:
-*        sge_emt_adminhost
-*        sge_emt_calendar
-*        sge_emt_ckpt
-*        sge_emt_complex
-*        sge_emt_config
-*        sge_emt_global_config
-*        sge_emt_exechost
-*        sge_emt_jatask
-*        sge_emt_petask
-*        sge_emt_job
-*        sge_emt_job_schedd_info
-*        sge_emt_manager
-*        sge_emt_operator
-*        sge_emt_sharetree
-*        sge_emt_pe
-*        sge_emt_project
-*        sge_emt_queue
-*        sge_emt_schedd_conf
-*        sge_emt_schedd_monitor
-*        sge_emt_shutdown
-*        sge_emt_qmaster_goes_down
-*        sge_emt_submithost
-*        sge_emt_user
-*        sge_emt_userset
+*        SGE_EMT_ADMINHOST
+*        SGE_EMT_CALENDAR
+*        SGE_EMT_CKPT
+*        SGE_EMT_COMPLEX
+*        SGE_EMT_CONFIG
+*        SGE_EMT_GLOBAL_CONFIG
+*        SGE_EMT_EXECHOST
+*        SGE_EMT_JATASK
+*        SGE_EMT_PETASK
+*        SGE_EMT_JOB
+*        SGE_EMT_JOB_SCHEDD_INFO
+*        SGE_EMT_MANAGER
+*        SGE_EMT_OPERATOR
+*        SGE_EMT_SHARETREE
+*        SGE_EMT_PE
+*        SGE_EMT_PROJECT
+*        SGE_EMT_QUEUE
+*        SGE_EMT_SCHEDD_CONF
+*        SGE_EMT_SCHEDD_MONITOR
+*        SGE_EMT_SHUTDOWN
+*        SGE_EMT_QMASTER_GOES_DOWN
+*        SGE_EMT_SUBMITHOST
+*        SGE_EMT_USER
+*        SGE_EMT_USERSET
 *
 *     If usermapping is enabled, two additional event types are defined:
-*        sge_emt_usermapping
-*        sge_emt_hostgroup
+*        SGE_EMT_USERMAPPING
+*        SGE_EMT_HOSTGROUP
 *  
-*     The last value defined as event type is sge_emt_all. It can be used to 
+*     The last value defined as event type is SGE_EMT_ALL. It can be used to 
 *     subscribe all event types.
 *
 *     Different event actions are defined in the enumeration sge_event_action:
-*        sge_ema_list      - the whole master list has been sent 
+*        SGE_EMA_LIST      - the whole master list has been sent 
 *                            (used at initialization)
-*        sge_ema_add       - a new object has been created
-*        sge_ema_mod       - an object has been modified
-*        sge_ema_del       - an object has been deleted
-*        sge_ema_trigger   - a certain action has been triggered, 
+*        SGE_EMA_ADD       - a new object has been created
+*        SGE_EMA_MOD       - an object has been modified
+*        SGE_EMA_DEL       - an object has been deleted
+*        SGE_EMA_TRIGGER   - a certain action has been triggered, 
 *                            e.g. a scheduling run or a shutdown.
 *   
 *     Most functions of the event mirroring interface return error codes that 

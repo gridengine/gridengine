@@ -403,6 +403,7 @@ int pe_task_update_master_list(sge_event_type type, sge_event_action action,
       }
 
       lXchgList(pe_task, PET_scaled_usage, &usage);
+      usage = lFreeList(usage);
    }
 
    /* first petask add event could have created new pe_task list for job */

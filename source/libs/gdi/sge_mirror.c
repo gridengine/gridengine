@@ -32,7 +32,8 @@
 
 #include <stdlib.h>
 #include <sys/types.h>
-#include <time.h>
+
+#include "sge_time.h"
 
 #include "sge_mirror.h"
 #include "sge_event.h"
@@ -721,14 +722,14 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_event_type type)
 *******************************************************************************/
 sge_mirror_error sge_mirror_process_events(void)
 {
-   static time_t last_heared = 0;
-   time_t now;
+   static u_long32 last_heared = 0;
+   u_long32 now;
    lList *event_list = NULL;
    sge_mirror_error ret = SGE_EM_OK;
 
    DENTER(TOP_LAYER, "sge_mirror_process_events");
 
-   now = time(0);
+   now = sge_get_gmt();
 
    if(ec_get(&event_list) == 0) {
       last_heared = now;
@@ -1129,6 +1130,8 @@ static sge_mirror_error sge_mirror_process_event(sge_event_type type, sge_event_
 
    DENTER(TOP_LAYER, "sge_mirror_process_event");
 
+   DPRINTF(("%s\n", event_text(event)));
+
    if(mirror_base[type].callback_before != NULL) {
       ret = mirror_base[type].callback_before(type, action, event, mirror_base[type].clientdata);
       if(!ret) {
@@ -1171,7 +1174,7 @@ static int sge_mirror_process_shutdown(sge_event_type type,
    sge_mirror_shutdown();
    SGE_EXIT(0);
    DEXIT;
-   return SGE_EM_OK;
+   return TRUE;
 }
 
 static int sge_mirror_process_qmaster_goes_down(sge_event_type type, 
@@ -1186,7 +1189,7 @@ static int sge_mirror_process_qmaster_goes_down(sge_event_type type,
    ec_mark4registration();
 
    DEXIT;
-   return SGE_EM_OK;
+   return TRUE;
 }
 
 

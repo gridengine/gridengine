@@ -286,7 +286,7 @@ int ja_task_update_master_list(sge_event_type type, sge_event_action action,
                 job_get_id_string(job_id, ja_task_id, NULL), "ja_task_update_master_list"));
          DEXIT;
          return FALSE;
-      }
+      }   
 
       lXchgList(ja_task, JAT_task_list, &pe_tasks);
       lXchgList(ja_task, JAT_scaled_usage_list, &usage);
@@ -296,14 +296,14 @@ int ja_task_update_master_list(sge_event_type type, sge_event_action action,
     * each ja_task. If it is not yet enrolled, 
     * sge_mirror_update_master_list will fail.
     * If it is not enrolled, but in the range list
-    * for pending tasks,
-    * nothing is to do.
+    * for pending tasks, remove it from ranges.
     */
    if(action == SGE_EMA_DEL) {
       if(ja_task == NULL && 
          job_is_ja_task_defined(job, ja_task_id) &&
          (!job_is_enrolled(job, ja_task_id))
         ) {
+         job_delete_not_enrolled_ja_task(job, NULL, ja_task_id);
          DEXIT;
          return TRUE;
       }
@@ -331,11 +331,17 @@ int ja_task_update_master_list(sge_event_type type, sge_event_action action,
 
       lXchgList(ja_task, JAT_task_list, &pe_tasks);
       lXchgList(ja_task, JAT_scaled_usage_list, &usage);
+      pe_tasks = lFreeList(pe_tasks);
+      usage = lFreeList(usage);
    }
 
-   /* first jatask add event could have created new ja_task list for job */
-   if(lGetList(job, JB_ja_tasks) == NULL && list != NULL) {
-      lSetList(job, JB_ja_tasks, list);
+   if(action == SGE_EMA_ADD) {
+      /* first jatask add event could have created new ja_task list for job */
+      if(lGetList(job, JB_ja_tasks) == NULL && list != NULL) {
+         lSetList(job, JB_ja_tasks, list);
+      }
+      /* we must enroll the task to have it removed in the pending range list */
+      job_enroll(job, NULL, ja_task_id);
    }
 
    DEXIT;

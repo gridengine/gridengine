@@ -55,8 +55,11 @@ char *err_str;
 int answer_error;
 {
    int ret;
+   u_long32 dummy; /* always 0 */ 
 
    DENTER(TOP_LAYER, "execd_get_new_conf");
+
+   unpackint(pb, &dummy);
 
    ret = get_merged_configuration(&execd_config_list);
 

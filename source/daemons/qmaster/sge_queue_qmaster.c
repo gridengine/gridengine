@@ -188,6 +188,71 @@ static u_long32 queue_get_queue_number(void)
    }
 }
 
+/****** qmaster/queue/queue_set_initial_state() *******************************
+*  NAME
+*     queue_set_initial_state() -- set "initial" state 
+*
+*  SYNOPSIS
+*     int queue_set_initial_state(lListElem *queue, char *rhost) 
+*
+*  FUNCTION
+*     Change the "queue" state according to the "initial" state 
+*     configuration (QU_initial_state).
+*
+*  INPUTS
+*     lListElem *queue - QU_Type element 
+*     char *rhost      - hostname (used to write to SGE_EVENT)
+*
+*  RESULT
+*     int - was the queue changed?
+*        0 - no queue change
+*        1 - queue state was changed due to initial state
+*******************************************************************************/
+int queue_set_initial_state(lListElem *queue, char *rhost)
+{
+   const char *is = lGetString(queue, QU_initial_state);
+   int changed = 0;
+
+   DENTER(TOP_LAYER, "queue_set_initial_state");
+
+   if (is != NULL && strcmp(is, "default")) {
+      int enable = !strcmp(is, "enabled");
+      u_long32 state = lGetUlong(queue, QU_state);
+
+      if ((enable && (state & QDISABLED)) ||
+          (!enable && !(state & QDISABLED))) {
+         const char *queue_name = lGetString(queue, QU_qname);
+
+         if (!rhost) {
+            if (enable) {
+               WARNING((SGE_EVENT, MSG_QUEUE_ADDENABLED_S, queue_name));
+            } else {
+               WARNING((SGE_EVENT, MSG_QUEUE_ADDDISABLED_S, queue_name));
+            }
+         } else {
+            if (enable) {
+               WARNING((SGE_EVENT, MSG_QUEUE_EXECDRESTARTENABLEQ_SS,
+                        rhost, queue_name));
+            } else {
+               WARNING((SGE_EVENT, MSG_QUEUE_EXECDRESTARTDISABLEQ_SS,
+                        rhost, queue_name));
+            }
+         }
+
+         if (enable) {
+            CLEARBIT(QDISABLED, state);
+         } else {
+            SETBIT(QDISABLED, state);
+         }
+         lSetUlong(queue, QU_state, state);
+         changed = 1;
+      }
+   }
+
+   DEXIT;
+   return changed;
+}
+
 static int mod_queue_attributes(
 lList **alpp,
 lListElem *new_queue,
@@ -1239,19 +1304,21 @@ lListElem *qep
    return 0;
 }
 
-/****** qmaster/queue/queue_list_set_state_to_unknown() ***********************
+/****** qmaster/queue/queue_list_set_unknown_state_to() ************************
 *  NAME
-*     queue_list_set_state_to_unknown() -- set (all) queues to u state 
+*     queue_list_set_unknown_state_to() -- set/clear u state of queues  
 *
 *  SYNOPSIS
-*     void queue_list_set_state_to_unknown(lList *queue_list, 
+*     void queue_list_set_unknown_state_to(lList *queue_list, 
 *                                          const char *hostname, 
-*                                          int send_events) 
+*                                          int send_events,
+*                                          int new_state) 
 *
 *  FUNCTION
-*     Sets all queues in "queue_list" which reside on host "hostname"
-*     into the unknown state. If "hostname" is NULL than all queues
-*     mentioned in "queue_list" will get set to the unknown state.
+*     Clears or sets the unknown state of all queues in "queue_list" which 
+*     reside on host "hostname". If "hostname" is NULL than all queues
+*     mentioned in "queue_list" will get the new unknown state.
+*     
 *     Modify events for all modified queues will be generated if 
 *     "send_events" is 1 (true).
 *
@@ -1259,13 +1326,15 @@ lListElem *qep
 *     lList *queue_list    - QU_Type list 
 *     const char *hostname - valid hostname or NULL 
 *     int send_events      - 0 or 1 
+*     int new_state        - new unknown state (0 or 1)
 *
 *  RESULT
 *     void - None
 *******************************************************************************/
-void queue_list_set_state_to_unknown(lList *queue_list, 
+void queue_list_set_unknown_state_to(lList *queue_list, 
                                      const char *hostname,
-                                     int send_events)
+                                     int send_events,
+                                     int new_state)
 {
    const void *iterator = NULL;
    lListElem *queue = NULL;
@@ -1287,8 +1356,12 @@ void queue_list_set_state_to_unknown(lList *queue_list,
          next_queue = lNext(queue);
       }
       state = lGetUlong(queue, QU_state);
-      if (!ISSET(state, QUNKNOWN)) {
-         SETBIT(QUNKNOWN, state);
+      if ((ISSET(state, QUNKNOWN) > 0) != (new_state > 0)) {
+         if (new_state) {
+            SETBIT(QUNKNOWN, state);
+         } else {
+            CLEARBIT(QUNKNOWN, state);
+         }
          lSetUlong(queue, QU_state, state);
 
          if (send_events) {

@@ -37,10 +37,11 @@
 #include "commlib.h"
 #include "sgermon.h"
 #include "sge_log.h"
-
+#include "sge_answer.h"
 #include "sge_host.h"
 
 #include "msg_common.h"
+#include "msg_gdilib.h"
 
 lList *Master_Exechost_List = NULL;
 lList *Master_Adminhost_List = NULL;
@@ -75,5 +76,59 @@ lListElem *host_list_locate(lList *host_list, const char *hostname)
    return ret;
 }
 
+/****** gdi/host/host_is_referenced() ******************************************
+*  NAME
+*     host_is_referenced() -- Is a given host referenced in other objects? 
+*
+*  SYNOPSIS
+*     int host_is_referenced(const lListElem *host, 
+*                            lList **answer_list, 
+*                            const lList *queue_list) 
+*
+*  FUNCTION
+*     This function returns true (1) if the given "host" is referenced
+*     in a queue contained in "queue_list". If this is the case than
+*     a corresponding message will be added to the "answer_list". 
+*
+*  INPUTS
+*     const lListElem *host   - EH_Type, AH_Type or SH_Type object 
+*     lList **answer_list     - AN_Type list 
+*     const lList *queue_list - QU_Type list 
+*
+*  RESULT
+*     int - true (1) or false (0) 
+******************************************************************************/
+int host_is_referenced(const lListElem *host, 
+                       lList **answer_list,
+                       const lList *queue_list)
+{
+   int ret = 0;
 
+   if (host != NULL) {
+      lListElem *queue = NULL;
+      const char *hostname = NULL;
+      int nm = NoName;
+      int pos = -1;
 
+      if (object_has_type(host, EH_Type)) {
+         nm = object_get_primary_key(EH_Type);
+      } else if (object_has_type(host, AH_Type)) {
+         nm = object_get_primary_key(AH_Type);
+      } else if (object_has_type(host, SH_Type)) {
+         nm = object_get_primary_key(SH_Type);
+      }
+      pos = lGetPosViaElem(host, nm);
+      hostname = lGetPosHost(host, pos);
+      queue = lGetElemHost(queue_list, QU_qhostname, hostname); 
+
+      if (queue != NULL) {
+         const char *queuename = lGetString(queue, QU_qname);
+
+         sprintf(SGE_EVENT, MSG_HOSTREFINQUEUE_SS, hostname, queuename);
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
+                         ANSWER_QUALITY_INFO);
+         ret = 1;
+      }
+   }
+   return ret;
+}

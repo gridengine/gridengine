@@ -44,7 +44,6 @@ void sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
 
 int sge_signal_queue(int how, lListElem *qep, lListElem *jep, lListElem *jatep);
 void signal_on_calendar(lListElem *qep, u_long32 old_state, u_long32 new_state);
-int queue_set_initial_state(lListElem *queue, char *rhost);
 
 
 #endif /* __SGE_QMOD_QMASTER_H */

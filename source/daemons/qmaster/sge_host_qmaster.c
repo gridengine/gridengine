@@ -81,21 +81,57 @@
 #include "sge_complex.h"
 #include "sge_queue.h"
 #include "sge_queue_qmaster.h"
+#include "qmaster_to_execd.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-static int sge_has_active_queue(char *uniquie);
-
 static void master_kill_execds(sge_gdi_request *request, sge_gdi_request *answer);
 
-static int notify_kill_job(lListElem *lel, int kill_jobs, const char *target);
+static void host_trash_nonstatic_load_values(lListElem *host);
 
 static void notify(lListElem *lel, sge_gdi_request *answer, int kill_jobs, int force);
 
+static int sge_unlink_object(lListElem *ep, int nm);
+
 static int verify_scaling_list(lList **alpp, lListElem *hep); 
 
-static int sge_unlink_object(lListElem *ep, int nm);
+/****** qmaster/host/host_trash_nonstatic_load_values() ***********************
+*  NAME
+*     host_trash_nonstatic_load_values() -- Trash old load values 
+*
+*  SYNOPSIS
+*     static void host_trash_nonstatic_load_values(lListElem *host) 
+*
+*  FUNCTION
+*     Trash old load values in "host" element 
+*
+*  INPUTS
+*     lListElem *host - EH_Type element 
+*
+*  RESULT
+*     void - None
+*******************************************************************************/
+static void host_trash_nonstatic_load_values(lListElem *host) 
+{
+   lList *load_attr_list;
+   lListElem *next_load_attr;
+   lListElem *load_attr;
+
+   load_attr_list = lGetList(host, EH_load_list);
+   next_load_attr = lFirst(load_attr_list);
+   while ((load_attr = next_load_attr)) {
+      const char *load_attr_name = lGetString(load_attr, HL_name);
+
+      next_load_attr = lNext(load_attr);
+      if (!sge_is_static_load_value(load_attr_name)) {
+         lRemoveElem(load_attr_list, load_attr);
+      }
+   }
+   if (lGetNumberOfElem(load_attr_list) == 0) {
+      lSetList(host, EH_load_list, NULL);
+   }
+}
 
 /* ------------------------------------------ 
 
@@ -260,7 +296,8 @@ u_long32 target
       return STATUS_EEXIST;
    }
 
-   if (target==SGE_EXECHOST_LIST && sge_has_active_queue(unique)) {
+   if (target==SGE_EXECHOST_LIST && 
+       host_is_referenced(hep, NULL, Master_Queue_List)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTDELEXECACTIVQ_S, unique));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -549,39 +586,11 @@ const char *target    /* prognames[QSTD|EXECD] */
       set_last_heard_from(prognames[QSTD], 1, host, 0);
    }
 
-   /* trash old load values */
-   {
-      lListElem *nextep, *ep = lFirst(lGetList(hep, EH_load_list));
-      while (ep) {
-         nextep = lNext(ep);
-         if (!sge_is_static_load_value(lGetString(ep, HL_name)))
-            lDelSubStr(hep, HL_name, lGetString(ep, HL_name), EH_load_list);
-         ep = nextep;
-      }
-   }    
-
-   queue_list_set_state_to_unknown(Master_Queue_List, host, 1);
+   host_trash_nonstatic_load_values(hep);
+   queue_list_set_unknown_state_to(Master_Queue_List, host, 1, 1);
 
    DEXIT;
    return;
-}
-
-
-/* ------------------------------------------------------------ */
-
-static int sge_has_active_queue(
-char *unique 
-) {
-   DENTER(TOP_LAYER, "sge_has_active_queue");
-
-
-   if (lGetElemHost(Master_Queue_List, QU_qhostname, unique) != NULL) {
-      DEXIT;
-      return 1;
-   }
-
-   DEXIT;
-   return 0;
 }
 
 /* ----------------------------------------
@@ -659,7 +668,7 @@ lList *lp
 
 
             tmp_hostname = lGetHost(host_ep, EH_name);
-            queue_list_set_state_to_unknown(Master_Queue_List, tmp_hostname, 1);
+            queue_list_set_unknown_state_to(Master_Queue_List, tmp_hostname, 1, 0);
          }
 
          sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), *hepp);
@@ -742,7 +751,7 @@ lList *lp
       const char* tmp_hostname;
 
       tmp_hostname = lGetHost(host_ep, EH_name);
-      queue_list_set_state_to_unknown(Master_Queue_List, tmp_hostname, 1);
+      queue_list_set_unknown_state_to(Master_Queue_List, tmp_hostname, 1, 0);
    }
 
    if (global_ep) {
@@ -1116,21 +1125,6 @@ sge_gdi_request *answer
    DEXIT;
 }
 
-void master_notify_execds(void)
-{
-   lListElem *host;
-
-   for_each(host , Master_Exechost_List) {  
-      const char *hostname = lGetHost(host, EH_name);
-
-      if (strcmp(hostname, SGE_TEMPLATE_NAME) && 
-          strcmp(hostname, SGE_GLOBAL_NAME)) {
-         featureset_id_t id = feature_get_active_featureset_id();
-
-         notify_new_features(host, id, prognames[EXECD]);
-      }
-   }   
-}
 
 /********************************************************************
  Notify execd on a host to shutdown
@@ -1166,7 +1160,7 @@ int force
                      ANSWER_QUALITY_WARNING);
    }
    if (execd_alive || force) {
-      if (notify_kill_job(lel, kill_jobs, prognames[EXECD])) {
+      if (host_notify_about_kill(lel, kill_jobs)) {
          INFO((SGE_EVENT, MSG_COM_NONOTIFICATION_SSS, action_str, 
                (execd_alive ? "" : MSG_OBJ_UNKNOWN), hostname));
       } else {
@@ -1231,62 +1225,10 @@ int force
    return;
 }
 
-/************************************************************************
- We send an unacknowledged request for the moment. I would have a better
- feelin if we make some sort of acknowledgement. 
- ************************************************************************/
-static int notify_kill_job(
-lListElem *lel,
-int kill_jobs,
-const char *target 
-) {
-   const char *hostname;
-   sge_pack_buffer pb;
-   int ret;
-   u_long32 dummy;
-
-   hostname = lGetHost(lel, EH_name);
-
-   if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
-      packint(&pb, kill_jobs);
-
-      if (gdi_send_message_pb(0, target, 0, hostname, TAG_KILL_EXECD,
-                       &pb, &dummy))
-         ret = -1;
-      else
-         ret = 0;
-
-      clear_packbuffer(&pb);
-   } else {
-      ret = -1;
-   }   
-
-   return ret;
-}
-
-int notify_new_features(lListElem *host, 
-                        featureset_id_t featureset, 
-                        const char *target) 
+void master_notify_execds(void)
 {
-   sge_pack_buffer pb;
-   int ret = -1;
-
-   if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
-      const char *hostname = lGetHost(host, EH_name);
-      u_long32 dummy;
-
-      packint(&pb, featureset);
-      if (gdi_send_message_pb(0, target, 0, hostname, TAG_NEW_FEATURES, 
-          &pb, &dummy)) {
-         ret = -1;
-      } else {
-         ret = 0;
-      }
-      clear_packbuffer(&pb);
-   } else {
-      ret = -1;
-   }
-   return ret; 
+   host_list_notify_about_featureset(Master_Exechost_List,
+                                     feature_get_active_featureset_id());
 }
 
 /****

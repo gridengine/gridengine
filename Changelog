@@ -1,3 +1,5 @@
+EB-2002-07-26-0: Cleanup:   removed duplicated code.
+
 EB-2002-07-24-0: Cleanup:   removed code which someone copied in the past. 
 
 CR-2002-07-24-0: Bugfix:    wrong port output in qstat error message when 

@@ -43,16 +43,27 @@
 #     test data is gathered and a number of metrics are calculated from 
 #     this test data.
 #
+#     During the whole test, qstat -f is executed in regular intervals.
+#     In Grid Engine 6 systems, qmaster communication information is retrieved
+#     using the qping command.
+#     Size and cpu usage of qmaster and scheduler are monitored.
+#
 #     Raw data is delivered by
 #        - submission scripts
 #        - qevent client
 #        - scheduler profiling
 #
 #     Different scenarios are run:
-#        - queues are disabled during whole submission
-#        - queues are enabled during whole submission
-#        - queues are enabled after half of the test jobs have been submitted
-#        - test with sharetree, queues are disabled during whole submission
+#        1 queues are disabled during whole submission
+#        2 queues are enabled during whole submission
+#        3 queues are enabled after half of the test jobs have been submitted
+#        4 scenario 3 without qstat's
+#        5 scenario 3 with resource requests (hard and soft)
+#        6 scenario 3 with resource requests (hard and soft) and parallel jobs
+#          requesting a range of slots
+#        7 scenario 3 with array jobs
+#        8 scenario 3 with sharetree
+#        9 scenario 3 with functional policy
 #
 #     The test results are stored as HTML pages including a number of 
 #     charts.
@@ -111,13 +122,13 @@
 #        schedd orders
 #           Shows the number of scheduler orders over time.
 #
-#        sharetree policy
+#        sharetree/functional policy
 #           Shows the number of dispatched jobs per project over time.
 #           Verifies the scheduler decisions regarding sharetree policy.
 #
 #***************************************************************************
-# TODO: add qstat's on master host as second_foreign_user,
-# qstat script similar to submitter and process_info
+#
+#
 # Define the global veriables to give them back
 global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
 global check_init_level_procedure check_category
@@ -188,6 +199,11 @@ global functional_policy
 set queue_list ""
 set host_list ""
 set throughput_subdir ""
+
+# settings for the chart generation:
+# we have a certain number of data sets (xy_rows)
+global throughput_num_data_sets
+set throughput_num_data_sets 24
 
 proc init_level {} {
    global ts_config
@@ -262,7 +278,7 @@ proc init_level {} {
          return -1
       }
    }
-#if { $minor_level != 0 } {
+#if { $minor_level != 3 } {
 #   return -1
 #}
    switch -- $minor_level {
@@ -307,6 +323,7 @@ proc init_level {} {
          set enable_queues_job_count  [expr $job_count / 2]
          set throughput_subdir        "mixed_requests_parallel"
          set do_requests              1
+         set nr_slots                 50 ;# speed up execution of parallel jobs
          set parallel_jobs            1
       }
       "6" {
@@ -470,7 +487,7 @@ proc throughput_setup_functional_policy {} {
    global ts_config
    global CHECK_OUTPUT
 
-   puts $CHECK_OUTPUT "setup sharetree ..."
+   puts $CHECK_OUTPUT "setup functional policy ..."
 
    puts $CHECK_OUTPUT "   adding projects ..."
    set prj_setup(name) "project1"
@@ -588,6 +605,7 @@ proc setup_queues {} {
    if {$parallel_jobs} {
       set pe(pe_name) "perfpe"
       set pe(slots)   "99999"
+      set pe(allocation_rule)   "\$fill_up"
       add_pe pe
    }
 
@@ -894,6 +912,9 @@ proc run_throughput_test {} {
             set output [ split $output "\n" ]
             foreach line $output {
                set line [string trim $line]
+               if {[string length $line] == 0} {
+                  continue
+               }
                # puts $CHECK_OUTPUT $line
                switch -glob -- $line {
                   "SUBMITTER*" {
@@ -1118,6 +1139,11 @@ proc run_throughput_test {} {
             set output [ split $output "\n" ]
             foreach line $output {
                set line [string trim $line]
+
+               # skip empty lines
+               if {[string length $line] == 0} {
+                  continue
+               }
                #puts $CHECK_OUTPUT $line
                switch -glob -- $line {
                   "SUBMIT OK*" {
@@ -1211,8 +1237,11 @@ proc run_throughput_test {} {
                      set qping_data($index,clients) [lindex $line 4]
                      incr qping_data(count)
                   }
+                  "SUBMIT 1*" {
+                     # unused output - ignore it
+                  }
                   default {
-                     # puts $CHECK_OUTPUT "unexpected output (submitter): |$line|"
+                     puts $CHECK_OUTPUT "unexpected output (submitter): |$line|"
                   }
                }
             }
@@ -1236,6 +1265,11 @@ proc run_throughput_test {} {
             set output [ split $output "\n" ]
             foreach line $output {
                set line [string trim $line]
+
+               # skip empty lines
+               if {[string length $line] == 0} {
+                  continue
+               }
                #puts $CHECK_OUTPUT $line
 
                switch -glob -- $line {
@@ -1393,38 +1427,45 @@ proc run_throughput_test {} {
                      set run_time [lindex $prof 4]
                      set schedd_data($schedd_nr,schedd_total_time) $run_time
                   }
+                  "*PROF:*" -
+                  "JOB_DEL*" -
+                  "ECL_STATE*" {
+                     # unused output - ignore it
+                  }
                   default {
-                     # puts $CHECK_OUTPUT "unexpected output (qevent/tail): |$line|"
+                     puts $CHECK_OUTPUT "unexpected output (qevent/tail): |$line|"
                   }
                }
             }
          }
       }
 
-      # update system status
-      # we have one slot per queue !
-      set jobs_running $result(jobs_running)
-      set jobs_run_pend         [ expr ( $result(jobs_submitted) - $result(jobs_done)    ) ]
-      set result(jobs_pending)  [ expr ( $jobs_run_pend          - $jobs_running ) ]
-      set result(free_slots)    [ expr ( $result(total_slots)    - $jobs_running ) ]
-      set result(queues_enabled) $are_enabled
-      
-      # tasks to be done once a minute
-      if { $result(test_run_time) != $time_now } {
-         show_current_system_status result job_data schedd_data monitoring
-         flush $CHECK_OUTPUT
+      if { ! $error } {
+         # update system status
+         # we have one slot per queue !
+         set jobs_running $result(jobs_running)
+         set jobs_run_pend         [ expr ( $result(jobs_submitted) - $result(jobs_done)    ) ]
+         set result(jobs_pending)  [ expr ( $jobs_run_pend          - $jobs_running ) ]
+         set result(free_slots)    [ expr ( $result(total_slots)    - $jobs_running ) ]
+         set result(queues_enabled) $are_enabled
+         
+         # tasks to be done once a minute
+         if { $result(test_run_time) != $time_now } {
+            show_current_system_status result job_data schedd_data monitoring
+            flush $CHECK_OUTPUT
 
-         # enable queues when $enable_queues_job_count is reached
-         if { ! $are_enabled && $result(jobs_submitted) >= $enable_queues_job_count } {
-            set are_enabled 1
-            enable_queue $queue_list
-            catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
-            puts $CHECK_OUTPUT $catch_result
+            # enable queues when $enable_queues_job_count is reached
+            if { ! $are_enabled && $result(jobs_submitted) >= $enable_queues_job_count } {
+               set are_enabled 1
+               enable_queue $queue_list
+               catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+               puts $CHECK_OUTPUT $catch_result
+            }
+
          }
-
+         set result(test_run_time) $time_now
+         save_current_system_status results_list result
       }
-      set result(test_run_time) $time_now
-      save_current_system_status results_list result
    } 
    log_user 1
 
@@ -1455,7 +1496,9 @@ proc run_throughput_test {} {
    }
 
    # create reports
-   create_reports results_list job_data schedd_data monitoring qstat_data qping_data
+   if { ! $error } {
+      create_reports results_list job_data schedd_data monitoring qstat_data qping_data
+   }
 
    set_error 0 "ok"
 }
@@ -1589,6 +1632,7 @@ proc compare_dump_data_file { file1 file2 } {
    global ts_config
    global CHECK_OUTPUT 
    global array_size do_requests parallel_jobs
+   global throughput_num_data_sets
 
    if { [file isfile $file1] != 1 } {
       puts $CHECK_OUTPUT "no file $file1"
@@ -1627,7 +1671,7 @@ proc compare_dump_data_file { file1 file2 } {
    set job_count2 $test_config2(end_job_count)
    if { $job_count1 != $job_count2 } {
       incr error 1
-      append content [create_html_text "The to projects have different job count"]
+      append content [create_html_text "The two projects have different job count"]
    }
  
    set enable_queue_job_count1 $test_config1(enable_queues_job_count)
@@ -1833,12 +1877,25 @@ proc compare_dump_data_file { file1 file2 } {
    read_array_from_file_data file_data1 "job data"       jobs1
    puts $CHECK_OUTPUT "reading scheduler data of test A"
    read_array_from_file_data file_data1 "scheduler data" schedd1
+   puts $CHECK_OUTPUT "reading monitoring data of test A"
+   read_array_from_file_data file_data1 "monitoring" monitoring1
+   puts $CHECK_OUTPUT "reading qstat data of test A"
+   read_array_from_file_data file_data1 "qstat data" qstat1
+   puts $CHECK_OUTPUT "reading qping data of test A"
+   read_array_from_file_data file_data1 "qping data" qping1
+
    puts $CHECK_OUTPUT "reading online data of test B"
    read_array_from_file_data file_data2 "online data"    results2
    puts $CHECK_OUTPUT "reading job data of test B"
    read_array_from_file_data file_data2 "job data"       jobs2
    puts $CHECK_OUTPUT "reading scheduler data of test B"
    read_array_from_file_data file_data2 "scheduler data" schedd2
+   puts $CHECK_OUTPUT "reading monitoring data of test B"
+   read_array_from_file_data file_data2 "monitoring" monitoring2
+   puts $CHECK_OUTPUT "reading qstat data of test B"
+   read_array_from_file_data file_data1 "qstat data" qstat2
+   puts $CHECK_OUTPUT "reading qping data of test B"
+   read_array_from_file_data file_data1 "qping data" qping2
    
 
 # --  1  set test "Total run time"
@@ -1861,7 +1918,6 @@ proc compare_dump_data_file { file1 file2 } {
 
    read_array_from_file "${file1}_dir/test_results_array.dat" "test results" test_data1
    read_array_from_file "${file2}_dir/test_results_array.dat" "test results" test_data2
-   
 
    #   A absolut  |  B absolut | B compared to A (in %) 
    set table(COLS) 4
@@ -2030,276 +2086,178 @@ proc compare_dump_data_file { file1 file2 } {
 
    set content ""
    append content ""
+   append content [create_html_image "Size of daemons" "daemon_size.gif"]
+   generate_html_file $output_dir/daemon_size.html $title $content
+
+   set content ""
+   append content ""
+   append content [create_html_image "CPU load of daemons" "daemon_cpu.gif"]
+   generate_html_file $output_dir/daemon_cpu.html $title $content
+
+   if { $qstat1(count) > 0 && $qstat2(count) > 0 } {
+      set content ""
+      append content ""
+      append content [create_html_image "Qstat performance" "qstat.gif"]
+      generate_html_file $output_dir/qstat.html $title $content
+   }
+
+   if { $qping1(count) > 0 && $qping2(count) > 0 } {
+      set content ""
+      append content ""
+      append content [create_html_image "Qping information" "qping.gif"]
+      generate_html_file $output_dir/qping.html $title $content
+   }
+
+   set content ""
+   append content ""
    append content [create_html_image "Running jobs" "running_jobs.gif"]
    append content [create_html_image "Job times" "job_times.gif"]
    append content [create_html_image "Job distribution" "job_distribution.gif"]
    append content [create_html_image "Pending jobs" "pending_jobs.gif"]
    append content [create_html_image "Scheduler times" "schedd_calc_time.gif"]
    append content [create_html_image "Scheduler orders" "schedd_orders.gif"]
+   append content [create_html_image "Size of daemons" "daemon_size.gif"]
+   append content [create_html_image "CPU load of daemons" "daemon_cpu.gif"]
    generate_html_file $output_dir/all_charts.html $title $content
 
 
    # plot diagrams
-   # get functions for test run  and schedd data
-       #  1) test run
-       calculate_test_run_xy_rows results1 xy_rows 0
-       #  2) schedd run
-       set test_start $results1(0,test_run_time)
-       calculate_schedd_run_xy_rows schedd1 xy_rows $test_start 0
-       #  3) job submit times and job run times
-       calculate_submit_run_xy_rows jobs1 xy_rows $test_start 0
+   # calculate values for test run A
+   calculate_test_run_xy_rows results1 xy_rows 0
+   set test_start $results1(0,test_run_time)
+   calculate_schedd_run_xy_rows schedd1 xy_rows $test_start 0
+   calculate_submit_run_xy_rows jobs1 xy_rows $test_start 0
+   calculate_monitoring_xy_rows monitoring1 xy_rows $test_start 0
+   calculate_qstat_xy_rows qstat1 xy_rows $test_start 0
+   calculate_qping_xy_rows qping1 xy_rows $test_start 0
 
-       #  1) test run
-       calculate_test_run_xy_rows results2 xy_rows 18
-       #  2) schedd run
-       set test_start $results2(0,test_run_time)
-       calculate_schedd_run_xy_rows schedd2 xy_rows $test_start 18
-       #  3) job submit times and job run times
-       calculate_submit_run_xy_rows jobs2 xy_rows $test_start 18
+   # calculate values for test run B
+   calculate_test_run_xy_rows results2 xy_rows $throughput_num_data_sets
+   set test_start $results2(0,test_run_time)
+   calculate_schedd_run_xy_rows schedd2 xy_rows $test_start $throughput_num_data_sets
+   calculate_submit_run_xy_rows jobs2 xy_rows $test_start $throughput_num_data_sets
+   calculate_monitoring_xy_rows monitoring2 xy_rows $test_start $throughput_num_data_sets
+   calculate_qstat_xy_rows qstat2 xy_rows $test_start $throughput_num_data_sets
+   calculate_qping_xy_rows qping2 xy_rows $test_start $throughput_num_data_sets
 
+   set plot_data(xlabel) "time\[s\]"
+   set plot_data(ylabel) "values"
 
+   set plot_data(title) "Throughput test results - running jobs"
+   set plot_data(output_file) "$output_dir/running_jobs.gif"
+   clear_xy_rows_show xy_rows
+   clear_xy_rows_show xy_rows $throughput_num_data_sets
+   set_xy_rows_show xy_rows 0
+   set_xy_rows_show xy_rows 4
+   set_xy_rows_show xy_rows 5
+   set_xy_rows_show xy_rows 0 $throughput_num_data_sets
+   set_xy_rows_show xy_rows 4 $throughput_num_data_sets
+   set_xy_rows_show xy_rows 5 $throughput_num_data_sets
+   create_gnuplot_xy_gif plot_data xy_rows
 
+   set plot_data(title) "Throughput test results - pending jobs"
+   set plot_data(output_file) "$output_dir/pending_jobs.gif"
+   clear_xy_rows_show xy_rows
+   clear_xy_rows_show xy_rows $throughput_num_data_sets
+   set_xy_rows_show xy_rows 1
+   set_xy_rows_show xy_rows 2
+   set_xy_rows_show xy_rows 3
+   set_xy_rows_show xy_rows 1 $throughput_num_data_sets
+   set_xy_rows_show xy_rows 2 $throughput_num_data_sets
+   set_xy_rows_show xy_rows 3 $throughput_num_data_sets
+   create_gnuplot_xy_gif plot_data xy_rows
 
-       set plot_data(xlabel) "time\[s\]"
-       set plot_data(ylabel) "values"
+   set plot_data(title) "Throughput test results - schedd calculation time"
+   set plot_data(output_file) "$output_dir/schedd_calc_time.gif"
+   clear_xy_rows_show xy_rows
+   clear_xy_rows_show xy_rows $throughput_num_data_sets
+   set_xy_rows_show xy_rows 6
+   set_xy_rows_show xy_rows 6 $throughput_num_data_sets
+   create_gnuplot_xy_gif plot_data xy_rows
 
-       set plot_data(title) "Throughput test results - running jobs"
-       set plot_data(output_file) "$output_dir/running_jobs.gif"
-       set xy_rows(0,show) 1     ;# running jobs
-       set xy_rows(1,show) 0     ;# pending jobs
-       set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs submitted
-       set xy_rows(4,show) 1     ;# total system slots
-       set xy_rows(5,show) 1     ;# free system slots
-       set xy_rows(6,show) 0     ;# scheduler calculation time
-       set xy_rows(8,show) 0     ;# schedd orders
-       set xy_rows(9,show) 0     ;# job submit time
-       set xy_rows(10,show) 0     ;# job run time
-       set xy_rows(11,show) 0     ;# job distribution
+   set plot_data(title) "Throughput test results - schedd orders"
+   set plot_data(output_file) "$output_dir/schedd_orders.gif"
+   clear_xy_rows_show xy_rows
+   clear_xy_rows_show xy_rows $throughput_num_data_sets
+   set_xy_rows_show xy_rows 8
+   set_xy_rows_show xy_rows 8 $throughput_num_data_sets
+   create_gnuplot_xy_gif plot_data xy_rows
 
-       set start 18
-       set xy_rows($start,show) 1     ;# running jobs
-       incr start 1
-       set xy_rows($start,show) 0     ;# pending jobs
-       incr start 1
-       set xy_rows($start,show) 0     ;# jobs done
-       incr start 1
-       set xy_rows($start,show) 0     ;# jobs submitted
-       incr start 1
-       set xy_rows($start,show) 1     ;# total system slots
-       incr start 1
-       set xy_rows($start,show) 1     ;# free system slots
-       incr start 1
-       set xy_rows($start,show) 0     ;# scheduler calculation time
-       incr start 1
-       set xy_rows($start,show) 0     ;# schedd orders
-       incr start 1
-       set xy_rows($start,show) 0     ;# job submit time
-       incr start 1
-       set xy_rows($start,show) 0     ;# job run time
-       incr start 1
-       set xy_rows($start,show) 0     ;#  job distribution
-       create_gnuplot_xy_gif plot_data xy_rows
+   set plot_data(title) "Throughput test results - job times"
+   set plot_data(output_file) "$output_dir/job_times.gif"
+   clear_xy_rows_show xy_rows
+   clear_xy_rows_show xy_rows $throughput_num_data_sets
+   set_xy_rows_show xy_rows 9
+   set_xy_rows_show xy_rows 10
+   set_xy_rows_show xy_rows 9 $throughput_num_data_sets
+   set_xy_rows_show xy_rows 10 $throughput_num_data_sets
+   create_gnuplot_xy_gif plot_data xy_rows
 
+   set plot_data(title) "Throughput test results - job distribution"
+   set plot_data(output_file) "$output_dir/job_distribution.gif"
+   set plot_data(xlabel) "job time\[s\]"
+   set plot_data(ylabel) "number of jobs"
+   clear_xy_rows_show xy_rows
+   clear_xy_rows_show xy_rows $throughput_num_data_sets
+   set_xy_rows_show xy_rows 11
+   set_xy_rows_show xy_rows 11 $throughput_num_data_sets
+   create_gnuplot_xy_gif plot_data xy_rows
 
+   set plot_data(title) "Throughput test results - size of daemons"
+   set plot_data(output_file) "$output_dir/daemon_size.gif"
+   set plot_data(xlabel) "time\[s\]"
+   set plot_data(ylabel) "size \[kB\]"
+   clear_xy_rows_show xy_rows
+   clear_xy_rows_show xy_rows $throughput_num_data_sets
+   set_xy_rows_show xy_rows 12
+   set_xy_rows_show xy_rows 14
+   set_xy_rows_show xy_rows 12 $throughput_num_data_sets
+   set_xy_rows_show xy_rows 14 $throughput_num_data_sets
+   create_gnuplot_xy_gif plot_data xy_rows
 
-       set plot_data(title) "Throughput test results - pending jobs"
-       set plot_data(output_file) "$output_dir/pending_jobs.gif"
-       set xy_rows(0,show) 0     ;# running jobs
-       set xy_rows(1,show) 1     ;# pending jobs
-       set xy_rows(2,show) 1     ;# jobs done
-       set xy_rows(3,show) 1     ;# jobs submitted
-       set xy_rows(4,show) 0     ;# total system slots
-       set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 0     ;# scheduler calculation time
-       set xy_rows(8,show) 0     ;# schedd orders
-       set xy_rows(9,show) 0     ;# job submit time
-       set xy_rows(10,show) 0     ;# job run time
-       set xy_rows(11,show) 0     ;# job distribution
+   set plot_data(title) "Throughput test results - CPU load of daemons"
+   set plot_data(output_file) "$output_dir/daemon_cpu.gif"
+   set plot_data(xlabel) "time\[s\]"
+   set plot_data(ylabel) "cpu load \[%\]"
+   clear_xy_rows_show xy_rows
+   clear_xy_rows_show xy_rows $throughput_num_data_sets
+   set_xy_rows_show xy_rows 13
+   set_xy_rows_show xy_rows 15
+   set_xy_rows_show xy_rows 13 $throughput_num_data_sets
+   set_xy_rows_show xy_rows 15 $throughput_num_data_sets
+   create_gnuplot_xy_gif plot_data xy_rows
 
+   if { $qstat1(count) > 0 && $qstat2(count) > 0 } {
+      set plot_data(title) "Throughput test results - qstat performance"
+      set plot_data(output_file) "$output_dir/qstat.gif"
+      set plot_data(xlabel) "time\[s\]"
+      set plot_data(ylabel) "duration \[s\]"
+      clear_xy_rows_show xy_rows
+      clear_xy_rows_show xy_rows $throughput_num_data_sets
+      set_xy_rows_show xy_rows 16
+      set_xy_rows_show xy_rows 17
+      set_xy_rows_show xy_rows 16 $throughput_num_data_sets
+      set_xy_rows_show xy_rows 17 $throughput_num_data_sets
+      create_gnuplot_xy_gif plot_data xy_rows
+   }
 
-       set start 18
-       set xy_rows($start,show) 0     ;# running jobs
-       incr start 1
-       set xy_rows($start,show) 1     ;# pending jobs
-       incr start 1
-       set xy_rows($start,show) 1     ;# jobs done
-       incr start 1
-       set xy_rows($start,show) 1     ;# jobs submitted
-       incr start 1
-       set xy_rows($start,show) 0     ;# total system slots
-       incr start 1
-       set xy_rows($start,show) 0     ;# free system slots
-       incr start 1
-       set xy_rows($start,show) 0     ;# scheduler calculation time
-       incr start 1
-       set xy_rows($start,show) 0     ;# schedd orders
-       incr start 1
-       set xy_rows($start,show) 0     ;# job submit time
-       incr start 1
-       set xy_rows($start,show) 0     ;# job run time
-       incr start 1
-       set xy_rows($start,show) 0     ;#  job distribution
-       create_gnuplot_xy_gif plot_data xy_rows
-
-       set plot_data(title) "Throughput test results - schedd calculation time"
-       set plot_data(output_file) "$output_dir/schedd_calc_time.gif"
-       set xy_rows(0,show) 0     ;# running jobs
-       set xy_rows(1,show) 0     ;# pending jobs
-       set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs submitted
-       set xy_rows(4,show) 0     ;# total system slots
-       set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 1     ;# scheduler calculation time
-       set xy_rows(8,show) 0     ;# schedd orders
-       set xy_rows(9,show) 0     ;# job submit time
-       set xy_rows(10,show) 0     ;# job run time
-       set xy_rows(11,show) 0     ;# job distribution
-
-       set start 18
-       set xy_rows($start,show) 0     ;# running jobs
-       incr start 1
-       set xy_rows($start,show) 0     ;# pending jobs
-       incr start 1
-       set xy_rows($start,show) 0     ;# jobs done
-       incr start 1
-       set xy_rows($start,show) 0     ;# jobs submitted
-       incr start 1
-       set xy_rows($start,show) 0     ;# total system slots
-       incr start 1
-       set xy_rows($start,show) 0     ;# free system slots
-       incr start 1
-       set xy_rows($start,show) 1     ;# scheduler calculation time
-       incr start 1
-       set xy_rows($start,show) 0     ;# schedd orders
-       incr start 1
-       set xy_rows($start,show) 0     ;# job submit time
-       incr start 1
-       set xy_rows($start,show) 0     ;# job run time
-       incr start 1
-       set xy_rows($start,show) 0     ;#  job distribution
-       create_gnuplot_xy_gif plot_data xy_rows
-
-
-       set plot_data(title) "Throughput test results - schedd orders"
-       set plot_data(output_file) "$output_dir/schedd_orders.gif"
-       set xy_rows(0,show) 0     ;# running jobs
-       set xy_rows(1,show) 0     ;# pending jobs
-       set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs submitted
-       set xy_rows(4,show) 0     ;# total system slots
-       set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 0     ;# scheduler calculation time
-       set xy_rows(8,show) 1     ;# schedd orders
-       set xy_rows(9,show) 0     ;# job submit time
-       set xy_rows(10,show) 0     ;# job run time
-       set xy_rows(11,show) 0     ;# job distribution
-
-       set start 18
-       set xy_rows($start,show) 0     ;# running jobs
-       incr start 1
-       set xy_rows($start,show) 0     ;# pending jobs
-       incr start 1
-       set xy_rows($start,show) 0     ;# jobs done
-       incr start 1
-       set xy_rows($start,show) 0     ;# jobs submitted
-       incr start 1
-       set xy_rows($start,show) 0     ;# total system slots
-       incr start 1
-       set xy_rows($start,show) 0     ;# free system slots
-       incr start 1
-       set xy_rows($start,show) 0     ;# scheduler calculation time
-       incr start 1
-       set xy_rows($start,show) 1     ;# schedd orders
-       incr start 1
-       set xy_rows($start,show) 0     ;# job submit time
-       incr start 1
-       set xy_rows($start,show) 0     ;# job run time
-       incr start 1
-       set xy_rows($start,show) 0     ;#  job distribution
-       create_gnuplot_xy_gif plot_data xy_rows
-
-       set plot_data(title) "Throughput test results - job times"
-       set plot_data(output_file) "$output_dir/job_times.gif"
-       set xy_rows(0,show) 0     ;# running jobs
-       set xy_rows(1,show) 0     ;# pending jobs
-       set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs submitted
-       set xy_rows(4,show) 0     ;# total system slots
-       set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 0     ;# scheduler calculation time
-       set xy_rows(8,show) 0     ;# schedd orders
-       set xy_rows(9,show) 1     ;# job submit time
-       set xy_rows(10,show) 1     ;# job run time
-       set xy_rows(11,show) 0     ;# job distribution
-
-       set start 18
-       set xy_rows($start,show) 0     ;# running jobs
-       incr start 1
-       set xy_rows($start,show) 0     ;# pending jobs
-       incr start 1
-       set xy_rows($start,show) 0     ;# jobs done
-       incr start 1
-       set xy_rows($start,show) 0     ;# jobs submitted
-       incr start 1
-       set xy_rows($start,show) 0     ;# total system slots
-       incr start 1
-       set xy_rows($start,show) 0     ;# free system slots
-       incr start 1
-       set xy_rows($start,show) 0     ;# scheduler calculation time
-       incr start 1
-       set xy_rows($start,show) 0     ;# schedd orders
-       incr start 1
-       set xy_rows($start,show) 1     ;# job submit time
-       incr start 1
-       set xy_rows($start,show) 1     ;# job run time
-       incr start 1
-       set xy_rows($start,show) 0     ;#  job distribution
-       create_gnuplot_xy_gif plot_data xy_rows
-   
-       set plot_data(title) "Throughput test results - job distribution"
-       set plot_data(output_file) "$output_dir/job_distribution.gif"
-       set plot_data(xlabel) "job time\[s\]"
-       set plot_data(ylabel) "number of jobs"
-       set xy_rows(0,show) 0     ;# running jobs
-       set xy_rows(1,show) 0     ;# pending jobs
-       set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs submitted
-       set xy_rows(4,show) 0     ;# total system slots
-       set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 0     ;# scheduler calculation time
-       set xy_rows(8,show) 0     ;# schedd orders
-       set xy_rows(9,show) 0     ;# job submit time
-       set xy_rows(10,show) 0     ;# job run time
-       set xy_rows(11,show) 1     ;# job distribution
-
-       set start 18
-       set xy_rows($start,show) 0     ;# running jobs
-       incr start 1
-       set xy_rows($start,show) 0     ;# pending jobs
-       incr start 1
-       set xy_rows($start,show) 0     ;# jobs done
-       incr start 1
-       set xy_rows($start,show) 0     ;# jobs submitted
-       incr start 1
-       set xy_rows($start,show) 0     ;# total system slots
-       incr start 1
-       set xy_rows($start,show) 0     ;# free system slots
-       incr start 1
-       set xy_rows($start,show) 0     ;# scheduler calculation time
-       incr start 1
-       set xy_rows($start,show) 0     ;# schedd orders
-       incr start 1
-       set xy_rows($start,show) 0     ;# job submit time
-       incr start 1
-       set xy_rows($start,show) 0     ;# job run time
-       incr start 1
-       set xy_rows($start,show) 1     ;#  job distribution
-       create_gnuplot_xy_gif plot_data xy_rows
-
+   if { $qping1(count) > 0 && $qping2(count) > 0 } {
+      set plot_data(title) "Throughput test results - qping information"
+      set plot_data(output_file) "$output_dir/qping.gif"
+      set plot_data(xlabel) "time\[s\]"
+      set plot_data(ylabel) "messages/clients"
+      clear_xy_rows_show xy_rows
+      clear_xy_rows_show xy_rows $throughput_num_data_sets
+      set_xy_rows_show xy_rows 21
+      set_xy_rows_show xy_rows 22
+      set_xy_rows_show xy_rows 23
+      set_xy_rows_show xy_rows 21 $throughput_num_data_sets
+      set_xy_rows_show xy_rows 22 $throughput_num_data_sets
+      set_xy_rows_show xy_rows 23 $throughput_num_data_sets
+      create_gnuplot_xy_gif plot_data xy_rows
+   }
 
    return 0
-
 }
 
 proc analyse_dump_data_file { file { force 0 } } {
@@ -2544,20 +2502,23 @@ proc analyse_dump_data_file { file { force 0 } } {
    append content [ create_html_text "" ]
    append content [create_html_link "   CPU load of qmaster and scheduler" "daemon_cpu.html"]
    append content [ create_html_text "" ]
-   append content [create_html_link "   Qping information" "qping.html"]
-   append content [ create_html_text "" ]
 
-   if {$qstat_interval > 0} {
+   if {$qping_data(count) > 0} {
+      append content [create_html_link "   Qping information" "qping.html"]
+      append content [ create_html_text "" ]
+   }
+
+   if {$qstat_data(count) > 0} {
       append content [create_html_link "   Qstat performance" "qstat.html"]
       append content [ create_html_text "" ]
    }
+   
    if { $throughput_sharetree == 1 || $functional_policy == 1 }  {
       append content [create_html_link "   Running project job analysis" "project_jobs.html"]
       append content [ create_html_text "" ]
-      append content [create_html_link "   All charts in one html document" "all_charts.html"]
-   } else {
-      append content [create_html_link "   All charts in one html document" "all_charts.html"]
    }
+
+   append content [create_html_link "   All charts in one html document" "all_charts.html"]
 
    # links to data
    append content [ create_html_text "" ]
@@ -2743,15 +2704,16 @@ proc analyse_dump_data_file { file { force 0 } } {
    append content [create_html_image "Scheduler orders" "schedd_orders.gif"]
    append content [create_html_image "Daemon size" "daemon_size.gif"]
    append content [create_html_image "Daemon CPU load" "daemon_cpu.gif"]
-   append content [create_html_image "Qping information" "qping.gif"]
-   if {$qstat_interval > 0} {
+   if {$qping_data(count) > 0} {
+      append content [create_html_image "Qping information" "qping.gif"]
+   }
+   if {$qstat_data(count) > 0} {
       append content [create_html_image "Qstat performance" "qstat.gif"]
    }
    if { $throughput_sharetree == 1 || $functional_policy == 1 }  {
       append content [create_html_image "Running project jobs" "project_jobs.gif"]
    }
    generate_html_file $output_dir/all_charts.html "$test_config(gridengine_version) from $test_config(test_date)" $content
-
 
    # plot diagrams
    # get functions for test run  and schedd data
@@ -2788,29 +2750,29 @@ proc analyse_dump_data_file { file { force 0 } } {
    set plot_data(title) "Throughput test results - pending jobs"
    set plot_data(output_file) "$output_dir/pending_jobs.gif"
    clear_xy_rows_show xy_rows
-   set xy_rows(1,show) 1     ;# pending jobs
-   set xy_rows(2,show) 1     ;# jobs done
-   set xy_rows(3,show) 1     ;# jobs subitted
+   set_xy_rows_show xy_rows 1
+   set_xy_rows_show xy_rows 2
+   set_xy_rows_show xy_rows 3
    create_gnuplot_xy_gif plot_data xy_rows
 
    set plot_data(title) "Throughput test results - schedd calculation time"
    set plot_data(output_file) "$output_dir/schedd_calc_time.gif"
    clear_xy_rows_show xy_rows
-   set xy_rows(6,show) 1     ;# scheduler calculation time
-   set xy_rows(7,show) 1     ;# schedd total time
+   set_xy_rows_show xy_rows 6
+   set_xy_rows_show xy_rows 7
    create_gnuplot_xy_gif plot_data xy_rows
 
    set plot_data(title) "Throughput test results - schedd orders"
    set plot_data(output_file) "$output_dir/schedd_orders.gif"
    clear_xy_rows_show xy_rows
-   set xy_rows(8,show) 1     ;# schedd orders
+   set_xy_rows_show xy_rows 8
    create_gnuplot_xy_gif plot_data xy_rows
 
    set plot_data(title) "Throughput test results - job times"
    set plot_data(output_file) "$output_dir/job_times.gif"
    clear_xy_rows_show xy_rows
-   set xy_rows(9,show) 1     ;# job submit time
-   set xy_rows(10,show) 1     ;# job run time
+   set_xy_rows_show xy_rows 9
+   set_xy_rows_show xy_rows 10
    create_gnuplot_xy_gif plot_data xy_rows
 
    set plot_data(title) "Throughput test results - job distribution"
@@ -2818,7 +2780,7 @@ proc analyse_dump_data_file { file { force 0 } } {
    set plot_data(xlabel) "job time\[s\]"
    set plot_data(ylabel) "number of jobs"
    clear_xy_rows_show xy_rows
-   set xy_rows(11,show) 1    ;# job distribution
+   set_xy_rows_show xy_rows 11
    create_gnuplot_xy_gif plot_data xy_rows
 
    set plot_data(title) "Throughput test results - size of daemons"
@@ -2826,8 +2788,8 @@ proc analyse_dump_data_file { file { force 0 } } {
    set plot_data(xlabel) "time\[s\]"
    set plot_data(ylabel) "size \[kB\]"
    clear_xy_rows_show xy_rows
-   set xy_rows(12,show) 1     ;# qmaster size
-   set xy_rows(14,show) 1     ;# schedd size
+   set_xy_rows_show xy_rows 12
+   set_xy_rows_show xy_rows 14
    create_gnuplot_xy_gif plot_data xy_rows
 
    set plot_data(title) "Throughput test results - CPU load of daemons"
@@ -2835,28 +2797,30 @@ proc analyse_dump_data_file { file { force 0 } } {
    set plot_data(xlabel) "time\[s\]"
    set plot_data(ylabel) "cpu load \[%\]"
    clear_xy_rows_show xy_rows
-   set xy_rows(13,show) 1     ;# qmaster CPU load
-   set xy_rows(15,show) 1     ;# schedd CPU load
+   set_xy_rows_show xy_rows 13
+   set_xy_rows_show xy_rows 15
    create_gnuplot_xy_gif plot_data xy_rows
 
-   set plot_data(title) "Throughput test results - qping information"
-   set plot_data(output_file) "$output_dir/qping.gif"
-   set plot_data(xlabel) "time\[s\]"
-   set plot_data(ylabel) "messages/clients"
-   clear_xy_rows_show xy_rows
-   set xy_rows(21,show) 1     ;# number of clients
-   set xy_rows(22,show) 1     ;# messages in read buffer
-   set xy_rows(23,show) 1     ;# messages in write buffer
-   create_gnuplot_xy_gif plot_data xy_rows
+   if { $qping_data(count) > 0 } {
+      set plot_data(title) "Throughput test results - qping information"
+      set plot_data(output_file) "$output_dir/qping.gif"
+      set plot_data(xlabel) "time\[s\]"
+      set plot_data(ylabel) "messages/clients"
+      clear_xy_rows_show xy_rows
+      set_xy_rows_show xy_rows 21
+      set_xy_rows_show xy_rows 22
+      set_xy_rows_show xy_rows 23
+      create_gnuplot_xy_gif plot_data xy_rows
+   }
 
-   if {$qstat_interval > 0} {
+   if {$qstat_data(count) > 0} {
       set plot_data(title) "Throughput test results - qstat performance"
       set plot_data(output_file) "$output_dir/qstat.gif"
       set plot_data(xlabel) "time\[s\]"
       set plot_data(ylabel) "duration \[s\]"
       clear_xy_rows_show xy_rows
-      set xy_rows(16,show) 1     ;# qstat duration
-      set xy_rows(17,show) 1     ;# failed qstat duration
+      set_xy_rows_show xy_rows 16
+      set_xy_rows_show xy_rows 17
       create_gnuplot_xy_gif plot_data xy_rows
    }
 
@@ -2866,9 +2830,9 @@ proc analyse_dump_data_file { file { force 0 } } {
       set plot_data(title) "Throughput test results - project jobs"
       set plot_data(output_file) "$output_dir/project_jobs.gif"
       clear_xy_rows_show xy_rows
-      set xy_rows(18,show) 1     ;# running jobs project 1
-      set xy_rows(19,show) 1     ;# running jobs project 2
-      set xy_rows(20,show) 1     ;# running jobs project 3
+      set_xy_rows_show xy_rows 18
+      set_xy_rows_show xy_rows 19
+      set_xy_rows_show xy_rows 20
       create_gnuplot_xy_gif plot_data xy_rows
    }
 }
@@ -3882,10 +3846,20 @@ proc clean_current_system_status { results_array array_name job_array_name sched
    set qping_data(count) 0
 }
 
-proc clear_xy_rows_show { xy_rows_name } {
+proc clear_xy_rows_show { xy_rows_name {start 0}} {
+   global throughput_num_data_sets
+
    upvar $xy_rows_name xy_rows
 
-   for {set i 0} {$i <= 23} {incr i} {
+   set end [expr $start + $throughput_num_data_sets]
+   for {set i $start} {$i < $end} {incr i} {
       set xy_rows($i,show) 0
    }
+}
+
+proc set_xy_rows_show { xy_rows_name row {start 0}} {
+   upvar $xy_rows_name xy_rows
+
+   set row [expr $row + $start]
+   set xy_rows($row,show) 1
 }

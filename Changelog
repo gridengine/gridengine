@@ -1,3 +1,7 @@
+JG-2004-09-20-0: Testuite:  Improved test performance/throughput, added a number
+                            of charts to comparison of two clusters.
+                 Review:    CR
+
 SG-2004-09-20-0: Enhance.:  First part of extending the scheduler to use the
                             calendars. The qi-data structure has been extended
                             to include the next 2 state changes, and how long
@@ -62,6 +66,7 @@ JG-2004-09-14-0: Testsuite: Improved test performance/throughput:
                               - parallel jobs with resource requests
                               - array jobs
                               - functional policy
+                 Review:    CR
 
 DT-2004-09-13-1: Bugfix:    o Fixed DRMAA-J on Irix 6.5
 DT-2004-09-13-1: Bugfix:    o Added libjdrmaa to LD_LIBRARYN32_PATH in
@@ -91,6 +96,7 @@ JG-2004-09-09-0: Testsuite: Improved test performance/throughput:
                             - verified, fixed and documented the calculated 
                               metrics.
                             Some testsuite cleanup.
+                 Review:    CR
 
 SG-2004-09-08-0: Cleanup:   - fixed a bug added by SG-2004-09-08-0
                             - got the test_sge_qmaster_timed_event working
@@ -148,7 +154,7 @@ JG-2004-09-06-0: Testsuite: Enhanced / fixed test performance/throughput:
                             Did some fixes in testsuite procedures:
                             - installation of 5.3 systems
                             - filedescriptor leak in chart creation
-                 Review:    pending
+                 Review:    CR
 
 JG-2004-09-01-0: Enhancem.: Cleanup and performance improvement for bitfields.
                             Enhanced the bitfield module test.

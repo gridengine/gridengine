@@ -49,6 +49,7 @@ RC-2004-03-06-0: Bugfix:    deny jobnames with a colon
 AH-2004-03-04-1: Bugfix:    qselect/qstat -l selection wrongly considers 
                             load and utilization
                  Issue:     771
+                 Bugtraq:   5019624
                  Review:    AS
 
 SD-2004-02-27-0: Bugfix:    Fixed checking of read return code
@@ -119,6 +120,7 @@ AH-2004-01-26-0: Bugfix:    schedd_job_info=true causes large delays scheduling
                             parallel jobs
                  Changed:   sge_schedd
                  Issue:     648
+                 Bugtraq:   5019635
 
 RC-2004-01-22-1: Enhancem:  recognize HP-UX on IA64 as hp11-64
                  Changed:   dist/util/arch

@@ -5688,6 +5688,7 @@ proc menu {} {
 
     puts " (20) shutdown and restart master and scheduler"
     puts " (21) only start master and scheduler daemons"
+    puts " (22) check messages files of execds and qmaster"
 
   
   gets stdin input; 
@@ -5697,6 +5698,10 @@ proc menu {} {
   switch -- $input {
     "20" { restart_debug_daemons } 
     "21" { restart_debug_daemons 1 }
+    "22" { set output [check_messages_files]
+           puts $CHECK_OUTPUT $output
+           wait_for_enter
+         }
     "0" { select_runlevel }
     "1" { change_dir; }
     "2" { run_tests $CHECK_ACT_PATH 0

@@ -680,7 +680,7 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 
    # no header found?
    if { $x == $num_lines } {
-      add_proc_error "get_ps_info" "-1" "no usable data from ps command"
+      add_proc_error "get_ps_info" "-1" "no usable data from ps command, host=$host, host_arch=$host_arch"
       return
    }
   

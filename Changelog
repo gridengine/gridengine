@@ -1,3 +1,14 @@
+CR-2002-03-28-2  Testsuite: merges from maintrunc
+                            - new menu point: check messages files of
+                              execds and qmaster
+                            - new tcl file procedure: get_file_content()
+                            - new sge procedure: check_execd_messages()
+                            - new sge procedure: check_qmaster_messages()
+                            - new sge procedure: check_messages_files()
+                            - added new version: "SGEEE pre6.0 (Maintrunk)"
+                            - added new version: "SGE pre6.0 (Maintrunk)"
+
+
 JG-2002-03-28-2: Testsuite: - sge_procedures: new functions shutdown_qmaster, 
                               shutdown_scheduler and startup_scheduler.
                             - large_cluster test: shutdown scheduler before 

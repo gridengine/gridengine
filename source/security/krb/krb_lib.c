@@ -303,7 +303,7 @@ int krb_init(const char *progname)
 
       /* use $SGE_ROOT/keytab */
 
-      sprintf(keytab, "FILE:%s/%s", sge_get_root_dir(0), KRB_KEYTAB);
+      sprintf(keytab, "FILE:%s/%s", sge_get_root_dir(0, NULL, 0, 0), KRB_KEYTAB);
       if ((rc = krb5_kt_resolve(gsd.context, keytab, &gsd.keytab))) {
 
 	 ERROR((SGE_EVENT, MSG_KRB_COULDNOTRESOLVEKEYTABX_S, error_message(rc)));

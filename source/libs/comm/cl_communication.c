@@ -75,11 +75,11 @@ static cl_bool_t cl_ingore_timeout = CL_FALSE;
 static cl_bool_t cl_com_default_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value) {
    switch(mode) {
       case CL_SSL_PEER_NAME: {
-         CL_LOG(CL_LOG_WARNING,"CL_SSL_PEER_NAME");
+         CL_LOG(CL_LOG_WARNING,"checking peer name");
          break;
       }
       case CL_SSL_USER_NAME: {
-         CL_LOG(CL_LOG_WARNING,"CL_SSL_USER_NAME");
+         CL_LOG(CL_LOG_WARNING,"checking user name");
          break;
       }
    }
@@ -387,6 +387,7 @@ int cl_com_create_ssl_setup(cl_ssl_setup_t**     new_setup,
    }
 
    if (*new_setup != NULL) {
+      CL_LOG(CL_LOG_ERROR,"setup configuration pointer is not NULL");
       return CL_RETVAL_PARAMS;
    }
  

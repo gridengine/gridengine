@@ -195,15 +195,15 @@ fstype:   fstype.o  version.o $(RMONLIB)
 fstype.o: $(UTILBIN_DIR)/fstype.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/fstype.c
 #---------------------------------------------------------------------
-spooldefaults:   spooldefaults.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(EVCLIB) $(SECLIBS) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(LCKLIB) $(UTILIB) $(RMONLIB)
+spooldefaults:   spooldefaults.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SECLIBS) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(LCKLIB) $(UTILIB) $(RMONLIB)
 		$(CC) -o $@ spooldefaults.o version.o sge_mt_init.o $(LFLAGS) -lspoolc $(SPOOLING_LIBS) -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
 
 spooldefaults.o: $(UTILBIN_DIR)/spooldefaults.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spooldefaults.c
 
 #---------------------------------------------------------------------
-spoolinit:   spoolinit.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(EVCLIB) $(SECLIBS) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-		$(CC) -o $@ spoolinit.o version.o sge_mt_init.o $(LFLAGS) $(SPOOLING_LIBS) -lsched -levc $(SECLIB) $(KRBLIB) -lgdi -lsgeobj -lsgeobjd -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
+spoolinit:   spoolinit.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SECLIBS) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+		$(CC) -o $@ spoolinit.o version.o sge_mt_init.o $(LFLAGS) $(SPOOLING_LIBS) -lsched -levc -lgdi $(SECLIB) $(KRBLIB) -lsgeobj -lsgeobjd -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
 
 spoolinit.o: $(UTILBIN_DIR)/spoolinit.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spoolinit.c
@@ -230,8 +230,8 @@ tst_pthread_signals.o: $(UTILBIN_DIR)/tst_pthread_signals.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/tst_pthread_signals.c
 
 #---------------------------------------------------------------------
-spooledit: spooledit.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(SECLIBS) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-		$(CC) -o $@ spooledit.o version.o sge_mt_init.o $(LFLAGS) -lspoolb $(SPOOLING_LIBS) -lsched -levc -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lgdi -lcull -lcomm -lcommlists -luti -llck -lrmon -ldb$(BDB_LIB_SUFFIX) $(DLLIB) $(SLIBS) $(LIBS)
+spooledit: spooledit.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+		$(CC) -o $@ spooledit.o version.o sge_mt_init.o $(LFLAGS) -lspoolb $(SPOOLING_LIBS) -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon -ldb$(BDB_LIB_SUFFIX) $(DLLIB) $(SLIBS) $(LIBS)
 
 spooledit.o: $(UTILBIN_DIR)/spooledit.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spooledit.c

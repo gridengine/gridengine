@@ -57,7 +57,9 @@
 #include "setup_path.h"
 #include "sge_bootstrap.h"
 #include "sge_feature.h"
-#include "sec_lib.h"
+#include "sge_prog.h"
+#include "sge_security.h"
+#include "sge_all_listsL.h"
 
 #define ARGUMENT_COUNT 15
 static char*  cl_values[ARGUMENT_COUNT+1];
@@ -963,11 +965,13 @@ static void usage(void)
   int max_name_length = 0;
   int i=0;
   fprintf(stderr, "%s %s\n", GE_SHORTNAME, GDI_VERSION);
-  fprintf(stderr, "%s qping [-help] [-noalias] [ [ [-i <interval>] [-info] [-f] ] | [ [-dump_tag tag] [-dump] [-nonewline] ] ] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
+  fprintf(stderr, "%s qping [-help] [-noalias] [-ssl|-tcp] [ [ [-i <interval>] [-info] [-f] ] | [ [-dump_tag tag] [-dump] [-nonewline] ] ] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
   fprintf(stderr, "   -i         : set ping interval time\n");
   fprintf(stderr, "   -info      : show full status information and exit\n");
   fprintf(stderr, "   -f         : show full status information on each ping interval\n");
   fprintf(stderr, "   -noalias   : ignore $SGE_ROOT/SGE_CELL/common/host_aliases file\n");
+  fprintf(stderr, "   -ssl       : use SSL framework\n");
+  fprintf(stderr, "   -tcp       : use TCP framework\n");
   fprintf(stderr, "   -dump      : dump communication traffic (see \"communication traffic output options\" for additional information)\n");
   fprintf(stderr, "                   (provides the same output like -dump_tag MSG)\n");
   fprintf(stderr, "   -dump_tag  : dump communication traffic (see \"communication traffic output options\" for additional information)\n");
@@ -1028,6 +1032,11 @@ int main(int argc, char *argv[]) {
    char* resolved_comp_host = NULL;
    char* comp_name          = NULL;
    cl_com_handle_t* handle  = NULL;
+   cl_framework_t   communication_framework = CL_CT_TCP;
+   cl_tcp_connect_t connect_type = CL_TCP_DEFAULT;
+   cl_xml_connection_type_t connection_type = CL_CM_CT_MESSAGE;
+   char* client_name  = "qping";
+   int   got_no_framework  = 0;
 
    int   parameter_start   = 1;
    int   comp_id           = -1;
@@ -1041,6 +1050,8 @@ int main(int argc, char *argv[]) {
    int   option_f          = 0;
    int   option_info       = 0;
    int   option_noalias    = 0;
+   int   option_ssl        = 0;
+   int   option_tcp        = 0;
    int   option_dump       = 0;
    int   option_nonewline  = 1;
    int   parameter_count   = 4;
@@ -1086,6 +1097,16 @@ int main(int argc, char *argv[]) {
          }
          if (strcmp( argv[i] , "-noalias") == 0) {
              option_noalias = 1;
+             parameter_count++;
+             parameter_start++;
+         }
+         if (strcmp( argv[i] , "-tcp") == 0) {
+             option_tcp = 1;
+             parameter_count++;
+             parameter_start++;
+         }
+         if (strcmp( argv[i] , "-ssl") == 0) {
+             option_ssl = 1;
              parameter_count++;
              parameter_start++;
          }
@@ -1175,12 +1196,11 @@ int main(int argc, char *argv[]) {
    feature_mt_init();
 
    gdi_mt_init();
+   sge_getme(QPING);
 
-#ifdef SECURE
-   sec_mt_init();
-#endif
+   lInit(nmv);
 
-   retval = cl_com_setup_commlib(CL_ONE_THREAD ,CL_LOG_OFF, NULL );
+   retval = cl_com_setup_commlib(CL_RW_THREAD ,CL_LOG_OFF, NULL );
    if (retval != CL_RETVAL_OK) {
       fprintf(stderr,"%s\n",cl_get_error_text(retval));
       exit(1);
@@ -1204,16 +1224,77 @@ int main(int argc, char *argv[]) {
       }
    }
 
-   if (option_dump != 0) {
-      handle=cl_com_create_handle(&commlib_error, CL_CT_TCP,CL_CM_CT_STREAM  , CL_FALSE, comp_port, CL_TCP_RESERVED_PORT, "debug_client", 0, 1,0 );
-#if 0
-      printf("local hostname is \"%s\"\n", handle->local->comp_host);
-      printf("local component is \"%s\"\n", handle->local->comp_name);
-      printf("local component id is \"%lu\"\n", handle->local->comp_id);
-#endif
-   } else {
-      handle=cl_com_create_handle(&commlib_error, CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, comp_port, CL_TCP_DEFAULT,"qping", 0, 1,0 );
+   if ( option_ssl != 0 && option_tcp != 0) {
+      fprintf(stderr,"using of option -ssl and option -tcp not supported\n");
+      exit(1);
    }
+   
+
+   /* find out the framework type to use */
+   if ( option_ssl == 0 && option_tcp == 0 ) {
+      sge_setup_paths(sge_get_default_cell(), NULL);
+      if (sge_bootstrap(NULL) != true) {
+         fprintf(stderr,"please use option -ssl or -tcp to bypass bootstrap file read\n");
+         exit(1);
+      }
+      got_no_framework = 1;
+      if ( strcmp( "csp", bootstrap_get_security_mode()) == 0) {
+         option_ssl = 1;
+      } else {
+         option_tcp = 1;
+      }
+   }
+
+   if (option_ssl != 0) {
+      communication_framework = CL_CT_SSL;
+#ifdef SECURE
+      if (got_no_framework == 1) {
+         /* we got no framework and we have a bootstrap file */
+         sge_getme(QPING);
+         sge_ssl_setup_security_path("qping");
+      } else {
+         if (getenv("SSL_CA_CERT_FILE") == NULL) {
+            fprintf(stderr,"You have not set the SGE default environment or you specified the -ssl option.\n");
+            fprintf(stderr,"Please set the following environment variables to specifiy your certificates:\n");
+            fprintf(stderr,"- SSL_CA_CERT_FILE - CA certificate file\n");
+            fprintf(stderr,"- SSL_CERT_FILE    - certificates file\n");
+            fprintf(stderr,"- SSL_KEY_FILE     - key file\n");
+            fprintf(stderr,"- SSL_RAND_FILE    - rand file\n");
+            exit(1);
+         } else {
+            cl_ssl_setup_t ssl_config;
+            ssl_config.ssl_method           = CL_SSL_v23;                 /*  v23 method                                  */
+            ssl_config.ssl_CA_cert_pem_file = getenv("SSL_CA_CERT_FILE"); /*  CA certificate file                         */
+            ssl_config.ssl_CA_key_pem_file  = NULL;                       /*  private certificate file of CA (not used)   */
+            ssl_config.ssl_cert_pem_file    = getenv("SSL_CERT_FILE");    /*  certificates file                           */
+            ssl_config.ssl_key_pem_file     = getenv("SSL_KEY_FILE");     /*  key file                                    */
+            ssl_config.ssl_rand_file        = getenv("SSL_RAND_FILE");    /*  rand file (if RAND_status() not ok)         */
+            ssl_config.ssl_reconnect_file   = NULL;                       /*  file for reconnect data    (not used)       */
+            ssl_config.ssl_refresh_time     = 0;                          /*  key alive time for connections (not used)   */
+            ssl_config.ssl_password         = NULL;                       /*  password for encrypted keyfiles (not used)  */
+            ssl_config.ssl_verify_func      = NULL;                       /*  function callback for peer user/name check  */
+            cl_com_specify_ssl_configuration(&ssl_config);
+         }
+      }
+#endif
+   }
+   if (option_tcp != 0) {
+      communication_framework = CL_CT_TCP;
+   }
+
+   if (option_dump != 0) {
+      connect_type = CL_TCP_RESERVED_PORT;
+      connection_type = CL_CM_CT_STREAM;
+      client_name  = "debug_client";
+   }
+
+   retval = cl_com_set_error_func(qping_general_communication_error);
+   if (retval != CL_RETVAL_OK) {
+      fprintf(stderr,"%s\n",cl_get_error_text(retval));
+   }
+
+
+   handle=cl_com_create_handle(&commlib_error, communication_framework, connection_type, CL_FALSE, comp_port, connect_type, client_name, 0, 1,0 );
 
    if (handle == NULL) {
       fprintf(stderr, "could not create communication handle: %s\n", cl_get_error_text(commlib_error));

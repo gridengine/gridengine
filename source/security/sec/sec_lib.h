@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#if 0
+
 #include "cl_data_types.h"
 void sec_mt_init(void);
 
@@ -55,6 +57,5 @@ int sec_receive_message(cl_com_handle_t* handle,
                         unsigned long response_mid, 
                         cl_com_message_t** message, 
                         cl_com_endpoint_t** sender);
-
-
+#endif
 #endif /* __SEC_LIB_H */

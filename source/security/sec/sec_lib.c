@@ -30,6 +30,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+
+#if 0
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -4408,3 +4412,4 @@ static int sec_build_symbol_table (void)
       DEXIT;
       return 2;
 }
+#endif

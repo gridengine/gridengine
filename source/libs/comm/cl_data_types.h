@@ -87,8 +87,8 @@ typedef enum cl_host_resolve_method_def {
 } cl_host_resolve_method_t;
 
 typedef enum cl_thread_mode_def {
-   CL_NO_THREAD,         /* application must call cl_commlib_trigger() in main loop */
-   CL_ONE_THREAD         /* only one trigger thread */
+   CL_NO_THREAD,       /* application must call cl_commlib_trigger() in main loop */
+   CL_RW_THREAD        /* enable read thread, write thread, trigger thread, service thread   */
 } cl_thread_mode_t;
 
 

@@ -40,7 +40,6 @@
 #include "setup_path.h"
 #include "sge_bootstrap.h"
 #include "sge_feature.h"
-#include "sec_lib.h"
 #include "gdi_setup.h"
 #include "sge_profiling.h"
 
@@ -84,7 +83,4 @@ void sge_mt_init(void)
 
    gdi_mt_init();
 
-#ifdef SECURE
-   sec_mt_init();
-#endif
 } /* sge_mt_init */

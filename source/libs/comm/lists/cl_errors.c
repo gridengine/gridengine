@@ -398,6 +398,12 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_SSL_RAND_SEED_FAILURE: {
          return MSG_CL_RETVAL_SSL_RAND_SEED_FAILURE;
       }
+      case CL_RETVAL_SSL_NOT_SUPPORTED: {
+         return MSG_CL_RETVAL_SSL_NOT_SUPPORTED;
+      }
+      case CL_RETVAL_ERROR_SETTING_CIPHER_LIST: {
+         return MSG_CL_RETVAL_ERROR_SETTING_CIPHER_LIST;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

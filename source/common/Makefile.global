@@ -51,7 +51,6 @@ messages: common_messages libs_messages clients_messages daemons_messages utilbi
 ###############################################################################
 include  $(SDIR)/common/Makefile
 include  $(SDIR)/security/krb/Makefile
-include  $(SDIR)/security/sec/Makefile
 include  $(SDIR)/security/gss/Makefile
 include  $(SDIR)/libs/Makefile
 include  $(SDIR)/security/coshepherd/Makefile

@@ -74,7 +74,6 @@ files=" \
        libs/lck/lck_dependencies  \
        utilbin/utilbin_dependencies \
        security/coshepherd/coshepherd_dependencies \
-       security/sec/sec_dependencies \
        security/krb/krb_dependencies \
        security/gss/gss_dependencies \
        3rdparty/strptime/strptime_dependencies \

@@ -147,9 +147,11 @@
 #define CL_RETVAL_SSL_GET_SSL_ERROR                (CL_RETVAL_START_ID + 110)
 #define CL_RETVAL_SSL_NO_SERVICE_PEER_NAME         (CL_RETVAL_START_ID + 111)
 #define CL_RETVAL_SSL_RAND_SEED_FAILURE            (CL_RETVAL_START_ID + 112)
+#define CL_RETVAL_SSL_NOT_SUPPORTED                (CL_RETVAL_START_ID + 113)
+#define CL_RETVAL_ERROR_SETTING_CIPHER_LIST        (CL_RETVAL_START_ID + 114)
 
 
-#define CL_RETVAL_LAST_ID                     (CL_RETVAL_START_ID + 113)  /* this must be the last number + 1 */
+#define CL_RETVAL_LAST_ID                     (CL_RETVAL_START_ID + 115)  /* this must be the last number + 1 */
 #define CL_RETVAL_UNDEFINED_STR "UNDEFINED"
 
 int         cl_is_commlib_error(int error_id);

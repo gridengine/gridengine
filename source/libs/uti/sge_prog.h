@@ -91,7 +91,8 @@ enum {
  SPOOLDEFAULTS   ,       /* 39 */
  JAPI            ,       /* 40 */
  JAPI_EC         ,       /* 41 */
- DRMAA                   /* 42 */
+ DRMAA           ,       /* 42 */
+ QPING                   /* 43 */
 };
 
 

@@ -32,6 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#if 0
 
 #include "basis_types.h"
 
@@ -104,5 +105,6 @@
 #define MSG_SEC_DLLOADFAILED             _MESSAGE(55067, _("Unable to open the OpenSSL library.  Please make sure libcrypto is accessible from your shared library path.\n"))
 #define MSG_SEC_DLLOADSYMFAILED          _MESSAGE(55068, _("Unable to load symbol from libcrypto.\n"))
 
+#endif
 
 #endif /* __MSG_SEC_H */

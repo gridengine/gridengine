@@ -69,6 +69,7 @@
 #include "sge_hostname.h"
 #include "cl_commlib.h"
 #include "sge_mtutil.h"
+#include "cl_ssl_framework.h"
 
 #ifdef CRYPTO
 #include <openssl/evp.h>
@@ -82,12 +83,18 @@
 #ifdef SECURE
 const char* sge_dummy_sec_string = "AIMK_SECURE_OPTION_ENABLED";
 
-static pthread_mutex_t sec_rw_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t sec_ssl_setup_config_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cl_ssl_setup_t* sec_ssl_setup_config       = NULL;
+#define SEC_LOCK_SSL_SETUP()      sge_mutex_lock("ssl_setup_mutex", SGE_FUNC, __LINE__, &sec_ssl_setup_config_mutex)
+#define SEC_UNLOCK_SSL_SETUP()    sge_mutex_unlock("ssl_setup_mutex", SGE_FUNC, __LINE__, &sec_ssl_setup_config_mutex)
 
-#define SEC_LOCK_RW()      sge_mutex_lock("sec_rw_mutex", SGE_FUNC, __LINE__, &sec_rw_mutex)
-#define SEC_UNLOCK_RW()    sge_mutex_unlock("sec_rw_mutex", SGE_FUNC, __LINE__, &sec_rw_mutex)
+static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value);
+static bool is_daemon(const char* progname);
+static bool is_master(const char* progname);
 
-#endif 
+
+
+#endif
 
 static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
 static bool sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
@@ -142,6 +149,374 @@ static void dump_snd_info(char* un_resolved_hostname, char* component_name, unsi
    DEXIT;
 }
 
+
+#ifdef SECURE
+
+static bool is_daemon(const char* progname) {
+   if (progname != NULL) {
+      if ( !strcmp(prognames[QMASTER], progname) ||
+           !strcmp(prognames[EXECD]  , progname) ||
+           !strcmp(prognames[SCHEDD] , progname)) {
+         return true;
+      }
+   }
+   return false;
+}
+
+static bool is_master(const char* progname) {
+   if (progname != NULL) {
+      if ( !strcmp(prognames[QMASTER],progname)) {
+         return true;
+      } 
+   }
+   return false;
+}
+
+
+
+/* int 0 on success, -1 on failure */
+int sge_ssl_setup_security_path(const char *progname) {
+
+   int return_value = 0;
+   int commlib_error = 0;
+   SGE_STRUCT_STAT sbuf;
+	char *userdir = NULL;
+	char *user_local_dir = NULL;
+	char *ca_root = NULL;
+	char *ca_local_root = NULL;
+   char *sge_cakeyfile = NULL;
+   char *sge_keyfile = NULL;
+   char *sge_certfile = NULL;
+   int  len;
+   char *cp = NULL;
+
+#define SGE_QMASTER_PORT_ENVIRONMENT_NAME "SGE_QMASTER_PORT"
+#define SGE_COMMD_SERVICE "sge_qmaster"
+#define CA_DIR          "common/sgeCA"
+#define CA_LOCAL_DIR    "/var/sgeCA"
+#define CaKey           "cakey.pem"
+#define CaCert          "cacert.pem"
+#define SGESecPath      ".sge"
+#define UserKey         "key.pem"
+#define RandFile        "rand.seed"
+#define UserCert        "cert.pem"
+#define ReconnectFile   "private/reconnect.dat"
+#define VALID_MINUTES    7          /* expiry of connection        */
+
+
+
+   /* former global values */
+   char *ca_key_file    = NULL;   
+   char *ca_cert_file   = NULL;
+   char *key_file       = NULL;
+   char *rand_file      = NULL;
+   char *cert_file      = NULL; 
+   char *reconnect_file = NULL;
+
+   DENTER(TOP_LAYER, "setup_ssl_security_path");
+
+   if (progname == NULL) {
+      CRITICAL((SGE_EVENT, MSG_GDI_NO_VALID_PROGRAMM_NAME));
+      return -1;
+   }
+
+   SEC_LOCK_SSL_SETUP();
+
+   cp = getenv(SGE_QMASTER_PORT_ENVIRONMENT_NAME);
+   
+   /*
+   ** malloc ca_root string and check if directory has been created during
+   ** install otherwise exit
+   */
+   len = strlen(sge_get_root_dir(1, NULL, 0, 1)) + strlen(sge_get_default_cell()) +
+         strlen(CA_DIR) + 3;
+   ca_root = sge_malloc(len);
+   sprintf(ca_root, "%s/%s/%s", sge_get_root_dir(1, NULL, 0, 1), 
+                     sge_get_default_cell(), CA_DIR);
+   if (SGE_STAT(ca_root, &sbuf)) { 
+      CRITICAL((SGE_EVENT, MSG_SEC_CAROOTNOTFOUND_S, ca_root));
+      SGE_EXIT(1);
+   }
+
+   /*
+   ** malloc ca_local_root string and check if directory has been created during
+   ** install otherwise exit
+   */
+   if ((sge_cakeyfile=getenv("SGE_CAKEYFILE"))) {
+      ca_key_file = strdup(sge_cakeyfile);
+   } else {
+      if (getenv("SGE_NO_CA_LOCAL_ROOT")) {
+         ca_local_root = ca_root;
+      } else {
+         char *ca_local_dir = NULL;
+         /* If the user is root, use /var/sgeCA.  Otherwise, use /tmp/sgeCA */
+#if 0
+         if (geteuid () == 0) {
+            ca_local_dir = CA_LOCAL_DIR;
+         }
+         else {
+            ca_local_dir = USER_CA_LOCAL_DIR;
+         }
+#endif
+         ca_local_dir = CA_LOCAL_DIR; 
+         
+         len = strlen(ca_local_dir) + 
+               (cp ? strlen(cp)+4:strlen(SGE_COMMD_SERVICE)) +
+               strlen(sge_get_default_cell()) + 3;
+         ca_local_root = sge_malloc(len);
+         if (cp)
+            sprintf(ca_local_root, "%s/port%s/%s", ca_local_dir, cp, 
+                     sge_get_default_cell());
+         else
+            sprintf(ca_local_root, "%s/%s/%s", ca_local_dir, SGE_COMMD_SERVICE, 
+                     sge_get_default_cell());
+      }   
+      if (is_daemon(progname) && SGE_STAT(ca_local_root, &sbuf)) { 
+         CRITICAL((SGE_EVENT, MSG_SEC_CALOCALROOTNOTFOUND_S, ca_local_root));
+         SGE_EXIT(1);
+      }
+      ca_key_file = sge_malloc(strlen(ca_local_root) + (sizeof("private")-1) + strlen(CaKey) + 3);
+      sprintf(ca_key_file, "%s/private/%s", ca_local_root, CaKey);
+   }
+
+   if (is_master(progname) && SGE_STAT(ca_key_file, &sbuf)) { 
+      CRITICAL((SGE_EVENT, MSG_SEC_CAKEYFILENOTFOUND_S, ca_key_file));
+      SGE_EXIT(1);
+   }
+   DPRINTF(("ca_key_file: %s\n", ca_key_file));
+
+
+	ca_cert_file = sge_malloc(strlen(ca_root) + strlen(CaCert) + 2);
+	sprintf(ca_cert_file, "%s/%s", ca_root, CaCert);
+
+   if (SGE_STAT(ca_cert_file, &sbuf)) { 
+      CRITICAL((SGE_EVENT, MSG_SEC_CACERTFILENOTFOUND_S, ca_cert_file));
+      SGE_EXIT(1);
+   }
+   DPRINTF(("ca_cert_file: %s\n", ca_cert_file));
+
+   /*
+   ** determine userdir: 
+   ** - ca_root, ca_local_root for daemons 
+   ** - $HOME/.sge/{port$COMMD_PORT|SGE_COMMD_SERVICE}/$SGE_CELL
+   **   and as fallback
+   **   /var/sgeCA/{port$COMMD_PORT|SGE_COMMD_SERVICE}/$SGE_CELL/userkeys/$USER/{cert.pem,key.pem}
+   */
+
+   if (is_daemon(progname)){
+      userdir = strdup(ca_root);
+      user_local_dir = ca_local_root;
+   } else {
+      struct passwd *pw;
+
+      pw = sge_getpwnam(uti_state_get_user_name());
+
+      if (!pw) {   
+         CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, uti_state_get_user_name()));
+         SGE_EXIT(1);
+      }
+      userdir = sge_malloc(strlen(pw->pw_dir) + strlen(SGESecPath) +
+                          (cp ? strlen(cp) + 4 : strlen(SGE_COMMD_SERVICE)) +
+                           strlen(sge_get_default_cell()) + 4);
+      if (cp)                     
+         sprintf(userdir, "%s/%s/port%s/%s", pw->pw_dir, SGESecPath, cp, 
+               sge_get_default_cell());
+      else         
+         sprintf(userdir, "%s/%s/%s/%s", pw->pw_dir, SGESecPath, 
+                  SGE_COMMD_SERVICE, sge_get_default_cell());
+      user_local_dir = userdir;
+   }
+
+
+   if ((sge_keyfile = getenv("SGE_KEYFILE"))) {
+      key_file = strdup(sge_keyfile);
+   } else {   
+      key_file = sge_malloc(strlen(user_local_dir) + (sizeof("private")-1) + strlen(UserKey) + 3);
+      sprintf(key_file, "%s/private/%s", user_local_dir, UserKey);
+   }   
+
+
+   if (SGE_STAT(key_file, &sbuf)) { 
+      free(key_file);
+      key_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
+                              strlen(uti_state_get_user_name()) + strlen(UserKey) + 4);
+      sprintf(key_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), UserKey);
+   }   
+
+   rand_file = sge_malloc(strlen(user_local_dir) + (sizeof("private")-1) + strlen(RandFile) + 3);
+   sprintf(rand_file, "%s/private/%s", user_local_dir, RandFile);
+
+   if (SGE_STAT(rand_file, &sbuf)) { 
+      free(rand_file);
+      rand_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
+                              strlen(uti_state_get_user_name()) + strlen(RandFile) + 4);
+      sprintf(rand_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), RandFile);
+   }   
+
+   if (SGE_STAT(key_file, &sbuf)) { 
+      CRITICAL((SGE_EVENT, MSG_SEC_KEYFILENOTFOUND_S, key_file));
+      SGE_EXIT(1);
+   }
+   DPRINTF(("key_file: %s\n", key_file));
+
+   if (SGE_STAT(rand_file, &sbuf)) { 
+      WARNING((SGE_EVENT, MSG_SEC_RANDFILENOTFOUND_S, rand_file));
+   } else {
+      DPRINTF(("rand_file: %s\n", rand_file));
+   }   
+
+   if ((sge_certfile = getenv("SGE_CERTFILE"))) {
+      cert_file = strdup(sge_certfile);
+   } else {   
+      cert_file = sge_malloc(strlen(userdir) + (sizeof("certs")-1) + strlen(UserCert) + 3);
+      sprintf(cert_file, "%s/certs/%s", userdir, UserCert);
+   }
+
+   if (SGE_STAT(cert_file, &sbuf)) {
+      free(cert_file);
+      cert_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
+                              strlen(uti_state_get_user_name()) + strlen(UserCert) + 4);
+      sprintf(cert_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), UserCert);
+   }   
+
+   if (SGE_STAT(cert_file, &sbuf)) { 
+      CRITICAL((SGE_EVENT, MSG_SEC_CERTFILENOTFOUND_S, cert_file));
+      SGE_EXIT(1);
+   }
+   DPRINTF(("cert_file: %s\n", cert_file));
+
+	reconnect_file = sge_malloc(strlen(userdir) + strlen(ReconnectFile) + 2); 
+   sprintf(reconnect_file, "%s/%s", userdir, ReconnectFile);
+   DPRINTF(("reconnect_file: %s\n", reconnect_file));
+    
+   free(userdir);
+   free(ca_root);
+   if (!getenv("SGE_NO_CA_LOCAL_ROOT")) {
+      free(ca_local_root);
+   }
+
+
+   if (sec_ssl_setup_config != NULL) {
+      DPRINTF(("deleting old ssl configuration setup ...\n"));
+      cl_com_free_ssl_setup(&sec_ssl_setup_config);
+   }
+
+   DPRINTF(("creating ssl configuration setup ...\n"));
+   commlib_error = cl_com_create_ssl_setup(&sec_ssl_setup_config,
+                                           CL_SSL_v23,            /* ssl_method           */
+                                           ca_cert_file,          /* ssl_CA_cert_pem_file */
+                                           ca_key_file,           /* ssl_CA_key_pem_file  */
+                                           cert_file,             /* ssl_cert_pem_file    */
+                                           key_file,              /* ssl_key_pem_file     */
+                                           rand_file,             /* ssl_rand_file        */
+                                           reconnect_file,        /* ssl_reconnect_file   */
+                                           60 * VALID_MINUTES,    /* ssl_refresh_time     */
+                                           NULL,                  /* ssl_password         */
+                                           ssl_cert_verify_func); /* ssl_verify_func (cl_ssl_verify_func_t)  */
+   if ( commlib_error != CL_RETVAL_OK) {
+      return_value = -1;
+      DPRINTF(("return value of cl_com_create_ssl_setup(): %s\n", cl_get_error_text(commlib_error)));
+   }
+
+
+   commlib_error = cl_com_specify_ssl_configuration(sec_ssl_setup_config);
+   if ( commlib_error != CL_RETVAL_OK) {
+      return_value = -1;
+      DPRINTF(("return value of cl_com_specify_ssl_configuration(): %s\n", cl_get_error_text(commlib_error)));
+   }
+
+   SEC_UNLOCK_SSL_SETUP();
+
+   free(ca_key_file);   
+   free(ca_cert_file);
+   free(key_file);
+   free(rand_file);
+   free(cert_file); 
+   free(reconnect_file);
+
+   DEXIT;
+   return return_value;
+}
+
+static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value) {
+
+   /*
+    *   CR:
+    *
+    * - This callback function can be used to make additonal security checks 
+    * 
+    * - this callback is not called from commlib with a value == NULL 
+    * 
+    * - NOTE: This callback is called from the commlib. If the commlib is initalized with
+    *   thread support (see cl_com_setup_commlib() ) this may be a problem because the thread has
+    *   no application specific context initalization. So never call functions within this callback 
+    *   which need thread specific setup.
+    */
+   DENTER(TOP_LAYER, "ssl_cert_verify_func");
+
+   DPRINTF(("ssl_cert_verify_func()\n"));
+
+   if (value == NULL) {
+      /* This should never happen */
+      CRITICAL((SGE_EVENT, MSG_SEC_CERT_VERIFY_FUNC_NO_VAL));
+      DEXIT;
+      return CL_FALSE;
+   }
+
+   if (service_mode == CL_TRUE) {
+      switch(mode) {
+         case CL_SSL_PEER_NAME: {
+            DPRINTF(("local service got certificate from peer \"%s\"\n", value));
+#if 0
+            if (strcmp(value,"SGE admin user") != 0) {
+               DEXIT;
+               return CL_FALSE;
+            }
+#endif
+            break;
+         }
+         case CL_SSL_USER_NAME: {
+            DPRINTF(("local service got certificate from user \"%s\"\n", value));
+#if 0
+            if (strcmp(value,"") != 0) {
+               DEXIT;
+               return CL_FALSE;
+            }
+#endif
+            break;
+         }
+      }
+   } else {
+      switch(mode) {
+         case CL_SSL_PEER_NAME: {
+            DPRINTF(("local client got certificate from peer \"%s\"\n", value));
+#if 0
+            if (strcmp(value,"SGE admin user") != 0) {
+               DEXIT;
+               return CL_FALSE;
+            }
+#endif
+            break;
+         }
+         case CL_SSL_USER_NAME: {
+            DPRINTF(("local client got certificate from user \"%s\"\n", value));
+#if 0
+            if (strcmp(value,"") != 0) {
+               DEXIT;
+               return CL_FALSE;
+            }
+#endif
+            break;
+         }
+      }
+   }
+   DEXIT;
+   return CL_TRUE;
+}
+
+#endif
+
+
 /****** gdi/security/sge_security_initialize() ********************************
 *  NAME
 *     sge_security_initialize -- initialize sge security
@@ -172,7 +547,7 @@ int sge_security_initialize(const char *name)
       static const char* dummy_string = NULL;
       dummy_string = sge_dummy_sec_string;
       if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-         if (sec_init(name)) {
+         if (sge_ssl_setup_security_path(name)) {
             DEXIT;
             return -1;
          }
@@ -214,8 +589,10 @@ void sge_security_exit(int i)
 
 #ifdef SECURE
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      sec_exit();
-   }     
+      SEC_LOCK_SSL_SETUP();
+      cl_com_free_ssl_setup(&sec_ssl_setup_config);
+      SEC_UNLOCK_SSL_SETUP();
+   } 
 #endif
 
    DEXIT;
@@ -226,19 +603,6 @@ int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, 
 
    int ret;
    DENTER(TOP_LAYER, "gdi_receive_sec_message");
-
-#ifdef SECURE   
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      SEC_LOCK_RW();
-      ret = sec_receive_message( handle, un_resolved_hostname,  component_name,  component_id,  synchron,   response_mid,  message, sender);
-      if (message != NULL) {
-         dump_rcv_info(message,sender);
-      }
-      SEC_UNLOCK_RW();
-      DEXIT;
-      return ret;
-   }                      
-#endif
 
    ret = cl_commlib_receive_message(handle, un_resolved_hostname,  component_name,  component_id,  
                                      synchron, response_mid,  message,  sender);
@@ -259,20 +623,6 @@ int gdi_send_sec_message(cl_com_handle_t* handle,
                             int wait_for_ack) {
    int ret;
    DENTER(TOP_LAYER, "gdi_send_sec_message");
-
-   
-#ifdef SECURE
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      SEC_LOCK_RW();
-      ret = sec_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
-                                  ack_type, data,  size ,
-                                  mid,  response_mid,  tag , copy_data, wait_for_ack);
-      dump_snd_info(un_resolved_hostname, component_name, component_id, ack_type, tag, mid);
-      SEC_UNLOCK_RW();
-      DEXIT;
-      return ret;
-   }                      
-#endif
 
    ret = cl_commlib_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
                                   ack_type, data,  size ,
@@ -351,8 +701,15 @@ int compressed
       handle = cl_com_get_handle("execd_handle", 0);
       if (handle == NULL) {
          int commlib_error = CL_RETVAL_OK;
+         cl_framework_t  communication_framework = CL_CT_TCP;
          DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", tocomproc));
-         cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_execd_port(), CL_TCP_DEFAULT,"execd_handle" , 0 , 1 , 0 );
+         if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+            DPRINTF(("using communication lib with SSL framework (execd_handle)\n"));
+            communication_framework = CL_CT_SSL;
+         }
+         cl_com_create_handle(&commlib_error, communication_framework, CL_CM_CT_MESSAGE,
+                              CL_FALSE, sge_get_execd_port(), CL_TCP_DEFAULT,
+                              "execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
          if (handle == NULL) {
             ERROR((SGE_EVENT,MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S, tocomproc));
@@ -454,8 +811,16 @@ u_short *compressed
       handle = cl_com_get_handle("execd_handle", 0);
       if (handle == NULL) {
          int commlib_error = CL_RETVAL_OK;
+         cl_framework_t  communication_framework = CL_CT_TCP;
          DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", fromcommproc));
-         cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_execd_port(), CL_TCP_DEFAULT, "execd_handle" , 0 , 1 , 0 );
+         if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+            DPRINTF(("using communication lib with SSL framework (execd_handle)\n"));
+            communication_framework = CL_CT_SSL;
+         }
+         
+         cl_com_create_handle(&commlib_error, communication_framework, CL_CM_CT_MESSAGE,
+                              CL_FALSE, sge_get_execd_port(), CL_TCP_DEFAULT, 
+                              "execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
          if (handle == NULL) {
             ERROR((SGE_EVENT,MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S, fromcommproc));
@@ -1447,16 +1812,58 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
 }
 
 /* MT-NOTE: sge_security_verify_user() is MT safe (assumptions) */
-int sge_security_verify_user(const char *host, const char *commproc, u_short id, const char *user) 
+int sge_security_verify_user(const char *host, const char *commproc, u_long32 id, const char *gdi_user) 
 {
    DENTER(TOP_LAYER, "sge_security_verify_user");
 
 #ifdef SECURE
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      if (!sec_verify_user(user, commproc)) {
-         DEXIT;
-         return False;
-     }
+      const char* dummy_host = "NULL";
+      const char* dummy_commproc = "NULL";
+      const char* dummy_gdi_user = "NULL";
+      char* dummy_unique_user = "NULL";
+      cl_com_handle_t* handle = NULL;
+      char* unique_identifier = NULL;
+
+      if (gdi_user != NULL) {
+         dummy_gdi_user = gdi_user;
+      }
+      if (commproc != NULL) {
+         dummy_commproc = commproc;
+      }
+      if (host != NULL) {
+         dummy_host = host;
+      }
+
+      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+      if (cl_com_ssl_get_unique_id(handle, (char*)host, (char*)commproc, (unsigned long)id, &unique_identifier) == CL_RETVAL_OK) {
+         dummy_unique_user = unique_identifier;
+         DPRINTF(("unique identifier = "SFQ"\n", dummy_unique_user));
+      }
+
+      
+
+      /* TODO: This is only a workaround for the problem that daemons are not always started
+               as root, they also can be stared as admin user */
+
+      if (!is_daemon(commproc)) {
+         DPRINTF(("endpoint "SFN"/"SFN"/"U32CFormat" has the unique identifier "SFQ", gdi user = "SFQ"\n", 
+                  dummy_host, dummy_commproc, u32c(id), dummy_unique_user, dummy_gdi_user));
+         if (strcmp(dummy_gdi_user,dummy_unique_user) != 0) {
+            DPRINTF(("endpoint certificate user name doesn't match gdi user name\n"));
+            free(unique_identifier);
+            unique_identifier = NULL;
+            DEXIT;
+            return False;
+         }
+      } else {
+         DPRINTF(("ignoring verify user request for endpoint "SFN"/"SFN"/"U32CFormat", gdi user = "SFQ"\n",
+                  dummy_host, dummy_commproc, u32c(id), dummy_gdi_user));
+      }
+      if (unique_identifier != NULL) {
+         free(unique_identifier);
+         unique_identifier = NULL;
+      }
    }  
 #endif
 
@@ -1477,9 +1884,11 @@ int sge_security_verify_user(const char *host, const char *commproc, u_short id,
 void sge_security_event_handler(te_event_t anEvent)
 {
 #ifdef SECURE
+#if 0
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
       sec_clear_connectionlist();
-   }   
+   } 
+#endif  
 #endif
    
 #ifdef KERBEROS

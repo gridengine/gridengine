@@ -152,7 +152,7 @@ extern int main(int argc, char** argv)
         log_level=CL_LOG_OFF;
         break;
   }
-  cl_com_setup_commlib(CL_ONE_THREAD, log_level, NULL );
+  cl_com_setup_commlib(CL_RW_THREAD, log_level, NULL );
 
   if (server_mode == CL_TRUE) {
      handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, com_port, CL_TCP_DEFAULT, "server", 1, 1, 0 );

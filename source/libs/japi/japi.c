@@ -418,6 +418,8 @@ int japi_init_mt(dstring *diag)
    bootstrap_mt_init();
    feature_mt_init();
 
+   sge_getme(prog_number);
+
    sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
    if ( uti_state_get_mewho() == QUSERDEFINED) { 
       sge_gdi_param(SET_MEWHO, prog_number, NULL);
@@ -560,12 +562,18 @@ int japi_init(const char *contact, const char *session_key_in,
     * japi_init(), and only one thread may be in japi_init() at a time. */
    if (!virgin_session) {
       int commlib_error = CL_RETVAL_OK;
+      cl_framework_t  communication_framework = CL_CT_TCP;
 
       /* Make sure the commlib handle exists  If it doesn't, create it. */
       handle = cl_com_get_handle ((char*)uti_state_get_sge_formal_prog_name(), 0);
 
       if (handle == NULL) {
-         handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE,
+         if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+            DPRINTF(("using communication lib with SSL framework (japi)\n"));
+            communication_framework = CL_CT_SSL;
+         }
+         handle = cl_com_create_handle(&commlib_error, communication_framework, 
+                                       CL_CM_CT_MESSAGE, CL_FALSE,
                                        sge_get_qmaster_port(), CL_TCP_DEFAULT,
                                        (char*)prognames[uti_state_get_mewho()],
                                        0, 1, 0);      
@@ -4088,6 +4096,8 @@ static void *japi_implementation_thread(void *p)
    }
    JAPI_UNLOCK_EC_STATE();
    
+   sge_getme(prog_number);
+
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
    /* needed to init comlib per thread globals */

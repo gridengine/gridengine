@@ -32,6 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#if 0
 #include <stdio.h>
 
 #include "openssl/stack.h"
@@ -43,5 +44,7 @@
 #include "openssl/x509.h"
 #include "openssl/pem.h"
 #include "openssl/rand.h"
+
+#endif
 
 #endif /*__SEC_CRYPTO_H*/

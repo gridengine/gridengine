@@ -131,7 +131,7 @@ extern int main(int argc, char** argv)
 
 
   printf("startup commlib ...\n");
-  cl_com_setup_commlib(CL_ONE_THREAD ,atoi(argv[1]), NULL );
+  cl_com_setup_commlib(CL_RW_THREAD ,atoi(argv[1]), NULL );
   cl_com_set_status_func(my_application_status); 
 
 

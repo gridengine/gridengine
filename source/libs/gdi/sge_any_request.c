@@ -136,7 +136,7 @@ const char* sge_dump_message_tag(unsigned long tag) {
       case TAG_SEC_ERROR:
          return "TAG_SEC_ERROR";
       default:
-         return "TAG_NOT_DEFINED";
+         break;
    }
    return "TAG_NOT_DEFINED";
 }
@@ -344,13 +344,14 @@ void prepare_enroll(const char *name)
    u_long32 me_who;
    cl_com_handle_t* handle = NULL;
    cl_host_resolve_method_t resolve_method = CL_SHORT;
+   cl_framework_t  communication_framework = CL_CT_TCP;
    const char* default_domain = NULL;
 
 
    DENTER(TOP_LAYER, "prepare_enroll");
 
-   if (sge_security_initialize(name)) {
-      CRITICAL((SGE_EVENT, MSG_GDI_INITSECURITYDATAFAILED));
+   if (name == NULL) {
+      CRITICAL((SGE_EVENT, MSG_GDI_NO_VALID_PROGRAMM_NAME));
       SGE_EXIT(1);
    }
    
@@ -361,7 +362,7 @@ void prepare_enroll(const char *name)
    if ( uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == QMON 
         /* || uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD */ ) {
       INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
-      ret_val = cl_com_setup_commlib(CL_ONE_THREAD,CL_LOG_OFF,gdi_log_flush_func);
+      ret_val = cl_com_setup_commlib(CL_RW_THREAD,CL_LOG_OFF,gdi_log_flush_func);
    } else {
       INFO((SGE_EVENT,MSG_GDI_SINGLE_THREADED_STARTUP));
       ret_val = cl_com_setup_commlib(CL_NO_THREAD,CL_LOG_OFF,gdi_log_flush_func);
@@ -410,7 +411,19 @@ void prepare_enroll(const char *name)
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
+   /* init sge security module */   
+   if (sge_security_initialize(name)) {
+      CRITICAL((SGE_EVENT, MSG_GDI_INITSECURITYDATAFAILED));
+      SGE_EXIT(1);
+   }
 
+   /* set communication framework to SSL when CSP security is enabled */
+   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      DPRINTF(("using communication lib with SSL framework\n"));
+      communication_framework = CL_CT_SSL;
+   }
+
+   /* OK, now we can create communication handles ... */
    me_who = uti_state_get_mewho();
 
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
@@ -435,7 +448,7 @@ void prepare_enroll(const char *name)
                                                    CL_CM_AC_DISABLED ,
                                                    CL_TRUE);
             execd_port = sge_get_execd_port(); 
-            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_TRUE,execd_port , CL_TCP_DEFAULT,
+            handle = cl_com_create_handle(&commlib_error, communication_framework, CL_CM_CT_MESSAGE, CL_TRUE,execd_port , CL_TCP_DEFAULT,
                                           (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             if (handle == NULL) {
@@ -452,7 +465,7 @@ void prepare_enroll(const char *name)
             break;
          case QMASTER:
             DPRINTF(("creating QMASTER handle\n"));
-            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE,              /* message based tcp communication                */
+            handle = cl_com_create_handle(&commlib_error, communication_framework, CL_CM_CT_MESSAGE,              /* message based tcp communication                */
                                           CL_TRUE, sge_get_qmaster_port(),                          /* create service on qmaster port,                */
                                           CL_TCP_DEFAULT,                                           /* use standard connect mode         */
                                           (char*)prognames[uti_state_get_mewho()], my_component_id, /* this endpoint is called "qmaster" and has id 1 */
@@ -472,7 +485,7 @@ void prepare_enroll(const char *name)
             break;
          case QMON:
             DPRINTF(("creating QMON GDI handle\n"));
-            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(), CL_TCP_DEFAULT,
+            handle = cl_com_create_handle(&commlib_error, communication_framework, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(), CL_TCP_DEFAULT,
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             if (handle == NULL) {
@@ -491,7 +504,7 @@ void prepare_enroll(const char *name)
          default:
             /* this is for "normal" gdi clients of qmaster */
             DPRINTF(("creating GDI handle\n"));
-            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(), CL_TCP_DEFAULT,
+            handle = cl_com_create_handle(&commlib_error, communication_framework, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(), CL_TCP_DEFAULT,
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             if (handle == NULL) {
                switch (commlib_error) {

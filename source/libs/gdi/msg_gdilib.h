@@ -56,6 +56,7 @@
 */ 
 #define MSG_GDI_INITSECURITYDATAFAILED                _MESSAGE(43045, _("failed initialize security data\n"))
 #define MSG_GDI_INITCOMMLIBFAILED                     _MESSAGE(43046, _("failed initialize communication library\n"))
+#define MSG_GDI_NO_VALID_PROGRAMM_NAME                _MESSAGE(43047, _("got no valid programname\n"))
 #define MSG_GDI_RHOSTISNULLFORSENDREQUEST             _MESSAGE(43050, _("parameter rhost = NULL for sge_send_any_request()"))
 #define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _MESSAGE(43051, _("can't send "SFN"synchronous message to commproc ("SFN":%d) on host "SFQ": "SFN"\n"))
 #define MSG_GDI_RHOSTISNULLFORGETANYREQUEST           _MESSAGE(43052, _("parameter rhost = NULL for sge_get_any_request()"))
@@ -162,6 +163,19 @@
 #define MSG_GDI_ALREADY_CONECTED_SSU         _MESSAGE(43304, _("there is already a client endpoint %s/%s/"U32CFormat" connected to qmaster service\n"))
 #define MSG_GDI_ACCESS_DENIED_SSU            _MESSAGE(43305, _("qmaster service denies access from local endpoint %s/%s/"U32CFormat"\n"))
 #define MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S _MESSAGE(43306, _("can't create handle to execd \"%s\"\n"))
+
+
+
+#define MSG_SEC_CAROOTNOTFOUND_S         _MESSAGE(55000, _("CA_ROOT directory "SFQ" doesn't exist\n"))
+#define MSG_SEC_CALOCALROOTNOTFOUND_S    _MESSAGE(55001, _("CA_LOCAL_ROOT directory "SFQ" doesn't exist\n"))
+#define MSG_SEC_CAKEYFILENOTFOUND_S      _MESSAGE(55002, _("CA private key "SFQ" doesn't exist\n"))
+#define MSG_SEC_CACERTFILENOTFOUND_S     _MESSAGE(55003, _("CA certificate "SFQ" doesn't exist\n"))
+#define MSG_SEC_USERNOTFOUND_S           _MESSAGE(55007, _("user "SFQ" not found in password database\n"))
+#define MSG_SEC_KEYFILENOTFOUND_S        _MESSAGE(55004, _("key "SFQ" doesn't exist\n"))
+#define MSG_SEC_CERTFILENOTFOUND_S       _MESSAGE(55006, _("certificate "SFQ" doesn't exist\n"))
+#define MSG_SEC_RANDFILENOTFOUND_S       _MESSAGE(55005, _("random data file "SFQ" doesn't exist\n"))
+#define MSG_SEC_CANT_GET_SEC_CONFIG_S    _MESSAGE(55010, _("can't get security configuration: "SFQ""))
+#define MSG_SEC_CERT_VERIFY_FUNC_NO_VAL  _MESSAGE(55011, _("certificate verify callback function called without value\n"))
 
 
 #endif /* __MSG_GDILIB_H */

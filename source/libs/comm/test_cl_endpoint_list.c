@@ -334,7 +334,7 @@ main(int argc, char** argv)
   sleep(4);
   
     printf("commlib setup ...\n");
-  retval = cl_com_setup_commlib(CL_ONE_THREAD , atoi(argv[1]), NULL );
+  retval = cl_com_setup_commlib(CL_RW_THREAD , atoi(argv[1]), NULL );
   printf("%s\n\n",cl_get_error_text(retval));
 
   handle = cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 4545 , CL_TCP_DEFAULT,"client", 1,1,0 );

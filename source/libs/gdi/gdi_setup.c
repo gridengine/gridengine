@@ -108,10 +108,6 @@ void gdi_once_init(void) {
    feature_mt_init();
    sge_prof_setup();
 
-   /* sec */
-#ifdef SECURE
-   sec_mt_init();
-#endif
 
    /* gdi */
    gdi_init_mt();

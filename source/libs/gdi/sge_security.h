@@ -35,7 +35,6 @@
 #include "cull.h"
 #include "sge_gdiP.h"
 #include "dispatcher.h"
-#include "sec_lib.h"
 #include "sge_qmaster_timed_event.h"
 #include "cl_data_types.h"
 #include "cl_commlib.h"
@@ -94,6 +93,11 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
 
 int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char *err_str);
 
+#ifdef SECURE
+/* int 0 on success, -1 on failure */
+int sge_ssl_setup_security_path(const char *progname);
+#endif
+
 #ifdef KERBEROS
 int kerb_job(lListElem *jelem, struct dispatch_entry *de);
 #endif
@@ -108,7 +112,7 @@ int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user,
 int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
                         gid_t *gid, char *group);
 
-int sge_security_verify_user(const char *host, const char *commproc, u_short id, const char *user); 
+int sge_security_verify_user(const char *host, const char *commproc, u_long32 id, const char *user); 
 
 void sge_security_event_handler(te_event_t anEvent);
 

@@ -245,7 +245,7 @@ extern int main(int argc, char** argv)
         log_level=CL_LOG_OFF;
         break;
   }
-  cl_com_setup_commlib(CL_ONE_THREAD, log_level, NULL );
+  cl_com_setup_commlib(CL_RW_THREAD, log_level, NULL );
 
   cl_com_set_alias_file("./alias_file");
 
@@ -258,6 +258,7 @@ extern int main(int argc, char** argv)
   handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, 0, CL_TCP_DEFAULT, "server", 1, 1, 0 );
   if (handle == NULL) {
      printf("could not get handle\n");
+     cl_com_cleanup_commlib();
      exit(-1);
   }
 

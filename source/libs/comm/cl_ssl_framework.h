@@ -46,6 +46,10 @@ int cl_com_ssl_framework_cleanup(void);
 /* debug functions */
 void cl_dump_ssl_private(cl_com_connection_t* connection);
 
+/* global security function */
+int cl_com_ssl_get_unique_id(cl_com_handle_t* handle, 
+                             char* un_resolved_hostname, char* component_name, unsigned long component_id, 
+                             char** uniqueIdentifier );
 
 
 /* get/set functions */

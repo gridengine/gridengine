@@ -1,3 +1,8 @@
+CR-2005-02-02-0: Enhancm.:  reimplemenation and integration of former 
+                            csp security into commlib layer
+                 Changed:   gdi, commlib
+                 Review:    AA
+
 RD-2005-02-02-0: Bugfix:    switched use of /dev/kmem to kstat
                  Issue:     1403
                  Bugtraq:   6218430

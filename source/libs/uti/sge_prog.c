@@ -95,7 +95,8 @@ const char *prognames[] =
    "spoolinit" ,       /* 39  */
    "japi"      ,       /* 40  */
    "japi_ec"   ,       /* 41  */
-   "drmaa"             /* 42  */
+   "drmaa"     ,       /* 42  */
+   "qping"             /* 43  */ 
 };
  
 typedef struct {

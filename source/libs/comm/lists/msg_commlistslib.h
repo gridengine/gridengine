@@ -149,6 +149,8 @@
 #define MSG_CL_RETVAL_SSL_GET_SSL_ERROR                _MESSAGE(80111, _("ssl error"))
 #define MSG_CL_RETVAL_SSL_NO_SERVICE_PEER_NAME         _MESSAGE(80112, _("got no expected peer name for service certificate check"))
 #define MSG_CL_RETVAL_SSL_RAND_SEED_FAILURE            _MESSAGE(80113, _("PRNG hasn't been seeded with enough data"))
+#define MSG_CL_RETVAL_SSL_NOT_SUPPORTED                _MESSAGE(80114, _("SSL module not compiled with -DSECURE (aimk -secure) option"))
+#define MSG_CL_RETVAL_ERROR_SETTING_CIPHER_LIST        _MESSAGE(80115, _("error setting cipher list"))
 
 
 

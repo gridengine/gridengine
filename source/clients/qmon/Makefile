@@ -48,7 +48,6 @@ XICONLIB    = $(QMON_3RD)/libXicon$(LIBEXT)
 XLTREELIB   = $(QMON_3RD)/libXltree$(SHAREDEXT)
 XTABLIB     = $(QMON_3RD)/libXtab$(LIBEXT)
 
-include $(SDIR)/security/sec/Makefile
 include $(SDIR)/common/Makefile   
 include $(SDIR)/clients/common/Makefile   
 include $(SDIR)/daemons/common/Makefile   

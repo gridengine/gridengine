@@ -1,15 +1,20 @@
-ATTENTION !! THIS IS WORK IN PROGRESS AND SHOULD NOT BE USED IN PRODUCTION ENVIRONMENTS
-NONETHELESS YOU ARE VERY WELCOME TO TEST, ADVICE AND ENHANCE
+ATTENTION !! THIS IS WORK IN PROGRESS AND SHOULD NOT BE USED 
+IN PRODUCTION ENVIRONMENTS NONETHELESS YOU ARE VERY WELCOME 
+TO TEST, ADVICE AND ENHANCE
 
-In the following sections the use of the openssl binary (version 0.9.6b) for building a CA & key
-infrastructure for SGE is outlined.
+In the following sections the use of the openssl binary (version 0.9.6b) 
+for building a CA & key infrastructure for SGE is outlined.
 
 
 Setup CA
 ========
+Certificate creation cmds
+=========================
+CA creation:
+
 
 Certificate check cmds
-============
+======================
 Check issuer 
 % openssl x509 -issuer -in ~/.SGE_SECURE/default/CERT/cert.pem -noout
 issuer= /C=DE/ST=Bavaria/L=Regensburg/O=Sun Microsystems/OU=Gridware/CN=CA/Email=andre.alefeld@sun.com

@@ -49,6 +49,7 @@
 #include "sge_me.h" 
 #include "basis_types.h"
 #include "sge_gdi_intern.h"
+#include "sge_stat.h"
 
 #include "sec_crypto.h"          /* lib protos      */
 #include "sec_lib.h"             /* lib protos      */
@@ -59,16 +60,34 @@
 */
 static int sec_set_encrypt(int tag);
 static int sec_files(void);
-static int sec_dump_connlist(void);
-static int sec_undump_connlist(void);
-static int sec_announce_connection(const char *tocomproc, const char *tohost);
+
+static int sec_announce_connection(GlobalSecureData *gsd, const char *tocomproc, const char *tohost);
 static int sec_respond_announce(char *commproc, u_short id, char *host, char *buffer, u_long32 buflen);
 static int sec_handle_announce(char *comproc, u_short id, char *host, char *buffer, u_long32 buflen);
 static int sec_encrypt(char **buf, int *buflen);
 static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commproc, int id);
-/* static int sec_reconnect(void); */
-/* static int sec_write_data2hd(void); */
 static int sec_verify_certificate(X509 *cert);
+
+#ifdef SEC_RECONNECT
+
+static int sec_dump_connlist(void);
+static int sec_undump_connlist(void);
+static int sec_reconnect(void);
+static int sec_write_data2hd(void);
+static int sec_pack_reconnect(sge_pack_buffer *pb, 
+                              u_long32 connid, 
+                              u_long32 seq_send, 
+                              u_long32 seq_receive, 
+                              u_char *key_mat, 
+                              u_long32 key_mat_len);
+static int sec_unpack_reconnect(sge_pack_buffer *pb, 
+                                u_long32 *connid, 
+                                u_long32 *seq_send, 
+                                u_long32 *seq_receive, 
+                                u_char **key_mat, 
+                                u_long32 *key_mat_len);
+
+#endif
 
 
 static void sec_error(void);
@@ -77,8 +96,7 @@ static int sec_set_connid(char **buffer, int *buflen);
 static int sec_get_connid(char **buffer, u_long32 *buflen);
 static int sec_update_connlist(const char *host, const char *commproc, int id);
 static int sec_set_secdata(const char *host, const char *commproc, int id);
-static int sec_insert_conn2list(char *host, char *commproc, int id);
-static void sec_clearup_list(void);
+static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int id);
 static void sec_keymat2list(lListElem *element);
 static void sec_list2keymat(lListElem *element);
 /* static void sec_print_bytes(FILE *f, int n, char *b); */
@@ -111,11 +129,18 @@ static int sec_unpack_response(u_long32 *len, u_char **buf,
                         sge_pack_buffer *pb);
 static int sec_pack_message(sge_pack_buffer *pb, u_long32 connid, u_long32 enc_mac_len, u_char *enc_mac, u_char *enc_msg, u_long32 enc_msg_len);
 static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *enc_mac_len, u_char **enc_mac, u_long32 *enc_msg_len, u_char **enc_msg);
-/* static int sec_pack_reconnect(u_long32 connid, u_long32 seq_send, u_long32 seq_receive, u_char *key_mat, sge_pack_buffer *pb); */
-/* static int sec_unpack_reconnect(u_long32 *connid, u_long32 *seq_send, u_long32 *seq_receive, u_char **key_mat, sge_pack_buffer *pb); */
 
-
-#ifdef DEBUG_SEC
+static void debug_print_ASN1_UTCTIME(char *label, ASN1_UTCTIME *time)
+{
+   BIO *out;
+   printf("%s", label);
+   out = BIO_new_fp(stdout, BIO_NOCLOSE);
+   ASN1_UTCTIME_print(out, time);   
+   BIO_free(out);
+   printf("\n");
+}   
+   
+#ifdef SEC_DEBUG
 static void debug_print_buffer(char *title, unsigned char *buf, int buflen)
 {
    int j;
@@ -131,12 +156,20 @@ static void debug_print_buffer(char *title, unsigned char *buf, int buflen)
    printf("------------------------------------------------------\n");
 }
 
+static void debug_print_ASN1_UTCTIME(ASN1_UTCTIME *time)
+{
+   BIO *out;
+   out = BIO_new_fp(stdout, BIO_NOCLOSE);
+   ASN1_UTCTIME_print(out, time);   
+   BIO_free(out);
+}   
+   
 #  define DEBUG_PRINT(x, y)              printf(x,y)
 #  define DEBUG_PRINT_BUFFER(x,y,z)      debug_print_buffer(x,y,z)
 #else
 #  define DEBUG_PRINT(x,y)
 #  define DEBUG_PRINT_BUFFER(x,y,z)
-#endif /* DEBUG_SEC */
+#endif /* SEC_DEBUG */
 
 /*
 ** FIXME
@@ -144,12 +177,16 @@ static void debug_print_buffer(char *title, unsigned char *buf, int buflen)
 #define PREDEFINED_PW         "troet"
 
 
+sec_exit_func_type sec_exit_func = NULL;
 
 /*
 ** global secure data
 */
-GlobalSecureData gsd;
-static sec_exit_func_type sec_exit_func = NULL;
+static GlobalSecureData gsd;
+
+static u_long32 connid_counter = 0;
+static lList *conn_list = NULL;
+
 
 /*
 ** NAME
@@ -170,13 +207,15 @@ static sec_exit_func_type sec_exit_func = NULL;
 **      0       on success
 **      -1      on failure
 */
+int sec_init(const char *progname) 
+{
 
-int sec_init(
-const char *progname 
-) {
-   int   i=0;
+   DENTER(GDI_LAYER,"sec_init");
 
-   DENTER(TOP_LAYER,"sec_init");
+   /*
+   ** set everything to zero
+   */
+   memset(&gsd, 0, sizeof(gsd));
 
    /* 
    ** FIXME: rand seed needs to be improved
@@ -208,27 +247,38 @@ const char *progname
    ** FIXME: init all the other stuff
    */
    gsd.digest = EVP_md5();
-/*    gsd.cipher = EVP_des_cbc(); */
    gsd.cipher = EVP_rc4();
+/*    gsd.cipher = EVP_des_cbc(); */
 /*    gsd.cipher = EVP_enc_null(); */
 
    gsd.key_mat_len = GSD_KEY_MAT_32;
    gsd.key_mat = (u_char *) malloc(gsd.key_mat_len);
-   gsd.refresh_time = NULL;
    if (!gsd.key_mat){
       ERROR((SGE_EVENT,"failed malloc memory!\n"));
-      i = -1;
-      goto error;
+      DEXIT;
+      return -1;
    }
-   if(!strcmp(progname, prognames[QMASTER]))
+   if(!strcmp(progname, prognames[QMASTER])) {
       /* time after qmaster clears the connection list   */
-      X509_gmtime_adj(gsd.refresh_time, 0);
-   else
+      gsd.refresh_time = X509_gmtime_adj(gsd.refresh_time, 0);
+   }
+   else {
       /* time after client makes a new announce to master   */
-      X509_gmtime_adj(gsd.refresh_time, (long) 60*60*(ValidHours-1));
-   gsd.connid = gsd.connid_counter = gsd.seq_send = gsd.connect = gsd.seq_receive = 0;
-   gsd.conn_list = NULL;
+      gsd.refresh_time = X509_gmtime_adj(gsd.refresh_time, (long) 60*ValidMinutes);
+   }   
 
+   gsd.connid = gsd.seq_send = gsd.connect = gsd.seq_receive = 0;
+
+   /* 
+   ** read security related files
+   */
+   if(sec_files()){
+      ERROR((SGE_EVENT,"failed read security files\n"));
+      DEXIT;
+      return -1;
+   }
+
+#ifdef SEC_RECONNECT   
    /* 
    ** FIXME: install sec_exit functions for utilib
    */
@@ -237,28 +287,23 @@ const char *progname
       if (sec_undump_connlist())
                 WARNING((SGE_EVENT,"warning: Can't read ConnList\n"));
    }
-#if 0   
-FIXME
    else if(!gsd.is_daemon)
-           install_sec_exit_func(sec_write_data2hd);
-#endif
+      install_sec_exit_func(sec_write_data2hd);
 
-
-   /* 
-   ** read security related files
+   /*
+   ** read reconnect data
+   ** FIXME
    */
-   if(sec_files()){
-      ERROR((SGE_EVENT,"failed read security files\n"));
-      i = -1;
-      goto error;
-   }
+   if (!gsd.is_daemon)
+      sec_reconnect();
+#else
+   install_sec_exit_func(NULL);
+#endif      
+
+   DPRINTF(("====================[  CSP SECURITY  ]===========================\n"));
 
    DEXIT;
    return 0;
-
-   error:
-      DEXIT;
-      return i;
 }
 
 /*
@@ -301,48 +346,50 @@ int compressed
 ) {
    int i = 0;
 
-   DENTER(TOP_LAYER,"sec_send_message");
+   DENTER(GDI_LAYER, "sec_send_message");
 
-   if (gsd.refresh_time)
-      i = X509_cmp_current_time(gsd.refresh_time);
-   if ((me.who != QMASTER) && ((gsd.connect != 1) || (i < 0))) {
-      if (sec_announce_connection(tocomproc,tohost)) {
+   /*
+   ** every component has do negotiate its connection with qmaster
+   */
+   if (me.who != QMASTER) {
+      if (sec_announce_connection(&gsd, tocomproc,tohost)) {
          ERROR((SGE_EVENT,"failed announce\n"));
-         i = SEC_ANNOUNCE_FAILED;
-         goto error;
+         DEXIT;
+         return SEC_ANNOUNCE_FAILED;
       }
-      X509_gmtime_adj(gsd.refresh_time, (long) 60*60*(ValidHours-1));
-      gsd.connect = 1;
-   }
-
+   }   
+      
    if (sec_set_encrypt(tag)) {
       if (me.who == QMASTER) {
-         if(sec_set_secdata(tohost,tocomproc,toid)) {
-            ERROR((SGE_EVENT,"failed set security data\n"));
-            i = SEC_SEND_FAILED;
-            goto error;
+         /*
+         ** set the corresponding key and connection information
+         ** in the connection list for commd triple 
+         ** (tohost, tocomproc, toid)
+         */
+         if (sec_set_secdata(tohost,tocomproc,toid)) {
+            ERROR((SGE_EVENT, "failed set security data\n"));
+            DEXIT;
+            return SEC_SEND_FAILED;
          }
       }
       if (sec_encrypt(&buffer,&buflen)) {
          ERROR((SGE_EVENT,"failed encrypt message\n"));
-         i = SEC_SEND_FAILED;
-         goto error;
+         DEXIT;
+         return SEC_SEND_FAILED;
       }
    }
    else if (me.who != QMASTER) {
       if (sec_set_connid(&buffer, &buflen)) {
          ERROR((SGE_EVENT,"failed set connection ID\n"));
-         i = SEC_SEND_FAILED;
-         goto error;
+         DEXIT;
+         return SEC_SEND_FAILED;
       }
    }
 
    i = send_message(synchron, tocomproc, toid, tohost, tag, buffer, buflen,
                      mid, compressed);
-
-   error:
-      DEXIT;
-      return i;
+   DEXIT;
+   return i;
 }
 
 /*
@@ -372,12 +419,12 @@ int compressed
 **      -1      on failure
 */
 int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, 
-                        int *tag, char **buffer, u_long32 *buflen, int synchron, 
-                        u_short* compressed)
+                        int *tag, char **buffer, u_long32 *buflen, 
+                        int synchron, u_short* compressed)
 {
    int i;
 
-   DENTER(TOP_LAYER,"sec_receive_message");
+   DENTER(GDI_LAYER, "sec_receive_message");
 
    if ((i=receive_message(fromcommproc, fromid, fromhost, tag, buffer, buflen,
                        synchron, compressed))) {
@@ -386,24 +433,22 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
    }
 
    if (*tag == TAG_SEC_ANNOUNCE) {
-      i = sec_handle_announce(fromcommproc,*fromid,fromhost,*buffer,
-               *buflen);
-      if (i) {
+      if (sec_handle_announce(fromcommproc,*fromid,fromhost,*buffer,*buflen)) {
          ERROR((SGE_EVENT,"failed handle announce for (%s:%s:%d)\n",
-                  fromhost,fromcommproc,*fromid));
+                  fromhost, fromcommproc, *fromid));
          DEXIT;
-         return SEC_RECEIVE_FAILED;
+         return SEC_ANNOUNCE_FAILED;
       }
    }
    else if (sec_set_encrypt(*tag)) {
-
-      DEBUG_PRINT_BUFFER("Encrypted incoming message", (unsigned char*) (*buffer), (int)(*buflen));
+      DEBUG_PRINT_BUFFER("Encrypted incoming message", 
+                         (unsigned char*) (*buffer), (int)(*buflen));
 
       if (sec_decrypt(buffer,buflen,fromhost,fromcommproc,*fromid)) {
          ERROR((SGE_EVENT,"failed decrypt message (%s:%s:%d)\n",
                   fromhost,fromcommproc,*fromid));
-         if (sec_handle_announce(fromcommproc,*fromid,fromhost,NULL,0))
-            ERROR((SGE_EVENT,"failed handle decrypt error\n"));
+/*          if (sec_handle_announce(fromcommproc,*fromid,fromhost,NULL,0)) */
+/*             ERROR((SGE_EVENT,"failed handle decrypt error\n")); */
          DEXIT;
          return SEC_RECEIVE_FAILED;
       }
@@ -479,7 +524,7 @@ static int sec_files()
    int     i = 0;
    FILE    *fp = NULL;
 
-   DENTER(TOP_LAYER,"sec_files");
+   DENTER(GDI_LAYER,"sec_files");
 
    /* 
    ** setup the filenames of certificates, keys, etc.
@@ -547,15 +592,6 @@ static int sec_files()
       goto error;
    }   
 
-#if 0
-   /*
-   ** FIXME
-   */
-   if (!gsd.is_daemon)
-      sec_reconnect();
-#endif
-
-
    DEXIT;
    return 0;
     
@@ -578,7 +614,6 @@ static int sec_verify_certificate(X509 *cert)
    DENTER(GDI_LAYER, "sec_verify_certificate");
 
    DPRINTF(("subject: %s\n", X509_NAME_oneline(X509_get_subject_name(cert), 0, 0)));
-
    ctx = X509_STORE_new();
    X509_STORE_set_default_paths(ctx);
    X509_STORE_load_locations(ctx, CA_CERT_FILE, NULL);
@@ -590,6 +625,8 @@ static int sec_verify_certificate(X509 *cert)
    return ret;
 }   
 
+
+#ifdef SEC_RECONNECT
 /*
 ** NAME
 **   sec_dump_connlist
@@ -613,9 +650,9 @@ static int sec_dump_connlist()
    FILE    *fp;
 
    if (me.who == QMASTER) {
-      fp = fopen("sec_connlist.dat","w");
+      fp = fopen("sec_connlist.dat", "w");
       if (fp) {
-         lDumpList(fp, gsd.conn_list,0);
+         lDumpList(fp, conn_list, 0);
          fclose(fp);
       }
       else 
@@ -623,7 +660,7 @@ static int sec_dump_connlist()
 
       fp = fopen("sec_connid.dat","w");
       if (fp) {
-         fprintf(fp, u32, gsd.connid_counter);
+         fprintf(fp, u32, connid_counter);
          fclose(fp);
       }
       else
@@ -655,7 +692,7 @@ static int sec_undump_connlist()
    if (me.who == QMASTER) {
       fp = fopen("sec_connlist.dat","r");
       if (fp){
-         gsd.conn_list = lUndumpList(fp,NULL,NULL);
+         conn_list = lUndumpList(fp,NULL,NULL);
          fclose(fp);
       } 
       else
@@ -664,7 +701,7 @@ static int sec_undump_connlist()
          
       fp = fopen("sec_connid.dat","r");
       if (fp){
-         fscanf(fp, u32, &gsd.connid_counter);
+         fscanf(fp, u32, &connid_counter);
          fclose(fp);
       }
       else
@@ -672,6 +709,8 @@ static int sec_undump_connlist()
    } 
    return 0;
 }
+
+#endif
 
 /*
 ** NAME
@@ -693,6 +732,7 @@ static int sec_undump_connlist()
 **      -1      on failure
 */
 static int sec_announce_connection(
+GlobalSecureData *gsd,
 const char *tocomproc,
 const char *tohost 
 ) {
@@ -700,7 +740,7 @@ const char *tohost
    int i;
    X509 *x509_master=NULL;
    u_long32 x509_len, x509_master_len, chall_enc_len, enc_key_len, enc_key_mat_len,
-            iv_len = 0;
+            iv_len = 0, connid;
    unsigned char challenge[CHALL_LEN];
    unsigned char *x509_master_buf=NULL, 
                  *enc_challenge=NULL,
@@ -719,17 +759,31 @@ const char *tohost
    EVP_MD_CTX ctx;
    EVP_CIPHER_CTX ectx;
    
-   DENTER(TOP_LAYER, "sec_announce_connection");
+   DENTER(GDI_LAYER, "sec_announce_connection");
+
+   /*
+   ** try to reconnect
+   */
+   if (gsd->connect) {
+debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
+      if (gsd->refresh_time && (X509_cmp_current_time(gsd->refresh_time) > 0)) {
+         DPRINTF(("++++ Connection still valid\n"));      
+         DEXIT;      
+         return 0;
+      }   
+      DPRINTF(("---- Connection needs sec_announce_connection\n"));
+   }
+
    /* 
    ** send sec_announce
    */
-   gsd.seq_send = gsd.seq_receive = 0;
+   gsd->seq_send = gsd->seq_receive = 0;
 
    /* 
    ** write x509 to buffer
    */
    tmp = x509_buf = (unsigned char *) malloc(4096);
-   x509_len = i2d_X509(gsd.x509, &tmp);
+   x509_len = i2d_X509(gsd->x509, &tmp);
    if (!x509_len) {
       ERROR((SGE_EVENT,"i2d_x509 failed\n"));
       i=-1;
@@ -762,8 +816,8 @@ const char *tohost
    ** send buffer
    */
    DPRINTF(("send announce to=(%s:%s)\n",tohost,tocomproc));
-   if (send_message(COMMD_SYNCHRON, tocomproc, 0, tohost, TAG_SEC_ANNOUNCE, pb.head_ptr,
-                     pb.bytes_used, &dummymid, 0)) {
+   if (send_message(COMMD_SYNCHRON, tocomproc, 0, tohost, TAG_SEC_ANNOUNCE, 
+                     pb.head_ptr, pb.bytes_used, &dummymid, 0)) {
       i = -1;
       goto error;
    }
@@ -813,7 +867,7 @@ const char *tohost
    */
    i = sec_unpack_response(&x509_master_len, &x509_master_buf, 
                            &chall_enc_len, &enc_challenge,
-                           &gsd.connid, 
+                           &connid, 
                            &enc_key_len, &enc_key, 
                            &iv_len, &iv, 
                            &enc_key_mat_len, &enc_key_mat, &pb);
@@ -826,7 +880,7 @@ const char *tohost
    DEBUG_PRINT_BUFFER("enc_key_mat", enc_key_mat, enc_key_mat_len);
 
 
-   DPRINTF(("gsd.connid = %ld\n", gsd.connid));
+   DPRINTF(("received assigned connid = %d\n", (int) connid));
    
    /* 
    ** read x509 certificate from buffer
@@ -845,9 +899,7 @@ const char *tohost
       i = -1;
       goto error;
    }
-   else {
-      printf("Certificate is ok\n");
-   }   
+   DPRINTF(("Master certificate is ok\n"));
 
    /*
    ** extract public key 
@@ -864,7 +916,7 @@ const char *tohost
    /* 
    ** decrypt challenge with master public key
    */
-   EVP_VerifyInit(&ctx, gsd.digest);
+   EVP_VerifyInit(&ctx, gsd->digest);
    EVP_VerifyUpdate(&ctx, challenge, CHALL_LEN);
    if (!EVP_VerifyFinal(&ctx, enc_challenge, chall_enc_len, master_key)) {
       ERROR((SGE_EVENT,"challenge from master is bad\n"));
@@ -875,25 +927,37 @@ const char *tohost
    /*
    ** decrypt secret key
    */
-   if (!EVP_OpenInit(&ectx, gsd.cipher, enc_key, enc_key_len, iv, gsd.private_key)) {
+   if (!EVP_OpenInit(&ectx, gsd->cipher, enc_key, enc_key_len, iv, gsd->private_key)) {
       ERROR((SGE_EVENT,"EVP_OpenInit failed decrypt keys\n"));
       sec_error();
       i=-1;
       goto error;
    }
-   if (!EVP_OpenUpdate(&ectx, gsd.key_mat, (int*) &gsd.key_mat_len, enc_key_mat, (int) enc_key_mat_len)) {
+   if (!EVP_OpenUpdate(&ectx, gsd->key_mat, (int*) &(gsd->key_mat_len), enc_key_mat, (int) enc_key_mat_len)) {
       ERROR((SGE_EVENT,"EVP_OpenUpdate failed decrypt keys\n"));
       sec_error();
       i = -1;
       goto error;
    }
-   EVP_OpenFinal(&ectx, gsd.key_mat, (int*) &gsd.key_mat_len);
+   EVP_OpenFinal(&ectx, gsd->key_mat, (int*) &(gsd->key_mat_len));
    /* FIXME: problem in EVP_* lib for stream ciphers */
-   gsd.key_mat_len = 32;   
+   gsd->key_mat_len = 32;   
 
-   DEBUG_PRINT_BUFFER("Received key material", gsd.key_mat, gsd.key_mat_len);
+   DEBUG_PRINT_BUFFER("Received key material", gsd->key_mat, gsd->key_mat_len);
    
+   /*
+   ** set own connid to assigned connid
+   ** set refresh_time to current time + 60 * ValidMinutes
+   ** set connect flag
+   */
+   gsd->connect = 1;
+   gsd->connid = connid;
+   gsd->refresh_time = X509_gmtime_adj(gsd->refresh_time, 
+                                       (long) 60*ValidMinutes);
+
+
    i=0;
+
    error:
    clear_packbuffer(&pb);
    if (x509_master)
@@ -950,7 +1014,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    EVP_CIPHER_CTX ectx;
    EVP_MD_CTX ctx;
 
-   DENTER(TOP_LAYER, "sec_respond_announce");
+   DENTER(GDI_LAYER, "sec_respond_announce");
 
    /* 
    ** prepare packbuffer pb for unpacking message
@@ -982,8 +1046,8 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    ** read x509 certificate
    */
    x509 = d2i_X509(&x509, &x509_buf, x509_len);
-   if (x509_buf) 
-      free(x509_buf);
+/*    if (x509_buf)  */
+/*       free(x509_buf); */
    x509_buf = NULL;
 
    if (!x509){
@@ -1001,9 +1065,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
       i = -1;
       goto error;
    }
-   else {
-      printf("Certificate is ok\n");
-   }   
+   DPRINTF(("Client certificate is ok\n"));
       
    /*
    ** extract public key 
@@ -1037,7 +1099,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** set connection ID
    */
-   gsd.connid = gsd.connid_counter;
+   gsd.connid = connid_counter;
 
    /* 
    ** write x509 certificate to buffer
@@ -1108,8 +1170,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** insert connection to Connection List
    */
-   i = sec_insert_conn2list(host,commproc,id);
-   if (i) {
+   if (sec_insert_conn2list(gsd.connid, host,commproc,id)) {
       ERROR((SGE_EVENT,"failed insert Connection to List\n"));
       sec_send_err(commproc, id, host, &pb_respond, "failed insert you to list\n");
       goto error;
@@ -1130,14 +1191,14 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    i = 0;
 
    error:
-      if (x509_buf) 
-         free(x509_buf);
-      if (challenge) 
-         free(challenge);
-      if (enc_challenge) 
-         free(enc_challenge);
-      if (enc_key_mat) 
-         free(enc_key_mat);
+/*       if (x509_buf)  */
+/*          free(x509_buf); */
+/*       if (challenge)  */
+/*          free(challenge); */
+/*       if (enc_challenge)  */
+/*          free(enc_challenge); */
+/*       if (enc_key_mat)  */
+/*          free(enc_key_mat); */
       clear_packbuffer(&pb_respond);
       if (x509) 
          X509_free(x509);
@@ -1218,25 +1279,11 @@ int *buflen
    unsigned char *outbuf;
    unsigned int outlen = 0;
    
-   DENTER(TOP_LAYER,"sec_encrypt");   
+   DENTER(GDI_LAYER,"sec_encrypt");   
 
    seq_no = htonl(gsd.seq_send);
    memcpy(seq_str, &seq_no, INTSIZE);
 
-#if 0
-{
-   int i;
-   printf("gsd.key_mat_len = %d\n", gsd.key_mat_len);
-   for (i=0; i<gsd.key_mat_len; i++)
-      printf("%02x", gsd.key_mat[i]);
-   printf("\n");
-   printf("*buflen = %d\n", *buflen);
-   for (i=0; i<(*buflen); i++)
-      printf("%02x", (*buffer)[i]);
-   printf("\n");
-}   
-#endif
-   
    /*
    ** create digest
    */
@@ -1246,16 +1293,6 @@ int *buflen
    EVP_DigestUpdate(&mdctx, *buffer, *buflen);
    EVP_DigestFinal(&mdctx, md_value, &md_len);
    
-#if 0   
-{
-   int i;
-   printf("md_len = %d\n", md_len);
-   for (i=0; i<md_len; i++)
-      printf("%02x", md_value[i]);
-   printf("\n");
-}   
-#endif
-
    /*
    ** realloc *buffer 
    */
@@ -1284,10 +1321,7 @@ int *buflen
       goto error;
    }
    EVP_CIPHER_CTX_cleanup(&ctx);
-printf("md_len=%d  enc_md_len %d\n", md_len, enc_md_len);   
 
-   
-printf("*buflen = %d\n", *buflen);
 
    memset(iv, '\0', sizeof(iv));
    EVP_EncryptInit(&ctx, gsd.cipher, gsd.key_mat, iv);
@@ -1297,7 +1331,6 @@ printf("*buflen = %d\n", *buflen);
       i=-1;
       goto error;
    }
-printf("EVP_EncryptUpdate outlen = %d\n", outlen);
    if (!EVP_EncryptFinal(&ctx, outbuf, (int*) &outlen)) {
       ERROR((SGE_EVENT,"failed encrypt message\n"));
       sec_error();
@@ -1307,16 +1340,6 @@ printf("EVP_EncryptUpdate outlen = %d\n", outlen);
    EVP_CIPHER_CTX_cleanup(&ctx);
 
 outlen = *buflen;
-
-#if 0
-{
-   int i;
-   printf("outlen = %d\n", outlen);
-   for (i=0; i<outlen; i++)
-      printf("%02x", outbuf[i]);
-   printf("\n");
-}   
-#endif
 
    /*
    ** initialize packbuffer
@@ -1341,13 +1364,9 @@ outlen = *buflen;
    
    gsd.seq_send = INC32(gsd.seq_send);
 
-   if (gsd.conn_list) {
-      /* 
-      ** search list element for this connection
-      */
-      where = lWhere( "%T(%I==%u)", SecurityT, SEC_ConnectionID, gsd.connid);
-      element = lFindFirst(gsd.conn_list, where);
-      if (!element || !where) {
+   if (conn_list) {
+      element = lGetElemUlong(conn_list, SEC_ConnectionID, gsd.connid);
+      if (!element) {
          ERROR((SGE_EVENT,"no list entry for connection\n"));
          i=-1;
          goto error;
@@ -1394,7 +1413,7 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
    struct stat file_info;
    int compressed = 0;
 
-   DENTER(TOP_LAYER, "sec_handle_announce");
+   DENTER(GDI_LAYER, "sec_handle_announce");
 
    if (me.who == QMASTER) {
       if (buffer && buflen) {   
@@ -1473,7 +1492,6 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    u_char *enc_mac = NULL;
    u_long32 connid, enc_msg_len, enc_mac_len;
    lListElem *element=NULL;
-/*    lCondition *where=NULL; */
    sge_pack_buffer pb;
    EVP_CIPHER_CTX ctx;
    unsigned char iv[EVP_MAX_IV_LENGTH];
@@ -1482,7 +1500,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    unsigned char *outbuf = NULL;
    unsigned int outlen = 0;
 
-   DENTER(TOP_LAYER, "sec_decrypt");
+   DENTER(GDI_LAYER, "sec_decrypt");
    /*
    ** initialize packbuffer
    */
@@ -1504,38 +1522,18 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
       return i;
    }
 
-#if 0
-{
-   int j;
-   printf("enc_mac\n");
-   for (j=0;j<enc_mac_len;j++)
-      printf("%02x", enc_mac[j]);
-   printf("\n\n");   
-   printf("enc_msg\n");
-   for (j=0;j<enc_msg_len;j++)
-      printf("%02x", enc_msg[j]);
-   printf("\n");   
-}
-#endif
-
-
-#if 0
-FIXME
-   if (gsd.conn_list) {
-      sec_clearup_list();
+   if (conn_list) {
+   
       /* 
       ** search list element for this connection
       */
-      where = lWhere( "%T(%I==%u)", SecurityT, SEC_ConnectionID, connid);
-      element = lFindFirst(gsd.conn_list,where);
-      if (!element || !where) {
-         ERROR((SGE_EVENT,"no list entry for connection\n"));
+      element = lGetElemUlong(conn_list, SEC_ConnectionID, connid);
+      if (!element) {
+         ERROR((SGE_EVENT,"no list entry for connection %d\n", (int) connid));
          packstr(&pb,"Can't find you in connection list\n");
-         where = lFreeWhere(where);
          DEXIT;
          return -1;
       }
-      where = lFreeWhere(where);
    
       /* 
       ** get data from connection list
@@ -1554,7 +1552,6 @@ FIXME
          return -1;
       }
    }
-#endif
 
    /*
    ** realloc *buffer 
@@ -1617,11 +1614,11 @@ outlen = enc_msg_len;
    ** increment sequence number and write it to connection list   
    */
    gsd.seq_receive = INC32(gsd.seq_receive);
-   if(gsd.conn_list){
-      lSetHost(element,SEC_Host,host);
-      lSetString(element,SEC_Commproc,commproc);
-      lSetInt(element,SEC_Id,id);
-      lSetUlong(element,SEC_SeqNoReceive,gsd.seq_receive);
+   if(conn_list){
+      lSetHost(element, SEC_Host, host);
+      lSetString(element, SEC_Commproc, commproc);
+      lSetInt(element, SEC_Id, id);
+      lSetUlong(element, SEC_SeqNoReceive, gsd.seq_receive);
    }
 
    /* 
@@ -1630,13 +1627,11 @@ outlen = enc_msg_len;
    *buflen = outlen;
    *buffer = (char*) outbuf;
 
-printf("sec_decrypt = %d\n", (int) *buflen);
-
    DEXIT;
    return 0;
 }
 
-#if 0
+#ifdef SEC_RECONNECT
 /*
 ** NAME
 **   sec_reconnect
@@ -1653,25 +1648,26 @@ printf("sec_decrypt = %d\n", (int) *buflen);
 **      0       on success
 **      -1      on failure
 */
-
 static int sec_reconnect()
 {
    FILE *fp=NULL;
    int i, c, nbytes;
    sge_pack_buffer pb;
-   struct stat file_info;
+   SGE_STRUCT_STAT file_info;
    char *ptr;
    unsigned char time_str[64];
 
-   DENTER(TOP_LAYER,"sec_reconnect");
+   DENTER(GDI_LAYER,"sec_reconnect");
 
-   if (stat(gsd.files->reconnect_file, &file_info) < 0) {
+   if (SGE_STAT(gsd.files->reconnect_file, &file_info) < 0) {
       i = -1;
       goto error;
    }
 
-   /* open reconnect file                  */
-   fp = fopen(gsd.files->reconnect_file,"r");
+   /* 
+   ** open reconnect file
+   */
+   fp = fopen(gsd.files->reconnect_file, "r");
    if (!fp) {
       i = -1;
       ERROR((SGE_EVENT,"can't open file '%s': %s\n",
@@ -1680,6 +1676,7 @@ static int sec_reconnect()
    }
 
    /* read time of connection validity            */
+   memset(time_str, '\0', sizeof(time_str));
    for (i=0; i<63; i++) {
       c = getc(fp);
       if (c == EOF) {
@@ -1689,7 +1686,8 @@ static int sec_reconnect()
       }
       time_str[i] = (char) c;
    }      
-   d2i_ASN1_UTCTIME(&gsd.refresh_time, (unsigned char**) &time_str, 64);
+
+   d2i_ASN1_UTCTIME(&gsd.refresh_time, (unsigned char **)&time_str, sizeof(time_str));
       
    /* prepare packing buffer                                       */
    if ((i=init_packbuffer(&pb, 256,0))) {
@@ -1698,7 +1696,8 @@ static int sec_reconnect()
    }
 
    ptr = pb.head_ptr;               
-   for (i=0; i<file_info.st_size-63; i++) {
+
+   for (i=0; i<((SGE_OFF_T)file_info.st_size-63); i++) {
       c = getc(fp);
       if (c == EOF){
          ERROR((SGE_EVENT,"can't read data from reconnect file\n"));
@@ -1709,9 +1708,9 @@ static int sec_reconnect()
    }
 
    /* decrypt data with own rsa privat key            */
-   nbytes = RSA_private_decrypt((int) file_info.st_size-63, 
+   nbytes = RSA_private_decrypt((SGE_OFF_T)file_info.st_size-63, 
                                 (u_char*) pb.cur_ptr, (u_char*) pb.cur_ptr, 
-                                 gsd.rsa, RSA_PKCS1_PADDING);
+                                 gsd.private_key->pkey.rsa, RSA_PKCS1_PADDING);
    if (nbytes <= 0) {
       ERROR((SGE_EVENT,"failed decrypt reconnect data\n"));
       sec_error();
@@ -1719,8 +1718,8 @@ static int sec_reconnect()
       goto error;
    }
 
-   i = sec_unpack_reconnect(&gsd.connid, &gsd.seq_send, &gsd.seq_receive,
-                              &gsd.key_mat, &pb);
+   i = sec_unpack_reconnect(&pb, &gsd.connid, &gsd.seq_send, &gsd.seq_receive,
+                              &gsd.key_mat, &gsd.key_mat_len);
    if (i) {
       ERROR((SGE_EVENT,"failed read reconnect from buffer\n"));
       goto error;
@@ -1757,31 +1756,36 @@ static int sec_reconnect()
 static int sec_write_data2hd()
 {
    FILE   *fp=NULL;
-   int   i,nbytes,ret;
+   int   i,nbytes;
    sge_pack_buffer pb;
-   char   *ptr; 
-   unsigned char   time_str[64];
-   unsigned char **time_str_ptr;
+   EVP_PKEY *evp = NULL;
+   BIO *bio = NULL;
 
-   DENTER(TOP_LAYER,"sec_write_data2hd");
+   DENTER(GDI_LAYER,"sec_write_data2hd");
 
    /* prepare packing buffer                                       */
    if ((i=init_packbuffer(&pb, 256,0))) {
       ERROR((SGE_EVENT,"failed init_packbuffer\n"));
+      i = -1;
       goto error;
    }
    
-   /* write data to packing buffer               */
-   i = sec_pack_reconnect(gsd.connid, gsd.seq_send, gsd.seq_receive, 
-                           gsd.key_mat, &pb);
-   if (i) {
+   /* 
+   ** write data to packing buffer
+   */
+   if (sec_pack_reconnect(&pb, gsd.connid, gsd.seq_send, gsd.seq_receive,
+                           gsd.key_mat, gsd.key_mat_len)) {
       ERROR((SGE_EVENT,"failed write reconnect to buffer\n"));
+      i = -1;
       goto error;
    }
 
-   /* encrypt data with own public rsa key            */
+   /* 
+   ** encrypt data with own public rsa key
+   */
+   evp = X509_get_pubkey(gsd.x509);
    nbytes = RSA_public_encrypt(pb.bytes_used, (u_char*)pb.head_ptr, 
-                               (u_char*)pb.head_ptr, gsd.rsa, 
+                               (u_char*)pb.head_ptr, evp->pkey.rsa, 
                                RSA_PKCS1_PADDING);
    if (nbytes <= 0) {
       ERROR((SGE_EVENT,"failed encrypt reconnect data\n"));
@@ -1790,43 +1794,39 @@ static int sec_write_data2hd()
       goto error;
    }
 
-   /* open reconnect file                  */
-   fp = fopen(gsd.files->reconnect_file,"w");
-   if (!fp) {
-      i = -1;
+   /* 
+   ** open reconnect file
+   */
+   if (!(fp = fopen(gsd.files->reconnect_file,"w"))) {
       ERROR((SGE_EVENT,"can't open file '%s': %s\n",
                gsd.files->reconnect_file, strerror(errno)));
-      goto error;
-   }
-
-   if (!fp) {
-      ERROR((SGE_EVENT,"failed open reconnect file '%s'\n",
-             gsd.files->reconnect_file));
       i = -1;
       goto error;
    }
+   
+   bio = BIO_new_fp(fp, BIO_NOCLOSE);
 
-   /* write time of connection validity to file                    */
-   i2d_ASN1_UTCTIME(gsd.refresh_time, time_str_ptr);
-   for (i=0; i<63; i++) {
-      ret = putc((int) time_str[i], fp);
-      if (ret == EOF) {
-         ERROR((SGE_EVENT,"can't write to file\n"));
-         i = -1;
-         goto error;
-      }
+#if 1
+   /* 
+   ** write time of refresh_time to file
+   */
+   i = ASN1_TIME_print(bio, gsd.refresh_time);
+   if (!i) {
+      ERROR((SGE_EVENT,"can't write refresh_time to file\n"));
+      i = -1;
+      goto error;
    }
-
-   /* write buffer to file                  */
-   ptr = pb.head_ptr;
-   for (i=0; i<nbytes; i++) {
-      ret = putc((int) *(ptr+i),fp);
-      if (ret == EOF) {
-         ERROR((SGE_EVENT,"can't write to file\n"));
-         i = -1;
-         goto error;
-      }
+#endif
+   /* 
+   ** write encrypted buffer to file
+   */
+   i = BIO_write(bio, pb.head_ptr, nbytes);
+   if (!i) {
+      ERROR((SGE_EVENT,"can't write to file\n"));
+      i = -1;
+      goto error;
    }
+   BIO_free(bio);
 
    i=0;
 
@@ -1837,7 +1837,9 @@ static int sec_write_data2hd()
       DEXIT;
       return i;
 }
+
 #endif
+
 
 /*===========================================================================*/
 
@@ -1857,7 +1859,7 @@ static void sec_error(void)
 {
    long   l;
 
-   DENTER(TOP_LAYER,"sec_error");
+   DENTER(GDI_LAYER,"sec_error");
    while ((l=ERR_get_error())){
       ERROR((SGE_EVENT, ERR_error_string(l, NULL)));
       ERROR((SGE_EVENT,"\n"));
@@ -1895,7 +1897,7 @@ char *err_msg
 ) {
    int   i;
 
-   DENTER(TOP_LAYER,"sec_send_error");
+   DENTER(GDI_LAYER,"sec_send_error");
    if((i=packstr(pb,err_msg))) 
       goto error;
    if((i=sge_send_any_request(0,NULL,host,commproc,id,pb,TAG_SEC_ERROR)))
@@ -1933,7 +1935,7 @@ static int sec_set_connid(char **buffer, int *buflen)
    u_long32 i, new_buflen;
    sge_pack_buffer pb;
 
-   DENTER(TOP_LAYER,"sec_set_connid");
+   DENTER(GDI_LAYER,"sec_set_connid");
 
    new_buflen = *buflen + INTSIZE;
 
@@ -1979,7 +1981,7 @@ static int sec_get_connid(char **buffer, u_long32 *buflen)
    u_long32 new_buflen;
    sge_pack_buffer pb;
 
-   DENTER(TOP_LAYER,"sec_set_connid");
+   DENTER(GDI_LAYER,"sec_set_connid");
 
    new_buflen = *buflen - INTSIZE;
 
@@ -2024,29 +2026,22 @@ static int sec_get_connid(char **buffer, u_long32 *buflen)
 
 static int sec_update_connlist(const char *host, const char *commproc, int id)
 {
-   int ret = 0;
    lListElem *element=NULL;
-   lCondition *where=NULL;
 
-   DENTER(TOP_LAYER,"sec_update_connlist");
+   DENTER(GDI_LAYER,"sec_update_connlist");
 
-   where = lWhere( "%T(%I==%u)",SecurityT,SEC_ConnectionID,gsd.connid);
-   element = lFindFirst(gsd.conn_list,where);
-   if(!element || !where){
+   element = lGetElemUlong(conn_list, SEC_ConnectionID, gsd.connid);
+   if (!element){
       ERROR((SGE_EVENT,"no list entry for connection\n"));
-      ret = -1;
-      goto error;
-   }
-
-   lSetHost(element,SEC_Host,host);
-   lSetString(element,SEC_Commproc,commproc);
-   lSetInt(element,SEC_Id,id);
-
-   error:
-      if(where) 
-         lFreeWhere(where);
       DEXIT;
-      return ret;
+      return -1;
+   }
+   lSetHost(element, SEC_Host,host);
+   lSetString(element, SEC_Commproc,commproc);
+   lSetInt(element, SEC_Id,id);
+
+   DEXIT;
+   return 0;
 }
 
 /*
@@ -2074,22 +2069,22 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
    lListElem *element=NULL;
    lCondition *where=NULL;
 
-   DENTER(TOP_LAYER,"sec_get_secdata");
+   DENTER(GDI_LAYER,"sec_set_secdata");
 
    /* 
    ** get right element from connection list         
    */
    if (id) {
-      where = lWhere("%T(%I==%s && %I==%s && %I==%d)",SecurityT, SEC_Host,
-                     host,SEC_Commproc,commproc,SEC_Id,id);
+      where = lWhere("%T(%I==%s && %I==%s && %I==%d)", SecurityT,
+                       SEC_Host, host, SEC_Commproc, commproc, SEC_Id, id);
    }
    else {
-      where = lWhere("%T(%I==%s && %I==%s)",SecurityT, SEC_Host,
-                     host,SEC_Commproc,commproc);
+      where = lWhere("%T(%I==%s && %I==%s)", SecurityT,
+                     SEC_Host, host, SEC_Commproc, commproc);
    }
 
-   element = lFindFirst(gsd.conn_list,where);
-   if (!element || !where) {
+   element = lFindFirst(conn_list, where);
+   if (!element) {
       ERROR((SGE_EVENT,"no list entry for connection (%s:%s:%d)\n!",
              host,commproc,id));
       i=-1;
@@ -2100,9 +2095,9 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
    ** set security data                  
    */
    sec_list2keymat(element);
-   gsd.connid = lGetUlong(element,SEC_ConnectionID);
-   gsd.seq_send = lGetUlong(element,SEC_SeqNoSend);
-   gsd.seq_receive = lGetUlong(element,SEC_SeqNoReceive);
+   gsd.connid = lGetUlong(element, SEC_ConnectionID);
+   gsd.seq_send = lGetUlong(element, SEC_SeqNoSend);
+   gsd.seq_receive = lGetUlong(element, SEC_SeqNoReceive);
    
    i = 0;
    error:
@@ -2130,126 +2125,104 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
 **      0       on success
 **      -1      on failure
 */
-static int sec_insert_conn2list(char *host, char *commproc, int id)
+static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int id)
 {
-   int ret = 0;
-   ASN1_UTCTIME *time_str = NULL;
-   lListElem    *element;
-   lCondition   *where;
+   lListElem *element;
+   lCondition *where;
 
-   DENTER(TOP_LAYER,"sec_insert_conn2list");
+   DENTER(GDI_LAYER, "sec_insert_conn2list");
+   
+   /*
+   ** remove any outdated entries first
+   */
+   if (conn_list) {
+      ASN1_UTCTIME *utctime = ASN1_UTCTIME_new();
 
-   /* 
-   ** create List if it not exists               
-   */   
-   if (!gsd.conn_list) 
-      gsd.conn_list = lCreateList("conn_list",SecurityT);
-   if (!gsd.conn_list) {
-      ERROR((SGE_EVENT,"failed create Conn_List\n"));
-      ret = -1;
-      goto error;
+      element = lFirst(conn_list);
+      while (element) {
+         lListElem *del_el;
+         const char *dtime = lGetString(element, SEC_ExpiryDate);
+         utctime = d2i_ASN1_UTCTIME(NULL, (unsigned char**) &dtime, 
+                                          strlen(dtime));
+debug_print_ASN1_UTCTIME("utctime: ", utctime);
+         del_el = element;
+         element = lNext(element);
+         if ((X509_cmp_current_time(utctime) < 0)) { 
+            DPRINTF(("---- removed %d (%s, %s, %d) from conn_list\n", 
+                      lGetUlong(del_el, SEC_ConnectionID), 
+                      lGetHost(del_el, SEC_Host),
+                      lGetString(del_el, SEC_Commproc),
+                      lGetInt(del_el, SEC_Id)));
+            lRemoveElem(conn_list, del_el);
+         }   
+      }
+      ASN1_UTCTIME_free(utctime);
    }
 
    /* 
    ** delete element if some with <host,commproc,id> exists   
    */
-   where = lWhere( "%T(%I==%s && %I==%s && %I==%d)",SecurityT, SEC_Host,
-                   host,SEC_Commproc,commproc,SEC_Id,id);
+   where = lWhere("%T(%I==%s && %I==%s && %I==%d)", SecurityT,
+                    SEC_Host, host,
+                    SEC_Commproc, commproc,
+                    SEC_Id, id);
    if (!where) {
-      ERROR((SGE_EVENT,"can't build condition\n"));
-      ret = -1;
-      goto error;
+      ERROR((SGE_EVENT, "can't build condition\n"));
+      DEXIT;
+      return -1;
    }
-   element = lFindFirst(gsd.conn_list, where);
-   while (element) {
-      lFreeElem(lDechainElem(gsd.conn_list,element));
-                element = lFindNext(element,where);
-   }
+   element = lFindFirst(conn_list, where);
+   where = lFreeWhere(where);
 
    /* 
-   ** clearup list from old connections if it is time              
+   ** add new element if it does not exist                  
    */
-   sec_clearup_list();
-   
-   /* 
-   ** create element                  
-   */
-   element = lCreateElem(SecurityT);
+   if (!element || !conn_list) {
+      element = lAddElemUlong(&conn_list, SEC_ConnectionID, 
+                                 connid, SecurityT);
+   }
    if (!element) {
-      ERROR((SGE_EVENT,"failed create List_Element\n"));
-      ret = -1;
-      goto error;
+      ERROR((SGE_EVENT,"failed adding element to conn_list\n"));
+      DEXIT;
+      return -1;
    }
 
    /* 
    ** set values of element               
    */
-   lSetUlong(element,SEC_ConnectionID,gsd.connid); 
-   lSetHost(element,SEC_Host,host); 
+   lSetUlong(element, SEC_ConnectionID, connid);
+   lSetHost(element, SEC_Host, host);
    lSetString(element,SEC_Commproc,commproc); 
    lSetInt(element,SEC_Id,id); 
    lSetUlong(element,SEC_SeqNoSend,0); 
    lSetUlong(element,SEC_SeqNoReceive,0); 
-
    sec_keymat2list(element);
+{
+   int len;
+   unsigned char *tmp;
+   ASN1_UTCTIME *asn1_time_str = NULL;
+   unsigned char time_str[50]; 
 
-   X509_gmtime_adj(time_str,60*60*ValidHours);
+   asn1_time_str = X509_gmtime_adj(asn1_time_str, 60*ValidMinutes);
+   tmp = time_str;
+   len = i2d_ASN1_UTCTIME(asn1_time_str, &tmp);
+   time_str[len] = '\0';
+   ASN1_UTCTIME_free(asn1_time_str);
 
-   lSetString(element, SEC_ExpiryDate, (char *)time_str); 
-
-   /* 
-   ** append element to list               
-   */
-   if ((ret=lAppendElem(gsd.conn_list,element))) 
-      goto error;
+   lSetString(element, SEC_ExpiryDate, (char*) time_str);
+}   
+   DPRINTF(("++++ added %d (%s, %s, %d) to conn_list\n", 
+               (int)connid, host, commproc, id));
 
    /* 
    ** increment connid                   
    */
-   gsd.connid_counter = INC32(gsd.connid_counter);
+   connid_counter = INC32(connid_counter);
 
-
-   error:
-      DEXIT;
-      return ret;   
+   DEXIT;
+   return 0;   
 }
 
-/*
-** NAME
-**   sec_clearup_list
-**
-** SYNOPSIS
-**
-**   static void sec_clearup_list(void)
-**
-** DESCRIPTION
-**      This function clears the connection list from old connections.
-**
-*/
-static void sec_clearup_list(void)
-{
-   lListElem *element,*del_el;
-   const char *time_str=NULL;
-   int i;
-   ASN1_UTCTIME *utctime = NULL;
-
-   /* 
-   ** should the list be cleared from old connections ?
-   */
-   if (gsd.refresh_time && X509_cmp_current_time(gsd.refresh_time) < 0 ) {
-      element = lFirst(gsd.conn_list);
-      while (element) {
-         time_str = lGetString(element, SEC_ExpiryDate);
-         d2i_ASN1_UTCTIME(&utctime, (unsigned char**) &time_str, strlen(time_str));
-         i = X509_cmp_current_time(utctime);
-         del_el = element;
-         element = lNext(element);
-         if (i < 0)
-            lFreeElem(lDechainElem(gsd.conn_list, del_el));
-      }
-      X509_gmtime_adj(gsd.refresh_time, 60*60*ClearHours);
-   }
-}
 
 /*
 ** NAME
@@ -2269,7 +2242,6 @@ static void sec_keymat2list(lListElem *element)
 {
    int i;
    u_long32 ul[8];
-/*    u_char working_buf[gsd.key_mat_len + 33], *pos_ptr; */
    u_char working_buf[32 + 33], *pos_ptr;
 
    memcpy(working_buf,gsd.key_mat,gsd.key_mat_len);
@@ -2304,7 +2276,6 @@ static void sec_list2keymat(lListElem *element)
 {
    int i;
    u_long32 ul[8];
-/*    u_char working_buf[gsd.key_mat_len + 33],*pos_ptr; */
    u_char working_buf[32 + 33],*pos_ptr;
 
    ul[0]=lGetUlong(element,SEC_KeyPart0);
@@ -2902,8 +2873,9 @@ static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *e
       return(i);
 }
 
-#if 0
-static int sec_pack_reconnect(u_long32 connid, u_long32 seq_send, u_long32 seq_receive, u_char *key_mat, sge_pack_buffer *pb)
+#ifdef SEC_RECONNECT
+
+static int sec_pack_reconnect(sge_pack_buffer *pb, u_long32 connid, u_long32 seq_send, u_long32 seq_receive, u_char *key_mat, u_long32 key_mat_len)
 {
    int i;
 
@@ -2913,15 +2885,16 @@ static int sec_pack_reconnect(u_long32 connid, u_long32 seq_send, u_long32 seq_r
       goto error;
    if ((i=packint(pb, seq_receive))) 
       goto error;
-   if ((i=packbuf(pb,(char *) key_mat, gsd.key_mat_len)))
+   if ((i=packint(pb, key_mat_len))) 
+      goto error;
+   if ((i=packbuf(pb,(char *) key_mat, key_mat_len)))
       goto error;
 
    error:
         return(i);
 }
 
-static int sec_unpack_reconnect(u_long32 *connid, u_long32 *seq_send, u_long32 *seq_receive, 
-                         u_char **key_mat, sge_pack_buffer *pb)
+static int sec_unpack_reconnect(sge_pack_buffer *pb, u_long32 *connid, u_long32 *seq_send, u_long32 *seq_receive, u_char **key_mat, u_long32 *key_mat_len)
 {
    int i;
 
@@ -2931,7 +2904,9 @@ static int sec_unpack_reconnect(u_long32 *connid, u_long32 *seq_send, u_long32 *
       goto error;
    if((i=unpackint(pb,(u_long32 *) seq_receive))) 
       goto error;
-   if((i=unpackbuf(pb,(char **) key_mat, (u_long32) gsd.key_mat_len)))
+   if((i=unpackint(pb,(u_long32 *) key_mat_len))) 
+      goto error;
+   if((i=unpackbuf(pb,(char **) key_mat, (*key_mat_len))))
       goto error;
 
    error:

@@ -36,10 +36,7 @@
 #include "sge_all_listsL.h"
 
 #define CHALL_LEN       16
-#define ValidHours      12          /* expiry of connection    */
-#define ClearHours      1           /* search and destroy      */
-                                    /* expired connections     */
-                                    /* after every ClearHours  */
+#define ValidMinutes    1          /* expiry of connection        */
 
 #define KeyPath         "KEY"
 #define CertPath        "CERT"
@@ -80,14 +77,12 @@ typedef struct gsd_str {
    int crypt_space;
    int block_len;
    u_char *key_mat;
-   int key_mat_len;
+   u_long32 key_mat_len;
    EVP_PKEY *private_key;
    X509 *x509;
    u_long32 connid;
-   u_long32 connid_counter;
    int is_daemon;
    int connect;
-   lList *conn_list;
    u_long32 seq_send;
    u_long32 seq_receive;
    ASN1_UTCTIME *refresh_time;
@@ -109,7 +104,5 @@ typedef struct gsd_str {
 #define GSD_BLOCK_LEN      8
 #define GSD_KEY_MAT_32     32
 #define GSD_KEY_MAT_16     16
-
-extern GlobalSecureData gsd;
 
 #endif /* __SEC_LOCAL_H */

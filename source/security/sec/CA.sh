@@ -16,8 +16,8 @@
 # 12-Jan-96 tjh    Added more things ... including CA -signcert which
 #                  converts a certificate to a request and then signs it.
 # 10-Jan-96 eay    Fixed a few more bugs and added the SSLEAY_CONFIG
-#		   environment variable so this can be driven from
-#		   a script.
+#                   environment variable so this can be driven from
+#                   a script.
 # 25-Jul-96 eay    Cleaned up filenames some more.
 # 11-Jun-96 eay    Fixed a few filename missmatches.
 # 03-May-96 eay    Modified to use 'ssleay cmd' instead of 'cmd'.
@@ -50,6 +50,11 @@ CATOP=./demoCA
 CAKEY=cakey.pem
 CACERT=cacert.pem
 
+if [ $# = "0" ]; then
+   echo "usage: CA -newcert|-newreq|-newca|-sign|-verify" >&2
+   exit 0
+fi   
+
 for i
 do
 case $i in
@@ -74,29 +79,29 @@ case $i in
     # structure that Eric likes to manage things 
     NEW="1"
     if [ "$NEW" -a ! -f ${CATOP}/serial ]; then
-	# create the directory hierarchy
-	mkdir ${CATOP} 
-	mkdir ${CATOP}/certs 
-	mkdir ${CATOP}/crl 
-	mkdir ${CATOP}/newcerts
-	mkdir ${CATOP}/private
-	echo "01" > ${CATOP}/serial
-	touch ${CATOP}/index.txt
+        # create the directory hierarchy
+        mkdir ${CATOP} 
+        mkdir ${CATOP}/certs 
+        mkdir ${CATOP}/crl 
+        mkdir ${CATOP}/newcerts
+        mkdir ${CATOP}/private
+        echo "01" > ${CATOP}/serial
+        touch ${CATOP}/index.txt
     fi
     if [ ! -f ${CATOP}/private/$CAKEY ]; then
-	echo "CA certificate filename (or enter to create)"
-	read FILE
+        echo "CA certificate filename (or enter to create)"
+        read FILE
 
-	# ask user for existing CA certificate
-	if [ "$FILE" ]; then
-	    cp $FILE ${CATOP}/private/$CAKEY
-	    RET=$?
-	else
-	    echo "Making CA certificate ..."
-	    $REQ -new -x509 -keyout ${CATOP}/private/$CAKEY \
-			   -out ${CATOP}/$CACERT $DAYS
-	    RET=$?
-	fi
+        # ask user for existing CA certificate
+        if [ "$FILE" ]; then
+            cp $FILE ${CATOP}/private/$CAKEY
+            RET=$?
+        else
+            echo "Making CA certificate ..."
+            $REQ -new -x509 -keyout ${CATOP}/private/$CAKEY \
+                           -out ${CATOP}/$CACERT $DAYS
+            RET=$?
+        fi
     fi
     ;;
 -xsign)
@@ -119,16 +124,16 @@ case $i in
 -verify) 
     shift
     if [ -z "$1" ]; then
-	    $VERIFY -CAfile $CATOP/$CACERT newcert.pem
-	    RET=$?
+            $VERIFY -CAfile $CATOP/$CACERT newcert.pem
+            RET=$?
     else
-	for j
-	do
-	    $VERIFY -CAfile $CATOP/$CACERT $j
-	    if [ $? != 0 ]; then
-		    RET=$?
-	    fi
-	done
+        for j
+        do
+            $VERIFY -CAfile $CATOP/$CACERT $j
+            if [ $? != 0 ]; then
+                    RET=$?
+            fi
+        done
     fi
     exit 0
     ;;

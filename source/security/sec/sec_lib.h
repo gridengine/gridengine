@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sec_local.h"
-
 typedef int (*sec_exit_func_type)(void);
 extern sec_exit_func_type sec_exit_func;
 

@@ -1,3 +1,8 @@
+AH-2004-02-19-0: Bugfix:    Jobs were not scheduled into second queue instance 
+                            of a host
+                 Review:    JG
+                 Issue:     672
+
 SG-2004-02-19-1: Bugfix:    - scheduler did not get the global configuration
                             - event master worked outside an array.  
                  Changed:   scheduler, qmaster

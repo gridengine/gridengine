@@ -1279,7 +1279,6 @@ XtPointer cld, cad;
          JB_mail_options,
          JB_mail_list,
          JB_notify,
-/*          JB_hold, */
          JB_restart,
          JB_account,
          JB_project,

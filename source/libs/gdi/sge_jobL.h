@@ -153,7 +153,7 @@ enum {
 
 enum {
    JB_job_number = JB_LOWERBOUND,
-   JB_job_file,
+   JB_job_file,                     /* unused */
    JB_exec_file,
    JB_script_file,
    JB_script_size,
@@ -269,7 +269,7 @@ enum {
    
 ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_KULONG(JB_job_number)
-   SGE_XSTRING(JB_job_file)
+   SGE_XSTRING(JB_job_file)            /* unused */
    SGE_XSTRING(JB_exec_file)
    SGE_STRING(JB_script_file)
    SGE_ULONG(JB_script_size)

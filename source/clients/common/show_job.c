@@ -503,13 +503,6 @@ DTRACE;
          printf("start_time:                 %s", ctime((time_t *) &ultime));
       }
 
-   if (lGetPosViaElem(job, JB_hold)>=0)
-      if (lGetUlong(job, JB_hold)) {
-         printf("hold_list:                  ");
-         sge_show_hold_list(lGetUlong(job, JB_hold), SGE_STDOUT);
-         printf("\n");
-      }
-
    if (lGetPosViaElem(job, JB_granted_destin_identifier_list)>=0)
       if (lGetList(job, JB_granted_destin_identifier_list)) {
          intprt_type fields[] = { JG_qname, JG_qhostname, JG_slots, 0 };

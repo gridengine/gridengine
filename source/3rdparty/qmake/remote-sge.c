@@ -2036,59 +2036,72 @@ int start_remote_job (char **argv, char **envp,
    int exec_remote = 1;
    int recursive_make = 0;
    char *addtl_env[ADDTL_ENV_VARS];
-   char addtl_env_pass[ADDTL_ENV_VARS + 1];
+   char addtl_env_pass[ADDTL_ENV_SIZE + 1];
    char envvar[ADDTL_ENV_SIZE + 1];
 
    addtl_env_pass[0] = '\0';
- {
-   char **env = envp;
-   int first_hit = 1;
-   int var_idx = 0;
+   {
+      char **env = envp;
+      int first_hit = 1;
+      int var_idx = 0;
 
-   /* 
-    * Parse the given environment and search for variables that are not in the current environment.
-    * These variables have to be set in the execution environment, 
-    * if the task is started by qrsh, the variable names have to be part of a -v statement.
-    */
-   while (*env != NULL) {
-      char *copy, *variable, *value, *old_value;
+      /* 
+       * Parse the given environment and search for variables that are not in the 
+       * current environment or have a changed value.
+       * These variables have to be set in the execution environment, 
+       * if the task is started by qrsh, the variable names have to be part of a 
+       * -v statement.
+       */
+      while (*env != NULL) {
+         char *copy, *variable, *value, *old_value;
 
-      copy = strdup(*env);
-      variable = strtok(copy, "=");
-      value = strtok(NULL, "=");
-      if (value == NULL) {
-         value = "";
+         /* we have to dup env as we split it into variable and value */
+         copy = strdup(*env);
+         variable = strtok(copy, "=");
+         value = strtok(NULL, "=");
+         if (value == NULL) {
+            value = "";
+         }
+
+         /* retrieve variable from current environment */
+         old_value = getenv(variable);
+
+         /* if variable isn't set in current environment, or has been changed */
+         if (old_value == NULL || strcmp(old_value, value) != 0) {
+            if (var_idx >= ADDTL_ENV_VARS) {
+               free(copy); copy = NULL;
+               fprintf(stderr, "qmake: too many additional environment variables to set\n");
+               return 1;
+            }
+            /* store additional environment to set */
+            addtl_env[var_idx++] = strdup(*env);
+           
+            /* store variable name for -v option */
+            if (strlen(addtl_env_pass) + strlen(variable) >= ADDTL_ENV_SIZE) {
+               free(copy); copy = NULL;
+               fprintf(stderr, "qmake: additional environment variable names exeed buffer\n");
+               return 1;
+            }
+            if (!first_hit) {
+               strcat(addtl_env_pass, ",");
+            }
+            strcat(addtl_env_pass, variable);
+
+            first_hit = 0;
+         }
+
+         /* free the duplicated env entry */
+         free(copy); copy = NULL;
+         env++;
       }
-      old_value = getenv(variable);
-/*       fprintf(stderr, "%s\n", *env); */
 
-      if (old_value == NULL || strcmp(old_value, value) != 0) {
-         if (var_idx >= ADDTL_ENV_VARS) {
-            fprintf(stderr, "qmake: too many additional environment variables to set\n");
-            return 1;
-         }
-         addtl_env[var_idx++] = strdup(*env);
-         
-         if (strlen(addtl_env_pass) + strlen(variable) + 1 >= ADDTL_ENV_SIZE) {
-            fprintf(stderr, "qmake: additional environment variable names exeed buffer\n");
-            return 1;
-         }
-         if (!first_hit) {
-            strcat(addtl_env_pass, ",");
-         }
-         strcat(addtl_env_pass, variable);
+      /* addtl_env is a NULL terminated list (array) */
+      addtl_env[var_idx] = NULL;
 
-         first_hit = 0;
+      if(be_verbose) {
+         fprintf(stdout, "export the following environment variables: %s\n", addtl_env_pass);
       }
-      free(copy);
-      env++;
-   }
-   addtl_env[var_idx] = NULL;
-
-   if(be_verbose) {
-      fprintf(stdout, "export the following environment variables: %s\n", addtl_env_pass);
-   }
-} 
+   } 
    
    /* check for recursive make */
    if (is_recursive_make(argv[0])) {
@@ -2128,7 +2141,7 @@ int start_remote_job (char **argv, char **envp,
             }
             
             for(i = 0; i < sge_v_argc; i++) {
-               if (strlen(envvar) + strlen(sge_v_argv[i]) + 1 >= ADDTL_ENV_SIZE) {
+               if (strlen(envvar) + strlen(sge_v_argv[i]) >= ADDTL_ENV_SIZE) {
                   fprintf(stderr, "qmake: RECURSIVE_QMAKE_OPTIONS too big\n");
                   return 1;
                }
@@ -2171,7 +2184,8 @@ int start_remote_job (char **argv, char **envp,
       i = 0;
       while (addtl_env[i] != NULL) {
          free(addtl_env[i]);
-         addtl_env[i++] = NULL;
+         addtl_env[i] = NULL;
+         i++;
       }
    } else {
       /* child */
@@ -2297,7 +2311,8 @@ int start_remote_job (char **argv, char **envp,
       /* set the additional environment variables */
       i = 0;
       while (addtl_env[i] != NULL) {
-         putenv(addtl_env[i++]);
+         putenv(addtl_env[i]);
+         i++;
       }
 
       execvp(args[0], args);

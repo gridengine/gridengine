@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# SGE/SGEEE CA script
+# Grid Engine CA framework script
 #
 #___INFO__MARK_BEGIN__
 ##########################################################################
@@ -34,71 +34,486 @@
 ##########################################################################
 #___INFO__MARK_END__
 #
-#set -x
+# set -x
+
+# Reset PATH to a safe value  
 #
 PATH=/bin:/usr/bin
 
-umask 022
+# Easy way to prevent clearing of screen
+#
+CLEAR=clear
+#CLEAR=:
 
-if [ x$SGE_ROOT = x ]; then
-   echo '$SGE_ROOT not set'
-   exit 1
-fi
+# set to false if you don't want this script uses the i18n functions
+#
+SGE_I18N=true
 
-if [ x$SGE_CELL = x ]; then
-   SGE_CELL=default
-fi
-
-ARCH=`$SGE_ROOT/util/arch`
-
-CATOP=$SGE_ROOT/$SGE_CELL/common/sgeCA
-CALOCALTOP=/var/sgeCA/$SGE_CELL
-
-CAKEY=cakey.pem
-CACERT=cacert.pem
-
-CONFIG_DIR=$SGE_ROOT/util/sgeCA
-OPENSSL=$SGE_ROOT/utilbin/$ARCH/openssl
-
-ECHO=echo
-
-Translate() 
-{
-  $ECHO $1
-}  
+#-------------------------------------------------------------------------
+# USEFUL LOCAL SHELL PROCEDURES
 
 #-------------------------------------------------------------------------
 # ErrUsage: print usage string, exit
 #
 ErrUsage()
 {
+   myname=`basename $0`
    $ECHO "" >&2
-   Translate "Usage:" 2
-   $ECHO     " $1 {-ca|-testca|-cert|-req|-sign|-verify} [-days <days>] [-user <user>] [-outdir <outdir>]" >&2
-   $ECHO     "       -ca            \c" >&2
-   Translate "install CA directories and generate CA key and certificate" 2 1
-   $ECHO     "       -testca        \c" >&2
-   Translate "install CA directories and generate CA key and certificate in ./sgeCA" 2 1
-   $ECHO     "       -cert          \c" >&2
-   Translate "generate a selfsigned certificate and the corresponding private key" 2 1
-   $ECHO     "       -req           \c" >&2
-   Translate "generate a certificate request and the corresponding private key" 2 1
-   $ECHO     "       -sign          \c" >&2
-   Translate "sign a certificate request" 2 1
-   $ECHO     "       -verify        \c" >&2
-   Translate "verify a certificate" 2 1 "\$$QSYST_ROOT"
-   $ECHO     "       -batch          \c" >&2
-   Translate "sign and request in batch mode" 2 1
-   $ECHO     "       -days <days>   \c" >&2
-   Translate "days of validity of the certificate" 2 1
-   $ECHO     "       -user <user>   \c" >&2
-   Translate "use user as key and certificate file prefix" 2 1
-   $ECHO     "       -outdir <dir>  \c" >&2
-   Translate "use <dir> as output directory" 2 1
+   Translate 3 "Usage:"
+   $ECHO     " $1 {-init|-req|-sign|-verify|-userkeys <file>} [-days <days>]" >&2
+   $ECHO     "    -init           \c" >&2
+   Translate 1 "initialize CA infrastructure"
+   $ECHO     "    -req           \c" >&2
+   Translate 1 "generate a certificate request and private key"
+   $ECHO     "    -sign          \c" >&2
+   Translate 1 "sign a certificate request"
+   $ECHO     "    -verify        \c" >&2
+   Translate 1 "verify a certificate" 2 1 "\$$QSYST_ROOT"
+   $ECHO     "    -days <days>   \c" >&2
+   Translate 1 "days of validity of the certificate"
+   $ECHO     "    -userkeys <file>   \c" >&2
+   Translate 1 "generate certificates and keys for users in <file>"
    $ECHO "" >&2
 
    exit 1
 }
+
+#--------------------------------------------------------------------------
+# SetAdminUser
+#   set ADMINUSER from global cluster config
+#   exit if cluster config does not exist
+#
+SetAdminUser()
+{
+   cfgname=$SGE_ROOT/$SGE_CELL/common/configuration
+ 
+   if [ -f $cfgname ]; then
+      user=`grep admin_user $cfgname | awk '{ print $2 }'`
+   else
+      Translate 1 "Global cluster configuration >%s< does not exist. Exit." $cfgname
+      exit 1
+   fi
+ 
+   if [ `echo $user|tr "A-Z" "a-z"` = "none" ]; then
+      ADMINUSER=default
+   else
+      ADMINUSER=$user
+   fi
+}
+
+#--------------------------------------------------------------------------
+# InitCA Init CA directories and get DN info
+#
+InitCA()
+{
+   $CLEAR
+   $ECHO
+   Translate 0 "Initializing Certificate Authority (CA) for OpenSSL security framework"
+   $ECHO "----------------------------------------------------------------------"
+   $ECHO
+
+   MakeCADirs
+
+   MakeCAcert
+
+   Translate 0 "Creating Daemon certificate and key"
+   $ECHO "-----------------------------------"   
+   $ECHO
+
+   MakeCert daemon root "SGE Daemon" none
+
+   # Remove this to a differnt function
+   MakeCert user $ADMINUSER "SGE Admin user" noemail
+}
+
+#--------------------------------------------------------------------------
+# MakeCAcert create CA certificate and private key
+#
+#
+MakeCAcert()
+{
+   WaitClear clear
+
+   $ECHO
+   Translate 0 "Creating CA certificate and private key"
+   $ECHO "---------------------------------------"
+   $ECHO
+   Translate 0 "Please give some basic parameters to create the distinguished name (DN)"
+   Translate 0 "for the certificates."
+   $ECHO
+   Translate 0 "We will ask for"
+   $ECHO
+   Translate 0 "   - the two letter country code"
+   Translate 0 "   - the state"
+   Translate 0 "   - the location, e.g city or your buildingcode"
+   Translate 0 "   - the organization (e.g. your company name)"
+   Translate 0 "   - the organizational unit, e.g. your department"
+   Translate 0 "   - the email address of the CA administrator (you!)"
+   $ECHO
+   WaitClear clear
+   $ECHO
+
+   done=false
+   while [ $done = false ]; do
+
+      dndone=false
+      while [ $dndone = false ]; do
+         Translate 2 "Please enter your two letter country code, e.g. >US< >> "
+         INP=`Enter ""`
+         if [ "$INP != " -a `echo $INP | wc -c` = 3 ]; then
+            CA_C=`echo $INP | env LC_ALL=C tr "[a-z]" "[A-Z]"`
+            dndone=true
+         fi
+      done
+
+      Translate 2 "Please enter your state >> "
+      INP=`Enter ""`
+      CA_ST="$INP"
+
+
+      Translate 2 "Please enter your location, e.g city or buildingcode >> "
+      INP=`Enter ""`
+      CA_L="$INP"
+
+      dndone=false
+      while [ $dndone = false ]; do
+         Translate 2 "Please enter the name of your organization >> "
+         INP=`Enter ""`   
+         if [ "$INP" != "" ]; then
+            CA_O="$INP"
+            dndone=true
+         fi
+      done
+
+      Translate 2 "Please enter your organizational unit, e.g. your department >> "
+      INP=`Enter ""`    
+      CA_OU="$INP"
+
+      dndone=false
+      while [ $dndone = false ]; do
+         Translate 2 "Please enter the email address of the CA administrator >> "
+         INP=`Enter ""`   
+         if [ "$INP" != "" ]; then
+            CA_EMAIL="$INP"
+            dndone=true
+         fi
+      done
+
+
+      $CLEAR
+      $ECHO
+      Translate 0 "You selected the following basic data for the distinguished name of"
+      Translate 0 "your certificates:"
+      $ECHO
+      Translate 0 "Country code:         %s=%s" C "$CA_C"
+      Translate 0 "State:                %s=%s" ST "$CA_ST"
+      Translate 0 "Location:             %s=%s" L "$CA_L"
+      Translate 0 "Organization:         %s=%s" O "$CA_O"
+      Translate 0 "Organizational unit:  %s=%s" OU "$CA_OU"
+      Translate 0 "CA email address:     %s=%s" emailAddress "$CA_EMAIL"
+      $ECHO
+      Translate 4 "Do you want to use these data"
+      YesNo "\n$transout" y
+
+      if [ $? = 0 ]; then
+         done=true
+ 
+         TMPFILE=/tmp/sge_ca$$.tmp
+         TMPFILE1=/tmp/sge_ca1$$.tmp
+         $RM -f $TMPFILE $TMPFILE1
+         $TOUCH $TMPFILE $TMPFILE1
+         echo C="$CA_C" >> $TMPFILE
+         echo ST="$CA_ST" >> $TMPFILE
+         echo L="$CA_L" >> $TMPFILE
+         echo O="$CA_O" >> $TMPFILE
+         echo OU="$CA_OU" >> $TMPFILE
+         ExecuteAsAdmin $CP $TMPFILE $CATOP/dn.info
+         echo CN="SGE Certificate Authority" >> $TMPFILE
+         echo uniqueIdentifier=CA >> $TMPFILE
+         echo emailAddress=$CA_EMAIL >> $TMPFILE
+
+         Execute cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
+
+         umask 077
+         if [ "$RANDFILE" = "" ]; then
+            if [ -f /kernel/genunix ]; then
+               rfile=/kernel/genunix
+            elif [ -f /bin/vi ]; then
+               rfile=/bin/vi
+            fi
+            RANDFILE=$CALOCALTOP/private/rand.seed; export RANDFILE
+            Translate 0 "Creating RANDFILE from >%s< in >%s<" $rfile $RANDFILE
+            $ECHO
+            ExecuteAsAdmin $OPENSSL rand -rand $rfile -out $RANDFILE 1024
+         fi
+
+         Translate 0 "Creating CA certificate and private key"
+         $ECHO
+         ExecuteAsAdmin $REQ -config $TMPFILE1 -new -x509 \
+              -keyout ${CALOCALTOP}/private/$CAKEY -out ${CATOP}/$CACERT $DAYS
+         status=$?
+         umask 022
+
+         ExecuteAsAdmin $CHMOD 444 ${CATOP}/$CACERT
+
+         rm -f $TMPFILE $TMPFILE1
+
+         if [ $status != 0 ]; then
+            Translate 0 "Failed to create CA certificate and private key. Exit"
+            exit 1
+         fi
+
+      else
+         $CLEAR
+      fi
+   done
+   WaitClear clear
+}
+
+#--------------------------------------------------------------------------
+# MakeCert create certificate and private key for daemon
+#
+# $1 = "daemon" or "user"
+# $2 = uniqueIdentifier   (Unix user name)
+# $3 = commonname         (e.g. passwd gecos field)
+# $4 = email address
+#
+MakeCert()
+{
+
+   TMPFILE=/tmp/sge_ca$$.tmp
+   TMPFILE1=/tmp/sge_ca1$$.tmp
+   $RM -f $TMPFILE $TMPFILE1
+   Execute cp $CATOP/dn.info $TMPFILE
+   echo uniqueIdentifier=$2 >> $TMPFILE
+   echo CN=$3 >> $TMPFILE
+   echo emailAddress=$4 >> $TMPFILE
+   Execute cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
+
+
+   if [ $1 = daemon ]; then
+      KEYDIR=$CALOCALTOP/private
+      KEYFILE=$CALOCALTOP/private/key.pem
+      REQFILE=$CALOCALTOP/private/req.pem
+      CERTFILE=$CATOP/certs/cert.pem
+   else
+      KEYDIR=$CALOCALTOP/userkeys/$2
+      KEYFILE=$KEYDIR/key.pem
+      REQFILE=$KEYDIR/req.pem
+      CERTFILE=$KEYDIR/cert.pem
+      Execute $RM -rf $KEYDIR
+      ExecuteAsAdmin $MKDIR $KEYDIR
+   fi
+
+   if [ $rootinstalls = true ]; then
+      umask 077
+   fi
+
+   # create a certificate request
+   ExecuteAsAdmin $REQ -config $TMPFILE1 -new -keyout $KEYFILE -out $REQFILE $DAYS
+   if [ $? != 0 ]; then
+      Translate 0 "Can't create %s or %s. Exit." $KEYFILE $REQFILE
+      exit 1
+   fi  
+
+   # sign certificate request
+   ExecuteAsAdmin $CA -config $TMPFILE1 -policy policy_anything -batch $DAYS \
+                      -out $CERTFILE -infiles $REQFILE
+   if [ $? != 0 ]; then
+      Translate 0 "Can't sign certificate request %s. Exit." $REQFILE 
+      exit 1
+   fi
+
+   $RM -f $TMPFILE $TMPFILE1 
+
+   if [ $1 = daemon ]; then
+      Translate 0 "created and signed certificate for SGE daemons" 
+   else
+      if [ $rootinstalls = true ]; then
+         Execute $CHMOD 500 $KEYDIR
+         Execute $CHMOD 400 $KEYDIR/*
+         Execute $CHOWN -R $2 $KEYDIR
+      fi
+
+      Translate 0 "created and signed certificate for user >%s< in >%s<" $2 $KEYDIR
+   fi
+
+   umask 022
+}
+
+
+#--------------------------------------------------------------------------
+# MakeCADirs
+#    create all directories for CA infrastructure
+#
+# 
+MakeCADirs()
+{
+
+   if [ -d $CATOP -o -d $CALOCALTOP ]; then
+      Translate 0 "There are already directories of the CA infrastructure in"
+      $ECHO
+      $ECHO "   $CATOP "
+      Translate 0 "      or    "
+      $ECHO "   $CALOCALTOP "
+      $ECHO
+      Translate 4 "Do you want to recreate your SGE CA infrastructure"
+      YesNo "\n$transout" y
+      if [ $? != 0 ]; then
+         $ECHO
+         Translate 0 "We will not reinitialize your SGE CA infrastructure"
+         $ECHO
+         Translate 0 "CA initialization failed. Exit."
+         $ECHO
+         exit 1
+      fi
+   fi
+
+   if [ -f $CATOP -o -f $CALOCALTOP ]; then
+      Translate 0 "The CA directories"
+      $ECHO
+      Translate 0 "   %s or %s" $CATOP $CALOCALTOP
+      $ECHO
+      Translate 0 "seem to be regular files."
+      $ECHO
+      Translate 0 "CA initialization failed. Exit."
+      $ECHO
+      exit 1
+   fi
+
+   $RM -rf $CATOP $CALOCALTOP >/dev/null 2>/dev/null
+
+   if [ -f $CATOP -o -d $CATOP -o -f $CALOCALTOP -o -d $CALOCALTOP ]; then
+      Translate 0 "Can't delete the CA directories"
+      $ECHO
+      Translate 0 "   %s or %s" $CATOP $CALOCALTOP
+      $ECHO
+      Translate 0 "CA initialization failed. Exit."
+      $ECHO
+      exit 1
+   fi
+
+   Translate 0 "Creating %s" $CATOP
+   ExecuteAsAdmin $MKDIR $CATOP
+
+   Translate 0 "Creating %s" $CALOCALTOP
+   Execute $MKDIR -p $CALOCALTOP
+
+   if [ $ADMINUSER != default -a $rootinstalls = true ]; then
+      Execute $CHOWN $ADMINUSER $CALOCALTOP
+   fi
+
+   Translate 0 "Creating %s" ${CATOP}/certs
+   ExecuteAsAdmin $MKDIR ${CATOP}/certs
+
+   Translate 0 "Creating %s" ${CATOP}/crl
+   ExecuteAsAdmin $MKDIR ${CATOP}/crl
+
+   Translate 0 "Creating %s" ${CATOP}/newcerts
+   ExecuteAsAdmin $MKDIR ${CATOP}/newcerts
+
+   Translate 0 "Creating %s" ${CATOP}/serial
+   TruncCreateAndMakeWriteable ${CATOP}/serial
+   echo "01" > ${CATOP}/serial
+   ExecuteAsAdmin $CHMOD 644 ${CATOP}/serial
+
+   Translate 0 "Creating %s" ${CATOP}/index.txt
+   ExecuteAsAdmin $TOUCH ${CATOP}/index.txt   
+
+   Translate 0 "Creating %s" ${CALOCALTOP}/userkeys
+   ExecuteAsAdmin $MKDIR ${CALOCALTOP}/userkeys   
+
+   umask 077
+   Translate 0 "Creating %s" ${CALOCALTOP}/private
+   ExecuteAsAdmin $MKDIR ${CALOCALTOP}/private
+   umask 022
+}
+
+#--------------------------------------------------------------------------
+# THE MAIN PROCEDURE
+#--------------------------------------------------------------------------
+
+#----------------------------------
+# GET ARCH + ARCH SPECIFIC DEFAULTS
+#
+
+if [ -z "$SGE_ROOT" -o ! -d "$SGE_ROOT" ]; then
+   echo
+   echo ERROR: Please set your \$SGE_ROOT environment variable
+   echo and start this script again.
+   echo
+   exit 1
+fi
+
+if [ ! -f "$SGE_ROOT/util/arch" ]; then
+   echo
+   echo ERROR: The shell script \"$SGE_ROOT/util/arch\" does not exist.
+   echo Please verify your distribution and restart this script.
+   echo
+   exit 1
+fi
+
+if [ ! -f $SGE_ROOT/util/arch_variables ]; then
+   echo
+   echo ERROR: Missing shell script \"$SGE_ROOT/util/arch_variables\".
+   echo Please verify your distribution and restart this script.
+   echo
+   exit 1
+fi
+
+. $SGE_ROOT/util/arch_variables
+
+if [ "$SGE_CELL" = "" ]; then
+   SGE_CELL=default
+fi
+
+if [ "$COMMD_PORT" != "" ]; then
+   CA_PORT=port$COMMD_PORT
+else
+   CA_PORT=sge_commd
+fi
+
+# Set variable $ADMINUSER
+#
+SetAdminUser
+
+#-------------------------------------------------------------------------
+# setup i18n
+
+if [ "$GETTEXT" != "" -a "SGE_I18N" = true ]; then
+   unset TEXTDOMAINDIR TEXTDOMAIN
+   TEXTDOMAINDIR="`/bin/pwd`/locale"
+   TEXTDOMAIN=gridengine
+   translation=1
+else
+   translation=0
+   unset LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY
+   unset LC_NUMERIC LC_TIME LANGUAGE
+fi
+
+# end of internationalization setup
+#-------------------------------------------------------------------------
+
+
+V5BIN=$SGE_ROOT/bin/$ARCH
+V5UTILBIN=$SGE_ROOT/utilbin/$ARCH
+
+CATOP=$SGE_ROOT/$SGE_CELL/common/sgeCA
+
+euid=`$V5UTILBIN/uidgid -euid`
+if [ $euid = 0 ]; then
+   CALOCALTOP=/var/sgeCA/$CA_PORT/$SGE_CELL
+   rootinstalls=true
+else
+   CALOCALTOP=/tmp/sgeCA/$CA_PORT/$SGE_CELL
+   rootinstalls=false
+fi
+
+CAKEY=cakey.pem
+CACERT=cacert.pem
+
+CONFIG_DIR=$SGE_ROOT/util/sgeCA
+OPENSSL=$V5UTILBIN/openssl
 
 #-----------------------------
 # CommandLine Argument Parsing
@@ -112,29 +527,14 @@ indir=.
 ARGC=$#
 while [ $ARGC != 0 ]; do
    case $1 in
-   -ca)
-      WHICH="ca"
-      ;;
-   -testca)
-      WHICH="ca"
-      CATOP=./sgeCA
-      CALOCALTOP=./sgeCA
-      ;;
-   -batch)
-      BATCHMODE=-batch
-      CONFIG_DIR=/tmp/certificates
+   -init)
+      WHICH="init"
       ;;
    -req)
       WHICH="req"
       ;;
-   -cert)
-      WHICH="cert"
-      ;;
-   -sign|-signreq)
+   -sign)
       WHICH="sign"
-      ;;
-   -xsign)
-      WHICH="xsign"
       ;;
    -verify)
       WHICH="verify"
@@ -143,47 +543,27 @@ while [ $ARGC != 0 ]; do
       if [ $ARGC -lt 2 ]; then
          $ECHO "" >&2
          Translate "Error: -days needs argument" 2 1
-         ErrUsage $0
+         ErrUsage
       fi
       DAYS="-days $2"
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-   -user)
+   -userkeys)
       if [ $ARGC -lt 2 ]; then
          $ECHO "" >&2
          Translate "Error: -user needs argument" 2 1
-         ErrUsage $0
+         ErrUsage
       fi
       newreq=$2_req.pem
       newcert=$2_cert.pem
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-   -outdir)
-      if [ $ARGC -lt 2 ]; then
-         $ECHO "" >&2
-         Translate "Error: -outdir needs argument" 2 1
-         ErrUsage $0
-      fi
-      outdir=$2
-      shift
-      ARGC=`expr $ARGC - 1`
-      ;;
-   -indir)
-      if [ $ARGC -lt 2 ]; then
-         $ECHO "" >&2
-         Translate "Error: -indir needs argument" 2 1
-         ErrUsage $0
-      fi
-      indir=$2
-      shift
-      ARGC=`expr $ARGC - 1`
-      ;;
    *)
       $ECHO "" >&2
       Translate "Error: Unknown option %s" 2 1 "$1"
-      ErrUsage $0
+      ErrUsage
       ;;
    esac
    shift
@@ -191,48 +571,22 @@ while [ $ARGC != 0 ]; do
 done
 
 if [ "$WHICH" = "undef" ]; then
-   ErrUsage $0
+   ErrUsage
 fi
 
-REQ="$OPENSSL req -nodes -config $CONFIG_DIR/sge_ssl.cnf"
-CA="$OPENSSL ca -config $CONFIG_DIR/sge_ssl.cnf -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT -outdir $CATOP/newcerts"
+REQ="$OPENSSL req -nodes"
+
+CA="$OPENSSL ca -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT \
+   -outdir $CATOP/newcerts"
+
 VERIFY="$OPENSSL verify"
+
 X509="$OPENSSL x509"
 
 case $WHICH in
-ca)
-    # if explicitly asked for or it doesn't exist then setup the directory
-    # structure that Eric likes to manage things 
-    NEW="1"
-    if [ "$NEW" -a ! -f ${CATOP}/serial ]; then
-        # create the directory hierarchy
-        mkdir -p ${CALOCALTOP} 
-        mkdir ${CALOCALTOP}/private
-        mkdir -p ${CATOP} 
-        mkdir ${CATOP}/certs 
-        mkdir ${CATOP}/crl 
-        mkdir ${CATOP}/newcerts
-        echo "01" > ${CATOP}/serial
-        touch ${CATOP}/index.txt
-        # set file perms
-    fi
-    if [ ! -f ${CALOCALTOP}/private/$CAKEY ]; then
-        echo "CA certificate filename (or enter to create)"
-        read FILE
-
-        # ask user for existing CA certificate
-        if [ "$FILE" ]; then
-            cp $FILE ${CALOCALTOP}/private/$CAKEY
-            RET=$?
-        else
-            echo "Making CA certificate ..."
-            $REQ -new -x509 -keyout ${CALOCALTOP}/private/$CAKEY \
-                           -out ${CATOP}/$CACERT $DAYS
-            RET=$?
-        fi
-    fi
+init)
+   InitCA  
    ;;
-
 req)
     # create a certificate request
     $REQ -new -keyout $outdir/$newreq -out $outdir/$newreq $DAYS
@@ -243,19 +597,6 @@ req)
       echo "No success"
     fi  
    ;;
-
-cert)
-    # create a certificate
-    $REQ -new -x509 -keyout $outdir/$newreq -out $outdir/$newreq $DAYS
-    RET=$?
-    echo "Certificate request is in $outdir/$newreq"
-   ;;
-
-xsign)
-    $CA -policy policy_anything -infiles $indir/$newreq
-    RET=$?
-    ;;
-
 sign) 
     $CA -policy policy_anything $DAYS $BATCHMODE -out $outdir/$newcert -infiles $indir/$newreq
     RET=$?
@@ -263,22 +604,12 @@ sign)
       echo "Signed certificate is in $outdir/$newcert"
     fi
     ;;
-    
-signcert) 
-    echo "Cert passphrase will be requested twice - bug?"
-    $X509 -x509toreq -in $newreq -signkey $newreq -out tmp.pem
-    $CA -policy policy_anything -out $outdir/$newcert -infiles tmp.pem
-    cat $newcert
-    echo "Signed certificate is in $outdir/$newcert"
-    ;;
-
 verify) 
     $VERIFY -CAfile $CATOP/$CACERT $newcert
     RET=$?
     ;;
-
 help)
-    ErrUsage $0
+    ErrUsage
     ;;
 esac
 

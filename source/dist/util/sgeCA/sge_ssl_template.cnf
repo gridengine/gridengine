@@ -61,7 +61,7 @@ preserve             = no                       # keep passed DN ordering
 # A few difference way of specifying how similar the request should look
 # For type CA, the listed attributes must be the same, and the optional
 # and supplied fields are just that :-)
-policy               = policy_match
+policy               = policy_anything
 
 # For the CA policy
 [ policy_match ]
@@ -110,8 +110,6 @@ prompt                  = no
 string_mask = nombstr
 
 req_extensions = v3_req # The extensions to add to a certificate request
-
-[ req_distinguished_name ]
 
 # SET-ex3                        = SET extension number 3
 
@@ -221,3 +219,5 @@ basicConstraints = CA:true
 
 # issuerAltName=issuer:copy
 authorityKeyIdentifier=keyid:always,issuer:always
+
+[ req_distinguished_name ]

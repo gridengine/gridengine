@@ -48,10 +48,13 @@ PATH=/bin:/usr/bin
 
 SECFILELIST="bin lib utilbin"
 
-FILELIST="3rd_party bin ckpt examples inst_sge \
-install_execd install_qmaster mpi pvm qmon util utilbin"
+FILELIST="3rd_party bin ckpt examples inst_sge inst_sgeee \
+          install_execd install_qmaster mpi pvm qmon util utilbin"
 
 OPTFILES="catman doc locale man" 
+
+CLIENTFILES="qacct qalter qconf qdel qhost qlogin qmod qmon qrsh qsh \
+             qstat qsub"
 
 umask 022
 
@@ -76,9 +79,13 @@ SetFilePerm()
 #---------------------------------------------------------------------
 # MAIN MAIN
 #
+
+instauto=false
+instresport=false
+
 if [ -z "$SGE_ROOT" -o ! -d "$SGE_ROOT" ]; then
    echo 
-   echo ERROR: Please set your \$SGE_ROOT environment variable correctly
+   echo ERROR: Please set your \$SGE_ROOT environment variable
    echo and start this script again.
    echo 
    exit 1
@@ -87,7 +94,7 @@ fi
 if [ ! -f "$SGE_ROOT/util/arch" ]; then
    echo 
    echo ERROR: The shell script \"$SGE_ROOT/util/arch\" does not exist.
-   echo Please verify your distribution and restart this update procedure.
+   echo Please verify your distribution and restart this script.
    echo
    exit 1
 fi
@@ -95,27 +102,40 @@ fi
 if [ ! -f $SGE_ROOT/util/arch_variables ]; then
    echo
    echo ERROR: Missing shell script \"$SGE_ROOT/util/arch_variables\".
-   echo Please verify your distribution and restart this update procedure.
+   echo Please verify your distribution and restart this script.
    echo
    exit 1
 fi
 
 . $SGE_ROOT/util/arch_variables
 
-if [ $# != 3 ]; then
+if [ $# -lt 3 ]; then
    echo
    echo Set file permissions and owner of Grid Engine distribution in \$SGE_ROOT
    echo 
-   echo "usage: $0 \"adminuser\" \"group\" <codine_root>"
+   echo "usage: $0 [-auto] [-resport] \"adminuser\" \"group\" <codine_root>"
    echo 
-   echo example: $0 codadmin adm 
+   echo example: $0 codadmin adm \$SGE_ROOT
    echo
    exit 1
 fi
 
-if [ $3 = / ]; then
+if [ $1 = -auto ]; then
+   instauto=true
+   shift
+fi
+
+if [ $1 = -resport ]; then
+   instresport=true
+   shift
+elif [ $1 = -noresport ]; then
+   instresport=false
+   shift
+fi
+
+if [ $3 = / -o $3 = /etc ]; then
    echo
-   echo ERROR: cannot set permissions in root directory of your system.
+   echo ERROR: cannot set permissions in \"$3\" directory of your system.
    echo
    exit 1
 fi
@@ -127,37 +147,41 @@ if [ `echo $3 | cut -c1` != / ]; then
    exit 1
 fi
 
-clear
 
-$ECHO "                    WARNING WARNING WARNING"
-$ECHO "                    -----------------------"
-$ECHO "We will set the the file ownership and permission to"
-$ECHO
-$ECHO "   User:         $1"
-$ECHO "   Group:        $2"
-$ECHO "   In directory: $3"
-$ECHO
-$ECHO "We will also install the following binaries as SUID-root:"
-$ECHO
-$ECHO "   \$SGE_ROOT/utilbin/<arch>/rlogin"
-$ECHO "   \$SGE_ROOT/utilbin/<arch>/rsh"
-$ECHO "   \$SGE_ROOT/utilbin/<arch>/testsuidroot"
-$ECHO
+if [ $instauto = true ]; then
+   :
+else
+   clear
+   $ECHO "                    WARNING WARNING WARNING"
+   $ECHO "                    -----------------------"
+   $ECHO "We will set the the file ownership and permission to"
+   $ECHO
+   $ECHO "   User:         $1"
+   $ECHO "   Group:        $2"
+   $ECHO "   In directory: $3"
+   $ECHO
+   $ECHO "We will also install the following binaries as SUID-root:"
+   $ECHO
+   $ECHO "   \$SGE_ROOT/utilbin/<arch>/rlogin"
+   $ECHO "   \$SGE_ROOT/utilbin/<arch>/rsh"
+   $ECHO "   \$SGE_ROOT/utilbin/<arch>/testsuidroot"
+   $ECHO
 
-TEXT="Do you want to set the file permissions (yes/no) [NO] >> \c"
+   TEXT="Do you want to set the file permissions (yes/no) [NO] >> \c"
 
-YesNo_done=false
-while [ $YesNo_done = false ]; do
-   $ECHO "$TEXT" 
-   read YesNo_INP
-   if [ "$YesNo_INP" = "yes" -o "$YesNo_INP" = YES ]; then
-      YesNo_done=true
-   elif [ "$YesNo_INP" = "NO" -o "$YesNo_INP" = no ]; then
-      $ECHO
-      $ECHO "We will NOT set the file permissions. Exiting."
-      exit 1
-   fi
-done
+   YesNo_done=false
+   while [ $YesNo_done = false ]; do
+      $ECHO "$TEXT" 
+      read YesNo_INP
+      if [ "$YesNo_INP" = "yes" -o "$YesNo_INP" = YES ]; then
+         YesNo_done=true
+      elif [ "$YesNo_INP" = "NO" -o "$YesNo_INP" = no ]; then
+         $ECHO
+         $ECHO "We will NOT set the file permissions. Exiting."
+         exit 1
+      fi
+   done
+fi
 
 cd $3
 if [ $? != 0 ]; then
@@ -185,7 +209,7 @@ for f in $FILELIST $OPTFILES; do
    fi
 done
 
-# These files are owned by root for security reasons
+# These files and dirs are owned by root for security reasons
 for f in $SECFILELIST; do
    if [ -d $f -o -f $f ]; then
       SetFilePerm $f root root
@@ -197,12 +221,16 @@ chown $1 .
 chgrp $2 .
 chmod 755 .
 
-chown $1 bin/*/sgecommdcntl
-chmod 550 bin/*/sgecommdcntl
-
 chown 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot
 chgrp 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot
 chmod 4511 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot
+
+if [ $instresport = true ]; then
+   for i in $CLIENTFILES; do
+      chown 0 bin/*/$i
+      chmod 4511 bin/*/$i   
+   done
+fi
 
 $ECHO
 $ECHO "Your file permissions were set"

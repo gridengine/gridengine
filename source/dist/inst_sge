@@ -45,7 +45,7 @@ PATH=/bin:/usr/bin
 CLEAR=clear
 #CLEAR=:
 
-# set to false if you don't want this script (and SGE)
+# set to false if you don't want this script uses the i18n functions
 #
 SGE_I18N=true
 
@@ -82,141 +82,6 @@ ErrUsage()
    $ECHO "" >&2
 
    exit 1
-}
-
-#-------------------------------------------------------------------------
-# WaitClear
-# Let user press the return key
-# uses global variables $autoinst
-#                       $CLEAR
-# $1 = clear  clear screen 
-# $1 =
-# $2 = no string - print default messages
-# $4 = arg       - print argument
-#
-WaitClear()
-{
-   do_clear=$1
-   text="$2"
-
-   if [ "$text" != "" ]; then
-      $ECHO "$text"
-   else
-      Translate 2 "Hit <RETURN> to continue >> "
-   fi
-
-   if [ $autoinst = true ]; then
-      echo
-   else
-      read INP_WaitClear
-
-      if [ $do_clear = clear ]; then
-         $CLEAR
-      fi
-   fi
-}
-
-#-------------------------------------------------------------------------
-# Enter: input returned to stdout. If input is empty echo $1
-#
-Enter()
-{
-   if [ $autoinst = true ]; then
-      $ECHO $1
-   else
-      read INP
-      if [ "$INP" = "" ]; then
-         $ECHO $1
-      else
-         $ECHO $INP
-      fi
-   fi
-}
-
-#-------------------------------------------------------------------------
-# YesNo: print argument and get YES/NO answer
-# $1 = string to print
-# $2 = default value if user enters return. Values are y,n,x (for no default)
-#
-YesNo()
-{
-   text=$1
-   default=$2
-   if [ "$default" = "" ]; then
-      default=x
-      text="$text >> \c"
-   else
-      Translate 4 "(y/n)"
-      text="$text $transout [$default] >> \c"
-   fi
-
-   if [ $autoinst = true -a $default != x -a $default != X ]; then
-      $ECHO "$text"
-      $ECHO $default
-      if [ $default = y -o $default = Y ]; then
-         return 0
-      else
-         return 1
-      fi
-   fi
-
-   YesNo_done=false
-   while [ $YesNo_done = false ]; do
-      $ECHO "$text"
-      read YesNo_INP
-
-      if [ "$YesNo_INP" = "" ]; then
-         if [ "$default" = y -o "$default" = Y ]; then
-            YesNo_INP=y
-         elif [ "$default" = n -o "$default" = N ]; then
-            YesNo_INP=n
-         fi
-      fi
-
-      case "$YesNo_INP" in
-         y|y|j|J)
-            YesNo_done=true
-            ret=0
-            ;;
-         n|N)
-            YesNo_done=true
-            ret=1
-            ;;
-      esac
-   done
-   return $ret
-}
-
-#-------------------------------------------------------------------------
-# Fatal Error: print message and exit
-#
-FatalError()
-{
-   $ECHO $*                           >&2
-   $ECHO ""                           >&2
-   Translate 1 "Installation failed. Exit."
-   $ECHO ""                           >&2
-   exit 1
-}
-
-#-------------------------------------------------------------------------
-# Execute command and exit if exit status != 0
-#
-Execute()
-{
-   if [ "$verbose" = true ]; then
-      $ECHO $*
-   fi
-   $*
-   if [ $? != 0 ]; then
-      $ECHO >&2
-      Translate 1 "Command failed: %s" "$*"
-      $ECHO "" >&2
-      Translate 1 "Probably a permission problem. Please check file access parmissions."
-      Translate 1 "Check root read/write permission. Check if daemons are running."
-      $ECHO "" >&2
-      exit 1
-   fi
 }
 
 #-------------------------------------------------------------------------
@@ -282,6 +147,7 @@ PreCheckForFastInstall()
 #-------------------------------------------------------------------------
 # Ask the installer for the host name resolving method
 # (IGNORE_FQND=true/false)
+#
 SelectHostNameResolving()
 {
    $CLEAR
@@ -367,7 +233,6 @@ CheckCellDirectory()
 # Check the host names and put out warning message on probably wrong
 # hostname resolving
 #
-# Need this Variables:
 CheckHostNameResolving()
 {
 
@@ -489,7 +354,7 @@ AskIfDefaultOkAndSetVariables()
    Translate 0 "The following default settings can be used for an accelerated"
    Translate 0 "installation procedure:"
    $ECHO ""
-   $ECHO "   \$$QSYST_ROOT$BLANKS       = $QSYST_ROOT_VAL"
+   $ECHO "   \$$QSYST_ROOT$BLANKS        = $QSYST_ROOT_VAL"
 
    if [ "$COMMD_PORT" != "" ]; then
       $ECHO "   \$COMMD_PORT        = $COMMD_PORT"
@@ -518,35 +383,10 @@ AskIfDefaultOkAndSetVariables()
    fi
 }
 
-#-------------------------------------------------------------------------
-# Execute command as user $ADMINUSER and exit if exit status != 0
-# if ADMINUSER = default then execute command unchanged
-#
-ExecuteAsAdmin()
-{
-   if [ "$verbose" = true ]; then
-      $ECHO $*
-   fi
-
-   if [ $ADMINUSER = default ]; then
-      $*
-   else
-      $V5UTILBIN/adminrun $ADMINUSER $*
-   fi
-
-   if [ $? != 0 ]; then
-      $ECHO >&2
-      Translate 1 "Command failed: %s" "$*"
-      $ECHO "" >&2
-      Translate 1 "Probably a permission problem. Check your access to affected files."
-      Translate 1 "Check read/write permission. Check if daemons are running."
-      $ECHO "" >&2
-      exit 1
-   fi
-}
-
 #---------------------------------------------------
 # SetFilePerm
+# set file permissions to 644 and dirs. to 755 and change owner to admin
+# user
 #
 SetFilePerm()
 {
@@ -673,9 +513,7 @@ PrintConf()
    $ECHO "schedd_params          none"
    $ECHO "execd_params           none"
    $ECHO "finished_jobs          100"
-#   if [ $inst = sgeee ]; then
-      $ECHO "gid_range              $CFG_GID_RANGE"
-#   fi
+   $ECHO "gid_range              $CFG_GID_RANGE"
    if [ $ADMINUSER != default ]; then
       $ECHO "admin_user             $ADMINUSER"
    else
@@ -718,7 +556,7 @@ GetGidRange()
       Translate 0 "for 100 SGEEE jobs at the same time on a single host."
       Translate 0 "You can change at any time the group id range in your cluster configuration."
       $ECHO ""
-      Translate 3 "Please enter a range: "
+      Translate 2 "Please enter a range: "
 
       CFG_GID_RANGE=`Enter ""`
 
@@ -760,7 +598,7 @@ GetDefaultDomain()
       Translate 4 "Do you want to configure a default domain"
       YesNo "$transout" y
       if [ $? = 0 ]; then
-         Translate 3 "\nPlease enter your default domain: "
+         Translate 2 "\nPlease enter your default domain: "
          CFG_DEFAULT_DOMAIN=`Enter ""`
          if [ "$CFG_DEFAULT_DOMAIN" != "" ]; then
             $ECHO
@@ -961,30 +799,6 @@ AddLocalConfiguration_With_Qconf()
       Translate 0 "Local configuration for host >%s< created." $HOST
    fi
    WaitClear clear
-}
-
-#-------------------------------------------------------------------------
-# CreateAndMakeWriteable
-# create $1 as file and make it writable for everybody
-#
-CreateAndMakeWriteable()
-{
-   ExecuteAsAdmin $TOUCH $1
-   if [ $ADMINUSER != default ]; then
-      ExecuteAsAdmin $CHMOD 666 $1
-   fi
-}
-
-#-------------------------------------------------------------------------
-# TruncCreateAndMakeWriteable
-# delete $1 as file and make it writable for everybody
-#
-TruncCreateAndMakeWriteable()
-{
-   if [ -f $1 ]; then
-      ExecuteAsAdmin $RM $1
-   fi
-   CreateAndMakeWriteable $1
 }
 
 #-------------------------------------------------------------------------
@@ -1343,11 +1157,12 @@ CheckWhoInstallsQsyst()
       Translate 0 "If user >root< does not have write permissons in this directory on *all*"
       Translate 0 "of the machines where %s will be installed (NFS partitions not exported" "$QSYST"
       Translate 0 "for user >root< with read/write permissions) it is recommended to install"
-      Translate 0 "%s that all spool files will be created under this user id." "$QSYST"
+      Translate 0 "%s that all spool files will be created under the user id" "$QSYST"
+      Translate 0 "of user >%s<." $this_dir_user
       $ECHO ""
-      Translate 0 "IMPORTANT NOTE: daemons still have to be started by user >root<"
+      Translate 0 "IMPORTANT NOTE: The daemons still have to be started by user >%s<" root
 
-      Translate 4 "Do you want to run %s as admin user >%s<" $QSYST $this_dir_user
+      Translate 4 "Do you want to install %s as admin user >%s<" $QSYST $this_dir_user
       YesNo "\n$transout" y
       if [ $? = 0 ]; then
          $ECHO ""
@@ -2119,12 +1934,8 @@ SetCellDependentVariables()
 {
    COMMONDIR=$QSYST_CELL_VAL/common
    LCONFDIR=$QSYST_CELL_VAL/common/local_conf
+   CASHAREDDIR=$COMMONDIR/sgeCA
    HISTDIR=$COMMONDIR/history
-   HISTDIR_COMP=$HISTDIR/complexes
-   HISTDIR_EXEC=$HISTDIR/exechosts
-   HISTDIR_G=$HISTDIR_COMP/global
-   HISTDIR_H=$HISTDIR_COMP/host
-   HISTDIR_Q=$HISTDIR_COMP/queue
 }
 
 #--------------------------------------------------------------------------
@@ -2241,7 +2052,6 @@ StartExecd()
 #
 CheckBinaries()
 {
-CLIENTFILES="qacct qalter qconf qdel qhost qlogin qmod qmon qrsh qsh qstat qsub"
 
 BINFILES="sge_commd sge_coshepherd \
           sge_execd sge_qmaster  \
@@ -2316,17 +2126,15 @@ SetPermissions()
    $ECHO
 
    euid=`$V5UTILBIN/uidgid -euid`
-   arch=`util/arch`
 
    if [ $euid != 0 ]; then
       Translate 0 "You are not installing as user %s" root
-      Translate 4 "\nCan't set the file owner/group and permissions"
-      WaitClear clear
+      Translate 0 "\nCan't set the file owner/group and permissions"
+      WaitClear clear 
       return 0
    else
-      $ECHO
-      Translate 0 "Did you install this version with >pkgadd< or did you"
-      Translate 4 "already verify and set the file permissions of your distribution"
+      Translate 0 "Did you install this version with >pkgadd< or did you already"
+      Translate 4 "verify and set the file permissions of your distribution"
       YesNo "$transout" y
       if [ $? = 0 ]; then
          Translate 4 "We do not verify file permissions. Hit <RETURN> to continue >>"
@@ -2335,6 +2143,7 @@ SetPermissions()
       fi
    fi
 
+   rm -f ./tst$$ 2> /dev/null > /dev/null
    touch ./tst$$ 2> /dev/null > /dev/null
    rm -f ./tst$$ 2> /dev/null > /dev/null
    ret=$?
@@ -2363,25 +2172,23 @@ SetPermissions()
       WaitClear clear "$transout \c"
       return 0
    elif [ $fast = false ]; then
-      $ECHO ""
+      $CLEAR
+      $ECHO
       Translate 0 "Verifying and setting file permissions"
-      $ECHO "-------------------------------------"
+      $ECHO "--------------------------------------"
       $ECHO ""
       Translate 0 "We may now verify and set the file permissions of your %s distribution." "$QSYST"
       $ECHO ""
       Translate 0 "This may be useful since due to unpacking and copying of your"
       Translate 0 "distribution your files may be unaccessible to other users."
       $ECHO ""
-      Translate 0 "We will set the permssions of directories and executables to"
+      Translate 0 "We will set the permissions of directories and binaries to"
       $ECHO ""
       Translate 0 "   755 - that means executable are accessible for the world"
       $ECHO ""
       Translate 0 "and for ordinary files to"
       $ECHO ""
       Translate 0 "   644 - that means readable for the world"
-      $ECHO ""
-      Translate 0 "We will set the owner and group to >0< if you are installing as user >root<."
-
       Translate 4 "Do you want to verify and set your file permissions"
       YesNo "\n$transout" y
       ret=$?
@@ -2390,54 +2197,24 @@ SetPermissions()
    fi
 
    if [ $ret = 0 ]; then
-      if [ $fast = false ]; then
-         $CLEAR
-      fi
 
-      SetFilePerm README
-      SetFilePerm $myname
-      SetFilePerm install_execd
-      SetFilePerm install_qmaster
-      SetFilePerm 3rd_party
-      SetFilePerm bin
-      SetFilePerm lib
-      SetFilePerm catman
-      SetFilePerm ckpt
-      SetFilePerm examples
-      SetFilePerm man
-      SetFilePerm mpi
-      SetFilePerm pvm
-      SetFilePerm qmon
-      SetFilePerm util
-      SetFilePerm utilbin
-
-      if [ -d locale ]; then
-         SetFilePerm locale
-      fi
-
-      if [ -d doc ]; then
-         SetFilePerm doc
-      fi
-
-      if [ -d default ]; then
-         SetFilePerm default
-      fi
-
-      chown 0 bin/*/sgecommdcntl
-      chmod 550 bin/*/sgecommdcntl
-      chown 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot
-      chgrp 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot
-      chmod 4511 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot
-
-      #
-      # setuid client binaries in case of -resport
-      #
       if [ $resport = true ]; then
-         for i in $CLIENTFILES; do
-            chown 0 bin/*/$i
-            chmod 4511 bin/*/$i
-         done
+         resportarg=-resport
+      else
+         resportarg="-noresport"
       fi
+
+      if [ $ADMINUSER = default ]; then
+         fileowner=root
+      else
+         fileowner=$ADMINUSER
+      fi
+
+      filegid=`$V5UTILBIN/uidgid -gid`
+
+      $CLEAR
+
+      util/setfileperm.sh -auto $resportarg $fileowner $filegid $SGE_ROOT
 
       WaitClear clear
    else
@@ -2447,58 +2224,27 @@ SetPermissions()
 }
 
 #--------------------------------------------------------------------------
-# Translate
-# create localized version of arguments using "gettext" and "printf"
+# InitCA Create CA and initialize it for deamons and users
 #
-# uses global variable "translation" to either tranlate or not the text
-# 
-# $1 = 0  stdout, newline
-# $1 = 1  stderr, newline
-# $1 = 2  stdout, no newline
-# $1 = 3  stderr, no newline
-# $1 = 4  just store string in variable $transout
-# $2 = string to localize
-# $2- args not to localize
-#
-Translate()
+InitCA()
 {
-   newline=""
-   stderr=0
 
-   if [ "$1" = 0 -o "$1" = 1 ]; then
-      newline="\n"
+   if [ $csp = false ]; then
+      return
+   fi 
+
+   # Initialize CA, make directories and get DN info
+   #
+   util/sgeCA/sge_ca -init
+
+   if [ $? != 0 ]; then
+      CAErrUsage
    fi
 
-   if [ "$1" = 1 -o "$1" = 3 ]; then
-      stderr=1
-   fi
-   if [ "$1" = 4 ]; then
-      stderr=4
-   fi
-   shift
-
-   if [ "$translation" = 1 ]; then
-      transout=`env TEXTDOMAIN=$TEXTDOMAIN TEXTDOMAINDIR=$TEXTDOMAINDIR $GETTEXT "$1"`
-      shift
-      if [ $stderr = 4 ]; then
-         transout=`printf "$transout"$newline "$@"`
-      elif [ $stderr = 0 ]; then
-         printf "$transout"$newline "$@"
-      else
-         printf "$transout"$newline "$@" >&2
-      fi
-   else
-      transout="$1"
-      shift
-      if [ $stderr = 4 ]; then
-         transout=`printf "$transout" "$@"`
-      elif [ $stderr = 0 ]; then
-         printf "$transout"$newline "$@"    
-      else
-        printf "$transout"$newline "$@" >&2    
-      fi
-   fi
+   WaitClear clear
 }
+   
+
 
 #--------------------------------------------------------------------------
 # THE MAIN PROCEDURE
@@ -2524,17 +2270,17 @@ if [ $myname = inst_sge ]; then
    QSYST=SGE
    QSYST_NAME=SGE
    LINES=---
-   BLANKS=""
+   BLANKS="  "
 elif [ $myname = inst_sgeee ]; then
    inst=sgeee
    QSYST=SGEEE
    QSYST_NAME=SGEEE
    LINES=-----
-   BLANKS="  "
+   BLANKS=""
 else
-   echo  "unknown name of script: $0"
+   echo  "unknown name of this script: $0"
    echo  "must be either >inst_sge<, >inst_sgeee<"
-   echo  "may be your >basename< command is not in your \$PATH"
+   echo  "may be the >basename< command is not in your \$PATH"
    echo
    exit 1
 fi
@@ -2586,12 +2332,6 @@ unset GRD_DEBUG_LEVEL
 unset COD_DEBUG_LEVEL
 unset SGE_DEBUG_LEVEL
 
-TOUCH=touch
-RM=rm
-MKDIR=mkdir
-CHMOD=chmod
-CP=cp
-
 V5BIN=bin/$ARCH
 V5UTILBIN=utilbin/$ARCH
 QSYST_CELL_VAL=`eval echo '$'$QSYST_CELL`
@@ -2604,10 +2344,9 @@ fi
 export $QSYST_CELL
 
 ADMINUSER=default
-SHARED_LIBRARY_PATH=`util/arch -lib`
-CURRENTLIBS=`eval echo '$'$SHARED_LIBRARY_PATH`
 
 # exit if there are missing binaries
+#
 CheckBinaries
 
 MYUID=`$V5UTILBIN/uidgid -uid`
@@ -2624,7 +2363,7 @@ if [ "$HOST" = "" ]; then
 fi
 
 #-----------------------------
-# CommandLine Argument Parsing
+# commandline argument parsing
 #
 WHICH="undef"
 strict=true
@@ -2715,6 +2454,7 @@ master)
    AddDefaultComplexes
    AddDefaultDepartement
    AddCommonFiles
+   InitCA
    CreateSettingsFile
    WaitClear clear
    AddQsystStartUpScript $euid true

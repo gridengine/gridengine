@@ -1,3 +1,9 @@
+CR-2002-02-28-0: Testsuite:  
+                 Bugfix:    - wrong error message in wait_for_end_of_all_jobs()
+                 Enhancem.  - submit_job() generates output for timeout and eof
+                              error
+                 Enhancem.  - 2 new parameters for create_shell_script()
+
 JG-2002-02-27-0: Doc:       Documented the qrsh -noshell option in the
                             qrsh/submit man page.
                  Issue:     #132           

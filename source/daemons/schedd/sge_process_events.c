@@ -372,7 +372,7 @@ DTRACE;
 #define NM2  "%I%I"
 #define NM1  "%I"
 
-      what_job = lWhat("%T(" NM10 NM10 NM10 NM10 NM2 NM2")", JB_Type,
+      what_job = lWhat("%T(" NM10 NM10 NM10 NM10 NM2")", JB_Type,
             JB_job_number, 
             JB_script_file,
             JB_submission_time,
@@ -382,8 +382,8 @@ DTRACE;
             JB_gid,        /* x*/
             JB_nrunning,
             JB_execution_time,
-
             JB_checkpoint_attr,     /* x*/
+
             JB_checkpoint_interval, /* x*/
             JB_checkpoint_object,   
             JB_hard_resource_list,
@@ -393,8 +393,8 @@ DTRACE;
             JB_job_name,   /* x*/
             JB_priority,
             JB_hard_queue_list,
-
             JB_soft_queue_list,
+
             JB_master_hard_queue_list,
             JB_pe,
             JB_pe_range,
@@ -403,9 +403,9 @@ DTRACE;
             JB_hard_wallclock_gmt,
             JB_version,
             JB_now,
-
             JB_project,
   /* SGE */ JB_department,
+
             JB_jobclass, /*x*/
             JB_deadline,
             JB_host,
@@ -414,9 +414,9 @@ DTRACE;
             JB_ja_n_h_ids,
             JB_ja_u_h_ids,
             JB_ja_s_h_ids,
-
             JB_ja_o_h_ids,   
 	         JB_ja_tasks,
+
             JB_ja_template,
             JB_category);
    if (!what_job) 
@@ -617,7 +617,7 @@ int sge_process_all_events(lList *event_list)
                DEXIT;
                goto Error;
             }
-
+   
             if (!lists.job_list)
                lists.job_list = lCreateList("new job list", JB_Type);
             data_list = lGetList(event, ET_new_version);

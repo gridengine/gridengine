@@ -1903,7 +1903,7 @@ char *rhost
 #endif
    
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
-         ruser, rhost, cal_name, _("calendar")));
+         ruser, rhost, cal_name, MSG_OBJ_CALENDAR));
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
    sge_add_event(NULL, sgeE_CALENDAR_DEL, 0, 0, cal_name, NULL);
    DEXIT;

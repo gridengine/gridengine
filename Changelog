@@ -1,3 +1,7 @@
+CR-2002-07-18-1: Bugfix:    i18n wrong function call in infotext binary - l10n
+                            not working
+                 Bugtraq:   #4715919
+
 CR-2002-07-18-0: Bugfix:    i18n aimk compilation for SOLARIS86 did not translate
                             i18n code
 

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/11/12 15:40:07 $     Revision: $Revision: 1.22 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2005/01/12 16:48:17 $     Revision: $Revision: 1.23 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2004/11/12 15:40:07 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2005/01/12 16:48:17 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -98,7 +98,7 @@ is evaluated for each host the results are assigned to the hosts and
 are used to sort the hosts corresponding to the weighted load. The sorted
 host list is used to sort queues subsequently.
 .br
-The default load formula is "load_avg".
+The default load formula is "np_load_avg".
 .SS "\fBjob_load_adjustments\fP"
 The load, which is imposed by the xxQS_NAMExx jobs 
 running on a system varies in time, and often, e.g. for the CPU load, 
@@ -134,11 +134,11 @@ load of the hosts with the \fBload_formula\fP (see above) and to compare
 the load and consumable values against the load threshold lists
 defined in the queue configurations (see
 .M queue_conf 5 ).
-If your \fBload_formula\fP simply consists of the CPU load average parameter
-\fIload_avg\fP and if your jobs are very compute intensive, you might
-want to set the \fBjob_load_adjustments\fP list to \fIload_avg=100\fP,
+If your \fBload_formula\fP simply consists of the default CPU load average 
+parameter \fInp_load_avg\fP and if your jobs are very compute intensive, you might
+want to set the \fBjob_load_adjustments\fP list to \fInp_load_avg=1.00\fP,
 which means that every new job dispatched to a host will require
-100 % CPU time and thus the machine's load is instantly raised by 100.
+100 % CPU time and thus the machine's load is instantly raised by 1.00.
 .SS "\fBload_adjustment_decay_time\fP"
 The load corrections in the "\fBjob_load_adjustments\fP" list above
 are decayed linearly over time from the point of the job start, where
@@ -149,7 +149,7 @@ correction becomes 0. Proper values for "\fBload_adjustment_decay_time\fP"
 greatly depend upon the load or consumable parameters used and the
 specific operating
 system(s). Therefore, they can only be determined on-site and experimentally.
-For the default \fIload_avg\fP load parameter a
+For the default \fInp_load_avg\fP load parameter a
 "\fBload_adjustment_decay_time\fP" of 7 minutes has proven to yield reasonable
 results.
 .SS "\fBmaxujobs\fP"

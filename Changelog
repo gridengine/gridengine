@@ -1,3 +1,12 @@
+AH-2005-01-12-0: Doc      : Errors with load_avg in sched_conf(5)
+                            sched_conf(5) wrongly mentioned load_avg 
+                            rather than np_load_avg and 100 rather than
+                            1.0 for a job that utilizes a full cpu
+                 Changed:   man
+                 Review:    AS
+                 Issue:     1417
+                 Bugtraq:   6216694
+
 CR-2005-01-12-0: Enhancem.: commlib read/write errors closing connection
                             messages in the daemon log files will now also
                             contain the name of the connection where the

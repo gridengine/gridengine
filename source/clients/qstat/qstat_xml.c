@@ -755,7 +755,7 @@ int slots_per_line  /* number of slots to be printed in slots column
       /* report jobs dynamic scheduling attributes */
       /* only scheduled have these attribute */
       /* Pending jobs can also have tickets */
-      if (is_zombie_job) {
+      if (!is_zombie_job) {
          if (sge_ext || lGetList(jatep, JAT_granted_destin_identifier_list)) {
             xml_append_Attr_I(attributeList, "tickets", (int)tickets);
             xml_append_Attr_I(attributeList, "JB_override_tickets", (int)lGetUlong(job, JB_override_tickets));
@@ -1646,28 +1646,3 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
    DEXIT;
    return jobElem;
 }
-
-
-
-/* queues to print are selected by (QU_tag & TAG_SHOW_IT) */
-/* jobs are tagged with: lSetUlong(jatep, JAT_suitable, lGetUlong(jatep, JAT_suitable) & ~TAG_SHOW_IT); */
-/* or: lSetUlong(jatep, JAT_suitable, lGetUlong(jatep, JAT_suitable)|TAG_SHOW_IT|TAG_SELECT_IT); */
-
-/* print order:                                        */
-/*                                                     */
-/* cqueue       (cqueue_calculate_summary)             */
-/*                                                     */
-/* OR                                                  */
-/*                                                     */
-/* queue        (sge_print_queue)                      */
-/*   -> jobs in queue (running) (sge_print_jobs_queue) */
-/*                                                     */
-/* OR                                                  */
-/*  -> print running jobs (sge_print_jobs_queue)       */
-/*                                                     */
-/* print pending jobs  (sge_print_jobs_pending)        */
-/* print finished jobs (sge_print_jobs_finished)       */
-/* print error jobs    (sge_print_jobs_error)          */
-/* print zombi jobs    (sge_print_jobs_zombie)         */
-/*                                                     */
-

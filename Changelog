@@ -1,3 +1,7 @@
+SG-2004-02-09-0: Bugfix:    - qstat -urg crashed
+                            - added "-urg" to the qstat -help output
+                            - qstat -ext -xml did not display ticket information
+
 AD-2004-02-08-0: Bugfix:    Make over of the event master (evm) external
                             interface. This is needed in preparation for
                             a self-contained event master module.

@@ -75,8 +75,9 @@
 /* #define MSG_QSTAT_CANTGETREPLYONQSTATREQFROMQSTD_SSSS    _message(19039, _("unable to get reply on "SFN" request from "SFN"@"SFN": "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_QSTAT_FOLLOWINGDONOTEXIST _MESSAGE(19040, _("Following jobs do not exist: "))
 #define MSG_QSTAT_USAGE_DISPLAYALLPARALLELJOBTASKS    _MESSAGE(19041, _("display all parallel job tasks (do not group)\n"))
-#define MSG_QSTAT_XML_OUTPUT                          _MESSAGE(19042, _("displays the information in XML-Format\n"))
+#define MSG_QSTAT_XML_OUTPUT                          _MESSAGE(19042, _("display the information in XML-Format\n"))
 #define MSG_QSTAT_USAGE_DISPLAYCQUEUESUMMARY          _MESSAGE(19043, _("display cluster queue summary\n"))
+#define MSG_QSTAT_URGENCYINFO                         _MESSAGE(19044, _("display job urgency information\n"))
 
 #endif /* __MSG_QSTAT_H */
 

@@ -778,16 +778,6 @@ char **argv
          lSetList(xmlElem, XMLE_List, XML_out);
          lAppendElem(tempXML, xmlElem);
          XML_out = tempXML;
-
-         /*
-         lListElem *xml_elem = NULL;
-         
-         xml_elem = xml_getHead("queue_info", XML_out, NULL);
-         XML_out = NULL;   
-         lWriteElemXMLTo(xml_elem, stdout);
-     
-         xml_elem = lFreeElem(xml_elem);
-         */
       }
    }
 
@@ -1000,53 +990,59 @@ u_long32 show
          else
             jw = lAndWhere(jw, nw);
       }
-      j_all = lWhat("%T("FORMAT_I_20 FORMAT_I_10 FORMAT_I_2 FORMAT_I_2 FORMAT_I_2 FORMAT_I_1 ")", JB_Type, 
-                     JB_job_number, 
-                     JB_owner,
-                     JB_script_file,
-                     JB_group,
-                     JB_type,
+      {
+            const int job_nm[] = {
+            JB_job_number, 
+            JB_owner,
+            JB_script_file,
+            JB_group,
+            JB_type,
 
-                     JB_pe,
-                     JB_checkpoint_name,
-                     JB_jid_request_list,
-                     JB_jid_predecessor_list,
-                     JB_env_list,
-                     JB_priority,
-                     JB_jobshare,
+            JB_pe,
+            JB_checkpoint_name,
+            JB_jid_request_list,
+            JB_jid_predecessor_list,
+            JB_env_list,
+            JB_priority,
 
-                     JB_job_name,
-                     JB_project,
-                     JB_department,
-                     JB_submission_time,
-                     JB_deadline,
+            JB_jobshare,
+            JB_job_name,
+            JB_project,
+            JB_department,
+            JB_submission_time,
 
-                     JB_override_tickets,
-                     JB_pe_range,
-                     JB_hard_resource_list,
-                     JB_soft_resource_list,
-                     JB_hard_queue_list,
+            JB_deadline,
+            JB_override_tickets,
+            JB_pe_range,
+            JB_hard_resource_list,
+            JB_soft_resource_list,
+            
+            JB_hard_queue_list,
+            JB_soft_queue_list,
+            JB_master_hard_queue_list,
+            JB_ja_structure,
+            JB_ja_tasks,
 
-                     JB_soft_queue_list,
-                     JB_master_hard_queue_list,
-                     JB_ja_structure,
-                     JB_ja_tasks,
-                     JB_ja_n_h_ids,
+            JB_ja_n_h_ids,
+            JB_ja_u_h_ids,
+            JB_ja_o_h_ids,
+            JB_ja_s_h_ids,
+            JB_ja_z_ids,
 
-                     JB_ja_u_h_ids,
-                     JB_ja_o_h_ids,
-                     JB_ja_s_h_ids,
-                     JB_ja_z_ids,
-                     JB_ja_template,
+            JB_ja_template,
+            JB_execution_time,
+            JB_nurg,
+            JB_urg,
+            JB_rrcontr,
 
-                     JB_execution_time,
-                     JB_nurg,
-                     JB_urg,
-                     JB_rrcontr,
-                     JB_dlcontr,
+            JB_dlcontr,
+            JB_wtcontr,
+            NoName
+         };
+  
+      j_all =  lIntVector2What(JB_Type, job_nm);
 
-                     JB_wtcontr);
-
+      }
       j_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET,
                            NULL, jw, j_all, NULL, &state);
       j_all = lFreeWhat(j_all);
@@ -1069,43 +1065,56 @@ u_long32 show
          else
             zw = lOrWhere(zw, nw);
       }
-      z_all = lWhat("%T(" FORMAT_I_20 FORMAT_I_10 FORMAT_I_2 FORMAT_I_2 FORMAT_I_2 ")", JB_Type,
-                     JB_job_number,
-                     JB_owner,
-                     JB_group,
-                     JB_type,
-                     JB_pe,
-                     JB_checkpoint_name,
-                     JB_jid_predecessor_list,
-                     JB_env_list,
-                     JB_priority,
-                     JB_jobshare,
-                     JB_job_name,
-                     JB_project,
-                     JB_department,
-                     JB_submission_time,
-                     JB_deadline,
-                     JB_override_tickets,
-                     JB_pe_range,
-                     JB_hard_resource_list,
-                     JB_soft_resource_list,
-                     JB_hard_queue_list,
-                     JB_soft_queue_list,
-                     JB_master_hard_queue_list,
-                     JB_ja_structure,
-                     JB_ja_n_h_ids,
-                     JB_ja_u_h_ids,
-                     JB_ja_o_h_ids,
-                     JB_ja_s_h_ids,
-                     JB_ja_z_ids,
-                     JB_ja_template,
-                     JB_ja_tasks,
-                     JB_execution_time,
-                     JB_nurg,
-                     JB_urg,
-                     JB_rrcontr,
-                     JB_dlcontr,
-                     JB_wtcontr );
+      {
+            const int job_nm[] = {    
+            JB_job_number,
+            JB_owner,
+            JB_group,
+            JB_type,
+            JB_pe,
+            
+            JB_checkpoint_name,
+            JB_jid_predecessor_list,
+            JB_env_list,
+            JB_priority,
+            JB_jobshare,
+            
+            JB_job_name,
+            JB_project,
+            JB_department,
+            JB_submission_time,
+            JB_deadline,
+            
+            JB_override_tickets,
+            JB_pe_range,
+            JB_hard_resource_list,
+            JB_soft_resource_list,
+            JB_hard_queue_list,
+            
+            JB_soft_queue_list,
+            JB_master_hard_queue_list,
+            JB_ja_structure,
+            JB_ja_n_h_ids,
+            JB_ja_u_h_ids,
+            
+            JB_ja_o_h_ids,
+            JB_ja_s_h_ids,
+            JB_ja_z_ids,
+            JB_ja_template,
+            JB_ja_tasks,
+            
+            JB_execution_time,
+            JB_nurg,
+            JB_urg,
+            JB_rrcontr,
+            JB_dlcontr,
+
+            JB_wtcontr, 
+            NoName
+         };
+  
+      z_all =  lIntVector2What(JB_Type, job_nm);
+      }
 
       z_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ZOMBIE_LIST, SGE_GDI_GET, 
                            NULL, zw, z_all, NULL, &state);
@@ -2099,12 +2108,15 @@ char *what
       }
       if (!qselect_mode) 
          fprintf(fp, "        [-t]                            %s",MSG_QSTAT_USAGE_SHOWTASKINFO);
-      if (!qselect_mode)  
+      if (!qselect_mode){  
          fprintf(fp, "        [-u user_list]                  %s",MSG_QSTAT_USAGE_VIEWONLYJOBSOFTHISUSER);
+      }   
       fprintf(fp, "        [-U user_list]                  %s",MSG_QSTAT_USAGE_SELECTQUEUESWHEREUSERXHAVEACCESS);
 
-      if (!qselect_mode)
+      if (!qselect_mode){
+         fprintf(fp, "        [-urg]                          %s",MSG_QSTAT_URGENCYINFO );
          fprintf(fp, "        [-xml]                          %s", MSG_QSTAT_XML_OUTPUT );
+      }   
       
       if (getenv("MORE_INFO")) {
          fprintf(fp, MSG_QSTAT_USAGE_ADDITIONALDEBUGGINGOPTIONS);

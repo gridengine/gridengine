@@ -100,6 +100,7 @@
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
 #include "sge_io.h"
+#include "sge_sharetree_qmaster.h"
 
 extern lList *Master_Project_List;
 extern lList *Master_Sharetree_List;
@@ -188,14 +189,6 @@ int sge_setup_qmaster()
    }
    sge_show_conf();         
    new_config = 1;
-
-   /*
-   ** switch to admin user
-   */
-   if (sge_set_admin_username(conf.admin_user, err_str)) {
-      CRITICAL((SGE_EVENT, err_str));
-      SGE_EXIT(1);
-   }
 
    if (sge_switch2admin_user()) {
       CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));

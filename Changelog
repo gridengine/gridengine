@@ -1,3 +1,6 @@
+EB-2002-03-21-0  Bugfix:   local config not written as admin user at startup
+                 Issue:    #199
+
 CR-2002-03-20-1  Testsuite: sending "vt100" when client host is using tset
                             for terminal settings.
 
@@ -49,8 +52,8 @@ CR-2002-03-18-0  Testsuite: - qdel check: (merge from V53_beta2_BRANCH)
 
 EB-2002-03-18-0  Enhancem.: Modifications for redhat 7.2 (gcc 2.96)
 
-AH-2002-03-15-5  Bugfix:    Ensure after execd installation the host needs to be 
-                            only exec host but not admin host or submit host
+AH-2002-03-15-5  Bugfix:    Ensure after execd installation the host needs to 
+                            be only exec host but not admin host or submit host
 
 EB-2002-03-15-0: Bugfix:    qmaster code accepted qsub -t task specification
                             which included the id 0 => loop in schedd

@@ -268,7 +268,7 @@ char **argv
       SGE_EXIT(1);
    }
 
-   admin_user = read_adminuser_from_configuration(path.conf_file, 
+   admin_user = read_adminuser_from_configuration(NULL, path.conf_file, 
       SGE_GLOBAL_NAME, FLG_CONF_SPOOL);
 
    if (sge_set_admin_username(admin_user, err_str)) {

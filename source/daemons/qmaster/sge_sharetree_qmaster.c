@@ -64,8 +64,6 @@ extern lList *Master_Project_List;
 extern lList *Master_Sharetree_List;
 extern lList *Master_Userset_List;
 
-
-
 /************************************************************
   sge_add_sharetree - Master code
 

@@ -567,7 +567,9 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_STRING(JB_job_name)     
    SGE_XULONG(JB_version)
    SGE_XLIST(JB_jid_predecessor_list,JRE_Type) 
-   SGE_ILIST(JB_jid_predecessor_list, JB_Type) 
+   SGE_XLIST(JB_jid_predecessor_list,JRE_Type) 
+   SGE_ILIST(JB_jid_sucessor_list, JB_Type) 
+   SGE_ILIST(JB_jid_sucessor_list, JB_Type) 
 
    SGE_XSTRING(JB_project)             
    SGE_IOBJECT(JB_project, UP_Type)  
@@ -625,20 +627,15 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_ILIST(JB_hard_queue_list, QU_Type)
    SGE_XLIST(JB_soft_queue_list, QR_Type) 
    SGE_ILIST(JB_soft_queue_list, QU_Type)
+   
    SGE_ULONG(JB_mail_options) 
    SGE_TLIST(JB_mail_list, MR_Type)  
+
    SGE_XSTRING(JB_pe)              
    SGE_TLIST(JB_pe_range, RN_Type)     
    SGE_LIST(JB_master_hard_queue_list)  
    SGE_XSTRING(JB_pe_task_id_str) 
    SGE_OBJECT(JB_pe_object, PE_Type)   
-
-   SGE_XULONG(JB_nrunning)
-   SGE_XULONG(JB_soft_wallclock_gmt)
-   SGE_XULONG(JB_hard_wallclock_gmt)
-   SGE_ULONG(JB_override_tickets)   
-   SGE_TLIST(JB_qs_args, ST_Type)   
-   SGE_TLIST(JB_path_aliases, PA_Type)  
 
    SGE_XSTRING(JB_tgt)      
    SGE_XSTRING(JB_cred)   
@@ -655,12 +652,19 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_XSTRING(JB_jobclass) 
    SGE_HOST(JB_host)       
    SGE_REF(JB_category)    
-   SGE_LIST(JB_user_list)  
 
+   SGE_LIST(JB_user_list)  
    SGE_XULONG(JB_next_pe_task_id) 
    SGE_LIST(JB_job_identifier_list)    
-
    SGE_XSTRING(JB_job_source)
+   SGE_XULONG(JB_verify_suitable_queues)
+   SGE_XULONG(JB_nrunning)
+   SGE_XULONG(JB_soft_wallclock_gmt)
+   SGE_XULONG(JB_hard_wallclock_gmt)
+   SGE_ULONG(JB_override_tickets)   
+   SGE_TLIST(JB_qs_args, ST_Type)   
+   SGE_TLIST(JB_path_aliases, PA_Type)  
+
 
    /* 
     * IF YOU ADD SOMETHING HERE THEN CHANGE ALSO THE ADOC COMMENT ABOVE 

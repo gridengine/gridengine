@@ -1,3 +1,9 @@
+CR-2004-07-06-0: Bugfix:    qmaster clients may not reconnect after qmaster 
+                            outage
+                 Changed:   communication library (commlib)
+                 Issue:     1126
+                 Review:    JG
+
 JG-2004-07-06-2: Bugfix:    Fixed the build for HPUX.
 
 JG-2004-07-06-1: Bugfix:    projects not available after sge_qmaster restart

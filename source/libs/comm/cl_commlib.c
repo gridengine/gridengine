@@ -3242,12 +3242,6 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
       elem = cl_connection_list_get_first_elem(handle->connection_list);     
       if (elem == NULL) {
          leave_reason = CL_RETVAL_CONNECTION_NOT_FOUND;
-         if ( synchron != 0 && handle->service_provider == 0 ) {
-            /* we are no service provider, we can't wait for a (possible)
-               new connection, we can return immediately */
-            cl_raw_list_unlock(handle->connection_list);
-            return leave_reason;
-         }
       }
 
       /* only search for messages if there are any messages in message state CL_MS_READY */
@@ -3422,8 +3416,12 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
                break;
          }
          /* at this point the handle->connection_list must be unlocked */
-         if (leave_reason != CL_RETVAL_OK) {
-            return leave_reason;   /* CL_RETVAL_CONNECTION_NOT_FOUND */
+         if ( handle->service_provider == 0  && leave_reason == CL_RETVAL_CONNECTION_NOT_FOUND) {
+            /* 
+             *  we are no service provider AND we have no connection !
+             *  we can't wait for a (possible) new connection, so we return immediately 
+             */
+            return leave_reason;
          }
          gettimeofday(&now,NULL);
          if (now.tv_sec > my_timeout) {
@@ -3431,7 +3429,17 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
          }
       } 
    } while (synchron != 0 && cl_com_get_ignore_timeouts_flag() == CL_FALSE);
-   return CL_RETVAL_NO_MESSAGE;
+
+   /* 
+    * when leave_reason is CL_RETVAL_CONNECTION_NOT_FOUND the connection list
+    * is empty return this as indication for an error otherwise return
+    * CL_RETVAL_NO_MESSAGE to indicate that there is no message available
+    */  
+
+   if (leave_reason == CL_RETVAL_OK) {
+      return CL_RETVAL_NO_MESSAGE;
+   }
+   return leave_reason;
 }
 
 

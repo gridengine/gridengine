@@ -485,6 +485,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
         set open_remote_spawn__id "$open_spawn_buffer" 
      }
   } else { 
+     uplevel 1 { puts $CHECK_OUTPUT "opening connection to host $open_remote_spawn__hostname" }
      if { [have_ssh_access] == 0 } {
         set pid [ uplevel 1 { spawn "rlogin" "$open_remote_spawn__hostname" } ] 
         uplevel 1 { incr remote_spawn_nr_of_shells 1 }

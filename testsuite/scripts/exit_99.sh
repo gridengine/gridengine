@@ -1,7 +1,6 @@
 #!/bin/sh
 #
 #
-
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -33,17 +32,5 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
-
-#
-# Usage: sleeper.sh time file  ]
-#        default for time is 60 seconds
-#        file is full path filename to touch at end of
-#        sleep time.
-# 
-
-# -- our name ---
-#$ -N Sleeper
-#$ -S /bin/sh
-
-echo "here is the error:"
-/biNnN/echo "here is a error"
+sleep 5
+exit 99

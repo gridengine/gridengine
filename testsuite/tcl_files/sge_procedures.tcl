@@ -3062,6 +3062,88 @@ proc wait_for_load_from_all_queues { seconds } {
 }
 
 
+#****** sge_procedures/wait_for_job_state() ************************************
+#  NAME
+#     wait_for_job_state() -- wait for job to become special job state
+#
+#  SYNOPSIS
+#     wait_for_job_state { jobid state wait_timeout } 
+#
+#  FUNCTION
+#     This procedure is checking the job state of the given job id by parsing
+#     the qstat -f command. If the job has the state given in the parameter
+#     state the procedure returns the job state. If an timeout occurs the 
+#     procedure returns -1.
+#
+#  INPUTS
+#     jobid        - job id of job to check state
+#     state        - state to check for
+#     wait_timeout - given timeout in seconds
+#
+#  RESULT
+#     job state or -1 on error
+#
+#  SEE ALSO
+#     sge_procedures/wait_for_queue_state()
+#*******************************************************************************
+proc wait_for_job_state { jobid state wait_timeout } {
+
+   global CHECK_OUTPUT 
+
+   set my_timeout [ expr ( [timestamp] + $wait_timeout ) ]
+   while { 1 } {
+      puts $CHECK_OUTPUT "waiting for job $jobid to become job state ${state} ..."
+      sleep 1
+      set job_state [get_job_state $jobid]
+      if { [string first $state $job_state] >= 0 } {
+         return $job_state
+      }
+      if { [timestamp] > $my_timeout } {
+         add_proc_error "wait_for_job_state" -1 "timeout waiting for job $jobid to get in \"$state\" state"
+         return -1
+      }
+   }
+}
+
+#****** sge_procedures/wait_for_queue_state() **********************************
+#  NAME
+#     wait_for_queue_state() -- wait for queue to become special error state
+#
+#  SYNOPSIS
+#     wait_for_queue_state { queue state wait_timeout } 
+#
+#  FUNCTION
+#     This procedure is checking the queue by parsing the qstat -f command. 
+#
+#  INPUTS
+#     queue        - name of queue to check
+#     state        - state to check for
+#     wait_timeout - given timeout in seconds
+#
+#  RESULT
+#     queue state or -1 on error
+#
+#  SEE ALSO
+#     sge_procedures/wait_for_job_state()
+#*******************************************************************************
+proc wait_for_queue_state { queue state wait_timeout } {
+   global CHECK_OUTPUT
+
+   set my_timeout [ expr ( [timestamp] + $wait_timeout ) ]
+   while { 1 } {
+      puts $CHECK_OUTPUT "waiting for queue $queue to get in \"${state}\" state ..."
+      sleep 1
+      set q_state [get_queue_state $queue]
+      if { [string first $state $q_state] >= 0 } {
+         return $q_state
+      }
+      if { [timestamp] > $my_timeout } {
+         add_proc_error "wait_for_queue_state" -1 "timeout waiting for queue $queue to get in \"${state}\" state"
+         return -1
+      }
+   }
+}
+
 #****** sge_procedures/wait_for_unknown_load() *********************************
 #  NAME
 #     wait_for_unknown_load() -- wait for load to get >= 99 for a list of queues
@@ -4227,6 +4309,8 @@ proc is_job_running { jobid jobname } {
    }
    return -1
 }
+
+
 
 #****** sge_procedures/get_job_state() *****************************************
 #  NAME

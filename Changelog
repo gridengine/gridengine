@@ -1,14 +1,21 @@
-SG-2004-11-05-1: Bugfix:    added an error message for the case, that a job cannot be started
-                            due to the calendar.
+JG-2004-11-05-0: Bugfix:    Scheduler didn't respect usage of tightly integrated
+                            tasks and logged error messages.
+                 Changed:   qmaster, scheduler
+                 Bugtraq:   6191366
+                 Review:    SG
+
+SG-2004-11-05-1: Bugfix:    added an error message for the case, that a job 
+                            cannot be started due to the calendar.
                  Changed:   scheduler
                  Review:    DT
 
-SG-2004-11-05-0: Bugfix:    the scheduler had critical errors, when host groups were added
-                            or modified.
+SG-2004-11-05-0: Bugfix:    the scheduler had critical errors, when host groups
+                            were added or modified.
                  Changed:   mirror interface, scheduler
                  Review:    JG
 
-SG-2004-11-04-2: Bugfix:    qconf -ks gives bad error message if scheduler isn't running
+SG-2004-11-04-2: Bugfix:    qconf -ks gives bad error message if scheduler isn't
+                            running
                  Issue:     1319
                  Changed:   qmaster
                  Review:    DT

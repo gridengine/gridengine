@@ -277,21 +277,24 @@ typedef struct {
  *     evm/sge_event_master/add_event
  *
  *********************************************************************/
-#define LIST_MAX 2
+#define LIST_MAX 3
 
 const int EVENT_LIST[LIST_MAX][6] = {
    {sgeE_JOB_LIST, sgeE_JOB_ADD, sgeE_JOB_DEL, sgeE_JOB_MOD, sgeE_JOB_MOD_SCHED_PRIORITY, -1},
-   {sgeE_CQUEUE_LIST, sgeE_CQUEUE_ADD, sgeE_CQUEUE_DEL, sgeE_CQUEUE_MOD, -1, -1}
+   {sgeE_CQUEUE_LIST, sgeE_CQUEUE_ADD, sgeE_CQUEUE_DEL, sgeE_CQUEUE_MOD, -1, -1},
+   {sgeE_JATASK_ADD, sgeE_JATASK_DEL, sgeE_JATASK_MOD, -1, -1, -1 }
 };
 
 const int FIELD_LIST[LIST_MAX][3] = {
    {JB_ja_tasks, JB_ja_template, -1},
-   {CQ_qinstances, -1, -1}
+   {CQ_qinstances, -1, -1},
+   {JAT_task_list, -1, -1}
 };
 
 const int SOURCE_LIST[LIST_MAX][3] = {
    {sgeE_JATASK_MOD, sgeE_JATASK_ADD, -1},
-   {sgeE_QINSTANCE_ADD, sgeE_QINSTANCE_MOD, -1}
+   {sgeE_QINSTANCE_ADD, sgeE_QINSTANCE_MOD, -1},
+   {sgeE_PETASK_ADD, -1, -1}
 };
 
 /******************************************************
@@ -1334,6 +1337,10 @@ bool sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
          sub_list_elem = CQ_qinstances;
          lXchgList(element, sub_list_elem, &temp_sub_lp);
       }
+      else if(type == sgeE_JATASK_MOD) {
+         sub_list_elem = JAT_task_list;
+         lXchgList(element, sub_list_elem, &temp_sub_lp);
+      }
       
       lp = lCreateListHash("Events", lGetElemDescr(element), false);       
       lAppendElem (lp, lCopyElemHash(element, false));
@@ -1414,6 +1421,10 @@ bool sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event 
          sub_list_elem = CQ_qinstances;
          lXchgList(element, sub_list_elem, &temp_sub_lp);
       }
+      else if(type == sgeE_JATASK_MOD) {
+         sub_list_elem = JAT_task_list;
+         lXchgList(element, sub_list_elem, &temp_sub_lp);
+      }
       
       lp = lCreateListHash("Events", lGetElemDescr(element), false);       
       lAppendElem (lp, lCopyElemHash(element, false));
@@ -1491,6 +1502,10 @@ bool sge_add_list_event(u_long32 timestamp, ev_event type,
          }
          else if(type == sgeE_CQUEUE_MOD) {
             sub_list_elem = CQ_qinstances;
+            lXchgList(element, sub_list_elem, &temp_sub_lp);
+         }
+         else if(type == sgeE_JATASK_MOD) {
+            sub_list_elem = JAT_task_list;
             lXchgList(element, sub_list_elem, &temp_sub_lp);
          }
          

@@ -604,7 +604,6 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
          bool is_scheduler_resync = false;
 
          SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE); 
-         sge_set_commit_required();  
 
          for_each (ep, request->lp) {
 
@@ -663,7 +662,6 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
                   break;
             }
          }
-         sge_commit(); 
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
          if (is_scheduler_resync) {

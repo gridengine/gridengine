@@ -116,7 +116,8 @@ const lEnumeration
    *what_acl = NULL,
    *what_centry = NULL,
    *what_dept = NULL,
-   *what_jat = NULL;
+   *what_jat = NULL,
+   *what_pet = NULL;
 
 static void ensure_valid_what_and_where(void);
 
@@ -652,6 +653,21 @@ DTRACE;
       what_jat = lIntVector2What(JAT_Type, jat_nm);
    }
 
+   if (what_pet == NULL) {
+  
+      const int pet_nm[] = {         
+         PET_id, 
+         PET_status,     
+         PET_granted_destin_identifier_list,
+         PET_usage,
+         PET_scaled_usage,
+         PET_previous_usage,
+         NoName
+      };
+ 
+      what_pet = lIntVector2What(PET_Type, pet_nm);
+   }
+
    DEXIT;
    return;
 }
@@ -1011,6 +1027,7 @@ int subscribe_default_scheduler(void)
    sge_mirror_subscribe(SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_all_queue, what_queue);
    sge_mirror_subscribe(SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(SGE_TYPE_HGROUP,         NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, what_pet);
   
    /* event types with callbacks */
 

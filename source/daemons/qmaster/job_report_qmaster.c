@@ -740,12 +740,12 @@ sge_pack_buffer *pb
                         }
 
                         /* remove pe task from job/jatask */
-                        {
+                        if (known_pe_task) {
                            lList *answer_list = NULL;
                            sge_event_spool(&answer_list, 0, sgeE_PETASK_DEL, 
                                           jobid, jataskid, pe_task_id_str, 
                                           NULL, NULL, NULL, NULL, NULL, 
-                                          true, !known_pe_task);
+                                          true, true);
                            answer_list_output(&answer_list);
                         }
                         lRemoveElem(lGetList(jatep, JAT_task_list), petask);

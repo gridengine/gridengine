@@ -23,6 +23,8 @@ JG-2002-03-20-0  Bugfix:   Reduce memory consumption of qmaster and size of
                            that start series of tasks per slot reserved 
                            (e.g. qmake). 
 
+AS-2002-03-19-0  Install:   openssl command not required if not "-csp" mode
+
 AA-2002-03-19-4  Bugfix:   - scripts for I18N, gettext-1.11
 
 AA-2002-03-19-3  Bugfix:   - qmon cluster_token_extend_time was lost

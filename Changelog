@@ -1,3 +1,8 @@
+HP-2005-04-04-1: Cleanup:   removed double WIN32 block, added TMPDIR for faster
+                            compiling with gcc compilers
+                 Changed:   aimk.site
+                 Review:    EB
+
 HP-2005-04-04-0: Bugfix:    scripts/distinst now copies ASCMAN/man/manX to
                             man/catX for Interix man.
                  Bugtraq:   6239465           

@@ -4994,7 +4994,7 @@ global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM do_compile
           puts $CHECK_OUTPUT $result
        } else {
           puts $CHECK_OUTPUT $result
-          if { $prg_exit_state != 4 } {
+          if { $prg_exit_state == 255 } {
              if { [ have_root_passwd ] == -1 } {
                 set_root_passwd 
              }

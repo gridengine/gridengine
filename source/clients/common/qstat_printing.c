@@ -123,7 +123,7 @@ int sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
    /* compute the load and check for alarm states */
 
    is_load_value = sge_get_double_qattr(&load_avg, load_avg_str, q, exechost_list, centry_list, &has_value_from_object);
-   if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, centry_list, NULL)) {
+   if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, centry_list, NULL, true)) {
       qinstance_state_set_alarm(q, true);
       sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, 
                             centry_list, load_alarm_reason, 
@@ -133,7 +133,8 @@ int sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
                    lGetString(q, QU_suspend_interval), NULL, 0);
    if (lGetUlong(q, QU_nsuspend) != 0 &&
        interval != 0 &&
-       sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
+       sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL, false)) {
+/* SG: TODO: does this belong here? */       
 fprintf(stderr, u32" "u32" "u32"\n", lGetUlong(q, QU_nsuspend), interval, interval);
       qinstance_state_set_suspend_alarm(q, true);
       sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), 

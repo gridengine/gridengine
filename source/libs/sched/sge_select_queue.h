@@ -43,19 +43,32 @@ int sge_select_queue(lList *reqested_attr, lListElem *queue, lListElem *host, lL
  * is there a load alarm on this queue
  * 
  */
-int sge_load_alarm(char *reason, lListElem *queue, lList *threshold, const lList *exechost_list, const lList *complex_list, const lList *load_adjustments);
+int sge_load_alarm(char *reason, lListElem *queue, lList *threshold, 
+                   const lList *exechost_list, const lList *complex_list, 
+                   const lList *load_adjustments, bool is_check_consumable);
 
+void sge_create_load_list(const lList *queue_list, const lList *host_list, 
+                          const lList *centry_list, lList **load_list); 
+bool sge_load_list_alarm(lList *load_list, const lList *host_list, 
+                         const lList *centry_list);
+void sge_remove_queue_from_load_list(lList **load_list, const lList *queue_list);
+void sge_free_load_list(lList **load_list); 
 /* 
  * get reason for alarm state on queue
  * 
  */
-char *sge_load_alarm_reason(lListElem *queue, lList *threshold, const lList *exechost_list, const lList *complex_list, char  *reason, int reason_size, const char *type); 
+char *sge_load_alarm_reason(lListElem *queue, lList *threshold, const lList *exechost_list, 
+                            const lList *complex_list, char  *reason, int reason_size, 
+                            const char *type); 
 
 /* 
  * split queue list into unloaded and overloaded
  * 
  */
-int sge_split_queue_load(lList **unloaded, lList **overloaded, lList *exechost_list, lList *complex_list, const lList *load_adjustments, lList *granted, u_long32 ttype);
+int sge_split_queue_load(lList **unloaded, lList **overloaded, lList *exechost_list, 
+                         lList *complex_list, const lList *load_adjustments, 
+                         lList *granted, bool is_consumable_load_alarm, bool is_comprehensive,
+                         u_long32 ttype);
 
 int sge_split_queue_slots_free(lList **unloaded, lList **overloaded);
 

@@ -78,6 +78,8 @@ bool sge_bitfield_copy(bitfield source, bitfield target);
 int sge_bitfield_set(bitfield bf, int bit);
 int sge_bitfield_get(bitfield bf, int bit);
 int sge_bitfield_clear(bitfield bf, int bit);
+bool sge_bitfield_reset(bitfield source);
+bool sge_bitfield_changed(bitfield source);
 
 void sge_bitfield_print(bitfield bf, FILE *fd); 
 

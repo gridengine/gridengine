@@ -151,7 +151,7 @@ int event_handler_default_scheduler()
    sge_Sdescr_t copy;
    dstring ds;
    char buffer[128];
-   double prof_copy=0, prof_event=0, prof_init=0;
+   double prof_copy=0, prof_event=0, prof_init=0, prof_free=0, prof_run=0;
    DENTER(GDI_LAYER, "event_handler_default_scheduler");
    
    sge_dstring_init(&ds, buffer, sizeof(buffer));
@@ -226,8 +226,6 @@ int event_handler_default_scheduler()
    copy.dept_list = lSelect("", Master_Userset_List, where_dept, what_dept);
    copy.acl_list = lSelect("", Master_Userset_List, where_acl, what_acl);
 
-   DTRACE;
-
    /* .. but not in all cases */
    copy.centry_list = lCopyList("", Master_CEntry_List);
    copy.pe_list = lCopyList("", Master_Pe_List);
@@ -284,6 +282,7 @@ int event_handler_default_scheduler()
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
    prof_copy = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
 
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
 /* this is useful when tracing communication of schedd with qmaster */
 #define _DONT_TRACE_SCHEDULING
 #ifdef DONT_TRACE_SCHEDULING
@@ -297,6 +296,11 @@ int event_handler_default_scheduler()
       rmon_mlcpy(&DEBUG_ON, &tmp);
    }
 #endif
+   
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
+   prof_run = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
+
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
    
    if (getenv("SGE_ND")) {
       printf("--------------STOP-SCHEDULER-RUN-------------\n");
@@ -321,7 +325,10 @@ int event_handler_default_scheduler()
    copy.user_list = lFreeList(copy.user_list);
    copy.project_list = lFreeList(copy.project_list);
    copy.ckpt_list = lFreeList(copy.ckpt_list);
-   
+
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
+   prof_free = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
+
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM6);
    prof_event = prof_get_measurement_wallclock(SGE_PROF_CUSTOM6,true, NULL);
  
@@ -329,8 +336,8 @@ int event_handler_default_scheduler()
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO); 
 
-      INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copying lists: %.3f s)\n",
-               prof_event, prof_init, prof_copy ));
+      INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s)\n",
+               prof_event, prof_init, prof_copy, prof_run, prof_free));
 
       log_state_set_log_level(saved_logginglevel);
    }

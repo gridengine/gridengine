@@ -97,10 +97,11 @@ sge_Sdescr_t lists =
 
 static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist, lList **splitted_job_list[]);
 
-static int select_assign_debit(lList **queue_list, lList **job_list, lListElem *job, lListElem *ja_task, lList *pe_list, 
-   lList *ckpt_list, lList *centry_list, lList *host_list, lList *acl_list, lList **user_list, lList **group_list, 
-   lList **orders_list, double *total_running_job_tickets, int *sort_hostlist, bool dont_start, bool dont_reserve);
-
+static int select_assign_debit(lList **queue_list, lList **job_list, lListElem *job, lListElem *ja_task, 
+                               lList *pe_list, lList *ckpt_list, lList *centry_list, lList *host_list, 
+                               lList *acl_list, lList **user_list, lList **group_list, lList **orders_list, 
+                               double *total_running_job_tickets, int *sort_hostlist, bool dont_start, 
+                               bool dont_reserve, lList **load_lis);
 
 static bool job_get_duration(u_long32 *duration, const lListElem *jep);
 static void prepare_resource_schedules(const lList *running_jobs, const lList *suspended_jobs, 
@@ -146,7 +147,6 @@ int scheduler(sge_Sdescr_t *lists) {
    lList *hold_list = NULL;                        /* JB_Type */
    int prof_job_count;
 
-   int ret;
    int i;
 
    DENTER(TOP_LAYER, "scheduler");
@@ -180,10 +180,6 @@ int scheduler(sge_Sdescr_t *lists) {
    split_jobs(&(lists->job_list), NULL, lists->all_queue_list, 
               conf.max_aj_instances, splitted_job_lists);
  
-#if 0 /* EB: DEBUG */
-   job_lists_print(splitted_job_lists);
-#endif                      
-
    trash_splitted_jobs(splitted_job_lists);
 
    {
@@ -226,15 +222,8 @@ int scheduler(sge_Sdescr_t *lists) {
       lFreeWhat(what);
    }
 
-   ret = dispatch_jobs(lists, &orderlist, splitted_job_lists);
+   dispatch_jobs(lists, &orderlist, splitted_job_lists);
 
-#if 0
-   if (ret) {
-      /* only inconsistent data may lead to an exit here */ 
-      DEXIT;
-      return 0;
-   }
-#endif
    if(prof_is_active()) {
       u_long32 saved_logginglevel = log_state_get_log_level();
 
@@ -286,10 +275,12 @@ int scheduler(sge_Sdescr_t *lists) {
    }
 
    if (orderlist) {
-
       sge_send_orders2master(orderlist);
       orderlist = lFreeList(orderlist);
    }
+
+   schedd_mes_release();
+   schedd_mes_set_logging(0); 
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM5);
 
@@ -297,15 +288,14 @@ int scheduler(sge_Sdescr_t *lists) {
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO);
    
-      INFO((SGE_EVENT, "PROF: send orders took: %.3f s\n", 
-         prof_get_measurement_utime(SGE_PROF_CUSTOM5, true, NULL) ));
+      INFO((SGE_EVENT, "PROF: send orders and cleanup took: %.3f (u %.3f,s %.3f) s\n",
+         prof_get_measurement_wallclock(SGE_PROF_CUSTOM5, true, NULL), 
+         prof_get_measurement_utime(SGE_PROF_CUSTOM5, true, NULL),
+         prof_get_measurement_stime(SGE_PROF_CUSTOM5, true, NULL) ));
 
       log_state_set_log_level(saved_logginglevel);
    }
-
-   schedd_mes_release();
-   schedd_mes_set_logging(0); 
-
+   
    DEXIT;
    return 0;
 }
@@ -338,6 +328,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    lList *user_list=NULL, *group_list=NULL;
    lListElem *orig_job, *job, *cat;
    lList *non_avail_queues = NULL;
+   lList *consumable_load_list = NULL;
 
    bool queues_available;  
    u_long32 queue_sort_method; 
@@ -435,7 +426,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          lists->host_list,
          lists->centry_list,
          job_load_adjustments,
-         NULL,
+         NULL, false, false,
          QU_suspend_thresholds)) {
       DPRINTF(("couldn't split queue list with regard to suspend thresholds\n"));
       DEXIT;
@@ -456,7 +447,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    /* split queues into overloaded and non-overloaded queues */
    if (sge_split_queue_load(&(lists->queue_list), NULL, 
          lists->host_list, lists->centry_list, job_load_adjustments,
-         NULL, QU_load_thresholds)) {
+         NULL, false, true, QU_load_thresholds)) {
       DPRINTF(("couldn't split queue list concerning load\n"));
       lFreeList(non_avail_queues);
       DEXIT;
@@ -605,14 +596,15 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
       break;
    }
 
+   /* generate a consumable laod list structure. It stores which queues
+      are using consumables in their load threshold. */
+   sge_create_load_list(lists->queue_list, lists->host_list, lists->centry_list, 
+                        &consumable_load_list);
+
+   
    /*---------------------------------------------------------------------
     * DISPATCH JOBS TO QUEUES
     *---------------------------------------------------------------------*/
-
-#if 0
-   /* we will assume this time as start time for now assignments */
-   sconf_set_now(sge_get_gmt());
-#endif
 
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM4);
 
@@ -695,7 +687,8 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
                &total_running_job_tickets, 
                &sort_hostlist, 
                dont_start,
-               dont_reserve);
+               dont_reserve,
+               &consumable_load_list);
       
       }
 
@@ -784,7 +777,8 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
    lFreeList(user_list);
    lFreeList(group_list);
-
+   sge_free_load_list(&consumable_load_list);
+   
    DEXIT;
    return 0;
 }
@@ -825,7 +819,8 @@ lList **orders_list,
 double *total_running_job_tickets,
 int *sort_hostlist,
 bool dont_start,  /* don't try to find a now assignment */
-bool dont_reserve /* don't try to find a reservation assignment */
+bool dont_reserve, /* don't try to find a reservation assignment */
+lList **load_list
 ) {
    lListElem *granted_el;     
    int result = 1;
@@ -1019,23 +1014,51 @@ bool dont_reserve /* don't try to find a reservation assignment */
     * REMOVE QUEUES THAT ARE NO LONGER USEFUL FOR FURTHER SCHEDULING
     *------------------------------------------------------------------*/
    if (!sconf_get_max_reservations()) {
-      sge_split_suspended(queue_list, NULL);
-      sge_split_queue_slots_free(queue_list, NULL);
+      lList *disabled_queues = NULL;
+      lListElem *queue;
+      bool is_consumable_load_alarm = false;
 
+      if (*load_list == NULL) {
+         sge_split_suspended(queue_list, NULL);
+         sge_split_queue_slots_free(queue_list, NULL);
+      }
+      else {
+         sge_split_suspended(queue_list, &disabled_queues);
+         sge_remove_queue_from_load_list(load_list, disabled_queues);
+         disabled_queues = lFreeList(disabled_queues);
+
+         sge_split_queue_slots_free(queue_list, &disabled_queues);
+         sge_remove_queue_from_load_list(load_list, disabled_queues);
+         disabled_queues = lFreeList(disabled_queues);
+      }
+
+      /* remove all taggs */
+      for_each(queue, *queue_list) {
+         lSetUlong(queue, QU_tagged4schedule, 0);
+      }
+
+      is_consumable_load_alarm = sge_load_list_alarm(*load_list, host_list,
+                                                     centry_list);
+      
       /* split queues into overloaded and non-overloaded queues */
       if (sge_split_queue_load(
-            queue_list, /* source list                              */
-            NULL,                 /* no destination so they get trashed       */
-            host_list,     /* host list contains load values           */
+            queue_list,                                     /* source list                              */
+            (*load_list != NULL)? &disabled_queues: NULL,   /* no destination so they get trashed       */
+            host_list,                                      /* host list contains load values           */
             centry_list, 
             a.load_adjustments,
             a.gdil,
-            QU_load_thresholds)) {   /* use load thresholds here */
+            is_consumable_load_alarm,
+            /*(*load_list != NULL)*/false, QU_load_thresholds)) {   /* use load thresholds here */
             
          DPRINTF(("couldn't split queue list concerning load\n"));
          assignment_release(&a);
          DEXIT;
          return MATCH_NEVER;
+      }
+      if (*load_list != NULL) {
+         sge_remove_queue_from_load_list(load_list, disabled_queues);
+         disabled_queues = lFreeList(disabled_queues);
       }
    }
 

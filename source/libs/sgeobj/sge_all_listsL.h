@@ -94,6 +94,7 @@
 #include "sge_resource_utilizationL.h"
 #include "sge_qetiL.h"
 #include "cull_xmlL.h"
+#include "sched/sge_select_queueL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -236,14 +237,17 @@ extern "C" {
       {EVS_LOWERBOUND, EVSS, EVSN},              /* subscribed event list */
       {PACK_LOWERBOUND, PACKS, PACKN},          /* a cull version of the pack buffer */
 
-      {XMLA_LOWERBOUND, XMLAS, XMLAN},          /* ??? */
-      {XMLS_LOWERBOUND, XMLSS, XMLSN},          /* ??? */
-      {XMLH_LOWERBOUND, XMLHS, XMLHN},          /* ??? */
-      {XMLE_LOWERBOUND, XMLES, XMLEN},          /* ??? */
+      {XMLA_LOWERBOUND, XMLAS, XMLAN},          /* XML-Attribute */
+      {XMLS_LOWERBOUND, XMLSS, XMLSN},          /* XML-Stype-Sheet */
+      {XMLH_LOWERBOUND, XMLHS, XMLHN},          /* XML-Header*/
+      {XMLE_LOWERBOUND, XMLES, XMLEN},          /* XML-Element*/
 
       {RDE_LOWERBOUND, RDES, RDEN},             /* resource diagram */
       {RUE_LOWERBOUND, RUES, RUEN},             /* resource utilization */
       {QETI_LOWERBOUND, QETIS, QETIN},          /* queue end time iterator (scheduler) */
+
+      {LDR_LOWERBOUND, LDRS, LDRN},             /* queue consumables load alarm structure */
+      {QRL_LOWERBOUND, QRL_S, QRL_N},           /* queue consumables load alarm structure */
 
       {0, 0, NULL}
    };

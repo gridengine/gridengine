@@ -42,6 +42,7 @@
 #include "sge_log.h"
 #include "cull.h"
 #include "sge_select_queue.h"
+#include "sge_select_queueL.h"
 #include "sge_parse_num_par.h"
 #include "sge_complex_schedd.h"
 #include "valid_queue_user.h"
@@ -144,6 +145,12 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
                                 double lc_global, const lList *load_adjustments, int load_is_value); 
 
 static void clear_resource_tags( lList *resources, u_long32 max_tag); 
+
+
+/* ---- helpers for consumable evaluation for load in queues ----- */
+static lListElem *locate_load_elem(lList *load_list, lListElem *global_consumable, 
+                            lListElem *host_consumable, lListElem *queue_consumable,
+                            const char *limit); 
 
 
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task)
@@ -1681,7 +1688,6 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
             DEXIT;
             return 1;
          }
-         
          break;
       default:
          if (reason)
@@ -1740,7 +1746,7 @@ static int resource_cmp(u_long32 relop, double req, double src_dl)
 int 
 sge_load_alarm(char *reason, lListElem *qep, lList *threshold, 
                const lList *exechost_list, const lList *centry_list, 
-               const lList *load_adjustments) 
+               const lList *load_adjustments, bool is_check_consumable) 
 {
    lListElem *hep, *global_hep, *tep;
    u_long32 ulc_factor; 
@@ -1785,46 +1791,67 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
 
       name = lGetString(tep, CE_name);
       /* complex attriute definition */
-      if (!(cep = centry_list_locate(centry_list, name))) {
+
+      if (!(cep = centry_list_locate(centry_list, name))) { 
          if (reason)
             sprintf(reason, MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S, name);
-         /* no complex attribute for threshold -> ERROR */
          DEXIT;
          return 1;
       }
-
-      relop = lGetUlong(cep, CE_relop);
-
-      if (hep != NULL) {
-         hlep = lGetSubStr(hep, HL_name, name, EH_load_list);
-         if (hlep != NULL) {
-            load_value = lGetString(hlep, HL_value);
-            load_is_value = 0;
-         }
+      if (!is_check_consumable && lGetBool(cep, CE_consumable)) { 
+         continue;
       }
-      if ((hlep == NULL) && (global_hep != NULL)) {
-         glep = lGetSubStr(global_hep, HL_name, name, EH_load_list);
-         if (glep != NULL) {
-            load_value = lGetString(glep, HL_value);
-            load_is_value = 0;
-         }
-      } 
-      if (glep == NULL && hlep == NULL) {
-         queue_ep = lGetSubStr(qep, CE_name, name, QU_consumable_config_list);
-         if (queue_ep != NULL) {
-            load_value = lGetString(queue_ep, CE_stringval);
-            load_is_value = 1;
-         } else { 
-            if (reason) {
-               sprintf(reason, MSG_SCHEDD_NOVALUEFORATTR_S, name);
+
+      if (!lGetBool(cep, CE_consumable)) { 
+         if (hep != NULL) {
+            hlep = lGetSubStr(hep, HL_name, name, EH_load_list);
+            if (hlep != NULL) {
+               load_value = lGetString(hlep, HL_value);
+               load_is_value = 0;
             }
+         }
+         else if (global_hep != NULL) {
+            glep = lGetSubStr(global_hep, HL_name, name, EH_load_list);
+            if (glep != NULL) {
+               load_value = lGetString(glep, HL_value);
+               load_is_value = 0;
+            }
+         } 
+         else {
+            queue_ep = lGetSubStr(qep, CE_name, name, QU_consumable_config_list);
+            if (queue_ep != NULL) {
+               load_value = lGetString(queue_ep, CE_stringval);
+               load_is_value = 1;
+            } else { 
+               if (reason) {
+                  sprintf(reason, MSG_SCHEDD_NOVALUEFORATTR_S, name);
+               }
+               DEXIT;
+               return 1;
+            }
+         }      
+      }
+      else {
+         if (hep != NULL) {
+            hlep = lGetSubStr(hep, HL_name, name, EH_load_list);
+         }
+         /* load thesholds... */
+         if (!(cep = get_attribute_by_name(global_hep, hep, qep, name, centry_list))) {
+            if (reason)
+               sprintf(reason, MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S, name);
             DEXIT;
             return 1;
          }
+     
+     
+         load_value = lGetString(cep, CE_pj_stringval);
+         load_is_value = (lGetUlong(cep, CE_pj_dominant) & DOMINANT_TYPE_MASK) != DOMINANT_TYPE_CLOAD; 
       }
 
+      relop = lGetUlong(cep, CE_relop);
       limit_value = lGetString(tep, CE_stringval);
       type = lGetUlong(cep, CE_valtype);
+
       if(sge_check_load_alarm(reason, name, load_value, limit_value, relop, 
                               type, hep, hlep, lc_host, lc_global, 
                               load_adjustments, load_is_value)) {
@@ -1937,13 +1964,16 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
 
 */
 int sge_split_queue_load(
-lList **unloaded,    /* QU_Type */
-lList **overloaded,  /* QU_Type */
-lList *exechost_list, /* EH_Type */
-lList *centry_list, /* CE_Type */
-const lList *load_adjustments, /* CE_Type */
-lList *granted,      /* JG_Type */
-u_long32 ttype       /* may be QU_suspend_thresholds or QU_load_thresholds */
+lList **unloaded,               /* QU_Type */
+lList **overloaded,             /* QU_Type */
+lList *exechost_list,           /* EH_Type */
+lList *centry_list,             /* CE_Type */
+const lList *load_adjustments,  /* CE_Type */
+lList *granted,                 /* JG_Type */
+bool  is_consumable_load_alarm, /* is true, when the consumable evaluation 
+                                   set a load alarm */
+bool is_comprehensive,          /* do the load evaluation comprehensive (include consumables) */
+u_long32 ttype
 ) {
    lList *thresholds;
    lCondition *where;
@@ -1955,36 +1985,40 @@ u_long32 ttype       /* may be QU_suspend_thresholds or QU_load_thresholds */
 
    /* a job has been dispatched recently,
       but load correction is not in use at all */
-   if (granted && !load_adjustments) {
+   if (granted && !load_adjustments && !is_consumable_load_alarm) {
       DEXIT;
       return 0;
    }
 
+   if (!(granted && !load_adjustments)) { 
+
    /* tag those queues being overloaded */
-   for_each(qep, *unloaded) {
-      thresholds = lGetList(qep, ttype);
-      load_alarm = 0;
+      for_each(qep, *unloaded) {
+         thresholds = lGetList(qep, ttype);
+         load_alarm = 0;
 
-      /* do not verify load alarm anew if a job has been dispatched recently
-         but not to the host where this queue resides */
-      if (!granted || (granted && (sconf_get_global_load_correction() ||
-                           lGetElemHost(granted, JG_qhostname, lGetHost(qep, QU_qhostname))))) {
-         nverified++;
+         /* do not verify load alarm anew if a job has been dispatched recently
+            but not to the host where this queue resides */
+         if (!granted || (granted && (sconf_get_global_load_correction() ||
+                              lGetElemHost(granted, JG_qhostname, lGetHost(qep, QU_qhostname))))) {
+            nverified++;
 
-         if (sge_load_alarm(reason, qep, thresholds, exechost_list, centry_list, load_adjustments)!=0) {
-            load_alarm = 1;
-            if (ttype==QU_suspend_thresholds) {
-               DPRINTF(("queue %s tagged to be in suspend alarm: %s\n", 
-                     lGetString(qep, QU_full_name), reason));
-               schedd_mes_add_global(SCHEDD_INFO_QUEUEINALARM_SS, lGetString(qep, QU_full_name), reason);
-            } else {
-               DPRINTF(("queue %s tagged to be overloaded: %s\n", 
-                     lGetString(qep, QU_full_name), reason));
-               schedd_mes_add_global(SCHEDD_INFO_QUEUEOVERLOADED_SS, lGetString(qep, QU_full_name), reason);
+            if (sge_load_alarm(reason, qep, thresholds, exechost_list, centry_list, load_adjustments, is_comprehensive)!=0) {
+               load_alarm = 1;
+               if (ttype==QU_suspend_thresholds) {
+                  DPRINTF(("queue %s tagged to be in suspend alarm: %s\n", 
+                        lGetString(qep, QU_full_name), reason));
+                  schedd_mes_add_global(SCHEDD_INFO_QUEUEINALARM_SS, lGetString(qep, QU_full_name), reason);
+               } else {
+                  DPRINTF(("queue %s tagged to be overloaded: %s\n", 
+                        lGetString(qep, QU_full_name), reason));
+                  schedd_mes_add_global(SCHEDD_INFO_QUEUEOVERLOADED_SS, lGetString(qep, QU_full_name), reason);
+               }
             }
          }
+         if (load_alarm)
+            lSetUlong(qep, QU_tagged4schedule, load_alarm);
       }
-      lSetUlong(qep, QU_tagged4schedule, load_alarm);
    }
 
    DPRINTF(("verified threshold of %d queues\n", nverified));
@@ -4525,3 +4559,407 @@ static int rc_slots_by_time(lList *requests, u_long32 start, u_long32 duration,
    DEXIT;
    return 0;
 }
+
+/****** sge_select_queue/sge_create_load_list() ********************************
+*  NAME
+*     sge_create_load_list() -- create the controll structure for consumables as
+*                               load thresholds
+*
+*  SYNOPSIS
+*     void sge_create_load_list(const lList *queue_list, const lList 
+*     *host_list, const lList *centry_list, lList **load_list) 
+*
+*  FUNCTION
+*     scanes all queues for consumables as load thresholds. It builds a 
+*     consumable category for each queue which is using consumables as a load
+*     threshold. 
+*     If no consumables are used, the *load_list is set to NULL.
+*
+*  INPUTS
+*     const lList *queue_list  - a list of queue instances
+*     const lList *host_list   - a list of hosts
+*     const lList *centry_list - a list of complex entries
+*     lList **load_list        - a ref to the target load list
+*
+*  NOTES
+*     MT-NOTE: sge_create_load_list() is MT safe 
+*
+*  SEE ALSO
+*     sge_create_load_list
+*     locate_load_elem
+*     sge_load_list_alarm
+*     sge_remove_queue_from_load_list
+*     sge_free_load_list
+*
+*******************************************************************************/
+void sge_create_load_list(const lList *queue_list, const lList *host_list, 
+                          const lList *centry_list, lList **load_list) {
+   lListElem *queue;
+   lListElem *load_threshold;
+   lListElem *centry;
+   lList * load_threshold_list;
+   const char *load_threshold_name;
+   const char *limit_value;
+   lListElem *global;
+   lListElem *host;
+
+   DENTER(TOP_LAYER, "sge_create_load_list");
+
+   if (load_list == NULL){
+      CRITICAL((SGE_EVENT, "no load_list specified\n"));
+      DEXIT;
+      abort();
+   }
+
+   if (*load_list != NULL){
+      sge_free_load_list(load_list);
+   }
+
+   if ((global = host_list_locate(host_list, "global")) == NULL) {
+      ERROR((SGE_EVENT, "no global host in sge_create_load_list"));
+      DEXIT;
+      return;
+   }
+
+   for_each(queue, queue_list) {
+      load_threshold_list = lGetList(queue, QU_load_thresholds);
+      for_each(load_threshold, load_threshold_list) {
+         load_threshold_name = lGetString(load_threshold, CE_name);
+         limit_value = lGetString(load_threshold, CE_stringval);
+         if ((centry = centry_list_locate(centry_list, load_threshold_name)) == NULL) {
+            ERROR((SGE_EVENT, MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S, load_threshold_name));
+            goto error;
+         }
+
+         if (lGetBool(centry, CE_consumable)) {
+            lListElem *global_consumable = NULL;
+            lListElem *host_consumable = NULL;
+            lListElem *queue_consumable = NULL;
+
+            lListElem *load_elem = NULL;
+            lListElem *queue_ref_elem = NULL;
+            lList *queue_ref_list = NULL;
+
+
+            if ((host = host_list_locate(host_list, lGetHost(queue, QU_qhostname))) == NULL){  
+               ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOSTINQUEUE_SS, 
+                      lGetHost(queue, QU_qhostname), lGetString(queue, QU_full_name)));
+               goto error;
+            }
+
+            global_consumable = lGetSubStr(global, RUE_name, load_threshold_name, 
+                                           EH_resource_utilization);
+            host_consumable = lGetSubStr(host, RUE_name, load_threshold_name, 
+                                         EH_resource_utilization);
+            queue_consumable = lGetSubStr(queue, RUE_name, load_threshold_name, 
+                                          QU_resource_utilization);
+
+            if (*load_list == NULL) {
+               *load_list = lCreateList("load_ref_list", LDR_Type);
+               if (*load_list == NULL) goto error;
+            }
+            else {
+               load_elem = locate_load_elem(*load_list, global_consumable, 
+                                            host_consumable, queue_consumable,
+                                            limit_value);
+            }
+            if (load_elem == NULL) {
+               load_elem = lCreateElem(LDR_Type);
+               if (load_elem == NULL) goto error;
+               lSetPosRef(load_elem, LDR_global_pos, global_consumable);
+               lSetPosRef(load_elem, LDR_host_pos, host_consumable);
+               lSetPosRef(load_elem, LDR_queue_pos, queue_consumable);
+               lSetPosString(load_elem, LDR_limit_pos, limit_value);
+               lAppendElem(*load_list, load_elem);
+            }
+         
+            queue_ref_list = lGetPosList(load_elem, LDR_queue_ref_list_pos);
+            if (queue_ref_list == NULL) {
+               queue_ref_list = lCreateList("", QRL_Type);
+               if (queue_ref_list == NULL) goto error;
+               lSetPosList(load_elem, LDR_queue_ref_list_pos, queue_ref_list);
+            }
+               
+            queue_ref_elem = lCreateElem(QRL_Type);
+            if (queue_ref_elem == NULL) goto error;
+            lSetRef(queue_ref_elem, QRL_queue, queue);
+            lAppendElem(queue_ref_list, queue_ref_elem);
+
+            /* reset the changed bit in the consumables */
+            if (global_consumable != NULL){
+               sge_bitfield_reset(global_consumable->changed);
+            }
+            if (host_consumable != NULL){
+               sge_bitfield_reset(host_consumable->changed);
+            }
+            if (queue_consumable != NULL){
+               sge_bitfield_reset(queue_consumable->changed);
+            }
+
+         }
+      }
+   }
+
+   DEXIT;
+   return;
+
+error:
+   DPRINTF(("error in sge_create_load_list!"));
+   ERROR((SGE_EVENT, MSG_SGETEXT_CONSUMABLE_AS_LOAD));
+   sge_free_load_list(load_list);
+   DEXIT;
+   return;
+
+}
+
+/****** sge_select_queue/locate_load_elem() ************************************
+*  NAME
+*     locate_load_elem() -- locates a consumable category in the given load list
+*
+*  SYNOPSIS
+*     static lListElem* locate_load_elem(lList *load_list, lListElem 
+*     *global_consumable, lListElem *host_consumable, lListElem 
+*     *queue_consumable) 
+*
+*  INPUTS
+*     lList *load_list             - the load list to work on
+*     lListElem *global_consumable - a ref to the global consumable
+*     lListElem *host_consumable   - a ref to the host consumable
+*     lListElem *queue_consumable  - a ref to the qeue consumable
+*
+*  RESULT
+*     static lListElem* - NULL, or the category element from the load list
+*
+*  NOTES
+*     MT-NOTE: locate_load_elem() is MT safe 
+*
+*  SEE ALSO
+*     sge_create_load_list
+*     locate_load_elem
+*     sge_load_list_alarm
+*     sge_remove_queue_from_load_list
+*     sge_free_load_list
+*     
+*******************************************************************************/
+static lListElem *locate_load_elem(lList *load_list, lListElem *global_consumable, 
+                            lListElem *host_consumable, lListElem *queue_consumable,
+                            const char *limit) {
+   lListElem *load_elem = NULL;
+   lListElem *load = NULL;
+
+   for_each(load, load_list) {
+      if ((lGetPosRef(load, LDR_global_pos) == global_consumable) &&
+          (lGetPosRef(load, LDR_host_pos) == host_consumable) &&
+          (lGetPosRef(load, LDR_queue_pos) == queue_consumable) &&
+          ( strcmp(lGetPosString(load, LDR_limit_pos), limit) == 0)) {
+         load_elem = load;
+         break;
+      }
+   }
+   
+   return load_elem;
+}
+
+/****** sge_select_queue/sge_load_list_alarm() *********************************
+*  NAME
+*     sge_load_list_alarm() -- checks if queues went into an alarm state
+*
+*  SYNOPSIS
+*     bool sge_load_list_alarm(lList *load_list, const lList *host_list, const 
+*     lList *centry_list) 
+*
+*  FUNCTION
+*     The function uses the cull bitfield to identify modifications in one of
+*     the consumable elements. If the consumption has changed, the load for all
+*     queue referencing the consumable is recomputed. If a queue exceeds it
+*     load threshold, QU_tagged4schedule is set to 1.
+*
+*  INPUTS
+*     lList *load_list         - ??? 
+*     const lList *host_list   - ??? 
+*     const lList *centry_list - ??? 
+*
+*  RESULT
+*     bool - true, if at least one queue was set into alarm state 
+*
+*  NOTES
+*     MT-NOTE: sge_load_list_alarm() is MT safe 
+*
+*  SEE ALSO
+*     sge_create_load_list
+*     locate_load_elem
+*     sge_load_list_alarm
+*     sge_remove_queue_from_load_list
+*     sge_free_load_list
+*     
+*******************************************************************************/
+bool sge_load_list_alarm(lList *load_list, const lList *host_list, 
+                         const lList *centry_list) {   
+   lListElem *load;
+   lListElem *queue;
+   lListElem *queue_ref;
+   lList *queue_ref_list;
+   char reason[2048];
+   bool is_alarm = false;
+   
+   DENTER(TOP_LAYER, "sge_load_list_alarm");
+
+   if (load_list == NULL) {
+      DEXIT;
+      return is_alarm;
+   }
+   
+   for_each(load, load_list) {
+      bool is_recalc=false;
+      lListElem * elem;
+
+      elem = lGetPosRef(load, LDR_global_pos);
+      if (elem != NULL) {
+         is_recalc = is_recalc || sge_bitfield_changed(elem->changed);
+      }
+      
+      elem = lGetPosRef(load, LDR_host_pos);
+      if (elem != NULL) {
+         is_recalc = is_recalc || sge_bitfield_changed(elem->changed);
+      }
+      
+      elem = lGetPosRef(load, LDR_queue_pos);
+      if (elem != NULL) {
+         is_recalc = is_recalc || sge_bitfield_changed(elem->changed);
+      }
+     
+      if (is_recalc) {
+         bool is_category_alarm = false;
+         queue_ref_list = lGetPosList(load, LDR_queue_ref_list_pos);
+         for_each(queue_ref, queue_ref_list) {
+            queue = lGetRef(queue_ref, QRL_queue);
+            if (is_category_alarm) {
+               lSetUlong(queue, QU_tagged4schedule, 1); 
+            }
+            else if (sge_load_alarm(reason, queue, lGetList(queue, QU_load_thresholds), host_list, 
+                               centry_list, NULL, true)) {
+
+               DPRINTF(("queue %s tagged to be overloaded: %s\n", 
+                                     lGetString(queue, QU_full_name), reason));
+               schedd_mes_add_global(SCHEDD_INFO_QUEUEOVERLOADED_SS, 
+                                     lGetString(queue, QU_full_name), reason);
+               lSetUlong(queue, QU_tagged4schedule, 1); 
+               is_alarm = true;
+               is_category_alarm = true;
+            }
+            else {
+               break;
+            }
+         }
+      }
+   }
+   
+   DEXIT;
+   return is_alarm; 
+}
+
+/****** sge_select_queue/sge_remove_queue_from_load_list() *********************
+*  NAME
+*     sge_remove_queue_from_load_list() -- removes queues from the load list 
+*
+*  SYNOPSIS
+*     void sge_remove_queue_from_load_list(lList **load_list, const lList 
+*     *queue_list) 
+*
+*  INPUTS
+*     lList **load_list       - load list structure
+*     const lList *queue_list - queues to be removed from it.
+*
+*  NOTES
+*     MT-NOTE: sge_remove_queue_from_load_list() is MT safe 
+*
+*  SEE ALSO
+*     sge_create_load_list
+*     locate_load_elem
+*     sge_load_list_alarm
+*     sge_remove_queue_from_load_list
+*     sge_free_load_list
+*     
+*******************************************************************************/
+void sge_remove_queue_from_load_list(lList **load_list, const lList *queue_list){
+   lListElem* queue = NULL;
+   lListElem *load = NULL;
+   
+   DENTER(TOP_LAYER, "sge_remove_queue_from_load_list");
+   
+   if (load_list == NULL){
+      CRITICAL((SGE_EVENT, "no load_list specified\n"));
+      DEXIT;
+      abort();
+   }
+
+   if (*load_list == NULL) {
+      DEXIT;
+      return;
+   }
+
+   for_each(queue, queue_list) {
+      bool is_found = false;
+      lList *queue_ref_list = NULL;
+      lListElem *queue_ref = NULL;
+   
+      for_each(load, *load_list) {
+         queue_ref_list = lGetPosList(load, LDR_queue_ref_list_pos);
+         for_each(queue_ref, queue_ref_list) {
+            if (queue == lGetRef(queue_ref, QRL_queue)) {
+               is_found = true;
+               break;
+            }
+         }
+         if (is_found) {
+            lRemoveElem(queue_ref_list, queue_ref);
+
+            if (lGetNumberOfElem(queue_ref_list) == 0) {
+               lRemoveElem(*load_list, load); 
+            }            
+            break;
+         }
+      }
+
+      if (lGetNumberOfElem(*load_list) == 0) {
+         *load_list = lFreeList(*load_list);
+         DEXIT;
+         return;         
+      }
+   }
+
+   DEXIT;
+   return;
+}
+
+/****** sge_select_queue/sge_free_load_list() **********************************
+*  NAME
+*     sge_free_load_list() -- frees the load list and sets it to NULL
+*
+*  SYNOPSIS
+*     void sge_free_load_list(lList **load_list) 
+*
+*  INPUTS
+*     lList **load_list - the load list
+*
+*  NOTES
+*     MT-NOTE: sge_free_load_list() is MT safe 
+*
+*  SEE ALSO
+*     sge_create_load_list
+*     locate_load_elem
+*     sge_load_list_alarm
+*     sge_remove_queue_from_load_list
+*     sge_free_load_list
+*     
+*******************************************************************************/
+void sge_free_load_list(lList **load_list) {
+   DENTER(TOP_LAYER, "sge_free_load_list");
+
+   *load_list = lFreeList(*load_list);
+   
+   DEXIT;
+   return;
+}
+
+

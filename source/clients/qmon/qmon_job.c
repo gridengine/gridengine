@@ -748,7 +748,7 @@ void updateJobList(void)
                if (qep) {
                   lList *st = lGetList(qep, QU_suspend_thresholds);
                   qstate = lGetUlong(qep, QU_state);
-                  if ( sge_load_alarm(NULL, qep, st, ehl, cl, NULL)) {
+                  if ( sge_load_alarm(NULL, qep, st, ehl, cl, NULL, QU_suspend_thresholds)) {
                      jstate = lGetUlong(jap, JAT_state);
                      jstate &= ~JRUNNING; /* unset bit jrunning */
                      /* set bit jsuspended_on_subordinate */

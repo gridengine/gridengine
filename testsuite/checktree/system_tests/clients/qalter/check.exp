@@ -102,6 +102,8 @@ global hold_job_C
 global hold_job_D
 global hold_job_T
 global hold_job_U
+global nonadmin_hold_job
+global nonadmin_user
 global job_output_dir
 
 proc qalter_init_level {} {
@@ -154,7 +156,8 @@ proc run_dummy_jobs {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
    global CHECK_OUTPUT check_errno hold_job_D hold_job_U
    global check_errstr old_job_id hold_job_A hold_job_B hold_job_C hold_job_T
-
+   global ts_user_config nonadmin_user nonadmin_hold_job
+   
    set queue [get_queue_instance all.q $CHECK_HOST]
 
    set submitresult [ submit_job "-o /dev/null -e /dev/null -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 10" ]
@@ -262,8 +265,29 @@ proc run_dummy_jobs {} {
       delete_all_jobs
       return 
    }
-
+   
    set hold_job_U $submitresult
+   
+   #  Submit a job as not admin user
+   set nonadmin_user $ts_user_config(first_foreign_user)
+   
+   set submitresult [ submit_job "-h -t 1-4 -o /dev/null -e /dev/null -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15 " \
+                      1  60 "" $nonadmin_user  ]
+   if {$submitresult < 0 } {
+     set_error -1 "failure"
+     return
+   }
+   
+   # wait for job to get in pending state
+   if { [wait_for_jobpending $submitresult "leeper" 200 ] != 0 } {
+      set_error -1 "job $submitresult is not in pending state"
+      delete_all_jobs
+      return 
+   }
+
+   set nonadmin_hold_job $submitresult
+   
+
    set_error 0 "no errors"
 }
 
@@ -1860,10 +1884,10 @@ proc qalter_t {} {
 #****** qalter/qalter_h() ******
 # 
 #  NAME
-#     qalter_w -- test -h option for altering jobs' hold states
+#     qalter_h -- test -h option for altering jobs' hold states
 #
 #  SYNOPSIS
-#     qalter_w { } 
+#     qalter_h { } 
 #
 #  FUNCTION
 #     ??? 
@@ -1880,7 +1904,7 @@ proc qalter_t {} {
 #     ??? 
 #
 #  BUGS
-#     ??? 
+#     1434 
 #
 #  SEE ALSO
 #     ???/???
@@ -1889,15 +1913,149 @@ proc qalter_h {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
    global check_errno hold_job_D hold_job_U
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
-
+   global nonadmin_user nonadmin_hold_job
+   global CHECK_OUTPUT
+   
    set option "-h n"
    set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $hold_job_D $hold_job_U.1-4" } qalteroutput ]
    if {$qalterresult == 1} {
       set_error -1 "qalter $option - $qalteroutput"
       return
    }
+   
+   #
+   # Set a user hold as nonadmin user
+   # 
+   
+   set option       "-h u"
+   
+   puts $CHECK_OUTPUT "set user hold as non admin user $nonadmin_user for job $nonadmin_hold_job"
+   
+   set qalterresult [ start_remote_prog $CHECK_HOST $nonadmin_user \
+                      $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qhold \
+                      "$option $nonadmin_hold_job" ]
+                     
+   if { $prg_exit_state != 0 } {
+      set_error -1 "qhold as non admin user failed($option)"
+      return
+   }
+   
+   #
+   # Remove a user hold as nonadmin user 
+   #
+   set option       "-h u"
+   
+   puts $CHECK_OUTPUT "release user hold as non admin user $nonadmin_user for job $nonadmin_hold_job"
+   
+   set qalterresult [ start_remote_prog $CHECK_HOST $nonadmin_user \
+                     $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls \
+                     "$option $nonadmin_hold_job" ]
+                     
+   if { $prg_exit_state != 0 } {
+      set_error -1 "qrls as non admin user failed($option)"
+      return
+   }
+   
+   #
+   # Negativ test
+   # Set an operator hold as nonadmin user
+   #
+   set option       "-h o"
+   
+   puts $CHECK_OUTPUT "set operator hold as user $nonadmin_user for job $nonadmin_hold_job"
+   
+   set qalterresult [ start_remote_prog $CHECK_HOST $nonadmin_user \
+                     $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qhold \
+                     "$option $nonadmin_hold_job" ]
+                     
+   if { $prg_exit_state == 0 } {
+      set_error -1 "illegal set of operator hold as non admin user successed (qhold $option)"
+      return
+   }
+   
+   #
+   # Negativ test
+   # Set an system hold as nonadmin user
+   #
+   set option       "-h s"
+   
+   puts $CHECK_OUTPUT "set system hold as non admin user $nonadmin_user for job $nonadmin_hold_job"
+   
+   set qalterresult [ start_remote_prog $CHECK_HOST $nonadmin_user \
+                     $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qhold \
+                     "$option $nonadmin_hold_job" ]
+                     
+   if { $prg_exit_state == 0 } {
+      set_error -1 "illegal set of system hold as non admin user successed (qhold $option)"
+      return
+   }
+   
+   #
+   # Set an system hold as admin user
+   #
+   set option       "-h s"
+   
+   puts $CHECK_OUTPUT "set system hold as admin user $CHECK_USER for job $nonadmin_hold_job"
+   
+   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qhold $option $nonadmin_hold_job" } qalteroutput ]
+   if {$qalterresult == 1} {
+      set_error -1 "system hold as admin user failed ($option - $qalteroutput)"
+      return
+   }
 
+   #
+   # Negativ test
+   # Remove an system hold as nonadmin user
+   #
+   set option       "-h s"
+   
+   puts $CHECK_OUTPUT "release system hold as non admin user $nonadmin_user for job $nonadmin_hold_job"
+   
+   set qalterresult [ start_remote_prog $CHECK_HOST $nonadmin_user \
+                     $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls \
+                     "$option $nonadmin_hold_job" ]
+                     
+   if { $prg_exit_state == 0 } {
+      set_error -1 "illegal remove of system hold as non admin user successed (qhold $option)"
+      return
+   }
+
+   
+   #
+   # Set an operator hold as admin user
+   #
+   set option       "-h o"
+   
+   puts $CHECK_OUTPUT "set operator hold as admin user $CHECK_USER for job $nonadmin_hold_job"
+   
+   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qhold $option $nonadmin_hold_job" } qalteroutput ]
+   if {$qalterresult == 1} {
+      set_error -1 "system hold as admin user failed ($option - $qalteroutput)"
+      return
+   }
+   
+   #
+   # Negativ test
+   # Remove an operator hold as nonadmin user
+   #
+   set option       "-h o"
+   
+   puts $CHECK_OUTPUT "release operator hold as non admin user $nonadmin_user for job $nonadmin_hold_job"
+   
+   set qalterresult [ start_remote_prog $CHECK_HOST $nonadmin_user \
+                     $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls \
+                     "$option $nonadmin_hold_job" ]
+                     
+   if { $prg_exit_state == 0 } {
+      set_error -1 "illegal remove of operator hold as non admin user successed (qhold $option)"
+      return
+   }
+   
+   
+   
    set_error 0 "qalter $option - no errors"
 
    return
 }
+
+

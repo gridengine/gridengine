@@ -1,0 +1,6 @@
+Issue 1434: releasing user hold state through qrls may not require 
+            manager priviledges
+
+Test:       system_tests/clients/qalter
+Function:   function qalter_h sets and removes system, operator and user
+            holds as non admin user.

@@ -1,3 +1,11 @@
+RH-2005-03-17-0: Bugfix:    releasing user hold state through qrls may not 
+                            require manager privileges
+                 Issue:     1434
+                 Bugtraq:   6221244
+                 Changed:   qalter, qlrs, qhold, qmaster, 
+                            testsuite (qalter test)
+                 Review:    EB
+
 SG-2005-03-16-3: Bugfix:   qstat -F dies in case of a infinit integer setting
                            for a complex attribute
                  Issue:    1508

@@ -1905,8 +1905,8 @@ DTRACE;
 
       }
       else if (uti_state_get_mewho() == QRLS) {
-         ep_opt = sge_add_arg(pcmdline, h_OPT, lIntT, "-h", "n");
-         lSetInt(ep_opt, SPA_argval_lIntT, MINUS_H_TGT_NONE);
+         ep_opt = sge_add_arg(pcmdline, h_OPT, lIntT, "-h", "u");
+         lSetInt(ep_opt, SPA_argval_lIntT, MINUS_H_CMD_SUB | MINUS_H_TGT_USER);
       }
    }
    DEXIT;

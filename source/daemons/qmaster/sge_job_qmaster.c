@@ -2193,41 +2193,24 @@ int is_task_enrolled
       u_long32 target = op_code_and_hold & MINUS_H_TGT_ALL;
       int is_sub_op_code = (op_code == MINUS_H_CMD_SUB); 
       u_long32 old_hold = job_get_hold_state(job, jataskid);
-      u_long32 new_hold; 
-    
-      if (!is_task_enrolled) { 
-         new_ja_task = job_get_ja_task_template_pending(job, jataskid);
-      }
+      u_long32 new_hold;
+      
+#if 0
+      DPRINTF(("******** jo_id = %d\n", jobid ));
+      DPRINTF(("******** task_id = %d\n", jataskid ));
+      
+      DPRINTF(("********** op_code_and_hold = %x\n", op_code_and_hold ));
+      DPRINTF(("******************* op_code = %x\n", op_code ));
+      DPRINTF(("*************is_sub_op_code = %x\n", is_sub_op_code));
+      DPRINTF(("****************** old_hold = %x\n", old_hold));
+      DPRINTF(("******************** target = %x\n", target ));
+      DPRINTF(("******* MINUS_H_TGT_SYSTEM  = %x\n", MINUS_H_TGT_SYSTEM ));
+      DPRINTF(("***** MINUS_H_TGT_OPERATOR  = %x\n", MINUS_H_TGT_OPERATOR ));
+      DPRINTF(("********* MINUS_H_TGT_USER  = %x\n", MINUS_H_TGT_USER));
+#endif
 
-      if ((target & MINUS_H_TGT_SYSTEM) != (old_hold & MINUS_H_TGT_SYSTEM)) {
-         if (!manop_is_manager(ruser)) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_MGR_TO_SS, ruser, 
-                  is_sub_op_code ? MSG_JOB_RMHOLDMNG : MSG_JOB_SETHOLDMNG)); 
-            answer_list_add(alpp, SGE_EVENT, STATUS_ENOOPR, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_ENOOPR;   
-         }
-      }
-      if ((target & MINUS_H_TGT_OPERATOR) !=
-            (old_hold & MINUS_H_TGT_OPERATOR)) {
-         if (!manop_is_operator(ruser)) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_OPR_TO_SS, ruser, 
-                   is_sub_op_code ? MSG_JOB_RMHOLDOP : MSG_JOB_SETHOLDOP));  
-            answer_list_add(alpp, SGE_EVENT, STATUS_ENOOPR, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_ENOOPR;   
-         }
-      }
-      if ((target & MINUS_H_TGT_USER) != (old_hold & MINUS_H_TGT_USER)) {
-         if (strcmp(ruser, lGetString(job, JB_owner)) && 
-             !manop_is_operator(ruser)) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_JOB_OWN_TO_SUS, ruser, 
-                   u32c(jobid), is_sub_op_code ? 
-                   MSG_JOB_RMHOLDUSER : MSG_JOB_SETHOLDUSER));  
-            answer_list_add(alpp, SGE_EVENT, STATUS_ENOOPR, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_ENOOPR;   
-         } 
+      if (!is_task_enrolled) {
+         new_ja_task = job_get_ja_task_template_pending(job, jataskid);
       }
 
       switch (op_code) {
@@ -2247,6 +2230,48 @@ int is_task_enrolled
             new_hold = old_hold;
 /*             DPRINTF(("MINUS_H_CMD_[default] = "u32"\n", new_hold)); */
             break;
+      }
+
+      if (new_hold != old_hold) {
+         if ((target & MINUS_H_TGT_SYSTEM) == MINUS_H_TGT_SYSTEM) {
+            if (!manop_is_manager(ruser)) {
+                u_long32 new_mask = op_code_and_hold & ~MINUS_H_TGT_SYSTEM;
+                lSetPosUlong(tep, pos, new_mask);
+               ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_MGR_TO_SS, ruser, 
+                     is_sub_op_code ? MSG_JOB_RMHOLDMNG : MSG_JOB_SETHOLDMNG)); 
+               answer_list_add(alpp, SGE_EVENT, STATUS_ENOOPR, ANSWER_QUALITY_ERROR);
+               DEXIT;
+               return STATUS_ENOOPR;
+            }
+         }
+
+         if ( (target & MINUS_H_TGT_OPERATOR) == MINUS_H_TGT_OPERATOR) {
+            if (!manop_is_operator(ruser)) {
+                u_long32 new_mask = op_code_and_hold & ~MINUS_H_TGT_OPERATOR;
+                lSetPosUlong(tep, pos, new_mask);
+
+                ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_OPR_TO_SS, ruser, 
+                       is_sub_op_code ? MSG_JOB_RMHOLDOP : MSG_JOB_SETHOLDOP));  
+                answer_list_add(alpp, SGE_EVENT, STATUS_ENOOPR, ANSWER_QUALITY_ERROR);
+                DEXIT;
+                return STATUS_ENOOPR;
+            }
+         }
+
+
+         if ((target & MINUS_H_TGT_USER) == MINUS_H_TGT_USER) {
+            if (strcmp(ruser, lGetString(job, JB_owner)) && 
+                !manop_is_operator(ruser)) {
+                u_long32 new_mask = op_code_and_hold & ~MINUS_H_TGT_USER;
+                lSetPosUlong(tep, pos, new_mask);
+               ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_JOB_OWN_TO_SUS, ruser, 
+                      u32c(jobid), is_sub_op_code ? 
+                      MSG_JOB_RMHOLDUSER : MSG_JOB_SETHOLDUSER));  
+               answer_list_add(alpp, SGE_EVENT, STATUS_ENOOPR, ANSWER_QUALITY_ERROR);
+               DEXIT;
+               return STATUS_ENOOPR;   
+            } 
+         }
       }
 
       job_set_hold_state(job, NULL, jataskid, new_hold); 

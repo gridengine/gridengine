@@ -1,3 +1,7 @@
+SD-2004-02-27-0: Bugfix:    Fixed checking of read return code
+                 Changed:   execd
+                 Issue:     713
+
 DT-2004-02-27-0: Bugfix:    o Rearranged japi_exit() to prevent the reopening
                               of the close comm lib connection.
                             o qconf -sq @... now returns a friendly error

@@ -1,3 +1,5 @@
+JG-2003-11-24-1: Bugfix:    Fixed memory leak from JG-2003-11-24-0.
+
 JG-2003-11-24-0: Bugfix:    Fixed writing of the reporting file.
 
 DT-2003-11-24-0: Enhancem.: Added rusage to DRMAA and JAPI

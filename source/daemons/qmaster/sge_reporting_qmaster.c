@@ -209,6 +209,8 @@ reporting_create_acct_record(lList **answer_list,
       }
    }
 
+   sge_dstring_free(&job_dstring);
+
    DEXIT;
    return ret;
 }

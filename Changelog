@@ -1,3 +1,6 @@
+CR-2004-12-21-0: Bugfix:    -Werror CFLAG was missing for linux
+                            architectures - fixed aimk
+
 SG-2004-12-17-0: Enhancem.: - fixed limits for sol10-amd64
                  Changed:   sheperd
                  Review:    AA

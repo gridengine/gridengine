@@ -46,19 +46,23 @@ extern "C" {
 *  NAME
 *     RN_Type - CULL range element
 *
-*  SYNOPSIS
-*     RN_Type
-*     +--- RN_min: minimum or start value of an id range (e.g. 1)
-*     +--- RN_max: maximum or en value of an id range (e.g. 10)
-*     +--- RN_step: stepsize (e.g. 2)
+*  ELEMENTS
+*     SGE_ULONG(RN_min)
+*        minimum or start value of an id range (e.g. 1)
 *
+*     SGE_ULONG(RN_max)
+*        maximum or end value of an id range (e.g. 9)
+*
+*     SGE_ULONG(RN_step)
+*        stepsize (e.g. 2)
+* 
 *  FUNCTION
 *     CULL element holding values which define a id range
-*     (e.g. 1-10:2 => 1, 3, 5, 7, 9). 
+*     (e.g. 1-9:2 => 1, 3, 5, 7, 9). 
 *     Lists of this CULL element are hold within a CULL job element
-*     to hold job array task ids.
+*     (JB_Type) to hold job array task ids.
 *     Several functions may be used to access/modify/delete range 
-*     elements and range lists. You may find them in the 'see also' 
+*     elements and range lists. You may find them in the 'SEE ALSO' 
 *     section. It is highly advised to use these access functions
 *     because they assure and require a defined structure of 
 *     elements and lists.
@@ -75,7 +79,7 @@ extern "C" {
 *        - ids within range elements part of the same 
 *          list are non-overlapping: max_id(n) < min_id(n+1)
 *          (e.g. 1-9:2; 11-20:1; 25-28:3)
-*        
+*
 *  SEE ALSO 
 *     gdi/range/RN_Type
 *     gdi/range/range_list_calculate_union_set()
@@ -98,9 +102,11 @@ extern "C" {
 *     gdi/range/range_is_id_within()
 *     gdi/range/range_set_all_ids()
 *     gdi/range/range_sort_uniq_compress()
+*     gdi/job/JB_Type
 ******************************************************************************/
 
 /* *INDENT-OFF* */ 
+
 enum {
    RN_min = RN_LOWERBOUND,
    RN_max,

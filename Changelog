@@ -1,3 +1,5 @@
+EB-2002-03-06-0: ADoc:      JB_Type, JAT_Type, RN_Type got ADOC Header 
+
 JG-2002-03-06-0: Doc.:      Enhanced description of execd_params
                             SET_[SGE|COD|GRD]_ENV.
                  Issue:     #120

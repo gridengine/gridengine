@@ -44,7 +44,7 @@
 #include "sge_htable.h"
 #include "read_write_job.h"
 
-/****** gdi/job_jatask/job_get_ja_task_template_pending() **********************
+/****** gdi/job_jatask/job_get_ja_task_template_pending() *********************
 *  NAME
 *     job_get_ja_task_template_pending() -- create a ja task template 
 *

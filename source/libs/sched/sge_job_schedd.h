@@ -120,8 +120,6 @@ lListElem *explicit_job_request(lListElem *jep, const char *name);
 
 int sge_granted_slots(lList *gdil);
 
-/* EB: */
-
 const char *get_name_of_split_value(int value);
 
 /****** sched/sge_job_schedd/SPLIT_-Constants *********************************
@@ -129,7 +127,20 @@ const char *get_name_of_split_value(int value);
 *     SPLIT_-Constants -- Constants used for split_jobs() 
 *
 *  SYNOPSIS
-
+*     enum {
+*        SPLIT_FIRST,
+*        SPLIT_PENDING = SPLIT_FIRST,
+*        SPLIT_PENDING_EXCLUDED,
+*        SPLIT_PENDING_EXCLUDED_INSTANCES,
+*        SPLIT_SUSPENDED,
+*        SPLIT_WAITING_DUE_TO_PREDECESSOR,
+*        SPLIT_HOLD,
+*        SPLIT_ERROR,
+*        SPLIT_WAITING_DUE_TO_TIME,
+*        SPLIT_RUNNING,
+*        SPLIT_FINISHED,
+*        SPLIT_LAST
+*     };             
 *
 *  FUNCTION
 *     SPLIT_PENDING     - Pending jobs/tasks which may be dispatched 
@@ -149,6 +160,8 @@ const char *get_name_of_split_value(int value);
 *     SPLIT_RUNNING     - These Jobs/Tasks won't be dispatched 
 *                         because they are already running
 *     SPLIT_FINISHED    - Already finished jobs/tasks   
+*
+*     SPLIT_FIRST and SPLIT_LAST might be used to build loops.
 *
 *  SEE ALSO
 *     sched/sge_job_schedd/split_jobs() 
